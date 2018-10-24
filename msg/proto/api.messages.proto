@@ -1,0 +1,101 @@
+syntax = "proto2";
+package msg;
+import "core.types.proto";
+
+// MessageSend
+// @Function
+// @Returns:     MessagesSent
+message MessagesSend {
+    required int64 RandomID = 1;
+    required InputPeer Peer = 2;
+    required string Body = 5;
+    optional int64 ReplyTo = 6;
+}
+
+// MessagesEdit
+// @Function
+// @Returns:    Bool
+message MessagesEdit {
+    required int64 RandomID = 1;
+    required InputPeer Peer = 2;
+    required string Body = 3;
+    required int64 MessageID = 4;
+}
+
+// MessageSendMedia
+// @Function
+// @Returns:    Messages
+message MessagesSendMedia {
+    required int64 RandomID = 1;
+    required InputPeer Peer = 2;
+    required InputFile File = 3;
+}
+
+// MessageReadHistory
+// @Function
+// Returns:
+message MessagesReadHistory {
+    required InputPeer Peer = 2;
+    required int64 MaxID = 3;
+}
+
+// MessagesGet
+// @Function
+// Returns:     MessagesMany
+message MessagesGet {
+    required InputPeer Peer = 1;
+    repeated int64 MessagesIDs = 2;
+}
+
+// MessagesGetHistory
+// @Function
+// Returns:     MessagesMany
+message MessagesGetHistory {
+    required InputPeer Peer = 2;
+    required int32 Limit = 3;
+    required int64 MaxID = 4;
+    required int64 MinID = 5;
+}
+
+// MessagesGetDialogs
+// @Function
+// Returns:     MessagesDialogs
+message MessagesGetDialogs {
+    required int32 Limit = 2;
+    required int32 Offset = 3;
+}
+
+// MessagesGetDialog
+// @Function
+// Returns: Dialog
+message MessagesGetDialog {
+    required InputPeer Peer = 1;
+}
+
+// MessagesDialogs
+message MessagesDialogs {
+    repeated Dialog Dialogs = 1;
+    repeated User Users = 2;
+    repeated UserMessage Messages = 3;
+    required int32 Count = 4;
+    required int64 UpdateID = 5;
+}
+
+// MessagesSetTyping
+message MessagesSetTyping {
+    required InputPeer Peer = 1;
+    required TypingAction Action = 2;
+}
+
+// MessagesSent
+message MessagesSent {
+    required int64 MessageID = 1;
+    required int64 RandomID = 2 ;
+    required int64 CreatedOn = 3;
+}
+
+// MessagesMany
+message MessagesMany {
+    repeated UserMessage Messages = 1;
+    repeated User Users = 2;
+}

@@ -1,0 +1,11 @@
+syntax = "proto2";
+package msg;
+import "core.types.proto";
+import "client.core.messages.proto";
+
+// ClientPendingMessageDelivery
+message ClientPendingMessageDelivery {
+    required UserMessage Messages = 1;
+    required ClientPendingMessage PendingMessage = 2;
+    required bool Success = 3;
+}

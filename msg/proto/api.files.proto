@@ -1,0 +1,49 @@
+syntax = "proto2";
+package msg;
+
+// FileSavePart
+// @Function
+// @Returns: Bool
+message FileSavePart {
+    required int64 FileID = 1 [jstype = JS_STRING];
+    required int32 PartID = 2;
+    required int32 TotalParts = 3;
+    required bytes Bytes = 4;
+}
+
+// FileGetPart
+// @Function
+// @Returns File
+message FileGet {
+    required FileLocation Location = 1;
+    required int32 Offset = 2;
+    required int32 Limit =3;
+}
+
+// FileLocation
+message FileLocation {
+    required int64 PartitionID = 1 [jstype = JS_STRING];
+    required int64 FileID = 2 [jstype = JS_STRING];
+    required fixed64 AccessHash = 3 [jstype = JS_STRING];
+    required int32 TotalParts = 4;
+}
+
+// File
+message File {
+    required FileType Type = 1;
+    required int64 ModifiedTime = 2;
+    required bytes Bytes = 4;
+}
+
+// FileType
+enum FileType {
+    Unknown = 0;
+    Partial = 1;
+    Jpeg = 2;
+    Gif = 3;
+    Png = 4;
+    Webp = 5;
+    Mp3 = 6;
+    Mp4 = 7;
+    Mov = 8;
+}

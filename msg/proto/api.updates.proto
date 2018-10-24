@@ -1,0 +1,86 @@
+syntax = "proto2";
+package msg;
+import "core.messages.proto";
+import "core.types.proto";
+
+// UpdateGetState
+// @Function
+// @Return: UpdateState
+message UpdateGetState {
+}
+
+// UpdateGetDifference
+// @Function
+// @Return: UpdateDifference
+message UpdateGetDifference {
+    required int64 From = 1;
+    required int32 Limit = 2;
+}
+
+// UpdateDifference
+message UpdateDifference {
+    required bool More = 1;
+    required int64 MaxUpdateID = 2;
+    required int64 MinUpdateID = 3;
+    repeated UpdateEnvelope Updates = 4;
+    repeated User Users = 5;
+    //    repeated Chat Chats = 6;
+}
+
+// UpdateState
+message UpdateState {
+    required int64 UpdateID = 1;
+}
+
+// UpdateMessageID
+message UpdateMessageID {
+    required int32 UCount = 100;
+    required int64 MessageID = 1;
+    required int64 RandomID = 2;
+}
+
+// UpdateNewMessage
+message UpdateNewMessage {
+    required int32 UCount = 100;
+    required int64 UpdateID = 101;
+    required UserMessage Message = 1;
+    required User Sender = 2;
+    optional fixed64 AccessHash = 3 [jstype = JS_STRING];
+}
+
+// UpdateMessageEdited
+message UpdateMessageEdited {
+    required int32 UCount = 100;
+    required int64 UpdateID = 101;
+    required UserMessage Message = 1;
+}
+
+// UpdateReadHistoryInbox
+message UpdateReadHistoryInbox {
+    required int32 UCount = 100;
+    required int64 UpdateID = 101;
+    required Peer Peer = 1;
+    required int64 MaxID = 2;
+}
+
+// UpdateReadHistoryOutbox
+message UpdateReadHistoryOutbox {
+    required int32 UCount = 100;
+    required int64 UpdateID = 101;
+    required Peer Peer = 1;
+    required int64 MaxID = 2;
+}
+
+// UpdateUserTyping
+message UpdateUserTyping {
+    required int32 UCount = 100;
+    required int64 UserID = 1 [jstype = JS_STRING];
+    required TypingAction Action = 2;
+}
+
+// UpdateUserStatus
+message UpdateUserStatus {
+    required int32 UCount = 100;
+    required int64 UserID = 1 [jstype = JS_STRING];
+    required int32 Status = 2;
+}

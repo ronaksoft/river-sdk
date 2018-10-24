@@ -1,0 +1,33 @@
+syntax = "proto2";
+package msg;
+import "core.types.proto";
+
+// SystemGetPublicKeys
+// @Function
+// @Return: SystemPublicKeys
+message SystemGetPublicKeys {
+}
+
+// SystemGetDHGroups
+// @Function
+// @Return: SystemDHGroups
+message SystemGetDHGroups {
+}
+
+// System
+message SystemClientLog {
+    required string DeviceID = 1;
+    required string DeviceOS = 2;
+    required int64 UserID = 3 [jstype = JS_STRING];
+    required string Text = 4;
+
+}
+// SystemPublicKeys
+message SystemPublicKeys {
+    repeated RSAPublicKey RSAPublicKeys = 1;
+}
+
+// SystemDHGroups
+message SystemDHGroups {
+    repeated DHGroup DHGroups = 1;
+}

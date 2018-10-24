@@ -1,0 +1,36 @@
+syntax = "proto2";
+package msg;
+import "core.types.proto";
+
+// ContactsImport
+// @Function
+// @Returns: ContactsImported
+message ContactsImport {
+    repeated PhoneContact Contacts = 1;
+    required bool Replace = 2;
+}
+
+// ContactsGet
+// @Function
+// @Returns: ContactsMany
+message ContactsGet {
+    required string MD5Hash = 1;
+}
+
+// ContactsDelete
+// @Function
+// @Returns: Bool
+message ContactsDelete {
+    repeated int64 UserIDs = 1 [jstype = JS_STRING];
+}
+
+// ContactsImported
+message ContactsImported {
+    repeated ContactUser Users = 1;
+}
+
+// ContactsMany
+message ContactsMany {
+    repeated PhoneContact Contacts = 1 ;
+    repeated ContactUser Users = 2 ;
+}

@@ -1,0 +1,14 @@
+syntax = "proto2";
+package msg;
+import "core.types.proto";
+
+// AccountSetNotifySettings
+message AccountSetNotifySettings {
+    required InputPeer Peer = 1;
+    required NotifySettings Settings = 2;
+}
+
+// AccountGetNotifySettings
+message AccountGetNotifySettings {
+    repeated InputPeer Peers = 1;
+}

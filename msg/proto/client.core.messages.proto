@@ -1,0 +1,15 @@
+syntax = "proto2";
+package msg;
+
+// ClientPendingMessage
+message ClientPendingMessage {
+    required int64 ID = 1;
+    required int64 RequestID = 2;
+    required int64 PeerID = 3;
+    required int32 PeerType = 4;
+    required fixed64 AccessHash = 5;
+    required int64 CreatedOn = 6;
+    required int64 ReplyTo = 7;
+    required string Body = 8;
+    required int64 SenderID = 9 ;
+}

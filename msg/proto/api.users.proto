@@ -1,0 +1,13 @@
+syntax = "proto2";
+package msg;
+import "core.types.proto";
+
+// UsersGet
+message UsersGet {
+    repeated InputUser Users = 1;
+}
+
+// UsersMany
+message UsersMany {
+    repeated User Users = 1;
+}

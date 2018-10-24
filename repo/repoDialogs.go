@@ -1,0 +1,247 @@
+package repo
+
+import (
+	"fmt"
+
+	"git.ronaksoftware.com/ronak/riversdk/domain"
+	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/msg"
+	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
+	"go.uber.org/zap"
+)
+
+type RepoDialogs interface {
+	SaveDialog(dialog *msg.Dialog, lastUpdate int64) error
+	GetDialogs(offset, limit int32) []*msg.Dialog
+	GetDialog(peerID int64, peerType int32) *msg.Dialog
+	CountDialogs() int32
+	UpdateReadInboxMaxID(userID, peerID int64, peerType int32, maxID int64) error
+	UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID int64) error
+	UpdateDialogUnreadCount(peerID int64, peerTyep, unreadCount int32) error
+	UpdateAccessHash(accessHash int64, peerID int64, peerType int32) error
+	UpdateTopMesssageID(createdOn, peerID int64, peerType int32) error
+}
+
+type repoDialogs struct {
+	*repository
+}
+
+// UpdateTopMesssageID
+func (r *repoDialogs) UpdateTopMesssageID(createdOn, peerID int64, peerType int32) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	em := dto.Messages{}
+	err := r.db.Table(em.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerType).Limit(1).Order("ID DESC").Find(&em).Error
+	if err != nil {
+		log.LOG.Debug(err.Error())
+		return err
+	}
+
+	topMessageID := em.ID
+	ed := new(dto.Dialogs)
+	err = r.db.Table(ed.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerType).Updates(map[string]interface{}{
+		"TopMessageID": topMessageID,
+		"LastUpdate":   createdOn,
+		// "UnreadCount":  unreadCount,
+	}).Error
+
+	return err
+}
+
+// SaveDialog
+func (r *repoDialogs) SaveDialog(dialog *msg.Dialog, lastUpdate int64) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	if dialog == nil {
+		log.LOG.Error("repoDialogs::SaveDialog() :",
+			zap.String("dialog", "dialog is null"),
+		)
+		return domain.ErrNotFound
+	}
+
+	log.LOG.Debug("Messages::SaveDialog",
+		zap.Int64("PeerID", dialog.PeerID),
+		zap.Uint64("AccessHash", dialog.AccessHash),
+		zap.Int32("Unread", dialog.UnreadCount),
+	)
+	d := new(dto.Dialogs)
+	d.Map(dialog)
+
+	d.LastUpdate = lastUpdate
+
+	entity := new(dto.Dialogs)
+	r.db.Where(&dto.Dialogs{PeerID: d.PeerID, PeerType: d.PeerType}).Find(entity)
+	if entity.PeerID == 0 {
+		return r.db.Create(d).Error
+	}
+	return r.db.Table(d.TableName()).Where("PeerID=? AND PeerType=?", d.PeerID, d.PeerType).Update(d).Error
+}
+
+// UpdateDialogUnreadCount
+func (r *repoDialogs) UpdateDialogUnreadCount(peerID int64, peerTyep, unreadCount int32) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	log.LOG.Debug("Messages::UpdateDialogUnreadCount",
+		zap.Int64("PeerID", peerID),
+		zap.Int32("PeerType", peerTyep),
+		zap.Int32("UnreadCount", unreadCount),
+	)
+	ed := new(dto.Dialogs)
+	return r.db.Table(ed.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerTyep).Updates(map[string]interface{}{"UnreadCount": unreadCount}).Error
+}
+
+// GetDialogs
+func (r *repoDialogs) GetDialogs(offset, limit int32) []*msg.Dialog {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	log.LOG.Debug("Messages::GetDialogs",
+		zap.Int32("Offset", offset),
+		zap.Int32("Limit", limit),
+	)
+
+	dtoDlgs := make([]dto.Dialogs, 0, limit)
+
+	err := r.db.Limit(limit).Offset(offset).Find(&dtoDlgs).Error
+	if err != nil {
+		log.LOG.Debug(err.Error())
+		return nil
+	}
+
+	dialogs := make([]*msg.Dialog, 0, limit)
+	for _, v := range dtoDlgs {
+		tmp := new(msg.Dialog)
+		v.MapTo(tmp)
+		dialogs = append(dialogs, tmp)
+	}
+
+	// Delete Me
+	log.LOG.Debug("XXXXXX GetDialogs() ==>protoBuff : " + fmt.Sprint(dialogs))
+
+	return dialogs
+
+}
+
+// GetDialog
+func (r *repoDialogs) GetDialog(peerID int64, peerType int32) *msg.Dialog {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	log.LOG.Debug("Messages::GetDialog",
+		zap.Int64("PeerID", peerID),
+		zap.Int32("PeerType", peerType),
+	)
+
+	dtoDlg := new(dto.Dialogs)
+	err := r.db.Where("PeerID = ? AND PeerType = ?", peerID, peerType).First(dtoDlg).Error
+	if err != nil {
+		log.LOG.Debug(err.Error())
+		return nil
+	}
+
+	dialog := new(msg.Dialog)
+	dtoDlg.MapTo(dialog)
+
+	return dialog
+}
+
+// CountDialogs
+func (r *repoDialogs) CountDialogs() int32 {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	// TODO:: implement it in ORM
+	qry := `SELECT Count(DISTINCT dialogs.*) FROM dialogs
+	LEFT OUTER JOIN messages ON dialogs.PeerID = messages.PeerID AND dialogs.PeerType = messages.PeerType
+	WHERE messages.ID is not null`
+	var count int32
+	r.db.Raw(qry).Scan(&count)
+	return count
+}
+
+// UpdateReadInboxMaxID
+func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32, maxID int64) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	log.LOG.Debug("Messages::UpdateReadInboxMaxID",
+		zap.Int64("PeerID", peerID),
+		zap.Int32("PeerType", peerType),
+		zap.Int64("MaxID", maxID),
+	)
+
+	// get dialog
+	dtoDlg := new(dto.Dialogs)
+	err := r.db.Where("PeerID = ? AND PeerType = ?", peerID, peerType).First(dtoDlg).Error
+	if err != nil {
+		log.LOG.Debug(err.Error())
+		return nil
+	}
+
+	// current maxID is newer so skip updating dialog unread counts
+	if dtoDlg.ReadInboxMaxID > maxID {
+		log.LOG.Debug("repoDialogs::UpdateReadInboxMaxID() skipped dialogs unreadCount update",
+			zap.Int64("Current ReadInboxMaxID", dtoDlg.ReadInboxMaxID),
+			zap.Int64("Server Sended MaxID", maxID),
+		)
+		return nil
+	}
+
+	var unreadCount int
+
+	em := new(dto.Messages)
+	err = r.db.Table(em.TableName()).Where("SenderID <> ? AND PeerID = ? AND PeerType = ? AND ID > ? ", userID, peerID, peerType, maxID).Count(&unreadCount).Error
+	if err != nil {
+		log.LOG.Debug(err.Error())
+		return err
+	}
+
+	ed := new(dto.Dialogs)
+	err = r.db.Table(ed.TableName()).Where("PeerID = ? AND PeerType = ?", peerID, peerType).Updates(map[string]interface{}{
+		"ReadInboxMaxID": maxID,
+		"UnreadCount":    unreadCount, //gorm.Expr("UnreadCount + ?", unreadCount), // in snapshot mode if unread message lefted
+	}).Error
+
+	if err != nil {
+		log.LOG.Debug(err.Error())
+		return err
+	}
+	return nil
+}
+
+// UpdateReadOutboxMaxID
+func (r *repoDialogs) UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID int64) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	log.LOG.Debug("Messages::UpdateReadOutboxMaxID",
+		zap.Int64("PeerID", peerID),
+		zap.Int32("PeerType", peerType),
+		zap.Int64("MaxID", maxID),
+	)
+
+	ed := new(dto.Dialogs)
+	err := r.db.Table(ed.TableName()).Where("PeerID = ? AND PeerType = ?", peerID, peerType).Updates(map[string]interface{}{
+		"ReadOutboxMaxID": maxID,
+	}).Error
+
+	if err != nil {
+		log.LOG.Debug(err.Error())
+		return err
+	}
+	return nil
+}
+
+func (r *repoDialogs) UpdateAccessHash(accessHash int64, peerID int64, peerType int32) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	ed := new(dto.Dialogs)
+	err := r.db.Table(ed.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerType).Updates(map[string]interface{}{
+		"AccessHash": int64(accessHash),
+	}).Error
+	return err
+}
