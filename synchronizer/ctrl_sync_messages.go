@@ -5,7 +5,6 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd"
 	"git.ronaksoftware.com/ronak/riversdk/configs"
-	"git.ronaksoftware.com/ronak/riversdk/delegates"
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
@@ -189,7 +188,7 @@ func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
 	ctrl.addToDeliveredMessageList(message.ID)
 
 	// call external handler
-	cmd.GetUIExecuter().Exec(func() { delegates.Get().OnUpdates(msg.C_UpdateEnvelope, buff) })
+	cmd.GetUIExecuter().Exec(func() { ctrl.onUpdateMainDelegate(msg.C_UpdateEnvelope, buff) })
 }
 
 func (ctrl *SyncController) usersMany(e *msg.MessageEnvelope) {

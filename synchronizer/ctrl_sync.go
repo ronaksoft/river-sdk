@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd"
-	"git.ronaksoftware.com/ronak/riversdk/delegates"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/network"
@@ -28,9 +27,10 @@ type SyncConfig struct {
 // SyncController
 type SyncController struct {
 	//sync.Mutex
-	networkCtrl        *network.NetworkController
-	queue              *queue.QueueController
-	onSyncStatusChange domain.SyncStatusUpdateCallback
+	networkCtrl          *network.NetworkController
+	queue                *queue.QueueController
+	onSyncStatusChange   domain.SyncStatusUpdateCallback
+	onUpdateMainDelegate domain.OnUpdateMainDelegateHandler
 	// InternalChannel
 	stopChannel chan bool
 
@@ -115,6 +115,11 @@ func (ctrl *SyncController) Stop() {
 // SetSyncStatusChangedCallback
 func (ctrl *SyncController) SetSyncStatusChangedCallback(h domain.SyncStatusUpdateCallback) {
 	ctrl.onSyncStatusChange = h
+}
+
+// SetSyncStatusChangedCallback
+func (ctrl *SyncController) SetOnUpdateCallback(h domain.OnUpdateMainDelegateHandler) {
+	ctrl.onUpdateMainDelegate = h
 }
 
 // updateSyncStatus
@@ -378,7 +383,7 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 
 		// wrapped to UpdateContainer
 		buff, _ := updContainer.Marshal()
-		cmd.GetUIExecuter().Exec(func() { delegates.Get().OnUpdates(msg.C_UpdateContainer, buff) })
+		cmd.GetUIExecuter().Exec(func() { ctrl.onUpdateMainDelegate(msg.C_UpdateContainer, buff) })
 
 		// update last updateID
 		if ctrl.updateID < x.MaxUpdateID {
@@ -624,14 +629,14 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 	udpContainer.Length = int32(len(udpContainer.Updates))
 
 	// call external handler
-	if delegates.Get() != nil && delegates.Get().OnUpdates != nil {
+	if ctrl.onUpdateMainDelegate != nil {
 
 		// wrapped to UpdateContainer
 		buff, _ := udpContainer.Marshal()
 
 		// pass all updates to UI
 		cmd.GetUIExecuter().Exec(func() {
-			delegates.Get().OnUpdates(msg.C_UpdateContainer, buff)
+			ctrl.onUpdateMainDelegate(msg.C_UpdateContainer, buff)
 		})
 	}
 

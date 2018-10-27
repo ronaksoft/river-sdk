@@ -1,4 +1,4 @@
-package delegates
+package riversdk
 
 type MainDelegate interface {
 	OnNetworkStatusChanged(status int)
@@ -19,13 +19,13 @@ var (
 	dlg MainDelegate
 )
 
-func Get() MainDelegate {
+func getMainDelegate() MainDelegate {
 	if dlg == nil {
 		panic("main delegates not initialized")
 	}
 	return dlg
 }
 
-func Set(d MainDelegate) {
+func setMainDelegate(d MainDelegate) {
 	dlg = d
 }

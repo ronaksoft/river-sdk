@@ -3,7 +3,6 @@ package riversdk
 import (
 	"sync"
 
-	"git.ronaksoftware.com/ronak/riversdk/delegates"
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/network"
 	"git.ronaksoftware.com/ronak/riversdk/queue"
@@ -31,7 +30,7 @@ type RiverConfig struct {
 	ServerKeysFilePath string
 	// MainDelegate holds all the general callback functions that let the user of this SDK
 	// get notified of the events.
-	MainDelegate delegates.MainDelegate
+	MainDelegate MainDelegate
 }
 
 // River
@@ -44,7 +43,7 @@ type RiverConfig struct {
 // package name selected to handle repository functions.
 type River struct {
 	delegateMutex sync.Mutex
-	delegates     map[int64]delegates.RequestDelegate
+	delegates     map[int64]RequestDelegate
 	localCommands map[int64]domain.LocalMessageHandler
 
 	// Internal Controllers

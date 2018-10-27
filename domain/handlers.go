@@ -16,6 +16,9 @@ type MessageHandler func(m *msg.MessageEnvelope)
 // DeferredRequestHandler
 type DeferredRequestHandler func(constructor int64, msg []byte)
 
+// OnUpdateMainDelegateHandler
+type OnUpdateMainDelegateHandler func(constructor int64, msg []byte)
+
 // OnConnectCallback
 type OnConnectCallback func()
 

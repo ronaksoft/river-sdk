@@ -24,7 +24,6 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/repo"
 
-	"git.ronaksoftware.com/ronak/riversdk/delegates"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 
@@ -42,10 +41,10 @@ var (
 // This function must be called before any other function, otherwise it panics
 func (r *River) SetConfig(conf *RiverConfig) {
 	r.registerCommandHandlers()
-	r.delegates = make(map[int64]delegates.RequestDelegate)
+	r.delegates = make(map[int64]RequestDelegate)
 
 	// init delegates
-	delegates.Set(conf.MainDelegate)
+	setMainDelegate(conf.MainDelegate)
 
 	// init UI Executer
 	cmd.InitUIExecuter()
@@ -88,15 +87,15 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		},
 	)
 	r.networkCtrl.SetNetworkStatusChangedCallback(func(newQuality domain.NetworkStatus) {
-		if delegates.Get() != nil && delegates.Get().OnNetworkStatusChanged != nil {
-			delegates.Get().OnNetworkStatusChanged(int(newQuality))
+		if getMainDelegate() != nil && getMainDelegate().OnNetworkStatusChanged != nil {
+			getMainDelegate().OnNetworkStatusChanged(int(newQuality))
 		}
 	})
 
 	// Initialize queueController
 	var h domain.DeferredRequestHandler
-	if delegates.Get() != nil {
-		h = delegates.Get().OnDeferredRequests
+	if getMainDelegate() != nil {
+		h = getMainDelegate().OnDeferredRequests
 	} else {
 		h = nil
 	}
@@ -118,8 +117,14 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// call external delegate on sync status changed
 	r.syncCtrl.SetSyncStatusChangedCallback(func(newStatus domain.SyncStatus) {
-		if delegates.Get() != nil && delegates.Get().OnSyncStatusChanged != nil {
-			delegates.Get().OnSyncStatusChanged(int(newStatus))
+		if getMainDelegate() != nil && getMainDelegate().OnSyncStatusChanged != nil {
+			getMainDelegate().OnSyncStatusChanged(int(newStatus))
+		}
+	})
+	// call external delegate on OnUpdate
+	r.syncCtrl.SetOnUpdateCallback(func(constructor int64, buff []byte) {
+		if getMainDelegate() != nil && getMainDelegate().OnUpdates != nil {
+			getMainDelegate().OnUpdates(constructor, buff)
 		}
 	})
 
@@ -234,7 +239,7 @@ func (r *River) deepCopy(commandBytes []byte) []byte {
 // ExecuteCommand
 // This is a wrapper function to pass the request to the queueController, to be passed to networkController for final
 // delivery to the server.
-func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate delegates.RequestDelegate, blockingMode bool) (requestID int64, err error) {
+func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate, blockingMode bool) (requestID int64, err error) {
 	commandBytesDump := r.deepCopy(commandBytes)
 
 	if _, ok := msg.ConstructorNames[constructor]; !ok {
@@ -543,9 +548,9 @@ func (r *River) CreateAuthKey() (err error) {
 	waitGroup.Wait()
 
 	// inform external UI that authKey generated
-	if delegates.Get() != nil {
-		if delegates.Get().OnAuthKeyCreated != nil {
-			delegates.Get().OnAuthKeyCreated(configs.Get().AuthID)
+	if getMainDelegate() != nil {
+		if getMainDelegate().OnAuthKeyCreated != nil {
+			getMainDelegate().OnAuthKeyCreated(configs.Get().AuthID)
 		}
 	}
 
@@ -657,8 +662,8 @@ func (r *River) Logout() (int64, error) {
 		r.releaseDelegate(requestID)
 	}
 
-	if delegates.Get() != nil && delegates.Get().OnSessionClosed != nil {
-		delegates.Get().OnSessionClosed(0)
+	if getMainDelegate() != nil && getMainDelegate().OnSessionClosed != nil {
+		getMainDelegate().OnSessionClosed(0)
 	}
 
 	return requestID, err
@@ -667,9 +672,9 @@ func (r *River) Logout() (int64, error) {
 func (r *River) onGeneralError(e *msg.Error) {
 	// TODO:: calll external handler
 	log.LOG.Info("River::onGeneralError()")
-	if delegates.Get() != nil && delegates.Get().OnGeneralError != nil {
+	if getMainDelegate() != nil && getMainDelegate().OnGeneralError != nil {
 		buff, _ := e.Marshal()
-		delegates.Get().OnGeneralError(buff)
+		getMainDelegate().OnGeneralError(buff)
 	}
 }
 
