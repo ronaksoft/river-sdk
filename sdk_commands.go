@@ -1,7 +1,6 @@
 package riversdk
 
 import (
-	"fmt"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd"
@@ -15,9 +14,12 @@ import (
 )
 
 func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	log.LOG.Debug("River::messagesGetDialogs()")
 	req := new(msg.MessagesGetDialogs)
 	if err := req.Unmarshal(in.Message); err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("River::messagesGetDialogs()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
 		return
 	}
 	res := new(msg.MessagesDialogs)
@@ -25,6 +27,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 
 	// if the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {
+		log.LOG.Debug("River::messagesGetDialogs()-> GetDialogs() nothing found in cacheDB pass request to server")
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
 		return
 	}
@@ -41,10 +44,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 			mPendingMesssage[d.TopMessageID] = true
 		}
 	}
-	log.LOG.Debug("Messages",
-		zap.Int64s("MessageIDs", mMessages.ToArray()),
-		zap.Int64s("Users", mUsers.ToArray()),
-	)
+
 	res.Messages = repo.Ctx().Messages.GetManyMessages(mMessages.ToArray())
 
 	//Load Pending messages
@@ -62,9 +62,12 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 }
 
 func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	log.LOG.Debug("River::messagesSend()")
 	req := new(msg.MessagesSend)
 	if err := req.Unmarshal(in.Message); err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("River::messagesSend()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
 		return
 	}
 	// TODO :
@@ -98,10 +101,12 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 }
 
 func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-
+	log.LOG.Debug("River::messageGetHistory()")
 	req := new(msg.MessagesGetHistory)
 	if err := req.Unmarshal(in.Message); err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("River::messageGetHistory()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
 		return
 	}
 
@@ -123,6 +128,7 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 
 	// if the localDB had no or outdated data send the request to server
 	if (req.MaxID-maxMessageID) > int64(req.Limit) || len(res.Messages) <= 1 {
+		log.LOG.Debug("River::messageGetHistory()-> GetMessageHistory() nothing found in cacheDB pass request to server")
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
 		return
 	}
@@ -136,9 +142,12 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 }
 
 func (r *River) contactGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	log.LOG.Debug("River::contactGet()")
 	req := new(msg.ContactsGet)
 	if err := req.Unmarshal(in.Message); err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("River::contactGet()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
 		return
 	}
 
@@ -158,8 +167,13 @@ func (r *River) contactGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeou
 }
 
 func (r *River) messageReadHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	log.LOG.Debug("River::messageReadHistory()")
 	req := new(msg.MessagesReadHistory)
-	req.Unmarshal(in.Message)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG.Debug("River::messageReadHistory()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+	}
 
 	dialog := repo.Ctx().Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
@@ -169,18 +183,25 @@ func (r *River) messageReadHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 
-	repo.Ctx().Dialogs.UpdateReadInboxMaxID(configs.Get().UserID, req.Peer.ID, int32(req.Peer.Type), req.MaxID)
-
+	err := repo.Ctx().Dialogs.UpdateReadInboxMaxID(configs.Get().UserID, req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+	if err != nil {
+		log.LOG.Debug("River::messageReadHistory()-> UpdateReadInboxMaxID()",
+			zap.String("Error", err.Error()),
+		)
+	}
 	// send the request to server
-	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
 
+	log.LOG.Debug("River::messageReadHistory() Pass request to server")
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
 }
 
 func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	log.LOG.Debug("River::usersGet()")
 	req := new(msg.UsersGet)
-	err := req.Unmarshal(in.Message)
-	if err != nil {
-		log.LOG.Debug(err.Error())
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG.Debug("River::usersGet()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
 		return
 	}
 	userIDs := domain.MInt64B{}
@@ -189,13 +210,6 @@ func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 	}
 
 	users := repo.Ctx().Users.GetAnyUsers(userIDs.ToArray())
-	// if db allready had all users
-
-	log.LOG.Debug("SDk_Commands::usersGet()",
-		zap.Int("userID Count", len(userIDs)),
-		zap.Int("users Count", len(users)),
-		zap.String("Users", fmt.Sprint(users)),
-	)
 
 	if len(users) == len(userIDs) {
 		res := new(msg.UsersMany)
@@ -205,17 +219,19 @@ func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 		out.Message, _ = res.Marshal()
 		cmd.GetUIExecuter().Exec(func() { successCB(out) }) //successCB(out)
 	} else {
-		log.LOG.Debug("SDk_Commands::usersGet() send request to server")
+		log.LOG.Debug("River::messageGetHistory()-> GetAnyUsers() cacheDB is not up to date pass request to server")
 		// send the request to server
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
 	}
 }
 
 func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	log.LOG.Debug("River::messagesGet()")
 	req := new(msg.MessagesGet)
-	err := req.Unmarshal(in.Message)
-	if err != nil {
-		log.LOG.Debug(err.Error())
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG.Debug("River::messagesGet()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
 		return
 	}
 	msgIDs := domain.MInt64B{}
@@ -237,6 +253,7 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 		out.Message, _ = res.Marshal()
 		cmd.GetUIExecuter().Exec(func() { successCB(out) }) //successCB(out)
 	} else {
+		log.LOG.Debug("River::messagesGet() -> GetManyMessages() cacheDB is not up to date pass request to server")
 		// send the request to server
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
 	}

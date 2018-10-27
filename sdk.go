@@ -58,10 +58,12 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	var err error
 	err = repo.InitRepo("sqlite3", fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID))
 	if err != nil {
-		log.LOG.Fatal("faild to initialize DB context :" + err.Error())
+		log.LOG.Fatal("River::SetConfig() faild to initialize DB context",
+			zap.String("Error", err.Error()),
+		)
 	}
 
-	// init riverConfigs
+	// init riverConfigs this should be after connect to DB
 	configs.Get()
 
 	// Initialize realtime requests
@@ -99,7 +101,9 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		h = nil
 	}
 	if q, err := queue.NewQueueController(r.networkCtrl, conf.QueuePath, h); err != nil {
-		log.LOG.Fatal(err.Error())
+		log.LOG.Fatal("River::SetConfig() faild to initialize Queue",
+			zap.String("Error", err.Error()),
+		)
 	} else {
 		r.queueCtrl = q
 	}
@@ -121,13 +125,17 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Initialize Server Keys
 	if jsonBytes, err := ioutil.ReadFile(conf.ServerKeysFilePath); err != nil {
-		log.LOG.Fatal(err.Error())
+		log.LOG.Fatal("River::SetConfig() faild to open server keys",
+			zap.String("Error", err.Error()),
+		)
 	} else if err := _ServerKeys.UnmarshalJSON(jsonBytes); err != nil {
-		log.LOG.Fatal(err.Error())
+		log.LOG.Fatal("River::SetConfig() faild to unmarshal server keys",
+			zap.String("Error", err.Error()),
+		)
 	}
 
 	// Initialize River Connection
-	log.LOG.Info("Load/Create New River Connection")
+	log.LOG.Info("River::SetConfig() Load/Create New River Connection")
 
 	if configs.Get().UserID != 0 {
 		r.syncCtrl.SetUserID(configs.Get().UserID)
@@ -181,7 +189,9 @@ func (r *River) registerCommandHandlers() {
 func (r *River) Start() error {
 	// Start Controllers
 	if err := r.networkCtrl.Start(); err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("River::Start()",
+			zap.String("Error", err.Error()),
+		)
 		return err
 	}
 	r.queueCtrl.Start()
@@ -202,17 +212,22 @@ func (r *River) Stop() {
 	r.syncCtrl.Stop()
 	r.queueCtrl.Stop()
 	r.networkCtrl.Stop()
+	cmd.GetUIExecuter().Stop()
 
 	// Close database connection
 	err := repo.Ctx().Close()
-	log.LOG.Debug("faild to close DB context : " + err.Error())
+	log.LOG.Debug("River::Stop() faild to close DB context",
+		zap.String("Error", err.Error()),
+	)
 }
 func (r *River) deepCopy(commandBytes []byte) []byte {
 	length := len(commandBytes)
 	buff := make([]byte, length)
-	for i := 0; i < length; i++ {
-		buff[i] = commandBytes[i]
-	}
+	copy(buff, commandBytes)
+	// Deep Copy
+	// for i := 0; i < length; i++ {
+	// 	buff[i] = commandBytes[i]
+	// }
 	return buff
 }
 
@@ -228,8 +243,8 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	waitGroup := new(sync.WaitGroup)
 	requestID = domain.RandomInt63()
 
-	log.LOG.Debug("Execute Commend",
-		zap.String("ConstructorName", msg.ConstructorNames[constructor]),
+	log.LOG.Debug("River::ExecuteCommand()",
+		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
 
 	// if function is in blocking mode set the waitGroup to block until the job is done, otherwise
@@ -307,6 +322,10 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 }
 
 func (r *River) executeLocalCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	log.LOG.Debug("River::executeLocalCommand()",
+		zap.String("Constructor", msg.ConstructorNames[constructor]),
+	)
+
 	in := new(msg.MessageEnvelope)
 	out := new(msg.MessageEnvelope)
 	in.Constructor = constructor
@@ -320,10 +339,16 @@ func (r *River) executeLocalCommand(requestID uint64, constructor int64, command
 }
 
 func (r *River) executeRemoteCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	log.LOG.Debug("River::executeRemoteCommand()",
+		zap.String("Constructor", msg.ConstructorNames[constructor]),
+	)
 	r.queueCtrl.ExecuteCommand(requestID, constructor, commandBytes, timeoutCB, successCB)
 }
 
 func (r *River) releaseDelegate(requestID int64) {
+	log.LOG.Debug("River::releaseDelegate()",
+		zap.Int64("RequestID", requestID),
+	)
 	r.delegateMutex.Lock()
 	if _, ok := r.delegates[requestID]; ok {
 		delete(r.delegates, requestID)
@@ -334,7 +359,7 @@ func (r *River) releaseDelegate(requestID int64) {
 // CreateAuthKey
 // This function creates an AuthID and AuthKey to be used for transporting messages between client and server
 func (r *River) CreateAuthKey() (err error) {
-
+	log.LOG.Debug("River::CreateAuthKey()")
 	// wait untill network connects
 	for r.networkCtrl.Quality() == domain.DISCONNECTED || r.networkCtrl.Quality() == domain.CONNECTING {
 		time.Sleep(200)
@@ -348,7 +373,7 @@ func (r *River) CreateAuthKey() (err error) {
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
 
-	log.LOG.Info("1st Step Started :: InitConnect")
+	log.LOG.Info("River::CreateAuthKey() 1st Step Started :: InitConnect")
 
 	r.executeRemoteCommand(
 		//r.executeRealtimeCommand(
@@ -361,14 +386,14 @@ func (r *River) CreateAuthKey() (err error) {
 		},
 		func(res *msg.MessageEnvelope) {
 			defer waitGroup.Done()
-			log.LOG.Debug("Success Callback Called")
+			log.LOG.Debug("River::CreateAuthKey() Success Callback Called")
 			switch res.Constructor {
 			case msg.C_InitResponse:
 				x := new(msg.InitResponse)
 				err = x.Unmarshal(res.Message)
 				if err != nil {
-					log.LOG.Error(err.Error(),
-						zap.String(domain.LK_DESC, "InitResponse Unmarshal"),
+					log.LOG.Debug("River::CreateAuthKey() Success Callback",
+						zap.String("Error", err.Error()),
 					)
 				}
 				clientNonce = x.ClientNonce
@@ -376,7 +401,7 @@ func (r *River) CreateAuthKey() (err error) {
 				serverPubFP = x.RSAPubKeyFingerPrint
 				serverDHFP = x.DHGroupFingerPrint
 				serverPQ = x.PQ
-				log.LOG.Debug("InitResponse :: Received",
+				log.LOG.Debug("River::CreateAuthKey() InitResponse Received",
 					zap.Uint64("ServerNonce", serverNonce),
 					zap.Uint64("ClientNounce", clientNonce),
 					zap.Uint64("ServerDhFingerPrint", serverDHFP),
@@ -393,10 +418,12 @@ func (r *River) CreateAuthKey() (err error) {
 	// Wait for 1st step to complete
 	waitGroup.Wait()
 	if err != nil {
-		log.LOG.Info(err.Error())
+		log.LOG.Debug("River::CreateAuthKey() InitConnect",
+			zap.String("Error", err.Error()),
+		)
 		return
 	} else {
-		log.LOG.Info("1st Step Finished")
+		log.LOG.Info("River::CreateAuthKey() 1st Step Finished")
 	}
 
 	// 2. Send InitCompleteAuth
@@ -424,7 +451,7 @@ func (r *River) CreateAuthKey() (err error) {
 		req2.P = q.Uint64()
 		req2.Q = p.Uint64()
 	}
-	log.LOG.Debug("PQ Split",
+	log.LOG.Debug("River::CreateAuthKey() PQ Split",
 		zap.Uint64("P", req2.P),
 		zap.Uint64("Q", req2.Q),
 	)
@@ -445,13 +472,15 @@ func (r *River) CreateAuthKey() (err error) {
 	decrypted, _ := q2Internal.Marshal()
 	encrypted, err := rsa.EncryptPKCS1v15(rand.Reader, &rsaPublicKey, decrypted)
 	if err != nil {
-		log.LOG.Error(err.Error())
+		log.LOG.Debug("River::CreateAuthKey() -> EncryptPKCS1v15()",
+			zap.String("Error", err.Error()),
+		)
 	}
 	req2.EncryptedPayload = encrypted
 	req2Bytes, _ := req2.Marshal()
 
 	waitGroup.Add(1)
-	log.LOG.Info("2nd Step Started :: InitConnect")
+	log.LOG.Info("River::CreateAuthKey() 2nd Step Started :: InitConnect")
 	r.executeRemoteCommand(
 		//r.executeRealtimeCommand(
 		domain.RandomUint64(),
@@ -471,7 +500,9 @@ func (r *River) CreateAuthKey() (err error) {
 				case msg.InitAuthCompleted_OK:
 					serverDhKey, err := dh.ComputeKey(dhkx.NewPublicKey(x.ServerDHPubKey), clientDhKey)
 					if err != nil {
-						log.LOG.Error(err.Error())
+						log.LOG.Debug("River::CreateAuthKey() -> ComputeKey()",
+							zap.String("Error", err.Error()),
+						)
 						return
 					}
 					// r.ConnInfo.AuthKey = serverDhKey.Bytes()
@@ -551,7 +582,7 @@ func (r *River) DeletePendingMessage(id int64) (isSuccess bool) {
 func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
 	pmsg, err := repo.Ctx().PendingMessages.GetPendingMessageByID(id)
 	if err != nil {
-		log.LOG.Debug("SDK::RetryPendingMessage",
+		log.LOG.Debug("River::RetryPendingMessage()",
 			zap.String("GetPendingMessageByID", err.Error()),
 		)
 		isSuccess = false
@@ -563,9 +594,7 @@ func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
 	buff, _ := req.Marshal()
 	r.queueCtrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSend, buff, nil, nil)
 	isSuccess = true
-	log.LOG.Debug("SDK::RetryPendingMessage",
-		zap.String("Request queued", err.Error()),
-	)
+	log.LOG.Debug("River::RetryPendingMessage() Request enqueued")
 
 	return
 }
@@ -576,8 +605,8 @@ func (r *River) GetNetworkStatus() int32 {
 
 func (r *River) GetSyncStatus() int32 {
 
-	log.LOG.Debug("SDK::GetSyncStatus ",
-		zap.Int32("syncStatus", int32(r.syncCtrl.Status())),
+	log.LOG.Debug("River::GetSyncStatus()",
+		zap.String("syncStatus", domain.SyncStatusName[r.syncCtrl.Status()]),
 	)
 	return int32(r.syncCtrl.Status())
 }
@@ -587,7 +616,7 @@ func (r *River) Logout() (int64, error) {
 	dataDir, err := r.queueCtrl.DropQueue()
 
 	if err != nil {
-		log.LOG.Debug("SDK:Logout() failed to drop queue",
+		log.LOG.Debug("River::Logout() failed to drop queue",
 			zap.Error(err),
 		)
 	}
@@ -595,7 +624,7 @@ func (r *River) Logout() (int64, error) {
 	// drop and recreate database
 	err = repo.Ctx().ReinitiateDatabase()
 	if err != nil {
-		log.LOG.Debug("SDK:Logout() failed to re initiate database",
+		log.LOG.Debug("River::Logout() failed to re initiate database",
 			zap.Error(err),
 		)
 	}
@@ -603,7 +632,7 @@ func (r *River) Logout() (int64, error) {
 	// open queue
 	err = r.queueCtrl.OpenQueue(dataDir)
 	if err != nil {
-		log.LOG.Debug("SDK:Logout() failed to re open queue",
+		log.LOG.Debug("River::Logout() failed to re open queue",
 			zap.Error(err),
 		)
 	}
@@ -637,7 +666,7 @@ func (r *River) Logout() (int64, error) {
 
 func (r *River) onGeneralError(e *msg.Error) {
 	// TODO:: calll external handler
-	log.LOG.Info("SDK:: on general error")
+	log.LOG.Info("River::onGeneralError()")
 	if delegates.Get() != nil && delegates.Get().OnGeneralError != nil {
 		buff, _ := e.Marshal()
 		delegates.Get().OnGeneralError(buff)
@@ -648,8 +677,8 @@ func (r *River) onGeneralError(e *msg.Error) {
 func (r *River) UISettingGet(key string) string {
 	val, err := repo.Ctx().UISettings.Get(key)
 	if err != nil {
-		log.LOG.Info("SDK:: UISettingsGet()",
-			zap.Error(err),
+		log.LOG.Info("River::UISettingsGet()",
+			zap.String("Error", err.Error()),
 		)
 	}
 	return val
@@ -659,8 +688,8 @@ func (r *River) UISettingGet(key string) string {
 func (r *River) UISettingPut(key, value string) bool {
 	err := repo.Ctx().UISettings.Put(key, value)
 	if err != nil {
-		log.LOG.Info("SDK:: UISettingsPut()",
-			zap.Error(err),
+		log.LOG.Info("River::UISettingsPut()",
+			zap.String("Error", err.Error()),
 		)
 	}
 	return err == nil
@@ -670,8 +699,8 @@ func (r *River) UISettingPut(key, value string) bool {
 func (r *River) UISettingDelete(key string) bool {
 	err := repo.Ctx().UISettings.Delete(key)
 	if err != nil {
-		log.LOG.Info("SDK:: UISettingsDelete()",
-			zap.Error(err),
+		log.LOG.Info("River::UISettingsDelete()",
+			zap.String("Error", err.Error()),
 		)
 	}
 	return err == nil
@@ -703,17 +732,17 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 		cb := domain.GetRequestCallback(m.RequestID)
 		if cb != nil {
 			// if there was any listener maybe request already timedout
-			log.LOG.Warn("SDK::onReceivedMessage() Callback Found")
+			log.LOG.Warn("River::onReceivedMessage() Callback Found")
 
 			select {
 			case cb.ResponseChannel <- m:
-				log.LOG.Warn("SDK::onReceivedMessage() passed to callback listener")
+				log.LOG.Warn("River::onReceivedMessage() passed to callback listener")
 			default:
-				log.LOG.Warn("SDK::onReceivedMessage() there is no callback listener")
+				log.LOG.Warn("River::onReceivedMessage() there is no callback listener")
 			}
 			domain.RemoveRequestCallback(m.RequestID)
 		} else {
-			log.LOG.Debug("SDK::onReceivedMessage() callback does not exists",
+			log.LOG.Debug("River::onReceivedMessage() callback does not exists",
 				zap.Uint64(domain.LK_REQUEST_ID, m.RequestID),
 			)
 		}

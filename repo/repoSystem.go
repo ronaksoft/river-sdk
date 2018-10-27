@@ -2,7 +2,9 @@ package repo
 
 import (
 	"git.ronaksoftware.com/ronak/riversdk/domain"
+	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
+	"go.uber.org/zap"
 )
 
 type RepoSystem interface {
@@ -28,6 +30,10 @@ func (r *repoSystem) LoadInt(keyName string) (keyValue int, err error) {
 		err = domain.ErrDoesNotExists
 	}
 	keyValue = int(row.IntValue)
+
+	log.LOG.Debug("RepoSystem::LoadInt()",
+		zap.Int(keyName, keyValue),
+	)
 	return
 }
 
@@ -43,6 +49,11 @@ func (r *repoSystem) LoadString(keyName string) (keyValue string, err error) {
 		err = domain.ErrDoesNotExists
 	}
 	keyValue = row.StrValue
+
+	log.LOG.Debug("RepoSystem::LoadString()",
+		zap.String(keyName, keyValue),
+	)
+
 	return
 }
 
@@ -53,11 +64,21 @@ func (r *repoSystem) SaveInt(keyName string, keyValue int32) error {
 
 	s := dto.System{}
 
-	r.db.Where("KeyName = ?", keyName).First(&s)
+	err := r.db.Where("KeyName = ?", keyName).First(&s).Error
+	if err != nil {
+		log.LOG.Debug("RepoSystem::SaveInt()-> fetch system entity",
+			zap.String("Error", err.Error()),
+		)
+		return err
+	}
 
 	s.KeyName = keyName
 	s.StrValue = ""
 	s.IntValue = keyValue
+
+	log.LOG.Debug("RepoSystem::SaveInt()",
+		zap.Int32(keyName, keyValue),
+	)
 
 	return r.db.Save(s).Error
 }
@@ -69,11 +90,20 @@ func (r *repoSystem) SaveString(keyName string, keyValue string) error {
 
 	s := dto.System{}
 
-	r.db.Where("KeyName = ?", keyName).First(&s)
+	err := r.db.Where("KeyName = ?", keyName).First(&s).Error
+	if err != nil {
+		log.LOG.Debug("RepoSystem::SaveString()-> fetch system entity",
+			zap.String("Error", err.Error()),
+		)
+		return err
+	}
 
 	s.KeyName = keyName
 	s.StrValue = keyValue
 	s.IntValue = 0
 
+	log.LOG.Debug("RepoSystem::SaveString()",
+		zap.String(keyName, keyValue),
+	)
 	return r.db.Save(s).Error
 }

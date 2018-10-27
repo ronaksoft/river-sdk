@@ -47,3 +47,16 @@ const (
 	Syncing
 	Synced
 )
+
+var SyncStatusName = map[SyncStatus]string{
+	OutOfSync: "OutOfSync",
+	Syncing:   "Syncing",
+	Synced:    "Synced",
+}
+var NetworkStatusName = map[NetworkStatus]string{
+	DISCONNECTED: "DISCONNECTED",
+	CONNECTING:   "CONNECTING",
+	WEAK:         "WEAK",
+	SLOW:         "SLOW",
+	FAST:         "FAST",
+}

@@ -1,8 +1,6 @@
 package repo
 
 import (
-	"fmt"
-
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
@@ -34,7 +32,9 @@ func (r *repoDialogs) UpdateTopMesssageID(createdOn, peerID int64, peerType int3
 	em := dto.Messages{}
 	err := r.db.Table(em.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerType).Limit(1).Order("ID DESC").Find(&em).Error
 	if err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("RepoDialogs::UpdateTopMesssageID() TopMessage",
+			zap.String("Error", err.Error()),
+		)
 		return err
 	}
 
@@ -55,16 +55,16 @@ func (r *repoDialogs) SaveDialog(dialog *msg.Dialog, lastUpdate int64) error {
 	defer r.mx.Unlock()
 
 	if dialog == nil {
-		log.LOG.Error("repoDialogs::SaveDialog() :",
-			zap.String("dialog", "dialog is null"),
+		log.LOG.Debug("RepoDialogs::SaveDialog() :",
+			zap.String("Error", "dialog is null"),
 		)
 		return domain.ErrNotFound
 	}
 
-	log.LOG.Debug("Messages::SaveDialog",
+	log.LOG.Debug("RepoDialogs::SaveDialog",
 		zap.Int64("PeerID", dialog.PeerID),
 		zap.Uint64("AccessHash", dialog.AccessHash),
-		zap.Int32("Unread", dialog.UnreadCount),
+		zap.Int32("UnreadCount", dialog.UnreadCount),
 	)
 	d := new(dto.Dialogs)
 	d.Map(dialog)
@@ -84,7 +84,7 @@ func (r *repoDialogs) UpdateDialogUnreadCount(peerID int64, peerTyep, unreadCoun
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("Messages::UpdateDialogUnreadCount",
+	log.LOG.Debug("RepoDialogs::UpdateDialogUnreadCount()",
 		zap.Int64("PeerID", peerID),
 		zap.Int32("PeerType", peerTyep),
 		zap.Int32("UnreadCount", unreadCount),
@@ -98,7 +98,7 @@ func (r *repoDialogs) GetDialogs(offset, limit int32) []*msg.Dialog {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("Messages::GetDialogs",
+	log.LOG.Debug("RepoDialogs::GetDialogs()",
 		zap.Int32("Offset", offset),
 		zap.Int32("Limit", limit),
 	)
@@ -118,11 +118,7 @@ func (r *repoDialogs) GetDialogs(offset, limit int32) []*msg.Dialog {
 		dialogs = append(dialogs, tmp)
 	}
 
-	// Delete Me
-	log.LOG.Debug("XXXXXX GetDialogs() ==>protoBuff : " + fmt.Sprint(dialogs))
-
 	return dialogs
-
 }
 
 // GetDialog
@@ -130,7 +126,7 @@ func (r *repoDialogs) GetDialog(peerID int64, peerType int32) *msg.Dialog {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("Messages::GetDialog",
+	log.LOG.Debug("RepoDialogs::GetDialog()",
 		zap.Int64("PeerID", peerID),
 		zap.Int32("PeerType", peerType),
 	)
@@ -138,7 +134,9 @@ func (r *repoDialogs) GetDialog(peerID int64, peerType int32) *msg.Dialog {
 	dtoDlg := new(dto.Dialogs)
 	err := r.db.Where("PeerID = ? AND PeerType = ?", peerID, peerType).First(dtoDlg).Error
 	if err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("RepoDialogs::GetDialog()->fetch dialog entity",
+			zap.String("Error", err.Error()),
+		)
 		return nil
 	}
 
@@ -167,7 +165,7 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("Messages::UpdateReadInboxMaxID",
+	log.LOG.Debug("RepoDialogs::UpdateReadInboxMaxID()",
 		zap.Int64("PeerID", peerID),
 		zap.Int32("PeerType", peerType),
 		zap.Int64("MaxID", maxID),
@@ -177,15 +175,17 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 	dtoDlg := new(dto.Dialogs)
 	err := r.db.Where("PeerID = ? AND PeerType = ?", peerID, peerType).First(dtoDlg).Error
 	if err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("RepoDialogs::UpdateReadInboxMaxID()-> fetch dialog entity",
+			zap.String("Error", err.Error()),
+		)
 		return nil
 	}
 
 	// current maxID is newer so skip updating dialog unread counts
 	if dtoDlg.ReadInboxMaxID > maxID {
 		log.LOG.Debug("repoDialogs::UpdateReadInboxMaxID() skipped dialogs unreadCount update",
-			zap.Int64("Current ReadInboxMaxID", dtoDlg.ReadInboxMaxID),
-			zap.Int64("Server Sended MaxID", maxID),
+			zap.Int64("Current MaxID", dtoDlg.ReadInboxMaxID),
+			zap.Int64("Server MaxID", maxID),
 		)
 		return nil
 	}
@@ -195,7 +195,9 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 	em := new(dto.Messages)
 	err = r.db.Table(em.TableName()).Where("SenderID <> ? AND PeerID = ? AND PeerType = ? AND ID > ? ", userID, peerID, peerType, maxID).Count(&unreadCount).Error
 	if err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("RepoDialogs::UpdateReadInboxMaxID()-> fetch messages unread count",
+			zap.String("Error", err.Error()),
+		)
 		return err
 	}
 
@@ -206,7 +208,9 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 	}).Error
 
 	if err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("RepoDialogs::UpdateReadInboxMaxID()-> update dialog entity",
+			zap.String("Error", err.Error()),
+		)
 		return err
 	}
 	return nil
@@ -217,7 +221,7 @@ func (r *repoDialogs) UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID 
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("Messages::UpdateReadOutboxMaxID",
+	log.LOG.Debug("RepoDialogs::UpdateReadOutboxMaxID",
 		zap.Int64("PeerID", peerID),
 		zap.Int32("PeerType", peerType),
 		zap.Int64("MaxID", maxID),
@@ -229,7 +233,9 @@ func (r *repoDialogs) UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID 
 	}).Error
 
 	if err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("RepoDialogs::UpdateReadOutboxMaxID()-> update dialog entity",
+			zap.String("Error", err.Error()),
+		)
 		return err
 	}
 	return nil

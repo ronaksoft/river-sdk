@@ -15,9 +15,12 @@ import (
 
 // authAuthorization
 func (ctrl *SyncController) authAuthorization(e *msg.MessageEnvelope) {
+	log.LOG.Debug("SyncController::authAuthorization() applier")
 	x := new(msg.AuthAuthorization)
 	if err := x.Unmarshal(e.Message); err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("SyncController::authAuthorization()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
 		return
 	}
 
@@ -34,22 +37,28 @@ func (ctrl *SyncController) authAuthorization(e *msg.MessageEnvelope) {
 }
 
 func (ctrl *SyncController) authSentCode(e *msg.MessageEnvelope) {
+	log.LOG.Debug("SyncController::authSentCode() applier")
 	x := new(msg.AuthSentCode)
 	if err := x.Unmarshal(e.Message); err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("SyncController::authSentCode()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
 		return
 	}
 	conf := configs.Get()
 	conf.Phone = x.Phone
-	// no need to save it here its gonna be saved on authAuthorization
+	// No need to save it here its gonna be saved on authAuthorization
 	// conf.Save()
 }
 
 // contactsImported
 func (ctrl *SyncController) contactsImported(e *msg.MessageEnvelope) {
+	log.LOG.Debug("SyncController::contactsImported() applier")
 	x := new(msg.ContactsImported)
 	if err := x.Unmarshal(e.Message); err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("SyncController::contactsImported()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
 		return
 	}
 	for _, u := range x.Users {
@@ -59,9 +68,12 @@ func (ctrl *SyncController) contactsImported(e *msg.MessageEnvelope) {
 
 // contactsMany
 func (ctrl *SyncController) contactsMany(e *msg.MessageEnvelope) {
+	log.LOG.Debug("SyncController::contactsMany() applier")
 	x := new(msg.ContactsMany)
 	if err := x.Unmarshal(e.Message); err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("SyncController::contactsMany()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
 		return
 	}
 	for _, u := range x.Users {
@@ -71,9 +83,12 @@ func (ctrl *SyncController) contactsMany(e *msg.MessageEnvelope) {
 
 // messageDialogs
 func (ctrl *SyncController) messagesDialogs(e *msg.MessageEnvelope) {
+	log.LOG.Debug("SyncController::messagesDialogs() applier")
 	x := new(msg.MessagesDialogs)
 	if err := x.Unmarshal(e.Message); err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("SyncController::messagesDialogs()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
 		return
 	}
 
@@ -99,9 +114,12 @@ func (ctrl *SyncController) messagesDialogs(e *msg.MessageEnvelope) {
 
 // Check pending messages and notify UI
 func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
+	log.LOG.Debug("SyncController::messageSent() applier")
 	pmsg, err := repo.Ctx().PendingMessages.GetPendingMessageByRequestID(int64(e.RequestID))
 	if err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("SyncController::messageSent()-> GetPendingMessageByRequestID()",
+			zap.String("Error", err.Error()),
+		)
 		return
 	}
 
@@ -123,21 +141,27 @@ func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
 	// save message
 	err = repo.Ctx().Messages.SaveMessage(message)
 	if err != nil {
-		log.LOG.Error("faile to move PendingMessage to Messages " + err.Error())
+		log.LOG.Debug("SyncController::messageSent()-> SaveMessage() failed to move pendingMessage to message table",
+			zap.String("Error", err.Error()),
+		)
 		return
 	}
 
 	// delete pending mesage
 	err = repo.Ctx().PendingMessages.DeletePendingMessage(pmsg.ID)
 	if err != nil {
-		log.LOG.Error("faile to delete PendingMessage " + err.Error())
+		log.LOG.Debug("SyncController::messageSent()-> DeletePendingMessage() failed to delete pendingMessage",
+			zap.String("Error", err.Error()),
+		)
 		return
 	}
 
 	//Update doaligs
 	err = repo.Ctx().Dialogs.UpdateTopMesssageID(message.CreatedOn, message.PeerID, message.PeerType)
 	if err != nil {
-		log.LOG.Error("faile to update doalogs " + err.Error())
+		log.LOG.Debug("SyncController::messageSent()-> UpdateTopMesssageID() failed to update doalogs",
+			zap.String("Error", err.Error()),
+		)
 		return
 	}
 
@@ -169,10 +193,13 @@ func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
 }
 
 func (ctrl *SyncController) usersMany(e *msg.MessageEnvelope) {
+	log.LOG.Debug("SyncController::usersMany() applier")
 	u := new(msg.UsersMany)
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("SyncController::usersMany()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
 		return
 	}
 	for _, v := range u.Users {
@@ -181,10 +208,13 @@ func (ctrl *SyncController) usersMany(e *msg.MessageEnvelope) {
 }
 
 func (ctrl *SyncController) messagesMany(e *msg.MessageEnvelope) {
+	log.LOG.Debug("SyncController::messagesMany() applier")
 	u := new(msg.MessagesMany)
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("SyncController::messagesMany()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
 		return
 	}
 	for _, v := range u.Users {

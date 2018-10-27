@@ -32,12 +32,12 @@ func (r *repoUsers) SaveUser(user *msg.User) error {
 	defer r.mx.Unlock()
 
 	if user == nil {
-		log.LOG.Error("repoUsers::SaveUser() :",
-			zap.String("User", "User is null"),
+		log.LOG.Debug("RepoRepoUsers::SaveUser()",
+			zap.String("User", "user is null"),
 		)
 		return domain.ErrNotFound
 	}
-	log.LOG.Info("User saved in DB",
+	log.LOG.Info("RepoRepoUsers::SaveUser()",
 		zap.String("Name", fmt.Sprintf("%s %s", user.FirstName, user.LastName)),
 		zap.Int64("UserID", user.ID),
 	)
@@ -47,10 +47,10 @@ func (r *repoUsers) SaveUser(user *msg.User) error {
 	eu := new(dto.Users)
 	r.db.Find(eu, u.ID)
 	if eu.ID == 0 {
-
 		return r.db.Create(u).Error
 	}
 	return nil
+	// if user not exist just add it no need to update existing user
 	//return r.db.Table(u.TableName()).Where("ID=?", u.ID).Update(u).Error
 }
 
@@ -60,13 +60,13 @@ func (r *repoUsers) SaveContactUser(user *msg.ContactUser) error {
 	defer r.mx.Unlock()
 
 	if user == nil {
-		log.LOG.Error("repoUsers::SaveContactUser() :",
-			zap.String("User", "User is null"),
+		log.LOG.Debug("RepoRepoUsers::SaveContactUser()",
+			zap.String("User", "user is null"),
 		)
 		return domain.ErrNotFound
 	}
 
-	log.LOG.Info("ContactUser saved in DB",
+	log.LOG.Info("RepoRepoUsers::SaveContactUser()",
 		zap.String("Name", fmt.Sprintf("%s %s", user.FirstName, user.LastName)),
 		zap.Int64("UserID", user.ID),
 	)
@@ -88,7 +88,7 @@ func (r *repoUsers) GetManyUsers(userIDs []int64) []*msg.User {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("Users::GetManyUsers",
+	log.LOG.Debug("RepoUsers::GetManyUsers()",
 		zap.Int64s("UserIDs", userIDs),
 	)
 
@@ -97,7 +97,9 @@ func (r *repoUsers) GetManyUsers(userIDs []int64) []*msg.User {
 
 	err := r.db.Where("IsContact = 0 AND ID in (?)", userIDs).Find(&users).Error
 	if err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("RepoUsers::GetManyUsers()-> fetch user entity",
+			zap.String("Error", err.Error()),
+		)
 		return nil //, err
 	}
 
@@ -116,7 +118,7 @@ func (r *repoUsers) GetManyContactUsers(userIDs []int64) []*msg.ContactUser {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("Users::GetManyContactUsers",
+	log.LOG.Debug("RepoUsers::GetManyContactUsers()",
 		zap.Int64s("UserIDs", userIDs),
 	)
 	pbUsers := make([]*msg.ContactUser, 0, len(userIDs))
@@ -124,7 +126,9 @@ func (r *repoUsers) GetManyContactUsers(userIDs []int64) []*msg.ContactUser {
 
 	err := r.db.Where("IsContact = 1 AND ID in (?)", userIDs).Find(&users).Error
 	if err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("RepoUsers::GetManyContactUsers()-> fetch user entities",
+			zap.String("Error", err.Error()),
+		)
 		return nil //, err
 	}
 
@@ -143,13 +147,15 @@ func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("Users::GetManyContactUsers")
+	log.LOG.Debug("RepoUsers::GetContacts()")
 
 	users := make([]dto.Users, 0)
 
 	err := r.db.Where("AccessHash <> 0").Find(&users).Error
 	if err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("RepoUsers::GetContacts()-> fetch user entities",
+			zap.String("Error", err.Error()),
+		)
 		return nil, nil //, err
 	}
 	pbUsers := make([]*msg.ContactUser, 0)
@@ -195,7 +201,7 @@ func (r *repoUsers) GetUser(userID int64) *msg.User {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("Users::GetUser",
+	log.LOG.Debug("RepoUsers::GetUser()",
 		zap.Int64("UserID", userID),
 	)
 
@@ -204,7 +210,9 @@ func (r *repoUsers) GetUser(userID int64) *msg.User {
 
 	err := r.db.Find(user, userID).Error
 	if err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("RepoUsers::GetUser()-> fetch user entity",
+			zap.String("Error", err.Error()),
+		)
 		return nil //, err
 	}
 
@@ -218,7 +226,7 @@ func (r *repoUsers) GetAnyUsers(userIDs []int64) []*msg.User {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("Users::GetManyUsers",
+	log.LOG.Debug("RepoUsers::GetAnyUsers()",
 		zap.Int64s("UserIDs", userIDs),
 	)
 
@@ -227,7 +235,9 @@ func (r *repoUsers) GetAnyUsers(userIDs []int64) []*msg.User {
 
 	err := r.db.Where("ID in (?)", userIDs).Find(&users).Error
 	if err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("RepoUsers::GetAnyUsers()-> fetch user entity",
+			zap.String("Error", err.Error()),
+		)
 		return nil //, err
 	}
 

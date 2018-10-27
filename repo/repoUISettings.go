@@ -22,7 +22,6 @@ func (r *repoUISettings) Get(key string) (value string, err error) {
 
 	row := new(dto.UISettings)
 	err = r.db.Where("Key = ?", key).First(row).Error
-
 	if row == nil {
 		err = domain.ErrDoesNotExists
 	}

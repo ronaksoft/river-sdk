@@ -1,6 +1,7 @@
 package synchronizer
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -85,12 +86,16 @@ func NewSyncController(config SyncConfig) *SyncController {
 
 // Start
 func (ctrl *SyncController) Start() {
-	log.LOG.Info("SyncController:: Starting")
-	defer log.LOG.Info("SyncController:: Started")
+	log.LOG.Info("SyncController:: Start")
 
 	// Load the latest UpdateID stored in DB
 	if v, err := repo.Ctx().System.LoadInt(domain.CN_UPDATE_ID); err != nil {
-		repo.Ctx().System.SaveInt(domain.CN_UPDATE_ID, 0)
+		err := repo.Ctx().System.SaveInt(domain.CN_UPDATE_ID, 0)
+		if err != nil {
+			log.LOG.Debug("SyncController::Start()-> SaveInt()",
+				zap.String("Error", err.Error()),
+			)
+		}
 		ctrl.updateID = 0
 	} else {
 		ctrl.updateID = int64(v)
@@ -115,28 +120,18 @@ func (ctrl *SyncController) SetSyncStatusChangedCallback(h domain.SyncStatusUpda
 // updateSyncStatus
 func (ctrl *SyncController) updateSyncStatus(newStatus domain.SyncStatus) {
 	if ctrl.syncStatus == newStatus {
+		log.LOG.Info("SyncController::updateSyncStatus() syncStatus not changed")
 		return
 	}
 	switch newStatus {
 	case domain.OutOfSync:
-		log.LOG.Info("SyncController:: OutOfSync")
+		log.LOG.Info("SyncController::updateSyncStatus() OutOfSync")
 	case domain.Syncing:
-		log.LOG.Info("SyncController:: Syncing")
+		log.LOG.Info("SyncController::updateSyncStatus() Syncing")
 	case domain.Synced:
-		log.LOG.Info("SyncController:: Synced")
+		log.LOG.Info("SyncController::updateSyncStatus() Synced")
 	}
 	ctrl.syncStatus = newStatus
-
-	// delete me
-	log.LOG.Debug("updateSyncStatus: ctrl.syncStatus",
-		zap.Int("INT", int(ctrl.syncStatus)),
-		zap.Int32("INT32", int32(ctrl.syncStatus)),
-	)
-	log.LOG.Debug("updateSyncStatus : newStatus",
-		zap.Int("INT newStatus", int(newStatus)),
-		zap.Int32("INT32 newStatus", int32(newStatus)),
-	)
-	// ---
 
 	if ctrl.onSyncStatusChange != nil {
 		ctrl.onSyncStatusChange(newStatus)
@@ -154,16 +149,18 @@ func (ctrl *SyncController) watchDog() {
 				time.Sleep(100 * time.Millisecond)
 			}
 			if ctrl.syncStatus != domain.Syncing {
+				log.LOG.Info("SyncController::watchDog() -> sync() called")
 				ctrl.sync()
 			}
 		case <-ctrl.stopChannel:
+			log.LOG.Info("SyncController::watchDog() Stopped")
 			return
 		}
 	}
 }
 
 func (ctrl *SyncController) sync() {
-	log.LOG.Debug("SyncController:: sync",
+	log.LOG.Debug("SyncController::sync()",
 		zap.Int64("UpdateID", ctrl.updateID),
 		zap.Int64("UserID", ctrl.UserID),
 	)
@@ -182,9 +179,10 @@ func (ctrl *SyncController) sync() {
 	for {
 		serverUpdateID, err = ctrl.getUpdateState()
 		if err != nil {
-			log.LOG.Debug("SyncController::sync()",
-				zap.Error(err),
+			log.LOG.Debug("SyncController::sync()-> getUpdateState()",
+				zap.String("Error", err.Error()),
 			)
+
 			time.Sleep(100 * time.Millisecond)
 		} else {
 			break
@@ -194,14 +192,22 @@ func (ctrl *SyncController) sync() {
 	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > 999 {
 
 		// remove all messages
-		repo.Ctx().DropAndCreateTable(&dto.Messages{})
-
+		err := repo.Ctx().DropAndCreateTable(&dto.Messages{})
+		if err != nil {
+			log.LOG.Debug("SyncController::sync()-> DropAndCreateTable()",
+				zap.String("Error", err.Error()),
+			)
+		}
 		// Get Contacts from the server
 		ctrl.getContacts()
 		ctrl.updateID = serverUpdateID
 		ctrl.getAllDialogs(0, 100)
-		repo.Ctx().System.SaveInt(domain.CN_UPDATE_ID, int32(ctrl.updateID))
-
+		err = repo.Ctx().System.SaveInt(domain.CN_UPDATE_ID, int32(ctrl.updateID))
+		if err != nil {
+			log.LOG.Debug("SyncController::sync()-> SaveInt()",
+				zap.String("Error", err.Error()),
+			)
+		}
 	} else if time.Now().Sub(ctrl.lastUpdateReceived).Truncate(time.Second) > 60 {
 		// if it is passed over 60 seconds from the last update received it fetches the update
 		// difference from the server
@@ -215,12 +221,12 @@ func (ctrl *SyncController) sync() {
 // SetUserID
 func (ctrl *SyncController) SetUserID(userID int64) {
 	ctrl.UserID = userID
-	log.LOG.Info("userID was set",
+	log.LOG.Debug("SyncController::SetUserID()",
 		zap.Int64("UserID", userID),
 	)
 }
 
-// getUpdateState
+// getUpdateState responsibility is to only get server updateID
 func (ctrl *SyncController) getUpdateState() (updateID int64, err error) {
 
 	// when network is disconnected no need to enqueue update request in goque
@@ -248,11 +254,6 @@ func (ctrl *SyncController) getUpdateState() (updateID int64, err error) {
 				x := new(msg.UpdateState)
 				x.Unmarshal(m.Message)
 				updateID = x.UpdateID
-				// getUpdateState() responsibility is to only get server updateID
-				// if ctrl.updateID+1 < x.UpdateID {
-				// 	ctrl.updateSyncStatus(domain.OutOfSync)
-				// 	ctrl.getUpdateDifference(x.UpdateID)
-				// }
 			case msg.C_Error:
 				err = domain.ServerError(m.Message)
 				log.LOG.Debug(err.Error())
@@ -266,26 +267,23 @@ func (ctrl *SyncController) getUpdateState() (updateID int64, err error) {
 // getUpdateDifference
 func (ctrl *SyncController) getUpdateDifference(minUpdateID int64) {
 
-	log.LOG.Warn("OOOOOOOOOOOOOO Entered")
+	log.LOG.Debug("SyncController::getUpdateDifference()")
 	ctrl.updatingDifferenceLock.Lock()
 	if ctrl.updatingDifference {
 		ctrl.updatingDifferenceLock.Unlock()
-		log.LOG.Warn("OOOOOOOOOOOOOO Exited 1")
+		log.LOG.Debug("SyncController::getUpdateDifference() Exited already updatingDifference")
 		return
 	}
 	ctrl.updatingDifference = true
 	ctrl.updatingDifferenceLock.Unlock()
 
-	log.LOG.Warn("OOOOOOOOOOOOOO Continued 1")
-
 	// if updateID is zero then wait for snapshot sync
 	// and when sending requests w8 till its finish
 	if ctrl.updateID == 0 {
 		ctrl.updatingDifference = false
+		log.LOG.Debug("SyncController::getUpdateDifference() Exited UpdateID is zero need snapshot sync")
 		return
 	}
-
-	log.LOG.Warn("OOOOOOOOOOOOOO Continued 2")
 
 	for minUpdateID > ctrl.updateID {
 		limit := minUpdateID - ctrl.updateID
@@ -293,8 +291,12 @@ func (ctrl *SyncController) getUpdateDifference(minUpdateID int64) {
 		if limit > 100 {
 			limit = 100
 		}
+		log.LOG.Debug("SyncController::getUpdateDifference() Entered loop",
+			zap.Int64("limit", limit),
+			zap.Int64("updateID", ctrl.updateID),
+			zap.Int64("minUpdateID", minUpdateID),
+		)
 
-		log.LOG.Warn("OOOOOOOOOOOOOO Added Wait & queue")
 		ctrl.updateSyncStatus(domain.Syncing)
 		req := new(msg.UpdateGetDifference)
 		req.Limit = int32(limit)
@@ -305,17 +307,17 @@ func (ctrl *SyncController) getUpdateDifference(minUpdateID int64) {
 			msg.C_UpdateGetDifference,
 			reqBytes,
 			func() {
-				log.LOG.Warn("OOOOOOOOOOOOOO Timed Out Done Wait")
+				log.LOG.Debug("SyncController::getUpdateDifference() -> ExecuteRealtimeCommand() Timeout")
 			},
 			func(m *msg.MessageEnvelope) {
 				ctrl.onGetDiffrenceSucceed(m)
-				log.LOG.Warn("OOOOOOOOOOOOOO finished onGetDiffrenceSucceed")
+				log.LOG.Debug("SyncController::getUpdateDifference() -> ExecuteRealtimeCommand() Success")
 			},
 			true,
 		)
-		log.LOG.Warn("OOOOOOOOOOOOOO Done Wait")
+		log.LOG.Debug("SyncController::getUpdateDifference() Loop next")
 	}
-
+	log.LOG.Debug("SyncController::getUpdateDifference() Loop Finished")
 	ctrl.updatingDifference = false
 	ctrl.updateSyncStatus(domain.Synced)
 }
@@ -324,15 +326,20 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 	switch m.Constructor {
 	case msg.C_UpdateDifference:
 		x := new(msg.UpdateDifference)
-		x.Unmarshal(m.Message)
-
+		err := x.Unmarshal(m.Message)
+		if err != nil {
+			log.LOG.Debug("SyncController::onGetDiffrenceSucceed()-> Unmarshal()",
+				zap.String("Error", err.Error()),
+			)
+			return
+		}
 		updContainer := new(msg.UpdateContainer)
 		updContainer.Updates = make([]*msg.UpdateEnvelope, 0)
 		updContainer.Users = x.Users
 		updContainer.MaxUpdateID = x.MaxUpdateID
 		updContainer.MinUpdateID = x.MinUpdateID
 
-		log.LOG.Warn("OOOOOOOOOOOOOO Inside onGetDiffrenceSucceed",
+		log.LOG.Warn("SyncController::onGetDiffrenceSucceed()",
 			zap.Int64("UpdateID", ctrl.updateID),
 			zap.Int64("MaxUpdateID", x.MaxUpdateID),
 			zap.Int64("MinUpdateID", x.MinUpdateID),
@@ -352,7 +359,7 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 				continue
 			}
 
-			log.LOG.Debug("SyncController::getUpdateDifference Update Received",
+			log.LOG.Debug("SyncController::onGetDiffrenceSucceed() loop",
 				zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
 			)
 
@@ -378,11 +385,17 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 			ctrl.updateID = x.MaxUpdateID
 
 			// Save UpdateID to DB
-			repo.Ctx().System.SaveInt(domain.CN_UPDATE_ID, int32(ctrl.updateID))
-
+			err := repo.Ctx().System.SaveInt(domain.CN_UPDATE_ID, int32(ctrl.updateID))
+			if err != nil {
+				log.LOG.Debug("SyncController::onGetDiffrenceSucceed()-> SaveInt()",
+					zap.String("Error", err.Error()),
+				)
+			}
 		}
 	case msg.C_Error:
-		log.LOG.Debug(domain.ServerError(m.Message).Error())
+		log.LOG.Debug("SyncController::onGetDiffrenceSucceed()-> C_Error",
+			zap.String("Error", domain.ServerError(m.Message).Error()),
+		)
 		// TODO:: Handle error
 	}
 }
@@ -404,7 +417,7 @@ func (ctrl *SyncController) getContacts() {
 
 // getAllDialogs
 func (ctrl *SyncController) getAllDialogs(offset int32, limit int32) {
-	log.LOG.Info("SyncController:: Dialogs from Server")
+	log.LOG.Info("SyncController::getAllDialogs()")
 	req := new(msg.MessagesGetDialogs)
 	req.Limit = limit
 	req.Offset = offset
@@ -414,42 +427,73 @@ func (ctrl *SyncController) getAllDialogs(offset int32, limit int32) {
 		msg.C_MessagesGetDialogs,
 		reqBytes,
 		func() {
+			log.LOG.Info("SyncController::getAllDialogs() -> onTimeoutback() retry to getAllDialogs()")
 			ctrl.getAllDialogs(offset, limit)
 		},
 		func(m *msg.MessageEnvelope) {
 			switch m.Constructor {
 			case msg.C_MessagesDialogs:
 				x := new(msg.MessagesDialogs)
-				x.Unmarshal(m.Message)
-				log.LOG.Debug("MessagesDialogs",
+				err := x.Unmarshal(m.Message)
+				if err != nil {
+					log.LOG.Info("SyncController::getAllDialogs() -> onSuccessCallback() -> Unmarshal() ",
+						zap.String("Error", err.Error()),
+					)
+					return
+				}
+				log.LOG.Debug("SyncController::getAllDialogs() -> onSuccessCallback() -> MessagesDialogs",
 					zap.Int("DialogsLength", len(x.Dialogs)),
 					zap.Int32("Offset", offset),
 					zap.Int32("Total", x.Count),
 				)
 				mMessages := make(map[int64]*msg.UserMessage)
 				for _, message := range x.Messages {
-					repo.Ctx().Messages.SaveMessage(message)
+					err := repo.Ctx().Messages.SaveMessage(message)
+					if err != nil {
+						log.LOG.Info("SyncController::getAllDialogs() -> onSuccessCallback() -> SaveMessage() ",
+							zap.String("Error", err.Error()),
+						)
+					}
+
 					mMessages[message.ID] = message
 				}
 
 				for _, dialog := range x.Dialogs {
 					topMessage, _ := mMessages[dialog.TopMessageID]
 					if topMessage == nil {
-						log.LOG.Debug(domain.ErrNotFound.Error(),
+						log.LOG.Info("SyncController::getAllDialogs() -> onSuccessCallback() -> dialog TopMessage is null ",
 							zap.Int64("MessageID", dialog.TopMessageID),
 						)
 						continue
 					}
-					repo.Ctx().Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
+					err := repo.Ctx().Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
+					if err != nil {
+						log.LOG.Info("SyncController::getAllDialogs() -> onSuccessCallback() -> SaveDialog() ",
+							zap.String("Error", err.Error()),
+							zap.String("Dialog", fmt.Sprintf("%v", dialog)),
+						)
+					}
 				}
 				for _, user := range x.Users {
-					repo.Ctx().Users.SaveUser(user)
+					err := repo.Ctx().Users.SaveUser(user)
+					if err != nil {
+						log.LOG.Info("SyncController::getAllDialogs() -> onSuccessCallback() -> SaveUser() ",
+							zap.String("Error", err.Error()),
+							zap.String("User", fmt.Sprintf("%v", user)),
+						)
+					}
 				}
 				if x.Count > offset+limit {
+					log.LOG.Info("SyncController::getAllDialogs() -> onSuccessCallback() retry to getAllDialogs()",
+						zap.Int32("x.Count", x.Count),
+						zap.Int32("offset+limit", offset+limit),
+					)
 					ctrl.getAllDialogs(offset+limit, limit)
 				}
 			case msg.C_Error:
-				log.LOG.Debug(domain.ServerError(m.Message).Error())
+				log.LOG.Debug("SyncController::onSuccessCallback()-> C_Error",
+					zap.String("Error", domain.ServerError(m.Message).Error()),
+				)
 			}
 		},
 	)
@@ -482,12 +526,12 @@ func (ctrl *SyncController) Status() domain.SyncStatus {
 // MessageHandler call appliers-> repository and sync data
 func (ctrl *SyncController) MessageHandler(messages []*msg.MessageEnvelope) {
 	for _, m := range messages {
-		log.LOG.Debug("SyncController::messageHandler Received",
-			zap.String("CONSTRUCTOR", msg.ConstructorNames[m.Constructor]),
+		log.LOG.Debug("SyncController::MessageHandler() Received",
+			zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
 		)
 		if applier, ok := ctrl.messageAppliers[m.Constructor]; ok {
 			applier(m)
-			log.LOG.Debug("Message Applied",
+			log.LOG.Debug("SyncController::MessageHandler() Message Applied",
 				zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
 			)
 		}
@@ -499,10 +543,10 @@ func (ctrl *SyncController) MessageHandler(messages []*msg.MessageEnvelope) {
 func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 
 	if ctrl.syncStatus != domain.Synced {
-		log.LOG.Debug("ctrlSync::updateHandler() Ignore updates while syncing")
+		log.LOG.Debug("SyncController::UpdateHandler() Ignore updates while syncing")
 		return
 	}
-	log.LOG.Debug("SyncController::updateHandler Called")
+	log.LOG.Debug("SyncController::UpdateHandler() Called")
 	ctrl.lastUpdateReceived = time.Now()
 	if u.MinUpdateID != 0 {
 		// Check if we are out of sync with server, if yes, then get the difference and
@@ -515,7 +559,12 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 
 		if ctrl.updateID < u.MaxUpdateID {
 			ctrl.updateID = u.MaxUpdateID
-			repo.Ctx().System.SaveInt(domain.CN_UPDATE_ID, int32(ctrl.updateID))
+			err := repo.Ctx().System.SaveInt(domain.CN_UPDATE_ID, int32(ctrl.updateID))
+			if err != nil {
+				log.LOG.Debug("SyncController::UpdateHandler() -> SaveInt()",
+					zap.String("Error", err.Error()),
+				)
+			}
 		}
 	}
 
@@ -538,7 +587,7 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 			continue
 		}
 
-		log.LOG.Debug("SyncController::updateHandler Update Received",
+		log.LOG.Debug("SyncController::UpdateHandler() Update Received",
 			zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
 		)
 
@@ -555,24 +604,19 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 		if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
 
 			passToExternalHandler = applier(update)
-			log.LOG.Debug("NativeConnector::Update Applied",
+			log.LOG.Debug("SyncController::UpdateHandler() Update Applied",
 				zap.Int64("UPDATE_ID", update.UpdateID),
-				zap.String("CONSTRUCTOR", msg.ConstructorNames[update.Constructor]),
+				zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
 			)
 		}
-
-		// delete me
-		log.LOG.Debug("NativeConnector::updateHandler()",
-			zap.Bool("passToExternalHandler", passToExternalHandler),
-		)
 
 		if passToExternalHandler {
 			udpContainer.Updates = append(udpContainer.Updates, update)
 
 		} else {
-			log.LOG.Debug("NativeConnector::Update removed from external handler",
+			log.LOG.Debug("SyncController::UpdateHandler() Do not pass update to external handler",
 				zap.Int64("UPDATE_ID", update.UpdateID),
-				zap.String("CONSTRUCTOR", msg.ConstructorNames[update.Constructor]),
+				zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
 			)
 		}
 

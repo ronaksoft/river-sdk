@@ -36,7 +36,7 @@ type repository struct {
 // Ctx return repository context
 func Ctx() *Context {
 	if ctx == nil {
-		panic("repo not initialized !")
+		panic("Context::Ctx() repo not initialized !")
 	}
 	return ctx
 }
@@ -76,6 +76,9 @@ func repoSetDB(dialect, dbPath string) error {
 	r = new(repository)
 	r.db, repoLastError = gorm.Open(dialect, dbPath)
 	if repoLastError != nil {
+		log.LOG.Debug("Context::repoSetDB()->gorm.Open()",
+			zap.String("Error", repoLastError.Error()),
+		)
 		return repoLastError
 	}
 
@@ -100,14 +103,14 @@ func (c *Context) Close() error {
 func (c *Context) DropAndCreateTable(dtoTable interface{}) error {
 	err := r.db.DropTable(dtoTable).Error
 	if err != nil {
-		log.LOG.Debug("repo::DropAndCreateTable() failed to DROP",
-			zap.String("error", err.Error()),
+		log.LOG.Debug("Context::DropAndCreateTable() failed to DROP",
+			zap.String("Error", err.Error()),
 		)
 	}
 	err = r.db.AutoMigrate(dtoTable).Error
 	if err != nil {
-		log.LOG.Debug("repo::DropAndCreateTable() failed to AutoMigrate",
-			zap.String("error", err.Error()),
+		log.LOG.Debug("Context::DropAndCreateTable() failed to AutoMigrate",
+			zap.String("Error", err.Error()),
 		)
 	}
 	return err
@@ -124,8 +127,8 @@ func (c *Context) ReinitiateDatabase() error {
 	).Error
 
 	if err != nil {
-		log.LOG.Debug("repo::ReinitiateDatabase()",
-			zap.String("error", err.Error()),
+		log.LOG.Debug("Context::ReinitiateDatabase()->DropTableIfExists()",
+			zap.String("Error", err.Error()),
 		)
 	}
 
@@ -157,19 +160,3 @@ func (r *repository) Map(from interface{}, to interface{}) error {
 	json.Unmarshal(buff, to)
 	return err
 }
-
-// func (r *repository) IsNew(dto interface{}) bool {
-// 	return r.db.Model(dto).NewRecord(dto)
-// }
-
-// func (r *repository) Update(dto interface{}) error {
-// 	return r.db.Model(dto).Save(dto).Error
-// }
-
-// func (r *repository) Insert(dto interface{}) error {
-// 	return r.db.Model(dto).Create(dto).Error
-// }
-
-// func (r *repository) Delete(dto interface{}) error {
-// 	return r.db.Model(dto).Delete(dto).Error
-// }
