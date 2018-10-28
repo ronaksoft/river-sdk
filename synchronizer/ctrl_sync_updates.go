@@ -46,7 +46,7 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) (passToExter
 
 	// if the sender is not myself increase dialog counter else just save message
 	if x.Message.SenderID != ctrl.UserID {
-		err := repo.Ctx().Messages.SaveNewMessage(x.Message, dialog, ctrl.connInfo.GetUserID())
+		err := repo.Ctx().Messages.SaveNewMessage(x.Message, dialog, ctrl.connInfo.PickupUserID())
 		if err != nil {
 			log.LOG.Debug("SyncController::updateNewMessage()-> SaveNewMessage()",
 				zap.String("Error", err.Error()),

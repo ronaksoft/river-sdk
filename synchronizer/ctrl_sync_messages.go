@@ -22,9 +22,9 @@ func (ctrl *SyncController) authAuthorization(e *msg.MessageEnvelope) {
 		return
 	}
 
-	ctrl.connInfo.SetFirstName(x.User.FirstName)
-	ctrl.connInfo.SetLastName(x.User.LastName)
-	ctrl.connInfo.SetUserID(x.User.ID)
+	ctrl.connInfo.ChangeFirstName(x.User.FirstName)
+	ctrl.connInfo.ChangeLastName(x.User.LastName)
+	ctrl.connInfo.ChangeUserID(x.User.ID)
 	ctrl.connInfo.Save()
 
 	ctrl.SetUserID(x.User.ID)
@@ -41,7 +41,7 @@ func (ctrl *SyncController) authSentCode(e *msg.MessageEnvelope) {
 		)
 		return
 	}
-	ctrl.connInfo.SetPhone(x.Phone)
+	ctrl.connInfo.ChangePhone(x.Phone)
 	// No need to save it here its gonna be saved on authAuthorization
 	// conf.Save()
 }

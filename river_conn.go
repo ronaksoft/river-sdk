@@ -120,19 +120,19 @@ func (v *RiverConnection) loadConfig() error {
 	return nil
 }
 
-func (v *RiverConnection) Save()                         { v.saveConfig() }
-func (v *RiverConnection) SetAuthID(authID int64)        { v.AuthID = authID }
-func (v *RiverConnection) SetAuthKey(authKey [256]byte)  { v.AuthKey = authKey }
-func (v *RiverConnection) SetUserID(userID int64)        { v.UserID = userID }
-func (v *RiverConnection) SetUsername(username string)   { v.Username = username }
-func (v *RiverConnection) SetPhone(phone string)         { v.Phone = phone }
-func (v *RiverConnection) SetFirstName(firstName string) { v.FirstName = firstName }
-func (v *RiverConnection) SetLastName(lastName string)   { v.LastName = lastName }
-func (v *RiverConnection) Load() error                   { return v.loadConfig() }
-func (v *RiverConnection) GetAuthID() int64              { return v.AuthID }
-func (v *RiverConnection) GetAuthKey() [256]byte         { return v.AuthKey }
-func (v *RiverConnection) GetUserID() int64              { return v.UserID }
-func (v *RiverConnection) GetUsername() string           { return v.Username }
-func (v *RiverConnection) GetPhone() string              { return v.Phone }
-func (v *RiverConnection) GetFirstName() string          { return v.FirstName }
-func (v *RiverConnection) GetLastName() string           { return v.LastName }
+func (v *RiverConnection) Save()                            { v.saveConfig() }
+func (v *RiverConnection) ChangeAuthID(authID int64)        { v.AuthID = authID }
+func (v *RiverConnection) ChangeAuthKey(authKey [256]byte)  { v.AuthKey = authKey }
+func (v *RiverConnection) ChangeUserID(userID int64)        { v.UserID = userID }
+func (v *RiverConnection) ChangeUsername(username string)   { v.Username = username }
+func (v *RiverConnection) ChangePhone(phone string)         { v.Phone = phone }
+func (v *RiverConnection) ChangeFirstName(firstName string) { v.FirstName = firstName }
+func (v *RiverConnection) ChangeLastName(lastName string)   { v.LastName = lastName }
+func (v *RiverConnection) Load() error                      { return v.loadConfig() }
+func (v *RiverConnection) PickupAuthID() int64              { return v.AuthID }
+func (v *RiverConnection) PickupAuthKey() [256]byte         { return v.AuthKey }
+func (v *RiverConnection) PickupUserID() int64              { return v.UserID }
+func (v *RiverConnection) PickupUsername() string           { return v.Username }
+func (v *RiverConnection) PickupPhone() string              { return v.Phone }
+func (v *RiverConnection) PickupFirstName() string          { return v.FirstName }
+func (v *RiverConnection) PickupLastName() string           { return v.LastName }

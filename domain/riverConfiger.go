@@ -13,18 +13,18 @@ type RiverConnector struct {
 type RiverConfiger interface {
 	Save()
 	Load() error
-	SetAuthID(authID int64)
-	SetAuthKey(authKey [256]byte)
-	SetUserID(userID int64)
-	SetUsername(username string)
-	SetPhone(phone string)
-	SetFirstName(firstName string)
-	SetLastName(lastName string)
-	GetAuthID() int64
-	GetAuthKey() [256]byte
-	GetUserID() int64
-	GetUsername() string
-	GetPhone() string
-	GetFirstName() string
-	GetLastName() string
+	ChangeAuthID(authID int64)
+	ChangeAuthKey(authKey [256]byte)
+	ChangeUserID(userID int64)
+	ChangeUsername(username string)
+	ChangePhone(phone string)
+	ChangeFirstName(firstName string)
+	ChangeLastName(lastName string)
+	PickupAuthID() int64
+	PickupAuthKey() [256]byte
+	PickupUserID() int64
+	PickupUsername() string
+	PickupPhone() string
+	PickupFirstName() string
+	PickupLastName() string
 }
