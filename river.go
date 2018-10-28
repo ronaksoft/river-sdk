@@ -31,6 +31,9 @@ type RiverConfig struct {
 	// MainDelegate holds all the general callback functions that let the user of this SDK
 	// get notified of the events.
 	MainDelegate MainDelegate
+
+	// LogLevel
+	LogLevel int
 }
 
 // River

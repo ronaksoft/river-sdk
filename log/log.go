@@ -29,5 +29,8 @@ func init() {
 }
 
 func SetLogLevel(l int) {
+	if LOG == nil {
+		panic("logs is not initialized !!!")
+	}
 	LOG_LEVEL.SetLevel(zapcore.Level(l))
 }

@@ -44,6 +44,9 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	// init delegates
 	r.mainDelegate = conf.MainDelegate
 
+	// set loglevel
+	log.SetLogLevel(conf.LogLevel)
+
 	// init UI Executer
 	cmd.InitUIExecuter()
 
