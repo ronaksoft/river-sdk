@@ -3,6 +3,7 @@ package network
 import (
 	"encoding/hex"
 	"net/http"
+	"sort"
 	"sync"
 	"time"
 
@@ -65,10 +66,13 @@ type NetworkController struct {
 	// queue
 	messageQueue      *domain.QueueMessages
 	updateQueue       *domain.QueueUpdates
+	sendQueue         *domain.QueueMessages
 	chMessageDebuncer chan bool
 	chUpdateDebuncer  chan bool
-	OnMessage         domain.OnMessageHandler
-	OnUpdate          domain.OnUpdateHandler
+	chSendDebuncer    chan bool
+
+	OnMessage domain.OnMessageHandler
+	OnUpdate  domain.OnUpdateHandler
 }
 
 // NewNetworkController
@@ -100,8 +104,11 @@ func NewNetworkController(config NetworkConfig) *NetworkController {
 
 	m.updateQueue = domain.NewQueueUpdates()
 	m.messageQueue = domain.NewQueueMessages()
+	m.sendQueue = domain.NewQueueMessages()
+
 	m.chMessageDebuncer = make(chan bool)
 	m.chUpdateDebuncer = make(chan bool)
+	m.chSendDebuncer = make(chan bool)
 	return m
 }
 
@@ -116,6 +123,7 @@ func (ctrl *NetworkController) Start() error {
 	go ctrl.watchDog()
 	go ctrl.messageDebuncer()
 	go ctrl.updateDebuncer()
+	go ctrl.sendDebuncer()
 	return nil
 }
 
@@ -179,6 +187,38 @@ func (ctrl *NetworkController) updateDebuncer() {
 			}
 		case <-ctrl.stopChannel:
 			log.LOG.Debug("NetworkController::updateDebuncer() Stopped")
+			return
+		}
+	}
+}
+
+func (ctrl *NetworkController) sendDebuncer() {
+	counter := 0
+	timer := time.NewTimer(100 * time.Millisecond)
+	for {
+		select {
+		case <-ctrl.chSendDebuncer:
+			counter++
+			log.LOG.Debug("NetworkController::sendDebuncer() Received",
+				zap.Int("Counter", counter),
+			)
+			// on receive any update we wait another 100 ms until we receive 3 update
+			if counter < 3 {
+				log.LOG.Debug("NetworkController::sendDebuncer() Received Timer Reset",
+					zap.Int("Counter", counter),
+				)
+				timer.Reset(100 * time.Millisecond)
+			}
+		case <-timer.C:
+			if counter > 0 {
+				log.LOG.Debug("NetworkController::sendDebuncer() Flushed",
+					zap.Int("ItemCount", ctrl.updateQueue.Length()),
+				)
+				ctrl.sendFlush(ctrl.sendQueue.PopAll())
+				counter = 0
+			}
+		case <-ctrl.stopChannel:
+			log.LOG.Debug("NetworkController::sendDebuncer() Stopped")
 			return
 		}
 	}
@@ -388,6 +428,16 @@ func (ctrl *NetworkController) updateReceived() {
 	}
 }
 
+// send signal to debuncer
+func (ctrl *NetworkController) sendRequestReceived() {
+	select {
+	case ctrl.chSendDebuncer <- true:
+		log.LOG.Debug("NetworkController::sendRequestReceived() Signal")
+	default:
+		log.LOG.Debug("NetworkController::sendRequestReceived() Skipped")
+	}
+}
+
 // messageHandler
 // MessageEnvelopes will be extracted and separates updates and messages.
 func (ctrl *NetworkController) messageHandler(message *msg.MessageEnvelope) {
@@ -421,6 +471,7 @@ func (ctrl *NetworkController) Stop() {
 	ctrl.stopChannel <- true // receiver
 	ctrl.stopChannel <- true // updateDebuncer
 	ctrl.stopChannel <- true // messageDebuncer
+	ctrl.stopChannel <- true // sendDebuncer
 }
 
 // Connect
@@ -510,6 +561,13 @@ func (ctrl *NetworkController) SetNetworkStatusChangedCallback(h domain.NetworkS
 // TODO: implement queue for send requests but first check if server do accept MessageContainer or no
 func (ctrl *NetworkController) Send(msgEnvelope *msg.MessageEnvelope) error {
 
+	// this will probably solve queueController unordered message burst
+	// add to send buffer
+	ctrl.sendQueue.Push(msgEnvelope)
+	// signal the send debuncer
+	ctrl.sendRequestReceived()
+	return nil
+
 	// // DeleteMe debugging
 	// if msgEnvelope.Constructor == msg.C_MessagesSend {
 	// 	x := new(msg.MessagesSend)
@@ -524,7 +582,28 @@ func (ctrl *NetworkController) Send(msgEnvelope *msg.MessageEnvelope) error {
 	// 	}
 	// }
 
-	return ctrl._send(msgEnvelope)
+	// remove this line when sendDebuncer is Enabled
+	// return ctrl._send(msgEnvelope)
+}
+
+// sendFlush will be called in sendDebuncer that running in another go routine so its ok to run in sync mode
+func (ctrl *NetworkController) sendFlush(queueMsgs []*msg.MessageEnvelope) {
+
+	// TODO: need sort factor to make sure requests will be sent in desired order
+	sort.Slice(queueMsgs, func(i, j int) bool {
+		return queueMsgs[i].RequestID < queueMsgs[j].RequestID
+	})
+
+	msgContainer := new(msg.MessageContainer)
+	msgContainer.Envelopes = queueMsgs
+	msgContainer.Length = int32(len(queueMsgs))
+
+	messageEnvelop := new(msg.MessageEnvelope)
+	messageEnvelop.Constructor = msg.C_MessageContainer
+	messageEnvelop.Message, _ = msgContainer.Marshal()
+	messageEnvelop.RequestID = 0
+
+	ctrl._send(messageEnvelop)
 }
 
 // sendWebsocket
