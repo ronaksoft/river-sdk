@@ -509,6 +509,21 @@ func (ctrl *NetworkController) SetNetworkStatusChangedCallback(h domain.NetworkS
 // Send
 // TODO: implement queue for send requests but first check if server do accept MessageContainer or no
 func (ctrl *NetworkController) Send(msgEnvelope *msg.MessageEnvelope) error {
+
+	// // DeleteMe debugging
+	// if msgEnvelope.Constructor == msg.C_MessagesSend {
+	// 	x := new(msg.MessagesSend)
+	// 	err := x.Unmarshal(msgEnvelope.Message)
+	// 	if err == nil {
+	// 		log.LOG.Info("XXXXXXXXXXXXXX NetworkController.Send() -> MessagesSend",
+	// 			zap.Int64("PeerID", x.Peer.ID),
+	// 			zap.Uint64("AccessHash", x.Peer.AccessHash),
+	// 			zap.Int32("PeerType", int32(x.Peer.Type)),
+	// 			zap.String("Body", x.Body),
+	// 		)
+	// 	}
+	// }
+
 	return ctrl._send(msgEnvelope)
 }
 

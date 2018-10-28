@@ -69,7 +69,6 @@ func (r *repoSystem) SaveInt(keyName string, keyValue int32) error {
 		log.LOG.Debug("RepoSystem::SaveInt()-> fetch system entity",
 			zap.String("Error", err.Error()),
 		)
-		return err
 	}
 
 	s.KeyName = keyName
@@ -95,7 +94,6 @@ func (r *repoSystem) SaveString(keyName string, keyValue string) error {
 		log.LOG.Debug("RepoSystem::SaveString()-> fetch system entity",
 			zap.String("Error", err.Error()),
 		)
-		return err
 	}
 
 	s.KeyName = keyName

@@ -27,6 +27,7 @@ import (
 
 	"github.com/monnand/dhkx"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -63,6 +64,11 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		)
 	}
 
+	// Enable log mode
+	if conf.LogLevel == int(zapcore.DebugLevel) {
+		repo.Ctx().LogMode(true)
+	}
+
 	// init riverConfigs this should be after connect to DB
 	r.ConnInfo = getConfig()
 
@@ -73,9 +79,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		//msg.C_InitConnect:       true,
 		//msg.C_InitCompleteAuth:  true,
 	}
-
-	// Enable log mode
-	//repo.Ctx().LogMode(true)
 
 	// Initialize requests that should not passed to queueController
 

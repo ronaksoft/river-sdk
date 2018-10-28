@@ -1,8 +1,6 @@
 package repo
 
 import (
-	"fmt"
-
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
@@ -165,10 +163,6 @@ func (r *repoMessages) SaveMessage(message *msg.UserMessage) error {
 
 	m := new(dto.Messages)
 	m.Map(message)
-
-	log.LOG.Debug("RepoMessages::SaveMessage()",
-		zap.String("dtoMessage", fmt.Sprint(m)),
-	)
 
 	em := new(dto.Messages)
 	r.db.Find(em, m.ID)

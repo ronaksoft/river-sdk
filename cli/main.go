@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk"
-	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/fatih/color"
@@ -75,7 +74,6 @@ func main() {
 	}
 
 	qPath := "./_queue"
-	log.SetLogLevel(int(zapcore.DebugLevel))
 	_SDK = new(riversdk.River)
 	_SDK.SetConfig(&riversdk.RiverConfig{
 		ServerEndpoint:     "ws://new.river.im", //"ws://192.168.1.110/",
@@ -84,6 +82,7 @@ func main() {
 		QueuePath:          fmt.Sprintf("%s/%s", qPath, dbID),
 		ServerKeysFilePath: "./keys.json",
 		MainDelegate:       new(MainDelegate),
+		LogLevel:           int(zapcore.DebugLevel),
 	})
 
 	_SDK.Start()

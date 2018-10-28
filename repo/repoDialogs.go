@@ -55,7 +55,7 @@ func (r *repoDialogs) SaveDialog(dialog *msg.Dialog, lastUpdate int64) error {
 	defer r.mx.Unlock()
 
 	if dialog == nil {
-		log.LOG.Debug("RepoDialogs::SaveDialog() :",
+		log.LOG.Debug("RepoDialogs::SaveDialog()",
 			zap.String("Error", "dialog is null"),
 		)
 		return domain.ErrNotFound
@@ -107,7 +107,9 @@ func (r *repoDialogs) GetDialogs(offset, limit int32) []*msg.Dialog {
 
 	err := r.db.Limit(limit).Offset(offset).Find(&dtoDlgs).Error
 	if err != nil {
-		log.LOG.Debug(err.Error())
+		log.LOG.Debug("RepoDialogs::GetDialogs()",
+			zap.String("Error", err.Error()),
+		)
 		return nil
 	}
 
