@@ -123,7 +123,7 @@ func (ctrl *NetworkController) Start() error {
 	go ctrl.watchDog()
 	go ctrl.messageDebuncer()
 	go ctrl.updateDebuncer()
-	go ctrl.sendDebuncer()
+	// go ctrl.sendDebuncer()
 	return nil
 }
 
@@ -471,7 +471,7 @@ func (ctrl *NetworkController) Stop() {
 	ctrl.stopChannel <- true // receiver
 	ctrl.stopChannel <- true // updateDebuncer
 	ctrl.stopChannel <- true // messageDebuncer
-	ctrl.stopChannel <- true // sendDebuncer
+	// ctrl.stopChannel <- true // sendDebuncer
 }
 
 // Connect
@@ -561,29 +561,15 @@ func (ctrl *NetworkController) SetNetworkStatusChangedCallback(h domain.NetworkS
 // TODO: implement queue for send requests but first check if server do accept MessageContainer or no
 func (ctrl *NetworkController) Send(msgEnvelope *msg.MessageEnvelope) error {
 
-	// this will probably solve queueController unordered message burst
-	// add to send buffer
-	ctrl.sendQueue.Push(msgEnvelope)
-	// signal the send debuncer
-	ctrl.sendRequestReceived()
-	return nil
-
-	// // DeleteMe debugging
-	// if msgEnvelope.Constructor == msg.C_MessagesSend {
-	// 	x := new(msg.MessagesSend)
-	// 	err := x.Unmarshal(msgEnvelope.Message)
-	// 	if err == nil {
-	// 		log.LOG.Info("XXXXXXXXXXXXXX NetworkController.Send() -> MessagesSend",
-	// 			zap.Int64("PeerID", x.Peer.ID),
-	// 			zap.Uint64("AccessHash", x.Peer.AccessHash),
-	// 			zap.Int32("PeerType", int32(x.Peer.Type)),
-	// 			zap.String("Body", x.Body),
-	// 		)
-	// 	}
-	// }
+	// // this will probably solve queueController unordered message burst
+	// // add to send buffer
+	// ctrl.sendQueue.Push(msgEnvelope)
+	// // signal the send debuncer
+	// ctrl.sendRequestReceived()
+	// return nil
 
 	// remove this line when sendDebuncer is Enabled
-	// return ctrl._send(msgEnvelope)
+	return ctrl._send(msgEnvelope)
 }
 
 // sendFlush will be called in sendDebuncer that running in another go routine so its ok to run in sync mode
