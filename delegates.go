@@ -14,18 +14,3 @@ type RequestDelegate interface {
 	OnComplete(b []byte)
 	OnTimeout(err error)
 }
-
-var (
-	dlg MainDelegate
-)
-
-func getMainDelegate() MainDelegate {
-	if dlg == nil {
-		panic("main delegates not initialized")
-	}
-	return dlg
-}
-
-func setMainDelegate(d MainDelegate) {
-	dlg = d
-}

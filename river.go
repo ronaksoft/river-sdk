@@ -53,4 +53,9 @@ type River struct {
 
 	// RealTimeRequests is list of requests that should not passed to queue to send they should directly pass to networkController
 	realTimeRequest map[int64]bool
+
+	mainDelegate MainDelegate
+
+	// Connection Info
+	ConnInfo *RiverConnection
 }

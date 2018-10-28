@@ -20,12 +20,14 @@ import (
 
 // SyncConfig
 type SyncConfig struct {
+	ConnInfo    domain.RiverConfiger
 	NetworkCtrl *network.NetworkController
 	QueueCtrl   *queue.QueueController
 }
 
 // SyncController
 type SyncController struct {
+	connInfo domain.RiverConfiger
 	//sync.Mutex
 	networkCtrl          *network.NetworkController
 	queue                *queue.QueueController
@@ -54,6 +56,7 @@ type SyncController struct {
 func NewSyncController(config SyncConfig) *SyncController {
 	ctrl := new(SyncController)
 	ctrl.stopChannel = make(chan bool)
+	ctrl.connInfo = config.ConnInfo
 	ctrl.queue = config.QueueCtrl
 	ctrl.networkCtrl = config.NetworkCtrl
 

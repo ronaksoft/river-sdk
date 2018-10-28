@@ -1,4 +1,4 @@
-package configs
+package riversdk
 
 import (
 	"sync"
@@ -70,14 +70,14 @@ type RiverConnection struct {
 }
 
 // Get
-func Get() *RiverConnection {
+func getConfig() *RiverConnection {
 	if riverConf == nil {
 		mx.Lock()
 		defer mx.Unlock()
 		if riverConf == nil {
 			riverConf = new(RiverConnection)
-			if err := riverConf.Load(); err != nil {
-				riverConf.Save()
+			if err := riverConf.loadConfig(); err != nil {
+				riverConf.saveConfig()
 			}
 		}
 	}
@@ -85,12 +85,12 @@ func Get() *RiverConnection {
 }
 
 // Clear
-func Clear() {
+func clearConfig() {
 	riverConf = &RiverConnection{}
 }
 
 // Save
-func (v *RiverConnection) Save() {
+func (v *RiverConnection) saveConfig() {
 	log.LOG.Debug("RiverConnection::Save()")
 	if bytes, err := v.MarshalJSON(); err != nil {
 		log.LOG.Info("RiverConnection::Save()->MarshalJSON()",
@@ -104,7 +104,7 @@ func (v *RiverConnection) Save() {
 }
 
 // Load
-func (v *RiverConnection) Load() error {
+func (v *RiverConnection) loadConfig() error {
 	log.LOG.Debug("RiverConnection::Load()")
 	if kv, err := repo.Ctx().System.LoadString(domain.CN_CONN_INFO); err != nil {
 		log.LOG.Info("RiverConnection::Load()->LoadString()",
@@ -119,3 +119,20 @@ func (v *RiverConnection) Load() error {
 	}
 	return nil
 }
+
+func (v *RiverConnection) Save()                         { v.saveConfig() }
+func (v *RiverConnection) SetAuthID(authID int64)        { v.AuthID = authID }
+func (v *RiverConnection) SetAuthKey(authKey [256]byte)  { v.AuthKey = authKey }
+func (v *RiverConnection) SetUserID(userID int64)        { v.UserID = userID }
+func (v *RiverConnection) SetUsername(username string)   { v.Username = username }
+func (v *RiverConnection) SetPhone(phone string)         { v.Phone = phone }
+func (v *RiverConnection) SetFirstName(firstName string) { v.FirstName = firstName }
+func (v *RiverConnection) SetLastName(lastName string)   { v.LastName = lastName }
+func (v *RiverConnection) Load() error                   { return v.loadConfig() }
+func (v *RiverConnection) GetAuthID() int64              { return v.AuthID }
+func (v *RiverConnection) GetAuthKey() [256]byte         { return v.AuthKey }
+func (v *RiverConnection) GetUserID() int64              { return v.UserID }
+func (v *RiverConnection) GetUsername() string           { return v.Username }
+func (v *RiverConnection) GetPhone() string              { return v.Phone }
+func (v *RiverConnection) GetFirstName() string          { return v.FirstName }
+func (v *RiverConnection) GetLastName() string           { return v.LastName }

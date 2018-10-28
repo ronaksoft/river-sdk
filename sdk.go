@@ -13,8 +13,6 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/configs"
-
 	"git.ronaksoftware.com/ronak/riversdk/cmd"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
@@ -34,7 +32,7 @@ import (
 )
 
 var (
-	_ServerKeys configs.ServerKeys
+	_ServerKeys ServerKeys
 )
 
 // SetConfig
@@ -44,7 +42,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.delegates = make(map[int64]RequestDelegate)
 
 	// init delegates
-	setMainDelegate(conf.MainDelegate)
+	r.mainDelegate = conf.MainDelegate
 
 	// init UI Executer
 	cmd.InitUIExecuter()
@@ -63,7 +61,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	}
 
 	// init riverConfigs this should be after connect to DB
-	configs.Get()
+	r.ConnInfo = getConfig()
 
 	// Initialize realtime requests
 	r.realTimeRequest = map[int64]bool{
@@ -87,15 +85,15 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		},
 	)
 	r.networkCtrl.SetNetworkStatusChangedCallback(func(newQuality domain.NetworkStatus) {
-		if getMainDelegate() != nil && getMainDelegate().OnNetworkStatusChanged != nil {
-			getMainDelegate().OnNetworkStatusChanged(int(newQuality))
+		if r.mainDelegate != nil && r.mainDelegate.OnNetworkStatusChanged != nil {
+			r.mainDelegate.OnNetworkStatusChanged(int(newQuality))
 		}
 	})
 
 	// Initialize queueController
 	var h domain.DeferredRequestHandler
-	if getMainDelegate() != nil {
-		h = getMainDelegate().OnDeferredRequests
+	if r.mainDelegate != nil {
+		h = r.mainDelegate.OnDeferredRequests
 	} else {
 		h = nil
 	}
@@ -110,6 +108,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	// Initialize Sync Controller
 	r.syncCtrl = synchronizer.NewSyncController(
 		synchronizer.SyncConfig{
+			ConnInfo:    r.ConnInfo,
 			NetworkCtrl: r.networkCtrl,
 			QueueCtrl:   r.queueCtrl,
 		},
@@ -117,14 +116,14 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// call external delegate on sync status changed
 	r.syncCtrl.SetSyncStatusChangedCallback(func(newStatus domain.SyncStatus) {
-		if getMainDelegate() != nil && getMainDelegate().OnSyncStatusChanged != nil {
-			getMainDelegate().OnSyncStatusChanged(int(newStatus))
+		if r.mainDelegate != nil && r.mainDelegate.OnSyncStatusChanged != nil {
+			r.mainDelegate.OnSyncStatusChanged(int(newStatus))
 		}
 	})
 	// call external delegate on OnUpdate
-	r.syncCtrl.SetOnUpdateCallback(func(constructor int64, buff []byte) {
-		if getMainDelegate() != nil && getMainDelegate().OnUpdates != nil {
-			getMainDelegate().OnUpdates(constructor, buff)
+	r.syncCtrl.SetOnUpdateCallback(func(constructorID int64, b []byte) {
+		if r.mainDelegate != nil && r.mainDelegate.OnUpdates != nil {
+			r.mainDelegate.OnUpdates(constructorID, b)
 		}
 	})
 
@@ -142,8 +141,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	// Initialize River Connection
 	log.LOG.Info("River::SetConfig() Load/Create New River Connection")
 
-	if configs.Get().UserID != 0 {
-		r.syncCtrl.SetUserID(configs.Get().UserID)
+	if r.ConnInfo.UserID != 0 {
+		r.syncCtrl.SetUserID(r.ConnInfo.UserID)
 	}
 
 	// Update Network Controller
@@ -151,7 +150,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.networkCtrl.SetMessageHandler(r.onReceivedMessage)
 	r.networkCtrl.SetUpdateHandler(r.onReceivedUpdate)
 	r.networkCtrl.SetOnConnectCallback(r.callAuthRecall)
-	r.networkCtrl.SetAuthorization(configs.Get().AuthID, configs.Get().AuthKey[:])
+	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 }
 
 func (r *River) callAuthRecall() {
@@ -511,9 +510,9 @@ func (r *River) CreateAuthKey() (err error) {
 						return
 					}
 					// r.ConnInfo.AuthKey = serverDhKey.Bytes()
-					copy(configs.Get().AuthKey[:], serverDhKey.Bytes())
-					authKeyHash, _ := domain.Sha256(configs.Get().AuthKey[:])
-					configs.Get().AuthID = int64(binary.LittleEndian.Uint64(authKeyHash[24:32]))
+					copy(r.ConnInfo.AuthKey[:], serverDhKey.Bytes())
+					authKeyHash, _ := domain.Sha256(r.ConnInfo.AuthKey[:])
+					r.ConnInfo.AuthID = int64(binary.LittleEndian.Uint64(authKeyHash[24:32]))
 
 					var secret []byte
 					secret = append(secret, q2Internal.SecretNonce...)
@@ -532,8 +531,8 @@ func (r *River) CreateAuthKey() (err error) {
 					err = domain.ErrAuthFailed
 					return
 				}
-				configs.Get().Save()
-				r.networkCtrl.SetAuthorization(configs.Get().AuthID, configs.Get().AuthKey[:])
+				r.ConnInfo.Save()
+				r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 			case msg.C_Error:
 				err = domain.ServerError(res.Message)
 				return
@@ -548,9 +547,9 @@ func (r *River) CreateAuthKey() (err error) {
 	waitGroup.Wait()
 
 	// inform external UI that authKey generated
-	if getMainDelegate() != nil {
-		if getMainDelegate().OnAuthKeyCreated != nil {
-			getMainDelegate().OnAuthKeyCreated(configs.Get().AuthID)
+	if r.mainDelegate != nil {
+		if r.mainDelegate.OnAuthKeyCreated != nil {
+			r.mainDelegate.OnAuthKeyCreated(r.ConnInfo.AuthID)
 		}
 	}
 
@@ -643,7 +642,7 @@ func (r *River) Logout() (int64, error) {
 	}
 
 	// reset connection info
-	configs.Clear()
+	clearConfig()
 
 	// TODO : send logout request to server
 	requestID := domain.RandomInt63()
@@ -662,8 +661,8 @@ func (r *River) Logout() (int64, error) {
 		r.releaseDelegate(requestID)
 	}
 
-	if getMainDelegate() != nil && getMainDelegate().OnSessionClosed != nil {
-		getMainDelegate().OnSessionClosed(0)
+	if r.mainDelegate != nil && r.mainDelegate.OnSessionClosed != nil {
+		r.mainDelegate.OnSessionClosed(0)
 	}
 
 	return requestID, err
@@ -672,9 +671,9 @@ func (r *River) Logout() (int64, error) {
 func (r *River) onGeneralError(e *msg.Error) {
 	// TODO:: calll external handler
 	log.LOG.Info("River::onGeneralError()")
-	if getMainDelegate() != nil && getMainDelegate().OnGeneralError != nil {
+	if r.mainDelegate != nil && r.mainDelegate.OnGeneralError != nil {
 		buff, _ := e.Marshal()
-		getMainDelegate().OnGeneralError(buff)
+		r.mainDelegate.OnGeneralError(buff)
 	}
 }
 

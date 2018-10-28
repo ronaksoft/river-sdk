@@ -3,7 +3,6 @@ package main
 import (
 	"strconv"
 
-	"git.ronaksoftware.com/ronak/riversdk/configs"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"gopkg.in/abiosoft/ishell.v2"
@@ -16,12 +15,12 @@ var SDK = &ishell.Cmd{
 var SdkConnInfo = &ishell.Cmd{
 	Name: "ConnInfo",
 	Func: func(c *ishell.Context) {
-		c.Println("UserID:", configs.Get().UserID)
-		c.Println("AuthID:", configs.Get().AuthID)
-		c.Println("Phone:", configs.Get().Phone)
-		c.Println("FirstName:", configs.Get().FirstName)
-		c.Println("LastName:", configs.Get().LastName)
-		c.Println("AuthKey:", configs.Get().AuthKey)
+		c.Println("UserID:", _SDK.ConnInfo.UserID)
+		c.Println("AuthID:", _SDK.ConnInfo.AuthID)
+		c.Println("Phone:", _SDK.ConnInfo.Phone)
+		c.Println("FirstName:", _SDK.ConnInfo.FirstName)
+		c.Println("LastName:", _SDK.ConnInfo.LastName)
+		c.Println("AuthKey:", _SDK.ConnInfo.AuthKey)
 	},
 }
 

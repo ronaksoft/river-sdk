@@ -3,7 +3,6 @@ package synchronizer
 import (
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/configs"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/repo"
@@ -47,7 +46,7 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) (passToExter
 
 	// if the sender is not myself increase dialog counter else just save message
 	if x.Message.SenderID != ctrl.UserID {
-		err := repo.Ctx().Messages.SaveNewMessage(x.Message, dialog, configs.Get().UserID)
+		err := repo.Ctx().Messages.SaveNewMessage(x.Message, dialog, ctrl.connInfo.GetUserID())
 		if err != nil {
 			log.LOG.Debug("SyncController::updateNewMessage()-> SaveNewMessage()",
 				zap.String("Error", err.Error()),

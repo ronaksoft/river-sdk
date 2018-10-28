@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk"
-	"git.ronaksoftware.com/ronak/riversdk/configs"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
@@ -88,7 +87,7 @@ func main() {
 	})
 
 	_SDK.Start()
-	if configs.Get().AuthID == 0 {
+	if _SDK.ConnInfo.AuthID == 0 {
 		if err := _SDK.CreateAuthKey(); err != nil {
 			_Shell.Println("CreateAuthKey::", err.Error())
 		}

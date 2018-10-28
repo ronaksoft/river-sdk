@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd"
-	"git.ronaksoftware.com/ronak/riversdk/configs"
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
@@ -23,12 +22,10 @@ func (ctrl *SyncController) authAuthorization(e *msg.MessageEnvelope) {
 		return
 	}
 
-	conf := configs.Get()
-
-	conf.FirstName = x.User.FirstName
-	conf.LastName = x.User.LastName
-	conf.UserID = x.User.ID
-	conf.Save()
+	ctrl.connInfo.SetFirstName(x.User.FirstName)
+	ctrl.connInfo.SetLastName(x.User.LastName)
+	ctrl.connInfo.SetUserID(x.User.ID)
+	ctrl.connInfo.Save()
 
 	ctrl.SetUserID(x.User.ID)
 
@@ -44,8 +41,7 @@ func (ctrl *SyncController) authSentCode(e *msg.MessageEnvelope) {
 		)
 		return
 	}
-	conf := configs.Get()
-	conf.Phone = x.Phone
+	ctrl.connInfo.SetPhone(x.Phone)
 	// No need to save it here its gonna be saved on authAuthorization
 	// conf.Save()
 }

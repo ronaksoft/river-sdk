@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd"
-	"git.ronaksoftware.com/ronak/riversdk/configs"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/log"
@@ -75,7 +74,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 
 	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 	dbID := -time.Now().UnixNano()
-	res, err := repo.Ctx().PendingMessages.Save(dbID, configs.Get().UserID, req)
+	res, err := repo.Ctx().PendingMessages.Save(dbID, r.ConnInfo.UserID, req)
 
 	if err != nil {
 		e := new(msg.Error)
@@ -183,7 +182,7 @@ func (r *River) messageReadHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 
-	err := repo.Ctx().Dialogs.UpdateReadInboxMaxID(configs.Get().UserID, req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+	err := repo.Ctx().Dialogs.UpdateReadInboxMaxID(r.ConnInfo.UserID, req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 	if err != nil {
 		log.LOG.Debug("River::messageReadHistory()-> UpdateReadInboxMaxID()",
 			zap.String("Error", err.Error()),
