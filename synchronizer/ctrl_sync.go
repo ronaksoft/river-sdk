@@ -563,7 +563,6 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 			ctrl.updateSyncStatus(domain.OutOfSync)
 			ctrl.getUpdateDifference(u.MinUpdateID)
 		}
-		ctrl.updateSyncStatus(domain.Synced)
 
 		if ctrl.updateID < u.MaxUpdateID {
 			ctrl.updateID = u.MaxUpdateID
