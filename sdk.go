@@ -247,6 +247,10 @@ func deepCopy(commandBytes []byte) []byte {
 // This is a wrapper function to pass the request to the queueController, to be passed to networkController for final
 // delivery to the server.
 func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate, blockingMode bool) (requestID int64, err error) {
+	// deleteMe
+	log.LOG.Debug("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 1 ExecuteCommand Started req:" + msg.ConstructorNames[constructor])
+	defer log.LOG.Debug("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 7 ExecuteCommand Ended req:" + msg.ConstructorNames[constructor])
+
 	commandBytesDump := deepCopy(commandBytes)
 
 	if _, ok := msg.ConstructorNames[constructor]; !ok {
@@ -262,6 +266,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	// if function is in blocking mode set the waitGroup to block until the job is done, otherwise
 	// save 'delegate' into delegates list to be fetched later.
 	if blockingMode {
+		log.LOG.Debug("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 2 waitGroup.Add(1) / defer")
 		waitGroup.Add(1)
 		defer waitGroup.Wait()
 	} else if delegate != nil {
@@ -270,20 +275,25 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 		r.delegateMutex.Unlock()
 	}
 	timeoutCallback := func() {
+		log.LOG.Debug("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 3 timeout called")
 		if blockingMode {
 			defer waitGroup.Done()
 		}
 		err = domain.ErrRequestTimeout
 		delegate.OnTimeout(err)
 		r.releaseDelegate(requestID)
+		log.LOG.Debug("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 4 timeout ended")
 	}
 	successCallback := func(envelope *msg.MessageEnvelope) {
+		log.LOG.Debug("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 5 succes called")
 		if blockingMode {
 			defer waitGroup.Done()
 		}
 		b, _ := envelope.Marshal()
 		delegate.OnComplete(b)
 		r.releaseDelegate(requestID)
+
+		log.LOG.Debug("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 6 success ended")
 	}
 
 	_, isRealTimeRequest := r.realTimeRequest[constructor]
