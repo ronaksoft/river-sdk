@@ -73,6 +73,9 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		)
 		return
 	}
+	// this will be used as next requestID
+	req.RandomID = domain.SequentialUniqueID()
+
 	// TODO :
 	// 0. fix database and add PendingMessages table : Done
 

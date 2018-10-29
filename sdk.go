@@ -259,7 +259,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 		return 0, domain.ErrInvalidConstructor
 	}
 	waitGroup := new(sync.WaitGroup)
-	requestID = domain.RandomInt63()
+	requestID = domain.SequentialUniqueID()
 
 	log.LOG.Debug("River::ExecuteCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),

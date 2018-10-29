@@ -7,12 +7,17 @@ import (
 	"crypto/sha512"
 	"math/big"
 	"math/rand"
+	"sync/atomic"
 	"time"
 )
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
+
+var (
+	uniqueCounter int64
+)
 
 const (
 	DIGITS        = "0123456789"
@@ -248,4 +253,17 @@ func RandomID(n int) string {
 		b[i] = ALPHANUMERICS[rand.Intn(len(ALPHANUMERICS))]
 	}
 	return string(b)
+}
+
+// SequentialUniqueID generate sequential and unique int64 with UnixNano time for sequential and atomic counter for uniqueness
+func SequentialUniqueID() int64 {
+	atomic.AddInt64(&uniqueCounter, 1)
+	nanoTime := time.Now().UnixNano()
+	res := nanoTime + uniqueCounter
+
+	// reset counter we need counter only for requests that created in same nano second
+	if uniqueCounter > 16384 {
+		atomic.StoreInt64(&uniqueCounter, 0)
+	}
+	return res
 }

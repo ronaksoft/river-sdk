@@ -586,7 +586,7 @@ func (ctrl *NetworkController) Send(msgEnvelope *msg.MessageEnvelope, direct boo
 // sendFlush will be called in sendDebuncer that running in another go routine so its ok to run in sync mode
 func (ctrl *NetworkController) sendFlush(queueMsgs []*msg.MessageEnvelope) {
 
-	// TODO: need sort factor to make sure requests will be sent in desired order
+	// Implemented domain.SequentialUniqueID() to make sure requestID are sequential and unique
 	sort.Slice(queueMsgs, func(i, j int) bool {
 		return queueMsgs[i].RequestID < queueMsgs[j].RequestID
 	})
@@ -598,7 +598,7 @@ func (ctrl *NetworkController) sendFlush(queueMsgs []*msg.MessageEnvelope) {
 	messageEnvelop := new(msg.MessageEnvelope)
 	messageEnvelop.Constructor = msg.C_MessageContainer
 	messageEnvelop.Message, _ = msgContainer.Marshal()
-	messageEnvelop.RequestID = 0
+	messageEnvelop.RequestID = uint64(domain.SequentialUniqueID())
 
 	ctrl._send(messageEnvelop)
 }
