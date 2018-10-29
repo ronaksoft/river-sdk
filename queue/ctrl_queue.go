@@ -4,6 +4,8 @@ import (
 	"sync"
 	"time"
 
+	"git.ronaksoftware.com/ronak/riversdk/cmd"
+
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
@@ -221,7 +223,7 @@ func (ctrl *QueueController) executor(req request) {
 			zap.Uint64("RequestID", res.RequestID),
 		)
 		if reqCallbacks.SuccessCallback != nil {
-			reqCallbacks.SuccessCallback(res)
+			cmd.GetUIExecuter().Exec(reqCallbacks.SerialUICallback, func() { reqCallbacks.SuccessCallback(res) })
 		} else {
 			log.LOG.Warn("QueueController::executor() :: ResponseChannel received signal SuccessCallback is null",
 				zap.String("ConstructorName", msg.ConstructorNames[res.Constructor]),
@@ -274,7 +276,7 @@ func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructo
 					zap.Uint64("RequestID", requestID),
 				)
 				if reqCB.SuccessCallback != nil {
-					reqCB.SuccessCallback(res)
+					cmd.GetUIExecuter().Exec(reqCB.SerialUICallback, func() { reqCB.SuccessCallback(res) })
 				}
 			}
 		} else {
