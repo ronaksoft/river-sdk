@@ -186,7 +186,7 @@ func (ctrl *QueueController) executor(req request) {
 	)
 
 	// Try to send it over wire, if error happened put it back into the queue
-	if err := ctrl.network.Send(req.MessageEnvelope); err != nil {
+	if err := ctrl.network.Send(req.MessageEnvelope, false); err != nil {
 		ctrl.addToWaitingList(&req)
 		return
 	}
@@ -246,7 +246,7 @@ func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructo
 	domain.AddRequestCallback(requestID, successCB, domain.DEFAULT_WS_REALTIME_TIMEOUT, timeoutCB, serialUICallback)
 
 	execBlock := func(reqID uint64, req *msg.MessageEnvelope) error {
-		err := ctrl.network.Send(req)
+		err := ctrl.network.Send(req, blockingMode)
 		if err != nil {
 			log.LOG.Debug("QueueController::ExecuteRealtimeCommand()->network.Send()",
 				zap.String("Error", err.Error()),

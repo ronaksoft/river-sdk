@@ -123,7 +123,7 @@ func (ctrl *NetworkController) Start() error {
 	go ctrl.watchDog()
 	go ctrl.messageDebuncer()
 	go ctrl.updateDebuncer()
-	// go ctrl.sendDebuncer()
+	go ctrl.sendDebuncer()
 	return nil
 }
 
@@ -482,7 +482,7 @@ func (ctrl *NetworkController) Stop() {
 	ctrl.stopChannel <- true // receiver
 	ctrl.stopChannel <- true // updateDebuncer
 	ctrl.stopChannel <- true // messageDebuncer
-	// ctrl.stopChannel <- true // sendDebuncer
+	ctrl.stopChannel <- true // sendDebuncer
 }
 
 // Connect
@@ -568,19 +568,19 @@ func (ctrl *NetworkController) SetNetworkStatusChangedCallback(h domain.NetworkS
 	ctrl.wsOnNetworkStatusChange = h
 }
 
-// Send
-// TODO: implement queue for send requests but first check if server do accept MessageContainer or no
-func (ctrl *NetworkController) Send(msgEnvelope *msg.MessageEnvelope) error {
+// Send direct sends immediatly else it put it in debuncer
+func (ctrl *NetworkController) Send(msgEnvelope *msg.MessageEnvelope, direct bool) error {
 
-	// // this will probably solve queueController unordered message burst
-	// // add to send buffer
-	// ctrl.sendQueue.Push(msgEnvelope)
-	// // signal the send debuncer
-	// ctrl.sendRequestReceived()
-	// return nil
-
-	// remove this line when sendDebuncer is Enabled
-	return ctrl._send(msgEnvelope)
+	if direct {
+		return ctrl._send(msgEnvelope)
+	} else {
+		// this will probably solve queueController unordered message burst
+		// add to send buffer
+		ctrl.sendQueue.Push(msgEnvelope)
+		// signal the send debuncer
+		ctrl.sendRequestReceived()
+	}
+	return nil
 }
 
 // sendFlush will be called in sendDebuncer that running in another go routine so its ok to run in sync mode
