@@ -45,7 +45,7 @@ var MessageSend = &ishell.Cmd{
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessagesSend), reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessagesSend), reqBytes, reqDelegate, false, true); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -64,7 +64,7 @@ var MessageGetDialogs = &ishell.Cmd{
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessagesGetDialogs), reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessagesGetDialogs), reqBytes, reqDelegate, false, true); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -94,7 +94,7 @@ var MessageGetDialog = &ishell.Cmd{
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessagesGetDialog), reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessagesGetDialog), reqBytes, reqDelegate, false, true); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -163,7 +163,7 @@ var MessageGetHistory = &ishell.Cmd{
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessagesGetHistory), reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessagesGetHistory), reqBytes, reqDelegate, false, true); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -210,7 +210,7 @@ var MessageReadHistory = &ishell.Cmd{
 		}
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessagesReadHistory), reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessagesReadHistory), reqBytes, reqDelegate, false, true); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -257,7 +257,7 @@ var MessageSetTyping = &ishell.Cmd{
 		}
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessagesSetTyping), reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessagesSetTyping), reqBytes, reqDelegate, false, true); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -306,7 +306,7 @@ var MessagesGet = &ishell.Cmd{
 		}
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessagesGet), reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessagesGet), reqBytes, reqDelegate, false, true); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID

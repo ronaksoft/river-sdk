@@ -17,7 +17,7 @@ var AuthCheckPhone = &ishell.Cmd{
 		req.Phone = c.ReadLine()
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_AuthCheckPhone), reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_AuthCheckPhone), reqBytes, reqDelegate, false, true); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -33,7 +33,7 @@ var AuthSendCode = &ishell.Cmd{
 		req.Phone = c.ReadLine()
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_AuthSendCode), reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_AuthSendCode), reqBytes, reqDelegate, false, true); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -57,7 +57,7 @@ var AuthRegister = &ishell.Cmd{
 		req.LastName = c.ReadLine()
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_AuthRegister), reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_AuthRegister), reqBytes, reqDelegate, false, true); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -79,7 +79,7 @@ var AuthLogin = &ishell.Cmd{
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_AuthLogin), reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_AuthLogin), reqBytes, reqDelegate, false, true); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -103,7 +103,7 @@ var AuthRecall = &ishell.Cmd{
 		req := msg.AuthRecall{}
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_AuthRecall), reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_AuthRecall), reqBytes, reqDelegate, false, true); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
