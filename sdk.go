@@ -246,10 +246,11 @@ func deepCopy(commandBytes []byte) []byte {
 // ExecuteCommand
 // This is a wrapper function to pass the request to the queueController, to be passed to networkController for final
 // delivery to the server.
-func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate, blockingMode bool) (requestID int64, err error) {
+func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate, blockingMode, serialUICallback bool) (requestID int64, err error) {
 	// deleteMe
-	log.LOG.Debug("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 1 ExecuteCommand Started req:" + msg.ConstructorNames[constructor])
-	defer log.LOG.Debug("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 7 ExecuteCommand Ended req:" + msg.ConstructorNames[constructor])
+	cmdID := fmt.Sprintf("%v : ", time.Now().UnixNano())
+	log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 1 ExecuteCommand Started req:" + msg.ConstructorNames[constructor])
+	defer log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 7 ExecuteCommand Ended req:" + msg.ConstructorNames[constructor])
 
 	commandBytesDump := deepCopy(commandBytes)
 
@@ -266,7 +267,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	// if function is in blocking mode set the waitGroup to block until the job is done, otherwise
 	// save 'delegate' into delegates list to be fetched later.
 	if blockingMode {
-		log.LOG.Debug("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 2 waitGroup.Add(1) / defer")
+		log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 2 waitGroup.Add(1) / defer")
 		waitGroup.Add(1)
 		defer waitGroup.Wait()
 	} else if delegate != nil {
@@ -275,25 +276,41 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 		r.delegateMutex.Unlock()
 	}
 	timeoutCallback := func() {
-		log.LOG.Debug("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 3 timeout called")
-		if blockingMode {
-			defer waitGroup.Done()
+		execFn := func() {
+			log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 3 timeout called")
+			if blockingMode {
+				defer waitGroup.Done()
+			}
+			err = domain.ErrRequestTimeout
+			delegate.OnTimeout(err)
+			r.releaseDelegate(requestID)
+			log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 4 timeout ended")
 		}
-		err = domain.ErrRequestTimeout
-		delegate.OnTimeout(err)
-		r.releaseDelegate(requestID)
-		log.LOG.Debug("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 4 timeout ended")
+		// call UI callback in current thread or new thread
+		if serialUICallback {
+			execFn()
+		} else {
+			go execFn()
+		}
 	}
 	successCallback := func(envelope *msg.MessageEnvelope) {
-		log.LOG.Debug("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 5 succes called")
-		if blockingMode {
-			defer waitGroup.Done()
-		}
-		b, _ := envelope.Marshal()
-		delegate.OnComplete(b)
-		r.releaseDelegate(requestID)
+		execFn := func(m *msg.MessageEnvelope) {
+			log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 5 succes called")
+			if blockingMode {
+				defer waitGroup.Done()
+			}
+			b, _ := m.Marshal()
+			delegate.OnComplete(b)
+			r.releaseDelegate(requestID)
 
-		log.LOG.Debug("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 6 success ended")
+			log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 6 success ended")
+		}
+		// call UI callback in current thread or new thread
+		if serialUICallback {
+			execFn(envelope)
+		} else {
+			go execFn(envelope)
+		}
 	}
 
 	_, isRealTimeRequest := r.realTimeRequest[constructor]
