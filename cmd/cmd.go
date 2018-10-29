@@ -54,12 +54,16 @@ func (c *UIExecuter) Stop() {
 		log.LOG.Debug("CMD::Stop() cmd is not started")
 	}
 }
-func (c *UIExecuter) Exec(fn func()) {
-	select {
-	case c.chUIExecuter <- fn:
-		log.LOG.Debug("CMD::Exec() sent to channel")
-	default:
-		log.LOG.Debug("CMD::Exec() cmd is not started")
+func (c *UIExecuter) Exec(serialUICallback bool, fn func()) {
+	if serialUICallback {
+		select {
+		case c.chUIExecuter <- fn:
+			log.LOG.Debug("CMD::Exec() sent to channel")
+		default:
+			log.LOG.Debug("CMD::Exec() cmd is not started")
+		}
+	} else {
+		go fn()
 	}
 }
 

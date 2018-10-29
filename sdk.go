@@ -174,6 +174,7 @@ func (r *River) callAuthRecall() {
 				nil,
 				nil,
 				true,
+				true,
 			)
 			if err == nil {
 				break
@@ -276,41 +277,29 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 		r.delegateMutex.Unlock()
 	}
 	timeoutCallback := func() {
-		execFn := func() {
-			log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 3 timeout called")
-			if blockingMode {
-				defer waitGroup.Done()
-			}
-			err = domain.ErrRequestTimeout
-			delegate.OnTimeout(err)
-			r.releaseDelegate(requestID)
-			log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 4 timeout ended")
+
+		log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 3 timeout called")
+		if blockingMode {
+			defer waitGroup.Done()
 		}
-		// call UI callback in current thread or new thread
-		if serialUICallback {
-			execFn()
-		} else {
-			go execFn()
-		}
+		err = domain.ErrRequestTimeout
+		delegate.OnTimeout(err)
+		r.releaseDelegate(requestID)
+		log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 4 timeout ended")
+
 	}
 	successCallback := func(envelope *msg.MessageEnvelope) {
-		execFn := func(m *msg.MessageEnvelope) {
-			log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 5 succes called")
-			if blockingMode {
-				defer waitGroup.Done()
-			}
-			b, _ := m.Marshal()
-			delegate.OnComplete(b)
-			r.releaseDelegate(requestID)
 
-			log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 6 success ended")
+		log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 5 succes called")
+		if blockingMode {
+			defer waitGroup.Done()
 		}
-		// call UI callback in current thread or new thread
-		if serialUICallback {
-			execFn(envelope)
-		} else {
-			go execFn(envelope)
-		}
+		b, _ := envelope.Marshal()
+		delegate.OnComplete(b)
+		r.releaseDelegate(requestID)
+
+		log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 6 success ended")
+
 	}
 
 	_, isRealTimeRequest := r.realTimeRequest[constructor]
@@ -322,6 +311,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 			timeoutCallback,
 			successCallback,
 			blockingMode,
+			serialUICallback,
 		)
 		if err != nil && delegate != nil && delegate.OnTimeout != nil {
 			delegate.OnTimeout(err)
@@ -338,6 +328,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 					commandBytesDump,
 					timeoutCallback,
 					successCallback,
+					serialUICallback,
 				)
 			}
 			if blockingMode {
@@ -353,6 +344,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 				commandBytesDump,
 				timeoutCallback,
 				successCallback,
+				serialUICallback,
 			)
 		}
 	}
@@ -360,7 +352,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	return
 }
 
-func (r *River) executeLocalCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *River) executeLocalCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, serialUICallback bool) {
 	log.LOG.Debug("River::executeLocalCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
@@ -373,15 +365,15 @@ func (r *River) executeLocalCommand(requestID uint64, constructor int64, command
 	out.RequestID = in.RequestID
 	// double check
 	if applier, ok := r.localCommands[constructor]; ok {
-		applier(in, out, timeoutCB, successCB)
+		applier(in, out, timeoutCB, successCB, serialUICallback)
 	}
 }
 
-func (r *River) executeRemoteCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *River) executeRemoteCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, serialUICallback bool) {
 	log.LOG.Debug("River::executeRemoteCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
-	r.queueCtrl.ExecuteCommand(requestID, constructor, commandBytes, timeoutCB, successCB)
+	r.queueCtrl.ExecuteCommand(requestID, constructor, commandBytes, timeoutCB, successCB, serialUICallback)
 }
 
 func (r *River) releaseDelegate(requestID int64) {
@@ -452,6 +444,7 @@ func (r *River) CreateAuthKey() (err error) {
 				err = domain.ErrInvalidConstructor
 			}
 		},
+		true,
 	)
 
 	// Wait for 1st step to complete
@@ -576,6 +569,7 @@ func (r *River) CreateAuthKey() (err error) {
 				return
 			}
 		},
+		true,
 	)
 
 	// Wait for 2nd step to complete
@@ -631,7 +625,7 @@ func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
 	pmsg.MapToMessageSend(req)
 
 	buff, _ := req.Marshal()
-	r.queueCtrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSend, buff, nil, nil)
+	r.queueCtrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSend, buff, nil, nil, true)
 	isSuccess = true
 	log.LOG.Debug("River::RetryPendingMessage() Request enqueued")
 
@@ -691,7 +685,7 @@ func (r *River) Logout() (int64, error) {
 
 	req := new(msg.AuthLogout)
 	buff, _ := req.Marshal()
-	err = r.queueCtrl.ExecuteRealtimeCommand(uint64(requestID), msg.C_AuthLogout, buff, timeoutCallback, successCallback, true)
+	err = r.queueCtrl.ExecuteRealtimeCommand(uint64(requestID), msg.C_AuthLogout, buff, timeoutCallback, successCallback, true, true)
 	if err != nil {
 		r.releaseDelegate(requestID)
 	}

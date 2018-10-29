@@ -38,7 +38,7 @@ type UpdateApplier func(envelope *msg.UpdateEnvelope) (passToExternalhandler boo
 type MessageApplier func(envelope *msg.MessageEnvelope)
 
 // LocalMessageHandler
-type LocalMessageHandler func(in, out *msg.MessageEnvelope, timeoutCB TimeoutCallback, successCB MessageHandler)
+type LocalMessageHandler func(in, out *msg.MessageEnvelope, timeoutCB TimeoutCallback, successCB MessageHandler, serialUICallback bool)
 
 // OnMessageHandler
 type OnMessageHandler func(messages []*msg.MessageEnvelope)
