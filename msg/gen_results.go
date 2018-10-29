@@ -88,6 +88,12 @@ func ResultUsersMany(out *MessageEnvelope, res *UsersMany) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultAccountRegisterDevice(out *MessageEnvelope, res *AccountRegisterDevice) {
+	out.Constructor = C_AccountRegisterDevice
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultAuthLogout(out *MessageEnvelope, res *AuthLogout) {
 	out.Constructor = C_AuthLogout
 	pbytes.Put(out.Message)
@@ -156,6 +162,18 @@ func ResultMessagesGetDialogs(out *MessageEnvelope, res *MessagesGetDialogs) {
 }
 func ResultUpdateGetState(out *MessageEnvelope, res *UpdateGetState) {
 	out.Constructor = C_UpdateGetState
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultAccountUpdateUsername(out *MessageEnvelope, res *AccountUpdateUsername) {
+	out.Constructor = C_AccountUpdateUsername
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultAccountCheckUsername(out *MessageEnvelope, res *AccountCheckUsername) {
+	out.Constructor = C_AccountCheckUsername
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -280,12 +298,6 @@ func ResultSystemClientLog(out *MessageEnvelope, res *SystemClientLog) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
-func ResultNotifySettings(out *MessageEnvelope, res *NotifySettings) {
-	out.Constructor = C_NotifySettings
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
 func ResultInitCompleteAuthInternal(out *MessageEnvelope, res *InitCompleteAuthInternal) {
 	out.Constructor = C_InitCompleteAuthInternal
 	pbytes.Put(out.Message)
@@ -388,6 +400,12 @@ func ResultMessagesSend(out *MessageEnvelope, res *MessagesSend) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultUpdateNotifySettings(out *MessageEnvelope, res *UpdateNotifySettings) {
+	out.Constructor = C_UpdateNotifySettings
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultAuthRecalled(out *MessageEnvelope, res *AuthRecalled) {
 	out.Constructor = C_AuthRecalled
 	pbytes.Put(out.Message)
@@ -424,6 +442,18 @@ func ResultContactsImport(out *MessageEnvelope, res *ContactsImport) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultPeerNotifySettings(out *MessageEnvelope, res *PeerNotifySettings) {
+	out.Constructor = C_PeerNotifySettings
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultAccountUpdateProfile(out *MessageEnvelope, res *AccountUpdateProfile) {
+	out.Constructor = C_AccountUpdateProfile
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultFileSavePart(out *MessageEnvelope, res *FileSavePart) {
 	out.Constructor = C_FileSavePart
 	pbytes.Put(out.Message)
@@ -450,6 +480,12 @@ func ResultInputFile(out *MessageEnvelope, res *InputFile) {
 }
 func ResultContactsMany(out *MessageEnvelope, res *ContactsMany) {
 	out.Constructor = C_ContactsMany
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultAccountUnregisterDevice(out *MessageEnvelope, res *AccountUnregisterDevice) {
+	out.Constructor = C_AccountUnregisterDevice
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -486,6 +522,12 @@ func ResultInitConnect(out *MessageEnvelope, res *InitConnect) {
 }
 func ResultFileGet(out *MessageEnvelope, res *FileGet) {
 	out.Constructor = C_FileGet
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultUpdateUsername(out *MessageEnvelope, res *UpdateUsername) {
+	out.Constructor = C_UpdateUsername
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

@@ -89,6 +89,12 @@ var (
 			return m
 		},
 	}
+	PoolAccountRegisterDevice = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountRegisterDevice)
+			return m
+		},
+	}
 	PoolAuthLogout = sync.Pool{
 		New: func() interface{} {
 			m := new(AuthLogout)
@@ -158,6 +164,18 @@ var (
 	PoolUpdateGetState = sync.Pool{
 		New: func() interface{} {
 			m := new(UpdateGetState)
+			return m
+		},
+	}
+	PoolAccountUpdateUsername = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountUpdateUsername)
+			return m
+		},
+	}
+	PoolAccountCheckUsername = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountCheckUsername)
 			return m
 		},
 	}
@@ -281,12 +299,6 @@ var (
 			return m
 		},
 	}
-	PoolNotifySettings = sync.Pool{
-		New: func() interface{} {
-			m := new(NotifySettings)
-			return m
-		},
-	}
 	PoolInitCompleteAuthInternal = sync.Pool{
 		New: func() interface{} {
 			m := new(InitCompleteAuthInternal)
@@ -389,6 +401,12 @@ var (
 			return m
 		},
 	}
+	PoolUpdateNotifySettings = sync.Pool{
+		New: func() interface{} {
+			m := new(UpdateNotifySettings)
+			return m
+		},
+	}
 	PoolAuthRecalled = sync.Pool{
 		New: func() interface{} {
 			m := new(AuthRecalled)
@@ -425,6 +443,18 @@ var (
 			return m
 		},
 	}
+	PoolPeerNotifySettings = sync.Pool{
+		New: func() interface{} {
+			m := new(PeerNotifySettings)
+			return m
+		},
+	}
+	PoolAccountUpdateProfile = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountUpdateProfile)
+			return m
+		},
+	}
 	PoolFileSavePart = sync.Pool{
 		New: func() interface{} {
 			m := new(FileSavePart)
@@ -452,6 +482,12 @@ var (
 	PoolContactsMany = sync.Pool{
 		New: func() interface{} {
 			m := new(ContactsMany)
+			return m
+		},
+	}
+	PoolAccountUnregisterDevice = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountUnregisterDevice)
 			return m
 		},
 	}
@@ -488,6 +524,12 @@ var (
 	PoolFileGet = sync.Pool{
 		New: func() interface{} {
 			m := new(FileGet)
+			return m
+		},
+	}
+	PoolUpdateUsername = sync.Pool{
+		New: func() interface{} {
+			m := new(UpdateUsername)
 			return m
 		},
 	}

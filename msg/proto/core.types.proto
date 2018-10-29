@@ -19,6 +19,7 @@ message Dialog {
     required int64 ReadOutboxMaxID = 5;
     required int32 UnreadCount = 6;
     required fixed64 AccessHash = 7 [jstype = JS_STRING];
+    optional PeerNotifySettings NotifySettings = 8;
 }
 
 // Peer
@@ -54,6 +55,7 @@ message User {
     required int64 ID = 1 [jstype = JS_STRING];
     required string FirstName = 2;
     required string LastName = 3;
+    required string Username = 4;
 }
 
 // ContactUser
@@ -110,18 +112,11 @@ message PhoneContact {
     required string Phone = 4;
 }
 
-// NotifyFlags
-enum NotifyFlags {
-    ShowPreview = 1;
-    Silent = 2;
-}
-
-// NotifySettings
-message NotifySettings {
-    required fixed32 Flags = 1;
+// PeerNotifySettings
+message PeerNotifySettings {
+    required int32 Flags = 1;
     optional int64 MuteUntil = 2;
     optional string Sound = 3;
-
 }
 
 // InputFile

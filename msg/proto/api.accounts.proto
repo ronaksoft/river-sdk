@@ -3,12 +3,58 @@ package msg;
 import "core.types.proto";
 
 // AccountSetNotifySettings
+// @Function
+// @Return: Bool
 message AccountSetNotifySettings {
     required InputPeer Peer = 1;
-    required NotifySettings Settings = 2;
+    required PeerNotifySettings Settings = 2;
 }
 
 // AccountGetNotifySettings
+// @Function
+// @Return: Bool
 message AccountGetNotifySettings {
     repeated InputPeer Peers = 1;
+}
+
+// AccountRegisterDevice
+// @Function
+// @Return: Bool
+message AccountRegisterDevice {
+    required int32 TokenType = 1;
+    required string Token = 2;
+    required string DeviceModel = 3;
+    required string SystemVersion = 4;
+    required string AppVersion = 5;
+    required string LangCode = 6;
+}
+
+// AccountUnregisterDevice
+// @Function
+// @Return: Bool
+message AccountUnregisterDevice {
+    required int32 TokenType = 1;
+    required string Token = 2;
+}
+
+// AccountUpdateProfile
+// @Function
+// @Return: UserFull
+message AccountUpdateProfile {
+    required string FirstName = 1;
+    required string LastName = 2;
+}
+
+// AccountCheckUsername
+// @Function
+// @Return: Bool
+message AccountCheckUsername {
+    required string Username = 1;
+}
+
+// AccountUpdateUsername
+// @Function
+// @Return: UserFull
+message AccountUpdateUsername {
+    required string Username = 1;
 }

@@ -15,6 +15,7 @@ const (
 	C_File                         int64 = 749574446
 	C_User                         int64 = 765557111
 	C_UsersMany                    int64 = 801733941
+	C_AccountRegisterDevice        int64 = 946059841
 	C_AuthLogout                   int64 = 992431648
 	C_UsersGet                     int64 = 1039301579
 	C_RSAPublicKey                 int64 = 1046601890
@@ -27,6 +28,8 @@ const (
 	C_ContactsGet                  int64 = 1412732665
 	C_MessagesGetDialogs           int64 = 1429532372
 	C_UpdateGetState               int64 = 1437250230
+	C_AccountUpdateUsername        int64 = 1477164344
+	C_AccountCheckUsername         int64 = 1501406413
 	C_UpdateReadHistoryInbox       int64 = 1529128378
 	C_MessagesSetTyping            int64 = 1540214486
 	C_InitCompleteAuth             int64 = 1583178320
@@ -47,7 +50,6 @@ const (
 	C_AuthRegister                 int64 = 2228369460
 	C_AuthCheckedPhone             int64 = 2236203131
 	C_SystemClientLog              int64 = 2244397803
-	C_NotifySettings               int64 = 2267536040
 	C_InitCompleteAuthInternal     int64 = 2360982492
 	C_UpdateEnvelope               int64 = 2373884514
 	C_AuthSentCode                 int64 = 2375498471
@@ -65,23 +67,28 @@ const (
 	C_SystemDHGroups               int64 = 2890748083
 	C_MessagesSent                 int64 = 2942502835
 	C_MessagesSend                 int64 = 3000244183
+	C_UpdateNotifySettings         int64 = 3187524885
 	C_AuthRecalled                 int64 = 3249025459
 	C_MessagesDialogs              int64 = 3252610224
 	C_InputPeer                    int64 = 3374092470
 	C_MessagesGetHistory           int64 = 3396939832
 	C_UpdateNewMessage             int64 = 3426925183
 	C_ContactsImport               int64 = 3473528730
+	C_PeerNotifySettings           int64 = 3475030132
+	C_AccountUpdateProfile         int64 = 3725499887
 	C_FileSavePart                 int64 = 3766876582
 	C_InputUser                    int64 = 3865689926
 	C_ClientPendingMessageDelivery int64 = 3881219190
 	C_InputFile                    int64 = 3882180383
 	C_ContactsMany                 int64 = 3883395672
+	C_AccountUnregisterDevice      int64 = 3981251588
 	C_AuthSendCode                 int64 = 3984043365
 	C_Bool                         int64 = 4122188204
 	C_InitResponse                 int64 = 4130340247
 	C_AuthCheckPhone               int64 = 4134648516
 	C_InitConnect                  int64 = 4150793517
 	C_FileGet                      int64 = 4282510672
+	C_UpdateUsername               int64 = 4290110589
 )
 
 var ConstructorNames = map[int64]string{
@@ -99,6 +106,7 @@ var ConstructorNames = map[int64]string{
 	749574446:  "File",
 	765557111:  "User",
 	801733941:  "UsersMany",
+	946059841:  "AccountRegisterDevice",
 	992431648:  "AuthLogout",
 	1039301579: "UsersGet",
 	1046601890: "RSAPublicKey",
@@ -111,6 +119,8 @@ var ConstructorNames = map[int64]string{
 	1412732665: "ContactsGet",
 	1429532372: "MessagesGetDialogs",
 	1437250230: "UpdateGetState",
+	1477164344: "AccountUpdateUsername",
+	1501406413: "AccountCheckUsername",
 	1529128378: "UpdateReadHistoryInbox",
 	1540214486: "MessagesSetTyping",
 	1583178320: "InitCompleteAuth",
@@ -131,7 +141,6 @@ var ConstructorNames = map[int64]string{
 	2228369460: "AuthRegister",
 	2236203131: "AuthCheckedPhone",
 	2244397803: "SystemClientLog",
-	2267536040: "NotifySettings",
 	2360982492: "InitCompleteAuthInternal",
 	2373884514: "UpdateEnvelope",
 	2375498471: "AuthSentCode",
@@ -149,21 +158,26 @@ var ConstructorNames = map[int64]string{
 	2890748083: "SystemDHGroups",
 	2942502835: "MessagesSent",
 	3000244183: "MessagesSend",
+	3187524885: "UpdateNotifySettings",
 	3249025459: "AuthRecalled",
 	3252610224: "MessagesDialogs",
 	3374092470: "InputPeer",
 	3396939832: "MessagesGetHistory",
 	3426925183: "UpdateNewMessage",
 	3473528730: "ContactsImport",
+	3475030132: "PeerNotifySettings",
+	3725499887: "AccountUpdateProfile",
 	3766876582: "FileSavePart",
 	3865689926: "InputUser",
 	3881219190: "ClientPendingMessageDelivery",
 	3882180383: "InputFile",
 	3883395672: "ContactsMany",
+	3981251588: "AccountUnregisterDevice",
 	3984043365: "AuthSendCode",
 	4122188204: "Bool",
 	4130340247: "InitResponse",
 	4134648516: "AuthCheckPhone",
 	4150793517: "InitConnect",
 	4282510672: "FileGet",
+	4290110589: "UpdateUsername",
 }

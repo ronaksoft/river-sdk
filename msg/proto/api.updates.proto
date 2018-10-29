@@ -84,3 +84,22 @@ message UpdateUserStatus {
     required int64 UserID = 1 [jstype = JS_STRING];
     required int32 Status = 2;
 }
+
+// UpdateUsername
+message UpdateUsername {
+    required int32 UCount = 100;
+    required int64 UpdateID = 101;
+    required int64 UserID = 1 [jstype = JS_STRING];
+    required string Username = 2;
+    required string FirstName = 3;
+    required string LastName = 4;
+}
+
+// UpdateNotifySettings
+message UpdateNotifySettings {
+    required int32 UCount = 100;
+    required int64 UpdateID = 101;
+    required int64 UserID = 1 [jstype = JS_STRING];
+    required InputPeer NotifyPeer = 2;
+    required PeerNotifySettings Settings = 3;
+}
