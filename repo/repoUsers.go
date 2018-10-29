@@ -16,6 +16,7 @@ type RepoUsers interface {
 	GetManyUsers(userIDs []int64) []*msg.User
 	GetManyContactUsers(userIDs []int64) []*msg.ContactUser
 	GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact)
+	SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*msg.PhoneContact)
 	GetAccessHash(userID int64) (uint64, error)
 	UpdateAccessHash(accessHash int64, peerID int64, peerType int32) error
 	GetUser(userID int64) *msg.User
@@ -154,6 +155,37 @@ func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
 	err := r.db.Where("AccessHash <> 0").Find(&users).Error
 	if err != nil {
 		log.LOG.Debug("RepoUsers::GetContacts()-> fetch user entities",
+			zap.String("Error", err.Error()),
+		)
+		return nil, nil //, err
+	}
+	pbUsers := make([]*msg.ContactUser, 0)
+	pbContacts := make([]*msg.PhoneContact, 0)
+	for _, v := range users {
+		tmpUser := new(msg.ContactUser)
+		tmpContact := new(msg.PhoneContact)
+		v.MapToContactUser(tmpUser)
+		v.MapToPhoneContact(tmpContact)
+		pbUsers = append(pbUsers, tmpUser)
+		pbContacts = append(pbContacts, tmpContact)
+	}
+
+	return pbUsers, pbContacts
+
+}
+
+// SearchContacts
+func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*msg.PhoneContact) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	log.LOG.Debug("RepoUsers::SearchContacts()")
+
+	p := "%" + searchPhrase + "%"
+	users := make([]dto.Users, 0)
+	err := r.db.Where("AccessHash <> 0 AND (FirstName LIKE ? OR LastName LIKE ? OR Phone LIKE ? OR Username LIKE ?)", p, p, p, p).Find(&users).Error
+	if err != nil {
+		log.LOG.Debug("RepoUsers::SearchContacts()-> fetch user entities",
 			zap.String("Error", err.Error()),
 		)
 		return nil, nil //, err

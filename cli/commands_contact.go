@@ -1,6 +1,7 @@
 package main
 
 import (
+	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/toolbox"
 	"gopkg.in/abiosoft/ishell.v2"
@@ -49,7 +50,21 @@ var ContactGet = &ishell.Cmd{
 	},
 }
 
+var SearchContacts = &ishell.Cmd{
+	Name: "SearchContacts",
+	Func: func(c *ishell.Context) {
+
+		reqID := domain.RandomUint64()
+		c.Print("Search Phrase:")
+		searchPharase := c.ReadLine()
+		reqDelegate := new(RequestDelegate)
+		reqDelegate.RequestID = int64(reqID)
+		_SDK.SearchContacts(reqID, searchPharase, reqDelegate)
+	},
+}
+
 func init() {
 	Contact.AddCmd(ContactImport)
 	Contact.AddCmd(ContactGet)
+	Contact.AddCmd(SearchContacts)
 }

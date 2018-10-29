@@ -402,6 +402,17 @@ func (ctrl *NetworkController) extractMessages(m *msg.MessageEnvelope) ([]*msg.M
 		if err == nil {
 			updates = append(updates, x)
 		}
+	case msg.C_Error:
+		e := new(msg.Error)
+		e.Unmarshal(m.Message)
+		// its general error
+		if ctrl.wsOnError != nil && m.RequestID == 0 {
+			ctrl.wsOnError(e)
+		} else {
+			// ui callback delegate will handle it
+			messages = append(messages, m)
+		}
+
 	default:
 		messages = append(messages, m)
 	}

@@ -1,8 +1,0 @@
-syntax = "proto2";
-package msg;
-
-// ClientContactsSearch
-// retuens ContactsMany
-message ClientContactsSearch {
-    required string Query = 1;
-}
