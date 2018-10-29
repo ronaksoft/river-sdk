@@ -70,7 +70,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	}
 
 	// init riverConfigs this should be after connect to DB
-	r.ConnInfo = getConfig()
+	r.loadSystemConfig()
 
 	// Initialize realtime requests
 	r.realTimeRequest = map[int64]bool{
@@ -230,7 +230,9 @@ func (r *River) Stop() {
 		zap.String("Error", err.Error()),
 	)
 }
-func (r *River) deepCopy(commandBytes []byte) []byte {
+
+// take a copy of commandBytes b4 IOS/Android GC/OS collect/alter them
+func deepCopy(commandBytes []byte) []byte {
 	length := len(commandBytes)
 	buff := make([]byte, length)
 	copy(buff, commandBytes)
@@ -245,7 +247,7 @@ func (r *River) deepCopy(commandBytes []byte) []byte {
 // This is a wrapper function to pass the request to the queueController, to be passed to networkController for final
 // delivery to the server.
 func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate, blockingMode bool) (requestID int64, err error) {
-	commandBytesDump := r.deepCopy(commandBytes)
+	commandBytesDump := deepCopy(commandBytes)
 
 	if _, ok := msg.ConstructorNames[constructor]; !ok {
 		return 0, domain.ErrInvalidConstructor
@@ -648,7 +650,7 @@ func (r *River) Logout() (int64, error) {
 	}
 
 	// reset connection info
-	clearConfig()
+	r.clearSystemConfig()
 
 	// TODO : send logout request to server
 	requestID := domain.RandomInt63()

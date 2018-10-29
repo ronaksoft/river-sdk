@@ -184,7 +184,11 @@ func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
 	ctrl.addToDeliveredMessageList(message.ID)
 
 	// call external handler
-	cmd.GetUIExecuter().Exec(func() { ctrl.onUpdateMainDelegate(msg.C_UpdateEnvelope, buff) })
+	cmd.GetUIExecuter().Exec(func() {
+		if ctrl.onUpdateMainDelegate != nil {
+			ctrl.onUpdateMainDelegate(msg.C_UpdateEnvelope, buff)
+		}
+	})
 }
 
 func (ctrl *SyncController) usersMany(e *msg.MessageEnvelope) {

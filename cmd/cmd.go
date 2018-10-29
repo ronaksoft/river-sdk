@@ -17,6 +17,11 @@ type UIExecuter struct {
 	chStop       chan bool
 }
 
+func init() {
+	GetUIExecuter()
+}
+
+// InitUIExecuter added for clearify cuz init will initialize this
 func InitUIExecuter() {
 	GetUIExecuter()
 }

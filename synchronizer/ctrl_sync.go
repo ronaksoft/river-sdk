@@ -386,7 +386,11 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 
 		// wrapped to UpdateContainer
 		buff, _ := updContainer.Marshal()
-		cmd.GetUIExecuter().Exec(func() { ctrl.onUpdateMainDelegate(msg.C_UpdateContainer, buff) })
+		cmd.GetUIExecuter().Exec(func() {
+			if ctrl.onUpdateMainDelegate != nil {
+				ctrl.onUpdateMainDelegate(msg.C_UpdateContainer, buff)
+			}
+		})
 
 		// update last updateID
 		if ctrl.updateID < x.MaxUpdateID {
@@ -638,7 +642,9 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 
 		// pass all updates to UI
 		cmd.GetUIExecuter().Exec(func() {
-			ctrl.onUpdateMainDelegate(msg.C_UpdateContainer, buff)
+			if ctrl.onUpdateMainDelegate != nil {
+				ctrl.onUpdateMainDelegate(msg.C_UpdateContainer, buff)
+			}
 		})
 	}
 

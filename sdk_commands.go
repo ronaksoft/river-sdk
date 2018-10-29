@@ -57,7 +57,11 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	out.Constructor = msg.C_MessagesDialogs
 	out.Message, _ = res.Marshal()
 
-	cmd.GetUIExecuter().Exec(func() { successCB(out) }) //successCB(out)
+	cmd.GetUIExecuter().Exec(func() {
+		if successCB != nil {
+			successCB(out)
+		}
+	}) //successCB(out)
 }
 
 func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -96,7 +100,11 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	// 4. later when queue got processed and server returned response we should check if the requestID
 	//   exist in pendindTable we remove it and insert new message with new id to message table
 	//   invoke new OnUpdate with new protobuff to inform ui that pending message got delivered
-	cmd.GetUIExecuter().Exec(func() { successCB(out) }) //successCB(out)
+	cmd.GetUIExecuter().Exec(func() {
+		if successCB != nil {
+			successCB(out)
+		}
+	}) //successCB(out)
 }
 
 func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -137,7 +145,11 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 	out.Constructor = msg.C_MessagesMany
 	out.Message, _ = res.Marshal()
 
-	cmd.GetUIExecuter().Exec(func() { successCB(out) }) //successCB(out)
+	cmd.GetUIExecuter().Exec(func() {
+		if successCB != nil {
+			successCB(out)
+		}
+	}) //successCB(out)
 }
 
 func (r *River) contactGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -162,7 +174,11 @@ func (r *River) contactGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeou
 	out.Constructor = msg.C_ContactsMany
 	out.Message, _ = res.Marshal()
 
-	cmd.GetUIExecuter().Exec(func() { successCB(out) }) // successCB(out)
+	cmd.GetUIExecuter().Exec(func() {
+		if successCB != nil {
+			successCB(out)
+		}
+	}) //successCB(out)
 }
 
 func (r *River) messageReadHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -216,7 +232,11 @@ func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 
 		out.Constructor = msg.C_UsersMany
 		out.Message, _ = res.Marshal()
-		cmd.GetUIExecuter().Exec(func() { successCB(out) }) //successCB(out)
+		cmd.GetUIExecuter().Exec(func() {
+			if successCB != nil {
+				successCB(out)
+			}
+		}) //successCB(out)
 	} else {
 		log.LOG.Debug("River::messageGetHistory()-> GetAnyUsers() cacheDB is not up to date pass request to server")
 		// send the request to server
@@ -250,7 +270,11 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 
 		out.Constructor = msg.C_MessagesMany
 		out.Message, _ = res.Marshal()
-		cmd.GetUIExecuter().Exec(func() { successCB(out) }) //successCB(out)
+		cmd.GetUIExecuter().Exec(func() {
+			if successCB != nil {
+				successCB(out)
+			}
+		}) //successCB(out)
 	} else {
 		log.LOG.Debug("River::messagesGet() -> GetManyMessages() cacheDB is not up to date pass request to server")
 		// send the request to server

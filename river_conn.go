@@ -1,17 +1,10 @@
 package riversdk
 
 import (
-	"sync"
-
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/repo"
 	"go.uber.org/zap"
-)
-
-var (
-	mx        sync.Mutex
-	riverConf *RiverConnection
 )
 
 // easyjson:json
@@ -70,23 +63,16 @@ type RiverConnection struct {
 }
 
 // Get
-func getConfig() *RiverConnection {
-	if riverConf == nil {
-		mx.Lock()
-		defer mx.Unlock()
-		if riverConf == nil {
-			riverConf = new(RiverConnection)
-			if err := riverConf.loadConfig(); err != nil {
-				riverConf.saveConfig()
-			}
-		}
+func (r *River) loadSystemConfig() {
+	r.ConnInfo = new(RiverConnection)
+	if err := r.ConnInfo.loadConfig(); err != nil {
+		r.ConnInfo.saveConfig()
 	}
-	return riverConf
 }
 
 // Clear
-func clearConfig() {
-	riverConf = &RiverConnection{}
+func (r *River) clearSystemConfig() {
+	r.ConnInfo = &RiverConnection{}
 }
 
 // Save
