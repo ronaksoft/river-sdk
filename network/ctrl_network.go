@@ -571,36 +571,58 @@ func (ctrl *NetworkController) SetNetworkStatusChangedCallback(h domain.NetworkS
 // Send direct sends immediatly else it put it in debuncer
 func (ctrl *NetworkController) Send(msgEnvelope *msg.MessageEnvelope, direct bool) error {
 
-	if direct {
-		return ctrl._send(msgEnvelope)
-	} else {
-		// this will probably solve queueController unordered message burst
-		// add to send buffer
-		ctrl.sendQueue.Push(msgEnvelope)
-		// signal the send debuncer
-		ctrl.sendRequestReceived()
-	}
-	return nil
+	// send without debuncer
+	return ctrl._send(msgEnvelope)
+
+	// // send with debuncer() not works {"Code": "E01", "Items": "REQUEST"}
+	// if direct {
+	// 	return ctrl._send(msgEnvelope)
+	// } else {
+	// 	// this will probably solve queueController unordered message burst
+	// 	// add to send buffer
+	// 	ctrl.sendQueue.Push(msgEnvelope)
+	// 	// signal the send debuncer
+	// 	ctrl.sendRequestReceived()
+	// }
+	// return nil
 }
 
 // sendFlush will be called in sendDebuncer that running in another go routine so its ok to run in sync mode
 func (ctrl *NetworkController) sendFlush(queueMsgs []*msg.MessageEnvelope) {
 
-	// Implemented domain.SequentialUniqueID() to make sure requestID are sequential and unique
-	sort.Slice(queueMsgs, func(i, j int) bool {
-		return queueMsgs[i].RequestID < queueMsgs[j].RequestID
-	})
+	log.LOG.Debug("NetworkController::sendFlush()",
+		zap.Int("queueMsgs Count", len(queueMsgs)),
+	)
+	if len(queueMsgs) > 1 {
+		// Implemented domain.SequentialUniqueID() to make sure requestID are sequential and unique
+		sort.Slice(queueMsgs, func(i, j int) bool {
+			return queueMsgs[i].RequestID < queueMsgs[j].RequestID
+		})
 
-	msgContainer := new(msg.MessageContainer)
-	msgContainer.Envelopes = queueMsgs
-	msgContainer.Length = int32(len(queueMsgs))
+		msgContainer := new(msg.MessageContainer)
+		msgContainer.Envelopes = queueMsgs
+		msgContainer.Length = int32(len(queueMsgs))
 
-	messageEnvelop := new(msg.MessageEnvelope)
-	messageEnvelop.Constructor = msg.C_MessageContainer
-	messageEnvelop.Message, _ = msgContainer.Marshal()
-	messageEnvelop.RequestID = uint64(domain.SequentialUniqueID())
+		messageEnvelop := new(msg.MessageEnvelope)
+		messageEnvelop.Constructor = msg.C_MessageContainer
+		messageEnvelop.Message, _ = msgContainer.Marshal()
+		messageEnvelop.RequestID = 0 //uint64(domain.SequentialUniqueID())
 
-	ctrl._send(messageEnvelop)
+		err := ctrl._send(messageEnvelop)
+		if err != nil {
+			log.LOG.Debug("NetworkController::sendFlush() -> ctrl._send() many",
+				zap.String("Error", err.Error()),
+			)
+		}
+
+	} else {
+		err := ctrl._send(queueMsgs[0])
+		if err != nil {
+			log.LOG.Debug("NetworkController::sendFlush() -> ctrl._send() one",
+				zap.String("Error", err.Error()),
+			)
+		}
+	}
 }
 
 // sendWebsocket
