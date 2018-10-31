@@ -69,6 +69,7 @@ func NewSyncController(config SyncConfig) *SyncController {
 		msg.C_UpdateReadHistoryInbox:  ctrl.updateReadHistoryInbox,
 		msg.C_UpdateMessageEdited:     ctrl.updateMessageEdited,
 		msg.C_UpdateMessageID:         ctrl.updateMessageID,
+		msg.C_UpdateUsername:          ctrl.updateUsername,
 	}
 
 	ctrl.messageAppliers = map[int64]domain.MessageApplier{

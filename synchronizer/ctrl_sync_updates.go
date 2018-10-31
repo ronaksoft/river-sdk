@@ -160,3 +160,19 @@ func (ctrl *SyncController) updateMessageID(u *msg.UpdateEnvelope) (passToExtern
 	passToExternalhandler = false
 	return
 }
+
+// updateUsername
+func (ctrl *SyncController) updateUsername(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
+	log.LOG.Debug("SyncController::updateUsername() applier")
+	x := new(msg.UpdateUsername)
+	x.Unmarshal(u.Update)
+
+	ctrl.connInfo.ChangeUserID(x.UserID)
+	ctrl.connInfo.ChangeUsername(x.Username)
+	ctrl.connInfo.ChangeFirstName(x.FirstName)
+	ctrl.connInfo.ChangeLastName(x.LastName)
+	ctrl.connInfo.Save()
+
+	passToExternalhandler = true
+	return
+}
