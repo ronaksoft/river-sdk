@@ -198,7 +198,7 @@ func (ctrl *SyncController) sync() {
 		}
 	}
 
-	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > 999 {
+	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > 200 {
 		log.LOG.Debug("SyncController::sync()-> Snapshot sync")
 		// remove all messages
 		err := repo.Ctx().DropAndCreateTable(&dto.Messages{})
