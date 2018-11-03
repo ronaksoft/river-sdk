@@ -70,6 +70,9 @@ type NetworkController struct {
 	chMessageDebuncer chan bool
 	chUpdateDebuncer  chan bool
 	chSendDebuncer    chan bool
+	// prevent write to socket concurrently
+	// it used to prevent invoke read request while qriting on socket too
+	wsSendDebuncerLock sync.Mutex
 
 	OnMessage domain.OnMessageHandler
 	OnUpdate  domain.OnUpdateHandler
@@ -129,7 +132,8 @@ func (ctrl *NetworkController) Start() error {
 
 func (ctrl *NetworkController) messageDebuncer() {
 	counter := 0
-	timer := time.NewTimer(100 * time.Millisecond)
+	interval := 100 * time.Millisecond
+	timer := time.NewTimer(interval)
 	for {
 		select {
 		case <-ctrl.chMessageDebuncer:
@@ -142,7 +146,7 @@ func (ctrl *NetworkController) messageDebuncer() {
 				log.LOG.Debug("NetworkController::messageDebuncer() Received Timer Reset",
 					zap.Int("Counter", counter),
 				)
-				timer.Reset(100 * time.Millisecond)
+				timer.Reset(interval)
 			}
 		case <-timer.C:
 			if ctrl.OnMessage != nil && counter > 0 {
@@ -152,6 +156,7 @@ func (ctrl *NetworkController) messageDebuncer() {
 				ctrl.OnMessage(ctrl.messageQueue.PopAll())
 				counter = 0
 			}
+			timer.Reset(interval)
 		case <-ctrl.stopChannel:
 			log.LOG.Debug("NetworkController::messageDebuncer() Stopped")
 			return
@@ -162,7 +167,8 @@ func (ctrl *NetworkController) messageDebuncer() {
 
 func (ctrl *NetworkController) updateDebuncer() {
 	counter := 0
-	timer := time.NewTimer(100 * time.Millisecond)
+	interval := 100 * time.Millisecond
+	timer := time.NewTimer(interval)
 	for {
 		select {
 		case <-ctrl.chUpdateDebuncer:
@@ -175,7 +181,7 @@ func (ctrl *NetworkController) updateDebuncer() {
 				log.LOG.Debug("NetworkController::updateDebuncer() Received Timer Reset",
 					zap.Int("Counter", counter),
 				)
-				timer.Reset(100 * time.Millisecond)
+				timer.Reset(interval)
 			}
 		case <-timer.C:
 			if ctrl.OnUpdate != nil && counter > 0 {
@@ -185,6 +191,7 @@ func (ctrl *NetworkController) updateDebuncer() {
 				ctrl.OnUpdate(ctrl.updateQueue.PopAll())
 				counter = 0
 			}
+			timer.Reset(interval)
 		case <-ctrl.stopChannel:
 			log.LOG.Debug("NetworkController::updateDebuncer() Stopped")
 			return
@@ -194,8 +201,14 @@ func (ctrl *NetworkController) updateDebuncer() {
 
 func (ctrl *NetworkController) sendDebuncer() {
 	counter := 0
-	timer := time.NewTimer(100 * time.Millisecond)
+	interval := 100 * time.Millisecond
+	timer := time.NewTimer(interval)
 	for {
+		// wait for network to connect
+		for ctrl.wsQuality == domain.CONNECTING || ctrl.wsQuality == domain.DISCONNECTED {
+			time.Sleep(interval)
+		}
+
 		select {
 		case <-ctrl.chSendDebuncer:
 			counter++
@@ -207,16 +220,17 @@ func (ctrl *NetworkController) sendDebuncer() {
 				log.LOG.Debug("NetworkController::sendDebuncer() Received Timer Reset",
 					zap.Int("Counter", counter),
 				)
-				timer.Reset(100 * time.Millisecond)
+				timer.Reset(interval)
 			}
 		case <-timer.C:
-			if counter > 0 {
+			if ctrl.sendQueue.Length() > 0 {
 				log.LOG.Debug("NetworkController::sendDebuncer() Flushed",
-					zap.Int("ItemCount", ctrl.updateQueue.Length()),
+					zap.Int("ItemCount", ctrl.sendQueue.Length()),
 				)
 				ctrl.sendFlush(ctrl.sendQueue.PopAll())
 				counter = 0
 			}
+			timer.Reset(interval)
 		case <-ctrl.stopChannel:
 			log.LOG.Debug("NetworkController::sendDebuncer() Stopped")
 			return
@@ -306,6 +320,11 @@ func (ctrl *NetworkController) keepAlive() {
 func (ctrl *NetworkController) receiver() {
 	res := msg.ProtoMessage{}
 	for {
+		// prevent webSocket.ReadMessage() request while writing message to websocket
+		// this will wait till sendFlush() finish's its job
+		ctrl.wsSendDebuncerLock.Lock()
+		ctrl.wsSendDebuncerLock.Unlock()
+
 		messageType, message, err := ctrl.wsConn.ReadMessage()
 		if err != nil {
 			log.LOG.Debug("NetworkController::receiver()->ReadMessage()",
@@ -572,19 +591,22 @@ func (ctrl *NetworkController) SetNetworkStatusChangedCallback(h domain.NetworkS
 func (ctrl *NetworkController) Send(msgEnvelope *msg.MessageEnvelope, direct bool) error {
 
 	// send without debuncer
-	return ctrl._send(msgEnvelope)
+	// return ctrl._send(msgEnvelope)
 
-	// // send with debuncer() not works {"Code": "E01", "Items": "REQUEST"}
-	// if direct {
-	// 	return ctrl._send(msgEnvelope)
-	// } else {
-	// 	// this will probably solve queueController unordered message burst
-	// 	// add to send buffer
-	// 	ctrl.sendQueue.Push(msgEnvelope)
-	// 	// signal the send debuncer
-	// 	ctrl.sendRequestReceived()
-	// }
-	// return nil
+	if direct {
+		// this will wait till sendFlush() done its job
+		ctrl.wsSendDebuncerLock.Lock()
+		ctrl.wsSendDebuncerLock.Unlock()
+
+		return ctrl._send(msgEnvelope)
+	} else {
+		// this will probably solve queueController unordered message burst
+		// add to send buffer
+		ctrl.sendQueue.Push(msgEnvelope)
+		// signal the send debuncer
+		ctrl.sendRequestReceived()
+	}
+	return nil
 }
 
 // sendFlush will be called in sendDebuncer that running in another go routine so its ok to run in sync mode
@@ -593,26 +615,53 @@ func (ctrl *NetworkController) sendFlush(queueMsgs []*msg.MessageEnvelope) {
 	log.LOG.Debug("NetworkController::sendFlush()",
 		zap.Int("queueMsgs Count", len(queueMsgs)),
 	)
+
+	ctrl.wsSendDebuncerLock.Lock()
+
 	if len(queueMsgs) > 1 {
 		// Implemented domain.SequentialUniqueID() to make sure requestID are sequential and unique
 		sort.Slice(queueMsgs, func(i, j int) bool {
 			return queueMsgs[i].RequestID < queueMsgs[j].RequestID
 		})
 
-		msgContainer := new(msg.MessageContainer)
-		msgContainer.Envelopes = queueMsgs
-		msgContainer.Length = int32(len(queueMsgs))
+		// chunk data by 50 and send
+		limit := 50
+		length := len(queueMsgs)
+		rangeCount := length / limit
+		for i := 0; i <= rangeCount; i++ {
+			startIdx := i * limit
+			// empty already
+			if startIdx >= length {
+				break
+			}
+			endIdx := startIdx + limit
+			// check slice bounds
+			if endIdx > length {
+				endIdx = length
+			}
+			// fetch chunk
+			chunkMsgs := queueMsgs[startIdx:endIdx]
 
-		messageEnvelop := new(msg.MessageEnvelope)
-		messageEnvelop.Constructor = msg.C_MessageContainer
-		messageEnvelop.Message, _ = msgContainer.Marshal()
-		messageEnvelop.RequestID = 0 //uint64(domain.SequentialUniqueID())
+			msgContainer := new(msg.MessageContainer)
+			msgContainer.Envelopes = chunkMsgs
+			msgContainer.Length = int32(len(chunkMsgs))
 
-		err := ctrl._send(messageEnvelop)
-		if err != nil {
-			log.LOG.Debug("NetworkController::sendFlush() -> ctrl._send() many",
-				zap.String("Error", err.Error()),
-			)
+			messageEnvelop := new(msg.MessageEnvelope)
+			messageEnvelop.Constructor = msg.C_MessageContainer
+			messageEnvelop.Message, _ = msgContainer.Marshal()
+			messageEnvelop.RequestID = 0 //uint64(domain.SequentialUniqueID())
+
+			err := ctrl._send(messageEnvelop)
+			if err != nil {
+				log.LOG.Debug("NetworkController::sendFlush() -> ctrl._send() many",
+					zap.String("Error", err.Error()),
+				)
+
+				// add requests again to sendQueue and try again later
+				log.LOG.Debug("NetworkController::sendFlush() -> ctrl._send() many : pushed requests back to sendQueue")
+				ctrl.sendQueue.PushMany(queueMsgs[startIdx:])
+				break
+			}
 		}
 
 	} else {
@@ -621,8 +670,14 @@ func (ctrl *NetworkController) sendFlush(queueMsgs []*msg.MessageEnvelope) {
 			log.LOG.Debug("NetworkController::sendFlush() -> ctrl._send() one",
 				zap.String("Error", err.Error()),
 			)
+
+			// add requests again to sendQueue and try again later
+			log.LOG.Debug("NetworkController::sendFlush() -> ctrl._send() one : pushed request back to sendQueue")
+			ctrl.sendQueue.Push(queueMsgs[0])
 		}
 	}
+
+	ctrl.wsSendDebuncerLock.Unlock()
 }
 
 // sendWebsocket

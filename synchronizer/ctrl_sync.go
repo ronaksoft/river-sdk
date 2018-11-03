@@ -199,7 +199,7 @@ func (ctrl *SyncController) sync() {
 	}
 
 	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > 999 {
-
+		log.LOG.Debug("SyncController::sync()-> Snapshot sync")
 		// remove all messages
 		err := repo.Ctx().DropAndCreateTable(&dto.Messages{})
 		if err != nil {
@@ -245,19 +245,21 @@ func (ctrl *SyncController) getUpdateState() (updateID int64, err error) {
 
 	req := new(msg.UpdateGetState)
 	reqBytes, _ := req.Marshal()
-	waitGroup := new(sync.WaitGroup)
-	waitGroup.Add(1)
-	ctrl.queue.ExecuteCommand(
-		domain.RandomUint64(),
+	// waitGroup := new(sync.WaitGroup)
+	// waitGroup.Add(1)
+	//ctrl.queue.ExecuteCommand(
+	ctrl.queue.ExecuteRealtimeCommand(
+		uint64(domain.SequentialUniqueID()),
 		msg.C_UpdateGetState,
 		reqBytes,
 		func() {
-			defer waitGroup.Done()
+			//defer waitGroup.Done()
 			err = domain.ErrRequestTimeout
+			log.LOG.Debug("SyncController.getUpdateState() Error : " + err.Error())
 		},
 		func(m *msg.MessageEnvelope) {
-			defer waitGroup.Done()
-
+			//defer waitGroup.Done()
+			log.LOG.Debug("SyncController.getUpdateState() Success")
 			switch m.Constructor {
 			case msg.C_UpdateState:
 				x := new(msg.UpdateState)
@@ -269,8 +271,9 @@ func (ctrl *SyncController) getUpdateState() (updateID int64, err error) {
 			}
 		},
 		true,
+		true,
 	)
-	waitGroup.Wait()
+	//waitGroup.Wait()
 	return
 }
 
@@ -313,7 +316,7 @@ func (ctrl *SyncController) getUpdateDifference(minUpdateID int64) {
 		req.From = ctrl.updateID
 		reqBytes, _ := req.Marshal()
 		ctrl.queue.ExecuteRealtimeCommand(
-			domain.RandomUint64(),
+			uint64(domain.SequentialUniqueID()),
 			msg.C_UpdateGetDifference,
 			reqBytes,
 			func() {
@@ -421,7 +424,7 @@ func (ctrl *SyncController) getContacts() {
 	req := new(msg.ContactsGet)
 	reqBytes, _ := req.Marshal()
 	ctrl.queue.ExecuteCommand(
-		domain.RandomUint64(),
+		uint64(domain.SequentialUniqueID()),
 		msg.C_ContactsGet,
 		reqBytes,
 		nil,
@@ -440,7 +443,7 @@ func (ctrl *SyncController) getAllDialogs(offset int32, limit int32) {
 	req.Offset = offset
 	reqBytes, _ := req.Marshal()
 	ctrl.queue.ExecuteCommand(
-		domain.RandomUint64(),
+		uint64(domain.SequentialUniqueID()),
 		msg.C_MessagesGetDialogs,
 		reqBytes,
 		func() {

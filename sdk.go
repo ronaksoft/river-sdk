@@ -168,7 +168,7 @@ func (r *River) callAuthRecall() {
 			// this is priority command that should not passed to queue
 			// after auth recall answer got back the queue should send its requests in order to get related updates
 			err := r.queueCtrl.ExecuteRealtimeCommand(
-				domain.RandomUint64(),
+				uint64(domain.SequentialUniqueID()),
 				msg.C_AuthRecall,
 				reqBytes,
 				nil,
@@ -194,6 +194,8 @@ func (r *River) registerCommandHandlers() {
 	r.localCommands[msg.C_MessagesReadHistory] = r.messageReadHistory
 	r.localCommands[msg.C_UsersGet] = r.usersGet
 	r.localCommands[msg.C_MessagesGet] = r.messagesGet
+
+	// TODO : Add new api commands
 }
 
 // Start
@@ -399,7 +401,7 @@ func (r *River) CreateAuthKey() (err error) {
 	var clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64
 	// 1. Send InitConnect to Server
 	req1 := new(msg.InitConnect)
-	req1.ClientNonce = domain.RandomUint64()
+	req1.ClientNonce = uint64(domain.SequentialUniqueID())
 	req1Bytes, _ := req1.Marshal()
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
@@ -408,7 +410,7 @@ func (r *River) CreateAuthKey() (err error) {
 
 	r.executeRemoteCommand(
 		//r.executeRealtimeCommand(
-		domain.RandomUint64(),
+		uint64(domain.SequentialUniqueID()),
 		msg.C_InitConnect,
 		req1Bytes,
 		func() {
@@ -515,7 +517,7 @@ func (r *River) CreateAuthKey() (err error) {
 	log.LOG.Info("River::CreateAuthKey() 2nd Step Started :: InitConnect")
 	r.executeRemoteCommand(
 		//r.executeRealtimeCommand(
-		domain.RandomUint64(),
+		uint64(domain.SequentialUniqueID()),
 		msg.C_InitCompleteAuth,
 		req2Bytes,
 		func() {

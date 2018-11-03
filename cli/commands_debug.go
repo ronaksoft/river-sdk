@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"time"
 
+	"git.ronaksoftware.com/ronak/riversdk/domain"
+
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/toolbox"
 
@@ -264,9 +266,86 @@ var ContactImportByNetwork = &ishell.Cmd{
 	},
 }
 
+var MessageSendBulk = &ishell.Cmd{
+	Name: "MessageSendBulk",
+	Func: func(c *ishell.Context) {
+		// for just one user
+
+		peerID := int64(0)
+		for {
+			c.Print("Peer ID: ")
+			pID, err := strconv.ParseInt(c.ReadLine(), 10, 64)
+			if err == nil {
+				peerID = pID
+				break
+			} else {
+				c.Println(err.Error())
+			}
+		}
+		accessHash := uint64(0)
+		for {
+			c.Print("Access Hash: ")
+			acHash, err := strconv.ParseUint(c.ReadLine(), 10, 64)
+			if err == nil {
+				accessHash = acHash
+				break
+			} else {
+				c.Println(err.Error())
+			}
+		}
+
+		var count int
+		for {
+			c.Print("Tries : ")
+			tmp, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+			if err == nil {
+				count = int(tmp)
+				break
+			} else {
+				c.Println(err.Error())
+			}
+		}
+
+		_SDK.AddRealTimeRequest(msg.C_MessageContainer)
+
+		msgs := make([]*msg.MessageEnvelope, count)
+		for i := 0; i < count; i++ {
+			req := &msg.MessagesSend{}
+			req.Peer = &msg.InputPeer{}
+			req.Peer.ID = peerID
+			req.Peer.AccessHash = accessHash
+			req.Peer.Type = msg.PeerType_PeerUser
+			req.RandomID = ronak.RandomInt64(0)
+			req.Body = fmt.Sprintf("Test Msg [%v]", i)
+
+			buff, _ := req.Marshal()
+			msgEnvelop := &msg.MessageEnvelope{
+				Constructor: msg.C_MessagesSend,
+				Message:     buff,
+				RequestID:   uint64(domain.SequentialUniqueID()),
+			}
+			msgs[i] = msgEnvelop
+		}
+
+		msgContainer := new(msg.MessageContainer)
+		msgContainer.Envelopes = msgs
+		msgContainer.Length = int32(len(msgs))
+		reqBytes, _ := msgContainer.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessageContainer), reqBytes, reqDelegate, false, true); err != nil {
+			_Log.Debug(err.Error())
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+
+		_SDK.RemoveRealTimeRequest(msg.C_MessageContainer)
+	},
+}
+
 func init() {
 	Debug.AddCmd(SendTyping)
 	Debug.AddCmd(MessageSendByNetwork)
 	Debug.AddCmd(MessageSendByQueue)
 	Debug.AddCmd(ContactImportByNetwork)
+	Debug.AddCmd(MessageSendBulk)
 }

@@ -54,7 +54,7 @@ var SearchContacts = &ishell.Cmd{
 	Name: "SearchContacts",
 	Func: func(c *ishell.Context) {
 
-		reqID := domain.RandomUint64()
+		reqID := uint64(domain.SequentialUniqueID())
 		c.Print("Search Phrase:")
 		searchPharase := c.ReadLine()
 		reqDelegate := new(RequestDelegate)
