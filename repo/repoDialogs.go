@@ -43,7 +43,6 @@ func (r *repoDialogs) UpdateTopMesssageID(createdOn, peerID int64, peerType int3
 	err = r.db.Table(ed.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerType).Updates(map[string]interface{}{
 		"TopMessageID": topMessageID,
 		"LastUpdate":   createdOn,
-		// "UnreadCount":  unreadCount,
 	}).Error
 
 	return err
@@ -192,6 +191,8 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 		return nil
 	}
 
+	// calculate unread count
+	// currently when we enter dialog the max unreaded message ID will be sent
 	var unreadCount int
 
 	em := new(dto.Messages)

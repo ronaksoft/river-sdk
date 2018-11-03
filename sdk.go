@@ -27,7 +27,6 @@ import (
 
 	"github.com/monnand/dhkx"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -64,10 +63,10 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		)
 	}
 
-	// Enable log mode
-	if conf.LogLevel == int(zapcore.DebugLevel) {
-		repo.Ctx().LogMode(true)
-	}
+	// // Enable log mode
+	// if conf.LogLevel == int(zapcore.DebugLevel) {
+	// 	repo.Ctx().LogMode(true)
+	// }
 
 	// init riverConfigs this should be after connect to DB
 	r.loadSystemConfig()

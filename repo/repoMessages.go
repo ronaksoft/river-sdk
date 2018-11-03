@@ -52,7 +52,7 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 		r.db.Table(m.TableName()).Where("ID=?", m.ID).Update(m)
 	}
 
-	var unreadCount int
+	// calculate unread count
 
 	dtoDlg := new(dto.Dialogs)
 	err := r.db.Where("PeerID = ? AND PeerType = ?", m.PeerID, m.PeerType).First(dtoDlg).Error
@@ -62,15 +62,19 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 		)
 		return err
 	}
-
-	maxID := dtoDlg.ReadInboxMaxID
-	err = r.db.Table(em.TableName()).Where("SenderID <> ? AND PeerID = ? AND PeerType = ? AND ID > ? ", userID, m.PeerID, m.PeerType, maxID).Count(&unreadCount).Error
-	if err != nil {
-		log.LOG.Debug("RepoRepoMessages::SaveNewMessage()-> fetch messages unread count",
-			zap.String("Error", err.Error()),
-		)
-		return err
+	unreadCount := dtoDlg.UnreadCount
+	if m.SenderID != userID && m.ID > dtoDlg.TopMessageID {
+		unreadCount++
 	}
+	// var unreadCount int
+	// maxID := dtoDlg.ReadInboxMaxID
+	// err = r.db.Table(em.TableName()).Where("SenderID <> ? AND PeerID = ? AND PeerType = ? AND ID > ? ", userID, m.PeerID, m.PeerType, maxID).Count(&unreadCount).Error
+	// if err != nil {
+	// 	log.LOG.Debug("RepoRepoMessages::SaveNewMessage()-> fetch messages unread count",
+	// 		zap.String("Error", err.Error()),
+	// 	)
+	// 	return err
+	// }
 
 	err = r.db.Table(em.TableName()).Where("PeerID=? AND PeerType=?", m.PeerID, m.PeerType).Limit(1).Order("ID DESC").Find(em).Error
 	if err != nil {
@@ -85,7 +89,7 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 	err = r.db.Table(ed.TableName()).Where("PeerID=? AND PeerType=?", m.PeerID, m.PeerType).Updates(map[string]interface{}{
 		"TopMessageID": topMessageID,
 		"LastUpdate":   message.CreatedOn,
-		"UnreadCount":  unreadCount,
+		"UnreadCount":  unreadCount, //gorm.Expr("UnreadCount + ?", unreadCount), // in snapshot mode if unread message lefted
 	}).Error
 
 	if err != nil {
