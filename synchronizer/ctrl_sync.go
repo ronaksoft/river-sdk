@@ -245,20 +245,22 @@ func (ctrl *SyncController) getUpdateState() (updateID int64, err error) {
 
 	req := new(msg.UpdateGetState)
 	reqBytes, _ := req.Marshal()
-	// waitGroup := new(sync.WaitGroup)
-	// waitGroup.Add(1)
+
+	// this waitgroup is required cuz our callbacks will be called in UIExecuter go routine
+	waitGroup := new(sync.WaitGroup)
+	waitGroup.Add(1)
 	//ctrl.queue.ExecuteCommand(
 	ctrl.queue.ExecuteRealtimeCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_UpdateGetState,
 		reqBytes,
 		func() {
-			//defer waitGroup.Done()
+			defer waitGroup.Done()
 			err = domain.ErrRequestTimeout
 			log.LOG.Debug("SyncController.getUpdateState() Error : " + err.Error())
 		},
 		func(m *msg.MessageEnvelope) {
-			//defer waitGroup.Done()
+			defer waitGroup.Done()
 			log.LOG.Debug("SyncController.getUpdateState() Success")
 			switch m.Constructor {
 			case msg.C_UpdateState:
@@ -273,7 +275,7 @@ func (ctrl *SyncController) getUpdateState() (updateID int64, err error) {
 		true,
 		true,
 	)
-	//waitGroup.Wait()
+	waitGroup.Wait()
 	return
 }
 
