@@ -17,12 +17,9 @@ var ContactImport = &ishell.Cmd{
 		req := msg.ContactsImport{}
 		req.Replace = true
 		contact := msg.PhoneContact{}
-		c.Print("First Name:")
-		contact.FirstName = c.ReadLine()
-		c.Print("Last Name:")
-		contact.LastName = c.ReadLine()
-		c.Print("Phone: ")
-		contact.Phone = c.ReadLine()
+		contact.FirstName = fnGetFirstName(c)
+		contact.LastName = fnGetLastName(c)
+		contact.Phone = fnGetPhone(c)
 		contact.ClientID = ronak.RandomInt64(0)
 		req.Contacts = append(req.Contacts, &contact)
 		reqBytes, _ := req.Marshal()
@@ -55,8 +52,7 @@ var SearchContacts = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 
 		reqID := uint64(domain.SequentialUniqueID())
-		c.Print("Search Phrase:")
-		searchPharase := c.ReadLine()
+		searchPharase := fnGetSearchPhrase(c)
 		reqDelegate := new(RequestDelegate)
 		reqDelegate.RequestID = int64(reqID)
 		_SDK.SearchContacts(reqID, searchPharase, reqDelegate)

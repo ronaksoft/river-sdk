@@ -2,12 +2,13 @@ package main
 
 import (
 	"git.ronaksoftware.com/ronak/riversdk/msg"
-	"go.uber.org/zap"
 )
 
 type MainDelegate struct{}
 
 func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
+
+	_Shell.Println(_RED("OnUpdates() Constructor: %v", msg.ConstructorNames[constructor]))
 
 	switch constructor {
 	case msg.C_UpdateContainer:
@@ -17,8 +18,9 @@ func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 			_Log.Debug(err.Error())
 			return
 		}
-		_MAGNETA("UpdateContainer:: %d --> %d", updateContainer.MinUpdateID, updateContainer.MaxUpdateID)
+		_Shell.Println(_MAGNETA("OnUpdates() :: UpdateContainer:: %d --> %d", updateContainer.MinUpdateID, updateContainer.MaxUpdateID))
 		for _, update := range updateContainer.Updates {
+			_Shell.Println(_MAGNETA("OnUpdates() :: Loop Update Constructor :: %v", msg.ConstructorNames[update.Constructor]))
 			UpdatePrinter(update)
 		}
 	case msg.C_ClientPendingMessageDelivery:
@@ -28,6 +30,16 @@ func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 		udp.Update = b
 
 		UpdatePrinter(udp)
+	case msg.C_UpdateEnvelope:
+		update := new(msg.UpdateEnvelope)
+		err := update.Unmarshal(b)
+		if err != nil {
+			_Log.Debug(err.Error())
+			return
+		} else {
+			_Shell.Println(_MAGNETA("OnUpdates() :: Update Constructor :: %v", msg.ConstructorNames[update.Constructor]))
+			UpdatePrinter(update)
+		}
 	}
 
 }
@@ -35,7 +47,7 @@ func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 func (d *MainDelegate) OnDeferredRequests(requestID int64, b []byte) {
 	envelope := new(msg.MessageEnvelope)
 	envelope.Unmarshal(b)
-	_Shell.Println(_GREEN("RequestID: %d", requestID))
+	_Shell.Println(_RED("OnDeferredRequests() RequestID: %d", requestID))
 	MessagePrinter(envelope)
 }
 
@@ -43,36 +55,28 @@ func (d *MainDelegate) OnNetworkStatusChanged(quality int) {
 	status := []string{
 		"Disconnected", "Connecting", "Week", "Slow", "Fast",
 	}
-	_Log.Info("Network Status Changed",
-		zap.String("Status", status[quality]))
+	_Shell.Println(_RED("Network Status Changed: Status = %v", status[quality]))
 }
 
 func (d *MainDelegate) OnSyncStatusChanged(newStatus int) {
 	status := []string{
 		"Out of Sync", "Syncing", "Synced",
 	}
-	_Log.Info("Network Status Changed",
-		zap.String("Status", status[newStatus]))
+	_Shell.Println(_RED("Sync Status Changed: Status = %v", status[newStatus]))
 }
 
 func (d *MainDelegate) OnAuthKeyCreated(authID int64) {
-	_Log.Info("Auth Key Created",
-		zap.Int64("AuthID", authID),
-	)
+
+	_Shell.Println(_RED("Auth Key Created: AuthID = %v", authID))
 }
 
 func (d *MainDelegate) OnGeneralError(b []byte) {
 	e := new(msg.Error)
 	e.Unmarshal(b)
 
-	_Log.Info("OnGeneralError",
-		zap.String("Code", e.Code),
-		zap.String("Items", e.Items),
-	)
+	_Shell.Println(_RED("OnGeneralError: {Code = %v , Items = %v }", e.Code, e.Items))
 }
 
 func (d *MainDelegate) OnSessionClosed(res int) {
-	_Log.Info("OnSessionClosed",
-		zap.Int("Res", res),
-	)
+	_Shell.Println(_RED("OnSessionClosed : Res = %v", res))
 }

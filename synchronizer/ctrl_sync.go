@@ -225,6 +225,7 @@ func (ctrl *SyncController) sync() {
 			ctrl.getUpdateDifference(serverUpdateID)
 		}
 	}
+	log.LOG.Debug("SyncController::sync() status : " + domain.SyncStatusName[ctrl.syncStatus])
 }
 
 // SetUserID

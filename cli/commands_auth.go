@@ -13,8 +13,7 @@ var AuthCheckPhone = &ishell.Cmd{
 	Name: "CheckPhone",
 	Func: func(c *ishell.Context) {
 		req := msg.AuthCheckPhone{}
-		c.Print("Phone: ")
-		req.Phone = c.ReadLine()
+		req.Phone = fnGetPhone(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_AuthCheckPhone), reqBytes, reqDelegate, false); err != nil {
@@ -29,8 +28,7 @@ var AuthSendCode = &ishell.Cmd{
 	Name: "SendCode",
 	Func: func(c *ishell.Context) {
 		req := msg.AuthSendCode{}
-		c.Print("Phone: ")
-		req.Phone = c.ReadLine()
+		req.Phone = fnGetPhone(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_AuthSendCode), reqBytes, reqDelegate, false); err != nil {
@@ -45,16 +43,12 @@ var AuthRegister = &ishell.Cmd{
 	Name: "Register",
 	Func: func(c *ishell.Context) {
 		req := msg.AuthRegister{}
-		c.Print("Phone: ")
-		req.Phone = c.ReadLine()
-		c.Print("Phone Code: ")
-		req.PhoneCode = c.ReadLine()
-		c.Print("Phone Code Hash: ")
-		req.PhoneCodeHash = c.ReadLine()
-		c.Print("First Name: ")
-		req.FirstName = c.ReadLine()
-		c.Print("Last Name: ")
-		req.LastName = c.ReadLine()
+
+		req.Phone = fnGetPhone(c)
+		req.PhoneCode = fnGetPhoneCode(c)
+		req.PhoneCodeHash = fnGetPhoneCodeHash(c)
+		req.FirstName = fnGetFirstName(c)
+		req.LastName = fnGetLastName(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_AuthRegister), reqBytes, reqDelegate, false); err != nil {
@@ -70,12 +64,9 @@ var AuthLogin = &ishell.Cmd{
 	Name: "Login",
 	Func: func(c *ishell.Context) {
 		req := msg.AuthLogin{}
-		c.Print("Phone: ")
-		req.Phone = c.ReadLine()
-		c.Print("Phone Code: ")
-		req.PhoneCode = c.ReadLine()
-		c.Print("Phone Code Hash: ")
-		req.PhoneCodeHash = c.ReadLine()
+		req.Phone = fnGetPhone(c)
+		req.PhoneCode = fnGetPhoneCode(c)
+		req.PhoneCodeHash = fnGetPhoneCodeHash(c)
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"strconv"
-
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"gopkg.in/abiosoft/ishell.v2"
@@ -38,26 +36,8 @@ var SdkGetDiffrence = &ishell.Cmd{
 	Name: "GetDiffrence",
 	Func: func(c *ishell.Context) {
 		req := msg.UpdateGetDifference{}
-		for {
-			c.Print("Limit: ")
-			limit, err := strconv.ParseInt(c.ReadLine(), 10, 32)
-			req.Limit = int32(limit)
-			if err == nil {
-				break
-			} else {
-				c.Println(err.Error())
-			}
-		}
-		for {
-			c.Print("From UpdateID: ")
-			fromUpdateID, err := strconv.ParseInt(c.ReadLine(), 10, 64)
-			req.From = fromUpdateID
-			if err == nil {
-				break
-			} else {
-				c.Println(err.Error())
-			}
-		}
+		req.Limit = fnGetLimit(c)
+		req.From = fnGetFromUpdateID(c)
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)

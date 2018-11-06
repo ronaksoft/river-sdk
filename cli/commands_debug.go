@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
@@ -23,50 +22,12 @@ var SendTyping = &ishell.Cmd{
 		// for just one user
 		req := msg.MessagesSetTyping{}
 		req.Peer = &msg.InputPeer{}
-		for {
-			c.Print("Peer ID: ")
-			peerID, err := strconv.ParseInt(c.ReadLine(), 10, 64)
-			req.Peer.ID = peerID
-			if err == nil {
-				break
-			} else {
-				c.Println(err.Error())
-			}
-		}
-		for {
-			c.Print("Access Hash: ")
-			accessHash, err := strconv.ParseUint(c.ReadLine(), 10, 64)
-			req.Peer.AccessHash = uint64(accessHash)
-			if err == nil {
-				break
-			} else {
-				c.Println(err.Error())
-			}
-		}
+		req.Peer.ID = fnGetPeerID(c)
+		req.Peer.AccessHash = fnGetAccessHash(c)
 
-		var count int
-		for {
-			c.Print("Tries : ")
-			tmp, err := strconv.ParseInt(c.ReadLine(), 10, 32)
-			if err == nil {
-				count = int(tmp)
-				break
-			} else {
-				c.Println(err.Error())
-			}
-		}
-		var interval time.Duration
-		for {
-			c.Print("Interval: ")
-			tmp, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		count := fnGetTries(c)
+		interval := fnGetInterval(c)
 
-			if err == nil {
-				interval = time.Duration(tmp) * time.Millisecond
-				break
-			} else {
-				c.Println(err.Error())
-			}
-		}
 		for i := 0; i < count; i++ {
 			time.Sleep(interval)
 			if i%2 == 0 {
@@ -94,50 +55,11 @@ var MessageSendByNetwork = &ishell.Cmd{
 		req := msg.MessagesSend{}
 		req.Peer = &msg.InputPeer{}
 		req.Peer.Type = msg.PeerType_PeerUser
-		for {
-			c.Print("Peer ID: ")
-			peerID, err := strconv.ParseInt(c.ReadLine(), 10, 64)
-			req.Peer.ID = peerID
-			if err == nil {
-				break
-			} else {
-				c.Println(err.Error())
-			}
-		}
-		for {
-			c.Print("Access Hash: ")
-			accessHash, err := strconv.ParseUint(c.ReadLine(), 10, 64)
-			req.Peer.AccessHash = uint64(accessHash)
-			if err == nil {
-				break
-			} else {
-				c.Println(err.Error())
-			}
-		}
+		req.Peer.ID = fnGetPeerID(c)
+		req.Peer.AccessHash = fnGetAccessHash(c)
 
-		var count int
-		for {
-			c.Print("Tries : ")
-			tmp, err := strconv.ParseInt(c.ReadLine(), 10, 32)
-			if err == nil {
-				count = int(tmp)
-				break
-			} else {
-				c.Println(err.Error())
-			}
-		}
-		var interval time.Duration
-		for {
-			c.Print("Interval: ")
-			tmp, err := strconv.ParseInt(c.ReadLine(), 10, 32)
-
-			if err == nil {
-				interval = time.Duration(tmp) * time.Millisecond
-				break
-			} else {
-				c.Println(err.Error())
-			}
-		}
+		count := fnGetTries(c)
+		interval := fnGetInterval(c)
 
 		_SDK.AddRealTimeRequest(msg.C_MessagesSend)
 		for i := 0; i < count; i++ {
@@ -164,50 +86,12 @@ var MessageSendByQueue = &ishell.Cmd{
 		req := msg.MessagesSend{}
 		req.Peer = &msg.InputPeer{}
 		req.Peer.Type = msg.PeerType_PeerUser
-		for {
-			c.Print("Peer ID: ")
-			peerID, err := strconv.ParseInt(c.ReadLine(), 10, 64)
-			req.Peer.ID = peerID
-			if err == nil {
-				break
-			} else {
-				c.Println(err.Error())
-			}
-		}
-		for {
-			c.Print("Access Hash: ")
-			accessHash, err := strconv.ParseUint(c.ReadLine(), 10, 64)
-			req.Peer.AccessHash = uint64(accessHash)
-			if err == nil {
-				break
-			} else {
-				c.Println(err.Error())
-			}
-		}
+		req.Peer.ID = fnGetPeerID(c)
+		req.Peer.AccessHash = fnGetAccessHash(c)
 
-		var count int
-		for {
-			c.Print("Tries : ")
-			tmp, err := strconv.ParseInt(c.ReadLine(), 10, 32)
-			if err == nil {
-				count = int(tmp)
-				break
-			} else {
-				c.Println(err.Error())
-			}
-		}
-		var interval time.Duration
-		for {
-			c.Print("Interval: ")
-			tmp, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		count := fnGetTries(c)
+		interval := fnGetInterval(c)
 
-			if err == nil {
-				interval = time.Duration(tmp) * time.Millisecond
-				break
-			} else {
-				c.Println(err.Error())
-			}
-		}
 		// make sure
 		_SDK.RemoveRealTimeRequest(msg.C_MessagesSend)
 		for i := 0; i < count; i++ {
@@ -232,28 +116,16 @@ var ContactImportByNetwork = &ishell.Cmd{
 		req := msg.ContactsImport{}
 		req.Replace = true
 		contact := msg.PhoneContact{}
-		c.Print("First Name:")
-		contact.FirstName = c.ReadLine()
-		c.Print("Last Name:")
-		contact.LastName = c.ReadLine()
-		c.Print("Phone: ")
-		contact.Phone = c.ReadLine()
+		contact.FirstName = fnGetFirstName(c)
+		contact.LastName = fnGetLastName(c)
+		contact.Phone = fnGetPhone(c)
+
 		contact.ClientID = ronak.RandomInt64(0)
 		req.Contacts = append(req.Contacts, &contact)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 
-		// var requestID int64
-		// for {
-		// 	c.Print("RequestID : ")
-		// 	tmp, err := strconv.ParseInt(c.ReadLine(), 10, 32)
-		// 	if err == nil {
-		// 		requestID = tmp
-		// 		break
-		// 	} else {
-		// 		c.Println(err.Error())
-		// 	}
-		// }
+		// requestID := fnGetRequestID(c)
 
 		_SDK.RemoveRealTimeRequest(msg.C_ContactsImport)
 
@@ -271,40 +143,9 @@ var MessageSendBulk = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		// for just one user
 
-		peerID := int64(0)
-		for {
-			c.Print("Peer ID: ")
-			pID, err := strconv.ParseInt(c.ReadLine(), 10, 64)
-			if err == nil {
-				peerID = pID
-				break
-			} else {
-				c.Println(err.Error())
-			}
-		}
-		accessHash := uint64(0)
-		for {
-			c.Print("Access Hash: ")
-			acHash, err := strconv.ParseUint(c.ReadLine(), 10, 64)
-			if err == nil {
-				accessHash = acHash
-				break
-			} else {
-				c.Println(err.Error())
-			}
-		}
-
-		var count int
-		for {
-			c.Print("Tries : ")
-			tmp, err := strconv.ParseInt(c.ReadLine(), 10, 32)
-			if err == nil {
-				count = int(tmp)
-				break
-			} else {
-				c.Println(err.Error())
-			}
-		}
+		peerID := fnGetPeerID(c)
+		accessHash := fnGetAccessHash(c)
+		count := fnGetTries(c)
 
 		_SDK.AddRealTimeRequest(msg.C_MessageContainer)
 
