@@ -31,6 +31,7 @@ func (u *Contacts) MapToUser(v *msg.User) {
 	v.ID = u.ID
 	v.FirstName = u.FirstName
 	v.LastName = u.LastName
+	v.Username = u.Username
 }
 func (u *Contacts) MapToContactUser(v *msg.ContactUser) {
 	v.ID = u.ID
