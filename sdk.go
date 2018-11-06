@@ -173,7 +173,6 @@ func (r *River) callAuthRecall() {
 				nil,
 				nil,
 				true,
-				true,
 			)
 			if err == nil {
 				break
@@ -248,7 +247,7 @@ func deepCopy(commandBytes []byte) []byte {
 // ExecuteCommand
 // This is a wrapper function to pass the request to the queueController, to be passed to networkController for final
 // delivery to the server.
-func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate, blockingMode, serialUICallback bool) (requestID int64, err error) {
+func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate, blockingMode bool) (requestID int64, err error) {
 	// deleteMe
 	cmdID := fmt.Sprintf("%v : ", time.Now().UnixNano())
 	log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 1 ExecuteCommand Started req:" + msg.ConstructorNames[constructor])
@@ -312,7 +311,6 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 			timeoutCallback,
 			successCallback,
 			blockingMode,
-			serialUICallback,
 		)
 		if err != nil && delegate != nil && delegate.OnTimeout != nil {
 			delegate.OnTimeout(err)
@@ -329,7 +327,6 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 					commandBytesDump,
 					timeoutCallback,
 					successCallback,
-					serialUICallback,
 				)
 			}
 			if blockingMode {
@@ -345,7 +342,6 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 				commandBytesDump,
 				timeoutCallback,
 				successCallback,
-				serialUICallback,
 			)
 		}
 	}
@@ -353,7 +349,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	return
 }
 
-func (r *River) executeLocalCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, serialUICallback bool) {
+func (r *River) executeLocalCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	log.LOG.Debug("River::executeLocalCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
@@ -366,15 +362,15 @@ func (r *River) executeLocalCommand(requestID uint64, constructor int64, command
 	out.RequestID = in.RequestID
 	// double check
 	if applier, ok := r.localCommands[constructor]; ok {
-		applier(in, out, timeoutCB, successCB, serialUICallback)
+		applier(in, out, timeoutCB, successCB)
 	}
 }
 
-func (r *River) executeRemoteCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, serialUICallback bool) {
+func (r *River) executeRemoteCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	log.LOG.Debug("River::executeRemoteCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
-	r.queueCtrl.ExecuteCommand(requestID, constructor, commandBytes, timeoutCB, successCB, serialUICallback)
+	r.queueCtrl.ExecuteCommand(requestID, constructor, commandBytes, timeoutCB, successCB)
 }
 
 func (r *River) releaseDelegate(requestID int64) {
@@ -445,7 +441,6 @@ func (r *River) CreateAuthKey() (err error) {
 				err = domain.ErrInvalidConstructor
 			}
 		},
-		true,
 	)
 
 	// Wait for 1st step to complete
@@ -570,7 +565,6 @@ func (r *River) CreateAuthKey() (err error) {
 				return
 			}
 		},
-		true,
 	)
 
 	// Wait for 2nd step to complete

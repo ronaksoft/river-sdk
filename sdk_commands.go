@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, serialUICallback bool) {
+func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	log.LOG.Debug("River::messagesGetDialogs()")
 	req := new(msg.MessagesGetDialogs)
 	if err := req.Unmarshal(in.Message); err != nil {
@@ -27,7 +27,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	// if the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {
 		log.LOG.Debug("River::messagesGetDialogs()-> GetDialogs() nothing found in cacheDB pass request to server")
-		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, serialUICallback)
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
 		return
 	}
 
@@ -57,14 +57,14 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	out.Constructor = msg.C_MessagesDialogs
 	out.Message, _ = res.Marshal()
 
-	cmd.GetUIExecuter().Exec(serialUICallback, func() {
+	cmd.GetUIExecuter().Exec(func() {
 		if successCB != nil {
 			successCB(out)
 		}
 	}) //successCB(out)
 }
 
-func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, serialUICallback bool) {
+func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	log.LOG.Debug("River::messagesSend()")
 	req := new(msg.MessagesSend)
 	if err := req.Unmarshal(in.Message); err != nil {
@@ -94,7 +94,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	requestBytes, _ := req.Marshal()
 	// r.queueCtrl.addToWaitingList(req) // this needs to be wrapped by MessageEnvelope
 	// using req randomID as requestID later in queue processing and network controller messageHandler
-	r.queueCtrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSend, requestBytes, timeoutCB, successCB, serialUICallback)
+	r.queueCtrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSend, requestBytes, timeoutCB, successCB)
 
 	// 3. return to CallBack with pending message data : Done
 	out.Constructor = msg.C_ClientPendingMessage
@@ -103,14 +103,14 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	// 4. later when queue got processed and server returned response we should check if the requestID
 	//   exist in pendindTable we remove it and insert new message with new id to message table
 	//   invoke new OnUpdate with new protobuff to inform ui that pending message got delivered
-	cmd.GetUIExecuter().Exec(serialUICallback, func() {
+	cmd.GetUIExecuter().Exec(func() {
 		if successCB != nil {
 			successCB(out)
 		}
 	}) //successCB(out)
 }
 
-func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, serialUICallback bool) {
+func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	log.LOG.Debug("River::messageGetHistory()")
 	req := new(msg.MessagesGetHistory)
 	if err := req.Unmarshal(in.Message); err != nil {
@@ -139,7 +139,7 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 	// if the localDB had no or outdated data send the request to server
 	if (req.MaxID-maxMessageID) > int64(req.Limit) || len(res.Messages) <= 1 {
 		log.LOG.Debug("River::messageGetHistory()-> GetMessageHistory() nothing found in cacheDB pass request to server")
-		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, serialUICallback)
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
 		return
 	}
 
@@ -148,14 +148,14 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 	out.Constructor = msg.C_MessagesMany
 	out.Message, _ = res.Marshal()
 
-	cmd.GetUIExecuter().Exec(serialUICallback, func() {
+	cmd.GetUIExecuter().Exec(func() {
 		if successCB != nil {
 			successCB(out)
 		}
 	}) //successCB(out)
 }
 
-func (r *River) contactGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, serialUICallback bool) {
+func (r *River) contactGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	log.LOG.Debug("River::contactGet()")
 	req := new(msg.ContactsGet)
 	if err := req.Unmarshal(in.Message); err != nil {
@@ -170,21 +170,21 @@ func (r *River) contactGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeou
 
 	// if didn't find anything send request to server
 	if len(res.Users) == 0 || len(res.Contacts) == 0 {
-		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, serialUICallback)
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
 		return
 	}
 
 	out.Constructor = msg.C_ContactsMany
 	out.Message, _ = res.Marshal()
 
-	cmd.GetUIExecuter().Exec(serialUICallback, func() {
+	cmd.GetUIExecuter().Exec(func() {
 		if successCB != nil {
 			successCB(out)
 		}
 	}) //successCB(out)
 }
 
-func (r *River) messageReadHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, serialUICallback bool) {
+func (r *River) messageReadHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	log.LOG.Debug("River::messageReadHistory()")
 	req := new(msg.MessagesReadHistory)
 	if err := req.Unmarshal(in.Message); err != nil {
@@ -210,10 +210,10 @@ func (r *River) messageReadHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	// send the request to server
 
 	log.LOG.Debug("River::messageReadHistory() Pass request to server")
-	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, serialUICallback)
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
 }
 
-func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, serialUICallback bool) {
+func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	log.LOG.Debug("River::usersGet()")
 	req := new(msg.UsersGet)
 	if err := req.Unmarshal(in.Message); err != nil {
@@ -235,7 +235,7 @@ func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 
 		out.Constructor = msg.C_UsersMany
 		out.Message, _ = res.Marshal()
-		cmd.GetUIExecuter().Exec(serialUICallback, func() {
+		cmd.GetUIExecuter().Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
@@ -243,11 +243,11 @@ func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 	} else {
 		log.LOG.Debug("River::messageGetHistory()-> GetAnyUsers() cacheDB is not up to date pass request to server")
 		// send the request to server
-		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, serialUICallback)
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
 	}
 }
 
-func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, serialUICallback bool) {
+func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	log.LOG.Debug("River::messagesGet()")
 	req := new(msg.MessagesGet)
 	if err := req.Unmarshal(in.Message); err != nil {
@@ -273,7 +273,7 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 
 		out.Constructor = msg.C_MessagesMany
 		out.Message, _ = res.Marshal()
-		cmd.GetUIExecuter().Exec(serialUICallback, func() {
+		cmd.GetUIExecuter().Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
@@ -281,6 +281,6 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 	} else {
 		log.LOG.Debug("River::messagesGet() -> GetManyMessages() cacheDB is not up to date pass request to server")
 		// send the request to server
-		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, serialUICallback)
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
 	}
 }

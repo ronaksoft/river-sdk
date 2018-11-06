@@ -61,7 +61,7 @@ var SdkGetDiffrence = &ishell.Cmd{
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_UpdateGetDifference), reqBytes, reqDelegate, false, true); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_UpdateGetDifference), reqBytes, reqDelegate, false); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID

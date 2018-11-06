@@ -17,13 +17,12 @@ var (
 // SuccessCallback will be called otherwise TimeoutCallback will be called. If for any reason the memory was reset
 // then these callbacks will be forgot and the response will be saved on disk to be fetched later.
 type RequestCallback struct {
-	RequestID        uint64
-	SuccessCallback  MessageHandler
-	TimeoutCallback  TimeoutCallback
-	ResponseChannel  chan *msg.MessageEnvelope
-	CreatedOn        time.Time
-	Timeout          time.Duration
-	SerialUICallback bool
+	RequestID       uint64
+	SuccessCallback MessageHandler
+	TimeoutCallback TimeoutCallback
+	ResponseChannel chan *msg.MessageEnvelope
+	CreatedOn       time.Time
+	Timeout         time.Duration
 }
 
 func init() {
@@ -31,29 +30,27 @@ func init() {
 }
 
 // NewRequestCallback
-func NewRequestCallback(reqID uint64, success MessageHandler, timeOut time.Duration, timeout TimeoutCallback, serialUICallback bool) *RequestCallback {
+func NewRequestCallback(reqID uint64, success MessageHandler, timeOut time.Duration, timeout TimeoutCallback) *RequestCallback {
 
 	return &RequestCallback{
-		RequestID:        reqID,
-		SuccessCallback:  success,
-		TimeoutCallback:  timeout,
-		ResponseChannel:  make(chan *msg.MessageEnvelope),
-		CreatedOn:        time.Now(),
-		Timeout:          timeOut,
-		SerialUICallback: serialUICallback,
+		RequestID:       reqID,
+		SuccessCallback: success,
+		TimeoutCallback: timeout,
+		ResponseChannel: make(chan *msg.MessageEnvelope),
+		CreatedOn:       time.Now(),
+		Timeout:         timeOut,
 	}
 }
 
 // AddRequestCallback
-func AddRequestCallback(reqID uint64, success MessageHandler, timeOut time.Duration, timeout TimeoutCallback, serialUICallback bool) *RequestCallback {
+func AddRequestCallback(reqID uint64, success MessageHandler, timeOut time.Duration, timeout TimeoutCallback) *RequestCallback {
 	cb := &RequestCallback{
-		RequestID:        reqID,
-		SuccessCallback:  success,
-		TimeoutCallback:  timeout,
-		ResponseChannel:  make(chan *msg.MessageEnvelope),
-		CreatedOn:        time.Now(),
-		Timeout:          timeOut,
-		SerialUICallback: serialUICallback,
+		RequestID:       reqID,
+		SuccessCallback: success,
+		TimeoutCallback: timeout,
+		ResponseChannel: make(chan *msg.MessageEnvelope),
+		CreatedOn:       time.Now(),
+		Timeout:         timeOut,
 	}
 	mxCB.Lock()
 	requestCallbacks[reqID] = cb

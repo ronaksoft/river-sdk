@@ -184,7 +184,7 @@ func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
 	ctrl.addToDeliveredMessageList(message.ID)
 
 	// call external handler
-	cmd.GetUIExecuter().Exec(true, func() {
+	cmd.GetUIExecuter().Exec(func() {
 		if ctrl.onUpdateMainDelegate != nil {
 			ctrl.onUpdateMainDelegate(msg.C_UpdateEnvelope, buff)
 		}

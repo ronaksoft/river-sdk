@@ -273,7 +273,6 @@ func (ctrl *SyncController) getUpdateState() (updateID int64, err error) {
 			}
 		},
 		true,
-		true,
 	)
 	waitGroup.Wait()
 	return
@@ -328,7 +327,6 @@ func (ctrl *SyncController) getUpdateDifference(minUpdateID int64) {
 				ctrl.onGetDiffrenceSucceed(m)
 				log.LOG.Debug("SyncController::getUpdateDifference() -> ExecuteRealtimeCommand() Success")
 			},
-			true,
 			true,
 		)
 		log.LOG.Debug("SyncController::getUpdateDifference() Loop next")
@@ -395,7 +393,7 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 
 		// wrapped to UpdateContainer
 		buff, _ := updContainer.Marshal()
-		cmd.GetUIExecuter().Exec(true, func() {
+		cmd.GetUIExecuter().Exec(func() {
 			if ctrl.onUpdateMainDelegate != nil {
 				ctrl.onUpdateMainDelegate(msg.C_UpdateContainer, buff)
 			}
@@ -433,7 +431,6 @@ func (ctrl *SyncController) getContacts() {
 		func(m *msg.MessageEnvelope) {
 			// SyncController applier will take care of this
 		},
-		true,
 	)
 }
 
@@ -518,7 +515,6 @@ func (ctrl *SyncController) getAllDialogs(offset int32, limit int32) {
 				)
 			}
 		},
-		true,
 	)
 
 }
@@ -652,7 +648,7 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 		buff, _ := udpContainer.Marshal()
 
 		// pass all updates to UI
-		cmd.GetUIExecuter().Exec(true, func() {
+		cmd.GetUIExecuter().Exec(func() {
 			if ctrl.onUpdateMainDelegate != nil {
 				ctrl.onUpdateMainDelegate(msg.C_UpdateContainer, buff)
 			}

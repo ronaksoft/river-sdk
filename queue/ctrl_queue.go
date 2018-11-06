@@ -175,7 +175,6 @@ func (ctrl *QueueController) executor(req request) {
 			},
 			req.Timeout,
 			nil,
-			true,
 		)
 	}
 	if req.Timeout == 0 {
@@ -223,7 +222,7 @@ func (ctrl *QueueController) executor(req request) {
 			zap.Uint64("RequestID", res.RequestID),
 		)
 		if reqCallbacks.SuccessCallback != nil {
-			cmd.GetUIExecuter().Exec(reqCallbacks.SerialUICallback, func() { reqCallbacks.SuccessCallback(res) })
+			cmd.GetUIExecuter().Exec(func() { reqCallbacks.SuccessCallback(res) })
 		} else {
 			log.LOG.Warn("QueueController::executor() :: ResponseChannel received signal SuccessCallback is null",
 				zap.String("ConstructorName", msg.ConstructorNames[res.Constructor]),
@@ -235,7 +234,7 @@ func (ctrl *QueueController) executor(req request) {
 }
 
 // ExecuteRealtimeCommand
-func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, blockingMode, serialUICallback bool) (err error) {
+func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, blockingMode bool) (err error) {
 
 	messageEnvelope := new(msg.MessageEnvelope)
 	messageEnvelope.Constructor = constructor
@@ -243,7 +242,7 @@ func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructo
 	messageEnvelope.Message = commandBytes
 
 	// Add the callback functions
-	domain.AddRequestCallback(requestID, successCB, domain.DEFAULT_WS_REALTIME_TIMEOUT, timeoutCB, serialUICallback)
+	domain.AddRequestCallback(requestID, successCB, domain.DEFAULT_WS_REALTIME_TIMEOUT, timeoutCB)
 
 	execBlock := func(reqID uint64, req *msg.MessageEnvelope) error {
 		err := ctrl.network.Send(req, blockingMode)
@@ -276,7 +275,7 @@ func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructo
 					zap.Uint64("RequestID", requestID),
 				)
 				if reqCB.SuccessCallback != nil {
-					cmd.GetUIExecuter().Exec(reqCB.SerialUICallback, func() { reqCB.SuccessCallback(res) })
+					cmd.GetUIExecuter().Exec(func() { reqCB.SuccessCallback(res) })
 				}
 			}
 		} else {
@@ -298,7 +297,7 @@ func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructo
 }
 
 // executeRemoteCommand
-func (ctrl *QueueController) ExecuteCommand(requestID uint64, constructor int64, requestBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, serialUICallback bool) {
+func (ctrl *QueueController) ExecuteCommand(requestID uint64, constructor int64, requestBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	log.LOG.Debug("QueueController::ExecuteCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 		zap.Uint64("RequestID", requestID),
@@ -314,7 +313,7 @@ func (ctrl *QueueController) ExecuteCommand(requestID uint64, constructor int64,
 	}
 
 	// Add the callback functions
-	domain.AddRequestCallback(requestID, successCB, req.Timeout, timeoutCB, serialUICallback)
+	domain.AddRequestCallback(requestID, successCB, req.Timeout, timeoutCB)
 
 	// Add the request to the queue
 	ctrl.addToWaitingList(&req)

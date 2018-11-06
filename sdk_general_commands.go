@@ -46,7 +46,7 @@ func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
 	pmsg.MapToMessageSend(req)
 
 	buff, _ := req.Marshal()
-	r.queueCtrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSend, buff, nil, nil, true)
+	r.queueCtrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSend, buff, nil, nil)
 	isSuccess = true
 	log.LOG.Debug("River::RetryPendingMessage() Request enqueued")
 
@@ -109,7 +109,7 @@ func (r *River) Logout() (int64, error) {
 
 	req := new(msg.AuthLogout)
 	buff, _ := req.Marshal()
-	err = r.queueCtrl.ExecuteRealtimeCommand(uint64(requestID), msg.C_AuthLogout, buff, timeoutCallback, successCallback, true, true)
+	err = r.queueCtrl.ExecuteRealtimeCommand(uint64(requestID), msg.C_AuthLogout, buff, timeoutCallback, successCallback, true)
 	if err != nil {
 		r.releaseDelegate(requestID)
 	}

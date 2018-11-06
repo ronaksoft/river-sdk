@@ -45,8 +45,10 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 	dlg.Map(dialog)
 
 	em := new(dto.Messages)
+	isNewMsg := false
 	r.db.Find(em, m.ID)
 	if em.ID == 0 {
+		isNewMsg = true
 		r.db.Create(m)
 	} else {
 		r.db.Table(m.TableName()).Where("ID=?", m.ID).Update(m)
@@ -63,7 +65,9 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 		return err
 	}
 	unreadCount := dtoDlg.UnreadCount
-	if m.SenderID != userID && m.ID > dtoDlg.TopMessageID {
+	// newMessage : m.ID > topMessage
+	// isNewMsg : if message delivered unordered or late
+	if m.SenderID != userID && (isNewMsg || m.ID > dtoDlg.TopMessageID) {
 		unreadCount++
 	}
 	// var unreadCount int
