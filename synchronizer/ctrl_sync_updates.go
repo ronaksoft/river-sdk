@@ -161,6 +161,22 @@ func (ctrl *SyncController) updateMessageID(u *msg.UpdateEnvelope) (passToExtern
 	return
 }
 
+// updateNotifySettings
+func (ctrl *SyncController) updateNotifySettings(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
+	log.LOG.Debug("SyncController::updateNotifySettings() applier")
+	x := new(msg.UpdateNotifySettings)
+	x.Unmarshal(u.Update)
+
+	err := repo.Ctx().Dialogs.UpdateNotifySetting(x)
+	if err != nil {
+		log.LOG.Debug("SyncController::updateNotifySettings() -> Dialogs.UpdateNotifySettings()",
+			zap.String("Error", err.Error()),
+		)
+	}
+	passToExternalhandler = true
+	return
+}
+
 // updateUsername
 func (ctrl *SyncController) updateUsername(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
 	log.LOG.Debug("SyncController::updateUsername() applier")

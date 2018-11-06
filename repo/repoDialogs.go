@@ -5,6 +5,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
+	"github.com/kataras/iris/core/errors"
 	"go.uber.org/zap"
 )
 
@@ -18,6 +19,7 @@ type RepoDialogs interface {
 	UpdateDialogUnreadCount(peerID int64, peerTyep, unreadCount int32) error
 	UpdateAccessHash(accessHash int64, peerID int64, peerType int32) error
 	UpdateTopMesssageID(createdOn, peerID int64, peerType int32) error
+	UpdateNotifySetting(msg *msg.UpdateNotifySettings) error
 }
 
 type repoDialogs struct {
@@ -253,4 +255,39 @@ func (r *repoDialogs) UpdateAccessHash(accessHash int64, peerID int64, peerType 
 		"AccessHash": int64(accessHash),
 	}).Error
 	return err
+}
+
+func (r *repoDialogs) UpdateNotifySetting(msg *msg.UpdateNotifySettings) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	if msg.NotifyPeer == nil {
+		return errors.New("RepoDialogs::UpdateNotifySetting() => msg.NotifyPeer is null")
+	}
+	if msg.Settings == nil {
+		return errors.New("RepoDialogs::UpdateNotifySetting() => msg.Settings is null")
+	}
+
+	log.LOG.Debug("RepoDialogs::UpdateNotifySetting()",
+		zap.Int64("UserId", msg.UserID),
+		zap.Int64("PeerID", msg.NotifyPeer.ID),
+		zap.Uint64("AccessHash", msg.NotifyPeer.AccessHash),
+		zap.Int32("Flag", msg.Settings.Flags),
+		zap.Int64("MuteUntil", msg.Settings.MuteUntil),
+		zap.String("Sound", msg.Settings.Sound),
+	)
+
+	dtoDlg := new(dto.Dialogs)
+	err := r.db.Where("PeerID = ? AND PeerType = ?", msg.NotifyPeer.ID, msg.NotifyPeer.Type).First(dtoDlg).Error
+	if err != nil {
+		log.LOG.Debug("RepoDialogs::UpdateNotifySetting()->fetch dialog entity",
+			zap.String("Error", err.Error()),
+		)
+		return err
+	}
+	dtoDlg.NotifyFlags = msg.Settings.Flags
+	dtoDlg.NotifyMuteUntil = msg.Settings.MuteUntil
+	dtoDlg.NotifySound = msg.Settings.Sound
+
+	return r.db.Save(dtoDlg).Error
 }
