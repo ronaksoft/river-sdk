@@ -53,6 +53,7 @@ func main() {
 	_Shell.AddCmd(SDK)
 	_Shell.AddCmd(User)
 	_Shell.AddCmd(Debug)
+	_Shell.AddCmd(Account)
 
 	_Shell.Print("River Host (default: river.im):")
 	_Shell.Print("DB Path (./_db): ")

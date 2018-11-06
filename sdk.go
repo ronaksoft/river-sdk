@@ -192,6 +192,8 @@ func (r *River) registerCommandHandlers() {
 	r.localCommands[msg.C_MessagesReadHistory] = r.messageReadHistory
 	r.localCommands[msg.C_UsersGet] = r.usersGet
 	r.localCommands[msg.C_MessagesGet] = r.messagesGet
+	r.localCommands[msg.C_AccountUpdateUsername] = r.accountUpdateUsername
+	r.localCommands[msg.C_AccountUpdateProfile] = r.accountUpdateProfile
 
 	// TODO : Add new api commands
 }

@@ -240,3 +240,9 @@ func fnGetInputUser(c *ishell.Context) []*msg.InputUser {
 	}
 	return users
 }
+
+func fnGetUsername(c *ishell.Context) string {
+	c.Print("Username: ")
+	uname := c.ReadLine()
+	return uname
+}

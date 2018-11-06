@@ -284,3 +284,40 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
 	}
 }
+
+func (r *River) accountUpdateUsername(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	log.LOG.Debug("River::accountUpdateUsername()")
+	req := new(msg.AccountUpdateUsername)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG.Debug("River::accountUpdateUsername()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
+
+	r.ConnInfo.Username = req.Username
+	r.ConnInfo.saveConfig()
+
+	log.LOG.Debug("River::accountUpdateUsername()-> pass request to server")
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
+}
+
+func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	log.LOG.Debug("River::accountUpdateProfile()")
+	req := new(msg.AccountUpdateProfile)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG.Debug("River::accountUpdateProfile()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
+
+	r.ConnInfo.FirstName = req.FirstName
+	r.ConnInfo.LastName = req.LastName
+	r.ConnInfo.saveConfig()
+
+	log.LOG.Debug("River::accountUpdateProfile()-> pass request to server")
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
+}
