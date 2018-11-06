@@ -24,6 +24,7 @@ func (ctrl *SyncController) authAuthorization(e *msg.MessageEnvelope) {
 
 	ctrl.connInfo.ChangeFirstName(x.User.FirstName)
 	ctrl.connInfo.ChangeLastName(x.User.LastName)
+	ctrl.connInfo.ChangeUsername(x.User.Username)
 	ctrl.connInfo.ChangeUserID(x.User.ID)
 	ctrl.connInfo.Save()
 
