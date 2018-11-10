@@ -1,11 +1,12 @@
 package repo
 
 import (
+	"errors"
+
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
-	"github.com/kataras/iris/core/errors"
 	"go.uber.org/zap"
 )
 
