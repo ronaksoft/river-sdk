@@ -16,15 +16,18 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func BenchmarkInsert(b *testing.B) {
+func BenchmarkInsertORM(b *testing.B) {
+	// Create DB and Tables
 	err := InitRepo("sqlite3", "river.db")
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer Ctx().Close()
+	//defer os.Remove("river.db")
+
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
-
+	for i := 0; i < 100; i++ {
 		m := new(msg.UserMessage)
 		m.ID = domain.SequentialUniqueID()
 		m.PeerID = 123456789
@@ -35,58 +38,29 @@ func BenchmarkInsert(b *testing.B) {
 		Ctx().Messages.SaveMessage(m)
 	}
 
-	// os.Remove("river.db")
 }
 
 func BenchmarkInsertRAW(b *testing.B) {
+	// Create DB and Tables
 	err := InitRepo("sqlite3", "river.db")
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer Ctx().Close()
+	//defer os.Remove("river.db")
+
+	// Open DB
 	db, err := sql.Open("sqlite3", "river.db")
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.Close()
 
 	// insert
 	stmt, err := db.Prepare(`INSERT INTO messages 
-	(
-	ID,
-	PeerID,
-	PeerType,
-	CreatedOn,
-	Body,
-	SenderID,
-	EditedOn,
-	FwdSenderID	,
-	FwdChannelID,
-	FwdChannelMessageID	,
-	Flags	,
-	MessageType	,
-	ContentRead	,
-	Inbox,
-	ReplyTo	,
-	MessageAction
-	)
+	( ID, PeerID, PeerType, CreatedOn, Body, SenderID, EditedOn, FwdSenderID, FwdChannelID, FwdChannelMessageID, Flags, MessageType, ContentRead, Inbox, ReplyTo, MessageAction )
 	VALUES
-	(
-	?,
-	?,
-	?,
-	?,
-	?,
-	?,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0
-	)`)
+	(?,?,?,?,?,?,0,0,0,0,0,0,0,0,0,0)`)
 
 	if err != nil {
 		log.Fatal(err)
@@ -94,7 +68,7 @@ func BenchmarkInsertRAW(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for i := 0; i < 100; i++ {
 		m := new(msg.UserMessage)
 		m.ID = domain.SequentialUniqueID()
 		m.PeerID = 123456789
@@ -108,20 +82,22 @@ func BenchmarkInsertRAW(b *testing.B) {
 			log.Fatal(err)
 		}
 	}
-
-	// os.Remove("river.db")
 }
 
-func BenchmarkInsertBatchQueryBuilder(b *testing.B) {
+func BenchmarkInsertBatch(b *testing.B) {
+	// Create DB and Tables
 	err := InitRepo("sqlite3", "river.db")
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer Ctx().Close()
+	//defer os.Remove("river.db")
 
 	db, err := sql.Open("sqlite3", "river.db")
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.Close()
 
 	batchSB := new(strings.Builder)
 
@@ -156,10 +132,10 @@ func BenchmarkInsertBatchQueryBuilder(b *testing.B) {
 		}).Sql
 		batchSB.WriteString(str + ";")
 	}
-
 	qry := batchSB.String()
 
 	b.ResetTimer()
+
 	_, err = db.Exec(qry)
 	if err != nil {
 		log.Fatal(err)
