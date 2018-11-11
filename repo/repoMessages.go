@@ -88,7 +88,11 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 		return err
 	}
 
-	topMessageID := em.ID
+	topMessageID := m.ID
+	if em.ID > m.ID {
+		topMessageID = em.ID
+	}
+
 	ed := new(dto.Dialogs)
 	err = r.db.Table(ed.TableName()).Where("PeerID=? AND PeerType=?", m.PeerID, m.PeerType).Updates(map[string]interface{}{
 		"TopMessageID": topMessageID,
@@ -293,4 +297,9 @@ func (r *repoMessages) GetUnreadMessageCount(peerID int64, peerType int32, userI
 	count := 0
 	r.db.Model(&dto.Messages{}).Where("PeerID = ? AND PeerType = ? AND SenderID <> ? AND ID>?", peerID, peerType, userID, maxID).Count(&count)
 	return int32(count)
+}
+
+// save message batch mode
+func (r *repoMessages) SaveMessageMany() {
+
 }

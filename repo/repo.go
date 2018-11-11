@@ -153,10 +153,17 @@ func (r *repository) initDB() error {
 
 	return repoLastError
 }
+func (c *Context) Exec(qry string) error {
+	return r.db.Exec(qry).Error
+}
 
 func (r *repository) Map(from interface{}, to interface{}) error {
 
 	buff, err := json.Marshal(from)
 	json.Unmarshal(buff, to)
 	return err
+}
+
+func (r *repository) Exec(qry string) error {
+	return r.db.Exec(qry).Error
 }
