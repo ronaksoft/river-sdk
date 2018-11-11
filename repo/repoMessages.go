@@ -169,9 +169,9 @@ func (r *repoMessages) SaveMessage(message *msg.UserMessage) error {
 		return domain.ErrNotFound
 	}
 
-	log.LOG.Debug("RepoMessages::SaveMessage()",
-		zap.Int64("MessageID", message.ID),
-	)
+	// log.LOG.Debug("RepoMessages::SaveMessage()",
+	// 	zap.Int64("MessageID", message.ID),
+	// )
 
 	m := new(dto.Messages)
 	m.Map(message)

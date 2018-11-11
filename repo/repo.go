@@ -20,6 +20,8 @@ var (
 )
 
 type Context struct {
+	DBDialect       string
+	DBPath          string
 	Dialogs         RepoDialogs
 	Messages        RepoMessages
 	PendingMessages RepoPendingMessages
@@ -48,6 +50,8 @@ func InitRepo(dialect, dbPath string) error {
 		if ctx == nil {
 			repoLastError = repoSetDB(dialect, dbPath)
 			ctx = &Context{
+				DBDialect:       dialect,
+				DBPath:          dbPath,
 				Dialogs:         &repoDialogs{repository: r},
 				Messages:        &repoMessages{repository: r},
 				PendingMessages: &repoPendingMessages{repository: r},

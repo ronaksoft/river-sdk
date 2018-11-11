@@ -183,10 +183,35 @@ var MessageSendBulk = &ishell.Cmd{
 	},
 }
 
+var TestORM = &ishell.Cmd{
+	Name: "TestORM",
+	Func: func(c *ishell.Context) {
+		tries := fnGetTries(c)
+		_SDK.TestORM(tries)
+	},
+}
+var TestRAW = &ishell.Cmd{
+	Name: "TestRAW",
+	Func: func(c *ishell.Context) {
+		tries := fnGetTries(c)
+		_SDK.TestORM(tries)
+	},
+}
+var TestBatch = &ishell.Cmd{
+	Name: "TestBatch",
+	Func: func(c *ishell.Context) {
+		tries := fnGetTries(c)
+		_SDK.TestBatch(tries)
+	},
+}
+
 func init() {
 	Debug.AddCmd(SendTyping)
 	Debug.AddCmd(MessageSendByNetwork)
 	Debug.AddCmd(MessageSendByQueue)
 	Debug.AddCmd(ContactImportByNetwork)
 	Debug.AddCmd(MessageSendBulk)
+	Debug.AddCmd(TestORM)
+	Debug.AddCmd(TestRAW)
+	Debug.AddCmd(TestBatch)
 }
