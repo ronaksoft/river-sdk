@@ -244,6 +244,7 @@ func (ctrl *SyncController) sync() {
 	}
 	ctrl.isSyncing = false
 	log.LOG.Debug("SyncController::sync() status : " + domain.SyncStatusName[ctrl.syncStatus])
+	ctrl.updateSyncStatus(domain.Synced)
 }
 
 // SetUserID
