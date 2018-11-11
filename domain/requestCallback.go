@@ -23,6 +23,7 @@ type RequestCallback struct {
 	ResponseChannel chan *msg.MessageEnvelope
 	CreatedOn       time.Time
 	Timeout         time.Duration
+	IsUICallback    bool
 }
 
 func init() {
@@ -30,7 +31,7 @@ func init() {
 }
 
 // NewRequestCallback
-func NewRequestCallback(reqID uint64, success MessageHandler, timeOut time.Duration, timeout TimeoutCallback) *RequestCallback {
+func NewRequestCallback(reqID uint64, success MessageHandler, timeOut time.Duration, timeout TimeoutCallback, isUICallback bool) *RequestCallback {
 
 	return &RequestCallback{
 		RequestID:       reqID,
@@ -39,11 +40,12 @@ func NewRequestCallback(reqID uint64, success MessageHandler, timeOut time.Durat
 		ResponseChannel: make(chan *msg.MessageEnvelope),
 		CreatedOn:       time.Now(),
 		Timeout:         timeOut,
+		IsUICallback:    isUICallback,
 	}
 }
 
 // AddRequestCallback
-func AddRequestCallback(reqID uint64, success MessageHandler, timeOut time.Duration, timeout TimeoutCallback) *RequestCallback {
+func AddRequestCallback(reqID uint64, success MessageHandler, timeOut time.Duration, timeout TimeoutCallback, isUICallback bool) *RequestCallback {
 	cb := &RequestCallback{
 		RequestID:       reqID,
 		SuccessCallback: success,
@@ -51,6 +53,7 @@ func AddRequestCallback(reqID uint64, success MessageHandler, timeOut time.Durat
 		ResponseChannel: make(chan *msg.MessageEnvelope),
 		CreatedOn:       time.Now(),
 		Timeout:         timeOut,
+		IsUICallback:    isUICallback,
 	}
 	mxCB.Lock()
 	requestCallbacks[reqID] = cb

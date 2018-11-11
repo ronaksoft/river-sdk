@@ -175,6 +175,7 @@ func (r *River) callAuthRecall() {
 				nil,
 				nil,
 				true,
+				false,
 			)
 			if err == nil {
 				break
@@ -315,6 +316,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 			timeoutCallback,
 			successCallback,
 			blockingMode,
+			true,
 		)
 		if err != nil && delegate != nil && delegate.OnTimeout != nil {
 			delegate.OnTimeout(err)
@@ -374,7 +376,7 @@ func (r *River) executeRemoteCommand(requestID uint64, constructor int64, comman
 	log.LOG.Debug("River::executeRemoteCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
-	r.queueCtrl.ExecuteCommand(requestID, constructor, commandBytes, timeoutCB, successCB)
+	r.queueCtrl.ExecuteCommand(requestID, constructor, commandBytes, timeoutCB, successCB, true)
 }
 
 func (r *River) releaseDelegate(requestID int64) {

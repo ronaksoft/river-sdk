@@ -33,7 +33,7 @@ func GetUIExecuter() *UIExecuter {
 		defer mx.Unlock()
 		if exec == nil {
 			exec = &UIExecuter{
-				chUIExecuter: make(chan func()),
+				chUIExecuter: make(chan func(), 100),
 				chStop:       make(chan bool),
 			}
 			exec.Start()
@@ -65,12 +65,28 @@ func (c *UIExecuter) Exec(fn func()) {
 
 // Pass responses to external handler (UI) one by one
 func (c *UIExecuter) UIExecuter() {
+	// uiExecTimeout := 50 * time.Millisecond
+
 	for {
 		select {
 		case fn := <-c.chUIExecuter:
 			fn()
-		case <-c.chStop:
-			return
+			// // prevent (UI) external handler block our callbacks forever
+			// chDone := make(chan bool)
+			// go func(ch chan bool) {
+			// 	fn()
+			// 	ch <- true
+			// }(chDone)
+			// select {
+			// case <-time.After(uiExecTimeout):
+			// 	log.LOG.Debug("cmd::UIExecuter() execute fn() timedout")
+			// case <-chDone:
+			// 	log.LOG.Debug("cmd::UIExecuter() execute fn() successfully finished")
+			// }
+			// chDone = nil
+
+			// case <-c.chStop:
+			// 	return
 		}
 	}
 }

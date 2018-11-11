@@ -175,6 +175,7 @@ func (ctrl *QueueController) executor(req request) {
 			},
 			req.Timeout,
 			nil,
+			true,
 		)
 	}
 	if req.Timeout == 0 {
@@ -194,7 +195,12 @@ func (ctrl *QueueController) executor(req request) {
 	case <-time.After(req.Timeout):
 		domain.RemoveRequestCallback(req.ID)
 		if reqCallbacks.TimeoutCallback != nil {
-			reqCallbacks.TimeoutCallback()
+
+			if reqCallbacks.IsUICallback {
+				cmd.GetUIExecuter().Exec(func() { reqCallbacks.TimeoutCallback() })
+			} else {
+				reqCallbacks.TimeoutCallback()
+			}
 		}
 
 		// hotfix check pendingMessage &&  messagesReadHistory on timeout
@@ -222,7 +228,11 @@ func (ctrl *QueueController) executor(req request) {
 			zap.Uint64("RequestID", res.RequestID),
 		)
 		if reqCallbacks.SuccessCallback != nil {
-			cmd.GetUIExecuter().Exec(func() { reqCallbacks.SuccessCallback(res) })
+			if reqCallbacks.IsUICallback {
+				cmd.GetUIExecuter().Exec(func() { reqCallbacks.SuccessCallback(res) })
+			} else {
+				reqCallbacks.SuccessCallback(res)
+			}
 		} else {
 			log.LOG.Warn("QueueController::executor() :: ResponseChannel received signal SuccessCallback is null",
 				zap.String("ConstructorName", msg.ConstructorNames[res.Constructor]),
@@ -234,7 +244,7 @@ func (ctrl *QueueController) executor(req request) {
 }
 
 // ExecuteRealtimeCommand
-func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, blockingMode bool) (err error) {
+func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, blockingMode, isUICallback bool) (err error) {
 
 	messageEnvelope := new(msg.MessageEnvelope)
 	messageEnvelope.Constructor = constructor
@@ -242,7 +252,7 @@ func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructo
 	messageEnvelope.Message = commandBytes
 
 	// Add the callback functions
-	domain.AddRequestCallback(requestID, successCB, domain.DEFAULT_WS_REALTIME_TIMEOUT, timeoutCB)
+	domain.AddRequestCallback(requestID, successCB, domain.DEFAULT_WS_REALTIME_TIMEOUT, timeoutCB, isUICallback)
 
 	execBlock := func(reqID uint64, req *msg.MessageEnvelope) error {
 		err := ctrl.network.Send(req, blockingMode)
@@ -266,7 +276,12 @@ func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructo
 
 				domain.RemoveRequestCallback(reqID)
 				if reqCB.TimeoutCallback != nil {
-					reqCB.TimeoutCallback()
+					if reqCB.IsUICallback {
+						cmd.GetUIExecuter().Exec(func() { reqCB.TimeoutCallback() })
+					} else {
+
+						reqCB.TimeoutCallback()
+					}
 				}
 				err = domain.ErrRequestTimeout
 			case res := <-reqCB.ResponseChannel:
@@ -275,7 +290,11 @@ func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructo
 					zap.Uint64("RequestID", requestID),
 				)
 				if reqCB.SuccessCallback != nil {
-					cmd.GetUIExecuter().Exec(func() { reqCB.SuccessCallback(res) })
+					if reqCB.IsUICallback {
+						cmd.GetUIExecuter().Exec(func() { reqCB.SuccessCallback(res) })
+					} else {
+						reqCB.SuccessCallback(res)
+					}
 				}
 			}
 		} else {
@@ -297,7 +316,7 @@ func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructo
 }
 
 // executeRemoteCommand
-func (ctrl *QueueController) ExecuteCommand(requestID uint64, constructor int64, requestBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (ctrl *QueueController) ExecuteCommand(requestID uint64, constructor int64, requestBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, isUICallback bool) {
 	log.LOG.Debug("QueueController::ExecuteCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 		zap.Uint64("RequestID", requestID),
@@ -313,7 +332,7 @@ func (ctrl *QueueController) ExecuteCommand(requestID uint64, constructor int64,
 	}
 
 	// Add the callback functions
-	domain.AddRequestCallback(requestID, successCB, req.Timeout, timeoutCB)
+	domain.AddRequestCallback(requestID, successCB, req.Timeout, timeoutCB, isUICallback)
 
 	// Add the request to the queue
 	ctrl.addToWaitingList(&req)

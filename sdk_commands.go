@@ -27,7 +27,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	// if the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {
 		log.LOG.Debug("River::messagesGetDialogs()-> GetDialogs() nothing found in cacheDB pass request to server")
-		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
 	}
 
@@ -94,7 +94,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	requestBytes, _ := req.Marshal()
 	// r.queueCtrl.addToWaitingList(req) // this needs to be wrapped by MessageEnvelope
 	// using req randomID as requestID later in queue processing and network controller messageHandler
-	r.queueCtrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSend, requestBytes, timeoutCB, successCB)
+	r.queueCtrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSend, requestBytes, timeoutCB, successCB, true)
 
 	// 3. return to CallBack with pending message data : Done
 	out.Constructor = msg.C_ClientPendingMessage
@@ -139,7 +139,7 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 	// if the localDB had no or outdated data send the request to server
 	if (req.MaxID-maxMessageID) > int64(req.Limit) || len(res.Messages) <= 1 {
 		log.LOG.Debug("River::messageGetHistory()-> GetMessageHistory() nothing found in cacheDB pass request to server")
-		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
 	}
 
@@ -170,7 +170,7 @@ func (r *River) contactGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeou
 
 	// if didn't find anything send request to server
 	if len(res.Users) == 0 || len(res.Contacts) == 0 {
-		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
 	}
 
@@ -210,7 +210,7 @@ func (r *River) messageReadHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	// send the request to server
 
 	log.LOG.Debug("River::messageReadHistory() Pass request to server")
-	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 }
 
 func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -243,7 +243,7 @@ func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 	} else {
 		log.LOG.Debug("River::messageGetHistory()-> GetAnyUsers() cacheDB is not up to date pass request to server")
 		// send the request to server
-		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 	}
 }
 
@@ -281,7 +281,7 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 	} else {
 		log.LOG.Debug("River::messagesGet() -> GetManyMessages() cacheDB is not up to date pass request to server")
 		// send the request to server
-		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 	}
 }
 
@@ -300,7 +300,7 @@ func (r *River) accountUpdateUsername(in, out *msg.MessageEnvelope, timeoutCB do
 
 	log.LOG.Debug("River::accountUpdateUsername()-> pass request to server")
 	// send the request to server
-	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 }
 
 func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -319,5 +319,5 @@ func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB dom
 
 	log.LOG.Debug("River::accountUpdateProfile()-> pass request to server")
 	// send the request to server
-	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB)
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 }

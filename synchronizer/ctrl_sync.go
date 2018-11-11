@@ -293,6 +293,7 @@ func (ctrl *SyncController) getUpdateState() (updateID int64, err error) {
 			}
 		},
 		true,
+		false,
 	)
 	waitGroup.Wait()
 	return
@@ -348,6 +349,7 @@ func (ctrl *SyncController) getUpdateDifference(minUpdateID int64) {
 				log.LOG.Debug("SyncController::getUpdateDifference() -> ExecuteRealtimeCommand() Success")
 			},
 			true,
+			false,
 		)
 		log.LOG.Debug("SyncController::getUpdateDifference() Loop next")
 
@@ -451,6 +453,7 @@ func (ctrl *SyncController) getContacts() {
 		func(m *msg.MessageEnvelope) {
 			// SyncController applier will take care of this
 		},
+		false,
 	)
 }
 
@@ -535,6 +538,7 @@ func (ctrl *SyncController) getAllDialogs(offset int32, limit int32) {
 				)
 			}
 		},
+		false,
 	)
 
 }
@@ -595,7 +599,11 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 	if u.MinUpdateID != 0 {
 		// Check if we are out of sync with server, if yes, then get the difference and
 		// try to sync with server again
-		if ctrl.updateID < u.MinUpdateID-1 {
+		if ctrl.updateID < u.MinUpdateID-1 && !ctrl.isUpdatingDifference {
+			log.LOG.Debug("SyncController::UpdateHandler() calling getUpdateDifference()",
+				zap.Int64("UpdateID", ctrl.updateID),
+				zap.Int64("MinUpdateID", u.MinUpdateID),
+			)
 			ctrl.updateSyncStatus(domain.OutOfSync)
 			ctrl.getUpdateDifference(u.MinUpdateID)
 		}
