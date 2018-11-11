@@ -644,6 +644,10 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 	updateContainer := new(msg.UpdateContainer)
 
+	log.LOG.Debug("SDK::onReceivedUpdate()",
+		zap.Int("Received Container Count :", len(upds)),
+	)
+
 	minID := int64(^uint64(0) >> 1)
 	maxID := int64(0)
 
@@ -673,6 +677,20 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 			}
 		}
 
+	}
+
+	log.LOG.Debug("SDK::onReceivedUpdate()",
+		zap.Int("Received Updates Count :", len(updates)),
+		zap.Int64("UpdateID :", r.syncCtrl.UpdateID()),
+		zap.Int64("MaxID :", maxID),
+		zap.Int64("MinID :", minID),
+	)
+
+	// check max UpdateID if its greater than snapshot sync threshold discard recived updates and execute sanpshot sync
+	if maxID-r.syncCtrl.UpdateID() > domain.SnapshotSync_Threshold {
+		log.LOG.Debug("SDK::onReceivedUpdate() snapshot threshold reached")
+		r.syncCtrl.CheckSyncState()
+		return
 	}
 
 	// sort updates

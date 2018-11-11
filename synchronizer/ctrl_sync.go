@@ -48,8 +48,11 @@ type SyncController struct {
 	deliveredMessagesMutex sync.Mutex
 	deliveredMessages      map[int64]bool
 
-	updatingDifferenceLock sync.Mutex
-	updatingDifference     bool
+	isUpdatingDifferenceLock sync.Mutex
+	isUpdatingDifference     bool
+
+	isSyncingLock sync.Mutex
+	isSyncing     bool
 }
 
 // NewSyncController
@@ -172,9 +175,18 @@ func (ctrl *SyncController) watchDog() {
 func (ctrl *SyncController) sync() {
 	log.LOG.Debug("SyncController::sync()",
 		zap.Int64("UpdateID", ctrl.updateID),
-		zap.Int64("UserID", ctrl.UserID),
 	)
+	ctrl.isSyncingLock.Lock()
+	if ctrl.isSyncing {
+		ctrl.isSyncingLock.Unlock()
+		log.LOG.Debug("SyncController::sync() Exited already syncing")
+		return
+	}
+	ctrl.isSyncing = true
+	ctrl.isSyncingLock.Unlock()
+
 	if ctrl.UserID == 0 {
+		ctrl.isSyncing = false
 		return
 	}
 
@@ -195,11 +207,15 @@ func (ctrl *SyncController) sync() {
 
 			time.Sleep(100 * time.Millisecond)
 		} else {
+			log.LOG.Debug("SyncController::sync()-> getUpdateState()",
+				zap.Int64("serverUpdateID", serverUpdateID),
+				zap.Int64("UpdateID", ctrl.updateID),
+			)
 			break
 		}
 	}
 
-	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > 200 {
+	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSync_Threshold {
 		log.LOG.Debug("SyncController::sync()-> Snapshot sync")
 		// remove all messages
 		err := repo.Ctx().DropAndCreateTable(&dto.Messages{})
@@ -226,6 +242,7 @@ func (ctrl *SyncController) sync() {
 			ctrl.getUpdateDifference(serverUpdateID)
 		}
 	}
+	ctrl.isSyncing = false
 	log.LOG.Debug("SyncController::sync() status : " + domain.SyncStatusName[ctrl.syncStatus])
 }
 
@@ -284,19 +301,19 @@ func (ctrl *SyncController) getUpdateState() (updateID int64, err error) {
 func (ctrl *SyncController) getUpdateDifference(minUpdateID int64) {
 
 	log.LOG.Debug("SyncController::getUpdateDifference()")
-	ctrl.updatingDifferenceLock.Lock()
-	if ctrl.updatingDifference {
-		ctrl.updatingDifferenceLock.Unlock()
+	ctrl.isUpdatingDifferenceLock.Lock()
+	if ctrl.isUpdatingDifference {
+		ctrl.isUpdatingDifferenceLock.Unlock()
 		log.LOG.Debug("SyncController::getUpdateDifference() Exited already updatingDifference")
 		return
 	}
-	ctrl.updatingDifference = true
-	ctrl.updatingDifferenceLock.Unlock()
+	ctrl.isUpdatingDifference = true
+	ctrl.isUpdatingDifferenceLock.Unlock()
 
 	// if updateID is zero then wait for snapshot sync
 	// and when sending requests w8 till its finish
 	if ctrl.updateID == 0 {
-		ctrl.updatingDifference = false
+		ctrl.isUpdatingDifference = false
 		log.LOG.Debug("SyncController::getUpdateDifference() Exited UpdateID is zero need snapshot sync")
 		return
 	}
@@ -335,7 +352,7 @@ func (ctrl *SyncController) getUpdateDifference(minUpdateID int64) {
 
 	}
 	log.LOG.Debug("SyncController::getUpdateDifference() Loop Finished")
-	ctrl.updatingDifference = false
+	ctrl.isUpdatingDifference = false
 	ctrl.updateSyncStatus(domain.Synced)
 }
 
@@ -567,7 +584,12 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 		log.LOG.Debug("SyncController::UpdateHandler() Ignore updates while syncing")
 		return
 	}
-	log.LOG.Debug("SyncController::UpdateHandler() Called")
+	log.LOG.Debug("SyncController::UpdateHandler() Called",
+		zap.Int64("UpdateID", ctrl.updateID),
+		zap.Int64("MaxID", u.MaxUpdateID),
+		zap.Int64("MinID", u.MinUpdateID),
+		zap.Int("Count : ", len(u.Updates)),
+	)
 	ctrl.lastUpdateReceived = time.Now()
 	if u.MinUpdateID != 0 {
 		// Check if we are out of sync with server, if yes, then get the difference and
@@ -657,4 +679,12 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 		})
 	}
 
+}
+
+func (ctrl *SyncController) UpdateID() int64 {
+	return ctrl.updateID
+}
+
+func (ctrl *SyncController) CheckSyncState() {
+	go ctrl.sync()
 }

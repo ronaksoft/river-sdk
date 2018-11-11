@@ -10,6 +10,7 @@ const (
 	DEFAULT_WS_WRITE_TIMEOUT             = 3 * time.Second
 	DEFAULT_WS_REALTIME_TIMEOUT          = 3 * time.Second
 	DEFAULT_REQUEST_TIMEOUT              = 30 * time.Second
+	SnapshotSync_Threshold               = 200
 )
 
 // LOG KEYS
