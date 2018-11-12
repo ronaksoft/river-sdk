@@ -205,6 +205,13 @@ var TestBatch = &ishell.Cmd{
 	},
 }
 
+var PrintDebuncerStatus = &ishell.Cmd{
+	Name: "PrintDebuncerStatus",
+	Func: func(c *ishell.Context) {
+		_SDK.PrintDebuncerStatus()
+	},
+}
+
 func init() {
 	Debug.AddCmd(SendTyping)
 	Debug.AddCmd(MessageSendByNetwork)
@@ -214,4 +221,5 @@ func init() {
 	Debug.AddCmd(TestORM)
 	Debug.AddCmd(TestRAW)
 	Debug.AddCmd(TestBatch)
+	Debug.AddCmd(PrintDebuncerStatus)
 }

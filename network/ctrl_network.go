@@ -149,7 +149,7 @@ func (ctrl *NetworkController) messageDebuncer() {
 				timer.Reset(interval)
 			}
 		case <-timer.C:
-			if ctrl.OnMessage != nil && counter > 0 {
+			if ctrl.OnMessage != nil && ctrl.messageQueue.Length() > 0 {
 				log.LOG.Debug("NetworkController::messageDebuncer() Flushed",
 					zap.Int("ItemCount", ctrl.messageQueue.Length()),
 				)
@@ -184,7 +184,7 @@ func (ctrl *NetworkController) updateDebuncer() {
 				timer.Reset(interval)
 			}
 		case <-timer.C:
-			if ctrl.OnUpdate != nil && counter > 0 {
+			if ctrl.OnUpdate != nil && ctrl.updateQueue.Length() > 0 {
 				log.LOG.Debug("NetworkController::updateDebuncer() Flushed",
 					zap.Int("ItemCount", ctrl.updateQueue.Length()),
 				)
@@ -753,4 +753,15 @@ func (ctrl *NetworkController) _send(msgEnvelope *msg.MessageEnvelope) error {
 // Quality returns NetworkStatus
 func (ctrl *NetworkController) Quality() domain.NetworkStatus {
 	return ctrl.wsQuality
+}
+
+func (ctrl *NetworkController) PrintDebuncerStatus() {
+	log.LOG.Debug("Messages queue",
+		zap.Int("Count", ctrl.messageQueue.Length()),
+		zap.Int("Items Count", len(ctrl.messageQueue.GetRawItems())),
+	)
+	log.LOG.Debug("Updates queue",
+		zap.Int("Count", ctrl.updateQueue.Length()),
+		zap.Int("Items Count", len(ctrl.updateQueue.GetRawItems())),
+	)
 }

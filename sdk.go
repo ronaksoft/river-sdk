@@ -302,8 +302,8 @@ func deepCopy(commandBytes []byte) []byte {
 func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate, blockingMode bool) (requestID int64, err error) {
 	// deleteMe
 	cmdID := fmt.Sprintf("%v : ", time.Now().UnixNano())
-	log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 1 ExecuteCommand Started req:" + msg.ConstructorNames[constructor])
-	defer log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 7 ExecuteCommand Ended req:" + msg.ConstructorNames[constructor])
+	log.LOG.Debug(cmdID + "SDK::ExecuteCommand() 1 ExecuteCommand Started req:" + msg.ConstructorNames[constructor])
+	defer log.LOG.Debug(cmdID + "SDK::ExecuteCommand() 7 ExecuteCommand Ended req:" + msg.ConstructorNames[constructor])
 
 	commandBytesDump := deepCopy(commandBytes)
 
@@ -320,7 +320,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	// if function is in blocking mode set the waitGroup to block until the job is done, otherwise
 	// save 'delegate' into delegates list to be fetched later.
 	if blockingMode {
-		log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 2 waitGroup.Add(1) / defer")
+		log.LOG.Debug(cmdID + "SDK::ExecuteCommand() 2 waitGroup.Add(1) / defer")
 		waitGroup.Add(1)
 		defer waitGroup.Wait()
 	} else if delegate != nil {
@@ -330,19 +330,19 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	}
 	timeoutCallback := func() {
 
-		log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 3 timeout called")
+		log.LOG.Debug(cmdID + "SDK::ExecuteCommand() 3 timeout called")
 		if blockingMode {
 			defer waitGroup.Done()
 		}
 		err = domain.ErrRequestTimeout
 		delegate.OnTimeout(err)
 		r.releaseDelegate(requestID)
-		log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 4 timeout ended")
+		log.LOG.Debug(cmdID + "SDK::ExecuteCommand() 4 timeout ended")
 
 	}
 	successCallback := func(envelope *msg.MessageEnvelope) {
 
-		log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 5 succes called")
+		log.LOG.Debug(cmdID + "SDK::ExecuteCommand() 5 succes called")
 		if blockingMode {
 			defer waitGroup.Done()
 		}
@@ -350,7 +350,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 		delegate.OnComplete(b)
 		r.releaseDelegate(requestID)
 
-		log.LOG.Debug(cmdID + "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 6 success ended")
+		log.LOG.Debug(cmdID + "SDK::ExecuteCommand() 6 success ended")
 
 	}
 
@@ -705,6 +705,8 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 	updateIDs := domain.MInt64B{}
 	users := make([]*msg.User, 0)
 	updates := make([]*msg.UpdateEnvelope, 0)
+
+	currentUpdateID := r.syncCtrl.UpdateID()
 	for _, val := range upds {
 		if val.MinUpdateID < minID {
 			minID = val.MinUpdateID
@@ -714,6 +716,13 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 		}
 
 		for _, u := range val.Updates {
+			if u.UpdateID > 0 && u.UpdateID <= currentUpdateID {
+				log.LOG.Debug("SDK::onReceivedUpdate() XXXXXXXXXXXXXXXXXXXXXXXXXXXXX Outdated update ",
+					zap.Int64("CurrentUpdateID", currentUpdateID),
+					zap.Int64("UpdateID", u.UpdateID),
+				)
+				continue
+			}
 			if _, ok := updateIDs[u.UpdateID]; !ok {
 				updateIDs[u.UpdateID] = true
 				updates = append(updates, u)
@@ -755,6 +764,11 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 	r.syncCtrl.UpdateHandler(updateContainer)
 }
 
+func (r *River) PrintDebuncerStatus() {
+	log.LOG.Debug("SDK::PrintDebuncerStatus()")
+	r.networkCtrl.PrintDebuncerStatus()
+}
+
 func (r *River) TestORM(tries int) {
 
 	sw := time.Now()
@@ -787,9 +801,9 @@ func (r *River) TestRAW(tries int) {
 
 	// insert
 	stmt, err := db.Prepare(`INSERT INTO messages 
-( ID, PeerID, PeerType, CreatedOn, Body, SenderID, EditedOn, FwdSenderID, FwdChannelID, FwdChannelMessageID, Flags, MessageType, ContentRead, Inbox, ReplyTo, MessageAction )
-VALUES
-(?,?,?,?,?,?,0,0,0,0,0,0,0,0,0,0)`)
+	( ID, PeerID, PeerType, CreatedOn, Body, SenderID, EditedOn, FwdSenderID, FwdChannelID, FwdChannelMessageID, Flags, MessageType, ContentRead, Inbox, ReplyTo, MessageAction )
+	VALUES
+	(?,?,?,?,?,?,0,0,0,0,0,0,0,0,0,0)`)
 
 	if err != nil {
 		log.LOG.Debug("TestRAW() :: Error : " + err.Error())

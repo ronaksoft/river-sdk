@@ -45,9 +45,9 @@ func (q *QueueMessages) Pop() (*msg.MessageEnvelope, error) {
 }
 func (q *QueueMessages) PopAll() []*msg.MessageEnvelope {
 	q.mx.Lock()
-	m := q.items
+	m := q.items[:]
 	q.length = 0
-	q.items = make([]*msg.MessageEnvelope, 0)
+	q.items = q.items[0:0]
 	q.mx.Unlock()
 	return m
 }
@@ -55,10 +55,14 @@ func (q *QueueMessages) PopAll() []*msg.MessageEnvelope {
 func (q *QueueMessages) Clear() {
 	q.mx.Lock()
 	q.length = 0
-	q.items = make([]*msg.MessageEnvelope, 0)
+	q.items = q.items[:]
 	q.mx.Unlock()
 }
 
 func (q *QueueMessages) Length() int {
 	return q.length
+}
+
+func (q *QueueMessages) GetRawItems() []*msg.MessageEnvelope {
+	return q.items
 }
