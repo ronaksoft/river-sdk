@@ -47,7 +47,7 @@ func (q *QueueUpdates) PopAll() []*msg.UpdateContainer {
 	q.mx.Lock()
 	m := q.items[:]
 	q.length = 0
-	q.items = q.items[0:0]
+	q.items = make([]*msg.UpdateContainer, 0)
 	q.mx.Unlock()
 	return m
 }
@@ -55,7 +55,7 @@ func (q *QueueUpdates) PopAll() []*msg.UpdateContainer {
 func (q *QueueUpdates) Clear() {
 	q.mx.Lock()
 	q.length = 0
-	q.items = q.items[0:0]
+	q.items = make([]*msg.UpdateContainer, 0)
 	q.mx.Unlock()
 }
 
