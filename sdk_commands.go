@@ -1,6 +1,7 @@
 package riversdk
 
 import (
+	"encoding/json"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd"
@@ -318,6 +319,35 @@ func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB dom
 	r.ConnInfo.saveConfig()
 
 	log.LOG.Debug("River::accountUpdateProfile()-> pass request to server")
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+}
+
+// save token to DB
+func (r *River) accountRegisterDevice(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.AccountRegisterDevice)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG.Debug("River::accountRegisterDevice()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
+	r.DeviceToken = req
+
+	val, err := json.Marshal(req)
+	if err != nil {
+		log.LOG.Debug("River::accountRegisterDevice()-> Json Marshal()",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
+	err = repo.Ctx().System.SaveString(domain.CN_DEVICE_TOKEN, string(val))
+	if err != nil {
+		log.LOG.Debug("River::accountRegisterDevice()-> SaveString()",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 }

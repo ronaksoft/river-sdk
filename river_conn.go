@@ -62,7 +62,7 @@ type RiverConnection struct {
 	LastName  string
 }
 
-// Get
+// Get system Configs
 func (r *River) loadSystemConfig() {
 	r.ConnInfo = new(RiverConnection)
 	if err := r.ConnInfo.loadConfig(); err != nil {

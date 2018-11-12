@@ -27,8 +27,9 @@ const (
 
 // Table Column Names
 const (
-	CN_CONN_INFO = "CONN_INFO"
-	CN_UPDATE_ID = "UPDATE_ID"
+	CN_CONN_INFO    = "CONN_INFO"
+	CN_UPDATE_ID    = "UPDATE_ID"
+	CN_DEVICE_TOKEN = "DEVICE_TOKEN_INFO"
 )
 
 type NetworkStatus int

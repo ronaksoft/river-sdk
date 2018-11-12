@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
+	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/network"
 	"git.ronaksoftware.com/ronak/riversdk/queue"
 	"git.ronaksoftware.com/ronak/riversdk/synchronizer"
@@ -61,4 +62,7 @@ type River struct {
 
 	// Connection Info
 	ConnInfo *RiverConnection
+
+	// Device Token
+	DeviceToken *msg.AccountRegisterDevice
 }

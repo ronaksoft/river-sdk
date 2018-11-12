@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"database/sql"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/big"
@@ -72,6 +73,9 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// init riverConfigs this should be after connect to DB
 	r.loadSystemConfig()
+
+	// load DeviceToken
+	r.loadDeviceToken()
 
 	// Initialize realtime requests
 	r.realTimeRequest = map[int64]bool{
@@ -156,11 +160,29 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.networkCtrl.SetErrorHandler(r.onGeneralError)
 	r.networkCtrl.SetMessageHandler(r.onReceivedMessage)
 	r.networkCtrl.SetUpdateHandler(r.onReceivedUpdate)
-	r.networkCtrl.SetOnConnectCallback(r.callAuthRecall)
+	r.networkCtrl.SetOnConnectCallback(r.callAuthRecall_RegisterDevice)
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 }
 
-func (r *River) callAuthRecall() {
+// Get deviceToken
+func (r *River) loadDeviceToken() {
+	r.DeviceToken = new(msg.AccountRegisterDevice)
+	str, err := repo.Ctx().System.LoadString(domain.CN_DEVICE_TOKEN)
+	if err != nil {
+		log.LOG.Info("River::loadDeviceToken() failed to fetch DeviceToken",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
+	err = json.Unmarshal([]byte(str), r.DeviceToken)
+	if err != nil {
+		log.LOG.Info("River::loadDeviceToken() failed to unmarshal DeviceToken",
+			zap.String("Error", err.Error()),
+		)
+	}
+}
+
+func (r *River) callAuthRecall_RegisterDevice() {
 	req := msg.AuthRecall{}
 	reqBytes, _ := req.Marshal()
 	if r.syncCtrl.UserID != 0 {
@@ -171,6 +193,30 @@ func (r *River) callAuthRecall() {
 			err := r.queueCtrl.ExecuteRealtimeCommand(
 				uint64(domain.SequentialUniqueID()),
 				msg.C_AuthRecall,
+				reqBytes,
+				nil,
+				nil,
+				true,
+				false,
+			)
+			if err == nil {
+				break
+			} else {
+				time.Sleep(1 * time.Second)
+			}
+		}
+
+		if r.DeviceToken == nil || r.DeviceToken.Token == "" {
+			log.LOG.Info("callAuthRecall_RegisterDevice() Device Token is not set")
+			return
+		}
+
+		// register device to receive notification
+		reqBytes, _ = r.DeviceToken.Marshal()
+		for {
+			err := r.queueCtrl.ExecuteRealtimeCommand(
+				uint64(domain.SequentialUniqueID()),
+				msg.C_AccountRegisterDevice,
 				reqBytes,
 				nil,
 				nil,
@@ -197,6 +243,7 @@ func (r *River) registerCommandHandlers() {
 	r.localCommands[msg.C_MessagesGet] = r.messagesGet
 	r.localCommands[msg.C_AccountUpdateUsername] = r.accountUpdateUsername
 	r.localCommands[msg.C_AccountUpdateProfile] = r.accountUpdateProfile
+	r.localCommands[msg.C_AccountRegisterDevice] = r.accountRegisterDevice
 
 	// TODO : Add new api commands
 }
@@ -584,7 +631,7 @@ func (r *River) CreateAuthKey() (err error) {
 	}
 
 	// call authRecall to receive data from websocket
-	r.callAuthRecall()
+	r.callAuthRecall_RegisterDevice()
 
 	return
 }
