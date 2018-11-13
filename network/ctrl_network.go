@@ -765,3 +765,15 @@ func (ctrl *NetworkController) PrintDebuncerStatus() {
 		zap.Int("Items Count", len(ctrl.updateQueue.GetRawItems())),
 	)
 }
+
+// Reconnect by wsKeepConnection = true the watchdog will connect itself again no need to call ctrl.Connect()
+func (ctrl *NetworkController) Reconnect() {
+	if ctrl.wsConn != nil {
+		ctrl.wsKeepConnection = true
+		ctrl.wsConn.Close()
+		// watchDog() will take care of this
+		//go ctrl.Connect()
+
+		log.LOG.Info("NetworkController::Disconnect() Reconnected")
+	}
+}

@@ -105,11 +105,12 @@ func (r *River) Logout() (int64, error) {
 	}
 	successCallback := func(envelope *msg.MessageEnvelope) {
 		r.releaseDelegate(requestID)
+		r.networkCtrl.Reconnect()
 	}
 
 	req := new(msg.AuthLogout)
 	buff, _ := req.Marshal()
-	err = r.queueCtrl.ExecuteRealtimeCommand(uint64(requestID), msg.C_AuthLogout, buff, timeoutCallback, successCallback, true, true)
+	err = r.queueCtrl.ExecuteRealtimeCommand(uint64(requestID), msg.C_AuthLogout, buff, timeoutCallback, successCallback, true, false)
 	if err != nil {
 		r.releaseDelegate(requestID)
 	}
