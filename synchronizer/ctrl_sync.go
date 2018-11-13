@@ -697,3 +697,7 @@ func (ctrl *SyncController) UpdateID() int64 {
 func (ctrl *SyncController) CheckSyncState() {
 	go ctrl.sync()
 }
+
+func (ctrl *SyncController) ClearUpdateID() {
+	ctrl.updateID = 0
+}

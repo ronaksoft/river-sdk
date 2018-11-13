@@ -102,10 +102,13 @@ func (r *River) Logout() (int64, error) {
 	timeoutCallback := func() {
 		err = domain.ErrRequestTimeout
 		r.releaseDelegate(requestID)
+		r.networkCtrl.Reconnect()
+		r.syncCtrl.ClearUpdateID()
 	}
 	successCallback := func(envelope *msg.MessageEnvelope) {
 		r.releaseDelegate(requestID)
 		r.networkCtrl.Reconnect()
+		r.syncCtrl.ClearUpdateID()
 	}
 
 	req := new(msg.AuthLogout)
