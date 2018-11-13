@@ -81,7 +81,18 @@ func (r *repoUsers) SaveContactUser(user *msg.ContactUser) error {
 
 		return r.db.Create(u).Error
 	}
-	return r.db.Table(u.TableName()).Where("ID=?", u.ID).Update(u).Error
+
+	// WARNING when update with struct, GORM will only update those fields that with non blank value
+	// fix bug : if we had user and later we add its contact with fname or lname empty the fname and lname from user will remain unchanged
+	return r.db.Table(u.TableName()).Where("ID=?", u.ID).Updates(map[string]interface{}{
+		"FirstName":  u.FirstName,
+		"LastName":   u.LastName,
+		"AccessHash": u.AccessHash,
+		"Phone":      u.Phone,
+		"Username":   u.Username,
+		"ClientID":   u.ClientID,
+		"IsContact":  u.IsContact,
+	}).Error
 }
 
 // GetManyUsers
