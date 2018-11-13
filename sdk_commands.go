@@ -2,6 +2,7 @@ package riversdk
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd"
@@ -74,6 +75,21 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		)
 		return
 	}
+
+	// do not allow empty message
+	if strings.TrimSpace(req.Body) == "" {
+		e := new(msg.Error)
+		e.Code = "n/a"
+		e.Items = "empty message is not allowed"
+		msg.ResultError(out, e)
+		cmd.GetUIExecuter().Exec(func() {
+			if successCB != nil {
+				successCB(out)
+			}
+		})
+		return
+	}
+
 	// this will be used as next requestID
 	req.RandomID = domain.SequentialUniqueID()
 
@@ -89,6 +105,11 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		e.Code = "n/a"
 		e.Items = "Failed to save to pendingMessages : " + err.Error()
 		msg.ResultError(out, e)
+		cmd.GetUIExecuter().Exec(func() {
+			if successCB != nil {
+				successCB(out)
+			}
+		})
 		return
 	}
 	// 2. add to queue [ looks like there is general queue to send messages ] : Done
