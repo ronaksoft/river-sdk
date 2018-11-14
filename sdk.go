@@ -639,7 +639,11 @@ func (r *River) CreateAuthKey() (err error) {
 
 func (r *River) onGeneralError(e *msg.Error) {
 	// TODO:: calll external handler
-	log.LOG.Info("River::onGeneralError()")
+	log.LOG.Info("River::onGeneralError()",
+		zap.String("Code", e.Code),
+		zap.String("Item", e.Items),
+	)
+
 	if r.mainDelegate != nil && r.mainDelegate.OnGeneralError != nil {
 		buff, _ := e.Marshal()
 		r.mainDelegate.OnGeneralError(buff)
