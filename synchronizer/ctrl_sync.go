@@ -198,22 +198,22 @@ func (ctrl *SyncController) sync() {
 	var serverUpdateID int64
 	var err error
 	// try each 100ms until we get serverUpdateID from server
-	for {
-		serverUpdateID, err = ctrl.getUpdateState()
-		if err != nil {
-			log.LOG.Debug("SyncController::sync()-> getUpdateState()",
-				zap.String("Error", err.Error()),
-			)
-
-			time.Sleep(100 * time.Millisecond)
-		} else {
-			log.LOG.Debug("SyncController::sync()-> getUpdateState()",
-				zap.Int64("serverUpdateID", serverUpdateID),
-				zap.Int64("UpdateID", ctrl.updateID),
-			)
-			break
-		}
+	//for {
+	serverUpdateID, err = ctrl.getUpdateState()
+	if err != nil {
+		log.LOG.Debug("SyncController::sync()-> getUpdateState()",
+			zap.String("Error", err.Error()),
+		)
+		// time.Sleep(100 * time.Millisecond)
+		return
+	} else {
+		log.LOG.Debug("SyncController::sync()-> getUpdateState()",
+			zap.Int64("serverUpdateID", serverUpdateID),
+			zap.Int64("UpdateID", ctrl.updateID),
+		)
+		// break
 	}
+	//}
 
 	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSync_Threshold {
 		log.LOG.Debug("SyncController::sync()-> Snapshot sync")

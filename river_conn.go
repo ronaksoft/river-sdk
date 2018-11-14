@@ -73,7 +73,11 @@ func (r *River) loadSystemConfig() {
 
 // Clear
 func (r *River) clearSystemConfig() {
-	r.ConnInfo = new(RiverConnection)
+	r.ConnInfo.FirstName = ""
+	r.ConnInfo.LastName = ""
+	r.ConnInfo.Phone = ""
+	r.ConnInfo.UserID = 0
+	r.ConnInfo.Username = ""
 	r.DeviceToken = new(msg.AccountRegisterDevice)
 }
 

@@ -498,10 +498,13 @@ func (ctrl *NetworkController) messageHandler(message *msg.MessageEnvelope) {
 // Sends stop signal to keepAlive and watchDog routines.
 func (ctrl *NetworkController) Stop() {
 	ctrl.stopChannel <- true // keepAlive
-	ctrl.stopChannel <- true // receiver
 	ctrl.stopChannel <- true // updateDebuncer
 	ctrl.stopChannel <- true // messageDebuncer
 	ctrl.stopChannel <- true // sendDebuncer
+	select {
+	case ctrl.stopChannel <- true: // receiver may or may not be listening
+	default:
+	}
 }
 
 // Connect

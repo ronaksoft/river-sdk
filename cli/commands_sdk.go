@@ -14,11 +14,11 @@ var SdkConnInfo = &ishell.Cmd{
 	Name: "ConnInfo",
 	Func: func(c *ishell.Context) {
 		c.Println("UserID:", _SDK.ConnInfo.UserID)
-		c.Println("AuthID:", _SDK.ConnInfo.AuthID)
+		c.Println("AuthID:", _SDK.ConnInfo.PickupAuthID())
 		c.Println("Phone:", _SDK.ConnInfo.Phone)
 		c.Println("FirstName:", _SDK.ConnInfo.FirstName)
 		c.Println("LastName:", _SDK.ConnInfo.LastName)
-		c.Println("AuthKey:", _SDK.ConnInfo.AuthKey)
+		c.Println("AuthKey:", _SDK.ConnInfo.PickupAuthKey())
 	},
 }
 
