@@ -55,7 +55,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	for _, m := range res.Messages {
 		mUsers[m.SenderID] = true
 	}
-	res.Users = repo.Ctx().Users.GetManyUsers(mUsers.ToArray())
+	res.Users = repo.Ctx().Users.GetAnyUsers(mUsers.ToArray())
 	out.Constructor = msg.C_MessagesDialogs
 	out.Message, _ = res.Marshal()
 

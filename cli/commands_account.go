@@ -101,10 +101,36 @@ var UpdateProfile = &ishell.Cmd{
 	},
 }
 
+var SetNotifySettings = &ishell.Cmd{
+	Name: "SetNotifySettings",
+	Func: func(c *ishell.Context) {
+		req := msg.AccountSetNotifySettings{
+			Peer:     new(msg.InputPeer),
+			Settings: new(msg.PeerNotifySettings),
+		}
+		req.Peer.ID = fnGetPeerID(c)
+		req.Peer.Type = 1
+		req.Peer.AccessHash = fnGetAccessHash(c)
+		req.Settings.Flags = 113
+		req.Settings.MuteUntil = 0
+		req.Settings.Sound = ""
+
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+
+		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_AccountSetNotifySettings), reqBytes, reqDelegate, false); err != nil {
+			_Log.Debug(err.Error())
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
 func init() {
 	Account.AddCmd(RegisterDevice)
 	Account.AddCmd(UpdateUsername)
 	Account.AddCmd(CheckUsername)
 	Account.AddCmd(UnregisterDevice)
 	Account.AddCmd(UpdateProfile)
+	Account.AddCmd(SetNotifySettings)
 }
