@@ -94,19 +94,20 @@ func (r *River) Logout() (int64, error) {
 		)
 	}
 
-	// reset connection info
-	r.clearSystemConfig()
-
 	// TODO : send logout request to server
 	requestID := domain.RandomInt63()
 	timeoutCallback := func() {
 		err = domain.ErrRequestTimeout
 		r.releaseDelegate(requestID)
+
+		r.clearSystemConfig()
 		r.networkCtrl.Reconnect()
 		r.syncCtrl.ClearUpdateID()
 	}
 	successCallback := func(envelope *msg.MessageEnvelope) {
 		r.releaseDelegate(requestID)
+
+		r.clearSystemConfig()
 		r.networkCtrl.Reconnect()
 		r.syncCtrl.ClearUpdateID()
 	}
