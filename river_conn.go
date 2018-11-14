@@ -3,6 +3,7 @@ package riversdk
 import (
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/repo"
 	"go.uber.org/zap"
 )
@@ -72,7 +73,8 @@ func (r *River) loadSystemConfig() {
 
 // Clear
 func (r *River) clearSystemConfig() {
-	r.ConnInfo = &RiverConnection{}
+	r.ConnInfo = new(RiverConnection)
+	r.DeviceToken = new(msg.AccountRegisterDevice)
 }
 
 // Save
