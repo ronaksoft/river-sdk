@@ -401,3 +401,63 @@ func (r *River) accountRegisterDevice(in, out *msg.MessageEnvelope, timeoutCB do
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 }
+
+// remove token from DB
+func (r *River) accountUnregisterDevice(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.AccountUnregisterDevice)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG.Debug("River::accountUnregisterDevice()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
+	r.DeviceToken = new(msg.AccountRegisterDevice)
+
+	val, err := json.Marshal(r.DeviceToken)
+	if err != nil {
+		log.LOG.Debug("River::accountUnregisterDevice()-> Json Marshal()",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
+	err = repo.Ctx().System.SaveString(domain.CN_DEVICE_TOKEN, string(val))
+	if err != nil {
+		log.LOG.Debug("River::accountUnregisterDevice()-> SaveString()",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+}
+
+func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.AccountSetNotifySettings)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG.Debug("River::accountSetNotifySettings()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
+
+	dialog := repo.Ctx().Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
+	if dialog == nil {
+		log.LOG.Debug("River::accountSetNotifySettings()-> GetDialog()",
+			zap.String("Error", "Dialog is null"),
+		)
+		return
+	}
+
+	dialog.NotifySettings = req.Settings
+	err := repo.Ctx().Dialogs.SaveDialog(dialog, 0)
+	if err != nil {
+		log.LOG.Debug("River::accountSetNotifySettings()-> SaveDialog()",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
+
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+
+}

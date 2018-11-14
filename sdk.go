@@ -245,6 +245,8 @@ func (r *River) registerCommandHandlers() {
 	r.localCommands[msg.C_AccountUpdateUsername] = r.accountUpdateUsername
 	r.localCommands[msg.C_AccountUpdateProfile] = r.accountUpdateProfile
 	r.localCommands[msg.C_AccountRegisterDevice] = r.accountRegisterDevice
+	r.localCommands[msg.C_AccountUnregisterDevice] = r.accountUnregisterDevice
+	r.localCommands[msg.C_AccountSetNotifySettings] = r.accountSetNotifySettings
 
 	// TODO : Add new api commands
 }

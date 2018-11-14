@@ -71,7 +71,9 @@ func (r *repoDialogs) SaveDialog(dialog *msg.Dialog, lastUpdate int64) error {
 	d := new(dto.Dialogs)
 	d.Map(dialog)
 
-	d.LastUpdate = lastUpdate
+	if lastUpdate > 0 {
+		d.LastUpdate = lastUpdate
+	}
 
 	entity := new(dto.Dialogs)
 	r.db.Where(&dto.Dialogs{PeerID: d.PeerID, PeerType: d.PeerType}).Find(entity)
