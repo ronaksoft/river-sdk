@@ -66,6 +66,35 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	}) //successCB(out)
 }
 
+func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	log.LOG.Debug("River::messagesGetDialog()")
+	req := new(msg.MessagesGetDialog)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG.Debug("River::messagesGetDialog()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
+	res := new(msg.Dialog)
+	res = repo.Ctx().Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
+
+	// if the localDB had no data send the request to server
+	if res == nil {
+		log.LOG.Debug("River::messagesGetDialog()-> GetDialog() nothing found in cacheDB pass request to server")
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+		return
+	}
+
+	out.Constructor = msg.C_Dialog
+	out.Message, _ = res.Marshal()
+
+	cmd.GetUIExecuter().Exec(func() {
+		if successCB != nil {
+			successCB(out)
+		}
+	}) //successCB(out)
+}
+
 func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	log.LOG.Debug("River::messagesSend()")
 	req := new(msg.MessagesSend)
