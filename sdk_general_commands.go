@@ -36,7 +36,7 @@ func (r *River) DeletePendingMessage(id int64) (isSuccess bool) {
 func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
 	pmsg, err := repo.Ctx().PendingMessages.GetPendingMessageByID(id)
 	if err != nil {
-		log.LOG.Debug("River::RetryPendingMessage()",
+		log.LOG_Debug("River::RetryPendingMessage()",
 			zap.String("GetPendingMessageByID", err.Error()),
 		)
 		isSuccess = false
@@ -48,7 +48,7 @@ func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
 	buff, _ := req.Marshal()
 	r.queueCtrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSend, buff, nil, nil, true)
 	isSuccess = true
-	log.LOG.Debug("River::RetryPendingMessage() Request enqueued")
+	log.LOG_Debug("River::RetryPendingMessage() Request enqueued")
 
 	return
 }
@@ -61,7 +61,7 @@ func (r *River) GetNetworkStatus() int32 {
 // GetSyncStatus returns SyncController status
 func (r *River) GetSyncStatus() int32 {
 
-	log.LOG.Debug("River::GetSyncStatus()",
+	log.LOG_Debug("River::GetSyncStatus()",
 		zap.String("syncStatus", domain.SyncStatusName[r.syncCtrl.Status()]),
 	)
 	return int32(r.syncCtrl.Status())
@@ -73,7 +73,7 @@ func (r *River) Logout() (int64, error) {
 	dataDir, err := r.queueCtrl.DropQueue()
 
 	if err != nil {
-		log.LOG.Debug("River::Logout() failed to drop queue",
+		log.LOG_Debug("River::Logout() failed to drop queue",
 			zap.Error(err),
 		)
 	}
@@ -81,7 +81,7 @@ func (r *River) Logout() (int64, error) {
 	// drop and recreate database
 	err = repo.Ctx().ReinitiateDatabase()
 	if err != nil {
-		log.LOG.Debug("River::Logout() failed to re initiate database",
+		log.LOG_Debug("River::Logout() failed to re initiate database",
 			zap.Error(err),
 		)
 	}
@@ -89,7 +89,7 @@ func (r *River) Logout() (int64, error) {
 	// open queue
 	err = r.queueCtrl.OpenQueue(dataDir)
 	if err != nil {
-		log.LOG.Debug("River::Logout() failed to re open queue",
+		log.LOG_Debug("River::Logout() failed to re open queue",
 			zap.Error(err),
 		)
 	}
@@ -130,7 +130,7 @@ func (r *River) Logout() (int64, error) {
 func (r *River) UISettingGet(key string) string {
 	val, err := repo.Ctx().UISettings.Get(key)
 	if err != nil {
-		log.LOG.Info("River::UISettingsGet()",
+		log.LOG_Info("River::UISettingsGet()",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -141,7 +141,7 @@ func (r *River) UISettingGet(key string) string {
 func (r *River) UISettingPut(key, value string) bool {
 	err := repo.Ctx().UISettings.Put(key, value)
 	if err != nil {
-		log.LOG.Info("River::UISettingsPut()",
+		log.LOG_Info("River::UISettingsPut()",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -152,7 +152,7 @@ func (r *River) UISettingPut(key, value string) bool {
 func (r *River) UISettingDelete(key string) bool {
 	err := repo.Ctx().UISettings.Delete(key)
 	if err != nil {
-		log.LOG.Info("River::UISettingsDelete()",
+		log.LOG_Info("River::UISettingsDelete()",
 			zap.String("Error", err.Error()),
 		)
 	}

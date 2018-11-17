@@ -29,12 +29,12 @@ func (r *repoPendingMessages) Save(ID int64, senderID int64, message *msg.Messag
 	defer r.mx.Unlock()
 
 	if message == nil {
-		log.LOG.Debug("RepoPendingMessages::Save() :",
+		log.LOG_Debug("RepoPendingMessages::Save() :",
 			zap.String("Error", "message is null"),
 		)
 		return nil, domain.ErrNotFound
 	}
-	log.LOG.Debug("RepoPendingMessages::Save()",
+	log.LOG_Debug("RepoPendingMessages::Save()",
 		zap.Int64("PendingMessageID", ID),
 	)
 
@@ -82,14 +82,14 @@ func (r *repoPendingMessages) GetPendingMessageByRequestID(requestID int64) (*dt
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("RepoPendingMessages::GetPendingMessageByRequestID()",
+	log.LOG_Debug("RepoPendingMessages::GetPendingMessageByRequestID()",
 		zap.Int64("RandomID/RequestID", requestID),
 	)
 
 	pmsg := new(dto.PendingMessages)
 	err := r.db.Where("RequestID = ?", requestID).First(pmsg).Error
 	if err != nil {
-		log.LOG.Debug("RepoPendingMessages::GetPendingMessageByRequestID()-> fetch pendingMessage entity",
+		log.LOG_Debug("RepoPendingMessages::GetPendingMessageByRequestID()-> fetch pendingMessage entity",
 			zap.String("Error", err.Error()),
 		)
 		return nil, err
@@ -103,14 +103,14 @@ func (r *repoPendingMessages) GetPendingMessageByRequestID(requestID int64) (*dt
 func (r *repoPendingMessages) GetPendingMessageByID(id int64) (*dto.PendingMessages, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-	log.LOG.Debug("RepoPendingMessages::GetPendingMessageByID()",
+	log.LOG_Debug("RepoPendingMessages::GetPendingMessageByID()",
 		zap.Int64("ID", id),
 	)
 
 	pmsg := new(dto.PendingMessages)
 	err := r.db.Where("ID = ?", id).First(pmsg).Error
 	if err != nil {
-		log.LOG.Debug("RepoPendingMessages::GetPendingMessageByID()-> fetch pendingMessage entity",
+		log.LOG_Debug("RepoPendingMessages::GetPendingMessageByID()-> fetch pendingMessage entity",
 			zap.String("Error", err.Error()),
 		)
 		return nil, err
@@ -125,13 +125,13 @@ func (r *repoPendingMessages) DeletePendingMessage(ID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("RepoPendingMessages::DeletePendingMessage()",
+	log.LOG_Debug("RepoPendingMessages::DeletePendingMessage()",
 		zap.Int64("ID", ID),
 	)
 
 	err := r.db.Where("ID = ?", ID).Delete(dto.PendingMessages{}).Error
 	if err != nil {
-		log.LOG.Debug("RepoPendingMessages::DeletePendingMessage()-> delete pendingMessage entity",
+		log.LOG_Debug("RepoPendingMessages::DeletePendingMessage()-> delete pendingMessage entity",
 			zap.String("Error", err.Error()),
 		)
 		return err
@@ -144,14 +144,14 @@ func (r *repoPendingMessages) GetManyPendingMessages(messageIDs []int64) []*msg.
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("RepoPendingMessages::GetManyPendingMessages()",
+	log.LOG_Debug("RepoPendingMessages::GetManyPendingMessages()",
 		zap.Int64s("MessageIDs", messageIDs),
 	)
 	messages := make([]*msg.UserMessage, 0, len(messageIDs))
 	dtoMsgs := make([]dto.PendingMessages, 0, len(messageIDs))
 	err := r.db.Where("ID in (?)", messageIDs).Find(&dtoMsgs).Error
 	if err != nil {
-		log.LOG.Debug("RepoPendingMessages::GetManyPendingMessages()-> fetch pendingMessage entities",
+		log.LOG_Debug("RepoPendingMessages::GetManyPendingMessages()-> fetch pendingMessage entities",
 			zap.String("Error", err.Error()),
 		)
 		return nil

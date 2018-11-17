@@ -11,11 +11,11 @@ import (
 
 // updateNewMessage
 func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
-	log.LOG.Debug("SyncController::updateNewMessage() applier")
+	log.LOG_Debug("SyncController::updateNewMessage() applier")
 	x := new(msg.UpdateNewMessage)
 	err := x.Unmarshal(u.Update)
 	if err != nil {
-		log.LOG.Debug("SyncController::updateNewMessage()-> Unmarshal()",
+		log.LOG_Debug("SyncController::updateNewMessage()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -35,7 +35,7 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) (passToExter
 		}
 		err := repo.Ctx().Dialogs.SaveDialog(dialog, x.Message.CreatedOn)
 		if err != nil {
-			log.LOG.Debug("SyncController::updateNewMessage()-> SaveDialog()",
+			log.LOG_Debug("SyncController::updateNewMessage()-> SaveDialog()",
 				zap.String("Error", err.Error()),
 			)
 			// return
@@ -48,7 +48,7 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) (passToExter
 	if x.Message.SenderID != ctrl.UserID {
 		err := repo.Ctx().Messages.SaveNewMessage(x.Message, dialog, ctrl.connInfo.PickupUserID())
 		if err != nil {
-			log.LOG.Debug("SyncController::updateNewMessage()-> SaveNewMessage()",
+			log.LOG_Debug("SyncController::updateNewMessage()-> SaveNewMessage()",
 				zap.String("Error", err.Error()),
 			)
 			// return
@@ -56,7 +56,7 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) (passToExter
 	} else {
 		err := repo.Ctx().Messages.SaveSelfMessage(x.Message, dialog)
 		if err != nil {
-			log.LOG.Debug("SyncController::updateNewMessage()-> SaveSelfMessage()",
+			log.LOG_Debug("SyncController::updateNewMessage()-> SaveSelfMessage()",
 				zap.String("Error", err.Error()),
 			)
 			// return
@@ -68,14 +68,14 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) (passToExter
 		// update users access hash
 		err := repo.Ctx().Users.UpdateAccessHash(int64(x.AccessHash), x.Message.PeerID, x.Message.PeerType)
 		if err != nil {
-			log.LOG.Debug("SyncController::updateNewMessage() -> Users.UpdateAccessHash()",
+			log.LOG_Debug("SyncController::updateNewMessage() -> Users.UpdateAccessHash()",
 				zap.String("Error", err.Error()),
 			)
 		}
 		err = repo.Ctx().Dialogs.UpdateAccessHash(int64(x.AccessHash), x.Message.PeerID, x.Message.PeerType)
 
 		if err != nil {
-			log.LOG.Debug("SyncController::updateNewMessage() -> Dialogs.UpdateAccessHash()",
+			log.LOG_Debug("SyncController::updateNewMessage() -> Dialogs.UpdateAccessHash()",
 				zap.String("Error", err.Error()),
 			)
 		}
@@ -92,7 +92,7 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) (passToExter
 
 // updateReadHistoryInbox
 func (ctrl *SyncController) updateReadHistoryInbox(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
-	log.LOG.Debug("SyncController::updateReadHistoryInbox() applier")
+	log.LOG_Debug("SyncController::updateReadHistoryInbox() applier")
 	x := new(msg.UpdateReadHistoryInbox)
 	x.Unmarshal(u.Update)
 	dialog := repo.Ctx().Dialogs.GetDialog(x.Peer.ID, x.Peer.Type)
@@ -102,7 +102,7 @@ func (ctrl *SyncController) updateReadHistoryInbox(u *msg.UpdateEnvelope) (passT
 
 	err := repo.Ctx().Dialogs.UpdateReadInboxMaxID(ctrl.UserID, x.Peer.ID, x.Peer.Type, x.MaxID)
 	if err != nil {
-		log.LOG.Debug("SyncController::updateReadHistoryInbox() -> UpdateReadInboxMaxID()",
+		log.LOG_Debug("SyncController::updateReadHistoryInbox() -> UpdateReadInboxMaxID()",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -112,12 +112,12 @@ func (ctrl *SyncController) updateReadHistoryInbox(u *msg.UpdateEnvelope) (passT
 
 // updateReadHistoryOutbox
 func (ctrl *SyncController) updateReadHistoryOutbox(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
-	log.LOG.Debug("SyncController::updateReadHistoryOutbox() applier")
+	log.LOG_Debug("SyncController::updateReadHistoryOutbox() applier")
 	x := new(msg.UpdateReadHistoryOutbox)
 	x.Unmarshal(u.Update)
 	err := repo.Ctx().Dialogs.UpdateReadOutboxMaxID(x.Peer.ID, x.Peer.Type, x.MaxID)
 	if err != nil {
-		log.LOG.Debug("SyncController::updateReadHistoryOutbox() -> UpdateReadOutboxMaxID()",
+		log.LOG_Debug("SyncController::updateReadHistoryOutbox() -> UpdateReadOutboxMaxID()",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -127,12 +127,12 @@ func (ctrl *SyncController) updateReadHistoryOutbox(u *msg.UpdateEnvelope) (pass
 
 // updateMessageEdited
 func (ctrl *SyncController) updateMessageEdited(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
-	log.LOG.Debug("SyncController::updateMessageEdited() applier")
+	log.LOG_Debug("SyncController::updateMessageEdited() applier")
 	x := new(msg.UpdateMessageEdited)
 	x.Unmarshal(u.Update)
 	err := repo.Ctx().Messages.SaveMessage(x.Message)
 	if err != nil {
-		log.LOG.Debug("SyncController::updateMessageEdited() -> SaveMessage()",
+		log.LOG_Debug("SyncController::updateMessageEdited() -> SaveMessage()",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -141,7 +141,7 @@ func (ctrl *SyncController) updateMessageEdited(u *msg.UpdateEnvelope) (passToEx
 }
 
 func (ctrl *SyncController) updateMessageID(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
-	log.LOG.Debug("SyncController::updateMessageID() applier")
+	log.LOG_Debug("SyncController::updateMessageID() applier")
 	x := new(msg.UpdateMessageID)
 	x.Unmarshal(u.Update)
 
@@ -163,13 +163,13 @@ func (ctrl *SyncController) updateMessageID(u *msg.UpdateEnvelope) (passToExtern
 
 // updateNotifySettings
 func (ctrl *SyncController) updateNotifySettings(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
-	log.LOG.Debug("SyncController::updateNotifySettings() applier")
+	log.LOG_Debug("SyncController::updateNotifySettings() applier")
 	x := new(msg.UpdateNotifySettings)
 	x.Unmarshal(u.Update)
 
 	err := repo.Ctx().Dialogs.UpdateNotifySetting(x)
 	if err != nil {
-		log.LOG.Debug("SyncController::updateNotifySettings() -> Dialogs.UpdateNotifySettings()",
+		log.LOG_Debug("SyncController::updateNotifySettings() -> Dialogs.UpdateNotifySettings()",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -179,7 +179,7 @@ func (ctrl *SyncController) updateNotifySettings(u *msg.UpdateEnvelope) (passToE
 
 // updateUsername
 func (ctrl *SyncController) updateUsername(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
-	log.LOG.Debug("SyncController::updateUsername() applier")
+	log.LOG_Debug("SyncController::updateUsername() applier")
 	x := new(msg.UpdateUsername)
 	x.Unmarshal(u.Update)
 

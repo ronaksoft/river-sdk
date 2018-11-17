@@ -15,10 +15,10 @@ import (
 )
 
 func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	log.LOG.Debug("River::messagesGetDialogs()")
+	log.LOG_Debug("River::messagesGetDialogs()")
 	req := new(msg.MessagesGetDialogs)
 	if err := req.Unmarshal(in.Message); err != nil {
-		log.LOG.Debug("River::messagesGetDialogs()-> Unmarshal()",
+		log.LOG_Debug("River::messagesGetDialogs()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -28,7 +28,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 
 	// if the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {
-		log.LOG.Debug("River::messagesGetDialogs()-> GetDialogs() nothing found in cacheDB pass request to server")
+		log.LOG_Debug("River::messagesGetDialogs()-> GetDialogs() nothing found in cacheDB pass request to server")
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
 	}
@@ -67,10 +67,10 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 }
 
 func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	log.LOG.Debug("River::messagesGetDialog()")
+	log.LOG_Debug("River::messagesGetDialog()")
 	req := new(msg.MessagesGetDialog)
 	if err := req.Unmarshal(in.Message); err != nil {
-		log.LOG.Debug("River::messagesGetDialog()-> Unmarshal()",
+		log.LOG_Debug("River::messagesGetDialog()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -80,7 +80,7 @@ func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain
 
 	// if the localDB had no data send the request to server
 	if res == nil {
-		log.LOG.Debug("River::messagesGetDialog()-> GetDialog() nothing found in cacheDB pass request to server")
+		log.LOG_Debug("River::messagesGetDialog()-> GetDialog() nothing found in cacheDB pass request to server")
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
 	}
@@ -96,10 +96,10 @@ func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain
 }
 
 func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	log.LOG.Debug("River::messagesSend()")
+	log.LOG_Debug("River::messagesSend()")
 	req := new(msg.MessagesSend)
 	if err := req.Unmarshal(in.Message); err != nil {
-		log.LOG.Debug("River::messagesSend()-> Unmarshal()",
+		log.LOG_Debug("River::messagesSend()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -162,10 +162,10 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 }
 
 func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	log.LOG.Debug("River::messageGetHistory()")
+	log.LOG_Debug("River::messageGetHistory()")
 	req := new(msg.MessagesGetHistory)
 	if err := req.Unmarshal(in.Message); err != nil {
-		log.LOG.Debug("River::messageGetHistory()-> Unmarshal()",
+		log.LOG_Debug("River::messageGetHistory()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -189,7 +189,7 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 
 	// if the localDB had no or outdated data send the request to server
 	if (req.MaxID-maxMessageID) > int64(req.Limit) || len(res.Messages) <= 1 {
-		log.LOG.Debug("River::messageGetHistory()-> GetMessageHistory() nothing found in cacheDB pass request to server")
+		log.LOG_Debug("River::messageGetHistory()-> GetMessageHistory() nothing found in cacheDB pass request to server")
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
 	}
@@ -207,10 +207,10 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 }
 
 func (r *River) contactGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	log.LOG.Debug("River::contactGet()")
+	log.LOG_Debug("River::contactGet()")
 	req := new(msg.ContactsGet)
 	if err := req.Unmarshal(in.Message); err != nil {
-		log.LOG.Debug("River::contactGet()-> Unmarshal()",
+		log.LOG_Debug("River::contactGet()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -236,10 +236,10 @@ func (r *River) contactGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeou
 }
 
 func (r *River) messageReadHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	log.LOG.Debug("River::messageReadHistory()")
+	log.LOG_Debug("River::messageReadHistory()")
 	req := new(msg.MessagesReadHistory)
 	if err := req.Unmarshal(in.Message); err != nil {
-		log.LOG.Debug("River::messageReadHistory()-> Unmarshal()",
+		log.LOG_Debug("River::messageReadHistory()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -254,21 +254,21 @@ func (r *River) messageReadHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 
 	err := repo.Ctx().Dialogs.UpdateReadInboxMaxID(r.ConnInfo.UserID, req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 	if err != nil {
-		log.LOG.Debug("River::messageReadHistory()-> UpdateReadInboxMaxID()",
+		log.LOG_Debug("River::messageReadHistory()-> UpdateReadInboxMaxID()",
 			zap.String("Error", err.Error()),
 		)
 	}
 	// send the request to server
 
-	log.LOG.Debug("River::messageReadHistory() Pass request to server")
+	log.LOG_Debug("River::messageReadHistory() Pass request to server")
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 }
 
 func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	log.LOG.Debug("River::usersGet()")
+	log.LOG_Debug("River::usersGet()")
 	req := new(msg.UsersGet)
 	if err := req.Unmarshal(in.Message); err != nil {
-		log.LOG.Debug("River::usersGet()-> Unmarshal()",
+		log.LOG_Debug("River::usersGet()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -292,17 +292,17 @@ func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 			}
 		}) //successCB(out)
 	} else {
-		log.LOG.Debug("River::messageGetHistory()-> GetAnyUsers() cacheDB is not up to date pass request to server")
+		log.LOG_Debug("River::messageGetHistory()-> GetAnyUsers() cacheDB is not up to date pass request to server")
 		// send the request to server
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 	}
 }
 
 func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	log.LOG.Debug("River::messagesGet()")
+	log.LOG_Debug("River::messagesGet()")
 	req := new(msg.MessagesGet)
 	if err := req.Unmarshal(in.Message); err != nil {
-		log.LOG.Debug("River::messagesGet()-> Unmarshal()",
+		log.LOG_Debug("River::messagesGet()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -330,17 +330,17 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 			}
 		}) //successCB(out)
 	} else {
-		log.LOG.Debug("River::messagesGet() -> GetManyMessages() cacheDB is not up to date pass request to server")
+		log.LOG_Debug("River::messagesGet() -> GetManyMessages() cacheDB is not up to date pass request to server")
 		// send the request to server
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 	}
 }
 
 func (r *River) accountUpdateUsername(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	log.LOG.Debug("River::accountUpdateUsername()")
+	log.LOG_Debug("River::accountUpdateUsername()")
 	req := new(msg.AccountUpdateUsername)
 	if err := req.Unmarshal(in.Message); err != nil {
-		log.LOG.Debug("River::accountUpdateUsername()-> Unmarshal()",
+		log.LOG_Debug("River::accountUpdateUsername()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -349,16 +349,16 @@ func (r *River) accountUpdateUsername(in, out *msg.MessageEnvelope, timeoutCB do
 	r.ConnInfo.Username = req.Username
 	r.ConnInfo.saveConfig()
 
-	log.LOG.Debug("River::accountUpdateUsername()-> pass request to server")
+	log.LOG_Debug("River::accountUpdateUsername()-> pass request to server")
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 }
 
 func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	log.LOG.Debug("River::accountUpdateProfile()")
+	log.LOG_Debug("River::accountUpdateProfile()")
 	req := new(msg.AccountUpdateProfile)
 	if err := req.Unmarshal(in.Message); err != nil {
-		log.LOG.Debug("River::accountUpdateProfile()-> Unmarshal()",
+		log.LOG_Debug("River::accountUpdateProfile()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -368,7 +368,7 @@ func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB dom
 	r.ConnInfo.LastName = req.LastName
 	r.ConnInfo.saveConfig()
 
-	log.LOG.Debug("River::accountUpdateProfile()-> pass request to server")
+	log.LOG_Debug("River::accountUpdateProfile()-> pass request to server")
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 }
@@ -377,7 +377,7 @@ func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB dom
 func (r *River) accountRegisterDevice(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.AccountRegisterDevice)
 	if err := req.Unmarshal(in.Message); err != nil {
-		log.LOG.Debug("River::accountRegisterDevice()-> Unmarshal()",
+		log.LOG_Debug("River::accountRegisterDevice()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -386,14 +386,14 @@ func (r *River) accountRegisterDevice(in, out *msg.MessageEnvelope, timeoutCB do
 
 	val, err := json.Marshal(req)
 	if err != nil {
-		log.LOG.Debug("River::accountRegisterDevice()-> Json Marshal()",
+		log.LOG_Debug("River::accountRegisterDevice()-> Json Marshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
 	}
 	err = repo.Ctx().System.SaveString(domain.CN_DEVICE_TOKEN, string(val))
 	if err != nil {
-		log.LOG.Debug("River::accountRegisterDevice()-> SaveString()",
+		log.LOG_Debug("River::accountRegisterDevice()-> SaveString()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -406,7 +406,7 @@ func (r *River) accountRegisterDevice(in, out *msg.MessageEnvelope, timeoutCB do
 func (r *River) accountUnregisterDevice(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.AccountUnregisterDevice)
 	if err := req.Unmarshal(in.Message); err != nil {
-		log.LOG.Debug("River::accountUnregisterDevice()-> Unmarshal()",
+		log.LOG_Debug("River::accountUnregisterDevice()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -415,14 +415,14 @@ func (r *River) accountUnregisterDevice(in, out *msg.MessageEnvelope, timeoutCB 
 
 	val, err := json.Marshal(r.DeviceToken)
 	if err != nil {
-		log.LOG.Debug("River::accountUnregisterDevice()-> Json Marshal()",
+		log.LOG_Debug("River::accountUnregisterDevice()-> Json Marshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
 	}
 	err = repo.Ctx().System.SaveString(domain.CN_DEVICE_TOKEN, string(val))
 	if err != nil {
-		log.LOG.Debug("River::accountUnregisterDevice()-> SaveString()",
+		log.LOG_Debug("River::accountUnregisterDevice()-> SaveString()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -434,7 +434,7 @@ func (r *River) accountUnregisterDevice(in, out *msg.MessageEnvelope, timeoutCB 
 func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.AccountSetNotifySettings)
 	if err := req.Unmarshal(in.Message); err != nil {
-		log.LOG.Debug("River::accountSetNotifySettings()-> Unmarshal()",
+		log.LOG_Debug("River::accountSetNotifySettings()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -442,7 +442,7 @@ func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB
 
 	dialog := repo.Ctx().Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
-		log.LOG.Debug("River::accountSetNotifySettings()-> GetDialog()",
+		log.LOG_Debug("River::accountSetNotifySettings()-> GetDialog()",
 			zap.String("Error", "Dialog is null"),
 		)
 		return
@@ -451,7 +451,7 @@ func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB
 	dialog.NotifySettings = req.Settings
 	err := repo.Ctx().Dialogs.SaveDialog(dialog, 0)
 	if err != nil {
-		log.LOG.Debug("River::accountSetNotifySettings()-> SaveDialog()",
+		log.LOG_Debug("River::accountSetNotifySettings()-> SaveDialog()",
 			zap.String("Error", err.Error()),
 		)
 		return

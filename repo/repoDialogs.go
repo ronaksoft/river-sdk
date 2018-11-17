@@ -35,7 +35,7 @@ func (r *repoDialogs) UpdateTopMesssageID(createdOn, peerID int64, peerType int3
 	em := dto.Messages{}
 	err := r.db.Table(em.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerType).Limit(1).Order("ID DESC").Find(&em).Error
 	if err != nil {
-		log.LOG.Debug("RepoDialogs::UpdateTopMesssageID() TopMessage",
+		log.LOG_Debug("RepoDialogs::UpdateTopMesssageID() TopMessage",
 			zap.String("Error", err.Error()),
 		)
 		return err
@@ -57,13 +57,13 @@ func (r *repoDialogs) SaveDialog(dialog *msg.Dialog, lastUpdate int64) error {
 	defer r.mx.Unlock()
 
 	if dialog == nil {
-		log.LOG.Debug("RepoDialogs::SaveDialog()",
+		log.LOG_Debug("RepoDialogs::SaveDialog()",
 			zap.String("Error", "dialog is null"),
 		)
 		return domain.ErrNotFound
 	}
 
-	log.LOG.Debug("RepoDialogs::SaveDialog",
+	log.LOG_Debug("RepoDialogs::SaveDialog",
 		zap.Int64("PeerID", dialog.PeerID),
 		zap.Uint64("AccessHash", dialog.AccessHash),
 		zap.Int32("UnreadCount", dialog.UnreadCount),
@@ -88,7 +88,7 @@ func (r *repoDialogs) UpdateDialogUnreadCount(peerID int64, peerTyep, unreadCoun
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("RepoDialogs::UpdateDialogUnreadCount()",
+	log.LOG_Debug("RepoDialogs::UpdateDialogUnreadCount()",
 		zap.Int64("PeerID", peerID),
 		zap.Int32("PeerType", peerTyep),
 		zap.Int32("UnreadCount", unreadCount),
@@ -102,7 +102,7 @@ func (r *repoDialogs) GetDialogs(offset, limit int32) []*msg.Dialog {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("RepoDialogs::GetDialogs()",
+	log.LOG_Debug("RepoDialogs::GetDialogs()",
 		zap.Int32("Offset", offset),
 		zap.Int32("Limit", limit),
 	)
@@ -111,7 +111,7 @@ func (r *repoDialogs) GetDialogs(offset, limit int32) []*msg.Dialog {
 
 	err := r.db.Limit(limit).Offset(offset).Find(&dtoDlgs).Error
 	if err != nil {
-		log.LOG.Debug("RepoDialogs::GetDialogs()",
+		log.LOG_Debug("RepoDialogs::GetDialogs()",
 			zap.String("Error", err.Error()),
 		)
 		return nil
@@ -132,7 +132,7 @@ func (r *repoDialogs) GetDialog(peerID int64, peerType int32) *msg.Dialog {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("RepoDialogs::GetDialog()",
+	log.LOG_Debug("RepoDialogs::GetDialog()",
 		zap.Int64("PeerID", peerID),
 		zap.Int32("PeerType", peerType),
 	)
@@ -140,7 +140,7 @@ func (r *repoDialogs) GetDialog(peerID int64, peerType int32) *msg.Dialog {
 	dtoDlg := new(dto.Dialogs)
 	err := r.db.Where("PeerID = ? AND PeerType = ?", peerID, peerType).First(dtoDlg).Error
 	if err != nil {
-		log.LOG.Debug("RepoDialogs::GetDialog()->fetch dialog entity",
+		log.LOG_Debug("RepoDialogs::GetDialog()->fetch dialog entity",
 			zap.String("Error", err.Error()),
 		)
 		return nil
@@ -171,7 +171,7 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("RepoDialogs::UpdateReadInboxMaxID()",
+	log.LOG_Debug("RepoDialogs::UpdateReadInboxMaxID()",
 		zap.Int64("PeerID", peerID),
 		zap.Int32("PeerType", peerType),
 		zap.Int64("MaxID", maxID),
@@ -181,7 +181,7 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 	dtoDlg := new(dto.Dialogs)
 	err := r.db.Where("PeerID = ? AND PeerType = ?", peerID, peerType).First(dtoDlg).Error
 	if err != nil {
-		log.LOG.Debug("RepoDialogs::UpdateReadInboxMaxID()-> fetch dialog entity",
+		log.LOG_Debug("RepoDialogs::UpdateReadInboxMaxID()-> fetch dialog entity",
 			zap.String("Error", err.Error()),
 		)
 		return nil
@@ -189,7 +189,7 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 
 	// current maxID is newer so skip updating dialog unread counts
 	if dtoDlg.ReadInboxMaxID > maxID {
-		log.LOG.Debug("repoDialogs::UpdateReadInboxMaxID() skipped dialogs unreadCount update",
+		log.LOG_Debug("repoDialogs::UpdateReadInboxMaxID() skipped dialogs unreadCount update",
 			zap.Int64("Current MaxID", dtoDlg.ReadInboxMaxID),
 			zap.Int64("Server MaxID", maxID),
 		)
@@ -203,7 +203,7 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 	em := new(dto.Messages)
 	err = r.db.Table(em.TableName()).Where("SenderID <> ? AND PeerID = ? AND PeerType = ? AND ID > ? ", userID, peerID, peerType, maxID).Count(&unreadCount).Error
 	if err != nil {
-		log.LOG.Debug("RepoDialogs::UpdateReadInboxMaxID()-> fetch messages unread count",
+		log.LOG_Debug("RepoDialogs::UpdateReadInboxMaxID()-> fetch messages unread count",
 			zap.String("Error", err.Error()),
 		)
 		return err
@@ -216,7 +216,7 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 	}).Error
 
 	if err != nil {
-		log.LOG.Debug("RepoDialogs::UpdateReadInboxMaxID()-> update dialog entity",
+		log.LOG_Debug("RepoDialogs::UpdateReadInboxMaxID()-> update dialog entity",
 			zap.String("Error", err.Error()),
 		)
 		return err
@@ -229,7 +229,7 @@ func (r *repoDialogs) UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID 
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("RepoDialogs::UpdateReadOutboxMaxID",
+	log.LOG_Debug("RepoDialogs::UpdateReadOutboxMaxID",
 		zap.Int64("PeerID", peerID),
 		zap.Int32("PeerType", peerType),
 		zap.Int64("MaxID", maxID),
@@ -241,7 +241,7 @@ func (r *repoDialogs) UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID 
 	}).Error
 
 	if err != nil {
-		log.LOG.Debug("RepoDialogs::UpdateReadOutboxMaxID()-> update dialog entity",
+		log.LOG_Debug("RepoDialogs::UpdateReadOutboxMaxID()-> update dialog entity",
 			zap.String("Error", err.Error()),
 		)
 		return err
@@ -271,7 +271,7 @@ func (r *repoDialogs) UpdateNotifySetting(msg *msg.UpdateNotifySettings) error {
 		return errors.New("RepoDialogs::UpdateNotifySetting() => msg.Settings is null")
 	}
 
-	log.LOG.Debug("RepoDialogs::UpdateNotifySetting()",
+	log.LOG_Debug("RepoDialogs::UpdateNotifySetting()",
 		zap.Int64("UserId", msg.UserID),
 		zap.Int64("PeerID", msg.NotifyPeer.ID),
 		zap.Uint64("AccessHash", msg.NotifyPeer.AccessHash),
@@ -283,7 +283,7 @@ func (r *repoDialogs) UpdateNotifySetting(msg *msg.UpdateNotifySettings) error {
 	dtoDlg := new(dto.Dialogs)
 	err := r.db.Where("PeerID = ? AND PeerType = ?", msg.NotifyPeer.ID, msg.NotifyPeer.Type).First(dtoDlg).Error
 	if err != nil {
-		log.LOG.Debug("RepoDialogs::UpdateNotifySetting()->fetch dialog entity",
+		log.LOG_Debug("RepoDialogs::UpdateNotifySetting()->fetch dialog entity",
 			zap.String("Error", err.Error()),
 		)
 		return err

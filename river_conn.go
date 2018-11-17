@@ -83,13 +83,13 @@ func (r *River) clearSystemConfig() {
 
 // Save
 func (v *RiverConnection) saveConfig() {
-	log.LOG.Debug("RiverConnection::Save()")
+	log.LOG_Debug("RiverConnection::Save()")
 	if bytes, err := v.MarshalJSON(); err != nil {
-		log.LOG.Info("RiverConnection::Save()->MarshalJSON()",
+		log.LOG_Info("RiverConnection::Save()->MarshalJSON()",
 			zap.String("Error", err.Error()),
 		)
 	} else if err := repo.Ctx().System.SaveString(domain.CN_CONN_INFO, string(bytes)); err != nil {
-		log.LOG.Info("RiverConnection::Save()->SaveString()",
+		log.LOG_Info("RiverConnection::Save()->SaveString()",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -97,14 +97,14 @@ func (v *RiverConnection) saveConfig() {
 
 // Load
 func (v *RiverConnection) loadConfig() error {
-	log.LOG.Debug("RiverConnection::Load()")
+	log.LOG_Debug("RiverConnection::Load()")
 	if kv, err := repo.Ctx().System.LoadString(domain.CN_CONN_INFO); err != nil {
-		log.LOG.Info("RiverConnection::Load()->LoadString()",
+		log.LOG_Info("RiverConnection::Load()->LoadString()",
 			zap.String("Error", err.Error()),
 		)
 		return err
 	} else if err := v.UnmarshalJSON([]byte(kv)); err != nil {
-		log.LOG.Info("RiverConnection::Load()->UnmarshalJSON()",
+		log.LOG_Info("RiverConnection::Load()->UnmarshalJSON()",
 			zap.String("Error", err.Error()),
 		)
 		return err

@@ -49,17 +49,17 @@ func (c *UIExecuter) Start() {
 func (c *UIExecuter) Stop() {
 	select {
 	case c.chStop <- true:
-		log.LOG.Debug("CMD::Stop() sent stop signal")
+		log.LOG_Debug("CMD::Stop() sent stop signal")
 	default:
-		log.LOG.Debug("CMD::Stop() cmd is not started")
+		log.LOG_Debug("CMD::Stop() cmd is not started")
 	}
 }
 func (c *UIExecuter) Exec(fn func()) {
 	select {
 	case c.chUIExecuter <- fn:
-		log.LOG.Debug("CMD::Exec() sent to channel")
+		log.LOG_Debug("CMD::Exec() sent to channel")
 	default:
-		log.LOG.Debug("CMD::Exec() cmd is not started")
+		log.LOG_Debug("CMD::Exec() cmd is not started")
 	}
 }
 
@@ -79,9 +79,9 @@ func (c *UIExecuter) UIExecuter() {
 			// }(chDone)
 			// select {
 			// case <-time.After(uiExecTimeout):
-			// 	log.LOG.Debug("cmd::UIExecuter() execute fn() timedout")
+			// 	log.LOG_Debug("cmd::UIExecuter() execute fn() timedout")
 			// case <-chDone:
-			// 	log.LOG.Debug("cmd::UIExecuter() execute fn() successfully finished")
+			// 	log.LOG_Debug("cmd::UIExecuter() execute fn() successfully finished")
 			// }
 			// chDone = nil
 

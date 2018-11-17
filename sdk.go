@@ -50,6 +50,15 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	// set loglevel
 	log.SetLogLevel(conf.LogLevel)
 
+	// check logger
+	if conf.Logger != nil {
+		// set logger
+		r.logger = conf.Logger
+		log.SetLogger(func(logLevel int, msg string) {
+			r.logger.Log(logLevel, msg)
+		})
+	}
+
 	// init UI Executer
 	cmd.InitUIExecuter()
 
@@ -61,7 +70,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	var err error
 	err = repo.InitRepo("sqlite3", fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID))
 	if err != nil {
-		log.LOG.Fatal("River::SetConfig() faild to initialize DB context",
+		log.LOG_Fatal("River::SetConfig() faild to initialize DB context",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -109,7 +118,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		h = nil
 	}
 	if q, err := queue.NewQueueController(r.networkCtrl, conf.QueuePath, h); err != nil {
-		log.LOG.Fatal("River::SetConfig() faild to initialize Queue",
+		log.LOG_Fatal("River::SetConfig() faild to initialize Queue",
 			zap.String("Error", err.Error()),
 		)
 	} else {
@@ -140,17 +149,17 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Initialize Server Keys
 	if jsonBytes, err := ioutil.ReadFile(conf.ServerKeysFilePath); err != nil {
-		log.LOG.Fatal("River::SetConfig() faild to open server keys",
+		log.LOG_Fatal("River::SetConfig() faild to open server keys",
 			zap.String("Error", err.Error()),
 		)
 	} else if err := _ServerKeys.UnmarshalJSON(jsonBytes); err != nil {
-		log.LOG.Fatal("River::SetConfig() faild to unmarshal server keys",
+		log.LOG_Fatal("River::SetConfig() faild to unmarshal server keys",
 			zap.String("Error", err.Error()),
 		)
 	}
 
 	// Initialize River Connection
-	log.LOG.Info("River::SetConfig() Load/Create New River Connection")
+	log.LOG_Info("River::SetConfig() Load/Create New River Connection")
 
 	if r.ConnInfo.UserID != 0 {
 		r.syncCtrl.SetUserID(r.ConnInfo.UserID)
@@ -169,14 +178,14 @@ func (r *River) loadDeviceToken() {
 	r.DeviceToken = new(msg.AccountRegisterDevice)
 	str, err := repo.Ctx().System.LoadString(domain.CN_DEVICE_TOKEN)
 	if err != nil {
-		log.LOG.Info("River::loadDeviceToken() failed to fetch DeviceToken",
+		log.LOG_Info("River::loadDeviceToken() failed to fetch DeviceToken",
 			zap.String("Error", err.Error()),
 		)
 		return
 	}
 	err = json.Unmarshal([]byte(str), r.DeviceToken)
 	if err != nil {
-		log.LOG.Info("River::loadDeviceToken() failed to unmarshal DeviceToken",
+		log.LOG_Info("River::loadDeviceToken() failed to unmarshal DeviceToken",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -207,7 +216,7 @@ func (r *River) callAuthRecall_RegisterDevice() {
 		}
 
 		if r.DeviceToken == nil || r.DeviceToken.Token == "" {
-			log.LOG.Info("callAuthRecall_RegisterDevice() Device Token is not set")
+			log.LOG_Info("callAuthRecall_RegisterDevice() Device Token is not set")
 			return
 		}
 
@@ -255,7 +264,7 @@ func (r *River) registerCommandHandlers() {
 func (r *River) Start() error {
 	// Start Controllers
 	if err := r.networkCtrl.Start(); err != nil {
-		log.LOG.Debug("River::Start()",
+		log.LOG_Debug("River::Start()",
 			zap.String("Error", err.Error()),
 		)
 		return err
@@ -282,7 +291,7 @@ func (r *River) Stop() {
 
 	// Close database connection
 	err := repo.Ctx().Close()
-	log.LOG.Debug("River::Stop() faild to close DB context",
+	log.LOG_Debug("River::Stop() faild to close DB context",
 		zap.String("Error", err.Error()),
 	)
 }
@@ -305,8 +314,8 @@ func deepCopy(commandBytes []byte) []byte {
 func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate, blockingMode bool) (requestID int64, err error) {
 	// deleteMe
 	cmdID := fmt.Sprintf("%v : ", time.Now().UnixNano())
-	log.LOG.Debug(cmdID + "SDK::ExecuteCommand() 1 ExecuteCommand Started req:" + msg.ConstructorNames[constructor])
-	defer log.LOG.Debug(cmdID + "SDK::ExecuteCommand() 7 ExecuteCommand Ended req:" + msg.ConstructorNames[constructor])
+	log.LOG_Debug(cmdID + "SDK::ExecuteCommand() 1 ExecuteCommand Started req:" + msg.ConstructorNames[constructor])
+	defer log.LOG_Debug(cmdID + "SDK::ExecuteCommand() 7 ExecuteCommand Ended req:" + msg.ConstructorNames[constructor])
 
 	commandBytesDump := deepCopy(commandBytes)
 
@@ -316,14 +325,14 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	waitGroup := new(sync.WaitGroup)
 	requestID = domain.SequentialUniqueID()
 
-	log.LOG.Debug("River::ExecuteCommand()",
+	log.LOG_Debug("River::ExecuteCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
 
 	// if function is in blocking mode set the waitGroup to block until the job is done, otherwise
 	// save 'delegate' into delegates list to be fetched later.
 	if blockingMode {
-		log.LOG.Debug(cmdID + "SDK::ExecuteCommand() 2 waitGroup.Add(1) / defer")
+		log.LOG_Debug(cmdID + "SDK::ExecuteCommand() 2 waitGroup.Add(1) / defer")
 		waitGroup.Add(1)
 		defer waitGroup.Wait()
 	} else if delegate != nil {
@@ -333,19 +342,19 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	}
 	timeoutCallback := func() {
 
-		log.LOG.Debug(cmdID + "SDK::ExecuteCommand() 3 timeout called")
+		log.LOG_Debug(cmdID + "SDK::ExecuteCommand() 3 timeout called")
 		if blockingMode {
 			defer waitGroup.Done()
 		}
 		err = domain.ErrRequestTimeout
 		delegate.OnTimeout(err)
 		r.releaseDelegate(requestID)
-		log.LOG.Debug(cmdID + "SDK::ExecuteCommand() 4 timeout ended")
+		log.LOG_Debug(cmdID + "SDK::ExecuteCommand() 4 timeout ended")
 
 	}
 	successCallback := func(envelope *msg.MessageEnvelope) {
 
-		log.LOG.Debug(cmdID + "SDK::ExecuteCommand() 5 succes called")
+		log.LOG_Debug(cmdID + "SDK::ExecuteCommand() 5 succes called")
 		if blockingMode {
 			defer waitGroup.Done()
 		}
@@ -353,7 +362,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 		delegate.OnComplete(b)
 		r.releaseDelegate(requestID)
 
-		log.LOG.Debug(cmdID + "SDK::ExecuteCommand() 6 success ended")
+		log.LOG_Debug(cmdID + "SDK::ExecuteCommand() 6 success ended")
 
 	}
 
@@ -406,7 +415,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 }
 
 func (r *River) executeLocalCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	log.LOG.Debug("River::executeLocalCommand()",
+	log.LOG_Debug("River::executeLocalCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
 
@@ -423,14 +432,14 @@ func (r *River) executeLocalCommand(requestID uint64, constructor int64, command
 }
 
 func (r *River) executeRemoteCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	log.LOG.Debug("River::executeRemoteCommand()",
+	log.LOG_Debug("River::executeRemoteCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
 	r.queueCtrl.ExecuteCommand(requestID, constructor, commandBytes, timeoutCB, successCB, true)
 }
 
 func (r *River) releaseDelegate(requestID int64) {
-	log.LOG.Debug("River::releaseDelegate()",
+	log.LOG_Debug("River::releaseDelegate()",
 		zap.Int64("RequestID", requestID),
 	)
 	r.delegateMutex.Lock()
@@ -443,7 +452,7 @@ func (r *River) releaseDelegate(requestID int64) {
 // CreateAuthKey
 // This function creates an AuthID and AuthKey to be used for transporting messages between client and server
 func (r *River) CreateAuthKey() (err error) {
-	log.LOG.Debug("River::CreateAuthKey()")
+	log.LOG_Debug("River::CreateAuthKey()")
 	// wait untill network connects
 	for r.networkCtrl.Quality() == domain.DISCONNECTED || r.networkCtrl.Quality() == domain.CONNECTING {
 		time.Sleep(200)
@@ -457,7 +466,7 @@ func (r *River) CreateAuthKey() (err error) {
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
 
-	log.LOG.Info("River::CreateAuthKey() 1st Step Started :: InitConnect")
+	log.LOG_Info("River::CreateAuthKey() 1st Step Started :: InitConnect")
 
 	r.executeRemoteCommand(
 		//r.executeRealtimeCommand(
@@ -470,13 +479,13 @@ func (r *River) CreateAuthKey() (err error) {
 		},
 		func(res *msg.MessageEnvelope) {
 			defer waitGroup.Done()
-			log.LOG.Debug("River::CreateAuthKey() Success Callback Called")
+			log.LOG_Debug("River::CreateAuthKey() Success Callback Called")
 			switch res.Constructor {
 			case msg.C_InitResponse:
 				x := new(msg.InitResponse)
 				err = x.Unmarshal(res.Message)
 				if err != nil {
-					log.LOG.Debug("River::CreateAuthKey() Success Callback",
+					log.LOG_Debug("River::CreateAuthKey() Success Callback",
 						zap.String("Error", err.Error()),
 					)
 				}
@@ -485,7 +494,7 @@ func (r *River) CreateAuthKey() (err error) {
 				serverPubFP = x.RSAPubKeyFingerPrint
 				serverDHFP = x.DHGroupFingerPrint
 				serverPQ = x.PQ
-				log.LOG.Debug("River::CreateAuthKey() InitResponse Received",
+				log.LOG_Debug("River::CreateAuthKey() InitResponse Received",
 					zap.Uint64("ServerNonce", serverNonce),
 					zap.Uint64("ClientNounce", clientNonce),
 					zap.Uint64("ServerDhFingerPrint", serverDHFP),
@@ -502,12 +511,12 @@ func (r *River) CreateAuthKey() (err error) {
 	// Wait for 1st step to complete
 	waitGroup.Wait()
 	if err != nil {
-		log.LOG.Debug("River::CreateAuthKey() InitConnect",
+		log.LOG_Debug("River::CreateAuthKey() InitConnect",
 			zap.String("Error", err.Error()),
 		)
 		return
 	} else {
-		log.LOG.Info("River::CreateAuthKey() 1st Step Finished")
+		log.LOG_Info("River::CreateAuthKey() 1st Step Finished")
 	}
 
 	// 2. Send InitCompleteAuth
@@ -535,7 +544,7 @@ func (r *River) CreateAuthKey() (err error) {
 		req2.P = q.Uint64()
 		req2.Q = p.Uint64()
 	}
-	log.LOG.Debug("River::CreateAuthKey() PQ Split",
+	log.LOG_Debug("River::CreateAuthKey() PQ Split",
 		zap.Uint64("P", req2.P),
 		zap.Uint64("Q", req2.Q),
 	)
@@ -556,7 +565,7 @@ func (r *River) CreateAuthKey() (err error) {
 	decrypted, _ := q2Internal.Marshal()
 	encrypted, err := rsa.EncryptPKCS1v15(rand.Reader, &rsaPublicKey, decrypted)
 	if err != nil {
-		log.LOG.Debug("River::CreateAuthKey() -> EncryptPKCS1v15()",
+		log.LOG_Debug("River::CreateAuthKey() -> EncryptPKCS1v15()",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -564,7 +573,7 @@ func (r *River) CreateAuthKey() (err error) {
 	req2Bytes, _ := req2.Marshal()
 
 	waitGroup.Add(1)
-	log.LOG.Info("River::CreateAuthKey() 2nd Step Started :: InitConnect")
+	log.LOG_Info("River::CreateAuthKey() 2nd Step Started :: InitConnect")
 	r.executeRemoteCommand(
 		//r.executeRealtimeCommand(
 		uint64(domain.SequentialUniqueID()),
@@ -584,7 +593,7 @@ func (r *River) CreateAuthKey() (err error) {
 				case msg.InitAuthCompleted_OK:
 					serverDhKey, err := dh.ComputeKey(dhkx.NewPublicKey(x.ServerDHPubKey), clientDhKey)
 					if err != nil {
-						log.LOG.Debug("River::CreateAuthKey() -> ComputeKey()",
+						log.LOG_Debug("River::CreateAuthKey() -> ComputeKey()",
 							zap.String("Error", err.Error()),
 						)
 						return
@@ -641,7 +650,7 @@ func (r *River) CreateAuthKey() (err error) {
 
 func (r *River) onGeneralError(e *msg.Error) {
 	// TODO:: calll external handler
-	log.LOG.Info("River::onGeneralError()",
+	log.LOG_Info("River::onGeneralError()",
 		zap.String("Code", e.Code),
 		zap.String("Item", e.Items),
 	)
@@ -678,17 +687,17 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 		cb := domain.GetRequestCallback(m.RequestID)
 		if cb != nil {
 			// if there was any listener maybe request already timedout
-			log.LOG.Warn("River::onReceivedMessage() Callback Found")
+			log.LOG_Warn("River::onReceivedMessage() Callback Found")
 
 			select {
 			case cb.ResponseChannel <- m:
-				log.LOG.Warn("River::onReceivedMessage() passed to callback listener")
+				log.LOG_Warn("River::onReceivedMessage() passed to callback listener")
 			default:
-				log.LOG.Warn("River::onReceivedMessage() there is no callback listener")
+				log.LOG_Warn("River::onReceivedMessage() there is no callback listener")
 			}
 			domain.RemoveRequestCallback(m.RequestID)
 		} else {
-			log.LOG.Debug("River::onReceivedMessage() callback does not exists",
+			log.LOG_Debug("River::onReceivedMessage() callback does not exists",
 				zap.Uint64(domain.LK_REQUEST_ID, m.RequestID),
 			)
 		}
@@ -700,7 +709,7 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 	updateContainer := new(msg.UpdateContainer)
 
-	log.LOG.Debug("SDK::onReceivedUpdate()",
+	log.LOG_Debug("SDK::onReceivedUpdate()",
 		zap.Int("Received Container Count :", len(upds)),
 	)
 
@@ -724,7 +733,7 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 
 		for _, u := range val.Updates {
 			if u.UpdateID > 0 && u.UpdateID <= currentUpdateID {
-				log.LOG.Debug("SDK::onReceivedUpdate() XXXXXXXXXXXXXXXXXXXXXXXXXXXXX Outdated update ",
+				log.LOG_Debug("SDK::onReceivedUpdate() XXXXXXXXXXXXXXXXXXXXXXXXXXXXX Outdated update ",
 					zap.Int64("CurrentUpdateID", currentUpdateID),
 					zap.Int64("UpdateID", u.UpdateID),
 				)
@@ -744,7 +753,7 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 
 	}
 
-	log.LOG.Debug("SDK::onReceivedUpdate()",
+	log.LOG_Debug("SDK::onReceivedUpdate()",
 		zap.Int("Received Updates Count :", len(updates)),
 		zap.Int64("UpdateID :", r.syncCtrl.UpdateID()),
 		zap.Int64("MaxID :", maxID),
@@ -753,7 +762,7 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 
 	// check max UpdateID if its greater than snapshot sync threshold discard recived updates and execute sanpshot sync
 	if maxID-r.syncCtrl.UpdateID() > domain.SnapshotSync_Threshold {
-		log.LOG.Debug("SDK::onReceivedUpdate() snapshot threshold reached")
+		log.LOG_Debug("SDK::onReceivedUpdate() snapshot threshold reached")
 		r.syncCtrl.CheckSyncState()
 		return
 	}
@@ -772,7 +781,7 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 }
 
 func (r *River) PrintDebuncerStatus() {
-	log.LOG.Debug("SDK::PrintDebuncerStatus()")
+	log.LOG_Debug("SDK::PrintDebuncerStatus()")
 	r.networkCtrl.PrintDebuncerStatus()
 }
 
@@ -789,19 +798,19 @@ func (r *River) TestORM(tries int) {
 		m.SenderID = 987654321
 		err := repo.Ctx().Messages.SaveMessage(m)
 		if err != nil {
-			log.LOG.Debug("TestORM() :: Error : " + err.Error())
+			log.LOG_Debug("TestORM() :: Error : " + err.Error())
 			return
 		}
 	}
 	elapsed := time.Since(sw)
-	log.LOG.Debug("TestORM() :: Elapsed : " + fmt.Sprintf("%v", elapsed))
+	log.LOG_Debug("TestORM() :: Elapsed : " + fmt.Sprintf("%v", elapsed))
 }
 
 func (r *River) TestRAW(tries int) {
 	// Open DB
 	db, err := sql.Open(repo.Ctx().DBDialect, repo.Ctx().DBPath)
 	if err != nil {
-		log.LOG.Debug("TestRAW() :: Error : " + err.Error())
+		log.LOG_Debug("TestRAW() :: Error : " + err.Error())
 		return
 	}
 	defer db.Close()
@@ -813,7 +822,7 @@ func (r *River) TestRAW(tries int) {
 	(?,?,?,?,?,?,0,0,0,0,0,0,0,0,0,0)`)
 
 	if err != nil {
-		log.LOG.Debug("TestRAW() :: Error : " + err.Error())
+		log.LOG_Debug("TestRAW() :: Error : " + err.Error())
 		return
 	}
 
@@ -829,17 +838,17 @@ func (r *River) TestRAW(tries int) {
 
 		_, err := stmt.Exec(m.ID, m.PeerID, m.PeerType, m.CreatedOn, m.Body, m.SenderID)
 		if err != nil {
-			log.LOG.Debug("TestRAW() :: Error : " + err.Error())
+			log.LOG_Debug("TestRAW() :: Error : " + err.Error())
 		}
 	}
 	elapsed := time.Since(sw)
-	log.LOG.Debug("TestRAW() :: Elapsed : " + fmt.Sprintf("%v", elapsed))
+	log.LOG_Debug("TestRAW() :: Elapsed : " + fmt.Sprintf("%v", elapsed))
 }
 
 func (r *River) TestBatch(tries int) {
 	db, err := sql.Open(repo.Ctx().DBDialect, repo.Ctx().DBPath)
 	if err != nil {
-		log.LOG.Debug("TestBatch() :: Error : " + err.Error())
+		log.LOG_Debug("TestBatch() :: Error : " + err.Error())
 		return
 	}
 	defer db.Close()
@@ -881,8 +890,8 @@ func (r *River) TestBatch(tries int) {
 	sw := time.Now()
 	_, err = db.Exec(qry)
 	elapsed := time.Since(sw)
-	log.LOG.Debug("TestBatch() :: Elapsed : " + fmt.Sprintf("%v", elapsed))
+	log.LOG_Debug("TestBatch() :: Elapsed : " + fmt.Sprintf("%v", elapsed))
 	if err != nil {
-		log.LOG.Debug("TestBatch() :: Error : " + err.Error())
+		log.LOG_Debug("TestBatch() :: Error : " + err.Error())
 	}
 }

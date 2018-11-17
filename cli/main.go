@@ -20,10 +20,10 @@ var (
 )
 
 var (
-	_Shell                        *ishell.Shell
-	_SDK                          *riversdk.River
-	_Log                          *zap.Logger
-	_BLUE, _GREEN, _MAGNETA, _RED func(format string, a ...interface{}) string
+	_Shell                                 *ishell.Shell
+	_SDK                                   *riversdk.River
+	_Log                                   *zap.Logger
+	_BLUE, _GREEN, _MAGNETA, _RED, _Yellow func(format string, a ...interface{}) string
 )
 
 func main() {
@@ -40,6 +40,7 @@ func main() {
 	_GREEN = color.New(color.FgHiGreen).SprintfFunc()
 	_MAGNETA = color.New(color.FgHiMagenta).SprintfFunc()
 	_RED = color.New(color.FgHiRed).SprintfFunc()
+	_Yellow = color.New(color.FgHiYellow).SprintfFunc()
 
 	// Initialize Shell
 	_Shell = ishell.New()
@@ -84,6 +85,7 @@ func main() {
 		QueuePath:          fmt.Sprintf("%s/%s", qPath, dbID),
 		ServerKeysFilePath: "./keys.json",
 		MainDelegate:       new(MainDelegate),
+		Logger:             new(Logger),
 		LogLevel:           int(zapcore.DebugLevel),
 	})
 

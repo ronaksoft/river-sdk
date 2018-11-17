@@ -14,3 +14,7 @@ type RequestDelegate interface {
 	OnComplete(b []byte)
 	OnTimeout(err error)
 }
+
+type LoggerDelegate interface {
+	Log(logLevel int, msg string)
+}

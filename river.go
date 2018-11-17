@@ -35,6 +35,9 @@ type RiverConfig struct {
 
 	// LogLevel
 	LogLevel int
+
+	// Logger pass logs to external handler
+	Logger LoggerDelegate
 }
 
 // River
@@ -59,6 +62,8 @@ type River struct {
 	realTimeRequest map[int64]bool
 
 	mainDelegate MainDelegate
+
+	logger LoggerDelegate
 
 	// Connection Info
 	ConnInfo *RiverConnection

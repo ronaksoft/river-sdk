@@ -31,7 +31,7 @@ func (r *repoSystem) LoadInt(keyName string) (keyValue int, err error) {
 	}
 	keyValue = int(row.IntValue)
 
-	log.LOG.Debug("RepoSystem::LoadInt()",
+	log.LOG_Debug("RepoSystem::LoadInt()",
 		zap.Int(keyName, keyValue),
 	)
 	return
@@ -50,7 +50,7 @@ func (r *repoSystem) LoadString(keyName string) (keyValue string, err error) {
 	}
 	keyValue = row.StrValue
 
-	log.LOG.Debug("RepoSystem::LoadString()",
+	log.LOG_Debug("RepoSystem::LoadString()",
 		zap.String(keyName, keyValue),
 	)
 
@@ -66,7 +66,7 @@ func (r *repoSystem) SaveInt(keyName string, keyValue int32) error {
 
 	err := r.db.Where("KeyName = ?", keyName).First(&s).Error
 	if err != nil {
-		log.LOG.Debug("RepoSystem::SaveInt()-> fetch system entity",
+		log.LOG_Debug("RepoSystem::SaveInt()-> fetch system entity",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -75,7 +75,7 @@ func (r *repoSystem) SaveInt(keyName string, keyValue int32) error {
 	s.StrValue = ""
 	s.IntValue = keyValue
 
-	log.LOG.Debug("RepoSystem::SaveInt()",
+	log.LOG_Debug("RepoSystem::SaveInt()",
 		zap.Int32(keyName, keyValue),
 	)
 
@@ -91,7 +91,7 @@ func (r *repoSystem) SaveString(keyName string, keyValue string) error {
 
 	err := r.db.Where("KeyName = ?", keyName).First(&s).Error
 	if err != nil {
-		log.LOG.Debug("RepoSystem::SaveString()-> fetch system entity",
+		log.LOG_Debug("RepoSystem::SaveString()-> fetch system entity",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -100,7 +100,7 @@ func (r *repoSystem) SaveString(keyName string, keyValue string) error {
 	s.StrValue = keyValue
 	s.IntValue = 0
 
-	log.LOG.Debug("RepoSystem::SaveString()",
+	log.LOG_Debug("RepoSystem::SaveString()",
 		zap.String(keyName, keyValue),
 	)
 	return r.db.Save(s).Error

@@ -33,12 +33,12 @@ func (r *repoUsers) SaveUser(user *msg.User) error {
 	defer r.mx.Unlock()
 
 	if user == nil {
-		log.LOG.Debug("RepoRepoUsers::SaveUser()",
+		log.LOG_Debug("RepoRepoUsers::SaveUser()",
 			zap.String("User", "user is null"),
 		)
 		return domain.ErrNotFound
 	}
-	log.LOG.Info("RepoRepoUsers::SaveUser()",
+	log.LOG_Info("RepoRepoUsers::SaveUser()",
 		zap.String("Name", fmt.Sprintf("%s %s", user.FirstName, user.LastName)),
 		zap.Int64("UserID", user.ID),
 	)
@@ -61,13 +61,13 @@ func (r *repoUsers) SaveContactUser(user *msg.ContactUser) error {
 	defer r.mx.Unlock()
 
 	if user == nil {
-		log.LOG.Debug("RepoRepoUsers::SaveContactUser()",
+		log.LOG_Debug("RepoRepoUsers::SaveContactUser()",
 			zap.String("User", "user is null"),
 		)
 		return domain.ErrNotFound
 	}
 
-	log.LOG.Info("RepoRepoUsers::SaveContactUser()",
+	log.LOG_Info("RepoRepoUsers::SaveContactUser()",
 		zap.String("Name", fmt.Sprintf("%s %s", user.FirstName, user.LastName)),
 		zap.Int64("UserID", user.ID),
 	)
@@ -100,7 +100,7 @@ func (r *repoUsers) GetManyUsers(userIDs []int64) []*msg.User {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("RepoUsers::GetManyUsers()",
+	log.LOG_Debug("RepoUsers::GetManyUsers()",
 		zap.Int64s("UserIDs", userIDs),
 	)
 
@@ -109,7 +109,7 @@ func (r *repoUsers) GetManyUsers(userIDs []int64) []*msg.User {
 
 	err := r.db.Where("IsContact = 0 AND ID in (?)", userIDs).Find(&users).Error
 	if err != nil {
-		log.LOG.Debug("RepoUsers::GetManyUsers()-> fetch user entity",
+		log.LOG_Debug("RepoUsers::GetManyUsers()-> fetch user entity",
 			zap.String("Error", err.Error()),
 		)
 		return nil //, err
@@ -130,7 +130,7 @@ func (r *repoUsers) GetManyContactUsers(userIDs []int64) []*msg.ContactUser {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("RepoUsers::GetManyContactUsers()",
+	log.LOG_Debug("RepoUsers::GetManyContactUsers()",
 		zap.Int64s("UserIDs", userIDs),
 	)
 	pbUsers := make([]*msg.ContactUser, 0, len(userIDs))
@@ -138,7 +138,7 @@ func (r *repoUsers) GetManyContactUsers(userIDs []int64) []*msg.ContactUser {
 
 	err := r.db.Where("IsContact = 1 AND ID in (?)", userIDs).Find(&users).Error
 	if err != nil {
-		log.LOG.Debug("RepoUsers::GetManyContactUsers()-> fetch user entities",
+		log.LOG_Debug("RepoUsers::GetManyContactUsers()-> fetch user entities",
 			zap.String("Error", err.Error()),
 		)
 		return nil //, err
@@ -159,13 +159,13 @@ func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("RepoUsers::GetContacts()")
+	log.LOG_Debug("RepoUsers::GetContacts()")
 
 	users := make([]dto.Users, 0)
 
 	err := r.db.Where("AccessHash <> 0").Find(&users).Error
 	if err != nil {
-		log.LOG.Debug("RepoUsers::GetContacts()-> fetch user entities",
+		log.LOG_Debug("RepoUsers::GetContacts()-> fetch user entities",
 			zap.String("Error", err.Error()),
 		)
 		return nil, nil //, err
@@ -190,13 +190,13 @@ func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("RepoUsers::SearchContacts()")
+	log.LOG_Debug("RepoUsers::SearchContacts()")
 
 	p := "%" + searchPhrase + "%"
 	users := make([]dto.Users, 0)
 	err := r.db.Where("AccessHash <> 0 AND (FirstName LIKE ? OR LastName LIKE ? OR Phone LIKE ? OR Username LIKE ?)", p, p, p, p).Find(&users).Error
 	if err != nil {
-		log.LOG.Debug("RepoUsers::SearchContacts()-> fetch user entities",
+		log.LOG_Debug("RepoUsers::SearchContacts()-> fetch user entities",
 			zap.String("Error", err.Error()),
 		)
 		return nil, nil //, err
@@ -244,7 +244,7 @@ func (r *repoUsers) GetUser(userID int64) *msg.User {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("RepoUsers::GetUser()",
+	log.LOG_Debug("RepoUsers::GetUser()",
 		zap.Int64("UserID", userID),
 	)
 
@@ -253,7 +253,7 @@ func (r *repoUsers) GetUser(userID int64) *msg.User {
 
 	err := r.db.Find(user, userID).Error
 	if err != nil {
-		log.LOG.Debug("RepoUsers::GetUser()-> fetch user entity",
+		log.LOG_Debug("RepoUsers::GetUser()-> fetch user entity",
 			zap.String("Error", err.Error()),
 		)
 		return nil //, err
@@ -269,7 +269,7 @@ func (r *repoUsers) GetAnyUsers(userIDs []int64) []*msg.User {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG.Debug("RepoUsers::GetAnyUsers()",
+	log.LOG_Debug("RepoUsers::GetAnyUsers()",
 		zap.Int64s("UserIDs", userIDs),
 	)
 
@@ -278,7 +278,7 @@ func (r *repoUsers) GetAnyUsers(userIDs []int64) []*msg.User {
 
 	err := r.db.Where("ID in (?)", userIDs).Find(&users).Error
 	if err != nil {
-		log.LOG.Debug("RepoUsers::GetAnyUsers()-> fetch user entity",
+		log.LOG_Debug("RepoUsers::GetAnyUsers()-> fetch user entity",
 			zap.String("Error", err.Error()),
 		)
 		return nil //, err

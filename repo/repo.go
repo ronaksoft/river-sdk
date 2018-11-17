@@ -80,7 +80,7 @@ func repoSetDB(dialect, dbPath string) error {
 	r = new(repository)
 	r.db, repoLastError = gorm.Open(dialect, dbPath)
 	if repoLastError != nil {
-		log.LOG.Debug("Context::repoSetDB()->gorm.Open()",
+		log.LOG_Debug("Context::repoSetDB()->gorm.Open()",
 			zap.String("Error", repoLastError.Error()),
 		)
 		return repoLastError
@@ -107,13 +107,13 @@ func (c *Context) Close() error {
 func (c *Context) DropAndCreateTable(dtoTable interface{}) error {
 	err := r.db.DropTable(dtoTable).Error
 	if err != nil {
-		log.LOG.Debug("Context::DropAndCreateTable() failed to DROP",
+		log.LOG_Debug("Context::DropAndCreateTable() failed to DROP",
 			zap.String("Error", err.Error()),
 		)
 	}
 	err = r.db.AutoMigrate(dtoTable).Error
 	if err != nil {
-		log.LOG.Debug("Context::DropAndCreateTable() failed to AutoMigrate",
+		log.LOG_Debug("Context::DropAndCreateTable() failed to AutoMigrate",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -131,7 +131,7 @@ func (c *Context) ReinitiateDatabase() error {
 	).Error
 
 	if err != nil {
-		log.LOG.Debug("Context::ReinitiateDatabase()->DropTableIfExists()",
+		log.LOG_Debug("Context::ReinitiateDatabase()->DropTableIfExists()",
 			zap.String("Error", err.Error()),
 		)
 	}
