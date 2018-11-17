@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	callerSkipOffset = 3
+	callerSkipOffset = 2
 )
 
 var (
@@ -234,20 +234,11 @@ func fnGetCallerInfo() string {
 
 	// get line of code that called this
 	callerInfo := ""
-	// we get the callers as uintptrs - but we just need 1
-	fpcs := make([]uintptr, 1)
-	// skip 2 levels to get to the caller of whoever called fnGetCallerInfo()
-	n := runtime.Callers(callerSkipOffset, fpcs)
-	if n > 0 {
-		// get the info of the actual function that's in the pointer
-		fun := runtime.FuncForPC(fpcs[0] - 1)
-		if fun != nil {
-			fileName, line := fun.FileLine(fpcs[0])
-			fileName = path.Base(fileName)
-			// callerName := fun.Name()
-			// callerName = path.Ext(callerName)[1:] + "()"
-			callerInfo = fmt.Sprintf("%s:%d", fileName, line)
-		}
+
+	_, fileName, line, ok := runtime.Caller(callerSkipOffset)
+	if ok {
+		fileName = path.Base(fileName)
+		callerInfo = fmt.Sprintf("%s:%d", fileName, line)
 	}
 
 	return callerInfo
