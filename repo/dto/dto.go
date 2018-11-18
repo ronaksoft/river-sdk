@@ -13,7 +13,7 @@ func (d *dto) Map(to interface{}) {
 	Map(d, to)
 }
 
-// up to 5x faster than MapJson
+// Map is up to 5x faster than MapJson
 func Map(from interface{}, to interface{}) {
 	srcElement := reflect.ValueOf(from).Elem()
 	desElement := reflect.ValueOf(to).Elem()
@@ -46,7 +46,8 @@ func Map(from interface{}, to interface{}) {
 	}
 }
 
-func MapJson(from interface{}, to interface{}) error {
+// MapJSON uses json tag to map
+func MapJSON(from interface{}, to interface{}) error {
 	buff, err := json.Marshal(from)
 	if err != nil {
 		return err

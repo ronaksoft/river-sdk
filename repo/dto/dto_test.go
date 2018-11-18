@@ -23,7 +23,7 @@ func BenchmarkMapJson(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		MapJson(src, des)
+		MapJSON(src, des)
 	}
 
 	// fmt.Println("src :", src)
