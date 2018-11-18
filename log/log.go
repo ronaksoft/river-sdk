@@ -55,7 +55,7 @@ func LOG_Debug(msg string, fields ...zap.Field) {
 	callerInfo := fnGetCallerInfo()
 
 	if logger != nil {
-		if int(LOG_LEVEL.Level()) < int(zap.DebugLevel) {
+		if int(LOG_LEVEL.Level()) > int(zap.DebugLevel) {
 			return
 		}
 		logger(int(zap.DebugLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
@@ -69,7 +69,7 @@ func LOG_Warn(msg string, fields ...zap.Field) {
 	callerInfo := fnGetCallerInfo()
 
 	if logger != nil {
-		if int(LOG_LEVEL.Level()) < int(zap.WarnLevel) {
+		if int(LOG_LEVEL.Level()) > int(zap.WarnLevel) {
 			return
 		}
 		logger(int(zap.WarnLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
@@ -83,7 +83,7 @@ func LOG_Info(msg string, fields ...zap.Field) {
 	callerInfo := fnGetCallerInfo()
 
 	if logger != nil {
-		if int(LOG_LEVEL.Level()) < int(zap.InfoLevel) {
+		if int(LOG_LEVEL.Level()) > int(zap.InfoLevel) {
 			return
 		}
 		logger(int(zap.InfoLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
@@ -97,7 +97,7 @@ func LOG_Error(msg string, fields ...zap.Field) {
 	callerInfo := fnGetCallerInfo()
 
 	if logger != nil {
-		if int(LOG_LEVEL.Level()) < int(zap.ErrorLevel) {
+		if int(LOG_LEVEL.Level()) > int(zap.ErrorLevel) {
 			return
 		}
 		logger(int(zap.ErrorLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
@@ -111,7 +111,7 @@ func LOG_Fatal(msg string, fields ...zap.Field) {
 	callerInfo := fnGetCallerInfo()
 
 	if logger != nil {
-		if int(LOG_LEVEL.Level()) < int(zap.FatalLevel) {
+		if int(LOG_LEVEL.Level()) > int(zap.FatalLevel) {
 			return
 		}
 		logger(int(zap.FatalLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
