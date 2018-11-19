@@ -24,7 +24,7 @@ var ContactImport = &ishell.Cmd{
 		req.Contacts = append(req.Contacts, &contact)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_ContactsImport), reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsImport, reqBytes, reqDelegate, false); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -39,7 +39,7 @@ var ContactGet = &ishell.Cmd{
 		req := msg.ContactsGet{}
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_ContactsGet), reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsGet, reqBytes, reqDelegate, false); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
