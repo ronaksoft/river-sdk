@@ -246,3 +246,9 @@ func fnGetUsername(c *ishell.Context) string {
 	uname := c.ReadLine()
 	return uname
 }
+
+func fnGetTitle(c *ishell.Context) string {
+	c.Print("Title: ")
+	title := c.ReadLine()
+	return title
+}

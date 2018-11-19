@@ -16,6 +16,12 @@ func ResultPeer(out *MessageEnvelope, res *Peer) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultMessagesEditGroupTitle(out *MessageEnvelope, res *MessagesEditGroupTitle) {
+	out.Constructor = C_MessagesEditGroupTitle
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultUpdateUserTyping(out *MessageEnvelope, res *UpdateUserTyping) {
 	out.Constructor = C_UpdateUserTyping
 	pbytes.Put(out.Message)
@@ -316,6 +322,12 @@ func ResultAuthSentCode(out *MessageEnvelope, res *AuthSentCode) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultMessagesDeleteGroupUser(out *MessageEnvelope, res *MessagesDeleteGroupUser) {
+	out.Constructor = C_MessagesDeleteGroupUser
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultFileLocation(out *MessageEnvelope, res *FileLocation) {
 	out.Constructor = C_FileLocation
 	pbytes.Put(out.Message)
@@ -324,6 +336,12 @@ func ResultFileLocation(out *MessageEnvelope, res *FileLocation) {
 }
 func ResultMessagesEdit(out *MessageEnvelope, res *MessagesEdit) {
 	out.Constructor = C_MessagesEdit
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultMessagesAddGroupUser(out *MessageEnvelope, res *MessagesAddGroupUser) {
+	out.Constructor = C_MessagesAddGroupUser
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -376,6 +394,12 @@ func ResultInitDB(out *MessageEnvelope, res *InitDB) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultUpdateChatMemberDeleted(out *MessageEnvelope, res *UpdateChatMemberDeleted) {
+	out.Constructor = C_UpdateChatMemberDeleted
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultEchoWithDelay(out *MessageEnvelope, res *EchoWithDelay) {
 	out.Constructor = C_EchoWithDelay
 	pbytes.Put(out.Message)
@@ -388,6 +412,12 @@ func ResultSystemDHGroups(out *MessageEnvelope, res *SystemDHGroups) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultMessagesCreateGroup(out *MessageEnvelope, res *MessagesCreateGroup) {
+	out.Constructor = C_MessagesCreateGroup
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultMessagesSent(out *MessageEnvelope, res *MessagesSent) {
 	out.Constructor = C_MessagesSent
 	pbytes.Put(out.Message)
@@ -396,6 +426,12 @@ func ResultMessagesSent(out *MessageEnvelope, res *MessagesSent) {
 }
 func ResultMessagesSend(out *MessageEnvelope, res *MessagesSend) {
 	out.Constructor = C_MessagesSend
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultUpdateChatMemberAdded(out *MessageEnvelope, res *UpdateChatMemberAdded) {
+	out.Constructor = C_UpdateChatMemberAdded
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

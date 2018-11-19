@@ -72,6 +72,47 @@ message MessagesGetDialog {
     required InputPeer Peer = 1;
 }
 
+// MessagesSetTyping
+// @Function
+// Returns: Bool
+message MessagesSetTyping {
+    required InputPeer Peer = 1;
+    required TypingAction Action = 2;
+}
+
+// MessagesCreateGroup
+// @Function
+// @Returns: Bool
+message MessagesCreateGroup {
+    repeated InputUser Users = 1;
+    required string Title = 2;
+}
+
+// MessagesAddGroupUser
+// @Function
+// @Returns: Bool
+message MessagesAddGroupUser {
+    required int64 ChatID = 1;
+    required InputUser User = 2;
+    required int32 ForwardLimit = 3;
+}
+
+// MessagesEditGroupTitle
+// @Function
+// @Returns: Bool
+message MessagesEditGroupTitle {
+    required int64 ChatID = 1;
+    required string Title = 2;
+}
+
+// MessagesDeleteGroupUser
+// @Function
+// @Returns: Bool
+message MessagesDeleteGroupUser {
+    required int64 ChatID = 1;
+    required InputUser User = 2;
+}
+
 // MessagesDialogs
 message MessagesDialogs {
     repeated Dialog Dialogs = 1;
@@ -81,16 +122,10 @@ message MessagesDialogs {
     required int64 UpdateID = 5;
 }
 
-// MessagesSetTyping
-message MessagesSetTyping {
-    required InputPeer Peer = 1;
-    required TypingAction Action = 2;
-}
-
 // MessagesSent
 message MessagesSent {
     required int64 MessageID = 1;
-    required int64 RandomID = 2 ;
+    required int64 RandomID = 2;
     required int64 CreatedOn = 3;
 }
 
@@ -99,3 +134,4 @@ message MessagesMany {
     repeated UserMessage Messages = 1;
     repeated User Users = 2;
 }
+

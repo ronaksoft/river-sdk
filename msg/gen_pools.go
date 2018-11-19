@@ -17,6 +17,12 @@ var (
 			return m
 		},
 	}
+	PoolMessagesEditGroupTitle = sync.Pool{
+		New: func() interface{} {
+			m := new(MessagesEditGroupTitle)
+			return m
+		},
+	}
 	PoolUpdateUserTyping = sync.Pool{
 		New: func() interface{} {
 			m := new(UpdateUserTyping)
@@ -317,6 +323,12 @@ var (
 			return m
 		},
 	}
+	PoolMessagesDeleteGroupUser = sync.Pool{
+		New: func() interface{} {
+			m := new(MessagesDeleteGroupUser)
+			return m
+		},
+	}
 	PoolFileLocation = sync.Pool{
 		New: func() interface{} {
 			m := new(FileLocation)
@@ -326,6 +338,12 @@ var (
 	PoolMessagesEdit = sync.Pool{
 		New: func() interface{} {
 			m := new(MessagesEdit)
+			return m
+		},
+	}
+	PoolMessagesAddGroupUser = sync.Pool{
+		New: func() interface{} {
+			m := new(MessagesAddGroupUser)
 			return m
 		},
 	}
@@ -377,6 +395,12 @@ var (
 			return m
 		},
 	}
+	PoolUpdateChatMemberDeleted = sync.Pool{
+		New: func() interface{} {
+			m := new(UpdateChatMemberDeleted)
+			return m
+		},
+	}
 	PoolEchoWithDelay = sync.Pool{
 		New: func() interface{} {
 			m := new(EchoWithDelay)
@@ -389,6 +413,12 @@ var (
 			return m
 		},
 	}
+	PoolMessagesCreateGroup = sync.Pool{
+		New: func() interface{} {
+			m := new(MessagesCreateGroup)
+			return m
+		},
+	}
 	PoolMessagesSent = sync.Pool{
 		New: func() interface{} {
 			m := new(MessagesSent)
@@ -398,6 +428,12 @@ var (
 	PoolMessagesSend = sync.Pool{
 		New: func() interface{} {
 			m := new(MessagesSend)
+			return m
+		},
+	}
+	PoolUpdateChatMemberAdded = sync.Pool{
+		New: func() interface{} {
+			m := new(UpdateChatMemberAdded)
 			return m
 		},
 	}

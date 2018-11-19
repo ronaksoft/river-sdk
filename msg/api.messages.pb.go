@@ -36,7 +36,7 @@ func (m *MessagesSend) Reset()         { *m = MessagesSend{} }
 func (m *MessagesSend) String() string { return proto.CompactTextString(m) }
 func (*MessagesSend) ProtoMessage()    {}
 func (*MessagesSend) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_565fcfd1ce036211, []int{0}
+	return fileDescriptor_api_messages_dbf9971ce524e0d8, []int{0}
 }
 func (m *MessagesSend) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -107,7 +107,7 @@ func (m *MessagesEdit) Reset()         { *m = MessagesEdit{} }
 func (m *MessagesEdit) String() string { return proto.CompactTextString(m) }
 func (*MessagesEdit) ProtoMessage()    {}
 func (*MessagesEdit) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_565fcfd1ce036211, []int{1}
+	return fileDescriptor_api_messages_dbf9971ce524e0d8, []int{1}
 }
 func (m *MessagesEdit) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -177,7 +177,7 @@ func (m *MessagesSendMedia) Reset()         { *m = MessagesSendMedia{} }
 func (m *MessagesSendMedia) String() string { return proto.CompactTextString(m) }
 func (*MessagesSendMedia) ProtoMessage()    {}
 func (*MessagesSendMedia) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_565fcfd1ce036211, []int{2}
+	return fileDescriptor_api_messages_dbf9971ce524e0d8, []int{2}
 }
 func (m *MessagesSendMedia) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -239,7 +239,7 @@ func (m *MessagesReadHistory) Reset()         { *m = MessagesReadHistory{} }
 func (m *MessagesReadHistory) String() string { return proto.CompactTextString(m) }
 func (*MessagesReadHistory) ProtoMessage()    {}
 func (*MessagesReadHistory) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_565fcfd1ce036211, []int{3}
+	return fileDescriptor_api_messages_dbf9971ce524e0d8, []int{3}
 }
 func (m *MessagesReadHistory) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -294,7 +294,7 @@ func (m *MessagesGet) Reset()         { *m = MessagesGet{} }
 func (m *MessagesGet) String() string { return proto.CompactTextString(m) }
 func (*MessagesGet) ProtoMessage()    {}
 func (*MessagesGet) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_565fcfd1ce036211, []int{4}
+	return fileDescriptor_api_messages_dbf9971ce524e0d8, []int{4}
 }
 func (m *MessagesGet) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -351,7 +351,7 @@ func (m *MessagesGetHistory) Reset()         { *m = MessagesGetHistory{} }
 func (m *MessagesGetHistory) String() string { return proto.CompactTextString(m) }
 func (*MessagesGetHistory) ProtoMessage()    {}
 func (*MessagesGetHistory) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_565fcfd1ce036211, []int{5}
+	return fileDescriptor_api_messages_dbf9971ce524e0d8, []int{5}
 }
 func (m *MessagesGetHistory) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -420,7 +420,7 @@ func (m *MessagesGetDialogs) Reset()         { *m = MessagesGetDialogs{} }
 func (m *MessagesGetDialogs) String() string { return proto.CompactTextString(m) }
 func (*MessagesGetDialogs) ProtoMessage()    {}
 func (*MessagesGetDialogs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_565fcfd1ce036211, []int{6}
+	return fileDescriptor_api_messages_dbf9971ce524e0d8, []int{6}
 }
 func (m *MessagesGetDialogs) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -474,7 +474,7 @@ func (m *MessagesGetDialog) Reset()         { *m = MessagesGetDialog{} }
 func (m *MessagesGetDialog) String() string { return proto.CompactTextString(m) }
 func (*MessagesGetDialog) ProtoMessage()    {}
 func (*MessagesGetDialog) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_565fcfd1ce036211, []int{7}
+	return fileDescriptor_api_messages_dbf9971ce524e0d8, []int{7}
 }
 func (m *MessagesGetDialog) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -510,6 +510,289 @@ func (m *MessagesGetDialog) GetPeer() *InputPeer {
 	return nil
 }
 
+// MessagesSetTyping
+// @Function
+// Returns: Bool
+type MessagesSetTyping struct {
+	Peer   *InputPeer   `protobuf:"bytes,1,req,name=Peer" json:"Peer,omitempty"`
+	Action TypingAction `protobuf:"varint,2,req,name=Action,enum=msg.TypingAction" json:"Action"`
+}
+
+func (m *MessagesSetTyping) Reset()         { *m = MessagesSetTyping{} }
+func (m *MessagesSetTyping) String() string { return proto.CompactTextString(m) }
+func (*MessagesSetTyping) ProtoMessage()    {}
+func (*MessagesSetTyping) Descriptor() ([]byte, []int) {
+	return fileDescriptor_api_messages_dbf9971ce524e0d8, []int{8}
+}
+func (m *MessagesSetTyping) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MessagesSetTyping) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MessagesSetTyping.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *MessagesSetTyping) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MessagesSetTyping.Merge(dst, src)
+}
+func (m *MessagesSetTyping) XXX_Size() int {
+	return m.Size()
+}
+func (m *MessagesSetTyping) XXX_DiscardUnknown() {
+	xxx_messageInfo_MessagesSetTyping.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MessagesSetTyping proto.InternalMessageInfo
+
+func (m *MessagesSetTyping) GetPeer() *InputPeer {
+	if m != nil {
+		return m.Peer
+	}
+	return nil
+}
+
+func (m *MessagesSetTyping) GetAction() TypingAction {
+	if m != nil {
+		return m.Action
+	}
+	return TypingAction_Typing
+}
+
+// MessagesCreateGroup
+// @Function
+// @Returns: Bool
+type MessagesCreateGroup struct {
+	Users []*InputUser `protobuf:"bytes,1,rep,name=Users" json:"Users,omitempty"`
+	Title string       `protobuf:"bytes,2,req,name=Title" json:"Title"`
+}
+
+func (m *MessagesCreateGroup) Reset()         { *m = MessagesCreateGroup{} }
+func (m *MessagesCreateGroup) String() string { return proto.CompactTextString(m) }
+func (*MessagesCreateGroup) ProtoMessage()    {}
+func (*MessagesCreateGroup) Descriptor() ([]byte, []int) {
+	return fileDescriptor_api_messages_dbf9971ce524e0d8, []int{9}
+}
+func (m *MessagesCreateGroup) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MessagesCreateGroup) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MessagesCreateGroup.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *MessagesCreateGroup) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MessagesCreateGroup.Merge(dst, src)
+}
+func (m *MessagesCreateGroup) XXX_Size() int {
+	return m.Size()
+}
+func (m *MessagesCreateGroup) XXX_DiscardUnknown() {
+	xxx_messageInfo_MessagesCreateGroup.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MessagesCreateGroup proto.InternalMessageInfo
+
+func (m *MessagesCreateGroup) GetUsers() []*InputUser {
+	if m != nil {
+		return m.Users
+	}
+	return nil
+}
+
+func (m *MessagesCreateGroup) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+// MessagesAddGroupUser
+// @Function
+// @Returns: Bool
+type MessagesAddGroupUser struct {
+	ChatID       int64      `protobuf:"varint,1,req,name=ChatID" json:"ChatID"`
+	User         *InputUser `protobuf:"bytes,2,req,name=User" json:"User,omitempty"`
+	ForwardLimit int32      `protobuf:"varint,3,req,name=ForwardLimit" json:"ForwardLimit"`
+}
+
+func (m *MessagesAddGroupUser) Reset()         { *m = MessagesAddGroupUser{} }
+func (m *MessagesAddGroupUser) String() string { return proto.CompactTextString(m) }
+func (*MessagesAddGroupUser) ProtoMessage()    {}
+func (*MessagesAddGroupUser) Descriptor() ([]byte, []int) {
+	return fileDescriptor_api_messages_dbf9971ce524e0d8, []int{10}
+}
+func (m *MessagesAddGroupUser) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MessagesAddGroupUser) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MessagesAddGroupUser.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *MessagesAddGroupUser) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MessagesAddGroupUser.Merge(dst, src)
+}
+func (m *MessagesAddGroupUser) XXX_Size() int {
+	return m.Size()
+}
+func (m *MessagesAddGroupUser) XXX_DiscardUnknown() {
+	xxx_messageInfo_MessagesAddGroupUser.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MessagesAddGroupUser proto.InternalMessageInfo
+
+func (m *MessagesAddGroupUser) GetChatID() int64 {
+	if m != nil {
+		return m.ChatID
+	}
+	return 0
+}
+
+func (m *MessagesAddGroupUser) GetUser() *InputUser {
+	if m != nil {
+		return m.User
+	}
+	return nil
+}
+
+func (m *MessagesAddGroupUser) GetForwardLimit() int32 {
+	if m != nil {
+		return m.ForwardLimit
+	}
+	return 0
+}
+
+// MessagesEditGroupTitle
+// @Function
+// @Returns: Bool
+type MessagesEditGroupTitle struct {
+	ChatID int64  `protobuf:"varint,1,req,name=ChatID" json:"ChatID"`
+	Title  string `protobuf:"bytes,2,req,name=Title" json:"Title"`
+}
+
+func (m *MessagesEditGroupTitle) Reset()         { *m = MessagesEditGroupTitle{} }
+func (m *MessagesEditGroupTitle) String() string { return proto.CompactTextString(m) }
+func (*MessagesEditGroupTitle) ProtoMessage()    {}
+func (*MessagesEditGroupTitle) Descriptor() ([]byte, []int) {
+	return fileDescriptor_api_messages_dbf9971ce524e0d8, []int{11}
+}
+func (m *MessagesEditGroupTitle) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MessagesEditGroupTitle) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MessagesEditGroupTitle.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *MessagesEditGroupTitle) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MessagesEditGroupTitle.Merge(dst, src)
+}
+func (m *MessagesEditGroupTitle) XXX_Size() int {
+	return m.Size()
+}
+func (m *MessagesEditGroupTitle) XXX_DiscardUnknown() {
+	xxx_messageInfo_MessagesEditGroupTitle.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MessagesEditGroupTitle proto.InternalMessageInfo
+
+func (m *MessagesEditGroupTitle) GetChatID() int64 {
+	if m != nil {
+		return m.ChatID
+	}
+	return 0
+}
+
+func (m *MessagesEditGroupTitle) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+// MessagesDeleteGroupUser
+// @Function
+// @Returns: Bool
+type MessagesDeleteGroupUser struct {
+	ChatID int64      `protobuf:"varint,1,req,name=ChatID" json:"ChatID"`
+	User   *InputUser `protobuf:"bytes,2,req,name=User" json:"User,omitempty"`
+}
+
+func (m *MessagesDeleteGroupUser) Reset()         { *m = MessagesDeleteGroupUser{} }
+func (m *MessagesDeleteGroupUser) String() string { return proto.CompactTextString(m) }
+func (*MessagesDeleteGroupUser) ProtoMessage()    {}
+func (*MessagesDeleteGroupUser) Descriptor() ([]byte, []int) {
+	return fileDescriptor_api_messages_dbf9971ce524e0d8, []int{12}
+}
+func (m *MessagesDeleteGroupUser) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MessagesDeleteGroupUser) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MessagesDeleteGroupUser.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *MessagesDeleteGroupUser) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MessagesDeleteGroupUser.Merge(dst, src)
+}
+func (m *MessagesDeleteGroupUser) XXX_Size() int {
+	return m.Size()
+}
+func (m *MessagesDeleteGroupUser) XXX_DiscardUnknown() {
+	xxx_messageInfo_MessagesDeleteGroupUser.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MessagesDeleteGroupUser proto.InternalMessageInfo
+
+func (m *MessagesDeleteGroupUser) GetChatID() int64 {
+	if m != nil {
+		return m.ChatID
+	}
+	return 0
+}
+
+func (m *MessagesDeleteGroupUser) GetUser() *InputUser {
+	if m != nil {
+		return m.User
+	}
+	return nil
+}
+
 // MessagesDialogs
 type MessagesDialogs struct {
 	Dialogs  []*Dialog      `protobuf:"bytes,1,rep,name=Dialogs" json:"Dialogs,omitempty"`
@@ -523,7 +806,7 @@ func (m *MessagesDialogs) Reset()         { *m = MessagesDialogs{} }
 func (m *MessagesDialogs) String() string { return proto.CompactTextString(m) }
 func (*MessagesDialogs) ProtoMessage()    {}
 func (*MessagesDialogs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_565fcfd1ce036211, []int{8}
+	return fileDescriptor_api_messages_dbf9971ce524e0d8, []int{13}
 }
 func (m *MessagesDialogs) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -587,59 +870,6 @@ func (m *MessagesDialogs) GetUpdateID() int64 {
 	return 0
 }
 
-// MessagesSetTyping
-type MessagesSetTyping struct {
-	Peer   *InputPeer   `protobuf:"bytes,1,req,name=Peer" json:"Peer,omitempty"`
-	Action TypingAction `protobuf:"varint,2,req,name=Action,enum=msg.TypingAction" json:"Action"`
-}
-
-func (m *MessagesSetTyping) Reset()         { *m = MessagesSetTyping{} }
-func (m *MessagesSetTyping) String() string { return proto.CompactTextString(m) }
-func (*MessagesSetTyping) ProtoMessage()    {}
-func (*MessagesSetTyping) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_565fcfd1ce036211, []int{9}
-}
-func (m *MessagesSetTyping) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MessagesSetTyping) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MessagesSetTyping.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (dst *MessagesSetTyping) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MessagesSetTyping.Merge(dst, src)
-}
-func (m *MessagesSetTyping) XXX_Size() int {
-	return m.Size()
-}
-func (m *MessagesSetTyping) XXX_DiscardUnknown() {
-	xxx_messageInfo_MessagesSetTyping.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MessagesSetTyping proto.InternalMessageInfo
-
-func (m *MessagesSetTyping) GetPeer() *InputPeer {
-	if m != nil {
-		return m.Peer
-	}
-	return nil
-}
-
-func (m *MessagesSetTyping) GetAction() TypingAction {
-	if m != nil {
-		return m.Action
-	}
-	return TypingAction_Typing
-}
-
 // MessagesSent
 type MessagesSent struct {
 	MessageID int64 `protobuf:"varint,1,req,name=MessageID" json:"MessageID"`
@@ -651,7 +881,7 @@ func (m *MessagesSent) Reset()         { *m = MessagesSent{} }
 func (m *MessagesSent) String() string { return proto.CompactTextString(m) }
 func (*MessagesSent) ProtoMessage()    {}
 func (*MessagesSent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_565fcfd1ce036211, []int{10}
+	return fileDescriptor_api_messages_dbf9971ce524e0d8, []int{14}
 }
 func (m *MessagesSent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -711,7 +941,7 @@ func (m *MessagesMany) Reset()         { *m = MessagesMany{} }
 func (m *MessagesMany) String() string { return proto.CompactTextString(m) }
 func (*MessagesMany) ProtoMessage()    {}
 func (*MessagesMany) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_565fcfd1ce036211, []int{11}
+	return fileDescriptor_api_messages_dbf9971ce524e0d8, []int{15}
 }
 func (m *MessagesMany) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -763,8 +993,12 @@ func init() {
 	proto.RegisterType((*MessagesGetHistory)(nil), "msg.MessagesGetHistory")
 	proto.RegisterType((*MessagesGetDialogs)(nil), "msg.MessagesGetDialogs")
 	proto.RegisterType((*MessagesGetDialog)(nil), "msg.MessagesGetDialog")
-	proto.RegisterType((*MessagesDialogs)(nil), "msg.MessagesDialogs")
 	proto.RegisterType((*MessagesSetTyping)(nil), "msg.MessagesSetTyping")
+	proto.RegisterType((*MessagesCreateGroup)(nil), "msg.MessagesCreateGroup")
+	proto.RegisterType((*MessagesAddGroupUser)(nil), "msg.MessagesAddGroupUser")
+	proto.RegisterType((*MessagesEditGroupTitle)(nil), "msg.MessagesEditGroupTitle")
+	proto.RegisterType((*MessagesDeleteGroupUser)(nil), "msg.MessagesDeleteGroupUser")
+	proto.RegisterType((*MessagesDialogs)(nil), "msg.MessagesDialogs")
 	proto.RegisterType((*MessagesSent)(nil), "msg.MessagesSent")
 	proto.RegisterType((*MessagesMany)(nil), "msg.MessagesMany")
 }
@@ -1056,6 +1290,167 @@ func (m *MessagesGetDialog) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *MessagesSetTyping) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MessagesSetTyping) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Peer == nil {
+		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
+	} else {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintApiMessages(dAtA, i, uint64(m.Peer.Size()))
+		n9, err := m.Peer.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n9
+	}
+	dAtA[i] = 0x10
+	i++
+	i = encodeVarintApiMessages(dAtA, i, uint64(m.Action))
+	return i, nil
+}
+
+func (m *MessagesCreateGroup) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MessagesCreateGroup) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Users) > 0 {
+		for _, msg := range m.Users {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintApiMessages(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintApiMessages(dAtA, i, uint64(len(m.Title)))
+	i += copy(dAtA[i:], m.Title)
+	return i, nil
+}
+
+func (m *MessagesAddGroupUser) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MessagesAddGroupUser) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintApiMessages(dAtA, i, uint64(m.ChatID))
+	if m.User == nil {
+		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("User")
+	} else {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintApiMessages(dAtA, i, uint64(m.User.Size()))
+		n10, err := m.User.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n10
+	}
+	dAtA[i] = 0x18
+	i++
+	i = encodeVarintApiMessages(dAtA, i, uint64(m.ForwardLimit))
+	return i, nil
+}
+
+func (m *MessagesEditGroupTitle) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MessagesEditGroupTitle) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintApiMessages(dAtA, i, uint64(m.ChatID))
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintApiMessages(dAtA, i, uint64(len(m.Title)))
+	i += copy(dAtA[i:], m.Title)
+	return i, nil
+}
+
+func (m *MessagesDeleteGroupUser) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MessagesDeleteGroupUser) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintApiMessages(dAtA, i, uint64(m.ChatID))
+	if m.User == nil {
+		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("User")
+	} else {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintApiMessages(dAtA, i, uint64(m.User.Size()))
+		n11, err := m.User.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n11
+	}
+	return i, nil
+}
+
 func (m *MessagesDialogs) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1113,39 +1508,6 @@ func (m *MessagesDialogs) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x28
 	i++
 	i = encodeVarintApiMessages(dAtA, i, uint64(m.UpdateID))
-	return i, nil
-}
-
-func (m *MessagesSetTyping) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MessagesSetTyping) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Peer == nil {
-		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
-	} else {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintApiMessages(dAtA, i, uint64(m.Peer.Size()))
-		n9, err := m.Peer.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n9
-	}
-	dAtA[i] = 0x10
-	i++
-	i = encodeVarintApiMessages(dAtA, i, uint64(m.Action))
 	return i, nil
 }
 
@@ -1351,6 +1713,78 @@ func (m *MessagesGetDialog) Size() (n int) {
 	return n
 }
 
+func (m *MessagesSetTyping) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Peer != nil {
+		l = m.Peer.Size()
+		n += 1 + l + sovApiMessages(uint64(l))
+	}
+	n += 1 + sovApiMessages(uint64(m.Action))
+	return n
+}
+
+func (m *MessagesCreateGroup) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Users) > 0 {
+		for _, e := range m.Users {
+			l = e.Size()
+			n += 1 + l + sovApiMessages(uint64(l))
+		}
+	}
+	l = len(m.Title)
+	n += 1 + l + sovApiMessages(uint64(l))
+	return n
+}
+
+func (m *MessagesAddGroupUser) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovApiMessages(uint64(m.ChatID))
+	if m.User != nil {
+		l = m.User.Size()
+		n += 1 + l + sovApiMessages(uint64(l))
+	}
+	n += 1 + sovApiMessages(uint64(m.ForwardLimit))
+	return n
+}
+
+func (m *MessagesEditGroupTitle) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovApiMessages(uint64(m.ChatID))
+	l = len(m.Title)
+	n += 1 + l + sovApiMessages(uint64(l))
+	return n
+}
+
+func (m *MessagesDeleteGroupUser) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovApiMessages(uint64(m.ChatID))
+	if m.User != nil {
+		l = m.User.Size()
+		n += 1 + l + sovApiMessages(uint64(l))
+	}
+	return n
+}
+
 func (m *MessagesDialogs) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1377,20 +1811,6 @@ func (m *MessagesDialogs) Size() (n int) {
 	}
 	n += 1 + sovApiMessages(uint64(m.Count))
 	n += 1 + sovApiMessages(uint64(m.UpdateID))
-	return n
-}
-
-func (m *MessagesSetTyping) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Peer != nil {
-		l = m.Peer.Size()
-		n += 1 + l + sovApiMessages(uint64(l))
-	}
-	n += 1 + sovApiMessages(uint64(m.Action))
 	return n
 }
 
@@ -2532,6 +2952,584 @@ func (m *MessagesGetDialog) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *MessagesSetTyping) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApiMessages
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MessagesSetTyping: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MessagesSetTyping: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Peer", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApiMessages
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Peer == nil {
+				m.Peer = &InputPeer{}
+			}
+			if err := m.Peer.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
+			}
+			m.Action = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Action |= (TypingAction(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000002)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApiMessages(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApiMessages
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Action")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MessagesCreateGroup) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApiMessages
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MessagesCreateGroup: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MessagesCreateGroup: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Users", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApiMessages
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Users = append(m.Users, &InputUser{})
+			if err := m.Users[len(m.Users)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApiMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000001)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApiMessages(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApiMessages
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Title")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MessagesAddGroupUser) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApiMessages
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MessagesAddGroupUser: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MessagesAddGroupUser: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChatID", wireType)
+			}
+			m.ChatID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ChatID |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field User", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApiMessages
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.User == nil {
+				m.User = &InputUser{}
+			}
+			if err := m.User.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000002)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ForwardLimit", wireType)
+			}
+			m.ForwardLimit = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ForwardLimit |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000004)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApiMessages(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApiMessages
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("ChatID")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("User")
+	}
+	if hasFields[0]&uint64(0x00000004) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("ForwardLimit")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MessagesEditGroupTitle) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApiMessages
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MessagesEditGroupTitle: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MessagesEditGroupTitle: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChatID", wireType)
+			}
+			m.ChatID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ChatID |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApiMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000002)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApiMessages(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApiMessages
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("ChatID")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Title")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MessagesDeleteGroupUser) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApiMessages
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MessagesDeleteGroupUser: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MessagesDeleteGroupUser: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChatID", wireType)
+			}
+			m.ChatID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ChatID |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field User", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApiMessages
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.User == nil {
+				m.User = &InputUser{}
+			}
+			if err := m.User.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000002)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApiMessages(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApiMessages
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("ChatID")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("User")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *MessagesDialogs) Unmarshal(dAtA []byte) error {
 	var hasFields [1]uint64
 	l := len(dAtA)
@@ -2715,117 +3713,6 @@ func (m *MessagesDialogs) Unmarshal(dAtA []byte) error {
 	}
 	if hasFields[0]&uint64(0x00000002) == 0 {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("UpdateID")
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MessagesSetTyping) Unmarshal(dAtA []byte) error {
-	var hasFields [1]uint64
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowApiMessages
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MessagesSetTyping: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MessagesSetTyping: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Peer", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApiMessages
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthApiMessages
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Peer == nil {
-				m.Peer = &InputPeer{}
-			}
-			if err := m.Peer.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-			hasFields[0] |= uint64(0x00000001)
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
-			}
-			m.Action = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApiMessages
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Action |= (TypingAction(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			hasFields[0] |= uint64(0x00000002)
-		default:
-			iNdEx = preIndex
-			skippy, err := skipApiMessages(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthApiMessages
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-	if hasFields[0]&uint64(0x00000001) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
-	}
-	if hasFields[0]&uint64(0x00000002) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Action")
 	}
 
 	if iNdEx > l {
@@ -3170,43 +4057,49 @@ var (
 	ErrIntOverflowApiMessages   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("api.messages.proto", fileDescriptor_api_messages_565fcfd1ce036211) }
+func init() { proto.RegisterFile("api.messages.proto", fileDescriptor_api_messages_dbf9971ce524e0d8) }
 
-var fileDescriptor_api_messages_565fcfd1ce036211 = []byte{
-	// 546 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x94, 0x4f, 0x6b, 0xdb, 0x30,
-	0x18, 0xc6, 0x23, 0xdb, 0x49, 0x1b, 0x65, 0x74, 0xad, 0x77, 0x11, 0x65, 0xb8, 0x46, 0x30, 0xc8,
-	0x61, 0x64, 0x90, 0xcb, 0xce, 0x4b, 0xbd, 0x3f, 0x86, 0x65, 0x1d, 0x6a, 0x73, 0xdc, 0x41, 0xd4,
-	0x6a, 0x26, 0x48, 0x2c, 0x63, 0xa9, 0x50, 0x1f, 0xf6, 0x0d, 0xc6, 0x18, 0xfb, 0x4e, 0x83, 0x1e,
-	0x7b, 0xdc, 0x69, 0x8c, 0xe4, 0x8b, 0x0c, 0xcb, 0x96, 0xff, 0x2c, 0xdb, 0x9a, 0x42, 0x6f, 0xc9,
-	0xef, 0x7d, 0xf5, 0xbc, 0x8f, 0x9e, 0xe8, 0x0d, 0x74, 0x69, 0xc2, 0x47, 0x4b, 0x26, 0x25, 0x9d,
-	0x33, 0x39, 0x4a, 0x52, 0xa1, 0x84, 0x6b, 0x2f, 0xe5, 0xfc, 0x70, 0xff, 0x5c, 0xa4, 0x6c, 0xa4,
-	0xb2, 0xc4, 0x60, 0xfc, 0x05, 0xc0, 0x07, 0xd3, 0xb2, 0xf3, 0x94, 0xc5, 0x91, 0xeb, 0xc3, 0x5d,
-	0x42, 0xe3, 0x48, 0x2c, 0xc3, 0x00, 0x01, 0xdf, 0x1a, 0xda, 0x13, 0xe7, 0xfa, 0xe7, 0x51, 0x87,
-	0x54, 0xd4, 0xc5, 0xd0, 0x79, 0xcf, 0x58, 0x8a, 0x2c, 0xdf, 0x1a, 0x0e, 0xc6, 0x7b, 0xa3, 0xa5,
-	0x9c, 0x8f, 0xc2, 0x38, 0xb9, 0x54, 0x39, 0x25, 0xba, 0xe6, 0x22, 0xe8, 0x4c, 0x44, 0x94, 0xa1,
-	0xae, 0x6f, 0x0d, 0xfb, 0xa5, 0x82, 0x26, 0xae, 0x07, 0x77, 0x08, 0x4b, 0x16, 0xd9, 0x99, 0x40,
-	0x3d, 0x1f, 0x54, 0xf2, 0x06, 0xe2, 0x6f, 0x0d, 0x43, 0x2f, 0x23, 0xae, 0xee, 0xd9, 0x90, 0xbd,
-	0x61, 0x08, 0xc3, 0x7e, 0x39, 0x2f, 0x0c, 0x90, 0xd3, 0x18, 0x50, 0x63, 0xfc, 0x09, 0x1e, 0x34,
-	0x43, 0x9a, 0xb2, 0x88, 0xd3, 0x7b, 0x32, 0x86, 0xa1, 0xf3, 0x8a, 0x2f, 0x98, 0x36, 0xd6, 0xea,
-	0xc9, 0x29, 0xd1, 0x35, 0x3c, 0x83, 0x8f, 0xcc, 0x78, 0xc2, 0x68, 0xf4, 0x86, 0x4b, 0x25, 0xd2,
-	0x6c, 0x2b, 0xf9, 0x43, 0xd8, 0x9d, 0xd2, 0xab, 0x30, 0xd0, 0xfa, 0xc6, 0x61, 0x81, 0xf0, 0x29,
-	0x1c, 0x18, 0xd9, 0xd7, 0x4c, 0x55, 0x72, 0xe0, 0x3f, 0x72, 0x7e, 0x7d, 0x24, 0x0c, 0x24, 0xb2,
-	0x7c, 0x7b, 0x68, 0x93, 0x26, 0xc2, 0x9f, 0x01, 0x74, 0x1b, 0xaa, 0x77, 0xf4, 0xfa, 0x96, 0x2f,
-	0xb9, 0xd2, 0x5e, 0xbb, 0xc6, 0xab, 0x46, 0xf5, 0x3d, 0x9c, 0x8d, 0x7b, 0xe8, 0x1a, 0x8f, 0xc3,
-	0x40, 0xbf, 0xb6, 0xba, 0x96, 0x23, 0xfc, 0xae, 0xe5, 0x26, 0xe0, 0x74, 0x21, 0xe6, 0xb2, 0x9e,
-	0x64, 0x6d, 0x4e, 0x7a, 0x0c, 0x7b, 0x27, 0x17, 0x17, 0x92, 0xb5, 0x6d, 0x94, 0x0c, 0x3f, 0xaf,
-	0x5f, 0x42, 0xa5, 0xb7, 0x4d, 0x72, 0xf8, 0x3b, 0x80, 0x0f, 0xcd, 0x49, 0x63, 0xe3, 0x09, 0xdc,
-	0x29, 0x3f, 0x22, 0xe0, 0xdb, 0xc3, 0xc1, 0x78, 0xa0, 0x8f, 0x16, 0x8c, 0x98, 0x9a, 0x7b, 0x04,
-	0xbb, 0x33, 0xc9, 0xd2, 0x22, 0xee, 0xc1, 0xb8, 0xaf, 0x9b, 0x72, 0x42, 0x0a, 0xee, 0x3e, 0x85,
-	0xbb, 0x46, 0x1a, 0xd9, 0xba, 0x67, 0xbf, 0xea, 0x29, 0x0b, 0xa4, 0xea, 0xc8, 0x2f, 0x7f, 0x2c,
-	0x2e, 0x63, 0xa5, 0xa3, 0xac, 0x2e, 0xaf, 0x51, 0xfe, 0xa6, 0x67, 0x49, 0x44, 0x15, 0xfb, 0x23,
-	0xcd, 0x8a, 0xe2, 0x8f, 0xcd, 0x55, 0x50, 0x67, 0x59, 0xc2, 0xe3, 0xad, 0x02, 0x70, 0x9f, 0xc1,
-	0xde, 0x8b, 0x73, 0xc5, 0x45, 0xac, 0x43, 0xdf, 0x1b, 0x1f, 0xe8, 0xae, 0x42, 0xa0, 0x28, 0x98,
-	0xa8, 0x8b, 0x6f, 0xf8, 0xaa, 0xf5, 0xcf, 0xa4, 0xda, 0x8b, 0x0a, 0xfe, 0xba, 0xa8, 0xad, 0x9d,
-	0xb4, 0xfe, 0xb1, 0x93, 0xfd, 0xe3, 0x94, 0x51, 0xc5, 0xa2, 0x93, 0xb8, 0xb5, 0x14, 0x35, 0xc6,
-	0x1f, 0xea, 0xc9, 0x53, 0x1a, 0x67, 0xad, 0x7c, 0xc1, 0xad, 0xf9, 0xde, 0xf6, 0x73, 0x4d, 0xd0,
-	0xf5, 0xca, 0x03, 0x37, 0x2b, 0x0f, 0xfc, 0x5a, 0x79, 0xe0, 0xeb, 0xda, 0xeb, 0xdc, 0xac, 0xbd,
-	0xce, 0x8f, 0xb5, 0xd7, 0xf9, 0x1d, 0x00, 0x00, 0xff, 0xff, 0x09, 0x73, 0x6c, 0xdf, 0xb9, 0x05,
-	0x00, 0x00,
+var fileDescriptor_api_messages_dbf9971ce524e0d8 = []byte{
+	// 650 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0xcf, 0x6b, 0xd4, 0x40,
+	0x14, 0xde, 0x49, 0xb2, 0x6d, 0x77, 0x5a, 0x6a, 0x1b, 0x45, 0x43, 0x91, 0x34, 0x0c, 0x0a, 0x7b,
+	0x90, 0x15, 0x7a, 0xf1, 0xdc, 0x36, 0xb6, 0x06, 0x5c, 0x2b, 0x69, 0x8b, 0x07, 0xf1, 0x30, 0x34,
+	0xd3, 0xed, 0xc0, 0x6e, 0x26, 0x24, 0x53, 0x6c, 0x0e, 0x5e, 0x3c, 0x8b, 0x88, 0xff, 0x93, 0xd0,
+	0x63, 0x8f, 0x9e, 0x44, 0x76, 0xff, 0x11, 0xc9, 0x4b, 0x26, 0x3f, 0xba, 0xda, 0x5d, 0x61, 0x6f,
+	0xbb, 0xdf, 0xf7, 0xe6, 0x7b, 0xdf, 0x7b, 0xf3, 0xe6, 0x05, 0x9b, 0x34, 0xe2, 0xbd, 0x11, 0x4b,
+	0x12, 0x3a, 0x60, 0x49, 0x2f, 0x8a, 0x85, 0x14, 0xa6, 0x3e, 0x4a, 0x06, 0x5b, 0x1b, 0x67, 0x22,
+	0x66, 0x3d, 0x99, 0x46, 0x0a, 0x26, 0x5f, 0x11, 0x5e, 0xeb, 0x17, 0x91, 0xc7, 0x2c, 0x0c, 0x4c,
+	0x07, 0xaf, 0xf8, 0x34, 0x0c, 0xc4, 0xc8, 0x73, 0x2d, 0xe4, 0x68, 0x5d, 0x7d, 0xcf, 0xb8, 0xfe,
+	0xb5, 0xdd, 0xf2, 0x4b, 0xd4, 0x24, 0xd8, 0x78, 0xcb, 0x58, 0x6c, 0x69, 0x8e, 0xd6, 0x5d, 0xdd,
+	0x59, 0xef, 0x8d, 0x92, 0x41, 0xcf, 0x0b, 0xa3, 0x4b, 0x99, 0xa1, 0x3e, 0x70, 0xa6, 0x85, 0x8d,
+	0x3d, 0x11, 0xa4, 0x56, 0xdb, 0xd1, 0xba, 0x9d, 0x42, 0x01, 0x10, 0xd3, 0xc6, 0xcb, 0x3e, 0x8b,
+	0x86, 0xe9, 0x89, 0xb0, 0x96, 0x1c, 0x54, 0xca, 0x2b, 0x90, 0x7c, 0xaf, 0x19, 0x7a, 0x19, 0x70,
+	0xb9, 0x60, 0x43, 0xfa, 0x94, 0x21, 0x82, 0x3b, 0x45, 0x3e, 0xcf, 0xb5, 0x8c, 0x5a, 0x82, 0x0a,
+	0x26, 0x9f, 0xf0, 0x66, 0xbd, 0x49, 0x7d, 0x16, 0x70, 0xba, 0x20, 0x63, 0x04, 0x1b, 0x07, 0x7c,
+	0xc8, 0xc0, 0x58, 0x23, 0x26, 0x43, 0x7d, 0xe0, 0xc8, 0x29, 0xbe, 0xaf, 0xd2, 0xfb, 0x8c, 0x06,
+	0xaf, 0x78, 0x22, 0x45, 0x9c, 0xce, 0x25, 0xbf, 0x85, 0xdb, 0x7d, 0x7a, 0xe5, 0xb9, 0xa0, 0xaf,
+	0x1c, 0xe6, 0x10, 0x39, 0xc6, 0xab, 0x4a, 0xf6, 0x90, 0xc9, 0x52, 0x0e, 0xdd, 0x21, 0xe7, 0x54,
+	0x47, 0x3c, 0x37, 0xb1, 0x34, 0x47, 0xef, 0xea, 0x7e, 0x1d, 0x22, 0x5f, 0x10, 0x36, 0x6b, 0xaa,
+	0xff, 0xe9, 0xf5, 0x35, 0x1f, 0x71, 0x09, 0x5e, 0xdb, 0xca, 0x2b, 0x40, 0x55, 0x1d, 0xc6, 0x54,
+	0x1d, 0xc0, 0xf1, 0xd0, 0x73, 0x61, 0xda, 0x2a, 0x2e, 0x83, 0xc8, 0x9b, 0x86, 0x1b, 0x97, 0xd3,
+	0xa1, 0x18, 0x24, 0x55, 0x26, 0x6d, 0x3a, 0xd3, 0x63, 0xbc, 0x74, 0x74, 0x7e, 0x9e, 0xb0, 0xa6,
+	0x8d, 0x02, 0x23, 0x2f, 0xaa, 0x49, 0x28, 0xf5, 0xe6, 0xe9, 0x1c, 0xb9, 0xa8, 0x8f, 0x90, 0x3c,
+	0x49, 0x23, 0x1e, 0xce, 0x75, 0xd0, 0x7c, 0x8e, 0x97, 0x76, 0xcf, 0x24, 0x17, 0x21, 0x98, 0x5d,
+	0xdf, 0xd9, 0x84, 0xa8, 0x5c, 0x20, 0x27, 0x94, 0xc5, 0xfc, 0x1f, 0x79, 0x57, 0x4d, 0xcb, 0x7e,
+	0xcc, 0xa8, 0x64, 0x87, 0xb1, 0xb8, 0x8c, 0xcc, 0x27, 0xb8, 0x7d, 0x9a, 0xb0, 0x38, 0xb1, 0x90,
+	0xa3, 0x37, 0x93, 0x65, 0xb0, 0x9f, 0x93, 0x59, 0x67, 0x4e, 0xb8, 0x1c, 0x32, 0x48, 0xa6, 0x1e,
+	0x4a, 0x0e, 0x91, 0xcf, 0x08, 0x3f, 0x50, 0xca, 0xbb, 0x41, 0x00, 0xb2, 0xd9, 0xa9, 0xac, 0x65,
+	0xfb, 0x17, 0x54, 0xde, 0x7a, 0x07, 0x05, 0x96, 0x15, 0x99, 0x45, 0x4d, 0x5f, 0x3d, 0xe4, 0x05,
+	0xce, 0xec, 0xe2, 0xb5, 0x03, 0x11, 0x7f, 0xa4, 0x71, 0x30, 0x3d, 0x01, 0x0d, 0x86, 0xf8, 0xf8,
+	0x61, 0x7d, 0x3d, 0x80, 0x09, 0xb0, 0x37, 0xc3, 0xc5, 0x5d, 0x85, 0xbd, 0xc7, 0x8f, 0x94, 0xa6,
+	0xcb, 0x86, 0xac, 0xe8, 0xd8, 0x62, 0x4a, 0x23, 0x3f, 0x10, 0xbe, 0x57, 0xaa, 0x17, 0xf3, 0xf7,
+	0x14, 0x2f, 0x17, 0x3f, 0x8b, 0xdb, 0x58, 0x85, 0xa3, 0x39, 0xe6, 0x2b, 0xce, 0xdc, 0x56, 0x57,
+	0xa6, 0x41, 0x50, 0x07, 0x82, 0xea, 0xb7, 0xf5, 0x0c, 0xaf, 0x28, 0x69, 0x4b, 0x87, 0x98, 0x8d,
+	0x32, 0xa6, 0x20, 0xfc, 0x32, 0x22, 0x6b, 0xc1, 0xbe, 0xb8, 0x0c, 0x25, 0xbc, 0xa1, 0x72, 0xea,
+	0x01, 0xca, 0x96, 0xd9, 0x69, 0x14, 0x50, 0xc9, 0x6e, 0x3d, 0xa3, 0x12, 0x25, 0x57, 0x8d, 0x0f,
+	0x85, 0x6c, 0xee, 0x4d, 0xf4, 0xd7, 0xbd, 0xd9, 0x58, 0x91, 0xda, 0x3f, 0x56, 0x64, 0x27, 0x1f,
+	0xd2, 0xe0, 0x28, 0x6c, 0xec, 0xa8, 0x0a, 0x26, 0x1f, 0xaa, 0xcc, 0x7d, 0x1a, 0xa6, 0x8d, 0xaa,
+	0xd1, 0xcc, 0xaa, 0x67, 0x35, 0x71, 0xcf, 0xba, 0x1e, 0xdb, 0xe8, 0x66, 0x6c, 0xa3, 0xdf, 0x63,
+	0x1b, 0x7d, 0x9b, 0xd8, 0xad, 0x9b, 0x89, 0xdd, 0xfa, 0x39, 0xb1, 0x5b, 0x7f, 0x02, 0x00, 0x00,
+	0xff, 0xff, 0x72, 0x0b, 0x9f, 0x8f, 0x48, 0x07, 0x00, 0x00,
 }

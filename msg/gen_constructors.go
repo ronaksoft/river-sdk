@@ -3,6 +3,7 @@ package msg
 const (
 	C_MessagesSendMedia            int64 = 25498545
 	C_Peer                         int64 = 47470215
+	C_MessagesEditGroupTitle       int64 = 143417640
 	C_UpdateUserTyping             int64 = 178254060
 	C_Ack                          int64 = 447331921
 	C_ContactUser                  int64 = 460099170
@@ -53,8 +54,10 @@ const (
 	C_InitCompleteAuthInternal     int64 = 2360982492
 	C_UpdateEnvelope               int64 = 2373884514
 	C_AuthSentCode                 int64 = 2375498471
+	C_MessagesDeleteGroupUser      int64 = 2410057319
 	C_FileLocation                 int64 = 2432133155
 	C_MessagesEdit                 int64 = 2492658432
+	C_MessagesAddGroupUser         int64 = 2559309146
 	C_AuthLogin                    int64 = 2587620888
 	C_Error                        int64 = 2619118453
 	C_ProtoEncryptedPayload        int64 = 2668405547
@@ -63,10 +66,13 @@ const (
 	C_SystemPublicKeys             int64 = 2745130223
 	C_DHGroup                      int64 = 2751503049
 	C_InitDB                       int64 = 2793857427
+	C_UpdateChatMemberDeleted      int64 = 2798925845
 	C_EchoWithDelay                int64 = 2861516000
 	C_SystemDHGroups               int64 = 2890748083
+	C_MessagesCreateGroup          int64 = 2916726768
 	C_MessagesSent                 int64 = 2942502835
 	C_MessagesSend                 int64 = 3000244183
+	C_UpdateChatMemberAdded        int64 = 3034247697
 	C_UpdateNotifySettings         int64 = 3187524885
 	C_AuthRecalled                 int64 = 3249025459
 	C_MessagesDialogs              int64 = 3252610224
@@ -94,6 +100,7 @@ const (
 var ConstructorNames = map[int64]string{
 	25498545:   "MessagesSendMedia",
 	47470215:   "Peer",
+	143417640:  "MessagesEditGroupTitle",
 	178254060:  "UpdateUserTyping",
 	447331921:  "Ack",
 	460099170:  "ContactUser",
@@ -144,8 +151,10 @@ var ConstructorNames = map[int64]string{
 	2360982492: "InitCompleteAuthInternal",
 	2373884514: "UpdateEnvelope",
 	2375498471: "AuthSentCode",
+	2410057319: "MessagesDeleteGroupUser",
 	2432133155: "FileLocation",
 	2492658432: "MessagesEdit",
+	2559309146: "MessagesAddGroupUser",
 	2587620888: "AuthLogin",
 	2619118453: "Error",
 	2668405547: "ProtoEncryptedPayload",
@@ -154,10 +163,13 @@ var ConstructorNames = map[int64]string{
 	2745130223: "SystemPublicKeys",
 	2751503049: "DHGroup",
 	2793857427: "InitDB",
+	2798925845: "UpdateChatMemberDeleted",
 	2861516000: "EchoWithDelay",
 	2890748083: "SystemDHGroups",
+	2916726768: "MessagesCreateGroup",
 	2942502835: "MessagesSent",
 	3000244183: "MessagesSend",
+	3034247697: "UpdateChatMemberAdded",
 	3187524885: "UpdateNotifySettings",
 	3249025459: "AuthRecalled",
 	3252610224: "MessagesDialogs",

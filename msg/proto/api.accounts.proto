@@ -12,9 +12,9 @@ message AccountSetNotifySettings {
 
 // AccountGetNotifySettings
 // @Function
-// @Return: Bool
+// @Return: NotifySettings
 message AccountGetNotifySettings {
-    repeated InputPeer Peers = 1;
+    repeated InputPeer Peer = 1;
 }
 
 // AccountRegisterDevice

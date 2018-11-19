@@ -72,7 +72,7 @@ message ContactUser {
 
 // UserMessage
 message UserMessage {
-    required int64 ID = 1 [jstype = JS_STRING];
+    required int64 ID = 1;
     required int64 PeerID = 2 [jstype = JS_STRING];
     required int32 PeerType = 3;
     required int64 CreatedOn = 4;

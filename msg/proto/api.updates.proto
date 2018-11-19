@@ -103,3 +103,20 @@ message UpdateNotifySettings {
     required InputPeer NotifyPeer = 2;
     required PeerNotifySettings Settings = 3;
 }
+
+// UpdateChatMemberAdded
+message UpdateChatMemberAdded {
+    required int64 ChatID = 1;
+    required int64 UserID = 2;
+    required int64 InviterID = 3;
+    required int32 ChatVersion = 4;
+    required int64 Date = 5;
+}
+
+// UpdateChatMemberDeleted
+message UpdateChatMemberDeleted {
+    required int64 ChatID = 1;
+    required int64 UserID = 2;
+    required int32 ChatVersion = 3;
+    required int64 Date = 4;
+}
