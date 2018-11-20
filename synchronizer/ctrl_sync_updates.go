@@ -22,15 +22,16 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) (passToExter
 	}
 	dialog := repo.Ctx().Dialogs.GetDialog(x.Message.PeerID, x.Message.PeerType)
 	if dialog == nil {
-		unreadCount := int32(0)
-		if x.Message.SenderID != ctrl.UserID {
-			unreadCount = 1
-		}
+		// // this will be handled by repo
+		// unreadCount := int32(0)
+		// if x.Message.SenderID != ctrl.UserID {
+		// 	unreadCount = 1
+		// }
 		dialog = &msg.Dialog{
 			PeerID:       x.Message.PeerID,
 			PeerType:     x.Message.PeerType,
 			TopMessageID: x.Message.ID,
-			UnreadCount:  unreadCount,
+			UnreadCount:  0,
 			AccessHash:   x.AccessHash,
 		}
 		err := repo.Ctx().Dialogs.SaveDialog(dialog, x.Message.CreatedOn)
