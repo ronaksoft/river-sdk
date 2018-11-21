@@ -130,4 +130,5 @@ message InputFile {
 message Group {
     required int64 ID = 1 [jstype = JS_STRING];
     required string Title = 2;
+    required int64 CreatedOn = 3;
 }

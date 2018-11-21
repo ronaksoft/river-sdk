@@ -154,6 +154,12 @@ func ResultMessagesReadHistory(out *MessageEnvelope, res *MessagesReadHistory) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultUpdateGroupMemberAdded(out *MessageEnvelope, res *UpdateGroupMemberAdded) {
+	out.Constructor = C_UpdateGroupMemberAdded
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultContactsGet(out *MessageEnvelope, res *ContactsGet) {
 	out.Constructor = C_ContactsGet
 	pbytes.Put(out.Message)
@@ -394,12 +400,6 @@ func ResultInitDB(out *MessageEnvelope, res *InitDB) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
-func ResultUpdateChatMemberDeleted(out *MessageEnvelope, res *UpdateChatMemberDeleted) {
-	out.Constructor = C_UpdateChatMemberDeleted
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
 func ResultEchoWithDelay(out *MessageEnvelope, res *EchoWithDelay) {
 	out.Constructor = C_EchoWithDelay
 	pbytes.Put(out.Message)
@@ -432,12 +432,6 @@ func ResultMessagesSent(out *MessageEnvelope, res *MessagesSent) {
 }
 func ResultMessagesSend(out *MessageEnvelope, res *MessagesSend) {
 	out.Constructor = C_MessagesSend
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
-func ResultUpdateChatMemberAdded(out *MessageEnvelope, res *UpdateChatMemberAdded) {
-	out.Constructor = C_UpdateChatMemberAdded
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -498,6 +492,12 @@ func ResultAccountUpdateProfile(out *MessageEnvelope, res *AccountUpdateProfile)
 }
 func ResultFileSavePart(out *MessageEnvelope, res *FileSavePart) {
 	out.Constructor = C_FileSavePart
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultUpdateGroupMemberDeleted(out *MessageEnvelope, res *UpdateGroupMemberDeleted) {
+	out.Constructor = C_UpdateGroupMemberDeleted
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

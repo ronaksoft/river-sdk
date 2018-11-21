@@ -35,6 +35,7 @@ message UpdateContainer {
     required int64 MinUpdateID = 3;
     required int64 MaxUpdateID = 4;
     repeated User Users = 5;
+    repeated Group Groups = 6;
 }
 
 // ProtoMessage

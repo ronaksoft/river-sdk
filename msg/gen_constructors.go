@@ -26,6 +26,7 @@ const (
 	C_AuthRecall                   int64 = 1172029049
 	C_SystemGetPublicKeys          int64 = 1191522796
 	C_MessagesReadHistory          int64 = 1300826534
+	C_UpdateGroupMemberAdded       int64 = 1385521426
 	C_ContactsGet                  int64 = 1412732665
 	C_MessagesGetDialogs           int64 = 1429532372
 	C_UpdateGetState               int64 = 1437250230
@@ -66,14 +67,12 @@ const (
 	C_SystemPublicKeys             int64 = 2745130223
 	C_DHGroup                      int64 = 2751503049
 	C_InitDB                       int64 = 2793857427
-	C_UpdateChatMemberDeleted      int64 = 2798925845
 	C_EchoWithDelay                int64 = 2861516000
 	C_Group                        int64 = 2885774273
 	C_SystemDHGroups               int64 = 2890748083
 	C_MessagesCreateGroup          int64 = 2916726768
 	C_MessagesSent                 int64 = 2942502835
 	C_MessagesSend                 int64 = 3000244183
-	C_UpdateChatMemberAdded        int64 = 3034247697
 	C_UpdateNotifySettings         int64 = 3187524885
 	C_AuthRecalled                 int64 = 3249025459
 	C_MessagesDialogs              int64 = 3252610224
@@ -84,6 +83,7 @@ const (
 	C_PeerNotifySettings           int64 = 3475030132
 	C_AccountUpdateProfile         int64 = 3725499887
 	C_FileSavePart                 int64 = 3766876582
+	C_UpdateGroupMemberDeleted     int64 = 3841937255
 	C_InputUser                    int64 = 3865689926
 	C_ClientPendingMessageDelivery int64 = 3881219190
 	C_InputFile                    int64 = 3882180383
@@ -124,6 +124,7 @@ var ConstructorNames = map[int64]string{
 	1172029049: "AuthRecall",
 	1191522796: "SystemGetPublicKeys",
 	1300826534: "MessagesReadHistory",
+	1385521426: "UpdateGroupMemberAdded",
 	1412732665: "ContactsGet",
 	1429532372: "MessagesGetDialogs",
 	1437250230: "UpdateGetState",
@@ -164,14 +165,12 @@ var ConstructorNames = map[int64]string{
 	2745130223: "SystemPublicKeys",
 	2751503049: "DHGroup",
 	2793857427: "InitDB",
-	2798925845: "UpdateChatMemberDeleted",
 	2861516000: "EchoWithDelay",
 	2885774273: "Group",
 	2890748083: "SystemDHGroups",
 	2916726768: "MessagesCreateGroup",
 	2942502835: "MessagesSent",
 	3000244183: "MessagesSend",
-	3034247697: "UpdateChatMemberAdded",
 	3187524885: "UpdateNotifySettings",
 	3249025459: "AuthRecalled",
 	3252610224: "MessagesDialogs",
@@ -182,6 +181,7 @@ var ConstructorNames = map[int64]string{
 	3475030132: "PeerNotifySettings",
 	3725499887: "AccountUpdateProfile",
 	3766876582: "FileSavePart",
+	3841937255: "UpdateGroupMemberDeleted",
 	3865689926: "InputUser",
 	3881219190: "ClientPendingMessageDelivery",
 	3882180383: "InputFile",

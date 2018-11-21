@@ -24,7 +24,7 @@ message UpdateDifference {
     required int64 MinUpdateID = 3;
     repeated UpdateEnvelope Updates = 4;
     repeated User Users = 5;
-    //    repeated Chat Chats = 6;
+    repeated Group Groups = 6;
 }
 
 // UpdateState
@@ -104,8 +104,8 @@ message UpdateNotifySettings {
     required PeerNotifySettings Settings = 3;
 }
 
-// UpdateChatMemberAdded
-message UpdateChatMemberAdded {
+// UpdateGroupMemberAdded
+message UpdateGroupMemberAdded {
     required int64 ChatID = 1;
     required int64 UserID = 2;
     required int64 InviterID = 3;
@@ -113,8 +113,8 @@ message UpdateChatMemberAdded {
     required int64 Date = 5;
 }
 
-// UpdateChatMemberDeleted
-message UpdateChatMemberDeleted {
+// UpdateGroupMemberDeleted
+message UpdateGroupMemberDeleted {
     required int64 ChatID = 1;
     required int64 UserID = 2;
     required int32 ChatVersion = 3;
