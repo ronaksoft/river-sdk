@@ -1,8 +1,6 @@
 package repo
 
 import (
-	"time"
-
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
@@ -28,7 +26,6 @@ func (r *repoGroups) Save(g *msg.Group) (err error) {
 	isNew := ge.ID <= 0
 	ge.MapFrom(g)
 	if isNew {
-		ge.CreatedOn = time.Now().Unix()
 		return r.db.Create(ge).Error
 	} else {
 		return r.db.Table(ge.TableName()).Where("ID=?", g.ID).Update(ge).Error

@@ -1,6 +1,8 @@
 package dto
 
 import (
+	"time"
+
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
 
@@ -18,14 +20,14 @@ func (Groups) TableName() string {
 
 func (m *Groups) MapFrom(v *msg.Group) {
 	m.ID = v.ID
-	//m.CreatedOn = time.Now().Unix()
+	m.CreatedOn = time.Now().Unix()
 	//m.EditedOn = v.EditedOn
 	m.Title = v.Title
 }
 
 func (m *Groups) MapTo(v *msg.Group) {
 	v.ID = m.ID
-	//v.CreatedOn = m.CreatedOn
+	v.CreatedOn = m.CreatedOn
 	//v.EditedOn = m.EditedOn
 	v.Title = m.Title
 }
