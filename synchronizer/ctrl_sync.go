@@ -533,6 +533,15 @@ func (ctrl *SyncController) getAllDialogs(offset int32, limit int32) {
 						)
 					}
 				}
+				for _, group := range x.Groups {
+					err := repo.Ctx().Groups.Save(group)
+					if err != nil {
+						log.LOG_Info("SyncController::getAllDialogs() -> onSuccessCallback() -> Groups.Save() ",
+							zap.String("Error", err.Error()),
+							zap.String("Group", fmt.Sprintf("%v", group)),
+						)
+					}
+				}
 				if x.Count > offset+limit {
 					log.LOG_Info("SyncController::getAllDialogs() -> onSuccessCallback() retry to getAllDialogs()",
 						zap.Int32("x.Count", x.Count),
