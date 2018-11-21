@@ -125,7 +125,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		bufGroup := new(bytes.Buffer)
 		tableGroup := tablewriter.NewWriter(bufGroup)
 		tableGroup.SetHeader([]string{
-			"UserID", "Title",
+			"GroupID", "Title",
 		})
 		for _, x := range x.Groups {
 			tableGroup.Append([]string{
@@ -137,6 +137,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 
 		_Shell.Println(bufDialogs.String())
 		_Shell.Println(bufUsers.String())
+		_Shell.Println(bufGroup.String())
 	case msg.C_Dialog:
 		x := new(msg.Dialog)
 		x.Unmarshal(envelope.Message)

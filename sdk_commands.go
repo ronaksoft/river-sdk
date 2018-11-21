@@ -34,6 +34,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 
 	mUsers := domain.MInt64B{}
+	mGroups := domain.MInt64B{}
 	mMessages := domain.MInt64B{}
 	mPendingMesssage := domain.MInt64B{}
 	for _, d := range res.Dialogs {
@@ -53,8 +54,14 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	res.Messages = append(res.Messages, pendingMessages...)
 
 	for _, m := range res.Messages {
-		mUsers[m.SenderID] = true
+		if m.PeerType == int32(msg.PeerType_PeerUser) {
+			mUsers[m.SenderID] = true
+		}
+		if m.PeerType == int32(msg.PeerType_PeerChat) {
+			mGroups[m.PeerID] = true
+		}
 	}
+	res.Groups = repo.Ctx().Groups.GetManyGroups(mGroups.ToArray())
 	res.Users = repo.Ctx().Users.GetAnyUsers(mUsers.ToArray())
 	out.Constructor = msg.C_MessagesDialogs
 	out.Message, _ = res.Marshal()

@@ -10,7 +10,7 @@ import (
 
 type RepoGroups interface {
 	Save(g *msg.Group) (err error)
-	GetManyGroups(groupIDs []int64) ([]*msg.Group, error)
+	GetManyGroups(groupIDs []int64) []*msg.Group
 	SaveMany(groups []*msg.Group) error
 }
 
@@ -79,7 +79,7 @@ func (r *repoGroups) SaveMany(groups []*msg.Group) error {
 }
 
 // Get
-func (r *repoGroups) GetManyGroups(groupIDs []int64) ([]*msg.Group, error) {
+func (r *repoGroups) GetManyGroups(groupIDs []int64) []*msg.Group {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -91,7 +91,7 @@ func (r *repoGroups) GetManyGroups(groupIDs []int64) ([]*msg.Group, error) {
 		log.LOG_Debug("RepoGroups::GetManyGroups()-> fetch groups entity",
 			zap.String("Error", err.Error()),
 		)
-		return nil, err
+		return nil //, err
 	}
 
 	for _, v := range groups {
@@ -100,5 +100,5 @@ func (r *repoGroups) GetManyGroups(groupIDs []int64) ([]*msg.Group, error) {
 		pbGroup = append(pbGroup, tmp)
 	}
 
-	return pbGroup, nil
+	return pbGroup
 }
