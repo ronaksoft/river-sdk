@@ -384,10 +384,12 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 		)
 
 		// No need to wait here till DB gets synced cuz UI will have required data
-		// Save Groups
-		go repo.Ctx().Groups.SaveMany(x.Groups)
-		// Save Users
-		go repo.Ctx().Users.SaveMany(x.Users)
+		go func() {
+			// Save Groups
+			repo.Ctx().Groups.SaveMany(x.Groups)
+			// Save Users
+			repo.Ctx().Users.SaveMany(x.Users)
+		}()
 
 		// take out updateMessageID
 		for _, update := range x.Updates {

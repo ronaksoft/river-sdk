@@ -721,7 +721,7 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 	groupIDs := domain.MInt64B{}
 	updateIDs := domain.MInt64B{}
 	users := make([]*msg.User, 0)
-	groups := make([]*msg.Group)
+	groups := make([]*msg.Group, 0)
 	updates := make([]*msg.UpdateEnvelope, 0)
 
 	currentUpdateID := r.syncCtrl.UpdateID()
@@ -757,7 +757,7 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 		for _, g := range val.Groups {
 			if _, ok := groupIDs[g.ID]; !ok {
 				groupIDs[g.ID] = true
-				groups = append(groups, u)
+				groups = append(groups, g)
 			}
 		}
 
@@ -778,10 +778,12 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 	}
 
 	// No need to wait here till DB gets synced cuz UI will have required data
-	// Save Groups
-	go repo.Ctx().Groups.SaveMany(groups)
-	// Save Users
-	go repo.Ctx().Users.SaveMany(users)
+	go func() {
+		// Save Groups
+		repo.Ctx().Groups.SaveMany(groups)
+		// Save Users
+		repo.Ctx().Users.SaveMany(users)
+	}()
 
 	// sort updates
 	sort.Slice(updates, func(i, j int) bool {
