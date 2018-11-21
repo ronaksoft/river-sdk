@@ -407,6 +407,12 @@ var (
 			return m
 		},
 	}
+	PoolGroup = sync.Pool{
+		New: func() interface{} {
+			m := new(Group)
+			return m
+		},
+	}
 	PoolSystemDHGroups = sync.Pool{
 		New: func() interface{} {
 			m := new(SystemDHGroups)

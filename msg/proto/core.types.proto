@@ -125,3 +125,9 @@ message InputFile {
     required int32 TotalParts = 2;
     required string FileName = 3;
 }
+
+// Group
+message Group {
+    required int64 ID = 1 [jstype = JS_STRING];
+    required string Title = 2;
+}

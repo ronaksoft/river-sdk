@@ -120,6 +120,7 @@ message MessagesDialogs {
     repeated UserMessage Messages = 3;
     required int32 Count = 4;
     required int64 UpdateID = 5;
+    repeated Group Groups = 6;
 }
 
 // MessagesSent

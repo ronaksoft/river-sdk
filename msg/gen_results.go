@@ -406,6 +406,12 @@ func ResultEchoWithDelay(out *MessageEnvelope, res *EchoWithDelay) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultGroup(out *MessageEnvelope, res *Group) {
+	out.Constructor = C_Group
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultSystemDHGroups(out *MessageEnvelope, res *SystemDHGroups) {
 	out.Constructor = C_SystemDHGroups
 	pbytes.Put(out.Message)

@@ -68,6 +68,7 @@ const (
 	C_InitDB                       int64 = 2793857427
 	C_UpdateChatMemberDeleted      int64 = 2798925845
 	C_EchoWithDelay                int64 = 2861516000
+	C_Group                        int64 = 2885774273
 	C_SystemDHGroups               int64 = 2890748083
 	C_MessagesCreateGroup          int64 = 2916726768
 	C_MessagesSent                 int64 = 2942502835
@@ -165,6 +166,7 @@ var ConstructorNames = map[int64]string{
 	2793857427: "InitDB",
 	2798925845: "UpdateChatMemberDeleted",
 	2861516000: "EchoWithDelay",
+	2885774273: "Group",
 	2890748083: "SystemDHGroups",
 	2916726768: "MessagesCreateGroup",
 	2942502835: "MessagesSent",
