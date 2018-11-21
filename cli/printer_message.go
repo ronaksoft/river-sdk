@@ -121,6 +121,20 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			})
 		}
 		tableUsers.Render()
+		// group
+		bufGroup := new(bytes.Buffer)
+		tableGroup := tablewriter.NewWriter(bufGroup)
+		tableGroup.SetHeader([]string{
+			"UserID", "Title",
+		})
+		for _, x := range x.Groups {
+			tableGroup.Append([]string{
+				fmt.Sprintf("%d", x.ID),
+				fmt.Sprintf("%s", x.Title),
+			})
+		}
+		tableGroup.Render()
+
 		_Shell.Println(bufDialogs.String())
 		_Shell.Println(bufUsers.String())
 	case msg.C_Dialog:

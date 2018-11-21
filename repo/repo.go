@@ -28,6 +28,7 @@ type Context struct {
 	System          RepoSystem
 	Users           RepoUsers
 	UISettings      RepoUISettings
+	Groups          RepoGroups
 }
 
 type repository struct {
@@ -58,20 +59,10 @@ func InitRepo(dialect, dbPath string) error {
 				System:          &repoSystem{repository: r},
 				Users:           &repoUsers{repository: r},
 				UISettings:      &repoUISettings{repository: r},
+				Groups:          &repoGroups{repository: r},
 			}
 		}
 	}
-
-	// singletone.Do(func() {
-	// 	repoLastError = repoSetDB(dbPath, dbID)
-	// 	ctx = &Context{
-	// 		Dialogs:         &repoDialogs{repository: r},
-	// 		Messages:        &repoMessages{repository: r},
-	// 		PendingMessages: &repoPendingMessages{repository: r},
-	// 		System:          &repoSystem{repository: r},
-	// 		Users:           &repoUsers{repository: r},
-	// 	}
-	// })
 
 	return repoLastError
 }
@@ -127,6 +118,8 @@ func (c *Context) ReinitiateDatabase() error {
 		dto.PendingMessages{},
 		dto.System{},
 		dto.Users{},
+		dto.Groups{},
+		dto.GroupMembers{},
 		//dto.UISettings{}, //do not remove UISettings on logout
 	).Error
 
@@ -153,6 +146,8 @@ func (r *repository) initDB() error {
 		dto.System{},
 		dto.Users{},
 		dto.UISettings{},
+		dto.Groups{},
+		dto.GroupMembers{},
 	).Error
 
 	return repoLastError

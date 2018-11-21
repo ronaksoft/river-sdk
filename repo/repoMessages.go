@@ -259,13 +259,19 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 	dtoResult = append(dtoResult, dtoMsgs...)
 
 	userIDs := domain.MInt64B{}
+	groupIDs := domain.MInt64B{}
 	for _, v := range dtoResult {
 		tmp := new(msg.UserMessage)
 		v.MapTo(tmp)
 		messages = append(messages, tmp)
-		userIDs[v.SenderID] = true
-		if v.ID < 0 {
-			userIDs[v.PeerID] = true
+		if v.PeerType == int32(msg.PeerType_PeerUser) {
+			userIDs[v.SenderID] = true
+			if v.ID < 0 {
+				userIDs[v.PeerID] = true
+			}
+		}
+		if v.PeerType == int32(msg.PeerType_PeerChat) {
+			groupIDs[v.PeerID] = true
 		}
 	}
 
@@ -287,6 +293,21 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 		pbUsers = append(pbUsers, tmp)
 
 	}
+
+	// Get groups <rewrite it here to remove coupling>
+	groups := make([]dto.Groups, 0, len(groupIDs))
+	err = r.db.Where("ID in (?)", groupIDs.ToArray()).Find(&groups).Error
+	if err != nil {
+		log.LOG_Debug("RepoGroups::GetManyGroups()-> fetch groups entity",
+			zap.String("Error", err.Error()),
+		)
+	}
+	for _, v := range groups {
+		tmp := new(msg.User)
+		v.MapToUser(tmp)
+		pbUsers = append(pbUsers, tmp)
+	}
+
 	return messages, pbUsers
 }
 

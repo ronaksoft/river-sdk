@@ -1,5 +1,9 @@
 package dto
 
+import (
+	"git.ronaksoftware.com/ronak/riversdk/msg"
+)
+
 type Groups struct {
 	dto
 	ID        int64  `gorm:"primary_key;column:ID;auto_increment:false" json:"ID"`
@@ -12,16 +16,22 @@ func (Groups) TableName() string {
 	return "groups"
 }
 
-// func (m *Groups) Map(v *msg.XXXXXXXXX) {
-// 	m.ID = v.ID
-// 	m.CreatedOn = v.CreatedOn
-// 	m.EditedOn = v.EditedOn
-// 	m.Title = v.Title
-// }
+func (m *Groups) MapFrom(v *msg.Group) {
+	m.ID = v.ID
+	//m.CreatedOn = time.Now().Unix()
+	//m.EditedOn = v.EditedOn
+	m.Title = v.Title
+}
 
-// func (m *Groups) MapTo(v *msg.XXXXXXXXX) {
-// 	v.ID = m.ID
-// 	v.CreatedOn = m.CreatedOn
-// 	v.EditedOn = m.EditedOn
-// 	v.Title = m.Title
-// }
+func (m *Groups) MapTo(v *msg.Group) {
+	v.ID = m.ID
+	//v.CreatedOn = m.CreatedOn
+	//v.EditedOn = m.EditedOn
+	v.Title = m.Title
+}
+
+// TODO : cahnge this properly this is sux :/
+func (m *Groups) MapToUser(v *msg.User) {
+	v.ID = m.ID
+	v.FirstName = m.Title
+}
