@@ -29,9 +29,3 @@ func (m *Groups) MapTo(v *msg.Group) {
 	//v.EditedOn = m.EditedOn
 	v.Title = m.Title
 }
-
-// TODO : cahnge this properly this is sux :/
-func (m *Groups) MapToUser(v *msg.User) {
-	v.ID = m.ID
-	v.FirstName = m.Title
-}

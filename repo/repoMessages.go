@@ -293,21 +293,6 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 		pbUsers = append(pbUsers, tmp)
 
 	}
-
-	// Get groups <rewrite it here to remove coupling>
-	groups := make([]dto.Groups, 0, len(groupIDs))
-	err = r.db.Where("ID in (?)", groupIDs.ToArray()).Find(&groups).Error
-	if err != nil {
-		log.LOG_Debug("RepoGroups::GetManyGroups()-> fetch groups entity",
-			zap.String("Error", err.Error()),
-		)
-	}
-	for _, v := range groups {
-		tmp := new(msg.User)
-		v.MapToUser(tmp)
-		pbUsers = append(pbUsers, tmp)
-	}
-
 	return messages, pbUsers
 }
 
