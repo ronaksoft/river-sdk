@@ -373,6 +373,7 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 		updContainer := new(msg.UpdateContainer)
 		updContainer.Updates = make([]*msg.UpdateEnvelope, 0)
 		updContainer.Users = x.Users
+		updContainer.Groups = x.Groups
 		updContainer.MaxUpdateID = x.MaxUpdateID
 		updContainer.MinUpdateID = x.MinUpdateID
 
@@ -381,6 +382,12 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 			zap.Int64("MaxUpdateID", x.MaxUpdateID),
 			zap.Int64("MinUpdateID", x.MinUpdateID),
 		)
+
+		// No need to wait here till DB gets synced cuz UI will have required data
+		// Save Groups
+		go repo.Ctx().Groups.SaveMany(x.Groups)
+		// Save Users
+		go repo.Ctx().Users.SaveMany(x.Users)
 
 		// take out updateMessageID
 		for _, update := range x.Updates {
@@ -412,7 +419,6 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 			}
 		}
 		updContainer.Length = int32(len(updContainer.Updates))
-
 		// wrapped to UpdateContainer
 		buff, _ := updContainer.Marshal()
 		cmd.GetUIExecuter().Exec(func() {
@@ -623,6 +629,8 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 	udpContainer.Updates = make([]*msg.UpdateEnvelope, 0)
 	udpContainer.MaxUpdateID = u.MaxUpdateID
 	udpContainer.MinUpdateID = u.MinUpdateID
+	udpContainer.Users = u.Users
+	udpContainer.Groups = u.Groups
 
 	// take out updateMessageID
 	for _, update := range u.Updates {

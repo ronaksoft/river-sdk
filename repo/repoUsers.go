@@ -21,6 +21,7 @@ type RepoUsers interface {
 	UpdateAccessHash(accessHash int64, peerID int64, peerType int32) error
 	GetUser(userID int64) *msg.User
 	GetAnyUsers(userIDs []int64) []*msg.User
+	SaveMany(users []*msg.User) error
 }
 
 type repoUsers struct {
@@ -292,4 +293,49 @@ func (r *repoUsers) GetAnyUsers(userIDs []int64) []*msg.User {
 	}
 
 	return pbUsers
+}
+
+func (r *repoUsers) SaveMany(users []*msg.User) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	userIDs := domain.MInt64B{}
+	for _, v := range users {
+		userIDs[v.ID] = true
+	}
+	mapDTOUsers := make(map[int64]*dto.Users)
+	dtoUsers := make([]dto.Users, 0)
+	err := r.db.Where("ID in (?)", userIDs.ToArray()).Find(&dtoUsers).Error
+	if err != nil {
+		log.LOG_Debug("RepoUsers::SaveMany()-> fetch groups entity",
+			zap.String("Error", err.Error()),
+		)
+		return err
+	}
+	count := len(dtoUsers)
+	for i := 0; i < count; i++ {
+		mapDTOUsers[dtoUsers[i].ID] = &dtoUsers[i]
+	}
+
+	for _, v := range users {
+		if dtoEntity, ok := mapDTOUsers[v.ID]; ok {
+			dtoEntity.MapFromUser(v)
+			err = r.db.Table(dtoEntity.TableName()).Where("ID=?", dtoEntity.ID).Update(dtoEntity).Error
+		} else {
+			dtoEntity := new(dto.Users)
+			dtoEntity.MapFromUser(v)
+			err = r.db.Create(dtoEntity).Error
+		}
+		if err != nil {
+			log.LOG_Debug("RepoUsers::SaveMany()-> save group entity",
+				zap.Int64("ID", v.ID),
+				zap.String("FirstName", v.FirstName),
+				zap.String("Lastname", v.LastName),
+				zap.String("UserName", v.Username),
+				zap.String("Error", err.Error()),
+			)
+			break
+		}
+	}
+	return err
 }

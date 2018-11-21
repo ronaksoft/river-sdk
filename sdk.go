@@ -718,8 +718,10 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 
 	// remove duplicated users and updates and pass it to sync controller
 	userIDs := domain.MInt64B{}
+	groupIDs := domain.MInt64B{}
 	updateIDs := domain.MInt64B{}
 	users := make([]*msg.User, 0)
+	groups := make([]*msg.Group)
 	updates := make([]*msg.UpdateEnvelope, 0)
 
 	currentUpdateID := r.syncCtrl.UpdateID()
@@ -744,10 +746,18 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 				updates = append(updates, u)
 			}
 		}
+		// get distinct users
 		for _, u := range val.Users {
 			if _, ok := userIDs[u.ID]; !ok {
 				userIDs[u.ID] = true
 				users = append(users, u)
+			}
+		}
+		// get distinct groups
+		for _, g := range val.Groups {
+			if _, ok := groupIDs[g.ID]; !ok {
+				groupIDs[g.ID] = true
+				groups = append(groups, u)
 			}
 		}
 
@@ -767,6 +777,12 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 		return
 	}
 
+	// No need to wait here till DB gets synced cuz UI will have required data
+	// Save Groups
+	go repo.Ctx().Groups.SaveMany(groups)
+	// Save Users
+	go repo.Ctx().Users.SaveMany(users)
+
 	// sort updates
 	sort.Slice(updates, func(i, j int) bool {
 		return updates[i].UpdateID < updates[j].UpdateID
@@ -774,6 +790,7 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 
 	updateContainer.Updates = updates
 	updateContainer.Users = users
+	updateContainer.Groups = groups
 	updateContainer.Length = int32(len(updates))
 	updateContainer.MinUpdateID = minID
 	updateContainer.MaxUpdateID = maxID
