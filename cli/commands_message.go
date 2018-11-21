@@ -17,11 +17,10 @@ var MessageSend = &ishell.Cmd{
 		req := msg.MessagesSend{}
 		req.RandomID = ronak.RandomInt64(0)
 		req.Peer = &msg.InputPeer{}
-		req.Peer.Type = msg.PeerType_PeerUser
+		req.Peer.Type = fnGetPeerType(c)
 		req.Peer.ID = fnGetPeerID(c)
 		req.Peer.AccessHash = fnGetAccessHash(c)
 		req.Body = fnGetBody(c)
-
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSend, reqBytes, reqDelegate, false); err != nil {

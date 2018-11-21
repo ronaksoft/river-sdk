@@ -560,6 +560,10 @@ func (ctrl *NetworkController) Disconnect() {
 // If authID and authKey are defined then sending messages will be encrypted before
 // writing on the wire.
 func (ctrl *NetworkController) SetAuthorization(authID int64, authKey []byte) {
+	log.LOG_Info("NetworkController::SetAuthorization()",
+		zap.Int64("AuthID", authID),
+		zap.Binary("authKey", authKey),
+	)
 	ctrl.authKey = make([]byte, len(authKey))
 	ctrl.authID = authID
 	copy(ctrl.authKey, authKey)

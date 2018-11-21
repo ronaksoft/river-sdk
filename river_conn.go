@@ -1,6 +1,8 @@
 package riversdk
 
 import (
+	"encoding/json"
+
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
@@ -78,7 +80,26 @@ func (r *River) clearSystemConfig() {
 	r.ConnInfo.Phone = ""
 	r.ConnInfo.UserID = 0
 	r.ConnInfo.Username = ""
+	r.ConnInfo.Save()
 	r.DeviceToken = new(msg.AccountRegisterDevice)
+	r.saveDeviceToken()
+}
+
+func (r *River) saveDeviceToken() {
+	val, err := json.Marshal(r.DeviceToken)
+	if err != nil {
+		log.LOG_Debug("River::saveDeviceToken()-> Json Marshal()",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
+	err = repo.Ctx().System.SaveString(domain.CN_DEVICE_TOKEN, string(val))
+	if err != nil {
+		log.LOG_Debug("River::saveDeviceToken()-> SaveString()",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
 }
 
 // Save

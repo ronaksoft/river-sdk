@@ -59,6 +59,34 @@ func fnGetPeerID(c *ishell.Context) int64 {
 	return peerID
 }
 
+func fnGetPeerType(c *ishell.Context) msg.PeerType {
+	var peerType msg.PeerType
+
+	for {
+		c.Print("Peer Type: ")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
+		if err == nil {
+			switch id {
+			case 0:
+				peerType = msg.PeerType_PeerSelf
+			case 1:
+				peerType = msg.PeerType_PeerUser
+			case 2:
+				peerType = msg.PeerType_PeerChat
+			case 3:
+				peerType = msg.PeerType_PeerChannel
+			default:
+				c.Println("Invalid peerType (0:self,1:user,2:group,3:channel)")
+			}
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+
+	return peerType
+}
+
 func fnGetAccessHash(c *ishell.Context) uint64 {
 	var accessHash uint64
 	for {

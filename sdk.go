@@ -243,7 +243,7 @@ func (r *River) callAuthRecall_RegisterDevice() {
 
 func (r *River) registerCommandHandlers() {
 	r.localCommands = make(map[int64]domain.LocalMessageHandler)
-	r.localCommands[msg.C_MessagesGetDialogs] = r.messagesGetDialogs
+	// r.localCommands[msg.C_MessagesGetDialogs] = r.messagesGetDialogs
 	r.localCommands[msg.C_MessagesGetDialog] = r.messagesGetDialog
 	r.localCommands[msg.C_MessagesGetHistory] = r.messageGetHistory
 	r.localCommands[msg.C_MessagesSend] = r.messagesSend
