@@ -109,6 +109,13 @@ func (ctrl *SyncController) messagesDialogs(e *msg.MessageEnvelope) {
 	for _, group := range x.Groups {
 		repo.Ctx().Groups.Save(group)
 	}
+
+	log.LOG_Debug("SyncController::messagesDialogs()",
+		zap.Int("DialogsCount", len(x.Dialogs)),
+		zap.Int("GroupsCount", len(x.Groups)),
+		zap.Int("UsersCount", len(x.Users)),
+		zap.Int("MessagesCount", len(x.Messages)),
+	)
 }
 
 // Check pending messages and notify UI
