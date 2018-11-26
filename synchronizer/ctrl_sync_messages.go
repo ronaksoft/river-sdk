@@ -258,5 +258,5 @@ func (ctrl *SyncController) groupFull(e *msg.MessageEnvelope) {
 	}
 
 	// Update NotifySettings
-	repo.Ctx().Dialogs.UpdatePeerNotifySettings(u.Group.ID, int32(msg.PeerType_PeerChat), u.NotifySettings)
+	repo.Ctx().Dialogs.UpdatePeerNotifySettings(u.Group.ID, int32(msg.PeerType_PeerGroup), u.NotifySettings)
 }

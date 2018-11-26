@@ -3,10 +3,10 @@ package msg
 const (
 	C_MessagesSendMedia            int64 = 25498545
 	C_Peer                         int64 = 47470215
-	C_MessagesGetFullGroup         int64 = 101548158
-	C_MessagesEditGroupTitle       int64 = 143417640
 	C_UpdateUserTyping             int64 = 178254060
 	C_GroupFull                    int64 = 205850814
+	C_UpdateGroupTitleUpdated      int64 = 368656849
+	C_GroupsAddUser                int64 = 394654713
 	C_Ack                          int64 = 447331921
 	C_ContactUser                  int64 = 460099170
 	C_AccountGetNotifySettings     int64 = 477008681
@@ -27,6 +27,7 @@ const (
 	C_AuthAuthorization            int64 = 1140037965
 	C_AuthRecall                   int64 = 1172029049
 	C_SystemGetPublicKeys          int64 = 1191522796
+	C_GroupsCreate                 int64 = 1271969037
 	C_MessagesReadHistory          int64 = 1300826534
 	C_UpdateGroupMemberAdded       int64 = 1385521426
 	C_ContactsGet                  int64 = 1412732665
@@ -57,10 +58,9 @@ const (
 	C_InitCompleteAuthInternal     int64 = 2360982492
 	C_UpdateEnvelope               int64 = 2373884514
 	C_AuthSentCode                 int64 = 2375498471
-	C_MessagesDeleteGroupUser      int64 = 2410057319
 	C_FileLocation                 int64 = 2432133155
 	C_MessagesEdit                 int64 = 2492658432
-	C_MessagesAddGroupUser         int64 = 2559309146
+	C_GroupsEditTitle              int64 = 2582813461
 	C_AuthLogin                    int64 = 2587620888
 	C_Error                        int64 = 2619118453
 	C_ProtoEncryptedPayload        int64 = 2668405547
@@ -72,9 +72,10 @@ const (
 	C_EchoWithDelay                int64 = 2861516000
 	C_Group                        int64 = 2885774273
 	C_SystemDHGroups               int64 = 2890748083
-	C_MessagesCreateGroup          int64 = 2916726768
 	C_MessagesSent                 int64 = 2942502835
+	C_GroupsGetFull                int64 = 2986704909
 	C_MessagesSend                 int64 = 3000244183
+	C_GroupsDeleteUser             int64 = 3172322223
 	C_UpdateNotifySettings         int64 = 3187524885
 	C_AuthRecalled                 int64 = 3249025459
 	C_MessagesDialogs              int64 = 3252610224
@@ -104,10 +105,10 @@ const (
 var ConstructorNames = map[int64]string{
 	25498545:   "MessagesSendMedia",
 	47470215:   "Peer",
-	101548158:  "MessagesGetFullGroup",
-	143417640:  "MessagesEditGroupTitle",
 	178254060:  "UpdateUserTyping",
 	205850814:  "GroupFull",
+	368656849:  "UpdateGroupTitleUpdated",
+	394654713:  "GroupsAddUser",
 	447331921:  "Ack",
 	460099170:  "ContactUser",
 	477008681:  "AccountGetNotifySettings",
@@ -128,6 +129,7 @@ var ConstructorNames = map[int64]string{
 	1140037965: "AuthAuthorization",
 	1172029049: "AuthRecall",
 	1191522796: "SystemGetPublicKeys",
+	1271969037: "GroupsCreate",
 	1300826534: "MessagesReadHistory",
 	1385521426: "UpdateGroupMemberAdded",
 	1412732665: "ContactsGet",
@@ -158,10 +160,9 @@ var ConstructorNames = map[int64]string{
 	2360982492: "InitCompleteAuthInternal",
 	2373884514: "UpdateEnvelope",
 	2375498471: "AuthSentCode",
-	2410057319: "MessagesDeleteGroupUser",
 	2432133155: "FileLocation",
 	2492658432: "MessagesEdit",
-	2559309146: "MessagesAddGroupUser",
+	2582813461: "GroupsEditTitle",
 	2587620888: "AuthLogin",
 	2619118453: "Error",
 	2668405547: "ProtoEncryptedPayload",
@@ -173,9 +174,10 @@ var ConstructorNames = map[int64]string{
 	2861516000: "EchoWithDelay",
 	2885774273: "Group",
 	2890748083: "SystemDHGroups",
-	2916726768: "MessagesCreateGroup",
 	2942502835: "MessagesSent",
+	2986704909: "GroupsGetFull",
 	3000244183: "MessagesSend",
+	3172322223: "GroupsDeleteUser",
 	3187524885: "UpdateNotifySettings",
 	3249025459: "AuthRecalled",
 	3252610224: "MessagesDialogs",

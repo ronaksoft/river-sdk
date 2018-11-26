@@ -52,7 +52,7 @@ func TestAddGroupMember(t *testing.T) {
 
 	for i := 1; i < 11; i++ {
 		x := new(msg.UpdateGroupMemberAdded)
-		x.ChatID = int64(i)
+		x.GroupID = int64(i)
 		x.ChatVersion = int32(i)
 		x.Date = time.Now().Unix()
 		x.InviterID = int64(i)
@@ -82,7 +82,7 @@ func TestDeleteGroupMember(t *testing.T) {
 	//defer os.Remove("river.db")
 
 	x := new(msg.UpdateGroupMemberAdded)
-	x.ChatID = 1
+	x.GroupID = 1
 	x.ChatVersion = 2
 	x.Date = time.Now().Unix()
 	x.InviterID = 3

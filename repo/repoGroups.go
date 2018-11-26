@@ -112,7 +112,7 @@ func (r *repoGroups) AddGroupMember(m *msg.UpdateGroupMemberAdded) error {
 	defer r.mx.Unlock()
 
 	dtoGP := new(dto.GroupParticipants)
-	err := r.db.Where("GroupID = ? AND UserID = ?", m.ChatID, m.UserID).First(dtoGP).Error
+	err := r.db.Where("GroupID = ? AND UserID = ?", m.GroupID, m.UserID).First(dtoGP).Error
 	// if record does not exist, not found error returns
 	if err != nil {
 		dtoGP.MapFromUpdateGroupMemberAdded(m)

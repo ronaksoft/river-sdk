@@ -24,7 +24,7 @@ func (m *GroupParticipants) MapFrom(groupID int64, v *msg.GroupParticipant) {
 }
 
 func (m *GroupParticipants) MapFromUpdateGroupMemberAdded(v *msg.UpdateGroupMemberAdded) {
-	m.GroupID = v.ChatID
+	m.GroupID = v.GroupID
 	m.UserID = v.UserID
 	m.InviterID = v.InviterID
 	m.Date = v.Date

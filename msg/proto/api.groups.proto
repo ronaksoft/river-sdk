@@ -1,0 +1,44 @@
+syntax = "proto2";
+package msg;
+import "core.types.proto";
+
+
+// GroupsCreate
+// @Function
+// @Returns: Bool
+message GroupsCreate {
+    repeated InputUser Users = 1;
+    required string Title = 2;
+}
+
+// GroupsAddUser
+// @Function
+// @Returns: Bool
+message GroupsAddUser {
+    required int64 GroupID = 1;
+    required InputUser User = 2;
+    required int32 ForwardLimit = 3;
+}
+
+// GroupsEditTitle
+// @Function
+// @Returns: Bool
+message GroupsEditTitle {
+    required int64 GroupID = 1;
+    required string Title = 2;
+}
+
+// GroupsDeleteUser
+// @Function
+// @Returns: Bool
+message GroupsDeleteUser {
+    required int64 GroupID = 1;
+    required InputUser User = 2;
+}
+
+// GroupsGetFull
+// @Function
+// @Returns: GroupFull
+message GroupsGetFull {
+    required int64 GroupID = 1;
+}

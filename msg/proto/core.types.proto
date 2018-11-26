@@ -40,8 +40,9 @@ message InputPeer {
 enum PeerType {
     PeerSelf = 0;
     PeerUser = 1;
-    PeerChat = 2;
-    PeerChannel = 3;
+    PeerGroup = 2;
+    PeerSuperGroup = 3;
+    PeerChannel = 4;
 }
 
 // InputPeer

@@ -12,12 +12,12 @@ var Group = &ishell.Cmd{
 var Create = &ishell.Cmd{
 	Name: "Create",
 	Func: func(c *ishell.Context) {
-		req := msg.MessagesCreateGroup{}
+		req := msg.GroupsCreate{}
 		req.Title = fnGetTitle(c)
 		req.Users = fnGetInputUser(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesCreateGroup, reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsCreate, reqBytes, reqDelegate, false); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -28,7 +28,7 @@ var Create = &ishell.Cmd{
 var AddGroupUser = &ishell.Cmd{
 	Name: "AddGroupUser",
 	Func: func(c *ishell.Context) {
-		req := msg.MessagesAddGroupUser{}
+		req := msg.GroupsAddUser{}
 		req.User = &msg.InputUser{}
 		req.GroupID = fnGetGroupID(c)
 		req.User.UserID = fnGetPeerID(c)
@@ -36,7 +36,7 @@ var AddGroupUser = &ishell.Cmd{
 		req.ForwardLimit = fnGetForwardLimit(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesAddGroupUser, reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsAddUser, reqBytes, reqDelegate, false); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -47,14 +47,14 @@ var AddGroupUser = &ishell.Cmd{
 var DeleteGroupUser = &ishell.Cmd{
 	Name: "DeleteGroupUser",
 	Func: func(c *ishell.Context) {
-		req := msg.MessagesDeleteGroupUser{}
+		req := msg.GroupsDeleteUser{}
 		req.User = &msg.InputUser{}
 		req.GroupID = fnGetGroupID(c)
 		req.User.UserID = fnGetPeerID(c)
 		req.User.AccessHash = fnGetAccessHash(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesDeleteGroupUser, reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsDeleteUser, reqBytes, reqDelegate, false); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -65,12 +65,12 @@ var DeleteGroupUser = &ishell.Cmd{
 var EditGroupTitle = &ishell.Cmd{
 	Name: "EditGroupTitle",
 	Func: func(c *ishell.Context) {
-		req := msg.MessagesEditGroupTitle{}
+		req := msg.GroupsEditTitle{}
 		req.GroupID = fnGetGroupID(c)
 		req.Title = fnGetTitle(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesEditGroupTitle, reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsEditTitle, reqBytes, reqDelegate, false); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID

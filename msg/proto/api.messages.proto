@@ -80,45 +80,6 @@ message MessagesSetTyping {
     required TypingAction Action = 2;
 }
 
-// MessagesCreateGroup
-// @Function
-// @Returns: Bool
-message MessagesCreateGroup {
-    repeated InputUser Users = 1;
-    required string Title = 2;
-}
-
-// MessagesAddGroupUser
-// @Function
-// @Returns: Bool
-message MessagesAddGroupUser {
-    required int64 GroupID = 1;
-    required InputUser User = 2;
-    required int32 ForwardLimit = 3;
-}
-
-// MessagesEditGroupTitle
-// @Function
-// @Returns: Bool
-message MessagesEditGroupTitle {
-    required int64 GroupID = 1;
-    required string Title = 2;
-}
-
-// MessagesDeleteGroupUser
-// @Function
-// @Returns: Bool
-message MessagesDeleteGroupUser {
-    required int64 GroupID = 1;
-    required InputUser User = 2;
-}
-
-// MessagesGetFullGroup
-// @Function
-// @Returns: GroupFull
-message MessagesGetFullGroup {
-    required int32 GroupID = 1;
-}
 
 // MessagesDialogs
 message MessagesDialogs {

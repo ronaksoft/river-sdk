@@ -17,18 +17,6 @@ var (
 			return m
 		},
 	}
-	PoolMessagesGetFullGroup = sync.Pool{
-		New: func() interface{} {
-			m := new(MessagesGetFullGroup)
-			return m
-		},
-	}
-	PoolMessagesEditGroupTitle = sync.Pool{
-		New: func() interface{} {
-			m := new(MessagesEditGroupTitle)
-			return m
-		},
-	}
 	PoolUpdateUserTyping = sync.Pool{
 		New: func() interface{} {
 			m := new(UpdateUserTyping)
@@ -38,6 +26,18 @@ var (
 	PoolGroupFull = sync.Pool{
 		New: func() interface{} {
 			m := new(GroupFull)
+			return m
+		},
+	}
+	PoolUpdateGroupTitleUpdated = sync.Pool{
+		New: func() interface{} {
+			m := new(UpdateGroupTitleUpdated)
+			return m
+		},
+	}
+	PoolGroupsAddUser = sync.Pool{
+		New: func() interface{} {
+			m := new(GroupsAddUser)
 			return m
 		},
 	}
@@ -158,6 +158,12 @@ var (
 	PoolSystemGetPublicKeys = sync.Pool{
 		New: func() interface{} {
 			m := new(SystemGetPublicKeys)
+			return m
+		},
+	}
+	PoolGroupsCreate = sync.Pool{
+		New: func() interface{} {
+			m := new(GroupsCreate)
 			return m
 		},
 	}
@@ -341,12 +347,6 @@ var (
 			return m
 		},
 	}
-	PoolMessagesDeleteGroupUser = sync.Pool{
-		New: func() interface{} {
-			m := new(MessagesDeleteGroupUser)
-			return m
-		},
-	}
 	PoolFileLocation = sync.Pool{
 		New: func() interface{} {
 			m := new(FileLocation)
@@ -359,9 +359,9 @@ var (
 			return m
 		},
 	}
-	PoolMessagesAddGroupUser = sync.Pool{
+	PoolGroupsEditTitle = sync.Pool{
 		New: func() interface{} {
-			m := new(MessagesAddGroupUser)
+			m := new(GroupsEditTitle)
 			return m
 		},
 	}
@@ -431,21 +431,27 @@ var (
 			return m
 		},
 	}
-	PoolMessagesCreateGroup = sync.Pool{
-		New: func() interface{} {
-			m := new(MessagesCreateGroup)
-			return m
-		},
-	}
 	PoolMessagesSent = sync.Pool{
 		New: func() interface{} {
 			m := new(MessagesSent)
 			return m
 		},
 	}
+	PoolGroupsGetFull = sync.Pool{
+		New: func() interface{} {
+			m := new(GroupsGetFull)
+			return m
+		},
+	}
 	PoolMessagesSend = sync.Pool{
 		New: func() interface{} {
 			m := new(MessagesSend)
+			return m
+		},
+	}
+	PoolGroupsDeleteUser = sync.Pool{
+		New: func() interface{} {
+			m := new(GroupsDeleteUser)
 			return m
 		},
 	}

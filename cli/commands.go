@@ -72,7 +72,7 @@ func fnGetPeerType(c *ishell.Context) msg.PeerType {
 			case 1:
 				peerType = msg.PeerType_PeerUser
 			case 2:
-				peerType = msg.PeerType_PeerChat
+				peerType = msg.PeerType_PeerGroup
 			case 3:
 				peerType = msg.PeerType_PeerChannel
 			default:

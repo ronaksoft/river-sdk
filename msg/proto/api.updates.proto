@@ -106,7 +106,7 @@ message UpdateNotifySettings {
 
 // UpdateGroupMemberAdded
 message UpdateGroupMemberAdded {
-    required int64 ChatID = 1;
+    required int64 GroupID = 1;
     required int64 UserID = 2;
     required int64 InviterID = 3;
     required int32 ChatVersion = 4;
@@ -115,8 +115,14 @@ message UpdateGroupMemberAdded {
 
 // UpdateGroupMemberDeleted
 message UpdateGroupMemberDeleted {
-    required int64 ChatID = 1;
+    required int64 GroupID = 1;
     required int64 UserID = 2;
     required int32 ChatVersion = 3;
     required int64 Date = 4;
+}
+
+// UpdateGroupTitleUpdated
+message UpdateGroupTitleUpdated {
+    required int64 GroupID = 1;
+    required string Title = 2;
 }

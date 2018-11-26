@@ -57,7 +57,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		if m.PeerType == int32(msg.PeerType_PeerUser) {
 			mUsers[m.SenderID] = true
 		}
-		if m.PeerType == int32(msg.PeerType_PeerChat) {
+		if m.PeerType == int32(msg.PeerType_PeerGroup) {
 			mGroups[m.PeerID] = true
 		}
 	}
@@ -469,8 +469,8 @@ func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB
 
 }
 
-func (r *River) messagesEditGroupTitle(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.MessagesEditGroupTitle)
+func (r *River) groupsEditTitle(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.GroupsEditTitle)
 	if err := req.Unmarshal(in.Message); err != nil {
 		log.LOG_Debug("River::messagesEditGroupTitle()-> Unmarshal()",
 			zap.String("Error", err.Error()),

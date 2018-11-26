@@ -217,7 +217,7 @@ func (ctrl *SyncController) updateGroupMemberDeleted(u *msg.UpdateEnvelope) (pas
 	x := new(msg.UpdateGroupMemberDeleted)
 	x.Unmarshal(u.Update)
 
-	err := repo.Ctx().Groups.DeleteGroupMember(x.ChatID, x.UserID)
+	err := repo.Ctx().Groups.DeleteGroupMember(x.GroupID, x.UserID)
 	if err != nil {
 		log.LOG_Debug("SyncController::updateGroupMemberDeleted() -> DeleteGroupMember()",
 			zap.String("Error", err.Error()),

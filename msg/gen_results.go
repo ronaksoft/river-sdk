@@ -16,18 +16,6 @@ func ResultPeer(out *MessageEnvelope, res *Peer) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
-func ResultMessagesGetFullGroup(out *MessageEnvelope, res *MessagesGetFullGroup) {
-	out.Constructor = C_MessagesGetFullGroup
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
-func ResultMessagesEditGroupTitle(out *MessageEnvelope, res *MessagesEditGroupTitle) {
-	out.Constructor = C_MessagesEditGroupTitle
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
 func ResultUpdateUserTyping(out *MessageEnvelope, res *UpdateUserTyping) {
 	out.Constructor = C_UpdateUserTyping
 	pbytes.Put(out.Message)
@@ -36,6 +24,18 @@ func ResultUpdateUserTyping(out *MessageEnvelope, res *UpdateUserTyping) {
 }
 func ResultGroupFull(out *MessageEnvelope, res *GroupFull) {
 	out.Constructor = C_GroupFull
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultUpdateGroupTitleUpdated(out *MessageEnvelope, res *UpdateGroupTitleUpdated) {
+	out.Constructor = C_UpdateGroupTitleUpdated
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultGroupsAddUser(out *MessageEnvelope, res *GroupsAddUser) {
+	out.Constructor = C_GroupsAddUser
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -156,6 +156,12 @@ func ResultAuthRecall(out *MessageEnvelope, res *AuthRecall) {
 }
 func ResultSystemGetPublicKeys(out *MessageEnvelope, res *SystemGetPublicKeys) {
 	out.Constructor = C_SystemGetPublicKeys
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultGroupsCreate(out *MessageEnvelope, res *GroupsCreate) {
+	out.Constructor = C_GroupsCreate
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -340,12 +346,6 @@ func ResultAuthSentCode(out *MessageEnvelope, res *AuthSentCode) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
-func ResultMessagesDeleteGroupUser(out *MessageEnvelope, res *MessagesDeleteGroupUser) {
-	out.Constructor = C_MessagesDeleteGroupUser
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
 func ResultFileLocation(out *MessageEnvelope, res *FileLocation) {
 	out.Constructor = C_FileLocation
 	pbytes.Put(out.Message)
@@ -358,8 +358,8 @@ func ResultMessagesEdit(out *MessageEnvelope, res *MessagesEdit) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
-func ResultMessagesAddGroupUser(out *MessageEnvelope, res *MessagesAddGroupUser) {
-	out.Constructor = C_MessagesAddGroupUser
+func ResultGroupsEditTitle(out *MessageEnvelope, res *GroupsEditTitle) {
+	out.Constructor = C_GroupsEditTitle
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -430,20 +430,26 @@ func ResultSystemDHGroups(out *MessageEnvelope, res *SystemDHGroups) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
-func ResultMessagesCreateGroup(out *MessageEnvelope, res *MessagesCreateGroup) {
-	out.Constructor = C_MessagesCreateGroup
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
 func ResultMessagesSent(out *MessageEnvelope, res *MessagesSent) {
 	out.Constructor = C_MessagesSent
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultGroupsGetFull(out *MessageEnvelope, res *GroupsGetFull) {
+	out.Constructor = C_GroupsGetFull
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultMessagesSend(out *MessageEnvelope, res *MessagesSend) {
 	out.Constructor = C_MessagesSend
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultGroupsDeleteUser(out *MessageEnvelope, res *GroupsDeleteUser) {
+	out.Constructor = C_GroupsDeleteUser
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

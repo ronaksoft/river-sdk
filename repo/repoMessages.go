@@ -270,7 +270,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 				userIDs[v.PeerID] = true
 			}
 		}
-		if v.PeerType == int32(msg.PeerType_PeerChat) {
+		if v.PeerType == int32(msg.PeerType_PeerGroup) {
 			groupIDs[v.PeerID] = true
 		}
 	}
