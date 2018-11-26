@@ -55,10 +55,8 @@ var MessageGetDialog = &ishell.Cmd{
 	Name: "GetDialog",
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesGetDialog{}
-		req.Peer = &msg.InputPeer{
-			Type:       msg.PeerType_PeerUser,
-			AccessHash: 0,
-		}
+		req.Peer = &msg.InputPeer{}
+		req.Peer.Type = fnGetPeerType(c)
 		req.Peer.ID = fnGetPeerID(c)
 
 		reqBytes, _ := req.Marshal()
@@ -78,7 +76,7 @@ var MessageGetHistory = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesGetHistory{}
 		req.Peer = &msg.InputPeer{}
-		req.Peer.Type = msg.PeerType_PeerUser
+		req.Peer.Type = fnGetPeerType(c)
 		req.Peer.ID = fnGetPeerID(c)
 		req.Peer.AccessHash = fnGetAccessHash(c)
 		req.MaxID = fnGetMaxID(c)
@@ -101,7 +99,7 @@ var MessageReadHistory = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesReadHistory{}
 		req.Peer = &msg.InputPeer{}
-		req.Peer.Type = msg.PeerType_PeerUser
+		req.Peer.Type = fnGetPeerType(c)
 		req.Peer.ID = fnGetPeerID(c)
 		req.Peer.AccessHash = fnGetAccessHash(c)
 		req.MaxID = fnGetMaxID(c)
@@ -122,7 +120,7 @@ var MessageSetTyping = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesSetTyping{}
 		req.Peer = &msg.InputPeer{}
-		req.Peer.Type = msg.PeerType_PeerUser
+		req.Peer.Type = fnGetPeerType(c)
 		req.Peer.ID = fnGetPeerID(c)
 		req.Peer.AccessHash = fnGetAccessHash(c)
 		req.Action = fnGetTypingAction(c)
@@ -143,7 +141,7 @@ var MessagesGet = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesGet{}
 		req.Peer = &msg.InputPeer{}
-		req.Peer.Type = msg.PeerType_PeerUser
+		req.Peer.Type = fnGetPeerType(c)
 
 		req.Peer.ID = fnGetPeerID(c)
 		req.Peer.AccessHash = fnGetAccessHash(c)

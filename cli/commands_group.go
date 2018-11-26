@@ -25,8 +25,8 @@ var Create = &ishell.Cmd{
 	},
 }
 
-var AddGroupUser = &ishell.Cmd{
-	Name: "AddGroupUser",
+var AddUser = &ishell.Cmd{
+	Name: "AddUser",
 	Func: func(c *ishell.Context) {
 		req := msg.GroupsAddUser{}
 		req.User = &msg.InputUser{}
@@ -44,8 +44,8 @@ var AddGroupUser = &ishell.Cmd{
 	},
 }
 
-var DeleteGroupUser = &ishell.Cmd{
-	Name: "DeleteGroupUser",
+var DeleteUser = &ishell.Cmd{
+	Name: "DeleteUser",
 	Func: func(c *ishell.Context) {
 		req := msg.GroupsDeleteUser{}
 		req.User = &msg.InputUser{}
@@ -62,8 +62,8 @@ var DeleteGroupUser = &ishell.Cmd{
 	},
 }
 
-var EditGroupTitle = &ishell.Cmd{
-	Name: "EditGroupTitle",
+var EditTitle = &ishell.Cmd{
+	Name: "EditTitle",
 	Func: func(c *ishell.Context) {
 		req := msg.GroupsEditTitle{}
 		req.GroupID = fnGetGroupID(c)
@@ -78,8 +78,8 @@ var EditGroupTitle = &ishell.Cmd{
 	},
 }
 
-var GetFullGroup = &ishell.Cmd{
-	Name: "GetFullGroup",
+var GetFull = &ishell.Cmd{
+	Name: "GetFull",
 	Func: func(c *ishell.Context) {
 		req := msg.GroupsGetFull{}
 		req.GroupID = fnGetGroupID(c)
@@ -95,8 +95,8 @@ var GetFullGroup = &ishell.Cmd{
 
 func init() {
 	Group.AddCmd(Create)
-	Group.AddCmd(AddGroupUser)
-	Group.AddCmd(DeleteGroupUser)
-	Group.AddCmd(EditGroupTitle)
-	Group.AddCmd(GetFullGroup)
+	Group.AddCmd(AddUser)
+	Group.AddCmd(DeleteUser)
+	Group.AddCmd(EditTitle)
+	Group.AddCmd(GetFull)
 }
