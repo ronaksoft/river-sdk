@@ -259,20 +259,15 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 	dtoResult = append(dtoResult, dtoMsgs...)
 
 	userIDs := domain.MInt64B{}
-	groupIDs := domain.MInt64B{}
 	for _, v := range dtoResult {
 		tmp := new(msg.UserMessage)
 		v.MapTo(tmp)
 		messages = append(messages, tmp)
-		if v.PeerType == int32(msg.PeerType_PeerUser) {
-			userIDs[v.SenderID] = true
-			if v.ID < 0 {
-				userIDs[v.PeerID] = true
-			}
-		}
-		if v.PeerType == int32(msg.PeerType_PeerGroup) {
-			groupIDs[v.PeerID] = true
-		}
+		userIDs[v.SenderID] = true
+		// // pending messages
+		// if v.ID < 0 {
+		// 	userIDs[v.PeerID] = true
+		// }
 	}
 
 	// Get users <rewrite it here to remove coupling>
