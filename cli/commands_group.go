@@ -78,25 +78,25 @@ var EditGroupTitle = &ishell.Cmd{
 	},
 }
 
-// var GetFullGroup = &ishell.Cmd{
-// 	Name: "GetFullGroup",
-// 	Func: func(c *ishell.Context) {
-// 		req := msg.MessagesGetFullGroup{}
-// 		req.GroupID = fnGetGroupID(c)
-// 		reqBytes, _ := req.Marshal()
-// 		reqDelegate := new(RequestDelegate)
-// 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesGetFullGroup, reqBytes, reqDelegate, false); err != nil {
-// 			_Log.Debug(err.Error())
-// 		} else {
-// 			reqDelegate.RequestID = reqID
-// 		}
-// 	},
-// }
+var GetFullGroup = &ishell.Cmd{
+	Name: "GetFullGroup",
+	Func: func(c *ishell.Context) {
+		req := msg.GroupsGetFull{}
+		req.GroupID = fnGetGroupID(c)
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsGetFull, reqBytes, reqDelegate, false); err != nil {
+			_Log.Debug(err.Error())
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
 
 func init() {
 	Group.AddCmd(Create)
 	Group.AddCmd(AddGroupUser)
 	Group.AddCmd(DeleteGroupUser)
 	Group.AddCmd(EditGroupTitle)
-	//Group.AddCmd(GetFullGroup)
+	Group.AddCmd(GetFullGroup)
 }

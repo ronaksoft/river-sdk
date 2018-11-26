@@ -194,15 +194,15 @@ func (ctrl *SyncController) updateUsername(u *msg.UpdateEnvelope) (passToExterna
 	return
 }
 
-// updateChatMemberAdded
-func (ctrl *SyncController) updateChatMemberAdded(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
-	log.LOG_Debug("SyncController::updateChatMemberAdded() applier")
+// updateGroupMemberAdded
+func (ctrl *SyncController) updateGroupMemberAdded(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
+	log.LOG_Debug("SyncController::updateGroupMemberAdded() applier")
 	x := new(msg.UpdateGroupMemberAdded)
 	x.Unmarshal(u.Update)
 
 	err := repo.Ctx().Groups.AddGroupMember(x)
 	if err != nil {
-		log.LOG_Debug("SyncController::updateChatMemberAdded() -> AddGroupMember()",
+		log.LOG_Debug("SyncController::updateGroupMemberAdded() -> AddGroupMember()",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -228,20 +228,20 @@ func (ctrl *SyncController) updateGroupMemberDeleted(u *msg.UpdateEnvelope) (pas
 	return
 }
 
-// updateGroupTitleEdited
-// func (ctrl *SyncController) updateGroupTitleEdited(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
-// 	log.LOG_Debug("SyncController::updateGroupTitleEdited() applier")
+// updateGroupTitleUpdated
+func (ctrl *SyncController) updateGroupTitleUpdated(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
+	log.LOG_Debug("SyncController::updateGroupTitleEdited() applier")
 
-// 	x := new(msg.UpdateGroupTitleEdited)
-// 	x.Unmarshal(u.Update)
+	x := new(msg.UpdateGroupTitleUpdated)
+	x.Unmarshal(u.Update)
 
-// 	err := repo.Ctx().Groups.Save(x.Group)
-// 	if err != nil {
-// 		log.LOG_Debug("SyncController::updateGroupTitleEdited() -> updateGroupTitleEdited()",
-// 			zap.String("Error", err.Error()),
-// 		)
-// 	}
+	err := repo.Ctx().Groups.UpdateGroupTitle(x.GroupID, x.Title)
+	if err != nil {
+		log.LOG_Debug("SyncController::updateGroupTitleEdited() -> updateGroupTitleEdited()",
+			zap.String("Error", err.Error()),
+		)
+	}
 
-// 	passToExternalhandler = true
-// 	return
-// }
+	passToExternalhandler = true
+	return
+}

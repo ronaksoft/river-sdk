@@ -257,6 +257,27 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		tableMsg.Render()
 		_Shell.Println(bufMsg.String())
 
+	case msg.C_GroupFull:
+		x := new(msg.GroupFull)
+
+		_Shell.Println(fmt.Sprintf("GroupID : %d \t Title : %s", x.Group.ID, x.Group.Title))
+		_Shell.Println(fmt.Sprintf("NotifySettings Sound: %s \t Mute : %d \t Flag : %d", x.NotifySettings.Sound, x.NotifySettings.MuteUntil, x.NotifySettings.Flags))
+		_Shell.Println(fmt.Sprintf("Participants Count : %d ", len(x.Participants)))
+
+		bufUsers := new(bytes.Buffer)
+		tableUsers := tablewriter.NewWriter(bufUsers)
+		tableUsers.SetHeader([]string{
+			"UserID", "FirstName", "LastName",
+		})
+		for _, x := range x.Users {
+			tableUsers.Append([]string{
+				fmt.Sprintf("%d", x.ID),
+				fmt.Sprintf("%s", x.FirstName),
+				fmt.Sprintf("%s", x.LastName),
+			})
+		}
+		tableUsers.Render()
+		_Shell.Println(bufUsers.String())
 	default:
 		constructorName, _ := msg.ConstructorNames[envelope.Constructor]
 		_Log.Debug("DEFAULT",
