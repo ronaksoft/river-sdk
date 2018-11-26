@@ -16,6 +16,12 @@ func ResultPeer(out *MessageEnvelope, res *Peer) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultMessagesGetFullGroup(out *MessageEnvelope, res *MessagesGetFullGroup) {
+	out.Constructor = C_MessagesGetFullGroup
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultMessagesEditGroupTitle(out *MessageEnvelope, res *MessagesEditGroupTitle) {
 	out.Constructor = C_MessagesEditGroupTitle
 	pbytes.Put(out.Message)
@@ -24,6 +30,12 @@ func ResultMessagesEditGroupTitle(out *MessageEnvelope, res *MessagesEditGroupTi
 }
 func ResultUpdateUserTyping(out *MessageEnvelope, res *UpdateUserTyping) {
 	out.Constructor = C_UpdateUserTyping
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultGroupFull(out *MessageEnvelope, res *GroupFull) {
+	out.Constructor = C_GroupFull
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -534,6 +546,12 @@ func ResultAccountUnregisterDevice(out *MessageEnvelope, res *AccountUnregisterD
 }
 func ResultAuthSendCode(out *MessageEnvelope, res *AuthSendCode) {
 	out.Constructor = C_AuthSendCode
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultGroupParticipant(out *MessageEnvelope, res *GroupParticipant) {
+	out.Constructor = C_GroupParticipant
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

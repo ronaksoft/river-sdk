@@ -17,6 +17,12 @@ var (
 			return m
 		},
 	}
+	PoolMessagesGetFullGroup = sync.Pool{
+		New: func() interface{} {
+			m := new(MessagesGetFullGroup)
+			return m
+		},
+	}
 	PoolMessagesEditGroupTitle = sync.Pool{
 		New: func() interface{} {
 			m := new(MessagesEditGroupTitle)
@@ -26,6 +32,12 @@ var (
 	PoolUpdateUserTyping = sync.Pool{
 		New: func() interface{} {
 			m := new(UpdateUserTyping)
+			return m
+		},
+	}
+	PoolGroupFull = sync.Pool{
+		New: func() interface{} {
+			m := new(GroupFull)
 			return m
 		},
 	}
@@ -536,6 +548,12 @@ var (
 	PoolAuthSendCode = sync.Pool{
 		New: func() interface{} {
 			m := new(AuthSendCode)
+			return m
+		},
+	}
+	PoolGroupParticipant = sync.Pool{
+		New: func() interface{} {
+			m := new(GroupParticipant)
 			return m
 		},
 	}

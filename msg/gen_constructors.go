@@ -3,8 +3,10 @@ package msg
 const (
 	C_MessagesSendMedia            int64 = 25498545
 	C_Peer                         int64 = 47470215
+	C_MessagesGetFullGroup         int64 = 101548158
 	C_MessagesEditGroupTitle       int64 = 143417640
 	C_UpdateUserTyping             int64 = 178254060
+	C_GroupFull                    int64 = 205850814
 	C_Ack                          int64 = 447331921
 	C_ContactUser                  int64 = 460099170
 	C_AccountGetNotifySettings     int64 = 477008681
@@ -90,6 +92,7 @@ const (
 	C_ContactsMany                 int64 = 3883395672
 	C_AccountUnregisterDevice      int64 = 3981251588
 	C_AuthSendCode                 int64 = 3984043365
+	C_GroupParticipant             int64 = 4072279665
 	C_Bool                         int64 = 4122188204
 	C_InitResponse                 int64 = 4130340247
 	C_AuthCheckPhone               int64 = 4134648516
@@ -101,8 +104,10 @@ const (
 var ConstructorNames = map[int64]string{
 	25498545:   "MessagesSendMedia",
 	47470215:   "Peer",
+	101548158:  "MessagesGetFullGroup",
 	143417640:  "MessagesEditGroupTitle",
 	178254060:  "UpdateUserTyping",
+	205850814:  "GroupFull",
 	447331921:  "Ack",
 	460099170:  "ContactUser",
 	477008681:  "AccountGetNotifySettings",
@@ -188,6 +193,7 @@ var ConstructorNames = map[int64]string{
 	3883395672: "ContactsMany",
 	3981251588: "AccountUnregisterDevice",
 	3984043365: "AuthSendCode",
+	4072279665: "GroupParticipant",
 	4122188204: "Bool",
 	4130340247: "InitResponse",
 	4134648516: "AuthCheckPhone",

@@ -92,7 +92,7 @@ message MessagesCreateGroup {
 // @Function
 // @Returns: Bool
 message MessagesAddGroupUser {
-    required int64 ChatID = 1;
+    required int64 GroupID = 1;
     required InputUser User = 2;
     required int32 ForwardLimit = 3;
 }
@@ -101,7 +101,7 @@ message MessagesAddGroupUser {
 // @Function
 // @Returns: Bool
 message MessagesEditGroupTitle {
-    required int64 ChatID = 1;
+    required int64 GroupID = 1;
     required string Title = 2;
 }
 
@@ -109,8 +109,15 @@ message MessagesEditGroupTitle {
 // @Function
 // @Returns: Bool
 message MessagesDeleteGroupUser {
-    required int64 ChatID = 1;
+    required int64 GroupID = 1;
     required InputUser User = 2;
+}
+
+// MessagesGetFullGroup
+// @Function
+// @Returns: GroupFull
+message MessagesGetFullGroup {
+    required int32 GroupID = 1;
 }
 
 // MessagesDialogs
@@ -134,5 +141,6 @@ message MessagesSent {
 message MessagesMany {
     repeated UserMessage Messages = 1;
     repeated User Users = 2;
+    repeated Group Groups = 3;
 }
 

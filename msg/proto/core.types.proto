@@ -131,4 +131,30 @@ message Group {
     required int64 ID = 1 [jstype = JS_STRING];
     required string Title = 2;
     required int64 CreatedOn = 3;
+    required int32 Participants = 4;
+    optional int64 EditedOn = 5;
 }
+
+// GroupFull
+message GroupFull {
+    required Group Group = 1;
+    repeated User Users = 2;
+    repeated GroupParticipant Participants = 3;
+    required PeerNotifySettings NotifySettings = 4;
+}
+
+// ParticipantType
+enum ParticipantType {
+    Creator = 0;
+    Admin = 1;
+    Member = 2;
+}
+
+// GroupParticipant
+message GroupParticipant {
+    required int64 UserID = 1;
+    required int64 InviterID = 2;
+    required int64 Date = 3;
+    required ParticipantType Type = 4;
+}
+
