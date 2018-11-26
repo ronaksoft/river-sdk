@@ -193,3 +193,55 @@ func (ctrl *SyncController) updateUsername(u *msg.UpdateEnvelope) (passToExterna
 	passToExternalhandler = true
 	return
 }
+
+// updateChatMemberAdded
+func (ctrl *SyncController) updateChatMemberAdded(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
+	log.LOG_Debug("SyncController::updateChatMemberAdded() applier")
+	x := new(msg.UpdateGroupMemberAdded)
+	x.Unmarshal(u.Update)
+
+	err := repo.Ctx().Groups.AddGroupMember(x)
+	if err != nil {
+		log.LOG_Debug("SyncController::updateChatMemberAdded() -> AddGroupMember()",
+			zap.String("Error", err.Error()),
+		)
+	}
+
+	passToExternalhandler = true
+	return
+}
+
+// updateGroupMemberDeleted
+func (ctrl *SyncController) updateGroupMemberDeleted(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
+	log.LOG_Debug("SyncController::updateGroupMemberDeleted() applier")
+	x := new(msg.UpdateGroupMemberDeleted)
+	x.Unmarshal(u.Update)
+
+	err := repo.Ctx().Groups.DeleteGroupMember(x.ChatID, x.UserID)
+	if err != nil {
+		log.LOG_Debug("SyncController::updateGroupMemberDeleted() -> DeleteGroupMember()",
+			zap.String("Error", err.Error()),
+		)
+	}
+
+	passToExternalhandler = true
+	return
+}
+
+// updateGroupTitleEdited
+// func (ctrl *SyncController) updateGroupTitleEdited(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
+// 	log.LOG_Debug("SyncController::updateGroupTitleEdited() applier")
+
+// 	x := new(msg.UpdateGroupTitleEdited)
+// 	x.Unmarshal(u.Update)
+
+// 	err := repo.Ctx().Groups.Save(x.Group)
+// 	if err != nil {
+// 		log.LOG_Debug("SyncController::updateGroupTitleEdited() -> updateGroupTitleEdited()",
+// 			zap.String("Error", err.Error()),
+// 		)
+// 	}
+
+// 	passToExternalhandler = true
+// 	return
+// }

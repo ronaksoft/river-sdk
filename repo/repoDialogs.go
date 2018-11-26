@@ -21,6 +21,7 @@ type RepoDialogs interface {
 	UpdateAccessHash(accessHash int64, peerID int64, peerType int32) error
 	UpdateTopMesssageID(createdOn, peerID int64, peerType int32) error
 	UpdateNotifySetting(msg *msg.UpdateNotifySettings) error
+	UpdatePeerNotifySettings(peerID int64, peerType int32, notifySetting *msg.PeerNotifySettings) error
 }
 
 type repoDialogs struct {
@@ -293,4 +294,19 @@ func (r *repoDialogs) UpdateNotifySetting(msg *msg.UpdateNotifySettings) error {
 	dtoDlg.NotifySound = msg.Settings.Sound
 
 	return r.db.Save(dtoDlg).Error
+}
+
+// UpdatePeerNotifySettings
+func (r *repoDialogs) UpdatePeerNotifySettings(peerID int64, peerType int32, notifySetting *msg.PeerNotifySettings) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	ed := new(dto.Dialogs)
+	err := r.db.Table(ed.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerType).Updates(map[string]interface{}{
+		"Flags":     notifySetting.Flags,
+		"MuteUntil": notifySetting.MuteUntil,
+		"Sound":     notifySetting.Sound,
+	}).Error
+
+	return err
 }

@@ -235,3 +235,28 @@ func (ctrl *SyncController) messagesMany(e *msg.MessageEnvelope) {
 		repo.Ctx().Messages.SaveMessage(v)
 	}
 }
+
+func (ctrl *SyncController) groupFull(e *msg.MessageEnvelope) {
+	log.LOG_Debug("SyncController::groupFull() applier")
+	u := new(msg.GroupFull)
+	err := u.Unmarshal(e.Message)
+	if err != nil {
+		log.LOG_Debug("SyncController::groupFull()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
+	// Save Group
+	repo.Ctx().Groups.Save(u.Group)
+	// Save Users
+	for _, v := range u.Users {
+		repo.Ctx().Users.SaveUser(v)
+	}
+	// Save Members
+	for _, v := range u.Participants {
+		repo.Ctx().Groups.SaveParticipants(u.Group.ID, v)
+	}
+
+	// Update NotifySettings
+	repo.Ctx().Dialogs.UpdatePeerNotifySettings(u.Group.ID, int32(msg.PeerType_PeerChat), u.NotifySettings)
+}

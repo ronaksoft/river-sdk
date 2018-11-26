@@ -119,7 +119,7 @@ func (c *Context) ReinitiateDatabase() error {
 		dto.System{},
 		dto.Users{},
 		dto.Groups{},
-		dto.GroupMembers{},
+		dto.GroupParticipants{},
 		//dto.UISettings{}, //do not remove UISettings on logout
 	).Error
 
@@ -147,7 +147,7 @@ func (r *repository) initDB() error {
 		dto.Users{},
 		dto.UISettings{},
 		dto.Groups{},
-		dto.GroupMembers{},
+		dto.GroupParticipants{},
 	).Error
 
 	return repoLastError

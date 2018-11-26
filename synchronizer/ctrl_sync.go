@@ -85,6 +85,7 @@ func NewSyncController(config SyncConfig) *SyncController {
 		msg.C_AuthSentCode:      ctrl.authSentCode,
 		msg.C_UsersMany:         ctrl.usersMany,
 		msg.C_MessagesMany:      ctrl.messagesMany,
+		msg.C_GroupFull:         ctrl.groupFull,
 	}
 
 	ctrl.deliveredMessages = make(map[int64]bool, 0)

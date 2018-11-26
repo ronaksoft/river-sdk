@@ -25,6 +25,78 @@ var Create = &ishell.Cmd{
 	},
 }
 
+var AddGroupUser = &ishell.Cmd{
+	Name: "AddGroupUser",
+	Func: func(c *ishell.Context) {
+		req := msg.MessagesAddGroupUser{}
+		req.User = &msg.InputUser{}
+		req.GroupID = fnGetGroupID(c)
+		req.User.UserID = fnGetPeerID(c)
+		req.User.AccessHash = fnGetAccessHash(c)
+		req.ForwardLimit = fnGetForwardLimit(c)
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesAddGroupUser, reqBytes, reqDelegate, false); err != nil {
+			_Log.Debug(err.Error())
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
+var DeleteGroupUser = &ishell.Cmd{
+	Name: "DeleteGroupUser",
+	Func: func(c *ishell.Context) {
+		req := msg.MessagesDeleteGroupUser{}
+		req.User = &msg.InputUser{}
+		req.GroupID = fnGetGroupID(c)
+		req.User.UserID = fnGetPeerID(c)
+		req.User.AccessHash = fnGetAccessHash(c)
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesDeleteGroupUser, reqBytes, reqDelegate, false); err != nil {
+			_Log.Debug(err.Error())
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
+var EditGroupTitle = &ishell.Cmd{
+	Name: "EditGroupTitle",
+	Func: func(c *ishell.Context) {
+		req := msg.MessagesEditGroupTitle{}
+		req.GroupID = fnGetGroupID(c)
+		req.Title = fnGetTitle(c)
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesEditGroupTitle, reqBytes, reqDelegate, false); err != nil {
+			_Log.Debug(err.Error())
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
+// var GetFullGroup = &ishell.Cmd{
+// 	Name: "GetFullGroup",
+// 	Func: func(c *ishell.Context) {
+// 		req := msg.MessagesGetFullGroup{}
+// 		req.GroupID = fnGetGroupID(c)
+// 		reqBytes, _ := req.Marshal()
+// 		reqDelegate := new(RequestDelegate)
+// 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesGetFullGroup, reqBytes, reqDelegate, false); err != nil {
+// 			_Log.Debug(err.Error())
+// 		} else {
+// 			reqDelegate.RequestID = reqID
+// 		}
+// 	},
+// }
+
 func init() {
 	Group.AddCmd(Create)
+	Group.AddCmd(AddGroupUser)
+	Group.AddCmd(DeleteGroupUser)
+	Group.AddCmd(EditGroupTitle)
+	//Group.AddCmd(GetFullGroup)
 }

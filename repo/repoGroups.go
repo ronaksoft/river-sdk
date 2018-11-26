@@ -12,6 +12,11 @@ type RepoGroups interface {
 	Save(g *msg.Group) (err error)
 	GetManyGroups(groupIDs []int64) []*msg.Group
 	SaveMany(groups []*msg.Group) error
+	AddGroupMember(m *msg.UpdateGroupMemberAdded) error
+	DeleteGroupMember(groupID, userID int64) error
+	UpdateGroupTitle(groupID int64, title string) error
+	SaveParticipants(groupID int64, participant *msg.GroupParticipant) error
+	GetParticipants(groupID int64) ([]*msg.GroupParticipant, error)
 }
 
 type repoGroups struct {
@@ -78,7 +83,6 @@ func (r *repoGroups) SaveMany(groups []*msg.Group) error {
 	return err
 }
 
-// Get
 func (r *repoGroups) GetManyGroups(groupIDs []int64) []*msg.Group {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -101,4 +105,68 @@ func (r *repoGroups) GetManyGroups(groupIDs []int64) []*msg.Group {
 	}
 
 	return pbGroup
+}
+
+func (r *repoGroups) AddGroupMember(m *msg.UpdateGroupMemberAdded) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	dtoGP := new(dto.GroupParticipants)
+	err := r.db.Where("GroupID = ? AND UserID = ?", m.ChatID, m.UserID).First(dtoGP).Error
+	// if record does not exist, not found error returns
+	if err != nil {
+		dtoGP.MapFromUpdateGroupMemberAdded(m)
+		err = r.db.Create(dtoGP).Error
+	}
+	return err
+}
+
+func (r *repoGroups) DeleteGroupMember(groupID, userID int64) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	dtoGP := new(dto.GroupParticipants)
+	err := r.db.Where("GroupID = ? AND UserID = ?", groupID, userID).First(dtoGP).Error
+	if err == nil {
+		err = r.db.Delete(dtoGP).Error
+	}
+	return err
+}
+
+func (r *repoGroups) UpdateGroupTitle(groupID int64, title string) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	dtoG := new(dto.Groups)
+	return r.db.Table(dtoG.TableName()).Where("ID = ? ", groupID).Updates(map[string]interface{}{"Title": title}).Error
+}
+
+func (r *repoGroups) SaveParticipants(groupID int64, participant *msg.GroupParticipant) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	dtoGP := new(dto.GroupParticipants)
+	err := r.db.Where("GroupID = ? AND UserID = ?", groupID, participant.UserID).First(dtoGP).Error
+	dtoGP.MapFrom(groupID, participant)
+	// if record does not exist, not found error returns
+	if err != nil {
+		return r.db.Create(dtoGP).Error
+	}
+	return r.db.Table(dtoGP.TableName()).Where("GroupID = ? AND UserID = ?", groupID, participant.UserID).Update(dtoGP).Error
+}
+
+func (r *repoGroups) GetParticipants(groupID int64) ([]*msg.GroupParticipant, error) {
+	dtoGPs := make([]dto.GroupParticipants, 0)
+	err := r.db.Where("GroupID = ?", groupID).Find(&dtoGPs).Error
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*msg.GroupParticipant, 0)
+	for _, v := range dtoGPs {
+		tmp := new(msg.GroupParticipant)
+		v.MapTo(tmp)
+		res = append(res, tmp)
+	}
+
+	return res, nil
 }

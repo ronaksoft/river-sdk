@@ -468,3 +468,26 @@ func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 
 }
+
+func (r *River) messagesEditGroupTitle(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.MessagesEditGroupTitle)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG_Debug("River::messagesEditGroupTitle()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	err := repo.Ctx().Groups.UpdateGroupTitle(req.GroupID, req.Title)
+	if err != nil {
+		log.LOG_Debug("River::messagesEditGroupTitle()-> UpdateGroupTitle()",
+			zap.String("Error", err.Error()),
+		)
+	}
+
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+
+}

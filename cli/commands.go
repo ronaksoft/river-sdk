@@ -280,3 +280,33 @@ func fnGetTitle(c *ishell.Context) string {
 	title := c.ReadLine()
 	return title
 }
+
+func fnGetGroupID(c *ishell.Context) int64 {
+	var groupID int64
+	for {
+		c.Print("Group ID: ")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
+		if err == nil {
+			groupID = id
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return groupID
+}
+
+func fnGetForwardLimit(c *ishell.Context) int32 {
+	var fwdLimit int32
+	for {
+		c.Print("Forward Limit: ")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		if err == nil {
+			fwdLimit = int32(id)
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return fwdLimit
+}
