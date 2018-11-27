@@ -259,10 +259,26 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 
 	case msg.C_GroupFull:
 		x := new(msg.GroupFull)
-
-		_Shell.Println(fmt.Sprintf("GroupID : %d \t Title : %s", x.Group.ID, x.Group.Title))
-		_Shell.Println(fmt.Sprintf("NotifySettings Sound: %s \t Mute : %d \t Flag : %d", x.NotifySettings.Sound, x.NotifySettings.MuteUntil, x.NotifySettings.Flags))
-		_Shell.Println(fmt.Sprintf("Participants Count : %d ", len(x.Participants)))
+		err := x.Unmarshal(envelope.Message)
+		if err != nil {
+			_Shell.Println(_RED(err.Error()))
+			return
+		}
+		if x.Group != nil {
+			_Shell.Println(fmt.Sprintf("GroupID : %d \t Title : %s", x.Group.ID, x.Group.Title))
+		} else {
+			_Shell.Println(_RED("x.Group is null"))
+		}
+		if x.NotifySettings != nil {
+			_Shell.Println(fmt.Sprintf("NotifySettings Sound: %s \t Mute : %d \t Flag : %d", x.NotifySettings.Sound, x.NotifySettings.MuteUntil, x.NotifySettings.Flags))
+		} else {
+			_Shell.Println(_RED("x.NotifySettings is null"))
+		}
+		if x.Participants != nil {
+			_Shell.Println(fmt.Sprintf("Participants Count : %d ", len(x.Participants)))
+		} else {
+			_Shell.Println(_RED("x.Participants is null"))
+		}
 
 		bufUsers := new(bytes.Buffer)
 		tableUsers := tablewriter.NewWriter(bufUsers)
