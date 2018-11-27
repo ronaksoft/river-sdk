@@ -54,7 +54,7 @@ var MessageSendByNetwork = &ishell.Cmd{
 		// for just one user
 		req := msg.MessagesSend{}
 		req.Peer = &msg.InputPeer{}
-		req.Peer.Type = msg.PeerType_PeerUser
+		req.Peer.Type = fnGetPeerType(c)
 		req.Peer.ID = fnGetPeerID(c)
 		req.Peer.AccessHash = fnGetAccessHash(c)
 
@@ -85,7 +85,7 @@ var MessageSendByQueue = &ishell.Cmd{
 		// for just one user
 		req := msg.MessagesSend{}
 		req.Peer = &msg.InputPeer{}
-		req.Peer.Type = msg.PeerType_PeerUser
+		req.Peer.Type = fnGetPeerType(c)
 		req.Peer.ID = fnGetPeerID(c)
 		req.Peer.AccessHash = fnGetAccessHash(c)
 
@@ -143,6 +143,7 @@ var MessageSendBulk = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		// for just one user
 
+		peerType := fnGetPeerType(c)
 		peerID := fnGetPeerID(c)
 		accessHash := fnGetAccessHash(c)
 		count := fnGetTries(c)
@@ -155,7 +156,7 @@ var MessageSendBulk = &ishell.Cmd{
 			req.Peer = &msg.InputPeer{}
 			req.Peer.ID = peerID
 			req.Peer.AccessHash = accessHash
-			req.Peer.Type = msg.PeerType_PeerUser
+			req.Peer.Type = peerType
 			req.RandomID = ronak.RandomInt64(0)
 			req.Body = fmt.Sprintf("Test Msg [%v]", i)
 
