@@ -188,13 +188,12 @@ func (r *repoGroups) SaveParticipantsByID(groupID, createdOn int64, userIDs []in
 	defer r.mx.Unlock()
 
 	for _, id := range userIDs {
-		e := dto.GroupParticipants{
-			Date:    createdOn,
-			GroupID: groupID,
-			// InviterID : TODO !!!
-			Type:   0,
-			UserID: id,
-		}
-		r.db.Create(e)
+		dtoGP := new(dto.GroupParticipants)
+		r.db.Where("GroupID = ? AND UserID = ?", groupID, id).First(dtoGP)
+		dtoGP.Date = createdOn
+		dtoGP.GroupID = groupID
+		dtoGP.Type = int32(msg.ParticipantType_Member)
+		dtoGP.UserID = id
+		r.db.Save(dtoGP)
 	}
 }
