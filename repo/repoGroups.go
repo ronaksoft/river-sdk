@@ -32,7 +32,7 @@ func (r *repoGroups) Save(g *msg.Group) (err error) {
 
 	ge := new(dto.Groups)
 	r.db.Find(ge, g.ID)
-	isNew := ge.ID <= 0
+	isNew := ge.ID == 0
 	ge.MapFrom(g)
 	if isNew {
 		return r.db.Create(ge).Error
