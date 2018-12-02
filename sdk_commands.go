@@ -592,6 +592,7 @@ func (r *River) groupDeleteUser(in, out *msg.MessageEnvelope, timeoutCB domain.T
 
 }
 
+// Warn : until implementation of GroupFull.Participants we dont get info of users that added to group when group created
 func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.GroupsGetFull)
 	if err := req.Unmarshal(in.Message); err != nil {
@@ -607,6 +608,9 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	// Group
 	group, err := repo.Ctx().Groups.GetGroup(req.GroupID)
 	if err != nil {
+		log.LOG_Warn("River::groupsGetFull()-> GetGroup() Sending Request To Server !!!",
+			zap.String("Error", err.Error()),
+		)
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, false)
 		return
 	}
@@ -615,6 +619,9 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	// Participants
 	participents, err := repo.Ctx().Groups.GetParticipants(req.GroupID)
 	if err != nil {
+		log.LOG_Warn("River::groupsGetFull()-> GetParticipants() Sending Request To Server !!!",
+			zap.String("Error", err.Error()),
+		)
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, false)
 		return
 	}
@@ -623,6 +630,8 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	// NotifySettings
 	dlg := repo.Ctx().Dialogs.GetDialog(req.GroupID, int32(msg.PeerType_PeerGroup))
 	if dlg == nil {
+		log.LOG_Warn("River::groupsGetFull()-> GetDialog() Sending Request To Server !!!")
+
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, false)
 		return
 	}
@@ -635,6 +644,12 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	}
 	users := repo.Ctx().Users.GetAnyUsers(userIDs.ToArray())
 	if users == nil || len(participents) != len(users) {
+		log.LOG_Warn("River::groupsGetFull()-> GetAnyUsers() Sending Request To Server !!!",
+			zap.Bool("Is user nil ? ", users == nil),
+			zap.Int("Participanr Count", len(participents)),
+			zap.Int("Users Count", len(users)),
+		)
+
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, false)
 		return
 	}

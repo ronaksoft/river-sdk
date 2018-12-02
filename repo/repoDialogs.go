@@ -303,9 +303,9 @@ func (r *repoDialogs) UpdatePeerNotifySettings(peerID int64, peerType int32, not
 
 	ed := new(dto.Dialogs)
 	err := r.db.Table(ed.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerType).Updates(map[string]interface{}{
-		"Flags":     notifySetting.Flags,
-		"MuteUntil": notifySetting.MuteUntil,
-		"Sound":     notifySetting.Sound,
+		"NotifyFlags":     notifySetting.Flags,
+		"NotifyMuteUntil": notifySetting.MuteUntil,
+		"NotifySound":     notifySetting.Sound,
 	}).Error
 
 	return err
