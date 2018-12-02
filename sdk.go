@@ -257,7 +257,8 @@ func (r *River) registerCommandHandlers() {
 	r.localCommands[msg.C_AccountUnregisterDevice] = r.accountUnregisterDevice
 	r.localCommands[msg.C_AccountSetNotifySettings] = r.accountSetNotifySettings
 	r.localCommands[msg.C_GroupsEditTitle] = r.groupsEditTitle
-
+	r.localCommands[msg.C_MessagesClearHistory] = r.messagesClearHistory
+	r.localCommands[msg.C_MessagesDelete] = r.messagesDelete
 	// TODO : Add new api commands
 }
 

@@ -15,6 +15,8 @@ type RepoMessages interface {
 	GetManyMessages(messageIDs []int64) []*msg.UserMessage
 	GetMessageHistory(peerID int64, peerType int32, minID, maxID int64, limit int32) ([]*msg.UserMessage, []*msg.User)
 	GetUnreadMessageCount(peerID int64, peerType int32, userID, maxID int64) int32
+	DeleteDialogMessage(peerID int64, peerType int32, maxID int64) error
+	DeleteMany(IDs []int64) error
 }
 
 type repoMessages struct {
@@ -304,4 +306,13 @@ func (r *repoMessages) GetUnreadMessageCount(peerID int64, peerType int32, userI
 // save message batch mode
 func (r *repoMessages) SaveMessageMany() {
 
+}
+
+func (r *repoMessages) DeleteDialogMessage(peerID int64, peerType int32, maxID int64) error {
+
+	return r.db.Where("PeerID=? AND PeerType=? AND ID <= ?", peerID, peerType, maxID).Delete(dto.Messages{}).Error
+}
+func (r *repoMessages) DeleteMany(IDs []int64) error {
+
+	return r.db.Where("ID IN (?)", IDs).Delete(dto.Messages{}).Error
 }

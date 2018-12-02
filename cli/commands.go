@@ -310,3 +310,18 @@ func fnGetForwardLimit(c *ishell.Context) int32 {
 	}
 	return fwdLimit
 }
+
+func fnGetRevoke(c *ishell.Context) bool {
+	revoke := false
+	for {
+		c.Print("Revoke : (0 = false , >=1 : true)")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		if err == nil {
+			revoke = id > 0
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return revoke
+}

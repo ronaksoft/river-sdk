@@ -158,6 +158,47 @@ var MessagesGet = &ishell.Cmd{
 	},
 }
 
+var MessagesClearHistory = &ishell.Cmd{
+	Name: "MessagesClearHistory",
+	Func: func(c *ishell.Context) {
+		req := msg.MessagesClearHistory{}
+		req.Peer = &msg.InputPeer{}
+		req.Peer.Type = fnGetPeerType(c)
+		req.Peer.ID = fnGetPeerID(c)
+		req.MaxID = fnGetMaxID(c)
+
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesClearHistory, reqBytes, reqDelegate, false); err != nil {
+			_Log.Debug(err.Error())
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+
+	},
+}
+
+var MessagesDelete = &ishell.Cmd{
+	Name: "MessagesDelete",
+	Func: func(c *ishell.Context) {
+		req := msg.MessagesDelete{}
+		req.Peer = &msg.InputPeer{}
+		req.Peer.Type = fnGetPeerType(c)
+		req.Peer.ID = fnGetPeerID(c)
+		req.Revoke = fnGetRevoke(c)
+		req.MessageIDs = fnGetMessageIDs(c)
+
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesDelete, reqBytes, reqDelegate, false); err != nil {
+			_Log.Debug(err.Error())
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+
+	},
+}
+
 func init() {
 	Message.AddCmd(MessageGetDialogs)
 	Message.AddCmd(MessageGetDialog)
@@ -167,4 +208,6 @@ func init() {
 	Message.AddCmd(MessageReadHistory)
 	Message.AddCmd(MessageSetTyping)
 	Message.AddCmd(MessagesGet)
+	Message.AddCmd(MessagesClearHistory)
+	Message.AddCmd(MessagesDelete)
 }

@@ -39,7 +39,6 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) (passToExter
 			log.LOG_Debug("SyncController::updateNewMessage()-> SaveDialog()",
 				zap.String("Error", err.Error()),
 			)
-			// return
 		}
 	}
 	// save user if does not exist
@@ -52,7 +51,6 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) (passToExter
 			log.LOG_Debug("SyncController::updateNewMessage()-> SaveNewMessage()",
 				zap.String("Error", err.Error()),
 			)
-			// return
 		}
 	} else {
 		err := repo.Ctx().Messages.SaveSelfMessage(x.Message, dialog)
@@ -60,7 +58,6 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) (passToExter
 			log.LOG_Debug("SyncController::updateNewMessage()-> SaveSelfMessage()",
 				zap.String("Error", err.Error()),
 			)
-			// return
 		}
 	}
 
@@ -88,6 +85,49 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) (passToExter
 	} else {
 		passToExternalhandler = true
 	}
+
+	// Parse message action and call required appliers
+	switch x.Message.MessageAction {
+	case MessageActionNope:
+		// Do nothing
+	case MessageActionContactRegistered:
+		// Not implemented
+	case MessageActionGroupCreated:
+		// this will be handled by upper level on UpdateContainer
+	case MessageActionGroupAddUser:
+		// TODO : this should be implemented
+
+		act := new(msg.MessageActionGroupAddUser)
+		err := act.Unmarshal(x.Message.MessageActionData)
+		if err != nil {
+			log.LOG_Debug("SyncController::updateNewMessage() -> MessageActionGroupAddUser Failed to Parse", zap.String("Error", err.Error()))
+		}
+		repo.Ctx().Groups.SaveParticipantsByID(x.Message.PeerID, x.Message.CreatedOn, act.UserIDs)
+
+	case MessageActionGroupDeleteUser:
+		act := new(msg.MessageActionGroupAddUser)
+		err := act.Unmarshal(x.Message.MessageActionData)
+		if err != nil {
+			log.LOG_Debug("SyncController::updateNewMessage() -> MessageActionGroupDeleteUser Failed to Parse", zap.String("Error", err.Error()))
+		}
+		err = repo.Ctx().Groups.DeleteGroupMemberMany(x.Message.PeerID, act.UserIDs)
+		if err != nil {
+			log.LOG_Debug("SyncController::updateNewMessage() -> DeleteGroupMemberMany() Failed", zap.String("Error", err.Error()))
+		}
+	case MessageActionGroupTitleChanged:
+	// this will be handled by upper level on UpdateContainer
+	case MessageActionClearHistory:
+		act := new(msg.MessageActionClearHistory)
+		err := act.Unmarshal(x.Message.MessageActionData)
+		if err != nil {
+			log.LOG_Debug("SyncController::updateNewMessage() -> MessageActionClearHistory Failed to Parse", zap.String("Error", err.Error()))
+		}
+		err = repo.Ctx().Messages.DeleteDialogMessage(x.Message.PeerID, x.Message.PeerType, act.MaxID)
+		if err != nil {
+			log.LOG_Debug("SyncController::updateNewMessage() -> DeleteDialogMessage() Failed", zap.String("Error", err.Error()))
+		}
+	}
+
 	return
 }
 
@@ -194,50 +234,16 @@ func (ctrl *SyncController) updateUsername(u *msg.UpdateEnvelope) (passToExterna
 	return
 }
 
-// updateGroupMemberAdded
-func (ctrl *SyncController) updateGroupMemberAdded(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
-	log.LOG_Debug("SyncController::updateGroupMemberAdded() applier")
-	x := new(msg.UpdateGroupMemberAdded)
+// updateMessagesDeleted
+func (ctrl *SyncController) updateMessagesDeleted(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
+	log.LOG_Debug("SyncController::updateMessagesDeleted() applier")
+
+	x := new(msg.UpdateMessagesDeleted)
 	x.Unmarshal(u.Update)
 
-	err := repo.Ctx().Groups.AddGroupMember(x)
+	err := repo.Ctx().Messages.DeleteMany(x.MessageIDs)
 	if err != nil {
-		log.LOG_Debug("SyncController::updateGroupMemberAdded() -> AddGroupMember()",
-			zap.String("Error", err.Error()),
-		)
-	}
-
-	passToExternalhandler = true
-	return
-}
-
-// updateGroupMemberDeleted
-func (ctrl *SyncController) updateGroupMemberDeleted(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
-	log.LOG_Debug("SyncController::updateGroupMemberDeleted() applier")
-	x := new(msg.UpdateGroupMemberDeleted)
-	x.Unmarshal(u.Update)
-
-	err := repo.Ctx().Groups.DeleteGroupMember(x.GroupID, x.UserID)
-	if err != nil {
-		log.LOG_Debug("SyncController::updateGroupMemberDeleted() -> DeleteGroupMember()",
-			zap.String("Error", err.Error()),
-		)
-	}
-
-	passToExternalhandler = true
-	return
-}
-
-// updateGroupTitleUpdated
-func (ctrl *SyncController) updateGroupTitleUpdated(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
-	log.LOG_Debug("SyncController::updateGroupTitleEdited() applier")
-
-	x := new(msg.UpdateGroupTitleUpdated)
-	x.Unmarshal(u.Update)
-
-	err := repo.Ctx().Groups.UpdateGroupTitle(x.GroupID, x.Title)
-	if err != nil {
-		log.LOG_Debug("SyncController::updateGroupTitleEdited() -> updateGroupTitleEdited()",
+		log.LOG_Debug("SyncController::updateMessagesDeleted() -> DeleteMany()",
 			zap.String("Error", err.Error()),
 		)
 	}

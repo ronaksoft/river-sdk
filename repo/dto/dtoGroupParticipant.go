@@ -23,15 +23,6 @@ func (m *GroupParticipants) MapFrom(groupID int64, v *msg.GroupParticipant) {
 	m.Type = int32(v.Type)
 }
 
-func (m *GroupParticipants) MapFromUpdateGroupMemberAdded(v *msg.UpdateGroupMemberAdded) {
-	m.GroupID = v.GroupID
-	m.UserID = v.UserID
-	m.InviterID = v.InviterID
-	m.Date = v.Date
-	// m.Type = int32(v.Type)
-	m.Type = int32(msg.ParticipantType_Member)
-}
-
 func (m *GroupParticipants) MapTo(v *msg.GroupParticipant) {
 	v.UserID = m.UserID
 	v.InviterID = m.InviterID

@@ -491,3 +491,49 @@ func (r *River) groupsEditTitle(in, out *msg.MessageEnvelope, timeoutCB domain.T
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 
 }
+
+func (r *River) messagesClearHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.MessagesClearHistory)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG_Debug("River::messagesClearHistory()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	err := repo.Ctx().Messages.DeleteDialogMessage(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+	if err != nil {
+		log.LOG_Debug("River::messagesClearHistory()-> DeleteDialogMessage()",
+			zap.String("Error", err.Error()),
+		)
+	}
+
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+
+}
+
+func (r *River) messagesDelete(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.MessagesDelete)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG_Debug("River::messagesDelete()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	err := repo.Ctx().Messages.DeleteMany(req.MessageIDs)
+	if err != nil {
+		log.LOG_Debug("River::messagesDelete()-> DeleteMany()",
+			zap.String("Error", err.Error()),
+		)
+	}
+
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+
+}

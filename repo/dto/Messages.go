@@ -20,6 +20,7 @@ type Messages struct {
 	Inbox               bool   `gorm:"column:Inbox" json:"Inbox"`
 	ReplyTo             int64  `gorm:"column:ReplyTo" json:"ReplyTo"`
 	MessageAction       int32  `gorm:"column:MessageAction" json:"MessageAction"`
+	MessageActionData   []byte `gorm:"type:blob;column:MessageActionData" json:"MessageActionData"`
 }
 
 func (Messages) TableName() string {
@@ -43,6 +44,7 @@ func (m *Messages) Map(v *msg.UserMessage) {
 	m.Inbox = v.Inbox
 	m.ReplyTo = v.ReplyTo
 	m.MessageAction = v.MessageAction
+	m.MessageActionData = v.MessageActionData
 }
 
 func (m *Messages) MapTo(v *msg.UserMessage) {
@@ -62,4 +64,5 @@ func (m *Messages) MapTo(v *msg.UserMessage) {
 	v.Inbox = m.Inbox
 	v.ReplyTo = m.ReplyTo
 	v.MessageAction = m.MessageAction
+	v.MessageActionData = m.MessageActionData
 }
