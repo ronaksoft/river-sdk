@@ -537,3 +537,57 @@ func (r *River) messagesDelete(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 
 }
+
+func (r *River) groupAddUser(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.GroupsAddUser)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG_Debug("River::groupAddUser()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	gp := &msg.GroupParticipant{
+		Date:      time.Now().Unix(),
+		InviterID: r.ConnInfo.UserID,
+		Type:      msg.ParticipantType_Member,
+		UserID:    req.User.UserID,
+	}
+	err := repo.Ctx().Groups.SaveParticipants(req.GroupID, gp)
+	// TODO : Increase group ParticipantCount
+	if err != nil {
+		log.LOG_Debug("River::groupAddUser()-> SaveParticipants()",
+			zap.String("Error", err.Error()),
+		)
+	}
+
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+
+}
+
+func (r *River) groupDeleteUser(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.GroupsDeleteUser)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG_Debug("River::groupDeleteUser()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	err := repo.Ctx().Groups.DeleteGroupMember(req.GroupID, req.User.UserID)
+	// TODO : Decrease group ParticipantCount
+	if err != nil {
+		log.LOG_Debug("River::groupDeleteUser()-> SaveParticipants()",
+			zap.String("Error", err.Error()),
+		)
+	}
+
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+
+}

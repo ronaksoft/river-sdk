@@ -259,6 +259,8 @@ func (r *River) registerCommandHandlers() {
 	r.localCommands[msg.C_GroupsEditTitle] = r.groupsEditTitle
 	r.localCommands[msg.C_MessagesClearHistory] = r.messagesClearHistory
 	r.localCommands[msg.C_MessagesDelete] = r.messagesDelete
+	r.localCommands[msg.C_GroupsAddUser] = r.groupAddUser
+	r.localCommands[msg.C_GroupsDeleteUser] = r.groupDeleteUser
 	// TODO : Add new api commands
 }
 
