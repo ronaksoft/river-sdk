@@ -185,6 +185,7 @@ var MessagesDelete = &ishell.Cmd{
 		req.Peer = &msg.InputPeer{}
 		req.Peer.Type = fnGetPeerType(c)
 		req.Peer.ID = fnGetPeerID(c)
+		req.Peer.AccessHash = fnGetAccessHash(c)
 		req.Revoke = fnGetRevoke(c)
 		req.MessageIDs = fnGetMessageIDs(c)
 
