@@ -55,6 +55,13 @@ message UpdateMessageEdited {
     required UserMessage Message = 1;
 }
 
+// UpdateMessageDeleted
+message UpdateMessagesDeleted {
+    required int32 UCount = 100;
+    required int64 UpdateID = 101;
+    repeated int64 MessageIDs = 1;
+}
+
 // UpdateReadHistoryInbox
 message UpdateReadHistoryInbox {
     required int32 UCount = 100;
@@ -76,6 +83,7 @@ message UpdateUserTyping {
     required int32 UCount = 100;
     required int64 UserID = 1 [jstype = JS_STRING];
     required TypingAction Action = 2;
+    required int64 PeerID = 3;
 }
 
 // UpdateUserStatus
@@ -104,25 +112,4 @@ message UpdateNotifySettings {
     required PeerNotifySettings Settings = 3;
 }
 
-// UpdateGroupMemberAdded
-message UpdateGroupMemberAdded {
-    required int64 GroupID = 1;
-    required int64 UserID = 2;
-    required int64 InviterID = 3;
-    required int32 ChatVersion = 4;
-    required int64 Date = 5;
-}
 
-// UpdateGroupMemberDeleted
-message UpdateGroupMemberDeleted {
-    required int64 GroupID = 1;
-    required int64 UserID = 2;
-    required int32 ChatVersion = 3;
-    required int64 Date = 4;
-}
-
-// UpdateGroupTitleUpdated
-message UpdateGroupTitleUpdated {
-    required int64 GroupID = 1;
-    required string Title = 2;
-}

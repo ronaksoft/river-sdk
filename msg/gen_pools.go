@@ -29,12 +29,6 @@ var (
 			return m
 		},
 	}
-	PoolUpdateGroupTitleUpdated = sync.Pool{
-		New: func() interface{} {
-			m := new(UpdateGroupTitleUpdated)
-			return m
-		},
-	}
 	PoolGroupsAddUser = sync.Pool{
 		New: func() interface{} {
 			m := new(GroupsAddUser)
@@ -86,6 +80,12 @@ var (
 	PoolUpdateContainer = sync.Pool{
 		New: func() interface{} {
 			m := new(UpdateContainer)
+			return m
+		},
+	}
+	PoolUpdateMessagesDeleted = sync.Pool{
+		New: func() interface{} {
+			m := new(UpdateMessagesDeleted)
 			return m
 		},
 	}
@@ -161,6 +161,18 @@ var (
 			return m
 		},
 	}
+	PoolMessageActionGroupDeleteUser = sync.Pool{
+		New: func() interface{} {
+			m := new(MessageActionGroupDeleteUser)
+			return m
+		},
+	}
+	PoolMessageActionClearHistory = sync.Pool{
+		New: func() interface{} {
+			m := new(MessageActionClearHistory)
+			return m
+		},
+	}
 	PoolGroupsCreate = sync.Pool{
 		New: func() interface{} {
 			m := new(GroupsCreate)
@@ -170,12 +182,6 @@ var (
 	PoolMessagesReadHistory = sync.Pool{
 		New: func() interface{} {
 			m := new(MessagesReadHistory)
-			return m
-		},
-	}
-	PoolUpdateGroupMemberAdded = sync.Pool{
-		New: func() interface{} {
-			m := new(UpdateGroupMemberAdded)
 			return m
 		},
 	}
@@ -269,9 +275,21 @@ var (
 			return m
 		},
 	}
+	PoolMessageActionGroupAddUser = sync.Pool{
+		New: func() interface{} {
+			m := new(MessageActionGroupAddUser)
+			return m
+		},
+	}
 	PoolMessageContainer = sync.Pool{
 		New: func() interface{} {
 			m := new(MessageContainer)
+			return m
+		},
+	}
+	PoolMessagesClearHistory = sync.Pool{
+		New: func() interface{} {
+			m := new(MessagesClearHistory)
 			return m
 		},
 	}
@@ -323,6 +341,12 @@ var (
 			return m
 		},
 	}
+	PoolMessageActionGroupCreated = sync.Pool{
+		New: func() interface{} {
+			m := new(MessageActionGroupCreated)
+			return m
+		},
+	}
 	PoolSystemClientLog = sync.Pool{
 		New: func() interface{} {
 			m := new(SystemClientLog)
@@ -344,6 +368,18 @@ var (
 	PoolAuthSentCode = sync.Pool{
 		New: func() interface{} {
 			m := new(AuthSentCode)
+			return m
+		},
+	}
+	PoolMessageActionContactRegistered = sync.Pool{
+		New: func() interface{} {
+			m := new(MessageActionContactRegistered)
+			return m
+		},
+	}
+	PoolMessageActionGroupTitleChanged = sync.Pool{
+		New: func() interface{} {
+			m := new(MessageActionGroupTitleChanged)
 			return m
 		},
 	}
@@ -503,6 +539,12 @@ var (
 			return m
 		},
 	}
+	PoolMessagesDelete = sync.Pool{
+		New: func() interface{} {
+			m := new(MessagesDelete)
+			return m
+		},
+	}
 	PoolAccountUpdateProfile = sync.Pool{
 		New: func() interface{} {
 			m := new(AccountUpdateProfile)
@@ -512,12 +554,6 @@ var (
 	PoolFileSavePart = sync.Pool{
 		New: func() interface{} {
 			m := new(FileSavePart)
-			return m
-		},
-	}
-	PoolUpdateGroupMemberDeleted = sync.Pool{
-		New: func() interface{} {
-			m := new(UpdateGroupMemberDeleted)
 			return m
 		},
 	}

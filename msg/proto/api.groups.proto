@@ -15,7 +15,7 @@ message GroupsCreate {
 // @Function
 // @Returns: Bool
 message GroupsAddUser {
-    required int64 GroupID = 1;
+    required int64 GroupID = 1 [jstype = JS_STRING];
     required InputUser User = 2;
     required int32 ForwardLimit = 3;
 }
@@ -24,7 +24,7 @@ message GroupsAddUser {
 // @Function
 // @Returns: Bool
 message GroupsEditTitle {
-    required int64 GroupID = 1;
+    required int64 GroupID = 1 [jstype = JS_STRING];
     required string Title = 2;
 }
 
@@ -32,7 +32,7 @@ message GroupsEditTitle {
 // @Function
 // @Returns: Bool
 message GroupsDeleteUser {
-    required int64 GroupID = 1;
+    required int64 GroupID = 1 [jstype = JS_STRING];
     required InputUser User = 2;
 }
 
@@ -40,5 +40,5 @@ message GroupsDeleteUser {
 // @Function
 // @Returns: GroupFull
 message GroupsGetFull {
-    required int64 GroupID = 1;
+    required int64 GroupID = 1 [jstype = JS_STRING];
 }

@@ -89,6 +89,7 @@ message UserMessage {
     required bool Inbox = 14;
     optional int64 ReplyTo = 15;
     optional int32 MessageAction = 16;
+    optional bytes MessageActionData = 17;
 }
 
 // RSAPublicKey

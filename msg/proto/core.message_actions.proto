@@ -1,0 +1,43 @@
+syntax = "proto2";
+package msg;
+
+
+/*
+    Creation Time: 2018 - Nov - 28
+    Created by:  (ehsan)
+    Maintainers:
+       1.  Ehsan N. Moosa (E2)
+    Auditor: Ehsan N. Moosa (E2)
+    Copyright Ronak Software Group 2018
+*/
+
+// MessageActionGroupAddUser
+message MessageActionGroupAddUser {
+    repeated int64 UserIDs = 1 [jstype = JS_STRING];
+}
+
+// MessageActionGroupDeleteUser
+message MessageActionGroupDeleteUser {
+    repeated int64 UserIDs = 1 [jstype = JS_STRING];
+}
+
+// MessageActionGroupCreated
+message MessageActionGroupCreated {
+    required string GroupTitle = 1;
+    repeated int64 UserIDs = 2 [jstype = JS_STRING];
+}
+
+// MessageActionGroupTitleChanged
+message MessageActionGroupTitleChanged {
+    required string GroupTitle = 1;
+}
+
+// MessageActionClearHistory
+message MessageActionClearHistory {
+    required int64 MaxID = 1;
+}
+
+// MessageActionContactRegistered
+message MessageActionContactRegistered {
+
+}

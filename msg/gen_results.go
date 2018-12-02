@@ -28,12 +28,6 @@ func ResultGroupFull(out *MessageEnvelope, res *GroupFull) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
-func ResultUpdateGroupTitleUpdated(out *MessageEnvelope, res *UpdateGroupTitleUpdated) {
-	out.Constructor = C_UpdateGroupTitleUpdated
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
 func ResultGroupsAddUser(out *MessageEnvelope, res *GroupsAddUser) {
 	out.Constructor = C_GroupsAddUser
 	pbytes.Put(out.Message)
@@ -84,6 +78,12 @@ func ResultInitAuthCompleted(out *MessageEnvelope, res *InitAuthCompleted) {
 }
 func ResultUpdateContainer(out *MessageEnvelope, res *UpdateContainer) {
 	out.Constructor = C_UpdateContainer
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultUpdateMessagesDeleted(out *MessageEnvelope, res *UpdateMessagesDeleted) {
+	out.Constructor = C_UpdateMessagesDeleted
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -160,6 +160,18 @@ func ResultSystemGetPublicKeys(out *MessageEnvelope, res *SystemGetPublicKeys) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultMessageActionGroupDeleteUser(out *MessageEnvelope, res *MessageActionGroupDeleteUser) {
+	out.Constructor = C_MessageActionGroupDeleteUser
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultMessageActionClearHistory(out *MessageEnvelope, res *MessageActionClearHistory) {
+	out.Constructor = C_MessageActionClearHistory
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultGroupsCreate(out *MessageEnvelope, res *GroupsCreate) {
 	out.Constructor = C_GroupsCreate
 	pbytes.Put(out.Message)
@@ -168,12 +180,6 @@ func ResultGroupsCreate(out *MessageEnvelope, res *GroupsCreate) {
 }
 func ResultMessagesReadHistory(out *MessageEnvelope, res *MessagesReadHistory) {
 	out.Constructor = C_MessagesReadHistory
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
-func ResultUpdateGroupMemberAdded(out *MessageEnvelope, res *UpdateGroupMemberAdded) {
-	out.Constructor = C_UpdateGroupMemberAdded
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -268,8 +274,20 @@ func ResultUpdateState(out *MessageEnvelope, res *UpdateState) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultMessageActionGroupAddUser(out *MessageEnvelope, res *MessageActionGroupAddUser) {
+	out.Constructor = C_MessageActionGroupAddUser
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultMessageContainer(out *MessageEnvelope, res *MessageContainer) {
 	out.Constructor = C_MessageContainer
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultMessagesClearHistory(out *MessageEnvelope, res *MessagesClearHistory) {
+	out.Constructor = C_MessagesClearHistory
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -322,6 +340,12 @@ func ResultAuthCheckedPhone(out *MessageEnvelope, res *AuthCheckedPhone) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultMessageActionGroupCreated(out *MessageEnvelope, res *MessageActionGroupCreated) {
+	out.Constructor = C_MessageActionGroupCreated
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultSystemClientLog(out *MessageEnvelope, res *SystemClientLog) {
 	out.Constructor = C_SystemClientLog
 	pbytes.Put(out.Message)
@@ -342,6 +366,18 @@ func ResultUpdateEnvelope(out *MessageEnvelope, res *UpdateEnvelope) {
 }
 func ResultAuthSentCode(out *MessageEnvelope, res *AuthSentCode) {
 	out.Constructor = C_AuthSentCode
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultMessageActionContactRegistered(out *MessageEnvelope, res *MessageActionContactRegistered) {
+	out.Constructor = C_MessageActionContactRegistered
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultMessageActionGroupTitleChanged(out *MessageEnvelope, res *MessageActionGroupTitleChanged) {
+	out.Constructor = C_MessageActionGroupTitleChanged
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -502,6 +538,12 @@ func ResultPeerNotifySettings(out *MessageEnvelope, res *PeerNotifySettings) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultMessagesDelete(out *MessageEnvelope, res *MessagesDelete) {
+	out.Constructor = C_MessagesDelete
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultAccountUpdateProfile(out *MessageEnvelope, res *AccountUpdateProfile) {
 	out.Constructor = C_AccountUpdateProfile
 	pbytes.Put(out.Message)
@@ -510,12 +552,6 @@ func ResultAccountUpdateProfile(out *MessageEnvelope, res *AccountUpdateProfile)
 }
 func ResultFileSavePart(out *MessageEnvelope, res *FileSavePart) {
 	out.Constructor = C_FileSavePart
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
-func ResultUpdateGroupMemberDeleted(out *MessageEnvelope, res *UpdateGroupMemberDeleted) {
-	out.Constructor = C_UpdateGroupMemberDeleted
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

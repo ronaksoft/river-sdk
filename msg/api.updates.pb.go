@@ -33,7 +33,7 @@ func (m *UpdateGetState) Reset()         { *m = UpdateGetState{} }
 func (m *UpdateGetState) String() string { return proto.CompactTextString(m) }
 func (*UpdateGetState) ProtoMessage()    {}
 func (*UpdateGetState) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_updates_2130e1aa863cff63, []int{0}
+	return fileDescriptor_api_updates_e2cdeede8e82e87d, []int{0}
 }
 func (m *UpdateGetState) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -74,7 +74,7 @@ func (m *UpdateGetDifference) Reset()         { *m = UpdateGetDifference{} }
 func (m *UpdateGetDifference) String() string { return proto.CompactTextString(m) }
 func (*UpdateGetDifference) ProtoMessage()    {}
 func (*UpdateGetDifference) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_updates_2130e1aa863cff63, []int{1}
+	return fileDescriptor_api_updates_e2cdeede8e82e87d, []int{1}
 }
 func (m *UpdateGetDifference) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -131,7 +131,7 @@ func (m *UpdateDifference) Reset()         { *m = UpdateDifference{} }
 func (m *UpdateDifference) String() string { return proto.CompactTextString(m) }
 func (*UpdateDifference) ProtoMessage()    {}
 func (*UpdateDifference) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_updates_2130e1aa863cff63, []int{2}
+	return fileDescriptor_api_updates_e2cdeede8e82e87d, []int{2}
 }
 func (m *UpdateDifference) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -211,7 +211,7 @@ func (m *UpdateState) Reset()         { *m = UpdateState{} }
 func (m *UpdateState) String() string { return proto.CompactTextString(m) }
 func (*UpdateState) ProtoMessage()    {}
 func (*UpdateState) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_updates_2130e1aa863cff63, []int{3}
+	return fileDescriptor_api_updates_e2cdeede8e82e87d, []int{3}
 }
 func (m *UpdateState) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -258,7 +258,7 @@ func (m *UpdateMessageID) Reset()         { *m = UpdateMessageID{} }
 func (m *UpdateMessageID) String() string { return proto.CompactTextString(m) }
 func (*UpdateMessageID) ProtoMessage()    {}
 func (*UpdateMessageID) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_updates_2130e1aa863cff63, []int{4}
+	return fileDescriptor_api_updates_e2cdeede8e82e87d, []int{4}
 }
 func (m *UpdateMessageID) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -321,7 +321,7 @@ func (m *UpdateNewMessage) Reset()         { *m = UpdateNewMessage{} }
 func (m *UpdateNewMessage) String() string { return proto.CompactTextString(m) }
 func (*UpdateNewMessage) ProtoMessage()    {}
 func (*UpdateNewMessage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_updates_2130e1aa863cff63, []int{5}
+	return fileDescriptor_api_updates_e2cdeede8e82e87d, []int{5}
 }
 func (m *UpdateNewMessage) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -396,7 +396,7 @@ func (m *UpdateMessageEdited) Reset()         { *m = UpdateMessageEdited{} }
 func (m *UpdateMessageEdited) String() string { return proto.CompactTextString(m) }
 func (*UpdateMessageEdited) ProtoMessage()    {}
 func (*UpdateMessageEdited) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_updates_2130e1aa863cff63, []int{6}
+	return fileDescriptor_api_updates_e2cdeede8e82e87d, []int{6}
 }
 func (m *UpdateMessageEdited) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -446,6 +446,67 @@ func (m *UpdateMessageEdited) GetMessage() *UserMessage {
 	return nil
 }
 
+// UpdateMessageDeleted
+type UpdateMessagesDeleted struct {
+	UCount     int32   `protobuf:"varint,100,req,name=UCount" json:"UCount"`
+	UpdateID   int64   `protobuf:"varint,101,req,name=UpdateID" json:"UpdateID"`
+	MessageIDs []int64 `protobuf:"varint,1,rep,name=MessageIDs" json:"MessageIDs,omitempty"`
+}
+
+func (m *UpdateMessagesDeleted) Reset()         { *m = UpdateMessagesDeleted{} }
+func (m *UpdateMessagesDeleted) String() string { return proto.CompactTextString(m) }
+func (*UpdateMessagesDeleted) ProtoMessage()    {}
+func (*UpdateMessagesDeleted) Descriptor() ([]byte, []int) {
+	return fileDescriptor_api_updates_e2cdeede8e82e87d, []int{7}
+}
+func (m *UpdateMessagesDeleted) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *UpdateMessagesDeleted) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_UpdateMessagesDeleted.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *UpdateMessagesDeleted) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpdateMessagesDeleted.Merge(dst, src)
+}
+func (m *UpdateMessagesDeleted) XXX_Size() int {
+	return m.Size()
+}
+func (m *UpdateMessagesDeleted) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpdateMessagesDeleted.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UpdateMessagesDeleted proto.InternalMessageInfo
+
+func (m *UpdateMessagesDeleted) GetUCount() int32 {
+	if m != nil {
+		return m.UCount
+	}
+	return 0
+}
+
+func (m *UpdateMessagesDeleted) GetUpdateID() int64 {
+	if m != nil {
+		return m.UpdateID
+	}
+	return 0
+}
+
+func (m *UpdateMessagesDeleted) GetMessageIDs() []int64 {
+	if m != nil {
+		return m.MessageIDs
+	}
+	return nil
+}
+
 // UpdateReadHistoryInbox
 type UpdateReadHistoryInbox struct {
 	UCount   int32 `protobuf:"varint,100,req,name=UCount" json:"UCount"`
@@ -458,7 +519,7 @@ func (m *UpdateReadHistoryInbox) Reset()         { *m = UpdateReadHistoryInbox{}
 func (m *UpdateReadHistoryInbox) String() string { return proto.CompactTextString(m) }
 func (*UpdateReadHistoryInbox) ProtoMessage()    {}
 func (*UpdateReadHistoryInbox) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_updates_2130e1aa863cff63, []int{7}
+	return fileDescriptor_api_updates_e2cdeede8e82e87d, []int{8}
 }
 func (m *UpdateReadHistoryInbox) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -527,7 +588,7 @@ func (m *UpdateReadHistoryOutbox) Reset()         { *m = UpdateReadHistoryOutbox
 func (m *UpdateReadHistoryOutbox) String() string { return proto.CompactTextString(m) }
 func (*UpdateReadHistoryOutbox) ProtoMessage()    {}
 func (*UpdateReadHistoryOutbox) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_updates_2130e1aa863cff63, []int{8}
+	return fileDescriptor_api_updates_e2cdeede8e82e87d, []int{9}
 }
 func (m *UpdateReadHistoryOutbox) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -589,13 +650,14 @@ type UpdateUserTyping struct {
 	UCount int32        `protobuf:"varint,100,req,name=UCount" json:"UCount"`
 	UserID int64        `protobuf:"varint,1,req,name=UserID" json:"UserID"`
 	Action TypingAction `protobuf:"varint,2,req,name=Action,enum=msg.TypingAction" json:"Action"`
+	PeerID int64        `protobuf:"varint,3,req,name=PeerID" json:"PeerID"`
 }
 
 func (m *UpdateUserTyping) Reset()         { *m = UpdateUserTyping{} }
 func (m *UpdateUserTyping) String() string { return proto.CompactTextString(m) }
 func (*UpdateUserTyping) ProtoMessage()    {}
 func (*UpdateUserTyping) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_updates_2130e1aa863cff63, []int{9}
+	return fileDescriptor_api_updates_e2cdeede8e82e87d, []int{10}
 }
 func (m *UpdateUserTyping) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -645,6 +707,13 @@ func (m *UpdateUserTyping) GetAction() TypingAction {
 	return TypingAction_Typing
 }
 
+func (m *UpdateUserTyping) GetPeerID() int64 {
+	if m != nil {
+		return m.PeerID
+	}
+	return 0
+}
+
 // UpdateUserStatus
 type UpdateUserStatus struct {
 	UCount int32 `protobuf:"varint,100,req,name=UCount" json:"UCount"`
@@ -656,7 +725,7 @@ func (m *UpdateUserStatus) Reset()         { *m = UpdateUserStatus{} }
 func (m *UpdateUserStatus) String() string { return proto.CompactTextString(m) }
 func (*UpdateUserStatus) ProtoMessage()    {}
 func (*UpdateUserStatus) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_updates_2130e1aa863cff63, []int{10}
+	return fileDescriptor_api_updates_e2cdeede8e82e87d, []int{11}
 }
 func (m *UpdateUserStatus) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -720,7 +789,7 @@ func (m *UpdateUsername) Reset()         { *m = UpdateUsername{} }
 func (m *UpdateUsername) String() string { return proto.CompactTextString(m) }
 func (*UpdateUsername) ProtoMessage()    {}
 func (*UpdateUsername) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_updates_2130e1aa863cff63, []int{11}
+	return fileDescriptor_api_updates_e2cdeede8e82e87d, []int{12}
 }
 func (m *UpdateUsername) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -804,7 +873,7 @@ func (m *UpdateNotifySettings) Reset()         { *m = UpdateNotifySettings{} }
 func (m *UpdateNotifySettings) String() string { return proto.CompactTextString(m) }
 func (*UpdateNotifySettings) ProtoMessage()    {}
 func (*UpdateNotifySettings) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_updates_2130e1aa863cff63, []int{12}
+	return fileDescriptor_api_updates_e2cdeede8e82e87d, []int{13}
 }
 func (m *UpdateNotifySettings) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -868,205 +937,6 @@ func (m *UpdateNotifySettings) GetSettings() *PeerNotifySettings {
 	return nil
 }
 
-// UpdateGroupMemberAdded
-type UpdateGroupMemberAdded struct {
-	GroupID     int64 `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
-	UserID      int64 `protobuf:"varint,2,req,name=UserID" json:"UserID"`
-	InviterID   int64 `protobuf:"varint,3,req,name=InviterID" json:"InviterID"`
-	ChatVersion int32 `protobuf:"varint,4,req,name=ChatVersion" json:"ChatVersion"`
-	Date        int64 `protobuf:"varint,5,req,name=Date" json:"Date"`
-}
-
-func (m *UpdateGroupMemberAdded) Reset()         { *m = UpdateGroupMemberAdded{} }
-func (m *UpdateGroupMemberAdded) String() string { return proto.CompactTextString(m) }
-func (*UpdateGroupMemberAdded) ProtoMessage()    {}
-func (*UpdateGroupMemberAdded) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_updates_2130e1aa863cff63, []int{13}
-}
-func (m *UpdateGroupMemberAdded) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *UpdateGroupMemberAdded) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_UpdateGroupMemberAdded.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (dst *UpdateGroupMemberAdded) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UpdateGroupMemberAdded.Merge(dst, src)
-}
-func (m *UpdateGroupMemberAdded) XXX_Size() int {
-	return m.Size()
-}
-func (m *UpdateGroupMemberAdded) XXX_DiscardUnknown() {
-	xxx_messageInfo_UpdateGroupMemberAdded.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_UpdateGroupMemberAdded proto.InternalMessageInfo
-
-func (m *UpdateGroupMemberAdded) GetGroupID() int64 {
-	if m != nil {
-		return m.GroupID
-	}
-	return 0
-}
-
-func (m *UpdateGroupMemberAdded) GetUserID() int64 {
-	if m != nil {
-		return m.UserID
-	}
-	return 0
-}
-
-func (m *UpdateGroupMemberAdded) GetInviterID() int64 {
-	if m != nil {
-		return m.InviterID
-	}
-	return 0
-}
-
-func (m *UpdateGroupMemberAdded) GetChatVersion() int32 {
-	if m != nil {
-		return m.ChatVersion
-	}
-	return 0
-}
-
-func (m *UpdateGroupMemberAdded) GetDate() int64 {
-	if m != nil {
-		return m.Date
-	}
-	return 0
-}
-
-// UpdateGroupMemberDeleted
-type UpdateGroupMemberDeleted struct {
-	GroupID     int64 `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
-	UserID      int64 `protobuf:"varint,2,req,name=UserID" json:"UserID"`
-	ChatVersion int32 `protobuf:"varint,3,req,name=ChatVersion" json:"ChatVersion"`
-	Date        int64 `protobuf:"varint,4,req,name=Date" json:"Date"`
-}
-
-func (m *UpdateGroupMemberDeleted) Reset()         { *m = UpdateGroupMemberDeleted{} }
-func (m *UpdateGroupMemberDeleted) String() string { return proto.CompactTextString(m) }
-func (*UpdateGroupMemberDeleted) ProtoMessage()    {}
-func (*UpdateGroupMemberDeleted) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_updates_2130e1aa863cff63, []int{14}
-}
-func (m *UpdateGroupMemberDeleted) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *UpdateGroupMemberDeleted) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_UpdateGroupMemberDeleted.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (dst *UpdateGroupMemberDeleted) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UpdateGroupMemberDeleted.Merge(dst, src)
-}
-func (m *UpdateGroupMemberDeleted) XXX_Size() int {
-	return m.Size()
-}
-func (m *UpdateGroupMemberDeleted) XXX_DiscardUnknown() {
-	xxx_messageInfo_UpdateGroupMemberDeleted.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_UpdateGroupMemberDeleted proto.InternalMessageInfo
-
-func (m *UpdateGroupMemberDeleted) GetGroupID() int64 {
-	if m != nil {
-		return m.GroupID
-	}
-	return 0
-}
-
-func (m *UpdateGroupMemberDeleted) GetUserID() int64 {
-	if m != nil {
-		return m.UserID
-	}
-	return 0
-}
-
-func (m *UpdateGroupMemberDeleted) GetChatVersion() int32 {
-	if m != nil {
-		return m.ChatVersion
-	}
-	return 0
-}
-
-func (m *UpdateGroupMemberDeleted) GetDate() int64 {
-	if m != nil {
-		return m.Date
-	}
-	return 0
-}
-
-// UpdateGroupTitleUpdated
-type UpdateGroupTitleUpdated struct {
-	GroupID int64  `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
-	Title   string `protobuf:"bytes,2,req,name=Title" json:"Title"`
-}
-
-func (m *UpdateGroupTitleUpdated) Reset()         { *m = UpdateGroupTitleUpdated{} }
-func (m *UpdateGroupTitleUpdated) String() string { return proto.CompactTextString(m) }
-func (*UpdateGroupTitleUpdated) ProtoMessage()    {}
-func (*UpdateGroupTitleUpdated) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_updates_2130e1aa863cff63, []int{15}
-}
-func (m *UpdateGroupTitleUpdated) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *UpdateGroupTitleUpdated) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_UpdateGroupTitleUpdated.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (dst *UpdateGroupTitleUpdated) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UpdateGroupTitleUpdated.Merge(dst, src)
-}
-func (m *UpdateGroupTitleUpdated) XXX_Size() int {
-	return m.Size()
-}
-func (m *UpdateGroupTitleUpdated) XXX_DiscardUnknown() {
-	xxx_messageInfo_UpdateGroupTitleUpdated.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_UpdateGroupTitleUpdated proto.InternalMessageInfo
-
-func (m *UpdateGroupTitleUpdated) GetGroupID() int64 {
-	if m != nil {
-		return m.GroupID
-	}
-	return 0
-}
-
-func (m *UpdateGroupTitleUpdated) GetTitle() string {
-	if m != nil {
-		return m.Title
-	}
-	return ""
-}
-
 func init() {
 	proto.RegisterType((*UpdateGetState)(nil), "msg.UpdateGetState")
 	proto.RegisterType((*UpdateGetDifference)(nil), "msg.UpdateGetDifference")
@@ -1075,15 +945,13 @@ func init() {
 	proto.RegisterType((*UpdateMessageID)(nil), "msg.UpdateMessageID")
 	proto.RegisterType((*UpdateNewMessage)(nil), "msg.UpdateNewMessage")
 	proto.RegisterType((*UpdateMessageEdited)(nil), "msg.UpdateMessageEdited")
+	proto.RegisterType((*UpdateMessagesDeleted)(nil), "msg.UpdateMessagesDeleted")
 	proto.RegisterType((*UpdateReadHistoryInbox)(nil), "msg.UpdateReadHistoryInbox")
 	proto.RegisterType((*UpdateReadHistoryOutbox)(nil), "msg.UpdateReadHistoryOutbox")
 	proto.RegisterType((*UpdateUserTyping)(nil), "msg.UpdateUserTyping")
 	proto.RegisterType((*UpdateUserStatus)(nil), "msg.UpdateUserStatus")
 	proto.RegisterType((*UpdateUsername)(nil), "msg.UpdateUsername")
 	proto.RegisterType((*UpdateNotifySettings)(nil), "msg.UpdateNotifySettings")
-	proto.RegisterType((*UpdateGroupMemberAdded)(nil), "msg.UpdateGroupMemberAdded")
-	proto.RegisterType((*UpdateGroupMemberDeleted)(nil), "msg.UpdateGroupMemberDeleted")
-	proto.RegisterType((*UpdateGroupTitleUpdated)(nil), "msg.UpdateGroupTitleUpdated")
 }
 func (m *UpdateGetState) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
@@ -1341,6 +1209,41 @@ func (m *UpdateMessageEdited) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *UpdateMessagesDeleted) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *UpdateMessagesDeleted) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.MessageIDs) > 0 {
+		for _, num := range m.MessageIDs {
+			dAtA[i] = 0x8
+			i++
+			i = encodeVarintApiUpdates(dAtA, i, uint64(num))
+		}
+	}
+	dAtA[i] = 0xa0
+	i++
+	dAtA[i] = 0x6
+	i++
+	i = encodeVarintApiUpdates(dAtA, i, uint64(m.UCount))
+	dAtA[i] = 0xa8
+	i++
+	dAtA[i] = 0x6
+	i++
+	i = encodeVarintApiUpdates(dAtA, i, uint64(m.UpdateID))
+	return i, nil
+}
+
 func (m *UpdateReadHistoryInbox) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1448,6 +1351,9 @@ func (m *UpdateUserTyping) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x10
 	i++
 	i = encodeVarintApiUpdates(dAtA, i, uint64(m.Action))
+	dAtA[i] = 0x18
+	i++
+	i = encodeVarintApiUpdates(dAtA, i, uint64(m.PeerID))
 	dAtA[i] = 0xa0
 	i++
 	dAtA[i] = 0x6
@@ -1583,94 +1489,6 @@ func (m *UpdateNotifySettings) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *UpdateGroupMemberAdded) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *UpdateGroupMemberAdded) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	dAtA[i] = 0x8
-	i++
-	i = encodeVarintApiUpdates(dAtA, i, uint64(m.GroupID))
-	dAtA[i] = 0x10
-	i++
-	i = encodeVarintApiUpdates(dAtA, i, uint64(m.UserID))
-	dAtA[i] = 0x18
-	i++
-	i = encodeVarintApiUpdates(dAtA, i, uint64(m.InviterID))
-	dAtA[i] = 0x20
-	i++
-	i = encodeVarintApiUpdates(dAtA, i, uint64(m.ChatVersion))
-	dAtA[i] = 0x28
-	i++
-	i = encodeVarintApiUpdates(dAtA, i, uint64(m.Date))
-	return i, nil
-}
-
-func (m *UpdateGroupMemberDeleted) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *UpdateGroupMemberDeleted) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	dAtA[i] = 0x8
-	i++
-	i = encodeVarintApiUpdates(dAtA, i, uint64(m.GroupID))
-	dAtA[i] = 0x10
-	i++
-	i = encodeVarintApiUpdates(dAtA, i, uint64(m.UserID))
-	dAtA[i] = 0x18
-	i++
-	i = encodeVarintApiUpdates(dAtA, i, uint64(m.ChatVersion))
-	dAtA[i] = 0x20
-	i++
-	i = encodeVarintApiUpdates(dAtA, i, uint64(m.Date))
-	return i, nil
-}
-
-func (m *UpdateGroupTitleUpdated) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *UpdateGroupTitleUpdated) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	dAtA[i] = 0x8
-	i++
-	i = encodeVarintApiUpdates(dAtA, i, uint64(m.GroupID))
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintApiUpdates(dAtA, i, uint64(len(m.Title)))
-	i += copy(dAtA[i:], m.Title)
-	return i, nil
-}
-
 func encodeVarintApiUpdates(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -1787,6 +1605,22 @@ func (m *UpdateMessageEdited) Size() (n int) {
 	return n
 }
 
+func (m *UpdateMessagesDeleted) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.MessageIDs) > 0 {
+		for _, e := range m.MessageIDs {
+			n += 1 + sovApiUpdates(uint64(e))
+		}
+	}
+	n += 2 + sovApiUpdates(uint64(m.UCount))
+	n += 2 + sovApiUpdates(uint64(m.UpdateID))
+	return n
+}
+
 func (m *UpdateReadHistoryInbox) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1827,6 +1661,7 @@ func (m *UpdateUserTyping) Size() (n int) {
 	_ = l
 	n += 1 + sovApiUpdates(uint64(m.UserID))
 	n += 1 + sovApiUpdates(uint64(m.Action))
+	n += 1 + sovApiUpdates(uint64(m.PeerID))
 	n += 2 + sovApiUpdates(uint64(m.UCount))
 	return n
 }
@@ -1878,45 +1713,6 @@ func (m *UpdateNotifySettings) Size() (n int) {
 	}
 	n += 2 + sovApiUpdates(uint64(m.UCount))
 	n += 2 + sovApiUpdates(uint64(m.UpdateID))
-	return n
-}
-
-func (m *UpdateGroupMemberAdded) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovApiUpdates(uint64(m.GroupID))
-	n += 1 + sovApiUpdates(uint64(m.UserID))
-	n += 1 + sovApiUpdates(uint64(m.InviterID))
-	n += 1 + sovApiUpdates(uint64(m.ChatVersion))
-	n += 1 + sovApiUpdates(uint64(m.Date))
-	return n
-}
-
-func (m *UpdateGroupMemberDeleted) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovApiUpdates(uint64(m.GroupID))
-	n += 1 + sovApiUpdates(uint64(m.UserID))
-	n += 1 + sovApiUpdates(uint64(m.ChatVersion))
-	n += 1 + sovApiUpdates(uint64(m.Date))
-	return n
-}
-
-func (m *UpdateGroupTitleUpdated) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovApiUpdates(uint64(m.GroupID))
-	l = len(m.Title)
-	n += 1 + l + sovApiUpdates(uint64(l))
 	return n
 }
 
@@ -2803,6 +2599,176 @@ func (m *UpdateMessageEdited) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *UpdateMessagesDeleted) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApiUpdates
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UpdateMessagesDeleted: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UpdateMessagesDeleted: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType == 0 {
+				var v int64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowApiUpdates
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (int64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.MessageIDs = append(m.MessageIDs, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowApiUpdates
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthApiUpdates
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.MessageIDs) == 0 {
+					m.MessageIDs = make([]int64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v int64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowApiUpdates
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (int64(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.MessageIDs = append(m.MessageIDs, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field MessageIDs", wireType)
+			}
+		case 100:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UCount", wireType)
+			}
+			m.UCount = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiUpdates
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.UCount |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		case 101:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UpdateID", wireType)
+			}
+			m.UpdateID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiUpdates
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.UpdateID |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000002)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApiUpdates(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApiUpdates
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("UCount")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("UpdateID")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *UpdateReadHistoryInbox) Unmarshal(dAtA []byte) error {
 	var hasFields [1]uint64
 	l := len(dAtA)
@@ -3187,6 +3153,26 @@ func (m *UpdateUserTyping) Unmarshal(dAtA []byte) error {
 				}
 			}
 			hasFields[0] |= uint64(0x00000002)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PeerID", wireType)
+			}
+			m.PeerID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiUpdates
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PeerID |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000004)
 		case 100:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field UCount", wireType)
@@ -3206,7 +3192,7 @@ func (m *UpdateUserTyping) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			hasFields[0] |= uint64(0x00000004)
+			hasFields[0] |= uint64(0x00000008)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipApiUpdates(dAtA[iNdEx:])
@@ -3229,6 +3215,9 @@ func (m *UpdateUserTyping) Unmarshal(dAtA []byte) error {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Action")
 	}
 	if hasFields[0]&uint64(0x00000004) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("PeerID")
+	}
+	if hasFields[0]&uint64(0x00000008) == 0 {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("UCount")
 	}
 
@@ -3770,422 +3759,6 @@ func (m *UpdateNotifySettings) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *UpdateGroupMemberAdded) Unmarshal(dAtA []byte) error {
-	var hasFields [1]uint64
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowApiUpdates
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: UpdateGroupMemberAdded: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UpdateGroupMemberAdded: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GroupID", wireType)
-			}
-			m.GroupID = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApiUpdates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.GroupID |= (int64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			hasFields[0] |= uint64(0x00000001)
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserID", wireType)
-			}
-			m.UserID = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApiUpdates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.UserID |= (int64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			hasFields[0] |= uint64(0x00000002)
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InviterID", wireType)
-			}
-			m.InviterID = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApiUpdates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.InviterID |= (int64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			hasFields[0] |= uint64(0x00000004)
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ChatVersion", wireType)
-			}
-			m.ChatVersion = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApiUpdates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ChatVersion |= (int32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			hasFields[0] |= uint64(0x00000008)
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Date", wireType)
-			}
-			m.Date = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApiUpdates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Date |= (int64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			hasFields[0] |= uint64(0x00000010)
-		default:
-			iNdEx = preIndex
-			skippy, err := skipApiUpdates(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthApiUpdates
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-	if hasFields[0]&uint64(0x00000001) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("GroupID")
-	}
-	if hasFields[0]&uint64(0x00000002) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("UserID")
-	}
-	if hasFields[0]&uint64(0x00000004) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("InviterID")
-	}
-	if hasFields[0]&uint64(0x00000008) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("ChatVersion")
-	}
-	if hasFields[0]&uint64(0x00000010) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Date")
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *UpdateGroupMemberDeleted) Unmarshal(dAtA []byte) error {
-	var hasFields [1]uint64
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowApiUpdates
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: UpdateGroupMemberDeleted: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UpdateGroupMemberDeleted: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GroupID", wireType)
-			}
-			m.GroupID = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApiUpdates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.GroupID |= (int64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			hasFields[0] |= uint64(0x00000001)
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserID", wireType)
-			}
-			m.UserID = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApiUpdates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.UserID |= (int64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			hasFields[0] |= uint64(0x00000002)
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ChatVersion", wireType)
-			}
-			m.ChatVersion = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApiUpdates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ChatVersion |= (int32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			hasFields[0] |= uint64(0x00000004)
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Date", wireType)
-			}
-			m.Date = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApiUpdates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Date |= (int64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			hasFields[0] |= uint64(0x00000008)
-		default:
-			iNdEx = preIndex
-			skippy, err := skipApiUpdates(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthApiUpdates
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-	if hasFields[0]&uint64(0x00000001) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("GroupID")
-	}
-	if hasFields[0]&uint64(0x00000002) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("UserID")
-	}
-	if hasFields[0]&uint64(0x00000004) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("ChatVersion")
-	}
-	if hasFields[0]&uint64(0x00000008) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Date")
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *UpdateGroupTitleUpdated) Unmarshal(dAtA []byte) error {
-	var hasFields [1]uint64
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowApiUpdates
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: UpdateGroupTitleUpdated: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UpdateGroupTitleUpdated: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GroupID", wireType)
-			}
-			m.GroupID = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApiUpdates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.GroupID |= (int64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			hasFields[0] |= uint64(0x00000001)
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApiUpdates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthApiUpdates
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Title = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-			hasFields[0] |= uint64(0x00000002)
-		default:
-			iNdEx = preIndex
-			skippy, err := skipApiUpdates(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthApiUpdates
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-	if hasFields[0]&uint64(0x00000001) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("GroupID")
-	}
-	if hasFields[0]&uint64(0x00000002) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Title")
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func skipApiUpdates(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -4291,58 +3864,53 @@ var (
 	ErrIntOverflowApiUpdates   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("api.updates.proto", fileDescriptor_api_updates_2130e1aa863cff63) }
+func init() { proto.RegisterFile("api.updates.proto", fileDescriptor_api_updates_e2cdeede8e82e87d) }
 
-var fileDescriptor_api_updates_2130e1aa863cff63 = []byte{
-	// 788 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x55, 0xcd, 0x4e, 0xdb, 0x4a,
-	0x14, 0x8e, 0x49, 0x62, 0xc8, 0x89, 0xc4, 0x0d, 0xc3, 0xd5, 0xc5, 0x8a, 0xb8, 0x26, 0xd7, 0x0b,
-	0x14, 0x5d, 0xa9, 0xa1, 0x4a, 0x9f, 0x00, 0x08, 0x3f, 0x51, 0x09, 0xad, 0x0c, 0xe9, 0xde, 0xc4,
-	0x87, 0x60, 0x09, 0xff, 0xc8, 0x33, 0xa1, 0x64, 0xc9, 0x1b, 0x54, 0x6a, 0x57, 0x7d, 0x96, 0x3e,
-	0x00, 0xdd, 0xb1, 0x44, 0xaa, 0x54, 0x55, 0xf0, 0x02, 0x7d, 0x84, 0x6a, 0x66, 0x3c, 0x8e, 0x1d,
-	0xaa, 0x46, 0x55, 0x16, 0xdd, 0x79, 0xbe, 0xf3, 0xcd, 0x39, 0xdf, 0xf9, 0x99, 0x63, 0x58, 0x71,
-	0x22, 0xaf, 0x35, 0x8a, 0x5c, 0x87, 0x21, 0x6d, 0x45, 0x71, 0xc8, 0x42, 0x52, 0xf4, 0xe9, 0xb0,
-	0xbe, 0x3a, 0x08, 0x63, 0x6c, 0xf9, 0x48, 0xa9, 0x33, 0x54, 0x96, 0x7a, 0x4d, 0x80, 0x6c, 0x1c,
-	0x29, 0xc4, 0xaa, 0xc1, 0x72, 0x5f, 0x5c, 0x3e, 0x40, 0x76, 0xc2, 0x1c, 0x86, 0xd6, 0x4b, 0x58,
-	0x4d, 0x91, 0x8e, 0x77, 0x7e, 0x8e, 0x31, 0x06, 0x03, 0x24, 0x06, 0x94, 0xf6, 0xe3, 0xd0, 0x37,
-	0xb4, 0xc6, 0x42, 0xb3, 0xb8, 0x53, 0xba, 0xfd, 0xba, 0x51, 0xb0, 0x05, 0x42, 0xea, 0x50, 0x3e,
-	0xf2, 0x7c, 0x8f, 0x19, 0x0b, 0x8d, 0x85, 0x66, 0x39, 0x31, 0x49, 0xc8, 0xfa, 0xae, 0x41, 0x4d,
-	0x7a, 0xcb, 0xbb, 0xea, 0x85, 0x31, 0x0a, 0x57, 0x4b, 0xca, 0x15, 0x47, 0xc8, 0x26, 0x54, 0x7b,
-	0xce, 0xb5, 0xbc, 0xd0, 0xed, 0x08, 0x87, 0x2a, 0x56, 0xd6, 0x20, 0x78, 0x5e, 0x90, 0xf2, 0x8a,
-	0x39, 0xde, 0xc4, 0x40, 0x9e, 0xc1, 0xa2, 0xfc, 0xa6, 0x46, 0xa9, 0x51, 0x6c, 0x56, 0xdb, 0xab,
-	0x2d, 0x9f, 0x0e, 0x5b, 0x12, 0xdb, 0x0b, 0xae, 0xf0, 0x32, 0x8c, 0xd0, 0x56, 0x1c, 0xb2, 0x01,
-	0xe5, 0x3e, 0xc5, 0x98, 0x1a, 0x65, 0x41, 0xae, 0x48, 0x32, 0xc5, 0xd8, 0x96, 0x38, 0xb1, 0x40,
-	0x3f, 0x88, 0xc3, 0x51, 0x44, 0x0d, 0x5d, 0x30, 0x40, 0x30, 0x04, 0x64, 0x27, 0x16, 0x6b, 0x0b,
-	0xaa, 0xd2, 0x9f, 0x28, 0x27, 0x69, 0xc0, 0x52, 0xaa, 0x33, 0x5b, 0xbb, 0x14, 0xb5, 0x46, 0xf0,
-	0x97, 0xfc, 0xee, 0xc9, 0x66, 0x75, 0x3b, 0xc4, 0x82, 0x4a, 0x7a, 0xc8, 0xdd, 0x9a, 0xc0, 0xdc,
-	0xb1, 0xed, 0x04, 0x6e, 0xe8, 0x4f, 0x15, 0x2a, 0x45, 0xc9, 0x3a, 0xe8, 0xfd, 0xdd, 0x70, 0x14,
-	0x30, 0xc3, 0xcd, 0x74, 0x26, 0xc1, 0xac, 0xcf, 0x69, 0x6b, 0x8e, 0xf1, 0x6d, 0xe2, 0x96, 0xfc,
-	0x0f, 0x8b, 0xc9, 0xa7, 0x08, 0x5b, 0x6d, 0xd7, 0xd2, 0x1a, 0x24, 0xb8, 0xad, 0x08, 0xe4, 0x3f,
-	0xd0, 0x4f, 0x30, 0x70, 0x31, 0x16, 0xe1, 0x73, 0xe5, 0x4a, 0x0c, 0x64, 0x13, 0x60, 0x7b, 0x30,
-	0x40, 0x4a, 0x0f, 0x1d, 0x7a, 0x61, 0x14, 0x1b, 0x5a, 0x53, 0xdf, 0xd1, 0xb9, 0x8a, 0xe7, 0x9a,
-	0x9d, 0xb1, 0xfc, 0x5a, 0x69, 0xae, 0x84, 0xf8, 0xd3, 0x12, 0xde, 0x68, 0x6a, 0x68, 0x13, 0x71,
-	0x7b, 0xae, 0xc7, 0xd0, 0xfd, 0xad, 0x74, 0xe6, 0xd5, 0xf0, 0x5e, 0x83, 0x7f, 0xe4, 0xc1, 0x46,
-	0xc7, 0x3d, 0xf4, 0x28, 0x0b, 0xe3, 0x71, 0x37, 0x38, 0x0b, 0xaf, 0xc9, 0xbf, 0x50, 0x7a, 0x8d,
-	0x18, 0x27, 0x1a, 0x64, 0x9d, 0x38, 0x60, 0x0b, 0x98, 0x3f, 0xa0, 0x9e, 0x73, 0x3d, 0xd5, 0x46,
-	0x09, 0xcd, 0xad, 0xea, 0x83, 0x06, 0x6b, 0x4f, 0x54, 0xbd, 0x1a, 0xb1, 0x3f, 0x2c, 0xeb, 0x26,
-	0x1d, 0x3e, 0xde, 0x8b, 0xd3, 0x71, 0xe4, 0x05, 0x43, 0x62, 0x82, 0xce, 0x4f, 0xe9, 0xc8, 0xab,
-	0x49, 0x49, 0x50, 0xb2, 0x05, 0xfa, 0xf6, 0x80, 0x79, 0x61, 0x20, 0x14, 0x2d, 0xb7, 0x57, 0x84,
-	0x62, 0x79, 0x59, 0x1a, 0x94, 0x0e, 0x79, 0x9a, 0xf1, 0x00, 0x82, 0xac, 0x04, 0xfe, 0x58, 0x47,
-	0x74, 0xa6, 0x84, 0x75, 0xd0, 0x25, 0x33, 0xb7, 0xec, 0x12, 0x6c, 0x46, 0xbc, 0x7b, 0x4d, 0xed,
-	0x5a, 0xee, 0x2c, 0x70, 0x7c, 0x9c, 0x19, 0x8e, 0x17, 0x32, 0xe1, 0x8a, 0x80, 0x95, 0xb4, 0x90,
-	0xca, 0x83, 0x05, 0x95, 0x7d, 0x2f, 0xa6, 0xec, 0x98, 0x53, 0x8a, 0x19, 0xca, 0x04, 0xe6, 0x5e,
-	0x8e, 0x9c, 0x84, 0x52, 0xca, 0x7a, 0x51, 0xe8, 0xdc, 0xed, 0xfc, 0xa2, 0xc1, 0xdf, 0xc9, 0x2e,
-	0x09, 0x99, 0x77, 0x3e, 0x3e, 0x41, 0xc6, 0xbc, 0x60, 0x38, 0xbb, 0x9e, 0x2d, 0x00, 0x79, 0x43,
-	0x0c, 0xa2, 0xdc, 0x23, 0xcb, 0xa2, 0xad, 0xdd, 0x20, 0x1a, 0x31, 0x31, 0x8d, 0x19, 0x06, 0x79,
-	0x01, 0x4b, 0xca, 0xb7, 0xc8, 0xb6, 0xda, 0x5e, 0x4b, 0xc7, 0x36, 0x1f, 0xda, 0x4e, 0x89, 0x73,
-	0x67, 0xf7, 0x29, 0x7d, 0xd9, 0x62, 0xc5, 0xf7, 0xd0, 0x3f, 0xc3, 0x78, 0xdb, 0x75, 0xd1, 0x25,
-	0x26, 0x2c, 0x0a, 0x6c, 0x6a, 0x4d, 0x2b, 0x50, 0x84, 0x96, 0xf9, 0x67, 0x1f, 0x91, 0xca, 0xde,
-	0x82, 0x4a, 0x37, 0xb8, 0xf2, 0x98, 0x20, 0x64, 0x7f, 0x62, 0x13, 0x98, 0xff, 0xea, 0x76, 0x2f,
-	0x1c, 0xf6, 0x06, 0x63, 0xca, 0x27, 0xbf, 0x94, 0xc9, 0x20, 0x6b, 0xe0, 0x3f, 0xd5, 0x8e, 0xc3,
-	0xd0, 0x28, 0x67, 0xff, 0xcf, 0x1c, 0xb1, 0x3e, 0x6a, 0x60, 0x3c, 0x91, 0xdf, 0xc1, 0x4b, 0x64,
-	0x73, 0x27, 0x30, 0x25, 0xae, 0x38, 0x4b, 0x5c, 0xe9, 0x89, 0xb8, 0xbe, 0x5a, 0x4f, 0x22, 0xe0,
-	0xa9, 0xc7, 0x2e, 0x51, 0x9e, 0x67, 0x4b, 0xab, 0x43, 0x59, 0xf0, 0x73, 0x2f, 0x43, 0x42, 0x3b,
-	0xc6, 0xed, 0x83, 0xa9, 0xdd, 0x3d, 0x98, 0xda, 0xb7, 0x07, 0x53, 0x7b, 0xf7, 0x68, 0x16, 0xee,
-	0x1e, 0xcd, 0xc2, 0xfd, 0xa3, 0x59, 0xf8, 0x11, 0x00, 0x00, 0xff, 0xff, 0xbd, 0x9f, 0x14, 0x0b,
-	0x30, 0x09, 0x00, 0x00,
+var fileDescriptor_api_updates_e2cdeede8e82e87d = []byte{
+	// 706 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x55, 0xcd, 0x6e, 0xd3, 0x40,
+	0x10, 0x8e, 0xeb, 0xc4, 0x6d, 0x26, 0x52, 0x49, 0xb7, 0x40, 0xad, 0xaa, 0xb8, 0xc1, 0x87, 0x2a,
+	0x42, 0x22, 0x45, 0xe1, 0x09, 0x5a, 0xd2, 0x9f, 0x88, 0xa6, 0x20, 0x97, 0x3e, 0x80, 0x49, 0xa6,
+	0xc1, 0x52, 0xfd, 0x23, 0xef, 0x9a, 0x36, 0x47, 0xde, 0x00, 0x09, 0xee, 0xbc, 0x4e, 0xb9, 0xf5,
+	0x58, 0x09, 0x09, 0xa1, 0xf6, 0x05, 0x78, 0x04, 0xb4, 0x3f, 0xde, 0xda, 0x05, 0x11, 0xa1, 0x1c,
+	0xb8, 0x79, 0xbf, 0xf9, 0xf6, 0x9b, 0x6f, 0x67, 0x66, 0xd7, 0xb0, 0xe4, 0x27, 0x41, 0x27, 0x4b,
+	0x46, 0x3e, 0x43, 0xda, 0x49, 0xd2, 0x98, 0xc5, 0xc4, 0x0c, 0xe9, 0x78, 0x75, 0x79, 0x18, 0xa7,
+	0xd8, 0x09, 0x91, 0x52, 0x7f, 0x9c, 0x47, 0x56, 0x9b, 0x02, 0x64, 0x93, 0x24, 0x47, 0xdc, 0x26,
+	0x2c, 0x1e, 0x8b, 0xcd, 0x7b, 0xc8, 0x8e, 0x98, 0xcf, 0xd0, 0x7d, 0x09, 0xcb, 0x1a, 0xe9, 0x05,
+	0x27, 0x27, 0x98, 0x62, 0x34, 0x44, 0x62, 0x43, 0x75, 0x37, 0x8d, 0x43, 0xdb, 0x68, 0xcd, 0xb5,
+	0xcd, 0xed, 0xea, 0xc5, 0xf7, 0xf5, 0x8a, 0x27, 0x10, 0xb2, 0x0a, 0xb5, 0x83, 0x20, 0x0c, 0x98,
+	0x3d, 0xd7, 0x9a, 0x6b, 0xd7, 0x54, 0x48, 0x42, 0xee, 0x4f, 0x03, 0x9a, 0x52, 0xad, 0x2c, 0x35,
+	0x88, 0x53, 0x14, 0x52, 0x0b, 0xb9, 0x14, 0x47, 0xc8, 0x06, 0x34, 0x06, 0xfe, 0xb9, 0xdc, 0xd0,
+	0xef, 0x09, 0xc1, 0x3c, 0x57, 0x31, 0x20, 0x78, 0x41, 0xa4, 0x79, 0x66, 0x89, 0x77, 0x1b, 0x20,
+	0x4f, 0x61, 0x5e, 0x7e, 0x53, 0xbb, 0xda, 0x32, 0xdb, 0x8d, 0xee, 0x72, 0x27, 0xa4, 0xe3, 0x8e,
+	0xc4, 0x76, 0xa2, 0xf7, 0x78, 0x1a, 0x27, 0xe8, 0xe5, 0x1c, 0xb2, 0x0e, 0xb5, 0x63, 0x8a, 0x29,
+	0xb5, 0x6b, 0x82, 0x5c, 0x97, 0x64, 0x8a, 0xa9, 0x27, 0x71, 0xe2, 0x82, 0xb5, 0x97, 0xc6, 0x59,
+	0x42, 0x6d, 0x4b, 0x30, 0x40, 0x30, 0x04, 0xe4, 0xa9, 0x88, 0xbb, 0x09, 0x0d, 0xa9, 0x27, 0xca,
+	0x49, 0x5a, 0xb0, 0xa0, 0x7d, 0x16, 0x6b, 0xa7, 0x51, 0x37, 0x83, 0x7b, 0xf2, 0x7b, 0x20, 0x9b,
+	0xd5, 0xef, 0x11, 0x17, 0xea, 0x7a, 0x51, 0xda, 0x75, 0x0b, 0x73, 0x61, 0xcf, 0x8f, 0x46, 0x71,
+	0x78, 0xa7, 0x50, 0x1a, 0x25, 0x6b, 0x60, 0x1d, 0xbf, 0x88, 0xb3, 0x88, 0xd9, 0xa3, 0x42, 0x67,
+	0x14, 0xe6, 0x7e, 0xd5, 0xad, 0x39, 0xc4, 0x33, 0x25, 0x4b, 0x9e, 0xc0, 0xbc, 0xfa, 0x14, 0x69,
+	0x1b, 0xdd, 0xa6, 0xae, 0x81, 0xc2, 0xbd, 0x9c, 0x40, 0x1e, 0x83, 0x75, 0x84, 0xd1, 0x08, 0x53,
+	0x91, 0xbe, 0x54, 0x2e, 0x15, 0x20, 0x1b, 0x00, 0x5b, 0xc3, 0x21, 0x52, 0xba, 0xef, 0xd3, 0x77,
+	0xb6, 0xd9, 0x32, 0xda, 0xd6, 0xb6, 0xc5, 0x5d, 0x3c, 0x33, 0xbc, 0x42, 0xe4, 0xef, 0x4e, 0x4b,
+	0x25, 0xc4, 0x3f, 0x96, 0xf0, 0x83, 0x91, 0x0f, 0xad, 0x32, 0xb7, 0x33, 0x0a, 0x18, 0x8e, 0xfe,
+	0xe9, 0x38, 0xb3, 0x7a, 0x38, 0x83, 0x07, 0x25, 0x0b, 0xb4, 0x87, 0xa7, 0xc8, 0x4d, 0x38, 0x00,
+	0xba, 0x6b, 0xd4, 0x36, 0x5a, 0x66, 0xdb, 0xf4, 0x0a, 0xc8, 0xcc, 0x89, 0x3f, 0x19, 0xf0, 0x50,
+	0x2e, 0x3c, 0xf4, 0x47, 0xfb, 0x01, 0x65, 0x71, 0x3a, 0xe9, 0x47, 0x6f, 0xe3, 0x73, 0xf2, 0x08,
+	0xaa, 0xaf, 0x11, 0x53, 0x75, 0x78, 0xd9, 0x20, 0x0e, 0x78, 0x02, 0xe6, 0x37, 0x77, 0xe0, 0x9f,
+	0xdf, 0x99, 0x1f, 0x09, 0xcd, 0xec, 0xea, 0xb3, 0x01, 0x2b, 0xbf, 0xb9, 0x7a, 0x95, 0xb1, 0xff,
+	0x6c, 0xeb, 0x8b, 0x9e, 0x7a, 0x3e, 0x04, 0x6f, 0x26, 0x49, 0x10, 0x8d, 0x89, 0x03, 0x16, 0x5f,
+	0xe9, 0xbb, 0x96, 0x8f, 0xa8, 0x42, 0xc9, 0x26, 0x58, 0x5b, 0x43, 0x16, 0xc4, 0x91, 0x70, 0xb4,
+	0xd8, 0x5d, 0x12, 0x8e, 0xe5, 0x66, 0x19, 0xc8, 0x7d, 0xc8, 0x15, 0x77, 0xc9, 0x4f, 0x72, 0xe7,
+	0x69, 0x52, 0xd8, 0x94, 0x7b, 0x19, 0x15, 0x0d, 0xf2, 0x37, 0x24, 0xa3, 0x53, 0x0d, 0xae, 0x81,
+	0x25, 0x99, 0xa5, 0x37, 0x58, 0x61, 0x53, 0xf2, 0x5d, 0x19, 0xf9, 0x2f, 0x80, 0x8b, 0x45, 0x7e,
+	0x88, 0x53, 0xd3, 0xf1, 0x32, 0x2b, 0xae, 0x48, 0x58, 0xd7, 0x65, 0xce, 0x15, 0x5c, 0xa8, 0xef,
+	0x06, 0x29, 0x65, 0x87, 0x9c, 0x62, 0x16, 0x28, 0xb7, 0x30, 0x57, 0x39, 0xf0, 0x15, 0xa5, 0x5a,
+	0x54, 0xc9, 0xd1, 0x99, 0x9b, 0xfd, 0xcd, 0x80, 0xfb, 0xea, 0x89, 0x8b, 0x59, 0x70, 0x32, 0x39,
+	0x42, 0xc6, 0x82, 0x68, 0x3c, 0xbd, 0x9e, 0x1d, 0x00, 0xb9, 0x43, 0x8c, 0xa9, 0x7c, 0xde, 0x16,
+	0x45, 0xd3, 0xfb, 0x51, 0x92, 0x31, 0x31, 0xab, 0x05, 0x06, 0x79, 0x0e, 0x0b, 0xb9, 0xb6, 0x38,
+	0x6d, 0xa3, 0xbb, 0xa2, 0x87, 0xba, 0x9c, 0xda, 0xd3, 0xc4, 0x59, 0x4f, 0xb7, 0x6d, 0x5f, 0x5c,
+	0x3b, 0xc6, 0xe5, 0xb5, 0x63, 0xfc, 0xb8, 0x76, 0x8c, 0x8f, 0x37, 0x4e, 0xe5, 0xf2, 0xc6, 0xa9,
+	0x5c, 0xdd, 0x38, 0x95, 0x5f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xd4, 0x35, 0x97, 0x53, 0x14, 0x08,
+	0x00, 0x00,
 }

@@ -80,6 +80,22 @@ message MessagesSetTyping {
     required TypingAction Action = 2;
 }
 
+// MessageClearHistory
+// @Function
+// Returns: Bool
+message MessagesClearHistory {
+    required InputPeer Peer = 1;
+    required int64 MaxID = 2;
+}
+
+// MessagesDelete
+// @Function
+// Returns: Bool
+message MessagesDelete {
+    required InputPeer Peer = 1;
+    repeated int64 MessageIDs = 2;
+    required bool Revoke = 3;
+}
 
 // MessagesDialogs
 message MessagesDialogs {
