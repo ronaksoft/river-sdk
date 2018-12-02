@@ -11,6 +11,7 @@ import (
 type RepoGroups interface {
 	Save(g *msg.Group) (err error)
 	GetManyGroups(groupIDs []int64) []*msg.Group
+	GetGroup(groupID int64) (*msg.Group, error)
 	SaveMany(groups []*msg.Group) error
 	// AddGroupMember(m *msg.UpdateGroupMemberAdded) error
 	DeleteGroupMember(groupID, userID int64) error
@@ -107,6 +108,26 @@ func (r *repoGroups) GetManyGroups(groupIDs []int64) []*msg.Group {
 	}
 
 	return pbGroup
+}
+
+func (r *repoGroups) GetGroup(groupID int64) (*msg.Group, error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	pbGroup := new(msg.Group)
+	groups := new(dto.Groups)
+
+	err := r.db.Find(groups, groupID).Error
+	if err != nil {
+		log.LOG_Debug("RepoGroups::GetGroup()-> fetch groups entity",
+			zap.String("Error", err.Error()),
+		)
+		return nil, err //, err
+	}
+
+	groups.MapTo(pbGroup)
+
+	return pbGroup, nil
 }
 
 // func (r *repoGroups) AddGroupMember(m *msg.UpdateGroupMemberAdded) error {

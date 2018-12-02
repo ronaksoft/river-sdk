@@ -591,3 +591,60 @@ func (r *River) groupDeleteUser(in, out *msg.MessageEnvelope, timeoutCB domain.T
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 
 }
+
+func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.GroupsGetFull)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG_Debug("River::groupsGetFull()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	res := new(msg.GroupFull)
+	// Group
+	group, err := repo.Ctx().Groups.GetGroup(req.GroupID)
+	if err != nil {
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, false)
+		return
+	}
+	res.Group = group
+
+	// Participants
+	participents, err := repo.Ctx().Groups.GetParticipants(req.GroupID)
+	if err != nil {
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, false)
+		return
+	}
+	res.Participants = participents
+
+	// NotifySettings
+	dlg := repo.Ctx().Dialogs.GetDialog(req.GroupID, int32(msg.PeerType_PeerGroup))
+	if dlg == nil {
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, false)
+		return
+	}
+	res.NotifySettings = dlg.NotifySettings
+
+	// Users
+	userIDs := domain.MInt64B{}
+	for _, v := range participents {
+		userIDs[v.UserID] = true
+	}
+	users := repo.Ctx().Users.GetAnyUsers(userIDs.ToArray())
+	if users == nil || len(participents) != len(users) {
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, false)
+		return
+	}
+	res.Users = users
+
+	out.Constructor = msg.C_GroupFull
+	out.Message, _ = res.Marshal()
+	successCB(out)
+
+	// send the request to server no need to pass server response to external handler (UI) just to re update catch DB
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, nil, nil, false)
+
+}
