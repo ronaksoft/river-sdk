@@ -589,7 +589,6 @@ func (r *River) groupDeleteUser(in, out *msg.MessageEnvelope, timeoutCB domain.T
 
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
-
 }
 
 // Warn : until implementation of GroupFull.Participants we dont get info of users that added to group when group created

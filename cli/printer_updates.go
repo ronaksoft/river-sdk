@@ -24,8 +24,8 @@ func UpdatePrinter(envelope *msg.UpdateEnvelope) {
 		x.Unmarshal(envelope.Update)
 		_Shell.Println(_MAGNETA("UserID, Action: %10d, %s", x.UserID, x.Action.String()))
 
-	case msg.C_ClientPendingMessageDelivery:
-		x := new(msg.ClientPendingMessageDelivery)
+	case msg.C_ClientUpdatePendingMessageDelivery:
+		x := new(msg.ClientUpdatePendingMessageDelivery)
 		err := x.Unmarshal(envelope.Update)
 		if err != nil {
 			_Shell.Println(_BLUE("#UPDATE failed to unmarshal: %v", err))

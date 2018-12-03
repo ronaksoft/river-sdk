@@ -43,6 +43,7 @@ message AccountUnregisterDevice {
 message AccountUpdateProfile {
     required string FirstName = 1;
     required string LastName = 2;
+    optional string Bio = 3;
 }
 
 // AccountCheckUsername

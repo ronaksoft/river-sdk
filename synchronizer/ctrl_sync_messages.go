@@ -172,11 +172,11 @@ func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
 	}
 
 	// TODO : Notify UI that the pending message delivered to server
-	e.Constructor = msg.C_ClientPendingMessageDelivery
+	e.Constructor = msg.C_ClientUpdatePendingMessageDelivery
 	pbcpm := new(msg.ClientPendingMessage)
 	pmsg.MapTo(pbcpm)
 
-	out := msg.ClientPendingMessageDelivery{
+	out := msg.ClientUpdatePendingMessageDelivery{
 		Messages:       message,
 		PendingMessage: pbcpm,
 		Success:        true,

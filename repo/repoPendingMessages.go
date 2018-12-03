@@ -17,6 +17,7 @@ type RepoPendingMessages interface {
 	DeletePendingMessage(ID int64) error
 	GetManyPendingMessages(messageIDs []int64) []*msg.UserMessage
 	GetAllPendingMessages() []*msg.MessagesSend
+	DeletePeerAllMessages(peerID int64, peerType int32) (*msg.ClientUpdateMessagesDeleted, error)
 }
 
 type repoPendingMessages struct {
@@ -182,4 +183,30 @@ func (r *repoPendingMessages) GetAllPendingMessages() []*msg.MessagesSend {
 	}
 
 	return res
+}
+
+func (r *repoPendingMessages) DeletePeerAllMessages(peerID int64, peerType int32) (*msg.ClientUpdateMessagesDeleted, error) {
+
+	msgs := make([]dto.PendingMessages, 0)
+	err := r.db.Where("PeerID=? AND PeerType=?", peerID, peerType).Find(&msgs).Error
+	if err != nil {
+		log.LOG_Debug("RepoPendingMessages::DeletePeerAllMessages()-> fetch pendingMessage entities",
+			zap.String("Error", err.Error()),
+		)
+		return nil, err
+	}
+	res := new(msg.ClientUpdateMessagesDeleted)
+	res.PeerID = peerID
+	res.PeerType = peerType
+	res.MessageIDs = make([]int64, 0)
+	for _, v := range msgs {
+		res.MessageIDs = append(res.MessageIDs, v.ID)
+	}
+	err = r.db.Where("PeerID=? AND PeerType=?", peerID, peerType).Delete(dto.PendingMessages{}).Error
+	if err != nil {
+		log.LOG_Debug("RepoPendingMessages::DeletePeerAllMessages()-> delete pendingMessage entities",
+			zap.String("Error", err.Error()),
+		)
+	}
+	return res, err
 }

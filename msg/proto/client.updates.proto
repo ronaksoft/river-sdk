@@ -4,8 +4,15 @@ import "core.types.proto";
 import "client.core.messages.proto";
 
 // ClientPendingMessageDelivery
-message ClientPendingMessageDelivery {
+message ClientUpdatePendingMessageDelivery {
     required UserMessage Messages = 1;
     required ClientPendingMessage PendingMessage = 2;
     required bool Success = 3;
+}
+
+// ClientUpdateMessageDeleted
+message ClientUpdateMessagesDeleted {
+    required int64 PeerID = 1;
+    required int32 PeerType = 2;
+    repeated int64 MessageIDs = 3;
 }

@@ -23,7 +23,7 @@ func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 			_Shell.Println(_MAGNETA("OnUpdates() :: Loop Update Constructor :: %v", msg.ConstructorNames[update.Constructor]))
 			UpdatePrinter(update)
 		}
-	case msg.C_ClientPendingMessageDelivery:
+	case msg.C_ClientUpdatePendingMessageDelivery:
 		//wrapping it to update envelop to pass UpdatePrinter
 		udp := new(msg.UpdateEnvelope)
 		udp.Constructor = constructor

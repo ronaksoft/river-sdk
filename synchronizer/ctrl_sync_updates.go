@@ -10,7 +10,7 @@ import (
 )
 
 // updateNewMessage
-func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
+func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
 	log.LOG_Debug("SyncController::updateNewMessage() applier")
 	x := new(msg.UpdateNewMessage)
 	err := x.Unmarshal(u.Update)
@@ -18,7 +18,7 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) (passToExter
 		log.LOG_Debug("SyncController::updateNewMessage()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
-		return
+		return []*msg.UpdateEnvelope{}
 	}
 	dialog := repo.Ctx().Dialogs.GetDialog(x.Message.PeerID, x.Message.PeerType)
 	if dialog == nil {
@@ -78,12 +78,10 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) (passToExter
 			)
 		}
 	}
-
+	res := make([]*msg.UpdateEnvelope, 0)
 	// Perevent calling external delegate
-	if ctrl.isDeliveredMessage(x.Message.ID) {
-		passToExternalhandler = false
-	} else {
-		passToExternalhandler = true
+	if !ctrl.isDeliveredMessage(x.Message.ID) {
+		res = append(res, u)
 	}
 
 	// Parse message action and call required appliers
@@ -114,6 +112,44 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) (passToExter
 		if err != nil {
 			log.LOG_Debug("SyncController::updateNewMessage() -> DeleteGroupMemberMany() Failed", zap.String("Error", err.Error()))
 		}
+
+		// Check if user left (deleted him/her self from group) remove its Group, Dialog and its PendingMessages
+		selfUserID := ctrl.connInfo.PickupUserID()
+		userLeft := false
+		for _, v := range act.UserIDs {
+			if v == selfUserID {
+				userLeft = true
+				break
+			}
+		}
+		if userLeft {
+			// Delete Group		NOT REQUIRED
+			// Delete Dialog	NOT REQUIRED
+			// Delete PendingMessage
+			deletedMsgs, err := repo.Ctx().PendingMessages.DeletePeerAllMessages(x.Message.PeerID, x.Message.PeerType)
+			if err != nil {
+				log.LOG_Debug("River::groupDeleteUser()-> DeleteGroupPendingMessage()",
+					zap.String("Error", err.Error()),
+				)
+			} else {
+				buff, err := deletedMsgs.Marshal()
+				if err != nil {
+					log.LOG_Debug("River::groupDeleteUser()-> Unmarshal ClientUpdateMessagesDeleted",
+						zap.String("Error", err.Error()),
+					)
+				} else {
+					udp := new(msg.UpdateEnvelope)
+					udp.Constructor = msg.C_ClientUpdateMessagesDeleted
+					udp.Update = buff
+					udp.UCount = 1
+					udp.Timestamp = u.Timestamp
+					udp.UpdateID = u.UpdateID
+					res = append(res, udp)
+				}
+			}
+
+		}
+
 	case MessageActionGroupTitleChanged:
 	// this will be handled by upper level on UpdateContainer
 	case MessageActionClearHistory:
@@ -128,17 +164,17 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) (passToExter
 		}
 	}
 
-	return
+	return res
 }
 
 // updateReadHistoryInbox
-func (ctrl *SyncController) updateReadHistoryInbox(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
+func (ctrl *SyncController) updateReadHistoryInbox(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
 	log.LOG_Debug("SyncController::updateReadHistoryInbox() applier")
 	x := new(msg.UpdateReadHistoryInbox)
 	x.Unmarshal(u.Update)
 	dialog := repo.Ctx().Dialogs.GetDialog(x.Peer.ID, x.Peer.Type)
 	if dialog == nil {
-		return
+		return []*msg.UpdateEnvelope{}
 	}
 
 	err := repo.Ctx().Dialogs.UpdateReadInboxMaxID(ctrl.UserID, x.Peer.ID, x.Peer.Type, x.MaxID)
@@ -147,12 +183,12 @@ func (ctrl *SyncController) updateReadHistoryInbox(u *msg.UpdateEnvelope) (passT
 			zap.String("Error", err.Error()),
 		)
 	}
-	passToExternalhandler = true
-	return
+	res := []*msg.UpdateEnvelope{u}
+	return res
 }
 
 // updateReadHistoryOutbox
-func (ctrl *SyncController) updateReadHistoryOutbox(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
+func (ctrl *SyncController) updateReadHistoryOutbox(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
 	log.LOG_Debug("SyncController::updateReadHistoryOutbox() applier")
 	x := new(msg.UpdateReadHistoryOutbox)
 	x.Unmarshal(u.Update)
@@ -162,12 +198,12 @@ func (ctrl *SyncController) updateReadHistoryOutbox(u *msg.UpdateEnvelope) (pass
 			zap.String("Error", err.Error()),
 		)
 	}
-	passToExternalhandler = true
-	return
+	res := []*msg.UpdateEnvelope{u}
+	return res
 }
 
 // updateMessageEdited
-func (ctrl *SyncController) updateMessageEdited(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
+func (ctrl *SyncController) updateMessageEdited(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
 	log.LOG_Debug("SyncController::updateMessageEdited() applier")
 	x := new(msg.UpdateMessageEdited)
 	x.Unmarshal(u.Update)
@@ -177,11 +213,11 @@ func (ctrl *SyncController) updateMessageEdited(u *msg.UpdateEnvelope) (passToEx
 			zap.String("Error", err.Error()),
 		)
 	}
-	passToExternalhandler = true
-	return
+	res := []*msg.UpdateEnvelope{u}
+	return res
 }
 
-func (ctrl *SyncController) updateMessageID(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
+func (ctrl *SyncController) updateMessageID(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
 	log.LOG_Debug("SyncController::updateMessageID() applier")
 	x := new(msg.UpdateMessageID)
 	x.Unmarshal(u.Update)
@@ -198,12 +234,12 @@ func (ctrl *SyncController) updateMessageID(u *msg.UpdateEnvelope) (passToExtern
 	msgEnvelop.RequestID = uint64(x.RandomID)
 	msgEnvelop.Message, _ = sent.Marshal()
 	ctrl.messageSent(msgEnvelop)
-	passToExternalhandler = false
-	return
+	res := []*msg.UpdateEnvelope{u}
+	return res
 }
 
 // updateNotifySettings
-func (ctrl *SyncController) updateNotifySettings(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
+func (ctrl *SyncController) updateNotifySettings(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
 	log.LOG_Debug("SyncController::updateNotifySettings() applier")
 	x := new(msg.UpdateNotifySettings)
 	x.Unmarshal(u.Update)
@@ -214,12 +250,12 @@ func (ctrl *SyncController) updateNotifySettings(u *msg.UpdateEnvelope) (passToE
 			zap.String("Error", err.Error()),
 		)
 	}
-	passToExternalhandler = true
-	return
+	res := []*msg.UpdateEnvelope{u}
+	return res
 }
 
 // updateUsername
-func (ctrl *SyncController) updateUsername(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
+func (ctrl *SyncController) updateUsername(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
 	log.LOG_Debug("SyncController::updateUsername() applier")
 	x := new(msg.UpdateUsername)
 	x.Unmarshal(u.Update)
@@ -230,12 +266,12 @@ func (ctrl *SyncController) updateUsername(u *msg.UpdateEnvelope) (passToExterna
 	ctrl.connInfo.ChangeLastName(x.LastName)
 	ctrl.connInfo.Save()
 
-	passToExternalhandler = true
-	return
+	res := []*msg.UpdateEnvelope{u}
+	return res
 }
 
 // updateMessagesDeleted
-func (ctrl *SyncController) updateMessagesDeleted(u *msg.UpdateEnvelope) (passToExternalhandler bool) {
+func (ctrl *SyncController) updateMessagesDeleted(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
 	log.LOG_Debug("SyncController::updateMessagesDeleted() applier")
 
 	x := new(msg.UpdateMessagesDeleted)
@@ -248,6 +284,6 @@ func (ctrl *SyncController) updateMessagesDeleted(u *msg.UpdateEnvelope) (passTo
 		)
 	}
 
-	passToExternalhandler = true
-	return
+	res := []*msg.UpdateEnvelope{u}
+	return res
 }

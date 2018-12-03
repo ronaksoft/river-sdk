@@ -484,6 +484,12 @@ func ResultMessagesSend(out *MessageEnvelope, res *MessagesSend) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultClientUpdateMessagesDeleted(out *MessageEnvelope, res *ClientUpdateMessagesDeleted) {
+	out.Constructor = C_ClientUpdateMessagesDeleted
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultGroupsDeleteUser(out *MessageEnvelope, res *GroupsDeleteUser) {
 	out.Constructor = C_GroupsDeleteUser
 	pbytes.Put(out.Message)
@@ -556,14 +562,14 @@ func ResultFileSavePart(out *MessageEnvelope, res *FileSavePart) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
-func ResultInputUser(out *MessageEnvelope, res *InputUser) {
-	out.Constructor = C_InputUser
+func ResultClientUpdatePendingMessageDelivery(out *MessageEnvelope, res *ClientUpdatePendingMessageDelivery) {
+	out.Constructor = C_ClientUpdatePendingMessageDelivery
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
-func ResultClientPendingMessageDelivery(out *MessageEnvelope, res *ClientPendingMessageDelivery) {
-	out.Constructor = C_ClientPendingMessageDelivery
+func ResultInputUser(out *MessageEnvelope, res *InputUser) {
+	out.Constructor = C_InputUser
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

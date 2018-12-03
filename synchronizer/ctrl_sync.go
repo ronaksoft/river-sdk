@@ -415,11 +415,11 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 			if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
 
 				// TODO: hotfix added this cuz sync works awkwardly
-				passToExternalHandler := applier(update)
+				externalHandlerUpdates := applier(update)
 				// check updateID to ensure to do not pass old updates to UI.
 				// TODO : server still sends typing updates
-				if passToExternalHandler && update.UpdateID > ctrl.updateID && update.Constructor != msg.C_UpdateUserTyping {
-					updContainer.Updates = append(updContainer.Updates, update)
+				if update.UpdateID > ctrl.updateID && update.Constructor != msg.C_UpdateUserTyping {
+					updContainer.Updates = append(updContainer.Updates, externalHandlerUpdates...)
 				}
 			}
 		}
@@ -673,18 +673,18 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 		// 	continue
 		// }
 
-		passToExternalHandler := true
+		var externalHandlerUpdates []*msg.UpdateEnvelope
 		if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
 
-			passToExternalHandler = applier(update)
+			externalHandlerUpdates = applier(update)
 			log.LOG_Debug("SyncController::UpdateHandler() Update Applied",
 				zap.Int64("UPDATE_ID", update.UpdateID),
 				zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
 			)
 		}
 
-		if passToExternalHandler {
-			udpContainer.Updates = append(udpContainer.Updates, update)
+		if externalHandlerUpdates != nil {
+			udpContainer.Updates = append(udpContainer.Updates, externalHandlerUpdates...)
 
 		} else {
 			log.LOG_Debug("SyncController::UpdateHandler() Do not pass update to external handler",

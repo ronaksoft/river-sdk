@@ -485,6 +485,12 @@ var (
 			return m
 		},
 	}
+	PoolClientUpdateMessagesDeleted = sync.Pool{
+		New: func() interface{} {
+			m := new(ClientUpdateMessagesDeleted)
+			return m
+		},
+	}
 	PoolGroupsDeleteUser = sync.Pool{
 		New: func() interface{} {
 			m := new(GroupsDeleteUser)
@@ -557,15 +563,15 @@ var (
 			return m
 		},
 	}
-	PoolInputUser = sync.Pool{
+	PoolClientUpdatePendingMessageDelivery = sync.Pool{
 		New: func() interface{} {
-			m := new(InputUser)
+			m := new(ClientUpdatePendingMessageDelivery)
 			return m
 		},
 	}
-	PoolClientPendingMessageDelivery = sync.Pool{
+	PoolInputUser = sync.Pool{
 		New: func() interface{} {
-			m := new(ClientPendingMessageDelivery)
+			m := new(InputUser)
 			return m
 		},
 	}

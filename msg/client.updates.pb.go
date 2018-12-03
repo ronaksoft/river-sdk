@@ -23,24 +23,24 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
 // ClientPendingMessageDelivery
-type ClientPendingMessageDelivery struct {
+type ClientUpdatePendingMessageDelivery struct {
 	Messages       *UserMessage          `protobuf:"bytes,1,req,name=Messages" json:"Messages,omitempty"`
 	PendingMessage *ClientPendingMessage `protobuf:"bytes,2,req,name=PendingMessage" json:"PendingMessage,omitempty"`
 	Success        bool                  `protobuf:"varint,3,req,name=Success" json:"Success"`
 }
 
-func (m *ClientPendingMessageDelivery) Reset()         { *m = ClientPendingMessageDelivery{} }
-func (m *ClientPendingMessageDelivery) String() string { return proto.CompactTextString(m) }
-func (*ClientPendingMessageDelivery) ProtoMessage()    {}
-func (*ClientPendingMessageDelivery) Descriptor() ([]byte, []int) {
-	return fileDescriptor_client_updates_3d7bee4d63a50438, []int{0}
+func (m *ClientUpdatePendingMessageDelivery) Reset()         { *m = ClientUpdatePendingMessageDelivery{} }
+func (m *ClientUpdatePendingMessageDelivery) String() string { return proto.CompactTextString(m) }
+func (*ClientUpdatePendingMessageDelivery) ProtoMessage()    {}
+func (*ClientUpdatePendingMessageDelivery) Descriptor() ([]byte, []int) {
+	return fileDescriptor_client_updates_ebf9641288d93b15, []int{0}
 }
-func (m *ClientPendingMessageDelivery) XXX_Unmarshal(b []byte) error {
+func (m *ClientUpdatePendingMessageDelivery) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *ClientPendingMessageDelivery) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ClientUpdatePendingMessageDelivery) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_ClientPendingMessageDelivery.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ClientUpdatePendingMessageDelivery.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalTo(b)
@@ -50,43 +50,105 @@ func (m *ClientPendingMessageDelivery) XXX_Marshal(b []byte, deterministic bool)
 		return b[:n], nil
 	}
 }
-func (dst *ClientPendingMessageDelivery) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ClientPendingMessageDelivery.Merge(dst, src)
+func (dst *ClientUpdatePendingMessageDelivery) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClientUpdatePendingMessageDelivery.Merge(dst, src)
 }
-func (m *ClientPendingMessageDelivery) XXX_Size() int {
+func (m *ClientUpdatePendingMessageDelivery) XXX_Size() int {
 	return m.Size()
 }
-func (m *ClientPendingMessageDelivery) XXX_DiscardUnknown() {
-	xxx_messageInfo_ClientPendingMessageDelivery.DiscardUnknown(m)
+func (m *ClientUpdatePendingMessageDelivery) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClientUpdatePendingMessageDelivery.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ClientPendingMessageDelivery proto.InternalMessageInfo
+var xxx_messageInfo_ClientUpdatePendingMessageDelivery proto.InternalMessageInfo
 
-func (m *ClientPendingMessageDelivery) GetMessages() *UserMessage {
+func (m *ClientUpdatePendingMessageDelivery) GetMessages() *UserMessage {
 	if m != nil {
 		return m.Messages
 	}
 	return nil
 }
 
-func (m *ClientPendingMessageDelivery) GetPendingMessage() *ClientPendingMessage {
+func (m *ClientUpdatePendingMessageDelivery) GetPendingMessage() *ClientPendingMessage {
 	if m != nil {
 		return m.PendingMessage
 	}
 	return nil
 }
 
-func (m *ClientPendingMessageDelivery) GetSuccess() bool {
+func (m *ClientUpdatePendingMessageDelivery) GetSuccess() bool {
 	if m != nil {
 		return m.Success
 	}
 	return false
 }
 
-func init() {
-	proto.RegisterType((*ClientPendingMessageDelivery)(nil), "msg.ClientPendingMessageDelivery")
+// ClientUpdateMessageDeleted
+type ClientUpdateMessagesDeleted struct {
+	PeerID     int64   `protobuf:"varint,1,req,name=PeerID" json:"PeerID"`
+	PeerType   int32   `protobuf:"varint,2,req,name=PeerType" json:"PeerType"`
+	MessageIDs []int64 `protobuf:"varint,3,rep,name=MessageIDs" json:"MessageIDs,omitempty"`
 }
-func (m *ClientPendingMessageDelivery) Marshal() (dAtA []byte, err error) {
+
+func (m *ClientUpdateMessagesDeleted) Reset()         { *m = ClientUpdateMessagesDeleted{} }
+func (m *ClientUpdateMessagesDeleted) String() string { return proto.CompactTextString(m) }
+func (*ClientUpdateMessagesDeleted) ProtoMessage()    {}
+func (*ClientUpdateMessagesDeleted) Descriptor() ([]byte, []int) {
+	return fileDescriptor_client_updates_ebf9641288d93b15, []int{1}
+}
+func (m *ClientUpdateMessagesDeleted) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ClientUpdateMessagesDeleted) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ClientUpdateMessagesDeleted.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *ClientUpdateMessagesDeleted) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClientUpdateMessagesDeleted.Merge(dst, src)
+}
+func (m *ClientUpdateMessagesDeleted) XXX_Size() int {
+	return m.Size()
+}
+func (m *ClientUpdateMessagesDeleted) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClientUpdateMessagesDeleted.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ClientUpdateMessagesDeleted proto.InternalMessageInfo
+
+func (m *ClientUpdateMessagesDeleted) GetPeerID() int64 {
+	if m != nil {
+		return m.PeerID
+	}
+	return 0
+}
+
+func (m *ClientUpdateMessagesDeleted) GetPeerType() int32 {
+	if m != nil {
+		return m.PeerType
+	}
+	return 0
+}
+
+func (m *ClientUpdateMessagesDeleted) GetMessageIDs() []int64 {
+	if m != nil {
+		return m.MessageIDs
+	}
+	return nil
+}
+
+func init() {
+	proto.RegisterType((*ClientUpdatePendingMessageDelivery)(nil), "msg.ClientUpdatePendingMessageDelivery")
+	proto.RegisterType((*ClientUpdateMessagesDeleted)(nil), "msg.ClientUpdateMessagesDeleted")
+}
+func (m *ClientUpdatePendingMessageDelivery) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -96,7 +158,7 @@ func (m *ClientPendingMessageDelivery) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ClientPendingMessageDelivery) MarshalTo(dAtA []byte) (int, error) {
+func (m *ClientUpdatePendingMessageDelivery) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -136,6 +198,37 @@ func (m *ClientPendingMessageDelivery) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *ClientUpdateMessagesDeleted) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ClientUpdateMessagesDeleted) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintClientUpdates(dAtA, i, uint64(m.PeerID))
+	dAtA[i] = 0x10
+	i++
+	i = encodeVarintClientUpdates(dAtA, i, uint64(m.PeerType))
+	if len(m.MessageIDs) > 0 {
+		for _, num := range m.MessageIDs {
+			dAtA[i] = 0x18
+			i++
+			i = encodeVarintClientUpdates(dAtA, i, uint64(num))
+		}
+	}
+	return i, nil
+}
+
 func encodeVarintClientUpdates(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -145,7 +238,7 @@ func encodeVarintClientUpdates(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *ClientPendingMessageDelivery) Size() (n int) {
+func (m *ClientUpdatePendingMessageDelivery) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -163,6 +256,22 @@ func (m *ClientPendingMessageDelivery) Size() (n int) {
 	return n
 }
 
+func (m *ClientUpdateMessagesDeleted) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovClientUpdates(uint64(m.PeerID))
+	n += 1 + sovClientUpdates(uint64(m.PeerType))
+	if len(m.MessageIDs) > 0 {
+		for _, e := range m.MessageIDs {
+			n += 1 + sovClientUpdates(uint64(e))
+		}
+	}
+	return n
+}
+
 func sovClientUpdates(x uint64) (n int) {
 	for {
 		n++
@@ -176,7 +285,7 @@ func sovClientUpdates(x uint64) (n int) {
 func sozClientUpdates(x uint64) (n int) {
 	return sovClientUpdates(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *ClientPendingMessageDelivery) Unmarshal(dAtA []byte) error {
+func (m *ClientUpdatePendingMessageDelivery) Unmarshal(dAtA []byte) error {
 	var hasFields [1]uint64
 	l := len(dAtA)
 	iNdEx := 0
@@ -200,10 +309,10 @@ func (m *ClientPendingMessageDelivery) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ClientPendingMessageDelivery: wiretype end group for non-group")
+			return fmt.Errorf("proto: ClientUpdatePendingMessageDelivery: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ClientPendingMessageDelivery: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ClientUpdatePendingMessageDelivery: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -325,6 +434,176 @@ func (m *ClientPendingMessageDelivery) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *ClientUpdateMessagesDeleted) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowClientUpdates
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ClientUpdateMessagesDeleted: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ClientUpdateMessagesDeleted: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PeerID", wireType)
+			}
+			m.PeerID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClientUpdates
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PeerID |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PeerType", wireType)
+			}
+			m.PeerType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClientUpdates
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PeerType |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000002)
+		case 3:
+			if wireType == 0 {
+				var v int64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowClientUpdates
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (int64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.MessageIDs = append(m.MessageIDs, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowClientUpdates
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthClientUpdates
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.MessageIDs) == 0 {
+					m.MessageIDs = make([]int64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v int64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowClientUpdates
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (int64(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.MessageIDs = append(m.MessageIDs, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field MessageIDs", wireType)
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipClientUpdates(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthClientUpdates
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("PeerID")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("PeerType")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipClientUpdates(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -431,22 +710,27 @@ var (
 )
 
 func init() {
-	proto.RegisterFile("client.updates.proto", fileDescriptor_client_updates_3d7bee4d63a50438)
+	proto.RegisterFile("client.updates.proto", fileDescriptor_client_updates_ebf9641288d93b15)
 }
 
-var fileDescriptor_client_updates_3d7bee4d63a50438 = []byte{
-	// 204 bytes of a gzipped FileDescriptorProto
+var fileDescriptor_client_updates_ebf9641288d93b15 = []byte{
+	// 274 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x49, 0xce, 0xc9, 0x4c,
 	0xcd, 0x2b, 0xd1, 0x2b, 0x2d, 0x48, 0x49, 0x2c, 0x49, 0x2d, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9,
 	0x17, 0x62, 0xce, 0x2d, 0x4e, 0x97, 0x12, 0x48, 0xce, 0x2f, 0x4a, 0xd5, 0x2b, 0xa9, 0x2c, 0x80,
 	0x09, 0x4b, 0x49, 0x41, 0x15, 0x83, 0x25, 0x72, 0x53, 0x8b, 0x8b, 0x13, 0xd3, 0x61, 0x72, 0x4a,
-	0xeb, 0x19, 0xb9, 0x64, 0x9c, 0xc1, 0xd2, 0x01, 0xa9, 0x79, 0x29, 0x99, 0x79, 0xe9, 0xbe, 0x10,
-	0x79, 0x97, 0xd4, 0x9c, 0xcc, 0xb2, 0xd4, 0xa2, 0x4a, 0x21, 0x1d, 0x2e, 0x0e, 0xa8, 0x50, 0xb1,
-	0x04, 0xa3, 0x02, 0x93, 0x06, 0xb7, 0x91, 0x80, 0x5e, 0x6e, 0x71, 0xba, 0x5e, 0x68, 0x71, 0x6a,
-	0x11, 0x54, 0x22, 0x08, 0xae, 0x42, 0xc8, 0x91, 0x8b, 0x0f, 0xd5, 0x1c, 0x09, 0x26, 0xb0, 0x1e,
-	0x49, 0xb0, 0x1e, 0x6c, 0x16, 0x05, 0xa1, 0x69, 0x10, 0x92, 0xe3, 0x62, 0x0f, 0x2e, 0x4d, 0x4e,
-	0x4e, 0x2d, 0x2e, 0x96, 0x60, 0x56, 0x60, 0xd2, 0xe0, 0x70, 0x62, 0x39, 0x71, 0x4f, 0x9e, 0x21,
-	0x08, 0x26, 0xe8, 0x24, 0x71, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47, 0x72, 0x8c, 0x0f, 0x1e, 0xc9,
-	0x31, 0x4e, 0x78, 0x2c, 0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3, 0x8d, 0xc7, 0x72, 0x0c, 0x80, 0x00,
-	0x00, 0x00, 0xff, 0xff, 0xf5, 0xac, 0x53, 0xd6, 0x15, 0x01, 0x00, 0x00,
+	0x5b, 0x19, 0xb9, 0x94, 0x9c, 0xc1, 0xd2, 0xa1, 0x60, 0xa3, 0x02, 0x52, 0xf3, 0x52, 0x32, 0xf3,
+	0xd2, 0x7d, 0x21, 0xaa, 0x5c, 0x52, 0x73, 0x32, 0xcb, 0x52, 0x8b, 0x2a, 0x85, 0x74, 0xb8, 0x38,
+	0xa0, 0x42, 0xc5, 0x12, 0x8c, 0x0a, 0x4c, 0x1a, 0xdc, 0x46, 0x02, 0x7a, 0xb9, 0xc5, 0xe9, 0x7a,
+	0xa1, 0xc5, 0xa9, 0x45, 0x50, 0x89, 0x20, 0xb8, 0x0a, 0x21, 0x47, 0x2e, 0x3e, 0x54, 0x73, 0x24,
+	0x98, 0xc0, 0x7a, 0x24, 0xc1, 0x7a, 0x20, 0xd6, 0xa1, 0x2a, 0x08, 0x42, 0xd3, 0x20, 0x24, 0xc7,
+	0xc5, 0x1e, 0x5c, 0x9a, 0x9c, 0x9c, 0x5a, 0x5c, 0x2c, 0xc1, 0xac, 0xc0, 0xa4, 0xc1, 0xe1, 0xc4,
+	0x72, 0xe2, 0x9e, 0x3c, 0x43, 0x10, 0x4c, 0x50, 0xa9, 0x96, 0x4b, 0x1a, 0xd9, 0xd9, 0x30, 0xab,
+	0x5d, 0x52, 0x73, 0x52, 0x4b, 0x52, 0x53, 0x84, 0x64, 0xb8, 0xd8, 0x02, 0x52, 0x53, 0x8b, 0x3c,
+	0x5d, 0xc0, 0xae, 0x65, 0x86, 0xea, 0x86, 0x8a, 0x09, 0x29, 0x70, 0x71, 0x80, 0x58, 0x21, 0x95,
+	0x05, 0x10, 0x97, 0xb1, 0x42, 0xe5, 0xe1, 0xa2, 0x42, 0x72, 0x5c, 0x5c, 0x50, 0x23, 0x3d, 0x5d,
+	0x40, 0x2e, 0x60, 0xd6, 0x60, 0x0e, 0x42, 0x12, 0x71, 0x92, 0x38, 0xf1, 0x48, 0x8e, 0xf1, 0xc2,
+	0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1,
+	0xc6, 0x63, 0x39, 0x06, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x56, 0x16, 0x5a, 0xcf, 0x9a, 0x01,
+	0x00, 0x00,
 }

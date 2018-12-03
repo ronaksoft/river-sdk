@@ -32,7 +32,7 @@ type SyncStatusUpdateCallback func(newStatus SyncStatus)
 type TimeoutCallback func()
 
 // UpdateApplier
-type UpdateApplier func(envelope *msg.UpdateEnvelope) (passToExternalhandler bool)
+type UpdateApplier func(envelope *msg.UpdateEnvelope) []*msg.UpdateEnvelope
 
 // MessageApplier
 type MessageApplier func(envelope *msg.MessageEnvelope)
