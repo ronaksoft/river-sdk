@@ -15,11 +15,13 @@ type RepoGroups interface {
 	SaveMany(groups []*msg.Group) error
 	// AddGroupMember(m *msg.UpdateGroupMemberAdded) error
 	DeleteGroupMember(groupID, userID int64) error
+	DeleteAllGroupMember(groupID int64) error
 	UpdateGroupTitle(groupID int64, title string) error
 	SaveParticipants(groupID int64, participant *msg.GroupParticipant) error
 	GetParticipants(groupID int64) ([]*msg.GroupParticipant, error)
 	DeleteGroupMemberMany(peerID int64, IDs []int64) error
 	SaveParticipantsByID(groupID, createdOn int64, userIDs []int64)
+	Delete(groupID int64) error
 }
 
 type repoGroups struct {
@@ -156,6 +158,13 @@ func (r *repoGroups) DeleteGroupMember(groupID, userID int64) error {
 	return err
 }
 
+func (r *repoGroups) DeleteAllGroupMember(groupID int64) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	return r.db.Where("GroupID= ? ", groupID).Delete(dto.GroupParticipants{}).Error
+}
+
 func (r *repoGroups) UpdateGroupTitle(groupID int64, title string) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -217,4 +226,11 @@ func (r *repoGroups) SaveParticipantsByID(groupID, createdOn int64, userIDs []in
 		dtoGP.UserID = id
 		r.db.Save(dtoGP)
 	}
+}
+
+func (r *repoGroups) Delete(groupID int64) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	return r.db.Where("ID= ? ", groupID).Delete(dto.Groups{}).Error
 }

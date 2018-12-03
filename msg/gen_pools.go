@@ -17,6 +17,12 @@ var (
 			return m
 		},
 	}
+	PoolInitUserBound = sync.Pool{
+		New: func() interface{} {
+			m := new(InitUserBound)
+			return m
+		},
+	}
 	PoolUpdateUserTyping = sync.Pool{
 		New: func() interface{} {
 			m := new(UpdateUserTyping)
@@ -275,6 +281,12 @@ var (
 			return m
 		},
 	}
+	PoolInitBindUser = sync.Pool{
+		New: func() interface{} {
+			m := new(InitBindUser)
+			return m
+		},
+	}
 	PoolMessageActionGroupAddUser = sync.Pool{
 		New: func() interface{} {
 			m := new(MessageActionGroupAddUser)
@@ -410,6 +422,12 @@ var (
 	PoolError = sync.Pool{
 		New: func() interface{} {
 			m := new(Error)
+			return m
+		},
+	}
+	PoolMessagesForward = sync.Pool{
+		New: func() interface{} {
+			m := new(MessagesForward)
 			return m
 		},
 	}

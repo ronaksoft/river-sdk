@@ -86,6 +86,7 @@ message MessagesSetTyping {
 message MessagesClearHistory {
     required InputPeer Peer = 1;
     required int64 MaxID = 2;
+    required bool Delete = 3;
 }
 
 // MessagesDelete
@@ -95,6 +96,17 @@ message MessagesDelete {
     required InputPeer Peer = 1;
     repeated int64 MessageIDs = 2;
     required bool Revoke = 3;
+}
+
+// MessagesForward
+// @Function
+// Returns: Bool
+message MessagesForward {
+    required InputPeer FromPeer = 1;
+    required InputPeer ToPeer = 2;
+    required bool Silence = 3;
+    repeated int64 MessageIDs = 4;
+    required int64 RandomID = 5;
 }
 
 // MessagesDialogs

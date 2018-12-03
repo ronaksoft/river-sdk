@@ -162,6 +162,14 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) []*msg.Updat
 		if err != nil {
 			log.LOG_Debug("SyncController::updateNewMessage() -> DeleteDialogMessage() Failed", zap.String("Error", err.Error()))
 		}
+		if act.Delete {
+			// Delete Dialog
+			repo.Ctx().Dialogs.Delete(x.Message.PeerID, x.Message.PeerType)
+			// Delete Group
+			repo.Ctx().Groups.Delete(x.Message.PeerID)
+			// Delete Participants
+			repo.Ctx().Groups.DeleteAllGroupMember(x.Message.PeerID)
+		}
 	}
 
 	return res

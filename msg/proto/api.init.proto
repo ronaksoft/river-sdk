@@ -11,7 +11,7 @@ message InitDB {
 
 // InitConnect
 // @Function
-// @Return: InitReponse
+// @Return: InitResponse
 message InitConnect {
     required fixed64 ClientNonce = 1;
 }
@@ -32,8 +32,6 @@ message InitResponse {
 message InitCompleteAuth {
     required fixed64 ClientNonce = 1;
     required fixed64 ServerNonce = 2;
-    //    fixed32 ClientPubKeyE = 3;
-    //    string ClientPubKeyN = 4;
     required bytes ClientDHPubKey = 5;
     required fixed64 P = 6;
     required fixed64 Q = 7;
@@ -57,4 +55,25 @@ message InitAuthCompleted {
     required Statuses Status = 3;
     required fixed64 SecretHash = 4;
     required bytes ServerDHPubKey = 5;
+}
+
+
+// /////////////////
+// This part will be used by EDGE-PLAIN server only.
+// ///////
+
+// InitBindUser
+// @Function
+// @Return: InitUserBound
+message InitBindUser {
+    required string AuthKey = 1;
+    required string Username = 2;
+    required string Phone = 3;
+    required string FirstName = 4;
+    required string LastName = 5;
+}
+
+// InitUserBound
+message InitUserBound {
+    required int64 AuthID = 1;
 }

@@ -3,6 +3,7 @@ package msg
 const (
 	C_MessagesSendMedia                  int64 = 25498545
 	C_Peer                               int64 = 47470215
+	C_InitUserBound                      int64 = 128391141
 	C_UpdateUserTyping                   int64 = 178254060
 	C_GroupFull                          int64 = 205850814
 	C_GroupsAddUser                      int64 = 394654713
@@ -46,6 +47,7 @@ const (
 	C_SystemGetDHGroups                  int64 = 1786665018
 	C_UpdateMessageEdited                int64 = 1825079988
 	C_UpdateState                        int64 = 1837585836
+	C_InitBindUser                       int64 = 1933549113
 	C_MessageActionGroupAddUser          int64 = 1949386261
 	C_MessageContainer                   int64 = 1972016308
 	C_MessagesClearHistory               int64 = 1981246180
@@ -69,6 +71,7 @@ const (
 	C_GroupsEditTitle                    int64 = 2582813461
 	C_AuthLogin                          int64 = 2587620888
 	C_Error                              int64 = 2619118453
+	C_MessagesForward                    int64 = 2662884753
 	C_ProtoEncryptedPayload              int64 = 2668405547
 	C_PhoneContact                       int64 = 2672574672
 	C_UpdateUserStatus                   int64 = 2696747995
@@ -112,6 +115,7 @@ const (
 var ConstructorNames = map[int64]string{
 	25498545:   "MessagesSendMedia",
 	47470215:   "Peer",
+	128391141:  "InitUserBound",
 	178254060:  "UpdateUserTyping",
 	205850814:  "GroupFull",
 	394654713:  "GroupsAddUser",
@@ -155,6 +159,7 @@ var ConstructorNames = map[int64]string{
 	1786665018: "SystemGetDHGroups",
 	1825079988: "UpdateMessageEdited",
 	1837585836: "UpdateState",
+	1933549113: "InitBindUser",
 	1949386261: "MessageActionGroupAddUser",
 	1972016308: "MessageContainer",
 	1981246180: "MessagesClearHistory",
@@ -178,6 +183,7 @@ var ConstructorNames = map[int64]string{
 	2582813461: "GroupsEditTitle",
 	2587620888: "AuthLogin",
 	2619118453: "Error",
+	2662884753: "MessagesForward",
 	2668405547: "ProtoEncryptedPayload",
 	2672574672: "PhoneContact",
 	2696747995: "UpdateUserStatus",

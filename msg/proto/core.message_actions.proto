@@ -35,6 +35,7 @@ message MessageActionGroupTitleChanged {
 // MessageActionClearHistory
 message MessageActionClearHistory {
     required int64 MaxID = 1;
+    required bool Delete = 2;
 }
 
 // MessageActionContactRegistered

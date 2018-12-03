@@ -16,6 +16,12 @@ func ResultPeer(out *MessageEnvelope, res *Peer) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultInitUserBound(out *MessageEnvelope, res *InitUserBound) {
+	out.Constructor = C_InitUserBound
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultUpdateUserTyping(out *MessageEnvelope, res *UpdateUserTyping) {
 	out.Constructor = C_UpdateUserTyping
 	pbytes.Put(out.Message)
@@ -274,6 +280,12 @@ func ResultUpdateState(out *MessageEnvelope, res *UpdateState) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultInitBindUser(out *MessageEnvelope, res *InitBindUser) {
+	out.Constructor = C_InitBindUser
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultMessageActionGroupAddUser(out *MessageEnvelope, res *MessageActionGroupAddUser) {
 	out.Constructor = C_MessageActionGroupAddUser
 	pbytes.Put(out.Message)
@@ -408,6 +420,12 @@ func ResultAuthLogin(out *MessageEnvelope, res *AuthLogin) {
 }
 func ResultError(out *MessageEnvelope, res *Error) {
 	out.Constructor = C_Error
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultMessagesForward(out *MessageEnvelope, res *MessagesForward) {
+	out.Constructor = C_MessagesForward
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

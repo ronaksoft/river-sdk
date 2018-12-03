@@ -1,6 +1,7 @@
 package main
 
 import (
+	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/toolbox"
 	"gopkg.in/abiosoft/ishell.v2"
@@ -200,6 +201,61 @@ var MessagesDelete = &ishell.Cmd{
 	},
 }
 
+var MessagesEdit = &ishell.Cmd{
+	Name: "MessagesEdit",
+	Func: func(c *ishell.Context) {
+		req := msg.MessagesEdit{}
+		req.Peer = &msg.InputPeer{}
+		req.Peer.Type = fnGetPeerType(c)
+		req.Peer.ID = fnGetPeerID(c)
+		req.Peer.AccessHash = fnGetAccessHash(c)
+		req.MessageID = fnGetMessageID(c)
+		req.Body = fnGetBody(c)
+
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesEdit, reqBytes, reqDelegate, false); err != nil {
+			_Log.Debug(err.Error())
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+
+	},
+}
+
+var MessagesForward = &ishell.Cmd{
+	Name: "MessagesForward",
+	Func: func(c *ishell.Context) {
+		req := msg.MessagesForward{}
+		req.FromPeer = &msg.InputPeer{}
+		req.ToPeer = &msg.InputPeer{}
+
+		req.RandomID = domain.SequentialUniqueID()
+		req.Silence = fnGetSilence(c)
+
+		c.Print("***** From Peer :")
+		req.FromPeer.Type = fnGetPeerType(c)
+		req.FromPeer.ID = fnGetPeerID(c)
+		req.FromPeer.AccessHash = fnGetAccessHash(c)
+
+		c.Print("***** To Peer :")
+		req.ToPeer.Type = fnGetPeerType(c)
+		req.ToPeer.ID = fnGetPeerID(c)
+		req.ToPeer.AccessHash = fnGetAccessHash(c)
+
+		req.MessageIDs = fnGetMessageIDs(c)
+
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesForward, reqBytes, reqDelegate, false); err != nil {
+			_Log.Debug(err.Error())
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+
+	},
+}
+
 func init() {
 	Message.AddCmd(MessageGetDialogs)
 	Message.AddCmd(MessageGetDialog)
@@ -211,4 +267,6 @@ func init() {
 	Message.AddCmd(MessagesGet)
 	Message.AddCmd(MessagesClearHistory)
 	Message.AddCmd(MessagesDelete)
+	Message.AddCmd(MessagesEdit)
+	Message.AddCmd(MessagesForward)
 }

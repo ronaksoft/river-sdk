@@ -228,6 +228,20 @@ func fnGetMessageIDs(c *ishell.Context) []int64 {
 	}
 	return messagesIDs
 }
+func fnGetMessageID(c *ishell.Context) int64 {
+	messageID := int64(0)
+	for {
+		c.Print("MessageID: ")
+		msgID, err := strconv.ParseInt(c.ReadLine(), 10, 64)
+		if err != nil {
+			break
+		} else {
+			messageID = msgID
+			break
+		}
+	}
+	return messageID
+}
 
 func fnGetFromUpdateID(c *ishell.Context) int64 {
 	var updateID int64
@@ -324,4 +338,19 @@ func fnGetRevoke(c *ishell.Context) bool {
 		}
 	}
 	return revoke
+}
+
+func fnGetSilence(c *ishell.Context) bool {
+	silence := false
+	for {
+		c.Print("Silence : (0 = false , >=1 : true)")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		if err == nil {
+			silence = id > 0
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return silence
 }

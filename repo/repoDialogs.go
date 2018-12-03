@@ -22,6 +22,7 @@ type RepoDialogs interface {
 	UpdateTopMesssageID(createdOn, peerID int64, peerType int32) error
 	UpdateNotifySetting(msg *msg.UpdateNotifySettings) error
 	UpdatePeerNotifySettings(peerID int64, peerType int32, notifySetting *msg.PeerNotifySettings) error
+	Delete(groupID int64, peerType int32) error
 }
 
 type repoDialogs struct {
@@ -309,4 +310,11 @@ func (r *repoDialogs) UpdatePeerNotifySettings(peerID int64, peerType int32, not
 	}).Error
 
 	return err
+}
+
+func (r *repoDialogs) Delete(groupID int64, peerType int32) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	return r.db.Where("PeerID=? AND  PeerType=?", groupID, peerType).Delete(dto.Dialogs{}).Error
 }
