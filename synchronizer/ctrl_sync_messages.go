@@ -252,6 +252,22 @@ func (ctrl *SyncController) groupFull(e *msg.MessageEnvelope) {
 	for _, v := range u.Users {
 		repo.Ctx().Users.SaveUser(v)
 	}
+
+	// Hotfix : cuz server do not send participent list we fill it with users by relative data
+	// remove this later
+	if u.Participants == nil || len(u.Participants) != len(u.Users) {
+		for _, v := range u.Users {
+			tmp := &msg.GroupParticipant{
+				Date:      time.Now().Unix(),
+				InviterID: v.ID,
+				Type:      msg.ParticipantType_Member,
+				UserID:    v.ID,
+			}
+			repo.Ctx().Groups.SaveParticipants(u.Group.ID, tmp)
+		}
+	}
+	// EOF hotfix
+
 	// Save Members
 	for _, v := range u.Participants {
 		repo.Ctx().Groups.SaveParticipants(u.Group.ID, v)

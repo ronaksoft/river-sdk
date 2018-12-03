@@ -262,7 +262,8 @@ func (r *River) registerCommandHandlers() {
 	r.localCommands[msg.C_GroupsAddUser] = r.groupAddUser
 	r.localCommands[msg.C_GroupsDeleteUser] = r.groupDeleteUser
 
-	// r.localCommands[msg.C_GroupsGetFull] = r.groupsGetFull // Warn : we need GroupFull.Participants
+	// added by Hotfix
+	r.localCommands[msg.C_GroupsGetFull] = r.groupsGetFull // Warn : we need GroupFull.Participants
 
 }
 
