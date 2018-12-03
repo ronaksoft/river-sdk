@@ -502,7 +502,7 @@ func (r *River) messagesClearHistory(in, out *msg.MessageEnvelope, timeoutCB dom
 		successCB(out)
 		return
 	}
-
+	// this will be handled on mesage update appliers too
 	err := repo.Ctx().Messages.DeleteDialogMessage(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 	if err != nil {
 		log.LOG_Debug("River::messagesClearHistory()-> DeleteDialogMessage()",

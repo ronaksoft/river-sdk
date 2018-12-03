@@ -354,3 +354,18 @@ func fnGetSilence(c *ishell.Context) bool {
 	}
 	return silence
 }
+
+func fnGetDelete(c *ishell.Context) bool {
+	del := false
+	for {
+		c.Print("Delete : (0 = false , >=1 : true)")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		if err == nil {
+			del = id > 0
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return del
+}

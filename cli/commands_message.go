@@ -166,7 +166,9 @@ var MessagesClearHistory = &ishell.Cmd{
 		req.Peer = &msg.InputPeer{}
 		req.Peer.Type = fnGetPeerType(c)
 		req.Peer.ID = fnGetPeerID(c)
+		req.Peer.AccessHash = fnGetAccessHash(c)
 		req.MaxID = fnGetMaxID(c)
+		req.Delete = fnGetDelete(c)
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
@@ -233,12 +235,12 @@ var MessagesForward = &ishell.Cmd{
 		req.RandomID = domain.SequentialUniqueID()
 		req.Silence = fnGetSilence(c)
 
-		c.Print("***** From Peer :")
+		c.Println("***** From Peer :")
 		req.FromPeer.Type = fnGetPeerType(c)
 		req.FromPeer.ID = fnGetPeerID(c)
 		req.FromPeer.AccessHash = fnGetAccessHash(c)
 
-		c.Print("***** To Peer :")
+		c.Println("***** To Peer :")
 		req.ToPeer.Type = fnGetPeerType(c)
 		req.ToPeer.ID = fnGetPeerID(c)
 		req.ToPeer.AccessHash = fnGetAccessHash(c)
