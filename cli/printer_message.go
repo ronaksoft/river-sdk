@@ -57,7 +57,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		tableUsers := tablewriter.NewWriter(bufUsers)
 		tableUsers.SetCaption(true, "Users")
 		tableUsers.SetHeader([]string{
-			"FirstName", "LastName", "Username", "User ID", "AccessHash",
+			"FirstName", "LastName", "Username", "User ID", "AccessHash", "ClientID",
 		})
 
 		for _, u := range x.Users {
@@ -67,6 +67,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 				u.Username,
 				fmt.Sprintf("%d", u.ID),
 				fmt.Sprintf("%d", u.AccessHash),
+				fmt.Sprintf("%d", u.ClientID),
 			})
 		}
 		tableUsers.Render()
@@ -74,7 +75,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		tableContacts := tablewriter.NewWriter(bufContacts)
 		tableContacts.SetCaption(true, "Contacts")
 		tableContacts.SetHeader([]string{
-			"Client ID", "FirstName", "LastName", "Phone",
+			"Client ID", "FirstName", "LastName", "Phone", "ClientID",
 		})
 
 		for _, u := range x.Contacts {
@@ -83,6 +84,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 				u.FirstName,
 				u.LastName,
 				u.Phone,
+				fmt.Sprintf("%d", u.ClientID),
 			})
 		}
 		tableContacts.Render()

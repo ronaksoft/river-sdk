@@ -690,7 +690,9 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 	go r.syncCtrl.MessageHandler(msgs)
 
 	// check requestCallbacks and call callbacks
-	for _, m := range msgs {
+	count := len(msgs)
+	for idx := 0; idx < count; idx++ {
+		m := msgs[idx]
 		cb := domain.GetRequestCallback(m.RequestID)
 		if cb != nil {
 			// if there was any listener maybe request already timedout
