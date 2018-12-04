@@ -610,7 +610,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 		log.LOG_Warn("River::groupsGetFull()-> GetGroup() Sending Request To Server !!!",
 			zap.String("Error", err.Error()),
 		)
-		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, false)
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
 	}
 	res.Group = group
@@ -621,7 +621,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 		log.LOG_Warn("River::groupsGetFull()-> GetParticipants() Sending Request To Server !!!",
 			zap.String("Error", err.Error()),
 		)
-		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, false)
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
 	}
 	res.Participants = participents
@@ -631,7 +631,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	if dlg == nil {
 		log.LOG_Warn("River::groupsGetFull()-> GetDialog() Sending Request To Server !!!")
 
-		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, false)
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
 	}
 	res.NotifySettings = dlg.NotifySettings
@@ -649,7 +649,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 			zap.Int("Users Count", len(users)),
 		)
 
-		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, false)
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
 	}
 	res.Users = users
