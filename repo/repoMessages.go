@@ -17,6 +17,7 @@ type RepoMessages interface {
 	GetUnreadMessageCount(peerID int64, peerType int32, userID, maxID int64) int32
 	DeleteDialogMessage(peerID int64, peerType int32, maxID int64) error
 	DeleteMany(IDs []int64) error
+	DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.ClientUpdateMessagesDeleted, error)
 }
 
 type repoMessages struct {
@@ -315,4 +316,32 @@ func (r *repoMessages) DeleteDialogMessage(peerID int64, peerType int32, maxID i
 func (r *repoMessages) DeleteMany(IDs []int64) error {
 
 	return r.db.Where("ID IN (?)", IDs).Delete(dto.Messages{}).Error
+}
+
+func (r *repoMessages) DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.ClientUpdateMessagesDeleted, error) {
+
+	res := make([]*msg.ClientUpdateMessagesDeleted, 0)
+	msgs := make([]dto.Messages, 0)
+	mpeer := make(map[int64]*msg.ClientUpdateMessagesDeleted)
+	err := r.db.Where("ID in (?)", IDs).Find(&msgs).Error
+	if err != nil {
+		for _, v := range msgs {
+
+			if udp, ok := mpeer[v.PeerID]; ok {
+				udp.MessageIDs = append(udp.MessageIDs, v.ID)
+			} else {
+				tmp := new(msg.ClientUpdateMessagesDeleted)
+				tmp.PeerID = v.PeerID
+				tmp.PeerType = v.PeerType
+				tmp.MessageIDs = make([]int64, 0)
+			}
+		}
+	}
+
+	for _, v := range mpeer {
+		res = append(res, v)
+	}
+	err = r.db.Where("ID IN (?)", IDs).Delete(dto.Messages{}).Error
+
+	return res, err
 }

@@ -285,7 +285,7 @@ func (ctrl *SyncController) updateMessagesDeleted(u *msg.UpdateEnvelope) []*msg.
 	x := new(msg.UpdateMessagesDeleted)
 	x.Unmarshal(u.Update)
 
-	err := repo.Ctx().Messages.DeleteMany(x.MessageIDs)
+	udps, err := repo.Ctx().Messages.DeleteManyAndReturnClientUpdate(x.MessageIDs)
 	if err != nil {
 		log.LOG_Debug("SyncController::updateMessagesDeleted() -> DeleteMany()",
 			zap.String("Error", err.Error()),
@@ -293,5 +293,16 @@ func (ctrl *SyncController) updateMessagesDeleted(u *msg.UpdateEnvelope) []*msg.
 	}
 
 	res := []*msg.UpdateEnvelope{u}
+
+	for _, v := range udps {
+		udp := new(msg.UpdateEnvelope)
+		udp.Constructor = msg.C_ClientUpdateMessagesDeleted
+		udp.Timestamp = u.Timestamp
+		udp.UCount = 1
+		udp.UpdateID = u.UpdateID
+		udp.Update, _ = v.Marshal()
+		res = append(res, udp)
+	}
+
 	return res
 }

@@ -265,12 +265,14 @@ func (ctrl *SyncController) groupFull(e *msg.MessageEnvelope) {
 			}
 			repo.Ctx().Groups.SaveParticipants(u.Group.ID, tmp)
 		}
-	}
-	// EOF hotfix
 
-	// Save Members
-	for _, v := range u.Participants {
-		repo.Ctx().Groups.SaveParticipants(u.Group.ID, v)
+		// EOF hotfix
+	} else {
+
+		// Save Members
+		for _, v := range u.Participants {
+			repo.Ctx().Groups.SaveParticipants(u.Group.ID, v)
+		}
 	}
 
 	// Update NotifySettings
