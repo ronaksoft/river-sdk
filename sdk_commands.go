@@ -642,7 +642,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 		userIDs[v.UserID] = true
 	}
 	users := repo.Ctx().Users.GetAnyUsers(userIDs.ToArray())
-	if users == nil || len(participents) != len(users) {
+	if users == nil || len(participents) != len(users) || len(users) <= 0 {
 		log.LOG_Warn("River::groupsGetFull()-> GetAnyUsers() Sending Request To Server !!!",
 			zap.Bool("Is user nil ? ", users == nil),
 			zap.Int("Participanr Count", len(participents)),
