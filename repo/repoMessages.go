@@ -352,8 +352,6 @@ func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, err
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	r.db.LogMode(true)
-
 	log.LOG_Debug("RepoMessages::GetTopMessageID()",
 		zap.Int64("PeerID", peerID),
 	)
