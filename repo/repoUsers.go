@@ -22,6 +22,7 @@ type RepoUsers interface {
 	GetUser(userID int64) *msg.User
 	GetAnyUsers(userIDs []int64) []*msg.User
 	SaveMany(users []*msg.User) error
+	UpdateContactinfo(userID int64, firstName, lastName string) error
 }
 
 type repoUsers struct {
@@ -337,5 +338,21 @@ func (r *repoUsers) SaveMany(users []*msg.User) error {
 			break
 		}
 	}
+	return err
+}
+
+func (r *repoUsers) UpdateContactinfo(userID int64, firstName, lastName string) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	log.LOG_Debug("RepoUsers::UpdateContactinfo()",
+		zap.Int64("UserID", userID),
+	)
+	dtoUser := new(dto.Users)
+	err := r.db.Table(dtoUser.TableName()).Where("ID=?", userID).Updates(map[string]interface{}{
+		"FirstName": firstName,
+		"LasttName": lastName,
+	}).Error
+
 	return err
 }

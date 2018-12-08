@@ -186,3 +186,12 @@ func (r *River) GetRealTopMessageID(peerID int64, peerType int32) int64 {
 	}
 	return topMsgID
 }
+
+// UpdateContactinfo update contact name
+func (r *River) UpdateContactinfo(userID int64, firstName, lastName string) error {
+	err := repo.Ctx().Users.UpdateContactinfo(userID, firstName, lastName)
+	if err != nil {
+		log.LOG_Debug("SDK::UpdateContactinfo() => Users.UpdateContactInfo()", zap.String("Error", err.Error()))
+	}
+	return err
+}
