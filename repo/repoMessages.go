@@ -18,6 +18,7 @@ type RepoMessages interface {
 	DeleteDialogMessage(peerID int64, peerType int32, maxID int64) error
 	DeleteMany(IDs []int64) error
 	DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.ClientUpdateMessagesDeleted, error)
+	GetTopMessageID(peerID int64, peerType int32) (int64, error)
 }
 
 type repoMessages struct {
@@ -344,4 +345,25 @@ func (r *repoMessages) DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.Clie
 	err = r.db.Where("ID IN (?)", IDs).Delete(dto.Messages{}).Error
 
 	return res, err
+}
+
+// GetManyMessages
+func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	r.db.LogMode(true)
+
+	log.LOG_Debug("RepoMessages::GetTopMessageID()",
+		zap.Int64("PeerID", peerID),
+	)
+	dtoMsg := dto.Messages{}
+	err := r.db.Table(dtoMsg.TableName()).Where("PeerID =? AND PeerType= ?", peerID, peerType).Last(&dtoMsg).Error
+	if err != nil {
+		log.LOG_Debug("RepoRepoMessages::GetTopMessageID()-> fetch message",
+			zap.String("Error", err.Error()),
+		)
+		return -1, err
+	}
+	return dtoMsg.ID, nil
 }

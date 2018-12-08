@@ -213,6 +213,17 @@ var PrintDebuncerStatus = &ishell.Cmd{
 	},
 }
 
+var GetTopMessageID = &ishell.Cmd{
+	Name: "GetTopMessageID",
+	Func: func(c *ishell.Context) {
+
+		peerID := fnGetPeerID(c)
+		peerType := fnGetPeerType(c)
+		maxID := _SDK.GetRealTopMessageID(peerID, int32(peerType))
+		c.Println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX MaxID = ", maxID)
+	},
+}
+
 func init() {
 	Debug.AddCmd(SendTyping)
 	Debug.AddCmd(MessageSendByNetwork)
@@ -223,4 +234,5 @@ func init() {
 	Debug.AddCmd(TestRAW)
 	Debug.AddCmd(TestBatch)
 	Debug.AddCmd(PrintDebuncerStatus)
+	Debug.AddCmd(GetTopMessageID)
 }
