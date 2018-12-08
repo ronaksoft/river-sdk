@@ -38,7 +38,7 @@ var SendTyping = &ishell.Cmd{
 
 			reqBytes, _ := req.Marshal()
 			reqDelegate := new(RequestDelegate)
-			if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSetTyping, reqBytes, reqDelegate, false); err != nil {
+			if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSetTyping, reqBytes, reqDelegate, false, false); err != nil {
 				_Log.Debug(err.Error())
 			} else {
 				reqDelegate.RequestID = reqID
@@ -69,7 +69,7 @@ var MessageSendByNetwork = &ishell.Cmd{
 
 			reqBytes, _ := req.Marshal()
 			reqDelegate := new(RequestDelegate)
-			if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSend, reqBytes, reqDelegate, false); err != nil {
+			if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSend, reqBytes, reqDelegate, false, false); err != nil {
 				_Log.Debug(err.Error())
 			} else {
 				reqDelegate.RequestID = reqID
@@ -101,7 +101,7 @@ var MessageSendByQueue = &ishell.Cmd{
 
 			reqBytes, _ := req.Marshal()
 			reqDelegate := new(RequestDelegate)
-			if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSend, reqBytes, reqDelegate, false); err != nil {
+			if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSend, reqBytes, reqDelegate, false, false); err != nil {
 				_Log.Debug(err.Error())
 			} else {
 				reqDelegate.RequestID = reqID
@@ -129,7 +129,7 @@ var ContactImportByNetwork = &ishell.Cmd{
 
 		_SDK.RemoveRealTimeRequest(msg.C_ContactsImport)
 
-		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsImport, reqBytes, reqDelegate, true); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsImport, reqBytes, reqDelegate, true, false); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -174,7 +174,7 @@ var MessageSendBulk = &ishell.Cmd{
 		msgContainer.Length = int32(len(msgs))
 		reqBytes, _ := msgContainer.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_MessageContainer, reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_MessageContainer, reqBytes, reqDelegate, false, false); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID

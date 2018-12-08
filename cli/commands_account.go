@@ -23,7 +23,7 @@ var RegisterDevice = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 
-		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountRegisterDevice, reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountRegisterDevice, reqBytes, reqDelegate, false, false); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -40,7 +40,7 @@ var UpdateUsername = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 
-		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUpdateUsername, reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUpdateUsername, reqBytes, reqDelegate, false, false); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -57,7 +57,7 @@ var CheckUsername = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 
-		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountCheckUsername, reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountCheckUsername, reqBytes, reqDelegate, false, false); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -75,7 +75,7 @@ var UnregisterDevice = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 
-		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUnregisterDevice, reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUnregisterDevice, reqBytes, reqDelegate, false, false); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -93,7 +93,7 @@ var UpdateProfile = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 
-		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUpdateProfile, reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUpdateProfile, reqBytes, reqDelegate, false, false); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -118,7 +118,7 @@ var SetNotifySettings = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 
-		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountSetNotifySettings, reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountSetNotifySettings, reqBytes, reqDelegate, false, false); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID

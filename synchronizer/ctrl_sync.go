@@ -681,6 +681,9 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 				zap.Int64("UPDATE_ID", update.UpdateID),
 				zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
 			)
+		} else {
+			// add update if not in update appliers
+			udpContainer.Updates = append(udpContainer.Updates, update)
 		}
 
 		if externalHandlerUpdates != nil {

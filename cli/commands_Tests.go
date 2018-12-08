@@ -43,7 +43,7 @@ var BatchSend = &ishell.Cmd{
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessageContainer), reqBytes, reqDelegate, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessageContainer), reqBytes, reqDelegate, false, false); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID

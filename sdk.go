@@ -318,7 +318,7 @@ func deepCopy(commandBytes []byte) []byte {
 // ExecuteCommand
 // This is a wrapper function to pass the request to the queueController, to be passed to networkController for final
 // delivery to the server.
-func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate, blockingMode bool) (requestID int64, err error) {
+func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate, blockingMode, serverForce bool) (requestID int64, err error) {
 	// deleteMe
 	cmdID := fmt.Sprintf("%v : ", time.Now().UnixNano())
 	log.LOG_Debug(cmdID + "SDK::ExecuteCommand() 1 ExecuteCommand Started req:" + msg.ConstructorNames[constructor])
@@ -372,28 +372,43 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 		log.LOG_Debug(cmdID + "SDK::ExecuteCommand() 6 success ended")
 
 	}
+	if !serverForce {
+		_, isRealTimeRequest := r.realTimeRequest[constructor]
+		if isRealTimeRequest {
+			err := r.queueCtrl.ExecuteRealtimeCommand(
+				uint64(requestID),
+				constructor,
+				commandBytesDump,
+				timeoutCallback,
+				successCallback,
+				blockingMode,
+				true,
+			)
+			if err != nil && delegate != nil && delegate.OnTimeout != nil {
+				delegate.OnTimeout(err)
+			}
+		} else {
+			// else pass the request to queue
+			_, ok := r.localCommands[constructor]
+			if ok {
 
-	_, isRealTimeRequest := r.realTimeRequest[constructor]
-	if isRealTimeRequest {
-		err := r.queueCtrl.ExecuteRealtimeCommand(
-			uint64(requestID),
-			constructor,
-			commandBytesDump,
-			timeoutCallback,
-			successCallback,
-			blockingMode,
-			true,
-		)
-		if err != nil && delegate != nil && delegate.OnTimeout != nil {
-			delegate.OnTimeout(err)
-		}
-	} else {
-		// else pass the request to queue
-		_, ok := r.localCommands[constructor]
-		if ok {
+				execBlock := func() {
+					r.executeLocalCommand(
+						uint64(requestID),
+						constructor,
+						commandBytesDump,
+						timeoutCallback,
+						successCallback,
+					)
+				}
+				if blockingMode {
+					execBlock()
+				} else {
+					go execBlock()
+				}
 
-			execBlock := func() {
-				r.executeLocalCommand(
+			} else {
+				r.executeRemoteCommand(
 					uint64(requestID),
 					constructor,
 					commandBytesDump,
@@ -401,21 +416,15 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 					successCallback,
 				)
 			}
-			if blockingMode {
-				execBlock()
-			} else {
-				go execBlock()
-			}
-
-		} else {
-			r.executeRemoteCommand(
-				uint64(requestID),
-				constructor,
-				commandBytesDump,
-				timeoutCallback,
-				successCallback,
-			)
 		}
+	} else {
+		r.executeRemoteCommand(
+			uint64(requestID),
+			constructor,
+			commandBytesDump,
+			timeoutCallback,
+			successCallback,
+		)
 	}
 
 	return
