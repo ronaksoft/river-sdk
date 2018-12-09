@@ -10,6 +10,11 @@ enum TypingAction {
     Cancel = 4;
 }
 
+enum DialogFlags {
+    Empty = 0;
+    Deleted = 1;
+}
+
 // Dialog
 message Dialog {
     required int64 PeerID = 1 [jstype = JS_STRING];
@@ -20,6 +25,7 @@ message Dialog {
     required int32 UnreadCount = 6;
     required fixed64 AccessHash = 7 [jstype = JS_STRING];
     optional PeerNotifySettings NotifySettings = 8;
+    optional int32 Flags = 9;
 }
 
 // Peer
