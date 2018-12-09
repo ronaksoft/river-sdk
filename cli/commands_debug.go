@@ -224,6 +224,33 @@ var GetTopMessageID = &ishell.Cmd{
 	},
 }
 
+var ContactImportMany = &ishell.Cmd{
+	Name: "ContactImportMany",
+	Func: func(c *ishell.Context) {
+		req := msg.ContactsImport{}
+		req.Replace = true
+		for i := 0; i < 80; i++ {
+			txt := fmt.Sprintf("237400%d", 23740010+i)
+			contact := msg.PhoneContact{}
+			contact.FirstName = txt
+			contact.LastName = txt
+			contact.Phone = txt
+			contact.ClientID = domain.SequentialUniqueID()
+			req.Contacts = append(req.Contacts, &contact)
+		}
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsImport, reqBytes, reqDelegate, false, false); err != nil {
+			_Log.Debug(err.Error())
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+
+		time.Sleep(200 * time.Millisecond)
+
+	},
+}
+
 func init() {
 	Debug.AddCmd(SendTyping)
 	Debug.AddCmd(MessageSendByNetwork)
@@ -235,4 +262,5 @@ func init() {
 	Debug.AddCmd(TestBatch)
 	Debug.AddCmd(PrintDebuncerStatus)
 	Debug.AddCmd(GetTopMessageID)
+	Debug.AddCmd(ContactImportMany)
 }

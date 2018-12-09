@@ -100,6 +100,8 @@ func NewNetworkController(config NetworkConfig) *NetworkController {
 	m.wsDialer = &websocket.Dialer{
 		Proxy:            http.ProxyFromEnvironment,
 		HandshakeTimeout: 10 * time.Second,
+		WriteBufferSize:  32 * 1024, // 32kB
+		ReadBufferSize:   32 * 1024, // 32kB
 	}
 	m.stopChannel = make(chan bool)
 	m.connectChannel = make(chan bool)
@@ -132,7 +134,7 @@ func (ctrl *NetworkController) Start() error {
 
 func (ctrl *NetworkController) messageDebuncer() {
 	counter := 0
-	interval := 100 * time.Millisecond
+	interval := 50 * time.Millisecond
 	timer := time.NewTimer(interval)
 	for {
 		select {
@@ -141,7 +143,7 @@ func (ctrl *NetworkController) messageDebuncer() {
 			log.LOG_Debug("NetworkController::messageDebuncer() Received",
 				zap.Int("Counter", counter),
 			)
-			// on receive any update we wait another 100 ms until we receive 3 update
+			// on receive any update we wait another interval until we receive 3 update
 			if counter < 3 {
 				log.LOG_Debug("NetworkController::messageDebuncer() Received Timer Reset",
 					zap.Int("Counter", counter),
@@ -167,7 +169,7 @@ func (ctrl *NetworkController) messageDebuncer() {
 
 func (ctrl *NetworkController) updateDebuncer() {
 	counter := 0
-	interval := 100 * time.Millisecond
+	interval := 50 * time.Millisecond
 	timer := time.NewTimer(interval)
 	for {
 		select {
@@ -176,7 +178,7 @@ func (ctrl *NetworkController) updateDebuncer() {
 			log.LOG_Debug("NetworkController::updateDebuncer() Received",
 				zap.Int("Counter", counter),
 			)
-			// on receive any update we wait another 100 ms until we receive 3 update
+			// on receive any update we wait another interval until we receive 3 update
 			if counter < 3 {
 				log.LOG_Debug("NetworkController::updateDebuncer() Received Timer Reset",
 					zap.Int("Counter", counter),
@@ -201,7 +203,7 @@ func (ctrl *NetworkController) updateDebuncer() {
 
 func (ctrl *NetworkController) sendDebuncer() {
 	counter := 0
-	interval := 100 * time.Millisecond
+	interval := 50 * time.Millisecond
 	timer := time.NewTimer(interval)
 	for {
 		// wait for network to connect
@@ -215,7 +217,7 @@ func (ctrl *NetworkController) sendDebuncer() {
 			log.LOG_Debug("NetworkController::sendDebuncer() Received",
 				zap.Int("Counter", counter),
 			)
-			// on receive any update we wait another 100 ms until we receive 3 update
+			// on receive any update we wait another interval until we receive 3 update
 			if counter < 3 {
 				log.LOG_Debug("NetworkController::sendDebuncer() Received Timer Reset",
 					zap.Int("Counter", counter),
