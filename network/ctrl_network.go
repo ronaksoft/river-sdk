@@ -100,8 +100,8 @@ func NewNetworkController(config NetworkConfig) *NetworkController {
 	m.wsDialer = &websocket.Dialer{
 		Proxy:            http.ProxyFromEnvironment,
 		HandshakeTimeout: 10 * time.Second,
-		WriteBufferSize:  32 * 1024, // 32kB
-		ReadBufferSize:   32 * 1024, // 32kB
+		WriteBufferSize:  64 * 1024, // 32kB
+		ReadBufferSize:   64 * 1024, // 32kB
 	}
 	m.stopChannel = make(chan bool)
 	m.connectChannel = make(chan bool)
