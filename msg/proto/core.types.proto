@@ -1,18 +1,15 @@
 syntax = "proto2";
 package msg;
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+option (gogoproto.goproto_enum_prefix_all) = false;
 
 // TypingAction
 enum TypingAction {
-    Typing = 0;
-    RecordingVoice = 1;
-    RecordingVideo = 2;
-    Uploading = 3;
-    Cancel = 4;
-}
-
-enum DialogFlags {
-    Empty = 0;
-    Deleted = 1;
+    TypingActionTyping = 0;
+    TypingActionRecordingVoice = 1;
+    TypingActionRecordingVideo = 2;
+    TypingActionUploading = 3;
+    TypingActionCancel = 4;
 }
 
 // Dialog
@@ -25,7 +22,6 @@ message Dialog {
     required int32 UnreadCount = 6;
     required fixed64 AccessHash = 7 [jstype = JS_STRING];
     optional PeerNotifySettings NotifySettings = 8;
-    optional int32 Flags = 9;
 }
 
 // Peer
@@ -134,6 +130,16 @@ message InputFile {
     required string FileName = 3;
 }
 
+enum GroupFlags {
+    GroupFlagsEmpty = 0;
+    GroupFlagsCreator = 1;
+    GroupFlagsLeft = 2;
+    GroupFlagsKicked = 4;
+    GroupFlagsAdmin = 8;
+    GroupFlagsAdminsEnabled = 16;
+    GroupFlagsDeactivated = 32;
+}
+
 // Group
 message Group {
     required int64 ID = 1 [jstype = JS_STRING];
@@ -141,6 +147,7 @@ message Group {
     required int64 CreatedOn = 3;
     required int32 Participants = 4;
     optional int64 EditedOn = 5;
+    optional GroupFlags Flags = 6;
 }
 
 // GroupFull
@@ -153,9 +160,9 @@ message GroupFull {
 
 // ParticipantType
 enum ParticipantType {
-    Creator = 0;
-    Admin = 1;
-    Member = 2;
+    ParticipantTypeCreator = 0;
+    ParticipantTypeAdmin = 1;
+    ParticipantMember = 2;
 }
 
 // GroupParticipant

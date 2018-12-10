@@ -68,13 +68,13 @@ func fnGetPeerType(c *ishell.Context) msg.PeerType {
 		if err == nil {
 			switch id {
 			case 0:
-				peerType = msg.PeerType_PeerSelf
+				peerType = msg.PeerSelf
 			case 1:
-				peerType = msg.PeerType_PeerUser
+				peerType = msg.PeerUser
 			case 2:
-				peerType = msg.PeerType_PeerGroup
+				peerType = msg.PeerGroup
 			case 3:
-				peerType = msg.PeerType_PeerChannel
+				peerType = msg.PeerChannel
 			default:
 				c.Println("Invalid peerType (0:self,1:user,2:group,3:channel)")
 			}

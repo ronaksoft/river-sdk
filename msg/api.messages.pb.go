@@ -562,7 +562,7 @@ func (m *MessagesSetTyping) GetAction() TypingAction {
 	if m != nil {
 		return m.Action
 	}
-	return TypingAction_Typing
+	return TypingActionTyping
 }
 
 // MessageClearHistory

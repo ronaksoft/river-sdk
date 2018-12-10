@@ -38,7 +38,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	mMessages := domain.MInt64B{}
 	mPendingMesssage := domain.MInt64B{}
 	for _, d := range res.Dialogs {
-		if d.PeerType == int32(msg.PeerType_PeerUser) {
+		if d.PeerType == int32(msg.PeerUser) {
 			mUsers[d.PeerID] = true
 		}
 		mMessages[d.TopMessageID] = true
@@ -54,10 +54,10 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	res.Messages = append(res.Messages, pendingMessages...)
 
 	for _, m := range res.Messages {
-		if m.PeerType == int32(msg.PeerType_PeerUser) {
+		if m.PeerType == int32(msg.PeerUser) {
 			mUsers[m.SenderID] = true
 		}
-		if m.PeerType == int32(msg.PeerType_PeerGroup) {
+		if m.PeerType == int32(msg.PeerGroup) {
 			mGroups[m.PeerID] = true
 		}
 	}
@@ -552,7 +552,7 @@ func (r *River) groupAddUser(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	gp := &msg.GroupParticipant{
 		Date:      time.Now().Unix(),
 		InviterID: r.ConnInfo.UserID,
-		Type:      msg.ParticipantType_Member,
+		Type:      msg.ParticipantMember,
 		UserID:    req.User.UserID,
 	}
 	err := repo.Ctx().Groups.SaveParticipants(req.GroupID, gp)
@@ -627,7 +627,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	res.Participants = participents
 
 	// NotifySettings
-	dlg := repo.Ctx().Dialogs.GetDialog(req.GroupID, int32(msg.PeerType_PeerGroup))
+	dlg := repo.Ctx().Dialogs.GetDialog(req.GroupID, int32(msg.PeerGroup))
 	if dlg == nil {
 		log.LOG_Warn("River::groupsGetFull()-> GetDialog() Sending Request To Server !!!")
 

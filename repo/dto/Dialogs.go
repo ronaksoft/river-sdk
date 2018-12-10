@@ -15,7 +15,6 @@ type Dialogs struct {
 	NotifyFlags     int32  `gorm:"column:NotifyFlags" json:"NotifyFlags"`
 	NotifyMuteUntil int64  `gorm:"column:NotifyMuteUntil" json:"NotifyMuteUntil"`
 	NotifySound     string `gorm:"column:NotifySound" json:"NotifySound"`
-	Flags           int32  `gorm:"column:Flags" json:"Flags"`
 }
 
 func (Dialogs) TableName() string {
@@ -36,7 +35,6 @@ func (d *Dialogs) Map(v *msg.Dialog) {
 		d.NotifyMuteUntil = v.NotifySettings.MuteUntil
 		d.NotifySound = v.NotifySettings.Sound
 	}
-	d.Flags = v.Flags
 }
 
 func (d *Dialogs) MapTo(v *msg.Dialog) {
@@ -52,5 +50,4 @@ func (d *Dialogs) MapTo(v *msg.Dialog) {
 	v.NotifySettings.Flags = d.NotifyFlags
 	v.NotifySettings.MuteUntil = d.NotifyMuteUntil
 	v.NotifySettings.Sound = d.NotifySound
-	v.Flags = d.Flags
 }

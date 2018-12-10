@@ -255,26 +255,29 @@ func (ctrl *SyncController) groupFull(e *msg.MessageEnvelope) {
 
 	// Hotfix : cuz server do not send participent list we fill it with users by relative data
 	// remove this later
-	if u.Participants == nil || len(u.Participants) != len(u.Users) {
-		for _, v := range u.Users {
-			tmp := &msg.GroupParticipant{
-				Date:      time.Now().Unix(),
-				InviterID: v.ID,
-				Type:      msg.ParticipantType_Member,
-				UserID:    v.ID,
-			}
-			repo.Ctx().Groups.SaveParticipants(u.Group.ID, tmp)
-		}
+	// if u.Participants == nil || len(u.Participants) != len(u.Users) {
+	// 	for _, v := range u.Users {
+	// 		tmp := &msg.GroupParticipant{
+	// 			Date:      time.Now().Unix(),
+	// 			InviterID: v.ID,
+	// 			Type:      msg.ParticipantType_Member,
+	// 			UserID:    v.ID,
+	// 		}
+	// 		repo.Ctx().Groups.SaveParticipants(u.Group.ID, tmp)
+	// 	}
+	// } else {
+	// 	// Save Members
+	// 	for _, v := range u.Participants {
+	// 		repo.Ctx().Groups.SaveParticipants(u.Group.ID, v)
+	// 	}
+	// }
+	// EOF hotfix
 
-		// EOF hotfix
-	} else {
-
-		// Save Members
-		for _, v := range u.Participants {
-			repo.Ctx().Groups.SaveParticipants(u.Group.ID, v)
-		}
+	// Save Group Members
+	for _, v := range u.Participants {
+		repo.Ctx().Groups.SaveParticipants(u.Group.ID, v)
 	}
 
 	// Update NotifySettings
-	repo.Ctx().Dialogs.UpdatePeerNotifySettings(u.Group.ID, int32(msg.PeerType_PeerGroup), u.NotifySettings)
+	repo.Ctx().Dialogs.UpdatePeerNotifySettings(u.Group.ID, int32(msg.PeerGroup), u.NotifySettings)
 }

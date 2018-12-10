@@ -37,13 +37,13 @@ message File {
 
 // FileType
 enum FileType {
-    Unknown = 0;
-    Partial = 1;
-    Jpeg = 2;
-    Gif = 3;
-    Png = 4;
-    Webp = 5;
-    Mp3 = 6;
-    Mp4 = 7;
-    Mov = 8;
+    FileTypeUnknown = 0;
+    FileTypePartial = 1;
+    FileTypeJpeg = 2;
+    FileTypeGif = 3;
+    FileTypePng = 4;
+    FileTypeWebp = 5;
+    FileTypeMp3 = 6;
+    FileTypeMp4 = 7;
+    FileTypeMov = 8;
 }

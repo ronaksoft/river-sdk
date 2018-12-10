@@ -113,7 +113,7 @@ func main() {
 func fnRunDebug_SendMessageByQueue() {
 	req := msg.MessagesSend{}
 	req.Peer = &msg.InputPeer{
-		Type:       msg.PeerType_PeerUser,
+		Type:       msg.PeerUser,
 		ID:         int64(_DbgPeerID),
 		AccessHash: uint64(_DbgAccessHash),
 	}
@@ -143,7 +143,7 @@ func fnRunDebug_SendMessageByQueue() {
 func fnRunDebug_SendMessageByNetwork() {
 	req := msg.MessagesSend{}
 	req.Peer = &msg.InputPeer{
-		Type:       msg.PeerType_PeerUser,
+		Type:       msg.PeerUser,
 		ID:         int64(_DbgPeerID),
 		AccessHash: uint64(_DbgAccessHash),
 	}

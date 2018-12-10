@@ -31,9 +31,9 @@ var SendTyping = &ishell.Cmd{
 		for i := 0; i < count; i++ {
 			time.Sleep(interval)
 			if i%2 == 0 {
-				req.Action = msg.TypingAction_Typing
+				req.Action = msg.TypingActionTyping
 			} else {
-				req.Action = msg.TypingAction_Cancel
+				req.Action = msg.TypingActionCancel
 			}
 
 			reqBytes, _ := req.Marshal()
