@@ -3,7 +3,6 @@ package riversdk
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"database/sql"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -27,7 +26,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 
-	"github.com/doug-martin/goqu"
 	"github.com/monnand/dhkx"
 	"go.uber.org/zap"
 
@@ -820,115 +818,4 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 func (r *River) PrintDebuncerStatus() {
 	log.LOG_Debug("SDK::PrintDebuncerStatus()")
 	r.networkCtrl.PrintDebuncerStatus()
-}
-
-func (r *River) TestORM(tries int) {
-
-	sw := time.Now()
-	for i := 0; i < tries; i++ {
-		m := new(msg.UserMessage)
-		m.ID = domain.SequentialUniqueID()
-		m.PeerID = 123456789
-		m.PeerType = 1
-		m.CreatedOn = time.Now().Unix()
-		m.Body = fmt.Sprintf("Test %v", i)
-		m.SenderID = 987654321
-		err := repo.Ctx().Messages.SaveMessage(m)
-		if err != nil {
-			log.LOG_Debug("TestORM() :: Error : " + err.Error())
-			return
-		}
-	}
-	elapsed := time.Since(sw)
-	log.LOG_Debug("TestORM() :: Elapsed : " + fmt.Sprintf("%v", elapsed))
-}
-
-func (r *River) TestRAW(tries int) {
-	// Open DB
-	db, err := sql.Open(repo.Ctx().DBDialect, repo.Ctx().DBPath)
-	if err != nil {
-		log.LOG_Debug("TestRAW() :: Error : " + err.Error())
-		return
-	}
-	defer db.Close()
-
-	// insert
-	stmt, err := db.Prepare(`INSERT INTO messages 
-	( ID, PeerID, PeerType, CreatedOn, Body, SenderID, EditedOn, FwdSenderID, FwdChannelID, FwdChannelMessageID, Flags, MessageType, ContentRead, Inbox, ReplyTo, MessageAction )
-	VALUES
-	(?,?,?,?,?,?,0,0,0,0,0,0,0,0,0,0)`)
-
-	if err != nil {
-		log.LOG_Debug("TestRAW() :: Error : " + err.Error())
-		return
-	}
-
-	sw := time.Now()
-	for i := 0; i < tries; i++ {
-		m := new(msg.UserMessage)
-		m.ID = domain.SequentialUniqueID()
-		m.PeerID = 123456789
-		m.PeerType = 1
-		m.CreatedOn = time.Now().Unix()
-		m.Body = fmt.Sprintf("Test %v", i)
-		m.SenderID = 987654321
-
-		_, err := stmt.Exec(m.ID, m.PeerID, m.PeerType, m.CreatedOn, m.Body, m.SenderID)
-		if err != nil {
-			log.LOG_Debug("TestRAW() :: Error : " + err.Error())
-		}
-	}
-	elapsed := time.Since(sw)
-	log.LOG_Debug("TestRAW() :: Elapsed : " + fmt.Sprintf("%v", elapsed))
-}
-
-func (r *River) TestBatch(tries int) {
-	db, err := sql.Open(repo.Ctx().DBDialect, repo.Ctx().DBPath)
-	if err != nil {
-		log.LOG_Debug("TestBatch() :: Error : " + err.Error())
-		return
-	}
-	defer db.Close()
-
-	batchSB := new(strings.Builder)
-
-	for i := 0; i < tries; i++ {
-		m := new(msg.UserMessage)
-		m.ID = domain.SequentialUniqueID()
-		m.PeerID = 123456789
-		m.PeerType = 1
-		m.CreatedOn = time.Now().Unix()
-		m.Body = fmt.Sprintf("Test %v", i)
-		m.SenderID = 987654321
-
-		qb := goqu.New("", nil)
-
-		str := qb.From("messages").Insert(goqu.Record{
-			"ID":                  m.ID,
-			"PeerID":              m.PeerID,
-			"PeerType":            m.PeerType,
-			"CreatedOn":           m.CreatedOn,
-			"Body":                m.Body,
-			"SenderID":            m.SenderID,
-			"EditedOn":            m.EditedOn,
-			"FwdSenderID":         m.SenderID,
-			"FwdChannelID":        m.FwdChannelID,
-			"FwdChannelMessageID": m.FwdChannelMessageID,
-			"Flags":               m.Flags,
-			"MessageType":         m.MessageType,
-			"ContentRead":         m.ContentRead,
-			"Inbox":               m.Inbox,
-			"ReplyTo":             m.ReplyTo,
-			"MessageAction":       m.MessageAction,
-		}).Sql
-		batchSB.WriteString(str + ";")
-	}
-	qry := batchSB.String()
-	sw := time.Now()
-	_, err = db.Exec(qry)
-	elapsed := time.Since(sw)
-	log.LOG_Debug("TestBatch() :: Elapsed : " + fmt.Sprintf("%v", elapsed))
-	if err != nil {
-		log.LOG_Debug("TestBatch() :: Error : " + err.Error())
-	}
 }

@@ -13,14 +13,13 @@ type RepoGroups interface {
 	GetManyGroups(groupIDs []int64) []*msg.Group
 	GetGroup(groupID int64) (*msg.Group, error)
 	SaveMany(groups []*msg.Group) error
-	// AddGroupMember(m *msg.UpdateGroupMemberAdded) error
 	DeleteGroupMember(groupID, userID int64) error
 	DeleteAllGroupMember(groupID int64) error
 	UpdateGroupTitle(groupID int64, title string) error
 	SaveParticipants(groupID int64, participant *msg.GroupParticipant) error
 	GetParticipants(groupID int64) ([]*msg.GroupParticipant, error)
 	DeleteGroupMemberMany(peerID int64, IDs []int64) error
-	//SaveParticipantsByID(groupID, createdOn int64, userIDs []int64)
+	SaveParticipantsByID(groupID, createdOn int64, userIDs []int64)
 	Delete(groupID int64) error
 }
 
@@ -132,20 +131,6 @@ func (r *repoGroups) GetGroup(groupID int64) (*msg.Group, error) {
 	return pbGroup, nil
 }
 
-// func (r *repoGroups) AddGroupMember(m *msg.UpdateGroupMemberAdded) error {
-// 	r.mx.Lock()
-// 	defer r.mx.Unlock()
-
-// 	dtoGP := new(dto.GroupParticipants)
-// 	err := r.db.Where("GroupID = ? AND UserID = ?", m.GroupID, m.UserID).First(dtoGP).Error
-// 	// if record does not exist, not found error returns
-// 	if err != nil {
-// 		dtoGP.MapFromUpdateGroupMemberAdded(m)
-// 		err = r.db.Create(dtoGP).Error
-// 	}
-// 	return err
-// }
-
 func (r *repoGroups) DeleteGroupMember(groupID, userID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -213,20 +198,20 @@ func (r *repoGroups) DeleteGroupMemberMany(peerID int64, IDs []int64) error {
 	return r.db.Where("GroupID= ? AND UserID IN (?)", peerID, IDs).Delete(dto.GroupParticipants{}).Error
 }
 
-// func (r *repoGroups) SaveParticipantsByID(groupID, createdOn int64, userIDs []int64) {
-// 	r.mx.Lock()
-// 	defer r.mx.Unlock()
+func (r *repoGroups) SaveParticipantsByID(groupID, createdOn int64, userIDs []int64) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
 
-// 	for _, id := range userIDs {
-// 		dtoGP := new(dto.GroupParticipants)
-// 		r.db.Where("GroupID = ? AND UserID = ?", groupID, id).First(dtoGP)
-// 		dtoGP.Date = createdOn
-// 		dtoGP.GroupID = groupID
-// 		dtoGP.Type = int32(msg.ParticipantMember)
-// 		dtoGP.UserID = id
-// 		r.db.Save(dtoGP)
-// 	}
-// }
+	for _, id := range userIDs {
+		dtoGP := new(dto.GroupParticipants)
+		r.db.Where("GroupID = ? AND UserID = ?", groupID, id).First(dtoGP)
+		dtoGP.Date = createdOn
+		dtoGP.GroupID = groupID
+		dtoGP.Type = int32(msg.ParticipantMember)
+		dtoGP.UserID = id
+		r.db.Save(dtoGP)
+	}
+}
 
 func (r *repoGroups) Delete(groupID int64) error {
 	r.mx.Lock()
