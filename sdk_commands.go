@@ -324,15 +324,23 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 		msgIDs[v] = true
 	}
 
-	user := repo.Ctx().Users.GetUser(req.Peer.ID)
 	messages := repo.Ctx().Messages.GetManyMessages(msgIDs.ToArray())
+	mUsers := domain.MInt64B{}
+	mUsers[req.Peer.ID] = true
+	for _, m := range messages {
+		actUserIDs := domain.ExtractActionUserIDs(m.MessageAction, m.MessageActionData)
+		for _, id := range actUserIDs {
+			mUsers[id] = true
+		}
+	}
+	users := repo.Ctx().Users.GetAnyUsers(mUsers.ToArray())
 
 	// if db allready had all users
-	if len(messages) == len(msgIDs) && user != nil {
+	if len(messages) == len(msgIDs) && len(users) > 0 {
 		res := new(msg.MessagesMany)
 		res.Users = make([]*msg.User, 0)
 		res.Messages = messages
-		res.Users = append(res.Users, user)
+		res.Users = append(res.Users, users...)
 
 		out.Constructor = msg.C_MessagesMany
 		out.Message, _ = res.Marshal()
