@@ -60,6 +60,8 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		if m.PeerType == int32(msg.PeerGroup) {
 			mGroups[m.PeerID] = true
 		}
+		mUsers[m.FwdSenderID] = true
+
 		// load MessageActionData users
 		actUserIDs := domain.ExtractActionUserIDs(m.MessageAction, m.MessageActionData)
 		for _, id := range actUserIDs {
@@ -328,6 +330,8 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 	mUsers := domain.MInt64B{}
 	mUsers[req.Peer.ID] = true
 	for _, m := range messages {
+		mUsers[m.SenderID] = true
+		mUsers[m.FwdSenderID] = true
 		actUserIDs := domain.ExtractActionUserIDs(m.MessageAction, m.MessageActionData)
 		for _, id := range actUserIDs {
 			mUsers[id] = true
