@@ -60,6 +60,11 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		if m.PeerType == int32(msg.PeerGroup) {
 			mGroups[m.PeerID] = true
 		}
+		// load MessageActionData users
+		actUserIDs := domain.ExtractActionUserIDs(m.MessageAction, m.MessageActionData)
+		for _, id := range actUserIDs {
+			mUsers[id] = true
+		}
 	}
 	res.Groups = repo.Ctx().Groups.GetManyGroups(mGroups.ToArray())
 	res.Users = repo.Ctx().Users.GetAnyUsers(mUsers.ToArray())

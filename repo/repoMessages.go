@@ -268,7 +268,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 		messages = append(messages, tmp)
 		userIDs[v.SenderID] = true
 
-		// Extract Message Action Users
+		// load MessageActionData users
 		actionUserIds := domain.ExtractActionUserIDs(v.MessageAction, v.MessageActionData)
 		for _, id := range actionUserIds {
 			userIDs[id] = true
