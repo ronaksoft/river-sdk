@@ -3,6 +3,7 @@ package synchronizer
 import (
 	"time"
 
+	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/repo"
@@ -92,13 +93,13 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) []*msg.Updat
 
 	// Parse message action and call required appliers
 	switch x.Message.MessageAction {
-	case MessageActionNope:
+	case domain.MessageActionNope:
 		// Do nothing
-	case MessageActionContactRegistered:
+	case domain.MessageActionContactRegistered:
 		// Not implemented
-	case MessageActionGroupCreated:
+	case domain.MessageActionGroupCreated:
 		// this will be handled by upper level on UpdateContainer
-	case MessageActionGroupAddUser:
+	case domain.MessageActionGroupAddUser:
 		// TODO : this should be implemented
 
 		act := new(msg.MessageActionGroupAddUser)
@@ -109,7 +110,7 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) []*msg.Updat
 		// Hotfix this should be handled by group Participant list
 		repo.Ctx().Groups.SaveParticipantsByID(x.Message.PeerID, x.Message.CreatedOn, act.UserIDs)
 
-	case MessageActionGroupDeleteUser:
+	case domain.MessageActionGroupDeleteUser:
 		act := new(msg.MessageActionGroupAddUser)
 		err := act.Unmarshal(x.Message.MessageActionData)
 		if err != nil {
@@ -157,9 +158,9 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) []*msg.Updat
 
 		}
 
-	case MessageActionGroupTitleChanged:
+	case domain.MessageActionGroupTitleChanged:
 	// this will be handled by upper level on UpdateContainer
-	case MessageActionClearHistory:
+	case domain.MessageActionClearHistory:
 		act := new(msg.MessageActionClearHistory)
 		err := act.Unmarshal(x.Message.MessageActionData)
 		if err != nil {
