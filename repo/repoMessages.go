@@ -311,15 +311,45 @@ func (r *repoMessages) SaveMessageMany() {
 }
 
 func (r *repoMessages) DeleteDialogMessage(peerID int64, peerType int32, maxID int64) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
 
 	return r.db.Where("PeerID=? AND PeerType=? AND ID <= ?", peerID, peerType, maxID).Delete(dto.Messages{}).Error
 }
-func (r *repoMessages) DeleteMany(IDs []int64) error {
 
-	return r.db.Where("ID IN (?)", IDs).Delete(dto.Messages{}).Error
+func (r *repoMessages) DeleteMany(IDs []int64) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	// Get dialogs that their top message is going to be removed
+	dtoDoalogs := make([]dto.Dialogs, 0)
+	err := r.db.Where("TopMessageID in (?)", IDs).Find(&dtoDoalogs).Error
+	if err != nil {
+		log.LOG_Debug("RepoMessages::DeleteMany() fetch dialogs", zap.Error(err))
+	}
+
+	// remove message
+	err = r.db.Where("ID IN (?)", IDs).Delete(dto.Messages{}).Error
+	if err != nil {
+		log.LOG_Debug("RepoMessages::DeleteMany() delete from Messages", zap.Error(err))
+	}
+
+	// fetch last message and set it as dialog top message
+	for _, d := range dtoDoalogs {
+		dtoMsg := dto.Messages{}
+		err := r.db.Table(dtoMsg.TableName()).Where("PeerID =? AND PeerType= ?", d.PeerID, d.PeerType).Last(&dtoMsg).Error
+		if err == nil && dtoMsg.ID != 0 {
+			d.TopMessageID = dtoMsg.ID
+			r.db.Save(d)
+		}
+	}
+
+	return err
 }
 
 func (r *repoMessages) DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.ClientUpdateMessagesDeleted, error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
 
 	res := make([]*msg.ClientUpdateMessagesDeleted, 0)
 	msgs := make([]dto.Messages, 0)

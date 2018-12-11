@@ -15,7 +15,9 @@ type RepoPendingMessages interface {
 	GetPendingMessageByRequestID(requestID int64) (*dto.PendingMessages, error)
 	GetPendingMessageByID(id int64) (*dto.PendingMessages, error)
 	DeletePendingMessage(ID int64) error
+	DeleteManyPendingMessage(IDs []int64) error
 	GetManyPendingMessages(messageIDs []int64) []*msg.UserMessage
+	GetManyPendingMessagesRequestID(messageIDs []int64) []int64
 	GetAllPendingMessages() []*msg.MessagesSend
 	DeletePeerAllMessages(peerID int64, peerType int32) (*msg.ClientUpdateMessagesDeleted, error)
 }
@@ -140,6 +142,44 @@ func (r *repoPendingMessages) DeletePendingMessage(ID int64) error {
 	return nil
 }
 
+// DeleteManyPendingMessage
+func (r *repoPendingMessages) DeleteManyPendingMessage(IDs []int64) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	// Get dialogs that their top message is going to be removed
+	dtoDoalogs := make([]dto.Dialogs, 0)
+	err := r.db.Where("TopMessageID in (?)", IDs).Find(&dtoDoalogs).Error
+	if err != nil {
+		log.LOG_Debug("RepoPendingMessages::DeleteMany() fetch dialogs", zap.Error(err))
+	}
+
+	// remove pending message
+	err = r.db.Where("ID IN (?)", IDs).Delete(dto.PendingMessages{}).Error
+	if err != nil {
+		log.LOG_Debug("RepoPendingMessages::DeleteMany() delete from Messages", zap.Error(err))
+	}
+
+	// fetch last message and set it as dialog top message
+	for _, d := range dtoDoalogs {
+		dtoPend := dto.PendingMessages{}
+		err := r.db.Table(dtoPend.TableName()).Where("PeerID =? AND PeerType= ?", d.PeerID, d.PeerType).First(&dtoPend).Error // cuz the pendMsg Ids are negative of nano time so the smallest is latest record
+		if err == nil && dtoPend.ID != 0 {
+			d.TopMessageID = dtoPend.ID
+			r.db.Save(d)
+		} else {
+			dtoMsg := dto.Messages{}
+			err := r.db.Table(dtoMsg.TableName()).Where("PeerID =? AND PeerType= ?", d.PeerID, d.PeerType).Last(&dtoMsg).Error
+			if err == nil && dtoMsg.ID != 0 {
+				d.TopMessageID = dtoMsg.ID
+				r.db.Save(d)
+			}
+		}
+	}
+
+	return nil
+}
+
 // GetManyPendingMessages
 func (r *repoPendingMessages) GetManyPendingMessages(messageIDs []int64) []*msg.UserMessage {
 	r.mx.Lock()
@@ -168,6 +208,29 @@ func (r *repoPendingMessages) GetManyPendingMessages(messageIDs []int64) []*msg.
 	return messages
 }
 
+// GetManyPendingMessages
+func (r *repoPendingMessages) GetManyPendingMessagesRequestID(messageIDs []int64) []int64 {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	log.LOG_Debug("RepoPendingMessages::GetManyPendingMessagesRequestID()",
+		zap.Int64s("MessageIDs", messageIDs),
+	)
+	dtoMsgs := make([]dto.PendingMessages, 0, len(messageIDs))
+	err := r.db.Where("ID in (?)", messageIDs).Find(&dtoMsgs).Error
+	if err != nil {
+		log.LOG_Debug("RepoPendingMessages::GetManyPendingMessages()-> fetch pendingMessage entities",
+			zap.String("Error", err.Error()),
+		)
+		return nil
+	}
+	requestIDs := make([]int64, 0)
+	for _, v := range dtoMsgs {
+		requestIDs = append(requestIDs, v.RequestID)
+	}
+
+	return requestIDs
+}
 func (r *repoPendingMessages) GetAllPendingMessages() []*msg.MessagesSend {
 	r.mx.Lock()
 	defer r.mx.Unlock()

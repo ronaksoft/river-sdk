@@ -526,6 +526,29 @@ func (r *River) messagesDelete(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 		return
 	}
 
+	// Get PendingMessage and cancel its requests
+	pendingMessageIDs := make([]int64, 0)
+	for _, id := range req.MessageIDs {
+		if id < 0 {
+			pendingMessageIDs = append(pendingMessageIDs, id)
+		}
+	}
+	if len(pendingMessageIDs) > 0 {
+		// remove from queue
+		pendedRequestIDs := repo.Ctx().PendingMessages.GetManyPendingMessagesRequestID(pendingMessageIDs)
+		for _, reqID := range pendedRequestIDs {
+			r.queueCtrl.CancelRequest(reqID)
+		}
+		// remove from DB
+		err := repo.Ctx().PendingMessages.DeleteManyPendingMessage(pendingMessageIDs)
+		if err != nil {
+			log.LOG_Debug("River::messagesDelete()-> DeletePendingMessage()",
+				zap.String("Error", err.Error()),
+			)
+		}
+	}
+
+	// remove message
 	err := repo.Ctx().Messages.DeleteMany(req.MessageIDs)
 	if err != nil {
 		log.LOG_Debug("River::messagesDelete()-> DeleteMany()",
