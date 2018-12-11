@@ -794,12 +794,12 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 	}
 
 	// No need to wait here till DB gets synced cuz UI will have required data
-	go func() {
+	go func(u []*msg.User, g []*msg.Group) {
 		// Save Groups
-		repo.Ctx().Groups.SaveMany(groups)
+		repo.Ctx().Groups.SaveMany(g)
 		// Save Users
-		repo.Ctx().Users.SaveMany(users)
-	}()
+		repo.Ctx().Users.SaveMany(u)
+	}(users, groups)
 
 	// sort updates
 	sort.Slice(updates, func(i, j int) bool {

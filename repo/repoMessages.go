@@ -98,13 +98,11 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 	}
 
 	ed := new(dto.Dialogs)
-	r.db.LogMode(true)
 	err = r.db.Table(ed.TableName()).Where("PeerID=? AND PeerType=?", m.PeerID, m.PeerType).Updates(map[string]interface{}{
 		"TopMessageID": topMessageID,
 		"LastUpdate":   message.CreatedOn,
 		"UnreadCount":  unreadCount, //gorm.Expr("UnreadCount + ?", unreadCount), // in snapshot mode if unread message lefted
 	}).Error
-	r.db.LogMode(false)
 	if err != nil {
 		log.LOG_Debug("RepoRepoMessages::SaveNewMessage()-> update dialog entity",
 			zap.String("Error", err.Error()),
