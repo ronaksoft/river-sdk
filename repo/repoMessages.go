@@ -19,7 +19,7 @@ type RepoMessages interface {
 	DeleteMany(IDs []int64) error
 	DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.ClientUpdateMessagesDeleted, error)
 	GetTopMessageID(peerID int64, peerType int32) (int64, error)
-	GetMessageHistoryWithMinMaxID(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User, msgMaxID, msgMinID int64)
+	GetMessageHistoryWithMinMaxID(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User)
 }
 
 type repoMessages struct {
@@ -296,7 +296,7 @@ func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerTy
 }
 
 // GetMessageHistoryWithMinMaxID
-func (r *repoMessages) GetMessageHistoryWithMinMaxID(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User, msgMaxID, msgMinID int64) {
+func (r *repoMessages) GetMessageHistoryWithMinMaxID(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -317,17 +317,8 @@ func (r *repoMessages) GetMessageHistoryWithMinMaxID(peerID int64, peerType int3
 		)
 		return
 	}
-	msgMinID = int64(^uint64(0) >> 1)
-	msgMaxID = 0
 	userIDs := domain.MInt64B{}
 	for _, v := range dtoResult {
-		if v.ID < msgMinID {
-			msgMinID = v.ID
-		}
-		if v.ID > msgMaxID {
-			msgMaxID = v.ID
-		}
-
 		tmp := new(msg.UserMessage)
 		v.MapTo(tmp)
 		protoMsgs = append(protoMsgs, tmp)

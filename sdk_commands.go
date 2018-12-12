@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"git.ronaksoftware.com/ronak/riversdk/synchronizer"
+
 	"git.ronaksoftware.com/ronak/riversdk/cmd"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
@@ -205,49 +207,49 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 		} else {
 			maxID := dtoDialog.TopMessageID + 1
 			// check holes
-			if isMessageInHole(dtoDialog.PeerID, req.MinID, maxID) {
+			if synchronizer.IsMessageInHole(dtoDialog.PeerID, req.MinID, maxID) {
 				// send request to server
 				log.LOG_Debug("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
 				r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 			} else {
 				// we have both minID and maxID
-				messages, users, msgMaxID, msgMinID := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, maxID, req.Limit)
+				messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, maxID, req.Limit)
 				fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
 			}
 		}
 
 	} else if req.MinID == 0 && req.MaxID != 0 {
 		// check holes
-		if isMessageInHole(dtoDialog.PeerID, req.MinID, req.MaxID) {
+		if synchronizer.IsMessageInHole(dtoDialog.PeerID, req.MinID, req.MaxID) {
 			// send request to server
 			log.LOG_Debug("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		} else {
 			// we have both minID and maxID
-			messages, users, msgMaxID, msgMinID := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, maxID, req.Limit)
+			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
 		}
 
 	} else if req.MinID != 0 && req.MaxID == 0 {
 		maxID := dtoDialog.TopMessageID + 1
 		// check holes
-		if isMessageInHole(dtoDialog.PeerID, req.MinID, maxID) {
+		if synchronizer.IsMessageInHole(dtoDialog.PeerID, req.MinID, maxID) {
 			// send request to server
 			log.LOG_Debug("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		} else {
 			// we have both minID and maxID
-			messages, users, msgMaxID, msgMinID := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, maxID, req.Limit)
+			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, maxID, req.Limit)
 			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
 		}
 	} else {
-		if isMessageInHole(dtoDialog.PeerID, req.MinID, req.MaxID) {
+		if synchronizer.IsMessageInHole(dtoDialog.PeerID, req.MinID, req.MaxID) {
 			// send request to server
 			log.LOG_Debug("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		} else {
 			// we have both minID and maxID
-			messages, users, msgMaxID, msgMinID := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, maxID, req.Limit)
+			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
 		}
 	}

@@ -6,7 +6,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func isMessageInHole(peerID, minID, maxID int64) bool {
+func IsMessageInHole(peerID, minID, maxID int64) bool {
 	holes, err := repo.Ctx().MessageHoles.GetHoles(peerID, minID, maxID)
 	if err != nil {
 		return true
