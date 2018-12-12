@@ -13,12 +13,13 @@ type RepoMessages interface {
 	SaveMessage(message *msg.UserMessage) error
 	SaveSelfMessage(message *msg.UserMessage, dialog *msg.Dialog) error
 	GetManyMessages(messageIDs []int64) []*msg.UserMessage
-	GetMessageHistory(peerID int64, peerType int32, minID, maxID int64, limit int32) ([]*msg.UserMessage, []*msg.User)
+	GetMessageHistoryWithPendingMessages(peerID int64, peerType int32, minID, maxID int64, limit int32) ([]*msg.UserMessage, []*msg.User)
 	GetUnreadMessageCount(peerID int64, peerType int32, userID, maxID int64) int32
 	DeleteDialogMessage(peerID int64, peerType int32, maxID int64) error
 	DeleteMany(IDs []int64) error
 	DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.ClientUpdateMessagesDeleted, error)
 	GetTopMessageID(peerID int64, peerType int32) (int64, error)
+	GetMessageHistoryWithMinMaxID(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User, msgMaxID, msgMinID int64)
 }
 
 type repoMessages struct {
@@ -216,8 +217,8 @@ func (r *repoMessages) GetManyMessages(messageIDs []int64) []*msg.UserMessage {
 	return messages
 }
 
-// GetMessageHistory
-func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, maxID int64, limit int32) ([]*msg.UserMessage, []*msg.User) {
+// GetMessageHistoryWithPendingMessages
+func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -229,7 +230,6 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 		zap.Int32("Limit", limit),
 	)
 
-	messages := make([]*msg.UserMessage, 0, limit)
 	dtoMsgs := make([]dto.Messages, 0, limit)
 	dtoPendings := make([]dto.PendingMessages, 0, limit)
 
@@ -244,7 +244,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 		log.LOG_Debug("RepoRepoMessages::GetMessageHistory()-> fetch messages",
 			zap.String("Error", err.Error()),
 		)
-		return nil, nil
+		return
 	}
 
 	dtoResult := make([]dto.Messages, 0, limit)
@@ -265,7 +265,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 	for _, v := range dtoResult {
 		tmp := new(msg.UserMessage)
 		v.MapTo(tmp)
-		messages = append(messages, tmp)
+		protoMsgs = append(protoMsgs, tmp)
 		userIDs[v.SenderID] = true
 		userIDs[v.FwdSenderID] = true
 		// load MessageActionData users
@@ -276,7 +276,6 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 	}
 
 	// Get users <rewrite it here to remove coupling>
-	pbUsers := make([]*msg.User, 0, len(userIDs))
 	users := make([]dto.Users, 0, len(userIDs))
 
 	err = r.db.Where("ID in (?)", userIDs.ToArray()).Find(&users).Error
@@ -284,16 +283,81 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 		log.LOG_Debug("RepoRepoMessages::GetMessageHistory()-> fetch users",
 			zap.String("Error", err.Error()),
 		)
-		return nil, nil // , err
+		return
 	}
 
 	for _, v := range users {
 		tmp := new(msg.User)
 		v.MapToUser(tmp)
-		pbUsers = append(pbUsers, tmp)
+		protoUsers = append(protoUsers, tmp)
 
 	}
-	return messages, pbUsers
+	return
+}
+
+// GetMessageHistoryWithMinMaxID
+func (r *repoMessages) GetMessageHistoryWithMinMaxID(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User, msgMaxID, msgMinID int64) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	log.LOG_Debug("RepoMessages::GetMessageHistory()",
+		zap.Int64("PeerID", peerID),
+		zap.Int32("PeerType", peerType),
+		zap.Int64("MinID", minID),
+		zap.Int64("MaxID", maxID),
+		zap.Int32("Limit", limit),
+	)
+
+	dtoResult := make([]dto.Messages, 0, limit)
+
+	err := r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID > ? AND messages.ID < ?", peerID, peerType, minID, maxID).Find(&dtoResult).Error
+	if err != nil {
+		log.LOG_Debug("RepoRepoMessages::GetMessageHistory()-> fetch messages",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
+	msgMinID = int64(^uint64(0) >> 1)
+	msgMaxID = 0
+	userIDs := domain.MInt64B{}
+	for _, v := range dtoResult {
+		if v.ID < msgMinID {
+			msgMinID = v.ID
+		}
+		if v.ID > msgMaxID {
+			msgMaxID = v.ID
+		}
+
+		tmp := new(msg.UserMessage)
+		v.MapTo(tmp)
+		protoMsgs = append(protoMsgs, tmp)
+		userIDs[v.SenderID] = true
+		userIDs[v.FwdSenderID] = true
+		// load MessageActionData users
+		actionUserIds := domain.ExtractActionUserIDs(v.MessageAction, v.MessageActionData)
+		for _, id := range actionUserIds {
+			userIDs[id] = true
+		}
+	}
+
+	// Get users <rewrite it here to remove coupling>
+	users := make([]dto.Users, 0, len(userIDs))
+
+	err = r.db.Where("ID in (?)", userIDs.ToArray()).Find(&users).Error
+	if err != nil {
+		log.LOG_Debug("RepoRepoMessages::GetMessageHistory()-> fetch users",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
+
+	for _, v := range users {
+		tmp := new(msg.User)
+		v.MapToUser(tmp)
+		protoUsers = append(protoUsers, tmp)
+
+	}
+	return
 }
 
 func (r *repoMessages) GetUnreadMessageCount(peerID int64, peerType int32, userID, maxID int64) int32 {

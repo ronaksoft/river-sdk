@@ -526,6 +526,14 @@ func (ctrl *SyncController) getAllDialogs(offset int32, limit int32) {
 							zap.String("Dialog", fmt.Sprintf("%v", dialog)),
 						)
 					}
+
+					// create MessageHole
+					err = createMessageHole(dialog.PeerID, 0, dialog.TopMessageID)
+					if err != nil {
+						log.LOG_Info("SyncController::getAllDialogs() -> createMessageHole() ",
+							zap.String("Error", err.Error()),
+						)
+					}
 				}
 				for _, user := range x.Users {
 					err := repo.Ctx().Users.SaveUser(user)

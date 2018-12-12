@@ -184,40 +184,88 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 		)
 		return
 	}
-
-	// log not required for now
-
-	res := new(msg.MessagesMany)
-
-	// fetch messages
-	messages, users := repo.Ctx().Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
-	res.Messages = messages
-	res.Users = users
-
-	var maxMessageID int64
-	for _, v := range messages {
-		if maxMessageID < v.ID {
-			maxMessageID = v.ID
-		}
-	}
-
-	// if the localDB had no or outdated data send the request to server
-	if (req.MaxID-maxMessageID) > int64(req.Limit) || len(res.Messages) <= 1 {
-		log.LOG_Debug("River::messageGetHistory()-> GetMessageHistory() nothing found in cacheDB pass request to server")
-		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	dtoDialog := repo.Ctx().Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
+	if dtoDialog == nil {
+		out.Constructor = msg.C_Error
+		out.RequestID = in.RequestID
+		msg.ResultError(out, &msg.Error{Code: "-1", Items: "dialog does not exist"})
+		cmd.GetUIExecuter().Exec(func() {
+			if successCB != nil {
+				successCB(out)
+			}
+		})
 		return
 	}
 
+	if req.MinID == 0 && req.MaxID == 0 {
+		if dtoDialog.TopMessageID < 0 {
+			// fetch messages from localDB cuz there is a pending message it means we are not connected to server
+			messages, users := repo.Ctx().Messages.GetMessageHistoryWithPendingMessages(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
+			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
+		} else {
+			maxID := dtoDialog.TopMessageID + 1
+			// check holes
+			if isMessageInHole(dtoDialog.PeerID, req.MinID, maxID) {
+				// send request to server
+				log.LOG_Debug("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
+				r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+			} else {
+				// we have both minID and maxID
+				messages, users, msgMaxID, msgMinID := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, maxID, req.Limit)
+				fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
+			}
+		}
+
+	} else if req.MinID == 0 && req.MaxID != 0 {
+		// check holes
+		if isMessageInHole(dtoDialog.PeerID, req.MinID, req.MaxID) {
+			// send request to server
+			log.LOG_Debug("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
+			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+		} else {
+			// we have both minID and maxID
+			messages, users, msgMaxID, msgMinID := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, maxID, req.Limit)
+			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
+		}
+
+	} else if req.MinID != 0 && req.MaxID == 0 {
+		maxID := dtoDialog.TopMessageID + 1
+		// check holes
+		if isMessageInHole(dtoDialog.PeerID, req.MinID, maxID) {
+			// send request to server
+			log.LOG_Debug("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
+			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+		} else {
+			// we have both minID and maxID
+			messages, users, msgMaxID, msgMinID := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, maxID, req.Limit)
+			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
+		}
+	} else {
+		if isMessageInHole(dtoDialog.PeerID, req.MinID, req.MaxID) {
+			// send request to server
+			log.LOG_Debug("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
+			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+		} else {
+			// we have both minID and maxID
+			messages, users, msgMaxID, msgMinID := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, maxID, req.Limit)
+			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
+		}
+	}
+}
+
+func fnSendGetMessageHistoryResponse(out *msg.MessageEnvelope, messages []*msg.UserMessage, users []*msg.User, requestID uint64, successCB domain.MessageHandler) {
+	res := new(msg.MessagesMany)
+	res.Messages = messages
+	res.Users = users
 	// result
-	out.RequestID = in.RequestID
+	out.RequestID = requestID
 	out.Constructor = msg.C_MessagesMany
 	out.Message, _ = res.Marshal()
-
 	cmd.GetUIExecuter().Exec(func() {
 		if successCB != nil {
 			successCB(out)
 		}
-	}) //successCB(out)
+	})
 }
 
 func (r *River) contactGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {

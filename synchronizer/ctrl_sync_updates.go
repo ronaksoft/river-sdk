@@ -166,6 +166,7 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) []*msg.Updat
 		if err != nil {
 			log.LOG_Debug("SyncController::updateNewMessage() -> MessageActionClearHistory Failed to Parse", zap.String("Error", err.Error()))
 		}
+
 		err = repo.Ctx().Messages.DeleteDialogMessage(x.Message.PeerID, x.Message.PeerType, act.MaxID)
 		if err != nil {
 			log.LOG_Debug("SyncController::updateNewMessage() -> DeleteDialogMessage() Failed", zap.String("Error", err.Error()))
@@ -177,6 +178,15 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) []*msg.Updat
 			repo.Ctx().Groups.Delete(x.Message.PeerID)
 			// Delete Participants
 			repo.Ctx().Groups.DeleteAllGroupMember(x.Message.PeerID)
+			//delete MessageHole
+			deleteMessageHole(x.Message.PeerID)
+		} else {
+			// get dialog and create first hole
+			dtoDlg := repo.Ctx().Dialogs.GetDialog(x.Message.PeerID, x.Message.PeerType)
+			if dtoDlg != nil {
+				deleteMessageHole(x.Message.PeerID)
+				createMessageHole(dtoDlg.PeerID, 0, dtoDlg.TopMessageID)
+			}
 		}
 	}
 

@@ -231,9 +231,36 @@ func (ctrl *SyncController) messagesMany(e *msg.MessageEnvelope) {
 		repo.Ctx().Users.SaveUser(v)
 	}
 
+	// extract MessageHole info
+	peerMessageMinID := make(map[int64]int64)
+	peerMessageMaxID := make(map[int64]int64)
+	peerMessages := make(map[int64]bool)
 	for _, v := range u.Messages {
 		repo.Ctx().Messages.SaveMessage(v)
+		if _, ok := peerMessages[v.PeerID]; ok {
+			if v.ID < peerMessageMinID[v.PeerID] {
+				peerMessageMinID[v.PeerID] = v.ID
+			}
+			if v.ID > peerMessageMaxID[v.PeerID] {
+				peerMessageMaxID[v.PeerID] = v.ID
+			}
+		} else {
+			peerMessages[v.PeerID] = true
+			peerMessageMaxID[v.PeerID] = v.ID
+			peerMessageMinID[v.PeerID] = v.ID
+		}
 	}
+
+	// fill MessageHoles
+	for peerID := range peerMessages {
+		err := fillMessageHoles(peerID, peerMessageMinID[peerID], peerMessageMaxID[peerID])
+		if err != nil {
+			log.LOG_Debug("SyncController::updateMessageHole()",
+				zap.String("Error", err.Error()),
+			)
+		}
+	}
+
 }
 
 func (ctrl *SyncController) groupFull(e *msg.MessageEnvelope) {
