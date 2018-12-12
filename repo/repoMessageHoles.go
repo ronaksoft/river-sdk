@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"database/sql"
 	"errors"
 
 	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
@@ -26,9 +27,14 @@ func (r *repoMessageHoles) Save(peerID, minID, maxID int64) error {
 		return errors.New("invalid hole params, minID is less or equal to maxID")
 	}
 
+	nilInt64 := sql.NullInt64{
+		Int64: minID,
+		Valid: true,
+	}
+
 	m := dto.MessageHoles{
 		PeerID: peerID,
-		MinID:  minID,
+		MinID:  nilInt64,
 		MaxID:  maxID,
 	}
 
