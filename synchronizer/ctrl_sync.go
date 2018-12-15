@@ -528,7 +528,7 @@ func (ctrl *SyncController) getAllDialogs(offset int32, limit int32) {
 					}
 
 					// create MessageHole
-					err = createMessageHole(dialog.PeerID, 0, dialog.TopMessageID)
+					err = createMessageHole(dialog.PeerID, 0, dialog.TopMessageID-1)
 					if err != nil {
 						log.LOG_Info("SyncController::getAllDialogs() -> createMessageHole() ",
 							zap.String("Error", err.Error()),

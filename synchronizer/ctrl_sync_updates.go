@@ -185,7 +185,7 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) []*msg.Updat
 			dtoDlg := repo.Ctx().Dialogs.GetDialog(x.Message.PeerID, x.Message.PeerType)
 			if dtoDlg != nil {
 				deleteMessageHole(x.Message.PeerID)
-				createMessageHole(dtoDlg.PeerID, 0, dtoDlg.TopMessageID)
+				createMessageHole(dtoDlg.PeerID, 0, dtoDlg.TopMessageID-1)
 			}
 		}
 	}
