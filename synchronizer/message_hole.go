@@ -29,9 +29,9 @@ func fillMessageHoles(peerID, msgMinID, msgMaxID int64) error {
 			}
 			err = repo.Ctx().MessageHoles.Save(h.PeerID, h.MinID.Int64, msgMinID-1) // Insert
 			if err != nil {
-				fnLogFillMessageHoles("Update", h.PeerID, h.MinID.Int64, msgMinID-1, err)
+				fnLogFillMessageHoles("Insert", h.PeerID, h.MinID.Int64, msgMinID-1, err)
 			}
-			repo.Ctx().MessageHoles.Save(h.PeerID, msgMaxID+1, h.MaxID) // Insert
+			err = repo.Ctx().MessageHoles.Save(h.PeerID, msgMaxID+1, h.MaxID) // Insert
 			if err != nil {
 				fnLogFillMessageHoles("Insert", h.PeerID, msgMaxID+1, h.MaxID, err)
 			}
