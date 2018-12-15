@@ -369,3 +369,33 @@ func fnGetDelete(c *ishell.Context) bool {
 	}
 	return del
 }
+
+func fnGetAdmin(c *ishell.Context) bool {
+	del := false
+	for {
+		c.Print("Admin : (0 = false , >=1 : true)")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		if err == nil {
+			del = id > 0
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return del
+}
+
+func fnGetAdminEnabled(c *ishell.Context) bool {
+	del := false
+	for {
+		c.Print("Admin Enabled : (0 = false , >=1 : true)")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		if err == nil {
+			del = id > 0
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return del
+}

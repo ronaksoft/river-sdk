@@ -93,10 +93,48 @@ var GetFull = &ishell.Cmd{
 	},
 }
 
+var UpdateAdmin = &ishell.Cmd{
+	Name: "UpdateAdmin",
+	Func: func(c *ishell.Context) {
+		req := msg.GroupsUpdateAdmin{}
+		req.User = new(msg.InputUser)
+		req.GroupID = fnGetGroupID(c)
+		req.User.UserID = fnGetPeerID(c)
+		req.User.AccessHash = fnGetAccessHash(c)
+		req.Admin = fnGetAdmin(c)
+
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsUpdateAdmin, reqBytes, reqDelegate, false, false); err != nil {
+			_Log.Debug(err.Error())
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
+var ToggleAdmins = &ishell.Cmd{
+	Name: "ToggleAdmins",
+	Func: func(c *ishell.Context) {
+		req := msg.GroupsToggleAdmins{}
+		req.GroupID = fnGetGroupID(c)
+		req.AdminEnabled = fnGetAdminEnabled(c)
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsToggleAdmins, reqBytes, reqDelegate, false, false); err != nil {
+			_Log.Debug(err.Error())
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
 func init() {
 	Group.AddCmd(Create)
 	Group.AddCmd(AddUser)
 	Group.AddCmd(DeleteUser)
 	Group.AddCmd(EditTitle)
 	Group.AddCmd(GetFull)
+	Group.AddCmd(UpdateAdmin)
+	Group.AddCmd(ToggleAdmins)
 }

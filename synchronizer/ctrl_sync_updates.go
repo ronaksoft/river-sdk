@@ -316,3 +316,53 @@ func (ctrl *SyncController) updateMessagesDeleted(u *msg.UpdateEnvelope) []*msg.
 
 	return res
 }
+
+// TODO : Implement new Updates
+
+// // updateGroupParticipantAdd
+// func (ctrl *SyncController) updateGroupParticipantAdd(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+// 	log.LOG_Debug("SyncController::updateGroupParticipantAdd() applier")
+
+// 	x := new(msg.UpdateGroupParticipantAdd)
+// 	x.Unmarshal(u.Update)
+
+// 	res := []*msg.UpdateEnvelope{u}
+// 	// XXXXXXXXXXXXXXXXXXXXXXXXXXX
+// 	return res
+// }
+
+// // updateGroupParticipantDeleted
+// func (ctrl *SyncController) updateGroupParticipantDeleted(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+// 	log.LOG_Debug("SyncController::updateGroupParticipantDeleted() applier")
+
+// 	x := new(msg.UpdateGroupParticipantDeleted)
+// 	x.Unmarshal(u.Update)
+
+// 	res := []*msg.UpdateEnvelope{u}
+// 	// XXXXXXXXXXXXXXXXXXXXXXXXXXX
+// 	return res
+// }
+
+// // updateGroupParticipantAdmin
+// func (ctrl *SyncController) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+// 	log.LOG_Debug("SyncController::updateGroupParticipantAdmin() applier")
+
+// 	x := new(msg.UpdateGroupParticipantAdmin)
+// 	x.Unmarshal(u.Update)
+
+// 	res := []*msg.UpdateEnvelope{u}
+// 	// XXXXXXXXXXXXXXXXXXXXXXXXXXX
+// 	return res
+// }
+
+// // UpdateGroupAdmins
+// func (ctrl *SyncController) updateGroupAdmins(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+// 	log.LOG_Debug("SyncController::updateGroupAdmins() applier")
+
+// 	x := new(msg.UpdateGroupAdmins)
+// 	x.Unmarshal(u.Update)
+
+// 	res := []*msg.UpdateEnvelope{u}
+// 	// XXXXXXXXXXXXXXXXXXXXXXXXXXX
+// 	return res
+// }

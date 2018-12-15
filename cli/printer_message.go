@@ -267,7 +267,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			return
 		}
 		if x.Group != nil {
-			_Shell.Println(fmt.Sprintf("GroupID : %d \t Title : %s", x.Group.ID, x.Group.Title))
+			_Shell.Println(fmt.Sprintf("GroupID : %d \t Title : %s \t Flags :%v", x.Group.ID, x.Group.Title, x.Group.Flags))
 		} else {
 			_Shell.Println(_RED("x.Group is null"))
 		}
