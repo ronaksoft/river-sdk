@@ -178,16 +178,16 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 }
 
 func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	log.LOG_Debug("River::messageGetHistory()")
+	log.LOG_Warn("River::messageGetHistory()")
 	req := new(msg.MessagesGetHistory)
 	if err := req.Unmarshal(in.Message); err != nil {
-		log.LOG_Debug("River::messageGetHistory()-> Unmarshal()",
+		log.LOG_Warn("River::messageGetHistory()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
 	}
 
-	log.LOG_Debug("River::messageGetHistory()-> XXXXXXXXXXXXXXXXXX : ",
+	log.LOG_Warn("River::messageGetHistory()-> XXXXXXXXXXXXXXXXXX : ",
 		zap.Int64("PeerID", req.Peer.ID),
 		zap.Int64("MinID", req.MinID),
 		zap.Int64("MaxID", req.MaxID),
@@ -208,9 +208,9 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 	}
 
 	if req.MinID == 0 && req.MaxID == 0 {
-		log.LOG_Debug("River::messageGetHistory()-> 1. req.MinID == 0 && req.MaxID == 0")
+		log.LOG_Warn("River::messageGetHistory()-> 1. req.MinID == 0 && req.MaxID == 0")
 		if dtoDialog.TopMessageID < 0 {
-			log.LOG_Debug("River::messageGetHistory()-> Load pending messages")
+			log.LOG_Warn("River::messageGetHistory()-> Load pending messages")
 			// fetch messages from localDB cuz there is a pending message it means we are not connected to server
 			messages, users := repo.Ctx().Messages.GetMessageHistoryWithPendingMessages(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
@@ -219,64 +219,68 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 
 			// check holes
 			if synchronizer.IsMessageInHole(dtoDialog.PeerID, req.MinID, maxID) {
-				log.LOG_Debug("River::messageGetHistory()-> Message is in hole")
+				log.LOG_Warn("River::messageGetHistory()-> Message is in hole")
 				// send request to server
-				log.LOG_Debug("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
+				log.LOG_Warn("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
 				r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 			} else {
 				// we have both minID and maxID
-				log.LOG_Debug("River::messageGetHistory()-> Message is not in hole")
+				log.LOG_Warn("River::messageGetHistory()-> Message is not in hole")
 				messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, maxID, req.Limit)
 				fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
 			}
 		}
 
 	} else if req.MinID == 0 && req.MaxID != 0 {
-		log.LOG_Debug("River::messageGetHistory()-> 2. req.MinID == 0 && req.MaxID != 0")
+		log.LOG_Warn("River::messageGetHistory()-> 2. req.MinID == 0 && req.MaxID != 0")
 
 		// check holes
 		if synchronizer.IsMessageInHole(dtoDialog.PeerID, req.MinID, req.MaxID) {
 
-			log.LOG_Debug("River::messageGetHistory()-> Message is in hole")
+			log.LOG_Warn("River::messageGetHistory()-> Message is in hole")
 			// send request to server
-			log.LOG_Debug("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
+			log.LOG_Warn("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		} else {
 
-			log.LOG_Debug("River::messageGetHistory()-> Message is not in hole")
+			log.LOG_Warn("River::messageGetHistory()-> Message is not in hole")
 			// we have both minID and maxID
 			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
 		}
 
 	} else if req.MinID != 0 && req.MaxID == 0 {
-		log.LOG_Debug("River::messageGetHistory()-> 3 . req.MinID != 0 && req.MaxID == 0")
-		maxID := dtoDialog.TopMessageID + 1
+
+		// BUG : server calculate last 20 messages and returns
+		// TODO : report this
+
+		log.LOG_Warn("River::messageGetHistory()-> 3 . req.MinID != 0 && req.MaxID == 0")
+		maxID := dtoDialog.TopMessageID - 1
 		// check holes
 		if synchronizer.IsMessageInHole(dtoDialog.PeerID, req.MinID, maxID) {
 
-			log.LOG_Debug("River::messageGetHistory()-> Message is in hole")
+			log.LOG_Warn("River::messageGetHistory()-> Message is in hole")
 			// send request to server
-			log.LOG_Debug("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
+			log.LOG_Warn("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		} else {
 
-			log.LOG_Debug("River::messageGetHistory()-> Message is not in hole")
+			log.LOG_Warn("River::messageGetHistory()-> Message is not in hole")
 			// we have both minID and maxID
 			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, maxID, req.Limit)
 			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
 		}
 	} else {
 
-		log.LOG_Debug("River::messageGetHistory()-> 4 . req.MinID != 0 && req.MaxID != 0")
+		log.LOG_Warn("River::messageGetHistory()-> 4 . req.MinID != 0 && req.MaxID != 0")
 		if synchronizer.IsMessageInHole(dtoDialog.PeerID, req.MinID, req.MaxID) {
 
-			log.LOG_Debug("River::messageGetHistory()-> Message is in hole")
+			log.LOG_Warn("River::messageGetHistory()-> Message is in hole")
 			// send request to server
-			log.LOG_Debug("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
+			log.LOG_Warn("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		} else {
-			log.LOG_Debug("River::messageGetHistory()-> Message is not in hole")
+			log.LOG_Warn("River::messageGetHistory()-> Message is not in hole")
 			// we have both minID and maxID
 			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)

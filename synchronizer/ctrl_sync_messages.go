@@ -253,7 +253,7 @@ func (ctrl *SyncController) messagesMany(e *msg.MessageEnvelope) {
 
 	// fill MessageHoles
 	for peerID := range peerMessages {
-		err := fillMessageHoles(peerID, peerMessageMinID[peerID]-1, peerMessageMaxID[peerID]-1)
+		err := fillMessageHoles(peerID, peerMessageMinID[peerID], peerMessageMaxID[peerID])
 		if err != nil {
 			log.LOG_Debug("SyncController::updateMessageHole()",
 				zap.String("Error", err.Error()),
