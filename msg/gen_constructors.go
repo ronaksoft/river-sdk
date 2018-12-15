@@ -16,6 +16,7 @@ const (
 	C_InitAuthCompleted                  int64 = 627708982
 	C_UpdateContainer                    int64 = 661712615
 	C_UpdateMessagesDeleted              int64 = 670568714
+	C_UpdateGroupAdmins                  int64 = 694155405
 	C_File                               int64 = 749574446
 	C_User                               int64 = 765557111
 	C_UsersMany                          int64 = 801733941
@@ -32,6 +33,7 @@ const (
 	C_MessageActionClearHistory          int64 = 1270465696
 	C_GroupsCreate                       int64 = 1271969037
 	C_MessagesReadHistory                int64 = 1300826534
+	C_GroupsUpdateAdmin                  int64 = 1345991011
 	C_ContactsGet                        int64 = 1412732665
 	C_MessagesGetDialogs                 int64 = 1429532372
 	C_UpdateGetState                     int64 = 1437250230
@@ -39,12 +41,15 @@ const (
 	C_AccountCheckUsername               int64 = 1501406413
 	C_UpdateReadHistoryInbox             int64 = 1529128378
 	C_MessagesSetTyping                  int64 = 1540214486
+	C_GroupsToggleAdmins                 int64 = 1581076909
 	C_InitCompleteAuth                   int64 = 1583178320
+	C_UpdateGroupParticipantAdd          int64 = 1623827837
 	C_UserMessage                        int64 = 1677556362
 	C_MessagesMany                       int64 = 1713238910
 	C_UpdateDifference                   int64 = 1742546619
 	C_ContactsDelete                     int64 = 1750426880
 	C_SystemGetDHGroups                  int64 = 1786665018
+	C_UpdateGroupParticipantAdmin        int64 = 1813022164
 	C_UpdateMessageEdited                int64 = 1825079988
 	C_UpdateState                        int64 = 1837585836
 	C_InitBindUser                       int64 = 1933549113
@@ -67,6 +72,7 @@ const (
 	C_MessageActionContactRegistered     int64 = 2399156016
 	C_MessageActionGroupTitleChanged     int64 = 2418464749
 	C_FileLocation                       int64 = 2432133155
+	C_UpdateGroupParticipantDeleted      int64 = 2489941844
 	C_MessagesEdit                       int64 = 2492658432
 	C_GroupsEditTitle                    int64 = 2582813461
 	C_AuthLogin                          int64 = 2587620888
@@ -128,6 +134,7 @@ var ConstructorNames = map[int64]string{
 	627708982:  "InitAuthCompleted",
 	661712615:  "UpdateContainer",
 	670568714:  "UpdateMessagesDeleted",
+	694155405:  "UpdateGroupAdmins",
 	749574446:  "File",
 	765557111:  "User",
 	801733941:  "UsersMany",
@@ -144,6 +151,7 @@ var ConstructorNames = map[int64]string{
 	1270465696: "MessageActionClearHistory",
 	1271969037: "GroupsCreate",
 	1300826534: "MessagesReadHistory",
+	1345991011: "GroupsUpdateAdmin",
 	1412732665: "ContactsGet",
 	1429532372: "MessagesGetDialogs",
 	1437250230: "UpdateGetState",
@@ -151,12 +159,15 @@ var ConstructorNames = map[int64]string{
 	1501406413: "AccountCheckUsername",
 	1529128378: "UpdateReadHistoryInbox",
 	1540214486: "MessagesSetTyping",
+	1581076909: "GroupsToggleAdmins",
 	1583178320: "InitCompleteAuth",
+	1623827837: "UpdateGroupParticipantAdd",
 	1677556362: "UserMessage",
 	1713238910: "MessagesMany",
 	1742546619: "UpdateDifference",
 	1750426880: "ContactsDelete",
 	1786665018: "SystemGetDHGroups",
+	1813022164: "UpdateGroupParticipantAdmin",
 	1825079988: "UpdateMessageEdited",
 	1837585836: "UpdateState",
 	1933549113: "InitBindUser",
@@ -179,6 +190,7 @@ var ConstructorNames = map[int64]string{
 	2399156016: "MessageActionContactRegistered",
 	2418464749: "MessageActionGroupTitleChanged",
 	2432133155: "FileLocation",
+	2489941844: "UpdateGroupParticipantDeleted",
 	2492658432: "MessagesEdit",
 	2582813461: "GroupsEditTitle",
 	2587620888: "AuthLogin",

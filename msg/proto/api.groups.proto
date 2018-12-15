@@ -2,7 +2,6 @@ syntax = "proto2";
 package msg;
 import "core.types.proto";
 
-
 // GroupsCreate
 // @Function
 // @Returns: Bool
@@ -41,4 +40,21 @@ message GroupsDeleteUser {
 // @Returns: GroupFull
 message GroupsGetFull {
     required int64 GroupID = 1 [jstype = JS_STRING];
+}
+
+// GroupsToggleAdmins
+// @Function
+// @Returns: Bool
+message GroupsToggleAdmins {
+    required int64 GroupID = 1 [jstype = JS_STRING];
+    required bool AdminEnabled = 2;
+}
+
+// GroupsUpdateAdmin
+// @Function
+// @Returns: Bool
+message GroupsUpdateAdmin {
+    required int64 GroupID = 1 [jstype = JS_STRING];
+    required InputUser User = 2;
+    required bool Admin = 3;
 }

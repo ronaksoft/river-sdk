@@ -34,7 +34,7 @@ func (m *GroupsCreate) Reset()         { *m = GroupsCreate{} }
 func (m *GroupsCreate) String() string { return proto.CompactTextString(m) }
 func (*GroupsCreate) ProtoMessage()    {}
 func (*GroupsCreate) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_groups_c05e8c1041ff049c, []int{0}
+	return fileDescriptor_api_groups_9a907c8894ed4756, []int{0}
 }
 func (m *GroupsCreate) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -90,7 +90,7 @@ func (m *GroupsAddUser) Reset()         { *m = GroupsAddUser{} }
 func (m *GroupsAddUser) String() string { return proto.CompactTextString(m) }
 func (*GroupsAddUser) ProtoMessage()    {}
 func (*GroupsAddUser) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_groups_c05e8c1041ff049c, []int{1}
+	return fileDescriptor_api_groups_9a907c8894ed4756, []int{1}
 }
 func (m *GroupsAddUser) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -152,7 +152,7 @@ func (m *GroupsEditTitle) Reset()         { *m = GroupsEditTitle{} }
 func (m *GroupsEditTitle) String() string { return proto.CompactTextString(m) }
 func (*GroupsEditTitle) ProtoMessage()    {}
 func (*GroupsEditTitle) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_groups_c05e8c1041ff049c, []int{2}
+	return fileDescriptor_api_groups_9a907c8894ed4756, []int{2}
 }
 func (m *GroupsEditTitle) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -207,7 +207,7 @@ func (m *GroupsDeleteUser) Reset()         { *m = GroupsDeleteUser{} }
 func (m *GroupsDeleteUser) String() string { return proto.CompactTextString(m) }
 func (*GroupsDeleteUser) ProtoMessage()    {}
 func (*GroupsDeleteUser) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_groups_c05e8c1041ff049c, []int{3}
+	return fileDescriptor_api_groups_9a907c8894ed4756, []int{3}
 }
 func (m *GroupsDeleteUser) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -261,7 +261,7 @@ func (m *GroupsGetFull) Reset()         { *m = GroupsGetFull{} }
 func (m *GroupsGetFull) String() string { return proto.CompactTextString(m) }
 func (*GroupsGetFull) ProtoMessage()    {}
 func (*GroupsGetFull) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_groups_c05e8c1041ff049c, []int{4}
+	return fileDescriptor_api_groups_9a907c8894ed4756, []int{4}
 }
 func (m *GroupsGetFull) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -297,12 +297,132 @@ func (m *GroupsGetFull) GetGroupID() int64 {
 	return 0
 }
 
+// GroupsToggleAdmins
+// @Function
+// @Returns: Bool
+type GroupsToggleAdmins struct {
+	GroupID      int64 `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
+	AdminEnabled bool  `protobuf:"varint,2,req,name=AdminEnabled" json:"AdminEnabled"`
+}
+
+func (m *GroupsToggleAdmins) Reset()         { *m = GroupsToggleAdmins{} }
+func (m *GroupsToggleAdmins) String() string { return proto.CompactTextString(m) }
+func (*GroupsToggleAdmins) ProtoMessage()    {}
+func (*GroupsToggleAdmins) Descriptor() ([]byte, []int) {
+	return fileDescriptor_api_groups_9a907c8894ed4756, []int{5}
+}
+func (m *GroupsToggleAdmins) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GroupsToggleAdmins) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GroupsToggleAdmins.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *GroupsToggleAdmins) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GroupsToggleAdmins.Merge(dst, src)
+}
+func (m *GroupsToggleAdmins) XXX_Size() int {
+	return m.Size()
+}
+func (m *GroupsToggleAdmins) XXX_DiscardUnknown() {
+	xxx_messageInfo_GroupsToggleAdmins.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GroupsToggleAdmins proto.InternalMessageInfo
+
+func (m *GroupsToggleAdmins) GetGroupID() int64 {
+	if m != nil {
+		return m.GroupID
+	}
+	return 0
+}
+
+func (m *GroupsToggleAdmins) GetAdminEnabled() bool {
+	if m != nil {
+		return m.AdminEnabled
+	}
+	return false
+}
+
+// GroupsUpdateAdmin
+// @Function
+// @Returns: Bool
+type GroupsUpdateAdmin struct {
+	GroupID int64      `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
+	User    *InputUser `protobuf:"bytes,2,req,name=User" json:"User,omitempty"`
+	Admin   bool       `protobuf:"varint,3,req,name=Admin" json:"Admin"`
+}
+
+func (m *GroupsUpdateAdmin) Reset()         { *m = GroupsUpdateAdmin{} }
+func (m *GroupsUpdateAdmin) String() string { return proto.CompactTextString(m) }
+func (*GroupsUpdateAdmin) ProtoMessage()    {}
+func (*GroupsUpdateAdmin) Descriptor() ([]byte, []int) {
+	return fileDescriptor_api_groups_9a907c8894ed4756, []int{6}
+}
+func (m *GroupsUpdateAdmin) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GroupsUpdateAdmin) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GroupsUpdateAdmin.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *GroupsUpdateAdmin) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GroupsUpdateAdmin.Merge(dst, src)
+}
+func (m *GroupsUpdateAdmin) XXX_Size() int {
+	return m.Size()
+}
+func (m *GroupsUpdateAdmin) XXX_DiscardUnknown() {
+	xxx_messageInfo_GroupsUpdateAdmin.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GroupsUpdateAdmin proto.InternalMessageInfo
+
+func (m *GroupsUpdateAdmin) GetGroupID() int64 {
+	if m != nil {
+		return m.GroupID
+	}
+	return 0
+}
+
+func (m *GroupsUpdateAdmin) GetUser() *InputUser {
+	if m != nil {
+		return m.User
+	}
+	return nil
+}
+
+func (m *GroupsUpdateAdmin) GetAdmin() bool {
+	if m != nil {
+		return m.Admin
+	}
+	return false
+}
+
 func init() {
 	proto.RegisterType((*GroupsCreate)(nil), "msg.GroupsCreate")
 	proto.RegisterType((*GroupsAddUser)(nil), "msg.GroupsAddUser")
 	proto.RegisterType((*GroupsEditTitle)(nil), "msg.GroupsEditTitle")
 	proto.RegisterType((*GroupsDeleteUser)(nil), "msg.GroupsDeleteUser")
 	proto.RegisterType((*GroupsGetFull)(nil), "msg.GroupsGetFull")
+	proto.RegisterType((*GroupsToggleAdmins)(nil), "msg.GroupsToggleAdmins")
+	proto.RegisterType((*GroupsUpdateAdmin)(nil), "msg.GroupsUpdateAdmin")
 }
 func (m *GroupsCreate) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
@@ -453,6 +573,76 @@ func (m *GroupsGetFull) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *GroupsToggleAdmins) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GroupsToggleAdmins) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintApiGroups(dAtA, i, uint64(m.GroupID))
+	dAtA[i] = 0x10
+	i++
+	if m.AdminEnabled {
+		dAtA[i] = 1
+	} else {
+		dAtA[i] = 0
+	}
+	i++
+	return i, nil
+}
+
+func (m *GroupsUpdateAdmin) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GroupsUpdateAdmin) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintApiGroups(dAtA, i, uint64(m.GroupID))
+	if m.User == nil {
+		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("User")
+	} else {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintApiGroups(dAtA, i, uint64(m.User.Size()))
+		n3, err := m.User.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n3
+	}
+	dAtA[i] = 0x18
+	i++
+	if m.Admin {
+		dAtA[i] = 1
+	} else {
+		dAtA[i] = 0
+	}
+	i++
+	return i, nil
+}
+
 func encodeVarintApiGroups(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -527,6 +717,32 @@ func (m *GroupsGetFull) Size() (n int) {
 	var l int
 	_ = l
 	n += 1 + sovApiGroups(uint64(m.GroupID))
+	return n
+}
+
+func (m *GroupsToggleAdmins) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovApiGroups(uint64(m.GroupID))
+	n += 2
+	return n
+}
+
+func (m *GroupsUpdateAdmin) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovApiGroups(uint64(m.GroupID))
+	if m.User != nil {
+		l = m.User.Size()
+		n += 1 + l + sovApiGroups(uint64(l))
+	}
+	n += 2
 	return n
 }
 
@@ -1084,6 +1300,239 @@ func (m *GroupsGetFull) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *GroupsToggleAdmins) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApiGroups
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GroupsToggleAdmins: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GroupsToggleAdmins: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GroupID", wireType)
+			}
+			m.GroupID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiGroups
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.GroupID |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AdminEnabled", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiGroups
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.AdminEnabled = bool(v != 0)
+			hasFields[0] |= uint64(0x00000002)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApiGroups(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApiGroups
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("GroupID")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("AdminEnabled")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GroupsUpdateAdmin) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApiGroups
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GroupsUpdateAdmin: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GroupsUpdateAdmin: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GroupID", wireType)
+			}
+			m.GroupID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiGroups
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.GroupID |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field User", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiGroups
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApiGroups
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.User == nil {
+				m.User = &InputUser{}
+			}
+			if err := m.User.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000002)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiGroups
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Admin = bool(v != 0)
+			hasFields[0] |= uint64(0x00000004)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApiGroups(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApiGroups
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("GroupID")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("User")
+	}
+	if hasFields[0]&uint64(0x00000004) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Admin")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipApiGroups(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1189,26 +1638,29 @@ var (
 	ErrIntOverflowApiGroups   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("api.groups.proto", fileDescriptor_api_groups_c05e8c1041ff049c) }
+func init() { proto.RegisterFile("api.groups.proto", fileDescriptor_api_groups_9a907c8894ed4756) }
 
-var fileDescriptor_api_groups_c05e8c1041ff049c = []byte{
-	// 274 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x48, 0x2c, 0xc8, 0xd4,
-	0x4b, 0x2f, 0xca, 0x2f, 0x2d, 0x28, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0xce, 0x2d,
-	0x4e, 0x97, 0x12, 0x48, 0xce, 0x2f, 0x4a, 0xd5, 0x2b, 0xa9, 0x2c, 0x48, 0x85, 0x0a, 0x2b, 0x05,
-	0x70, 0xf1, 0xb8, 0x83, 0x95, 0x39, 0x17, 0xa5, 0x26, 0x96, 0xa4, 0x0a, 0xa9, 0x70, 0xb1, 0x86,
-	0x16, 0xa7, 0x16, 0x15, 0x4b, 0x30, 0x2a, 0x30, 0x6b, 0x70, 0x1b, 0xf1, 0xe9, 0xe5, 0x16, 0xa7,
-	0xeb, 0x79, 0xe6, 0x15, 0x94, 0x96, 0x80, 0x84, 0x83, 0x20, 0x92, 0x42, 0x52, 0x5c, 0xac, 0x21,
-	0x99, 0x25, 0x39, 0xa9, 0x12, 0x4c, 0x0a, 0x4c, 0x1a, 0x9c, 0x4e, 0x2c, 0x27, 0xee, 0xc9, 0x33,
-	0x04, 0x41, 0x84, 0x94, 0xea, 0xb9, 0x78, 0x21, 0x26, 0x3a, 0xa6, 0xa4, 0x80, 0x54, 0x0b, 0x29,
-	0x70, 0xb1, 0x83, 0x05, 0x3c, 0x5d, 0x24, 0x18, 0x15, 0x98, 0x34, 0x98, 0x9d, 0xd8, 0x40, 0xca,
-	0x0d, 0x18, 0x83, 0x60, 0xc2, 0x42, 0x4a, 0x5c, 0x2c, 0x20, 0x95, 0x60, 0xd3, 0x30, 0xed, 0x04,
-	0xcb, 0x09, 0x69, 0x70, 0xf1, 0xb8, 0xe5, 0x17, 0x95, 0x27, 0x16, 0xa5, 0xf8, 0x64, 0xe6, 0x66,
-	0x96, 0x48, 0x30, 0x2b, 0x30, 0x69, 0xb0, 0x42, 0x6d, 0x46, 0x91, 0x51, 0xf2, 0xe7, 0xe2, 0x87,
-	0x38, 0xc0, 0x35, 0x25, 0xb3, 0x04, 0xec, 0x26, 0x22, 0x9c, 0x80, 0xcf, 0x47, 0x11, 0x5c, 0x02,
-	0x10, 0x03, 0x5d, 0x52, 0x73, 0x52, 0x4b, 0x52, 0xa9, 0xe7, 0x29, 0x25, 0x43, 0x58, 0x58, 0xb9,
-	0xa7, 0x96, 0xb8, 0x95, 0xe6, 0xe4, 0x10, 0x36, 0xd6, 0x49, 0xe2, 0xc4, 0x23, 0x39, 0xc6, 0x0b,
-	0x8f, 0xe4, 0x18, 0x1f, 0x3c, 0x92, 0x63, 0x9c, 0xf0, 0x58, 0x8e, 0xe1, 0xc2, 0x63, 0x39, 0x86,
-	0x1b, 0x8f, 0xe5, 0x18, 0x00, 0x01, 0x00, 0x00, 0xff, 0xff, 0x4a, 0x59, 0x53, 0x4a, 0xf4, 0x01,
-	0x00, 0x00,
+var fileDescriptor_api_groups_9a907c8894ed4756 = []byte{
+	// 335 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x51, 0xcd, 0x4a, 0xf3, 0x40,
+	0x14, 0xcd, 0x4f, 0xf3, 0x7d, 0x7a, 0xad, 0x5a, 0x67, 0x15, 0xba, 0x88, 0x61, 0x70, 0x91, 0x55,
+	0x50, 0xdf, 0xa0, 0xb5, 0x3f, 0x14, 0x04, 0xa5, 0xb4, 0xe0, 0xd2, 0xe8, 0x5c, 0x42, 0x20, 0x69,
+	0xc2, 0xcc, 0x04, 0x71, 0xe5, 0x2b, 0xf8, 0x58, 0x5d, 0x76, 0xe9, 0x4a, 0xa4, 0x79, 0x11, 0xc9,
+	0x4c, 0x03, 0x8a, 0xa0, 0x5d, 0x74, 0x7b, 0xce, 0xb9, 0xe7, 0x9c, 0x7b, 0x2f, 0x74, 0xa2, 0x22,
+	0x09, 0x63, 0x9e, 0x97, 0x85, 0x08, 0x0b, 0x9e, 0xcb, 0x9c, 0xd8, 0x99, 0x88, 0xbb, 0x9d, 0xc7,
+	0x9c, 0x63, 0x28, 0x9f, 0x0b, 0xdc, 0xc0, 0xf4, 0x16, 0xda, 0x63, 0x25, 0xbb, 0xe2, 0x18, 0x49,
+	0x24, 0x67, 0xe0, 0xcc, 0x05, 0x72, 0xe1, 0x9a, 0xbe, 0x1d, 0x1c, 0x5c, 0x1e, 0x85, 0x99, 0x88,
+	0xc3, 0xc9, 0xa2, 0x28, 0x65, 0x0d, 0x4f, 0x35, 0x49, 0xba, 0xe0, 0xcc, 0x12, 0x99, 0xa2, 0x6b,
+	0xf9, 0x56, 0xb0, 0xdf, 0x6f, 0x2d, 0xdf, 0x4f, 0x8d, 0xa9, 0x86, 0xe8, 0x0b, 0x1c, 0x6a, 0xc7,
+	0x1e, 0x63, 0xb5, 0x9a, 0xf8, 0xf0, 0x5f, 0x01, 0x93, 0x81, 0x6b, 0xfa, 0x56, 0x60, 0xf7, 0xff,
+	0xd5, 0xf2, 0x73, 0x73, 0xda, 0xc0, 0x84, 0x42, 0xab, 0x56, 0x2a, 0xb7, 0x9f, 0x99, 0x8a, 0x23,
+	0x01, 0xb4, 0x47, 0x39, 0x7f, 0x8a, 0x38, 0xbb, 0x4e, 0xb2, 0x44, 0xba, 0xb6, 0x6f, 0x05, 0xce,
+	0x26, 0xf9, 0x1b, 0x43, 0x6f, 0xe0, 0x58, 0x17, 0x18, 0xb2, 0x44, 0xaa, 0x4e, 0x5b, 0x54, 0xf8,
+	0x6d, 0xa3, 0x3b, 0xe8, 0x68, 0xc3, 0x01, 0xa6, 0x28, 0x71, 0x77, 0x4b, 0xd1, 0x8b, 0xe6, 0x56,
+	0x63, 0x94, 0xa3, 0x32, 0x4d, 0xff, 0xb6, 0xa5, 0xf7, 0x40, 0xf4, 0xc8, 0x2c, 0x8f, 0xe3, 0x14,
+	0x7b, 0x2c, 0x4b, 0x16, 0x62, 0x8b, 0x3a, 0x01, 0xb4, 0x95, 0x76, 0xb8, 0x88, 0x1e, 0x52, 0x64,
+	0xaa, 0xd6, 0x5e, 0x73, 0xbf, 0xaf, 0x0c, 0x2d, 0xe1, 0x44, 0x27, 0xcc, 0x0b, 0x16, 0x49, 0x9d,
+	0xb0, 0xa3, 0x27, 0x76, 0xc1, 0x51, 0x76, 0xea, 0x7b, 0x4d, 0xba, 0x86, 0xfa, 0xee, 0x72, 0xed,
+	0x99, 0xab, 0xb5, 0x67, 0x7e, 0xac, 0x3d, 0xf3, 0xb5, 0xf2, 0x8c, 0x55, 0xe5, 0x19, 0x6f, 0x95,
+	0x67, 0x7c, 0x06, 0x00, 0x00, 0xff, 0xff, 0x6b, 0x5d, 0xbd, 0x03, 0xcd, 0x02, 0x00, 0x00,
 }

@@ -278,24 +278,27 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		}
 		if x.Participants != nil {
 			_Shell.Println(fmt.Sprintf("Participants Count : %d ", len(x.Participants)))
+
+			bufUsers := new(bytes.Buffer)
+			tableUsers := tablewriter.NewWriter(bufUsers)
+			tableUsers.SetHeader([]string{
+				"UserID", "FirstName", "LastName", "AccessHash",
+			})
+			for _, x := range x.Participants {
+				tableUsers.Append([]string{
+					fmt.Sprintf("%d", x.UserID),
+					fmt.Sprintf("%s", x.FirstName),
+					fmt.Sprintf("%s", x.LastName),
+					fmt.Sprintf("%d", x.AccessHash),
+				})
+			}
+			tableUsers.Render()
+			_Shell.Println(bufUsers.String())
+
 		} else {
 			_Shell.Println(_RED("x.Participants is null"))
 		}
 
-		bufUsers := new(bytes.Buffer)
-		tableUsers := tablewriter.NewWriter(bufUsers)
-		tableUsers.SetHeader([]string{
-			"UserID", "FirstName", "LastName",
-		})
-		for _, x := range x.Users {
-			tableUsers.Append([]string{
-				fmt.Sprintf("%d", x.ID),
-				fmt.Sprintf("%s", x.FirstName),
-				fmt.Sprintf("%s", x.LastName),
-			})
-		}
-		tableUsers.Render()
-		_Shell.Println(bufUsers.String())
 	default:
 		constructorName, _ := msg.ConstructorNames[envelope.Constructor]
 		_Log.Debug("DEFAULT",

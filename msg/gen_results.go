@@ -94,6 +94,12 @@ func ResultUpdateMessagesDeleted(out *MessageEnvelope, res *UpdateMessagesDelete
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultUpdateGroupAdmins(out *MessageEnvelope, res *UpdateGroupAdmins) {
+	out.Constructor = C_UpdateGroupAdmins
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultFile(out *MessageEnvelope, res *File) {
 	out.Constructor = C_File
 	pbytes.Put(out.Message)
@@ -190,6 +196,12 @@ func ResultMessagesReadHistory(out *MessageEnvelope, res *MessagesReadHistory) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultGroupsUpdateAdmin(out *MessageEnvelope, res *GroupsUpdateAdmin) {
+	out.Constructor = C_GroupsUpdateAdmin
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultContactsGet(out *MessageEnvelope, res *ContactsGet) {
 	out.Constructor = C_ContactsGet
 	pbytes.Put(out.Message)
@@ -232,8 +244,20 @@ func ResultMessagesSetTyping(out *MessageEnvelope, res *MessagesSetTyping) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultGroupsToggleAdmins(out *MessageEnvelope, res *GroupsToggleAdmins) {
+	out.Constructor = C_GroupsToggleAdmins
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultInitCompleteAuth(out *MessageEnvelope, res *InitCompleteAuth) {
 	out.Constructor = C_InitCompleteAuth
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultUpdateGroupParticipantAdd(out *MessageEnvelope, res *UpdateGroupParticipantAdd) {
+	out.Constructor = C_UpdateGroupParticipantAdd
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -264,6 +288,12 @@ func ResultContactsDelete(out *MessageEnvelope, res *ContactsDelete) {
 }
 func ResultSystemGetDHGroups(out *MessageEnvelope, res *SystemGetDHGroups) {
 	out.Constructor = C_SystemGetDHGroups
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultUpdateGroupParticipantAdmin(out *MessageEnvelope, res *UpdateGroupParticipantAdmin) {
+	out.Constructor = C_UpdateGroupParticipantAdmin
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -396,6 +426,12 @@ func ResultMessageActionGroupTitleChanged(out *MessageEnvelope, res *MessageActi
 }
 func ResultFileLocation(out *MessageEnvelope, res *FileLocation) {
 	out.Constructor = C_FileLocation
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultUpdateGroupParticipantDeleted(out *MessageEnvelope, res *UpdateGroupParticipantDeleted) {
+	out.Constructor = C_UpdateGroupParticipantDeleted
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

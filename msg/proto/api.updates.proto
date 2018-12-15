@@ -60,6 +60,7 @@ message UpdateMessagesDeleted {
     required int32 UCount = 100;
     required int64 UpdateID = 101;
     repeated int64 MessageIDs = 1;
+    optional Peer Peer = 2;
 }
 
 // UpdateReadHistoryInbox
@@ -110,4 +111,39 @@ message UpdateNotifySettings {
     required int64 UserID = 1 [jstype = JS_STRING];
     required InputPeer NotifyPeer = 2;
     required PeerNotifySettings Settings = 3;
+}
+
+// UpdateGroupParticipantAdd
+message UpdateGroupParticipantAdd {
+    required int32 UCount = 100;
+    required int64 UpdateID = 101;
+    required int64 GroupID = 1 [jstype = JS_STRING];
+    required int64 UserID = 2 [jstype = JS_STRING];
+    required int64 InviterID = 3 [jstype = JS_STRING];
+    required int64 Date = 4;
+}
+
+// UpdateGroupParticipantDeleted
+message UpdateGroupParticipantDeleted {
+    required int32 UCount = 100;
+    required int64 UpdateID = 101;
+    required int64 GroupID = 1 [jstype = JS_STRING];
+    required int64 UserID = 2 [jstype = JS_STRING];
+}
+
+// UpdateGroupParticipantAdmin
+message UpdateGroupParticipantAdmin {
+    required int32 UCount = 100;
+    required int64 UpdateID = 101;
+    required int64 GroupID = 1 [jstype = JS_STRING];
+    required int64 UserID = 2 [jstype = JS_STRING];
+    required bool IsAdmin = 3;
+}
+
+// UpdateGroupAdmins
+message UpdateGroupAdmins {
+    required int32 UCount = 100;
+    required int64 UpdateID = 101;
+    required int64 GroupID = 1 [jstype = JS_STRING];
+    required bool AdminEnabled = 2;
 }

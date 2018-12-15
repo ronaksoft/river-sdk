@@ -130,14 +130,14 @@ message InputFile {
     required string FileName = 3;
 }
 
+// GroupFlags
 enum GroupFlags {
     GroupFlagsEmpty = 0;
     GroupFlagsCreator = 1;
-    GroupFlagsLeft = 2;
-    GroupFlagsKicked = 3;
-    GroupFlagsAdmin = 4;
-    GroupFlagsAdminsEnabled = 5;
-    GroupFlagsDeactivated = 6;
+    GroupFlagsNonParticipant = 2;
+    GroupFlagsAdmin = 3;
+    GroupFlagsAdminsEnabled = 4;
+    GroupFlagsDeactivated = 5;
 }
 
 // Group
@@ -160,17 +160,18 @@ message GroupFull {
 
 // ParticipantType
 enum ParticipantType {
-    ParticipantTypeCreator = 0;
+    ParticipantTypeMember = 0;
     ParticipantTypeAdmin = 1;
-    ParticipantMember = 2;
+    ParticipantTypeCreator = 2;
+
 }
 
 // GroupParticipant
 message GroupParticipant {
     required int64 UserID = 1;
-    required int64 InviterID = 2;
-    required int64 Date = 3;
+    required string FirstName = 2;
+    required string LastName = 3;
     required ParticipantType Type = 4;
-    required int64 AccessHash = 5;
+    required uint64 AccessHash = 5;
 }
 

@@ -275,36 +275,16 @@ func (ctrl *SyncController) groupFull(e *msg.MessageEnvelope) {
 	}
 	// Save Group
 	repo.Ctx().Groups.Save(u.Group)
+
+	// Save Group Members
+	for _, v := range u.Participants {
+		repo.Ctx().Groups.SaveParticipants(u.Group.ID, v)
+	}
+
 	// Save Users
 	for _, v := range u.Users {
 		repo.Ctx().Users.SaveUser(v)
 	}
-
-	// Hotfix : cuz server do not send participent list we fill it with users by relative data
-	// remove this later
-	if u.Participants == nil || len(u.Participants) != len(u.Users) {
-		for _, v := range u.Users {
-			tmp := &msg.GroupParticipant{
-				Date:      time.Now().Unix(),
-				InviterID: v.ID,
-				Type:      msg.ParticipantMember,
-				UserID:    v.ID,
-			}
-			repo.Ctx().Groups.SaveParticipants(u.Group.ID, tmp)
-		}
-	} else {
-		// Save Members
-		for _, v := range u.Participants {
-			repo.Ctx().Groups.SaveParticipants(u.Group.ID, v)
-		}
-	}
-	// EOF hotfix
-
-	// // Uncomment this when server sends participants in GroupFull
-	// // Save Group Members
-	// for _, v := range u.Participants {
-	// 	repo.Ctx().Groups.SaveParticipants(u.Group.ID, v)
-	// }
 
 	// Update NotifySettings
 	repo.Ctx().Dialogs.UpdatePeerNotifySettings(u.Group.ID, int32(msg.PeerGroup), u.NotifySettings)

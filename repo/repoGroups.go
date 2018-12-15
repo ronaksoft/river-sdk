@@ -19,7 +19,6 @@ type RepoGroups interface {
 	SaveParticipants(groupID int64, participant *msg.GroupParticipant) error
 	GetParticipants(groupID int64) ([]*msg.GroupParticipant, error)
 	DeleteGroupMemberMany(peerID int64, IDs []int64) error
-	SaveParticipantsByID(groupID, createdOn int64, userIDs []int64)
 	Delete(groupID int64) error
 }
 
@@ -196,21 +195,6 @@ func (r *repoGroups) DeleteGroupMemberMany(peerID int64, IDs []int64) error {
 	defer r.mx.Unlock()
 
 	return r.db.Where("GroupID= ? AND UserID IN (?)", peerID, IDs).Delete(dto.GroupParticipants{}).Error
-}
-
-func (r *repoGroups) SaveParticipantsByID(groupID, createdOn int64, userIDs []int64) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	for _, id := range userIDs {
-		dtoGP := new(dto.GroupParticipants)
-		r.db.Where("GroupID = ? AND UserID = ?", groupID, id).First(dtoGP)
-		dtoGP.Date = createdOn
-		dtoGP.GroupID = groupID
-		dtoGP.Type = int32(msg.ParticipantMember)
-		dtoGP.UserID = id
-		r.db.Save(dtoGP)
-	}
 }
 
 func (r *repoGroups) Delete(groupID int64) error {

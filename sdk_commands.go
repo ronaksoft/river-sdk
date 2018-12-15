@@ -638,19 +638,22 @@ func (r *River) groupAddUser(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		successCB(out)
 		return
 	}
-
-	gp := &msg.GroupParticipant{
-		Date:      time.Now().Unix(),
-		InviterID: r.ConnInfo.UserID,
-		Type:      msg.ParticipantMember,
-		UserID:    req.User.UserID,
-	}
-	err := repo.Ctx().Groups.SaveParticipants(req.GroupID, gp)
-	// TODO : Increase group ParticipantCount
-	if err != nil {
-		log.LOG_Debug("River::groupAddUser()-> SaveParticipants()",
-			zap.String("Error", err.Error()),
-		)
+	user := repo.Ctx().Users.GetUser(req.User.UserID)
+	if user != nil {
+		gp := &msg.GroupParticipant{
+			AccessHash: req.User.AccessHash,
+			FirstName:  user.FirstName,
+			LastName:   user.LastName,
+			UserID:     req.User.UserID,
+			Type:       msg.ParticipantTypeMember,
+		}
+		err := repo.Ctx().Groups.SaveParticipants(req.GroupID, gp)
+		// TODO : Increase group ParticipantCount
+		if err != nil {
+			log.LOG_Debug("River::groupAddUser()-> SaveParticipants()",
+				zap.String("Error", err.Error()),
+			)
+		}
 	}
 
 	// send the request to server

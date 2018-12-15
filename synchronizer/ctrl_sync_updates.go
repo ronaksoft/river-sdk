@@ -102,14 +102,6 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) []*msg.Updat
 	case domain.MessageActionGroupAddUser:
 		// TODO : this should be implemented
 
-		act := new(msg.MessageActionGroupAddUser)
-		err := act.Unmarshal(x.Message.MessageActionData)
-		if err != nil {
-			log.LOG_Debug("SyncController::updateNewMessage() -> MessageActionGroupAddUser Failed to Parse", zap.String("Error", err.Error()))
-		}
-		// Hotfix this should be handled by group Participant list
-		repo.Ctx().Groups.SaveParticipantsByID(x.Message.PeerID, x.Message.CreatedOn, act.UserIDs)
-
 	case domain.MessageActionGroupDeleteUser:
 		act := new(msg.MessageActionGroupAddUser)
 		err := act.Unmarshal(x.Message.MessageActionData)

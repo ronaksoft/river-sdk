@@ -95,6 +95,12 @@ var (
 			return m
 		},
 	}
+	PoolUpdateGroupAdmins = sync.Pool{
+		New: func() interface{} {
+			m := new(UpdateGroupAdmins)
+			return m
+		},
+	}
 	PoolFile = sync.Pool{
 		New: func() interface{} {
 			m := new(File)
@@ -191,6 +197,12 @@ var (
 			return m
 		},
 	}
+	PoolGroupsUpdateAdmin = sync.Pool{
+		New: func() interface{} {
+			m := new(GroupsUpdateAdmin)
+			return m
+		},
+	}
 	PoolContactsGet = sync.Pool{
 		New: func() interface{} {
 			m := new(ContactsGet)
@@ -233,9 +245,21 @@ var (
 			return m
 		},
 	}
+	PoolGroupsToggleAdmins = sync.Pool{
+		New: func() interface{} {
+			m := new(GroupsToggleAdmins)
+			return m
+		},
+	}
 	PoolInitCompleteAuth = sync.Pool{
 		New: func() interface{} {
 			m := new(InitCompleteAuth)
+			return m
+		},
+	}
+	PoolUpdateGroupParticipantAdd = sync.Pool{
+		New: func() interface{} {
+			m := new(UpdateGroupParticipantAdd)
 			return m
 		},
 	}
@@ -266,6 +290,12 @@ var (
 	PoolSystemGetDHGroups = sync.Pool{
 		New: func() interface{} {
 			m := new(SystemGetDHGroups)
+			return m
+		},
+	}
+	PoolUpdateGroupParticipantAdmin = sync.Pool{
+		New: func() interface{} {
+			m := new(UpdateGroupParticipantAdmin)
 			return m
 		},
 	}
@@ -398,6 +428,12 @@ var (
 	PoolFileLocation = sync.Pool{
 		New: func() interface{} {
 			m := new(FileLocation)
+			return m
+		},
+	}
+	PoolUpdateGroupParticipantDeleted = sync.Pool{
+		New: func() interface{} {
+			m := new(UpdateGroupParticipantDeleted)
 			return m
 		},
 	}

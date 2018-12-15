@@ -62,4 +62,5 @@ const (
 	ERR_ITEM_GROUP        = "GROUP"
 	ERR_ITEM_USERS        = "USERS"
 	ERR_ITEM_RETRACT_TIME = "RETRACT_TIME"
+	ERR_ITEM_BIO          = "BIO"
 )
