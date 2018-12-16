@@ -5,6 +5,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
+	"github.com/jinzhu/gorm"
 	"go.uber.org/zap"
 )
 
@@ -420,13 +421,33 @@ func (r *repoMessages) DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.Clie
 				tmp.PeerID = v.PeerID
 				tmp.PeerType = v.PeerType
 				tmp.MessageIDs = make([]int64, 0)
+				mpeer[v.PeerID] = tmp
 			}
 		}
 	}
 
 	for _, v := range mpeer {
+
+		// Update Dialog Counter on delete message
+		dtoDlg := new(dto.Dialogs)
+		err := r.db.Where("PeerID = ? AND PeerType = ?", v.PeerID, v.PeerType).First(dtoDlg).Error
+		if err != nil {
+			removedUnreadCount := int32(0)
+			for _, msgID := range v.MessageIDs {
+				if msgID > dtoDlg.ReadInboxMaxID {
+					removedUnreadCount++
+				}
+			}
+			if removedUnreadCount > 0 && removedUnreadCount <= dtoDlg.UnreadCount {
+				err = r.db.Table(dtoDlg.TableName()).Where("PeerID=? AND PeerType=?", v.PeerID, v.PeerType).Updates(map[string]interface{}{
+					"UnreadCount": gorm.Expr("UnreadCount - ?", removedUnreadCount),
+				}).Error
+			}
+		}
+
 		res = append(res, v)
 	}
+
 	err = r.db.Where("ID IN (?)", IDs).Delete(dto.Messages{}).Error
 
 	return res, err
