@@ -327,7 +327,13 @@ func (ctrl *SyncController) updateMessagesDeleted(u *msg.UpdateEnvelope) []*msg.
 // 	x.Unmarshal(u.Update)
 
 // 	res := []*msg.UpdateEnvelope{u}
-// 	// XXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+// 	err := repo.Ctx().Groups.SaveParticipants(bla bla bla)
+// 	if err != nil {
+// 		log.LOG_Debug("SyncController::updateGroupParticipantAdd()-> SaveParticipants()",
+// 			zap.String("Error", err.Error()),
+// 		)
+// 	}
 // 	return res
 // }
 
@@ -343,26 +349,20 @@ func (ctrl *SyncController) updateMessagesDeleted(u *msg.UpdateEnvelope) []*msg.
 // 	return res
 // }
 
-// // updateGroupParticipantAdmin
-// func (ctrl *SyncController) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-// 	log.LOG_Debug("SyncController::updateGroupParticipantAdmin() applier")
+// updateGroupParticipantAdmin
+func (ctrl *SyncController) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+	log.LOG_Debug("SyncController::updateGroupParticipantAdmin() applier")
 
-// 	x := new(msg.UpdateGroupParticipantAdmin)
-// 	x.Unmarshal(u.Update)
+	x := new(msg.UpdateGroupParticipantAdmin)
+	x.Unmarshal(u.Update)
 
-// 	res := []*msg.UpdateEnvelope{u}
-// 	// XXXXXXXXXXXXXXXXXXXXXXXXXXX
-// 	return res
-// }
+	res := []*msg.UpdateEnvelope{u}
 
-// // UpdateGroupAdmins
-// func (ctrl *SyncController) updateGroupAdmins(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-// 	log.LOG_Debug("SyncController::updateGroupAdmins() applier")
-
-// 	x := new(msg.UpdateGroupAdmins)
-// 	x.Unmarshal(u.Update)
-
-// 	res := []*msg.UpdateEnvelope{u}
-// 	// XXXXXXXXXXXXXXXXXXXXXXXXXXX
-// 	return res
-// }
+	err := repo.Ctx().Groups.UpdateGroupMemberType(x.GroupID, x.UserID, x.IsAdmin)
+	if err != nil {
+		log.LOG_Debug("SyncController::updateGroupParticipantAdmin()-> UpdateGroupMemberType()",
+			zap.String("Error", err.Error()),
+		)
+	}
+	return res
+}

@@ -260,6 +260,7 @@ func (r *River) registerCommandHandlers() {
 	r.localCommands[msg.C_GroupsAddUser] = r.groupAddUser
 	r.localCommands[msg.C_GroupsDeleteUser] = r.groupDeleteUser
 	r.localCommands[msg.C_GroupsGetFull] = r.groupsGetFull
+	r.localCommands[msg.C_GroupsUpdateAdmin] = r.groupUpdateAdmin
 
 }
 

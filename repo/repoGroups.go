@@ -20,6 +20,7 @@ type RepoGroups interface {
 	GetParticipants(groupID int64) ([]*msg.GroupParticipant, error)
 	DeleteGroupMemberMany(peerID int64, IDs []int64) error
 	Delete(groupID int64) error
+	UpdateGroupMemberType(groupID, userID int64, isAdmin bool) error
 }
 
 type repoGroups struct {
@@ -202,4 +203,20 @@ func (r *repoGroups) Delete(groupID int64) error {
 	defer r.mx.Unlock()
 
 	return r.db.Where("ID= ? ", groupID).Delete(dto.Groups{}).Error
+}
+
+func (r *repoGroups) UpdateGroupMemberType(groupID, userID int64, isAdmin bool) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	dtoGP := new(dto.GroupParticipants)
+
+	userType := int32(msg.ParticipantTypeMember)
+	if isAdmin {
+		userType = int32(msg.ParticipantTypeAdmin)
+	}
+
+	return r.db.Table(dtoGP.TableName()).Where("GroupID = ? AND UserID = ?", groupID, userID).Updates(map[string]interface{}{
+		"Type": userType,
+	}).Error
 }

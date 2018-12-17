@@ -787,3 +787,26 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, nil, nil, false)
 
 }
+
+func (r *River) groupUpdateAdmin(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.GroupsUpdateAdmin)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG_Debug("River::groupUpdateAdmin()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	err := repo.Ctx().Groups.UpdateGroupMemberType(req.GroupID, req.User.UserID, req.Admin)
+	// TODO : Decrease group ParticipantCount
+	if err != nil {
+		log.LOG_Debug("River::groupUpdateAdmin()-> UpdateGroupMemberType()",
+			zap.String("Error", err.Error()),
+		)
+	}
+
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+}
