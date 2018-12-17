@@ -45,6 +45,7 @@ func fnFlagsToString(flags []msg.GroupFlags) string {
 	for _, f := range flags {
 		sb.WriteString(fmt.Sprintf("%d;", int32(f)))
 	}
+	sb.WriteString(";") // prevent leaving empty flags cuz it wont be saved
 	return sb.String()
 }
 func fnFlagsToArray(flags string) []msg.GroupFlags {
