@@ -207,6 +207,7 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 	}
 
 	if req.MinID == 0 && req.MaxID == 0 {
+		// Load type 0 : initial
 		log.LOG_Warn("River::messageGetHistory()-> 1. req.MinID == 0 && req.MaxID == 0")
 		if dtoDialog.TopMessageID < 0 {
 			log.LOG_Warn("River::messageGetHistory()-> Load pending messages")
@@ -231,6 +232,8 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 		}
 
 	} else if req.MinID == 0 && req.MaxID != 0 {
+		// Load type 1 : scroll to up
+
 		log.LOG_Warn("River::messageGetHistory()-> 2. req.MinID == 0 && req.MaxID != 0")
 
 		// check holes
@@ -249,6 +252,7 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 		}
 
 	} else if req.MinID != 0 && req.MaxID == 0 {
+		// Load type 2 : scroll to down
 
 		// BUG : server calculate last 20 messages and returns
 		// TODO : report this
@@ -270,6 +274,7 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
 		}
 	} else {
+		// Load type 3 : exact size
 
 		log.LOG_Warn("River::messageGetHistory()-> 4 . req.MinID != 0 && req.MaxID != 0")
 		if synchronizer.IsMessageInHole(dtoDialog.PeerID, req.MinID, req.MaxID) {

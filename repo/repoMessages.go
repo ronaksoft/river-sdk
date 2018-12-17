@@ -238,7 +238,7 @@ func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerTy
 	if minID == 0 && maxID == 0 {
 		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? ", peerID, peerType).Find(&dtoMsgs).Error
 	} else {
-		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID > ? AND messages.ID < ?", peerID, peerType, minID, maxID).Find(&dtoMsgs).Error
+		// there is no way this will happens :/
 	}
 
 	if err != nil {
@@ -311,7 +311,17 @@ func (r *repoMessages) GetMessageHistoryWithMinMaxID(peerID int64, peerType int3
 
 	dtoResult := make([]dto.Messages, 0, limit)
 
-	err := r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID > ? AND messages.ID < ?", peerID, peerType, minID, maxID).Find(&dtoResult).Error
+	var err error
+	if maxID == 0 && minID == 0 {
+		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ?", peerID, peerType).Find(&dtoResult).Error
+	} else if minID == 0 && maxID != 0 {
+		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID >= ? AND messages.ID < ?", peerID, peerType, minID, maxID).Find(&dtoResult).Error
+	} else if minID != 0 && maxID == 0 {
+		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID > ?", peerID, peerType, minID).Find(&dtoResult).Error
+	} else {
+		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID > ? AND messages.ID < ?", peerID, peerType, minID, maxID).Find(&dtoResult).Error
+	}
+
 	if err != nil {
 		log.LOG_Debug("RepoRepoMessages::GetMessageHistory()-> fetch messages",
 			zap.String("Error", err.Error()),
