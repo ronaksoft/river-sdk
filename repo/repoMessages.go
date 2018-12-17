@@ -21,7 +21,6 @@ type RepoMessages interface {
 	DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.ClientUpdateMessagesDeleted, error)
 	GetTopMessageID(peerID int64, peerType int32) (int64, error)
 	GetMessageHistoryWithMinMaxID(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User)
-	GetMessageHistory(peerID int64, peerType int32, minID, maxID int64, limit int32) ([]*msg.UserMessage, []*msg.User)
 }
 
 type repoMessages struct {
@@ -486,84 +485,4 @@ func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, err
 		return -1, err
 	}
 	return dtoMsg.ID, nil
-}
-
-// OLD VERSION :: delete this when message hole got fixed
-func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, maxID int64, limit int32) ([]*msg.UserMessage, []*msg.User) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	log.LOG_Debug("RepoMessages::GetMessageHistory()",
-		zap.Int64("PeerID", peerID),
-		zap.Int32("PeerType", peerType),
-		zap.Int64("MinID", minID),
-		zap.Int64("MaxID", maxID),
-		zap.Int32("Limit", limit),
-	)
-
-	messages := make([]*msg.UserMessage, 0, limit)
-	dtoMsgs := make([]dto.Messages, 0, limit)
-	dtoPendings := make([]dto.PendingMessages, 0, limit)
-
-	var err error
-	if minID == 0 && maxID == 0 {
-		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? ", peerID, peerType).Find(&dtoMsgs).Error
-	} else {
-		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID > ? AND messages.ID < ?", peerID, peerType, minID, maxID).Find(&dtoMsgs).Error
-	}
-
-	if err != nil {
-		log.LOG_Debug("RepoRepoMessages::GetMessageHistory()-> fetch messages",
-			zap.String("Error", err.Error()),
-		)
-		return nil, nil
-	}
-
-	dtoResult := make([]dto.Messages, 0, limit)
-
-	// get all pending message for this user
-	err = r.db.Order("ID ASC").Limit(limit).Where("PeerID = ? AND PeerType = ? ", peerID, peerType).Find(&dtoPendings).Error
-	if err == nil {
-		for _, v := range dtoPendings {
-			tmp := new(dto.Messages)
-			v.MapToDtoMessage(tmp)
-			dtoResult = append(dtoResult, *tmp)
-			// dtoMsgs = append(dtoMsgs, *tmp)
-		}
-	}
-	dtoResult = append(dtoResult, dtoMsgs...)
-
-	userIDs := domain.MInt64B{}
-	for _, v := range dtoResult {
-		tmp := new(msg.UserMessage)
-		v.MapTo(tmp)
-		messages = append(messages, tmp)
-		userIDs[v.SenderID] = true
-		userIDs[v.FwdSenderID] = true
-		// load MessageActionData users
-		actionUserIds := domain.ExtractActionUserIDs(v.MessageAction, v.MessageActionData)
-		for _, id := range actionUserIds {
-			userIDs[id] = true
-		}
-	}
-
-	// Get users <rewrite it here to remove coupling>
-	pbUsers := make([]*msg.User, 0, len(userIDs))
-	users := make([]dto.Users, 0, len(userIDs))
-
-	err = r.db.Where("ID in (?)", userIDs.ToArray()).Find(&users).Error
-	if err != nil {
-		log.LOG_Debug("RepoRepoMessages::GetMessageHistory()-> fetch users",
-			zap.String("Error", err.Error()),
-		)
-		return nil, nil // , err
-	}
-
-	for _, v := range users {
-		tmp := new(msg.User)
-		v.MapToUser(tmp)
-		pbUsers = append(pbUsers, tmp)
-
-	}
-	return messages, pbUsers
 }
