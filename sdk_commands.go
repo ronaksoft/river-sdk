@@ -186,13 +186,6 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 		return
 	}
 
-	log.LOG_Warn("River::messageGetHistory()-> XXXXXXXXXXXXXXXXXX : ",
-		zap.Int64("PeerID", req.Peer.ID),
-		zap.Int64("MinID", req.MinID),
-		zap.Int64("MaxID", req.MaxID),
-		zap.Int32("Limit", req.Limit),
-	)
-
 	dtoDialog := repo.Ctx().Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
 	if dtoDialog == nil {
 		out.Constructor = msg.C_Error
@@ -208,84 +201,84 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 
 	if req.MinID == 0 && req.MaxID == 0 {
 		// Load type 0 : initial
-		log.LOG_Warn("River::messageGetHistory()-> 1. req.MinID == 0 && req.MaxID == 0")
 		if dtoDialog.TopMessageID < 0 {
-			log.LOG_Warn("River::messageGetHistory()-> Load pending messages")
 			// fetch messages from localDB cuz there is a pending message it means we are not connected to server
 			messages, users := repo.Ctx().Messages.GetMessageHistoryWithPendingMessages(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
 		} else {
+			log.LOG_Warn("AAAAAAAAAAAAAAAAAAAAA : \t")
 			maxID := dtoDialog.TopMessageID - 1
 
-			// check holes
-			if synchronizer.IsMessageInHole(dtoDialog.PeerID, req.MinID, maxID) {
-				log.LOG_Warn("River::messageGetHistory()-> Message is in hole")
-				// send request to server
-				log.LOG_Warn("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
-				r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+			holes := synchronizer.GetHoles(dtoDialog.PeerID, req.MinID, maxID)
+			closestHole := synchronizer.GetMaxClosetHole(maxID, holes)
+			if closestHole != nil {
+				messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), closestHole.MaxID, maxID, req.Limit)
+				if len(messages) == int(req.Limit) {
+					log.LOG_Warn("AAAAAAAAAAAAAAAAAAAAA : \t 111111 from localDB")
+					fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
+				} else {
+					log.LOG_Warn("AAAAAAAAAAAAAAAAAAAAA : \t 222222 sent to server")
+					r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+				}
 			} else {
-				// we have both minID and maxID
-				log.LOG_Warn("River::messageGetHistory()-> Message is not in hole")
-				messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, maxID, req.Limit)
-				fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
+				log.LOG_Warn("AAAAAAAAAAAAAAAAAAAAA : \t 333333 sent to server")
+				r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 			}
 		}
 
 	} else if req.MinID == 0 && req.MaxID != 0 {
 		// Load type 1 : scroll to up
-
-		log.LOG_Warn("River::messageGetHistory()-> 2. req.MinID == 0 && req.MaxID != 0")
-
-		// check holes
-		if synchronizer.IsMessageInHole(dtoDialog.PeerID, req.MinID, req.MaxID) {
-
-			log.LOG_Warn("River::messageGetHistory()-> Message is in hole")
-			// send request to server
-			log.LOG_Warn("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
-			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+		log.LOG_Warn("BBBBBBBBBBBBBBBBBBBBBBBBB : \t")
+		holes := synchronizer.GetHoles(dtoDialog.PeerID, req.MinID, req.MaxID)
+		closestHole := synchronizer.GetMaxClosetHole(req.MaxID, holes)
+		if closestHole != nil {
+			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), closestHole.MaxID, req.MaxID, req.Limit)
+			if len(messages) == int(req.Limit) {
+				log.LOG_Warn("BBBBBBBBBBBBBBBBBBBBBBBBB : \t 111111 from localDB")
+				fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
+			} else {
+				log.LOG_Warn("BBBBBBBBBBBBBBBBBBBBBBBBB : \t 222222 sent to server")
+				r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+			}
 		} else {
 
-			log.LOG_Warn("River::messageGetHistory()-> Message is not in hole")
-			// we have both minID and maxID
-			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
-			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
+			log.LOG_Warn("BBBBBBBBBBBBBBBBBBBBBBBBB : \t 333333 sent to server")
+			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		}
 
 	} else if req.MinID != 0 && req.MaxID == 0 {
 		// Load type 2 : scroll to down
 
+		log.LOG_Warn("CCCCCCCCCCCCCCCCCCCCCCCCCC : \t")
 		// BUG : server calculate last 20 messages and returns
 		// TODO : report this
-
-		log.LOG_Warn("River::messageGetHistory()-> 3 . req.MinID != 0 && req.MaxID == 0")
 		maxID := dtoDialog.TopMessageID - 1
-		// check holes
-		if synchronizer.IsMessageInHole(dtoDialog.PeerID, req.MinID, maxID) {
 
-			log.LOG_Warn("River::messageGetHistory()-> Message is in hole")
-			// send request to server
-			log.LOG_Warn("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
-			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+		holes := synchronizer.GetHoles(dtoDialog.PeerID, req.MinID, maxID)
+		closestHole := synchronizer.GetMinClosetHole(req.MinID, holes)
+		if closestHole != nil {
+			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, closestHole.MinID.Int64, req.Limit)
+			if len(messages) == int(req.Limit) {
+				log.LOG_Warn("CCCCCCCCCCCCCCCCCCCCCCCCCC : \t 111111 from localDB")
+				fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
+			} else {
+				log.LOG_Warn("CCCCCCCCCCCCCCCCCCCCCCCCCC : \t 222222 from server")
+				r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+			}
 		} else {
-
-			log.LOG_Warn("River::messageGetHistory()-> Message is not in hole")
-			// we have both minID and maxID
-			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, maxID, req.Limit)
+			log.LOG_Warn("CCCCCCCCCCCCCCCCCCCCCCCCCC : \t 333333 from localDB")
+			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
 		}
 	} else {
+		log.LOG_Warn("DDDDDDDDDDDDDDDDDDDDDDDDDDDD : \t")
 		// Load type 3 : exact size
-
-		log.LOG_Warn("River::messageGetHistory()-> 4 . req.MinID != 0 && req.MaxID != 0")
-		if synchronizer.IsMessageInHole(dtoDialog.PeerID, req.MinID, req.MaxID) {
-
-			log.LOG_Warn("River::messageGetHistory()-> Message is in hole")
-			// send request to server
-			log.LOG_Warn("River::messageGetHistory()-> GetMessageHistoryWithMinMaxID() pass request to server")
+		holes := synchronizer.GetHoles(dtoDialog.PeerID, req.MinID, req.MaxID)
+		if len(holes) > 0 {
+			log.LOG_Warn("DDDDDDDDDDDDDDDDDDDDDDDDDDDD : \t 111111 sent  to server")
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		} else {
-			log.LOG_Warn("River::messageGetHistory()-> Message is not in hole")
-			// we have both minID and maxID
+			log.LOG_Warn("DDDDDDDDDDDDDDDDDDDDDDDDDDDD : \t 222222 from localDB")
 			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
 		}

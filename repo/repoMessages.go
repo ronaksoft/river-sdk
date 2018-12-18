@@ -315,11 +315,11 @@ func (r *repoMessages) GetMessageHistoryWithMinMaxID(peerID int64, peerType int3
 	if maxID == 0 && minID == 0 {
 		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ?", peerID, peerType).Find(&dtoResult).Error
 	} else if minID == 0 && maxID != 0 {
-		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID >= ? AND messages.ID < ?", peerID, peerType, minID, maxID).Find(&dtoResult).Error
+		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID >= ? AND messages.ID <= ?", peerID, peerType, minID, maxID).Find(&dtoResult).Error
 	} else if minID != 0 && maxID == 0 {
-		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID > ?", peerID, peerType, minID).Find(&dtoResult).Error
+		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID >= ?", peerID, peerType, minID).Find(&dtoResult).Error
 	} else {
-		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID > ? AND messages.ID < ?", peerID, peerType, minID, maxID).Find(&dtoResult).Error
+		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID >= ? AND messages.ID <= ?", peerID, peerType, minID, maxID).Find(&dtoResult).Error
 	}
 
 	if err != nil {

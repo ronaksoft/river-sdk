@@ -3,15 +3,54 @@ package synchronizer
 import (
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/repo"
+	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
 	"go.uber.org/zap"
 )
 
-func IsMessageInHole(peerID, minID, maxID int64) bool {
+func GetHoles(peerID, minID, maxID int64) []dto.MessageHoles {
 	holes, err := repo.Ctx().MessageHoles.GetHoles(peerID, minID, maxID)
 	if err != nil {
-		return true
+		return make([]dto.MessageHoles, 0)
 	}
-	return len(holes) > 0
+	return holes
+}
+
+func GetMinClosetHole(minID int64, holes []dto.MessageHoles) *dto.MessageHoles {
+	minGapSizeIdx := -1
+	minGaSize := int64(^uint64(0) >> 1)
+
+	for idx, h := range holes {
+		if h.MaxID < minID {
+			continue
+		}
+		gapSize := h.MinID.Int64 - minID
+		if minGaSize > gapSize {
+			minGaSize = gapSize
+			minGapSizeIdx = idx
+		}
+	}
+	if minGapSizeIdx > -1 {
+		return &holes[minGapSizeIdx]
+	}
+	return nil
+}
+func GetMaxClosetHole(maxID int64, holes []dto.MessageHoles) *dto.MessageHoles {
+	maxGapSizeIdx := -1
+	maxGapSize := int64(^uint64(0) >> 1)
+	for idx, h := range holes {
+		if h.MaxID > maxID {
+			continue
+		}
+		gapSize := maxID - h.MaxID
+		if maxGapSize > gapSize {
+			maxGapSize = gapSize
+			maxGapSizeIdx = idx
+		}
+	}
+	if maxGapSizeIdx > -1 {
+		return &holes[maxGapSizeIdx]
+	}
+	return nil
 }
 
 func fillMessageHoles(peerID, msgMinID, msgMaxID int64) error {

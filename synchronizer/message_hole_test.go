@@ -447,3 +447,35 @@ func TestFillMessageHolesInsideMaxOverlap(t *testing.T) {
 		t.Error("inside max overlap mode create wrong hole")
 	}
 }
+
+func TestGetMaxClosestHole(t *testing.T) {
+
+	holes := []dto.MessageHoles{
+		dto.MessageHoles{
+			PeerID: 1,
+			MinID:  sql.NullInt64{Int64: 0, Valid: true},
+			MaxID:  692,
+		},
+	}
+	dto := GetMaxClosetHole(982, holes)
+	if dto == nil {
+		t.Error("Failed :/ ")
+	}
+
+}
+
+func TestGetMonClosestHole(t *testing.T) {
+
+	holes := []dto.MessageHoles{
+		dto.MessageHoles{
+			PeerID: 1,
+			MinID:  sql.NullInt64{Int64: 0, Valid: true},
+			MaxID:  635,
+		},
+	}
+	dto := GetMinClosetHole(933, holes)
+	if dto == nil {
+		t.Error("Failed :/ ")
+	}
+
+}

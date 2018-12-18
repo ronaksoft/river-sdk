@@ -70,14 +70,14 @@ func (r repoMessageHoles) GetHoles(peerID, msgMinID, msgMaxID int64) ([]dto.Mess
 		A : MinID <= msgMinID && MinID < msgMaxID && MaxID > msgMinID && MaxID >= msgMaxID ||
 		B : MinID > msgMinID && MinID < msgMaxID && MaxID > msgMinID && MaxID > msgMaxID ||
 		C : MinID < msgMinID && MinID < msgMaxID && MaxID > msgMinID && MaxID < msgMaxID ||
-		D : MinID > msgMinID && MinID < msgMaxID && MaxID > msgMinID && MaxID < msgMaxID ||
+		D : MinID >= msgMinID && MinID < msgMaxID && MaxID > msgMinID && MaxID <= msgMaxID ||
 	*/
 	dtoHoles := make([]dto.MessageHoles, 0)
 	err := r.db.Where("PeerID = ? AND ("+
 		"(MinID <= ? AND MinID < ? AND MaxID > ? AND MaxID >= ?)"+" OR "+ // A : inside or exact size of hole
 		"(MinID > ? AND MinID < ? AND MaxID > ? AND MaxID > ?)"+" OR "+ // B : minside overlap
 		"(MinID < ? AND MinID < ? AND MaxID > ? AND MaxID < ?)"+" OR "+ // C : maxside overlap
-		"(MinID > ? AND MinID < ? AND MaxID > ? AND MaxID < ?)"+" ) ", // D : surrendered over hole
+		"(MinID >= ? AND MinID < ? AND MaxID > ? AND MaxID <= ?)"+" ) ", // D : surrendered over hole
 		peerID,
 		msgMinID, msgMaxID, msgMinID, msgMaxID,
 		msgMinID, msgMaxID, msgMinID, msgMaxID,
