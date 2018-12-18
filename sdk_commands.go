@@ -221,8 +221,12 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 					r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 				}
 			} else {
-				log.LOG_Warn("AAAAAAAAAAAAAAAAAAAAA : \t 333333 sent to server")
-				r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+				// log.LOG_Warn("AAAAAAAAAAAAAAAAAAAAA : \t 333333 sent to server")
+				// r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+
+				log.LOG_Warn("AAAAAAAAAAAAAAAAAAAAA : \t 333333 from localDB")
+				messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
+				fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
 			}
 		}
 
@@ -241,9 +245,12 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 				r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 			}
 		} else {
+			// log.LOG_Warn("BBBBBBBBBBBBBBBBBBBBBBBBB : \t 333333 sent to server")
+			// r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 
-			log.LOG_Warn("BBBBBBBBBBBBBBBBBBBBBBBBB : \t 333333 sent to server")
-			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+			log.LOG_Warn("BBBBBBBBBBBBBBBBBBBBBBBBB : \t 333333 from localDB")
+			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
+			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
 		}
 
 	} else if req.MinID != 0 && req.MaxID == 0 {
