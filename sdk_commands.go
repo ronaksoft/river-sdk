@@ -198,6 +198,17 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 		})
 		return
 	}
+	// Offline mode
+	if r.networkCtrl.Quality() == domain.DISCONNECTED || r.networkCtrl.Quality() == domain.CONNECTING {
+		if dtoDialog.TopMessageID < 0 {
+			messages, users := repo.Ctx().Messages.GetMessageHistoryWithPendingMessages(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
+			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
+		} else {
+			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
+			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
+		}
+		return
+	}
 
 	if req.MinID == 0 && req.MaxID == 0 {
 		// Load type 0 : initial
@@ -212,7 +223,7 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 			holes := synchronizer.GetHoles(dtoDialog.PeerID, req.MinID, maxID)
 			closestHole := synchronizer.GetMaxClosetHole(maxID, holes)
 			if closestHole != nil {
-				messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), closestHole.MaxID, maxID, req.Limit)
+				messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), closestHole.MaxID, dtoDialog.TopMessageID, req.Limit)
 				if len(messages) == int(req.Limit) {
 					log.LOG_Warn("AAAAAAAAAAAAAAAAAAAAA : \t 111111 from localDB")
 					fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
