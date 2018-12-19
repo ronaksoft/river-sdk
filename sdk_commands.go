@@ -354,6 +354,32 @@ func (r *River) contactGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeou
 	}) //successCB(out)
 }
 
+func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.ContactsImport)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG_Debug("River::contactsImport()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	if req.Replace {
+		for _, c := range req.Contacts {
+			err := repo.Ctx().Users.UpdatePhoneContact(c)
+			if err != nil {
+				log.LOG_Debug("River::contactsImport()-> SaveParticipants()",
+					zap.String("Error", err.Error()),
+				)
+			}
+		}
+	}
+
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+}
+
 func (r *River) messageReadHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	log.LOG_Debug("River::messageReadHistory()")
 	req := new(msg.MessagesReadHistory)

@@ -13,6 +13,7 @@ import (
 type RepoUsers interface {
 	SaveUser(user *msg.User) error
 	SaveContactUser(user *msg.ContactUser) error
+	UpdatePhoneContact(user *msg.PhoneContact) error
 	GetManyUsers(userIDs []int64) []*msg.User
 	GetManyContactUsers(userIDs []int64) []*msg.ContactUser
 	GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact)
@@ -95,6 +96,29 @@ func (r *repoUsers) SaveContactUser(user *msg.ContactUser) error {
 		"ClientID":   u.ClientID,
 		"IsContact":  u.IsContact,
 	}).Error
+}
+
+// SavePhoneContact
+func (r *repoUsers) UpdatePhoneContact(user *msg.PhoneContact) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	if user == nil {
+		log.LOG_Debug("RepoRepoUsers::SaveContactUser()",
+			zap.String("User", "user is null"),
+		)
+		return domain.ErrNotFound
+	}
+
+	dtoUser := new(dto.Users)
+	// just need to edit existing contacts info
+	if dtoUser.ID > 0 {
+		return r.db.Table(dtoUser.TableName()).Where("Phone=?", dtoUser.Phone).Updates(map[string]interface{}{
+			"FirstName": user.FirstName,
+			"LastName":  user.LastName,
+		}).Error
+	}
+	return nil
 }
 
 // GetManyUsers
