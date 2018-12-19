@@ -1,11 +1,10 @@
-package net
+package controller
 
 import (
 	"sync"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/actor"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"github.com/gorilla/websocket"
 )
@@ -21,7 +20,6 @@ const (
 type CtrlNetwork struct {
 	IsConnected  bool
 	Disconnected int
-	Actor        actor.Actor
 
 	connWriteLock       sync.Mutex
 	conn                *websocket.Conn
@@ -30,14 +28,25 @@ type CtrlNetwork struct {
 	keepConnectionAlive bool
 
 	messageSeq int64
+
+	// Actor Info :
+	authID    int64
+	authKey   []byte //[256]byte
+	onError   domain.ErrorHandler
+	onMessage domain.OnMessageHandler
+	onUpdate  domain.OnUpdateHandler
 }
 
 // NewCtrlNetwork create new instance
-func NewCtrlNetwork(act actor.Actor) *CtrlNetwork {
+func NewCtrlNetwork(authID int64, authKey []byte, onMessage domain.OnMessageHandler, onUpdate domain.OnUpdateHandler, onError domain.ErrorHandler) *CtrlNetwork {
 	n := &CtrlNetwork{
-		stop:     make(chan bool),
-		Actor:    act,
-		wsDialer: websocket.DefaultDialer,
+		stop:      make(chan bool),
+		wsDialer:  websocket.DefaultDialer,
+		authID:    authID,
+		authKey:   authKey,
+		onError:   onError,
+		onMessage: onMessage,
+		onUpdate:  onUpdate,
 	}
 	// n.wsDialer.ReadBufferSize = 32 * 1024  // 32KB
 	// n.wsDialer.WriteBufferSize = 32 * 1024 // 32KB
@@ -68,9 +77,9 @@ func (ctrl *CtrlNetwork) Stop() {
 // Send the data payload is binary
 func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
 	protoMessage := new(msg.ProtoMessage)
-	protoMessage.AuthID = ctrl.Actor.AuthID
+	protoMessage.AuthID = ctrl.authID
 	protoMessage.MessageKey = make([]byte, 32)
-	if ctrl.Actor.AuthID == 0 {
+	if ctrl.authID == 0 {
 		protoMessage.Payload, _ = msgEnvelope.Marshal()
 	} else {
 		ctrl.messageSeq++
@@ -80,8 +89,8 @@ func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
 		}
 		encryptedPayload.MessageID = uint64(time.Now().Unix()<<32 | ctrl.messageSeq)
 		unencryptedBytes, _ := encryptedPayload.Marshal()
-		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.Actor.AuthKey, unencryptedBytes)
-		messageKey := domain.GenerateMessageKey(ctrl.Actor.AuthKey, unencryptedBytes)
+		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes)
+		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes)
 		copy(protoMessage.MessageKey, messageKey)
 		protoMessage.Payload = encryptedPayloadBytes
 	}
@@ -172,7 +181,7 @@ func (ctrl *CtrlNetwork) receiver() {
 			}
 			ctrl.messageHandler(receivedEnvelope)
 		} else {
-			decryptedBytes, err := domain.Decrypt(ctrl.Actor.AuthKey, res.MessageKey, res.Payload)
+			decryptedBytes, err := domain.Decrypt(ctrl.authKey, res.MessageKey, res.Payload)
 			if err != nil {
 				continue
 			}
@@ -210,8 +219,8 @@ func (ctrl *CtrlNetwork) extractMessages(m *msg.MessageEnvelope) ([]*msg.Message
 		e := new(msg.Error)
 		e.Unmarshal(m.Message)
 		// its general error
-		if ctrl.Actor.OnError != nil && m.RequestID == 0 {
-			ctrl.Actor.OnError(e)
+		if ctrl.onError != nil && m.RequestID == 0 {
+			ctrl.onError(e)
 		} else {
 			// ui callback delegate will handle it
 			messages = append(messages, m)
@@ -226,10 +235,10 @@ func (ctrl *CtrlNetwork) extractMessages(m *msg.MessageEnvelope) ([]*msg.Message
 func (ctrl *CtrlNetwork) messageHandler(message *msg.MessageEnvelope) {
 	// extract all updates/ messages
 	messages, updates := ctrl.extractMessages(message)
-	if ctrl.Actor.OnMessage != nil {
-		ctrl.Actor.OnMessage(messages)
+	if ctrl.onMessage != nil {
+		ctrl.onMessage(messages)
 	}
-	if ctrl.Actor.OnMessage != nil {
-		ctrl.Actor.OnUpdate(updates)
+	if ctrl.onMessage != nil {
+		ctrl.onUpdate(updates)
 	}
 }

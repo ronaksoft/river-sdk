@@ -160,10 +160,10 @@ func (r *River) UISettingDelete(key string) bool {
 }
 
 // SearchContacts searchs contacts
-func (r *River) SearchContacts(requestID uint64, searchPhrase string, delegate RequestDelegate) {
+func (r *River) SearchContacts(requestID int64, searchPhrase string, delegate RequestDelegate) {
 	res := new(msg.MessageEnvelope)
 	res.Constructor = msg.C_ContactsMany
-	res.RequestID = requestID
+	res.RequestID = uint64(requestID)
 
 	contacts := new(msg.ContactsMany)
 	contacts.Users, contacts.Contacts = repo.Ctx().Users.SearchContacts(searchPhrase)
