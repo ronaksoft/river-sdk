@@ -213,90 +213,97 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 	if req.MinID == 0 && req.MaxID == 0 {
 		// Load type 0 : initial
 		if dtoDialog.TopMessageID < 0 {
+			log.LOG_Debug("River::messageGetHistory() Load Type 0 : from localDB PendedMessage")
 			// fetch messages from localDB cuz there is a pending message it means we are not connected to server
 			messages, users := repo.Ctx().Messages.GetMessageHistoryWithPendingMessages(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
 		} else {
-			log.LOG_Warn("AAAAAAAAAAAAAAAAAAAAA : \t")
+
 			maxID := dtoDialog.TopMessageID - 1
 
 			holes := synchronizer.GetHoles(dtoDialog.PeerID, req.MinID, maxID)
 			closestHole := synchronizer.GetMaxClosetHole(maxID, holes)
-			if closestHole != nil {
-				messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), closestHole.MaxID, dtoDialog.TopMessageID, req.Limit)
-				if len(messages) == int(req.Limit) {
-					log.LOG_Warn("AAAAAAAAAAAAAAAAAAAAA : \t 111111 from localDB")
-					fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
+			if len(holes) > 0 {
+				if closestHole != nil {
+					messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), closestHole.MaxID, dtoDialog.TopMessageID, req.Limit)
+					if len(messages) == int(req.Limit) {
+						log.LOG_Debug("River::messageGetHistory() Load Type 0:A1 from localDB")
+						fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
+					} else {
+						log.LOG_Debug("River::messageGetHistory() Load Type 0:A2 sent to server")
+						r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+					}
 				} else {
-					log.LOG_Warn("AAAAAAAAAAAAAAAAAAAAA : \t 222222 sent to server")
+					log.LOG_Debug("River::messageGetHistory() Load Type 0:A3 sent to server")
 					r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 				}
 			} else {
-				// log.LOG_Warn("AAAAAAAAAAAAAAAAAAAAA : \t 333333 sent to server")
-				// r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
-
-				log.LOG_Warn("AAAAAAAAAAAAAAAAAAAAA : \t 333333 from localDB")
+				log.LOG_Debug("River::messageGetHistory() Load Type 0:A4 from localDB")
 				messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 				fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
 			}
+
 		}
 
 	} else if req.MinID == 0 && req.MaxID != 0 {
 		// Load type 1 : scroll to up
-		log.LOG_Warn("BBBBBBBBBBBBBBBBBBBBBBBBB : \t")
 		holes := synchronizer.GetHoles(dtoDialog.PeerID, req.MinID, req.MaxID)
 		closestHole := synchronizer.GetMaxClosetHole(req.MaxID, holes)
-		if closestHole != nil {
-			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), closestHole.MaxID, req.MaxID, req.Limit)
-			if len(messages) == int(req.Limit) {
-				log.LOG_Warn("BBBBBBBBBBBBBBBBBBBBBBBBB : \t 111111 from localDB")
-				fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
+
+		if len(holes) > 0 {
+			if closestHole != nil {
+				messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), closestHole.MaxID, req.MaxID, req.Limit)
+				if len(messages) == int(req.Limit) {
+					log.LOG_Debug("River::messageGetHistory() Load Type 1:B1 from localDB")
+					fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
+				} else {
+					log.LOG_Debug("River::messageGetHistory() Load Type 1:B2 sent to server")
+					r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+				}
 			} else {
-				log.LOG_Warn("BBBBBBBBBBBBBBBBBBBBBBBBB : \t 222222 sent to server")
+				log.LOG_Debug("River::messageGetHistory() Load Type 1:B3 sent to server")
 				r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 			}
 		} else {
-			// log.LOG_Warn("BBBBBBBBBBBBBBBBBBBBBBBBB : \t 333333 sent to server")
-			// r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
-
-			log.LOG_Warn("BBBBBBBBBBBBBBBBBBBBBBBBB : \t 333333 from localDB")
+			log.LOG_Debug("River::messageGetHistory() Load Type 1:B4 from localDB")
 			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
 		}
 
 	} else if req.MinID != 0 && req.MaxID == 0 {
 		// Load type 2 : scroll to down
-
-		log.LOG_Warn("CCCCCCCCCCCCCCCCCCCCCCCCCC : \t")
-		// BUG : server calculate last 20 messages and returns
-		// TODO : report this
 		maxID := dtoDialog.TopMessageID - 1
 
 		holes := synchronizer.GetHoles(dtoDialog.PeerID, req.MinID, maxID)
 		closestHole := synchronizer.GetMinClosetHole(req.MinID, holes)
-		if closestHole != nil {
-			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, closestHole.MinID.Int64, req.Limit)
-			if len(messages) == int(req.Limit) {
-				log.LOG_Warn("CCCCCCCCCCCCCCCCCCCCCCCCCC : \t 111111 from localDB")
-				fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
+		if len(holes) > 0 {
+			if closestHole != nil {
+				messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, closestHole.MinID.Int64, req.Limit)
+				if len(messages) == int(req.Limit) {
+					log.LOG_Debug("River::messageGetHistory() Load Type 2:C1 from localDB")
+					fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
+				} else {
+					log.LOG_Debug("River::messageGetHistory() Load Type 2:C2 sent to server")
+					r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+				}
 			} else {
-				log.LOG_Warn("CCCCCCCCCCCCCCCCCCCCCCCCCC : \t 222222 from server")
+				log.LOG_Debug("River::messageGetHistory() Load Type 2:C3 sent to server")
 				r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 			}
 		} else {
-			log.LOG_Warn("CCCCCCCCCCCCCCCCCCCCCCCCCC : \t 333333 from localDB")
+			log.LOG_Debug("River::messageGetHistory() Load Type 2:C4 from localDB")
 			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
 		}
+
 	} else {
-		log.LOG_Warn("DDDDDDDDDDDDDDDDDDDDDDDDDDDD : \t")
 		// Load type 3 : exact size
 		holes := synchronizer.GetHoles(dtoDialog.PeerID, req.MinID, req.MaxID)
 		if len(holes) > 0 {
-			log.LOG_Warn("DDDDDDDDDDDDDDDDDDDDDDDDDDDD : \t 111111 sent  to server")
+			log.LOG_Debug("River::messageGetHistory() Load Type 3:C1 sent to server")
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		} else {
-			log.LOG_Warn("DDDDDDDDDDDDDDDDDDDDDDDDDDDD : \t 222222 from localDB")
+			log.LOG_Debug("River::messageGetHistory() Load Type 3:C2 from localDB")
 			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
 		}
