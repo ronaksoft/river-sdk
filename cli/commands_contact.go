@@ -51,10 +51,10 @@ var SearchContacts = &ishell.Cmd{
 	Name: "SearchContacts",
 	Func: func(c *ishell.Context) {
 
-		reqID := uint64(domain.SequentialUniqueID())
+		reqID := domain.SequentialUniqueID()
 		searchPharase := fnGetSearchPhrase(c)
 		reqDelegate := new(RequestDelegate)
-		reqDelegate.RequestID = int64(reqID)
+		reqDelegate.RequestID = reqID
 		_SDK.SearchContacts(reqID, searchPharase, reqDelegate)
 	},
 }
