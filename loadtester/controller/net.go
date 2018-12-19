@@ -170,7 +170,7 @@ func (ctrl *CtrlNetwork) receiver() {
 		if messageType != websocket.BinaryMessage {
 			continue
 		}
-		// TODO : Handle Received Message
+
 		res := msg.ProtoMessage{}
 		res.Unmarshal(message)
 		if res.AuthID == 0 {

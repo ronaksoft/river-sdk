@@ -33,9 +33,9 @@ func init() {
 
 	// Initialize Shell
 	_Shell = ishell.New()
-	_Shell.Println("============================")
+	_Shell.Println("===============================")
 	_Shell.Println("## River Load Tester Console ##")
-	_Shell.Println("============================")
+	_Shell.Println("===============================")
 	// _Shell.AddCmd(Init)
 	// _Shell.AddCmd(Auth)
 	// _Shell.AddCmd(Message)

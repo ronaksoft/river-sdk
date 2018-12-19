@@ -3,7 +3,9 @@ package actor
 import (
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/controller"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/executer"
+	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
+	"go.uber.org/zap"
 )
 
 type Actor struct {
@@ -35,14 +37,36 @@ func NewActor(userID int64, authID int64, authKey []byte) (*Actor, error) {
 	return act, nil
 }
 
+// onMessage check requestCallbacks and call callbacks
 func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
-
+	for _, m := range messages {
+		req := act.exec.GetRequest(m.RequestID)
+		if req != nil {
+			select {
+			case req.ResponseWaitChannel <- m:
+				log.LOG_Debug("Actor::onMessage() callback singnal sent")
+			default:
+				log.LOG_Debug("Actor::onMessage() callback is skipped probably timedout before")
+			}
+			act.exec.RemoveRequest(m.RequestID)
+		} else {
+			log.LOG_Debug("Actor::onMessage() callback does not exists",
+				zap.Uint64("RequestID", m.RequestID),
+			)
+		}
+	}
 }
 
-func (act *Actor) onUpdate(messages []*msg.UpdateContainer) {
-
+func (act *Actor) onUpdate(updates []*msg.UpdateContainer) {
+	for _, cnt := range updates {
+		for _, u := range cnt.Updates {
+			// TODO : Implement actors update reactions
+			if u.Constructor == msg.C_UpdateNewMessage {
+			}
+		}
+	}
 }
 
 func (act *Actor) onError(u *msg.Error) {
-
+	// TODO : Add reporter error log
 }

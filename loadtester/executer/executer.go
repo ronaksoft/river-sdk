@@ -88,3 +88,21 @@ func (exec *Executer) executer(message *msg.MessageEnvelope, r *Request) {
 		}
 	}
 }
+
+// GetRequest returns response callbacks
+func (exec *Executer) GetRequest(reqID uint64) *Request {
+	exec.requestsLock.Lock()
+	req, ok := exec.requests[reqID]
+	exec.requestsLock.Unlock()
+	if ok {
+		return req
+	}
+	return nil
+}
+
+// RemoveRequest removes response callbacks
+func (exec *Executer) RemoveRequest(reqID uint64) {
+	exec.requestsLock.Lock()
+	delete(exec.requests, reqID)
+	exec.requestsLock.Unlock()
+}
