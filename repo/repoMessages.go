@@ -1,6 +1,8 @@
 package repo
 
 import (
+	"sort"
+
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
@@ -318,6 +320,12 @@ func (r *repoMessages) GetMessageHistoryWithMinMaxID(peerID int64, peerType int3
 		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID >= ? AND messages.ID <= ?", peerID, peerType, minID, maxID).Find(&dtoResult).Error
 	} else if minID != 0 && maxID == 0 {
 		err = r.db.Order("ID ASC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID >= ?", peerID, peerType, minID).Find(&dtoResult).Error
+		// sort DESC again
+		if err == nil {
+			sort.Slice(dtoResult, func(i, j int) bool {
+				return dtoResult[i].ID > dtoResult[j].ID
+			})
+		}
 	} else {
 		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID >= ? AND messages.ID <= ?", peerID, peerType, minID, maxID).Find(&dtoResult).Error
 	}
