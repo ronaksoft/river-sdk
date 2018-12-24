@@ -7,7 +7,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
-	"github.com/jinzhu/gorm"
 	"go.uber.org/zap"
 )
 
@@ -436,7 +435,7 @@ func (r *repoMessages) DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.Clie
 	msgs := make([]dto.Messages, 0)
 	mpeer := make(map[int64]*msg.ClientUpdateMessagesDeleted)
 	err = r.db.Where("ID in (?)", IDs).Find(&msgs).Error
-	if err != nil {
+	if err == nil {
 		for _, v := range msgs {
 
 			if udp, ok := mpeer[v.PeerID]; ok {
@@ -445,7 +444,7 @@ func (r *repoMessages) DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.Clie
 				tmp := new(msg.ClientUpdateMessagesDeleted)
 				tmp.PeerID = v.PeerID
 				tmp.PeerType = v.PeerType
-				tmp.MessageIDs = make([]int64, 0)
+				tmp.MessageIDs = []int64{v.ID}
 				mpeer[v.PeerID] = tmp
 			}
 		}
@@ -455,7 +454,7 @@ func (r *repoMessages) DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.Clie
 		// Update Dialog Counter on delete message
 		dtoDlg := new(dto.Dialogs)
 		err := r.db.Where("PeerID = ? AND PeerType = ?", v.PeerID, v.PeerType).First(dtoDlg).Error
-		if err != nil {
+		if err == nil {
 			removedUnreadCount := int32(0)
 			for _, msgID := range v.MessageIDs {
 				if msgID > dtoDlg.ReadInboxMaxID {
@@ -464,7 +463,7 @@ func (r *repoMessages) DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.Clie
 			}
 			if removedUnreadCount > 0 && removedUnreadCount <= dtoDlg.UnreadCount {
 				err = r.db.Table(dtoDlg.TableName()).Where("PeerID=? AND PeerType=?", v.PeerID, v.PeerType).Updates(map[string]interface{}{
-					"UnreadCount": gorm.Expr("UnreadCount - ?", removedUnreadCount),
+					"UnreadCount": (dtoDlg.UnreadCount - removedUnreadCount), //gorm.Expr("UnreadCount - ?", removedUnreadCount),
 				}).Error
 			}
 		}
@@ -478,8 +477,9 @@ func (r *repoMessages) DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.Clie
 		dtoMsg := dto.Messages{}
 		err := r.db.Table(dtoMsg.TableName()).Where("PeerID =? AND PeerType= ?", d.PeerID, d.PeerType).Last(&dtoMsg).Error
 		if err == nil && dtoMsg.ID != 0 {
-			d.TopMessageID = dtoMsg.ID
-			r.db.Save(d)
+			err = r.db.Table(d.TableName()).Where("PeerID=? AND PeerType=?", d.PeerID, d.PeerType).Updates(map[string]interface{}{
+				"TopMessageID": dtoMsg.ID,
+			}).Error
 		}
 	}
 
