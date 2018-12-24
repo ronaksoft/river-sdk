@@ -1,6 +1,10 @@
 package dto
 
-import "git.ronaksoftware.com/ronak/riversdk/msg"
+import (
+	"encoding/json"
+
+	"git.ronaksoftware.com/ronak/riversdk/msg"
+)
 
 type PendingMessages struct {
 	dto
@@ -13,6 +17,8 @@ type PendingMessages struct {
 	CreatedOn  int64  `gorm:"column:CreatedOn" json:"CreatedOn"`
 	Body       string `gorm:"type:TEXT;column:Body" json:"Body"`
 	ReplyTo    int64  `gorm:"column:ReplyTo" json:"ReplyTo"`
+	ClearDraft bool   `gorm:"column:ClearDraft" json:"ClearDraft"`
+	Entities   []byte `gorm:"type:blob;column:Entities" json:"Entities"`
 }
 
 func (PendingMessages) TableName() string {
@@ -28,6 +34,8 @@ func (m *PendingMessages) Map(v *msg.MessagesSend) {
 	m.PeerType = int32(v.Peer.Type)
 	m.ReplyTo = v.ReplyTo
 	m.RequestID = v.RandomID
+	m.ClearDraft = v.ClearDraft
+	m.Entities, _ = json.Marshal(v.Entities)
 }
 
 func (m *PendingMessages) MapTo(v *msg.ClientPendingMessage) {
@@ -40,6 +48,9 @@ func (m *PendingMessages) MapTo(v *msg.ClientPendingMessage) {
 	v.ReplyTo = m.ReplyTo
 	v.Body = m.Body
 	v.SenderID = m.SenderID
+
+	// // TODO : add Entities to its proto
+	// json.Unmarshal(m.Entities, v.Entities)
 
 }
 func (m *PendingMessages) MapToUserMessage(v *msg.UserMessage) {
@@ -59,6 +70,8 @@ func (m *PendingMessages) MapToUserMessage(v *msg.UserMessage) {
 	//v.Inbox = m.Inbox
 	v.ReplyTo = m.ReplyTo
 	//v.MessageAction = m.MessageAction
+
+	json.Unmarshal(m.Entities, v.Entities)
 }
 
 func (m *PendingMessages) MapToDtoMessage(v *Messages) {
@@ -78,6 +91,7 @@ func (m *PendingMessages) MapToDtoMessage(v *Messages) {
 	//v.Inbox = m.Inbox
 	v.ReplyTo = m.ReplyTo
 	//v.MessageAction = m.MessageAction
+	json.Unmarshal(m.Entities, v.Entities)
 }
 
 func (m *PendingMessages) MapToMessageSend(v *msg.MessagesSend) {
@@ -89,4 +103,6 @@ func (m *PendingMessages) MapToMessageSend(v *msg.MessagesSend) {
 	v.Peer.Type = msg.PeerType(m.PeerType)
 	v.RandomID = m.RequestID
 	v.ReplyTo = m.ReplyTo
+	v.ClearDraft = m.ClearDraft
+	json.Unmarshal(m.Entities, v.Entities)
 }
