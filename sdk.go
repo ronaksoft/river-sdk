@@ -649,6 +649,8 @@ func (r *River) CreateAuthKey() (err error) {
 	// Wait for 2nd step to complete
 	waitGroup.Wait()
 
+	// double set AuthID
+	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 	// inform external UI that authKey generated
 	if r.mainDelegate != nil {
 		if r.mainDelegate.OnAuthKeyCreated != nil {
