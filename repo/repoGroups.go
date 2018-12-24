@@ -21,6 +21,7 @@ type RepoGroups interface {
 	DeleteGroupMemberMany(peerID int64, IDs []int64) error
 	Delete(groupID int64) error
 	UpdateGroupMemberType(groupID, userID int64, isAdmin bool) error
+	SearchGroups(searchPhrase string) []*msg.Group
 }
 
 type repoGroups struct {
@@ -219,4 +220,29 @@ func (r *repoGroups) UpdateGroupMemberType(groupID, userID int64, isAdmin bool) 
 	return r.db.Table(dtoGP.TableName()).Where("GroupID = ? AND UserID = ?", groupID, userID).Updates(map[string]interface{}{
 		"Type": userType,
 	}).Error
+}
+
+func (r *repoGroups) SearchGroups(searchPhrase string) []*msg.Group {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	log.LOG_Debug("RepoGroups::SearchGroups()")
+
+	p := "%" + searchPhrase + "%"
+	users := make([]dto.Groups, 0)
+	err := r.db.Where("Title LIKE ? ", p).Find(&users).Error
+	if err != nil {
+		log.LOG_Debug("RepoGroups::SearchGroups()-> fetch group entities",
+			zap.String("Error", err.Error()),
+		)
+		return nil
+	}
+	pbGroup := make([]*msg.Group, 0)
+	for _, v := range users {
+		tmpG := new(msg.Group)
+		v.MapTo(tmpG)
+		pbGroup = append(pbGroup, tmpG)
+	}
+
+	return pbGroup
 }

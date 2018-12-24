@@ -299,6 +299,20 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			_Shell.Println(_RED("x.Participants is null"))
 		}
 
+	case msg.C_InputUser:
+		x := new(msg.InputUser)
+		x.Unmarshal(envelope.Message)
+		bufUsers := new(bytes.Buffer)
+		tableUsers := tablewriter.NewWriter(bufUsers)
+		tableUsers.SetHeader([]string{
+			"UserID", "AccessHash",
+		})
+		tableUsers.Append([]string{
+			fmt.Sprintf("%d", x.UserID),
+			fmt.Sprintf("%d", x.AccessHash),
+		})
+		tableUsers.Render()
+		_Shell.Println(bufUsers.String())
 	default:
 		constructorName, _ := msg.ConstructorNames[envelope.Constructor]
 		_Log.Debug("DEFAULT",

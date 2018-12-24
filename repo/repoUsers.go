@@ -24,6 +24,7 @@ type RepoUsers interface {
 	GetAnyUsers(userIDs []int64) []*msg.User
 	SaveMany(users []*msg.User) error
 	UpdateContactinfo(userID int64, firstName, lastName string) error
+	SearchUsers(searchPhrase string) []*msg.User
 }
 
 type repoUsers struct {
@@ -379,4 +380,29 @@ func (r *repoUsers) UpdateContactinfo(userID int64, firstName, lastName string) 
 	}).Error
 
 	return err
+}
+
+func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	log.LOG_Debug("RepoUsers::SearchContacts()")
+
+	p := "%" + searchPhrase + "%"
+	users := make([]dto.Users, 0)
+	err := r.db.Where("FirstName LIKE ? OR LastName LIKE ? OR Phone LIKE ? OR Username LIKE ?", p, p, p, p).Find(&users).Error
+	if err != nil {
+		log.LOG_Debug("RepoUsers::SearchUsers()-> fetch user entities",
+			zap.String("Error", err.Error()),
+		)
+		return nil
+	}
+	pbUsers := make([]*msg.User, 0)
+	for _, v := range users {
+		tmpUser := new(msg.User)
+		v.MapToUser(tmpUser)
+		pbUsers = append(pbUsers, tmpUser)
+	}
+
+	return pbUsers
 }

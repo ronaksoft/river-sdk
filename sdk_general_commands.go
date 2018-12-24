@@ -195,3 +195,125 @@ func (r *River) UpdateContactinfo(userID int64, firstName, lastName string) erro
 	}
 	return err
 }
+
+// SearchInDialogs search dialog title
+func (r *River) SearchInDialogs(requestID int64, searchPhrase string, delegate RequestDelegate) {
+	res := new(msg.MessageEnvelope)
+	res.Constructor = msg.C_MessagesDialogs
+	res.RequestID = uint64(requestID)
+
+	dlgs := new(msg.MessagesDialogs)
+
+	users := repo.Ctx().Users.SearchUsers(searchPhrase)
+	groups := repo.Ctx().Groups.SearchGroups(searchPhrase)
+	dlgs.Users = users
+	dlgs.Groups = groups
+
+	mDialogs := domain.MInt64B{}
+	for _, v := range users {
+		mDialogs[v.ID] = true
+	}
+	for _, v := range groups {
+		mDialogs[v.ID] = true
+	}
+
+	dialogs := repo.Ctx().Dialogs.GetManyDialog(mDialogs.ToArray())
+	dlgs.Dialogs = dialogs
+
+	mMessages := domain.MInt64B{}
+	for _, v := range dialogs {
+		mMessages[v.TopMessageID] = true
+	}
+	dlgs.Messages = repo.Ctx().Messages.GetManyMessages(mMessages.ToArray())
+
+	res.Message, _ = dlgs.Marshal()
+	buff, _ := res.Marshal()
+	if delegate.OnComplete != nil {
+		delegate.OnComplete(buff)
+	}
+}
+
+// GetGroupInputUser get group participant user
+func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, delegate RequestDelegate) {
+	res := new(msg.MessageEnvelope)
+	res.Constructor = msg.C_InputUser
+	res.RequestID = uint64(requestID)
+
+	user := new(msg.InputUser)
+	user.UserID = userID
+
+	accessHash, err := repo.Ctx().Users.GetAccessHash(userID)
+	if err != nil || accessHash == 0 {
+		participant, err := repo.Ctx().Groups.GetParticipants(groupID)
+		if err == nil {
+			for _, p := range participant {
+				if p.UserID == userID {
+					accessHash = p.AccessHash
+					break
+				}
+			}
+		}
+	}
+
+	if accessHash == 0 {
+		// get group full and get its access hash from its participants
+		req := new(msg.GroupsGetFull)
+		req.GroupID = groupID
+		reqBytes, _ := req.Marshal()
+
+		out := new(msg.MessageEnvelope)
+		// Timeout Callback
+		timeoutCB := func() {
+			if delegate.OnTimeout != nil {
+				delegate.OnTimeout(domain.ErrRequestTimeout)
+			}
+		}
+
+		// Success Callback
+		successCB := func(response *msg.MessageEnvelope) {
+			if response.Constructor != msg.C_GroupFull {
+				msg.ResultError(out, &msg.Error{Code: "00", Items: "response type is not GroupFull"})
+				if delegate.OnComplete != nil {
+					outBytes, _ := out.Marshal()
+					delegate.OnComplete(outBytes)
+				}
+				return
+			}
+
+			groupFull := new(msg.GroupFull)
+			err := groupFull.Unmarshal(response.Message)
+			if err != nil {
+				msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+				if delegate.OnComplete != nil {
+					outBytes, _ := out.Marshal()
+					delegate.OnComplete(outBytes)
+				}
+				return
+			}
+
+			for _, p := range groupFull.Participants {
+				if p.UserID == userID {
+					user.AccessHash = p.AccessHash
+					break
+				}
+			}
+
+			res.Message, _ = user.Marshal()
+			resBytes, _ := res.Marshal()
+			if delegate.OnComplete != nil {
+				delegate.OnComplete(resBytes)
+			}
+		}
+		// Send GroupsGetFull request to get user AccessHash
+		r.queueCtrl.ExecuteRealtimeCommand(uint64(requestID), msg.C_GroupsGetFull, reqBytes, timeoutCB, successCB, true, false)
+
+	} else {
+		user.AccessHash = accessHash
+		res.Message, _ = user.Marshal()
+
+		buff, _ := res.Marshal()
+		if delegate.OnComplete != nil {
+			delegate.OnComplete(buff)
+		}
+	}
+}

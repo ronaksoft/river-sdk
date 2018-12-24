@@ -229,6 +229,25 @@ var ContactImportMany = &ishell.Cmd{
 	},
 }
 
+var SearchInDialogs = &ishell.Cmd{
+	Name: "SearchInDialogs",
+	Func: func(c *ishell.Context) {
+		searchPhrase := fnGetTitle(c)
+		reqDelegate := new(RequestDelegate)
+		_SDK.SearchInDialogs(domain.SequentialUniqueID(), searchPhrase, reqDelegate)
+	},
+}
+
+var GetGroupInputPeer = &ishell.Cmd{
+	Name: "GetGroupInputPeer",
+	Func: func(c *ishell.Context) {
+		groupID := fnGetGroupID(c)
+		userID := fnGetPeerID(c)
+		reqDelegate := new(RequestDelegate)
+		_SDK.GetGroupInputUser(domain.SequentialUniqueID(), groupID, userID, reqDelegate)
+	},
+}
+
 func init() {
 	Debug.AddCmd(SendTyping)
 	Debug.AddCmd(MessageSendByNetwork)
@@ -238,4 +257,7 @@ func init() {
 	Debug.AddCmd(PrintDebuncerStatus)
 	Debug.AddCmd(GetTopMessageID)
 	Debug.AddCmd(ContactImportMany)
+
+	Debug.AddCmd(SearchInDialogs)
+	Debug.AddCmd(GetGroupInputPeer)
 }

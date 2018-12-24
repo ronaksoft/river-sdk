@@ -23,6 +23,7 @@ type RepoDialogs interface {
 	UpdateNotifySetting(msg *msg.UpdateNotifySettings) error
 	UpdatePeerNotifySettings(peerID int64, peerType int32, notifySetting *msg.PeerNotifySettings) error
 	Delete(groupID int64, peerType int32) error
+	GetManyDialog(peerIDs []int64) []*msg.Dialog
 }
 
 type repoDialogs struct {
@@ -317,4 +318,28 @@ func (r *repoDialogs) Delete(groupID int64, peerType int32) error {
 	defer r.mx.Unlock()
 
 	return r.db.Where("PeerID=? AND  PeerType=?", groupID, peerType).Delete(dto.Dialogs{}).Error
+}
+
+// GetManyDialog
+func (r *repoDialogs) GetManyDialog(peerIDs []int64) []*msg.Dialog {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	dtoDlgs := make([]dto.Dialogs, 0)
+	err := r.db.Where("PeerID IN (?)", peerIDs).Find(&dtoDlgs).Error
+	if err != nil {
+		log.LOG_Debug("RepoDialogs::GetDialogMany()",
+			zap.String("Error", err.Error()),
+		)
+		return nil
+	}
+
+	dialogs := make([]*msg.Dialog, 0)
+	for _, v := range dtoDlgs {
+		tmp := new(msg.Dialog)
+		v.MapTo(tmp)
+		dialogs = append(dialogs, tmp)
+	}
+
+	return dialogs
 }
