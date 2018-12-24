@@ -72,10 +72,16 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 		return err
 	}
 	unreadCount := dtoDlg.UnreadCount
+	mentionedCount := dtoDlg.MentionedCount
 	// newMessage : m.ID > topMessage
 	// isNewMsg : if message delivered unordered or late
 	if m.SenderID != userID && (isNewMsg || m.ID > dtoDlg.TopMessageID) {
 		unreadCount++
+		for _, entity := range message.Entities {
+			if entity.Type == msg.MessageEntityTypeMention {
+				mentionedCount++
+			}
+		}
 	}
 	// var unreadCount int
 	// maxID := dtoDlg.ReadInboxMaxID
@@ -102,9 +108,10 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 
 	ed := new(dto.Dialogs)
 	err = r.db.Table(ed.TableName()).Where("PeerID=? AND PeerType=?", m.PeerID, m.PeerType).Updates(map[string]interface{}{
-		"TopMessageID": topMessageID,
-		"LastUpdate":   message.CreatedOn,
-		"UnreadCount":  unreadCount, //gorm.Expr("UnreadCount + ?", unreadCount), // in snapshot mode if unread message lefted
+		"TopMessageID":   topMessageID,
+		"LastUpdate":     message.CreatedOn,
+		"UnreadCount":    unreadCount,
+		"MentionedCount": mentionedCount,
 	}).Error
 	if err != nil {
 		log.LOG_Debug("RepoRepoMessages::SaveNewMessage()-> update dialog entity",
