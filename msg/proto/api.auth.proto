@@ -38,17 +38,30 @@ message AuthCheckPhone {
 
 // AuthSendCode
 // @Function
-// @Return AuthSentCode
+// @Return: AuthSentCode
 message AuthSendCode {
     required string Phone = 1;
 }
 
+// AuthResendCode
+// @Function
+// @Return: Bool
+message AuthResendCode {
+    required string Phone = 1;
+    required string PhoneCodeHash = 2;
+}
+
 // AuthRecall
 // @Function
-// @Return AuthRecalled
+// @Return: AuthRecalled
 message AuthRecall {
     required int64 ClientID = 1 [jstype = JS_STRING];
 }
+
+// AuthDestroyKey
+// @Function
+// @Return: Bool
+message AuthDestroyKey {}
 
 // AuthRecalled
 message AuthRecalled {

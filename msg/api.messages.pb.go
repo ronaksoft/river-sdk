@@ -22,21 +22,72 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
+// MediaType
+type MediaType int32
+
+const (
+	MediaType_MediaTypeEmpty            MediaType = 0
+	MediaType_MediaTypeUploadedPhoto    MediaType = 1
+	MediaType_MediaTypePhoto            MediaType = 2
+	MediaType_MediaTypeUploadedDocument MediaType = 3
+	MediaType_MediaTypeDocument         MediaType = 4
+	MediaType_MediaTypeContact          MediaType = 5
+)
+
+var MediaType_name = map[int32]string{
+	0: "MediaTypeEmpty",
+	1: "MediaTypeUploadedPhoto",
+	2: "MediaTypePhoto",
+	3: "MediaTypeUploadedDocument",
+	4: "MediaTypeDocument",
+	5: "MediaTypeContact",
+}
+var MediaType_value = map[string]int32{
+	"MediaTypeEmpty":            0,
+	"MediaTypeUploadedPhoto":    1,
+	"MediaTypePhoto":            2,
+	"MediaTypeUploadedDocument": 3,
+	"MediaTypeDocument":         4,
+	"MediaTypeContact":          5,
+}
+
+func (x MediaType) Enum() *MediaType {
+	p := new(MediaType)
+	*p = x
+	return p
+}
+func (x MediaType) String() string {
+	return proto.EnumName(MediaType_name, int32(x))
+}
+func (x *MediaType) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(MediaType_value, data, "MediaType")
+	if err != nil {
+		return err
+	}
+	*x = MediaType(value)
+	return nil
+}
+func (MediaType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_api_messages_1f846938731d3305, []int{0}
+}
+
 // MessageSend
 // @Function
-// @Returns:     MessagesSent
+// @Return: MessagesSent
 type MessagesSend struct {
-	RandomID int64      `protobuf:"varint,1,req,name=RandomID" json:"RandomID"`
-	Peer     *InputPeer `protobuf:"bytes,2,req,name=Peer" json:"Peer,omitempty"`
-	Body     string     `protobuf:"bytes,5,req,name=Body" json:"Body"`
-	ReplyTo  int64      `protobuf:"varint,6,opt,name=ReplyTo" json:"ReplyTo"`
+	RandomID   int64            `protobuf:"varint,1,req,name=RandomID" json:"RandomID"`
+	Peer       *InputPeer       `protobuf:"bytes,2,req,name=Peer" json:"Peer,omitempty"`
+	Body       string           `protobuf:"bytes,5,req,name=Body" json:"Body"`
+	ReplyTo    int64            `protobuf:"varint,6,opt,name=ReplyTo" json:"ReplyTo"`
+	ClearDraft bool             `protobuf:"varint,7,opt,name=ClearDraft" json:"ClearDraft"`
+	Entities   []*MessageEntity `protobuf:"bytes,8,rep,name=Entities" json:"Entities,omitempty"`
 }
 
 func (m *MessagesSend) Reset()         { *m = MessagesSend{} }
 func (m *MessagesSend) String() string { return proto.CompactTextString(m) }
 func (*MessagesSend) ProtoMessage()    {}
 func (*MessagesSend) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_0960d693eba64ec1, []int{0}
+	return fileDescriptor_api_messages_1f846938731d3305, []int{0}
 }
 func (m *MessagesSend) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -93,9 +144,110 @@ func (m *MessagesSend) GetReplyTo() int64 {
 	return 0
 }
 
+func (m *MessagesSend) GetClearDraft() bool {
+	if m != nil {
+		return m.ClearDraft
+	}
+	return false
+}
+
+func (m *MessagesSend) GetEntities() []*MessageEntity {
+	if m != nil {
+		return m.Entities
+	}
+	return nil
+}
+
+// MessageSendMedia
+// @Function
+// @Return: Messages
+type MessagesSendMedia struct {
+	RandomID   int64      `protobuf:"varint,1,req,name=RandomID" json:"RandomID"`
+	Peer       *InputPeer `protobuf:"bytes,2,req,name=Peer" json:"Peer,omitempty"`
+	MediaType  MediaType  `protobuf:"varint,3,req,name=MediaType,enum=msg.MediaType" json:"MediaType"`
+	MediaData  []byte     `protobuf:"bytes,4,req,name=MediaData" json:"MediaData"`
+	ReplyTo    int64      `protobuf:"varint,5,opt,name=ReplyTo" json:"ReplyTo"`
+	ClearDraft bool       `protobuf:"varint,6,opt,name=ClearDraft" json:"ClearDraft"`
+}
+
+func (m *MessagesSendMedia) Reset()         { *m = MessagesSendMedia{} }
+func (m *MessagesSendMedia) String() string { return proto.CompactTextString(m) }
+func (*MessagesSendMedia) ProtoMessage()    {}
+func (*MessagesSendMedia) Descriptor() ([]byte, []int) {
+	return fileDescriptor_api_messages_1f846938731d3305, []int{1}
+}
+func (m *MessagesSendMedia) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MessagesSendMedia) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MessagesSendMedia.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *MessagesSendMedia) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MessagesSendMedia.Merge(dst, src)
+}
+func (m *MessagesSendMedia) XXX_Size() int {
+	return m.Size()
+}
+func (m *MessagesSendMedia) XXX_DiscardUnknown() {
+	xxx_messageInfo_MessagesSendMedia.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MessagesSendMedia proto.InternalMessageInfo
+
+func (m *MessagesSendMedia) GetRandomID() int64 {
+	if m != nil {
+		return m.RandomID
+	}
+	return 0
+}
+
+func (m *MessagesSendMedia) GetPeer() *InputPeer {
+	if m != nil {
+		return m.Peer
+	}
+	return nil
+}
+
+func (m *MessagesSendMedia) GetMediaType() MediaType {
+	if m != nil {
+		return m.MediaType
+	}
+	return MediaType_MediaTypeEmpty
+}
+
+func (m *MessagesSendMedia) GetMediaData() []byte {
+	if m != nil {
+		return m.MediaData
+	}
+	return nil
+}
+
+func (m *MessagesSendMedia) GetReplyTo() int64 {
+	if m != nil {
+		return m.ReplyTo
+	}
+	return 0
+}
+
+func (m *MessagesSendMedia) GetClearDraft() bool {
+	if m != nil {
+		return m.ClearDraft
+	}
+	return false
+}
+
 // MessagesEdit
 // @Function
-// @Returns:    Bool
+// @Return: Bool
 type MessagesEdit struct {
 	RandomID  int64      `protobuf:"varint,1,req,name=RandomID" json:"RandomID"`
 	Peer      *InputPeer `protobuf:"bytes,2,req,name=Peer" json:"Peer,omitempty"`
@@ -107,7 +259,7 @@ func (m *MessagesEdit) Reset()         { *m = MessagesEdit{} }
 func (m *MessagesEdit) String() string { return proto.CompactTextString(m) }
 func (*MessagesEdit) ProtoMessage()    {}
 func (*MessagesEdit) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_0960d693eba64ec1, []int{1}
+	return fileDescriptor_api_messages_1f846938731d3305, []int{2}
 }
 func (m *MessagesEdit) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -164,69 +316,6 @@ func (m *MessagesEdit) GetMessageID() int64 {
 	return 0
 }
 
-// MessageSendMedia
-// @Function
-// @Returns:    Messages
-type MessagesSendMedia struct {
-	RandomID int64      `protobuf:"varint,1,req,name=RandomID" json:"RandomID"`
-	Peer     *InputPeer `protobuf:"bytes,2,req,name=Peer" json:"Peer,omitempty"`
-	File     *InputFile `protobuf:"bytes,3,req,name=File" json:"File,omitempty"`
-}
-
-func (m *MessagesSendMedia) Reset()         { *m = MessagesSendMedia{} }
-func (m *MessagesSendMedia) String() string { return proto.CompactTextString(m) }
-func (*MessagesSendMedia) ProtoMessage()    {}
-func (*MessagesSendMedia) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_0960d693eba64ec1, []int{2}
-}
-func (m *MessagesSendMedia) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MessagesSendMedia) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MessagesSendMedia.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (dst *MessagesSendMedia) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MessagesSendMedia.Merge(dst, src)
-}
-func (m *MessagesSendMedia) XXX_Size() int {
-	return m.Size()
-}
-func (m *MessagesSendMedia) XXX_DiscardUnknown() {
-	xxx_messageInfo_MessagesSendMedia.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MessagesSendMedia proto.InternalMessageInfo
-
-func (m *MessagesSendMedia) GetRandomID() int64 {
-	if m != nil {
-		return m.RandomID
-	}
-	return 0
-}
-
-func (m *MessagesSendMedia) GetPeer() *InputPeer {
-	if m != nil {
-		return m.Peer
-	}
-	return nil
-}
-
-func (m *MessagesSendMedia) GetFile() *InputFile {
-	if m != nil {
-		return m.File
-	}
-	return nil
-}
-
 // MessageReadHistory
 // @Function
 // Returns:
@@ -239,7 +328,7 @@ func (m *MessagesReadHistory) Reset()         { *m = MessagesReadHistory{} }
 func (m *MessagesReadHistory) String() string { return proto.CompactTextString(m) }
 func (*MessagesReadHistory) ProtoMessage()    {}
 func (*MessagesReadHistory) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_0960d693eba64ec1, []int{3}
+	return fileDescriptor_api_messages_1f846938731d3305, []int{3}
 }
 func (m *MessagesReadHistory) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -294,7 +383,7 @@ func (m *MessagesGet) Reset()         { *m = MessagesGet{} }
 func (m *MessagesGet) String() string { return proto.CompactTextString(m) }
 func (*MessagesGet) ProtoMessage()    {}
 func (*MessagesGet) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_0960d693eba64ec1, []int{4}
+	return fileDescriptor_api_messages_1f846938731d3305, []int{4}
 }
 func (m *MessagesGet) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -351,7 +440,7 @@ func (m *MessagesGetHistory) Reset()         { *m = MessagesGetHistory{} }
 func (m *MessagesGetHistory) String() string { return proto.CompactTextString(m) }
 func (*MessagesGetHistory) ProtoMessage()    {}
 func (*MessagesGetHistory) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_0960d693eba64ec1, []int{5}
+	return fileDescriptor_api_messages_1f846938731d3305, []int{5}
 }
 func (m *MessagesGetHistory) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -420,7 +509,7 @@ func (m *MessagesGetDialogs) Reset()         { *m = MessagesGetDialogs{} }
 func (m *MessagesGetDialogs) String() string { return proto.CompactTextString(m) }
 func (*MessagesGetDialogs) ProtoMessage()    {}
 func (*MessagesGetDialogs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_0960d693eba64ec1, []int{6}
+	return fileDescriptor_api_messages_1f846938731d3305, []int{6}
 }
 func (m *MessagesGetDialogs) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -474,7 +563,7 @@ func (m *MessagesGetDialog) Reset()         { *m = MessagesGetDialog{} }
 func (m *MessagesGetDialog) String() string { return proto.CompactTextString(m) }
 func (*MessagesGetDialog) ProtoMessage()    {}
 func (*MessagesGetDialog) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_0960d693eba64ec1, []int{7}
+	return fileDescriptor_api_messages_1f846938731d3305, []int{7}
 }
 func (m *MessagesGetDialog) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -522,7 +611,7 @@ func (m *MessagesSetTyping) Reset()         { *m = MessagesSetTyping{} }
 func (m *MessagesSetTyping) String() string { return proto.CompactTextString(m) }
 func (*MessagesSetTyping) ProtoMessage()    {}
 func (*MessagesSetTyping) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_0960d693eba64ec1, []int{8}
+	return fileDescriptor_api_messages_1f846938731d3305, []int{8}
 }
 func (m *MessagesSetTyping) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -578,7 +667,7 @@ func (m *MessagesClearHistory) Reset()         { *m = MessagesClearHistory{} }
 func (m *MessagesClearHistory) String() string { return proto.CompactTextString(m) }
 func (*MessagesClearHistory) ProtoMessage()    {}
 func (*MessagesClearHistory) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_0960d693eba64ec1, []int{9}
+	return fileDescriptor_api_messages_1f846938731d3305, []int{9}
 }
 func (m *MessagesClearHistory) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -641,7 +730,7 @@ func (m *MessagesDelete) Reset()         { *m = MessagesDelete{} }
 func (m *MessagesDelete) String() string { return proto.CompactTextString(m) }
 func (*MessagesDelete) ProtoMessage()    {}
 func (*MessagesDelete) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_0960d693eba64ec1, []int{10}
+	return fileDescriptor_api_messages_1f846938731d3305, []int{10}
 }
 func (m *MessagesDelete) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -706,7 +795,7 @@ func (m *MessagesForward) Reset()         { *m = MessagesForward{} }
 func (m *MessagesForward) String() string { return proto.CompactTextString(m) }
 func (*MessagesForward) ProtoMessage()    {}
 func (*MessagesForward) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_0960d693eba64ec1, []int{11}
+	return fileDescriptor_api_messages_1f846938731d3305, []int{11}
 }
 func (m *MessagesForward) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -784,7 +873,7 @@ func (m *MessagesDialogs) Reset()         { *m = MessagesDialogs{} }
 func (m *MessagesDialogs) String() string { return proto.CompactTextString(m) }
 func (*MessagesDialogs) ProtoMessage()    {}
 func (*MessagesDialogs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_0960d693eba64ec1, []int{12}
+	return fileDescriptor_api_messages_1f846938731d3305, []int{12}
 }
 func (m *MessagesDialogs) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -866,7 +955,7 @@ func (m *MessagesSent) Reset()         { *m = MessagesSent{} }
 func (m *MessagesSent) String() string { return proto.CompactTextString(m) }
 func (*MessagesSent) ProtoMessage()    {}
 func (*MessagesSent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_0960d693eba64ec1, []int{13}
+	return fileDescriptor_api_messages_1f846938731d3305, []int{13}
 }
 func (m *MessagesSent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -927,7 +1016,7 @@ func (m *MessagesMany) Reset()         { *m = MessagesMany{} }
 func (m *MessagesMany) String() string { return proto.CompactTextString(m) }
 func (*MessagesMany) ProtoMessage()    {}
 func (*MessagesMany) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_messages_0960d693eba64ec1, []int{14}
+	return fileDescriptor_api_messages_1f846938731d3305, []int{14}
 }
 func (m *MessagesMany) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -979,8 +1068,8 @@ func (m *MessagesMany) GetGroups() []*Group {
 
 func init() {
 	proto.RegisterType((*MessagesSend)(nil), "msg.MessagesSend")
-	proto.RegisterType((*MessagesEdit)(nil), "msg.MessagesEdit")
 	proto.RegisterType((*MessagesSendMedia)(nil), "msg.MessagesSendMedia")
+	proto.RegisterType((*MessagesEdit)(nil), "msg.MessagesEdit")
 	proto.RegisterType((*MessagesReadHistory)(nil), "msg.MessagesReadHistory")
 	proto.RegisterType((*MessagesGet)(nil), "msg.MessagesGet")
 	proto.RegisterType((*MessagesGetHistory)(nil), "msg.MessagesGetHistory")
@@ -993,6 +1082,7 @@ func init() {
 	proto.RegisterType((*MessagesDialogs)(nil), "msg.MessagesDialogs")
 	proto.RegisterType((*MessagesSent)(nil), "msg.MessagesSent")
 	proto.RegisterType((*MessagesMany)(nil), "msg.MessagesMany")
+	proto.RegisterEnum("msg.MediaType", MediaType_name, MediaType_value)
 }
 func (m *MessagesSend) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
@@ -1031,46 +1121,26 @@ func (m *MessagesSend) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x30
 	i++
 	i = encodeVarintApiMessages(dAtA, i, uint64(m.ReplyTo))
-	return i, nil
-}
-
-func (m *MessagesEdit) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MessagesEdit) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	dAtA[i] = 0x8
+	dAtA[i] = 0x38
 	i++
-	i = encodeVarintApiMessages(dAtA, i, uint64(m.RandomID))
-	if m.Peer == nil {
-		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
+	if m.ClearDraft {
+		dAtA[i] = 1
 	} else {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintApiMessages(dAtA, i, uint64(m.Peer.Size()))
-		n2, err := m.Peer.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n2
+		dAtA[i] = 0
 	}
-	dAtA[i] = 0x1a
 	i++
-	i = encodeVarintApiMessages(dAtA, i, uint64(len(m.Body)))
-	i += copy(dAtA[i:], m.Body)
-	dAtA[i] = 0x20
-	i++
-	i = encodeVarintApiMessages(dAtA, i, uint64(m.MessageID))
+	if len(m.Entities) > 0 {
+		for _, msg := range m.Entities {
+			dAtA[i] = 0x42
+			i++
+			i = encodeVarintApiMessages(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
 	return i, nil
 }
 
@@ -1098,24 +1168,72 @@ func (m *MessagesSendMedia) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintApiMessages(dAtA, i, uint64(m.Peer.Size()))
+		n2, err := m.Peer.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	dAtA[i] = 0x18
+	i++
+	i = encodeVarintApiMessages(dAtA, i, uint64(m.MediaType))
+	if m.MediaData != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintApiMessages(dAtA, i, uint64(len(m.MediaData)))
+		i += copy(dAtA[i:], m.MediaData)
+	}
+	dAtA[i] = 0x28
+	i++
+	i = encodeVarintApiMessages(dAtA, i, uint64(m.ReplyTo))
+	dAtA[i] = 0x30
+	i++
+	if m.ClearDraft {
+		dAtA[i] = 1
+	} else {
+		dAtA[i] = 0
+	}
+	i++
+	return i, nil
+}
+
+func (m *MessagesEdit) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MessagesEdit) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintApiMessages(dAtA, i, uint64(m.RandomID))
+	if m.Peer == nil {
+		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
+	} else {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintApiMessages(dAtA, i, uint64(m.Peer.Size()))
 		n3, err := m.Peer.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n3
 	}
-	if m.File == nil {
-		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("File")
-	} else {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintApiMessages(dAtA, i, uint64(m.File.Size()))
-		n4, err := m.File.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n4
-	}
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintApiMessages(dAtA, i, uint64(len(m.Body)))
+	i += copy(dAtA[i:], m.Body)
+	dAtA[i] = 0x20
+	i++
+	i = encodeVarintApiMessages(dAtA, i, uint64(m.MessageID))
 	return i, nil
 }
 
@@ -1140,11 +1258,11 @@ func (m *MessagesReadHistory) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintApiMessages(dAtA, i, uint64(m.Peer.Size()))
-		n5, err := m.Peer.MarshalTo(dAtA[i:])
+		n4, err := m.Peer.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n5
+		i += n4
 	}
 	dAtA[i] = 0x18
 	i++
@@ -1173,11 +1291,11 @@ func (m *MessagesGet) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintApiMessages(dAtA, i, uint64(m.Peer.Size()))
-		n6, err := m.Peer.MarshalTo(dAtA[i:])
+		n5, err := m.Peer.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n6
+		i += n5
 	}
 	if len(m.MessagesIDs) > 0 {
 		for _, num := range m.MessagesIDs {
@@ -1210,11 +1328,11 @@ func (m *MessagesGetHistory) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintApiMessages(dAtA, i, uint64(m.Peer.Size()))
-		n7, err := m.Peer.MarshalTo(dAtA[i:])
+		n6, err := m.Peer.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n7
+		i += n6
 	}
 	dAtA[i] = 0x18
 	i++
@@ -1273,11 +1391,11 @@ func (m *MessagesGetDialog) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintApiMessages(dAtA, i, uint64(m.Peer.Size()))
-		n8, err := m.Peer.MarshalTo(dAtA[i:])
+		n7, err := m.Peer.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n8
+		i += n7
 	}
 	return i, nil
 }
@@ -1303,11 +1421,11 @@ func (m *MessagesSetTyping) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintApiMessages(dAtA, i, uint64(m.Peer.Size()))
-		n9, err := m.Peer.MarshalTo(dAtA[i:])
+		n8, err := m.Peer.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n9
+		i += n8
 	}
 	dAtA[i] = 0x10
 	i++
@@ -1336,11 +1454,11 @@ func (m *MessagesClearHistory) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintApiMessages(dAtA, i, uint64(m.Peer.Size()))
-		n10, err := m.Peer.MarshalTo(dAtA[i:])
+		n9, err := m.Peer.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n10
+		i += n9
 	}
 	dAtA[i] = 0x10
 	i++
@@ -1377,11 +1495,11 @@ func (m *MessagesDelete) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintApiMessages(dAtA, i, uint64(m.Peer.Size()))
-		n11, err := m.Peer.MarshalTo(dAtA[i:])
+		n10, err := m.Peer.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n11
+		i += n10
 	}
 	if len(m.MessageIDs) > 0 {
 		for _, num := range m.MessageIDs {
@@ -1422,11 +1540,11 @@ func (m *MessagesForward) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintApiMessages(dAtA, i, uint64(m.FromPeer.Size()))
-		n12, err := m.FromPeer.MarshalTo(dAtA[i:])
+		n11, err := m.FromPeer.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n12
+		i += n11
 	}
 	if m.ToPeer == nil {
 		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("ToPeer")
@@ -1434,11 +1552,11 @@ func (m *MessagesForward) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintApiMessages(dAtA, i, uint64(m.ToPeer.Size()))
-		n13, err := m.ToPeer.MarshalTo(dAtA[i:])
+		n12, err := m.ToPeer.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n13
+		i += n12
 	}
 	dAtA[i] = 0x18
 	i++
@@ -1637,6 +1755,34 @@ func (m *MessagesSend) Size() (n int) {
 	l = len(m.Body)
 	n += 1 + l + sovApiMessages(uint64(l))
 	n += 1 + sovApiMessages(uint64(m.ReplyTo))
+	n += 2
+	if len(m.Entities) > 0 {
+		for _, e := range m.Entities {
+			l = e.Size()
+			n += 1 + l + sovApiMessages(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MessagesSendMedia) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovApiMessages(uint64(m.RandomID))
+	if m.Peer != nil {
+		l = m.Peer.Size()
+		n += 1 + l + sovApiMessages(uint64(l))
+	}
+	n += 1 + sovApiMessages(uint64(m.MediaType))
+	if m.MediaData != nil {
+		l = len(m.MediaData)
+		n += 1 + l + sovApiMessages(uint64(l))
+	}
+	n += 1 + sovApiMessages(uint64(m.ReplyTo))
+	n += 2
 	return n
 }
 
@@ -1654,24 +1800,6 @@ func (m *MessagesEdit) Size() (n int) {
 	l = len(m.Body)
 	n += 1 + l + sovApiMessages(uint64(l))
 	n += 1 + sovApiMessages(uint64(m.MessageID))
-	return n
-}
-
-func (m *MessagesSendMedia) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovApiMessages(uint64(m.RandomID))
-	if m.Peer != nil {
-		l = m.Peer.Size()
-		n += 1 + l + sovApiMessages(uint64(l))
-	}
-	if m.File != nil {
-		l = m.File.Size()
-		n += 1 + l + sovApiMessages(uint64(l))
-	}
 	return n
 }
 
@@ -2039,6 +2167,57 @@ func (m *MessagesSend) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClearDraft", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.ClearDraft = bool(v != 0)
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Entities", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApiMessages
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Entities = append(m.Entities, &MessageEntity{})
+			if err := m.Entities[len(m.Entities)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipApiMessages(dAtA[iNdEx:])
@@ -2062,6 +2241,214 @@ func (m *MessagesSend) Unmarshal(dAtA []byte) error {
 	}
 	if hasFields[0]&uint64(0x00000004) == 0 {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Body")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MessagesSendMedia) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApiMessages
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MessagesSendMedia: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MessagesSendMedia: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RandomID", wireType)
+			}
+			m.RandomID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RandomID |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Peer", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApiMessages
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Peer == nil {
+				m.Peer = &InputPeer{}
+			}
+			if err := m.Peer.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000002)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MediaType", wireType)
+			}
+			m.MediaType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MediaType |= (MediaType(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000004)
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MediaData", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthApiMessages
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MediaData = append(m.MediaData[:0], dAtA[iNdEx:postIndex]...)
+			if m.MediaData == nil {
+				m.MediaData = []byte{}
+			}
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000008)
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReplyTo", wireType)
+			}
+			m.ReplyTo = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ReplyTo |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClearDraft", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.ClearDraft = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApiMessages(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApiMessages
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("RandomID")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
+	}
+	if hasFields[0]&uint64(0x00000004) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("MediaType")
+	}
+	if hasFields[0]&uint64(0x00000008) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("MediaData")
 	}
 
 	if iNdEx > l {
@@ -2229,154 +2616,6 @@ func (m *MessagesEdit) Unmarshal(dAtA []byte) error {
 	}
 	if hasFields[0]&uint64(0x00000008) == 0 {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("MessageID")
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MessagesSendMedia) Unmarshal(dAtA []byte) error {
-	var hasFields [1]uint64
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowApiMessages
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MessagesSendMedia: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MessagesSendMedia: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RandomID", wireType)
-			}
-			m.RandomID = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApiMessages
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.RandomID |= (int64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			hasFields[0] |= uint64(0x00000001)
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Peer", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApiMessages
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthApiMessages
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Peer == nil {
-				m.Peer = &InputPeer{}
-			}
-			if err := m.Peer.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-			hasFields[0] |= uint64(0x00000002)
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field File", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApiMessages
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthApiMessages
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.File == nil {
-				m.File = &InputFile{}
-			}
-			if err := m.File.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-			hasFields[0] |= uint64(0x00000004)
-		default:
-			iNdEx = preIndex
-			skippy, err := skipApiMessages(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthApiMessages
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-	if hasFields[0]&uint64(0x00000001) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("RandomID")
-	}
-	if hasFields[0]&uint64(0x00000002) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
-	}
-	if hasFields[0]&uint64(0x00000004) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("File")
 	}
 
 	if iNdEx > l {
@@ -4263,51 +4502,60 @@ var (
 	ErrIntOverflowApiMessages   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("api.messages.proto", fileDescriptor_api_messages_0960d693eba64ec1) }
+func init() { proto.RegisterFile("api.messages.proto", fileDescriptor_api_messages_1f846938731d3305) }
 
-var fileDescriptor_api_messages_0960d693eba64ec1 = []byte{
-	// 681 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x95, 0x4d, 0x6f, 0xd3, 0x4c,
-	0x10, 0xc7, 0xb3, 0xb6, 0xe3, 0x26, 0x93, 0x47, 0x7d, 0xda, 0x85, 0x83, 0x55, 0x55, 0xae, 0xb5,
-	0x12, 0x28, 0x42, 0x28, 0x48, 0xb9, 0x70, 0xa6, 0x35, 0x2d, 0x91, 0x08, 0x45, 0x6e, 0xfb, 0x01,
-	0xac, 0x7a, 0x1b, 0x2c, 0x12, 0xaf, 0xb5, 0xde, 0x42, 0x7d, 0xe0, 0xc0, 0x1d, 0x21, 0xc4, 0x97,
-	0xa2, 0xc7, 0x1e, 0x39, 0x21, 0xd4, 0x9e, 0xf8, 0x16, 0xc8, 0x6b, 0xaf, 0x5f, 0x92, 0xbe, 0x04,
-	0xa9, 0xb7, 0xf6, 0x37, 0xe3, 0xf9, 0xff, 0x67, 0x32, 0x1e, 0x03, 0xf6, 0xe3, 0x70, 0x30, 0xa3,
-	0x49, 0xe2, 0x4f, 0x68, 0x32, 0x88, 0x39, 0x13, 0x0c, 0xeb, 0xb3, 0x64, 0xb2, 0xb1, 0x76, 0xcc,
-	0x38, 0x1d, 0x88, 0x34, 0x56, 0x98, 0x7c, 0x45, 0xf0, 0xdf, 0xb8, 0xc8, 0x3c, 0xa0, 0x51, 0x80,
-	0x1d, 0xe8, 0x78, 0x7e, 0x14, 0xb0, 0xd9, 0xc8, 0xb5, 0x90, 0xa3, 0xf5, 0xf5, 0x6d, 0xe3, 0xfc,
-	0xd7, 0x56, 0xcb, 0x2b, 0x29, 0x26, 0x60, 0xbc, 0xa5, 0x94, 0x5b, 0x9a, 0xa3, 0xf5, 0x7b, 0xc3,
-	0xd5, 0xc1, 0x2c, 0x99, 0x0c, 0x46, 0x51, 0x7c, 0x2a, 0x32, 0xea, 0xc9, 0x18, 0xb6, 0xc0, 0xd8,
-	0x66, 0x41, 0x6a, 0xb5, 0x1d, 0xad, 0xdf, 0x2d, 0x2a, 0x48, 0x82, 0x6d, 0x58, 0xf1, 0x68, 0x3c,
-	0x4d, 0x0f, 0x99, 0x65, 0x3a, 0xa8, 0x2c, 0xaf, 0x20, 0xf9, 0x5e, 0x33, 0xf4, 0x32, 0x08, 0xc5,
-	0x3d, 0x1b, 0xd2, 0x17, 0x0c, 0x11, 0xe8, 0x16, 0x7a, 0x23, 0xd7, 0x32, 0x6a, 0x02, 0x15, 0x26,
-	0x9f, 0x60, 0xbd, 0x3e, 0xa4, 0x31, 0x0d, 0x42, 0xff, 0x9e, 0x8c, 0x11, 0x30, 0x76, 0xc3, 0x29,
-	0x95, 0xc6, 0x1a, 0x39, 0x19, 0xf5, 0x64, 0x8c, 0x1c, 0xc1, 0x03, 0x25, 0xef, 0x51, 0x3f, 0x78,
-	0x15, 0x26, 0x82, 0xf1, 0x74, 0xa9, 0xf2, 0x1b, 0xd0, 0x1e, 0xfb, 0x67, 0x23, 0x57, 0xd6, 0x57,
-	0x0e, 0x73, 0x44, 0x0e, 0xa0, 0xa7, 0xca, 0xee, 0x51, 0x51, 0x96, 0x43, 0xb7, 0x94, 0x73, 0xaa,
-	0x47, 0x46, 0x6e, 0x62, 0x69, 0x8e, 0xde, 0xd7, 0xbd, 0x3a, 0x22, 0x5f, 0x10, 0xe0, 0x5a, 0xd5,
-	0x7f, 0xf4, 0xfa, 0x3a, 0x9c, 0x85, 0x42, 0x7a, 0x6d, 0x2b, 0xaf, 0x12, 0x55, 0x7d, 0x18, 0x0b,
-	0x7d, 0xc8, 0x58, 0x18, 0x8d, 0x5c, 0xb9, 0x6d, 0x55, 0x2c, 0x43, 0xe4, 0x4d, 0xc3, 0x8d, 0x1b,
-	0xfa, 0x53, 0x36, 0x49, 0x2a, 0x25, 0x6d, 0x51, 0x69, 0x13, 0xcc, 0xfd, 0x93, 0x93, 0x84, 0x36,
-	0x6d, 0x14, 0x8c, 0x3c, 0xaf, 0x36, 0xa1, 0xac, 0xb7, 0xcc, 0xe4, 0xc8, 0xbb, 0xfa, 0x0a, 0x89,
-	0xc3, 0x34, 0x0e, 0xa3, 0xa5, 0x1e, 0xc4, 0xcf, 0xc0, 0x7c, 0x71, 0x2c, 0x42, 0x16, 0x49, 0xb3,
-	0xab, 0xc3, 0x75, 0x99, 0x95, 0x17, 0xc8, 0x03, 0xca, 0x62, 0xfe, 0x1f, 0x11, 0xf0, 0x50, 0x29,
-	0xed, 0x4c, 0xa9, 0xcf, 0xe7, 0x7f, 0x02, 0xb4, 0xcc, 0xba, 0x68, 0x8b, 0x63, 0xde, 0x04, 0xd3,
-	0xa5, 0x53, 0x2a, 0xf2, 0x5d, 0xed, 0x28, 0xd5, 0x9c, 0x11, 0x0e, 0xab, 0x4a, 0x35, 0x27, 0x4b,
-	0xe9, 0xd9, 0x00, 0xe5, 0x5b, 0xa6, 0xd6, 0xa9, 0x46, 0x32, 0x4d, 0x8f, 0x7e, 0x60, 0xef, 0xe7,
-	0x34, 0x73, 0x46, 0x7e, 0x20, 0xf8, 0x5f, 0x89, 0xee, 0x32, 0xfe, 0xd1, 0xe7, 0x01, 0x7e, 0x02,
-	0x9d, 0x5d, 0xce, 0x66, 0xb7, 0x28, 0x97, 0x71, 0xfc, 0x18, 0xcc, 0x43, 0x76, 0xcb, 0x5a, 0x16,
-	0xd1, 0xec, 0x66, 0x1d, 0x84, 0x53, 0x1a, 0x1d, 0x37, 0x6d, 0x28, 0x38, 0xd7, 0x85, 0xb1, 0xd0,
-	0x45, 0xfd, 0x52, 0xb4, 0xaf, 0xbb, 0x14, 0xe4, 0x4f, 0xad, 0x13, 0xb5, 0xa4, 0x8f, 0x60, 0xa5,
-	0xf8, 0xd3, 0x42, 0x8e, 0xde, 0xef, 0x0d, 0x7b, 0xd2, 0x5e, 0xce, 0x3c, 0x15, 0xc3, 0x5b, 0xd0,
-	0x3e, 0x4a, 0x28, 0xcf, 0xa7, 0xd7, 0x1b, 0x76, 0x65, 0x52, 0x46, 0xbc, 0x9c, 0xe3, 0xa7, 0xd0,
-	0x51, 0xa5, 0x2d, 0x5d, 0xe6, 0xac, 0x95, 0x39, 0x45, 0xc0, 0x2b, 0x33, 0xb2, 0x0d, 0xd8, 0x61,
-	0xa7, 0x91, 0x90, 0x2f, 0x5a, 0xf9, 0x6a, 0x48, 0x94, 0xf5, 0x71, 0x14, 0x07, 0xbe, 0xa0, 0xf3,
-	0x7d, 0x28, 0x8a, 0x09, 0x98, 0x7b, 0x9c, 0x9d, 0xc6, 0x89, 0x65, 0x4a, 0x25, 0x90, 0x4a, 0x12,
-	0x79, 0x45, 0x84, 0x9c, 0x35, 0xbe, 0x38, 0xa2, 0x79, 0x80, 0xd1, 0xb5, 0x07, 0xb8, 0x31, 0x41,
-	0xed, 0x86, 0x5b, 0xdb, 0xdd, 0xe1, 0xd4, 0x17, 0x34, 0xd8, 0x8f, 0x1a, 0xc7, 0xae, 0xc2, 0xe4,
-	0x73, 0xed, 0xdb, 0x32, 0xf6, 0xa3, 0xb4, 0x31, 0x1a, 0x74, 0xe7, 0x68, 0xee, 0x9c, 0x74, 0xd5,
-	0xbd, 0x7e, 0x53, 0xf7, 0xdb, 0xd6, 0xf9, 0xa5, 0x8d, 0x2e, 0x2e, 0x6d, 0xf4, 0xfb, 0xd2, 0x46,
-	0xdf, 0xae, 0xec, 0xd6, 0xc5, 0x95, 0xdd, 0xfa, 0x79, 0x65, 0xb7, 0xfe, 0x06, 0x00, 0x00, 0xff,
-	0xff, 0x2f, 0x9f, 0xe0, 0x5b, 0xb6, 0x07, 0x00, 0x00,
+var fileDescriptor_api_messages_1f846938731d3305 = []byte{
+	// 827 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x95, 0xcd, 0x8e, 0xe3, 0x44,
+	0x10, 0xc7, 0xd3, 0x76, 0xe2, 0xc9, 0x54, 0x56, 0x43, 0xb6, 0x59, 0x90, 0x19, 0x2d, 0x5e, 0xab,
+	0x05, 0xc8, 0x5a, 0xa1, 0x20, 0xe5, 0xc2, 0x99, 0x19, 0xcf, 0x2e, 0x91, 0x18, 0x76, 0xe5, 0x49,
+	0x1e, 0xa0, 0x15, 0xf7, 0x64, 0x2d, 0x62, 0xb7, 0x65, 0x77, 0x60, 0x7d, 0xe4, 0xce, 0x01, 0x71,
+	0xe5, 0x81, 0xd8, 0xe3, 0x1e, 0x39, 0x21, 0x34, 0xc3, 0x85, 0x27, 0xe0, 0x8a, 0xdc, 0xee, 0xf6,
+	0x47, 0x32, 0x3b, 0x93, 0x95, 0xe6, 0x96, 0xfc, 0xaa, 0x5c, 0x55, 0xff, 0x72, 0x55, 0x19, 0x30,
+	0x4d, 0xa3, 0x49, 0xcc, 0xf2, 0x9c, 0xae, 0x58, 0x3e, 0x49, 0x33, 0x2e, 0x38, 0x36, 0xe3, 0x7c,
+	0x75, 0x3c, 0x5e, 0xf2, 0x8c, 0x4d, 0x44, 0x91, 0x6a, 0x4c, 0xfe, 0x41, 0xf0, 0xe0, 0x5c, 0x79,
+	0x5e, 0xb0, 0x24, 0xc4, 0x2e, 0x0c, 0x03, 0x9a, 0x84, 0x3c, 0x9e, 0xf9, 0x36, 0x72, 0x0d, 0xcf,
+	0x3c, 0xe9, 0xbf, 0xf9, 0xeb, 0x49, 0x2f, 0xa8, 0x29, 0x26, 0xd0, 0x7f, 0xc9, 0x58, 0x66, 0x1b,
+	0xae, 0xe1, 0x8d, 0xa6, 0x47, 0x93, 0x38, 0x5f, 0x4d, 0x66, 0x49, 0xba, 0x11, 0x25, 0x0d, 0xa4,
+	0x0d, 0xdb, 0xd0, 0x3f, 0xe1, 0x61, 0x61, 0x0f, 0x5c, 0xc3, 0x3b, 0x54, 0x11, 0x24, 0xc1, 0x0e,
+	0x1c, 0x04, 0x2c, 0x5d, 0x17, 0x73, 0x6e, 0x5b, 0x2e, 0xaa, 0xc3, 0x6b, 0x88, 0x3f, 0x03, 0x38,
+	0x5d, 0x33, 0x9a, 0xf9, 0x19, 0xbd, 0x14, 0xf6, 0x81, 0x8b, 0xbc, 0xa1, 0x72, 0x69, 0x71, 0x3c,
+	0x81, 0xe1, 0x59, 0x22, 0x22, 0x11, 0xb1, 0xdc, 0x1e, 0xba, 0xa6, 0x37, 0x9a, 0x62, 0x59, 0x87,
+	0x92, 0x22, 0x6d, 0x45, 0x50, 0xfb, 0x90, 0xff, 0x10, 0x3c, 0x6c, 0xcb, 0x3c, 0x67, 0x61, 0x44,
+	0xef, 0x49, 0xeb, 0x14, 0x0e, 0x65, 0xb8, 0x79, 0x91, 0x32, 0xdb, 0x74, 0x0d, 0xef, 0x48, 0x39,
+	0xd6, 0x54, 0x85, 0x6d, 0xdc, 0x30, 0x51, 0xcf, 0xf8, 0x54, 0x50, 0xbb, 0xef, 0x1a, 0xde, 0x83,
+	0x8e, 0x4f, 0x89, 0xdb, 0x9d, 0x1a, 0xdc, 0xdd, 0x29, 0xeb, 0xe6, 0x4e, 0x91, 0xdf, 0x5a, 0x2f,
+	0xf8, 0x2c, 0x8c, 0xc4, 0x3d, 0xbf, 0x60, 0x73, 0xe7, 0x05, 0x4b, 0x69, 0x32, 0xdf, 0xcc, 0x97,
+	0xd2, 0xcc, 0x46, 0x9a, 0xc2, 0x64, 0x01, 0x1f, 0xea, 0x9a, 0x02, 0x46, 0xc3, 0x6f, 0xa3, 0x5c,
+	0xf0, 0xac, 0xd8, 0x2b, 0xf1, 0x31, 0x0c, 0xce, 0xe9, 0xeb, 0x99, 0x2f, 0x33, 0xeb, 0xd0, 0x15,
+	0x22, 0x17, 0x30, 0xd2, 0x61, 0x9f, 0x33, 0x51, 0x87, 0x43, 0xb7, 0x84, 0x73, 0x9b, 0x47, 0x66,
+	0x7e, 0x6e, 0x1b, 0xae, 0xe9, 0x99, 0x41, 0x1b, 0x91, 0x5f, 0x10, 0xe0, 0x56, 0xd4, 0xf7, 0xac,
+	0xf5, 0xbb, 0x28, 0x8e, 0x84, 0xac, 0x75, 0xa0, 0x6b, 0x95, 0xa8, 0xd1, 0xd1, 0xdf, 0xd1, 0x21,
+	0x6d, 0x51, 0x32, 0xf3, 0xe5, 0xfa, 0x34, 0xb6, 0x12, 0x91, 0xef, 0x3b, 0xd5, 0xf8, 0x11, 0x5d,
+	0xf3, 0x55, 0xde, 0x64, 0x32, 0x76, 0x33, 0x3d, 0x06, 0xeb, 0xc5, 0xe5, 0x65, 0xce, 0xba, 0x65,
+	0x28, 0x46, 0xbe, 0x6e, 0x16, 0xa3, 0x8e, 0xb7, 0x4f, 0xe7, 0xc8, 0xab, 0xf6, 0x46, 0x89, 0x79,
+	0x91, 0x46, 0xc9, 0x5e, 0x0f, 0xe2, 0xaf, 0xc0, 0xfa, 0x66, 0x29, 0x22, 0x9e, 0xc8, 0x62, 0x8f,
+	0xa6, 0x0f, 0xa5, 0x57, 0x15, 0xa0, 0x32, 0xe8, 0x12, 0xab, 0x7f, 0x44, 0xc0, 0x23, 0x9d, 0x49,
+	0x0e, 0xf6, 0xf6, 0x2b, 0x40, 0xfb, 0x8c, 0x8b, 0xb1, 0xdb, 0xe6, 0xc7, 0x60, 0xf9, 0x6c, 0xcd,
+	0x44, 0xb5, 0xb5, 0x7a, 0x79, 0x14, 0x23, 0x19, 0x1c, 0xe9, 0xac, 0x15, 0xd9, 0x2b, 0x9f, 0x03,
+	0x50, 0x8f, 0xb9, 0x1e, 0xa7, 0x16, 0x29, 0x73, 0x06, 0xec, 0x47, 0xfe, 0xc3, 0x56, 0xce, 0x8a,
+	0x91, 0x3f, 0x10, 0x7c, 0xa0, 0x93, 0x3e, 0xe3, 0xd9, 0x4f, 0x34, 0x0b, 0xf1, 0x53, 0x18, 0x3e,
+	0xcb, 0x78, 0x7c, 0x4b, 0xe6, 0xda, 0x8e, 0xbf, 0x00, 0x6b, 0xce, 0x6f, 0x19, 0x4b, 0x65, 0x2d,
+	0x4f, 0xcb, 0x45, 0xb4, 0x66, 0xc9, 0xb2, 0x5b, 0x86, 0x86, 0x5b, 0x2a, 0xfa, 0x3b, 0x2a, 0xda,
+	0x37, 0x64, 0x70, 0xd3, 0x0d, 0x21, 0xff, 0xb6, 0x94, 0xe8, 0x21, 0xfd, 0x1c, 0x0e, 0xd4, 0x4f,
+	0x1b, 0xc9, 0x9b, 0x3d, 0x92, 0xe5, 0x55, 0x2c, 0xd0, 0x36, 0xfc, 0x04, 0x06, 0x8b, 0x9c, 0x65,
+	0x55, 0xf7, 0x46, 0xd3, 0x43, 0xe9, 0x54, 0x92, 0xa0, 0xe2, 0xf8, 0x4b, 0x18, 0xea, 0xd0, 0xb6,
+	0x29, 0x7d, 0xc6, 0xb5, 0x8f, 0x32, 0x04, 0xb5, 0x47, 0x39, 0x01, 0xa7, 0x7c, 0x93, 0x08, 0xb9,
+	0x68, 0xf5, 0x6a, 0x48, 0x54, 0xea, 0x58, 0xa4, 0x21, 0x15, 0x6c, 0x5b, 0x87, 0xa6, 0x98, 0x80,
+	0xf5, 0x3c, 0xe3, 0x9b, 0x34, 0xb7, 0x2d, 0x99, 0x09, 0x64, 0x26, 0x89, 0x02, 0x65, 0x21, 0xaf,
+	0x3b, 0x9f, 0x50, 0xd1, 0xbd, 0x80, 0xe8, 0xc6, 0x0b, 0xd8, 0xe9, 0xa0, 0xf1, 0x8e, 0x2b, 0x7c,
+	0x78, 0x9a, 0x31, 0x2a, 0x58, 0xf8, 0x22, 0xe9, 0x1c, 0xbb, 0x06, 0x93, 0x9f, 0x5b, 0xc7, 0xfd,
+	0x9c, 0x26, 0x45, 0xa7, 0x35, 0xe8, 0xce, 0xd6, 0xdc, 0xd9, 0xe9, 0x46, 0xbd, 0xf9, 0x2e, 0xf5,
+	0x4f, 0x7f, 0x47, 0xad, 0xef, 0x1f, 0xc6, 0xe5, 0xd6, 0xa8, 0x3f, 0x67, 0x71, 0x2a, 0x8a, 0x71,
+	0x0f, 0x1f, 0xc3, 0xc7, 0x35, 0x5b, 0xa4, 0x6b, 0x4e, 0x43, 0x16, 0xbe, 0x7c, 0xc5, 0x05, 0x1f,
+	0xa3, 0x8e, 0x7f, 0xc5, 0x0c, 0xfc, 0x29, 0x7c, 0xb2, 0xe3, 0xef, 0xf3, 0xe5, 0x26, 0x66, 0x89,
+	0x18, 0x9b, 0xf8, 0xa3, 0xf2, 0xf0, 0x28, 0x73, 0x8d, 0xfb, 0xf8, 0x11, 0x8c, 0x6b, 0x7c, 0xca,
+	0x13, 0x41, 0x97, 0x62, 0x3c, 0x38, 0xb1, 0xdf, 0x5c, 0x39, 0xe8, 0xed, 0x95, 0x83, 0xfe, 0xbe,
+	0x72, 0xd0, 0xaf, 0xd7, 0x4e, 0xef, 0xed, 0xb5, 0xd3, 0xfb, 0xf3, 0xda, 0xe9, 0xfd, 0x1f, 0x00,
+	0x00, 0xff, 0xff, 0xa3, 0x30, 0x01, 0xca, 0x25, 0x09, 0x00, 0x00,
 }

@@ -20,6 +20,8 @@ const (
 	C_File                               int64 = 749574446
 	C_User                               int64 = 765557111
 	C_UsersMany                          int64 = 801733941
+	C_InputMediaUploadedPhoto            int64 = 849930963
+	C_InputMediaUploadedDocument         int64 = 870692909
 	C_AccountRegisterDevice              int64 = 946059841
 	C_AuthLogout                         int64 = 992431648
 	C_UsersGet                           int64 = 1039301579
@@ -40,9 +42,11 @@ const (
 	C_AccountUpdateUsername              int64 = 1477164344
 	C_AccountCheckUsername               int64 = 1501406413
 	C_UpdateReadHistoryInbox             int64 = 1529128378
+	C_InputMediaContact                  int64 = 1534117184
 	C_MessagesSetTyping                  int64 = 1540214486
 	C_GroupsToggleAdmins                 int64 = 1581076909
 	C_InitCompleteAuth                   int64 = 1583178320
+	C_AccountSetPrivacy                  int64 = 1599585002
 	C_UpdateGroupParticipantAdd          int64 = 1623827837
 	C_UserMessage                        int64 = 1677556362
 	C_MessagesMany                       int64 = 1713238910
@@ -52,6 +56,7 @@ const (
 	C_UpdateGroupParticipantAdmin        int64 = 1813022164
 	C_UpdateMessageEdited                int64 = 1825079988
 	C_UpdateState                        int64 = 1837585836
+	C_AccountGetPrivacy                  int64 = 1897044856
 	C_InitBindUser                       int64 = 1933549113
 	C_MessageActionGroupAddUser          int64 = 1949386261
 	C_MessageContainer                   int64 = 1972016308
@@ -62,10 +67,12 @@ const (
 	C_ContactsImported                   int64 = 2157298354
 	C_ClientPendingMessage               int64 = 2164891929
 	C_ProtoMessage                       int64 = 2179260159
+	C_InputMediaPhoto                    int64 = 2201579839
 	C_AuthRegister                       int64 = 2228369460
 	C_AuthCheckedPhone                   int64 = 2236203131
 	C_MessageActionGroupCreated          int64 = 2241024808
 	C_SystemClientLog                    int64 = 2244397803
+	C_InputMediaDocument                 int64 = 2258657627
 	C_InitCompleteAuthInternal           int64 = 2360982492
 	C_UpdateEnvelope                     int64 = 2373884514
 	C_AuthSentCode                       int64 = 2375498471
@@ -80,6 +87,7 @@ const (
 	C_MessagesForward                    int64 = 2662884753
 	C_ProtoEncryptedPayload              int64 = 2668405547
 	C_PhoneContact                       int64 = 2672574672
+	C_AuthResendCode                     int64 = 2682713491
 	C_UpdateUserStatus                   int64 = 2696747995
 	C_SystemPublicKeys                   int64 = 2745130223
 	C_DHGroup                            int64 = 2751503049
@@ -100,9 +108,12 @@ const (
 	C_UpdateNewMessage                   int64 = 3426925183
 	C_ContactsImport                     int64 = 3473528730
 	C_PeerNotifySettings                 int64 = 3475030132
+	C_MessageEntity                      int64 = 3479443932
 	C_MessagesDelete                     int64 = 3487616910
+	C_AuthDestroyKey                     int64 = 3673422656
 	C_AccountUpdateProfile               int64 = 3725499887
 	C_FileSavePart                       int64 = 3766876582
+	C_AccountPrivacyRules                int64 = 3802018092
 	C_ClientUpdatePendingMessageDelivery int64 = 3828722061
 	C_InputUser                          int64 = 3865689926
 	C_InputFile                          int64 = 3882180383
@@ -110,11 +121,13 @@ const (
 	C_AccountUnregisterDevice            int64 = 3981251588
 	C_AuthSendCode                       int64 = 3984043365
 	C_GroupParticipant                   int64 = 4072279665
+	C_InputDocument                      int64 = 4081048424
 	C_Bool                               int64 = 4122188204
 	C_InitResponse                       int64 = 4130340247
 	C_AuthCheckPhone                     int64 = 4134648516
 	C_InitConnect                        int64 = 4150793517
 	C_FileGet                            int64 = 4282510672
+	C_AccountChangePhone                 int64 = 4285969474
 	C_UpdateUsername                     int64 = 4290110589
 )
 
@@ -138,6 +151,8 @@ var ConstructorNames = map[int64]string{
 	749574446:  "File",
 	765557111:  "User",
 	801733941:  "UsersMany",
+	849930963:  "InputMediaUploadedPhoto",
+	870692909:  "InputMediaUploadedDocument",
 	946059841:  "AccountRegisterDevice",
 	992431648:  "AuthLogout",
 	1039301579: "UsersGet",
@@ -158,9 +173,11 @@ var ConstructorNames = map[int64]string{
 	1477164344: "AccountUpdateUsername",
 	1501406413: "AccountCheckUsername",
 	1529128378: "UpdateReadHistoryInbox",
+	1534117184: "InputMediaContact",
 	1540214486: "MessagesSetTyping",
 	1581076909: "GroupsToggleAdmins",
 	1583178320: "InitCompleteAuth",
+	1599585002: "AccountSetPrivacy",
 	1623827837: "UpdateGroupParticipantAdd",
 	1677556362: "UserMessage",
 	1713238910: "MessagesMany",
@@ -170,6 +187,7 @@ var ConstructorNames = map[int64]string{
 	1813022164: "UpdateGroupParticipantAdmin",
 	1825079988: "UpdateMessageEdited",
 	1837585836: "UpdateState",
+	1897044856: "AccountGetPrivacy",
 	1933549113: "InitBindUser",
 	1949386261: "MessageActionGroupAddUser",
 	1972016308: "MessageContainer",
@@ -180,10 +198,12 @@ var ConstructorNames = map[int64]string{
 	2157298354: "ContactsImported",
 	2164891929: "ClientPendingMessage",
 	2179260159: "ProtoMessage",
+	2201579839: "InputMediaPhoto",
 	2228369460: "AuthRegister",
 	2236203131: "AuthCheckedPhone",
 	2241024808: "MessageActionGroupCreated",
 	2244397803: "SystemClientLog",
+	2258657627: "InputMediaDocument",
 	2360982492: "InitCompleteAuthInternal",
 	2373884514: "UpdateEnvelope",
 	2375498471: "AuthSentCode",
@@ -198,6 +218,7 @@ var ConstructorNames = map[int64]string{
 	2662884753: "MessagesForward",
 	2668405547: "ProtoEncryptedPayload",
 	2672574672: "PhoneContact",
+	2682713491: "AuthResendCode",
 	2696747995: "UpdateUserStatus",
 	2745130223: "SystemPublicKeys",
 	2751503049: "DHGroup",
@@ -218,9 +239,12 @@ var ConstructorNames = map[int64]string{
 	3426925183: "UpdateNewMessage",
 	3473528730: "ContactsImport",
 	3475030132: "PeerNotifySettings",
+	3479443932: "MessageEntity",
 	3487616910: "MessagesDelete",
+	3673422656: "AuthDestroyKey",
 	3725499887: "AccountUpdateProfile",
 	3766876582: "FileSavePart",
+	3802018092: "AccountPrivacyRules",
 	3828722061: "ClientUpdatePendingMessageDelivery",
 	3865689926: "InputUser",
 	3882180383: "InputFile",
@@ -228,10 +252,12 @@ var ConstructorNames = map[int64]string{
 	3981251588: "AccountUnregisterDevice",
 	3984043365: "AuthSendCode",
 	4072279665: "GroupParticipant",
+	4081048424: "InputDocument",
 	4122188204: "Bool",
 	4130340247: "InitResponse",
 	4134648516: "AuthCheckPhone",
 	4150793517: "InitConnect",
 	4282510672: "FileGet",
+	4285969474: "AccountChangePhone",
 	4290110589: "UpdateUsername",
 }

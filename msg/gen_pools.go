@@ -119,6 +119,18 @@ var (
 			return m
 		},
 	}
+	PoolInputMediaUploadedPhoto = sync.Pool{
+		New: func() interface{} {
+			m := new(InputMediaUploadedPhoto)
+			return m
+		},
+	}
+	PoolInputMediaUploadedDocument = sync.Pool{
+		New: func() interface{} {
+			m := new(InputMediaUploadedDocument)
+			return m
+		},
+	}
 	PoolAccountRegisterDevice = sync.Pool{
 		New: func() interface{} {
 			m := new(AccountRegisterDevice)
@@ -239,6 +251,12 @@ var (
 			return m
 		},
 	}
+	PoolInputMediaContact = sync.Pool{
+		New: func() interface{} {
+			m := new(InputMediaContact)
+			return m
+		},
+	}
 	PoolMessagesSetTyping = sync.Pool{
 		New: func() interface{} {
 			m := new(MessagesSetTyping)
@@ -254,6 +272,12 @@ var (
 	PoolInitCompleteAuth = sync.Pool{
 		New: func() interface{} {
 			m := new(InitCompleteAuth)
+			return m
+		},
+	}
+	PoolAccountSetPrivacy = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountSetPrivacy)
 			return m
 		},
 	}
@@ -308,6 +332,12 @@ var (
 	PoolUpdateState = sync.Pool{
 		New: func() interface{} {
 			m := new(UpdateState)
+			return m
+		},
+	}
+	PoolAccountGetPrivacy = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountGetPrivacy)
 			return m
 		},
 	}
@@ -371,6 +401,12 @@ var (
 			return m
 		},
 	}
+	PoolInputMediaPhoto = sync.Pool{
+		New: func() interface{} {
+			m := new(InputMediaPhoto)
+			return m
+		},
+	}
 	PoolAuthRegister = sync.Pool{
 		New: func() interface{} {
 			m := new(AuthRegister)
@@ -392,6 +428,12 @@ var (
 	PoolSystemClientLog = sync.Pool{
 		New: func() interface{} {
 			m := new(SystemClientLog)
+			return m
+		},
+	}
+	PoolInputMediaDocument = sync.Pool{
+		New: func() interface{} {
+			m := new(InputMediaDocument)
 			return m
 		},
 	}
@@ -476,6 +518,12 @@ var (
 	PoolPhoneContact = sync.Pool{
 		New: func() interface{} {
 			m := new(PhoneContact)
+			return m
+		},
+	}
+	PoolAuthResendCode = sync.Pool{
+		New: func() interface{} {
+			m := new(AuthResendCode)
 			return m
 		},
 	}
@@ -599,9 +647,21 @@ var (
 			return m
 		},
 	}
+	PoolMessageEntity = sync.Pool{
+		New: func() interface{} {
+			m := new(MessageEntity)
+			return m
+		},
+	}
 	PoolMessagesDelete = sync.Pool{
 		New: func() interface{} {
 			m := new(MessagesDelete)
+			return m
+		},
+	}
+	PoolAuthDestroyKey = sync.Pool{
+		New: func() interface{} {
+			m := new(AuthDestroyKey)
 			return m
 		},
 	}
@@ -614,6 +674,12 @@ var (
 	PoolFileSavePart = sync.Pool{
 		New: func() interface{} {
 			m := new(FileSavePart)
+			return m
+		},
+	}
+	PoolAccountPrivacyRules = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountPrivacyRules)
 			return m
 		},
 	}
@@ -659,6 +725,12 @@ var (
 			return m
 		},
 	}
+	PoolInputDocument = sync.Pool{
+		New: func() interface{} {
+			m := new(InputDocument)
+			return m
+		},
+	}
 	PoolBool = sync.Pool{
 		New: func() interface{} {
 			m := new(Bool)
@@ -686,6 +758,12 @@ var (
 	PoolFileGet = sync.Pool{
 		New: func() interface{} {
 			m := new(FileGet)
+			return m
+		},
+	}
+	PoolAccountChangePhone = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountChangePhone)
 			return m
 		},
 	}

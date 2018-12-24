@@ -22,6 +22,98 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
+// AccountPrivacyKey
+type AccountPrivacyKey int32
+
+const (
+	AccountPrivacyKey_AccountPrivacyKeyChatNone        AccountPrivacyKey = 0
+	AccountPrivacyKey_AccountPrivacyKeyChatInvite      AccountPrivacyKey = 1
+	AccountPrivacyKey_AccountPrivacyKeyStatusTimestamp AccountPrivacyKey = 2
+	AccountPrivacyKey_AccountPrivacyKeyPhoneCall       AccountPrivacyKey = 3
+)
+
+var AccountPrivacyKey_name = map[int32]string{
+	0: "AccountPrivacyKeyChatNone",
+	1: "AccountPrivacyKeyChatInvite",
+	2: "AccountPrivacyKeyStatusTimestamp",
+	3: "AccountPrivacyKeyPhoneCall",
+}
+var AccountPrivacyKey_value = map[string]int32{
+	"AccountPrivacyKeyChatNone":        0,
+	"AccountPrivacyKeyChatInvite":      1,
+	"AccountPrivacyKeyStatusTimestamp": 2,
+	"AccountPrivacyKeyPhoneCall":       3,
+}
+
+func (x AccountPrivacyKey) Enum() *AccountPrivacyKey {
+	p := new(AccountPrivacyKey)
+	*p = x
+	return p
+}
+func (x AccountPrivacyKey) String() string {
+	return proto.EnumName(AccountPrivacyKey_name, int32(x))
+}
+func (x *AccountPrivacyKey) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(AccountPrivacyKey_value, data, "AccountPrivacyKey")
+	if err != nil {
+		return err
+	}
+	*x = AccountPrivacyKey(value)
+	return nil
+}
+func (AccountPrivacyKey) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_api_accounts_46e8a89c49136284, []int{0}
+}
+
+// AccountPrivacyValue
+type AccountPrivacyValue int32
+
+const (
+	AccountPrivacyValue_AccountPrivacyValueAllowAll         AccountPrivacyValue = 0
+	AccountPrivacyValue_AccountPrivacyValueAllowContacts    AccountPrivacyValue = 1
+	AccountPrivacyValue_AccountPrivacyValueAllowUsers       AccountPrivacyValue = 2
+	AccountPrivacyValue_AccountPrivacyValueDisallowAll      AccountPrivacyValue = 3
+	AccountPrivacyValue_AccountPrivacyValueDisallowContacts AccountPrivacyValue = 4
+	AccountPrivacyValue_AccountPrivacyValueDisallowUsers    AccountPrivacyValue = 5
+)
+
+var AccountPrivacyValue_name = map[int32]string{
+	0: "AccountPrivacyValueAllowAll",
+	1: "AccountPrivacyValueAllowContacts",
+	2: "AccountPrivacyValueAllowUsers",
+	3: "AccountPrivacyValueDisallowAll",
+	4: "AccountPrivacyValueDisallowContacts",
+	5: "AccountPrivacyValueDisallowUsers",
+}
+var AccountPrivacyValue_value = map[string]int32{
+	"AccountPrivacyValueAllowAll":         0,
+	"AccountPrivacyValueAllowContacts":    1,
+	"AccountPrivacyValueAllowUsers":       2,
+	"AccountPrivacyValueDisallowAll":      3,
+	"AccountPrivacyValueDisallowContacts": 4,
+	"AccountPrivacyValueDisallowUsers":    5,
+}
+
+func (x AccountPrivacyValue) Enum() *AccountPrivacyValue {
+	p := new(AccountPrivacyValue)
+	*p = x
+	return p
+}
+func (x AccountPrivacyValue) String() string {
+	return proto.EnumName(AccountPrivacyValue_name, int32(x))
+}
+func (x *AccountPrivacyValue) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(AccountPrivacyValue_value, data, "AccountPrivacyValue")
+	if err != nil {
+		return err
+	}
+	*x = AccountPrivacyValue(value)
+	return nil
+}
+func (AccountPrivacyValue) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_api_accounts_46e8a89c49136284, []int{1}
+}
+
 // AccountSetNotifySettings
 // @Function
 // @Return: Bool
@@ -34,7 +126,7 @@ func (m *AccountSetNotifySettings) Reset()         { *m = AccountSetNotifySettin
 func (m *AccountSetNotifySettings) String() string { return proto.CompactTextString(m) }
 func (*AccountSetNotifySettings) ProtoMessage()    {}
 func (*AccountSetNotifySettings) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_accounts_692a25c29907f239, []int{0}
+	return fileDescriptor_api_accounts_46e8a89c49136284, []int{0}
 }
 func (m *AccountSetNotifySettings) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -81,14 +173,14 @@ func (m *AccountSetNotifySettings) GetSettings() *PeerNotifySettings {
 // @Function
 // @Return: NotifySettings
 type AccountGetNotifySettings struct {
-	Peer []*InputPeer `protobuf:"bytes,1,rep,name=Peer" json:"Peer,omitempty"`
+	Peer *InputPeer `protobuf:"bytes,1,req,name=Peer" json:"Peer,omitempty"`
 }
 
 func (m *AccountGetNotifySettings) Reset()         { *m = AccountGetNotifySettings{} }
 func (m *AccountGetNotifySettings) String() string { return proto.CompactTextString(m) }
 func (*AccountGetNotifySettings) ProtoMessage()    {}
 func (*AccountGetNotifySettings) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_accounts_692a25c29907f239, []int{1}
+	return fileDescriptor_api_accounts_46e8a89c49136284, []int{1}
 }
 func (m *AccountGetNotifySettings) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -117,7 +209,7 @@ func (m *AccountGetNotifySettings) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_AccountGetNotifySettings proto.InternalMessageInfo
 
-func (m *AccountGetNotifySettings) GetPeer() []*InputPeer {
+func (m *AccountGetNotifySettings) GetPeer() *InputPeer {
 	if m != nil {
 		return m.Peer
 	}
@@ -140,7 +232,7 @@ func (m *AccountRegisterDevice) Reset()         { *m = AccountRegisterDevice{} }
 func (m *AccountRegisterDevice) String() string { return proto.CompactTextString(m) }
 func (*AccountRegisterDevice) ProtoMessage()    {}
 func (*AccountRegisterDevice) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_accounts_692a25c29907f239, []int{2}
+	return fileDescriptor_api_accounts_46e8a89c49136284, []int{2}
 }
 func (m *AccountRegisterDevice) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -223,7 +315,7 @@ func (m *AccountUnregisterDevice) Reset()         { *m = AccountUnregisterDevice
 func (m *AccountUnregisterDevice) String() string { return proto.CompactTextString(m) }
 func (*AccountUnregisterDevice) ProtoMessage()    {}
 func (*AccountUnregisterDevice) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_accounts_692a25c29907f239, []int{3}
+	return fileDescriptor_api_accounts_46e8a89c49136284, []int{3}
 }
 func (m *AccountUnregisterDevice) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -279,7 +371,7 @@ func (m *AccountUpdateProfile) Reset()         { *m = AccountUpdateProfile{} }
 func (m *AccountUpdateProfile) String() string { return proto.CompactTextString(m) }
 func (*AccountUpdateProfile) ProtoMessage()    {}
 func (*AccountUpdateProfile) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_accounts_692a25c29907f239, []int{4}
+	return fileDescriptor_api_accounts_46e8a89c49136284, []int{4}
 }
 func (m *AccountUpdateProfile) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -340,7 +432,7 @@ func (m *AccountCheckUsername) Reset()         { *m = AccountCheckUsername{} }
 func (m *AccountCheckUsername) String() string { return proto.CompactTextString(m) }
 func (*AccountCheckUsername) ProtoMessage()    {}
 func (*AccountCheckUsername) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_accounts_692a25c29907f239, []int{5}
+	return fileDescriptor_api_accounts_46e8a89c49136284, []int{5}
 }
 func (m *AccountCheckUsername) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -387,7 +479,7 @@ func (m *AccountUpdateUsername) Reset()         { *m = AccountUpdateUsername{} }
 func (m *AccountUpdateUsername) String() string { return proto.CompactTextString(m) }
 func (*AccountUpdateUsername) ProtoMessage()    {}
 func (*AccountUpdateUsername) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_accounts_692a25c29907f239, []int{6}
+	return fileDescriptor_api_accounts_46e8a89c49136284, []int{6}
 }
 func (m *AccountUpdateUsername) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -423,6 +515,224 @@ func (m *AccountUpdateUsername) GetUsername() string {
 	return ""
 }
 
+// AccountChangePhone
+// @Function
+// @Return: User
+type AccountChangePhone struct {
+	Phone         string `protobuf:"bytes,1,req,name=Phone" json:"Phone"`
+	PhoneCodeHash string `protobuf:"bytes,2,req,name=PhoneCodeHash" json:"PhoneCodeHash"`
+	PhoneCode     string `protobuf:"bytes,3,req,name=PhoneCode" json:"PhoneCode"`
+}
+
+func (m *AccountChangePhone) Reset()         { *m = AccountChangePhone{} }
+func (m *AccountChangePhone) String() string { return proto.CompactTextString(m) }
+func (*AccountChangePhone) ProtoMessage()    {}
+func (*AccountChangePhone) Descriptor() ([]byte, []int) {
+	return fileDescriptor_api_accounts_46e8a89c49136284, []int{7}
+}
+func (m *AccountChangePhone) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AccountChangePhone) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AccountChangePhone.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *AccountChangePhone) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccountChangePhone.Merge(dst, src)
+}
+func (m *AccountChangePhone) XXX_Size() int {
+	return m.Size()
+}
+func (m *AccountChangePhone) XXX_DiscardUnknown() {
+	xxx_messageInfo_AccountChangePhone.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AccountChangePhone proto.InternalMessageInfo
+
+func (m *AccountChangePhone) GetPhone() string {
+	if m != nil {
+		return m.Phone
+	}
+	return ""
+}
+
+func (m *AccountChangePhone) GetPhoneCodeHash() string {
+	if m != nil {
+		return m.PhoneCodeHash
+	}
+	return ""
+}
+
+func (m *AccountChangePhone) GetPhoneCode() string {
+	if m != nil {
+		return m.PhoneCode
+	}
+	return ""
+}
+
+// AccountSetPrivacy
+// @Function
+// @Return: AccountPrivacyRules
+type AccountSetPrivacy struct {
+	Key    AccountPrivacyKey     `protobuf:"varint,1,req,name=Key,enum=msg.AccountPrivacyKey" json:"Key"`
+	Values []AccountPrivacyValue `protobuf:"varint,2,rep,name=Values,enum=msg.AccountPrivacyValue" json:"Values,omitempty"`
+}
+
+func (m *AccountSetPrivacy) Reset()         { *m = AccountSetPrivacy{} }
+func (m *AccountSetPrivacy) String() string { return proto.CompactTextString(m) }
+func (*AccountSetPrivacy) ProtoMessage()    {}
+func (*AccountSetPrivacy) Descriptor() ([]byte, []int) {
+	return fileDescriptor_api_accounts_46e8a89c49136284, []int{8}
+}
+func (m *AccountSetPrivacy) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AccountSetPrivacy) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AccountSetPrivacy.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *AccountSetPrivacy) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccountSetPrivacy.Merge(dst, src)
+}
+func (m *AccountSetPrivacy) XXX_Size() int {
+	return m.Size()
+}
+func (m *AccountSetPrivacy) XXX_DiscardUnknown() {
+	xxx_messageInfo_AccountSetPrivacy.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AccountSetPrivacy proto.InternalMessageInfo
+
+func (m *AccountSetPrivacy) GetKey() AccountPrivacyKey {
+	if m != nil {
+		return m.Key
+	}
+	return AccountPrivacyKey_AccountPrivacyKeyChatNone
+}
+
+func (m *AccountSetPrivacy) GetValues() []AccountPrivacyValue {
+	if m != nil {
+		return m.Values
+	}
+	return nil
+}
+
+// AccountGetPrivacy
+// @Function
+// @Return: AccountPrivacyRules
+type AccountGetPrivacy struct {
+	Key AccountPrivacyKey `protobuf:"varint,1,req,name=Key,enum=msg.AccountPrivacyKey" json:"Key"`
+}
+
+func (m *AccountGetPrivacy) Reset()         { *m = AccountGetPrivacy{} }
+func (m *AccountGetPrivacy) String() string { return proto.CompactTextString(m) }
+func (*AccountGetPrivacy) ProtoMessage()    {}
+func (*AccountGetPrivacy) Descriptor() ([]byte, []int) {
+	return fileDescriptor_api_accounts_46e8a89c49136284, []int{9}
+}
+func (m *AccountGetPrivacy) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AccountGetPrivacy) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AccountGetPrivacy.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *AccountGetPrivacy) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccountGetPrivacy.Merge(dst, src)
+}
+func (m *AccountGetPrivacy) XXX_Size() int {
+	return m.Size()
+}
+func (m *AccountGetPrivacy) XXX_DiscardUnknown() {
+	xxx_messageInfo_AccountGetPrivacy.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AccountGetPrivacy proto.InternalMessageInfo
+
+func (m *AccountGetPrivacy) GetKey() AccountPrivacyKey {
+	if m != nil {
+		return m.Key
+	}
+	return AccountPrivacyKey_AccountPrivacyKeyChatNone
+}
+
+// AccountPrivacyRules
+type AccountPrivacyRules struct {
+	Rules []AccountPrivacyValue `protobuf:"varint,1,rep,name=Rules,enum=msg.AccountPrivacyValue" json:"Rules,omitempty"`
+	Users []*User               `protobuf:"bytes,2,rep,name=Users" json:"Users,omitempty"`
+}
+
+func (m *AccountPrivacyRules) Reset()         { *m = AccountPrivacyRules{} }
+func (m *AccountPrivacyRules) String() string { return proto.CompactTextString(m) }
+func (*AccountPrivacyRules) ProtoMessage()    {}
+func (*AccountPrivacyRules) Descriptor() ([]byte, []int) {
+	return fileDescriptor_api_accounts_46e8a89c49136284, []int{10}
+}
+func (m *AccountPrivacyRules) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AccountPrivacyRules) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AccountPrivacyRules.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *AccountPrivacyRules) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccountPrivacyRules.Merge(dst, src)
+}
+func (m *AccountPrivacyRules) XXX_Size() int {
+	return m.Size()
+}
+func (m *AccountPrivacyRules) XXX_DiscardUnknown() {
+	xxx_messageInfo_AccountPrivacyRules.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AccountPrivacyRules proto.InternalMessageInfo
+
+func (m *AccountPrivacyRules) GetRules() []AccountPrivacyValue {
+	if m != nil {
+		return m.Rules
+	}
+	return nil
+}
+
+func (m *AccountPrivacyRules) GetUsers() []*User {
+	if m != nil {
+		return m.Users
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*AccountSetNotifySettings)(nil), "msg.AccountSetNotifySettings")
 	proto.RegisterType((*AccountGetNotifySettings)(nil), "msg.AccountGetNotifySettings")
@@ -431,6 +741,12 @@ func init() {
 	proto.RegisterType((*AccountUpdateProfile)(nil), "msg.AccountUpdateProfile")
 	proto.RegisterType((*AccountCheckUsername)(nil), "msg.AccountCheckUsername")
 	proto.RegisterType((*AccountUpdateUsername)(nil), "msg.AccountUpdateUsername")
+	proto.RegisterType((*AccountChangePhone)(nil), "msg.AccountChangePhone")
+	proto.RegisterType((*AccountSetPrivacy)(nil), "msg.AccountSetPrivacy")
+	proto.RegisterType((*AccountGetPrivacy)(nil), "msg.AccountGetPrivacy")
+	proto.RegisterType((*AccountPrivacyRules)(nil), "msg.AccountPrivacyRules")
+	proto.RegisterEnum("msg.AccountPrivacyKey", AccountPrivacyKey_name, AccountPrivacyKey_value)
+	proto.RegisterEnum("msg.AccountPrivacyValue", AccountPrivacyValue_name, AccountPrivacyValue_value)
 }
 func (m *AccountSetNotifySettings) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
@@ -489,17 +805,17 @@ func (m *AccountGetNotifySettings) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Peer) > 0 {
-		for _, msg := range m.Peer {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintApiAccounts(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
+	if m.Peer == nil {
+		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
+	} else {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintApiAccounts(dAtA, i, uint64(m.Peer.Size()))
+		n3, err := m.Peer.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
 		}
+		i += n3
 	}
 	return i, nil
 }
@@ -644,6 +960,122 @@ func (m *AccountUpdateUsername) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *AccountChangePhone) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AccountChangePhone) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0xa
+	i++
+	i = encodeVarintApiAccounts(dAtA, i, uint64(len(m.Phone)))
+	i += copy(dAtA[i:], m.Phone)
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintApiAccounts(dAtA, i, uint64(len(m.PhoneCodeHash)))
+	i += copy(dAtA[i:], m.PhoneCodeHash)
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintApiAccounts(dAtA, i, uint64(len(m.PhoneCode)))
+	i += copy(dAtA[i:], m.PhoneCode)
+	return i, nil
+}
+
+func (m *AccountSetPrivacy) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AccountSetPrivacy) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintApiAccounts(dAtA, i, uint64(m.Key))
+	if len(m.Values) > 0 {
+		for _, num := range m.Values {
+			dAtA[i] = 0x10
+			i++
+			i = encodeVarintApiAccounts(dAtA, i, uint64(num))
+		}
+	}
+	return i, nil
+}
+
+func (m *AccountGetPrivacy) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AccountGetPrivacy) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintApiAccounts(dAtA, i, uint64(m.Key))
+	return i, nil
+}
+
+func (m *AccountPrivacyRules) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AccountPrivacyRules) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Rules) > 0 {
+		for _, num := range m.Rules {
+			dAtA[i] = 0x8
+			i++
+			i = encodeVarintApiAccounts(dAtA, i, uint64(num))
+		}
+	}
+	if len(m.Users) > 0 {
+		for _, msg := range m.Users {
+			dAtA[i] = 0x12
+			i++
+			i = encodeVarintApiAccounts(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
 func encodeVarintApiAccounts(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -676,11 +1108,9 @@ func (m *AccountGetNotifySettings) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if len(m.Peer) > 0 {
-		for _, e := range m.Peer {
-			l = e.Size()
-			n += 1 + l + sovApiAccounts(uint64(l))
-		}
+	if m.Peer != nil {
+		l = m.Peer.Size()
+		n += 1 + l + sovApiAccounts(uint64(l))
 	}
 	return n
 }
@@ -751,6 +1181,66 @@ func (m *AccountUpdateUsername) Size() (n int) {
 	_ = l
 	l = len(m.Username)
 	n += 1 + l + sovApiAccounts(uint64(l))
+	return n
+}
+
+func (m *AccountChangePhone) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Phone)
+	n += 1 + l + sovApiAccounts(uint64(l))
+	l = len(m.PhoneCodeHash)
+	n += 1 + l + sovApiAccounts(uint64(l))
+	l = len(m.PhoneCode)
+	n += 1 + l + sovApiAccounts(uint64(l))
+	return n
+}
+
+func (m *AccountSetPrivacy) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovApiAccounts(uint64(m.Key))
+	if len(m.Values) > 0 {
+		for _, e := range m.Values {
+			n += 1 + sovApiAccounts(uint64(e))
+		}
+	}
+	return n
+}
+
+func (m *AccountGetPrivacy) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovApiAccounts(uint64(m.Key))
+	return n
+}
+
+func (m *AccountPrivacyRules) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Rules) > 0 {
+		for _, e := range m.Rules {
+			n += 1 + sovApiAccounts(uint64(e))
+		}
+	}
+	if len(m.Users) > 0 {
+		for _, e := range m.Users {
+			l = e.Size()
+			n += 1 + l + sovApiAccounts(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -893,6 +1383,7 @@ func (m *AccountSetNotifySettings) Unmarshal(dAtA []byte) error {
 	return nil
 }
 func (m *AccountGetNotifySettings) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -947,11 +1438,14 @@ func (m *AccountGetNotifySettings) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Peer = append(m.Peer, &InputPeer{})
-			if err := m.Peer[len(m.Peer)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if m.Peer == nil {
+				m.Peer = &InputPeer{}
+			}
+			if err := m.Peer.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000001)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipApiAccounts(dAtA[iNdEx:])
@@ -966,6 +1460,9 @@ func (m *AccountGetNotifySettings) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx += skippy
 		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
 	}
 
 	if iNdEx > l {
@@ -1633,6 +2130,517 @@ func (m *AccountUpdateUsername) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *AccountChangePhone) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApiAccounts
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AccountChangePhone: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AccountChangePhone: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Phone", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiAccounts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApiAccounts
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Phone = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PhoneCodeHash", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiAccounts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApiAccounts
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PhoneCodeHash = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000002)
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PhoneCode", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiAccounts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApiAccounts
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PhoneCode = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000004)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApiAccounts(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApiAccounts
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Phone")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("PhoneCodeHash")
+	}
+	if hasFields[0]&uint64(0x00000004) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("PhoneCode")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AccountSetPrivacy) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApiAccounts
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AccountSetPrivacy: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AccountSetPrivacy: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			m.Key = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiAccounts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Key |= (AccountPrivacyKey(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType == 0 {
+				var v AccountPrivacyValue
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowApiAccounts
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (AccountPrivacyValue(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.Values = append(m.Values, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowApiAccounts
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthApiAccounts
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				if elementCount != 0 && len(m.Values) == 0 {
+					m.Values = make([]AccountPrivacyValue, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v AccountPrivacyValue
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowApiAccounts
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (AccountPrivacyValue(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.Values = append(m.Values, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field Values", wireType)
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApiAccounts(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApiAccounts
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Key")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AccountGetPrivacy) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApiAccounts
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AccountGetPrivacy: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AccountGetPrivacy: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			m.Key = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiAccounts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Key |= (AccountPrivacyKey(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApiAccounts(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApiAccounts
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Key")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AccountPrivacyRules) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApiAccounts
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AccountPrivacyRules: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AccountPrivacyRules: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType == 0 {
+				var v AccountPrivacyValue
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowApiAccounts
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (AccountPrivacyValue(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.Rules = append(m.Rules, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowApiAccounts
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthApiAccounts
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				if elementCount != 0 && len(m.Rules) == 0 {
+					m.Rules = make([]AccountPrivacyValue, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v AccountPrivacyValue
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowApiAccounts
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (AccountPrivacyValue(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.Rules = append(m.Rules, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field Rules", wireType)
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Users", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApiAccounts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApiAccounts
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Users = append(m.Users, &User{})
+			if err := m.Users[len(m.Users)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApiAccounts(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApiAccounts
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipApiAccounts(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1738,33 +2746,50 @@ var (
 	ErrIntOverflowApiAccounts   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("api.accounts.proto", fileDescriptor_api_accounts_692a25c29907f239) }
+func init() { proto.RegisterFile("api.accounts.proto", fileDescriptor_api_accounts_46e8a89c49136284) }
 
-var fileDescriptor_api_accounts_692a25c29907f239 = []byte{
-	// 394 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x91, 0xcf, 0x8b, 0xda, 0x40,
-	0x1c, 0xc5, 0x13, 0xa3, 0x45, 0x47, 0x5a, 0xca, 0xd0, 0xd6, 0xc1, 0x43, 0x2a, 0x43, 0x29, 0xa5,
-	0x87, 0x1c, 0xda, 0x4b, 0x7b, 0x29, 0xa8, 0xa5, 0xa5, 0xd0, 0x8a, 0x44, 0x2d, 0xf4, 0x18, 0xe2,
-	0xd7, 0x74, 0xd0, 0xcc, 0x0c, 0x33, 0xe3, 0x42, 0xfe, 0x8b, 0xfd, 0xb3, 0x3c, 0x7a, 0xdc, 0xd3,
-	0xb2, 0xe8, 0x9f, 0xb0, 0xff, 0xc0, 0x62, 0x7e, 0x99, 0x1c, 0x76, 0xd9, 0xc3, 0xde, 0x92, 0xf7,
-	0x3e, 0xf3, 0xde, 0x1b, 0x06, 0xe1, 0x40, 0x32, 0x2f, 0x08, 0x43, 0xb1, 0xe5, 0x46, 0x7b, 0x52,
-	0x09, 0x23, 0xb0, 0x13, 0xeb, 0xa8, 0xff, 0x32, 0x14, 0x0a, 0x3c, 0x93, 0x48, 0xc8, 0x65, 0xaa,
-	0x11, 0x19, 0x66, 0xe0, 0x0c, 0xcc, 0x44, 0x18, 0xb6, 0x4a, 0x66, 0x60, 0x0c, 0xe3, 0x91, 0xc6,
-	0x14, 0x35, 0xa7, 0x00, 0x8a, 0xd8, 0x83, 0xc6, 0x87, 0xee, 0xa7, 0x17, 0x5e, 0xac, 0x23, 0xef,
-	0x17, 0x97, 0x5b, 0x73, 0x52, 0xfd, 0xd4, 0xc3, 0x9f, 0x51, 0xbb, 0xe0, 0x49, 0x23, 0xe5, 0x7a,
-	0x29, 0x77, 0x32, 0xeb, 0x71, 0x7e, 0x09, 0xd2, 0x6f, 0x65, 0xe9, 0xcf, 0x07, 0x4a, 0x9d, 0xfb,
-	0x4a, 0xe9, 0xad, 0x8d, 0x5e, 0xe7, 0x01, 0x3e, 0x44, 0x4c, 0x1b, 0x50, 0xdf, 0xe1, 0x82, 0x85,
-	0x80, 0x29, 0xea, 0xcc, 0xc5, 0x1a, 0xf8, 0x3c, 0x91, 0x90, 0xee, 0x6e, 0x8d, 0x9a, 0xbb, 0xeb,
-	0xb7, 0x96, 0x7f, 0x96, 0x71, 0x1f, 0xb5, 0xd2, 0x9f, 0x74, 0x6f, 0x27, 0xf7, 0x33, 0x09, 0xbf,
-	0x47, 0xdd, 0x2c, 0xe9, 0x8f, 0x58, 0xc2, 0x86, 0x38, 0x15, 0xa2, 0x6a, 0xe0, 0x8f, 0xe8, 0xf9,
-	0x2c, 0xd1, 0x06, 0xe2, 0xbf, 0xa0, 0x34, 0x13, 0x9c, 0x34, 0x2b, 0x64, 0xdd, 0xc2, 0xef, 0x10,
-	0x1a, 0x4a, 0x59, 0x80, 0xad, 0x0a, 0x58, 0xd1, 0xf1, 0x00, 0xb5, 0x7f, 0x07, 0x3c, 0x1a, 0x8b,
-	0x25, 0x90, 0x67, 0x15, 0xa6, 0x54, 0xe9, 0x3f, 0xd4, 0xcb, 0x2f, 0xbd, 0xe0, 0xea, 0x49, 0xaf,
-	0x4d, 0x0d, 0x7a, 0x55, 0x44, 0xcb, 0x65, 0x60, 0x60, 0xaa, 0xc4, 0x8a, 0x6d, 0xd2, 0xdc, 0x1f,
-	0x4c, 0x69, 0x33, 0x09, 0xe2, 0x2c, 0xb7, 0x38, 0x77, 0x96, 0xb3, 0xe1, 0x39, 0xd2, 0xa8, 0x0f,
-	0xcf, 0x89, 0x37, 0xc8, 0x19, 0x31, 0x41, 0x9c, 0x81, 0x5d, 0x9a, 0x27, 0x81, 0x7e, 0x29, 0x5b,
-	0xc7, 0xff, 0x21, 0x5c, 0x2f, 0x34, 0x28, 0x9e, 0x27, 0x16, 0xdf, 0xb5, 0xd2, 0x52, 0xa5, 0x5f,
-	0xcb, 0xf7, 0xcf, 0xf6, 0x3e, 0xfe, 0xe8, 0x88, 0xec, 0x0e, 0xae, 0xbd, 0x3f, 0xb8, 0xf6, 0xcd,
-	0xc1, 0xb5, 0x2f, 0x8f, 0xae, 0xb5, 0x3f, 0xba, 0xd6, 0xd5, 0xd1, 0xb5, 0xee, 0x02, 0x00, 0x00,
-	0xff, 0xff, 0x26, 0x84, 0x5b, 0x6f, 0x36, 0x03, 0x00, 0x00,
+var fileDescriptor_api_accounts_46e8a89c49136284 = []byte{
+	// 658 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x93, 0xcf, 0x4e, 0xdb, 0x4a,
+	0x14, 0xc6, 0xe3, 0x38, 0x41, 0x70, 0xd0, 0x45, 0xbe, 0x73, 0x6f, 0xc1, 0xa5, 0xc2, 0xa4, 0x2e,
+	0x6a, 0x11, 0x0b, 0xab, 0x4a, 0x37, 0xed, 0xa6, 0x52, 0x08, 0x2a, 0x45, 0xb4, 0x28, 0x72, 0x00,
+	0xa9, 0xcb, 0x91, 0x39, 0x24, 0x23, 0x9c, 0x19, 0xcb, 0x33, 0xa1, 0xf2, 0xae, 0x8f, 0xd0, 0x6d,
+	0xdf, 0x88, 0x25, 0xcb, 0xae, 0xaa, 0x0a, 0xde, 0xa0, 0x7d, 0x81, 0xca, 0xe3, 0x3f, 0x89, 0x1b,
+	0x68, 0x55, 0xd4, 0xdd, 0xe4, 0x3b, 0xbf, 0x39, 0xdf, 0x37, 0xe7, 0xc4, 0x40, 0x68, 0xc4, 0x3c,
+	0x1a, 0x04, 0x62, 0xcc, 0x95, 0xf4, 0xa2, 0x58, 0x28, 0x41, 0xcc, 0x91, 0x1c, 0xac, 0x5a, 0x81,
+	0x88, 0xd1, 0x53, 0x49, 0x84, 0xb9, 0xec, 0x4a, 0xb0, 0x3b, 0x19, 0xd8, 0x47, 0x75, 0x20, 0x14,
+	0x3b, 0x4d, 0xfa, 0xa8, 0x14, 0xe3, 0x03, 0x49, 0x5c, 0x68, 0xf4, 0x10, 0x63, 0xdb, 0x68, 0xd5,
+	0x37, 0x17, 0xdb, 0x4b, 0xde, 0x48, 0x0e, 0xbc, 0x3d, 0x1e, 0x8d, 0x55, 0xaa, 0xfa, 0xba, 0x46,
+	0x9e, 0xc1, 0x7c, 0xc1, 0xdb, 0x75, 0xcd, 0xad, 0x68, 0x2e, 0x2d, 0x56, 0xdb, 0xf9, 0x25, 0xe8,
+	0xbe, 0x2c, 0x4d, 0x77, 0xef, 0x62, 0xea, 0x7e, 0x37, 0xe0, 0x5e, 0xde, 0xc0, 0xc7, 0x01, 0x93,
+	0x0a, 0xe3, 0x1d, 0x3c, 0x67, 0x01, 0x12, 0x17, 0x16, 0x0e, 0xc5, 0x19, 0xf2, 0xc3, 0x24, 0x42,
+	0xdd, 0xa2, 0xb9, 0xdd, 0xb8, 0xf8, 0xb2, 0x5e, 0xf3, 0x27, 0x32, 0x59, 0x85, 0xa6, 0xfe, 0xa1,
+	0xf3, 0x2e, 0xe4, 0xf5, 0x4c, 0x22, 0x8f, 0x61, 0x31, 0xeb, 0xf4, 0x56, 0x9c, 0x60, 0x68, 0x9b,
+	0x53, 0xc4, 0x74, 0x81, 0x6c, 0xc1, 0x3f, 0xfd, 0x44, 0x2a, 0x1c, 0x1d, 0x63, 0x2c, 0x99, 0xe0,
+	0x76, 0x63, 0x8a, 0xac, 0x96, 0xc8, 0x06, 0x40, 0x27, 0x8a, 0x0a, 0xb0, 0x39, 0x05, 0x4e, 0xe9,
+	0xa4, 0x05, 0xf3, 0x6f, 0x28, 0x1f, 0x74, 0xc5, 0x09, 0xda, 0x73, 0x53, 0x4c, 0xa9, 0xba, 0xef,
+	0x60, 0x25, 0x7f, 0xf4, 0x11, 0x8f, 0xff, 0xea, 0xb3, 0x5d, 0x05, 0xff, 0x17, 0xad, 0xa3, 0x13,
+	0xaa, 0xb0, 0x17, 0x8b, 0x53, 0x16, 0xea, 0xbe, 0xaf, 0x58, 0x2c, 0xd5, 0x01, 0x1d, 0x65, 0x7d,
+	0x8b, 0x7b, 0x13, 0x39, 0x0b, 0x9e, 0x23, 0xf5, 0x6a, 0xf0, 0x9c, 0x58, 0x06, 0x73, 0x9b, 0x09,
+	0xdb, 0x6c, 0x19, 0x65, 0x31, 0x15, 0xdc, 0xe7, 0xa5, 0x6b, 0x77, 0x88, 0xc1, 0xd9, 0x91, 0xc4,
+	0x98, 0xe7, 0x1d, 0x8b, 0x73, 0xc5, 0xb4, 0x54, 0xdd, 0x17, 0xe5, 0xfe, 0xb3, 0xbc, 0x7f, 0x70,
+	0xf5, 0x83, 0x01, 0xa4, 0x74, 0xa5, 0x7c, 0x80, 0xbd, 0xa1, 0xe0, 0x7a, 0x3a, 0xfa, 0x50, 0xb9,
+	0x95, 0x49, 0xe9, 0xb2, 0xf5, 0x21, 0xdd, 0xc2, 0x6b, 0x2a, 0x87, 0x95, 0x67, 0x56, 0x4b, 0xe9,
+	0xc4, 0x4a, 0xa1, 0xf2, 0xf7, 0x99, 0xc8, 0xee, 0x18, 0xfe, 0x9d, 0x7c, 0x73, 0xbd, 0x98, 0x9d,
+	0xd3, 0x20, 0x21, 0x1e, 0x98, 0xfb, 0x98, 0x68, 0xfb, 0xa5, 0xf6, 0xb2, 0xfe, 0xdb, 0xe7, 0x50,
+	0x4e, 0xec, 0x63, 0x52, 0x0c, 0x6f, 0x1f, 0x13, 0xf2, 0x14, 0xe6, 0x8e, 0x69, 0x38, 0xc6, 0xf4,
+	0xb3, 0x33, 0x37, 0x97, 0xda, 0xf6, 0x0d, 0x57, 0x34, 0xe0, 0xe7, 0x9c, 0xdb, 0x2d, 0x6d, 0x77,
+	0xef, 0x6c, 0xeb, 0x9e, 0xc2, 0x7f, 0xd5, 0xba, 0x3f, 0x0e, 0x51, 0x12, 0x0f, 0x9a, 0xfa, 0x60,
+	0x1b, 0xbf, 0x09, 0x93, 0x61, 0x64, 0x1d, 0x9a, 0xe9, 0x46, 0xb2, 0xf0, 0x8b, 0xed, 0x05, 0xcd,
+	0xa7, 0x8a, 0x9f, 0xe9, 0x5b, 0x9f, 0x8c, 0x32, 0xed, 0x24, 0x08, 0x59, 0x83, 0xfb, 0x33, 0x62,
+	0x77, 0x48, 0xd5, 0x81, 0xe0, 0x68, 0xd5, 0xc8, 0x3a, 0x3c, 0xb8, 0xb1, 0xbc, 0xc7, 0xcf, 0x99,
+	0x42, 0xcb, 0x20, 0x1b, 0xd0, 0x9a, 0x01, 0xfa, 0x8a, 0xaa, 0xb1, 0x3c, 0x64, 0x23, 0x94, 0x8a,
+	0x8e, 0x22, 0xab, 0x4e, 0x1c, 0x58, 0x9d, 0xa1, 0xb2, 0xed, 0xd1, 0x30, 0xb4, 0xcc, 0xad, 0x6f,
+	0xc6, 0xcf, 0x43, 0xd0, 0x6f, 0x9b, 0xb5, 0xd7, 0x72, 0x27, 0x0c, 0xc5, 0xfb, 0x4e, 0x18, 0x5a,
+	0xb5, 0x59, 0xfb, 0x09, 0xd0, 0x15, 0x5c, 0xd1, 0x40, 0x49, 0xcb, 0x20, 0x0f, 0x61, 0xed, 0x36,
+	0x4a, 0xcf, 0xc6, 0xaa, 0x13, 0x17, 0x9c, 0x1b, 0x90, 0x1d, 0x26, 0x69, 0x61, 0x66, 0x92, 0x27,
+	0xf0, 0xe8, 0x17, 0x4c, 0xe9, 0xd7, 0xb8, 0x25, 0x55, 0x01, 0x66, 0x96, 0xcd, 0x6d, 0xfb, 0xe2,
+	0xca, 0x31, 0x2e, 0xaf, 0x1c, 0xe3, 0xeb, 0x95, 0x63, 0x7c, 0xbc, 0x76, 0x6a, 0x97, 0xd7, 0x4e,
+	0xed, 0xf3, 0xb5, 0x53, 0xfb, 0x11, 0x00, 0x00, 0xff, 0xff, 0x1e, 0x66, 0x52, 0xc8, 0x6e, 0x06,
+	0x00, 0x00,
 }

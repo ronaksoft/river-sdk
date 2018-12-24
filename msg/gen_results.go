@@ -118,6 +118,18 @@ func ResultUsersMany(out *MessageEnvelope, res *UsersMany) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultInputMediaUploadedPhoto(out *MessageEnvelope, res *InputMediaUploadedPhoto) {
+	out.Constructor = C_InputMediaUploadedPhoto
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultInputMediaUploadedDocument(out *MessageEnvelope, res *InputMediaUploadedDocument) {
+	out.Constructor = C_InputMediaUploadedDocument
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultAccountRegisterDevice(out *MessageEnvelope, res *AccountRegisterDevice) {
 	out.Constructor = C_AccountRegisterDevice
 	pbytes.Put(out.Message)
@@ -238,6 +250,12 @@ func ResultUpdateReadHistoryInbox(out *MessageEnvelope, res *UpdateReadHistoryIn
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultInputMediaContact(out *MessageEnvelope, res *InputMediaContact) {
+	out.Constructor = C_InputMediaContact
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultMessagesSetTyping(out *MessageEnvelope, res *MessagesSetTyping) {
 	out.Constructor = C_MessagesSetTyping
 	pbytes.Put(out.Message)
@@ -252,6 +270,12 @@ func ResultGroupsToggleAdmins(out *MessageEnvelope, res *GroupsToggleAdmins) {
 }
 func ResultInitCompleteAuth(out *MessageEnvelope, res *InitCompleteAuth) {
 	out.Constructor = C_InitCompleteAuth
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultAccountSetPrivacy(out *MessageEnvelope, res *AccountSetPrivacy) {
+	out.Constructor = C_AccountSetPrivacy
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -306,6 +330,12 @@ func ResultUpdateMessageEdited(out *MessageEnvelope, res *UpdateMessageEdited) {
 }
 func ResultUpdateState(out *MessageEnvelope, res *UpdateState) {
 	out.Constructor = C_UpdateState
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultAccountGetPrivacy(out *MessageEnvelope, res *AccountGetPrivacy) {
+	out.Constructor = C_AccountGetPrivacy
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -370,6 +400,12 @@ func ResultProtoMessage(out *MessageEnvelope, res *ProtoMessage) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultInputMediaPhoto(out *MessageEnvelope, res *InputMediaPhoto) {
+	out.Constructor = C_InputMediaPhoto
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultAuthRegister(out *MessageEnvelope, res *AuthRegister) {
 	out.Constructor = C_AuthRegister
 	pbytes.Put(out.Message)
@@ -390,6 +426,12 @@ func ResultMessageActionGroupCreated(out *MessageEnvelope, res *MessageActionGro
 }
 func ResultSystemClientLog(out *MessageEnvelope, res *SystemClientLog) {
 	out.Constructor = C_SystemClientLog
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultInputMediaDocument(out *MessageEnvelope, res *InputMediaDocument) {
+	out.Constructor = C_InputMediaDocument
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -474,6 +516,12 @@ func ResultProtoEncryptedPayload(out *MessageEnvelope, res *ProtoEncryptedPayloa
 }
 func ResultPhoneContact(out *MessageEnvelope, res *PhoneContact) {
 	out.Constructor = C_PhoneContact
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultAuthResendCode(out *MessageEnvelope, res *AuthResendCode) {
+	out.Constructor = C_AuthResendCode
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -598,8 +646,20 @@ func ResultPeerNotifySettings(out *MessageEnvelope, res *PeerNotifySettings) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultMessageEntity(out *MessageEnvelope, res *MessageEntity) {
+	out.Constructor = C_MessageEntity
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultMessagesDelete(out *MessageEnvelope, res *MessagesDelete) {
 	out.Constructor = C_MessagesDelete
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultAuthDestroyKey(out *MessageEnvelope, res *AuthDestroyKey) {
+	out.Constructor = C_AuthDestroyKey
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -612,6 +672,12 @@ func ResultAccountUpdateProfile(out *MessageEnvelope, res *AccountUpdateProfile)
 }
 func ResultFileSavePart(out *MessageEnvelope, res *FileSavePart) {
 	out.Constructor = C_FileSavePart
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultAccountPrivacyRules(out *MessageEnvelope, res *AccountPrivacyRules) {
+	out.Constructor = C_AccountPrivacyRules
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -658,6 +724,12 @@ func ResultGroupParticipant(out *MessageEnvelope, res *GroupParticipant) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultInputDocument(out *MessageEnvelope, res *InputDocument) {
+	out.Constructor = C_InputDocument
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultBool(out *MessageEnvelope, res *Bool) {
 	out.Constructor = C_Bool
 	pbytes.Put(out.Message)
@@ -684,6 +756,12 @@ func ResultInitConnect(out *MessageEnvelope, res *InitConnect) {
 }
 func ResultFileGet(out *MessageEnvelope, res *FileGet) {
 	out.Constructor = C_FileGet
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultAccountChangePhone(out *MessageEnvelope, res *AccountChangePhone) {
+	out.Constructor = C_AccountChangePhone
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

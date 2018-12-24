@@ -3,7 +3,7 @@ package msg;
 
 // FileSavePart
 // @Function
-// @Returns: Bool
+// @Return: Bool
 message FileSavePart {
     required int64 FileID = 1 [jstype = JS_STRING];
     required int32 PartID = 2;
@@ -13,7 +13,7 @@ message FileSavePart {
 
 // FileGetPart
 // @Function
-// @Returns File
+// @Return: File
 message FileGet {
     required FileLocation Location = 1;
     required int32 Offset = 2;

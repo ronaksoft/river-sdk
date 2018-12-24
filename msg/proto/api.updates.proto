@@ -109,7 +109,7 @@ message UpdateNotifySettings {
     required int32 UCount = 100;
     required int64 UpdateID = 101;
     required int64 UserID = 1 [jstype = JS_STRING];
-    required InputPeer NotifyPeer = 2;
+    required Peer NotifyPeer = 2;
     required PeerNotifySettings Settings = 3;
 }
 

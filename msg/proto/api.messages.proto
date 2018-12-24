@@ -4,31 +4,46 @@ import "core.types.proto";
 
 // MessageSend
 // @Function
-// @Returns:     MessagesSent
+// @Return: MessagesSent
 message MessagesSend {
     required int64 RandomID = 1;
     required InputPeer Peer = 2;
     required string Body = 5;
     optional int64 ReplyTo = 6;
+    optional bool ClearDraft = 7;
+    repeated MessageEntity Entities = 8;
+}
+
+// MediaType
+enum MediaType {
+    MediaTypeEmpty = 0;
+    MediaTypeUploadedPhoto = 1;
+    MediaTypePhoto = 2;
+    MediaTypeUploadedDocument = 3;
+    MediaTypeDocument = 4;
+    MediaTypeContact = 5;
+}
+
+// MessageSendMedia
+// @Function
+// @Return: Messages
+message MessagesSendMedia {
+    required int64 RandomID = 1;
+    required InputPeer Peer = 2;
+    required MediaType MediaType = 3;
+    required bytes MediaData = 4;
+    optional int64 ReplyTo = 5;
+    optional bool ClearDraft = 6;
 }
 
 // MessagesEdit
 // @Function
-// @Returns:    Bool
+// @Return: Bool
 message MessagesEdit {
     required int64 RandomID = 1;
     required InputPeer Peer = 2;
     required string Body = 3;
     required int64 MessageID = 4;
-}
-
-// MessageSendMedia
-// @Function
-// @Returns:    Messages
-message MessagesSendMedia {
-    required int64 RandomID = 1;
-    required InputPeer Peer = 2;
-    required InputFile File = 3;
 }
 
 // MessageReadHistory

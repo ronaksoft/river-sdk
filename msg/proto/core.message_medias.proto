@@ -1,0 +1,47 @@
+syntax = "proto2";
+package msg;
+import "core.types.proto";
+
+/*
+    Creation Time: 2018 - Nov - 28
+    Created by:  (ehsan)
+    Maintainers:
+       1.  Ehsan N. Moosa (E2)
+    Auditor: Ehsan N. Moosa (E2)
+    Copyright Ronak Software Group 2018
+*/
+
+// InputMediaUploadedPhoto
+message InputMediaUploadedPhoto {
+    required string Caption = 1;
+    repeated InputDocument Stickers = 2;
+    required InputFile File = 3;
+}
+
+// InputMediaPhoto
+message InputMediaPhoto {
+    required string Caption = 1;
+    required InputDocument Photo = 2;
+}
+
+// InputMediaContact
+message InputMediaContact {
+    required string Phone = 1;
+    required string FirstName = 2;
+    required string LastName = 3;
+}
+
+// InputMediaUploadedDocument
+message InputMediaUploadedDocument {
+    required InputFile File = 1;
+    required InputFile Thumbnail = 2;
+    required string MimeType = 3;
+    required string Caption = 4;
+    repeated InputDocument Stickers = 5;
+}
+
+// InputMediaDocument
+message InputMediaDocument {
+    required string Caption = 1;
+    required InputDocument Document = 2;
+}

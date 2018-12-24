@@ -4,7 +4,7 @@ import "core.types.proto";
 
 // GroupsCreate
 // @Function
-// @Returns: Bool
+// @Return: Bool
 message GroupsCreate {
     repeated InputUser Users = 1;
     required string Title = 2;
@@ -12,7 +12,7 @@ message GroupsCreate {
 
 // GroupsAddUser
 // @Function
-// @Returns: Bool
+// @Return: Bool
 message GroupsAddUser {
     required int64 GroupID = 1 [jstype = JS_STRING];
     required InputUser User = 2;
@@ -21,7 +21,7 @@ message GroupsAddUser {
 
 // GroupsEditTitle
 // @Function
-// @Returns: Bool
+// @Return: Bool
 message GroupsEditTitle {
     required int64 GroupID = 1 [jstype = JS_STRING];
     required string Title = 2;
@@ -29,7 +29,7 @@ message GroupsEditTitle {
 
 // GroupsDeleteUser
 // @Function
-// @Returns: Bool
+// @Return: Bool
 message GroupsDeleteUser {
     required int64 GroupID = 1 [jstype = JS_STRING];
     required InputUser User = 2;
@@ -37,14 +37,14 @@ message GroupsDeleteUser {
 
 // GroupsGetFull
 // @Function
-// @Returns: GroupFull
+// @Return: GroupFull
 message GroupsGetFull {
     required int64 GroupID = 1 [jstype = JS_STRING];
 }
 
 // GroupsToggleAdmins
 // @Function
-// @Returns: Bool
+// @Return: Bool
 message GroupsToggleAdmins {
     required int64 GroupID = 1 [jstype = JS_STRING];
     required bool AdminEnabled = 2;
@@ -52,7 +52,7 @@ message GroupsToggleAdmins {
 
 // GroupsUpdateAdmin
 // @Function
-// @Returns: Bool
+// @Return: Bool
 message GroupsUpdateAdmin {
     required int64 GroupID = 1 [jstype = JS_STRING];
     required InputUser User = 2;

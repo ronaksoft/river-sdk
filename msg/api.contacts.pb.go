@@ -23,7 +23,7 @@ const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
 // ContactsImport
 // @Function
-// @Returns: ContactsImported
+// @Return: ContactsImported
 type ContactsImport struct {
 	Contacts []*PhoneContact `protobuf:"bytes,1,rep,name=Contacts" json:"Contacts,omitempty"`
 	Replace  bool            `protobuf:"varint,2,req,name=Replace" json:"Replace"`
@@ -33,7 +33,7 @@ func (m *ContactsImport) Reset()         { *m = ContactsImport{} }
 func (m *ContactsImport) String() string { return proto.CompactTextString(m) }
 func (*ContactsImport) ProtoMessage()    {}
 func (*ContactsImport) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_contacts_3797fe66e88821dc, []int{0}
+	return fileDescriptor_api_contacts_10b8fcf1ddf56fe8, []int{0}
 }
 func (m *ContactsImport) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -78,7 +78,7 @@ func (m *ContactsImport) GetReplace() bool {
 
 // ContactsGet
 // @Function
-// @Returns: ContactsMany
+// @Return: ContactsMany
 type ContactsGet struct {
 	MD5Hash string `protobuf:"bytes,1,req,name=MD5Hash" json:"MD5Hash"`
 }
@@ -87,7 +87,7 @@ func (m *ContactsGet) Reset()         { *m = ContactsGet{} }
 func (m *ContactsGet) String() string { return proto.CompactTextString(m) }
 func (*ContactsGet) ProtoMessage()    {}
 func (*ContactsGet) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_contacts_3797fe66e88821dc, []int{1}
+	return fileDescriptor_api_contacts_10b8fcf1ddf56fe8, []int{1}
 }
 func (m *ContactsGet) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -125,7 +125,7 @@ func (m *ContactsGet) GetMD5Hash() string {
 
 // ContactsDelete
 // @Function
-// @Returns: Bool
+// @Return: Bool
 type ContactsDelete struct {
 	UserIDs []int64 `protobuf:"varint,1,rep,name=UserIDs" json:"UserIDs,omitempty"`
 }
@@ -134,7 +134,7 @@ func (m *ContactsDelete) Reset()         { *m = ContactsDelete{} }
 func (m *ContactsDelete) String() string { return proto.CompactTextString(m) }
 func (*ContactsDelete) ProtoMessage()    {}
 func (*ContactsDelete) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_contacts_3797fe66e88821dc, []int{2}
+	return fileDescriptor_api_contacts_10b8fcf1ddf56fe8, []int{2}
 }
 func (m *ContactsDelete) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -179,7 +179,7 @@ func (m *ContactsImported) Reset()         { *m = ContactsImported{} }
 func (m *ContactsImported) String() string { return proto.CompactTextString(m) }
 func (*ContactsImported) ProtoMessage()    {}
 func (*ContactsImported) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_contacts_3797fe66e88821dc, []int{3}
+	return fileDescriptor_api_contacts_10b8fcf1ddf56fe8, []int{3}
 }
 func (m *ContactsImported) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -225,7 +225,7 @@ func (m *ContactsMany) Reset()         { *m = ContactsMany{} }
 func (m *ContactsMany) String() string { return proto.CompactTextString(m) }
 func (*ContactsMany) ProtoMessage()    {}
 func (*ContactsMany) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_contacts_3797fe66e88821dc, []int{4}
+	return fileDescriptor_api_contacts_10b8fcf1ddf56fe8, []int{4}
 }
 func (m *ContactsMany) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1142,9 +1142,9 @@ var (
 	ErrIntOverflowApiContacts   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("api.contacts.proto", fileDescriptor_api_contacts_3797fe66e88821dc) }
+func init() { proto.RegisterFile("api.contacts.proto", fileDescriptor_api_contacts_10b8fcf1ddf56fe8) }
 
-var fileDescriptor_api_contacts_3797fe66e88821dc = []byte{
+var fileDescriptor_api_contacts_10b8fcf1ddf56fe8 = []byte{
 	// 260 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4a, 0x2c, 0xc8, 0xd4,
 	0x4b, 0xce, 0xcf, 0x2b, 0x49, 0x4c, 0x2e, 0x29, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62,

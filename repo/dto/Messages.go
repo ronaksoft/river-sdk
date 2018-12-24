@@ -1,6 +1,10 @@
 package dto
 
-import "git.ronaksoftware.com/ronak/riversdk/msg"
+import (
+	"encoding/json"
+
+	"git.ronaksoftware.com/ronak/riversdk/msg"
+)
 
 type Messages struct {
 	dto
@@ -21,6 +25,7 @@ type Messages struct {
 	ReplyTo             int64  `gorm:"column:ReplyTo" json:"ReplyTo"`
 	MessageAction       int32  `gorm:"column:MessageAction" json:"MessageAction"`
 	MessageActionData   []byte `gorm:"type:blob;column:MessageActionData" json:"MessageActionData"`
+	Entities            []byte `gorm:"type:blob;column:Entities" json:"Entities"`
 }
 
 func (Messages) TableName() string {
@@ -45,6 +50,7 @@ func (m *Messages) Map(v *msg.UserMessage) {
 	m.ReplyTo = v.ReplyTo
 	m.MessageAction = v.MessageAction
 	m.MessageActionData = v.MessageActionData
+	m.Entities, _ = json.Marshal(v.Entities)
 }
 
 func (m *Messages) MapTo(v *msg.UserMessage) {
@@ -65,4 +71,5 @@ func (m *Messages) MapTo(v *msg.UserMessage) {
 	v.ReplyTo = m.ReplyTo
 	v.MessageAction = m.MessageAction
 	v.MessageActionData = m.MessageActionData
+	json.Unmarshal(m.Entities, v.Entities)
 }

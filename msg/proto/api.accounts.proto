@@ -14,7 +14,7 @@ message AccountSetNotifySettings {
 // @Function
 // @Return: NotifySettings
 message AccountGetNotifySettings {
-    repeated InputPeer Peer = 1;
+    required InputPeer Peer = 1;
 }
 
 // AccountRegisterDevice
@@ -58,4 +58,52 @@ message AccountCheckUsername {
 // @Return: UserFull
 message AccountUpdateUsername {
     required string Username = 1;
+}
+
+// AccountChangePhone
+// @Function
+// @Return: User
+message AccountChangePhone {
+    required string Phone = 1;
+    required string PhoneCodeHash = 2;
+    required string PhoneCode = 3;
+}
+
+// AccountPrivacyKey
+enum AccountPrivacyKey {
+    AccountPrivacyKeyChatNone = 0;
+    AccountPrivacyKeyChatInvite = 1;
+    AccountPrivacyKeyStatusTimestamp = 2;
+    AccountPrivacyKeyPhoneCall = 3;
+}
+
+// AccountPrivacyValue
+enum AccountPrivacyValue {
+    AccountPrivacyValueAllowAll = 0;
+    AccountPrivacyValueAllowContacts = 1;
+    AccountPrivacyValueAllowUsers = 2;
+    AccountPrivacyValueDisallowAll = 3;
+    AccountPrivacyValueDisallowContacts = 4;
+    AccountPrivacyValueDisallowUsers = 5;
+}
+
+// AccountSetPrivacy
+// @Function
+// @Return: AccountPrivacyRules
+message AccountSetPrivacy {
+    required AccountPrivacyKey Key = 1;
+    repeated AccountPrivacyValue Values = 2;
+}
+
+// AccountGetPrivacy
+// @Function
+// @Return: AccountPrivacyRules
+message AccountGetPrivacy {
+    required AccountPrivacyKey Key = 1;
+}
+
+// AccountPrivacyRules
+message AccountPrivacyRules {
+    repeated AccountPrivacyValue Rules = 1;
+    repeated User Users = 2;
 }

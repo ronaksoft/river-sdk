@@ -4,7 +4,7 @@ import "core.types.proto";
 
 // ContactsImport
 // @Function
-// @Returns: ContactsImported
+// @Return: ContactsImported
 message ContactsImport {
     repeated PhoneContact Contacts = 1;
     required bool Replace = 2;
@@ -12,14 +12,14 @@ message ContactsImport {
 
 // ContactsGet
 // @Function
-// @Returns: ContactsMany
+// @Return: ContactsMany
 message ContactsGet {
     required string MD5Hash = 1;
 }
 
 // ContactsDelete
 // @Function
-// @Returns: Bool
+// @Return: Bool
 message ContactsDelete {
     repeated int64 UserIDs = 1 [jstype = JS_STRING];
 }

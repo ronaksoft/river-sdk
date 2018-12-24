@@ -78,12 +78,12 @@ func (x *FileType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 func (FileType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_api_files_d19aa5b00a9e9750, []int{0}
+	return fileDescriptor_api_files_4106d38717163c87, []int{0}
 }
 
 // FileSavePart
 // @Function
-// @Returns: Bool
+// @Return: Bool
 type FileSavePart struct {
 	FileID     int64  `protobuf:"varint,1,req,name=FileID" json:"FileID"`
 	PartID     int32  `protobuf:"varint,2,req,name=PartID" json:"PartID"`
@@ -95,7 +95,7 @@ func (m *FileSavePart) Reset()         { *m = FileSavePart{} }
 func (m *FileSavePart) String() string { return proto.CompactTextString(m) }
 func (*FileSavePart) ProtoMessage()    {}
 func (*FileSavePart) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_files_d19aa5b00a9e9750, []int{0}
+	return fileDescriptor_api_files_4106d38717163c87, []int{0}
 }
 func (m *FileSavePart) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -154,7 +154,7 @@ func (m *FileSavePart) GetBytes() []byte {
 
 // FileGetPart
 // @Function
-// @Returns File
+// @Return: File
 type FileGet struct {
 	Location *FileLocation `protobuf:"bytes,1,req,name=Location" json:"Location,omitempty"`
 	Offset   int32         `protobuf:"varint,2,req,name=Offset" json:"Offset"`
@@ -165,7 +165,7 @@ func (m *FileGet) Reset()         { *m = FileGet{} }
 func (m *FileGet) String() string { return proto.CompactTextString(m) }
 func (*FileGet) ProtoMessage()    {}
 func (*FileGet) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_files_d19aa5b00a9e9750, []int{1}
+	return fileDescriptor_api_files_4106d38717163c87, []int{1}
 }
 func (m *FileGet) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -227,7 +227,7 @@ func (m *FileLocation) Reset()         { *m = FileLocation{} }
 func (m *FileLocation) String() string { return proto.CompactTextString(m) }
 func (*FileLocation) ProtoMessage()    {}
 func (*FileLocation) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_files_d19aa5b00a9e9750, []int{2}
+	return fileDescriptor_api_files_4106d38717163c87, []int{2}
 }
 func (m *FileLocation) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -295,7 +295,7 @@ func (m *File) Reset()         { *m = File{} }
 func (m *File) String() string { return proto.CompactTextString(m) }
 func (*File) ProtoMessage()    {}
 func (*File) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_files_d19aa5b00a9e9750, []int{3}
+	return fileDescriptor_api_files_4106d38717163c87, []int{3}
 }
 func (m *File) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1223,9 +1223,9 @@ var (
 	ErrIntOverflowApiFiles   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("api.files.proto", fileDescriptor_api_files_d19aa5b00a9e9750) }
+func init() { proto.RegisterFile("api.files.proto", fileDescriptor_api_files_4106d38717163c87) }
 
-var fileDescriptor_api_files_d19aa5b00a9e9750 = []byte{
+var fileDescriptor_api_files_4106d38717163c87 = []byte{
 	// 412 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x91, 0xdf, 0x8a, 0xd3, 0x40,
 	0x14, 0xc6, 0x33, 0x49, 0x9a, 0x2d, 0xa7, 0xd5, 0x8e, 0xe3, 0x4d, 0x10, 0x89, 0x25, 0x88, 0x06,

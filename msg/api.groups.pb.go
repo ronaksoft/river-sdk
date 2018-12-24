@@ -24,7 +24,7 @@ const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
 // GroupsCreate
 // @Function
-// @Returns: Bool
+// @Return: Bool
 type GroupsCreate struct {
 	Users []*InputUser `protobuf:"bytes,1,rep,name=Users" json:"Users,omitempty"`
 	Title string       `protobuf:"bytes,2,req,name=Title" json:"Title"`
@@ -34,7 +34,7 @@ func (m *GroupsCreate) Reset()         { *m = GroupsCreate{} }
 func (m *GroupsCreate) String() string { return proto.CompactTextString(m) }
 func (*GroupsCreate) ProtoMessage()    {}
 func (*GroupsCreate) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_groups_9a907c8894ed4756, []int{0}
+	return fileDescriptor_api_groups_28a4da9850682e02, []int{0}
 }
 func (m *GroupsCreate) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -79,7 +79,7 @@ func (m *GroupsCreate) GetTitle() string {
 
 // GroupsAddUser
 // @Function
-// @Returns: Bool
+// @Return: Bool
 type GroupsAddUser struct {
 	GroupID      int64      `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
 	User         *InputUser `protobuf:"bytes,2,req,name=User" json:"User,omitempty"`
@@ -90,7 +90,7 @@ func (m *GroupsAddUser) Reset()         { *m = GroupsAddUser{} }
 func (m *GroupsAddUser) String() string { return proto.CompactTextString(m) }
 func (*GroupsAddUser) ProtoMessage()    {}
 func (*GroupsAddUser) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_groups_9a907c8894ed4756, []int{1}
+	return fileDescriptor_api_groups_28a4da9850682e02, []int{1}
 }
 func (m *GroupsAddUser) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -142,7 +142,7 @@ func (m *GroupsAddUser) GetForwardLimit() int32 {
 
 // GroupsEditTitle
 // @Function
-// @Returns: Bool
+// @Return: Bool
 type GroupsEditTitle struct {
 	GroupID int64  `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
 	Title   string `protobuf:"bytes,2,req,name=Title" json:"Title"`
@@ -152,7 +152,7 @@ func (m *GroupsEditTitle) Reset()         { *m = GroupsEditTitle{} }
 func (m *GroupsEditTitle) String() string { return proto.CompactTextString(m) }
 func (*GroupsEditTitle) ProtoMessage()    {}
 func (*GroupsEditTitle) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_groups_9a907c8894ed4756, []int{2}
+	return fileDescriptor_api_groups_28a4da9850682e02, []int{2}
 }
 func (m *GroupsEditTitle) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -197,7 +197,7 @@ func (m *GroupsEditTitle) GetTitle() string {
 
 // GroupsDeleteUser
 // @Function
-// @Returns: Bool
+// @Return: Bool
 type GroupsDeleteUser struct {
 	GroupID int64      `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
 	User    *InputUser `protobuf:"bytes,2,req,name=User" json:"User,omitempty"`
@@ -207,7 +207,7 @@ func (m *GroupsDeleteUser) Reset()         { *m = GroupsDeleteUser{} }
 func (m *GroupsDeleteUser) String() string { return proto.CompactTextString(m) }
 func (*GroupsDeleteUser) ProtoMessage()    {}
 func (*GroupsDeleteUser) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_groups_9a907c8894ed4756, []int{3}
+	return fileDescriptor_api_groups_28a4da9850682e02, []int{3}
 }
 func (m *GroupsDeleteUser) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -252,7 +252,7 @@ func (m *GroupsDeleteUser) GetUser() *InputUser {
 
 // GroupsGetFull
 // @Function
-// @Returns: GroupFull
+// @Return: GroupFull
 type GroupsGetFull struct {
 	GroupID int64 `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
 }
@@ -261,7 +261,7 @@ func (m *GroupsGetFull) Reset()         { *m = GroupsGetFull{} }
 func (m *GroupsGetFull) String() string { return proto.CompactTextString(m) }
 func (*GroupsGetFull) ProtoMessage()    {}
 func (*GroupsGetFull) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_groups_9a907c8894ed4756, []int{4}
+	return fileDescriptor_api_groups_28a4da9850682e02, []int{4}
 }
 func (m *GroupsGetFull) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -299,7 +299,7 @@ func (m *GroupsGetFull) GetGroupID() int64 {
 
 // GroupsToggleAdmins
 // @Function
-// @Returns: Bool
+// @Return: Bool
 type GroupsToggleAdmins struct {
 	GroupID      int64 `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
 	AdminEnabled bool  `protobuf:"varint,2,req,name=AdminEnabled" json:"AdminEnabled"`
@@ -309,7 +309,7 @@ func (m *GroupsToggleAdmins) Reset()         { *m = GroupsToggleAdmins{} }
 func (m *GroupsToggleAdmins) String() string { return proto.CompactTextString(m) }
 func (*GroupsToggleAdmins) ProtoMessage()    {}
 func (*GroupsToggleAdmins) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_groups_9a907c8894ed4756, []int{5}
+	return fileDescriptor_api_groups_28a4da9850682e02, []int{5}
 }
 func (m *GroupsToggleAdmins) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -354,7 +354,7 @@ func (m *GroupsToggleAdmins) GetAdminEnabled() bool {
 
 // GroupsUpdateAdmin
 // @Function
-// @Returns: Bool
+// @Return: Bool
 type GroupsUpdateAdmin struct {
 	GroupID int64      `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
 	User    *InputUser `protobuf:"bytes,2,req,name=User" json:"User,omitempty"`
@@ -365,7 +365,7 @@ func (m *GroupsUpdateAdmin) Reset()         { *m = GroupsUpdateAdmin{} }
 func (m *GroupsUpdateAdmin) String() string { return proto.CompactTextString(m) }
 func (*GroupsUpdateAdmin) ProtoMessage()    {}
 func (*GroupsUpdateAdmin) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_groups_9a907c8894ed4756, []int{6}
+	return fileDescriptor_api_groups_28a4da9850682e02, []int{6}
 }
 func (m *GroupsUpdateAdmin) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1638,9 +1638,9 @@ var (
 	ErrIntOverflowApiGroups   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("api.groups.proto", fileDescriptor_api_groups_9a907c8894ed4756) }
+func init() { proto.RegisterFile("api.groups.proto", fileDescriptor_api_groups_28a4da9850682e02) }
 
-var fileDescriptor_api_groups_9a907c8894ed4756 = []byte{
+var fileDescriptor_api_groups_28a4da9850682e02 = []byte{
 	// 335 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x51, 0xcd, 0x4a, 0xf3, 0x40,
 	0x14, 0xcd, 0x4f, 0xf3, 0x7d, 0x7a, 0xad, 0x5a, 0x67, 0x15, 0xba, 0x88, 0x61, 0x70, 0x91, 0x55,

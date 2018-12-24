@@ -12,6 +12,8 @@ type Users struct {
 	Username   string `gorm:"type:TEXT;column:Username" json:"Username"`
 	ClientID   int64  `gorm:"column:ClientID" json:"ClientID"`
 	IsContact  int32  `gorm:"column:IsContact" json:"IsContact"`
+	Status     int32  `gorm:"column:Status" json:"Status"`
+	Restricted bool   `gorm:"column:Restricted" json:"Restricted"`
 }
 
 func (Users) TableName() string {
