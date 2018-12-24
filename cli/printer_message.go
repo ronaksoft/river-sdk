@@ -97,7 +97,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		bufDialogs := new(bytes.Buffer)
 		tableDialogs := tablewriter.NewWriter(bufDialogs)
 		tableDialogs.SetHeader([]string{
-			"PeerID", "PeerType", "Top Message ID", "Unread", "AccessHash",
+			"PeerID", "PeerType", "Top Message ID", "Unread", "AccessHash", "MentionedCount",
 		})
 
 		for _, d := range x.Dialogs {
@@ -107,6 +107,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 				fmt.Sprintf("%d", d.TopMessageID),
 				fmt.Sprintf("%d", d.UnreadCount),
 				fmt.Sprintf("%d", d.AccessHash),
+				fmt.Sprintf("%d", d.MentionedCount),
 			})
 		}
 		tableDialogs.Render()

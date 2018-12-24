@@ -72,6 +72,9 @@ func (m *PendingMessages) MapToUserMessage(v *msg.UserMessage) {
 	//v.MessageAction = m.MessageAction
 
 	json.Unmarshal(m.Entities, v.Entities)
+	if v.Entities == nil {
+		v.Entities = []*msg.MessageEntity{}
+	}
 }
 
 func (m *PendingMessages) MapToDtoMessage(v *Messages) {
@@ -91,7 +94,8 @@ func (m *PendingMessages) MapToDtoMessage(v *Messages) {
 	//v.Inbox = m.Inbox
 	v.ReplyTo = m.ReplyTo
 	//v.MessageAction = m.MessageAction
-	json.Unmarshal(m.Entities, v.Entities)
+	v.Entities = m.Entities
+
 }
 
 func (m *PendingMessages) MapToMessageSend(v *msg.MessagesSend) {
@@ -105,4 +109,7 @@ func (m *PendingMessages) MapToMessageSend(v *msg.MessagesSend) {
 	v.ReplyTo = m.ReplyTo
 	v.ClearDraft = m.ClearDraft
 	json.Unmarshal(m.Entities, v.Entities)
+	if v.Entities == nil {
+		v.Entities = []*msg.MessageEntity{}
+	}
 }

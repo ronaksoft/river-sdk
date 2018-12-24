@@ -51,6 +51,9 @@ func (m *Messages) Map(v *msg.UserMessage) {
 	m.MessageAction = v.MessageAction
 	m.MessageActionData = v.MessageActionData
 	m.Entities, _ = json.Marshal(v.Entities)
+	if len(m.Entities) == 0 {
+		m.Entities = []byte("[]")
+	}
 }
 
 func (m *Messages) MapTo(v *msg.UserMessage) {
@@ -72,4 +75,7 @@ func (m *Messages) MapTo(v *msg.UserMessage) {
 	v.MessageAction = m.MessageAction
 	v.MessageActionData = m.MessageActionData
 	json.Unmarshal(m.Entities, v.Entities)
+	if v.Entities == nil {
+		v.Entities = []*msg.MessageEntity{}
+	}
 }
