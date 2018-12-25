@@ -102,8 +102,8 @@ message UserMessage {
     required bool ContentRead = 13;
     required bool Inbox = 14;
     required int64 ReplyTo = 15;
-    required int32 MessageAction = 16;
-    required bytes MessageActionData = 17;
+    optional int32 MessageAction = 16;
+    optional bytes MessageActionData = 17;
     repeated MessageEntity Entities = 18;
 }
 
