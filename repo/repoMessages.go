@@ -78,7 +78,7 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 	if m.SenderID != userID && (isNewMsg || m.ID > dtoDlg.TopMessageID) {
 		unreadCount++
 		for _, entity := range message.Entities {
-			if entity.Type == msg.MessageEntityTypeMention {
+			if entity.Type == msg.MessageEntityTypeMention && entity.UserID == userID {
 				mentionedCount++
 			}
 		}

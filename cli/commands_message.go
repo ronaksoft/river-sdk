@@ -22,6 +22,7 @@ var MessageSend = &ishell.Cmd{
 		req.Peer.ID = fnGetPeerID(c)
 		req.Peer.AccessHash = fnGetAccessHash(c)
 		req.Body = fnGetBody(c)
+		req.Entities = fnGetEntities(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSend, reqBytes, reqDelegate, false, false); err != nil {

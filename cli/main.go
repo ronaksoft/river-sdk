@@ -3,11 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk"
-	"git.ronaksoftware.com/ronak/riversdk/msg"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/fatih/color"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -75,13 +72,13 @@ func main() {
 		}
 	} else {
 		dbPath = "./_db"
-		dbID = "23740072"
+		dbID = "23740001"
 	}
 
 	qPath := "./_queue"
 	_SDK = new(riversdk.River)
 	_SDK.SetConfig(&riversdk.RiverConfig{
-		ServerEndpoint:     "ws://new.river.im", //"ws://192.168.1.110/",
+		ServerEndpoint:     "ws://web.river.im", //"ws://192.168.1.110/",
 		DbPath:             dbPath,
 		DbID:               dbID,
 		QueuePath:          fmt.Sprintf("%s/%s", qPath, dbID),
@@ -102,7 +99,7 @@ func main() {
 		_Shell.Run()
 	} else {
 
-		// go fnRunDebug_SendMessageByQueue()
+		// go fnRunDebug()
 
 		//block forever
 		select {}
@@ -110,62 +107,5 @@ func main() {
 
 }
 
-func fnRunDebug_SendMessageByQueue() {
-	req := msg.MessagesSend{}
-	req.Peer = &msg.InputPeer{
-		Type:       msg.PeerUser,
-		ID:         int64(_DbgPeerID),
-		AccessHash: uint64(_DbgAccessHash),
-	}
-	var count int = 1
-
-	var interval time.Duration = 500 * time.Millisecond
-
-	// make sure
-	_SDK.RemoveRealTimeRequest(msg.C_MessagesSend)
-	for i := 0; i < count; i++ {
-		time.Sleep(interval)
-		req.RandomID = ronak.RandomInt64(0)
-		req.Body = fmt.Sprintf("Test Msg [%v]", i)
-
-		reqBytes, _ := req.Marshal()
-		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessagesSend), reqBytes, reqDelegate, false, false); err != nil {
-			_Log.Debug(err.Error())
-		} else {
-			reqDelegate.RequestID = reqID
-		}
-	}
-
-	fmt.Println("XXXXXXXXXXXXXXXXXXXXXXYYYYYYYYYYYYYYYYYZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ")
-}
-
-func fnRunDebug_SendMessageByNetwork() {
-	req := msg.MessagesSend{}
-	req.Peer = &msg.InputPeer{
-		Type:       msg.PeerUser,
-		ID:         int64(_DbgPeerID),
-		AccessHash: uint64(_DbgAccessHash),
-	}
-	var count int = 100
-
-	var interval time.Duration = 500 * time.Millisecond
-
-	// make sure
-	_SDK.AddRealTimeRequest(msg.C_MessagesSend)
-	for i := 0; i < count; i++ {
-		time.Sleep(interval)
-		req.RandomID = ronak.RandomInt64(0)
-		req.Body = fmt.Sprintf("Test Msg [%v]", i)
-
-		reqBytes, _ := req.Marshal()
-		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessagesSend), reqBytes, reqDelegate, false, false); err != nil {
-			_Log.Debug(err.Error())
-		} else {
-			reqDelegate.RequestID = reqID
-		}
-	}
-
-	_SDK.RemoveRealTimeRequest(msg.C_MessagesSend)
+func fnRunDebug() {
 }

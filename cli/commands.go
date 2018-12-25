@@ -399,3 +399,65 @@ func fnGetAdminEnabled(c *ishell.Context) bool {
 	}
 	return del
 }
+
+func fnGetEntities(c *ishell.Context) []*msg.MessageEntity {
+	entities := make([]*msg.MessageEntity, 0)
+	for {
+		c.Print("Enter none numeric character to break\r\n")
+		var entityType msg.MessageEntityType
+		var offset int32
+		var length int32
+		var userID int64
+		for {
+			c.Print(len(entities), "Type: (0:Bold, 1:Italic, 2:Mention,3:Url, 4:Email ,5:Hashtag)")
+			typeID, err := strconv.ParseInt(c.ReadLine(), 10, 64)
+			if err == nil && typeID < 6 {
+				entityType = msg.MessageEntityType(typeID)
+				break
+			} else {
+				return entities
+			}
+		}
+
+		for {
+			c.Print(len(entities), "Offset: ")
+			tmp, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+			if err == nil {
+				offset = int32(tmp)
+				break
+			} else {
+				return entities
+			}
+		}
+
+		for {
+			c.Print(len(entities), "Length: ")
+			tmp, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+			if err == nil {
+				length = int32(tmp)
+				break
+			} else {
+				return entities
+			}
+		}
+
+		for {
+			c.Print(len(entities), "UserID: ")
+			tmp, err := strconv.ParseInt(c.ReadLine(), 10, 64)
+			if err == nil {
+				userID = tmp
+				break
+			} else {
+				return entities
+			}
+		}
+
+		e := &msg.MessageEntity{
+			Length: length,
+			Offset: offset,
+			Type:   entityType,
+			UserID: userID,
+		}
+		entities = append(entities, e)
+	}
+}
