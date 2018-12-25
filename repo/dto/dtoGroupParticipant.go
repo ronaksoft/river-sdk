@@ -10,6 +10,7 @@ type GroupParticipants struct {
 	LastName   string `gorm:"column:LastName" json:"LastName"`
 	Type       int32  `gorm:"column:Type" json:"Type"`
 	AccessHash int64  `gorm:"column:AccessHash" json:"AccessHash"`
+	Username   string `gorm:"column:Username" json:"Username"`
 }
 
 func (GroupParticipants) TableName() string {
@@ -23,6 +24,7 @@ func (m *GroupParticipants) MapFrom(groupID int64, v *msg.GroupParticipant) {
 	m.LastName = v.LastName
 	m.Type = int32(v.Type)
 	m.AccessHash = int64(v.AccessHash)
+	m.Username = v.Username
 }
 
 func (m *GroupParticipants) MapTo(v *msg.GroupParticipant) {
@@ -31,4 +33,5 @@ func (m *GroupParticipants) MapTo(v *msg.GroupParticipant) {
 	v.LastName = m.LastName
 	v.Type = msg.ParticipantType(m.Type)
 	v.AccessHash = uint64(m.AccessHash)
+	v.Username = v.Username
 }

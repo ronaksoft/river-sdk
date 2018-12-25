@@ -25,6 +25,9 @@ func (u *Users) MapFromUser(t *msg.User) {
 	u.FirstName = t.FirstName
 	u.LastName = t.LastName
 	u.Username = t.Username
+	u.Status = int32(t.Status)
+	u.Restricted = t.Restricted
+	u.AccessHash = int64(t.AccessHash)
 }
 
 func (u *Users) MapFromContactUser(t *msg.ContactUser) {
@@ -43,6 +46,9 @@ func (u *Users) MapToUser(v *msg.User) {
 	v.FirstName = u.FirstName
 	v.LastName = u.LastName
 	v.Username = u.Username
+	v.Status = msg.UserStatus(u.Status)
+	v.Restricted = u.Restricted
+	v.AccessHash = uint64(u.AccessHash)
 }
 func (u *Users) MapToContactUser(v *msg.ContactUser) {
 	v.ID = u.ID

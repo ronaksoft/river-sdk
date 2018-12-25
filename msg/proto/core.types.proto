@@ -71,6 +71,7 @@ message User {
     required string Username = 4;
     required UserStatus Status = 5;
     required bool Restricted = 6;
+    required fixed64 AccessHash = 7 [jstype = JS_STRING];
 }
 
 // ContactUser
@@ -216,5 +217,6 @@ message GroupParticipant {
     required string LastName = 3;
     required ParticipantType Type = 4;
     required uint64 AccessHash = 5 [jstype = JS_STRING];
+    required string Username = 6;
 }
 
