@@ -216,6 +216,7 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 	err = r.db.Table(ed.TableName()).Where("PeerID = ? AND PeerType = ?", peerID, peerType).Updates(map[string]interface{}{
 		"ReadInboxMaxID": maxID,
 		"UnreadCount":    unreadCount, //gorm.Expr("UnreadCount + ?", unreadCount), // in snapshot mode if unread message lefted
+		"MentionedCount": 0,           // Hotfix :: on each ReadHistoryInbox set mentioned count to zero
 	}).Error
 
 	if err != nil {
