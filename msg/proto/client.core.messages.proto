@@ -1,5 +1,6 @@
 syntax = "proto2";
 package msg;
+import "core.types.proto";
 
 // ClientPendingMessage
 message ClientPendingMessage {
@@ -12,4 +13,5 @@ message ClientPendingMessage {
     required int64 ReplyTo = 7;
     required string Body = 8;
     required int64 SenderID = 9 ;
+    repeated MessageEntity Entities = 10;
 }

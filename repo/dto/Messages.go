@@ -50,11 +50,7 @@ func (m *Messages) Map(v *msg.UserMessage) {
 	m.ReplyTo = v.ReplyTo
 	m.MessageAction = v.MessageAction
 	m.MessageActionData = v.MessageActionData
-	entities, err := json.Marshal(v.Entities)
-	if err != nil {
-		panic(err)
-	}
-	m.Entities = entities
+	m.Entities, _ = json.Marshal(v.Entities)
 	if len(m.Entities) == 0 {
 		m.Entities = []byte("[]")
 	}
@@ -80,11 +76,5 @@ func (m *Messages) MapTo(v *msg.UserMessage) {
 	v.MessageActionData = m.MessageActionData
 
 	v.Entities = make([]*msg.MessageEntity, 0)
-	err := json.Unmarshal(m.Entities, &v.Entities)
-	if err != nil {
-		panic(err)
-	}
-	if v.Entities == nil {
-		v.Entities = []*msg.MessageEntity{}
-	}
+	json.Unmarshal(m.Entities, &v.Entities)
 }

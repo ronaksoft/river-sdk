@@ -49,9 +49,8 @@ func (m *PendingMessages) MapTo(v *msg.ClientPendingMessage) {
 	v.Body = m.Body
 	v.SenderID = m.SenderID
 
-	// // TODO : add Entities to its proto
-	// json.Unmarshal(m.Entities, v.Entities)
-
+	v.Entities = make([]*msg.MessageEntity, 0)
+	json.Unmarshal(m.Entities, &v.Entities)
 }
 func (m *PendingMessages) MapToUserMessage(v *msg.UserMessage) {
 	v.ID = m.ID
@@ -71,10 +70,8 @@ func (m *PendingMessages) MapToUserMessage(v *msg.UserMessage) {
 	v.ReplyTo = m.ReplyTo
 	//v.MessageAction = m.MessageAction
 
-	json.Unmarshal(m.Entities, v.Entities)
-	if v.Entities == nil {
-		v.Entities = []*msg.MessageEntity{}
-	}
+	v.Entities = make([]*msg.MessageEntity, 0)
+	json.Unmarshal(m.Entities, &v.Entities)
 }
 
 func (m *PendingMessages) MapToDtoMessage(v *Messages) {
@@ -108,8 +105,7 @@ func (m *PendingMessages) MapToMessageSend(v *msg.MessagesSend) {
 	v.RandomID = m.RequestID
 	v.ReplyTo = m.ReplyTo
 	v.ClearDraft = m.ClearDraft
-	json.Unmarshal(m.Entities, v.Entities)
-	if v.Entities == nil {
-		v.Entities = []*msg.MessageEntity{}
-	}
+
+	v.Entities = make([]*msg.MessageEntity, 0)
+	json.Unmarshal(m.Entities, &v.Entities)
 }
