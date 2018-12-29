@@ -2,37 +2,48 @@ package scenario
 
 import (
 	"strings"
+	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/domain"
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/actor"
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
 
-// Actor receives scenario and execute its step one by one
-
+// Register Scenario
 type Register struct {
 }
 
-func (s *Register) NewRegister() {
-
+// NewRegister create new instance
+func NewRegister() *Register {
+	s := new(Register)
+	return s
 }
 
-func (s *Register) Execute() {
+// Execute Register scenario
+func (s *Register) Execute(act *actor.Actor) {
 
+	//check if actor does not have AuthID it means it didn't run CreateAuthKey scenario
+	if act.AuthID == 0 {
+		createAuthKey := NewCreateAuthKey()
+		createAuthKey.Execute(act)
+	}
+
+	act.ExecuteRequest(s.sendCode(act))
 }
 
 //sendCode : Step 1
-func (s *Register) sendCode(phone string) (*msg.MessageEnvelope, domain.MessageHandler, domain.TimeoutCallback) {
-	envReq := AuthSendCode(phone)
-	timeoutCB := func() {
+func (s *Register) sendCode(act *actor.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
+	envReq := AuthSendCode(act.Phone)
+	timeoutCB := func(requestID uint64, elapsed time.Duration) {
 		// TODO : Reporter failed
 	}
-	successCB := func(resp *msg.MessageEnvelope) {
+	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
 		// TODO : chain next request here
 		if resp.Constructor == msg.C_AuthSentCode {
 			x := new(msg.AuthSentCode)
 			x.Unmarshal(resp.Message)
-			s.register(x)
+			act.ExecuteRequest(s.register(x, act))
 		} else {
 			// TODO : Reporter failed
 		}
@@ -42,35 +53,30 @@ func (s *Register) sendCode(phone string) (*msg.MessageEnvelope, domain.MessageH
 }
 
 // register : Step 2
-func (s *Register) register(resp *msg.AuthSentCode) (*msg.MessageEnvelope, domain.MessageHandler, domain.TimeoutCallback) {
+func (s *Register) register(resp *msg.AuthSentCode, act *actor.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 	if strings.HasSuffix(resp.Phone, "237400") {
 		code := resp.Phone[len(resp.Phone)-4:]
 		envReq := AuthRegister(resp.Phone, code, resp.PhoneCodeHash)
 
-		timeoutCB := func() {
+		timeoutCB := func(requestID uint64, elapsed time.Duration) {
 			// TODO : Reporter failed
 		}
-		successCB := func(resp *msg.MessageEnvelope) {
-			// TODO : chain next request here
-			if resp.Constructor == msg.C_Bool {
-				x := new(msg.Bool)
+		successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
+			if resp.Constructor == msg.C_AuthAuthorization {
+				x := new(msg.AuthAuthorization)
 				x.Unmarshal(resp.Message)
 
-				if x.Result {
-					// TODO : reporter success
-				} else {
-					// TODO : Reporter failed
-				}
+				// TODO : Complete Scenario
+				// x.User
+
 			} else {
 				// TODO : Reporter failed
 			}
 		}
 
-		// TODO : Fix This
 		return envReq, successCB, timeoutCB
 	}
 
 	// TODO : Reporter failed
-
 	return nil, nil, nil
 }

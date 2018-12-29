@@ -461,3 +461,46 @@ func fnGetEntities(c *ishell.Context) []*msg.MessageEntity {
 		entities = append(entities, e)
 	}
 }
+
+func fnGetTokenType(c *ishell.Context) int32 {
+	var tokenType int32
+	for {
+		c.Print("TokenType (Firebase = 2 , APN = 1) : ")
+		tmp, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		if err == nil {
+			tokenType = int32(tmp)
+			break
+		}
+	}
+
+	return tokenType
+}
+func fnGetToken(c *ishell.Context) string {
+	c.Print("Token: ")
+	token := c.ReadLine()
+	return token
+}
+
+func fnGetDeviceModel(c *ishell.Context) string {
+	c.Print("Model(ios | android) : ")
+	model := c.ReadLine()
+	return model
+}
+
+func fnGetSysytemVersion(c *ishell.Context) string {
+	c.Print("Sysytem Version : ")
+	version := c.ReadLine()
+	return version
+}
+
+func fnGetAppVersion(c *ishell.Context) string {
+	c.Print("App Version : ")
+	version := c.ReadLine()
+	return version
+}
+
+func fnGetLangCode(c *ishell.Context) string {
+	c.Print("Language Code : ")
+	code := c.ReadLine()
+	return code
+}

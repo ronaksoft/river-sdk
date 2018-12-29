@@ -13,12 +13,12 @@ var RegisterDevice = &ishell.Cmd{
 	Name: "RegisterDevice",
 	Func: func(c *ishell.Context) {
 		req := msg.AccountRegisterDevice{}
-		req.TokenType = 0
-		req.Token = "token"
-		req.DeviceModel = "River CLI"
-		req.SystemVersion = "v0.0.013"
-		req.AppVersion = "v0.2.3"
-		req.LangCode = "en-us"
+		req.TokenType = fnGetTokenType(c)
+		req.Token = fnGetToken(c)
+		req.DeviceModel = fnGetDeviceModel(c)
+		req.SystemVersion = fnGetSysytemVersion(c)
+		req.AppVersion = fnGetAppVersion(c)
+		req.LangCode = fnGetLangCode(c)
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)

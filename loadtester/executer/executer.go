@@ -4,40 +4,30 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/types"
-	"git.ronaksoftware.com/ronak/riversdk/msg"
-)
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 
-const (
-	// DefaultTimeout request timeout
-	DefaultTimeout = 10 * time.Second
+	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
 
 // Executer command executer
 type Executer struct {
-	netCtrl      types.Network
+	netCtrl      shared.Networker
 	requestsLock sync.Mutex
 	requests     map[uint64]*Request
 }
-
-// SuccessCallback timeout
-type SuccessCallback func(response *msg.MessageEnvelope, elapsed time.Duration)
-
-// TimeoutCallback function
-type TimeoutCallback func(requestID uint64, elapsed time.Duration)
 
 // Request required data to send command to server
 type Request struct {
 	RequestID           uint64
 	CreatedOn           time.Time
 	Timeout             time.Duration
-	OnSuccess           SuccessCallback
-	OnTimeOut           TimeoutCallback
+	OnSuccess           shared.SuccessCallback
+	OnTimeOut           shared.TimeoutCallback
 	ResponseWaitChannel chan *msg.MessageEnvelope
 }
 
 // NewExecuter create new instance of command executer
-func NewExecuter(netCtrl types.Network) *Executer {
+func NewExecuter(netCtrl shared.Networker) *Executer {
 	exe := &Executer{
 		netCtrl:  netCtrl,
 		requests: make(map[uint64]*Request),
@@ -46,10 +36,10 @@ func NewExecuter(netCtrl types.Network) *Executer {
 }
 
 // Exec execute command
-func (exec *Executer) Exec(message *msg.MessageEnvelope, onSuccess SuccessCallback, onTimeOut TimeoutCallback, timeout time.Duration) {
+func (exec *Executer) Exec(message *msg.MessageEnvelope, onSuccess shared.SuccessCallback, onTimeOut shared.TimeoutCallback, timeout time.Duration) {
 
 	if timeout == 0 {
-		timeout = DefaultTimeout
+		timeout = shared.DefaultTimeout
 	}
 
 	r := &Request{

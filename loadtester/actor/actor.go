@@ -3,12 +3,15 @@ package actor
 import (
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/controller"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/executer"
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"go.uber.org/zap"
 )
 
+// Actor indicator as user
 type Actor struct {
+	Phone   string
 	AuthID  int64
 	AuthKey []byte //[256]byte
 	UserID  int64
@@ -35,6 +38,14 @@ func NewActor(userID int64, authID int64, authKey []byte) (*Actor, error) {
 	act.exec = executer.NewExecuter(act.netCtrl)
 
 	return act, nil
+}
+
+// ExecuteRequest send request to server
+func (act *Actor) ExecuteRequest(message *msg.MessageEnvelope, onSuccess shared.SuccessCallback, onTimeOut shared.TimeoutCallback) {
+	if message == nil {
+		return
+	}
+	act.exec.Exec(message, onSuccess, onTimeOut, shared.DefaultSendTimeout)
 }
 
 // onMessage check requestCallbacks and call callbacks

@@ -5,15 +5,9 @@ import (
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"github.com/gorilla/websocket"
-)
-
-const (
-	// DefaultSendTimeout write to ws timeout
-	DefaultSendTimeout = 3 * time.Second
-	// DefaultServerURL websocket url
-	DefaultServerURL = "ws://new.river.im"
 )
 
 // CtrlNetwork network layer
@@ -98,7 +92,7 @@ func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
 	b, err := protoMessage.Marshal()
 
 	ctrl.connWriteLock.Lock()
-	ctrl.conn.SetWriteDeadline(time.Now().Add(DefaultSendTimeout))
+	ctrl.conn.SetWriteDeadline(time.Now().Add(shared.DefaultSendTimeout))
 	err = ctrl.conn.WriteMessage(websocket.BinaryMessage, b)
 	ctrl.connWriteLock.Unlock()
 
@@ -107,7 +101,7 @@ func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
 
 // connect to websocket and start receiving data from websocket
 func (ctrl *CtrlNetwork) connect() error {
-	conn, _, err := ctrl.wsDialer.Dial(DefaultServerURL, nil)
+	conn, _, err := ctrl.wsDialer.Dial(shared.DefaultServerURL, nil)
 	if err == nil {
 		ctrl.conn = conn
 	}

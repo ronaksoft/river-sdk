@@ -1,7 +1,7 @@
-package types
+package shared
 
 import "git.ronaksoftware.com/ronak/riversdk/msg"
 
-type Network interface {
+type Networker interface {
 	Send(msgEnvelope *msg.MessageEnvelope) error
 }
