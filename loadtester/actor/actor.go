@@ -50,7 +50,7 @@ func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
 			}
 			act.exec.RemoveRequest(m.RequestID)
 		} else {
-			log.LOG_Debug("Actor::onMessage() callback does not exists",
+			log.LOG_Warn("Actor::onMessage() callback does not exists",
 				zap.Uint64("RequestID", m.RequestID),
 			)
 		}
@@ -67,6 +67,7 @@ func (act *Actor) onUpdate(updates []*msg.UpdateContainer) {
 	}
 }
 
-func (act *Actor) onError(u *msg.Error) {
+func (act *Actor) onError(err *msg.Error) {
 	// TODO : Add reporter error log
+	log.LOG_Warn("Actor::onError() ", zap.String("Error", err.String()))
 }

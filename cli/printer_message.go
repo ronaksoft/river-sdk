@@ -179,7 +179,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		bufMessages := new(bytes.Buffer)
 		tableMessages := tablewriter.NewWriter(bufMessages)
 		tableMessages.SetHeader([]string{
-			"PeerID", "PeerType", "CreatedOn", "Flags", "Body",
+			"PeerID", "PeerType", "CreatedOn", "Flags", "Body", "Entities",
 		})
 
 		for _, d := range x.Messages {
@@ -189,6 +189,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 				fmt.Sprintf("%d", d.CreatedOn),
 				fmt.Sprintf("%d", d.Flags),
 				fmt.Sprintf("%v", string(d.Body)),
+				fmt.Sprintf("%v", d.Entities),
 			})
 		}
 		tableMessages.Render()
