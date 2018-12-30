@@ -1,6 +1,8 @@
 package shared
 
-import "git.ronaksoftware.com/ronak/riversdk/domain"
+import (
+	"git.ronaksoftware.com/ronak/riversdk/domain"
+)
 
 // publicKey
 type PublicKey struct {

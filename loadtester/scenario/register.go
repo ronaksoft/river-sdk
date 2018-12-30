@@ -12,6 +12,7 @@ import (
 
 // Register Scenario
 type Register struct {
+	Scenario
 }
 
 // NewRegister create new instance
@@ -22,13 +23,7 @@ func NewRegister() *Register {
 
 // Execute Register scenario
 func (s *Register) Execute(act *actor.Actor) {
-
-	//check if actor does not have AuthID it means it didn't run CreateAuthKey scenario
-	if act.AuthID == 0 {
-		createAuthKey := NewCreateAuthKey()
-		createAuthKey.Execute(act)
-	}
-
+	s.wait.Add(1)
 	act.ExecuteRequest(s.sendCode(act))
 }
 
@@ -37,8 +32,12 @@ func (s *Register) sendCode(act *actor.Actor) (*msg.MessageEnvelope, shared.Succ
 	envReq := AuthSendCode(act.Phone)
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
 		// TODO : Reporter failed
+		s.failed("sendCode() Timeout")
 	}
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
+		if s.isErrorResponse(resp) {
+			return
+		}
 		// TODO : chain next request here
 		if resp.Constructor == msg.C_AuthSentCode {
 			x := new(msg.AuthSentCode)
@@ -46,6 +45,7 @@ func (s *Register) sendCode(act *actor.Actor) (*msg.MessageEnvelope, shared.Succ
 			act.ExecuteRequest(s.register(x, act))
 		} else {
 			// TODO : Reporter failed
+			s.failed("sendCode() SuccessCB response is not AuthSentCode")
 		}
 	}
 
@@ -54,23 +54,32 @@ func (s *Register) sendCode(act *actor.Actor) (*msg.MessageEnvelope, shared.Succ
 
 // register : Step 2
 func (s *Register) register(resp *msg.AuthSentCode, act *actor.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
-	if strings.HasSuffix(resp.Phone, "237400") {
+	if strings.HasPrefix(resp.Phone, "237400") {
 		code := resp.Phone[len(resp.Phone)-4:]
 		envReq := AuthRegister(resp.Phone, code, resp.PhoneCodeHash)
 
 		timeoutCB := func(requestID uint64, elapsed time.Duration) {
 			// TODO : Reporter failed
+			s.failed("register() TimedOut")
 		}
 		successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
+			if s.isErrorResponse(resp) {
+				return
+			}
 			if resp.Constructor == msg.C_AuthAuthorization {
 				x := new(msg.AuthAuthorization)
 				x.Unmarshal(resp.Message)
 
 				// TODO : Complete Scenario
-				// x.User
+				act.UserID = x.User.ID
+				act.UserName = x.User.Username
+				act.UserFullName = x.User.FirstName + " " + x.User.LastName
+
+				s.completed("register() Success")
 
 			} else {
 				// TODO : Reporter failed
+				s.failed("sendCode() SuccessCB response is not AuthAuthorization")
 			}
 		}
 
@@ -78,5 +87,7 @@ func (s *Register) register(resp *msg.AuthSentCode, act *actor.Actor) (*msg.Mess
 	}
 
 	// TODO : Reporter failed
+	s.failed("login() phone number does not start with 237400")
+
 	return nil, nil, nil
 }

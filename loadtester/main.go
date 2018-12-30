@@ -1,7 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"os"
+
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/actor"
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/scenario"
 
 	"github.com/fatih/color"
 	"go.uber.org/zap"
@@ -43,5 +47,34 @@ func init() {
 
 func main() {
 
-	_Shell.Run()
+	act, err := actor.NewActor("237400" + "0000001")
+	if err != nil {
+		panic(err)
+	}
+
+	sCreateAuthKey := scenario.NewCreateAuthKey()
+	sCreateAuthKey.Execute(act)
+	sCreateAuthKey.Wait()
+
+	// sRegister := scenario.NewRegister()
+	// sRegister.Execute(act)
+	// sRegister.Wait()
+
+	sLogin := scenario.NewLogin()
+	sLogin.Execute(act)
+	sLogin.Wait()
+
+	act.PhoneList = []string{"23740071", "23740072"}
+	sImportContact := scenario.NewImportContact()
+	sImportContact.Execute(act)
+	sImportContact.Wait()
+
+	for _, p := range act.Peers {
+		fmt.Println(p)
+	}
+
+	// TODO : Test SendMessage scenario
+
+	// _Shell.Run()
+
 }

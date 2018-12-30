@@ -11,26 +11,37 @@ import (
 
 // Actor indicator as user
 type Actor struct {
-	Phone   string
+	Phone     string
+	PhoneList []string
+
+	// Auth info will filled after CreateAuthKey
 	AuthID  int64
 	AuthKey []byte //[256]byte
-	UserID  int64
-	Peers   []*shared.PeerInfo
+
+	// User will get filled after login/register
+	UserID       int64
+	UserName     string
+	UserFullName string
+
+	// Peers will filled after Contact import
+	Peers []*shared.PeerInfo
 
 	netCtrl *controller.CtrlNetwork
 	exec    *executer.Executer
 }
 
 // NewActor create new actor instance
-func NewActor(userID int64, authID int64, authKey []byte) (*Actor, error) {
+func NewActor(phone string) (*Actor, error) {
 
 	act := &Actor{
-		UserID:  userID,
-		AuthID:  authID,
-		AuthKey: authKey,
-		Peers:   make([]*shared.PeerInfo, 0),
+		Phone:     phone,
+		PhoneList: make([]string, 0),
+		UserID:    0,
+		AuthID:    0,
+		AuthKey:   make([]byte, 0),
+		Peers:     make([]*shared.PeerInfo, 0),
 	}
-	act.netCtrl = controller.NewCtrlNetwork(authID, authKey, act.onMessage, act.onUpdate, act.onError)
+	act.netCtrl = controller.NewCtrlNetwork(act.AuthID, act.AuthKey, act.onMessage, act.onUpdate, act.onError)
 	err := act.netCtrl.Start()
 	if err != nil {
 		return act, err
@@ -48,7 +59,13 @@ func (act *Actor) ExecuteRequest(message *msg.MessageEnvelope, onSuccess shared.
 	act.exec.Exec(message, onSuccess, onTimeOut, shared.DefaultSendTimeout)
 }
 
-// SetAuthData
+// SetAuthInfo set authID and authKey after CreateAuthKey completed
+func (act *Actor) SetAuthInfo(authID int64, authKey []byte) {
+	act.AuthID = authID
+	act.AuthKey = make([]byte, len(authKey))
+	copy(act.AuthKey, authKey)
+	act.netCtrl.SetAuthInfo(act.AuthID, act.AuthKey)
+}
 
 // onMessage check requestCallbacks and call callbacks
 func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {

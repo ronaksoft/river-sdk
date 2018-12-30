@@ -48,6 +48,12 @@ func NewCtrlNetwork(authID int64, authKey []byte, onMessage domain.OnMessageHand
 	return n
 }
 
+// SetAuthInfo set authID and authKey after CreateAuthKey completed
+func (ctrl *CtrlNetwork) SetAuthInfo(authID int64, authKey []byte) {
+	ctrl.authID = authID
+	ctrl.authKey = authKey
+}
+
 // Start start websocket
 func (ctrl *CtrlNetwork) Start() error {
 	err := ctrl.connect()

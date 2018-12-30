@@ -9,6 +9,7 @@ import (
 )
 
 type SendMessage struct {
+	Scenario
 }
 
 // NewSendMessage create new instance
@@ -19,34 +20,34 @@ func NewSendMessage() *SendMessage {
 
 // Execute SendMessage scenario
 func (s *SendMessage) Execute(act *actor.Actor) {
-
-	//check if actor does not have AuthID it means it didn't run CreateAuthKey scenario
-	if act.AuthID == 0 {
-		createAuthKey := NewCreateAuthKey()
-		createAuthKey.Execute(act)
-	}
-
 	for _, p := range act.Peers {
+		s.wait.Add(1)
 		act.ExecuteRequest(s.messageSend(act, p))
 	}
 }
 
+// messageSend : Step 1
 func (s *SendMessage) messageSend(act *actor.Actor, peer *shared.PeerInfo) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 	reqEnv := MessageSend(peer)
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
 		// TODO : Reporter failed
+		s.failed("messageSend() Timeout")
 	}
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
+		if s.isErrorResponse(resp) {
+			return
+		}
 		if resp.Constructor == msg.C_MessagesSent {
 			x := new(msg.MessagesSent)
 			x.Unmarshal(resp.Message)
 
 			// TODO : Complete Scenario
-
+			s.completed("messageSend() Success")
 		} else {
 			// TODO : Reporter failed
+			s.failed("messageSend() SuccessCB response is not MessagesSent")
 		}
 	}
 

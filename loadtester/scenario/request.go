@@ -117,3 +117,25 @@ func MessageSend(peer *shared.PeerInfo) (envelop *msg.MessageEnvelope) {
 
 	return
 }
+
+func ContactsImport(phone string) (envelop *msg.MessageEnvelope) {
+	req := new(msg.ContactsImport)
+	req.Contacts = []*msg.PhoneContact{
+		&msg.PhoneContact{
+			ClientID:  0,
+			FirstName: phone,
+			LastName:  phone,
+			Phone:     phone,
+		},
+	}
+	req.Replace = true
+
+	data, err := req.Marshal()
+	if err != nil {
+		panic(err)
+	}
+
+	envelop = wrapEnvelop(msg.C_ContactsImport, data)
+
+	return
+}

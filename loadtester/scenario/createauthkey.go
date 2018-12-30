@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/binary"
-	"encoding/json"
 	"io/ioutil"
 	"math/big"
 	"time"
@@ -19,11 +18,12 @@ import (
 
 const (
 	// ServerKeysFilePath server public key
-	ServerKeysFilePath = "./keys.json"
+	ServerKeysFilePath = "keys.json"
 )
 
 // CreateAuthKey scenario
 type CreateAuthKey struct {
+	Scenario
 	ServerKeys *shared.ServerKeys
 }
 
@@ -31,11 +31,18 @@ type CreateAuthKey struct {
 func NewCreateAuthKey() *CreateAuthKey {
 
 	s := new(CreateAuthKey)
+	s.ServerKeys = &shared.ServerKeys{
+		DHGroups:   make([]shared.DHGroup, 0),
+		PublicKeys: make([]shared.PublicKey, 0),
+	}
 
 	// Initialize Server Keys
-	if jsonBytes, err := ioutil.ReadFile(ServerKeysFilePath); err != nil {
+	jsonBytes, err := ioutil.ReadFile(ServerKeysFilePath)
+	if err != nil {
 		panic(err)
-	} else if err := json.Unmarshal(jsonBytes, s.ServerKeys); err != nil {
+	}
+	err = s.ServerKeys.UnmarshalJSON(jsonBytes)
+	if err != nil {
 		panic(err)
 	}
 	return s
@@ -43,9 +50,8 @@ func NewCreateAuthKey() *CreateAuthKey {
 
 // Execute CreateAuthKey scenario
 func (s *CreateAuthKey) Execute(act *actor.Actor) {
-
-	req, success, timeout := s.initConnect(act)
-	act.ExecuteRequest(req, success, timeout)
+	s.wait.Add(1)
+	act.ExecuteRequest(s.initConnect(act))
 }
 
 // Step : 1
@@ -54,17 +60,23 @@ func (s *CreateAuthKey) initConnect(act *actor.Actor) (*msg.MessageEnvelope, sha
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
 		// TODO : Reporter failed
+		s.failed("initConnect() Timeout")
 	}
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
+		if s.isErrorResponse(resp) {
+			return
+		}
 		if resp.Constructor == msg.C_InitResponse {
 			x := new(msg.InitResponse)
 			x.Unmarshal(resp.Message)
 
 			// chain next request here
 			act.ExecuteRequest(s.initCompleteAuth(x, act))
+
 		} else {
 			// TODO : Reporter failed
+			s.failed("initConnect() successCB response type is not InitResponse")
 		}
 	}
 
@@ -103,6 +115,7 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act *actor.Acto
 	serverPubKey, err := s.ServerKeys.GetPublicKey(int64(serverPubFP))
 	if err != nil {
 		// TODO : Reporter failed
+		s.failed("ServerKeys.GetPublicKey(), Err : " + err.Error())
 	}
 	n := big.NewInt(0)
 	n.SetString(serverPubKey.N, 10)
@@ -114,6 +127,7 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act *actor.Acto
 	encPayload, err := rsa.EncryptPKCS1v15(rand.Reader, &rsaPublicKey, decrypted)
 	if err != nil {
 		// TODO : Reporter failed
+		s.failed("rsa.EncryptPKCS1v15(), Err : " + err.Error())
 	}
 
 	// send chained request
@@ -121,9 +135,13 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act *actor.Acto
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
 		// TODO : Reporter failed
+		s.failed("initCompleteAuth() Timeout")
 	}
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
+		if s.isErrorResponse(resp) {
+			return
+		}
 		// TODO : chain next request here
 		if resp.Constructor == msg.C_InitAuthCompleted {
 			x := new(msg.InitAuthCompleted)
@@ -142,8 +160,7 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act *actor.Acto
 
 				// TODO : Complete Scenario
 				// Save authKey && authID
-				act.AuthID = authID
-				copy(act.AuthKey, authKey)
+				act.SetAuthInfo(authID, authKey)
 
 				var secret []byte
 				secret = append(secret, q2Internal.SecretNonce...)
@@ -154,17 +171,23 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act *actor.Acto
 				if x.SecretHash != binary.LittleEndian.Uint64(secretHash[24:32]) {
 					err = domain.ErrSecretNonceMismatch
 					// TODO : Reporter failed
+					s.failed("initCompleteAuth(), err : " + err.Error())
 					return
 				}
+				s.completed("initCompleteAuth() Success")
 			case msg.InitAuthCompleted_RETRY:
 				// TODO : Reporter failed && Retry with new DHKey
+				s.failed("initCompleteAuth(), err : Retry with new DHKey")
+
 			case msg.InitAuthCompleted_FAIL:
 				err = domain.ErrAuthFailed
 				// TODO : Reporter failed
+				s.failed("initCompleteAuth(), err : " + err.Error())
 			}
 
 		} else {
 			// TODO : Reporter failed
+			s.failed("initCompleteAuth() successCB response type is not InitAuthCompleted")
 		}
 	}
 

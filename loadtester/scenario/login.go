@@ -11,6 +11,7 @@ import (
 
 // Login scenario
 type Login struct {
+	Scenario
 }
 
 // NewLogin create new instance
@@ -21,13 +22,7 @@ func NewLogin() *Login {
 
 // Execute Login scenario
 func (s *Login) Execute(act *actor.Actor) {
-
-	//check if actor does not have AuthID it means it didn't run CreateAuthKey scenario
-	if act.AuthID == 0 {
-		createAuthKey := NewCreateAuthKey()
-		createAuthKey.Execute(act)
-	}
-
+	s.wait.Add(1)
 	act.ExecuteRequest(s.sendCode(act))
 }
 
@@ -37,9 +32,13 @@ func (s *Login) sendCode(act *actor.Actor) (*msg.MessageEnvelope, shared.Success
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
 		// TODO : Reporter failed
+		s.failed("sendCode() Timeout")
 	}
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
+		if s.isErrorResponse(resp) {
+			return
+		}
 		if resp.Constructor == msg.C_AuthSentCode {
 			x := new(msg.AuthSentCode)
 			x.Unmarshal(resp.Message)
@@ -47,6 +46,7 @@ func (s *Login) sendCode(act *actor.Actor) (*msg.MessageEnvelope, shared.Success
 			act.ExecuteRequest(s.login(x, act))
 		} else {
 			// TODO : Reporter failed
+			s.failed("sendCode() SuccessCB response is not AuthSentCode")
 		}
 	}
 
@@ -55,25 +55,34 @@ func (s *Login) sendCode(act *actor.Actor) (*msg.MessageEnvelope, shared.Success
 
 // login Step : 2
 func (s *Login) login(resp *msg.AuthSentCode, act *actor.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
-	if strings.HasSuffix(resp.Phone, "237400") {
+	if strings.HasPrefix(resp.Phone, "237400") {
 		code := resp.Phone[len(resp.Phone)-4:]
 
 		reqEnv := AuthLogin(resp.Phone, code, resp.PhoneCodeHash)
 
 		timeoutCB := func(requestID uint64, elapsed time.Duration) {
 			// TODO : Reporter failed
+			s.failed("login() TimedOut")
 		}
 
 		successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
+			if s.isErrorResponse(resp) {
+				return
+			}
 			if resp.Constructor == msg.C_AuthAuthorization {
 				x := new(msg.AuthAuthorization)
 				x.Unmarshal(resp.Message)
 
 				// TODO : Complete Scenario
-				// x.User
+				act.UserID = x.User.ID
+				act.UserName = x.User.Username
+				act.UserFullName = x.User.FirstName + " " + x.User.LastName
+
+				s.completed("login() Success")
 
 			} else {
 				// TODO : Reporter failed
+				s.failed("sendCode() SuccessCB response is not AuthAuthorization")
 			}
 		}
 
@@ -81,5 +90,7 @@ func (s *Login) login(resp *msg.AuthSentCode, act *actor.Actor) (*msg.MessageEnv
 	}
 
 	// TODO : Reporter failed
+	s.failed("login() phone number does not start with 237400")
+
 	return nil, nil, nil
 }
