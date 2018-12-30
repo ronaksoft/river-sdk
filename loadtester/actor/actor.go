@@ -15,7 +15,7 @@ type Actor struct {
 	AuthID  int64
 	AuthKey []byte //[256]byte
 	UserID  int64
-	Peers   []PeerInfo
+	Peers   []*shared.PeerInfo
 
 	netCtrl *controller.CtrlNetwork
 	exec    *executer.Executer
@@ -28,7 +28,7 @@ func NewActor(userID int64, authID int64, authKey []byte) (*Actor, error) {
 		UserID:  userID,
 		AuthID:  authID,
 		AuthKey: authKey,
-		Peers:   make([]PeerInfo, 0),
+		Peers:   make([]*shared.PeerInfo, 0),
 	}
 	act.netCtrl = controller.NewCtrlNetwork(authID, authKey, act.onMessage, act.onUpdate, act.onError)
 	err := act.netCtrl.Start()
@@ -47,6 +47,8 @@ func (act *Actor) ExecuteRequest(message *msg.MessageEnvelope, onSuccess shared.
 	}
 	act.exec.Exec(message, onSuccess, onTimeOut, shared.DefaultSendTimeout)
 }
+
+// SetAuthData
 
 // onMessage check requestCallbacks and call callbacks
 func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {

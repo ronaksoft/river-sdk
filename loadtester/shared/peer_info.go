@@ -1,4 +1,4 @@
-package actor
+package shared
 
 import "git.ronaksoftware.com/ronak/riversdk/msg"
 

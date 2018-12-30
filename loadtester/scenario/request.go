@@ -1,6 +1,10 @@
 package scenario
 
 import (
+	"strconv"
+
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
+
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
@@ -90,6 +94,26 @@ func AuthLogin(phone, code, hash string) (envelop *msg.MessageEnvelope) {
 	}
 
 	envelop = wrapEnvelop(msg.C_AuthLogin, data)
+
+	return
+}
+
+func MessageSend(peer *shared.PeerInfo) (envelop *msg.MessageEnvelope) {
+	req := new(msg.MessagesSend)
+	req.Peer = &msg.InputPeer{
+		AccessHash: peer.AccessHash,
+		ID:         peer.PeerID,
+		Type:       peer.PeerType,
+	}
+	req.RandomID = domain.SequentialUniqueID()
+	req.Body = strconv.FormatInt(req.RandomID, 10)
+
+	data, err := req.Marshal()
+	if err != nil {
+		panic(err)
+	}
+
+	envelop = wrapEnvelop(msg.C_MessagesSend, data)
 
 	return
 }

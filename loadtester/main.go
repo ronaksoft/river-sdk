@@ -36,18 +36,12 @@ func init() {
 	_Shell.Println("===============================")
 	_Shell.Println("## River Load Tester Console ##")
 	_Shell.Println("===============================")
-	// _Shell.AddCmd(Init)
-	// _Shell.AddCmd(Auth)
-	// _Shell.AddCmd(Message)
-	// _Shell.AddCmd(Contact)
-	// _Shell.AddCmd(SDK)
-	// _Shell.AddCmd(User)
-	// _Shell.AddCmd(Debug)
-	// _Shell.AddCmd(Account)
-	// _Shell.AddCmd(Tests)
-	// _Shell.AddCmd(Group)
+	_Shell.AddCmd(cmdCreateAuthKey)
+	_Shell.AddCmd(cmdRegister)
+	_Shell.AddCmd(cmdLogin)
 }
 
 func main() {
+
 	_Shell.Run()
 }

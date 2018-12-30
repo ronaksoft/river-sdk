@@ -33,7 +33,7 @@ func (s *Login) Execute(act *actor.Actor) {
 
 //sendCode : Step 1
 func (s *Login) sendCode(act *actor.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
-	envReq := AuthSendCode(act.Phone)
+	reqEnv := AuthSendCode(act.Phone)
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
 		// TODO : Reporter failed
@@ -50,7 +50,7 @@ func (s *Login) sendCode(act *actor.Actor) (*msg.MessageEnvelope, shared.Success
 		}
 	}
 
-	return envReq, successCB, timeoutCB
+	return reqEnv, successCB, timeoutCB
 }
 
 // login Step : 2

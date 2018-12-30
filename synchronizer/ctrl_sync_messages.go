@@ -133,16 +133,11 @@ func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
 	sent.Unmarshal(e.Message)
 
 	message := new(msg.UserMessage)
-	message.ID = sent.MessageID
-	message.CreatedOn = sent.CreatedOn //pmsg.CreatedOn
 
-	//message.RequestID = pmsg.RequestID
-	message.PeerID = pmsg.PeerID
-	message.SenderID = pmsg.SenderID
-	message.PeerType = pmsg.PeerType
-	//message.AccessHash = pmsg.AccessHash
-	message.Body = pmsg.Body
-	message.ReplyTo = pmsg.ReplyTo
+	pmsg.MapToUserMessage(message)
+
+	message.ID = sent.MessageID
+	message.CreatedOn = sent.CreatedOn
 
 	// save message
 	err = repo.Ctx().Messages.SaveMessage(message)
