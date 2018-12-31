@@ -20,6 +20,10 @@ func NewImportContact() *ImportContact {
 
 // Play execute ImportContact scenario
 func (s *ImportContact) Play(act shared.Acter) {
+	if len(act.GetPeers()) > 0 {
+		s.log("Actor already have Peers", 0)
+		return
+	}
 	if act.GetAuthID() == 0 {
 		Play(act, NewCreateAuthKey())
 	}
@@ -38,11 +42,11 @@ func (s *ImportContact) contactImport(phone string, act shared.Acter) (*msg.Mess
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
 		// TODO : Reporter failed
-		s.failed("contactImport() Timeout")
+		s.failed(act, elapsed, "contactImport() Timeout")
 	}
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
-		if s.isErrorResponse(resp) {
+		if s.isErrorResponse(act, elapsed, resp) {
 			return
 		}
 		if resp.Constructor == msg.C_ContactsImported {
@@ -59,10 +63,14 @@ func (s *ImportContact) contactImport(phone string, act shared.Acter) (*msg.Mess
 				})
 			}
 			act.SetPeers(peers)
-			s.completed("contactImport() Success")
+			err := act.Save()
+			if err != nil {
+				s.log("contactImport() Actor.Save(), Err : "+err.Error(), elapsed)
+			}
+			s.completed(act, elapsed, "contactImport() Success")
 		} else {
 			// TODO : Reporter failed
-			s.failed("contactImport() SuccessCB response is not ContactsImported")
+			s.failed(act, elapsed, "contactImport() SuccessCB response is not ContactsImported")
 		}
 	}
 

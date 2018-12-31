@@ -1,30 +1,35 @@
 package actor
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"os"
+
+	"go.uber.org/zap"
+
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/controller"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/executer"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
-	"go.uber.org/zap"
 )
 
 // Actor indicator as user
 type Actor struct {
-	Phone     string
-	PhoneList []string
+	Phone     string   `json:"phone"`
+	PhoneList []string `json:"phone_list"`
 
 	// Auth info will filled after CreateAuthKey
-	AuthID  int64
-	AuthKey []byte //[256]byte
+	AuthID  int64  `json:"auth_id"`
+	AuthKey []byte `json:"auth_key"`
 
 	// User will get filled after login/register
-	UserID       int64
-	UserName     string
-	UserFullName string
+	UserID       int64  `json:"user_id"`
+	UserName     string `json:"user_name"`
+	UserFullName string `json:"user_fullname"`
 
 	// Peers will filled after Contact import
-	Peers []*shared.PeerInfo
+	Peers []*shared.PeerInfo `json:"peers"`
 
 	netCtrl shared.Neter
 	exec    *executer.Executer
@@ -33,16 +38,21 @@ type Actor struct {
 // NewActor create new actor instance
 func NewActor(phone string) (shared.Acter, error) {
 
-	act := &Actor{
-		Phone:     phone,
-		PhoneList: make([]string, 0),
-		UserID:    0,
-		AuthID:    0,
-		AuthKey:   make([]byte, 0),
-		Peers:     make([]*shared.PeerInfo, 0),
+	act := new(Actor)
+	err := act.Load(phone)
+	if err != nil {
+		act = &Actor{
+			Phone:     phone,
+			PhoneList: make([]string, 0),
+			UserID:    0,
+			AuthID:    0,
+			AuthKey:   make([]byte, 0),
+			Peers:     make([]*shared.PeerInfo, 0),
+		}
 	}
+
 	act.netCtrl = controller.NewCtrlNetwork(act.AuthID, act.AuthKey, act.onMessage, act.onUpdate, act.onError)
-	err := act.netCtrl.Start()
+	err = act.netCtrl.Start()
 	if err != nil {
 		return act, err
 	}
@@ -108,6 +118,32 @@ func (act *Actor) ExecuteRequest(message *msg.MessageEnvelope, onSuccess shared.
 	act.exec.Exec(message, onSuccess, onTimeOut, shared.DefaultSendTimeout)
 }
 
+// Save save actor after register/ login / contact import
+func (act *Actor) Save() error {
+	buff, err := json.Marshal(act)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile("_cache/"+act.Phone, buff, os.ModePerm)
+}
+
+// Load saved actor
+func (act *Actor) Load(phone string) error {
+	jsonBytes, err := ioutil.ReadFile("_cache/" + phone)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(jsonBytes, act)
+}
+
+// Stop dispose actor
+func (act *Actor) Stop() {
+	if act.netCtrl != nil {
+		act.netCtrl.Stop()
+		act.netCtrl = nil
+	}
+}
+
 // onMessage check requestCallbacks and call callbacks
 func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
 	for _, m := range messages {
@@ -115,30 +151,34 @@ func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
 		if req != nil {
 			select {
 			case req.ResponseWaitChannel <- m:
-				log.LOG_Debug("Actor::onMessage() callback singnal sent")
+				log.LOG_Debug("onMessage() callback singnal sent")
 			default:
-				log.LOG_Debug("Actor::onMessage() callback is skipped probably timedout before")
+				log.LOG_Warn("onMessage() callback is skipped probably timedout before")
 			}
 			act.exec.RemoveRequest(m.RequestID)
 		} else {
-			log.LOG_Warn("Actor::onMessage() callback does not exists",
-				zap.Uint64("RequestID", m.RequestID),
-			)
+			log.LOG_Warn("onMessage() callback does not exists", zap.Uint64("RequestID", m.RequestID))
 		}
 	}
 }
 
 func (act *Actor) onUpdate(updates []*msg.UpdateContainer) {
+
 	for _, cnt := range updates {
-		for _, u := range cnt.Updates {
-			// TODO : Implement actors update reactions
-			if u.Constructor == msg.C_UpdateNewMessage {
-			}
-		}
+		log.LOG_Debug("onUpdate()",
+			zap.Int32("Length", cnt.Length),
+			zap.Int64("MinID", cnt.MinUpdateID),
+			zap.Int64("MaxID", cnt.MaxUpdateID),
+		)
+		// for _, u := range cnt.Updates {
+		// 	// TODO : Implement actors update reactions
+		// 	if u.Constructor == msg.C_UpdateNewMessage {
+		// 	}
+		// }
 	}
 }
 
 func (act *Actor) onError(err *msg.Error) {
 	// TODO : Add reporter error log
-	log.LOG_Warn("Actor::onError() ", zap.String("Error", err.String()))
+	log.LOG_Error("onError()", zap.String("Error", err.String()))
 }

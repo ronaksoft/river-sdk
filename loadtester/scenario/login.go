@@ -21,6 +21,10 @@ func NewLogin() *Login {
 
 // Play execute Login scenario
 func (s *Login) Play(act shared.Acter) {
+	if act.GetUserID() > 0 {
+		s.log("Actor already have UserID", 0)
+		return
+	}
 	if act.GetAuthID() == 0 {
 		Play(act, NewCreateAuthKey())
 	}
@@ -34,11 +38,11 @@ func (s *Login) sendCode(act shared.Acter) (*msg.MessageEnvelope, shared.Success
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
 		// TODO : Reporter failed
-		s.failed("sendCode() Timeout")
+		s.failed(act, elapsed, "sendCode() Timeout")
 	}
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
-		if s.isErrorResponse(resp) {
+		if s.isErrorResponse(act, elapsed, resp) {
 			return
 		}
 		if resp.Constructor == msg.C_AuthSentCode {
@@ -48,7 +52,7 @@ func (s *Login) sendCode(act shared.Acter) (*msg.MessageEnvelope, shared.Success
 			act.ExecuteRequest(s.login(x, act))
 		} else {
 			// TODO : Reporter failed
-			s.failed("sendCode() SuccessCB response is not AuthSentCode")
+			s.failed(act, elapsed, "sendCode() SuccessCB response is not AuthSentCode")
 		}
 	}
 
@@ -64,11 +68,11 @@ func (s *Login) login(resp *msg.AuthSentCode, act shared.Acter) (*msg.MessageEnv
 
 		timeoutCB := func(requestID uint64, elapsed time.Duration) {
 			// TODO : Reporter failed
-			s.failed("login() TimedOut")
+			s.failed(act, elapsed, "login() TimedOut")
 		}
 
 		successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
-			if s.isErrorResponse(resp) {
+			if s.isErrorResponse(act, elapsed, resp) {
 				return
 			}
 			if resp.Constructor == msg.C_AuthAuthorization {
@@ -77,11 +81,16 @@ func (s *Login) login(resp *msg.AuthSentCode, act shared.Acter) (*msg.MessageEnv
 
 				// TODO : Complete Scenario
 				act.SetUserInfo(x.User.ID, x.User.Username, x.User.FirstName+" "+x.User.LastName)
-				s.completed("login() Success")
+				err := act.Save()
+				if err != nil {
+					s.log("contactImport() Actor.Save(), Err : "+err.Error(), elapsed)
+				}
+
+				s.completed(act, elapsed, "login() Success")
 
 			} else {
 				// TODO : Reporter failed
-				s.failed("sendCode() SuccessCB response is not AuthAuthorization")
+				s.failed(act, elapsed, "sendCode() SuccessCB response is not AuthAuthorization")
 			}
 		}
 
@@ -89,7 +98,7 @@ func (s *Login) login(resp *msg.AuthSentCode, act shared.Acter) (*msg.MessageEnv
 	}
 
 	// TODO : Reporter failed
-	s.failed("login() phone number does not start with 237400")
+	s.failed(act, -1, "login() phone number does not start with 237400")
 
 	return nil, nil, nil
 }

@@ -1,8 +1,12 @@
 package scenario
 
 import (
-	"fmt"
 	"sync"
+	"time"
+
+	"git.ronaksoftware.com/ronak/riversdk/log"
+
+	"go.uber.org/zap"
 
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 
@@ -24,22 +28,32 @@ func (s *Scenario) Wait() {
 	s.wait.Wait()
 }
 
-func (s *Scenario) failed(str string) {
-	fmt.Println("Failed : " + str)
+func (s *Scenario) failed(act shared.Acter, elapsed time.Duration, str string) {
+	log.LOG_Warn("failed() : "+str, zap.Duration("elapsed", elapsed))
 	s.wait.Done()
+	act.Stop()
 }
 
-func (s *Scenario) completed(str string) {
-	fmt.Println("Success : " + str)
+func (s *Scenario) completed(act shared.Acter, elapsed time.Duration, str string) {
+	log.LOG_Info("completed() : "+str, zap.Duration("elapsed", elapsed))
 	s.wait.Done()
+	act.Stop()
 }
 
-func (s *Scenario) isErrorResponse(resp *msg.MessageEnvelope) bool {
+func (s *Scenario) log(str string, elapsed time.Duration) {
+	if elapsed > 0 {
+		log.LOG_Info("log() : "+str, zap.Duration("elapsed", elapsed))
+	}
+	log.LOG_Warn("log() : " + str)
+}
+
+func (s *Scenario) isErrorResponse(act shared.Acter, elapsed time.Duration, resp *msg.MessageEnvelope) bool {
 	if resp.Constructor == msg.C_Error {
 		x := new(msg.Error)
 		x.Unmarshal(resp.Message)
-		fmt.Println("Response Error : ", x.Code, x.Items)
+		log.LOG_Warn("isErrorResponse(): ", zap.String("Err", x.String()), zap.Duration("elapsed", elapsed))
 		s.wait.Done()
+		act.Stop()
 		return true
 	}
 	return false

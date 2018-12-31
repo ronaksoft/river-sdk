@@ -161,6 +161,9 @@ func (ctrl *CtrlNetwork) onConnect() {
 
 // receiver read messages from websocket and pass them to proper handler
 func (ctrl *CtrlNetwork) receiver() {
+	if !ctrl.keepConnectionAlive {
+		return
+	}
 	for {
 		messageType, message, err := ctrl.conn.ReadMessage()
 		if err != nil {

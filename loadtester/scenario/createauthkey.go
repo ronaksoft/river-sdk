@@ -49,6 +49,10 @@ func NewCreateAuthKey() *CreateAuthKey {
 
 // Play execute CreateAuthKey scenario
 func (s *CreateAuthKey) Play(act shared.Acter) {
+	if act.GetAuthID() > 0 {
+		s.log("Actor already have AuthID", 0)
+		return
+	}
 	s.wait.Add(1)
 	act.ExecuteRequest(s.initConnect(act))
 }
@@ -59,11 +63,11 @@ func (s *CreateAuthKey) initConnect(act shared.Acter) (*msg.MessageEnvelope, sha
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
 		// TODO : Reporter failed
-		s.failed("initConnect() Timeout")
+		s.failed(act, elapsed, "initConnect() Timeout")
 	}
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
-		if s.isErrorResponse(resp) {
+		if s.isErrorResponse(act, elapsed, resp) {
 			return
 		}
 		if resp.Constructor == msg.C_InitResponse {
@@ -73,9 +77,11 @@ func (s *CreateAuthKey) initConnect(act shared.Acter) (*msg.MessageEnvelope, sha
 			// chain next request here
 			act.ExecuteRequest(s.initCompleteAuth(x, act))
 
+			s.log("initConnect() Success", elapsed)
+
 		} else {
 			// TODO : Reporter failed
-			s.failed("initConnect() successCB response type is not InitResponse")
+			s.failed(act, elapsed, "initConnect() successCB response type is not InitResponse")
 		}
 	}
 
@@ -114,7 +120,7 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acte
 	serverPubKey, err := s.ServerKeys.GetPublicKey(int64(serverPubFP))
 	if err != nil {
 		// TODO : Reporter failed
-		s.failed("ServerKeys.GetPublicKey(), Err : " + err.Error())
+		s.failed(act, -1, "ServerKeys.GetPublicKey(), Err : "+err.Error())
 	}
 	n := big.NewInt(0)
 	n.SetString(serverPubKey.N, 10)
@@ -126,7 +132,7 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acte
 	encPayload, err := rsa.EncryptPKCS1v15(rand.Reader, &rsaPublicKey, decrypted)
 	if err != nil {
 		// TODO : Reporter failed
-		s.failed("rsa.EncryptPKCS1v15(), Err : " + err.Error())
+		s.failed(act, -1, "rsa.EncryptPKCS1v15(), Err : "+err.Error())
 	}
 
 	// send chained request
@@ -134,11 +140,11 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acte
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
 		// TODO : Reporter failed
-		s.failed("initCompleteAuth() Timeout")
+		s.failed(act, elapsed, "initCompleteAuth() Timeout")
 	}
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
-		if s.isErrorResponse(resp) {
+		if s.isErrorResponse(act, elapsed, resp) {
 			return
 		}
 		// TODO : chain next request here
@@ -170,23 +176,23 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acte
 				if x.SecretHash != binary.LittleEndian.Uint64(secretHash[24:32]) {
 					err = domain.ErrSecretNonceMismatch
 					// TODO : Reporter failed
-					s.failed("initCompleteAuth(), err : " + err.Error())
+					s.failed(act, elapsed, "initCompleteAuth(), err : "+err.Error())
 					return
 				}
-				s.completed("initCompleteAuth() Success")
+				s.completed(act, elapsed, "initCompleteAuth() Success")
 			case msg.InitAuthCompleted_RETRY:
 				// TODO : Reporter failed && Retry with new DHKey
-				s.failed("initCompleteAuth(), err : Retry with new DHKey")
+				s.failed(act, elapsed, "initCompleteAuth(), err : Retry with new DHKey")
 
 			case msg.InitAuthCompleted_FAIL:
 				err = domain.ErrAuthFailed
 				// TODO : Reporter failed
-				s.failed("initCompleteAuth(), err : " + err.Error())
+				s.failed(act, elapsed, "initCompleteAuth(), err : "+err.Error())
 			}
 
 		} else {
 			// TODO : Reporter failed
-			s.failed("initCompleteAuth() successCB response type is not InitAuthCompleted")
+			s.failed(act, elapsed, "initCompleteAuth() successCB response type is not InitAuthCompleted")
 		}
 	}
 

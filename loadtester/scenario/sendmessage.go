@@ -41,11 +41,11 @@ func (s *SendMessage) messageSend(act shared.Acter, peer *shared.PeerInfo) (*msg
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
 		// TODO : Reporter failed
-		s.failed("messageSend() Timeout")
+		s.failed(act, elapsed, "messageSend() Timeout")
 	}
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
-		if s.isErrorResponse(resp) {
+		if s.isErrorResponse(act, elapsed, resp) {
 			return
 		}
 		if resp.Constructor == msg.C_MessagesSent {
@@ -53,10 +53,10 @@ func (s *SendMessage) messageSend(act shared.Acter, peer *shared.PeerInfo) (*msg
 			x.Unmarshal(resp.Message)
 
 			// TODO : Complete Scenario
-			s.completed("messageSend() Success")
+			s.completed(act, elapsed, "messageSend() Success")
 		} else {
 			// TODO : Reporter failed
-			s.failed("messageSend() SuccessCB response is not MessagesSent")
+			s.failed(act, elapsed, "messageSend() SuccessCB response is not MessagesSent")
 		}
 	}
 

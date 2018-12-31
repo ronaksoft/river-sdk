@@ -24,6 +24,10 @@ type Acter interface {
 	SetPeers(peers []*PeerInfo)
 
 	ExecuteRequest(message *msg.MessageEnvelope, onSuccess SuccessCallback, onTimeOut TimeoutCallback)
+
+	Save() error
+
+	Stop()
 }
 
 // Screenwriter scenario interface
