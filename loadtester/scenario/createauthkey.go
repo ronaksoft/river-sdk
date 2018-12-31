@@ -8,7 +8,6 @@ import (
 	"math/big"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/actor"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
@@ -48,14 +47,14 @@ func NewCreateAuthKey() *CreateAuthKey {
 	return s
 }
 
-// Execute CreateAuthKey scenario
-func (s *CreateAuthKey) Execute(act *actor.Actor) {
+// Play execute CreateAuthKey scenario
+func (s *CreateAuthKey) Play(act shared.Acter) {
 	s.wait.Add(1)
 	act.ExecuteRequest(s.initConnect(act))
 }
 
 // Step : 1
-func (s *CreateAuthKey) initConnect(act *actor.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
+func (s *CreateAuthKey) initConnect(act shared.Acter) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 	reqEnv := InitConnect()
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
@@ -84,7 +83,7 @@ func (s *CreateAuthKey) initConnect(act *actor.Actor) (*msg.MessageEnvelope, sha
 }
 
 // Step : 2
-func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act *actor.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
+func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acter) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 
 	clientNonce := resp.ClientNonce
 	serverNonce := resp.ServerNonce

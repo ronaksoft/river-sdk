@@ -3,7 +3,6 @@ package scenario
 import (
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/actor"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
@@ -19,16 +18,22 @@ func NewImportContact() *ImportContact {
 	return s
 }
 
-// Execute ImportContact scenario
-func (s *ImportContact) Execute(act *actor.Actor) {
-	for _, p := range act.PhoneList {
+// Play execute ImportContact scenario
+func (s *ImportContact) Play(act shared.Acter) {
+	if act.GetAuthID() == 0 {
+		Play(act, NewCreateAuthKey())
+	}
+	if act.GetUserID() == 0 {
+		Play(act, NewLogin())
+	}
+	for _, p := range act.GetPhoneList() {
 		s.wait.Add(1)
 		act.ExecuteRequest(s.contactImport(p, act))
 	}
 }
 
 // contactImport : Step 1
-func (s *ImportContact) contactImport(phone string, act *actor.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
+func (s *ImportContact) contactImport(phone string, act shared.Acter) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 	reqEnv := ContactsImport(phone)
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
@@ -44,14 +49,16 @@ func (s *ImportContact) contactImport(phone string, act *actor.Actor) (*msg.Mess
 			x := new(msg.ContactsImported)
 			x.Unmarshal(resp.Message)
 			// TODO : Complete scenario
+			peers := make([]*shared.PeerInfo, 0, len(x.Users))
 			for _, u := range x.Users {
-				act.Peers = append(act.Peers, &shared.PeerInfo{
+				peers = append(peers, &shared.PeerInfo{
 					PeerID:     u.ID,
 					PeerType:   msg.PeerUser,
 					AccessHash: u.AccessHash,
 					Name:       u.FirstName + " " + u.LastName,
 				})
 			}
+			act.SetPeers(peers)
 			s.completed("contactImport() Success")
 		} else {
 			// TODO : Reporter failed

@@ -3,7 +3,6 @@ package scenario
 import (
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/actor"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
@@ -18,16 +17,26 @@ func NewSendMessage() *SendMessage {
 	return s
 }
 
-// Execute SendMessage scenario
-func (s *SendMessage) Execute(act *actor.Actor) {
-	for _, p := range act.Peers {
+// Play execute SendMessage scenario
+func (s *SendMessage) Play(act shared.Acter) {
+	if act.GetAuthID() == 0 {
+		Play(act, NewCreateAuthKey())
+	}
+	if act.GetUserID() == 0 {
+		Play(act, NewLogin())
+	}
+	if len(act.GetPeers()) == 0 {
+		Play(act, NewImportContact())
+	}
+
+	for _, p := range act.GetPeers() {
 		s.wait.Add(1)
 		act.ExecuteRequest(s.messageSend(act, p))
 	}
 }
 
 // messageSend : Step 1
-func (s *SendMessage) messageSend(act *actor.Actor, peer *shared.PeerInfo) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
+func (s *SendMessage) messageSend(act shared.Acter, peer *shared.PeerInfo) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 	reqEnv := MessageSend(peer)
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {

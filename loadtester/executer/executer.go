@@ -11,7 +11,7 @@ import (
 
 // Executer command executer
 type Executer struct {
-	netCtrl      shared.Networker
+	netCtrl      shared.Neter
 	requestsLock sync.Mutex
 	requests     map[uint64]*Request
 }
@@ -27,7 +27,7 @@ type Request struct {
 }
 
 // NewExecuter create new instance of command executer
-func NewExecuter(netCtrl shared.Networker) *Executer {
+func NewExecuter(netCtrl shared.Neter) *Executer {
 	exe := &Executer{
 		netCtrl:  netCtrl,
 		requests: make(map[uint64]*Request),

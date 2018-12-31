@@ -26,12 +26,12 @@ type Actor struct {
 	// Peers will filled after Contact import
 	Peers []*shared.PeerInfo
 
-	netCtrl *controller.CtrlNetwork
+	netCtrl shared.Neter
 	exec    *executer.Executer
 }
 
 // NewActor create new actor instance
-func NewActor(phone string) (*Actor, error) {
+func NewActor(phone string) (shared.Acter, error) {
 
 	act := &Actor{
 		Phone:     phone,
@@ -51,13 +51,17 @@ func NewActor(phone string) (*Actor, error) {
 	return act, nil
 }
 
-// ExecuteRequest send request to server
-func (act *Actor) ExecuteRequest(message *msg.MessageEnvelope, onSuccess shared.SuccessCallback, onTimeOut shared.TimeoutCallback) {
-	if message == nil {
-		return
-	}
-	act.exec.Exec(message, onSuccess, onTimeOut, shared.DefaultSendTimeout)
-}
+// GetPhone Acter interface func
+func (act *Actor) GetPhone() string { return act.Phone }
+
+// SetPhone Acter interface func
+func (act *Actor) SetPhone(phone string) { act.Phone = phone }
+
+// GetPhoneList Acter interface func
+func (act *Actor) GetPhoneList() []string { return act.PhoneList }
+
+// SetPhoneList Acter interface func
+func (act *Actor) SetPhoneList(phoneList []string) { act.PhoneList = phoneList }
 
 // SetAuthInfo set authID and authKey after CreateAuthKey completed
 func (act *Actor) SetAuthInfo(authID int64, authKey []byte) {
@@ -65,6 +69,43 @@ func (act *Actor) SetAuthInfo(authID int64, authKey []byte) {
 	act.AuthKey = make([]byte, len(authKey))
 	copy(act.AuthKey, authKey)
 	act.netCtrl.SetAuthInfo(act.AuthID, act.AuthKey)
+}
+
+// GetAuthInfo Acter interface func
+func (act *Actor) GetAuthInfo() (int64, []byte) { return act.AuthID, act.AuthKey }
+
+// GetAuthID Acter interface func
+func (act *Actor) GetAuthID() (authID int64) {
+	return act.AuthID
+}
+
+// GetUserID Acter interface func
+func (act *Actor) GetUserID() int64 { return act.UserID }
+
+// GetUserInfo Acter interface func
+func (act *Actor) GetUserInfo() (userID int64, username, userFullName string) {
+	return act.UserID, act.UserName, act.UserFullName
+}
+
+// SetUserInfo Acter interface func
+func (act *Actor) SetUserInfo(userID int64, username, userFullName string) {
+	act.UserID = userID
+	act.UserName = username
+	act.UserFullName = userFullName
+}
+
+// GetPeers Acter interface func
+func (act *Actor) GetPeers() []*shared.PeerInfo { return act.Peers }
+
+// SetPeers Acter interface func
+func (act *Actor) SetPeers(peers []*shared.PeerInfo) { act.Peers = peers }
+
+// ExecuteRequest send request to server
+func (act *Actor) ExecuteRequest(message *msg.MessageEnvelope, onSuccess shared.SuccessCallback, onTimeOut shared.TimeoutCallback) {
+	if message == nil {
+		return
+	}
+	act.exec.Exec(message, onSuccess, onTimeOut, shared.DefaultSendTimeout)
 }
 
 // onMessage check requestCallbacks and call callbacks

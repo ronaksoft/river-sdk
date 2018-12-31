@@ -32,7 +32,7 @@ type CtrlNetwork struct {
 }
 
 // NewCtrlNetwork create new instance
-func NewCtrlNetwork(authID int64, authKey []byte, onMessage domain.OnMessageHandler, onUpdate domain.OnUpdateHandler, onError domain.ErrorHandler) *CtrlNetwork {
+func NewCtrlNetwork(authID int64, authKey []byte, onMessage domain.OnMessageHandler, onUpdate domain.OnUpdateHandler, onError domain.ErrorHandler) shared.Neter {
 	n := &CtrlNetwork{
 		stop:      make(chan bool),
 		wsDialer:  websocket.DefaultDialer,

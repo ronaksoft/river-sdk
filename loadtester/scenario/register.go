@@ -4,7 +4,6 @@ import (
 	"strings"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/actor"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 
 	"git.ronaksoftware.com/ronak/riversdk/msg"
@@ -21,15 +20,18 @@ func NewRegister() *Register {
 	return s
 }
 
-// Execute Register scenario
-func (s *Register) Execute(act *actor.Actor) {
+// Play execute Register scenario
+func (s *Register) Play(act shared.Acter) {
+	if act.GetAuthID() == 0 {
+		Play(act, NewCreateAuthKey())
+	}
 	s.wait.Add(1)
 	act.ExecuteRequest(s.sendCode(act))
 }
 
 //sendCode : Step 1
-func (s *Register) sendCode(act *actor.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
-	envReq := AuthSendCode(act.Phone)
+func (s *Register) sendCode(act shared.Acter) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
+	envReq := AuthSendCode(act.GetPhone())
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
 		// TODO : Reporter failed
 		s.failed("sendCode() Timeout")
@@ -53,7 +55,7 @@ func (s *Register) sendCode(act *actor.Actor) (*msg.MessageEnvelope, shared.Succ
 }
 
 // register : Step 2
-func (s *Register) register(resp *msg.AuthSentCode, act *actor.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
+func (s *Register) register(resp *msg.AuthSentCode, act shared.Acter) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 	if strings.HasPrefix(resp.Phone, "237400") {
 		code := resp.Phone[len(resp.Phone)-4:]
 		envReq := AuthRegister(resp.Phone, code, resp.PhoneCodeHash)
@@ -71,10 +73,7 @@ func (s *Register) register(resp *msg.AuthSentCode, act *actor.Actor) (*msg.Mess
 				x.Unmarshal(resp.Message)
 
 				// TODO : Complete Scenario
-				act.UserID = x.User.ID
-				act.UserName = x.User.Username
-				act.UserFullName = x.User.FirstName + " " + x.User.LastName
-
+				act.SetUserInfo(x.User.ID, x.User.Username, x.User.FirstName+" "+x.User.LastName)
 				s.completed("register() Success")
 
 			} else {

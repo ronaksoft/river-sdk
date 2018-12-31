@@ -6,17 +6,20 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/actor"
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 )
 
+// Scenario is something that screenwriter create
 type Scenario struct {
 	wait sync.WaitGroup
 }
 
-func (s *Scenario) Execute(act *actor.Actor) {
+// Play execute scenario
+func (s *Scenario) Play(act shared.Acter) {
 	panic("Not implemented")
 }
 
+// Wait until play overs
 func (s *Scenario) Wait() {
 	s.wait.Wait()
 }
@@ -40,4 +43,10 @@ func (s *Scenario) isErrorResponse(resp *msg.MessageEnvelope) bool {
 		return true
 	}
 	return false
+}
+
+// Play puts actor in scenario to play its role and wait to show overs
+func Play(act shared.Acter, scenario shared.Screenwriter) {
+	scenario.Play(act)
+	scenario.Wait()
 }
