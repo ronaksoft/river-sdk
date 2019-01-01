@@ -1,6 +1,8 @@
 package shared
 
 import (
+	"time"
+
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
 
@@ -28,6 +30,11 @@ type Acter interface {
 	Save() error
 
 	Stop()
+
+	SetTimeout(constructor int64, elapsed time.Duration)
+	SetSuccess(constructor int64, elapsed time.Duration)
+	GetStatus() *Status
+	SetStopHandler(func(phone string))
 }
 
 // Screenwriter scenario interface
@@ -42,4 +49,14 @@ type Neter interface {
 	SetAuthInfo(authID int64, authKey []byte)
 	Start() error
 	Stop()
+	IsConnected() bool
+	DisconnectCount() int64
+}
+
+// Reporter report interface
+type Reporter interface {
+	Register(act Acter)
+	String() string
+	Print()
+	Clear()
 }

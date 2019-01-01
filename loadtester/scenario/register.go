@@ -37,10 +37,12 @@ func (s *Register) Play(act shared.Acter) {
 func (s *Register) sendCode(act shared.Acter) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 	envReq := AuthSendCode(act.GetPhone())
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
-		// TODO : Reporter failed
+		// Reporter failed
+		act.SetTimeout(msg.C_AuthSendCode, elapsed)
 		s.failed(act, elapsed, "sendCode() Timeout")
 	}
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
+		act.SetSuccess(msg.C_AuthSendCode, elapsed)
 		if s.isErrorResponse(act, elapsed, resp) {
 			return
 		}
@@ -65,10 +67,13 @@ func (s *Register) register(resp *msg.AuthSentCode, act shared.Acter) (*msg.Mess
 		envReq := AuthRegister(resp.Phone, code, resp.PhoneCodeHash)
 
 		timeoutCB := func(requestID uint64, elapsed time.Duration) {
-			// TODO : Reporter failed
+			// Reporter failed
+			act.SetTimeout(msg.C_AuthRegister, elapsed)
 			s.failed(act, elapsed, "register() TimedOut")
 		}
 		successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
+			act.SetSuccess(msg.C_AuthRegister, elapsed)
+
 			if s.isErrorResponse(act, elapsed, resp) {
 				return
 			}

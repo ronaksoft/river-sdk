@@ -37,11 +37,13 @@ func (s *Login) sendCode(act shared.Acter) (*msg.MessageEnvelope, shared.Success
 	reqEnv := AuthSendCode(act.GetPhone())
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
-		// TODO : Reporter failed
+		// Reporter failed
+		act.SetTimeout(msg.C_AuthSendCode, elapsed)
 		s.failed(act, elapsed, "sendCode() Timeout")
 	}
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
+		act.SetSuccess(msg.C_AuthSendCode, elapsed)
 		if s.isErrorResponse(act, elapsed, resp) {
 			return
 		}
@@ -67,11 +69,13 @@ func (s *Login) login(resp *msg.AuthSentCode, act shared.Acter) (*msg.MessageEnv
 		reqEnv := AuthLogin(resp.Phone, code, resp.PhoneCodeHash)
 
 		timeoutCB := func(requestID uint64, elapsed time.Duration) {
-			// TODO : Reporter failed
+			//Reporter failed
+			act.SetTimeout(msg.C_AuthLogin, elapsed)
 			s.failed(act, elapsed, "login() TimedOut")
 		}
 
 		successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
+			act.SetSuccess(msg.C_AuthLogin, elapsed)
 			if s.isErrorResponse(act, elapsed, resp) {
 				return
 			}

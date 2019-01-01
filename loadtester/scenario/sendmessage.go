@@ -40,11 +40,13 @@ func (s *SendMessage) messageSend(act shared.Acter, peer *shared.PeerInfo) (*msg
 	reqEnv := MessageSend(peer)
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
-		// TODO : Reporter failed
+		// Reporter failed
+		act.SetTimeout(msg.C_MessagesSend, elapsed)
 		s.failed(act, elapsed, "messageSend() Timeout")
 	}
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
+		act.SetSuccess(msg.C_MessagesSend, elapsed)
 		if s.isErrorResponse(act, elapsed, resp) {
 			return
 		}

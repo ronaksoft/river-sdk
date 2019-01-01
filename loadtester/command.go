@@ -14,6 +14,15 @@ import (
 var (
 	_Actors []shared.Acter
 )
+var cmdPrint = &ishell.Cmd{
+	Name: "Print",
+	Func: func(c *ishell.Context) {
+		if _Reporter != nil {
+			fnClearScreeen()
+			_Reporter.Print()
+		}
+	},
+}
 
 var cmdRegister = &ishell.Cmd{
 	Name: "Register",
@@ -21,9 +30,10 @@ var cmdRegister = &ishell.Cmd{
 		// get suffix start phoneNo
 		// get suffix end phoneNo
 		// start registering
-
 		startNo := fnStartPhone(c)
 		endNo := fnEndPhone(c)
+		fnClearScreeen()
+		_Reporter.Clear()
 		s := scenario.NewRegister()
 		phoneNo := ""
 		for startNo <= endNo {
@@ -34,11 +44,11 @@ var cmdRegister = &ishell.Cmd{
 				log.LOG_Error(fmt.Sprintf("NewActor(%s)", phoneNo), zap.String("Error", err.Error()))
 				continue
 			}
-			// run sync
-			// scenario.Play(act, s)
+
+			_Reporter.Register(act)
 
 			// run async
-			s.Play(act)
+			go scenario.Play(act, s)
 		}
 	},
 }
@@ -53,6 +63,8 @@ var cmdLogin = &ishell.Cmd{
 
 		startNo := fnStartPhone(c)
 		endNo := fnEndPhone(c)
+		fnClearScreeen()
+		_Reporter.Clear()
 		s := scenario.NewLogin()
 		phoneNo := ""
 		for startNo <= endNo {
@@ -63,11 +75,11 @@ var cmdLogin = &ishell.Cmd{
 				log.LOG_Error(fmt.Sprintf("NewActor(%s)", phoneNo), zap.String("Error", err.Error()))
 				continue
 			}
-			// run sync
-			// scenario.Play(act, s)
+
+			_Reporter.Register(act)
 
 			// run async
-			s.Play(act)
+			go scenario.Play(act, s)
 		}
 
 	},
@@ -84,6 +96,8 @@ var cmdImportContact = &ishell.Cmd{
 		phoneNoToImportAsContact := fnGetPhone(c)
 		startNo := fnStartPhone(c)
 		endNo := fnEndPhone(c)
+		fnClearScreeen()
+		_Reporter.Clear()
 		s := scenario.NewImportContact()
 		phoneNo := ""
 		for startNo <= endNo {
@@ -95,11 +109,11 @@ var cmdImportContact = &ishell.Cmd{
 				log.LOG_Error(fmt.Sprintf("NewActor(%s)", phoneNo), zap.String("Error", err.Error()))
 				continue
 			}
-			// run sync
-			// scenario.Play(act, s)
+
+			_Reporter.Register(act)
 
 			// run async
-			s.Play(act)
+			go scenario.Play(act, s)
 		}
 	},
 }
@@ -113,6 +127,8 @@ var cmdSendMessage = &ishell.Cmd{
 
 		startNo := fnStartPhone(c)
 		endNo := fnEndPhone(c)
+		fnClearScreeen()
+		_Reporter.Clear()
 		s := scenario.NewSendMessage()
 		phoneNo := ""
 		for startNo <= endNo {
@@ -123,11 +139,11 @@ var cmdSendMessage = &ishell.Cmd{
 				log.LOG_Error(fmt.Sprintf("NewActor(%s)", phoneNo), zap.String("Error", err.Error()))
 				continue
 			}
-			// run sync
-			// scenario.Play(act, s)
 
-			// run async
-			s.Play(act)
+			_Reporter.Register(act)
+
+			// // run async
+			go scenario.Play(act, s)
 		}
 	},
 }

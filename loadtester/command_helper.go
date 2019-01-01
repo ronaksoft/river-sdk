@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 
 	ishell "gopkg.in/abiosoft/ishell.v2"
@@ -58,4 +59,8 @@ func fnGetPhone(c *ishell.Context) string {
 		}
 	}
 	return tmpNo
+}
+
+func fnClearScreeen() {
+	fmt.Println("\033[H\033[2J") // clear screen
 }

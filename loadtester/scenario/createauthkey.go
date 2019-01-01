@@ -62,11 +62,13 @@ func (s *CreateAuthKey) initConnect(act shared.Acter) (*msg.MessageEnvelope, sha
 	reqEnv := InitConnect()
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
-		// TODO : Reporter failed
+		//Reporter failed
+		act.SetTimeout(msg.C_InitConnect, elapsed)
 		s.failed(act, elapsed, "initConnect() Timeout")
 	}
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
+		act.SetSuccess(msg.C_InitConnect, elapsed)
 		if s.isErrorResponse(act, elapsed, resp) {
 			return
 		}
@@ -139,11 +141,13 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acte
 	reqEnv := InitCompleteAuth(clientNonce, serverNonce, p, q, dhPubKey.Bytes(), encPayload)
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
-		// TODO : Reporter failed
+		// Reporter failed
+		act.SetTimeout(msg.C_InitCompleteAuth, elapsed)
 		s.failed(act, elapsed, "initCompleteAuth() Timeout")
 	}
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
+		act.SetSuccess(msg.C_InitCompleteAuth, elapsed)
 		if s.isErrorResponse(act, elapsed, resp) {
 			return
 		}

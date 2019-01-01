@@ -2,6 +2,7 @@ package controller
 
 import (
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
@@ -12,8 +13,8 @@ import (
 
 // CtrlNetwork network layer
 type CtrlNetwork struct {
-	IsConnected  bool
-	Disconnected int
+	isConnected  bool
+	Disconnected int64
 
 	connWriteLock       sync.Mutex
 	conn                *websocket.Conn
@@ -71,7 +72,7 @@ func (ctrl *CtrlNetwork) Stop() {
 	ctrl.disconnect()
 	// signal watchDog
 	ctrl.stop <- true
-	ctrl.IsConnected = false
+	ctrl.isConnected = false
 }
 
 // Send the data payload is binary
@@ -105,6 +106,16 @@ func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
 	return err
 }
 
+// IsConnected connection status
+func (ctrl *CtrlNetwork) IsConnected() bool {
+	return ctrl.isConnected
+}
+
+// DisconnectCount network failed count
+func (ctrl *CtrlNetwork) DisconnectCount() int64 {
+	return ctrl.Disconnected
+}
+
 // connect to websocket and start receiving data from websocket
 func (ctrl *CtrlNetwork) connect() error {
 	conn, _, err := ctrl.wsDialer.Dial(shared.DefaultServerURL, nil)
@@ -129,7 +140,7 @@ func (ctrl *CtrlNetwork) watchDog() {
 			if ctrl.conn != nil {
 				ctrl.receiver()
 			}
-			ctrl.IsConnected = false
+			ctrl.isConnected = false
 			if ctrl.keepConnectionAlive {
 				err := ctrl.connect()
 				if err == nil {
@@ -156,7 +167,7 @@ func (ctrl *CtrlNetwork) onConnect() {
 			time.Sleep(1 * time.Second)
 		}
 	}
-	ctrl.IsConnected = true
+	ctrl.isConnected = true
 }
 
 // receiver read messages from websocket and pass them to proper handler
@@ -167,7 +178,7 @@ func (ctrl *CtrlNetwork) receiver() {
 	for {
 		messageType, message, err := ctrl.conn.ReadMessage()
 		if err != nil {
-			ctrl.Disconnected++
+			atomic.AddInt64(&ctrl.Disconnected, 1)
 			return
 		}
 		if messageType != websocket.BinaryMessage {

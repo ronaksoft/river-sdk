@@ -41,11 +41,13 @@ func (s *ImportContact) contactImport(phone string, act shared.Acter) (*msg.Mess
 	reqEnv := ContactsImport(phone)
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
-		// TODO : Reporter failed
+		// Reporter failed
+		act.SetTimeout(msg.C_ContactsImport, elapsed)
 		s.failed(act, elapsed, "contactImport() Timeout")
 	}
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
+		act.SetSuccess(msg.C_ContactsImport, elapsed)
 		if s.isErrorResponse(act, elapsed, resp) {
 			return
 		}

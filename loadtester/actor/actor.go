@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"sync/atomic"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -31,8 +33,14 @@ type Actor struct {
 	// Peers will filled after Contact import
 	Peers []*shared.PeerInfo `json:"peers"`
 
-	netCtrl shared.Neter
-	exec    *executer.Executer
+	netCtrl shared.Neter       `json:"-"`
+	exec    *executer.Executer `json:"-"`
+
+	// Reporter data
+
+	CreatedOn     time.Time      `json:"-"`
+	Status        *shared.Status `json:"-"`
+	OnStopHandler func(phone string)
 }
 
 // NewActor create new actor instance
@@ -57,7 +65,8 @@ func NewActor(phone string) (shared.Acter, error) {
 		return act, err
 	}
 	act.exec = executer.NewExecuter(act.netCtrl)
-
+	act.CreatedOn = time.Now()
+	act.Status = new(shared.Status)
 	return act, nil
 }
 
@@ -115,6 +124,7 @@ func (act *Actor) ExecuteRequest(message *msg.MessageEnvelope, onSuccess shared.
 	if message == nil {
 		return
 	}
+	atomic.AddInt64(&act.Status.RequestCount, 1)
 	act.exec.Exec(message, onSuccess, onTimeOut, shared.DefaultSendTimeout)
 }
 
@@ -139,9 +149,43 @@ func (act *Actor) Load(phone string) error {
 // Stop dispose actor
 func (act *Actor) Stop() {
 	if act.netCtrl != nil {
+		act.Status.DisconnectCount = act.netCtrl.DisconnectCount()
 		act.netCtrl.Stop()
 		act.netCtrl = nil
 	}
+	act.Status.LifeTime = time.Since(act.CreatedOn)
+	if act.OnStopHandler != nil {
+		act.OnStopHandler(act.Phone)
+	}
+}
+
+// SetTimeout fill reporter data
+func (act *Actor) SetTimeout(constructor int64, elapsed time.Duration) {
+	if act.Status.TimeoutCount == 0 {
+		act.Status.AverageTimeoutTime = elapsed
+	} else {
+		act.Status.AverageTimeoutTime = (act.Status.AverageTimeoutTime + elapsed) / 2
+	}
+	atomic.AddInt64(&act.Status.TimeoutCount, 1)
+}
+
+// SetSuccess fill reporter data
+func (act *Actor) SetSuccess(constructor int64, elapsed time.Duration) {
+	if act.Status.SuccessCount == 0 {
+		act.Status.AverageSuccessTime = elapsed
+	} else {
+		act.Status.AverageSuccessTime = (act.Status.AverageSuccessTime + elapsed) / 2
+	}
+	atomic.AddInt64(&act.Status.SuccessCount, 1)
+}
+
+// GetStatus return actor statistics
+func (act *Actor) GetStatus() *shared.Status {
+	return act.Status
+}
+
+func (act *Actor) SetStopHandler(fn func(phone string)) {
+	act.OnStopHandler = fn
 }
 
 // onMessage check requestCallbacks and call callbacks

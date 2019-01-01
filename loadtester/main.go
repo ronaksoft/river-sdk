@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/report"
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 
 	"github.com/fatih/color"
@@ -15,6 +17,7 @@ var (
 	_Shell                *ishell.Shell
 	_Log                  *zap.Logger
 	_GREEN, _RED, _Yellow func(format string, a ...interface{}) string
+	_Reporter             shared.Reporter
 )
 
 func init() {
@@ -36,12 +39,16 @@ func init() {
 	_Shell.Println("===============================")
 	_Shell.Println("## River Load Tester Console ##")
 	_Shell.Println("===============================")
+
+	_Shell.AddCmd(cmdPrint)
 	_Shell.AddCmd(cmdRegister)
 	_Shell.AddCmd(cmdLogin)
 	_Shell.AddCmd(cmdImportContact)
 	_Shell.AddCmd(cmdSendMessage)
 
 	log.SetLogger(Log)
+
+	_Reporter = report.NewReport()
 }
 
 func main() {
@@ -63,6 +70,9 @@ func main() {
 
 // Log log printer
 func Log(logLevel int, msg string) {
+	if _Reporter != nil {
+		return
+	}
 
 	switch logLevel {
 	case int(zap.DebugLevel):
