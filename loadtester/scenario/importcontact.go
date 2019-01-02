@@ -13,8 +13,9 @@ type ImportContact struct {
 }
 
 // NewImportContact create new instance
-func NewImportContact() *ImportContact {
+func NewImportContact(isFinal bool) shared.Screenwriter {
 	s := new(ImportContact)
+	s.isFinal = isFinal
 	return s
 }
 
@@ -25,10 +26,10 @@ func (s *ImportContact) Play(act shared.Acter) {
 		return
 	}
 	if act.GetAuthID() == 0 {
-		Play(act, NewCreateAuthKey())
+		Play(act, NewCreateAuthKey(false))
 	}
 	if act.GetUserID() == 0 {
-		Play(act, NewLogin())
+		Play(act, NewLogin(false))
 	}
 	for _, p := range act.GetPhoneList() {
 		s.wait.Add(1)

@@ -34,7 +34,7 @@ var cmdRegister = &ishell.Cmd{
 		endNo := fnEndPhone(c)
 		fnClearScreeen()
 		_Reporter.Clear()
-		s := scenario.NewRegister()
+		s := scenario.NewRegister(true)
 		phoneNo := ""
 		for startNo <= endNo {
 			phoneNo = fmt.Sprintf("237400%07d", startNo)
@@ -65,7 +65,7 @@ var cmdLogin = &ishell.Cmd{
 		endNo := fnEndPhone(c)
 		fnClearScreeen()
 		_Reporter.Clear()
-		s := scenario.NewLogin()
+		s := scenario.NewLogin(true)
 		phoneNo := ""
 		for startNo <= endNo {
 			phoneNo = fmt.Sprintf("237400%07d", startNo)
@@ -98,7 +98,7 @@ var cmdImportContact = &ishell.Cmd{
 		endNo := fnEndPhone(c)
 		fnClearScreeen()
 		_Reporter.Clear()
-		s := scenario.NewImportContact()
+		s := scenario.NewImportContact(true)
 		phoneNo := ""
 		for startNo <= endNo {
 			phoneNo = fmt.Sprintf("237400%07d", startNo)
@@ -129,7 +129,7 @@ var cmdSendMessage = &ishell.Cmd{
 		endNo := fnEndPhone(c)
 		fnClearScreeen()
 		_Reporter.Clear()
-		s := scenario.NewSendMessage()
+		s := scenario.NewSendMessage(true)
 		phoneNo := ""
 		for startNo <= endNo {
 			phoneNo = fmt.Sprintf("237400%07d", startNo)

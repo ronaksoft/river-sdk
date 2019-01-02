@@ -33,14 +33,13 @@ type Actor struct {
 	// Peers will filled after Contact import
 	Peers []*shared.PeerInfo `json:"peers"`
 
-	netCtrl shared.Neter       `json:"-"`
-	exec    *executer.Executer `json:"-"`
-
 	// Reporter data
+	CreatedOn     time.Time          `json:"-"`
+	Status        *shared.Status     `json:"-"`
+	OnStopHandler func(phone string) `json:"-"`
 
-	CreatedOn     time.Time      `json:"-"`
-	Status        *shared.Status `json:"-"`
-	OnStopHandler func(phone string)
+	netCtrl shared.Neter
+	exec    *executer.Executer
 }
 
 // NewActor create new actor instance
@@ -184,8 +183,14 @@ func (act *Actor) GetStatus() *shared.Status {
 	return act.Status
 }
 
+//SetStopHandler set on stop callback/delegate
 func (act *Actor) SetStopHandler(fn func(phone string)) {
 	act.OnStopHandler = fn
+}
+
+// ReceivedErrorResponse increase status ErrorRespons
+func (act *Actor) ReceivedErrorResponse() {
+	atomic.AddInt64(&act.Status.ErrorRespons, 1)
 }
 
 // onMessage check requestCallbacks and call callbacks

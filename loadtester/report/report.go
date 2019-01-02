@@ -14,6 +14,7 @@ import (
 type Report struct {
 	mx          sync.Mutex
 	isPrinting  bool
+	isActive    bool
 	Timer       time.Time
 	ActorStatus map[string]*shared.Status
 
@@ -26,6 +27,7 @@ type Report struct {
 	RequestCount       int64
 	TimeoutCount       int64
 	SuccessCount       int64
+	ErrorCount         int64
 	DisconnectCount    int64
 	AverageSuccessTime time.Duration
 	AverageTimeoutTime time.Duration
@@ -38,6 +40,16 @@ func NewReport() shared.Reporter {
 	r := new(Report)
 	r.ActorStatus = make(map[string]*shared.Status)
 	return r
+}
+
+// IsActive return active flag
+func (r *Report) IsActive() bool {
+	return r.isActive
+}
+
+// SetIsActive change active flag
+func (r *Report) SetIsActive(isActive bool) {
+	r.isActive = isActive
 }
 
 // Register add actor to be monitored by reporter
@@ -62,6 +74,7 @@ func (r *Report) onActorStop(phone string) {
 			r.RequestCount = status.RequestCount
 			r.TimeoutCount = status.TimeoutCount
 			r.SuccessCount = status.SuccessCount
+			r.ErrorCount = status.ErrorRespons
 			r.DisconnectCount = status.DisconnectCount
 			r.AverageSuccessTime = status.AverageSuccessTime
 			r.AverageTimeoutTime = status.AverageTimeoutTime
@@ -71,6 +84,7 @@ func (r *Report) onActorStop(phone string) {
 			r.RequestCount += status.RequestCount
 			r.TimeoutCount += status.TimeoutCount
 			r.SuccessCount += status.SuccessCount
+			r.ErrorCount += status.ErrorRespons
 			r.DisconnectCount += status.DisconnectCount
 			r.AverageSuccessTime = (r.AverageSuccessTime + status.AverageSuccessTime) / 2
 			r.AverageTimeoutTime = (r.AverageTimeoutTime + status.AverageTimeoutTime) / 2
@@ -85,7 +99,7 @@ func (r *Report) onActorStop(phone string) {
 		log.LOG_Warn(fmt.Sprintf("Actor(%s) not found in reporter", phone))
 	}
 	// Print does not need to be thread safe :/
-	if !r.isPrinting || r.StoppedActors == r.TotalActor {
+	if r.isActive && (!r.isPrinting || r.StoppedActors == r.TotalActor) {
 		r.isPrinting = true
 		r.Print()
 	}
@@ -95,18 +109,19 @@ func (r *Report) onActorStop(phone string) {
 func (r *Report) String() string {
 	return fmt.Sprintf(""+
 		`
-Total			: %d
-Active			: %d
-Stopped			: %d
-Requests		: %d
-Timeout			: %d
-Succes			: %d
-Disconnect		: %d
-Avg Lifetime		: %v
-Avg Success		: %v
-Avg Timeout		: %v
+Total Actors			: %d
+Active Actors			: %d
+Stopped Actors			: %d
+Request Count			: %d
+Timedout Requests		: %d
+Succeed Requests		: %d
+Error Responses			: %d
+Network Disconnect		: %d
+Avg Actor Lifetime		: %v
+Avg Success Interval		: %v
+Avg Timeout Interval		: %v
 
-Total Exec Time		: %v
+Total Exec Time			: %v
 
 `,
 		r.TotalActor,
@@ -115,6 +130,7 @@ Total Exec Time		: %v
 		r.RequestCount,
 		r.TimeoutCount,
 		r.SuccessCount,
+		r.ErrorCount,
 		r.DisconnectCount,
 		r.AverageLifeTime,
 		r.AverageSuccessTime,

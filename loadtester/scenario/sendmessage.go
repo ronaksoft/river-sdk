@@ -12,21 +12,22 @@ type SendMessage struct {
 }
 
 // NewSendMessage create new instance
-func NewSendMessage() *SendMessage {
+func NewSendMessage(isFinal bool) shared.Screenwriter {
 	s := new(SendMessage)
+	s.isFinal = isFinal
 	return s
 }
 
 // Play execute SendMessage scenario
 func (s *SendMessage) Play(act shared.Acter) {
 	if act.GetAuthID() == 0 {
-		Play(act, NewCreateAuthKey())
+		Play(act, NewCreateAuthKey(false))
 	}
 	if act.GetUserID() == 0 {
-		Play(act, NewLogin())
+		Play(act, NewLogin(false))
 	}
 	if len(act.GetPeers()) == 0 {
-		Play(act, NewImportContact())
+		Play(act, NewImportContact(false))
 	}
 
 	for _, p := range act.GetPeers() {

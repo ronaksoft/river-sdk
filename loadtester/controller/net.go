@@ -43,8 +43,8 @@ func NewCtrlNetwork(authID int64, authKey []byte, onMessage domain.OnMessageHand
 		onMessage: onMessage,
 		onUpdate:  onUpdate,
 	}
-	// n.wsDialer.ReadBufferSize = 32 * 1024  // 32KB
-	// n.wsDialer.WriteBufferSize = 32 * 1024 // 32KB
+	n.wsDialer.ReadBufferSize = 32 * 1024  // 32KB
+	n.wsDialer.WriteBufferSize = 32 * 1024 // 32KB
 
 	return n
 }
@@ -164,7 +164,7 @@ func (ctrl *CtrlNetwork) onConnect() {
 		if err == nil {
 			break
 		} else {
-			time.Sleep(1 * time.Second)
+			time.Sleep(time.Second)
 		}
 	}
 	ctrl.isConnected = true
@@ -178,7 +178,10 @@ func (ctrl *CtrlNetwork) receiver() {
 	for {
 		messageType, message, err := ctrl.conn.ReadMessage()
 		if err != nil {
-			atomic.AddInt64(&ctrl.Disconnected, 1)
+			// on stop request we set keepConnectionAlive to false
+			if ctrl.keepConnectionAlive {
+				atomic.AddInt64(&ctrl.Disconnected, 1)
+			}
 			return
 		}
 		if messageType != websocket.BinaryMessage {

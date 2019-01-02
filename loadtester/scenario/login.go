@@ -14,8 +14,9 @@ type Login struct {
 }
 
 // NewLogin create new instance
-func NewLogin() *Login {
+func NewLogin(isFinal bool) shared.Screenwriter {
 	s := new(Login)
+	s.isFinal = isFinal
 	return s
 }
 
@@ -26,7 +27,7 @@ func (s *Login) Play(act shared.Acter) {
 		return
 	}
 	if act.GetAuthID() == 0 {
-		Play(act, NewCreateAuthKey())
+		Play(act, NewCreateAuthKey(false))
 	}
 	s.wait.Add(1)
 	act.ExecuteRequest(s.sendCode(act))

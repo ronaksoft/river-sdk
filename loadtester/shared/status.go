@@ -8,6 +8,7 @@ type Status struct {
 	RequestCount       int64
 	TimeoutCount       int64
 	SuccessCount       int64
+	ErrorRespons       int64
 	DisconnectCount    int64
 	AverageSuccessTime time.Duration
 	AverageTimeoutTime time.Duration

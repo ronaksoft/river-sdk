@@ -27,9 +27,10 @@ type CreateAuthKey struct {
 }
 
 // NewCreateAuthKey initiate CreateAuthKey scenario
-func NewCreateAuthKey() *CreateAuthKey {
+func NewCreateAuthKey(isFinal bool) shared.Screenwriter {
 
 	s := new(CreateAuthKey)
+	s.isFinal = isFinal
 	s.ServerKeys = &shared.ServerKeys{
 		DHGroups:   make([]shared.DHGroup, 0),
 		PublicKeys: make([]shared.PublicKey, 0),

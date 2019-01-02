@@ -40,6 +40,7 @@ func init() {
 	_Shell.Println("## River Load Tester Console ##")
 	_Shell.Println("===============================")
 
+	_Shell.AddCmd(CLI)
 	_Shell.AddCmd(cmdPrint)
 	_Shell.AddCmd(cmdRegister)
 	_Shell.AddCmd(cmdLogin)
@@ -70,7 +71,7 @@ func main() {
 
 // Log log printer
 func Log(logLevel int, msg string) {
-	if _Reporter != nil {
+	if _Reporter.IsActive() {
 		return
 	}
 

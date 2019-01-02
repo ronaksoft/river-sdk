@@ -35,12 +35,15 @@ type Acter interface {
 	SetSuccess(constructor int64, elapsed time.Duration)
 	GetStatus() *Status
 	SetStopHandler(func(phone string))
+	ReceivedErrorResponse()
 }
 
 // Screenwriter scenario interface
 type Screenwriter interface {
 	Play(act Acter)
 	Wait()
+	SetFinal(isFinal bool)
+	IsFinal() bool
 }
 
 // Neter network interface
@@ -59,4 +62,6 @@ type Reporter interface {
 	String() string
 	Print()
 	Clear()
+	IsActive() bool
+	SetIsActive(isActive bool)
 }

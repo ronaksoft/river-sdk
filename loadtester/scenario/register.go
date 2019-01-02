@@ -15,8 +15,9 @@ type Register struct {
 }
 
 // NewRegister create new instance
-func NewRegister() *Register {
+func NewRegister(isFinal bool) shared.Screenwriter {
 	s := new(Register)
+	s.isFinal = isFinal
 	return s
 }
 
@@ -27,7 +28,7 @@ func (s *Register) Play(act shared.Acter) {
 		return
 	}
 	if act.GetAuthID() == 0 {
-		Play(act, NewCreateAuthKey())
+		Play(act, NewCreateAuthKey(false))
 	}
 	s.wait.Add(1)
 	act.ExecuteRequest(s.sendCode(act))
@@ -85,7 +86,7 @@ func (s *Register) register(resp *msg.AuthSentCode, act shared.Acter) (*msg.Mess
 				act.SetUserInfo(x.User.ID, x.User.Username, x.User.FirstName+" "+x.User.LastName)
 				err := act.Save()
 				if err != nil {
-					s.log("contactImport() Actor.Save(), Err : "+err.Error(), elapsed)
+					s.log("register() Actor.Save(), Err : "+err.Error(), elapsed)
 				}
 
 				s.completed(act, elapsed, "register() Success")
