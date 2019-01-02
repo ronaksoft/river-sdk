@@ -18,19 +18,19 @@ type Report struct {
 	Timer       time.Time
 	ActorStatus map[string]*shared.Status
 
-	TotalActor    int64
+	TotalActors   int64
 	ActiveActors  int64
 	StoppedActors int64
 
 	// statistics
-	AverageLifeTime    time.Duration
-	RequestCount       int64
-	TimeoutCount       int64
-	SuccessCount       int64
-	ErrorCount         int64
-	DisconnectCount    int64
-	AverageSuccessTime time.Duration
-	AverageTimeoutTime time.Duration
+	RequestCount           int64
+	TimedoutRequests       int64
+	SucceedRequests        int64
+	ErrorResponses         int64
+	NetworkDisconnects     int64
+	AverageActorLifetime   time.Duration
+	AverageSuccessInterval time.Duration
+	AverageTimeoutInterval time.Duration
 
 	lastPrintTime time.Time
 }
@@ -58,7 +58,7 @@ func (r *Report) Register(act shared.Acter) {
 	r.ActorStatus[act.GetPhone()] = act.GetStatus()
 	r.mx.Unlock()
 	act.SetStopHandler(r.onActorStop)
-	atomic.AddInt64(&r.TotalActor, 1)
+	atomic.AddInt64(&r.TotalActors, 1)
 	atomic.AddInt64(&r.ActiveActors, 1)
 }
 
@@ -70,24 +70,24 @@ func (r *Report) onActorStop(phone string) {
 
 	if ok {
 		if r.StoppedActors == 0 {
-			r.AverageLifeTime = status.LifeTime
 			r.RequestCount = status.RequestCount
-			r.TimeoutCount = status.TimeoutCount
-			r.SuccessCount = status.SuccessCount
-			r.ErrorCount = status.ErrorRespons
-			r.DisconnectCount = status.DisconnectCount
-			r.AverageSuccessTime = status.AverageSuccessTime
-			r.AverageTimeoutTime = status.AverageTimeoutTime
+			r.TimedoutRequests = status.TimedoutRequests
+			r.SucceedRequests = status.SucceedRequests
+			r.ErrorResponses = status.ErrorRespons
+			r.NetworkDisconnects = status.NetworkDisconnects
+			r.AverageActorLifetime = status.LifeTime
+			r.AverageSuccessInterval = status.AverageSuccessInterval
+			r.AverageTimeoutInterval = status.AverageTimeoutInterval
 
 		} else {
-			r.AverageLifeTime = (r.AverageLifeTime + status.LifeTime) / 2
 			r.RequestCount += status.RequestCount
-			r.TimeoutCount += status.TimeoutCount
-			r.SuccessCount += status.SuccessCount
-			r.ErrorCount += status.ErrorRespons
-			r.DisconnectCount += status.DisconnectCount
-			r.AverageSuccessTime = (r.AverageSuccessTime + status.AverageSuccessTime) / 2
-			r.AverageTimeoutTime = (r.AverageTimeoutTime + status.AverageTimeoutTime) / 2
+			r.TimedoutRequests += status.TimedoutRequests
+			r.SucceedRequests += status.SucceedRequests
+			r.ErrorResponses += status.ErrorRespons
+			r.NetworkDisconnects += status.NetworkDisconnects
+			r.AverageActorLifetime = (r.AverageActorLifetime + status.LifeTime) / 2
+			r.AverageSuccessInterval = (r.AverageSuccessInterval + status.AverageSuccessInterval) / 2
+			r.AverageTimeoutInterval = (r.AverageTimeoutInterval + status.AverageTimeoutInterval) / 2
 
 		}
 		atomic.AddInt64(&r.StoppedActors, 1)
@@ -99,7 +99,7 @@ func (r *Report) onActorStop(phone string) {
 		log.LOG_Warn(fmt.Sprintf("Actor(%s) not found in reporter", phone))
 	}
 	// Print does not need to be thread safe :/
-	if r.isActive && (!r.isPrinting || r.StoppedActors == r.TotalActor) {
+	if r.isActive && (!r.isPrinting || r.StoppedActors == r.TotalActors) {
 		r.isPrinting = true
 		r.Print()
 	}
@@ -124,17 +124,17 @@ Avg Timeout Interval		: %v
 Total Exec Time			: %v
 
 `,
-		r.TotalActor,
+		r.TotalActors,
 		r.ActiveActors,
 		r.StoppedActors,
 		r.RequestCount,
-		r.TimeoutCount,
-		r.SuccessCount,
-		r.ErrorCount,
-		r.DisconnectCount,
-		r.AverageLifeTime,
-		r.AverageSuccessTime,
-		r.AverageTimeoutTime,
+		r.TimedoutRequests,
+		r.SucceedRequests,
+		r.ErrorResponses,
+		r.NetworkDisconnects,
+		r.AverageActorLifetime,
+		r.AverageSuccessInterval,
+		r.AverageTimeoutInterval,
 		time.Since(r.Timer),
 	)
 }
@@ -150,15 +150,15 @@ func (r *Report) Print() {
 // Clear reset reporter statistics
 func (r *Report) Clear() {
 	r.ActorStatus = make(map[string]*shared.Status)
-	r.TotalActor = 0
+	r.TotalActors = 0
 	r.ActiveActors = 0
 	r.StoppedActors = 0
-	r.AverageLifeTime = 0
+	r.AverageActorLifetime = 0
 	r.RequestCount = 0
-	r.TimeoutCount = 0
-	r.SuccessCount = 0
-	r.DisconnectCount = 0
-	r.AverageSuccessTime = 0
-	r.AverageTimeoutTime = 0
+	r.TimedoutRequests = 0
+	r.SucceedRequests = 0
+	r.NetworkDisconnects = 0
+	r.AverageSuccessInterval = 0
+	r.AverageTimeoutInterval = 0
 	r.Timer = time.Now()
 }

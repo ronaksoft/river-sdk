@@ -148,7 +148,7 @@ func (act *Actor) Load(phone string) error {
 // Stop dispose actor
 func (act *Actor) Stop() {
 	if act.netCtrl != nil {
-		act.Status.DisconnectCount = act.netCtrl.DisconnectCount()
+		act.Status.NetworkDisconnects = act.netCtrl.DisconnectCount()
 		act.netCtrl.Stop()
 		act.netCtrl = nil
 	}
@@ -160,22 +160,22 @@ func (act *Actor) Stop() {
 
 // SetTimeout fill reporter data
 func (act *Actor) SetTimeout(constructor int64, elapsed time.Duration) {
-	if act.Status.TimeoutCount == 0 {
-		act.Status.AverageTimeoutTime = elapsed
+	if act.Status.TimedoutRequests == 0 {
+		act.Status.AverageTimeoutInterval = elapsed
 	} else {
-		act.Status.AverageTimeoutTime = (act.Status.AverageTimeoutTime + elapsed) / 2
+		act.Status.AverageTimeoutInterval = (act.Status.AverageTimeoutInterval + elapsed) / 2
 	}
-	atomic.AddInt64(&act.Status.TimeoutCount, 1)
+	atomic.AddInt64(&act.Status.TimedoutRequests, 1)
 }
 
 // SetSuccess fill reporter data
 func (act *Actor) SetSuccess(constructor int64, elapsed time.Duration) {
-	if act.Status.SuccessCount == 0 {
-		act.Status.AverageSuccessTime = elapsed
+	if act.Status.SucceedRequests == 0 {
+		act.Status.AverageSuccessInterval = elapsed
 	} else {
-		act.Status.AverageSuccessTime = (act.Status.AverageSuccessTime + elapsed) / 2
+		act.Status.AverageSuccessInterval = (act.Status.AverageSuccessInterval + elapsed) / 2
 	}
-	atomic.AddInt64(&act.Status.SuccessCount, 1)
+	atomic.AddInt64(&act.Status.SucceedRequests, 1)
 }
 
 // GetStatus return actor statistics

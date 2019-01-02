@@ -4,12 +4,12 @@ import "time"
 
 // Status info
 type Status struct {
-	LifeTime           time.Duration
-	RequestCount       int64
-	TimeoutCount       int64
-	SuccessCount       int64
-	ErrorRespons       int64
-	DisconnectCount    int64
-	AverageSuccessTime time.Duration
-	AverageTimeoutTime time.Duration
+	RequestCount           int64
+	TimedoutRequests       int64
+	SucceedRequests        int64
+	ErrorRespons           int64
+	NetworkDisconnects     int64
+	LifeTime               time.Duration
+	AverageSuccessInterval time.Duration
+	AverageTimeoutInterval time.Duration
 }
