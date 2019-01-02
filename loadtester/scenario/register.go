@@ -24,7 +24,7 @@ func NewRegister(isFinal bool) shared.Screenwriter {
 // Play execute Register scenario
 func (s *Register) Play(act shared.Acter) {
 	if act.GetUserID() > 0 {
-		s.log("Actor already have UserID", 0)
+		s.log(act, "Actor already have UserID", 0)
 		return
 	}
 	if act.GetAuthID() == 0 {
@@ -86,7 +86,7 @@ func (s *Register) register(resp *msg.AuthSentCode, act shared.Acter) (*msg.Mess
 				act.SetUserInfo(x.User.ID, x.User.Username, x.User.FirstName+" "+x.User.LastName)
 				err := act.Save()
 				if err != nil {
-					s.log("register() Actor.Save(), Err : "+err.Error(), elapsed)
+					s.log(act, "register() Actor.Save(), Err : "+err.Error(), elapsed)
 				}
 
 				s.completed(act, elapsed, "register() Success")

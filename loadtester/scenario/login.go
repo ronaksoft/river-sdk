@@ -23,7 +23,7 @@ func NewLogin(isFinal bool) shared.Screenwriter {
 // Play execute Login scenario
 func (s *Login) Play(act shared.Acter) {
 	if act.GetUserID() > 0 {
-		s.log("Actor already have UserID", 0)
+		s.log(act, "Actor already have UserID", 0)
 		return
 	}
 	if act.GetAuthID() == 0 {
@@ -88,7 +88,7 @@ func (s *Login) login(resp *msg.AuthSentCode, act shared.Acter) (*msg.MessageEnv
 				act.SetUserInfo(x.User.ID, x.User.Username, x.User.FirstName+" "+x.User.LastName)
 				err := act.Save()
 				if err != nil {
-					s.log("contactImport() Actor.Save(), Err : "+err.Error(), elapsed)
+					s.log(act, "contactImport() Actor.Save(), Err : "+err.Error(), elapsed)
 				}
 
 				s.completed(act, elapsed, "login() Success")

@@ -22,7 +22,7 @@ func NewImportContact(isFinal bool) shared.Screenwriter {
 // Play execute ImportContact scenario
 func (s *ImportContact) Play(act shared.Acter) {
 	if len(act.GetPeers()) > 0 {
-		s.log("Actor already have Peers", 0)
+		s.log(act, "Actor already have Peers", 0)
 		return
 	}
 	if act.GetAuthID() == 0 {
@@ -68,7 +68,7 @@ func (s *ImportContact) contactImport(phone string, act shared.Acter) (*msg.Mess
 			act.SetPeers(peers)
 			err := act.Save()
 			if err != nil {
-				s.log("contactImport() Actor.Save(), Err : "+err.Error(), elapsed)
+				s.log(act, "contactImport() Actor.Save(), Err : "+err.Error(), elapsed)
 			}
 			s.completed(act, elapsed, "contactImport() Success")
 		} else {

@@ -51,7 +51,7 @@ func NewCreateAuthKey(isFinal bool) shared.Screenwriter {
 // Play execute CreateAuthKey scenario
 func (s *CreateAuthKey) Play(act shared.Acter) {
 	if act.GetAuthID() > 0 {
-		s.log("Actor already have AuthID", 0)
+		s.log(act, "Actor already have AuthID", 0)
 		return
 	}
 	s.wait.Add(1)
@@ -80,7 +80,7 @@ func (s *CreateAuthKey) initConnect(act shared.Acter) (*msg.MessageEnvelope, sha
 			// chain next request here
 			act.ExecuteRequest(s.initCompleteAuth(x, act))
 
-			s.log("initConnect() Success", elapsed)
+			s.log(act, "initConnect() Success", elapsed)
 
 		} else {
 			// TODO : Reporter failed
