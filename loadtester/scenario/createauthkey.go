@@ -54,7 +54,7 @@ func (s *CreateAuthKey) Play(act shared.Acter) {
 		s.log(act, "Actor already have AuthID", 0)
 		return
 	}
-	s.wait.Add(1)
+	s.AddJobs(1)
 	act.ExecuteRequest(s.initConnect(act))
 }
 

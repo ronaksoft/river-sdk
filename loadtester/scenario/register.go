@@ -30,7 +30,7 @@ func (s *Register) Play(act shared.Acter) {
 	if act.GetAuthID() == 0 {
 		Play(act, NewCreateAuthKey(false))
 	}
-	s.wait.Add(1)
+	s.AddJobs(1)
 	act.ExecuteRequest(s.sendCode(act))
 }
 

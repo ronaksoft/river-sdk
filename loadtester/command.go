@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"sync"
+	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/actor"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/scenario"
@@ -34,8 +36,9 @@ var cmdRegister = &ishell.Cmd{
 		endNo := fnEndPhone(c)
 		fnClearScreeen()
 		_Reporter.Clear()
-		s := scenario.NewRegister(true)
 		phoneNo := ""
+		wg := sync.WaitGroup{}
+		sw := time.Now()
 		for startNo <= endNo {
 			phoneNo = fmt.Sprintf("237400%07d", startNo)
 			startNo++
@@ -47,9 +50,21 @@ var cmdRegister = &ishell.Cmd{
 
 			_Reporter.Register(act)
 
+			wg.Add(1)
 			// run async
-			go scenario.Play(act, s)
+			go func() {
+				scenario.Play(act, scenario.NewRegister(true))
+				wg.Done()
+			}()
 		}
+		wg.Wait()
+		elapsed := time.Since(sw)
+		if !_Reporter.IsActive() {
+			fnClearScreeen()
+			log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
+			log.LOG_Info(fmt.Sprintf(_Reporter.String()))
+		}
+
 	},
 }
 
@@ -65,8 +80,10 @@ var cmdLogin = &ishell.Cmd{
 		endNo := fnEndPhone(c)
 		fnClearScreeen()
 		_Reporter.Clear()
-		s := scenario.NewLogin(true)
+
 		phoneNo := ""
+		wg := sync.WaitGroup{}
+		sw := time.Now()
 		for startNo <= endNo {
 			phoneNo = fmt.Sprintf("237400%07d", startNo)
 			startNo++
@@ -78,8 +95,19 @@ var cmdLogin = &ishell.Cmd{
 
 			_Reporter.Register(act)
 
+			wg.Add(1)
 			// run async
-			go scenario.Play(act, s)
+			go func() {
+				scenario.Play(act, scenario.NewLogin(true))
+				wg.Done()
+			}()
+		}
+		wg.Wait()
+		elapsed := time.Since(sw)
+		if !_Reporter.IsActive() {
+			fnClearScreeen()
+			log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
+			log.LOG_Info(fmt.Sprintf(_Reporter.String()))
 		}
 
 	},
@@ -98,8 +126,10 @@ var cmdImportContact = &ishell.Cmd{
 		endNo := fnEndPhone(c)
 		fnClearScreeen()
 		_Reporter.Clear()
-		s := scenario.NewImportContact(true)
+
 		phoneNo := ""
+		wg := sync.WaitGroup{}
+		sw := time.Now()
 		for startNo <= endNo {
 			phoneNo = fmt.Sprintf("237400%07d", startNo)
 			startNo++
@@ -112,8 +142,19 @@ var cmdImportContact = &ishell.Cmd{
 
 			_Reporter.Register(act)
 
+			wg.Add(1)
 			// run async
-			go scenario.Play(act, s)
+			go func() {
+				scenario.Play(act, scenario.NewImportContact(true))
+				wg.Done()
+			}()
+		}
+		wg.Wait()
+		elapsed := time.Since(sw)
+		if !_Reporter.IsActive() {
+			fnClearScreeen()
+			log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
+			log.LOG_Info(fmt.Sprintf(_Reporter.String()))
 		}
 	},
 }
@@ -129,8 +170,10 @@ var cmdSendMessage = &ishell.Cmd{
 		endNo := fnEndPhone(c)
 		fnClearScreeen()
 		_Reporter.Clear()
-		s := scenario.NewSendMessage(true)
+
 		phoneNo := ""
+		wg := sync.WaitGroup{}
+		sw := time.Now()
 		for startNo <= endNo {
 			phoneNo = fmt.Sprintf("237400%07d", startNo)
 			startNo++
@@ -142,8 +185,19 @@ var cmdSendMessage = &ishell.Cmd{
 
 			_Reporter.Register(act)
 
+			wg.Add(1)
 			// // run async
-			go scenario.Play(act, s)
+			go func() {
+				scenario.Play(act, scenario.NewSendMessage(true))
+				wg.Done()
+			}()
+		}
+		wg.Wait()
+		elapsed := time.Since(sw)
+		if !_Reporter.IsActive() {
+			fnClearScreeen()
+			log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
+			log.LOG_Info(fmt.Sprintf(_Reporter.String()))
 		}
 	},
 }

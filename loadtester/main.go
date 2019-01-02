@@ -48,6 +48,7 @@ func init() {
 	_Shell.AddCmd(cmdSendMessage)
 
 	log.SetLogger(Log)
+	log.SetLogLevel(0) // DBG: -1, INF: 1, WRN: 2, ERR: 3
 
 	_Reporter = report.NewReport()
 }

@@ -29,9 +29,9 @@ func (s *SendMessage) Play(act shared.Acter) {
 	if len(act.GetPeers()) == 0 {
 		Play(act, NewImportContact(false))
 	}
-
-	for _, p := range act.GetPeers() {
-		s.wait.Add(1)
+	peers := act.GetPeers()
+	s.AddJobs(len(peers))
+	for _, p := range peers {
 		act.ExecuteRequest(s.messageSend(act, p))
 	}
 }

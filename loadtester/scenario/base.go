@@ -25,24 +25,26 @@ func (s *Scenario) Play(act shared.Acter) {
 }
 
 // Wait until play overs
-func (s *Scenario) Wait() {
+func (s *Scenario) Wait(act shared.Acter) {
 	s.wait.Wait()
+	if s.isFinal {
+		act.Stop()
+	}
+}
+
+//AddJobs add delta to wait group
+func (s *Scenario) AddJobs(delta int) {
+	s.wait.Add(delta)
 }
 
 func (s *Scenario) failed(act shared.Acter, elapsed time.Duration, str string) {
 	log.LOG_Error(act.GetPhone()+"\t failed() : "+str, zap.Duration("elapsed", elapsed))
 	s.wait.Done()
-	if s.isFinal {
-		act.Stop()
-	}
 }
 
 func (s *Scenario) completed(act shared.Acter, elapsed time.Duration, str string) {
 	log.LOG_Info(act.GetPhone()+"\t completed() : "+str, zap.Duration("elapsed", elapsed))
 	s.wait.Done()
-	if s.isFinal {
-		act.Stop()
-	}
 }
 
 func (s *Scenario) log(act shared.Acter, str string, elapsed time.Duration) {
@@ -60,9 +62,6 @@ func (s *Scenario) isErrorResponse(act shared.Acter, elapsed time.Duration, resp
 		x.Unmarshal(resp.Message)
 		log.LOG_Error(act.GetPhone()+"\t isErrorResponse(): ", zap.String("Err", x.String()), zap.Duration("elapsed", elapsed))
 		s.wait.Done()
-		if s.isFinal {
-			act.Stop()
-		}
 		return true
 	}
 	return false
@@ -81,5 +80,5 @@ func (s *Scenario) IsFinal() bool {
 // Play puts actor in scenario to play its role and wait to show overs
 func Play(act shared.Acter, scenario shared.Screenwriter) {
 	scenario.Play(act)
-	scenario.Wait()
+	scenario.Wait(act)
 }

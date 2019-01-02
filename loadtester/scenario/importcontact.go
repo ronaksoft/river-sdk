@@ -31,8 +31,10 @@ func (s *ImportContact) Play(act shared.Acter) {
 	if act.GetUserID() == 0 {
 		Play(act, NewLogin(false))
 	}
-	for _, p := range act.GetPhoneList() {
-		s.wait.Add(1)
+
+	phoneList := act.GetPhoneList()
+	s.AddJobs(len(phoneList))
+	for _, p := range phoneList {
 		act.ExecuteRequest(s.contactImport(p, act))
 	}
 }
