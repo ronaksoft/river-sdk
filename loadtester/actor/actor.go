@@ -59,11 +59,11 @@ func NewActor(phone string) (shared.Acter, error) {
 	}
 
 	act.netCtrl = controller.NewCtrlNetwork(act.AuthID, act.AuthKey, act.onMessage, act.onUpdate, act.onError)
+	act.exec = executer.NewExecuter(act.netCtrl)
 	err = act.netCtrl.Start()
 	if err != nil {
 		return act, err
 	}
-	act.exec = executer.NewExecuter(act.netCtrl)
 	act.CreatedOn = time.Now()
 	act.Status = new(shared.Status)
 	return act, nil
