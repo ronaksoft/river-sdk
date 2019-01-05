@@ -744,10 +744,10 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 
 	currentUpdateID := r.syncCtrl.UpdateID()
 	for _, val := range upds {
-		if val.MinUpdateID < minID {
+		if val.MinUpdateID < minID && val.MinUpdateID > 0 {
 			minID = val.MinUpdateID
 		}
-		if val.MaxUpdateID > maxID {
+		if val.MaxUpdateID > maxID && val.MaxUpdateID > 0 {
 			maxID = val.MaxUpdateID
 		}
 

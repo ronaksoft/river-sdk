@@ -330,6 +330,8 @@ func (ctrl *SyncController) getUpdateDifference(minUpdateID int64) {
 		limit++
 		if limit > 100 {
 			limit = 100
+		} else {
+			limit-- // cuz we allready have minUpdateID itself
 		}
 		log.LOG_Debug("SyncController::getUpdateDifference() Entered loop",
 			zap.Int64("limit", limit),
@@ -615,10 +617,10 @@ func (ctrl *SyncController) MessageHandler(messages []*msg.MessageEnvelope) {
 // UpdateHandler
 func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 
-	if ctrl.syncStatus != domain.Synced {
-		log.LOG_Debug("SyncController::UpdateHandler() Ignore updates while syncing")
-		return
-	}
+	// if ctrl.syncStatus != domain.Synced {
+	// 	log.LOG_Debug("SyncController::UpdateHandler() Ignore updates while syncing")
+	// 	return
+	// }
 	log.LOG_Debug("SyncController::UpdateHandler() Called",
 		zap.Int64("UpdateID", ctrl.updateID),
 		zap.Int64("MaxID", u.MaxUpdateID),
