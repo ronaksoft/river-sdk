@@ -331,8 +331,12 @@ func (ctrl *SyncController) getUpdateDifference(minUpdateID int64) {
 		if limit > 100 {
 			limit = 100
 		} else {
-			limit-- // cuz we allready have minUpdateID itself
+			limit-- // cuz we already have minUpdateID itself
 		}
+		if limit <= 0 {
+			return
+		}
+
 		log.LOG_Debug("SyncController::getUpdateDifference() Entered loop",
 			zap.Int64("limit", limit),
 			zap.Int64("updateID", ctrl.updateID),
