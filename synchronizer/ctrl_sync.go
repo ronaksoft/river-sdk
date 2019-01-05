@@ -334,7 +334,7 @@ func (ctrl *SyncController) getUpdateDifference(minUpdateID int64) {
 			limit-- // cuz we already have minUpdateID itself
 		}
 		if limit <= 0 {
-			return
+			break
 		}
 
 		log.LOG_Debug("SyncController::getUpdateDifference() Entered loop",
