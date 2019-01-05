@@ -284,7 +284,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			bufUsers := new(bytes.Buffer)
 			tableUsers := tablewriter.NewWriter(bufUsers)
 			tableUsers.SetHeader([]string{
-				"UserID", "FirstName", "LastName", "AccessHash",
+				"UserID", "FirstName", "LastName", "AccessHash", "Username",
 			})
 			for _, x := range x.Participants {
 				tableUsers.Append([]string{
@@ -292,6 +292,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 					fmt.Sprintf("%s", x.FirstName),
 					fmt.Sprintf("%s", x.LastName),
 					fmt.Sprintf("%d", x.AccessHash),
+					fmt.Sprintf("%s", x.Username),
 				})
 			}
 			tableUsers.Render()

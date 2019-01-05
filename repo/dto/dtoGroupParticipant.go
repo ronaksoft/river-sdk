@@ -33,5 +33,5 @@ func (m *GroupParticipants) MapTo(v *msg.GroupParticipant) {
 	v.LastName = m.LastName
 	v.Type = msg.ParticipantType(m.Type)
 	v.AccessHash = uint64(m.AccessHash)
-	v.Username = v.Username
+	v.Username = m.Username
 }
