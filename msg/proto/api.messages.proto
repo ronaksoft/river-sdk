@@ -1,6 +1,9 @@
 syntax = "proto2";
 package msg;
 import "core.types.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+option (gogoproto.goproto_enum_prefix_all) = false;
+
 
 // MessageSend
 // @Function
@@ -14,23 +17,21 @@ message MessagesSend {
     repeated MessageEntity Entities = 8;
 }
 
-// MediaType
-enum MediaType {
-    MediaTypeEmpty = 0;
-    MediaTypeUploadedPhoto = 1;
-    MediaTypePhoto = 2;
-    MediaTypeUploadedDocument = 3;
-    MediaTypeDocument = 4;
-    MediaTypeContact = 5;
+enum InputMediaType {
+    InputMediaTypeEmpty = 0;
+    InputMediaTypeUploadedPhoto = 1;
+    InputMediaTypePhoto = 2;
+    InputMediaTypeContact = 3;
+    InputMediaTypeUploadedDocument = 4;
+    InputMediaTypeDocument = 5;
 }
-
 // MessageSendMedia
 // @Function
 // @Return: Messages
 message MessagesSendMedia {
     required int64 RandomID = 1;
     required InputPeer Peer = 2;
-    required MediaType MediaType = 3;
+    required InputMediaType MediaType = 3;
     required bytes MediaData = 4;
     optional int64 ReplyTo = 5;
     optional bool ClearDraft = 6;

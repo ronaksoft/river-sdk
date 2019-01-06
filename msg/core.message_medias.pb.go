@@ -6,8 +6,10 @@ package msg
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
+import _ "github.com/gogo/protobuf/gogoproto"
 
 import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
+import encoding_binary "encoding/binary"
 
 import io "io"
 
@@ -22,18 +24,512 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
+// Document Attribute Type
+type DocumentAttributeType int32
+
+const (
+	AttributeTypeNone     DocumentAttributeType = 0
+	AttributeTypeAudio    DocumentAttributeType = 1
+	AttributeTypeVideo    DocumentAttributeType = 2
+	AttributeTypePhoto    DocumentAttributeType = 3
+	AttributeTypeFilename DocumentAttributeType = 4
+	AttributeAnimated     DocumentAttributeType = 5
+)
+
+var DocumentAttributeType_name = map[int32]string{
+	0: "AttributeTypeNone",
+	1: "AttributeTypeAudio",
+	2: "AttributeTypeVideo",
+	3: "AttributeTypePhoto",
+	4: "AttributeTypeFilename",
+	5: "AttributeAnimated",
+}
+var DocumentAttributeType_value = map[string]int32{
+	"AttributeTypeNone":     0,
+	"AttributeTypeAudio":    1,
+	"AttributeTypeVideo":    2,
+	"AttributeTypePhoto":    3,
+	"AttributeTypeFilename": 4,
+	"AttributeAnimated":     5,
+}
+
+func (x DocumentAttributeType) Enum() *DocumentAttributeType {
+	p := new(DocumentAttributeType)
+	*p = x
+	return p
+}
+func (x DocumentAttributeType) String() string {
+	return proto.EnumName(DocumentAttributeType_name, int32(x))
+}
+func (x *DocumentAttributeType) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(DocumentAttributeType_value, data, "DocumentAttributeType")
+	if err != nil {
+		return err
+	}
+	*x = DocumentAttributeType(value)
+	return nil
+}
+func (DocumentAttributeType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_core_message_medias_96a50ace67db4160, []int{0}
+}
+
+// Document Type
+type DocumentType int32
+
+const (
+	DocumentTypeUnknown DocumentType = 0
+	DocumentTypePhoto   DocumentType = 1
+	DocumentTypeVoice   DocumentType = 2
+	DocumentTypeVideo   DocumentType = 3
+	DocumentTypeWebPage DocumentType = 4
+)
+
+var DocumentType_name = map[int32]string{
+	0: "DocumentTypeUnknown",
+	1: "DocumentTypePhoto",
+	2: "DocumentTypeVoice",
+	3: "DocumentTypeVideo",
+	4: "DocumentTypeWebPage",
+}
+var DocumentType_value = map[string]int32{
+	"DocumentTypeUnknown": 0,
+	"DocumentTypePhoto":   1,
+	"DocumentTypeVoice":   2,
+	"DocumentTypeVideo":   3,
+	"DocumentTypeWebPage": 4,
+}
+
+func (x DocumentType) Enum() *DocumentType {
+	p := new(DocumentType)
+	*p = x
+	return p
+}
+func (x DocumentType) String() string {
+	return proto.EnumName(DocumentType_name, int32(x))
+}
+func (x *DocumentType) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(DocumentType_value, data, "DocumentType")
+	if err != nil {
+		return err
+	}
+	*x = DocumentType(value)
+	return nil
+}
+func (DocumentType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_core_message_medias_96a50ace67db4160, []int{1}
+}
+
+// DocumentAttributeAudio
+type DocumentAttributeAudio struct {
+	Voice     bool   `protobuf:"varint,1,req,name=Voice" json:"Voice"`
+	Duration  uint32 `protobuf:"varint,2,req,name=Duration" json:"Duration"`
+	Title     string `protobuf:"bytes,3,req,name=Title" json:"Title"`
+	Performer string `protobuf:"bytes,4,req,name=Performer" json:"Performer"`
+	Waveform  []byte `protobuf:"bytes,5,opt,name=Waveform" json:"Waveform"`
+}
+
+func (m *DocumentAttributeAudio) Reset()         { *m = DocumentAttributeAudio{} }
+func (m *DocumentAttributeAudio) String() string { return proto.CompactTextString(m) }
+func (*DocumentAttributeAudio) ProtoMessage()    {}
+func (*DocumentAttributeAudio) Descriptor() ([]byte, []int) {
+	return fileDescriptor_core_message_medias_96a50ace67db4160, []int{0}
+}
+func (m *DocumentAttributeAudio) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DocumentAttributeAudio) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DocumentAttributeAudio.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *DocumentAttributeAudio) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DocumentAttributeAudio.Merge(dst, src)
+}
+func (m *DocumentAttributeAudio) XXX_Size() int {
+	return m.Size()
+}
+func (m *DocumentAttributeAudio) XXX_DiscardUnknown() {
+	xxx_messageInfo_DocumentAttributeAudio.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DocumentAttributeAudio proto.InternalMessageInfo
+
+func (m *DocumentAttributeAudio) GetVoice() bool {
+	if m != nil {
+		return m.Voice
+	}
+	return false
+}
+
+func (m *DocumentAttributeAudio) GetDuration() uint32 {
+	if m != nil {
+		return m.Duration
+	}
+	return 0
+}
+
+func (m *DocumentAttributeAudio) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+func (m *DocumentAttributeAudio) GetPerformer() string {
+	if m != nil {
+		return m.Performer
+	}
+	return ""
+}
+
+func (m *DocumentAttributeAudio) GetWaveform() []byte {
+	if m != nil {
+		return m.Waveform
+	}
+	return nil
+}
+
+// DocumentAttributeVideo
+type DocumentAttributeVideo struct {
+	Width    uint32 `protobuf:"varint,1,req,name=Width" json:"Width"`
+	Height   uint32 `protobuf:"varint,2,req,name=Height" json:"Height"`
+	Duration uint32 `protobuf:"varint,3,req,name=Duration" json:"Duration"`
+}
+
+func (m *DocumentAttributeVideo) Reset()         { *m = DocumentAttributeVideo{} }
+func (m *DocumentAttributeVideo) String() string { return proto.CompactTextString(m) }
+func (*DocumentAttributeVideo) ProtoMessage()    {}
+func (*DocumentAttributeVideo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_core_message_medias_96a50ace67db4160, []int{1}
+}
+func (m *DocumentAttributeVideo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DocumentAttributeVideo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DocumentAttributeVideo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *DocumentAttributeVideo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DocumentAttributeVideo.Merge(dst, src)
+}
+func (m *DocumentAttributeVideo) XXX_Size() int {
+	return m.Size()
+}
+func (m *DocumentAttributeVideo) XXX_DiscardUnknown() {
+	xxx_messageInfo_DocumentAttributeVideo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DocumentAttributeVideo proto.InternalMessageInfo
+
+func (m *DocumentAttributeVideo) GetWidth() uint32 {
+	if m != nil {
+		return m.Width
+	}
+	return 0
+}
+
+func (m *DocumentAttributeVideo) GetHeight() uint32 {
+	if m != nil {
+		return m.Height
+	}
+	return 0
+}
+
+func (m *DocumentAttributeVideo) GetDuration() uint32 {
+	if m != nil {
+		return m.Duration
+	}
+	return 0
+}
+
+// DocumentAttributeFile
+type DocumentAttributeFile struct {
+	Filename string `protobuf:"bytes,1,req,name=Filename" json:"Filename"`
+}
+
+func (m *DocumentAttributeFile) Reset()         { *m = DocumentAttributeFile{} }
+func (m *DocumentAttributeFile) String() string { return proto.CompactTextString(m) }
+func (*DocumentAttributeFile) ProtoMessage()    {}
+func (*DocumentAttributeFile) Descriptor() ([]byte, []int) {
+	return fileDescriptor_core_message_medias_96a50ace67db4160, []int{2}
+}
+func (m *DocumentAttributeFile) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DocumentAttributeFile) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DocumentAttributeFile.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *DocumentAttributeFile) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DocumentAttributeFile.Merge(dst, src)
+}
+func (m *DocumentAttributeFile) XXX_Size() int {
+	return m.Size()
+}
+func (m *DocumentAttributeFile) XXX_DiscardUnknown() {
+	xxx_messageInfo_DocumentAttributeFile.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DocumentAttributeFile proto.InternalMessageInfo
+
+func (m *DocumentAttributeFile) GetFilename() string {
+	if m != nil {
+		return m.Filename
+	}
+	return ""
+}
+
+// DocumentAttribute
+type DocumentAttribute struct {
+	Type DocumentAttributeType `protobuf:"varint,1,req,name=Type,enum=msg.DocumentAttributeType" json:"Type"`
+	Data []byte                `protobuf:"bytes,2,opt,name=Data" json:"Data"`
+}
+
+func (m *DocumentAttribute) Reset()         { *m = DocumentAttribute{} }
+func (m *DocumentAttribute) String() string { return proto.CompactTextString(m) }
+func (*DocumentAttribute) ProtoMessage()    {}
+func (*DocumentAttribute) Descriptor() ([]byte, []int) {
+	return fileDescriptor_core_message_medias_96a50ace67db4160, []int{3}
+}
+func (m *DocumentAttribute) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DocumentAttribute) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DocumentAttribute.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *DocumentAttribute) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DocumentAttribute.Merge(dst, src)
+}
+func (m *DocumentAttribute) XXX_Size() int {
+	return m.Size()
+}
+func (m *DocumentAttribute) XXX_DiscardUnknown() {
+	xxx_messageInfo_DocumentAttribute.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DocumentAttribute proto.InternalMessageInfo
+
+func (m *DocumentAttribute) GetType() DocumentAttributeType {
+	if m != nil {
+		return m.Type
+	}
+	return AttributeTypeNone
+}
+
+func (m *DocumentAttribute) GetData() []byte {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+// Document
+type Document struct {
+	ID         int64                `protobuf:"varint,1,req,name=ID" json:"ID"`
+	AccessHash uint64               `protobuf:"fixed64,2,req,name=AccessHash" json:"AccessHash"`
+	Date       int64                `protobuf:"varint,3,req,name=Date" json:"Date"`
+	MimeType   string               `protobuf:"bytes,4,req,name=MimeType" json:"MimeType"`
+	FileSize   int32                `protobuf:"varint,5,req,name=FileSize" json:"FileSize"`
+	Version    int32                `protobuf:"varint,6,req,name=Version" json:"Version"`
+	ClusterID  int32                `protobuf:"varint,7,req,name=ClusterID" json:"ClusterID"`
+	Attributes []*DocumentAttribute `protobuf:"bytes,8,rep,name=Attributes" json:"Attributes,omitempty"`
+}
+
+func (m *Document) Reset()         { *m = Document{} }
+func (m *Document) String() string { return proto.CompactTextString(m) }
+func (*Document) ProtoMessage()    {}
+func (*Document) Descriptor() ([]byte, []int) {
+	return fileDescriptor_core_message_medias_96a50ace67db4160, []int{4}
+}
+func (m *Document) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Document) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Document.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *Document) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Document.Merge(dst, src)
+}
+func (m *Document) XXX_Size() int {
+	return m.Size()
+}
+func (m *Document) XXX_DiscardUnknown() {
+	xxx_messageInfo_Document.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Document proto.InternalMessageInfo
+
+func (m *Document) GetID() int64 {
+	if m != nil {
+		return m.ID
+	}
+	return 0
+}
+
+func (m *Document) GetAccessHash() uint64 {
+	if m != nil {
+		return m.AccessHash
+	}
+	return 0
+}
+
+func (m *Document) GetDate() int64 {
+	if m != nil {
+		return m.Date
+	}
+	return 0
+}
+
+func (m *Document) GetMimeType() string {
+	if m != nil {
+		return m.MimeType
+	}
+	return ""
+}
+
+func (m *Document) GetFileSize() int32 {
+	if m != nil {
+		return m.FileSize
+	}
+	return 0
+}
+
+func (m *Document) GetVersion() int32 {
+	if m != nil {
+		return m.Version
+	}
+	return 0
+}
+
+func (m *Document) GetClusterID() int32 {
+	if m != nil {
+		return m.ClusterID
+	}
+	return 0
+}
+
+func (m *Document) GetAttributes() []*DocumentAttribute {
+	if m != nil {
+		return m.Attributes
+	}
+	return nil
+}
+
+// InputDocument
+type InputDocument struct {
+	ID         int64  `protobuf:"varint,1,req,name=ID" json:"ID"`
+	AccessHash uint64 `protobuf:"fixed64,2,req,name=AccessHash" json:"AccessHash"`
+	ClusterID  int32  `protobuf:"varint,3,req,name=ClusterID" json:"ClusterID"`
+}
+
+func (m *InputDocument) Reset()         { *m = InputDocument{} }
+func (m *InputDocument) String() string { return proto.CompactTextString(m) }
+func (*InputDocument) ProtoMessage()    {}
+func (*InputDocument) Descriptor() ([]byte, []int) {
+	return fileDescriptor_core_message_medias_96a50ace67db4160, []int{5}
+}
+func (m *InputDocument) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *InputDocument) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_InputDocument.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *InputDocument) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_InputDocument.Merge(dst, src)
+}
+func (m *InputDocument) XXX_Size() int {
+	return m.Size()
+}
+func (m *InputDocument) XXX_DiscardUnknown() {
+	xxx_messageInfo_InputDocument.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_InputDocument proto.InternalMessageInfo
+
+func (m *InputDocument) GetID() int64 {
+	if m != nil {
+		return m.ID
+	}
+	return 0
+}
+
+func (m *InputDocument) GetAccessHash() uint64 {
+	if m != nil {
+		return m.AccessHash
+	}
+	return 0
+}
+
+func (m *InputDocument) GetClusterID() int32 {
+	if m != nil {
+		return m.ClusterID
+	}
+	return 0
+}
+
 // InputMediaUploadedPhoto
 type InputMediaUploadedPhoto struct {
-	Caption  string           `protobuf:"bytes,1,req,name=Caption" json:"Caption"`
-	Stickers []*InputDocument `protobuf:"bytes,2,rep,name=Stickers" json:"Stickers,omitempty"`
-	File     *InputFile       `protobuf:"bytes,3,req,name=File" json:"File,omitempty"`
+	Caption    string               `protobuf:"bytes,1,req,name=Caption" json:"Caption"`
+	Stickers   []*InputDocument     `protobuf:"bytes,2,rep,name=Stickers" json:"Stickers,omitempty"`
+	File       *InputFile           `protobuf:"bytes,3,req,name=File" json:"File,omitempty"`
+	Attributes []*DocumentAttribute `protobuf:"bytes,4,rep,name=Attributes" json:"Attributes,omitempty"`
 }
 
 func (m *InputMediaUploadedPhoto) Reset()         { *m = InputMediaUploadedPhoto{} }
 func (m *InputMediaUploadedPhoto) String() string { return proto.CompactTextString(m) }
 func (*InputMediaUploadedPhoto) ProtoMessage()    {}
 func (*InputMediaUploadedPhoto) Descriptor() ([]byte, []int) {
-	return fileDescriptor_core_message_medias_74147aafd880c80f, []int{0}
+	return fileDescriptor_core_message_medias_96a50ace67db4160, []int{6}
 }
 func (m *InputMediaUploadedPhoto) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -83,6 +579,13 @@ func (m *InputMediaUploadedPhoto) GetFile() *InputFile {
 	return nil
 }
 
+func (m *InputMediaUploadedPhoto) GetAttributes() []*DocumentAttribute {
+	if m != nil {
+		return m.Attributes
+	}
+	return nil
+}
+
 // InputMediaPhoto
 type InputMediaPhoto struct {
 	Caption string         `protobuf:"bytes,1,req,name=Caption" json:"Caption"`
@@ -93,7 +596,7 @@ func (m *InputMediaPhoto) Reset()         { *m = InputMediaPhoto{} }
 func (m *InputMediaPhoto) String() string { return proto.CompactTextString(m) }
 func (*InputMediaPhoto) ProtoMessage()    {}
 func (*InputMediaPhoto) Descriptor() ([]byte, []int) {
-	return fileDescriptor_core_message_medias_74147aafd880c80f, []int{1}
+	return fileDescriptor_core_message_medias_96a50ace67db4160, []int{7}
 }
 func (m *InputMediaPhoto) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -147,7 +650,7 @@ func (m *InputMediaContact) Reset()         { *m = InputMediaContact{} }
 func (m *InputMediaContact) String() string { return proto.CompactTextString(m) }
 func (*InputMediaContact) ProtoMessage()    {}
 func (*InputMediaContact) Descriptor() ([]byte, []int) {
-	return fileDescriptor_core_message_medias_74147aafd880c80f, []int{2}
+	return fileDescriptor_core_message_medias_96a50ace67db4160, []int{8}
 }
 func (m *InputMediaContact) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -199,18 +702,19 @@ func (m *InputMediaContact) GetLastName() string {
 
 // InputMediaUploadedDocument
 type InputMediaUploadedDocument struct {
-	File      *InputFile       `protobuf:"bytes,1,req,name=File" json:"File,omitempty"`
-	Thumbnail *InputFile       `protobuf:"bytes,2,req,name=Thumbnail" json:"Thumbnail,omitempty"`
-	MimeType  string           `protobuf:"bytes,3,req,name=MimeType" json:"MimeType"`
-	Caption   string           `protobuf:"bytes,4,req,name=Caption" json:"Caption"`
-	Stickers  []*InputDocument `protobuf:"bytes,5,rep,name=Stickers" json:"Stickers,omitempty"`
+	File       *InputFile           `protobuf:"bytes,1,req,name=File" json:"File,omitempty"`
+	Thumbnail  *InputFile           `protobuf:"bytes,2,req,name=Thumbnail" json:"Thumbnail,omitempty"`
+	MimeType   string               `protobuf:"bytes,3,req,name=MimeType" json:"MimeType"`
+	Caption    string               `protobuf:"bytes,4,req,name=Caption" json:"Caption"`
+	Stickers   []*InputDocument     `protobuf:"bytes,5,rep,name=Stickers" json:"Stickers,omitempty"`
+	Attributes []*DocumentAttribute `protobuf:"bytes,6,rep,name=Attributes" json:"Attributes,omitempty"`
 }
 
 func (m *InputMediaUploadedDocument) Reset()         { *m = InputMediaUploadedDocument{} }
 func (m *InputMediaUploadedDocument) String() string { return proto.CompactTextString(m) }
 func (*InputMediaUploadedDocument) ProtoMessage()    {}
 func (*InputMediaUploadedDocument) Descriptor() ([]byte, []int) {
-	return fileDescriptor_core_message_medias_74147aafd880c80f, []int{3}
+	return fileDescriptor_core_message_medias_96a50ace67db4160, []int{9}
 }
 func (m *InputMediaUploadedDocument) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -274,6 +778,13 @@ func (m *InputMediaUploadedDocument) GetStickers() []*InputDocument {
 	return nil
 }
 
+func (m *InputMediaUploadedDocument) GetAttributes() []*DocumentAttribute {
+	if m != nil {
+		return m.Attributes
+	}
+	return nil
+}
+
 // InputMediaDocument
 type InputMediaDocument struct {
 	Caption  string         `protobuf:"bytes,1,req,name=Caption" json:"Caption"`
@@ -284,7 +795,7 @@ func (m *InputMediaDocument) Reset()         { *m = InputMediaDocument{} }
 func (m *InputMediaDocument) String() string { return proto.CompactTextString(m) }
 func (*InputMediaDocument) ProtoMessage()    {}
 func (*InputMediaDocument) Descriptor() ([]byte, []int) {
-	return fileDescriptor_core_message_medias_74147aafd880c80f, []int{4}
+	return fileDescriptor_core_message_medias_96a50ace67db4160, []int{10}
 }
 func (m *InputMediaDocument) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -327,13 +838,397 @@ func (m *InputMediaDocument) GetDocument() *InputDocument {
 	return nil
 }
 
+// MediaPhoto
+type MediaPhoto struct {
+}
+
+func (m *MediaPhoto) Reset()         { *m = MediaPhoto{} }
+func (m *MediaPhoto) String() string { return proto.CompactTextString(m) }
+func (*MediaPhoto) ProtoMessage()    {}
+func (*MediaPhoto) Descriptor() ([]byte, []int) {
+	return fileDescriptor_core_message_medias_96a50ace67db4160, []int{11}
+}
+func (m *MediaPhoto) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MediaPhoto) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MediaPhoto.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *MediaPhoto) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MediaPhoto.Merge(dst, src)
+}
+func (m *MediaPhoto) XXX_Size() int {
+	return m.Size()
+}
+func (m *MediaPhoto) XXX_DiscardUnknown() {
+	xxx_messageInfo_MediaPhoto.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MediaPhoto proto.InternalMessageInfo
+
+// MediaDocument
+type MediaDocument struct {
+	Caption      string    `protobuf:"bytes,1,req,name=Caption" json:"Caption"`
+	TTLinSeconds int32     `protobuf:"varint,2,req,name=TTLinSeconds" json:"TTLinSeconds"`
+	Doc          *Document `protobuf:"bytes,3,req,name=Doc" json:"Doc,omitempty"`
+}
+
+func (m *MediaDocument) Reset()         { *m = MediaDocument{} }
+func (m *MediaDocument) String() string { return proto.CompactTextString(m) }
+func (*MediaDocument) ProtoMessage()    {}
+func (*MediaDocument) Descriptor() ([]byte, []int) {
+	return fileDescriptor_core_message_medias_96a50ace67db4160, []int{12}
+}
+func (m *MediaDocument) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MediaDocument) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MediaDocument.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *MediaDocument) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MediaDocument.Merge(dst, src)
+}
+func (m *MediaDocument) XXX_Size() int {
+	return m.Size()
+}
+func (m *MediaDocument) XXX_DiscardUnknown() {
+	xxx_messageInfo_MediaDocument.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MediaDocument proto.InternalMessageInfo
+
+func (m *MediaDocument) GetCaption() string {
+	if m != nil {
+		return m.Caption
+	}
+	return ""
+}
+
+func (m *MediaDocument) GetTTLinSeconds() int32 {
+	if m != nil {
+		return m.TTLinSeconds
+	}
+	return 0
+}
+
+func (m *MediaDocument) GetDoc() *Document {
+	if m != nil {
+		return m.Doc
+	}
+	return nil
+}
+
+// MediaContact
+type MediaContact struct {
+}
+
+func (m *MediaContact) Reset()         { *m = MediaContact{} }
+func (m *MediaContact) String() string { return proto.CompactTextString(m) }
+func (*MediaContact) ProtoMessage()    {}
+func (*MediaContact) Descriptor() ([]byte, []int) {
+	return fileDescriptor_core_message_medias_96a50ace67db4160, []int{13}
+}
+func (m *MediaContact) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MediaContact) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MediaContact.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *MediaContact) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MediaContact.Merge(dst, src)
+}
+func (m *MediaContact) XXX_Size() int {
+	return m.Size()
+}
+func (m *MediaContact) XXX_DiscardUnknown() {
+	xxx_messageInfo_MediaContact.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MediaContact proto.InternalMessageInfo
+
+// MediaWebPage
+type MediaWebPage struct {
+}
+
+func (m *MediaWebPage) Reset()         { *m = MediaWebPage{} }
+func (m *MediaWebPage) String() string { return proto.CompactTextString(m) }
+func (*MediaWebPage) ProtoMessage()    {}
+func (*MediaWebPage) Descriptor() ([]byte, []int) {
+	return fileDescriptor_core_message_medias_96a50ace67db4160, []int{14}
+}
+func (m *MediaWebPage) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MediaWebPage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MediaWebPage.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *MediaWebPage) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MediaWebPage.Merge(dst, src)
+}
+func (m *MediaWebPage) XXX_Size() int {
+	return m.Size()
+}
+func (m *MediaWebPage) XXX_DiscardUnknown() {
+	xxx_messageInfo_MediaWebPage.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MediaWebPage proto.InternalMessageInfo
+
 func init() {
+	proto.RegisterType((*DocumentAttributeAudio)(nil), "msg.DocumentAttributeAudio")
+	proto.RegisterType((*DocumentAttributeVideo)(nil), "msg.DocumentAttributeVideo")
+	proto.RegisterType((*DocumentAttributeFile)(nil), "msg.DocumentAttributeFile")
+	proto.RegisterType((*DocumentAttribute)(nil), "msg.DocumentAttribute")
+	proto.RegisterType((*Document)(nil), "msg.Document")
+	proto.RegisterType((*InputDocument)(nil), "msg.InputDocument")
 	proto.RegisterType((*InputMediaUploadedPhoto)(nil), "msg.InputMediaUploadedPhoto")
 	proto.RegisterType((*InputMediaPhoto)(nil), "msg.InputMediaPhoto")
 	proto.RegisterType((*InputMediaContact)(nil), "msg.InputMediaContact")
 	proto.RegisterType((*InputMediaUploadedDocument)(nil), "msg.InputMediaUploadedDocument")
 	proto.RegisterType((*InputMediaDocument)(nil), "msg.InputMediaDocument")
+	proto.RegisterType((*MediaPhoto)(nil), "msg.MediaPhoto")
+	proto.RegisterType((*MediaDocument)(nil), "msg.MediaDocument")
+	proto.RegisterType((*MediaContact)(nil), "msg.MediaContact")
+	proto.RegisterType((*MediaWebPage)(nil), "msg.MediaWebPage")
+	proto.RegisterEnum("msg.DocumentAttributeType", DocumentAttributeType_name, DocumentAttributeType_value)
+	proto.RegisterEnum("msg.DocumentType", DocumentType_name, DocumentType_value)
 }
+func (m *DocumentAttributeAudio) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DocumentAttributeAudio) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x8
+	i++
+	if m.Voice {
+		dAtA[i] = 1
+	} else {
+		dAtA[i] = 0
+	}
+	i++
+	dAtA[i] = 0x10
+	i++
+	i = encodeVarintCoreMessageMedias(dAtA, i, uint64(m.Duration))
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintCoreMessageMedias(dAtA, i, uint64(len(m.Title)))
+	i += copy(dAtA[i:], m.Title)
+	dAtA[i] = 0x22
+	i++
+	i = encodeVarintCoreMessageMedias(dAtA, i, uint64(len(m.Performer)))
+	i += copy(dAtA[i:], m.Performer)
+	if m.Waveform != nil {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintCoreMessageMedias(dAtA, i, uint64(len(m.Waveform)))
+		i += copy(dAtA[i:], m.Waveform)
+	}
+	return i, nil
+}
+
+func (m *DocumentAttributeVideo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DocumentAttributeVideo) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintCoreMessageMedias(dAtA, i, uint64(m.Width))
+	dAtA[i] = 0x10
+	i++
+	i = encodeVarintCoreMessageMedias(dAtA, i, uint64(m.Height))
+	dAtA[i] = 0x18
+	i++
+	i = encodeVarintCoreMessageMedias(dAtA, i, uint64(m.Duration))
+	return i, nil
+}
+
+func (m *DocumentAttributeFile) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DocumentAttributeFile) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0xa
+	i++
+	i = encodeVarintCoreMessageMedias(dAtA, i, uint64(len(m.Filename)))
+	i += copy(dAtA[i:], m.Filename)
+	return i, nil
+}
+
+func (m *DocumentAttribute) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DocumentAttribute) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintCoreMessageMedias(dAtA, i, uint64(m.Type))
+	if m.Data != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintCoreMessageMedias(dAtA, i, uint64(len(m.Data)))
+		i += copy(dAtA[i:], m.Data)
+	}
+	return i, nil
+}
+
+func (m *Document) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Document) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintCoreMessageMedias(dAtA, i, uint64(m.ID))
+	dAtA[i] = 0x11
+	i++
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.AccessHash))
+	i += 8
+	dAtA[i] = 0x18
+	i++
+	i = encodeVarintCoreMessageMedias(dAtA, i, uint64(m.Date))
+	dAtA[i] = 0x22
+	i++
+	i = encodeVarintCoreMessageMedias(dAtA, i, uint64(len(m.MimeType)))
+	i += copy(dAtA[i:], m.MimeType)
+	dAtA[i] = 0x28
+	i++
+	i = encodeVarintCoreMessageMedias(dAtA, i, uint64(m.FileSize))
+	dAtA[i] = 0x30
+	i++
+	i = encodeVarintCoreMessageMedias(dAtA, i, uint64(m.Version))
+	dAtA[i] = 0x38
+	i++
+	i = encodeVarintCoreMessageMedias(dAtA, i, uint64(m.ClusterID))
+	if len(m.Attributes) > 0 {
+		for _, msg := range m.Attributes {
+			dAtA[i] = 0x42
+			i++
+			i = encodeVarintCoreMessageMedias(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *InputDocument) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *InputDocument) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintCoreMessageMedias(dAtA, i, uint64(m.ID))
+	dAtA[i] = 0x11
+	i++
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.AccessHash))
+	i += 8
+	dAtA[i] = 0x18
+	i++
+	i = encodeVarintCoreMessageMedias(dAtA, i, uint64(m.ClusterID))
+	return i, nil
+}
+
 func (m *InputMediaUploadedPhoto) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -376,6 +1271,18 @@ func (m *InputMediaUploadedPhoto) MarshalTo(dAtA []byte) (int, error) {
 			return 0, err
 		}
 		i += n1
+	}
+	if len(m.Attributes) > 0 {
+		for _, msg := range m.Attributes {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintCoreMessageMedias(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
 	}
 	return i, nil
 }
@@ -503,6 +1410,18 @@ func (m *InputMediaUploadedDocument) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
+	if len(m.Attributes) > 0 {
+		for _, msg := range m.Attributes {
+			dAtA[i] = 0x32
+			i++
+			i = encodeVarintCoreMessageMedias(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
 	return i, nil
 }
 
@@ -540,6 +1459,97 @@ func (m *InputMediaDocument) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *MediaPhoto) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MediaPhoto) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
+func (m *MediaDocument) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MediaDocument) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0xa
+	i++
+	i = encodeVarintCoreMessageMedias(dAtA, i, uint64(len(m.Caption)))
+	i += copy(dAtA[i:], m.Caption)
+	dAtA[i] = 0x10
+	i++
+	i = encodeVarintCoreMessageMedias(dAtA, i, uint64(m.TTLinSeconds))
+	if m.Doc == nil {
+		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("Doc")
+	} else {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintCoreMessageMedias(dAtA, i, uint64(m.Doc.Size()))
+		n6, err := m.Doc.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n6
+	}
+	return i, nil
+}
+
+func (m *MediaContact) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MediaContact) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
+func (m *MediaWebPage) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MediaWebPage) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
 func encodeVarintCoreMessageMedias(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -549,6 +1559,97 @@ func encodeVarintCoreMessageMedias(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
+func (m *DocumentAttributeAudio) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 2
+	n += 1 + sovCoreMessageMedias(uint64(m.Duration))
+	l = len(m.Title)
+	n += 1 + l + sovCoreMessageMedias(uint64(l))
+	l = len(m.Performer)
+	n += 1 + l + sovCoreMessageMedias(uint64(l))
+	if m.Waveform != nil {
+		l = len(m.Waveform)
+		n += 1 + l + sovCoreMessageMedias(uint64(l))
+	}
+	return n
+}
+
+func (m *DocumentAttributeVideo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovCoreMessageMedias(uint64(m.Width))
+	n += 1 + sovCoreMessageMedias(uint64(m.Height))
+	n += 1 + sovCoreMessageMedias(uint64(m.Duration))
+	return n
+}
+
+func (m *DocumentAttributeFile) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Filename)
+	n += 1 + l + sovCoreMessageMedias(uint64(l))
+	return n
+}
+
+func (m *DocumentAttribute) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovCoreMessageMedias(uint64(m.Type))
+	if m.Data != nil {
+		l = len(m.Data)
+		n += 1 + l + sovCoreMessageMedias(uint64(l))
+	}
+	return n
+}
+
+func (m *Document) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovCoreMessageMedias(uint64(m.ID))
+	n += 9
+	n += 1 + sovCoreMessageMedias(uint64(m.Date))
+	l = len(m.MimeType)
+	n += 1 + l + sovCoreMessageMedias(uint64(l))
+	n += 1 + sovCoreMessageMedias(uint64(m.FileSize))
+	n += 1 + sovCoreMessageMedias(uint64(m.Version))
+	n += 1 + sovCoreMessageMedias(uint64(m.ClusterID))
+	if len(m.Attributes) > 0 {
+		for _, e := range m.Attributes {
+			l = e.Size()
+			n += 1 + l + sovCoreMessageMedias(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *InputDocument) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovCoreMessageMedias(uint64(m.ID))
+	n += 9
+	n += 1 + sovCoreMessageMedias(uint64(m.ClusterID))
+	return n
+}
+
 func (m *InputMediaUploadedPhoto) Size() (n int) {
 	if m == nil {
 		return 0
@@ -566,6 +1667,12 @@ func (m *InputMediaUploadedPhoto) Size() (n int) {
 	if m.File != nil {
 		l = m.File.Size()
 		n += 1 + l + sovCoreMessageMedias(uint64(l))
+	}
+	if len(m.Attributes) > 0 {
+		for _, e := range m.Attributes {
+			l = e.Size()
+			n += 1 + l + sovCoreMessageMedias(uint64(l))
+		}
 	}
 	return n
 }
@@ -624,6 +1731,12 @@ func (m *InputMediaUploadedDocument) Size() (n int) {
 			n += 1 + l + sovCoreMessageMedias(uint64(l))
 		}
 	}
+	if len(m.Attributes) > 0 {
+		for _, e := range m.Attributes {
+			l = e.Size()
+			n += 1 + l + sovCoreMessageMedias(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -642,6 +1755,49 @@ func (m *InputMediaDocument) Size() (n int) {
 	return n
 }
 
+func (m *MediaPhoto) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MediaDocument) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Caption)
+	n += 1 + l + sovCoreMessageMedias(uint64(l))
+	n += 1 + sovCoreMessageMedias(uint64(m.TTLinSeconds))
+	if m.Doc != nil {
+		l = m.Doc.Size()
+		n += 1 + l + sovCoreMessageMedias(uint64(l))
+	}
+	return n
+}
+
+func (m *MediaContact) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MediaWebPage) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func sovCoreMessageMedias(x uint64) (n int) {
 	for {
 		n++
@@ -654,6 +1810,865 @@ func sovCoreMessageMedias(x uint64) (n int) {
 }
 func sozCoreMessageMedias(x uint64) (n int) {
 	return sovCoreMessageMedias(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *DocumentAttributeAudio) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCoreMessageMedias
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DocumentAttributeAudio: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DocumentAttributeAudio: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Voice", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Voice = bool(v != 0)
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Duration", wireType)
+			}
+			m.Duration = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Duration |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000002)
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000004)
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Performer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Performer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000008)
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Waveform", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Waveform = append(m.Waveform[:0], dAtA[iNdEx:postIndex]...)
+			if m.Waveform == nil {
+				m.Waveform = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCoreMessageMedias(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Voice")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Duration")
+	}
+	if hasFields[0]&uint64(0x00000004) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Title")
+	}
+	if hasFields[0]&uint64(0x00000008) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Performer")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DocumentAttributeVideo) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCoreMessageMedias
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DocumentAttributeVideo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DocumentAttributeVideo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Width", wireType)
+			}
+			m.Width = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Width |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Height", wireType)
+			}
+			m.Height = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Height |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000002)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Duration", wireType)
+			}
+			m.Duration = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Duration |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000004)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCoreMessageMedias(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Width")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Height")
+	}
+	if hasFields[0]&uint64(0x00000004) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Duration")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DocumentAttributeFile) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCoreMessageMedias
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DocumentAttributeFile: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DocumentAttributeFile: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Filename", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Filename = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000001)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCoreMessageMedias(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Filename")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DocumentAttribute) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCoreMessageMedias
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DocumentAttribute: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DocumentAttribute: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			m.Type = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Type |= (DocumentAttributeType(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Data = append(m.Data[:0], dAtA[iNdEx:postIndex]...)
+			if m.Data == nil {
+				m.Data = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCoreMessageMedias(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Type")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Document) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCoreMessageMedias
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Document: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Document: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			m.ID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ID |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccessHash", wireType)
+			}
+			m.AccessHash = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AccessHash = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+			hasFields[0] |= uint64(0x00000002)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Date", wireType)
+			}
+			m.Date = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Date |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000004)
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MimeType", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MimeType = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000008)
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FileSize", wireType)
+			}
+			m.FileSize = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.FileSize |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000010)
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Version", wireType)
+			}
+			m.Version = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Version |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000020)
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClusterID", wireType)
+			}
+			m.ClusterID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ClusterID |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000040)
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Attributes", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Attributes = append(m.Attributes, &DocumentAttribute{})
+			if err := m.Attributes[len(m.Attributes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCoreMessageMedias(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("ID")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("AccessHash")
+	}
+	if hasFields[0]&uint64(0x00000004) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Date")
+	}
+	if hasFields[0]&uint64(0x00000008) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("MimeType")
+	}
+	if hasFields[0]&uint64(0x00000010) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("FileSize")
+	}
+	if hasFields[0]&uint64(0x00000020) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Version")
+	}
+	if hasFields[0]&uint64(0x00000040) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("ClusterID")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *InputDocument) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCoreMessageMedias
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: InputDocument: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: InputDocument: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			m.ID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ID |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccessHash", wireType)
+			}
+			m.AccessHash = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AccessHash = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+			hasFields[0] |= uint64(0x00000002)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClusterID", wireType)
+			}
+			m.ClusterID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ClusterID |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000004)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCoreMessageMedias(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("ID")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("AccessHash")
+	}
+	if hasFields[0]&uint64(0x00000004) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("ClusterID")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *InputMediaUploadedPhoto) Unmarshal(dAtA []byte) error {
 	var hasFields [1]uint64
@@ -780,6 +2795,37 @@ func (m *InputMediaUploadedPhoto) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 			hasFields[0] |= uint64(0x00000002)
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Attributes", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Attributes = append(m.Attributes, &DocumentAttribute{})
+			if err := m.Attributes[len(m.Attributes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipCoreMessageMedias(dAtA[iNdEx:])
@@ -1267,6 +3313,37 @@ func (m *InputMediaUploadedDocument) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Attributes", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Attributes = append(m.Attributes, &DocumentAttribute{})
+			if err := m.Attributes[len(m.Attributes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipCoreMessageMedias(dAtA[iNdEx:])
@@ -1421,6 +3498,300 @@ func (m *InputMediaDocument) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *MediaPhoto) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCoreMessageMedias
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MediaPhoto: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MediaPhoto: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCoreMessageMedias(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MediaDocument) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCoreMessageMedias
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MediaDocument: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MediaDocument: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Caption", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Caption = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TTLinSeconds", wireType)
+			}
+			m.TTLinSeconds = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TTLinSeconds |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000002)
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Doc", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoreMessageMedias
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Doc == nil {
+				m.Doc = &Document{}
+			}
+			if err := m.Doc.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000004)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCoreMessageMedias(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Caption")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("TTLinSeconds")
+	}
+	if hasFields[0]&uint64(0x00000004) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Doc")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MediaContact) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCoreMessageMedias
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MediaContact: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MediaContact: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCoreMessageMedias(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MediaWebPage) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCoreMessageMedias
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MediaWebPage: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MediaWebPage: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCoreMessageMedias(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCoreMessageMedias
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipCoreMessageMedias(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1527,31 +3898,63 @@ var (
 )
 
 func init() {
-	proto.RegisterFile("core.message_medias.proto", fileDescriptor_core_message_medias_74147aafd880c80f)
+	proto.RegisterFile("core.message_medias.proto", fileDescriptor_core_message_medias_96a50ace67db4160)
 }
 
-var fileDescriptor_core_message_medias_74147aafd880c80f = []byte{
-	// 352 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x92, 0xbf, 0x6e, 0xea, 0x30,
-	0x18, 0xc5, 0xe3, 0x04, 0x74, 0xc1, 0x48, 0xf7, 0xde, 0x7a, 0x69, 0xca, 0xe0, 0x46, 0x9e, 0x32,
-	0x54, 0x19, 0x78, 0x04, 0xa8, 0x90, 0x2a, 0x95, 0xaa, 0xa2, 0x74, 0xea, 0x50, 0xb9, 0x89, 0x05,
-	0x56, 0x71, 0x1c, 0xc5, 0xce, 0xc0, 0x43, 0x54, 0xea, 0x63, 0x31, 0x32, 0x76, 0xaa, 0x10, 0xbc,
-	0x48, 0x15, 0x43, 0x12, 0x4a, 0xff, 0xc0, 0x7a, 0xbe, 0x9f, 0x8f, 0xce, 0x77, 0x3e, 0xc3, 0xb3,
-	0x50, 0xa6, 0x2c, 0x10, 0x4c, 0x29, 0x3a, 0x66, 0x8f, 0x82, 0x45, 0x9c, 0xaa, 0x20, 0x49, 0xa5,
-	0x96, 0xc8, 0x11, 0x6a, 0xdc, 0xfe, 0x6f, 0xe6, 0x7a, 0x96, 0xb0, 0xad, 0x4c, 0x5e, 0x00, 0x3c,
-	0xbd, 0x8a, 0x93, 0x4c, 0x0f, 0x72, 0xf8, 0x3e, 0x99, 0x4a, 0x1a, 0xb1, 0xe8, 0x76, 0x92, 0x3f,
-	0xc1, 0xf0, 0x4f, 0x8f, 0x26, 0x9a, 0xcb, 0xd8, 0x05, 0x9e, 0xed, 0x37, 0xbb, 0xb5, 0xf9, 0xfb,
-	0xb9, 0x35, 0x2c, 0x44, 0x14, 0xc0, 0xc6, 0x9d, 0xe6, 0xe1, 0x33, 0x4b, 0x95, 0x6b, 0x7b, 0x8e,
-	0xdf, 0xea, 0xa0, 0x40, 0xa8, 0x71, 0x60, 0xfc, 0x2e, 0x65, 0x98, 0x09, 0x16, 0xeb, 0x61, 0xc9,
-	0x20, 0x02, 0x6b, 0x7d, 0x3e, 0x65, 0xae, 0xe3, 0xd9, 0x7e, 0xab, 0xf3, 0xb7, 0x62, 0x73, 0x75,
-	0x68, 0x66, 0xe4, 0x01, 0xfe, 0xab, 0xe2, 0x1c, 0x17, 0xc3, 0x87, 0x75, 0x03, 0xba, 0xb6, 0xf1,
-	0xfd, 0x2e, 0xc3, 0x06, 0x20, 0x19, 0x3c, 0xa9, 0xcc, 0x7b, 0x32, 0xd6, 0x34, 0xd4, 0xa8, 0x6d,
-	0x9e, 0xc7, 0xec, 0x93, 0xf9, 0x46, 0x42, 0x04, 0x36, 0xfb, 0x3c, 0x55, 0xfa, 0x86, 0x0a, 0x66,
-	0xec, 0x8b, 0x79, 0x25, 0x23, 0x0f, 0x36, 0xae, 0xe9, 0x16, 0x71, 0x76, 0x90, 0x52, 0x25, 0x4b,
-	0x00, 0xdb, 0x5f, 0x3b, 0x2e, 0xc2, 0x95, 0xb5, 0x80, 0x9f, 0x6b, 0x41, 0x17, 0xb0, 0x39, 0x9a,
-	0x64, 0xe2, 0x29, 0xa6, 0x7c, 0xba, 0xdd, 0x73, 0x1f, 0xac, 0x80, 0x3c, 0xd2, 0x80, 0x0b, 0x36,
-	0x9a, 0x25, 0x7b, 0x91, 0x0a, 0x75, 0xb7, 0xd3, 0xda, 0xa1, 0xd3, 0xd6, 0x0f, 0x9f, 0x96, 0x44,
-	0x10, 0x55, 0x1b, 0x96, 0x9b, 0x1d, 0xf1, 0x81, 0x0a, 0xf6, 0x97, 0xe3, 0x95, 0x4c, 0xd7, 0x9d,
-	0xaf, 0x30, 0x58, 0xac, 0x30, 0x58, 0xae, 0x30, 0x78, 0x5d, 0x63, 0x6b, 0xb1, 0xc6, 0xd6, 0xdb,
-	0x1a, 0x5b, 0x1f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x54, 0x58, 0x02, 0x2b, 0xf9, 0x02, 0x00, 0x00,
+var fileDescriptor_core_message_medias_96a50ace67db4160 = []byte{
+	// 858 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0xcd, 0x6a, 0xeb, 0x46,
+	0x14, 0xb6, 0x7e, 0xec, 0x38, 0xe7, 0xda, 0xa9, 0x32, 0x25, 0xbe, 0xba, 0xe6, 0xa2, 0x6b, 0xb4,
+	0x28, 0xe2, 0xd2, 0xfa, 0x96, 0x50, 0x0a, 0x5d, 0x3a, 0x31, 0x97, 0x18, 0x92, 0x60, 0x1c, 0x27,
+	0x59, 0x74, 0x51, 0x64, 0x69, 0x22, 0x0f, 0xb1, 0x34, 0x46, 0x1a, 0xb5, 0x24, 0xfb, 0xee, 0xbb,
+	0xec, 0x03, 0x74, 0xd1, 0x47, 0xe8, 0x0b, 0x14, 0xb2, 0xcc, 0xb2, 0xab, 0xd2, 0x26, 0x2f, 0x52,
+	0x66, 0xf4, 0x6f, 0x9b, 0xd4, 0x85, 0xae, 0xec, 0xf9, 0xce, 0x37, 0x73, 0xbe, 0xf3, 0xcd, 0x39,
+	0x1a, 0x78, 0xe3, 0xd0, 0x10, 0xf7, 0x7d, 0x1c, 0x45, 0xb6, 0x87, 0xbf, 0xf3, 0xb1, 0x4b, 0xec,
+	0xa8, 0xbf, 0x0c, 0x29, 0xa3, 0x48, 0xf1, 0x23, 0xaf, 0xab, 0x89, 0x38, 0xbb, 0x5b, 0xe2, 0x14,
+	0xee, 0x7e, 0xe1, 0x11, 0x36, 0x8f, 0x67, 0x7d, 0x87, 0xfa, 0x1f, 0x3c, 0xea, 0xd1, 0x0f, 0x02,
+	0x9e, 0xc5, 0x37, 0x62, 0x25, 0x16, 0xe2, 0x5f, 0x42, 0x37, 0x7f, 0x93, 0xa0, 0x33, 0xa4, 0x4e,
+	0xec, 0xe3, 0x80, 0x0d, 0x18, 0x0b, 0xc9, 0x2c, 0x66, 0x78, 0x10, 0xbb, 0x84, 0xa2, 0x2e, 0xd4,
+	0xaf, 0x28, 0x71, 0xb0, 0x2e, 0xf5, 0x64, 0xab, 0x79, 0xa4, 0x3e, 0xfc, 0xf9, 0xae, 0x36, 0x49,
+	0x20, 0xd4, 0x83, 0xe6, 0x30, 0x0e, 0x6d, 0x46, 0x68, 0xa0, 0xcb, 0x3d, 0xd9, 0x6a, 0xa7, 0xe1,
+	0x1c, 0xe5, 0xbb, 0xa7, 0x84, 0x2d, 0xb0, 0xae, 0xf4, 0x64, 0x6b, 0x37, 0xdb, 0x2d, 0x20, 0x64,
+	0xc2, 0xee, 0x18, 0x87, 0x37, 0x34, 0xf4, 0x71, 0xa8, 0xab, 0xa5, 0x78, 0x01, 0xf3, 0x0c, 0xd7,
+	0xf6, 0xf7, 0x98, 0xaf, 0xf4, 0x7a, 0x4f, 0xb2, 0x5a, 0x59, 0x86, 0x0c, 0x35, 0xd9, 0x06, 0xe5,
+	0x57, 0xc4, 0xc5, 0x42, 0xf9, 0x35, 0x71, 0xd9, 0x5c, 0x28, 0xcf, 0xa4, 0x25, 0x10, 0x7a, 0x0b,
+	0x8d, 0x13, 0x4c, 0xbc, 0x39, 0xab, 0xe8, 0x4e, 0xb1, 0x4a, 0x5d, 0xca, 0xa6, 0xba, 0xcc, 0x6f,
+	0xe0, 0x60, 0x2d, 0xeb, 0x47, 0xb2, 0x10, 0x96, 0xf0, 0xdf, 0xc0, 0xf6, 0x13, 0xc7, 0xb2, 0x9a,
+	0x72, 0xd4, 0x74, 0x60, 0x7f, 0x6d, 0x2b, 0xfa, 0x0a, 0xd4, 0xe9, 0xdd, 0x32, 0xd9, 0xb2, 0x77,
+	0xd8, 0xed, 0xfb, 0x91, 0xd7, 0x5f, 0x63, 0x71, 0x46, 0x7a, 0x9c, 0x60, 0x23, 0x1d, 0xd4, 0xa1,
+	0xcd, 0x6c, 0x5d, 0x2e, 0x39, 0x23, 0x10, 0xf3, 0x17, 0x19, 0x9a, 0xd9, 0x7e, 0xd4, 0x01, 0x79,
+	0x34, 0x14, 0x47, 0x2b, 0x47, 0x0d, 0x4e, 0xfa, 0x52, 0x9a, 0xc8, 0xa3, 0x21, 0xfa, 0x0c, 0x60,
+	0xe0, 0x38, 0x38, 0x8a, 0x4e, 0xec, 0x68, 0x2e, 0x8c, 0x68, 0xe4, 0xf1, 0x52, 0x24, 0x4d, 0x93,
+	0xdc, 0xa1, 0x52, 0x4a, 0x23, 0xaa, 0x3d, 0x23, 0xbe, 0x10, 0x56, 0xb9, 0xc1, 0x1c, 0xcd, 0xfc,
+	0xb8, 0x20, 0xf7, 0x58, 0xaf, 0xf7, 0x64, 0xab, 0x5e, 0xf6, 0x83, 0xa3, 0xc8, 0x80, 0x9d, 0x2b,
+	0x1c, 0x46, 0xdc, 0xeb, 0x46, 0x89, 0x90, 0x81, 0xbc, 0x4d, 0x8e, 0x17, 0x71, 0xc4, 0x70, 0x38,
+	0x1a, 0xea, 0x3b, 0x25, 0x46, 0x01, 0xa3, 0xaf, 0x01, 0x72, 0x97, 0x22, 0xbd, 0xd9, 0x53, 0xac,
+	0x57, 0x87, 0x9d, 0xcd, 0x26, 0x4e, 0x4a, 0x4c, 0x33, 0x82, 0xf6, 0x28, 0x58, 0xc6, 0xec, 0x7f,
+	0xb3, 0xaa, 0x22, 0x56, 0xd9, 0x28, 0xd6, 0xfc, 0x5d, 0x82, 0xd7, 0x22, 0xeb, 0x19, 0x1f, 0xe4,
+	0xcb, 0xe5, 0x82, 0xda, 0x2e, 0x76, 0xc7, 0x73, 0x3e, 0xce, 0x06, 0xec, 0x1c, 0xdb, 0x4b, 0xd1,
+	0x78, 0xe5, 0xee, 0xc9, 0x40, 0xd4, 0x87, 0xe6, 0x05, 0x23, 0xce, 0x2d, 0x0e, 0x23, 0x5d, 0x16,
+	0x65, 0x22, 0x51, 0x66, 0xa5, 0x8a, 0x49, 0xce, 0x41, 0x26, 0xa8, 0xdc, 0x68, 0x21, 0xe5, 0xd5,
+	0xe1, 0x5e, 0xc1, 0xe5, 0xe8, 0x44, 0xc4, 0x56, 0xcc, 0x53, 0xb7, 0x36, 0xef, 0x5b, 0xf8, 0xa4,
+	0x28, 0x63, 0x3b, 0xf9, 0x16, 0xd4, 0x05, 0x51, 0x38, 0xb8, 0x59, 0x7b, 0x42, 0x30, 0x63, 0xd8,
+	0x2f, 0x0e, 0x3f, 0xa6, 0x01, 0xb3, 0x1d, 0xc6, 0x27, 0x7a, 0x3c, 0xa7, 0x41, 0x75, 0xb2, 0x12,
+	0x88, 0x3b, 0xff, 0x91, 0x84, 0x11, 0x3b, 0xe7, 0x93, 0x27, 0x97, 0xbf, 0x26, 0x39, 0xcc, 0x9b,
+	0xf1, 0xd4, 0x4e, 0x29, 0xe5, 0x0f, 0x52, 0x8e, 0x9a, 0x3f, 0xcb, 0xd0, 0x5d, 0xbf, 0x9b, 0xbc,
+	0x3d, 0x32, 0x3b, 0xa5, 0x17, 0xec, 0xfc, 0x1c, 0x76, 0xa7, 0xf3, 0xd8, 0x9f, 0x05, 0x36, 0x59,
+	0xa4, 0x75, 0xae, 0x12, 0x0b, 0x42, 0x65, 0x82, 0x94, 0x8d, 0x13, 0x54, 0xf2, 0x54, 0xfd, 0xb7,
+	0x96, 0xa8, 0x6f, 0xd1, 0x12, 0xd5, 0xeb, 0x6e, 0x6c, 0x7d, 0xdd, 0x2e, 0xa0, 0xc2, 0x99, 0xdc,
+	0x91, 0x2d, 0x1a, 0x36, 0xe3, 0xbe, 0x70, 0xe9, 0x39, 0xc7, 0x6c, 0x01, 0x14, 0xfd, 0x64, 0xde,
+	0x43, 0xfb, 0xbf, 0xa5, 0xb3, 0xa0, 0x35, 0x9d, 0x9e, 0x92, 0xe0, 0x02, 0x3b, 0x34, 0x70, 0x23,
+	0x91, 0x32, 0x1b, 0xc1, 0x4a, 0x04, 0xbd, 0x03, 0x65, 0x48, 0x9d, 0x74, 0x30, 0xda, 0x95, 0xfa,
+	0x27, 0x3c, 0x62, 0xee, 0x41, 0xab, 0xdc, 0x7c, 0xf9, 0xfa, 0x1a, 0xcf, 0xc6, 0xb6, 0x87, 0xdf,
+	0xff, 0x2a, 0x6d, 0x78, 0x03, 0xc4, 0x8d, 0x1d, 0xc0, 0x7e, 0x05, 0x38, 0xa7, 0x01, 0xd6, 0x6a,
+	0xa8, 0x03, 0xa8, 0x02, 0x8b, 0xf7, 0x55, 0x93, 0xd6, 0x70, 0xf1, 0x7a, 0x69, 0xf2, 0x1a, 0x2e,
+	0x2c, 0xd1, 0x14, 0xf4, 0x06, 0x0e, 0x2a, 0x78, 0xf6, 0xb2, 0x68, 0x6a, 0x25, 0xf3, 0x20, 0x20,
+	0xbe, 0xcd, 0xb0, 0xab, 0xd5, 0xdf, 0xff, 0x28, 0x41, 0x2b, 0x93, 0x2a, 0x14, 0xbe, 0x86, 0x4f,
+	0xcb, 0xeb, 0xcb, 0xe0, 0x36, 0xa0, 0x3f, 0x04, 0x5a, 0x8d, 0x1f, 0x50, 0x0e, 0x24, 0x29, 0xa5,
+	0x55, 0x58, 0xbc, 0xfe, 0x9a, 0xbc, 0x06, 0x0b, 0xe1, 0xca, 0xea, 0xe9, 0xa9, 0x61, 0x9a, 0x7a,
+	0xf4, 0xf6, 0xf1, 0x6f, 0xa3, 0xf6, 0xf0, 0x64, 0x48, 0x8f, 0x4f, 0x86, 0xf4, 0xd7, 0x93, 0x21,
+	0xfd, 0xf4, 0x6c, 0xd4, 0x1e, 0x9f, 0x8d, 0xda, 0x1f, 0xcf, 0x46, 0xed, 0x9f, 0x00, 0x00, 0x00,
+	0xff, 0xff, 0xae, 0xe1, 0xf2, 0xba, 0xe6, 0x08, 0x00, 0x00,
 }

@@ -26,6 +26,8 @@ type Messages struct {
 	MessageAction       int32  `gorm:"column:MessageAction" json:"MessageAction"`
 	MessageActionData   []byte `gorm:"type:blob;column:MessageActionData" json:"MessageActionData"`
 	Entities            []byte `gorm:"type:blob;column:Entities" json:"Entities"`
+	MediaType           int32  `gorm:"column:MediaType" json:"MediaType"`
+	Media               []byte `gorm:"type:blob;column:Media" json:"Media"`
 }
 
 func (Messages) TableName() string {
@@ -54,6 +56,8 @@ func (m *Messages) Map(v *msg.UserMessage) {
 	if len(m.Entities) == 0 {
 		m.Entities = []byte("[]")
 	}
+	m.MediaType = int32(v.MediaType)
+	m.Media = v.Media
 }
 
 func (m *Messages) MapTo(v *msg.UserMessage) {
@@ -77,4 +81,7 @@ func (m *Messages) MapTo(v *msg.UserMessage) {
 
 	v.Entities = make([]*msg.MessageEntity, 0)
 	json.Unmarshal(m.Entities, &v.Entities)
+
+	v.MediaType = msg.MediaType(m.MediaType)
+	v.Media = m.Media
 }

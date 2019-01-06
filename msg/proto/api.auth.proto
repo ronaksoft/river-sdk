@@ -61,12 +61,14 @@ message AuthRecall {
 // AuthDestroyKey
 // @Function
 // @Return: Bool
-message AuthDestroyKey {}
+message AuthDestroyKey {
+}
 
 // AuthRecalled
 message AuthRecalled {
     required int64 ClientID = 1 [jstype = JS_STRING];
     required int64 Timestamp = 2;
+    repeated Cluster AvailableClusters = 3;
 }
 
 // AuthAuthorization

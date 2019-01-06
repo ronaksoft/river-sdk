@@ -1,6 +1,8 @@
 syntax = "proto2";
 package msg;
 import "core.types.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+option (gogoproto.goproto_enum_prefix_all) = false;
 
 /*
     Creation Time: 2018 - Nov - 28
@@ -11,11 +13,78 @@ import "core.types.proto";
     Copyright Ronak Software Group 2018
 */
 
+// Document Attribute Type
+enum DocumentAttributeType {
+    AttributeTypeNone = 0;
+    AttributeTypeAudio = 1;
+    AttributeTypeVideo = 2;
+    AttributeTypePhoto = 3;
+    AttributeTypeFilename = 4;
+    AttributeAnimated = 5;
+}
+
+// DocumentAttributeAudio
+message DocumentAttributeAudio {
+    required bool Voice = 1;
+    required uint32 Duration = 2;
+    required string Title = 3;
+    required string Performer = 4;
+    optional bytes Waveform = 5;
+}
+
+// DocumentAttributeVideo
+message DocumentAttributeVideo {
+    required uint32 Width = 1;
+    required uint32 Height = 2;
+    required uint32 Duration = 3;
+}
+
+// DocumentAttributeFile
+message DocumentAttributeFile {
+    required string Filename = 1;
+}
+
+// DocumentAttribute
+message DocumentAttribute {
+    required DocumentAttributeType Type = 1;
+    optional bytes Data = 2;
+}
+
+
+// Document Type
+enum DocumentType {
+    DocumentTypeUnknown = 0;
+    DocumentTypePhoto = 1;
+    DocumentTypeVoice = 2;
+    DocumentTypeVideo = 3;
+    DocumentTypeWebPage = 4;
+}
+
+// Document
+message Document {
+    required int64 ID = 1 [jstype = JS_STRING];
+    required fixed64 AccessHash = 2 [jstype = JS_STRING];
+    required int64 Date = 3;
+    required string MimeType = 4;
+    required int32 FileSize = 5;
+    required int32 Version = 6;
+    required int32 ClusterID = 7;
+    repeated DocumentAttribute Attributes = 8;
+}
+
+// InputDocument
+message InputDocument {
+    required int64 ID = 1 [jstype = JS_STRING];
+    required fixed64 AccessHash = 2 [jstype = JS_STRING];
+    required int32 ClusterID = 3;
+}
+
 // InputMediaUploadedPhoto
 message InputMediaUploadedPhoto {
     required string Caption = 1;
     repeated InputDocument Stickers = 2;
     required InputFile File = 3;
+    repeated DocumentAttribute Attributes = 4;
 }
 
 // InputMediaPhoto
@@ -38,10 +107,33 @@ message InputMediaUploadedDocument {
     required string MimeType = 3;
     required string Caption = 4;
     repeated InputDocument Stickers = 5;
+    repeated DocumentAttribute Attributes = 6;
 }
 
 // InputMediaDocument
 message InputMediaDocument {
     required string Caption = 1;
     required InputDocument Document = 2;
+}
+
+// MediaPhoto
+message MediaPhoto {
+
+}
+
+// MediaDocument
+message MediaDocument {
+    required string Caption = 1;
+    required int32 TTLinSeconds = 2; // Seconds
+    required Document Doc = 3;
+}
+
+// MediaContact
+message MediaContact {
+
+}
+
+// MediaWebPage
+message MediaWebPage {
+
 }

@@ -15,17 +15,16 @@ message FileSavePart {
 // @Function
 // @Return: File
 message FileGet {
-    required FileLocation Location = 1;
+    required InputFileLocation Location = 1;
     required int32 Offset = 2;
     required int32 Limit =3;
 }
 
-// FileLocation
-message FileLocation {
-    required int64 PartitionID = 1 [jstype = JS_STRING];
+// InputFileLocation
+message InputFileLocation {
     required int64 FileID = 2 [jstype = JS_STRING];
     required fixed64 AccessHash = 3 [jstype = JS_STRING];
-    required int32 TotalParts = 4;
+    required int32 Version = 4;
 }
 
 // File

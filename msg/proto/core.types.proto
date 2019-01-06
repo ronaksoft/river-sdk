@@ -86,6 +86,14 @@ message ContactUser {
 
 }
 
+// MediaType
+enum MediaType {
+    MediaTypeEmpty = 0;
+    MediaTypePhoto = 1;
+    MediaTypeDocument = 2;
+    MediaTypeContact = 3;
+}
+
 // UserMessage
 message UserMessage {
     required int64 ID = 1;
@@ -106,6 +114,8 @@ message UserMessage {
     optional int32 MessageAction = 16;
     optional bytes MessageActionData = 17;
     repeated MessageEntity Entities = 18;
+    optional MediaType MediaType = 19;
+    optional bytes Media = 20;
 }
 
 // MessageEntityType
@@ -161,18 +171,7 @@ message InputFile {
     required int32 TotalParts = 2;
     required string FileName = 3;
     required string MD5Checksum = 4;
-}
-
-// DocumentType
-enum DocumentType {
-    DocumentTypeUnknown = 0;
-    DocumentTypePhoto = 1;
-}
-
-// InputDocument
-message InputDocument {
-    required int64 ID = 1 [jstype = JS_STRING];
-    required fixed64 AccessHash = 2 [jstype = JS_STRING];
+    required int32 ClusterID = 5;
 }
 
 // GroupFlags
@@ -220,3 +219,11 @@ message GroupParticipant {
     required string Username = 6;
 }
 
+
+// Cluster
+message Cluster {
+    required int32 ID = 1;
+    required string IP = 2;
+    required string Domain = 3;
+    required string Location = 4;
+}

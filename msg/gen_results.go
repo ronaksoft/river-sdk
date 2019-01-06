@@ -16,8 +16,20 @@ func ResultPeer(out *MessageEnvelope, res *Peer) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultMediaPhoto(out *MessageEnvelope, res *MediaPhoto) {
+	out.Constructor = C_MediaPhoto
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultInitUserBound(out *MessageEnvelope, res *InitUserBound) {
 	out.Constructor = C_InitUserBound
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultMediaWebPage(out *MessageEnvelope, res *MediaWebPage) {
+	out.Constructor = C_MediaWebPage
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -30,6 +42,18 @@ func ResultUpdateUserTyping(out *MessageEnvelope, res *UpdateUserTyping) {
 }
 func ResultGroupFull(out *MessageEnvelope, res *GroupFull) {
 	out.Constructor = C_GroupFull
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultDocumentAttributeAudio(out *MessageEnvelope, res *DocumentAttributeAudio) {
+	out.Constructor = C_DocumentAttributeAudio
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultInputFileLocation(out *MessageEnvelope, res *InputFileLocation) {
+	out.Constructor = C_InputFileLocation
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -70,6 +94,12 @@ func ResultMessageEnvelope(out *MessageEnvelope, res *MessageEnvelope) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultDocument(out *MessageEnvelope, res *Document) {
+	out.Constructor = C_Document
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultUpdateGetDifference(out *MessageEnvelope, res *UpdateGetDifference) {
 	out.Constructor = C_UpdateGetDifference
 	pbytes.Put(out.Message)
@@ -96,6 +126,12 @@ func ResultUpdateMessagesDeleted(out *MessageEnvelope, res *UpdateMessagesDelete
 }
 func ResultUpdateGroupAdmins(out *MessageEnvelope, res *UpdateGroupAdmins) {
 	out.Constructor = C_UpdateGroupAdmins
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultCluster(out *MessageEnvelope, res *Cluster) {
+	out.Constructor = C_Cluster
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -364,6 +400,12 @@ func ResultMessagesClearHistory(out *MessageEnvelope, res *MessagesClearHistory)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultDocumentAttributeVideo(out *MessageEnvelope, res *DocumentAttributeVideo) {
+	out.Constructor = C_DocumentAttributeVideo
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultAccountSetNotifySettings(out *MessageEnvelope, res *AccountSetNotifySettings) {
 	out.Constructor = C_AccountSetNotifySettings
 	pbytes.Put(out.Message)
@@ -406,6 +448,12 @@ func ResultInputMediaPhoto(out *MessageEnvelope, res *InputMediaPhoto) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultDocumentAttributeFile(out *MessageEnvelope, res *DocumentAttributeFile) {
+	out.Constructor = C_DocumentAttributeFile
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultAuthRegister(out *MessageEnvelope, res *AuthRegister) {
 	out.Constructor = C_AuthRegister
 	pbytes.Put(out.Message)
@@ -436,6 +484,12 @@ func ResultInputMediaDocument(out *MessageEnvelope, res *InputMediaDocument) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultMediaDocument(out *MessageEnvelope, res *MediaDocument) {
+	out.Constructor = C_MediaDocument
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultInitCompleteAuthInternal(out *MessageEnvelope, res *InitCompleteAuthInternal) {
 	out.Constructor = C_InitCompleteAuthInternal
 	pbytes.Put(out.Message)
@@ -462,12 +516,6 @@ func ResultMessageActionContactRegistered(out *MessageEnvelope, res *MessageActi
 }
 func ResultMessageActionGroupTitleChanged(out *MessageEnvelope, res *MessageActionGroupTitleChanged) {
 	out.Constructor = C_MessageActionGroupTitleChanged
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
-func ResultFileLocation(out *MessageEnvelope, res *FileLocation) {
-	out.Constructor = C_FileLocation
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -670,6 +718,12 @@ func ResultAccountUpdateProfile(out *MessageEnvelope, res *AccountUpdateProfile)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultMediaContact(out *MessageEnvelope, res *MediaContact) {
+	out.Constructor = C_MediaContact
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultFileSavePart(out *MessageEnvelope, res *FileSavePart) {
 	out.Constructor = C_FileSavePart
 	pbytes.Put(out.Message)
@@ -744,6 +798,12 @@ func ResultInitResponse(out *MessageEnvelope, res *InitResponse) {
 }
 func ResultAuthCheckPhone(out *MessageEnvelope, res *AuthCheckPhone) {
 	out.Constructor = C_AuthCheckPhone
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultDocumentAttribute(out *MessageEnvelope, res *DocumentAttribute) {
+	out.Constructor = C_DocumentAttribute
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

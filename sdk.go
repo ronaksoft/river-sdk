@@ -202,7 +202,7 @@ func (r *River) callAuthRecall_RegisterDevice() {
 				msg.C_AuthRecall,
 				reqBytes,
 				nil,
-				nil,
+				r.onAuthRecalled,
 				true,
 				false,
 			)
@@ -235,6 +235,28 @@ func (r *River) callAuthRecall_RegisterDevice() {
 			} else {
 				time.Sleep(1 * time.Second)
 			}
+		}
+	}
+}
+
+// onAuthRecalled update cluster info
+func (r *River) onAuthRecalled(m *msg.MessageEnvelope) {
+	if m.Constructor == msg.C_AuthRecalled {
+		x := new(msg.AuthRecalled)
+		err := x.Unmarshal(m.Message)
+		if err != nil {
+			log.LOG_Warn("onAuthRecalled()", zap.Error(err))
+			return
+		}
+
+		// TODO : do somthing with cluster info
+		for _, c := range x.AvailableClusters {
+			log.LOG_Info("AvailableClusters",
+				zap.Int32("ID", c.ID),
+				zap.String("Domain", c.Domain),
+				zap.String("IP", c.IP),
+				zap.String("Location", c.Location),
+			)
 		}
 	}
 }

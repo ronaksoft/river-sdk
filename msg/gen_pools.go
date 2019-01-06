@@ -17,9 +17,21 @@ var (
 			return m
 		},
 	}
+	PoolMediaPhoto = sync.Pool{
+		New: func() interface{} {
+			m := new(MediaPhoto)
+			return m
+		},
+	}
 	PoolInitUserBound = sync.Pool{
 		New: func() interface{} {
 			m := new(InitUserBound)
+			return m
+		},
+	}
+	PoolMediaWebPage = sync.Pool{
+		New: func() interface{} {
+			m := new(MediaWebPage)
 			return m
 		},
 	}
@@ -32,6 +44,18 @@ var (
 	PoolGroupFull = sync.Pool{
 		New: func() interface{} {
 			m := new(GroupFull)
+			return m
+		},
+	}
+	PoolDocumentAttributeAudio = sync.Pool{
+		New: func() interface{} {
+			m := new(DocumentAttributeAudio)
+			return m
+		},
+	}
+	PoolInputFileLocation = sync.Pool{
+		New: func() interface{} {
+			m := new(InputFileLocation)
 			return m
 		},
 	}
@@ -71,6 +95,12 @@ var (
 			return m
 		},
 	}
+	PoolDocument = sync.Pool{
+		New: func() interface{} {
+			m := new(Document)
+			return m
+		},
+	}
 	PoolUpdateGetDifference = sync.Pool{
 		New: func() interface{} {
 			m := new(UpdateGetDifference)
@@ -98,6 +128,12 @@ var (
 	PoolUpdateGroupAdmins = sync.Pool{
 		New: func() interface{} {
 			m := new(UpdateGroupAdmins)
+			return m
+		},
+	}
+	PoolCluster = sync.Pool{
+		New: func() interface{} {
+			m := new(Cluster)
 			return m
 		},
 	}
@@ -365,6 +401,12 @@ var (
 			return m
 		},
 	}
+	PoolDocumentAttributeVideo = sync.Pool{
+		New: func() interface{} {
+			m := new(DocumentAttributeVideo)
+			return m
+		},
+	}
 	PoolAccountSetNotifySettings = sync.Pool{
 		New: func() interface{} {
 			m := new(AccountSetNotifySettings)
@@ -407,6 +449,12 @@ var (
 			return m
 		},
 	}
+	PoolDocumentAttributeFile = sync.Pool{
+		New: func() interface{} {
+			m := new(DocumentAttributeFile)
+			return m
+		},
+	}
 	PoolAuthRegister = sync.Pool{
 		New: func() interface{} {
 			m := new(AuthRegister)
@@ -437,6 +485,12 @@ var (
 			return m
 		},
 	}
+	PoolMediaDocument = sync.Pool{
+		New: func() interface{} {
+			m := new(MediaDocument)
+			return m
+		},
+	}
 	PoolInitCompleteAuthInternal = sync.Pool{
 		New: func() interface{} {
 			m := new(InitCompleteAuthInternal)
@@ -464,12 +518,6 @@ var (
 	PoolMessageActionGroupTitleChanged = sync.Pool{
 		New: func() interface{} {
 			m := new(MessageActionGroupTitleChanged)
-			return m
-		},
-	}
-	PoolFileLocation = sync.Pool{
-		New: func() interface{} {
-			m := new(FileLocation)
 			return m
 		},
 	}
@@ -671,6 +719,12 @@ var (
 			return m
 		},
 	}
+	PoolMediaContact = sync.Pool{
+		New: func() interface{} {
+			m := new(MediaContact)
+			return m
+		},
+	}
 	PoolFileSavePart = sync.Pool{
 		New: func() interface{} {
 			m := new(FileSavePart)
@@ -746,6 +800,12 @@ var (
 	PoolAuthCheckPhone = sync.Pool{
 		New: func() interface{} {
 			m := new(AuthCheckPhone)
+			return m
+		},
+	}
+	PoolDocumentAttribute = sync.Pool{
+		New: func() interface{} {
+			m := new(DocumentAttribute)
 			return m
 		},
 	}
