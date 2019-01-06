@@ -28,7 +28,13 @@ func (s *Register) Play(act shared.Acter) {
 		return
 	}
 	if act.GetAuthID() == 0 {
-		Play(act, NewCreateAuthKey(false))
+		s.AddJobs(1)
+		success := Play(act, NewCreateAuthKey(false))
+		if !success {
+			s.failed(act, 0, "Play() : failed at pre requested scenario CreateAuthKey")
+			return
+		}
+		s.wait.Done()
 	}
 	s.AddJobs(1)
 	act.ExecuteRequest(s.sendCode(act))
@@ -44,7 +50,7 @@ func (s *Register) sendCode(act shared.Acter) (*msg.MessageEnvelope, shared.Succ
 	}
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
 		act.SetSuccess(msg.C_AuthSendCode, elapsed)
-		if s.isErrorResponse(act, elapsed, resp) {
+		if s.isErrorResponse(act, elapsed, resp, "sendCode()") {
 			return
 		}
 		// TODO : chain next request here
@@ -75,7 +81,7 @@ func (s *Register) register(resp *msg.AuthSentCode, act shared.Acter) (*msg.Mess
 		successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
 			act.SetSuccess(msg.C_AuthRegister, elapsed)
 
-			if s.isErrorResponse(act, elapsed, resp) {
+			if s.isErrorResponse(act, elapsed, resp, "register()") {
 				return
 			}
 			if resp.Constructor == msg.C_AuthAuthorization {

@@ -27,7 +27,13 @@ func (s *Login) Play(act shared.Acter) {
 		return
 	}
 	if act.GetAuthID() == 0 {
-		Play(act, NewCreateAuthKey(false))
+		s.AddJobs(1)
+		success := Play(act, NewCreateAuthKey(false))
+		if !success {
+			s.failed(act, 0, "Play() : failed at pre requested scenario CreateAuthKey")
+			return
+		}
+		s.wait.Done()
 	}
 	s.AddJobs(1)
 	act.ExecuteRequest(s.sendCode(act))
@@ -45,7 +51,7 @@ func (s *Login) sendCode(act shared.Acter) (*msg.MessageEnvelope, shared.Success
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
 		act.SetSuccess(msg.C_AuthSendCode, elapsed)
-		if s.isErrorResponse(act, elapsed, resp) {
+		if s.isErrorResponse(act, elapsed, resp, "sendCode()") {
 			return
 		}
 		if resp.Constructor == msg.C_AuthSentCode {
@@ -77,7 +83,7 @@ func (s *Login) login(resp *msg.AuthSentCode, act shared.Acter) (*msg.MessageEnv
 
 		successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
 			act.SetSuccess(msg.C_AuthLogin, elapsed)
-			if s.isErrorResponse(act, elapsed, resp) {
+			if s.isErrorResponse(act, elapsed, resp, "login()") {
 				return
 			}
 			if resp.Constructor == msg.C_AuthAuthorization {

@@ -70,7 +70,7 @@ func (s *CreateAuthKey) initConnect(act shared.Acter) (*msg.MessageEnvelope, sha
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
 		act.SetSuccess(msg.C_InitConnect, elapsed)
-		if s.isErrorResponse(act, elapsed, resp) {
+		if s.isErrorResponse(act, elapsed, resp, "initConnect()") {
 			return
 		}
 		if resp.Constructor == msg.C_InitResponse {
@@ -149,7 +149,7 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acte
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
 		act.SetSuccess(msg.C_InitCompleteAuth, elapsed)
-		if s.isErrorResponse(act, elapsed, resp) {
+		if s.isErrorResponse(act, elapsed, resp, "InitCompleteAuth()") {
 			return
 		}
 		// TODO : chain next request here

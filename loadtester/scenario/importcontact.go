@@ -26,10 +26,23 @@ func (s *ImportContact) Play(act shared.Acter) {
 	// 	return
 	// }
 	if act.GetAuthID() == 0 {
-		Play(act, NewCreateAuthKey(false))
+		s.AddJobs(1)
+		success := Play(act, NewCreateAuthKey(false))
+		if !success {
+
+			s.failed(act, 0, "Play() : failed at pre requested scenario CreateAuthKey")
+			return
+		}
+		s.wait.Done()
 	}
 	if act.GetUserID() == 0 {
-		Play(act, NewLogin(false))
+		s.AddJobs(1)
+		success := Play(act, NewLogin(false))
+		if !success {
+			s.failed(act, 0, "Play() : failed at pre requested scenario Login")
+			return
+		}
+		s.wait.Done()
 	}
 
 	phoneList := act.GetPhoneList()
@@ -51,7 +64,7 @@ func (s *ImportContact) contactImport(phone string, act shared.Acter) (*msg.Mess
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
 		act.SetSuccess(msg.C_ContactsImport, elapsed)
-		if s.isErrorResponse(act, elapsed, resp) {
+		if s.isErrorResponse(act, elapsed, resp, "contactImport()") {
 			return
 		}
 		if resp.Constructor == msg.C_ContactsImported {

@@ -21,13 +21,31 @@ func NewSendMessage(isFinal bool) shared.Screenwriter {
 // Play execute SendMessage scenario
 func (s *SendMessage) Play(act shared.Acter) {
 	if act.GetAuthID() == 0 {
-		Play(act, NewCreateAuthKey(false))
+		s.AddJobs(1)
+		success := Play(act, NewCreateAuthKey(false))
+		if !success {
+			s.failed(act, 0, "Play() : failed at pre requested scenario CreateAuthKey")
+			return
+		}
+		s.wait.Done()
 	}
 	if act.GetUserID() == 0 {
-		Play(act, NewLogin(false))
+		s.AddJobs(1)
+		success := Play(act, NewLogin(false))
+		if !success {
+			s.failed(act, 0, "Play() : failed at pre requested scenario Login")
+			return
+		}
+		s.wait.Done()
 	}
 	if len(act.GetPeers()) == 0 {
-		Play(act, NewImportContact(false))
+		s.AddJobs(1)
+		success := Play(act, NewImportContact(false))
+		if !success {
+			s.failed(act, 0, "Play() : failed at pre requested scenario ImportContact")
+			return
+		}
+		s.wait.Done()
 	}
 	peers := act.GetPeers()
 	s.AddJobs(len(peers))
@@ -48,7 +66,7 @@ func (s *SendMessage) messageSend(act shared.Acter, peer *shared.PeerInfo) (*msg
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
 		act.SetSuccess(msg.C_MessagesSend, elapsed)
-		if s.isErrorResponse(act, elapsed, resp) {
+		if s.isErrorResponse(act, elapsed, resp, "messageSend()") {
 			return
 		}
 		if resp.Constructor == msg.C_MessagesSent {

@@ -41,10 +41,11 @@ type Acter interface {
 // Screenwriter scenario interface
 type Screenwriter interface {
 	Play(act Acter)
-	Wait(act Acter)
+	Wait(act Acter) bool
 	SetFinal(isFinal bool)
 	IsFinal() bool
 	AddJobs(i int)
+	GetResult() bool
 }
 
 // Neter network interface
