@@ -2,6 +2,10 @@ package domain
 
 import "time"
 
+const (
+	FilePayloadSize = 1024 * 256 // 256KB
+)
+
 // Global Parameters
 const (
 	PRODUCTION_SERVER_WEBSOCKET_ENDPOINT = "ws://river.im"

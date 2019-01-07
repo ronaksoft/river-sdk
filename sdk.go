@@ -802,7 +802,10 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 		}
 
 	}
-
+	// on typing min max is equal to zero so meh
+	if minID > maxID {
+		minID = 0
+	}
 	log.LOG_Debug("SDK::onReceivedUpdate()",
 		zap.Int("Received Updates Count :", len(updates)),
 		zap.Int64("UpdateID :", r.syncCtrl.UpdateID()),

@@ -30,6 +30,7 @@ type Context struct {
 	UISettings      RepoUISettings
 	Groups          RepoGroups
 	MessageHoles    RepoMessageHoles
+	Files           RepoFiles
 }
 
 type repository struct {
@@ -62,6 +63,7 @@ func InitRepo(dialect, dbPath string) error {
 				UISettings:      &repoUISettings{repository: r},
 				Groups:          &repoGroups{repository: r},
 				MessageHoles:    &repoMessageHoles{repository: r},
+				Files:           &repoFiles{repository: r},
 			}
 		}
 	}
@@ -123,6 +125,7 @@ func (c *Context) ReinitiateDatabase() error {
 		dto.Groups{},
 		dto.GroupParticipants{},
 		dto.MessageHoles{},
+		dto.FileStatus{},
 		//dto.UISettings{}, //do not remove UISettings on logout
 	).Error
 
@@ -152,6 +155,7 @@ func (r *repository) initDB() error {
 		dto.Groups{},
 		dto.GroupParticipants{},
 		dto.MessageHoles{},
+		dto.FileStatus{},
 	).Error
 
 	return repoLastError
