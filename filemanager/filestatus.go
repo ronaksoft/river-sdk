@@ -8,6 +8,7 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/repo"
 )
 
@@ -147,4 +148,23 @@ func (fs *FileStatus) fileStatusChanged() {
 		fs.onFileStatusChanged(fs.MessageID, fs.Position, fs.TotalSize)
 	}
 
+}
+
+func (fs *FileStatus) ReadAsFileSavePart() (envelop *msg.MessageEnvelope, readCount int, err error) {
+
+	var buff []byte
+	buff, readCount, err = fs.Read()
+	if err != nil {
+		return
+	}
+	req := new(msg.FileSavePart)
+	req.Bytes = buff
+	req.FileID = fs.FileID
+	req.PartID = fs.PartNo
+	req.TotalParts = fs.TotalParts
+
+	envelop.Message, err = req.Marshal()
+	envelop.RequestID = uint64(domain.SequentialUniqueID())
+
+	return
 }

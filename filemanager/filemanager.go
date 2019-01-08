@@ -8,6 +8,8 @@ import (
 	"os"
 	"sync"
 
+	"go.uber.org/zap"
+
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
@@ -26,13 +28,16 @@ const (
 
 // FileManager manages files status and cache
 type FileManager struct {
-	authKey []byte
-	authID  int64
+	authKey    []byte
+	authID     int64
+	messageSeq int64
 
-	mxDown        sync.Mutex
-	mxUp          sync.Mutex
-	UploadQueue   map[int64]*FileStatus
-	DownloadQueue map[int64]*FileStatus
+	mxDown               sync.Mutex
+	mxUp                 sync.Mutex
+	UploadQueue          map[int64]*FileStatus
+	DownloadQueue        map[int64]*FileStatus
+	UploadQueueStarted   bool
+	DownloadQueueStarted bool
 
 	chStopUploader   chan bool
 	chStopDownloader chan bool
@@ -87,6 +92,15 @@ func GetBestCluster() *msg.Cluster {
 	}
 
 	return nil
+}
+
+func (fm *FileManager) Stop() {
+	if fm.UploadQueueStarted {
+		fm.chStopUploader <- true
+	}
+	if fm.DownloadQueueStarted {
+		fm.chStopDownloader <- true
+	}
 }
 
 // Upload file to server
@@ -202,12 +216,53 @@ func (fm *FileManager) startDownloadQueue() {
 }
 
 func (fm *FileManager) startUploadQueue() {
-	// for {
-	// 	select {
-	// 	case <-fm.chStopUploader:
-	// 		return
-	// 	default:
+	for {
+		fm.UploadQueueStarted = true
+		wg := &sync.WaitGroup{}
+		select {
+		case <-fm.chStopUploader:
+			// wait for running request gracefuly end
+			wg.Wait()
+			fm.UploadQueueStarted = false
+			return
+		default:
+			// round robin and wait till all items in queus moves on step forward
+			fm.mxUp.Lock()
+			for _, fs := range fm.UploadQueue {
+				envelop, readCount, err := fs.ReadAsFileSavePart()
+				if err != nil {
+					log.LOG_Error("FileManager::startUploadQueue()", zap.Error(err), zap.String("filePath", fs.FilePath))
+					continue
+				}
+				wg.Add(1)
+				go fm.sendUploadRequest(envelop, int64(readCount), fs, wg)
+			}
+			fm.mxUp.Unlock()
+			wg.Wait()
+		}
+	}
+}
 
-	// 	}
-	// }
+func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, fs *FileStatus, wg *sync.WaitGroup) {
+	// time out has been set in Send()
+	res, err := fm.Send(req, _Clusters[fs.ClusterID])
+	if err == nil {
+		switch res.Constructor {
+		case msg.C_Error:
+			x := new(msg.Error)
+			x.Unmarshal(res.Message)
+			log.LOG_Error("sendUploadRequest() received Error response", zap.String("Code", x.Code), zap.String("Item", x.Code))
+		case msg.C_Bool:
+			x := new(msg.Bool)
+			x.Unmarshal(res.Message)
+			if x.Result {
+				fs.ReadCommit(count)
+			}
+		default:
+			log.LOG_Error("sendUploadRequest() received unknown response", zap.Error(err))
+		}
+	} else {
+		log.LOG_Error("sendUploadRequest()", zap.Error(err))
+	}
+	wg.Done()
 }

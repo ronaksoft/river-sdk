@@ -7,31 +7,26 @@ import (
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
-	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
 
-var (
-	_MessageSeq int64
-)
-
 // Send the data payload is binary
-func Send(msgEnvelope *msg.MessageEnvelope, cluster *msg.Cluster, authID int64, authKey []byte, chResult chan *msg.MessageEnvelope) error {
+func (fm *FileManager) Send(msgEnvelope *msg.MessageEnvelope, cluster *msg.Cluster) (*msg.MessageEnvelope, error) {
 	protoMessage := new(msg.ProtoMessage)
-	protoMessage.AuthID = authID
+	protoMessage.AuthID = fm.authID
 	protoMessage.MessageKey = make([]byte, 32)
-	if authID == 0 {
+	if fm.authID == 0 {
 		protoMessage.Payload, _ = msgEnvelope.Marshal()
 	} else {
-		_MessageSeq++
+		fm.messageSeq++
 		encryptedPayload := msg.ProtoEncryptedPayload{
 			ServerSalt: 234242, // TODO:: ServerSalt ?
 			Envelope:   msgEnvelope,
 		}
-		encryptedPayload.MessageID = uint64(time.Now().Unix()<<32 | _MessageSeq)
+		encryptedPayload.MessageID = uint64(time.Now().Unix()<<32 | fm.messageSeq)
 		unencryptedBytes, _ := encryptedPayload.Marshal()
-		encryptedPayloadBytes, _ := domain.Encrypt(authKey, unencryptedBytes)
-		messageKey := domain.GenerateMessageKey(authKey, unencryptedBytes)
+		encryptedPayloadBytes, _ := domain.Encrypt(fm.authKey, unencryptedBytes)
+		messageKey := domain.GenerateMessageKey(fm.authKey, unencryptedBytes)
 		copy(protoMessage.MessageKey, messageKey)
 		protoMessage.Payload = encryptedPayloadBytes
 	}
@@ -39,26 +34,22 @@ func Send(msgEnvelope *msg.MessageEnvelope, cluster *msg.Cluster, authID int64, 
 	b, err := protoMessage.Marshal()
 	reqBuff := bytes.NewBuffer(b)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// SEND data
-	httpResp, err := http.Post(cluster.Domain, "application/protobuf", reqBuff)
+	// set timeout
+	client := http.DefaultClient
+	client.Timeout = domain.DEFAULT_REQUEST_TIMEOUT
+	httpResp, err := client.Post(cluster.Domain, "application/protobuf", reqBuff)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	resBuff, err := ioutil.ReadAll(httpResp.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	res := new(msg.MessageEnvelope)
 	err = res.Unmarshal(resBuff)
-	if err != nil {
-		return err
-	}
-	select {
-	case chResult <- res:
-	default:
-		log.LOG_Warn("filemanager::Send() no one listening at chResult channel")
-	}
-	return nil
+
+	return res, err
 }
