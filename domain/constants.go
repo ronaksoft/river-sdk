@@ -3,7 +3,8 @@ package domain
 import "time"
 
 const (
-	FilePayloadSize = 1024 * 256 // 256KB
+	FilePayloadSize    = 1024 * 256        // 256KB
+	FileMaxAllowedSize = 750 * 1024 * 1024 // 750MB
 )
 
 // Global Parameters

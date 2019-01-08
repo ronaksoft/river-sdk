@@ -88,6 +88,12 @@ func ResultUpdateReadHistoryOutbox(out *MessageEnvelope, res *UpdateReadHistoryO
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultDocumentAttributePhoto(out *MessageEnvelope, res *DocumentAttributePhoto) {
+	out.Constructor = C_DocumentAttributePhoto
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultMessageEnvelope(out *MessageEnvelope, res *MessageEnvelope) {
 	out.Constructor = C_MessageEnvelope
 	pbytes.Put(out.Message)
@@ -192,6 +198,12 @@ func ResultRSAPublicKey(out *MessageEnvelope, res *RSAPublicKey) {
 }
 func ResultMessagesGetDialog(out *MessageEnvelope, res *MessagesGetDialog) {
 	out.Constructor = C_MessagesGetDialog
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultClientSendMessageMedia(out *MessageEnvelope, res *ClientSendMessageMedia) {
+	out.Constructor = C_ClientSendMessageMedia
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

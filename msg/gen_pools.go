@@ -89,6 +89,12 @@ var (
 			return m
 		},
 	}
+	PoolDocumentAttributePhoto = sync.Pool{
+		New: func() interface{} {
+			m := new(DocumentAttributePhoto)
+			return m
+		},
+	}
 	PoolMessageEnvelope = sync.Pool{
 		New: func() interface{} {
 			m := new(MessageEnvelope)
@@ -194,6 +200,12 @@ var (
 	PoolMessagesGetDialog = sync.Pool{
 		New: func() interface{} {
 			m := new(MessagesGetDialog)
+			return m
+		},
+	}
+	PoolClientSendMessageMedia = sync.Pool{
+		New: func() interface{} {
+			m := new(ClientSendMessageMedia)
 			return m
 		},
 	}

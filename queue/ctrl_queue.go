@@ -394,7 +394,7 @@ func (ctrl *QueueController) reinitializePendingMessages() {
 	for _, v := range pendingMessages {
 		messageEnvelope := new(msg.MessageEnvelope)
 		messageEnvelope.RequestID = uint64(v.RandomID)
-		v.RandomID = domain.SequentialUniqueID()
+		// v.RandomID = domain.SequentialUniqueID()
 		messageEnvelope.Constructor = msg.C_MessagesSend
 		messageEnvelope.Message, _ = v.Marshal()
 		req := &request{

@@ -504,3 +504,9 @@ func fnGetLangCode(c *ishell.Context) string {
 	code := c.ReadLine()
 	return code
 }
+
+func fnGetFileName(c *ishell.Context) string {
+	c.Print("File Name: ")
+	name := c.ReadLine()
+	return name
+}

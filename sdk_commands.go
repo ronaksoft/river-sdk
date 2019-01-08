@@ -3,7 +3,6 @@ package riversdk
 import (
 	"encoding/json"
 	"strings"
-	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd"
 	"git.ronaksoftware.com/ronak/riversdk/synchronizer"
@@ -112,6 +111,7 @@ func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain
 
 func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	log.LOG_Debug("River::messagesSend()")
+
 	req := new(msg.MessagesSend)
 	if err := req.Unmarshal(in.Message); err != nil {
 		log.LOG_Debug("River::messagesSend()-> Unmarshal()",
@@ -133,7 +133,6 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		})
 		return
 	}
-
 	// this will be used as next requestID
 	req.RandomID = domain.SequentialUniqueID()
 
@@ -141,7 +140,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	// 0. fix database and add PendingMessages table : Done
 
 	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
-	dbID := -time.Now().UnixNano()
+	dbID := -domain.SequentialUniqueID()
 	res, err := repo.Ctx().PendingMessages.Save(dbID, r.ConnInfo.UserID, req)
 
 	if err != nil {
@@ -174,6 +173,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 			successCB(out)
 		}
 	}) //successCB(out)
+
 }
 
 func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -858,4 +858,65 @@ func (r *River) groupUpdateAdmin(in, out *msg.MessageEnvelope, timeoutCB domain.
 
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+}
+
+func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	// send Media
+	log.LOG_Debug("River::clientSendMessageMedia()")
+	reqMedia := new(msg.ClientSendMessageMedia)
+	if err := reqMedia.Unmarshal(in.Message); err != nil {
+		log.LOG_Debug("River::clientSendMessageMedia()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
+
+	// this will be used as next requestID
+	// fileID := domain.SequentialUniqueID()
+
+	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
+	dbID := -domain.SequentialUniqueID()
+	res, err := repo.Ctx().PendingMessages.SaveMessageMedia(dbID, r.ConnInfo.UserID, reqMedia)
+
+	if err != nil {
+		e := new(msg.Error)
+		e.Code = "n/a"
+		e.Items = "Failed to save to pendingMessages : " + err.Error()
+		msg.ResultError(out, e)
+		cmd.GetUIExecuter().Exec(func() {
+			if successCB != nil {
+				successCB(out)
+			}
+		})
+		return
+	}
+
+	// 2. TODO : start file upload and send process
+	err = r.fileManager.Upload(res, r.onFileProgressChanged)
+	if err != nil {
+		e := new(msg.Error)
+		e.Code = "n/a"
+		e.Items = "Failed to start Upload : " + err.Error()
+		msg.ResultError(out, e)
+		cmd.GetUIExecuter().Exec(func() {
+			if successCB != nil {
+				successCB(out)
+			}
+		})
+		return
+	}
+
+	// 3. return to CallBack with pending message data : Done
+	out.Constructor = msg.C_ClientPendingMessage
+	out.Message, _ = res.Marshal()
+
+	// 4. later when queue got processed and server returned response we should check if the requestID
+	//   exist in pendindTable we remove it and insert new message with new id to message table
+	//   invoke new OnUpdate with new protobuff to inform ui that pending message got delivered
+	cmd.GetUIExecuter().Exec(func() {
+		if successCB != nil {
+			successCB(out)
+		}
+	}) //successCB(out)
+
 }

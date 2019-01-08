@@ -182,6 +182,24 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) []*msg.Updat
 		}
 	}
 
+	// handle Media message
+	switch x.Message.MediaType {
+	case msg.MediaTypeEmpty:
+		// TODO:: implement it
+	case msg.MediaTypePhoto:
+		// TODO:: implement it
+	case msg.MediaTypeDocument:
+		// doc := new(msg.Document)
+		// x.Unmarshal(x.Message.Media)
+		// docID := doc.ID
+		// clusterID := doc.ClusterID
+		// accessHash := doc.AccessHash
+		// fileSize := doc.FileSize
+	case msg.MediaTypeContact:
+		// TODO:: implement it
+	default:
+	}
+
 	return res
 }
 

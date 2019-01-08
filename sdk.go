@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd"
+	"git.ronaksoftware.com/ronak/riversdk/filemanager"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/network"
@@ -169,6 +170,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.networkCtrl.SetUpdateHandler(r.onReceivedUpdate)
 	r.networkCtrl.SetOnConnectCallback(r.callAuthRecall_RegisterDevice)
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+	r.fileManager.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 }
 
 // Get deviceToken
@@ -249,15 +251,8 @@ func (r *River) onAuthRecalled(m *msg.MessageEnvelope) {
 			return
 		}
 
-		// TODO : do somthing with cluster info
-		for _, c := range x.AvailableClusters {
-			log.LOG_Info("AvailableClusters",
-				zap.Int32("ID", c.ID),
-				zap.String("Domain", c.Domain),
-				zap.String("IP", c.IP),
-				zap.String("Location", c.Location),
-			)
-		}
+		// save cluster info
+		filemanager.SetAvailableClusters(x.AvailableClusters)
 	}
 }
 
@@ -267,6 +262,7 @@ func (r *River) registerCommandHandlers() {
 	r.localCommands[msg.C_MessagesGetDialog] = r.messagesGetDialog
 	r.localCommands[msg.C_MessagesGetHistory] = r.messageGetHistory
 	r.localCommands[msg.C_MessagesSend] = r.messagesSend
+	r.localCommands[msg.C_ClientSendMessageMedia] = r.clientSendMessageMedia
 	r.localCommands[msg.C_ContactsGet] = r.contactGet
 	r.localCommands[msg.C_MessagesReadHistory] = r.messageReadHistory
 	r.localCommands[msg.C_UsersGet] = r.usersGet
@@ -658,6 +654,7 @@ func (r *River) CreateAuthKey() (err error) {
 				}
 				r.ConnInfo.Save()
 				r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+				r.fileManager.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 			case msg.C_Error:
 				err = domain.ServerError(res.Message)
 				return
@@ -673,6 +670,7 @@ func (r *River) CreateAuthKey() (err error) {
 
 	// double set AuthID
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+	r.fileManager.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 	// inform external UI that authKey generated
 	if r.mainDelegate != nil {
 		if r.mainDelegate.OnAuthKeyCreated != nil {
@@ -845,4 +843,12 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 func (r *River) PrintDebuncerStatus() {
 	log.LOG_Debug("SDK::PrintDebuncerStatus()")
 	r.networkCtrl.PrintDebuncerStatus()
+}
+
+func (r *River) onFileProgressChanged(messageID, position, totalSize int64) {
+	percent := float64(position) / float64(totalSize) * float64(100)
+	log.LOG_Warn("onFileProgressChanged()",
+		zap.Int64("MsgID", messageID),
+		zap.Float64("Percent", percent),
+	)
 }

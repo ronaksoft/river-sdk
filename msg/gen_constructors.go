@@ -15,6 +15,7 @@ const (
 	C_ContactUser                        int64 = 460099170
 	C_AccountGetNotifySettings           int64 = 477008681
 	C_UpdateReadHistoryOutbox            int64 = 510866108
+	C_DocumentAttributePhoto             int64 = 515862833
 	C_MessageEnvelope                    int64 = 535232465
 	C_Document                           int64 = 555739168
 	C_UpdateGetDifference                int64 = 556775761
@@ -33,6 +34,7 @@ const (
 	C_UsersGet                           int64 = 1039301579
 	C_RSAPublicKey                       int64 = 1046601890
 	C_MessagesGetDialog                  int64 = 1050840034
+	C_ClientSendMessageMedia             int64 = 1095038539
 	C_Dialog                             int64 = 1120787796
 	C_AuthAuthorization                  int64 = 1140037965
 	C_AuthRecall                         int64 = 1172029049
@@ -156,6 +158,7 @@ var ConstructorNames = map[int64]string{
 	460099170:  "ContactUser",
 	477008681:  "AccountGetNotifySettings",
 	510866108:  "UpdateReadHistoryOutbox",
+	515862833:  "DocumentAttributePhoto",
 	535232465:  "MessageEnvelope",
 	555739168:  "Document",
 	556775761:  "UpdateGetDifference",
@@ -174,6 +177,7 @@ var ConstructorNames = map[int64]string{
 	1039301579: "UsersGet",
 	1046601890: "RSAPublicKey",
 	1050840034: "MessagesGetDialog",
+	1095038539: "ClientSendMessageMedia",
 	1120787796: "Dialog",
 	1140037965: "AuthAuthorization",
 	1172029049: "AuthRecall",

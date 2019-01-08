@@ -1,4 +1,4 @@
-package filemanger
+package filemanager
 
 import (
 	"os"
@@ -14,34 +14,47 @@ import (
 type StateType bool
 
 var (
-	UploadType   StateType = false
-	DownloadType StateType = true
+	StateDownload StateType = true
+	StateUpload   StateType = false
 )
 
 // FileStatus monitors file state
 type FileStatus struct {
 	mx                  sync.Mutex
-	FileID              int64                      `json:"FileID"`
-	FilePath            string                     `json:"FilePath"`
-	Position            int64                      `json:"Position"`
-	TotalSize           int64                      `json:"TotalSize"`
-	PartNo              int32                      `json:"PartNo"`
-	TotalParts          int32                      `json:"TotalParts"`
-	StatusType          StateType                  `json:"StatusType"`
-	onFileStatusChanged domain.OnFileStatusChanged `json:"-"`
+	MessageID           int64     `json:"MessageID"`
+	FileID              int64     `json:"FileID"`
+	ClusterID           int32     `json:"ClusterID"`
+	AccessHash          uint64    `json:"AccessHash"`
+	FilePath            string    `json:"FilePath"`
+	Position            int64     `json:"Position"`
+	TotalSize           int64     `json:"TotalSize"`
+	PartNo              int32     `json:"PartNo"`
+	TotalParts          int32     `json:"TotalParts"`
+	Type                StateType `json:"StatusType"`
+	onFileStatusChanged domain.OnFileStatusChanged
 }
 
 // NewFileStatus create new instance
-func NewFileStatus(fileID, totalSize int64, filePath string, isDownload StateType, progress domain.OnFileStatusChanged) *FileStatus {
+func NewFileStatus(messageID int64,
+	fileID int64,
+	totalSize int64,
+	filePath string,
+	isDownload StateType,
+	clusterID int32,
+	accessHash uint64,
+	progress domain.OnFileStatusChanged) *FileStatus {
 	fs := &FileStatus{
+		MessageID:           messageID,
 		FileID:              fileID,
 		FilePath:            filePath,
 		TotalSize:           totalSize,
+		ClusterID:           clusterID,
+		AccessHash:          accessHash,
 		Position:            0,
 		PartNo:              0,
 		TotalParts:          0,
 		onFileStatusChanged: progress,
-		StatusType:          isDownload,
+		Type:                isDownload,
 	}
 
 	count := totalSize / domain.FilePayloadSize
@@ -131,7 +144,7 @@ func (fs *FileStatus) fileStatusChanged() {
 		log.LOG_Debug("fileStatusChanged() failed to save in DB", zap.Error(err))
 	}
 	if fs.onFileStatusChanged != nil {
-		fs.onFileStatusChanged(fs.FileID, fs.Position, fs.TotalSize)
+		fs.onFileStatusChanged(fs.MessageID, fs.Position, fs.TotalSize)
 	}
 
 }

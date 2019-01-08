@@ -29,7 +29,8 @@ message DocumentAttributeAudio {
     required uint32 Duration = 2;
     required string Title = 3;
     required string Performer = 4;
-    optional bytes Waveform = 5;
+    required string Album = 5;
+    optional bytes Waveform = 6;
 }
 
 // DocumentAttributeVideo
@@ -37,6 +38,13 @@ message DocumentAttributeVideo {
     required uint32 Width = 1;
     required uint32 Height = 2;
     required uint32 Duration = 3;
+    required bool Round = 4;
+}
+
+// DocumentAttributePhoto
+message DocumentAttributePhoto {
+    required uint32 Width = 1;
+    required uint32 Height = 2;
 }
 
 // DocumentAttributeFile

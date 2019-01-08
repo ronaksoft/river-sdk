@@ -6,6 +6,10 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
 
+const (
+	_ClientSendMessageMediaType = -1
+)
+
 type PendingMessages struct {
 	dto
 	ID         int64  `gorm:"primary_key;column:ID;auto_increment:false" json:"ID"`
@@ -19,6 +23,8 @@ type PendingMessages struct {
 	ReplyTo    int64  `gorm:"column:ReplyTo" json:"ReplyTo"`
 	ClearDraft bool   `gorm:"column:ClearDraft" json:"ClearDraft"`
 	Entities   []byte `gorm:"type:blob;column:Entities" json:"Entities"`
+	MediaType  int32  `gorm:"column:MediaType" json:"MediaType"`
+	Media      []byte `gorm:"type:blob;column:Media" json:"Media"`
 }
 
 func (PendingMessages) TableName() string {
@@ -51,6 +57,9 @@ func (m *PendingMessages) MapTo(v *msg.ClientPendingMessage) {
 
 	v.Entities = make([]*msg.MessageEntity, 0)
 	json.Unmarshal(m.Entities, &v.Entities)
+
+	v.MediaType = msg.InputMediaType(m.MediaType)
+	v.Media = m.Media
 }
 func (m *PendingMessages) MapToUserMessage(v *msg.UserMessage) {
 	v.ID = m.ID
@@ -72,6 +81,13 @@ func (m *PendingMessages) MapToUserMessage(v *msg.UserMessage) {
 
 	v.Entities = make([]*msg.MessageEntity, 0)
 	json.Unmarshal(m.Entities, &v.Entities)
+
+	if m.MediaType > 0 {
+		v.MessageType = _ClientSendMessageMediaType
+	}
+
+	v.MediaType = msg.MediaType(m.MediaType)
+	v.Media = m.Media
 }
 
 func (m *PendingMessages) MapToDtoMessage(v *Messages) {
@@ -93,6 +109,12 @@ func (m *PendingMessages) MapToDtoMessage(v *Messages) {
 	//v.MessageAction = m.MessageAction
 	v.Entities = m.Entities
 
+	if m.MediaType > 0 {
+		v.MessageType = _ClientSendMessageMediaType
+	}
+	v.MediaType = int32(m.MediaType)
+	v.Media = m.Media
+
 }
 
 func (m *PendingMessages) MapToMessageSend(v *msg.MessagesSend) {
@@ -108,4 +130,20 @@ func (m *PendingMessages) MapToMessageSend(v *msg.MessagesSend) {
 
 	v.Entities = make([]*msg.MessageEntity, 0)
 	json.Unmarshal(m.Entities, &v.Entities)
+}
+
+func (m *PendingMessages) MapFromMessageMedia(fileID int64, v *msg.ClientSendMessageMedia) {
+	//m.ID = v.ID
+	//m.RequestID = fileID
+	m.PeerID = v.Peer.ID
+	//m.SenderID = v.
+	m.PeerType = int32(v.Peer.Type)
+	m.AccessHash = int64(v.Peer.AccessHash)
+	//m.CreatedOn = v.
+	m.Body = v.Caption
+	m.ReplyTo = v.ReplyTo
+	m.ClearDraft = v.ClearDraft
+	// m.Entities = v.
+	m.MediaType = int32(v.MediaType)
+	m.Media, _ = v.Marshal()
 }

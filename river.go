@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
+	"git.ronaksoftware.com/ronak/riversdk/filemanager"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/network"
 	"git.ronaksoftware.com/ronak/riversdk/queue"
@@ -57,6 +58,7 @@ type River struct {
 	networkCtrl *network.NetworkController
 	queueCtrl   *queue.QueueController
 	syncCtrl    *synchronizer.SyncController
+	fileManager *filemanager.FileManager
 
 	// RealTimeRequests is list of requests that should not passed to queue to send they should directly pass to networkController
 	realTimeRequest map[int64]bool

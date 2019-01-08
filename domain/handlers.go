@@ -47,4 +47,4 @@ type OnMessageHandler func(messages []*msg.MessageEnvelope)
 type OnUpdateHandler func(messages []*msg.UpdateContainer)
 
 // OnFileStatusChanged delegate to rise event
-type OnFileStatusChanged func(fileID, position, totalSize int64)
+type OnFileStatusChanged func(messageID, position, totalSize int64)

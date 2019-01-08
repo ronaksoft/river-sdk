@@ -27,16 +27,59 @@ var FileSavePart = &ishell.Cmd{
 var MessagesSendMedia = &ishell.Cmd{
 	Name: "MessagesSendMedia",
 	Func: func(c *ishell.Context) {
-		// for just one user
-		req := msg.MessagesSendMedia{}
 
-		reqBytes, _ := req.Marshal()
-		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSendMedia, reqBytes, reqDelegate, false, false); err != nil {
-			_Log.Debug(err.Error())
-		} else {
-			reqDelegate.RequestID = reqID
-		}
+		// xxx := new(msg.ClientSendMessageMedia)
+
+		// // for just one user
+		// req := msg.MessagesSendMedia{}
+
+		// req.ClearDraft = true
+		// req.MediaType = msg.MediaTypeDocument
+
+		// doc := new(msg.InputMediaUploadedDocument)
+
+		// photo := new(msg.InputMediaUploadedPhoto)
+
+		// doc.MimeType = ""
+		// doc.Caption = "Test File"
+
+		// // set attributes
+		// doc.Attributes = make([]*msg.DocumentAttribute)
+
+		// docAttrib := new(msg.DocumentAttribute)
+		// docAttrib.Type = msg.DocumentAttributeFile
+
+		// attribFile := new(msg.DocumentAttributeFile)
+
+		// xx = new(msg.DocumentAttributeAudio)
+
+		// attribFile.Filename = fnGetFileName(c)
+		// // marshal attribs
+		// docAttrib.Data, _ = attribFile.Marshal()
+
+		// // file
+		// file := new(msg.InputFile)
+		// file.
+		// 	doc.File = file
+
+		// // marshal doc data
+		// req.MediaType = msg.InputMediaTypeUploadedDocument
+		// req.MediaData, _ = doc.Marshal()
+
+		// req.Peer = msg.InputPeer{}
+		// req.Peer.Type = fnGetPeerType(c)
+		// req.Peer.ID = fnGetPeerID(c)
+		// req.Peer.AccessHash = fnGetAccessHash(c)
+
+		// req.RandomID = domain.SequentialUniqueID()
+
+		// reqBytes, _ := req.Marshal()
+		// reqDelegate := new(RequestDelegate)
+		// if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSendMedia, reqBytes, reqDelegate, false, false); err != nil {
+		// 	_Log.Debug(err.Error())
+		// } else {
+		// 	reqDelegate.RequestID = reqID
+		// }
 
 	},
 }

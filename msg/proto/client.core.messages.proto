@@ -1,6 +1,8 @@
 syntax = "proto2";
 package msg;
 import "core.types.proto";
+import "api.messages.proto";
+import "core.message_medias.proto";
 
 // ClientPendingMessage
 message ClientPendingMessage {
@@ -14,4 +16,21 @@ message ClientPendingMessage {
     required string Body = 8;
     required int64 SenderID = 9 ;
     repeated MessageEntity Entities = 10;
+    optional InputMediaType MediaType = 11;
+    optional bytes Media = 12;
+}
+
+// ClientSendMessageMedia
+message ClientSendMessageMedia {
+    required InputPeer Peer = 1;
+    required InputMediaType MediaType = 2;
+    optional string Caption = 3;
+    optional string FileName = 4;
+    optional string FilePath = 5;
+    optional string ThumbFilePath = 6;
+    optional string FileMIME = 7;
+    optional string ThumbMIME = 8;
+    optional int64 ReplyTo = 9;
+    optional bool ClearDraft = 10;
+    repeated DocumentAttribute Attributes = 11;
 }

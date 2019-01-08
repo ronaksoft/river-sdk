@@ -20,6 +20,7 @@ type RepoPendingMessages interface {
 	GetManyPendingMessagesRequestID(messageIDs []int64) []int64
 	GetAllPendingMessages() []*msg.MessagesSend
 	DeletePeerAllMessages(peerID int64, peerType int32) (*msg.ClientUpdateMessagesDeleted, error)
+	SaveMessageMedia(ID, senderID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error)
 }
 
 type repoPendingMessages struct {
@@ -270,6 +271,59 @@ func (r *repoPendingMessages) DeletePeerAllMessages(peerID int64, peerType int32
 		log.LOG_Debug("RepoPendingMessages::DeletePeerAllMessages()-> delete pendingMessage entities",
 			zap.String("Error", err.Error()),
 		)
+	}
+	return res, err
+}
+
+func (r *repoPendingMessages) SaveMessageMedia(ID, senderID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	if msgMedia == nil {
+		log.LOG_Debug("RepoPendingMessages::msgMedia() :",
+			zap.String("Error", "msgMedia is null"),
+		)
+		return nil, domain.ErrNotFound
+	}
+	log.LOG_Debug("RepoPendingMessages::SaveMedia()",
+		zap.Int64("PendingMessageID", ID),
+	)
+
+	fileID := domain.SequentialUniqueID()
+	m := new(dto.PendingMessages)
+	m.MapFromMessageMedia(fileID, msgMedia)
+	m.ID = ID
+	m.SenderID = senderID
+	m.CreatedOn = time.Now().Unix()
+
+	res := new(msg.ClientPendingMessage)
+	m.MapTo(res)
+	ep := new(dto.PendingMessages)
+	r.db.Find(ep, m.ID)
+
+	var err error
+	if ep.ID == 0 {
+		err = r.db.Create(m).Error
+	} else {
+		err = r.db.Table(m.TableName()).Where("ID", m.ID).Update(m).Error
+	}
+
+	if err == nil {
+		dlg := new(dto.Dialogs)
+		r.db.Where(&dto.Dialogs{PeerID: m.PeerID, PeerType: m.PeerType}).Find(&dlg)
+		if dlg.PeerID == 0 {
+			dlg.LastUpdate = m.CreatedOn
+			dlg.PeerID = m.PeerID
+			dlg.PeerType = m.PeerType
+			dlg.TopMessageID = m.ID
+			r.db.Create(dlg)
+		} else {
+			r.db.Table(dlg.TableName()).Where("PeerID=? AND PeerType=?", m.PeerID, m.PeerType).Updates(map[string]interface{}{
+				"TopMessageID": m.ID,
+				"LastUpdate":   m.CreatedOn,
+			})
+
+		}
 	}
 	return res, err
 }

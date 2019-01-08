@@ -7,10 +7,10 @@ import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
 
+import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 import encoding_binary "encoding/binary"
 
 import io "io"
-import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -35,13 +35,15 @@ type ClientPendingMessage struct {
 	Body       string           `protobuf:"bytes,8,req,name=Body" json:"Body"`
 	SenderID   int64            `protobuf:"varint,9,req,name=SenderID" json:"SenderID"`
 	Entities   []*MessageEntity `protobuf:"bytes,10,rep,name=Entities" json:"Entities,omitempty"`
+	MediaType  InputMediaType   `protobuf:"varint,11,opt,name=MediaType,enum=msg.InputMediaType" json:"MediaType"`
+	Media      []byte           `protobuf:"bytes,12,opt,name=Media" json:"Media"`
 }
 
 func (m *ClientPendingMessage) Reset()         { *m = ClientPendingMessage{} }
 func (m *ClientPendingMessage) String() string { return proto.CompactTextString(m) }
 func (*ClientPendingMessage) ProtoMessage()    {}
 func (*ClientPendingMessage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_client_core_messages_3d881b06cb1810a2, []int{0}
+	return fileDescriptor_client_core_messages_0d0b47e8fcf628a3, []int{0}
 }
 func (m *ClientPendingMessage) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -140,8 +142,148 @@ func (m *ClientPendingMessage) GetEntities() []*MessageEntity {
 	return nil
 }
 
+func (m *ClientPendingMessage) GetMediaType() InputMediaType {
+	if m != nil {
+		return m.MediaType
+	}
+	return InputMediaTypeEmpty
+}
+
+func (m *ClientPendingMessage) GetMedia() []byte {
+	if m != nil {
+		return m.Media
+	}
+	return nil
+}
+
+// ClientSendMessageMedia
+type ClientSendMessageMedia struct {
+	Peer          *InputPeer           `protobuf:"bytes,1,req,name=Peer" json:"Peer,omitempty"`
+	MediaType     InputMediaType       `protobuf:"varint,2,req,name=MediaType,enum=msg.InputMediaType" json:"MediaType"`
+	Caption       string               `protobuf:"bytes,3,opt,name=Caption" json:"Caption"`
+	FileName      string               `protobuf:"bytes,4,opt,name=FileName" json:"FileName"`
+	FilePath      string               `protobuf:"bytes,5,opt,name=FilePath" json:"FilePath"`
+	ThumbFilePath string               `protobuf:"bytes,6,opt,name=ThumbFilePath" json:"ThumbFilePath"`
+	FileMIME      string               `protobuf:"bytes,7,opt,name=FileMIME" json:"FileMIME"`
+	ThumbMIME     string               `protobuf:"bytes,8,opt,name=ThumbMIME" json:"ThumbMIME"`
+	ReplyTo       int64                `protobuf:"varint,9,opt,name=ReplyTo" json:"ReplyTo"`
+	ClearDraft    bool                 `protobuf:"varint,10,opt,name=ClearDraft" json:"ClearDraft"`
+	Attributes    []*DocumentAttribute `protobuf:"bytes,11,rep,name=Attributes" json:"Attributes,omitempty"`
+}
+
+func (m *ClientSendMessageMedia) Reset()         { *m = ClientSendMessageMedia{} }
+func (m *ClientSendMessageMedia) String() string { return proto.CompactTextString(m) }
+func (*ClientSendMessageMedia) ProtoMessage()    {}
+func (*ClientSendMessageMedia) Descriptor() ([]byte, []int) {
+	return fileDescriptor_client_core_messages_0d0b47e8fcf628a3, []int{1}
+}
+func (m *ClientSendMessageMedia) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ClientSendMessageMedia) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ClientSendMessageMedia.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *ClientSendMessageMedia) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClientSendMessageMedia.Merge(dst, src)
+}
+func (m *ClientSendMessageMedia) XXX_Size() int {
+	return m.Size()
+}
+func (m *ClientSendMessageMedia) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClientSendMessageMedia.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ClientSendMessageMedia proto.InternalMessageInfo
+
+func (m *ClientSendMessageMedia) GetPeer() *InputPeer {
+	if m != nil {
+		return m.Peer
+	}
+	return nil
+}
+
+func (m *ClientSendMessageMedia) GetMediaType() InputMediaType {
+	if m != nil {
+		return m.MediaType
+	}
+	return InputMediaTypeEmpty
+}
+
+func (m *ClientSendMessageMedia) GetCaption() string {
+	if m != nil {
+		return m.Caption
+	}
+	return ""
+}
+
+func (m *ClientSendMessageMedia) GetFileName() string {
+	if m != nil {
+		return m.FileName
+	}
+	return ""
+}
+
+func (m *ClientSendMessageMedia) GetFilePath() string {
+	if m != nil {
+		return m.FilePath
+	}
+	return ""
+}
+
+func (m *ClientSendMessageMedia) GetThumbFilePath() string {
+	if m != nil {
+		return m.ThumbFilePath
+	}
+	return ""
+}
+
+func (m *ClientSendMessageMedia) GetFileMIME() string {
+	if m != nil {
+		return m.FileMIME
+	}
+	return ""
+}
+
+func (m *ClientSendMessageMedia) GetThumbMIME() string {
+	if m != nil {
+		return m.ThumbMIME
+	}
+	return ""
+}
+
+func (m *ClientSendMessageMedia) GetReplyTo() int64 {
+	if m != nil {
+		return m.ReplyTo
+	}
+	return 0
+}
+
+func (m *ClientSendMessageMedia) GetClearDraft() bool {
+	if m != nil {
+		return m.ClearDraft
+	}
+	return false
+}
+
+func (m *ClientSendMessageMedia) GetAttributes() []*DocumentAttribute {
+	if m != nil {
+		return m.Attributes
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*ClientPendingMessage)(nil), "msg.ClientPendingMessage")
+	proto.RegisterType((*ClientSendMessageMedia)(nil), "msg.ClientSendMessageMedia")
 }
 func (m *ClientPendingMessage) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
@@ -199,6 +341,95 @@ func (m *ClientPendingMessage) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
+	dAtA[i] = 0x58
+	i++
+	i = encodeVarintClientCoreMessages(dAtA, i, uint64(m.MediaType))
+	if m.Media != nil {
+		dAtA[i] = 0x62
+		i++
+		i = encodeVarintClientCoreMessages(dAtA, i, uint64(len(m.Media)))
+		i += copy(dAtA[i:], m.Media)
+	}
+	return i, nil
+}
+
+func (m *ClientSendMessageMedia) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ClientSendMessageMedia) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Peer == nil {
+		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
+	} else {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintClientCoreMessages(dAtA, i, uint64(m.Peer.Size()))
+		n1, err := m.Peer.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n1
+	}
+	dAtA[i] = 0x10
+	i++
+	i = encodeVarintClientCoreMessages(dAtA, i, uint64(m.MediaType))
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintClientCoreMessages(dAtA, i, uint64(len(m.Caption)))
+	i += copy(dAtA[i:], m.Caption)
+	dAtA[i] = 0x22
+	i++
+	i = encodeVarintClientCoreMessages(dAtA, i, uint64(len(m.FileName)))
+	i += copy(dAtA[i:], m.FileName)
+	dAtA[i] = 0x2a
+	i++
+	i = encodeVarintClientCoreMessages(dAtA, i, uint64(len(m.FilePath)))
+	i += copy(dAtA[i:], m.FilePath)
+	dAtA[i] = 0x32
+	i++
+	i = encodeVarintClientCoreMessages(dAtA, i, uint64(len(m.ThumbFilePath)))
+	i += copy(dAtA[i:], m.ThumbFilePath)
+	dAtA[i] = 0x3a
+	i++
+	i = encodeVarintClientCoreMessages(dAtA, i, uint64(len(m.FileMIME)))
+	i += copy(dAtA[i:], m.FileMIME)
+	dAtA[i] = 0x42
+	i++
+	i = encodeVarintClientCoreMessages(dAtA, i, uint64(len(m.ThumbMIME)))
+	i += copy(dAtA[i:], m.ThumbMIME)
+	dAtA[i] = 0x48
+	i++
+	i = encodeVarintClientCoreMessages(dAtA, i, uint64(m.ReplyTo))
+	dAtA[i] = 0x50
+	i++
+	if m.ClearDraft {
+		dAtA[i] = 1
+	} else {
+		dAtA[i] = 0
+	}
+	i++
+	if len(m.Attributes) > 0 {
+		for _, msg := range m.Attributes {
+			dAtA[i] = 0x5a
+			i++
+			i = encodeVarintClientCoreMessages(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
 	return i, nil
 }
 
@@ -229,6 +460,45 @@ func (m *ClientPendingMessage) Size() (n int) {
 	n += 1 + sovClientCoreMessages(uint64(m.SenderID))
 	if len(m.Entities) > 0 {
 		for _, e := range m.Entities {
+			l = e.Size()
+			n += 1 + l + sovClientCoreMessages(uint64(l))
+		}
+	}
+	n += 1 + sovClientCoreMessages(uint64(m.MediaType))
+	if m.Media != nil {
+		l = len(m.Media)
+		n += 1 + l + sovClientCoreMessages(uint64(l))
+	}
+	return n
+}
+
+func (m *ClientSendMessageMedia) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Peer != nil {
+		l = m.Peer.Size()
+		n += 1 + l + sovClientCoreMessages(uint64(l))
+	}
+	n += 1 + sovClientCoreMessages(uint64(m.MediaType))
+	l = len(m.Caption)
+	n += 1 + l + sovClientCoreMessages(uint64(l))
+	l = len(m.FileName)
+	n += 1 + l + sovClientCoreMessages(uint64(l))
+	l = len(m.FilePath)
+	n += 1 + l + sovClientCoreMessages(uint64(l))
+	l = len(m.ThumbFilePath)
+	n += 1 + l + sovClientCoreMessages(uint64(l))
+	l = len(m.FileMIME)
+	n += 1 + l + sovClientCoreMessages(uint64(l))
+	l = len(m.ThumbMIME)
+	n += 1 + l + sovClientCoreMessages(uint64(l))
+	n += 1 + sovClientCoreMessages(uint64(m.ReplyTo))
+	n += 2
+	if len(m.Attributes) > 0 {
+		for _, e := range m.Attributes {
 			l = e.Size()
 			n += 1 + l + sovClientCoreMessages(uint64(l))
 		}
@@ -491,6 +761,56 @@ func (m *ClientPendingMessage) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MediaType", wireType)
+			}
+			m.MediaType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClientCoreMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MediaType |= (InputMediaType(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Media", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClientCoreMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthClientCoreMessages
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Media = append(m.Media[:0], dAtA[iNdEx:postIndex]...)
+			if m.Media == nil {
+				m.Media = []byte{}
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipClientCoreMessages(dAtA[iNdEx:])
@@ -532,6 +852,361 @@ func (m *ClientPendingMessage) Unmarshal(dAtA []byte) error {
 	}
 	if hasFields[0]&uint64(0x00000100) == 0 {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("SenderID")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ClientSendMessageMedia) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowClientCoreMessages
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ClientSendMessageMedia: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ClientSendMessageMedia: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Peer", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClientCoreMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthClientCoreMessages
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Peer == nil {
+				m.Peer = &InputPeer{}
+			}
+			if err := m.Peer.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MediaType", wireType)
+			}
+			m.MediaType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClientCoreMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MediaType |= (InputMediaType(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000002)
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Caption", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClientCoreMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClientCoreMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Caption = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FileName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClientCoreMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClientCoreMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FileName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FilePath", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClientCoreMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClientCoreMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FilePath = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ThumbFilePath", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClientCoreMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClientCoreMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ThumbFilePath = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FileMIME", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClientCoreMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClientCoreMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FileMIME = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ThumbMIME", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClientCoreMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClientCoreMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ThumbMIME = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReplyTo", wireType)
+			}
+			m.ReplyTo = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClientCoreMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ReplyTo |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClearDraft", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClientCoreMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.ClearDraft = bool(v != 0)
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Attributes", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClientCoreMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthClientCoreMessages
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Attributes = append(m.Attributes, &DocumentAttribute{})
+			if err := m.Attributes[len(m.Attributes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipClientCoreMessages(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthClientCoreMessages
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("MediaType")
 	}
 
 	if iNdEx > l {
@@ -645,28 +1320,42 @@ var (
 )
 
 func init() {
-	proto.RegisterFile("client.core.messages.proto", fileDescriptor_client_core_messages_3d881b06cb1810a2)
+	proto.RegisterFile("client.core.messages.proto", fileDescriptor_client_core_messages_0d0b47e8fcf628a3)
 }
 
-var fileDescriptor_client_core_messages_3d881b06cb1810a2 = []byte{
-	// 298 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x4c, 0x90, 0xbf, 0x6a, 0xf3, 0x30,
-	0x14, 0xc5, 0x6d, 0x39, 0x7f, 0xef, 0xb7, 0x7c, 0x88, 0x0c, 0x22, 0x14, 0x55, 0x84, 0x0e, 0x9e,
-	0x34, 0xf4, 0x0d, 0x9a, 0xb8, 0x50, 0x0f, 0xa5, 0xc1, 0xcd, 0x0b, 0x04, 0xfb, 0xe2, 0x1a, 0x12,
-	0xd9, 0xb5, 0xd4, 0xc1, 0x6f, 0xd1, 0xc7, 0xca, 0x98, 0xb1, 0x53, 0x29, 0x36, 0xf4, 0x39, 0x8a,
-	0x5d, 0xc7, 0xd5, 0x26, 0x7e, 0xbf, 0x73, 0xe0, 0xe8, 0xc2, 0x32, 0x3e, 0x64, 0xa8, 0x8c, 0x8c,
-	0xf3, 0x12, 0xe5, 0x11, 0xb5, 0xde, 0xa7, 0xa8, 0x65, 0x51, 0xe6, 0x26, 0xa7, 0xde, 0x51, 0xa7,
-	0xcb, 0xff, 0x9d, 0x31, 0x55, 0x71, 0xc1, 0xab, 0x6f, 0x02, 0x8b, 0x4d, 0xd7, 0xda, 0xa2, 0x4a,
-	0x32, 0x95, 0x3e, 0xfe, 0xd6, 0xe8, 0x02, 0x48, 0x18, 0x30, 0x57, 0x10, 0xdf, 0x5b, 0x8f, 0x4e,
-	0x9f, 0xd7, 0x4e, 0x44, 0xc2, 0x80, 0xae, 0x60, 0x1e, 0xe1, 0xeb, 0x1b, 0x6a, 0x13, 0x06, 0x8c,
-	0x58, 0xf2, 0x0f, 0xd3, 0x2b, 0x98, 0x6c, 0x11, 0xcb, 0x30, 0x60, 0x9e, 0x15, 0xe8, 0x19, 0x15,
-	0x30, 0x6b, 0x5f, 0xbb, 0xaa, 0x40, 0x36, 0x12, 0xc4, 0x1f, 0xf7, 0x7e, 0xa0, 0xf4, 0x06, 0xe0,
-	0x2e, 0x8e, 0x51, 0xeb, 0x87, 0xbd, 0x7e, 0x61, 0x63, 0x41, 0xfc, 0x49, 0x9f, 0xb1, 0x78, 0xbb,
-	0x64, 0x53, 0xe2, 0xde, 0x60, 0xf2, 0xa4, 0xd8, 0xc4, 0x5e, 0x32, 0x60, 0xca, 0x61, 0x1a, 0x61,
-	0x71, 0xa8, 0x76, 0x39, 0x9b, 0x5a, 0x89, 0x0b, 0xa4, 0x0c, 0x46, 0xeb, 0x3c, 0xa9, 0xd8, 0x4c,
-	0x10, 0x7f, 0xde, 0xcb, 0x8e, 0xb4, 0x2b, 0x9f, 0x51, 0x25, 0xdd, 0x2f, 0xe6, 0x56, 0x75, 0xa0,
-	0x54, 0xc2, 0xec, 0x5e, 0x99, 0xcc, 0x64, 0xa8, 0x19, 0x08, 0xcf, 0xff, 0x77, 0x4b, 0xe5, 0x51,
-	0xa7, 0xb2, 0xbf, 0x5f, 0xe7, 0xaa, 0x68, 0xc8, 0xac, 0xd9, 0xa9, 0xe6, 0xee, 0xb9, 0xe6, 0xee,
-	0x57, 0xcd, 0xdd, 0xf7, 0x86, 0x3b, 0xe7, 0x86, 0x3b, 0x1f, 0x0d, 0x77, 0x7e, 0x02, 0x00, 0x00,
-	0xff, 0xff, 0xcd, 0x1c, 0xc8, 0xaa, 0xb6, 0x01, 0x00, 0x00,
+var fileDescriptor_client_core_messages_0d0b47e8fcf628a3 = []byte{
+	// 519 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x92, 0xbd, 0x8e, 0xd3, 0x40,
+	0x10, 0xc7, 0x63, 0x3b, 0x97, 0x8f, 0xc9, 0x71, 0x42, 0xcb, 0xe9, 0xb4, 0x44, 0xc8, 0xac, 0xa2,
+	0x2b, 0x2c, 0x0a, 0x17, 0x29, 0xa0, 0xbe, 0xc4, 0x87, 0x70, 0x11, 0x88, 0x4c, 0x7a, 0xe4, 0x4b,
+	0x86, 0x9c, 0xa5, 0xf8, 0x03, 0xef, 0xa6, 0xc8, 0x5b, 0xf0, 0x3e, 0xbc, 0xc0, 0xd1, 0x5d, 0x49,
+	0x85, 0x50, 0xf2, 0x22, 0x68, 0x37, 0xf6, 0x7a, 0x2f, 0x34, 0x74, 0xc9, 0xef, 0xff, 0x5b, 0xef,
+	0xec, 0xcc, 0xc0, 0x70, 0xb9, 0x49, 0x30, 0x13, 0xfe, 0x32, 0x2f, 0xd1, 0x4f, 0x91, 0xf3, 0x78,
+	0x8d, 0xdc, 0x2f, 0xca, 0x5c, 0xe4, 0xc4, 0x49, 0xf9, 0x7a, 0xf8, 0x5c, 0x25, 0x62, 0x57, 0xd4,
+	0x78, 0x48, 0xe2, 0x22, 0x39, 0x51, 0x87, 0x2f, 0xcd, 0xf3, 0x5f, 0x52, 0x5c, 0x25, 0x71, 0x15,
+	0x8d, 0x7e, 0x38, 0x70, 0x39, 0x55, 0x97, 0xcc, 0x31, 0x5b, 0x25, 0xd9, 0x7a, 0x76, 0xb4, 0xc8,
+	0x25, 0xd8, 0x61, 0x40, 0x2d, 0x66, 0x7b, 0xce, 0xa4, 0xfd, 0xf0, 0xfb, 0x75, 0x2b, 0xb2, 0xc3,
+	0x80, 0x8c, 0xa0, 0x1f, 0xe1, 0xb7, 0x2d, 0x72, 0x11, 0x06, 0xd4, 0x36, 0xc2, 0x06, 0x93, 0x57,
+	0xd0, 0x99, 0x23, 0x96, 0x61, 0x40, 0x1d, 0x43, 0xa8, 0x18, 0x61, 0xd0, 0x93, 0xbf, 0x16, 0xbb,
+	0x02, 0x69, 0x9b, 0xd9, 0xde, 0x59, 0x95, 0x6b, 0x4a, 0xae, 0x01, 0x6e, 0x96, 0x4b, 0xe4, 0xfc,
+	0x43, 0xcc, 0xef, 0xe9, 0x19, 0xb3, 0xbd, 0x4e, 0xe5, 0x18, 0x5c, 0x56, 0x32, 0x2d, 0x31, 0x16,
+	0xb8, 0xfa, 0x94, 0xd1, 0x8e, 0x59, 0x89, 0xc6, 0xc4, 0x85, 0x6e, 0x84, 0xc5, 0x66, 0xb7, 0xc8,
+	0x69, 0xd7, 0x30, 0x6a, 0x48, 0x28, 0xb4, 0x27, 0xf9, 0x6a, 0x47, 0x7b, 0xcc, 0xf6, 0xfa, 0x55,
+	0xa8, 0x88, 0xac, 0xf2, 0x33, 0x66, 0x2b, 0xf5, 0x8a, 0xbe, 0x71, 0x54, 0x53, 0xe2, 0x43, 0xef,
+	0x36, 0x13, 0x89, 0x48, 0x90, 0x53, 0x60, 0x8e, 0x37, 0x18, 0x13, 0x3f, 0xe5, 0x6b, 0xbf, 0xea,
+	0x9f, 0xca, 0x76, 0x91, 0x76, 0xc8, 0x3b, 0xe8, 0xcf, 0x64, 0xe3, 0xd5, 0xc3, 0x07, 0xcc, 0xf2,
+	0x2e, 0xc6, 0x2f, 0xd4, 0x81, 0x30, 0x2b, 0xb6, 0x42, 0x47, 0xf5, 0x23, 0x34, 0x20, 0x43, 0x38,
+	0x53, 0x7f, 0xe8, 0x39, 0xb3, 0xbc, 0xf3, 0x2a, 0x3f, 0xa2, 0xd1, 0x4f, 0x07, 0xae, 0x8e, 0xd3,
+	0x93, 0x75, 0x55, 0x57, 0xab, 0x88, 0x8c, 0xa0, 0x2d, 0x3b, 0xaa, 0x26, 0x38, 0x18, 0x5f, 0x34,
+	0x57, 0x49, 0x1a, 0xa9, 0xec, 0x69, 0x4d, 0x72, 0x9a, 0xff, 0x5b, 0x93, 0x0b, 0xdd, 0x69, 0x5c,
+	0x88, 0x24, 0xcf, 0xa8, 0xc3, 0x2c, 0xdd, 0xbb, 0x1a, 0xca, 0xf6, 0xbd, 0x4f, 0x36, 0xf8, 0x31,
+	0x4e, 0xe5, 0x90, 0x1b, 0x41, 0xd3, 0xda, 0x98, 0xc7, 0x42, 0x8e, 0xf8, 0xc4, 0x90, 0x94, 0xbc,
+	0x81, 0x67, 0x8b, 0xfb, 0x6d, 0x7a, 0xa7, 0xb5, 0x8e, 0xa1, 0x3d, 0x8d, 0xea, 0xaf, 0xcd, 0xc2,
+	0xd9, 0x2d, 0xed, 0x9e, 0x7e, 0x4d, 0x52, 0xb9, 0x2e, 0xea, 0x88, 0x52, 0x7a, 0x86, 0xd2, 0x60,
+	0x73, 0x5d, 0xfa, 0xcc, 0xfa, 0x77, 0x5d, 0xae, 0x01, 0xa6, 0x1b, 0x8c, 0xcb, 0xa0, 0x8c, 0xbf,
+	0x0a, 0x0a, 0xcc, 0xf2, 0x7a, 0xf5, 0x62, 0x36, 0x9c, 0xbc, 0x05, 0xb8, 0x11, 0xa2, 0x4c, 0xee,
+	0xb6, 0x02, 0x39, 0x1d, 0xa8, 0xd5, 0xb8, 0x52, 0x5d, 0x0d, 0xf2, 0xe5, 0x36, 0xc5, 0x4c, 0xe8,
+	0x38, 0x32, 0xcc, 0x09, 0x7d, 0xd8, 0xbb, 0xd6, 0xe3, 0xde, 0xb5, 0xfe, 0xec, 0x5d, 0xeb, 0xfb,
+	0xc1, 0x6d, 0x3d, 0x1e, 0xdc, 0xd6, 0xaf, 0x83, 0xdb, 0xfa, 0x1b, 0x00, 0x00, 0xff, 0xff, 0x3b,
+	0xa0, 0x47, 0x25, 0x06, 0x04, 0x00, 0x00,
 }
