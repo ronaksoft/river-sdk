@@ -82,7 +82,7 @@ func (fs *FileStatus) Read() ([]byte, int, error) {
 		return nil, 0, err
 	}
 
-	buff := make([]byte, 0, domain.FilePayloadSize)
+	buff := make([]byte, domain.FilePayloadSize)
 	readCount, err := file.ReadAt(buff, fs.Position)
 	file.Close()
 	if err != nil {
@@ -165,9 +165,11 @@ func (fs *FileStatus) ReadAsFileSavePart() (envelop *msg.MessageEnvelope, readCo
 	req := new(msg.FileSavePart)
 	req.Bytes = buff
 	req.FileID = fs.FileID
-	req.PartID = fs.PartNo
+	req.PartID = fs.PartNo + 1
 	req.TotalParts = fs.TotalParts
 
+	envelop = new(msg.MessageEnvelope)
+	envelop.Constructor = msg.C_FileSavePart
 	envelop.Message, err = req.Marshal()
 	envelop.RequestID = uint64(domain.SequentialUniqueID())
 

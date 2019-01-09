@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"sync"
+	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/repo"
 
@@ -90,7 +91,18 @@ func SetAvailableClusters(clusters []*msg.Cluster) {
 	}
 }
 
+func GetAvailableClusters() map[int32]*msg.Cluster {
+	return _Clusters
+}
+
 func GetBestCluster() *msg.Cluster {
+
+	for {
+		if len(_Clusters) > 0 {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 	// TODO : fix this later
 	// get first cluster
 	for _, c := range _Clusters {
@@ -136,7 +148,7 @@ func (fm *FileManager) Upload(req *msg.ClientPendingMessage) error {
 		log.LOG_Debug(strMD5)
 	}
 
-	fileID := req.RequestID
+	fileID := domain.SequentialUniqueID()
 	cluster := GetBestCluster()
 	state := NewFileStatus(req.ID, fileID, fileSize, x.FilePath, StateUpload, cluster.ID, 0, fm.progressCallback)
 
@@ -272,7 +284,7 @@ func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, 
 		case msg.C_Error:
 			x := new(msg.Error)
 			x.Unmarshal(res.Message)
-			log.LOG_Error("sendUploadRequest() received Error response", zap.String("Code", x.Code), zap.String("Item", x.Code))
+			log.LOG_Error("sendUploadRequest() received Error response", zap.String("Code", x.Code), zap.String("Item", x.Items))
 		case msg.C_Bool:
 			x := new(msg.Bool)
 			x.Unmarshal(res.Message)

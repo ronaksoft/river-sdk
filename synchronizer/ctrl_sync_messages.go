@@ -163,7 +163,7 @@ func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
 		clientMendMedia := new(msg.ClientSendMessageMedia)
 		clientMendMedia.Unmarshal(pmsg.Media)
 		// save to local files
-		err := repo.Ctx().Files.MoveUploadedFileToLocalFile(clientMendMedia, sent)
+		err := repo.Ctx().Files.MoveUploadedFileToFiles(clientMendMedia, sent)
 		filemanager.Ctx().DeleteFromQueue(pmsg.ID)
 		if err != nil {
 			log.LOG_Debug("SyncController::messageSent()-> MoveUploadedFileToLocalFile() failed ",

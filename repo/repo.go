@@ -126,6 +126,7 @@ func (c *Context) ReinitiateDatabase() error {
 		dto.GroupParticipants{},
 		dto.MessageHoles{},
 		dto.FileStatus{},
+		dto.Files{},
 		//dto.UISettings{}, //do not remove UISettings on logout
 	).Error
 
@@ -156,6 +157,7 @@ func (r *repository) initDB() error {
 		dto.GroupParticipants{},
 		dto.MessageHoles{},
 		dto.FileStatus{},
+		dto.Files{},
 	).Error
 
 	return repoLastError

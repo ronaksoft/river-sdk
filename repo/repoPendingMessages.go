@@ -20,7 +20,7 @@ type RepoPendingMessages interface {
 	GetManyPendingMessagesRequestID(messageIDs []int64) []int64
 	GetAllPendingMessages() []*msg.MessagesSend
 	DeletePeerAllMessages(peerID int64, peerType int32) (*msg.ClientUpdateMessagesDeleted, error)
-	SaveMessageMedia(ID, senderID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error)
+	SaveMessageMedia(ID, senderID, requestID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error)
 }
 
 type repoPendingMessages struct {
@@ -238,7 +238,7 @@ func (r *repoPendingMessages) GetAllPendingMessages() []*msg.MessagesSend {
 
 	res := make([]*msg.MessagesSend, 0)
 	var dtos []dto.PendingMessages
-	r.db.Find(&dtos)
+	r.db.Where("MediaType=?", 0).Find(&dtos)
 
 	for _, v := range dtos {
 		tmp := new(msg.MessagesSend)
@@ -275,7 +275,7 @@ func (r *repoPendingMessages) DeletePeerAllMessages(peerID int64, peerType int32
 	return res, err
 }
 
-func (r *repoPendingMessages) SaveMessageMedia(ID, senderID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error) {
+func (r *repoPendingMessages) SaveMessageMedia(ID, senderID, requestID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -295,6 +295,7 @@ func (r *repoPendingMessages) SaveMessageMedia(ID, senderID int64, msgMedia *msg
 	m.ID = ID
 	m.SenderID = senderID
 	m.CreatedOn = time.Now().Unix()
+	m.RequestID = requestID
 
 	res := new(msg.ClientPendingMessage)
 	m.MapTo(res)

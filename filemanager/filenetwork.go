@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
 
-// Send the data payload is binary
+// Send to file server cluster
 func (fm *FileManager) Send(msgEnvelope *msg.MessageEnvelope, cluster *msg.Cluster) (*msg.MessageEnvelope, error) {
 	protoMessage := new(msg.ProtoMessage)
 	protoMessage.AuthID = fm.authID
@@ -32,24 +33,48 @@ func (fm *FileManager) Send(msgEnvelope *msg.MessageEnvelope, cluster *msg.Clust
 	}
 
 	b, err := protoMessage.Marshal()
+
+	//ioutil.WriteFile("dump.raw", b, os.ModePerm)
+
 	reqBuff := bytes.NewBuffer(b)
 	if err != nil {
 		return nil, err
 	}
-	// SEND data
-	// set timeout
+
+	// Set timeouta
 	client := http.DefaultClient
 	client.Timeout = domain.DEFAULT_REQUEST_TIMEOUT
+	if !strings.HasPrefix(cluster.Domain, "http") {
+		cluster.Domain = "http://" + cluster.Domain
+	}
+	// Send Data
 	httpResp, err := client.Post(cluster.Domain, "application/protobuf", reqBuff)
 	if err != nil {
 		return nil, err
 	}
+	// Read response
 	resBuff, err := ioutil.ReadAll(httpResp.Body)
 	if err != nil {
 		return nil, err
 	}
-	res := new(msg.MessageEnvelope)
+	// Decrypt response
+	res := new(msg.ProtoMessage)
 	err = res.Unmarshal(resBuff)
+	if err != nil {
+		return nil, err
+	}
+	if res.AuthID == 0 {
+		receivedEnvelope := new(msg.MessageEnvelope)
+		err = receivedEnvelope.Unmarshal(res.Payload)
+		return receivedEnvelope, err
+	}
+	decryptedBytes, err := domain.Decrypt(fm.authKey, res.MessageKey, res.Payload)
 
-	return res, err
+	receivedEncryptedPayload := new(msg.ProtoEncryptedPayload)
+	err = receivedEncryptedPayload.Unmarshal(decryptedBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return receivedEncryptedPayload.Envelope, nil
 }

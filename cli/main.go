@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"git.ronaksoftware.com/ronak/riversdk/msg"
+
 	"git.ronaksoftware.com/ronak/riversdk"
 	"github.com/fatih/color"
 	"go.uber.org/zap"
@@ -72,7 +74,7 @@ func main() {
 		}
 	} else {
 		dbPath = "./_db"
-		dbID = "989016876040"
+		dbID = "23740071"
 	}
 
 	qPath := "./_queue"
@@ -99,7 +101,7 @@ func main() {
 		_Shell.Run()
 	} else {
 
-		// go fnRunDebug()
+		fnRunDebug()
 
 		//block forever
 		select {}
@@ -108,4 +110,34 @@ func main() {
 }
 
 func fnRunDebug() {
+	req := new(msg.ClientSendMessageMedia)
+	req.Attributes = make([]*msg.DocumentAttribute, 0)
+	req.Caption = "Test file"
+	req.ClearDraft = true
+	req.FileMIME = ""
+	req.FileName = "test.zip"
+	req.FilePath = "/home/q/test.zip"
+	req.MediaType = msg.InputMediaTypeUploadedDocument
+	req.Peer = &msg.InputPeer{
+		AccessHash: 4500871196408867,
+		ID:         1408226742326241,
+		Type:       msg.PeerUser,
+	}
+	req.ReplyTo = 0
+	req.ThumbFilePath = ""
+	req.ThumbMIME = ""
+
+	docAttrib := new(msg.DocumentAttribute)
+	attrib := new(msg.DocumentAttributeFile)
+	attrib.Filename = "test.zip"
+	docAttrib.Type = msg.AttributeTypeFilename
+	docAttrib.Data, _ = attrib.Marshal()
+
+	req.Attributes = append(req.Attributes, docAttrib)
+
+	buff, _ := req.Marshal()
+	reqDelegate := new(RequestDelegate)
+	reqID, err := _SDK.ExecuteCommand(msg.C_ClientSendMessageMedia, buff, reqDelegate, false, false)
+
+	_Shell.Println("RequestID :", reqID, "\tError :", err)
 }
