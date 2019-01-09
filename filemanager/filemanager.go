@@ -151,7 +151,7 @@ func (fm *FileManager) Upload(req *msg.ClientPendingMessage) error {
 	fileID := domain.SequentialUniqueID()
 	cluster := GetBestCluster()
 	state := NewFileStatus(req.ID, fileID, fileSize, x.FilePath, StateUpload, cluster.ID, 0, fm.progressCallback)
-
+	state.UploadRequest = x
 	fm.AddToQueue(state)
 	return nil
 }
@@ -163,24 +163,30 @@ func (fm *FileManager) Download(filePath string, req *msg.UserMessage) {
 	var accessHash uint64
 	var fileSize int32
 
-	switch req.MediaType {
-	case msg.MediaTypeEmpty:
-		// TODO:: implement it
-	case msg.MediaTypePhoto:
-		// TODO:: implement it
-	case msg.MediaTypeDocument:
-		x := new(msg.Document)
-		x.Unmarshal(req.Media)
-		docID = x.ID
-		clusterID = x.ClusterID
-		accessHash = x.AccessHash
-		fileSize = x.FileSize
-	case msg.MediaTypeContact:
-		// TODO:: implement it
-	default:
-	}
-
+	// switch req.MediaType {
+	// case msg.MediaTypeEmpty:
+	// 	// TODO:: implement it
+	// case msg.MediaTypePhoto:
+	// 	// TODO:: implement it
+	// case msg.MediaTypeDocument:
+	// 	x := new(msg.Document)
+	// 	x.Unmarshal(req.Media)
+	// 	docID = x.ID
+	// 	clusterID = x.ClusterID
+	// 	accessHash = x.AccessHash
+	// 	fileSize = x.FileSize
+	// case msg.MediaTypeContact:
+	// 	// TODO:: implement it
+	// default:
+	// }
+	x := new(msg.Document)
+	x.Unmarshal(req.Media)
+	docID = x.ID
+	clusterID = x.ClusterID
+	accessHash = x.AccessHash
+	fileSize = x.FileSize
 	state := NewFileStatus(req.ID, docID, int64(fileSize), filePath, StateDownload, clusterID, accessHash, fm.progressCallback)
+	state.DownloadRequest = x
 	fm.AddToQueue(state)
 }
 
@@ -234,6 +240,9 @@ func (fm *FileManager) SetAuthorization(authID int64, authKey []byte) {
 }
 
 func (fm *FileManager) startDownloadQueue() {
+	if GetBestCluster() == nil {
+		time.Sleep(100 * time.Millisecond)
+	}
 	// for {
 	// 	select {
 	// 	case <-fm.chStopDownloader:
@@ -244,6 +253,9 @@ func (fm *FileManager) startDownloadQueue() {
 }
 
 func (fm *FileManager) startUploadQueue() {
+	if GetBestCluster() == nil {
+		time.Sleep(100 * time.Millisecond)
+	}
 	for {
 		fm.UploadQueueStarted = true
 		wg := &sync.WaitGroup{}
@@ -287,7 +299,10 @@ func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, 
 			log.LOG_Error("sendUploadRequest() received Error response", zap.String("Code", x.Code), zap.String("Item", x.Items))
 		case msg.C_Bool:
 			x := new(msg.Bool)
-			x.Unmarshal(res.Message)
+			err := x.Unmarshal(res.Message)
+			if err != nil {
+				log.LOG_Error("sendUploadRequest() failed to unmarshal C_Bool", zap.Error(err))
+			}
 			if x.Result {
 				isCompleted := fs.ReadCommit(count)
 				if isCompleted {

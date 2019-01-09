@@ -41,7 +41,7 @@ func (fm *FileManager) Send(msgEnvelope *msg.MessageEnvelope, cluster *msg.Clust
 		return nil, err
 	}
 
-	// Set timeouta
+	// Set timeout
 	client := http.DefaultClient
 	client.Timeout = domain.DEFAULT_REQUEST_TIMEOUT
 	if !strings.HasPrefix(cluster.Domain, "http") {

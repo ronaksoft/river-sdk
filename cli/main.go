@@ -2,7 +2,13 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+
+	"git.ronaksoftware.com/ronak/riversdk/filemanager"
+
+	"git.ronaksoftware.com/ronak/riversdk/domain"
+	"git.ronaksoftware.com/ronak/riversdk/repo"
 
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 
@@ -101,12 +107,80 @@ func main() {
 		_Shell.Run()
 	} else {
 
-		fnRunDebug()
+		// testDecryptDump()
+		// fnRunDebug()
+		testSendMessageMedia()
 
 		//block forever
 		select {}
 	}
 
+}
+
+func testSendMessageMedia() {
+
+	dtoFS := repo.Ctx().Files.GetFirstFileStatu()
+	fs := filemanager.FileStatus{}
+	fs.LoadDTO(dtoFS, nil)
+	req := fs.UploadRequest
+
+	// Create SendMessageMedia Request
+	x := new(msg.MessagesSendMedia)
+	x.Peer = req.Peer
+	x.ClearDraft = req.ClearDraft
+	x.MediaType = req.MediaType
+	x.RandomID = domain.SequentialUniqueID()
+	x.ReplyTo = req.ReplyTo
+
+	doc := new(msg.InputMediaUploadedDocument)
+	doc.MimeType = req.FileMIME
+	doc.Attributes = req.Attributes
+	doc.Caption = req.Caption
+	doc.File = &msg.InputFile{
+		ClusterID:   fs.ClusterID,
+		FileID:      fs.FileID,
+		FileName:    req.FileName,
+		MD5Checksum: "",
+		TotalParts:  fs.TotalParts,
+	}
+	x.MediaData, _ = doc.Marshal()
+
+	reqBuff, _ := x.Marshal()
+	reqDelegate := new(RequestDelegate)
+
+	// test unmarshal media data
+	tmpDocBuff, err := doc.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	tmpDoc := new(msg.InputMediaUploadedDocument)
+	err = tmpDoc.Unmarshal(tmpDocBuff)
+	if err != nil {
+		panic(err)
+	}
+	// test unmarshal message send media ===========
+	tmp := new(msg.MessagesSendMedia)
+	err = tmp.Unmarshal(reqBuff)
+	if err != nil {
+		panic(err)
+	}
+
+	_SDK.ExecuteCommand(msg.C_MessagesSendMedia, reqBuff, reqDelegate, false, false)
+
+}
+
+func testDecryptDump() {
+	file, _ := os.Open("dump.raw")
+	rawBytes, _ := ioutil.ReadAll(file)
+
+	protMsg := new(msg.ProtoMessage)
+	protMsg.Unmarshal(rawBytes)
+
+	decryptedBytes, _ := domain.Decrypt(_SDK.ConnInfo.AuthKey[:], protMsg.MessageKey, protMsg.Payload)
+	encryptedPayload := new(msg.ProtoEncryptedPayload)
+	_ = encryptedPayload.Unmarshal(decryptedBytes)
+
+	fmt.Println(encryptedPayload.Envelope)
 }
 
 func fnRunDebug() {

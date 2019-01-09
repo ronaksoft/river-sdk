@@ -10,6 +10,8 @@ type RepoFiles interface {
 	GetAllFileStatus() []dto.FileStatus
 	DeleteFileStatus(ID int64) error
 	MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, sent *msg.MessagesSent) (err error)
+	// delete this later
+	GetFirstFileStatu() dto.FileStatus
 }
 
 type repoFiles struct {
@@ -61,4 +63,10 @@ func (r *repoFiles) MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, sen
 	f.Map(sent.MessageID, sent.CreatedOn, req)
 	err = r.db.Save(f).Error
 	return err
+}
+
+func (r *repoFiles) GetFirstFileStatu() dto.FileStatus {
+	e := dto.FileStatus{}
+	r.db.First(&e)
+	return e
 }

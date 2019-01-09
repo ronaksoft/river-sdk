@@ -81,8 +81,11 @@ func (fs *FileStatus) Read() ([]byte, int, error) {
 	if err != nil {
 		return nil, 0, err
 	}
-
-	buff := make([]byte, domain.FilePayloadSize)
+	var requiredBytes int64 = domain.FilePayloadSize
+	if (fs.Position + domain.FilePayloadSize) > fs.TotalSize {
+		requiredBytes = fs.TotalSize - fs.Position
+	}
+	buff := make([]byte, requiredBytes)
 	readCount, err := file.ReadAt(buff, fs.Position)
 	file.Close()
 	if err != nil {
@@ -190,8 +193,12 @@ func (fs *FileStatus) GetDTO() *dto.FileStatus {
 	m.TotalParts = fs.TotalParts
 	m.Type = bool(fs.Type)
 	m.IsCompleted = fs.IsCompleted
-	m.UploadRequest, _ = fs.UploadRequest.Marshal()
-	m.DownloadRequest, _ = fs.DownloadRequest.Marshal()
+	if fs.UploadRequest != nil {
+		m.UploadRequest, _ = fs.UploadRequest.Marshal()
+	}
+	if fs.DownloadRequest != nil {
+		m.DownloadRequest, _ = fs.DownloadRequest.Marshal()
+	}
 
 	return m
 }
@@ -208,7 +215,9 @@ func (fs *FileStatus) LoadDTO(d dto.FileStatus, progress domain.OnFileStatusChan
 	fs.TotalParts = d.TotalParts
 	fs.Type = StateType(d.Type)
 	fs.IsCompleted = d.IsCompleted
+	fs.UploadRequest = new(msg.ClientSendMessageMedia)
 	fs.UploadRequest.Unmarshal(d.UploadRequest)
+	fs.DownloadRequest = new(msg.Document)
 	fs.DownloadRequest.Unmarshal(d.DownloadRequest)
 	fs.onFileStatusChanged = progress
 }
