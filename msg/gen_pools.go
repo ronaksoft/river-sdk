@@ -383,6 +383,12 @@ var (
 			return m
 		},
 	}
+	PoolUserPhoto = sync.Pool{
+		New: func() interface{} {
+			m := new(UserPhoto)
+			return m
+		},
+	}
 	PoolAccountGetPrivacy = sync.Pool{
 		New: func() interface{} {
 			m := new(AccountGetPrivacy)
@@ -530,6 +536,12 @@ var (
 	PoolMessageActionGroupTitleChanged = sync.Pool{
 		New: func() interface{} {
 			m := new(MessageActionGroupTitleChanged)
+			return m
+		},
+	}
+	PoolFileLocation = sync.Pool{
+		New: func() interface{} {
+			m := new(FileLocation)
 			return m
 		},
 	}

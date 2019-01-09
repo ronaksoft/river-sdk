@@ -64,6 +64,7 @@ const (
 	C_UpdateGroupParticipantAdmin        int64 = 1813022164
 	C_UpdateMessageEdited                int64 = 1825079988
 	C_UpdateState                        int64 = 1837585836
+	C_UserPhoto                          int64 = 1881347437
 	C_AccountGetPrivacy                  int64 = 1897044856
 	C_InitBindUser                       int64 = 1933549113
 	C_MessageActionGroupAddUser          int64 = 1949386261
@@ -89,6 +90,7 @@ const (
 	C_AuthSentCode                       int64 = 2375498471
 	C_MessageActionContactRegistered     int64 = 2399156016
 	C_MessageActionGroupTitleChanged     int64 = 2418464749
+	C_FileLocation                       int64 = 2432133155
 	C_UpdateGroupParticipantDeleted      int64 = 2489941844
 	C_MessagesEdit                       int64 = 2492658432
 	C_GroupsEditTitle                    int64 = 2582813461
@@ -207,6 +209,7 @@ var ConstructorNames = map[int64]string{
 	1813022164: "UpdateGroupParticipantAdmin",
 	1825079988: "UpdateMessageEdited",
 	1837585836: "UpdateState",
+	1881347437: "UserPhoto",
 	1897044856: "AccountGetPrivacy",
 	1933549113: "InitBindUser",
 	1949386261: "MessageActionGroupAddUser",
@@ -232,6 +235,7 @@ var ConstructorNames = map[int64]string{
 	2375498471: "AuthSentCode",
 	2399156016: "MessageActionContactRegistered",
 	2418464749: "MessageActionGroupTitleChanged",
+	2432133155: "FileLocation",
 	2489941844: "UpdateGroupParticipantDeleted",
 	2492658432: "MessagesEdit",
 	2582813461: "GroupsEditTitle",

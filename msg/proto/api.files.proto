@@ -1,5 +1,6 @@
 syntax = "proto2";
 package msg;
+import "core.types.proto";
 
 // FileSavePart
 // @Function
@@ -18,13 +19,6 @@ message FileGet {
     required InputFileLocation Location = 1;
     required int32 Offset = 2;
     required int32 Limit =3;
-}
-
-// InputFileLocation
-message InputFileLocation {
-    required int64 FileID = 2 [jstype = JS_STRING];
-    required fixed64 AccessHash = 3 [jstype = JS_STRING];
-    required int32 Version = 4;
 }
 
 // File

@@ -111,7 +111,7 @@ message InputMediaContact {
 // InputMediaUploadedDocument
 message InputMediaUploadedDocument {
     required InputFile File = 1;
-    required InputFile Thumbnail = 2;
+    optional InputFile Thumbnail = 2;
     required string MimeType = 3;
     required string Caption = 4;
     repeated InputDocument Stickers = 5;

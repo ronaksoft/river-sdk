@@ -48,7 +48,7 @@ enum PeerType {
     PeerChannel = 4;
 }
 
-// InputPeer
+// InputUser
 message InputUser {
     required int64 UserID = 1 [jstype = JS_STRING];
     required fixed64 AccessHash = 2 [jstype = JS_STRING];
@@ -63,6 +63,27 @@ enum UserStatus {
     UserStatusLastMonth = 4;
 }
 
+// InputFileLocation
+message InputFileLocation {
+    required int64 FileID = 2 [jstype = JS_STRING];
+    required fixed64 AccessHash = 3 [jstype = JS_STRING];
+    required int32 Version = 4;
+}
+
+// FileLocation
+message FileLocation {
+    required int32 ClusterID = 1;
+    required int64 FileID = 2 [jstype = JS_STRING];
+    required fixed64 AccessHash = 3 [jstype = JS_STRING];
+}
+
+// UserPhoto
+message UserPhoto {
+    required FileLocation PhotoBig = 1;
+    required FileLocation PhotoSmall = 2;
+    required int64 PhotoID = 3;
+}
+
 // User
 message User {
     required int64 ID = 1 [jstype = JS_STRING];
@@ -72,6 +93,7 @@ message User {
     required UserStatus Status = 5;
     required bool Restricted = 6;
     required fixed64 AccessHash = 7 [jstype = JS_STRING];
+    optional UserPhoto Photo = 8;
 }
 
 // ContactUser
@@ -83,7 +105,6 @@ message ContactUser {
     required string Phone = 5;
     required string Username = 6;
     required int64 ClientID = 7 [jstype = JS_STRING];
-
 }
 
 // MediaType
@@ -218,7 +239,6 @@ message GroupParticipant {
     required uint64 AccessHash = 5 [jstype = JS_STRING];
     required string Username = 6;
 }
-
 
 // Cluster
 message Cluster {

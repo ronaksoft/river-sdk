@@ -382,6 +382,12 @@ func ResultUpdateState(out *MessageEnvelope, res *UpdateState) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultUserPhoto(out *MessageEnvelope, res *UserPhoto) {
+	out.Constructor = C_UserPhoto
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultAccountGetPrivacy(out *MessageEnvelope, res *AccountGetPrivacy) {
 	out.Constructor = C_AccountGetPrivacy
 	pbytes.Put(out.Message)
@@ -528,6 +534,12 @@ func ResultMessageActionContactRegistered(out *MessageEnvelope, res *MessageActi
 }
 func ResultMessageActionGroupTitleChanged(out *MessageEnvelope, res *MessageActionGroupTitleChanged) {
 	out.Constructor = C_MessageActionGroupTitleChanged
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultFileLocation(out *MessageEnvelope, res *FileLocation) {
+	out.Constructor = C_FileLocation
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
