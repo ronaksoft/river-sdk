@@ -867,7 +867,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID int64, clusterID, totalP
 	x.Peer = req.Peer
 	x.ClearDraft = req.ClearDraft
 	x.MediaType = req.MediaType
-	x.RandomID = domain.SequentialUniqueID()
+	x.RandomID = fileID
 	x.ReplyTo = req.ReplyTo
 
 	//

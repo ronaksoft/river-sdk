@@ -878,7 +878,8 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 
 	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 	msgID := -domain.SequentialUniqueID()
-	res, err := repo.Ctx().PendingMessages.SaveMessageMedia(msgID, r.ConnInfo.UserID, int64(in.RequestID), reqMedia)
+	fileID := int64(in.RequestID)
+	res, err := repo.Ctx().PendingMessages.SaveMessageMedia(msgID, r.ConnInfo.UserID, fileID, reqMedia)
 
 	if err != nil {
 		e := new(msg.Error)
@@ -894,7 +895,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	}
 
 	// 2. TODO : start file upload and send process
-	err = filemanager.Ctx().Upload(res)
+	err = filemanager.Ctx().Upload(fileID, res)
 	if err != nil {
 		e := new(msg.Error)
 		e.Code = "n/a"

@@ -122,7 +122,7 @@ func (fm *FileManager) Stop() {
 }
 
 // Upload file to server
-func (fm *FileManager) Upload(req *msg.ClientPendingMessage) error {
+func (fm *FileManager) Upload(fileID int64, req *msg.ClientPendingMessage) error {
 	x := new(msg.ClientSendMessageMedia)
 	x.Unmarshal(req.Media)
 
@@ -148,7 +148,6 @@ func (fm *FileManager) Upload(req *msg.ClientPendingMessage) error {
 		log.LOG_Debug(strMD5)
 	}
 
-	fileID := domain.SequentialUniqueID()
 	cluster := GetBestCluster()
 	state := NewFileStatus(req.ID, fileID, fileSize, x.FilePath, StateUpload, cluster.ID, 0, fm.progressCallback)
 	state.UploadRequest = x

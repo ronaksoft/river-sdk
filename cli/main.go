@@ -108,8 +108,8 @@ func main() {
 	} else {
 
 		// testDecryptDump()
-		// fnRunDebug()
-		testSendMessageMedia()
+		fnRunDebug()
+		//testSendMessageMedia()
 
 		//block forever
 		select {}
@@ -147,23 +147,6 @@ func testSendMessageMedia() {
 
 	reqBuff, _ := x.Marshal()
 	reqDelegate := new(RequestDelegate)
-
-	// test unmarshal media data
-	tmpDocBuff, err := doc.Marshal()
-	if err != nil {
-		panic(err)
-	}
-	tmpDoc := new(msg.InputMediaUploadedDocument)
-	err = tmpDoc.Unmarshal(tmpDocBuff)
-	if err != nil {
-		panic(err)
-	}
-	// test unmarshal message send media ===========
-	tmp := new(msg.MessagesSendMedia)
-	err = tmp.Unmarshal(reqBuff)
-	if err != nil {
-		panic(err)
-	}
 
 	_SDK.ExecuteCommand(msg.C_MessagesSendMedia, reqBuff, reqDelegate, false, false)
 

@@ -46,7 +46,7 @@ func (r *repoFiles) DeleteFileStatus(ID int64) error {
 	defer r.mx.Unlock()
 
 	// remove pending message
-	err := r.db.Where("ID = ?", ID).Delete(dto.FileStatus{}).Error
+	err := r.db.Where("MessageID = ?", ID).Delete(dto.FileStatus{}).Error
 
 	return err
 }
