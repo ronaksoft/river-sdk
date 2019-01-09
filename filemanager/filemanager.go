@@ -8,6 +8,8 @@ import (
 	"os"
 	"sync"
 
+	"git.ronaksoftware.com/ronak/riversdk/repo"
+
 	"go.uber.org/zap"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
@@ -39,8 +41,10 @@ type FileManager struct {
 	UploadQueueStarted   bool
 	DownloadQueueStarted bool
 
-	chStopUploader   chan bool
-	chStopDownloader chan bool
+	chStopUploader    chan bool
+	chStopDownloader  chan bool
+	onUploadCompleted domain.OnFileUploadCompleted
+	progressCallback  domain.OnFileStatusChanged
 }
 
 func Ctx() *FileManager {
@@ -50,7 +54,7 @@ func Ctx() *FileManager {
 	return ctx
 }
 
-func InitFileManager() {
+func InitFileManager(onUploadCompleted domain.OnFileUploadCompleted, progressCallback domain.OnFileStatusChanged) {
 	if _Clusters == nil {
 		_Clusters = make(map[int32]*msg.Cluster)
 	}
@@ -60,10 +64,12 @@ func InitFileManager() {
 		defer singletone.Unlock()
 		if ctx == nil {
 			ctx = &FileManager{
-				UploadQueue:      make(map[int64]*FileStatus, 0),
-				DownloadQueue:    make(map[int64]*FileStatus, 0),
-				chStopUploader:   make(chan bool),
-				chStopDownloader: make(chan bool),
+				UploadQueue:       make(map[int64]*FileStatus, 0),
+				DownloadQueue:     make(map[int64]*FileStatus, 0),
+				chStopUploader:    make(chan bool),
+				chStopDownloader:  make(chan bool),
+				onUploadCompleted: onUploadCompleted,
+				progressCallback:  progressCallback,
 			}
 
 		}
@@ -104,7 +110,7 @@ func (fm *FileManager) Stop() {
 }
 
 // Upload file to server
-func (fm *FileManager) Upload(req *msg.ClientPendingMessage, progressCB domain.OnFileStatusChanged) error {
+func (fm *FileManager) Upload(req *msg.ClientPendingMessage) error {
 	x := new(msg.ClientSendMessageMedia)
 	x.Unmarshal(req.Media)
 
@@ -132,14 +138,14 @@ func (fm *FileManager) Upload(req *msg.ClientPendingMessage, progressCB domain.O
 
 	fileID := req.RequestID
 	cluster := GetBestCluster()
-	state := NewFileStatus(req.ID, fileID, fileSize, x.FilePath, StateUpload, cluster.ID, 0, progressCB)
+	state := NewFileStatus(req.ID, fileID, fileSize, x.FilePath, StateUpload, cluster.ID, 0, fm.progressCallback)
 
 	fm.AddToQueue(state)
 	return nil
 }
 
 // Download add download request
-func (fm *FileManager) Download(filePath string, req *msg.UserMessage, progressCB domain.OnFileStatusChanged) {
+func (fm *FileManager) Download(filePath string, req *msg.UserMessage) {
 	var docID int64
 	var clusterID int32
 	var accessHash uint64
@@ -162,7 +168,7 @@ func (fm *FileManager) Download(filePath string, req *msg.UserMessage, progressC
 	default:
 	}
 
-	state := NewFileStatus(req.ID, docID, int64(fileSize), filePath, StateDownload, clusterID, accessHash, progressCB)
+	state := NewFileStatus(req.ID, docID, int64(fileSize), filePath, StateDownload, clusterID, accessHash, fm.progressCallback)
 	fm.AddToQueue(state)
 }
 
@@ -178,6 +184,16 @@ func (fm *FileManager) AddToQueue(status *FileStatus) {
 		fm.DownloadQueue[status.FileID] = status
 		fm.mxDown.Unlock()
 	}
+}
+
+func (fm *FileManager) DeleteFromQueue(messageID int64) {
+	fm.mxUp.Lock()
+	delete(fm.UploadQueue, messageID)
+	fm.mxUp.Unlock()
+
+	fm.mxDown.Lock()
+	delete(fm.DownloadQueue, messageID)
+	fm.mxDown.Unlock()
 }
 
 // CalculateMD5 this will calculate md5 hash for files that are smaller than threshold
@@ -229,6 +245,10 @@ func (fm *FileManager) startUploadQueue() {
 			// round robin and wait till all items in queus moves on step forward
 			fm.mxUp.Lock()
 			for _, fs := range fm.UploadQueue {
+				if fs.IsCompleted {
+					continue
+				}
+
 				envelop, readCount, err := fs.ReadAsFileSavePart()
 				if err != nil {
 					log.LOG_Error("FileManager::startUploadQueue()", zap.Error(err), zap.String("filePath", fs.FilePath))
@@ -239,6 +259,7 @@ func (fm *FileManager) startUploadQueue() {
 			}
 			fm.mxUp.Unlock()
 			wg.Wait()
+
 		}
 	}
 }
@@ -256,7 +277,13 @@ func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, 
 			x := new(msg.Bool)
 			x.Unmarshal(res.Message)
 			if x.Result {
-				fs.ReadCommit(count)
+				isCompleted := fs.ReadCommit(count)
+				if isCompleted {
+					// TODO : call completed delegate to execute SendMessageMedia
+					if fm.onUploadCompleted != nil {
+						go fm.onUploadCompleted(fs.MessageID, fs.FileID, fs.ClusterID, fs.TotalParts, fs.UploadRequest)
+					}
+				}
 			}
 		default:
 			log.LOG_Error("sendUploadRequest() received unknown response", zap.Error(err))
@@ -265,4 +292,14 @@ func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, 
 		log.LOG_Error("sendUploadRequest()", zap.Error(err))
 	}
 	wg.Done()
+}
+
+func (fm *FileManager) LoadFileStatusQueue() {
+	//TODO : load pended file status
+	dtos := repo.Ctx().Files.GetAllFileStatus()
+	for _, d := range dtos {
+		fs := new(FileStatus)
+		fs.LoadDTO(d, fm.progressCallback)
+		fm.AddToQueue(fs)
+	}
 }

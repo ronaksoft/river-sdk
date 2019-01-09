@@ -6,11 +6,14 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
 
-type FileClientMessageMedia struct {
-	FileID        int64  `gorm:"primary_key;column:FileID;auto_increment:false" json:"FileID"`
+type Files struct {
+	MessageID     int64  `gorm:"primary_key;column:MessageID;auto_increment:false" json:"MessageID"`
 	PeerID        int64  `gorm:"column:PeerID" json:"PeerID"`
 	PeerType      int32  `gorm:"column:PeerType" json:"PeerType"`
+	ClusterID     int64  `gorm:"column:ClusterID" json:"ClusterID"`
+	DocumentID    int64  `gorm:"column:DocumentID" json:"DocumentID"`
 	AccessHash    int64  `gorm:"column:AccessHash" json:"AccessHash"`
+	CreatedOn     int64  `gorm:"column:CreatedOn" json:"CreatedOn"`
 	MediaType     int32  `gorm:"column:MediaType" json:"MediaType"`
 	Caption       string `gorm:"type:TEXT;column:Caption" json:"Caption"`
 	FileName      string `gorm:"type:TEXT;column:FileName" json:"FileName"`
@@ -23,14 +26,16 @@ type FileClientMessageMedia struct {
 	Attributes    []byte `gorm:"type:blob;column:Attributes" json:"Attributes"`
 }
 
-func (FileClientMessageMedia) TableName() string {
-	return "fileclientmessagemedia"
+func (Files) TableName() string {
+	return "files"
 }
 
-func (m *FileClientMessageMedia) Map(fileID int64, v *msg.ClientSendMessageMedia) {
-	m.FileID = fileID
+func (m *Files) Map(messageID int64, createdOn int64, v *msg.ClientSendMessageMedia) {
+	m.MessageID = messageID
 	m.PeerID = v.Peer.ID
 	m.PeerType = int32(v.Peer.Type)
+	//m.ClusterID = v.ClusterID
+	//m.DocumentID = v.DocumentID
 	m.AccessHash = int64(v.Peer.AccessHash)
 	m.MediaType = int32(v.MediaType)
 	m.Caption = v.Caption
@@ -42,26 +47,4 @@ func (m *FileClientMessageMedia) Map(fileID int64, v *msg.ClientSendMessageMedia
 	m.ReplyTo = v.ReplyTo
 	m.ClearDraft = v.ClearDraft
 	m.Attributes, _ = json.Marshal(v.Attributes)
-}
-
-func (m *FileClientMessageMedia) MapTo(v *msg.ClientSendMessageMedia) {
-	if v.Peer == nil {
-		v.Peer = new(msg.InputPeer)
-	}
-	v.Peer.ID = m.PeerID
-	v.Peer.Type = msg.PeerType(m.PeerType)
-	v.Peer.AccessHash = uint64(m.AccessHash)
-	v.MediaType = msg.InputMediaType(m.MediaType)
-	v.Caption = m.Caption
-	v.FileName = m.FileName
-	v.FilePath = m.FilePath
-	v.ThumbFilePath = m.ThumbFilePath
-	v.FileMIME = m.FileMIME
-	v.ThumbMIME = m.ThumbMIME
-	v.ReplyTo = m.ReplyTo
-	v.ClearDraft = m.ClearDraft
-	if v.Attributes == nil {
-		v.Attributes = make([]*msg.DocumentAttribute, 0)
-	}
-	json.Unmarshal(m.Attributes, &v.Attributes)
 }

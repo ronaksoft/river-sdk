@@ -3,6 +3,8 @@ package synchronizer
 import (
 	"time"
 
+	"git.ronaksoftware.com/ronak/riversdk/filemanager"
+
 	"git.ronaksoftware.com/ronak/riversdk/cmd"
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/log"
@@ -154,7 +156,27 @@ func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
 		log.LOG_Debug("SyncController::messageSent()-> DeletePendingMessage() failed to delete pendingMessage",
 			zap.String("Error", err.Error()),
 		)
-		return
+	}
+	// if it was file upload request
+	if pmsg.MediaType > 0 {
+		// save to local files and delete file status
+		clientMendMedia := new(msg.ClientSendMessageMedia)
+		clientMendMedia.Unmarshal(pmsg.Media)
+		// save to local files
+		err := repo.Ctx().Files.MoveUploadedFileToLocalFile(clientMendMedia, sent)
+		filemanager.Ctx().DeleteFromQueue(pmsg.ID)
+		if err != nil {
+			log.LOG_Debug("SyncController::messageSent()-> MoveUploadedFileToLocalFile() failed ",
+				zap.String("Error", err.Error()),
+			)
+		}
+		// delete file status
+		err = repo.Ctx().Files.DeleteFileStatus(pmsg.ID)
+		if err != nil {
+			log.LOG_Debug("SyncController::messageSent()-> DeleteFileStatus() failed to delete FileStatus",
+				zap.String("Error", err.Error()),
+			)
+		}
 	}
 
 	//Update doaligs
@@ -163,7 +185,6 @@ func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
 		log.LOG_Debug("SyncController::messageSent()-> UpdateTopMesssageID() failed to update doalogs",
 			zap.String("Error", err.Error()),
 		)
-		return
 	}
 
 	// TODO : Notify UI that the pending message delivered to server

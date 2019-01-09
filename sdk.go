@@ -93,7 +93,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		//msg.C_InitCompleteAuth:  true,
 	}
 
-	// Initialize requests that should not passed to queueController
+	// Initialize filemanager
+	filemanager.InitFileManager(r.onFileUploadCompleted, r.onFileProgressChanged)
 
 	// Initialize Network Controller
 	r.networkCtrl = network.NewNetworkController(
@@ -170,7 +171,9 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.networkCtrl.SetUpdateHandler(r.onReceivedUpdate)
 	r.networkCtrl.SetOnConnectCallback(r.callAuthRecall_RegisterDevice)
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-	r.fileManager.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+	filemanager.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+
+	filemanager.Ctx().LoadFileStatusQueue()
 }
 
 // Get deviceToken
@@ -654,7 +657,7 @@ func (r *River) CreateAuthKey() (err error) {
 				}
 				r.ConnInfo.Save()
 				r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-				r.fileManager.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+				filemanager.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 			case msg.C_Error:
 				err = domain.ServerError(res.Message)
 				return
@@ -670,7 +673,7 @@ func (r *River) CreateAuthKey() (err error) {
 
 	// double set AuthID
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-	r.fileManager.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+	filemanager.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 	// inform external UI that authKey generated
 	if r.mainDelegate != nil {
 		if r.mainDelegate.OnAuthKeyCreated != nil {
@@ -851,4 +854,52 @@ func (r *River) onFileProgressChanged(messageID, position, totalSize int64) {
 		zap.Int64("MsgID", messageID),
 		zap.Float64("Percent", percent),
 	)
+}
+
+func (r *River) onFileUploadCompleted(messageID, fileID int64, clusterID, totalParts int32, req *msg.ClientSendMessageMedia) {
+	log.LOG_Warn("onFileUploadCompleted()",
+		zap.Int64("messageID", messageID),
+		zap.Int64("fileID", fileID),
+	)
+
+	// Create SendMessageMedia Request
+	x := new(msg.MessagesSendMedia)
+	x.Peer = req.Peer
+	x.ClearDraft = req.ClearDraft
+	x.MediaType = req.MediaType
+	x.RandomID = domain.SequentialUniqueID()
+	x.ReplyTo = req.ReplyTo
+
+	//
+	switch x.MediaType {
+	case msg.InputMediaTypeEmpty:
+		panic("SDK:onFileUploadCompleted() not implemented")
+	case msg.InputMediaTypeUploadedPhoto:
+		panic("SDK:onFileUploadCompleted() not implemented")
+	case msg.InputMediaTypePhoto:
+		panic("SDK:onFileUploadCompleted() not implemented")
+	case msg.InputMediaTypeContact:
+		panic("SDK:onFileUploadCompleted() not implemented")
+	case msg.InputMediaTypeUploadedDocument:
+
+		doc := new(msg.InputMediaUploadedDocument)
+		doc.MimeType = req.FileMIME
+		doc.Attributes = req.Attributes
+		doc.Caption = req.Caption
+		doc.File = &msg.InputFile{
+			ClusterID:   clusterID,
+			FileID:      fileID,
+			FileName:    req.FileName,
+			MD5Checksum: "",
+			TotalParts:  totalParts,
+		}
+		x.MediaData, _ = doc.Marshal()
+	case msg.InputMediaTypeDocument:
+		panic("SDK:onFileUploadCompleted() not implemented")
+	default:
+		panic("SDK:onFileUploadCompleted() invalid input media type")
+	}
+	reqBuff, _ := x.Marshal()
+	requestID := uint64(domain.SequentialUniqueID())
+	r.queueCtrl.ExecuteCommand(requestID, msg.C_MessagesSendMedia, reqBuff, nil, nil, false)
 }

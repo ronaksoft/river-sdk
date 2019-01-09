@@ -6,9 +6,10 @@ import (
 )
 
 type RepoFiles interface {
-	SaveFileStatus(fileID int64, filePath string, position, totalSize int64, partNo, totalParts int32) (err error)
-	SaveFileMessageMedia(fileID int64, req *msg.ClientSendMessageMedia) error
-	GetDialogFileMessageMedia(peerID int64, peerType int32) ([]*msg.ClientSendMessageMedia, error)
+	SaveFileStatus(fs *dto.FileStatus) (err error)
+	GetAllFileStatus() []dto.FileStatus
+	DeleteFileStatus(ID int64) error
+	MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, sent *msg.MessagesSent) (err error)
 }
 
 type repoFiles struct {
@@ -16,61 +17,48 @@ type repoFiles struct {
 }
 
 // SaveFileStatus
-func (r *repoFiles) SaveFileStatus(fileID int64, filePath string, position, totalSize int64, partNo, totalParts int32) (err error) {
+func (r *repoFiles) SaveFileStatus(fs *dto.FileStatus) (err error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
 	dto := new(dto.FileStatus)
-	r.db.Find(dto, fileID)
+	r.db.Find(dto, fs.MessageID)
 	if dto.FileID == 0 {
-		return r.db.Create(dto).Error
+		return r.db.Create(fs).Error
 	}
-	return r.db.Save(dto).Error
+	return r.db.Save(fs).Error
 }
 
-func (r *repoFiles) SaveFileMessageMedia(fileID int64, req *msg.ClientSendMessageMedia) error {
+func (r *repoFiles) GetAllFileStatus() []dto.FileStatus {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	dto := new(dto.FileClientMessageMedia)
-	r.db.Find(dto, fileID)
-	if dto.FileID == 0 {
-		dto.Map(fileID, req)
-		return r.db.Create(dto).Error
-	}
-	return r.db.Save(dto).Error
+	dtos := make([]dto.FileStatus, 0)
+	r.db.Find(&dtos)
+	return dtos
 }
 
-func (r *repoFiles) GetFileMessageMedia(fileID int64) (*msg.ClientSendMessageMedia, error) {
+// DeleteFileStatus
+func (r *repoFiles) DeleteFileStatus(ID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	dto := new(dto.FileClientMessageMedia)
-	err := r.db.Find(dto, fileID).Error
-	if err != nil {
-		return nil, err
-	}
-	x := new(msg.ClientSendMessageMedia)
-	dto.MapTo(x)
-	return x, nil
+	// remove pending message
+	err := r.db.Where("ID = ?", ID).Delete(dto.FileStatus{}).Error
+
+	return err
 }
 
-func (r *repoFiles) GetDialogFileMessageMedia(peerID int64, peerType int32) ([]*msg.ClientSendMessageMedia, error) {
+func (r *repoFiles) MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, sent *msg.MessagesSent) (err error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
-	dtos := make([]dto.FileClientMessageMedia, 0)
-
-	err := r.db.Where("PeerID=? AND PeerType=?", peerID, peerType).Find(&dtos).Error
-	if err != nil {
-		return nil, err
+	f := new(dto.Files)
+	r.db.Find(f, sent.MessageID)
+	if f.MessageID > 0 {
+		f.Map(sent.MessageID, sent.CreatedOn, req)
+		err = r.db.Create(f).Error
 	}
-	x := make([]*msg.ClientSendMessageMedia, 0, len(dtos))
-	for _, d := range dtos {
-		tmp := new(msg.ClientSendMessageMedia)
-		d.MapTo(tmp)
-		x = append(x, tmp)
-	}
-
-	return x, nil
+	f.Map(sent.MessageID, sent.CreatedOn, req)
+	err = r.db.Save(f).Error
+	return err
 }

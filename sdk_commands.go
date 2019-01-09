@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"git.ronaksoftware.com/ronak/riversdk/filemanager"
+
 	"git.ronaksoftware.com/ronak/riversdk/cmd"
 	"git.ronaksoftware.com/ronak/riversdk/synchronizer"
 
@@ -892,7 +894,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	}
 
 	// 2. TODO : start file upload and send process
-	err = r.fileManager.Upload(res, r.onFileProgressChanged)
+	err = filemanager.Ctx().Upload(res)
 	if err != nil {
 		e := new(msg.Error)
 		e.Code = "n/a"

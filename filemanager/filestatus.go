@@ -4,6 +4,8 @@ import (
 	"os"
 	"sync"
 
+	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
+
 	"go.uber.org/zap"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
@@ -22,16 +24,19 @@ var (
 // FileStatus monitors file state
 type FileStatus struct {
 	mx                  sync.Mutex
-	MessageID           int64     `json:"MessageID"`
-	FileID              int64     `json:"FileID"`
-	ClusterID           int32     `json:"ClusterID"`
-	AccessHash          uint64    `json:"AccessHash"`
-	FilePath            string    `json:"FilePath"`
-	Position            int64     `json:"Position"`
-	TotalSize           int64     `json:"TotalSize"`
-	PartNo              int32     `json:"PartNo"`
-	TotalParts          int32     `json:"TotalParts"`
-	Type                StateType `json:"StatusType"`
+	MessageID           int64                       `json:"MessageID"`
+	FileID              int64                       `json:"FileID"`
+	ClusterID           int32                       `json:"ClusterID"`
+	AccessHash          uint64                      `json:"AccessHash"`
+	FilePath            string                      `json:"FilePath"`
+	Position            int64                       `json:"Position"`
+	TotalSize           int64                       `json:"TotalSize"`
+	PartNo              int32                       `json:"PartNo"`
+	TotalParts          int32                       `json:"TotalParts"`
+	Type                StateType                   `json:"StatusType"`
+	IsCompleted         bool                        `json:"IsCompleted"`
+	UploadRequest       *msg.ClientSendMessageMedia `json:"UploadRequest"`
+	DownloadRequest     *msg.Document               `json:"DownloadRequest"`
 	onFileStatusChanged domain.OnFileStatusChanged
 }
 
@@ -133,14 +138,14 @@ func (fs *FileStatus) Write(data []byte) error {
 func (fs *FileStatus) ReadCommit(count int64) (isCompleted bool) {
 	fs.Position += count
 	fs.PartNo++
-	isCompleted = fs.PartNo == fs.TotalParts
+	fs.IsCompleted = fs.PartNo == fs.TotalParts
 	fs.fileStatusChanged()
-	return isCompleted
+	return fs.IsCompleted
 }
 
 func (fs *FileStatus) fileStatusChanged() {
 	// TODO : save file status to DB
-	err := repo.Ctx().Files.SaveFileStatus(fs.FileID, fs.FilePath, fs.Position, fs.TotalSize, fs.PartNo, fs.TotalParts)
+	err := repo.Ctx().Files.SaveFileStatus(fs.GetDTO())
 	if err != nil {
 		log.LOG_Debug("fileStatusChanged() failed to save in DB", zap.Error(err))
 	}
@@ -167,4 +172,41 @@ func (fs *FileStatus) ReadAsFileSavePart() (envelop *msg.MessageEnvelope, readCo
 	envelop.RequestID = uint64(domain.SequentialUniqueID())
 
 	return
+}
+
+func (fs *FileStatus) GetDTO() *dto.FileStatus {
+	m := new(dto.FileStatus)
+
+	m.MessageID = fs.MessageID
+	m.FileID = fs.FileID
+	m.ClusterID = fs.ClusterID
+	m.AccessHash = fs.AccessHash
+	m.FilePath = fs.FilePath
+	m.Position = fs.Position
+	m.TotalSize = fs.TotalSize
+	m.PartNo = fs.PartNo
+	m.TotalParts = fs.TotalParts
+	m.Type = bool(fs.Type)
+	m.IsCompleted = fs.IsCompleted
+	m.UploadRequest, _ = fs.UploadRequest.Marshal()
+	m.DownloadRequest, _ = fs.DownloadRequest.Marshal()
+
+	return m
+}
+
+func (fs *FileStatus) LoadDTO(d dto.FileStatus, progress domain.OnFileStatusChanged) {
+	fs.MessageID = d.MessageID
+	fs.FileID = d.FileID
+	fs.ClusterID = d.ClusterID
+	fs.AccessHash = d.AccessHash
+	fs.FilePath = d.FilePath
+	fs.Position = d.Position
+	fs.TotalSize = d.TotalSize
+	fs.PartNo = d.PartNo
+	fs.TotalParts = d.TotalParts
+	fs.Type = StateType(d.Type)
+	fs.IsCompleted = d.IsCompleted
+	fs.UploadRequest.Unmarshal(d.UploadRequest)
+	fs.DownloadRequest.Unmarshal(d.DownloadRequest)
+	fs.onFileStatusChanged = progress
 }
