@@ -28,6 +28,7 @@ type FileStatus struct {
 	FileID              int64                       `json:"FileID"`
 	ClusterID           int32                       `json:"ClusterID"`
 	AccessHash          uint64                      `json:"AccessHash"`
+	Version             int32                       `json:"Version"`
 	FilePath            string                      `json:"FilePath"`
 	Position            int64                       `json:"Position"`
 	TotalSize           int64                       `json:"TotalSize"`
@@ -48,6 +49,7 @@ func NewFileStatus(messageID int64,
 	isDownload StateType,
 	clusterID int32,
 	accessHash uint64,
+	version int32,
 	progress domain.OnFileStatusChanged) *FileStatus {
 	fs := &FileStatus{
 		MessageID:           messageID,
@@ -56,6 +58,7 @@ func NewFileStatus(messageID int64,
 		TotalSize:           totalSize,
 		ClusterID:           clusterID,
 		AccessHash:          accessHash,
+		Version:             version,
 		Position:            0,
 		PartNo:              0,
 		TotalParts:          0,
@@ -97,44 +100,44 @@ func (fs *FileStatus) Read() ([]byte, int, error) {
 }
 
 // Write writes givin data to current position of file
-func (fs *FileStatus) Write(data []byte) error {
+func (fs *FileStatus) Write(data []byte) (isCompleted bool, err error) {
 	fs.mx.Lock()
 
-	var err error
 	var file *os.File
 
 	// create file if its not exist
 	if _, err = os.Stat(fs.FilePath); os.IsNotExist(err) {
 		file, err = os.Create(fs.FilePath)
 		if err != nil {
-			return err
+			return false, err
 		}
 		// truncate reserves size of file
 		err = file.Truncate(fs.TotalSize)
 		if err != nil {
-			return err
+			return false, err
 		}
 	}
 	// open file if its not open
 	if file == nil {
 		file, err = os.Open(fs.FilePath)
 		if err != nil {
-			return err
+			return
 		}
 	}
 
 	// write to file
 	count, err := file.WriteAt(data, fs.Position)
 	if err != nil {
-		return err
+		return
 	}
 	fs.Position += int64(count)
-
+	fs.IsCompleted = fs.Position >= fs.TotalSize
+	isCompleted = fs.IsCompleted
 	fs.fileStatusChanged()
 
 	fs.mx.Unlock()
 
-	return nil
+	return
 }
 
 //ReadCommit apply that last read process result was success and increase counter and progress
@@ -220,4 +223,26 @@ func (fs *FileStatus) LoadDTO(d dto.FileStatus, progress domain.OnFileStatusChan
 	fs.DownloadRequest = new(msg.Document)
 	fs.DownloadRequest.Unmarshal(d.DownloadRequest)
 	fs.onFileStatusChanged = progress
+}
+
+func (fs *FileStatus) ReadAsFileGet() (envelop *msg.MessageEnvelope, err error) {
+
+	req := new(msg.FileGet)
+	req.Location = new(msg.InputFileLocation)
+	req.Location.AccessHash = fs.AccessHash
+	req.Location.FileID = fs.MessageID
+	req.Location.Version = fs.Version
+	req.Offset = int32(fs.Position)
+	var requiredBytes int32 = domain.FilePayloadSize
+	if (fs.Position + domain.FilePayloadSize) > fs.TotalSize {
+		requiredBytes = int32(fs.TotalSize - fs.Position)
+	}
+	req.Limit = requiredBytes
+
+	envelop = new(msg.MessageEnvelope)
+	envelop.Constructor = msg.C_FileGet
+	envelop.Message, err = req.Marshal()
+	envelop.RequestID = uint64(domain.SequentialUniqueID())
+
+	return
 }

@@ -108,9 +108,9 @@ func main() {
 	} else {
 
 		// testDecryptDump()
-		fnRunDebug()
+		// fnRunUploadFile()
 		//testSendMessageMedia()
-
+		fnrunDownloadFile()
 		//block forever
 		select {}
 	}
@@ -166,7 +166,7 @@ func testDecryptDump() {
 	fmt.Println(encryptedPayload.Envelope)
 }
 
-func fnRunDebug() {
+func fnRunUploadFile() {
 	req := new(msg.ClientSendMessageMedia)
 	req.Attributes = make([]*msg.DocumentAttribute, 0)
 	req.Caption = "Test file"
@@ -204,4 +204,8 @@ func fnRunDebug() {
 	reqID, err := _SDK.ExecuteCommand(msg.C_ClientSendMessageMedia, buff, reqDelegate, false, false)
 
 	_Shell.Println("RequestID :", reqID, "\tError :", err)
+}
+
+func fnrunDownloadFile() {
+	_SDK.FileDownload(0)
 }

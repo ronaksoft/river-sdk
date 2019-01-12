@@ -10,10 +10,12 @@ type RepoFiles interface {
 	GetAllFileStatus() []dto.FileStatus
 	GetFileStatus(msgID int64) (dto.FileStatus, error)
 	DeleteFileStatus(ID int64) error
+	DeleteManyFileStatus(IDs []int64) error
 	MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, fileSize int32, sent *msg.MessagesSent) (err error)
 	SaveFileDocument(msgID int64, doc *msg.MediaDocument) error
 	GetExistingFileDocument(filePath string) *dto.Files
 	GetFilePath(msgID, docID int64) string
+	UpdateDownloadingFilePath(msgID, docID int64, filePath string) error
 	// delete this later
 	GetFirstFileStatu() dto.FileStatus
 }
@@ -58,15 +60,26 @@ func (r *repoFiles) DeleteFileStatus(ID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	// remove pending message
+	// remove pending status
 	err := r.db.Where("MessageID = ?", ID).Delete(dto.FileStatus{}).Error
 
 	return err
 }
 
+// DeleteManyFileStatus
+func (r *repoFiles) DeleteManyFileStatus(IDs []int64) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	// remove pending status
+	err := r.db.Where("MessageID IN (?)", IDs).Delete(dto.FileStatus{}).Error
+
+	return err
+}
 func (r *repoFiles) MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, fileSize int32, sent *msg.MessagesSent) (err error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
+
 	f := new(dto.Files)
 	r.db.Find(f, sent.MessageID)
 	if f.MessageID > 0 {
@@ -127,4 +140,14 @@ func (r *repoFiles) GetFilePath(msgID, docID int64) string {
 		return f.FilePath
 	}
 	return ""
+}
+
+func (r *repoFiles) UpdateDownloadingFilePath(msgID, docID int64, filePath string) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	mld := dto.Files{}
+	return r.db.Table(mld.TableName()).Where("MessageID=? OR DocumentID=?", msgID, docID).Updates(map[string]interface{}{
+		"FilePath": filePath,
+	}).Error
 }

@@ -174,14 +174,14 @@ func (fm *FileManager) Upload(fileID int64, req *msg.ClientPendingMessage) error
 	if fileSize > domain.FileMaxAllowedSize {
 		return errors.New("max allowed file size is 750 MB")
 	}
-	strMD5, err := fm.CalculateMD5(file)
-	if err == nil {
-		// TODO : check DB with file md5 hash and meeeeehhhhh :/
-		log.LOG_Debug(strMD5)
-	}
+	// strMD5, err := fm.CalculateMD5(file)
+	// if err == nil {
+	// 	// TODO : check DB with file md5 hash and meeeeehhhhh :/
+	// 	log.LOG_Debug(strMD5)
+	// }
 
 	cluster := GetBestCluster()
-	state := NewFileStatus(req.ID, fileID, fileSize, x.FilePath, StateUpload, cluster.ID, 0, fm.progressCallback)
+	state := NewFileStatus(req.ID, fileID, fileSize, x.FilePath, StateUpload, cluster.ID, 0, 0, fm.progressCallback)
 	state.UploadRequest = x
 	fm.AddToQueue(state)
 	return nil
@@ -192,6 +192,7 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 	var docID int64
 	var clusterID int32
 	var accessHash uint64
+	var version int32
 	var fileSize int32
 	var filePath string
 	var state *FileStatus
@@ -212,10 +213,12 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 		docID = x.Doc.ID
 		clusterID = x.Doc.ClusterID
 		accessHash = x.Doc.AccessHash
+		version = x.Doc.Version
 		fileSize = x.Doc.FileSize
 		filePath = GetFilePath(x.Doc.MimeType, x.Doc.ID, "")
-		state := NewFileStatus(req.ID, docID, int64(fileSize), filePath, StateDownload, clusterID, accessHash, fm.progressCallback)
+		state := NewFileStatus(req.ID, docID, int64(fileSize), filePath, StateDownload, clusterID, accessHash, version, fm.progressCallback)
 		state.DownloadRequest = x.Doc
+
 	case msg.MediaTypeContact:
 		// TODO:: implement it
 	default:
@@ -223,6 +226,7 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 	}
 	if state != nil {
 		fm.AddToQueue(state)
+		repo.Ctx().Files.UpdateDownloadingFilePath(state.MessageID, state.FileID, state.FilePath)
 	}
 }
 
@@ -279,13 +283,44 @@ func (fm *FileManager) startDownloadQueue() {
 	if GetBestCluster() == nil {
 		time.Sleep(100 * time.Millisecond)
 	}
-	// for {
-	// 	select {
-	// 	case <-fm.chStopDownloader:
-	// 		return
-	// 	default:
-	// 	}
-	// }
+	for {
+		fm.DownloadQueueStarted = true
+		wg := &sync.WaitGroup{}
+		select {
+		case <-fm.chStopDownloader:
+			// wait for running request gracefuly end
+			wg.Wait()
+			fm.DownloadQueueStarted = false
+			return
+		default:
+			// round robin and wait till all items in queus moves on step forward
+			fm.mxDown.Lock()
+			completedDownloads := domain.MInt64B{}
+			for _, fs := range fm.DownloadQueue {
+				if fs.IsCompleted {
+					completedDownloads[fs.MessageID] = true
+					continue
+				}
+
+				envelop, err := fs.ReadAsFileGet()
+				if err != nil {
+					log.LOG_Error("FileManager::startDownloadQueue()", zap.Error(err), zap.String("filePath", fs.FilePath))
+					continue
+				}
+
+				wg.Add(1)
+				go fm.sendDownloadRequest(envelop, fs, wg)
+			}
+			//remove completed downloads from queue
+			for key := range completedDownloads {
+				delete(fm.DownloadQueue, key)
+			}
+			go repo.Ctx().Files.DeleteManyFileStatus(completedDownloads.ToArray())
+			fm.mxDown.Unlock()
+			wg.Wait()
+
+		}
+	}
 }
 
 func (fm *FileManager) startUploadQueue() {
@@ -350,6 +385,39 @@ func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, 
 			}
 		default:
 			log.LOG_Error("sendUploadRequest() received unknown response", zap.Error(err))
+		}
+	} else {
+		log.LOG_Error("sendUploadRequest()", zap.Error(err))
+	}
+	wg.Done()
+}
+
+func (fm *FileManager) sendDownloadRequest(req *msg.MessageEnvelope, fs *FileStatus, wg *sync.WaitGroup) {
+	// time out has been set in Send()
+	res, err := fm.Send(req, _Clusters[fs.ClusterID])
+	if err == nil {
+		switch res.Constructor {
+		case msg.C_Error:
+			x := new(msg.Error)
+			x.Unmarshal(res.Message)
+			log.LOG_Error("sendDownloadRequest() received Error response", zap.String("Code", x.Code), zap.String("Item", x.Items))
+		case msg.C_File:
+			x := new(msg.File)
+			err := x.Unmarshal(res.Message)
+			if err != nil {
+				log.LOG_Error("sendDownloadRequest() failed to unmarshal C_File", zap.Error(err))
+			}
+			isCompleted, err := fs.Write(x.Bytes)
+			if err != nil {
+				log.LOG_Error("sendDownloadRequest() failed write to file", zap.Error(err))
+			} else if isCompleted {
+				//call completed delegate
+				if fm.onDownloadCompleted != nil {
+					go fm.onDownloadCompleted(fs.MessageID, fs.FilePath)
+				}
+			}
+		default:
+			log.LOG_Error("sendDownloadRequest() received unknown response", zap.Error(err))
 		}
 	} else {
 		log.LOG_Error("sendUploadRequest()", zap.Error(err))

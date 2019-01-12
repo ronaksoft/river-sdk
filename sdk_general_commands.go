@@ -2,6 +2,7 @@ package riversdk
 
 import (
 	"git.ronaksoftware.com/ronak/riversdk/domain"
+	"git.ronaksoftware.com/ronak/riversdk/filemanager"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/repo"
@@ -341,4 +342,18 @@ func (r *River) GetFilePath(msgID int64) string {
 		}
 	}
 	return ""
+}
+
+func (r *River) FileDownload(msgID int64) {
+	m := repo.Ctx().Messages.GetMessage(msgID)
+	if m != nil {
+		switch m.MediaType {
+		case msg.MediaTypeDocument:
+			x := new(msg.MediaDocument)
+			err := x.Unmarshal(m.Media)
+			if err == nil {
+				filemanager.Ctx().Download(m)
+			}
+		}
+	}
 }
