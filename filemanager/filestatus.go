@@ -230,7 +230,7 @@ func (fs *FileStatus) ReadAsFileGet() (envelop *msg.MessageEnvelope, err error) 
 	req := new(msg.FileGet)
 	req.Location = new(msg.InputFileLocation)
 	req.Location.AccessHash = fs.AccessHash
-	req.Location.FileID = fs.MessageID
+	req.Location.FileID = fs.FileID
 	req.Location.Version = fs.Version
 	req.Offset = int32(fs.Position)
 	var requiredBytes int32 = domain.FilePayloadSize

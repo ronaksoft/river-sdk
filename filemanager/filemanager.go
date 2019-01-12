@@ -216,7 +216,7 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 		version = x.Doc.Version
 		fileSize = x.Doc.FileSize
 		filePath = GetFilePath(x.Doc.MimeType, x.Doc.ID, "")
-		state := NewFileStatus(req.ID, docID, int64(fileSize), filePath, StateDownload, clusterID, accessHash, version, fm.progressCallback)
+		state = NewFileStatus(req.ID, docID, int64(fileSize), filePath, StateDownload, clusterID, accessHash, version, fm.progressCallback)
 		state.DownloadRequest = x.Doc
 
 	case msg.MediaTypeContact:
@@ -295,28 +295,37 @@ func (fm *FileManager) startDownloadQueue() {
 		default:
 			// round robin and wait till all items in queus moves on step forward
 			fm.mxDown.Lock()
-			completedDownloads := domain.MInt64B{}
-			for _, fs := range fm.DownloadQueue {
-				if fs.IsCompleted {
-					completedDownloads[fs.MessageID] = true
-					continue
+			if len(fm.DownloadQueue) > 0 {
+				completedDownloads := domain.MInt64B{}
+				for _, fs := range fm.DownloadQueue {
+					if fs.IsCompleted {
+						completedDownloads[fs.MessageID] = true
+						continue
+					}
+
+					envelop, err := fs.ReadAsFileGet()
+					if err != nil {
+						log.LOG_Error("FileManager::startDownloadQueue()", zap.Error(err), zap.String("filePath", fs.FilePath))
+						continue
+					}
+
+					wg.Add(1)
+					go fm.sendDownloadRequest(envelop, fs, wg)
+				}
+				//remove completed downloads from queue
+				if len(completedDownloads) > 0 {
+					for key := range completedDownloads {
+						delete(fm.DownloadQueue, key)
+					}
+					go repo.Ctx().Files.DeleteManyFileStatus(completedDownloads.ToArray())
 				}
 
-				envelop, err := fs.ReadAsFileGet()
-				if err != nil {
-					log.LOG_Error("FileManager::startDownloadQueue()", zap.Error(err), zap.String("filePath", fs.FilePath))
-					continue
-				}
+				fm.mxDown.Unlock()
+			} else {
+				fm.mxDown.Unlock()
+				time.Sleep(300 * time.Millisecond)
+			}
 
-				wg.Add(1)
-				go fm.sendDownloadRequest(envelop, fs, wg)
-			}
-			//remove completed downloads from queue
-			for key := range completedDownloads {
-				delete(fm.DownloadQueue, key)
-			}
-			go repo.Ctx().Files.DeleteManyFileStatus(completedDownloads.ToArray())
-			fm.mxDown.Unlock()
 			wg.Wait()
 
 		}
@@ -339,20 +348,26 @@ func (fm *FileManager) startUploadQueue() {
 		default:
 			// round robin and wait till all items in queus moves on step forward
 			fm.mxUp.Lock()
-			for _, fs := range fm.UploadQueue {
-				if fs.IsCompleted {
-					continue
-				}
+			if len(fm.UploadQueue) > 0 {
+				for _, fs := range fm.UploadQueue {
+					if fs.IsCompleted {
+						continue
+					}
 
-				envelop, readCount, err := fs.ReadAsFileSavePart()
-				if err != nil {
-					log.LOG_Error("FileManager::startUploadQueue()", zap.Error(err), zap.String("filePath", fs.FilePath))
-					continue
+					envelop, readCount, err := fs.ReadAsFileSavePart()
+					if err != nil {
+						log.LOG_Error("FileManager::startUploadQueue()", zap.Error(err), zap.String("filePath", fs.FilePath))
+						continue
+					}
+					wg.Add(1)
+					go fm.sendUploadRequest(envelop, int64(readCount), fs, wg)
 				}
-				wg.Add(1)
-				go fm.sendUploadRequest(envelop, int64(readCount), fs, wg)
+				fm.mxUp.Unlock()
+			} else {
+				fm.mxUp.Unlock()
+				time.Sleep(300 * time.Millisecond)
 			}
-			fm.mxUp.Unlock()
+
 			wg.Wait()
 
 		}
