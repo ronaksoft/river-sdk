@@ -189,15 +189,17 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) []*msg.Updat
 	case msg.MediaTypePhoto:
 		// TODO:: implement it
 	case msg.MediaTypeDocument:
-		// doc := new(msg.Document)
-		// x.Unmarshal(x.Message.Media)
-		// docID := doc.ID
-		// clusterID := doc.ClusterID
-		// accessHash := doc.AccessHash
-		// fileSize := doc.FileSize
+		mediaDoc := new(msg.MediaDocument)
+		err = mediaDoc.Unmarshal(x.Message.Media)
+		if err == nil {
+			repo.Ctx().Files.SaveFileDocument(x.Message.ID, mediaDoc)
+		} else {
+			log.LOG_Error("SyncController::updateNewMessage()-> connat unmarshal MediaTypeDocument", zap.Error(err))
+		}
 	case msg.MediaTypeContact:
 		// TODO:: implement it
 	default:
+		log.LOG_Error("SyncController::updateNewMessage()-> Invalid MediaType")
 	}
 
 	return res

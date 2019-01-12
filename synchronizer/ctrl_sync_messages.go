@@ -1,6 +1,7 @@
 package synchronizer
 
 import (
+	"os"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/filemanager"
@@ -160,10 +161,21 @@ func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
 	// if it was file upload request
 	if pmsg.MediaType > 0 {
 		// save to local files and delete file status
-		clientMendMedia := new(msg.ClientSendMessageMedia)
-		clientMendMedia.Unmarshal(pmsg.Media)
+		clientSendMedia := new(msg.ClientSendMessageMedia)
+		err := clientSendMedia.Unmarshal(pmsg.Media)
+		// get file size
+		fileSize := int64(0)
+		if err == nil {
+			f, err := os.Open(clientSendMedia.FilePath)
+			if err == nil {
+				fstate, err := f.Stat()
+				if err == nil {
+					fileSize = fstate.Size()
+				}
+			}
+		}
 		// save to local files
-		err := repo.Ctx().Files.MoveUploadedFileToFiles(clientMendMedia, sent)
+		err = repo.Ctx().Files.MoveUploadedFileToFiles(clientSendMedia, int32(fileSize), sent)
 		filemanager.Ctx().DeleteFromQueue(pmsg.ID)
 		if err != nil {
 			log.LOG_Debug("SyncController::messageSent()-> MoveUploadedFileToLocalFile() failed ",

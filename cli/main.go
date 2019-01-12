@@ -175,10 +175,17 @@ func fnRunDebug() {
 	req.FileName = "test.zip"
 	req.FilePath = "/home/q/test.zip"
 	req.MediaType = msg.InputMediaTypeUploadedDocument
+	// // 0056
+	// req.Peer = &msg.InputPeer{
+	// 	AccessHash: 4500871196408867,
+	// 	ID:         1408226742326241,
+	// 	Type:       msg.PeerUser,
+	// }
+	// ZzzzzzzzzzzzzzzzzzzzZ
 	req.Peer = &msg.InputPeer{
-		AccessHash: 4500871196408867,
-		ID:         1408226742326241,
-		Type:       msg.PeerUser,
+		AccessHash: 0,
+		ID:         -119344555506722,
+		Type:       msg.PeerGroup,
 	}
 	req.ReplyTo = 0
 	req.ThumbFilePath = ""
