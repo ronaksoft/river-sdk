@@ -153,7 +153,7 @@ func (fs *FileStatus) fileStatusChanged() {
 		log.LOG_Debug("fileStatusChanged() failed to save in DB", zap.Error(err))
 	}
 	if fs.onFileStatusChanged != nil {
-		fs.onFileStatusChanged(fs.MessageID, fs.Position, fs.TotalSize)
+		fs.onFileStatusChanged(fs.MessageID, fs.Position, fs.TotalSize, fs.Type == StateDownload)
 	}
 
 }

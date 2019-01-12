@@ -317,3 +317,28 @@ func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, 
 		}
 	}
 }
+
+func (r *River) GetFileProgess(msgID int64) float64 {
+	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
+	if err != nil {
+		return -1
+	}
+	if fs.TotalParts <= 0 {
+		return -1
+	}
+	return (float64(fs.Position) / float64(fs.TotalSize) * float64(100))
+}
+func (r *River) GetFilePath(msgID int64) string {
+	m := repo.Ctx().Messages.GetMessage(msgID)
+	if m != nil {
+		switch m.MediaType {
+		case msg.MediaTypeDocument:
+			x := new(msg.MediaDocument)
+			err := x.Unmarshal(m.Media)
+			if err == nil {
+				return repo.Ctx().Files.GetFilePath(m.ID, x.Doc.ID)
+			}
+		}
+	}
+	return ""
+}

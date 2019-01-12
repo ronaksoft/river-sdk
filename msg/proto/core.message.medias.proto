@@ -13,13 +13,13 @@ option (gogoproto.goproto_enum_prefix_all) = false;
     Copyright Ronak Software Group 2018
 */
 
-// Document Attribute Type
+// DocumentAttributeType
 enum DocumentAttributeType {
     AttributeTypeNone = 0;
     AttributeTypeAudio = 1;
     AttributeTypeVideo = 2;
     AttributeTypePhoto = 3;
-    AttributeTypeFilename = 4;
+    AttributeTypeFile = 4;
     AttributeAnimated = 5;
 }
 
@@ -138,7 +138,9 @@ message MediaDocument {
 
 // MediaContact
 message MediaContact {
-
+    required string Phone = 1;
+    required string FirstName = 2;
+    required string LastName = 3;
 }
 
 // MediaWebPage

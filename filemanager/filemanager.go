@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -22,11 +25,16 @@ var (
 	singletone sync.Mutex
 	ctx        *FileManager
 	_Clusters  map[int32]*msg.Cluster
+	_DirAudio  string
+	_DirFile   string
+	_DirPhoto  string
+	_DirVideo  string
 )
 
 const (
 	// FileSizeThresholdForCheckHash for files thatare smaller than  this number we will calculate md5 hash to do not reupload same file twice
 	FileSizeThresholdForCheckHash = 10 * 1024 * 1024 // 10MB
+
 )
 
 // FileManager manages files status and cache
@@ -42,10 +50,11 @@ type FileManager struct {
 	UploadQueueStarted   bool
 	DownloadQueueStarted bool
 
-	chStopUploader    chan bool
-	chStopDownloader  chan bool
-	onUploadCompleted domain.OnFileUploadCompleted
-	progressCallback  domain.OnFileStatusChanged
+	chStopUploader      chan bool
+	chStopDownloader    chan bool
+	onUploadCompleted   domain.OnFileUploadCompleted
+	onDownloadCompleted domain.OnFileDownloadCompleted
+	progressCallback    domain.OnFileStatusChanged
 }
 
 func Ctx() *FileManager {
@@ -55,7 +64,7 @@ func Ctx() *FileManager {
 	return ctx
 }
 
-func InitFileManager(onUploadCompleted domain.OnFileUploadCompleted, progressCallback domain.OnFileStatusChanged) {
+func InitFileManager(onUploadCompleted domain.OnFileUploadCompleted, progressCallback domain.OnFileStatusChanged, onDownloadCompleted domain.OnFileDownloadCompleted) {
 	if _Clusters == nil {
 		_Clusters = make(map[int32]*msg.Cluster)
 	}
@@ -65,12 +74,13 @@ func InitFileManager(onUploadCompleted domain.OnFileUploadCompleted, progressCal
 		defer singletone.Unlock()
 		if ctx == nil {
 			ctx = &FileManager{
-				UploadQueue:       make(map[int64]*FileStatus, 0),
-				DownloadQueue:     make(map[int64]*FileStatus, 0),
-				chStopUploader:    make(chan bool),
-				chStopDownloader:  make(chan bool),
-				onUploadCompleted: onUploadCompleted,
-				progressCallback:  progressCallback,
+				UploadQueue:         make(map[int64]*FileStatus, 0),
+				DownloadQueue:       make(map[int64]*FileStatus, 0),
+				chStopUploader:      make(chan bool),
+				chStopDownloader:    make(chan bool),
+				onUploadCompleted:   onUploadCompleted,
+				progressCallback:    progressCallback,
+				onDownloadCompleted: onDownloadCompleted,
 			}
 
 		}
@@ -79,6 +89,12 @@ func InitFileManager(onUploadCompleted domain.OnFileUploadCompleted, progressCal
 	go ctx.startDownloadQueue()
 	go ctx.startUploadQueue()
 
+}
+func SetRootFolders(audioDir, fileDir, photoDir, videoDir string) {
+	_DirAudio = audioDir
+	_DirFile = fileDir
+	_DirPhoto = photoDir
+	_DirVideo = videoDir
 }
 
 func SetAvailableClusters(clusters []*msg.Cluster) {
@@ -110,6 +126,22 @@ func GetBestCluster() *msg.Cluster {
 	}
 
 	return nil
+}
+
+func GetFilePath(mime string, docID int64, fileName string) string {
+	lower := strings.ToLower(mime)
+	strDocID := strconv.FormatInt(docID, 10)
+	ext := path.Ext(fileName)
+	if strings.HasPrefix(lower, "video/") {
+		return path.Join(_DirVideo, fmt.Sprintf("%s%s", strDocID, ext))
+	}
+	if strings.HasPrefix(lower, "audio/") {
+		return path.Join(_DirVideo, fmt.Sprintf("%s%s", strDocID, ext))
+	}
+	if strings.HasPrefix(lower, "image/") {
+		return path.Join(_DirVideo, fmt.Sprintf("%s%s", strDocID, ext))
+	}
+	return path.Join(_DirFile, fmt.Sprintf("%s%s", strDocID, ext))
 }
 
 func (fm *FileManager) Stop() {
@@ -156,37 +188,42 @@ func (fm *FileManager) Upload(fileID int64, req *msg.ClientPendingMessage) error
 }
 
 // Download add download request
-func (fm *FileManager) Download(filePath string, req *msg.UserMessage) {
+func (fm *FileManager) Download(req *msg.UserMessage) {
 	var docID int64
 	var clusterID int32
 	var accessHash uint64
 	var fileSize int32
-
-	// switch req.MediaType {
-	// case msg.MediaTypeEmpty:
-	// 	// TODO:: implement it
-	// case msg.MediaTypePhoto:
-	// 	// TODO:: implement it
-	// case msg.MediaTypeDocument:
-	// 	x := new(msg.Document)
-	// 	x.Unmarshal(req.Media)
-	// 	docID = x.ID
-	// 	clusterID = x.ClusterID
-	// 	accessHash = x.AccessHash
-	// 	fileSize = x.FileSize
-	// case msg.MediaTypeContact:
-	// 	// TODO:: implement it
-	// default:
-	// }
-	x := new(msg.Document)
-	x.Unmarshal(req.Media)
-	docID = x.ID
-	clusterID = x.ClusterID
-	accessHash = x.AccessHash
-	fileSize = x.FileSize
-	state := NewFileStatus(req.ID, docID, int64(fileSize), filePath, StateDownload, clusterID, accessHash, fm.progressCallback)
-	state.DownloadRequest = x
-	fm.AddToQueue(state)
+	var filePath string
+	var state *FileStatus
+	switch req.MediaType {
+	case msg.MediaTypeEmpty:
+		// TODO:: implement it
+	case msg.MediaTypePhoto:
+		// // TODO:: implement it
+		// x := new(msg.MediaPhoto)
+		// x.Unmarshal(req.Media)
+		// docID = x.Doc.ID
+		// clusterID = x.Doc.ClusterID
+		// accessHash = x.Doc.AccessHash
+		// fileSize = x.Doc.FileSize
+	case msg.MediaTypeDocument:
+		x := new(msg.MediaDocument)
+		x.Unmarshal(req.Media)
+		docID = x.Doc.ID
+		clusterID = x.Doc.ClusterID
+		accessHash = x.Doc.AccessHash
+		fileSize = x.Doc.FileSize
+		filePath = GetFilePath(x.Doc.MimeType, x.Doc.ID, "")
+		state := NewFileStatus(req.ID, docID, int64(fileSize), filePath, StateDownload, clusterID, accessHash, fm.progressCallback)
+		state.DownloadRequest = x.Doc
+	case msg.MediaTypeContact:
+		// TODO:: implement it
+	default:
+		log.LOG_Error("FileManager::Download() Invalid MediaType")
+	}
+	if state != nil {
+		fm.AddToQueue(state)
+	}
 }
 
 // AddToQueue add request to queue

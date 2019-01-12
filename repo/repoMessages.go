@@ -22,6 +22,7 @@ type RepoMessages interface {
 	DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.ClientUpdateMessagesDeleted, error)
 	GetTopMessageID(peerID int64, peerType int32) (int64, error)
 	GetMessageHistoryWithMinMaxID(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User)
+	GetMessage(messageID int64) *msg.UserMessage
 }
 
 type repoMessages struct {
@@ -493,7 +494,7 @@ func (r *repoMessages) DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.Clie
 	return res, err
 }
 
-// GetManyMessages
+// GetTopMessageID
 func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -510,4 +511,27 @@ func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, err
 		return -1, err
 	}
 	return dtoMsg.ID, nil
+}
+
+// GetMessage
+func (r *repoMessages) GetMessage(messageID int64) *msg.UserMessage {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	log.LOG_Debug("RepoMessages::GetManyMessages()",
+		zap.Int64("MessageID", messageID),
+	)
+	message := new(msg.UserMessage)
+	dtoMsg := new(dto.Messages)
+	err := r.db.Where("ID = ?", messageID).Find(&dtoMsg).Error
+	if err != nil {
+		log.LOG_Debug("RepoRepoMessages::GetMessage()-> fetch messages",
+			zap.String("Error", err.Error()),
+		)
+		return nil
+	}
+
+	dtoMsg.MapTo(message)
+
+	return message
 }

@@ -8,6 +8,11 @@ type MainDelegate interface {
 	OnAuthKeyCreated(int64)
 	OnGeneralError(b []byte)
 	OnSessionClosed(res int)
+
+	OnDownloadProgressChanged(messageID, position, totalSize int64, percent float64)
+	OnUploadProgressChanged(messageID, position, totalSize int64, percent float64)
+	OnDownloadCompleted(messageID int64, filePath string)
+	OnUploadCompleted(messageID int64, filePath string)
 }
 
 type RequestDelegate interface {

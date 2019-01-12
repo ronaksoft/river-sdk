@@ -52,6 +52,12 @@ func ResultDocumentAttributeAudio(out *MessageEnvelope, res *DocumentAttributeAu
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultAccountPrivacyDisallowUsers(out *MessageEnvelope, res *AccountPrivacyDisallowUsers) {
+	out.Constructor = C_AccountPrivacyDisallowUsers
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultInputFileLocation(out *MessageEnvelope, res *InputFileLocation) {
 	out.Constructor = C_InputFileLocation
 	pbytes.Put(out.Message)
@@ -118,6 +124,12 @@ func ResultInitAuthCompleted(out *MessageEnvelope, res *InitAuthCompleted) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultAccountPrivacyAllowAll(out *MessageEnvelope, res *AccountPrivacyAllowAll) {
+	out.Constructor = C_AccountPrivacyAllowAll
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultUpdateContainer(out *MessageEnvelope, res *UpdateContainer) {
 	out.Constructor = C_UpdateContainer
 	pbytes.Put(out.Message)
@@ -126,6 +138,12 @@ func ResultUpdateContainer(out *MessageEnvelope, res *UpdateContainer) {
 }
 func ResultUpdateMessagesDeleted(out *MessageEnvelope, res *UpdateMessagesDeleted) {
 	out.Constructor = C_UpdateMessagesDeleted
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultAccountPrivacyRule(out *MessageEnvelope, res *AccountPrivacyRule) {
+	out.Constructor = C_AccountPrivacyRule
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -706,6 +724,12 @@ func ResultUpdateNewMessage(out *MessageEnvelope, res *UpdateNewMessage) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultAccountPrivacyAllowContacts(out *MessageEnvelope, res *AccountPrivacyAllowContacts) {
+	out.Constructor = C_AccountPrivacyAllowContacts
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultContactsImport(out *MessageEnvelope, res *ContactsImport) {
 	out.Constructor = C_ContactsImport
 	pbytes.Put(out.Message)
@@ -726,6 +750,18 @@ func ResultMessageEntity(out *MessageEnvelope, res *MessageEntity) {
 }
 func ResultMessagesDelete(out *MessageEnvelope, res *MessagesDelete) {
 	out.Constructor = C_MessagesDelete
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultAccountPrivacyDisallowContacts(out *MessageEnvelope, res *AccountPrivacyDisallowContacts) {
+	out.Constructor = C_AccountPrivacyDisallowContacts
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultAccountPrivacyDisallowAll(out *MessageEnvelope, res *AccountPrivacyDisallowAll) {
+	out.Constructor = C_AccountPrivacyDisallowAll
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -792,6 +828,12 @@ func ResultAccountUnregisterDevice(out *MessageEnvelope, res *AccountUnregisterD
 }
 func ResultAuthSendCode(out *MessageEnvelope, res *AuthSendCode) {
 	out.Constructor = C_AuthSendCode
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultAccountPrivacyAllowUsers(out *MessageEnvelope, res *AccountPrivacyAllowUsers) {
+	out.Constructor = C_AccountPrivacyAllowUsers
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

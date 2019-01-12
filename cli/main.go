@@ -194,7 +194,7 @@ func fnRunDebug() {
 	docAttrib := new(msg.DocumentAttribute)
 	attrib := new(msg.DocumentAttributeFile)
 	attrib.Filename = "test.zip"
-	docAttrib.Type = msg.AttributeTypeFilename
+	docAttrib.Type = msg.AttributeTypeFile
 	docAttrib.Data, _ = attrib.Marshal()
 
 	req.Attributes = append(req.Attributes, docAttrib)

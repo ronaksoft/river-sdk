@@ -53,6 +53,12 @@ var (
 			return m
 		},
 	}
+	PoolAccountPrivacyDisallowUsers = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountPrivacyDisallowUsers)
+			return m
+		},
+	}
 	PoolInputFileLocation = sync.Pool{
 		New: func() interface{} {
 			m := new(InputFileLocation)
@@ -119,6 +125,12 @@ var (
 			return m
 		},
 	}
+	PoolAccountPrivacyAllowAll = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountPrivacyAllowAll)
+			return m
+		},
+	}
 	PoolUpdateContainer = sync.Pool{
 		New: func() interface{} {
 			m := new(UpdateContainer)
@@ -128,6 +140,12 @@ var (
 	PoolUpdateMessagesDeleted = sync.Pool{
 		New: func() interface{} {
 			m := new(UpdateMessagesDeleted)
+			return m
+		},
+	}
+	PoolAccountPrivacyRule = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountPrivacyRule)
 			return m
 		},
 	}
@@ -707,6 +725,12 @@ var (
 			return m
 		},
 	}
+	PoolAccountPrivacyAllowContacts = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountPrivacyAllowContacts)
+			return m
+		},
+	}
 	PoolContactsImport = sync.Pool{
 		New: func() interface{} {
 			m := new(ContactsImport)
@@ -728,6 +752,18 @@ var (
 	PoolMessagesDelete = sync.Pool{
 		New: func() interface{} {
 			m := new(MessagesDelete)
+			return m
+		},
+	}
+	PoolAccountPrivacyDisallowContacts = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountPrivacyDisallowContacts)
+			return m
+		},
+	}
+	PoolAccountPrivacyDisallowAll = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountPrivacyDisallowAll)
 			return m
 		},
 	}
@@ -794,6 +830,12 @@ var (
 	PoolAuthSendCode = sync.Pool{
 		New: func() interface{} {
 			m := new(AuthSendCode)
+			return m
+		},
+	}
+	PoolAccountPrivacyAllowUsers = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountPrivacyAllowUsers)
 			return m
 		},
 	}

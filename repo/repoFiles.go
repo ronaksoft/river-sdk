@@ -8,10 +8,12 @@ import (
 type RepoFiles interface {
 	SaveFileStatus(fs *dto.FileStatus) (err error)
 	GetAllFileStatus() []dto.FileStatus
+	GetFileStatus(msgID int64) (dto.FileStatus, error)
 	DeleteFileStatus(ID int64) error
 	MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, fileSize int32, sent *msg.MessagesSent) (err error)
 	SaveFileDocument(msgID int64, doc *msg.MediaDocument) error
-
+	GetExistingFileDocument(filePath string) *dto.Files
+	GetFilePath(msgID, docID int64) string
 	// delete this later
 	GetFirstFileStatu() dto.FileStatus
 }
@@ -40,6 +42,15 @@ func (r *repoFiles) GetAllFileStatus() []dto.FileStatus {
 	dtos := make([]dto.FileStatus, 0)
 	r.db.Find(&dtos)
 	return dtos
+}
+
+func (r *repoFiles) GetFileStatus(msgID int64) (dto.FileStatus, error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	mdl := dto.FileStatus{}
+	err := r.db.Find(&mdl, msgID).Error
+	return mdl, err
 }
 
 // DeleteFileStatus
@@ -92,4 +103,28 @@ func (r *repoFiles) SaveFileDocument(msgID int64, doc *msg.MediaDocument) error 
 	}
 	mdl.MapFromDocument(doc)
 	return r.db.Create(mdl).Error
+}
+
+func (r *repoFiles) GetExistingFileDocument(filePath string) *dto.Files {
+	existedDocument := new(dto.Files)
+
+	err := r.db.Table(existedDocument.TableName()).Where("FilePath=?", filePath).First(existedDocument).Error
+	if err != nil {
+		return nil
+	}
+	return existedDocument
+}
+
+func (r *repoFiles) GetFilePath(msgID, docID int64) string {
+	f := dto.Files{}
+
+	r.db.Find(&f, msgID)
+	if f.MessageID > 0 && f.FilePath != "" {
+		return f.FilePath
+	}
+	r.db.Table(f.TableName()).Where("DocumentID=?", docID).First(&f)
+	if f.MessageID > 0 && f.FilePath != "" {
+		return f.FilePath
+	}
+	return ""
 }

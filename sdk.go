@@ -94,7 +94,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	}
 
 	// Initialize filemanager
-	filemanager.InitFileManager(r.onFileUploadCompleted, r.onFileProgressChanged)
+	filemanager.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory)
+	filemanager.InitFileManager(r.onFileUploadCompleted, r.onFileProgressChanged, r.onFileDownloadCompleted)
 
 	// Initialize Network Controller
 	r.networkCtrl = network.NewNetworkController(
@@ -848,12 +849,24 @@ func (r *River) PrintDebuncerStatus() {
 	r.networkCtrl.PrintDebuncerStatus()
 }
 
-func (r *River) onFileProgressChanged(messageID, position, totalSize int64) {
+func (r *River) onFileProgressChanged(messageID, position, totalSize int64, isDownload bool) {
 	percent := float64(position) / float64(totalSize) * float64(100)
 	log.LOG_Warn("onFileProgressChanged()",
 		zap.Int64("MsgID", messageID),
 		zap.Float64("Percent", percent),
 	)
+
+	// Notify UI that upload is completed
+	if isDownload {
+		if r.mainDelegate.OnDownloadProgressChanged != nil {
+			r.mainDelegate.OnDownloadProgressChanged(messageID, position, totalSize, percent)
+		}
+	} else {
+		if r.mainDelegate.OnUploadProgressChanged != nil {
+			r.mainDelegate.OnUploadProgressChanged(messageID, position, totalSize, percent)
+		}
+	}
+
 }
 
 func (r *River) onFileUploadCompleted(messageID, fileID int64, clusterID, totalParts int32, req *msg.ClientSendMessageMedia) {
@@ -861,45 +874,62 @@ func (r *River) onFileUploadCompleted(messageID, fileID int64, clusterID, totalP
 		zap.Int64("messageID", messageID),
 		zap.Int64("fileID", fileID),
 	)
+	// if total parts are grater than zero it means we actually uploaded new file
+	// else the doc was already uploaded we called this just to notify ui that upload finished
+	if totalParts > 0 {
 
-	// Create SendMessageMedia Request
-	x := new(msg.MessagesSendMedia)
-	x.Peer = req.Peer
-	x.ClearDraft = req.ClearDraft
-	x.MediaType = req.MediaType
-	x.RandomID = fileID
-	x.ReplyTo = req.ReplyTo
+		// Create SendMessageMedia Request
+		x := new(msg.MessagesSendMedia)
+		x.Peer = req.Peer
+		x.ClearDraft = req.ClearDraft
+		x.MediaType = req.MediaType
+		x.RandomID = fileID
+		x.ReplyTo = req.ReplyTo
 
-	//
-	switch x.MediaType {
-	case msg.InputMediaTypeEmpty:
-		panic("SDK:onFileUploadCompleted() not implemented")
-	case msg.InputMediaTypeUploadedPhoto:
-		panic("SDK:onFileUploadCompleted() not implemented")
-	case msg.InputMediaTypePhoto:
-		panic("SDK:onFileUploadCompleted() not implemented")
-	case msg.InputMediaTypeContact:
-		panic("SDK:onFileUploadCompleted() not implemented")
-	case msg.InputMediaTypeUploadedDocument:
+		//
+		switch x.MediaType {
+		case msg.InputMediaTypeEmpty:
+			panic("SDK:onFileUploadCompleted() not implemented")
+		case msg.InputMediaTypeUploadedPhoto:
+			panic("SDK:onFileUploadCompleted() not implemented")
+		case msg.InputMediaTypePhoto:
+			panic("SDK:onFileUploadCompleted() not implemented")
+		case msg.InputMediaTypeContact:
+			panic("SDK:onFileUploadCompleted() not implemented")
+		case msg.InputMediaTypeUploadedDocument:
 
-		doc := new(msg.InputMediaUploadedDocument)
-		doc.MimeType = req.FileMIME
-		doc.Attributes = req.Attributes
-		doc.Caption = req.Caption
-		doc.File = &msg.InputFile{
-			ClusterID:   clusterID,
-			FileID:      fileID,
-			FileName:    req.FileName,
-			MD5Checksum: "",
-			TotalParts:  totalParts,
+			doc := new(msg.InputMediaUploadedDocument)
+			doc.MimeType = req.FileMIME
+			doc.Attributes = req.Attributes
+			doc.Caption = req.Caption
+			doc.File = &msg.InputFile{
+				ClusterID:   clusterID,
+				FileID:      fileID,
+				FileName:    req.FileName,
+				MD5Checksum: "",
+				TotalParts:  totalParts,
+			}
+			x.MediaData, _ = doc.Marshal()
+		case msg.InputMediaTypeDocument:
+			panic("SDK:onFileUploadCompleted() not implemented")
+		default:
+			panic("SDK:onFileUploadCompleted() invalid input media type")
 		}
-		x.MediaData, _ = doc.Marshal()
-	case msg.InputMediaTypeDocument:
-		panic("SDK:onFileUploadCompleted() not implemented")
-	default:
-		panic("SDK:onFileUploadCompleted() invalid input media type")
+		reqBuff, _ := x.Marshal()
+		requestID := uint64(domain.SequentialUniqueID())
+		r.queueCtrl.ExecuteCommand(requestID, msg.C_MessagesSendMedia, reqBuff, nil, nil, false)
+
 	}
-	reqBuff, _ := x.Marshal()
-	requestID := uint64(domain.SequentialUniqueID())
-	r.queueCtrl.ExecuteCommand(requestID, msg.C_MessagesSendMedia, reqBuff, nil, nil, false)
+
+	// Notify UI that upload is completed
+	if r.mainDelegate.OnUploadProgressChanged != nil {
+		r.mainDelegate.OnUploadCompleted(messageID, req.FilePath)
+	}
+}
+
+func (r *River) onFileDownloadCompleted(messageID int64, filePath string) {
+	// Notify UI that download is completed
+	if r.mainDelegate.OnDownloadCompleted != nil {
+		r.mainDelegate.OnDownloadCompleted(messageID, filePath)
+	}
 }

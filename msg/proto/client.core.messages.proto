@@ -2,7 +2,7 @@ syntax = "proto2";
 package msg;
 import "core.types.proto";
 import "api.messages.proto";
-import "core.message_medias.proto";
+import "core.message.medias.proto";
 
 // ClientPendingMessage
 message ClientPendingMessage {

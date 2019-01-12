@@ -873,53 +873,112 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		return
 	}
 
-	// this will be used as next requestID
-	// fileID := domain.SequentialUniqueID()
-
-	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
-	msgID := -domain.SequentialUniqueID()
-	fileID := int64(in.RequestID)
-	res, err := repo.Ctx().PendingMessages.SaveMessageMedia(msgID, r.ConnInfo.UserID, fileID, reqMedia)
-
-	if err != nil {
-		e := new(msg.Error)
-		e.Code = "n/a"
-		e.Items = "Failed to save to pendingMessages : " + err.Error()
-		msg.ResultError(out, e)
-		cmd.GetUIExecuter().Exec(func() {
-			if successCB != nil {
-				successCB(out)
-			}
-		})
-		return
+	// TODO : check if file has been uploaded b4
+	dtoFile := repo.Ctx().Files.GetExistingFileDocument(reqMedia.FilePath)
+	fileAlreadyUploaded := false
+	if dtoFile != nil {
+		fileAlreadyUploaded = dtoFile.ClusterID > 0 && dtoFile.DocumentID > 0 && dtoFile.AccessHash > 0
 	}
+	if fileAlreadyUploaded {
+		msgID := -domain.SequentialUniqueID()
+		fileID := int64(in.RequestID)
+		res, err := repo.Ctx().PendingMessages.SaveMessageMedia(msgID, r.ConnInfo.UserID, fileID, reqMedia)
 
-	// 2. TODO : start file upload and send process
-	err = filemanager.Ctx().Upload(fileID, res)
-	if err != nil {
-		e := new(msg.Error)
-		e.Code = "n/a"
-		e.Items = "Failed to start Upload : " + err.Error()
-		msg.ResultError(out, e)
-		cmd.GetUIExecuter().Exec(func() {
-			if successCB != nil {
-				successCB(out)
-			}
-		})
-		return
-	}
-
-	// 3. return to CallBack with pending message data : Done
-	out.Constructor = msg.C_ClientPendingMessage
-	out.Message, _ = res.Marshal()
-
-	// 4. later when queue got processed and server returned response we should check if the requestID
-	//   exist in pendindTable we remove it and insert new message with new id to message table
-	//   invoke new OnUpdate with new protobuff to inform ui that pending message got delivered
-	cmd.GetUIExecuter().Exec(func() {
-		if successCB != nil {
-			successCB(out)
+		if err != nil {
+			e := new(msg.Error)
+			e.Code = "n/a"
+			e.Items = "Failed to save to pendingMessages : " + err.Error()
+			msg.ResultError(out, e)
+			cmd.GetUIExecuter().Exec(func() {
+				if successCB != nil {
+					successCB(out)
+				}
+			})
+			return
 		}
-	}) //successCB(out)
+
+		req := new(msg.MessagesSendMedia)
+		req.ClearDraft = reqMedia.ClearDraft
+		req.MediaType = msg.InputMediaTypeDocument
+		doc := new(msg.InputMediaDocument)
+		doc.Caption = reqMedia.Caption
+		doc.Document = new(msg.InputDocument)
+		doc.Document.AccessHash = uint64(dtoFile.AccessHash)
+		doc.Document.ClusterID = dtoFile.ClusterID
+		doc.Document.ID = dtoFile.DocumentID
+		req.MediaData, _ = doc.Marshal()
+		req.Peer = reqMedia.Peer
+		req.RandomID = domain.SequentialUniqueID()
+		req.ReplyTo = reqMedia.ReplyTo
+
+		reqBytes, _ := req.Marshal()
+		in.Constructor = msg.C_MessagesSendMedia
+		in.Message = reqBytes
+
+		//TODO :FIX THIS : required behaviour add to pending message and put this to progress pipe line and etc ...
+		// 3. return to CallBack with pending message data : Done
+		out.Constructor = msg.C_ClientPendingMessage
+		out.Message, _ = res.Marshal()
+
+		// 4. later when queue got processed and server returned response we should check if the requestID
+		//   exist in pendindTable we remove it and insert new message with new id to message table
+		//   invoke new OnUpdate with new protobuff to inform ui that pending message got delivered
+		cmd.GetUIExecuter().Exec(func() {
+			if successCB != nil {
+				successCB(out)
+			}
+		}) //successCB(out)
+
+		r.onFileUploadCompleted(msgID, fileID, dtoFile.ClusterID, -1, reqMedia)
+		// send the request to server
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+
+	} else {
+		// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
+		msgID := -domain.SequentialUniqueID()
+		fileID := int64(in.RequestID)
+		res, err := repo.Ctx().PendingMessages.SaveMessageMedia(msgID, r.ConnInfo.UserID, fileID, reqMedia)
+
+		if err != nil {
+			e := new(msg.Error)
+			e.Code = "n/a"
+			e.Items = "Failed to save to pendingMessages : " + err.Error()
+			msg.ResultError(out, e)
+			cmd.GetUIExecuter().Exec(func() {
+				if successCB != nil {
+					successCB(out)
+				}
+			})
+			return
+		}
+
+		// 2. TODO : start file upload and send process
+		err = filemanager.Ctx().Upload(fileID, res)
+		if err != nil {
+			e := new(msg.Error)
+			e.Code = "n/a"
+			e.Items = "Failed to start Upload : " + err.Error()
+			msg.ResultError(out, e)
+			cmd.GetUIExecuter().Exec(func() {
+				if successCB != nil {
+					successCB(out)
+				}
+			})
+			return
+		}
+
+		// 3. return to CallBack with pending message data : Done
+		out.Constructor = msg.C_ClientPendingMessage
+		out.Message, _ = res.Marshal()
+
+		// 4. later when queue got processed and server returned response we should check if the requestID
+		//   exist in pendindTable we remove it and insert new message with new id to message table
+		//   invoke new OnUpdate with new protobuff to inform ui that pending message got delivered
+		cmd.GetUIExecuter().Exec(func() {
+			if successCB != nil {
+				successCB(out)
+			}
+		}) //successCB(out)
+	}
 
 }

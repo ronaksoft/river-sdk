@@ -38,6 +38,12 @@ type RiverConfig struct {
 
 	// Logger pass logs to external handler
 	Logger LoggerDelegate
+
+	// Folder path to save files
+	DocumentPhotoDirectory string
+	DocumentVideoDirectory string
+	DocumentFileDirectory  string
+	DocumentAudioDirectory string
 }
 
 // River
