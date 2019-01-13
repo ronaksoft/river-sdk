@@ -1,6 +1,8 @@
 package riversdk
 
 import (
+	"os"
+
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/filemanager"
 	"git.ronaksoftware.com/ronak/riversdk/log"
@@ -337,7 +339,12 @@ func (r *River) GetFilePath(msgID int64) string {
 			x := new(msg.MediaDocument)
 			err := x.Unmarshal(m.Media)
 			if err == nil {
-				return repo.Ctx().Files.GetFilePath(m.ID, x.Doc.ID)
+				// check file existance
+				filePath := repo.Ctx().Files.GetFilePath(m.ID, x.Doc.ID)
+				if _, err = os.Stat(filePath); os.IsNotExist(err) {
+					filePath = ""
+				}
+				return filePath
 			}
 		}
 	}
