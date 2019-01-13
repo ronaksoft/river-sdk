@@ -116,6 +116,7 @@ func (r *repoFiles) SaveFileDocument(msgID int64, doc *msg.MediaDocument) error 
 	r.db.First(&mdl, msgID)
 	if existedDocument.MessageID > 0 {
 		mdl.MapFromFile(existedDocument)
+		mdl.MessageID = msgID
 	}
 
 	if mdl.MessageID > 0 {
@@ -123,6 +124,7 @@ func (r *repoFiles) SaveFileDocument(msgID int64, doc *msg.MediaDocument) error 
 		return r.db.Table(mdl.TableName()).Where("MessageID=?", msgID).Update(&mdl).Error
 	}
 	mdl.MapFromDocument(doc)
+	mdl.MessageID = msgID
 	return r.db.Create(&mdl).Error
 
 }

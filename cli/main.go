@@ -110,7 +110,7 @@ func main() {
 		fnRunUploadFile()
 		// testSendMessageMedia()
 		// fnrunDownloadFile()
-
+		// fnSendInputMediaDocument()
 		//block forever
 		select {}
 	}
@@ -175,6 +175,13 @@ func fnRunUploadFile() {
 	req.FileName = "test.zip"
 	req.FilePath = "/home/q/test.zip"
 	req.MediaType = msg.InputMediaTypeUploadedDocument
+	// // 0009
+	// req.Peer = &msg.InputPeer{
+	// 	AccessHash: 4500232805839723,
+	// 	ID:         189353777894340,
+	// 	Type:       msg.PeerUser,
+	// }
+
 	// 0056
 	req.Peer = &msg.InputPeer{
 		AccessHash: 4500871196408867,
@@ -208,4 +215,34 @@ func fnRunUploadFile() {
 
 func fnrunDownloadFile() {
 	_SDK.FileDownload(3942)
+}
+
+func fnSendInputMediaDocument() {
+
+	req := new(msg.MessagesSendMedia)
+	req.ClearDraft = true
+	req.MediaType = msg.InputMediaTypeDocument
+	doc := new(msg.InputMediaDocument)
+	doc.Caption = "TEST SEND InputMediaDocument"
+	doc.Document = new(msg.InputDocument)
+	doc.Document.AccessHash = uint64(4499372557768840)
+	doc.Document.ClusterID = 1
+	doc.Document.ID = int64(2148252319320369373)
+	req.MediaData, _ = doc.Marshal()
+	// 0056
+	req.Peer = &msg.InputPeer{
+		AccessHash: 4500871196408867,
+		ID:         1408226742326241,
+		Type:       msg.PeerUser,
+	}
+	req.RandomID = domain.SequentialUniqueID()
+	req.ReplyTo = 0
+
+	// send the request to server
+	buff, _ := req.Marshal()
+	reqDelegate := new(RequestDelegate)
+	reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSendMedia, buff, reqDelegate, false, false)
+
+	_Shell.Println("RequestID :", reqID, "\tError :", err)
+
 }
