@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/rand"
 	"strconv"
 	"time"
 
@@ -509,4 +510,193 @@ func fnGetFileName(c *ishell.Context) string {
 	c.Print("File Name: ")
 	name := c.ReadLine()
 	return name
+}
+func fnGetFilePath(c *ishell.Context) string {
+	c.Print("File Path: ")
+	name := c.ReadLine()
+	return name
+}
+func fnGetReplyTo(c *ishell.Context) int64 {
+	var replyTo int64
+	for {
+		c.Print("Reply To: ")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
+		if err == nil {
+			replyTo = id
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return replyTo
+}
+
+func fnGetWidth(c *ishell.Context) uint32 {
+	var res uint32
+	for {
+		c.Print("Width : ")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		if err == nil {
+			res = uint32(id)
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return res
+}
+func fnGetHeight(c *ishell.Context) uint32 {
+	var res uint32
+	for {
+		c.Print("Heigth : ")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		if err == nil {
+			res = uint32(id)
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return res
+}
+
+func fnGetVoice(c *ishell.Context) bool {
+	res := false
+	for {
+		c.Print("IsVoice : (0 = false , >=1 : true)")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		if err == nil {
+			res = id > 0
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return res
+}
+
+func fnGetRound(c *ishell.Context) bool {
+	res := false
+	for {
+		c.Print("IsRound : (0 = false , >=1 : true)")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		if err == nil {
+			res = id > 0
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return res
+}
+
+func fnGetPerformer(c *ishell.Context) string {
+	c.Print("Performer: ")
+	title := c.ReadLine()
+	return title
+}
+
+func fnGetWaveForm(c *ishell.Context) []byte {
+	res := make([]byte, 100)
+	rand.Read(res)
+	return res
+}
+
+func fnGetInputMediaType(c *ishell.Context) msg.InputMediaType {
+	mediaType := msg.InputMediaTypeEmpty
+	for {
+		c.Print("InputMediaType : (UploadedPhoto=1, UploadedDocument= 4)")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
+		if err == nil && id == 1 || id == 4 {
+			mediaType = msg.InputMediaType(id)
+			break
+		} else {
+			c.Println("entered value is invalid ")
+		}
+	}
+	return mediaType
+}
+
+func fnGetAttributes(c *ishell.Context) []*msg.DocumentAttribute {
+	result := make([]*msg.DocumentAttribute, 0)
+
+	for {
+		c.Println("Enter 0 zero to break Attribute loop")
+		attrType := getAttributeType(c)
+		if attrType == msg.AttributeTypeNone {
+			break
+		}
+		switch attrType {
+
+		case msg.AttributeTypeAudio:
+			result = append(result, getAudioAttribute(c))
+		case msg.AttributeTypeVideo:
+			result = append(result, getVideoAttribute(c))
+		case msg.AttributeTypePhoto:
+			result = append(result, getPhotoAttribute(c))
+		case msg.AttributeTypeFile:
+			result = append(result, getFileAttribute(c))
+		}
+	}
+	return result
+}
+
+func getAttributeType(c *ishell.Context) msg.DocumentAttributeType {
+	attribType := msg.AttributeTypeNone
+	for {
+		//AttributeTypeNone  DocumentAttributeType = 0
+		//AttributeTypeAudio DocumentAttributeType = 1
+		//AttributeTypeVideo DocumentAttributeType = 2
+		//AttributeTypePhoto DocumentAttributeType = 3
+		//AttributeTypeFile  DocumentAttributeType = 4
+		//AttributeAnimated  DocumentAttributeType = 5
+		c.Print("AttributeType : (Audio=1, Video=2 ,Photo=3, File=4 )")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
+		if err == nil && id >= 0 && id < 5 {
+			attribType = msg.DocumentAttributeType(id)
+			break
+		} else {
+			c.Println("entered value is invalid ")
+		}
+	}
+	return attribType
+}
+
+func getAudioAttribute(c *ishell.Context) *msg.DocumentAttribute {
+	req := new(msg.DocumentAttribute)
+	req.Type = msg.AttributeTypeAudio
+	attrib := new(msg.DocumentAttributeAudio)
+	attrib.Performer = fnGetPerformer(c)
+	attrib.Title = fnGetTitle(c)
+	attrib.Voice = fnGetVoice(c)
+	attrib.Waveform = fnGetWaveForm(c)
+	req.Data, _ = attrib.Marshal()
+	return req
+}
+func getVideoAttribute(c *ishell.Context) *msg.DocumentAttribute {
+	req := new(msg.DocumentAttribute)
+	req.Type = msg.AttributeTypeVideo
+	attrib := new(msg.DocumentAttributeVideo)
+	attrib.Round = fnGetRound(c)
+	attrib.Width = fnGetWidth(c)
+	attrib.Height = fnGetHeight(c)
+	req.Data, _ = attrib.Marshal()
+	return req
+}
+func getPhotoAttribute(c *ishell.Context) *msg.DocumentAttribute {
+	req := new(msg.DocumentAttribute)
+	req.Type = msg.AttributeTypePhoto
+	attrib := new(msg.DocumentAttributePhoto)
+	attrib.Width = fnGetWidth(c)
+	attrib.Height = fnGetHeight(c)
+	req.Data, _ = attrib.Marshal()
+	return req
+}
+func getFileAttribute(c *ishell.Context) *msg.DocumentAttribute {
+	req := new(msg.DocumentAttribute)
+	req.Type = msg.AttributeTypeFile
+	attrib := new(msg.DocumentAttributeFile)
+	attrib.Filename = fnGetFileName(c)
+	req.Data, _ = attrib.Marshal()
+	return req
 }

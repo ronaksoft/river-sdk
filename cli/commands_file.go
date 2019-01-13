@@ -1,6 +1,10 @@
 package main
 
 import (
+	"mime"
+	"os"
+	"path"
+
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )
@@ -8,15 +12,39 @@ import (
 var File = &ishell.Cmd{
 	Name: "File",
 }
-var FileSavePart = &ishell.Cmd{
-	Name: "FileSavePart",
+
+var Upload = &ishell.Cmd{
+	Name: "Upload",
 	Func: func(c *ishell.Context) {
-		// for just one user
-		req := msg.FileSavePart{}
+
+		req := msg.ClientSendMessageMedia{}
+		req.Attributes = make([]*msg.DocumentAttribute, 0)
+
+		req.Peer = new(msg.InputPeer)
+		req.Peer.Type = fnGetPeerType(c)
+		req.Peer.ID = fnGetPeerID(c)
+		req.Peer.AccessHash = fnGetAccessHash(c)
+		req.FilePath = fnGetFilePath(c)
+		req.ReplyTo = fnGetReplyTo(c)
+
+		f, _ := os.Open(req.FilePath)
+		filename := f.Name()
+		f.Close()
+
+		req.Caption = filename
+		req.ClearDraft = true
+		req.FileMIME = mime.TypeByExtension(path.Ext(filename))
+		req.FileName = filename
+
+		req.ThumbFilePath = ""
+		req.ThumbMIME = ""
+
+		req.MediaType = fnGetInputMediaType(c)
+		req.Attributes = fnGetAttributes(c)
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_FileSavePart, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBytes, reqDelegate, false, false); err != nil {
 			_Log.Debug(err.Error())
 		} else {
 			reqDelegate.RequestID = reqID
@@ -24,86 +52,17 @@ var FileSavePart = &ishell.Cmd{
 
 	},
 }
-var MessagesSendMedia = &ishell.Cmd{
-	Name: "MessagesSendMedia",
+
+var Download = &ishell.Cmd{
+	Name: "Download",
 	Func: func(c *ishell.Context) {
-
-		// xxx := new(msg.ClientSendMessageMedia)
-
-		// // for just one user
-		// req := msg.MessagesSendMedia{}
-
-		// req.ClearDraft = true
-		// req.MediaType = msg.MediaTypeDocument
-
-		// doc := new(msg.InputMediaUploadedDocument)
-
-		// photo := new(msg.InputMediaUploadedPhoto)
-
-		// doc.MimeType = ""
-		// doc.Caption = "Test File"
-
-		// // set attributes
-		// doc.Attributes = make([]*msg.DocumentAttribute)
-
-		// docAttrib := new(msg.DocumentAttribute)
-		// docAttrib.Type = msg.DocumentAttributeFile
-
-		// attribFile := new(msg.DocumentAttributeFile)
-
-		// xx = new(msg.DocumentAttributeAudio)
-
-		// attribFile.Filename = fnGetFileName(c)
-		// // marshal attribs
-		// docAttrib.Data, _ = attribFile.Marshal()
-
-		// // file
-		// file := new(msg.InputFile)
-		// file.
-		// 	doc.File = file
-
-		// // marshal doc data
-		// req.MediaType = msg.InputMediaTypeUploadedDocument
-		// req.MediaData, _ = doc.Marshal()
-
-		// req.Peer = msg.InputPeer{}
-		// req.Peer.Type = fnGetPeerType(c)
-		// req.Peer.ID = fnGetPeerID(c)
-		// req.Peer.AccessHash = fnGetAccessHash(c)
-
-		// req.RandomID = domain.SequentialUniqueID()
-
-		// reqBytes, _ := req.Marshal()
-		// reqDelegate := new(RequestDelegate)
-		// if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSendMedia, reqBytes, reqDelegate, false, false); err != nil {
-		// 	_Log.Debug(err.Error())
-		// } else {
-		// 	reqDelegate.RequestID = reqID
-		// }
-
-	},
-}
-
-var FileGet = &ishell.Cmd{
-	Name: "FileGet",
-	Func: func(c *ishell.Context) {
-		// for just one user
-		req := msg.FileGet{}
-
-		reqBytes, _ := req.Marshal()
-		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_FileGet, reqBytes, reqDelegate, false, false); err != nil {
-			_Log.Debug(err.Error())
-		} else {
-			reqDelegate.RequestID = reqID
-		}
-
+		messageID := fnGetMessageID(c)
+		_SDK.FileDownload(messageID)
 	},
 }
 
 func init() {
-	Debug.AddCmd(FileGet)
-	File.AddCmd(FileSavePart)
-	Debug.AddCmd(MessagesSendMedia)
+	File.AddCmd(Upload)
+	File.AddCmd(Download)
 
 }
