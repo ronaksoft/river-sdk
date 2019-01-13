@@ -67,3 +67,14 @@ var NetworkStatusName = map[NetworkStatus]string{
 	SLOW:         "SLOW",
 	FAST:         "FAST",
 }
+
+type RequestStatus int32
+
+const (
+	RequestStateDefault   RequestStatus = 0
+	RequestStateCompleted RequestStatus = 1
+	RequestStatePending   RequestStatus = 2
+	RequestStatePused     RequestStatus = 3
+	RequestStateFailed    RequestStatus = 4
+	RequestStateCanceled  RequestStatus = 5
+)

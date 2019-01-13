@@ -185,8 +185,10 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) []*msg.Updat
 	// handle Media message
 	switch x.Message.MediaType {
 	case msg.MediaTypeEmpty:
+		log.LOG_Info("updateNewMessage() Message.MediaType is msg.MediaTypeEmpty")
 		// TODO:: implement it
 	case msg.MediaTypePhoto:
+		log.LOG_Info("updateNewMessage() Message.MediaType is msg.MediaTypePhoto")
 		// TODO:: implement it
 	case msg.MediaTypeDocument:
 		mediaDoc := new(msg.MediaDocument)
@@ -197,9 +199,10 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) []*msg.Updat
 			log.LOG_Error("SyncController::updateNewMessage()-> connat unmarshal MediaTypeDocument", zap.Error(err))
 		}
 	case msg.MediaTypeContact:
+		log.LOG_Info("updateNewMessage() Message.MediaType is msg.MediaTypeContact")
 		// TODO:: implement it
 	default:
-		log.LOG_Error("SyncController::updateNewMessage()-> Invalid MediaType")
+		log.LOG_Info("updateNewMessage() Message.MediaType is invalid")
 	}
 
 	return res

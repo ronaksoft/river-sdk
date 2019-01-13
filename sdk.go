@@ -910,6 +910,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID int64, clusterID, totalP
 				TotalParts:  totalParts,
 			}
 			x.MediaData, _ = doc.Marshal()
+
 		case msg.InputMediaTypeDocument:
 			panic("SDK:onFileUploadCompleted() not implemented")
 		default:

@@ -36,6 +36,7 @@ type FileStatus struct {
 	TotalParts          int32                       `json:"TotalParts"`
 	Type                StateType                   `json:"StatusType"`
 	IsCompleted         bool                        `json:"IsCompleted"`
+	RequestStatus       domain.RequestStatus        `json:"RequestStatus"`
 	UploadRequest       *msg.ClientSendMessageMedia `json:"UploadRequest"`
 	DownloadRequest     *msg.Document               `json:"DownloadRequest"`
 	onFileStatusChanged domain.OnFileStatusChanged
@@ -201,6 +202,7 @@ func (fs *FileStatus) GetDTO() *dto.FileStatus {
 	m.TotalParts = fs.TotalParts
 	m.Type = bool(fs.Type)
 	m.IsCompleted = fs.IsCompleted
+	m.RequestStatus = int32(fs.RequestStatus)
 	if fs.UploadRequest != nil {
 		m.UploadRequest, _ = fs.UploadRequest.Marshal()
 	}
@@ -224,6 +226,7 @@ func (fs *FileStatus) LoadDTO(d dto.FileStatus, progress domain.OnFileStatusChan
 	fs.TotalParts = d.TotalParts
 	fs.Type = StateType(d.Type)
 	fs.IsCompleted = d.IsCompleted
+	fs.RequestStatus = domain.RequestStatus(d.RequestStatus)
 	fs.UploadRequest = new(msg.ClientSendMessageMedia)
 	fs.UploadRequest.Unmarshal(d.UploadRequest)
 	fs.DownloadRequest = new(msg.Document)

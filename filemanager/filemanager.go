@@ -184,6 +184,7 @@ func (fm *FileManager) Upload(fileID int64, req *msg.ClientPendingMessage) error
 	state := NewFileStatus(req.ID, fileID, fileSize, x.FilePath, StateUpload, cluster.ID, 0, 0, fm.progressCallback)
 	state.UploadRequest = x
 	fm.AddToQueue(state)
+	repo.Ctx().Files.SaveFileStatus(state.GetDTO())
 	return nil
 }
 
@@ -226,13 +227,13 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 	}
 	if state != nil {
 		fm.AddToQueue(state)
+		repo.Ctx().Files.SaveFileStatus(state.GetDTO())
 		repo.Ctx().Files.SaveDownloadingFile(state.GetDTO())
 	}
 }
 
 // AddToQueue add request to queue
 func (fm *FileManager) AddToQueue(status *FileStatus) {
-
 	if status.Type == StateUpload {
 		fm.mxUp.Lock()
 		fm.UploadQueue[status.FileID] = status
