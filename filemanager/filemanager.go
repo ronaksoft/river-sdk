@@ -229,6 +229,7 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 		fm.AddToQueue(state)
 		repo.Ctx().Files.SaveFileStatus(state.GetDTO())
 		repo.Ctx().Files.SaveDownloadingFile(state.GetDTO())
+		repo.Ctx().Files.UpdateFileStatus(state.MessageID, domain.RequestStateDefault)
 	}
 }
 
@@ -245,13 +246,13 @@ func (fm *FileManager) AddToQueue(status *FileStatus) {
 	}
 }
 
-func (fm *FileManager) DeleteFromQueue(messageID int64) {
+func (fm *FileManager) DeleteFromQueue(fileID int64) {
 	fm.mxUp.Lock()
-	delete(fm.UploadQueue, messageID)
+	delete(fm.UploadQueue, fileID)
 	fm.mxUp.Unlock()
 
 	fm.mxDown.Lock()
-	delete(fm.DownloadQueue, messageID)
+	delete(fm.DownloadQueue, fileID)
 	fm.mxDown.Unlock()
 }
 
@@ -447,6 +448,13 @@ func (fm *FileManager) LoadFileStatusQueue() {
 	for _, d := range dtos {
 		fs := new(FileStatus)
 		fs.LoadDTO(d, fm.progressCallback)
+		if fs.RequestStatus == domain.RequestStatePused ||
+			fs.RequestStatus == domain.RequestStateCanceled ||
+			fs.RequestStatus == domain.RequestStateFailed ||
+			fs.RequestStatus == domain.RequestStateCompleted {
+			continue
+		}
+
 		fm.AddToQueue(fs)
 	}
 }

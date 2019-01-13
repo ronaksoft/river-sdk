@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
 )
@@ -16,6 +17,8 @@ type RepoFiles interface {
 	GetExistingFileDocument(filePath string) *dto.Files
 	GetFilePath(msgID, docID int64) string
 	SaveDownloadingFile(fs *dto.FileStatus) error
+	UpdateFileStatus(msgID int64, state domain.RequestStatus) error
+
 	// delete this later
 	GetFirstFileStatu() dto.FileStatus
 }
@@ -164,12 +167,22 @@ func (r *repoFiles) SaveDownloadingFile(fs *dto.FileStatus) error {
 	defer r.mx.Unlock()
 
 	mdl := dto.Files{}
-	r.db.Find(mdl, fs.MessageID)
+	r.db.Find(&mdl, fs.MessageID)
 	if mdl.MessageID == 0 {
 		(&mdl).MapFromFileStatus(fs)
 		r.db.Create(&mdl)
 	}
 	return r.db.Table(mdl.TableName()).Where("MessageID=? OR DocumentID=?", fs.MessageID, fs.FileID).Updates(map[string]interface{}{
 		"FilePath": fs.FilePath,
+	}).Error
+}
+
+func (r *repoFiles) UpdateFileStatus(msgID int64, state domain.RequestStatus) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	mdl := dto.FileStatus{}
+	return r.db.Table(mdl.TableName()).Where("MessageID=? ", msgID).Updates(map[string]interface{}{
+		"RequestStatus": int32(state),
 	}).Error
 }

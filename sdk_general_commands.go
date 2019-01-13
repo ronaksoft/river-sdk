@@ -353,14 +353,38 @@ func (r *River) GetFilePath(msgID int64) string {
 
 func (r *River) FileDownload(msgID int64) {
 	m := repo.Ctx().Messages.GetMessage(msgID)
+
 	if m != nil {
 		switch m.MediaType {
 		case msg.MediaTypeDocument:
 			x := new(msg.MediaDocument)
 			err := x.Unmarshal(m.Media)
 			if err == nil {
-				filemanager.Ctx().Download(m)
+				// check file existance
+				filePath := repo.Ctx().Files.GetFilePath(m.ID, x.Doc.ID)
+				if _, err = os.Stat(filePath); os.IsNotExist(err) {
+					filemanager.Ctx().Download(m)
+				} else {
+					r.onFileDownloadCompleted(m.ID, filePath)
+				}
+
 			}
 		}
+	}
+}
+
+func (r *River) CancelDownload(msgID int64) {
+	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
+	if err == nil {
+		filemanager.Ctx().DeleteFromQueue(fs.FileID)
+		repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStatePused)
+	}
+}
+
+func (r *River) CancelUpload(msgID int64) {
+	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
+	if err == nil {
+		filemanager.Ctx().DeleteFromQueue(fs.FileID)
+		repo.Ctx().PendingMessages.DeletePendingMessage(fs.MessageID)
 	}
 }

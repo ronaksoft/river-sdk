@@ -21,6 +21,7 @@ type RepoPendingMessages interface {
 	GetAllPendingMessages() []*msg.MessagesSend
 	DeletePeerAllMessages(peerID int64, peerType int32) (*msg.ClientUpdateMessagesDeleted, error)
 	SaveMessageMedia(ID, senderID, requestID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error)
+	GetPendingMessage(messageID int64) *msg.UserMessage
 }
 
 type repoPendingMessages struct {
@@ -327,4 +328,27 @@ func (r *repoPendingMessages) SaveMessageMedia(ID, senderID, requestID int64, ms
 		}
 	}
 	return res, err
+}
+
+// GetPendingMessages
+func (r *repoPendingMessages) GetPendingMessage(messageID int64) *msg.UserMessage {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	log.LOG_Debug("RepoPendingMessages::GetPendingMessages()",
+		zap.Int64("MessageID", messageID),
+	)
+	message := new(msg.UserMessage)
+	dtoMsg := new(dto.PendingMessages)
+	err := r.db.Where("ID = ?", messageID).Find(&dtoMsg).Error
+	if err != nil {
+		log.LOG_Debug("RepoPendingMessages::GetPendingMessages()-> fetch messages",
+			zap.String("Error", err.Error()),
+		)
+		return nil
+	}
+
+	dtoMsg.MapToUserMessage(message)
+
+	return message
 }
