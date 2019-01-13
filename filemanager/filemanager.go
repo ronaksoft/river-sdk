@@ -226,7 +226,7 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 	}
 	if state != nil {
 		fm.AddToQueue(state)
-		repo.Ctx().Files.UpdateDownloadingFilePath(state.MessageID, state.FileID, state.FilePath)
+		repo.Ctx().Files.SaveDownloadingFile(state.GetDTO())
 	}
 }
 
@@ -299,7 +299,7 @@ func (fm *FileManager) startDownloadQueue() {
 				completedDownloads := domain.MInt64B{}
 				for _, fs := range fm.DownloadQueue {
 					if fs.IsCompleted {
-						completedDownloads[fs.MessageID] = true
+						completedDownloads[fs.FileID] = true
 						continue
 					}
 

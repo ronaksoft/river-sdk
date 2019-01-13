@@ -15,7 +15,7 @@ type RepoFiles interface {
 	SaveFileDocument(msgID int64, doc *msg.MediaDocument) error
 	GetExistingFileDocument(filePath string) *dto.Files
 	GetFilePath(msgID, docID int64) string
-	UpdateDownloadingFilePath(msgID, docID int64, filePath string) error
+	SaveDownloadingFile(fs *dto.FileStatus) error
 	// delete this later
 	GetFirstFileStatu() dto.FileStatus
 }
@@ -142,12 +142,17 @@ func (r *repoFiles) GetFilePath(msgID, docID int64) string {
 	return ""
 }
 
-func (r *repoFiles) UpdateDownloadingFilePath(msgID, docID int64, filePath string) error {
+func (r *repoFiles) SaveDownloadingFile(fs *dto.FileStatus) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	mld := dto.Files{}
-	return r.db.Table(mld.TableName()).Where("MessageID=? OR DocumentID=?", msgID, docID).Updates(map[string]interface{}{
-		"FilePath": filePath,
+	mdl := dto.Files{}
+	r.db.Find(mdl, fs.MessageID)
+	if mdl.MessageID == 0 {
+		(&mdl).MapFromFileStatus(fs)
+		r.db.Create(&mdl)
+	}
+	return r.db.Table(mdl.TableName()).Where("MessageID=? OR DocumentID=?", fs.MessageID, fs.FileID).Updates(map[string]interface{}{
+		"FilePath": fs.FilePath,
 	}).Error
 }

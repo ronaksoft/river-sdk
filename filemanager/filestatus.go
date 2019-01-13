@@ -102,24 +102,26 @@ func (fs *FileStatus) Read() ([]byte, int, error) {
 // Write writes givin data to current position of file
 func (fs *FileStatus) Write(data []byte) (isCompleted bool, err error) {
 	fs.mx.Lock()
-
+	defer fs.mx.Unlock()
 	var file *os.File
 
 	// create file if its not exist
 	if _, err = os.Stat(fs.FilePath); os.IsNotExist(err) {
 		file, err = os.Create(fs.FilePath)
 		if err != nil {
-			return false, err
+			return
 		}
+
 		// truncate reserves size of file
 		err = file.Truncate(fs.TotalSize)
 		if err != nil {
-			return false, err
+			file.Close()
+			return
 		}
 	}
 	// open file if its not open
 	if file == nil {
-		file, err = os.Open(fs.FilePath)
+		file, err = os.OpenFile(fs.FilePath, os.O_RDWR, os.ModePerm)
 		if err != nil {
 			return
 		}
@@ -127,15 +129,17 @@ func (fs *FileStatus) Write(data []byte) (isCompleted bool, err error) {
 
 	// write to file
 	count, err := file.WriteAt(data, fs.Position)
+	file.Close()
 	if err != nil {
 		return
 	}
 	fs.Position += int64(count)
 	fs.IsCompleted = fs.Position >= fs.TotalSize
 	isCompleted = fs.IsCompleted
+	if isCompleted {
+		repo.Ctx().Files.SaveDownloadingFile(fs.GetDTO())
+	}
 	fs.fileStatusChanged()
-
-	fs.mx.Unlock()
 
 	return
 }
@@ -188,7 +192,8 @@ func (fs *FileStatus) GetDTO() *dto.FileStatus {
 	m.MessageID = fs.MessageID
 	m.FileID = fs.FileID
 	m.ClusterID = fs.ClusterID
-	m.AccessHash = fs.AccessHash
+	m.AccessHash = int64(fs.AccessHash)
+	m.Version = fs.Version
 	m.FilePath = fs.FilePath
 	m.Position = fs.Position
 	m.TotalSize = fs.TotalSize
@@ -210,7 +215,8 @@ func (fs *FileStatus) LoadDTO(d dto.FileStatus, progress domain.OnFileStatusChan
 	fs.MessageID = d.MessageID
 	fs.FileID = d.FileID
 	fs.ClusterID = d.ClusterID
-	fs.AccessHash = d.AccessHash
+	fs.AccessHash = uint64(d.AccessHash)
+	fs.Version = d.Version
 	fs.FilePath = d.FilePath
 	fs.Position = d.Position
 	fs.TotalSize = d.TotalSize

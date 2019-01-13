@@ -207,5 +207,5 @@ func fnRunUploadFile() {
 }
 
 func fnrunDownloadFile() {
-	_SDK.FileDownload(3941)
+	_SDK.FileDownload(3942)
 }

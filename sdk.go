@@ -928,6 +928,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID int64, clusterID, totalP
 }
 
 func (r *River) onFileDownloadCompleted(messageID int64, filePath string) {
+
 	// Notify UI that download is completed
 	if r.mainDelegate.OnDownloadCompleted != nil {
 		r.mainDelegate.OnDownloadCompleted(messageID, filePath)

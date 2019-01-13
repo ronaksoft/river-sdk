@@ -87,3 +87,57 @@ func (m *Files) MapFromDocument(v *msg.MediaDocument) {
 	m.ClusterID = v.Doc.ClusterID
 	m.Attributes, _ = json.Marshal(v.Doc.Attributes)
 }
+
+func (m *Files) MapFromFileStatus(v *FileStatus) {
+	m.MessageID = v.MessageID
+	m.DocumentID = v.FileID
+	m.ClusterID = v.ClusterID
+	m.AccessHash = v.AccessHash
+	m.Version = v.Version
+	m.FilePath = v.FilePath
+	//m.Position = v.Position
+	m.FileSize = int32(v.TotalSize)
+	//m.PartNo = v.PartNo
+	//m.TotalParts = v.TotalParts
+	//m.IsCompleted = v.IsCompleted
+	if v.Type {
+		// Download state
+		doc := new(msg.Document)
+		err := doc.Unmarshal(v.DownloadRequest)
+		if err == nil {
+			m.DocumentID = doc.ID
+			m.AccessHash = int64(doc.AccessHash)
+			m.CreatedOn = doc.Date
+			m.FileMIME = doc.MimeType
+			m.FileSize = doc.FileSize
+			m.Version = doc.Version
+			m.ClusterID = doc.ClusterID
+			m.Attributes, _ = json.Marshal(doc.Attributes)
+		}
+
+	} else {
+		// upload state
+		req := new(msg.ClientSendMessageMedia)
+		err := req.Unmarshal(v.UploadRequest)
+		if err == nil {
+			//m.MessageID = messageID
+			m.PeerID = req.Peer.ID
+			m.PeerType = int32(req.Peer.Type)
+			//m.ClusterID = v.ClusterID
+			//m.DocumentID = v.DocumentID
+			m.AccessHash = int64(req.Peer.AccessHash)
+			m.MediaType = int32(req.MediaType)
+			m.Caption = req.Caption
+			m.FileName = req.FileName
+			//m.FileSize = fileSize
+			m.FilePath = req.FilePath
+			m.ThumbFilePath = req.ThumbFilePath
+			m.FileMIME = req.FileMIME
+			m.ThumbMIME = req.ThumbMIME
+			m.ReplyTo = req.ReplyTo
+			m.ClearDraft = req.ClearDraft
+			//m.Version = 0
+			m.Attributes, _ = json.Marshal(req.Attributes)
+		}
+	}
+}
