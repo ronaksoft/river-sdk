@@ -92,14 +92,22 @@ func (r *repoFiles) MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, fil
 }
 
 func (r *repoFiles) GetFirstFileStatu() dto.FileStatus {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
 	e := dto.FileStatus{}
 	r.db.First(&e)
 	return e
 }
 
 func (r *repoFiles) SaveFileDocument(msgID int64, doc *msg.MediaDocument) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
 	// 1. get file by documentID if we had file allready update file info for current msg too (use case : forwarded messages)
 	existedDocument := dto.Files{}
+	// r.db.LogMode(true)
+	// defer r.db.LogMode(false)
 
 	r.db.Table(existedDocument.TableName()).Where("DocumentID=?", doc.Doc.ID).First(&existedDocument)
 
@@ -112,13 +120,17 @@ func (r *repoFiles) SaveFileDocument(msgID int64, doc *msg.MediaDocument) error 
 
 	if mdl.MessageID > 0 {
 		mdl.MapFromDocument(doc)
-		return r.db.Table(mdl.TableName()).Where("MessageID=?", msgID).Update(mdl).Error
+		return r.db.Table(mdl.TableName()).Where("MessageID=?", msgID).Update(&mdl).Error
 	}
 	mdl.MapFromDocument(doc)
-	return r.db.Create(mdl).Error
+	return r.db.Create(&mdl).Error
+
 }
 
 func (r *repoFiles) GetExistingFileDocument(filePath string) *dto.Files {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
 	existedDocument := new(dto.Files)
 
 	err := r.db.Table(existedDocument.TableName()).Where("FilePath=?", filePath).First(existedDocument).Error
@@ -129,6 +141,9 @@ func (r *repoFiles) GetExistingFileDocument(filePath string) *dto.Files {
 }
 
 func (r *repoFiles) GetFilePath(msgID, docID int64) string {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
 	f := dto.Files{}
 
 	r.db.Find(&f, msgID)

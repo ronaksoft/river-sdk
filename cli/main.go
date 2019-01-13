@@ -107,7 +107,7 @@ func main() {
 		_Shell.Run()
 	} else {
 		// testDecryptDump()
-		// fnRunUploadFile()
+		fnRunUploadFile()
 		// testSendMessageMedia()
 		// fnrunDownloadFile()
 
@@ -177,8 +177,8 @@ func fnRunUploadFile() {
 	req.MediaType = msg.InputMediaTypeUploadedDocument
 	// 0056
 	req.Peer = &msg.InputPeer{
-		AccessHash: 4500232805839723,
-		ID:         189353777894340,
+		AccessHash: 4500871196408867,
+		ID:         1408226742326241,
 		Type:       msg.PeerUser,
 	}
 	// // ZzzzzzzzzzzzzzzzzzzzZ

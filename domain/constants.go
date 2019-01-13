@@ -1,6 +1,10 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	"git.ronaksoftware.com/ronak/riversdk/msg"
+)
 
 const (
 	FilePayloadSize    = 1024 * 256        // 256KB
@@ -78,3 +82,12 @@ const (
 	RequestStateFailed    RequestStatus = 4
 	RequestStateCanceled  RequestStatus = 5
 )
+
+var DocumentAttributeTypeNames = map[msg.DocumentAttributeType]string{
+	msg.AttributeTypeNone:  "AttributeTypeNone",
+	msg.AttributeTypeAudio: "AttributeTypeAudio",
+	msg.AttributeTypeVideo: "AttributeTypeVideo",
+	msg.AttributeTypePhoto: "AttributeTypePhoto",
+	msg.AttributeTypeFile:  "AttributeTypeFile",
+	msg.AttributeAnimated:  "AttributeAnimated",
+}

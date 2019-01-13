@@ -608,6 +608,13 @@ func (ctrl *SyncController) MessageHandler(messages []*msg.MessageEnvelope) {
 		log.LOG_Debug("SyncController::MessageHandler() Received",
 			zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
 		)
+
+		if m.Constructor == msg.C_Error {
+			err := new(msg.Error)
+			err.Unmarshal(m.Message)
+			log.LOG_Error("MessageHandler() Received Error ", zap.String("Code", err.Code), zap.String("Item", err.Items))
+		}
+
 		if applier, ok := ctrl.messageAppliers[m.Constructor]; ok {
 			applier(m)
 			log.LOG_Debug("SyncController::MessageHandler() Message Applied",

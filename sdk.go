@@ -901,6 +901,13 @@ func (r *River) onFileUploadCompleted(messageID, fileID int64, clusterID, totalP
 			doc := new(msg.InputMediaUploadedDocument)
 			doc.MimeType = req.FileMIME
 			doc.Attributes = req.Attributes
+
+			//DELETE MEEEE
+			for _, at := range req.Attributes {
+				log.LOG_Warn("ZZZZZZZZZZZZZZZ", zap.String("AttributeType", domain.DocumentAttributeTypeNames[at.Type]))
+			}
+			// DELETE MEE
+
 			doc.Caption = req.Caption
 			doc.File = &msg.InputFile{
 				ClusterID:   clusterID,
