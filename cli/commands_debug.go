@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
+	"github.com/kr/pretty"
 
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/toolbox"
@@ -248,6 +250,70 @@ var GetGroupInputPeer = &ishell.Cmd{
 	},
 }
 
+var UpdateNewMessageHexString = &ishell.Cmd{
+	Name: "UpdateNewMessageHexString",
+	Func: func(c *ishell.Context) {
+		str := fnGetUpdateNewMessageHexString(c)
+		buff, err := hex.DecodeString(str)
+		if err != nil {
+			c.Println("Error : ", err)
+			return
+		}
+
+		udp := new(msg.UpdateNewMessage)
+		err = udp.Unmarshal(buff)
+		if err != nil {
+			c.Println("Error : ", err)
+			return
+		}
+
+		fmt.Printf("\r\n\r\n\r\n%# v\r\n\r\n\r\n", pretty.Formatter(udp))
+		switch udp.Message.MediaType {
+		case msg.MediaTypeDocument:
+			x := new(msg.MediaDocument)
+			err = x.Unmarshal(udp.Message.Media)
+			if err == nil {
+				fmt.Printf("\r\n%# v\r\n", pretty.Formatter(x))
+
+				for _, att := range x.Doc.Attributes {
+					switch att.Type {
+					case msg.AttributeTypeAudio:
+						attrib := new(msg.DocumentAttributeAudio)
+						err = attrib.Unmarshal(att.Data)
+						if err == nil {
+							fmt.Printf("\r\n%# v\r\n", pretty.Formatter(attrib))
+						}
+					case msg.AttributeTypeVideo:
+						attrib := new(msg.DocumentAttributeVideo)
+						err = attrib.Unmarshal(att.Data)
+						if err == nil {
+							fmt.Printf("\r\n%# v\r\n", pretty.Formatter(attrib))
+						}
+					case msg.AttributeTypePhoto:
+						attrib := new(msg.DocumentAttributePhoto)
+						err = attrib.Unmarshal(att.Data)
+						if err == nil {
+							fmt.Printf("\r\n%# v\r\n", pretty.Formatter(attrib))
+						}
+					case msg.AttributeTypeFile:
+						attrib := new(msg.DocumentAttributeFile)
+						err = attrib.Unmarshal(att.Data)
+						if err == nil {
+							fmt.Printf("\r\n%# v\r\n", pretty.Formatter(attrib))
+						}
+					}
+				}
+			}
+		case msg.MediaTypePhoto:
+			x := new(msg.MediaPhoto)
+			err = x.Unmarshal(udp.Message.Media)
+			if err == nil {
+
+			}
+		}
+	},
+}
+
 func init() {
 	Debug.AddCmd(SendTyping)
 	Debug.AddCmd(MessageSendByNetwork)
@@ -260,4 +326,6 @@ func init() {
 
 	Debug.AddCmd(SearchInDialogs)
 	Debug.AddCmd(GetGroupInputPeer)
+
+	Debug.AddCmd(UpdateNewMessageHexString)
 }

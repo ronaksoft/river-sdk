@@ -700,3 +700,12 @@ func getFileAttribute(c *ishell.Context) *msg.DocumentAttribute {
 	req.Data, _ = attrib.Marshal()
 	return req
 }
+func fnGetUpdateNewMessageHexString(c *ishell.Context) string {
+	c.Print("Enter UpdateNewMessage Hex String:")
+	title := c.ReadLine()
+
+	if title[:2] == "0x" {
+		title = title[2:]
+	}
+	return title
+}
