@@ -9,7 +9,7 @@ import (
 type RepoFiles interface {
 	SaveFileStatus(fs *dto.FileStatus) (err error)
 	GetAllFileStatus() []dto.FileStatus
-	GetFileStatus(msgID int64) (dto.FileStatus, error)
+	GetFileStatus(msgID int64) (*dto.FileStatus, error)
 	DeleteFileStatus(ID int64) error
 	DeleteManyFileStatus(IDs []int64) error
 	MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, fileSize int32, sent *msg.MessagesSent) (err error)
@@ -49,12 +49,12 @@ func (r *repoFiles) GetAllFileStatus() []dto.FileStatus {
 	return dtos
 }
 
-func (r *repoFiles) GetFileStatus(msgID int64) (dto.FileStatus, error) {
+func (r *repoFiles) GetFileStatus(msgID int64) (*dto.FileStatus, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	mdl := dto.FileStatus{}
-	err := r.db.Find(&mdl, msgID).Error
+	mdl := new(dto.FileStatus)
+	err := r.db.Find(mdl, msgID).Error
 	return mdl, err
 }
 

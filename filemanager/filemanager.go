@@ -167,53 +167,61 @@ func (fm *FileManager) Upload(fileID int64, req *msg.ClientPendingMessage) error
 
 // Download add download request
 func (fm *FileManager) Download(req *msg.UserMessage) {
-	var docID int64
-	var clusterID int32
-	var accessHash uint64
-	var version int32
-	var fileSize int32
-	var filePath string
-	var state *FileStatus
-	switch req.MediaType {
-	case msg.MediaTypeEmpty:
-		// TODO:: implement it
-	case msg.MediaTypePhoto:
-		// // TODO:: implement it
-		// x := new(msg.MediaPhoto)
-		// x.Unmarshal(req.Media)
-		// docID = x.Doc.ID
-		// clusterID = x.Doc.ClusterID
-		// accessHash = x.Doc.AccessHash
-		// fileSize = x.Doc.FileSize
-	case msg.MediaTypeDocument:
-		x := new(msg.MediaDocument)
-		x.Unmarshal(req.Media)
 
-		fileName := ""
-		for _, attr := range x.Doc.Attributes {
-			if attr.Type == msg.AttributeTypeFile {
-				attrFile := new(msg.DocumentAttributeFile)
-				err := attrFile.Unmarshal(attr.Data)
-				if err == nil {
-					fileName = attrFile.Filename
+	var state *FileStatus
+	dtoState, err := repo.Ctx().Files.GetFileStatus(req.ID)
+	if err == nil && dtoState != nil {
+		state = new(FileStatus)
+		state.LoadDTO(*dtoState, fm.progressCallback)
+	} else {
+		var docID int64
+		var clusterID int32
+		var accessHash uint64
+		var version int32
+		var fileSize int32
+		var filePath string
+		switch req.MediaType {
+		case msg.MediaTypeEmpty:
+			// TODO:: implement it
+		case msg.MediaTypePhoto:
+			// // TODO:: implement it
+			// x := new(msg.MediaPhoto)
+			// x.Unmarshal(req.Media)
+			// docID = x.Doc.ID
+			// clusterID = x.Doc.ClusterID
+			// accessHash = x.Doc.AccessHash
+			// fileSize = x.Doc.FileSize
+		case msg.MediaTypeDocument:
+			x := new(msg.MediaDocument)
+			x.Unmarshal(req.Media)
+
+			fileName := ""
+			for _, attr := range x.Doc.Attributes {
+				if attr.Type == msg.AttributeTypeFile {
+					attrFile := new(msg.DocumentAttributeFile)
+					err := attrFile.Unmarshal(attr.Data)
+					if err == nil {
+						fileName = attrFile.Filename
+					}
 				}
 			}
+
+			docID = x.Doc.ID
+			clusterID = x.Doc.ClusterID
+			accessHash = x.Doc.AccessHash
+			version = x.Doc.Version
+			fileSize = x.Doc.FileSize
+			filePath = GetFilePath(x.Doc.MimeType, x.Doc.ID, fileName)
+			state = NewFileStatus(req.ID, docID, int64(fileSize), filePath, StateDownload, clusterID, accessHash, version, fm.progressCallback)
+			state.DownloadRequest = x.Doc
+
+		case msg.MediaTypeContact:
+			// TODO:: implement it
+		default:
+			log.LOG_Error("FileManager::Download() Invalid MediaType")
 		}
-
-		docID = x.Doc.ID
-		clusterID = x.Doc.ClusterID
-		accessHash = x.Doc.AccessHash
-		version = x.Doc.Version
-		fileSize = x.Doc.FileSize
-		filePath = GetFilePath(x.Doc.MimeType, x.Doc.ID, fileName)
-		state = NewFileStatus(req.ID, docID, int64(fileSize), filePath, StateDownload, clusterID, accessHash, version, fm.progressCallback)
-		state.DownloadRequest = x.Doc
-
-	case msg.MediaTypeContact:
-		// TODO:: implement it
-	default:
-		log.LOG_Error("FileManager::Download() Invalid MediaType")
 	}
+
 	if state != nil {
 		fm.AddToQueue(state)
 		repo.Ctx().Files.SaveFileStatus(state.GetDTO())

@@ -329,6 +329,10 @@ func (r *River) GetFileProgess(msgID int64) float64 {
 	if fs.TotalParts <= 0 {
 		return -1
 	}
+	if fs.IsCompleted || fs.Position == fs.TotalSize {
+		go repo.Ctx().Files.DeleteFileStatus(fs.MessageID)
+		return -1
+	}
 	return (float64(fs.Position) / float64(fs.TotalSize) * float64(100))
 }
 func (r *River) GetFilePath(msgID int64) string {
