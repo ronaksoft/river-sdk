@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -81,7 +82,7 @@ func main() {
 		}
 	} else {
 		dbPath = "./_db"
-		dbID = "23740071"
+		dbID = "23740009"
 	}
 
 	qPath := "./_queue"
@@ -107,18 +108,20 @@ func main() {
 	if isDebug != "true" {
 		_Shell.Run()
 	} else {
-		// testDecryptDump()
+		// fnDecryptDump()
 		fnRunUploadFile()
-		// testSendMessageMedia()
-		// fnrunDownloadFile()
+		// fnSendMessageMedia()
+		// fnRunDownloadFile()
 		// fnSendInputMediaDocument()
+		// fnDecodeUpdateHexString()
+
 		//block forever
 		select {}
 	}
 
 }
 
-func testSendMessageMedia() {
+func fnSendMessageMedia() {
 
 	dtoFS := repo.Ctx().Files.GetFirstFileStatu()
 	fs := filemanager.FileStatus{}
@@ -138,7 +141,6 @@ func testSendMessageMedia() {
 	doc.Attributes = req.Attributes
 	doc.Caption = req.Caption
 	doc.File = &msg.InputFile{
-		ClusterID:   fs.ClusterID,
 		FileID:      fs.FileID,
 		FileName:    req.FileName,
 		MD5Checksum: "",
@@ -153,7 +155,7 @@ func testSendMessageMedia() {
 
 }
 
-func testDecryptDump() {
+func fnDecryptDump() {
 	file, _ := os.Open("dump.raw")
 	rawBytes, _ := ioutil.ReadAll(file)
 
@@ -174,21 +176,22 @@ func fnRunUploadFile() {
 	req.ClearDraft = true
 	req.FileMIME = ""
 	req.FileName = "test.zip"
-	req.FilePath = "/home/q/test.zip"
+	req.FilePath = "/home/q/d.zip"
 	req.MediaType = msg.InputMediaTypeUploadedDocument
-	// // 0009
+	// 0009
+	req.Peer = &msg.InputPeer{
+		AccessHash: 4500232805839723,
+		ID:         189353777894340,
+		Type:       msg.PeerUser,
+	}
+
+	// // 0056
 	// req.Peer = &msg.InputPeer{
-	// 	AccessHash: 4500232805839723,
-	// 	ID:         189353777894340,
+	// 	AccessHash: 4500871196408867,
+	// 	ID:         1408226742326241,
 	// 	Type:       msg.PeerUser,
 	// }
 
-	// 0056
-	req.Peer = &msg.InputPeer{
-		AccessHash: 4500871196408867,
-		ID:         1408226742326241,
-		Type:       msg.PeerUser,
-	}
 	// // ZzzzzzzzzzzzzzzzzzzzZ
 	// req.Peer = &msg.InputPeer{
 	// 	AccessHash: 0,
@@ -214,8 +217,8 @@ func fnRunUploadFile() {
 	_Shell.Println("RequestID :", reqID, "\tError :", err)
 }
 
-func fnrunDownloadFile() {
-	_SDK.FileDownload(3942)
+func fnRunDownloadFile() {
+	_SDK.FileDownload(7)
 }
 
 func fnSendInputMediaDocument() {
@@ -246,4 +249,21 @@ func fnSendInputMediaDocument() {
 
 	_Shell.Println("RequestID :", reqID, "\tError :", err)
 
+}
+
+func fnDecodeUpdateHexString() {
+	str := "0a35081b10c4a7ace5f5862b180120f2c3f1e1052800300038004000480050005a0060d0bdedc8c296c902680070007800800100980100122408d0bdedc8c296c9021204303030391a0430303039220028003000390000000000000000196b73cc19f0fc0f00a00601a8062c"
+	buff, err := hex.DecodeString(str)
+	if err != nil {
+		panic(err)
+	}
+
+	udp := new(msg.UpdateNewMessage)
+	err = udp.Unmarshal(buff)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(udp.Message.MediaType)
+	fmt.Println(udp.Message.Media)
 }

@@ -193,7 +193,7 @@ message InputFile {
     required int32 TotalParts = 2;
     required string FileName = 3;
     required string MD5Checksum = 4;
-    required int32 ClusterID = 5;
+//    required int32 ClusterID = 5;
 }
 
 // GroupFlags

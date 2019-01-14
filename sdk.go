@@ -263,6 +263,10 @@ func (r *River) onAuthRecalled(m *msg.MessageEnvelope) {
 			log.LOG_Warn("onAuthRecalled()", zap.Error(err))
 			return
 		}
+		// // TODO : get time difference and apply it later on send packets to server
+		// clientTime := time.Now().Unix()
+		// serverTime := x.Timestamp
+
 	}
 }
 
@@ -910,7 +914,6 @@ func (r *River) onFileUploadCompleted(messageID, fileID int64, clusterID, totalP
 
 			doc.Caption = req.Caption
 			doc.File = &msg.InputFile{
-				ClusterID:   clusterID,
 				FileID:      fileID,
 				FileName:    req.FileName,
 				MD5Checksum: "",
@@ -936,7 +939,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID int64, clusterID, totalP
 }
 
 func (r *River) onFileDownloadCompleted(messageID int64, filePath string) {
-
+	log.LOG_Info("onFileDownloadCompleted()", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
 	// Notify UI that download is completed
 	if r.mainDelegate.OnDownloadCompleted != nil {
 		r.mainDelegate.OnDownloadCompleted(messageID, filePath)
