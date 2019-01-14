@@ -100,6 +100,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	} else {
 		fileServerAddress = conf.ServerEndpoint + "/file"
 	}
+	fileServerAddress = strings.Replace(fileServerAddress, "ws://", "http://", 1)
 	filemanager.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory)
 
 	filemanager.InitFileManager(fileServerAddress, r.onFileUploadCompleted, r.onFileProgressChanged, r.onFileDownloadCompleted)
@@ -906,12 +907,6 @@ func (r *River) onFileUploadCompleted(messageID, fileID int64, clusterID, totalP
 			doc := new(msg.InputMediaUploadedDocument)
 			doc.MimeType = req.FileMIME
 			doc.Attributes = req.Attributes
-
-			//DELETE MEEEE
-			for _, at := range req.Attributes {
-				log.LOG_Warn("ZZZZZZZZZZZZZZZ", zap.String("AttributeType", domain.DocumentAttributeTypeNames[at.Type]))
-			}
-			// DELETE MEE
 
 			doc.Caption = req.Caption
 			doc.File = &msg.InputFile{
