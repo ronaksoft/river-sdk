@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime"
 	"os"
 	"path"
 	"strconv"
@@ -97,10 +98,18 @@ func SetRootFolders(audioDir, fileDir, photoDir, videoDir string) {
 	_DirVideo = videoDir
 }
 
-func GetFilePath(mime string, docID int64, fileName string) string {
-	lower := strings.ToLower(mime)
+func GetFilePath(mimeType string, docID int64, fileName string) string {
+	lower := strings.ToLower(mimeType)
 	strDocID := strconv.FormatInt(docID, 10)
 	ext := path.Ext(fileName)
+	if ext == "" {
+		exts, err := mime.ExtensionsByType(mimeType)
+		if err == nil {
+			for _, val := range exts {
+				ext = val
+			}
+		}
+	}
 	if strings.HasPrefix(lower, "video/") {
 		return path.Join(_DirVideo, fmt.Sprintf("%s%s", strDocID, ext))
 	}
@@ -179,12 +188,24 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 	case msg.MediaTypeDocument:
 		x := new(msg.MediaDocument)
 		x.Unmarshal(req.Media)
+
+		fileName := ""
+		for _, attr := range x.Doc.Attributes {
+			if attr.Type == msg.AttributeTypeFile {
+				attrFile := new(msg.DocumentAttributeFile)
+				err := attrFile.Unmarshal(attr.Data)
+				if err == nil {
+					fileName = attrFile.Filename
+				}
+			}
+		}
+
 		docID = x.Doc.ID
 		clusterID = x.Doc.ClusterID
 		accessHash = x.Doc.AccessHash
 		version = x.Doc.Version
 		fileSize = x.Doc.FileSize
-		filePath = GetFilePath(x.Doc.MimeType, x.Doc.ID, "")
+		filePath = GetFilePath(x.Doc.MimeType, x.Doc.ID, fileName)
 		state = NewFileStatus(req.ID, docID, int64(fileSize), filePath, StateDownload, clusterID, accessHash, version, fm.progressCallback)
 		state.DownloadRequest = x.Doc
 
