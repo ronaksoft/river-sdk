@@ -91,3 +91,9 @@ var DocumentAttributeTypeNames = map[msg.DocumentAttributeType]string{
 	msg.AttributeTypeFile:  "AttributeTypeFile",
 	msg.AttributeAnimated:  "AttributeAnimated",
 }
+var MediaTypeNames = map[msg.MediaType]string{
+	msg.MediaTypeEmpty:    "Empty",
+	msg.MediaTypePhoto:    "Photo",
+	msg.MediaTypeDocument: "Document",
+	msg.MediaTypeContact:  "Contact",
+}

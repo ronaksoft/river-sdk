@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
+	"git.ronaksoftware.com/ronak/riversdk/domain"
+
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"github.com/olekukonko/tablewriter"
 	"go.uber.org/zap"
@@ -179,17 +181,19 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		bufMessages := new(bytes.Buffer)
 		tableMessages := tablewriter.NewWriter(bufMessages)
 		tableMessages.SetHeader([]string{
-			"PeerID", "PeerType", "CreatedOn", "Flags", "Body", "Entities",
+			"MsgID", "PeerID", "PeerType", "CreatedOn", "Flags", "Body", "Entities", "MeidaType",
 		})
 
 		for _, d := range x.Messages {
 			tableMessages.Append([]string{
+				fmt.Sprintf("%d", d.ID),
 				fmt.Sprintf("%d", d.PeerID),
 				fmt.Sprintf("%d", d.PeerType),
 				fmt.Sprintf("%d", d.CreatedOn),
 				fmt.Sprintf("%d", d.Flags),
 				fmt.Sprintf("%v", string(d.Body)),
 				fmt.Sprintf("%v", d.Entities),
+				fmt.Sprintf("%s", domain.MediaTypeNames[d.MediaType]),
 			})
 		}
 		tableMessages.Render()

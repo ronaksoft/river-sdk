@@ -10,8 +10,8 @@ func UpdatePrinter(envelope *msg.UpdateEnvelope) {
 	case msg.C_UpdateNewMessage:
 		x := new(msg.UpdateNewMessage)
 		x.Unmarshal(envelope.Update)
-		_Shell.Println(_MAGNETA("PeerID, MessageID, SenderID, Body: %d %d %d %s",
-			x.Message.PeerID, x.Message.ID, x.Message.SenderID, x.Message.Body,
+		_Shell.Println(_MAGNETA("MsgID,PeerID, MessageID, SenderID, Body: %d %d %d %d %s",
+			x.Message.ID, x.Message.PeerID, x.Message.ID, x.Message.SenderID, x.Message.Body,
 		))
 	case msg.C_UpdateReadHistoryInbox:
 		x := new(msg.UpdateReadHistoryInbox)
