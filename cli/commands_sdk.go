@@ -1,7 +1,6 @@
 package main
 
 import (
-	"git.ronaksoftware.com/ronak/riversdk/filemanager"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"gopkg.in/abiosoft/ishell.v2"
@@ -20,9 +19,6 @@ var SdkConnInfo = &ishell.Cmd{
 		c.Println("FirstName:", _SDK.ConnInfo.FirstName)
 		c.Println("LastName:", _SDK.ConnInfo.LastName)
 		c.Println("AuthKey:", _SDK.ConnInfo.PickupAuthKey())
-		for _, cluster := range filemanager.GetAvailableClusters() {
-			c.Println("ClusterID:", cluster.ID, "\tIP:", cluster.IP, "\tDomain:", cluster.Domain)
-		}
 	},
 }
 
