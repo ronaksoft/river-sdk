@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
@@ -12,7 +11,7 @@ import (
 )
 
 // Send to file server cluster
-func (fm *FileManager) Send(msgEnvelope *msg.MessageEnvelope, cluster *msg.Cluster) (*msg.MessageEnvelope, error) {
+func (fm *FileManager) Send(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
 	protoMessage := new(msg.ProtoMessage)
 	protoMessage.AuthID = fm.authID
 	protoMessage.MessageKey = make([]byte, 32)
@@ -44,11 +43,9 @@ func (fm *FileManager) Send(msgEnvelope *msg.MessageEnvelope, cluster *msg.Clust
 	// Set timeout
 	client := http.DefaultClient
 	client.Timeout = domain.DEFAULT_REQUEST_TIMEOUT
-	if !strings.HasPrefix(cluster.Domain, "http") {
-		cluster.Domain = "http://" + cluster.Domain
-	}
+
 	// Send Data
-	httpResp, err := client.Post(cluster.Domain, "application/protobuf", reqBuff)
+	httpResp, err := client.Post(fm.ServerAddress, "application/protobuf", reqBuff)
 	if err != nil {
 		return nil, err
 	}

@@ -94,8 +94,15 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	}
 
 	// Initialize filemanager
+	fileServerAddress := ""
+	if strings.HasSuffix(conf.ServerEndpoint, "/") {
+		fileServerAddress = conf.ServerEndpoint + "file"
+	} else {
+		fileServerAddress = conf.ServerEndpoint + "/file"
+	}
 	filemanager.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory)
-	filemanager.InitFileManager(r.onFileUploadCompleted, r.onFileProgressChanged, r.onFileDownloadCompleted)
+
+	filemanager.InitFileManager(fileServerAddress, r.onFileUploadCompleted, r.onFileProgressChanged, r.onFileDownloadCompleted)
 
 	// Initialize Network Controller
 	r.networkCtrl = network.NewNetworkController(
@@ -106,6 +113,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		},
 	)
 	r.networkCtrl.SetNetworkStatusChangedCallback(func(newQuality domain.NetworkStatus) {
+		filemanager.Ctx().SetNetworkStatus(newQuality)
 		if r.mainDelegate != nil && r.mainDelegate.OnNetworkStatusChanged != nil {
 			r.mainDelegate.OnNetworkStatusChanged(int(newQuality))
 		}
@@ -254,9 +262,6 @@ func (r *River) onAuthRecalled(m *msg.MessageEnvelope) {
 			log.LOG_Warn("onAuthRecalled()", zap.Error(err))
 			return
 		}
-
-		// save cluster info
-		filemanager.SetAvailableClusters(x.AvailableClusters)
 	}
 }
 

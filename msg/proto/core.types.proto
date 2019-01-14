@@ -65,6 +65,7 @@ enum UserStatus {
 
 // InputFileLocation
 message InputFileLocation {
+    required int32 ClusterID = 1;
     required int64 FileID = 2 [jstype = JS_STRING];
     required fixed64 AccessHash = 3 [jstype = JS_STRING];
     required int32 Version = 4;
@@ -154,7 +155,7 @@ message MessageEntity {
     required MessageEntityType Type = 1;
     required int32 Offset = 2;
     required int32 Length = 3;
-    optional int64 UserID = 4;
+    optional int64 UserID = 4 [jstype = JS_STRING];
 }
 
 // RSAPublicKey
@@ -238,12 +239,4 @@ message GroupParticipant {
     required ParticipantType Type = 4;
     required uint64 AccessHash = 5 [jstype = JS_STRING];
     required string Username = 6;
-}
-
-// Cluster
-message Cluster {
-    required int32 ID = 1;
-    required string IP = 2;
-    required string Domain = 3;
-    required string Location = 4;
 }

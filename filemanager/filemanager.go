@@ -24,7 +24,6 @@ import (
 var (
 	singletone sync.Mutex
 	ctx        *FileManager
-	_Clusters  map[int32]*msg.Cluster
 	_DirAudio  string
 	_DirFile   string
 	_DirPhoto  string
@@ -42,6 +41,9 @@ type FileManager struct {
 	authKey    []byte
 	authID     int64
 	messageSeq int64
+
+	ServerAddress string
+	NetworkStatus domain.NetworkStatus
 
 	mxDown               sync.Mutex
 	mxUp                 sync.Mutex
@@ -64,16 +66,14 @@ func Ctx() *FileManager {
 	return ctx
 }
 
-func InitFileManager(onUploadCompleted domain.OnFileUploadCompleted, progressCallback domain.OnFileStatusChanged, onDownloadCompleted domain.OnFileDownloadCompleted) {
-	if _Clusters == nil {
-		_Clusters = make(map[int32]*msg.Cluster)
-	}
+func InitFileManager(serverAddress string, onUploadCompleted domain.OnFileUploadCompleted, progressCallback domain.OnFileStatusChanged, onDownloadCompleted domain.OnFileDownloadCompleted) {
 
 	if ctx == nil {
 		singletone.Lock()
 		defer singletone.Unlock()
 		if ctx == nil {
 			ctx = &FileManager{
+				ServerAddress:       serverAddress,
 				UploadQueue:         make(map[int64]*FileStatus, 0),
 				DownloadQueue:       make(map[int64]*FileStatus, 0),
 				chStopUploader:      make(chan bool),
@@ -95,37 +95,6 @@ func SetRootFolders(audioDir, fileDir, photoDir, videoDir string) {
 	_DirFile = fileDir
 	_DirPhoto = photoDir
 	_DirVideo = videoDir
-}
-
-func SetAvailableClusters(clusters []*msg.Cluster) {
-	// double check
-	if _Clusters == nil {
-		_Clusters = make(map[int32]*msg.Cluster)
-	}
-	for _, c := range clusters {
-		_Clusters[c.ID] = c
-	}
-}
-
-func GetAvailableClusters() map[int32]*msg.Cluster {
-	return _Clusters
-}
-
-func GetBestCluster() *msg.Cluster {
-
-	for {
-		if len(_Clusters) > 0 {
-			break
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-	// TODO : fix this later
-	// get first cluster
-	for _, c := range _Clusters {
-		return c
-	}
-
-	return nil
 }
 
 func GetFilePath(mime string, docID int64, fileName string) string {
@@ -180,8 +149,7 @@ func (fm *FileManager) Upload(fileID int64, req *msg.ClientPendingMessage) error
 	// 	log.LOG_Debug(strMD5)
 	// }
 
-	cluster := GetBestCluster()
-	state := NewFileStatus(req.ID, fileID, fileSize, x.FilePath, StateUpload, cluster.ID, 0, 0, fm.progressCallback)
+	state := NewFileStatus(req.ID, fileID, fileSize, x.FilePath, StateUpload, 0, 0, 0, fm.progressCallback)
 	state.UploadRequest = x
 	fm.AddToQueue(state)
 	repo.Ctx().Files.SaveFileStatus(state.GetDTO())
@@ -282,10 +250,11 @@ func (fm *FileManager) SetAuthorization(authID int64, authKey []byte) {
 }
 
 func (fm *FileManager) startDownloadQueue() {
-	if GetBestCluster() == nil {
-		time.Sleep(100 * time.Millisecond)
-	}
 	for {
+		if fm.NetworkStatus == domain.DISCONNECTED || fm.NetworkStatus == domain.CONNECTING {
+			time.Sleep(100 * time.Millisecond)
+		}
+
 		fm.DownloadQueueStarted = true
 		wg := &sync.WaitGroup{}
 		select {
@@ -335,10 +304,11 @@ func (fm *FileManager) startDownloadQueue() {
 }
 
 func (fm *FileManager) startUploadQueue() {
-	if GetBestCluster() == nil {
-		time.Sleep(100 * time.Millisecond)
-	}
 	for {
+		if fm.NetworkStatus == domain.DISCONNECTED || fm.NetworkStatus == domain.CONNECTING {
+			time.Sleep(100 * time.Millisecond)
+		}
+
 		fm.UploadQueueStarted = true
 		wg := &sync.WaitGroup{}
 		select {
@@ -378,7 +348,7 @@ func (fm *FileManager) startUploadQueue() {
 
 func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, fs *FileStatus, wg *sync.WaitGroup) {
 	// time out has been set in Send()
-	res, err := fm.Send(req, _Clusters[fs.ClusterID])
+	res, err := fm.Send(req)
 	if err == nil {
 		switch res.Constructor {
 		case msg.C_Error:
@@ -411,7 +381,7 @@ func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, 
 
 func (fm *FileManager) sendDownloadRequest(req *msg.MessageEnvelope, fs *FileStatus, wg *sync.WaitGroup) {
 	// time out has been set in Send()
-	res, err := fm.Send(req, _Clusters[fs.ClusterID])
+	res, err := fm.Send(req)
 	if err == nil {
 		switch res.Constructor {
 		case msg.C_Error:
@@ -457,4 +427,8 @@ func (fm *FileManager) LoadFileStatusQueue() {
 
 		fm.AddToQueue(fs)
 	}
+}
+
+func (fm *FileManager) SetNetworkStatus(state domain.NetworkStatus) {
+	fm.NetworkStatus = state
 }

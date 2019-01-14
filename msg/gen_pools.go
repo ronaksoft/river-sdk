@@ -155,12 +155,6 @@ var (
 			return m
 		},
 	}
-	PoolCluster = sync.Pool{
-		New: func() interface{} {
-			m := new(Cluster)
-			return m
-		},
-	}
 	PoolFile = sync.Pool{
 		New: func() interface{} {
 			m := new(File)

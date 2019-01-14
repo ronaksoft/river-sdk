@@ -154,12 +154,6 @@ func ResultUpdateGroupAdmins(out *MessageEnvelope, res *UpdateGroupAdmins) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
-func ResultCluster(out *MessageEnvelope, res *Cluster) {
-	out.Constructor = C_Cluster
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
 func ResultFile(out *MessageEnvelope, res *File) {
 	out.Constructor = C_File
 	pbytes.Put(out.Message)

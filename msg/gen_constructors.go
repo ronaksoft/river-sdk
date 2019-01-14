@@ -26,7 +26,6 @@ const (
 	C_UpdateMessagesDeleted              int64 = 670568714
 	C_AccountPrivacyRule                 int64 = 690047132
 	C_UpdateGroupAdmins                  int64 = 694155405
-	C_Cluster                            int64 = 712527880
 	C_File                               int64 = 749574446
 	C_User                               int64 = 765557111
 	C_UsersMany                          int64 = 801733941
@@ -178,7 +177,6 @@ var ConstructorNames = map[int64]string{
 	670568714:  "UpdateMessagesDeleted",
 	690047132:  "AccountPrivacyRule",
 	694155405:  "UpdateGroupAdmins",
-	712527880:  "Cluster",
 	749574446:  "File",
 	765557111:  "User",
 	801733941:  "UsersMany",
