@@ -35,6 +35,12 @@ var (
 			return m
 		},
 	}
+	PoolSystemStopTrace = sync.Pool{
+		New: func() interface{} {
+			m := new(SystemStopTrace)
+			return m
+		},
+	}
 	PoolUpdateUserTyping = sync.Pool{
 		New: func() interface{} {
 			m := new(UpdateUserTyping)
@@ -482,6 +488,12 @@ var (
 	PoolInputMediaPhoto = sync.Pool{
 		New: func() interface{} {
 			m := new(InputMediaPhoto)
+			return m
+		},
+	}
+	PoolSystemStartTrace = sync.Pool{
+		New: func() interface{} {
+			m := new(SystemStartTrace)
 			return m
 		},
 	}

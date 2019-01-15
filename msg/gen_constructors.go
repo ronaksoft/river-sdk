@@ -6,6 +6,7 @@ const (
 	C_MediaPhoto                         int64 = 71894788
 	C_InitUserBound                      int64 = 128391141
 	C_MediaWebPage                       int64 = 148034084
+	C_SystemStopTrace                    int64 = 172425342
 	C_UpdateUserTyping                   int64 = 178254060
 	C_GroupFull                          int64 = 205850814
 	C_DocumentAttributeAudio             int64 = 309707708
@@ -81,6 +82,7 @@ const (
 	C_ClientPendingMessage               int64 = 2164891929
 	C_ProtoMessage                       int64 = 2179260159
 	C_InputMediaPhoto                    int64 = 2201579839
+	C_SystemStartTrace                   int64 = 2217162353
 	C_DocumentAttributeFile              int64 = 2227452062
 	C_AuthRegister                       int64 = 2228369460
 	C_AuthCheckedPhone                   int64 = 2236203131
@@ -159,6 +161,7 @@ var ConstructorNames = map[int64]string{
 	71894788:   "MediaPhoto",
 	128391141:  "InitUserBound",
 	148034084:  "MediaWebPage",
+	172425342:  "SystemStopTrace",
 	178254060:  "UpdateUserTyping",
 	205850814:  "GroupFull",
 	309707708:  "DocumentAttributeAudio",
@@ -234,6 +237,7 @@ var ConstructorNames = map[int64]string{
 	2164891929: "ClientPendingMessage",
 	2179260159: "ProtoMessage",
 	2201579839: "InputMediaPhoto",
+	2217162353: "SystemStartTrace",
 	2227452062: "DocumentAttributeFile",
 	2228369460: "AuthRegister",
 	2236203131: "AuthCheckedPhone",

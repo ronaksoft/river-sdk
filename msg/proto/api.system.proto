@@ -14,7 +14,15 @@ message SystemGetPublicKeys {
 message SystemGetDHGroups {
 }
 
-// System
+// SystemStartTrace
+message SystemStartTrace {
+    required int32 ClusterID = 1;
+}
+
+// SystemStopTrace
+message SystemStopTrace {}
+
+// SystemClientLog
 message SystemClientLog {
     required string DeviceID = 1;
     required string DeviceOS = 2;

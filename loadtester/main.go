@@ -11,6 +11,8 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	ishell "gopkg.in/abiosoft/ishell.v2"
+	// "net/http"
+	// _ "net/http/pprof"
 )
 
 var (
@@ -59,6 +61,11 @@ func init() {
 }
 
 func main() {
+
+	// // pprof
+	// go func() {
+	// 	http.ListenAndServe("localhost:6060", nil)
+	// }()
 
 	_Shell.Run()
 }
