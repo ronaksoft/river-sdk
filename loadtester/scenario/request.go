@@ -1,11 +1,8 @@
 package scenario
 
 import (
-	"strconv"
-
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 
-	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
 
@@ -13,13 +10,15 @@ func wrapEnvelop(ctr int64, data []byte) *msg.MessageEnvelope {
 	env := new(msg.MessageEnvelope)
 	env.Constructor = ctr
 	env.Message = data
-	env.RequestID = uint64(domain.SequentialUniqueID())
+	// env.RequestID = uint64(domain.SequentialUniqueID())
+	env.RequestID = uint64(shared.GetSeqID())
 	return env
 }
 
 func InitConnect() (envelop *msg.MessageEnvelope) {
 	req := new(msg.InitConnect)
-	req.ClientNonce = uint64(domain.SequentialUniqueID())
+	//req.ClientNonce = uint64(domain.SequentialUniqueID())
+	req.ClientNonce = uint64(shared.GetSeqID())
 	data, err := req.Marshal()
 	if err != nil {
 		panic(err)
@@ -105,8 +104,9 @@ func MessageSend(peer *shared.PeerInfo) (envelop *msg.MessageEnvelope) {
 		ID:         peer.PeerID,
 		Type:       peer.PeerType,
 	}
-	req.RandomID = domain.SequentialUniqueID()
-	req.Body = strconv.FormatInt(req.RandomID, 10)
+	// req.RandomID = domain.SequentialUniqueID()
+	req.RandomID = shared.GetSeqID()
+	req.Body = "A" //strconv.FormatInt(req.RandomID, 10)
 
 	data, err := req.Marshal()
 	if err != nil {

@@ -47,6 +47,11 @@ func init() {
 	_Shell.AddCmd(cmdImportContact)
 	_Shell.AddCmd(cmdSendMessage)
 
+	_Shell.AddCmd(cmdRegisterByPool)
+	_Shell.AddCmd(cmdLoginByPool)
+	_Shell.AddCmd(cmdImportContactByPool)
+	_Shell.AddCmd(cmdSendMessageByPool)
+
 	log.SetLogger(Log)
 	log.SetLogLevel(0) // DBG: -1, INF: 1, WRN: 2, ERR: 3
 
@@ -54,18 +59,6 @@ func init() {
 }
 
 func main() {
-
-	// act, err := actor.NewActor("237400" + "0000001")
-	// act.SetPhoneList([]string{"23740071", "23740072"})
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// scenario.Play(act, scenario.NewCreateAuthKey())
-	// scenario.Play(act, scenario.NewRegister())
-	// scenario.Play(act, scenario.NewLogin())
-	// scenario.Play(act, scenario.NewImportContact())
-	// scenario.Play(act, scenario.NewSendMessage())
 
 	_Shell.Run()
 }

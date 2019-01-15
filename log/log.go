@@ -51,13 +51,13 @@ func SetLogger(fn func(logLevel int, msg string)) {
 }
 
 func LOG_Debug(msg string, fields ...zap.Field) {
+	if int(LOG_LEVEL.Level()) > int(zap.DebugLevel) {
+		return
+	}
 
 	callerInfo := fnGetCallerInfo()
 
 	if logger != nil {
-		if int(LOG_LEVEL.Level()) > int(zap.DebugLevel) {
-			return
-		}
 		logger(int(zap.DebugLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
 	} else {
 		_LOG.Debug(msg, fields...)
@@ -65,13 +65,12 @@ func LOG_Debug(msg string, fields ...zap.Field) {
 }
 
 func LOG_Warn(msg string, fields ...zap.Field) {
-
+	if int(LOG_LEVEL.Level()) > int(zap.WarnLevel) {
+		return
+	}
 	callerInfo := fnGetCallerInfo()
 
 	if logger != nil {
-		if int(LOG_LEVEL.Level()) > int(zap.WarnLevel) {
-			return
-		}
 		logger(int(zap.WarnLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
 	} else {
 		_LOG.Warn(msg, fields...)
@@ -79,13 +78,12 @@ func LOG_Warn(msg string, fields ...zap.Field) {
 }
 
 func LOG_Info(msg string, fields ...zap.Field) {
-
+	if int(LOG_LEVEL.Level()) > int(zap.InfoLevel) {
+		return
+	}
 	callerInfo := fnGetCallerInfo()
 
 	if logger != nil {
-		if int(LOG_LEVEL.Level()) > int(zap.InfoLevel) {
-			return
-		}
 		logger(int(zap.InfoLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
 	} else {
 		_LOG.Info(msg, fields...)
@@ -93,13 +91,12 @@ func LOG_Info(msg string, fields ...zap.Field) {
 }
 
 func LOG_Error(msg string, fields ...zap.Field) {
-
+	if int(LOG_LEVEL.Level()) > int(zap.ErrorLevel) {
+		return
+	}
 	callerInfo := fnGetCallerInfo()
 
 	if logger != nil {
-		if int(LOG_LEVEL.Level()) > int(zap.ErrorLevel) {
-			return
-		}
 		logger(int(zap.ErrorLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
 	} else {
 		_LOG.Error(msg, fields...)
@@ -107,13 +104,12 @@ func LOG_Error(msg string, fields ...zap.Field) {
 }
 
 func LOG_Fatal(msg string, fields ...zap.Field) {
-
+	if int(LOG_LEVEL.Level()) > int(zap.FatalLevel) {
+		return
+	}
 	callerInfo := fnGetCallerInfo()
 
 	if logger != nil {
-		if int(LOG_LEVEL.Level()) > int(zap.FatalLevel) {
-			return
-		}
 		logger(int(zap.FatalLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
 	}
 	//  The logger should calls os.Exit(1) when its FatalLevel

@@ -21,10 +21,10 @@ func NewImportContact(isFinal bool) shared.Screenwriter {
 
 // Play execute ImportContact scenario
 func (s *ImportContact) Play(act shared.Acter) {
-	// if len(act.GetPeers()) > 0 {
-	// 	s.log(act, "Actor already have Peers", 0)
-	// 	return
-	// }
+	if len(act.GetPeers()) > 0 {
+		s.log(act, "Actor already have Peers", 0)
+		return
+	}
 	if act.GetAuthID() == 0 {
 		s.AddJobs(1)
 		success := Play(act, NewCreateAuthKey(false))

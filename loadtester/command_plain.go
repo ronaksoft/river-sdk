@@ -183,11 +183,10 @@ var cmdSendMessage = &ishell.Cmd{
 				continue
 			}
 
-			_Reporter.Register(act)
-
 			wg.Add(1)
 			// // run async
 			go func() {
+				_Reporter.Register(act)
 				scenario.Play(act, scenario.NewSendMessage(true))
 				wg.Done()
 			}()

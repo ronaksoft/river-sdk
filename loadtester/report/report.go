@@ -98,11 +98,13 @@ func (r *Report) onActorStop(phone string) {
 	} else {
 		log.LOG_Warn(fmt.Sprintf("Actor(%s) not found in reporter", phone))
 	}
+
 	// Print does not need to be thread safe :/
 	if r.isActive && (!r.isPrinting || r.StoppedActors == r.TotalActors) {
 		r.isPrinting = true
 		r.Print()
 	}
+
 }
 
 // String format data for print
