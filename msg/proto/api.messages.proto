@@ -125,6 +125,14 @@ message MessagesForward {
     required int64 RandomID = 5;
 }
 
+// MessagesReadContents
+// @Function
+// Returns: Bool
+message MessagesReadContents {
+    required InputPeer Peer = 1;
+    repeated int64 MessageIDs = 2;
+}
+
 // MessagesDialogs
 message MessagesDialogs {
     repeated Dialog Dialogs = 1;

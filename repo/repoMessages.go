@@ -23,6 +23,7 @@ type RepoMessages interface {
 	GetTopMessageID(peerID int64, peerType int32) (int64, error)
 	GetMessageHistoryWithMinMaxID(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User)
 	GetMessage(messageID int64) *msg.UserMessage
+	SetContentRead(messageIDs []int64) error
 }
 
 type repoMessages struct {
@@ -534,4 +535,18 @@ func (r *repoMessages) GetMessage(messageID int64) *msg.UserMessage {
 	dtoMsg.MapTo(message)
 
 	return message
+}
+
+// SetContentRead
+func (r *repoMessages) SetContentRead(messageIDs []int64) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	log.LOG_Debug("RepoMessages::SetContentRead()",
+		zap.Int64s("MessageIDs", messageIDs),
+	)
+	mdl := dto.Messages{}
+	return r.db.Table(mdl.TableName()).Where("ID in (?)", messageIDs).Updates(map[string]interface{}{
+		"ContentRead": true,
+	}).Error
 }

@@ -982,3 +982,25 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	}
 
 }
+
+func (r *River) messagesReadContents(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.MessagesReadContents)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG_Debug("River::messagesReadContents()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	err := repo.Ctx().Messages.SetContentRead(req.MessageIDs)
+	if err != nil {
+		log.LOG_Debug("River::groupUpdateAdmin()-> UpdateGroupMemberType()",
+			zap.String("Error", err.Error()),
+		)
+	}
+
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+}

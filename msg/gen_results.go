@@ -370,6 +370,12 @@ func ResultContactsDelete(out *MessageEnvelope, res *ContactsDelete) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultMessagesReadContents(out *MessageEnvelope, res *MessagesReadContents) {
+	out.Constructor = C_MessagesReadContents
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultSystemGetDHGroups(out *MessageEnvelope, res *SystemGetDHGroups) {
 	out.Constructor = C_SystemGetDHGroups
 	pbytes.Put(out.Message)
@@ -660,6 +666,12 @@ func ResultMessagesSent(out *MessageEnvelope, res *MessagesSent) {
 }
 func ResultGroupsGetFull(out *MessageEnvelope, res *GroupsGetFull) {
 	out.Constructor = C_GroupsGetFull
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultUpdateReadMessagesContents(out *MessageEnvelope, res *UpdateReadMessagesContents) {
+	out.Constructor = C_UpdateReadMessagesContents
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

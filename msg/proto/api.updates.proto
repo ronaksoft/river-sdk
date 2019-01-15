@@ -147,3 +147,11 @@ message UpdateGroupAdmins {
     required int64 GroupID = 1 [jstype = JS_STRING];
     required bool AdminEnabled = 2;
 }
+
+// UpdateReadMessagesContents
+message UpdateReadMessagesContents {
+    required int32 UCount = 100;
+    required int64 UpdateID = 101;
+    repeated int64 MessageIDs = 1;
+    required Peer Peer = 2;
+}

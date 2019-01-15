@@ -82,7 +82,7 @@ func main() {
 		}
 	} else {
 		dbPath = "./_db"
-		dbID = "23740009"
+		dbID = "23740056"
 	}
 
 	qPath := "./_queue"
@@ -109,11 +109,12 @@ func main() {
 		_Shell.Run()
 	} else {
 		// fnDecryptDump()
-		fnRunUploadFile()
+		// fnRunUploadFile()
 		// fnSendMessageMedia()
 		// fnRunDownloadFile()
 		// fnSendInputMediaDocument()
 		// fnDecodeUpdateHexString()
+		// fnMessagesReadContents()
 
 		//block forever
 		select {}
@@ -266,4 +267,26 @@ func fnDecodeUpdateHexString() {
 
 	fmt.Println(udp.Message.MediaType)
 	fmt.Println(udp.Message.Media)
+}
+
+func fnMessagesReadContents() {
+
+	req := new(msg.MessagesReadContents)
+	// 0056
+	req.Peer = &msg.InputPeer{
+		AccessHash: 4500871196408867,
+		ID:         1408226742326241,
+		Type:       msg.PeerUser,
+	}
+	req.MessageIDs = []int64{
+		4038,
+	}
+
+	// send the request to server
+	buff, _ := req.Marshal()
+	reqDelegate := new(RequestDelegate)
+	reqID, err := _SDK.ExecuteCommand(msg.C_MessagesReadContents, buff, reqDelegate, false, false)
+
+	_Shell.Println("RequestID :", reqID, "\tError :", err)
+
 }

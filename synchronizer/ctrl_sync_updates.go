@@ -389,3 +389,21 @@ func (ctrl *SyncController) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) [
 	}
 	return res
 }
+
+// updateReadMessagesContents
+func (ctrl *SyncController) updateReadMessagesContents(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+	log.LOG_Debug("SyncController::updateReadMessagesContents() applier")
+
+	x := new(msg.UpdateReadMessagesContents)
+	x.Unmarshal(u.Update)
+
+	err := repo.Ctx().Messages.SetContentRead(x.MessageIDs)
+	if err != nil {
+		log.LOG_Debug("SyncController::updateReadMessagesContents()-> SetContentRead()",
+			zap.String("Error", err.Error()),
+		)
+	}
+
+	res := []*msg.UpdateEnvelope{u}
+	return res
+}

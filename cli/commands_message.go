@@ -259,11 +259,32 @@ var MessagesForward = &ishell.Cmd{
 	},
 }
 
+var MessagesReadContents = &ishell.Cmd{
+	Name: "MessagesReadContents",
+	Func: func(c *ishell.Context) {
+		req := msg.MessagesReadContents{
+			Peer:       new(msg.InputPeer),
+			MessageIDs: make([]int64, 0),
+		}
+		req.Peer.Type = fnGetPeerType(c)
+		req.Peer.ID = fnGetPeerID(c)
+		req.Peer.AccessHash = fnGetAccessHash(c)
+		req.MessageIDs = fnGetMessageIDs(c)
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesReadContents, reqBytes, reqDelegate, false, false); err != nil {
+			_Log.Debug(err.Error())
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+
+	},
+}
+
 func init() {
 	Message.AddCmd(MessageGetDialogs)
 	Message.AddCmd(MessageGetDialog)
 	Message.AddCmd(MessageSend)
-	// Message.AddCmd(MessageReadHistory)
 	Message.AddCmd(MessageGetHistory)
 	Message.AddCmd(MessageReadHistory)
 	Message.AddCmd(MessageSetTyping)
@@ -272,4 +293,5 @@ func init() {
 	Message.AddCmd(MessagesDelete)
 	Message.AddCmd(MessagesEdit)
 	Message.AddCmd(MessagesForward)
+	Message.AddCmd(MessagesReadContents)
 }

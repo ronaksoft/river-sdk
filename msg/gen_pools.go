@@ -371,6 +371,12 @@ var (
 			return m
 		},
 	}
+	PoolMessagesReadContents = sync.Pool{
+		New: func() interface{} {
+			m := new(MessagesReadContents)
+			return m
+		},
+	}
 	PoolSystemGetDHGroups = sync.Pool{
 		New: func() interface{} {
 			m := new(SystemGetDHGroups)
@@ -662,6 +668,12 @@ var (
 	PoolGroupsGetFull = sync.Pool{
 		New: func() interface{} {
 			m := new(GroupsGetFull)
+			return m
+		},
+	}
+	PoolUpdateReadMessagesContents = sync.Pool{
+		New: func() interface{} {
+			m := new(UpdateReadMessagesContents)
 			return m
 		},
 	}

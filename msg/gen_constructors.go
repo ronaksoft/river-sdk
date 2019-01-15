@@ -62,6 +62,7 @@ const (
 	C_MessagesMany                       int64 = 1713238910
 	C_UpdateDifference                   int64 = 1742546619
 	C_ContactsDelete                     int64 = 1750426880
+	C_MessagesReadContents               int64 = 1781251275
 	C_SystemGetDHGroups                  int64 = 1786665018
 	C_UpdateGroupParticipantAdmin        int64 = 1813022164
 	C_UpdateMessageEdited                int64 = 1825079988
@@ -111,6 +112,7 @@ const (
 	C_SystemDHGroups                     int64 = 2890748083
 	C_MessagesSent                       int64 = 2942502835
 	C_GroupsGetFull                      int64 = 2986704909
+	C_UpdateReadMessagesContents         int64 = 2991403048
 	C_MessagesSend                       int64 = 3000244183
 	C_ClientUpdateMessagesDeleted        int64 = 3060926862
 	C_GroupsDeleteUser                   int64 = 3172322223
@@ -213,6 +215,7 @@ var ConstructorNames = map[int64]string{
 	1713238910: "MessagesMany",
 	1742546619: "UpdateDifference",
 	1750426880: "ContactsDelete",
+	1781251275: "MessagesReadContents",
 	1786665018: "SystemGetDHGroups",
 	1813022164: "UpdateGroupParticipantAdmin",
 	1825079988: "UpdateMessageEdited",
@@ -262,6 +265,7 @@ var ConstructorNames = map[int64]string{
 	2890748083: "SystemDHGroups",
 	2942502835: "MessagesSent",
 	2986704909: "GroupsGetFull",
+	2991403048: "UpdateReadMessagesContents",
 	3000244183: "MessagesSend",
 	3060926862: "ClientUpdateMessagesDeleted",
 	3172322223: "GroupsDeleteUser",
