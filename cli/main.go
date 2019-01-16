@@ -82,20 +82,24 @@ func main() {
 		}
 	} else {
 		dbPath = "./_db"
-		dbID = "23740056"
+		dbID = "23740071"
 	}
 
 	qPath := "./_queue"
 	_SDK = new(riversdk.River)
 	_SDK.SetConfig(&riversdk.RiverConfig{
-		ServerEndpoint:     "ws://new.river.im", //"ws://192.168.1.110/",
-		DbPath:             dbPath,
-		DbID:               dbID,
-		QueuePath:          fmt.Sprintf("%s/%s", qPath, dbID),
-		ServerKeysFilePath: "./keys.json",
-		MainDelegate:       new(MainDelegate),
-		Logger:             new(Logger),
-		LogLevel:           int(zapcore.DebugLevel),
+		ServerEndpoint:         "ws://new.river.im", //"ws://192.168.1.110/",
+		DbPath:                 dbPath,
+		DbID:                   dbID,
+		QueuePath:              fmt.Sprintf("%s/%s", qPath, dbID),
+		ServerKeysFilePath:     "./keys.json",
+		MainDelegate:           new(MainDelegate),
+		Logger:                 new(Logger),
+		LogLevel:               int(zapcore.DebugLevel),
+		DocumentAudioDirectory: "./_files/audio",
+		DocumentVideoDirectory: "./_files/video",
+		DocumentPhotoDirectory: "./_files/photo",
+		DocumentFileDirectory:  "./_files/file",
 	})
 
 	_SDK.Start()
@@ -111,7 +115,7 @@ func main() {
 		// fnDecryptDump()
 		// fnRunUploadFile()
 		// fnSendMessageMedia()
-		// fnRunDownloadFile()
+		fnRunDownloadFile()
 		// fnSendInputMediaDocument()
 		// fnDecodeUpdateHexString()
 		// fnMessagesReadContents()
@@ -219,7 +223,7 @@ func fnRunUploadFile() {
 }
 
 func fnRunDownloadFile() {
-	_SDK.FileDownload(7)
+	_SDK.FileDownload(4131)
 }
 
 func fnSendInputMediaDocument() {

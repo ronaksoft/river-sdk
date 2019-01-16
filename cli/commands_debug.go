@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
+	"mime"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
@@ -391,6 +392,21 @@ var SystemTraceStop = &ishell.Cmd{
 
 	},
 }
+var MimeToExt = &ishell.Cmd{
+	Name: "MimeToExt",
+	Func: func(c *ishell.Context) {
+
+		mimeType := fnGetMime(c)
+		exts, err := mime.ExtensionsByType(mimeType)
+		if err != nil {
+			c.Println(err)
+			return
+		}
+		for _, ext := range exts {
+			c.Println(ext)
+		}
+	},
+}
 
 func init() {
 	Debug.AddCmd(SendTyping)
@@ -409,4 +425,6 @@ func init() {
 	Debug.AddCmd(SystemTrace)
 	Debug.AddCmd(SystemTraceStart)
 	Debug.AddCmd(SystemTraceStop)
+
+	Debug.AddCmd(MimeToExt)
 }

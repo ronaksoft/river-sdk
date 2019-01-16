@@ -372,8 +372,15 @@ func (r *River) FileDownload(msgID int64) {
 					r.onFileDownloadCompleted(m.ID, filePath)
 				}
 
+			} else {
+				log.LOG_Error("SDK::FileDownload()", zap.Error(err))
 			}
+
+		default:
+			log.LOG_Error("SDK::FileDownload() MediaType is invalid", zap.Int32("MediaType", int32(m.MediaType)))
 		}
+	} else {
+		log.LOG_Error("SDK::FileDownload()", zap.Int64("Message does not exist", msgID))
 	}
 }
 

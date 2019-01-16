@@ -103,10 +103,15 @@ func GetFilePath(mimeType string, docID int64, fileName string) string {
 	strDocID := strconv.FormatInt(docID, 10)
 	ext := path.Ext(fileName)
 	if ext == "" {
-		exts, err := mime.ExtensionsByType(mimeType)
-		if err == nil {
-			for _, val := range exts {
-				ext = val
+		// TOF :/
+		if lower == "audio/ogg" {
+			ext = ".ogg"
+		} else {
+			exts, err := mime.ExtensionsByType(mimeType)
+			if err == nil {
+				for _, val := range exts {
+					ext = val
+				}
 			}
 		}
 	}
@@ -114,10 +119,10 @@ func GetFilePath(mimeType string, docID int64, fileName string) string {
 		return path.Join(_DirVideo, fmt.Sprintf("%s%s", strDocID, ext))
 	}
 	if strings.HasPrefix(lower, "audio/") {
-		return path.Join(_DirVideo, fmt.Sprintf("%s%s", strDocID, ext))
+		return path.Join(_DirAudio, fmt.Sprintf("%s%s", strDocID, ext))
 	}
 	if strings.HasPrefix(lower, "image/") {
-		return path.Join(_DirVideo, fmt.Sprintf("%s%s", strDocID, ext))
+		return path.Join(_DirPhoto, fmt.Sprintf("%s%s", strDocID, ext))
 	}
 	return path.Join(_DirFile, fmt.Sprintf("%s%s", strDocID, ext))
 }
@@ -170,9 +175,15 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 
 	var state *FileStatus
 	dtoState, err := repo.Ctx().Files.GetFileStatus(req.ID)
+
 	if err == nil && dtoState != nil {
+		if dtoState.IsCompleted || dtoState.Position == dtoState.TotalSize {
+			fm.downloadCompleted(dtoState.MessageID, dtoState.FilePath)
+			return
+		}
 		state = new(FileStatus)
 		state.LoadDTO(*dtoState, fm.progressCallback)
+
 	} else {
 		var docID int64
 		var clusterID int32
@@ -234,22 +245,22 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 func (fm *FileManager) AddToQueue(status *FileStatus) {
 	if status.Type == StateUpload {
 		fm.mxUp.Lock()
-		fm.UploadQueue[status.FileID] = status
+		fm.UploadQueue[status.MessageID] = status
 		fm.mxUp.Unlock()
 	} else {
 		fm.mxDown.Lock()
-		fm.DownloadQueue[status.FileID] = status
+		fm.DownloadQueue[status.MessageID] = status
 		fm.mxDown.Unlock()
 	}
 }
 
-func (fm *FileManager) DeleteFromQueue(fileID int64) {
+func (fm *FileManager) DeleteFromQueue(msgID int64) {
 	fm.mxUp.Lock()
-	delete(fm.UploadQueue, fileID)
+	delete(fm.UploadQueue, msgID)
 	fm.mxUp.Unlock()
 
 	fm.mxDown.Lock()
-	delete(fm.DownloadQueue, fileID)
+	delete(fm.DownloadQueue, msgID)
 	fm.mxDown.Unlock()
 }
 
@@ -296,10 +307,11 @@ func (fm *FileManager) startDownloadQueue() {
 			// round robin and wait till all items in queus moves on step forward
 			fm.mxDown.Lock()
 			if len(fm.DownloadQueue) > 0 {
-				completedDownloads := domain.MInt64B{}
+				completedItems := domain.MInt64B{}
 				for _, fs := range fm.DownloadQueue {
 					if fs.IsCompleted {
-						completedDownloads[fs.FileID] = true
+						// panic("completed DOWNLOAD exist in download queue")
+						completedItems[fs.MessageID] = true
 						continue
 					}
 
@@ -312,12 +324,13 @@ func (fm *FileManager) startDownloadQueue() {
 					wg.Add(1)
 					go fm.sendDownloadRequest(envelop, fs, wg)
 				}
+
 				//remove completed downloads from queue
-				if len(completedDownloads) > 0 {
-					for key := range completedDownloads {
+				if len(completedItems) > 0 {
+					for key := range completedItems {
 						delete(fm.DownloadQueue, key)
 					}
-					go repo.Ctx().Files.DeleteManyFileStatus(completedDownloads.ToArray())
+					go repo.Ctx().Files.DeleteManyFileStatus(completedItems.ToArray())
 				}
 
 				fm.mxDown.Unlock()
@@ -350,8 +363,11 @@ func (fm *FileManager) startUploadQueue() {
 			// round robin and wait till all items in queus moves on step forward
 			fm.mxUp.Lock()
 			if len(fm.UploadQueue) > 0 {
+				completedItems := domain.MInt64B{}
 				for _, fs := range fm.UploadQueue {
 					if fs.IsCompleted {
+						// panic("completed UPLOAD exist in upload queue")
+						completedItems[fs.MessageID] = true
 						continue
 					}
 
@@ -363,6 +379,15 @@ func (fm *FileManager) startUploadQueue() {
 					wg.Add(1)
 					go fm.sendUploadRequest(envelop, int64(readCount), fs, wg)
 				}
+
+				//remove completed items from queue
+				if len(completedItems) > 0 {
+					for key := range completedItems {
+						delete(fm.UploadQueue, key)
+					}
+					go repo.Ctx().Files.DeleteManyFileStatus(completedItems.ToArray())
+				}
+
 				fm.mxUp.Unlock()
 			} else {
 				fm.mxUp.Unlock()
@@ -393,10 +418,8 @@ func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, 
 			if x.Result {
 				isCompleted := fs.ReadCommit(count)
 				if isCompleted {
-					// TODO : call completed delegate to execute SendMessageMedia
-					if fm.onUploadCompleted != nil {
-						go fm.onUploadCompleted(fs.MessageID, fs.FileID, fs.ClusterID, fs.TotalParts, fs.UploadRequest)
-					}
+					//call completed delegate
+					fm.uploadCompleted(fs.MessageID, fs.FileID, fs.ClusterID, fs.TotalParts, fs.UploadRequest)
 				}
 			}
 		default:
@@ -428,9 +451,8 @@ func (fm *FileManager) sendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 				log.LOG_Error("sendDownloadRequest() failed write to file", zap.Error(err))
 			} else if isCompleted {
 				//call completed delegate
-				if fm.onDownloadCompleted != nil {
-					go fm.onDownloadCompleted(fs.MessageID, fs.FilePath)
-				}
+				fm.downloadCompleted(fs.MessageID, fs.FilePath)
+
 			}
 		default:
 			log.LOG_Error("sendDownloadRequest() received unknown response", zap.Error(err))
@@ -442,7 +464,7 @@ func (fm *FileManager) sendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 }
 
 func (fm *FileManager) LoadFileStatusQueue() {
-	//TODO : load pended file status
+	// Load pended file status
 	dtos := repo.Ctx().Files.GetAllFileStatus()
 	for _, d := range dtos {
 		fs := new(FileStatus)
@@ -458,6 +480,25 @@ func (fm *FileManager) LoadFileStatusQueue() {
 	}
 }
 
+// SetNetworkStatus called on network controller state changes to inform filemanager
 func (fm *FileManager) SetNetworkStatus(state domain.NetworkStatus) {
 	fm.NetworkStatus = state
+}
+
+func (fm *FileManager) downloadCompleted(msgID int64, filePath string) {
+	// delete file status
+	fm.DeleteFromQueue(msgID)
+	repo.Ctx().Files.DeleteFileStatus(msgID)
+	if fm.onDownloadCompleted != nil {
+		fm.onDownloadCompleted(msgID, filePath)
+	}
+}
+
+func (fm *FileManager) uploadCompleted(msgID, fileID int64, clusterID, totalParts int32, uploadRequest *msg.ClientSendMessageMedia) {
+	// delete file status
+	fm.DeleteFromQueue(msgID)
+	repo.Ctx().Files.DeleteFileStatus(msgID)
+	if fm.onUploadCompleted != nil {
+		fm.onUploadCompleted(msgID, fileID, clusterID, totalParts, uploadRequest)
+	}
 }

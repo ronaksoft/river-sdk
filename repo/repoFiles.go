@@ -10,8 +10,8 @@ type RepoFiles interface {
 	SaveFileStatus(fs *dto.FileStatus) (err error)
 	GetAllFileStatus() []dto.FileStatus
 	GetFileStatus(msgID int64) (*dto.FileStatus, error)
-	DeleteFileStatus(ID int64) error
-	DeleteManyFileStatus(IDs []int64) error
+	DeleteFileStatus(msgID int64) error
+	DeleteManyFileStatus(msgIDs []int64) error
 	MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, fileSize int32, sent *msg.MessagesSent) (err error)
 	SaveFileDocument(msgID int64, doc *msg.MediaDocument) error
 	GetExistingFileDocument(filePath string) *dto.Files
@@ -70,12 +70,12 @@ func (r *repoFiles) DeleteFileStatus(ID int64) error {
 }
 
 // DeleteManyFileStatus
-func (r *repoFiles) DeleteManyFileStatus(IDs []int64) error {
+func (r *repoFiles) DeleteManyFileStatus(msgIDs []int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
 	// remove pending status
-	err := r.db.Where("MessageID IN (?)", IDs).Delete(dto.FileStatus{}).Error
+	err := r.db.Where("MessageID IN (?)", msgIDs).Delete(dto.FileStatus{}).Error
 
 	return err
 }

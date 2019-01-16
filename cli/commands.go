@@ -709,3 +709,9 @@ func fnGetUpdateNewMessageHexString(c *ishell.Context) string {
 	}
 	return title
 }
+
+func fnGetMime(c *ishell.Context) string {
+	c.Print("MIME Type:")
+	mime := c.ReadLine()
+	return mime
+}
