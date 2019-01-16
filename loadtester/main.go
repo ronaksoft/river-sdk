@@ -7,12 +7,12 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 
+	_ "net/http/pprof"
+
 	"github.com/fatih/color"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	ishell "gopkg.in/abiosoft/ishell.v2"
-	// "net/http"
-	// _ "net/http/pprof"
 )
 
 var (
