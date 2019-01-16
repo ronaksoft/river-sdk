@@ -100,6 +100,7 @@ func main() {
 		DocumentVideoDirectory: "./_files/video",
 		DocumentPhotoDirectory: "./_files/photo",
 		DocumentFileDirectory:  "./_files/file",
+		DocumentCacheDirectory: "./_files/cache",
 	})
 
 	_SDK.Start()

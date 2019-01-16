@@ -29,6 +29,7 @@ var (
 	_DirFile   string
 	_DirPhoto  string
 	_DirVideo  string
+	_DirCache  string
 )
 
 const (
@@ -91,11 +92,12 @@ func InitFileManager(serverAddress string, onUploadCompleted domain.OnFileUpload
 	go ctx.startUploadQueue()
 
 }
-func SetRootFolders(audioDir, fileDir, photoDir, videoDir string) {
+func SetRootFolders(audioDir, fileDir, photoDir, videoDir, cacheDir string) {
 	_DirAudio = audioDir
 	_DirFile = fileDir
 	_DirPhoto = photoDir
 	_DirVideo = videoDir
+	_DirCache = cacheDir
 }
 
 func GetFilePath(mimeType string, docID int64, fileName string) string {
@@ -103,18 +105,22 @@ func GetFilePath(mimeType string, docID int64, fileName string) string {
 	strDocID := strconv.FormatInt(docID, 10)
 	ext := path.Ext(fileName)
 	if ext == "" {
-		// TOF :/
-		if lower == "audio/ogg" {
-			ext = ".ogg"
-		} else {
-			exts, err := mime.ExtensionsByType(mimeType)
-			if err == nil {
-				for _, val := range exts {
-					ext = val
-				}
+		exts, err := mime.ExtensionsByType(mimeType)
+		if err == nil {
+			for _, val := range exts {
+				ext = val
 			}
 		}
 	}
+
+	// if the file is opus type,
+	// means its voice file so it should be saved in cache folder
+	// so user could not access to it by file manager
+	if lower == "audio/ogg" {
+		ext = ".ogg"
+		return path.Join(_DirCache, fmt.Sprintf("%s%s", strDocID, ext))
+	}
+
 	if strings.HasPrefix(lower, "video/") {
 		return path.Join(_DirVideo, fmt.Sprintf("%s%s", strDocID, ext))
 	}
@@ -124,6 +130,7 @@ func GetFilePath(mimeType string, docID int64, fileName string) string {
 	if strings.HasPrefix(lower, "image/") {
 		return path.Join(_DirPhoto, fmt.Sprintf("%s%s", strDocID, ext))
 	}
+
 	return path.Join(_DirFile, fmt.Sprintf("%s%s", strDocID, ext))
 }
 
