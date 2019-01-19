@@ -2,6 +2,7 @@ package filemanager
 
 import (
 	"os"
+	"strings"
 	"sync"
 
 	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
@@ -52,6 +53,12 @@ func NewFileStatus(messageID int64,
 	accessHash uint64,
 	version int32,
 	progress domain.OnFileStatusChanged) *FileStatus {
+
+	// support IOS file path
+	if strings.HasPrefix(filePath, "file://") {
+		filePath = filePath[7:]
+	}
+
 	fs := &FileStatus{
 		MessageID:           messageID,
 		FileID:              fileID,
