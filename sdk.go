@@ -343,6 +343,9 @@ func deepCopy(commandBytes []byte) []byte {
 	// for i := 0; i < length; i++ {
 	// 	buff[i] = commandBytes[i]
 	// }
+
+	// delete this
+	log.LOG_Debug("deepCopy()", zap.String("nuff", fmt.Sprintf("\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n%x\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n", buff)))
 	return buff
 }
 

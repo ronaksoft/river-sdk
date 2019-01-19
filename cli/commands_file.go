@@ -156,12 +156,14 @@ func downloadWorker(workerIdx int, wg *sync.WaitGroup, partQueue chan int, fileB
 				req.Limit = x.Doc.FileSize - (req.Offset)
 			}
 
+			requestID := uint64(domain.SequentialUniqueID())
+
 			reqBuff, _ := req.Marshal()
 
 			envelop := new(msg.MessageEnvelope)
 			envelop.Constructor = msg.C_FileGet
 			envelop.Message = reqBuff
-			envelop.RequestID = uint64(domain.SequentialUniqueID())
+			envelop.RequestID = requestID
 
 			// Send
 			for _SDK.GetNetworkStatus() == int32(domain.DISCONNECTED) || _SDK.GetNetworkStatus() == int32(domain.CONNECTING) {
@@ -173,6 +175,13 @@ func downloadWorker(workerIdx int, wg *sync.WaitGroup, partQueue chan int, fileB
 			res, err := ctx.Send(envelop)
 
 			if err == nil {
+				responseID := res.RequestID
+				if requestID != responseID {
+					log.LOG_Warn("RequestIDs are not equal", zap.Uint64("reqID", requestID), zap.Uint64("resID", responseID))
+				} else {
+					log.LOG_Debug("RequestIDs are equal", zap.Uint64("reqID", requestID), zap.Uint64("resID", responseID))
+				}
+
 				switch res.Constructor {
 				case msg.C_Error:
 					x := new(msg.Error)
