@@ -345,7 +345,20 @@ func deepCopy(commandBytes []byte) []byte {
 	// }
 
 	// delete this
-	log.LOG_Debug("deepCopy()", zap.String("nuff", fmt.Sprintf("\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n%x\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n", buff)))
+	totalLength := len(buff)
+	count := totalLength / 150
+	if (count * 150) < totalLength {
+		count++
+	}
+	for i := 0; i < count; i++ {
+		offset := i * 150
+		limit := offset + 150
+		if totalLength < limit {
+			limit = totalLength - offset
+		}
+		log.LOG_Debug("deepCopy()", zap.String("buff", fmt.Sprintf("%x", buff[offset:limit])))
+	}
+
 	return buff
 }
 
