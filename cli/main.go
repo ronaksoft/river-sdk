@@ -120,7 +120,7 @@ func main() {
 		// fnSendInputMediaDocument()
 		// fnDecodeUpdateHexString()
 		// fnMessagesReadContents()
-		fnUnmarshalClientSendMessageMedia()
+
 		//block forever
 		select {}
 	}
@@ -293,21 +293,5 @@ func fnMessagesReadContents() {
 	reqID, err := _SDK.ExecuteCommand(msg.C_MessagesReadContents, buff, reqDelegate, false, false)
 
 	_Shell.Println("RequestID :", reqID, "\tError :", err)
-
-}
-
-func fnUnmarshalClientSendMessageMedia() {
-	buff, err := hex.DecodeString("0a140891c5f6d8d5beaf031001199f2f13ecb8fd0f0010042a7366696c653a2f2f2f7661722f6d6f62696c652f436f6e7461696e6572732f446174612f4170706c69636174696f6e2f39363442")
-	if err != nil {
-		panic(err)
-	}
-
-	x := new(msg.ClientSendMessageMedia)
-	err = x.Unmarshal(buff)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println("%#v", x)
 
 }
