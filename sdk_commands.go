@@ -873,6 +873,12 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		return
 	}
 
+	// support IOS file path
+	if strings.HasPrefix(reqMedia.FilePath, "file://") {
+		reqMedia.FilePath = reqMedia.FilePath[7:]
+		in.Message, _ = reqMedia.Marshal()
+	}
+
 	// TODO : check if file has been uploaded b4
 	dtoFile := repo.Ctx().Files.GetExistingFileDocument(reqMedia.FilePath)
 	fileAlreadyUploaded := false
