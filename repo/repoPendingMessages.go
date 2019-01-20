@@ -22,6 +22,7 @@ type RepoPendingMessages interface {
 	DeletePeerAllMessages(peerID int64, peerType int32) (*msg.ClientUpdateMessagesDeleted, error)
 	SaveClientMessageMedia(ID, senderID, requestID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error)
 	GetPendingMessage(messageID int64) *msg.UserMessage
+	SaveMessageMedia(ID int64, senderID int64, message *msg.MessagesSendMedia) (*msg.ClientPendingMessage, error)
 }
 
 type repoPendingMessages struct {
