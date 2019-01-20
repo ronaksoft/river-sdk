@@ -888,7 +888,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	if fileAlreadyUploaded {
 		msgID := -domain.SequentialUniqueID()
 		fileID := uint64(domain.SequentialUniqueID())
-		res, err := repo.Ctx().PendingMessages.SaveMessageMedia(msgID, r.ConnInfo.UserID, int64(fileID), reqMedia)
+		res, err := repo.Ctx().PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, int64(fileID), reqMedia)
 
 		if err != nil {
 			e := new(msg.Error)
@@ -943,7 +943,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 		msgID := -domain.SequentialUniqueID()
 		fileID := int64(in.RequestID)
-		res, err := repo.Ctx().PendingMessages.SaveMessageMedia(msgID, r.ConnInfo.UserID, fileID, reqMedia)
+		res, err := repo.Ctx().PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, fileID, reqMedia)
 
 		if err != nil {
 			e := new(msg.Error)
@@ -1009,4 +1009,50 @@ func (r *River) messagesReadContents(in, out *msg.MessageEnvelope, timeoutCB dom
 
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+}
+
+func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	log.LOG_Debug("River::messagesSendMedia()")
+
+	req := new(msg.MessagesSendMedia)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG_Debug("River::messagesSendMedia()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
+
+	// this will be used as next requestID
+	req.RandomID = domain.SequentialUniqueID()
+
+	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
+	dbID := -domain.SequentialUniqueID()
+	res, err := repo.Ctx().PendingMessages.SaveMessageMedia(dbID, r.ConnInfo.UserID, req)
+
+	if err != nil {
+		e := new(msg.Error)
+		e.Code = "n/a"
+		e.Items = "Failed to save to pendingMessages : " + err.Error()
+		msg.ResultError(out, e)
+		cmd.GetUIExecuter().Exec(func() {
+			if successCB != nil {
+				successCB(out)
+			}
+		})
+		return
+	}
+
+	requestBytes, _ := req.Marshal()
+	r.queueCtrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSendMedia, requestBytes, timeoutCB, successCB, true)
+
+	// 3. return to CallBack with pending message data : Done
+	out.Constructor = msg.C_ClientPendingMessage
+	out.Message, _ = res.Marshal()
+
+	cmd.GetUIExecuter().Exec(func() {
+		if successCB != nil {
+			successCB(out)
+		}
+	}) //successCB(out)
+
 }

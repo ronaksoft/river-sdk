@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	_ClientSendMessageMediaType = -1
+	_ClientSendMessageMediaType   = -1
+	_ClientSendMessageContactType = -2
 )
 
 type PendingMessages struct {
@@ -82,8 +83,11 @@ func (m *PendingMessages) MapToUserMessage(v *msg.UserMessage) {
 	v.Entities = make([]*msg.MessageEntity, 0)
 	json.Unmarshal(m.Entities, &v.Entities)
 
-	if m.MediaType > 0 {
+	if m.MediaType == int32(msg.InputMediaTypeUploadedDocument) {
 		v.MessageType = _ClientSendMessageMediaType
+	}
+	if m.MediaType == int32(msg.InputMediaTypeContact) {
+		v.MessageType = _ClientSendMessageContactType
 	}
 
 	v.MediaType = msg.MediaType(m.MediaType)
@@ -109,8 +113,11 @@ func (m *PendingMessages) MapToDtoMessage(v *Messages) {
 	//v.MessageAction = m.MessageAction
 	v.Entities = m.Entities
 
-	if m.MediaType > 0 {
+	if m.MediaType == int32(msg.InputMediaTypeUploadedDocument) {
 		v.MessageType = _ClientSendMessageMediaType
+	}
+	if m.MediaType == int32(msg.InputMediaTypeContact) {
+		v.MessageType = _ClientSendMessageContactType
 	}
 	v.MediaType = int32(m.MediaType)
 	v.Media = m.Media
@@ -132,7 +139,7 @@ func (m *PendingMessages) MapToMessageSend(v *msg.MessagesSend) {
 	json.Unmarshal(m.Entities, &v.Entities)
 }
 
-func (m *PendingMessages) MapFromMessageMedia(fileID int64, v *msg.ClientSendMessageMedia) {
+func (m *PendingMessages) MapFromClientMessageMedia(fileID int64, v *msg.ClientSendMessageMedia) {
 	//m.ID = v.ID
 	//m.RequestID = fileID
 	m.PeerID = v.Peer.ID
@@ -144,6 +151,16 @@ func (m *PendingMessages) MapFromMessageMedia(fileID int64, v *msg.ClientSendMes
 	m.ReplyTo = v.ReplyTo
 	m.ClearDraft = v.ClearDraft
 	// m.Entities = v.
+	m.MediaType = int32(v.MediaType)
+	m.Media, _ = v.Marshal()
+}
+func (m *PendingMessages) MapFromMessageMedia(v *msg.MessagesSendMedia) {
+	m.RequestID = v.RandomID
+	m.PeerID = v.Peer.ID
+	m.PeerType = int32(v.Peer.Type)
+	m.AccessHash = int64(v.Peer.AccessHash)
+	m.ReplyTo = v.ReplyTo
+	m.ClearDraft = v.ClearDraft
 	m.MediaType = int32(v.MediaType)
 	m.Media, _ = v.Marshal()
 }

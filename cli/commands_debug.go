@@ -6,6 +6,9 @@ import (
 	"mime"
 	"time"
 
+	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/repo"
+
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"github.com/kr/pretty"
 
@@ -187,8 +190,8 @@ var MessageSendBulk = &ishell.Cmd{
 	},
 }
 
-var PrintDebuncerStatus = &ishell.Cmd{
-	Name: "PrintDebuncerStatus",
+var DebuncerStatus = &ishell.Cmd{
+	Name: "DebuncerStatus",
 	Func: func(c *ishell.Context) {
 		_SDK.PrintDebuncerStatus()
 	},
@@ -321,19 +324,15 @@ var SystemTrace = &ishell.Cmd{
 		// for just one user
 		req := msg.MessagesSend{}
 		// 0056
-		req.Peer = &msg.InputPeer{
-			AccessHash: 4500871196408867,
-			ID:         1408226742326241,
-			Type:       msg.PeerUser,
-		}
-		// req.Peer.Type = fnGetPeerType(c)
-		// req.Peer.ID = fnGetPeerID(c)
-		// req.Peer.AccessHash = fnGetAccessHash(c)
-		// count := fnGetTries(c)
-		// interval := fnGetInterval(c)
+		req.Peer = &msg.InputPeer{}
+		req.Peer.Type = fnGetPeerType(c)
+		req.Peer.ID = fnGetPeerID(c)
+		req.Peer.AccessHash = fnGetAccessHash(c)
+		count := fnGetTries(c)
+		interval := fnGetInterval(c)
 
-		count := 10
-		interval := 1 * time.Millisecond
+		// count := 10
+		// interval := 1 * time.Millisecond
 
 		// Call SystemStartTrace
 		sysStart := new(msg.SystemStartTrace)
@@ -407,6 +406,65 @@ var MimeToExt = &ishell.Cmd{
 		}
 	},
 }
+var PrintMessage = &ishell.Cmd{
+	Name: "PrintMessageMedia",
+	Func: func(c *ishell.Context) {
+
+		msgID := fnGetMessageID(c)
+
+		m := repo.Ctx().Messages.GetMessage(msgID)
+
+		if m == nil {
+			log.LOG_Error("Message Is nil")
+			return
+		}
+
+		if m.MediaType == msg.MediaTypeDocument {
+			// x := new(msg.MediaDocument)
+			// err := x.Unmarshal(m.Media)
+			// if err != nil {
+			// 	log.LOG_Error("Pars MediaDocument Failed", zap.Error(err))
+			// 	return
+			// }
+			fmt.Printf("\r\n\r\n\r\n%# v\r\n\r\n\r\n", pretty.Formatter(m))
+			x := new(msg.MediaDocument)
+			err := x.Unmarshal(m.Media)
+			if err == nil {
+				fmt.Printf("\r\n%# v\r\n", pretty.Formatter(x))
+
+				for _, att := range x.Doc.Attributes {
+					switch att.Type {
+					case msg.AttributeTypeAudio:
+						attrib := new(msg.DocumentAttributeAudio)
+						err = attrib.Unmarshal(att.Data)
+						if err == nil {
+							fmt.Printf("\r\n%# v\r\n", pretty.Formatter(attrib))
+						}
+					case msg.AttributeTypeVideo:
+						attrib := new(msg.DocumentAttributeVideo)
+						err = attrib.Unmarshal(att.Data)
+						if err == nil {
+							fmt.Printf("\r\n%# v\r\n", pretty.Formatter(attrib))
+						}
+					case msg.AttributeTypePhoto:
+						attrib := new(msg.DocumentAttributePhoto)
+						err = attrib.Unmarshal(att.Data)
+						if err == nil {
+							fmt.Printf("\r\n%# v\r\n", pretty.Formatter(attrib))
+						}
+					case msg.AttributeTypeFile:
+						attrib := new(msg.DocumentAttributeFile)
+						err = attrib.Unmarshal(att.Data)
+						if err == nil {
+							fmt.Printf("\r\n%# v\r\n", pretty.Formatter(attrib))
+						}
+					}
+				}
+			}
+		}
+
+	},
+}
 
 func init() {
 	Debug.AddCmd(SendTyping)
@@ -414,7 +472,7 @@ func init() {
 	Debug.AddCmd(MessageSendByQueue)
 	Debug.AddCmd(ContactImportByNetwork)
 	Debug.AddCmd(MessageSendBulk)
-	Debug.AddCmd(PrintDebuncerStatus)
+	Debug.AddCmd(DebuncerStatus)
 	Debug.AddCmd(GetTopMessageID)
 	Debug.AddCmd(ContactImportMany)
 
@@ -427,4 +485,5 @@ func init() {
 	Debug.AddCmd(SystemTraceStop)
 
 	Debug.AddCmd(MimeToExt)
+	Debug.AddCmd(PrintMessage)
 }

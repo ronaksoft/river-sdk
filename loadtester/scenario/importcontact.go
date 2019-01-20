@@ -22,7 +22,7 @@ func NewImportContact(isFinal bool) shared.Screenwriter {
 // Play execute ImportContact scenario
 func (s *ImportContact) Play(act shared.Acter) {
 	if len(act.GetPeers()) > 0 {
-		s.log(act, "Actor already have Peers", 0)
+		s.log(act, "Actor already have Peers", 0, 0)
 		return
 	}
 	if act.GetAuthID() == 0 {
@@ -30,7 +30,7 @@ func (s *ImportContact) Play(act shared.Acter) {
 		success := Play(act, NewCreateAuthKey(false))
 		if !success {
 
-			s.failed(act, 0, "Play() : failed at pre requested scenario CreateAuthKey")
+			s.failed(act, 0, 0, "Play() : failed at pre requested scenario CreateAuthKey")
 			return
 		}
 		s.wait.Done()
@@ -39,7 +39,7 @@ func (s *ImportContact) Play(act shared.Acter) {
 		s.AddJobs(1)
 		success := Play(act, NewLogin(false))
 		if !success {
-			s.failed(act, 0, "Play() : failed at pre requested scenario Login")
+			s.failed(act, 0, 0, "Play() : failed at pre requested scenario Login")
 			return
 		}
 		s.wait.Done()
@@ -59,7 +59,7 @@ func (s *ImportContact) contactImport(phone string, act shared.Acter) (*msg.Mess
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
 		// Reporter failed
 		act.SetTimeout(msg.C_ContactsImport, elapsed)
-		s.failed(act, elapsed, "contactImport() Timeout")
+		s.failed(act, elapsed, requestID, "contactImport() Timeout")
 	}
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
@@ -83,12 +83,12 @@ func (s *ImportContact) contactImport(phone string, act shared.Acter) (*msg.Mess
 			act.SetPeers(peers)
 			err := act.Save()
 			if err != nil {
-				s.log(act, "contactImport() Actor.Save(), Err : "+err.Error(), elapsed)
+				s.log(act, "contactImport() Actor.Save(), Err : "+err.Error(), elapsed, resp.RequestID)
 			}
-			s.completed(act, elapsed, "contactImport() Success")
+			s.completed(act, elapsed, resp.RequestID, "contactImport() Success")
 		} else {
 			// TODO : Reporter failed
-			s.failed(act, elapsed, "contactImport() SuccessCB response is not ContactsImported")
+			s.failed(act, elapsed, resp.RequestID, "contactImport() SuccessCB response is not ContactsImported")
 		}
 	}
 

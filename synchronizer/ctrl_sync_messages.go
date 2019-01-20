@@ -159,7 +159,7 @@ func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
 		)
 	}
 	// if it was file upload request
-	if pmsg.MediaType > 0 {
+	if pmsg.MediaType == int32(msg.InputMediaTypeUploadedDocument) {
 		// save to local files and delete file status
 		clientSendMedia := new(msg.ClientSendMessageMedia)
 		err := clientSendMedia.Unmarshal(pmsg.Media)

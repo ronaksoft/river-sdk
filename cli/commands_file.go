@@ -128,10 +128,47 @@ var DownloadMultiConnection = &ishell.Cmd{
 	},
 }
 
+var ShareContact = &ishell.Cmd{
+	Name: "ShareContact",
+	Func: func(c *ishell.Context) {
+
+		req := new(msg.MessagesSendMedia)
+
+		req.Peer = &msg.InputPeer{}
+		req.Peer.Type = fnGetPeerType(c)
+		req.Peer.ID = fnGetPeerID(c)
+		req.Peer.AccessHash = fnGetAccessHash(c)
+		req.ReplyTo = fnGetReplyTo(c)
+
+		// get Media Contact
+		req.MediaType = msg.InputMediaTypeContact
+		contact := new(msg.InputMediaContact)
+		contact.FirstName = fnGetFirstName(c)
+		contact.LastName = fnGetLastName(c)
+		contact.Phone = fnGetPhone(c)
+		// marshal contact
+		req.MediaData, _ = contact.Marshal()
+
+		req.ClearDraft = true
+		req.RandomID = domain.SequentialUniqueID()
+
+		// send request to server
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSendMedia, reqBytes, reqDelegate, false, false); err != nil {
+			_Log.Debug(err.Error())
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+
+	},
+}
+
 func init() {
 	File.AddCmd(Upload)
 	File.AddCmd(Download)
 	File.AddCmd(DownloadMultiConnection)
+	File.AddCmd(ShareContact)
 
 }
 

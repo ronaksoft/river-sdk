@@ -82,7 +82,7 @@ func main() {
 		}
 	} else {
 		dbPath = "./_db"
-		dbID = "23740071"
+		dbID = "23740056"
 	}
 
 	qPath := "./_queue"
@@ -116,7 +116,7 @@ func main() {
 		// fnDecryptDump()
 		// fnRunUploadFile()
 		// fnSendMessageMedia()
-		// fnRunDownloadFile()
+		fnRunDownloadFile()
 		// fnSendInputMediaDocument()
 		// fnDecodeUpdateHexString()
 		// fnMessagesReadContents()
@@ -224,7 +224,7 @@ func fnRunUploadFile() {
 }
 
 func fnRunDownloadFile() {
-	_SDK.FileDownload(4131)
+	_SDK.FileDownload(138)
 }
 
 func fnSendInputMediaDocument() {

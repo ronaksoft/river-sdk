@@ -295,6 +295,7 @@ func (r *River) registerCommandHandlers() {
 	r.localCommands[msg.C_GroupsUpdateAdmin] = r.groupUpdateAdmin
 	r.localCommands[msg.C_ContactsImport] = r.contactsImport
 	r.localCommands[msg.C_MessagesReadContents] = r.messagesReadContents
+	r.localCommands[msg.C_MessagesSendMedia] = r.messagesSendMedia
 
 }
 

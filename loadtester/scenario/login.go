@@ -23,14 +23,14 @@ func NewLogin(isFinal bool) shared.Screenwriter {
 // Play execute Login scenario
 func (s *Login) Play(act shared.Acter) {
 	if act.GetUserID() > 0 {
-		s.log(act, "Actor already have UserID", 0)
+		s.log(act, "Actor already have UserID", 0, 0)
 		return
 	}
 	if act.GetAuthID() == 0 {
 		s.AddJobs(1)
 		success := Play(act, NewCreateAuthKey(false))
 		if !success {
-			s.failed(act, 0, "Play() : failed at pre requested scenario CreateAuthKey")
+			s.failed(act, 0, 0, "Play() : failed at pre requested scenario CreateAuthKey")
 			return
 		}
 		s.wait.Done()
@@ -46,7 +46,7 @@ func (s *Login) sendCode(act shared.Acter) (*msg.MessageEnvelope, shared.Success
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
 		// Reporter failed
 		act.SetTimeout(msg.C_AuthSendCode, elapsed)
-		s.failed(act, elapsed, "sendCode() Timeout")
+		s.failed(act, elapsed, requestID, "sendCode() Timeout")
 	}
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
@@ -61,7 +61,7 @@ func (s *Login) sendCode(act shared.Acter) (*msg.MessageEnvelope, shared.Success
 			act.ExecuteRequest(s.login(x, act))
 		} else {
 			// TODO : Reporter failed
-			s.failed(act, elapsed, "sendCode() SuccessCB response is not AuthSentCode")
+			s.failed(act, elapsed, resp.RequestID, "sendCode() SuccessCB response is not AuthSentCode")
 		}
 	}
 
@@ -78,7 +78,7 @@ func (s *Login) login(resp *msg.AuthSentCode, act shared.Acter) (*msg.MessageEnv
 		timeoutCB := func(requestID uint64, elapsed time.Duration) {
 			//Reporter failed
 			act.SetTimeout(msg.C_AuthLogin, elapsed)
-			s.failed(act, elapsed, "login() TimedOut")
+			s.failed(act, elapsed, requestID, "login() TimedOut")
 		}
 
 		successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
@@ -94,14 +94,14 @@ func (s *Login) login(resp *msg.AuthSentCode, act shared.Acter) (*msg.MessageEnv
 				act.SetUserInfo(x.User.ID, x.User.Username, x.User.FirstName+" "+x.User.LastName)
 				err := act.Save()
 				if err != nil {
-					s.log(act, "contactImport() Actor.Save(), Err : "+err.Error(), elapsed)
+					s.log(act, "contactImport() Actor.Save(), Err : "+err.Error(), elapsed, resp.RequestID)
 				}
 
-				s.completed(act, elapsed, "login() Success")
+				s.completed(act, elapsed, resp.RequestID, "login() Success")
 
 			} else {
 				// TODO : Reporter failed
-				s.failed(act, elapsed, "sendCode() SuccessCB response is not AuthAuthorization")
+				s.failed(act, elapsed, resp.RequestID, "sendCode() SuccessCB response is not AuthAuthorization")
 			}
 		}
 
@@ -109,7 +109,7 @@ func (s *Login) login(resp *msg.AuthSentCode, act shared.Acter) (*msg.MessageEnv
 	}
 
 	// TODO : Reporter failed
-	s.failed(act, -1, "login() phone number does not start with 237400")
+	s.failed(act, -1, 0, "login() phone number does not start with 237400")
 
 	return nil, nil, nil
 }

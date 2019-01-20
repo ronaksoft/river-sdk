@@ -24,7 +24,7 @@ func (s *SendMessage) Play(act shared.Acter) {
 		s.AddJobs(1)
 		success := Play(act, NewCreateAuthKey(false))
 		if !success {
-			s.failed(act, 0, "Play() : failed at pre requested scenario CreateAuthKey")
+			s.failed(act, 0, 0, "Play() : failed at pre requested scenario CreateAuthKey")
 			return
 		}
 		s.wait.Done()
@@ -33,7 +33,7 @@ func (s *SendMessage) Play(act shared.Acter) {
 		s.AddJobs(1)
 		success := Play(act, NewLogin(false))
 		if !success {
-			s.failed(act, 0, "Play() : failed at pre requested scenario Login")
+			s.failed(act, 0, 0, "Play() : failed at pre requested scenario Login")
 			return
 		}
 		s.wait.Done()
@@ -42,7 +42,7 @@ func (s *SendMessage) Play(act shared.Acter) {
 		s.AddJobs(1)
 		success := Play(act, NewImportContact(false))
 		if !success {
-			s.failed(act, 0, "Play() : failed at pre requested scenario ImportContact")
+			s.failed(act, 0, 0, "Play() : failed at pre requested scenario ImportContact")
 			return
 		}
 		s.wait.Done()
@@ -61,7 +61,7 @@ func (s *SendMessage) messageSend(act shared.Acter, peer *shared.PeerInfo) (*msg
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
 		// Reporter failed
 		act.SetTimeout(msg.C_MessagesSend, elapsed)
-		s.failed(act, elapsed, "messageSend() Timeout")
+		s.failed(act, elapsed, requestID, "messageSend() Timeout")
 	}
 
 	successCB := func(resp *msg.MessageEnvelope, elapsed time.Duration) {
@@ -74,10 +74,10 @@ func (s *SendMessage) messageSend(act shared.Acter, peer *shared.PeerInfo) (*msg
 			x.Unmarshal(resp.Message)
 
 			// TODO : Complete Scenario
-			s.completed(act, elapsed, "messageSend() Success")
+			s.completed(act, elapsed, resp.RequestID, "messageSend() Success")
 		} else {
 			// TODO : Reporter failed
-			s.failed(act, elapsed, "messageSend() SuccessCB response is not MessagesSent")
+			s.failed(act, elapsed, resp.RequestID, "messageSend() SuccessCB response is not MessagesSent")
 		}
 	}
 

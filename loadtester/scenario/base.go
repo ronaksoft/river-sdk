@@ -1,6 +1,7 @@
 package scenario
 
 import (
+	"strconv"
 	"sync"
 	"time"
 
@@ -39,23 +40,23 @@ func (s *Scenario) AddJobs(delta int) {
 	s.wait.Add(delta)
 }
 
-func (s *Scenario) failed(act shared.Acter, elapsed time.Duration, str string) {
+func (s *Scenario) failed(act shared.Acter, elapsed time.Duration, reqID uint64, str string) {
 	s.result = false
-	log.LOG_Error(act.GetPhone()+"\t failed() : "+str, zap.Duration("elapsed", elapsed))
+	log.LOG_Error(act.GetPhone()+"\tReqID:"+strconv.FormatUint(reqID, 10)+"\t failed() : "+str, zap.Duration("elapsed", elapsed))
 	s.wait.Done()
 }
 
-func (s *Scenario) completed(act shared.Acter, elapsed time.Duration, str string) {
+func (s *Scenario) completed(act shared.Acter, elapsed time.Duration, reqID uint64, str string) {
 	s.result = true
-	log.LOG_Info(act.GetPhone()+"\t completed() : "+str, zap.Duration("elapsed", elapsed))
+	log.LOG_Info(act.GetPhone()+"\tReqID:"+strconv.FormatUint(reqID, 10)+"\t completed() : "+str, zap.Duration("elapsed", elapsed))
 	s.wait.Done()
 }
 
-func (s *Scenario) log(act shared.Acter, str string, elapsed time.Duration) {
+func (s *Scenario) log(act shared.Acter, str string, elapsed time.Duration, reqID uint64) {
 	if elapsed > 0 {
-		log.LOG_Warn(act.GetPhone()+"\t log() : "+str, zap.Duration("elapsed", elapsed))
+		log.LOG_Warn(act.GetPhone()+"\tReqID:"+strconv.FormatUint(reqID, 10)+"\t log() : "+str, zap.Duration("elapsed", elapsed))
 	} else {
-		log.LOG_Warn(act.GetPhone() + "\t log() : " + str)
+		log.LOG_Warn(act.GetPhone() + "\tReqID:" + strconv.FormatUint(reqID, 10) + "\t log() : " + str)
 	}
 }
 
@@ -65,7 +66,7 @@ func (s *Scenario) isErrorResponse(act shared.Acter, elapsed time.Duration, resp
 		x := new(msg.Error)
 		x.Unmarshal(resp.Message)
 		s.result = false
-		log.LOG_Error(act.GetPhone()+"\t isErrorResponse(): ", zap.String("CallBackName", cbName), zap.String("Err", x.String()), zap.Duration("elapsed", elapsed))
+		log.LOG_Error(act.GetPhone()+"\tReqID:"+strconv.FormatUint(resp.RequestID, 10)+"\t isErrorResponse(): ", zap.String("CallBackName", cbName), zap.String("Err", x.String()), zap.Duration("elapsed", elapsed))
 		s.wait.Done()
 		return true
 	}

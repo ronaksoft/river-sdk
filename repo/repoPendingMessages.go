@@ -20,7 +20,7 @@ type RepoPendingMessages interface {
 	GetManyPendingMessagesRequestID(messageIDs []int64) []int64
 	GetAllPendingMessages() []*msg.MessagesSend
 	DeletePeerAllMessages(peerID int64, peerType int32) (*msg.ClientUpdateMessagesDeleted, error)
-	SaveMessageMedia(ID, senderID, requestID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error)
+	SaveClientMessageMedia(ID, senderID, requestID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error)
 	GetPendingMessage(messageID int64) *msg.UserMessage
 }
 
@@ -276,7 +276,7 @@ func (r *repoPendingMessages) DeletePeerAllMessages(peerID int64, peerType int32
 	return res, err
 }
 
-func (r *repoPendingMessages) SaveMessageMedia(ID, senderID, requestID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error) {
+func (r *repoPendingMessages) SaveClientMessageMedia(ID, senderID, requestID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -292,7 +292,7 @@ func (r *repoPendingMessages) SaveMessageMedia(ID, senderID, requestID int64, ms
 
 	fileID := domain.SequentialUniqueID()
 	m := new(dto.PendingMessages)
-	m.MapFromMessageMedia(fileID, msgMedia)
+	m.MapFromClientMessageMedia(fileID, msgMedia)
 	m.ID = ID
 	m.SenderID = senderID
 	m.CreatedOn = time.Now().Unix()
@@ -351,4 +351,57 @@ func (r *repoPendingMessages) GetPendingMessage(messageID int64) *msg.UserMessag
 	dtoMsg.MapToUserMessage(message)
 
 	return message
+}
+
+func (r *repoPendingMessages) SaveMessageMedia(ID int64, senderID int64, message *msg.MessagesSendMedia) (*msg.ClientPendingMessage, error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	if message == nil {
+		log.LOG_Debug("RepoPendingMessages::SaveMessageMedia() :",
+			zap.String("Error", "message is null"),
+		)
+		return nil, domain.ErrNotFound
+	}
+	log.LOG_Debug("RepoPendingMessages::SaveMessageMedia()",
+		zap.Int64("PendingMessageID", ID),
+	)
+
+	m := new(dto.PendingMessages)
+	m.MapFromMessageMedia(message)
+	m.ID = ID
+	m.SenderID = senderID
+	m.CreatedOn = time.Now().Unix()
+
+	res := new(msg.ClientPendingMessage)
+	m.MapTo(res)
+
+	ep := new(dto.PendingMessages)
+	r.db.Find(ep, m.ID)
+
+	var err error
+	if ep.ID == 0 {
+		err = r.db.Create(m).Error
+	} else {
+		err = r.db.Table(m.TableName()).Where("ID", m.ID).Update(m).Error
+	}
+
+	if err == nil {
+		dlg := new(dto.Dialogs)
+		r.db.Where(&dto.Dialogs{PeerID: m.PeerID, PeerType: m.PeerType}).Find(&dlg)
+		if dlg.PeerID == 0 {
+			dlg.LastUpdate = m.CreatedOn
+			dlg.PeerID = m.PeerID
+			dlg.PeerType = m.PeerType
+			dlg.TopMessageID = m.ID
+			r.db.Create(dlg)
+		} else {
+			r.db.Table(dlg.TableName()).Where("PeerID=? AND PeerType=?", m.PeerID, m.PeerType).Updates(map[string]interface{}{
+				"TopMessageID": m.ID,
+				"LastUpdate":   m.CreatedOn,
+			})
+
+		}
+	}
+	return res, err
 }
