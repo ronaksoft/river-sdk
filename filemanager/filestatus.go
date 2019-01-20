@@ -123,7 +123,7 @@ func (fs *FileStatus) Write(data []byte) (isCompleted bool, err error) {
 	}
 	// open file if its not open
 	if file == nil {
-		file, err = os.OpenFile(fs.FilePath, os.O_RDWR, os.ModePerm)
+		file, err = os.OpenFile(fs.FilePath, os.O_RDWR, 0666)
 		if err != nil {
 			return
 		}
