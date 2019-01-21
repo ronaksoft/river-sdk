@@ -48,11 +48,13 @@ func init() {
 	_Shell.AddCmd(cmdLogin)
 	_Shell.AddCmd(cmdImportContact)
 	_Shell.AddCmd(cmdSendMessage)
+	_Shell.AddCmd(cmdCreateAuthKey)
 
 	_Shell.AddCmd(cmdRegisterByPool)
 	_Shell.AddCmd(cmdLoginByPool)
 	_Shell.AddCmd(cmdImportContactByPool)
 	_Shell.AddCmd(cmdSendMessageByPool)
+	_Shell.AddCmd(cmdCreateAuthKeyByPool)
 
 	log.SetLogger(Log)
 	log.SetLogLevel(0) // DBG: -1, INF: 1, WRN: 2, ERR: 3
