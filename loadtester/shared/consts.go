@@ -10,10 +10,10 @@ const (
 	DefaultServerURL = "ws://new.river.im"
 
 	// DefaultTimeout request timeout
-	DefaultTimeout = 30 * time.Second
+	DefaultTimeout = 10 * time.Second
 
 	// DefaultSendTimeout write to ws timeout
-	DefaultSendTimeout = 30 * time.Second
+	DefaultSendTimeout = 3 * time.Second
 
 	// MaxWorker concurrent go routins
 	MaxWorker = 96

@@ -162,5 +162,5 @@ func (m *PendingMessages) MapFromMessageMedia(v *msg.MessagesSendMedia) {
 	m.ReplyTo = v.ReplyTo
 	m.ClearDraft = v.ClearDraft
 	m.MediaType = int32(v.MediaType)
-	m.Media, _ = v.Marshal()
+	m.Media = v.MediaData
 }
