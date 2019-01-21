@@ -14,6 +14,7 @@ type Users struct {
 	IsContact  int32  `gorm:"column:IsContact" json:"IsContact"`
 	Status     int32  `gorm:"column:Status" json:"Status"`
 	Restricted bool   `gorm:"column:Restricted" json:"Restricted"`
+	Bio        string `gorm:"type:TEXT;column:Bio" json:"Bio"`
 }
 
 func (Users) TableName() string {

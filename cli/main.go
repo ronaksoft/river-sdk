@@ -224,7 +224,7 @@ func fnRunUploadFile() {
 }
 
 func fnRunDownloadFile() {
-	_SDK.FileDownload(138)
+	_SDK.FileDownload(149)
 }
 
 func fnSendInputMediaDocument() {
