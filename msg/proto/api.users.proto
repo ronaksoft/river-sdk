@@ -3,7 +3,16 @@ package msg;
 import "core.types.proto";
 
 // UsersGet
+// @Function
+// @Returns: UsersMany
 message UsersGet {
+    repeated InputUser Users = 1;
+}
+
+// UsersGetFull
+// @Function
+// @Returns: UsersFullMany
+message UsersGetFull {
     repeated InputUser Users = 1;
 }
 

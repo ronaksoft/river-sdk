@@ -90,11 +90,12 @@ message User {
     required int64 ID = 1 [jstype = JS_STRING];
     required string FirstName = 2;
     required string LastName = 3;
-    required string Username = 4;
+    optional string Username = 4;
     required UserStatus Status = 5;
     required bool Restricted = 6;
     required fixed64 AccessHash = 7 [jstype = JS_STRING];
     optional UserPhoto Photo = 8;
+    optional string Bio = 9;
 }
 
 // ContactUser

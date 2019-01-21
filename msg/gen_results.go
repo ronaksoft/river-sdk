@@ -736,6 +736,12 @@ func ResultMessagesDialogs(out *MessageEnvelope, res *MessagesDialogs) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultUsersGetFull(out *MessageEnvelope, res *UsersGetFull) {
+	out.Constructor = C_UsersGetFull
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultInputPeer(out *MessageEnvelope, res *InputPeer) {
 	out.Constructor = C_InputPeer
 	pbytes.Put(out.Message)

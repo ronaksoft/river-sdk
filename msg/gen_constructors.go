@@ -123,6 +123,7 @@ const (
 	C_UpdateNotifySettings               int64 = 3187524885
 	C_AuthRecalled                       int64 = 3249025459
 	C_MessagesDialogs                    int64 = 3252610224
+	C_UsersGetFull                       int64 = 3343342086
 	C_InputPeer                          int64 = 3374092470
 	C_MessagesGetHistory                 int64 = 3396939832
 	C_UpdateNewMessage                   int64 = 3426925183
@@ -281,6 +282,7 @@ var ConstructorNames = map[int64]string{
 	3187524885: "UpdateNotifySettings",
 	3249025459: "AuthRecalled",
 	3252610224: "MessagesDialogs",
+	3343342086: "UsersGetFull",
 	3374092470: "InputPeer",
 	3396939832: "MessagesGetHistory",
 	3426925183: "UpdateNewMessage",

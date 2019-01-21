@@ -1,6 +1,6 @@
 package dto
 
-type UsersAvatar struct {
+type UserPhotos struct {
 	dto
 	UserID     int64 `gorm:"type:bigint;primary_key;column:UserID" json:"UserID"`  //type is required for composite primary key
 	FileID     int64 `gorm:"type:integer;primary_key;column:FileID" json:"FileID"` //type is required for composite primary key
@@ -11,13 +11,13 @@ type UsersAvatar struct {
 	PhotoBig   bool  `gorm:"column:PhotoBig" json:"PhotoBig"`
 }
 
-func (UsersAvatar) TableName() string {
-	return "users_avatar"
+func (UserPhotos) TableName() string {
+	return "user_photos"
 }
 
-func (m *UsersAvatar) Map() {
+func (m *UserPhotos) Map() {
 
 }
-func (m *UsersAvatar) MapTo() {
+func (m *UserPhotos) MapTo() {
 
 }

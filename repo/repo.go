@@ -127,7 +127,7 @@ func (c *Context) ReinitiateDatabase() error {
 		dto.MessageHoles{},
 		dto.FileStatus{},
 		dto.Files{},
-		dto.UsersAvatar{},
+		dto.UserPhotos{},
 		//dto.UISettings{}, //do not remove UISettings on logout
 	).Error
 
@@ -159,7 +159,7 @@ func (r *repository) initDB() error {
 		dto.MessageHoles{},
 		dto.FileStatus{},
 		dto.Files{},
-		dto.UsersAvatar{},
+		dto.UserPhotos{},
 	).Error
 
 	return repoLastError

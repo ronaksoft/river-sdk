@@ -737,6 +737,12 @@ var (
 			return m
 		},
 	}
+	PoolUsersGetFull = sync.Pool{
+		New: func() interface{} {
+			m := new(UsersGetFull)
+			return m
+		},
+	}
 	PoolInputPeer = sync.Pool{
 		New: func() interface{} {
 			m := new(InputPeer)
