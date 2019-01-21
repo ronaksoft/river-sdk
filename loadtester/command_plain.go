@@ -26,6 +26,47 @@ var cmdPrint = &ishell.Cmd{
 	},
 }
 
+var cmdCreateAuthKey = &ishell.Cmd{
+	Name: "CreateAuthKey",
+	Func: func(c *ishell.Context) {
+		// get suffix start phoneNo
+		// get suffix end phoneNo
+		// start registering
+		startNo := fnStartPhone(c)
+		endNo := fnEndPhone(c)
+		fnClearScreeen()
+		_Reporter.Clear()
+		phoneNo := ""
+		wg := sync.WaitGroup{}
+		sw := time.Now()
+		for startNo <= endNo {
+			phoneNo = fmt.Sprintf("237400%07d", startNo)
+			startNo++
+			act, err := actor.NewActor(phoneNo)
+			if err != nil {
+				log.LOG_Error(fmt.Sprintf("NewActor(%s)", phoneNo), zap.String("Error", err.Error()))
+				continue
+			}
+
+			_Reporter.Register(act)
+
+			wg.Add(1)
+			// run async
+			go func() {
+				scenario.Play(act, scenario.NewCreateAuthKey(true))
+				wg.Done()
+			}()
+		}
+		wg.Wait()
+		elapsed := time.Since(sw)
+
+		fnClearScreeen()
+		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
+		log.LOG_Info(fmt.Sprintf(_Reporter.String()))
+
+	},
+}
+
 var cmdRegister = &ishell.Cmd{
 	Name: "Register",
 	Func: func(c *ishell.Context) {
@@ -59,11 +100,10 @@ var cmdRegister = &ishell.Cmd{
 		}
 		wg.Wait()
 		elapsed := time.Since(sw)
-		if !_Reporter.IsActive() {
-			fnClearScreeen()
-			log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
-			log.LOG_Info(fmt.Sprintf(_Reporter.String()))
-		}
+
+		fnClearScreeen()
+		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
+		log.LOG_Info(fmt.Sprintf(_Reporter.String()))
 
 	},
 }
@@ -104,11 +144,10 @@ var cmdLogin = &ishell.Cmd{
 		}
 		wg.Wait()
 		elapsed := time.Since(sw)
-		if !_Reporter.IsActive() {
-			fnClearScreeen()
-			log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
-			log.LOG_Info(fmt.Sprintf(_Reporter.String()))
-		}
+
+		fnClearScreeen()
+		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
+		log.LOG_Info(fmt.Sprintf(_Reporter.String()))
 
 	},
 }
@@ -151,11 +190,11 @@ var cmdImportContact = &ishell.Cmd{
 		}
 		wg.Wait()
 		elapsed := time.Since(sw)
-		if !_Reporter.IsActive() {
-			fnClearScreeen()
-			log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
-			log.LOG_Info(fmt.Sprintf(_Reporter.String()))
-		}
+
+		fnClearScreeen()
+		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
+		log.LOG_Info(fmt.Sprintf(_Reporter.String()))
+
 	},
 }
 
@@ -194,10 +233,10 @@ var cmdSendMessage = &ishell.Cmd{
 		}
 		wg.Wait()
 		elapsed := time.Since(sw)
-		if !_Reporter.IsActive() {
-			fnClearScreeen()
-			log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
-			log.LOG_Info(fmt.Sprintf(_Reporter.String()))
-		}
+
+		fnClearScreeen()
+		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
+		log.LOG_Info(fmt.Sprintf(_Reporter.String()))
+
 	},
 }

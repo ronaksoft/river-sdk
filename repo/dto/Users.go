@@ -15,6 +15,7 @@ type Users struct {
 	Status     int32  `gorm:"column:Status" json:"Status"`
 	Restricted bool   `gorm:"column:Restricted" json:"Restricted"`
 	Bio        string `gorm:"type:TEXT;column:Bio" json:"Bio"`
+	Photo      []byte `gorm:"type:blob;column:Photo" json:"Photo"`
 }
 
 func (Users) TableName() string {
@@ -29,6 +30,8 @@ func (u *Users) MapFromUser(t *msg.User) {
 	u.Status = int32(t.Status)
 	u.Restricted = t.Restricted
 	u.AccessHash = int64(t.AccessHash)
+	u.Bio = t.Bio
+	u.Photo, _ = t.Photo.Marshal()
 }
 
 func (u *Users) MapFromContactUser(t *msg.ContactUser) {
@@ -50,6 +53,11 @@ func (u *Users) MapToUser(v *msg.User) {
 	v.Status = msg.UserStatus(u.Status)
 	v.Restricted = u.Restricted
 	v.AccessHash = uint64(u.AccessHash)
+	v.Bio = u.Bio
+	if v.Photo == nil {
+		v.Photo = new(msg.UserPhoto)
+	}
+	v.Photo.Unmarshal(u.Photo)
 }
 func (u *Users) MapToContactUser(v *msg.ContactUser) {
 	v.ID = u.ID

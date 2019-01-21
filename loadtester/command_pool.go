@@ -10,6 +10,40 @@ import (
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )
 
+var cmdCreateAuthKeyByPool = &ishell.Cmd{
+	Name: "CreateAuthKeyByPool",
+	Func: func(c *ishell.Context) {
+
+		startNo := fnStartPhone(c)
+		endNo := fnEndPhone(c)
+		fnClearScreeen()
+		_Reporter.Clear()
+
+		startDispatcher()
+		defer stopDispatcher()
+
+		phoneNo := ""
+		wg := &sync.WaitGroup{}
+		sw := time.Now()
+		for startNo <= endNo {
+			phoneNo = fmt.Sprintf("237400%07d", startNo)
+			startNo++
+
+			// Add To Queue
+			wg.Add(1)
+			JobQueue <- Job{PhoneNo: phoneNo, Wait: wg, Scenario: scenario.NewCreateAuthKey(true)}
+
+		}
+		wg.Wait()
+		elapsed := time.Since(sw)
+
+		fnClearScreeen()
+		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
+		log.LOG_Info(fmt.Sprintf(_Reporter.String()))
+
+	},
+}
+
 var cmdRegisterByPool = &ishell.Cmd{
 	Name: "RegisterByPool",
 	Func: func(c *ishell.Context) {
@@ -36,11 +70,10 @@ var cmdRegisterByPool = &ishell.Cmd{
 		}
 		wg.Wait()
 		elapsed := time.Since(sw)
-		if !_Reporter.IsActive() {
-			fnClearScreeen()
-			log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
-			log.LOG_Info(fmt.Sprintf(_Reporter.String()))
-		}
+
+		fnClearScreeen()
+		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
+		log.LOG_Info(fmt.Sprintf(_Reporter.String()))
 
 	},
 }
@@ -74,11 +107,10 @@ var cmdLoginByPool = &ishell.Cmd{
 		}
 		wg.Wait()
 		elapsed := time.Since(sw)
-		if !_Reporter.IsActive() {
-			fnClearScreeen()
-			log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
-			log.LOG_Info(fmt.Sprintf(_Reporter.String()))
-		}
+
+		fnClearScreeen()
+		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
+		log.LOG_Info(fmt.Sprintf(_Reporter.String()))
 
 	},
 }
@@ -114,11 +146,11 @@ var cmdImportContactByPool = &ishell.Cmd{
 		}
 		wg.Wait()
 		elapsed := time.Since(sw)
-		if !_Reporter.IsActive() {
-			fnClearScreeen()
-			log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
-			log.LOG_Info(fmt.Sprintf(_Reporter.String()))
-		}
+
+		fnClearScreeen()
+		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
+		log.LOG_Info(fmt.Sprintf(_Reporter.String()))
+
 	},
 }
 
@@ -148,10 +180,10 @@ var cmdSendMessageByPool = &ishell.Cmd{
 		}
 		wg.Wait()
 		elapsed := time.Since(sw)
-		if !_Reporter.IsActive() {
-			fnClearScreeen()
-			log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
-			log.LOG_Info(fmt.Sprintf(_Reporter.String()))
-		}
+
+		fnClearScreeen()
+		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
+		log.LOG_Info(fmt.Sprintf(_Reporter.String()))
+
 	},
 }

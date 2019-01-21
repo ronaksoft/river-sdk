@@ -90,9 +90,12 @@ func (s *Register) register(resp *msg.AuthSentCode, act shared.Acter) (*msg.Mess
 
 				// TODO : Complete Scenario
 				act.SetUserInfo(x.User.ID, x.User.Username, x.User.FirstName+" "+x.User.LastName)
-				err := act.Save()
-				if err != nil {
-					s.log(act, "register() Actor.Save(), Err : "+err.Error(), elapsed, resp.RequestID)
+
+				if s.isFinal {
+					err := act.Save()
+					if err != nil {
+						s.log(act, "register() Actor.Save(), Err : "+err.Error(), elapsed, resp.RequestID)
+					}
 				}
 
 				s.completed(act, elapsed, resp.RequestID, "register() Success")

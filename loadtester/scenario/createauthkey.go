@@ -172,6 +172,13 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acte
 				// Save authKey && authID
 				act.SetAuthInfo(authID, authKey)
 
+				if s.isFinal {
+					err := act.Save()
+					if err != nil {
+						s.log(act, "initCompleteAuth() Actor.Save(), Err : "+err.Error(), elapsed, resp.RequestID)
+					}
+				}
+
 				var secret []byte
 				secret = append(secret, q2Internal.SecretNonce...)
 				secret = append(secret, byte(msg.InitAuthCompleted_OK))

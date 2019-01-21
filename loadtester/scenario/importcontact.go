@@ -81,9 +81,12 @@ func (s *ImportContact) contactImport(phone string, act shared.Acter) (*msg.Mess
 				})
 			}
 			act.SetPeers(peers)
-			err := act.Save()
-			if err != nil {
-				s.log(act, "contactImport() Actor.Save(), Err : "+err.Error(), elapsed, resp.RequestID)
+
+			if s.isFinal {
+				err := act.Save()
+				if err != nil {
+					s.log(act, "contactImport() Actor.Save(), Err : "+err.Error(), elapsed, resp.RequestID)
+				}
 			}
 			s.completed(act, elapsed, resp.RequestID, "contactImport() Success")
 		} else {

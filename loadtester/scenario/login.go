@@ -92,9 +92,12 @@ func (s *Login) login(resp *msg.AuthSentCode, act shared.Acter) (*msg.MessageEnv
 
 				// TODO : Complete Scenario
 				act.SetUserInfo(x.User.ID, x.User.Username, x.User.FirstName+" "+x.User.LastName)
-				err := act.Save()
-				if err != nil {
-					s.log(act, "contactImport() Actor.Save(), Err : "+err.Error(), elapsed, resp.RequestID)
+
+				if s.isFinal {
+					err := act.Save()
+					if err != nil {
+						s.log(act, "login() Actor.Save(), Err : "+err.Error(), elapsed, resp.RequestID)
+					}
 				}
 
 				s.completed(act, elapsed, resp.RequestID, "login() Success")
