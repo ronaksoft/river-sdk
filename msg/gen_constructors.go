@@ -13,6 +13,7 @@ const (
 	C_AccountPrivacyDisallowUsers        int64 = 352774342
 	C_InputFileLocation                  int64 = 354669666
 	C_GroupsAddUser                      int64 = 394654713
+	C_AccountUpdatePhoto                 int64 = 406174115
 	C_Ack                                int64 = 447331921
 	C_ContactUser                        int64 = 460099170
 	C_AccountGetNotifySettings           int64 = 477008681
@@ -43,6 +44,7 @@ const (
 	C_AuthRecall                         int64 = 1172029049
 	C_SystemGetPublicKeys                int64 = 1191522796
 	C_MessageActionGroupDeleteUser       int64 = 1213452128
+	C_AccountUploadPhoto                 int64 = 1222469957
 	C_MessageActionClearHistory          int64 = 1270465696
 	C_GroupsCreate                       int64 = 1271969037
 	C_MessagesReadHistory                int64 = 1300826534
@@ -142,6 +144,7 @@ const (
 	C_ContactsMany                       int64 = 3883395672
 	C_AccountUnregisterDevice            int64 = 3981251588
 	C_AuthSendCode                       int64 = 3984043365
+	C_GroupPhoto                         int64 = 3998516135
 	C_AccountPrivacyAllowUsers           int64 = 4047110177
 	C_GroupParticipant                   int64 = 4072279665
 	C_InputDocument                      int64 = 4081048424
@@ -168,6 +171,7 @@ var ConstructorNames = map[int64]string{
 	352774342:  "AccountPrivacyDisallowUsers",
 	354669666:  "InputFileLocation",
 	394654713:  "GroupsAddUser",
+	406174115:  "AccountUpdatePhoto",
 	447331921:  "Ack",
 	460099170:  "ContactUser",
 	477008681:  "AccountGetNotifySettings",
@@ -198,6 +202,7 @@ var ConstructorNames = map[int64]string{
 	1172029049: "AuthRecall",
 	1191522796: "SystemGetPublicKeys",
 	1213452128: "MessageActionGroupDeleteUser",
+	1222469957: "AccountUploadPhoto",
 	1270465696: "MessageActionClearHistory",
 	1271969037: "GroupsCreate",
 	1300826534: "MessagesReadHistory",
@@ -297,6 +302,7 @@ var ConstructorNames = map[int64]string{
 	3883395672: "ContactsMany",
 	3981251588: "AccountUnregisterDevice",
 	3984043365: "AuthSendCode",
+	3998516135: "GroupPhoto",
 	4047110177: "AccountPrivacyAllowUsers",
 	4072279665: "GroupParticipant",
 	4081048424: "InputDocument",

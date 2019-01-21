@@ -31,7 +31,7 @@ func (m *SystemGetPublicKeys) Reset()         { *m = SystemGetPublicKeys{} }
 func (m *SystemGetPublicKeys) String() string { return proto.CompactTextString(m) }
 func (*SystemGetPublicKeys) ProtoMessage()    {}
 func (*SystemGetPublicKeys) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_system_0dd7abde5d21979f, []int{0}
+	return fileDescriptor_api_system_285317084c4ce732, []int{0}
 }
 func (m *SystemGetPublicKeys) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -70,7 +70,7 @@ func (m *SystemGetDHGroups) Reset()         { *m = SystemGetDHGroups{} }
 func (m *SystemGetDHGroups) String() string { return proto.CompactTextString(m) }
 func (*SystemGetDHGroups) ProtoMessage()    {}
 func (*SystemGetDHGroups) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_system_0dd7abde5d21979f, []int{1}
+	return fileDescriptor_api_system_285317084c4ce732, []int{1}
 }
 func (m *SystemGetDHGroups) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -108,7 +108,7 @@ func (m *SystemStartTrace) Reset()         { *m = SystemStartTrace{} }
 func (m *SystemStartTrace) String() string { return proto.CompactTextString(m) }
 func (*SystemStartTrace) ProtoMessage()    {}
 func (*SystemStartTrace) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_system_0dd7abde5d21979f, []int{2}
+	return fileDescriptor_api_system_285317084c4ce732, []int{2}
 }
 func (m *SystemStartTrace) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -152,7 +152,7 @@ func (m *SystemStopTrace) Reset()         { *m = SystemStopTrace{} }
 func (m *SystemStopTrace) String() string { return proto.CompactTextString(m) }
 func (*SystemStopTrace) ProtoMessage()    {}
 func (*SystemStopTrace) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_system_0dd7abde5d21979f, []int{3}
+	return fileDescriptor_api_system_285317084c4ce732, []int{3}
 }
 func (m *SystemStopTrace) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -193,7 +193,7 @@ func (m *SystemClientLog) Reset()         { *m = SystemClientLog{} }
 func (m *SystemClientLog) String() string { return proto.CompactTextString(m) }
 func (*SystemClientLog) ProtoMessage()    {}
 func (*SystemClientLog) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_system_0dd7abde5d21979f, []int{4}
+	return fileDescriptor_api_system_285317084c4ce732, []int{4}
 }
 func (m *SystemClientLog) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -259,7 +259,7 @@ func (m *SystemPublicKeys) Reset()         { *m = SystemPublicKeys{} }
 func (m *SystemPublicKeys) String() string { return proto.CompactTextString(m) }
 func (*SystemPublicKeys) ProtoMessage()    {}
 func (*SystemPublicKeys) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_system_0dd7abde5d21979f, []int{5}
+	return fileDescriptor_api_system_285317084c4ce732, []int{5}
 }
 func (m *SystemPublicKeys) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -304,7 +304,7 @@ func (m *SystemDHGroups) Reset()         { *m = SystemDHGroups{} }
 func (m *SystemDHGroups) String() string { return proto.CompactTextString(m) }
 func (*SystemDHGroups) ProtoMessage()    {}
 func (*SystemDHGroups) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_system_0dd7abde5d21979f, []int{6}
+	return fileDescriptor_api_system_285317084c4ce732, []int{6}
 }
 func (m *SystemDHGroups) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1286,9 +1286,9 @@ var (
 	ErrIntOverflowApiSystem   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("api.system.proto", fileDescriptor_api_system_0dd7abde5d21979f) }
+func init() { proto.RegisterFile("api.system.proto", fileDescriptor_api_system_285317084c4ce732) }
 
-var fileDescriptor_api_system_0dd7abde5d21979f = []byte{
+var fileDescriptor_api_system_285317084c4ce732 = []byte{
 	// 308 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x64, 0x90, 0xcd, 0x4a, 0xf3, 0x40,
 	0x18, 0x85, 0x33, 0x4d, 0xbf, 0xd2, 0xbe, 0x9f, 0x3f, 0xed, 0x14, 0x61, 0x70, 0x31, 0x86, 0x59,

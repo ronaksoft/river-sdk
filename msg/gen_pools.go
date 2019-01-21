@@ -77,6 +77,12 @@ var (
 			return m
 		},
 	}
+	PoolAccountUpdatePhoto = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountUpdatePhoto)
+			return m
+		},
+	}
 	PoolAck = sync.Pool{
 		New: func() interface{} {
 			m := new(Ack)
@@ -254,6 +260,12 @@ var (
 	PoolMessageActionGroupDeleteUser = sync.Pool{
 		New: func() interface{} {
 			m := new(MessageActionGroupDeleteUser)
+			return m
+		},
+	}
+	PoolAccountUploadPhoto = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountUploadPhoto)
 			return m
 		},
 	}
@@ -848,6 +860,12 @@ var (
 	PoolAuthSendCode = sync.Pool{
 		New: func() interface{} {
 			m := new(AuthSendCode)
+			return m
+		},
+	}
+	PoolGroupPhoto = sync.Pool{
+		New: func() interface{} {
+			m := new(GroupPhoto)
 			return m
 		},
 	}

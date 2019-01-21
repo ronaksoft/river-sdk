@@ -60,6 +60,20 @@ message AccountUpdateUsername {
     required string Username = 1;
 }
 
+// AccountUploadPhoto
+// @Function
+// @Return: Bool
+message AccountUploadPhoto {
+    required InputFile File = 1;
+}
+
+// AccountUpdatePhoto
+// @Function
+// @Return: Bool
+message AccountUpdatePhoto {
+    required InputDocument Photo = 1;
+}
+
 // AccountChangePhone
 // @Function
 // @Return: User
@@ -68,6 +82,22 @@ message AccountChangePhone {
     required string PhoneCodeHash = 2;
     required string PhoneCode = 3;
 }
+
+// AccountSetPrivacy
+// @Function
+// @Return: AccountPrivacyRules
+message AccountSetPrivacy {
+    required AccountPrivacyKey Key = 1;
+    repeated AccountPrivacyRule Rules = 2;
+}
+
+// AccountGetPrivacy
+// @Function
+// @Return: AccountPrivacyRules
+message AccountGetPrivacy {
+    required AccountPrivacyKey Key = 1;
+}
+
 
 // AccountPrivacyKey
 enum AccountPrivacyKey {
@@ -86,20 +116,6 @@ enum AccountPrivacyType {
     AccountPrivacyTypeDisallowUsers = 5;
 }
 
-// AccountSetPrivacy
-// @Function
-// @Return: AccountPrivacyRules
-message AccountSetPrivacy {
-    required AccountPrivacyKey Key = 1;
-    repeated AccountPrivacyRule Rules = 2;
-}
-
-// AccountGetPrivacy
-// @Function
-// @Return: AccountPrivacyRules
-message AccountGetPrivacy {
-    required AccountPrivacyKey Key = 1;
-}
 
 // AccountPrivacyRules
 message AccountPrivacyRules {

@@ -76,6 +76,12 @@ func ResultGroupsAddUser(out *MessageEnvelope, res *GroupsAddUser) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultAccountUpdatePhoto(out *MessageEnvelope, res *AccountUpdatePhoto) {
+	out.Constructor = C_AccountUpdatePhoto
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultAck(out *MessageEnvelope, res *Ack) {
 	out.Constructor = C_Ack
 	pbytes.Put(out.Message)
@@ -252,6 +258,12 @@ func ResultSystemGetPublicKeys(out *MessageEnvelope, res *SystemGetPublicKeys) {
 }
 func ResultMessageActionGroupDeleteUser(out *MessageEnvelope, res *MessageActionGroupDeleteUser) {
 	out.Constructor = C_MessageActionGroupDeleteUser
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultAccountUploadPhoto(out *MessageEnvelope, res *AccountUploadPhoto) {
+	out.Constructor = C_AccountUploadPhoto
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -846,6 +858,12 @@ func ResultAccountUnregisterDevice(out *MessageEnvelope, res *AccountUnregisterD
 }
 func ResultAuthSendCode(out *MessageEnvelope, res *AuthSendCode) {
 	out.Constructor = C_AuthSendCode
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultGroupPhoto(out *MessageEnvelope, res *GroupPhoto) {
+	out.Constructor = C_GroupPhoto
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

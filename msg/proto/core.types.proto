@@ -193,7 +193,7 @@ message InputFile {
     required int32 TotalParts = 2;
     required string FileName = 3;
     required string MD5Checksum = 4;
-//    required int32 ClusterID = 5;
+    //    required int32 ClusterID = 5;
 }
 
 // GroupFlags
@@ -206,6 +206,12 @@ enum GroupFlags {
     GroupFlagsDeactivated = 5;
 }
 
+// GroupPhoto
+message GroupPhoto {
+    required FileLocation PhotoBig = 1;
+    required FileLocation PhotoSmall = 2;
+}
+
 // Group
 message Group {
     required int64 ID = 1 [jstype = JS_STRING];
@@ -214,6 +220,8 @@ message Group {
     required int32 Participants = 4;
     optional int64 EditedOn = 5;
     repeated GroupFlags Flags = 6;
+    optional GroupPhoto Photo = 7;
+
 }
 
 // GroupFull
@@ -239,4 +247,11 @@ message GroupParticipant {
     required ParticipantType Type = 4;
     required uint64 AccessHash = 5 [jstype = JS_STRING];
     required string Username = 6;
+}
+
+// InputDocument
+message InputDocument {
+    required int64 ID = 1 [jstype = JS_STRING];
+    required fixed64 AccessHash = 2 [jstype = JS_STRING];
+    required int32 ClusterID = 3;
 }

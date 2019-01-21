@@ -58,7 +58,6 @@ message DocumentAttribute {
     optional bytes Data = 2;
 }
 
-
 // Document Type
 enum DocumentType {
     DocumentTypeUnknown = 0;
@@ -80,13 +79,6 @@ message Document {
     repeated DocumentAttribute Attributes = 8;
 }
 
-// InputDocument
-message InputDocument {
-    required int64 ID = 1 [jstype = JS_STRING];
-    required fixed64 AccessHash = 2 [jstype = JS_STRING];
-    required int32 ClusterID = 3;
-}
-
 // InputMediaUploadedPhoto
 message InputMediaUploadedPhoto {
     required string Caption = 1;
@@ -106,6 +98,7 @@ message InputMediaContact {
     required string Phone = 1;
     required string FirstName = 2;
     required string LastName = 3;
+    optional string VCard = 4;
 }
 
 // InputMediaUploadedDocument
@@ -141,6 +134,7 @@ message MediaContact {
     required string Phone = 1;
     required string FirstName = 2;
     required string LastName = 3;
+    optional string VCard = 4;
 }
 
 // MediaWebPage
