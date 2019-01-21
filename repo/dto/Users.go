@@ -54,10 +54,14 @@ func (u *Users) MapToUser(v *msg.User) {
 	v.Restricted = u.Restricted
 	v.AccessHash = uint64(u.AccessHash)
 	v.Bio = u.Bio
+
 	if v.Photo == nil {
 		v.Photo = new(msg.UserPhoto)
 	}
-	v.Photo.Unmarshal(u.Photo)
+	err := v.Photo.Unmarshal(u.Photo)
+	if err != nil {
+		v.Photo = nil
+	}
 }
 func (u *Users) MapToContactUser(v *msg.ContactUser) {
 	v.ID = u.ID

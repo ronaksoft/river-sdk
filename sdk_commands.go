@@ -73,8 +73,11 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	res.Groups = repo.Ctx().Groups.GetManyGroups(mGroups.ToArray())
 	res.Users = repo.Ctx().Users.GetAnyUsers(mUsers.ToArray())
 	out.Constructor = msg.C_MessagesDialogs
-	out.Message, _ = res.Marshal()
-
+	buff, err := res.Marshal()
+	if err != nil {
+		log.LOG_Debug("River::messagesGetDialogs()-> res.Marshal()", zap.Error(err))
+	}
+	out.Message = buff
 	cmd.GetUIExecuter().Exec(func() {
 		if successCB != nil {
 			successCB(out)
