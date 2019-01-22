@@ -4,7 +4,6 @@ package riversdk
 
 import (
 	json "encoding/json"
-
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
@@ -18,348 +17,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson94b2531bDecodeGitRonaksoftwareComRonakSdkRiver(in *jlexer.Lexer, out *ServerKeys) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeString()
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "PublicKeys":
-			if in.IsNull() {
-				in.Skip()
-				out.PublicKeys = nil
-			} else {
-				in.Delim('[')
-				if out.PublicKeys == nil {
-					if !in.IsDelim(']') {
-						out.PublicKeys = make([]PublicKey, 0, 2)
-					} else {
-						out.PublicKeys = []PublicKey{}
-					}
-				} else {
-					out.PublicKeys = (out.PublicKeys)[:0]
-				}
-				for !in.IsDelim(']') {
-					var v1 PublicKey
-					if data := in.Raw(); in.Ok() {
-						in.AddError((v1).UnmarshalJSON(data))
-					}
-					out.PublicKeys = append(out.PublicKeys, v1)
-					in.WantComma()
-				}
-				in.Delim(']')
-			}
-		case "DHGroups":
-			if in.IsNull() {
-				in.Skip()
-				out.DHGroups = nil
-			} else {
-				in.Delim('[')
-				if out.DHGroups == nil {
-					if !in.IsDelim(']') {
-						out.DHGroups = make([]DHGroup, 0, 2)
-					} else {
-						out.DHGroups = []DHGroup{}
-					}
-				} else {
-					out.DHGroups = (out.DHGroups)[:0]
-				}
-				for !in.IsDelim(']') {
-					var v2 DHGroup
-					if data := in.Raw(); in.Ok() {
-						in.AddError((v2).UnmarshalJSON(data))
-					}
-					out.DHGroups = append(out.DHGroups, v2)
-					in.WantComma()
-				}
-				in.Delim(']')
-			}
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson94b2531bEncodeGitRonaksoftwareComRonakSdkRiver(out *jwriter.Writer, in ServerKeys) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"PublicKeys\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		if in.PublicKeys == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
-		} else {
-			out.RawByte('[')
-			for v3, v4 := range in.PublicKeys {
-				if v3 > 0 {
-					out.RawByte(',')
-				}
-				out.Raw((v4).MarshalJSON())
-			}
-			out.RawByte(']')
-		}
-	}
-	{
-		const prefix string = ",\"DHGroups\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		if in.DHGroups == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
-		} else {
-			out.RawByte('[')
-			for v5, v6 := range in.DHGroups {
-				if v5 > 0 {
-					out.RawByte(',')
-				}
-				out.Raw((v6).MarshalJSON())
-			}
-			out.RawByte(']')
-		}
-	}
-	out.RawByte('}')
-}
-
-// MarshalJSON supports json.Marshaler interface
-func (v ServerKeys) MarshalJSON() ([]byte, error) {
-	w := jwriter.Writer{}
-	easyjson94b2531bEncodeGitRonaksoftwareComRonakSdkRiver(&w, v)
-	return w.Buffer.BuildBytes(), w.Error
-}
-
-// MarshalEasyJSON supports easyjson.Marshaler interface
-func (v ServerKeys) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson94b2531bEncodeGitRonaksoftwareComRonakSdkRiver(w, v)
-}
-
-// UnmarshalJSON supports json.Unmarshaler interface
-func (v *ServerKeys) UnmarshalJSON(data []byte) error {
-	r := jlexer.Lexer{Data: data}
-	easyjson94b2531bDecodeGitRonaksoftwareComRonakSdkRiver(&r, v)
-	return r.Error()
-}
-
-// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *ServerKeys) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson94b2531bDecodeGitRonaksoftwareComRonakSdkRiver(l, v)
-}
-func easyjson94b2531bDecodeGitRonaksoftwareComRonakSdkRiver1(in *jlexer.Lexer, out *PublicKey) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeString()
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "N":
-			out.N = string(in.String())
-		case "FingerPrint":
-			out.FingerPrint = int64(in.Int64())
-		case "E":
-			out.E = uint32(in.Uint32())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson94b2531bEncodeGitRonaksoftwareComRonakSdkRiver1(out *jwriter.Writer, in PublicKey) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"N\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.N))
-	}
-	{
-		const prefix string = ",\"FingerPrint\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.Int64(int64(in.FingerPrint))
-	}
-	{
-		const prefix string = ",\"E\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.Uint32(uint32(in.E))
-	}
-	out.RawByte('}')
-}
-
-// MarshalJSON supports json.Marshaler interface
-func (v PublicKey) MarshalJSON() ([]byte, error) {
-	w := jwriter.Writer{}
-	easyjson94b2531bEncodeGitRonaksoftwareComRonakSdkRiver1(&w, v)
-	return w.Buffer.BuildBytes(), w.Error
-}
-
-// MarshalEasyJSON supports easyjson.Marshaler interface
-func (v PublicKey) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson94b2531bEncodeGitRonaksoftwareComRonakSdkRiver1(w, v)
-}
-
-// UnmarshalJSON supports json.Unmarshaler interface
-func (v *PublicKey) UnmarshalJSON(data []byte) error {
-	r := jlexer.Lexer{Data: data}
-	easyjson94b2531bDecodeGitRonaksoftwareComRonakSdkRiver1(&r, v)
-	return r.Error()
-}
-
-// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *PublicKey) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson94b2531bDecodeGitRonaksoftwareComRonakSdkRiver1(l, v)
-}
-func easyjson94b2531bDecodeGitRonaksoftwareComRonakSdkRiver2(in *jlexer.Lexer, out *DHGroup) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeString()
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "Prime":
-			out.Prime = string(in.String())
-		case "Gen":
-			out.Gen = int32(in.Int32())
-		case "FingerPrint":
-			out.FingerPrint = int64(in.Int64())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson94b2531bEncodeGitRonaksoftwareComRonakSdkRiver2(out *jwriter.Writer, in DHGroup) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"Prime\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.Prime))
-	}
-	{
-		const prefix string = ",\"Gen\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.Int32(int32(in.Gen))
-	}
-	{
-		const prefix string = ",\"FingerPrint\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.Int64(int64(in.FingerPrint))
-	}
-	out.RawByte('}')
-}
-
-// MarshalJSON supports json.Marshaler interface
-func (v DHGroup) MarshalJSON() ([]byte, error) {
-	w := jwriter.Writer{}
-	easyjson94b2531bEncodeGitRonaksoftwareComRonakSdkRiver2(&w, v)
-	return w.Buffer.BuildBytes(), w.Error
-}
-
-// MarshalEasyJSON supports easyjson.Marshaler interface
-func (v DHGroup) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson94b2531bEncodeGitRonaksoftwareComRonakSdkRiver2(w, v)
-}
-
-// UnmarshalJSON supports json.Unmarshaler interface
-func (v *DHGroup) UnmarshalJSON(data []byte) error {
-	r := jlexer.Lexer{Data: data}
-	easyjson94b2531bDecodeGitRonaksoftwareComRonakSdkRiver2(&r, v)
-	return r.Error()
-}
-
-// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *DHGroup) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson94b2531bDecodeGitRonaksoftwareComRonakSdkRiver2(l, v)
-}
-func easyjson94b2531bDecodeGitRonaksoftwareComRonakSdkRiver3(in *jlexer.Lexer, out *RiverConnection) {
+func easyjson94b2531bDecodeGitRonaksoftwareComRonakRiversdk(in *jlexer.Lexer, out *RiverConnection) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -396,6 +54,8 @@ func easyjson94b2531bDecodeGitRonaksoftwareComRonakSdkRiver3(in *jlexer.Lexer, o
 			out.FirstName = string(in.String())
 		case "LastName":
 			out.LastName = string(in.String())
+		case "Bio":
+			out.Bio = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -406,7 +66,7 @@ func easyjson94b2531bDecodeGitRonaksoftwareComRonakSdkRiver3(in *jlexer.Lexer, o
 		in.Consumed()
 	}
 }
-func easyjson94b2531bEncodeGitRonaksoftwareComRonakSdkRiver3(out *jwriter.Writer, in RiverConnection) {
+func easyjson94b2531bEncodeGitRonaksoftwareComRonakRiversdk(out *jwriter.Writer, in RiverConnection) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -480,29 +140,380 @@ func easyjson94b2531bEncodeGitRonaksoftwareComRonakSdkRiver3(out *jwriter.Writer
 		}
 		out.String(string(in.LastName))
 	}
+	{
+		const prefix string = ",\"Bio\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Bio))
+	}
 	out.RawByte('}')
 }
 
 // MarshalJSON supports json.Marshaler interface
 func (v RiverConnection) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson94b2531bEncodeGitRonaksoftwareComRonakSdkRiver3(&w, v)
+	easyjson94b2531bEncodeGitRonaksoftwareComRonakRiversdk(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v RiverConnection) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson94b2531bEncodeGitRonaksoftwareComRonakSdkRiver3(w, v)
+	easyjson94b2531bEncodeGitRonaksoftwareComRonakRiversdk(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *RiverConnection) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson94b2531bDecodeGitRonaksoftwareComRonakSdkRiver3(&r, v)
+	easyjson94b2531bDecodeGitRonaksoftwareComRonakRiversdk(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *RiverConnection) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson94b2531bDecodeGitRonaksoftwareComRonakSdkRiver3(l, v)
+	easyjson94b2531bDecodeGitRonaksoftwareComRonakRiversdk(l, v)
+}
+func easyjson94b2531bDecodeGitRonaksoftwareComRonakRiversdk1(in *jlexer.Lexer, out *ServerKeys) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "PublicKeys":
+			if in.IsNull() {
+				in.Skip()
+				out.PublicKeys = nil
+			} else {
+				in.Delim('[')
+				if out.PublicKeys == nil {
+					if !in.IsDelim(']') {
+						out.PublicKeys = make([]PublicKey, 0, 2)
+					} else {
+						out.PublicKeys = []PublicKey{}
+					}
+				} else {
+					out.PublicKeys = (out.PublicKeys)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v3 PublicKey
+					if data := in.Raw(); in.Ok() {
+						in.AddError((v3).UnmarshalJSON(data))
+					}
+					out.PublicKeys = append(out.PublicKeys, v3)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
+		case "DHGroups":
+			if in.IsNull() {
+				in.Skip()
+				out.DHGroups = nil
+			} else {
+				in.Delim('[')
+				if out.DHGroups == nil {
+					if !in.IsDelim(']') {
+						out.DHGroups = make([]DHGroup, 0, 2)
+					} else {
+						out.DHGroups = []DHGroup{}
+					}
+				} else {
+					out.DHGroups = (out.DHGroups)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v4 DHGroup
+					if data := in.Raw(); in.Ok() {
+						in.AddError((v4).UnmarshalJSON(data))
+					}
+					out.DHGroups = append(out.DHGroups, v4)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson94b2531bEncodeGitRonaksoftwareComRonakRiversdk1(out *jwriter.Writer, in ServerKeys) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"PublicKeys\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.PublicKeys == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v5, v6 := range in.PublicKeys {
+				if v5 > 0 {
+					out.RawByte(',')
+				}
+				out.Raw((v6).MarshalJSON())
+			}
+			out.RawByte(']')
+		}
+	}
+	{
+		const prefix string = ",\"DHGroups\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.DHGroups == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v7, v8 := range in.DHGroups {
+				if v7 > 0 {
+					out.RawByte(',')
+				}
+				out.Raw((v8).MarshalJSON())
+			}
+			out.RawByte(']')
+		}
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v ServerKeys) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson94b2531bEncodeGitRonaksoftwareComRonakRiversdk1(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v ServerKeys) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson94b2531bEncodeGitRonaksoftwareComRonakRiversdk1(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *ServerKeys) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson94b2531bDecodeGitRonaksoftwareComRonakRiversdk1(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *ServerKeys) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson94b2531bDecodeGitRonaksoftwareComRonakRiversdk1(l, v)
+}
+func easyjson94b2531bDecodeGitRonaksoftwareComRonakRiversdk2(in *jlexer.Lexer, out *DHGroup) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "Prime":
+			out.Prime = string(in.String())
+		case "Gen":
+			out.Gen = int32(in.Int32())
+		case "FingerPrint":
+			out.FingerPrint = int64(in.Int64())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson94b2531bEncodeGitRonaksoftwareComRonakRiversdk2(out *jwriter.Writer, in DHGroup) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"Prime\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Prime))
+	}
+	{
+		const prefix string = ",\"Gen\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int32(int32(in.Gen))
+	}
+	{
+		const prefix string = ",\"FingerPrint\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int64(int64(in.FingerPrint))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v DHGroup) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson94b2531bEncodeGitRonaksoftwareComRonakRiversdk2(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v DHGroup) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson94b2531bEncodeGitRonaksoftwareComRonakRiversdk2(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *DHGroup) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson94b2531bDecodeGitRonaksoftwareComRonakRiversdk2(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *DHGroup) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson94b2531bDecodeGitRonaksoftwareComRonakRiversdk2(l, v)
+}
+func easyjson94b2531bDecodeGitRonaksoftwareComRonakRiversdk3(in *jlexer.Lexer, out *PublicKey) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "N":
+			out.N = string(in.String())
+		case "FingerPrint":
+			out.FingerPrint = int64(in.Int64())
+		case "E":
+			out.E = uint32(in.Uint32())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson94b2531bEncodeGitRonaksoftwareComRonakRiversdk3(out *jwriter.Writer, in PublicKey) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"N\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.N))
+	}
+	{
+		const prefix string = ",\"FingerPrint\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int64(int64(in.FingerPrint))
+	}
+	{
+		const prefix string = ",\"E\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Uint32(uint32(in.E))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v PublicKey) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson94b2531bEncodeGitRonaksoftwareComRonakRiversdk3(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v PublicKey) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson94b2531bEncodeGitRonaksoftwareComRonakRiversdk3(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *PublicKey) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson94b2531bDecodeGitRonaksoftwareComRonakRiversdk3(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *PublicKey) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson94b2531bDecodeGitRonaksoftwareComRonakRiversdk3(l, v)
 }

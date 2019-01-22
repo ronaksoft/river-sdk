@@ -3,6 +3,8 @@ package dto
 import (
 	"encoding/json"
 
+	"git.ronaksoftware.com/ronak/riversdk/domain"
+
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
 
@@ -100,7 +102,7 @@ func (m *Files) MapFromFileStatus(v *FileStatus) {
 	//m.PartNo = v.PartNo
 	//m.TotalParts = v.TotalParts
 	//m.IsCompleted = v.IsCompleted
-	if v.Type {
+	if v.Type == int32(domain.FileStateDownload) {
 		// Download state
 		doc := new(msg.Document)
 		err := doc.Unmarshal(v.DownloadRequest)
@@ -115,7 +117,7 @@ func (m *Files) MapFromFileStatus(v *FileStatus) {
 			m.Attributes, _ = json.Marshal(doc.Attributes)
 		}
 
-	} else {
+	} else if v.Type == int32(domain.FileStateUpload) {
 		// upload state
 		req := new(msg.ClientSendMessageMedia)
 		err := req.Unmarshal(v.UploadRequest)

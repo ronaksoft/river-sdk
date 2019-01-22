@@ -14,13 +14,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/repo"
 )
 
-type StateType bool
-
-var (
-	StateDownload StateType = true
-	StateUpload   StateType = false
-)
-
 // FileStatus monitors file state
 type FileStatus struct {
 	mx                  sync.Mutex
@@ -34,7 +27,7 @@ type FileStatus struct {
 	TotalSize           int64                       `json:"TotalSize"`
 	PartNo              int32                       `json:"PartNo"`
 	TotalParts          int32                       `json:"TotalParts"`
-	Type                StateType                   `json:"StatusType"`
+	Type                domain.FileStateType        `json:"StatusType"`
 	IsCompleted         bool                        `json:"IsCompleted"`
 	RequestStatus       domain.RequestStatus        `json:"RequestStatus"`
 	UploadRequest       *msg.ClientSendMessageMedia `json:"UploadRequest"`
@@ -47,7 +40,7 @@ func NewFileStatus(messageID int64,
 	fileID int64,
 	totalSize int64,
 	filePath string,
-	isDownload StateType,
+	stateType domain.FileStateType,
 	clusterID int32,
 	accessHash uint64,
 	version int32,
@@ -65,7 +58,7 @@ func NewFileStatus(messageID int64,
 		PartNo:              0,
 		TotalParts:          0,
 		onFileStatusChanged: progress,
-		Type:                isDownload,
+		Type:                stateType,
 	}
 
 	count := totalSize / domain.FilePayloadSize
@@ -162,7 +155,7 @@ func (fs *FileStatus) fileStatusChanged() {
 		log.LOG_Debug("fileStatusChanged() failed to save in DB", zap.Error(err))
 	}
 	if fs.onFileStatusChanged != nil {
-		fs.onFileStatusChanged(fs.MessageID, fs.Position, fs.TotalSize, fs.Type == StateDownload)
+		fs.onFileStatusChanged(fs.MessageID, fs.Position, fs.TotalSize, fs.Type)
 	}
 
 }
@@ -201,7 +194,7 @@ func (fs *FileStatus) GetDTO() *dto.FileStatus {
 	m.TotalSize = fs.TotalSize
 	m.PartNo = fs.PartNo
 	m.TotalParts = fs.TotalParts
-	m.Type = bool(fs.Type)
+	m.Type = int32(fs.Type)
 	m.IsCompleted = fs.IsCompleted
 	m.RequestStatus = int32(fs.RequestStatus)
 	if fs.UploadRequest != nil {
@@ -225,7 +218,7 @@ func (fs *FileStatus) LoadDTO(d dto.FileStatus, progress domain.OnFileStatusChan
 	fs.TotalSize = d.TotalSize
 	fs.PartNo = d.PartNo
 	fs.TotalParts = d.TotalParts
-	fs.Type = StateType(d.Type)
+	fs.Type = domain.FileStateType(d.Type)
 	fs.IsCompleted = d.IsCompleted
 	fs.RequestStatus = domain.RequestStatus(d.RequestStatus)
 	fs.UploadRequest = new(msg.ClientSendMessageMedia)

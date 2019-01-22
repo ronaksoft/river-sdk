@@ -5,8 +5,11 @@ import (
 	"sync/atomic"
 	"time"
 
+	"go.uber.org/zap"
+
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
+	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"github.com/gorilla/websocket"
 )
@@ -61,7 +64,7 @@ func (ctrl *CtrlNetwork) Start() error {
 	if err == nil {
 		ctrl.keepConnectionAlive = true
 		go ctrl.watchDog()
-		go ctrl.onConnect()
+		ctrl.onConnect()
 	}
 	return err
 }
@@ -81,7 +84,11 @@ func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
 	protoMessage.AuthID = ctrl.authID
 	protoMessage.MessageKey = make([]byte, 32)
 	if ctrl.authID == 0 {
-		protoMessage.Payload, _ = msgEnvelope.Marshal()
+		payload, err := msgEnvelope.Marshal()
+		if err != nil {
+			return err
+		}
+		protoMessage.Payload = payload
 	} else {
 		ctrl.messageSeq++
 		encryptedPayload := msg.ProtoEncryptedPayload{
@@ -89,15 +96,23 @@ func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
 			Envelope:   msgEnvelope,
 		}
 		encryptedPayload.MessageID = uint64(time.Now().Unix()<<32 | ctrl.messageSeq)
-		unencryptedBytes, _ := encryptedPayload.Marshal()
-		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes)
+		unencryptedBytes, err := encryptedPayload.Marshal()
+		if err != nil {
+			return err
+		}
+		encryptedPayloadBytes, err := domain.Encrypt(ctrl.authKey, unencryptedBytes)
+		if err != nil {
+			return err
+		}
 		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes)
 		copy(protoMessage.MessageKey, messageKey)
 		protoMessage.Payload = encryptedPayloadBytes
 	}
 
 	b, err := protoMessage.Marshal()
-
+	if err != nil {
+		return err
+	}
 	ctrl.connWriteLock.Lock()
 	ctrl.conn.SetWriteDeadline(time.Now().Add(shared.DefaultSendTimeout))
 	err = ctrl.conn.WriteMessage(websocket.BinaryMessage, b)
@@ -144,7 +159,7 @@ func (ctrl *CtrlNetwork) watchDog() {
 			if ctrl.keepConnectionAlive {
 				err := ctrl.connect()
 				if err == nil {
-					go ctrl.onConnect()
+					ctrl.onConnect()
 				}
 			}
 		}
@@ -154,7 +169,7 @@ func (ctrl *CtrlNetwork) watchDog() {
 // onConnect send AuthRecall request to server
 func (ctrl *CtrlNetwork) onConnect() {
 	req := msg.AuthRecall{}
-	reqID := uint64(domain.SequentialUniqueID())
+	reqID := uint64(shared.GetSeqID())
 	for {
 		envelop := new(msg.MessageEnvelope)
 		envelop.Constructor = msg.C_AuthRecall
@@ -164,9 +179,11 @@ func (ctrl *CtrlNetwork) onConnect() {
 		if err == nil {
 			break
 		} else {
-			time.Sleep(time.Second)
+			log.LOG_Error("onConnect() AuthRecall", zap.Error(err))
+			time.Sleep(time.Microsecond * 50)
 		}
 	}
+
 	ctrl.isConnected = true
 }
 

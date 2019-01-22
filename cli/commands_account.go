@@ -126,6 +126,15 @@ var SetNotifySettings = &ishell.Cmd{
 	},
 }
 
+var UploadPhoto = &ishell.Cmd{
+	Name: "UploadPhoto",
+	Func: func(c *ishell.Context) {
+		filePath := fnGetFilePath(c)
+		_SDK.AccountUploadPhoto(filePath)
+
+	},
+}
+
 func init() {
 	Account.AddCmd(RegisterDevice)
 	Account.AddCmd(UpdateUsername)
@@ -133,4 +142,5 @@ func init() {
 	Account.AddCmd(UnregisterDevice)
 	Account.AddCmd(UpdateProfile)
 	Account.AddCmd(SetNotifySettings)
+	Account.AddCmd(UploadPhoto)
 }

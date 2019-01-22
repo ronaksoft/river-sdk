@@ -1,6 +1,7 @@
 package riversdk
 
 import (
+	"errors"
 	"os"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
@@ -369,7 +370,7 @@ func (r *River) FileDownload(msgID int64) {
 				if _, err = os.Stat(filePath); os.IsNotExist(err) {
 					filemanager.Ctx().Download(m)
 				} else {
-					r.onFileDownloadCompleted(m.ID, filePath)
+					r.onFileDownloadCompleted(m.ID, filePath, domain.FileStateExistedDownload)
 				}
 
 			} else {
@@ -397,5 +398,38 @@ func (r *River) CancelUpload(msgID int64) {
 	if err == nil {
 		filemanager.Ctx().DeleteFromQueue(fs.FileID)
 		repo.Ctx().PendingMessages.DeletePendingMessage(fs.MessageID)
+	} else {
+		log.LOG_Error("SDK::CancelUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
 	}
+}
+
+func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
+
+	//TOF
+	msgID = domain.SequentialUniqueID()
+	fileID := domain.SequentialUniqueID()
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.LOG_Error("SDK::AccountUploadPhoto()", zap.Error(err))
+		return 0
+	}
+	fileInfo, err := file.Stat()
+	if err != nil {
+		log.LOG_Error("SDK::AccountUploadPhoto()", zap.Error(err))
+		return 0
+	}
+
+	// fileName := fileInfo.Name()
+	totalSize := fileInfo.Size() // size in Byte
+	if totalSize > domain.FileMaxPhotoSize {
+		log.LOG_Error("SDK::AccountUploadPhoto()", zap.Error(errors.New("max allowed file size is 1 MB")))
+		return 0
+	}
+
+	state := filemanager.NewFileStatus(msgID, fileID, totalSize, filePath, domain.FileStateUploadAccountPhoto, 0, 0, 0, r.onFileProgressChanged)
+
+	filemanager.Ctx().AddToQueue(state)
+
+	return msgID
 }

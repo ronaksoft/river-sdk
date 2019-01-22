@@ -196,6 +196,7 @@ func (act *Actor) ReceivedErrorResponse() {
 // onMessage check requestCallbacks and call callbacks
 func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
 	for _, m := range messages {
+		log.LOG_Debug("onMessage() Received ", zap.String("Constructor", msg.ConstructorNames[m.Constructor]), zap.Uint64("ReqID", m.RequestID))
 		req := act.exec.GetRequest(m.RequestID)
 		if req != nil {
 			select {

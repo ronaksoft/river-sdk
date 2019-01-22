@@ -11,7 +11,7 @@ type FileStatus struct {
 	TotalSize       int64  `gorm:"column:TotalSize" json:"TotalSize"`
 	PartNo          int32  `gorm:"column:PartNo" json:"PartNo"`
 	TotalParts      int32  `gorm:"column:TotalParts" json:"TotalParts"`
-	Type            bool   `gorm:"column:Type" json:"StatusType"`
+	Type            int32  `gorm:"column:Type" json:"StatusType"`
 	IsCompleted     bool   `gorm:"column:IsCompleted" json:"IsCompleted"`
 	RequestStatus   int32  `gorm:"column:RequestStatus" json:"RequestStatus"`
 	UploadRequest   []byte `gorm:"column:UploadRequest" json:"UploadRequest"`

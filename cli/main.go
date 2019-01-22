@@ -82,7 +82,7 @@ func main() {
 		}
 	} else {
 		dbPath = "./_db"
-		dbID = "23740056"
+		dbID = "23740071"
 	}
 
 	qPath := "./_queue"
@@ -121,11 +121,15 @@ func main() {
 		// fnDecodeUpdateHexString()
 		// fnMessagesReadContents()
 		// fnGetDialogs()
-
+		fnAccountUploadPhoto()
 		//block forever
 		select {}
 	}
 
+}
+
+func fnAccountUploadPhoto() {
+	_SDK.AccountUploadPhoto("/home/q/Desktop/decrypt_dump.raw.png")
 }
 
 func fnGetDialogs() {

@@ -25,6 +25,7 @@ type RepoUsers interface {
 	SaveMany(users []*msg.User) error
 	UpdateContactinfo(userID int64, firstName, lastName string) error
 	SearchUsers(searchPhrase string) []*msg.User
+	UpdateUserProfile(userID int64, req *msg.AccountUpdateProfile) error
 }
 
 type repoUsers struct {
@@ -405,4 +406,20 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 	}
 
 	return pbUsers
+}
+
+func (r *repoUsers) UpdateUserProfile(userID int64, req *msg.AccountUpdateProfile) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	dtoUser := new(dto.Users)
+	// just need to edit existing contacts info
+	if dtoUser.ID > 0 {
+		return r.db.Table(dtoUser.TableName()).Where("ID=?", userID).Updates(map[string]interface{}{
+			"FirstName": req.FirstName,
+			"LastName":  req.LastName,
+			"Bio":       req.Bio,
+		}).Error
+	}
+	return nil
 }

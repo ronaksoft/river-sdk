@@ -122,7 +122,7 @@ func ContactsImport(phone string) (envelop *msg.MessageEnvelope) {
 	req := new(msg.ContactsImport)
 	req.Contacts = []*msg.PhoneContact{
 		&msg.PhoneContact{
-			ClientID:  0,
+			ClientID:  shared.GetSeqID(),
 			FirstName: phone,
 			LastName:  phone,
 			Phone:     phone,

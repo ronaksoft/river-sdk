@@ -63,6 +63,7 @@ type RiverConnection struct {
 	Phone     string
 	FirstName string
 	LastName  string
+	Bio       string
 }
 
 // Get system Configs

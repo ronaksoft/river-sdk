@@ -9,6 +9,7 @@ import (
 const (
 	FilePayloadSize    = 1024 * 256        // 256KB
 	FileMaxAllowedSize = 750 * 1024 * 1024 // 750MB
+	FileMaxPhotoSize   = 1 * 1024 * 1024   // 1MB
 )
 
 // Global Parameters
@@ -97,3 +98,13 @@ var MediaTypeNames = map[msg.MediaType]string{
 	msg.MediaTypeDocument: "Document",
 	msg.MediaTypeContact:  "Contact",
 }
+
+type FileStateType int32
+
+const (
+	FileStateDownload           FileStateType = 1
+	FileStateUpload             FileStateType = 2
+	FileStateExistedDownload    FileStateType = 3
+	FileStateExistedUpload      FileStateType = 4
+	FileStateUploadAccountPhoto FileStateType = 5
+)

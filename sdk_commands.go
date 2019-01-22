@@ -514,25 +514,6 @@ func (r *River) accountUpdateUsername(in, out *msg.MessageEnvelope, timeoutCB do
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 }
 
-func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	log.LOG_Debug("River::accountUpdateProfile()")
-	req := new(msg.AccountUpdateProfile)
-	if err := req.Unmarshal(in.Message); err != nil {
-		log.LOG_Debug("River::accountUpdateProfile()-> Unmarshal()",
-			zap.String("Error", err.Error()),
-		)
-		return
-	}
-
-	r.ConnInfo.FirstName = req.FirstName
-	r.ConnInfo.LastName = req.LastName
-	r.ConnInfo.saveConfig()
-
-	log.LOG_Debug("River::accountUpdateProfile()-> pass request to server")
-	// send the request to server
-	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
-}
-
 // save token to DB
 func (r *River) accountRegisterDevice(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.AccountRegisterDevice)
@@ -938,7 +919,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 			}
 		}) //successCB(out)
 
-		r.onFileUploadCompleted(msgID, int64(fileID), dtoFile.ClusterID, -1, reqMedia)
+		r.onFileUploadCompleted(msgID, int64(fileID), dtoFile.ClusterID, -1, domain.FileStateExistedUpload, reqMedia)
 		// send the request to server
 		r.queueCtrl.ExecuteCommand(fileID, in.Constructor, in.Message, nil, nil, false)
 
@@ -1058,4 +1039,58 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 		}
 	}) //successCB(out)
 
+}
+
+func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.AccountUpdateProfile)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG_Debug("River::accountUpdateProfile()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+	//TODO : add connInfo Bio and save it too
+	r.ConnInfo.FirstName = req.FirstName
+	r.ConnInfo.LastName = req.LastName
+	r.ConnInfo.Bio = req.Bio
+	r.ConnInfo.Save()
+
+	err := repo.Ctx().Users.UpdateUserProfile(r.ConnInfo.UserID, req)
+	if err != nil {
+		log.LOG_Debug("River::accountUpdateProfile()-> UpdateUserProfile()",
+			zap.String("Error", err.Error()),
+		)
+	}
+
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+}
+
+func (r *River) accountUploadPhoto(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.AccountUpdateProfile)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG_Debug("River::accountUpdateProfile()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+	//TODO : add connInfo Bio and save it too
+	r.ConnInfo.FirstName = req.FirstName
+	r.ConnInfo.LastName = req.LastName
+	r.ConnInfo.Bio = req.Bio
+	r.ConnInfo.Save()
+
+	err := repo.Ctx().Users.UpdateUserProfile(r.ConnInfo.UserID, req)
+	if err != nil {
+		log.LOG_Debug("River::accountUpdateProfile()-> UpdateUserProfile()",
+			zap.String("Error", err.Error()),
+		)
+	}
+
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 }

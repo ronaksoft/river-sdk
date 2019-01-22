@@ -10,6 +10,7 @@ import (
 	"math/big"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -861,7 +862,7 @@ func (r *River) PrintDebuncerStatus() {
 	r.networkCtrl.PrintDebuncerStatus()
 }
 
-func (r *River) onFileProgressChanged(messageID, position, totalSize int64, isDownload bool) {
+func (r *River) onFileProgressChanged(messageID, position, totalSize int64, stateType domain.FileStateType) {
 	percent := float64(position) / float64(totalSize) * float64(100)
 	log.LOG_Warn("onFileProgressChanged()",
 		zap.Int64("MsgID", messageID),
@@ -869,11 +870,11 @@ func (r *River) onFileProgressChanged(messageID, position, totalSize int64, isDo
 	)
 
 	// Notify UI that upload is completed
-	if isDownload {
+	if stateType == domain.FileStateDownload {
 		if r.mainDelegate.OnDownloadProgressChanged != nil {
 			r.mainDelegate.OnDownloadProgressChanged(messageID, position, totalSize, percent)
 		}
-	} else {
+	} else if stateType == domain.FileStateUpload {
 		if r.mainDelegate.OnUploadProgressChanged != nil {
 			r.mainDelegate.OnUploadProgressChanged(messageID, position, totalSize, percent)
 		}
@@ -881,15 +882,16 @@ func (r *River) onFileProgressChanged(messageID, position, totalSize int64, isDo
 
 }
 
-func (r *River) onFileUploadCompleted(messageID, fileID int64, clusterID, totalParts int32, req *msg.ClientSendMessageMedia) {
+func (r *River) onFileUploadCompleted(messageID, fileID int64, clusterID, totalParts int32, stateType domain.FileStateType, req *msg.ClientSendMessageMedia) {
 	log.LOG_Warn("onFileUploadCompleted()",
 		zap.Int64("messageID", messageID),
 		zap.Int64("fileID", fileID),
 	)
 	// if total parts are grater than zero it means we actually uploaded new file
 	// else the doc was already uploaded we called this just to notify ui that upload finished
-	if totalParts > 0 {
-
+	filepath := ""
+	if stateType == domain.FileStateUpload {
+		filepath = req.FilePath
 		// Create SendMessageMedia Request
 		x := new(msg.MessagesSendMedia)
 		x.Peer = req.Peer
@@ -932,15 +934,53 @@ func (r *River) onFileUploadCompleted(messageID, fileID int64, clusterID, totalP
 		requestID := uint64(domain.SequentialUniqueID())
 		r.queueCtrl.ExecuteCommand(requestID, msg.C_MessagesSendMedia, reqBuff, nil, nil, false)
 
+	} else if stateType == domain.FileStateUploadAccountPhoto {
+		// TODO : AccountUploadPhoto
+		x := new(msg.AccountUploadPhoto)
+		x.File = &msg.InputFile{
+			FileID:      fileID,
+			FileName:    strconv.FormatInt(fileID, 10) + ".jpg",
+			TotalParts:  totalParts,
+			MD5Checksum: "",
+		}
+		reqBuff, err := x.Marshal()
+		if err != nil {
+			log.LOG_Error("SDK::onFileUploadCompleted() marshal AccountUploadPhoto", zap.Error(err))
+			return
+		}
+		requestID := uint64(domain.SequentialUniqueID())
+		successCB := func(m *msg.MessageEnvelope) {
+			log.LOG_Debug("AccountUploadPhoto success callback")
+			if m.Constructor == msg.C_Bool {
+				x := new(msg.Bool)
+				err := x.Unmarshal(m.Message)
+				if err != nil {
+					log.LOG_Error("AccountUploadPhoto success callback", zap.Error(err))
+				}
+
+			}
+			if m.Constructor == msg.C_Error {
+				x := new(msg.Error)
+				err := x.Unmarshal(m.Message)
+				if err != nil {
+					log.LOG_Error("AccountUploadPhoto timeout callback", zap.Error(err))
+				}
+				log.LOG_Error("AccountUploadPhoto timeout callback", zap.String("Code", x.Code), zap.String("Item", x.Items))
+			}
+		}
+		timeoutCB := func() {
+			log.LOG_Debug("AccountUploadPhoto timeoput callback")
+		}
+		r.queueCtrl.ExecuteCommand(requestID, msg.C_AccountUploadPhoto, reqBuff, timeoutCB, successCB, false)
 	}
 
 	// Notify UI that upload is completed
-	if r.mainDelegate.OnUploadProgressChanged != nil {
-		r.mainDelegate.OnUploadCompleted(messageID, req.FilePath)
+	if r.mainDelegate.OnUploadCompleted != nil {
+		r.mainDelegate.OnUploadCompleted(messageID, filepath)
 	}
 }
 
-func (r *River) onFileDownloadCompleted(messageID int64, filePath string) {
+func (r *River) onFileDownloadCompleted(messageID int64, filePath string, stateType domain.FileStateType) {
 	log.LOG_Info("onFileDownloadCompleted()", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
 	// Notify UI that download is completed
 	if r.mainDelegate.OnDownloadCompleted != nil {

@@ -170,7 +170,7 @@ func (fm *FileManager) Upload(fileID int64, req *msg.ClientPendingMessage) error
 	// 	log.LOG_Debug(strMD5)
 	// }
 
-	state := NewFileStatus(req.ID, fileID, fileSize, x.FilePath, StateUpload, 0, 0, 0, fm.progressCallback)
+	state := NewFileStatus(req.ID, fileID, fileSize, x.FilePath, domain.FileStateUpload, 0, 0, 0, fm.progressCallback)
 	state.UploadRequest = x
 	fm.AddToQueue(state)
 	repo.Ctx().Files.SaveFileStatus(state.GetDTO())
@@ -185,7 +185,7 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 
 	if err == nil && dtoState != nil {
 		if dtoState.IsCompleted || dtoState.Position == dtoState.TotalSize {
-			fm.downloadCompleted(dtoState.MessageID, dtoState.FilePath)
+			fm.downloadCompleted(dtoState.MessageID, dtoState.FilePath, domain.FileStateType(dtoState.Type))
 			return
 		}
 		state = new(FileStatus)
@@ -230,7 +230,7 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 			version = x.Doc.Version
 			fileSize = x.Doc.FileSize
 			filePath = GetFilePath(x.Doc.MimeType, x.Doc.ID, fileName)
-			state = NewFileStatus(req.ID, docID, int64(fileSize), filePath, StateDownload, clusterID, accessHash, version, fm.progressCallback)
+			state = NewFileStatus(req.ID, docID, int64(fileSize), filePath, domain.FileStateDownload, clusterID, accessHash, version, fm.progressCallback)
 			state.DownloadRequest = x.Doc
 
 		case msg.MediaTypeContact:
@@ -250,11 +250,11 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 
 // AddToQueue add request to queue
 func (fm *FileManager) AddToQueue(status *FileStatus) {
-	if status.Type == StateUpload {
+	if status.Type == domain.FileStateUpload || status.Type == domain.FileStateUploadAccountPhoto {
 		fm.mxUp.Lock()
 		fm.UploadQueue[status.MessageID] = status
 		fm.mxUp.Unlock()
-	} else {
+	} else if status.Type == domain.FileStateDownload {
 		fm.mxDown.Lock()
 		fm.DownloadQueue[status.MessageID] = status
 		fm.mxDown.Unlock()
@@ -426,7 +426,7 @@ func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, 
 				isCompleted := fs.ReadCommit(count)
 				if isCompleted {
 					//call completed delegate
-					fm.uploadCompleted(fs.MessageID, fs.FileID, fs.ClusterID, fs.TotalParts, fs.UploadRequest)
+					fm.uploadCompleted(fs.MessageID, fs.FileID, fs.ClusterID, fs.TotalParts, fs.Type, fs.UploadRequest)
 				}
 			}
 		default:
@@ -458,7 +458,7 @@ func (fm *FileManager) sendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 				log.LOG_Error("sendDownloadRequest() failed write to file", zap.Error(err))
 			} else if isCompleted {
 				//call completed delegate
-				fm.downloadCompleted(fs.MessageID, fs.FilePath)
+				fm.downloadCompleted(fs.MessageID, fs.FilePath, fs.Type)
 
 			}
 		default:
@@ -492,20 +492,20 @@ func (fm *FileManager) SetNetworkStatus(state domain.NetworkStatus) {
 	fm.NetworkStatus = state
 }
 
-func (fm *FileManager) downloadCompleted(msgID int64, filePath string) {
+func (fm *FileManager) downloadCompleted(msgID int64, filePath string, stateType domain.FileStateType) {
 	// delete file status
 	fm.DeleteFromQueue(msgID)
 	repo.Ctx().Files.DeleteFileStatus(msgID)
 	if fm.onDownloadCompleted != nil {
-		fm.onDownloadCompleted(msgID, filePath)
+		fm.onDownloadCompleted(msgID, filePath, stateType)
 	}
 }
 
-func (fm *FileManager) uploadCompleted(msgID, fileID int64, clusterID, totalParts int32, uploadRequest *msg.ClientSendMessageMedia) {
+func (fm *FileManager) uploadCompleted(msgID, fileID int64, clusterID, totalParts int32, stateType domain.FileStateType, uploadRequest *msg.ClientSendMessageMedia) {
 	// delete file status
 	fm.DeleteFromQueue(msgID)
 	repo.Ctx().Files.DeleteFileStatus(msgID)
 	if fm.onUploadCompleted != nil {
-		fm.onUploadCompleted(msgID, fileID, clusterID, totalParts, uploadRequest)
+		fm.onUploadCompleted(msgID, fileID, clusterID, totalParts, stateType, uploadRequest)
 	}
 }

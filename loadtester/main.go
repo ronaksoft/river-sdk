@@ -3,16 +3,17 @@ package main
 import (
 	"os"
 
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/actor"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/report"
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/scenario"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 	"git.ronaksoftware.com/ronak/riversdk/log"
-
-	_ "net/http/pprof"
 
 	"github.com/fatih/color"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	ishell "gopkg.in/abiosoft/ishell.v2"
+	// _ "net/http/pprof"
 )
 
 var (
@@ -57,7 +58,7 @@ func init() {
 	_Shell.AddCmd(cmdCreateAuthKeyByPool)
 
 	log.SetLogger(Log)
-	log.SetLogLevel(0) // DBG: -1, INF: 1, WRN: 2, ERR: 3
+	log.SetLogLevel(-1) // DBG: -1, INF: 1, WRN: 2, ERR: 3
 
 	_Reporter = report.NewReport()
 }
@@ -68,6 +69,18 @@ func main() {
 	// go func() {
 	// 	http.ListenAndServe("localhost:6060", nil)
 	// }()
+
+	isDebug := os.Getenv("SDK_DEBUG")
+	if isDebug == "true" {
+		act, err := actor.NewActor("2374000009953")
+		if err != nil {
+			panic(err)
+		}
+		act.SetPhoneList([]string{"23740072"})
+		sn := scenario.NewImportContact(true)
+		sn.Play(act)
+		sn.Wait(act)
+	}
 
 	_Shell.Run()
 }
