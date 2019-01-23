@@ -109,10 +109,26 @@ func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
 		protoMessage.Payload = encryptedPayloadBytes
 	}
 
+	// // log
+	// msgKey := crc32.ChecksumIEEE(protoMessage.MessageKey)
+	// log.LOG_Info("Crc32 of MessageKey & RequestID",
+	// 	zap.Uint32("Crc32", msgKey),
+	// 	zap.Uint64("ReqID", msgEnvelope.RequestID),
+	// 	zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
+	// )
+
 	b, err := protoMessage.Marshal()
 	if err != nil {
 		return err
 	}
+	// // dump request
+	// if msgEnvelope.Constructor == msg.C_ContactsImport {
+	// 	err := ioutil.WriteFile("ImportContact_Dump.raw", b, os.ModePerm)
+	// 	if err != nil {
+	// 		log.LOG_Error("Packet Dump Failed", zap.Error(err))
+	// 	}
+	// }
+
 	ctrl.connWriteLock.Lock()
 	ctrl.conn.SetWriteDeadline(time.Now().Add(shared.DefaultSendTimeout))
 	err = ctrl.conn.WriteMessage(websocket.BinaryMessage, b)
