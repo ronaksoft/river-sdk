@@ -104,7 +104,13 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	fileServerAddress = strings.Replace(fileServerAddress, "ws://", "http://", 1)
 	filemanager.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory, conf.DocumentCacheDirectory)
 
-	filemanager.InitFileManager(fileServerAddress, r.onFileUploadCompleted, r.onFileProgressChanged, r.onFileDownloadCompleted)
+	filemanager.InitFileManager(fileServerAddress,
+		r.onFileUploadCompleted,
+		r.onFileProgressChanged,
+		r.onFileDownloadCompleted,
+		r.onFileUploadError,
+		r.onFileDownloadError,
+	)
 
 	// Initialize Network Controller
 	r.networkCtrl = network.NewNetworkController(
@@ -985,5 +991,34 @@ func (r *River) onFileDownloadCompleted(messageID int64, filePath string, stateT
 	// Notify UI that download is completed
 	if r.mainDelegate.OnDownloadCompleted != nil {
 		r.mainDelegate.OnDownloadCompleted(messageID, filePath)
+	}
+}
+
+func (r *River) onFileUploadError(messageID, requestID int64, filePath string, err []byte) {
+	x := new(msg.Error)
+	x.Unmarshal(err)
+	log.LOG_Error("onFileUploadError() received Error response",
+		zap.Int64("MsgID", messageID),
+		zap.Int64("ReqID", requestID),
+		zap.String("Code", x.Code),
+		zap.String("Item", x.Items),
+	)
+	// Notify UI that upload encountered an error
+	if r.mainDelegate.OnUploadError != nil {
+		r.mainDelegate.OnUploadError(messageID, requestID, filePath, err)
+	}
+}
+func (r *River) onFileDownloadError(messageID, requestID int64, filePath string, err []byte) {
+	x := new(msg.Error)
+	x.Unmarshal(err)
+	log.LOG_Error("onFileDownloadError() received Error response",
+		zap.Int64("MsgID", messageID),
+		zap.Int64("ReqID", requestID),
+		zap.String("Code", x.Code),
+		zap.String("Item", x.Items),
+	)
+	// Notify UI that download encountered an error
+	if r.mainDelegate.OnDownloadError != nil {
+		r.mainDelegate.OnDownloadError(messageID, requestID, filePath, err)
 	}
 }

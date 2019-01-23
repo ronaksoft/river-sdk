@@ -54,3 +54,9 @@ type OnFileUploadCompleted func(messageID, fileID int64, clusterID, totalParts i
 
 // OnFileDownloadCompleted delegate to rise event
 type OnFileDownloadCompleted func(messageID int64, filePath string, stateType FileStateType)
+
+// OnFileUploadError on receive error from server
+type OnFileUploadError func(messageID, requestID int64, filePath string, err []byte)
+
+// OnFileDownloadError on receive error from server
+type OnFileDownloadError func(messageID, requestID int64, filePath string, err []byte)

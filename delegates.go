@@ -13,6 +13,8 @@ type MainDelegate interface {
 	OnUploadProgressChanged(messageID, position, totalSize int64, percent float64)
 	OnDownloadCompleted(messageID int64, filePath string)
 	OnUploadCompleted(messageID int64, filePath string)
+	OnDownloadError(messageID, requestID int64, filePath string, err []byte)
+	OnUploadError(messageID, requestID int64, filePath string, err []byte)
 }
 
 type RequestDelegate interface {

@@ -93,3 +93,19 @@ func (d *MainDelegate) OnDownloadCompleted(messageID int64, filePath string) {
 func (d *MainDelegate) OnUploadCompleted(messageID int64, filePath string) {
 	_Shell.Println(_RED("OnUploadProgressChanged : MsgID = %v , FilePath = %s", messageID, filePath))
 }
+
+func (d *MainDelegate) OnUploadError(messageID, requestID int64, filePath string, err []byte) {
+	x := new(msg.Error)
+	x.Unmarshal(err)
+
+	_Shell.Println(_RED("OnUploadError : MsgID = %v , ReqID = %v , FilePath = %s , Err = %s",
+		messageID, requestID, filePath, x.String()))
+}
+
+func (d *MainDelegate) OnDownloadError(messageID, requestID int64, filePath string, err []byte) {
+	x := new(msg.Error)
+	x.Unmarshal(err)
+
+	_Shell.Println(_RED("OnDownloadError : MsgID = %v , ReqID = %v , FilePath = %s , Err = %s",
+		messageID, requestID, filePath, x.String()))
+}

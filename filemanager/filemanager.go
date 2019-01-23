@@ -59,6 +59,8 @@ type FileManager struct {
 	onUploadCompleted   domain.OnFileUploadCompleted
 	onDownloadCompleted domain.OnFileDownloadCompleted
 	progressCallback    domain.OnFileStatusChanged
+	onUploadError       domain.OnFileUploadError
+	onDownloadError     domain.OnFileDownloadError
 }
 
 func Ctx() *FileManager {
@@ -68,7 +70,13 @@ func Ctx() *FileManager {
 	return ctx
 }
 
-func InitFileManager(serverAddress string, onUploadCompleted domain.OnFileUploadCompleted, progressCallback domain.OnFileStatusChanged, onDownloadCompleted domain.OnFileDownloadCompleted) {
+func InitFileManager(serverAddress string,
+	onUploadCompleted domain.OnFileUploadCompleted,
+	progressCallback domain.OnFileStatusChanged,
+	onDownloadCompleted domain.OnFileDownloadCompleted,
+	onFileUploadError domain.OnFileUploadError,
+	onFileDownloadError domain.OnFileDownloadError,
+) {
 
 	if ctx == nil {
 		singletone.Lock()
@@ -83,6 +91,8 @@ func InitFileManager(serverAddress string, onUploadCompleted domain.OnFileUpload
 				onUploadCompleted:   onUploadCompleted,
 				progressCallback:    progressCallback,
 				onDownloadCompleted: onDownloadCompleted,
+				onUploadError:       onFileUploadError,
+				onDownloadError:     onFileDownloadError,
 			}
 
 		}
@@ -413,9 +423,12 @@ func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, 
 	if err == nil {
 		switch res.Constructor {
 		case msg.C_Error:
-			x := new(msg.Error)
-			x.Unmarshal(res.Message)
-			log.LOG_Error("sendUploadRequest() received Error response", zap.String("Code", x.Code), zap.String("Item", x.Items))
+			if fm.onUploadError != nil {
+				fm.onUploadError(fs.MessageID, int64(req.RequestID), fs.FilePath, req.Message)
+			}
+			// remove upload from
+			fm.DeleteFromQueue(fs.MessageID)
+			log.LOG_Error("sendUploadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
 		case msg.C_Bool:
 			x := new(msg.Bool)
 			err := x.Unmarshal(res.Message)
@@ -444,9 +457,12 @@ func (fm *FileManager) sendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 	if err == nil {
 		switch res.Constructor {
 		case msg.C_Error:
-			x := new(msg.Error)
-			x.Unmarshal(res.Message)
-			log.LOG_Error("sendDownloadRequest() received Error response", zap.String("Code", x.Code), zap.String("Item", x.Items))
+			if fm.onDownloadError != nil {
+				fm.onDownloadError(fs.MessageID, int64(req.RequestID), fs.FilePath, req.Message)
+			}
+			// remove download from queue
+			fm.DeleteFromQueue(fs.MessageID)
+			log.LOG_Error("sendDownloadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
 		case msg.C_File:
 			x := new(msg.File)
 			err := x.Unmarshal(res.Message)
