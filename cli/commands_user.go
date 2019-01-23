@@ -27,6 +27,25 @@ var UsersGet = &ishell.Cmd{
 	},
 }
 
+var UsersGetFull = &ishell.Cmd{
+	Name: "UsersGetFull",
+	Func: func(c *ishell.Context) {
+		// for just one user
+		req := msg.UsersGetFull{}
+		req.Users = fnGetInputUser(c)
+
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_UsersGetFull, reqBytes, reqDelegate, false, false); err != nil {
+			_Log.Debug(err.Error())
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+
+	},
+}
+
 func init() {
 	User.AddCmd(UsersGet)
+	User.AddCmd(UsersGetFull)
 }

@@ -28,15 +28,23 @@ func (m *UserPhotos) Map(userId int64, v *msg.UserPhoto) {
 	m.Big_FileID = v.PhotoBig.FileID
 	m.Big_AccessHash = int64(v.PhotoBig.AccessHash)
 	m.Big_ClusterID = v.PhotoBig.ClusterID
-	//m.Big_Version = v.PhotoBig.Version
-	m.Big_FilePath = ""
+	// m.Big_Version = v.PhotoBig.Version
+	// m.Big_FilePath = ""
 	m.Small_FileID = v.PhotoSmall.FileID
 	m.Small_AccessHash = int64(v.PhotoSmall.AccessHash)
 	m.Small_ClusterID = v.PhotoSmall.ClusterID
-	//m.Small_Version = v.PhotoSmall.Version
-	m.Small_FilePath = ""
+	// m.Small_Version = v.PhotoSmall.Version
+	// m.Small_FilePath = ""
 
 }
-func (m *UserPhotos) MapTo() {
-
+func (m *UserPhotos) MapTo(v *msg.UserPhoto) {
+	v.PhotoID = m.PhotoID
+	v.PhotoBig = new(msg.FileLocation)
+	v.PhotoSmall = new(msg.FileLocation)
+	v.PhotoBig.FileID = m.Big_FileID
+	v.PhotoBig.AccessHash = uint64(m.Big_AccessHash)
+	v.PhotoBig.ClusterID = m.Big_ClusterID
+	v.PhotoSmall.FileID = m.Small_FileID
+	v.PhotoSmall.AccessHash = uint64(m.Small_AccessHash)
+	v.PhotoSmall.ClusterID = m.Small_ClusterID
 }

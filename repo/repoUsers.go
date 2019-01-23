@@ -47,6 +47,21 @@ func (r *repoUsers) SaveUser(user *msg.User) error {
 		zap.String("Name", fmt.Sprintf("%s %s", user.FirstName, user.LastName)),
 		zap.Int64("UserID", user.ID),
 	)
+
+	// save user Photos
+	if user.Photo != nil {
+
+		dtoPhoto := new(dto.UserPhotos)
+		r.db.Where(&dto.UserPhotos{UserID: user.ID, PhotoID: user.Photo.PhotoID}).Find(dtoPhoto)
+		if dtoPhoto.UserID == 0 || dtoPhoto.PhotoID == 0 {
+			dtoPhoto.Map(user.ID, user.Photo)
+			r.db.Create(dtoPhoto)
+		} else {
+			dtoPhoto.Map(user.ID, user.Photo)
+			r.db.Table(dtoPhoto.TableName()).Where("UserID=? AND PhotoID=?", user.ID, user.Photo.PhotoID).Update(dtoPhoto)
+		}
+	}
+
 	u := new(dto.Users)
 	u.MapFromUser(user)
 

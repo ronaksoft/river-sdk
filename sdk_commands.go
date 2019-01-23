@@ -1094,3 +1094,48 @@ func (r *River) accountUploadPhoto(in, out *msg.MessageEnvelope, timeoutCB domai
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 }
+
+func (r *River) usersGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	log.LOG_Debug("River::usersGetFull()")
+	req := new(msg.UsersGetFull)
+	if err := req.Unmarshal(in.Message); err != nil {
+		log.LOG_Debug("River::usersGetFull()-> Unmarshal()",
+			zap.String("Error", err.Error()),
+		)
+		return
+	}
+	userIDs := domain.MInt64B{}
+	for _, v := range req.Users {
+		userIDs[v.UserID] = true
+	}
+
+	users := repo.Ctx().Users.GetAnyUsers(userIDs.ToArray())
+
+	// TODO : this condition is very lame and have high false positive rate cuz many users do not set username or bio
+	alreadyHaveinCache := len(users) == len(userIDs)
+	if alreadyHaveinCache {
+		for _, u := range users {
+			if u.Username == "" || u.Bio == "" {
+				alreadyHaveinCache = false
+				break
+			}
+		}
+	}
+
+	if alreadyHaveinCache {
+		res := new(msg.UsersMany)
+		res.Users = users
+
+		out.Constructor = msg.C_UsersMany
+		out.Message, _ = res.Marshal()
+		cmd.GetUIExecuter().Exec(func() {
+			if successCB != nil {
+				successCB(out)
+			}
+		}) //successCB(out)
+	} else {
+		log.LOG_Debug("River::messageGetHistory()-> GetAnyUsers() cacheDB is not up to date pass request to server")
+		// send the request to server
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	}
+}

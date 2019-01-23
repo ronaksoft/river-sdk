@@ -121,8 +121,9 @@ func main() {
 		// fnDecodeUpdateHexString()
 		// fnMessagesReadContents()
 		// fnGetDialogs()
-		fnAccountUploadPhoto()
+		// fnAccountUploadPhoto()
 		//block forever
+
 		select {}
 	}
 
