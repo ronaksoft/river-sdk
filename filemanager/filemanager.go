@@ -424,7 +424,7 @@ func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, 
 		switch res.Constructor {
 		case msg.C_Error:
 			if fm.onUploadError != nil {
-				fm.onUploadError(fs.MessageID, int64(req.RequestID), fs.FilePath, req.Message)
+				fm.onUploadError(fs.MessageID, int64(req.RequestID), fs.FilePath, res.Message)
 			}
 			// remove upload from
 			fm.DeleteFromQueue(fs.MessageID)
@@ -458,7 +458,7 @@ func (fm *FileManager) sendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 		switch res.Constructor {
 		case msg.C_Error:
 			if fm.onDownloadError != nil {
-				fm.onDownloadError(fs.MessageID, int64(req.RequestID), fs.FilePath, req.Message)
+				fm.onDownloadError(fs.MessageID, int64(req.RequestID), fs.FilePath, res.Message)
 			}
 			// remove download from queue
 			fm.DeleteFromQueue(fs.MessageID)
