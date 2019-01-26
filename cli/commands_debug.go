@@ -318,79 +318,6 @@ var UpdateNewMessageHexString = &ishell.Cmd{
 	},
 }
 
-var SystemTrace = &ishell.Cmd{
-	Name: "SystemTrace",
-	Func: func(c *ishell.Context) {
-		// for just one user
-		req := msg.MessagesSend{}
-		// 0056
-		req.Peer = &msg.InputPeer{}
-		req.Peer.Type = fnGetPeerType(c)
-		req.Peer.ID = fnGetPeerID(c)
-		req.Peer.AccessHash = fnGetAccessHash(c)
-		count := fnGetTries(c)
-		interval := fnGetInterval(c)
-
-		// count := 10
-		// interval := 1 * time.Millisecond
-
-		// Call SystemStartTrace
-		sysStart := new(msg.SystemStartTrace)
-		sysStart.ClusterID = 1
-		sysStartBytes, _ := sysStart.Marshal()
-		sysStartDelegate := new(RequestDelegate)
-		_SDK.ExecuteCommand(msg.C_SystemStartTrace, sysStartBytes, sysStartDelegate, true, true)
-
-		_SDK.AddRealTimeRequest(msg.C_MessagesSend)
-		for i := 0; i < count; i++ {
-			time.Sleep(interval)
-			req.RandomID = ronak.RandomInt64(0)
-			req.Body = fmt.Sprintf("Test Msg [%v]", i)
-
-			reqBytes, _ := req.Marshal()
-			reqDelegate := new(RequestDelegate)
-			if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSend, reqBytes, reqDelegate, true, true); err != nil {
-				_Log.Debug(err.Error())
-			} else {
-				reqDelegate.RequestID = reqID
-			}
-		}
-		_SDK.RemoveRealTimeRequest(msg.C_MessagesSend)
-
-		// Call SystemTraceStop
-		sysStop := new(msg.SystemStopTrace)
-		sysStopBytes, _ := sysStop.Marshal()
-		sysStopDelegate := new(RequestDelegate)
-		_SDK.ExecuteCommand(msg.C_SystemStopTrace, sysStopBytes, sysStopDelegate, true, true)
-
-	},
-}
-
-var SystemTraceStart = &ishell.Cmd{
-	Name: "SystemTraceStart",
-	Func: func(c *ishell.Context) {
-
-		// Call SystemStartTrace
-		sysStart := new(msg.SystemStartTrace)
-		sysStart.ClusterID = 1
-		sysStartBytes, _ := sysStart.Marshal()
-		sysStartDelegate := new(RequestDelegate)
-		_SDK.ExecuteCommand(msg.C_SystemStartTrace, sysStartBytes, sysStartDelegate, true, false)
-	},
-}
-
-var SystemTraceStop = &ishell.Cmd{
-	Name: "SystemTraceStop",
-	Func: func(c *ishell.Context) {
-
-		// Call SystemTraceStop
-		sysStop := new(msg.SystemStopTrace)
-		sysStopBytes, _ := sysStop.Marshal()
-		sysStopDelegate := new(RequestDelegate)
-		_SDK.ExecuteCommand(msg.C_SystemStopTrace, sysStopBytes, sysStopDelegate, true, false)
-
-	},
-}
 var MimeToExt = &ishell.Cmd{
 	Name: "MimeToExt",
 	Func: func(c *ishell.Context) {
@@ -480,9 +407,6 @@ func init() {
 	Debug.AddCmd(GetGroupInputPeer)
 
 	Debug.AddCmd(UpdateNewMessageHexString)
-	Debug.AddCmd(SystemTrace)
-	Debug.AddCmd(SystemTraceStart)
-	Debug.AddCmd(SystemTraceStop)
 
 	Debug.AddCmd(MimeToExt)
 	Debug.AddCmd(PrintMessage)
