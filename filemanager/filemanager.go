@@ -435,6 +435,9 @@ func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, 
 			if err != nil {
 				log.LOG_Error("sendUploadRequest() failed to unmarshal C_Bool", zap.Error(err))
 			}
+			// reset counter
+			fs.retryCounter = 0
+
 			if x.Result {
 				isCompleted := fs.ReadCommit(count)
 				if isCompleted {
@@ -443,11 +446,30 @@ func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, 
 				}
 			}
 		default:
+			// increase counter
+			fs.retryCounter++
 			log.LOG_Error("sendUploadRequest() received unknown response", zap.Error(err))
+
 		}
 	} else {
+		// increase counter
+		fs.retryCounter++
 		log.LOG_Error("sendUploadRequest()", zap.Error(err))
+
 	}
+	if fs.retryCounter > domain.FileRetryThreshold {
+		if fm.onUploadError != nil {
+			x := new(msg.Error)
+			x.Code = "00"
+			x.Items = "upload request errors passed retry threshold"
+			xbuff, _ := x.Marshal()
+			fm.onUploadError(fs.MessageID, int64(req.RequestID), fs.FilePath, xbuff)
+		}
+		// remove upload from queue
+		fm.DeleteFromQueue(fs.MessageID)
+		log.LOG_Error("sendUploadRequest() upload request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
+	}
+
 	wg.Done()
 }
 
@@ -469,6 +491,9 @@ func (fm *FileManager) sendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 			if err != nil {
 				log.LOG_Error("sendDownloadRequest() failed to unmarshal C_File", zap.Error(err))
 			}
+			// reset counter
+			fs.retryCounter = 0
+
 			isCompleted, err := fs.Write(x.Bytes)
 			if err != nil {
 				log.LOG_Error("sendDownloadRequest() failed write to file", zap.Error(err))
@@ -478,10 +503,26 @@ func (fm *FileManager) sendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 
 			}
 		default:
+			// increase counter
+			fs.retryCounter++
 			log.LOG_Error("sendDownloadRequest() received unknown response", zap.Error(err))
 		}
 	} else {
+		// increase counter
+		fs.retryCounter++
 		log.LOG_Error("sendUploadRequest()", zap.Error(err))
+	}
+	if fs.retryCounter > domain.FileRetryThreshold {
+		if fm.onDownloadError != nil {
+			x := new(msg.Error)
+			x.Code = "00"
+			x.Items = "download request errors passed retry threshold"
+			xbuff, _ := x.Marshal()
+			fm.onDownloadError(fs.MessageID, int64(req.RequestID), fs.FilePath, xbuff)
+		}
+		// remove download from queue
+		fm.DeleteFromQueue(fs.MessageID)
+		log.LOG_Error("sendDownloadRequest() download request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
 	}
 	wg.Done()
 }

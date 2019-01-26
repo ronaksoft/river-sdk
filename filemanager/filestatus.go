@@ -33,6 +33,8 @@ type FileStatus struct {
 	UploadRequest       *msg.ClientSendMessageMedia `json:"UploadRequest"`
 	DownloadRequest     *msg.Document               `json:"DownloadRequest"`
 	onFileStatusChanged domain.OnFileStatusChanged
+	// on receive unknown reposne or send error increase this counter to reach its threshold
+	retryCounter int
 }
 
 // NewFileStatus create new instance
