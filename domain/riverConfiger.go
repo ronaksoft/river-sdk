@@ -20,6 +20,7 @@ type RiverConfiger interface {
 	ChangePhone(phone string)
 	ChangeFirstName(firstName string)
 	ChangeLastName(lastName string)
+	ChangeBio(lastName string)
 	PickupAuthID() int64
 	PickupAuthKey() [256]byte
 	PickupUserID() int64
@@ -27,4 +28,5 @@ type RiverConfiger interface {
 	PickupPhone() string
 	PickupFirstName() string
 	PickupLastName() string
+	PickupBio() string
 }

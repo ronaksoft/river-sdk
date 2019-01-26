@@ -102,6 +102,7 @@ message UpdateUsername {
     required string Username = 2;
     required string FirstName = 3;
     required string LastName = 4;
+    required string Bio = 5;
 }
 
 // UpdateNotifySettings

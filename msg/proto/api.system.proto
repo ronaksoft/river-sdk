@@ -14,22 +14,6 @@ message SystemGetPublicKeys {
 message SystemGetDHGroups {
 }
 
-// SystemStartTrace
-message SystemStartTrace {
-    required int32 ClusterID = 1;
-}
-
-// SystemStopTrace
-message SystemStopTrace {}
-
-// SystemClientLog
-message SystemClientLog {
-    required string DeviceID = 1;
-    required string DeviceOS = 2;
-    required int64 UserID = 3 [jstype = JS_STRING];
-    required string Text = 4;
-
-}
 // SystemPublicKeys
 message SystemPublicKeys {
     repeated RSAPublicKey RSAPublicKeys = 1;

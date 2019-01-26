@@ -34,12 +34,6 @@ func ResultMediaWebPage(out *MessageEnvelope, res *MediaWebPage) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
-func ResultSystemStopTrace(out *MessageEnvelope, res *SystemStopTrace) {
-	out.Constructor = C_SystemStopTrace
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
 func ResultUpdateUserTyping(out *MessageEnvelope, res *UpdateUserTyping) {
 	out.Constructor = C_UpdateUserTyping
 	pbytes.Put(out.Message)
@@ -502,12 +496,6 @@ func ResultInputMediaPhoto(out *MessageEnvelope, res *InputMediaPhoto) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
-func ResultSystemStartTrace(out *MessageEnvelope, res *SystemStartTrace) {
-	out.Constructor = C_SystemStartTrace
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
 func ResultDocumentAttributeFile(out *MessageEnvelope, res *DocumentAttributeFile) {
 	out.Constructor = C_DocumentAttributeFile
 	pbytes.Put(out.Message)
@@ -528,12 +516,6 @@ func ResultAuthCheckedPhone(out *MessageEnvelope, res *AuthCheckedPhone) {
 }
 func ResultMessageActionGroupCreated(out *MessageEnvelope, res *MessageActionGroupCreated) {
 	out.Constructor = C_MessageActionGroupCreated
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
-func ResultSystemClientLog(out *MessageEnvelope, res *SystemClientLog) {
-	out.Constructor = C_SystemClientLog
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

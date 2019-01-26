@@ -305,7 +305,13 @@ func (ctrl *SyncController) updateUsername(u *msg.UpdateEnvelope) []*msg.UpdateE
 	ctrl.connInfo.ChangeUsername(x.Username)
 	ctrl.connInfo.ChangeFirstName(x.FirstName)
 	ctrl.connInfo.ChangeLastName(x.LastName)
+	ctrl.connInfo.ChangeBio(x.Bio)
 	ctrl.connInfo.Save()
+
+	err := repo.Ctx().Users.UpdateUsername(x)
+	if err != nil {
+		log.LOG_Debug("SyncController::updateUsername() error save to DB", zap.Error(err))
+	}
 
 	res := []*msg.UpdateEnvelope{u}
 	return res

@@ -26,6 +26,7 @@ type RepoUsers interface {
 	UpdateContactinfo(userID int64, firstName, lastName string) error
 	SearchUsers(searchPhrase string) []*msg.User
 	UpdateUserProfile(userID int64, req *msg.AccountUpdateProfile) error
+	UpdateUsername(u *msg.UpdateUsername) error
 }
 
 type repoUsers struct {
@@ -437,4 +438,25 @@ func (r *repoUsers) UpdateUserProfile(userID int64, req *msg.AccountUpdateProfil
 		}).Error
 	}
 	return nil
+}
+
+// SaveContactUser
+func (r *repoUsers) UpdateUsername(u *msg.UpdateUsername) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	if u == nil {
+		log.LOG_Debug("RepoRepoUsers::SaveContactUser()",
+			zap.String("User", "user is null"),
+		)
+		return domain.ErrNotFound
+	}
+	mdl := dto.Users{}
+
+	return r.db.Table(mdl.TableName()).Where("ID=?", u.UserID).Updates(map[string]interface{}{
+		"FirstName": u.FirstName,
+		"LastName":  u.LastName,
+		"Username":  u.Username,
+		"Bio":       u.Bio,
+	}).Error
 }

@@ -35,12 +35,6 @@ var (
 			return m
 		},
 	}
-	PoolSystemStopTrace = sync.Pool{
-		New: func() interface{} {
-			m := new(SystemStopTrace)
-			return m
-		},
-	}
 	PoolUpdateUserTyping = sync.Pool{
 		New: func() interface{} {
 			m := new(UpdateUserTyping)
@@ -503,12 +497,6 @@ var (
 			return m
 		},
 	}
-	PoolSystemStartTrace = sync.Pool{
-		New: func() interface{} {
-			m := new(SystemStartTrace)
-			return m
-		},
-	}
 	PoolDocumentAttributeFile = sync.Pool{
 		New: func() interface{} {
 			m := new(DocumentAttributeFile)
@@ -530,12 +518,6 @@ var (
 	PoolMessageActionGroupCreated = sync.Pool{
 		New: func() interface{} {
 			m := new(MessageActionGroupCreated)
-			return m
-		},
-	}
-	PoolSystemClientLog = sync.Pool{
-		New: func() interface{} {
-			m := new(SystemClientLog)
 			return m
 		},
 	}

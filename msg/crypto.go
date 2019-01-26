@@ -5,24 +5,11 @@ import (
 	"crypto/cipher"
 	"crypto/sha512"
 	"github.com/gobwas/pool/pbytes"
-	"hash"
-	"sync"
-)
-
-var (
-	_Sha512Pool = sync.Pool{
-		New: func() interface{} {
-			return sha512.New()
-		},
-	}
 )
 
 // Sha512 returns a 64bytes array which is sha512(in)
 func Sha512(in []byte) ([]byte, error) {
-	// h := sha512.New()
-	h := _Sha512Pool.Get().(hash.Hash)
-	defer _Sha512Pool.Put(h)
-	h.Reset()
+	h := sha512.New()
 	if _, err := h.Write(in); err != nil {
 		return nil, err
 	}

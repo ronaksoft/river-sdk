@@ -142,6 +142,7 @@ func (v *RiverConnection) ChangeUsername(username string)   { v.Username = usern
 func (v *RiverConnection) ChangePhone(phone string)         { v.Phone = phone }
 func (v *RiverConnection) ChangeFirstName(firstName string) { v.FirstName = firstName }
 func (v *RiverConnection) ChangeLastName(lastName string)   { v.LastName = lastName }
+func (v *RiverConnection) ChangeBio(bio string)             { v.Bio = bio }
 func (v *RiverConnection) Load() error                      { return v.loadConfig() }
 func (v *RiverConnection) PickupAuthID() int64              { return v.AuthID }
 func (v *RiverConnection) PickupAuthKey() [256]byte         { return v.AuthKey }
@@ -150,3 +151,4 @@ func (v *RiverConnection) PickupUsername() string           { return v.Username 
 func (v *RiverConnection) PickupPhone() string              { return v.Phone }
 func (v *RiverConnection) PickupFirstName() string          { return v.FirstName }
 func (v *RiverConnection) PickupLastName() string           { return v.LastName }
+func (v *RiverConnection) PickupBio() string                { return v.Bio }
