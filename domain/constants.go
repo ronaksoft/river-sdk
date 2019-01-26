@@ -77,12 +77,12 @@ var NetworkStatusName = map[NetworkStatus]string{
 type RequestStatus int32
 
 const (
-	RequestStateDefault   RequestStatus = 0
-	RequestStateCompleted RequestStatus = 1
-	RequestStatePending   RequestStatus = 2
-	RequestStatePused     RequestStatus = 3
-	RequestStateFailed    RequestStatus = 4
-	RequestStateCanceled  RequestStatus = 5
+	RequestStateNone       RequestStatus = 0
+	RequestStateInProgress RequestStatus = 1
+	RequestStateCompleted  RequestStatus = 2
+	RequestStatePused      RequestStatus = 3
+	RequestStateCanceled   RequestStatus = 4
+	RequestStateError      RequestStatus = 5
 )
 
 var DocumentAttributeTypeNames = map[msg.DocumentAttributeType]string{

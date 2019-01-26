@@ -61,6 +61,7 @@ func NewFileStatus(messageID int64,
 		TotalParts:          0,
 		onFileStatusChanged: progress,
 		Type:                stateType,
+		RequestStatus:       domain.RequestStateInProgress,
 	}
 
 	count := totalSize / domain.FilePayloadSize
@@ -132,6 +133,9 @@ func (fs *FileStatus) Write(data []byte) (isCompleted bool, err error) {
 	}
 	fs.Position += int64(count)
 	fs.IsCompleted = fs.Position >= fs.TotalSize
+	if fs.IsCompleted {
+		fs.RequestStatus = domain.RequestStateCompleted
+	}
 	isCompleted = fs.IsCompleted
 	if isCompleted {
 		repo.Ctx().Files.SaveDownloadingFile(fs.GetDTO())
@@ -146,6 +150,9 @@ func (fs *FileStatus) ReadCommit(count int64) (isCompleted bool) {
 	fs.Position += count
 	fs.PartNo++
 	fs.IsCompleted = fs.PartNo == fs.TotalParts
+	if fs.IsCompleted {
+		fs.RequestStatus = domain.RequestStateCompleted
+	}
 	fs.fileStatusChanged()
 	return fs.IsCompleted
 }

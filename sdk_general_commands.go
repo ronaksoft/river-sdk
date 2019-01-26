@@ -1,6 +1,7 @@
 package riversdk
 
 import (
+	"encoding/json"
 	"errors"
 	"os"
 
@@ -322,21 +323,56 @@ func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, 
 	}
 }
 
-func (r *River) GetFileProgess(msgID int64) float64 {
-	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
-	if err != nil {
-		return -1
+func (r *River) GetFileStatus(msgID int64) string {
+
+	var progress float64
+	var reqStatus int32
+	var filePath string
+
+	filePath = getFilePath(msgID)
+
+	if filePath == "" {
+		fs, err := repo.Ctx().Files.GetFileStatus(msgID)
+
+		if err == nil && fs != nil {
+			// file does not exist and it have progress state
+			// double check
+			if fs.IsCompleted {
+				go repo.Ctx().Files.DeleteFileStatus(fs.MessageID)
+			}
+			reqStatus = fs.RequestStatus
+			if fs.TotalSize > 0 {
+				progress = (float64(fs.Position) / float64(fs.TotalSize) * float64(100))
+			}
+
+		} else {
+			// file does not exist and its progress state does not exist too
+			reqStatus = int32(domain.RequestStateNone)
+			progress = 0
+			filePath = ""
+		}
+	} else {
+		// file exists so it means download completed
+		reqStatus = int32(domain.RequestStateCompleted)
+		progress = 100
 	}
-	if fs.TotalParts <= 0 {
-		return -1
+
+	x := struct {
+		Status   int32   `json:"status"`
+		Progress float64 `json:"progress"`
+		Filepath string  `json:"filepath"`
+	}{
+		Status:   reqStatus,
+		Progress: progress,
+		Filepath: filePath,
 	}
-	if fs.IsCompleted || fs.Position == fs.TotalSize {
-		go repo.Ctx().Files.DeleteFileStatus(fs.MessageID)
-		return -1
-	}
-	return (float64(fs.Position) / float64(fs.TotalSize) * float64(100))
+
+	buff, _ := json.Marshal(x)
+
+	return string(buff)
 }
-func (r *River) GetFilePath(msgID int64) string {
+
+func getFilePath(msgID int64) string {
 	m := repo.Ctx().Messages.GetMessage(msgID)
 	if m != nil {
 		switch m.MediaType {
@@ -385,11 +421,34 @@ func (r *River) FileDownload(msgID int64) {
 	}
 }
 
-func (r *River) CancelDownload(msgID int64) {
+func (r *River) PauseDownload(msgID int64) {
 	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
 	if err == nil {
 		filemanager.Ctx().DeleteFromQueue(fs.FileID)
 		repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStatePused)
+	} else {
+		log.LOG_Error("SDK::PauseDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
+	}
+}
+
+func (r *River) CancelDownload(msgID int64) {
+	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
+	if err == nil {
+		filemanager.Ctx().DeleteFromQueue(fs.FileID)
+		repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStateCanceled)
+	} else {
+		log.LOG_Error("SDK::CancelDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
+	}
+}
+
+func (r *River) PauseUpload(msgID int64) {
+	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
+	if err == nil {
+		filemanager.Ctx().DeleteFromQueue(fs.FileID)
+		repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStatePused)
+		// repo.Ctx().PendingMessages.DeletePendingMessage(fs.MessageID)
+	} else {
+		log.LOG_Error("SDK::PauseUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
 	}
 }
 
@@ -397,6 +456,7 @@ func (r *River) CancelUpload(msgID int64) {
 	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
 	if err == nil {
 		filemanager.Ctx().DeleteFromQueue(fs.FileID)
+		repo.Ctx().Files.DeleteFileStatus(msgID)
 		repo.Ctx().PendingMessages.DeletePendingMessage(fs.MessageID)
 	} else {
 		log.LOG_Error("SDK::CancelUpload()", zap.Int64("MsgID", msgID), zap.Error(err))

@@ -91,7 +91,6 @@ var AuthInfo = &ishell.Cmd{
 			log.LOG_Error("actor.GetAuthInfo()", zap.String("Error", "authKey not created for this actor"))
 			return
 		}
-
 		hexStr := hex.EncodeToString(authKey)
 
 		authKeyHash, _ := domain.Sha256(authKey)
