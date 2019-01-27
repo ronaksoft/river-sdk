@@ -7,13 +7,13 @@ import (
 
 const (
 	// DefaultServerURL websocket url
-	DefaultServerURL = "ws://new.river.im"
+	DefaultServerURL = "ws://test.river.im"
 
 	// DefaultTimeout request timeout
-	DefaultTimeout = 10 * time.Second
+	DefaultTimeout = 5 * time.Second
 
 	// DefaultSendTimeout write to ws timeout
-	DefaultSendTimeout = 10 * time.Second
+	DefaultSendTimeout = 5 * time.Second
 
 	// MaxWorker concurrent go routins
 	MaxWorker = 96

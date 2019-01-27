@@ -68,7 +68,7 @@ message InputFileLocation {
     required int32 ClusterID = 1;
     required int64 FileID = 2 [jstype = JS_STRING];
     required fixed64 AccessHash = 3 [jstype = JS_STRING];
-    required int32 Version = 4;
+    optional int32 Version = 4;
 }
 
 // FileLocation

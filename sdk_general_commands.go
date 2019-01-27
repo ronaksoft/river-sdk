@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"strings"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/filemanager"
@@ -469,6 +470,11 @@ func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 	msgID = domain.SequentialUniqueID()
 	fileID := domain.SequentialUniqueID()
 
+	// support IOS file path
+	if strings.HasPrefix(filePath, "file://") {
+		filePath = filePath[7:]
+	}
+
 	file, err := os.Open(filePath)
 	if err != nil {
 		log.LOG_Error("SDK::AccountUploadPhoto()", zap.Error(err))
@@ -492,4 +498,71 @@ func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 	filemanager.Ctx().AddToQueue(state)
 
 	return msgID
+}
+
+func (r *River) AccountGetPhoto_Big(userID int64) string {
+
+	user := repo.Ctx().Users.GetUser(userID)
+	if user != nil {
+		if user.Photo != nil {
+			dtoPhoto := repo.Ctx().Users.GetUserPhoto(userID, user.Photo.PhotoID)
+			if dtoPhoto != nil {
+				if dtoPhoto.Big_FilePath != "" {
+					// check if file exist
+					if _, err := os.Stat(dtoPhoto.Big_FilePath); os.IsNotExist(err) {
+						return downloadAccountPhoto(userID, user.Photo, true)
+
+					}
+					return dtoPhoto.Big_FilePath
+
+				}
+				return downloadAccountPhoto(userID, user.Photo, true)
+
+			}
+			return downloadAccountPhoto(userID, user.Photo, true)
+
+		}
+		log.LOG_Error("SDK::AccountGetPhoto_Big() user photo is null")
+		return ""
+	}
+	log.LOG_Error("SDK::AccountGetPhoto_Big() user does not exist")
+	return ""
+}
+
+func (r *River) AccountGetPhoto_Small(userID int64) string {
+
+	user := repo.Ctx().Users.GetUser(userID)
+	if user != nil {
+		if user.Photo != nil {
+			dtoPhoto := repo.Ctx().Users.GetUserPhoto(userID, user.Photo.PhotoID)
+			if dtoPhoto != nil {
+
+				if dtoPhoto.Small_FilePath != "" {
+					// check if file exist
+					if _, err := os.Stat(dtoPhoto.Small_FilePath); os.IsNotExist(err) {
+						return downloadAccountPhoto(userID, user.Photo, false)
+					}
+					return dtoPhoto.Small_FilePath
+				}
+				return downloadAccountPhoto(userID, user.Photo, false)
+
+			}
+			return downloadAccountPhoto(userID, user.Photo, false)
+		}
+		log.LOG_Error("SDK::AccountGetPhoto_Small() user photo is null")
+		return ""
+	}
+	log.LOG_Error("SDK::AccountGetPhoto_Small() user does not exist")
+	return ""
+}
+
+// this function is sync
+func downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) string {
+	// send Download request
+	filePath, err := filemanager.Ctx().DownloadAccountPhoto(userID, photo, isBig)
+	if err != nil {
+		log.LOG_Error("SDK::downloadAccountPhoto() error", zap.Error(err))
+		return ""
+	}
+	return filePath
 }

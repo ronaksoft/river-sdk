@@ -27,6 +27,8 @@ type RepoUsers interface {
 	SearchUsers(searchPhrase string) []*msg.User
 	UpdateUserProfile(userID int64, req *msg.AccountUpdateProfile) error
 	UpdateUsername(u *msg.UpdateUsername) error
+	GetUserPhoto(userID, photoID int64) *dto.UserPhotos
+	UpdateAccountPhotoPath(userID, photoID int64, isBig bool, filePath string) error
 }
 
 type repoUsers struct {
@@ -459,4 +461,44 @@ func (r *repoUsers) UpdateUsername(u *msg.UpdateUsername) error {
 		"Username":  u.Username,
 		"Bio":       u.Bio,
 	}).Error
+}
+
+func (r *repoUsers) GetUserPhoto(userID, photoID int64) *dto.UserPhotos {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	log.LOG_Debug("RepoUsers::GetUserPhoto()",
+		zap.Int64("UserID", userID),
+		zap.Int64("PhotoID", photoID),
+	)
+
+	var dtoPhoto *dto.UserPhotos
+
+	err := r.db.Where("UserID = ? AND PhotoID = ?", userID, photoID).First(dtoPhoto).Error
+	if err != nil {
+		log.LOG_Debug("RepoDialogs::GetDialog()->fetch dialog entity",
+			zap.String("Error", err.Error()),
+		)
+		return nil
+	}
+
+	return dtoPhoto
+}
+
+func (r *repoUsers) UpdateAccountPhotoPath(userID, photoID int64, isBig bool, filePath string) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	e := new(dto.UserPhotos)
+
+	if isBig {
+		return r.db.Table(e.TableName()).Where("UserID = ? AND PhotoID = ?", userID, photoID).Updates(map[string]interface{}{
+			"Big_FilePath": filePath,
+		}).Error
+	}
+
+	return r.db.Table(e.TableName()).Where("UserID = ? AND PhotoID = ?", userID, photoID).Updates(map[string]interface{}{
+		"Small_FilePath": filePath,
+	}).Error
+
 }

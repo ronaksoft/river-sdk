@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"mime"
 	"os"
 	"path"
@@ -575,4 +576,61 @@ func (fm *FileManager) uploadCompleted(msgID, fileID int64, clusterID, totalPart
 	if fm.onUploadCompleted != nil {
 		fm.onUploadCompleted(msgID, fileID, clusterID, totalParts, stateType, uploadRequest)
 	}
+}
+
+func (fm *FileManager) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) (string, error) {
+	req := new(msg.FileGet)
+	req.Location = new(msg.InputFileLocation)
+	if isBig {
+		req.Location.ClusterID = photo.PhotoBig.ClusterID
+		req.Location.AccessHash = photo.PhotoBig.AccessHash
+		req.Location.FileID = photo.PhotoBig.FileID
+		req.Location.Version = 0
+	} else {
+		req.Location.ClusterID = photo.PhotoSmall.ClusterID
+		req.Location.AccessHash = photo.PhotoSmall.AccessHash
+		req.Location.FileID = photo.PhotoSmall.FileID
+		req.Location.Version = 0
+	}
+
+	req.Offset = 0
+	req.Limit = 0
+
+	envelop := new(msg.MessageEnvelope)
+	envelop.Constructor = msg.C_FileGet
+	envelop.Message, _ = req.Marshal()
+	envelop.RequestID = uint64(domain.SequentialUniqueID())
+
+	filePath := GetFilePath("image/jpeg", req.Location.FileID, "avatar.jpg")
+	res, err := fm.Send(envelop)
+	if err == nil {
+		switch res.Constructor {
+		case msg.C_Error:
+			strErr := ""
+			x := new(msg.Error)
+			if err := x.Unmarshal(res.Message); err == nil {
+				strErr = "Code :" + x.Code + ", Items :" + x.Items
+			}
+			return "", fmt.Errorf("received error response Error :{ %s }", strErr)
+		case msg.C_File:
+			x := new(msg.File)
+			err := x.Unmarshal(res.Message)
+			if err != nil {
+				return "", err
+			}
+
+			// write to file path
+			err = ioutil.WriteFile(filePath, x.Bytes, 0666)
+			if err != nil {
+				return "", err
+			}
+
+			// save to DB
+			return filePath, repo.Ctx().Users.UpdateAccountPhotoPath(userID, photo.PhotoID, isBig, filePath)
+
+		default:
+			return "", fmt.Errorf("received unknown response constructor")
+		}
+	}
+	return "", err
 }

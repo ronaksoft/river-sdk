@@ -103,9 +103,10 @@ var MediaTypeNames = map[msg.MediaType]string{
 type FileStateType int32
 
 const (
-	FileStateDownload           FileStateType = 1
-	FileStateUpload             FileStateType = 2
-	FileStateExistedDownload    FileStateType = 3
-	FileStateExistedUpload      FileStateType = 4
-	FileStateUploadAccountPhoto FileStateType = 5
+	FileStateDownload             FileStateType = 1
+	FileStateUpload               FileStateType = 2
+	FileStateExistedDownload      FileStateType = 3
+	FileStateExistedUpload        FileStateType = 4
+	FileStateUploadAccountPhoto   FileStateType = 5
+	FileStateDownloadAccountPhoto FileStateType = 6
 )

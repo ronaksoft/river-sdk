@@ -3,11 +3,12 @@
 
 package msg
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-
-import io "io"
+import (
+	fmt "fmt"
+	proto "github.com/gogo/protobuf/proto"
+	io "io"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -27,7 +28,7 @@ func (m *AccountPrivacyAllowAll) Reset()         { *m = AccountPrivacyAllowAll{}
 func (m *AccountPrivacyAllowAll) String() string { return proto.CompactTextString(m) }
 func (*AccountPrivacyAllowAll) ProtoMessage()    {}
 func (*AccountPrivacyAllowAll) Descriptor() ([]byte, []int) {
-	return fileDescriptor_core_account_privacies_5ab2eac42588bca4, []int{0}
+	return fileDescriptor_f0c04064b7c128f2, []int{0}
 }
 func (m *AccountPrivacyAllowAll) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -44,8 +45,8 @@ func (m *AccountPrivacyAllowAll) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-func (dst *AccountPrivacyAllowAll) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AccountPrivacyAllowAll.Merge(dst, src)
+func (m *AccountPrivacyAllowAll) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccountPrivacyAllowAll.Merge(m, src)
 }
 func (m *AccountPrivacyAllowAll) XXX_Size() int {
 	return m.Size()
@@ -63,7 +64,7 @@ func (m *AccountPrivacyAllowContacts) Reset()         { *m = AccountPrivacyAllow
 func (m *AccountPrivacyAllowContacts) String() string { return proto.CompactTextString(m) }
 func (*AccountPrivacyAllowContacts) ProtoMessage()    {}
 func (*AccountPrivacyAllowContacts) Descriptor() ([]byte, []int) {
-	return fileDescriptor_core_account_privacies_5ab2eac42588bca4, []int{1}
+	return fileDescriptor_f0c04064b7c128f2, []int{1}
 }
 func (m *AccountPrivacyAllowContacts) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -80,8 +81,8 @@ func (m *AccountPrivacyAllowContacts) XXX_Marshal(b []byte, deterministic bool) 
 		return b[:n], nil
 	}
 }
-func (dst *AccountPrivacyAllowContacts) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AccountPrivacyAllowContacts.Merge(dst, src)
+func (m *AccountPrivacyAllowContacts) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccountPrivacyAllowContacts.Merge(m, src)
 }
 func (m *AccountPrivacyAllowContacts) XXX_Size() int {
 	return m.Size()
@@ -100,7 +101,7 @@ func (m *AccountPrivacyAllowUsers) Reset()         { *m = AccountPrivacyAllowUse
 func (m *AccountPrivacyAllowUsers) String() string { return proto.CompactTextString(m) }
 func (*AccountPrivacyAllowUsers) ProtoMessage()    {}
 func (*AccountPrivacyAllowUsers) Descriptor() ([]byte, []int) {
-	return fileDescriptor_core_account_privacies_5ab2eac42588bca4, []int{2}
+	return fileDescriptor_f0c04064b7c128f2, []int{2}
 }
 func (m *AccountPrivacyAllowUsers) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -117,8 +118,8 @@ func (m *AccountPrivacyAllowUsers) XXX_Marshal(b []byte, deterministic bool) ([]
 		return b[:n], nil
 	}
 }
-func (dst *AccountPrivacyAllowUsers) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AccountPrivacyAllowUsers.Merge(dst, src)
+func (m *AccountPrivacyAllowUsers) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccountPrivacyAllowUsers.Merge(m, src)
 }
 func (m *AccountPrivacyAllowUsers) XXX_Size() int {
 	return m.Size()
@@ -143,7 +144,7 @@ func (m *AccountPrivacyDisallowAll) Reset()         { *m = AccountPrivacyDisallo
 func (m *AccountPrivacyDisallowAll) String() string { return proto.CompactTextString(m) }
 func (*AccountPrivacyDisallowAll) ProtoMessage()    {}
 func (*AccountPrivacyDisallowAll) Descriptor() ([]byte, []int) {
-	return fileDescriptor_core_account_privacies_5ab2eac42588bca4, []int{3}
+	return fileDescriptor_f0c04064b7c128f2, []int{3}
 }
 func (m *AccountPrivacyDisallowAll) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -160,8 +161,8 @@ func (m *AccountPrivacyDisallowAll) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (dst *AccountPrivacyDisallowAll) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AccountPrivacyDisallowAll.Merge(dst, src)
+func (m *AccountPrivacyDisallowAll) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccountPrivacyDisallowAll.Merge(m, src)
 }
 func (m *AccountPrivacyDisallowAll) XXX_Size() int {
 	return m.Size()
@@ -179,7 +180,7 @@ func (m *AccountPrivacyDisallowContacts) Reset()         { *m = AccountPrivacyDi
 func (m *AccountPrivacyDisallowContacts) String() string { return proto.CompactTextString(m) }
 func (*AccountPrivacyDisallowContacts) ProtoMessage()    {}
 func (*AccountPrivacyDisallowContacts) Descriptor() ([]byte, []int) {
-	return fileDescriptor_core_account_privacies_5ab2eac42588bca4, []int{4}
+	return fileDescriptor_f0c04064b7c128f2, []int{4}
 }
 func (m *AccountPrivacyDisallowContacts) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -196,8 +197,8 @@ func (m *AccountPrivacyDisallowContacts) XXX_Marshal(b []byte, deterministic boo
 		return b[:n], nil
 	}
 }
-func (dst *AccountPrivacyDisallowContacts) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AccountPrivacyDisallowContacts.Merge(dst, src)
+func (m *AccountPrivacyDisallowContacts) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccountPrivacyDisallowContacts.Merge(m, src)
 }
 func (m *AccountPrivacyDisallowContacts) XXX_Size() int {
 	return m.Size()
@@ -216,7 +217,7 @@ func (m *AccountPrivacyDisallowUsers) Reset()         { *m = AccountPrivacyDisal
 func (m *AccountPrivacyDisallowUsers) String() string { return proto.CompactTextString(m) }
 func (*AccountPrivacyDisallowUsers) ProtoMessage()    {}
 func (*AccountPrivacyDisallowUsers) Descriptor() ([]byte, []int) {
-	return fileDescriptor_core_account_privacies_5ab2eac42588bca4, []int{5}
+	return fileDescriptor_f0c04064b7c128f2, []int{5}
 }
 func (m *AccountPrivacyDisallowUsers) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -233,8 +234,8 @@ func (m *AccountPrivacyDisallowUsers) XXX_Marshal(b []byte, deterministic bool) 
 		return b[:n], nil
 	}
 }
-func (dst *AccountPrivacyDisallowUsers) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AccountPrivacyDisallowUsers.Merge(dst, src)
+func (m *AccountPrivacyDisallowUsers) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccountPrivacyDisallowUsers.Merge(m, src)
 }
 func (m *AccountPrivacyDisallowUsers) XXX_Size() int {
 	return m.Size()
@@ -260,6 +261,25 @@ func init() {
 	proto.RegisterType((*AccountPrivacyDisallowContacts)(nil), "msg.AccountPrivacyDisallowContacts")
 	proto.RegisterType((*AccountPrivacyDisallowUsers)(nil), "msg.AccountPrivacyDisallowUsers")
 }
+
+func init() { proto.RegisterFile("core.account.privacies.proto", fileDescriptor_f0c04064b7c128f2) }
+
+var fileDescriptor_f0c04064b7c128f2 = []byte{
+	// 180 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x49, 0xce, 0x2f, 0x4a,
+	0xd5, 0x4b, 0x4c, 0x4e, 0xce, 0x2f, 0xcd, 0x2b, 0xd1, 0x2b, 0x28, 0xca, 0x2c, 0x4b, 0x4c, 0xce,
+	0x4c, 0x2d, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0xce, 0x2d, 0x4e, 0x57, 0x92, 0xe0,
+	0x12, 0x73, 0x84, 0xc8, 0x07, 0x80, 0xa5, 0x2b, 0x1d, 0x73, 0x72, 0xf2, 0xcb, 0x1d, 0x73, 0x72,
+	0x94, 0x64, 0xb9, 0xa4, 0xb1, 0xc8, 0x38, 0xe7, 0xe7, 0x95, 0x24, 0x26, 0x97, 0x14, 0x2b, 0x59,
+	0x70, 0x49, 0x60, 0x91, 0x0e, 0x2d, 0x4e, 0x2d, 0x2a, 0x16, 0x92, 0xe1, 0x62, 0x07, 0x31, 0x3c,
+	0x5d, 0x8a, 0x25, 0x18, 0x15, 0x98, 0x35, 0x98, 0x9d, 0x98, 0x0c, 0x18, 0x83, 0x60, 0x42, 0x4a,
+	0xd2, 0x5c, 0x92, 0xa8, 0x3a, 0x5d, 0x32, 0x8b, 0x13, 0x61, 0xb6, 0x2a, 0x70, 0xc9, 0x61, 0x97,
+	0x84, 0x5b, 0x6c, 0x8d, 0xee, 0x2e, 0x98, 0x0a, 0x22, 0xec, 0x76, 0x92, 0x38, 0xf1, 0x48, 0x8e,
+	0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58,
+	0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x06, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0xaa, 0x49, 0xae, 0x55,
+	0x2c, 0x01, 0x00, 0x00,
+}
+
 func (m *AccountPrivacyAllowAll) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1018,23 +1038,3 @@ var (
 	ErrInvalidLengthCoreAccountPrivacies = fmt.Errorf("proto: negative length found during unmarshaling")
 	ErrIntOverflowCoreAccountPrivacies   = fmt.Errorf("proto: integer overflow")
 )
-
-func init() {
-	proto.RegisterFile("core.account.privacies.proto", fileDescriptor_core_account_privacies_5ab2eac42588bca4)
-}
-
-var fileDescriptor_core_account_privacies_5ab2eac42588bca4 = []byte{
-	// 180 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x49, 0xce, 0x2f, 0x4a,
-	0xd5, 0x4b, 0x4c, 0x4e, 0xce, 0x2f, 0xcd, 0x2b, 0xd1, 0x2b, 0x28, 0xca, 0x2c, 0x4b, 0x4c, 0xce,
-	0x4c, 0x2d, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0xce, 0x2d, 0x4e, 0x57, 0x92, 0xe0,
-	0x12, 0x73, 0x84, 0xc8, 0x07, 0x80, 0xa5, 0x2b, 0x1d, 0x73, 0x72, 0xf2, 0xcb, 0x1d, 0x73, 0x72,
-	0x94, 0x64, 0xb9, 0xa4, 0xb1, 0xc8, 0x38, 0xe7, 0xe7, 0x95, 0x24, 0x26, 0x97, 0x14, 0x2b, 0x59,
-	0x70, 0x49, 0x60, 0x91, 0x0e, 0x2d, 0x4e, 0x2d, 0x2a, 0x16, 0x92, 0xe1, 0x62, 0x07, 0x31, 0x3c,
-	0x5d, 0x8a, 0x25, 0x18, 0x15, 0x98, 0x35, 0x98, 0x9d, 0x98, 0x0c, 0x18, 0x83, 0x60, 0x42, 0x4a,
-	0xd2, 0x5c, 0x92, 0xa8, 0x3a, 0x5d, 0x32, 0x8b, 0x13, 0x61, 0xb6, 0x2a, 0x70, 0xc9, 0x61, 0x97,
-	0x84, 0x5b, 0x6c, 0x8d, 0xee, 0x2e, 0x98, 0x0a, 0x22, 0xec, 0x76, 0x92, 0x38, 0xf1, 0x48, 0x8e,
-	0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58,
-	0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x06, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0xaa, 0x49, 0xae, 0x55,
-	0x2c, 0x01, 0x00, 0x00,
-}

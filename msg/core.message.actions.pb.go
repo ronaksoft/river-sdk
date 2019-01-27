@@ -3,12 +3,13 @@
 
 package msg
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-
-import io "io"
-import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
+import (
+	fmt "fmt"
+	github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
+	proto "github.com/gogo/protobuf/proto"
+	io "io"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -30,7 +31,7 @@ func (m *MessageActionGroupAddUser) Reset()         { *m = MessageActionGroupAdd
 func (m *MessageActionGroupAddUser) String() string { return proto.CompactTextString(m) }
 func (*MessageActionGroupAddUser) ProtoMessage()    {}
 func (*MessageActionGroupAddUser) Descriptor() ([]byte, []int) {
-	return fileDescriptor_core_message_actions_9009de6a860815b7, []int{0}
+	return fileDescriptor_f9c512600f09e3be, []int{0}
 }
 func (m *MessageActionGroupAddUser) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -47,8 +48,8 @@ func (m *MessageActionGroupAddUser) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (dst *MessageActionGroupAddUser) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MessageActionGroupAddUser.Merge(dst, src)
+func (m *MessageActionGroupAddUser) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MessageActionGroupAddUser.Merge(m, src)
 }
 func (m *MessageActionGroupAddUser) XXX_Size() int {
 	return m.Size()
@@ -75,7 +76,7 @@ func (m *MessageActionGroupDeleteUser) Reset()         { *m = MessageActionGroup
 func (m *MessageActionGroupDeleteUser) String() string { return proto.CompactTextString(m) }
 func (*MessageActionGroupDeleteUser) ProtoMessage()    {}
 func (*MessageActionGroupDeleteUser) Descriptor() ([]byte, []int) {
-	return fileDescriptor_core_message_actions_9009de6a860815b7, []int{1}
+	return fileDescriptor_f9c512600f09e3be, []int{1}
 }
 func (m *MessageActionGroupDeleteUser) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -92,8 +93,8 @@ func (m *MessageActionGroupDeleteUser) XXX_Marshal(b []byte, deterministic bool)
 		return b[:n], nil
 	}
 }
-func (dst *MessageActionGroupDeleteUser) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MessageActionGroupDeleteUser.Merge(dst, src)
+func (m *MessageActionGroupDeleteUser) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MessageActionGroupDeleteUser.Merge(m, src)
 }
 func (m *MessageActionGroupDeleteUser) XXX_Size() int {
 	return m.Size()
@@ -121,7 +122,7 @@ func (m *MessageActionGroupCreated) Reset()         { *m = MessageActionGroupCre
 func (m *MessageActionGroupCreated) String() string { return proto.CompactTextString(m) }
 func (*MessageActionGroupCreated) ProtoMessage()    {}
 func (*MessageActionGroupCreated) Descriptor() ([]byte, []int) {
-	return fileDescriptor_core_message_actions_9009de6a860815b7, []int{2}
+	return fileDescriptor_f9c512600f09e3be, []int{2}
 }
 func (m *MessageActionGroupCreated) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -138,8 +139,8 @@ func (m *MessageActionGroupCreated) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (dst *MessageActionGroupCreated) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MessageActionGroupCreated.Merge(dst, src)
+func (m *MessageActionGroupCreated) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MessageActionGroupCreated.Merge(m, src)
 }
 func (m *MessageActionGroupCreated) XXX_Size() int {
 	return m.Size()
@@ -173,7 +174,7 @@ func (m *MessageActionGroupTitleChanged) Reset()         { *m = MessageActionGro
 func (m *MessageActionGroupTitleChanged) String() string { return proto.CompactTextString(m) }
 func (*MessageActionGroupTitleChanged) ProtoMessage()    {}
 func (*MessageActionGroupTitleChanged) Descriptor() ([]byte, []int) {
-	return fileDescriptor_core_message_actions_9009de6a860815b7, []int{3}
+	return fileDescriptor_f9c512600f09e3be, []int{3}
 }
 func (m *MessageActionGroupTitleChanged) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -190,8 +191,8 @@ func (m *MessageActionGroupTitleChanged) XXX_Marshal(b []byte, deterministic boo
 		return b[:n], nil
 	}
 }
-func (dst *MessageActionGroupTitleChanged) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MessageActionGroupTitleChanged.Merge(dst, src)
+func (m *MessageActionGroupTitleChanged) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MessageActionGroupTitleChanged.Merge(m, src)
 }
 func (m *MessageActionGroupTitleChanged) XXX_Size() int {
 	return m.Size()
@@ -219,7 +220,7 @@ func (m *MessageActionClearHistory) Reset()         { *m = MessageActionClearHis
 func (m *MessageActionClearHistory) String() string { return proto.CompactTextString(m) }
 func (*MessageActionClearHistory) ProtoMessage()    {}
 func (*MessageActionClearHistory) Descriptor() ([]byte, []int) {
-	return fileDescriptor_core_message_actions_9009de6a860815b7, []int{4}
+	return fileDescriptor_f9c512600f09e3be, []int{4}
 }
 func (m *MessageActionClearHistory) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -236,8 +237,8 @@ func (m *MessageActionClearHistory) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (dst *MessageActionClearHistory) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MessageActionClearHistory.Merge(dst, src)
+func (m *MessageActionClearHistory) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MessageActionClearHistory.Merge(m, src)
 }
 func (m *MessageActionClearHistory) XXX_Size() int {
 	return m.Size()
@@ -270,7 +271,7 @@ func (m *MessageActionContactRegistered) Reset()         { *m = MessageActionCon
 func (m *MessageActionContactRegistered) String() string { return proto.CompactTextString(m) }
 func (*MessageActionContactRegistered) ProtoMessage()    {}
 func (*MessageActionContactRegistered) Descriptor() ([]byte, []int) {
-	return fileDescriptor_core_message_actions_9009de6a860815b7, []int{5}
+	return fileDescriptor_f9c512600f09e3be, []int{5}
 }
 func (m *MessageActionContactRegistered) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -287,8 +288,8 @@ func (m *MessageActionContactRegistered) XXX_Marshal(b []byte, deterministic boo
 		return b[:n], nil
 	}
 }
-func (dst *MessageActionContactRegistered) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MessageActionContactRegistered.Merge(dst, src)
+func (m *MessageActionContactRegistered) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MessageActionContactRegistered.Merge(m, src)
 }
 func (m *MessageActionContactRegistered) XXX_Size() int {
 	return m.Size()
@@ -307,6 +308,30 @@ func init() {
 	proto.RegisterType((*MessageActionClearHistory)(nil), "msg.MessageActionClearHistory")
 	proto.RegisterType((*MessageActionContactRegistered)(nil), "msg.MessageActionContactRegistered")
 }
+
+func init() { proto.RegisterFile("core.message.actions.proto", fileDescriptor_f9c512600f09e3be) }
+
+var fileDescriptor_f9c512600f09e3be = []byte{
+	// 267 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x90, 0x3f, 0x6b, 0x83, 0x40,
+	0x18, 0xc6, 0xbd, 0xb3, 0x7f, 0x6f, 0xbc, 0xc9, 0x06, 0xb9, 0x8a, 0x74, 0x70, 0x92, 0xae, 0x85,
+	0x2e, 0x51, 0x69, 0x9b, 0x21, 0x8b, 0x34, 0x73, 0x39, 0xf4, 0xc5, 0x0a, 0xc6, 0x0b, 0x77, 0x6f,
+	0xa1, 0xfd, 0x16, 0xfd, 0x58, 0x19, 0x33, 0x76, 0x2a, 0x45, 0xbf, 0x48, 0xa9, 0x5a, 0x08, 0x31,
+	0x83, 0xd3, 0x71, 0xcf, 0xc3, 0x8f, 0xdf, 0xc3, 0xcb, 0x66, 0x99, 0xd2, 0x10, 0xae, 0xc1, 0x18,
+	0x59, 0x40, 0x28, 0x33, 0x2c, 0x55, 0x6d, 0xc2, 0x8d, 0x56, 0xa8, 0xb8, 0xbd, 0x36, 0x85, 0x7f,
+	0xc7, 0xae, 0x96, 0x7d, 0x3b, 0xef, 0xca, 0x47, 0xad, 0xde, 0x36, 0xf3, 0x3c, 0x5f, 0x19, 0xd0,
+	0xdc, 0x65, 0xe7, 0x7f, 0xef, 0x22, 0x31, 0x0e, 0xf1, 0xec, 0xc0, 0x8e, 0xe8, 0x2d, 0x49, 0xff,
+	0x23, 0xff, 0x9e, 0xb9, 0x63, 0x34, 0x81, 0x0a, 0x10, 0x26, 0xd0, 0x2f, 0xc7, 0xc4, 0xb1, 0x06,
+	0x89, 0x90, 0xf3, 0x1b, 0xc6, 0xba, 0xff, 0x73, 0x89, 0x15, 0x38, 0xc4, 0xa3, 0xc1, 0x65, 0x74,
+	0xb2, 0xfd, 0xbe, 0xb6, 0xd2, 0xbd, 0x7c, 0x5f, 0x40, 0xc7, 0x82, 0x07, 0x26, 0xc6, 0x82, 0x0e,
+	0x8c, 0x5f, 0x65, 0x5d, 0x4c, 0xb5, 0xf8, 0xab, 0x83, 0xa1, 0x71, 0x05, 0x52, 0x3f, 0x95, 0x06,
+	0x95, 0xfe, 0xe0, 0x33, 0x76, 0xba, 0x94, 0xef, 0x8b, 0xa4, 0xa3, 0xed, 0x81, 0xee, 0x23, 0xee,
+	0xb2, 0xb3, 0xfe, 0x1a, 0x0e, 0xf5, 0x68, 0x70, 0x31, 0x94, 0x43, 0xe6, 0x7b, 0x07, 0xf3, 0x62,
+	0x55, 0xa3, 0xcc, 0x30, 0x85, 0xa2, 0x34, 0x08, 0x1a, 0xf2, 0xc8, 0xd9, 0x36, 0x82, 0xec, 0x1a,
+	0x41, 0x7e, 0x1a, 0x41, 0x3e, 0x5b, 0x61, 0xed, 0x5a, 0x61, 0x7d, 0xb5, 0xc2, 0xfa, 0x0d, 0x00,
+	0x00, 0xff, 0xff, 0x4e, 0xcf, 0x3a, 0x31, 0xd6, 0x01, 0x00, 0x00,
+}
+
 func (m *MessageActionGroupAddUser) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1291,28 +1316,3 @@ var (
 	ErrInvalidLengthCoreMessageActions = fmt.Errorf("proto: negative length found during unmarshaling")
 	ErrIntOverflowCoreMessageActions   = fmt.Errorf("proto: integer overflow")
 )
-
-func init() {
-	proto.RegisterFile("core.message.actions.proto", fileDescriptor_core_message_actions_9009de6a860815b7)
-}
-
-var fileDescriptor_core_message_actions_9009de6a860815b7 = []byte{
-	// 267 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x90, 0x3f, 0x6b, 0x83, 0x40,
-	0x18, 0xc6, 0xbd, 0xb3, 0x7f, 0x6f, 0xbc, 0xc9, 0x06, 0xb9, 0x8a, 0x74, 0x70, 0x92, 0xae, 0x85,
-	0x2e, 0x51, 0x69, 0x9b, 0x21, 0x8b, 0x34, 0x73, 0x39, 0xf4, 0xc5, 0x0a, 0xc6, 0x0b, 0x77, 0x6f,
-	0xa1, 0xfd, 0x16, 0xfd, 0x58, 0x19, 0x33, 0x76, 0x2a, 0x45, 0xbf, 0x48, 0xa9, 0x5a, 0x08, 0x31,
-	0x83, 0xd3, 0x71, 0xcf, 0xc3, 0x8f, 0xdf, 0xc3, 0xcb, 0x66, 0x99, 0xd2, 0x10, 0xae, 0xc1, 0x18,
-	0x59, 0x40, 0x28, 0x33, 0x2c, 0x55, 0x6d, 0xc2, 0x8d, 0x56, 0xa8, 0xb8, 0xbd, 0x36, 0x85, 0x7f,
-	0xc7, 0xae, 0x96, 0x7d, 0x3b, 0xef, 0xca, 0x47, 0xad, 0xde, 0x36, 0xf3, 0x3c, 0x5f, 0x19, 0xd0,
-	0xdc, 0x65, 0xe7, 0x7f, 0xef, 0x22, 0x31, 0x0e, 0xf1, 0xec, 0xc0, 0x8e, 0xe8, 0x2d, 0x49, 0xff,
-	0x23, 0xff, 0x9e, 0xb9, 0x63, 0x34, 0x81, 0x0a, 0x10, 0x26, 0xd0, 0x2f, 0xc7, 0xc4, 0xb1, 0x06,
-	0x89, 0x90, 0xf3, 0x1b, 0xc6, 0xba, 0xff, 0x73, 0x89, 0x15, 0x38, 0xc4, 0xa3, 0xc1, 0x65, 0x74,
-	0xb2, 0xfd, 0xbe, 0xb6, 0xd2, 0xbd, 0x7c, 0x5f, 0x40, 0xc7, 0x82, 0x07, 0x26, 0xc6, 0x82, 0x0e,
-	0x8c, 0x5f, 0x65, 0x5d, 0x4c, 0xb5, 0xf8, 0xab, 0x83, 0xa1, 0x71, 0x05, 0x52, 0x3f, 0x95, 0x06,
-	0x95, 0xfe, 0xe0, 0x33, 0x76, 0xba, 0x94, 0xef, 0x8b, 0xa4, 0xa3, 0xed, 0x81, 0xee, 0x23, 0xee,
-	0xb2, 0xb3, 0xfe, 0x1a, 0x0e, 0xf5, 0x68, 0x70, 0x31, 0x94, 0x43, 0xe6, 0x7b, 0x07, 0xf3, 0x62,
-	0x55, 0xa3, 0xcc, 0x30, 0x85, 0xa2, 0x34, 0x08, 0x1a, 0xf2, 0xc8, 0xd9, 0x36, 0x82, 0xec, 0x1a,
-	0x41, 0x7e, 0x1a, 0x41, 0x3e, 0x5b, 0x61, 0xed, 0x5a, 0x61, 0x7d, 0xb5, 0xc2, 0xfa, 0x0d, 0x00,
-	0x00, 0xff, 0xff, 0x4e, 0xcf, 0x3a, 0x31, 0xd6, 0x01, 0x00, 0x00,
-}

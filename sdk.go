@@ -813,6 +813,19 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 			if _, ok := userIDs[u.ID]; !ok {
 				userIDs[u.ID] = true
 				users = append(users, u)
+
+				// Download users avatar if its not exist
+				if u.Photo != nil {
+					dtoPhoto := repo.Ctx().Users.GetUserPhoto(u.ID, u.Photo.PhotoID)
+					if dtoPhoto != nil {
+						if dtoPhoto.Small_FilePath == "" {
+							go downloadAccountPhoto(u.ID, u.Photo, false)
+						}
+					} else {
+						go downloadAccountPhoto(u.ID, u.Photo, false)
+					}
+				}
+
 			}
 		}
 		// get distinct groups

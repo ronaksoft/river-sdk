@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"hash/crc32"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -109,13 +110,15 @@ func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
 		protoMessage.Payload = encryptedPayloadBytes
 	}
 
-	// // log
-	// msgKey := crc32.ChecksumIEEE(protoMessage.MessageKey)
-	// log.LOG_Info("Crc32 of MessageKey & RequestID",
-	// 	zap.Uint32("Crc32", msgKey),
-	// 	zap.Uint64("ReqID", msgEnvelope.RequestID),
-	// 	zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
-	// )
+	// log
+	if msgEnvelope.Constructor != msg.C_AuthRecall {
+		msgKey := crc32.ChecksumIEEE(protoMessage.MessageKey)
+		log.LOG_Info("Crc32 of MessageKey & RequestID",
+			zap.Uint32("Crc32", msgKey),
+			zap.Uint64("ReqID", msgEnvelope.RequestID),
+			zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
+		)
+	}
 
 	b, err := protoMessage.Marshal()
 	if err != nil {
