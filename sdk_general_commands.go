@@ -475,6 +475,11 @@ func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 		filePath = filePath[7:]
 	}
 
+	log.LOG_Error("SDK::AccountUploadPhoto() IOS support filepath", zap.String("filePath", filePath))
+	if _, err := os.Stat(filePath); err != nil {
+		log.LOG_Error("SDK::AccountUploadPhoto() os.Stat(filePath) Error ", zap.String("Err", err.Error()))
+	}
+
 	file, err := os.Open(filePath)
 	if err != nil {
 		log.LOG_Error("SDK::AccountUploadPhoto()", zap.Error(err))
