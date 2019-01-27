@@ -472,17 +472,17 @@ func (r *repoUsers) GetUserPhoto(userID, photoID int64) *dto.UserPhotos {
 		zap.Int64("PhotoID", photoID),
 	)
 
-	var dtoPhoto *dto.UserPhotos
+	dtoPhoto := dto.UserPhotos{}
 
-	err := r.db.Where("UserID = ? AND PhotoID = ?", userID, photoID).First(dtoPhoto).Error
+	err := r.db.Where("UserID = ? AND PhotoID = ?", userID, photoID).First(&dtoPhoto).Error
 	if err != nil {
-		log.LOG_Debug("RepoDialogs::GetDialog()->fetch dialog entity",
+		log.LOG_Debug("RepoUsers::GetUserPhoto()->fetch UserPhoto entity",
 			zap.String("Error", err.Error()),
 		)
 		return nil
 	}
 
-	return dtoPhoto
+	return &dtoPhoto
 }
 
 func (r *repoUsers) UpdateAccountPhotoPath(userID, photoID int64, isBig bool, filePath string) error {

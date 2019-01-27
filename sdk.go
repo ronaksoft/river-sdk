@@ -818,7 +818,7 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 				if u.Photo != nil {
 					dtoPhoto := repo.Ctx().Users.GetUserPhoto(u.ID, u.Photo.PhotoID)
 					if dtoPhoto != nil {
-						if dtoPhoto.Small_FilePath == "" {
+						if dtoPhoto.Small_FilePath == "" && dtoPhoto.UserID > 0 && dtoPhoto.Small_FileID != 0 {
 							go downloadAccountPhoto(u.ID, u.Photo, false)
 						}
 					} else {
