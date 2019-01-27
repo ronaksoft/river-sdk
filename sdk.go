@@ -902,16 +902,15 @@ func (r *River) onFileProgressChanged(messageID, position, totalSize int64, stat
 
 }
 
-func (r *River) onFileUploadCompleted(messageID, fileID int64, clusterID, totalParts int32, stateType domain.FileStateType, req *msg.ClientSendMessageMedia) {
+func (r *River) onFileUploadCompleted(messageID, fileID int64, clusterID, totalParts int32, stateType domain.FileStateType, filePath string, req *msg.ClientSendMessageMedia) {
 	log.LOG_Warn("onFileUploadCompleted()",
 		zap.Int64("messageID", messageID),
 		zap.Int64("fileID", fileID),
 	)
 	// if total parts are grater than zero it means we actually uploaded new file
 	// else the doc was already uploaded we called this just to notify ui that upload finished
-	filepath := ""
+
 	if stateType == domain.FileStateUpload {
-		filepath = req.FilePath
 		// Create SendMessageMedia Request
 		x := new(msg.MessagesSendMedia)
 		x.Peer = req.Peer
@@ -996,7 +995,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID int64, clusterID, totalP
 
 	// Notify UI that upload is completed
 	if r.mainDelegate.OnUploadCompleted != nil {
-		r.mainDelegate.OnUploadCompleted(messageID, filepath)
+		r.mainDelegate.OnUploadCompleted(messageID, filePath)
 	}
 }
 

@@ -445,7 +445,7 @@ func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, 
 				isCompleted := fs.ReadCommit(count)
 				if isCompleted {
 					//call completed delegate
-					fm.uploadCompleted(fs.MessageID, fs.FileID, fs.ClusterID, fs.TotalParts, fs.Type, fs.UploadRequest)
+					fm.uploadCompleted(fs.MessageID, fs.FileID, fs.ClusterID, fs.TotalParts, fs.Type, fs.FilePath, fs.UploadRequest)
 				}
 			}
 		default:
@@ -569,12 +569,12 @@ func (fm *FileManager) downloadCompleted(msgID int64, filePath string, stateType
 	}
 }
 
-func (fm *FileManager) uploadCompleted(msgID, fileID int64, clusterID, totalParts int32, stateType domain.FileStateType, uploadRequest *msg.ClientSendMessageMedia) {
+func (fm *FileManager) uploadCompleted(msgID, fileID int64, clusterID, totalParts int32, stateType domain.FileStateType, filePath string, uploadRequest *msg.ClientSendMessageMedia) {
 	// delete file status
 	fm.DeleteFromQueue(msgID)
 	repo.Ctx().Files.DeleteFileStatus(msgID)
 	if fm.onUploadCompleted != nil {
-		fm.onUploadCompleted(msgID, fileID, clusterID, totalParts, stateType, uploadRequest)
+		fm.onUploadCompleted(msgID, fileID, clusterID, totalParts, stateType, filePath, uploadRequest)
 	}
 }
 
