@@ -611,7 +611,7 @@ func (fm *FileManager) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, 
 			if err := x.Unmarshal(res.Message); err == nil {
 				strErr = "Code :" + x.Code + ", Items :" + x.Items
 			}
-			return "", fmt.Errorf("received error response Error :{ %s }", strErr)
+			return "", fmt.Errorf("received error response { %s }", strErr)
 		case msg.C_File:
 			x := new(msg.File)
 			err := x.Unmarshal(res.Message)

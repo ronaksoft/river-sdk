@@ -72,6 +72,14 @@ func (r *repoUsers) SaveUser(user *msg.User) error {
 	r.db.Find(eu, u.ID)
 	if eu.ID == 0 {
 		return r.db.Create(u).Error
+	} else if user.Photo != nil {
+		// update user photo info if exist
+		buff, err := user.Photo.Marshal()
+		if err == nil {
+			r.db.Table(u.TableName()).Where("ID=?", u.ID).Updates(map[string]interface{}{
+				"Photo": buff,
+			})
+		}
 	}
 	return nil
 	// if user not exist just add it no need to update existing user
@@ -100,6 +108,7 @@ func (r *repoUsers) SaveContactUser(user *msg.ContactUser) error {
 
 	eu := new(dto.Users)
 	r.db.Find(eu, u.ID)
+
 	if eu.ID == 0 {
 
 		return r.db.Create(u).Error

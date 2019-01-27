@@ -135,6 +135,23 @@ var UploadPhoto = &ishell.Cmd{
 	},
 }
 
+var DownloadPhotoBig = &ishell.Cmd{
+	Name: "DownloadPhotoBig",
+	Func: func(c *ishell.Context) {
+		userID := fnGetPeerID(c)
+		_SDK.AccountGetPhoto_Big(userID)
+
+	},
+}
+var DownloadPhotoSmall = &ishell.Cmd{
+	Name: "DownloadPhotoSmall",
+	Func: func(c *ishell.Context) {
+		userID := fnGetPeerID(c)
+		_SDK.AccountGetPhoto_Small(userID)
+
+	},
+}
+
 func init() {
 	Account.AddCmd(RegisterDevice)
 	Account.AddCmd(UpdateUsername)
@@ -143,4 +160,6 @@ func init() {
 	Account.AddCmd(UpdateProfile)
 	Account.AddCmd(SetNotifySettings)
 	Account.AddCmd(UploadPhoto)
+	Account.AddCmd(DownloadPhotoBig)
+	Account.AddCmd(DownloadPhotoSmall)
 }

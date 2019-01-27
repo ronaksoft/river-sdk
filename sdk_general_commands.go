@@ -330,32 +330,30 @@ func (r *River) GetFileStatus(msgID int64) string {
 	var reqStatus int32
 	var filePath string
 
-	filePath = getFilePath(msgID)
-
-	if filePath == "" {
-		fs, err := repo.Ctx().Files.GetFileStatus(msgID)
-
-		if err == nil && fs != nil {
-			// file does not exist and it have progress state
-			// double check
-			if fs.IsCompleted {
-				go repo.Ctx().Files.DeleteFileStatus(fs.MessageID)
-			}
-			reqStatus = fs.RequestStatus
-			if fs.TotalSize > 0 {
-				progress = (float64(fs.Position) / float64(fs.TotalSize) * float64(100))
-			}
-
+	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
+	if err == nil && fs != nil {
+		// file is inprogress state
+		// double check
+		if fs.IsCompleted {
+			go repo.Ctx().Files.DeleteFileStatus(fs.MessageID)
+		}
+		reqStatus = fs.RequestStatus
+		filePath = fs.FilePath
+		if fs.TotalSize > 0 {
+			progress = (float64(fs.Position) / float64(fs.TotalSize) * float64(100))
+		}
+	} else {
+		filePath = getFilePath(msgID)
+		if filePath != "" {
+			// file exists so it means download completed
+			reqStatus = int32(domain.RequestStateCompleted)
+			progress = 100
 		} else {
 			// file does not exist and its progress state does not exist too
 			reqStatus = int32(domain.RequestStateNone)
 			progress = 0
 			filePath = ""
 		}
-	} else {
-		// file exists so it means download completed
-		reqStatus = int32(domain.RequestStateCompleted)
-		progress = 100
 	}
 
 	x := struct {
@@ -558,6 +556,18 @@ func (r *River) AccountGetPhoto_Small(userID int64) string {
 
 // this function is sync
 func downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) string {
+
+	log.LOG_Debug("SDK::downloadAccountPhoto",
+		zap.Int64("UserID", userID),
+		zap.Bool("IsBig", isBig),
+		zap.Int64("PhotoBig.FileID", photo.PhotoBig.FileID),
+		zap.Uint64("PhotoBig.AccessHash", photo.PhotoBig.AccessHash),
+		zap.Int32("PhotoBig.ClusterID", photo.PhotoBig.ClusterID),
+		zap.Int64("SmallBig.FileID", photo.PhotoSmall.FileID),
+		zap.Uint64("SmallBig.AccessHash", photo.PhotoSmall.AccessHash),
+		zap.Int32("SmallBig.ClusterID", photo.PhotoSmall.ClusterID),
+	)
+
 	// send Download request
 	filePath, err := filemanager.Ctx().DownloadAccountPhoto(userID, photo, isBig)
 	if err != nil {

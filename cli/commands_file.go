@@ -71,6 +71,14 @@ var Download = &ishell.Cmd{
 	},
 }
 
+var Status = &ishell.Cmd{
+	Name: "Status",
+	Func: func(c *ishell.Context) {
+		messageID := fnGetMessageID(c)
+		str := _SDK.GetFileStatus(messageID)
+		c.Println(str)
+	},
+}
 var DownloadMultiConnection = &ishell.Cmd{
 	Name: "DownloadMultiConnection",
 	Func: func(c *ishell.Context) {
@@ -169,6 +177,7 @@ func init() {
 	File.AddCmd(Download)
 	File.AddCmd(DownloadMultiConnection)
 	File.AddCmd(ShareContact)
+	File.AddCmd(Status)
 
 }
 
