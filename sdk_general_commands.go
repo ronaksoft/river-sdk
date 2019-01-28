@@ -365,8 +365,8 @@ func getFilePath(msgID int64) string {
 func (r *River) FileDownload(msgID int64) {
 
 	status, progress, filePath := geFileStatus(msgID)
-	log.LOG_Debug("SDK::FileDownload() ",
-		zap.String("FileStatus", domain.RequestStatusNames[status]),
+	log.LOG_Debug("SDK::FileDownload() current file progress status",
+		zap.String("Status", domain.RequestStatusNames[status]),
 		zap.Float64("Progress", progress),
 		zap.String("FilePath", filePath),
 	)
