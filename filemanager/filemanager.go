@@ -611,7 +611,7 @@ func (fm *FileManager) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, 
 			if err := x.Unmarshal(res.Message); err == nil {
 				strErr = "Code :" + x.Code + ", Items :" + x.Items
 			}
-			return "", fmt.Errorf("received error response { %s }", strErr)
+			return "", fmt.Errorf("received error response {UserID: %d,  %s }", userID, strErr)
 		case msg.C_File:
 			x := new(msg.File)
 			err := x.Unmarshal(res.Message)
@@ -629,7 +629,7 @@ func (fm *FileManager) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, 
 			return filePath, repo.Ctx().Users.UpdateAccountPhotoPath(userID, photo.PhotoID, isBig, filePath)
 
 		default:
-			return "", fmt.Errorf("received unknown response constructor")
+			return "", fmt.Errorf("received unknown response constructor {UserId : %d}", userID)
 		}
 	}
 	return "", err
