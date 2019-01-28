@@ -168,17 +168,6 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acte
 				authKeyHash, _ := domain.Sha256(authKey)
 				authID := int64(binary.LittleEndian.Uint64(authKeyHash[24:32]))
 
-				// TODO : Complete Scenario
-				// Save authKey && authID
-				act.SetAuthInfo(authID, authKey)
-
-				if s.isFinal {
-					err := act.Save()
-					if err != nil {
-						s.log(act, "initCompleteAuth() Actor.Save(), Err : "+err.Error(), elapsed, resp.RequestID)
-					}
-				}
-
 				var secret []byte
 				secret = append(secret, q2Internal.SecretNonce...)
 				secret = append(secret, byte(msg.InitAuthCompleted_OK))
@@ -190,6 +179,15 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acte
 					// TODO : Reporter failed
 					s.failed(act, elapsed, resp.RequestID, "initCompleteAuth(), err : "+err.Error())
 					return
+				}
+
+				// Save authKey && authID
+				act.SetAuthInfo(authID, authKey)
+				if s.isFinal {
+					err := act.Save()
+					if err != nil {
+						s.log(act, "initCompleteAuth() Actor.Save(), Err : "+err.Error(), elapsed, resp.RequestID)
+					}
 				}
 				s.completed(act, elapsed, resp.RequestID, "initCompleteAuth() Success")
 			case msg.InitAuthCompleted_RETRY:
