@@ -345,6 +345,7 @@ func (r *River) GetFileStatus(msgID int64) string {
 func getFilePath(msgID int64) string {
 	m := repo.Ctx().Messages.GetMessage(msgID)
 	if m != nil {
+
 		switch m.MediaType {
 		case msg.MediaTypeDocument:
 			x := new(msg.MediaDocument)
@@ -352,6 +353,18 @@ func getFilePath(msgID int64) string {
 			if err == nil {
 				// check file existance
 				filePath := repo.Ctx().Files.GetFilePath(m.ID, x.Doc.ID)
+				if _, err = os.Stat(filePath); os.IsNotExist(err) {
+					filePath = ""
+				}
+				return filePath
+			}
+		default:
+			// Probably this is pendingMessage so MediaData is ClientSendMessageMedia
+			x := new(msg.ClientSendMessageMedia)
+			err := x.Unmarshal(m.Media)
+			if err == nil {
+				// check file existance
+				filePath := x.FilePath
 				if _, err = os.Stat(filePath); os.IsNotExist(err) {
 					filePath = ""
 				}
