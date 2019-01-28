@@ -326,42 +326,13 @@ func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, 
 
 func (r *River) GetFileStatus(msgID int64) string {
 
-	var progress float64
-	var reqStatus int32
-	var filePath string
-
-	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
-	if err == nil && fs != nil {
-		// file is inprogress state
-		// double check
-		if fs.IsCompleted {
-			go repo.Ctx().Files.DeleteFileStatus(fs.MessageID)
-		}
-		reqStatus = fs.RequestStatus
-		filePath = fs.FilePath
-		if fs.TotalSize > 0 {
-			progress = (float64(fs.Position) / float64(fs.TotalSize) * float64(100))
-		}
-	} else {
-		filePath = getFilePath(msgID)
-		if filePath != "" {
-			// file exists so it means download completed
-			reqStatus = int32(domain.RequestStateCompleted)
-			progress = 100
-		} else {
-			// file does not exist and its progress state does not exist too
-			reqStatus = int32(domain.RequestStateNone)
-			progress = 0
-			filePath = ""
-		}
-	}
-
+	status, progress, filePath := geFileStatus(msgID)
 	x := struct {
 		Status   int32   `json:"status"`
 		Progress float64 `json:"progress"`
 		Filepath string  `json:"filepath"`
 	}{
-		Status:   reqStatus,
+		Status:   int32(status),
 		Progress: progress,
 		Filepath: filePath,
 	}
@@ -392,31 +363,41 @@ func getFilePath(msgID int64) string {
 }
 
 func (r *River) FileDownload(msgID int64) {
+
+	status, progress, filePath := geFileStatus(msgID)
+	log.LOG_Debug("SDK::FileDownload() ",
+		zap.String("FileStatus", domain.RequestStatusNames[status]),
+		zap.Float64("Progress", progress),
+		zap.String("FilePath", filePath),
+	)
 	m := repo.Ctx().Messages.GetMessage(msgID)
-
-	if m != nil {
-		switch m.MediaType {
-		case msg.MediaTypeDocument:
-			x := new(msg.MediaDocument)
-			err := x.Unmarshal(m.Media)
-			if err == nil {
-				// check file existance
-				filePath := repo.Ctx().Files.GetFilePath(m.ID, x.Doc.ID)
-				if _, err = os.Stat(filePath); os.IsNotExist(err) {
-					filemanager.Ctx().Download(m)
-				} else {
-					r.onFileDownloadCompleted(m.ID, filePath, domain.FileStateExistedDownload)
-				}
-
-			} else {
-				log.LOG_Error("SDK::FileDownload()", zap.Error(err))
-			}
-
-		default:
-			log.LOG_Error("SDK::FileDownload() MediaType is invalid", zap.Int32("MediaType", int32(m.MediaType)))
-		}
-	} else {
+	if m == nil {
 		log.LOG_Error("SDK::FileDownload()", zap.Int64("Message does not exist", msgID))
+		return
+	}
+
+	switch status {
+	case domain.RequestStateNone:
+		filemanager.Ctx().Download(m)
+	case domain.RequestStateInProgress:
+		// already downloading
+		// filemanager.Ctx().Download(m)
+	case domain.RequestStateCompleted:
+		r.onFileDownloadCompleted(m.ID, filePath, domain.FileStateExistedDownload)
+	case domain.RequestStatePused:
+		filemanager.Ctx().Download(m)
+	case domain.RequestStateCanceled:
+		filemanager.Ctx().Download(m)
+	case domain.RequestStateError:
+		filemanager.Ctx().Download(m)
+	}
+
+	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
+	if err == nil && fs != nil {
+
+	} else {
+		m := repo.Ctx().Messages.GetMessage(msgID)
+		filemanager.Ctx().Download(m)
 	}
 }
 
@@ -575,4 +556,35 @@ func downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) string
 		return ""
 	}
 	return filePath
+}
+
+func geFileStatus(msgID int64) (status domain.RequestStatus, progress float64, filePath string) {
+
+	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
+	if err == nil && fs != nil {
+		// file is inprogress state
+		// double check
+		if fs.IsCompleted {
+			go repo.Ctx().Files.DeleteFileStatus(fs.MessageID)
+		}
+		status = domain.RequestStatus(fs.RequestStatus)
+		filePath = fs.FilePath
+		if fs.TotalSize > 0 {
+			progress = (float64(fs.Position) / float64(fs.TotalSize) * float64(100))
+		}
+	} else {
+		filePath = getFilePath(msgID)
+		if filePath != "" {
+			// file exists so it means download completed
+			status = domain.RequestStateCompleted
+			progress = 100
+		} else {
+			// file does not exist and its progress state does not exist too
+			status = domain.RequestStateNone
+			progress = 0
+			filePath = ""
+		}
+	}
+
+	return
 }

@@ -85,6 +85,15 @@ const (
 	RequestStateError      RequestStatus = 5
 )
 
+var RequestStatusNames = map[RequestStatus]string{
+	RequestStateNone:       "None",
+	RequestStateInProgress: "InProgress",
+	RequestStateCompleted:  "Completed",
+	RequestStatePused:      "Pused",
+	RequestStateCanceled:   "Canceled",
+	RequestStateError:      "Error",
+}
+
 var DocumentAttributeTypeNames = map[msg.DocumentAttributeType]string{
 	msg.AttributeTypeNone:  "AttributeTypeNone",
 	msg.AttributeTypeAudio: "AttributeTypeAudio",
