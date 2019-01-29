@@ -499,9 +499,23 @@ func (fm *FileManager) sendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 			err := x.Unmarshal(res.Message)
 			if err != nil {
 				log.LOG_Error("sendDownloadRequest() failed to unmarshal C_File", zap.Error(err))
+				fs.retryCounter++
+				break
 			}
-			// reset counter
-			fs.retryCounter = 0
+
+			if len(x.Bytes) == 0 {
+				log.LOG_Error("sendDownloadRequest() Received 0 bytes from server ",
+					zap.Int64("MsgID", fs.MessageID),
+					zap.Int64("Position", fs.Position),
+					zap.Int64("TotalSize", fs.TotalSize),
+				)
+				fs.retryCounter++
+				break
+
+			} else {
+				// reset counter
+				fs.retryCounter = 0
+			}
 
 			isCompleted, err := fs.Write(x.Bytes)
 			if err != nil {

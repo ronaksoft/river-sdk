@@ -116,7 +116,7 @@ func main() {
 		// fnDecryptDump()
 		// fnRunUploadFile()
 		// fnSendMessageMedia()
-		fnRunDownloadFile()
+		// fnRunDownloadFile()
 		// fnSendInputMediaDocument()
 		// fnDecodeUpdateHexString()
 		// fnMessagesReadContents()
