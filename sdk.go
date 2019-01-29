@@ -821,7 +821,7 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 						if dtoPhoto.Small_FilePath == "" && dtoPhoto.UserID > 0 && dtoPhoto.Small_FileID != 0 && u.Photo.PhotoSmall.FileID != 0 {
 							go downloadAccountPhoto(u.ID, u.Photo, false)
 						}
-					} else {
+					} else if u.Photo.PhotoID != 0 {
 						go downloadAccountPhoto(u.ID, u.Photo, false)
 					}
 				}
