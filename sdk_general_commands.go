@@ -485,7 +485,7 @@ func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 		return 0
 	}
 
-	state := filemanager.NewFileStatus(msgID, fileID, totalSize, filePath, domain.FileStateUploadAccountPhoto, 0, 0, 0, r.onFileProgressChanged)
+	state := filemanager.NewFileStatus(msgID, fileID, 0, totalSize, filePath, domain.FileStateUploadAccountPhoto, 0, 0, 0, r.onFileProgressChanged)
 
 	filemanager.Ctx().AddToQueue(state)
 
@@ -600,4 +600,121 @@ func geFileStatus(msgID int64) (status domain.RequestStatus, progress float64, f
 	}
 
 	return
+}
+
+func (r *River) GroupUploadPhoto(groupID int64, filePath string) (msgID int64) {
+
+	//TOF
+	msgID = domain.SequentialUniqueID()
+	fileID := domain.SequentialUniqueID()
+
+	// support IOS file path
+	if strings.HasPrefix(filePath, "file://") {
+		filePath = filePath[7:]
+	}
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.LOG_Error("SDK::GroupUploadPhoto()", zap.Error(err))
+		return 0
+	}
+	fileInfo, err := file.Stat()
+	if err != nil {
+		log.LOG_Error("SDK::GroupUploadPhoto()", zap.Error(err))
+		return 0
+	}
+
+	// fileName := fileInfo.Name()
+	totalSize := fileInfo.Size() // size in Byte
+	if totalSize > domain.FileMaxPhotoSize {
+		log.LOG_Error("SDK::GroupUploadPhoto()", zap.Error(errors.New("max allowed file size is 1 MB")))
+		return 0
+	}
+
+	state := filemanager.NewFileStatus(msgID, fileID, groupID, totalSize, filePath, domain.FileStateUploadGroupPhoto, 0, 0, 0, r.onFileProgressChanged)
+
+	filemanager.Ctx().AddToQueue(state)
+
+	return msgID
+}
+
+func (r *River) GroupGetPhoto_Big(groupID int64) string {
+
+	group, err := repo.Ctx().Groups.GetGroupDTO(groupID)
+	if err == nil && group != nil {
+		if group.Photo != nil {
+			groupPhoto := new(msg.GroupPhoto)
+			err = groupPhoto.Unmarshal(group.Photo)
+			if err != nil {
+				log.LOG_Error("SDK::GroupGetPhoto_Big() failed to unmarshal GroupPhoto", zap.Error(err))
+				return ""
+			}
+			if group.Big_FilePath != "" {
+				// check if file exist
+				if _, err := os.Stat(group.Big_FilePath); os.IsNotExist(err) {
+					return downloadGroupPhoto(groupID, groupPhoto, true)
+				}
+				return group.Big_FilePath
+
+			}
+			return downloadGroupPhoto(groupID, groupPhoto, true)
+
+		}
+		log.LOG_Error("SDK::GroupGetPhoto_Big() group photo is null")
+		return ""
+	}
+	log.LOG_Error("SDK::GroupGetPhoto_Big() group does not exist")
+	return ""
+}
+
+func (r *River) GroupGetPhoto_Small(groupID int64) string {
+
+	group, err := repo.Ctx().Groups.GetGroupDTO(groupID)
+	if err == nil && group != nil {
+		if group.Photo != nil {
+			groupPhoto := new(msg.GroupPhoto)
+			err = groupPhoto.Unmarshal(group.Photo)
+			if err != nil {
+				log.LOG_Error("SDK::GroupGetPhoto_Small() failed to unmarshal GroupPhoto", zap.Error(err))
+				return ""
+			}
+			if group.Small_FilePath != "" {
+				// check if file exist
+				if _, err := os.Stat(group.Small_FilePath); os.IsNotExist(err) {
+					return downloadGroupPhoto(groupID, groupPhoto, true)
+				}
+				return group.Small_FilePath
+
+			}
+			return downloadGroupPhoto(groupID, groupPhoto, false)
+
+		}
+		log.LOG_Error("SDK::GroupGetPhoto_Small() group photo is null")
+		return ""
+	}
+	log.LOG_Error("SDK::GroupGetPhoto_Small() group does not exist")
+	return ""
+}
+
+// this function is sync
+func downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) string {
+
+	log.LOG_Debug("SDK::downloadGroupPhoto",
+		zap.Int64("UserID", groupID),
+		zap.Bool("IsBig", isBig),
+		zap.Int64("PhotoBig.FileID", photo.PhotoBig.FileID),
+		zap.Uint64("PhotoBig.AccessHash", photo.PhotoBig.AccessHash),
+		zap.Int32("PhotoBig.ClusterID", photo.PhotoBig.ClusterID),
+		zap.Int64("SmallBig.FileID", photo.PhotoSmall.FileID),
+		zap.Uint64("SmallBig.AccessHash", photo.PhotoSmall.AccessHash),
+		zap.Int32("SmallBig.ClusterID", photo.PhotoSmall.ClusterID),
+	)
+
+	// send Download request
+	filePath, err := filemanager.Ctx().DownloadGroupPhoto(groupID, photo, isBig)
+	if err != nil {
+		log.LOG_Error("SDK::downloadGroupPhoto() error", zap.Error(err))
+		return ""
+	}
+	return filePath
 }

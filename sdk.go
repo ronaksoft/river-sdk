@@ -902,7 +902,7 @@ func (r *River) onFileProgressChanged(messageID, position, totalSize int64, stat
 
 }
 
-func (r *River) onFileUploadCompleted(messageID, fileID int64, clusterID, totalParts int32, stateType domain.FileStateType, filePath string, req *msg.ClientSendMessageMedia) {
+func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64, clusterID, totalParts int32, stateType domain.FileStateType, filePath string, req *msg.ClientSendMessageMedia) {
 	log.LOG_Warn("onFileUploadCompleted()",
 		zap.Int64("messageID", messageID),
 		zap.Int64("fileID", fileID),
@@ -991,6 +991,46 @@ func (r *River) onFileUploadCompleted(messageID, fileID int64, clusterID, totalP
 			log.LOG_Debug("AccountUploadPhoto timeoput callback")
 		}
 		r.queueCtrl.ExecuteCommand(requestID, msg.C_AccountUploadPhoto, reqBuff, timeoutCB, successCB, false)
+
+	} else if stateType == domain.FileStateUploadGroupPhoto {
+		// TODO : GroupUploadPhoto
+		x := new(msg.GroupUploadPhoto)
+		x.GroupID = targetID
+		x.File = &msg.InputFile{
+			FileID:      fileID,
+			FileName:    strconv.FormatInt(fileID, 10) + ".jpg",
+			TotalParts:  totalParts,
+			MD5Checksum: "",
+		}
+		reqBuff, err := x.Marshal()
+		if err != nil {
+			log.LOG_Error("SDK::onFileUploadCompleted() marshal GroupUploadPhoto", zap.Error(err))
+			return
+		}
+		requestID := uint64(domain.SequentialUniqueID())
+		successCB := func(m *msg.MessageEnvelope) {
+			log.LOG_Debug("GroupUploadPhoto success callback")
+			if m.Constructor == msg.C_Bool {
+				x := new(msg.Bool)
+				err := x.Unmarshal(m.Message)
+				if err != nil {
+					log.LOG_Error("GroupUploadPhoto success callback", zap.Error(err))
+				}
+
+			}
+			if m.Constructor == msg.C_Error {
+				x := new(msg.Error)
+				err := x.Unmarshal(m.Message)
+				if err != nil {
+					log.LOG_Error("GroupUploadPhoto timeout callback", zap.Error(err))
+				}
+				log.LOG_Error("GroupUploadPhoto timeout callback", zap.String("Code", x.Code), zap.String("Item", x.Items))
+			}
+		}
+		timeoutCB := func() {
+			log.LOG_Debug("GroupUploadPhoto timeoput callback")
+		}
+		r.queueCtrl.ExecuteCommand(requestID, msg.C_GroupUploadPhoto, reqBuff, timeoutCB, successCB, false)
 	}
 
 	// Notify UI that upload is completed

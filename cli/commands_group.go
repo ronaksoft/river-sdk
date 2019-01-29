@@ -1,7 +1,9 @@
 package main
 
 import (
+	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
+	"go.uber.org/zap"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )
 
@@ -129,6 +131,34 @@ var ToggleAdmins = &ishell.Cmd{
 	},
 }
 
+var GroupUploadPhoto = &ishell.Cmd{
+	Name: "UploadPhoto",
+	Func: func(c *ishell.Context) {
+		groupID := fnGetGroupID(c)
+		filePath := fnGetFilePath(c)
+		_SDK.GroupUploadPhoto(groupID, filePath)
+
+	},
+}
+
+var GroupDownloadPhotoBig = &ishell.Cmd{
+	Name: "DownloadPhotoBig",
+	Func: func(c *ishell.Context) {
+		groupID := fnGetGroupID(c)
+		strFilePath := _SDK.GroupGetPhoto_Big(groupID)
+		log.LOG_Info("File Download Complete", zap.String("path", strFilePath))
+
+	},
+}
+var GroupDownloadPhotoSmall = &ishell.Cmd{
+	Name: "DownloadPhotoSmall",
+	Func: func(c *ishell.Context) {
+		groupID := fnGetGroupID(c)
+		strFilePath := _SDK.GroupGetPhoto_Small(groupID)
+		log.LOG_Info("File Download Complete", zap.String("path", strFilePath))
+	},
+}
+
 func init() {
 	Group.AddCmd(Create)
 	Group.AddCmd(AddUser)
@@ -137,4 +167,7 @@ func init() {
 	Group.AddCmd(GetFull)
 	Group.AddCmd(UpdateAdmin)
 	Group.AddCmd(ToggleAdmins)
+	Group.AddCmd(GroupUploadPhoto)
+	Group.AddCmd(GroupDownloadPhotoBig)
+	Group.AddCmd(GroupDownloadPhotoSmall)
 }

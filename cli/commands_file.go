@@ -79,6 +79,7 @@ var Status = &ishell.Cmd{
 		c.Println(str)
 	},
 }
+
 var DownloadMultiConnection = &ishell.Cmd{
 	Name: "DownloadMultiConnection",
 	Func: func(c *ishell.Context) {

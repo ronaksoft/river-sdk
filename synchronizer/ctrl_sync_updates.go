@@ -413,3 +413,20 @@ func (ctrl *SyncController) updateReadMessagesContents(u *msg.UpdateEnvelope) []
 	res := []*msg.UpdateEnvelope{u}
 	return res
 }
+
+func (ctrl *SyncController) updateUserPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+	log.LOG_Debug("SyncController::updateUserPhoto() applier")
+
+	x := new(msg.UpdateUserPhoto)
+	x.Unmarshal(u.Update)
+
+	err := repo.Ctx().Users.SaveUserPhoto(x)
+	if err != nil {
+		log.LOG_Debug("SyncController::updateUserPhoto()-> SetContentRead()",
+			zap.String("Error", err.Error()),
+		)
+	}
+
+	res := []*msg.UpdateEnvelope{u}
+	return res
+}

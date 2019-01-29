@@ -22,6 +22,8 @@ type RepoGroups interface {
 	Delete(groupID int64) error
 	UpdateGroupMemberType(groupID, userID int64, isAdmin bool) error
 	SearchGroups(searchPhrase string) []*msg.Group
+	GetGroupDTO(groupID int64) (*dto.Groups, error)
+	UpdateGroupPhotoPath(groupID int64, isBig bool, filePath string) error
 }
 
 type repoGroups struct {
@@ -245,4 +247,39 @@ func (r *repoGroups) SearchGroups(searchPhrase string) []*msg.Group {
 	}
 
 	return pbGroup
+}
+
+func (r *repoGroups) GetGroupDTO(groupID int64) (*dto.Groups, error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	group := new(dto.Groups)
+
+	err := r.db.Find(group, groupID).Error
+	if err != nil {
+		log.LOG_Debug("RepoGroups::GetGroup()-> fetch groups entity",
+			zap.String("Error", err.Error()),
+		)
+		return nil, err //, err
+	}
+
+	return group, nil
+}
+
+func (r *repoGroups) UpdateGroupPhotoPath(groupID int64, isBig bool, filePath string) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	e := new(dto.Groups)
+
+	if isBig {
+		return r.db.Table(e.TableName()).Where("ID = ? ", groupID).Updates(map[string]interface{}{
+			"Big_FilePath": filePath,
+		}).Error
+	}
+
+	return r.db.Table(e.TableName()).Where("ID = ? ", groupID).Updates(map[string]interface{}{
+		"Small_FilePath": filePath,
+	}).Error
+
 }

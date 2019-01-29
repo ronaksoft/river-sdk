@@ -118,4 +118,6 @@ const (
 	FileStateExistedUpload        FileStateType = 4
 	FileStateUploadAccountPhoto   FileStateType = 5
 	FileStateDownloadAccountPhoto FileStateType = 6
+	FileStateUploadGroupPhoto     FileStateType = 7
+	FileStateDownloadGroupPhoto   FileStateType = 8
 )

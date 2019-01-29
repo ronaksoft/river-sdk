@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
@@ -122,6 +123,7 @@ func main() {
 		// fnMessagesReadContents()
 		// fnGetDialogs()
 		// fnAccountUploadPhoto()
+		fnGroupUploadPhoto()
 		//block forever
 
 		select {}
@@ -242,7 +244,23 @@ func fnRunUploadFile() {
 }
 
 func fnRunDownloadFile() {
-	_SDK.FileDownload(127)
+
+	// oneAndHalf := domain.FilePayloadSize + (domain.FilePayloadSize / 2)
+	// twoAndHalf := oneAndHalf + domain.FilePayloadSize
+	// buff := make([]byte, oneAndHalf)
+	// rand.Read(buff)
+	// ioutil.WriteFile("1.5.raw", buff, os.ModePerm)
+
+	// buff = make([]byte, twoAndHalf)
+	// rand.Read(buff)
+	// ioutil.WriteFile("2.5.raw", buff, os.ModePerm)
+
+	threeAndHalf := (domain.FilePayloadSize * 3) + (domain.FilePayloadSize / 2)
+	buff := make([]byte, threeAndHalf)
+	rand.Read(buff)
+	ioutil.WriteFile("3.5.raw", buff, os.ModePerm)
+
+	_SDK.FileDownload(133)
 }
 
 func fnSendInputMediaDocument() {
@@ -312,4 +330,8 @@ func fnMessagesReadContents() {
 
 	_Shell.Println("RequestID :", reqID, "\tError :", err)
 
+}
+
+func fnGroupUploadPhoto() {
+	_SDK.GroupUploadPhoto(-2101046409375509, "/home/q/Desktop/decrypt_dump.raw.png")
 }

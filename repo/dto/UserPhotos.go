@@ -37,6 +37,7 @@ func (m *UserPhotos) Map(userId int64, v *msg.UserPhoto) {
 	// m.Small_FilePath = ""
 
 }
+
 func (m *UserPhotos) MapTo(v *msg.UserPhoto) {
 	v.PhotoID = m.PhotoID
 	v.PhotoBig = new(msg.FileLocation)

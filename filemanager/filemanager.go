@@ -181,7 +181,7 @@ func (fm *FileManager) Upload(fileID int64, req *msg.ClientPendingMessage) error
 	// 	log.LOG_Debug(strMD5)
 	// }
 
-	state := NewFileStatus(req.ID, fileID, fileSize, x.FilePath, domain.FileStateUpload, 0, 0, 0, fm.progressCallback)
+	state := NewFileStatus(req.ID, fileID, 0, fileSize, x.FilePath, domain.FileStateUpload, 0, 0, 0, fm.progressCallback)
 	state.UploadRequest = x
 	fm.AddToQueue(state)
 	repo.Ctx().Files.SaveFileStatus(state.GetDTO())
@@ -241,7 +241,7 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 			version = x.Doc.Version
 			fileSize = x.Doc.FileSize
 			filePath = GetFilePath(x.Doc.MimeType, x.Doc.ID, fileName)
-			state = NewFileStatus(req.ID, docID, int64(fileSize), filePath, domain.FileStateDownload, clusterID, accessHash, version, fm.progressCallback)
+			state = NewFileStatus(req.ID, docID, 0, int64(fileSize), filePath, domain.FileStateDownload, clusterID, accessHash, version, fm.progressCallback)
 			state.DownloadRequest = x.Doc
 
 		case msg.MediaTypeContact:
@@ -261,7 +261,7 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 
 // AddToQueue add request to queue
 func (fm *FileManager) AddToQueue(status *FileStatus) {
-	if status.Type == domain.FileStateUpload || status.Type == domain.FileStateUploadAccountPhoto {
+	if status.Type == domain.FileStateUpload || status.Type == domain.FileStateUploadAccountPhoto || status.Type == domain.FileStateUploadGroupPhoto {
 		fm.mxUp.Lock()
 		fm.UploadQueue[status.MessageID] = status
 		fm.mxUp.Unlock()
@@ -445,7 +445,7 @@ func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, 
 				isCompleted := fs.ReadCommit(count)
 				if isCompleted {
 					//call completed delegate
-					fm.uploadCompleted(fs.MessageID, fs.FileID, fs.ClusterID, fs.TotalParts, fs.Type, fs.FilePath, fs.UploadRequest)
+					fm.uploadCompleted(fs.MessageID, fs.FileID, fs.TargetID, fs.ClusterID, fs.TotalParts, fs.Type, fs.FilePath, fs.UploadRequest)
 				}
 			}
 		default:
@@ -583,12 +583,12 @@ func (fm *FileManager) downloadCompleted(msgID int64, filePath string, stateType
 	}
 }
 
-func (fm *FileManager) uploadCompleted(msgID, fileID int64, clusterID, totalParts int32, stateType domain.FileStateType, filePath string, uploadRequest *msg.ClientSendMessageMedia) {
+func (fm *FileManager) uploadCompleted(msgID, fileID, targetID int64, clusterID, totalParts int32, stateType domain.FileStateType, filePath string, uploadRequest *msg.ClientSendMessageMedia) {
 	// delete file status
 	fm.DeleteFromQueue(msgID)
 	repo.Ctx().Files.DeleteFileStatus(msgID)
 	if fm.onUploadCompleted != nil {
-		fm.onUploadCompleted(msgID, fileID, clusterID, totalParts, stateType, filePath, uploadRequest)
+		fm.onUploadCompleted(msgID, fileID, targetID, clusterID, totalParts, stateType, filePath, uploadRequest)
 	}
 }
 
@@ -644,6 +644,63 @@ func (fm *FileManager) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, 
 
 		default:
 			return "", fmt.Errorf("received unknown response constructor {UserId : %d}", userID)
+		}
+	}
+	return "", err
+}
+
+func (fm *FileManager) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) (string, error) {
+	req := new(msg.FileGet)
+	req.Location = new(msg.InputFileLocation)
+	if isBig {
+		req.Location.ClusterID = photo.PhotoBig.ClusterID
+		req.Location.AccessHash = photo.PhotoBig.AccessHash
+		req.Location.FileID = photo.PhotoBig.FileID
+		req.Location.Version = 0
+	} else {
+		req.Location.ClusterID = photo.PhotoSmall.ClusterID
+		req.Location.AccessHash = photo.PhotoSmall.AccessHash
+		req.Location.FileID = photo.PhotoSmall.FileID
+		req.Location.Version = 0
+	}
+
+	req.Offset = 0
+	req.Limit = 0
+
+	envelop := new(msg.MessageEnvelope)
+	envelop.Constructor = msg.C_FileGet
+	envelop.Message, _ = req.Marshal()
+	envelop.RequestID = uint64(domain.SequentialUniqueID())
+
+	filePath := GetFilePath("image/jpeg", req.Location.FileID, "group_avatar.jpg")
+	res, err := fm.Send(envelop)
+	if err == nil {
+		switch res.Constructor {
+		case msg.C_Error:
+			strErr := ""
+			x := new(msg.Error)
+			if err := x.Unmarshal(res.Message); err == nil {
+				strErr = "Code :" + x.Code + ", Items :" + x.Items
+			}
+			return "", fmt.Errorf("received error response {GroupID: %d,  %s }", groupID, strErr)
+		case msg.C_File:
+			x := new(msg.File)
+			err := x.Unmarshal(res.Message)
+			if err != nil {
+				return "", err
+			}
+
+			// write to file path
+			err = ioutil.WriteFile(filePath, x.Bytes, 0666)
+			if err != nil {
+				return "", err
+			}
+
+			// save to DB
+			return filePath, repo.Ctx().Groups.UpdateGroupPhotoPath(groupID, isBig, filePath)
+
+		default:
+			return "", fmt.Errorf("received unknown response constructor {GroupID : %d}", groupID)
 		}
 	}
 	return "", err

@@ -29,6 +29,7 @@ type RepoUsers interface {
 	UpdateUsername(u *msg.UpdateUsername) error
 	GetUserPhoto(userID, photoID int64) *dto.UserPhotos
 	UpdateAccountPhotoPath(userID, photoID int64, isBig bool, filePath string) error
+	SaveUserPhoto(userPhoto *msg.UpdateUserPhoto) error
 }
 
 type repoUsers struct {
@@ -510,4 +511,44 @@ func (r *repoUsers) UpdateAccountPhotoPath(userID, photoID int64, isBig bool, fi
 		"Small_FilePath": filePath,
 	}).Error
 
+}
+
+// SaveUserPhoto
+func (r *repoUsers) SaveUserPhoto(userPhoto *msg.UpdateUserPhoto) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	if userPhoto == nil {
+		log.LOG_Debug("RepoRepoUsers::SaveUserPhoto()",
+			zap.String("User", "user is null"),
+		)
+		return domain.ErrNotFound
+	}
+
+	var er error
+	// save user Photos
+	if userPhoto.Photo != nil {
+
+		dtoPhoto := new(dto.UserPhotos)
+		r.db.Where(&dto.UserPhotos{UserID: userPhoto.UserID, PhotoID: userPhoto.Photo.PhotoID}).Find(dtoPhoto)
+		if dtoPhoto.UserID == 0 || dtoPhoto.PhotoID == 0 {
+			dtoPhoto.Map(userPhoto.UserID, userPhoto.Photo)
+			er = r.db.Create(dtoPhoto).Error
+		} else {
+			dtoPhoto.Map(userPhoto.UserID, userPhoto.Photo)
+			er = r.db.Table(dtoPhoto.TableName()).Where("UserID=? AND PhotoID=?", userPhoto.UserID, userPhoto.Photo.PhotoID).Update(dtoPhoto).Error
+		}
+	}
+	user := new(dto.Users)
+	r.db.Find(user, userPhoto.UserID)
+	if user.ID != 0 && userPhoto.Photo != nil {
+		// update user photo info if exist
+		buff, err := userPhoto.Photo.Marshal()
+		if err == nil {
+			return r.db.Table(user.TableName()).Where("ID=?", user.ID).Updates(map[string]interface{}{
+				"Photo": buff,
+			}).Error
+		}
+	}
+	return er
 }

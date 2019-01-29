@@ -109,7 +109,8 @@ message UpdateUsername {
 message UpdateUserPhoto {
     required int32 UCount = 100;
     required int64 UpdateID = 101;
-    optional UserPhoto Photo = 8;
+    required int64 UserID = 1 [jstype = JS_STRING];
+    optional UserPhoto Photo = 2;
 }
 
 // UpdateNotifySettings
@@ -160,7 +161,8 @@ message UpdateGroupAdmins {
 message UpdateGroupPhoto {
     required int32 UCount = 100;
     required int64 UpdateID = 101;
-    optional GroupPhoto Photo = 8;
+    required int64 GroupID = 1 [jstype = JS_STRING];
+    optional GroupPhoto Photo = 2;
 }
 
 // UpdateReadMessagesContents

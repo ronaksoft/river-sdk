@@ -19,6 +19,7 @@ type FileStatus struct {
 	mx                  sync.Mutex
 	MessageID           int64                       `json:"MessageID"`
 	FileID              int64                       `json:"FileID"`
+	TargetID            int64                       `json:"TargetID"`
 	ClusterID           int32                       `json:"ClusterID"`
 	AccessHash          uint64                      `json:"AccessHash"`
 	Version             int32                       `json:"Version"`
@@ -40,6 +41,7 @@ type FileStatus struct {
 // NewFileStatus create new instance
 func NewFileStatus(messageID int64,
 	fileID int64,
+	targetID int64,
 	totalSize int64,
 	filePath string,
 	stateType domain.FileStateType,
@@ -51,6 +53,7 @@ func NewFileStatus(messageID int64,
 	fs := &FileStatus{
 		MessageID:           messageID,
 		FileID:              fileID,
+		TargetID:            targetID,
 		FilePath:            filePath,
 		TotalSize:           totalSize,
 		ClusterID:           clusterID,
