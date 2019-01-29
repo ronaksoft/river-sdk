@@ -58,3 +58,11 @@ message GroupsUpdateAdmin {
     required InputUser User = 2;
     required bool Admin = 3;
 }
+
+
+// GroupUploadPhoto
+// @Function
+// @Return: Bool
+message GroupUploadPhoto {
+    required InputFile File = 1;
+}

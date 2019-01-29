@@ -47,6 +47,12 @@ var (
 			return m
 		},
 	}
+	PoolUpdateUserPhoto = sync.Pool{
+		New: func() interface{} {
+			m := new(UpdateUserPhoto)
+			return m
+		},
+	}
 	PoolDocumentAttributeAudio = sync.Pool{
 		New: func() interface{} {
 			m := new(DocumentAttributeAudio)
@@ -62,6 +68,12 @@ var (
 	PoolInputFileLocation = sync.Pool{
 		New: func() interface{} {
 			m := new(InputFileLocation)
+			return m
+		},
+	}
+	PoolUpdateGroupPhoto = sync.Pool{
+		New: func() interface{} {
+			m := new(UpdateGroupPhoto)
 			return m
 		},
 	}
@@ -158,6 +170,12 @@ var (
 	PoolUpdateGroupAdmins = sync.Pool{
 		New: func() interface{} {
 			m := new(UpdateGroupAdmins)
+			return m
+		},
+	}
+	PoolGroupUploadPhoto = sync.Pool{
+		New: func() interface{} {
+			m := new(GroupUploadPhoto)
 			return m
 		},
 	}

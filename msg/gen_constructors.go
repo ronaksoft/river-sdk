@@ -8,9 +8,11 @@ const (
 	C_MediaWebPage                       int64 = 148034084
 	C_UpdateUserTyping                   int64 = 178254060
 	C_GroupFull                          int64 = 205850814
+	C_UpdateUserPhoto                    int64 = 302028082
 	C_DocumentAttributeAudio             int64 = 309707708
 	C_AccountPrivacyDisallowUsers        int64 = 352774342
 	C_InputFileLocation                  int64 = 354669666
+	C_UpdateGroupPhoto                   int64 = 367193154
 	C_GroupsAddUser                      int64 = 394654713
 	C_AccountUpdatePhoto                 int64 = 406174115
 	C_Ack                                int64 = 447331921
@@ -27,6 +29,7 @@ const (
 	C_UpdateMessagesDeleted              int64 = 670568714
 	C_AccountPrivacyRule                 int64 = 690047132
 	C_UpdateGroupAdmins                  int64 = 694155405
+	C_GroupUploadPhoto                   int64 = 703740190
 	C_File                               int64 = 749574446
 	C_User                               int64 = 765557111
 	C_UsersMany                          int64 = 801733941
@@ -164,9 +167,11 @@ var ConstructorNames = map[int64]string{
 	148034084:  "MediaWebPage",
 	178254060:  "UpdateUserTyping",
 	205850814:  "GroupFull",
+	302028082:  "UpdateUserPhoto",
 	309707708:  "DocumentAttributeAudio",
 	352774342:  "AccountPrivacyDisallowUsers",
 	354669666:  "InputFileLocation",
+	367193154:  "UpdateGroupPhoto",
 	394654713:  "GroupsAddUser",
 	406174115:  "AccountUpdatePhoto",
 	447331921:  "Ack",
@@ -183,6 +188,7 @@ var ConstructorNames = map[int64]string{
 	670568714:  "UpdateMessagesDeleted",
 	690047132:  "AccountPrivacyRule",
 	694155405:  "UpdateGroupAdmins",
+	703740190:  "GroupUploadPhoto",
 	749574446:  "File",
 	765557111:  "User",
 	801733941:  "UsersMany",

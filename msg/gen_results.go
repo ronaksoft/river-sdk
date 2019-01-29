@@ -46,6 +46,12 @@ func ResultGroupFull(out *MessageEnvelope, res *GroupFull) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultUpdateUserPhoto(out *MessageEnvelope, res *UpdateUserPhoto) {
+	out.Constructor = C_UpdateUserPhoto
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultDocumentAttributeAudio(out *MessageEnvelope, res *DocumentAttributeAudio) {
 	out.Constructor = C_DocumentAttributeAudio
 	pbytes.Put(out.Message)
@@ -60,6 +66,12 @@ func ResultAccountPrivacyDisallowUsers(out *MessageEnvelope, res *AccountPrivacy
 }
 func ResultInputFileLocation(out *MessageEnvelope, res *InputFileLocation) {
 	out.Constructor = C_InputFileLocation
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultUpdateGroupPhoto(out *MessageEnvelope, res *UpdateGroupPhoto) {
+	out.Constructor = C_UpdateGroupPhoto
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -156,6 +168,12 @@ func ResultAccountPrivacyRule(out *MessageEnvelope, res *AccountPrivacyRule) {
 }
 func ResultUpdateGroupAdmins(out *MessageEnvelope, res *UpdateGroupAdmins) {
 	out.Constructor = C_UpdateGroupAdmins
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultGroupUploadPhoto(out *MessageEnvelope, res *GroupUploadPhoto) {
+	out.Constructor = C_GroupUploadPhoto
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

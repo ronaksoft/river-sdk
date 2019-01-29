@@ -2,6 +2,7 @@ package filemanager
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -54,11 +55,12 @@ func (fm *FileManager) Send(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvel
 	if err != nil {
 		return nil, err
 	}
+
 	// Decrypt response
 	res := new(msg.ProtoMessage)
 	err = res.Unmarshal(resBuff)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error : %s , Response Dump : %s", err.Error(), string(resBuff))
 	}
 	if res.AuthID == 0 {
 		receivedEnvelope := new(msg.MessageEnvelope)
