@@ -519,7 +519,7 @@ func (fm *FileManager) sendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 	} else {
 		// increase counter
 		fs.retryCounter++
-		log.LOG_Error("sendUploadRequest()", zap.Error(err))
+		log.LOG_Error("sendDownloadRequest()", zap.Error(err))
 	}
 	if fs.retryCounter > domain.FileRetryThreshold {
 		// remove download from queue
