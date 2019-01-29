@@ -248,7 +248,7 @@ func (fs *FileStatus) ReadAsFileGet() (envelop *msg.MessageEnvelope, err error) 
 	req.Offset = int32(fs.Position)
 	var requiredBytes int32 = domain.FilePayloadSize
 	if (fs.Position + domain.FilePayloadSize) > fs.TotalSize {
-		requiredBytes = int32(fs.TotalSize - fs.Position)
+		requiredBytes = int32(fs.TotalSize-fs.Position) + 1
 	}
 	req.Limit = requiredBytes
 
