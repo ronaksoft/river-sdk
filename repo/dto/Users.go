@@ -31,7 +31,11 @@ func (u *Users) MapFromUser(t *msg.User) {
 	u.Restricted = t.Restricted
 	u.AccessHash = int64(t.AccessHash)
 	u.Bio = t.Bio
-	u.Photo, _ = t.Photo.Marshal()
+	if t.Photo != nil {
+		if t.Photo.PhotoID != 0 {
+			u.Photo, _ = t.Photo.Marshal()
+		}
+	}
 }
 
 func (u *Users) MapFromContactUser(t *msg.ContactUser) {
@@ -43,6 +47,11 @@ func (u *Users) MapFromContactUser(t *msg.ContactUser) {
 	u.Username = t.Username
 	u.ClientID = t.ClientID
 	u.IsContact = 1
+	if t.Photo != nil {
+		if t.Photo.PhotoID != 0 {
+			u.Photo, _ = t.Photo.Marshal()
+		}
+	}
 }
 
 func (u *Users) MapToUser(v *msg.User) {
@@ -71,6 +80,13 @@ func (u *Users) MapToContactUser(v *msg.ContactUser) {
 	v.Phone = u.Phone
 	v.Username = u.Username
 	v.ClientID = u.ClientID
+	if v.Photo == nil {
+		v.Photo = new(msg.UserPhoto)
+	}
+	err := v.Photo.Unmarshal(u.Photo)
+	if err != nil {
+		v.Photo = nil
+	}
 }
 
 func (u *Users) MapToPhoneContact(v *msg.PhoneContact) {

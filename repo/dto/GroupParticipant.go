@@ -11,6 +11,7 @@ type GroupParticipants struct {
 	Type       int32  `gorm:"column:Type" json:"Type"`
 	AccessHash int64  `gorm:"column:AccessHash" json:"AccessHash"`
 	Username   string `gorm:"column:Username" json:"Username"`
+	Photo      []byte `gorm:"type:blob;column:Photo" json:"Photo"`
 }
 
 func (GroupParticipants) TableName() string {
@@ -25,6 +26,12 @@ func (m *GroupParticipants) MapFrom(groupID int64, v *msg.GroupParticipant) {
 	m.Type = int32(v.Type)
 	m.AccessHash = int64(v.AccessHash)
 	m.Username = v.Username
+
+	if v.Photo != nil {
+		if v.Photo.PhotoID != 0 {
+			m.Photo, _ = v.Photo.Marshal()
+		}
+	}
 }
 
 func (m *GroupParticipants) MapTo(v *msg.GroupParticipant) {
@@ -34,4 +41,11 @@ func (m *GroupParticipants) MapTo(v *msg.GroupParticipant) {
 	v.Type = msg.ParticipantType(m.Type)
 	v.AccessHash = uint64(m.AccessHash)
 	v.Username = m.Username
+	if v.Photo == nil {
+		v.Photo = new(msg.UserPhoto)
+	}
+	err := v.Photo.Unmarshal(m.Photo)
+	if err != nil {
+		v.Photo = nil
+	}
 }

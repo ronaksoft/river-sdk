@@ -88,7 +88,7 @@ func main() {
 	qPath := "./_queue"
 	_SDK = new(riversdk.River)
 	_SDK.SetConfig(&riversdk.RiverConfig{
-		ServerEndpoint:         "ws://test.river.im", //"ws://192.168.1.110/",
+		ServerEndpoint:         "ws://new.river.im", //"ws://192.168.1.110/",
 		DbPath:                 dbPath,
 		DbID:                   dbID,
 		QueuePath:              fmt.Sprintf("%s/%s", qPath, dbID),
@@ -121,7 +121,7 @@ func main() {
 		// fnDecodeUpdateHexString()
 		// fnMessagesReadContents()
 		// fnGetDialogs()
-		fnAccountUploadPhoto()
+		// fnAccountUploadPhoto()
 		//block forever
 
 		select {}
