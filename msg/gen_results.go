@@ -46,6 +46,12 @@ func ResultInputMediaGeoLocation(out *MessageEnvelope, res *InputMediaGeoLocatio
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultMessageActionGroupPhotoChanged(out *MessageEnvelope, res *MessageActionGroupPhotoChanged) {
+	out.Constructor = C_MessageActionGroupPhotoChanged
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultGroupFull(out *MessageEnvelope, res *GroupFull) {
 	out.Constructor = C_GroupFull
 	pbytes.Put(out.Message)

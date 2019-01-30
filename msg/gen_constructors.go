@@ -8,6 +8,7 @@ const (
 	C_MediaWebPage                       int64 = 148034084
 	C_UpdateUserTyping                   int64 = 178254060
 	C_InputMediaGeoLocation              int64 = 185664060
+	C_MessageActionGroupPhotoChanged     int64 = 188265964
 	C_GroupFull                          int64 = 205850814
 	C_UpdateUserPhoto                    int64 = 302028082
 	C_DocumentAttributeAudio             int64 = 309707708
@@ -171,6 +172,7 @@ var ConstructorNames = map[int64]string{
 	148034084:  "MediaWebPage",
 	178254060:  "UpdateUserTyping",
 	185664060:  "InputMediaGeoLocation",
+	188265964:  "MessageActionGroupPhotoChanged",
 	205850814:  "GroupFull",
 	302028082:  "UpdateUserPhoto",
 	309707708:  "DocumentAttributeAudio",

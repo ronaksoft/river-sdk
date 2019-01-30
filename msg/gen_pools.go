@@ -47,6 +47,12 @@ var (
 			return m
 		},
 	}
+	PoolMessageActionGroupPhotoChanged = sync.Pool{
+		New: func() interface{} {
+			m := new(MessageActionGroupPhotoChanged)
+			return m
+		},
+	}
 	PoolGroupFull = sync.Pool{
 		New: func() interface{} {
 			m := new(GroupFull)

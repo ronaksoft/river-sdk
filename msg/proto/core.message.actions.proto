@@ -1,6 +1,6 @@
 syntax = "proto2";
 package msg;
-
+import "core.types.proto";
 
 /*
     Creation Time: 2018 - Nov - 28
@@ -32,6 +32,10 @@ message MessageActionGroupTitleChanged {
     required string GroupTitle = 1;
 }
 
+message MessageActionGroupPhotoChanged {
+    optional GroupPhoto Photo = 1;
+}
+
 // MessageActionClearHistory
 message MessageActionClearHistory {
     required int64 MaxID = 1;
@@ -42,3 +46,4 @@ message MessageActionClearHistory {
 message MessageActionContactRegistered {
 
 }
+
