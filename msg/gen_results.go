@@ -40,6 +40,12 @@ func ResultUpdateUserTyping(out *MessageEnvelope, res *UpdateUserTyping) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultInputMediaGeoLocation(out *MessageEnvelope, res *InputMediaGeoLocation) {
+	out.Constructor = C_InputMediaGeoLocation
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultGroupFull(out *MessageEnvelope, res *GroupFull) {
 	out.Constructor = C_GroupFull
 	pbytes.Put(out.Message)
@@ -616,6 +622,12 @@ func ResultError(out *MessageEnvelope, res *Error) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultMediaGeoLocation(out *MessageEnvelope, res *MediaGeoLocation) {
+	out.Constructor = C_MediaGeoLocation
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultMessagesForward(out *MessageEnvelope, res *MessagesForward) {
 	out.Constructor = C_MessagesForward
 	pbytes.Put(out.Message)
@@ -660,6 +672,12 @@ func ResultDHGroup(out *MessageEnvelope, res *DHGroup) {
 }
 func ResultInitDB(out *MessageEnvelope, res *InitDB) {
 	out.Constructor = C_InitDB
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultAuthLoginByToken(out *MessageEnvelope, res *AuthLoginByToken) {
+	out.Constructor = C_AuthLoginByToken
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -810,6 +828,12 @@ func ResultAuthDestroyKey(out *MessageEnvelope, res *AuthDestroyKey) {
 }
 func ResultAccountUpdateProfile(out *MessageEnvelope, res *AccountUpdateProfile) {
 	out.Constructor = C_AccountUpdateProfile
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultAccountRemovePhoto(out *MessageEnvelope, res *AccountRemovePhoto) {
+	out.Constructor = C_AccountRemovePhoto
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

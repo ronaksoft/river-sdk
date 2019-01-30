@@ -24,6 +24,7 @@ type RepoGroups interface {
 	SearchGroups(searchPhrase string) []*msg.Group
 	GetGroupDTO(groupID int64) (*dto.Groups, error)
 	UpdateGroupPhotoPath(groupID int64, isBig bool, filePath string) error
+	UpdateGroupPhoto(groupPhoto *msg.UpdateGroupPhoto) error
 }
 
 type repoGroups struct {
@@ -282,4 +283,17 @@ func (r *repoGroups) UpdateGroupPhotoPath(groupID int64, isBig bool, filePath st
 		"Small_FilePath": filePath,
 	}).Error
 
+}
+
+func (r *repoGroups) UpdateGroupPhoto(groupPhoto *msg.UpdateGroupPhoto) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	grp := new(dto.Groups)
+	err := r.db.Find(grp, groupPhoto.GroupID).Error
+	if err == nil {
+		grp.MapFromUpdateGroupPhoto(groupPhoto)
+		return r.db.Table(grp.TableName()).Where("ID=?", grp.ID).Updates(grp).Error
+	}
+	return err
 }

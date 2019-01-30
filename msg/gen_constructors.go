@@ -7,6 +7,7 @@ const (
 	C_InitUserBound                      int64 = 128391141
 	C_MediaWebPage                       int64 = 148034084
 	C_UpdateUserTyping                   int64 = 178254060
+	C_InputMediaGeoLocation              int64 = 185664060
 	C_GroupFull                          int64 = 205850814
 	C_UpdateUserPhoto                    int64 = 302028082
 	C_DocumentAttributeAudio             int64 = 309707708
@@ -103,6 +104,7 @@ const (
 	C_GroupsEditTitle                    int64 = 2582813461
 	C_AuthLogin                          int64 = 2587620888
 	C_Error                              int64 = 2619118453
+	C_MediaGeoLocation                   int64 = 2625326500
 	C_MessagesForward                    int64 = 2662884753
 	C_ProtoEncryptedPayload              int64 = 2668405547
 	C_PhoneContact                       int64 = 2672574672
@@ -111,6 +113,7 @@ const (
 	C_SystemPublicKeys                   int64 = 2745130223
 	C_DHGroup                            int64 = 2751503049
 	C_InitDB                             int64 = 2793857427
+	C_AuthLoginByToken                   int64 = 2851553023
 	C_EchoWithDelay                      int64 = 2861516000
 	C_Group                              int64 = 2885774273
 	C_SystemDHGroups                     int64 = 2890748083
@@ -136,6 +139,7 @@ const (
 	C_AccountPrivacyDisallowAll          int64 = 3653779109
 	C_AuthDestroyKey                     int64 = 3673422656
 	C_AccountUpdateProfile               int64 = 3725499887
+	C_AccountRemovePhoto                 int64 = 3728692172
 	C_MediaContact                       int64 = 3735320833
 	C_FileSavePart                       int64 = 3766876582
 	C_AccountPrivacyRules                int64 = 3802018092
@@ -166,6 +170,7 @@ var ConstructorNames = map[int64]string{
 	128391141:  "InitUserBound",
 	148034084:  "MediaWebPage",
 	178254060:  "UpdateUserTyping",
+	185664060:  "InputMediaGeoLocation",
 	205850814:  "GroupFull",
 	302028082:  "UpdateUserPhoto",
 	309707708:  "DocumentAttributeAudio",
@@ -262,6 +267,7 @@ var ConstructorNames = map[int64]string{
 	2582813461: "GroupsEditTitle",
 	2587620888: "AuthLogin",
 	2619118453: "Error",
+	2625326500: "MediaGeoLocation",
 	2662884753: "MessagesForward",
 	2668405547: "ProtoEncryptedPayload",
 	2672574672: "PhoneContact",
@@ -270,6 +276,7 @@ var ConstructorNames = map[int64]string{
 	2745130223: "SystemPublicKeys",
 	2751503049: "DHGroup",
 	2793857427: "InitDB",
+	2851553023: "AuthLoginByToken",
 	2861516000: "EchoWithDelay",
 	2885774273: "Group",
 	2890748083: "SystemDHGroups",
@@ -295,6 +302,7 @@ var ConstructorNames = map[int64]string{
 	3653779109: "AccountPrivacyDisallowAll",
 	3673422656: "AuthDestroyKey",
 	3725499887: "AccountUpdateProfile",
+	3728692172: "AccountRemovePhoto",
 	3735320833: "MediaContact",
 	3766876582: "FileSavePart",
 	3802018092: "AccountPrivacyRules",

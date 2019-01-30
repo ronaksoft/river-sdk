@@ -833,6 +833,18 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 			if _, ok := groupIDs[g.ID]; !ok {
 				groupIDs[g.ID] = true
 				groups = append(groups, g)
+
+				// Download group avatar if its not exist
+				if g.Photo != nil {
+					dtoGroup, err := repo.Ctx().Groups.GetGroupDTO(g.ID)
+					if err == nil && dtoGroup != nil {
+						if dtoGroup.Small_FilePath == "" && dtoGroup.ID > 0 && dtoGroup.Small_FileID != 0 && g.Photo.PhotoSmall.FileID != 0 {
+							go downloadGroupPhoto(g.ID, g.Photo, false)
+						}
+					} else if g.Photo.PhotoSmall.FileID != 0 {
+						go downloadGroupPhoto(g.ID, g.Photo, false)
+					}
+				}
 			}
 		}
 

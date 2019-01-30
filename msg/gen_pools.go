@@ -41,6 +41,12 @@ var (
 			return m
 		},
 	}
+	PoolInputMediaGeoLocation = sync.Pool{
+		New: func() interface{} {
+			m := new(InputMediaGeoLocation)
+			return m
+		},
+	}
 	PoolGroupFull = sync.Pool{
 		New: func() interface{} {
 			m := new(GroupFull)
@@ -617,6 +623,12 @@ var (
 			return m
 		},
 	}
+	PoolMediaGeoLocation = sync.Pool{
+		New: func() interface{} {
+			m := new(MediaGeoLocation)
+			return m
+		},
+	}
 	PoolMessagesForward = sync.Pool{
 		New: func() interface{} {
 			m := new(MessagesForward)
@@ -662,6 +674,12 @@ var (
 	PoolInitDB = sync.Pool{
 		New: func() interface{} {
 			m := new(InitDB)
+			return m
+		},
+	}
+	PoolAuthLoginByToken = sync.Pool{
+		New: func() interface{} {
+			m := new(AuthLoginByToken)
 			return m
 		},
 	}
@@ -812,6 +830,12 @@ var (
 	PoolAccountUpdateProfile = sync.Pool{
 		New: func() interface{} {
 			m := new(AccountUpdateProfile)
+			return m
+		},
+	}
+	PoolAccountRemovePhoto = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountRemovePhoto)
 			return m
 		},
 	}

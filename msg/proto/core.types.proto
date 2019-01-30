@@ -116,6 +116,7 @@ enum MediaType {
     MediaTypePhoto = 1;
     MediaTypeDocument = 2;
     MediaTypeContact = 3;
+    MediaTypeGeoLocation = 4;
 }
 
 // UserMessage

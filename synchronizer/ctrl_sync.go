@@ -80,7 +80,8 @@ func NewSyncController(config SyncConfig) *SyncController {
 		msg.C_UpdateGroupParticipantAdmin: ctrl.updateGroupParticipantAdmin,
 		msg.C_UpdateReadMessagesContents:  ctrl.updateReadMessagesContents,
 
-		msg.C_UpdateUserPhoto: ctrl.updateUserPhoto,
+		msg.C_UpdateUserPhoto:  ctrl.updateUserPhoto,
+		msg.C_UpdateGroupPhoto: ctrl.updateGroupPhoto,
 	}
 
 	ctrl.messageAppliers = map[int64]domain.MessageApplier{

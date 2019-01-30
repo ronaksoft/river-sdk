@@ -422,7 +422,23 @@ func (ctrl *SyncController) updateUserPhoto(u *msg.UpdateEnvelope) []*msg.Update
 
 	err := repo.Ctx().Users.SaveUserPhoto(x)
 	if err != nil {
-		log.LOG_Debug("SyncController::updateUserPhoto()-> SetContentRead()",
+		log.LOG_Debug("SyncController::updateUserPhoto()-> SaveUserPhoto()",
+			zap.String("Error", err.Error()),
+		)
+	}
+
+	res := []*msg.UpdateEnvelope{u}
+	return res
+}
+func (ctrl *SyncController) updateGroupPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+	log.LOG_Debug("SyncController::updateGroupPhoto() applier")
+
+	x := new(msg.UpdateGroupPhoto)
+	x.Unmarshal(u.Update)
+
+	err := repo.Ctx().Groups.UpdateGroupPhoto(x)
+	if err != nil {
+		log.LOG_Debug("SyncController::updateGroupPhoto()-> UpdateGroupPhoto()",
 			zap.String("Error", err.Error()),
 		)
 	}

@@ -74,6 +74,12 @@ message AccountUpdatePhoto {
     required InputDocument Photo = 1;
 }
 
+// AccountRemotePhoto
+// @Function
+// @Return: Bool
+message AccountRemovePhoto {
+}
+
 // AccountChangePhone
 // @Function
 // @Return: User
@@ -98,7 +104,6 @@ message AccountGetPrivacy {
     required AccountPrivacyKey Key = 1;
 }
 
-
 // AccountPrivacyKey
 enum AccountPrivacyKey {
     AccountPrivacyKeyNone = 0;
@@ -115,7 +120,6 @@ enum AccountPrivacyType {
     AccountPrivacyTypeDisallowContacts = 4;
     AccountPrivacyTypeDisallowUsers = 5;
 }
-
 
 // AccountPrivacyRules
 message AccountPrivacyRules {

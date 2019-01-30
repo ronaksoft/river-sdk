@@ -203,11 +203,15 @@ func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
 			case req.ResponseWaitChannel <- m:
 				log.LOG_Debug("onMessage() callback singnal sent")
 			default:
-				log.LOG_Debug("onMessage() callback is skipped probably timedout before")
+				log.LOG_Warn("onMessage() callback is skipped probably timedout before",
+					zap.Uint64("RequestID", m.RequestID),
+					zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
+					zap.Duration("Elapsed", time.Since(req.CreatedOn)),
+				)
 			}
 			act.exec.RemoveRequest(m.RequestID)
 		} else {
-			log.LOG_Debug("onMessage() callback does not exists", zap.Uint64("RequestID", m.RequestID))
+			log.LOG_Debug("onMessage() callback does not exists", zap.Uint64("RequestID", m.RequestID), zap.String("Constructor", msg.ConstructorNames[m.Constructor]))
 		}
 	}
 }

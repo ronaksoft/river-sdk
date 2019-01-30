@@ -4,7 +4,6 @@ import "core.types.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 option (gogoproto.goproto_enum_prefix_all) = false;
 
-
 // MessageSend
 // @Function
 // @Return: MessagesSent
@@ -24,6 +23,12 @@ enum InputMediaType {
     InputMediaTypeContact = 3;
     InputMediaTypeUploadedDocument = 4;
     InputMediaTypeDocument = 5;
+    InputMediaTypeGeoLocation = 6;
+    Reserved1 = 10;
+    Reserved2 = 11;
+    Reserved3 = 12;
+    Reserved4 = 13;
+    Reserved5 = 14;
 }
 // MessageSendMedia
 // @Function

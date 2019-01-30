@@ -29,12 +29,22 @@ message AuthLogout {
     repeated int64 AuthIDs = 1 [jstype = JS_STRING];
 }
 
+// AuthLoginByToken
+// @Function
+// @Return: AuthAuthorization
+message AuthLoginByToken {
+    required string Token = 1;
+    required string Provider = 2;
+}
+
 // AuthCheckPhone
 // @Function
 // @Return: AuthCheckedPhone
 message AuthCheckPhone {
     required string Phone = 1;
 }
+
+
 
 // AuthSendCode
 // @Function
