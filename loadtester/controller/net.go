@@ -77,6 +77,7 @@ func (ctrl *CtrlNetwork) Stop() {
 	// signal watchDog
 	ctrl.stop <- true
 	ctrl.isConnected = false
+	ctrl.conn = nil
 }
 
 // Send the data payload is binary
@@ -189,17 +190,21 @@ func (ctrl *CtrlNetwork) watchDog() {
 func (ctrl *CtrlNetwork) onConnect() {
 	req := msg.AuthRecall{}
 	reqID := uint64(shared.GetSeqID())
-	for {
+	// 3 is max try to send authRecal
+	for i := 0; i < 3; i++ {
 		envelop := new(msg.MessageEnvelope)
 		envelop.Constructor = msg.C_AuthRecall
 		envelop.Message, _ = req.Marshal()
 		envelop.RequestID = reqID
+		if ctrl.conn == nil {
+			return
+		}
 		err := ctrl.Send(envelop)
 		if err == nil {
 			break
 		} else {
 			log.LOG_Error("onConnect() AuthRecall", zap.Error(err))
-			time.Sleep(time.Microsecond * 50)
+			// time.Sleep(time.Microsecond * 50)
 		}
 	}
 

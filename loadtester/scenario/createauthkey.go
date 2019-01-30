@@ -84,7 +84,7 @@ func (s *CreateAuthKey) initConnect(act shared.Acter) (*msg.MessageEnvelope, sha
 
 		} else {
 			// TODO : Reporter failed
-			s.failed(act, elapsed, resp.RequestID, "initConnect() successCB response type is not InitResponse")
+			s.failed(act, elapsed, resp.RequestID, "initConnect() successCB response type is not InitResponse , Constructor :"+msg.ConstructorNames[resp.Constructor])
 		}
 	}
 
@@ -202,7 +202,7 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acte
 
 		} else {
 			// TODO : Reporter failed
-			s.failed(act, elapsed, resp.RequestID, "initCompleteAuth() successCB response type is not InitAuthCompleted")
+			s.failed(act, elapsed, resp.RequestID, "initCompleteAuth() successCB response type is not InitAuthCompleted , Constructor :"+msg.ConstructorNames[resp.Constructor])
 		}
 	}
 

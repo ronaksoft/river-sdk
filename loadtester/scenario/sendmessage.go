@@ -77,7 +77,7 @@ func (s *SendMessage) messageSend(act shared.Acter, peer *shared.PeerInfo) (*msg
 			s.completed(act, elapsed, resp.RequestID, "messageSend() Success")
 		} else {
 			// TODO : Reporter failed
-			s.failed(act, elapsed, resp.RequestID, "messageSend() SuccessCB response is not MessagesSent")
+			s.failed(act, elapsed, resp.RequestID, "messageSend() SuccessCB response is not MessagesSent, Constructor :"+msg.ConstructorNames[resp.Constructor])
 		}
 	}
 

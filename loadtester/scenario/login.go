@@ -61,7 +61,7 @@ func (s *Login) sendCode(act shared.Acter) (*msg.MessageEnvelope, shared.Success
 			act.ExecuteRequest(s.login(x, act))
 		} else {
 			// TODO : Reporter failed
-			s.failed(act, elapsed, resp.RequestID, "sendCode() SuccessCB response is not AuthSentCode")
+			s.failed(act, elapsed, resp.RequestID, "sendCode() SuccessCB response is not AuthSentCode , Constructor :"+msg.ConstructorNames[resp.Constructor])
 		}
 	}
 
@@ -104,7 +104,7 @@ func (s *Login) login(resp *msg.AuthSentCode, act shared.Acter) (*msg.MessageEnv
 
 			} else {
 				// TODO : Reporter failed
-				s.failed(act, elapsed, resp.RequestID, "sendCode() SuccessCB response is not AuthAuthorization")
+				s.failed(act, elapsed, resp.RequestID, "sendCode() SuccessCB response is not AuthAuthorization , Constructor :"+msg.ConstructorNames[resp.Constructor])
 			}
 		}
 

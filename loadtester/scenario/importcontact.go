@@ -91,7 +91,7 @@ func (s *ImportContact) contactImport(phone string, act shared.Acter) (*msg.Mess
 			s.completed(act, elapsed, resp.RequestID, "contactImport() Success")
 		} else {
 			// TODO : Reporter failed
-			s.failed(act, elapsed, resp.RequestID, "contactImport() SuccessCB response is not ContactsImported")
+			s.failed(act, elapsed, resp.RequestID, "contactImport() SuccessCB response is not ContactsImported , Constructor :"+msg.ConstructorNames[resp.Constructor])
 		}
 	}
 

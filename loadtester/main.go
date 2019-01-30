@@ -55,16 +55,10 @@ func init() {
 	_Shell.AddCmd(cmdSendMessage)
 	_Shell.AddCmd(cmdCreateAuthKey)
 
-	_Shell.AddCmd(cmdRegisterByPool)
-	_Shell.AddCmd(cmdLoginByPool)
-	_Shell.AddCmd(cmdImportContactByPool)
-	_Shell.AddCmd(cmdSendMessageByPool)
-	_Shell.AddCmd(cmdCreateAuthKeyByPool)
-
 	_Shell.AddCmd(cmdDebug)
 
 	log.SetLogger(Log)
-	log.SetLogLevel(0) // DBG: -1, INF: 0, WRN: 1, ERR: 2
+	log.SetLogLevel(-1) // DBG: -1, INF: 0, WRN: 1, ERR: 2
 
 	_Reporter = report.NewReport()
 }

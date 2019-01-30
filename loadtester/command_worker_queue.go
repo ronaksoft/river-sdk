@@ -57,6 +57,7 @@ func startWorker() {
 
 			if err != nil {
 				log.LOG_Error(fmt.Sprintf("NewActor(%s)", job.PhoneNo), zap.String("Error", err.Error()))
+				job.Wait.Done()
 				continue
 			}
 			_Reporter.Register(act)
