@@ -160,21 +160,13 @@ func (act *Actor) Stop() {
 
 // SetTimeout fill reporter data
 func (act *Actor) SetTimeout(constructor int64, elapsed time.Duration) {
-	if act.Status.TimedoutRequests == 0 {
-		act.Status.AverageTimeoutInterval = elapsed
-	} else {
-		act.Status.AverageTimeoutInterval = (act.Status.AverageTimeoutInterval + elapsed) / 2
-	}
+	act.Status.AverageTimeoutInterval += elapsed
 	atomic.AddInt64(&act.Status.TimedoutRequests, 1)
 }
 
 // SetSuccess fill reporter data
 func (act *Actor) SetSuccess(constructor int64, elapsed time.Duration) {
-	if act.Status.SucceedRequests == 0 {
-		act.Status.AverageSuccessInterval = elapsed
-	} else {
-		act.Status.AverageSuccessInterval = (act.Status.AverageSuccessInterval + elapsed) / 2
-	}
+	act.Status.AverageSuccessInterval += elapsed
 	atomic.AddInt64(&act.Status.SucceedRequests, 1)
 }
 

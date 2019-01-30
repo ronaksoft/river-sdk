@@ -32,6 +32,10 @@ type Report struct {
 	AverageSuccessInterval time.Duration
 	AverageTimeoutInterval time.Duration
 
+	totalActorLifetime   time.Duration
+	totalSuccessInterval time.Duration
+	totalTimeoutInterval time.Duration
+
 	lastPrintTime time.Time
 }
 
@@ -69,29 +73,29 @@ func (r *Report) onActorStop(phone string) {
 	r.mx.Unlock()
 
 	if ok {
-		if r.StoppedActors == 0 {
-			r.RequestCount = status.RequestCount
-			r.TimedoutRequests = status.TimedoutRequests
-			r.SucceedRequests = status.SucceedRequests
-			r.ErrorResponses = status.ErrorRespons
-			r.NetworkDisconnects = status.NetworkDisconnects
-			r.AverageActorLifetime = status.LifeTime
-			r.AverageSuccessInterval = status.AverageSuccessInterval
-			r.AverageTimeoutInterval = status.AverageTimeoutInterval
 
-		} else {
-			r.RequestCount += status.RequestCount
-			r.TimedoutRequests += status.TimedoutRequests
-			r.SucceedRequests += status.SucceedRequests
-			r.ErrorResponses += status.ErrorRespons
-			r.NetworkDisconnects += status.NetworkDisconnects
-			r.AverageActorLifetime = (r.AverageActorLifetime + status.LifeTime) / 2
-			r.AverageSuccessInterval = (r.AverageSuccessInterval + status.AverageSuccessInterval) / 2
-			r.AverageTimeoutInterval = (r.AverageTimeoutInterval + status.AverageTimeoutInterval) / 2
-
-		}
 		atomic.AddInt64(&r.StoppedActors, 1)
 		atomic.AddInt64(&r.ActiveActors, -1)
+		r.RequestCount += status.RequestCount
+		r.TimedoutRequests += status.TimedoutRequests
+		r.SucceedRequests += status.SucceedRequests
+		r.ErrorResponses += status.ErrorRespons
+		r.NetworkDisconnects += status.NetworkDisconnects
+
+		r.totalActorLifetime += status.LifeTime
+		r.totalSuccessInterval += status.AverageSuccessInterval
+		r.totalTimeoutInterval += status.AverageTimeoutInterval
+
+		if r.StoppedActors > 0 {
+			r.AverageActorLifetime = r.totalActorLifetime / time.Duration(r.StoppedActors)
+		}
+		if r.SucceedRequests > 0 {
+			r.AverageSuccessInterval = r.totalSuccessInterval / time.Duration(r.SucceedRequests)
+		}
+		if r.TimedoutRequests > 0 {
+			r.AverageTimeoutInterval = r.totalTimeoutInterval / time.Duration(r.TimedoutRequests)
+		}
+
 		r.mx.Lock()
 		delete(r.ActorStatus, phone)
 		r.mx.Unlock()

@@ -188,25 +188,25 @@ func (ctrl *CtrlNetwork) watchDog() {
 
 // onConnect send AuthRecall request to server
 func (ctrl *CtrlNetwork) onConnect() {
-	req := msg.AuthRecall{}
-	reqID := uint64(shared.GetSeqID())
-	// 3 is max try to send authRecal
-	for i := 0; i < 3; i++ {
-		envelop := new(msg.MessageEnvelope)
-		envelop.Constructor = msg.C_AuthRecall
-		envelop.Message, _ = req.Marshal()
-		envelop.RequestID = reqID
-		if ctrl.conn == nil {
-			return
-		}
-		err := ctrl.Send(envelop)
-		if err == nil {
-			break
-		} else {
-			log.LOG_Error("onConnect() AuthRecall", zap.Error(err))
-			// time.Sleep(time.Microsecond * 50)
-		}
-	}
+	// req := msg.AuthRecall{}
+	// reqID := uint64(shared.GetSeqID())
+	// // 3 is max retry to send authRecal
+	// for i := 0; i < 3; i++ {
+	// 	envelop := new(msg.MessageEnvelope)
+	// 	envelop.Constructor = msg.C_AuthRecall
+	// 	envelop.Message, _ = req.Marshal()
+	// 	envelop.RequestID = reqID
+	// 	if ctrl.conn == nil {
+	// 		return
+	// 	}
+	// 	err := ctrl.Send(envelop)
+	// 	if err == nil {
+	// 		break
+	// 	} else {
+	// 		log.LOG_Error("onConnect() AuthRecall", zap.Error(err))
+	// 		// time.Sleep(time.Microsecond * 50)
+	// 	}
+	// }
 
 	ctrl.isConnected = true
 }

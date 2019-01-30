@@ -10,20 +10,20 @@ const (
 	DefaultServerURL = "ws://test.river.im"
 
 	// DefaultTimeout request timeout
-	DefaultTimeout = 5 * time.Second
+	DefaultTimeout = 15 * time.Second
 
 	// DefaultSendTimeout write to ws timeout
-	DefaultSendTimeout = 5 * time.Second
+	DefaultSendTimeout = 15 * time.Second
 
 	// MaxWorker concurrent go routins
 	MaxWorker = 96
 
 	// MaxQueueBuffer queue channel buffer size
-	MaxQueueBuffer = 512
+	MaxQueueBuffer = 2000
 )
 
 var (
-	counter = time.Now().UnixNano()
+	counter = int64(1)
 )
 
 func GetSeqID() int64 {
