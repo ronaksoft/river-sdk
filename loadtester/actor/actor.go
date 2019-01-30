@@ -196,7 +196,7 @@ func (act *Actor) ReceivedErrorResponse() {
 // onMessage check requestCallbacks and call callbacks
 func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
 	for _, m := range messages {
-		log.LOG_Debug("onMessage() Received ", zap.String("Constructor", msg.ConstructorNames[m.Constructor]), zap.Uint64("ReqID", m.RequestID))
+		// log.LOG_Debug("onMessage() Received ", zap.String("Constructor", msg.ConstructorNames[m.Constructor]), zap.Uint64("ReqID", m.RequestID))
 		req := act.exec.GetRequest(m.RequestID)
 		if req != nil {
 			select {
@@ -210,8 +210,24 @@ func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
 				)
 			}
 			act.exec.RemoveRequest(m.RequestID)
-		} else {
-			log.LOG_Debug("onMessage() callback does not exists", zap.Uint64("RequestID", m.RequestID), zap.String("Constructor", msg.ConstructorNames[m.Constructor]))
+		} else if m.Constructor != msg.C_AuthRecalled {
+			if m.Constructor == msg.C_Error {
+				x := new(msg.Error)
+				err := x.Unmarshal(m.Message)
+				if err == nil {
+					log.LOG_Error("onMessage() callback does not exists received Error",
+						zap.Uint64("RequestID", m.RequestID),
+						zap.String("Code", x.Code),
+						zap.String("Item", x.Items),
+					)
+				} else {
+					log.LOG_Error("onMessage() callback does not exists received Error and filed to unmarshal Error",
+						zap.Uint64("RequestID", m.RequestID),
+					)
+				}
+			} else {
+				log.LOG_Debug("onMessage() callback does not exists", zap.Uint64("RequestID", m.RequestID), zap.String("Constructor", msg.ConstructorNames[m.Constructor]))
+			}
 		}
 	}
 }

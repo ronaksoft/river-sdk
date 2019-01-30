@@ -44,12 +44,12 @@ func (m *Groups) MapFrom(v *msg.Group) {
 	if v.Photo != nil {
 		m.Photo, _ = v.Photo.Marshal()
 		m.Small_AccessHash = int64(v.Photo.PhotoSmall.AccessHash)
-		m.Small_AccessHash = v.Photo.PhotoSmall.FileID
+		m.Small_FileID = v.Photo.PhotoSmall.FileID
 		m.Small_ClusterID = v.Photo.PhotoSmall.ClusterID
 		m.Small_Version = 0
 
 		m.Big_AccessHash = int64(v.Photo.PhotoBig.AccessHash)
-		m.Big_AccessHash = v.Photo.PhotoBig.FileID
+		m.Big_FileID = v.Photo.PhotoBig.FileID
 		m.Big_ClusterID = v.Photo.PhotoBig.ClusterID
 		m.Big_Version = 0
 	}
@@ -76,12 +76,12 @@ func (m *Groups) MapFromUpdateGroupPhoto(v *msg.UpdateGroupPhoto) {
 	if v.Photo != nil {
 		m.Photo, _ = v.Photo.Marshal()
 		m.Small_AccessHash = int64(v.Photo.PhotoSmall.AccessHash)
-		m.Small_AccessHash = v.Photo.PhotoSmall.FileID
+		m.Small_FileID = v.Photo.PhotoSmall.FileID
 		m.Small_ClusterID = v.Photo.PhotoSmall.ClusterID
 		m.Small_Version = 0
 
 		m.Big_AccessHash = int64(v.Photo.PhotoBig.AccessHash)
-		m.Big_AccessHash = v.Photo.PhotoBig.FileID
+		m.Big_FileID = v.Photo.PhotoBig.FileID
 		m.Big_ClusterID = v.Photo.PhotoBig.ClusterID
 		m.Big_Version = 0
 	}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"strconv"
 	"strings"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
@@ -505,6 +506,12 @@ func (r *River) AccountGetPhoto_Big(userID int64) string {
 						return downloadAccountPhoto(userID, user.Photo, true)
 
 					}
+					// check if fileID is changed redownload
+					strFileID := strconv.FormatInt(dtoPhoto.Big_FileID, 10)
+					if strings.Index(dtoPhoto.Big_FilePath, strFileID) < 0 {
+						return downloadAccountPhoto(user.ID, user.Photo, true)
+					}
+
 					return dtoPhoto.Big_FilePath
 
 				}
@@ -534,6 +541,13 @@ func (r *River) AccountGetPhoto_Small(userID int64) string {
 					if _, err := os.Stat(dtoPhoto.Small_FilePath); os.IsNotExist(err) {
 						return downloadAccountPhoto(userID, user.Photo, false)
 					}
+
+					// check if fileID is changed redownload
+					strFileID := strconv.FormatInt(dtoPhoto.Small_FileID, 10)
+					if strings.Index(dtoPhoto.Small_FilePath, strFileID) < 0 {
+						return downloadAccountPhoto(user.ID, user.Photo, true)
+					}
+
 					return dtoPhoto.Small_FilePath
 				}
 				return downloadAccountPhoto(userID, user.Photo, false)
@@ -654,6 +668,11 @@ func (r *River) GroupGetPhoto_Big(groupID int64) string {
 				if _, err := os.Stat(group.Big_FilePath); os.IsNotExist(err) {
 					return downloadGroupPhoto(groupID, groupPhoto, true)
 				}
+				// check if fileID is changed redownload
+				strFileID := strconv.FormatInt(groupPhoto.PhotoBig.FileID, 10)
+				if strings.Index(group.Big_FilePath, strFileID) < 0 {
+					return downloadGroupPhoto(groupID, groupPhoto, true)
+				}
 				return group.Big_FilePath
 
 			}
@@ -679,10 +698,18 @@ func (r *River) GroupGetPhoto_Small(groupID int64) string {
 				return ""
 			}
 			if group.Small_FilePath != "" {
+
 				// check if file exist
 				if _, err := os.Stat(group.Small_FilePath); os.IsNotExist(err) {
-					return downloadGroupPhoto(groupID, groupPhoto, true)
+					return downloadGroupPhoto(groupID, groupPhoto, false)
 				}
+
+				// check if fileID is changed redownload
+				strFileID := strconv.FormatInt(groupPhoto.PhotoSmall.FileID, 10)
+				if strings.Index(group.Small_FilePath, strFileID) < 0 {
+					return downloadGroupPhoto(groupID, groupPhoto, false)
+				}
+
 				return group.Small_FilePath
 
 			}
