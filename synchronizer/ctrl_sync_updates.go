@@ -21,6 +21,10 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) []*msg.Updat
 		)
 		return []*msg.UpdateEnvelope{}
 	}
+
+	// used messageType to identify client & server messages on Media thingy
+	x.Message.MessageType = 1
+
 	dialog := repo.Ctx().Dialogs.GetDialog(x.Message.PeerID, x.Message.PeerType)
 	if dialog == nil {
 		// // this will be handled by repo
