@@ -481,7 +481,11 @@ func fnGetToken(c *ishell.Context) string {
 	token := c.ReadLine()
 	return token
 }
-
+func fnGetProvider(c *ishell.Context) string {
+	c.Print("Provider (ap, nested, google, apple): ")
+	token := c.ReadLine()
+	return token
+}
 func fnGetDeviceModel(c *ishell.Context) string {
 	c.Print("Model(ios | android) : ")
 	model := c.ReadLine()

@@ -102,6 +102,22 @@ var AuthRecall = &ishell.Cmd{
 	},
 }
 
+var AuthLoginByToken = &ishell.Cmd{
+	Name: "LoginByToken",
+	Func: func(c *ishell.Context) {
+		req := msg.AuthLoginByToken{}
+		req.Provider = fnGetProvider(c)
+		req.Token = fnGetToken(c)
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthLoginByToken, reqBytes, reqDelegate, false, false); err != nil {
+			_Log.Debug(err.Error())
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
 func init() {
 	Auth.AddCmd(AuthSendCode)
 	Auth.AddCmd(AuthCheckPhone)
@@ -109,4 +125,5 @@ func init() {
 	Auth.AddCmd(AuthLogin)
 	Auth.AddCmd(AuthRecall)
 	Auth.AddCmd(AuthLogout)
+	Auth.AddCmd(AuthLoginByToken)
 }
