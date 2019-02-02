@@ -2,7 +2,6 @@ package riversdk
 
 import (
 	"encoding/json"
-	"errors"
 	"os"
 	"strconv"
 	"strings"
@@ -479,12 +478,12 @@ func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 		return 0
 	}
 
-	// fileName := fileInfo.Name()
-	totalSize := fileInfo.Size() // size in Byte
-	if totalSize > domain.FileMaxPhotoSize {
-		log.LOG_Error("SDK::AccountUploadPhoto()", zap.Error(errors.New("max allowed file size is 1 MB")))
-		return 0
-	}
+	// // fileName := fileInfo.Name()
+	// totalSize := fileInfo.Size() // size in Byte
+	// if totalSize > domain.FileMaxPhotoSize {
+	// 	log.LOG_Error("SDK::AccountUploadPhoto()", zap.Error(errors.New("max allowed file size is 1 MB")))
+	// 	return 0
+	// }
 
 	state := filemanager.NewFileStatus(msgID, fileID, 0, totalSize, filePath, domain.FileStateUploadAccountPhoto, 0, 0, 0, r.onFileProgressChanged)
 
@@ -638,12 +637,12 @@ func (r *River) GroupUploadPhoto(groupID int64, filePath string) (msgID int64) {
 		return 0
 	}
 
-	// fileName := fileInfo.Name()
-	totalSize := fileInfo.Size() // size in Byte
-	if totalSize > domain.FileMaxPhotoSize {
-		log.LOG_Error("SDK::GroupUploadPhoto()", zap.Error(errors.New("max allowed file size is 1 MB")))
-		return 0
-	}
+	// // fileName := fileInfo.Name()
+	// totalSize := fileInfo.Size() // size in Byte
+	// if totalSize > domain.FileMaxPhotoSize {
+	// 	log.LOG_Error("SDK::GroupUploadPhoto()", zap.Error(errors.New("max allowed file size is 1 MB")))
+	// 	return 0
+	// }
 
 	state := filemanager.NewFileStatus(msgID, fileID, groupID, totalSize, filePath, domain.FileStateUploadGroupPhoto, 0, 0, 0, r.onFileProgressChanged)
 
