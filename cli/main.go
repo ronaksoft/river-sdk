@@ -83,7 +83,7 @@ func main() {
 		}
 	} else {
 		dbPath = "./_db"
-		dbID = "23740056"
+		dbID = "23740071"
 	}
 
 	qPath := "./_queue"
@@ -123,10 +123,28 @@ func main() {
 		// fnMessagesReadContents()
 		// fnGetDialogs()
 		// fnAccountUploadPhoto()
-		fnGroupUploadPhoto()
+		// fnGroupUploadPhoto()
+		fnLoginWithAuthKey()
 		//block forever
 
 		select {}
+	}
+
+}
+
+func fnLoginWithAuthKey() {
+	req := new(msg.AuthLoginByToken)
+	req.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjUwMDExMTg0MzcsImVtYWlsIjpudWxsLCJ1c2VyX2lkIjoyNCwidXNlcm5hbWUiOiIwOTAxNjg3NjA0MCIsImlwIjoiMi4xNzYuNzQuMjgifQ.ajYyfUPtnCoQMwh6gw0gsuyEAalyD54wtow0JirZkbI"
+	req.Provider = "ap"
+	// AuthProviderAsanPardakht = "ap"
+	// AuthProviderNested       = "nested"
+	// AuthProviderGoogle       = "google"
+	// AuthProviderApple        = "apple"
+
+	reqBytes, _ := req.Marshal()
+	reqDelegate := new(RequestDelegate)
+	if _, err := _SDK.ExecuteCommand(msg.C_AuthLoginByToken, reqBytes, reqDelegate, false, false); err != nil {
+		_Log.Debug(err.Error())
 	}
 
 }

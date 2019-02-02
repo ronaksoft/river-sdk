@@ -9,6 +9,7 @@ type Status struct {
 	SucceedRequests        int64
 	ErrorRespons           int64
 	NetworkDisconnects     int64
+	ActorSucceed           bool
 	LifeTime               time.Duration
 	AverageSuccessInterval time.Duration
 	AverageTimeoutInterval time.Duration

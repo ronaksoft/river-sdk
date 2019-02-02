@@ -8,7 +8,10 @@ import (
 	"math/big"
 	"time"
 
+	"go.uber.org/zap"
+
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
+	"git.ronaksoftware.com/ronak/riversdk/log"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
@@ -174,10 +177,15 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acte
 				secret = append(secret, authKeyHash[:8]...)
 				secretHash, _ := domain.Sha256(secret)
 
-				if x.SecretHash != binary.LittleEndian.Uint64(secretHash[24:32]) {
+				clientSecretHash := binary.LittleEndian.Uint64(secretHash[24:32])
+				if x.SecretHash != clientSecretHash {
 					err = domain.ErrSecretNonceMismatch
 					// TODO : Reporter failed
 					s.failed(act, elapsed, resp.RequestID, "initCompleteAuth(), err : "+err.Error())
+					log.LOG_Error("initCompleteAuth(), err : secret hash does not match",
+						zap.Uint64("Server SecretHash", x.SecretHash),
+						zap.Uint64("Client SecretHash", clientSecretHash),
+					)
 					return
 				}
 

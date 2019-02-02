@@ -23,7 +23,7 @@ const (
 )
 
 var (
-	counter = int64(1)
+	counter = time.Now().UnixNano() //int64(10000)
 )
 
 func GetSeqID() int64 {

@@ -42,12 +42,14 @@ func (s *Scenario) AddJobs(delta int) {
 
 func (s *Scenario) failed(act shared.Acter, elapsed time.Duration, reqID uint64, str string) {
 	s.result = false
+	act.SetActorSucceed(false)
 	log.LOG_Error(act.GetPhone()+"\tReqID:"+strconv.FormatUint(reqID, 10)+"\t failed() : "+str, zap.Duration("elapsed", elapsed))
 	s.wait.Done()
 }
 
 func (s *Scenario) completed(act shared.Acter, elapsed time.Duration, reqID uint64, str string) {
 	s.result = true
+	act.SetActorSucceed(true)
 	log.LOG_Info(act.GetPhone()+"\tReqID:"+strconv.FormatUint(reqID, 10)+"\t completed() : "+str, zap.Duration("elapsed", elapsed))
 	s.wait.Done()
 }
@@ -66,6 +68,7 @@ func (s *Scenario) isErrorResponse(act shared.Acter, elapsed time.Duration, resp
 		x := new(msg.Error)
 		x.Unmarshal(resp.Message)
 		s.result = false
+		act.SetActorSucceed(false)
 		log.LOG_Error(act.GetPhone()+"\tReqID:"+strconv.FormatUint(resp.RequestID, 10)+"\t isErrorResponse(): ", zap.String("CallBackName", cbName), zap.String("Err", x.String()), zap.Duration("elapsed", elapsed))
 		s.wait.Done()
 		return true

@@ -170,6 +170,11 @@ func (act *Actor) SetSuccess(constructor int64, elapsed time.Duration) {
 	atomic.AddInt64(&act.Status.SucceedRequests, 1)
 }
 
+// SetSucceed fill reporter data
+func (act *Actor) SetActorSucceed(isSucceed bool) {
+	act.Status.ActorSucceed = isSucceed
+}
+
 // GetStatus return actor statistics
 func (act *Actor) GetStatus() *shared.Status {
 	return act.Status

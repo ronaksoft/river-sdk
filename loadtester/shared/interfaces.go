@@ -33,6 +33,7 @@ type Acter interface {
 
 	SetTimeout(constructor int64, elapsed time.Duration)
 	SetSuccess(constructor int64, elapsed time.Duration)
+	SetActorSucceed(isSucceed bool)
 	GetStatus() *Status
 	SetStopHandler(func(phone string))
 	ReceivedErrorResponse()

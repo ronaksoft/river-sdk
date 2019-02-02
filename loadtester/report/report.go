@@ -32,6 +32,9 @@ type Report struct {
 	AverageSuccessInterval time.Duration
 	AverageTimeoutInterval time.Duration
 
+	SucceedActors int64
+	FailedActors  int64
+
 	totalActorLifetime   time.Duration
 	totalSuccessInterval time.Duration
 	totalTimeoutInterval time.Duration
@@ -86,6 +89,12 @@ func (r *Report) onActorStop(phone string) {
 		r.totalSuccessInterval += status.AverageSuccessInterval
 		r.totalTimeoutInterval += status.AverageTimeoutInterval
 
+		if status.ActorSucceed {
+			atomic.AddInt64(&r.SucceedActors, 1)
+		} else {
+			atomic.AddInt64(&r.FailedActors, 1)
+		}
+
 		if r.StoppedActors > 0 {
 			r.AverageActorLifetime = r.totalActorLifetime / time.Duration(r.StoppedActors)
 		}
@@ -118,6 +127,8 @@ func (r *Report) String() string {
 Total Actors			: %d
 Active Actors			: %d
 Stopped Actors			: %d
+Succeed Actors			: %d
+Failed Actors			: %d
 Request Count			: %d
 Timedout Requests		: %d
 Succeed Requests		: %d
@@ -133,6 +144,8 @@ Total Exec Time			: %v
 		r.TotalActors,
 		r.ActiveActors,
 		r.StoppedActors,
+		r.SucceedActors,
+		r.FailedActors,
 		r.RequestCount,
 		r.TimedoutRequests,
 		r.SucceedRequests,
