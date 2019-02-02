@@ -1,6 +1,6 @@
 syntax = "proto2";
 package msg;
-import "core.types.proto";
+import "chat.core.types.proto";
 
 // AccountSetNotifySettings
 // @Function
@@ -102,6 +102,18 @@ message AccountSetPrivacy {
 // @Return: AccountPrivacyRules
 message AccountGetPrivacy {
     required AccountPrivacyKey Key = 1;
+}
+
+// AccountGetActiveSessions
+// @Function
+// @Returns: AccountSessions
+message AccountGetActiveSessions {
+}
+
+// AccountSessions
+message AccountSessions {
+    repeated ActiveSession Sessions = 1;
+    required int64 ActiveAuthID = 2;
 }
 
 // AccountPrivacyKey

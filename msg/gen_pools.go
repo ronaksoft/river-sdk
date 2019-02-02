@@ -335,6 +335,12 @@ var (
 			return m
 		},
 	}
+	PoolAccountSessions = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountSessions)
+			return m
+		},
+	}
 	PoolAccountUpdateUsername = sync.Pool{
 		New: func() interface{} {
 			m := new(AccountUpdateUsername)
@@ -761,6 +767,12 @@ var (
 			return m
 		},
 	}
+	PoolAccountGetActiveSessions = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountGetActiveSessions)
+			return m
+		},
+	}
 	PoolUsersGetFull = sync.Pool{
 		New: func() interface{} {
 			m := new(UsersGetFull)
@@ -776,6 +788,12 @@ var (
 	PoolMessagesGetHistory = sync.Pool{
 		New: func() interface{} {
 			m := new(MessagesGetHistory)
+			return m
+		},
+	}
+	PoolActiveSession = sync.Pool{
+		New: func() interface{} {
+			m := new(ActiveSession)
 			return m
 		},
 	}

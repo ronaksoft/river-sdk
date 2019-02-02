@@ -1,8 +1,8 @@
 syntax = "proto2";
 package msg;
-import "core.types.proto";
-import "api.messages.proto";
-import "core.message.medias.proto";
+import "chat.core.types.proto";
+import "chat.api.messages.proto";
+import "chat.core.message.medias.proto";
 
 // ClientPendingMessage
 message ClientPendingMessage {

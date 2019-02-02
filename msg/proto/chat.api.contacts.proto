@@ -1,6 +1,6 @@
 syntax = "proto2";
 package msg;
-import "core.types.proto";
+import "chat.core.types.proto";
 
 // ContactsImport
 // @Function

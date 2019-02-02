@@ -56,6 +56,7 @@ const (
 	C_ContactsGet                        int64 = 1412732665
 	C_MessagesGetDialogs                 int64 = 1429532372
 	C_UpdateGetState                     int64 = 1437250230
+	C_AccountSessions                    int64 = 1454388462
 	C_AccountUpdateUsername              int64 = 1477164344
 	C_AccountCheckUsername               int64 = 1501406413
 	C_UpdateReadHistoryInbox             int64 = 1529128378
@@ -127,9 +128,11 @@ const (
 	C_UpdateNotifySettings               int64 = 3187524885
 	C_AuthRecalled                       int64 = 3249025459
 	C_MessagesDialogs                    int64 = 3252610224
+	C_AccountGetActiveSessions           int64 = 3258946431
 	C_UsersGetFull                       int64 = 3343342086
 	C_InputPeer                          int64 = 3374092470
 	C_MessagesGetHistory                 int64 = 3396939832
+	C_ActiveSession                      int64 = 3398277417
 	C_UpdateNewMessage                   int64 = 3426925183
 	C_AccountPrivacyAllowContacts        int64 = 3442577898
 	C_ContactsImport                     int64 = 3473528730
@@ -220,6 +223,7 @@ var ConstructorNames = map[int64]string{
 	1412732665: "ContactsGet",
 	1429532372: "MessagesGetDialogs",
 	1437250230: "UpdateGetState",
+	1454388462: "AccountSessions",
 	1477164344: "AccountUpdateUsername",
 	1501406413: "AccountCheckUsername",
 	1529128378: "UpdateReadHistoryInbox",
@@ -291,9 +295,11 @@ var ConstructorNames = map[int64]string{
 	3187524885: "UpdateNotifySettings",
 	3249025459: "AuthRecalled",
 	3252610224: "MessagesDialogs",
+	3258946431: "AccountGetActiveSessions",
 	3343342086: "UsersGetFull",
 	3374092470: "InputPeer",
 	3396939832: "MessagesGetHistory",
+	3398277417: "ActiveSession",
 	3426925183: "UpdateNewMessage",
 	3442577898: "AccountPrivacyAllowContacts",
 	3473528730: "ContactsImport",

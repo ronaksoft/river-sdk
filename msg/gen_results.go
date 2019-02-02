@@ -334,6 +334,12 @@ func ResultUpdateGetState(out *MessageEnvelope, res *UpdateGetState) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultAccountSessions(out *MessageEnvelope, res *AccountSessions) {
+	out.Constructor = C_AccountSessions
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultAccountUpdateUsername(out *MessageEnvelope, res *AccountUpdateUsername) {
 	out.Constructor = C_AccountUpdateUsername
 	pbytes.Put(out.Message)
@@ -760,6 +766,12 @@ func ResultMessagesDialogs(out *MessageEnvelope, res *MessagesDialogs) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultAccountGetActiveSessions(out *MessageEnvelope, res *AccountGetActiveSessions) {
+	out.Constructor = C_AccountGetActiveSessions
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultUsersGetFull(out *MessageEnvelope, res *UsersGetFull) {
 	out.Constructor = C_UsersGetFull
 	pbytes.Put(out.Message)
@@ -774,6 +786,12 @@ func ResultInputPeer(out *MessageEnvelope, res *InputPeer) {
 }
 func ResultMessagesGetHistory(out *MessageEnvelope, res *MessagesGetHistory) {
 	out.Constructor = C_MessagesGetHistory
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultActiveSession(out *MessageEnvelope, res *ActiveSession) {
+	out.Constructor = C_ActiveSession
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
