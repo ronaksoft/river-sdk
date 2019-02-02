@@ -76,6 +76,12 @@ type NetworkController struct {
 
 	OnMessage domain.OnMessageHandler
 	OnUpdate  domain.OnUpdateHandler
+
+	// requests that it should sent unencrypted
+	unauthorizedRequests map[int64]bool
+
+	// client and server time difference
+	clientTimeDifference int64
 }
 
 // NewNetworkController
@@ -114,6 +120,11 @@ func NewNetworkController(config NetworkConfig) *NetworkController {
 	m.chMessageDebuncer = make(chan bool)
 	m.chUpdateDebuncer = make(chan bool)
 	m.chSendDebuncer = make(chan bool)
+
+	m.unauthorizedRequests = map[int64]bool{
+		msg.C_SystemGetServerTime: true,
+	}
+
 	return m
 }
 
@@ -602,7 +613,8 @@ func (ctrl *NetworkController) Send(msgEnvelope *msg.MessageEnvelope, direct boo
 	// send without debuncer
 	// return ctrl._send(msgEnvelope)
 
-	if direct {
+	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
+	if direct || unauthorized {
 		// this will wait till sendFlush() done its job
 		ctrl.wsSendDebuncerLock.Lock()
 		ctrl.wsSendDebuncerLock.Unlock()
@@ -693,21 +705,23 @@ func (ctrl *NetworkController) sendFlush(queueMsgs []*msg.MessageEnvelope) {
 // Writes the message on the wire. It will encrypts the message if authorization has been set.
 func (ctrl *NetworkController) _send(msgEnvelope *msg.MessageEnvelope) error {
 	protoMessage := new(msg.ProtoMessage)
-	protoMessage.AuthID = ctrl.authID
 	protoMessage.MessageKey = make([]byte, 32)
-	if ctrl.authID == 0 {
+	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
+	if ctrl.authID == 0 || unauthorized {
+		protoMessage.AuthID = 0
 		log.LOG_Debug("NetworkController::_send()",
 			zap.String("Warning", "AuthID is zero ProtoMessage is unencrypted"),
 			zap.Int64("AuthID", ctrl.authID),
 		)
 		protoMessage.Payload, _ = msgEnvelope.Marshal()
 	} else {
+		protoMessage.AuthID = ctrl.authID
 		ctrl.messageSeq++
 		encryptedPayload := msg.ProtoEncryptedPayload{
 			ServerSalt: 234242, // TODO:: ServerSalt ?
 			Envelope:   msgEnvelope,
 		}
-		encryptedPayload.MessageID = uint64(time.Now().Unix()<<32 | ctrl.messageSeq)
+		encryptedPayload.MessageID = uint64((time.Now().Unix()+ctrl.clientTimeDifference)<<32 | ctrl.messageSeq)
 		unencryptedBytes, _ := encryptedPayload.Marshal()
 		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes)
 		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes)
@@ -785,4 +799,8 @@ func (ctrl *NetworkController) Reconnect() {
 
 		log.LOG_Info("NetworkController::Disconnect() Reconnected")
 	}
+}
+
+func (ctrl *NetworkController) SetClientTimeDifference(delta int64) {
+	ctrl.clientTimeDifference = delta
 }

@@ -52,6 +52,7 @@ const (
 	C_MessageActionClearHistory          int64 = 1270465696
 	C_GroupsCreate                       int64 = 1271969037
 	C_MessagesReadHistory                int64 = 1300826534
+	C_SystemGetServerTime                int64 = 1321179349
 	C_GroupsUpdateAdmin                  int64 = 1345991011
 	C_ContactsGet                        int64 = 1412732665
 	C_MessagesGetDialogs                 int64 = 1429532372
@@ -116,6 +117,7 @@ const (
 	C_DHGroup                            int64 = 2751503049
 	C_InitDB                             int64 = 2793857427
 	C_AuthLoginByToken                   int64 = 2851553023
+	C_SystemServerTime                   int64 = 2854614486
 	C_EchoWithDelay                      int64 = 2861516000
 	C_Group                              int64 = 2885774273
 	C_SystemDHGroups                     int64 = 2890748083
@@ -219,6 +221,7 @@ var ConstructorNames = map[int64]string{
 	1270465696: "MessageActionClearHistory",
 	1271969037: "GroupsCreate",
 	1300826534: "MessagesReadHistory",
+	1321179349: "SystemGetServerTime",
 	1345991011: "GroupsUpdateAdmin",
 	1412732665: "ContactsGet",
 	1429532372: "MessagesGetDialogs",
@@ -283,6 +286,7 @@ var ConstructorNames = map[int64]string{
 	2751503049: "DHGroup",
 	2793857427: "InitDB",
 	2851553023: "AuthLoginByToken",
+	2854614486: "SystemServerTime",
 	2861516000: "EchoWithDelay",
 	2885774273: "Group",
 	2890748083: "SystemDHGroups",

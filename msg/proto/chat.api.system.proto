@@ -14,6 +14,17 @@ message SystemGetPublicKeys {
 message SystemGetDHGroups {
 }
 
+// SystemGetServerTime
+// @Function
+// @Returns: SystemServerTime
+message SystemGetServerTime {
+}
+
+// SystemServerTime
+message SystemServerTime {
+    required int64 Timestamp = 1; // In Seconds
+}
+
 // SystemPublicKeys
 message SystemPublicKeys {
     repeated RSAPublicKey RSAPublicKeys = 1;

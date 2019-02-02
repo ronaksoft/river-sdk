@@ -5,6 +5,7 @@ package msg
 
 import (
 	fmt "fmt"
+	github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"
@@ -99,6 +100,90 @@ func (m *SystemGetDHGroups) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SystemGetDHGroups proto.InternalMessageInfo
 
+// SystemGetServerTime
+// @Function
+// @Returns: SystemServerTime
+type SystemGetServerTime struct {
+}
+
+func (m *SystemGetServerTime) Reset()         { *m = SystemGetServerTime{} }
+func (m *SystemGetServerTime) String() string { return proto.CompactTextString(m) }
+func (*SystemGetServerTime) ProtoMessage()    {}
+func (*SystemGetServerTime) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c566bdbff65da108, []int{2}
+}
+func (m *SystemGetServerTime) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SystemGetServerTime) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SystemGetServerTime.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SystemGetServerTime) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SystemGetServerTime.Merge(m, src)
+}
+func (m *SystemGetServerTime) XXX_Size() int {
+	return m.Size()
+}
+func (m *SystemGetServerTime) XXX_DiscardUnknown() {
+	xxx_messageInfo_SystemGetServerTime.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SystemGetServerTime proto.InternalMessageInfo
+
+// SystemServerTime
+type SystemServerTime struct {
+	Timestamp int64 `protobuf:"varint,1,req,name=Timestamp" json:"Timestamp"`
+}
+
+func (m *SystemServerTime) Reset()         { *m = SystemServerTime{} }
+func (m *SystemServerTime) String() string { return proto.CompactTextString(m) }
+func (*SystemServerTime) ProtoMessage()    {}
+func (*SystemServerTime) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c566bdbff65da108, []int{3}
+}
+func (m *SystemServerTime) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SystemServerTime) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SystemServerTime.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SystemServerTime) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SystemServerTime.Merge(m, src)
+}
+func (m *SystemServerTime) XXX_Size() int {
+	return m.Size()
+}
+func (m *SystemServerTime) XXX_DiscardUnknown() {
+	xxx_messageInfo_SystemServerTime.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SystemServerTime proto.InternalMessageInfo
+
+func (m *SystemServerTime) GetTimestamp() int64 {
+	if m != nil {
+		return m.Timestamp
+	}
+	return 0
+}
+
 // SystemPublicKeys
 type SystemPublicKeys struct {
 	RSAPublicKeys []*RSAPublicKey `protobuf:"bytes,1,rep,name=RSAPublicKeys" json:"RSAPublicKeys,omitempty"`
@@ -108,7 +193,7 @@ func (m *SystemPublicKeys) Reset()         { *m = SystemPublicKeys{} }
 func (m *SystemPublicKeys) String() string { return proto.CompactTextString(m) }
 func (*SystemPublicKeys) ProtoMessage()    {}
 func (*SystemPublicKeys) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c566bdbff65da108, []int{2}
+	return fileDescriptor_c566bdbff65da108, []int{4}
 }
 func (m *SystemPublicKeys) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -153,7 +238,7 @@ func (m *SystemDHGroups) Reset()         { *m = SystemDHGroups{} }
 func (m *SystemDHGroups) String() string { return proto.CompactTextString(m) }
 func (*SystemDHGroups) ProtoMessage()    {}
 func (*SystemDHGroups) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c566bdbff65da108, []int{3}
+	return fileDescriptor_c566bdbff65da108, []int{5}
 }
 func (m *SystemDHGroups) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -192,6 +277,8 @@ func (m *SystemDHGroups) GetDHGroups() []*DHGroup {
 func init() {
 	proto.RegisterType((*SystemGetPublicKeys)(nil), "msg.SystemGetPublicKeys")
 	proto.RegisterType((*SystemGetDHGroups)(nil), "msg.SystemGetDHGroups")
+	proto.RegisterType((*SystemGetServerTime)(nil), "msg.SystemGetServerTime")
+	proto.RegisterType((*SystemServerTime)(nil), "msg.SystemServerTime")
 	proto.RegisterType((*SystemPublicKeys)(nil), "msg.SystemPublicKeys")
 	proto.RegisterType((*SystemDHGroups)(nil), "msg.SystemDHGroups")
 }
@@ -199,19 +286,22 @@ func init() {
 func init() { proto.RegisterFile("chat.api.system.proto", fileDescriptor_c566bdbff65da108) }
 
 var fileDescriptor_c566bdbff65da108 = []byte{
-	// 187 bytes of a gzipped FileDescriptorProto
+	// 231 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4d, 0xce, 0x48, 0x2c,
 	0xd1, 0x4b, 0x2c, 0xc8, 0xd4, 0x2b, 0xae, 0x2c, 0x2e, 0x49, 0xcd, 0xd5, 0x2b, 0x28, 0xca, 0x2f,
 	0xc9, 0x17, 0x62, 0xce, 0x2d, 0x4e, 0x97, 0x82, 0xc8, 0x25, 0xe7, 0x17, 0xa5, 0xea, 0x95, 0x54,
 	0x16, 0xa4, 0x16, 0x43, 0xe4, 0x94, 0x44, 0xb9, 0x84, 0x83, 0xc1, 0x6a, 0xdd, 0x53, 0x4b, 0x02,
 	0x4a, 0x93, 0x72, 0x32, 0x93, 0xbd, 0x53, 0x2b, 0x8b, 0x95, 0x84, 0xb9, 0x04, 0xe1, 0xc2, 0x2e,
-	0x1e, 0xee, 0x45, 0xf9, 0xa5, 0x05, 0xc5, 0x4a, 0xde, 0x5c, 0x02, 0x10, 0x41, 0x84, 0x42, 0x21,
-	0x73, 0x2e, 0xde, 0xa0, 0x60, 0x47, 0x84, 0x80, 0x04, 0xa3, 0x02, 0xb3, 0x06, 0xb7, 0x91, 0xa0,
-	0x5e, 0x6e, 0x71, 0xba, 0x1e, 0xb2, 0x4c, 0x10, 0xaa, 0x3a, 0x25, 0x2b, 0x2e, 0x3e, 0x88, 0x61,
-	0x30, 0xe3, 0x85, 0x34, 0xb8, 0x38, 0x60, 0x6c, 0xa8, 0x29, 0x3c, 0x60, 0x53, 0xa0, 0x82, 0x41,
-	0x70, 0x59, 0x27, 0x89, 0x13, 0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e,
-	0x71, 0xc2, 0x63, 0x39, 0x86, 0x0b, 0x8f, 0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0x00, 0x04, 0x00,
-	0x00, 0xff, 0xff, 0x40, 0xbf, 0x64, 0xf3, 0x02, 0x01, 0x00, 0x00,
+	0x1e, 0xee, 0x45, 0xf9, 0xa5, 0x05, 0xc5, 0x28, 0x6a, 0x83, 0x53, 0x8b, 0xca, 0x52, 0x8b, 0x42,
+	0x32, 0x73, 0x53, 0x95, 0xcc, 0xb8, 0x04, 0x20, 0xc2, 0x08, 0x31, 0x21, 0x25, 0x2e, 0x4e, 0x10,
+	0x5d, 0x5c, 0x92, 0x98, 0x5b, 0x20, 0xc1, 0xa8, 0xc0, 0xa4, 0xc1, 0xec, 0xc4, 0x72, 0xe2, 0x9e,
+	0x3c, 0x43, 0x10, 0x42, 0x58, 0xc9, 0x1b, 0xa6, 0x0f, 0x61, 0xaf, 0x90, 0x39, 0x17, 0x6f, 0x50,
+	0xb0, 0x23, 0x42, 0x40, 0x82, 0x51, 0x81, 0x59, 0x83, 0xdb, 0x48, 0x50, 0x2f, 0xb7, 0x38, 0x5d,
+	0x0f, 0x59, 0x26, 0x08, 0x55, 0x9d, 0x92, 0x15, 0x17, 0x1f, 0xc4, 0x30, 0x98, 0x6b, 0x85, 0x34,
+	0xb8, 0x38, 0x60, 0x6c, 0xa8, 0x29, 0x3c, 0x60, 0x53, 0xa0, 0x82, 0x41, 0x70, 0x59, 0x27, 0x89,
+	0x13, 0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71, 0xc2, 0x63, 0x39,
+	0x86, 0x0b, 0x8f, 0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0x00, 0x04, 0x00, 0x00, 0xff, 0xff, 0x60,
+	0x3a, 0x6a, 0xc9, 0x51, 0x01, 0x00, 0x00,
 }
 
 func (m *SystemGetPublicKeys) Marshal() (dAtA []byte, err error) {
@@ -247,6 +337,45 @@ func (m *SystemGetDHGroups) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	return i, nil
+}
+
+func (m *SystemGetServerTime) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SystemGetServerTime) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
+func (m *SystemServerTime) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SystemServerTime) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintChatApiSystem(dAtA, i, uint64(m.Timestamp))
 	return i, nil
 }
 
@@ -334,6 +463,25 @@ func (m *SystemGetDHGroups) Size() (n int) {
 	}
 	var l int
 	_ = l
+	return n
+}
+
+func (m *SystemGetServerTime) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *SystemServerTime) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovChatApiSystem(uint64(m.Timestamp))
 	return n
 }
 
@@ -473,6 +621,130 @@ func (m *SystemGetDHGroups) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx += skippy
 		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SystemGetServerTime) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowChatApiSystem
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SystemGetServerTime: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SystemGetServerTime: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipChatApiSystem(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthChatApiSystem
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SystemServerTime) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowChatApiSystem
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SystemServerTime: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SystemServerTime: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+			}
+			m.Timestamp = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiSystem
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Timestamp |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipChatApiSystem(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthChatApiSystem
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Timestamp")
 	}
 
 	if iNdEx > l {

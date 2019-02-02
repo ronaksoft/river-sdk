@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 
@@ -320,6 +321,13 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		})
 		tableUsers.Render()
 		_Shell.Println(bufUsers.String())
+	case msg.C_SystemServerTime:
+		x := new(msg.SystemServerTime)
+		x.Unmarshal(envelope.Message)
+		serverTime := x.Timestamp
+		clientTime := time.Now().Unix()
+		delta := serverTime - clientTime
+		_Shell.Println(_BLUE("ServerTime : %d \t ClientTime : %d \t Delta: %d", serverTime, clientTime, delta))
 	default:
 		constructorName, _ := msg.ConstructorNames[envelope.Constructor]
 		_Log.Debug("DEFAULT",

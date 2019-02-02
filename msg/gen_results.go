@@ -310,6 +310,12 @@ func ResultMessagesReadHistory(out *MessageEnvelope, res *MessagesReadHistory) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultSystemGetServerTime(out *MessageEnvelope, res *SystemGetServerTime) {
+	out.Constructor = C_SystemGetServerTime
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultGroupsUpdateAdmin(out *MessageEnvelope, res *GroupsUpdateAdmin) {
 	out.Constructor = C_GroupsUpdateAdmin
 	pbytes.Put(out.Message)
@@ -690,6 +696,12 @@ func ResultInitDB(out *MessageEnvelope, res *InitDB) {
 }
 func ResultAuthLoginByToken(out *MessageEnvelope, res *AuthLoginByToken) {
 	out.Constructor = C_AuthLoginByToken
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultSystemServerTime(out *MessageEnvelope, res *SystemServerTime) {
+	out.Constructor = C_SystemServerTime
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

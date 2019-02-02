@@ -83,13 +83,13 @@ func main() {
 		}
 	} else {
 		dbPath = "./_db"
-		dbID = "23740071"
+		dbID = "23740072"
 	}
 
 	qPath := "./_queue"
 	_SDK = new(riversdk.River)
 	_SDK.SetConfig(&riversdk.RiverConfig{
-		ServerEndpoint:         "ws://new.river.im", //"ws://192.168.1.110/",
+		ServerEndpoint:         "ws://test.river.im", //"ws://192.168.1.110/",
 		DbPath:                 dbPath,
 		DbID:                   dbID,
 		QueuePath:              fmt.Sprintf("%s/%s", qPath, dbID),
@@ -124,7 +124,7 @@ func main() {
 		// fnGetDialogs()
 		// fnAccountUploadPhoto()
 		// fnGroupUploadPhoto()
-		fnLoginWithAuthKey()
+		// fnLoginWithAuthKey()
 		//block forever
 
 		select {}

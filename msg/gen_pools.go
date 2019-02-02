@@ -311,6 +311,12 @@ var (
 			return m
 		},
 	}
+	PoolSystemGetServerTime = sync.Pool{
+		New: func() interface{} {
+			m := new(SystemGetServerTime)
+			return m
+		},
+	}
 	PoolGroupsUpdateAdmin = sync.Pool{
 		New: func() interface{} {
 			m := new(GroupsUpdateAdmin)
@@ -692,6 +698,12 @@ var (
 	PoolAuthLoginByToken = sync.Pool{
 		New: func() interface{} {
 			m := new(AuthLoginByToken)
+			return m
+		},
+	}
+	PoolSystemServerTime = sync.Pool{
+		New: func() interface{} {
+			m := new(SystemServerTime)
 			return m
 		},
 	}

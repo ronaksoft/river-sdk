@@ -50,8 +50,24 @@ var SdkGetDiffrence = &ishell.Cmd{
 	},
 }
 
+var SdkGetServerTime = &ishell.Cmd{
+	Name: "GetServerTime",
+	Func: func(c *ishell.Context) {
+		req := msg.SystemGetServerTime{}
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_SystemGetServerTime, reqBytes, reqDelegate, false, false); err != nil {
+			_Log.Debug(err.Error())
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+
+	},
+}
+
 func init() {
 	SDK.AddCmd(SdkConnInfo)
 	SDK.AddCmd(SdkSetLogLevel)
 	SDK.AddCmd(SdkGetDiffrence)
+	SDK.AddCmd(SdkGetServerTime)
 }

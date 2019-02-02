@@ -186,7 +186,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.networkCtrl.SetErrorHandler(r.onGeneralError)
 	r.networkCtrl.SetMessageHandler(r.onReceivedMessage)
 	r.networkCtrl.SetUpdateHandler(r.onReceivedUpdate)
-	r.networkCtrl.SetOnConnectCallback(r.callAuthRecall_RegisterDevice)
+	r.networkCtrl.SetOnConnectCallback(r.onNetworkControllerConnected)
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 	filemanager.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 
@@ -211,7 +211,28 @@ func (r *River) loadDeviceToken() {
 	}
 }
 
-func (r *River) callAuthRecall_RegisterDevice() {
+func (r *River) onNetworkControllerConnected() {
+
+	// Get Server Time and set server time difference
+	timeReq := new(msg.SystemGetServerTime)
+	timeReqBytes, _ := timeReq.Marshal()
+	for {
+		err := r.queueCtrl.ExecuteRealtimeCommand(
+			uint64(domain.SequentialUniqueID()),
+			msg.C_SystemGetServerTime,
+			timeReqBytes,
+			nil,
+			r.onGetServerTime,
+			true,
+			false,
+		)
+		if err == nil {
+			break
+		} else {
+			time.Sleep(1 * time.Second)
+		}
+	}
+
 	req := msg.AuthRecall{}
 	reqBytes, _ := req.Marshal()
 	if r.syncCtrl.UserID != 0 {
@@ -258,6 +279,28 @@ func (r *River) callAuthRecall_RegisterDevice() {
 				time.Sleep(1 * time.Second)
 			}
 		}
+	}
+}
+
+// onGetServerTime update client & server time difference
+func (r *River) onGetServerTime(m *msg.MessageEnvelope) {
+	if m.Constructor == msg.C_SystemServerTime {
+		x := new(msg.SystemServerTime)
+		err := x.Unmarshal(m.Message)
+		if err != nil {
+			log.LOG_Warn("onGetServerTime()", zap.Error(err))
+			return
+		}
+		// TODO : get time difference and apply it later on send packets to server
+		clientTime := time.Now().Unix()
+		serverTime := x.Timestamp
+		delta := serverTime - clientTime
+		r.networkCtrl.SetClientTimeDifference(delta)
+		log.LOG_Debug("River::onGetServerTime()",
+			zap.Int64("Servertime", serverTime),
+			zap.Int64("ClientTime", clientTime),
+			zap.Int64("Difference", delta),
+		)
 	}
 }
 
@@ -702,8 +745,9 @@ func (r *River) CreateAuthKey() (err error) {
 		}
 	}
 
+	// this is not required here :/
 	// call authRecall to receive data from websocket
-	r.callAuthRecall_RegisterDevice()
+	// r.onNetworkControllerConnected()
 
 	return
 }
