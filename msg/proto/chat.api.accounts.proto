@@ -62,9 +62,10 @@ message AccountUpdateUsername {
 
 // AccountUploadPhoto
 // @Function
-// @Return: Bool
+// @Return: Bool / UserPhoto
 message AccountUploadPhoto {
     required InputFile File = 1;
+    optional bool ReturnObject = 2;
 }
 
 // AccountUpdatePhoto

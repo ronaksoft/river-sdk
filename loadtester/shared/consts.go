@@ -7,7 +7,7 @@ import (
 
 const (
 	// DefaultServerURL websocket url
-	DefaultServerURL = "ws://new.river.im"
+	DefaultServerURL = "ws://test.river.im"
 
 	// DefaultTimeout request timeout
 	DefaultTimeout = 15 * time.Second

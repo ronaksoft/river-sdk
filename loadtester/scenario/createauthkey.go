@@ -200,8 +200,11 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acte
 				s.completed(act, elapsed, resp.RequestID, "initCompleteAuth() Success")
 			case msg.InitAuthCompleted_RETRY:
 				// TODO : Reporter failed && Retry with new DHKey
-				s.failed(act, elapsed, resp.RequestID, "initCompleteAuth(), err : Retry with new DHKey")
+				// s.failed(act, elapsed, resp.RequestID, "initCompleteAuth(), err : Retry with new DHKey")
 
+				// retry to create authkey
+				act.ExecuteRequest(s.initConnect(act))
+				return
 			case msg.InitAuthCompleted_FAIL:
 				err = domain.ErrAuthFailed
 				// TODO : Reporter failed
