@@ -1050,7 +1050,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64, cluster
 
 	} else if stateType == domain.FileStateUploadGroupPhoto {
 		// TODO : GroupUploadPhoto
-		x := new(msg.GroupUploadPhoto)
+		x := new(msg.GroupsUploadPhoto)
 		x.GroupID = targetID
 		x.File = &msg.InputFile{
 			FileID:      fileID,
@@ -1086,7 +1086,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64, cluster
 		timeoutCB := func() {
 			log.LOG_Debug("GroupUploadPhoto timeoput callback")
 		}
-		r.queueCtrl.ExecuteCommand(requestID, msg.C_GroupUploadPhoto, reqBuff, timeoutCB, successCB, false)
+		r.queueCtrl.ExecuteCommand(requestID, msg.C_GroupsUploadPhoto, reqBuff, timeoutCB, successCB, false)
 	}
 
 	// Notify UI that upload is completed

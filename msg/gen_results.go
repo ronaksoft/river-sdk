@@ -184,12 +184,6 @@ func ResultUpdateGroupAdmins(out *MessageEnvelope, res *UpdateGroupAdmins) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
-func ResultGroupUploadPhoto(out *MessageEnvelope, res *GroupUploadPhoto) {
-	out.Constructor = C_GroupUploadPhoto
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
 func ResultFile(out *MessageEnvelope, res *File) {
 	out.Constructor = C_File
 	pbytes.Put(out.Message)
@@ -636,6 +630,12 @@ func ResultAuthLogin(out *MessageEnvelope, res *AuthLogin) {
 }
 func ResultError(out *MessageEnvelope, res *Error) {
 	out.Constructor = C_Error
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultGroupsUploadPhoto(out *MessageEnvelope, res *GroupsUploadPhoto) {
+	out.Constructor = C_GroupsUploadPhoto
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

@@ -185,12 +185,6 @@ var (
 			return m
 		},
 	}
-	PoolGroupUploadPhoto = sync.Pool{
-		New: func() interface{} {
-			m := new(GroupUploadPhoto)
-			return m
-		},
-	}
 	PoolFile = sync.Pool{
 		New: func() interface{} {
 			m := new(File)
@@ -638,6 +632,12 @@ var (
 	PoolError = sync.Pool{
 		New: func() interface{} {
 			m := new(Error)
+			return m
+		},
+	}
+	PoolGroupsUploadPhoto = sync.Pool{
+		New: func() interface{} {
+			m := new(GroupsUploadPhoto)
 			return m
 		},
 	}

@@ -31,7 +31,6 @@ const (
 	C_UpdateMessagesDeleted              int64 = 670568714
 	C_AccountPrivacyRule                 int64 = 690047132
 	C_UpdateGroupAdmins                  int64 = 694155405
-	C_GroupUploadPhoto                   int64 = 703740190
 	C_File                               int64 = 749574446
 	C_User                               int64 = 765557111
 	C_UsersMany                          int64 = 801733941
@@ -107,6 +106,7 @@ const (
 	C_GroupsEditTitle                    int64 = 2582813461
 	C_AuthLogin                          int64 = 2587620888
 	C_Error                              int64 = 2619118453
+	C_GroupsUploadPhoto                  int64 = 2624284907
 	C_MediaGeoLocation                   int64 = 2625326500
 	C_MessagesForward                    int64 = 2662884753
 	C_ProtoEncryptedPayload              int64 = 2668405547
@@ -200,7 +200,6 @@ var ConstructorNames = map[int64]string{
 	670568714:  "UpdateMessagesDeleted",
 	690047132:  "AccountPrivacyRule",
 	694155405:  "UpdateGroupAdmins",
-	703740190:  "GroupUploadPhoto",
 	749574446:  "File",
 	765557111:  "User",
 	801733941:  "UsersMany",
@@ -276,6 +275,7 @@ var ConstructorNames = map[int64]string{
 	2582813461: "GroupsEditTitle",
 	2587620888: "AuthLogin",
 	2619118453: "Error",
+	2624284907: "GroupsUploadPhoto",
 	2625326500: "MediaGeoLocation",
 	2662884753: "MessagesForward",
 	2668405547: "ProtoEncryptedPayload",

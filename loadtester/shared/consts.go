@@ -10,16 +10,16 @@ const (
 	DefaultServerURL = "ws://test.river.im"
 
 	// DefaultTimeout request timeout
-	DefaultTimeout = 15 * time.Second
+	DefaultTimeout = 3 * time.Second
 
 	// DefaultSendTimeout write to ws timeout
-	DefaultSendTimeout = 15 * time.Second
+	DefaultSendTimeout = 3 * time.Second
 
 	// MaxWorker concurrent go routins
 	MaxWorker = 96
 
 	// MaxQueueBuffer queue channel buffer size
-	MaxQueueBuffer = 2000
+	MaxQueueBuffer = 10000
 )
 
 var (
