@@ -329,19 +329,21 @@ func (ctrl *SyncController) getUpdateDifference(minUpdateID int64) {
 		return
 	}
 
+	loopRepeatCounter := 0
 	for minUpdateID > ctrl.updateID {
-		limit := minUpdateID - ctrl.updateID
-		limit++
+		loopRepeatCounter++
+
+		fromUpdateID := ctrl.updateID + 1 // cuz we already have updateID itself
+		limit := minUpdateID - fromUpdateID
 		if limit > 100 {
 			limit = 100
-		} else {
-			limit-- // cuz we already have minUpdateID itself
 		}
 		if limit <= 0 {
 			break
 		}
 
 		log.LOG_Debug("SyncController::getUpdateDifference() Entered loop",
+			zap.Int("LoopRepeatCounter", loopRepeatCounter),
 			zap.Int64("limit", limit),
 			zap.Int64("updateID", ctrl.updateID),
 			zap.Int64("minUpdateID", minUpdateID),
@@ -350,7 +352,7 @@ func (ctrl *SyncController) getUpdateDifference(minUpdateID int64) {
 		ctrl.updateSyncStatus(domain.Syncing)
 		req := new(msg.UpdateGetDifference)
 		req.Limit = int32(limit)
-		req.From = ctrl.updateID
+		req.From = fromUpdateID
 		reqBytes, _ := req.Marshal()
 		ctrl.queue.ExecuteRealtimeCommand(
 			uint64(domain.SequentialUniqueID()),
@@ -436,13 +438,6 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 			}
 		}
 		updContainer.Length = int32(len(updContainer.Updates))
-		// wrapped to UpdateContainer
-		buff, _ := updContainer.Marshal()
-		cmd.GetUIExecuter().Exec(func() {
-			if ctrl.onUpdateMainDelegate != nil {
-				ctrl.onUpdateMainDelegate(msg.C_UpdateContainer, buff)
-			}
-		})
 
 		// update last updateID
 		if ctrl.updateID < x.MaxUpdateID {
@@ -456,6 +451,15 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 				)
 			}
 		}
+
+		// wrapped to UpdateContainer
+		buff, _ := updContainer.Marshal()
+		cmd.GetUIExecuter().Exec(func() {
+			if ctrl.onUpdateMainDelegate != nil {
+				ctrl.onUpdateMainDelegate(msg.C_UpdateContainer, buff)
+			}
+		})
+
 	case msg.C_Error:
 		log.LOG_Debug("SyncController::onGetDiffrenceSucceed()-> C_Error",
 			zap.String("Error", domain.ServerError(m.Message).Error()),

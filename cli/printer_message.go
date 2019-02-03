@@ -235,6 +235,8 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		x := new(msg.UpdateDifference)
 		x.Unmarshal(envelope.Message)
 
+		_Shell.Println(_GREEN("Received UpdateDifference \t MaxID:%d \t MinID:%d \t UpdateCounts:%d", x.MaxUpdateID, x.MinUpdateID, len(x.Updates)))
+
 		for _, v := range x.Updates {
 			if v.Constructor == msg.C_UpdateNewMessage {
 				msg := new(msg.MessageEnvelope)

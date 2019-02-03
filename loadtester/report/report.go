@@ -179,5 +179,13 @@ func (r *Report) Clear() {
 	r.NetworkDisconnects = 0
 	r.AverageSuccessInterval = 0
 	r.AverageTimeoutInterval = 0
+	r.ErrorResponses = 0
+	r.SucceedActors = 0
+	r.FailedActors = 0
+	r.totalActorLifetime = 0
+	r.totalSuccessInterval = 0
+	r.totalTimeoutInterval = 0
+	// r.lastPrintTime = 0
+
 	r.Timer = time.Now()
 }
