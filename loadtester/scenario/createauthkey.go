@@ -204,7 +204,7 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acte
 
 				// retry to create authkey
 				act.ExecuteRequest(s.initConnect(act))
-				return
+
 			case msg.InitAuthCompleted_FAIL:
 				err = domain.ErrAuthFailed
 				// TODO : Reporter failed
