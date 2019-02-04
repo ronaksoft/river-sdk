@@ -162,12 +162,15 @@ Total Exec Time			: %v
 func (r *Report) Print() {
 	fmt.Printf("\033[0;0H") // print inplace
 	fmt.Println(r.String())
-	fmt.Println("Total Execution Time : ", time.Since(r.Timer))
+	fmt.Println("Total Execution Time :", time.Since(r.Timer))
 	r.isPrinting = false
 }
 
 // Clear reset reporter statistics
 func (r *Report) Clear() {
+
+	shared.ClearFailedRequest()
+
 	r.ActorStatus = make(map[string]*shared.Status)
 	r.TotalActors = 0
 	r.ActiveActors = 0

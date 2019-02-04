@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/scenario"
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )
@@ -15,7 +16,9 @@ var cmdPrint = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		if _Reporter != nil {
 			fnClearScreeen()
-			_Reporter.Print()
+
+			fmt.Println(_Reporter.String())
+			fmt.Printf("Failed Requests :\n%s", shared.PrintFailedRequest())
 		}
 	},
 }
@@ -49,7 +52,9 @@ var cmdCreateAuthKey = &ishell.Cmd{
 
 		fnClearScreeen()
 		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
-		log.LOG_Info(fmt.Sprintf(_Reporter.String()))
+
+		fmt.Println(_Reporter.String())
+		fmt.Printf("Failed Requests :\n%s", shared.PrintFailedRequest())
 
 	},
 }
@@ -83,7 +88,9 @@ var cmdRegister = &ishell.Cmd{
 
 		fnClearScreeen()
 		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
-		log.LOG_Info(fmt.Sprintf(_Reporter.String()))
+
+		fmt.Println(_Reporter.String())
+		fmt.Printf("Failed Requests :\n%s", shared.PrintFailedRequest())
 
 	},
 }
@@ -120,7 +127,9 @@ var cmdLogin = &ishell.Cmd{
 
 		fnClearScreeen()
 		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
-		log.LOG_Info(fmt.Sprintf(_Reporter.String()))
+
+		fmt.Println(_Reporter.String())
+		fmt.Printf("Failed Requests :\n%s", shared.PrintFailedRequest())
 
 	},
 }
@@ -159,7 +168,9 @@ var cmdImportContact = &ishell.Cmd{
 
 		fnClearScreeen()
 		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
-		log.LOG_Info(fmt.Sprintf(_Reporter.String()))
+
+		fmt.Println(_Reporter.String())
+		fmt.Printf("Failed Requests :\n%s", shared.PrintFailedRequest())
 
 	},
 }
@@ -193,7 +204,9 @@ var cmdSendMessage = &ishell.Cmd{
 
 		fnClearScreeen()
 		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
-		log.LOG_Info(fmt.Sprintf(_Reporter.String()))
+
+		fmt.Println(_Reporter.String())
+		fmt.Printf("Failed Requests :\n%s", shared.PrintFailedRequest())
 
 	},
 }

@@ -102,6 +102,25 @@ var SetServerURL = &ishell.Cmd{
 	},
 }
 
+var SetRequestIDCounter = &ishell.Cmd{
+	Name: "SetSeqIDCounter",
+	Func: func(c *ishell.Context) {
+		var counter int64 = time.Now().UnixNano()
+		for {
+			c.Print("Seed of SeqID (time.UnixNano: ")
+			entery, err := strconv.ParseInt(c.ReadLine(), 10, 64)
+			if err == nil {
+				counter = entery
+				break
+			} else {
+				c.Println(err.Error())
+			}
+		}
+
+		shared.SeqIDCounter = counter
+	},
+}
+
 func init() {
 	CLI.AddCmd(SetReporter)
 	CLI.AddCmd(SetLogLevel)
@@ -109,5 +128,6 @@ func init() {
 	CLI.AddCmd(SetMaxWorker)
 	CLI.AddCmd(SetMaxQueueBuffer)
 	CLI.AddCmd(SetServerURL)
+	CLI.AddCmd(SetRequestIDCounter)
 
 }

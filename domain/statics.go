@@ -257,12 +257,12 @@ func RandomID(n int) string {
 
 // SequentialUniqueID generate sequential and unique int64 with UnixNano time for sequential and atomic counter for uniqueness
 func SequentialUniqueID() int64 {
-	atomic.AddInt64(&uniqueCounter, 1)
+	counter := atomic.AddInt64(&uniqueCounter, 1)
 	nanoTime := time.Now().UnixNano()
-	res := nanoTime + uniqueCounter
+	res := nanoTime + counter
 
 	// reset counter we need counter only for requests that created in same nano second
-	if uniqueCounter > 16384 {
+	if counter > 16384 {
 		atomic.StoreInt64(&uniqueCounter, 0)
 	}
 	return res

@@ -20,13 +20,10 @@ var (
 
 	// MaxQueueBuffer queue channel buffer size
 	MaxQueueBuffer = 10000
-)
 
-var (
-	counter = time.Now().UnixNano() //int64(10000)
+	SeqIDCounter = time.Now().UnixNano()
 )
 
 func GetSeqID() int64 {
-	atomic.AddInt64(&counter, 1)
-	return counter
+	return atomic.AddInt64(&SeqIDCounter, 1)
 }
