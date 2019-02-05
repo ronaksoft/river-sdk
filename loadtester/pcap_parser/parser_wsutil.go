@@ -2,18 +2,14 @@ package pcap_parser
 
 import (
 	"bytes"
-	"net"
+
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
-)
-
-var (
-	serverIP = net.ParseIP("185.126.202.199")
-	clientIP = net.ParseIP("192.168.17.99")
 )
 
 func Parse_wsutil(pcapFile string) (chan *ParsedWS, error) {
@@ -51,7 +47,7 @@ func parsePackects_wsutil(chRes chan *ParsedWS, src *gopacket.PacketSource) {
 		tcp := packet.TransportLayer().(*layers.TCP)
 		r := bytes.NewReader(tcp.Payload)
 		// Read message that client sends to server
-		if ip.SrcIP.Equal(clientIP) {
+		if uint16(tcp.SrcPort) != shared.ServerPort {
 			msgs := make([]wsutil.Message, 0)
 			var err error
 			msgs, err = wsutil.ReadClientMessage(r, msgs)
@@ -77,7 +73,7 @@ func parsePackects_wsutil(chRes chan *ParsedWS, src *gopacket.PacketSource) {
 		}
 
 		// Read message that server sends to client
-		if ip.SrcIP.Equal(serverIP) {
+		if uint16(tcp.SrcPort) == shared.ServerPort {
 			msgs := make([]wsutil.Message, 0)
 			var err error
 			msgs, err = wsutil.ReadServerMessage(r, msgs)

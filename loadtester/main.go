@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/actor"
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/pcap_parser"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/report"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/scenario"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
@@ -83,6 +84,8 @@ func main() {
 		// fnDebugDecrypt()
 
 		// fnSendRawDump()
+
+		fnPcapParser()
 	}
 
 	_Shell.Run()
@@ -137,7 +140,7 @@ func loadCachedActors() {
 			fmt.Println("Failed to Unmarshal actor Filename :", f.Name())
 		}
 	}
-	fmt.Printf("\nSuccessfully loaded %d actors \n\n", counter)
+	fmt.Printf("\n Successfully loaded %d actors \n\n", counter)
 }
 
 func fnSendContactImport() {
@@ -185,4 +188,18 @@ func fnDebugDecrypt() {
 	fmt.Println(authID)
 	decryptProtoMessage(rawbytes, authKey)
 
+}
+
+func fnPcapParser() {
+	res, err := pcap_parser.Parse("/tmpfs/dump.pcap")
+	if err != nil {
+		log.LOG_Error("Error", zap.Error(err))
+		return
+	}
+
+	rpt := report.NewPcapReport()
+	for r := range res {
+		rpt.Feed(r)
+	}
+	fmt.Println(rpt.String())
 }

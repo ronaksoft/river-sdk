@@ -44,23 +44,28 @@ type Actor struct {
 
 // NewActor create new actor instance
 func NewActor(phone string) (shared.Acter, error) {
-
-	act := new(Actor)
-	err := act.Load(phone)
-	if err != nil {
-		act = &Actor{
-			Phone:     phone,
-			PhoneList: make([]string, 0),
-			UserID:    0,
-			AuthID:    0,
-			AuthKey:   make([]byte, 0),
-			Peers:     make([]*shared.PeerInfo, 0),
+	var act *Actor
+	acter, ok := shared.GetCacheActorByPhone(phone)
+	if !ok {
+		act = new(Actor)
+		err := act.Load(phone)
+		if err != nil {
+			act = &Actor{
+				Phone:     phone,
+				PhoneList: make([]string, 0),
+				UserID:    0,
+				AuthID:    0,
+				AuthKey:   make([]byte, 0),
+				Peers:     make([]*shared.PeerInfo, 0),
+			}
 		}
+	} else {
+		act = acter.(*Actor)
 	}
 
 	act.netCtrl = controller.NewCtrlNetwork(act.AuthID, act.AuthKey, act.onMessage, act.onUpdate, act.onError)
 	act.exec = executer.NewExecuter(act.netCtrl)
-	err = act.netCtrl.Start()
+	err := act.netCtrl.Start()
 	if err != nil {
 		return act, err
 	}

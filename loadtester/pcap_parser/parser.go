@@ -1,9 +1,19 @@
 package pcap_parser
 
 import (
+	"encoding/binary"
+	"time"
+
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
+	"github.com/google/gopacket/tcpassembly"
+)
+
+var (
+	reassmblerTCP map[uint32]gopacket.Packet
 )
 
 func Parse(pcapFile string) (chan *ParsedWS, error) {
@@ -16,7 +26,7 @@ func Parse(pcapFile string) (chan *ParsedWS, error) {
 	}
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 
-	go parsePackects(result, packetSource)
+	go parsePackects_withAssembly(result, packetSource)
 
 	return result, nil
 
@@ -41,6 +51,9 @@ func parsePackects(chRes chan *ParsedWS, src *gopacket.PacketSource) {
 		ip := packet.NetworkLayer().(*layers.IPv4)
 		tcp := packet.TransportLayer().(*layers.TCP)
 
+		// if rowNo == 14125 {
+		// 	rowNo = 14125
+		// }
 		ws := NewWS(tcp.Payload)
 		if ws == nil {
 			continue
@@ -59,7 +72,124 @@ func parsePackects(chRes chan *ParsedWS, src *gopacket.PacketSource) {
 			}
 			chRes <- res
 		}
+	}
 
+}
+
+func parsePackects_withAssembly(chRes chan *ParsedWS, src *gopacket.PacketSource) {
+
+	defer close(chRes)
+
+	// Set up assembly
+	streamFactory := &wsFactory{
+		ch: chRes,
+	}
+	streamPool := tcpassembly.NewStreamPool(streamFactory)
+	assembler := tcpassembly.NewAssembler(streamPool)
+	packets := src.Packets()
+	ticker := time.Tick(shared.DefaultTimeout)
+	// Read in packets, pass to assembler.
+	for {
+		select {
+		case packet := <-packets:
+			// nil packet is EOF
+			if packet == nil {
+				assembler.FlushAll()
+				return
+			}
+			if packet.NetworkLayer() == nil || packet.TransportLayer() == nil || packet.TransportLayer().LayerType() != layers.LayerTypeTCP {
+				continue
+			}
+			tcp := packet.TransportLayer().(*layers.TCP)
+			assembler.AssembleWithTimestamp(packet.NetworkLayer().NetworkFlow(), tcp, packet.Metadata().Timestamp)
+		case <-ticker:
+			assembler.FlushOlderThan(time.Now().Add(shared.DefaultTimeout * -1))
+		}
+	}
+
+}
+
+// WSFactory implements tcpassembly.StreamFactory
+type wsFactory struct {
+	ch chan *ParsedWS
+}
+
+func (h *wsFactory) New(net, tcp gopacket.Flow) tcpassembly.Stream {
+	s := &wsStream{
+		ch:   h.ch,
+		data: make([]byte, 0),
+		net:  net,
+		tcp:  tcp,
+	}
+	// ReaderStream implements tcpassembly.Stream, so we can return a pointer to it.
+	return s
+}
+
+// httpStream will handle the actual decoding of http requests.
+type wsStream struct {
+	ch                                  chan *ParsedWS
+	data                                []byte
+	net, tcp                            gopacket.Flow
+	bytes, packets, outOfOrder, skipped int64
+	start, end                          time.Time
+	sawStart, sawEnd                    bool
+}
+
+// Reassembled is called whenever new packet data is available for reading.
+// Reassembly objects contain stream data IN ORDER.
+func (s *wsStream) Reassembled(reassemblies []tcpassembly.Reassembly) {
+
+	buff := make([]byte, 0)
+	for _, reassembly := range reassemblies {
+		if reassembly.Seen.Before(s.end) {
+			s.outOfOrder++
+		} else {
+			s.end = reassembly.Seen
+		}
+		s.bytes += int64(len(reassembly.Bytes))
+		s.packets++
+		if reassembly.Skip > 0 {
+			s.skipped += int64(reassembly.Skip)
+		}
+		s.sawStart = s.sawStart || reassembly.Start
+		s.sawEnd = s.sawEnd || reassembly.End
+
+		buff = append(buff, reassembly.Bytes...)
+	}
+
+	n := len(buff)
+	if n > 8 {
+		s.data = make([]byte, n, n)
+		copy(s.data, buff)
+	}
+
+}
+
+// ReassemblyComplete is called when the TCP assembler believes a stream has
+func (s *wsStream) ReassemblyComplete() {
+
+	// diffSecs := float64(s.end.Sub(s.start)) / float64(time.Second)
+	// log.Printf("Reassembly of stream %v:%v complete - start:%v end:%v bytes:%v packets:%v ooo:%v bps:%v pps:%v skipped:%v",
+	// 	s.net, s.tcp, s.start, s.end, s.bytes, s.packets, s.outOfOrder,
+	// 	float64(s.bytes)/diffSecs, float64(s.packets)/diffSecs, s.skipped)
+
+	ws := NewWS(s.data)
+	if ws == nil {
+		return
+	}
+	isValid, protoMsg := ws.IsValid()
+
+	if isValid {
+		res := &ParsedWS{
+			RowNo:   0,
+			Counter: 0,
+			SrcIP:   s.net.Src().Raw(),
+			DstIP:   s.net.Dst().Raw(),
+			SrcPort: binary.BigEndian.Uint16(s.tcp.Src().Raw()),
+			DstPort: binary.BigEndian.Uint16(s.tcp.Dst().Raw()),
+			Message: protoMsg,
+		}
+		s.ch <- res
 	}
 
 }
