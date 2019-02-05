@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -63,6 +64,8 @@ func init() {
 
 	_Reporter = report.NewReport()
 	_Reporter.SetIsActive(true)
+
+	loadCachedActors()
 }
 
 func main() {
@@ -103,6 +106,38 @@ func Log(logLevel int, msg string) {
 	case int(zap.FatalLevel):
 		_Shell.Println(_RED("FTL : \t %s", msg))
 	}
+}
+
+func loadCachedActors() {
+
+	fmt.Printf("\n\n Start Loading Cached Actors ... \n\n")
+
+	files, err := ioutil.ReadDir("_cache/")
+	if err != nil {
+		log.LOG_Error("Fialed to load cached actors LoadCachedActors()", zap.Error(err))
+		return
+	}
+
+	counter := 0
+	for _, f := range files {
+		if f.IsDir() {
+			continue
+		}
+		jsonBytes, err := ioutil.ReadFile("_cache/" + f.Name())
+		if err != nil {
+			fmt.Println("Failed to load actor Filename : ", f.Name())
+			continue
+		}
+		act := new(actor.Actor)
+		err = json.Unmarshal(jsonBytes, act)
+		if err == nil {
+			shared.CacheActor(act)
+			counter++
+		} else {
+			fmt.Println("Failed to Unmarshal actor Filename :", f.Name())
+		}
+	}
+	fmt.Printf("\nSuccessfully loaded %d actors \n\n", counter)
 }
 
 func fnSendContactImport() {
