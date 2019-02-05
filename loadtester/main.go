@@ -56,9 +56,10 @@ func init() {
 	_Shell.AddCmd(cmdCreateAuthKey)
 
 	_Shell.AddCmd(cmdDebug)
+	_Shell.AddCmd(cmdPcap)
 
 	log.SetLogger(Log)
-	log.SetLogLevel(1) // DBG: -1, INF: 0, WRN: 1, ERR: 2
+	log.SetLogLevel(0) // DBG: -1, INF: 0, WRN: 1, ERR: 2
 
 	_Reporter = report.NewReport()
 	_Reporter.SetIsActive(true)
