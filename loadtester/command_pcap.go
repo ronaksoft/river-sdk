@@ -40,7 +40,7 @@ var cmdParse = &ishell.Cmd{
 			if err != nil {
 				feedErrs++
 				flow := fmt.Sprintf("%v:%d-->%v:%d", r.SrcIP, r.SrcPort, r.DstIP, r.DstPort)
-				_, ok := shared.GetCacheActorByAuthID(r.Message.AuthID)
+				_, ok := shared.GetCachedActorByAuthID(r.Message.AuthID)
 				fmt.Printf("Feed() AuthID : %d \t Exist : %v \t %s \t %s \n", r.Message.AuthID, ok, flow, err.Error())
 			}
 		}
@@ -74,7 +74,7 @@ var cmdParse_wsutil = &ishell.Cmd{
 			if err != nil {
 				feedErrs++
 				flow := fmt.Sprintf("%v:%d-->%v:%d", r.SrcIP, r.SrcPort, r.DstIP, r.DstPort)
-				_, ok := shared.GetCacheActorByAuthID(r.Message.AuthID)
+				_, ok := shared.GetCachedActorByAuthID(r.Message.AuthID)
 				fmt.Printf("Feed() AuthID : %d \t Exist : %v \t %s \t %s \n", r.Message.AuthID, ok, flow, err.Error())
 			}
 		}

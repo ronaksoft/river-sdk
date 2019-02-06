@@ -22,14 +22,14 @@ func CacheActor(act Acter) {
 	mx.Unlock()
 }
 
-func GetCacheActorByAuthID(authID int64) (act Acter, ok bool) {
+func GetCachedActorByAuthID(authID int64) (act Acter, ok bool) {
 	mx.Lock()
 	act, ok = cachedActorsByAuthID[authID]
 	mx.Unlock()
 	return
 }
 
-func GetCacheActorByPhone(phone string) (act Acter, ok bool) {
+func GetCachedActorByPhone(phone string) (act Acter, ok bool) {
 	mx.Lock()
 	act, ok = cachedActorsByPhone[phone]
 	mx.Unlock()

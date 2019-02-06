@@ -17,6 +17,7 @@ type Acter interface {
 	SetAuthInfo(authID int64, authKey []byte)
 	GetAuthInfo() (authID int64, authKey []byte)
 	GetAuthID() (authID int64)
+	GetAuthKey() (authKey []byte)
 
 	GetUserID() (userID int64)
 	GetUserInfo() (userID int64, username, userFullName string)
@@ -52,7 +53,6 @@ type Screenwriter interface {
 // Neter network interface
 type Neter interface {
 	Send(msgEnvelope *msg.MessageEnvelope) error
-	SetAuthInfo(authID int64, authKey []byte)
 	Start() error
 	Stop()
 	IsConnected() bool

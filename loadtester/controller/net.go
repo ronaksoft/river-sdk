@@ -28,21 +28,23 @@ type CtrlNetwork struct {
 
 	messageSeq int64
 
-	// Actor Info :
-	authID    int64
-	authKey   []byte //[256]byte
+	actor shared.Acter
+
 	onError   domain.ErrorHandler
 	onMessage domain.OnMessageHandler
 	onUpdate  domain.OnUpdateHandler
 }
 
 // NewCtrlNetwork create new instance
-func NewCtrlNetwork(authID int64, authKey []byte, onMessage domain.OnMessageHandler, onUpdate domain.OnUpdateHandler, onError domain.ErrorHandler) shared.Neter {
+func NewCtrlNetwork(act shared.Acter,
+	onMessage domain.OnMessageHandler,
+	onUpdate domain.OnUpdateHandler,
+	onError domain.ErrorHandler,
+) shared.Neter {
 	n := &CtrlNetwork{
 		stop:      make(chan bool),
 		wsDialer:  websocket.DefaultDialer,
-		authID:    authID,
-		authKey:   authKey,
+		actor:     act,
 		onError:   onError,
 		onMessage: onMessage,
 		onUpdate:  onUpdate,
@@ -51,12 +53,6 @@ func NewCtrlNetwork(authID int64, authKey []byte, onMessage domain.OnMessageHand
 	n.wsDialer.WriteBufferSize = 32 * 1024 // 32KB
 
 	return n
-}
-
-// SetAuthInfo set authID and authKey after CreateAuthKey completed
-func (ctrl *CtrlNetwork) SetAuthInfo(authID int64, authKey []byte) {
-	ctrl.authID = authID
-	ctrl.authKey = authKey
 }
 
 // Start start websocket
@@ -82,10 +78,13 @@ func (ctrl *CtrlNetwork) Stop() {
 
 // Send the data payload is binary
 func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
+
+	authID, authKey := ctrl.actor.GetAuthInfo()
+
 	protoMessage := new(msg.ProtoMessage)
-	protoMessage.AuthID = ctrl.authID
+	protoMessage.AuthID = authID
 	protoMessage.MessageKey = make([]byte, 32)
-	if ctrl.authID == 0 {
+	if authID == 0 {
 		payload, err := msgEnvelope.Marshal()
 		if err != nil {
 			return err
@@ -102,11 +101,11 @@ func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
 		if err != nil {
 			return err
 		}
-		encryptedPayloadBytes, err := domain.Encrypt(ctrl.authKey, unencryptedBytes)
+		encryptedPayloadBytes, err := domain.Encrypt(authKey, unencryptedBytes)
 		if err != nil {
 			return err
 		}
-		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes)
+		messageKey := domain.GenerateMessageKey(authKey, unencryptedBytes)
 		copy(protoMessage.MessageKey, messageKey)
 		protoMessage.Payload = encryptedPayloadBytes
 	}
@@ -137,6 +136,18 @@ func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
 	ctrl.conn.SetWriteDeadline(time.Now().Add(shared.DefaultSendTimeout))
 	err = ctrl.conn.WriteMessage(websocket.BinaryMessage, b)
 	ctrl.connWriteLock.Unlock()
+
+	// deep copy for log
+	//====================================
+	// Log Sent Messages
+	tmpBuff := make([]byte, len(b))
+	copy(tmpBuff, b)
+	tmp := new(msg.ProtoMessage)
+	err = tmp.Unmarshal(tmpBuff)
+	if err == nil {
+		logSentPacket(tmp)
+	}
+	//====================================
 
 	return err
 }
@@ -229,23 +240,75 @@ func (ctrl *CtrlNetwork) receiver() {
 			continue
 		}
 
-		res := msg.ProtoMessage{}
-		res.Unmarshal(message)
+		// deep copy for log
+		//====================================
+		// Log Received Messages
+		tmpBuff := make([]byte, len(message))
+		copy(tmpBuff, message)
+
+		tmp := new(msg.ProtoMessage)
+		err = tmp.Unmarshal(tmpBuff)
+		if err == nil {
+			logReceivedPacket(tmp)
+
+			res := new(msg.ProtoMessage)
+			err = res.Unmarshal(tmpBuff)
+			if err != nil {
+				log.LOG_Error("TMP CtrlNetwork::receiver() failed to unmarshal to ProtoMessage", zap.Error(err))
+
+				if res.AuthID == 0 {
+					receivedEnvelope := new(msg.MessageEnvelope)
+					err = receivedEnvelope.Unmarshal(res.Payload)
+					if err != nil {
+						log.LOG_Error("TMP  CtrlNetwork::receiver() failed to unmarshal to MessageEnvelope", zap.Error(err))
+					}
+				} else {
+					act, _ := shared.GetCachedActorByAuthID(res.AuthID)
+					decryptedBytes, err := domain.Decrypt(act.GetAuthKey(), res.MessageKey, res.Payload)
+					if err != nil {
+						log.LOG_Error("TMP  CtrlNetwork::receiver() failed to domain.Decrypt()", zap.Error(err))
+						log.LOG_Error("netCtrl & Actor Info : ",
+							zap.Int64("ctrl.AuthID", ctrl.actor.GetAuthID()),
+							zap.Int64("act.AuthID", act.GetAuthID()),
+							zap.Binary("ctrl.AuthKey", ctrl.actor.GetAuthKey()),
+							zap.Binary("act.AuthKey", act.GetAuthKey()),
+						)
+					}
+					receivedEncryptedPayload := new(msg.ProtoEncryptedPayload)
+					err = receivedEncryptedPayload.Unmarshal(decryptedBytes)
+					if err != nil {
+						log.LOG_Error("TMP  CtrlNetwork::receiver() failed to unmarshal to ProtoEncryptedPayload", zap.Error(err))
+					}
+				}
+			}
+		}
+		//====================================
+
+		res := new(msg.ProtoMessage)
+		err = res.Unmarshal(message)
+		if err != nil {
+			log.LOG_Error("CtrlNetwork::receiver() failed to unmarshal to ProtoMessage", zap.Error(err))
+			continue
+		}
+
 		if res.AuthID == 0 {
 			receivedEnvelope := new(msg.MessageEnvelope)
 			err = receivedEnvelope.Unmarshal(res.Payload)
 			if err != nil {
+				log.LOG_Error("CtrlNetwork::receiver() failed to unmarshal to MessageEnvelope", zap.Error(err))
 				continue
 			}
 			ctrl.messageHandler(receivedEnvelope)
 		} else {
-			decryptedBytes, err := domain.Decrypt(ctrl.authKey, res.MessageKey, res.Payload)
+			decryptedBytes, err := domain.Decrypt(ctrl.actor.GetAuthKey(), res.MessageKey, res.Payload)
 			if err != nil {
+				log.LOG_Error("CtrlNetwork::receiver() failed to domain.Decrypt()", zap.Error(err))
 				continue
 			}
 			receivedEncryptedPayload := new(msg.ProtoEncryptedPayload)
 			err = receivedEncryptedPayload.Unmarshal(decryptedBytes)
 			if err != nil {
+				log.LOG_Error("CtrlNetwork::receiver() failed to unmarshal to ProtoEncryptedPayload", zap.Error(err))
 				continue
 			}
 			ctrl.messageHandler(receivedEncryptedPayload.Envelope)

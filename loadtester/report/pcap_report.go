@@ -60,8 +60,8 @@ func NewPcapReport() *PcapReport {
 // Feed insert data to reporter
 func (r *PcapReport) Feed(p *pcap_parser.ParsedWS) error {
 
-	act, ok := shared.GetCacheActorByAuthID(p.Message.AuthID)
-	if !ok {
+	act, ok := shared.GetCachedActorByAuthID(p.Message.AuthID)
+	if !ok && p.Message.AuthID != 0 {
 		return fmt.Errorf("Actor does not exist for this authID : %d", p.Message.AuthID)
 	}
 	envelop, err := decryptProto(act, p.Message)
@@ -166,32 +166,6 @@ func (r *PcapReport) String() string {
 	return sb.String()
 }
 
-func decryptProto(act shared.Acter, protMsg *msg.ProtoMessage) (*msg.MessageEnvelope, error) {
-	if protMsg.AuthID == 0 {
-		env := new(msg.MessageEnvelope)
-		err := env.Unmarshal(protMsg.Payload)
-		if err != nil {
-			return nil, fmt.Errorf("decryptProto() AuthID=0 Unmarshal protMsg.Payload , err : %s", err.Error())
-		}
-		return env, nil
-	}
-	authID, authKey := act.GetAuthInfo()
-	if authID != protMsg.AuthID {
-		return nil, fmt.Errorf("decryptProto() Actor AuthID:%d is not equal to ProtoMsg AuthID :%d", authID, protMsg.AuthID)
-	}
-	decryptedBytes, err := domain.Decrypt(authKey, protMsg.MessageKey, protMsg.Payload)
-	if err != nil {
-		return nil, fmt.Errorf("decryptProto() -> domain.Decrypt() , err : %s", err.Error())
-	}
-	encryptedPayload := new(msg.ProtoEncryptedPayload)
-	err = encryptedPayload.Unmarshal(decryptedBytes)
-	if err != nil {
-		return nil, fmt.Errorf("decryptProto() -> Unmarshal(decryptedBytes) , err : %s", err.Error())
-	}
-
-	return encryptedPayload.Envelope, nil
-}
-
 func extractMessages(m *msg.MessageEnvelope) ([]*msg.MessageEnvelope, []*msg.UpdateContainer) {
 	messages := make([]*msg.MessageEnvelope, 0)
 	updates := make([]*msg.UpdateContainer, 0)
@@ -233,4 +207,85 @@ func extractMessages(m *msg.MessageEnvelope) ([]*msg.MessageEnvelope, []*msg.Upd
 		messages = append(messages, m)
 	}
 	return messages, updates
+}
+
+// FeedPacket insert data to reporter
+func (r *PcapReport) FeedPacket(p *msg.ProtoMessage, isResponse bool) error {
+	act, ok := shared.GetCachedActorByAuthID(p.AuthID)
+	if !ok && p.AuthID != 0 {
+		return fmt.Errorf("Actor does not exist for this authID : %d", p.AuthID)
+	}
+
+	envelop, err := decryptProto(act, p)
+	if err != nil {
+		return err
+	}
+	// extract only messages reposnses and skip updates
+	messages, _ := extractMessages(envelop)
+	for _, m := range messages {
+
+		r.ConstructorCounter[m.Constructor] = r.ConstructorCounter[m.Constructor] + 1
+		// create report params
+		req, ok := r.Requests[m.RequestID]
+		if ok {
+			req.AuthIDs[p.AuthID] = true
+			// response
+			if isResponse {
+				req.ResponseList = append(req.ResponseList, msg.ConstructorNames[m.Constructor])
+			} else {
+				// request
+				req.RequestsList = append(req.RequestsList, msg.ConstructorNames[m.Constructor])
+			}
+
+		} else {
+			req := &PcapRequest{
+				ReqID:        m.RequestID,
+				AuthIDs:      make(map[int64]bool),
+				RequestsList: make([]string, 0),
+				ResponseList: make([]string, 0),
+			}
+
+			req.AuthIDs[p.AuthID] = true
+			// response
+			if isResponse {
+				req.ResponseList = append(req.ResponseList, msg.ConstructorNames[m.Constructor])
+			} else {
+				// request
+				req.RequestsList = append(req.RequestsList, msg.ConstructorNames[m.Constructor])
+			}
+
+			r.Requests[m.RequestID] = req
+		}
+	}
+	r.isProcessed = false
+	return nil
+}
+
+func decryptProto(act shared.Acter, protMsg *msg.ProtoMessage) (*msg.MessageEnvelope, error) {
+	if protMsg.AuthID == 0 {
+		env := new(msg.MessageEnvelope)
+		err := env.Unmarshal(protMsg.Payload)
+		if err != nil {
+			return nil, fmt.Errorf("decryptProto() AuthID=0 Unmarshal protMsg.Payload , err : %s", err.Error())
+		}
+		return env, nil
+	}
+	if act == nil {
+		return nil, fmt.Errorf("decryptProto() when protMsg have authID & encrypted, actor can't be null")
+	}
+	authID, authKey := act.GetAuthInfo()
+	if authID != protMsg.AuthID {
+		return nil, fmt.Errorf("decryptProto() Actor AuthID:%d is not equal to ProtoMsg AuthID :%d", authID, protMsg.AuthID)
+	}
+	decryptedBytes, err := domain.Decrypt(authKey, protMsg.MessageKey, protMsg.Payload)
+	if err != nil {
+		return nil, fmt.Errorf("decryptProto() -> domain.Decrypt() , err : %s", err.Error())
+	}
+	encryptedPayload := new(msg.ProtoEncryptedPayload)
+	err = encryptedPayload.Unmarshal(decryptedBytes)
+	if err != nil {
+		return nil, fmt.Errorf("decryptProto() -> Unmarshal(decryptedBytes) , err : %s", err.Error())
+	}
+
+	return encryptedPayload.Envelope, nil
 }

@@ -45,7 +45,7 @@ type Actor struct {
 // NewActor create new actor instance
 func NewActor(phone string) (shared.Acter, error) {
 	var act *Actor
-	acter, ok := shared.GetCacheActorByPhone(phone)
+	acter, ok := shared.GetCachedActorByPhone(phone)
 	if !ok {
 		act = new(Actor)
 		err := act.Load(phone)
@@ -63,7 +63,7 @@ func NewActor(phone string) (shared.Acter, error) {
 		act = acter.(*Actor)
 	}
 
-	act.netCtrl = controller.NewCtrlNetwork(act.AuthID, act.AuthKey, act.onMessage, act.onUpdate, act.onError)
+	act.netCtrl = controller.NewCtrlNetwork(act, act.onMessage, act.onUpdate, act.onError)
 	act.exec = executer.NewExecuter(act.netCtrl)
 	err := act.netCtrl.Start()
 	if err != nil {
@@ -91,7 +91,6 @@ func (act *Actor) SetAuthInfo(authID int64, authKey []byte) {
 	act.AuthID = authID
 	act.AuthKey = make([]byte, len(authKey))
 	copy(act.AuthKey, authKey)
-	act.netCtrl.SetAuthInfo(act.AuthID, act.AuthKey)
 }
 
 // GetAuthInfo Acter interface func
@@ -100,6 +99,11 @@ func (act *Actor) GetAuthInfo() (int64, []byte) { return act.AuthID, act.AuthKey
 // GetAuthID Acter interface func
 func (act *Actor) GetAuthID() (authID int64) {
 	return act.AuthID
+}
+
+// GetAuthKey Acter interface func
+func (act *Actor) GetAuthKey() (authKey []byte) {
+	return act.AuthKey
 }
 
 // GetUserID Acter interface func
@@ -155,7 +159,7 @@ func (act *Actor) Stop() {
 	if act.netCtrl != nil {
 		act.Status.NetworkDisconnects = act.netCtrl.DisconnectCount()
 		act.netCtrl.Stop()
-		act.netCtrl = nil
+		// act.netCtrl = nil
 	}
 	act.Status.LifeTime = time.Since(act.CreatedOn)
 	if act.OnStopHandler != nil {

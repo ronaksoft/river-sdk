@@ -64,7 +64,7 @@ func init() {
 	log.SetLogLevel(0) // DBG: -1, INF: 0, WRN: 1, ERR: 2
 
 	_Reporter = report.NewReport()
-	_Reporter.SetIsActive(true)
+	// _Reporter.SetIsActive(true)
 
 	loadCachedActors()
 }
@@ -204,7 +204,7 @@ func fnPcapParser() {
 		if err != nil {
 			feedErrs++
 			flow := fmt.Sprintf("%v:%d-->%v:%d", r.SrcIP, r.SrcPort, r.DstIP, r.DstPort)
-			_, ok := shared.GetCacheActorByAuthID(r.Message.AuthID)
+			_, ok := shared.GetCachedActorByAuthID(r.Message.AuthID)
 			fmt.Printf("Feed() AuthID : %d \t Exist : %v \t %s \t %s \n", r.Message.AuthID, ok, flow, err.Error())
 		}
 	}
