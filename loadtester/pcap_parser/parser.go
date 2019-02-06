@@ -127,12 +127,9 @@ func (h *wsFactory) New(net, tcp gopacket.Flow) tcpassembly.Stream {
 
 // httpStream will handle the actual decoding of http requests.
 type wsStream struct {
-	ch                                  chan *ParsedWS
-	data                                []byte
-	net, tcp                            gopacket.Flow
-	bytes, packets, outOfOrder, skipped int64
-	start, end                          time.Time
-	sawStart, sawEnd                    bool
+	ch       chan *ParsedWS
+	data     []byte
+	net, tcp gopacket.Flow
 }
 
 // Reassembled is called whenever new packet data is available for reading.
@@ -141,24 +138,11 @@ func (s *wsStream) Reassembled(reassemblies []tcpassembly.Reassembly) {
 
 	buff := make([]byte, 0)
 	for _, reassembly := range reassemblies {
-		if reassembly.Seen.Before(s.end) {
-			s.outOfOrder++
-		} else {
-			s.end = reassembly.Seen
-		}
-		s.bytes += int64(len(reassembly.Bytes))
-		s.packets++
-		if reassembly.Skip > 0 {
-			s.skipped += int64(reassembly.Skip)
-		}
-		s.sawStart = s.sawStart || reassembly.Start
-		s.sawEnd = s.sawEnd || reassembly.End
-
 		buff = append(buff, reassembly.Bytes...)
 	}
 
 	n := len(buff)
-	if n > 8 {
+	if n > 0 {
 		s.data = make([]byte, n, n)
 		copy(s.data, buff)
 	}
@@ -167,11 +151,6 @@ func (s *wsStream) Reassembled(reassemblies []tcpassembly.Reassembly) {
 
 // ReassemblyComplete is called when the TCP assembler believes a stream has
 func (s *wsStream) ReassemblyComplete() {
-
-	// diffSecs := float64(s.end.Sub(s.start)) / float64(time.Second)
-	// log.Printf("Reassembly of stream %v:%v complete - start:%v end:%v bytes:%v packets:%v ooo:%v bps:%v pps:%v skipped:%v",
-	// 	s.net, s.tcp, s.start, s.end, s.bytes, s.packets, s.outOfOrder,
-	// 	float64(s.bytes)/diffSecs, float64(s.packets)/diffSecs, s.skipped)
 
 	ws := NewWS(s.data)
 	if ws == nil {

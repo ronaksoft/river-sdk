@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
+
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/pcap_parser"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/report"
 	"git.ronaksoftware.com/ronak/riversdk/log"
@@ -32,10 +34,18 @@ var cmdParse = &ishell.Cmd{
 		}
 
 		rpt := report.NewPcapReport()
+		feedErrs := 0
 		for r := range res {
-			rpt.Feed(r)
+			err := rpt.Feed(r)
+			if err != nil {
+				feedErrs++
+				flow := fmt.Sprintf("%v:%d-->%v:%d", r.SrcIP, r.SrcPort, r.DstIP, r.DstPort)
+				_, ok := shared.GetCacheActorByAuthID(r.Message.AuthID)
+				fmt.Printf("Feed() AuthID : %d \t Exist : %v \t %s \t %s \n", r.Message.AuthID, ok, flow, err.Error())
+			}
 		}
 		fmt.Println(rpt.String())
+		fmt.Println("Feed() Errors : ", feedErrs)
 
 	},
 }
@@ -58,10 +68,18 @@ var cmdParse_wsutil = &ishell.Cmd{
 		}
 
 		rpt := report.NewPcapReport()
+		feedErrs := 0
 		for r := range res {
-			rpt.Feed(r)
+			err := rpt.Feed(r)
+			if err != nil {
+				feedErrs++
+				flow := fmt.Sprintf("%v:%d-->%v:%d", r.SrcIP, r.SrcPort, r.DstIP, r.DstPort)
+				_, ok := shared.GetCacheActorByAuthID(r.Message.AuthID)
+				fmt.Printf("Feed() AuthID : %d \t Exist : %v \t %s \t %s \n", r.Message.AuthID, ok, flow, err.Error())
+			}
 		}
 		fmt.Println(rpt.String())
+		fmt.Println("Feed() Errors : ", feedErrs)
 
 	},
 }

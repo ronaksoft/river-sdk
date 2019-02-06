@@ -106,15 +106,12 @@ func (w *WS) UnmaskPayload() []byte {
 
 // IsValid simply compare len of payload and length in header :/
 func (w *WS) IsValid() (bool, *msg.ProtoMessage) {
-	if len(w.Payload) == w.ExtendedPayloadLength() {
-		x := new(msg.ProtoMessage)
-		err := x.Unmarshal(w.UnmaskPayload())
-		if err != nil {
-			return false, nil
-		}
-		return true, x
+	x := new(msg.ProtoMessage)
+	err := x.Unmarshal(w.UnmaskPayload())
+	if err != nil {
+		return false, nil
 	}
-	return false, nil
+	return true, x
 }
 
 // Cipher copied from github.com/gobwas/ws/cipher.go xD
