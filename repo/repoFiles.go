@@ -18,6 +18,8 @@ type RepoFiles interface {
 	GetFilePath(msgID, docID int64) string
 	SaveDownloadingFile(fs *dto.FileStatus) error
 	UpdateFileStatus(msgID int64, state domain.RequestStatus) error
+	UpdateThumbnailPath(msgID int64, filePath string) error
+	GetFile(msgID int64) (*dto.Files, error)
 
 	// delete this later
 	GetFirstFileStatu() dto.FileStatus
@@ -185,4 +187,24 @@ func (r *repoFiles) UpdateFileStatus(msgID int64, state domain.RequestStatus) er
 	return r.db.Table(mdl.TableName()).Where("MessageID=? ", msgID).Updates(map[string]interface{}{
 		"RequestStatus": int32(state),
 	}).Error
+}
+
+func (r *repoFiles) UpdateThumbnailPath(msgID int64, filePath string) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	e := new(dto.Files)
+	return r.db.Table(e.TableName()).Where("MessageID = ? ", msgID).Updates(map[string]interface{}{
+		"ThumbFilePath": filePath,
+	}).Error
+
+}
+
+func (r *repoFiles) GetFile(msgID int64) (*dto.Files, error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	mdl := new(dto.Files)
+	err := r.db.Find(mdl, msgID).Error
+	return mdl, err
 }

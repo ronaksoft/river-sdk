@@ -16,23 +16,31 @@ import (
 
 // FileStatus monitors file state
 type FileStatus struct {
-	mx                  sync.Mutex
-	MessageID           int64                       `json:"MessageID"`
-	FileID              int64                       `json:"FileID"`
-	TargetID            int64                       `json:"TargetID"`
-	ClusterID           int32                       `json:"ClusterID"`
-	AccessHash          uint64                      `json:"AccessHash"`
-	Version             int32                       `json:"Version"`
-	FilePath            string                      `json:"FilePath"`
-	Position            int64                       `json:"Position"`
-	TotalSize           int64                       `json:"TotalSize"`
-	PartNo              int32                       `json:"PartNo"`
-	TotalParts          int32                       `json:"TotalParts"`
-	Type                domain.FileStateType        `json:"StatusType"`
-	IsCompleted         bool                        `json:"IsCompleted"`
-	RequestStatus       domain.RequestStatus        `json:"RequestStatus"`
-	UploadRequest       *msg.ClientSendMessageMedia `json:"UploadRequest"`
-	DownloadRequest     *msg.Document               `json:"DownloadRequest"`
+	mx              sync.Mutex
+	MessageID       int64                       `json:"MessageID"`
+	FileID          int64                       `json:"FileID"`
+	TargetID        int64                       `json:"TargetID"`
+	ClusterID       int32                       `json:"ClusterID"`
+	AccessHash      uint64                      `json:"AccessHash"`
+	Version         int32                       `json:"Version"`
+	FilePath        string                      `json:"FilePath"`
+	Position        int64                       `json:"Position"`
+	TotalSize       int64                       `json:"TotalSize"`
+	PartNo          int32                       `json:"PartNo"`
+	TotalParts      int32                       `json:"TotalParts"`
+	Type            domain.FileStateType        `json:"StatusType"`
+	IsCompleted     bool                        `json:"IsCompleted"`
+	RequestStatus   domain.RequestStatus        `json:"RequestStatus"`
+	UploadRequest   *msg.ClientSendMessageMedia `json:"UploadRequest"`
+	DownloadRequest *msg.Document               `json:"DownloadRequest"`
+
+	ThumbFileID     int64  `json:"ThumbFileID"`
+	ThumbFilePath   string `json:"ThumbFilePath"`
+	ThumbPosition   int64  `json:"ThumbPosition"`
+	ThumbTotalSize  int64  `json:"ThumbTotalSize"`
+	ThumbPartNo     int32  `json:"ThumbPartNo"`
+	ThumbTotalParts int32  `json:"ThumbTotalParts"`
+
 	onFileStatusChanged domain.OnFileStatusChanged
 	// on receive unknown reposne or send error increase this counter to reach its threshold
 	retryCounter int
@@ -67,30 +75,51 @@ func NewFileStatus(messageID int64,
 		RequestStatus:       domain.RequestStateInProgress,
 	}
 
-	count := totalSize / domain.FilePayloadSize
-	if (count * domain.FilePayloadSize) < totalSize {
-		fs.TotalParts = int32(count + 1)
-	} else {
-		fs.TotalParts = int32(count)
-	}
+	// count := totalSize / domain.FilePayloadSize
+	// if (count * domain.FilePayloadSize) < totalSize {
+	// 	fs.TotalParts = int32(count + 1)
+	// } else {
+	// 	fs.TotalParts = int32(count)
+	// }
+	fs.TotalParts = CalculatePartsCount(totalSize)
 
 	return fs
 }
 
+func CalculatePartsCount(fileSize int64) int32 {
+	count := fileSize / domain.FilePayloadSize
+	if (count * domain.FilePayloadSize) < fileSize {
+		return int32(count + 1)
+	} else {
+		return int32(count)
+	}
+
+}
+
 // Read reads next required chunk of data
-func (fs *FileStatus) Read() ([]byte, int, error) {
+func (fs *FileStatus) Read(isThumbnail bool) ([]byte, int, error) {
 	fs.mx.Lock()
 
-	file, err := os.Open(fs.FilePath)
+	filePath := fs.FilePath
+	position := fs.Position
+	totalSize := fs.TotalSize
+
+	if isThumbnail {
+		filePath = fs.ThumbFilePath
+		position = fs.ThumbPosition
+		totalSize = fs.ThumbTotalSize
+	}
+
+	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, 0, err
 	}
 	var requiredBytes int64 = domain.FilePayloadSize
-	if (fs.Position + domain.FilePayloadSize) > fs.TotalSize {
-		requiredBytes = fs.TotalSize - fs.Position
+	if (position + domain.FilePayloadSize) > totalSize {
+		requiredBytes = totalSize - position
 	}
 	buff := make([]byte, requiredBytes)
-	readCount, err := file.ReadAt(buff, fs.Position)
+	readCount, err := file.ReadAt(buff, position)
 	file.Close()
 	if err != nil {
 		return nil, 0, err
@@ -149,7 +178,14 @@ func (fs *FileStatus) Write(data []byte) (isCompleted bool, err error) {
 }
 
 //ReadCommit apply that last read process result was success and increase counter and progress
-func (fs *FileStatus) ReadCommit(count int64) (isCompleted bool) {
+func (fs *FileStatus) ReadCommit(count int64, isThumbnail bool) (isCompleted bool) {
+
+	if isThumbnail {
+		fs.ThumbPosition += count
+		fs.ThumbPartNo++
+		return
+	}
+
 	fs.Position += count
 	fs.PartNo++
 	fs.IsCompleted = fs.PartNo == fs.TotalParts
@@ -172,18 +208,25 @@ func (fs *FileStatus) fileStatusChanged() {
 
 }
 
-func (fs *FileStatus) ReadAsFileSavePart() (envelop *msg.MessageEnvelope, readCount int, err error) {
+func (fs *FileStatus) ReadAsFileSavePart(isThumbnail bool) (envelop *msg.MessageEnvelope, readCount int, err error) {
 
 	var buff []byte
-	buff, readCount, err = fs.Read()
+	buff, readCount, err = fs.Read(isThumbnail)
 	if err != nil {
 		return
 	}
 	req := new(msg.FileSavePart)
 	req.Bytes = buff
-	req.FileID = fs.FileID
-	req.PartID = fs.PartNo + 1
-	req.TotalParts = fs.TotalParts
+
+	if isThumbnail {
+		req.FileID = fs.ThumbFileID
+		req.PartID = fs.ThumbPartNo + 1
+		req.TotalParts = fs.ThumbTotalParts
+	} else {
+		req.FileID = fs.FileID
+		req.PartID = fs.PartNo + 1
+		req.TotalParts = fs.TotalParts
+	}
 
 	envelop = new(msg.MessageEnvelope)
 	envelop.Constructor = msg.C_FileSavePart
@@ -215,6 +258,12 @@ func (fs *FileStatus) GetDTO() *dto.FileStatus {
 	if fs.DownloadRequest != nil {
 		m.DownloadRequest, _ = fs.DownloadRequest.Marshal()
 	}
+	m.ThumbFileID = fs.ThumbFileID
+	m.ThumbFilePath = fs.ThumbFilePath
+	m.ThumbPosition = fs.ThumbPosition
+	m.ThumbTotalSize = fs.ThumbTotalSize
+	m.ThumbPartNo = fs.ThumbPartNo
+	m.ThumbTotalParts = fs.ThumbTotalParts
 
 	return m
 }
@@ -238,6 +287,14 @@ func (fs *FileStatus) LoadDTO(d dto.FileStatus, progress domain.OnFileStatusChan
 	fs.DownloadRequest = new(msg.Document)
 	fs.DownloadRequest.Unmarshal(d.DownloadRequest)
 	fs.onFileStatusChanged = progress
+
+	fs.ThumbFileID = d.ThumbFileID
+	fs.ThumbFilePath = d.ThumbFilePath
+	fs.ThumbPosition = d.ThumbPosition
+	fs.ThumbTotalSize = d.ThumbTotalSize
+	fs.ThumbPartNo = d.ThumbPartNo
+	fs.ThumbTotalParts = d.ThumbTotalParts
+
 }
 
 func (fs *FileStatus) ReadAsFileGet() (envelop *msg.MessageEnvelope, err error) {

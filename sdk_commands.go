@@ -919,7 +919,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 			}
 		}) //successCB(out)
 
-		r.onFileUploadCompleted(msgID, int64(fileID), 0, dtoFile.ClusterID, -1, domain.FileStateExistedUpload, dtoFile.FilePath, reqMedia)
+		r.onFileUploadCompleted(msgID, int64(fileID), 0, dtoFile.ClusterID, -1, domain.FileStateExistedUpload, dtoFile.FilePath, reqMedia, 0, 0)
 		// send the request to server
 		r.queueCtrl.ExecuteCommand(fileID, in.Constructor, in.Message, nil, nil, false)
 

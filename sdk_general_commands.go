@@ -744,3 +744,62 @@ func downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) string
 	}
 	return filePath
 }
+
+func (r *River) FileDownloadThumbnail(msgID int64) string {
+
+	m := repo.Ctx().Messages.GetMessage(msgID)
+	if m == nil {
+		log.LOG_Error("SDK::FileDownloadThumbnail() message does not exist")
+		return ""
+	}
+	filePath := ""
+	docID := int64(0)
+	clusterID := int32(0)
+	accessHash := uint64(0)
+	version := int32(0)
+	switch m.MediaType {
+	case msg.MediaTypeEmpty:
+		// TODO:: implement it
+	case msg.MediaTypePhoto:
+		// // TODO:: implement it
+	case msg.MediaTypeDocument:
+		x := new(msg.MediaDocument)
+		x.Unmarshal(m.Media)
+		if x.Doc.Thumbnail != nil {
+			docID = x.Doc.Thumbnail.FileID
+			clusterID = x.Doc.Thumbnail.ClusterID
+			accessHash = x.Doc.Thumbnail.AccessHash
+			// version = x.Doc.Thumbnail.Version
+		} else {
+			log.LOG_Warn("SDK::FileDownloadThumbnail() Message does not have thumbnail", zap.Int64("MsgID", msgID))
+			return filePath
+		}
+
+	case msg.MediaTypeContact:
+		// TODO:: implement it
+	default:
+		log.LOG_Error("SDK::FileDownloadThumbnail() Invalid MediaType")
+	}
+
+	dto, err := repo.Ctx().Files.GetFile(msgID)
+
+	if err == nil {
+		if _, err = os.Stat(dto.ThumbFilePath); os.IsNotExist(err) {
+			path, err := filemanager.Ctx().DownloadThumbnail(m.ID, docID, accessHash, clusterID, version)
+			if err != nil {
+				log.LOG_Error("SDK::FileDownloadThumbnail()-> filemanager.DownloadThumbnail()", zap.Error(err))
+			}
+			filePath = path
+		} else {
+			filePath = dto.ThumbFilePath
+		}
+	} else {
+		path, _ := filemanager.Ctx().DownloadThumbnail(m.ID, docID, accessHash, clusterID, version)
+		if err != nil {
+			log.LOG_Error("SDK::FileDownloadThumbnail()-> filemanager.DownloadThumbnail()", zap.Error(err))
+		}
+		filePath = path
+	}
+
+	return filePath
+}

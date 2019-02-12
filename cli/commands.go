@@ -520,6 +520,11 @@ func fnGetFilePath(c *ishell.Context) string {
 	name := c.ReadLine()
 	return name
 }
+func fnGetThumbFilePath(c *ishell.Context) string {
+	c.Print("Thumbnail File Path: ")
+	name := c.ReadLine()
+	return name
+}
 func fnGetReplyTo(c *ishell.Context) int64 {
 	var replyTo int64
 	for {

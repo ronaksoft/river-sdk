@@ -167,7 +167,6 @@ func (fm *FileManager) Upload(fileID int64, req *msg.ClientPendingMessage) error
 	if err != nil {
 		return err
 	}
-
 	if x.FileName == "" {
 		x.FileName = fileInfo.Name()
 	}
@@ -183,6 +182,20 @@ func (fm *FileManager) Upload(fileID int64, req *msg.ClientPendingMessage) error
 
 	state := NewFileStatus(req.ID, fileID, 0, fileSize, x.FilePath, domain.FileStateUpload, 0, 0, 0, fm.progressCallback)
 	state.UploadRequest = x
+
+	thumbFile, err := os.Open(x.ThumbFilePath)
+	if err == nil {
+		thumbInfo, err := thumbFile.Stat()
+		if err == nil {
+			state.ThumbFileID = domain.SequentialUniqueID()
+			state.ThumbFilePath = x.ThumbFilePath
+			state.ThumbPosition = 0
+			state.ThumbTotalSize = thumbInfo.Size()
+			state.ThumbPartNo = 0
+			state.ThumbTotalParts = CalculatePartsCount(thumbInfo.Size())
+		}
+	}
+
 	fm.AddToQueue(state)
 	repo.Ctx().Files.SaveFileStatus(state.GetDTO())
 	return nil
@@ -388,8 +401,8 @@ func (fm *FileManager) startUploadQueue() {
 						completedItems[fs.MessageID] = true
 						continue
 					}
-
-					envelop, readCount, err := fs.ReadAsFileSavePart()
+					isThumbnail := fs.ThumbPosition < fs.ThumbTotalSize
+					envelop, readCount, err := fs.ReadAsFileSavePart(isThumbnail)
 					if err != nil {
 						log.LOG_Error("FileManager::startUploadQueue()", zap.Error(err), zap.String("filePath", fs.FilePath))
 						continue
@@ -442,10 +455,11 @@ func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, 
 			fs.retryCounter = 0
 
 			if x.Result {
-				isCompleted := fs.ReadCommit(count)
-				if isCompleted {
+				isThumbnail := fs.ThumbPosition < fs.ThumbTotalSize
+				isCompleted := fs.ReadCommit(count, isThumbnail)
+				if isCompleted && !isThumbnail {
 					//call completed delegate
-					fm.uploadCompleted(fs.MessageID, fs.FileID, fs.TargetID, fs.ClusterID, fs.TotalParts, fs.Type, fs.FilePath, fs.UploadRequest)
+					fm.uploadCompleted(fs.MessageID, fs.FileID, fs.TargetID, fs.ClusterID, fs.TotalParts, fs.Type, fs.FilePath, fs.UploadRequest, fs.ThumbFileID, fs.ThumbTotalParts)
 				}
 			}
 		default:
@@ -458,8 +472,8 @@ func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, 
 		// increase counter
 		fs.retryCounter++
 		log.LOG_Error("sendUploadRequest()", zap.Error(err))
-
 	}
+
 	if fs.retryCounter > domain.FileRetryThreshold {
 
 		// remove upload from queue
@@ -583,12 +597,20 @@ func (fm *FileManager) downloadCompleted(msgID int64, filePath string, stateType
 	}
 }
 
-func (fm *FileManager) uploadCompleted(msgID, fileID, targetID int64, clusterID, totalParts int32, stateType domain.FileStateType, filePath string, uploadRequest *msg.ClientSendMessageMedia) {
+func (fm *FileManager) uploadCompleted(msgID, fileID, targetID int64,
+	clusterID, totalParts int32,
+	stateType domain.FileStateType,
+	filePath string,
+	uploadRequest *msg.ClientSendMessageMedia,
+	thumbFileID int64,
+	thumbTotalParts int32,
+
+) {
 	// delete file status
 	fm.DeleteFromQueue(msgID)
 	repo.Ctx().Files.DeleteFileStatus(msgID)
 	if fm.onUploadCompleted != nil {
-		fm.onUploadCompleted(msgID, fileID, targetID, clusterID, totalParts, stateType, filePath, uploadRequest)
+		fm.onUploadCompleted(msgID, fileID, targetID, clusterID, totalParts, stateType, filePath, uploadRequest, thumbFileID, thumbTotalParts)
 	}
 }
 
@@ -701,6 +723,57 @@ func (fm *FileManager) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, 
 
 		default:
 			return "", fmt.Errorf("received unknown response constructor {GroupID : %d}", groupID)
+		}
+	}
+	return "", err
+}
+
+func (fm *FileManager) DownloadThumbnail(msgID int64, fileID int64, accessHash uint64, clusterID, version int32) (string, error) {
+
+	req := new(msg.FileGet)
+	req.Location = &msg.InputFileLocation{
+		AccessHash: accessHash,
+		ClusterID:  clusterID,
+		FileID:     fileID,
+		Version:    version,
+	}
+	req.Offset = 0
+	req.Limit = 0
+
+	envelop := new(msg.MessageEnvelope)
+	envelop.Constructor = msg.C_FileGet
+	envelop.Message, _ = req.Marshal()
+	envelop.RequestID = uint64(domain.SequentialUniqueID())
+
+	filePath := path.Join(_DirCache, fmt.Sprintf("%d%s", fileID, ".jpg"))
+	res, err := fm.Send(envelop)
+	if err == nil {
+		switch res.Constructor {
+		case msg.C_Error:
+			strErr := ""
+			x := new(msg.Error)
+			if err := x.Unmarshal(res.Message); err == nil {
+				strErr = "Code :" + x.Code + ", Items :" + x.Items
+			}
+			return "", fmt.Errorf("DownloadThumbnail() received error response {MsgID: %d,  %s }", msgID, strErr)
+		case msg.C_File:
+			x := new(msg.File)
+			err := x.Unmarshal(res.Message)
+			if err != nil {
+				return "", err
+			}
+
+			// write to file path
+			err = ioutil.WriteFile(filePath, x.Bytes, 0666)
+			if err != nil {
+				return "", err
+			}
+
+			// save to DB
+			return filePath, repo.Ctx().Files.UpdateThumbnailPath(msgID, filePath)
+
+		default:
+			return "", fmt.Errorf("DownloadThumbnail() received unknown response constructor {GroupID : %d}", msgID)
 		}
 	}
 	return "", err

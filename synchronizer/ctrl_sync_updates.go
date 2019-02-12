@@ -3,6 +3,8 @@ package synchronizer
 import (
 	"time"
 
+	"git.ronaksoftware.com/ronak/riversdk/filemanager"
+
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
@@ -198,7 +200,14 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) []*msg.Updat
 		mediaDoc := new(msg.MediaDocument)
 		err = mediaDoc.Unmarshal(x.Message.Media)
 		if err == nil {
+			t := mediaDoc.Doc.Thumbnail
+			if t != nil {
+				if t.FileID != 0 {
+					go filemanager.Ctx().DownloadThumbnail(x.Message.ID, t.FileID, t.AccessHash, t.ClusterID, 0)
+				}
+			}
 			repo.Ctx().Files.SaveFileDocument(x.Message.ID, mediaDoc)
+
 		} else {
 			log.LOG_Error("SyncController::updateNewMessage()-> connat unmarshal MediaTypeDocument", zap.Error(err))
 		}

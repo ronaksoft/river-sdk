@@ -35,6 +35,7 @@ var Upload = &ishell.Cmd{
 		req.Peer.ID = fnGetPeerID(c)
 		req.Peer.AccessHash = fnGetAccessHash(c)
 		req.FilePath = fnGetFilePath(c)
+		req.ThumbFilePath = fnGetThumbFilePath(c)
 		req.ReplyTo = fnGetReplyTo(c)
 
 		f, _ := os.Open(req.FilePath)
@@ -173,12 +174,22 @@ var ShareContact = &ishell.Cmd{
 	},
 }
 
+var DownloadThumbnail = &ishell.Cmd{
+	Name: "DownloadThumbnail",
+	Func: func(c *ishell.Context) {
+		messageID := fnGetMessageID(c)
+		strFilePath := _SDK.FileDownloadThumbnail(messageID)
+		log.LOG_Info("File Download Complete", zap.String("path", strFilePath))
+	},
+}
+
 func init() {
 	File.AddCmd(Upload)
 	File.AddCmd(Download)
 	File.AddCmd(DownloadMultiConnection)
 	File.AddCmd(ShareContact)
 	File.AddCmd(Status)
+	File.AddCmd(DownloadThumbnail)
 
 }
 

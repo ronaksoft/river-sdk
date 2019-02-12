@@ -958,7 +958,14 @@ func (r *River) onFileProgressChanged(messageID, position, totalSize int64, stat
 
 }
 
-func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64, clusterID, totalParts int32, stateType domain.FileStateType, filePath string, req *msg.ClientSendMessageMedia) {
+func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
+	clusterID, totalParts int32,
+	stateType domain.FileStateType,
+	filePath string,
+	req *msg.ClientSendMessageMedia,
+	thumbFileID int64,
+	thumbTotalParts int32,
+) {
 	log.LOG_Warn("onFileUploadCompleted()",
 		zap.Int64("messageID", messageID),
 		zap.Int64("fileID", fileID),
@@ -998,6 +1005,16 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64, cluster
 				MD5Checksum: "",
 				TotalParts:  totalParts,
 			}
+
+			if thumbFileID > 0 && thumbTotalParts > 0 {
+				doc.Thumbnail = &msg.InputFile{
+					FileID:      thumbFileID,
+					FileName:    "thumb_" + req.FileName,
+					MD5Checksum: "",
+					TotalParts:  thumbTotalParts,
+				}
+			}
+
 			x.MediaData, _ = doc.Marshal()
 
 		case msg.InputMediaTypeDocument:

@@ -16,6 +16,12 @@ type FileStatus struct {
 	RequestStatus   int32  `gorm:"column:RequestStatus" json:"RequestStatus"`
 	UploadRequest   []byte `gorm:"column:UploadRequest" json:"UploadRequest"`
 	DownloadRequest []byte `gorm:"column:DownloadRequest" json:"DownloadRequest"`
+	ThumbFileID     int64  `gorm:"column:ThumbFileID" json:"ThumbFileID"`
+	ThumbFilePath   string `gorm:"column:ThumbFilePath" json:"ThumbFilePath"`
+	ThumbPosition   int64  `gorm:"column:ThumbPosition" json:"ThumbPosition"`
+	ThumbTotalSize  int64  `gorm:"column:ThumbTotalSize" json:"ThumbTotalSize"`
+	ThumbPartNo     int32  `gorm:"column:ThumbPartNo" json:"ThumbPartNo"`
+	ThumbTotalParts int32  `gorm:"column:ThumbTotalParts" json:"ThumbTotalParts"`
 }
 
 func (FileStatus) TableName() string {

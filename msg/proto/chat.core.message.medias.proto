@@ -77,6 +77,7 @@ message Document {
     required int32 Version = 6;
     required int32 ClusterID = 7;
     repeated DocumentAttribute Attributes = 8;
+    optional FileLocation Thumbnail = 9;
 }
 
 // InputMediaUploadedPhoto

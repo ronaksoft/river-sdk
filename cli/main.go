@@ -83,7 +83,7 @@ func main() {
 		}
 	} else {
 		dbPath = "./_db"
-		dbID = "23740072"
+		dbID = "23740071"
 	}
 
 	qPath := "./_queue"
@@ -125,8 +125,9 @@ func main() {
 		// fnAccountUploadPhoto()
 		// fnGroupUploadPhoto()
 		// fnLoginWithAuthKey()
-		//block forever
+		fnRunDownloadFileThumbnail()
 
+		//block forever
 		select {}
 	}
 
@@ -220,13 +221,14 @@ func fnRunUploadFile() {
 	req.ClearDraft = true
 	req.FileMIME = ""
 	req.FileName = "test.zip"
-	req.FilePath = "/home/q/d.zip"
+	req.FilePath = "/tmpfs/photo.png"
+	req.ThumbFilePath = "/tmpfs/thumb.jpg"
 	req.MediaType = msg.InputMediaTypeUploadedDocument
 	// 0009
 	req.Peer = &msg.InputPeer{
-		AccessHash: 4500232805839723,
-		ID:         189353777894340,
-		Type:       msg.PeerUser,
+		AccessHash: 0,
+		ID:         -2101046409375509,
+		Type:       msg.PeerGroup,
 	}
 
 	// // 0056
@@ -243,12 +245,11 @@ func fnRunUploadFile() {
 	// 	Type:       msg.PeerGroup,
 	// }
 	req.ReplyTo = 3400
-	req.ThumbFilePath = ""
-	req.ThumbMIME = ""
+	req.ThumbMIME = "image/jpg"
 
 	docAttrib := new(msg.DocumentAttribute)
 	attrib := new(msg.DocumentAttributeFile)
-	attrib.Filename = "test.zip"
+	attrib.Filename = "test.png"
 	docAttrib.Type = msg.AttributeTypeFile
 	docAttrib.Data, _ = attrib.Marshal()
 
@@ -352,4 +353,8 @@ func fnMessagesReadContents() {
 
 func fnGroupUploadPhoto() {
 	_SDK.GroupUploadPhoto(-2101046409375509, "/home/q/Desktop/decrypt_dump.raw.png")
+}
+
+func fnRunDownloadFileThumbnail() {
+	_SDK.FileDownloadThumbnail(662)
 }
