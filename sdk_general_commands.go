@@ -353,8 +353,10 @@ func getFilePath(msgID int64) string {
 			if err == nil {
 				// check file existance
 				filePath := repo.Ctx().Files.GetFilePath(m.ID, x.Doc.ID)
+				log.LOG_Warn("ZZZZZZZZZ getFilePath()", zap.Int64("MsgID", msgID), zap.Int64("DocID", x.Doc.ID), zap.String("FilePath", filePath))
 				if _, err = os.Stat(filePath); os.IsNotExist(err) {
 					filePath = ""
+					log.LOG_Warn("ZZZZZZZZZ getFilePath() Check File Exist", zap.Error(err))
 				}
 				return filePath
 			}
@@ -590,10 +592,12 @@ func geFileStatus(msgID int64) (status domain.RequestStatus, progress float64, f
 	if err == nil && fs != nil {
 		// file is inprogress state
 		// double check
+
 		if fs.IsCompleted {
 			go repo.Ctx().Files.DeleteFileStatus(fs.MessageID)
 		}
 		status = domain.RequestStatus(fs.RequestStatus)
+		log.LOG_Warn("ZZZZZZZZZ geFileStatus()", zap.Int64("MsgID", msgID), zap.String("Status", domain.RequestStatusNames[status]), zap.String("FilePath", fs.FilePath))
 		filePath = fs.FilePath
 		if fs.TotalParts > 0 {
 			partList := domain.MInt64B{}

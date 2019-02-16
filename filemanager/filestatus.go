@@ -72,7 +72,7 @@ func NewFileStatus(messageID int64,
 		ClusterID:  clusterID,
 		AccessHash: accessHash,
 		Version:    version,
-		
+
 		PartList:            NewQueueParts(),
 		TotalParts:          0,
 		onFileStatusChanged: progress,
@@ -191,6 +191,7 @@ func (fs *FileStatus) ReadCommit(count int64, isThumbnail bool, partIdx int64) (
 	if isThumbnail {
 		fs.ThumbPosition += count
 		fs.ThumbPartNo++
+		repo.Ctx().Files.SaveFileStatus(fs.GetDTO())
 		return
 	}
 
