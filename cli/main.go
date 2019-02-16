@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
@@ -115,7 +114,7 @@ func main() {
 		_Shell.Run()
 	} else {
 		// fnDecryptDump()
-		fnRunUploadFile()
+		// fnRunUploadFile()
 		// fnSendMessageMedia()
 		// fnRunDownloadFile()
 		// fnSendInputMediaDocument()
@@ -226,9 +225,9 @@ func fnRunUploadFile() {
 	req.MediaType = msg.InputMediaTypeUploadedDocument
 	// 0009
 	req.Peer = &msg.InputPeer{
-		AccessHash: 0,
-		ID:         -2101046409375509,
-		Type:       msg.PeerGroup,
+		AccessHash: 4501753917828959,
+		ID:         986281403829488,
+		Type:       msg.PeerUser,
 	}
 
 	// // 0056
@@ -274,12 +273,12 @@ func fnRunDownloadFile() {
 	// rand.Read(buff)
 	// ioutil.WriteFile("2.5.raw", buff, os.ModePerm)
 
-	threeAndHalf := (domain.FilePayloadSize * 3) + (domain.FilePayloadSize / 2)
-	buff := make([]byte, threeAndHalf)
-	rand.Read(buff)
-	ioutil.WriteFile("3.5.raw", buff, os.ModePerm)
+	// threeAndHalf := (domain.FilePayloadSize * 3) + (domain.FilePayloadSize / 2)
+	// buff := make([]byte, threeAndHalf)
+	// rand.Read(buff)
+	// ioutil.WriteFile("3.5.raw", buff, os.ModePerm)
 
-	_SDK.FileDownload(133)
+	_SDK.FileDownload(6)
 }
 
 func fnSendInputMediaDocument() {

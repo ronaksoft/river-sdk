@@ -18,6 +18,7 @@ import (
 // FileStatus monitors file state
 type FileStatus struct {
 	mx         sync.Mutex
+	mxPartList sync.Mutex
 	MessageID  int64  `json:"MessageID"`
 	FileID     int64  `json:"FileID"`
 	TargetID   int64  `json:"TargetID"`
@@ -27,7 +28,7 @@ type FileStatus struct {
 	FilePath   string `json:"FilePath"`
 
 	TotalSize       int64                       `json:"TotalSize"`
-	PartList        *QueueParts                 `json:"PartNo"`
+	PartList        map[int64]bool              `json:"PartNo"`
 	TotalParts      int64                       `json:"TotalParts"`
 	Type            domain.FileStateType        `json:"StatusType"`
 	IsCompleted     bool                        `json:"IsCompleted"`
@@ -49,6 +50,7 @@ type FileStatus struct {
 	stop             bool
 	started          bool
 	chUploadProgress chan int64
+	chPartList       chan int64
 }
 
 // NewFileStatus create new instance
@@ -73,7 +75,6 @@ func NewFileStatus(messageID int64,
 		AccessHash: accessHash,
 		Version:    version,
 
-		PartList:            NewQueueParts(),
 		TotalParts:          0,
 		onFileStatusChanged: progress,
 		Type:                stateType,
@@ -83,11 +84,12 @@ func NewFileStatus(messageID int64,
 	// create partlist
 	fs.TotalParts = CalculatePartsCount(totalSize)
 
-	items := make([]int64, 0, fs.TotalParts)
+	fs.PartList = make(map[int64]bool, fs.TotalParts)
+	fs.chPartList = make(chan int64, fs.TotalParts)
 	for i := int64(0); i < fs.TotalParts; i++ {
-		items = append(items, i)
+		fs.PartList[i] = true
+		fs.chPartList <- i
 	}
-	fs.PartList.PushMany(items)
 
 	return fs
 }
@@ -169,9 +171,9 @@ func (fs *FileStatus) Write(data []byte, partIdx int64) (isCompleted bool, err e
 	if err != nil {
 		return
 	}
-	//fs.Position += int64(count)
 
-	count := fs.PartList.Length()
+	fs.deleteFromPartList(partIdx)
+	count := fs.partListCount()
 	fs.IsCompleted = count == 0
 
 	if fs.IsCompleted {
@@ -181,6 +183,7 @@ func (fs *FileStatus) Write(data []byte, partIdx int64) (isCompleted bool, err e
 	if isCompleted {
 		repo.Ctx().Files.SaveDownloadingFile(fs.GetDTO())
 	}
+
 	fs.fileStatusChanged()
 
 	return
@@ -194,8 +197,8 @@ func (fs *FileStatus) ReadCommit(count int64, isThumbnail bool, partIdx int64) (
 		repo.Ctx().Files.SaveFileStatus(fs.GetDTO())
 		return
 	}
-
-	partCount := fs.PartList.Length()
+	fs.deleteFromPartList(partIdx)
+	partCount := fs.partListCount()
 	fs.IsCompleted = partCount == 0
 
 	if fs.IsCompleted {
@@ -212,7 +215,7 @@ func (fs *FileStatus) fileStatusChanged() {
 		log.LOG_Debug("fileStatusChanged() failed to save in DB", zap.Error(err))
 	}
 
-	lenParts := int64(fs.PartList.Length())
+	lenParts := int64(fs.partListCount())
 
 	processedParts := fs.TotalParts - lenParts
 	if fs.onFileStatusChanged != nil {
@@ -261,7 +264,7 @@ func (fs *FileStatus) GetDTO() *dto.FileStatus {
 	//m.Position = fs.Position
 	m.TotalSize = fs.TotalSize
 
-	partList, _ := json.Marshal(fs.PartList.GetRawItems())
+	partList, _ := json.Marshal(fs.PartList)
 	m.PartList = partList
 
 	m.TotalParts = fs.TotalParts
@@ -294,10 +297,8 @@ func (fs *FileStatus) LoadDTO(d dto.FileStatus, progress domain.OnFileStatusChan
 	// fs.Position = d.Position
 	fs.TotalSize = d.TotalSize
 
-	items := make([]int64, 0)
-	json.Unmarshal(d.PartList, &items)
-	fs.PartList = NewQueueParts()
-	fs.PartList.PushMany(items)
+	fs.PartList = make(map[int64]bool)
+	json.Unmarshal(d.PartList, &fs.PartList)
 
 	fs.TotalParts = d.TotalParts
 	fs.Type = domain.FileStateType(d.Type)
@@ -364,7 +365,7 @@ func (fs *FileStatus) StartDownload(fm *FileManager) {
 
 	fs.stop = false
 
-	partCount := fs.PartList.Length()
+	partCount := fs.partListCount()
 	workersCount := domain.FilePipelineCount
 	if partCount < domain.FilePipelineCount {
 		workersCount = partCount
@@ -387,7 +388,7 @@ func (fs *FileStatus) StartUpload(fm *FileManager) {
 
 	fs.stop = false
 
-	partCount := fs.PartList.Length()
+	partCount := fs.partListCount()
 	workersCount := domain.FilePipelineCount
 	if partCount < domain.FilePipelineCount {
 		workersCount = partCount
@@ -423,15 +424,20 @@ func (fs *FileStatus) Stop() {
 
 func (fs *FileStatus) downloader_job(fm *FileManager) {
 	for {
-		partIdx, err := fs.PartList.Pop()
-		if err == nil {
+		if fs.stop {
+			return
+		}
+
+		select {
+		case partIdx := <-fs.chPartList:
 			envelop, err := fs.ReadAsFileGet(partIdx)
 			if err != nil {
 				log.LOG_Error("downloader_job() -> ReadAsFileGet()", zap.Int64("msgID", fs.MessageID), zap.Int64("PartNo", partIdx))
-				continue
+				// fs.chPartList <- partIdx
+				break
 			}
 			fm.SendDownloadRequest(envelop, fs, partIdx)
-		} else {
+		default:
 			return
 		}
 	}
@@ -441,25 +447,23 @@ func (fs *FileStatus) uploader_job(fm *FileManager) {
 		if fs.stop {
 			return
 		}
-		partIdx, err := fs.PartList.Pop()
-		if err == nil {
+		select {
+		case partIdx := <-fs.chPartList:
 			// keep last part until all other parts upload successfully
-			partCount := fs.PartList.Length()
-			if (partIdx+1) == fs.TotalParts && partCount > 0 {
-				fs.PartList.Push(partIdx)
-				continue
+			partCount := fs.partListCount()
+			if (partIdx+1) == fs.TotalParts && partCount > 1 {
+				fs.chPartList <- partIdx
+				break
 			}
 			envelop, readCount, err := fs.ReadAsFileSavePart(false, partIdx)
 			if err != nil {
 				log.LOG_Error("FileManager::startUploadQueue()", zap.Error(err), zap.String("filePath", fs.FilePath))
-				continue
+				break
 			}
 			fm.SendUploadRequest(envelop, int64(readCount), fs, partIdx)
-
-		} else {
+		default:
 			return
 		}
-
 	}
 
 }
@@ -473,4 +477,16 @@ func (fs *FileStatus) upload_thumbnail(fm *FileManager) {
 		}
 		fm.SendUploadRequest(envelop, int64(readCount), fs, 0)
 	}
+}
+
+func (fs *FileStatus) partListCount() int {
+	fs.mxPartList.Lock()
+	count := len(fs.PartList)
+	fs.mxPartList.Unlock()
+	return count
+}
+func (fs *FileStatus) deleteFromPartList(partIdx int64) {
+	fs.mxPartList.Lock()
+	delete(fs.PartList, partIdx)
+	fs.mxPartList.Unlock()
 }
