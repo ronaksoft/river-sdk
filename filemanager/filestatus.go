@@ -1,6 +1,7 @@
 package filemanager
 
 import (
+	"encoding/json"
 	"os"
 	"sync"
 
@@ -16,18 +17,18 @@ import (
 
 // FileStatus monitors file state
 type FileStatus struct {
-	mx              sync.Mutex
-	MessageID       int64                       `json:"MessageID"`
-	FileID          int64                       `json:"FileID"`
-	TargetID        int64                       `json:"TargetID"`
-	ClusterID       int32                       `json:"ClusterID"`
-	AccessHash      uint64                      `json:"AccessHash"`
-	Version         int32                       `json:"Version"`
-	FilePath        string                      `json:"FilePath"`
-	Position        int64                       `json:"Position"`
+	mx         sync.Mutex
+	MessageID  int64  `json:"MessageID"`
+	FileID     int64  `json:"FileID"`
+	TargetID   int64  `json:"TargetID"`
+	ClusterID  int32  `json:"ClusterID"`
+	AccessHash uint64 `json:"AccessHash"`
+	Version    int32  `json:"Version"`
+	FilePath   string `json:"FilePath"`
+
 	TotalSize       int64                       `json:"TotalSize"`
-	PartNo          int32                       `json:"PartNo"`
-	TotalParts      int32                       `json:"TotalParts"`
+	PartList        *QueueParts                 `json:"PartNo"`
+	TotalParts      int64                       `json:"TotalParts"`
 	Type            domain.FileStateType        `json:"StatusType"`
 	IsCompleted     bool                        `json:"IsCompleted"`
 	RequestStatus   domain.RequestStatus        `json:"RequestStatus"`
@@ -44,6 +45,10 @@ type FileStatus struct {
 	onFileStatusChanged domain.OnFileStatusChanged
 	// on receive unknown reposne or send error increase this counter to reach its threshold
 	retryCounter int
+
+	stop             bool
+	started          bool
+	chUploadProgress chan int64
 }
 
 // NewFileStatus create new instance
@@ -59,49 +64,49 @@ func NewFileStatus(messageID int64,
 	progress domain.OnFileStatusChanged) *FileStatus {
 
 	fs := &FileStatus{
-		MessageID:           messageID,
-		FileID:              fileID,
-		TargetID:            targetID,
-		FilePath:            filePath,
-		TotalSize:           totalSize,
-		ClusterID:           clusterID,
-		AccessHash:          accessHash,
-		Version:             version,
-		Position:            0,
-		PartNo:              0,
+		MessageID:  messageID,
+		FileID:     fileID,
+		TargetID:   targetID,
+		FilePath:   filePath,
+		TotalSize:  totalSize,
+		ClusterID:  clusterID,
+		AccessHash: accessHash,
+		Version:    version,
+		
+		PartList:            NewQueueParts(),
 		TotalParts:          0,
 		onFileStatusChanged: progress,
 		Type:                stateType,
 		RequestStatus:       domain.RequestStateInProgress,
 	}
 
-	// count := totalSize / domain.FilePayloadSize
-	// if (count * domain.FilePayloadSize) < totalSize {
-	// 	fs.TotalParts = int32(count + 1)
-	// } else {
-	// 	fs.TotalParts = int32(count)
-	// }
+	// create partlist
 	fs.TotalParts = CalculatePartsCount(totalSize)
+
+	items := make([]int64, 0, fs.TotalParts)
+	for i := int64(0); i < fs.TotalParts; i++ {
+		items = append(items, i)
+	}
+	fs.PartList.PushMany(items)
 
 	return fs
 }
 
-func CalculatePartsCount(fileSize int64) int32 {
+func CalculatePartsCount(fileSize int64) int64 {
 	count := fileSize / domain.FilePayloadSize
 	if (count * domain.FilePayloadSize) < fileSize {
-		return int32(count + 1)
-	} else {
-		return int32(count)
+		return count + 1
 	}
+	return count
 
 }
 
 // Read reads next required chunk of data
-func (fs *FileStatus) Read(isThumbnail bool) ([]byte, int, error) {
+func (fs *FileStatus) Read(isThumbnail bool, partIdx int64) ([]byte, int, error) {
 	fs.mx.Lock()
 
 	filePath := fs.FilePath
-	position := fs.Position
+	position := int64(partIdx * domain.FilePayloadSize)
 	totalSize := fs.TotalSize
 
 	if isThumbnail {
@@ -130,7 +135,7 @@ func (fs *FileStatus) Read(isThumbnail bool) ([]byte, int, error) {
 }
 
 // Write writes givin data to current position of file
-func (fs *FileStatus) Write(data []byte) (isCompleted bool, err error) {
+func (fs *FileStatus) Write(data []byte, partIdx int64) (isCompleted bool, err error) {
 	fs.mx.Lock()
 	defer fs.mx.Unlock()
 	var file *os.File
@@ -158,13 +163,17 @@ func (fs *FileStatus) Write(data []byte) (isCompleted bool, err error) {
 	}
 
 	// write to file
-	count, err := file.WriteAt(data, fs.Position)
+	position := partIdx * domain.FilePayloadSize
+	_, err = file.WriteAt(data, int64(position))
 	file.Close()
 	if err != nil {
 		return
 	}
-	fs.Position += int64(count)
-	fs.IsCompleted = fs.Position >= fs.TotalSize
+	//fs.Position += int64(count)
+
+	count := fs.PartList.Length()
+	fs.IsCompleted = count == 0
+
 	if fs.IsCompleted {
 		fs.RequestStatus = domain.RequestStateCompleted
 	}
@@ -178,17 +187,16 @@ func (fs *FileStatus) Write(data []byte) (isCompleted bool, err error) {
 }
 
 //ReadCommit apply that last read process result was success and increase counter and progress
-func (fs *FileStatus) ReadCommit(count int64, isThumbnail bool) (isCompleted bool) {
-
+func (fs *FileStatus) ReadCommit(count int64, isThumbnail bool, partIdx int64) (isCompleted bool) {
 	if isThumbnail {
 		fs.ThumbPosition += count
 		fs.ThumbPartNo++
 		return
 	}
 
-	fs.Position += count
-	fs.PartNo++
-	fs.IsCompleted = fs.PartNo == fs.TotalParts
+	partCount := fs.PartList.Length()
+	fs.IsCompleted = partCount == 0
+
 	if fs.IsCompleted {
 		fs.RequestStatus = domain.RequestStateCompleted
 	}
@@ -202,16 +210,20 @@ func (fs *FileStatus) fileStatusChanged() {
 	if err != nil {
 		log.LOG_Debug("fileStatusChanged() failed to save in DB", zap.Error(err))
 	}
+
+	lenParts := int64(fs.PartList.Length())
+
+	processedParts := fs.TotalParts - lenParts
 	if fs.onFileStatusChanged != nil {
-		fs.onFileStatusChanged(fs.MessageID, fs.Position, fs.TotalSize, fs.Type)
+		fs.onFileStatusChanged(fs.MessageID, processedParts, fs.TotalParts, fs.Type)
 	}
 
 }
 
-func (fs *FileStatus) ReadAsFileSavePart(isThumbnail bool) (envelop *msg.MessageEnvelope, readCount int, err error) {
+func (fs *FileStatus) ReadAsFileSavePart(isThumbnail bool, partIdx int64) (envelop *msg.MessageEnvelope, readCount int, err error) {
 
 	var buff []byte
-	buff, readCount, err = fs.Read(isThumbnail)
+	buff, readCount, err = fs.Read(isThumbnail, partIdx)
 	if err != nil {
 		return
 	}
@@ -224,8 +236,8 @@ func (fs *FileStatus) ReadAsFileSavePart(isThumbnail bool) (envelop *msg.Message
 		req.TotalParts = fs.ThumbTotalParts
 	} else {
 		req.FileID = fs.FileID
-		req.PartID = fs.PartNo + 1
-		req.TotalParts = fs.TotalParts
+		req.PartID = int32(partIdx + 1)
+		req.TotalParts = int32(fs.TotalParts)
 	}
 
 	envelop = new(msg.MessageEnvelope)
@@ -245,9 +257,12 @@ func (fs *FileStatus) GetDTO() *dto.FileStatus {
 	m.AccessHash = int64(fs.AccessHash)
 	m.Version = fs.Version
 	m.FilePath = fs.FilePath
-	m.Position = fs.Position
+	//m.Position = fs.Position
 	m.TotalSize = fs.TotalSize
-	m.PartNo = fs.PartNo
+
+	partList, _ := json.Marshal(fs.PartList.GetRawItems())
+	m.PartList = partList
+
 	m.TotalParts = fs.TotalParts
 	m.Type = int32(fs.Type)
 	m.IsCompleted = fs.IsCompleted
@@ -275,9 +290,14 @@ func (fs *FileStatus) LoadDTO(d dto.FileStatus, progress domain.OnFileStatusChan
 	fs.AccessHash = uint64(d.AccessHash)
 	fs.Version = d.Version
 	fs.FilePath = d.FilePath
-	fs.Position = d.Position
+	// fs.Position = d.Position
 	fs.TotalSize = d.TotalSize
-	fs.PartNo = d.PartNo
+
+	items := make([]int64, 0)
+	json.Unmarshal(d.PartList, &items)
+	fs.PartList = NewQueueParts()
+	fs.PartList.PushMany(items)
+
 	fs.TotalParts = d.TotalParts
 	fs.Type = domain.FileStateType(d.Type)
 	fs.IsCompleted = d.IsCompleted
@@ -297,7 +317,7 @@ func (fs *FileStatus) LoadDTO(d dto.FileStatus, progress domain.OnFileStatusChan
 
 }
 
-func (fs *FileStatus) ReadAsFileGet() (envelop *msg.MessageEnvelope, err error) {
+func (fs *FileStatus) ReadAsFileGet(partNo int64) (envelop *msg.MessageEnvelope, err error) {
 
 	req := new(msg.FileGet)
 	req.Location = new(msg.InputFileLocation)
@@ -305,10 +325,12 @@ func (fs *FileStatus) ReadAsFileGet() (envelop *msg.MessageEnvelope, err error) 
 	req.Location.AccessHash = fs.AccessHash
 	req.Location.FileID = fs.FileID
 	req.Location.Version = fs.Version
-	req.Offset = int32(fs.Position)
+
+	req.Offset = int32(partNo * domain.FilePayloadSize)
+	position := int64(req.Offset)
 	var requiredBytes int32 = domain.FilePayloadSize
-	if (fs.Position + domain.FilePayloadSize) > fs.TotalSize {
-		requiredBytes = int32(fs.TotalSize - fs.Position)
+	if (position + domain.FilePayloadSize) > fs.TotalSize {
+		requiredBytes = int32(fs.TotalSize - position)
 	}
 	req.Limit = requiredBytes
 
@@ -328,4 +350,126 @@ func (fs *FileStatus) ReadAsFileGet() (envelop *msg.MessageEnvelope, err error) 
 	)
 
 	return
+}
+
+func (fs *FileStatus) StartDownload(fm *FileManager) {
+	fs.mx.Lock()
+	if fs.started {
+		fs.mx.Unlock()
+		return
+	}
+	fs.started = true
+	fs.mx.Unlock()
+
+	fs.stop = false
+
+	partCount := fs.PartList.Length()
+	workersCount := domain.FilePipelineCount
+	if partCount < domain.FilePipelineCount {
+		workersCount = partCount
+	}
+
+	for i := 0; i < workersCount; i++ {
+		go fs.downloader_job(fm)
+	}
+}
+
+func (fs *FileStatus) StartUpload(fm *FileManager) {
+
+	fs.mx.Lock()
+	if fs.started {
+		fs.mx.Unlock()
+		return
+	}
+	fs.started = true
+	fs.mx.Unlock()
+
+	fs.stop = false
+
+	partCount := fs.PartList.Length()
+	workersCount := domain.FilePipelineCount
+	if partCount < domain.FilePipelineCount {
+		workersCount = partCount
+	}
+	// upload thumbnail first
+	fs.upload_thumbnail(fm)
+
+	fs.chUploadProgress = make(chan int64, workersCount)
+	go fs.monitorUploadProgress(fm)
+	// start uploading file
+	for i := 0; i < workersCount; i++ {
+		go fs.uploader_job(fm)
+	}
+}
+
+func (fs *FileStatus) monitorUploadProgress(fm *FileManager) {
+	for {
+		select {
+		case partIdx := <-fs.chUploadProgress:
+			isCompleted := fs.ReadCommit(0, false, partIdx)
+			if isCompleted {
+				// call completed delegate
+				fm.uploadCompleted(fs.MessageID, fs.FileID, fs.TargetID, fs.ClusterID, fs.TotalParts, fs.Type, fs.FilePath, fs.UploadRequest, fs.ThumbFileID, fs.ThumbTotalParts)
+				return
+			}
+		}
+	}
+}
+func (fs *FileStatus) Stop() {
+	fs.stop = true
+	fs.started = false
+}
+
+func (fs *FileStatus) downloader_job(fm *FileManager) {
+	for {
+		partIdx, err := fs.PartList.Pop()
+		if err == nil {
+			envelop, err := fs.ReadAsFileGet(partIdx)
+			if err != nil {
+				log.LOG_Error("downloader_job() -> ReadAsFileGet()", zap.Int64("msgID", fs.MessageID), zap.Int64("PartNo", partIdx))
+				continue
+			}
+			fm.SendDownloadRequest(envelop, fs, partIdx)
+		} else {
+			return
+		}
+	}
+}
+func (fs *FileStatus) uploader_job(fm *FileManager) {
+	for {
+		if fs.stop {
+			return
+		}
+		partIdx, err := fs.PartList.Pop()
+		if err == nil {
+			// keep last part until all other parts upload successfully
+			partCount := fs.PartList.Length()
+			if (partIdx+1) == fs.TotalParts && partCount > 0 {
+				fs.PartList.Push(partIdx)
+				continue
+			}
+			envelop, readCount, err := fs.ReadAsFileSavePart(false, partIdx)
+			if err != nil {
+				log.LOG_Error("FileManager::startUploadQueue()", zap.Error(err), zap.String("filePath", fs.FilePath))
+				continue
+			}
+			fm.SendUploadRequest(envelop, int64(readCount), fs, partIdx)
+
+		} else {
+			return
+		}
+
+	}
+
+}
+
+func (fs *FileStatus) upload_thumbnail(fm *FileManager) {
+	for fs.ThumbPosition < fs.ThumbTotalSize {
+		envelop, readCount, err := fs.ReadAsFileSavePart(true, 0)
+		if err != nil {
+			log.LOG_Error("FileManager::startUploadQueue()", zap.Error(err), zap.String("filePath", fs.FilePath))
+			continue
+		}
+		fm.SendUploadRequest(envelop, int64(readCount), fs, 0)
+	}
 }

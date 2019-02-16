@@ -595,8 +595,11 @@ func geFileStatus(msgID int64) (status domain.RequestStatus, progress float64, f
 		}
 		status = domain.RequestStatus(fs.RequestStatus)
 		filePath = fs.FilePath
-		if fs.TotalSize > 0 {
-			progress = (float64(fs.Position) / float64(fs.TotalSize) * float64(100))
+		if fs.TotalParts > 0 {
+			partList := domain.MInt64B{}
+			json.Unmarshal(fs.PartList, &partList)
+			processedParts := fs.TotalParts - int64(len(partList))
+			progress = (float64(processedParts) / float64(fs.TotalParts) * float64(100))
 		}
 	} else {
 		filePath = getFilePath(msgID)

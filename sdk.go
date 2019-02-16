@@ -938,8 +938,9 @@ func (r *River) PrintDebuncerStatus() {
 	r.networkCtrl.PrintDebuncerStatus()
 }
 
-func (r *River) onFileProgressChanged(messageID, position, totalSize int64, stateType domain.FileStateType) {
-	percent := float64(position) / float64(totalSize) * float64(100)
+func (r *River) onFileProgressChanged(messageID, processedParts, totalParts int64, stateType domain.FileStateType) {
+	percent := float64(processedParts) / float64(totalParts) * float64(100)
+
 	log.LOG_Warn("onFileProgressChanged()",
 		zap.Int64("MsgID", messageID),
 		zap.Float64("Percent", percent),
@@ -948,18 +949,18 @@ func (r *River) onFileProgressChanged(messageID, position, totalSize int64, stat
 	// Notify UI that upload is completed
 	if stateType == domain.FileStateDownload {
 		if r.mainDelegate.OnDownloadProgressChanged != nil {
-			r.mainDelegate.OnDownloadProgressChanged(messageID, position, totalSize, percent)
+			r.mainDelegate.OnDownloadProgressChanged(messageID, processedParts, totalParts, percent)
 		}
 	} else if stateType == domain.FileStateUpload {
 		if r.mainDelegate.OnUploadProgressChanged != nil {
-			r.mainDelegate.OnUploadProgressChanged(messageID, position, totalSize, percent)
+			r.mainDelegate.OnUploadProgressChanged(messageID, processedParts, totalParts, percent)
 		}
 	}
 
 }
 
 func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
-	clusterID, totalParts int32,
+	clusterID int32, totalParts int64,
 	stateType domain.FileStateType,
 	filePath string,
 	req *msg.ClientSendMessageMedia,
@@ -1003,7 +1004,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 				FileID:      fileID,
 				FileName:    req.FileName,
 				MD5Checksum: "",
-				TotalParts:  totalParts,
+				TotalParts:  int32(totalParts),
 			}
 
 			if thumbFileID > 0 && thumbTotalParts > 0 {
@@ -1032,7 +1033,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 		x.File = &msg.InputFile{
 			FileID:      fileID,
 			FileName:    strconv.FormatInt(fileID, 10) + ".jpg",
-			TotalParts:  totalParts,
+			TotalParts:  int32(totalParts),
 			MD5Checksum: "",
 		}
 		reqBuff, err := x.Marshal()
@@ -1072,7 +1073,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 		x.File = &msg.InputFile{
 			FileID:      fileID,
 			FileName:    strconv.FormatInt(fileID, 10) + ".jpg",
-			TotalParts:  totalParts,
+			TotalParts:  int32(totalParts),
 			MD5Checksum: "",
 		}
 		reqBuff, err := x.Marshal()

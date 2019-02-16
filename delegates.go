@@ -9,8 +9,8 @@ type MainDelegate interface {
 	OnGeneralError(b []byte)
 	OnSessionClosed(res int)
 
-	OnDownloadProgressChanged(messageID, position, totalSize int64, percent float64)
-	OnUploadProgressChanged(messageID, position, totalSize int64, percent float64)
+	OnDownloadProgressChanged(messageID, processedParts, totalParts int64, percent float64)
+	OnUploadProgressChanged(messageID, processedParts, totalParts int64, percent float64)
 	OnDownloadCompleted(messageID int64, filePath string)
 	OnUploadCompleted(messageID int64, filePath string)
 	OnDownloadError(messageID, requestID int64, filePath string, err []byte)

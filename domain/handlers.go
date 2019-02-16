@@ -47,11 +47,11 @@ type OnMessageHandler func(messages []*msg.MessageEnvelope)
 type OnUpdateHandler func(messages []*msg.UpdateContainer)
 
 // OnFileStatusChanged delegate to rise event
-type OnFileStatusChanged func(messageID, position, totalSize int64, stateType FileStateType)
+type OnFileStatusChanged func(messageID, processedParts, totalParts int64, stateType FileStateType)
 
 // OnFileUploadCompleted delegate to rise event
 type OnFileUploadCompleted func(messageID, fileID, targetID int64,
-	clusterID, totalParts int32,
+	clusterID int32, totalParts int64,
 	stateType FileStateType,
 	filePath string,
 	req *msg.ClientSendMessageMedia,

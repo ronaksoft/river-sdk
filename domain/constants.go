@@ -11,6 +11,7 @@ const (
 	FileMaxAllowedSize = 750 * 1024 * 1024 // 750MB
 	FileMaxPhotoSize   = 1 * 1024 * 1024   // 1MB
 	FileRetryThreshold = 10
+	FilePipelineCount  = 8
 )
 
 // Global Parameters

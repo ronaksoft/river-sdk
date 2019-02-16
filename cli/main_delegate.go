@@ -81,10 +81,10 @@ func (d *MainDelegate) OnSessionClosed(res int) {
 	_Shell.Println(_RED("OnSessionClosed : Res = %v", res))
 }
 
-func (d *MainDelegate) OnDownloadProgressChanged(messageID, position, totalSize int64, percent float64) {
+func (d *MainDelegate) OnDownloadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
 	_Shell.Println(_RED("OnDownloadProgressChanged : Progress = %v", percent))
 }
-func (d *MainDelegate) OnUploadProgressChanged(messageID, position, totalSize int64, percent float64) {
+func (d *MainDelegate) OnUploadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
 	_Shell.Println(_RED("OnUploadProgressChanged : Progress = %v", percent))
 }
 func (d *MainDelegate) OnDownloadCompleted(messageID int64, filePath string) {

@@ -115,7 +115,7 @@ func main() {
 		_Shell.Run()
 	} else {
 		// fnDecryptDump()
-		// fnRunUploadFile()
+		fnRunUploadFile()
 		// fnSendMessageMedia()
 		// fnRunDownloadFile()
 		// fnSendInputMediaDocument()
@@ -125,7 +125,7 @@ func main() {
 		// fnAccountUploadPhoto()
 		// fnGroupUploadPhoto()
 		// fnLoginWithAuthKey()
-		fnRunDownloadFileThumbnail()
+		// fnRunDownloadFileThumbnail()
 
 		//block forever
 		select {}
@@ -189,7 +189,7 @@ func fnSendMessageMedia() {
 		FileID:      fs.FileID,
 		FileName:    req.FileName,
 		MD5Checksum: "",
-		TotalParts:  fs.TotalParts,
+		TotalParts:  int32(fs.TotalParts),
 	}
 	x.MediaData, _ = doc.Marshal()
 
@@ -221,7 +221,7 @@ func fnRunUploadFile() {
 	req.ClearDraft = true
 	req.FileMIME = ""
 	req.FileName = "test.zip"
-	req.FilePath = "/tmpfs/photo.png"
+	req.FilePath = "_f/video.mp4"
 	req.ThumbFilePath = "/tmpfs/thumb.jpg"
 	req.MediaType = msg.InputMediaTypeUploadedDocument
 	// 0009

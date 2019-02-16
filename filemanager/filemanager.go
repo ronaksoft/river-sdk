@@ -55,8 +55,11 @@ type FileManager struct {
 	UploadQueueStarted   bool
 	DownloadQueueStarted bool
 
-	chStopUploader      chan bool
-	chStopDownloader    chan bool
+	chStopUploader    chan bool
+	chStopDownloader  chan bool
+	chNewDownloadItem chan bool
+	chNewUploadItem   chan bool
+
 	onUploadCompleted   domain.OnFileUploadCompleted
 	onDownloadCompleted domain.OnFileDownloadCompleted
 	progressCallback    domain.OnFileStatusChanged
@@ -89,6 +92,8 @@ func InitFileManager(serverAddress string,
 				DownloadQueue:       make(map[int64]*FileStatus, 0),
 				chStopUploader:      make(chan bool),
 				chStopDownloader:    make(chan bool),
+				chNewDownloadItem:   make(chan bool),
+				chNewUploadItem:     make(chan bool),
 				onUploadCompleted:   onUploadCompleted,
 				progressCallback:    progressCallback,
 				onDownloadCompleted: onDownloadCompleted,
@@ -192,7 +197,7 @@ func (fm *FileManager) Upload(fileID int64, req *msg.ClientPendingMessage) error
 			state.ThumbPosition = 0
 			state.ThumbTotalSize = thumbInfo.Size()
 			state.ThumbPartNo = 0
-			state.ThumbTotalParts = CalculatePartsCount(thumbInfo.Size())
+			state.ThumbTotalParts = int32(CalculatePartsCount(thumbInfo.Size()))
 		}
 	}
 
@@ -278,19 +283,30 @@ func (fm *FileManager) AddToQueue(status *FileStatus) {
 		fm.mxUp.Lock()
 		fm.UploadQueue[status.MessageID] = status
 		fm.mxUp.Unlock()
+		fm.chNewUploadItem <- true
 	} else if status.Type == domain.FileStateDownload {
 		fm.mxDown.Lock()
 		fm.DownloadQueue[status.MessageID] = status
 		fm.mxDown.Unlock()
+		fm.chNewDownloadItem <- true
 	}
 }
 
 func (fm *FileManager) DeleteFromQueue(msgID int64) {
 	fm.mxUp.Lock()
-	delete(fm.UploadQueue, msgID)
+	up, uok := fm.UploadQueue[msgID]
+	if uok {
+		delete(fm.UploadQueue, msgID)
+		up.Stop()
+	}
 	fm.mxUp.Unlock()
 
 	fm.mxDown.Lock()
+	down, dok := fm.DownloadQueue[msgID]
+	if dok {
+		delete(fm.DownloadQueue, msgID)
+		down.Stop()
+	}
 	delete(fm.DownloadQueue, msgID)
 	fm.mxDown.Unlock()
 }
@@ -325,53 +341,22 @@ func (fm *FileManager) startDownloadQueue() {
 		if fm.NetworkStatus == domain.DISCONNECTED || fm.NetworkStatus == domain.CONNECTING {
 			time.Sleep(100 * time.Millisecond)
 		}
-
 		fm.DownloadQueueStarted = true
-		wg := &sync.WaitGroup{}
 		select {
 		case <-fm.chStopDownloader:
-			// wait for running request gracefuly end
-			wg.Wait()
+			fm.mxDown.Lock()
+			for _, v := range fm.DownloadQueue {
+				v.Stop()
+			}
+			fm.mxDown.Unlock()
 			fm.DownloadQueueStarted = false
 			return
-		default:
-			// round robin and wait till all items in queus moves on step forward
+		case <-fm.chNewDownloadItem:
 			fm.mxDown.Lock()
-			if len(fm.DownloadQueue) > 0 {
-				completedItems := domain.MInt64B{}
-				for _, fs := range fm.DownloadQueue {
-					if fs.IsCompleted {
-						// panic("completed DOWNLOAD exist in download queue")
-						completedItems[fs.MessageID] = true
-						continue
-					}
-
-					envelop, err := fs.ReadAsFileGet()
-					if err != nil {
-						log.LOG_Error("FileManager::startDownloadQueue()", zap.Error(err), zap.String("filePath", fs.FilePath))
-						continue
-					}
-
-					wg.Add(1)
-					go fm.sendDownloadRequest(envelop, fs, wg)
-				}
-
-				//remove completed downloads from queue, other states will be handled in place when its accure
-				if len(completedItems) > 0 {
-					for key := range completedItems {
-						delete(fm.DownloadQueue, key)
-					}
-					go repo.Ctx().Files.DeleteManyFileStatus(completedItems.ToArray())
-				}
-
-				fm.mxDown.Unlock()
-			} else {
-				fm.mxDown.Unlock()
-				time.Sleep(300 * time.Millisecond)
+			for _, v := range fm.DownloadQueue {
+				go v.StartDownload(fm)
 			}
-
-			wg.Wait()
-
+			fm.mxDown.Unlock()
 		}
 	}
 }
@@ -383,55 +368,27 @@ func (fm *FileManager) startUploadQueue() {
 		}
 
 		fm.UploadQueueStarted = true
-		wg := &sync.WaitGroup{}
 		select {
 		case <-fm.chStopUploader:
-			// wait for running request gracefuly end
-			wg.Wait()
+			fm.mxUp.Lock()
+			for _, v := range fm.UploadQueue {
+				v.Stop()
+			}
+			fm.mxUp.Unlock()
 			fm.UploadQueueStarted = false
 			return
-		default:
-			// round robin and wait till all items in queus moves on step forward
+		case <-fm.chNewUploadItem:
 			fm.mxUp.Lock()
-			if len(fm.UploadQueue) > 0 {
-				completedItems := domain.MInt64B{}
-				for _, fs := range fm.UploadQueue {
-					if fs.IsCompleted {
-						// panic("completed UPLOAD exist in upload queue")
-						completedItems[fs.MessageID] = true
-						continue
-					}
-					isThumbnail := fs.ThumbPosition < fs.ThumbTotalSize
-					envelop, readCount, err := fs.ReadAsFileSavePart(isThumbnail)
-					if err != nil {
-						log.LOG_Error("FileManager::startUploadQueue()", zap.Error(err), zap.String("filePath", fs.FilePath))
-						continue
-					}
-					wg.Add(1)
-					go fm.sendUploadRequest(envelop, int64(readCount), fs, wg)
-				}
-
-				//remove completed items from queue, other states will be handled in place when its accure
-				if len(completedItems) > 0 {
-					for key := range completedItems {
-						delete(fm.UploadQueue, key)
-					}
-					go repo.Ctx().Files.DeleteManyFileStatus(completedItems.ToArray())
-				}
-
-				fm.mxUp.Unlock()
-			} else {
-				fm.mxUp.Unlock()
-				time.Sleep(300 * time.Millisecond)
+			for _, v := range fm.UploadQueue {
+				go v.StartUpload(fm)
 			}
-
-			wg.Wait()
+			fm.mxUp.Unlock()
 
 		}
 	}
 }
 
-func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, fs *FileStatus, wg *sync.WaitGroup) {
+func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, fs *FileStatus, partIdx int64) {
 	// time out has been set in Send()
 	res, err := fm.Send(req)
 	if err == nil {
@@ -453,13 +410,17 @@ func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, 
 			}
 			// reset counter
 			fs.retryCounter = 0
-
 			if x.Result {
+
 				isThumbnail := fs.ThumbPosition < fs.ThumbTotalSize
-				isCompleted := fs.ReadCommit(count, isThumbnail)
-				if isCompleted && !isThumbnail {
-					//call completed delegate
-					fm.uploadCompleted(fs.MessageID, fs.FileID, fs.TargetID, fs.ClusterID, fs.TotalParts, fs.Type, fs.FilePath, fs.UploadRequest, fs.ThumbFileID, fs.ThumbTotalParts)
+				if isThumbnail {
+					fs.ReadCommit(count, true, 0)
+				} else {
+					select {
+					case fs.chUploadProgress <- partIdx:
+					default:
+						// progress monitor is exited already
+					}
 				}
 			}
 		default:
@@ -489,11 +450,9 @@ func (fm *FileManager) sendUploadRequest(req *msg.MessageEnvelope, count int64, 
 			fm.onUploadError(fs.MessageID, int64(req.RequestID), fs.FilePath, xbuff)
 		}
 	}
-
-	wg.Done()
 }
 
-func (fm *FileManager) sendDownloadRequest(req *msg.MessageEnvelope, fs *FileStatus, wg *sync.WaitGroup) {
+func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileStatus, partIdx int64) {
 	// time out has been set in Send()
 	res, err := fm.Send(req)
 	if err == nil {
@@ -520,7 +479,7 @@ func (fm *FileManager) sendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 			if len(x.Bytes) == 0 {
 				log.LOG_Error("sendDownloadRequest() Received 0 bytes from server ",
 					zap.Int64("MsgID", fs.MessageID),
-					zap.Int64("Position", fs.Position),
+					zap.Int64("PartNo", partIdx),
 					zap.Int64("TotalSize", fs.TotalSize),
 				)
 				fs.retryCounter++
@@ -531,7 +490,7 @@ func (fm *FileManager) sendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 				fs.retryCounter = 0
 			}
 
-			isCompleted, err := fs.Write(x.Bytes)
+			isCompleted, err := fs.Write(x.Bytes, partIdx)
 			if err != nil {
 				log.LOG_Error("sendDownloadRequest() failed write to file", zap.Error(err))
 			} else if isCompleted {
@@ -546,6 +505,7 @@ func (fm *FileManager) sendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 		}
 	} else {
 		// increase counter
+		fs.PartList.Push(partIdx)
 		fs.retryCounter++
 		log.LOG_Error("sendDownloadRequest()", zap.Error(err))
 	}
@@ -563,7 +523,6 @@ func (fm *FileManager) sendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 			fm.onDownloadError(fs.MessageID, int64(req.RequestID), fs.FilePath, xbuff)
 		}
 	}
-	wg.Done()
 }
 
 func (fm *FileManager) LoadFileStatusQueue() {
@@ -598,7 +557,7 @@ func (fm *FileManager) downloadCompleted(msgID int64, filePath string, stateType
 }
 
 func (fm *FileManager) uploadCompleted(msgID, fileID, targetID int64,
-	clusterID, totalParts int32,
+	clusterID int32, totalParts int64,
 	stateType domain.FileStateType,
 	filePath string,
 	uploadRequest *msg.ClientSendMessageMedia,
