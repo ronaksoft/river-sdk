@@ -2,6 +2,7 @@ package riversdk
 
 import (
 	"sync"
+	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
@@ -77,4 +78,7 @@ type River struct {
 
 	// Device Token
 	DeviceToken *msg.AccountRegisterDevice
+
+	lastOutOfSyncTime  time.Time
+	chOutOfSyncUpdates chan []*msg.UpdateContainer
 }

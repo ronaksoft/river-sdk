@@ -41,6 +41,9 @@ var (
 // SetConfig
 // This function must be called before any other function, otherwise it panics
 func (r *River) SetConfig(conf *RiverConfig) {
+	r.lastOutOfSyncTime = time.Now().Add(1 * time.Second)
+	r.chOutOfSyncUpdates = make(chan []*msg.UpdateContainer, 500)
+
 	r.registerCommandHandlers()
 	r.delegates = make(map[int64]RequestDelegate)
 
@@ -813,6 +816,26 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 
 // called when network flushes received updates
 func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
+
+	// if we receive any update in less than 500 ms push them to chOutOfSyncUpdates until 500ms passes
+	if time.Since(r.lastOutOfSyncTime) < time.Millisecond*500 {
+		r.chOutOfSyncUpdates <- upds
+		return
+	}
+
+	// read chOutOfSyncUpdates if there was any update left
+	resumeFromOutOfSyncWait := false
+readChannel:
+	for {
+		select {
+		case outOfSyncUpds := <-r.chOutOfSyncUpdates:
+			resumeFromOutOfSyncWait = true
+			upds = append(upds, outOfSyncUpds...)
+		default:
+			break readChannel
+		}
+	}
+
 	updateContainer := new(msg.UpdateContainer)
 
 	log.LOG_Debug("SDK::onReceivedUpdate()",
@@ -908,6 +931,18 @@ func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
 	if maxID-r.syncCtrl.UpdateID() > domain.SnapshotSync_Threshold {
 		log.LOG_Debug("SDK::onReceivedUpdate() snapshot threshold reached")
 		r.syncCtrl.CheckSyncState()
+		return
+	}
+	// if we met out of sync condition wait 500 ms and process updates
+	if !resumeFromOutOfSyncWait && minID > 0 && r.syncCtrl.UpdateID() < minID-1 {
+		r.chOutOfSyncUpdates <- upds
+		r.lastOutOfSyncTime = time.Now()
+		// insure that updates will be processed after 500ms
+		go func(r *River) {
+			time.Sleep(500 * time.Millisecond)
+			r.onReceivedUpdate([]*msg.UpdateContainer{})
+		}(r)
+
 		return
 	}
 
