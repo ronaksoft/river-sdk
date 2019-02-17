@@ -113,7 +113,7 @@ func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
 	// log
 	if msgEnvelope.Constructor != msg.C_AuthRecall {
 		msgKey := crc32.ChecksumIEEE(protoMessage.MessageKey)
-		log.LOG_Info("Crc32 of MessageKey & RequestID",
+		log.LOG_Debug("Crc32 of MessageKey & RequestID",
 			zap.Uint32("Crc32", msgKey),
 			zap.Uint64("ReqID", msgEnvelope.RequestID),
 			zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
@@ -137,17 +137,8 @@ func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
 	err = ctrl.conn.WriteMessage(websocket.BinaryMessage, b)
 	ctrl.connWriteLock.Unlock()
 
-	// deep copy for log
-	//====================================
-	// Log Sent Messages
-	tmpBuff := make([]byte, len(b))
-	copy(tmpBuff, b)
-	tmp := new(msg.ProtoMessage)
-	err = tmp.Unmarshal(tmpBuff)
-	if err == nil {
-		logSentPacket(tmp)
-	}
-	//====================================
+	// log sent packet
+	logSentPacket(protoMessage)
 
 	return err
 }
@@ -240,56 +231,15 @@ func (ctrl *CtrlNetwork) receiver() {
 			continue
 		}
 
-		// deep copy for log
-		//====================================
-		// Log Received Messages
-		tmpBuff := make([]byte, len(message))
-		copy(tmpBuff, message)
-
-		tmp := new(msg.ProtoMessage)
-		err = tmp.Unmarshal(tmpBuff)
-		if err == nil {
-			logReceivedPacket(tmp)
-
-			res := new(msg.ProtoMessage)
-			err = res.Unmarshal(tmpBuff)
-			if err != nil {
-				log.LOG_Error("TMP CtrlNetwork::receiver() failed to unmarshal to ProtoMessage", zap.Error(err))
-
-				if res.AuthID == 0 {
-					receivedEnvelope := new(msg.MessageEnvelope)
-					err = receivedEnvelope.Unmarshal(res.Payload)
-					if err != nil {
-						log.LOG_Error("TMP  CtrlNetwork::receiver() failed to unmarshal to MessageEnvelope", zap.Error(err))
-					}
-				} else {
-					act, _ := shared.GetCachedActorByAuthID(res.AuthID)
-					decryptedBytes, err := domain.Decrypt(act.GetAuthKey(), res.MessageKey, res.Payload)
-					if err != nil {
-						log.LOG_Error("TMP  CtrlNetwork::receiver() failed to domain.Decrypt()", zap.Error(err))
-						log.LOG_Error("netCtrl & Actor Info : ",
-							zap.Int64("ctrl.AuthID", ctrl.actor.GetAuthID()),
-							zap.Int64("act.AuthID", act.GetAuthID()),
-							zap.Binary("ctrl.AuthKey", ctrl.actor.GetAuthKey()),
-							zap.Binary("act.AuthKey", act.GetAuthKey()),
-						)
-					}
-					receivedEncryptedPayload := new(msg.ProtoEncryptedPayload)
-					err = receivedEncryptedPayload.Unmarshal(decryptedBytes)
-					if err != nil {
-						log.LOG_Error("TMP  CtrlNetwork::receiver() failed to unmarshal to ProtoEncryptedPayload", zap.Error(err))
-					}
-				}
-			}
-		}
-		//====================================
-
 		res := new(msg.ProtoMessage)
 		err = res.Unmarshal(message)
 		if err != nil {
 			log.LOG_Error("CtrlNetwork::receiver() failed to unmarshal to ProtoMessage", zap.Error(err))
 			continue
 		}
+
+		// log received packet
+		logReceivedPacket(res)
 
 		if res.AuthID == 0 {
 			receivedEnvelope := new(msg.MessageEnvelope)

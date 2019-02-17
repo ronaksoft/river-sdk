@@ -35,3 +35,7 @@ func GetCachedActorByPhone(phone string) (act Acter, ok bool) {
 	mx.Unlock()
 	return
 }
+
+func GetCachedAllActors() map[string]Acter {
+	return cachedActorsByPhone
+}

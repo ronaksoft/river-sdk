@@ -65,6 +65,23 @@ func (r *PcapReport) Feed(p *pcap_parser.ParsedWS) error {
 		return fmt.Errorf("Actor does not exist for this authID : %d", p.Message.AuthID)
 	}
 	envelop, err := decryptProto(act, p.Message)
+
+	// TODO : remove this after authID fixed in protoMessage
+	//===========================
+	// forceDecrypt tries to decrypt protoMsg by all actors authkey
+	forceDecrypt := true
+	if err != nil && forceDecrypt {
+		allActors := shared.GetCachedAllActors()
+		for _, a := range allActors {
+			envelop, err = decryptProto(a, p.Message)
+			if err == nil {
+				act = a
+				break
+			}
+		}
+	}
+	//===========================
+
 	if err != nil {
 		return err
 	}
@@ -76,7 +93,10 @@ func (r *PcapReport) Feed(p *pcap_parser.ParsedWS) error {
 		// create report params
 		req, ok := r.Requests[m.RequestID]
 		if ok {
-			req.AuthIDs[p.Message.AuthID] = true
+			// AuthID == 0 means unencrypted message
+			if p.Message.AuthID != 0 {
+				req.AuthIDs[p.Message.AuthID] = true
+			}
 			// response
 			if p.SrcPort == shared.ServerPort {
 				req.ResponseList = append(req.ResponseList, msg.ConstructorNames[m.Constructor])
@@ -217,6 +237,23 @@ func (r *PcapReport) FeedPacket(p *msg.ProtoMessage, isResponse bool) error {
 	}
 
 	envelop, err := decryptProto(act, p)
+
+	// TODO : remove this after authID fixed in protoMessage
+	//===========================
+	// forceDecrypt tries to decrypt protoMsg by all actors authkey
+	forceDecrypt := true
+	if err != nil && forceDecrypt {
+		allActors := shared.GetCachedAllActors()
+		for _, a := range allActors {
+			envelop, err = decryptProto(a, p)
+			if err == nil {
+				act = a
+				break
+			}
+		}
+	}
+	//===========================
+
 	if err != nil {
 		return err
 	}
@@ -273,10 +310,13 @@ func decryptProto(act shared.Acter, protMsg *msg.ProtoMessage) (*msg.MessageEnve
 	if act == nil {
 		return nil, fmt.Errorf("decryptProto() when protMsg have authID & encrypted, actor can't be null")
 	}
-	authID, authKey := act.GetAuthInfo()
-	if authID != protMsg.AuthID {
-		return nil, fmt.Errorf("decryptProto() Actor AuthID:%d is not equal to ProtoMsg AuthID :%d", authID, protMsg.AuthID)
-	}
+
+	authKey := act.GetAuthKey()
+	// // TODO : enable this after forceDecrypt got fixed
+	// authID, authKey := act.GetAuthInfo()
+	// if authID != protMsg.AuthID {
+	// 	return nil, fmt.Errorf("decryptProto() Actor AuthID:%d is not equal to ProtoMsg AuthID :%d", authID, protMsg.AuthID)
+	// }
 	decryptedBytes, err := domain.Decrypt(authKey, protMsg.MessageKey, protMsg.Payload)
 	if err != nil {
 		return nil, fmt.Errorf("decryptProto() -> domain.Decrypt() , err : %s", err.Error())

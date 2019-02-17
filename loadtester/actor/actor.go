@@ -47,6 +47,7 @@ func NewActor(phone string) (shared.Acter, error) {
 	var act *Actor
 	acter, ok := shared.GetCachedActorByPhone(phone)
 	if !ok {
+		log.LOG_Warn("NewActor() Actor not found in Cache", zap.String("Phone", phone))
 		act = new(Actor)
 		err := act.Load(phone)
 		if err != nil {
@@ -207,9 +208,13 @@ func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
 		if req != nil {
 			select {
 			case req.ResponseWaitChannel <- m:
-				log.LOG_Debug("onMessage() callback singnal sent")
+				log.LOG_Debug("onMessage() callback singnal sent",
+					zap.Uint64("RequestID", m.RequestID),
+					zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
+					zap.Duration("Elapsed", time.Since(req.CreatedOn)),
+				)
 			default:
-				log.LOG_Warn("onMessage() callback is skipped probably timedout before",
+				log.LOG_Error("onMessage() callback is skipped probably timedout before",
 					zap.Uint64("RequestID", m.RequestID),
 					zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
 					zap.Duration("Elapsed", time.Since(req.CreatedOn)),
