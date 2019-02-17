@@ -238,6 +238,10 @@ func (ctrl *CtrlNetwork) receiver() {
 			continue
 		}
 
+		if res.AuthID != ctrl.actor.GetAuthID() {
+			log.LOG_Error("Received unmatched AuthID ", zap.Int64("Server.AutID", res.AuthID), zap.Int64("Actor.AuthID", ctrl.actor.GetAuthID()))
+		}
+
 		// log received packet
 		logReceivedPacket(res)
 
@@ -248,6 +252,10 @@ func (ctrl *CtrlNetwork) receiver() {
 				log.LOG_Error("CtrlNetwork::receiver() failed to unmarshal to MessageEnvelope", zap.Error(err))
 				continue
 			}
+			// ============ TODO: delte me
+			log.LOG_Warn("Received message is unencrypted", zap.Int64("AuthID", res.AuthID), zap.String("Constructor", msg.ConstructorNames[receivedEnvelope.Constructor]))
+			//============================
+
 			ctrl.messageHandler(receivedEnvelope)
 		} else {
 			decryptedBytes, err := domain.Decrypt(ctrl.actor.GetAuthKey(), res.MessageKey, res.Payload)
@@ -306,10 +314,26 @@ func (ctrl *CtrlNetwork) extractMessages(m *msg.MessageEnvelope) ([]*msg.Message
 func (ctrl *CtrlNetwork) messageHandler(message *msg.MessageEnvelope) {
 	// extract all updates/ messages
 	messages, updates := ctrl.extractMessages(message)
+
+	// ========= TODO : delete me
+	for _, m := range messages {
+		log.LOG_Warn("print MessageEnvelop", zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
+			zap.String("Payload", string(m.Message)),
+		)
+	}
+	for _, uc := range updates {
+		for _, u := range uc.Updates {
+			log.LOG_Warn("print UpdateEnvelop", zap.String("Constructor", msg.ConstructorNames[u.Constructor]),
+				zap.String("Payload", string(u.Update)),
+			)
+		}
+	}
+	//==============================
+
 	if ctrl.onMessage != nil {
 		ctrl.onMessage(messages)
 	}
-	if ctrl.onMessage != nil {
+	if ctrl.onUpdate != nil {
 		ctrl.onUpdate(updates)
 	}
 }
