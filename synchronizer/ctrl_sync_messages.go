@@ -279,6 +279,9 @@ func (ctrl *SyncController) messagesMany(e *msg.MessageEnvelope) {
 		}
 	}
 
+	// handle Media message
+	go handleMediaMessage(u.Messages...)
+
 	// fill MessageHoles
 	for peerID := range peerMessages {
 		err := fillMessageHoles(peerID, peerMessageMinID[peerID], peerMessageMaxID[peerID])

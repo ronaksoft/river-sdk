@@ -66,22 +66,6 @@ func (r *PcapReport) Feed(p *pcap_parser.ParsedWS) error {
 	}
 	envelop, err := decryptProto(act, p.Message)
 
-	// TODO : remove this after authID fixed in protoMessage
-	//===========================
-	// forceDecrypt tries to decrypt protoMsg by all actors authkey
-	forceDecrypt := true
-	if err != nil && forceDecrypt {
-		allActors := shared.GetCachedAllActors()
-		for _, a := range allActors {
-			envelop, err = decryptProto(a, p.Message)
-			if err == nil {
-				act = a
-				break
-			}
-		}
-	}
-	//===========================
-
 	if err != nil {
 		return err
 	}
@@ -238,22 +222,6 @@ func (r *PcapReport) FeedPacket(p *msg.ProtoMessage, isResponse bool) error {
 
 	envelop, err := decryptProto(act, p)
 
-	// TODO : remove this after authID fixed in protoMessage
-	//===========================
-	// forceDecrypt tries to decrypt protoMsg by all actors authkey
-	forceDecrypt := true
-	if err != nil && forceDecrypt {
-		allActors := shared.GetCachedAllActors()
-		for _, a := range allActors {
-			envelop, err = decryptProto(a, p)
-			if err == nil {
-				act = a
-				break
-			}
-		}
-	}
-	//===========================
-
 	if err != nil {
 		return err
 	}
@@ -311,12 +279,10 @@ func decryptProto(act shared.Acter, protMsg *msg.ProtoMessage) (*msg.MessageEnve
 		return nil, fmt.Errorf("decryptProto() when protMsg have authID & encrypted, actor can't be null")
 	}
 
-	authKey := act.GetAuthKey()
-	// // TODO : enable this after forceDecrypt got fixed
-	// authID, authKey := act.GetAuthInfo()
-	// if authID != protMsg.AuthID {
-	// 	return nil, fmt.Errorf("decryptProto() Actor AuthID:%d is not equal to ProtoMsg AuthID :%d", authID, protMsg.AuthID)
-	// }
+	authID, authKey := act.GetAuthInfo()
+	if authID != protMsg.AuthID {
+		return nil, fmt.Errorf("decryptProto() Actor AuthID:%d is not equal to ProtoMsg AuthID :%d", authID, protMsg.AuthID)
+	}
 	decryptedBytes, err := domain.Decrypt(authKey, protMsg.MessageKey, protMsg.Payload)
 	if err != nil {
 		return nil, fmt.Errorf("decryptProto() -> domain.Decrypt() , err : %s", err.Error())

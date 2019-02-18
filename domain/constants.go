@@ -22,7 +22,7 @@ const (
 	DEFAULT_WS_WRITE_TIMEOUT             = 3 * time.Second
 	DEFAULT_WS_REALTIME_TIMEOUT          = 3 * time.Second
 	DEFAULT_REQUEST_TIMEOUT              = 30 * time.Second
-	SnapshotSync_Threshold               = 200
+	SnapshotSync_Threshold               = 999
 )
 
 // LOG KEYS
@@ -121,4 +121,15 @@ const (
 	FileStateDownloadAccountPhoto FileStateType = 6
 	FileStateUploadGroupPhoto     FileStateType = 7
 	FileStateDownloadGroupPhoto   FileStateType = 8
+)
+
+type MediaType int
+
+const (
+	MediaTypeAll   MediaType = 0
+	MediaTypeFile  MediaType = 1
+	MediaTypeMedia MediaType = 2
+	MediaTypeVoice MediaType = 3
+	MediaTypeAudio MediaType = 4
+	MediaTypeLink  MediaType = 5
 )

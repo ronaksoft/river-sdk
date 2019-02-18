@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd"
+	"git.ronaksoftware.com/ronak/riversdk/filemanager"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/network"
@@ -756,4 +757,36 @@ func (ctrl *SyncController) CheckSyncState() {
 
 func (ctrl *SyncController) ClearUpdateID() {
 	ctrl.updateID = 0
+}
+
+func handleMediaMessage(messages ...*msg.UserMessage) {
+	for _, m := range messages {
+		switch m.MediaType {
+		case msg.MediaTypeEmpty:
+			// NOP
+		case msg.MediaTypePhoto:
+			log.LOG_Info("handleMediaMessage() Message.MediaType is msg.MediaTypePhoto")
+			// TODO:: implement it
+		case msg.MediaTypeDocument:
+			mediaDoc := new(msg.MediaDocument)
+			err := mediaDoc.Unmarshal(m.Media)
+			if err == nil {
+				t := mediaDoc.Doc.Thumbnail
+				if t != nil {
+					if t.FileID != 0 {
+						go filemanager.Ctx().DownloadThumbnail(m.ID, t.FileID, t.AccessHash, t.ClusterID, 0)
+					}
+				}
+				repo.Ctx().Files.SaveFileDocument(m, mediaDoc)
+
+			} else {
+				log.LOG_Error("handleMediaMessage()-> connat unmarshal MediaTypeDocument", zap.Error(err))
+			}
+		case msg.MediaTypeContact:
+			log.LOG_Info("handleMediaMessage() Message.MediaType is msg.MediaTypeContact")
+			// TODO:: implement it
+		default:
+			log.LOG_Info("handleMediaMessage() Message.MediaType is invalid")
+		}
+	}
 }

@@ -1,6 +1,8 @@
 package repo
 
 import (
+	"encoding/json"
+
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
@@ -13,7 +15,7 @@ type RepoFiles interface {
 	DeleteFileStatus(msgID int64) error
 	DeleteManyFileStatus(msgIDs []int64) error
 	MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, fileSize int32, sent *msg.MessagesSent) (err error)
-	SaveFileDocument(msgID int64, doc *msg.MediaDocument) error
+	SaveFileDocument(m *msg.UserMessage, doc *msg.MediaDocument) error
 	GetExistingFileDocument(filePath string) *dto.Files
 	GetFilePath(msgID, docID int64) string
 	SaveDownloadingFile(fs *dto.FileStatus) error
@@ -23,6 +25,8 @@ type RepoFiles interface {
 
 	// delete this later
 	GetFirstFileStatu() dto.FileStatus
+
+	GetSharedMedia(peerID int64, peerType int32, mediaType int32) ([]*msg.UserMessage, error)
 }
 
 type repoFiles struct {
@@ -105,7 +109,7 @@ func (r *repoFiles) GetFirstFileStatu() dto.FileStatus {
 	return e
 }
 
-func (r *repoFiles) SaveFileDocument(msgID int64, doc *msg.MediaDocument) error {
+func (r *repoFiles) SaveFileDocument(m *msg.UserMessage, doc *msg.MediaDocument) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -118,18 +122,18 @@ func (r *repoFiles) SaveFileDocument(msgID int64, doc *msg.MediaDocument) error 
 
 	// 2. get file by messageID create or update document info
 	mdl := dto.Files{}
-	r.db.First(&mdl, msgID)
+	r.db.First(&mdl, m.ID)
 	if existedDocument.MessageID > 0 {
 		mdl.MapFromFile(existedDocument)
-		mdl.MessageID = msgID
+		mdl.MessageID = m.ID
 	}
-
+	// doc already exist
 	if mdl.MessageID > 0 {
 		mdl.MapFromDocument(doc)
-		return r.db.Table(mdl.TableName()).Where("MessageID=?", msgID).Update(&mdl).Error
+		return r.db.Table(mdl.TableName()).Where("MessageID=?", m.ID).Update(&mdl).Error
 	}
-	mdl.MapFromDocument(doc)
-	mdl.MessageID = msgID
+
+	mdl.MapFromUserMessageDocument(m, doc)
 	return r.db.Create(&mdl).Error
 
 }
@@ -207,4 +211,88 @@ func (r *repoFiles) GetFile(msgID int64) (*dto.Files, error) {
 	mdl := new(dto.Files)
 	err := r.db.Find(mdl, msgID).Error
 	return mdl, err
+}
+
+func (r *repoFiles) GetSharedMedia(peerID int64, peerType int32, mediaType int32) ([]*msg.UserMessage, error) {
+	mType := domain.MediaType(mediaType)
+
+	dtos := make([]dto.Files, 0)
+	err := r.db.Where("PeerID=? AND PeerType=?", peerID, peerType).Find(&dtos).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// extract msgIDs by applying attribute filter
+	msgIDs := domain.MInt64B{}
+	for _, d := range dtos {
+		attribs := make([]*msg.DocumentAttribute, 0)
+		err := json.Unmarshal(d.Attributes, &attribs)
+		if err != nil {
+			continue
+		}
+	attributes:
+		for _, a := range attribs {
+			// AttributeTypeNone
+			// AttributeTypeAudio
+			// AttributeTypeVideo
+			// AttributeTypePhoto
+			// AttributeTypeFile
+			// AttributeAnimated
+			switch mType {
+			case domain.MediaTypeAll:
+				msgIDs[d.MessageID] = true
+				break attributes
+			case domain.MediaTypeFile:
+				if a.Type == msg.AttributeTypeNone || a.Type == msg.AttributeTypeFile {
+					msgIDs[d.MessageID] = true
+				}
+			case domain.MediaTypeMedia:
+				if a.Type == msg.AttributeTypePhoto || a.Type == msg.AttributeAnimated || a.Type == msg.AttributeTypeVideo {
+					msgIDs[d.MessageID] = true
+				}
+			case domain.MediaTypeVoice:
+				if a.Type == msg.AttributeTypeAudio {
+					x := new(msg.DocumentAttributeAudio)
+					err := x.Unmarshal(a.Data)
+					if err == nil {
+						if x.Voice {
+							msgIDs[d.MessageID] = true
+						}
+					}
+				}
+			case domain.MediaTypeAudio:
+				if a.Type == msg.AttributeTypeAudio {
+					x := new(msg.DocumentAttributeAudio)
+					err := x.Unmarshal(a.Data)
+					if err == nil {
+						if !x.Voice {
+							msgIDs[d.MessageID] = true
+						}
+					}
+				}
+			case domain.MediaTypeLink:
+				// not implemented
+			default:
+				// not implemented
+			}
+		}
+	}
+
+	messageIDs := msgIDs.ToArray()
+	messages := make([]*msg.UserMessage, 0, len(messageIDs))
+	dtoMsgs := make([]dto.Messages, 0, len(messageIDs))
+	err = r.db.Where("ID in (?)", messageIDs).Find(&dtoMsgs).Error
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range dtoMsgs {
+
+		tmp := new(msg.UserMessage)
+		v.MapTo(tmp)
+		messages = append(messages, tmp)
+	}
+
+	return messages, nil
+
 }

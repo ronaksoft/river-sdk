@@ -3,8 +3,6 @@ package synchronizer
 import (
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/filemanager"
-
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/log"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
@@ -189,35 +187,9 @@ func (ctrl *SyncController) updateNewMessage(u *msg.UpdateEnvelope) []*msg.Updat
 	}
 
 	// handle Media message
-	switch x.Message.MediaType {
-	case msg.MediaTypeEmpty:
-		log.LOG_Info("updateNewMessage() Message.MediaType is msg.MediaTypeEmpty")
-		// TODO:: implement it
-	case msg.MediaTypePhoto:
-		log.LOG_Info("updateNewMessage() Message.MediaType is msg.MediaTypePhoto")
-		// TODO:: implement it
-	case msg.MediaTypeDocument:
-		mediaDoc := new(msg.MediaDocument)
-		err = mediaDoc.Unmarshal(x.Message.Media)
-		if err == nil {
-			t := mediaDoc.Doc.Thumbnail
-			if t != nil {
-				if t.FileID != 0 {
-					go filemanager.Ctx().DownloadThumbnail(x.Message.ID, t.FileID, t.AccessHash, t.ClusterID, 0)
-				}
-			}
-			repo.Ctx().Files.SaveFileDocument(x.Message.ID, mediaDoc)
-
-		} else {
-			log.LOG_Error("SyncController::updateNewMessage()-> connat unmarshal MediaTypeDocument", zap.Error(err))
-		}
-	case msg.MediaTypeContact:
-		log.LOG_Info("updateNewMessage() Message.MediaType is msg.MediaTypeContact")
-		// TODO:: implement it
-	default:
-		log.LOG_Info("updateNewMessage() Message.MediaType is invalid")
+	if int32(x.Message.MediaType) > 0 {
+		go handleMediaMessage(x.Message)
 	}
-
 	return res
 }
 

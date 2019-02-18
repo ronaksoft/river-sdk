@@ -183,6 +183,17 @@ var DownloadThumbnail = &ishell.Cmd{
 	},
 }
 
+var GetSharedMedia = &ishell.Cmd{
+	Name: "GetSharedMedia",
+	Func: func(c *ishell.Context) {
+		peerType := fnGetPeerType(c)
+		peerID := fnGetPeerID(c)
+		mediaType := fnGetMediaType(c)
+		reqDelegate := &RequestDelegate{}
+		_SDK.GetSharedMedia(peerID, int32(peerType), int32(mediaType), reqDelegate)
+	},
+}
+
 func init() {
 	File.AddCmd(Upload)
 	File.AddCmd(Download)
@@ -190,6 +201,7 @@ func init() {
 	File.AddCmd(ShareContact)
 	File.AddCmd(Status)
 	File.AddCmd(DownloadThumbnail)
+	File.AddCmd(GetSharedMedia)
 
 }
 

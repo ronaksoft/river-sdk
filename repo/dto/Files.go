@@ -143,3 +143,23 @@ func (m *Files) MapFromFileStatus(v *FileStatus) {
 		}
 	}
 }
+
+func (m *Files) MapFromUserMessageDocument(um *msg.UserMessage, v *msg.MediaDocument) {
+
+	m.MessageID = um.ID
+	m.PeerID = um.PeerID
+	m.PeerType = um.PeerType
+	m.MediaType = int32(um.MediaType)
+	m.ReplyTo = um.ReplyTo
+
+	m.Caption = v.Caption
+	m.DocumentID = v.Doc.ID
+	m.AccessHash = int64(v.Doc.AccessHash)
+	m.CreatedOn = v.Doc.Date
+	m.FileMIME = v.Doc.MimeType
+	m.FileSize = v.Doc.FileSize
+	m.Version = v.Doc.Version
+	m.ClusterID = v.Doc.ClusterID
+	m.Attributes, _ = json.Marshal(v.Doc.Attributes)
+
+}
