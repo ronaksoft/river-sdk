@@ -16,13 +16,13 @@ import (
 // PcapRequest feed process type
 type PcapRequest struct {
 	ReqID        uint64
-	AuthIDs      map[int64]bool
+	AuthIDs      domain.MInt64B
 	RequestsList []string
 	ResponseList []string
 }
 
 func (r *PcapRequest) String() string {
-	return fmt.Sprintf("ReqID:%d \t AuthIDs[%v] \t Req[%v] \t Res[%v]", r.ReqID, r.AuthIDs, r.RequestsList, r.ResponseList)
+	return fmt.Sprintf("ReqID:%d \t AuthIDs:%v \t Req:%v \t Res:%v", r.ReqID, r.AuthIDs.ToArray(), r.RequestsList, r.ResponseList)
 }
 
 // PcapReport pcap parser reporter
@@ -92,7 +92,7 @@ func (r *PcapReport) Feed(p *pcap_parser.ParsedWS) error {
 		} else {
 			req := &PcapRequest{
 				ReqID:        m.RequestID,
-				AuthIDs:      make(map[int64]bool),
+				AuthIDs:      domain.MInt64B{},
 				RequestsList: make([]string, 0),
 				ResponseList: make([]string, 0),
 			}
@@ -245,7 +245,7 @@ func (r *PcapReport) FeedPacket(p *msg.ProtoMessage, isResponse bool) error {
 		} else {
 			req := &PcapRequest{
 				ReqID:        m.RequestID,
-				AuthIDs:      make(map[int64]bool),
+				AuthIDs:      domain.MInt64B{},
 				RequestsList: make([]string, 0),
 				ResponseList: make([]string, 0),
 			}

@@ -66,6 +66,10 @@ func init() {
 	_Reporter = report.NewReport()
 	// _Reporter.SetIsActive(true)
 
+	if _, err := os.Stat("_cache/"); os.IsNotExist(err) {
+		os.Mkdir("_cache/", os.ModePerm)
+	}
+
 	loadCachedActors()
 }
 

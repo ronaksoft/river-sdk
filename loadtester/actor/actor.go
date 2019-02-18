@@ -214,11 +214,24 @@ func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
 					zap.Duration("Elapsed", time.Since(req.CreatedOn)),
 				)
 			default:
-				log.LOG_Error("onMessage() callback is skipped probably timedout before",
-					zap.Uint64("RequestID", m.RequestID),
-					zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
-					zap.Duration("Elapsed", time.Since(req.CreatedOn)),
-				)
+				elapsed := time.Since(req.CreatedOn)
+				if elapsed < shared.DefaultTimeout {
+					// if elapsed time is less than timeout retry to pass request until 1 sec
+					go func(request *executer.Request, message *msg.MessageEnvelope) {
+						select {
+						case request.ResponseWaitChannel <- message:
+							return
+						case <-time.After(time.Second):
+						}
+					}(req, m)
+
+				} else {
+					log.LOG_Error("onMessage() callback is skipped probably timedout before",
+						zap.Uint64("RequestID", m.RequestID),
+						zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
+						zap.Duration("Elapsed", elapsed),
+					)
+				}
 			}
 			act.exec.RemoveRequest(m.RequestID)
 		} else if m.Constructor != msg.C_AuthRecalled {
