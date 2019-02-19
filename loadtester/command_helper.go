@@ -3,7 +3,12 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"time"
 
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/controller"
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/report"
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
+	"git.ronaksoftware.com/ronak/riversdk/log"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )
 
@@ -63,4 +68,36 @@ func fnGetPhone(c *ishell.Context) string {
 
 func fnClearScreeen() {
 	fmt.Println("\033[H\033[2J") // clear screen
+}
+
+func fnClearReports() {
+	_Reporter.Clear()
+	controller.ClearLoggedPackets()
+}
+
+func fnPrintReports(elapsed time.Duration) {
+	fnClearScreeen()
+	log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
+
+	fmt.Println(_Reporter.String())
+	fmt.Printf("Failed Requests :\n%s", shared.PrintFailedRequest())
+
+	rpt := report.NewPcapReport()
+	requsetList := controller.GetLoggedSentPackets()
+	for _, p := range requsetList {
+		err := rpt.FeedPacket(p, false)
+		if err != nil {
+			fmt.Println("rpt.FeedPacket(p, requests) :", err)
+		}
+	}
+
+	responseList := controller.GetLoggedReceivedPackets()
+	n := len(responseList)
+	for i := 0; i < n; i++ {
+		err := rpt.FeedPacket(responseList[i], true)
+		if err != nil {
+			fmt.Println("rpt.FeedPacket(p, reponses) :", err)
+		}
+	}
+	fmt.Println(rpt.String())
 }

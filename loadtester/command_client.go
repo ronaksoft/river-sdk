@@ -1,0 +1,89 @@
+package main
+
+import (
+	"time"
+
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/scenario"
+
+	"go.uber.org/zap"
+
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/actor"
+	"git.ronaksoftware.com/ronak/riversdk/log"
+
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
+
+	ishell "gopkg.in/abiosoft/ishell.v2"
+)
+
+var _clientActer shared.Acter
+var _clientCreatedOn time.Time
+
+var cmdClient = &ishell.Cmd{
+	Name: "Client",
+}
+
+var cmdClientStart = &ishell.Cmd{
+	Name: "Start",
+	Func: func(c *ishell.Context) {
+
+		phoneNo := fnGetPhone(c)
+		// clear
+		fnClearScreeen()
+		fnClearReports()
+
+		// TODO :: register or login
+		var err error
+		_clientCreatedOn = time.Now()
+		_clientActer, err = actor.NewActor(phoneNo)
+		if err != nil {
+			log.LOG_Error("Faile to create client actor", zap.Error(err))
+		}
+
+		// create authKey if actor does not have authID
+		if _clientActer.GetAuthID() == 0 {
+			sw := scenario.NewCreateAuthKey(false)
+			success := scenario.Play(_clientActer, sw)
+			if !success {
+				log.LOG_Error("Faile at pre requested scenario CreateAuthKey")
+				return
+			}
+		}
+		// login if actor does not have userID
+		if _clientActer.GetUserID() == 0 {
+			sw := scenario.NewLogin(true)
+			success := scenario.Play(_clientActer, sw)
+			if !success {
+				log.LOG_Error("Faile at pre requested scenario Login")
+				return
+			}
+		}
+
+		sw := scenario.NewAuthRecall(false)
+		success := scenario.Play(_clientActer, sw)
+		if !success {
+			log.LOG_Error("Faile at pre requested scenario AuthRecall")
+			return
+		}
+		_Reporter.SetIsActive(false)
+		log.SetLogLevel(-1)
+		log.LOG_Info("Client Actor Started log level changed to debug")
+	},
+}
+
+var cmdClientStop = &ishell.Cmd{
+	Name: "Stop",
+	Func: func(c *ishell.Context) {
+		if _clientActer == nil {
+			log.LOG_Error("Client Actor is not started")
+			return
+		}
+		_clientActer.Stop()
+		fnPrintReports(time.Since(_clientCreatedOn))
+		_clientActer = nil
+	},
+}
+
+func init() {
+	cmdClient.AddCmd(cmdClientStart)
+	cmdClient.AddCmd(cmdClientStop)
+}

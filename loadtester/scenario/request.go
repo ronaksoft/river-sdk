@@ -139,3 +139,16 @@ func ContactsImport(phone string) (envelop *msg.MessageEnvelope) {
 
 	return
 }
+
+func AuthRecallReq() (envelop *msg.MessageEnvelope) {
+	req := new(msg.AuthRecall)
+
+	data, err := req.Marshal()
+	if err != nil {
+		panic(err)
+	}
+
+	envelop = wrapEnvelop(msg.C_AuthRecall, data)
+
+	return
+}

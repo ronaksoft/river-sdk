@@ -60,6 +60,13 @@ func startWorker() {
 				job.Wait.Done()
 				continue
 			}
+
+			// // TODO :: just for test  remove this later
+			// // === authRecall call this B4 register in reporter
+			// authRecall := scenario.NewAuthRecall(false)
+			// scenario.Play(act, authRecall)
+			// // ==============
+
 			_Reporter.Register(act)
 			scenario.Play(act, job.Scenario)
 			job.Wait.Done()

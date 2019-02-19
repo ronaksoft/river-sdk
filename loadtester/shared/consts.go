@@ -16,7 +16,7 @@ var (
 	DefaultSendTimeout = 10 * time.Second
 
 	// MaxWorker concurrent go routins
-	MaxWorker = 96
+	MaxWorker = 1000
 
 	// MaxQueueBuffer queue channel buffer size
 	MaxQueueBuffer = 10000

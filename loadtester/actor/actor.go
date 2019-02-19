@@ -139,6 +139,13 @@ func (act *Actor) ExecuteRequest(message *msg.MessageEnvelope, onSuccess shared.
 
 // Save save actor after register/ login / contact import
 func (act *Actor) Save() error {
+
+	// save to cached actors
+	_, ok := shared.GetCachedActorByPhone(act.Phone)
+	if !ok {
+		shared.CacheActor(act)
+	}
+
 	buff, err := json.Marshal(act)
 	if err != nil {
 		return err
@@ -264,11 +271,9 @@ func (act *Actor) onUpdate(updates []*msg.UpdateContainer) {
 			zap.Int64("MinID", cnt.MinUpdateID),
 			zap.Int64("MaxID", cnt.MaxUpdateID),
 		)
-		// for _, u := range cnt.Updates {
-		// 	// TODO : Implement actors update reactions
-		// 	if u.Constructor == msg.C_UpdateNewMessage {
-		// 	}
-		// }
+		for _, u := range cnt.Updates {
+			log.LOG_Debug("onUpdate() Received ", zap.String("Constructor", msg.ConstructorNames[u.Constructor]))
+		}
 	}
 }
 

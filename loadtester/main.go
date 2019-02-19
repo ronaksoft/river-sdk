@@ -50,12 +50,12 @@ func init() {
 	_Shell.Println("===============================")
 
 	_Shell.AddCmd(CLI)
-	_Shell.AddCmd(cmdPrint)
 	_Shell.AddCmd(cmdRegister)
 	_Shell.AddCmd(cmdLogin)
 	_Shell.AddCmd(cmdImportContact)
 	_Shell.AddCmd(cmdSendMessage)
 	_Shell.AddCmd(cmdCreateAuthKey)
+	_Shell.AddCmd(cmdClient)
 
 	_Shell.AddCmd(cmdDebug)
 	_Shell.AddCmd(cmdPcap)

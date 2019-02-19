@@ -31,6 +31,10 @@ type Report struct {
 	AverageActorLifetime   time.Duration
 	AverageSuccessInterval time.Duration
 	AverageTimeoutInterval time.Duration
+	MinActorLifetime       time.Duration
+	MaxActorLifetime       time.Duration
+	MinSuccessInterval     time.Duration
+	MaxSuccessInterval     time.Duration
 
 	SucceedActors int64
 	FailedActors  int64
@@ -89,6 +93,20 @@ func (r *Report) onActorStop(phone string) {
 		r.totalSuccessInterval += status.AverageSuccessInterval
 		r.totalTimeoutInterval += status.AverageTimeoutInterval
 
+		if r.MinActorLifetime > status.LifeTime && status.LifeTime > 0 {
+			r.MinActorLifetime = status.LifeTime
+		}
+		if r.MaxActorLifetime < status.LifeTime && status.LifeTime > 0 {
+			r.MaxActorLifetime = status.LifeTime
+		}
+
+		if r.MinSuccessInterval > status.AverageSuccessInterval && status.AverageSuccessInterval > 0 {
+			r.MinSuccessInterval = status.AverageSuccessInterval
+		}
+		if r.MaxSuccessInterval < status.AverageSuccessInterval && status.AverageSuccessInterval > 0 {
+			r.MaxSuccessInterval = status.AverageSuccessInterval
+		}
+
 		if status.ActorSucceed {
 			atomic.AddInt64(&r.SucceedActors, 1)
 		} else {
@@ -134,8 +152,8 @@ Timedout Requests		: %d
 Succeed Requests		: %d
 Error Responses			: %d
 Network Disconnect		: %d
-Avg Actor Lifetime		: %v
-Avg Success Interval		: %v
+Avg Actor Lifetime		: %v (%v - %v)
+Avg Success Interval		: %v (%v - %v)
 Avg Timeout Interval		: %v
 
 Total Exec Time			: %v
@@ -151,8 +169,8 @@ Total Exec Time			: %v
 		r.SucceedRequests,
 		r.ErrorResponses,
 		r.NetworkDisconnects,
-		r.AverageActorLifetime,
-		r.AverageSuccessInterval,
+		r.AverageActorLifetime, r.MinActorLifetime, r.MaxActorLifetime,
+		r.AverageSuccessInterval, r.MinSuccessInterval, r.MaxSuccessInterval,
 		r.AverageTimeoutInterval,
 		time.Since(r.Timer),
 	)
@@ -189,6 +207,11 @@ func (r *Report) Clear() {
 	r.totalSuccessInterval = 0
 	r.totalTimeoutInterval = 0
 	// r.lastPrintTime = 0
+
+	r.MinActorLifetime = time.Duration(^uint64(0) >> 1)
+	r.MinSuccessInterval = time.Duration(^uint64(0) >> 1)
+	r.MaxActorLifetime = 0
+	r.MaxSuccessInterval = 0
 
 	r.Timer = time.Now()
 }

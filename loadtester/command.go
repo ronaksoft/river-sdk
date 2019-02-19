@@ -5,26 +5,9 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/controller"
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/report"
-
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/scenario"
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
-	"git.ronaksoftware.com/ronak/riversdk/log"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )
-
-var cmdPrint = &ishell.Cmd{
-	Name: "Print",
-	Func: func(c *ishell.Context) {
-		if _Reporter != nil {
-			fnClearScreeen()
-
-			fmt.Println(_Reporter.String())
-			fmt.Printf("Failed Requests :\n%s", shared.PrintFailedRequest())
-		}
-	},
-}
 
 var cmdCreateAuthKey = &ishell.Cmd{
 	Name: "CreateAuthKey",
@@ -32,9 +15,12 @@ var cmdCreateAuthKey = &ishell.Cmd{
 
 		startNo := fnStartPhone(c)
 		endNo := fnEndPhone(c)
-		fnClearScreeen()
-		_Reporter.Clear()
 
+		// clear
+		fnClearScreeen()
+		fnClearReports()
+
+		// start workers
 		startDispatcher()
 		defer stopDispatcher()
 
@@ -51,13 +37,7 @@ var cmdCreateAuthKey = &ishell.Cmd{
 
 		}
 		wg.Wait()
-		elapsed := time.Since(sw)
-
-		fnClearScreeen()
-		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
-
-		fmt.Println(_Reporter.String())
-		fmt.Printf("Failed Requests :\n%s", shared.PrintFailedRequest())
+		fnPrintReports(time.Since(sw))
 
 	},
 }
@@ -68,9 +48,12 @@ var cmdRegister = &ishell.Cmd{
 
 		startNo := fnStartPhone(c)
 		endNo := fnEndPhone(c)
-		fnClearScreeen()
-		_Reporter.Clear()
 
+		// clear
+		fnClearScreeen()
+		fnClearReports()
+
+		// start workers
 		startDispatcher()
 		defer stopDispatcher()
 
@@ -87,13 +70,7 @@ var cmdRegister = &ishell.Cmd{
 
 		}
 		wg.Wait()
-		elapsed := time.Since(sw)
-
-		fnClearScreeen()
-		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
-
-		fmt.Println(_Reporter.String())
-		fmt.Printf("Failed Requests :\n%s", shared.PrintFailedRequest())
+		fnPrintReports(time.Since(sw))
 
 	},
 }
@@ -102,15 +79,14 @@ var cmdLogin = &ishell.Cmd{
 	Name: "Login",
 	Func: func(c *ishell.Context) {
 
-		// get suffix start phoneNo
-		// get suffix end phoneNo
-		// start loging in :/
-
 		startNo := fnStartPhone(c)
 		endNo := fnEndPhone(c)
-		fnClearScreeen()
-		_Reporter.Clear()
 
+		// clear
+		fnClearScreeen()
+		fnClearReports()
+
+		// start workers
 		startDispatcher()
 		defer stopDispatcher()
 
@@ -126,13 +102,7 @@ var cmdLogin = &ishell.Cmd{
 			JobQueue <- Job{PhoneNo: phoneNo, Wait: wg, Scenario: scenario.NewLogin(true)}
 		}
 		wg.Wait()
-		elapsed := time.Since(sw)
-
-		fnClearScreeen()
-		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
-
-		fmt.Println(_Reporter.String())
-		fmt.Printf("Failed Requests :\n%s", shared.PrintFailedRequest())
+		fnPrintReports(time.Since(sw))
 
 	},
 }
@@ -140,17 +110,16 @@ var cmdLogin = &ishell.Cmd{
 var cmdImportContact = &ishell.Cmd{
 	Name: "ImportContact",
 	Func: func(c *ishell.Context) {
-		// get phone number to import
-		// get suffix start phoneNo
-		// get suffix end phoneNo
-		// start importing contacts
 
 		phoneNoToImportAsContact := fnGetPhone(c)
 		startNo := fnStartPhone(c)
 		endNo := fnEndPhone(c)
-		fnClearScreeen()
-		_Reporter.Clear()
 
+		// clear
+		fnClearScreeen()
+		fnClearReports()
+
+		// start workers
 		startDispatcher()
 		defer stopDispatcher()
 
@@ -167,13 +136,7 @@ var cmdImportContact = &ishell.Cmd{
 
 		}
 		wg.Wait()
-		elapsed := time.Since(sw)
-
-		fnClearScreeen()
-		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
-
-		fmt.Println(_Reporter.String())
-		fmt.Printf("Failed Requests :\n%s", shared.PrintFailedRequest())
+		fnPrintReports(time.Since(sw))
 
 	},
 }
@@ -184,10 +147,12 @@ var cmdSendMessage = &ishell.Cmd{
 
 		startNo := fnStartPhone(c)
 		endNo := fnEndPhone(c)
-		fnClearScreeen()
-		_Reporter.Clear()
-		controller.ClearLoggedPackets()
 
+		// clear
+		fnClearScreeen()
+		fnClearReports()
+
+		// start workers
 		startDispatcher()
 		defer stopDispatcher()
 
@@ -204,38 +169,6 @@ var cmdSendMessage = &ishell.Cmd{
 
 		}
 		wg.Wait()
-		elapsed := time.Since(sw)
-
-		fnClearScreeen()
-		log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
-
-		fmt.Println(_Reporter.String())
-		fmt.Printf("Failed Requests :\n%s", shared.PrintFailedRequest())
-
-		rpt := report.NewPcapReport()
-		requsetList := controller.GetLoggedSentPackets()
-		for _, p := range requsetList {
-			err := rpt.FeedPacket(p, false)
-			if err != nil {
-				fmt.Println("rpt.FeedPacket(p, requests) :", err)
-			}
-		}
-
-		responseList := controller.GetLoggedReceivedPackets()
-		n := len(responseList)
-		for i := 0; i < n; i++ {
-			err := rpt.FeedPacket(responseList[i], true)
-			if err != nil {
-				fmt.Println("rpt.FeedPacket(p, reponses) :", err)
-			}
-		}
-		// for _, p := range responseList {
-		// 	err := rpt.FeedPacket(p, true)
-		// 	if err != nil {
-		// 		fmt.Println("rpt.FeedPacket(p, reponses) :", err)
-		// 	}
-		// }
-		fmt.Println(rpt.String())
-
+		fnPrintReports(time.Since(sw))
 	},
 }

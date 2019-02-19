@@ -39,7 +39,8 @@ type PcapReport struct {
 	// TimedoutRequest : requestID that have zero item on its responseList
 	TimedoutRequest []*PcapRequest
 
-	ConstructorCounter map[int64]int64
+	MessageCounter map[int64]int64
+	UpdateCounter  map[int64]int64
 
 	isProcessed bool
 }
@@ -52,7 +53,8 @@ func NewPcapReport() *PcapReport {
 	r.DuplicatedRequest = make([]*PcapRequest, 0)
 	r.DuplicatedResponse = make([]*PcapRequest, 0)
 	r.TimedoutRequest = make([]*PcapRequest, 0)
-	r.ConstructorCounter = make(map[int64]int64)
+	r.MessageCounter = make(map[int64]int64)
+	r.UpdateCounter = make(map[int64]int64)
 
 	return r
 }
@@ -70,10 +72,10 @@ func (r *PcapReport) Feed(p *pcap_parser.ParsedWS) error {
 		return err
 	}
 	// extract only messages reposnses and skip updates
-	messages, _ := extractMessages(envelop)
+	messages, updates := extractMessages(envelop)
 	for _, m := range messages {
 
-		r.ConstructorCounter[m.Constructor] = r.ConstructorCounter[m.Constructor] + 1
+		r.MessageCounter[m.Constructor] = r.MessageCounter[m.Constructor] + 1
 		// create report params
 		req, ok := r.Requests[m.RequestID]
 		if ok {
@@ -109,6 +111,14 @@ func (r *PcapReport) Feed(p *pcap_parser.ParsedWS) error {
 			r.Requests[m.RequestID] = req
 		}
 	}
+
+	// count received update
+	for _, uc := range updates {
+		for _, u := range uc.Updates {
+			r.UpdateCounter[u.Constructor] = r.UpdateCounter[u.Constructor] + 1
+		}
+	}
+
 	r.isProcessed = false
 	return nil
 }
@@ -162,8 +172,12 @@ func (r *PcapReport) String() string {
 	sb.WriteString(fmt.Sprintf("\n\t Total Duplicate Response : %d", len(r.DuplicatedResponse)))
 	sb.WriteString(fmt.Sprintf("\n\t Total Timeouted Requests : %d", len(r.TimedoutRequest)))
 
-	sb.WriteString("\n\t Received Messages : \n")
-	for con, count := range r.ConstructorCounter {
+	sb.WriteString("\n\n\t Received Messages :")
+	for con, count := range r.MessageCounter {
+		sb.WriteString(fmt.Sprintf("\n\t\t %s : %d", msg.ConstructorNames[con], count))
+	}
+	sb.WriteString("\n\n\t Received Updates :")
+	for con, count := range r.UpdateCounter {
 		sb.WriteString(fmt.Sprintf("\n\t\t %s : %d", msg.ConstructorNames[con], count))
 	}
 
@@ -226,10 +240,10 @@ func (r *PcapReport) FeedPacket(p *msg.ProtoMessage, isResponse bool) error {
 		return err
 	}
 	// extract only messages reposnses and skip updates
-	messages, _ := extractMessages(envelop)
+	messages, updates := extractMessages(envelop)
 	for _, m := range messages {
 
-		r.ConstructorCounter[m.Constructor] = r.ConstructorCounter[m.Constructor] + 1
+		r.MessageCounter[m.Constructor] = r.MessageCounter[m.Constructor] + 1
 		// create report params
 		req, ok := r.Requests[m.RequestID]
 		if ok {
@@ -262,6 +276,14 @@ func (r *PcapReport) FeedPacket(p *msg.ProtoMessage, isResponse bool) error {
 			r.Requests[m.RequestID] = req
 		}
 	}
+
+	// count received update
+	for _, uc := range updates {
+		for _, u := range uc.Updates {
+			r.UpdateCounter[u.Constructor] = r.UpdateCounter[u.Constructor] + 1
+		}
+	}
+
 	r.isProcessed = false
 	return nil
 }
