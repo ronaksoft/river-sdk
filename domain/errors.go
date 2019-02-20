@@ -19,9 +19,9 @@ var (
 	ErrQueuePathIsNotSet   = errors.New("queue path is not set")
 )
 
-// ParseServerError
+// ParseServerError ...
 func ParseServerError(b []byte) error {
 	x := new(msg.Error)
 	x.Unmarshal(b)
-	return errors.New(fmt.Sprintf("%s:%s", x.Code, x.Items))
+	return fmt.Errorf("%s:%s", x.Code, x.Items)
 }
