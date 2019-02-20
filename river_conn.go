@@ -94,7 +94,7 @@ func (r *River) saveDeviceToken() {
 		)
 		return
 	}
-	err = repo.Ctx().System.SaveString(domain.CN_DEVICE_TOKEN, string(val))
+	err = repo.Ctx().System.SaveString(domain.ColumnDeviceToken, string(val))
 	if err != nil {
 		logs.Debug("River::saveDeviceToken()-> SaveString()",
 			zap.String("Error", err.Error()),
@@ -110,7 +110,7 @@ func (v *RiverConnection) saveConfig() {
 		logs.Info("RiverConnection::Save()->MarshalJSON()",
 			zap.String("Error", err.Error()),
 		)
-	} else if err := repo.Ctx().System.SaveString(domain.CN_CONN_INFO, string(bytes)); err != nil {
+	} else if err := repo.Ctx().System.SaveString(domain.ColumnConnectionInfo, string(bytes)); err != nil {
 		logs.Info("RiverConnection::Save()->SaveString()",
 			zap.String("Error", err.Error()),
 		)
@@ -120,7 +120,7 @@ func (v *RiverConnection) saveConfig() {
 // Load
 func (v *RiverConnection) loadConfig() error {
 	logs.Debug("RiverConnection::Load()")
-	if kv, err := repo.Ctx().System.LoadString(domain.CN_CONN_INFO); err != nil {
+	if kv, err := repo.Ctx().System.LoadString(domain.ColumnConnectionInfo); err != nil {
 		logs.Info("RiverConnection::Load()->LoadString()",
 			zap.String("Error", err.Error()),
 		)

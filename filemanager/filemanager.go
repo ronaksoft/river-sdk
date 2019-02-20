@@ -265,7 +265,7 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 		case msg.MediaTypeContact:
 			// TODO:: implement it
 		default:
-			logs.Error("FileManager::Download() Invalid MediaType")
+			logs.Error("FileManager::Download() Invalid SharedMediaType")
 		}
 	}
 
@@ -338,7 +338,7 @@ func (fm *FileManager) SetAuthorization(authID int64, authKey []byte) {
 
 func (fm *FileManager) startDownloadQueue() {
 	for {
-		if fm.NetworkStatus == domain.DISCONNECTED || fm.NetworkStatus == domain.CONNECTING {
+		if fm.NetworkStatus == domain.NetworkDisconnected || fm.NetworkStatus == domain.NetworkConnecting {
 			time.Sleep(100 * time.Millisecond)
 		}
 		fm.DownloadQueueStarted = true
@@ -363,7 +363,7 @@ func (fm *FileManager) startDownloadQueue() {
 
 func (fm *FileManager) startUploadQueue() {
 	for {
-		if fm.NetworkStatus == domain.DISCONNECTED || fm.NetworkStatus == domain.CONNECTING {
+		if fm.NetworkStatus == domain.NetworkDisconnected || fm.NetworkStatus == domain.NetworkConnecting {
 			time.Sleep(100 * time.Millisecond)
 		}
 
@@ -533,7 +533,7 @@ func (fm *FileManager) LoadFileStatusQueue() {
 	for _, d := range dtos {
 		fs := new(FileStatus)
 		fs.LoadDTO(d, fm.progressCallback)
-		if fs.RequestStatus == domain.RequestStatePused ||
+		if fs.RequestStatus == domain.RequestStatePaused ||
 			fs.RequestStatus == domain.RequestStateCanceled ||
 			fs.RequestStatus == domain.RequestStateCompleted ||
 			fs.RequestStatus == domain.RequestStateError {

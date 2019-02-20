@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
-
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
 
@@ -16,7 +15,7 @@ type Files struct {
 	DocumentID    int64  `gorm:"column:DocumentID" json:"DocumentID"`
 	AccessHash    int64  `gorm:"column:AccessHash" json:"AccessHash"`
 	CreatedOn     int64  `gorm:"column:CreatedOn" json:"CreatedOn"`
-	MediaType     int32  `gorm:"column:MediaType" json:"MediaType"`
+	MediaType     int32  `gorm:"column:SharedMediaType" json:"SharedMediaType"`
 	Caption       string `gorm:"type:TEXT;column:Caption" json:"Caption"`
 	FileName      string `gorm:"type:TEXT;column:FileName" json:"FileName"`
 	FileSize      int32  `gorm:"column:FileSize" json:"FileSize"`

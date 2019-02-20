@@ -24,7 +24,7 @@ const (
 	ALPHANUMERICS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 )
 
-// SplitPQ
+// SplitPQ ...
 // This function used for proof of work to splits PQ to two prime numbers P and Q
 func SplitPQ(pq *big.Int) (p1, p2 *big.Int) {
 	value_0 := big.NewInt(0)
@@ -105,7 +105,7 @@ func SplitPQ(pq *big.Int) (p1, p2 *big.Int) {
 	return
 }
 
-// GenerateMessageKey
+// GenerateMessageKey ...
 // Message Key is: _Sha512(DHKey[100:140], InternalHeader, Payload)[32:64]
 func GenerateMessageKey(dhKey, plain []byte) []byte {
 	// Message Key is: _Sha512(DHKey[100:140], InternalHeader, Payload)[32:64]
@@ -120,7 +120,7 @@ func GenerateMessageKey(dhKey, plain []byte) []byte {
 	}
 }
 
-// Encrypt
+// Encrypt ...
 // Generate MessageKey, AES IV and AES Key:
 // 1. Message Key is: _Sha512(dhKey[100:140], plain)[32:64]
 // 2. AES IV: _Sha512 (dhKey[180:220], MessageKey)[:32]
@@ -155,7 +155,7 @@ func Encrypt(dhKey, plain []byte) (encrypted []byte, err error) {
 
 }
 
-// Decrypt
+// Decrypt ...
 // Decrypts the message:
 // 1. AES IV: _Sha512 (dhKey[180:220], MessageKey)[:12]
 // 2. AES KEY: _Sha512 (MessageKey, dhKey[170:210])[:32]
@@ -237,11 +237,12 @@ func Sha512(in []byte) ([]byte, error) {
 	return h.Sum(nil), nil
 }
 
-// RandUint64 produces a pseudo-random unsigned number
+// RandomUint64 produces a pseudo-random unsigned number
 func RandomUint64() uint64 {
 	return rand.Uint64()
 }
 
+// RandomInt63 produces a pseudo-random signed number
 func RandomInt63() int64 {
 	return rand.Int63()
 }

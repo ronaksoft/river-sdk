@@ -1,15 +1,6 @@
 package domain
 
-type RiverConnector struct {
-	AuthID    int64
-	AuthKey   [256]byte
-	UserID    int64
-	Username  string
-	Phone     string
-	FirstName string
-	LastName  string
-}
-
+// RiverConfiger high level interface to prevent package confilict when pass RiverConfig to SyncController
 type RiverConfiger interface {
 	Save()
 	Load() error

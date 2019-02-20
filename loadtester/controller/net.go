@@ -31,14 +31,14 @@ type CtrlNetwork struct {
 	actor shared.Acter
 
 	onError   domain.ErrorHandler
-	onMessage domain.OnMessageHandler
-	onUpdate  domain.OnUpdateHandler
+	onMessage domain.ReceivedMessageHandler
+	onUpdate  domain.ReceivedUpdateHandler
 }
 
 // NewCtrlNetwork create new instance
 func NewCtrlNetwork(act shared.Acter,
-	onMessage domain.OnMessageHandler,
-	onUpdate domain.OnUpdateHandler,
+	onMessage domain.ReceivedMessageHandler,
+	onUpdate domain.ReceivedUpdateHandler,
 	onError domain.ErrorHandler,
 ) shared.Neter {
 	n := &CtrlNetwork{

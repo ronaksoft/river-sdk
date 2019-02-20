@@ -15,8 +15,8 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/uiexec"
 	"git.ronaksoftware.com/ronak/riversdk/filemanager"
+	"git.ronaksoftware.com/ronak/riversdk/uiexec"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/network"
@@ -199,7 +199,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 // Get deviceToken
 func (r *River) loadDeviceToken() {
 	r.DeviceToken = new(msg.AccountRegisterDevice)
-	str, err := repo.Ctx().System.LoadString(domain.CN_DEVICE_TOKEN)
+	str, err := repo.Ctx().System.LoadString(domain.ColumnDeviceToken)
 	if err != nil {
 		logs.Info("River::loadDeviceToken() failed to fetch DeviceToken",
 			zap.String("Error", err.Error()),
@@ -556,7 +556,7 @@ func (r *River) releaseDelegate(requestID int64) {
 func (r *River) CreateAuthKey() (err error) {
 	logs.Debug("River::CreateAuthKey()")
 	// wait untill network connects
-	for r.networkCtrl.Quality() == domain.DISCONNECTED || r.networkCtrl.Quality() == domain.CONNECTING {
+	for r.networkCtrl.Quality() == domain.NetworkDisconnected || r.networkCtrl.Quality() == domain.NetworkConnecting {
 		time.Sleep(200)
 	}
 
@@ -603,7 +603,7 @@ func (r *River) CreateAuthKey() (err error) {
 					zap.Uint64("ServerFingerPrint", serverPubFP),
 				)
 			case msg.C_Error:
-				err = domain.ServerError(res.Message)
+				err = domain.ParseServerError(res.Message)
 			default:
 				err = domain.ErrInvalidConstructor
 			}
@@ -726,7 +726,7 @@ func (r *River) CreateAuthKey() (err error) {
 				r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 				filemanager.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 			case msg.C_Error:
-				err = domain.ServerError(res.Message)
+				err = domain.ParseServerError(res.Message)
 				return
 			default:
 				err = domain.ErrInvalidConstructor
@@ -807,7 +807,7 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 			domain.RemoveRequestCallback(m.RequestID)
 		} else {
 			logs.Debug("River::onReceivedMessage() callback does not exists",
-				zap.Uint64(domain.LK_REQUEST_ID, m.RequestID),
+				zap.Uint64("RequestID", m.RequestID),
 			)
 		}
 	}
@@ -928,7 +928,7 @@ readChannel:
 	)
 
 	// check max UpdateID if its greater than snapshot sync threshold discard recived updates and execute sanpshot sync
-	if maxID-r.syncCtrl.UpdateID() > domain.SnapshotSync_Threshold {
+	if maxID-r.syncCtrl.UpdateID() > domain.SnapshotSyncThreshold {
 		logs.Debug("SDK::onReceivedUpdate() snapshot threshold reached")
 		r.syncCtrl.CheckSyncState()
 		return
@@ -969,8 +969,8 @@ readChannel:
 }
 
 func (r *River) PrintDebuncerStatus() {
-	logs.Debug("SDK::PrintDebuncerStatus()")
-	r.networkCtrl.PrintDebuncerStatus()
+	logs.Debug("SDK::PrintDebouncerStatus()")
+	r.networkCtrl.PrintDebouncerStatus()
 }
 
 func (r *River) onFileProgressChanged(messageID, processedParts, totalParts int64, stateType domain.FileStateType) {

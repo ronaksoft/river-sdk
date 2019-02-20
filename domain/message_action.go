@@ -5,15 +5,23 @@ import (
 )
 
 const (
-	MessageActionNope              int32 = 0x00
+	// MessageActionNope glass messages type
+	MessageActionNope int32 = 0x00
+	// MessageActionContactRegistered glass messages type
 	MessageActionContactRegistered int32 = 0x01
-	MessageActionGroupCreated      int32 = 0x02
-	MessageActionGroupAddUser      int32 = 0x03
-	MessageActionGroupDeleteUser   int32 = 0x05
+	// MessageActionGroupCreated glass messages type
+	MessageActionGroupCreated int32 = 0x02
+	// MessageActionGroupAddUser glass messages type
+	MessageActionGroupAddUser int32 = 0x03
+	// MessageActionGroupDeleteUser glass messages type
+	MessageActionGroupDeleteUser int32 = 0x05
+	// MessageActionGroupTitleChanged glass messages type
 	MessageActionGroupTitleChanged int32 = 0x06
-	MessageActionClearHistory      int32 = 0x07
+	// MessageActionClearHistory glass messages type
+	MessageActionClearHistory int32 = 0x07
 )
 
+// ExtractActionUserIDs get user ids from  MessageActions
 func ExtractActionUserIDs(act int32, data []byte) []int64 {
 
 	res := make([]int64, 0)

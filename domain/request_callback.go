@@ -12,7 +12,7 @@ var (
 	requestCallbacks map[uint64]*RequestCallback
 )
 
-// RequestCallback
+// RequestCallback ...
 // This will be stored in memory until the request sent to server, if server responds in the acceptable time frame,
 // SuccessCallback will be called otherwise TimeoutCallback will be called. If for any reason the memory was reset
 // then these callbacks will be forgot and the response will be saved on disk to be fetched later.
@@ -30,7 +30,7 @@ func init() {
 	requestCallbacks = make(map[uint64]*RequestCallback, 0)
 }
 
-// NewRequestCallback
+// NewRequestCallback create new instance
 func NewRequestCallback(reqID uint64, success MessageHandler, timeOut time.Duration, timeout TimeoutCallback, isUICallback bool) *RequestCallback {
 
 	return &RequestCallback{
@@ -44,7 +44,7 @@ func NewRequestCallback(reqID uint64, success MessageHandler, timeOut time.Durat
 	}
 }
 
-// AddRequestCallback
+// AddRequestCallback in memory cache to save requests
 func AddRequestCallback(reqID uint64, success MessageHandler, timeOut time.Duration, timeout TimeoutCallback, isUICallback bool) *RequestCallback {
 	cb := &RequestCallback{
 		RequestID:       reqID,
@@ -61,14 +61,14 @@ func AddRequestCallback(reqID uint64, success MessageHandler, timeOut time.Durat
 	return cb
 }
 
-// RemoveRequestCallback
+// RemoveRequestCallback remove from in memory cache
 func RemoveRequestCallback(reqID uint64) {
 	mxCB.Lock()
 	delete(requestCallbacks, reqID)
 	mxCB.Unlock()
 }
 
-// GetRequestCallback
+// GetRequestCallback fetch request
 func GetRequestCallback(reqID uint64) (cb *RequestCallback) {
 	mxCB.Lock()
 	val, ok := requestCallbacks[reqID]

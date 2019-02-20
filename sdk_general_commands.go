@@ -397,7 +397,7 @@ func (r *River) FileDownload(msgID int64) {
 		// filemanager.Ctx().Download(m)
 	case domain.RequestStateCompleted:
 		r.onFileDownloadCompleted(m.ID, filePath, domain.FileStateExistedDownload)
-	case domain.RequestStatePused:
+	case domain.RequestStatePaused:
 		filemanager.Ctx().Download(m)
 	case domain.RequestStateCanceled:
 		filemanager.Ctx().Download(m)
@@ -418,7 +418,7 @@ func (r *River) PauseDownload(msgID int64) {
 	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
 	if err == nil {
 		filemanager.Ctx().DeleteFromQueue(fs.FileID)
-		repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStatePused)
+		repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStatePaused)
 	} else {
 		logs.Error("SDK::PauseDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
 	}
@@ -438,7 +438,7 @@ func (r *River) PauseUpload(msgID int64) {
 	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
 	if err == nil {
 		filemanager.Ctx().DeleteFromQueue(fs.FileID)
-		repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStatePused)
+		repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStatePaused)
 		// repo.Ctx().PendingMessages.DeletePendingMessage(fs.MessageID)
 	} else {
 		logs.Error("SDK::PauseUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
@@ -782,7 +782,7 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 	case msg.MediaTypeContact:
 		// TODO:: implement it
 	default:
-		logs.Error("SDK::FileDownloadThumbnail() Invalid MediaType")
+		logs.Error("SDK::FileDownloadThumbnail() Invalid SharedMediaType")
 	}
 
 	dto, err := repo.Ctx().Files.GetFile(msgID)

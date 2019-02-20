@@ -727,13 +727,13 @@ func fnGetMime(c *ishell.Context) string {
 	return mime
 }
 
-func fnGetMediaType(c *ishell.Context) domain.MediaType {
-	mediaType := domain.MediaTypeAll
+func fnGetMediaType(c *ishell.Context) domain.SharedMediaType {
+	mediaType := domain.SharedMediaTypeAll
 	for {
 		c.Print("Media Type : (All=0, File= 1, Media= 2, Voice= 3, Audio= 4)")
 		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
 		if err == nil && id < 5 {
-			mediaType = domain.MediaType(id)
+			mediaType = domain.SharedMediaType(id)
 			break
 		} else {
 			c.Println("entered value is invalid ")

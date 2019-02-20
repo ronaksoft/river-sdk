@@ -43,7 +43,7 @@ func (fm *FileManager) Send(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvel
 
 	// Set timeout
 	client := http.DefaultClient
-	client.Timeout = domain.DEFAULT_REQUEST_TIMEOUT
+	client.Timeout = domain.WebsocketRequestTime
 
 	// Send Data
 	httpResp, err := client.Post(fm.ServerAddress, "application/protobuf", reqBuff)

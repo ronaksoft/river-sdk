@@ -84,7 +84,7 @@ func (ctrl *QueueController) distributor() {
 	for {
 
 		// Wait While Network is Disconnected or Connecting
-		for ctrl.network.Quality() == domain.DISCONNECTED || ctrl.network.Quality() == domain.CONNECTING {
+		for ctrl.network.Quality() == domain.NetworkDisconnected || ctrl.network.Quality() == domain.NetworkConnecting {
 			logs.Debug("QueueController::distributor() Network is not connected ...",
 				zap.String("Quality", domain.NetworkStatusName[ctrl.network.Quality()]),
 			)
@@ -179,7 +179,7 @@ func (ctrl *QueueController) executor(req request) {
 		)
 	}
 	if req.Timeout == 0 {
-		req.Timeout = domain.DEFAULT_REQUEST_TIMEOUT
+		req.Timeout = domain.WebsocketRequestTime
 	}
 	logs.Debug("QueueController::executor() Request handover to network controller",
 		zap.Uint64("RequestID", req.ID),
@@ -252,7 +252,7 @@ func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructo
 	messageEnvelope.Message = commandBytes
 
 	// Add the callback functions
-	domain.AddRequestCallback(requestID, successCB, domain.DEFAULT_WS_REALTIME_TIMEOUT, timeoutCB, isUICallback)
+	domain.AddRequestCallback(requestID, successCB, domain.WebsocketDirectTime, timeoutCB, isUICallback)
 
 	execBlock := func(reqID uint64, req *msg.MessageEnvelope) error {
 		err := ctrl.network.Send(req, blockingMode)
@@ -268,7 +268,7 @@ func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructo
 		reqCB := domain.GetRequestCallback(reqID)
 		if reqCB != nil {
 			select {
-			case <-time.After(domain.DEFAULT_WS_REALTIME_TIMEOUT):
+			case <-time.After(domain.WebsocketDirectTime):
 				logs.Debug("QueueController::ExecuteRealtimeCommand()->execBlock() : Timeout",
 					zap.String("ConstructorName", msg.ConstructorNames[req.Constructor]),
 					zap.Uint64("RequestID", requestID),
@@ -327,7 +327,7 @@ func (ctrl *QueueController) ExecuteCommand(requestID uint64, constructor int64,
 	messageEnvelope.Message = requestBytes
 	req := request{
 		ID:              requestID,
-		Timeout:         domain.DEFAULT_REQUEST_TIMEOUT,
+		Timeout:         domain.WebsocketRequestTime,
 		MessageEnvelope: messageEnvelope,
 	}
 
@@ -399,7 +399,7 @@ func (ctrl *QueueController) reinitializePendingMessages() {
 		messageEnvelope.Message, _ = v.Marshal()
 		req := &request{
 			ID:              messageEnvelope.RequestID,
-			Timeout:         domain.DEFAULT_REQUEST_TIMEOUT,
+			Timeout:         domain.WebsocketRequestTime,
 			MessageEnvelope: messageEnvelope,
 		}
 

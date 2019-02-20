@@ -6,8 +6,8 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/filemanager"
 
-	"git.ronaksoftware.com/ronak/riversdk/uiexec"
 	"git.ronaksoftware.com/ronak/riversdk/synchronizer"
+	"git.ronaksoftware.com/ronak/riversdk/uiexec"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/logs"
@@ -204,7 +204,7 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 		return
 	}
 	// Offline mode
-	if r.networkCtrl.Quality() == domain.DISCONNECTED || r.networkCtrl.Quality() == domain.CONNECTING {
+	if r.networkCtrl.Quality() == domain.NetworkDisconnected || r.networkCtrl.Quality() == domain.NetworkConnecting {
 		if dtoDialog.TopMessageID < 0 {
 			messages, users := repo.Ctx().Messages.GetMessageHistoryWithPendingMessages(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 			fnSendGetMessageHistoryResponse(out, messages, users, in.RequestID, successCB)
@@ -532,7 +532,7 @@ func (r *River) accountRegisterDevice(in, out *msg.MessageEnvelope, timeoutCB do
 		)
 		return
 	}
-	err = repo.Ctx().System.SaveString(domain.CN_DEVICE_TOKEN, string(val))
+	err = repo.Ctx().System.SaveString(domain.ColumnDeviceToken, string(val))
 	if err != nil {
 		logs.Debug("River::accountRegisterDevice()-> SaveString()",
 			zap.String("Error", err.Error()),
@@ -561,7 +561,7 @@ func (r *River) accountUnregisterDevice(in, out *msg.MessageEnvelope, timeoutCB 
 		)
 		return
 	}
-	err = repo.Ctx().System.SaveString(domain.CN_DEVICE_TOKEN, string(val))
+	err = repo.Ctx().System.SaveString(domain.ColumnDeviceToken, string(val))
 	if err != nil {
 		logs.Debug("River::accountUnregisterDevice()-> SaveString()",
 			zap.String("Error", err.Error()),

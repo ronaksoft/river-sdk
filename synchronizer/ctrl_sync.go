@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/uiexec"
 	"git.ronaksoftware.com/ronak/riversdk/filemanager"
+	"git.ronaksoftware.com/ronak/riversdk/uiexec"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/network"
@@ -107,8 +107,8 @@ func (ctrl *SyncController) Start() {
 	logs.Info("SyncController:: Start")
 
 	// Load the latest UpdateID stored in DB
-	if v, err := repo.Ctx().System.LoadInt(domain.CN_UPDATE_ID); err != nil {
-		err := repo.Ctx().System.SaveInt(domain.CN_UPDATE_ID, 0)
+	if v, err := repo.Ctx().System.LoadInt(domain.ColumnUpdateID); err != nil {
+		err := repo.Ctx().System.SaveInt(domain.ColumnUpdateID, 0)
 		if err != nil {
 			logs.Debug("SyncController::Start()-> SaveInt()",
 				zap.String("Error", err.Error()),
@@ -168,7 +168,7 @@ func (ctrl *SyncController) watchDog() {
 		select {
 		case <-time.After(60 * time.Second):
 			// make sure network is connected b4 start getUpdateDifference or snapshotSync
-			for ctrl.networkCtrl.Quality() == domain.DISCONNECTED || ctrl.networkCtrl.Quality() == domain.CONNECTING {
+			for ctrl.networkCtrl.Quality() == domain.NetworkDisconnected || ctrl.networkCtrl.Quality() == domain.NetworkConnecting {
 				time.Sleep(100 * time.Millisecond)
 			}
 			if ctrl.syncStatus != domain.Syncing {
@@ -201,7 +201,7 @@ func (ctrl *SyncController) sync() {
 	}
 
 	// make sure network is connected b4 start getUpdateDifference or snapshotSync
-	for ctrl.networkCtrl.Quality() == domain.DISCONNECTED || ctrl.networkCtrl.Quality() == domain.CONNECTING {
+	for ctrl.networkCtrl.Quality() == domain.NetworkDisconnected || ctrl.networkCtrl.Quality() == domain.NetworkConnecting {
 		time.Sleep(100 * time.Millisecond)
 	}
 
@@ -225,7 +225,7 @@ func (ctrl *SyncController) sync() {
 	}
 	//}
 
-	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSync_Threshold {
+	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSyncThreshold {
 		logs.Debug("SyncController::sync()-> Snapshot sync")
 		// remove all messages
 		err := repo.Ctx().DropAndCreateTable(&dto.Messages{})
@@ -238,7 +238,7 @@ func (ctrl *SyncController) sync() {
 		ctrl.getContacts()
 		ctrl.updateID = serverUpdateID
 		ctrl.getAllDialogs(0, 100)
-		err = repo.Ctx().System.SaveInt(domain.CN_UPDATE_ID, int32(ctrl.updateID))
+		err = repo.Ctx().System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
 		if err != nil {
 			logs.Debug("SyncController::sync()-> SaveInt()",
 				zap.String("Error", err.Error()),
@@ -269,7 +269,7 @@ func (ctrl *SyncController) SetUserID(userID int64) {
 func (ctrl *SyncController) getUpdateState() (updateID int64, err error) {
 
 	// when network is disconnected no need to enqueue update request in goque
-	if ctrl.networkCtrl.Quality() == domain.DISCONNECTED || ctrl.networkCtrl.Quality() == domain.CONNECTING {
+	if ctrl.networkCtrl.Quality() == domain.NetworkDisconnected || ctrl.networkCtrl.Quality() == domain.NetworkConnecting {
 		return -1, domain.ErrNoConnection
 	}
 
@@ -298,7 +298,7 @@ func (ctrl *SyncController) getUpdateState() (updateID int64, err error) {
 				x.Unmarshal(m.Message)
 				updateID = x.UpdateID
 			case msg.C_Error:
-				err = domain.ServerError(m.Message)
+				err = domain.ParseServerError(m.Message)
 				logs.Debug(err.Error())
 			}
 		},
@@ -445,7 +445,7 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 			ctrl.updateID = x.MaxUpdateID
 
 			// Save UpdateID to DB
-			err := repo.Ctx().System.SaveInt(domain.CN_UPDATE_ID, int32(ctrl.updateID))
+			err := repo.Ctx().System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
 			if err != nil {
 				logs.Debug("SyncController::onGetDiffrenceSucceed()-> SaveInt()",
 					zap.String("Error", err.Error()),
@@ -463,7 +463,7 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 
 	case msg.C_Error:
 		logs.Debug("SyncController::onGetDiffrenceSucceed()-> C_Error",
-			zap.String("Error", domain.ServerError(m.Message).Error()),
+			zap.String("Error", domain.ParseServerError(m.Message).Error()),
 		)
 		// TODO:: Handle error
 	}
@@ -579,7 +579,7 @@ func (ctrl *SyncController) getAllDialogs(offset int32, limit int32) {
 				}
 			case msg.C_Error:
 				logs.Debug("SyncController::onSuccessCallback()-> C_Error",
-					zap.String("Error", domain.ServerError(m.Message).Error()),
+					zap.String("Error", domain.ParseServerError(m.Message).Error()),
 				)
 			}
 		},
@@ -662,7 +662,7 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 
 		if ctrl.updateID < u.MaxUpdateID {
 			ctrl.updateID = u.MaxUpdateID
-			err := repo.Ctx().System.SaveInt(domain.CN_UPDATE_ID, int32(ctrl.updateID))
+			err := repo.Ctx().System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
 			if err != nil {
 				logs.Debug("SyncController::UpdateHandler() -> SaveInt()",
 					zap.String("Error", err.Error()),
@@ -765,7 +765,7 @@ func handleMediaMessage(messages ...*msg.UserMessage) {
 		case msg.MediaTypeEmpty:
 			// NOP
 		case msg.MediaTypePhoto:
-			logs.Info("handleMediaMessage() Message.MediaType is msg.MediaTypePhoto")
+			logs.Info("handleMediaMessage() Message.SharedMediaType is msg.MediaTypePhoto")
 			// TODO:: implement it
 		case msg.MediaTypeDocument:
 			mediaDoc := new(msg.MediaDocument)
@@ -783,10 +783,10 @@ func handleMediaMessage(messages ...*msg.UserMessage) {
 				logs.Error("handleMediaMessage()-> connat unmarshal MediaTypeDocument", zap.Error(err))
 			}
 		case msg.MediaTypeContact:
-			logs.Info("handleMediaMessage() Message.MediaType is msg.MediaTypeContact")
+			logs.Info("handleMediaMessage() Message.SharedMediaType is msg.MediaTypeContact")
 			// TODO:: implement it
 		default:
-			logs.Info("handleMediaMessage() Message.MediaType is invalid")
+			logs.Info("handleMediaMessage() Message.SharedMediaType is invalid")
 		}
 	}
 }

@@ -214,7 +214,7 @@ func (r *repoFiles) GetFile(msgID int64) (*dto.Files, error) {
 }
 
 func (r *repoFiles) GetSharedMedia(peerID int64, peerType int32, mediaType int32) ([]*msg.UserMessage, error) {
-	mType := domain.MediaType(mediaType)
+	mType := domain.SharedMediaType(mediaType)
 
 	dtos := make([]dto.Files, 0)
 	err := r.db.Where("PeerID=? AND PeerType=?", peerID, peerType).Find(&dtos).Error
@@ -239,18 +239,18 @@ func (r *repoFiles) GetSharedMedia(peerID int64, peerType int32, mediaType int32
 			// AttributeTypeFile
 			// AttributeAnimated
 			switch mType {
-			case domain.MediaTypeAll:
+			case domain.SharedMediaTypeAll:
 				msgIDs[d.MessageID] = true
 				break attributes
-			case domain.MediaTypeFile:
+			case domain.SharedMediaTypeFile:
 				if a.Type == msg.AttributeTypeNone || a.Type == msg.AttributeTypeFile {
 					msgIDs[d.MessageID] = true
 				}
-			case domain.MediaTypeMedia:
+			case domain.SharedMediaTypeMedia:
 				if a.Type == msg.AttributeTypePhoto || a.Type == msg.AttributeAnimated || a.Type == msg.AttributeTypeVideo {
 					msgIDs[d.MessageID] = true
 				}
-			case domain.MediaTypeVoice:
+			case domain.SharedMediaTypeVoice:
 				if a.Type == msg.AttributeTypeAudio {
 					x := new(msg.DocumentAttributeAudio)
 					err := x.Unmarshal(a.Data)
@@ -260,7 +260,7 @@ func (r *repoFiles) GetSharedMedia(peerID int64, peerType int32, mediaType int32
 						}
 					}
 				}
-			case domain.MediaTypeAudio:
+			case domain.SharedMediaTypeAudio:
 				if a.Type == msg.AttributeTypeAudio {
 					x := new(msg.DocumentAttributeAudio)
 					err := x.Unmarshal(a.Data)
@@ -270,7 +270,7 @@ func (r *repoFiles) GetSharedMedia(peerID int64, peerType int32, mediaType int32
 						}
 					}
 				}
-			case domain.MediaTypeLink:
+			case domain.SharedMediaTypeLink:
 				// not implemented
 			default:
 				// not implemented

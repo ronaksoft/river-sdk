@@ -236,7 +236,7 @@ func downloadWorker(workerIdx int, wg *sync.WaitGroup, partQueue chan int, fileB
 			envelop.RequestID = requestID
 
 			// Send
-			for _SDK.GetNetworkStatus() == int32(domain.DISCONNECTED) || _SDK.GetNetworkStatus() == int32(domain.CONNECTING) {
+			for _SDK.GetNetworkStatus() == int32(domain.NetworkDisconnected) || _SDK.GetNetworkStatus() == int32(domain.NetworkConnecting) {
 				logs.Warn("network is not connected", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx))
 				time.Sleep(500 * time.Millisecond)
 			}

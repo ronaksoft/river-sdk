@@ -64,18 +64,18 @@ type NetworkController struct {
 	pingIdx    int
 
 	// queue
-	messageQueue      *domain.QueueMessages
-	updateQueue       *domain.QueueUpdates
-	sendQueue         *domain.QueueMessages
-	chMessageDebuncer chan bool
-	chUpdateDebuncer  chan bool
-	chSendDebuncer    chan bool
+	messageQueue       *domain.QueueMessages
+	updateQueue        *domain.QueueUpdates
+	sendQueue          *domain.QueueMessages
+	chMessageDebouncer chan bool
+	chUpdateDebouncer  chan bool
+	chSendDebouncer    chan bool
 	// prevent write to socket concurrently
 	// it used to prevent invoke read request while qriting on socket too
-	wsSendDebuncerLock sync.Mutex
+	wsSendDebouncerLock sync.Mutex
 
-	OnMessage domain.OnMessageHandler
-	OnUpdate  domain.OnUpdateHandler
+	OnMessage domain.ReceivedMessageHandler
+	OnUpdate  domain.ReceivedUpdateHandler
 
 	// requests that it should sent unencrypted
 	unauthorizedRequests map[int64]bool
@@ -88,17 +88,17 @@ type NetworkController struct {
 func NewNetworkController(config NetworkConfig) *NetworkController {
 	m := new(NetworkController)
 	if config.ServerEndpoint == "" {
-		m.websocketEndpoint = domain.PRODUCTION_SERVER_WEBSOCKET_ENDPOINT
+		m.websocketEndpoint = domain.WebsocketEndpoint
 	} else {
 		m.websocketEndpoint = config.ServerEndpoint
 	}
 	if config.PingTime <= 0 {
-		m.wsPingTime = domain.DEFAULT_WS_PING_TIME
+		m.wsPingTime = domain.WebsocketPingTime
 	} else {
 		m.wsPingTime = config.PingTime
 	}
 	if config.PongTimeout <= 0 {
-		m.wsPongTimeout = domain.DEFAULT_WS_PONG_TIMEOUT
+		m.wsPongTimeout = domain.WebsocketPongTime
 	} else {
 		m.wsPongTimeout = config.PongTimeout
 	}
@@ -117,9 +117,9 @@ func NewNetworkController(config NetworkConfig) *NetworkController {
 	m.messageQueue = domain.NewQueueMessages()
 	m.sendQueue = domain.NewQueueMessages()
 
-	m.chMessageDebuncer = make(chan bool)
-	m.chUpdateDebuncer = make(chan bool)
-	m.chSendDebuncer = make(chan bool)
+	m.chMessageDebouncer = make(chan bool)
+	m.chUpdateDebouncer = make(chan bool)
+	m.chSendDebouncer = make(chan bool)
 
 	m.unauthorizedRequests = map[int64]bool{
 		msg.C_SystemGetServerTime: true,
@@ -137,33 +137,33 @@ func (ctrl *NetworkController) Start() error {
 	}
 	go ctrl.keepAlive()
 	go ctrl.watchDog()
-	go ctrl.messageDebuncer()
-	go ctrl.updateDebuncer()
-	go ctrl.sendDebuncer()
+	go ctrl.messageDebouncer()
+	go ctrl.updateDebouncer()
+	go ctrl.sendDebouncer()
 	return nil
 }
 
-func (ctrl *NetworkController) messageDebuncer() {
+func (ctrl *NetworkController) messageDebouncer() {
 	counter := 0
 	interval := 50 * time.Millisecond
 	timer := time.NewTimer(interval)
 	for {
 		select {
-		case <-ctrl.chMessageDebuncer:
+		case <-ctrl.chMessageDebouncer:
 			counter++
-			logs.Debug("NetworkController::messageDebuncer() Received",
+			logs.Debug("NetworkController::messageDebouncer() Received",
 				zap.Int("Counter", counter),
 			)
 			// on receive any update we wait another interval until we receive 3 update
 			if counter < 3 {
-				logs.Debug("NetworkController::messageDebuncer() Received Timer Reset",
+				logs.Debug("NetworkController::messageDebouncer() Received Timer Reset",
 					zap.Int("Counter", counter),
 				)
 				timer.Reset(interval)
 			}
 		case <-timer.C:
 			if ctrl.OnMessage != nil && ctrl.messageQueue.Length() > 0 {
-				logs.Debug("NetworkController::messageDebuncer() Flushed",
+				logs.Debug("NetworkController::messageDebouncer() Flushed",
 					zap.Int("ItemCount", ctrl.messageQueue.Length()),
 				)
 				ctrl.OnMessage(ctrl.messageQueue.PopAll())
@@ -171,34 +171,34 @@ func (ctrl *NetworkController) messageDebuncer() {
 			}
 			timer.Reset(interval)
 		case <-ctrl.stopChannel:
-			logs.Debug("NetworkController::messageDebuncer() Stopped")
+			logs.Debug("NetworkController::messageDebouncer() Stopped")
 			return
 		}
 	}
 
 }
 
-func (ctrl *NetworkController) updateDebuncer() {
+func (ctrl *NetworkController) updateDebouncer() {
 	counter := 0
 	interval := 50 * time.Millisecond
 	timer := time.NewTimer(interval)
 	for {
 		select {
-		case <-ctrl.chUpdateDebuncer:
+		case <-ctrl.chUpdateDebouncer:
 			counter++
-			logs.Debug("NetworkController::updateDebuncer() Received",
+			logs.Debug("NetworkController::updateDebouncer() Received",
 				zap.Int("Counter", counter),
 			)
 			// on receive any update we wait another interval until we receive 3 update
 			if counter < 3 {
-				logs.Debug("NetworkController::updateDebuncer() Received Timer Reset",
+				logs.Debug("NetworkController::updateDebouncer() Received Timer Reset",
 					zap.Int("Counter", counter),
 				)
 				timer.Reset(interval)
 			}
 		case <-timer.C:
 			if ctrl.OnUpdate != nil && ctrl.updateQueue.Length() > 0 {
-				logs.Debug("NetworkController::updateDebuncer() Flushed",
+				logs.Debug("NetworkController::updateDebouncer() Flushed",
 					zap.Int("ItemCount", ctrl.updateQueue.Length()),
 				)
 				ctrl.OnUpdate(ctrl.updateQueue.PopAll())
@@ -206,38 +206,38 @@ func (ctrl *NetworkController) updateDebuncer() {
 			}
 			timer.Reset(interval)
 		case <-ctrl.stopChannel:
-			logs.Debug("NetworkController::updateDebuncer() Stopped")
+			logs.Debug("NetworkController::updateDebouncer() Stopped")
 			return
 		}
 	}
 }
 
-func (ctrl *NetworkController) sendDebuncer() {
+func (ctrl *NetworkController) sendDebouncer() {
 	counter := 0
 	interval := 50 * time.Millisecond
 	timer := time.NewTimer(interval)
 	for {
 		// wait for network to connect
-		for ctrl.wsQuality == domain.CONNECTING || ctrl.wsQuality == domain.DISCONNECTED {
+		for ctrl.wsQuality == domain.NetworkConnecting || ctrl.wsQuality == domain.NetworkDisconnected {
 			time.Sleep(interval)
 		}
 
 		select {
-		case <-ctrl.chSendDebuncer:
+		case <-ctrl.chSendDebouncer:
 			counter++
-			logs.Debug("NetworkController::sendDebuncer() Received",
+			logs.Debug("NetworkController::sendDebouncer() Received",
 				zap.Int("Counter", counter),
 			)
 			// on receive any update we wait another interval until we receive 3 update
 			if counter < 3 {
-				logs.Debug("NetworkController::sendDebuncer() Received Timer Reset",
+				logs.Debug("NetworkController::sendDebouncer() Received Timer Reset",
 					zap.Int("Counter", counter),
 				)
 				timer.Reset(interval)
 			}
 		case <-timer.C:
 			if ctrl.sendQueue.Length() > 0 {
-				logs.Debug("NetworkController::sendDebuncer() Flushed",
+				logs.Debug("NetworkController::sendDebouncer() Flushed",
 					zap.Int("ItemCount", ctrl.sendQueue.Length()),
 				)
 				ctrl.sendFlush(ctrl.sendQueue.PopAll())
@@ -245,7 +245,7 @@ func (ctrl *NetworkController) sendDebuncer() {
 			}
 			timer.Reset(interval)
 		case <-ctrl.stopChannel:
-			logs.Debug("NetworkController::sendDebuncer() Stopped")
+			logs.Debug("NetworkController::sendDebouncer() Stopped")
 			return
 		}
 	}
@@ -265,8 +265,8 @@ func (ctrl *NetworkController) watchDog() {
 				ctrl.receiver()
 			}
 
-			logs.Debug("NetworkController::watchDog() DISCONNECTED")
-			ctrl.updateNetworkStatus(domain.DISCONNECTED)
+			logs.Debug("NetworkController::watchDog() NetworkDisconnected")
+			ctrl.updateNetworkStatus(domain.NetworkDisconnected)
 			if ctrl.wsKeepConnection {
 
 				logs.Debug("NetworkController::watchDog() Retry to Connect")
@@ -291,7 +291,7 @@ func (ctrl *NetworkController) keepAlive() {
 				continue
 			}
 			ctrl.wsWriteLock.Lock()
-			ctrl.wsConn.SetWriteDeadline(time.Now().Add(domain.DEFAULT_WS_WRITE_TIMEOUT))
+			ctrl.wsConn.SetWriteDeadline(time.Now().Add(domain.WebsocketWriteTime))
 			err := ctrl.wsConn.WriteMessage(websocket.PingMessage, nil)
 			ctrl.wsWriteLock.Unlock()
 			if err != nil {
@@ -311,11 +311,11 @@ func (ctrl *NetworkController) keepAlive() {
 				avgDelay := (ctrl.pingDelays[0] + ctrl.pingDelays[1] + ctrl.pingDelays[2]) / 3
 				switch {
 				case avgDelay > 1500*time.Millisecond:
-					ctrl.updateNetworkStatus(domain.WEAK)
+					ctrl.updateNetworkStatus(domain.NetworkWeak)
 				case avgDelay > 500*time.Millisecond:
-					ctrl.updateNetworkStatus(domain.SLOW)
+					ctrl.updateNetworkStatus(domain.NetworkSlow)
 				default:
-					ctrl.updateNetworkStatus(domain.FAST)
+					ctrl.updateNetworkStatus(domain.NetworkFast)
 				}
 			case <-time.After(ctrl.wsPongTimeout):
 				ctrl.wsConn.SetReadDeadline(time.Now())
@@ -335,8 +335,8 @@ func (ctrl *NetworkController) receiver() {
 	for {
 		// prevent webSocket.ReadMessage() request while writing message to websocket
 		// this will wait till sendFlush() finish's its job
-		ctrl.wsSendDebuncerLock.Lock()
-		ctrl.wsSendDebuncerLock.Unlock()
+		ctrl.wsSendDebouncerLock.Lock()
+		ctrl.wsSendDebouncerLock.Unlock()
 
 		messageType, message, err := ctrl.wsConn.ReadMessage()
 		if err != nil {
@@ -370,9 +370,9 @@ func (ctrl *NetworkController) receiver() {
 				if err != nil {
 					logs.Debug("NetworkController::receiver()->Decrypt()",
 						zap.String("Error", err.Error()),
-						zap.Int64(domain.LK_CLIENT_AUTH_ID, ctrl.authID),
-						zap.Int64(domain.LK_SERVER_AUTH_ID, res.AuthID),
-						zap.String(domain.LK_MSG_KEY, hex.Dump(res.MessageKey)))
+						zap.Int64("ctrl.authID", ctrl.authID),
+						zap.Int64("resp.AuthID", res.AuthID),
+						zap.String("resp.MessageKey", hex.Dump(res.MessageKey)))
 
 					continue
 				}
@@ -399,13 +399,13 @@ func (ctrl *NetworkController) updateNetworkStatus(newStatus domain.NetworkStatu
 		return
 	}
 	switch newStatus {
-	case domain.DISCONNECTED:
+	case domain.NetworkDisconnected:
 		logs.Info("NetworkController::updateNetworkStatus() Disconnected")
-	case domain.WEAK:
+	case domain.NetworkWeak:
 		logs.Info("NetworkController::updateNetworkStatus() Weak")
-	case domain.SLOW:
+	case domain.NetworkSlow:
 		logs.Info("NetworkController::updateNetworkStatus() Slow")
-	case domain.FAST:
+	case domain.NetworkFast:
 		logs.Info("NetworkController::updateNetworkStatus() Fast")
 	}
 	ctrl.wsQuality = newStatus
@@ -451,30 +451,30 @@ func (ctrl *NetworkController) extractMessages(m *msg.MessageEnvelope) ([]*msg.M
 	return messages, updates
 }
 
-// send signal to debuncer
+// send signal to debouncer
 func (ctrl *NetworkController) messageReceived() {
 	select {
-	case ctrl.chMessageDebuncer <- true:
+	case ctrl.chMessageDebouncer <- true:
 		logs.Debug("NetworkController::messageReceived() Signal")
 	default:
 		logs.Debug("NetworkController::messageReceived() Skipped")
 	}
 }
 
-// send signal to debuncer
+// send signal to debouncer
 func (ctrl *NetworkController) updateReceived() {
 	select {
-	case ctrl.chUpdateDebuncer <- true:
+	case ctrl.chUpdateDebouncer <- true:
 		logs.Debug("NetworkController::updateReceived() Signal")
 	default:
 		logs.Debug("NetworkController::updateReceived() Skipped")
 	}
 }
 
-// send signal to debuncer
+// send signal to debouncer
 func (ctrl *NetworkController) sendRequestReceived() {
 	select {
-	case ctrl.chSendDebuncer <- true:
+	case ctrl.chSendDebouncer <- true:
 		logs.Debug("NetworkController::sendRequestReceived() Signal")
 	default:
 		logs.Debug("NetworkController::sendRequestReceived() Skipped")
@@ -511,9 +511,9 @@ func (ctrl *NetworkController) messageHandler(message *msg.MessageEnvelope) {
 // Sends stop signal to keepAlive and watchDog routines.
 func (ctrl *NetworkController) Stop() {
 	ctrl.stopChannel <- true // keepAlive
-	ctrl.stopChannel <- true // updateDebuncer
-	ctrl.stopChannel <- true // messageDebuncer
-	ctrl.stopChannel <- true // sendDebuncer
+	ctrl.stopChannel <- true // updateDebouncer
+	ctrl.stopChannel <- true // messageDebouncer
+	ctrl.stopChannel <- true // sendDebouncer
 	select {
 	case ctrl.stopChannel <- true: // receiver may or may not be listening
 	default:
@@ -523,7 +523,7 @@ func (ctrl *NetworkController) Stop() {
 // Connect
 func (ctrl *NetworkController) Connect() {
 	logs.Info("NetworkController::Connect() Connecting")
-	ctrl.updateNetworkStatus(domain.CONNECTING)
+	ctrl.updateNetworkStatus(domain.NetworkConnecting)
 	keepGoing := true
 	for keepGoing {
 		if ctrl.wsConn != nil {
@@ -551,7 +551,7 @@ func (ctrl *NetworkController) Connect() {
 			// basically we send priority requests b4 queue starts to work
 			ctrl.wsOnConnect()
 
-			ctrl.updateNetworkStatus(domain.FAST)
+			ctrl.updateNetworkStatus(domain.NetworkFast)
 		}
 	}
 
@@ -588,12 +588,12 @@ func (ctrl *NetworkController) SetErrorHandler(h domain.ErrorHandler) {
 }
 
 // SetMessageHandler
-func (ctrl *NetworkController) SetMessageHandler(h domain.OnMessageHandler) {
+func (ctrl *NetworkController) SetMessageHandler(h domain.ReceivedMessageHandler) {
 	ctrl.OnMessage = h
 }
 
 // SetUpdateHandler
-func (ctrl *NetworkController) SetUpdateHandler(h domain.OnUpdateHandler) {
+func (ctrl *NetworkController) SetUpdateHandler(h domain.ReceivedUpdateHandler) {
 	ctrl.OnUpdate = h
 }
 
@@ -607,37 +607,37 @@ func (ctrl *NetworkController) SetNetworkStatusChangedCallback(h domain.NetworkS
 	ctrl.wsOnNetworkStatusChange = h
 }
 
-// Send direct sends immediatly else it put it in debuncer
+// Send direct sends immediately else it put it in debouncer
 func (ctrl *NetworkController) Send(msgEnvelope *msg.MessageEnvelope, direct bool) error {
 
-	// send without debuncer
+	// send without debouncer
 	// return ctrl._send(msgEnvelope)
 
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
 	if direct || unauthorized {
 		// this will wait till sendFlush() done its job
-		ctrl.wsSendDebuncerLock.Lock()
-		ctrl.wsSendDebuncerLock.Unlock()
+		ctrl.wsSendDebouncerLock.Lock()
+		ctrl.wsSendDebouncerLock.Unlock()
 
 		return ctrl._send(msgEnvelope)
 	} else {
 		// this will probably solve queueController unordered message burst
 		// add to send buffer
 		ctrl.sendQueue.Push(msgEnvelope)
-		// signal the send debuncer
+		// signal the send debouncer
 		ctrl.sendRequestReceived()
 	}
 	return nil
 }
 
-// sendFlush will be called in sendDebuncer that running in another go routine so its ok to run in sync mode
+// sendFlush will be called in sendDebouncer that running in another go routine so its ok to run in sync mode
 func (ctrl *NetworkController) sendFlush(queueMsgs []*msg.MessageEnvelope) {
 
 	logs.Debug("NetworkController::sendFlush()",
 		zap.Int("queueMsgs Count", len(queueMsgs)),
 	)
 
-	ctrl.wsSendDebuncerLock.Lock()
+	ctrl.wsSendDebouncerLock.Lock()
 
 	if len(queueMsgs) > 1 {
 		// Implemented domain.SequentialUniqueID() to make sure requestID are sequential and unique
@@ -698,7 +698,7 @@ func (ctrl *NetworkController) sendFlush(queueMsgs []*msg.MessageEnvelope) {
 		}
 	}
 
-	ctrl.wsSendDebuncerLock.Unlock()
+	ctrl.wsSendDebouncerLock.Unlock()
 }
 
 // sendWebsocket
@@ -752,7 +752,7 @@ func (ctrl *NetworkController) _send(msgEnvelope *msg.MessageEnvelope) error {
 	}
 
 	ctrl.wsWriteLock.Lock()
-	ctrl.wsConn.SetWriteDeadline(time.Now().Add(domain.DEFAULT_WS_WRITE_TIMEOUT))
+	ctrl.wsConn.SetWriteDeadline(time.Now().Add(domain.WebsocketWriteTime))
 	err = ctrl.wsConn.WriteMessage(websocket.BinaryMessage, b)
 	ctrl.wsWriteLock.Unlock()
 
@@ -761,14 +761,13 @@ func (ctrl *NetworkController) _send(msgEnvelope *msg.MessageEnvelope) error {
 			zap.String("Error", domain.ErrNoConnection.Error()),
 		)
 		logs.Debug(err.Error())
-		ctrl.updateNetworkStatus(domain.DISCONNECTED)
+		ctrl.updateNetworkStatus(domain.NetworkDisconnected)
 		ctrl.wsConn.SetReadDeadline(time.Now())
 		return err
 	}
 	logs.Debug("NetworkController::_send() Message sent to the wire",
-		zap.String(domain.LK_FUNC_NAME, "NetworkController::send"),
 		zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
-		zap.String(domain.LK_MSG_SIZE, humanize.Bytes(uint64(protoMessage.Size()))),
+		zap.String("Size", humanize.Bytes(uint64(protoMessage.Size()))),
 	)
 	return nil
 }
@@ -778,7 +777,7 @@ func (ctrl *NetworkController) Quality() domain.NetworkStatus {
 	return ctrl.wsQuality
 }
 
-func (ctrl *NetworkController) PrintDebuncerStatus() {
+func (ctrl *NetworkController) PrintDebouncerStatus() {
 	logs.Debug("Messages queue",
 		zap.Int("Count", ctrl.messageQueue.Length()),
 		zap.Int("Items Count", len(ctrl.messageQueue.GetRawItems())),

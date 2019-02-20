@@ -4,52 +4,49 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
 
-// ErrorHandler
+// ErrorHandler error callback/delegate
 type ErrorHandler func(u *msg.Error)
 
-// // UpdateHandler
-// type UpdateHandler func(u *msg.UpdateContainer)
-
-// MessageHandler
+// MessageHandler success callback/delegate
 type MessageHandler func(m *msg.MessageEnvelope)
 
-// DeferredRequestHandler
+// DeferredRequestHandler late responses that they requestID has been terminated callback/delegate
 type DeferredRequestHandler func(constructor int64, msg []byte)
 
-// OnUpdateMainDelegateHandler
+// OnUpdateMainDelegateHandler used as relay to pass getDifference updates to UI
 type OnUpdateMainDelegateHandler func(constructor int64, msg []byte)
 
-// OnConnectCallback
+// OnConnectCallback networkController callback/delegate on websocket dial success
 type OnConnectCallback func()
 
-// NetworkStatusUpdateCallback
+// NetworkStatusUpdateCallback NetworkController status change callback/delegate
 type NetworkStatusUpdateCallback func(newStatus NetworkStatus)
 
-// SyncStatusUpdateCallback
+// SyncStatusUpdateCallback SyncController status change callback/delegate
 type SyncStatusUpdateCallback func(newStatus SyncStatus)
 
-// TimeoutCallback
+// TimeoutCallback timeout callback/delegate
 type TimeoutCallback func()
 
-// UpdateApplier
+// UpdateApplier on receive update in SyncController, cache client data, there are some applier function for each proto message
 type UpdateApplier func(envelope *msg.UpdateEnvelope) []*msg.UpdateEnvelope
 
-// MessageApplier
+// MessageApplier on receive response in SyncController, cache client data, there are some applier function for each proto message
 type MessageApplier func(envelope *msg.MessageEnvelope)
 
-// LocalMessageHandler
+// LocalMessageHandler SDK commands that handle user request from client cache
 type LocalMessageHandler func(in, out *msg.MessageEnvelope, timeoutCB TimeoutCallback, successCB MessageHandler)
 
-// OnMessageHandler
-type OnMessageHandler func(messages []*msg.MessageEnvelope)
+// ReceivedMessageHandler NetworkController pass all received response messages to this callback/delegate
+type ReceivedMessageHandler func(messages []*msg.MessageEnvelope)
 
-// OnUpdateHandler
-type OnUpdateHandler func(messages []*msg.UpdateContainer)
+// ReceivedUpdateHandler NetworkController pass all received update messages to this callback/delegate
+type ReceivedUpdateHandler func(messages []*msg.UpdateContainer)
 
-// OnFileStatusChanged delegate to rise event
+// OnFileStatusChanged delegate to rise file progress event
 type OnFileStatusChanged func(messageID, processedParts, totalParts int64, stateType FileStateType)
 
-// OnFileUploadCompleted delegate to rise event
+// OnFileUploadCompleted delegate to rise upload completed event
 type OnFileUploadCompleted func(messageID, fileID, targetID int64,
 	clusterID int32, totalParts int64,
 	stateType FileStateType,
@@ -59,7 +56,7 @@ type OnFileUploadCompleted func(messageID, fileID, targetID int64,
 	thumbTotalParts int32,
 )
 
-// OnFileDownloadCompleted delegate to rise event
+// OnFileDownloadCompleted delegate to rise download completed event
 type OnFileDownloadCompleted func(messageID int64, filePath string, stateType FileStateType)
 
 // OnFileUploadError on receive error from server

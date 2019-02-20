@@ -240,7 +240,7 @@ func (r *repoPendingMessages) GetAllPendingMessages() []*msg.MessagesSend {
 
 	res := make([]*msg.MessagesSend, 0)
 	var dtos []dto.PendingMessages
-	r.db.Where("MediaType=?", 0).Find(&dtos)
+	r.db.Where("SharedMediaType=?", 0).Find(&dtos)
 
 	for _, v := range dtos {
 		tmp := new(msg.MessagesSend)
