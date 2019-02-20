@@ -24,7 +24,7 @@ type Users interface {
 	GetUser(userID int64) *msg.User
 	GetAnyUsers(userIDs []int64) []*msg.User
 	SaveMany(users []*msg.User) error
-	UpdateContactinfo(userID int64, firstName, lastName string) error
+	UpdateContactInfo(userID int64, firstName, lastName string) error
 	SearchUsers(searchPhrase string) []*msg.User
 	UpdateUserProfile(userID int64, req *msg.AccountUpdateProfile) error
 	UpdateUsername(u *msg.UpdateUsername) error
@@ -43,12 +43,12 @@ func (r *repoUsers) SaveUser(user *msg.User) error {
 	defer r.mx.Unlock()
 
 	if user == nil {
-		logs.Debug("RepoRepoUsers::SaveUser()",
+		logs.Debug("RepoUsers::SaveUser()",
 			zap.String("User", "user is null"),
 		)
 		return domain.ErrNotFound
 	}
-	logs.Info("RepoRepoUsers::SaveUser()",
+	logs.Info("RepoUsers::SaveUser()",
 		zap.String("Name", fmt.Sprintf("%s %s", user.FirstName, user.LastName)),
 		zap.Int64("UserID", user.ID),
 	)
@@ -94,13 +94,13 @@ func (r *repoUsers) SaveContactUser(user *msg.ContactUser) error {
 	defer r.mx.Unlock()
 
 	if user == nil {
-		logs.Debug("RepoRepoUsers::SaveContactUser()",
+		logs.Debug("RepoUsers::SaveContactUser()",
 			zap.String("User", "user is null"),
 		)
 		return domain.ErrNotFound
 	}
 
-	logs.Info("RepoRepoUsers::SaveContactUser()",
+	logs.Info("RepoUsers::SaveContactUser()",
 		zap.String("Name", fmt.Sprintf("%s %s", user.FirstName, user.LastName)),
 		zap.Int64("UserID", user.ID),
 	)
@@ -135,7 +135,7 @@ func (r *repoUsers) UpdatePhoneContact(user *msg.PhoneContact) error {
 	defer r.mx.Unlock()
 
 	if user == nil {
-		logs.Debug("RepoRepoUsers::SaveContactUser()",
+		logs.Debug("RepoUsers::SaveContactUser()",
 			zap.String("User", "user is null"),
 		)
 		return domain.ErrNotFound
@@ -396,11 +396,11 @@ func (r *repoUsers) SaveMany(users []*msg.User) error {
 	return err
 }
 
-func (r *repoUsers) UpdateContactinfo(userID int64, firstName, lastName string) error {
+func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("Users::UpdateContactinfo()",
+	logs.Debug("Users::UpdateContactInfo()",
 		zap.Int64("UserID", userID),
 	)
 	dtoUser := new(dto.Users)
@@ -459,7 +459,7 @@ func (r *repoUsers) UpdateUsername(u *msg.UpdateUsername) error {
 	defer r.mx.Unlock()
 
 	if u == nil {
-		logs.Debug("RepoRepoUsers::SaveContactUser()",
+		logs.Debug("RepoUsers::SaveContactUser()",
 			zap.String("User", "user is null"),
 		)
 		return domain.ErrNotFound
@@ -520,7 +520,7 @@ func (r *repoUsers) SaveUserPhoto(userPhoto *msg.UpdateUserPhoto) error {
 	defer r.mx.Unlock()
 
 	if userPhoto == nil {
-		logs.Debug("RepoRepoUsers::SaveUserPhoto()",
+		logs.Debug("RepoUsers::SaveUserPhoto()",
 			zap.String("User", "user is null"),
 		)
 		return domain.ErrNotFound

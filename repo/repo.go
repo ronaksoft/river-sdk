@@ -6,9 +6,10 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
+	"github.com/jinzhu/gorm"
 	"go.uber.org/zap"
 
-	"github.com/jinzhu/gorm"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
