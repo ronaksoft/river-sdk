@@ -30,15 +30,13 @@ import (
 
 	"github.com/monnand/dhkx"
 	"go.uber.org/zap"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
 	_ServerKeys ServerKeys
 )
 
-// SetConfig
+// SetConfig ...
 // This function must be called before any other function, otherwise it panics
 func (r *River) SetConfig(conf *RiverConfig) {
 	r.lastOutOfSyncTime = time.Now().Add(1 * time.Second)
@@ -353,7 +351,7 @@ func (r *River) registerCommandHandlers() {
 
 }
 
-// Start
+// Start ...
 func (r *River) Start() error {
 	// Start Controllers
 	if err := r.networkCtrl.Start(); err != nil {
@@ -371,7 +369,7 @@ func (r *River) Start() error {
 	return nil
 }
 
-// Stop
+// Stop ...
 func (r *River) Stop() {
 	// Disconnect from Server
 	r.networkCtrl.Disconnect()
@@ -401,7 +399,7 @@ func deepCopy(commandBytes []byte) []byte {
 	return buff
 }
 
-// ExecuteCommand
+// ExecuteCommand ...
 // This is a wrapper function to pass the request to the queueController, to be passed to networkController for final
 // delivery to the server.
 func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate, blockingMode, serverForce bool) (requestID int64, err error) {
@@ -551,7 +549,7 @@ func (r *River) releaseDelegate(requestID int64) {
 	r.delegateMutex.Unlock()
 }
 
-// CreateAuthKey
+// CreateAuthKey ...
 // This function creates an AuthID and AuthKey to be used for transporting messages between client and server
 func (r *River) CreateAuthKey() (err error) {
 	logs.Debug("River::CreateAuthKey()")
@@ -617,9 +615,8 @@ func (r *River) CreateAuthKey() (err error) {
 			zap.String("Error", err.Error()),
 		)
 		return
-	} else {
-		logs.Info("River::CreateAuthKey() 1st Step Finished")
 	}
+	logs.Info("River::CreateAuthKey() 1st Step Finished")
 
 	// 2. Send InitCompleteAuth
 	req2 := new(msg.InitCompleteAuth)
@@ -768,12 +765,12 @@ func (r *River) onGeneralError(e *msg.Error) {
 	}
 }
 
-// AddRealTimeRequest
+// AddRealTimeRequest ...
 func (r *River) AddRealTimeRequest(constructor int64) {
 	r.realTimeRequest[constructor] = true
 }
 
-// RemoveRealTimeRequest
+// RemoveRealTimeRequest ...
 func (r *River) RemoveRealTimeRequest(constructor int64) {
 	delete(r.realTimeRequest, constructor)
 }
@@ -968,6 +965,7 @@ readChannel:
 	r.syncCtrl.UpdateHandler(updateContainer)
 }
 
+// PrintDebuncerStatus ...
 func (r *River) PrintDebuncerStatus() {
 	logs.Debug("SDK::PrintDebouncerStatus()")
 	r.networkCtrl.PrintDebouncerStatus()

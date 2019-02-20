@@ -10,30 +10,30 @@ import (
 	"go.uber.org/zap"
 )
 
+// PublicKey ...
 // easyjson:json
-// publicKey
 type PublicKey struct {
 	N           string
 	FingerPrint int64
 	E           uint32
 }
 
+// DHGroup ...
 // easyjson:json
-// DHGroup
 type DHGroup struct {
 	Prime       string
 	Gen         int32
 	FingerPrint int64
 }
 
+// ServerKeys ...
 // easyjson:json
-// ServerKeys
 type ServerKeys struct {
 	PublicKeys []PublicKey
 	DHGroups   []DHGroup
 }
 
-// getPublicKey
+// GetPublicKey ...
 func (v *ServerKeys) GetPublicKey(keyFP int64) (PublicKey, error) {
 	for _, pk := range v.PublicKeys {
 		if pk.FingerPrint == keyFP {
@@ -43,7 +43,7 @@ func (v *ServerKeys) GetPublicKey(keyFP int64) (PublicKey, error) {
 	return PublicKey{}, domain.ErrNotFound
 }
 
-// getDhGroup
+// GetDhGroup ...
 func (v *ServerKeys) GetDhGroup(keyFP int64) (DHGroup, error) {
 	for _, dh := range v.DHGroups {
 		if dh.FingerPrint == keyFP {
@@ -53,8 +53,8 @@ func (v *ServerKeys) GetDhGroup(keyFP int64) (DHGroup, error) {
 	return DHGroup{}, domain.ErrNotFound
 }
 
+// RiverConnection connection info
 // easyjson:json
-// RiverConnection
 type RiverConnection struct {
 	AuthID    int64
 	AuthKey   [256]byte
@@ -66,7 +66,7 @@ type RiverConnection struct {
 	Bio       string
 }
 
-// Get system Configs
+// loadSystemConfig get system config from local DB
 func (r *River) loadSystemConfig() {
 	r.ConnInfo = new(RiverConnection)
 	if err := r.ConnInfo.loadConfig(); err != nil {
@@ -74,7 +74,7 @@ func (r *River) loadSystemConfig() {
 	}
 }
 
-// Clear
+// clearSystemConfig reset config
 func (r *River) clearSystemConfig() {
 	r.ConnInfo.FirstName = ""
 	r.ConnInfo.LastName = ""
@@ -86,6 +86,7 @@ func (r *River) clearSystemConfig() {
 	r.saveDeviceToken()
 }
 
+// saveDeviceToken save DeviceToken to DB
 func (r *River) saveDeviceToken() {
 	val, err := json.Marshal(r.DeviceToken)
 	if err != nil {
@@ -103,7 +104,7 @@ func (r *River) saveDeviceToken() {
 	}
 }
 
-// Save
+// saveConfig save to DB
 func (v *RiverConnection) saveConfig() {
 	logs.Debug("RiverConnection::Save()")
 	if bytes, err := v.MarshalJSON(); err != nil {
@@ -117,7 +118,7 @@ func (v *RiverConnection) saveConfig() {
 	}
 }
 
-// Load
+// loadConfig load from DB
 func (v *RiverConnection) loadConfig() error {
 	logs.Debug("RiverConnection::Load()")
 	if kv, err := repo.Ctx().System.LoadString(domain.ColumnConnectionInfo); err != nil {
@@ -134,21 +135,56 @@ func (v *RiverConnection) loadConfig() error {
 	return nil
 }
 
-func (v *RiverConnection) Save()                            { v.saveConfig() }
-func (v *RiverConnection) ChangeAuthID(authID int64)        { v.AuthID = authID }
-func (v *RiverConnection) ChangeAuthKey(authKey [256]byte)  { v.AuthKey = authKey }
-func (v *RiverConnection) ChangeUserID(userID int64)        { v.UserID = userID }
-func (v *RiverConnection) ChangeUsername(username string)   { v.Username = username }
-func (v *RiverConnection) ChangePhone(phone string)         { v.Phone = phone }
+// Save RiverConfiger interface func
+func (v *RiverConnection) Save() { v.saveConfig() }
+
+// ChangeAuthID RiverConfiger interface func
+func (v *RiverConnection) ChangeAuthID(authID int64) { v.AuthID = authID }
+
+// ChangeAuthKey RiverConfiger interface func
+func (v *RiverConnection) ChangeAuthKey(authKey [256]byte) { v.AuthKey = authKey }
+
+// ChangeUserID RiverConfiger interface func
+func (v *RiverConnection) ChangeUserID(userID int64) { v.UserID = userID }
+
+// ChangeUsername RiverConfiger interface func
+func (v *RiverConnection) ChangeUsername(username string) { v.Username = username }
+
+// ChangePhone RiverConfiger interface func
+func (v *RiverConnection) ChangePhone(phone string) { v.Phone = phone }
+
+// ChangeFirstName RiverConfiger interface func
 func (v *RiverConnection) ChangeFirstName(firstName string) { v.FirstName = firstName }
-func (v *RiverConnection) ChangeLastName(lastName string)   { v.LastName = lastName }
-func (v *RiverConnection) ChangeBio(bio string)             { v.Bio = bio }
-func (v *RiverConnection) Load() error                      { return v.loadConfig() }
-func (v *RiverConnection) PickupAuthID() int64              { return v.AuthID }
-func (v *RiverConnection) PickupAuthKey() [256]byte         { return v.AuthKey }
-func (v *RiverConnection) PickupUserID() int64              { return v.UserID }
-func (v *RiverConnection) PickupUsername() string           { return v.Username }
-func (v *RiverConnection) PickupPhone() string              { return v.Phone }
-func (v *RiverConnection) PickupFirstName() string          { return v.FirstName }
-func (v *RiverConnection) PickupLastName() string           { return v.LastName }
-func (v *RiverConnection) PickupBio() string                { return v.Bio }
+
+// ChangeLastName RiverConfiger interface func
+func (v *RiverConnection) ChangeLastName(lastName string) { v.LastName = lastName }
+
+// ChangeBio RiverConfiger interface func
+func (v *RiverConnection) ChangeBio(bio string) { v.Bio = bio }
+
+// Load RiverConfiger interface func
+func (v *RiverConnection) Load() error { return v.loadConfig() }
+
+// PickupAuthID RiverConfiger interface func
+func (v *RiverConnection) PickupAuthID() int64 { return v.AuthID }
+
+// PickupAuthKey RiverConfiger interface func
+func (v *RiverConnection) PickupAuthKey() [256]byte { return v.AuthKey }
+
+// PickupUserID RiverConfiger interface func
+func (v *RiverConnection) PickupUserID() int64 { return v.UserID }
+
+// PickupUsername RiverConfiger interface func
+func (v *RiverConnection) PickupUsername() string { return v.Username }
+
+// PickupPhone RiverConfiger interface func
+func (v *RiverConnection) PickupPhone() string { return v.Phone }
+
+// PickupFirstName RiverConfiger interface func
+func (v *RiverConnection) PickupFirstName() string { return v.FirstName }
+
+// PickupLastName RiverConfiger interface func
+func (v *RiverConnection) PickupLastName() string { return v.LastName }
+
+// PickupBio RiverConfiger interface func
+func (v *RiverConnection) PickupBio() string { return v.Bio }

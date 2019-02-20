@@ -324,6 +324,8 @@ func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, 
 	}
 }
 
+// GetFileStatus returns file status
+// TODO :: change response to protobuff
 func (r *River) GetFileStatus(msgID int64) string {
 
 	status, progress, filePath := geFileStatus(msgID)
@@ -375,6 +377,7 @@ func getFilePath(msgID int64) string {
 	return ""
 }
 
+// FileDownload add download request to filemanager queue
 func (r *River) FileDownload(msgID int64) {
 
 	status, progress, filePath := geFileStatus(msgID)
@@ -414,6 +417,7 @@ func (r *River) FileDownload(msgID int64) {
 	}
 }
 
+// PauseDownload pause download
 func (r *River) PauseDownload(msgID int64) {
 	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
 	if err == nil {
@@ -424,6 +428,7 @@ func (r *River) PauseDownload(msgID int64) {
 	}
 }
 
+// CancelDownload cancel download
 func (r *River) CancelDownload(msgID int64) {
 	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
 	if err == nil {
@@ -434,6 +439,7 @@ func (r *River) CancelDownload(msgID int64) {
 	}
 }
 
+// PauseUpload pause upload
 func (r *River) PauseUpload(msgID int64) {
 	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
 	if err == nil {
@@ -445,6 +451,7 @@ func (r *River) PauseUpload(msgID int64) {
 	}
 }
 
+// CancelUpload cancel upload
 func (r *River) CancelUpload(msgID int64) {
 	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
 	if err == nil {
@@ -456,6 +463,7 @@ func (r *River) CancelUpload(msgID int64) {
 	}
 }
 
+// AccountUploadPhoto upload user profile photo
 func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 
 	//TOF
@@ -492,6 +500,7 @@ func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 	return msgID
 }
 
+// AccountGetPhoto_Big download user profile picture
 func (r *River) AccountGetPhoto_Big(userID int64) string {
 
 	user := repo.Ctx().Users.GetUser(userID)
@@ -527,6 +536,7 @@ func (r *River) AccountGetPhoto_Big(userID int64) string {
 	return ""
 }
 
+// AccountGetPhoto_Small download user profile picture thumbnail
 func (r *River) AccountGetPhoto_Small(userID int64) string {
 
 	user := repo.Ctx().Users.GetUser(userID)
@@ -561,7 +571,7 @@ func (r *River) AccountGetPhoto_Small(userID int64) string {
 	return ""
 }
 
-// this function is sync
+// downloadAccountPhoto this function is sync
 func downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) string {
 
 	logs.Debug("SDK::downloadAccountPhoto",
@@ -584,6 +594,7 @@ func downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) string
 	return filePath
 }
 
+// geFileStatus
 func geFileStatus(msgID int64) (status domain.RequestStatus, progress float64, filePath string) {
 
 	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
@@ -619,6 +630,7 @@ func geFileStatus(msgID int64) (status domain.RequestStatus, progress float64, f
 	return
 }
 
+// GroupUploadPhoto upload group profile photo
 func (r *River) GroupUploadPhoto(groupID int64, filePath string) (msgID int64) {
 
 	//TOF
@@ -655,6 +667,7 @@ func (r *River) GroupUploadPhoto(groupID int64, filePath string) (msgID int64) {
 	return msgID
 }
 
+// GroupGetPhoto_Big download group profile picture
 func (r *River) GroupGetPhoto_Big(groupID int64) string {
 
 	group, err := repo.Ctx().Groups.GetGroupDTO(groupID)
@@ -689,6 +702,7 @@ func (r *River) GroupGetPhoto_Big(groupID int64) string {
 	return ""
 }
 
+// GroupGetPhoto_Small download group profile picture thumbnail
 func (r *River) GroupGetPhoto_Small(groupID int64) string {
 
 	group, err := repo.Ctx().Groups.GetGroupDTO(groupID)
@@ -749,6 +763,7 @@ func downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) string
 	return filePath
 }
 
+// FileDownloadThumbnail download file thumbnail
 func (r *River) FileDownloadThumbnail(msgID int64) string {
 
 	m := repo.Ctx().Messages.GetMessage(msgID)
@@ -808,6 +823,7 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 	return filePath
 }
 
+// GetSharedMedia search in given dialog files
 func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, delegate RequestDelegate) {
 	msgs, err := repo.Ctx().Files.GetSharedMedia(peerID, peerType, mediaType)
 	if err != nil {

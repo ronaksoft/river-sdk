@@ -11,7 +11,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/synchronizer"
 )
 
-// RiverConfig
+// RiverConfig ...
 type RiverConfig struct {
 	ServerEndpoint string
 	// PingTimeSec sets how often a ping message will be sent to the server. Ping messages
@@ -48,7 +48,7 @@ type RiverConfig struct {
 	DocumentCacheDirectory string
 }
 
-// River
+// River ...
 // This the main and a wrapper around all the components of the system (networkController, queueController,
 // syncController). All the controllers could be used standalone, but this SDK connect them in a way
 // we think is the best possible.
