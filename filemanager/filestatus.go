@@ -15,7 +15,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/repo"
 )
 
-// FileStatus monitors file state
+// FileStatus monitors file upload/download state
 type FileStatus struct {
 	mx         sync.Mutex
 	mxPartList sync.Mutex
@@ -94,6 +94,7 @@ func NewFileStatus(messageID int64,
 	return fs
 }
 
+// CalculatePartsCount return total parts
 func CalculatePartsCount(fileSize int64) int64 {
 	count := fileSize / domain.FilePayloadSize
 	if (count * domain.FilePayloadSize) < fileSize {
@@ -189,7 +190,7 @@ func (fs *FileStatus) Write(data []byte, partIdx int64) (isCompleted bool, err e
 	return
 }
 
-//ReadCommit apply that last read process result was success and increase counter and progress
+// ReadCommit apply that last read process result was success and increase counter and progress
 func (fs *FileStatus) ReadCommit(count int64, isThumbnail bool, partIdx int64) (isCompleted bool) {
 	if isThumbnail {
 		fs.ThumbPosition += count
@@ -224,6 +225,7 @@ func (fs *FileStatus) fileStatusChanged() {
 
 }
 
+// ReadAsFileSavePart read required chunk of data and pack them into FileSavePart
 func (fs *FileStatus) ReadAsFileSavePart(isThumbnail bool, partIdx int64) (envelop *msg.MessageEnvelope, readCount int, err error) {
 
 	var buff []byte
@@ -252,6 +254,7 @@ func (fs *FileStatus) ReadAsFileSavePart(isThumbnail bool, partIdx int64) (envel
 	return
 }
 
+// GetDTO map FileStatus to its repo DTO to save in DB
 func (fs *FileStatus) GetDTO() *dto.FileStatus {
 	m := new(dto.FileStatus)
 
@@ -287,6 +290,7 @@ func (fs *FileStatus) GetDTO() *dto.FileStatus {
 	return m
 }
 
+// LoadDTO Map related to repo DTO to FileStatus
 func (fs *FileStatus) LoadDTO(d dto.FileStatus, progress domain.OnFileStatusChanged) {
 	fs.MessageID = d.MessageID
 	fs.FileID = d.FileID
@@ -319,6 +323,7 @@ func (fs *FileStatus) LoadDTO(d dto.FileStatus, progress domain.OnFileStatusChan
 
 }
 
+// ReadAsFileGet create related FileGet request
 func (fs *FileStatus) ReadAsFileGet(partNo int64) (envelop *msg.MessageEnvelope, err error) {
 
 	req := new(msg.FileGet)
@@ -354,6 +359,7 @@ func (fs *FileStatus) ReadAsFileGet(partNo int64) (envelop *msg.MessageEnvelope,
 	return
 }
 
+// StartDownload begins download
 func (fs *FileStatus) StartDownload(fm *FileManager) {
 	fs.mx.Lock()
 	if fs.started {
@@ -372,10 +378,11 @@ func (fs *FileStatus) StartDownload(fm *FileManager) {
 	}
 
 	for i := 0; i < workersCount; i++ {
-		go fs.downloader_job(fm)
+		go fs.downloaderJob(fm)
 	}
 }
 
+// StartUpload begins upload
 func (fs *FileStatus) StartUpload(fm *FileManager) {
 
 	fs.mx.Lock()
@@ -394,13 +401,13 @@ func (fs *FileStatus) StartUpload(fm *FileManager) {
 		workersCount = partCount
 	}
 	// upload thumbnail first
-	fs.upload_thumbnail(fm)
+	fs.uploadThumbnail(fm)
 
 	fs.chUploadProgress = make(chan int64, workersCount)
 	go fs.monitorUploadProgress(fm)
 	// start uploading file
 	for i := 0; i < workersCount; i++ {
-		go fs.uploader_job(fm)
+		go fs.uploaderJob(fm)
 	}
 }
 
@@ -417,12 +424,14 @@ func (fs *FileStatus) monitorUploadProgress(fm *FileManager) {
 		}
 	}
 }
+
+// Stop set stop flag
 func (fs *FileStatus) Stop() {
 	fs.stop = true
 	fs.started = false
 }
 
-func (fs *FileStatus) downloader_job(fm *FileManager) {
+func (fs *FileStatus) downloaderJob(fm *FileManager) {
 	for {
 		if fs.stop {
 			return
@@ -432,7 +441,7 @@ func (fs *FileStatus) downloader_job(fm *FileManager) {
 		case partIdx := <-fs.chPartList:
 			envelop, err := fs.ReadAsFileGet(partIdx)
 			if err != nil {
-				logs.Error("downloader_job() -> ReadAsFileGet()", zap.Int64("msgID", fs.MessageID), zap.Int64("PartNo", partIdx))
+				logs.Error("downloaderJob() -> ReadAsFileGet()", zap.Int64("msgID", fs.MessageID), zap.Int64("PartNo", partIdx))
 				// fs.chPartList <- partIdx
 				break
 			}
@@ -442,7 +451,7 @@ func (fs *FileStatus) downloader_job(fm *FileManager) {
 		}
 	}
 }
-func (fs *FileStatus) uploader_job(fm *FileManager) {
+func (fs *FileStatus) uploaderJob(fm *FileManager) {
 	for {
 		if fs.stop {
 			return
@@ -468,7 +477,7 @@ func (fs *FileStatus) uploader_job(fm *FileManager) {
 
 }
 
-func (fs *FileStatus) upload_thumbnail(fm *FileManager) {
+func (fs *FileStatus) uploadThumbnail(fm *FileManager) {
 	for fs.ThumbPosition < fs.ThumbTotalSize {
 		envelop, readCount, err := fs.ReadAsFileSavePart(true, 0)
 		if err != nil {

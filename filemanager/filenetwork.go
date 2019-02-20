@@ -11,7 +11,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
 
-// Send to file server cluster
+// Send encrypt and send request to server and receive and decrypt its response
 func (fm *FileManager) Send(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
 	protoMessage := new(msg.ProtoMessage)
 	protoMessage.AuthID = fm.authID
@@ -46,7 +46,7 @@ func (fm *FileManager) Send(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvel
 	client.Timeout = domain.WebsocketRequestTime
 
 	// Send Data
-	httpResp, err := client.Post(fm.ServerAddress, "application/protobuf", reqBuff)
+	httpResp, err := client.Post(fm.ServerEndpoint, "application/protobuf", reqBuff)
 	if err != nil {
 		return nil, err
 	}

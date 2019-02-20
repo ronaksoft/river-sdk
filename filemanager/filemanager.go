@@ -24,29 +24,28 @@ import (
 )
 
 var (
-	singletone sync.Mutex
-	ctx        *FileManager
-	_DirAudio  string
-	_DirFile   string
-	_DirPhoto  string
-	_DirVideo  string
-	_DirCache  string
+	mx       sync.Mutex
+	ctx      *FileManager
+	dirAudio string
+	dirFile  string
+	dirPhoto string
+	dirVideo string
+	dirCache string
 )
 
 const (
-	// FileSizeThresholdForCheckHash for files thatare smaller than  this number we will calculate md5 hash to do not reupload same file twice
+	// FileSizeThresholdForCheckHash for files that are smaller than this number we will calculate md5 hash to do not reupload same file twice
 	FileSizeThresholdForCheckHash = 10 * 1024 * 1024 // 10MB
-
 )
 
-// FileManager manages files status and cache
+// FileManager manages files download/upload/status and cache
 type FileManager struct {
 	authKey    []byte
 	authID     int64
 	messageSeq int64
 
-	ServerAddress string
-	NetworkStatus domain.NetworkStatus
+	ServerEndpoint string
+	NetworkStatus  domain.NetworkStatus
 
 	mxDown               sync.Mutex
 	mxUp                 sync.Mutex
@@ -67,6 +66,7 @@ type FileManager struct {
 	onDownloadError     domain.OnFileDownloadError
 }
 
+// Ctx return filemanager singletone instance
 func Ctx() *FileManager {
 	if ctx == nil {
 		panic("FileManager::Ctx() file manager not initialized !")
@@ -74,6 +74,7 @@ func Ctx() *FileManager {
 	return ctx
 }
 
+// InitFileManager initialize file manager and create singletone instance
 func InitFileManager(serverAddress string,
 	onUploadCompleted domain.OnFileUploadCompleted,
 	progressCallback domain.OnFileStatusChanged,
@@ -83,11 +84,11 @@ func InitFileManager(serverAddress string,
 ) {
 
 	if ctx == nil {
-		singletone.Lock()
-		defer singletone.Unlock()
+		mx.Lock()
+		defer mx.Unlock()
 		if ctx == nil {
 			ctx = &FileManager{
-				ServerAddress:       serverAddress,
+				ServerEndpoint:      serverAddress,
 				UploadQueue:         make(map[int64]*FileStatus, 0),
 				DownloadQueue:       make(map[int64]*FileStatus, 0),
 				chStopUploader:      make(chan bool),
@@ -108,14 +109,17 @@ func InitFileManager(serverAddress string,
 	go ctx.startUploadQueue()
 
 }
+
+// SetRootFolders directory paths to download files
 func SetRootFolders(audioDir, fileDir, photoDir, videoDir, cacheDir string) {
-	_DirAudio = audioDir
-	_DirFile = fileDir
-	_DirPhoto = photoDir
-	_DirVideo = videoDir
-	_DirCache = cacheDir
+	dirAudio = audioDir
+	dirFile = fileDir
+	dirPhoto = photoDir
+	dirVideo = videoDir
+	dirCache = cacheDir
 }
 
+// GetFilePath generate related file path by its mime type
 func GetFilePath(mimeType string, docID int64, fileName string) string {
 	lower := strings.ToLower(mimeType)
 	strDocID := strconv.FormatInt(docID, 10)
@@ -134,22 +138,23 @@ func GetFilePath(mimeType string, docID int64, fileName string) string {
 	// so user could not access to it by file manager
 	if lower == "audio/ogg" {
 		ext = ".ogg"
-		return path.Join(_DirCache, fmt.Sprintf("%s%s", strDocID, ext))
+		return path.Join(dirCache, fmt.Sprintf("%s%s", strDocID, ext))
 	}
 
 	if strings.HasPrefix(lower, "video/") {
-		return path.Join(_DirVideo, fmt.Sprintf("%s%s", strDocID, ext))
+		return path.Join(dirVideo, fmt.Sprintf("%s%s", strDocID, ext))
 	}
 	if strings.HasPrefix(lower, "audio/") {
-		return path.Join(_DirAudio, fmt.Sprintf("%s%s", strDocID, ext))
+		return path.Join(dirAudio, fmt.Sprintf("%s%s", strDocID, ext))
 	}
 	if strings.HasPrefix(lower, "image/") {
-		return path.Join(_DirPhoto, fmt.Sprintf("%s%s", strDocID, ext))
+		return path.Join(dirPhoto, fmt.Sprintf("%s%s", strDocID, ext))
 	}
 
-	return path.Join(_DirFile, fmt.Sprintf("%s%s", strDocID, ext))
+	return path.Join(dirFile, fmt.Sprintf("%s%s", strDocID, ext))
 }
 
+// Stop set stop flag
 func (fm *FileManager) Stop() {
 	if fm.UploadQueueStarted {
 		fm.chStopUploader <- true
@@ -179,11 +184,6 @@ func (fm *FileManager) Upload(fileID int64, req *msg.ClientPendingMessage) error
 	if fileSize > domain.FileMaxAllowedSize {
 		return errors.New("max allowed file size is 750 MB")
 	}
-	// strMD5, err := fm.CalculateMD5(file)
-	// if err == nil {
-	// 	// TODO : check DB with file md5 hash and meeeeehhhhh :/
-	// 	log.Debug(strMD5)
-	// }
 
 	state := NewFileStatus(req.ID, fileID, 0, fileSize, x.FilePath, domain.FileStateUpload, 0, 0, 0, fm.progressCallback)
 	state.UploadRequest = x
@@ -292,6 +292,7 @@ func (fm *FileManager) AddToQueue(status *FileStatus) {
 	}
 }
 
+// DeleteFromQueue remove items from download/upload queue and stop them
 func (fm *FileManager) DeleteFromQueue(msgID int64) {
 	fm.mxUp.Lock()
 	up, uok := fm.UploadQueue[msgID]
@@ -330,6 +331,7 @@ func (fm *FileManager) CalculateMD5(file *os.File) (string, error) {
 	return "", errors.New("file size is grater than threshold")
 }
 
+// SetAuthorization set client AuthID and AuthKey to encrypt&decrypt network requests
 func (fm *FileManager) SetAuthorization(authID int64, authKey []byte) {
 	fm.authKey = make([]byte, len(authKey))
 	fm.authID = authID
@@ -388,6 +390,7 @@ func (fm *FileManager) startUploadQueue() {
 	}
 }
 
+// SendUploadRequest send request to server
 func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, fs *FileStatus, partIdx int64) {
 	// time out has been set in Send()
 	res, err := fm.Send(req)
@@ -453,6 +456,7 @@ func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, 
 	}
 }
 
+// SendDownloadRequest send request to server
 func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileStatus, partIdx int64) {
 	// time out has been set in Send()
 	res, err := fm.Send(req)
@@ -527,6 +531,7 @@ func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 	}
 }
 
+// LoadFileStatusQueue load inprogress request from databse
 func (fm *FileManager) LoadFileStatusQueue() {
 	// Load pended file status
 	dtos := repo.Ctx().Files.GetAllFileStatus()
@@ -578,6 +583,7 @@ func (fm *FileManager) uploadCompleted(msgID, fileID, targetID int64,
 	}
 }
 
+// DownloadAccountPhoto download account photo from server its sync
 func (fm *FileManager) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) (string, error) {
 	req := new(msg.FileGet)
 	req.Location = new(msg.InputFileLocation)
@@ -592,7 +598,7 @@ func (fm *FileManager) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, 
 		req.Location.FileID = photo.PhotoSmall.FileID
 		req.Location.Version = 0
 	}
-
+	// get all bytes
 	req.Offset = 0
 	req.Limit = 0
 
@@ -635,6 +641,7 @@ func (fm *FileManager) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, 
 	return "", err
 }
 
+// DownloadGroupPhoto download group photo from server its sync
 func (fm *FileManager) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) (string, error) {
 	req := new(msg.FileGet)
 	req.Location = new(msg.InputFileLocation)
@@ -649,7 +656,7 @@ func (fm *FileManager) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, 
 		req.Location.FileID = photo.PhotoSmall.FileID
 		req.Location.Version = 0
 	}
-
+	// get all bytes
 	req.Offset = 0
 	req.Limit = 0
 
@@ -692,6 +699,7 @@ func (fm *FileManager) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, 
 	return "", err
 }
 
+// DownloadThumbnail download thumbnail from server its sync
 func (fm *FileManager) DownloadThumbnail(msgID int64, fileID int64, accessHash uint64, clusterID, version int32) (string, error) {
 
 	req := new(msg.FileGet)
@@ -701,6 +709,7 @@ func (fm *FileManager) DownloadThumbnail(msgID int64, fileID int64, accessHash u
 		FileID:     fileID,
 		Version:    version,
 	}
+	// get all bytes
 	req.Offset = 0
 	req.Limit = 0
 
@@ -709,7 +718,7 @@ func (fm *FileManager) DownloadThumbnail(msgID int64, fileID int64, accessHash u
 	envelop.Message, _ = req.Marshal()
 	envelop.RequestID = uint64(domain.SequentialUniqueID())
 
-	filePath := path.Join(_DirCache, fmt.Sprintf("%d%s", fileID, ".jpg"))
+	filePath := path.Join(dirCache, fmt.Sprintf("%d%s", fileID, ".jpg"))
 	res, err := fm.Send(envelop)
 	if err == nil {
 		switch res.Constructor {
