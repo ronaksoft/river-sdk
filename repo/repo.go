@@ -9,7 +9,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/jinzhu/gorm"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
@@ -19,6 +18,7 @@ var (
 	repoLastError error
 )
 
+// Context container of repo
 type Context struct {
 	DBDialect       string
 	DBPath          string
@@ -46,6 +46,7 @@ func Ctx() *Context {
 	return ctx
 }
 
+// InitRepo initialize repo singletone
 func InitRepo(dialect, dbPath string) error {
 	if ctx == nil {
 		singletone.Lock()
@@ -85,6 +86,7 @@ func repoSetDB(dialect, dbPath string) error {
 
 }
 
+// LogMode set query logger if true prints all executed queries
 func (c *Context) LogMode(enable bool) {
 
 	if r != nil {
@@ -92,6 +94,7 @@ func (c *Context) LogMode(enable bool) {
 	}
 }
 
+// Close underlying DB connection
 func (c *Context) Close() error {
 	repoLastError = r.db.Close()
 	r = nil
@@ -99,6 +102,7 @@ func (c *Context) Close() error {
 	return repoLastError
 }
 
+// DropAndCreateTable remove and create elated dto object table
 func (c *Context) DropAndCreateTable(dtoTable interface{}) error {
 	err := r.db.DropTable(dtoTable).Error
 	if err != nil {
@@ -115,6 +119,7 @@ func (c *Context) DropAndCreateTable(dtoTable interface{}) error {
 	return err
 }
 
+// ReinitiateDatabase runs auto migrate
 func (c *Context) ReinitiateDatabase() error {
 	err := r.db.DropTableIfExists(
 		dto.Dialogs{},
@@ -164,10 +169,13 @@ func (r *repository) initDB() error {
 
 	return repoLastError
 }
+
+// Exec execute raw query
 func (c *Context) Exec(qry string) error {
 	return r.db.Exec(qry).Error
 }
 
+// Map basic mapper don't use this define mapper for each dto
 func (r *repository) Map(from interface{}, to interface{}) error {
 
 	buff, err := json.Marshal(from)
@@ -175,6 +183,7 @@ func (r *repository) Map(from interface{}, to interface{}) error {
 	return err
 }
 
+// Exec execute raw query
 func (r *repository) Exec(qry string) error {
 	return r.db.Exec(qry).Error
 }

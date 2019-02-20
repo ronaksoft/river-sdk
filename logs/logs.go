@@ -18,32 +18,32 @@ const (
 )
 
 var (
-	_LOG      *zap.Logger
-	LOG_LEVEL zap.AtomicLevel
-	logger    func(logLevel int, msg string)
+	log      *zap.Logger
+	logLevel zap.AtomicLevel
+	logger   func(logLevel int, msg string)
 )
 
 func init() {
 
-	LOG_LEVEL = zap.NewAtomicLevelAt(zap.DebugLevel)
+	logLevel = zap.NewAtomicLevelAt(zap.DebugLevel)
 	logConfig := zap.NewProductionConfig()
 	logConfig.Encoding = "console"
 	logConfig.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	logConfig.EncoderConfig.EncodeDuration = zapcore.StringDurationEncoder
-	logConfig.Level = LOG_LEVEL
+	logConfig.Level = logLevel
 	if l, err := logConfig.Build(); err != nil {
 		os.Exit(1)
 	} else {
-		_LOG = l
+		log = l
 	}
 
 }
 
 func SetLogLevel(l int) {
-	if _LOG == nil {
+	if log == nil {
 		panic("logs is not initialized !!!")
 	}
-	LOG_LEVEL.SetLevel(zapcore.Level(l))
+	logLevel.SetLevel(zapcore.Level(l))
 }
 
 func SetLogger(fn func(logLevel int, msg string)) {
@@ -51,7 +51,7 @@ func SetLogger(fn func(logLevel int, msg string)) {
 }
 
 func Debug(msg string, fields ...zap.Field) {
-	if int(LOG_LEVEL.Level()) > int(zap.DebugLevel) {
+	if int(logLevel.Level()) > int(zap.DebugLevel) {
 		return
 	}
 
@@ -60,12 +60,12 @@ func Debug(msg string, fields ...zap.Field) {
 	if logger != nil {
 		logger(int(zap.DebugLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
 	} else {
-		_LOG.Debug(msg, fields...)
+		log.Debug(msg, fields...)
 	}
 }
 
 func Warn(msg string, fields ...zap.Field) {
-	if int(LOG_LEVEL.Level()) > int(zap.WarnLevel) {
+	if int(logLevel.Level()) > int(zap.WarnLevel) {
 		return
 	}
 	callerInfo := fnGetCallerInfo()
@@ -73,12 +73,12 @@ func Warn(msg string, fields ...zap.Field) {
 	if logger != nil {
 		logger(int(zap.WarnLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
 	} else {
-		_LOG.Warn(msg, fields...)
+		log.Warn(msg, fields...)
 	}
 }
 
 func Info(msg string, fields ...zap.Field) {
-	if int(LOG_LEVEL.Level()) > int(zap.InfoLevel) {
+	if int(logLevel.Level()) > int(zap.InfoLevel) {
 		return
 	}
 	callerInfo := fnGetCallerInfo()
@@ -86,12 +86,12 @@ func Info(msg string, fields ...zap.Field) {
 	if logger != nil {
 		logger(int(zap.InfoLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
 	} else {
-		_LOG.Info(msg, fields...)
+		log.Info(msg, fields...)
 	}
 }
 
 func Error(msg string, fields ...zap.Field) {
-	if int(LOG_LEVEL.Level()) > int(zap.ErrorLevel) {
+	if int(logLevel.Level()) > int(zap.ErrorLevel) {
 		return
 	}
 	callerInfo := fnGetCallerInfo()
@@ -99,12 +99,12 @@ func Error(msg string, fields ...zap.Field) {
 	if logger != nil {
 		logger(int(zap.ErrorLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
 	} else {
-		_LOG.Error(msg, fields...)
+		log.Error(msg, fields...)
 	}
 }
 
 func Fatal(msg string, fields ...zap.Field) {
-	if int(LOG_LEVEL.Level()) > int(zap.FatalLevel) {
+	if int(logLevel.Level()) > int(zap.FatalLevel) {
 		return
 	}
 	callerInfo := fnGetCallerInfo()
@@ -113,7 +113,7 @@ func Fatal(msg string, fields ...zap.Field) {
 		logger(int(zap.FatalLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
 	}
 	//  The logger should calls os.Exit(1) when its FatalLevel
-	_LOG.Fatal(msg, fields...)
+	log.Fatal(msg, fields...)
 
 }
 
