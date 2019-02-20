@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/cmd"
+	"git.ronaksoftware.com/ronak/riversdk/uiexec"
 	"git.ronaksoftware.com/ronak/riversdk/filemanager"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
@@ -63,7 +63,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	}
 
 	// init UI Executer
-	cmd.InitUIExecuter()
+	uiexec.InitUIExec()
 
 	// Initialize Database
 	os.MkdirAll(conf.DbPath, os.ModePerm)
@@ -380,7 +380,7 @@ func (r *River) Stop() {
 	r.syncCtrl.Stop()
 	r.queueCtrl.Stop()
 	r.networkCtrl.Stop()
-	cmd.GetUIExecuter().Stop()
+	uiexec.Ctx().Stop()
 
 	// Close database connection
 	err := repo.Ctx().Close()

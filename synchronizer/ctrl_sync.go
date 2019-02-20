@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/cmd"
+	"git.ronaksoftware.com/ronak/riversdk/uiexec"
 	"git.ronaksoftware.com/ronak/riversdk/filemanager"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
@@ -455,7 +455,7 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 
 		// wrapped to UpdateContainer
 		buff, _ := updContainer.Marshal()
-		cmd.GetUIExecuter().Exec(func() {
+		uiexec.Ctx().Exec(func() {
 			if ctrl.onUpdateMainDelegate != nil {
 				ctrl.onUpdateMainDelegate(msg.C_UpdateContainer, buff)
 			}
@@ -738,7 +738,7 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 		buff, _ := udpContainer.Marshal()
 
 		// pass all updates to UI
-		cmd.GetUIExecuter().Exec(func() {
+		uiexec.Ctx().Exec(func() {
 			if ctrl.onUpdateMainDelegate != nil {
 				ctrl.onUpdateMainDelegate(msg.C_UpdateContainer, buff)
 			}

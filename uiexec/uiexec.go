@@ -1,14 +1,16 @@
-package cmd
+package uiexec
 
 import (
 	"sync"
+	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/logs"
 )
 
 var (
-	mx   sync.Mutex
-	exec *UIExecuter
+	mx             sync.Mutex
+	exec           *UIExecuter
+	uiExecInterval = 100 * time.Millisecond
 )
 
 // UIExecuter layer
@@ -18,16 +20,16 @@ type UIExecuter struct {
 }
 
 func init() {
-	GetUIExecuter()
+	Ctx()
 }
 
-// InitUIExecuter added for clearify cuz init will initialize this
-func InitUIExecuter() {
-	GetUIExecuter()
+// InitUIExec added for clearify cuz init will initialize this
+func InitUIExec() {
+	Ctx()
 }
 
-// GetUIUIExecuter
-func GetUIExecuter() *UIExecuter {
+// Ctx singletone
+func Ctx() *UIExecuter {
 	if exec == nil {
 		mx.Lock()
 		defer mx.Unlock()
@@ -42,51 +44,39 @@ func GetUIExecuter() *UIExecuter {
 	return exec
 }
 
+// Start starts UIExecuter listener
 func (c *UIExecuter) Start() {
 	go c.UIExecuter()
 }
 
+// Stop sent stop signal
 func (c *UIExecuter) Stop() {
 	select {
 	case c.chStop <- true:
 		logs.Debug("CMD::Stop() sent stop signal")
-	default:
+	case <-time.After(uiExecInterval):
 		logs.Debug("CMD::Stop() cmd is not started")
 	}
 }
+
+// Exec pass given function to UIExecuter buffered channel
 func (c *UIExecuter) Exec(fn func()) {
 	select {
 	case c.chUIExecuter <- fn:
 		logs.Debug("CMD::Exec() sent to channel")
-	default:
-		logs.Debug("CMD::Exec() cmd is not started")
+	case <-time.After(uiExecInterval):
+		logs.Warn("CMD::Exec() cmd is not started")
 	}
 }
 
-// Pass responses to external handler (UI) one by one
+// UIExecuter Pass responses to external handler (UI) one by one
 func (c *UIExecuter) UIExecuter() {
-	// uiExecTimeout := 50 * time.Millisecond
-
 	for {
 		select {
 		case fn := <-c.chUIExecuter:
 			fn()
-			// // prevent (UI) external handler block our callbacks forever
-			// chDone := make(chan bool)
-			// go func(ch chan bool) {
-			// 	fn()
-			// 	ch <- true
-			// }(chDone)
-			// select {
-			// case <-time.After(uiExecTimeout):
-			// 	log.Debug("cmd::UIExecuter() execute fn() timedout")
-			// case <-chDone:
-			// 	log.Debug("cmd::UIExecuter() execute fn() successfully finished")
-			// }
-			// chDone = nil
-
-			// case <-c.chStop:
-			// 	return
+		case <-c.chStop:
+			return
 		}
 	}
 }

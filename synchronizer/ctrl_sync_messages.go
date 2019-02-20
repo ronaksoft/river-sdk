@@ -6,7 +6,7 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/filemanager"
 
-	"git.ronaksoftware.com/ronak/riversdk/cmd"
+	"git.ronaksoftware.com/ronak/riversdk/uiexec"
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
@@ -223,7 +223,7 @@ func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
 	ctrl.addToDeliveredMessageList(message.ID)
 
 	// call external handler
-	cmd.GetUIExecuter().Exec(func() {
+	uiexec.Ctx().Exec(func() {
 		if ctrl.onUpdateMainDelegate != nil {
 			ctrl.onUpdateMainDelegate(msg.C_UpdateEnvelope, buff)
 		}

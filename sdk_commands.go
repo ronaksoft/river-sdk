@@ -6,7 +6,7 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/filemanager"
 
-	"git.ronaksoftware.com/ronak/riversdk/cmd"
+	"git.ronaksoftware.com/ronak/riversdk/uiexec"
 	"git.ronaksoftware.com/ronak/riversdk/synchronizer"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
@@ -78,7 +78,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		logs.Debug("River::messagesGetDialogs()-> res.Marshal()", zap.Error(err))
 	}
 	out.Message = buff
-	cmd.GetUIExecuter().Exec(func() {
+	uiexec.Ctx().Exec(func() {
 		if successCB != nil {
 			successCB(out)
 		}
@@ -107,7 +107,7 @@ func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain
 	out.Constructor = msg.C_Dialog
 	out.Message, _ = res.Marshal()
 
-	cmd.GetUIExecuter().Exec(func() {
+	uiexec.Ctx().Exec(func() {
 		if successCB != nil {
 			successCB(out)
 		}
@@ -131,7 +131,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		e.Code = "n/a"
 		e.Items = "empty message is not allowed"
 		msg.ResultError(out, e)
-		cmd.GetUIExecuter().Exec(func() {
+		uiexec.Ctx().Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
@@ -153,7 +153,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		e.Code = "n/a"
 		e.Items = "Failed to save to pendingMessages : " + err.Error()
 		msg.ResultError(out, e)
-		cmd.GetUIExecuter().Exec(func() {
+		uiexec.Ctx().Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
@@ -173,7 +173,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	// 4. later when queue got processed and server returned response we should check if the requestID
 	//   exist in pendindTable we remove it and insert new message with new id to message table
 	//   invoke new OnUpdate with new protobuff to inform ui that pending message got delivered
-	cmd.GetUIExecuter().Exec(func() {
+	uiexec.Ctx().Exec(func() {
 		if successCB != nil {
 			successCB(out)
 		}
@@ -196,7 +196,7 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 		out.Constructor = msg.C_Error
 		out.RequestID = in.RequestID
 		msg.ResultError(out, &msg.Error{Code: "-1", Items: "dialog does not exist"})
-		cmd.GetUIExecuter().Exec(func() {
+		uiexec.Ctx().Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
@@ -323,7 +323,7 @@ func fnSendGetMessageHistoryResponse(out *msg.MessageEnvelope, messages []*msg.U
 	out.RequestID = requestID
 	out.Constructor = msg.C_MessagesMany
 	out.Message, _ = res.Marshal()
-	cmd.GetUIExecuter().Exec(func() {
+	uiexec.Ctx().Exec(func() {
 		if successCB != nil {
 			successCB(out)
 		}
@@ -352,7 +352,7 @@ func (r *River) contactGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeou
 	out.Constructor = msg.C_ContactsMany
 	out.Message, _ = res.Marshal()
 
-	cmd.GetUIExecuter().Exec(func() {
+	uiexec.Ctx().Exec(func() {
 		if successCB != nil {
 			successCB(out)
 		}
@@ -436,7 +436,7 @@ func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 
 		out.Constructor = msg.C_UsersMany
 		out.Message, _ = res.Marshal()
-		cmd.GetUIExecuter().Exec(func() {
+		uiexec.Ctx().Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
@@ -484,7 +484,7 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 
 		out.Constructor = msg.C_MessagesMany
 		out.Message, _ = res.Marshal()
-		cmd.GetUIExecuter().Exec(func() {
+		uiexec.Ctx().Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
@@ -883,7 +883,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 			e.Code = "n/a"
 			e.Items = "Failed to save to pendingMessages : " + err.Error()
 			msg.ResultError(out, e)
-			cmd.GetUIExecuter().Exec(func() {
+			uiexec.Ctx().Exec(func() {
 				if successCB != nil {
 					successCB(out)
 				}
@@ -917,7 +917,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		// 4. later when queue got processed and server returned response we should check if the requestID
 		//   exist in pendindTable we remove it and insert new message with new id to message table
 		//   invoke new OnUpdate with new protobuff to inform ui that pending message got delivered
-		cmd.GetUIExecuter().Exec(func() {
+		uiexec.Ctx().Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
@@ -938,7 +938,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 			e.Code = "n/a"
 			e.Items = "Failed to save to pendingMessages : " + err.Error()
 			msg.ResultError(out, e)
-			cmd.GetUIExecuter().Exec(func() {
+			uiexec.Ctx().Exec(func() {
 				if successCB != nil {
 					successCB(out)
 				}
@@ -953,7 +953,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 			e.Code = "n/a"
 			e.Items = "Failed to start Upload : " + err.Error()
 			msg.ResultError(out, e)
-			cmd.GetUIExecuter().Exec(func() {
+			uiexec.Ctx().Exec(func() {
 				if successCB != nil {
 					successCB(out)
 				}
@@ -968,7 +968,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		// 4. later when queue got processed and server returned response we should check if the requestID
 		//   exist in pendindTable we remove it and insert new message with new id to message table
 		//   invoke new OnUpdate with new protobuff to inform ui that pending message got delivered
-		cmd.GetUIExecuter().Exec(func() {
+		uiexec.Ctx().Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
@@ -1022,7 +1022,7 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 		e.Code = "n/a"
 		e.Items = "Failed to save to pendingMessages : " + err.Error()
 		msg.ResultError(out, e)
-		cmd.GetUIExecuter().Exec(func() {
+		uiexec.Ctx().Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
@@ -1037,7 +1037,7 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 	out.Constructor = msg.C_ClientPendingMessage
 	out.Message, _ = res.Marshal()
 
-	cmd.GetUIExecuter().Exec(func() {
+	uiexec.Ctx().Exec(func() {
 		if successCB != nil {
 			successCB(out)
 		}
@@ -1132,7 +1132,7 @@ func (r *River) usersGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 
 		out.Constructor = msg.C_UsersMany
 		out.Message, _ = res.Marshal()
-		cmd.GetUIExecuter().Exec(func() {
+		uiexec.Ctx().Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}

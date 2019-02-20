@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/cmd"
+	"git.ronaksoftware.com/ronak/riversdk/uiexec"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/logs"
@@ -197,7 +197,7 @@ func (ctrl *QueueController) executor(req request) {
 		if reqCallbacks.TimeoutCallback != nil {
 
 			if reqCallbacks.IsUICallback {
-				cmd.GetUIExecuter().Exec(func() { reqCallbacks.TimeoutCallback() })
+				uiexec.Ctx().Exec(func() { reqCallbacks.TimeoutCallback() })
 			} else {
 				reqCallbacks.TimeoutCallback()
 			}
@@ -229,7 +229,7 @@ func (ctrl *QueueController) executor(req request) {
 		)
 		if reqCallbacks.SuccessCallback != nil {
 			if reqCallbacks.IsUICallback {
-				cmd.GetUIExecuter().Exec(func() { reqCallbacks.SuccessCallback(res) })
+				uiexec.Ctx().Exec(func() { reqCallbacks.SuccessCallback(res) })
 			} else {
 				reqCallbacks.SuccessCallback(res)
 			}
@@ -277,7 +277,7 @@ func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructo
 				domain.RemoveRequestCallback(reqID)
 				if reqCB.TimeoutCallback != nil {
 					if reqCB.IsUICallback {
-						cmd.GetUIExecuter().Exec(func() { reqCB.TimeoutCallback() })
+						uiexec.Ctx().Exec(func() { reqCB.TimeoutCallback() })
 					} else {
 
 						reqCB.TimeoutCallback()
@@ -291,7 +291,7 @@ func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructo
 				)
 				if reqCB.SuccessCallback != nil {
 					if reqCB.IsUICallback {
-						cmd.GetUIExecuter().Exec(func() { reqCB.SuccessCallback(res) })
+						uiexec.Ctx().Exec(func() { reqCB.SuccessCallback(res) })
 					} else {
 						reqCB.SuccessCallback(res)
 					}
