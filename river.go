@@ -63,7 +63,7 @@ type River struct {
 
 	// Internal Controllers
 	networkCtrl *network.Controller
-	queueCtrl   *queue.QueueController
+	queueCtrl   *queue.Controller
 	syncCtrl    *synchronizer.SyncController
 
 	// RealTimeRequests is list of requests that should not passed to queue to send they should directly pass to networkController
