@@ -227,7 +227,7 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 			maxID := dtoDialog.TopMessageID - 1
 
 			holes := synchronizer.GetHoles(dtoDialog.PeerID, req.MinID, maxID)
-			closestHole := synchronizer.GetMaxClosetHole(maxID, holes)
+			closestHole := synchronizer.GetMaxClosestHole(maxID, holes)
 			if len(holes) > 0 {
 				if closestHole != nil {
 					messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), closestHole.MaxID, dtoDialog.TopMessageID, req.Limit)
@@ -253,7 +253,7 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 	} else if req.MinID == 0 && req.MaxID != 0 {
 		// Load type 1 : scroll to up
 		holes := synchronizer.GetHoles(dtoDialog.PeerID, req.MinID, req.MaxID)
-		closestHole := synchronizer.GetMaxClosetHole(req.MaxID, holes)
+		closestHole := synchronizer.GetMaxClosestHole(req.MaxID, holes)
 
 		if len(holes) > 0 {
 			if closestHole != nil {
@@ -280,7 +280,7 @@ func (r *River) messageGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain
 		maxID := dtoDialog.TopMessageID - 1
 
 		holes := synchronizer.GetHoles(dtoDialog.PeerID, req.MinID, maxID)
-		closestHole := synchronizer.GetMinClosetHole(req.MinID, holes)
+		closestHole := synchronizer.GetMinClosestHole(req.MinID, holes)
 		if len(holes) > 0 {
 			if closestHole != nil {
 				messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, closestHole.MinID.Int64, req.Limit)

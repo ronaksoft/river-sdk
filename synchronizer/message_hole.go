@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// GetHoles get holes between min & max
 func GetHoles(peerID, minID, maxID int64) []dto.MessageHoles {
 	holes, err := repo.Ctx().MessageHoles.GetHoles(peerID, minID, maxID)
 	if err != nil {
@@ -15,7 +16,8 @@ func GetHoles(peerID, minID, maxID int64) []dto.MessageHoles {
 	return holes
 }
 
-func GetMinClosetHole(minID int64, holes []dto.MessageHoles) *dto.MessageHoles {
+// GetMinClosestHole find closest hole from lower side
+func GetMinClosestHole(minID int64, holes []dto.MessageHoles) *dto.MessageHoles {
 	minGapSizeIdx := -1
 	minGaSize := int64(^uint64(0) >> 1)
 
@@ -34,7 +36,9 @@ func GetMinClosetHole(minID int64, holes []dto.MessageHoles) *dto.MessageHoles {
 	}
 	return nil
 }
-func GetMaxClosetHole(maxID int64, holes []dto.MessageHoles) *dto.MessageHoles {
+
+// GetMaxClosestHole find closest hole from upper side
+func GetMaxClosestHole(maxID int64, holes []dto.MessageHoles) *dto.MessageHoles {
 	maxGapSizeIdx := -1
 	maxGapSize := int64(^uint64(0) >> 1)
 	for idx, h := range holes {
@@ -53,6 +57,7 @@ func GetMaxClosetHole(maxID int64, holes []dto.MessageHoles) *dto.MessageHoles {
 	return nil
 }
 
+// fillMessageHoles
 func fillMessageHoles(peerID, msgMinID, msgMaxID int64) error {
 	holes, err := repo.Ctx().MessageHoles.GetHoles(peerID, msgMinID, msgMaxID)
 	if err != nil {
@@ -104,14 +109,17 @@ func fillMessageHoles(peerID, msgMinID, msgMaxID int64) error {
 	return nil
 }
 
+// createMessageHole
 func createMessageHole(peerID, minID, maxID int64) error {
 	return repo.Ctx().MessageHoles.Save(peerID, minID, maxID)
 }
 
+// deleteMessageHole
 func deleteMessageHole(peerID int64) error {
 	return repo.Ctx().MessageHoles.DeleteAll(peerID)
 }
 
+// fnLogFillMessageHoles
 func fnLogFillMessageHoles(operation string, peerID, minID, maxID int64, err error) {
 	logs.Warn("fillMessageHoles() :: Failed To "+operation,
 		zap.Int64("peerID", peerID),

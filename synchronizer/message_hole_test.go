@@ -21,7 +21,7 @@ func TestIsMessageInHole(t *testing.T) {
 	defer repo.Ctx().Close()
 	defer os.Remove("river.db")
 
-	// Insert CHunck Data
+	// Insert Chunck Data
 	dtoHoles := []dto.MessageHoles{
 		dto.MessageHoles{
 			PeerID: 1,
@@ -457,7 +457,7 @@ func TestGetMaxClosestHole(t *testing.T) {
 			MaxID:  692,
 		},
 	}
-	dto := GetMaxClosetHole(982, holes)
+	dto := GetMaxClosestHole(982, holes)
 	if dto == nil {
 		t.Error("Failed :/ ")
 	}
@@ -473,7 +473,7 @@ func TestGetMonClosestHole(t *testing.T) {
 			MaxID:  635,
 		},
 	}
-	dto := GetMinClosetHole(933, holes)
+	dto := GetMinClosestHole(933, holes)
 	if dto == nil {
 		t.Error("Failed :/ ")
 	}

@@ -147,7 +147,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Initialize Sync Controller
 	r.syncCtrl = synchronizer.NewSyncController(
-		synchronizer.SyncConfig{
+		synchronizer.Config{
 			ConnInfo:    r.ConnInfo,
 			NetworkCtrl: r.networkCtrl,
 			QueueCtrl:   r.queueCtrl,
