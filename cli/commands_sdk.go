@@ -1,7 +1,7 @@
 package main
 
 import (
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"gopkg.in/abiosoft/ishell.v2"
 )
@@ -28,7 +28,7 @@ var SdkSetLogLevel = &ishell.Cmd{
 		choiceIndex := c.MultiChoice([]string{
 			"Debug", "Info", "Warn", "Error",
 		}, "Level")
-		log.SetLogLevel(choiceIndex - 1)
+		logs.SetLogLevel(choiceIndex - 1)
 	},
 }
 

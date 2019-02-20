@@ -1,7 +1,7 @@
 package synchronizer
 
 import (
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/repo"
 	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
 	"go.uber.org/zap"
@@ -113,7 +113,7 @@ func deleteMessageHole(peerID int64) error {
 }
 
 func fnLogFillMessageHoles(operation string, peerID, minID, maxID int64, err error) {
-	log.LOG_Warn("fillMessageHoles() :: Failed To "+operation,
+	logs.Warn("fillMessageHoles() :: Failed To "+operation,
 		zap.Int64("peerID", peerID),
 		zap.Int64("minID", minID),
 		zap.Int64("maxID", maxID),

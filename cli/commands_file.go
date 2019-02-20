@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/repo"
 	ishell "gopkg.in/abiosoft/ishell.v2"
@@ -92,7 +92,7 @@ var DownloadMultiConnection = &ishell.Cmd{
 
 			err := x.Unmarshal(m.Media)
 			if err != nil {
-				log.LOG_Error("Error", zap.Error(err))
+				logs.Error("Error", zap.Error(err))
 				return
 			}
 
@@ -124,17 +124,17 @@ var DownloadMultiConnection = &ishell.Cmd{
 		strName := strconv.FormatInt(domain.SequentialUniqueID(), 10) + ".tmp"
 		f, err := os.Create(strName)
 		if err != nil {
-			log.LOG_Error("Error", zap.Error(err))
+			logs.Error("Error", zap.Error(err))
 		}
 		defer f.Close()
 		for partIdx, buff := range fileBuff {
 			position := partIdx * domain.FilePayloadSize
 			_, err := f.WriteAt(buff, int64(position))
 			if err != nil {
-				log.LOG_Error("Error", zap.Error(err))
+				logs.Error("Error", zap.Error(err))
 			}
 		}
-		log.LOG_Info("File save Completed :", zap.String("fileName", f.Name()))
+		logs.Info("File save Completed :", zap.String("fileName", f.Name()))
 	},
 }
 
@@ -179,7 +179,7 @@ var DownloadThumbnail = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		messageID := fnGetMessageID(c)
 		strFilePath := _SDK.FileDownloadThumbnail(messageID)
-		log.LOG_Info("File Download Complete", zap.String("path", strFilePath))
+		logs.Info("File Download Complete", zap.String("path", strFilePath))
 	},
 }
 
@@ -208,7 +208,7 @@ func init() {
 func downloadWorker(workerIdx int, wg *sync.WaitGroup, partQueue chan int, fileBuff map[int][]byte, fileLock *sync.Mutex, x *msg.MediaDocument) {
 	defer wg.Done()
 
-	log.LOG_Info("Worker Started :", zap.Int("worker", workerIdx))
+	logs.Info("Worker Started :", zap.Int("worker", workerIdx))
 	for {
 		select {
 		case partIdx := <-partQueue:
@@ -237,26 +237,26 @@ func downloadWorker(workerIdx int, wg *sync.WaitGroup, partQueue chan int, fileB
 
 			// Send
 			for _SDK.GetNetworkStatus() == int32(domain.DISCONNECTED) || _SDK.GetNetworkStatus() == int32(domain.CONNECTING) {
-				log.LOG_Warn("network is not connected", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx))
+				logs.Warn("network is not connected", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx))
 				time.Sleep(500 * time.Millisecond)
 			}
 
-			log.LOG_Debug("send download request", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx))
+			logs.Debug("send download request", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx))
 			res, err := ctx.Send(envelop)
 
 			if err == nil {
 				responseID := res.RequestID
 				if requestID != responseID {
-					log.LOG_Warn("RequestIDs are not equal", zap.Uint64("reqID", requestID), zap.Uint64("resID", responseID))
+					logs.Warn("RequestIDs are not equal", zap.Uint64("reqID", requestID), zap.Uint64("resID", responseID))
 				} else {
-					log.LOG_Debug("RequestIDs are equal", zap.Uint64("reqID", requestID), zap.Uint64("resID", responseID))
+					logs.Debug("RequestIDs are equal", zap.Uint64("reqID", requestID), zap.Uint64("resID", responseID))
 				}
 
 				switch res.Constructor {
 				case msg.C_Error:
 					x := new(msg.Error)
 					x.Unmarshal(res.Message)
-					log.LOG_Error("received Error response", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx), zap.String("Code", x.Code), zap.String("Item", x.Items))
+					logs.Error("received Error response", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx), zap.String("Code", x.Code), zap.String("Item", x.Items))
 					// on error add to queue again
 					partQueue <- partIdx
 				case msg.C_File:
@@ -265,7 +265,7 @@ func downloadWorker(workerIdx int, wg *sync.WaitGroup, partQueue chan int, fileB
 					if err != nil {
 						// on error add to queue again
 						partQueue <- partIdx
-						log.LOG_Error("failed to unmarshal C_File", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx), zap.Error(err))
+						logs.Error("failed to unmarshal C_File", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx), zap.Error(err))
 					} else {
 						fileLock.Lock()
 						fileBuff[partIdx] = x.Bytes
@@ -274,16 +274,16 @@ func downloadWorker(workerIdx int, wg *sync.WaitGroup, partQueue chan int, fileB
 				default:
 					// on error add to queue again
 					partQueue <- partIdx
-					log.LOG_Error("received unknown response", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx), zap.Error(err))
+					logs.Error("received unknown response", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx), zap.Error(err))
 				}
 			} else {
 				// on error add to queue again
 				partQueue <- partIdx
-				log.LOG_Error("downloadWorker()", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx), zap.Error(err))
+				logs.Error("downloadWorker()", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx), zap.Error(err))
 			}
 
 		default:
-			log.LOG_Info("Worker Exited :", zap.Int("worker", workerIdx))
+			logs.Info("Worker Exited :", zap.Int("worker", workerIdx))
 			return
 		}
 	}

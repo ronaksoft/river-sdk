@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 )
 
 // Report collects reporters statistics
@@ -127,7 +127,7 @@ func (r *Report) onActorStop(phone string) {
 		delete(r.ActorStatus, phone)
 		r.mx.Unlock()
 	} else {
-		log.LOG_Warn(fmt.Sprintf("Actor(%s) not found in reporter", phone))
+		logs.Warn(fmt.Sprintf("Actor(%s) not found in reporter", phone))
 	}
 
 	// Print does not need to be thread safe :/

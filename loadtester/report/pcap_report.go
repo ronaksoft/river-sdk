@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"go.uber.org/zap"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
@@ -212,9 +212,9 @@ func extractMessages(m *msg.MessageEnvelope) ([]*msg.MessageEnvelope, []*msg.Upd
 			x := new(msg.Error)
 			err := x.Unmarshal(m.Message)
 			if err == nil {
-				log.LOG_Error("PcapReport::extractMessages() Received General Error", zap.String("Code", x.Code), zap.String("Items", x.Items))
+				logs.Error("PcapReport::extractMessages() Received General Error", zap.String("Code", x.Code), zap.String("Items", x.Items))
 			} else {
-				log.LOG_Error("PcapReport::extractMessages() Received General Error and failed to unmarshal it", zap.Error(err))
+				logs.Error("PcapReport::extractMessages() Received General Error and failed to unmarshal it", zap.Error(err))
 			}
 		} else {
 			// callback delegate will handle it

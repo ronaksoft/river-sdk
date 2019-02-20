@@ -6,7 +6,7 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )
 
@@ -20,7 +20,7 @@ var SetLogLevel = &ishell.Cmd{
 		idx := c.MultiChoice([]string{
 			"Debug", "Info", "Warn", "Error",
 		}, "Level")
-		log.SetLogLevel(idx - 1)
+		logs.SetLogLevel(idx - 1)
 	},
 }
 var SetReporter = &ishell.Cmd{

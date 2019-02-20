@@ -12,7 +12,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/controller"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/executer"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
 
@@ -47,7 +47,7 @@ func NewActor(phone string) (shared.Acter, error) {
 	var act *Actor
 	acter, ok := shared.GetCachedActorByPhone(phone)
 	if !ok {
-		log.LOG_Warn("NewActor() Actor not found in Cache", zap.String("Phone", phone))
+		logs.Warn("NewActor() Actor not found in Cache", zap.String("Phone", phone))
 		act = new(Actor)
 		err := act.Load(phone)
 		if err != nil {
@@ -210,12 +210,12 @@ func (act *Actor) ReceivedErrorResponse() {
 // onMessage check requestCallbacks and call callbacks
 func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
 	for _, m := range messages {
-		// log.LOG_Debug("onMessage() Received ", zap.String("Constructor", msg.ConstructorNames[m.Constructor]), zap.Uint64("ReqID", m.RequestID))
+		// log.Debug("onMessage() Received ", zap.String("Constructor", msg.ConstructorNames[m.Constructor]), zap.Uint64("ReqID", m.RequestID))
 		req := act.exec.GetRequest(m.RequestID)
 		if req != nil {
 			select {
 			case req.ResponseWaitChannel <- m:
-				log.LOG_Debug("onMessage() callback singnal sent",
+				logs.Debug("onMessage() callback singnal sent",
 					zap.Uint64("RequestID", m.RequestID),
 					zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
 					zap.Duration("Elapsed", time.Since(req.CreatedOn)),
@@ -233,7 +233,7 @@ func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
 					}(req, m)
 
 				} else {
-					log.LOG_Error("onMessage() callback is skipped probably timedout before",
+					logs.Error("onMessage() callback is skipped probably timedout before",
 						zap.Uint64("RequestID", m.RequestID),
 						zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
 						zap.Duration("Elapsed", elapsed),
@@ -246,18 +246,18 @@ func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
 				x := new(msg.Error)
 				err := x.Unmarshal(m.Message)
 				if err == nil {
-					log.LOG_Error("onMessage() callback does not exists received Error",
+					logs.Error("onMessage() callback does not exists received Error",
 						zap.Uint64("RequestID", m.RequestID),
 						zap.String("Code", x.Code),
 						zap.String("Item", x.Items),
 					)
 				} else {
-					log.LOG_Error("onMessage() callback does not exists received Error and filed to unmarshal Error",
+					logs.Error("onMessage() callback does not exists received Error and filed to unmarshal Error",
 						zap.Uint64("RequestID", m.RequestID),
 					)
 				}
 			} else {
-				log.LOG_Debug("onMessage() callback does not exists", zap.Uint64("RequestID", m.RequestID), zap.String("Constructor", msg.ConstructorNames[m.Constructor]))
+				logs.Debug("onMessage() callback does not exists", zap.Uint64("RequestID", m.RequestID), zap.String("Constructor", msg.ConstructorNames[m.Constructor]))
 			}
 		}
 	}
@@ -266,18 +266,18 @@ func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
 func (act *Actor) onUpdate(updates []*msg.UpdateContainer) {
 
 	for _, cnt := range updates {
-		log.LOG_Debug("onUpdate()",
+		logs.Debug("onUpdate()",
 			zap.Int32("Length", cnt.Length),
 			zap.Int64("MinID", cnt.MinUpdateID),
 			zap.Int64("MaxID", cnt.MaxUpdateID),
 		)
 		for _, u := range cnt.Updates {
-			log.LOG_Debug("onUpdate() Received ", zap.String("Constructor", msg.ConstructorNames[u.Constructor]))
+			logs.Debug("onUpdate() Received ", zap.String("Constructor", msg.ConstructorNames[u.Constructor]))
 		}
 	}
 }
 
 func (act *Actor) onError(err *msg.Error) {
 	// TODO : Add reporter error log
-	log.LOG_Error("onError()", zap.String("Error", err.String()))
+	logs.Error("onError()", zap.String("Error", err.String()))
 }

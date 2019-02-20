@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
@@ -182,7 +182,7 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acte
 					err = domain.ErrSecretNonceMismatch
 					// TODO : Reporter failed
 					s.failed(act, elapsed, resp.RequestID, "initCompleteAuth(), err : "+err.Error())
-					log.LOG_Error("initCompleteAuth(), err : secret hash does not match",
+					logs.Error("initCompleteAuth(), err : secret hash does not match",
 						zap.Uint64("Server SecretHash", x.SecretHash),
 						zap.Uint64("Client SecretHash", clientSecretHash),
 					)

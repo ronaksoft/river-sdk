@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/repo"
 )
@@ -212,7 +212,7 @@ func (fs *FileStatus) fileStatusChanged() {
 	// TODO : save file status to DB
 	err := repo.Ctx().Files.SaveFileStatus(fs.GetDTO())
 	if err != nil {
-		log.LOG_Debug("fileStatusChanged() failed to save in DB", zap.Error(err))
+		logs.Debug("fileStatusChanged() failed to save in DB", zap.Error(err))
 	}
 
 	lenParts := int64(fs.partListCount())
@@ -341,7 +341,7 @@ func (fs *FileStatus) ReadAsFileGet(partNo int64) (envelop *msg.MessageEnvelope,
 	envelop.Message, err = req.Marshal()
 	envelop.RequestID = uint64(domain.SequentialUniqueID())
 
-	log.LOG_Debug("FileStatus::ReadAsFileGet()",
+	logs.Debug("FileStatus::ReadAsFileGet()",
 		zap.Int64("MsgID", fs.MessageID),
 		zap.Int32("Offset", req.Offset),
 		zap.Int32("Limit", req.Limit),
@@ -432,7 +432,7 @@ func (fs *FileStatus) downloader_job(fm *FileManager) {
 		case partIdx := <-fs.chPartList:
 			envelop, err := fs.ReadAsFileGet(partIdx)
 			if err != nil {
-				log.LOG_Error("downloader_job() -> ReadAsFileGet()", zap.Int64("msgID", fs.MessageID), zap.Int64("PartNo", partIdx))
+				logs.Error("downloader_job() -> ReadAsFileGet()", zap.Int64("msgID", fs.MessageID), zap.Int64("PartNo", partIdx))
 				// fs.chPartList <- partIdx
 				break
 			}
@@ -457,7 +457,7 @@ func (fs *FileStatus) uploader_job(fm *FileManager) {
 			}
 			envelop, readCount, err := fs.ReadAsFileSavePart(false, partIdx)
 			if err != nil {
-				log.LOG_Error("FileManager::startUploadQueue()", zap.Error(err), zap.String("filePath", fs.FilePath))
+				logs.Error("FileManager::startUploadQueue()", zap.Error(err), zap.String("filePath", fs.FilePath))
 				break
 			}
 			fm.SendUploadRequest(envelop, int64(readCount), fs, partIdx)
@@ -472,7 +472,7 @@ func (fs *FileStatus) upload_thumbnail(fm *FileManager) {
 	for fs.ThumbPosition < fs.ThumbTotalSize {
 		envelop, readCount, err := fs.ReadAsFileSavePart(true, 0)
 		if err != nil {
-			log.LOG_Error("FileManager::startUploadQueue()", zap.Error(err), zap.String("filePath", fs.FilePath))
+			logs.Error("FileManager::startUploadQueue()", zap.Error(err), zap.String("filePath", fs.FilePath))
 			continue
 		}
 		fm.SendUploadRequest(envelop, int64(readCount), fs, 0)

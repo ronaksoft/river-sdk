@@ -8,7 +8,7 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/pcap_parser"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/report"
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"go.uber.org/zap"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )
@@ -24,12 +24,12 @@ var cmdParse = &ishell.Cmd{
 		c.Print("pcap file path:")
 		filePath := c.ReadLine()
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
-			log.LOG_Error("Error", zap.Error(err))
+			logs.Error("Error", zap.Error(err))
 			return
 		}
 		res, err := pcap_parser.Parse(filePath)
 		if err != nil {
-			log.LOG_Error("Error", zap.Error(err))
+			logs.Error("Error", zap.Error(err))
 			return
 		}
 
@@ -57,13 +57,13 @@ var cmdParse_wsutil = &ishell.Cmd{
 		c.Print("pcap file path:")
 		filePath := c.ReadLine()
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
-			log.LOG_Error("Error", zap.Error(err))
+			logs.Error("Error", zap.Error(err))
 			return
 		}
 
 		res, err := pcap_parser.Parse(filePath)
 		if err != nil {
-			log.LOG_Error("Error", zap.Error(err))
+			logs.Error("Error", zap.Error(err))
 			return
 		}
 

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"sync"
 
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
 	"go.uber.org/zap"
 
@@ -75,7 +75,7 @@ func repoSetDB(dialect, dbPath string) error {
 	r = new(repository)
 	r.db, repoLastError = gorm.Open(dialect, dbPath)
 	if repoLastError != nil {
-		log.LOG_Debug("Context::repoSetDB()->gorm.Open()",
+		logs.Debug("Context::repoSetDB()->gorm.Open()",
 			zap.String("Error", repoLastError.Error()),
 		)
 		return repoLastError
@@ -102,13 +102,13 @@ func (c *Context) Close() error {
 func (c *Context) DropAndCreateTable(dtoTable interface{}) error {
 	err := r.db.DropTable(dtoTable).Error
 	if err != nil {
-		log.LOG_Debug("Context::DropAndCreateTable() failed to DROP",
+		logs.Debug("Context::DropAndCreateTable() failed to DROP",
 			zap.String("Error", err.Error()),
 		)
 	}
 	err = r.db.AutoMigrate(dtoTable).Error
 	if err != nil {
-		log.LOG_Debug("Context::DropAndCreateTable() failed to AutoMigrate",
+		logs.Debug("Context::DropAndCreateTable() failed to AutoMigrate",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -132,7 +132,7 @@ func (c *Context) ReinitiateDatabase() error {
 	).Error
 
 	if err != nil {
-		log.LOG_Debug("Context::ReinitiateDatabase()->DropTableIfExists()",
+		logs.Debug("Context::ReinitiateDatabase()->DropTableIfExists()",
 			zap.String("Error", err.Error()),
 		)
 	}

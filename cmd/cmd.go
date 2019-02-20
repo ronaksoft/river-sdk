@@ -3,7 +3,7 @@ package cmd
 import (
 	"sync"
 
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 )
 
 var (
@@ -49,17 +49,17 @@ func (c *UIExecuter) Start() {
 func (c *UIExecuter) Stop() {
 	select {
 	case c.chStop <- true:
-		log.LOG_Debug("CMD::Stop() sent stop signal")
+		logs.Debug("CMD::Stop() sent stop signal")
 	default:
-		log.LOG_Debug("CMD::Stop() cmd is not started")
+		logs.Debug("CMD::Stop() cmd is not started")
 	}
 }
 func (c *UIExecuter) Exec(fn func()) {
 	select {
 	case c.chUIExecuter <- fn:
-		log.LOG_Debug("CMD::Exec() sent to channel")
+		logs.Debug("CMD::Exec() sent to channel")
 	default:
-		log.LOG_Debug("CMD::Exec() cmd is not started")
+		logs.Debug("CMD::Exec() cmd is not started")
 	}
 }
 
@@ -79,9 +79,9 @@ func (c *UIExecuter) UIExecuter() {
 			// }(chDone)
 			// select {
 			// case <-time.After(uiExecTimeout):
-			// 	log.LOG_Debug("cmd::UIExecuter() execute fn() timedout")
+			// 	log.Debug("cmd::UIExecuter() execute fn() timedout")
 			// case <-chDone:
-			// 	log.LOG_Debug("cmd::UIExecuter() execute fn() successfully finished")
+			// 	log.Debug("cmd::UIExecuter() execute fn() successfully finished")
 			// }
 			// chDone = nil
 

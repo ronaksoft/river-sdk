@@ -8,7 +8,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/controller"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/report"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )
 
@@ -77,7 +77,7 @@ func fnClearReports() {
 
 func fnPrintReports(elapsed time.Duration) {
 	fnClearScreeen()
-	log.LOG_Info(fmt.Sprintf("Execution Time : %v", elapsed))
+	logs.Info(fmt.Sprintf("Execution Time : %v", elapsed))
 
 	fmt.Println(_Reporter.String())
 	fmt.Printf("Failed Requests :\n%s", shared.PrintFailedRequest())

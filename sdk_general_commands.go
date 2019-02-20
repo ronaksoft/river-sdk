@@ -8,7 +8,7 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/filemanager"
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/repo"
 	"go.uber.org/zap"
@@ -42,7 +42,7 @@ func (r *River) DeletePendingMessage(id int64) (isSuccess bool) {
 func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
 	pmsg, err := repo.Ctx().PendingMessages.GetPendingMessageByID(id)
 	if err != nil {
-		log.LOG_Debug("River::RetryPendingMessage()",
+		logs.Debug("River::RetryPendingMessage()",
 			zap.String("GetPendingMessageByID", err.Error()),
 		)
 		isSuccess = false
@@ -54,7 +54,7 @@ func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
 	buff, _ := req.Marshal()
 	r.queueCtrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSend, buff, nil, nil, true)
 	isSuccess = true
-	log.LOG_Debug("River::RetryPendingMessage() Request enqueued")
+	logs.Debug("River::RetryPendingMessage() Request enqueued")
 
 	return
 }
@@ -67,7 +67,7 @@ func (r *River) GetNetworkStatus() int32 {
 // GetSyncStatus returns SyncController status
 func (r *River) GetSyncStatus() int32 {
 
-	log.LOG_Debug("River::GetSyncStatus()",
+	logs.Debug("River::GetSyncStatus()",
 		zap.String("syncStatus", domain.SyncStatusName[r.syncCtrl.Status()]),
 	)
 	return int32(r.syncCtrl.Status())
@@ -79,7 +79,7 @@ func (r *River) Logout() (int64, error) {
 	dataDir, err := r.queueCtrl.DropQueue()
 
 	if err != nil {
-		log.LOG_Debug("River::Logout() failed to drop queue",
+		logs.Debug("River::Logout() failed to drop queue",
 			zap.Error(err),
 		)
 	}
@@ -87,7 +87,7 @@ func (r *River) Logout() (int64, error) {
 	// drop and recreate database
 	err = repo.Ctx().ReinitiateDatabase()
 	if err != nil {
-		log.LOG_Debug("River::Logout() failed to re initiate database",
+		logs.Debug("River::Logout() failed to re initiate database",
 			zap.Error(err),
 		)
 	}
@@ -95,7 +95,7 @@ func (r *River) Logout() (int64, error) {
 	// open queue
 	err = r.queueCtrl.OpenQueue(dataDir)
 	if err != nil {
-		log.LOG_Debug("River::Logout() failed to re open queue",
+		logs.Debug("River::Logout() failed to re open queue",
 			zap.Error(err),
 		)
 	}
@@ -136,7 +136,7 @@ func (r *River) Logout() (int64, error) {
 func (r *River) UISettingGet(key string) string {
 	val, err := repo.Ctx().UISettings.Get(key)
 	if err != nil {
-		log.LOG_Info("River::UISettingsGet()",
+		logs.Info("River::UISettingsGet()",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -147,7 +147,7 @@ func (r *River) UISettingGet(key string) string {
 func (r *River) UISettingPut(key, value string) bool {
 	err := repo.Ctx().UISettings.Put(key, value)
 	if err != nil {
-		log.LOG_Info("River::UISettingsPut()",
+		logs.Info("River::UISettingsPut()",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -158,7 +158,7 @@ func (r *River) UISettingPut(key, value string) bool {
 func (r *River) UISettingDelete(key string) bool {
 	err := repo.Ctx().UISettings.Delete(key)
 	if err != nil {
-		log.LOG_Info("River::UISettingsDelete()",
+		logs.Info("River::UISettingsDelete()",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -187,7 +187,7 @@ func (r *River) GetRealTopMessageID(peerID int64, peerType int32) int64 {
 
 	topMsgID, err := repo.Ctx().Messages.GetTopMessageID(peerID, peerType)
 	if err != nil {
-		log.LOG_Debug("SDK::GetRealTopMessageID() => Messages.GetTopMessageID()", zap.String("Error", err.Error()))
+		logs.Debug("SDK::GetRealTopMessageID() => Messages.GetTopMessageID()", zap.String("Error", err.Error()))
 		return -1
 	}
 	return topMsgID
@@ -197,7 +197,7 @@ func (r *River) GetRealTopMessageID(peerID int64, peerType int32) int64 {
 func (r *River) UpdateContactinfo(userID int64, firstName, lastName string) error {
 	err := repo.Ctx().Users.UpdateContactinfo(userID, firstName, lastName)
 	if err != nil {
-		log.LOG_Debug("SDK::UpdateContactinfo() => Users.UpdateContactInfo()", zap.String("Error", err.Error()))
+		logs.Debug("SDK::UpdateContactinfo() => Users.UpdateContactInfo()", zap.String("Error", err.Error()))
 	}
 	return err
 }
@@ -378,14 +378,14 @@ func getFilePath(msgID int64) string {
 func (r *River) FileDownload(msgID int64) {
 
 	status, progress, filePath := geFileStatus(msgID)
-	log.LOG_Debug("SDK::FileDownload() current file progress status",
+	logs.Debug("SDK::FileDownload() current file progress status",
 		zap.String("Status", domain.RequestStatusNames[status]),
 		zap.Float64("Progress", progress),
 		zap.String("FilePath", filePath),
 	)
 	m := repo.Ctx().Messages.GetMessage(msgID)
 	if m == nil {
-		log.LOG_Error("SDK::FileDownload()", zap.Int64("Message does not exist", msgID))
+		logs.Error("SDK::FileDownload()", zap.Int64("Message does not exist", msgID))
 		return
 	}
 
@@ -420,7 +420,7 @@ func (r *River) PauseDownload(msgID int64) {
 		filemanager.Ctx().DeleteFromQueue(fs.FileID)
 		repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStatePused)
 	} else {
-		log.LOG_Error("SDK::PauseDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
+		logs.Error("SDK::PauseDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
 	}
 }
 
@@ -430,7 +430,7 @@ func (r *River) CancelDownload(msgID int64) {
 		filemanager.Ctx().DeleteFromQueue(fs.FileID)
 		repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStateCanceled)
 	} else {
-		log.LOG_Error("SDK::CancelDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
+		logs.Error("SDK::CancelDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
 	}
 }
 
@@ -441,7 +441,7 @@ func (r *River) PauseUpload(msgID int64) {
 		repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStatePused)
 		// repo.Ctx().PendingMessages.DeletePendingMessage(fs.MessageID)
 	} else {
-		log.LOG_Error("SDK::PauseUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
+		logs.Error("SDK::PauseUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
 	}
 }
 
@@ -452,7 +452,7 @@ func (r *River) CancelUpload(msgID int64) {
 		repo.Ctx().Files.DeleteFileStatus(msgID)
 		repo.Ctx().PendingMessages.DeletePendingMessage(fs.MessageID)
 	} else {
-		log.LOG_Error("SDK::CancelUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
+		logs.Error("SDK::CancelUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
 	}
 }
 
@@ -469,19 +469,19 @@ func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		log.LOG_Error("SDK::AccountUploadPhoto()", zap.Error(err))
+		logs.Error("SDK::AccountUploadPhoto()", zap.Error(err))
 		return 0
 	}
 	fileInfo, err := file.Stat()
 	if err != nil {
-		log.LOG_Error("SDK::AccountUploadPhoto()", zap.Error(err))
+		logs.Error("SDK::AccountUploadPhoto()", zap.Error(err))
 		return 0
 	}
 
 	// // fileName := fileInfo.Name()
 	totalSize := fileInfo.Size() // size in Byte
 	// if totalSize > domain.FileMaxPhotoSize {
-	// 	log.LOG_Error("SDK::AccountUploadPhoto()", zap.Error(errors.New("max allowed file size is 1 MB")))
+	// 	log.Error("SDK::AccountUploadPhoto()", zap.Error(errors.New("max allowed file size is 1 MB")))
 	// 	return 0
 	// }
 
@@ -520,10 +520,10 @@ func (r *River) AccountGetPhoto_Big(userID int64) string {
 			return downloadAccountPhoto(userID, user.Photo, true)
 
 		}
-		log.LOG_Error("SDK::AccountGetPhoto_Big() user photo is null")
+		logs.Error("SDK::AccountGetPhoto_Big() user photo is null")
 		return ""
 	}
-	log.LOG_Error("SDK::AccountGetPhoto_Big() user does not exist")
+	logs.Error("SDK::AccountGetPhoto_Big() user does not exist")
 	return ""
 }
 
@@ -554,17 +554,17 @@ func (r *River) AccountGetPhoto_Small(userID int64) string {
 			}
 			return downloadAccountPhoto(userID, user.Photo, false)
 		}
-		log.LOG_Error("SDK::AccountGetPhoto_Small() user photo is null")
+		logs.Error("SDK::AccountGetPhoto_Small() user photo is null")
 		return ""
 	}
-	log.LOG_Error("SDK::AccountGetPhoto_Small() user does not exist")
+	logs.Error("SDK::AccountGetPhoto_Small() user does not exist")
 	return ""
 }
 
 // this function is sync
 func downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) string {
 
-	log.LOG_Debug("SDK::downloadAccountPhoto",
+	logs.Debug("SDK::downloadAccountPhoto",
 		zap.Int64("UserID", userID),
 		zap.Bool("IsBig", isBig),
 		zap.Int64("PhotoBig.FileID", photo.PhotoBig.FileID),
@@ -578,7 +578,7 @@ func downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) string
 	// send Download request
 	filePath, err := filemanager.Ctx().DownloadAccountPhoto(userID, photo, isBig)
 	if err != nil {
-		log.LOG_Error("SDK::downloadAccountPhoto() error", zap.Error(err))
+		logs.Error("SDK::downloadAccountPhoto() error", zap.Error(err))
 		return ""
 	}
 	return filePath
@@ -632,19 +632,19 @@ func (r *River) GroupUploadPhoto(groupID int64, filePath string) (msgID int64) {
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		log.LOG_Error("SDK::GroupUploadPhoto()", zap.Error(err))
+		logs.Error("SDK::GroupUploadPhoto()", zap.Error(err))
 		return 0
 	}
 	fileInfo, err := file.Stat()
 	if err != nil {
-		log.LOG_Error("SDK::GroupUploadPhoto()", zap.Error(err))
+		logs.Error("SDK::GroupUploadPhoto()", zap.Error(err))
 		return 0
 	}
 
 	// // fileName := fileInfo.Name()
 	totalSize := fileInfo.Size() // size in Byte
 	// if totalSize > domain.FileMaxPhotoSize {
-	// 	log.LOG_Error("SDK::GroupUploadPhoto()", zap.Error(errors.New("max allowed file size is 1 MB")))
+	// 	log.Error("SDK::GroupUploadPhoto()", zap.Error(errors.New("max allowed file size is 1 MB")))
 	// 	return 0
 	// }
 
@@ -663,7 +663,7 @@ func (r *River) GroupGetPhoto_Big(groupID int64) string {
 			groupPhoto := new(msg.GroupPhoto)
 			err = groupPhoto.Unmarshal(group.Photo)
 			if err != nil {
-				log.LOG_Error("SDK::GroupGetPhoto_Big() failed to unmarshal GroupPhoto", zap.Error(err))
+				logs.Error("SDK::GroupGetPhoto_Big() failed to unmarshal GroupPhoto", zap.Error(err))
 				return ""
 			}
 			if group.Big_FilePath != "" {
@@ -682,10 +682,10 @@ func (r *River) GroupGetPhoto_Big(groupID int64) string {
 			return downloadGroupPhoto(groupID, groupPhoto, true)
 
 		}
-		log.LOG_Error("SDK::GroupGetPhoto_Big() group photo is null")
+		logs.Error("SDK::GroupGetPhoto_Big() group photo is null")
 		return ""
 	}
-	log.LOG_Error("SDK::GroupGetPhoto_Big() group does not exist")
+	logs.Error("SDK::GroupGetPhoto_Big() group does not exist")
 	return ""
 }
 
@@ -697,7 +697,7 @@ func (r *River) GroupGetPhoto_Small(groupID int64) string {
 			groupPhoto := new(msg.GroupPhoto)
 			err = groupPhoto.Unmarshal(group.Photo)
 			if err != nil {
-				log.LOG_Error("SDK::GroupGetPhoto_Small() failed to unmarshal GroupPhoto", zap.Error(err))
+				logs.Error("SDK::GroupGetPhoto_Small() failed to unmarshal GroupPhoto", zap.Error(err))
 				return ""
 			}
 			if group.Small_FilePath != "" {
@@ -719,17 +719,17 @@ func (r *River) GroupGetPhoto_Small(groupID int64) string {
 			return downloadGroupPhoto(groupID, groupPhoto, false)
 
 		}
-		log.LOG_Error("SDK::GroupGetPhoto_Small() group photo is null")
+		logs.Error("SDK::GroupGetPhoto_Small() group photo is null")
 		return ""
 	}
-	log.LOG_Error("SDK::GroupGetPhoto_Small() group does not exist")
+	logs.Error("SDK::GroupGetPhoto_Small() group does not exist")
 	return ""
 }
 
 // this function is sync
 func downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) string {
 
-	log.LOG_Debug("SDK::downloadGroupPhoto",
+	logs.Debug("SDK::downloadGroupPhoto",
 		zap.Int64("UserID", groupID),
 		zap.Bool("IsBig", isBig),
 		zap.Int64("PhotoBig.FileID", photo.PhotoBig.FileID),
@@ -743,7 +743,7 @@ func downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) string
 	// send Download request
 	filePath, err := filemanager.Ctx().DownloadGroupPhoto(groupID, photo, isBig)
 	if err != nil {
-		log.LOG_Error("SDK::downloadGroupPhoto() error", zap.Error(err))
+		logs.Error("SDK::downloadGroupPhoto() error", zap.Error(err))
 		return ""
 	}
 	return filePath
@@ -753,7 +753,7 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 
 	m := repo.Ctx().Messages.GetMessage(msgID)
 	if m == nil {
-		log.LOG_Error("SDK::FileDownloadThumbnail() message does not exist")
+		logs.Error("SDK::FileDownloadThumbnail() message does not exist")
 		return ""
 	}
 	filePath := ""
@@ -775,14 +775,14 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 			accessHash = x.Doc.Thumbnail.AccessHash
 			// version = x.Doc.Thumbnail.Version
 		} else {
-			log.LOG_Warn("SDK::FileDownloadThumbnail() Message does not have thumbnail", zap.Int64("MsgID", msgID))
+			logs.Warn("SDK::FileDownloadThumbnail() Message does not have thumbnail", zap.Int64("MsgID", msgID))
 			return filePath
 		}
 
 	case msg.MediaTypeContact:
 		// TODO:: implement it
 	default:
-		log.LOG_Error("SDK::FileDownloadThumbnail() Invalid MediaType")
+		logs.Error("SDK::FileDownloadThumbnail() Invalid MediaType")
 	}
 
 	dto, err := repo.Ctx().Files.GetFile(msgID)
@@ -791,7 +791,7 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 		if _, err = os.Stat(dto.ThumbFilePath); os.IsNotExist(err) {
 			path, err := filemanager.Ctx().DownloadThumbnail(m.ID, docID, accessHash, clusterID, version)
 			if err != nil {
-				log.LOG_Error("SDK::FileDownloadThumbnail()-> filemanager.DownloadThumbnail()", zap.Error(err))
+				logs.Error("SDK::FileDownloadThumbnail()-> filemanager.DownloadThumbnail()", zap.Error(err))
 			}
 			filePath = path
 		} else {
@@ -800,7 +800,7 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 	} else {
 		path, _ := filemanager.Ctx().DownloadThumbnail(m.ID, docID, accessHash, clusterID, version)
 		if err != nil {
-			log.LOG_Error("SDK::FileDownloadThumbnail()-> filemanager.DownloadThumbnail()", zap.Error(err))
+			logs.Error("SDK::FileDownloadThumbnail()-> filemanager.DownloadThumbnail()", zap.Error(err))
 		}
 		filePath = path
 	}

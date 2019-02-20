@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"gopkg.in/abiosoft/ishell.v2"
 )
@@ -35,29 +35,29 @@ var Decrypt = &ishell.Cmd{
 		hexStr := c.ReadLine()
 		rawBytes, err := hex.DecodeString(hexStr)
 		if err != nil {
-			log.LOG_Error("hex.DecodeString()", zap.Error(err))
+			logs.Error("hex.DecodeString()", zap.Error(err))
 			return
 		}
 
 		act, err := actor.NewActor(phone)
 		if err != nil {
-			log.LOG_Error("actor.NewActor()", zap.Error(err))
+			logs.Error("actor.NewActor()", zap.Error(err))
 			return
 		}
 
 		authID, authKey := act.GetAuthInfo()
 		if authID == 0 || len(authKey) == 0 {
-			log.LOG_Error("actor.GetAuthInfo()", zap.String("Error", "authKey not created for this actor"))
+			logs.Error("actor.GetAuthInfo()", zap.String("Error", "authKey not created for this actor"))
 			return
 		}
 
 		envelop, err := decryptProtoMessage(rawBytes, authKey)
 		if err != nil {
-			log.LOG_Error("decryptProtoMessage()", zap.Error(err))
+			logs.Error("decryptProtoMessage()", zap.Error(err))
 			return
 		}
 
-		log.LOG_Info("ProtoMessage Decrypt", zap.String("Constructor", msg.ConstructorNames[envelop.Constructor]))
+		logs.Info("ProtoMessage Decrypt", zap.String("Constructor", msg.ConstructorNames[envelop.Constructor]))
 		switch envelop.Constructor {
 		case msg.C_AuthRecall:
 			fnPrintAuthRecal(envelop)
@@ -82,13 +82,13 @@ var AuthInfo = &ishell.Cmd{
 
 		act, err := actor.NewActor(phone)
 		if err != nil {
-			log.LOG_Error("actor.NewActor()", zap.Error(err))
+			logs.Error("actor.NewActor()", zap.Error(err))
 			return
 		}
 
 		authID, authKey := act.GetAuthInfo()
 		if authID == 0 || len(authKey) == 0 {
-			log.LOG_Error("actor.GetAuthInfo()", zap.String("Error", "authKey not created for this actor"))
+			logs.Error("actor.GetAuthInfo()", zap.String("Error", "authKey not created for this actor"))
 			return
 		}
 		hexStr := hex.EncodeToString(authKey)
@@ -96,7 +96,7 @@ var AuthInfo = &ishell.Cmd{
 		authKeyHash, _ := domain.Sha256(authKey)
 		authIDBySha256OfAuthKey := int64(binary.LittleEndian.Uint64(authKeyHash[24:32]))
 
-		log.LOG_Info("AuthInfo",
+		logs.Info("AuthInfo",
 			zap.Int64("AuthID", authID),
 			zap.Int64("Sha256(authKey)[24:32]", authIDBySha256OfAuthKey),
 			zap.String("AuthKey", hexStr),
@@ -138,7 +138,7 @@ func fnPrintAuthRecal(env *msg.MessageEnvelope) {
 	x := new(msg.AuthRecall)
 	err := x.Unmarshal(env.Message)
 	if err != nil {
-		log.LOG_Error("Error", zap.Error(err))
+		logs.Error("Error", zap.Error(err))
 		return
 	}
 	fmt.Printf("\r\n%# v\r\n", pretty.Formatter(x))
@@ -147,7 +147,7 @@ func fnPrintAuthRecalled(env *msg.MessageEnvelope) {
 	x := new(msg.AuthRecalled)
 	err := x.Unmarshal(env.Message)
 	if err != nil {
-		log.LOG_Error("Error", zap.Error(err))
+		logs.Error("Error", zap.Error(err))
 		return
 	}
 	fmt.Printf("\r\n%# v\r\n", pretty.Formatter(x))
@@ -157,7 +157,7 @@ func fnPrintContactsImport(env *msg.MessageEnvelope) {
 	x := new(msg.ContactsImport)
 	err := x.Unmarshal(env.Message)
 	if err != nil {
-		log.LOG_Error("Error", zap.Error(err))
+		logs.Error("Error", zap.Error(err))
 		return
 	}
 	fmt.Printf("\r\n%# v\r\n", pretty.Formatter(x))
@@ -166,7 +166,7 @@ func fnPrintContactsImported(env *msg.MessageEnvelope) {
 	x := new(msg.ContactsImported)
 	err := x.Unmarshal(env.Message)
 	if err != nil {
-		log.LOG_Error("Error", zap.Error(err))
+		logs.Error("Error", zap.Error(err))
 		return
 	}
 	fmt.Printf("\r\n%# v\r\n", pretty.Formatter(x))
@@ -176,7 +176,7 @@ func fnPrintError(env *msg.MessageEnvelope) {
 	x := new(msg.ContactsImported)
 	err := x.Unmarshal(env.Message)
 	if err != nil {
-		log.LOG_Error("Error", zap.Error(err))
+		logs.Error("Error", zap.Error(err))
 		return
 	}
 	fmt.Printf("\r\n%# v\r\n", pretty.Formatter(x))

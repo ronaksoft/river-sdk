@@ -8,7 +8,7 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/actor"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/scenario"
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"go.uber.org/zap"
 )
 
@@ -31,7 +31,7 @@ func startDispatcher() {
 	for index := 0; index < shared.MaxWorker; index++ {
 		go startWorker()
 	}
-	log.LOG_Info(fmt.Sprintf("Started %d workers successfully", shared.MaxWorker))
+	logs.Info(fmt.Sprintf("Started %d workers successfully", shared.MaxWorker))
 }
 
 func stopDispatcher() {
@@ -39,7 +39,7 @@ func stopDispatcher() {
 		for index := 0; index < shared.MaxWorker; index++ {
 			StopQueue <- true
 		}
-		log.LOG_Info(fmt.Sprintf("Stopped %d workers successfully", shared.MaxWorker))
+		logs.Info(fmt.Sprintf("Stopped %d workers successfully", shared.MaxWorker))
 	}()
 }
 
@@ -56,7 +56,7 @@ func startWorker() {
 			}
 
 			if err != nil {
-				log.LOG_Error(fmt.Sprintf("NewActor(%s)", job.PhoneNo), zap.String("Error", err.Error()))
+				logs.Error(fmt.Sprintf("NewActor(%s)", job.PhoneNo), zap.String("Error", err.Error()))
 				job.Wait.Done()
 				continue
 			}

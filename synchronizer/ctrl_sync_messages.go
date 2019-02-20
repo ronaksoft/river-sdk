@@ -8,7 +8,7 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd"
 	"git.ronaksoftware.com/ronak/riversdk/domain"
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/repo"
 	"go.uber.org/zap"
@@ -16,10 +16,10 @@ import (
 
 // authAuthorization
 func (ctrl *SyncController) authAuthorization(e *msg.MessageEnvelope) {
-	log.LOG_Debug("SyncController::authAuthorization() applier")
+	logs.Debug("SyncController::authAuthorization() applier")
 	x := new(msg.AuthAuthorization)
 	if err := x.Unmarshal(e.Message); err != nil {
-		log.LOG_Debug("SyncController::authAuthorization()-> Unmarshal()",
+		logs.Debug("SyncController::authAuthorization()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -37,10 +37,10 @@ func (ctrl *SyncController) authAuthorization(e *msg.MessageEnvelope) {
 }
 
 func (ctrl *SyncController) authSentCode(e *msg.MessageEnvelope) {
-	log.LOG_Debug("SyncController::authSentCode() applier")
+	logs.Debug("SyncController::authSentCode() applier")
 	x := new(msg.AuthSentCode)
 	if err := x.Unmarshal(e.Message); err != nil {
-		log.LOG_Debug("SyncController::authSentCode()-> Unmarshal()",
+		logs.Debug("SyncController::authSentCode()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -52,10 +52,10 @@ func (ctrl *SyncController) authSentCode(e *msg.MessageEnvelope) {
 
 // contactsImported
 func (ctrl *SyncController) contactsImported(e *msg.MessageEnvelope) {
-	log.LOG_Debug("SyncController::contactsImported() applier")
+	logs.Debug("SyncController::contactsImported() applier")
 	x := new(msg.ContactsImported)
 	if err := x.Unmarshal(e.Message); err != nil {
-		log.LOG_Debug("SyncController::contactsImported()-> Unmarshal()",
+		logs.Debug("SyncController::contactsImported()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -67,10 +67,10 @@ func (ctrl *SyncController) contactsImported(e *msg.MessageEnvelope) {
 
 // contactsMany
 func (ctrl *SyncController) contactsMany(e *msg.MessageEnvelope) {
-	log.LOG_Debug("SyncController::contactsMany() applier")
+	logs.Debug("SyncController::contactsMany() applier")
 	x := new(msg.ContactsMany)
 	if err := x.Unmarshal(e.Message); err != nil {
-		log.LOG_Debug("SyncController::contactsMany()-> Unmarshal()",
+		logs.Debug("SyncController::contactsMany()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -82,10 +82,10 @@ func (ctrl *SyncController) contactsMany(e *msg.MessageEnvelope) {
 
 // messageDialogs
 func (ctrl *SyncController) messagesDialogs(e *msg.MessageEnvelope) {
-	log.LOG_Debug("SyncController::messagesDialogs() applier")
+	logs.Debug("SyncController::messagesDialogs() applier")
 	x := new(msg.MessagesDialogs)
 	if err := x.Unmarshal(e.Message); err != nil {
-		log.LOG_Debug("SyncController::messagesDialogs()-> Unmarshal()",
+		logs.Debug("SyncController::messagesDialogs()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -99,7 +99,7 @@ func (ctrl *SyncController) messagesDialogs(e *msg.MessageEnvelope) {
 	for _, dialog := range x.Dialogs {
 		topMessage, _ := mMessages[dialog.TopMessageID]
 		if topMessage == nil {
-			log.LOG_Debug(domain.ErrNotFound.Error(),
+			logs.Debug(domain.ErrNotFound.Error(),
 				zap.Int64("MessageID", dialog.TopMessageID),
 			)
 			continue
@@ -113,7 +113,7 @@ func (ctrl *SyncController) messagesDialogs(e *msg.MessageEnvelope) {
 		repo.Ctx().Groups.Save(group)
 	}
 
-	log.LOG_Debug("SyncController::messagesDialogs()",
+	logs.Debug("SyncController::messagesDialogs()",
 		zap.Int("DialogsCount", len(x.Dialogs)),
 		zap.Int("GroupsCount", len(x.Groups)),
 		zap.Int("UsersCount", len(x.Users)),
@@ -123,10 +123,10 @@ func (ctrl *SyncController) messagesDialogs(e *msg.MessageEnvelope) {
 
 // Check pending messages and notify UI
 func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
-	log.LOG_Debug("SyncController::messageSent() applier")
+	logs.Debug("SyncController::messageSent() applier")
 	pmsg, err := repo.Ctx().PendingMessages.GetPendingMessageByRequestID(int64(e.RequestID))
 	if err != nil {
-		log.LOG_Debug("SyncController::messageSent()-> GetPendingMessageByRequestID()",
+		logs.Debug("SyncController::messageSent()-> GetPendingMessageByRequestID()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -145,7 +145,7 @@ func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
 	// save message
 	err = repo.Ctx().Messages.SaveMessage(message)
 	if err != nil {
-		log.LOG_Debug("SyncController::messageSent()-> SaveMessage() failed to move pendingMessage to message table",
+		logs.Debug("SyncController::messageSent()-> SaveMessage() failed to move pendingMessage to message table",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -154,7 +154,7 @@ func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
 	// delete pending mesage
 	err = repo.Ctx().PendingMessages.DeletePendingMessage(pmsg.ID)
 	if err != nil {
-		log.LOG_Debug("SyncController::messageSent()-> DeletePendingMessage() failed to delete pendingMessage",
+		logs.Debug("SyncController::messageSent()-> DeletePendingMessage() failed to delete pendingMessage",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -178,14 +178,14 @@ func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
 		err = repo.Ctx().Files.MoveUploadedFileToFiles(clientSendMedia, int32(fileSize), sent)
 		filemanager.Ctx().DeleteFromQueue(pmsg.ID)
 		if err != nil {
-			log.LOG_Debug("SyncController::messageSent()-> MoveUploadedFileToLocalFile() failed ",
+			logs.Debug("SyncController::messageSent()-> MoveUploadedFileToLocalFile() failed ",
 				zap.String("Error", err.Error()),
 			)
 		}
 		// delete file status
 		err = repo.Ctx().Files.DeleteFileStatus(pmsg.ID)
 		if err != nil {
-			log.LOG_Debug("SyncController::messageSent()-> DeleteFileStatus() failed to delete FileStatus",
+			logs.Debug("SyncController::messageSent()-> DeleteFileStatus() failed to delete FileStatus",
 				zap.String("Error", err.Error()),
 			)
 		}
@@ -194,7 +194,7 @@ func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
 	//Update doaligs
 	err = repo.Ctx().Dialogs.UpdateTopMesssageID(message.CreatedOn, message.PeerID, message.PeerType)
 	if err != nil {
-		log.LOG_Debug("SyncController::messageSent()-> UpdateTopMesssageID() failed to update doalogs",
+		logs.Debug("SyncController::messageSent()-> UpdateTopMesssageID() failed to update doalogs",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -231,11 +231,11 @@ func (ctrl *SyncController) messageSent(e *msg.MessageEnvelope) {
 }
 
 func (ctrl *SyncController) usersMany(e *msg.MessageEnvelope) {
-	log.LOG_Debug("SyncController::usersMany() applier")
+	logs.Debug("SyncController::usersMany() applier")
 	u := new(msg.UsersMany)
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		log.LOG_Debug("SyncController::usersMany()-> Unmarshal()",
+		logs.Debug("SyncController::usersMany()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -246,11 +246,11 @@ func (ctrl *SyncController) usersMany(e *msg.MessageEnvelope) {
 }
 
 func (ctrl *SyncController) messagesMany(e *msg.MessageEnvelope) {
-	log.LOG_Debug("SyncController::messagesMany() applier")
+	logs.Debug("SyncController::messagesMany() applier")
 	u := new(msg.MessagesMany)
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		log.LOG_Debug("SyncController::messagesMany()-> Unmarshal()",
+		logs.Debug("SyncController::messagesMany()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -286,7 +286,7 @@ func (ctrl *SyncController) messagesMany(e *msg.MessageEnvelope) {
 	for peerID := range peerMessages {
 		err := fillMessageHoles(peerID, peerMessageMinID[peerID], peerMessageMaxID[peerID])
 		if err != nil {
-			log.LOG_Debug("SyncController::updateMessageHole()",
+			logs.Debug("SyncController::updateMessageHole()",
 				zap.String("Error", err.Error()),
 			)
 		}
@@ -295,11 +295,11 @@ func (ctrl *SyncController) messagesMany(e *msg.MessageEnvelope) {
 }
 
 func (ctrl *SyncController) groupFull(e *msg.MessageEnvelope) {
-	log.LOG_Debug("SyncController::groupFull() applier")
+	logs.Debug("SyncController::groupFull() applier")
 	u := new(msg.GroupFull)
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		log.LOG_Debug("SyncController::groupFull()-> Unmarshal()",
+		logs.Debug("SyncController::groupFull()-> Unmarshal()",
 			zap.String("Error", err.Error()),
 		)
 		return

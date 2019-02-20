@@ -25,7 +25,7 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/repo"
 
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 
 	"github.com/monnand/dhkx"
@@ -51,13 +51,13 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.mainDelegate = conf.MainDelegate
 
 	// set loglevel
-	log.SetLogLevel(conf.LogLevel)
+	logs.SetLogLevel(conf.LogLevel)
 
 	// check logger
 	if conf.Logger != nil {
 		// set logger
 		r.logger = conf.Logger
-		log.SetLogger(func(logLevel int, msg string) {
+		logs.SetLogger(func(logLevel int, msg string) {
 			r.logger.Log(logLevel, msg)
 		})
 	}
@@ -73,7 +73,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	var err error
 	err = repo.InitRepo("sqlite3", fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID))
 	if err != nil {
-		log.LOG_Fatal("River::SetConfig() faild to initialize DB context",
+		logs.Fatal("River::SetConfig() faild to initialize DB context",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -138,7 +138,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		h = nil
 	}
 	if q, err := queue.NewQueueController(r.networkCtrl, conf.QueuePath, h); err != nil {
-		log.LOG_Fatal("River::SetConfig() faild to initialize Queue",
+		logs.Fatal("River::SetConfig() faild to initialize Queue",
 			zap.String("Error", err.Error()),
 		)
 	} else {
@@ -169,17 +169,17 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Initialize Server Keys
 	if jsonBytes, err := ioutil.ReadFile(conf.ServerKeysFilePath); err != nil {
-		log.LOG_Fatal("River::SetConfig() faild to open server keys",
+		logs.Fatal("River::SetConfig() faild to open server keys",
 			zap.String("Error", err.Error()),
 		)
 	} else if err := _ServerKeys.UnmarshalJSON(jsonBytes); err != nil {
-		log.LOG_Fatal("River::SetConfig() faild to unmarshal server keys",
+		logs.Fatal("River::SetConfig() faild to unmarshal server keys",
 			zap.String("Error", err.Error()),
 		)
 	}
 
 	// Initialize River Connection
-	log.LOG_Info("River::SetConfig() Load/Create New River Connection")
+	logs.Info("River::SetConfig() Load/Create New River Connection")
 
 	if r.ConnInfo.UserID != 0 {
 		r.syncCtrl.SetUserID(r.ConnInfo.UserID)
@@ -201,14 +201,14 @@ func (r *River) loadDeviceToken() {
 	r.DeviceToken = new(msg.AccountRegisterDevice)
 	str, err := repo.Ctx().System.LoadString(domain.CN_DEVICE_TOKEN)
 	if err != nil {
-		log.LOG_Info("River::loadDeviceToken() failed to fetch DeviceToken",
+		logs.Info("River::loadDeviceToken() failed to fetch DeviceToken",
 			zap.String("Error", err.Error()),
 		)
 		return
 	}
 	err = json.Unmarshal([]byte(str), r.DeviceToken)
 	if err != nil {
-		log.LOG_Info("River::loadDeviceToken() failed to unmarshal DeviceToken",
+		logs.Info("River::loadDeviceToken() failed to unmarshal DeviceToken",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -260,7 +260,7 @@ func (r *River) onNetworkControllerConnected() {
 		}
 
 		if r.DeviceToken == nil || r.DeviceToken.Token == "" {
-			log.LOG_Info("callAuthRecall_RegisterDevice() Device Token is not set")
+			logs.Info("callAuthRecall_RegisterDevice() Device Token is not set")
 			return
 		}
 
@@ -291,7 +291,7 @@ func (r *River) onGetServerTime(m *msg.MessageEnvelope) {
 		x := new(msg.SystemServerTime)
 		err := x.Unmarshal(m.Message)
 		if err != nil {
-			log.LOG_Warn("onGetServerTime()", zap.Error(err))
+			logs.Warn("onGetServerTime()", zap.Error(err))
 			return
 		}
 		// TODO : get time difference and apply it later on send packets to server
@@ -299,7 +299,7 @@ func (r *River) onGetServerTime(m *msg.MessageEnvelope) {
 		serverTime := x.Timestamp
 		delta := serverTime - clientTime
 		r.networkCtrl.SetClientTimeDifference(delta)
-		log.LOG_Debug("River::onGetServerTime()",
+		logs.Debug("River::onGetServerTime()",
 			zap.Int64("Servertime", serverTime),
 			zap.Int64("ClientTime", clientTime),
 			zap.Int64("Difference", delta),
@@ -313,7 +313,7 @@ func (r *River) onAuthRecalled(m *msg.MessageEnvelope) {
 		x := new(msg.AuthRecalled)
 		err := x.Unmarshal(m.Message)
 		if err != nil {
-			log.LOG_Warn("onAuthRecalled()", zap.Error(err))
+			logs.Warn("onAuthRecalled()", zap.Error(err))
 			return
 		}
 		// // TODO : get time difference and apply it later on send packets to server
@@ -357,7 +357,7 @@ func (r *River) registerCommandHandlers() {
 func (r *River) Start() error {
 	// Start Controllers
 	if err := r.networkCtrl.Start(); err != nil {
-		log.LOG_Debug("River::Start()",
+		logs.Debug("River::Start()",
 			zap.String("Error", err.Error()),
 		)
 		return err
@@ -384,7 +384,7 @@ func (r *River) Stop() {
 
 	// Close database connection
 	err := repo.Ctx().Close()
-	log.LOG_Debug("River::Stop() faild to close DB context",
+	logs.Debug("River::Stop() faild to close DB context",
 		zap.String("Error", err.Error()),
 	)
 }
@@ -407,8 +407,8 @@ func deepCopy(commandBytes []byte) []byte {
 func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate, blockingMode, serverForce bool) (requestID int64, err error) {
 	// deleteMe
 	cmdID := fmt.Sprintf("%v : ", time.Now().UnixNano())
-	log.LOG_Debug(cmdID + "SDK::ExecuteCommand() 1 ExecuteCommand Started req:" + msg.ConstructorNames[constructor])
-	defer log.LOG_Debug(cmdID + "SDK::ExecuteCommand() 7 ExecuteCommand Ended req:" + msg.ConstructorNames[constructor])
+	logs.Debug(cmdID + "SDK::ExecuteCommand() 1 ExecuteCommand Started req:" + msg.ConstructorNames[constructor])
+	defer logs.Debug(cmdID + "SDK::ExecuteCommand() 7 ExecuteCommand Ended req:" + msg.ConstructorNames[constructor])
 
 	commandBytesDump := deepCopy(commandBytes)
 
@@ -418,14 +418,14 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	waitGroup := new(sync.WaitGroup)
 	requestID = domain.SequentialUniqueID()
 
-	log.LOG_Debug("River::ExecuteCommand()",
+	logs.Debug("River::ExecuteCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
 
 	// if function is in blocking mode set the waitGroup to block until the job is done, otherwise
 	// save 'delegate' into delegates list to be fetched later.
 	if blockingMode {
-		log.LOG_Debug(cmdID + "SDK::ExecuteCommand() 2 waitGroup.Add(1) / defer")
+		logs.Debug(cmdID + "SDK::ExecuteCommand() 2 waitGroup.Add(1) / defer")
 		waitGroup.Add(1)
 		defer waitGroup.Wait()
 	} else if delegate != nil {
@@ -435,19 +435,19 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	}
 	timeoutCallback := func() {
 
-		log.LOG_Debug(cmdID + "SDK::ExecuteCommand() 3 timeout called")
+		logs.Debug(cmdID + "SDK::ExecuteCommand() 3 timeout called")
 		if blockingMode {
 			defer waitGroup.Done()
 		}
 		err = domain.ErrRequestTimeout
 		delegate.OnTimeout(err)
 		r.releaseDelegate(requestID)
-		log.LOG_Debug(cmdID + "SDK::ExecuteCommand() 4 timeout ended")
+		logs.Debug(cmdID + "SDK::ExecuteCommand() 4 timeout ended")
 
 	}
 	successCallback := func(envelope *msg.MessageEnvelope) {
 
-		log.LOG_Debug(cmdID + "SDK::ExecuteCommand() 5 succes called")
+		logs.Debug(cmdID + "SDK::ExecuteCommand() 5 succes called")
 		if blockingMode {
 			defer waitGroup.Done()
 		}
@@ -455,7 +455,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 		delegate.OnComplete(b)
 		r.releaseDelegate(requestID)
 
-		log.LOG_Debug(cmdID + "SDK::ExecuteCommand() 6 success ended")
+		logs.Debug(cmdID + "SDK::ExecuteCommand() 6 success ended")
 
 	}
 	if !serverForce {
@@ -517,7 +517,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 }
 
 func (r *River) executeLocalCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	log.LOG_Debug("River::executeLocalCommand()",
+	logs.Debug("River::executeLocalCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
 
@@ -534,14 +534,14 @@ func (r *River) executeLocalCommand(requestID uint64, constructor int64, command
 }
 
 func (r *River) executeRemoteCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	log.LOG_Debug("River::executeRemoteCommand()",
+	logs.Debug("River::executeRemoteCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
 	r.queueCtrl.ExecuteCommand(requestID, constructor, commandBytes, timeoutCB, successCB, true)
 }
 
 func (r *River) releaseDelegate(requestID int64) {
-	log.LOG_Debug("River::releaseDelegate()",
+	logs.Debug("River::releaseDelegate()",
 		zap.Int64("RequestID", requestID),
 	)
 	r.delegateMutex.Lock()
@@ -554,7 +554,7 @@ func (r *River) releaseDelegate(requestID int64) {
 // CreateAuthKey
 // This function creates an AuthID and AuthKey to be used for transporting messages between client and server
 func (r *River) CreateAuthKey() (err error) {
-	log.LOG_Debug("River::CreateAuthKey()")
+	logs.Debug("River::CreateAuthKey()")
 	// wait untill network connects
 	for r.networkCtrl.Quality() == domain.DISCONNECTED || r.networkCtrl.Quality() == domain.CONNECTING {
 		time.Sleep(200)
@@ -568,7 +568,7 @@ func (r *River) CreateAuthKey() (err error) {
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
 
-	log.LOG_Info("River::CreateAuthKey() 1st Step Started :: InitConnect")
+	logs.Info("River::CreateAuthKey() 1st Step Started :: InitConnect")
 
 	r.executeRemoteCommand(
 		//r.executeRealtimeCommand(
@@ -581,13 +581,13 @@ func (r *River) CreateAuthKey() (err error) {
 		},
 		func(res *msg.MessageEnvelope) {
 			defer waitGroup.Done()
-			log.LOG_Debug("River::CreateAuthKey() Success Callback Called")
+			logs.Debug("River::CreateAuthKey() Success Callback Called")
 			switch res.Constructor {
 			case msg.C_InitResponse:
 				x := new(msg.InitResponse)
 				err = x.Unmarshal(res.Message)
 				if err != nil {
-					log.LOG_Debug("River::CreateAuthKey() Success Callback",
+					logs.Debug("River::CreateAuthKey() Success Callback",
 						zap.String("Error", err.Error()),
 					)
 				}
@@ -596,7 +596,7 @@ func (r *River) CreateAuthKey() (err error) {
 				serverPubFP = x.RSAPubKeyFingerPrint
 				serverDHFP = x.DHGroupFingerPrint
 				serverPQ = x.PQ
-				log.LOG_Debug("River::CreateAuthKey() InitResponse Received",
+				logs.Debug("River::CreateAuthKey() InitResponse Received",
 					zap.Uint64("ServerNonce", serverNonce),
 					zap.Uint64("ClientNounce", clientNonce),
 					zap.Uint64("ServerDhFingerPrint", serverDHFP),
@@ -613,12 +613,12 @@ func (r *River) CreateAuthKey() (err error) {
 	// Wait for 1st step to complete
 	waitGroup.Wait()
 	if err != nil {
-		log.LOG_Debug("River::CreateAuthKey() InitConnect",
+		logs.Debug("River::CreateAuthKey() InitConnect",
 			zap.String("Error", err.Error()),
 		)
 		return
 	} else {
-		log.LOG_Info("River::CreateAuthKey() 1st Step Finished")
+		logs.Info("River::CreateAuthKey() 1st Step Finished")
 	}
 
 	// 2. Send InitCompleteAuth
@@ -646,7 +646,7 @@ func (r *River) CreateAuthKey() (err error) {
 		req2.P = q.Uint64()
 		req2.Q = p.Uint64()
 	}
-	log.LOG_Debug("River::CreateAuthKey() PQ Split",
+	logs.Debug("River::CreateAuthKey() PQ Split",
 		zap.Uint64("P", req2.P),
 		zap.Uint64("Q", req2.Q),
 	)
@@ -667,7 +667,7 @@ func (r *River) CreateAuthKey() (err error) {
 	decrypted, _ := q2Internal.Marshal()
 	encrypted, err := rsa.EncryptPKCS1v15(rand.Reader, &rsaPublicKey, decrypted)
 	if err != nil {
-		log.LOG_Debug("River::CreateAuthKey() -> EncryptPKCS1v15()",
+		logs.Debug("River::CreateAuthKey() -> EncryptPKCS1v15()",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -675,7 +675,7 @@ func (r *River) CreateAuthKey() (err error) {
 	req2Bytes, _ := req2.Marshal()
 
 	waitGroup.Add(1)
-	log.LOG_Info("River::CreateAuthKey() 2nd Step Started :: InitConnect")
+	logs.Info("River::CreateAuthKey() 2nd Step Started :: InitConnect")
 	r.executeRemoteCommand(
 		//r.executeRealtimeCommand(
 		uint64(domain.SequentialUniqueID()),
@@ -695,7 +695,7 @@ func (r *River) CreateAuthKey() (err error) {
 				case msg.InitAuthCompleted_OK:
 					serverDhKey, err := dh.ComputeKey(dhkx.NewPublicKey(x.ServerDHPubKey), clientDhKey)
 					if err != nil {
-						log.LOG_Debug("River::CreateAuthKey() -> ComputeKey()",
+						logs.Debug("River::CreateAuthKey() -> ComputeKey()",
 							zap.String("Error", err.Error()),
 						)
 						return
@@ -757,7 +757,7 @@ func (r *River) CreateAuthKey() (err error) {
 
 func (r *River) onGeneralError(e *msg.Error) {
 	// TODO:: calll external handler
-	log.LOG_Info("River::onGeneralError()",
+	logs.Info("River::onGeneralError()",
 		zap.String("Code", e.Code),
 		zap.String("Item", e.Items),
 	)
@@ -796,17 +796,17 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 		cb := domain.GetRequestCallback(m.RequestID)
 		if cb != nil {
 			// if there was any listener maybe request already timedout
-			log.LOG_Warn("River::onReceivedMessage() Callback Found")
+			logs.Warn("River::onReceivedMessage() Callback Found")
 
 			select {
 			case cb.ResponseChannel <- m:
-				log.LOG_Warn("River::onReceivedMessage() passed to callback listener")
+				logs.Warn("River::onReceivedMessage() passed to callback listener")
 			default:
-				log.LOG_Warn("River::onReceivedMessage() there is no callback listener")
+				logs.Warn("River::onReceivedMessage() there is no callback listener")
 			}
 			domain.RemoveRequestCallback(m.RequestID)
 		} else {
-			log.LOG_Debug("River::onReceivedMessage() callback does not exists",
+			logs.Debug("River::onReceivedMessage() callback does not exists",
 				zap.Uint64(domain.LK_REQUEST_ID, m.RequestID),
 			)
 		}
@@ -838,7 +838,7 @@ readChannel:
 
 	updateContainer := new(msg.UpdateContainer)
 
-	log.LOG_Debug("SDK::onReceivedUpdate()",
+	logs.Debug("SDK::onReceivedUpdate()",
 		zap.Int("Received Container Count :", len(upds)),
 	)
 
@@ -864,7 +864,7 @@ readChannel:
 
 		for _, u := range val.Updates {
 			if u.UpdateID > 0 && u.UpdateID <= currentUpdateID {
-				log.LOG_Debug("SDK::onReceivedUpdate() XXXXXXXXXXXXXXXXXXXXXXXXXXXXX Outdated update ",
+				logs.Debug("SDK::onReceivedUpdate() XXXXXXXXXXXXXXXXXXXXXXXXXXXXX Outdated update ",
 					zap.Int64("CurrentUpdateID", currentUpdateID),
 					zap.Int64("UpdateID", u.UpdateID),
 				)
@@ -920,7 +920,7 @@ readChannel:
 	if minID > maxID {
 		minID = 0
 	}
-	log.LOG_Debug("SDK::onReceivedUpdate()",
+	logs.Debug("SDK::onReceivedUpdate()",
 		zap.Int("Received Updates Count :", len(updates)),
 		zap.Int64("UpdateID :", r.syncCtrl.UpdateID()),
 		zap.Int64("MaxID :", maxID),
@@ -929,7 +929,7 @@ readChannel:
 
 	// check max UpdateID if its greater than snapshot sync threshold discard recived updates and execute sanpshot sync
 	if maxID-r.syncCtrl.UpdateID() > domain.SnapshotSync_Threshold {
-		log.LOG_Debug("SDK::onReceivedUpdate() snapshot threshold reached")
+		logs.Debug("SDK::onReceivedUpdate() snapshot threshold reached")
 		r.syncCtrl.CheckSyncState()
 		return
 	}
@@ -969,14 +969,14 @@ readChannel:
 }
 
 func (r *River) PrintDebuncerStatus() {
-	log.LOG_Debug("SDK::PrintDebuncerStatus()")
+	logs.Debug("SDK::PrintDebuncerStatus()")
 	r.networkCtrl.PrintDebuncerStatus()
 }
 
 func (r *River) onFileProgressChanged(messageID, processedParts, totalParts int64, stateType domain.FileStateType) {
 	percent := float64(processedParts) / float64(totalParts) * float64(100)
 
-	log.LOG_Warn("onFileProgressChanged()",
+	logs.Warn("onFileProgressChanged()",
 		zap.Int64("MsgID", messageID),
 		zap.Float64("Percent", percent),
 	)
@@ -1002,7 +1002,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 	thumbFileID int64,
 	thumbTotalParts int32,
 ) {
-	log.LOG_Warn("onFileUploadCompleted()",
+	logs.Warn("onFileUploadCompleted()",
 		zap.Int64("messageID", messageID),
 		zap.Int64("fileID", fileID),
 	)
@@ -1073,17 +1073,17 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 		}
 		reqBuff, err := x.Marshal()
 		if err != nil {
-			log.LOG_Error("SDK::onFileUploadCompleted() marshal AccountUploadPhoto", zap.Error(err))
+			logs.Error("SDK::onFileUploadCompleted() marshal AccountUploadPhoto", zap.Error(err))
 			return
 		}
 		requestID := uint64(domain.SequentialUniqueID())
 		successCB := func(m *msg.MessageEnvelope) {
-			log.LOG_Debug("AccountUploadPhoto success callback")
+			logs.Debug("AccountUploadPhoto success callback")
 			if m.Constructor == msg.C_Bool {
 				x := new(msg.Bool)
 				err := x.Unmarshal(m.Message)
 				if err != nil {
-					log.LOG_Error("AccountUploadPhoto success callback", zap.Error(err))
+					logs.Error("AccountUploadPhoto success callback", zap.Error(err))
 				}
 
 			}
@@ -1091,13 +1091,13 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 				x := new(msg.Error)
 				err := x.Unmarshal(m.Message)
 				if err != nil {
-					log.LOG_Error("AccountUploadPhoto timeout callback", zap.Error(err))
+					logs.Error("AccountUploadPhoto timeout callback", zap.Error(err))
 				}
-				log.LOG_Error("AccountUploadPhoto timeout callback", zap.String("Code", x.Code), zap.String("Item", x.Items))
+				logs.Error("AccountUploadPhoto timeout callback", zap.String("Code", x.Code), zap.String("Item", x.Items))
 			}
 		}
 		timeoutCB := func() {
-			log.LOG_Debug("AccountUploadPhoto timeoput callback")
+			logs.Debug("AccountUploadPhoto timeoput callback")
 		}
 		r.queueCtrl.ExecuteCommand(requestID, msg.C_AccountUploadPhoto, reqBuff, timeoutCB, successCB, false)
 
@@ -1113,17 +1113,17 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 		}
 		reqBuff, err := x.Marshal()
 		if err != nil {
-			log.LOG_Error("SDK::onFileUploadCompleted() marshal GroupUploadPhoto", zap.Error(err))
+			logs.Error("SDK::onFileUploadCompleted() marshal GroupUploadPhoto", zap.Error(err))
 			return
 		}
 		requestID := uint64(domain.SequentialUniqueID())
 		successCB := func(m *msg.MessageEnvelope) {
-			log.LOG_Debug("GroupUploadPhoto success callback")
+			logs.Debug("GroupUploadPhoto success callback")
 			if m.Constructor == msg.C_Bool {
 				x := new(msg.Bool)
 				err := x.Unmarshal(m.Message)
 				if err != nil {
-					log.LOG_Error("GroupUploadPhoto success callback", zap.Error(err))
+					logs.Error("GroupUploadPhoto success callback", zap.Error(err))
 				}
 
 			}
@@ -1131,13 +1131,13 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 				x := new(msg.Error)
 				err := x.Unmarshal(m.Message)
 				if err != nil {
-					log.LOG_Error("GroupUploadPhoto timeout callback", zap.Error(err))
+					logs.Error("GroupUploadPhoto timeout callback", zap.Error(err))
 				}
-				log.LOG_Error("GroupUploadPhoto timeout callback", zap.String("Code", x.Code), zap.String("Item", x.Items))
+				logs.Error("GroupUploadPhoto timeout callback", zap.String("Code", x.Code), zap.String("Item", x.Items))
 			}
 		}
 		timeoutCB := func() {
-			log.LOG_Debug("GroupUploadPhoto timeoput callback")
+			logs.Debug("GroupUploadPhoto timeoput callback")
 		}
 		r.queueCtrl.ExecuteCommand(requestID, msg.C_GroupsUploadPhoto, reqBuff, timeoutCB, successCB, false)
 	}
@@ -1149,7 +1149,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 }
 
 func (r *River) onFileDownloadCompleted(messageID int64, filePath string, stateType domain.FileStateType) {
-	log.LOG_Info("onFileDownloadCompleted()", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
+	logs.Info("onFileDownloadCompleted()", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
 	// Notify UI that download is completed
 	if r.mainDelegate.OnDownloadCompleted != nil {
 		r.mainDelegate.OnDownloadCompleted(messageID, filePath)
@@ -1159,7 +1159,7 @@ func (r *River) onFileDownloadCompleted(messageID int64, filePath string, stateT
 func (r *River) onFileUploadError(messageID, requestID int64, filePath string, err []byte) {
 	x := new(msg.Error)
 	x.Unmarshal(err)
-	log.LOG_Error("onFileUploadError() received Error response",
+	logs.Error("onFileUploadError() received Error response",
 		zap.Int64("MsgID", messageID),
 		zap.Int64("ReqID", requestID),
 		zap.String("Code", x.Code),
@@ -1173,7 +1173,7 @@ func (r *River) onFileUploadError(messageID, requestID int64, filePath string, e
 func (r *River) onFileDownloadError(messageID, requestID int64, filePath string, err []byte) {
 	x := new(msg.Error)
 	x.Unmarshal(err)
-	log.LOG_Error("onFileDownloadError() received Error response",
+	logs.Error("onFileDownloadError() received Error response",
 		zap.Int64("MsgID", messageID),
 		zap.Int64("ReqID", requestID),
 		zap.String("Code", x.Code),

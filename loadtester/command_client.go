@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/actor"
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 
@@ -36,7 +36,7 @@ var cmdClientStart = &ishell.Cmd{
 		_clientCreatedOn = time.Now()
 		_clientActer, err = actor.NewActor(phoneNo)
 		if err != nil {
-			log.LOG_Error("Faile to create client actor", zap.Error(err))
+			logs.Error("Faile to create client actor", zap.Error(err))
 		}
 
 		// create authKey if actor does not have authID
@@ -44,7 +44,7 @@ var cmdClientStart = &ishell.Cmd{
 			sw := scenario.NewCreateAuthKey(false)
 			success := scenario.Play(_clientActer, sw)
 			if !success {
-				log.LOG_Error("Faile at pre requested scenario CreateAuthKey")
+				logs.Error("Faile at pre requested scenario CreateAuthKey")
 				return
 			}
 		}
@@ -53,7 +53,7 @@ var cmdClientStart = &ishell.Cmd{
 			sw := scenario.NewLogin(true)
 			success := scenario.Play(_clientActer, sw)
 			if !success {
-				log.LOG_Error("Faile at pre requested scenario Login")
+				logs.Error("Faile at pre requested scenario Login")
 				return
 			}
 		}
@@ -61,12 +61,12 @@ var cmdClientStart = &ishell.Cmd{
 		sw := scenario.NewAuthRecall(false)
 		success := scenario.Play(_clientActer, sw)
 		if !success {
-			log.LOG_Error("Faile at pre requested scenario AuthRecall")
+			logs.Error("Faile at pre requested scenario AuthRecall")
 			return
 		}
 		_Reporter.SetIsActive(false)
-		log.SetLogLevel(-1)
-		log.LOG_Info("Client Actor Started log level changed to debug")
+		logs.SetLogLevel(-1)
+		logs.Info("Client Actor Started log level changed to debug")
 	},
 }
 
@@ -74,7 +74,7 @@ var cmdClientStop = &ishell.Cmd{
 	Name: "Stop",
 	Func: func(c *ishell.Context) {
 		if _clientActer == nil {
-			log.LOG_Error("Client Actor is not started")
+			logs.Error("Client Actor is not started")
 			return
 		}
 		_clientActer.Stop()

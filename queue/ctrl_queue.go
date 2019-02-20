@@ -7,7 +7,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/cmd"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/network"
 	"git.ronaksoftware.com/ronak/riversdk/repo"
@@ -85,13 +85,13 @@ func (ctrl *QueueController) distributor() {
 
 		// Wait While Network is Disconnected or Connecting
 		for ctrl.network.Quality() == domain.DISCONNECTED || ctrl.network.Quality() == domain.CONNECTING {
-			log.LOG_Debug("QueueController::distributor() Network is not connected ...",
+			logs.Debug("QueueController::distributor() Network is not connected ...",
 				zap.String("Quality", domain.NetworkStatusName[ctrl.network.Quality()]),
 			)
 			time.Sleep(time.Second)
 		}
 
-		log.LOG_Debug("QueueController::distributor()",
+		logs.Debug("QueueController::distributor()",
 			zap.Uint64("Queue Length", ctrl.waitingList.Length()),
 		)
 
@@ -101,7 +101,7 @@ func (ctrl *QueueController) distributor() {
 		// Peek item from the queue
 		item, err := ctrl.waitingList.Dequeue()
 		if err != nil {
-			log.LOG_Debug("QueueController::distributor()->Dequeue()",
+			logs.Debug("QueueController::distributor()->Dequeue()",
 				zap.String("Error", err.Error()),
 			)
 			return
@@ -114,20 +114,20 @@ func (ctrl *QueueController) distributor() {
 		// Prepare
 		req := request{}
 		if err := req.UnmarshalJSON(item.Value); err != nil {
-			log.LOG_Debug("QueueController::distributor()->UnmarshalJSON()",
+			logs.Debug("QueueController::distributor()->UnmarshalJSON()",
 				zap.String("Error", err.Error()),
 			)
 			return
 		}
 
 		if !ctrl.IsRequestCancelled(int64(req.ID)) {
-			log.LOG_Debug("QueueController::distributor() Request peeked from waiting list",
+			logs.Debug("QueueController::distributor() Request peeked from waiting list",
 				zap.Uint64("RequestID", req.ID),
 				zap.String("RequestName", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
 			)
 			go ctrl.executor(req)
 		} else {
-			log.LOG_Debug("QueueController::distributor() Request cancelled",
+			logs.Debug("QueueController::distributor() Request cancelled",
 				zap.Uint64("RequestID", req.ID),
 				zap.String("RequestName", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
 			)
@@ -161,7 +161,7 @@ func (ctrl *QueueController) isDistributorRunning() bool {
 func (ctrl *QueueController) executor(req request) {
 	reqCallbacks := domain.GetRequestCallback(req.ID)
 	if reqCallbacks == nil {
-		log.LOG_Debug("QueueController::executor() Callback not found",
+		logs.Debug("QueueController::executor() Callback not found",
 			zap.Uint64("RequestID", req.ID),
 		)
 
@@ -181,7 +181,7 @@ func (ctrl *QueueController) executor(req request) {
 	if req.Timeout == 0 {
 		req.Timeout = domain.DEFAULT_REQUEST_TIMEOUT
 	}
-	log.LOG_Debug("QueueController::executor() Request handover to network controller",
+	logs.Debug("QueueController::executor() Request handover to network controller",
 		zap.Uint64("RequestID", req.ID),
 	)
 
@@ -207,7 +207,7 @@ func (ctrl *QueueController) executor(req request) {
 		if req.MessageEnvelope.Constructor == msg.C_MessagesSend {
 			pmsg, err := repo.Ctx().PendingMessages.GetPendingMessageByRequestID(int64(req.ID))
 			if err == nil && pmsg != nil {
-				log.LOG_Warn("QueueController::executor() :: NOT SENT and request added to queue again !!",
+				logs.Warn("QueueController::executor() :: NOT SENT and request added to queue again !!",
 					zap.String("ConstructorName", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
 					zap.Uint64("RequestID", req.ID),
 				)
@@ -215,7 +215,7 @@ func (ctrl *QueueController) executor(req request) {
 			}
 		} else if req.MessageEnvelope.Constructor == msg.C_MessagesReadHistory {
 
-			log.LOG_Warn("QueueController::executor() :: NOT SENT and request added to queue again !!",
+			logs.Warn("QueueController::executor() :: NOT SENT and request added to queue again !!",
 				zap.String("ConstructorName", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
 				zap.Uint64("RequestID", req.ID),
 			)
@@ -223,7 +223,7 @@ func (ctrl *QueueController) executor(req request) {
 		}
 
 	case res := <-reqCallbacks.ResponseChannel:
-		log.LOG_Warn("QueueController::executor() :: ResponseChannel received signal",
+		logs.Warn("QueueController::executor() :: ResponseChannel received signal",
 			zap.String("ConstructorName", msg.ConstructorNames[res.Constructor]),
 			zap.Uint64("RequestID", res.RequestID),
 		)
@@ -234,7 +234,7 @@ func (ctrl *QueueController) executor(req request) {
 				reqCallbacks.SuccessCallback(res)
 			}
 		} else {
-			log.LOG_Warn("QueueController::executor() :: ResponseChannel received signal SuccessCallback is null",
+			logs.Warn("QueueController::executor() :: ResponseChannel received signal SuccessCallback is null",
 				zap.String("ConstructorName", msg.ConstructorNames[res.Constructor]),
 				zap.Uint64("RequestID", res.RequestID),
 			)
@@ -257,7 +257,7 @@ func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructo
 	execBlock := func(reqID uint64, req *msg.MessageEnvelope) error {
 		err := ctrl.network.Send(req, blockingMode)
 		if err != nil {
-			log.LOG_Debug("QueueController::ExecuteRealtimeCommand()->network.Send()",
+			logs.Debug("QueueController::ExecuteRealtimeCommand()->network.Send()",
 				zap.String("Error", err.Error()),
 				zap.String("ConstructorName", msg.ConstructorNames[req.Constructor]),
 				zap.Uint64("RequestID", requestID),
@@ -269,7 +269,7 @@ func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructo
 		if reqCB != nil {
 			select {
 			case <-time.After(domain.DEFAULT_WS_REALTIME_TIMEOUT):
-				log.LOG_Debug("QueueController::ExecuteRealtimeCommand()->execBlock() : Timeout",
+				logs.Debug("QueueController::ExecuteRealtimeCommand()->execBlock() : Timeout",
 					zap.String("ConstructorName", msg.ConstructorNames[req.Constructor]),
 					zap.Uint64("RequestID", requestID),
 				)
@@ -285,7 +285,7 @@ func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructo
 				}
 				err = domain.ErrRequestTimeout
 			case res := <-reqCB.ResponseChannel:
-				log.LOG_Debug("QueueController::ExecuteRealtimeCommand()->execBlock()  : Success",
+				logs.Debug("QueueController::ExecuteRealtimeCommand()->execBlock()  : Success",
 					zap.String("ConstructorName", msg.ConstructorNames[req.Constructor]),
 					zap.Uint64("RequestID", requestID),
 				)
@@ -298,7 +298,7 @@ func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructo
 				}
 			}
 		} else {
-			log.LOG_Debug("QueueController::ExecuteRealtimeCommand()->execBlock()  : RequestCallback not found",
+			logs.Debug("QueueController::ExecuteRealtimeCommand()->execBlock()  : RequestCallback not found",
 				zap.String("ConstructorName", msg.ConstructorNames[req.Constructor]),
 				zap.Uint64("RequestID", requestID),
 			)
@@ -317,7 +317,7 @@ func (ctrl *QueueController) ExecuteRealtimeCommand(requestID uint64, constructo
 
 // executeRemoteCommand
 func (ctrl *QueueController) ExecuteCommand(requestID uint64, constructor int64, requestBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, isUICallback bool) {
-	log.LOG_Debug("QueueController::ExecuteCommand()",
+	logs.Debug("QueueController::ExecuteCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 		zap.Uint64("RequestID", requestID),
 	)
@@ -342,18 +342,18 @@ func (ctrl *QueueController) ExecuteCommand(requestID uint64, constructor int64,
 func (ctrl *QueueController) addToWaitingList(req *request) {
 	jsonRequest, err := req.MarshalJSON()
 	if err != nil {
-		log.LOG_Debug("QueueController::addToWaitingList()->MarshalJSON()",
+		logs.Debug("QueueController::addToWaitingList()->MarshalJSON()",
 			zap.String("Error", err.Error()),
 		)
 		return
 	}
 	if _, err := ctrl.waitingList.Enqueue(jsonRequest); err != nil {
-		log.LOG_Debug("QueueController::addToWaitingList()->Enqueue()",
+		logs.Debug("QueueController::addToWaitingList()->Enqueue()",
 			zap.String("Error", err.Error()),
 		)
 		return
 	}
-	log.LOG_Debug("QueueController::addToWaitingList() Request added to waiting list",
+	logs.Debug("QueueController::addToWaitingList() Request added to waiting list",
 		zap.String("Constructor", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
 		zap.Uint64("RequestID", req.MessageEnvelope.RequestID),
 	)
@@ -364,7 +364,7 @@ func (ctrl *QueueController) addToWaitingList(req *request) {
 
 // Start
 func (ctrl *QueueController) Start() {
-	log.LOG_Info("QueueController::Start()")
+	logs.Info("QueueController::Start()")
 
 	ctrl.reinitializePendingMessages()
 
@@ -372,7 +372,7 @@ func (ctrl *QueueController) Start() {
 }
 
 func (ctrl *QueueController) reinitializePendingMessages() {
-	log.LOG_Info("QueueController::reinitializePendingMessages()")
+	logs.Info("QueueController::reinitializePendingMessages()")
 	// Remove all MessageSend requests from queue and add all pending messages back to queue
 	items := make([]*goque.Item, 0)
 	for {
@@ -413,7 +413,7 @@ func (ctrl *QueueController) reinitializePendingMessages() {
 		ctrl.waitingList.Enqueue(v.Value)
 	}
 
-	log.LOG_Info("QueueController::reinitializePendingMessages() Finished",
+	logs.Info("QueueController::reinitializePendingMessages() Finished",
 		zap.Uint64("Queue Length", ctrl.waitingList.Length()),
 	)
 }

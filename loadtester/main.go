@@ -12,7 +12,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/report"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/scenario"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 
 	"github.com/fatih/color"
 	"github.com/gorilla/websocket"
@@ -60,8 +60,8 @@ func init() {
 	_Shell.AddCmd(cmdDebug)
 	_Shell.AddCmd(cmdPcap)
 
-	log.SetLogger(Log)
-	log.SetLogLevel(0) // DBG: -1, INF: 0, WRN: 1, ERR: 2
+	logs.SetLogger(Log)
+	logs.SetLogLevel(0) // DBG: -1, INF: 0, WRN: 1, ERR: 2
 
 	_Reporter = report.NewReport()
 	// _Reporter.SetIsActive(true)
@@ -121,7 +121,7 @@ func loadCachedActors() {
 
 	files, err := ioutil.ReadDir("_cache/")
 	if err != nil {
-		log.LOG_Error("Fialed to load cached actors LoadCachedActors()", zap.Error(err))
+		logs.Error("Fialed to load cached actors LoadCachedActors()", zap.Error(err))
 		return
 	}
 
@@ -197,7 +197,7 @@ func fnDebugDecrypt() {
 func fnPcapParser() {
 	res, err := pcap_parser.Parse("/tmpfs/dump.pcap")
 	if err != nil {
-		log.LOG_Error("Error", zap.Error(err))
+		logs.Error("Error", zap.Error(err))
 		return
 	}
 

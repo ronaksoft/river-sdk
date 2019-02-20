@@ -6,7 +6,7 @@ import (
 	"mime"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/repo"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
@@ -342,7 +342,7 @@ var PrintMessage = &ishell.Cmd{
 		m := repo.Ctx().Messages.GetMessage(msgID)
 
 		if m == nil {
-			log.LOG_Error("Message Is nil")
+			logs.Error("Message Is nil")
 			return
 		}
 
@@ -350,7 +350,7 @@ var PrintMessage = &ishell.Cmd{
 			// x := new(msg.MediaDocument)
 			// err := x.Unmarshal(m.Media)
 			// if err != nil {
-			// 	log.LOG_Error("Pars MediaDocument Failed", zap.Error(err))
+			// 	log.Error("Pars MediaDocument Failed", zap.Error(err))
 			// 	return
 			// }
 			fmt.Printf("\r\n\r\n\r\n%# v\r\n\r\n\r\n", pretty.Formatter(m))

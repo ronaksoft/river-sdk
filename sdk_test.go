@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"github.com/dustin/go-humanize"
 	"github.com/jmoiron/sqlx"
@@ -15,7 +15,7 @@ import (
 )
 
 func dummyMessageHandler(m *msg.MessageEnvelope) {
-	log.LOG_Info("MessageEnvelope Handler",
+	logs.Info("MessageEnvelope Handler",
 		zap.Uint64("REQ_ID", m.RequestID),
 		zap.String("CONSTRUCTOR", msg.ConstructorNames[m.Constructor]),
 		zap.String("LENGTH", humanize.Bytes(uint64(len(m.Message)))),
@@ -23,20 +23,20 @@ func dummyMessageHandler(m *msg.MessageEnvelope) {
 }
 
 func dummyUpdateHandler(u *msg.UpdateContainer) {
-	log.LOG_Info("UpdateContainer Handler",
+	logs.Info("UpdateContainer Handler",
 		zap.Int64("MIN_UPDATE_ID", u.MinUpdateID),
 		zap.Int64("MAX_UPDATE_ID", u.MaxUpdateID),
 		zap.Int32("LENGTH", u.Length),
 	)
 	for _, update := range u.Updates {
-		log.LOG_Info("UpdateEnvelope",
+		logs.Info("UpdateEnvelope",
 			zap.String("CONSTRUCTOR", msg.ConstructorNames[update.Constructor]),
 		)
 	}
 }
 
 func dummyQualityUpdateHandler(q NetworkStatus) {
-	log.LOG_Info("Network Quality Updated",
+	logs.Info("Network Quality Updated",
 		zap.Int("New Quality", int(q)),
 	)
 }
@@ -54,7 +54,7 @@ func newTestNetwork(pintTime time.Duration) *networkController {
 func newTestQueue(network *networkController) *queueController {
 	q, err := newQueueController(network, "./_data/queue", nil)
 	if err != nil {
-		log.LOG_Fatal(err.Error())
+		logs.Fatal(err.Error())
 	}
 	return q
 }
@@ -65,7 +65,7 @@ func newTestDB() *sqlx.DB {
 	dbID := "test"
 	os.MkdirAll(dbPath, os.ModePerm)
 	if db, err := sqlx.Open("sqlite3", fmt.Sprintf("%s/%s.db", dbPath, dbID)); err != nil {
-		log.LOG_Fatal(err.Error())
+		logs.Fatal(err.Error())
 	} else {
 		setDB(db)
 		return db
@@ -109,7 +109,7 @@ func TestNewSyncController(t *testing.T) {
 			Timeout:         2 * time.Second,
 			MessageEnvelope: messageEnvelope,
 		}
-		log.LOG_Info("prepare request",
+		logs.Info("prepare request",
 			zap.Uint64("ReqID", messageEnvelope.RequestID),
 		)
 		queueCtrl.addToWaitingList(&req)
@@ -125,7 +125,7 @@ func TestNewNetworkController(t *testing.T) {
 	ctl.SetUpdateHandler(dummyUpdateHandler)
 	ctl.SetNetworkStatusChangedCallback(dummyQualityUpdateHandler)
 	if err := ctl.Start(); err != nil {
-		log.LOG_Info(err.Error())
+		logs.Info(err.Error())
 		return
 	}
 	ctl.Connect()
@@ -136,7 +136,7 @@ func TestNewNetworkController(t *testing.T) {
 }
 
 func TestNewRiver(t *testing.T) {
-	log.LOG_Info("Creating New River SDK Instance")
+	logs.Info("Creating New River SDK Instance")
 	r := new(River)
 	r.SetConfig(&RiverConfig{
 		DbPath:             "./_data/",
@@ -147,11 +147,11 @@ func TestNewRiver(t *testing.T) {
 
 	r.Start()
 	if r.ConnInfo.AuthID == 0 {
-		log.LOG_Info("AuthKey has not been created yet.")
+		logs.Info("AuthKey has not been created yet.")
 		if err := r.CreateAuthKey(); err != nil {
 			t.Error(err.Error())
 			return
 		}
-		log.LOG_Info("AuthKey Created.")
+		logs.Info("AuthKey Created.")
 	}
 }

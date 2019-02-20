@@ -10,7 +10,7 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"github.com/gorilla/websocket"
 )
@@ -113,7 +113,7 @@ func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
 	// log
 	if msgEnvelope.Constructor != msg.C_AuthRecall {
 		msgKey := crc32.ChecksumIEEE(protoMessage.MessageKey)
-		log.LOG_Debug("Crc32 of MessageKey & RequestID",
+		logs.Debug("Crc32 of MessageKey & RequestID",
 			zap.Uint32("Crc32", msgKey),
 			zap.Uint64("ReqID", msgEnvelope.RequestID),
 			zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
@@ -128,7 +128,7 @@ func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
 	// if msgEnvelope.Constructor == msg.C_ContactsImport {
 	// 	err := ioutil.WriteFile("ImportContact_Dump.raw", b, os.ModePerm)
 	// 	if err != nil {
-	// 		log.LOG_Error("Packet Dump Failed", zap.Error(err))
+	// 		log.Error("Packet Dump Failed", zap.Error(err))
 	// 	}
 	// }
 
@@ -205,7 +205,7 @@ func (ctrl *CtrlNetwork) onConnect() {
 	// 	if err == nil {
 	// 		break
 	// 	} else {
-	// 		log.LOG_Error("onConnect() AuthRecall", zap.Error(err))
+	// 		log.Error("onConnect() AuthRecall", zap.Error(err))
 	// 		// time.Sleep(time.Microsecond * 50)
 	// 	}
 	// }
@@ -234,12 +234,12 @@ func (ctrl *CtrlNetwork) receiver() {
 		res := new(msg.ProtoMessage)
 		err = res.Unmarshal(message)
 		if err != nil {
-			log.LOG_Error("CtrlNetwork::receiver() failed to unmarshal to ProtoMessage", zap.Error(err))
+			logs.Error("CtrlNetwork::receiver() failed to unmarshal to ProtoMessage", zap.Error(err))
 			continue
 		}
 
 		if res.AuthID != ctrl.actor.GetAuthID() {
-			log.LOG_Error("Received unmatched AuthID ", zap.Int64("Server.AutID", res.AuthID), zap.Int64("Actor.AuthID", ctrl.actor.GetAuthID()))
+			logs.Error("Received unmatched AuthID ", zap.Int64("Server.AutID", res.AuthID), zap.Int64("Actor.AuthID", ctrl.actor.GetAuthID()))
 		}
 
 		// log received packet
@@ -249,7 +249,7 @@ func (ctrl *CtrlNetwork) receiver() {
 			receivedEnvelope := new(msg.MessageEnvelope)
 			err = receivedEnvelope.Unmarshal(res.Payload)
 			if err != nil {
-				log.LOG_Error("CtrlNetwork::receiver() failed to unmarshal to MessageEnvelope", zap.Error(err))
+				logs.Error("CtrlNetwork::receiver() failed to unmarshal to MessageEnvelope", zap.Error(err))
 				continue
 			}
 
@@ -257,13 +257,13 @@ func (ctrl *CtrlNetwork) receiver() {
 		} else {
 			decryptedBytes, err := domain.Decrypt(ctrl.actor.GetAuthKey(), res.MessageKey, res.Payload)
 			if err != nil {
-				log.LOG_Error("CtrlNetwork::receiver() failed to domain.Decrypt()", zap.Error(err))
+				logs.Error("CtrlNetwork::receiver() failed to domain.Decrypt()", zap.Error(err))
 				continue
 			}
 			receivedEncryptedPayload := new(msg.ProtoEncryptedPayload)
 			err = receivedEncryptedPayload.Unmarshal(decryptedBytes)
 			if err != nil {
-				log.LOG_Error("CtrlNetwork::receiver() failed to unmarshal to ProtoEncryptedPayload", zap.Error(err))
+				logs.Error("CtrlNetwork::receiver() failed to unmarshal to ProtoEncryptedPayload", zap.Error(err))
 				continue
 			}
 			ctrl.messageHandler(receivedEncryptedPayload.Envelope)

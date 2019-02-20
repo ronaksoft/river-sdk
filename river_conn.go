@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/repo"
 	"go.uber.org/zap"
@@ -89,14 +89,14 @@ func (r *River) clearSystemConfig() {
 func (r *River) saveDeviceToken() {
 	val, err := json.Marshal(r.DeviceToken)
 	if err != nil {
-		log.LOG_Debug("River::saveDeviceToken()-> Json Marshal()",
+		logs.Debug("River::saveDeviceToken()-> Json Marshal()",
 			zap.String("Error", err.Error()),
 		)
 		return
 	}
 	err = repo.Ctx().System.SaveString(domain.CN_DEVICE_TOKEN, string(val))
 	if err != nil {
-		log.LOG_Debug("River::saveDeviceToken()-> SaveString()",
+		logs.Debug("River::saveDeviceToken()-> SaveString()",
 			zap.String("Error", err.Error()),
 		)
 		return
@@ -105,13 +105,13 @@ func (r *River) saveDeviceToken() {
 
 // Save
 func (v *RiverConnection) saveConfig() {
-	log.LOG_Debug("RiverConnection::Save()")
+	logs.Debug("RiverConnection::Save()")
 	if bytes, err := v.MarshalJSON(); err != nil {
-		log.LOG_Info("RiverConnection::Save()->MarshalJSON()",
+		logs.Info("RiverConnection::Save()->MarshalJSON()",
 			zap.String("Error", err.Error()),
 		)
 	} else if err := repo.Ctx().System.SaveString(domain.CN_CONN_INFO, string(bytes)); err != nil {
-		log.LOG_Info("RiverConnection::Save()->SaveString()",
+		logs.Info("RiverConnection::Save()->SaveString()",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -119,14 +119,14 @@ func (v *RiverConnection) saveConfig() {
 
 // Load
 func (v *RiverConnection) loadConfig() error {
-	log.LOG_Debug("RiverConnection::Load()")
+	logs.Debug("RiverConnection::Load()")
 	if kv, err := repo.Ctx().System.LoadString(domain.CN_CONN_INFO); err != nil {
-		log.LOG_Info("RiverConnection::Load()->LoadString()",
+		logs.Info("RiverConnection::Load()->LoadString()",
 			zap.String("Error", err.Error()),
 		)
 		return err
 	} else if err := v.UnmarshalJSON([]byte(kv)); err != nil {
-		log.LOG_Info("RiverConnection::Load()->UnmarshalJSON()",
+		logs.Info("RiverConnection::Load()->UnmarshalJSON()",
 			zap.String("Error", err.Error()),
 		)
 		return err

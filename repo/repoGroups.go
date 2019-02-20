@@ -2,7 +2,7 @@ package repo
 
 import (
 	"git.ronaksoftware.com/ronak/riversdk/domain"
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
 	"go.uber.org/zap"
@@ -59,7 +59,7 @@ func (r *repoGroups) SaveMany(groups []*msg.Group) error {
 	dtoGroups := make([]dto.Groups, 0)
 	err := r.db.Where("ID in (?)", groupIDs.ToArray()).Find(&dtoGroups).Error
 	if err != nil {
-		log.LOG_Debug("RepoGroups::SaveMany()-> fetch groups entity",
+		logs.Debug("RepoGroups::SaveMany()-> fetch groups entity",
 			zap.String("Error", err.Error()),
 		)
 		return err
@@ -79,7 +79,7 @@ func (r *repoGroups) SaveMany(groups []*msg.Group) error {
 			err = r.db.Create(dtoEntity).Error
 		}
 		if err != nil {
-			log.LOG_Debug("RepoGroups::SaveMany()-> save group entity",
+			logs.Debug("RepoGroups::SaveMany()-> save group entity",
 				zap.Int64("ID", v.ID),
 				zap.String("Title", v.Title),
 				zap.Int64("CreatedOn", v.CreatedOn),
@@ -100,7 +100,7 @@ func (r *repoGroups) GetManyGroups(groupIDs []int64) []*msg.Group {
 
 	err := r.db.Where("ID in (?)", groupIDs).Find(&groups).Error
 	if err != nil {
-		log.LOG_Debug("RepoGroups::GetManyGroups()-> fetch groups entity",
+		logs.Debug("RepoGroups::GetManyGroups()-> fetch groups entity",
 			zap.String("Error", err.Error()),
 		)
 		return nil //, err
@@ -124,7 +124,7 @@ func (r *repoGroups) GetGroup(groupID int64) (*msg.Group, error) {
 
 	err := r.db.Find(groups, groupID).Error
 	if err != nil {
-		log.LOG_Debug("RepoGroups::GetGroup()-> fetch groups entity",
+		logs.Debug("RepoGroups::GetGroup()-> fetch groups entity",
 			zap.String("Error", err.Error()),
 		)
 		return nil, err //, err
@@ -229,13 +229,13 @@ func (r *repoGroups) SearchGroups(searchPhrase string) []*msg.Group {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	log.LOG_Debug("RepoGroups::SearchGroups()")
+	logs.Debug("RepoGroups::SearchGroups()")
 
 	p := "%" + searchPhrase + "%"
 	users := make([]dto.Groups, 0)
 	err := r.db.Where("Title LIKE ? ", p).Find(&users).Error
 	if err != nil {
-		log.LOG_Debug("RepoGroups::SearchGroups()-> fetch group entities",
+		logs.Debug("RepoGroups::SearchGroups()-> fetch group entities",
 			zap.String("Error", err.Error()),
 		)
 		return nil
@@ -258,7 +258,7 @@ func (r *repoGroups) GetGroupDTO(groupID int64) (*dto.Groups, error) {
 
 	err := r.db.Find(group, groupID).Error
 	if err != nil {
-		log.LOG_Debug("RepoGroups::GetGroup()-> fetch groups entity",
+		logs.Debug("RepoGroups::GetGroup()-> fetch groups entity",
 			zap.String("Error", err.Error()),
 		)
 		return nil, err //, err

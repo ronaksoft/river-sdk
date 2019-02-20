@@ -13,7 +13,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/repo"
 	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
 
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/queue"
 	"go.uber.org/zap"
@@ -104,13 +104,13 @@ func NewSyncController(config SyncConfig) *SyncController {
 
 // Start
 func (ctrl *SyncController) Start() {
-	log.LOG_Info("SyncController:: Start")
+	logs.Info("SyncController:: Start")
 
 	// Load the latest UpdateID stored in DB
 	if v, err := repo.Ctx().System.LoadInt(domain.CN_UPDATE_ID); err != nil {
 		err := repo.Ctx().System.SaveInt(domain.CN_UPDATE_ID, 0)
 		if err != nil {
-			log.LOG_Debug("SyncController::Start()-> SaveInt()",
+			logs.Debug("SyncController::Start()-> SaveInt()",
 				zap.String("Error", err.Error()),
 			)
 		}
@@ -143,16 +143,16 @@ func (ctrl *SyncController) SetOnUpdateCallback(h domain.OnUpdateMainDelegateHan
 // updateSyncStatus
 func (ctrl *SyncController) updateSyncStatus(newStatus domain.SyncStatus) {
 	if ctrl.syncStatus == newStatus {
-		log.LOG_Info("SyncController::updateSyncStatus() syncStatus not changed", zap.String("status", domain.SyncStatusName[newStatus]))
+		logs.Info("SyncController::updateSyncStatus() syncStatus not changed", zap.String("status", domain.SyncStatusName[newStatus]))
 		return
 	}
 	switch newStatus {
 	case domain.OutOfSync:
-		log.LOG_Info("SyncController::updateSyncStatus() OutOfSync")
+		logs.Info("SyncController::updateSyncStatus() OutOfSync")
 	case domain.Syncing:
-		log.LOG_Info("SyncController::updateSyncStatus() Syncing")
+		logs.Info("SyncController::updateSyncStatus() Syncing")
 	case domain.Synced:
-		log.LOG_Info("SyncController::updateSyncStatus() Synced")
+		logs.Info("SyncController::updateSyncStatus() Synced")
 	}
 	ctrl.syncStatus = newStatus
 
@@ -172,24 +172,24 @@ func (ctrl *SyncController) watchDog() {
 				time.Sleep(100 * time.Millisecond)
 			}
 			if ctrl.syncStatus != domain.Syncing {
-				log.LOG_Info("SyncController::watchDog() -> sync() called")
+				logs.Info("SyncController::watchDog() -> sync() called")
 				ctrl.sync()
 			}
 		case <-ctrl.stopChannel:
-			log.LOG_Info("SyncController::watchDog() Stopped")
+			logs.Info("SyncController::watchDog() Stopped")
 			return
 		}
 	}
 }
 
 func (ctrl *SyncController) sync() {
-	log.LOG_Debug("SyncController::sync()",
+	logs.Debug("SyncController::sync()",
 		zap.Int64("UpdateID", ctrl.updateID),
 	)
 	ctrl.isSyncingLock.Lock()
 	if ctrl.isSyncing {
 		ctrl.isSyncingLock.Unlock()
-		log.LOG_Debug("SyncController::sync() Exited already syncing")
+		logs.Debug("SyncController::sync() Exited already syncing")
 		return
 	}
 	ctrl.isSyncing = true
@@ -211,13 +211,13 @@ func (ctrl *SyncController) sync() {
 	//for {
 	serverUpdateID, err = ctrl.getUpdateState()
 	if err != nil {
-		log.LOG_Debug("SyncController::sync()-> getUpdateState()",
+		logs.Debug("SyncController::sync()-> getUpdateState()",
 			zap.String("Error", err.Error()),
 		)
 		// time.Sleep(100 * time.Millisecond)
 		return
 	} else {
-		log.LOG_Debug("SyncController::sync()-> getUpdateState()",
+		logs.Debug("SyncController::sync()-> getUpdateState()",
 			zap.Int64("serverUpdateID", serverUpdateID),
 			zap.Int64("UpdateID", ctrl.updateID),
 		)
@@ -226,11 +226,11 @@ func (ctrl *SyncController) sync() {
 	//}
 
 	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSync_Threshold {
-		log.LOG_Debug("SyncController::sync()-> Snapshot sync")
+		logs.Debug("SyncController::sync()-> Snapshot sync")
 		// remove all messages
 		err := repo.Ctx().DropAndCreateTable(&dto.Messages{})
 		if err != nil {
-			log.LOG_Debug("SyncController::sync()-> DropAndCreateTable()",
+			logs.Debug("SyncController::sync()-> DropAndCreateTable()",
 				zap.String("Error", err.Error()),
 			)
 		}
@@ -240,7 +240,7 @@ func (ctrl *SyncController) sync() {
 		ctrl.getAllDialogs(0, 100)
 		err = repo.Ctx().System.SaveInt(domain.CN_UPDATE_ID, int32(ctrl.updateID))
 		if err != nil {
-			log.LOG_Debug("SyncController::sync()-> SaveInt()",
+			logs.Debug("SyncController::sync()-> SaveInt()",
 				zap.String("Error", err.Error()),
 			)
 		}
@@ -253,14 +253,14 @@ func (ctrl *SyncController) sync() {
 		}
 	}
 	ctrl.isSyncing = false
-	log.LOG_Debug("SyncController::sync() status : " + domain.SyncStatusName[ctrl.syncStatus])
+	logs.Debug("SyncController::sync() status : " + domain.SyncStatusName[ctrl.syncStatus])
 	ctrl.updateSyncStatus(domain.Synced)
 }
 
 // SetUserID
 func (ctrl *SyncController) SetUserID(userID int64) {
 	ctrl.UserID = userID
-	log.LOG_Debug("SyncController::SetUserID()",
+	logs.Debug("SyncController::SetUserID()",
 		zap.Int64("UserID", userID),
 	)
 }
@@ -287,11 +287,11 @@ func (ctrl *SyncController) getUpdateState() (updateID int64, err error) {
 		func() {
 			defer waitGroup.Done()
 			err = domain.ErrRequestTimeout
-			log.LOG_Debug("SyncController.getUpdateState() Error : " + err.Error())
+			logs.Debug("SyncController.getUpdateState() Error : " + err.Error())
 		},
 		func(m *msg.MessageEnvelope) {
 			defer waitGroup.Done()
-			log.LOG_Debug("SyncController.getUpdateState() Success")
+			logs.Debug("SyncController.getUpdateState() Success")
 			switch m.Constructor {
 			case msg.C_UpdateState:
 				x := new(msg.UpdateState)
@@ -299,7 +299,7 @@ func (ctrl *SyncController) getUpdateState() (updateID int64, err error) {
 				updateID = x.UpdateID
 			case msg.C_Error:
 				err = domain.ServerError(m.Message)
-				log.LOG_Debug(err.Error())
+				logs.Debug(err.Error())
 			}
 		},
 		true,
@@ -312,11 +312,11 @@ func (ctrl *SyncController) getUpdateState() (updateID int64, err error) {
 // getUpdateDifference
 func (ctrl *SyncController) getUpdateDifference(minUpdateID int64) {
 
-	log.LOG_Debug("SyncController::getUpdateDifference()")
+	logs.Debug("SyncController::getUpdateDifference()")
 	ctrl.isUpdatingDifferenceLock.Lock()
 	if ctrl.isUpdatingDifference {
 		ctrl.isUpdatingDifferenceLock.Unlock()
-		log.LOG_Debug("SyncController::getUpdateDifference() Exited already updatingDifference")
+		logs.Debug("SyncController::getUpdateDifference() Exited already updatingDifference")
 		return
 	}
 	ctrl.isUpdatingDifference = true
@@ -326,7 +326,7 @@ func (ctrl *SyncController) getUpdateDifference(minUpdateID int64) {
 	// and when sending requests w8 till its finish
 	if ctrl.updateID == 0 {
 		ctrl.isUpdatingDifference = false
-		log.LOG_Debug("SyncController::getUpdateDifference() Exited UpdateID is zero need snapshot sync")
+		logs.Debug("SyncController::getUpdateDifference() Exited UpdateID is zero need snapshot sync")
 		return
 	}
 
@@ -343,7 +343,7 @@ func (ctrl *SyncController) getUpdateDifference(minUpdateID int64) {
 			break
 		}
 
-		log.LOG_Debug("SyncController::getUpdateDifference() Entered loop",
+		logs.Debug("SyncController::getUpdateDifference() Entered loop",
 			zap.Int("LoopRepeatCounter", loopRepeatCounter),
 			zap.Int64("limit", limit),
 			zap.Int64("updateID", ctrl.updateID),
@@ -360,19 +360,19 @@ func (ctrl *SyncController) getUpdateDifference(minUpdateID int64) {
 			msg.C_UpdateGetDifference,
 			reqBytes,
 			func() {
-				log.LOG_Debug("SyncController::getUpdateDifference() -> ExecuteRealtimeCommand() Timeout")
+				logs.Debug("SyncController::getUpdateDifference() -> ExecuteRealtimeCommand() Timeout")
 			},
 			func(m *msg.MessageEnvelope) {
 				ctrl.onGetDiffrenceSucceed(m)
-				log.LOG_Debug("SyncController::getUpdateDifference() -> ExecuteRealtimeCommand() Success")
+				logs.Debug("SyncController::getUpdateDifference() -> ExecuteRealtimeCommand() Success")
 			},
 			true,
 			false,
 		)
-		log.LOG_Debug("SyncController::getUpdateDifference() Loop next")
+		logs.Debug("SyncController::getUpdateDifference() Loop next")
 
 	}
-	log.LOG_Debug("SyncController::getUpdateDifference() Loop Finished")
+	logs.Debug("SyncController::getUpdateDifference() Loop Finished")
 	ctrl.isUpdatingDifference = false
 	ctrl.updateSyncStatus(domain.Synced)
 }
@@ -383,7 +383,7 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 		x := new(msg.UpdateDifference)
 		err := x.Unmarshal(m.Message)
 		if err != nil {
-			log.LOG_Debug("SyncController::onGetDiffrenceSucceed()-> Unmarshal()",
+			logs.Debug("SyncController::onGetDiffrenceSucceed()-> Unmarshal()",
 				zap.String("Error", err.Error()),
 			)
 			return
@@ -395,7 +395,7 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 		updContainer.MaxUpdateID = x.MaxUpdateID
 		updContainer.MinUpdateID = x.MinUpdateID
 
-		log.LOG_Warn("SyncController::onGetDiffrenceSucceed()",
+		logs.Warn("SyncController::onGetDiffrenceSucceed()",
 			zap.Int64("UpdateID", ctrl.updateID),
 			zap.Int64("MaxUpdateID", x.MaxUpdateID),
 			zap.Int64("MinUpdateID", x.MinUpdateID),
@@ -423,7 +423,7 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 				continue
 			}
 
-			log.LOG_Debug("SyncController::onGetDiffrenceSucceed() loop",
+			logs.Debug("SyncController::onGetDiffrenceSucceed() loop",
 				zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
 			)
 
@@ -447,7 +447,7 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 			// Save UpdateID to DB
 			err := repo.Ctx().System.SaveInt(domain.CN_UPDATE_ID, int32(ctrl.updateID))
 			if err != nil {
-				log.LOG_Debug("SyncController::onGetDiffrenceSucceed()-> SaveInt()",
+				logs.Debug("SyncController::onGetDiffrenceSucceed()-> SaveInt()",
 					zap.String("Error", err.Error()),
 				)
 			}
@@ -462,7 +462,7 @@ func (ctrl *SyncController) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 		})
 
 	case msg.C_Error:
-		log.LOG_Debug("SyncController::onGetDiffrenceSucceed()-> C_Error",
+		logs.Debug("SyncController::onGetDiffrenceSucceed()-> C_Error",
 			zap.String("Error", domain.ServerError(m.Message).Error()),
 		)
 		// TODO:: Handle error
@@ -487,7 +487,7 @@ func (ctrl *SyncController) getContacts() {
 
 // getAllDialogs
 func (ctrl *SyncController) getAllDialogs(offset int32, limit int32) {
-	log.LOG_Info("SyncController::getAllDialogs()")
+	logs.Info("SyncController::getAllDialogs()")
 	req := new(msg.MessagesGetDialogs)
 	req.Limit = limit
 	req.Offset = offset
@@ -497,7 +497,7 @@ func (ctrl *SyncController) getAllDialogs(offset int32, limit int32) {
 		msg.C_MessagesGetDialogs,
 		reqBytes,
 		func() {
-			log.LOG_Info("SyncController::getAllDialogs() -> onTimeoutback() retry to getAllDialogs()")
+			logs.Info("SyncController::getAllDialogs() -> onTimeoutback() retry to getAllDialogs()")
 			ctrl.getAllDialogs(offset, limit)
 		},
 		func(m *msg.MessageEnvelope) {
@@ -506,12 +506,12 @@ func (ctrl *SyncController) getAllDialogs(offset int32, limit int32) {
 				x := new(msg.MessagesDialogs)
 				err := x.Unmarshal(m.Message)
 				if err != nil {
-					log.LOG_Info("SyncController::getAllDialogs() -> onSuccessCallback() -> Unmarshal() ",
+					logs.Info("SyncController::getAllDialogs() -> onSuccessCallback() -> Unmarshal() ",
 						zap.String("Error", err.Error()),
 					)
 					return
 				}
-				log.LOG_Debug("SyncController::getAllDialogs() -> onSuccessCallback() -> MessagesDialogs",
+				logs.Debug("SyncController::getAllDialogs() -> onSuccessCallback() -> MessagesDialogs",
 					zap.Int("DialogsLength", len(x.Dialogs)),
 					zap.Int32("Offset", offset),
 					zap.Int32("Total", x.Count),
@@ -520,7 +520,7 @@ func (ctrl *SyncController) getAllDialogs(offset int32, limit int32) {
 				for _, message := range x.Messages {
 					err := repo.Ctx().Messages.SaveMessage(message)
 					if err != nil {
-						log.LOG_Info("SyncController::getAllDialogs() -> onSuccessCallback() -> SaveMessage() ",
+						logs.Info("SyncController::getAllDialogs() -> onSuccessCallback() -> SaveMessage() ",
 							zap.String("Error", err.Error()),
 						)
 					}
@@ -531,14 +531,14 @@ func (ctrl *SyncController) getAllDialogs(offset int32, limit int32) {
 				for _, dialog := range x.Dialogs {
 					topMessage, _ := mMessages[dialog.TopMessageID]
 					if topMessage == nil {
-						log.LOG_Info("SyncController::getAllDialogs() -> onSuccessCallback() -> dialog TopMessage is null ",
+						logs.Info("SyncController::getAllDialogs() -> onSuccessCallback() -> dialog TopMessage is null ",
 							zap.Int64("MessageID", dialog.TopMessageID),
 						)
 						continue
 					}
 					err := repo.Ctx().Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
 					if err != nil {
-						log.LOG_Info("SyncController::getAllDialogs() -> onSuccessCallback() -> SaveDialog() ",
+						logs.Info("SyncController::getAllDialogs() -> onSuccessCallback() -> SaveDialog() ",
 							zap.String("Error", err.Error()),
 							zap.String("Dialog", fmt.Sprintf("%v", dialog)),
 						)
@@ -547,7 +547,7 @@ func (ctrl *SyncController) getAllDialogs(offset int32, limit int32) {
 					// create MessageHole
 					err = createMessageHole(dialog.PeerID, 0, dialog.TopMessageID-1)
 					if err != nil {
-						log.LOG_Info("SyncController::getAllDialogs() -> createMessageHole() ",
+						logs.Info("SyncController::getAllDialogs() -> createMessageHole() ",
 							zap.String("Error", err.Error()),
 						)
 					}
@@ -555,7 +555,7 @@ func (ctrl *SyncController) getAllDialogs(offset int32, limit int32) {
 				for _, user := range x.Users {
 					err := repo.Ctx().Users.SaveUser(user)
 					if err != nil {
-						log.LOG_Info("SyncController::getAllDialogs() -> onSuccessCallback() -> SaveUser() ",
+						logs.Info("SyncController::getAllDialogs() -> onSuccessCallback() -> SaveUser() ",
 							zap.String("Error", err.Error()),
 							zap.String("User", fmt.Sprintf("%v", user)),
 						)
@@ -564,21 +564,21 @@ func (ctrl *SyncController) getAllDialogs(offset int32, limit int32) {
 				for _, group := range x.Groups {
 					err := repo.Ctx().Groups.Save(group)
 					if err != nil {
-						log.LOG_Info("SyncController::getAllDialogs() -> onSuccessCallback() -> Groups.Save() ",
+						logs.Info("SyncController::getAllDialogs() -> onSuccessCallback() -> Groups.Save() ",
 							zap.String("Error", err.Error()),
 							zap.String("Group", fmt.Sprintf("%v", group)),
 						)
 					}
 				}
 				if x.Count > offset+limit {
-					log.LOG_Info("SyncController::getAllDialogs() -> onSuccessCallback() retry to getAllDialogs()",
+					logs.Info("SyncController::getAllDialogs() -> onSuccessCallback() retry to getAllDialogs()",
 						zap.Int32("x.Count", x.Count),
 						zap.Int32("offset+limit", offset+limit),
 					)
 					ctrl.getAllDialogs(offset+limit, limit)
 				}
 			case msg.C_Error:
-				log.LOG_Debug("SyncController::onSuccessCallback()-> C_Error",
+				logs.Debug("SyncController::onSuccessCallback()-> C_Error",
 					zap.String("Error", domain.ServerError(m.Message).Error()),
 				)
 			}
@@ -614,19 +614,19 @@ func (ctrl *SyncController) Status() domain.SyncStatus {
 // MessageHandler call appliers-> repository and sync data
 func (ctrl *SyncController) MessageHandler(messages []*msg.MessageEnvelope) {
 	for _, m := range messages {
-		log.LOG_Debug("SyncController::MessageHandler() Received",
+		logs.Debug("SyncController::MessageHandler() Received",
 			zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
 		)
 
 		if m.Constructor == msg.C_Error {
 			err := new(msg.Error)
 			err.Unmarshal(m.Message)
-			log.LOG_Error("MessageHandler() Received Error ", zap.String("Code", err.Code), zap.String("Item", err.Items))
+			logs.Error("MessageHandler() Received Error ", zap.String("Code", err.Code), zap.String("Item", err.Items))
 		}
 
 		if applier, ok := ctrl.messageAppliers[m.Constructor]; ok {
 			applier(m)
-			log.LOG_Debug("SyncController::MessageHandler() Message Applied",
+			logs.Debug("SyncController::MessageHandler() Message Applied",
 				zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
 			)
 		}
@@ -638,10 +638,10 @@ func (ctrl *SyncController) MessageHandler(messages []*msg.MessageEnvelope) {
 func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 
 	// if ctrl.syncStatus != domain.Synced {
-	// 	log.LOG_Debug("SyncController::UpdateHandler() Ignore updates while syncing")
+	// 	log.Debug("SyncController::UpdateHandler() Ignore updates while syncing")
 	// 	return
 	// }
-	log.LOG_Debug("SyncController::UpdateHandler() Called",
+	logs.Debug("SyncController::UpdateHandler() Called",
 		zap.Int64("UpdateID", ctrl.updateID),
 		zap.Int64("MaxID", u.MaxUpdateID),
 		zap.Int64("MinID", u.MinUpdateID),
@@ -652,7 +652,7 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 		// Check if we are out of sync with server, if yes, then get the difference and
 		// try to sync with server again
 		if ctrl.updateID < u.MinUpdateID-1 && !ctrl.isUpdatingDifference {
-			log.LOG_Debug("SyncController::UpdateHandler() calling getUpdateDifference()",
+			logs.Debug("SyncController::UpdateHandler() calling getUpdateDifference()",
 				zap.Int64("UpdateID", ctrl.updateID),
 				zap.Int64("MinUpdateID", u.MinUpdateID),
 			)
@@ -664,7 +664,7 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 			ctrl.updateID = u.MaxUpdateID
 			err := repo.Ctx().System.SaveInt(domain.CN_UPDATE_ID, int32(ctrl.updateID))
 			if err != nil {
-				log.LOG_Debug("SyncController::UpdateHandler() -> SaveInt()",
+				logs.Debug("SyncController::UpdateHandler() -> SaveInt()",
 					zap.String("Error", err.Error()),
 				)
 			}
@@ -692,7 +692,7 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 			continue
 		}
 
-		log.LOG_Debug("SyncController::UpdateHandler() Update Received",
+		logs.Debug("SyncController::UpdateHandler() Update Received",
 			zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
 		)
 
@@ -709,7 +709,7 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 		if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
 
 			externalHandlerUpdates = applier(update)
-			log.LOG_Debug("SyncController::UpdateHandler() Update Applied",
+			logs.Debug("SyncController::UpdateHandler() Update Applied",
 				zap.Int64("UPDATE_ID", update.UpdateID),
 				zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
 			)
@@ -722,7 +722,7 @@ func (ctrl *SyncController) UpdateHandler(u *msg.UpdateContainer) {
 			udpContainer.Updates = append(udpContainer.Updates, externalHandlerUpdates...)
 
 		} else {
-			log.LOG_Debug("SyncController::UpdateHandler() Do not pass update to external handler",
+			logs.Debug("SyncController::UpdateHandler() Do not pass update to external handler",
 				zap.Int64("UPDATE_ID", update.UpdateID),
 				zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
 			)
@@ -765,7 +765,7 @@ func handleMediaMessage(messages ...*msg.UserMessage) {
 		case msg.MediaTypeEmpty:
 			// NOP
 		case msg.MediaTypePhoto:
-			log.LOG_Info("handleMediaMessage() Message.MediaType is msg.MediaTypePhoto")
+			logs.Info("handleMediaMessage() Message.MediaType is msg.MediaTypePhoto")
 			// TODO:: implement it
 		case msg.MediaTypeDocument:
 			mediaDoc := new(msg.MediaDocument)
@@ -780,13 +780,13 @@ func handleMediaMessage(messages ...*msg.UserMessage) {
 				repo.Ctx().Files.SaveFileDocument(m, mediaDoc)
 
 			} else {
-				log.LOG_Error("handleMediaMessage()-> connat unmarshal MediaTypeDocument", zap.Error(err))
+				logs.Error("handleMediaMessage()-> connat unmarshal MediaTypeDocument", zap.Error(err))
 			}
 		case msg.MediaTypeContact:
-			log.LOG_Info("handleMediaMessage() Message.MediaType is msg.MediaTypeContact")
+			logs.Info("handleMediaMessage() Message.MediaType is msg.MediaTypeContact")
 			// TODO:: implement it
 		default:
-			log.LOG_Info("handleMediaMessage() Message.MediaType is invalid")
+			logs.Info("handleMediaMessage() Message.MediaType is invalid")
 		}
 	}
 }

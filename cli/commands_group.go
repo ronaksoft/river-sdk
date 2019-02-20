@@ -1,7 +1,7 @@
 package main
 
 import (
-	"git.ronaksoftware.com/ronak/riversdk/log"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"go.uber.org/zap"
 	ishell "gopkg.in/abiosoft/ishell.v2"
@@ -146,7 +146,7 @@ var GroupDownloadPhotoBig = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		groupID := fnGetGroupID(c)
 		strFilePath := _SDK.GroupGetPhoto_Big(groupID)
-		log.LOG_Info("File Download Complete", zap.String("path", strFilePath))
+		logs.Info("File Download Complete", zap.String("path", strFilePath))
 
 	},
 }
@@ -155,7 +155,7 @@ var GroupDownloadPhotoSmall = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		groupID := fnGetGroupID(c)
 		strFilePath := _SDK.GroupGetPhoto_Small(groupID)
-		log.LOG_Info("File Download Complete", zap.String("path", strFilePath))
+		logs.Info("File Download Complete", zap.String("path", strFilePath))
 	},
 }
 
