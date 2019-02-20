@@ -117,7 +117,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Initialize Network Controller
 	r.networkCtrl = network.NewNetworkController(
-		network.NetworkConfig{
+		network.Config{
 			ServerEndpoint: conf.ServerEndpoint,
 			PingTime:       time.Duration(conf.PingTimeSec) * time.Second,
 			PongTimeout:    time.Duration(conf.PongTimeoutSec) * time.Second,

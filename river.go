@@ -62,7 +62,7 @@ type River struct {
 	localCommands map[int64]domain.LocalMessageHandler
 
 	// Internal Controllers
-	networkCtrl *network.NetworkController
+	networkCtrl *network.Controller
 	queueCtrl   *queue.QueueController
 	syncCtrl    *synchronizer.SyncController
 

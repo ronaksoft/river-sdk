@@ -38,7 +38,7 @@ type QueueController struct {
 
 	rateLimiter            *ratelimit.Bucket
 	waitingList            *goque.Queue
-	network                *network.NetworkController
+	network                *network.Controller
 	deferredRequestHandler func(requestID int64, b []byte)
 
 	// Internal Flags
@@ -50,7 +50,7 @@ type QueueController struct {
 }
 
 // NewQueueController
-func NewQueueController(network *network.NetworkController, dataDir string, deferredRequestHandler domain.DeferredRequestHandler) (*QueueController, error) {
+func NewQueueController(network *network.Controller, dataDir string, deferredRequestHandler domain.DeferredRequestHandler) (*QueueController, error) {
 	ctrl := new(QueueController)
 	ctrl.rateLimiter = ratelimit.NewBucket(time.Second, 20)
 	if dataDir == "" {

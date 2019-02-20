@@ -22,7 +22,7 @@ import (
 // SyncConfig
 type SyncConfig struct {
 	ConnInfo    domain.RiverConfiger
-	NetworkCtrl *network.NetworkController
+	NetworkCtrl *network.Controller
 	QueueCtrl   *queue.QueueController
 }
 
@@ -30,7 +30,7 @@ type SyncConfig struct {
 type SyncController struct {
 	connInfo domain.RiverConfiger
 	//sync.Mutex
-	networkCtrl          *network.NetworkController
+	networkCtrl          *network.Controller
 	queue                *queue.QueueController
 	onSyncStatusChange   domain.SyncStatusUpdateCallback
 	onUpdateMainDelegate domain.OnUpdateMainDelegateHandler
