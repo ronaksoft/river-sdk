@@ -7,7 +7,8 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
 )
 
-type RepoMessageHoles interface {
+// MessageHoles repoMessageHoles interface
+type MessageHoles interface {
 	Save(peerID, minID, maxID int64) error
 	Delete(peerID, minID int64) error
 	DeleteAll(peerID int64) error

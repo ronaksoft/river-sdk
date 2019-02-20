@@ -8,7 +8,8 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
 )
 
-type RepoFiles interface {
+// Files repoFiles interface
+type Files interface {
 	SaveFileStatus(fs *dto.FileStatus) (err error)
 	GetAllFileStatus() []dto.FileStatus
 	GetFileStatus(msgID int64) (*dto.FileStatus, error)

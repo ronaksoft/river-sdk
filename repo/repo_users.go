@@ -10,7 +10,8 @@ import (
 	"go.uber.org/zap"
 )
 
-type RepoUsers interface {
+// Users repoUsers interface
+type Users interface {
 	SaveUser(user *msg.User) error
 	SaveContactUser(user *msg.ContactUser) error
 	UpdatePhoneContact(user *msg.PhoneContact) error
@@ -156,7 +157,7 @@ func (r *repoUsers) GetManyUsers(userIDs []int64) []*msg.User {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("RepoUsers::GetManyUsers()",
+	logs.Debug("Users::GetManyUsers()",
 		zap.Int64s("UserIDs", userIDs),
 	)
 
@@ -165,7 +166,7 @@ func (r *repoUsers) GetManyUsers(userIDs []int64) []*msg.User {
 
 	err := r.db.Where("IsContact = 0 AND ID in (?)", userIDs).Find(&users).Error
 	if err != nil {
-		logs.Debug("RepoUsers::GetManyUsers()-> fetch user entity",
+		logs.Debug("Users::GetManyUsers()-> fetch user entity",
 			zap.String("Error", err.Error()),
 		)
 		return nil //, err
@@ -186,7 +187,7 @@ func (r *repoUsers) GetManyContactUsers(userIDs []int64) []*msg.ContactUser {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("RepoUsers::GetManyContactUsers()",
+	logs.Debug("Users::GetManyContactUsers()",
 		zap.Int64s("UserIDs", userIDs),
 	)
 	pbUsers := make([]*msg.ContactUser, 0, len(userIDs))
@@ -194,7 +195,7 @@ func (r *repoUsers) GetManyContactUsers(userIDs []int64) []*msg.ContactUser {
 
 	err := r.db.Where("IsContact = 1 AND ID in (?)", userIDs).Find(&users).Error
 	if err != nil {
-		logs.Debug("RepoUsers::GetManyContactUsers()-> fetch user entities",
+		logs.Debug("Users::GetManyContactUsers()-> fetch user entities",
 			zap.String("Error", err.Error()),
 		)
 		return nil //, err
@@ -215,13 +216,13 @@ func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("RepoUsers::GetContacts()")
+	logs.Debug("Users::GetContacts()")
 
 	users := make([]dto.Users, 0)
 
 	err := r.db.Where("AccessHash <> 0").Find(&users).Error
 	if err != nil {
-		logs.Debug("RepoUsers::GetContacts()-> fetch user entities",
+		logs.Debug("Users::GetContacts()-> fetch user entities",
 			zap.String("Error", err.Error()),
 		)
 		return nil, nil //, err
@@ -246,13 +247,13 @@ func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("RepoUsers::SearchContacts()")
+	logs.Debug("Users::SearchContacts()")
 
 	p := "%" + searchPhrase + "%"
 	users := make([]dto.Users, 0)
 	err := r.db.Where("AccessHash <> 0 AND (FirstName LIKE ? OR LastName LIKE ? OR Phone LIKE ? OR Username LIKE ?)", p, p, p, p).Find(&users).Error
 	if err != nil {
-		logs.Debug("RepoUsers::SearchContacts()-> fetch user entities",
+		logs.Debug("Users::SearchContacts()-> fetch user entities",
 			zap.String("Error", err.Error()),
 		)
 		return nil, nil //, err
@@ -300,7 +301,7 @@ func (r *repoUsers) GetUser(userID int64) *msg.User {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("RepoUsers::GetUser()",
+	logs.Debug("Users::GetUser()",
 		zap.Int64("UserID", userID),
 	)
 
@@ -309,7 +310,7 @@ func (r *repoUsers) GetUser(userID int64) *msg.User {
 
 	err := r.db.Find(user, userID).Error
 	if err != nil {
-		logs.Debug("RepoUsers::GetUser()-> fetch user entity",
+		logs.Debug("Users::GetUser()-> fetch user entity",
 			zap.String("Error", err.Error()),
 		)
 		return nil //, err
@@ -325,7 +326,7 @@ func (r *repoUsers) GetAnyUsers(userIDs []int64) []*msg.User {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("RepoUsers::GetAnyUsers()",
+	logs.Debug("Users::GetAnyUsers()",
 		zap.Int64s("UserIDs", userIDs),
 	)
 
@@ -334,7 +335,7 @@ func (r *repoUsers) GetAnyUsers(userIDs []int64) []*msg.User {
 
 	err := r.db.Where("ID in (?)", userIDs).Find(&users).Error
 	if err != nil {
-		logs.Debug("RepoUsers::GetAnyUsers()-> fetch user entity",
+		logs.Debug("Users::GetAnyUsers()-> fetch user entity",
 			zap.String("Error", err.Error()),
 		)
 		return nil //, err
@@ -362,7 +363,7 @@ func (r *repoUsers) SaveMany(users []*msg.User) error {
 	dtoUsers := make([]dto.Users, 0)
 	err := r.db.Where("ID in (?)", userIDs.ToArray()).Find(&dtoUsers).Error
 	if err != nil {
-		logs.Debug("RepoUsers::SaveMany()-> fetch groups entity",
+		logs.Debug("Users::SaveMany()-> fetch groups entity",
 			zap.String("Error", err.Error()),
 		)
 		return err
@@ -382,7 +383,7 @@ func (r *repoUsers) SaveMany(users []*msg.User) error {
 			err = r.db.Create(dtoEntity).Error
 		}
 		if err != nil {
-			logs.Debug("RepoUsers::SaveMany()-> save group entity",
+			logs.Debug("Users::SaveMany()-> save group entity",
 				zap.Int64("ID", v.ID),
 				zap.String("FirstName", v.FirstName),
 				zap.String("Lastname", v.LastName),
@@ -399,7 +400,7 @@ func (r *repoUsers) UpdateContactinfo(userID int64, firstName, lastName string) 
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("RepoUsers::UpdateContactinfo()",
+	logs.Debug("Users::UpdateContactinfo()",
 		zap.Int64("UserID", userID),
 	)
 	dtoUser := new(dto.Users)
@@ -415,13 +416,13 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("RepoUsers::SearchContacts()")
+	logs.Debug("Users::SearchContacts()")
 
 	p := "%" + searchPhrase + "%"
 	users := make([]dto.Users, 0)
 	err := r.db.Where("FirstName LIKE ? OR LastName LIKE ? OR Phone LIKE ? OR Username LIKE ?", p, p, p, p).Find(&users).Error
 	if err != nil {
-		logs.Debug("RepoUsers::SearchUsers()-> fetch user entities",
+		logs.Debug("Users::SearchUsers()-> fetch user entities",
 			zap.String("Error", err.Error()),
 		)
 		return nil
@@ -477,7 +478,7 @@ func (r *repoUsers) GetUserPhoto(userID, photoID int64) *dto.UserPhotos {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("RepoUsers::GetUserPhoto()",
+	logs.Debug("Users::GetUserPhoto()",
 		zap.Int64("UserID", userID),
 		zap.Int64("PhotoID", photoID),
 	)
@@ -486,7 +487,7 @@ func (r *repoUsers) GetUserPhoto(userID, photoID int64) *dto.UserPhotos {
 
 	err := r.db.Where("UserID = ? AND PhotoID = ?", userID, photoID).First(&dtoPhoto).Error
 	if err != nil {
-		logs.Debug("RepoUsers::GetUserPhoto()->fetch UserPhoto entity",
+		logs.Debug("Users::GetUserPhoto()->fetch UserPhoto entity",
 			zap.String("Error", err.Error()),
 		)
 		return nil

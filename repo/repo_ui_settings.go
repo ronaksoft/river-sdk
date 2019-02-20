@@ -5,7 +5,8 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
 )
 
-type RepoUISettings interface {
+// UISettings repoUISettings interface
+type UISettings interface {
 	Get(key string) (value string, err error)
 	Put(key, value string) error
 	Delete(key string) error

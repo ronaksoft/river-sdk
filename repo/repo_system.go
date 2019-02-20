@@ -7,7 +7,8 @@ import (
 	"go.uber.org/zap"
 )
 
-type RepoSystem interface {
+// System repoSystem interface
+type System interface {
 	LoadInt(keyName string) (keyValue int, err error)
 	LoadString(keyName string) (keyValue string, err error)
 	SaveInt(keyName string, keyValue int32) error
@@ -31,7 +32,7 @@ func (r *repoSystem) LoadInt(keyName string) (keyValue int, err error) {
 	}
 	keyValue = int(row.IntValue)
 
-	logs.Debug("RepoSystem::LoadInt()",
+	logs.Debug("System::LoadInt()",
 		zap.Int(keyName, keyValue),
 	)
 	return
@@ -50,7 +51,7 @@ func (r *repoSystem) LoadString(keyName string) (keyValue string, err error) {
 	}
 	keyValue = row.StrValue
 
-	logs.Debug("RepoSystem::LoadString()",
+	logs.Debug("System::LoadString()",
 		zap.String(keyName, keyValue),
 	)
 
@@ -66,7 +67,7 @@ func (r *repoSystem) SaveInt(keyName string, keyValue int32) error {
 
 	err := r.db.Where("KeyName = ?", keyName).First(&s).Error
 	if err != nil {
-		logs.Debug("RepoSystem::SaveInt()-> fetch system entity",
+		logs.Debug("System::SaveInt()-> fetch system entity",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -75,7 +76,7 @@ func (r *repoSystem) SaveInt(keyName string, keyValue int32) error {
 	s.StrValue = ""
 	s.IntValue = keyValue
 
-	logs.Debug("RepoSystem::SaveInt()",
+	logs.Debug("System::SaveInt()",
 		zap.Int32(keyName, keyValue),
 	)
 
@@ -91,7 +92,7 @@ func (r *repoSystem) SaveString(keyName string, keyValue string) error {
 
 	err := r.db.Where("KeyName = ?", keyName).First(&s).Error
 	if err != nil {
-		logs.Debug("RepoSystem::SaveString()-> fetch system entity",
+		logs.Debug("System::SaveString()-> fetch system entity",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -100,7 +101,7 @@ func (r *repoSystem) SaveString(keyName string, keyValue string) error {
 	s.StrValue = keyValue
 	s.IntValue = 0
 
-	logs.Debug("RepoSystem::SaveString()",
+	logs.Debug("System::SaveString()",
 		zap.String(keyName, keyValue),
 	)
 	return r.db.Save(s).Error

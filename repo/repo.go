@@ -22,15 +22,15 @@ var (
 type Context struct {
 	DBDialect       string
 	DBPath          string
-	Dialogs         RepoDialogs
-	Messages        RepoMessages
-	PendingMessages RepoPendingMessages
-	System          RepoSystem
-	Users           RepoUsers
-	UISettings      RepoUISettings
-	Groups          RepoGroups
-	MessageHoles    RepoMessageHoles
-	Files           RepoFiles
+	Dialogs         Dialogs
+	Messages        Messages
+	PendingMessages PendingMessages
+	System          System
+	Users           Users
+	UISettings      UISettings
+	Groups          Groups
+	MessageHoles    MessageHoles
+	Files           Files
 }
 
 type repository struct {
