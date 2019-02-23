@@ -1,26 +1,29 @@
 package main
 
 import (
+	"git.ronaksoftware.com/ronak/riversdk/domain"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
+	"go.uber.org/zap"
 )
 
 type MainDelegate struct{}
 
 func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 
-	_Shell.Println(_RED("OnUpdates() Constructor: %v", msg.ConstructorNames[constructor]))
+	logs.Info("Update received", zap.String("Constructor", msg.ConstructorNames[constructor]))
 
 	switch constructor {
 	case msg.C_UpdateContainer:
 		updateContainer := new(msg.UpdateContainer)
 		err := updateContainer.Unmarshal(b)
 		if err != nil {
-			_Log.Debug(err.Error())
+			logs.Error("Failed to unmarshal", zap.Error(err))
 			return
 		}
-		_Shell.Println(_MAGNETA("OnUpdates() :: UpdateContainer:: %d --> %d", updateContainer.MinUpdateID, updateContainer.MaxUpdateID))
+		logs.Message("Processing UpdateContainer", zap.Int64("MinID", updateContainer.MinUpdateID), zap.Int64("MaxID", updateContainer.MaxUpdateID))
 		for _, update := range updateContainer.Updates {
-			_Shell.Println(_MAGNETA("OnUpdates() :: Loop Update Constructor :: %v", msg.ConstructorNames[update.Constructor]))
+			logs.Message("Processing Update", zap.Int64("UpdateID", update.UpdateID), zap.String("Constructor", msg.ConstructorNames[update.Constructor]))
 			UpdatePrinter(update)
 		}
 	case msg.C_ClientUpdatePendingMessageDelivery:
@@ -28,16 +31,16 @@ func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 		udp := new(msg.UpdateEnvelope)
 		udp.Constructor = constructor
 		udp.Update = b
-
+		logs.Message("Processing ClientUpdatePendingMessageDelivery")
 		UpdatePrinter(udp)
 	case msg.C_UpdateEnvelope:
 		update := new(msg.UpdateEnvelope)
 		err := update.Unmarshal(b)
 		if err != nil {
-			_Log.Debug(err.Error())
+			logs.Error("Failed to unmarshal", zap.Error(err))
 			return
 		} else {
-			_Shell.Println(_MAGNETA("OnUpdates() :: Update Constructor :: %v", msg.ConstructorNames[update.Constructor]))
+			logs.Message("Processing UpdateEnvelop", zap.Int64("UpdateID", update.UpdateID), zap.String("Constructor", msg.ConstructorNames[update.Constructor]))
 			UpdatePrinter(update)
 		}
 	}
@@ -47,65 +50,90 @@ func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 func (d *MainDelegate) OnDeferredRequests(requestID int64, b []byte) {
 	envelope := new(msg.MessageEnvelope)
 	envelope.Unmarshal(b)
-	_Shell.Println(_RED("OnDeferredRequests() RequestID: %d", requestID))
+	logs.Info("Deferred Request received", zap.Uint64("RequestID", envelope.RequestID), zap.String("Constructor", msg.ConstructorNames[envelope.Constructor]))
 	MessagePrinter(envelope)
 }
 
 func (d *MainDelegate) OnNetworkStatusChanged(quality int) {
-	status := []string{
-		"Disconnected", "Connecting", "Week", "Slow", "Fast",
-	}
-	_Shell.Println(_RED("Network Status Changed: Status = %v", status[quality]))
+	state := domain.NetworkStatus(quality)
+	logs.Info("Network status changed", zap.String("Status", domain.NetworkStatusName[state]))
 }
 
 func (d *MainDelegate) OnSyncStatusChanged(newStatus int) {
-	status := []string{
-		"Out of Sync", "Syncing", "Synced",
-	}
-	_Shell.Println(_RED("Sync Status Changed: Status = %v", status[newStatus]))
+	state := domain.SyncStatus(newStatus)
+	logs.Info("Sync status changed", zap.String("Status", domain.SyncStatusName[state]))
 }
 
 func (d *MainDelegate) OnAuthKeyCreated(authID int64) {
-
-	_Shell.Println(_RED("Auth Key Created: AuthID = %v", authID))
+	logs.Info("Auth Key Created", zap.Int64("AuthID", authID))
 }
 
 func (d *MainDelegate) OnGeneralError(b []byte) {
 	e := new(msg.Error)
 	e.Unmarshal(b)
-
-	_Shell.Println(_RED("OnGeneralError: {Code = %v , Items = %v }", e.Code, e.Items))
+	logs.Error("Received general error", zap.String("Code", e.Code), zap.String("Items", e.Items))
 }
 
 func (d *MainDelegate) OnSessionClosed(res int) {
-	_Shell.Println(_RED("OnSessionClosed : Res = %v", res))
+	logs.Message("Session Closed", zap.Int("Res", res))
 }
 
 func (d *MainDelegate) OnDownloadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
-	_Shell.Println(_RED("OnDownloadProgressChanged : Progress = %v", percent))
+	logs.Message("Download progress changed", zap.Float64("Progress", percent))
 }
 func (d *MainDelegate) OnUploadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
-	_Shell.Println(_RED("OnUploadProgressChanged : Progress = %v", percent))
+	logs.Message("Upload progress changed", zap.Float64("Progress", percent))
 }
 func (d *MainDelegate) OnDownloadCompleted(messageID int64, filePath string) {
-	_Shell.Println(_RED("OnUploadProgressChanged : MsgID = %v , FilePath = %s", messageID, filePath))
+	logs.Info("Download completed", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
 }
 func (d *MainDelegate) OnUploadCompleted(messageID int64, filePath string) {
-	_Shell.Println(_RED("OnUploadProgressChanged : MsgID = %v , FilePath = %s", messageID, filePath))
+	logs.Info("Upload completed", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
 }
 
 func (d *MainDelegate) OnUploadError(messageID, requestID int64, filePath string, err []byte) {
 	x := new(msg.Error)
 	x.Unmarshal(err)
 
-	_Shell.Println(_RED("OnUploadError : MsgID = %v , ReqID = %v , FilePath = %s , Err = %s",
-		messageID, requestID, filePath, x.String()))
+	logs.Error("OnUploadError",
+		zap.String("Code", x.Code),
+		zap.String("Item", x.Items),
+		zap.Int64("MsgID", messageID),
+		zap.Int64("ReqID", requestID),
+		zap.String("FilePath", filePath),
+	)
+
 }
 
 func (d *MainDelegate) OnDownloadError(messageID, requestID int64, filePath string, err []byte) {
 	x := new(msg.Error)
 	x.Unmarshal(err)
 
-	_Shell.Println(_RED("OnDownloadError : MsgID = %v , ReqID = %v , FilePath = %s , Err = %s",
-		messageID, requestID, filePath, x.String()))
+	logs.Error("OnDownloadError",
+		zap.String("Code", x.Code),
+		zap.String("Item", x.Items),
+		zap.Int64("MsgID", messageID),
+		zap.Int64("ReqID", requestID),
+		zap.String("FilePath", filePath),
+	)
+}
+
+type PrintDelegate struct{}
+
+func (d *PrintDelegate) Log(logLevel int, msg string) {
+
+	switch logLevel {
+	case int(zap.DebugLevel):
+		_Shell.Println("DBG : \t", msg)
+	case int(zap.WarnLevel):
+		_Shell.Println(yellow("WRN : \t %s", msg))
+	case int(zap.InfoLevel):
+		_Shell.Println(green("INF : \t %s", msg))
+	case int(zap.ErrorLevel):
+		_Shell.Println(red("ERR : \t %s", msg))
+	case int(zap.FatalLevel):
+		_Shell.Println(red("FTL : \t %s", msg))
+	default:
+		_Shell.Println(blue("MSG : \t %s", msg))
+	}
 }

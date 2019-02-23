@@ -26,7 +26,7 @@ var RegisterDevice = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountRegisterDevice, reqBytes, reqDelegate, false, false); err != nil {
-			_Log.Debug(err.Error())
+			logs.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -43,7 +43,7 @@ var UpdateUsername = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUpdateUsername, reqBytes, reqDelegate, false, false); err != nil {
-			_Log.Debug(err.Error())
+			logs.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -60,7 +60,7 @@ var CheckUsername = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountCheckUsername, reqBytes, reqDelegate, false, false); err != nil {
-			_Log.Debug(err.Error())
+			logs.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -78,7 +78,7 @@ var UnregisterDevice = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUnregisterDevice, reqBytes, reqDelegate, false, false); err != nil {
-			_Log.Debug(err.Error())
+			logs.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -96,7 +96,7 @@ var UpdateProfile = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUpdateProfile, reqBytes, reqDelegate, false, false); err != nil {
-			_Log.Debug(err.Error())
+			logs.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -121,7 +121,7 @@ var SetNotifySettings = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountSetNotifySettings, reqBytes, reqDelegate, false, false); err != nil {
-			_Log.Debug(err.Error())
+			logs.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}

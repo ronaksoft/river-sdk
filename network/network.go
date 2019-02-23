@@ -127,7 +127,6 @@ func NewNetworkController(config Config) *Controller {
 // Start
 // Starts the controller background controller and watcher routines
 func (ctrl *Controller) Start() error {
-	logs.Debug("Start()")
 	if ctrl.OnUpdate == nil || ctrl.OnMessage == nil {
 		return domain.ErrHandlerNotSet
 	}
@@ -292,6 +291,7 @@ func (ctrl *Controller) keepAlive() {
 			ctrl.wsWriteLock.Unlock()
 			if err != nil {
 				ctrl.wsConn.SetReadDeadline(time.Now())
+				logs.Error("keepAlive() -> wsConn.WriteMessage()", zap.Error(err))
 				continue
 			}
 			pingTime := time.Now()
@@ -336,8 +336,7 @@ func (ctrl *Controller) receiver() {
 
 		messageType, message, err := ctrl.wsConn.ReadMessage()
 		if err != nil {
-			logs.Debug("receiver()->ReadMessage()",
-				zap.String("Error", err.Error()))
+			logs.Error("receiver()-> ReadMessage()", zap.Error(err))
 			return
 		}
 		logs.Debug("receiver() Message Received",
@@ -347,7 +346,11 @@ func (ctrl *Controller) receiver() {
 		switch messageType {
 		case websocket.BinaryMessage:
 			// If it is a BINARY message
-			res.Unmarshal(message)
+			err := res.Unmarshal(message)
+			if err != nil {
+				logs.Error("receiver()", zap.Error(err), zap.String("Dump", string(message)))
+				continue
+			}
 			if res.AuthID == 0 {
 
 				logs.Debug("receiver()",
@@ -357,14 +360,14 @@ func (ctrl *Controller) receiver() {
 				receivedEnvelope := new(msg.MessageEnvelope)
 				err = receivedEnvelope.Unmarshal(res.Payload)
 				if err != nil {
-					logs.Debug(err.Error())
+					logs.Error("receiver() Failed to unmarshal", zap.Error(err))
 					continue
 				}
 				ctrl.messageHandler(receivedEnvelope)
 			} else {
 				decryptedBytes, err := domain.Decrypt(ctrl.authKey, res.MessageKey, res.Payload)
 				if err != nil {
-					logs.Debug("receiver()->Decrypt()",
+					logs.Error("receiver()->Decrypt()",
 						zap.String("Error", err.Error()),
 						zap.Int64("ctrl.authID", ctrl.authID),
 						zap.Int64("resp.AuthID", res.AuthID),
@@ -375,8 +378,7 @@ func (ctrl *Controller) receiver() {
 				receivedEncryptedPayload := new(msg.ProtoEncryptedPayload)
 				err = receivedEncryptedPayload.Unmarshal(decryptedBytes)
 				if err != nil {
-					logs.Debug("receiver()->Unmarshal()",
-						zap.String("Error", err.Error()))
+					logs.Error("receiver() Failed to unmarshal", zap.Error(err))
 					continue
 				}
 				ctrl.messageHandler(receivedEncryptedPayload.Envelope)
@@ -391,7 +393,7 @@ func (ctrl *Controller) receiver() {
 // quality of service changed.
 func (ctrl *Controller) updateNetworkStatus(newStatus domain.NetworkStatus) {
 	if ctrl.wsQuality == newStatus {
-		logs.Info("updateNetworkStatus() wsQuality not changed")
+		logs.Debug("updateNetworkStatus() wsQuality not changed", zap.String("status", domain.NetworkStatusName[newStatus]))
 		return
 	}
 	switch newStatus {
@@ -526,9 +528,7 @@ func (ctrl *Controller) Connect() {
 			ctrl.wsConn.Close()
 		}
 		if wsConn, _, err := ctrl.wsDialer.Dial(ctrl.websocketEndpoint, nil); err != nil {
-			logs.Info("Connect()->Dial()",
-				zap.String("Error", err.Error()),
-			)
+			logs.Error("Connect()-> Dial()", zap.Error(err))
 			time.Sleep(3 * time.Second)
 		} else {
 			keepGoing = false
@@ -670,9 +670,7 @@ func (ctrl *Controller) sendFlush(queueMsgs []*msg.MessageEnvelope) {
 
 			err := ctrl._send(messageEnvelop)
 			if err != nil {
-				logs.Debug("sendFlush() -> ctrl._send() many",
-					zap.String("Error", err.Error()),
-				)
+				logs.Error("sendFlush() -> ctrl._send() many", zap.Error(err))
 
 				// add requests again to sendQueue and try again later
 				logs.Debug("sendFlush() -> ctrl._send() many : pushed requests back to sendQueue")
@@ -684,12 +682,10 @@ func (ctrl *Controller) sendFlush(queueMsgs []*msg.MessageEnvelope) {
 	} else {
 		err := ctrl._send(queueMsgs[0])
 		if err != nil {
-			logs.Debug("sendFlush() -> ctrl._send() one",
-				zap.String("Error", err.Error()),
-			)
+			logs.Error("sendFlush() -> ctrl._send() one", zap.Error(err))
 
 			// add requests again to sendQueue and try again later
-			logs.Debug("sendFlush() -> ctrl._send() one : pushed request back to sendQueue")
+			logs.Warn("sendFlush() -> ctrl._send() one : pushed request back to sendQueue")
 			ctrl.sendQueue.Push(queueMsgs[0])
 		}
 	}
@@ -735,9 +731,7 @@ func (ctrl *Controller) _send(msgEnvelope *msg.MessageEnvelope) error {
 	// }
 
 	if err != nil {
-		logs.Debug("_send()->Marshal()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Debug("_send()-> Failed to marshal", zap.Error(err))
 	}
 	if ctrl.wsConn == nil {
 		logs.Debug("_send()->Marshal()",
@@ -752,10 +746,7 @@ func (ctrl *Controller) _send(msgEnvelope *msg.MessageEnvelope) error {
 	ctrl.wsWriteLock.Unlock()
 
 	if err != nil {
-		logs.Debug("_send()->wsConn.WriteMessage()",
-			zap.String("Error", domain.ErrNoConnection.Error()),
-		)
-		logs.Debug(err.Error())
+		logs.Error("_send() -> wsConn.WriteMessage()", zap.Error(domain.ErrNoConnection))
 		ctrl.updateNetworkStatus(domain.NetworkDisconnected)
 		ctrl.wsConn.SetReadDeadline(time.Now())
 		return err
@@ -777,10 +768,6 @@ func (ctrl *Controller) PrintDebouncerStatus() {
 	logs.Debug("Messages queue",
 		zap.Int("Count", ctrl.messageQueue.Length()),
 		zap.Int("Items Count", len(ctrl.messageQueue.GetRawItems())),
-	)
-	logs.Debug("Updates queue",
-		zap.Int("Count", ctrl.updateQueue.Length()),
-		zap.Int("Items Count", len(ctrl.updateQueue.GetRawItems())),
 	)
 }
 

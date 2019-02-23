@@ -265,7 +265,7 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 		case msg.MediaTypeContact:
 			// TODO:: implement it
 		default:
-			logs.Error("FileManager::Download() Invalid SharedMediaType")
+			logs.Error("Download() Invalid SharedMediaType")
 		}
 	}
 
@@ -399,7 +399,7 @@ func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, 
 		case msg.C_Error:
 			// remove upload from
 			fm.DeleteFromQueue(fs.MessageID)
-			logs.Error("sendUploadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
+			logs.Error("SendUploadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
 			fs.RequestStatus = domain.RequestStateError
 			repo.Ctx().Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 			if fm.onUploadError != nil {
@@ -409,7 +409,7 @@ func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, 
 			x := new(msg.Bool)
 			err := x.Unmarshal(res.Message)
 			if err != nil {
-				logs.Error("sendUploadRequest() failed to unmarshal C_Bool", zap.Error(err))
+				logs.Error("SendUploadRequest() failed to unmarshal C_Bool", zap.Error(err))
 			}
 			// reset counter
 			fs.retryCounter = 0
@@ -429,13 +429,13 @@ func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, 
 		default:
 			// increase counter
 			fs.retryCounter++
-			logs.Error("sendUploadRequest() received unknown response", zap.Error(err))
+			logs.Error("SendUploadRequest() received unknown response", zap.Error(err))
 
 		}
 	} else {
 		// increase counter
 		fs.retryCounter++
-		logs.Error("sendUploadRequest()", zap.Error(err))
+		logs.Error("SendUploadRequest()", zap.Error(err))
 	}
 
 	if fs.retryCounter > domain.FileRetryThreshold {
@@ -443,7 +443,7 @@ func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, 
 		// remove upload from queue
 		fm.DeleteFromQueue(fs.MessageID)
 		fs.Stop()
-		logs.Error("sendUploadRequest() upload request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
+		logs.Error("SendUploadRequest() upload request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
 		fs.RequestStatus = domain.RequestStateError
 		repo.Ctx().Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 		if fm.onUploadError != nil {
@@ -465,7 +465,7 @@ func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 		case msg.C_Error:
 			// remove download from queue
 			fm.DeleteFromQueue(fs.MessageID)
-			logs.Error("sendDownloadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
+			logs.Error("SendDownloadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
 			fs.RequestStatus = domain.RequestStateError
 			repo.Ctx().Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 
@@ -476,13 +476,13 @@ func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 			x := new(msg.File)
 			err := x.Unmarshal(res.Message)
 			if err != nil {
-				logs.Error("sendDownloadRequest() failed to unmarshal C_File", zap.Error(err))
+				logs.Error("SendDownloadRequest() failed to unmarshal C_File", zap.Error(err))
 				fs.retryCounter++
 				break
 			}
 
 			if len(x.Bytes) == 0 {
-				logs.Error("sendDownloadRequest() Received 0 bytes from server ",
+				logs.Error("SendDownloadRequest() Received 0 bytes from server ",
 					zap.Int64("MsgID", fs.MessageID),
 					zap.Int64("PartNo", partIdx),
 					zap.Int64("TotalSize", fs.TotalSize),
@@ -497,7 +497,7 @@ func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 
 			isCompleted, err := fs.Write(x.Bytes, partIdx)
 			if err != nil {
-				logs.Error("sendDownloadRequest() failed write to file", zap.Error(err))
+				logs.Error("SendDownloadRequest() failed write to file", zap.Error(err))
 			} else if isCompleted {
 				//call completed delegate
 				fm.downloadCompleted(fs.MessageID, fs.FilePath, fs.Type)
@@ -506,19 +506,19 @@ func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 		default:
 			// increase counter
 			fs.retryCounter++
-			logs.Error("sendDownloadRequest() received unknown response", zap.Error(err))
+			logs.Error("SendDownloadRequest() received unknown response", zap.Error(err))
 		}
 	} else {
 		// increase counter
 		fs.chPartList <- partIdx
 		fs.retryCounter++
-		logs.Error("sendDownloadRequest()", zap.Error(err))
+		logs.Error("SendDownloadRequest()", zap.Error(err))
 	}
 	if fs.retryCounter > domain.FileRetryThreshold {
 		// remove download from queue
 		fm.DeleteFromQueue(fs.MessageID)
 		fs.Stop()
-		logs.Error("sendDownloadRequest() download request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
+		logs.Error("SendDownloadRequest() download request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
 		fs.RequestStatus = domain.RequestStateError
 		repo.Ctx().Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 		if fm.onDownloadError != nil {

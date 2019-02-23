@@ -213,7 +213,7 @@ func (fs *FileStatus) fileStatusChanged() {
 	// TODO : save file status to DB
 	err := repo.Ctx().Files.SaveFileStatus(fs.GetDTO())
 	if err != nil {
-		logs.Debug("fileStatusChanged() failed to save in DB", zap.Error(err))
+		logs.Error("fileStatusChanged() failed to save in DB", zap.Error(err))
 	}
 
 	lenParts := int64(fs.partListCount())
@@ -441,8 +441,7 @@ func (fs *FileStatus) downloaderJob(fm *FileManager) {
 		case partIdx := <-fs.chPartList:
 			envelop, err := fs.ReadAsFileGet(partIdx)
 			if err != nil {
-				logs.Error("downloaderJob() -> ReadAsFileGet()", zap.Int64("msgID", fs.MessageID), zap.Int64("PartNo", partIdx))
-				// fs.chPartList <- partIdx
+				logs.Error("downloaderJob()", zap.Int64("msgID", fs.MessageID), zap.Int64("PartNo", partIdx), zap.Error(err))
 				break
 			}
 			fm.SendDownloadRequest(envelop, fs, partIdx)
@@ -466,7 +465,7 @@ func (fs *FileStatus) uploaderJob(fm *FileManager) {
 			}
 			envelop, readCount, err := fs.ReadAsFileSavePart(false, partIdx)
 			if err != nil {
-				logs.Error("FileManager::startUploadQueue()", zap.Error(err), zap.String("filePath", fs.FilePath))
+				logs.Error("uploaderJob()", zap.Error(err), zap.String("filePath", fs.FilePath))
 				break
 			}
 			fm.SendUploadRequest(envelop, int64(readCount), fs, partIdx)
@@ -481,7 +480,7 @@ func (fs *FileStatus) uploadThumbnail(fm *FileManager) {
 	for fs.ThumbPosition < fs.ThumbTotalSize {
 		envelop, readCount, err := fs.ReadAsFileSavePart(true, 0)
 		if err != nil {
-			logs.Error("FileManager::startUploadQueue()", zap.Error(err), zap.String("filePath", fs.FilePath))
+			logs.Error("uploaderJob()", zap.Error(err), zap.String("filePath", fs.FilePath))
 			continue
 		}
 		fm.SendUploadRequest(envelop, int64(readCount), fs, 0)

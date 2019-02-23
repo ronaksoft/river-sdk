@@ -80,7 +80,7 @@ func (ctrl *Controller) distributor() {
 
 		// Wait While Network is Disconnected or Connecting
 		for ctrl.network.Quality() == domain.NetworkDisconnected || ctrl.network.Quality() == domain.NetworkConnecting {
-			logs.Debug("distributor() Network is not connected ...",
+			logs.Warn("distributor() Network is not connected ...",
 				zap.String("Quality", domain.NetworkStatusName[ctrl.network.Quality()]),
 			)
 			time.Sleep(time.Second)
@@ -96,9 +96,7 @@ func (ctrl *Controller) distributor() {
 		// Peek item from the queue
 		item, err := ctrl.waitingList.Dequeue()
 		if err != nil {
-			logs.Debug("distributor()->Dequeue()",
-				zap.String("Error", err.Error()),
-			)
+			logs.Error("distributor()->Dequeue()", zap.Error(err))
 			return
 		}
 
@@ -109,9 +107,7 @@ func (ctrl *Controller) distributor() {
 		// Prepare
 		req := request{}
 		if err := req.UnmarshalJSON(item.Value); err != nil {
-			logs.Debug("distributor()->UnmarshalJSON()",
-				zap.String("Error", err.Error()),
-			)
+			logs.Error("distributor()->UnmarshalJSON()", zap.Error(err))
 			return
 		}
 
@@ -182,6 +178,7 @@ func (ctrl *Controller) executor(req request) {
 
 	// Try to send it over wire, if error happened put it back into the queue
 	if err := ctrl.network.Send(req.MessageEnvelope, false); err != nil {
+		logs.Error("executor() -> network.Send()", zap.Error(err))
 		ctrl.addToWaitingList(&req)
 		return
 	}
@@ -218,7 +215,7 @@ func (ctrl *Controller) executor(req request) {
 		}
 
 	case res := <-reqCallbacks.ResponseChannel:
-		logs.Warn("executor() :: ResponseChannel received signal",
+		logs.Debug("executor() :: ResponseChannel received signal",
 			zap.String("ConstructorName", msg.ConstructorNames[res.Constructor]),
 			zap.Uint64("RequestID", res.RequestID),
 		)
@@ -252,7 +249,7 @@ func (ctrl *Controller) ExecuteRealtimeCommand(requestID uint64, constructor int
 	execBlock := func(reqID uint64, req *msg.MessageEnvelope) error {
 		err := ctrl.network.Send(req, blockingMode)
 		if err != nil {
-			logs.Debug("ExecuteRealtimeCommand()->network.Send()",
+			logs.Error("ExecuteRealtimeCommand()->network.Send()",
 				zap.String("Error", err.Error()),
 				zap.String("ConstructorName", msg.ConstructorNames[req.Constructor]),
 				zap.Uint64("RequestID", requestID),
@@ -337,15 +334,11 @@ func (ctrl *Controller) ExecuteCommand(requestID uint64, constructor int64, requ
 func (ctrl *Controller) addToWaitingList(req *request) {
 	jsonRequest, err := req.MarshalJSON()
 	if err != nil {
-		logs.Debug("addToWaitingList()->MarshalJSON()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("addToWaitingList()->MarshalJSON()", zap.Error(err))
 		return
 	}
 	if _, err := ctrl.waitingList.Enqueue(jsonRequest); err != nil {
-		logs.Debug("addToWaitingList()->Enqueue()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("addToWaitingList()->Enqueue()", zap.Error(err))
 		return
 	}
 	logs.Debug("addToWaitingList() Request added to waiting list",

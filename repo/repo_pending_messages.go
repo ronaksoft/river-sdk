@@ -96,9 +96,7 @@ func (r *repoPendingMessages) GetPendingMessageByRequestID(requestID int64) (*dt
 	pmsg := new(dto.PendingMessages)
 	err := r.db.Where("RequestID = ?", requestID).First(pmsg).Error
 	if err != nil {
-		logs.Debug("PendingMessages::GetPendingMessageByRequestID()-> fetch pendingMessage entity",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("PendingMessages::GetPendingMessageByRequestID()-> fetch pendingMessage entity", zap.Error(err))
 		return nil, err
 	}
 
@@ -117,9 +115,7 @@ func (r *repoPendingMessages) GetPendingMessageByID(id int64) (*dto.PendingMessa
 	pmsg := new(dto.PendingMessages)
 	err := r.db.Where("ID = ?", id).First(pmsg).Error
 	if err != nil {
-		logs.Debug("PendingMessages::GetPendingMessageByID()-> fetch pendingMessage entity",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("PendingMessages::GetPendingMessageByID()-> fetch pendingMessage entity", zap.Error(err))
 		return nil, err
 	}
 
@@ -138,9 +134,7 @@ func (r *repoPendingMessages) DeletePendingMessage(ID int64) error {
 
 	err := r.db.Where("ID = ?", ID).Delete(dto.PendingMessages{}).Error
 	if err != nil {
-		logs.Debug("PendingMessages::DeletePendingMessage()-> delete pendingMessage entity",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("PendingMessages::DeletePendingMessage()-> delete pendingMessage entity", zap.Error(err))
 		return err
 	}
 	return nil
@@ -155,13 +149,13 @@ func (r *repoPendingMessages) DeleteManyPendingMessage(IDs []int64) error {
 	dtoDoalogs := make([]dto.Dialogs, 0)
 	err := r.db.Where("TopMessageID in (?)", IDs).Find(&dtoDoalogs).Error
 	if err != nil {
-		logs.Debug("PendingMessages::DeleteMany() fetch dialogs", zap.Error(err))
+		logs.Error("PendingMessages::DeleteMany() fetch dialogs", zap.Error(err))
 	}
 
 	// remove pending message
 	err = r.db.Where("ID IN (?)", IDs).Delete(dto.PendingMessages{}).Error
 	if err != nil {
-		logs.Debug("PendingMessages::DeleteMany() delete from Messages", zap.Error(err))
+		logs.Error("PendingMessages::DeleteMany() delete from Messages", zap.Error(err))
 	}
 
 	// fetch last message and set it as dialog top message
@@ -196,9 +190,7 @@ func (r *repoPendingMessages) GetManyPendingMessages(messageIDs []int64) []*msg.
 	dtoMsgs := make([]dto.PendingMessages, 0, len(messageIDs))
 	err := r.db.Where("ID in (?)", messageIDs).Find(&dtoMsgs).Error
 	if err != nil {
-		logs.Debug("PendingMessages::GetManyPendingMessages()-> fetch pendingMessage entities",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("PendingMessages::GetManyPendingMessages()-> fetch pendingMessage entities", zap.Error(err))
 		return nil
 	}
 
@@ -223,9 +215,7 @@ func (r *repoPendingMessages) GetManyPendingMessagesRequestID(messageIDs []int64
 	dtoMsgs := make([]dto.PendingMessages, 0, len(messageIDs))
 	err := r.db.Where("ID in (?)", messageIDs).Find(&dtoMsgs).Error
 	if err != nil {
-		logs.Debug("PendingMessages::GetManyPendingMessages()-> fetch pendingMessage entities",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("PendingMessages::GetManyPendingMessages()-> fetch pendingMessage entities", zap.Error(err))
 		return nil
 	}
 	requestIDs := make([]int64, 0)
@@ -241,7 +231,7 @@ func (r *repoPendingMessages) GetAllPendingMessages() []*msg.MessagesSend {
 
 	res := make([]*msg.MessagesSend, 0)
 	var dtos []dto.PendingMessages
-	r.db.Where("SharedMediaType=?", 0).Find(&dtos)
+	r.db.Where("MediaType=?", 0).Find(&dtos)
 
 	for _, v := range dtos {
 		tmp := new(msg.MessagesSend)
@@ -257,9 +247,7 @@ func (r *repoPendingMessages) DeletePeerAllMessages(peerID int64, peerType int32
 	msgs := make([]dto.PendingMessages, 0)
 	err := r.db.Where("PeerID=? AND PeerType=?", peerID, peerType).Find(&msgs).Error
 	if err != nil {
-		logs.Debug("PendingMessages::DeletePeerAllMessages()-> fetch pendingMessage entities",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("PendingMessages::DeletePeerAllMessages()-> fetch pendingMessage entities", zap.Error(err))
 		return nil, err
 	}
 	res := new(msg.ClientUpdateMessagesDeleted)
@@ -271,9 +259,7 @@ func (r *repoPendingMessages) DeletePeerAllMessages(peerID int64, peerType int32
 	}
 	err = r.db.Where("PeerID=? AND PeerType=?", peerID, peerType).Delete(dto.PendingMessages{}).Error
 	if err != nil {
-		logs.Debug("PendingMessages::DeletePeerAllMessages()-> delete pendingMessage entities",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("PendingMessages::DeletePeerAllMessages()-> delete pendingMessage entities", zap.Error(err))
 	}
 	return res, err
 }
@@ -344,9 +330,7 @@ func (r *repoPendingMessages) GetPendingMessage(messageID int64) *msg.UserMessag
 	dtoMsg := new(dto.PendingMessages)
 	err := r.db.Where("ID = ?", messageID).Find(&dtoMsg).Error
 	if err != nil {
-		logs.Debug("PendingMessages::GetPendingMessages()-> fetch messages",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("PendingMessages::GetPendingMessages()-> fetch messages", zap.Error(err))
 		return nil
 	}
 

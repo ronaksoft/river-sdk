@@ -71,6 +71,8 @@ func (r *River) loadSystemConfig() {
 	r.ConnInfo = new(RiverConnection)
 	if err := r.ConnInfo.loadConfig(); err != nil {
 		r.ConnInfo.saveConfig()
+	} else {
+		logs.Error("River::loadSystemConfig()", zap.Error(err))
 	}
 }
 
@@ -90,16 +92,12 @@ func (r *River) clearSystemConfig() {
 func (r *River) saveDeviceToken() {
 	val, err := json.Marshal(r.DeviceToken)
 	if err != nil {
-		logs.Debug("River::saveDeviceToken()-> Json Marshal()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("River::saveDeviceToken()-> Json Marshal()", zap.Error(err))
 		return
 	}
 	err = repo.Ctx().System.SaveString(domain.ColumnDeviceToken, string(val))
 	if err != nil {
-		logs.Debug("River::saveDeviceToken()-> SaveString()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("River::saveDeviceToken()-> SaveString()", zap.Error(err))
 		return
 	}
 }
@@ -108,13 +106,9 @@ func (r *River) saveDeviceToken() {
 func (v *RiverConnection) saveConfig() {
 	logs.Debug("RiverConnection::Save()")
 	if bytes, err := v.MarshalJSON(); err != nil {
-		logs.Info("RiverConnection::Save()->MarshalJSON()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("RiverConnection::Save()->MarshalJSON()", zap.Error(err))
 	} else if err := repo.Ctx().System.SaveString(domain.ColumnConnectionInfo, string(bytes)); err != nil {
-		logs.Info("RiverConnection::Save()->SaveString()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("RiverConnection::Save()->SaveString()", zap.Error(err))
 	}
 }
 
@@ -122,14 +116,10 @@ func (v *RiverConnection) saveConfig() {
 func (v *RiverConnection) loadConfig() error {
 	logs.Debug("RiverConnection::Load()")
 	if kv, err := repo.Ctx().System.LoadString(domain.ColumnConnectionInfo); err != nil {
-		logs.Info("RiverConnection::Load()->LoadString()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("RiverConnection::Load()->LoadString()", zap.Error(err))
 		return err
 	} else if err := v.UnmarshalJSON([]byte(kv)); err != nil {
-		logs.Info("RiverConnection::Load()->UnmarshalJSON()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("RiverConnection::Load()->UnmarshalJSON()", zap.Error(err))
 		return err
 	}
 	return nil

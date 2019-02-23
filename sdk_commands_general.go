@@ -42,9 +42,7 @@ func (r *River) DeletePendingMessage(id int64) (isSuccess bool) {
 func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
 	pmsg, err := repo.Ctx().PendingMessages.GetPendingMessageByID(id)
 	if err != nil {
-		logs.Debug("River::RetryPendingMessage()",
-			zap.String("GetPendingMessageByID", err.Error()),
-		)
+		logs.Error("River::RetryPendingMessage() -> GetPendingMessageByID()", zap.Error(err))
 		isSuccess = false
 		return
 	}
@@ -79,25 +77,19 @@ func (r *River) Logout() (int64, error) {
 	dataDir, err := r.queueCtrl.DropQueue()
 
 	if err != nil {
-		logs.Debug("River::Logout() failed to drop queue",
-			zap.Error(err),
-		)
+		logs.Error("River::Logout() failed to drop queue", zap.Error(err))
 	}
 
 	// drop and recreate database
 	err = repo.Ctx().ReinitiateDatabase()
 	if err != nil {
-		logs.Debug("River::Logout() failed to re initiate database",
-			zap.Error(err),
-		)
+		logs.Error("River::Logout() failed to re initiate database", zap.Error(err))
 	}
 
 	// open queue
 	err = r.queueCtrl.OpenQueue(dataDir)
 	if err != nil {
-		logs.Debug("River::Logout() failed to re open queue",
-			zap.Error(err),
-		)
+		logs.Error("River::Logout() failed to re open queue", zap.Error(err))
 	}
 
 	// TODO : send logout request to server
@@ -136,9 +128,7 @@ func (r *River) Logout() (int64, error) {
 func (r *River) UISettingGet(key string) string {
 	val, err := repo.Ctx().UISettings.Get(key)
 	if err != nil {
-		logs.Info("River::UISettingsGet()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("River::UISettingsGet()", zap.Error(err))
 	}
 	return val
 }
@@ -147,9 +137,7 @@ func (r *River) UISettingGet(key string) string {
 func (r *River) UISettingPut(key, value string) bool {
 	err := repo.Ctx().UISettings.Put(key, value)
 	if err != nil {
-		logs.Info("River::UISettingsPut()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("River::UISettingsPut()", zap.Error(err))
 	}
 	return err == nil
 }
@@ -158,9 +146,7 @@ func (r *River) UISettingPut(key, value string) bool {
 func (r *River) UISettingDelete(key string) bool {
 	err := repo.Ctx().UISettings.Delete(key)
 	if err != nil {
-		logs.Info("River::UISettingsDelete()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("River::UISettingsDelete()", zap.Error(err))
 	}
 	return err == nil
 }
@@ -187,7 +173,7 @@ func (r *River) GetRealTopMessageID(peerID int64, peerType int32) int64 {
 
 	topMsgID, err := repo.Ctx().Messages.GetTopMessageID(peerID, peerType)
 	if err != nil {
-		logs.Debug("SDK::GetRealTopMessageID() => Messages.GetTopMessageID()", zap.String("Error", err.Error()))
+		logs.Error("SDK::GetRealTopMessageID() => Messages.GetTopMessageID()", zap.Error(err))
 		return -1
 	}
 	return topMsgID
@@ -197,7 +183,7 @@ func (r *River) GetRealTopMessageID(peerID int64, peerType int32) int64 {
 func (r *River) UpdateContactinfo(userID int64, firstName, lastName string) error {
 	err := repo.Ctx().Users.UpdateContactInfo(userID, firstName, lastName)
 	if err != nil {
-		logs.Debug("SDK::UpdateContactInfo() => Users.UpdateContactInfo()", zap.String("Error", err.Error()))
+		logs.Error("SDK::UpdateContactInfo() => Users.UpdateContactInfo()", zap.Error(err))
 	}
 	return err
 }
@@ -258,7 +244,11 @@ func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, 
 					break
 				}
 			}
+		} else {
+			logs.Error("GetGroupInputUser() -> GetParticipants()", zap.Error(err))
 		}
+	} else {
+		logs.Error("GetGroupInputUser() -> GetAccessHash()", zap.Error(err))
 	}
 
 	if accessHash == 0 {

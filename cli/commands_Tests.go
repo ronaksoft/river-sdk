@@ -4,7 +4,9 @@ import (
 	"fmt"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
+	"go.uber.org/zap"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )
 
@@ -44,7 +46,7 @@ var BatchSend = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(int64(msg.C_MessageContainer), reqBytes, reqDelegate, false, false); err != nil {
-			_Log.Debug(err.Error())
+			logs.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}

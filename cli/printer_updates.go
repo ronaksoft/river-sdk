@@ -1,42 +1,59 @@
 package main
 
-import "git.ronaksoftware.com/ronak/riversdk/msg"
+import (
+	"fmt"
+
+	"go.uber.org/zap"
+
+	"git.ronaksoftware.com/ronak/riversdk/logs"
+	"git.ronaksoftware.com/ronak/riversdk/msg"
+)
 
 func UpdatePrinter(envelope *msg.UpdateEnvelope) {
-	constructorName, _ := msg.ConstructorNames[envelope.Constructor]
-	_Shell.Println(_MAGNETA("ConstructorName: %s (0x%X)", constructorName, envelope.Constructor))
-	_Shell.Println(_MAGNETA("UpdateID: %10d, UCount: %4d", envelope.UpdateID, envelope.UCount))
+	// constructorName, _ := msg.ConstructorNames[envelope.Constructor]
+	// _Shell.Println(_MAGNETA("ConstructorName: %s (0x%X)", constructorName, envelope.Constructor))
+	// _Shell.Println(_MAGNETA("UpdateID: %10d, UCount: %4d", envelope.UpdateID, envelope.UCount))
 	switch envelope.Constructor {
 	case msg.C_UpdateNewMessage:
 		x := new(msg.UpdateNewMessage)
 		x.Unmarshal(envelope.Update)
-		_Shell.Println(_MAGNETA("MsgID,PeerID, MessageID, SenderID, Body: %d %d %d %d %s",
-			x.Message.ID, x.Message.PeerID, x.Message.ID, x.Message.SenderID, x.Message.Body,
-		))
+		logs.Message(fmt.Sprintf("UpdateNewMessage \t MsgID:%d, PeerID:%d , SenderID:%d , Body:%s",
+			x.Message.ID, x.Message.PeerID, x.Message.SenderID, x.Message.Body))
 	case msg.C_UpdateReadHistoryInbox:
 		x := new(msg.UpdateReadHistoryInbox)
 		x.Unmarshal(envelope.Update)
+		logs.Message(fmt.Sprintf("UpdateReadHistoryInbox \t PeerID:%d , MaxID:%d", x.Peer.ID, x.MaxID))
 	case msg.C_UpdateReadHistoryOutbox:
 		x := new(msg.UpdateReadHistoryOutbox)
 		x.Unmarshal(envelope.Update)
+		logs.Message(fmt.Sprintf("UpdateReadHistoryOutbox \t PeerID:%d , MaxID:%d", x.Peer.ID, x.MaxID))
 	case msg.C_UpdateUserTyping:
 		x := new(msg.UpdateUserTyping)
 		x.Unmarshal(envelope.Update)
-		_Shell.Println(_MAGNETA("UserID, Action: %10d, %s", x.UserID, x.Action.String()))
+		logs.Message(fmt.Sprintf("UpdateUserTyping \t UserID:%d , Action:%s", x.UserID, x.Action.String()))
 
 	case msg.C_ClientUpdatePendingMessageDelivery:
 		x := new(msg.ClientUpdatePendingMessageDelivery)
 		err := x.Unmarshal(envelope.Update)
 		if err != nil {
-			_Shell.Println(_BLUE("#UPDATE failed to unmarshal: %v", err))
+			logs.Error("Failed to unmarshal", zap.Error(err))
 			return
 		}
-		_Shell.Println(_BLUE("#UPDATE PendingMessageDelivery: %v", x.Success))
-		_Shell.Println(_BLUE("PendingMessage: %v", x.PendingMessage))
-		_Shell.Println(_BLUE("Messages: %v", x.Messages))
+		logs.Message(fmt.Sprintf("#UPDATE PendingMessageDelivery: %v", x.Success))
+		logs.Message(fmt.Sprintf("PendingMessage: %v", x.PendingMessage))
+		logs.Message(fmt.Sprintf("Messages: %v", x.Messages))
+	case msg.C_UpdateContainer:
+		x := new(msg.UpdateContainer)
+		err := x.Unmarshal(envelope.Update)
+		if err != nil {
+			logs.Error("Failed to unmarshal", zap.Error(err))
+			return
+		}
+		for _, u := range x.Updates {
+			UpdatePrinter(u)
+		}
 
-	case msg.C_UpdateMessageEdited:
-	case msg.C_UpdateMessageID:
-
+	default:
+		logs.Message("Received Update", zap.String("Constructor", msg.ConstructorNames[envelope.Constructor]))
 	}
 }

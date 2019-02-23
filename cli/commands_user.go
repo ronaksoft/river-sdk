@@ -1,7 +1,9 @@
 package main
 
 import (
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
+	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"
 )
 
@@ -19,7 +21,7 @@ var UsersGet = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_UsersGet, reqBytes, reqDelegate, false, false); err != nil {
-			_Log.Debug(err.Error())
+			logs.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -37,7 +39,7 @@ var UsersGetFull = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_UsersGetFull, reqBytes, reqDelegate, false, false); err != nil {
-			_Log.Debug(err.Error())
+			logs.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}

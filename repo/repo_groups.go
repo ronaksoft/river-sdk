@@ -59,9 +59,7 @@ func (r *repoGroups) SaveMany(groups []*msg.Group) error {
 	dtoGroups := make([]dto.Groups, 0)
 	err := r.db.Where("ID in (?)", groupIDs.ToArray()).Find(&dtoGroups).Error
 	if err != nil {
-		logs.Debug("Groups::SaveMany()-> fetch groups entity",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("Groups::SaveMany()-> fetch groups entity", zap.Error(err))
 		return err
 	}
 	count := len(dtoGroups)
@@ -79,12 +77,11 @@ func (r *repoGroups) SaveMany(groups []*msg.Group) error {
 			err = r.db.Create(dtoEntity).Error
 		}
 		if err != nil {
-			logs.Debug("Groups::SaveMany()-> save group entity",
+			logs.Error("Groups::SaveMany()-> save group entity",
 				zap.Int64("ID", v.ID),
 				zap.String("Title", v.Title),
 				zap.Int64("CreatedOn", v.CreatedOn),
-				zap.String("Error", err.Error()),
-			)
+				zap.Error(err))
 			break
 		}
 	}
@@ -100,9 +97,7 @@ func (r *repoGroups) GetManyGroups(groupIDs []int64) []*msg.Group {
 
 	err := r.db.Where("ID in (?)", groupIDs).Find(&groups).Error
 	if err != nil {
-		logs.Debug("Groups::GetManyGroups()-> fetch groups entity",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("Groups::GetManyGroups()-> fetch groups entity", zap.Error(err))
 		return nil //, err
 	}
 
@@ -124,9 +119,7 @@ func (r *repoGroups) GetGroup(groupID int64) (*msg.Group, error) {
 
 	err := r.db.Find(groups, groupID).Error
 	if err != nil {
-		logs.Debug("Groups::GetGroup()-> fetch groups entity",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("Groups::GetGroup()-> fetch groups entity", zap.Error(err))
 		return nil, err //, err
 	}
 
@@ -235,9 +228,7 @@ func (r *repoGroups) SearchGroups(searchPhrase string) []*msg.Group {
 	users := make([]dto.Groups, 0)
 	err := r.db.Where("Title LIKE ? ", p).Find(&users).Error
 	if err != nil {
-		logs.Debug("Groups::SearchGroups()-> fetch group entities",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("Groups::SearchGroups()-> fetch group entities", zap.Error(err))
 		return nil
 	}
 	pbGroup := make([]*msg.Group, 0)
@@ -258,9 +249,7 @@ func (r *repoGroups) GetGroupDTO(groupID int64) (*dto.Groups, error) {
 
 	err := r.db.Find(group, groupID).Error
 	if err != nil {
-		logs.Debug("Groups::GetGroup()-> fetch groups entity",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("Groups::GetGroup()-> fetch groups entity", zap.Error(err))
 		return nil, err //, err
 	}
 

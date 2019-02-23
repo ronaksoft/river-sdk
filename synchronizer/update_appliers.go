@@ -12,13 +12,11 @@ import (
 
 // updateNewMessage
 func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Debug("updateNewMessage() applier")
+	logs.Info("updateNewMessage() applier")
 	x := new(msg.UpdateNewMessage)
 	err := x.Unmarshal(u.Update)
 	if err != nil {
-		logs.Debug("updateNewMessage()-> Unmarshal()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("updateNewMessage()-> Unmarshal()", zap.Error(err))
 		return []*msg.UpdateEnvelope{}
 	}
 
@@ -41,9 +39,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		}
 		err := repo.Ctx().Dialogs.SaveDialog(dialog, x.Message.CreatedOn)
 		if err != nil {
-			logs.Debug("updateNewMessage()-> SaveDialog()",
-				zap.String("Error", err.Error()),
-			)
+			logs.Error("updateNewMessage()-> SaveDialog()", zap.Error(err))
 		}
 	}
 	// save user if does not exist
@@ -53,20 +49,16 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	if x.Message.SenderID != ctrl.UserID {
 		err := repo.Ctx().Messages.SaveNewMessage(x.Message, dialog, ctrl.connInfo.PickupUserID())
 		if err != nil {
-			logs.Debug("updateNewMessage()-> SaveNewMessage()",
-				zap.String("Error", err.Error()),
-			)
+			logs.Error("updateNewMessage()-> SaveNewMessage()", zap.Error(err))
 		}
 	} else {
 		err := repo.Ctx().Messages.SaveSelfMessage(x.Message, dialog)
 		if err != nil {
-			logs.Debug("updateNewMessage()-> SaveSelfMessage()",
-				zap.String("Error", err.Error()),
-			)
+			logs.Error("updateNewMessage()-> SaveSelfMessage()", zap.Error(err))
 		}
 	}
 
-	logs.Warn("UpdateNewMessage AccessHash ",
+	logs.Debug("UpdateNewMessage AccessHash ",
 		zap.Uint64("AccessHash Uint64", x.AccessHash),
 		zap.Int64("AccessHash Int64", int64(x.AccessHash)),
 		zap.String("Body", x.Message.Body),
@@ -77,16 +69,12 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		// update users access hash
 		err := repo.Ctx().Users.UpdateAccessHash(int64(x.AccessHash), x.Message.PeerID, x.Message.PeerType)
 		if err != nil {
-			logs.Debug("updateNewMessage() -> Users.UpdateAccessHash()",
-				zap.String("Error", err.Error()),
-			)
+			logs.Error("updateNewMessage() -> Users.UpdateAccessHash()", zap.Error(err))
 		}
 		err = repo.Ctx().Dialogs.UpdateAccessHash(int64(x.AccessHash), x.Message.PeerID, x.Message.PeerType)
 
 		if err != nil {
-			logs.Debug("updateNewMessage() -> Dialogs.UpdateAccessHash()",
-				zap.String("Error", err.Error()),
-			)
+			logs.Error("updateNewMessage() -> Dialogs.UpdateAccessHash()", zap.Error(err))
 		}
 	}
 	res := make([]*msg.UpdateEnvelope, 0)
@@ -110,11 +98,11 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		act := new(msg.MessageActionGroupAddUser)
 		err := act.Unmarshal(x.Message.MessageActionData)
 		if err != nil {
-			logs.Debug("updateNewMessage() -> MessageActionGroupDeleteUser Failed to Parse", zap.String("Error", err.Error()))
+			logs.Error("updateNewMessage() -> MessageActionGroupDeleteUser Failed to Parse", zap.Error(err))
 		}
 		err = repo.Ctx().Groups.DeleteGroupMemberMany(x.Message.PeerID, act.UserIDs)
 		if err != nil {
-			logs.Debug("updateNewMessage() -> DeleteGroupMemberMany() Failed", zap.String("Error", err.Error()))
+			logs.Error("updateNewMessage() -> DeleteGroupMemberMany() Failed", zap.Error(err))
 		}
 
 		// Check if user left (deleted him/her self from group) remove its Group, Dialog and its PendingMessages
@@ -132,15 +120,11 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 			// Delete PendingMessage
 			deletedMsgs, err := repo.Ctx().PendingMessages.DeletePeerAllMessages(x.Message.PeerID, x.Message.PeerType)
 			if err != nil {
-				logs.Debug("River::groupDeleteUser()-> DeleteGroupPendingMessage()",
-					zap.String("Error", err.Error()),
-				)
+				logs.Error("River::groupDeleteUser()-> DeleteGroupPendingMessage()", zap.Error(err))
 			} else {
 				buff, err := deletedMsgs.Marshal()
 				if err != nil {
-					logs.Debug("River::groupDeleteUser()-> Unmarshal ClientUpdateMessagesDeleted",
-						zap.String("Error", err.Error()),
-					)
+					logs.Error("River::groupDeleteUser()-> Unmarshal ClientUpdateMessagesDeleted", zap.Error(err))
 				} else {
 					udp := new(msg.UpdateEnvelope)
 					udp.Constructor = msg.C_ClientUpdateMessagesDeleted
@@ -160,12 +144,12 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		act := new(msg.MessageActionClearHistory)
 		err := act.Unmarshal(x.Message.MessageActionData)
 		if err != nil {
-			logs.Debug("updateNewMessage() -> MessageActionClearHistory Failed to Parse", zap.String("Error", err.Error()))
+			logs.Error("updateNewMessage() -> MessageActionClearHistory Failed to Parse", zap.Error(err))
 		}
 
 		err = repo.Ctx().Messages.DeleteDialogMessage(x.Message.PeerID, x.Message.PeerType, act.MaxID)
 		if err != nil {
-			logs.Debug("updateNewMessage() -> DeleteDialogMessage() Failed", zap.String("Error", err.Error()))
+			logs.Error("updateNewMessage() -> DeleteDialogMessage() Failed", zap.Error(err))
 		}
 		if act.Delete {
 			// Delete Dialog
@@ -195,7 +179,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 
 // updateReadHistoryInbox
 func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Debug("updateReadHistoryInbox() applier")
+	logs.Info("updateReadHistoryInbox() applier")
 	x := new(msg.UpdateReadHistoryInbox)
 	x.Unmarshal(u.Update)
 	dialog := repo.Ctx().Dialogs.GetDialog(x.Peer.ID, x.Peer.Type)
@@ -205,9 +189,7 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) []*msg.Upd
 
 	err := repo.Ctx().Dialogs.UpdateReadInboxMaxID(ctrl.UserID, x.Peer.ID, x.Peer.Type, x.MaxID)
 	if err != nil {
-		logs.Debug("updateReadHistoryInbox() -> UpdateReadInboxMaxID()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("updateReadHistoryInbox() -> UpdateReadInboxMaxID()", zap.Error(err))
 	}
 	res := []*msg.UpdateEnvelope{u}
 	return res
@@ -215,14 +197,12 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) []*msg.Upd
 
 // updateReadHistoryOutbox
 func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Debug("updateReadHistoryOutbox() applier")
+	logs.Info("updateReadHistoryOutbox() applier")
 	x := new(msg.UpdateReadHistoryOutbox)
 	x.Unmarshal(u.Update)
 	err := repo.Ctx().Dialogs.UpdateReadOutboxMaxID(x.Peer.ID, x.Peer.Type, x.MaxID)
 	if err != nil {
-		logs.Debug("updateReadHistoryOutbox() -> UpdateReadOutboxMaxID()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("updateReadHistoryOutbox() -> UpdateReadOutboxMaxID()", zap.Error(err))
 	}
 	res := []*msg.UpdateEnvelope{u}
 	return res
@@ -230,14 +210,12 @@ func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) []*msg.Up
 
 // updateMessageEdited
 func (ctrl *Controller) updateMessageEdited(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Debug("updateMessageEdited() applier")
+	logs.Info("updateMessageEdited() applier")
 	x := new(msg.UpdateMessageEdited)
 	x.Unmarshal(u.Update)
 	err := repo.Ctx().Messages.SaveMessage(x.Message)
 	if err != nil {
-		logs.Debug("updateMessageEdited() -> SaveMessage()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("updateMessageEdited() -> SaveMessage()", zap.Error(err))
 	}
 	res := []*msg.UpdateEnvelope{u}
 	return res
@@ -245,7 +223,7 @@ func (ctrl *Controller) updateMessageEdited(u *msg.UpdateEnvelope) []*msg.Update
 
 // updateMessageID
 func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Debug("updateMessageID() applier")
+	logs.Info("updateMessageID() applier")
 	x := new(msg.UpdateMessageID)
 	x.Unmarshal(u.Update)
 
@@ -267,15 +245,13 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 
 // updateNotifySettings
 func (ctrl *Controller) updateNotifySettings(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Debug("updateNotifySettings() applier")
+	logs.Info("updateNotifySettings() applier")
 	x := new(msg.UpdateNotifySettings)
 	x.Unmarshal(u.Update)
 
 	err := repo.Ctx().Dialogs.UpdateNotifySetting(x)
 	if err != nil {
-		logs.Debug("updateNotifySettings() -> Dialogs.UpdateNotifySettings()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("updateNotifySettings() -> Dialogs.UpdateNotifySettings()", zap.Error(err))
 	}
 	res := []*msg.UpdateEnvelope{u}
 	return res
@@ -283,7 +259,7 @@ func (ctrl *Controller) updateNotifySettings(u *msg.UpdateEnvelope) []*msg.Updat
 
 // updateUsername
 func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Debug("updateUsername() applier")
+	logs.Info("updateUsername() applier")
 	x := new(msg.UpdateUsername)
 	x.Unmarshal(u.Update)
 
@@ -296,7 +272,7 @@ func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) []*msg.UpdateEnvel
 
 	err := repo.Ctx().Users.UpdateUsername(x)
 	if err != nil {
-		logs.Debug("updateUsername() error save to DB", zap.Error(err))
+		logs.Error("updateUsername() error save to DB", zap.Error(err))
 	}
 
 	res := []*msg.UpdateEnvelope{u}
@@ -305,16 +281,14 @@ func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) []*msg.UpdateEnvel
 
 // updateMessagesDeleted
 func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Debug("updateMessagesDeleted() applier")
+	logs.Info("updateMessagesDeleted() applier")
 
 	x := new(msg.UpdateMessagesDeleted)
 	x.Unmarshal(u.Update)
 
 	udps, err := repo.Ctx().Messages.DeleteManyAndReturnClientUpdate(x.MessageIDs)
 	if err != nil {
-		logs.Debug("updateMessagesDeleted() -> DeleteMany()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("updateMessagesDeleted() -> DeleteMany()", zap.Error(err))
 	}
 
 	res := []*msg.UpdateEnvelope{u}
@@ -334,7 +308,7 @@ func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) []*msg.Upda
 
 // updateGroupParticipantAdmin
 func (ctrl *Controller) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Debug("updateGroupParticipantAdmin() applier")
+	logs.Info("updateGroupParticipantAdmin() applier")
 
 	x := new(msg.UpdateGroupParticipantAdmin)
 	x.Unmarshal(u.Update)
@@ -343,25 +317,21 @@ func (ctrl *Controller) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) []*ms
 
 	err := repo.Ctx().Groups.UpdateGroupMemberType(x.GroupID, x.UserID, x.IsAdmin)
 	if err != nil {
-		logs.Debug("updateGroupParticipantAdmin()-> UpdateGroupMemberType()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("updateGroupParticipantAdmin()-> UpdateGroupMemberType()", zap.Error(err))
 	}
 	return res
 }
 
 // updateReadMessagesContents
 func (ctrl *Controller) updateReadMessagesContents(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Debug("updateReadMessagesContents() applier")
+	logs.Info("updateReadMessagesContents() applier")
 
 	x := new(msg.UpdateReadMessagesContents)
 	x.Unmarshal(u.Update)
 
 	err := repo.Ctx().Messages.SetContentRead(x.MessageIDs)
 	if err != nil {
-		logs.Debug("updateReadMessagesContents()-> SetContentRead()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("updateReadMessagesContents()-> SetContentRead()", zap.Error(err))
 	}
 
 	res := []*msg.UpdateEnvelope{u}
@@ -370,16 +340,14 @@ func (ctrl *Controller) updateReadMessagesContents(u *msg.UpdateEnvelope) []*msg
 
 // updateUserPhoto
 func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Debug("updateUserPhoto() applier")
+	logs.Info("updateUserPhoto() applier")
 
 	x := new(msg.UpdateUserPhoto)
 	x.Unmarshal(u.Update)
 
 	err := repo.Ctx().Users.SaveUserPhoto(x)
 	if err != nil {
-		logs.Debug("updateUserPhoto()-> SaveUserPhoto()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("updateUserPhoto()-> SaveUserPhoto()", zap.Error(err))
 	}
 
 	res := []*msg.UpdateEnvelope{u}
@@ -388,16 +356,14 @@ func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 
 // updateGroupPhoto
 func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Debug("updateGroupPhoto() applier")
+	logs.Info("updateGroupPhoto() applier")
 
 	x := new(msg.UpdateGroupPhoto)
 	x.Unmarshal(u.Update)
 
 	err := repo.Ctx().Groups.UpdateGroupPhoto(x)
 	if err != nil {
-		logs.Debug("updateGroupPhoto()-> UpdateGroupPhoto()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("updateGroupPhoto()-> UpdateGroupPhoto()", zap.Error(err))
 	}
 
 	res := []*msg.UpdateEnvelope{u}

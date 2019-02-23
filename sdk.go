@@ -199,14 +199,14 @@ func (r *River) loadDeviceToken() {
 	r.DeviceToken = new(msg.AccountRegisterDevice)
 	str, err := repo.Ctx().System.LoadString(domain.ColumnDeviceToken)
 	if err != nil {
-		logs.Info("River::loadDeviceToken() failed to fetch DeviceToken",
+		logs.Error("River::loadDeviceToken() failed to fetch DeviceToken",
 			zap.String("Error", err.Error()),
 		)
 		return
 	}
 	err = json.Unmarshal([]byte(str), r.DeviceToken)
 	if err != nil {
-		logs.Info("River::loadDeviceToken() failed to unmarshal DeviceToken",
+		logs.Error("River::loadDeviceToken() failed to unmarshal DeviceToken",
 			zap.String("Error", err.Error()),
 		)
 	}
@@ -258,7 +258,7 @@ func (r *River) onNetworkControllerConnected() {
 		}
 
 		if r.DeviceToken == nil || r.DeviceToken.Token == "" {
-			logs.Info("callAuthRecall_RegisterDevice() Device Token is not set")
+			logs.Warn("callAuthRecall_RegisterDevice() Device Token is not set")
 			return
 		}
 
@@ -289,7 +289,7 @@ func (r *River) onGetServerTime(m *msg.MessageEnvelope) {
 		x := new(msg.SystemServerTime)
 		err := x.Unmarshal(m.Message)
 		if err != nil {
-			logs.Warn("onGetServerTime()", zap.Error(err))
+			logs.Error("onGetServerTime()", zap.Error(err))
 			return
 		}
 		// TODO : get time difference and apply it later on send packets to server
@@ -311,7 +311,7 @@ func (r *River) onAuthRecalled(m *msg.MessageEnvelope) {
 		x := new(msg.AuthRecalled)
 		err := x.Unmarshal(m.Message)
 		if err != nil {
-			logs.Warn("onAuthRecalled()", zap.Error(err))
+			logs.Error("onAuthRecalled()", zap.Error(err))
 			return
 		}
 		// // TODO : get time difference and apply it later on send packets to server
@@ -355,9 +355,7 @@ func (r *River) registerCommandHandlers() {
 func (r *River) Start() error {
 	// Start Controllers
 	if err := r.networkCtrl.Start(); err != nil {
-		logs.Debug("River::Start()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("River::Start()", zap.Error(err))
 		return err
 	}
 	r.queueCtrl.Start()
@@ -469,6 +467,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 				true,
 			)
 			if err != nil && delegate != nil && delegate.OnTimeout != nil {
+				logs.Error("ExecuteRealtimeCommand()", zap.Error(err))
 				delegate.OnTimeout(err)
 			}
 		} else {
@@ -585,9 +584,7 @@ func (r *River) CreateAuthKey() (err error) {
 				x := new(msg.InitResponse)
 				err = x.Unmarshal(res.Message)
 				if err != nil {
-					logs.Debug("River::CreateAuthKey() Success Callback",
-						zap.String("Error", err.Error()),
-					)
+					logs.Error("River::CreateAuthKey() Success Callback", zap.Error(err))
 				}
 				clientNonce = x.ClientNonce
 				serverNonce = x.ServerNonce
@@ -611,9 +608,7 @@ func (r *River) CreateAuthKey() (err error) {
 	// Wait for 1st step to complete
 	waitGroup.Wait()
 	if err != nil {
-		logs.Debug("River::CreateAuthKey() InitConnect",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("River::CreateAuthKey() InitConnect", zap.Error(err))
 		return
 	}
 	logs.Info("River::CreateAuthKey() 1st Step Finished")
@@ -664,9 +659,7 @@ func (r *River) CreateAuthKey() (err error) {
 	decrypted, _ := q2Internal.Marshal()
 	encrypted, err := rsa.EncryptPKCS1v15(rand.Reader, &rsaPublicKey, decrypted)
 	if err != nil {
-		logs.Debug("River::CreateAuthKey() -> EncryptPKCS1v15()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("River::CreateAuthKey() -> EncryptPKCS1v15()", zap.Error(err))
 	}
 	req2.EncryptedPayload = encrypted
 	req2Bytes, _ := req2.Marshal()
@@ -692,9 +685,7 @@ func (r *River) CreateAuthKey() (err error) {
 				case msg.InitAuthCompleted_OK:
 					serverDhKey, err := dh.ComputeKey(dhkx.NewPublicKey(x.ServerDHPubKey), clientDhKey)
 					if err != nil {
-						logs.Debug("River::CreateAuthKey() -> ComputeKey()",
-							zap.String("Error", err.Error()),
-						)
+						logs.Error("River::CreateAuthKey() -> ComputeKey()", zap.Error(err))
 						return
 					}
 					// r.ConnInfo.AuthKey = serverDhKey.Bytes()
@@ -793,17 +784,16 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 		cb := domain.GetRequestCallback(m.RequestID)
 		if cb != nil {
 			// if there was any listener maybe request already timedout
-			logs.Warn("River::onReceivedMessage() Callback Found")
-
+			logs.Debug("River::onReceivedMessage() Request callbvack found", zap.Uint64("RequestID", cb.RequestID))
 			select {
 			case cb.ResponseChannel <- m:
-				logs.Warn("River::onReceivedMessage() passed to callback listener")
+				logs.Debug("River::onReceivedMessage() passed to callback listener", zap.Uint64("RequestID", cb.RequestID))
 			default:
-				logs.Warn("River::onReceivedMessage() there is no callback listener")
+				logs.Error("River::onReceivedMessage() there is no callback listener", zap.Uint64("RequestID", cb.RequestID))
 			}
 			domain.RemoveRequestCallback(m.RequestID)
 		} else {
-			logs.Debug("River::onReceivedMessage() callback does not exists",
+			logs.Error("River::onReceivedMessage() callback does not exists",
 				zap.Uint64("RequestID", m.RequestID),
 			)
 		}
@@ -974,7 +964,7 @@ func (r *River) PrintDebuncerStatus() {
 func (r *River) onFileProgressChanged(messageID, processedParts, totalParts int64, stateType domain.FileStateType) {
 	percent := float64(processedParts) / float64(totalParts) * float64(100)
 
-	logs.Warn("onFileProgressChanged()",
+	logs.Debug("onFileProgressChanged()",
 		zap.Int64("MsgID", messageID),
 		zap.Float64("Percent", percent),
 	)
@@ -1000,7 +990,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 	thumbFileID int64,
 	thumbTotalParts int32,
 ) {
-	logs.Warn("onFileUploadCompleted()",
+	logs.Debug("onFileUploadCompleted()",
 		zap.Int64("messageID", messageID),
 		zap.Int64("fileID", fileID),
 	)

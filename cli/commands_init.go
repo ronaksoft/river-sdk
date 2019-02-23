@@ -1,25 +1,27 @@
 package main
 
 import (
-    "gopkg.in/abiosoft/ishell.v2"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
+	"go.uber.org/zap"
+	"gopkg.in/abiosoft/ishell.v2"
 )
 
 var Init = &ishell.Cmd{
-    Name:    "Init",
-    Aliases: []string{"init", "i"},
+	Name:    "Init",
+	Aliases: []string{"init", "i"},
 }
 
 var InitAuth = &ishell.Cmd{
-    Name: "Auth",
-    Func: func(c *ishell.Context) {
-        if err := _SDK.CreateAuthKey(); err != nil {
-            _Log.Error(err.Error())
-        } else {
-            _Log.Debug("== OK ==")
-        }
-    },
+	Name: "Auth",
+	Func: func(c *ishell.Context) {
+		if err := _SDK.CreateAuthKey(); err != nil {
+			logs.Error("CreateAuthKey failed", zap.Error(err))
+		} else {
+			logs.Message("CreateAuthKey == OK ==")
+		}
+	},
 }
 
 func init() {
-    Init.AddCmd(InitAuth)
+	Init.AddCmd(InitAuth)
 }

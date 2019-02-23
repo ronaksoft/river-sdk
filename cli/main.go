@@ -6,6 +6,10 @@ import (
 	"io/ioutil"
 	"os"
 
+	"git.ronaksoftware.com/ronak/riversdk/logs"
+	"github.com/fatih/color"
+	"go.uber.org/zap"
+
 	"git.ronaksoftware.com/ronak/riversdk/filemanager"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
@@ -14,8 +18,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 
 	"git.ronaksoftware.com/ronak/riversdk"
-	"github.com/fatih/color"
-	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/abiosoft/ishell.v2"
 )
@@ -26,27 +28,17 @@ var (
 )
 
 var (
-	_Shell                                 *ishell.Shell
-	_SDK                                   *riversdk.River
-	_Log                                   *zap.Logger
-	_BLUE, _GREEN, _MAGNETA, _RED, _Yellow func(format string, a ...interface{}) string
+	_Shell                   *ishell.Shell
+	_SDK                     *riversdk.River
+	green, red, yellow, blue func(format string, a ...interface{}) string
 )
 
 func main() {
-	logConfig := zap.NewProductionConfig()
-	logConfig.Encoding = "console"
-	logConfig.Level = zap.NewAtomicLevelAt(zapcore.Level(zapcore.DebugLevel))
-	if v, err := logConfig.Build(); err != nil {
-		os.Exit(1)
-	} else {
-		_Log = v
-	}
 
-	_BLUE = color.New(color.FgHiBlue).SprintfFunc()
-	_GREEN = color.New(color.FgHiGreen).SprintfFunc()
-	_MAGNETA = color.New(color.FgHiMagenta).SprintfFunc()
-	_RED = color.New(color.FgHiRed).SprintfFunc()
-	_Yellow = color.New(color.FgHiYellow).SprintfFunc()
+	green = color.New(color.FgHiGreen).SprintfFunc()
+	red = color.New(color.FgHiRed).SprintfFunc()
+	yellow = color.New(color.FgHiYellow).SprintfFunc()
+	blue = color.New(color.FgHiBlue).SprintfFunc()
 
 	// Initialize Shell
 	_Shell = ishell.New()
@@ -88,13 +80,13 @@ func main() {
 	qPath := "./_queue"
 	_SDK = new(riversdk.River)
 	_SDK.SetConfig(&riversdk.RiverConfig{
-		ServerEndpoint:         "ws://test.river.im", //"ws://192.168.1.110/",
+		ServerEndpoint:         "ws://new.river.im", //"ws://192.168.1.110/",
 		DbPath:                 dbPath,
 		DbID:                   dbID,
 		QueuePath:              fmt.Sprintf("%s/%s", qPath, dbID),
 		ServerKeysFilePath:     "./keys.json",
 		MainDelegate:           new(MainDelegate),
-		Logger:                 new(Logger),
+		Logger:                 new(PrintDelegate),
 		LogLevel:               int(zapcore.DebugLevel),
 		DocumentAudioDirectory: "./_files/audio",
 		DocumentVideoDirectory: "./_files/video",
@@ -144,7 +136,7 @@ func fnLoginWithAuthKey() {
 	reqBytes, _ := req.Marshal()
 	reqDelegate := new(RequestDelegate)
 	if _, err := _SDK.ExecuteCommand(msg.C_AuthLoginByToken, reqBytes, reqDelegate, false, false); err != nil {
-		_Log.Debug(err.Error())
+		logs.Error("ExecuteCommand failed", zap.Error(err))
 	}
 
 }
@@ -161,7 +153,7 @@ func fnGetDialogs() {
 	reqBytes, _ := req.Marshal()
 	reqDelegate := new(RequestDelegate)
 	if _, err := _SDK.ExecuteCommand(msg.C_MessagesGetDialogs, reqBytes, reqDelegate, false, false); err != nil {
-		_Log.Debug(err.Error())
+		logs.Error("ExecuteCommand failed", zap.Error(err))
 	}
 }
 

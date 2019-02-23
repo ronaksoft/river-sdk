@@ -1,7 +1,9 @@
 package main
 
 import (
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
+	"go.uber.org/zap"
 )
 
 /*
@@ -22,15 +24,15 @@ func (d *RequestDelegate) OnComplete(b []byte) {
 
 	err := d.Envelope.Unmarshal(b)
 	if err != nil {
-		_Shell.Println(_RED("Callback OnComplete() Unmarshal Error: %v", err.Error()))
-	} else {
-		_Shell.Println(_RED("Callback OnComplete() Constructor: %v", msg.ConstructorNames[d.Envelope.Constructor]))
+		logs.Error("Failed to unmarshal", zap.Error(err))
+		return
 	}
-	_Shell.Println(_GREEN("RequestID: %d", d.RequestID))
+	logs.Info("Callback OnComplete()", zap.Int64("ReqID", d.RequestID), zap.String("Constructor", msg.ConstructorNames[d.Envelope.Constructor]))
+
 	MessagePrinter(&d.Envelope)
 	return
 }
 
 func (d *RequestDelegate) OnTimeout(err error) {
-	_Shell.Println(_RED("Callback OnTimeout() Error: %v", err.Error()))
+	logs.Error("Callback OnTimeout()", zap.Int64("ReqID", d.RequestID), zap.Error(err))
 }

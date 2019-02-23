@@ -48,7 +48,7 @@ func (r *repoUsers) SaveUser(user *msg.User) error {
 		)
 		return domain.ErrNotFound
 	}
-	logs.Info("RepoUsers::SaveUser()",
+	logs.Debug("RepoUsers::SaveUser()",
 		zap.String("Name", fmt.Sprintf("%s %s", user.FirstName, user.LastName)),
 		zap.Int64("UserID", user.ID),
 	)
@@ -100,7 +100,7 @@ func (r *repoUsers) SaveContactUser(user *msg.ContactUser) error {
 		return domain.ErrNotFound
 	}
 
-	logs.Info("RepoUsers::SaveContactUser()",
+	logs.Debug("RepoUsers::SaveContactUser()",
 		zap.String("Name", fmt.Sprintf("%s %s", user.FirstName, user.LastName)),
 		zap.Int64("UserID", user.ID),
 	)
@@ -166,9 +166,7 @@ func (r *repoUsers) GetManyUsers(userIDs []int64) []*msg.User {
 
 	err := r.db.Where("IsContact = 0 AND ID in (?)", userIDs).Find(&users).Error
 	if err != nil {
-		logs.Debug("Users::GetManyUsers()-> fetch user entity",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("Users::GetManyUsers()-> fetch user entity", zap.Error(err))
 		return nil //, err
 	}
 
@@ -195,9 +193,7 @@ func (r *repoUsers) GetManyContactUsers(userIDs []int64) []*msg.ContactUser {
 
 	err := r.db.Where("IsContact = 1 AND ID in (?)", userIDs).Find(&users).Error
 	if err != nil {
-		logs.Debug("Users::GetManyContactUsers()-> fetch user entities",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("Users::GetManyContactUsers()-> fetch user entities", zap.Error(err))
 		return nil //, err
 	}
 
@@ -222,9 +218,7 @@ func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
 
 	err := r.db.Where("AccessHash <> 0").Find(&users).Error
 	if err != nil {
-		logs.Debug("Users::GetContacts()-> fetch user entities",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("Users::GetContacts()-> fetch user entities", zap.Error(err))
 		return nil, nil //, err
 	}
 	pbUsers := make([]*msg.ContactUser, 0)
@@ -253,9 +247,7 @@ func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*
 	users := make([]dto.Users, 0)
 	err := r.db.Where("AccessHash <> 0 AND (FirstName LIKE ? OR LastName LIKE ? OR Phone LIKE ? OR Username LIKE ?)", p, p, p, p).Find(&users).Error
 	if err != nil {
-		logs.Debug("Users::SearchContacts()-> fetch user entities",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("Users::SearchContacts()-> fetch user entities", zap.Error(err))
 		return nil, nil //, err
 	}
 	pbUsers := make([]*msg.ContactUser, 0)
@@ -310,9 +302,7 @@ func (r *repoUsers) GetUser(userID int64) *msg.User {
 
 	err := r.db.Find(user, userID).Error
 	if err != nil {
-		logs.Debug("Users::GetUser()-> fetch user entity",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("Users::GetUser()-> fetch user entity", zap.Error(err))
 		return nil //, err
 	}
 
@@ -335,9 +325,7 @@ func (r *repoUsers) GetAnyUsers(userIDs []int64) []*msg.User {
 
 	err := r.db.Where("ID in (?)", userIDs).Find(&users).Error
 	if err != nil {
-		logs.Debug("Users::GetAnyUsers()-> fetch user entity",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("Users::GetAnyUsers()-> fetch user entity", zap.Error(err))
 		return nil //, err
 	}
 
@@ -363,9 +351,7 @@ func (r *repoUsers) SaveMany(users []*msg.User) error {
 	dtoUsers := make([]dto.Users, 0)
 	err := r.db.Where("ID in (?)", userIDs.ToArray()).Find(&dtoUsers).Error
 	if err != nil {
-		logs.Debug("Users::SaveMany()-> fetch groups entity",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("Users::SaveMany()-> fetch groups entity", zap.Error(err))
 		return err
 	}
 	count := len(dtoUsers)
@@ -383,13 +369,12 @@ func (r *repoUsers) SaveMany(users []*msg.User) error {
 			err = r.db.Create(dtoEntity).Error
 		}
 		if err != nil {
-			logs.Debug("Users::SaveMany()-> save group entity",
+			logs.Error("Users::SaveMany()-> save group entity",
 				zap.Int64("ID", v.ID),
 				zap.String("FirstName", v.FirstName),
 				zap.String("Lastname", v.LastName),
 				zap.String("UserName", v.Username),
-				zap.String("Error", err.Error()),
-			)
+				zap.Error(err))
 			break
 		}
 	}
@@ -422,9 +407,7 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 	users := make([]dto.Users, 0)
 	err := r.db.Where("FirstName LIKE ? OR LastName LIKE ? OR Phone LIKE ? OR Username LIKE ?", p, p, p, p).Find(&users).Error
 	if err != nil {
-		logs.Debug("Users::SearchUsers()-> fetch user entities",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("Users::SearchUsers()-> fetch user entities", zap.Error(err))
 		return nil
 	}
 	pbUsers := make([]*msg.User, 0)
@@ -487,9 +470,7 @@ func (r *repoUsers) GetUserPhoto(userID, photoID int64) *dto.UserPhotos {
 
 	err := r.db.Where("UserID = ? AND PhotoID = ?", userID, photoID).First(&dtoPhoto).Error
 	if err != nil {
-		logs.Debug("Users::GetUserPhoto()->fetch UserPhoto entity",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("Users::GetUserPhoto()->fetch UserPhoto entity", zap.Error(err))
 		return nil
 	}
 

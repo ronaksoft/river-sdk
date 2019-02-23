@@ -67,9 +67,7 @@ func (r *repoSystem) SaveInt(keyName string, keyValue int32) error {
 
 	err := r.db.Where("KeyName = ?", keyName).First(&s).Error
 	if err != nil {
-		logs.Debug("System::SaveInt()-> fetch system entity",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("System::SaveInt()-> fetch system entity", zap.Error(err))
 	}
 
 	s.KeyName = keyName
@@ -92,9 +90,7 @@ func (r *repoSystem) SaveString(keyName string, keyValue string) error {
 
 	err := r.db.Where("KeyName = ?", keyName).First(&s).Error
 	if err != nil {
-		logs.Debug("System::SaveString()-> fetch system entity",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("System::SaveString()-> fetch system entity", zap.Error(err))
 	}
 
 	s.KeyName = keyName

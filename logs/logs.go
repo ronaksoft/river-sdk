@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -18,36 +19,35 @@ const (
 )
 
 var (
-	log      *zap.Logger
-	logLevel zap.AtomicLevel
-	logger   func(logLevel int, msg string)
+	logLevel                 zap.AtomicLevel
+	logger                   func(logLevel int, msg string)
+	green, red, yellow, blue func(format string, a ...interface{}) string
 )
 
 func init() {
-
 	logLevel = zap.NewAtomicLevelAt(zap.DebugLevel)
-	logConfig := zap.NewProductionConfig()
-	logConfig.Encoding = "console"
-	logConfig.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	logConfig.EncoderConfig.EncodeDuration = zapcore.StringDurationEncoder
-	logConfig.Level = logLevel
-	if l, err := logConfig.Build(); err != nil {
-		os.Exit(1)
-	} else {
-		log = l
-	}
+	green = color.New(color.FgHiGreen).SprintfFunc()
+	red = color.New(color.FgHiRed).SprintfFunc()
+	yellow = color.New(color.FgHiYellow).SprintfFunc()
+	blue = color.New(color.FgHiBlue).SprintfFunc()
 
 }
 
 func SetLogLevel(l int) {
-	if log == nil {
-		panic("logs is not initialized !!!")
-	}
 	logLevel.SetLevel(zapcore.Level(l))
 }
 
 func SetLogger(fn func(logLevel int, msg string)) {
 	logger = fn
+}
+
+func Message(msg string, fields ...zap.Field) {
+	callerInfo := fnGetCallerInfo()
+	if logger != nil {
+		logger(int(-99), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+	} else {
+		fnlog(int(-99), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+	}
 }
 
 func Debug(msg string, fields ...zap.Field) {
@@ -58,9 +58,9 @@ func Debug(msg string, fields ...zap.Field) {
 	callerInfo := fnGetCallerInfo()
 
 	if logger != nil {
-		logger(int(zap.DebugLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
+		logger(int(zap.DebugLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
 	} else {
-		log.Debug(msg, fields...)
+		fnlog(int(zap.DebugLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
 	}
 }
 
@@ -71,9 +71,9 @@ func Warn(msg string, fields ...zap.Field) {
 	callerInfo := fnGetCallerInfo()
 
 	if logger != nil {
-		logger(int(zap.WarnLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
+		logger(int(zap.WarnLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
 	} else {
-		log.Warn(msg, fields...)
+		fnlog(int(zap.WarnLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
 	}
 }
 
@@ -84,9 +84,9 @@ func Info(msg string, fields ...zap.Field) {
 	callerInfo := fnGetCallerInfo()
 
 	if logger != nil {
-		logger(int(zap.InfoLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
+		logger(int(zap.InfoLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
 	} else {
-		log.Info(msg, fields...)
+		fnlog(int(zap.InfoLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
 	}
 }
 
@@ -97,23 +97,25 @@ func Error(msg string, fields ...zap.Field) {
 	callerInfo := fnGetCallerInfo()
 
 	if logger != nil {
-		logger(int(zap.ErrorLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
+		logger(int(zap.ErrorLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
 	} else {
-		log.Error(msg, fields...)
+		fnlog(int(zap.ErrorLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
 	}
 }
 
 func Fatal(msg string, fields ...zap.Field) {
+	defer os.Exit(1)
+
 	if int(logLevel.Level()) > int(zap.FatalLevel) {
 		return
 	}
 	callerInfo := fnGetCallerInfo()
 
 	if logger != nil {
-		logger(int(zap.FatalLevel), msg+"\t"+callerInfo+"\t"+fnConvertFieldToString(fields...))
+		logger(int(zap.FatalLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+	} else {
+		fnlog(int(zap.FatalLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
 	}
-	//  The logger should calls os.Exit(1) when its FatalLevel
-	log.Fatal(msg, fields...)
 
 }
 
@@ -238,4 +240,23 @@ func fnGetCallerInfo() string {
 	}
 
 	return callerInfo
+}
+
+// log printer
+func fnlog(logLevel int, msg string) {
+
+	switch logLevel {
+	case int(zap.DebugLevel):
+		fmt.Println("DBG : \t", msg)
+	case int(zap.WarnLevel):
+		fmt.Println(yellow("WRN : \t %s", msg))
+	case int(zap.InfoLevel):
+		fmt.Println(green("INF : \t %s", msg))
+	case int(zap.ErrorLevel):
+		fmt.Println(red("ERR : \t %s", msg))
+	case int(zap.FatalLevel):
+		fmt.Println(red("FTL : \t %s", msg))
+	default:
+		fmt.Println(blue("MSG : \t %s", msg))
+	}
 }

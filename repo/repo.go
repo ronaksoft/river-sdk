@@ -107,15 +107,11 @@ func (c *Context) Close() error {
 func (c *Context) DropAndCreateTable(dtoTable interface{}) error {
 	err := r.db.DropTable(dtoTable).Error
 	if err != nil {
-		logs.Debug("Context::DropAndCreateTable() failed to DROP",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("Context::DropAndCreateTable() failed to DROP", zap.Error(err))
 	}
 	err = r.db.AutoMigrate(dtoTable).Error
 	if err != nil {
-		logs.Debug("Context::DropAndCreateTable() failed to AutoMigrate",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("Context::DropAndCreateTable() failed to AutoMigrate", zap.Error(err))
 	}
 	return err
 }
@@ -138,9 +134,7 @@ func (c *Context) ReinitiateDatabase() error {
 	).Error
 
 	if err != nil {
-		logs.Debug("Context::ReinitiateDatabase()->DropTableIfExists()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("Context::ReinitiateDatabase()->DropTableIfExists()", zap.Error(err))
 	}
 
 	err = r.initDB()

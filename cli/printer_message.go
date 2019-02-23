@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"git.ronaksoftware.com/ronak/riversdk/logs"
+
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 
 	"git.ronaksoftware.com/ronak/riversdk/msg"
@@ -13,25 +15,24 @@ import (
 )
 
 func MessagePrinter(envelope *msg.MessageEnvelope) {
-	constructorName, _ := msg.ConstructorNames[envelope.Constructor]
-	_Shell.Println(_GREEN("ConstructorName: %s (0x%X)", constructorName, envelope.Constructor))
 	switch envelope.Constructor {
 	case msg.C_AuthAuthorization:
 		x := new(msg.AuthAuthorization)
 		x.Unmarshal(envelope.Message)
-		_Shell.Println(_BLUE("%s %s (%d)", x.User.FirstName, x.User.LastName, x.User.ID))
+		logs.Message(fmt.Sprintf("AuthAuthorization \t %s %s (%d)", x.User.FirstName, x.User.LastName, x.User.ID))
+
 	case msg.C_AuthCheckedPhone:
 		x := new(msg.AuthCheckedPhone)
 		x.Unmarshal(envelope.Message)
-		_Shell.Println(_BLUE("Registered: %t", x.Registered))
+		logs.Message(fmt.Sprintf("AuthCheckedPhone \t Registered:%t", x.Registered))
 	case msg.C_AuthRecalled:
 		x := new(msg.AuthRecalled)
 		x.Unmarshal(envelope.Message)
-		_Shell.Println(_BLUE("ClientID: %d", x.ClientID))
+		logs.Message(fmt.Sprintf("AuthRecalled \t ClientID:%d , Timestamp:%d", x.ClientID, x.Timestamp))
 	case msg.C_AuthSentCode:
 		x := new(msg.AuthSentCode)
 		x.Unmarshal(envelope.Message)
-		_Shell.Println(_BLUE("Phone, PhoneCodeHash: %s, %s", x.Phone, x.PhoneCodeHash))
+		logs.Message(fmt.Sprintf("AuthSentCode \t Phone:%s , Hash:%s", x.Phone, x.PhoneCodeHash))
 	case msg.C_ContactsImported:
 		x := new(msg.ContactsImported)
 		x.Unmarshal(envelope.Message)
@@ -51,7 +52,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			})
 		}
 		table.Render()
-		_Shell.Println(buf.String())
+		logs.Message("\r\n" + buf.String())
 	case msg.C_ContactsMany:
 		x := new(msg.ContactsMany)
 		x.Unmarshal(envelope.Message)
@@ -91,12 +92,12 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			})
 		}
 		tableContacts.Render()
-		_Shell.Println(bufUsers.String())
-		_Shell.Println(bufContacts.String())
+		logs.Message("\r\n" + bufUsers.String())
+		logs.Message("\r\n" + bufContacts.String())
 	case msg.C_MessagesDialogs:
 		x := new(msg.MessagesDialogs)
 		x.Unmarshal(envelope.Message)
-		_Shell.Println(_BLUE("Total: %d", x.Count))
+
 		bufDialogs := new(bytes.Buffer)
 		tableDialogs := tablewriter.NewWriter(bufDialogs)
 		tableDialogs.SetHeader([]string{
@@ -141,9 +142,10 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		}
 		tableGroup.Render()
 
-		_Shell.Println(bufDialogs.String())
-		_Shell.Println(bufUsers.String())
-		_Shell.Println(bufGroup.String())
+		logs.Message("\r\n" + fmt.Sprintf("Total: %d", x.Count))
+		logs.Message("\r\n" + bufDialogs.String())
+		logs.Message("\r\n" + bufUsers.String())
+		logs.Message("\r\n" + bufGroup.String())
 	case msg.C_Dialog:
 		x := new(msg.Dialog)
 		x.Unmarshal(envelope.Message)
@@ -160,25 +162,25 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			fmt.Sprintf("%d", x.AccessHash),
 		})
 		table.Render()
-		_Shell.Println(buf.String())
+		logs.Message("\r\n" + buf.String())
 
 	case msg.C_MessagesSent:
 		x := new(msg.MessagesSent)
 		x.Unmarshal(envelope.Message)
-		_Shell.Println(_BLUE("MessageID, RandomID: %d, %d", x.MessageID, x.RandomID))
+		logs.Message(fmt.Sprintf("MessagesSent \t MsgID:%d , RandomID:%d", x.MessageID, x.RandomID))
 	case msg.C_Bool:
 		x := new(msg.Bool)
 		x.Unmarshal(envelope.Message)
-		_Shell.Println(_BLUE("Result: %t", x.Result))
+		logs.Message(fmt.Sprintf("Bool \t Res:%t", x.Result))
 	case msg.C_Error:
 		x := new(msg.Error)
 		x.Unmarshal(envelope.Message)
-		_Shell.Println(_BLUE("%s:%s", x.Code, x.Items))
+		logs.Message(fmt.Sprintf("Error \t %s:%s", x.Code, x.Items))
+
 	case msg.C_MessagesMany:
 
 		x := new(msg.MessagesMany)
 		x.Unmarshal(envelope.Message)
-		_Shell.Println(_BLUE("Total Message Count: %d", len(x.Messages)))
 		bufMessages := new(bytes.Buffer)
 		tableMessages := tablewriter.NewWriter(bufMessages)
 		tableMessages.SetHeader([]string{
@@ -211,8 +213,10 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			})
 		}
 		tableUsers.Render()
-		_Shell.Println(bufMessages.String())
-		_Shell.Println(bufUsers.String())
+
+		logs.Message(fmt.Sprintf("Total Message Count: %d", len(x.Messages)))
+		logs.Message("\r\n" + bufMessages.String())
+		logs.Message("\r\n" + bufUsers.String())
 	case msg.C_UsersMany:
 
 		x := new(msg.UsersMany)
@@ -230,12 +234,12 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			})
 		}
 		tableUsers.Render()
-		_Shell.Println(bufUsers.String())
+		logs.Message("\r\n" + bufUsers.String())
 	case msg.C_UpdateDifference:
 		x := new(msg.UpdateDifference)
 		x.Unmarshal(envelope.Message)
 
-		_Shell.Println(_GREEN("Received UpdateDifference \t MaxID:%d \t MinID:%d \t UpdateCounts:%d", x.MaxUpdateID, x.MinUpdateID, len(x.Updates)))
+		logs.Message(fmt.Sprintf("Received UpdateDifference \t MaxID:%d \t MinID:%d \t UpdateCounts:%d", x.MaxUpdateID, x.MinUpdateID, len(x.Updates)))
 
 		for _, v := range x.Updates {
 			if v.Constructor == msg.C_UpdateNewMessage {
@@ -266,27 +270,27 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		})
 
 		tableMsg.Render()
-		_Shell.Println(bufMsg.String())
+		logs.Message("\r\n" + bufMsg.String())
 
 	case msg.C_GroupFull:
 		x := new(msg.GroupFull)
 		err := x.Unmarshal(envelope.Message)
 		if err != nil {
-			_Shell.Println(_RED(err.Error()))
+			logs.Error("Failed to unmarshal", zap.Error(err))
 			return
 		}
 		if x.Group != nil {
-			_Shell.Println(fmt.Sprintf("GroupID : %d \t Title : %s \t Flags :%v", x.Group.ID, x.Group.Title, x.Group.Flags))
+			logs.Message(fmt.Sprintf("GroupID : %d \t Title : %s \t Flags :%v", x.Group.ID, x.Group.Title, x.Group.Flags))
 		} else {
-			_Shell.Println(_RED("x.Group is null"))
+			logs.Error("x.Group is null")
 		}
 		if x.NotifySettings != nil {
-			_Shell.Println(fmt.Sprintf("NotifySettings Sound: %s \t Mute : %d \t Flag : %d", x.NotifySettings.Sound, x.NotifySettings.MuteUntil, x.NotifySettings.Flags))
+			logs.Message(fmt.Sprintf("NotifySettings Sound: %s \t Mute : %d \t Flag : %d", x.NotifySettings.Sound, x.NotifySettings.MuteUntil, x.NotifySettings.Flags))
 		} else {
-			_Shell.Println(_RED("x.NotifySettings is null"))
+			logs.Error("x.NotifySettings is null")
 		}
 		if x.Participants != nil {
-			_Shell.Println(fmt.Sprintf("Participants Count : %d ", len(x.Participants)))
+			logs.Message(fmt.Sprintf("Participants Count : %d ", len(x.Participants)))
 
 			bufUsers := new(bytes.Buffer)
 			tableUsers := tablewriter.NewWriter(bufUsers)
@@ -303,10 +307,10 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 				})
 			}
 			tableUsers.Render()
-			_Shell.Println(bufUsers.String())
+			logs.Message("\r\n" + bufUsers.String())
 
 		} else {
-			_Shell.Println(_RED("x.Participants is null"))
+			logs.Error("x.Participants is null")
 		}
 
 	case msg.C_InputUser:
@@ -322,17 +326,17 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			fmt.Sprintf("%d", x.AccessHash),
 		})
 		tableUsers.Render()
-		_Shell.Println(bufUsers.String())
+		logs.Message("\r\n" + bufUsers.String())
 	case msg.C_SystemServerTime:
 		x := new(msg.SystemServerTime)
 		x.Unmarshal(envelope.Message)
 		serverTime := x.Timestamp
 		clientTime := time.Now().Unix()
 		delta := serverTime - clientTime
-		_Shell.Println(_BLUE("ServerTime : %d \t ClientTime : %d \t Delta: %d", serverTime, clientTime, delta))
+		logs.Message(fmt.Sprintf("ServerTime : %d \t ClientTime : %d \t Delta: %d", serverTime, clientTime, delta))
 	default:
 		constructorName, _ := msg.ConstructorNames[envelope.Constructor]
-		_Log.Debug("DEFAULT",
+		logs.Message("DEFAULT",
 			zap.String("ConstructorName", constructorName),
 			zap.Int64("Constructor", envelope.Constructor),
 		)

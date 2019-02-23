@@ -104,15 +104,13 @@ func NewSyncController(config Config) *Controller {
 
 // Start controller
 func (ctrl *Controller) Start() {
-	logs.Info(" Start")
+	logs.Info("Start")
 
 	// Load the latest UpdateID stored in DB
 	if v, err := repo.Ctx().System.LoadInt(domain.ColumnUpdateID); err != nil {
 		err := repo.Ctx().System.SaveInt(domain.ColumnUpdateID, 0)
 		if err != nil {
-			logs.Debug("Start()-> SaveInt()",
-				zap.String("Error", err.Error()),
-			)
+			logs.Error("Start()-> SaveInt()", zap.Error(err))
 		}
 		ctrl.updateID = 0
 	} else {
@@ -143,7 +141,7 @@ func (ctrl *Controller) SetOnUpdateCallback(h domain.OnUpdateMainDelegateHandler
 // updateSyncStatus
 func (ctrl *Controller) updateSyncStatus(newStatus domain.SyncStatus) {
 	if ctrl.syncStatus == newStatus {
-		logs.Info("updateSyncStatus() syncStatus not changed", zap.String("status", domain.SyncStatusName[newStatus]))
+		logs.Debug("updateSyncStatus() syncStatus not changed", zap.String("status", domain.SyncStatusName[newStatus]))
 		return
 	}
 	switch newStatus {
@@ -176,7 +174,7 @@ func (ctrl *Controller) watchDog() {
 				ctrl.sync()
 			}
 		case <-ctrl.stopChannel:
-			logs.Info("watchDog() Stopped")
+			logs.Warn("watchDog() Stopped")
 			return
 		}
 	}
@@ -210,9 +208,7 @@ func (ctrl *Controller) sync() {
 
 	serverUpdateID, err = ctrl.getUpdateState()
 	if err != nil {
-		logs.Debug("sync()-> getUpdateState()",
-			zap.String("Error", err.Error()),
-		)
+		logs.Error("sync()-> getUpdateState()", zap.Error(err))
 		return
 	}
 
@@ -226,9 +222,7 @@ func (ctrl *Controller) sync() {
 		// remove all messages
 		err := repo.Ctx().DropAndCreateTable(&dto.Messages{})
 		if err != nil {
-			logs.Debug("sync()-> DropAndCreateTable()",
-				zap.String("Error", err.Error()),
-			)
+			logs.Error("sync()-> DropAndCreateTable()", zap.Error(err))
 		}
 		// Get Contacts from the server
 		ctrl.getContacts()
@@ -236,9 +230,7 @@ func (ctrl *Controller) sync() {
 		ctrl.getAllDialogs(0, 100)
 		err = repo.Ctx().System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
 		if err != nil {
-			logs.Debug("sync()-> SaveInt()",
-				zap.String("Error", err.Error()),
-			)
+			logs.Error("sync()-> SaveInt()", zap.Error(err))
 		}
 	} else if time.Now().Sub(ctrl.lastUpdateReceived).Truncate(time.Second) > 60 {
 		// if it is passed over 60 seconds from the last update received it fetches the update
@@ -379,9 +371,7 @@ func (ctrl *Controller) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 		x := new(msg.UpdateDifference)
 		err := x.Unmarshal(m.Message)
 		if err != nil {
-			logs.Debug("onGetDiffrenceSucceed()-> Unmarshal()",
-				zap.String("Error", err.Error()),
-			)
+			logs.Error("onGetDiffrenceSucceed()-> Unmarshal()", zap.Error(err))
 			return
 		}
 		updContainer := new(msg.UpdateContainer)
@@ -391,7 +381,7 @@ func (ctrl *Controller) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 		updContainer.MaxUpdateID = x.MaxUpdateID
 		updContainer.MinUpdateID = x.MinUpdateID
 
-		logs.Warn("onGetDiffrenceSucceed()",
+		logs.Info("onGetDiffrenceSucceed()",
 			zap.Int64("UpdateID", ctrl.updateID),
 			zap.Int64("MaxUpdateID", x.MaxUpdateID),
 			zap.Int64("MinUpdateID", x.MinUpdateID),
@@ -443,9 +433,7 @@ func (ctrl *Controller) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 			// Save UpdateID to DB
 			err := repo.Ctx().System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
 			if err != nil {
-				logs.Debug("onGetDiffrenceSucceed()-> SaveInt()",
-					zap.String("Error", err.Error()),
-				)
+				logs.Error("onGetDiffrenceSucceed()-> SaveInt()", zap.Error(err))
 			}
 		}
 
@@ -493,7 +481,7 @@ func (ctrl *Controller) getAllDialogs(offset int32, limit int32) {
 		msg.C_MessagesGetDialogs,
 		reqBytes,
 		func() {
-			logs.Info("getAllDialogs() -> onTimeoutback() retry to getAllDialogs()")
+			logs.Warn("getAllDialogs() -> onTimeoutback() retry to getAllDialogs()")
 			ctrl.getAllDialogs(offset, limit)
 		},
 		func(m *msg.MessageEnvelope) {
@@ -502,9 +490,7 @@ func (ctrl *Controller) getAllDialogs(offset int32, limit int32) {
 				x := new(msg.MessagesDialogs)
 				err := x.Unmarshal(m.Message)
 				if err != nil {
-					logs.Info("getAllDialogs() -> onSuccessCallback() -> Unmarshal() ",
-						zap.String("Error", err.Error()),
-					)
+					logs.Error("getAllDialogs() -> onSuccessCallback() -> Unmarshal() ", zap.Error(err))
 					return
 				}
 				logs.Debug("getAllDialogs() -> onSuccessCallback() -> MessagesDialogs",
@@ -516,9 +502,7 @@ func (ctrl *Controller) getAllDialogs(offset int32, limit int32) {
 				for _, message := range x.Messages {
 					err := repo.Ctx().Messages.SaveMessage(message)
 					if err != nil {
-						logs.Info("getAllDialogs() -> onSuccessCallback() -> SaveMessage() ",
-							zap.String("Error", err.Error()),
-						)
+						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveMessage() ", zap.Error(err))
 					}
 
 					mMessages[message.ID] = message
@@ -527,14 +511,14 @@ func (ctrl *Controller) getAllDialogs(offset int32, limit int32) {
 				for _, dialog := range x.Dialogs {
 					topMessage, _ := mMessages[dialog.TopMessageID]
 					if topMessage == nil {
-						logs.Info("getAllDialogs() -> onSuccessCallback() -> dialog TopMessage is null ",
+						logs.Error("getAllDialogs() -> onSuccessCallback() -> dialog TopMessage is null ",
 							zap.Int64("MessageID", dialog.TopMessageID),
 						)
 						continue
 					}
 					err := repo.Ctx().Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
 					if err != nil {
-						logs.Info("getAllDialogs() -> onSuccessCallback() -> SaveDialog() ",
+						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveDialog() ",
 							zap.String("Error", err.Error()),
 							zap.String("Dialog", fmt.Sprintf("%v", dialog)),
 						)
@@ -543,15 +527,13 @@ func (ctrl *Controller) getAllDialogs(offset int32, limit int32) {
 					// create MessageHole
 					err = createMessageHole(dialog.PeerID, 0, dialog.TopMessageID-1)
 					if err != nil {
-						logs.Info("getAllDialogs() -> createMessageHole() ",
-							zap.String("Error", err.Error()),
-						)
+						logs.Error("getAllDialogs() -> createMessageHole() ", zap.Error(err))
 					}
 				}
 				for _, user := range x.Users {
 					err := repo.Ctx().Users.SaveUser(user)
 					if err != nil {
-						logs.Info("getAllDialogs() -> onSuccessCallback() -> SaveUser() ",
+						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveUser() ",
 							zap.String("Error", err.Error()),
 							zap.String("User", fmt.Sprintf("%v", user)),
 						)
@@ -560,7 +542,7 @@ func (ctrl *Controller) getAllDialogs(offset int32, limit int32) {
 				for _, group := range x.Groups {
 					err := repo.Ctx().Groups.Save(group)
 					if err != nil {
-						logs.Info("getAllDialogs() -> onSuccessCallback() -> Groups.Save() ",
+						logs.Error("getAllDialogs() -> onSuccessCallback() -> Groups.Save() ",
 							zap.String("Error", err.Error()),
 							zap.String("Group", fmt.Sprintf("%v", group)),
 						)
@@ -574,7 +556,7 @@ func (ctrl *Controller) getAllDialogs(offset int32, limit int32) {
 					ctrl.getAllDialogs(offset+limit, limit)
 				}
 			case msg.C_Error:
-				logs.Debug("onSuccessCallback()-> C_Error",
+				logs.Error("onSuccessCallback()-> C_Error",
 					zap.String("Error", domain.ParseServerError(m.Message).Error()),
 				)
 			}
@@ -656,9 +638,7 @@ func (ctrl *Controller) UpdateHandler(u *msg.UpdateContainer) {
 			ctrl.updateID = u.MaxUpdateID
 			err := repo.Ctx().System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
 			if err != nil {
-				logs.Debug("UpdateHandler() -> SaveInt()",
-					zap.String("Error", err.Error()),
-				)
+				logs.Error("UpdateHandler() -> SaveInt()", zap.Error(err))
 			}
 		}
 	}
@@ -692,7 +672,7 @@ func (ctrl *Controller) UpdateHandler(u *msg.UpdateContainer) {
 		if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
 
 			externalHandlerUpdates = applier(update)
-			logs.Debug("UpdateHandler() Update Applied",
+			logs.Info("UpdateHandler() Update Applied",
 				zap.Int64("UPDATE_ID", update.UpdateID),
 				zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
 			)
@@ -705,7 +685,7 @@ func (ctrl *Controller) UpdateHandler(u *msg.UpdateContainer) {
 			udpContainer.Updates = append(udpContainer.Updates, externalHandlerUpdates...)
 
 		} else {
-			logs.Debug("UpdateHandler() Do not pass update to external handler",
+			logs.Warn("UpdateHandler() Do not pass update to external handler",
 				zap.Int64("UPDATE_ID", update.UpdateID),
 				zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
 			)
