@@ -118,7 +118,7 @@ func (ctrl *Controller) distributor() {
 			)
 			go ctrl.executor(req)
 		} else {
-			logs.Debug("distributor() Request cancelled",
+			logs.Warn("distributor() Request cancelled",
 				zap.Uint64("RequestID", req.ID),
 				zap.String("RequestName", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
 			)

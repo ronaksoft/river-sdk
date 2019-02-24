@@ -369,3 +369,13 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	res := []*msg.UpdateEnvelope{u}
 	return res
 }
+
+// updateTooLong indicate that client updates exceed from server cache size so we should resync client with server
+func (ctrl *Controller) updateTooLong(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+	logs.Info("updateTooLong() applier")
+
+	go ctrl.sync()
+
+	res := []*msg.UpdateEnvelope{}
+	return res
+}

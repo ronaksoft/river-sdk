@@ -358,6 +358,12 @@ func ResultUpdateReadHistoryInbox(out *MessageEnvelope, res *UpdateReadHistoryIn
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultUpdateTooLong(out *MessageEnvelope, res *UpdateTooLong) {
+	out.Constructor = C_UpdateTooLong
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultInputMediaContact(out *MessageEnvelope, res *InputMediaContact) {
 	out.Constructor = C_InputMediaContact
 	pbytes.Put(out.Message)

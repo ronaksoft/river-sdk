@@ -26,6 +26,11 @@ message UpdateDifference {
     repeated Group Groups = 6;
 }
 
+// UpdateTooLong
+message UpdateTooLong {
+
+}
+
 // UpdateState
 message UpdateState {
     required int64 UpdateID = 1;

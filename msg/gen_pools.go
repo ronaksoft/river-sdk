@@ -359,6 +359,12 @@ var (
 			return m
 		},
 	}
+	PoolUpdateTooLong = sync.Pool{
+		New: func() interface{} {
+			m := new(UpdateTooLong)
+			return m
+		},
+	}
 	PoolInputMediaContact = sync.Pool{
 		New: func() interface{} {
 			m := new(InputMediaContact)

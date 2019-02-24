@@ -262,24 +262,25 @@ func (r *River) onNetworkControllerConnected() {
 			return
 		}
 
-		// register device to receive notification
-		reqBytes, _ = r.DeviceToken.Marshal()
-		for {
-			err := r.queueCtrl.ExecuteRealtimeCommand(
-				uint64(domain.SequentialUniqueID()),
-				msg.C_AccountRegisterDevice,
-				reqBytes,
-				nil,
-				nil,
-				true,
-				false,
-			)
-			if err == nil {
-				break
-			} else {
-				time.Sleep(1 * time.Second)
-			}
-		}
+		// this will be handled by UI
+		// // register device to receive notification
+		// reqBytes, _ = r.DeviceToken.Marshal()
+		// for {
+		// 	err := r.queueCtrl.ExecuteRealtimeCommand(
+		// 		uint64(domain.SequentialUniqueID()),
+		// 		msg.C_AccountRegisterDevice,
+		// 		reqBytes,
+		// 		nil,
+		// 		nil,
+		// 		true,
+		// 		false,
+		// 	)
+		// 	if err == nil {
+		// 		break
+		// 	} else {
+		// 		time.Sleep(1 * time.Second)
+		// 	}
+		// }
 	}
 }
 

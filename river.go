@@ -57,8 +57,10 @@ type RiverConfig struct {
 // by this SDK is Sqlite3, however with the least effort you can use other SQL databases. 'model' is the
 // package name selected to handle repository functions.
 type River struct {
+	// request callbacks cache
 	delegateMutex sync.Mutex
 	delegates     map[int64]RequestDelegate
+	// user requests that they can be satisfied by clent cache
 	localCommands map[int64]domain.LocalMessageHandler
 
 	// Internal Controllers
@@ -69,8 +71,10 @@ type River struct {
 	// RealTimeRequests is list of requests that should not passed to queue to send they should directly pass to networkController
 	realTimeRequest map[int64]bool
 
+	// main delegates
 	mainDelegate MainDelegate
 
+	// logger delegate
 	logger LoggerDelegate
 
 	// Connection Info
@@ -79,6 +83,7 @@ type River struct {
 	// Device Token
 	DeviceToken *msg.AccountRegisterDevice
 
+	// implements wait 500 ms on out of sync to receive possible missed updates
 	lastOutOfSyncTime  time.Time
 	chOutOfSyncUpdates chan []*msg.UpdateContainer
 }

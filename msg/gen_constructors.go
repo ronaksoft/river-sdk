@@ -60,6 +60,7 @@ const (
 	C_AccountUpdateUsername              int64 = 1477164344
 	C_AccountCheckUsername               int64 = 1501406413
 	C_UpdateReadHistoryInbox             int64 = 1529128378
+	C_UpdateTooLong                      int64 = 1531755547
 	C_InputMediaContact                  int64 = 1534117184
 	C_MessagesSetTyping                  int64 = 1540214486
 	C_GroupsToggleAdmins                 int64 = 1581076909
@@ -229,6 +230,7 @@ var ConstructorNames = map[int64]string{
 	1477164344: "AccountUpdateUsername",
 	1501406413: "AccountCheckUsername",
 	1529128378: "UpdateReadHistoryInbox",
+	1531755547: "UpdateTooLong",
 	1534117184: "InputMediaContact",
 	1540214486: "MessagesSetTyping",
 	1581076909: "GroupsToggleAdmins",
