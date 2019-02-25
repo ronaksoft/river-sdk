@@ -1048,7 +1048,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 			panic("SDK:onFileUploadCompleted() invalid input media type")
 		}
 		reqBuff, _ := x.Marshal()
-		requestID := uint64(domain.SequentialUniqueID())
+		requestID := uint64(fileID)
 		r.queueCtrl.ExecuteCommand(requestID, msg.C_MessagesSendMedia, reqBuff, nil, nil, false)
 
 	} else if stateType == domain.FileStateUploadAccountPhoto {

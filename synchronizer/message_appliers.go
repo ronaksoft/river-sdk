@@ -114,11 +114,6 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 
 // Check pending messages and notify UI
 func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
-	if ctrl.executingMessageSent {
-		return
-	}
-	ctrl.executingMessageSent = true
-	defer func() { ctrl.executingMessageSent = false }()
 
 	logs.Info("messageSent() applier")
 
@@ -129,9 +124,12 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 		return
 	}
 
+	// Add delivered message to prevent invoking newMessage event later
+	ctrl.addToDeliveredMessageList(sent.MessageID)
+
 	pmsg, err := repo.Ctx().PendingMessages.GetPendingMessageByRequestID(int64(e.RequestID))
 	if err != nil {
-		logs.Error("messageSent()-> GetPendingMessageByRequestID()", zap.Error(err))
+		logs.Error("messageSent()-> GetPendingMessageByRequestID()", zap.Uint64("RequestID", e.RequestID), zap.Error(err))
 		return
 	}
 
@@ -208,8 +206,6 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 	udpMsg.Timestamp = time.Now().Unix()
 
 	buff, _ := udpMsg.Marshal()
-	// Add delivered message to prevent invoking newMessage event later
-	ctrl.addToDeliveredMessageList(message.ID)
 
 	// call external handler
 	uiexec.Ctx().Exec(func() {

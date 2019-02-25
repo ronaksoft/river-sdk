@@ -230,8 +230,14 @@ func (ctrl *Controller) updateMessageEdited(u *msg.UpdateEnvelope) []*msg.Update
 // updateMessageID
 func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
 	logs.Info("updateMessageID() applier")
+
 	x := new(msg.UpdateMessageID)
 	x.Unmarshal(u.Update)
+
+	if ctrl.isDeliveredMessage(x.MessageID) {
+		logs.Debug("updateMessageID() message is already delivered")
+		return []*msg.UpdateEnvelope{}
+	}
 
 	msgEnvelop := new(msg.MessageEnvelope)
 	msgEnvelop.Constructor = msg.C_MessageEnvelope
