@@ -54,6 +54,9 @@ type Controller struct {
 
 	isSyncingLock sync.Mutex
 	isSyncing     bool
+
+	// simple flag to prevent executing UpdateMessageID & MessageSent at the same time
+	executingMessageSent bool
 }
 
 // NewSyncController create new instance

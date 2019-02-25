@@ -83,7 +83,19 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		res = append(res, u)
 	}
 
-	// Parse message action and call required appliers
+	// handle glass messages
+	ctrl.handleMessageAction(x, u, res)
+
+	// handle Media message
+	if int32(x.Message.MediaType) > 0 {
+		go handleMediaMessage(x.Message)
+	}
+	return res
+}
+
+// Parse message action and call required appliers
+func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.UpdateEnvelope, res []*msg.UpdateEnvelope) {
+
 	switch x.Message.MessageAction {
 	case domain.MessageActionNope:
 		// Do nothing
@@ -169,12 +181,6 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 			}
 		}
 	}
-
-	// handle Media message
-	if int32(x.Message.MediaType) > 0 {
-		go handleMediaMessage(x.Message)
-	}
-	return res
 }
 
 // updateReadHistoryInbox

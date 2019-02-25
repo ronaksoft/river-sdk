@@ -114,20 +114,58 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 
 // Check pending messages and notify UI
 func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
+	if ctrl.executingMessageSent {
+		return
+	}
+	ctrl.executingMessageSent = true
+	defer func() { ctrl.executingMessageSent = false }()
+
 	logs.Info("messageSent() applier")
+
+	sent := new(msg.MessagesSent)
+	err := sent.Unmarshal(e.Message)
+	if err != nil {
+		logs.Error("MessageSent() failed to unamarshal", zap.Error(err))
+		return
+	}
+
 	pmsg, err := repo.Ctx().PendingMessages.GetPendingMessageByRequestID(int64(e.RequestID))
 	if err != nil {
 		logs.Error("messageSent()-> GetPendingMessageByRequestID()", zap.Error(err))
 		return
 	}
 
-	sent := new(msg.MessagesSent)
-	sent.Unmarshal(e.Message)
+	// if it was file upload request
+	if pmsg.MediaType > 0 {
+		// save to local files and delete file status
+		clientSendMedia := new(msg.ClientSendMessageMedia)
+		err := clientSendMedia.Unmarshal(pmsg.Media)
+		// get file size
+		fileSize := int64(0)
+		if err == nil {
+			f, err := os.Open(clientSendMedia.FilePath)
+			if err == nil {
+				fstate, err := f.Stat()
+				if err == nil {
+					fileSize = fstate.Size()
+				}
+			}
+			// save to local files
+			err = repo.Ctx().Files.MoveUploadedFileToFiles(clientSendMedia, int32(fileSize), sent)
+			if err != nil {
+				logs.Error("messageSent()-> MoveUploadedFileToLocalFile() failed ", zap.Error(err))
+			}
+			// delete file status
+			err = repo.Ctx().Files.DeleteFileStatus(pmsg.ID)
+			if err != nil {
+				logs.Error("messageSent()-> DeleteFileStatus() failed to delete FileStatus", zap.Error(err))
+			}
+			filemanager.Ctx().DeleteFromQueue(pmsg.ID)
+		}
+	}
 
 	message := new(msg.UserMessage)
-
 	pmsg.MapToUserMessage(message)
-
 	message.ID = sent.MessageID
 	message.CreatedOn = sent.CreatedOn
 
@@ -142,34 +180,6 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 	err = repo.Ctx().PendingMessages.DeletePendingMessage(pmsg.ID)
 	if err != nil {
 		logs.Error("messageSent()-> DeletePendingMessage() failed to delete pendingMessage", zap.Error(err))
-	}
-	// if it was file upload request
-	if pmsg.MediaType == int32(msg.InputMediaTypeUploadedDocument) {
-		// save to local files and delete file status
-		clientSendMedia := new(msg.ClientSendMessageMedia)
-		err := clientSendMedia.Unmarshal(pmsg.Media)
-		// get file size
-		fileSize := int64(0)
-		if err == nil {
-			f, err := os.Open(clientSendMedia.FilePath)
-			if err == nil {
-				fstate, err := f.Stat()
-				if err == nil {
-					fileSize = fstate.Size()
-				}
-			}
-		}
-		// save to local files
-		err = repo.Ctx().Files.MoveUploadedFileToFiles(clientSendMedia, int32(fileSize), sent)
-		filemanager.Ctx().DeleteFromQueue(pmsg.ID)
-		if err != nil {
-			logs.Error("messageSent()-> MoveUploadedFileToLocalFile() failed ", zap.Error(err))
-		}
-		// delete file status
-		err = repo.Ctx().Files.DeleteFileStatus(pmsg.ID)
-		if err != nil {
-			logs.Error("messageSent()-> DeleteFileStatus() failed to delete FileStatus", zap.Error(err))
-		}
 	}
 
 	//Update doaligs

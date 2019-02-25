@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
+	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/repo/dto"
+	"go.uber.org/zap"
 )
 
 // Files repoFiles interface
@@ -28,6 +30,7 @@ type Files interface {
 	GetFirstFileStatu() dto.FileStatus
 
 	GetSharedMedia(peerID int64, peerType int32, mediaType int32) ([]*msg.UserMessage, error)
+	UpdateFilePathByDocumentID(messageID int64, filePath string)
 }
 
 type repoFiles struct {
@@ -94,11 +97,10 @@ func (r *repoFiles) MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, fil
 	r.db.Find(f, sent.MessageID)
 	if f.MessageID > 0 {
 		f.Map(sent.MessageID, sent.CreatedOn, fileSize, req)
-		err = r.db.Create(f).Error
+		return r.db.Table(f.TableName()).Where("MessageID=?", sent.MessageID).Update(f).Error
 	}
 	f.Map(sent.MessageID, sent.CreatedOn, fileSize, req)
-	err = r.db.Save(f).Error
-	return err
+	return r.db.Create(f).Error
 }
 
 func (r *repoFiles) GetFirstFileStatu() dto.FileStatus {
@@ -119,6 +121,7 @@ func (r *repoFiles) SaveFileDocument(m *msg.UserMessage, doc *msg.MediaDocument)
 	// r.db.LogMode(true)
 	// defer r.db.LogMode(false)
 
+	// try to find any duplicated document
 	r.db.Table(existedDocument.TableName()).Where("DocumentID=?", doc.Doc.ID).First(&existedDocument)
 
 	// 2. get file by messageID create or update document info
@@ -215,6 +218,10 @@ func (r *repoFiles) GetFile(msgID int64) (*dto.Files, error) {
 }
 
 func (r *repoFiles) GetSharedMedia(peerID int64, peerType int32, mediaType int32) ([]*msg.UserMessage, error) {
+
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
 	mType := domain.SharedMediaType(mediaType)
 
 	dtos := make([]dto.Files, 0)
@@ -296,4 +303,38 @@ func (r *repoFiles) GetSharedMedia(peerID int64, peerType int32, mediaType int32
 
 	return messages, nil
 
+}
+
+func (r *repoFiles) UpdateFilePathByDocumentID(messageID int64, filePath string) {
+
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	m := dto.Messages{}
+	r.db.Find(&m, messageID)
+	if m.ID > 0 {
+		switch msg.MediaType(m.MediaType) {
+		case msg.MediaTypeEmpty:
+			// NOP
+		case msg.MediaTypePhoto:
+			logs.Info("UpdateFilePathByDocumentID() Message.SharedMediaType is msg.MediaTypePhoto")
+			// TODO:: implement it
+		case msg.MediaTypeDocument:
+			mediaDoc := new(msg.MediaDocument)
+			err := mediaDoc.Unmarshal(m.Media)
+			if err == nil {
+				f := dto.Files{}
+				r.db.Table(f.TableName()).Where("DocumentID=?", mediaDoc.Doc.ID).Updates(map[string]interface{}{
+					"FilePath": filePath,
+				})
+			} else {
+				logs.Error("UpdateFilePathByDocumentID()-> connat unmarshal MediaTypeDocument", zap.Error(err))
+			}
+		case msg.MediaTypeContact:
+			logs.Info("UpdateFilePathByDocumentID() Message.SharedMediaType is msg.MediaTypeContact")
+			// TODO:: implement it
+		default:
+			logs.Info("UpdateFilePathByDocumentID() Message.SharedMediaType is invalid")
+		}
+	}
 }
