@@ -47,15 +47,17 @@ var cmdClientStart = &ishell.Cmd{
 				logs.Error("Faile at pre requested scenario CreateAuthKey")
 				return
 			}
+			_clientActer.Save()
 		}
 		// login if actor does not have userID
 		if _clientActer.GetUserID() == 0 {
-			sw := scenario.NewLogin(true)
+			sw := scenario.NewLogin(false)
 			success := scenario.Play(_clientActer, sw)
 			if !success {
 				logs.Error("Faile at pre requested scenario Login")
 				return
 			}
+			_clientActer.Save()
 		}
 
 		sw := scenario.NewAuthRecall(false)
