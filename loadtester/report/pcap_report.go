@@ -152,7 +152,7 @@ func (r *PcapReport) String() string {
 		r.ProcessFeeds()
 	}
 	sb := strings.Builder{}
-	sb.WriteString("\n\nPacp Parser Reqult : \n\n")
+	sb.WriteString("\n\nPcap Parser Result : \n\n")
 	for _, v := range r.CorruptedRequests {
 		sb.WriteString("\nCRP Req: " + v.String())
 	}
@@ -166,7 +166,7 @@ func (r *PcapReport) String() string {
 	for _, v := range r.TimedoutRequest {
 		sb.WriteString("\nTMO Req : " + v.String())
 	}
-	sb.WriteString("\n\nPacp Parser Summary : \n")
+	sb.WriteString("\n\nPcap Parser Summary : \n")
 	sb.WriteString(fmt.Sprintf("\n\t Total Corrupted Requests : %d", len(r.CorruptedRequests)))
 	sb.WriteString(fmt.Sprintf("\n\t Total Duplicate Requests : %d", len(r.DuplicatedRequest)))
 	sb.WriteString(fmt.Sprintf("\n\t Total Duplicate Response : %d", len(r.DuplicatedResponse)))
