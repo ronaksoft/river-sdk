@@ -465,17 +465,16 @@ func fnGetEntities(c *ishell.Context) []*msg.MessageEntity {
 	}
 }
 
-func fnGetTokenType(c *ishell.Context) int32 {
-	var tokenType int32
+func fnGetTokenType(c *ishell.Context) msg.PushTokenProvider {
+	var tokenType msg.PushTokenProvider
 	for {
-		c.Print("TokenType (Firebase = 2 , APN = 1) : ")
+		c.Print("TokenType (Firebase = 0 , APN = 1) : ")
 		tmp, err := strconv.ParseInt(c.ReadLine(), 10, 32)
 		if err == nil {
-			tokenType = int32(tmp)
+			tokenType = msg.PushTokenProvider(tmp)
 			break
 		}
 	}
-
 	return tokenType
 }
 func fnGetToken(c *ishell.Context) string {
@@ -508,6 +507,12 @@ func fnGetAppVersion(c *ishell.Context) string {
 
 func fnGetLangCode(c *ishell.Context) string {
 	c.Print("Language Code : ")
+	code := c.ReadLine()
+	return code
+}
+
+func fnGetClientID(c *ishell.Context) string {
+	c.Print("Client ID : ")
 	code := c.ReadLine()
 	return code
 }

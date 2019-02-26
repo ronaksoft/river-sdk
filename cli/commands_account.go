@@ -21,6 +21,7 @@ var RegisterDevice = &ishell.Cmd{
 		req.SystemVersion = fnGetSysytemVersion(c)
 		req.AppVersion = fnGetAppVersion(c)
 		req.LangCode = fnGetLangCode(c)
+		req.ClientID = fnGetClientID(c)
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
