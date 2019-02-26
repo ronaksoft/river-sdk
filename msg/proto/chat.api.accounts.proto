@@ -21,12 +21,13 @@ message AccountGetNotifySettings {
 // @Function
 // @Return: Bool
 message AccountRegisterDevice {
-    required int32 TokenType = 1;
     required string Token = 2;
     required string DeviceModel = 3;
     required string SystemVersion = 4;
     required string AppVersion = 5;
     required string LangCode = 6;
+    required PushTokenProvider TokenType = 7;
+    required string ClientID = 8;
 }
 
 // AccountUnregisterDevice

@@ -335,3 +335,9 @@ message ActiveSession {
     required int64 ActiveAt = 6;
     required string ClientIP = 7;
 }
+
+// NotificationType
+enum PushTokenProvider {
+    PushTokenFirebase = 0;
+    PushTokenApn = 1;
+}
