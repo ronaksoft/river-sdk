@@ -442,7 +442,6 @@ func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, 
 
 		// remove upload from queue
 		fm.DeleteFromQueue(fs.MessageID)
-		fs.Stop()
 		logs.Error("SendUploadRequest() upload request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
 		fs.RequestStatus = domain.RequestStateError
 		repo.Ctx().Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
@@ -517,7 +516,6 @@ func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 	if fs.retryCounter > domain.FileRetryThreshold {
 		// remove download from queue
 		fm.DeleteFromQueue(fs.MessageID)
-		fs.Stop()
 		logs.Error("SendDownloadRequest() download request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
 		fs.RequestStatus = domain.RequestStateError
 		repo.Ctx().Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)

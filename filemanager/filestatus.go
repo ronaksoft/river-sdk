@@ -478,6 +478,10 @@ func (fs *FileStatus) uploaderJob(fm *FileManager) {
 
 func (fs *FileStatus) uploadThumbnail(fm *FileManager) {
 	for fs.ThumbPosition < fs.ThumbTotalSize {
+		if fs.stop {
+			return
+		}
+
 		envelop, readCount, err := fs.ReadAsFileSavePart(true, 0)
 		if err != nil {
 			logs.Error("uploaderJob()", zap.Error(err), zap.String("filePath", fs.FilePath))
