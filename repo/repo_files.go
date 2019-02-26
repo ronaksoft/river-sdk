@@ -25,7 +25,7 @@ type Files interface {
 	UpdateFileStatus(msgID int64, state domain.RequestStatus) error
 	UpdateThumbnailPath(msgID int64, filePath string) error
 	GetFile(msgID int64) (*dto.Files, error)
-
+	GetFileByDocumentID(documentID int64) (*dto.Files, error)
 	// delete this later
 	GetFirstFileStatu() dto.FileStatus
 
@@ -337,4 +337,13 @@ func (r *repoFiles) UpdateFilePathByDocumentID(messageID int64, filePath string)
 			logs.Info("UpdateFilePathByDocumentID() Message.SharedMediaType is invalid")
 		}
 	}
+}
+
+func (r *repoFiles) GetFileByDocumentID(documentID int64) (*dto.Files, error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	mdl := new(dto.Files)
+	err := r.db.Where("DocumentID = ?", documentID).First(mdl).Error
+	return mdl, err
 }

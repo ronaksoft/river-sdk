@@ -756,6 +756,63 @@ func downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) string
 // FileDownloadThumbnail download file thumbnail
 func (r *River) FileDownloadThumbnail(msgID int64) string {
 
+	// its pending message
+	if msgID < 0 {
+		pmsg, err := repo.Ctx().PendingMessages.GetPendingMessageByID(msgID)
+		if err != nil {
+			logs.Error("SDK::FileDownloadThumbnail()", zap.Int64("PendingMsgID", msgID), zap.Error(err))
+			return ""
+		}
+
+		switch msg.InputMediaType(pmsg.MediaType) {
+		case msg.InputMediaTypeEmpty:
+			// NOT IMPLEMENTED
+		case msg.InputMediaTypeUploadedPhoto:
+			// NOT IMPLEMENTED
+		case msg.InputMediaTypePhoto:
+			// NOT IMPLEMENTED
+		case msg.InputMediaTypeGeoLocation:
+			// NOT IMPLEMENTED
+		case msg.InputMediaTypeContact:
+			// NOT IMPLEMENTED
+		case msg.InputMediaTypeDocument:
+			// pending message media is a file that already has been uploaded so pending message media is InputMediaDocument
+			doc := new(msg.InputMediaDocument)
+			err := doc.Unmarshal(pmsg.Media)
+			if err != nil {
+				logs.Error("SDK::FileDownloadThumbnail() failed to unmarshal to InputMediaDocument", zap.Int64("PendingMsgID", msgID), zap.Error(err))
+				return ""
+			}
+			// Get userMessage ID by DocumentID and extract thumbnail path from it
+			existedDocumentFile, err := repo.Ctx().Files.GetFileByDocumentID(doc.Document.ID)
+			if err != nil {
+				logs.Error("SDK::FileDownloadThumbnail() failed to fetch GetFileByDocumentID", zap.Int64("PendingMsgID", msgID), zap.Int64("DocID", doc.Document.ID), zap.Error(err))
+				return ""
+			}
+			return r.FileDownloadThumbnail(existedDocumentFile.MessageID)
+
+		case msg.InputMediaTypeUploadedDocument:
+			// pending message media is new upload so its type should be ClientSendMessageMedia
+			clientMedia := new(msg.ClientSendMessageMedia)
+			err := clientMedia.Unmarshal(pmsg.Media)
+			if err != nil {
+				logs.Error("SDK::FileDownloadThumbnail() failed to unmarshal to ClientSendMessageMedia", zap.Int64("PendingMsgID", msgID), zap.Error(err))
+				return ""
+			}
+			return clientMedia.ThumbFilePath
+		case msg.Reserved1:
+			// NOT IMPLEMENTED
+		case msg.Reserved2:
+			// NOT IMPLEMENTED
+		case msg.Reserved3:
+			// NOT IMPLEMENTED
+		case msg.Reserved4:
+			// NOT IMPLEMENTED
+		case msg.Reserved5:
+			// NOT IMPLEMENTED
+		}
+	}
+
 	m := repo.Ctx().Messages.GetMessage(msgID)
 	if m == nil {
 		logs.Error("SDK::FileDownloadThumbnail() message does not exist")
