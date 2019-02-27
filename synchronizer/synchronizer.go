@@ -517,20 +517,22 @@ func (ctrl *Controller) getAllDialogs(offset int32, limit int32) {
 						)
 						continue
 					}
-					err := repo.Ctx().Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
-					if err != nil {
-						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveDialog() ",
-							zap.String("Error", err.Error()),
-							zap.String("Dialog", fmt.Sprintf("%v", dialog)),
-						)
-					}
-
 					// create MessageHole
 					err = createMessageHole(dialog.PeerID, 0, dialog.TopMessageID-1)
 					if err != nil {
 						logs.Error("getAllDialogs() -> createMessageHole() ", zap.Error(err))
+					} else {
+						// make sure to created the messagehole b4 creating dialog
+						err := repo.Ctx().Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
+						if err != nil {
+							logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveDialog() ",
+								zap.String("Error", err.Error()),
+								zap.String("Dialog", fmt.Sprintf("%v", dialog)),
+							)
+						}
 					}
 				}
+
 				for _, user := range x.Users {
 					err := repo.Ctx().Users.SaveUser(user)
 					if err != nil {
