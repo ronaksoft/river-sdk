@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -40,6 +41,9 @@ type Actor struct {
 
 	netCtrl shared.Neter
 	exec    *executer.Executer
+
+	mxUpdate      sync.Mutex
+	updateApplier map[int64]shared.UpdateApplier
 }
 
 // NewActor create new actor instance
@@ -63,7 +67,7 @@ func NewActor(phone string) (shared.Acter, error) {
 	} else {
 		act = acter.(*Actor)
 	}
-
+	act.updateApplier = make(map[int64]shared.UpdateApplier)
 	act.netCtrl = controller.NewCtrlNetwork(act, act.onMessage, act.onUpdate, act.onError)
 	act.exec = executer.NewExecuter(act.netCtrl)
 	err := act.netCtrl.Start()
@@ -272,6 +276,9 @@ func (act *Actor) onUpdate(updates []*msg.UpdateContainer) {
 			zap.Int64("MaxID", cnt.MaxUpdateID),
 		)
 		for _, u := range cnt.Updates {
+			if fn, ok := act.updateApplier[u.Constructor]; ok {
+				fn(act, u)
+			}
 			logs.Debug("onUpdate() Received ", zap.String("Constructor", msg.ConstructorNames[u.Constructor]))
 		}
 	}
@@ -280,4 +287,11 @@ func (act *Actor) onUpdate(updates []*msg.UpdateContainer) {
 func (act *Actor) onError(err *msg.Error) {
 	// TODO : Add reporter error log
 	logs.Error("onError()", zap.String("Error", err.String()))
+}
+
+// SetUpdateApplier set update appliers
+func (act *Actor) SetUpdateApplier(constructor int64, fn shared.UpdateApplier) {
+	act.mxUpdate.Lock()
+	act.updateApplier[constructor] = fn
+	act.mxUpdate.Unlock()
 }

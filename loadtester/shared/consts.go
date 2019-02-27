@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"fmt"
 	"sync/atomic"
 	"time"
 )
@@ -32,4 +33,8 @@ var (
 
 func GetSeqID() int64 {
 	return atomic.AddInt64(&SeqIDCounter, 1)
+}
+
+func GetPhone(number int64) string {
+	return fmt.Sprintf("237400%07d", number)
 }

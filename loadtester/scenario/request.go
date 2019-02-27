@@ -1,10 +1,29 @@
 package scenario
 
 import (
+	"fmt"
+
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
+
+// getAccessHash
+// This function generate AccessHash for UserID1 to access UserID2
+func getAccessHash(userID1, userID2 int64) uint64 {
+	if userID1 == userID2 {
+		return 0
+	}
+	return trimU52(ronak.CRC64([]byte(fmt.Sprintf("/%d/x2374x/%d/", userID1, userID2))))
+}
+
+func trimU52(num uint64) uint64 {
+	if num > 4503599627370496 {
+		return num >> 12
+	}
+	return num
+}
 
 func wrapEnvelop(ctr int64, data []byte) *msg.MessageEnvelope {
 	env := new(msg.MessageEnvelope)
@@ -107,14 +126,11 @@ func MessageSend(peer *shared.PeerInfo) (envelop *msg.MessageEnvelope) {
 	// req.RandomID = domain.SequentialUniqueID()
 	req.RandomID = shared.GetSeqID()
 	req.Body = "A" //strconv.FormatInt(req.RandomID, 10)
-
 	data, err := req.Marshal()
 	if err != nil {
 		panic(err)
 	}
-
 	envelop = wrapEnvelop(msg.C_MessagesSend, data)
-
 	return
 }
 
@@ -149,6 +165,32 @@ func AuthRecallReq() (envelop *msg.MessageEnvelope) {
 	}
 
 	envelop = wrapEnvelop(msg.C_AuthRecall, data)
+
+	return
+}
+
+func GetPeerInfo(fromUserID, toUserID int64, peerType msg.PeerType) (peerInfo *shared.PeerInfo) {
+
+	accessHash := uint64(0)
+	switch peerType {
+	case msg.PeerSelf:
+		accessHash = 0
+	case msg.PeerUser:
+		accessHash = getAccessHash(fromUserID, toUserID)
+	case msg.PeerGroup:
+		accessHash = 0
+	case msg.PeerSuperGroup:
+		accessHash = 0
+	case msg.PeerChannel:
+		accessHash = 0
+	}
+
+	peerInfo = &shared.PeerInfo{
+		AccessHash: accessHash,
+		Name:       "ZZ",
+		PeerID:     toUserID,
+		PeerType:   peerType,
+	}
 
 	return
 }

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"hash/crc32"
 	"sync"
 	"sync/atomic"
@@ -132,6 +133,9 @@ func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
 	// 	}
 	// }
 
+	if ctrl.conn == nil {
+		return fmt.Errorf("network connection is null")
+	}
 	ctrl.connWriteLock.Lock()
 	ctrl.conn.SetWriteDeadline(time.Now().Add(shared.DefaultSendTimeout))
 	err = ctrl.conn.WriteMessage(websocket.BinaryMessage, b)

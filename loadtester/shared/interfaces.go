@@ -38,6 +38,8 @@ type Acter interface {
 	GetStatus() *Status
 	SetStopHandler(func(phone string))
 	ReceivedErrorResponse()
+
+	SetUpdateApplier(constructor int64, fn UpdateApplier)
 }
 
 // Screenwriter scenario interface

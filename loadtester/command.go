@@ -1,9 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"sync"
 	"time"
+
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/scenario"
 	ishell "gopkg.in/abiosoft/ishell.v2"
@@ -28,7 +29,7 @@ var cmdCreateAuthKey = &ishell.Cmd{
 		wg := &sync.WaitGroup{}
 		sw := time.Now()
 		for startNo <= endNo {
-			phoneNo = fmt.Sprintf("237400%07d", startNo)
+			phoneNo = shared.GetPhone(startNo)
 			startNo++
 
 			// Add To Queue
@@ -61,7 +62,7 @@ var cmdRegister = &ishell.Cmd{
 		wg := &sync.WaitGroup{}
 		sw := time.Now()
 		for startNo <= endNo {
-			phoneNo = fmt.Sprintf("237400%07d", startNo)
+			phoneNo = shared.GetPhone(startNo)
 			startNo++
 
 			// Add To Queue
@@ -94,7 +95,7 @@ var cmdLogin = &ishell.Cmd{
 		wg := &sync.WaitGroup{}
 		sw := time.Now()
 		for startNo <= endNo {
-			phoneNo = fmt.Sprintf("237400%07d", startNo)
+			phoneNo = shared.GetPhone(startNo)
 			startNo++
 
 			// Add To Queue
@@ -127,7 +128,7 @@ var cmdImportContact = &ishell.Cmd{
 		wg := &sync.WaitGroup{}
 		sw := time.Now()
 		for startNo <= endNo {
-			phoneNo = fmt.Sprintf("237400%07d", startNo)
+			phoneNo = shared.GetPhone(startNo)
 			startNo++
 
 			// Add To Queue
@@ -160,12 +161,44 @@ var cmdSendMessage = &ishell.Cmd{
 		wg := &sync.WaitGroup{}
 		sw := time.Now()
 		for startNo <= endNo {
-			phoneNo = fmt.Sprintf("237400%07d", startNo)
+			phoneNo = shared.GetPhone(startNo)
 			startNo++
 
 			// Add To Queue
 			wg.Add(1)
 			JobQueue <- Job{PhoneNo: phoneNo, Wait: wg, Scenario: scenario.NewSendMessage(true)}
+
+		}
+		wg.Wait()
+		fnPrintReports(time.Since(sw))
+	},
+}
+
+var cmdSendMessageMany = &ishell.Cmd{
+	Name: "SendMessageMany",
+	Func: func(c *ishell.Context) {
+
+		startNo := fnStartPhone(c)
+		endNo := fnEndPhone(c)
+
+		// clear
+		fnClearScreeen()
+		fnClearReports()
+
+		// start workers
+		startDispatcher()
+		defer stopDispatcher()
+
+		phoneNo := ""
+		wg := &sync.WaitGroup{}
+		sw := time.Now()
+		for startNo <= endNo {
+			phoneNo = shared.GetPhone(startNo)
+			startNo++
+
+			// Add To Queue
+			wg.Add(1)
+			JobQueue <- Job{PhoneNo: phoneNo, Wait: wg, Scenario: scenario.NewSendMessageMany(true, startNo, endNo)}
 
 		}
 		wg.Wait()

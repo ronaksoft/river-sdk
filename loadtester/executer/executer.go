@@ -58,6 +58,14 @@ func (exec *Executer) Exec(message *msg.MessageEnvelope, onSuccess shared.Succes
 
 // executer send and wait for response, call this on go routine
 func (exec *Executer) executer(message *msg.MessageEnvelope, r *Request) {
+	if exec.netCtrl == nil {
+		out := new(msg.MessageEnvelope)
+		out.RequestID = message.RequestID
+		msg.ResultError(out, &msg.Error{Code: "00", Items: "network controller is null"})
+		r.OnSuccess(out, time.Since(r.CreatedOn))
+		return
+	}
+
 	err := exec.netCtrl.Send(message)
 	if err != nil {
 		out := new(msg.MessageEnvelope)
