@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"github.com/fatih/color"
@@ -74,7 +75,7 @@ func main() {
 		}
 	} else {
 		dbPath = "./_db"
-		dbID = "23740056"
+		dbID = "23740071"
 	}
 
 	qPath := "./_queue"
@@ -117,13 +118,23 @@ func main() {
 		// fnGroupUploadPhoto()
 		// fnLoginWithAuthKey()
 		// fnRunDownloadFileThumbnail()
+		// fnStartDownloadAndCancelRequestafterward()
 
 		//block forever
 		select {}
 	}
 
 }
+func fnStartDownloadAndCancelRequestafterward() {
+	logs.Warn("ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZz Download Started")
+	_SDK.FileDownload(1249)
 
+	go func() {
+		time.Sleep(3 * time.Second)
+		_SDK.CancelDownload(1249)
+		logs.Warn("ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZz Cancell Called")
+	}()
+}
 func fnLoginWithAuthKey() {
 	req := new(msg.AuthLoginByToken)
 	req.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjUwMDExMTg0MzcsImVtYWlsIjpudWxsLCJ1c2VyX2lkIjoyNCwidXNlcm5hbWUiOiIwOTAxNjg3NjA0MCIsImlwIjoiMi4xNzYuNzQuMjgifQ.ajYyfUPtnCoQMwh6gw0gsuyEAalyD54wtow0JirZkbI"

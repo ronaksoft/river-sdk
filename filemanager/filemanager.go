@@ -308,7 +308,6 @@ func (fm *FileManager) DeleteFromQueue(msgID int64) {
 		delete(fm.DownloadQueue, msgID)
 		down.Stop()
 	}
-	delete(fm.DownloadQueue, msgID)
 	fm.mxDown.Unlock()
 }
 

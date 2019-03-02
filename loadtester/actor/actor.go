@@ -268,9 +268,11 @@ func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
 }
 
 func (act *Actor) onUpdate(updates []*msg.UpdateContainer) {
-
+	logs.Debug("onUpdate() Debounced UpdateContainer",
+		zap.Int("Length", len(updates)),
+	)
 	for _, cnt := range updates {
-		logs.Debug("onUpdate()",
+		logs.Debug("onUpdate() Processing UpdateContainer",
 			zap.Int32("Length", cnt.Length),
 			zap.Int64("MinID", cnt.MinUpdateID),
 			zap.Int64("MaxID", cnt.MaxUpdateID),
