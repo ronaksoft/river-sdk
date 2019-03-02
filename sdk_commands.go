@@ -1010,29 +1010,6 @@ func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB dom
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 }
 
-func (r *River) accountUploadPhoto(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.AccountUpdateProfile)
-	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::accountUpdateProfile()-> Unmarshal()", zap.Error(err))
-		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
-		successCB(out)
-		return
-	}
-	//TODO : add connInfo Bio and save it too
-	r.ConnInfo.FirstName = req.FirstName
-	r.ConnInfo.LastName = req.LastName
-	r.ConnInfo.Bio = req.Bio
-	r.ConnInfo.Save()
-
-	err := repo.Ctx().Users.UpdateUserProfile(r.ConnInfo.UserID, req)
-	if err != nil {
-		logs.Error("River::accountUpdateProfile()-> UpdateUserProfile()", zap.Error(err))
-	}
-
-	// send the request to server
-	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
-}
-
 func (r *River) usersGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	logs.Debug("River::usersGetFull()")
 	req := new(msg.UsersGetFull)

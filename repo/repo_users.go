@@ -31,6 +31,7 @@ type Users interface {
 	GetUserPhoto(userID, photoID int64) *dto.UserPhotos
 	UpdateAccountPhotoPath(userID, photoID int64, isBig bool, filePath string) error
 	SaveUserPhoto(userPhoto *msg.UpdateUserPhoto) error
+	RemoveUserPhoto(userID int64) error
 }
 
 type repoUsers struct {
@@ -82,6 +83,10 @@ func (r *repoUsers) SaveUser(user *msg.User) error {
 				"Photo": buff,
 			})
 		}
+	} else {
+		r.db.Table(u.TableName()).Where("ID=?", u.ID).Updates(map[string]interface{}{
+			"Photo": []byte("[]"),
+		})
 	}
 	return nil
 	// if user not exist just add it no need to update existing user
@@ -126,6 +131,7 @@ func (r *repoUsers) SaveContactUser(user *msg.ContactUser) error {
 		"Username":   u.Username,
 		"ClientID":   u.ClientID,
 		"IsContact":  u.IsContact,
+		"Photo":      u.Phone,
 	}).Error
 }
 
@@ -533,4 +539,15 @@ func (r *repoUsers) SaveUserPhoto(userPhoto *msg.UpdateUserPhoto) error {
 		}
 	}
 	return er
+}
+
+// RemoveUserPhoto
+func (r *repoUsers) RemoveUserPhoto(userID int64) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+	u := dto.Users{}
+	r.db.Table(u.TableName()).Where("ID=?", userID).Updates(map[string]interface{}{
+		"Photo": []byte(""),
+	})
+	return r.db.Delete(dto.UserPhotos{}, "UserID = ?", userID).Error
 }

@@ -927,3 +927,30 @@ func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, de
 		delegate.OnComplete(outBytes)
 	}
 }
+
+// AccountRemovePhoto send nil InputFile to clear acoount profile photo
+func (r *River) AccountRemovePhoto() {
+	reqID := uint64(domain.SequentialUniqueID())
+	req := new(msg.AccountRemovePhoto)
+	reqBytes, _ := req.Marshal()
+	r.queueCtrl.ExecuteCommand(reqID, msg.C_AccountRemovePhoto, reqBytes, nil, nil, false)
+	err := repo.Ctx().Users.RemoveUserPhoto(r.ConnInfo.UserID)
+	if err != nil {
+		logs.Error("SDK::AccountRemovePhoto()", zap.Error(err))
+	}
+}
+
+// GroupRemovePhoto send nil InputFile to clear group profile photo
+func (r *River) GroupRemovePhoto(groupID int64) {
+	// not implemented
+
+	// reqID := uint64(domain.SequentialUniqueID())
+	// req := new(msg.GroupsRemovePhoto)
+	// req.GroupID = groupID
+	// reqBytes, _ := req.Marshal()
+	// r.queueCtrl.ExecuteCommand(reqID, msg.C_GroupsRemovePhoto, reqBytes, nil, nil, false)
+	// err := repo.Ctx().Groups.RemoveGroupPhoto(groupID)
+	// if err != nil {
+	// 	logs.Error("SDK::GroupRemovePhoto()", zap.Error(err))
+	// }
+}

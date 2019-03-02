@@ -159,6 +159,14 @@ var GroupDownloadPhotoSmall = &ishell.Cmd{
 	},
 }
 
+var GroupRemovePhoto = &ishell.Cmd{
+	Name: "GroupRemovePhoto",
+	Func: func(c *ishell.Context) {
+		groupID := fnGetGroupID(c)
+		_SDK.GroupRemovePhoto(groupID)
+	},
+}
+
 func init() {
 	Group.AddCmd(Create)
 	Group.AddCmd(AddUser)
@@ -170,4 +178,5 @@ func init() {
 	Group.AddCmd(GroupUploadPhoto)
 	Group.AddCmd(GroupDownloadPhotoBig)
 	Group.AddCmd(GroupDownloadPhotoSmall)
+	Group.AddCmd(GroupRemovePhoto)
 }

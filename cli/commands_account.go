@@ -157,6 +157,13 @@ var DownloadPhotoSmall = &ishell.Cmd{
 	},
 }
 
+var RemovePhoto = &ishell.Cmd{
+	Name: "RemovePhoto",
+	Func: func(c *ishell.Context) {
+		_SDK.AccountRemovePhoto()
+	},
+}
+
 func init() {
 	Account.AddCmd(RegisterDevice)
 	Account.AddCmd(UpdateUsername)
@@ -167,4 +174,5 @@ func init() {
 	Account.AddCmd(UploadPhoto)
 	Account.AddCmd(DownloadPhotoBig)
 	Account.AddCmd(DownloadPhotoSmall)
+	Account.AddCmd(RemovePhoto)
 }

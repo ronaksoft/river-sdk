@@ -26,6 +26,7 @@ type Groups interface {
 	GetGroupDTO(groupID int64) (*dto.Groups, error)
 	UpdateGroupPhotoPath(groupID int64, isBig bool, filePath string) error
 	UpdateGroupPhoto(groupPhoto *msg.UpdateGroupPhoto) error
+	RemoveGroupPhoto(userID int64) error
 }
 
 type repoGroups struct {
@@ -285,4 +286,25 @@ func (r *repoGroups) UpdateGroupPhoto(groupPhoto *msg.UpdateGroupPhoto) error {
 		return r.db.Table(grp.TableName()).Where("ID=?", grp.ID).Updates(grp).Error
 	}
 	return err
+}
+
+// RemoveGroupPhoto
+func (r *repoGroups) RemoveGroupPhoto(userID int64) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	grp := new(dto.Groups)
+	return r.db.Table(grp.TableName()).Where("ID=?", userID).Updates(map[string]interface{}{
+		"Photo":            []byte("[]"),
+		"Big_FileID":       0,
+		"Big_AccessHash":   0,
+		"Big_ClusterID":    0,
+		"Big_Version":      0,
+		"Big_FilePath":     "",
+		"Small_FileID":     0,
+		"Small_AccessHash": 0,
+		"Small_ClusterID":  0,
+		"Small_Version":    0,
+		"Small_FilePath":   "",
+	}).Error
 }
