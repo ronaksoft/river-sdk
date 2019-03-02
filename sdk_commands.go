@@ -1052,3 +1052,30 @@ func (r *River) usersGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 	}
 }
+
+// accountRemovePhoto send nil InputFile to clear acoount profile photo
+func (r *River) accountRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+
+	err := repo.Ctx().Users.RemoveUserPhoto(r.ConnInfo.UserID)
+	if err != nil {
+		logs.Error("SDK::AccountRemovePhoto()", zap.Error(err))
+	}
+}
+
+// GroupRemovePhoto send nil InputFile to clear group profile photo
+func (r *River) groupRemovePhoto(groupID int64) {
+	// not implemented
+
+	// reqID := uint64(domain.SequentialUniqueID())
+	// req := new(msg.GroupsRemovePhoto)
+	// req.GroupID = groupID
+	// reqBytes, _ := req.Marshal()
+	// r.queueCtrl.ExecuteCommand(reqID, msg.C_GroupsRemovePhoto, reqBytes, nil, nil, false)
+	// err := repo.Ctx().Groups.RemoveGroupPhoto(groupID)
+	// if err != nil {
+	// 	logs.Error("SDK::GroupRemovePhoto()", zap.Error(err))
+	// }
+}

@@ -349,6 +349,7 @@ func (r *River) registerCommandHandlers() {
 	r.localCommands[msg.C_MessagesReadContents] = r.messagesReadContents
 	r.localCommands[msg.C_MessagesSendMedia] = r.messagesSendMedia
 	r.localCommands[msg.C_UsersGetFull] = r.usersGetFull
+	r.localCommands[msg.C_AccountRemovePhoto] = r.accountRemovePhoto
 
 }
 

@@ -160,7 +160,15 @@ var DownloadPhotoSmall = &ishell.Cmd{
 var RemovePhoto = &ishell.Cmd{
 	Name: "RemovePhoto",
 	Func: func(c *ishell.Context) {
-		_SDK.AccountRemovePhoto()
+		req := msg.AccountRemovePhoto{}
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountRemovePhoto, reqBytes, reqDelegate, false, false); err != nil {
+			logs.Error("ExecuteCommand failed", zap.Error(err))
+		} else {
+			reqDelegate.RequestID = reqID
+		}
 	},
 }
 
