@@ -159,13 +159,21 @@ var GroupDownloadPhotoSmall = &ishell.Cmd{
 	},
 }
 
-// var GroupRemovePhoto = &ishell.Cmd{
-// 	Name: "GroupRemovePhoto",
-// 	Func: func(c *ishell.Context) {
-// 		groupID := fnGetGroupID(c)
-// 		_SDK.GroupRemovePhoto(groupID)
-// 	},
-// }
+var GroupRemovePhoto = &ishell.Cmd{
+	Name: "RemovePhoto",
+	Func: func(c *ishell.Context) {
+		req := new(msg.GroupsRemovePhoto)
+		req.GroupID = fnGetGroupID(c)
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+
+		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsRemovePhoto, reqBytes, reqDelegate, false, false); err != nil {
+			logs.Error("ExecuteCommand failed", zap.Error(err))
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
 
 func init() {
 	Group.AddCmd(Create)
@@ -178,5 +186,5 @@ func init() {
 	Group.AddCmd(GroupUploadPhoto)
 	Group.AddCmd(GroupDownloadPhotoBig)
 	Group.AddCmd(GroupDownloadPhotoSmall)
-	//Group.AddCmd(GroupRemovePhoto)
+	Group.AddCmd(GroupRemovePhoto)
 }
