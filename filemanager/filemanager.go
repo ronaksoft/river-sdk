@@ -281,14 +281,24 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 func (fm *FileManager) AddToQueue(status *FileStatus) {
 	if status.Type == domain.FileStateUpload || status.Type == domain.FileStateUploadAccountPhoto || status.Type == domain.FileStateUploadGroupPhoto {
 		fm.mxUp.Lock()
-		fm.UploadQueue[status.MessageID] = status
+		_, ok := fm.UploadQueue[status.MessageID]
+		if !ok {
+			fm.UploadQueue[status.MessageID] = status
+		}
 		fm.mxUp.Unlock()
-		fm.chNewUploadItem <- true
+		if !ok {
+			fm.chNewUploadItem <- true
+		}
 	} else if status.Type == domain.FileStateDownload {
 		fm.mxDown.Lock()
-		fm.DownloadQueue[status.MessageID] = status
+		_, ok := fm.DownloadQueue[status.MessageID]
+		if !ok {
+			fm.DownloadQueue[status.MessageID] = status
+		}
 		fm.mxDown.Unlock()
-		fm.chNewDownloadItem <- true
+		if !ok {
+			fm.chNewDownloadItem <- true
+		}
 	}
 }
 
@@ -528,8 +538,8 @@ func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 	}
 }
 
-// LoadFileStatusQueue load inprogress request from databse
-func (fm *FileManager) LoadFileStatusQueue() {
+// LoadQueueFromDB load inprogress request from databse
+func (fm *FileManager) LoadQueueFromDB() {
 	// Load pended file status
 	dtos := repo.Ctx().Files.GetAllFileStatus()
 	for _, d := range dtos {
@@ -537,8 +547,7 @@ func (fm *FileManager) LoadFileStatusQueue() {
 		fs.LoadDTO(d, fm.progressCallback)
 		if fs.RequestStatus == domain.RequestStatePaused ||
 			fs.RequestStatus == domain.RequestStateCanceled ||
-			fs.RequestStatus == domain.RequestStateCompleted ||
-			fs.RequestStatus == domain.RequestStateError {
+			fs.RequestStatus == domain.RequestStateCompleted {
 			continue
 		}
 		fs.chPartList = make(chan int64, fs.partListCount())
@@ -552,6 +561,9 @@ func (fm *FileManager) LoadFileStatusQueue() {
 // SetNetworkStatus called on network controller state changes to inform filemanager
 func (fm *FileManager) SetNetworkStatus(state domain.NetworkStatus) {
 	fm.NetworkStatus = state
+	if state == domain.NetworkWeak || state == domain.NetworkSlow || state == domain.NetworkFast {
+		fm.LoadQueueFromDB()
+	}
 }
 
 func (fm *FileManager) downloadCompleted(msgID int64, filePath string, stateType domain.FileStateType) {

@@ -191,7 +191,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 	filemanager.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 
-	filemanager.Ctx().LoadFileStatusQueue()
+	filemanager.Ctx().LoadQueueFromDB()
 }
 
 // Get deviceToken
