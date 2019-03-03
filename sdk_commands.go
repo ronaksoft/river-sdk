@@ -3,6 +3,7 @@ package riversdk
 import (
 	"encoding/json"
 	"strings"
+	"sync"
 
 	"git.ronaksoftware.com/ronak/riversdk/filemanager"
 
@@ -358,17 +359,109 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 		return
 	}
 
+	// TOF
+	if len(req.Contacts) == 1 {
+		// send request to server
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+		return
+	}
+
+	res := new(msg.ContactsMany)
+	res.Users, res.Contacts = repo.Ctx().Users.GetContacts()
+
+	oldHash, err := repo.Ctx().System.LoadInt(domain.ColumnContactsImportHash)
+	if err != nil {
+		logs.Error("River::contactsImport()-> failed to get contactsImportHash ", zap.Error(err))
+	}
+	// calculate ContactsImportHash and compare with oldHash
+	newHash := domain.CalculateContactsImportHash(req)
+
+	// compare two hashs if equal return existing conacts
+	if int(newHash) == oldHash {
+		msg.ResultContactsMany(out, res)
+		successCB(out)
+		return
+	}
+
+	// not equal save it to DB
+	err = repo.Ctx().System.SaveInt(domain.ColumnContactsImportHash, int32(newHash))
+	if err != nil {
+		logs.Error("River::contactsImport() failed to save ContactsImportHash to DB", zap.Error(err))
+	}
+
+	// update phone contacts just a double check
 	if req.Replace {
 		for _, c := range req.Contacts {
 			err := repo.Ctx().Users.UpdatePhoneContact(c)
 			if err != nil {
-				logs.Error("River::contactsImport()-> SaveParticipants()", zap.Error(err))
+				logs.Error("River::contactsImport()-> UpdatePhoneContact()", zap.Error(err))
 			}
 		}
 	}
+	// extract differences between existing contacts and new contacts
+	diffContacts := domain.ExtractsContactsDifference(res.Contacts, req.Contacts)
+	if len(diffContacts) <= 50 {
+		// send the request to server
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	} else {
+		// chanking contacts by size of 50 and send them to server
+		go r.sendChunkedImportContactRequest(req.Replace, diffContacts, out, successCB)
+	}
+}
 
-	// send the request to server
-	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+// sendChunkedImportContactRequest chanking contacts by size of 50 and send them to server
+func (r *River) sendChunkedImportContactRequest(replace bool, diffContacts []*msg.PhoneContact, out *msg.MessageEnvelope, successCB domain.MessageHandler) {
+
+	result := new(msg.ContactsImported)
+	result.Users = make([]*msg.ContactUser, 0)
+
+	mx := sync.Mutex{}
+	wg := sync.WaitGroup{}
+	cbTimeout := func() {
+		wg.Done()
+		logs.Error("sendChunkedImportContactRequest() -> cbTimeout() ")
+	}
+
+	cbSuccess := func(env *msg.MessageEnvelope) {
+		mx.Lock()
+		defer mx.Unlock()
+		defer wg.Done()
+
+		if env.Constructor == msg.C_ContactsImported {
+			x := new(msg.ContactsImported)
+			err := x.Unmarshal(env.Message)
+			if err != nil {
+				logs.Error("sendChunkedImportContactRequest() -> cbSuccess() failed to unmarshal", zap.Error(err))
+				return
+			}
+			result.Users = append(result.Users, x.Users...)
+		} else {
+			logs.Error("sendChunkedImportContactRequest() -> cbSuccess() received unexpected response", zap.String("Constructor", msg.ConstructorNames[env.Constructor]))
+		}
+	}
+
+	count := len(diffContacts)
+	idx := 0
+	for idx < count {
+		req := new(msg.ContactsImport)
+		req.Replace = replace
+		req.Contacts = make([]*msg.PhoneContact, 0)
+
+		for i := 0; i < 50 && idx < count; i++ {
+			req.Contacts = append(req.Contacts, diffContacts[idx])
+			idx++
+		}
+
+		reqID := uint64(domain.SequentialUniqueID())
+		reqBytes, _ := req.Marshal()
+
+		wg.Add(1)
+		r.queueCtrl.ExecuteCommand(reqID, msg.C_ContactsImport, reqBytes, cbTimeout, cbSuccess, false)
+	}
+
+	wg.Wait()
+	msg.ResultContactsImported(out, result)
+	successCB(out)
 }
 
 func (r *River) messageReadHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {

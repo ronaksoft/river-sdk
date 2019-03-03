@@ -258,29 +258,42 @@ func (r *River) onNetworkControllerConnected() {
 		}
 
 		if r.DeviceToken == nil || r.DeviceToken.Token == "" {
-			logs.Warn("callAuthRecall_RegisterDevice() Device Token is not set")
+			logs.Warn("onNetworkControllerConnected() Device Token is not set")
+		}
+
+		contactsGetHash, err := repo.Ctx().System.LoadInt(domain.ColumnContactsGetHash)
+		if err != nil {
+			logs.Error("onNetworkControllerConnected() failed to get contactsGetHash", zap.Error(err))
+		}
+		contactGetReq := new(msg.ContactsGet)
+		contactGetReq.Crc32Hash = uint32(contactsGetHash)
+		contactGetBytes, _ := contactGetReq.Marshal()
+		r.queueCtrl.ExecuteRealtimeCommand(uint64(domain.SequentialUniqueID()), msg.C_ContactsGet, contactGetBytes, nil, r.onContactImportSuccess, false, false)
+	}
+}
+
+func (r *River) onContactImportSuccess(e *msg.MessageEnvelope) {
+	logs.Info("onContactImportSuccess()")
+	if e.Constructor == msg.C_ContactsMany {
+		x := new(msg.ContactsMany)
+		if err := x.Unmarshal(e.Message); err != nil {
+			logs.Error("contactsMany()-> Unmarshal()", zap.Error(err))
 			return
 		}
 
-		// this will be handled by UI
-		// // register device to receive notification
-		// reqBytes, _ = r.DeviceToken.Marshal()
-		// for {
-		// 	err := r.queueCtrl.ExecuteRealtimeCommand(
-		// 		uint64(domain.SequentialUniqueID()),
-		// 		msg.C_AccountRegisterDevice,
-		// 		reqBytes,
-		// 		nil,
-		// 		nil,
-		// 		true,
-		// 		false,
-		// 	)
-		// 	if err == nil {
-		// 		break
-		// 	} else {
-		// 		time.Sleep(1 * time.Second)
-		// 	}
-		// }
+		userIDs := domain.MInt64B{}
+		for _, u := range x.Users {
+			userIDs[u.ID] = true
+		}
+
+		// calculate contactsGethash and save
+		crc32Hash := domain.CalculateContactsGetHash(userIDs.ToArray())
+		err := repo.Ctx().System.SaveInt(domain.ColumnContactsGetHash, int32(crc32Hash))
+		if err != nil {
+			logs.Error("contactsMany() failed to save ContactsGetHash to DB", zap.Error(err))
+		}
+	} else {
+		logs.Warn("onContactImportSuccess() received unexpected response", zap.String("Constructor", msg.ConstructorNames[e.Constructor]))
 	}
 }
 

@@ -281,6 +281,12 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		}
 		if x.Group != nil {
 			logs.Message(fmt.Sprintf("GroupID : %d \t Title : %s \t Flags :%v", x.Group.ID, x.Group.Title, x.Group.Flags))
+			if x.Group.Photo == nil {
+				logs.Message("GroupPhoto is null")
+			} else {
+				logs.Message("GroupPhoto", zap.String("Big", x.Group.Photo.PhotoBig.String()), zap.String("Small", x.Group.Photo.PhotoSmall.String()))
+			}
+
 		} else {
 			logs.Error("x.Group is null")
 		}

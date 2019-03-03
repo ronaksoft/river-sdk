@@ -1,14 +1,25 @@
 package domain
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/sha256"
 	"crypto/sha512"
+	"encoding/binary"
+	"fmt"
+	"hash/crc32"
+	"log"
 	"math/big"
 	"math/rand"
+	"regexp"
+	"sort"
+	"strings"
 	"sync/atomic"
 	"time"
+
+	"git.ronaksoftware.com/ronak/riversdk/msg"
+	"github.com/nyaruka/phonenumbers"
 )
 
 func init() {
@@ -17,12 +28,22 @@ func init() {
 
 var (
 	uniqueCounter int64
+	_RegExPhone   *regexp.Regexp
 )
 
 const (
 	DIGITS        = "0123456789"
 	ALPHANUMERICS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 )
+
+func init() {
+	exp, err := regexp.Compile("^\\d*$")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	_RegExPhone = exp
+
+}
 
 // SplitPQ ...
 // This function used for proof of work to splits PQ to two prime numbers P and Q
@@ -267,4 +288,84 @@ func SequentialUniqueID() int64 {
 		atomic.StoreInt64(&uniqueCounter, 0)
 	}
 	return res
+}
+
+// CalculateContactsGetHash crc32 of UserIDs
+func CalculateContactsGetHash(userIDs []int64) uint32 {
+	// sort ASC
+	sort.Slice(userIDs, func(i, j int) bool { return userIDs[i] < userIDs[j] })
+	buff := bytes.Buffer{}
+	b := make([]byte, 8)
+	for _, id := range userIDs {
+		binary.BigEndian.PutUint64(b, uint64(id))
+		buff.Write(b)
+	}
+	crc32Hash := crc32.ChecksumIEEE(buff.Bytes())
+	return crc32Hash
+}
+
+// CalculateContactsImportHash crc32 of phones
+func CalculateContactsImportHash(req *msg.ContactsImport) uint32 {
+	phoneContacts := make(map[string]*msg.PhoneContact)
+	for _, c := range req.Contacts {
+		phoneContacts[c.Phone] = c
+	}
+	phones := make([]*msg.PhoneContact, 0)
+	for _, p := range phoneContacts {
+		phones = append(phones, p)
+	}
+	sort.Slice(phones, func(i, j int) bool { return phones[i].Phone < phones[j].Phone })
+	count := len(phones)
+	bb := bytes.Buffer{}
+	for idx := 0; idx < count; idx++ {
+		bb.Write([]byte(phones[idx].Phone))
+	}
+	crc32Hash := crc32.ChecksumIEEE(bb.Bytes())
+	return crc32Hash
+}
+
+// SanitizePhone copy of server side function
+func SanitizePhone(phoneNumber string) string {
+	phoneNumber = strings.TrimLeft(phoneNumber, " +0")
+	if !_RegExPhone.MatchString(phoneNumber) {
+		return ""
+	}
+	if strings.HasPrefix(phoneNumber, "237400") {
+		return phoneNumber
+	}
+	phone, err := phonenumbers.Parse(phoneNumber, "IR")
+	if err != nil {
+		return phoneNumber
+	}
+	return fmt.Sprintf("%d%d", *phone.CountryCode, *phone.NationalNumber)
+
+}
+
+// ExtractsContactsDifference remove items from newContacts that already exist in oldContacts
+func ExtractsContactsDifference(oldContacts, newContacts []*msg.PhoneContact) []*msg.PhoneContact {
+
+	mapOld := make(map[string]*msg.PhoneContact)
+	mapNew := make(map[string]*msg.PhoneContact)
+	for _, c := range oldContacts {
+		c.Phone = SanitizePhone(c.Phone)
+		mapOld[c.Phone] = c
+	}
+	for _, c := range newContacts {
+		c.Phone = SanitizePhone(c.Phone)
+		mapNew[c.Phone] = c
+	}
+
+	ok := false
+	for key := range mapOld {
+		_, ok = mapNew[key]
+		if ok {
+			delete(mapNew, key)
+		}
+	}
+
+	result := make([]*msg.PhoneContact, 0, len(mapNew))
+	for _, v := range mapNew {
+		result = append(result, v)
+	}
+	return result
 }

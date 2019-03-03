@@ -39,9 +39,11 @@ const (
 
 // Table Column Names
 const (
-	ColumnConnectionInfo = "CONN_INFO"
-	ColumnUpdateID       = "UPDATE_ID"
-	ColumnDeviceToken    = "DEVICE_TOKEN_INFO"
+	ColumnConnectionInfo     = "CONN_INFO"
+	ColumnUpdateID           = "UPDATE_ID"
+	ColumnDeviceToken        = "DEVICE_TOKEN_INFO"
+	ColumnContactsImportHash = "CONTACTS_IMPORT_HASH"
+	ColumnContactsGetHash    = "CONTACTS_GET_HASH"
 )
 
 // NetworkStatus network controller status
