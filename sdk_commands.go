@@ -1061,21 +1061,24 @@ func (r *River) accountRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domai
 
 	err := repo.Ctx().Users.RemoveUserPhoto(r.ConnInfo.UserID)
 	if err != nil {
-		logs.Error("SDK::AccountRemovePhoto()", zap.Error(err))
+		logs.Error("accountRemovePhoto()", zap.Error(err))
 	}
 }
 
 // GroupRemovePhoto send nil InputFile to clear group profile photo
-func (r *River) groupRemovePhoto(groupID int64) {
-	// not implemented
+func (r *River) groupRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 
-	// reqID := uint64(domain.SequentialUniqueID())
-	// req := new(msg.GroupsRemovePhoto)
-	// req.GroupID = groupID
-	// reqBytes, _ := req.Marshal()
-	// r.queueCtrl.ExecuteCommand(reqID, msg.C_GroupsRemovePhoto, reqBytes, nil, nil, false)
-	// err := repo.Ctx().Groups.RemoveGroupPhoto(groupID)
-	// if err != nil {
-	// 	logs.Error("SDK::GroupRemovePhoto()", zap.Error(err))
-	// }
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+
+	req := new(msg.GroupsRemovePhoto)
+	err := req.Unmarshal(in.Message)
+	if err != nil {
+		logs.Error("groupRemovePhoto() failed to unmarshal", zap.Error(err))
+	}
+
+	err = repo.Ctx().Groups.RemoveGroupPhoto(req.GroupID)
+	if err != nil {
+		logs.Error("groupRemovePhoto()", zap.Error(err))
+	}
 }

@@ -289,12 +289,12 @@ func (r *repoGroups) UpdateGroupPhoto(groupPhoto *msg.UpdateGroupPhoto) error {
 }
 
 // RemoveGroupPhoto
-func (r *repoGroups) RemoveGroupPhoto(userID int64) error {
+func (r *repoGroups) RemoveGroupPhoto(groupID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
 	grp := new(dto.Groups)
-	return r.db.Table(grp.TableName()).Where("ID=?", userID).Updates(map[string]interface{}{
+	return r.db.Table(grp.TableName()).Where("ID=?", groupID).Updates(map[string]interface{}{
 		"Photo":            []byte("[]"),
 		"Big_FileID":       0,
 		"Big_AccessHash":   0,

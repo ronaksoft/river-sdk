@@ -35,6 +35,12 @@ var (
 			return m
 		},
 	}
+	PoolGroupsRemovePhoto = sync.Pool{
+		New: func() interface{} {
+			m := new(GroupsRemovePhoto)
+			return m
+		},
+	}
 	PoolUpdateUserTyping = sync.Pool{
 		New: func() interface{} {
 			m := new(UpdateUserTyping)

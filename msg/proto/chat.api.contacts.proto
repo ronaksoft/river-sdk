@@ -14,7 +14,8 @@ message ContactsImport {
 // @Function
 // @Return: ContactsMany
 message ContactsGet {
-    required string MD5Hash = 1;
+    //    required string MD5Hash = 1;
+    required uint32 Crc32Hash = 2;
 }
 
 // ContactsDelete
@@ -31,6 +32,7 @@ message ContactsImported {
 
 // ContactsMany
 message ContactsMany {
-    repeated PhoneContact Contacts = 1 ;
-    repeated ContactUser Users = 2 ;
+    repeated PhoneContact Contacts = 1;
+    repeated ContactUser Users = 2;
+    required bool Modified = 3;
 }
