@@ -146,16 +146,13 @@ func (r *repoUsers) UpdatePhoneContact(user *msg.PhoneContact) error {
 		)
 		return domain.ErrNotFound
 	}
-
 	dtoUser := new(dto.Users)
 	// just need to edit existing contacts info
-	if dtoUser.ID > 0 {
-		return r.db.Table(dtoUser.TableName()).Where("Phone=?", dtoUser.Phone).Updates(map[string]interface{}{
-			"FirstName": user.FirstName,
-			"LastName":  user.LastName,
-		}).Error
-	}
-	return nil
+	return r.db.Table(dtoUser.TableName()).Where("Phone=?", user.Phone).Updates(map[string]interface{}{
+		"FirstName": user.FirstName,
+		"LastName":  user.LastName,
+	}).Error
+
 }
 
 // GetManyUsers
