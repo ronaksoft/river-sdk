@@ -116,7 +116,7 @@ func (r *repoFiles) SaveFileDocument(m *msg.UserMessage, doc *msg.MediaDocument)
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	// 1. get file by documentID if we had file allready update file info for current msg too (use case : forwarded messages)
+	// 1. get file by documentID if we had file already update file info for current msg too (use case : forwarded messages)
 	existedDocument := dto.Files{}
 	// r.db.LogMode(true)
 	// defer r.db.LogMode(false)
@@ -127,12 +127,15 @@ func (r *repoFiles) SaveFileDocument(m *msg.UserMessage, doc *msg.MediaDocument)
 	// 2. get file by messageID create or update document info
 	mdl := dto.Files{}
 	r.db.First(&mdl, m.ID)
+	fileExist := mdl.MessageID > 0
+
+	// fill extra fields from existed document
 	if existedDocument.MessageID > 0 {
 		mdl.MapFromFile(existedDocument)
 		mdl.MessageID = m.ID
 	}
 	// doc already exist
-	if mdl.MessageID > 0 {
+	if fileExist {
 		mdl.MapFromDocument(doc)
 		return r.db.Table(mdl.TableName()).Where("MessageID=?", m.ID).Update(&mdl).Error
 	}

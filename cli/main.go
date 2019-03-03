@@ -75,7 +75,7 @@ func main() {
 		}
 	} else {
 		dbPath = "./_db"
-		dbID = "23740071"
+		dbID = "23740099"
 	}
 
 	qPath := "./_queue"
@@ -119,12 +119,38 @@ func main() {
 		// fnLoginWithAuthKey()
 		// fnRunDownloadFileThumbnail()
 		// fnStartDownloadAndCancelRequestafterward()
-
+		// fnTestSaveFilesOnMessageGetHistory()
+		fnTestGetSharedMedia()
 		//block forever
 		select {}
 	}
 
 }
+
+func fnTestGetSharedMedia() {
+	reqDelegate := new(RequestDelegate)
+	_SDK.GetSharedMedia(701919179993523, 1, 4, reqDelegate)
+}
+
+func fnTestSaveFilesOnMessageGetHistory() {
+	req := new(msg.MessagesGetHistory)
+	req.Peer = &msg.InputPeer{
+		AccessHash: 4499985517732875,
+		ID:         701919179993523,
+		Type:       msg.PeerUser,
+	}
+	req.MinID = 0
+	req.MaxID = 0
+	req.Limit = 1000
+	reqBytes, _ := req.Marshal()
+	reqDelegate := new(RequestDelegate)
+	if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesGetHistory, reqBytes, reqDelegate, false, true); err != nil {
+		logs.Error("ExecuteCommand failed", zap.Error(err))
+	} else {
+		reqDelegate.RequestID = reqID
+	}
+}
+
 func fnStartDownloadAndCancelRequestafterward() {
 	logs.Warn("ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZz Download Started")
 	_SDK.FileDownload(1249)

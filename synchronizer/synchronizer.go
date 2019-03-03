@@ -741,13 +741,13 @@ func handleMediaMessage(messages ...*msg.UserMessage) {
 			mediaDoc := new(msg.MediaDocument)
 			err := mediaDoc.Unmarshal(m.Media)
 			if err == nil {
+				repo.Ctx().Files.SaveFileDocument(m, mediaDoc)
 				t := mediaDoc.Doc.Thumbnail
 				if t != nil {
 					if t.FileID != 0 {
 						go filemanager.Ctx().DownloadThumbnail(m.ID, t.FileID, t.AccessHash, t.ClusterID, 0)
 					}
 				}
-				repo.Ctx().Files.SaveFileDocument(m, mediaDoc)
 
 			} else {
 				logs.Error("handleMediaMessage()-> connat unmarshal MediaTypeDocument", zap.Error(err))
