@@ -429,17 +429,13 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 func (r *repoUsers) UpdateUserProfile(userID int64, req *msg.AccountUpdateProfile) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
-	dtoUser := new(dto.Users)
+	dtoUser := dto.Users{}
 	// just need to edit existing contacts info
-	if dtoUser.ID > 0 {
-		return r.db.Table(dtoUser.TableName()).Where("ID=?", userID).Updates(map[string]interface{}{
-			"FirstName": req.FirstName,
-			"LastName":  req.LastName,
-			"Bio":       req.Bio,
-		}).Error
-	}
-	return nil
+	return r.db.Table(dtoUser.TableName()).Where("ID=?", userID).Updates(map[string]interface{}{
+		"FirstName": req.FirstName,
+		"LastName":  req.LastName,
+		"Bio":       req.Bio,
+	}).Error
 }
 
 // SaveContactUser
