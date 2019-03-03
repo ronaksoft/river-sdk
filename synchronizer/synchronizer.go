@@ -238,7 +238,7 @@ func (ctrl *Controller) sync() {
 		// difference from the server
 		if serverUpdateID > ctrl.updateID+1 {
 			ctrl.updateSyncStatus(domain.OutOfSync)
-			ctrl.getUpdateDifference(serverUpdateID)
+			ctrl.getUpdateDifference(serverUpdateID + 1) // +1 cuz in here we dont have serverUpdateID itself too
 		}
 	}
 	ctrl.isSyncing = false

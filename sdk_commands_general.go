@@ -74,6 +74,16 @@ func (r *River) GetSyncStatus() int32 {
 // Logout drop queue & database , etc ...
 func (r *River) Logout() (int64, error) {
 
+	// unregister device if token exist
+	if r.DeviceToken != nil {
+		reqID := uint64(domain.SequentialUniqueID())
+		req := new(msg.AccountUnregisterDevice)
+		req.Token = r.DeviceToken.Token
+		req.TokenType = int32(r.DeviceToken.TokenType)
+		reqBytes, _ := req.Marshal()
+		r.queueCtrl.ExecuteRealtimeCommand(reqID, msg.C_AccountUnregisterDevice, reqBytes, nil, nil, true, false)
+	}
+
 	dataDir, err := r.queueCtrl.DropQueue()
 
 	if err != nil {
