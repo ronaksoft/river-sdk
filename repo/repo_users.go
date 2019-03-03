@@ -2,6 +2,7 @@ package repo
 
 import (
 	"fmt"
+	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/logs"
@@ -75,22 +76,28 @@ func (r *repoUsers) SaveUser(user *msg.User) error {
 	r.db.Find(eu, u.ID)
 	if eu.ID == 0 {
 		return r.db.Create(u).Error
-	} else if user.Photo != nil {
+	}
+
+	// if user not exist just add it no need to update existing user
+	// just update user photo and its last status info
+	if user.Photo != nil {
 		// update user photo info if exist
 		buff, err := user.Photo.Marshal()
 		if err == nil {
-			r.db.Table(u.TableName()).Where("ID=?", u.ID).Updates(map[string]interface{}{
-				"Photo": buff,
-			})
+			return r.db.Table(u.TableName()).Where("ID=?", u.ID).Updates(map[string]interface{}{
+				"Photo":      buff,
+				"Status":     int32(user.Status),
+				"StatusTime": time.Now().Unix(),
+			}).Error
 		}
 	} else {
-		r.db.Table(u.TableName()).Where("ID=?", u.ID).Updates(map[string]interface{}{
-			"Photo": []byte("[]"),
-		})
+		return r.db.Table(u.TableName()).Where("ID=?", u.ID).Updates(map[string]interface{}{
+			"Photo":      []byte("[]"),
+			"Status":     int32(user.Status),
+			"StatusTime": time.Now().Unix(),
+		}).Error
 	}
 	return nil
-	// if user not exist just add it no need to update existing user
-	//return r.db.Table(u.TableName()).Where("ID=?", u.ID).Update(u).Error
 }
 
 // SaveContactUser

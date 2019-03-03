@@ -13,6 +13,7 @@ type Users struct {
 	ClientID   int64  `gorm:"column:ClientID" json:"ClientID"`
 	IsContact  int32  `gorm:"column:IsContact" json:"IsContact"`
 	Status     int32  `gorm:"column:Status" json:"Status"`
+	StatusTime int64  `gorm:"column:StatusTime" json:"StatusTime"`
 	Restricted bool   `gorm:"column:Restricted" json:"Restricted"`
 	Bio        string `gorm:"type:TEXT;column:Bio" json:"Bio"`
 	Photo      []byte `gorm:"type:blob;column:Photo" json:"Photo"`
