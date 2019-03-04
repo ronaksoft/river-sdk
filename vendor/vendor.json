@@ -75,6 +75,12 @@
 			"revisionTime": "2018-09-05T12:55:35Z"
 		},
 		{
+			"checksumSHA1": "Qpm/5st1vwPGuUwxq8bNQ8/Ay20=",
+			"path": "github.com/gobwas/httphead",
+			"revision": "2c6c146eadee0b69f856f87e3e9f1d0cd6aad2f5",
+			"revisionTime": "2018-01-30T18:47:37Z"
+		},
+		{
 			"checksumSHA1": "1FX0nrj9y6EIddSDA4KQILOSKJ0=",
 			"path": "github.com/gobwas/pool",
 			"revision": "fa3125c39d7eca32e1387bb69b1b38dcb31b1e0b",
@@ -87,10 +93,28 @@
 			"revisionTime": "2018-04-24T06:07:27Z"
 		},
 		{
+			"checksumSHA1": "18BtV3gj+rFycn0AulsffnHyTQw=",
+			"path": "github.com/gobwas/pool/pbufio",
+			"revision": "fa3125c39d7eca32e1387bb69b1b38dcb31b1e0b",
+			"revisionTime": "2018-04-24T06:07:27Z"
+		},
+		{
 			"checksumSHA1": "lOiNOwclyAMiTpQsr0/NvklKlXQ=",
 			"path": "github.com/gobwas/pool/pbytes",
 			"revision": "fa3125c39d7eca32e1387bb69b1b38dcb31b1e0b",
 			"revisionTime": "2018-04-24T06:07:27Z"
+		},
+		{
+			"checksumSHA1": "j5soF3KVWnCt657diMt0+srAN+I=",
+			"path": "github.com/gobwas/ws",
+			"revision": "a6b9551e0d413ce449a620905eafdf6c273b785a",
+			"revisionTime": "2019-01-22T16:36:06Z"
+		},
+		{
+			"checksumSHA1": "etB08a1bg8obmOxLsMjGmxm493U=",
+			"path": "github.com/gobwas/ws/wsutil",
+			"revision": "a6b9551e0d413ce449a620905eafdf6c273b785a",
+			"revisionTime": "2019-01-22T16:36:06Z"
 		},
 		{
 			"checksumSHA1": "JaXAetgbsR4zw5i2rtUOXZVOqiA=",
@@ -117,10 +141,28 @@
 			"revisionTime": "2018-10-30T01:32:02Z"
 		},
 		{
-			"checksumSHA1": "47nJ3iu1bVvK9jPXwAinFYr4mBU=",
+			"checksumSHA1": "rasgUuf7DVFShc3hKeh9wjWBWO0=",
+			"path": "github.com/gogo/protobuf/gogoproto",
+			"revision": "8e4a75f11384d0fb2188d872d456407e41f33fc0",
+			"revisionTime": "2018-12-31T10:04:52Z"
+		},
+		{
+			"checksumSHA1": "jyCYGbN0KvpV6PasLXLOmNsaA3s=",
 			"path": "github.com/gogo/protobuf/proto",
-			"revision": "fd322a3c49630fe6d05737e2b7d9426e6680e28d",
-			"revisionTime": "2018-10-10T09:29:45Z"
+			"revision": "8e4a75f11384d0fb2188d872d456407e41f33fc0",
+			"revisionTime": "2018-12-31T10:04:52Z"
+		},
+		{
+			"checksumSHA1": "uA3fNRcrMhh6Y8ugPuoyEK72nvk=",
+			"path": "github.com/gogo/protobuf/protoc-gen-gogo/descriptor",
+			"revision": "8e4a75f11384d0fb2188d872d456407e41f33fc0",
+			"revisionTime": "2018-12-31T10:04:52Z"
+		},
+		{
+			"checksumSHA1": "Y2MOwzNZfl4NRNDbLCZa6sgx7O0=",
+			"path": "github.com/golang/protobuf/proto",
+			"revision": "1d3f30b51784bec5aad268e59fd3c2fc1c2fe73f",
+			"revisionTime": "2018-11-28T19:23:52Z"
 		},
 		{
 			"checksumSHA1": "h1d2lPZf6j2dW/mIqVnd1RdykDo=",
@@ -129,10 +171,34 @@
 			"revisionTime": "2018-05-18T05:39:59Z"
 		},
 		{
-			"checksumSHA1": "+WvAFQYdExJNUjKDAtuSs8O7ELg=",
+			"checksumSHA1": "e3rwrV0j/HWimHNKvWRHsijDD0I=",
+			"path": "github.com/google/gopacket",
+			"revision": "7edef24d642a09d18efcf1e00a9dc2d4c6342c82",
+			"revisionTime": "2019-02-03T21:14:14Z"
+		},
+		{
+			"checksumSHA1": "XHLMQhF6QDuZZiFvYkG30e/r9Z8=",
+			"path": "github.com/google/gopacket/layers",
+			"revision": "7edef24d642a09d18efcf1e00a9dc2d4c6342c82",
+			"revisionTime": "2019-02-03T21:14:14Z"
+		},
+		{
+			"checksumSHA1": "rPfnvJnxiiV/5jrWMDY56LSixpY=",
+			"path": "github.com/google/gopacket/pcap",
+			"revision": "7edef24d642a09d18efcf1e00a9dc2d4c6342c82",
+			"revisionTime": "2019-02-03T21:14:14Z"
+		},
+		{
+			"checksumSHA1": "JB3iiLLoJSfHofXOz5cZLh9y+Eo=",
+			"path": "github.com/google/gopacket/tcpassembly",
+			"revision": "7edef24d642a09d18efcf1e00a9dc2d4c6342c82",
+			"revisionTime": "2019-02-03T21:14:14Z"
+		},
+		{
+			"checksumSHA1": "EFilcRi6b0Bf3nckKo3UbeqoW50=",
 			"path": "github.com/gorilla/websocket",
-			"revision": "76e4896901ef89d253d69b528d3701dd146fe2ae",
-			"revisionTime": "2018-10-12T02:01:31Z"
+			"revision": "95ba29eb981bbb27d92e1f70bf8a1949452d926b",
+			"revisionTime": "2018-12-06T07:02:39Z"
 		},
 		{
 			"checksumSHA1": "O0r0hj4YL+jSRNjnshkeH4GY+4s=",
@@ -169,6 +235,18 @@
 			"path": "github.com/juju/ratelimit",
 			"revision": "59fac5042749a5afb9af70e813da1dd5474f0167",
 			"revisionTime": "2017-10-26T09:04:26Z"
+		},
+		{
+			"checksumSHA1": "3ohk4dFYrERZ6WTdKkIwnTA0HSI=",
+			"path": "github.com/kr/pretty",
+			"revision": "73f6ac0b30a98e433b289500d779f50c1a6f0712",
+			"revisionTime": "2018-05-06T08:33:45Z"
+		},
+		{
+			"checksumSHA1": "SbguDK5lY8uhaHNrmJmNbiWIGM0=",
+			"path": "github.com/kr/text",
+			"revision": "e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f",
+			"revisionTime": "2018-05-06T08:24:08Z"
 		},
 		{
 			"checksumSHA1": "Ckkk75h7Xhrc3b+QJ3oqbIrGsaY=",
@@ -239,22 +317,28 @@
 			"revisionTime": "2018-05-22T00:31:56Z"
 		},
 		{
+			"checksumSHA1": "TAVz4n1hOlM6kFcD5YFEJW1uwJk=",
+			"path": "github.com/nyaruka/phonenumbers",
+			"revision": "0c11119bae0805ab5639c0d0af641c8278d8cfd6",
+			"revisionTime": "2018-12-05T20:13:42Z"
+		},
+		{
 			"checksumSHA1": "llyApDxQeu6FeMSjM6X4QAOUiV8=",
 			"path": "github.com/olekukonko/tablewriter",
 			"revision": "be2c049b30ccd4d3fd795d6bf7dce74e42eeedaa",
 			"revisionTime": "2018-09-12T03:50:03Z"
 		},
 		{
-			"checksumSHA1": "NRnnn/qgnRRqdhtITE5lqNEoCrI=",
-			"path": "github.com/scylladb/gocqlx",
-			"revision": "8ea6a9d5f506d1e0c35f774e0814dc54ca95abc8",
-			"revisionTime": "2018-10-23T14:17:04Z"
+			"checksumSHA1": "Tlf/DTf/358MiP0Qxrv4GTDawHw=",
+			"path": "github.com/scylladb/go-reflectx",
+			"revision": "8e28c7b74629f55b19259fcd798953ee195ec4a4",
+			"revisionTime": "2019-01-25T13:51:51Z"
 		},
 		{
-			"checksumSHA1": "GAr28JJTLGQhsrGPk2oa9K9+ihk=",
-			"path": "github.com/scylladb/gocqlx/reflectx",
-			"revision": "8ea6a9d5f506d1e0c35f774e0814dc54ca95abc8",
-			"revisionTime": "2018-10-23T14:17:04Z"
+			"checksumSHA1": "vc49a0uPXwWiRTeBezTaWlDX/xo=",
+			"path": "github.com/scylladb/gocqlx",
+			"revision": "0b787f2f06dc5a12530d40a441e0c919661922d1",
+			"revisionTime": "2019-01-25T15:00:01Z"
 		},
 		{
 			"checksumSHA1": "hJ6SwC7uTeTjadQO6jY679nEkqo=",
