@@ -702,7 +702,8 @@ func (ctrl *Controller) _send(msgEnvelope *msg.MessageEnvelope) error {
 		protoMessage.AuthID = 0
 		logs.Debug("_send()",
 			zap.String("Warning", "AuthID is zero ProtoMessage is unencrypted"),
-			zap.Int64("AuthID", ctrl.authID),
+			zap.Int64("ctrl.AuthID", ctrl.authID),
+			zap.Int64("protoMessage.AuthID", protoMessage.AuthID),
 		)
 		protoMessage.Payload, _ = msgEnvelope.Marshal()
 	} else {

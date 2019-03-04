@@ -68,8 +68,17 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 		logs.Error("contactsMany()-> Unmarshal()", zap.Error(err))
 		return
 	}
+
+	userIDs := domain.MInt64B{}
 	for _, u := range x.Users {
+		userIDs[u.ID] = true
 		repo.Ctx().Users.SaveContactUser(u)
+	}
+	// calculate contactsGethash and save
+	crc32Hash := domain.CalculateContactsGetHash(userIDs.ToArray())
+	err := repo.Ctx().System.SaveInt(domain.ColumnContactsGetHash, int32(crc32Hash))
+	if err != nil {
+		logs.Error("contactsMany() failed to save ContactsGetHash to DB", zap.Error(err))
 	}
 }
 

@@ -261,40 +261,20 @@ func (r *River) onNetworkControllerConnected() {
 			logs.Warn("onNetworkControllerConnected() Device Token is not set")
 		}
 
-		contactsGetHash, err := repo.Ctx().System.LoadInt(domain.ColumnContactsGetHash)
-		if err != nil {
-			logs.Error("onNetworkControllerConnected() failed to get contactsGetHash", zap.Error(err))
-		}
-		contactGetReq := new(msg.ContactsGet)
-		contactGetReq.Crc32Hash = uint32(contactsGetHash)
-		contactGetBytes, _ := contactGetReq.Marshal()
-		r.queueCtrl.ExecuteRealtimeCommand(uint64(domain.SequentialUniqueID()), msg.C_ContactsGet, contactGetBytes, nil, r.onContactImportSuccess, false, false)
+		// import contact from server
+		r.contactImportFromServer()
 	}
 }
 
-func (r *River) onContactImportSuccess(e *msg.MessageEnvelope) {
-	logs.Info("onContactImportSuccess()")
-	if e.Constructor == msg.C_ContactsMany {
-		x := new(msg.ContactsMany)
-		if err := x.Unmarshal(e.Message); err != nil {
-			logs.Error("contactsMany()-> Unmarshal()", zap.Error(err))
-			return
-		}
-
-		userIDs := domain.MInt64B{}
-		for _, u := range x.Users {
-			userIDs[u.ID] = true
-		}
-
-		// calculate contactsGethash and save
-		crc32Hash := domain.CalculateContactsGetHash(userIDs.ToArray())
-		err := repo.Ctx().System.SaveInt(domain.ColumnContactsGetHash, int32(crc32Hash))
-		if err != nil {
-			logs.Error("contactsMany() failed to save ContactsGetHash to DB", zap.Error(err))
-		}
-	} else {
-		logs.Warn("onContactImportSuccess() received unexpected response", zap.String("Constructor", msg.ConstructorNames[e.Constructor]))
+func (r *River) contactImportFromServer() {
+	contactsGetHash, err := repo.Ctx().System.LoadInt(domain.ColumnContactsGetHash)
+	if err != nil {
+		logs.Error("onNetworkControllerConnected() failed to get contactsGetHash", zap.Error(err))
 	}
+	contactGetReq := new(msg.ContactsGet)
+	contactGetReq.Crc32Hash = uint32(contactsGetHash)
+	contactGetBytes, _ := contactGetReq.Marshal()
+	r.queueCtrl.ExecuteRealtimeCommand(uint64(domain.SequentialUniqueID()), msg.C_ContactsGet, contactGetBytes, nil, nil, false, false)
 }
 
 // onGetServerTime update client & server time difference
@@ -800,7 +780,7 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 		cb := domain.GetRequestCallback(m.RequestID)
 		if cb != nil {
 			// if there was any listener maybe request already timedout
-			logs.Debug("River::onReceivedMessage() Request callbvack found", zap.Uint64("RequestID", cb.RequestID))
+			logs.Debug("River::onReceivedMessage() Request callback found", zap.Uint64("RequestID", cb.RequestID))
 			select {
 			case cb.ResponseChannel <- m:
 				logs.Debug("River::onReceivedMessage() passed to callback listener", zap.Uint64("RequestID", cb.RequestID))

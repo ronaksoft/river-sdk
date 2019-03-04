@@ -118,13 +118,14 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		bufUsers := new(bytes.Buffer)
 		tableUsers := tablewriter.NewWriter(bufUsers)
 		tableUsers.SetHeader([]string{
-			"UserID", "FirstName", "LastName",
+			"UserID", "FirstName", "LastName", "Photo",
 		})
 		for _, x := range x.Users {
 			tableUsers.Append([]string{
 				fmt.Sprintf("%d", x.ID),
 				fmt.Sprintf("%s", x.FirstName),
 				fmt.Sprintf("%s", x.LastName),
+				fmt.Sprintf("%d", len(x.Photo.String())),
 			})
 		}
 		tableUsers.Render()
@@ -203,13 +204,14 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		bufUsers := new(bytes.Buffer)
 		tableUsers := tablewriter.NewWriter(bufUsers)
 		tableUsers.SetHeader([]string{
-			"UserID", "FirstName", "LastName",
+			"UserID", "FirstName", "LastName", "Photo",
 		})
 		for _, x := range x.Users {
 			tableUsers.Append([]string{
 				fmt.Sprintf("%d", x.ID),
 				fmt.Sprintf("%s", x.FirstName),
 				fmt.Sprintf("%s", x.LastName),
+				fmt.Sprintf("%d", len(x.Photo.String())),
 			})
 		}
 		tableUsers.Render()
@@ -224,12 +226,13 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		bufUsers := new(bytes.Buffer)
 		tableUsers := tablewriter.NewWriter(bufUsers)
 		tableUsers.SetHeader([]string{
-			"UserID", "FirstName", "LastName",
+			"UserID", "FirstName", "LastName", "Photo",
 		})
 		for _, x := range x.Users {
 			tableUsers.Append([]string{
 				fmt.Sprintf("%d", x.ID),
 				fmt.Sprintf("%s", x.FirstName),
+				fmt.Sprintf("%d", len(x.Photo.String())),
 				fmt.Sprintf("%s", x.LastName),
 			})
 		}
@@ -301,7 +304,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			bufUsers := new(bytes.Buffer)
 			tableUsers := tablewriter.NewWriter(bufUsers)
 			tableUsers.SetHeader([]string{
-				"UserID", "FirstName", "LastName", "AccessHash", "Username",
+				"UserID", "FirstName", "LastName", "AccessHash", "Username", "Photo",
 			})
 			for _, x := range x.Participants {
 				tableUsers.Append([]string{
@@ -310,6 +313,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 					fmt.Sprintf("%s", x.LastName),
 					fmt.Sprintf("%d", x.AccessHash),
 					fmt.Sprintf("%s", x.Username),
+					fmt.Sprintf("%d", len(x.Photo.String())),
 				})
 			}
 			tableUsers.Render()
