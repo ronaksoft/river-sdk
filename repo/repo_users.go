@@ -148,7 +148,7 @@ func (r *repoUsers) SaveContactUser(user *msg.ContactUser) error {
 		"Username":   u.Username,
 		"ClientID":   u.ClientID,
 		"IsContact":  u.IsContact,
-		"Photo":      u.Phone,
+		"Photo":      u.Photo,
 	}).Error
 }
 
