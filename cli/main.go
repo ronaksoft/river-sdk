@@ -94,6 +94,7 @@ func main() {
 		DocumentPhotoDirectory: "./_files/photo",
 		DocumentFileDirectory:  "./_files/file",
 		DocumentCacheDirectory: "./_files/cache",
+		DocumentLogDirectory:   "./_files/logs",
 	})
 
 	_SDK.Start()

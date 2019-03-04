@@ -46,6 +46,7 @@ type RiverConfig struct {
 	DocumentFileDirectory  string
 	DocumentAudioDirectory string
 	DocumentCacheDirectory string
+	DocumentLogDirectory   string
 }
 
 // River ...

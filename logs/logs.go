@@ -22,6 +22,8 @@ var (
 	logLevel                 zap.AtomicLevel
 	logger                   func(logLevel int, msg string)
 	green, red, yellow, blue func(format string, a ...interface{}) string
+	logFilePath              string
+	logWriteToFile           bool
 )
 
 func init() {
@@ -41,12 +43,20 @@ func SetLogger(fn func(logLevel int, msg string)) {
 	logger = fn
 }
 
+func SetLogFilePath(filePath string) {
+	logFilePath = filePath
+	logWriteToFile = filePath != ""
+}
+
 func Message(msg string, fields ...zap.Field) {
 	callerInfo := fnGetCallerInfo()
 	if logger != nil {
 		logger(int(-99), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
 	} else {
 		fnlog(int(-99), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+	}
+	if logWriteToFile {
+		fnSaveLog(int(-99), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
 	}
 }
 
@@ -62,6 +72,10 @@ func Debug(msg string, fields ...zap.Field) {
 	} else {
 		fnlog(int(zap.DebugLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
 	}
+
+	if logWriteToFile {
+		fnSaveLog(int(zap.DebugLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+	}
 }
 
 func Warn(msg string, fields ...zap.Field) {
@@ -74,6 +88,10 @@ func Warn(msg string, fields ...zap.Field) {
 		logger(int(zap.WarnLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
 	} else {
 		fnlog(int(zap.WarnLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+	}
+
+	if logWriteToFile {
+		fnSaveLog(int(zap.WarnLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
 	}
 }
 
@@ -88,6 +106,10 @@ func Info(msg string, fields ...zap.Field) {
 	} else {
 		fnlog(int(zap.InfoLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
 	}
+
+	if logWriteToFile {
+		fnSaveLog(int(zap.InfoLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+	}
 }
 
 func Error(msg string, fields ...zap.Field) {
@@ -100,6 +122,10 @@ func Error(msg string, fields ...zap.Field) {
 		logger(int(zap.ErrorLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
 	} else {
 		fnlog(int(zap.ErrorLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+	}
+
+	if logWriteToFile {
+		fnSaveLog(int(zap.ErrorLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
 	}
 }
 
@@ -115,6 +141,10 @@ func Fatal(msg string, fields ...zap.Field) {
 		logger(int(zap.FatalLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
 	} else {
 		fnlog(int(zap.FatalLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+	}
+
+	if logWriteToFile {
+		fnSaveLog(int(zap.FatalLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
 	}
 
 }
@@ -258,5 +288,32 @@ func fnlog(logLevel int, msg string) {
 		fmt.Println(red("FTL : \t %s", msg))
 	default:
 		fmt.Println(blue("MSG : \t %s", msg))
+	}
+}
+
+// fnSaveLog
+func fnSaveLog(logLevel int, msg string) {
+
+	switch logLevel {
+	case int(zap.DebugLevel):
+		msg = "DBG : \t " + msg
+	case int(zap.WarnLevel):
+		msg = "WRN : \t " + msg
+	case int(zap.InfoLevel):
+		msg = "INF : \t " + msg
+	case int(zap.ErrorLevel):
+		msg = "ERR : \t " + msg
+	case int(zap.FatalLevel):
+		msg = "FTL : \t " + msg
+	default:
+		msg = "MSG : \t " + msg
+	}
+
+	f, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	if err == nil {
+		f.WriteString(msg + "\n")
+		f.Close()
+	} else {
+		fmt.Println(err)
 	}
 }

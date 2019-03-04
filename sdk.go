@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"math/big"
 	"os"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -58,6 +59,20 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		logs.SetLogger(func(logLevel int, msg string) {
 			r.logger.Log(logLevel, msg)
 		})
+	}
+
+	// set log file path
+	if conf.DocumentLogDirectory != "" {
+		t := time.Now()
+		fName := fmt.Sprintf("%d-%02d-%02d.log", t.Year(), t.Month(), t.Day())
+		logDir := conf.DocumentLogDirectory
+		// support IOS file path
+		if strings.HasPrefix(logDir, "file://") {
+			logDir = logDir[7:]
+		}
+		logFilePath := path.Join(logDir, fName)
+		logs.SetLogFilePath(logFilePath)
+		logs.Info("SetConfig() ", zap.String("Log File Path", logFilePath))
 	}
 
 	// init UI Executer
@@ -838,16 +853,18 @@ readChannel:
 
 	currentUpdateID := r.syncCtrl.UpdateID()
 	for _, val := range upds {
-		if val.MinUpdateID < minID && val.MinUpdateID > 0 {
-			minID = val.MinUpdateID
-		}
-		if val.MaxUpdateID > maxID && val.MaxUpdateID > 0 {
-			maxID = val.MaxUpdateID
-		}
 
 		for _, u := range val.Updates {
+			// extract min and max id
+			if u.UpdateID < minID && u.UpdateID > 0 {
+				minID = u.UpdateID
+			}
+			if u.UpdateID > maxID && u.UpdateID > 0 {
+				maxID = u.UpdateID
+			}
+
 			if u.UpdateID > 0 && u.UpdateID <= currentUpdateID {
-				logs.Debug("SDK::onReceivedUpdate() XXXXXXXXXXXXXXXXXXXXXXXXXXXXX Outdated update ",
+				logs.Error("SDK::onReceivedUpdate() XXXXXXXXXXXXXXXXXXXXXXXXXXXXX Outdated update ",
 					zap.Int64("CurrentUpdateID", currentUpdateID),
 					zap.Int64("UpdateID", u.UpdateID),
 				)
@@ -899,6 +916,16 @@ readChannel:
 		}
 
 	}
+
+	if int(maxID-minID) > len(updates) {
+		logs.Error("SDK::onReceivedUpdate() XXXXXXXXXXXXXXXXXXXXXXXXXXXXX looks like there is missed update ",
+			zap.Int64("CurrentUpdateID", currentUpdateID),
+			zap.Int64("MaxID", maxID),
+			zap.Int64("MinID", minID),
+			zap.Int("len(updates)", len(updates)),
+		)
+	}
+
 	// on typing min max is equal to zero so meh
 	if minID > maxID {
 		minID = 0
