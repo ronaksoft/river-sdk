@@ -141,6 +141,11 @@ func (fs *FileStatus) Read(isThumbnail bool, partIdx int64) ([]byte, int, error)
 func (fs *FileStatus) Write(data []byte, partIdx int64) (isCompleted bool, err error) {
 	fs.mx.Lock()
 	defer fs.mx.Unlock()
+
+	if fs.stop {
+		return
+	}
+
 	var file *os.File
 
 	// create file if its not exist
@@ -198,6 +203,10 @@ func (fs *FileStatus) ReadCommit(count int64, isThumbnail bool, partIdx int64) (
 		repo.Ctx().Files.SaveFileStatus(fs.GetDTO())
 		return
 	}
+	if fs.stop {
+		return
+	}
+
 	fs.deleteFromPartList(partIdx)
 	partCount := fs.partListCount()
 	fs.IsCompleted = partCount == 0
@@ -381,6 +390,9 @@ func (fs *FileStatus) StartDownload(fm *FileManager) {
 		workersCount = partCount
 	}
 
+	// call onProgresschange to notify ui
+	fs.fileStatusChanged()
+
 	for i := 0; i < workersCount; i++ {
 		go fs.downloaderJob(fm)
 	}
@@ -404,6 +416,10 @@ func (fs *FileStatus) StartUpload(fm *FileManager) {
 	if partCount < domain.FilePipelineCount {
 		workersCount = partCount
 	}
+
+	// call onProgresschange to notify ui
+	fs.fileStatusChanged()
+
 	// upload thumbnail first
 	fs.uploadThumbnail(fm)
 
