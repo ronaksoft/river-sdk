@@ -164,12 +164,14 @@ func (r *repoPendingMessages) DeleteManyPendingMessage(IDs []int64) error {
 		err := r.db.Table(dtoPend.TableName()).Where("PeerID =? AND PeerType= ?", d.PeerID, d.PeerType).First(&dtoPend).Error // cuz the pendMsg Ids are negative of nano time so the smallest is latest record
 		if err == nil && dtoPend.ID != 0 {
 			d.TopMessageID = dtoPend.ID
+			d.LastUpdate = dtoPend.CreatedOn
 			r.db.Save(d)
 		} else {
 			dtoMsg := dto.Messages{}
 			err := r.db.Table(dtoMsg.TableName()).Where("PeerID =? AND PeerType= ?", d.PeerID, d.PeerType).Last(&dtoMsg).Error
 			if err == nil && dtoMsg.ID != 0 {
 				d.TopMessageID = dtoMsg.ID
+				d.LastUpdate = dtoMsg.CreatedOn
 				r.db.Save(d)
 			}
 		}

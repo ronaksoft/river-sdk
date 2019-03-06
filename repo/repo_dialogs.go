@@ -111,7 +111,7 @@ func (r *repoDialogs) GetDialogs(offset, limit int32) []*msg.Dialog {
 
 	dtoDlgs := make([]dto.Dialogs, 0, limit)
 
-	err := r.db.Limit(limit).Offset(offset).Find(&dtoDlgs).Error
+	err := r.db.Limit(limit).Offset(offset).Order("LastUpdate DESC").Find(&dtoDlgs).Error
 	if err != nil {
 		logs.Error("Dialogs::GetDialogs()", zap.Error(err))
 		return nil

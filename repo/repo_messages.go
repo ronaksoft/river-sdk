@@ -405,6 +405,7 @@ func (r *repoMessages) DeleteMany(IDs []int64) error {
 		err := r.db.Table(dtoMsg.TableName()).Where("PeerID =? AND PeerType= ?", d.PeerID, d.PeerType).Last(&dtoMsg).Error
 		if err == nil && dtoMsg.ID != 0 {
 			d.TopMessageID = dtoMsg.ID
+			d.LastUpdate = dtoMsg.CreatedOn
 			r.db.Save(d)
 		}
 	}
@@ -471,6 +472,7 @@ func (r *repoMessages) DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.Clie
 		if err == nil && dtoMsg.ID != 0 {
 			err = r.db.Table(d.TableName()).Where("PeerID=? AND PeerType=?", d.PeerID, d.PeerType).Updates(map[string]interface{}{
 				"TopMessageID": dtoMsg.ID,
+				"LastUpdate":   dtoMsg.CreatedOn,
 			}).Error
 		}
 	}

@@ -1,6 +1,10 @@
 package dto
 
-import "git.ronaksoftware.com/ronak/riversdk/msg"
+import (
+	"time"
+
+	"git.ronaksoftware.com/ronak/riversdk/msg"
+)
 
 type Dialogs struct {
 	dto
@@ -31,6 +35,7 @@ func (d *Dialogs) Map(v *msg.Dialog) {
 	d.ReadOutboxMaxID = v.ReadOutboxMaxID
 	d.TopMessageID = v.TopMessageID
 	d.UnreadCount = v.UnreadCount
+	d.LastUpdate = time.Now().Unix()
 	if v.NotifySettings != nil {
 		d.NotifyFlags = v.NotifySettings.Flags
 		d.NotifyMuteUntil = v.NotifySettings.MuteUntil
