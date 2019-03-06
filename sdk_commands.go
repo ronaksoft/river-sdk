@@ -1093,6 +1093,7 @@ func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB dom
 	r.ConnInfo.LastName = req.LastName
 	r.ConnInfo.Bio = req.Bio
 	r.ConnInfo.Save()
+	logs.Warn("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk accountUpdateProfile()", zap.String("Bio", req.Bio))
 
 	err := repo.Ctx().Users.UpdateUserProfile(r.ConnInfo.UserID, req)
 	if err != nil {

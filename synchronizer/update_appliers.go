@@ -293,6 +293,8 @@ func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) []*msg.UpdateEnvel
 	ctrl.connInfo.ChangeBio(x.Bio)
 	ctrl.connInfo.Save()
 
+	logs.Warn("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk updateUsername()", zap.String("Bio", x.Bio))
+
 	err := repo.Ctx().Users.UpdateUsername(x)
 	if err != nil {
 		logs.Error("updateUsername() error save to DB", zap.Error(err))
