@@ -1,6 +1,7 @@
 package synchronizer
 
 import (
+	"fmt"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/domain"
@@ -25,19 +26,29 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 
 	dialog := repo.Ctx().Dialogs.GetDialog(x.Message.PeerID, x.Message.PeerType)
 	if dialog == nil {
-		// // this will be handled by repo
-		// unreadCount := int32(0)
-		// if x.Message.SenderID != ctrl.UserID {
-		// 	unreadCount = 1
-		// }
-		dialog = &msg.Dialog{
-			PeerID:       x.Message.PeerID,
-			PeerType:     x.Message.PeerType,
-			TopMessageID: x.Message.ID,
-			UnreadCount:  0,
-			AccessHash:   x.AccessHash,
+
+		// create MessageHole
+		err = createMessageHole(x.Message.PeerID, 0, x.Message.ID-1)
+		if err != nil {
+			logs.Error("updateNewMessage() -> createMessageHole() ", zap.Error(err))
+		} else {
+			// make sure to created the messagehole b4 creating dialog
+			dialog = &msg.Dialog{
+				PeerID:       x.Message.PeerID,
+				PeerType:     x.Message.PeerType,
+				TopMessageID: x.Message.ID,
+				UnreadCount:  0,
+				AccessHash:   x.AccessHash,
+			}
+			err := repo.Ctx().Dialogs.SaveDialog(dialog, x.Message.CreatedOn)
+			if err != nil {
+				logs.Error("updateNewMessage() -> onSuccessCallback() -> SaveDialog() ",
+					zap.String("Error", err.Error()),
+					zap.String("Dialog", fmt.Sprintf("%v", dialog)),
+				)
+			}
 		}
-		err := repo.Ctx().Dialogs.SaveDialog(dialog, x.Message.CreatedOn)
+
 		if err != nil {
 			logs.Error("updateNewMessage()-> SaveDialog()", zap.Error(err))
 		}
