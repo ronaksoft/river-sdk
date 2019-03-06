@@ -421,7 +421,7 @@ func (r *River) FileDownload(msgID int64) {
 func (r *River) PauseDownload(msgID int64) {
 	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
 	if err == nil {
-		filemanager.Ctx().DeleteFromQueue(fs.MessageID)
+		filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatePaused)
 		repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStatePaused)
 	} else {
 		logs.Error("SDK::PauseDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
@@ -432,7 +432,7 @@ func (r *River) PauseDownload(msgID int64) {
 func (r *River) CancelDownload(msgID int64) {
 	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
 	if err == nil {
-		filemanager.Ctx().DeleteFromQueue(fs.MessageID)
+		filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStateCanceled)
 		repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStateCanceled)
 	} else {
 		logs.Error("SDK::CancelDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
@@ -443,7 +443,7 @@ func (r *River) CancelDownload(msgID int64) {
 func (r *River) PauseUpload(msgID int64) {
 	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
 	if err == nil {
-		filemanager.Ctx().DeleteFromQueue(fs.MessageID)
+		filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatePaused)
 		repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStatePaused)
 		// repo.Ctx().PendingMessages.DeletePendingMessage(fs.MessageID)
 	} else {
@@ -455,7 +455,7 @@ func (r *River) PauseUpload(msgID int64) {
 func (r *River) CancelUpload(msgID int64) {
 	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
 	if err == nil {
-		filemanager.Ctx().DeleteFromQueue(fs.MessageID)
+		filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStateCanceled)
 		repo.Ctx().Files.DeleteFileStatus(msgID)
 		repo.Ctx().PendingMessages.DeletePendingMessage(fs.MessageID)
 	} else {

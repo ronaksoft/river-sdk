@@ -4,8 +4,6 @@ import (
 	"os"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/filemanager"
-
 	"git.ronaksoftware.com/ronak/riversdk/domain"
 	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
@@ -170,7 +168,6 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 			if err != nil {
 				logs.Error("messageSent()-> DeleteFileStatus() failed to delete FileStatus", zap.Error(err))
 			}
-			filemanager.Ctx().DeleteFromQueue(pmsg.ID)
 		}
 	}
 

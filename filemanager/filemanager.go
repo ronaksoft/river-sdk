@@ -270,6 +270,7 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 	}
 
 	if state != nil {
+		state.RequestStatus = domain.RequestStateInProgress
 		fm.AddToQueue(state)
 		repo.Ctx().Files.SaveFileStatus(state.GetDTO())
 		repo.Ctx().Files.SaveDownloadingFile(state.GetDTO())
@@ -303,10 +304,11 @@ func (fm *FileManager) AddToQueue(status *FileStatus) {
 }
 
 // DeleteFromQueue remove items from download/upload queue and stop them
-func (fm *FileManager) DeleteFromQueue(msgID int64) {
+func (fm *FileManager) DeleteFromQueue(msgID int64, status domain.RequestStatus) {
 	fm.mxUp.Lock()
 	up, uok := fm.UploadQueue[msgID]
 	if uok {
+		up.RequestStatus = status
 		delete(fm.UploadQueue, msgID)
 		up.Stop()
 	}
@@ -315,6 +317,7 @@ func (fm *FileManager) DeleteFromQueue(msgID int64) {
 	fm.mxDown.Lock()
 	down, dok := fm.DownloadQueue[msgID]
 	if dok {
+		down.RequestStatus = status
 		delete(fm.DownloadQueue, msgID)
 		down.Stop()
 	}
@@ -407,7 +410,7 @@ func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, 
 		switch res.Constructor {
 		case msg.C_Error:
 			// remove upload from
-			fm.DeleteFromQueue(fs.MessageID)
+			fm.DeleteFromQueue(fs.MessageID, domain.RequestStateError)
 			logs.Error("SendUploadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
 			fs.RequestStatus = domain.RequestStateError
 			repo.Ctx().Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
@@ -450,7 +453,7 @@ func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, 
 	if fs.retryCounter > domain.FileRetryThreshold {
 
 		// remove upload from queue
-		fm.DeleteFromQueue(fs.MessageID)
+		fm.DeleteFromQueue(fs.MessageID, domain.RequestStateError)
 		logs.Error("SendUploadRequest() upload request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
 		fs.RequestStatus = domain.RequestStateError
 		repo.Ctx().Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
@@ -472,7 +475,7 @@ func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 		switch res.Constructor {
 		case msg.C_Error:
 			// remove download from queue
-			fm.DeleteFromQueue(fs.MessageID)
+			fm.DeleteFromQueue(fs.MessageID, domain.RequestStateError)
 			logs.Error("SendDownloadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
 			fs.RequestStatus = domain.RequestStateError
 			repo.Ctx().Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
@@ -524,7 +527,7 @@ func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 	}
 	if fs.retryCounter > domain.FileRetryThreshold {
 		// remove download from queue
-		fm.DeleteFromQueue(fs.MessageID)
+		fm.DeleteFromQueue(fs.MessageID, domain.RequestStateError)
 		logs.Error("SendDownloadRequest() download request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
 		fs.RequestStatus = domain.RequestStateError
 		repo.Ctx().Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
@@ -550,10 +553,6 @@ func (fm *FileManager) LoadQueueFromDB() {
 			fs.RequestStatus == domain.RequestStateCompleted {
 			continue
 		}
-		fs.chPartList = make(chan int64, fs.partListCount())
-		for p := range fs.PartList {
-			fs.chPartList <- p
-		}
 		fm.AddToQueue(fs)
 	}
 }
@@ -568,7 +567,7 @@ func (fm *FileManager) SetNetworkStatus(state domain.NetworkStatus) {
 
 func (fm *FileManager) downloadCompleted(msgID int64, filePath string, stateType domain.FileStateType) {
 	// delete file status
-	fm.DeleteFromQueue(msgID)
+	fm.DeleteFromQueue(msgID, domain.RequestStateCompleted)
 	repo.Ctx().Files.DeleteFileStatus(msgID)
 	if fm.onDownloadCompleted != nil {
 		fm.onDownloadCompleted(msgID, filePath, stateType)
@@ -585,7 +584,7 @@ func (fm *FileManager) uploadCompleted(msgID, fileID, targetID int64,
 
 ) {
 	// delete file status
-	fm.DeleteFromQueue(msgID)
+	fm.DeleteFromQueue(msgID, domain.RequestStateCompleted)
 	repo.Ctx().Files.DeleteFileStatus(msgID)
 	if fm.onUploadCompleted != nil {
 		fm.onUploadCompleted(msgID, fileID, targetID, clusterID, totalParts, stateType, filePath, uploadRequest, thumbFileID, thumbTotalParts)

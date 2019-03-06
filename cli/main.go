@@ -75,7 +75,7 @@ func main() {
 		}
 	} else {
 		dbPath = "./_db"
-		dbID = "23740099"
+		dbID = "23740071"
 	}
 
 	qPath := "./_queue"
@@ -119,9 +119,9 @@ func main() {
 		// fnGroupUploadPhoto()
 		// fnLoginWithAuthKey()
 		// fnRunDownloadFileThumbnail()
-		// fnStartDownloadAndCancelRequestafterward()
+		fnStartDownloadAndCancelRequestafterward()
 		// fnTestSaveFilesOnMessageGetHistory()
-		fnTestGetSharedMedia()
+		// fnTestGetSharedMedia()
 		//block forever
 		select {}
 	}
@@ -160,6 +160,21 @@ func fnStartDownloadAndCancelRequestafterward() {
 		time.Sleep(3 * time.Second)
 		_SDK.CancelDownload(1249)
 		logs.Warn("ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZz Cancell Called")
+	}()
+	go func() {
+		time.Sleep(15 * time.Second)
+		_SDK.FileDownload(1249)
+		logs.Warn("ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZz Restart Download Called after Cancel")
+	}()
+	go func() {
+		time.Sleep(18 * time.Second)
+		_SDK.PauseDownload(1249)
+		logs.Warn("ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZz Pause Download Called")
+	}()
+	go func() {
+		time.Sleep(30 * time.Second)
+		_SDK.FileDownload(1249)
+		logs.Warn("ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZz Restart Download Called After Pause")
 	}()
 }
 func fnLoginWithAuthKey() {

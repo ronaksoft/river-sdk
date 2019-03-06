@@ -321,6 +321,10 @@ func (fs *FileStatus) LoadDTO(d dto.FileStatus, progress domain.OnFileStatusChan
 	fs.ThumbPartNo = d.ThumbPartNo
 	fs.ThumbTotalParts = d.ThumbTotalParts
 
+	fs.chPartList = make(chan int64, len(fs.PartList))
+	for p := range fs.PartList {
+		fs.chPartList <- p
+	}
 }
 
 // ReadAsFileGet create related FileGet request
