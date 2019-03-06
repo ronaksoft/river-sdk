@@ -286,16 +286,12 @@ func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) []*msg.UpdateEnvel
 	x := new(msg.UpdateUsername)
 	x.Unmarshal(u.Update)
 
-	logs.Warn("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk updateUsername()", zap.String("Old Bio", ctrl.connInfo.PickupBio()), zap.String("New Bio", x.Bio))
-
 	ctrl.connInfo.ChangeUserID(x.UserID)
 	ctrl.connInfo.ChangeUsername(x.Username)
 	ctrl.connInfo.ChangeFirstName(x.FirstName)
 	ctrl.connInfo.ChangeLastName(x.LastName)
 	ctrl.connInfo.ChangeBio(x.Bio)
 	ctrl.connInfo.Save()
-
-	
 
 	err := repo.Ctx().Users.UpdateUsername(x)
 	if err != nil {

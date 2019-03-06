@@ -131,13 +131,47 @@ func (r *repoPendingMessages) DeletePendingMessage(ID int64) error {
 	logs.Debug("PendingMessages::DeletePendingMessage()",
 		zap.Int64("ID", ID),
 	)
-
-	err := r.db.Where("ID = ?", ID).Delete(dto.PendingMessages{}).Error
+	// get pending message
+	pmsg := new(dto.PendingMessages)
+	err := r.db.Where("ID = ?", ID).First(pmsg).Error
 	if err != nil {
-		logs.Error("PendingMessages::DeletePendingMessage()-> delete pendingMessage entity", zap.Error(err))
+		logs.Error("PendingMessages::GetPendingMessageByID()-> fetch pendingMessage entity", zap.Error(err))
 		return err
 	}
-	return nil
+	// get its dialog
+	d := new(dto.Dialogs)
+	err = r.db.Where("PeerID =? AND PeerType= ?", pmsg.PeerID, pmsg.PeerType).First(d).Error
+	if err != nil {
+		logs.Error("PendingMessages::GetPendingMessageByID()-> fetch dialog entity", zap.Error(err))
+		return err
+	}
+
+	err = r.db.Where("ID = ?", ID).Delete(dto.PendingMessages{}).Error
+	if err != nil {
+		logs.Error("PendingMessages::DeletePendingMessage()-> delete pendingMessage entity", zap.Error(err))
+		// return err
+	}
+
+	// if this message is this dialog top message id
+	if d.TopMessageID == pmsg.ID {
+		dtoPend := dto.PendingMessages{}
+		err = r.db.Table(dtoPend.TableName()).Where("PeerID =? AND PeerType= ?", d.PeerID, d.PeerType).First(&dtoPend).Error // cuz the pendMsg Ids are negative of nano time so the smallest is latest record
+		if err == nil && dtoPend.ID != 0 {
+			d.TopMessageID = dtoPend.ID
+			d.LastUpdate = dtoPend.CreatedOn
+			err = r.db.Save(d).Error
+		} else {
+			dtoMsg := dto.Messages{}
+			err = r.db.Table(dtoMsg.TableName()).Where("PeerID =? AND PeerType= ?", d.PeerID, d.PeerType).Last(&dtoMsg).Error
+			if err == nil && dtoMsg.ID != 0 {
+				d.TopMessageID = dtoMsg.ID
+				d.LastUpdate = dtoMsg.CreatedOn
+				err = r.db.Save(d).Error
+			}
+		}
+	}
+
+	return err
 }
 
 // DeleteManyPendingMessage

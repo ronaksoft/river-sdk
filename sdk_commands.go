@@ -1089,7 +1089,6 @@ func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB dom
 		return
 	}
 
-	logs.Warn("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk accountUpdateProfile()", zap.String("Old Bio", r.ConnInfo.Bio), zap.String("New Bio", req.Bio))
 	//TODO : add connInfo Bio and save it too
 	r.ConnInfo.FirstName = req.FirstName
 	r.ConnInfo.LastName = req.LastName
