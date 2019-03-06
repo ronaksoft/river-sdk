@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	_ClientSendMessageMediaType   = -1
-	_ClientSendMessageContactType = -2
+	_ClientSendMessageMediaType       = -1
+	_ClientSendMessageContactType     = -2
+	_ClientSendMessageGeoLocationType = -3
 )
 
 type PendingMessages struct {
@@ -83,12 +84,7 @@ func (m *PendingMessages) MapToUserMessage(v *msg.UserMessage) {
 	v.Entities = make([]*msg.MessageEntity, 0)
 	json.Unmarshal(m.Entities, &v.Entities)
 
-	if m.MediaType == int32(msg.InputMediaTypeUploadedDocument) {
-		v.MessageType = _ClientSendMessageMediaType
-	}
-	if m.MediaType == int32(msg.InputMediaTypeContact) {
-		v.MessageType = _ClientSendMessageContactType
-	}
+	v.MessageType = fnGetMessageType(m.MediaType)
 
 	v.MediaType = msg.MediaType(m.MediaType)
 	v.Media = m.Media
@@ -113,12 +109,8 @@ func (m *PendingMessages) MapToDtoMessage(v *Messages) {
 	//v.MessageAction = m.MessageAction
 	v.Entities = m.Entities
 
-	if m.MediaType == int32(msg.InputMediaTypeUploadedDocument) {
-		v.MessageType = _ClientSendMessageMediaType
-	}
-	if m.MediaType == int32(msg.InputMediaTypeContact) {
-		v.MessageType = _ClientSendMessageContactType
-	}
+	v.MessageType = fnGetMessageType(m.MediaType)
+
 	v.MediaType = int32(m.MediaType)
 	v.Media = m.Media
 
@@ -163,4 +155,17 @@ func (m *PendingMessages) MapFromMessageMedia(v *msg.MessagesSendMedia) {
 	m.ClearDraft = v.ClearDraft
 	m.MediaType = int32(v.MediaType)
 	m.Media = v.MediaData
+}
+
+func fnGetMessageType(inputType int32) int64 {
+	if inputType == int32(msg.InputMediaTypeUploadedDocument) {
+		return _ClientSendMessageMediaType
+	}
+	if inputType == int32(msg.InputMediaTypeContact) {
+		return _ClientSendMessageContactType
+	}
+	if inputType == int32(msg.InputMediaTypeGeoLocation) {
+		return _ClientSendMessageGeoLocationType
+	}
+	return 0
 }
