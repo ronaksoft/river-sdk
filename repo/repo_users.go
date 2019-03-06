@@ -44,12 +44,6 @@ func (r *repoUsers) SaveUser(user *msg.User) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	// TODO:: delete me
-	if user.Photo == nil {
-		logs.Warn("oooooooooooooooooooooooooooooooooo SaveUser()", zap.String("user", user.String()))
-	}
-	// ----------------
-
 	if user == nil {
 		logs.Debug("RepoUsers::SaveUser()",
 			zap.String("User", "user is null"),
@@ -110,10 +104,6 @@ func (r *repoUsers) SaveUser(user *msg.User) error {
 func (r *repoUsers) SaveContactUser(user *msg.ContactUser) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
-	if user.Photo == nil {
-		logs.Warn("oooooooooooooooooooooooooooooooooo SaveContactUser()", zap.String("user", user.String()))
-	}
 
 	if user == nil {
 		logs.Debug("RepoUsers::SaveContactUser()",
