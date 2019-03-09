@@ -66,9 +66,25 @@ var SdkGetServerTime = &ishell.Cmd{
 	},
 }
 
+var SdkUpdateGetState = &ishell.Cmd{
+	Name: "UpdateGetState",
+	Func: func(c *ishell.Context) {
+		req := msg.UpdateGetState{}
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_UpdateGetState, reqBytes, reqDelegate, false, false); err != nil {
+			logs.Error("ExecuteCommand failed", zap.Error(err))
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+
+	},
+}
+
 func init() {
 	SDK.AddCmd(SdkConnInfo)
 	SDK.AddCmd(SdkSetLogLevel)
 	SDK.AddCmd(SdkGetDiffrence)
 	SDK.AddCmd(SdkGetServerTime)
+	SDK.AddCmd(SdkUpdateGetState)
 }

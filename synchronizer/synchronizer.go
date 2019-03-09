@@ -258,7 +258,7 @@ func (ctrl *Controller) SetUserID(userID int64) {
 
 // getUpdateState responsibility is to only get server updateID
 func (ctrl *Controller) getUpdateState() (updateID int64, err error) {
-
+	updateID = 0
 	// when network is disconnected no need to enqueue update request in goque
 	if ctrl.networkCtrl.Quality() == domain.NetworkDisconnected || ctrl.networkCtrl.Quality() == domain.NetworkConnecting {
 		return -1, domain.ErrNoConnection
@@ -524,15 +524,14 @@ func (ctrl *Controller) getAllDialogs(offset int32, limit int32) {
 					err = createMessageHole(dialog.PeerID, 0, dialog.TopMessageID-1)
 					if err != nil {
 						logs.Error("getAllDialogs() -> createMessageHole() ", zap.Error(err))
-					} else {
-						// make sure to created the messagehole b4 creating dialog
-						err := repo.Ctx().Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
-						if err != nil {
-							logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveDialog() ",
-								zap.String("Error", err.Error()),
-								zap.String("Dialog", fmt.Sprintf("%v", dialog)),
-							)
-						}
+					}
+					// make sure to created the messagehole b4 creating dialog
+					err := repo.Ctx().Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
+					if err != nil {
+						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveDialog() ",
+							zap.String("Error", err.Error()),
+							zap.String("Dialog", fmt.Sprintf("%v", dialog)),
+						)
 					}
 				}
 

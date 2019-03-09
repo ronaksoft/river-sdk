@@ -31,22 +31,22 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		err = createMessageHole(x.Message.PeerID, 0, x.Message.ID-1)
 		if err != nil {
 			logs.Error("updateNewMessage() -> createMessageHole() ", zap.Error(err))
-		} else {
-			// make sure to created the messagehole b4 creating dialog
-			dialog = &msg.Dialog{
-				PeerID:       x.Message.PeerID,
-				PeerType:     x.Message.PeerType,
-				TopMessageID: x.Message.ID,
-				UnreadCount:  0,
-				AccessHash:   x.AccessHash,
-			}
-			err := repo.Ctx().Dialogs.SaveDialog(dialog, x.Message.CreatedOn)
-			if err != nil {
-				logs.Error("updateNewMessage() -> onSuccessCallback() -> SaveDialog() ",
-					zap.String("Error", err.Error()),
-					zap.String("Dialog", fmt.Sprintf("%v", dialog)),
-				)
-			}
+		}
+
+		// make sure to created the messagehole b4 creating dialog
+		dialog = &msg.Dialog{
+			PeerID:       x.Message.PeerID,
+			PeerType:     x.Message.PeerType,
+			TopMessageID: x.Message.ID,
+			UnreadCount:  0,
+			AccessHash:   x.AccessHash,
+		}
+		err := repo.Ctx().Dialogs.SaveDialog(dialog, x.Message.CreatedOn)
+		if err != nil {
+			logs.Error("updateNewMessage() -> onSuccessCallback() -> SaveDialog() ",
+				zap.String("Error", err.Error()),
+				zap.String("Dialog", fmt.Sprintf("%v", dialog)),
+			)
 		}
 
 		if err != nil {

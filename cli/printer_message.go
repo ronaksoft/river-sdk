@@ -344,6 +344,10 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		clientTime := time.Now().Unix()
 		delta := serverTime - clientTime
 		logs.Message(fmt.Sprintf("ServerTime : %d \t ClientTime : %d \t Delta: %d", serverTime, clientTime, delta))
+	case msg.C_UpdateState:
+		x := new(msg.UpdateState)
+		x.Unmarshal(envelope.Message)
+		logs.Message("\r\n" + x.String())
 	default:
 		constructorName, _ := msg.ConstructorNames[envelope.Constructor]
 		logs.Message("DEFAULT",
