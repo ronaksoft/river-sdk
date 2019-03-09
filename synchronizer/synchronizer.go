@@ -118,6 +118,8 @@ func (ctrl *Controller) Start() {
 		ctrl.updateID = int64(v)
 	}
 
+	logs.Warn("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", zap.Int64("ctrl.UpdateID", ctrl.updateID))
+
 	// Sync with Server
 	go ctrl.sync()
 
@@ -405,6 +407,7 @@ func (ctrl *Controller) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 
 		for _, update := range x.Updates {
 
+			logs.Warn("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx onGetDiffrenceSucceed()", zap.Int64("update.UpdateID", update.UpdateID))
 			// we allready processed this update type
 			if update.Constructor == msg.C_UpdateMessageID {
 				continue
@@ -619,7 +622,7 @@ func (ctrl *Controller) MessageHandler(messages []*msg.MessageEnvelope) {
 func (ctrl *Controller) UpdateHandler(u *msg.UpdateContainer) {
 
 	logs.Debug("UpdateHandler() Called",
-		zap.Int64("UpdateID", ctrl.updateID),
+		zap.Int64("ctrl.UpdateID", ctrl.updateID),
 		zap.Int64("MaxID", u.MaxUpdateID),
 		zap.Int64("MinID", u.MinUpdateID),
 		zap.Int("Count : ", len(u.Updates)),

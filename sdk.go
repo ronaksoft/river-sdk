@@ -855,6 +855,7 @@ readChannel:
 	for _, val := range upds {
 
 		for _, u := range val.Updates {
+			logs.Warn("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx onReceivedUpdate()", zap.Int64("u.UpdateID", u.UpdateID))
 			// extract min and max id
 			if u.UpdateID < minID && u.UpdateID > 0 {
 				minID = u.UpdateID

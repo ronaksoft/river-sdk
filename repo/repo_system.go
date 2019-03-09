@@ -23,7 +23,7 @@ type repoSystem struct {
 func (r *repoSystem) LoadInt(keyName string) (keyValue int, err error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
+	keyValue = 0
 	row := new(dto.System)
 	err = r.db.Where("KeyName = ?", keyName).First(row).Error
 
@@ -62,6 +62,8 @@ func (r *repoSystem) LoadString(keyName string) (keyValue string, err error) {
 func (r *repoSystem) SaveInt(keyName string, keyValue int32) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
+
+	logs.Warn("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx repoSystem()", zap.Int32(keyName, keyValue))
 
 	s := dto.System{}
 
