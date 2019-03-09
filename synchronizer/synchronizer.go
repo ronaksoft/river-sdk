@@ -728,6 +728,7 @@ func (ctrl *Controller) CheckSyncState() {
 // ClearUpdateID reset updateID
 func (ctrl *Controller) ClearUpdateID() {
 	ctrl.updateID = 0
+	ctrl.UserID = 0
 }
 
 // handleMediaMessage extract files info from messages that have Document object
