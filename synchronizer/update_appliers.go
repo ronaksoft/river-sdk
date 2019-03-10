@@ -111,7 +111,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 	case domain.MessageActionNope:
 		// Do nothing
 	case domain.MessageActionContactRegistered:
-		// Not implemented
+		go ctrl.ContactImportFromServer()
 	case domain.MessageActionGroupCreated:
 		// this will be handled by upper level on UpdateContainer
 	case domain.MessageActionGroupAddUser:

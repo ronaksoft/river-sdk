@@ -766,3 +766,15 @@ func handleMediaMessage(messages ...*msg.UserMessage) {
 		}
 	}
 }
+
+// ContactImportFromServer import contact from server
+func (ctrl *Controller) ContactImportFromServer() {
+	contactsGetHash, err := repo.Ctx().System.LoadInt(domain.ColumnContactsGetHash)
+	if err != nil {
+		logs.Error("onNetworkControllerConnected() failed to get contactsGetHash", zap.Error(err))
+	}
+	contactGetReq := new(msg.ContactsGet)
+	contactGetReq.Crc32Hash = uint32(contactsGetHash)
+	contactGetBytes, _ := contactGetReq.Marshal()
+	ctrl.queue.ExecuteRealtimeCommand(uint64(domain.SequentialUniqueID()), msg.C_ContactsGet, contactGetBytes, nil, nil, false, false)
+}

@@ -277,19 +277,8 @@ func (r *River) onNetworkControllerConnected() {
 		}
 
 		// import contact from server
-		r.contactImportFromServer()
+		r.syncCtrl.ContactImportFromServer()
 	}
-}
-
-func (r *River) contactImportFromServer() {
-	contactsGetHash, err := repo.Ctx().System.LoadInt(domain.ColumnContactsGetHash)
-	if err != nil {
-		logs.Error("onNetworkControllerConnected() failed to get contactsGetHash", zap.Error(err))
-	}
-	contactGetReq := new(msg.ContactsGet)
-	contactGetReq.Crc32Hash = uint32(contactsGetHash)
-	contactGetBytes, _ := contactGetReq.Marshal()
-	r.queueCtrl.ExecuteRealtimeCommand(uint64(domain.SequentialUniqueID()), msg.C_ContactsGet, contactGetBytes, nil, nil, false, false)
 }
 
 // onGetServerTime update client & server time difference
