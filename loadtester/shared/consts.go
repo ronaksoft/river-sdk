@@ -8,7 +8,9 @@ import (
 
 var (
 	// DefaultServerURL websocket url
-	DefaultServerURL = "ws://test.river.im"
+	DefaultServerURL = "ws://new.river.im"
+	// DefaultFileServerURL file server cluster
+	DefaultFileServerURL = "http://new.river.im/file"
 
 	// DefaultTimeout request timeout
 	DefaultTimeout = 10 * time.Second
@@ -17,7 +19,7 @@ var (
 	DefaultSendTimeout = 10 * time.Second
 
 	// MaxWorker concurrent go routins
-	MaxWorker = 1000
+	MaxWorker = 100
 
 	// MaxQueueBuffer queue channel buffer size
 	MaxQueueBuffer = 10000

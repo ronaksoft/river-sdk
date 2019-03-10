@@ -40,6 +40,7 @@ type Acter interface {
 	ReceivedErrorResponse()
 
 	SetUpdateApplier(constructor int64, fn UpdateApplier)
+	ExecFileRequest(msgEnvelop *msg.MessageEnvelope) (*msg.MessageEnvelope, error)
 }
 
 // Screenwriter scenario interface

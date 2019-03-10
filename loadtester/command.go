@@ -173,3 +173,35 @@ var cmdSendMessage = &ishell.Cmd{
 		fnPrintReports(time.Since(sw))
 	},
 }
+
+var cmdSendFile = &ishell.Cmd{
+	Name: "SendFile",
+	Func: func(c *ishell.Context) {
+
+		startNo := fnStartPhone(c)
+		endNo := fnEndPhone(c)
+
+		// clear
+		fnClearScreeen()
+		fnClearReports()
+
+		// start workers
+		startDispatcher()
+		defer stopDispatcher()
+
+		phoneNo := ""
+		wg := &sync.WaitGroup{}
+		sw := time.Now()
+		for startNo <= endNo {
+			phoneNo = shared.GetPhone(startNo)
+			startNo++
+
+			// Add To Queue
+			wg.Add(1)
+			JobQueue <- Job{PhoneNo: phoneNo, Wait: wg, Scenario: scenario.NewSendFile(true)}
+
+		}
+		wg.Wait()
+		fnPrintReports(time.Since(sw))
+	},
+}

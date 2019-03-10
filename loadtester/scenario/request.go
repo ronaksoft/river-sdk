@@ -1,7 +1,10 @@
 package scenario
 
 import (
+	"crypto/rand"
 	"fmt"
+
+	"git.ronaksoftware.com/ronak/riversdk/domain"
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
@@ -192,5 +195,73 @@ func GetPeerInfo(fromUserID, toUserID int64, peerType msg.PeerType) (peerInfo *s
 		PeerType:   peerType,
 	}
 
+	return
+}
+
+func FileSavePart() (envelop *msg.MessageEnvelope, fileID int64, fileParts int32) {
+	fileID = shared.GetSeqID()
+	fileParts = 1
+	req := new(msg.FileSavePart)
+	req.FileID = fileID
+	req.PartID = 1
+	req.TotalParts = 1
+	req.Bytes = fnGetRandomBuff(domain.FilePayloadSize)
+
+	data, err := req.Marshal()
+	if err != nil {
+		panic(err)
+	}
+
+	envelop = wrapEnvelop(msg.C_FileSavePart, data)
+
+	return
+}
+
+func fnGetRandomBuff(size int) []byte {
+	buff := make([]byte, size, size)
+	rand.Read(buff)
+	return buff
+}
+
+func MessageSendMedia(fileID int64, totalParts int32, peer *shared.PeerInfo) (envelop *msg.MessageEnvelope) {
+	req := new(msg.MessagesSendMedia)
+	req.Peer = &msg.InputPeer{
+		AccessHash: peer.AccessHash,
+		ID:         peer.PeerID,
+		Type:       peer.PeerType,
+	}
+	req.RandomID = shared.GetSeqID()
+
+	req.MediaType = msg.InputMediaTypeUploadedDocument
+	req.ReplyTo = 0
+	req.ClearDraft = true
+	attribFile := msg.DocumentAttributeFile{
+		Filename: "N.raw",
+	}
+	attribFileBuff, _ := attribFile.Marshal()
+	attrib := &msg.DocumentAttribute{
+		Type: msg.AttributeTypeFile,
+		Data: attribFileBuff,
+	}
+	media := msg.InputMediaUploadedDocument{
+		Attributes: []*msg.DocumentAttribute{attrib},
+		Caption:    "C",
+		File:       &msg.InputFile{FileID: fileID, FileName: "N.raw", TotalParts: totalParts, MD5Checksum: ""},
+		MimeType:   "application/raw",
+		Stickers:   nil,
+		Thumbnail:  nil,
+	}
+	mediaData, err := media.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	req.MediaData = mediaData
+
+	data, err := req.Marshal()
+	if err != nil {
+		panic(err)
+	}
+
+	envelop = wrapEnvelop(msg.C_MessagesSendMedia, data)
 	return
 }

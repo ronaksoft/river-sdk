@@ -297,3 +297,8 @@ func (act *Actor) SetUpdateApplier(constructor int64, fn shared.UpdateApplier) {
 	act.updateApplier[constructor] = fn
 	act.mxUpdate.Unlock()
 }
+
+// ExecFileRequest execute request against file server
+func (act *Actor) ExecFileRequest(msgEnvelop *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
+	return controller.ExecuteFileRequest(msgEnvelop, act)
+}
