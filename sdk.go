@@ -837,7 +837,7 @@ readChannel:
 	updateContainer := new(msg.UpdateContainer)
 
 	logs.Debug("SDK::onReceivedUpdate()",
-		zap.Int("Received Container Count :", len(upds)),
+		zap.Int("Received Container Count", len(upds)),
 	)
 
 	minID := int64(^uint64(0) >> 1)
@@ -855,7 +855,6 @@ readChannel:
 	for _, val := range upds {
 
 		for _, u := range val.Updates {
-			logs.Warn("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx onReceivedUpdate()", zap.Int64("u.UpdateID", u.UpdateID))
 			// extract min and max id
 			if u.UpdateID < minID && u.UpdateID > 0 {
 				minID = u.UpdateID
@@ -865,7 +864,7 @@ readChannel:
 			}
 
 			if u.UpdateID > 0 && u.UpdateID <= currentUpdateID {
-				logs.Error("SDK::onReceivedUpdate() XXXXXXXXXXXXXXXXXXXXXXXXXXXXX Outdated update ",
+				logs.Error("SDK::onReceivedUpdate() XXXXXXXX Outdated update ",
 					zap.Int64("CurrentUpdateID", currentUpdateID),
 					zap.Int64("UpdateID", u.UpdateID),
 				)
@@ -919,7 +918,7 @@ readChannel:
 	}
 
 	if int(maxID-minID) > len(updates) {
-		logs.Error("SDK::onReceivedUpdate() XXXXXXXXXXXXXXXXXXXXXXXXXXXXX looks like there is missed update ",
+		logs.Error("SDK::onReceivedUpdate() XXXXXXXX looks like there is missed update ",
 			zap.Int64("CurrentUpdateID", currentUpdateID),
 			zap.Int64("MaxID", maxID),
 			zap.Int64("MinID", minID),
@@ -932,10 +931,10 @@ readChannel:
 		minID = 0
 	}
 	logs.Debug("SDK::onReceivedUpdate()",
-		zap.Int("Received Updates Count :", len(updates)),
-		zap.Int64("UpdateID :", r.syncCtrl.UpdateID()),
-		zap.Int64("MaxID :", maxID),
-		zap.Int64("MinID :", minID),
+		zap.Int("Received Updates Count", len(updates)),
+		zap.Int64("UpdateID", r.syncCtrl.UpdateID()),
+		zap.Int64("MaxID", maxID),
+		zap.Int64("MinID", minID),
 	)
 
 	// check max UpdateID if its greater than snapshot sync threshold discard recived updates and execute sanpshot sync

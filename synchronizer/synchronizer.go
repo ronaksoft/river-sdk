@@ -118,8 +118,6 @@ func (ctrl *Controller) Start() {
 		ctrl.updateID = int64(v)
 	}
 
-	logs.Warn("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", zap.Int64("ctrl.UpdateID", ctrl.updateID))
-
 	// Sync with Server
 	go ctrl.sync()
 
@@ -167,7 +165,7 @@ func (ctrl *Controller) updateSyncStatus(newStatus domain.SyncStatus) {
 func (ctrl *Controller) watchDog() {
 	for {
 		select {
-		case <-time.After(60 * time.Second):
+		case <-time.After(30 * time.Second):
 			// make sure network is connected b4 start getUpdateDifference or snapshotSync
 			for ctrl.networkCtrl.Quality() == domain.NetworkDisconnected || ctrl.networkCtrl.Quality() == domain.NetworkConnecting {
 				time.Sleep(100 * time.Millisecond)
@@ -209,6 +207,7 @@ func (ctrl *Controller) sync() {
 	var serverUpdateID int64
 	var err error
 
+	// get updateID from server
 	serverUpdateID, err = ctrl.getUpdateState()
 	if err != nil {
 		logs.Error("sync()-> getUpdateState()", zap.Error(err))
@@ -235,7 +234,7 @@ func (ctrl *Controller) sync() {
 		if err != nil {
 			logs.Error("sync()-> SaveInt()", zap.Error(err))
 		}
-	} else if time.Now().Sub(ctrl.lastUpdateReceived).Truncate(time.Second) > 60 {
+	} else if time.Now().Sub(ctrl.lastUpdateReceived).Truncate(time.Second) > 30 {
 		// if it is passed over 60 seconds from the last update received it fetches the update
 		// difference from the server
 		if serverUpdateID > ctrl.updateID+1 {
@@ -304,6 +303,12 @@ func (ctrl *Controller) getUpdateState() (updateID int64, err error) {
 func (ctrl *Controller) getUpdateDifference(minUpdateID int64) {
 
 	logs.Debug("getUpdateDifference()")
+
+	// just double check to prevent calling getUpdateDifference() when sync routine is allready running
+	if ctrl.isSyncing {
+		return
+	}
+
 	ctrl.isUpdatingDifferenceLock.Lock()
 	if ctrl.isUpdatingDifference {
 		ctrl.isUpdatingDifferenceLock.Unlock()
@@ -315,7 +320,7 @@ func (ctrl *Controller) getUpdateDifference(minUpdateID int64) {
 
 	// if updateID is zero then wait for snapshot sync
 	// and when sending requests w8 till its finish
-	if ctrl.updateID == 0 {
+	if ctrl.updateID == 0 && minUpdateID > domain.SnapshotSyncThreshold {
 		ctrl.isUpdatingDifference = false
 		logs.Debug("getUpdateDifference() Exited UpdateID is zero need snapshot sync")
 		return
@@ -406,8 +411,6 @@ func (ctrl *Controller) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 		}
 
 		for _, update := range x.Updates {
-
-			logs.Warn("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx onGetDiffrenceSucceed()", zap.Int64("update.UpdateID", update.UpdateID))
 			// we allready processed this update type
 			if update.Constructor == msg.C_UpdateMessageID {
 				continue
