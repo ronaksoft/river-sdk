@@ -324,18 +324,6 @@ message InputDocument {
     required int32 ClusterID = 3;
 }
 
-// ActiveSession
-message ActiveSession {
-    required string AuthID = 100;
-    required string Model = 1;
-    required string AppVersion = 2;
-    required string SystemVersion = 3;
-    required string LangCode = 4;
-    required int64 CreatedAt = 5;
-    required int64 ActiveAt = 6;
-    required string ClientIP = 7;
-}
-
 // NotificationType
 enum PushTokenProvider {
     PushTokenFirebase = 0;

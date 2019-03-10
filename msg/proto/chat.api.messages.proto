@@ -50,6 +50,7 @@ message MessagesEdit {
     required InputPeer Peer = 2;
     required string Body = 3;
     required int64 MessageID = 4;
+    repeated MessageEntity Entities = 5;
 }
 
 // MessageReadHistory

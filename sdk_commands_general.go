@@ -72,10 +72,10 @@ func (r *River) GetSyncStatus() int32 {
 }
 
 // Logout drop queue & database , etc ...
-func (r *River) Logout() (int64, error) {
+func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 
 	// unregister device if token exist
-	if r.DeviceToken != nil {
+	if notifyServer && r.DeviceToken != nil {
 		reqID := uint64(domain.SequentialUniqueID())
 		req := new(msg.AccountUnregisterDevice)
 		req.Token = r.DeviceToken.Token
@@ -120,15 +120,17 @@ func (r *River) Logout() (int64, error) {
 		r.syncCtrl.ClearUpdateID()
 	}
 
-	req := new(msg.AuthLogout)
-	buff, _ := req.Marshal()
-	err = r.queueCtrl.ExecuteRealtimeCommand(uint64(requestID), msg.C_AuthLogout, buff, timeoutCallback, successCallback, true, false)
-	if err != nil {
-		r.releaseDelegate(requestID)
+	if notifyServer {
+		req := new(msg.AuthLogout)
+		buff, _ := req.Marshal()
+		err = r.queueCtrl.ExecuteRealtimeCommand(uint64(requestID), msg.C_AuthLogout, buff, timeoutCallback, successCallback, true, false)
+		if err != nil {
+			r.releaseDelegate(requestID)
+		}
 	}
 
 	if r.mainDelegate != nil && r.mainDelegate.OnSessionClosed != nil {
-		r.mainDelegate.OnSessionClosed(0)
+		r.mainDelegate.OnSessionClosed(reason)
 	}
 
 	return requestID, err

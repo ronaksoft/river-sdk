@@ -64,6 +64,12 @@ func ResultGroupFull(out *MessageEnvelope, res *GroupFull) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultAccountAuthorization(out *MessageEnvelope, res *AccountAuthorization) {
+	out.Constructor = C_AccountAuthorization
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultUpdateUserPhoto(out *MessageEnvelope, res *UpdateUserPhoto) {
 	out.Constructor = C_UpdateUserPhoto
 	pbytes.Put(out.Message)
@@ -238,6 +244,12 @@ func ResultUsersGet(out *MessageEnvelope, res *UsersGet) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultAccountResetAuthorization(out *MessageEnvelope, res *AccountResetAuthorization) {
+	out.Constructor = C_AccountResetAuthorization
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultRSAPublicKey(out *MessageEnvelope, res *RSAPublicKey) {
 	out.Constructor = C_RSAPublicKey
 	pbytes.Put(out.Message)
@@ -246,6 +258,12 @@ func ResultRSAPublicKey(out *MessageEnvelope, res *RSAPublicKey) {
 }
 func ResultMessagesGetDialog(out *MessageEnvelope, res *MessagesGetDialog) {
 	out.Constructor = C_MessagesGetDialog
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultAccountAuthorizations(out *MessageEnvelope, res *AccountAuthorizations) {
+	out.Constructor = C_AccountAuthorizations
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -336,12 +354,6 @@ func ResultMessagesGetDialogs(out *MessageEnvelope, res *MessagesGetDialogs) {
 }
 func ResultUpdateGetState(out *MessageEnvelope, res *UpdateGetState) {
 	out.Constructor = C_UpdateGetState
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
-func ResultAccountSessions(out *MessageEnvelope, res *AccountSessions) {
-	out.Constructor = C_AccountSessions
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -508,6 +520,12 @@ func ResultAccountSetNotifySettings(out *MessageEnvelope, res *AccountSetNotifyS
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
+func ResultAccountGetAuthorizations(out *MessageEnvelope, res *AccountGetAuthorizations) {
+	out.Constructor = C_AccountGetAuthorizations
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
 func ResultUpdateMessageID(out *MessageEnvelope, res *UpdateMessageID) {
 	out.Constructor = C_UpdateMessageID
 	pbytes.Put(out.Message)
@@ -576,6 +594,12 @@ func ResultInputMediaDocument(out *MessageEnvelope, res *InputMediaDocument) {
 }
 func ResultMediaDocument(out *MessageEnvelope, res *MediaDocument) {
 	out.Constructor = C_MediaDocument
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+func ResultUpdateAuthorizationReset(out *MessageEnvelope, res *UpdateAuthorizationReset) {
+	out.Constructor = C_UpdateAuthorizationReset
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -790,12 +814,6 @@ func ResultMessagesDialogs(out *MessageEnvelope, res *MessagesDialogs) {
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
 }
-func ResultAccountGetActiveSessions(out *MessageEnvelope, res *AccountGetActiveSessions) {
-	out.Constructor = C_AccountGetActiveSessions
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
 func ResultUsersGetFull(out *MessageEnvelope, res *UsersGetFull) {
 	out.Constructor = C_UsersGetFull
 	pbytes.Put(out.Message)
@@ -810,12 +828,6 @@ func ResultInputPeer(out *MessageEnvelope, res *InputPeer) {
 }
 func ResultMessagesGetHistory(out *MessageEnvelope, res *MessagesGetHistory) {
 	out.Constructor = C_MessagesGetHistory
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
-func ResultActiveSession(out *MessageEnvelope, res *ActiveSession) {
-	out.Constructor = C_ActiveSession
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)

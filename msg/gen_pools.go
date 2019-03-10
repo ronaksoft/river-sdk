@@ -65,6 +65,12 @@ var (
 			return m
 		},
 	}
+	PoolAccountAuthorization = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountAuthorization)
+			return m
+		},
+	}
 	PoolUpdateUserPhoto = sync.Pool{
 		New: func() interface{} {
 			m := new(UpdateUserPhoto)
@@ -239,6 +245,12 @@ var (
 			return m
 		},
 	}
+	PoolAccountResetAuthorization = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountResetAuthorization)
+			return m
+		},
+	}
 	PoolRSAPublicKey = sync.Pool{
 		New: func() interface{} {
 			m := new(RSAPublicKey)
@@ -248,6 +260,12 @@ var (
 	PoolMessagesGetDialog = sync.Pool{
 		New: func() interface{} {
 			m := new(MessagesGetDialog)
+			return m
+		},
+	}
+	PoolAccountAuthorizations = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountAuthorizations)
 			return m
 		},
 	}
@@ -338,12 +356,6 @@ var (
 	PoolUpdateGetState = sync.Pool{
 		New: func() interface{} {
 			m := new(UpdateGetState)
-			return m
-		},
-	}
-	PoolAccountSessions = sync.Pool{
-		New: func() interface{} {
-			m := new(AccountSessions)
 			return m
 		},
 	}
@@ -509,6 +521,12 @@ var (
 			return m
 		},
 	}
+	PoolAccountGetAuthorizations = sync.Pool{
+		New: func() interface{} {
+			m := new(AccountGetAuthorizations)
+			return m
+		},
+	}
 	PoolUpdateMessageID = sync.Pool{
 		New: func() interface{} {
 			m := new(UpdateMessageID)
@@ -578,6 +596,12 @@ var (
 	PoolMediaDocument = sync.Pool{
 		New: func() interface{} {
 			m := new(MediaDocument)
+			return m
+		},
+	}
+	PoolUpdateAuthorizationReset = sync.Pool{
+		New: func() interface{} {
+			m := new(UpdateAuthorizationReset)
 			return m
 		},
 	}
@@ -791,12 +815,6 @@ var (
 			return m
 		},
 	}
-	PoolAccountGetActiveSessions = sync.Pool{
-		New: func() interface{} {
-			m := new(AccountGetActiveSessions)
-			return m
-		},
-	}
 	PoolUsersGetFull = sync.Pool{
 		New: func() interface{} {
 			m := new(UsersGetFull)
@@ -812,12 +830,6 @@ var (
 	PoolMessagesGetHistory = sync.Pool{
 		New: func() interface{} {
 			m := new(MessagesGetHistory)
-			return m
-		},
-	}
-	PoolActiveSession = sync.Pool{
-		New: func() interface{} {
-			m := new(ActiveSession)
 			return m
 		},
 	}

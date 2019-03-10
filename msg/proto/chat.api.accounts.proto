@@ -106,17 +106,36 @@ message AccountGetPrivacy {
     required AccountPrivacyKey Key = 1;
 }
 
-// AccountGetActiveSessions
+// AccountGetAuthorizations
 // @Function
-// @Returns: AccountSessions
-message AccountGetActiveSessions {
+// @Returns: Authorizations
+message AccountGetAuthorizations {
 }
 
-// AccountSessions
-message AccountSessions {
-    repeated ActiveSession Sessions = 1;
-    required int64 ActiveAuthID = 2;
+// AccountResetAuthorization
+// @Function
+// @Returns: Bool
+message AccountResetAuthorization {
+    required int64 AuthID = 1 [jstype = JS_STRING];
 }
+
+// AccountAuthorizations
+message AccountAuthorizations {
+    repeated AccountAuthorization Authorizations = 1;
+}
+
+// AccountAuthorization
+message AccountAuthorization {
+    required int64 AuthID = 100 [jstype = JS_STRING];
+    required string Model = 1;
+    required string AppVersion = 2;
+    required string SystemVersion = 3;
+    required string LangCode = 4;
+    required int64 CreatedAt = 5;
+    required int64 ActiveAt = 6;
+    required string ClientIP = 7;
+}
+
 
 // AccountPrivacyKey
 enum AccountPrivacyKey {
