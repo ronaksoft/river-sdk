@@ -109,6 +109,7 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 		r.releaseDelegate(requestID)
 
 		r.clearSystemConfig()
+		r.syncCtrl.ClearUpdateID()
 		r.networkCtrl.Reconnect()
 		r.syncCtrl.ClearUpdateID()
 	}
@@ -116,6 +117,7 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 		r.releaseDelegate(requestID)
 
 		r.clearSystemConfig()
+		r.syncCtrl.ClearUpdateID() // TOF
 		r.networkCtrl.Reconnect()
 		r.syncCtrl.ClearUpdateID()
 	}
@@ -127,6 +129,11 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 		if err != nil {
 			r.releaseDelegate(requestID)
 		}
+	} else {
+		r.clearSystemConfig()
+		r.syncCtrl.ClearUpdateID() // TOF
+		r.networkCtrl.Reconnect()
+		r.syncCtrl.ClearUpdateID()
 	}
 
 	if r.mainDelegate != nil && r.mainDelegate.OnSessionClosed != nil {
