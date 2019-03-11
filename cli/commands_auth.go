@@ -84,7 +84,7 @@ var AuthLogin = &ishell.Cmd{
 var AuthLogout = &ishell.Cmd{
 	Name: "Logout",
 	Func: func(c *ishell.Context) {
-		if _, err := _SDK.Logout(); err != nil {
+		if _, err := _SDK.Logout(true, 0); err != nil {
 			logs.Error("ExecuteCommand failed", zap.Error(err))
 		}
 	},

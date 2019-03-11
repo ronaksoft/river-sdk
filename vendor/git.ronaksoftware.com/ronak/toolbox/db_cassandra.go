@@ -2,7 +2,6 @@ package ronak
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"github.com/gocql/gocql"
 	"github.com/scylladb/gocqlx"
@@ -100,7 +99,6 @@ type CqlTableClusteringColumn struct {
 type CassDB struct {
 	config        CassConfig
 	session       *gocql.Session
-	queryObserver func(context.Context, gocql.ObservedQuery)
 }
 
 // CassConfig
@@ -122,7 +120,7 @@ type CassConfig struct {
 	ReplicationFactor  int
 	CqlVersion         string
 	DefaultIdempotence bool
-	QueryObserver      func(context.Context, gocql.ObservedQuery)
+	QueryObserver      gocql.QueryObserver
 }
 
 type Consistency uint16
@@ -186,10 +184,7 @@ func NewCassDB(conf CassConfig) *CassDB {
 	cassCluster.Timeout = conf.Timeout
 	cassCluster.ReconnectInterval = conf.ReconnectInterval
 	cassCluster.DefaultIdempotence = conf.DefaultIdempotence
-	if conf.QueryObserver != nil {
-		db.ObserveQuery = conf.QueryObserver
-		cassCluster.QueryObserver = db
-	}
+	cassCluster.QueryObserver = conf.QueryObserver
 
 	cassCluster.Authenticator = gocql.PasswordAuthenticator{
 		Username: conf.Username,
@@ -251,10 +246,6 @@ func DropKeySpace(conf CassConfig) error {
 		session.Close()
 	}
 	return nil
-}
-
-func (db *CassDB) ObserveQuery(ctx context.Context, observer gocql.ObservedQuery) {
-	// Dummy function
 }
 
 func (db *CassDB) SetConsistency(c Consistency) {
