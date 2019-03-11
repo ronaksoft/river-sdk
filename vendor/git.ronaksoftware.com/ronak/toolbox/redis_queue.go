@@ -1,13 +1,13 @@
 package ronak
 
 import (
-    "github.com/mediocregopher/radix.v3"
+	"github.com/mediocregopher/radix/v3"
 )
 
 var (
-    LUA_POP_ALL = radix.NewEvalScript(
-        1,
-        `
+	LUA_POP_ALL = radix.NewEvalScript(
+		1,
+		`
         local result = {}
         local length = tonumber(redis.call('LLEN', KEYS[1]))
         for i = 1 , length do
@@ -18,9 +18,9 @@ var (
         end
         return result
 `)
-    LUA_PUSH_WITH_LIMIT = radix.NewEvalScript(
-        2,
-        `
+	LUA_PUSH_WITH_LIMIT = radix.NewEvalScript(
+		2,
+		`
         local result = 0
         local length = tonumber(redis.call('LLEN', KEYS[1]))
         if length < KEYS[2]  then
@@ -31,41 +31,41 @@ var (
 )
 
 type RedisQueueManager struct {
-    redisCache *RedisCache
+	redisCache *RedisCache
 }
 
 func NewRedisQueueManager(redisCache *RedisCache) *RedisQueueManager {
-    m := new(RedisQueueManager)
-    m.redisCache = redisCache
+	m := new(RedisQueueManager)
+	m.redisCache = redisCache
 
-    return m
+	return m
 }
 
 func (m *RedisQueueManager) Exists(queueName string) bool {
-    if b, err := m.redisCache.Exists(queueName); err == nil && b {
-        return true
-    }
-    return false
+	if b, err := m.redisCache.Exists(queueName); err == nil && b {
+		return true
+	}
+	return false
 }
 
 func (m *RedisQueueManager) PushBytes(queueName string, item []byte) (size int, err error) {
-    return m.redisCache.LPushBytes(queueName, item)
+	return m.redisCache.LPushBytes(queueName, item)
 }
 
 func (m *RedisQueueManager) PushWithLimit(queueName string, item string, limit int) (size int, err error) {
-    err = m.redisCache.Do(LUA_PUSH_WITH_LIMIT.Cmd(&size, queueName, item))
-    return
+	err = m.redisCache.Do(LUA_PUSH_WITH_LIMIT.Cmd(&size, queueName, item))
+	return
 }
 
 func (m *RedisQueueManager) Pop(queueName string) (b []byte, err error) {
-    return m.redisCache.RPopBytes(queueName)
+	return m.redisCache.RPopBytes(queueName)
 }
 
 func (m *RedisQueueManager) PopAll(queueName string) (b [][]byte, err error) {
-    err = m.redisCache.Do(LUA_POP_ALL.Cmd(&b, queueName))
-    return
+	err = m.redisCache.Do(LUA_POP_ALL.Cmd(&b, queueName))
+	return
 }
 
 func (m *RedisQueueManager) Length(queueName string) (l int, err error) {
-    return m.redisCache.LLen(queueName)
+	return m.redisCache.LLen(queueName)
 }

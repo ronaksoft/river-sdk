@@ -1,0 +1,111 @@
+package ronak
+
+import (
+    "fmt"
+    "github.com/prometheus/client_golang/prometheus"
+    "github.com/prometheus/client_golang/prometheus/promhttp"
+    "net/http"
+)
+
+/* 
+    Creation Time: 2019 - Feb - 07
+    Created by:  (ehsan)
+    Maintainers:
+       1.  Ehsan N. Moosa (E2)
+    Auditor: Ehsan N. Moosa (E2)
+    Copyright Ronak Software Group 2018
+*/
+
+// Prometheus
+type Prometheus struct {
+    tags       map[string]string
+    registry   *prometheus.Registry
+    labels     map[string]string
+    counters   map[string]prometheus.Counter
+    gauges     map[string]prometheus.Gauge
+    histograms map[string]prometheus.Histogram
+}
+
+func NewPrometheus(bundleID, instanceID string) *Prometheus {
+    m := new(Prometheus)
+    m.tags = make(map[string]string)
+    m.counters = make(map[string]prometheus.Counter)
+    m.gauges = make(map[string]prometheus.Gauge)
+    m.histograms = make(map[string]prometheus.Histogram)
+    m.registry = prometheus.NewRegistry()
+
+    m.labels = map[string]string{
+        "BundleID":   bundleID,
+        "InstanceID": instanceID,
+    }
+
+    m.registry.MustRegister(prometheus.NewGoCollector())
+
+    return m
+}
+
+func (p *Prometheus) SetConstLabels(m map[string]string) {
+    appendMap(&p.labels, &m)
+}
+
+func (p *Prometheus) Run(port int) error {
+    http.Handle("/metrics", promhttp.HandlerFor(p.registry, promhttp.HandlerOpts{}))
+    return http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+}
+
+func (p *Prometheus) Counter(name string) prometheus.Counter {
+    return p.counters[name]
+}
+
+func (p *Prometheus) RegisterCounter(name, help string, labels map[string]string) {
+    appendMap(&labels, &p.labels)
+    p.counters[name] = prometheus.NewCounter(prometheus.CounterOpts{
+        Namespace:   "cnt",
+        Name:        name,
+        Help:        help,
+        ConstLabels: labels,
+    })
+    p.registry.MustRegister(p.counters[name])
+}
+
+func (p *Prometheus) Gauge(name string) prometheus.Gauge {
+    return p.gauges[name]
+}
+
+func (p *Prometheus) RegisterGauge(name, help string, labels map[string]string) {
+    appendMap(&labels, &p.labels)
+    p.gauges[name] = prometheus.NewGauge(prometheus.GaugeOpts{
+        Namespace:   "gauge",
+        Name:        name,
+        Help:        help,
+        ConstLabels: labels,
+    })
+    p.registry.MustRegister(p.gauges[name])
+
+}
+
+func (p *Prometheus) Histogram(name string) prometheus.Histogram {
+    return p.histograms[name]
+}
+
+func (p *Prometheus) RegisterHistogram(name, help string, buckets []float64, labels map[string]string) {
+    appendMap(&labels, &p.labels)
+    p.histograms[name] = prometheus.NewHistogram(prometheus.HistogramOpts{
+        Namespace:   "hist",
+        Name:        name,
+        Help:        help,
+        ConstLabels: labels,
+        Buckets:     buckets,
+    })
+    p.registry.MustRegister(p.histograms[name])
+
+}
+
+func appendMap(m1, m2 *map[string]string) {
+    if *m1 == nil {
+        *m1 = make(map[string]string)
+    }
+    for k, v := range *m2 {
+        (*m1)[k] = v
+    }
+}

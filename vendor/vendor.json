@@ -3,10 +3,10 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "k7k9+y24dGBhJOmIpQU2eZQscvY=",
+			"checksumSHA1": "PCB4erLS+Bo9llxmuKci8RDc5U4=",
 			"path": "git.ronaksoftware.com/ronak/toolbox",
-			"revision": "00c3ce0f8af70393c9fdc8435953121dd8805f66",
-			"revisionTime": "2018-09-08T05:41:59Z"
+			"revision": "16571e76763bc074a3e31bc5913db5d8433d5c85",
+			"revisionTime": "2019-02-25T19:55:25Z"
 		},
 		{
 			"checksumSHA1": "JB9eXmXR0wEd8jXEIwep+hiDO3o=",
@@ -297,18 +297,6 @@
 			"path": "github.com/mattn/go-sqlite3",
 			"revision": "eed79b86572f203cc92e92048ba06b56a8ca06e8",
 			"revisionTime": "2018-11-09T09:53:04Z"
-		},
-		{
-			"checksumSHA1": "yC30u17+IYsMSOUiOaXgmiEUyDk=",
-			"path": "github.com/mediocregopher/radix.v3",
-			"revision": "bb5fd135e80bce6f48ced17c2397c1fff073dfc4",
-			"revisionTime": "2018-08-26T17:38:04Z"
-		},
-		{
-			"checksumSHA1": "YkEzzqxiGGN/vTeZxO8sBYeBWZs=",
-			"path": "github.com/mediocregopher/radix.v3/resp",
-			"revision": "bb5fd135e80bce6f48ced17c2397c1fff073dfc4",
-			"revisionTime": "2018-08-26T17:38:04Z"
 		},
 		{
 			"checksumSHA1": "EDKZegnItNTSeagExi4ai7hvGyc=",
