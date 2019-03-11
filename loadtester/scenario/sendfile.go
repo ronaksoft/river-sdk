@@ -60,6 +60,7 @@ func (s *SendFile) fileUpload(act shared.Acter, peer *shared.PeerInfo) (*msg.Mes
 	sw := time.Now()
 	req, fileID, totalParts := FileSavePart()
 
+	// upload file
 	res, err := act.ExecFileRequest(req)
 	if err != nil {
 		s.failed(act, time.Since(sw), uint64(fileID), "ExecFileRequest failed "+err.Error())

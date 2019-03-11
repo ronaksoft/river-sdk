@@ -1,4 +1,4 @@
-package supernumerary
+package shared
 
 import (
 	"os"
