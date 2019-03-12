@@ -79,6 +79,7 @@ func (ctrl *CtrlNetwork) Stop() {
 
 // Send the data payload is binary
 func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
+	shared.Metrics.CounterVec(shared.CntRequest).WithLabelValues(msg.ConstructorNames[msgEnvelope.Constructor]).Add(1)
 
 	authID, authKey := ctrl.actor.GetAuthInfo()
 
@@ -132,6 +133,9 @@ func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
 	// 		log.Error("Packet Dump Failed", zap.Error(err))
 	// 	}
 	// }
+
+	// metric
+	shared.Metrics.Counter(shared.CntSend).Add(float64(len(b)))
 
 	if ctrl.conn == nil {
 		return fmt.Errorf("network connection is null")
@@ -194,8 +198,22 @@ func (ctrl *CtrlNetwork) watchDog() {
 
 // onConnect send AuthRecall request to server
 func (ctrl *CtrlNetwork) onConnect() {
-	// req := msg.AuthRecall{}
-	// reqID := uint64(shared.GetSeqID())
+	req := msg.AuthRecall{}
+	reqID := uint64(shared.GetSeqID())
+
+	envelop := new(msg.MessageEnvelope)
+	envelop.Constructor = msg.C_AuthRecall
+	envelop.Message, _ = req.Marshal()
+	envelop.RequestID = reqID
+
+	if ctrl.conn == nil {
+		return
+	}
+	err := ctrl.Send(envelop)
+	if err != nil {
+		logs.Error("onConnect() AuthRecall", zap.Error(err))
+	}
+
 	// // 3 is max retry to send authRecal
 	// for i := 0; i < 3; i++ {
 	// 	envelop := new(msg.MessageEnvelope)
@@ -227,10 +245,17 @@ func (ctrl *CtrlNetwork) receiver() {
 		if err != nil {
 			// on stop request we set keepConnectionAlive to false
 			if ctrl.keepConnectionAlive {
+				//metric
+				shared.Metrics.Counter(shared.CntDisconnect).Add(1)
+
 				atomic.AddInt64(&ctrl.Disconnected, 1)
 			}
 			return
 		}
+
+		// metric
+		shared.Metrics.Counter(shared.CntReceive).Add(float64(len(message)))
+
 		if messageType != websocket.BinaryMessage {
 			continue
 		}

@@ -11,23 +11,29 @@ var (
 	sentPackets     []*msg.ProtoMessage
 	recvmx          sync.Mutex
 	receivedPackets []*msg.ProtoMessage
+	isEnabled       bool
 )
 
 func init() {
+	isEnabled = true
 	sentPackets = make([]*msg.ProtoMessage, 0)
 	receivedPackets = make([]*msg.ProtoMessage, 0)
 }
 
 func logSentPacket(m *msg.ProtoMessage) {
-	sentmx.Lock()
-	sentPackets = append(sentPackets, m)
-	sentmx.Unlock()
+	if isEnabled {
+		sentmx.Lock()
+		sentPackets = append(sentPackets, m)
+		sentmx.Unlock()
+	}
 }
 
 func logReceivedPacket(m *msg.ProtoMessage) {
-	recvmx.Lock()
-	receivedPackets = append(receivedPackets, m)
-	recvmx.Unlock()
+	if isEnabled {
+		recvmx.Lock()
+		receivedPackets = append(receivedPackets, m)
+		recvmx.Unlock()
+	}
 }
 
 func GetLoggedReceivedPackets() []*msg.ProtoMessage {
@@ -45,4 +51,9 @@ func ClearLoggedPackets() {
 	recvmx.Lock()
 	receivedPackets = receivedPackets[:0]
 	recvmx.Unlock()
+}
+
+func StopLogginPackets() {
+	isEnabled = false
+	ClearLoggedPackets()
 }

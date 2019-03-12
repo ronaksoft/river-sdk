@@ -8,9 +8,9 @@ import (
 
 var (
 	// DefaultServerURL websocket url
-	DefaultServerURL = "ws://new.river.im"
+	DefaultServerURL = "ws://test.river.im"
 	// DefaultFileServerURL file server cluster
-	DefaultFileServerURL = "http://new.river.im/file"
+	DefaultFileServerURL = "http://test.river.im/file"
 
 	// DefaultTimeout request timeout
 	DefaultTimeout = 10 * time.Second

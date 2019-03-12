@@ -181,12 +181,20 @@ func (act *Actor) Stop() {
 
 // SetTimeout fill reporter data
 func (act *Actor) SetTimeout(constructor int64, elapsed time.Duration) {
+	// metric
+	shared.Metrics.CounterVec(shared.CntTimedout).WithLabelValues(msg.ConstructorNames[constructor]).Add(1)
+	shared.Metrics.Histogram(shared.HistTimeoutLatency).Observe(float64(elapsed / time.Millisecond))
+
 	act.Status.AverageTimeoutInterval += elapsed
 	atomic.AddInt64(&act.Status.TimedoutRequests, 1)
 }
 
 // SetSuccess fill reporter data
 func (act *Actor) SetSuccess(constructor int64, elapsed time.Duration) {
+	// metric
+	shared.Metrics.CounterVec(shared.CntSucceess).WithLabelValues(msg.ConstructorNames[constructor]).Add(1)
+	shared.Metrics.Histogram(shared.HistSuccessLatency).Observe(float64(elapsed / time.Millisecond))
+
 	act.Status.AverageSuccessInterval += elapsed
 	atomic.AddInt64(&act.Status.SucceedRequests, 1)
 }
@@ -194,6 +202,11 @@ func (act *Actor) SetSuccess(constructor int64, elapsed time.Duration) {
 // SetSucceed fill reporter data
 func (act *Actor) SetActorSucceed(isSucceed bool) {
 	act.Status.ActorSucceed = isSucceed
+	if isSucceed {
+		shared.Metrics.Counter(shared.CntSucceedScenario).Add(1)
+	} else {
+		shared.Metrics.Counter(shared.CntFaildScenario).Add(1)
+	}
 }
 
 // GetStatus return actor statistics
@@ -208,13 +221,18 @@ func (act *Actor) SetStopHandler(fn func(phone string)) {
 
 // ReceivedErrorResponse increase status ErrorRespons
 func (act *Actor) ReceivedErrorResponse() {
+	// metrics
+	shared.Metrics.Counter(shared.CntError).Add(1)
+
 	atomic.AddInt64(&act.Status.ErrorRespons, 1)
 }
 
 // onMessage check requestCallbacks and call callbacks
 func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
 	for _, m := range messages {
-		// log.Debug("onMessage() Received ", zap.String("Constructor", msg.ConstructorNames[m.Constructor]), zap.Uint64("ReqID", m.RequestID))
+		// metric
+		shared.Metrics.CounterVec(shared.CntResponse).WithLabelValues(msg.ConstructorNames[m.Constructor]).Add(1)
+
 		req := act.exec.GetRequest(m.RequestID)
 		if req != nil {
 			select {
@@ -234,9 +252,17 @@ func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
 							return
 						case <-time.After(time.Second):
 						}
+						// this is not differed response
+						// // metric
+						// shared.Metrics.CounterVec(shared.CntDiffered).WithLabelValues(msg.ConstructorNames[message.Constructor]).Add(1)
 					}(req, m)
 
 				} else {
+
+					// metric
+					shared.Metrics.CounterVec(shared.CntDiffered).WithLabelValues(msg.ConstructorNames[m.Constructor]).Add(1)
+					shared.Metrics.Histogram(shared.HistDifferedLatency).Observe(float64(elapsed / time.Millisecond))
+
 					logs.Error("onMessage() callback is skipped probably timedout before",
 						zap.Uint64("RequestID", m.RequestID),
 						zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
@@ -278,6 +304,9 @@ func (act *Actor) onUpdate(updates []*msg.UpdateContainer) {
 			zap.Int64("MaxID", cnt.MaxUpdateID),
 		)
 		for _, u := range cnt.Updates {
+			// metric
+			shared.Metrics.CounterVec(shared.CntResponse).WithLabelValues(msg.ConstructorNames[u.Constructor]).Add(1)
+
 			if fn, ok := act.updateApplier[u.Constructor]; ok {
 				fn(act, u)
 			}
@@ -287,6 +316,9 @@ func (act *Actor) onUpdate(updates []*msg.UpdateContainer) {
 }
 
 func (act *Actor) onError(err *msg.Error) {
+	// metric
+	shared.Metrics.Counter(shared.CntError).Add(1)
+
 	// TODO : Add reporter error log
 	logs.Error("onError()", zap.String("Error", err.String()))
 }
@@ -299,6 +331,24 @@ func (act *Actor) SetUpdateApplier(constructor int64, fn shared.UpdateApplier) {
 }
 
 // ExecFileRequest execute request against file server
-func (act *Actor) ExecFileRequest(msgEnvelop *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
-	return controller.ExecuteFileRequest(msgEnvelop, act)
+func (act *Actor) ExecFileRequest(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
+
+	// metric
+	shared.Metrics.CounterVec(shared.CntRequest).WithLabelValues(msg.ConstructorNames[msgEnvelope.Constructor]).Add(1)
+	shared.Metrics.Counter(shared.CntFile).Add(1)
+
+	sw := time.Now()
+	env, err := controller.ExecuteFileRequest(msgEnvelope, act)
+
+	if err != nil {
+		shared.Metrics.Counter(shared.CntFileError).Add(1)
+		return env, err
+	}
+	elapsed := time.Since(sw)
+
+	// metric
+	shared.Metrics.CounterVec(shared.CntResponse).WithLabelValues(msg.ConstructorNames[env.Constructor]).Add(1)
+	shared.Metrics.Histogram(shared.HistFileLatency).Observe(float64(elapsed / time.Millisecond))
+
+	return env, err
 }

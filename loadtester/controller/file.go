@@ -64,6 +64,9 @@ func ExecuteFileRequest(msgEnvelope *msg.MessageEnvelope, act shared.Acter) (*ms
 		return nil, err
 	}
 
+	// metric
+	shared.Metrics.Counter(shared.CntReceive).Add(float64(len(resBuff)))
+
 	// Decrypt response
 	res := new(msg.ProtoMessage)
 	err = res.Unmarshal(resBuff)

@@ -49,6 +49,9 @@ func NewSupernumerary(fromPhoneNo, toPhoneNo int64) (*Supernumerary, error) {
 			return nil, err
 		}
 		s.Actors[i] = act
+
+		// metric
+		shared.Metrics.Gauge(shared.GaugeActors).Add(1)
 	}
 	return s, nil
 }

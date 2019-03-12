@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/actor"
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/controller"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/pcap_parser"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/report"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/scenario"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
+	"git.ronaksoftware.com/ronak/riversdk/loadtester/supernumerary"
 	"git.ronaksoftware.com/ronak/riversdk/logs"
 
 	"github.com/gorilla/websocket"
@@ -59,6 +62,9 @@ func init() {
 
 func main() {
 
+	// Run metrics
+	go shared.Metrics.Run(2374)
+
 	// // pprof
 	// go func() {
 	// 	http.ListenAndServe("localhost:6060", nil)
@@ -73,10 +79,36 @@ func main() {
 
 		// fnSendRawDump()
 
-		fnPcapParser()
+		// fnPcapParser()
+
+		fnSupernumerary()
+	}
+	_Shell.Run()
+
+}
+
+func fnSupernumerary() {
+
+	logs.Info("Disabling packet logger ...")
+	controller.StopLogginPackets()
+	logs.Info("Disabling packet logger ... Done")
+
+	logs.Info("Initializing ...")
+	s, err := supernumerary.NewSupernumerary(0, 1000)
+	logs.Info("Initializing ... Done")
+
+	if err != nil {
+		panic(err)
 	}
 
-	_Shell.Run()
+	// s.CreateAuthKey()
+	// s.Register()
+	// s.Login()
+
+	logs.Info("SetTickerApplier ...")
+	s.SetTickerApplier(30*time.Second, supernumerary.TickerActionSendMessage)
+	logs.Info("SetTickerApplier ... Done")
+
 }
 
 func loadCachedActors() {
