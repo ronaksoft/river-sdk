@@ -305,11 +305,6 @@ func (ctrl *Controller) getUpdateDifference(minUpdateID int64) {
 
 	logs.Debug("getUpdateDifference()")
 
-	// just double check to prevent calling getUpdateDifference() when sync routine is allready running
-	if ctrl.isSyncing {
-		return
-	}
-
 	ctrl.isUpdatingDifferenceLock.Lock()
 	if ctrl.isUpdatingDifference {
 		ctrl.isUpdatingDifferenceLock.Unlock()
