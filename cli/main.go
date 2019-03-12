@@ -119,7 +119,7 @@ func main() {
 		// fnGroupUploadPhoto()
 		// fnLoginWithAuthKey()
 		// fnRunDownloadFileThumbnail()
-		fnStartDownloadAndCancelRequestafterward()
+		// fnStartDownloadAndCancelRequestafterward()
 		// fnTestSaveFilesOnMessageGetHistory()
 		// fnTestGetSharedMedia()
 		//block forever

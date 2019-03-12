@@ -109,13 +109,13 @@ func fillMessageHoles(peerID, msgMinID, msgMaxID int64) error {
 	return nil
 }
 
-// createMessageHole
-func createMessageHole(peerID, minID, maxID int64) error {
+// CreateMessageHole
+func CreateMessageHole(peerID, minID, maxID int64) error {
 	return repo.Ctx().MessageHoles.Save(peerID, minID, maxID)
 }
 
-// deleteMessageHole
-func deleteMessageHole(peerID int64) error {
+// DeleteMessageHole
+func DeleteMessageHole(peerID int64) error {
 	return repo.Ctx().MessageHoles.DeleteAll(peerID)
 }
 

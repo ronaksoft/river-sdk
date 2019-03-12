@@ -525,7 +525,7 @@ func (ctrl *Controller) getAllDialogs(offset int32, limit int32) {
 						continue
 					}
 					// create MessageHole
-					err = createMessageHole(dialog.PeerID, 0, dialog.TopMessageID-1)
+					err = CreateMessageHole(dialog.PeerID, 0, dialog.TopMessageID-1)
 					if err != nil {
 						logs.Error("getAllDialogs() -> createMessageHole() ", zap.Error(err))
 					}

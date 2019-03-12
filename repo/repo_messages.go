@@ -25,6 +25,7 @@ type Messages interface {
 	GetMessageHistoryWithMinMaxID(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User)
 	GetMessage(messageID int64) *msg.UserMessage
 	SetContentRead(messageIDs []int64) error
+	GetDialogMessageCount(peerID int64, peerType int32) int32
 }
 
 type repoMessages struct {
@@ -530,4 +531,15 @@ func (r *repoMessages) SetContentRead(messageIDs []int64) error {
 	return r.db.Table(mdl.TableName()).Where("ID in (?)", messageIDs).Updates(map[string]interface{}{
 		"ContentRead": true,
 	}).Error
+}
+
+func (r *repoMessages) GetDialogMessageCount(peerID int64, peerType int32) int32 {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	count := int32(0)
+	mdl := &dto.Messages{}
+	r.db.Table(mdl.TableName()).Where("PeerID =? AND PeerType= ?", peerID, peerType).Count(&count)
+
+	return count
 }

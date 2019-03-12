@@ -28,7 +28,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	if dialog == nil {
 
 		// create MessageHole
-		err = createMessageHole(x.Message.PeerID, 0, x.Message.ID-1)
+		err = CreateMessageHole(x.Message.PeerID, 0, x.Message.ID-1)
 		if err != nil {
 			logs.Error("updateNewMessage() -> createMessageHole() ", zap.Error(err))
 		}
@@ -182,13 +182,15 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			// Delete Participants
 			repo.Ctx().Groups.DeleteAllGroupMember(x.Message.PeerID)
 			//delete MessageHole
-			deleteMessageHole(x.Message.PeerID)
+			DeleteMessageHole(x.Message.PeerID)
+			logs.Warn("handleMessageAction() deleted all MessageHoles", zap.Int64("PeerID", x.Message.PeerID))
 		} else {
 			// get dialog and create first hole
 			dtoDlg := repo.Ctx().Dialogs.GetDialog(x.Message.PeerID, x.Message.PeerType)
 			if dtoDlg != nil {
-				deleteMessageHole(x.Message.PeerID)
-				createMessageHole(dtoDlg.PeerID, 0, dtoDlg.TopMessageID-1)
+				DeleteMessageHole(x.Message.PeerID)
+				logs.Warn("handleMessageAction() deleted all MessageHoles", zap.Int64("PeerID", x.Message.PeerID))
+				CreateMessageHole(dtoDlg.PeerID, 0, dtoDlg.TopMessageID-1)
 			}
 		}
 	}
