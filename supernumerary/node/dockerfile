@@ -1,4 +1,5 @@
 FROM alpine
 WORKDIR /ronak
+RUN mkdir _cache
 COPY main /ronak
-CMD ["/ronak/main"]
+ENTRYPOINT ["/ronak/main"]

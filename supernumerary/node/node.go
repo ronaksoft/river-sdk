@@ -34,8 +34,12 @@ func NewNode(cfg *config.NodeConfig) (*Node, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	n.nats = nats
+
+	err = n.RegisterSubscribtion()
+	if err != nil {
+		return nil, err
+	}
 	return n, nil
 }
 
@@ -52,8 +56,6 @@ func (n *Node) cbStart(msg *nats.Msg) {
 	shared.DefaultTimeout = cfg.Timeout
 	shared.DefaultSendTimeout = cfg.Timeout
 
-	n.RegisterSubscribtion()
-
 	su, err := supernumerary.NewSupernumerary(n.Config.StartPhone, n.Config.StartPhone)
 	if err != nil {
 		logs.Error("cbStart()", zap.Error(err))
@@ -68,7 +70,6 @@ func (n *Node) cbStop(msg *nats.Msg) {
 	}
 
 	n.su.Stop()
-	n.Unsubscribe()
 }
 
 func (n *Node) cbCreateAuthKey(msg *nats.Msg) {

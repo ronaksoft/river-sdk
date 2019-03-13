@@ -1,11 +1,46 @@
 version: '2'
 services:
 
+## Supernumerary SERVICE
+  supernumerary-001:
+    image: supernumerary:latest
+    restart: always
+    expose:
+      - 2374
+    volumes:
+      - ./_cache:/ronak/_cache
+    environment:
+      - CFG_BOUNDLE_ID=001
+      - CFG_INSTANCE_ID=001
+      - CFG_NATS_URL=nats://nats:4222
+      - CFG_START_PHONE=0
+      - CFG_END_PHONE=1000
+    networks:
+      - testing
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 20000
+        hard: 40000
+    depends_on:
+      - nats
+
+## NATS SERVICE        
+  nats:
+    image: nats:latest
+    restart: always
+    ports:
+      - 4222:4222
+      - 8222:8222
+    networks:
+      - testing
+
 ## PROMETHEUS Metrics:
   prometheus:
     image: prom/prometheus:latest
     command: --config.file=/prometheus/prometheus.yml
-    network_mode: host
+    networks:
+      - testing
     expose:
       - 9090
     volumes:
@@ -15,12 +50,14 @@ services:
 ## GRAFANA Dashboard:
   grafana:
     image: grafana/grafana:latest
-    network_mode: host
-    expose:
-      - 3000
+    networks:
+      - testing
+    ports:
+      - 3000:3000
     volumes:
       - ./grafana:/var/lib/grafana
 
-
-
-
+networks:
+  testing:
+    external:
+      name: testing      
