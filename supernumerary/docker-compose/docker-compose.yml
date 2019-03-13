@@ -1,0 +1,26 @@
+version: '2'
+services:
+
+## PROMETHEUS Metrics:
+  prometheus:
+    image: prom/prometheus:latest
+    command: --config.file=/prometheus/prometheus.yml
+    network_mode: host
+    expose:
+      - 9090
+    volumes:
+      - ./prometheus:/prometheus
+
+
+## GRAFANA Dashboard:
+  grafana:
+    image: grafana/grafana:latest
+    network_mode: host
+    expose:
+      - 3000
+    volumes:
+      - ./grafana:/var/lib/grafana
+
+
+
+

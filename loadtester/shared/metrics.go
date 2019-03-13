@@ -1,8 +1,6 @@
 package shared
 
 import (
-	"os"
-
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 )
 
@@ -41,12 +39,9 @@ var (
 	TimeBucketMicroS = []float64{1, 2, 5, 10, 20, 50, 100, 200, 300, 400, 500, 1000, 2000, 5000, 10000}
 )
 
-func init() {
-	boundleID := os.Getenv("CFG_BOUNDLE_ID")
-	instanceID := os.Getenv("CFG_INSTANCE_ID")
-	Metrics = ronak.NewPrometheus(boundleID, instanceID)
+func InitMetrics(boundleID, instanceID string) {
 
-	// Register metrics
+	Metrics = ronak.NewPrometheus(boundleID, instanceID)
 
 	// Counter vectors
 	Metrics.RegisterCounterVec(CntRequest, "Number of message requests", nil, []string{"fn"})            // ok

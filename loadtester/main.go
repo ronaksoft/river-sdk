@@ -63,6 +63,10 @@ func init() {
 
 func main() {
 
+	// init metrics
+	boundleID := os.Getenv("CFG_BOUNDLE_ID")
+	instanceID := os.Getenv("CFG_INSTANCE_ID")
+	shared.InitMetrics(boundleID, instanceID)
 	// Run metrics
 	go shared.Metrics.Run(2374)
 
