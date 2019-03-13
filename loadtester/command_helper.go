@@ -101,3 +101,33 @@ func fnPrintReports(elapsed time.Duration) {
 	}
 	fmt.Println(rpt.String())
 }
+
+func fnGetDuration(c *ishell.Context) time.Duration {
+	var tmpNo time.Duration
+	for {
+		c.Print("Duration (second): ")
+		tmp, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		if err == nil {
+			tmpNo = time.Duration(tmp)
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return tmpNo * time.Second
+}
+
+func fnGetTickerAction(c *ishell.Context) int {
+	var action int
+	for {
+		c.Print("Actions (SendMsg = 1 , SendFile = 2) : ")
+		tmp, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		if err == nil {
+			if tmp > 0 && tmp < 3 {
+				action = int(tmp)
+				break
+			}
+		}
+	}
+	return action
+}

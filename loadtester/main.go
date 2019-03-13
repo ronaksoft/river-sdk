@@ -44,6 +44,7 @@ func init() {
 	_Shell.AddCmd(cmdCreateAuthKey)
 	_Shell.AddCmd(cmdClient)
 	_Shell.AddCmd(cmdSendFile)
+	_Shell.AddCmd(cmdSupernumerary)
 
 	_Shell.AddCmd(cmdDebug)
 	_Shell.AddCmd(cmdPcap)

@@ -5,6 +5,9 @@ import (
 	"os"
 	"time"
 
+	"git.ronaksoftware.com/ronak/riversdk/logs"
+	"go.uber.org/zap"
+
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/scenario"
@@ -48,6 +51,7 @@ func NewSupernumerary(fromPhoneNo, toPhoneNo int64) (*Supernumerary, error) {
 			defer s.dispose()
 			return nil, err
 		}
+		logs.Info("Initialized Actor", zap.String("Phone", phone))
 		s.Actors[i] = act
 
 		// metric
@@ -65,30 +69,38 @@ func (s *Supernumerary) Stop() {
 func (s *Supernumerary) dispose() {
 
 	if s.ticker != nil {
+		logs.Debug("dispose() send ticker stop signal")
 		s.chTikerStop <- true
 		s.ticker.Stop()
+		logs.Debug("dispose() ticker stopped")
 		s.ticker = nil
 	}
 
 	for i := s.FromPhoneNo; i < s.ToPhoneNo; i++ {
 		if act, ok := s.Actors[i]; ok {
+			logs.Info("dispose() stopping actor", zap.String("Phone", act.GetPhone()))
 			act.Stop()
 			s.Actors[i] = nil
 		}
 	}
+	shared.Metrics.Gauge(shared.GaugeActors).Set(0)
 	s.Actors = nil
 	s.FromPhoneNo = 0
 	s.ToPhoneNo = 0
 	s = nil // -_^
+
+	logs.Debug("dispose() done")
 }
 
 // CreateAuthKey init step required
 func (s *Supernumerary) CreateAuthKey() {
 	for _, act := range s.Actors {
 		sen := scenario.NewCreateAuthKey(false)
+		logs.Info("CreateAuthKey() CreatingAuthKey", zap.String("Phone", act.GetPhone()))
 		success := scenario.Play(act, sen)
 		if success {
-			act.Save()
+			err := act.Save()
+			logs.Debug("CreateAuthKey() save actor", zap.Error(err))
 		}
 	}
 }
@@ -97,9 +109,11 @@ func (s *Supernumerary) CreateAuthKey() {
 func (s *Supernumerary) Register() {
 	for _, act := range s.Actors {
 		sen := scenario.NewRegister(false)
+		logs.Info("Register() Registering", zap.String("Phone", act.GetPhone()))
 		success := scenario.Play(act, sen)
 		if success {
-			act.Save()
+			err := act.Save()
+			logs.Debug("Register() save actor", zap.Error(err))
 		}
 	}
 }
@@ -108,9 +122,11 @@ func (s *Supernumerary) Register() {
 func (s *Supernumerary) Login() {
 	for _, act := range s.Actors {
 		sen := scenario.NewLogin(false)
+		logs.Info("Login() Loging in", zap.String("Phone", act.GetPhone()))
 		success := scenario.Play(act, sen)
 		if success {
-			act.Save()
+			err := act.Save()
+			logs.Debug("Login() save actor", zap.Error(err))
 		}
 	}
 }
@@ -118,18 +134,22 @@ func (s *Supernumerary) Login() {
 // SetTickerApplier try to invoke certain action for all actors repeatedly
 func (s *Supernumerary) SetTickerApplier(duration time.Duration, action TickerAction) {
 	if s.ticker != nil {
+		logs.Debug("SetTickerApplier() send ticker stop signal")
 		s.chTikerStop <- true
 		s.ticker.Stop()
+		logs.Debug("SetTickerApplier() ticker stopped")
 	}
 	s.ticker = time.NewTicker(duration)
 	go s.tickerApplier(action)
+	logs.Debug("SetTickerApplier() Done")
 }
 
 // tickerApplier
 func (s *Supernumerary) tickerApplier(action TickerAction) {
 	for {
 		select {
-		case <-s.ticker.C:
+		case t := <-s.ticker.C:
+			logs.Info("tickerApplier() ticker signal", zap.Time("Time", t))
 			switch action {
 			case TickerActionNone:
 				// NOP
@@ -155,6 +175,7 @@ func (s *Supernumerary) tickerApplier(action TickerAction) {
 			}
 
 		case <-s.chTikerStop:
+			logs.Warn("tickerApplier() stop signal")
 			return
 		}
 	}

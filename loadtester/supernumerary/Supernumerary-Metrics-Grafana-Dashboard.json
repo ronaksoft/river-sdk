@@ -16,7 +16,6 @@
   "gnetId": null,
   "graphTooltip": 1,
   "id": 1,
-  "iteration": 1552401098339,
   "links": [],
   "panels": [
     {
@@ -60,14 +59,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(cnt_send[10s])",
+          "expr": "increase(cnt_send[10s])",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Send/Upload Byte",
           "refId": "A"
         },
         {
-          "expr": "rate(cnt_receive[10s])",
+          "expr": "increase(cnt_receive[10s])",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Receive /Download Byte",
@@ -78,7 +77,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Network Usage",
+      "title": "Network Usage / 10 s",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -226,7 +225,7 @@
       "dashes": false,
       "fill": 1,
       "gridPos": {
-        "h": 12,
+        "h": 9,
         "w": 12,
         "x": 0,
         "y": 10
@@ -259,7 +258,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(cnt_response_count[1h])",
+          "expr": "increase(cnt_response_count[5m])",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -271,7 +270,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Response/Updates Conts / h",
+      "title": "Response/Updates Conts  / 5 min",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -317,7 +316,7 @@
       "dashes": false,
       "fill": 1,
       "gridPos": {
-        "h": 12,
+        "h": 9,
         "w": 12,
         "x": 12,
         "y": 10
@@ -350,7 +349,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(cnt_request_count[1h])",
+          "expr": "increase(cnt_request_count[5m])",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -362,189 +361,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Request Counts/ h",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {
-        "MessagesSent": "dark-orange"
-      },
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "fill": 1,
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 22
-      },
-      "hideTimeOverride": false,
-      "id": 56,
-      "legend": {
-        "alignAsTable": true,
-        "avg": true,
-        "current": true,
-        "max": true,
-        "min": true,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null as zero",
-      "paceLength": 10,
-      "percentage": true,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "increase(cnt_differed_count[1h])",
-          "format": "time_series",
-          "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "{{ fn }}",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Differed Response / h",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {
-        "MessagesSend": "dark-blue"
-      },
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "fill": 1,
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 22
-      },
-      "hideTimeOverride": false,
-      "id": 55,
-      "legend": {
-        "alignAsTable": true,
-        "avg": true,
-        "current": true,
-        "max": true,
-        "min": true,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null as zero",
-      "paceLength": 10,
-      "percentage": true,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "increase(cnt_succeess_count[1h])",
-          "format": "time_series",
-          "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "{{ fn }}",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Success Requests / h",
+      "title": "Request Counts / 5 min",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -590,10 +407,10 @@
       "dashes": false,
       "fill": 1,
       "gridPos": {
-        "h": 6,
-        "w": 24,
+        "h": 7,
+        "w": 12,
         "x": 0,
-        "y": 28
+        "y": 19
       },
       "hideTimeOverride": false,
       "id": 57,
@@ -623,7 +440,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(cnt_timeout_count[1h])",
+          "expr": "increase(cnt_timeout_count[5m])",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -635,7 +452,189 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Timedout Requests / h",
+      "title": "Timedout Requests / 5 min",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {
+        "MessagesSend": "dark-blue"
+      },
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "fill": 1,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "hideTimeOverride": false,
+      "id": 55,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null as zero",
+      "paceLength": 10,
+      "percentage": true,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "increase(cnt_succeess_count[5m])",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "{{ fn }}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Success Requests /5 min",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {
+        "MessagesSent": "dark-orange"
+      },
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "fill": 1,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 26
+      },
+      "hideTimeOverride": false,
+      "id": 56,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null as zero",
+      "paceLength": 10,
+      "percentage": true,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "increase(cnt_differed_count[5m])",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "{{ fn }}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Differed Response / 5 min",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -690,10 +689,10 @@
       "gridPos": {
         "h": 7,
         "w": 12,
-        "x": 0,
-        "y": 34
+        "x": 12,
+        "y": 26
       },
-      "id": 67,
+      "id": 68,
       "interval": "",
       "legend": {
         "alignAsTable": true,
@@ -721,33 +720,25 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(cnt_error_count[10s])",
+          "expr": "increase(cnt_failed_scenario_count[5m])",
           "format": "time_series",
-          "interval": "",
           "intervalFactor": 1,
-          "legendFormat": "Error",
-          "refId": "A"
+          "legendFormat": "Failed Scenario",
+          "refId": "E"
         },
         {
-          "expr": "rate(cnt_disconnect_count[10s])",
+          "expr": "increase(cnt_succeed_scenario_count[5m])",
           "format": "time_series",
           "intervalFactor": 1,
-          "legendFormat": "Disconnect",
-          "refId": "B"
-        },
-        {
-          "expr": "rate(cnt_file_error_count[10s])",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "File Error",
-          "refId": "D"
+          "legendFormat": "Succeed Scenario",
+          "refId": "F"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Error Counters",
+      "title": "Scenario Counters / 5 min",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -786,11 +777,11 @@
     },
     {
       "aliasColors": {
-        "Disconnect": "dark-blue",
+        "Disconnect": "dark-red",
         "Error": "dark-yellow",
         "Failed Scenario": "dark-red",
         "File": "dark-purple",
-        "File Error": "light-yellow",
+        "File Error": "dark-blue",
         "Succeed Scenario": "dark-green"
       },
       "bars": false,
@@ -800,12 +791,12 @@
       "description": "",
       "fill": 1,
       "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 34
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 33
       },
-      "id": 68,
+      "id": 67,
       "interval": "",
       "legend": {
         "alignAsTable": true,
@@ -833,25 +824,33 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(cnt_failed_scenario_count[10s])",
+          "expr": "increase(cnt_error_count[5m])",
           "format": "time_series",
+          "interval": "",
           "intervalFactor": 1,
-          "legendFormat": "Failed Scenario",
-          "refId": "E"
+          "legendFormat": "Error",
+          "refId": "A"
         },
         {
-          "expr": "rate(cnt_succeed_scenario_count[10s])",
+          "expr": "increase(cnt_disconnect_count[5m])",
           "format": "time_series",
           "intervalFactor": 1,
-          "legendFormat": "Succeed Scenario",
-          "refId": "F"
+          "legendFormat": "Disconnect",
+          "refId": "B"
+        },
+        {
+          "expr": "increase(cnt_file_error_count[5m])",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "File Error",
+          "refId": "D"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Scenario Counters",
+      "title": "Error Counters / 5 min",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -894,11 +893,11 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 41
+        "y": 39
       },
       "id": 10,
       "panels": [],
-      "title": "Histograms [ Error ]",
+      "title": "Histograms",
       "type": "row"
     },
     {
@@ -918,10 +917,10 @@
       "dataFormat": "tsbuckets",
       "datasource": "Prometheus",
       "gridPos": {
-        "h": 6,
+        "h": 9,
         "w": 12,
         "x": 0,
-        "y": 42
+        "y": 40
       },
       "heatmap": {},
       "highlightCards": true,
@@ -933,7 +932,7 @@
       "links": [],
       "targets": [
         {
-          "expr": "sum(increase(hist_file_latency_bucket[1m])) by (le)",
+          "expr": "sum(increase(hist_file_latency_bucket[5m])) by (le)",
           "format": "heatmap",
           "interval": "1m",
           "intervalFactor": 1,
@@ -943,7 +942,7 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "File Upload Latency [ERR]",
+      "title": "File Upload Latency / 5 min",
       "tooltip": {
         "show": true,
         "showHistogram": true
@@ -973,7 +972,7 @@
         "cardRound": null
       },
       "color": {
-        "cardColor": "#629e51",
+        "cardColor": "#FADE2A",
         "colorScale": "sqrt",
         "colorScheme": "interpolateOranges",
         "exponent": 0.5,
@@ -984,10 +983,10 @@
       "dataFormat": "tsbuckets",
       "datasource": "Prometheus",
       "gridPos": {
-        "h": 6,
+        "h": 9,
         "w": 12,
         "x": 12,
-        "y": 42
+        "y": 40
       },
       "heatmap": {},
       "highlightCards": true,
@@ -999,7 +998,7 @@
       "links": [],
       "targets": [
         {
-          "expr": "sum(increase(hist_success_latency_bucket[1m])) by (le)",
+          "expr": "sum(increase(hist_success_latency_bucket[5m])) by (le)",
           "format": "heatmap",
           "interval": "1m",
           "intervalFactor": 1,
@@ -1009,7 +1008,7 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Success Latency [ERR]",
+      "title": "Success Latency / 5 min",
       "tooltip": {
         "show": true,
         "showHistogram": true
@@ -1050,10 +1049,10 @@
       "dataFormat": "tsbuckets",
       "datasource": "Prometheus",
       "gridPos": {
-        "h": 6,
+        "h": 9,
         "w": 12,
         "x": 0,
-        "y": 48
+        "y": 49
       },
       "heatmap": {},
       "highlightCards": true,
@@ -1065,7 +1064,7 @@
       "links": [],
       "targets": [
         {
-          "expr": "sum(increase(hist_timeout_latency_bucket[1m])) by (le)",
+          "expr": "sum(increase(hist_timeout_latency_bucket[5m])) by (le)",
           "format": "heatmap",
           "instant": false,
           "interval": "1m",
@@ -1076,7 +1075,7 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Timeout Latency [ERR]",
+      "title": "Timeout Latency / 5 min",
       "tooltip": {
         "show": true,
         "showHistogram": true
@@ -1106,7 +1105,7 @@
         "cardRound": null
       },
       "color": {
-        "cardColor": "#629e51",
+        "cardColor": "#FADE2A",
         "colorScale": "sqrt",
         "colorScheme": "interpolateOranges",
         "exponent": 0.5,
@@ -1117,10 +1116,10 @@
       "dataFormat": "tsbuckets",
       "datasource": "Prometheus",
       "gridPos": {
-        "h": 6,
+        "h": 9,
         "w": 12,
         "x": 12,
-        "y": 48
+        "y": 49
       },
       "heatmap": {},
       "highlightCards": true,
@@ -1132,7 +1131,7 @@
       "links": [],
       "targets": [
         {
-          "expr": "sum(increase(hist_differed_latency_bucket[1m])) by (le)",
+          "expr": "sum(increase(hist_differed_latency_bucket[5m])) by (le)",
           "format": "heatmap",
           "interval": "1m",
           "intervalFactor": 1,
@@ -1142,7 +1141,7 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Differed Response Latency [ERR]",
+      "title": "Differed Response Latency / 5 min",
       "tooltip": {
         "show": true,
         "showHistogram": true
@@ -1175,7 +1174,7 @@
     "list": []
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {
@@ -1206,5 +1205,5 @@
   "timezone": "",
   "title": "Supernumerary",
   "uid": "Xf8z1T2ik",
-  "version": 52
+  "version": 81
 }

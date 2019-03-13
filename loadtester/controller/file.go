@@ -41,13 +41,15 @@ func ExecuteFileRequest(msgEnvelope *msg.MessageEnvelope, act shared.Acter) (*ms
 	}
 
 	b, err := protoMessage.Marshal()
-
-	//ioutil.WriteFile("dump.raw", b, os.ModePerm)
-
-	reqBuff := bytes.NewBuffer(b)
 	if err != nil {
 		return nil, err
 	}
+	//ioutil.WriteFile("dump.raw", b, os.ModePerm)
+
+	// metric
+	shared.Metrics.Counter(shared.CntSend).Add(float64(len(b)))
+
+	reqBuff := bytes.NewBuffer(b)
 
 	// Set timeout
 	client := http.DefaultClient
