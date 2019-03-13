@@ -32,8 +32,11 @@ func init() {
 func main() {
 
 	for {
-		_Shell.Print("NATS URL :")
+		_Shell.Print("NATS URL (nats://localhost:4222):")
 		natsURL := _Shell.ReadLine()
+		if natsURL == "" {
+			natsURL = "nats://localhost:4222"
+		}
 		nats, err := nats.Connect(natsURL)
 		if err != nil {
 			_Shell.Println("Error : " + err.Error())

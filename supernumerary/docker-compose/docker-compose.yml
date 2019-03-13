@@ -14,7 +14,7 @@ services:
       - CFG_INSTANCE_ID=001
       - CFG_NATS_URL=nats://nats:4222
       - CFG_START_PHONE=0
-      - CFG_END_PHONE=1000
+      - CFG_END_PHONE=10
     networks:
       - testing
     ulimits:

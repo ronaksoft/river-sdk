@@ -2,9 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"strconv"
-	"strings"
-	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 
@@ -40,10 +37,12 @@ func NewNode(cfg *config.NodeConfig) (*Node, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return n, nil
 }
 
 func (n *Node) cbStart(msg *nats.Msg) {
+	logs.Info("cbStart()")
 	cfg := config.StartCfg{}
 	err := json.Unmarshal(msg.Data, &cfg)
 	if err != nil {
@@ -56,7 +55,7 @@ func (n *Node) cbStart(msg *nats.Msg) {
 	shared.DefaultTimeout = cfg.Timeout
 	shared.DefaultSendTimeout = cfg.Timeout
 
-	su, err := supernumerary.NewSupernumerary(n.Config.StartPhone, n.Config.StartPhone)
+	su, err := supernumerary.NewSupernumerary(n.Config.StartPhone, n.Config.EndPhone)
 	if err != nil {
 		logs.Error("cbStart()", zap.Error(err))
 	}
@@ -64,6 +63,8 @@ func (n *Node) cbStart(msg *nats.Msg) {
 }
 
 func (n *Node) cbStop(msg *nats.Msg) {
+	logs.Info("cbStop()")
+
 	if n.su == nil {
 		logs.Error("cbStop() supernumerary not initialized")
 		return
@@ -73,6 +74,8 @@ func (n *Node) cbStop(msg *nats.Msg) {
 }
 
 func (n *Node) cbCreateAuthKey(msg *nats.Msg) {
+	logs.Info("cbCreateAuthKey()")
+
 	if n.su == nil {
 		logs.Error("cbCreateAuthKey() supernumerary not initialized")
 		return
@@ -81,6 +84,8 @@ func (n *Node) cbCreateAuthKey(msg *nats.Msg) {
 }
 
 func (n *Node) cbLogin(msg *nats.Msg) {
+	logs.Info("cbLogin()")
+
 	if n.su == nil {
 		logs.Error("cbLogin() supernumerary not initialized")
 		return
@@ -89,6 +94,8 @@ func (n *Node) cbLogin(msg *nats.Msg) {
 }
 
 func (n *Node) cbRegister(msg *nats.Msg) {
+	logs.Info("cbRegister()")
+
 	if n.su == nil {
 		logs.Error("cbRegister() supernumerary not initialized")
 		return
@@ -97,23 +104,18 @@ func (n *Node) cbRegister(msg *nats.Msg) {
 }
 
 func (n *Node) cbTicker(msg *nats.Msg) {
-	data := strings.Split(string(msg.Data), ":")
-	if len(data) == 2 {
-		duration, err := strconv.Atoi(data[0])
-		if err == nil {
-			logs.Error("cbTicker() failed to parse", zap.Error(err))
-			return
-		}
-		action, err := strconv.Atoi(data[1])
-		if err == nil {
-			logs.Error("cbTicker() failed to parse", zap.Error(err))
-			return
-		}
-		n.su.SetTickerApplier(time.Duration(duration), supernumerary.TickerAction(action))
 
-	} else {
-		logs.Error("cbTicker() invalid parameters", zap.String("data", string(msg.Data)))
+	logs.Info("cbTicker()", zap.String("Data", string(msg.Data)))
+
+	cfg := config.TickerCfg{}
+	err := json.Unmarshal(msg.Data, &cfg)
+	if err != nil {
+		logs.Error("cbTicker() failed to unmarshal", zap.Error(err))
+		return
 	}
+
+	n.su.SetTickerApplier(cfg.Duration, cfg.Action)
+
 }
 
 // RegisterSubscribtion subscribe subjects

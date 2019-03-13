@@ -198,6 +198,11 @@ func (ctrl *CtrlNetwork) watchDog() {
 
 // onConnect send AuthRecall request to server
 func (ctrl *CtrlNetwork) onConnect() {
+
+	// if authkey not created skip
+	if ctrl.actor.GetAuthID() == 0 {
+		return
+	}
 	req := msg.AuthRecall{}
 	reqID := uint64(shared.GetSeqID())
 

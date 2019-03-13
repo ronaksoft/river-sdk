@@ -38,14 +38,20 @@ func fnGetTickerAction(c *ishell.Context) int {
 }
 
 func fnGetServerURL(c *ishell.Context) string {
-	c.Print("Server URL: ")
+	c.Print("Server URL (ws://test.river.im): ")
 	tmp := c.ReadLine()
+	if tmp == "" {
+		tmp = "ws://test.river.im"
+	}
 	return tmp
 }
 
 func fnGetFileServerURL(c *ishell.Context) string {
-	c.Print("File Server URL: ")
+	c.Print("File Server URL (http://test.river.im/file): ")
 	tmp := c.ReadLine()
+	if tmp == "" {
+		tmp = "http://test.river.im/file"
+	}
 	return tmp
 }
 
