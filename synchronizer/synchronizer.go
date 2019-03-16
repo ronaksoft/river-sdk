@@ -637,14 +637,6 @@ func (ctrl *Controller) UpdateHandler(u *msg.UpdateContainer) {
 			ctrl.updateSyncStatus(domain.OutOfSync)
 			ctrl.getUpdateDifference(u.MinUpdateID)
 		}
-
-		if ctrl.updateID < u.MaxUpdateID {
-			ctrl.updateID = u.MaxUpdateID
-			err := repo.Ctx().System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
-			if err != nil {
-				logs.Error("UpdateHandler() -> SaveInt()", zap.Error(err))
-			}
-		}
 	}
 
 	udpContainer := new(msg.UpdateContainer)
@@ -696,6 +688,16 @@ func (ctrl *Controller) UpdateHandler(u *msg.UpdateContainer) {
 		}
 
 	}
+
+	// save updateID after processing messages
+	if ctrl.updateID < u.MaxUpdateID {
+		ctrl.updateID = u.MaxUpdateID
+		err := repo.Ctx().System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
+		if err != nil {
+			logs.Error("UpdateHandler() -> SaveInt()", zap.Error(err))
+		}
+	}
+
 	udpContainer.Length = int32(len(udpContainer.Updates))
 
 	// call external handler
