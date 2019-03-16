@@ -4,7 +4,7 @@ stages:
 
 build:supernumerary-node:
   stage: build
-  image: registry.ronaksoftware.com/base/golang:latest
+  image: registry.ronaksoftware.com/base/golang:1.11
   script:
     ## Server Supernumerary
     - cd supernumerary
