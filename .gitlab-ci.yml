@@ -7,9 +7,10 @@ build:supernumerary-node:
   image: registry.ronaksoftware.com/base/golang:1.11
   script:
     ## Server Supernumerary
-    - cd supernumerary
+    - go env
+    - cd supernumerary/node
     - mkdir -p $CI_PROJECT_DIR/supernumerary/node/_build
-    - env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o $CI_PROJECT_DIR/supernumerary/node/_build/supernumerary ./node
+    - env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o $CI_PROJECT_DIR/supernumerary/node/_build/supernumerary
   artifacts:
     untracked: true
     expire_in: 1 hour
