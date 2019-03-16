@@ -1,15 +1,17 @@
 # Goque [![GoDoc](http://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/beeker1121/goque) [![License](http://img.shields.io/badge/license-mit-blue.svg)](https://raw.githubusercontent.com/beeker1121/goque/master/LICENSE) [![Go Report Card](https://goreportcard.com/badge/github.com/beeker1121/goque)](https://goreportcard.com/report/github.com/beeker1121/goque) [![Build Status](https://travis-ci.org/beeker1121/goque.svg?branch=master)](https://travis-ci.org/beeker1121/goque)
 
-Goque provides embedded, disk-based implementations of stack and queue data structures.
+Goque provides embedded, disk-based implementations of stack, queue, and priority queue data structures.
 
 Motivation for creating this project was the need for a persistent priority queue that remained performant while growing well beyond the available memory of a given machine. While there are many packages for Go offering queues, they all seem to be memory based and/or standalone solutions that are not embeddable within an application.
 
 Instead of using an in-memory heap structure to store data, everything is stored using the [Go port of LevelDB](https://github.com/syndtr/goleveldb). This results in very little memory being used no matter the size of the database, while read and write performance remains near constant.
 
+**IMPORTANT UPDATE: Goque has been updated to v2, which introduces a completely new API for the Enqueue, Push, and Update methods. Please refer the [v2 release](https://github.com/beeker1121/goque/releases/tag/v2.0.0) for more information on exactly what has been changed. The prior API can still be found at [release v1.0.2](https://github.com/beeker1121/goque/releases/tag/v1.0.2).**
+
 ## Features
 
-- Provides stack (LIFO), queue (FIFO), priority queue, and prefix queue structures.
-- Stacks and queues (but not priority queues or prefix queues) are interchangeable.
+- Provides stack (LIFO), queue (FIFO), and priority queue structures.
+- Stacks and queues (but not priority queues) are interchangeable.
 - Persistent, disk-based.
 - Optimized for fast inserts and reads.
 - Goroutine safe.
@@ -233,82 +235,9 @@ Delete the priority queue and underlying database:
 pq.Drop()
 ```
 
-### Prefix Queue
-
-PrefixQueue is a FIFO (first in, first out) data structure that separates each given prefix into its own queue.
-
-#### Methods
-
-Create or open a prefix queue:
-
-```go
-pq, err := goque.OpenPrefixQueue("data_dir")
-...
-defer pq.Close()
-```
-
-Enqueue an item:
-
-```go
-item, err := pq.Enqueue([]byte("prefix"), []byte("item value"))
-// or
-item, err := pq.EnqueueString("prefix", "item value")
-// or
-item, err := pq.EnqueueObject([]byte("prefix"), Object{X:1})
-```
-
-Dequeue an item:
-
-```go
-item, err := pq.Dequeue([]byte("prefix"))
-// or
-item, err := pq.DequeueString("prefix")
-...
-fmt.Println(item.ID)         // 1
-fmt.Println(item.Key)        // [112 114 101 102 105 120 0 0 0 0 0 0 0 0 1]
-fmt.Println(item.Value)      // [105 116 101 109 32 118 97 108 117 101]
-fmt.Println(item.ToString()) // item value
-
-// Decode to object.
-var obj Object
-err := item.ToObject(&obj)
-...
-fmt.Printf("%+v\n", obj) // {X:1}
-```
-
-Peek the next prefix queue item:
-
-```go
-item, err := pq.Peek([]byte("prefix"))
-// or
-item, err := pq.PeekString("prefix")
-// or
-item, err := pq.PeekByID([]byte("prefix"), 1)
-// or
-item, err := pq.PeekByIDString("prefix", 1)
-```
-
-Update an item in the prefix queue:
-
-```go
-item, err := pq.Update([]byte("prefix"), 1, []byte("new value"))
-// or
-item, err := pq.UpdateString("prefix", 1, "new value")
-// or
-item, err := pq.UpdateObject([]byte("prefix"), 1, Object{X:2})
-```
-
-Delete the prefix queue and underlying database:
-
-```go
-pq.Drop()
-```
-
 ## Benchmarks
 
-Benchmarks were ran on a Google Compute Engine n1-standard-1 machine (1 vCPU 3.75 GB of RAM):
-
-Go 1.6:
+Benchmarks were run on a Google Compute Engine n1-standard-1 machine (1 vCPU 3.75 GB of RAM):
 
 ```
 $ go test -bench=.
@@ -320,22 +249,6 @@ BenchmarkQueueDequeue             200000             18970 ns/op            1089
 BenchmarkStackPush                200000              8145 ns/op             487 B/op          7 allocs/op
 BenchmarkStackPop                 200000             18947 ns/op            1097 B/op         17 allocs/op
 ok      github.com/beeker1121/goque     22.549s
-```
-
-Go 1.8:
-
-```
-$ go test -bench=.
-BenchmarkPrefixQueueEnqueue        20000             60553 ns/op           10532 B/op        242 allocs/op
-BenchmarkPrefixQueueDequeue        10000            100727 ns/op           18519 B/op        444 allocs/op
-BenchmarkPriorityQueueEnqueue     300000              4781 ns/op             557 B/op          9 allocs/op
-BenchmarkPriorityQueueDequeue     200000             11656 ns/op            1206 B/op         19 allocs/op
-BenchmarkQueueEnqueue             300000              4625 ns/op             513 B/op          9 allocs/op
-BenchmarkQueueDequeue             200000             11537 ns/op            1125 B/op         19 allocs/op
-BenchmarkStackPush                300000              4631 ns/op             513 B/op          9 allocs/op
-BenchmarkStackPop                 200000              9629 ns/op            1116 B/op         19 allocs/op
-PASS
-ok      github.com/beeker1121/goque     18.135s
 ```
 
 ## Thanks
