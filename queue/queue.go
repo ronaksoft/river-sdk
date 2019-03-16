@@ -433,7 +433,7 @@ func (ctrl *Controller) CancelRequest(reqID int64) {
 // DropQueue remove queue from storage
 func (ctrl *Controller) DropQueue() (dataDir string, err error) {
 	dataDir = ctrl.waitingList.DataDir
-	err = ctrl.waitingList.Drop()
+	ctrl.waitingList.Drop()
 	return
 }
 

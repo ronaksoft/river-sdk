@@ -288,12 +288,14 @@ func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) []*msg.UpdateEnvel
 	x := new(msg.UpdateUsername)
 	x.Unmarshal(u.Update)
 
-	ctrl.connInfo.ChangeUserID(x.UserID)
-	ctrl.connInfo.ChangeUsername(x.Username)
-	ctrl.connInfo.ChangeFirstName(x.FirstName)
-	ctrl.connInfo.ChangeLastName(x.LastName)
-	ctrl.connInfo.ChangeBio(x.Bio)
-	ctrl.connInfo.Save()
+	if x.UserID == ctrl.UserID {
+		ctrl.connInfo.ChangeUserID(x.UserID)
+		ctrl.connInfo.ChangeUsername(x.Username)
+		ctrl.connInfo.ChangeFirstName(x.FirstName)
+		ctrl.connInfo.ChangeLastName(x.LastName)
+		ctrl.connInfo.ChangeBio(x.Bio)
+		ctrl.connInfo.Save()
+	}
 
 	err := repo.Ctx().Users.UpdateUsername(x)
 	if err != nil {
