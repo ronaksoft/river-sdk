@@ -49,7 +49,7 @@ func (n *Node) cbStart(msg *nats.Msg) {
 		logs.Error("Failed to unmarshal SatrtCfg", zap.Error(err))
 		return
 	}
-	
+
 	// check start state
 	if n.su != nil {
 		if len(n.su.Actors) > 0 {
@@ -112,6 +112,11 @@ func (n *Node) cbRegister(msg *nats.Msg) {
 }
 
 func (n *Node) cbTicker(msg *nats.Msg) {
+
+	if n.su == nil {
+		logs.Error("cbTicker() supernumerary not initialized")
+		return
+	}
 
 	logs.Info("cbTicker()", zap.String("Data", string(msg.Data)))
 
