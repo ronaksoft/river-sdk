@@ -1,7 +1,7 @@
 version: '2'
 services:
 
-## Supernumerary SERVICE
+## Supernumerary SERVICE 001
   supernumerary-001:
     image: supernumerary:latest
     restart: always
@@ -14,7 +14,31 @@ services:
       - CFG_INSTANCE_ID=001
       - CFG_NATS_URL=nats://nats:4222
       - CFG_START_PHONE=0
-      - CFG_END_PHONE=10
+      - CFG_END_PHONE=100
+    networks:
+      - testing
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 20000
+        hard: 40000
+    depends_on:
+      - nats
+
+## Supernumerary SERVICE 002
+  supernumerary-002:
+    image: supernumerary:latest
+    restart: always
+    expose:
+      - 2374
+    volumes:
+      - ./_cache:/ronak/_cache
+    environment:
+      - CFG_BOUNDLE_ID=002
+      - CFG_INSTANCE_ID=002
+      - CFG_NATS_URL=nats://nats:4222
+      - CFG_START_PHONE=100
+      - CFG_END_PHONE=200
     networks:
       - testing
     ulimits:
@@ -41,8 +65,8 @@ services:
     command: --config.file=/prometheus/prometheus.yml
     networks:
       - testing
-    expose:
-      - 9090
+    ports:
+      - 9090:9090
     volumes:
       - ./prometheus:/prometheus
 

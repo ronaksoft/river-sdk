@@ -161,6 +161,11 @@ func (s *Supernumerary) tickerApplier(action TickerAction) {
 					act.SetPeers([]*shared.PeerInfo{s.fnGetRandomPeer(act)})
 					// async
 					sen.Play(act)
+
+					// check stop signal while executing
+					if s.fnCheckStopSignal() {
+						return
+					}
 				}
 
 			case TickerActionSendFile:
@@ -171,6 +176,11 @@ func (s *Supernumerary) tickerApplier(action TickerAction) {
 					act.SetPeers([]*shared.PeerInfo{s.fnGetRandomPeer(act)})
 					// async
 					sen.Play(act)
+
+					// check stop signal while executing
+					if s.fnCheckStopSignal() {
+						return
+					}
 				}
 			}
 
@@ -178,6 +188,15 @@ func (s *Supernumerary) tickerApplier(action TickerAction) {
 			logs.Warn("tickerApplier() stop signal")
 			return
 		}
+	}
+}
+
+func (s *Supernumerary) fnCheckStopSignal() bool {
+	select {
+	case <-s.chTikerStop:
+		return true
+	default:
+		return false
 	}
 }
 

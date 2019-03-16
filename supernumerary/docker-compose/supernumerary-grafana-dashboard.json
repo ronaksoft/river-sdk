@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 1,
-  "id": 1,
+  "id": 2,
   "links": [],
   "panels": [
     {
@@ -175,7 +175,7 @@
       "tableColumn": "__name__",
       "targets": [
         {
-          "expr": "gauge_actor",
+          "expr": "sum(gauge_actor)",
           "format": "time_series",
           "hide": false,
           "instant": false,
@@ -1205,5 +1205,5 @@
   "timezone": "",
   "title": "Supernumerary",
   "uid": "Xf8z1T2ik",
-  "version": 81
+  "version": 3
 }

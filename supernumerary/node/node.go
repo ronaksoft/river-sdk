@@ -49,6 +49,14 @@ func (n *Node) cbStart(msg *nats.Msg) {
 		logs.Error("Failed to unmarshal SatrtCfg", zap.Error(err))
 		return
 	}
+	
+	// check start state
+	if n.su != nil {
+		if len(n.su.Actors) > 0 {
+			logs.Error("cbStart() supernumerary already started")
+			return
+		}
+	}
 
 	shared.DefaultFileServerURL = cfg.FileServerURL
 	shared.DefaultServerURL = cfg.ServerURL
