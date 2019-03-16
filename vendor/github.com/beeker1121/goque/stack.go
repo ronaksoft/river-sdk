@@ -220,36 +220,27 @@ func (s *Stack) Length() uint64 {
 }
 
 // Close closes the LevelDB database of the stack.
-func (s *Stack) Close() error {
+func (s *Stack) Close() {
 	s.Lock()
 	defer s.Unlock()
 
 	// Check if stack is already closed.
 	if !s.isOpen {
-		return nil
+		return
 	}
 
-	// Close the LevelDB database.
-	if err := s.db.Close(); err != nil {
-		return err
-	}
-
-	// Reset stack head and tail and set
-	// isOpen to false.
+	// Reset stack head and tail.
 	s.head = 0
 	s.tail = 0
-	s.isOpen = false
 
-	return nil
+	s.db.Close()
+	s.isOpen = false
 }
 
 // Drop closes and deletes the LevelDB database of the stack.
-func (s *Stack) Drop() error {
-	if err := s.Close(); err != nil {
-		return err
-	}
-
-	return os.RemoveAll(s.DataDir)
+func (s *Stack) Drop() {
+	s.Close()
+	os.RemoveAll(s.DataDir)
 }
 
 // getItemByID returns an item, if found, for the given ID.

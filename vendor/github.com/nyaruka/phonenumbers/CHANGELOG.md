@@ -1,3 +1,12 @@
+v1.0.36
+----------
+ * Update for upstream metadata v8.10.7
+
+v1.0.35
+----------
+ * update metadata for v8.10.4 release
+ * update AR test number to valid AR fixed line
+
 v1.0.34
 ----------
  * update travis file

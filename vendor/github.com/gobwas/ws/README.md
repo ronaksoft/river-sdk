@@ -138,12 +138,8 @@ We can apply the same pattern to read and write structured responses through a J
 		encoder = json.NewEncoder(w)
 	)
 	for {
-		hdr, err = r.NextFrame()
-		if err != nil {
+		if _, err = r.NextFrame(); err != nil {
 			return err
-		}
-		if hdr.OpCode == ws.OpClose {
-			return io.EOF
 		}
 		var req Request
 		if err := decoder.Decode(&req); err != nil {

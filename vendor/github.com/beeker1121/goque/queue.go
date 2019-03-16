@@ -220,36 +220,27 @@ func (q *Queue) Length() uint64 {
 }
 
 // Close closes the LevelDB database of the queue.
-func (q *Queue) Close() error {
+func (q *Queue) Close() {
 	q.Lock()
 	defer q.Unlock()
 
 	// Check if queue is already closed.
 	if !q.isOpen {
-		return nil
+		return
 	}
 
-	// Close the LevelDB database.
-	if err := q.db.Close(); err != nil {
-		return err
-	}
-
-	// Reset queue head and tail and set
-	// isOpen to false.
+	// Reset queue head and tail.
 	q.head = 0
 	q.tail = 0
-	q.isOpen = false
 
-	return nil
+	q.db.Close()
+	q.isOpen = false
 }
 
 // Drop closes and deletes the LevelDB database of the queue.
-func (q *Queue) Drop() error {
-	if err := q.Close(); err != nil {
-		return err
-	}
-
-	return os.RemoveAll(q.DataDir)
+func (q *Queue) Drop() {
+	q.Close()
+	os.RemoveAll(q.DataDir)
 }
 
 // getItemByID returns an item, if found, for the given ID.

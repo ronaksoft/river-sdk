@@ -62,8 +62,9 @@ type Session struct {
 	schemaEvents *eventDebouncer
 
 	// ring metadata
-	hosts           []HostInfo
-	useSystemSchema bool
+	hosts                     []HostInfo
+	useSystemSchema           bool
+	hasAggregatesAndFunctions bool
 
 	cfg ClusterConfig
 
@@ -105,6 +106,11 @@ func NewSession(cfg ClusterConfig) (*Session, error) {
 	// Check that hosts in the ClusterConfig is not empty
 	if len(cfg.Hosts) < 1 {
 		return nil, ErrNoHosts
+	}
+
+	// Check that either Authenticator is set or AuthProvider, not both
+	if cfg.Authenticator != nil && cfg.AuthProvider != nil {
+		return nil, errors.New("Can't use both Authenticator and AuthProvider in cluster config.")
 	}
 
 	s := &Session{
@@ -235,8 +241,9 @@ func (s *Session) init() error {
 		newer, _ := checkSystemSchema(s.control)
 		s.useSystemSchema = newer
 	} else {
-		host := s.ring.rrHost()
-		s.useSystemSchema = host.Version().Major >= 3
+		version := s.ring.rrHost().Version()
+		s.useSystemSchema = version.AtLeast(3, 0, 0)
+		s.hasAggregatesAndFunctions = version.AtLeast(2, 2, 0)
 	}
 
 	if s.pool.Size() == 0 {
