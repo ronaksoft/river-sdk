@@ -17,10 +17,10 @@ build:supernumerary-node:
     expire_in: 1 hour
 
 
-deploy:supernumerary:
+deploy:supernumerary-node:
   stage: deploy
   only:
-    - master
+    - feature/messagehole
   image: docker:latest
   services:
     - docker:dind
