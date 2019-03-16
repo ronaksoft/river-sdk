@@ -2,5 +2,5 @@ FROM git.ronaksoftware.com/base/alpine
 WORKDIR /ronak
 RUN mkdir _cache
 COPY keys.json /ronak
-COPY main /ronak
-ENTRYPOINT ["/ronak/main"]
+COPY ./_build/supernumerary /ronak
+ENTRYPOINT ["/ronak/supernumerary"]
