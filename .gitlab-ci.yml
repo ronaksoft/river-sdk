@@ -28,6 +28,6 @@ deploy:supernumerary-node:
     IMAGE_TAG:  "0.1"
   script:
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
-    - cd ./supernumerary
+    - cd ./supernumerary/node
     - docker build --pull -t $CI_REGISTRY_IMAGE/supernumerary:$IMAGE_TAG .
     - docker push $CI_REGISTRY_IMAGE/supernumerary:$IMAGE_TAG

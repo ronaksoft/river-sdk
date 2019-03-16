@@ -1,4 +1,4 @@
-FROM alpine
+FROM git.ronaksoftware.com/base/alpine
 WORKDIR /ronak
 RUN mkdir _cache
 COPY keys.json /ronak
