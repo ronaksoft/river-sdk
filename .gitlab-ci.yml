@@ -9,7 +9,7 @@ build:supernumerary-node:
     ## Server Supernumerary
     - cd supernumerary
     - mkdir -p $CI_PROJECT_DIR/supernumerary/node/_build
-    - env CGO_ENABLED=0 go build -ldflags "-s -w" -o $CI_PROJECT_DIR/cmd/server-api-notification/_build/supernumerary ./node
+    - env CGO_ENABLED=0 GO111MODULE=off go build -ldflags "-s -w" -o $CI_PROJECT_DIR/supernumerary/_build/supernumerary ./node
   artifacts:
     untracked: true
     expire_in: 1 hour
