@@ -1,0 +1,31 @@
+stages:
+  - build
+  - deploy
+
+build:supernumerary-node:
+  stage: build
+  image: registry.ronaksoftware.com/base/golang:1.11
+  script:
+    ## Server Supernumerary
+    - cd supernumerary
+    - mkdir -p $CI_PROJECT_DIR/supernumerary/node/_build
+    - env CGO_ENABLED=0 go build -ldflags "-s -w" -o $CI_PROJECT_DIR/cmd/server-api-notification/_build/supernumerary ./node
+  artifacts:
+    untracked: true
+    expire_in: 1 hour
+
+
+deploy:supernumerary:
+  stage: deploy
+  only:
+    - master
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    IMAGE_TAG:  "0.1"
+  script:
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+    - cd ./supernumerary
+    - docker build --pull -t $CI_REGISTRY_IMAGE/supernumerary:$IMAGE_TAG .
+    - docker push $CI_REGISTRY_IMAGE/supernumerary:$IMAGE_TAG
