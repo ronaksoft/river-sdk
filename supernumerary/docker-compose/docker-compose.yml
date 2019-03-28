@@ -3,7 +3,7 @@ services:
 
 ## Supernumerary SERVICE 001
   supernumerary-001:
-    image: supernumerary:latest
+    image: registry.ronaksoftware.com/ronak/riversdk/supernumerary:latest
     restart: always
     expose:
       - 2374
@@ -27,7 +27,7 @@ services:
 
 ## Supernumerary SERVICE 002
   supernumerary-002:
-    image: supernumerary:latest
+    image: registry.ronaksoftware.com/ronak/riversdk/supernumerary:latest
     restart: always
     expose:
       - 2374
