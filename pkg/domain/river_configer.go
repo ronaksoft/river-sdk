@@ -1,7 +1,7 @@
 package domain
 
-// RiverConfiger high level interface to prevent package confilict when pass RiverConfig to SyncController
-type RiverConfiger interface {
+// RiverConfigurator high level interface to prevent package conflict when pass RiverConfig to SyncController
+type RiverConfigurator interface {
 	Save()
 	Load() error
 	ChangeAuthID(authID int64)

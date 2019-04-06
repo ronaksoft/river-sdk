@@ -21,14 +21,14 @@ import (
 
 // Config sync controller required configs
 type Config struct {
-	ConnInfo    domain.RiverConfiger
+	ConnInfo    domain.RiverConfigurator
 	NetworkCtrl *network.Controller
 	QueueCtrl   *queue.Controller
 }
 
 // Controller cache received data from server to client DB
 type Controller struct {
-	connInfo domain.RiverConfiger
+	connInfo domain.RiverConfigurator
 
 	networkCtrl          *network.Controller
 	queue                *queue.Controller

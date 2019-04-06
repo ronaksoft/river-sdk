@@ -167,7 +167,10 @@ func (fm *FileManager) Stop() {
 // Upload file to server
 func (fm *FileManager) Upload(fileID int64, req *msg.ClientPendingMessage) error {
 	x := new(msg.ClientSendMessageMedia)
-	x.Unmarshal(req.Media)
+	err := x.Unmarshal(req.Media)
+	if err != nil {
+		return err
+	}
 
 	file, err := os.Open(x.FilePath)
 	if err != nil {
@@ -202,8 +205,8 @@ func (fm *FileManager) Upload(fileID int64, req *msg.ClientPendingMessage) error
 	}
 
 	fm.AddToQueue(state)
-	repo.Ctx().Files.SaveFileStatus(state.GetDTO())
-	return nil
+	err = repo.Ctx().Files.SaveFileStatus(state.GetDTO())
+	return err
 }
 
 // Download add download request

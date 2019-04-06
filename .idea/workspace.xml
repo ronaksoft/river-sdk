@@ -2,11 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4b3c8ed8-4f08-42a5-8fd4-fbfb58d0d314" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/ehsan.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/ehsan.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/cli-river/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli-river/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/cli-river/main_delegate.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli-river/main_delegate.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/repo/repo_files.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_files.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sdk_commands.go" beforeDir="false" afterPath="$PROJECT_DIR$/sdk_commands.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/domain/river_configer.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/domain/river_configer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/filemanager/filemanager.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/filemanager/filemanager.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/synchronizer/synchronizer.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/synchronizer/synchronizer.go" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -19,8 +17,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sdk_commands.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="128">
-              <caret line="576" column="48" selection-start-line="576" selection-start-column="48" selection-end-line="576" selection-end-column="48" />
+            <state relative-caret-position="329">
+              <caret line="655" column="35" lean-forward="true" selection-start-line="655" selection-start-column="35" selection-end-line="655" selection-end-column="35" />
               <folding>
                 <element signature="n#!!block;n#messagesGetDialogs#0" />
                 <element signature="e#706#793#0" />
@@ -135,10 +133,6 @@
                 <element signature="e#22016#22043#0" />
                 <element signature="e#23241#23295#0" />
                 <element signature="e#23266#23291#0" />
-                <element signature="e#23873#24110#0" />
-                <element signature="e#24037#24095#0" />
-                <element signature="e#24063#24090#0" />
-                <element signature="e#24403#24430#0" />
                 <element signature="n#!!block;n#contactsGet#0" />
                 <element signature="e#25230#25310#0" />
                 <element signature="e#25502#25614#0" />
@@ -235,11 +229,53 @@
           </provider>
         </entry>
       </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pkg/filemanager/filemanager.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-881">
+              <caret line="355" column="35" selection-start-line="355" selection-start-column="35" selection-end-line="355" selection-end-column="35" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pkg/domain/queue_messages.go">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pkg/domain/queue_updates.go">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pkg/domain/request_callback.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-390">
+              <caret line="36" column="31" lean-forward="true" selection-start-line="36" selection-start-column="31" selection-end-line="36" selection-end-column="31" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pkg/domain/statics.go">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
       <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/pkg/domain/river_configer.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="280">
+              <caret line="14" column="24" lean-forward="true" selection-start-line="14" selection-start-column="24" selection-end-line="14" selection-end-column="24" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/pkg/repo/repo_files.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="70">
-              <caret line="102" column="1" selection-start-line="102" selection-start-column="1" selection-end-line="102" selection-end-column="1" />
+            <state relative-caret-position="190">
+              <caret line="165" column="1" selection-start-line="165" selection-start-column="1" selection-end-line="165" selection-end-column="1" />
               <folding>
                 <element signature="n#!!block;n#SaveFileStatus#0" />
                 <element signature="e#1527#1562#0" />
@@ -296,322 +332,6 @@
                 <element signature="e#8956#9044#0" />
                 <element signature="n#!!block;n#GetFileByDocumentID#0" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/cmd/cli-river/main.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="279">
-              <caret line="53" column="5" lean-forward="true" selection-start-line="53" selection-start-column="5" selection-end-line="53" selection-end-column="5" />
-              <folding>
-                <element signature="e#473#564#0" />
-                <element signature="e#566#726#0" />
-                <element signature="e#1269#1294#0" />
-                <element signature="e#1803#2451#0" />
-                <element signature="e#1980#2002#0" />
-                <element signature="e#2498#2603#0" />
-                <element signature="e#2545#2600#0" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/cmd/cli-river/main_delegate.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="480">
-              <caret line="91" selection-start-line="91" selection-end-line="91" />
-              <folding>
-                <element signature="n#!!block;n#OnUpdates#0" />
-                <element signature="e#376#1604#0" />
-                <element signature="e#398#963#0" />
-                <element signature="e#526#594#0" />
-                <element signature="e#787#963#0" />
-                <element signature="e#965#1234#0" />
-                <element signature="e#1236#1601#0" />
-                <element signature="e#1344#1412#0" />
-                <element signature="e#1418#1601#0" />
-                <element signature="n#!!block;n#OnDeferredRequests#0" />
-                <element signature="n#!!block;n#OnNetworkStatusChanged#0" />
-                <element signature="n#!!block;n#OnSyncStatusChanged#0" />
-                <element signature="n#!!block;n#OnAuthKeyCreated#0" />
-                <element signature="n#!!block;n#OnGeneralError#0" />
-                <element signature="n#!!block;n#OnSessionClosed#0" />
-                <element signature="n#!!block;n#OnDownloadProgressChanged#0" />
-                <element signature="n#!!block;n#OnUploadProgressChanged#0" />
-                <element signature="n#!!block;n#OnDownloadCompleted#0" />
-                <element signature="n#!!block;n#OnUploadCompleted#0" />
-                <element signature="n#!!block;n#OnUploadError#0" />
-                <element signature="n#!!block;n#OnDownloadError#0" />
-                <element signature="n#!!block;n#Log#0" />
-                <element signature="e#4216#4629#0" />
-                <element signature="e#4235#4294#0" />
-                <element signature="e#4296#4365#0" />
-                <element signature="e#4367#4435#0" />
-                <element signature="e#4437#4504#0" />
-                <element signature="e#4506#4573#0" />
-                <element signature="e#4575#4626#0" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pkg/repo/repo_pending_messages.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="120">
-              <caret line="27" lean-forward="true" selection-start-line="27" selection-end-line="27" />
-              <folding>
-                <element signature="e#321#1207#0" />
-                <element signature="n#!!block;n#Save#0" />
-                <element signature="e#1446#1572#0" />
-                <element signature="e#1905#1938#0" />
-                <element signature="e#1944#2016#0" />
-                <element signature="e#2032#2047#0" />
-                <element signature="e#2086#2126#0" />
-                <element signature="e#2160#2298#0" />
-                <element signature="e#2304#2493#0" />
-                <element signature="e#2422#2487#0" />
-                <element signature="n#!!block;n#GetPendingMessageByRequestID#0" />
-                <element signature="e#2919#3051#0" />
-                <element signature="n#!!block;n#GetPendingMessageByID#0" />
-                <element signature="e#3411#3536#0" />
-                <element signature="n#!!block;n#DeletePendingMessage#0" />
-                <element signature="e#3893#4013#0" />
-                <element signature="e#4161#4273#0" />
-                <element signature="e#4358#4481#0" />
-                <element signature="e#4563#5233#0" />
-                <element signature="e#4836#4936#0" />
-                <element signature="e#4942#5230#0" />
-                <element signature="e#5124#5226#0" />
-                <element signature="n#!!block;n#DeleteManyPendingMessage#0" />
-                <element signature="e#5575#5655#0" />
-                <element signature="e#5771#5858#0" />
-                <element signature="e#5946#6594#0" />
-                <element signature="e#6220#6308#0" />
-                <element signature="e#6314#6591#0" />
-                <element signature="e#6497#6587#0" />
-                <element signature="n#!!block;n#GetManyPendingMessages#0" />
-                <element signature="e#7064#7187#0" />
-                <element signature="e#7216#7312#0" />
-                <element signature="n#!!block;n#GetManyPendingMessagesRequestID#0" />
-                <element signature="e#7736#7859#0" />
-                <element signature="e#7919#7970#0" />
-                <element signature="n#!!block;n#GetAllPendingMessages#0" />
-                <element signature="e#8240#8326#0" />
-                <element signature="n#!!block;n#DeletePeerAllMessages#0" />
-                <element signature="e#8607#8734#0" />
-                <element signature="e#8885#8937#0" />
-                <element signature="e#9052#9162#0" />
-                <element signature="n#!!block;n#SaveClientMessageMedia#0" />
-                <element signature="e#10215#10353#0" />
-                <element signature="e#10359#10548#0" />
-                <element signature="e#10477#10542#0" />
-                <element signature="n#!!block;n#GetPendingMessage#0" />
-                <element signature="e#10950#11054#0" />
-                <element signature="n#!!block;n#SaveMessageMedia#0" />
-                <element signature="e#11306#11444#0" />
-                <element signature="e#11805#11838#0" />
-                <element signature="e#11844#11916#0" />
-                <element signature="e#11933#12396#0" />
-                <element signature="e#11986#12026#0" />
-                <element signature="e#12060#12198#0" />
-                <element signature="e#12204#12393#0" />
-                <element signature="e#12322#12387#0" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/sdk_commands_general.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="400">
-              <caret line="74" column="69" selection-start-line="74" selection-start-column="69" selection-end-line="74" selection-end-column="69" />
-              <folding>
-                <element signature="e#517#810#0" />
-                <element signature="e#701#729#0" />
-                <element signature="e#932#1027#0" />
-                <element signature="e#1173#1645#0" />
-                <element signature="e#1257#1378#0" />
-                <element signature="e#1741#1783#0" />
-                <element signature="e#1870#2022#0" />
-                <element signature="e#2135#4006#0" />
-                <element signature="e#2216#2531#0" />
-                <element signature="e#2590#2663#0" />
-                <element signature="e#2750#2833#0" />
-                <element signature="e#2903#2979#0" />
-                <element signature="e#3084#3263#0" />
-                <element signature="e#3320#3473#0" />
-                <element signature="e#3492#3739#0" />
-                <element signature="e#3699#3736#0" />
-                <element signature="e#3745#3866#0" />
-                <element signature="e#3935#3980#0" />
-                <element signature="e#4117#4251#0" />
-                <element signature="e#4178#4237#0" />
-                <element signature="e#4364#4507#0" />
-                <element signature="e#4427#4486#0" />
-                <element signature="e#4623#4765#0" />
-                <element signature="e#4682#4744#0" />
-                <element signature="e#4898#5255#0" />
-                <element signature="e#5221#5253#0" />
-                <element signature="e#5375#5589#0" />
-                <element signature="e#5465#5570#0" />
-                <element signature="e#5714#5907#0" />
-                <element signature="e#5803#5893#0" />
-                <element signature="e#6044#6870#0" />
-                <element signature="e#6398#6426#0" />
-                <element signature="e#6453#6481#0" />
-                <element signature="e#6631#6670#0" />
-                <element signature="e#6836#6868#0" />
-                <element signature="e#7026#9270#0" />
-                <element signature="e#7276#7568#0" />
-                <element signature="e#7359#7480#0" />
-                <element signature="e#7394#7476#0" />
-                <element signature="e#7422#7471#0" />
-                <element signature="e#7486#7565#0" />
-                <element signature="e#7574#7649#0" />
-                <element signature="e#7671#9098#0" />
-                <element signature="e#7905#7998#0" />
-                <element signature="e#7939#7994#0" />
-                <element signature="e#8073#8917#0" />
-                <element signature="e#8121#8339#0" />
-                <element signature="e#8158#8211#0" />
-                <element signature="e#8247#8323#0" />
-                <element signature="e#8441#8638#0" />
-                <element signature="e#8478#8510#0" />
-                <element signature="e#8546#8622#0" />
-                <element signature="e#8684#8771#0" />
-                <element signature="e#8712#8766#0" />
-                <element signature="e#8873#8913#0" />
-                <element signature="e#9104#9268#0" />
-                <element signature="e#9231#9265#0" />
-                <element signature="e#9272#9308#0" />
-                <element signature="e#9399#9708#0" />
-                <element signature="e#9460#9580#0" />
-                <element signature="e#9580#9655#0" />
-                <element signature="e#9747#10496#0" />
-                <element signature="e#9806#10483#0" />
-                <element signature="e#9811#10480#0" />
-                <element signature="e#9834#10137#0" />
-                <element signature="e#9941#10137#0" />
-                <element signature="e#10086#10112#0" />
-                <element signature="e#10140#10476#0" />
-                <element signature="e#10314#10476#0" />
-                <element signature="e#10425#10451#0" />
-                <element signature="e#10598#11666#0" />
-                <element signature="e#10909#11002#0" />
-                <element signature="e#11005#11492#0" />
-                <element signature="e#11022#11083#0" />
-                <element signature="e#11123#11145#0" />
-                <element signature="e#11182#11293#0" />
-                <element signature="e#11295#11358#0" />
-                <element signature="e#11360#11425#0" />
-                <element signature="e#11427#11489#0" />
-                <element signature="e#11572#11577#0" />
-                <element signature="e#11583#11664#0" />
-                <element signature="e#11743#12054#0" />
-                <element signature="e#11810#11903#0" />
-                <element signature="e#12134#12450#0" />
-                <element signature="e#12201#12295#0" />
-                <element signature="e#12521#12897#0" />
-                <element signature="e#12588#12679#0" />
-                <element signature="e#12971#13324#0" />
-                <element signature="e#13038#13130#0" />
-                <element signature="e#13440#14315#0" />
-                <element signature="e#13596#13626#0" />
-                <element signature="e#13675#13748#0" />
-                <element signature="e#13794#13867#0" />
-                <element signature="e#13934#13949#0" />
-                <element signature="e#14426#15363#0" />
-                <element signature="e#14487#15288#0" />
-                <element signature="e#14512#15211#0" />
-                <element signature="e#14609#15149#0" />
-                <element signature="e#14645#15086#0" />
-                <element signature="e#14743#14811#0" />
-                <element signature="e#14978#15047#0" />
-                <element signature="e#15488#16445#0" />
-                <element signature="e#15549#16368#0" />
-                <element signature="e#15574#16289#0" />
-                <element signature="e#15671#16227#0" />
-                <element signature="e#15710#16162#0" />
-                <element signature="e#15810#15879#0" />
-                <element signature="e#16051#16120#0" />
-                <element signature="e#16574#17268#0" />
-                <element signature="e#17167#17249#0" />
-                <element signature="e#17384#18249#0" />
-                <element signature="e#17465#17914#0" />
-                <element signature="e#17469#17496#0" />
-                <element signature="e#17536#17595#0" />
-                <element signature="e#17694#17911#0" />
-                <element signature="e#17920#18238#0" />
-                <element signature="e#17974#18087#0" />
-                <element signature="e#18093#18235#0" />
-                <element signature="e#18377#19251#0" />
-                <element signature="e#18534#18564#0" />
-                <element signature="e#18613#18684#0" />
-                <element signature="e#18730#18801#0" />
-                <element signature="e#18868#18883#0" />
-                <element signature="e#19360#20351#0" />
-                <element signature="e#19448#20277#0" />
-                <element signature="e#19474#20201#0" />
-                <element signature="e#19573#19683#0" />
-                <element signature="e#19714#20140#0" />
-                <element signature="e#19807#19872#0" />
-                <element signature="e#20040#20105#0" />
-                <element signature="e#20474#21487#0" />
-                <element signature="e#20562#21411#0" />
-                <element signature="e#20588#21333#0" />
-                <element signature="e#20687#20799#0" />
-                <element signature="e#20832#21271#0" />
-                <element signature="e#20928#20994#0" />
-                <element signature="e#21167#21233#0" />
-                <element signature="e#21595#22285#0" />
-                <element signature="e#22186#22266#0" />
-                <element signature="e#22394#26066#0" />
-                <element signature="e#22435#24474#0" />
-                <element signature="e#22524#22638#0" />
-                <element signature="e#22642#24471#0" />
-                <element signature="e#22974#23805#0" />
-                <element signature="e#23214#23373#0" />
-                <element signature="e#23550#23740#0" />
-                <element signature="e#23809#24247#0" />
-                <element signature="e#24048#24211#0" />
-                <element signature="e#24533#24617#0" />
-                <element signature="e#24723#25392#0" />
-                <element signature="e#24850#25256#0" />
-                <element signature="e#24959#25122#0" />
-                <element signature="e#25128#25256#0" />
-                <element signature="e#25312#25389#0" />
-                <element signature="e#25455#25806#0" />
-                <element signature="e#25518#25760#0" />
-                <element signature="e#25634#25737#0" />
-                <element signature="e#25766#25803#0" />
-                <element signature="e#25812#26046#0" />
-                <element signature="e#25924#26025#0" />
-                <element signature="e#26219#27501#0" />
-                <element signature="e#26311#26556#0" />
-                <element signature="e#26506#26544#0" />
-                <element signature="e#26668#27063#0" />
-                <element signature="e#26746#26779#0" />
-                <element signature="e#26821#26855#0" />
-                <element signature="e#26877#26912#0" />
-                <element signature="e#26918#26952#0" />
-                <element signature="e#26977#27015#0" />
-                <element signature="e#27021#27060#0" />
-                <element signature="e#27463#27499#0" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/cmd/cli-river/commands_auth.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="210">
-              <caret line="86" column="30" selection-start-line="86" selection-start-column="30" selection-end-line="86" selection-end-column="30" />
             </state>
           </provider>
         </entry>
@@ -675,7 +395,6 @@
         <option value="$PROJECT_DIR$/pkg/queue/build-json.sh" />
         <option value="$PROJECT_DIR$/pkg/network/network.go" />
         <option value="$PROJECT_DIR$/pkg/logs/logs.go" />
-        <option value="$PROJECT_DIR$/pkg/filemanager/filemanager.go" />
         <option value="$PROJECT_DIR$/pkg/repo/repo_dialogs.go" />
         <option value="$PROJECT_DIR$/pkg/repo/repo_groups.go" />
         <option value="$PROJECT_DIR$/pkg/synchronizer/synchronizer.go" />
@@ -697,10 +416,12 @@
         <option value="$PROJECT_DIR$/pkg/repo/repo_pending_messages.go" />
         <option value="$PROJECT_DIR$/pkg/repo/repo.go" />
         <option value="$PROJECT_DIR$/sdk_commands_general.go" />
-        <option value="$PROJECT_DIR$/sdk_commands.go" />
         <option value="$PROJECT_DIR$/cmd/cli-river/main_delegate.go" />
         <option value="$PROJECT_DIR$/cmd/cli-river/main.go" />
         <option value="$PROJECT_DIR$/pkg/repo/repo_files.go" />
+        <option value="$PROJECT_DIR$/sdk_commands.go" />
+        <option value="$PROJECT_DIR$/pkg/filemanager/filemanager.go" />
+        <option value="$PROJECT_DIR$/pkg/domain/river_configer.go" />
       </list>
     </option>
   </component>
@@ -723,13 +444,13 @@
             <path>
               <item name="riversdk" type="b2602c69:ProjectViewProjectNode" />
               <item name="riversdk" type="462c0819:PsiDirectoryNode" />
-              <item name="cmd" type="462c0819:PsiDirectoryNode" />
+              <item name="pkg" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="riversdk" type="b2602c69:ProjectViewProjectNode" />
               <item name="riversdk" type="462c0819:PsiDirectoryNode" />
-              <item name="cmd" type="462c0819:PsiDirectoryNode" />
-              <item name="cli-river" type="462c0819:PsiDirectoryNode" />
+              <item name="pkg" type="462c0819:PsiDirectoryNode" />
+              <item name="domain" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -789,7 +510,7 @@
       <window_info anchor="bottom" id="Docker" order="7" />
       <window_info anchor="bottom" id="Database Changes" order="8" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="9" show_stripe_button="false" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="10" visible="true" weight="0.32959184" />
+      <window_info anchor="bottom" id="Terminal" order="10" weight="0.32959184" />
       <window_info anchor="bottom" id="Event Log" order="11" side_tool="true" />
       <window_info anchor="bottom" id="Tail" order="12" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
@@ -806,73 +527,6 @@
     <integration-enabled>true</integration-enabled>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/command_client.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="200">
-          <caret line="10" column="51" selection-start-line="10" selection-start-column="51" selection-end-line="10" selection-end-column="51" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/cli-supernumerary/cli/command.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="200">
-          <caret line="10" column="1" lean-forward="true" selection-start-line="10" selection-start-column="1" selection-end-line="10" selection-end-column="1" />
-          <folding>
-            <element signature="e#14#282#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-294">
-          <caret line="95" column="21" lean-forward="true" selection-start-line="95" selection-start-column="21" selection-end-line="95" selection-end-column="21" />
-          <folding>
-            <element signature="e#18#242#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/pcap_parser/types.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="100">
-          <caret line="11" column="21" selection-start-line="11" selection-start-column="21" selection-end-line="11" selection-end-column="21" />
-          <folding>
-            <element signature="e#174#380#0" />
-            <element signature="e#430#500#0" />
-            <element signature="n#!!block;n#NewWS#0" />
-            <element signature="e#618#999#0" />
-            <element signature="e#694#836#0" />
-            <element signature="e#842#984#0" />
-            <element signature="n#!!block;n#Fin#0" />
-            <element signature="n#!!block;n#Reserved#0" />
-            <element signature="n#!!block;n#OpCode#0" />
-            <element signature="n#!!block;n#Mask#0" />
-            <element signature="n#!!block;n#PayloadLength#0" />
-            <element signature="n#!!block;n#ExtendedPayloadLength#0" />
-            <element signature="n#!!block;n#MaskingKey#0" />
-            <element signature="e#1955#1967#0" />
-            <element signature="e#1983#2017#0" />
-            <element signature="n#!!block;n#UnmaskPayload#0" />
-            <element signature="e#2128#2249#0" />
-            <element signature="n#!!block;n#IsValid#0" />
-            <element signature="e#2469#2493#0" />
-            <element signature="n#!!block;n#cipher#0" />
-            <element signature="e#2654#2734#0" />
-            <element signature="e#2681#2722#0" />
-            <element signature="e#2933#3008#0" />
-            <element signature="e#3134#3171#0" />
-            <element signature="e#3201#3238#0" />
-            <element signature="e#3241#3315#0" />
-            <element signature="e#3608#3648#0" />
-            <element signature="e#3733#3788#0" />
-            <element signature="e#3956#4011#0" />
-            <element signature="e#4015#4063#0" />
-            <element signature="e#4202#4214#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/cmd/cli-river/commands_debug.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="46">
@@ -1059,13 +713,6 @@
             <element signature="e#22432#22591#0" />
             <element signature="e#22489#22525#0" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pkg/filemanager/filemanager.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-895">
-          <caret line="68" column="44" lean-forward="true" selection-start-line="68" selection-start-column="44" selection-end-line="68" selection-end-column="44" />
         </state>
       </provider>
     </entry>
@@ -1592,13 +1239,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pkg/domain/request_callback.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-17">
-          <caret line="36" column="31" lean-forward="true" selection-start-line="36" selection-start-column="31" selection-end-line="36" selection-end-column="31" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pkg/repo/dto/dto.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="220">
@@ -1947,6 +1587,71 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/repo/repo_pending_messages.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="140">
+          <caret line="28" column="33" lean-forward="true" selection-start-line="28" selection-start-column="33" selection-end-line="28" selection-end-column="33" />
+          <folding>
+            <element signature="e#321#1207#0" />
+            <element signature="n#!!block;n#Save#0" />
+            <element signature="e#1446#1572#0" />
+            <element signature="e#1905#1938#0" />
+            <element signature="e#1944#2016#0" />
+            <element signature="e#2032#2047#0" />
+            <element signature="e#2086#2126#0" />
+            <element signature="e#2160#2298#0" />
+            <element signature="e#2304#2493#0" />
+            <element signature="e#2422#2487#0" />
+            <element signature="n#!!block;n#GetPendingMessageByRequestID#0" />
+            <element signature="e#2919#3051#0" />
+            <element signature="n#!!block;n#GetPendingMessageByID#0" />
+            <element signature="e#3411#3536#0" />
+            <element signature="n#!!block;n#DeletePendingMessage#0" />
+            <element signature="e#3893#4013#0" />
+            <element signature="e#4161#4273#0" />
+            <element signature="e#4358#4481#0" />
+            <element signature="e#4563#5233#0" />
+            <element signature="e#4836#4936#0" />
+            <element signature="e#4942#5230#0" />
+            <element signature="e#5124#5226#0" />
+            <element signature="n#!!block;n#DeleteManyPendingMessage#0" />
+            <element signature="e#5575#5655#0" />
+            <element signature="e#5771#5858#0" />
+            <element signature="e#5946#6594#0" />
+            <element signature="e#6220#6308#0" />
+            <element signature="e#6314#6591#0" />
+            <element signature="e#6497#6587#0" />
+            <element signature="n#!!block;n#GetManyPendingMessages#0" />
+            <element signature="e#7064#7187#0" />
+            <element signature="e#7216#7312#0" />
+            <element signature="n#!!block;n#GetManyPendingMessagesRequestID#0" />
+            <element signature="e#7736#7859#0" />
+            <element signature="e#7919#7970#0" />
+            <element signature="n#!!block;n#GetAllPendingMessages#0" />
+            <element signature="e#8240#8326#0" />
+            <element signature="n#!!block;n#DeletePeerAllMessages#0" />
+            <element signature="e#8607#8734#0" />
+            <element signature="e#8885#8937#0" />
+            <element signature="e#9052#9162#0" />
+            <element signature="n#!!block;n#SaveClientMessageMedia#0" />
+            <element signature="e#10215#10353#0" />
+            <element signature="e#10359#10548#0" />
+            <element signature="e#10477#10542#0" />
+            <element signature="n#!!block;n#GetPendingMessage#0" />
+            <element signature="e#10950#11054#0" />
+            <element signature="n#!!block;n#SaveMessageMedia#0" />
+            <element signature="e#11306#11444#0" />
+            <element signature="e#11805#11838#0" />
+            <element signature="e#11844#11916#0" />
+            <element signature="e#11933#12396#0" />
+            <element signature="e#11986#12026#0" />
+            <element signature="e#12060#12198#0" />
+            <element signature="e#12204#12393#0" />
+            <element signature="e#12322#12387#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/sdk_commands_general.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="400">
@@ -2127,82 +1832,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pkg/repo/repo_pending_messages.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
-          <caret line="27" lean-forward="true" selection-start-line="27" selection-end-line="27" />
-          <folding>
-            <element signature="e#321#1207#0" />
-            <element signature="n#!!block;n#Save#0" />
-            <element signature="e#1446#1572#0" />
-            <element signature="e#1905#1938#0" />
-            <element signature="e#1944#2016#0" />
-            <element signature="e#2032#2047#0" />
-            <element signature="e#2086#2126#0" />
-            <element signature="e#2160#2298#0" />
-            <element signature="e#2304#2493#0" />
-            <element signature="e#2422#2487#0" />
-            <element signature="n#!!block;n#GetPendingMessageByRequestID#0" />
-            <element signature="e#2919#3051#0" />
-            <element signature="n#!!block;n#GetPendingMessageByID#0" />
-            <element signature="e#3411#3536#0" />
-            <element signature="n#!!block;n#DeletePendingMessage#0" />
-            <element signature="e#3893#4013#0" />
-            <element signature="e#4161#4273#0" />
-            <element signature="e#4358#4481#0" />
-            <element signature="e#4563#5233#0" />
-            <element signature="e#4836#4936#0" />
-            <element signature="e#4942#5230#0" />
-            <element signature="e#5124#5226#0" />
-            <element signature="n#!!block;n#DeleteManyPendingMessage#0" />
-            <element signature="e#5575#5655#0" />
-            <element signature="e#5771#5858#0" />
-            <element signature="e#5946#6594#0" />
-            <element signature="e#6220#6308#0" />
-            <element signature="e#6314#6591#0" />
-            <element signature="e#6497#6587#0" />
-            <element signature="n#!!block;n#GetManyPendingMessages#0" />
-            <element signature="e#7064#7187#0" />
-            <element signature="e#7216#7312#0" />
-            <element signature="n#!!block;n#GetManyPendingMessagesRequestID#0" />
-            <element signature="e#7736#7859#0" />
-            <element signature="e#7919#7970#0" />
-            <element signature="n#!!block;n#GetAllPendingMessages#0" />
-            <element signature="e#8240#8326#0" />
-            <element signature="n#!!block;n#DeletePeerAllMessages#0" />
-            <element signature="e#8607#8734#0" />
-            <element signature="e#8885#8937#0" />
-            <element signature="e#9052#9162#0" />
-            <element signature="n#!!block;n#SaveClientMessageMedia#0" />
-            <element signature="e#10215#10353#0" />
-            <element signature="e#10359#10548#0" />
-            <element signature="e#10477#10542#0" />
-            <element signature="n#!!block;n#GetPendingMessage#0" />
-            <element signature="e#10950#11054#0" />
-            <element signature="n#!!block;n#SaveMessageMedia#0" />
-            <element signature="e#11306#11444#0" />
-            <element signature="e#11805#11838#0" />
-            <element signature="e#11844#11916#0" />
-            <element signature="e#11933#12396#0" />
-            <element signature="e#11986#12026#0" />
-            <element signature="e#12060#12198#0" />
-            <element signature="e#12204#12393#0" />
-            <element signature="e#12322#12387#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/cli-river/commands_auth.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
-          <caret line="86" column="30" selection-start-line="86" selection-start-column="30" selection-end-line="86" selection-end-column="30" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/cmd/cli-river/main_delegate.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="480">
-          <caret line="91" selection-start-line="91" selection-end-line="91" />
+        <state relative-caret-position="-130">
+          <caret line="9" column="26" lean-forward="true" selection-start-line="9" selection-start-column="26" selection-end-line="9" selection-end-column="26" />
           <folding>
             <element signature="n#!!block;n#OnUpdates#0" />
             <element signature="e#376#1604#0" />
@@ -2237,10 +1870,96 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/cmd/cli-river/main.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="279">
+          <caret line="53" column="5" selection-start-line="53" selection-start-column="5" selection-end-line="53" selection-end-column="5" />
+          <folding>
+            <element signature="e#473#564#0" />
+            <element signature="e#566#726#0" />
+            <element signature="e#1269#1294#0" />
+            <element signature="e#1803#2451#0" />
+            <element signature="e#1980#2002#0" />
+            <element signature="e#2498#2603#0" />
+            <element signature="e#2545#2600#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cmd/cli-river/commands_auth.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="86" column="30" selection-start-line="86" selection-start-column="30" selection-end-line="86" selection-end-column="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/repo/repo_files.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="190">
+          <caret line="165" column="1" selection-start-line="165" selection-start-column="1" selection-end-line="165" selection-end-column="1" />
+          <folding>
+            <element signature="n#!!block;n#SaveFileStatus#0" />
+            <element signature="e#1527#1562#0" />
+            <element signature="n#!!block;n#GetAllFileStatus#0" />
+            <element signature="n#!!block;n#GetFileStatus#0" />
+            <element signature="n#!!block;n#DeleteFileStatus#0" />
+            <element signature="n#!!block;n#DeleteManyFileStatus#0" />
+            <element signature="n#!!block;n#MoveUploadedFileToFiles#0" />
+            <element signature="e#2652#2799#0" />
+            <element signature="n#!!block;n#SaveFileDocument#0" />
+            <element signature="e#3309#3330#0" />
+            <element signature="e#3717#3779#0" />
+            <element signature="e#3816#3930#0" />
+            <element signature="n#!!block;n#GetExistingFileDocument#0" />
+            <element signature="e#4275#4292#0" />
+            <element signature="n#!!block;n#GetFilePath#0" />
+            <element signature="e#4497#4521#0" />
+            <element signature="e#4628#4652#0" />
+            <element signature="n#!!block;n#SaveDownloadingFile#0" />
+            <element signature="e#4844#4899#0" />
+            <element signature="n#!!block;n#UpdateFileStatus#0" />
+            <element signature="n#!!block;n#UpdateThumbnailPath#0" />
+            <element signature="n#!!block;n#GetFile#0" />
+            <element signature="n#!!block;n#GetSharedMedia#0" />
+            <element signature="e#6130#6152#0" />
+            <element signature="e#6254#7620#0" />
+            <element signature="e#6367#6384#0" />
+            <element signature="e#6426#7617#0" />
+            <element signature="e#6431#6451#0" />
+            <element signature="e#6578#7613#0" />
+            <element signature="e#6596#6679#0" />
+            <element signature="e#6683#6829#0" />
+            <element signature="e#6790#6829#0" />
+            <element signature="e#6833#7017#0" />
+            <element signature="e#6978#7017#0" />
+            <element signature="e#7021#7265#0" />
+            <element signature="e#7095#7265#0" />
+            <element signature="e#7190#7259#0" />
+            <element signature="e#7209#7252#0" />
+            <element signature="e#7269#7514#0" />
+            <element signature="e#7343#7514#0" />
+            <element signature="e#7438#7508#0" />
+            <element signature="e#7458#7501#0" />
+            <element signature="e#7844#7866#0" />
+            <element signature="e#7895#7980#0" />
+            <element signature="n#!!block;n#UpdateFilePathByDocumentID#0" />
+            <element signature="e#8187#9051#0" />
+            <element signature="e#8191#9048#0" />
+            <element signature="e#8266#8407#0" />
+            <element signature="e#8410#8805#0" />
+            <element signature="e#8531#8693#0" />
+            <element signature="e#8699#8805#0" />
+            <element signature="e#8808#8953#0" />
+            <element signature="e#8956#9044#0" />
+            <element signature="n#!!block;n#GetFileByDocumentID#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/sdk_commands.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="128">
-          <caret line="576" column="48" selection-start-line="576" selection-start-column="48" selection-end-line="576" selection-end-column="48" />
+        <state relative-caret-position="329">
+          <caret line="655" column="35" lean-forward="true" selection-start-line="655" selection-start-column="35" selection-end-line="655" selection-end-column="35" />
           <folding>
             <element signature="n#!!block;n#messagesGetDialogs#0" />
             <element signature="e#706#793#0" />
@@ -2355,10 +2074,6 @@
             <element signature="e#22016#22043#0" />
             <element signature="e#23241#23295#0" />
             <element signature="e#23266#23291#0" />
-            <element signature="e#23873#24110#0" />
-            <element signature="e#24037#24095#0" />
-            <element signature="e#24063#24090#0" />
-            <element signature="e#24403#24430#0" />
             <element signature="n#!!block;n#contactsGet#0" />
             <element signature="e#25230#25310#0" />
             <element signature="e#25502#25614#0" />
@@ -2454,82 +2169,33 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/cli-river/main.go">
+    <entry file="file://$PROJECT_DIR$/pkg/filemanager/filemanager.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="279">
-          <caret line="53" column="5" lean-forward="true" selection-start-line="53" selection-start-column="5" selection-end-line="53" selection-end-column="5" />
-          <folding>
-            <element signature="e#473#564#0" />
-            <element signature="e#566#726#0" />
-            <element signature="e#1269#1294#0" />
-            <element signature="e#1803#2451#0" />
-            <element signature="e#1980#2002#0" />
-            <element signature="e#2498#2603#0" />
-            <element signature="e#2545#2600#0" />
-          </folding>
+        <state relative-caret-position="-881">
+          <caret line="355" column="35" selection-start-line="355" selection-start-column="35" selection-end-line="355" selection-end-column="35" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pkg/repo/repo_files.go">
+    <entry file="file://$PROJECT_DIR$/pkg/domain/queue_messages.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/domain/queue_updates.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/domain/request_callback.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="70">
-          <caret line="102" column="1" selection-start-line="102" selection-start-column="1" selection-end-line="102" selection-end-column="1" />
-          <folding>
-            <element signature="n#!!block;n#SaveFileStatus#0" />
-            <element signature="e#1527#1562#0" />
-            <element signature="n#!!block;n#GetAllFileStatus#0" />
-            <element signature="n#!!block;n#GetFileStatus#0" />
-            <element signature="n#!!block;n#DeleteFileStatus#0" />
-            <element signature="n#!!block;n#DeleteManyFileStatus#0" />
-            <element signature="n#!!block;n#MoveUploadedFileToFiles#0" />
-            <element signature="e#2652#2799#0" />
-            <element signature="n#!!block;n#SaveFileDocument#0" />
-            <element signature="e#3309#3330#0" />
-            <element signature="e#3717#3779#0" />
-            <element signature="e#3816#3930#0" />
-            <element signature="n#!!block;n#GetExistingFileDocument#0" />
-            <element signature="e#4275#4292#0" />
-            <element signature="n#!!block;n#GetFilePath#0" />
-            <element signature="e#4497#4521#0" />
-            <element signature="e#4628#4652#0" />
-            <element signature="n#!!block;n#SaveDownloadingFile#0" />
-            <element signature="e#4844#4899#0" />
-            <element signature="n#!!block;n#UpdateFileStatus#0" />
-            <element signature="n#!!block;n#UpdateThumbnailPath#0" />
-            <element signature="n#!!block;n#GetFile#0" />
-            <element signature="n#!!block;n#GetSharedMedia#0" />
-            <element signature="e#6130#6152#0" />
-            <element signature="e#6254#7620#0" />
-            <element signature="e#6367#6384#0" />
-            <element signature="e#6426#7617#0" />
-            <element signature="e#6431#6451#0" />
-            <element signature="e#6578#7613#0" />
-            <element signature="e#6596#6679#0" />
-            <element signature="e#6683#6829#0" />
-            <element signature="e#6790#6829#0" />
-            <element signature="e#6833#7017#0" />
-            <element signature="e#6978#7017#0" />
-            <element signature="e#7021#7265#0" />
-            <element signature="e#7095#7265#0" />
-            <element signature="e#7190#7259#0" />
-            <element signature="e#7209#7252#0" />
-            <element signature="e#7269#7514#0" />
-            <element signature="e#7343#7514#0" />
-            <element signature="e#7438#7508#0" />
-            <element signature="e#7458#7501#0" />
-            <element signature="e#7844#7866#0" />
-            <element signature="e#7895#7980#0" />
-            <element signature="n#!!block;n#UpdateFilePathByDocumentID#0" />
-            <element signature="e#8187#9051#0" />
-            <element signature="e#8191#9048#0" />
-            <element signature="e#8266#8407#0" />
-            <element signature="e#8410#8805#0" />
-            <element signature="e#8531#8693#0" />
-            <element signature="e#8699#8805#0" />
-            <element signature="e#8808#8953#0" />
-            <element signature="e#8956#9044#0" />
-            <element signature="n#!!block;n#GetFileByDocumentID#0" />
-          </folding>
+        <state relative-caret-position="-390">
+          <caret line="36" column="31" lean-forward="true" selection-start-line="36" selection-start-column="31" selection-end-line="36" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/domain/statics.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/domain/river_configer.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="280">
+          <caret line="14" column="24" lean-forward="true" selection-start-line="14" selection-start-column="24" selection-end-line="14" selection-end-column="24" />
         </state>
       </provider>
     </entry>
