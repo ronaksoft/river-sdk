@@ -25,7 +25,7 @@ require (
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/juju/ratelimit v1.0.1
 	github.com/kr/pretty v0.1.0
-	github.com/mailru/easyjson v0.0.0-20190312143242-1de009706dbe
+	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect

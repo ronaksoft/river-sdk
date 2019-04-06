@@ -439,8 +439,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 
 	// Success Callback
 	successCallback := func(envelope *msg.MessageEnvelope) {
-
-		logs.Debug(cmdID + "SDK::ExecuteCommand() 5 succes called")
+		logs.Debug(cmdID + "SDK::ExecuteCommand() 5 success called")
 		if blockingMode {
 			defer waitGroup.Done()
 		}
