@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4b3c8ed8-4f08-42a5-8fd4-fbfb58d0d314" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/pkg/queue/queue.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/queue/queue.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -15,15 +16,19 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sdk.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="510">
-              <caret line="445" column="34" selection-start-line="445" selection-start-column="34" selection-end-line="445" selection-end-column="34" />
+            <state relative-caret-position="210">
+              <caret line="980" column="31" selection-start-line="980" selection-start-column="31" selection-end-line="980" selection-end-column="31" />
               <folding>
+                <element signature="e#730#746#0" />
                 <element signature="n#!!block;n#SetConfig#0" />
                 <element signature="e#1216#1347#0" />
                 <element signature="e#1307#1343#0" />
                 <element signature="e#1407#1785#0" />
                 <element signature="e#1607#1635#0" />
+                <element signature="e#2040#2076#0" />
                 <element signature="e#2093#2204#0" />
+                <element signature="e#2207#2228#0" />
+                <element signature="e#2544#2577#0" />
                 <element signature="e#2754#2809#0" />
                 <element signature="e#2815#2871#0" />
                 <element signature="e#3404#3584#0" />
@@ -48,6 +53,7 @@
                 <element signature="e#6717#6753#0" />
                 <element signature="e#6840#7528#0" />
                 <element signature="e#6887#7320#0" />
+                <element signature="e#6892#6951#0" />
                 <element signature="e#7256#7272#0" />
                 <element signature="e#7278#7316#0" />
                 <element signature="e#7377#7453#0" />
@@ -57,13 +63,26 @@
                 <element signature="n#!!block;n#onAuthRecalled#0" />
                 <element signature="e#8364#8660#0" />
                 <element signature="e#8443#8508#0" />
+                <element signature="e#8511#8588#0" />
                 <element signature="n#!!block;n#registerCommandHandlers#0" />
                 <element signature="n#!!block;n#Start#0" />
                 <element signature="e#10594#10658#0" />
                 <element signature="n#!!block;n#Stop#0" />
                 <element signature="n#!!block;n#deepCopy#0" />
+                <element signature="e#11319#11331#0" />
+                <element signature="e#11419#11440#0" />
+                <element signature="n#!!block;n#ExecuteCommand#0" />
+                <element signature="e#11780#11812#0" />
                 <element signature="e#12137#12182#0" />
+                <element signature="e#12367#12461#0" />
+                <element signature="e#12540#12661#0" />
+                <element signature="e#12686#12778#0" />
+                <element signature="e#12828#13098#0" />
+                <element signature="e#12911#12942#0" />
+                <element signature="e#13177#13443#0" />
                 <element signature="e#13260#13291#0" />
+                <element signature="e#13461#14413#0" />
+                <element signature="e#13543#13890#0" />
                 <element signature="e#13793#13886#0" />
                 <element signature="e#13896#14410#0" />
                 <element signature="e#13985#14251#0" />
@@ -71,11 +90,13 @@
                 <element signature="e#14188#14212#0" />
                 <element signature="e#14218#14245#0" />
                 <element signature="e#14257#14406#0" />
+                <element signature="e#14419#14552#0" />
                 <element signature="n#!!block;n#executeLocalCommand#0" />
                 <element signature="e#15087#15132#0" />
                 <element signature="n#!!block;n#executeRemoteCommand#0" />
                 <element signature="n#!!block;n#releaseDelegate#0" />
                 <element signature="e#15704#15741#0" />
+                <element signature="e#15771#15791#0" />
                 <element signature="n#!!block;n#CreateAuthKey#0" />
                 <element signature="e#16133#16155#0" />
                 <element signature="e#16611#16676#0" />
@@ -153,6 +174,7 @@
                 <element signature="e#28524#28675#0" />
                 <element signature="e#28577#28672#0" />
                 <element signature="n#!!block;n#onFileUploadCompleted#0" />
+                <element signature="e#29033#29110#0" />
                 <element signature="e#29244#30757#0" />
                 <element signature="e#29455#30604#0" />
                 <element signature="e#29478#29563#0" />
@@ -196,25 +218,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/pkg/queue/queue.go">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="336">
-              <caret line="98" column="8" selection-start-line="98" selection-start-column="8" selection-end-line="98" selection-end-column="8" />
-              <folding>
-                <element signature="e#461#640#0" />
-                <element signature="n#!!block;n#NewQueueController#0" />
-                <element signature="n#!!block;n#setDistributorState#0" />
-                <element signature="n#!!block;n#isDistributorRunning#0" />
-                <element signature="n#!!block;n#executor#0" />
-                <element signature="n#!!block;n#ExecuteRealtimeCommand#0" />
-                <element signature="n#!!block;n#ExecuteCommand#0" />
-                <element signature="n#!!block;n#Start#0" />
-                <element signature="n#!!block;n#Stop#0" />
-                <element signature="n#!!block;n#IsRequestCancelled#0" />
-                <element signature="n#!!block;n#CancelRequest#0" />
-                <element signature="n#!!block;n#DropQueue#0" />
-                <element signature="n#!!block;n#OpenQueue#0" />
-              </folding>
+            <state relative-caret-position="20">
+              <caret line="1" column="6" selection-start-line="1" selection-start-column="6" selection-end-line="1" selection-end-column="6" />
             </state>
           </provider>
         </entry>
@@ -270,7 +277,6 @@
         <option value="$PROJECT_DIR$/loadtester/shared/consts.go" />
         <option value="$PROJECT_DIR$/loadtester/command_cli.go" />
         <option value="$PROJECT_DIR$/cli/main.go" />
-        <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/gofmt.sh" />
         <option value="$PROJECT_DIR$/govet.sh" />
         <option value="$PROJECT_DIR$/cmd/cli-loadtester/command_client.go" />
@@ -300,6 +306,7 @@
         <option value="$PROJECT_DIR$/sdk_commands.go" />
         <option value="$PROJECT_DIR$/sdk.go" />
         <option value="$PROJECT_DIR$/pkg/queue/queue.go" />
+        <option value="$PROJECT_DIR$/.gitignore" />
       </list>
     </option>
   </component>
@@ -401,13 +408,6 @@
           <folding>
             <element signature="e#14#146#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/.gitignore">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="20">
-          <caret line="1" selection-start-line="1" selection-end-line="1" />
         </state>
       </provider>
     </entry>
@@ -1616,17 +1616,43 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/queue/queue.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="336">
+          <caret line="98" selection-start-line="98" selection-end-line="98" />
+          <folding>
+            <element signature="e#461#640#0" />
+            <element signature="n#!!block;n#NewQueueController#0" />
+            <element signature="n#!!block;n#setDistributorState#0" />
+            <element signature="n#!!block;n#isDistributorRunning#0" />
+            <element signature="n#!!block;n#executor#0" />
+            <element signature="n#!!block;n#ExecuteRealtimeCommand#0" />
+            <element signature="n#!!block;n#ExecuteCommand#0" />
+            <element signature="n#!!block;n#Start#0" />
+            <element signature="n#!!block;n#Stop#0" />
+            <element signature="n#!!block;n#IsRequestCancelled#0" />
+            <element signature="n#!!block;n#CancelRequest#0" />
+            <element signature="n#!!block;n#DropQueue#0" />
+            <element signature="n#!!block;n#OpenQueue#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/sdk.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="510">
-          <caret line="445" column="34" selection-start-line="445" selection-start-column="34" selection-end-line="445" selection-end-column="34" />
+        <state relative-caret-position="210">
+          <caret line="980" column="31" selection-start-line="980" selection-start-column="31" selection-end-line="980" selection-end-column="31" />
           <folding>
+            <element signature="e#730#746#0" />
             <element signature="n#!!block;n#SetConfig#0" />
             <element signature="e#1216#1347#0" />
             <element signature="e#1307#1343#0" />
             <element signature="e#1407#1785#0" />
             <element signature="e#1607#1635#0" />
+            <element signature="e#2040#2076#0" />
             <element signature="e#2093#2204#0" />
+            <element signature="e#2207#2228#0" />
+            <element signature="e#2544#2577#0" />
             <element signature="e#2754#2809#0" />
             <element signature="e#2815#2871#0" />
             <element signature="e#3404#3584#0" />
@@ -1651,6 +1677,7 @@
             <element signature="e#6717#6753#0" />
             <element signature="e#6840#7528#0" />
             <element signature="e#6887#7320#0" />
+            <element signature="e#6892#6951#0" />
             <element signature="e#7256#7272#0" />
             <element signature="e#7278#7316#0" />
             <element signature="e#7377#7453#0" />
@@ -1660,13 +1687,26 @@
             <element signature="n#!!block;n#onAuthRecalled#0" />
             <element signature="e#8364#8660#0" />
             <element signature="e#8443#8508#0" />
+            <element signature="e#8511#8588#0" />
             <element signature="n#!!block;n#registerCommandHandlers#0" />
             <element signature="n#!!block;n#Start#0" />
             <element signature="e#10594#10658#0" />
             <element signature="n#!!block;n#Stop#0" />
             <element signature="n#!!block;n#deepCopy#0" />
+            <element signature="e#11319#11331#0" />
+            <element signature="e#11419#11440#0" />
+            <element signature="n#!!block;n#ExecuteCommand#0" />
+            <element signature="e#11780#11812#0" />
             <element signature="e#12137#12182#0" />
+            <element signature="e#12367#12461#0" />
+            <element signature="e#12540#12661#0" />
+            <element signature="e#12686#12778#0" />
+            <element signature="e#12828#13098#0" />
+            <element signature="e#12911#12942#0" />
+            <element signature="e#13177#13443#0" />
             <element signature="e#13260#13291#0" />
+            <element signature="e#13461#14413#0" />
+            <element signature="e#13543#13890#0" />
             <element signature="e#13793#13886#0" />
             <element signature="e#13896#14410#0" />
             <element signature="e#13985#14251#0" />
@@ -1674,11 +1714,13 @@
             <element signature="e#14188#14212#0" />
             <element signature="e#14218#14245#0" />
             <element signature="e#14257#14406#0" />
+            <element signature="e#14419#14552#0" />
             <element signature="n#!!block;n#executeLocalCommand#0" />
             <element signature="e#15087#15132#0" />
             <element signature="n#!!block;n#executeRemoteCommand#0" />
             <element signature="n#!!block;n#releaseDelegate#0" />
             <element signature="e#15704#15741#0" />
+            <element signature="e#15771#15791#0" />
             <element signature="n#!!block;n#CreateAuthKey#0" />
             <element signature="e#16133#16155#0" />
             <element signature="e#16611#16676#0" />
@@ -1756,6 +1798,7 @@
             <element signature="e#28524#28675#0" />
             <element signature="e#28577#28672#0" />
             <element signature="n#!!block;n#onFileUploadCompleted#0" />
+            <element signature="e#29033#29110#0" />
             <element signature="e#29244#30757#0" />
             <element signature="e#29455#30604#0" />
             <element signature="e#29478#29563#0" />
@@ -1797,25 +1840,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pkg/queue/queue.go">
+    <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="336">
-          <caret line="98" column="8" selection-start-line="98" selection-start-column="8" selection-end-line="98" selection-end-column="8" />
-          <folding>
-            <element signature="e#461#640#0" />
-            <element signature="n#!!block;n#NewQueueController#0" />
-            <element signature="n#!!block;n#setDistributorState#0" />
-            <element signature="n#!!block;n#isDistributorRunning#0" />
-            <element signature="n#!!block;n#executor#0" />
-            <element signature="n#!!block;n#ExecuteRealtimeCommand#0" />
-            <element signature="n#!!block;n#ExecuteCommand#0" />
-            <element signature="n#!!block;n#Start#0" />
-            <element signature="n#!!block;n#Stop#0" />
-            <element signature="n#!!block;n#IsRequestCancelled#0" />
-            <element signature="n#!!block;n#CancelRequest#0" />
-            <element signature="n#!!block;n#DropQueue#0" />
-            <element signature="n#!!block;n#OpenQueue#0" />
-          </folding>
+        <state relative-caret-position="20">
+          <caret line="1" column="6" selection-start-line="1" selection-start-column="6" selection-end-line="1" selection-end-column="6" />
         </state>
       </provider>
     </entry>
