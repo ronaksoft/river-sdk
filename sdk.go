@@ -429,8 +429,9 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 		r.delegates[requestID] = delegate
 		r.delegateMutex.Unlock()
 	}
-	timeoutCallback := func() {
 
+	// Timeout Callback
+	timeoutCallback := func() {
 		logs.Debug(cmdID + "SDK::ExecuteCommand() 3 timeout called")
 		if blockingMode {
 			defer waitGroup.Done()
@@ -441,6 +442,8 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 		logs.Debug(cmdID + "SDK::ExecuteCommand() 4 timeout ended")
 
 	}
+
+	// Success Callback
 	successCallback := func(envelope *msg.MessageEnvelope) {
 
 		logs.Debug(cmdID + "SDK::ExecuteCommand() 5 succes called")
@@ -474,7 +477,6 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 			// else pass the request to queue
 			_, ok := r.localCommands[constructor]
 			if ok {
-
 				execBlock := func() {
 					r.executeLocalCommand(
 						uint64(requestID),

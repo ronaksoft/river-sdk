@@ -66,7 +66,7 @@ type FileManager struct {
 	onDownloadError     domain.OnFileDownloadError
 }
 
-// Ctx return filemanager singletone instance
+// Ctx return filemanager singleton instance
 func Ctx() *FileManager {
 	if ctx == nil {
 		panic("FileManager::Ctx() file manager not initialized !")
