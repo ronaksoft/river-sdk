@@ -81,7 +81,7 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 		req.Token = r.DeviceToken.Token
 		req.TokenType = int32(r.DeviceToken.TokenType)
 		reqBytes, _ := req.Marshal()
-		r.queueCtrl.ExecuteRealtimeCommand(reqID, msg.C_AccountUnregisterDevice, reqBytes, nil, nil, true, false)
+		_ = r.queueCtrl.ExecuteRealtimeCommand(reqID, msg.C_AccountUnregisterDevice, reqBytes, nil, nil, true, false)
 	}
 
 	dataDir, err := r.queueCtrl.DropQueue()
@@ -102,7 +102,7 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 		logs.Error("River::Logout() failed to re open queue", zap.Error(err))
 	}
 
-	// TODO : send logout request to server
+	// send logout request to server
 	requestID := domain.RandomInt63()
 	timeoutCallback := func() {
 		err = domain.ErrRequestTimeout
