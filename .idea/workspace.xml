@@ -2,18 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4b3c8ed8-4f08-42a5-8fd4-fbfb58d0d314" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/cmd/cli-river/commands_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli-river/commands_group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/repo/dto/dialogs.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/dialogs.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/repo/dto/dto.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/dto.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/repo/dto/fileStatus.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/fileStatus.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/repo/dto/contacts.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/contacts.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/repo/dto/files.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/files.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/repo/dto/groups.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/groups.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/repo/dto/pending_messages.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/pending_messages.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/repo/dto/user_photos.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/user_photos.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/repo/repo_groups.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_groups.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/repo/repo_users.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_users.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sdk.go" beforeDir="false" afterPath="$PROJECT_DIR$/sdk.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sdk_commands_general.go" beforeDir="false" afterPath="$PROJECT_DIR$/sdk_commands_general.go" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -25,69 +15,39 @@
     <leaf>
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/pkg/repo/dto/contacts.go">
-          <provider selected="true" editor-type-id="text-editor" />
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pkg/repo/dto/files.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="251">
-              <caret line="122" column="37" lean-forward="true" selection-start-line="122" selection-start-column="37" selection-end-line="122" selection-end-column="37" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pkg/repo/dto/fileStatus.go">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="220">
-              <caret line="11" column="52" selection-start-line="11" selection-start-column="52" selection-end-line="11" selection-end-column="52" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pkg/repo/dto/group_participant.go">
-          <provider selected="true" editor-type-id="text-editor" />
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pkg/repo/dto/groups.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="363">
-              <caret line="26" column="16" lean-forward="true" selection-start-line="26" selection-start-column="16" selection-end-line="26" selection-end-column="16" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pkg/repo/dto/user_photos.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="533">
-              <caret line="32" column="45" selection-start-line="32" selection-start-column="45" selection-end-line="32" selection-end-column="45" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pkg/repo/dto/ui_settings.go">
-          <provider selected="true" editor-type-id="text-editor" />
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pkg/repo/dto/system.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="200">
-              <caret line="10" column="19" lean-forward="true" selection-start-line="10" selection-start-column="19" selection-end-line="10" selection-end-column="19" />
+              <caret line="35" selection-start-line="35" selection-end-line="35" />
+              <folding>
+                <element signature="e#78#574#0" />
+                <element signature="n#!!block;n#TableName#0" />
+                <element signature="n#!!block;n#MapFromContactUser#0" />
+                <element signature="n#!!block;n#MapToUser#0" />
+                <element signature="n#!!block;n#MapToContactUser#0" />
+                <element signature="n#!!block;n#MapToPhoneContact#0" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/pkg/repo/dto/pending_messages.go">
+        <entry file="file://$PROJECT_DIR$/pkg/repo/dto/files.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="517">
-              <caret line="116" column="31" selection-start-line="116" selection-start-column="31" selection-end-line="116" selection-end-column="31" />
+            <state relative-caret-position="120">
+              <caret line="31" column="32" selection-start-line="31" selection-start-column="32" selection-end-line="31" selection-end-column="32" />
+              <folding>
+                <element signature="e#149#1485#0" />
+                <element signature="n#!!block;n#TableName#0" />
+                <element signature="n#!!block;n#Map#0" />
+                <element signature="n#!!block;n#MapFromFile#0" />
+                <element signature="n#!!block;n#MapFromDocument#0" />
+                <element signature="n#!!block;n#MapFromFileStatus#0" />
+                <element signature="e#3462#3835#0" />
+                <element signature="e#3569#3831#0" />
+                <element signature="e#3710#4277#0" />
+                <element signature="e#3826#4274#0" />
+                <element signature="n#!!block;n#MapFromUserMessageDocument#0" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -167,11 +127,12 @@
         <option value="$PROJECT_DIR$/sdk_commands_general.go" />
         <option value="$PROJECT_DIR$/pkg/repo/dto/dialogs.go" />
         <option value="$PROJECT_DIR$/pkg/repo/dto/dto.go" />
-        <option value="$PROJECT_DIR$/pkg/repo/dto/files.go" />
         <option value="$PROJECT_DIR$/pkg/repo/dto/fileStatus.go" />
         <option value="$PROJECT_DIR$/pkg/repo/dto/groups.go" />
         <option value="$PROJECT_DIR$/pkg/repo/dto/user_photos.go" />
         <option value="$PROJECT_DIR$/pkg/repo/dto/pending_messages.go" />
+        <option value="$PROJECT_DIR$/pkg/repo/dto/files.go" />
+        <option value="$PROJECT_DIR$/pkg/repo/dto/contacts.go" />
       </list>
     </option>
   </component>
@@ -254,7 +215,7 @@
     <frame x="0" y="0" width="1680" height="1050" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24969475" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.24969475" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -267,7 +228,7 @@
       <window_info anchor="bottom" id="Docker" order="7" />
       <window_info anchor="bottom" id="Database Changes" order="8" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="9" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Terminal" order="10" weight="0.32959184" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="10" visible="true" weight="0.32959184" />
       <window_info anchor="bottom" id="Event Log" order="11" side_tool="true" />
       <window_info anchor="bottom" id="Tail" order="12" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
@@ -1546,42 +1507,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pkg/repo/dto/contacts.go">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pkg/repo/dto/files.go">
+    <entry file="file://$PROJECT_DIR$/pkg/repo/dto/pending_messages.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="251">
-          <caret line="122" column="37" lean-forward="true" selection-start-line="122" selection-start-column="37" selection-end-line="122" selection-end-column="37" />
+        <state relative-caret-position="433">
+          <caret line="124" column="43" lean-forward="true" selection-start-line="124" selection-start-column="43" selection-end-line="124" selection-end-column="43" />
         </state>
       </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pkg/repo/dto/fileStatus.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="220">
-          <caret line="11" column="52" selection-start-line="11" selection-start-column="52" selection-end-line="11" selection-end-column="52" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pkg/repo/dto/group_participant.go">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pkg/repo/dto/groups.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="363">
-          <caret line="26" column="16" lean-forward="true" selection-start-line="26" selection-start-column="16" selection-end-line="26" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pkg/repo/dto/user_photos.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="533">
-          <caret line="32" column="45" selection-start-line="32" selection-start-column="45" selection-end-line="32" selection-end-column="45" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pkg/repo/dto/ui_settings.go">
-      <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/pkg/repo/dto/system.go">
       <provider selected="true" editor-type-id="text-editor">
@@ -1590,10 +1521,65 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pkg/repo/dto/pending_messages.go">
+    <entry file="file://$PROJECT_DIR$/pkg/repo/dto/ui_settings.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/repo/dto/user_photos.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="517">
-          <caret line="116" column="31" selection-start-line="116" selection-start-column="31" selection-end-line="116" selection-end-column="31" />
+        <state relative-caret-position="533">
+          <caret line="32" column="45" selection-start-line="32" selection-start-column="45" selection-end-line="32" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/repo/dto/groups.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="363">
+          <caret line="26" column="16" lean-forward="true" selection-start-line="26" selection-start-column="16" selection-end-line="26" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/repo/dto/group_participant.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/repo/dto/fileStatus.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="220">
+          <caret line="11" column="52" selection-start-line="11" selection-start-column="52" selection-end-line="11" selection-end-column="52" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/repo/dto/contacts.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="220">
+          <caret line="35" selection-start-line="35" selection-end-line="35" />
+          <folding>
+            <element signature="e#78#574#0" />
+            <element signature="n#!!block;n#TableName#0" />
+            <element signature="n#!!block;n#MapFromContactUser#0" />
+            <element signature="n#!!block;n#MapToUser#0" />
+            <element signature="n#!!block;n#MapToContactUser#0" />
+            <element signature="n#!!block;n#MapToPhoneContact#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/repo/dto/files.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="31" column="32" selection-start-line="31" selection-start-column="32" selection-end-line="31" selection-end-column="32" />
+          <folding>
+            <element signature="e#149#1485#0" />
+            <element signature="n#!!block;n#TableName#0" />
+            <element signature="n#!!block;n#Map#0" />
+            <element signature="n#!!block;n#MapFromFile#0" />
+            <element signature="n#!!block;n#MapFromDocument#0" />
+            <element signature="n#!!block;n#MapFromFileStatus#0" />
+            <element signature="e#3462#3835#0" />
+            <element signature="e#3569#3831#0" />
+            <element signature="e#3710#4277#0" />
+            <element signature="e#3826#4274#0" />
+            <element signature="n#!!block;n#MapFromUserMessageDocument#0" />
+          </folding>
         </state>
       </provider>
     </entry>

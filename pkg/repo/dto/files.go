@@ -75,7 +75,6 @@ func (m *Files) MapFromFile(v Files) {
 }
 
 func (m *Files) MapFromDocument(v *msg.MediaDocument) {
-	// m.MessageID = msgID
 	m.Caption = v.Caption
 	m.DocumentID = v.Doc.ID
 	m.AccessHash = int64(v.Doc.AccessHash)
