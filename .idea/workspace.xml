@@ -1,0 +1,730 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="4b3c8ed8-4f08-42a5-8fd4-fbfb58d0d314" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/build.sh" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/build.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/commands.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/commands_Tests.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_Tests.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/commands_account.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_account.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/commands_auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_auth.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/commands_contact.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_contact.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/commands_debug.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_debug.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/commands_file.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_file.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/commands_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/commands_init.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_init.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/commands_message.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_message.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/commands_sdk.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_sdk.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/commands_user.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_user.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/keys.json" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/keys.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/main_delegate.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/main_delegate.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/printer_message.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/printer_message.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/printer_updates.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/printer_updates.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/request_delegate.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/request_delegate.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/domain/constants.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/domain/constants.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/domain/errors.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/domain/errors.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/domain/handlers.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/domain/handlers.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/domain/message_action.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/domain/message_action.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/domain/queue_messages.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/domain/queue_messages.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/domain/queue_updates.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/domain/queue_updates.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/domain/request_callback.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/domain/request_callback.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/domain/river_configer.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/domain/river_configer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/domain/statics.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/domain/statics.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/domain/types.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/domain/types.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/filemanager/filemanager.go" beforeDir="false" afterPath="$PROJECT_DIR$/filemanager/filemanager.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/filemanager/filenetwork.go" beforeDir="false" afterPath="$PROJECT_DIR$/filemanager/filenetwork.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/filemanager/filestatus.go" beforeDir="false" afterPath="$PROJECT_DIR$/filemanager/filestatus.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/loadtester/command_debug.go" beforeDir="false" afterPath="$PROJECT_DIR$/loadtester/command_debug.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/loadtester/controller/file.go" beforeDir="false" afterPath="$PROJECT_DIR$/loadtester/controller/file.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/loadtester/controller/net.go" beforeDir="false" afterPath="$PROJECT_DIR$/loadtester/controller/net.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/loadtester/report/pcap_report.go" beforeDir="false" afterPath="$PROJECT_DIR$/loadtester/report/pcap_report.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/loadtester/scenario/createauthkey.go" beforeDir="false" afterPath="$PROJECT_DIR$/loadtester/scenario/createauthkey.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/loadtester/scenario/request.go" beforeDir="false" afterPath="$PROJECT_DIR$/loadtester/scenario/request.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/loadtester/shared/serverkeys.go" beforeDir="false" afterPath="$PROJECT_DIR$/loadtester/shared/serverkeys.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/network/network.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/network/network.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/queue/queue.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/queue/queue.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/queue/queue_easyjson.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/queue/queue_easyjson.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/dto/contacts.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/contacts.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/dto/dialogs.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/dialogs.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/dto/dto.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/dto.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/dto/dto_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/dto_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/dto/fileStatus.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/fileStatus.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/dto/files.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/files.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/dto/group_participant.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/group_participant.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/dto/groups.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/groups.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/dto/message_holes.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/message_holes.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/dto/messages.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/messages.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/dto/pending_messages.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/pending_messages.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/dto/system.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/system.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/dto/ui_settings.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/ui_settings.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/dto/user_photos.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/user_photos.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/dto/users.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/dto/users.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/repo.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/repo_dialogs.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_dialogs.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/repo_files.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_files.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/repo_groups.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_groups.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/repo_message_holes.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_message_holes.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/repo_messages.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_messages.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/repo_pending_messages.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_pending_messages.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/repo_system.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_system.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/repo_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/repo_ui_settings.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_ui_settings.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repo/repo_users.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_users.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/river.go" beforeDir="false" afterPath="$PROJECT_DIR$/river.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/river_conn.go" beforeDir="false" afterPath="$PROJECT_DIR$/river_conn.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk.go" beforeDir="false" afterPath="$PROJECT_DIR$/sdk.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk_commands.go" beforeDir="false" afterPath="$PROJECT_DIR$/sdk_commands.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk_commands_general.go" beforeDir="false" afterPath="$PROJECT_DIR$/sdk_commands_general.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supernumerary/buildimage.sh" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/buildimage.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supernumerary/cli/command.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/cli/command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supernumerary/cli/helper.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/cli/helper.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supernumerary/cli/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/cli/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supernumerary/config/const.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/config/const.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supernumerary/config/node-config.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/config/node-config.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supernumerary/config/startcfg.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/config/startcfg.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supernumerary/config/tickercfg.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/config/tickercfg.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supernumerary/docker-compose/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/docker-compose/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supernumerary/docker-compose/prometheus/prometheus.yml" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/docker-compose/prometheus/prometheus.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supernumerary/docker-compose/supernumerary-grafana-dashboard.json" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/docker-compose/supernumerary-grafana-dashboard.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supernumerary/node/dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/node/dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supernumerary/node/keys.json" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/node/keys.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supernumerary/node/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/node/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supernumerary/node/node.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/node/node.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/synchronizer/message_appliers.go" beforeDir="false" afterPath="$PROJECT_DIR$/synchronizer/message_appliers.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/synchronizer/message_hole.go" beforeDir="false" afterPath="$PROJECT_DIR$/synchronizer/message_hole.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/synchronizer/message_hole_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/synchronizer/message_hole_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/synchronizer/synchronizer.go" beforeDir="false" afterPath="$PROJECT_DIR$/synchronizer/synchronizer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/synchronizer/update_appliers.go" beforeDir="false" afterPath="$PROJECT_DIR$/synchronizer/update_appliers.go" afterDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pkg/network/network.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="220">
+              <caret line="24" column="51" selection-start-line="24" selection-start-column="51" selection-end-line="24" selection-end-column="51" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/pkg/queue/queue.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="120">
+              <caret line="20" column="21" selection-start-line="20" selection-start-column="21" selection-end-line="20" selection-end-column="21" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>CreateAuthKey::</find>
+      <find>sendCode</find>
+      <find>test.riv</find>
+      <find>test.river.im</find>
+      <find>test2.river.im</find>
+      <find>git.ronaksoftware.com/ronak/riversdk/domain</find>
+      <find>git.ronaksoftware.com/ronak/riversdk/network</find>
+      <find>git.ronaksoftware.com/ronak/riversdk/queue</find>
+      <find>git.ronaksoftware.com/ronak/riversdk/repo</find>
+    </findStrings>
+    <replaceStrings>
+      <replace />
+      <replace>git.ronaksoftware.com/ronak/riversdk/pkg/domain</replace>
+      <replace>git.ronaksoftware.com/ronak/riversdk/pkg/network</replace>
+      <replace>git.ronaksoftware.com/ronak/riversdk/pkg/queue</replace>
+      <replace>git.ronaksoftware.com/ronak/riversdk/pkg/repo</replace>
+    </replaceStrings>
+    <dirStrings>
+      <dir>$PROJECT_DIR$/loadtester</dir>
+      <dir>$PROJECT_DIR$</dir>
+    </dirStrings>
+  </component>
+  <component name="GOROOT" path="$PROJECT_DIR$/../../../../go1.12.1" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/cli/build.sh" />
+        <option value="$PROJECT_DIR$/loadtester/command_plain.go" />
+        <option value="$PROJECT_DIR$/loadtester/main.go" />
+        <option value="$PROJECT_DIR$/loadtester/shared/consts.go" />
+        <option value="$PROJECT_DIR$/loadtester/command_cli.go" />
+        <option value="$PROJECT_DIR$/cli/main.go" />
+        <option value="$PROJECT_DIR$/.gitignore" />
+        <option value="$PROJECT_DIR$/pkg/queue/queue.go" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectFrameBounds" fullScreen="true">
+    <option name="width" value="1680" />
+    <option name="height" value="1050" />
+  </component>
+  <component name="ProjectView">
+    <navigator proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="riversdk" type="b2602c69:ProjectViewProjectNode" />
+              <item name="riversdk" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="riversdk" type="b2602c69:ProjectViewProjectNode" />
+              <item name="riversdk" type="462c0819:PsiDirectoryNode" />
+              <item name="pkg" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="Scope" />
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="go.gopath.indexing.explicitly.defined" value="true" />
+    <property name="go.import.settings.migrated" value="true" />
+    <property name="go.sdk.automatically.set" value="true" />
+    <property name="go.vendoring.notification.had.been.shown" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="settings.editor.selected.configurable" value="configurable.group.appearance" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/pkg" />
+      <recent name="$PROJECT_DIR$/cmd" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="0" y="0" width="1680" height="1050" extended-state="0" />
+    <editor active="true" />
+    <layout>
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2020757" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Run" order="2" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Docker" order="7" />
+      <window_info anchor="bottom" id="Database Changes" order="8" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" order="9" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Terminal" order="10" visible="true" weight="0.32142857" />
+      <window_info anchor="bottom" id="Event Log" order="11" side_tool="true" />
+      <window_info anchor="bottom" id="Tail" order="12" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="Database" order="3" />
+      <window_info anchor="right" id="Cargo" order="4" />
+    </layout>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/cmd/cli/commands.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-170">
+          <caret line="32" column="1" lean-forward="true" selection-start-line="32" selection-start-column="1" selection-end-line="32" selection-end-column="1" />
+          <folding>
+            <element signature="n#!!block;n#fnGetPhone#0" />
+            <element signature="n#!!block;n#fnGetPhoneCode#0" />
+            <element signature="n#!!block;n#fnGetPhoneCodeHash#0" />
+            <element signature="n#!!block;n#fnGetFirstName#0" />
+            <element signature="n#!!block;n#fnGetLastName#0" />
+            <element signature="n#!!block;n#fnGetSearchPhrase#0" />
+            <element signature="n#!!block;n#fnGetPeerID#0" />
+            <element signature="e#874#1036#0" />
+            <element signature="e#967#996#0" />
+            <element signature="e#1002#1033#0" />
+            <element signature="n#!!block;n#fnGetAccessHash#0" />
+            <element signature="e#1132#1315#0" />
+            <element signature="e#1232#1275#0" />
+            <element signature="e#1281#1312#0" />
+            <element signature="n#!!block;n#fnGetTries#0" />
+            <element signature="e#1399#1566#0" />
+            <element signature="e#1492#1526#0" />
+            <element signature="e#1532#1563#0" />
+            <element signature="n#!!block;n#fnGetInterval#0" />
+            <element signature="e#1671#1872#0" />
+            <element signature="e#1766#1832#0" />
+            <element signature="e#1838#1869#0" />
+            <element signature="n#!!block;n#fnGetRequestID#0" />
+            <element signature="e#1966#2136#0" />
+            <element signature="e#2063#2096#0" />
+            <element signature="e#2102#2133#0" />
+            <element signature="n#!!block;n#fnGetBody#0" />
+            <element signature="n#!!block;n#fnGetMaxID#0" />
+            <element signature="e#2323#2485#0" />
+            <element signature="e#2416#2445#0" />
+            <element signature="e#2451#2482#0" />
+            <element signature="n#!!block;n#fnGetMinID#0" />
+            <element signature="e#2568#2730#0" />
+            <element signature="e#2661#2690#0" />
+            <element signature="e#2696#2727#0" />
+            <element signature="n#!!block;n#fnGetLimit#0" />
+            <element signature="e#2813#2981#0" />
+            <element signature="e#2905#2941#0" />
+            <element signature="e#2947#2978#0" />
+            <element signature="n#!!block;n#fnGetTypingAction#0" />
+            <element signature="e#3094#3306#0" />
+            <element signature="e#3213#3266#0" />
+            <element signature="e#3272#3303#0" />
+            <element signature="n#!!block;n#fnGetMessageIDs#0" />
+            <element signature="e#3413#3675#0" />
+            <element signature="e#3603#3617#0" />
+            <element signature="e#3623#3672#0" />
+            <element signature="n#!!block;n#fnGetFromUpdateID#0" />
+            <element signature="e#3774#3964#0" />
+            <element signature="e#3883#3924#0" />
+            <element signature="e#3930#3961#0" />
+            <element signature="n#!!block;n#fnGetInputUser#0" />
+            <element signature="e#4084#4500#0" />
+            <element signature="e#4249#4263#0" />
+            <element signature="e#4381#4395#0" />
+            <element signature="n#!!block;n#fnGetUsername#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cmd/cli/commands_sdk.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="341">
+          <caret line="30" column="10" selection-start-line="30" selection-start-column="10" selection-end-line="30" selection-end-column="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cmd/cli/build.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="80">
+          <caret line="4" lean-forward="true" selection-start-line="4" selection-end-line="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cmd/cli/main_delegate.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="315">
+          <caret line="45" lean-forward="true" selection-start-line="45" selection-end-line="45" />
+          <folding>
+            <element signature="e#275#774#0" />
+            <element signature="e#403#445#0" />
+            <element signature="e#626#774#0" />
+            <element signature="e#776#976#0" />
+            <element signature="e#978#1277#0" />
+            <element signature="e#1086#1128#0" />
+            <element signature="e#1134#1277#0" />
+            <element signature="n#!!block;n#OnDeferredRequests#0" />
+            <element signature="n#!!block;n#OnNetworkStatusChanged#0" />
+            <element signature="e#1597#1657#0" />
+            <element signature="n#!!block;n#OnSyncStatusChanged#0" />
+            <element signature="e#1818#1860#0" />
+            <element signature="n#!!block;n#OnAuthKeyCreated#0" />
+            <element signature="n#!!block;n#OnGeneralError#0" />
+            <element signature="n#!!block;n#OnSessionClosed#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cmd/cli/printer_updates.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="280">
+          <caret line="14" column="10" lean-forward="true" selection-start-line="14" selection-start-column="10" selection-end-line="14" selection-end-column="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/msg/proto/core.messages.proto" />
+    <entry file="file://$PROJECT_DIR$/domain/queueUpdates.go" />
+    <entry file="file://$PROJECT_DIR$/domain/queueMessages.go" />
+    <entry file="file://$PROJECT_DIR$/log/log.go" />
+    <entry file="file://$PROJECT_DIR$/loadtester/command_pool.go" />
+    <entry file="file://$PROJECT_DIR$/loadtester/scenario/request.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="374">
+          <caret line="65" column="75" lean-forward="true" selection-start-line="65" selection-start-column="75" selection-end-line="65" selection-end-column="75" />
+          <folding>
+            <element signature="n#!!block;n#InitConnect#0" />
+            <element signature="e#613#630#0" />
+            <element signature="n#!!block;n#InitCompleteAuth#0" />
+            <element signature="e#1044#1061#0" />
+            <element signature="e#1286#1303#0" />
+            <element signature="e#1629#1646#0" />
+            <element signature="n#!!block;n#AuthLogin#0" />
+            <element signature="e#1921#1938#0" />
+            <element signature="n#!!block;n#MessageSend#0" />
+            <element signature="e#2127#2218#0" />
+            <element signature="e#2398#2415#0" />
+            <element signature="n#!!block;n#ContactsImport#0" />
+            <element signature="e#2633#2718#0" />
+            <element signature="e#2787#2804#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loadtester/scenario/login.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="435">
+          <caret line="94" column="29" selection-start-line="94" selection-start-column="29" selection-end-line="94" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loadtester/scenario/sendgroupmessage.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cmd/cmd.go" />
+    <entry file="file://$PROJECT_DIR$/loadtester/command_plain.go" />
+    <entry file="file://$PROJECT_DIR$/loadtester/scenario/register.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="570">
+          <caret line="59" column="39" selection-start-line="59" selection-start-column="39" selection-end-line="59" selection-end-column="39" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loadtester/scenario/base.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="570">
+          <caret line="54" column="21" selection-start-line="54" selection-start-column="21" selection-end-line="54" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/msg/crypto.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="320">
+          <caret line="23" column="28" lean-forward="true" selection-start-line="23" selection-start-column="28" selection-end-line="23" selection-end-column="28" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sdk.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-3550">
+          <caret line="531" column="12" selection-start-line="531" selection-start-column="12" selection-end-line="531" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/river.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="310">
+          <caret line="71" lean-forward="true" selection-start-line="71" selection-end-line="71" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loadtester/command_worker_queue.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="732">
+          <caret line="53" column="53" lean-forward="true" selection-start-line="53" selection-start-column="53" selection-end-line="53" selection-end-column="53" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loadtester/shared/cache.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loadtester/shared/failed_request.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-38" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loadtester/executer/executer.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="437">
+          <caret line="29" column="10" lean-forward="true" selection-start-line="29" selection-start-column="10" selection-end-line="29" selection-end-column="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loadtester/command_pcap.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="86" column="12" lean-forward="true" selection-start-line="86" selection-start-column="12" selection-end-line="86" selection-end-column="12" />
+          <folding>
+            <element signature="e#392#1191#0" />
+            <element signature="e#441#1188#0" />
+            <element signature="e#553#610#0" />
+            <element signature="e#669#726#0" />
+            <element signature="e#797#1112#0" />
+            <element signature="e#838#1108#0" />
+            <element signature="e#878#935#0" />
+            <element signature="e#1011#1103#0" />
+            <element signature="e#1226#2033#0" />
+            <element signature="e#1282#2030#0" />
+            <element signature="e#1394#1451#0" />
+            <element signature="e#1511#1568#0" />
+            <element signature="e#1639#1954#0" />
+            <element signature="e#1680#1950#0" />
+            <element signature="e#1720#1777#0" />
+            <element signature="e#1853#1945#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loadtester/command_debug.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2890" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loadtester/command_helper.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-650">
+          <caret line="9" column="5" selection-start-line="9" selection-start-column="5" selection-end-line="9" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loadtester/controller/net.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="223">
+          <caret line="166" column="43" selection-start-line="166" selection-start-column="43" selection-end-line="166" selection-end-column="43" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loadtester/actor/actor.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1610">
+          <caret line="23" column="48" lean-forward="true" selection-start-line="23" selection-start-column="48" selection-end-line="23" selection-end-column="48" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loadtester/_cache/2374000001594" />
+    <entry file="file://$PROJECT_DIR$/cmd/cli/main.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4">
+          <caret line="90" column="41" selection-start-line="90" selection-start-column="41" selection-end-line="90" selection-end-column="41" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loadtester/main.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="80">
+          <caret line="24" column="5" selection-start-line="24" selection-start-column="5" selection-end-line="24" selection-end-column="5" />
+          <folding>
+            <element signature="e#985#1002#0" />
+            <element signature="e#1008#1023#0" />
+            <element signature="n#!!block;n#Log#0" />
+            <element signature="n#!!block;n#fnSendContactImport#0" />
+            <element signature="n#!!block;n#fnSendRawDump#0" />
+            <element signature="n#!!block;n#fnDebugDecrypt#0" />
+            <element signature="n#!!block;n#fnPcapParser#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loadtester/scenario/createauthkey.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="578">
+          <caret line="72" selection-start-line="72" selection-end-line="72" />
+          <folding>
+            <element signature="n#!!block;n#NewCreateAuthKey#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loadtester/scenario/sendmessage.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loadtester/command_cli.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="578">
+          <caret line="98" column="31" selection-start-line="98" selection-start-column="31" selection-end-line="98" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/filemanager/filenetwork.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/filemanager/filestatus.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/network/ctrl_network.go" />
+    <entry file="file://$PROJECT_DIR$/loadtester/shared/consts.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="9" column="33" selection-start-line="9" selection-start-column="33" selection-end-line="9" selection-end-column="33" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loadtester/shared/interfaces.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="480">
+          <caret line="28" column="4" selection-start-line="28" selection-start-column="4" selection-end-line="28" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/filemanager/filemanager.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-489" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/repo/repo_messages.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="e#288#1258#0" />
+            <element signature="e#1278#1301#0" />
+            <element signature="n#!!block;n#SaveNewMessage#0" />
+            <element signature="e#1481#1611#0" />
+            <element signature="e#1913#1952#0" />
+            <element signature="e#1958#2020#0" />
+            <element signature="e#2185#2316#0" />
+            <element signature="e#2394#2427#0" />
+            <element signature="e#2551#2724#0" />
+            <element signature="e#2611#2721#0" />
+            <element signature="e#2690#2717#0" />
+            <element signature="e#2726#2748#0" />
+            <element signature="e#3269#3398#0" />
+            <element signature="e#3439#3466#0" />
+            <element signature="e#3611#3757#0" />
+            <element signature="e#3780#3912#0" />
+            <element signature="n#!!block;n#SaveSelfMessage#0" />
+            <element signature="e#4188#4319#0" />
+            <element signature="e#4603#4624#0" />
+            <element signature="e#4630#4692#0" />
+            <element signature="e#4731#4978#0" />
+            <element signature="e#4880#4954#0" />
+            <element signature="n#!!block;n#SaveMessage#0" />
+            <element signature="e#5134#5261#0" />
+            <element signature="e#5264#5303#0" />
+            <element signature="e#5454#5488#0" />
+            <element signature="n#!!block;n#GetManyMessages#0" />
+            <element signature="e#5974#6101#0" />
+            <element signature="e#6130#6215#0" />
+            <element signature="n#!!block;n#GetMessageHistoryWithPendingMessages#0" />
+            <element signature="e#6836#6960#0" />
+            <element signature="e#6966#7012#0" />
+            <element signature="e#7029#7154#0" />
+            <element signature="e#7381#7554#0" />
+            <element signature="e#7415#7551#0" />
+            <element signature="e#7657#7986#0" />
+            <element signature="e#7956#7983#0" />
+            <element signature="e#8169#8291#0" />
+            <element signature="e#8318#8404#0" />
+            <element signature="n#!!block;n#GetMessageHistoryWithMinMaxID#0" />
+            <element signature="e#8949#9074#0" />
+            <element signature="e#9108#9289#0" />
+            <element signature="e#9323#9616#0" />
+            <element signature="e#9510#9613#0" />
+            <element signature="e#9557#9608#0" />
+            <element signature="e#9622#9803#0" />
+            <element signature="e#9820#9945#0" />
+            <element signature="e#10004#10333#0" />
+            <element signature="e#10303#10330#0" />
+            <element signature="e#10516#10638#0" />
+            <element signature="e#10665#10751#0" />
+            <element signature="n#!!block;n#GetUnreadMessageCount#0" />
+            <element signature="n#!!block;n#SaveMessageMany#0" />
+            <element signature="n#!!block;n#DeleteDialogMessage#0" />
+            <element signature="n#!!block;n#DeleteMany#0" />
+            <element signature="e#11672#11745#0" />
+            <element signature="e#11846#11926#0" />
+            <element signature="e#12014#12248#0" />
+            <element signature="e#12194#12245#0" />
+            <element signature="n#!!block;n#DeleteManyAndReturnClientUpdate#0" />
+            <element signature="e#12600#12673#0" />
+            <element signature="e#12888#13195#0" />
+            <element signature="e#12915#13192#0" />
+            <element signature="e#12955#13011#0" />
+            <element signature="e#13017#13188#0" />
+            <element signature="e#13222#13924#0" />
+            <element signature="e#13407#13898#0" />
+            <element signature="e#13481#13558#0" />
+            <element signature="e#13520#13553#0" />
+            <element signature="e#13632#13894#0" />
+            <element signature="e#14078#14431#0" />
+            <element signature="e#14258#14428#0" />
+            <element signature="n#!!block;n#GetTopMessageID#0" />
+            <element signature="e#14823#14953#0" />
+            <element signature="n#!!block;n#GetMessage#0" />
+            <element signature="e#15319#15441#0" />
+            <element signature="n#!!block;n#SetContentRead#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/synchronizer/message_appliers.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2535" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/logs/logs.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-148" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loadtester/command.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="18" selection-start-line="18" selection-end-line="18" />
+          <folding>
+            <element signature="e#14#146#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/uiexec/uiexec.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-13">
+          <caret line="3" column="10" lean-forward="true" selection-start-line="3" selection-start-column="10" selection-end-line="3" selection-end-column="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="20">
+          <caret line="1" selection-start-line="1" selection-end-line="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/domain/errors.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="80">
+          <caret line="9" column="5" lean-forward="true" selection-start-line="9" selection-start-column="5" selection-end-line="9" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/network/network.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="220">
+          <caret line="24" column="51" selection-start-line="24" selection-start-column="51" selection-end-line="24" selection-end-column="51" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/repo/repo_files.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/queue/queue.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="20" column="21" selection-start-line="20" selection-start-column="21" selection-end-line="20" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>

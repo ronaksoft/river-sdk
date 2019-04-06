@@ -1,7 +1,7 @@
 package shared
 
 import (
-	"git.ronaksoftware.com/ronak/riversdk/domain"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 )
 
 // publicKey

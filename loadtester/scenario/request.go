@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"fmt"
 
-	"git.ronaksoftware.com/ronak/riversdk/domain"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 	ronak "git.ronaksoftware.com/ronak/toolbox"

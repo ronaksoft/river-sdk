@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/domain"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
 

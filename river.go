@@ -4,11 +4,11 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/domain"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
-	"git.ronaksoftware.com/ronak/riversdk/network"
-	"git.ronaksoftware.com/ronak/riversdk/queue"
-	"git.ronaksoftware.com/ronak/riversdk/synchronizer"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/network"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/queue"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/synchronizer"
 )
 
 // RiverConfig ...

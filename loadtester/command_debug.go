@@ -10,7 +10,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"git.ronaksoftware.com/ronak/riversdk/domain"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"gopkg.in/abiosoft/ishell.v2"
