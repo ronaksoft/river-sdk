@@ -125,56 +125,56 @@ func (v *RiverConnection) loadConfig() error {
 	return nil
 }
 
-// Save RiverConfiger interface func
+// Save RiverConfig interface func
 func (v *RiverConnection) Save() { v.saveConfig() }
 
-// ChangeAuthID RiverConfiger interface func
+// ChangeAuthID RiverConfig interface func
 func (v *RiverConnection) ChangeAuthID(authID int64) { v.AuthID = authID }
 
-// ChangeAuthKey RiverConfiger interface func
+// ChangeAuthKey RiverConfig interface func
 func (v *RiverConnection) ChangeAuthKey(authKey [256]byte) { v.AuthKey = authKey }
 
-// ChangeUserID RiverConfiger interface func
+// ChangeUserID RiverConfig interface func
 func (v *RiverConnection) ChangeUserID(userID int64) { v.UserID = userID }
 
-// ChangeUsername RiverConfiger interface func
+// ChangeUsername RiverConfig interface func
 func (v *RiverConnection) ChangeUsername(username string) { v.Username = username }
 
-// ChangePhone RiverConfiger interface func
+// ChangePhone RiverConfig interface func
 func (v *RiverConnection) ChangePhone(phone string) { v.Phone = phone }
 
-// ChangeFirstName RiverConfiger interface func
+// ChangeFirstName RiverConfig interface func
 func (v *RiverConnection) ChangeFirstName(firstName string) { v.FirstName = firstName }
 
-// ChangeLastName RiverConfiger interface func
+// ChangeLastName RiverConfig interface func
 func (v *RiverConnection) ChangeLastName(lastName string) { v.LastName = lastName }
 
-// ChangeBio RiverConfiger interface func
+// ChangeBio RiverConfig interface func
 func (v *RiverConnection) ChangeBio(bio string) { v.Bio = bio }
 
-// Load RiverConfiger interface func
+// Load RiverConfig interface func
 func (v *RiverConnection) Load() error { return v.loadConfig() }
 
-// PickupAuthID RiverConfiger interface func
+// PickupAuthID RiverConfig interface func
 func (v *RiverConnection) PickupAuthID() int64 { return v.AuthID }
 
-// PickupAuthKey RiverConfiger interface func
+// PickupAuthKey RiverConfig interface func
 func (v *RiverConnection) PickupAuthKey() [256]byte { return v.AuthKey }
 
-// PickupUserID RiverConfiger interface func
+// PickupUserID RiverConfig interface func
 func (v *RiverConnection) PickupUserID() int64 { return v.UserID }
 
-// PickupUsername RiverConfiger interface func
+// PickupUsername RiverConfig interface func
 func (v *RiverConnection) PickupUsername() string { return v.Username }
 
-// PickupPhone RiverConfiger interface func
+// PickupPhone RiverConfig interface func
 func (v *RiverConnection) PickupPhone() string { return v.Phone }
 
-// PickupFirstName RiverConfiger interface func
+// PickupFirstName RiverConfig interface func
 func (v *RiverConnection) PickupFirstName() string { return v.FirstName }
 
-// PickupLastName RiverConfiger interface func
+// PickupLastName RiverConfig interface func
 func (v *RiverConnection) PickupLastName() string { return v.LastName }
 
-// PickupBio RiverConfiger interface func
+// PickupBio RiverConfig interface func
 func (v *RiverConnection) PickupBio() string { return v.Bio }
