@@ -1,13 +1,12 @@
 package dto
 
 type FileStatus struct {
-	MessageID  int64  `gorm:"primary_key;column:MessageID" json:"MessageID"`
-	FileID     int64  `gorm:"column:FileID" json:"FileID"`
-	ClusterID  int32  `gorm:"column:ClusterID" json:"ClusterID"`
-	AccessHash int64  `gorm:"column:AccessHash" json:"AccessHash"`
-	Version    int32  `gorm:"column:Version" json:"Version"`
-	FilePath   string `gorm:"column:FilePath" json:"FilePath"`
-	//Position        int64  `gorm:"column:Position" json:"Position"`
+	MessageID       int64  `gorm:"primary_key;column:MessageID" json:"MessageID"`
+	FileID          int64  `gorm:"column:FileID" json:"FileID"`
+	ClusterID       int32  `gorm:"column:ClusterID" json:"ClusterID"`
+	AccessHash      int64  `gorm:"column:AccessHash" json:"AccessHash"`
+	Version         int32  `gorm:"column:Version" json:"Version"`
+	FilePath        string `gorm:"column:FilePath" json:"FilePath"`
 	TotalSize       int64  `gorm:"column:TotalSize" json:"TotalSize"`
 	PartList        []byte `gorm:"column:PartList" json:"PartList"`
 	TotalParts      int64  `gorm:"column:TotalParts" json:"TotalParts"`

@@ -362,7 +362,7 @@ func getFilePath(msgID int64) string {
 			x := new(msg.MediaDocument)
 			err := x.Unmarshal(m.Media)
 			if err == nil {
-				// check file existance
+				// check file existence
 				filePath := repo.Ctx().Files.GetFilePath(m.ID, x.Doc.ID)
 				if _, err = os.Stat(filePath); os.IsNotExist(err) {
 					filePath = ""
@@ -374,7 +374,7 @@ func getFilePath(msgID int64) string {
 			x := new(msg.ClientSendMessageMedia)
 			err := x.Unmarshal(m.Media)
 			if err == nil {
-				// check file existance
+				// check file existence
 				filePath := x.FilePath
 				if _, err = os.Stat(filePath); os.IsNotExist(err) {
 					filePath = ""
@@ -429,53 +429,54 @@ func (r *River) FileDownload(msgID int64) {
 // PauseDownload pause download
 func (r *River) PauseDownload(msgID int64) {
 	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
-	if err == nil {
-		filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatePaused)
-		repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStatePaused)
-	} else {
+	if err != nil {
 		logs.Error("SDK::PauseDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
+		return
 	}
+	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatePaused)
+	_ = repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStatePaused)
 }
 
 // CancelDownload cancel download
 func (r *River) CancelDownload(msgID int64) {
 	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
-	if err == nil {
-		filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStateCanceled)
-		repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStateCanceled)
-	} else {
+	if err != nil {
 		logs.Error("SDK::CancelDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
+		return
 	}
+	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStateCanceled)
+	_ = repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStateCanceled)
 }
 
 // PauseUpload pause upload
 func (r *River) PauseUpload(msgID int64) {
 	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
-	if err == nil {
-		filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatePaused)
-		repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStatePaused)
-		// repo.Ctx().PendingMessages.DeletePendingMessage(fs.MessageID)
-	} else {
+	if err != nil {
 		logs.Error("SDK::PauseUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
+		return
 	}
+	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatePaused)
+	_ = repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStatePaused)
+	// repo.Ctx().PendingMessages.DeletePendingMessage(fs.MessageID)
+
 }
 
 // CancelUpload cancel upload
 func (r *River) CancelUpload(msgID int64) {
 	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
-	if err == nil {
-		filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStateCanceled)
-		repo.Ctx().Files.DeleteFileStatus(msgID)
-		repo.Ctx().PendingMessages.DeletePendingMessage(fs.MessageID)
-	} else {
+	if err != nil {
 		logs.Error("SDK::CancelUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
+		return
 	}
+	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStateCanceled)
+	_ = repo.Ctx().Files.DeleteFileStatus(msgID)
+	_ = repo.Ctx().PendingMessages.DeletePendingMessage(fs.MessageID)
+
 }
 
 // AccountUploadPhoto upload user profile photo
 func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
-
-	//TOF
+	// TOF
 	msgID = domain.SequentialUniqueID()
 	fileID := domain.SequentialUniqueID()
 
@@ -517,23 +518,19 @@ func (r *River) AccountGetPhotoBig(userID int64) string {
 		if user.Photo != nil {
 			dtoPhoto := repo.Ctx().Users.GetUserPhoto(userID, user.Photo.PhotoID)
 			if dtoPhoto != nil {
-				if dtoPhoto.Big_FilePath != "" {
+				if dtoPhoto.BigFilePath != "" {
 					// check if file exist
-					if _, err := os.Stat(dtoPhoto.Big_FilePath); os.IsNotExist(err) {
+					if _, err := os.Stat(dtoPhoto.BigFilePath); os.IsNotExist(err) {
 						return downloadAccountPhoto(userID, user.Photo, true)
-
 					}
-					// check if fileID is changed redownload
-					strFileID := strconv.FormatInt(dtoPhoto.Big_FileID, 10)
-					if strings.Index(dtoPhoto.Big_FilePath, strFileID) < 0 {
+					// check if fileID is changed re-download
+					strFileID := strconv.FormatInt(dtoPhoto.BigFileID, 10)
+					if strings.Index(dtoPhoto.BigFilePath, strFileID) < 0 {
 						return downloadAccountPhoto(user.ID, user.Photo, true)
 					}
-
-					return dtoPhoto.Big_FilePath
-
+					return dtoPhoto.BigFilePath
 				}
 				return downloadAccountPhoto(userID, user.Photo, true)
-
 			}
 			return downloadAccountPhoto(userID, user.Photo, true)
 
@@ -554,19 +551,19 @@ func (r *River) AccountGetPhotoSmall(userID int64) string {
 			dtoPhoto := repo.Ctx().Users.GetUserPhoto(userID, user.Photo.PhotoID)
 			if dtoPhoto != nil {
 
-				if dtoPhoto.Small_FilePath != "" {
+				if dtoPhoto.SmallFilePath != "" {
 					// check if file exist
-					if _, err := os.Stat(dtoPhoto.Small_FilePath); os.IsNotExist(err) {
+					if _, err := os.Stat(dtoPhoto.SmallFilePath); os.IsNotExist(err) {
 						return downloadAccountPhoto(userID, user.Photo, false)
 					}
 
-					// check if fileID is changed redownload
-					strFileID := strconv.FormatInt(dtoPhoto.Small_FileID, 10)
-					if strings.Index(dtoPhoto.Small_FilePath, strFileID) < 0 {
+					// check if fileID is changed re-download
+					strFileID := strconv.FormatInt(dtoPhoto.SmallFileID, 10)
+					if strings.Index(dtoPhoto.SmallFilePath, strFileID) < 0 {
 						return downloadAccountPhoto(user.ID, user.Photo, true)
 					}
 
-					return dtoPhoto.Small_FilePath
+					return dtoPhoto.SmallFilePath
 				}
 				return downloadAccountPhoto(userID, user.Photo, false)
 
@@ -642,7 +639,7 @@ func getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, 
 // GroupUploadPhoto upload group profile photo
 func (r *River) GroupUploadPhoto(groupID int64, filePath string) (msgID int64) {
 
-	//TOF
+	// TOF
 	msgID = domain.SequentialUniqueID()
 	fileID := domain.SequentialUniqueID()
 
@@ -688,17 +685,17 @@ func (r *River) GroupGetPhotoBig(groupID int64) string {
 				logs.Error("SDK::GroupGetPhoto_Big() failed to unmarshal GroupPhoto", zap.Error(err))
 				return ""
 			}
-			if group.Big_FilePath != "" {
+			if group.BigFilePath != "" {
 				// check if file exist
-				if _, err := os.Stat(group.Big_FilePath); os.IsNotExist(err) {
+				if _, err := os.Stat(group.BigFilePath); os.IsNotExist(err) {
 					return downloadGroupPhoto(groupID, groupPhoto, true)
 				}
 				// check if fileID is changed redownload
 				strFileID := strconv.FormatInt(groupPhoto.PhotoBig.FileID, 10)
-				if strings.Index(group.Big_FilePath, strFileID) < 0 {
+				if strings.Index(group.BigFilePath, strFileID) < 0 {
 					return downloadGroupPhoto(groupID, groupPhoto, true)
 				}
-				return group.Big_FilePath
+				return group.BigFilePath
 
 			}
 			return downloadGroupPhoto(groupID, groupPhoto, true)
@@ -723,20 +720,20 @@ func (r *River) GroupGetPhotoSmall(groupID int64) string {
 				logs.Error("SDK::GroupGetPhoto_Small() failed to unmarshal GroupPhoto", zap.Error(err))
 				return ""
 			}
-			if group.Small_FilePath != "" {
+			if group.SmallFilePath != "" {
 
 				// check if file exist
-				if _, err := os.Stat(group.Small_FilePath); os.IsNotExist(err) {
+				if _, err := os.Stat(group.SmallFilePath); os.IsNotExist(err) {
 					return downloadGroupPhoto(groupID, groupPhoto, false)
 				}
 
 				// check if fileID is changed redownload
 				strFileID := strconv.FormatInt(groupPhoto.PhotoSmall.FileID, 10)
-				if strings.Index(group.Small_FilePath, strFileID) < 0 {
+				if strings.Index(group.SmallFilePath, strFileID) < 0 {
 					return downloadGroupPhoto(groupID, groupPhoto, false)
 				}
 
-				return group.Small_FilePath
+				return group.SmallFilePath
 
 			}
 			return downloadGroupPhoto(groupID, groupPhoto, false)

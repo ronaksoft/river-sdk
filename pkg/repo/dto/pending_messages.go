@@ -36,8 +36,6 @@ func (PendingMessages) TableName() string {
 func (m *PendingMessages) Map(v *msg.MessagesSend) {
 	m.AccessHash = int64(v.Peer.AccessHash)
 	m.Body = v.Body
-	//m.CreatedOn = v.CreatedOn
-	//m.ID = v.ID
 	m.PeerID = v.Peer.ID
 	m.PeerType = int32(v.Peer.Type)
 	m.ReplyTo = v.ReplyTo
@@ -68,18 +66,9 @@ func (m *PendingMessages) MapToUserMessage(v *msg.UserMessage) {
 	v.PeerID = m.PeerID
 	v.PeerType = m.PeerType
 	v.CreatedOn = m.CreatedOn
-	//v.EditedOn = m.EditedOn
-	//v.FwdSenderID = m.FwdSenderID
-	//v.FwdChannelID = m.FwdChannelID
-	//v.FwdChannelMessageID = m.FwdChannelMessageID
-	//v.Flags = m.Flags
-	//v.MessageType = m.MessageType
 	v.Body = m.Body
 	v.SenderID = m.SenderID
-	//v.ContentRead = m.ContentRead
-	//v.Inbox = m.Inbox
 	v.ReplyTo = m.ReplyTo
-	//v.MessageAction = m.MessageAction
 
 	v.Entities = make([]*msg.MessageEntity, 0)
 	json.Unmarshal(m.Entities, &v.Entities)
@@ -95,29 +84,17 @@ func (m *PendingMessages) MapToDtoMessage(v *Messages) {
 	v.PeerID = m.PeerID
 	v.PeerType = m.PeerType
 	v.CreatedOn = m.CreatedOn
-	//v.EditedOn = m.EditedOn
-	//v.FwdSenderID = m.FwdSenderID
-	//v.FwdChannelID = m.FwdChannelID
-	//v.FwdChannelMessageID = m.FwdChannelMessageID
-	//v.Flags = m.Flags
-	//v.MessageType = m.MessageType
 	v.Body = m.Body
 	v.SenderID = m.SenderID
-	//v.ContentRead = m.ContentRead
-	//v.Inbox = m.Inbox
 	v.ReplyTo = m.ReplyTo
-	//v.MessageAction = m.MessageAction
 	v.Entities = m.Entities
-
 	v.MessageType = fnGetMessageType(m.MediaType)
-
 	v.MediaType = int32(m.MediaType)
 	v.Media = m.Media
 
 }
 
 func (m *PendingMessages) MapToMessageSend(v *msg.MessagesSend) {
-
 	v.Body = m.Body
 	v.Peer = new(msg.InputPeer)
 	v.Peer.AccessHash = uint64(m.AccessHash)
@@ -132,17 +109,12 @@ func (m *PendingMessages) MapToMessageSend(v *msg.MessagesSend) {
 }
 
 func (m *PendingMessages) MapFromClientMessageMedia(fileID int64, v *msg.ClientSendMessageMedia) {
-	//m.ID = v.ID
-	//m.RequestID = fileID
 	m.PeerID = v.Peer.ID
-	//m.SenderID = v.
 	m.PeerType = int32(v.Peer.Type)
 	m.AccessHash = int64(v.Peer.AccessHash)
-	//m.CreatedOn = v.
 	m.Body = v.Caption
 	m.ReplyTo = v.ReplyTo
 	m.ClearDraft = v.ClearDraft
-	// m.Entities = v.
 	m.MediaType = int32(v.MediaType)
 	m.Media, _ = v.Marshal()
 }

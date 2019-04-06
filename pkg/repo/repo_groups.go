@@ -265,12 +265,12 @@ func (r *repoGroups) UpdateGroupPhotoPath(groupID int64, isBig bool, filePath st
 
 	if isBig {
 		return r.db.Table(e.TableName()).Where("ID = ? ", groupID).Updates(map[string]interface{}{
-			"Big_FilePath": filePath,
+			"BigFilePath": filePath,
 		}).Error
 	}
 
 	return r.db.Table(e.TableName()).Where("ID = ? ", groupID).Updates(map[string]interface{}{
-		"Small_FilePath": filePath,
+		"SmallFilePath": filePath,
 	}).Error
 
 }
@@ -295,15 +295,15 @@ func (r *repoGroups) RemoveGroupPhoto(groupID int64) error {
 	grp := new(dto.Groups)
 	return r.db.Table(grp.TableName()).Where("ID=?", groupID).Updates(map[string]interface{}{
 		"Photo":            []byte("[]"),
-		"Big_FileID":       0,
-		"Big_AccessHash":   0,
-		"Big_ClusterID":    0,
-		"Big_Version":      0,
-		"Big_FilePath":     "",
-		"Small_FileID":     0,
-		"Small_AccessHash": 0,
-		"Small_ClusterID":  0,
-		"Small_Version":    0,
-		"Small_FilePath":   "",
+		"BigFileID":       0,
+		"BigAccessHash":   0,
+		"BigClusterID":    0,
+		"BigVersion":      0,
+		"BigFilePath":     "",
+		"SmallFileID":     0,
+		"SmallAccessHash": 0,
+		"SmallClusterID":  0,
+		"SmallVersion":    0,
+		"SmallFilePath":   "",
 	}).Error
 }

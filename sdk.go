@@ -859,7 +859,7 @@ readChannel:
 				if u.Photo != nil {
 					dtoPhoto := repo.Ctx().Users.GetUserPhoto(u.ID, u.Photo.PhotoID)
 					if dtoPhoto != nil {
-						if dtoPhoto.Small_FilePath == "" || dtoPhoto.Small_FileID != u.Photo.PhotoSmall.FileID {
+						if dtoPhoto.SmallFilePath == "" || dtoPhoto.SmallFileID != u.Photo.PhotoSmall.FileID {
 							go downloadAccountPhoto(u.ID, u.Photo, false)
 						}
 					} else if u.Photo.PhotoID != 0 {
@@ -879,7 +879,7 @@ readChannel:
 				if g.Photo != nil {
 					dtoGroup, err := repo.Ctx().Groups.GetGroupDTO(g.ID)
 					if err == nil && dtoGroup != nil {
-						if dtoGroup.Small_FilePath == "" || dtoGroup.Small_FileID != g.Photo.PhotoSmall.FileID {
+						if dtoGroup.SmallFilePath == "" || dtoGroup.SmallFileID != g.Photo.PhotoSmall.FileID {
 							go downloadGroupPhoto(g.ID, g.Photo, false)
 						}
 					} else if g.Photo.PhotoSmall.FileID != 0 {

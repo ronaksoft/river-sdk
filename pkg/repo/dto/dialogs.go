@@ -8,8 +8,8 @@ import (
 
 type Dialogs struct {
 	dto
-	PeerID          int64  `gorm:"type:bigint;primary_key;column:PeerID" json:"PeerID"`      //type is required for composite primary key
-	PeerType        int32  `gorm:"type:integer;primary_key;column:PeerType" json:"PeerType"` //type is required for composite primary key
+	PeerID          int64  `gorm:"type:bigint;primary_key;column:PeerID" json:"PeerID"`      // type is required for composite primary key
+	PeerType        int32  `gorm:"type:integer;primary_key;column:PeerType" json:"PeerType"` // type is required for composite primary key
 	TopMessageID    int64  `gorm:"column:TopMessageID" json:"TopMessageID"`
 	AccessHash      int64  `gorm:"column:AccessHash" json:"AccessHash"`
 	ReadInboxMaxID  int64  `gorm:"column:ReadInboxMaxID" json:"ReadInboxMaxID"`
@@ -28,7 +28,6 @@ func (Dialogs) TableName() string {
 
 func (d *Dialogs) Map(v *msg.Dialog) {
 	d.AccessHash = int64(v.AccessHash)
-	//d.LastUpdate = v.LastUpdate
 	d.PeerID = v.PeerID
 	d.PeerType = v.PeerType
 	d.ReadInboxMaxID = v.ReadInboxMaxID
@@ -45,7 +44,6 @@ func (d *Dialogs) Map(v *msg.Dialog) {
 }
 
 func (d *Dialogs) MapTo(v *msg.Dialog) {
-
 	v.PeerID = d.PeerID
 	v.PeerType = d.PeerType
 	v.TopMessageID = d.TopMessageID

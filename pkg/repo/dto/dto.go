@@ -5,7 +5,7 @@ import (
 	"reflect"
 )
 
-//base struct
+// base struct
 type dto struct {
 }
 

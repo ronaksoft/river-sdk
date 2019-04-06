@@ -150,6 +150,7 @@ var GroupDownloadPhotoBig = &ishell.Cmd{
 
 	},
 }
+
 var GroupDownloadPhotoSmall = &ishell.Cmd{
 	Name: "DownloadPhotoSmall",
 	Func: func(c *ishell.Context) {

@@ -37,8 +37,6 @@ func (m *Files) Map(messageID int64, createdOn int64, fileSize int32, v *msg.Cli
 	m.MessageID = messageID
 	m.PeerID = v.Peer.ID
 	m.PeerType = int32(v.Peer.Type)
-	//m.ClusterID = v.ClusterID
-	//m.DocumentID = v.DocumentID
 	m.AccessHash = int64(v.Peer.AccessHash)
 	m.MediaType = int32(v.MediaType)
 	m.Caption = v.Caption
@@ -77,7 +75,7 @@ func (m *Files) MapFromFile(v Files) {
 }
 
 func (m *Files) MapFromDocument(v *msg.MediaDocument) {
-	//m.MessageID = msgID
+	// m.MessageID = msgID
 	m.Caption = v.Caption
 	m.DocumentID = v.Doc.ID
 	m.AccessHash = int64(v.Doc.AccessHash)
@@ -96,11 +94,7 @@ func (m *Files) MapFromFileStatus(v *FileStatus) {
 	m.AccessHash = v.AccessHash
 	m.Version = v.Version
 	m.FilePath = v.FilePath
-	//m.Position = v.Position
 	m.FileSize = int32(v.TotalSize)
-	//m.PartNo = v.PartNo
-	//m.TotalParts = v.TotalParts
-	//m.IsCompleted = v.IsCompleted
 	if v.Type == int32(domain.FileStateDownload) {
 		// Download state
 		doc := new(msg.Document)
@@ -119,25 +113,19 @@ func (m *Files) MapFromFileStatus(v *FileStatus) {
 	} else if v.Type == int32(domain.FileStateUpload) {
 		// upload state
 		req := new(msg.ClientSendMessageMedia)
-		err := req.Unmarshal(v.UploadRequest)
-		if err == nil {
-			//m.MessageID = messageID
+		if err := req.Unmarshal(v.UploadRequest); err == nil {
 			m.PeerID = req.Peer.ID
 			m.PeerType = int32(req.Peer.Type)
-			//m.ClusterID = v.ClusterID
-			//m.DocumentID = v.DocumentID
 			m.AccessHash = int64(req.Peer.AccessHash)
 			m.MediaType = int32(req.MediaType)
 			m.Caption = req.Caption
 			m.FileName = req.FileName
-			//m.FileSize = fileSize
 			m.FilePath = req.FilePath
 			m.ThumbFilePath = req.ThumbFilePath
 			m.FileMIME = req.FileMIME
 			m.ThumbMIME = req.ThumbMIME
 			m.ReplyTo = req.ReplyTo
 			m.ClearDraft = req.ClearDraft
-			//m.Version = 0
 			m.Attributes, _ = json.Marshal(req.Attributes)
 		}
 	}

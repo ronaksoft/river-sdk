@@ -17,17 +17,17 @@ type Groups struct {
 	Participants int32  `gorm:"column:Participants" json:"Participants"`
 	Flags        string `gorm:"column:Flags" json:"Flags"`
 
-	Photo            []byte `gorm:"type:blob;column:Photo" json:"Photo"`
-	Big_FileID       int64  `gorm:";column:Big_FileID" json:"Big_FileID"`
-	Big_AccessHash   int64  `gorm:";column:Big_AccessHash" json:"Big_AccessHash"`
-	Big_ClusterID    int32  `gorm:"column:Big_ClusterID" json:"Big_ClusterID"`
-	Big_Version      int32  `gorm:"column:Big_Version" json:"Big_Version"`
-	Big_FilePath     string `gorm:"column:Big_FilePath" json:"Big_FilePath"`
-	Small_FileID     int64  `gorm:";column:Small_FileID" json:"Small_FileID"`
-	Small_AccessHash int64  `gorm:";column:Small_AccessHash" json:"Small_AccessHash"`
-	Small_ClusterID  int32  `gorm:"column:Small_ClusterID" json:"Small_ClusterID"`
-	Small_Version    int32  `gorm:"column:Small_Version" json:"Small_Version"`
-	Small_FilePath   string `gorm:"column:Small_FilePath" json:"Small_FilePath"`
+	Photo           []byte `gorm:"type:blob;column:Photo" json:"Photo"`
+	BigFileID       int64  `gorm:";column:BigFileID" json:"BigFileID"`
+	BigAccessHash   int64  `gorm:";column:BigAccessHash" json:"BigAccessHash"`
+	BigClusterID    int32  `gorm:"column:BigClusterID" json:"BigClusterID"`
+	BigVersion      int32  `gorm:"column:BigVersion" json:"BigVersion"`
+	BigFilePath     string `gorm:"column:BigFilePath" json:"BigFilePath"`
+	SmallFileID     int64  `gorm:";column:SmallFileID" json:"SmallFileID"`
+	SmallAccessHash int64  `gorm:";column:SmallAccessHash" json:"SmallAccessHash"`
+	SmallClusterID  int32  `gorm:"column:SmallClusterID" json:"SmallClusterID"`
+	SmallVersion    int32  `gorm:"column:SmallVersion" json:"SmallVersion"`
+	SmallFilePath   string `gorm:"column:SmallFilePath" json:"SmallFilePath"`
 }
 
 func (Groups) TableName() string {
@@ -43,15 +43,15 @@ func (m *Groups) MapFrom(v *msg.Group) {
 	m.Flags = fnFlagsToString(v.Flags)
 	if v.Photo != nil {
 		m.Photo, _ = v.Photo.Marshal()
-		m.Small_AccessHash = int64(v.Photo.PhotoSmall.AccessHash)
-		m.Small_FileID = v.Photo.PhotoSmall.FileID
-		m.Small_ClusterID = v.Photo.PhotoSmall.ClusterID
-		m.Small_Version = 0
+		m.SmallAccessHash = int64(v.Photo.PhotoSmall.AccessHash)
+		m.SmallFileID = v.Photo.PhotoSmall.FileID
+		m.SmallClusterID = v.Photo.PhotoSmall.ClusterID
+		m.SmallVersion = 0
 
-		m.Big_AccessHash = int64(v.Photo.PhotoBig.AccessHash)
-		m.Big_FileID = v.Photo.PhotoBig.FileID
-		m.Big_ClusterID = v.Photo.PhotoBig.ClusterID
-		m.Big_Version = 0
+		m.BigAccessHash = int64(v.Photo.PhotoBig.AccessHash)
+		m.BigFileID = v.Photo.PhotoBig.FileID
+		m.BigClusterID = v.Photo.PhotoBig.ClusterID
+		m.BigVersion = 0
 	}
 }
 
@@ -75,15 +75,15 @@ func (m *Groups) MapFromUpdateGroupPhoto(v *msg.UpdateGroupPhoto) {
 	m.ID = v.GroupID
 	if v.Photo != nil {
 		m.Photo, _ = v.Photo.Marshal()
-		m.Small_AccessHash = int64(v.Photo.PhotoSmall.AccessHash)
-		m.Small_FileID = v.Photo.PhotoSmall.FileID
-		m.Small_ClusterID = v.Photo.PhotoSmall.ClusterID
-		m.Small_Version = 0
+		m.SmallAccessHash = int64(v.Photo.PhotoSmall.AccessHash)
+		m.SmallFileID = v.Photo.PhotoSmall.FileID
+		m.SmallClusterID = v.Photo.PhotoSmall.ClusterID
+		m.SmallVersion = 0
 
-		m.Big_AccessHash = int64(v.Photo.PhotoBig.AccessHash)
-		m.Big_FileID = v.Photo.PhotoBig.FileID
-		m.Big_ClusterID = v.Photo.PhotoBig.ClusterID
-		m.Big_Version = 0
+		m.BigAccessHash = int64(v.Photo.PhotoBig.AccessHash)
+		m.BigFileID = v.Photo.PhotoBig.FileID
+		m.BigClusterID = v.Photo.PhotoBig.ClusterID
+		m.BigVersion = 0
 	}
 }
 

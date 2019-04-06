@@ -491,12 +491,12 @@ func (r *repoUsers) UpdateAccountPhotoPath(userID, photoID int64, isBig bool, fi
 
 	if isBig {
 		return r.db.Table(e.TableName()).Where("UserID = ? AND PhotoID = ?", userID, photoID).Updates(map[string]interface{}{
-			"Big_FilePath": filePath,
+			"BigFilePath": filePath,
 		}).Error
 	}
 
 	return r.db.Table(e.TableName()).Where("UserID = ? AND PhotoID = ?", userID, photoID).Updates(map[string]interface{}{
-		"Small_FilePath": filePath,
+		"SmallFilePath": filePath,
 	}).Error
 
 }
