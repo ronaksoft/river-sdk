@@ -7,11 +7,11 @@ import (
 	"os"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"github.com/fatih/color"
 	"go.uber.org/zap"
 
-	"git.ronaksoftware.com/ronak/riversdk/filemanager"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/filemanager"
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"

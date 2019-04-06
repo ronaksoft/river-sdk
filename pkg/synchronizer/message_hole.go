@@ -1,7 +1,7 @@
 package synchronizer
 
 import (
-	"git.ronaksoftware.com/ronak/riversdk/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	"go.uber.org/zap"

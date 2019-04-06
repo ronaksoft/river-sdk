@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"sync"
 
-	"git.ronaksoftware.com/ronak/riversdk/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	"github.com/jinzhu/gorm"
 	"go.uber.org/zap"

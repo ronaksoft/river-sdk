@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
-	"git.ronaksoftware.com/ronak/riversdk/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 )
 
 // Report collects reporters statistics

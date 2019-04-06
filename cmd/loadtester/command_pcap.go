@@ -8,7 +8,7 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/pcap_parser"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/report"
-	"git.ronaksoftware.com/ronak/riversdk/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"go.uber.org/zap"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )

@@ -8,7 +8,7 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/actor"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/scenario"
-	"git.ronaksoftware.com/ronak/riversdk/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"go.uber.org/zap"
 )
 

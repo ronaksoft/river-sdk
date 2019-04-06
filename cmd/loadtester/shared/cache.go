@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"git.ronaksoftware.com/ronak/riversdk/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 )
 
 var (

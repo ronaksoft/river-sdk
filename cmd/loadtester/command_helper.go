@@ -8,7 +8,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/controller"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/report"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
-	"git.ronaksoftware.com/ronak/riversdk/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )
 

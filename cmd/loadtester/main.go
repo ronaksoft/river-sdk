@@ -15,7 +15,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/scenario"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/supernumerary"
-	"git.ronaksoftware.com/ronak/riversdk/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"

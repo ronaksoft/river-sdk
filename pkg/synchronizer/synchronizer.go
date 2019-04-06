@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/filemanager"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/filemanager"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
@@ -13,7 +13,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 
-	"git.ronaksoftware.com/ronak/riversdk/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/queue"
 	"go.uber.org/zap"

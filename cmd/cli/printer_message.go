@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 

@@ -13,7 +13,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/controller"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/executer"
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
-	"git.ronaksoftware.com/ronak/riversdk/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
 

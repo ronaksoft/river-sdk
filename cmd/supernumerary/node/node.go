@@ -6,7 +6,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/supernumerary"
-	"git.ronaksoftware.com/ronak/riversdk/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/supernumerary/config"
 	"github.com/nats-io/go-nats"
 	"go.uber.org/zap"

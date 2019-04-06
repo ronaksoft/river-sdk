@@ -1,7 +1,7 @@
 package main
 
 import (
-	"git.ronaksoftware.com/ronak/riversdk/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"github.com/nats-io/go-nats"
 	"gopkg.in/abiosoft/ishell.v2"
 )
