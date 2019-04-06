@@ -97,8 +97,8 @@ func (ctrl *Controller) distributor() {
 			return
 		}
 
-		// Disabled ratelimiter
-		// // Check the rate limit
+		// Disabled rate-limiter
+		// Check the rate limit
 		// ctrl.rateLimiter.Wait(1)
 
 		// Prepare

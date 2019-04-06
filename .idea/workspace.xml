@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4b3c8ed8-4f08-42a5-8fd4-fbfb58d0d314" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/sdk.go" beforeDir="false" afterPath="$PROJECT_DIR$/sdk.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sdk_commands.go" beforeDir="false" afterPath="$PROJECT_DIR$/sdk_commands.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/queue/queue.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/queue/queue.go" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -13,10 +12,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sdk_commands.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="573">
+            <state relative-caret-position="250">
               <caret line="1019" column="8" selection-start-line="1019" selection-start-column="8" selection-end-line="1019" selection-end-column="8" />
               <folding>
                 <element signature="n#!!block;n#messagesGetDialogs#0" />
@@ -251,6 +250,32 @@
           </provider>
         </entry>
       </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/pkg/queue/queue.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="135">
+              <caret line="101" column="10" lean-forward="true" selection-start-line="101" selection-start-column="10" selection-end-line="101" selection-end-column="10" />
+              <folding>
+                <element signature="e#461#640#0" />
+                <element signature="n#!!block;n#NewQueueController#0" />
+                <element signature="n#!!block;n#setDistributorState#0" />
+                <element signature="n#!!block;n#isDistributorRunning#0" />
+                <element signature="n#!!block;n#executor#0" />
+                <element signature="n#!!block;n#ExecuteRealtimeCommand#0" />
+                <element signature="n#!!block;n#ExecuteCommand#0" />
+                <element signature="n#!!block;n#addToWaitingList#0" />
+                <element signature="n#!!block;n#Start#0" />
+                <element signature="n#!!block;n#reinitializePendingMessages#0" />
+                <element signature="n#!!block;n#Stop#0" />
+                <element signature="n#!!block;n#IsRequestCancelled#0" />
+                <element signature="n#!!block;n#CancelRequest#0" />
+                <element signature="n#!!block;n#DropQueue#0" />
+                <element signature="n#!!block;n#OpenQueue#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sdk.go">
           <provider selected="true" editor-type-id="text-editor">
@@ -356,7 +381,6 @@
         <option value="$PROJECT_DIR$/river_conn.go" />
         <option value="$PROJECT_DIR$/delegates.go" />
         <option value="$PROJECT_DIR$/sdk.go" />
-        <option value="$PROJECT_DIR$/pkg/queue/queue.go" />
         <option value="$PROJECT_DIR$/cmd/cli-river/commands_account.go" />
         <option value="$PROJECT_DIR$/cmd/cli-river/commands_group.go" />
         <option value="$PROJECT_DIR$/sdk_commands_general.go" />
@@ -369,6 +393,7 @@
         <option value="$PROJECT_DIR$/pkg/repo/dto/files.go" />
         <option value="$PROJECT_DIR$/pkg/repo/dto/contacts.go" />
         <option value="$PROJECT_DIR$/sdk_commands.go" />
+        <option value="$PROJECT_DIR$/pkg/queue/queue.go" />
       </list>
     </option>
   </component>
@@ -387,6 +412,17 @@
             <path>
               <item name="riversdk" type="b2602c69:ProjectViewProjectNode" />
               <item name="riversdk" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="riversdk" type="b2602c69:ProjectViewProjectNode" />
+              <item name="riversdk" type="462c0819:PsiDirectoryNode" />
+              <item name="pkg" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="riversdk" type="b2602c69:ProjectViewProjectNode" />
+              <item name="riversdk" type="462c0819:PsiDirectoryNode" />
+              <item name="pkg" type="462c0819:PsiDirectoryNode" />
+              <item name="queue" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -446,7 +482,7 @@
       <window_info anchor="bottom" id="Docker" order="7" />
       <window_info anchor="bottom" id="Database Changes" order="8" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="9" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Terminal" order="10" weight="0.32959184" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="10" visible="true" weight="0.32959184" />
       <window_info anchor="bottom" id="Event Log" order="11" side_tool="true" />
       <window_info anchor="bottom" id="Tail" order="12" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
@@ -1423,95 +1459,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pkg/queue/queue.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="230">
-          <caret line="148" column="46" selection-start-line="148" selection-start-column="46" selection-end-line="148" selection-end-column="46" />
-          <folding>
-            <element signature="e#420#436#0" />
-            <element signature="e#461#640#0" />
-            <element signature="e#642#659#0" />
-            <element signature="e#811#1159#0" />
-            <element signature="n#!!block;n#NewQueueController#0" />
-            <element signature="e#1429#1475#0" />
-            <element signature="e#1527#1549#0" />
-            <element signature="e#1555#1582#0" />
-            <element signature="e#1729#1743#0" />
-            <element signature="n#!!block;n#distributor#0" />
-            <element signature="e#1963#1976#0" />
-            <element signature="e#2055#3417#0" />
-            <element signature="e#2225#2398#0" />
-            <element signature="e#2529#2543#0" />
-            <element signature="e#2632#2705#0" />
-            <element signature="e#2709#2732#0" />
-            <element signature="e#2879#2958#0" />
-            <element signature="e#3005#3227#0" />
-            <element signature="e#3233#3414#0" />
-            <element signature="n#!!block;n#setDistributorState#0" />
-            <element signature="n#!!block;n#isDistributorRunning#0" />
-            <element signature="e#3852#3863#0" />
-            <element signature="n#!!block;n#executor#0" />
-            <element signature="e#4182#4530#0" />
-            <element signature="e#4552#4600#0" />
-            <element signature="e#4849#4953#0" />
-            <element signature="e#4956#6707#0" />
-            <element signature="e#4966#6052#0" />
-            <element signature="e#5078#5235#0" />
-            <element signature="e#5113#5184#0" />
-            <element signature="e#5144#5178#0" />
-            <element signature="e#5190#5231#0" />
-            <element signature="e#5364#5738#0" />
-            <element signature="e#5485#5734#0" />
-            <element signature="e#5808#6052#0" />
-            <element signature="e#6055#6704#0" />
-            <element signature="e#6322#6484#0" />
-            <element signature="e#6356#6430#0" />
-            <element signature="e#6387#6424#0" />
-            <element signature="e#6436#6480#0" />
-            <element signature="e#6490#6704#0" />
-            <element signature="n#!!block;n#ExecuteRealtimeCommand#0" />
-            <element signature="e#7384#8916#0" />
-            <element signature="e#7448#7682#0" />
-            <element signature="e#7746#8686#0" />
-            <element signature="e#7751#8682#0" />
-            <element signature="e#7763#8258#0" />
-            <element signature="e#8075#8223#0" />
-            <element signature="e#8104#8172#0" />
-            <element signature="e#8137#8164#0" />
-            <element signature="e#8178#8217#0" />
-            <element signature="e#8262#8677#0" />
-            <element signature="e#8524#8677#0" />
-            <element signature="e#8553#8624#0" />
-            <element signature="e#8586#8616#0" />
-            <element signature="e#8630#8671#0" />
-            <element signature="e#8692#8900#0" />
-            <element signature="e#8935#8985#0" />
-            <element signature="e#8991#9038#0" />
-            <element signature="n#!!block;n#ExecuteCommand#0" />
-            <element signature="e#9636#9754#0" />
-            <element signature="n#!!block;n#addToWaitingList#0" />
-            <element signature="e#10071#10150#0" />
-            <element signature="e#10215#10290#0" />
-            <element signature="e#10533#10561#0" />
-            <element signature="n#!!block;n#Start#0" />
-            <element signature="n#!!block;n#reinitializePendingMessages#0" />
-            <element signature="e#10989#11242#0" />
-            <element signature="e#11063#11219#0" />
-            <element signature="e#11177#11215#0" />
-            <element signature="e#11225#11239#0" />
-            <element signature="e#11412#11865#0" />
-            <element signature="e#11666#11804#0" />
-            <element signature="e#11915#11962#0" />
-            <element signature="n#!!block;n#Stop#0" />
-            <element signature="n#!!block;n#IsRequestCancelled#0" />
-            <element signature="e#12342#12437#0" />
-            <element signature="n#!!block;n#CancelRequest#0" />
-            <element signature="n#!!block;n#DropQueue#0" />
-            <element signature="n#!!block;n#OpenQueue#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pkg/repo/dto/dto.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="220">
@@ -1654,7 +1601,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/sdk_commands.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="573">
+        <state relative-caret-position="250">
           <caret line="1019" column="8" selection-start-line="1019" selection-start-column="8" selection-end-line="1019" selection-end-column="8" />
           <folding>
             <element signature="n#!!block;n#messagesGetDialogs#0" />
@@ -1884,6 +1831,30 @@
             <element signature="e#41463#41517#0" />
             <element signature="e#41488#41513#0" />
             <element signature="e#41544#41788#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/queue/queue.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="135">
+          <caret line="101" column="10" lean-forward="true" selection-start-line="101" selection-start-column="10" selection-end-line="101" selection-end-column="10" />
+          <folding>
+            <element signature="e#461#640#0" />
+            <element signature="n#!!block;n#NewQueueController#0" />
+            <element signature="n#!!block;n#setDistributorState#0" />
+            <element signature="n#!!block;n#isDistributorRunning#0" />
+            <element signature="n#!!block;n#executor#0" />
+            <element signature="n#!!block;n#ExecuteRealtimeCommand#0" />
+            <element signature="n#!!block;n#ExecuteCommand#0" />
+            <element signature="n#!!block;n#addToWaitingList#0" />
+            <element signature="n#!!block;n#Start#0" />
+            <element signature="n#!!block;n#reinitializePendingMessages#0" />
+            <element signature="n#!!block;n#Stop#0" />
+            <element signature="n#!!block;n#IsRequestCancelled#0" />
+            <element signature="n#!!block;n#CancelRequest#0" />
+            <element signature="n#!!block;n#DropQueue#0" />
+            <element signature="n#!!block;n#OpenQueue#0" />
           </folding>
         </state>
       </provider>
