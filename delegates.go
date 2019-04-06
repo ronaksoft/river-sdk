@@ -1,6 +1,6 @@
 package riversdk
 
-// MainDelegate extenal (UI) handler will listen to this function to receive data from SDK
+// MainDelegate external (UI) handler will listen to this function to receive data from SDK
 type MainDelegate interface {
 	OnNetworkStatusChanged(status int)
 	OnSyncStatusChanged(status int)
@@ -18,13 +18,13 @@ type MainDelegate interface {
 	OnUploadError(messageID, requestID int64, filePath string, err []byte)
 }
 
-// RequestDelegate each request shoudl have this callbacks
+// RequestDelegate each request should have this callbacks
 type RequestDelegate interface {
 	OnComplete(b []byte)
 	OnTimeout(err error)
 }
 
-// LoggerDelegate callback to attack logs to extenal (UI) handler
+// LoggerDelegate callback to attack logs to external (UI) handler
 type LoggerDelegate interface {
 	Log(logLevel int, msg string)
 }

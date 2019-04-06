@@ -267,7 +267,7 @@ func (ctrl *Controller) getUpdateState() (updateID int64, err error) {
 	req := new(msg.UpdateGetState)
 	reqBytes, _ := req.Marshal()
 
-	// this waitgroup is required cuz our callbacks will be called in UIExecuter go routine
+	// this waitgroup is required cuz our callbacks will be called in UIExecutor go routine
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
 	//ctrl.queue.ExecuteCommand(

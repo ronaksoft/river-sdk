@@ -194,7 +194,7 @@ var MessageSendBulk = &ishell.Cmd{
 var DebuncerStatus = &ishell.Cmd{
 	Name: "DebuncerStatus",
 	Func: func(c *ishell.Context) {
-		_SDK.PrintDebuncerStatus()
+		_SDK.PrintDebouncerStatus()
 	},
 }
 

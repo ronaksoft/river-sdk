@@ -967,8 +967,8 @@ readChannel:
 	r.syncCtrl.UpdateHandler(updateContainer)
 }
 
-// PrintDebuncerStatus ...
-func (r *River) PrintDebuncerStatus() {
+// PrintDebouncerStatus ...
+func (r *River) PrintDebouncerStatus() {
 	logs.Debug("SDK::PrintDebouncerStatus()")
 	r.networkCtrl.PrintDebouncerStatus()
 }
@@ -1172,6 +1172,7 @@ func (r *River) onFileUploadError(messageID, requestID int64, filePath string, e
 		r.mainDelegate.OnUploadError(messageID, requestID, filePath, err)
 	}
 }
+
 func (r *River) onFileDownloadError(messageID, requestID int64, filePath string, err []byte) {
 	x := new(msg.Error)
 	x.Unmarshal(err)

@@ -9,13 +9,13 @@ import (
 
 var (
 	mx             sync.Mutex
-	exec           *UIExecuter
+	exec           *UIExecutor
 	uiExecInterval = 100 * time.Millisecond
 )
 
-// UIExecuter layer
-type UIExecuter struct {
-	chUIExecuter chan func()
+// UIExecutor layer
+type UIExecutor struct {
+	chUIExecutor chan func()
 	chStop       chan bool
 }
 
@@ -23,19 +23,19 @@ func init() {
 	Ctx()
 }
 
-// InitUIExec added for clearify cuz init will initialize this
+// InitUIExec added for clarify cuz init will initialize this
 func InitUIExec() {
 	Ctx()
 }
 
-// Ctx singletone
-func Ctx() *UIExecuter {
+// Ctx singleton
+func Ctx() *UIExecutor {
 	if exec == nil {
 		mx.Lock()
 		defer mx.Unlock()
 		if exec == nil {
-			exec = &UIExecuter{
-				chUIExecuter: make(chan func(), 100),
+			exec = &UIExecutor{
+				chUIExecutor: make(chan func(), 100),
 				chStop:       make(chan bool),
 			}
 			exec.Start()
@@ -44,13 +44,13 @@ func Ctx() *UIExecuter {
 	return exec
 }
 
-// Start starts UIExecuter listener
-func (c *UIExecuter) Start() {
-	go c.UIExecuter()
+// Start starts UIExecutor listener
+func (c *UIExecutor) Start() {
+	go c.UIExecutor()
 }
 
 // Stop sent stop signal
-func (c *UIExecuter) Stop() {
+func (c *UIExecutor) Stop() {
 	select {
 	case c.chStop <- true:
 		logs.Debug("CMD::Stop() sent stop signal")
@@ -59,21 +59,21 @@ func (c *UIExecuter) Stop() {
 	}
 }
 
-// Exec pass given function to UIExecuter buffered channel
-func (c *UIExecuter) Exec(fn func()) {
+// Exec pass given function to UIExecutor buffered channel
+func (c *UIExecutor) Exec(fn func()) {
 	select {
-	case c.chUIExecuter <- fn:
+	case c.chUIExecutor <- fn:
 		logs.Debug("CMD::Exec() sent to channel")
 	case <-time.After(uiExecInterval):
 		logs.Warn("CMD::Exec() cmd is not started")
 	}
 }
 
-// UIExecuter Pass responses to external handler (UI) one by one
-func (c *UIExecuter) UIExecuter() {
+// UIExecutor Pass responses to external handler (UI) one by one
+func (c *UIExecutor) UIExecutor() {
 	for {
 		select {
-		case fn := <-c.chUIExecuter:
+		case fn := <-c.chUIExecutor:
 			fn()
 		case <-c.chStop:
 			return
