@@ -81,12 +81,15 @@ func (d *MainDelegate) OnSessionClosed(res int) {
 func (d *MainDelegate) OnDownloadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
 	logs.Message("Download progress changed", zap.Float64("Progress", percent))
 }
+
 func (d *MainDelegate) OnUploadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
 	logs.Message("Upload progress changed", zap.Float64("Progress", percent))
 }
+
 func (d *MainDelegate) OnDownloadCompleted(messageID int64, filePath string) {
 	logs.Info("Download completed", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
 }
+
 func (d *MainDelegate) OnUploadCompleted(messageID int64, filePath string) {
 	logs.Info("Upload completed", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
 }

@@ -652,7 +652,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 			return
 		}
 
-		// 2. TODO : start file upload and send process
+		// 2. start file upload and send process
 		err = filemanager.Ctx().Upload(fileID, res)
 		if err != nil {
 			e := new(msg.Error)

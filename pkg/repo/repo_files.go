@@ -26,8 +26,6 @@ type Files interface {
 	UpdateThumbnailPath(msgID int64, filePath string) error
 	GetFile(msgID int64) (*dto.Files, error)
 	GetFileByDocumentID(documentID int64) (*dto.Files, error)
-	// delete this later
-	GetFirstFileStatu() dto.FileStatus
 
 	GetSharedMedia(peerID int64, peerType int32, mediaType int32) ([]*msg.UserMessage, error)
 	UpdateFilePathByDocumentID(messageID int64, filePath string)
@@ -89,6 +87,7 @@ func (r *repoFiles) DeleteManyFileStatus(msgIDs []int64) error {
 
 	return err
 }
+
 func (r *repoFiles) MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, fileSize int32, sent *msg.MessagesSent) (err error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -101,15 +100,6 @@ func (r *repoFiles) MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, fil
 	}
 	f.Map(sent.MessageID, sent.CreatedOn, fileSize, req)
 	return r.db.Create(f).Error
-}
-
-func (r *repoFiles) GetFirstFileStatu() dto.FileStatus {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	e := dto.FileStatus{}
-	r.db.First(&e)
-	return e
 }
 
 func (r *repoFiles) SaveFileDocument(m *msg.UserMessage, doc *msg.MediaDocument) error {
