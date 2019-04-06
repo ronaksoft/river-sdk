@@ -29,7 +29,7 @@ type Config struct {
 // Controller cache received data from server to client DB
 type Controller struct {
 	connInfo domain.RiverConfiger
-	//sync.Mutex
+
 	networkCtrl          *network.Controller
 	queue                *queue.Controller
 	onSyncStatusChange   domain.SyncStatusUpdateCallback
@@ -270,7 +270,7 @@ func (ctrl *Controller) getUpdateState() (updateID int64, err error) {
 	// this waitgroup is required cuz our callbacks will be called in UIExecutor go routine
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
-	//ctrl.queue.ExecuteCommand(
+	// ctrl.queue.ExecuteCommand(
 	ctrl.queue.ExecuteRealtimeCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_UpdateGetState,
@@ -347,7 +347,7 @@ func (ctrl *Controller) getUpdateDifference(minUpdateID int64) {
 		req.Limit = int32(limit)
 		req.From = fromUpdateID
 		reqBytes, _ := req.Marshal()
-		ctrl.queue.ExecuteRealtimeCommand(
+		_ = ctrl.queue.ExecuteRealtimeCommand(
 			uint64(domain.SequentialUniqueID()),
 			msg.C_UpdateGetDifference,
 			reqBytes,
@@ -355,7 +355,7 @@ func (ctrl *Controller) getUpdateDifference(minUpdateID int64) {
 				logs.Debug("getUpdateDifference() -> ExecuteRealtimeCommand() Timeout")
 			},
 			func(m *msg.MessageEnvelope) {
-				ctrl.onGetDiffrenceSucceed(m)
+				ctrl.onGetDifferenceSucceed(m)
 				logs.Debug("getUpdateDifference() -> ExecuteRealtimeCommand() Success")
 			},
 			true,
@@ -369,13 +369,13 @@ func (ctrl *Controller) getUpdateDifference(minUpdateID int64) {
 	ctrl.updateSyncStatus(domain.Synced)
 }
 
-func (ctrl *Controller) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
+func (ctrl *Controller) onGetDifferenceSucceed(m *msg.MessageEnvelope) {
 	switch m.Constructor {
 	case msg.C_UpdateDifference:
 		x := new(msg.UpdateDifference)
 		err := x.Unmarshal(m.Message)
 		if err != nil {
-			logs.Error("onGetDiffrenceSucceed()-> Unmarshal()", zap.Error(err))
+			logs.Error("onGetDifferenceSucceed()-> Unmarshal()", zap.Error(err))
 			return
 		}
 		updContainer := new(msg.UpdateContainer)
@@ -385,7 +385,7 @@ func (ctrl *Controller) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 		updContainer.MaxUpdateID = x.MaxUpdateID
 		updContainer.MinUpdateID = x.MinUpdateID
 
-		logs.Info("onGetDiffrenceSucceed()",
+		logs.Info("onGetDifferenceSucceed()",
 			zap.Int64("UpdateID", ctrl.updateID),
 			zap.Int64("MaxUpdateID", x.MaxUpdateID),
 			zap.Int64("MinUpdateID", x.MinUpdateID),
@@ -412,7 +412,7 @@ func (ctrl *Controller) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 				continue
 			}
 
-			logs.Debug("onGetDiffrenceSucceed() loop",
+			logs.Debug("onGetDifferenceSucceed() loop",
 				zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
 			)
 
@@ -436,7 +436,7 @@ func (ctrl *Controller) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 			// Save UpdateID to DB
 			err := repo.Ctx().System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
 			if err != nil {
-				logs.Error("onGetDiffrenceSucceed()-> SaveInt()", zap.Error(err))
+				logs.Error("onGetDifferenceSucceed()-> SaveInt()", zap.Error(err))
 			}
 		}
 
@@ -449,7 +449,7 @@ func (ctrl *Controller) onGetDiffrenceSucceed(m *msg.MessageEnvelope) {
 		})
 
 	case msg.C_Error:
-		logs.Debug("onGetDiffrenceSucceed()-> C_Error",
+		logs.Debug("onGetDifferenceSucceed()-> C_Error",
 			zap.String("Error", domain.ParseServerError(m.Message).Error()),
 		)
 		// TODO:: Handle error
@@ -744,18 +744,18 @@ func handleMediaMessage(messages ...*msg.UserMessage) {
 		case msg.MediaTypeDocument:
 			mediaDoc := new(msg.MediaDocument)
 			err := mediaDoc.Unmarshal(m.Media)
-			if err == nil {
-				repo.Ctx().Files.SaveFileDocument(m, mediaDoc)
-				t := mediaDoc.Doc.Thumbnail
-				if t != nil {
-					if t.FileID != 0 {
-						go filemanager.Ctx().DownloadThumbnail(m.ID, t.FileID, t.AccessHash, t.ClusterID, 0)
-					}
-				}
-
-			} else {
+			if err != nil {
 				logs.Error("handleMediaMessage()-> connat unmarshal MediaTypeDocument", zap.Error(err))
+				break
 			}
+			_ = repo.Ctx().Files.SaveFileDocument(m, mediaDoc)
+			t := mediaDoc.Doc.Thumbnail
+			if t != nil {
+				if t.FileID != 0 {
+					go filemanager.Ctx().DownloadThumbnail(m.ID, t.FileID, t.AccessHash, t.ClusterID, 0)
+				}
+			}
+
 		case msg.MediaTypeContact:
 			logs.Info("handleMediaMessage() Message.SharedMediaType is msg.MediaTypeContact")
 			// TODO:: implement it
