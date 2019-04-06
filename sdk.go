@@ -317,11 +317,11 @@ func (r *River) registerCommandHandlers() {
 	r.localCommands = make(map[int64]domain.LocalMessageHandler)
 	r.localCommands[msg.C_MessagesGetDialogs] = r.messagesGetDialogs
 	r.localCommands[msg.C_MessagesGetDialog] = r.messagesGetDialog
-	r.localCommands[msg.C_MessagesGetHistory] = r.messageGetHistory
+	r.localCommands[msg.C_MessagesGetHistory] = r.messagesGetHistory
 	r.localCommands[msg.C_MessagesSend] = r.messagesSend
 	r.localCommands[msg.C_ClientSendMessageMedia] = r.clientSendMessageMedia
-	r.localCommands[msg.C_ContactsGet] = r.contactGet
-	r.localCommands[msg.C_MessagesReadHistory] = r.messageReadHistory
+	r.localCommands[msg.C_ContactsGet] = r.contactsGet
+	r.localCommands[msg.C_MessagesReadHistory] = r.messagesReadHistory
 	r.localCommands[msg.C_UsersGet] = r.usersGet
 	r.localCommands[msg.C_MessagesGet] = r.messagesGet
 	r.localCommands[msg.C_AccountUpdateUsername] = r.accountUpdateUsername
