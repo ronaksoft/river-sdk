@@ -170,7 +170,7 @@ func (r *River) UISettingDelete(key string) bool {
 	return err == nil
 }
 
-// SearchContacts searchs contacts
+// SearchContacts searches contacts
 func (r *River) SearchContacts(requestID int64, searchPhrase string, delegate RequestDelegate) {
 	res := new(msg.MessageEnvelope)
 	res.Constructor = msg.C_ContactsMany
@@ -199,7 +199,7 @@ func (r *River) GetRealTopMessageID(peerID int64, peerType int32) int64 {
 }
 
 // UpdateContactInfo update contact name
-func (r *River) UpdateContactinfo(userID int64, firstName, lastName string) error {
+func (r *River) UpdateContactInfo(userID int64, firstName, lastName string) error {
 	err := repo.Ctx().Users.UpdateContactInfo(userID, firstName, lastName)
 	if err != nil {
 		logs.Error("SDK::UpdateContactInfo() => Users.UpdateContactInfo()", zap.Error(err))
@@ -337,7 +337,7 @@ func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, 
 // TODO :: change response to protobuff
 func (r *River) GetFileStatus(msgID int64) string {
 
-	status, progress, filePath := geFileStatus(msgID)
+	status, progress, filePath := getFileStatus(msgID)
 	x := struct {
 		Status   int32   `json:"status"`
 		Progress float64 `json:"progress"`
@@ -389,7 +389,7 @@ func getFilePath(msgID int64) string {
 // FileDownload add download request to filemanager queue
 func (r *River) FileDownload(msgID int64) {
 
-	status, progress, filePath := geFileStatus(msgID)
+	status, progress, filePath := getFileStatus(msgID)
 	logs.Debug("SDK::FileDownload() current file progress status",
 		zap.String("Status", domain.RequestStatusNames[status]),
 		zap.Float64("Progress", progress),
@@ -510,7 +510,7 @@ func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 }
 
 // AccountGetPhoto_Big download user profile picture
-func (r *River) AccountGetPhoto_Big(userID int64) string {
+func (r *River) AccountGetPhotoBig(userID int64) string {
 
 	user := repo.Ctx().Users.GetUser(userID)
 	if user != nil {
@@ -546,7 +546,7 @@ func (r *River) AccountGetPhoto_Big(userID int64) string {
 }
 
 // AccountGetPhoto_Small download user profile picture thumbnail
-func (r *River) AccountGetPhoto_Small(userID int64) string {
+func (r *River) AccountGetPhotoSmall(userID int64) string {
 
 	user := repo.Ctx().Users.GetUser(userID)
 	if user != nil {
@@ -603,8 +603,8 @@ func downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) string
 	return filePath
 }
 
-// geFileStatus
-func geFileStatus(msgID int64) (status domain.RequestStatus, progress float64, filePath string) {
+// getFileStatus
+func getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, filePath string) {
 
 	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
 	if err == nil && fs != nil {
@@ -677,7 +677,7 @@ func (r *River) GroupUploadPhoto(groupID int64, filePath string) (msgID int64) {
 }
 
 // GroupGetPhoto_Big download group profile picture
-func (r *River) GroupGetPhoto_Big(groupID int64) string {
+func (r *River) GroupGetPhotoBig(groupID int64) string {
 
 	group, err := repo.Ctx().Groups.GetGroupDTO(groupID)
 	if err == nil && group != nil {
@@ -712,7 +712,7 @@ func (r *River) GroupGetPhoto_Big(groupID int64) string {
 }
 
 // GroupGetPhoto_Small download group profile picture thumbnail
-func (r *River) GroupGetPhoto_Small(groupID int64) string {
+func (r *River) GroupGetPhotoSmall(groupID int64) string {
 
 	group, err := repo.Ctx().Groups.GetGroupDTO(groupID)
 	if err == nil && group != nil {

@@ -428,7 +428,7 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	}
 }
 
-// sendChunkedImportContactRequest chanking contacts by size of 50 and send them to server
+// sendChunkedImportContactRequest chunk contacts by size of 50 and send them to server
 func (r *River) sendChunkedImportContactRequest(replace bool, diffContacts []*msg.PhoneContact, out *msg.MessageEnvelope, successCB domain.MessageHandler) {
 
 	result := new(msg.ContactsImported)
