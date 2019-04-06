@@ -49,14 +49,14 @@ func SetLogFilePath(filePath string) {
 }
 
 func Message(msg string, fields ...zap.Field) {
-	callerInfo := fnGetCallerInfo()
+	callerInfo := getCallerInfo()
 	if logger != nil {
-		logger(int(-99), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+		logger(int(-99), callerInfo+"\t\t"+msg+"\t"+convertFieldToString(fields...))
 	} else {
-		fnlog(int(-99), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+		log(int(-99), callerInfo+"\t\t"+msg+"\t"+convertFieldToString(fields...))
 	}
 	if logWriteToFile {
-		fnSaveLog(int(-99), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+		saveLog(int(-99), callerInfo+"\t\t"+msg+"\t"+convertFieldToString(fields...))
 	}
 }
 
@@ -65,16 +65,16 @@ func Debug(msg string, fields ...zap.Field) {
 		return
 	}
 
-	callerInfo := fnGetCallerInfo()
+	callerInfo := getCallerInfo()
 
 	if logger != nil {
-		logger(int(zap.DebugLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+		logger(int(zap.DebugLevel), callerInfo+"\t\t"+msg+"\t"+convertFieldToString(fields...))
 	} else {
-		fnlog(int(zap.DebugLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+		log(int(zap.DebugLevel), callerInfo+"\t\t"+msg+"\t"+convertFieldToString(fields...))
 	}
 
 	if logWriteToFile {
-		fnSaveLog(int(zap.DebugLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+		saveLog(int(zap.DebugLevel), callerInfo+"\t\t"+msg+"\t"+convertFieldToString(fields...))
 	}
 }
 
@@ -82,16 +82,16 @@ func Warn(msg string, fields ...zap.Field) {
 	if int(logLevel.Level()) > int(zap.WarnLevel) {
 		return
 	}
-	callerInfo := fnGetCallerInfo()
+	callerInfo := getCallerInfo()
 
 	if logger != nil {
-		logger(int(zap.WarnLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+		logger(int(zap.WarnLevel), callerInfo+"\t\t"+msg+"\t"+convertFieldToString(fields...))
 	} else {
-		fnlog(int(zap.WarnLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+		log(int(zap.WarnLevel), callerInfo+"\t\t"+msg+"\t"+convertFieldToString(fields...))
 	}
 
 	if logWriteToFile {
-		fnSaveLog(int(zap.WarnLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+		saveLog(int(zap.WarnLevel), callerInfo+"\t\t"+msg+"\t"+convertFieldToString(fields...))
 	}
 }
 
@@ -99,16 +99,16 @@ func Info(msg string, fields ...zap.Field) {
 	if int(logLevel.Level()) > int(zap.InfoLevel) {
 		return
 	}
-	callerInfo := fnGetCallerInfo()
+	callerInfo := getCallerInfo()
 
 	if logger != nil {
-		logger(int(zap.InfoLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+		logger(int(zap.InfoLevel), callerInfo+"\t\t"+msg+"\t"+convertFieldToString(fields...))
 	} else {
-		fnlog(int(zap.InfoLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+		log(int(zap.InfoLevel), callerInfo+"\t\t"+msg+"\t"+convertFieldToString(fields...))
 	}
 
 	if logWriteToFile {
-		fnSaveLog(int(zap.InfoLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+		saveLog(int(zap.InfoLevel), callerInfo+"\t\t"+msg+"\t"+convertFieldToString(fields...))
 	}
 }
 
@@ -116,16 +116,16 @@ func Error(msg string, fields ...zap.Field) {
 	if int(logLevel.Level()) > int(zap.ErrorLevel) {
 		return
 	}
-	callerInfo := fnGetCallerInfo()
+	callerInfo := getCallerInfo()
 
 	if logger != nil {
-		logger(int(zap.ErrorLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+		logger(int(zap.ErrorLevel), callerInfo+"\t\t"+msg+"\t"+convertFieldToString(fields...))
 	} else {
-		fnlog(int(zap.ErrorLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+		log(int(zap.ErrorLevel), callerInfo+"\t\t"+msg+"\t"+convertFieldToString(fields...))
 	}
 
 	if logWriteToFile {
-		fnSaveLog(int(zap.ErrorLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+		saveLog(int(zap.ErrorLevel), callerInfo+"\t\t"+msg+"\t"+convertFieldToString(fields...))
 	}
 }
 
@@ -135,21 +135,21 @@ func Fatal(msg string, fields ...zap.Field) {
 	if int(logLevel.Level()) > int(zap.FatalLevel) {
 		return
 	}
-	callerInfo := fnGetCallerInfo()
+	callerInfo := getCallerInfo()
 
 	if logger != nil {
-		logger(int(zap.FatalLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+		logger(int(zap.FatalLevel), callerInfo+"\t\t"+msg+"\t"+convertFieldToString(fields...))
 	} else {
-		fnlog(int(zap.FatalLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+		log(int(zap.FatalLevel), callerInfo+"\t\t"+msg+"\t"+convertFieldToString(fields...))
 	}
 
 	if logWriteToFile {
-		fnSaveLog(int(zap.FatalLevel), callerInfo+"\t\t"+msg+"\t"+fnConvertFieldToString(fields...))
+		saveLog(int(zap.FatalLevel), callerInfo+"\t\t"+msg+"\t"+convertFieldToString(fields...))
 	}
 
 }
 
-func fnConvertFieldToString(fields ...zap.Field) string {
+func convertFieldToString(fields ...zap.Field) string {
 	sb := strings.Builder{}
 	sb.WriteString("{")
 
@@ -258,7 +258,7 @@ func fnConvertFieldToString(fields ...zap.Field) string {
 
 }
 
-func fnGetCallerInfo() string {
+func getCallerInfo() string {
 
 	// get line of code that called this
 	callerInfo := ""
@@ -272,8 +272,7 @@ func fnGetCallerInfo() string {
 	return callerInfo
 }
 
-// log printer
-func fnlog(logLevel int, msg string) {
+func log(logLevel int, msg string) {
 
 	switch logLevel {
 	case int(zap.DebugLevel):
@@ -291,8 +290,7 @@ func fnlog(logLevel int, msg string) {
 	}
 }
 
-// fnSaveLog
-func fnSaveLog(logLevel int, msg string) {
+func saveLog(logLevel int, msg string) {
 
 	switch logLevel {
 	case int(zap.DebugLevel):

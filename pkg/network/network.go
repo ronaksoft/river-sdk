@@ -28,7 +28,6 @@ type Config struct {
 
 // Controller websocket network controller
 type Controller struct {
-	//sync.Mutex
 	wsWriteLock sync.Mutex
 
 	// Internal Controller Channels
@@ -42,14 +41,12 @@ type Controller struct {
 	messageSeq int64
 
 	// Websocket Settings
-	wsDialer          *websocket.Dialer
-	websocketEndpoint string
-	wsKeepConnection  bool
-	wsPingTime        time.Duration
-	wsPongTimeout     time.Duration
-	wsConn            *websocket.Conn
-	//wsOnMessage             domain.MessageHandler
-	//wsOnUpdate              domain.UpdateHandler
+	wsDialer                *websocket.Dialer
+	websocketEndpoint       string
+	wsKeepConnection        bool
+	wsPingTime              time.Duration
+	wsPongTimeout           time.Duration
+	wsConn                  *websocket.Conn
 	wsOnError               domain.ErrorHandler
 	wsOnConnect             domain.OnConnectCallback
 	wsOnNetworkStatusChange domain.NetworkStatusUpdateCallback
@@ -412,7 +409,7 @@ func (ctrl *Controller) updateNetworkStatus(newStatus domain.NetworkStatus) {
 	}
 }
 
-// extractMessages recursively ectract update and messages
+// extractMessages recursively extract update and messages
 func (ctrl *Controller) extractMessages(m *msg.MessageEnvelope) ([]*msg.MessageEnvelope, []*msg.UpdateContainer) {
 	messages := make([]*msg.MessageEnvelope, 0)
 	updates := make([]*msg.UpdateContainer, 0)
@@ -607,7 +604,7 @@ func (ctrl *Controller) SetNetworkStatusChangedCallback(h domain.NetworkStatusUp
 func (ctrl *Controller) Send(msgEnvelope *msg.MessageEnvelope, direct bool) error {
 
 	// send without debouncer
-	// return ctrl._send(msgEnvelope)
+	// return ctrl.send(msgEnvelope)
 
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
 	if direct || unauthorized {
@@ -615,7 +612,7 @@ func (ctrl *Controller) Send(msgEnvelope *msg.MessageEnvelope, direct bool) erro
 		ctrl.wsSendDebouncerLock.Lock()
 		ctrl.wsSendDebouncerLock.Unlock()
 
-		return ctrl._send(msgEnvelope)
+		return ctrl.send(msgEnvelope)
 	} else {
 		// this will probably solve queueController unordered message burst
 		// add to send buffer
@@ -623,6 +620,72 @@ func (ctrl *Controller) Send(msgEnvelope *msg.MessageEnvelope, direct bool) erro
 		// signal the send debouncer
 		ctrl.sendRequestReceived()
 	}
+	return nil
+}
+
+// send Writes the message on the wire. It will encrypts the message if authorization has been set.
+func (ctrl *Controller) send(msgEnvelope *msg.MessageEnvelope) error {
+	protoMessage := new(msg.ProtoMessage)
+	protoMessage.MessageKey = make([]byte, 32)
+	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
+	if ctrl.authID == 0 || unauthorized {
+		protoMessage.AuthID = 0
+		logs.Debug("send()",
+			zap.String("Warning", "AuthID is zero ProtoMessage is unencrypted"),
+			zap.Int64("ctrl.AuthID", ctrl.authID),
+			zap.Int64("protoMessage.AuthID", protoMessage.AuthID),
+		)
+		protoMessage.Payload, _ = msgEnvelope.Marshal()
+	} else {
+		protoMessage.AuthID = ctrl.authID
+		ctrl.messageSeq++
+		encryptedPayload := msg.ProtoEncryptedPayload{
+			ServerSalt: 234242, // TODO:: ServerSalt ?
+			Envelope:   msgEnvelope,
+		}
+		encryptedPayload.MessageID = uint64((time.Now().Unix()+ctrl.clientTimeDifference)<<32 | ctrl.messageSeq)
+		unencryptedBytes, _ := encryptedPayload.Marshal()
+		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes)
+		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes)
+		copy(protoMessage.MessageKey, messageKey)
+		protoMessage.Payload = encryptedPayloadBytes
+	}
+
+	b, err := protoMessage.Marshal()
+
+	// // dump the message
+	// err = ioutil.WriteFile(fmt.Sprintf("_dump/%v_%v.bin", time.Now().UnixNano(), msg.ConstructorNames[msgEnvelope.Constructor]), b, 777)
+	// if err != nil {
+	// 	log.Debug("failed to write dump",
+	// 		zap.String("error", err.Error()),
+	// 	)
+	// }
+
+	if err != nil {
+		logs.Debug("send()-> Failed to marshal", zap.Error(err))
+	}
+	if ctrl.wsConn == nil {
+		logs.Debug("send()->Marshal()",
+			zap.String("Error", domain.ErrNoConnection.Error()),
+		)
+		return domain.ErrNoConnection
+	}
+
+	ctrl.wsWriteLock.Lock()
+	ctrl.wsConn.SetWriteDeadline(time.Now().Add(domain.WebsocketWriteTime))
+	err = ctrl.wsConn.WriteMessage(websocket.BinaryMessage, b)
+	ctrl.wsWriteLock.Unlock()
+
+	if err != nil {
+		logs.Error("send() -> wsConn.WriteMessage()", zap.Error(domain.ErrNoConnection))
+		ctrl.updateNetworkStatus(domain.NetworkDisconnected)
+		ctrl.wsConn.SetReadDeadline(time.Now())
+		return err
+	}
+	logs.Debug("send() Message sent to the wire",
+		zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
+		zap.String("Size", humanize.Bytes(uint64(protoMessage.Size()))),
+	)
 	return nil
 }
 
@@ -666,97 +729,31 @@ func (ctrl *Controller) sendFlush(queueMsgs []*msg.MessageEnvelope) {
 			messageEnvelop := new(msg.MessageEnvelope)
 			messageEnvelop.Constructor = msg.C_MessageContainer
 			messageEnvelop.Message, _ = msgContainer.Marshal()
-			messageEnvelop.RequestID = 0 //uint64(domain.SequentialUniqueID())
+			messageEnvelop.RequestID = 0 // uint64(domain.SequentialUniqueID())
 
-			err := ctrl._send(messageEnvelop)
+			err := ctrl.send(messageEnvelop)
 			if err != nil {
-				logs.Error("sendFlush() -> ctrl._send() many", zap.Error(err))
+				logs.Error("sendFlush() -> ctrl.send() many", zap.Error(err))
 
 				// add requests again to sendQueue and try again later
-				logs.Debug("sendFlush() -> ctrl._send() many : pushed requests back to sendQueue")
+				logs.Debug("sendFlush() -> ctrl.send() many : pushed requests back to sendQueue")
 				ctrl.sendQueue.PushMany(queueMsgs[startIdx:])
 				break
 			}
 		}
 
 	} else {
-		err := ctrl._send(queueMsgs[0])
+		err := ctrl.send(queueMsgs[0])
 		if err != nil {
-			logs.Error("sendFlush() -> ctrl._send() one", zap.Error(err))
+			logs.Error("sendFlush() -> ctrl.send() one", zap.Error(err))
 
 			// add requests again to sendQueue and try again later
-			logs.Warn("sendFlush() -> ctrl._send() one : pushed request back to sendQueue")
+			logs.Warn("sendFlush() -> ctrl.send() one : pushed request back to sendQueue")
 			ctrl.sendQueue.Push(queueMsgs[0])
 		}
 	}
 
 	ctrl.wsSendDebouncerLock.Unlock()
-}
-
-// _send Writes the message on the wire. It will encrypts the message if authorization has been set.
-func (ctrl *Controller) _send(msgEnvelope *msg.MessageEnvelope) error {
-	protoMessage := new(msg.ProtoMessage)
-	protoMessage.MessageKey = make([]byte, 32)
-	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
-	if ctrl.authID == 0 || unauthorized {
-		protoMessage.AuthID = 0
-		logs.Debug("_send()",
-			zap.String("Warning", "AuthID is zero ProtoMessage is unencrypted"),
-			zap.Int64("ctrl.AuthID", ctrl.authID),
-			zap.Int64("protoMessage.AuthID", protoMessage.AuthID),
-		)
-		protoMessage.Payload, _ = msgEnvelope.Marshal()
-	} else {
-		protoMessage.AuthID = ctrl.authID
-		ctrl.messageSeq++
-		encryptedPayload := msg.ProtoEncryptedPayload{
-			ServerSalt: 234242, // TODO:: ServerSalt ?
-			Envelope:   msgEnvelope,
-		}
-		encryptedPayload.MessageID = uint64((time.Now().Unix()+ctrl.clientTimeDifference)<<32 | ctrl.messageSeq)
-		unencryptedBytes, _ := encryptedPayload.Marshal()
-		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes)
-		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes)
-		copy(protoMessage.MessageKey, messageKey)
-		protoMessage.Payload = encryptedPayloadBytes
-	}
-
-	b, err := protoMessage.Marshal()
-
-	// // dump the message
-	// err = ioutil.WriteFile(fmt.Sprintf("_dump/%v_%v.bin", time.Now().UnixNano(), msg.ConstructorNames[msgEnvelope.Constructor]), b, 777)
-	// if err != nil {
-	// 	log.Debug("failed to write dump",
-	// 		zap.String("error", err.Error()),
-	// 	)
-	// }
-
-	if err != nil {
-		logs.Debug("_send()-> Failed to marshal", zap.Error(err))
-	}
-	if ctrl.wsConn == nil {
-		logs.Debug("_send()->Marshal()",
-			zap.String("Error", domain.ErrNoConnection.Error()),
-		)
-		return domain.ErrNoConnection
-	}
-
-	ctrl.wsWriteLock.Lock()
-	ctrl.wsConn.SetWriteDeadline(time.Now().Add(domain.WebsocketWriteTime))
-	err = ctrl.wsConn.WriteMessage(websocket.BinaryMessage, b)
-	ctrl.wsWriteLock.Unlock()
-
-	if err != nil {
-		logs.Error("_send() -> wsConn.WriteMessage()", zap.Error(domain.ErrNoConnection))
-		ctrl.updateNetworkStatus(domain.NetworkDisconnected)
-		ctrl.wsConn.SetReadDeadline(time.Now())
-		return err
-	}
-	logs.Debug("_send() Message sent to the wire",
-		zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
-		zap.String("Size", humanize.Bytes(uint64(protoMessage.Size()))),
-	)
-	return nil
 }
 
 // Quality returns NetworkStatus
@@ -778,7 +775,7 @@ func (ctrl *Controller) Reconnect() {
 		ctrl.wsKeepConnection = true
 		ctrl.wsConn.Close()
 		// watchDog() will take care of this
-		//go ctrl.Connect()
+		// go ctrl.Connect()
 
 		logs.Info("Disconnect() Reconnected")
 	}

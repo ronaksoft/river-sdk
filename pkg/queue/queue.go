@@ -28,7 +28,6 @@ type request struct {
 // This controller will be connected to networkController and messages will be queued here
 // before passing to the networkController.
 type Controller struct {
-	//sync.Mutex
 	distributorLock sync.Mutex
 
 	rateLimiter            *ratelimit.Bucket
@@ -39,8 +38,8 @@ type Controller struct {
 	// Internal Flags
 	distributorRunning bool
 
-	//Cancelled request
-	cancellLock      sync.Mutex
+	// Cancelled request
+	cancelLock       sync.Mutex
 	cancelledRequest map[int64]bool
 }
 
@@ -367,7 +366,7 @@ func (ctrl *Controller) reinitializePendingMessages() {
 	for {
 		if item, err := ctrl.waitingList.Dequeue(); err == nil && item != nil {
 			tmp := new(msg.MessageEnvelope)
-			tmp.Unmarshal(item.Value)
+			_ = tmp.Unmarshal(item.Value)
 			if tmp.Constructor != msg.C_MessagesSend {
 				items = append(items, item)
 			}
@@ -379,7 +378,7 @@ func (ctrl *Controller) reinitializePendingMessages() {
 	// get all pendingMessages
 	pendingMessages := repo.Ctx().PendingMessages.GetAllPendingMessages()
 
-	//add pendingMessages to queue
+	// add pendingMessages to queue
 	for _, v := range pendingMessages {
 		messageEnvelope := new(msg.MessageEnvelope)
 		messageEnvelope.RequestID = uint64(v.RandomID)
@@ -397,9 +396,9 @@ func (ctrl *Controller) reinitializePendingMessages() {
 		ctrl.addToWaitingList(req)
 	}
 
-	//add items to queue
+	// add items to queue
 	for _, v := range items {
-		ctrl.waitingList.Enqueue(v.Value)
+		_, _ = ctrl.waitingList.Enqueue(v.Value)
 	}
 
 	logs.Info("reinitializePendingMessages() Finished",
@@ -416,18 +415,18 @@ func (ctrl *Controller) Stop() {
 func (ctrl *Controller) IsRequestCancelled(reqID int64) bool {
 	_, ok := ctrl.cancelledRequest[reqID]
 	if ok {
-		ctrl.cancellLock.Lock()
+		ctrl.cancelLock.Lock()
 		delete(ctrl.cancelledRequest, reqID)
-		ctrl.cancellLock.Unlock()
+		ctrl.cancelLock.Unlock()
 	}
 	return ok
 }
 
 // CancelRequest cancel request
 func (ctrl *Controller) CancelRequest(reqID int64) {
-	ctrl.cancellLock.Lock()
+	ctrl.cancelLock.Lock()
 	ctrl.cancelledRequest[reqID] = true
-	ctrl.cancellLock.Unlock()
+	ctrl.cancelLock.Unlock()
 }
 
 // DropQueue remove queue from storage
