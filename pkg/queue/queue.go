@@ -97,10 +97,6 @@ func (ctrl *Controller) distributor() {
 			return
 		}
 
-		// Disabled rate-limiter
-		// Check the rate limit
-		// ctrl.rateLimiter.Wait(1)
-
 		// Prepare
 		req := request{}
 		if err := req.UnmarshalJSON(item.Value); err != nil {
