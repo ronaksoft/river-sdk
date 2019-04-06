@@ -49,7 +49,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 
 	res.Messages = repo.Ctx().Messages.GetManyMessages(mMessages.ToArray())
 
-	//Load Pending messages
+	// Load Pending messages
 	pendingMessages := repo.Ctx().PendingMessages.GetManyPendingMessages(mPendingMesssage.ToArray())
 	res.Messages = append(res.Messages, pendingMessages...)
 
@@ -80,7 +80,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		if successCB != nil {
 			successCB(out)
 		}
-	}) //successCB(out)
+	}) // successCB(out)
 }
 
 func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -107,7 +107,7 @@ func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain
 		if successCB != nil {
 			successCB(out)
 		}
-	}) //successCB(out)
+	}) // successCB(out)
 }
 
 func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -141,7 +141,6 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 	dbID := -domain.SequentialUniqueID()
 	res, err := repo.Ctx().PendingMessages.Save(dbID, r.ConnInfo.UserID, req)
-
 	if err != nil {
 		e := new(msg.Error)
 		e.Code = "n/a"
@@ -171,7 +170,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		if successCB != nil {
 			successCB(out)
 		}
-	}) //successCB(out)
+	}) // successCB(out)
 
 }
 
@@ -444,7 +443,7 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 			if successCB != nil {
 				successCB(out)
 			}
-		}) //successCB(out)
+		}) // successCB(out)
 	} else {
 		logs.Debug("River::messagesGet() -> GetManyMessages() cacheDB is not up to date pass request to server")
 		// send the request to server
@@ -531,7 +530,7 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 			if successCB != nil {
 				successCB(out)
 			}
-		}) //successCB(out)
+		}) // successCB(out)
 
 		requestBytes, _ := req.Marshal()
 		r.queueCtrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSendMedia, requestBytes, timeoutCB, successCB, true)
@@ -616,19 +615,19 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		in.Constructor = msg.C_MessagesSendMedia
 		in.Message = reqBytes
 
-		//TODO :FIX THIS : required behaviour add to pending message and put this to progress pipe line and etc ...
+		// TODO :FIX THIS : required behaviour add to pending message and put this to progress pipe line and etc ...
 		// 3. return to CallBack with pending message data : Done
 		out.Constructor = msg.C_ClientPendingMessage
 		out.Message, _ = res.Marshal()
 
 		// 4. later when queue got processed and server returned response we should check if the requestID
-		//   exist in pendindTable we remove it and insert new message with new id to message table
+		//   exist in pendingTable we remove it and insert new message with new id to message table
 		//   invoke new OnUpdate with new protobuff to inform ui that pending message got delivered
 		uiexec.Ctx().Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
-		}) //successCB(out)
+		}) // successCB(out)
 
 		r.onFileUploadCompleted(msgID, int64(fileID), 0, dtoFile.ClusterID, -1, domain.FileStateExistedUpload, dtoFile.FilePath, reqMedia, 0, 0)
 		// send the request to server
@@ -673,13 +672,13 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		out.Message, _ = res.Marshal()
 
 		// 4. later when queue got processed and server returned response we should check if the requestID
-		//   exist in pendindTable we remove it and insert new message with new id to message table
+		//   exist in pendingTable we remove it and insert new message with new id to message table
 		//   invoke new OnUpdate with new protobuff to inform ui that pending message got delivered
 		uiexec.Ctx().Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
-		}) //successCB(out)
+		}) // successCB(out)
 	}
 
 }
@@ -708,7 +707,7 @@ func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 		if successCB != nil {
 			successCB(out)
 		}
-	}) //successCB(out)
+	}) // successCB(out)
 }
 
 func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -935,7 +934,7 @@ func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB dom
 		return
 	}
 
-	//TODO : add connInfo Bio and save it too
+	// TODO : add connInfo Bio and save it too
 	r.ConnInfo.FirstName = req.FirstName
 	r.ConnInfo.LastName = req.LastName
 	r.ConnInfo.Bio = req.Bio
@@ -1155,7 +1154,7 @@ func (r *River) usersGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 			if successCB != nil {
 				successCB(out)
 			}
-		}) //successCB(out)
+		}) // successCB(out)
 	} else {
 		logs.Debug("River::messagesGetHistory()-> GetAnyUsers() cacheDB is not up to date pass request to server")
 		// send the request to server
@@ -1187,11 +1186,10 @@ func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 			if successCB != nil {
 				successCB(out)
 			}
-		}) //successCB(out)
+		}) // successCB(out)
 	} else {
 		logs.Debug("River::messagesGetHistory()-> GetAnyUsers() cacheDB is not up to date pass request to server")
 		// send the request to server
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 	}
 }
-

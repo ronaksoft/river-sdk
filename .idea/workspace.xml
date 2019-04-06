@@ -2,8 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4b3c8ed8-4f08-42a5-8fd4-fbfb58d0d314" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/ehsan.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/ehsan.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/repo/repo.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/repo/repo_pending_messages.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_pending_messages.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk_commands.go" beforeDir="false" afterPath="$PROJECT_DIR$/sdk_commands.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk_commands_general.go" beforeDir="false" afterPath="$PROJECT_DIR$/sdk_commands_general.go" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -14,214 +18,332 @@
   <component name="FileEditorManager">
     <leaf>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/sdk.go">
+        <entry file="file://$PROJECT_DIR$/sdk_commands.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="210">
-              <caret line="980" column="31" selection-start-line="980" selection-start-column="31" selection-end-line="980" selection-end-column="31" />
+            <state relative-caret-position="203">
+              <caret line="639" column="57" lean-forward="true" selection-start-line="639" selection-start-column="57" selection-end-line="639" selection-end-column="57" />
               <folding>
-                <element signature="e#730#746#0" />
-                <element signature="n#!!block;n#SetConfig#0" />
-                <element signature="e#1216#1347#0" />
-                <element signature="e#1307#1343#0" />
-                <element signature="e#1407#1785#0" />
-                <element signature="e#1607#1635#0" />
-                <element signature="e#2040#2076#0" />
-                <element signature="e#2093#2204#0" />
-                <element signature="e#2207#2228#0" />
-                <element signature="e#2544#2577#0" />
-                <element signature="e#2754#2809#0" />
-                <element signature="e#2815#2871#0" />
-                <element signature="e#3404#3584#0" />
-                <element signature="e#3674#3866#0" />
-                <element signature="e#3800#3863#0" />
-                <element signature="e#3982#4088#0" />
-                <element signature="e#4094#4116#0" />
-                <element signature="e#4216#4309#0" />
-                <element signature="e#4440#4576#0" />
-                <element signature="e#4514#4573#0" />
-                <element signature="e#4685#4803#0" />
-                <element signature="e#4749#4800#0" />
-                <element signature="e#4908#5014#0" />
-                <element signature="e#5079#5190#0" />
-                <element signature="e#5318#5364#0" />
-                <element signature="n#!!block;n#loadDeviceToken#0" />
-                <element signature="e#5998#6121#0" />
-                <element signature="e#6187#6305#0" />
-                <element signature="n#!!block;n#onNetworkControllerConnected#0" />
-                <element signature="e#6494#6756#0" />
-                <element signature="e#6697#6711#0" />
-                <element signature="e#6717#6753#0" />
-                <element signature="e#6840#7528#0" />
-                <element signature="e#6887#7320#0" />
-                <element signature="e#6892#6951#0" />
-                <element signature="e#7256#7272#0" />
-                <element signature="e#7278#7316#0" />
-                <element signature="e#7377#7453#0" />
-                <element signature="n#!!block;n#onGetServerTime#0" />
-                <element signature="e#7692#8225#0" />
-                <element signature="e#7775#7841#0" />
-                <element signature="n#!!block;n#onAuthRecalled#0" />
-                <element signature="e#8364#8660#0" />
-                <element signature="e#8443#8508#0" />
-                <element signature="e#8511#8588#0" />
-                <element signature="n#!!block;n#registerCommandHandlers#0" />
-                <element signature="n#!!block;n#Start#0" />
-                <element signature="e#10594#10658#0" />
-                <element signature="n#!!block;n#Stop#0" />
-                <element signature="n#!!block;n#deepCopy#0" />
-                <element signature="e#11319#11331#0" />
-                <element signature="e#11419#11440#0" />
-                <element signature="n#!!block;n#ExecuteCommand#0" />
-                <element signature="e#11780#11812#0" />
-                <element signature="e#12137#12182#0" />
-                <element signature="e#12367#12461#0" />
-                <element signature="e#12540#12661#0" />
-                <element signature="e#12686#12778#0" />
-                <element signature="e#12828#13098#0" />
-                <element signature="e#12911#12942#0" />
-                <element signature="e#13177#13443#0" />
-                <element signature="e#13260#13291#0" />
-                <element signature="e#13461#14413#0" />
-                <element signature="e#13543#13890#0" />
-                <element signature="e#13793#13886#0" />
-                <element signature="e#13896#14410#0" />
-                <element signature="e#13985#14251#0" />
-                <element signature="e#14011#14167#0" />
-                <element signature="e#14188#14212#0" />
-                <element signature="e#14218#14245#0" />
-                <element signature="e#14257#14406#0" />
-                <element signature="e#14419#14552#0" />
-                <element signature="n#!!block;n#executeLocalCommand#0" />
-                <element signature="e#15087#15132#0" />
-                <element signature="n#!!block;n#executeRemoteCommand#0" />
-                <element signature="n#!!block;n#releaseDelegate#0" />
-                <element signature="e#15704#15741#0" />
-                <element signature="e#15771#15791#0" />
-                <element signature="n#!!block;n#CreateAuthKey#0" />
-                <element signature="e#16133#16155#0" />
-                <element signature="e#16611#16676#0" />
-                <element signature="e#16711#17579#0" />
-                <element signature="e#16806#17575#0" />
-                <element signature="e#16834#17451#0" />
-                <element signature="e#16943#17025#0" />
-                <element signature="e#17455#17519#0" />
-                <element signature="e#17523#17570#0" />
-                <element signature="e#17652#17732#0" />
-                <element signature="e#18016#18033#0" />
-                <element signature="e#18332#18380#0" />
-                <element signature="e#18386#18434#0" />
-                <element signature="e#18726#18743#0" />
-                <element signature="e#18827#18865#0" />
-                <element signature="e#18997#19077#0" />
-                <element signature="e#19376#19441#0" />
-                <element signature="e#19476#21072#0" />
-                <element signature="e#19507#21068#0" />
-                <element signature="e#19535#20922#0" />
-                <element signature="e#19634#20742#0" />
-                <element signature="e#19656#20581#0" />
-                <element signature="e#19795#19891#0" />
-                <element signature="e#20439#20581#0" />
-                <element signature="e#20660#20736#0" />
-                <element signature="e#20926#21001#0" />
-                <element signature="e#21005#21063#0" />
-                <element signature="n#!!block;n#onGeneralError#0" />
-                <element signature="e#21567#21634#0" />
-                <element signature="n#!!block;n#AddRealTimeRequest#0" />
-                <element signature="n#!!block;n#RemoveRealTimeRequest#0" />
-                <element signature="n#!!block;n#onReceivedMessage#0" />
-                <element signature="e#22077#22128#0" />
-                <element signature="e#22318#23036#0" />
-                <element signature="e#22399#22906#0" />
-                <element signature="e#22573#22857#0" />
-                <element signature="e#22585#22726#0" />
-                <element signature="e#22730#22852#0" />
-                <element signature="e#22912#23033#0" />
-                <element signature="n#!!block;n#onReceivedUpdate#0" />
-                <element signature="e#23313#23357#0" />
-                <element signature="e#23468#23642#0" />
-                <element signature="e#23472#23639#0" />
-                <element signature="e#23483#23603#0" />
-                <element signature="e#23606#23635#0" />
-                <element signature="e#24173#25921#0" />
-                <element signature="e#24208#24744#0" />
-                <element signature="e#24282#24311#0" />
-                <element signature="e#24355#24384#0" />
-                <element signature="e#24440#24625#0" />
-                <element signature="e#24668#24740#0" />
-                <element signature="e#24799#25324#0" />
-                <element signature="e#24835#25320#0" />
-                <element signature="e#24960#25314#0" />
-                <element signature="e#25056#25218#0" />
-                <element signature="e#25149#25211#0" />
-                <element signature="e#25248#25308#0" />
-                <element signature="e#25381#25917#0" />
-                <element signature="e#25418#25913#0" />
-                <element signature="e#25546#25908#0" />
-                <element signature="e#25644#25804#0" />
-                <element signature="e#25737#25797#0" />
-                <element signature="e#25844#25902#0" />
-                <element signature="e#25959#26203#0" />
-                <element signature="e#26269#26285#0" />
-                <element signature="e#26666#26776#0" />
-                <element signature="e#26922#27172#0" />
-                <element signature="e#27065#27156#0" />
-                <element signature="e#27290#27390#0" />
-                <element signature="e#27465#27520#0" />
-                <element signature="n#!!block;n#PrintDebouncerStatus#0" />
-                <element signature="n#!!block;n#onFileProgressChanged#0" />
-                <element signature="e#28324#28479#0" />
-                <element signature="e#28379#28476#0" />
-                <element signature="e#28524#28675#0" />
-                <element signature="e#28577#28672#0" />
-                <element signature="n#!!block;n#onFileUploadCompleted#0" />
-                <element signature="e#29033#29110#0" />
-                <element signature="e#29244#30757#0" />
-                <element signature="e#29455#30604#0" />
-                <element signature="e#29478#29563#0" />
-                <element signature="e#29566#29659#0" />
-                <element signature="e#29662#29747#0" />
-                <element signature="e#29750#29837#0" />
-                <element signature="e#29840#30432#0" />
-                <element signature="e#30052#30171#0" />
-                <element signature="e#30218#30397#0" />
-                <element signature="e#30254#30392#0" />
-                <element signature="e#30436#30524#0" />
-                <element signature="e#30527#30600#0" />
-                <element signature="e#30814#32046#0" />
-                <element signature="e#30907#31047#0" />
-                <element signature="e#31094#31198#0" />
-                <element signature="e#31294#31856#0" />
-                <element signature="e#31383#31544#0" />
-                <element signature="e#31460#31538#0" />
-                <element signature="e#31580#31852#0" />
-                <element signature="e#31658#31736#0" />
-                <element signature="e#31879#31938#0" />
-                <element signature="e#32101#33339#0" />
-                <element signature="e#32214#32354#0" />
-                <element signature="e#32401#32503#0" />
-                <element signature="e#32599#33153#0" />
-                <element signature="e#32686#32845#0" />
-                <element signature="e#32763#32839#0" />
-                <element signature="e#32881#33149#0" />
-                <element signature="e#32959#33035#0" />
-                <element signature="e#33176#33233#0" />
-                <element signature="e#33424#33484#0" />
-                <element signature="n#!!block;n#onFileDownloadCompleted#0" />
-                <element signature="e#33912#33974#0" />
-                <element signature="n#!!block;n#onFileUploadError#0" />
-                <element signature="e#34386#34458#0" />
-                <element signature="n#!!block;n#onFileDownloadError#0" />
-                <element signature="e#34878#34952#0" />
+                <element signature="n#!!block;n#messagesGetDialogs#0" />
+                <element signature="e#706#793#0" />
+                <element signature="e#980#1199#0" />
+                <element signature="e#1358#1542#0" />
+                <element signature="e#1399#1431#0" />
+                <element signature="e#1491#1539#0" />
+                <element signature="e#1831#2190#0" />
+                <element signature="e#1872#1906#0" />
+                <element signature="e#1947#1980#0" />
+                <element signature="e#2161#2187#0" />
+                <element signature="e#2400#2480#0" />
+                <element signature="e#2527#2577#0" />
+                <element signature="e#2551#2574#0" />
+                <element signature="n#!!block;n#messagesGetDialog#0" />
+                <element signature="e#2858#2944#0" />
+                <element signature="e#3114#3331#0" />
+                <element signature="e#3424#3474#0" />
+                <element signature="e#3448#3471#0" />
+                <element signature="e#3741#3822#0" />
+                <element signature="e#3893#4097#0" />
+                <element signature="e#4030#4084#0" />
+                <element signature="e#4055#4080#0" />
+                <element signature="e#4636#4690#0" />
+                <element signature="e#4661#4686#0" />
+                <element signature="e#5568#5618#0" />
+                <element signature="e#5592#5615#0" />
+                <element signature="n#!!block;n#messagesReadHistory#0" />
+                <element signature="e#5906#5985#0" />
+                <element signature="e#6080#6093#0" />
+                <element signature="e#6132#6145#0" />
+                <element signature="e#6275#6365#0" />
+                <element signature="n#!!block;n#messagesGetHistory#0" />
+                <element signature="e#6828#6915#0" />
+                <element signature="e#7016#7254#0" />
+                <element signature="e#7114#7158#0" />
+                <element signature="e#7187#7241#0" />
+                <element signature="e#7212#7237#0" />
+                <element signature="e#7385#7872#0" />
+                <element signature="e#7419#7640#0" />
+                <element signature="e#7646#7860#0" />
+                <element signature="e#7911#10138#0" />
+                <element signature="e#7972#8384#0" />
+                <element signature="e#8390#10134#0" />
+                <element signature="e#8587#9374#0" />
+                <element signature="e#8615#9177#0" />
+                <element signature="e#8820#8976#0" />
+                <element signature="e#8982#9171#0" />
+                <element signature="e#9183#9369#0" />
+                <element signature="e#9380#10129#0" />
+                <element signature="e#9548#9846#0" />
+                <element signature="e#9852#10124#0" />
+                <element signature="e#10180#11881#0" />
+                <element signature="e#10374#11134#0" />
+                <element signature="e#10401#10941#0" />
+                <element signature="e#10591#10744#0" />
+                <element signature="e#10750#10936#0" />
+                <element signature="e#10947#11130#0" />
+                <element signature="e#11140#11877#0" />
+                <element signature="e#11304#11598#0" />
+                <element signature="e#11604#11872#0" />
+                <element signature="e#11923#13216#0" />
+                <element signature="e#12153#12919#0" />
+                <element signature="e#12180#12726#0" />
+                <element signature="e#12376#12529#0" />
+                <element signature="e#12535#12721#0" />
+                <element signature="e#12732#12915#0" />
+                <element signature="e#12925#13212#0" />
+                <element signature="e#13222#13823#0" />
+                <element signature="e#13347#13527#0" />
+                <element signature="e#13533#13820#0" />
+                <element signature="n#!!block;n#messagesGetHistory#1" />
+                <element signature="e#14186#14236#0" />
+                <element signature="e#14210#14233#0" />
+                <element signature="n#!!block;n#messagesDelete#0" />
+                <element signature="e#14452#14619#0" />
+                <element signature="e#14557#14589#0" />
+                <element signature="e#14742#14817#0" />
+                <element signature="e#14756#14814#0" />
+                <element signature="e#14849#15263#0" />
+                <element signature="e#15015#15056#0" />
+                <element signature="e#15173#15260#0" />
+                <element signature="e#15354#15429#0" />
+                <element signature="n#!!block;n#messagesGet#0" />
+                <element signature="e#15805#15885#0" />
+                <element signature="e#15949#15972#0" />
+                <element signature="e#16125#16329#0" />
+                <element signature="e#16300#16326#0" />
+                <element signature="e#16472#16783#0" />
+                <element signature="e#16708#16762#0" />
+                <element signature="e#16733#16758#0" />
+                <element signature="e#16789#17031#0" />
+                <element signature="n#!!block;n#messagesClearHistory#0" />
+                <element signature="e#17258#17431#0" />
+                <element signature="e#17369#17401#0" />
+                <element signature="e#17596#17686#0" />
+                <element signature="n#!!block;n#messagesReadContents#0" />
+                <element signature="e#18044#18217#0" />
+                <element signature="e#18155#18187#0" />
+                <element signature="e#18293#18381#0" />
+                <element signature="n#!!block;n#messagesSendMedia#0" />
+                <element signature="e#18775#18861#0" />
+                <element signature="e#18864#20595#0" />
+                <element signature="e#19052#20101#0" />
+                <element signature="e#19469#19706#0" />
+                <element signature="e#19633#19691#0" />
+                <element signature="e#19659#19686#0" />
+                <element signature="e#19875#19929#0" />
+                <element signature="e#19900#19925#0" />
+                <element signature="e#20104#20381#0" />
+                <element signature="e#21990#22048#0" />
+                <element signature="e#22016#22043#0" />
+                <element signature="e#23241#23295#0" />
+                <element signature="e#23266#23291#0" />
+                <element signature="e#23873#24110#0" />
+                <element signature="e#24037#24095#0" />
+                <element signature="e#24063#24090#0" />
+                <element signature="e#24377#24435#0" />
+                <element signature="e#24403#24430#0" />
+                <element signature="n#!!block;n#contactsGet#0" />
+                <element signature="e#25230#25310#0" />
+                <element signature="e#25502#25614#0" />
+                <element signature="e#25713#25763#0" />
+                <element signature="e#25737#25760#0" />
+                <element signature="n#!!block;n#contactsImport#0" />
+                <element signature="e#25996#26163#0" />
+                <element signature="e#26101#26133#0" />
+                <element signature="e#26200#26340#0" />
+                <element signature="e#26522#26618#0" />
+                <element signature="e#26813#26878#0" />
+                <element signature="e#27005#27105#0" />
+                <element signature="e#27169#27366#0" />
+                <element signature="e#27204#27363#0" />
+                <element signature="e#27272#27359#0" />
+                <element signature="e#27541#27676#0" />
+                <element signature="e#27682#27826#0" />
+                <element signature="n#!!block;n#sendChunkedImportContactRequest#0" />
+                <element signature="e#28223#28305#0" />
+                <element signature="e#28352#28890#0" />
+                <element signature="e#28452#28715#0" />
+                <element signature="e#28540#28660#0" />
+                <element signature="e#28721#28887#0" />
+                <element signature="e#28947#29358#0" />
+                <element signature="e#29094#29166#0" />
+                <element signature="n#!!block;n#accountUpdateUsername#0" />
+                <element signature="e#29702#29792#0" />
+                <element signature="n#!!block;n#accountRegisterDevice#0" />
+                <element signature="e#30304#30394#0" />
+                <element signature="e#30463#30556#0" />
+                <element signature="e#30647#30738#0" />
+                <element signature="n#!!block;n#accountUnregisterDevice#0" />
+                <element signature="e#31124#31216#0" />
+                <element signature="e#31322#31417#0" />
+                <element signature="e#31508#31601#0" />
+                <element signature="n#!!block;n#accountSetNotifySettings#0" />
+                <element signature="e#31965#32058#0" />
+                <element signature="e#32153#32276#0" />
+                <element signature="e#32380#32474#0" />
+                <element signature="n#!!block;n#accountRemovePhoto#0" />
+                <element signature="e#33021#33078#0" />
+                <element signature="n#!!block;n#accountUpdateProfile#0" />
+                <element signature="e#33305#33478#0" />
+                <element signature="e#33416#33448#0" />
+                <element signature="e#33725#33813#0" />
+                <element signature="n#!!block;n#groupsEditTitle#0" />
+                <element signature="e#34160#34335#0" />
+                <element signature="e#34273#34305#0" />
+                <element signature="e#34419#34508#0" />
+                <element signature="n#!!block;n#groupAddUser#0" />
+                <element signature="e#34851#35016#0" />
+                <element signature="e#34954#34986#0" />
+                <element signature="e#35084#35497#0" />
+                <element signature="e#35115#35291#0" />
+                <element signature="e#35413#35494#0" />
+                <element signature="n#!!block;n#groupDeleteUser#0" />
+                <element signature="e#35846#36014#0" />
+                <element signature="e#35952#35984#0" />
+                <element signature="e#36148#36230#0" />
+                <element signature="n#!!block;n#groupsGetFull#0" />
+                <element signature="e#36696#36862#0" />
+                <element signature="e#36800#36832#0" />
+                <element signature="e#36971#37181#0" />
+                <element signature="e#37303#37520#0" />
+                <element signature="e#37661#37856#0" />
+                <element signature="e#37970#38001#0" />
+                <element signature="e#38131#38468#0" />
+                <element signature="n#!!block;n#groupUpdateAdmin#0" />
+                <element signature="e#38995#39164#0" />
+                <element signature="e#39102#39134#0" />
+                <element signature="e#39313#39401#0" />
+                <element signature="n#!!block;n#groupRemovePhoto#0" />
+                <element signature="e#39950#40025#0" />
+                <element signature="e#40097#40152#0" />
+                <element signature="n#!!block;n#usersGetFull#0" />
+                <element signature="e#40400#40481#0" />
+                <element signature="e#40540#40571#0" />
+                <element signature="e#40820#40942#0" />
+                <element signature="e#40848#40939#0" />
+                <element signature="e#40888#40935#0" />
+                <element signature="e#40967#41189#0" />
+                <element signature="e#41114#41168#0" />
+                <element signature="e#41139#41164#0" />
+                <element signature="e#41195#41439#0" />
+                <element signature="n#!!block;n#usersGet#0" />
+                <element signature="e#41675#41752#0" />
+                <element signature="e#41811#41842#0" />
+                <element signature="e#41934#42156#0" />
+                <element signature="e#42081#42135#0" />
+                <element signature="e#42106#42131#0" />
+                <element signature="e#42162#42406#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pkg/repo/repo_pending_messages.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="106">
+              <caret line="29" column="13" selection-start-line="29" selection-start-column="13" selection-end-line="29" selection-end-column="13" />
+              <folding>
+                <element signature="e#321#1207#0" />
+                <element signature="n#!!block;n#Save#0" />
+                <element signature="e#1446#1572#0" />
+                <element signature="e#1905#1938#0" />
+                <element signature="e#1944#2016#0" />
+                <element signature="e#2032#2047#0" />
+                <element signature="e#2086#2126#0" />
+                <element signature="e#2160#2298#0" />
+                <element signature="e#2304#2493#0" />
+                <element signature="e#2422#2487#0" />
+                <element signature="n#!!block;n#GetPendingMessageByRequestID#0" />
+                <element signature="e#2919#3051#0" />
+                <element signature="n#!!block;n#GetPendingMessageByID#0" />
+                <element signature="e#3411#3536#0" />
+                <element signature="n#!!block;n#DeletePendingMessage#0" />
+                <element signature="e#3893#4013#0" />
+                <element signature="e#4161#4273#0" />
+                <element signature="e#4358#4481#0" />
+                <element signature="e#4563#5233#0" />
+                <element signature="e#4836#4936#0" />
+                <element signature="e#4942#5230#0" />
+                <element signature="e#5124#5226#0" />
+                <element signature="n#!!block;n#DeleteManyPendingMessage#0" />
+                <element signature="e#5575#5655#0" />
+                <element signature="e#5771#5858#0" />
+                <element signature="e#5946#6594#0" />
+                <element signature="e#6220#6308#0" />
+                <element signature="e#6314#6591#0" />
+                <element signature="e#6497#6587#0" />
+                <element signature="n#!!block;n#GetManyPendingMessages#0" />
+                <element signature="e#7064#7187#0" />
+                <element signature="e#7216#7312#0" />
+                <element signature="n#!!block;n#GetManyPendingMessagesRequestID#0" />
+                <element signature="e#7736#7859#0" />
+                <element signature="e#7919#7970#0" />
+                <element signature="n#!!block;n#GetAllPendingMessages#0" />
+                <element signature="e#8240#8326#0" />
+                <element signature="n#!!block;n#DeletePeerAllMessages#0" />
+                <element signature="e#8607#8734#0" />
+                <element signature="e#8885#8937#0" />
+                <element signature="e#9052#9162#0" />
+                <element signature="e#9397#9528#0" />
+                <element signature="e#9960#9993#0" />
+                <element signature="e#9999#10071#0" />
+                <element signature="e#10088#10551#0" />
+                <element signature="e#10141#10181#0" />
+                <element signature="e#10215#10353#0" />
+                <element signature="e#10359#10548#0" />
+                <element signature="e#10477#10542#0" />
+                <element signature="n#!!block;n#GetPendingMessage#0" />
+                <element signature="e#10950#11054#0" />
+                <element signature="n#!!block;n#SaveMessageMedia#0" />
+                <element signature="e#11306#11444#0" />
+                <element signature="e#11805#11838#0" />
+                <element signature="e#11844#11916#0" />
+                <element signature="e#11933#12396#0" />
+                <element signature="e#11986#12026#0" />
+                <element signature="e#12060#12198#0" />
+                <element signature="e#12204#12393#0" />
+                <element signature="e#12322#12387#0" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/.gitignore">
+        <entry file="file://$PROJECT_DIR$/pkg/repo/repo.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="20">
-              <caret line="1" column="6" selection-start-line="1" selection-start-column="6" selection-end-line="1" selection-end-column="6" />
+            <state relative-caret-position="3320">
+              <caret line="176" column="5" lean-forward="true" selection-start-line="176" selection-start-column="5" selection-end-line="176" selection-end-column="5" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/sdk_commands_general.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="210">
+              <caret line="93" column="21" selection-start-line="93" selection-start-column="21" selection-end-line="93" selection-end-column="21" />
+              <folding>
+                <element signature="e#517#810#0" />
+                <element signature="e#932#1027#0" />
+                <element signature="e#1173#1645#0" />
+                <element signature="e#1257#1378#0" />
+                <element signature="e#1741#1783#0" />
+                <element signature="e#1870#2022#0" />
+                <element signature="e#2216#2531#0" />
+                <element signature="e#2590#2663#0" />
+                <element signature="e#2750#2833#0" />
+                <element signature="e#2903#2979#0" />
+                <element signature="e#3084#3263#0" />
+                <element signature="e#3320#3473#0" />
+                <element signature="e#3492#3739#0" />
+                <element signature="e#3699#3736#0" />
+                <element signature="e#3745#3866#0" />
+                <element signature="e#3935#3980#0" />
+                <element signature="e#4364#4507#0" />
+                <element signature="e#4427#4486#0" />
+                <element signature="e#4623#4765#0" />
+                <element signature="e#4682#4744#0" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -286,7 +408,6 @@
         <option value="$PROJECT_DIR$/pkg/network/network.go" />
         <option value="$PROJECT_DIR$/pkg/logs/logs.go" />
         <option value="$PROJECT_DIR$/pkg/filemanager/filemanager.go" />
-        <option value="$PROJECT_DIR$/pkg/repo/repo.go" />
         <option value="$PROJECT_DIR$/pkg/repo/repo_dialogs.go" />
         <option value="$PROJECT_DIR$/pkg/repo/repo_groups.go" />
         <option value="$PROJECT_DIR$/pkg/synchronizer/synchronizer.go" />
@@ -303,10 +424,12 @@
         <option value="$PROJECT_DIR$/pkg/repo/dto/pending_messages.go" />
         <option value="$PROJECT_DIR$/pkg/repo/dto/files.go" />
         <option value="$PROJECT_DIR$/pkg/repo/dto/contacts.go" />
-        <option value="$PROJECT_DIR$/sdk_commands.go" />
         <option value="$PROJECT_DIR$/sdk.go" />
         <option value="$PROJECT_DIR$/pkg/queue/queue.go" />
         <option value="$PROJECT_DIR$/.gitignore" />
+        <option value="$PROJECT_DIR$/sdk_commands.go" />
+        <option value="$PROJECT_DIR$/pkg/repo/repo_pending_messages.go" />
+        <option value="$PROJECT_DIR$/pkg/repo/repo.go" />
       </list>
     </option>
   </component>
@@ -371,7 +494,7 @@
     <frame x="0" y="0" width="1680" height="1050" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24969475" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25274727" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -384,7 +507,7 @@
       <window_info anchor="bottom" id="Docker" order="7" />
       <window_info anchor="bottom" id="Database Changes" order="8" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="9" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Terminal" order="10" visible="true" weight="0.32959184" />
+      <window_info anchor="bottom" id="Terminal" order="10" weight="0.32959184" />
       <window_info anchor="bottom" id="Event Log" order="11" side_tool="true" />
       <window_info anchor="bottom" id="Tail" order="12" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
@@ -401,16 +524,6 @@
     <integration-enabled>true</integration-enabled>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/command.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="360">
-          <caret line="18" selection-start-line="18" selection-end-line="18" />
-          <folding>
-            <element signature="e#14#146#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pkg/domain/errors.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="80">
@@ -779,13 +892,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pkg/repo/repo.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="200">
-          <caret line="20" lean-forward="true" selection-start-line="20" selection-end-line="20" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pkg/logs/logs.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="180">
@@ -1091,9 +1197,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/update-vendor.sh">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
+    <entry file="file://$PROJECT_DIR$/update-vendor.sh" />
     <entry file="file://$PROJECT_DIR$/river_conn.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1420">
@@ -1237,36 +1341,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/sdk_commands_general.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="403">
-          <caret line="530" column="42" lean-forward="true" selection-start-line="530" selection-start-column="42" selection-end-line="530" selection-end-column="42" />
-          <folding>
-            <element signature="e#517#810#0" />
-            <element signature="e#932#1027#0" />
-            <element signature="e#1173#1645#0" />
-            <element signature="e#1257#1378#0" />
-            <element signature="e#1741#1783#0" />
-            <element signature="e#1870#2022#0" />
-            <element signature="e#2135#4006#0" />
-            <element signature="e#2216#2531#0" />
-            <element signature="e#2590#2663#0" />
-            <element signature="e#2750#2833#0" />
-            <element signature="e#2903#2979#0" />
-            <element signature="e#3084#3263#0" />
-            <element signature="e#3320#3473#0" />
-            <element signature="e#3492#3739#0" />
-            <element signature="e#3699#3736#0" />
-            <element signature="e#3745#3866#0" />
-            <element signature="e#3935#3980#0" />
-            <element signature="e#4364#4507#0" />
-            <element signature="e#4427#4486#0" />
-            <element signature="e#4623#4765#0" />
-            <element signature="e#4682#4744#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pkg/repo/dto/dto.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="220">
@@ -1377,245 +1451,6 @@
         <state relative-caret-position="-9285" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/sdk_commands.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="310">
-          <caret line="1085" column="21" selection-start-line="1085" selection-start-column="21" selection-end-line="1085" selection-end-column="21" />
-          <folding>
-            <element signature="n#!!block;n#messagesGetDialogs#0" />
-            <element signature="e#706#793#0" />
-            <element signature="e#980#1199#0" />
-            <element signature="e#1358#1542#0" />
-            <element signature="e#1399#1431#0" />
-            <element signature="e#1491#1539#0" />
-            <element signature="e#1831#2190#0" />
-            <element signature="e#1872#1906#0" />
-            <element signature="e#1947#1980#0" />
-            <element signature="e#2161#2187#0" />
-            <element signature="e#2400#2480#0" />
-            <element signature="e#2527#2577#0" />
-            <element signature="e#2551#2574#0" />
-            <element signature="n#!!block;n#messagesGetDialog#0" />
-            <element signature="e#2858#2944#0" />
-            <element signature="e#3114#3331#0" />
-            <element signature="e#3424#3474#0" />
-            <element signature="e#3448#3471#0" />
-            <element signature="n#!!block;n#messagesSend#0" />
-            <element signature="e#3741#3822#0" />
-            <element signature="e#3893#4097#0" />
-            <element signature="e#4030#4084#0" />
-            <element signature="e#4055#4080#0" />
-            <element signature="e#4184#4193#0" />
-            <element signature="e#4477#4703#0" />
-            <element signature="e#4636#4690#0" />
-            <element signature="e#4661#4686#0" />
-            <element signature="e#4821#4904#0" />
-            <element signature="e#5257#5355#0" />
-            <element signature="e#5568#5618#0" />
-            <element signature="e#5592#5615#0" />
-            <element signature="n#!!block;n#messagesReadHistory#0" />
-            <element signature="e#5906#5985#0" />
-            <element signature="e#6080#6093#0" />
-            <element signature="e#6132#6145#0" />
-            <element signature="e#6275#6365#0" />
-            <element signature="n#!!block;n#messagesGetHistory#0" />
-            <element signature="e#6828#6915#0" />
-            <element signature="e#7016#7254#0" />
-            <element signature="e#7114#7158#0" />
-            <element signature="e#7187#7241#0" />
-            <element signature="e#7212#7237#0" />
-            <element signature="e#7385#7872#0" />
-            <element signature="e#7419#7640#0" />
-            <element signature="e#7646#7860#0" />
-            <element signature="e#7911#10138#0" />
-            <element signature="e#7972#8384#0" />
-            <element signature="e#8390#10134#0" />
-            <element signature="e#8587#9374#0" />
-            <element signature="e#8615#9177#0" />
-            <element signature="e#8820#8976#0" />
-            <element signature="e#8982#9171#0" />
-            <element signature="e#9183#9369#0" />
-            <element signature="e#9380#10129#0" />
-            <element signature="e#9386#9392#0" />
-            <element signature="e#9548#9846#0" />
-            <element signature="e#9852#10124#0" />
-            <element signature="e#10180#11881#0" />
-            <element signature="e#10374#11134#0" />
-            <element signature="e#10401#10941#0" />
-            <element signature="e#10591#10744#0" />
-            <element signature="e#10750#10936#0" />
-            <element signature="e#10947#11130#0" />
-            <element signature="e#11140#11877#0" />
-            <element signature="e#11145#11151#0" />
-            <element signature="e#11304#11598#0" />
-            <element signature="e#11604#11872#0" />
-            <element signature="e#11923#13216#0" />
-            <element signature="e#12153#12919#0" />
-            <element signature="e#12180#12726#0" />
-            <element signature="e#12376#12529#0" />
-            <element signature="e#12535#12721#0" />
-            <element signature="e#12732#12915#0" />
-            <element signature="e#12925#13212#0" />
-            <element signature="e#13222#13823#0" />
-            <element signature="e#13347#13527#0" />
-            <element signature="e#13533#13820#0" />
-            <element signature="n#!!block;n#messagesGetHistory#1" />
-            <element signature="e#14186#14236#0" />
-            <element signature="e#14210#14233#0" />
-            <element signature="n#!!block;n#messagesDelete#0" />
-            <element signature="e#14452#14619#0" />
-            <element signature="e#14557#14589#0" />
-            <element signature="e#14742#14817#0" />
-            <element signature="e#14756#14814#0" />
-            <element signature="e#14849#15263#0" />
-            <element signature="e#15015#15056#0" />
-            <element signature="e#15173#15260#0" />
-            <element signature="e#15354#15429#0" />
-            <element signature="n#!!block;n#messagesGet#0" />
-            <element signature="e#15805#15885#0" />
-            <element signature="e#15949#15972#0" />
-            <element signature="e#16125#16329#0" />
-            <element signature="e#16300#16326#0" />
-            <element signature="e#16472#16783#0" />
-            <element signature="e#16708#16762#0" />
-            <element signature="e#16733#16758#0" />
-            <element signature="e#16789#17031#0" />
-            <element signature="n#!!block;n#messagesClearHistory#0" />
-            <element signature="e#17258#17431#0" />
-            <element signature="e#17369#17401#0" />
-            <element signature="e#17596#17686#0" />
-            <element signature="n#!!block;n#messagesReadContents#0" />
-            <element signature="e#18044#18217#0" />
-            <element signature="e#18155#18187#0" />
-            <element signature="e#18293#18381#0" />
-            <element signature="n#!!block;n#messagesSendMedia#0" />
-            <element signature="e#18775#18861#0" />
-            <element signature="e#18864#20595#0" />
-            <element signature="e#19052#20101#0" />
-            <element signature="e#19469#19706#0" />
-            <element signature="e#19633#19691#0" />
-            <element signature="e#19659#19686#0" />
-            <element signature="e#19875#19929#0" />
-            <element signature="e#19900#19925#0" />
-            <element signature="e#20104#20381#0" />
-            <element signature="n#!!block;n#clientSendMessageMedia#0" />
-            <element signature="e#20899#20990#0" />
-            <element signature="e#21070#21155#0" />
-            <element signature="e#21213#21308#0" />
-            <element signature="e#21477#21579#0" />
-            <element signature="e#21604#23571#0" />
-            <element signature="e#21826#22063#0" />
-            <element signature="e#21990#22048#0" />
-            <element signature="e#22016#22043#0" />
-            <element signature="e#22676#22783#0" />
-            <element signature="e#22927#23025#0" />
-            <element signature="e#23241#23295#0" />
-            <element signature="e#23266#23291#0" />
-            <element signature="e#23577#24984#0" />
-            <element signature="e#23873#24110#0" />
-            <element signature="e#24037#24095#0" />
-            <element signature="e#24063#24090#0" />
-            <element signature="e#24224#24450#0" />
-            <element signature="e#24377#24435#0" />
-            <element signature="e#24403#24430#0" />
-            <element signature="e#24595#24693#0" />
-            <element signature="e#24909#24963#0" />
-            <element signature="e#24934#24959#0" />
-            <element signature="n#!!block;n#contactsGet#0" />
-            <element signature="e#25230#25310#0" />
-            <element signature="e#25502#25614#0" />
-            <element signature="e#25713#25763#0" />
-            <element signature="e#25737#25760#0" />
-            <element signature="n#!!block;n#contactsImport#0" />
-            <element signature="e#25996#26163#0" />
-            <element signature="e#26101#26133#0" />
-            <element signature="e#26200#26340#0" />
-            <element signature="e#26522#26618#0" />
-            <element signature="e#26813#26878#0" />
-            <element signature="e#27005#27105#0" />
-            <element signature="e#27169#27366#0" />
-            <element signature="e#27204#27363#0" />
-            <element signature="e#27272#27359#0" />
-            <element signature="e#27541#27676#0" />
-            <element signature="e#27682#27826#0" />
-            <element signature="n#!!block;n#sendChunkedImportContactRequest#0" />
-            <element signature="e#28223#28305#0" />
-            <element signature="e#28352#28890#0" />
-            <element signature="e#28452#28715#0" />
-            <element signature="e#28540#28660#0" />
-            <element signature="e#28721#28887#0" />
-            <element signature="e#28947#29358#0" />
-            <element signature="e#29094#29166#0" />
-            <element signature="n#!!block;n#accountUpdateUsername#0" />
-            <element signature="e#29702#29792#0" />
-            <element signature="n#!!block;n#accountRegisterDevice#0" />
-            <element signature="e#30304#30394#0" />
-            <element signature="e#30463#30556#0" />
-            <element signature="e#30647#30738#0" />
-            <element signature="n#!!block;n#accountUnregisterDevice#0" />
-            <element signature="e#31124#31216#0" />
-            <element signature="e#31322#31417#0" />
-            <element signature="e#31508#31601#0" />
-            <element signature="n#!!block;n#accountSetNotifySettings#0" />
-            <element signature="e#31965#32058#0" />
-            <element signature="e#32153#32276#0" />
-            <element signature="e#32380#32474#0" />
-            <element signature="n#!!block;n#accountRemovePhoto#0" />
-            <element signature="e#33021#33078#0" />
-            <element signature="n#!!block;n#accountUpdateProfile#0" />
-            <element signature="e#33305#33478#0" />
-            <element signature="e#33416#33448#0" />
-            <element signature="e#33725#33813#0" />
-            <element signature="n#!!block;n#groupsEditTitle#0" />
-            <element signature="e#34160#34335#0" />
-            <element signature="e#34273#34305#0" />
-            <element signature="e#34419#34508#0" />
-            <element signature="n#!!block;n#groupAddUser#0" />
-            <element signature="e#34851#35016#0" />
-            <element signature="e#34954#34986#0" />
-            <element signature="e#35084#35497#0" />
-            <element signature="e#35115#35291#0" />
-            <element signature="e#35413#35494#0" />
-            <element signature="n#!!block;n#groupDeleteUser#0" />
-            <element signature="e#35846#36014#0" />
-            <element signature="e#35952#35984#0" />
-            <element signature="e#36148#36230#0" />
-            <element signature="n#!!block;n#groupsGetFull#0" />
-            <element signature="e#36696#36862#0" />
-            <element signature="e#36800#36832#0" />
-            <element signature="e#36971#37181#0" />
-            <element signature="e#37303#37520#0" />
-            <element signature="e#37661#37856#0" />
-            <element signature="e#37970#38001#0" />
-            <element signature="e#38131#38468#0" />
-            <element signature="n#!!block;n#groupUpdateAdmin#0" />
-            <element signature="e#38995#39164#0" />
-            <element signature="e#39102#39134#0" />
-            <element signature="e#39313#39401#0" />
-            <element signature="n#!!block;n#groupRemovePhoto#0" />
-            <element signature="e#39950#40025#0" />
-            <element signature="e#40097#40152#0" />
-            <element signature="n#!!block;n#usersGetFull#0" />
-            <element signature="e#40400#40481#0" />
-            <element signature="e#40540#40571#0" />
-            <element signature="e#40820#40942#0" />
-            <element signature="e#40848#40939#0" />
-            <element signature="e#40888#40935#0" />
-            <element signature="e#40967#41189#0" />
-            <element signature="e#41114#41168#0" />
-            <element signature="e#41139#41164#0" />
-            <element signature="e#41195#41439#0" />
-            <element signature="n#!!block;n#usersGet#0" />
-            <element signature="e#41675#41752#0" />
-            <element signature="e#41811#41842#0" />
-            <element signature="e#41934#42156#0" />
-            <element signature="e#42081#42135#0" />
-            <element signature="e#42106#42131#0" />
-            <element signature="e#42162#42406#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pkg/queue/queue.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="336">
@@ -1635,6 +1470,13 @@
             <element signature="n#!!block;n#DropQueue#0" />
             <element signature="n#!!block;n#OpenQueue#0" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="20">
+          <caret line="1" column="6" lean-forward="true" selection-start-line="1" selection-start-column="6" selection-end-line="1" selection-end-column="6" />
         </state>
       </provider>
     </entry>
@@ -1840,10 +1682,326 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/.gitignore">
+    <entry file="file://$PROJECT_DIR$/sdk_commands.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="20">
-          <caret line="1" column="6" selection-start-line="1" selection-start-column="6" selection-end-line="1" selection-end-column="6" />
+        <state relative-caret-position="203">
+          <caret line="639" column="57" lean-forward="true" selection-start-line="639" selection-start-column="57" selection-end-line="639" selection-end-column="57" />
+          <folding>
+            <element signature="n#!!block;n#messagesGetDialogs#0" />
+            <element signature="e#706#793#0" />
+            <element signature="e#980#1199#0" />
+            <element signature="e#1358#1542#0" />
+            <element signature="e#1399#1431#0" />
+            <element signature="e#1491#1539#0" />
+            <element signature="e#1831#2190#0" />
+            <element signature="e#1872#1906#0" />
+            <element signature="e#1947#1980#0" />
+            <element signature="e#2161#2187#0" />
+            <element signature="e#2400#2480#0" />
+            <element signature="e#2527#2577#0" />
+            <element signature="e#2551#2574#0" />
+            <element signature="n#!!block;n#messagesGetDialog#0" />
+            <element signature="e#2858#2944#0" />
+            <element signature="e#3114#3331#0" />
+            <element signature="e#3424#3474#0" />
+            <element signature="e#3448#3471#0" />
+            <element signature="e#3741#3822#0" />
+            <element signature="e#3893#4097#0" />
+            <element signature="e#4030#4084#0" />
+            <element signature="e#4055#4080#0" />
+            <element signature="e#4636#4690#0" />
+            <element signature="e#4661#4686#0" />
+            <element signature="e#5568#5618#0" />
+            <element signature="e#5592#5615#0" />
+            <element signature="n#!!block;n#messagesReadHistory#0" />
+            <element signature="e#5906#5985#0" />
+            <element signature="e#6080#6093#0" />
+            <element signature="e#6132#6145#0" />
+            <element signature="e#6275#6365#0" />
+            <element signature="n#!!block;n#messagesGetHistory#0" />
+            <element signature="e#6828#6915#0" />
+            <element signature="e#7016#7254#0" />
+            <element signature="e#7114#7158#0" />
+            <element signature="e#7187#7241#0" />
+            <element signature="e#7212#7237#0" />
+            <element signature="e#7385#7872#0" />
+            <element signature="e#7419#7640#0" />
+            <element signature="e#7646#7860#0" />
+            <element signature="e#7911#10138#0" />
+            <element signature="e#7972#8384#0" />
+            <element signature="e#8390#10134#0" />
+            <element signature="e#8587#9374#0" />
+            <element signature="e#8615#9177#0" />
+            <element signature="e#8820#8976#0" />
+            <element signature="e#8982#9171#0" />
+            <element signature="e#9183#9369#0" />
+            <element signature="e#9380#10129#0" />
+            <element signature="e#9548#9846#0" />
+            <element signature="e#9852#10124#0" />
+            <element signature="e#10180#11881#0" />
+            <element signature="e#10374#11134#0" />
+            <element signature="e#10401#10941#0" />
+            <element signature="e#10591#10744#0" />
+            <element signature="e#10750#10936#0" />
+            <element signature="e#10947#11130#0" />
+            <element signature="e#11140#11877#0" />
+            <element signature="e#11304#11598#0" />
+            <element signature="e#11604#11872#0" />
+            <element signature="e#11923#13216#0" />
+            <element signature="e#12153#12919#0" />
+            <element signature="e#12180#12726#0" />
+            <element signature="e#12376#12529#0" />
+            <element signature="e#12535#12721#0" />
+            <element signature="e#12732#12915#0" />
+            <element signature="e#12925#13212#0" />
+            <element signature="e#13222#13823#0" />
+            <element signature="e#13347#13527#0" />
+            <element signature="e#13533#13820#0" />
+            <element signature="n#!!block;n#messagesGetHistory#1" />
+            <element signature="e#14186#14236#0" />
+            <element signature="e#14210#14233#0" />
+            <element signature="n#!!block;n#messagesDelete#0" />
+            <element signature="e#14452#14619#0" />
+            <element signature="e#14557#14589#0" />
+            <element signature="e#14742#14817#0" />
+            <element signature="e#14756#14814#0" />
+            <element signature="e#14849#15263#0" />
+            <element signature="e#15015#15056#0" />
+            <element signature="e#15173#15260#0" />
+            <element signature="e#15354#15429#0" />
+            <element signature="n#!!block;n#messagesGet#0" />
+            <element signature="e#15805#15885#0" />
+            <element signature="e#15949#15972#0" />
+            <element signature="e#16125#16329#0" />
+            <element signature="e#16300#16326#0" />
+            <element signature="e#16472#16783#0" />
+            <element signature="e#16708#16762#0" />
+            <element signature="e#16733#16758#0" />
+            <element signature="e#16789#17031#0" />
+            <element signature="n#!!block;n#messagesClearHistory#0" />
+            <element signature="e#17258#17431#0" />
+            <element signature="e#17369#17401#0" />
+            <element signature="e#17596#17686#0" />
+            <element signature="n#!!block;n#messagesReadContents#0" />
+            <element signature="e#18044#18217#0" />
+            <element signature="e#18155#18187#0" />
+            <element signature="e#18293#18381#0" />
+            <element signature="n#!!block;n#messagesSendMedia#0" />
+            <element signature="e#18775#18861#0" />
+            <element signature="e#18864#20595#0" />
+            <element signature="e#19052#20101#0" />
+            <element signature="e#19469#19706#0" />
+            <element signature="e#19633#19691#0" />
+            <element signature="e#19659#19686#0" />
+            <element signature="e#19875#19929#0" />
+            <element signature="e#19900#19925#0" />
+            <element signature="e#20104#20381#0" />
+            <element signature="e#21990#22048#0" />
+            <element signature="e#22016#22043#0" />
+            <element signature="e#23241#23295#0" />
+            <element signature="e#23266#23291#0" />
+            <element signature="e#23873#24110#0" />
+            <element signature="e#24037#24095#0" />
+            <element signature="e#24063#24090#0" />
+            <element signature="e#24377#24435#0" />
+            <element signature="e#24403#24430#0" />
+            <element signature="n#!!block;n#contactsGet#0" />
+            <element signature="e#25230#25310#0" />
+            <element signature="e#25502#25614#0" />
+            <element signature="e#25713#25763#0" />
+            <element signature="e#25737#25760#0" />
+            <element signature="n#!!block;n#contactsImport#0" />
+            <element signature="e#25996#26163#0" />
+            <element signature="e#26101#26133#0" />
+            <element signature="e#26200#26340#0" />
+            <element signature="e#26522#26618#0" />
+            <element signature="e#26813#26878#0" />
+            <element signature="e#27005#27105#0" />
+            <element signature="e#27169#27366#0" />
+            <element signature="e#27204#27363#0" />
+            <element signature="e#27272#27359#0" />
+            <element signature="e#27541#27676#0" />
+            <element signature="e#27682#27826#0" />
+            <element signature="n#!!block;n#sendChunkedImportContactRequest#0" />
+            <element signature="e#28223#28305#0" />
+            <element signature="e#28352#28890#0" />
+            <element signature="e#28452#28715#0" />
+            <element signature="e#28540#28660#0" />
+            <element signature="e#28721#28887#0" />
+            <element signature="e#28947#29358#0" />
+            <element signature="e#29094#29166#0" />
+            <element signature="n#!!block;n#accountUpdateUsername#0" />
+            <element signature="e#29702#29792#0" />
+            <element signature="n#!!block;n#accountRegisterDevice#0" />
+            <element signature="e#30304#30394#0" />
+            <element signature="e#30463#30556#0" />
+            <element signature="e#30647#30738#0" />
+            <element signature="n#!!block;n#accountUnregisterDevice#0" />
+            <element signature="e#31124#31216#0" />
+            <element signature="e#31322#31417#0" />
+            <element signature="e#31508#31601#0" />
+            <element signature="n#!!block;n#accountSetNotifySettings#0" />
+            <element signature="e#31965#32058#0" />
+            <element signature="e#32153#32276#0" />
+            <element signature="e#32380#32474#0" />
+            <element signature="n#!!block;n#accountRemovePhoto#0" />
+            <element signature="e#33021#33078#0" />
+            <element signature="n#!!block;n#accountUpdateProfile#0" />
+            <element signature="e#33305#33478#0" />
+            <element signature="e#33416#33448#0" />
+            <element signature="e#33725#33813#0" />
+            <element signature="n#!!block;n#groupsEditTitle#0" />
+            <element signature="e#34160#34335#0" />
+            <element signature="e#34273#34305#0" />
+            <element signature="e#34419#34508#0" />
+            <element signature="n#!!block;n#groupAddUser#0" />
+            <element signature="e#34851#35016#0" />
+            <element signature="e#34954#34986#0" />
+            <element signature="e#35084#35497#0" />
+            <element signature="e#35115#35291#0" />
+            <element signature="e#35413#35494#0" />
+            <element signature="n#!!block;n#groupDeleteUser#0" />
+            <element signature="e#35846#36014#0" />
+            <element signature="e#35952#35984#0" />
+            <element signature="e#36148#36230#0" />
+            <element signature="n#!!block;n#groupsGetFull#0" />
+            <element signature="e#36696#36862#0" />
+            <element signature="e#36800#36832#0" />
+            <element signature="e#36971#37181#0" />
+            <element signature="e#37303#37520#0" />
+            <element signature="e#37661#37856#0" />
+            <element signature="e#37970#38001#0" />
+            <element signature="e#38131#38468#0" />
+            <element signature="n#!!block;n#groupUpdateAdmin#0" />
+            <element signature="e#38995#39164#0" />
+            <element signature="e#39102#39134#0" />
+            <element signature="e#39313#39401#0" />
+            <element signature="n#!!block;n#groupRemovePhoto#0" />
+            <element signature="e#39950#40025#0" />
+            <element signature="e#40097#40152#0" />
+            <element signature="n#!!block;n#usersGetFull#0" />
+            <element signature="e#40400#40481#0" />
+            <element signature="e#40540#40571#0" />
+            <element signature="e#40820#40942#0" />
+            <element signature="e#40848#40939#0" />
+            <element signature="e#40888#40935#0" />
+            <element signature="e#40967#41189#0" />
+            <element signature="e#41114#41168#0" />
+            <element signature="e#41139#41164#0" />
+            <element signature="e#41195#41439#0" />
+            <element signature="n#!!block;n#usersGet#0" />
+            <element signature="e#41675#41752#0" />
+            <element signature="e#41811#41842#0" />
+            <element signature="e#41934#42156#0" />
+            <element signature="e#42081#42135#0" />
+            <element signature="e#42106#42131#0" />
+            <element signature="e#42162#42406#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/repo/repo_pending_messages.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="106">
+          <caret line="29" column="13" selection-start-line="29" selection-start-column="13" selection-end-line="29" selection-end-column="13" />
+          <folding>
+            <element signature="e#321#1207#0" />
+            <element signature="n#!!block;n#Save#0" />
+            <element signature="e#1446#1572#0" />
+            <element signature="e#1905#1938#0" />
+            <element signature="e#1944#2016#0" />
+            <element signature="e#2032#2047#0" />
+            <element signature="e#2086#2126#0" />
+            <element signature="e#2160#2298#0" />
+            <element signature="e#2304#2493#0" />
+            <element signature="e#2422#2487#0" />
+            <element signature="n#!!block;n#GetPendingMessageByRequestID#0" />
+            <element signature="e#2919#3051#0" />
+            <element signature="n#!!block;n#GetPendingMessageByID#0" />
+            <element signature="e#3411#3536#0" />
+            <element signature="n#!!block;n#DeletePendingMessage#0" />
+            <element signature="e#3893#4013#0" />
+            <element signature="e#4161#4273#0" />
+            <element signature="e#4358#4481#0" />
+            <element signature="e#4563#5233#0" />
+            <element signature="e#4836#4936#0" />
+            <element signature="e#4942#5230#0" />
+            <element signature="e#5124#5226#0" />
+            <element signature="n#!!block;n#DeleteManyPendingMessage#0" />
+            <element signature="e#5575#5655#0" />
+            <element signature="e#5771#5858#0" />
+            <element signature="e#5946#6594#0" />
+            <element signature="e#6220#6308#0" />
+            <element signature="e#6314#6591#0" />
+            <element signature="e#6497#6587#0" />
+            <element signature="n#!!block;n#GetManyPendingMessages#0" />
+            <element signature="e#7064#7187#0" />
+            <element signature="e#7216#7312#0" />
+            <element signature="n#!!block;n#GetManyPendingMessagesRequestID#0" />
+            <element signature="e#7736#7859#0" />
+            <element signature="e#7919#7970#0" />
+            <element signature="n#!!block;n#GetAllPendingMessages#0" />
+            <element signature="e#8240#8326#0" />
+            <element signature="n#!!block;n#DeletePeerAllMessages#0" />
+            <element signature="e#8607#8734#0" />
+            <element signature="e#8885#8937#0" />
+            <element signature="e#9052#9162#0" />
+            <element signature="e#9397#9528#0" />
+            <element signature="e#9960#9993#0" />
+            <element signature="e#9999#10071#0" />
+            <element signature="e#10088#10551#0" />
+            <element signature="e#10141#10181#0" />
+            <element signature="e#10215#10353#0" />
+            <element signature="e#10359#10548#0" />
+            <element signature="e#10477#10542#0" />
+            <element signature="n#!!block;n#GetPendingMessage#0" />
+            <element signature="e#10950#11054#0" />
+            <element signature="n#!!block;n#SaveMessageMedia#0" />
+            <element signature="e#11306#11444#0" />
+            <element signature="e#11805#11838#0" />
+            <element signature="e#11844#11916#0" />
+            <element signature="e#11933#12396#0" />
+            <element signature="e#11986#12026#0" />
+            <element signature="e#12060#12198#0" />
+            <element signature="e#12204#12393#0" />
+            <element signature="e#12322#12387#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sdk_commands_general.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="93" column="21" selection-start-line="93" selection-start-column="21" selection-end-line="93" selection-end-column="21" />
+          <folding>
+            <element signature="e#517#810#0" />
+            <element signature="e#932#1027#0" />
+            <element signature="e#1173#1645#0" />
+            <element signature="e#1257#1378#0" />
+            <element signature="e#1741#1783#0" />
+            <element signature="e#1870#2022#0" />
+            <element signature="e#2216#2531#0" />
+            <element signature="e#2590#2663#0" />
+            <element signature="e#2750#2833#0" />
+            <element signature="e#2903#2979#0" />
+            <element signature="e#3084#3263#0" />
+            <element signature="e#3320#3473#0" />
+            <element signature="e#3492#3739#0" />
+            <element signature="e#3699#3736#0" />
+            <element signature="e#3745#3866#0" />
+            <element signature="e#3935#3980#0" />
+            <element signature="e#4364#4507#0" />
+            <element signature="e#4427#4486#0" />
+            <element signature="e#4623#4765#0" />
+            <element signature="e#4682#4744#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/repo/repo.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3320">
+          <caret line="176" column="5" lean-forward="true" selection-start-line="176" selection-start-column="5" selection-end-line="176" selection-end-column="5" />
         </state>
       </provider>
     </entry>

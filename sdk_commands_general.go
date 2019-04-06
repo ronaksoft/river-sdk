@@ -91,7 +91,7 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 	}
 
 	// drop and recreate database
-	err = repo.Ctx().ReinitiateDatabase()
+	err = repo.Ctx().ReInitiateDatabase()
 	if err != nil {
 		logs.Error("River::Logout() failed to re initiate database", zap.Error(err))
 	}

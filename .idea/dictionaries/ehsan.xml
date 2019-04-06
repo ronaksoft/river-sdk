@@ -2,6 +2,7 @@
   <dictionary name="ehsan">
     <words>
       <w>debouncer</w>
+      <w>gorm</w>
     </words>
   </dictionary>
 </component>

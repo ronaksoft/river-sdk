@@ -30,7 +30,6 @@ type repoPendingMessages struct {
 	*repository
 }
 
-// Save
 func (r *repoPendingMessages) Save(ID int64, senderID int64, message *msg.MessagesSend) (*msg.ClientPendingMessage, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -63,28 +62,29 @@ func (r *repoPendingMessages) Save(ID int64, senderID int64, message *msg.Messag
 	} else {
 		err = r.db.Table(m.TableName()).Where("ID", m.ID).Update(m).Error
 	}
-
-	if err == nil {
-		dlg := new(dto.Dialogs)
-		r.db.Where(&dto.Dialogs{PeerID: m.PeerID, PeerType: m.PeerType}).Find(&dlg)
-		if dlg.PeerID == 0 {
-			dlg.LastUpdate = m.CreatedOn
-			dlg.PeerID = m.PeerID
-			dlg.PeerType = m.PeerType
-			dlg.TopMessageID = m.ID
-			r.db.Create(dlg)
-		} else {
-			r.db.Table(dlg.TableName()).Where("PeerID=? AND PeerType=?", m.PeerID, m.PeerType).Updates(map[string]interface{}{
-				"TopMessageID": m.ID,
-				"LastUpdate":   m.CreatedOn,
-			})
-
-		}
+	if err != nil {
+		return nil, err
 	}
-	return res, err
+
+	dlg := new(dto.Dialogs)
+	r.db.Where(&dto.Dialogs{PeerID: m.PeerID, PeerType: m.PeerType}).Find(&dlg)
+	if dlg.PeerID == 0 {
+		dlg.LastUpdate = m.CreatedOn
+		dlg.PeerID = m.PeerID
+		dlg.PeerType = m.PeerType
+		dlg.TopMessageID = m.ID
+		r.db.Create(dlg)
+	} else {
+		r.db.Table(dlg.TableName()).Where("PeerID=? AND PeerType=?", m.PeerID, m.PeerType).Updates(map[string]interface{}{
+			"TopMessageID": m.ID,
+			"LastUpdate":   m.CreatedOn,
+		})
+
+	}
+
+	return res, nil
 }
 
-// GetPendingMessageByRequestID
 func (r *repoPendingMessages) GetPendingMessageByRequestID(requestID int64) (*dto.PendingMessages, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -104,7 +104,6 @@ func (r *repoPendingMessages) GetPendingMessageByRequestID(requestID int64) (*dt
 
 }
 
-// GetPendingMessageByID
 func (r *repoPendingMessages) GetPendingMessageByID(id int64) (*dto.PendingMessages, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -123,7 +122,6 @@ func (r *repoPendingMessages) GetPendingMessageByID(id int64) (*dto.PendingMessa
 
 }
 
-// DeletePendingMessage
 func (r *repoPendingMessages) DeletePendingMessage(ID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -174,7 +172,6 @@ func (r *repoPendingMessages) DeletePendingMessage(ID int64) error {
 	return err
 }
 
-// DeleteManyPendingMessage
 func (r *repoPendingMessages) DeleteManyPendingMessage(IDs []int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -214,7 +211,6 @@ func (r *repoPendingMessages) DeleteManyPendingMessage(IDs []int64) error {
 	return nil
 }
 
-// GetManyPendingMessages
 func (r *repoPendingMessages) GetManyPendingMessages(messageIDs []int64) []*msg.UserMessage {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -240,7 +236,6 @@ func (r *repoPendingMessages) GetManyPendingMessages(messageIDs []int64) []*msg.
 	return messages
 }
 
-// GetManyPendingMessages
 func (r *repoPendingMessages) GetManyPendingMessagesRequestID(messageIDs []int64) []int64 {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -261,6 +256,7 @@ func (r *repoPendingMessages) GetManyPendingMessagesRequestID(messageIDs []int64
 
 	return requestIDs
 }
+
 func (r *repoPendingMessages) GetAllPendingMessages() []*msg.MessagesSend {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -354,7 +350,6 @@ func (r *repoPendingMessages) SaveClientMessageMedia(ID, senderID, requestID int
 	return res, err
 }
 
-// GetPendingMessages
 func (r *repoPendingMessages) GetPendingMessage(messageID int64) *msg.UserMessage {
 	r.mx.Lock()
 	defer r.mx.Unlock()

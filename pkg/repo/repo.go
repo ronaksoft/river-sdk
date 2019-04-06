@@ -84,7 +84,6 @@ func repoSetDB(dialect, dbPath string) error {
 	}
 
 	return r.initDB()
-
 }
 
 // LogMode set query logger if true prints all executed queries
@@ -116,8 +115,8 @@ func (c *Context) DropAndCreateTable(dtoTable interface{}) error {
 	return err
 }
 
-// ReinitiateDatabase runs auto migrate
-func (c *Context) ReinitiateDatabase() error {
+// ReInitiateDatabase runs auto migrate
+func (c *Context) ReInitiateDatabase() error {
 	err := r.db.DropTableIfExists(
 		dto.Dialogs{},
 		dto.Messages{},
@@ -130,11 +129,11 @@ func (c *Context) ReinitiateDatabase() error {
 		dto.FileStatus{},
 		dto.Files{},
 		dto.UserPhotos{},
-		//dto.UISettings{}, //do not remove UISettings on logout
+		// dto.UISettings{}, //do not remove UISettings on logout
 	).Error
 
 	if err != nil {
-		logs.Error("Context::ReinitiateDatabase()->DropTableIfExists()", zap.Error(err))
+		logs.Error("Context::ReInitiateDatabase()->DropTableIfExists()", zap.Error(err))
 	}
 
 	err = r.initDB()
@@ -172,9 +171,11 @@ func (c *Context) Exec(qry string) error {
 
 // Map basic mapper don't use this define mapper for each dto
 func (r *repository) Map(from interface{}, to interface{}) error {
-
 	buff, err := json.Marshal(from)
-	json.Unmarshal(buff, to)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(buff, to)
 	return err
 }
 
