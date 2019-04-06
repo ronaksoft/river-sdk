@@ -75,7 +75,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		logs.Info("SetConfig() ", zap.String("Log File Path", logFilePath))
 	}
 
-	// init UI Executer
+	// init UI Executor
 	uiexec.InitUIExec()
 
 	// Initialize Database
@@ -105,9 +105,9 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	// Initialize realtime requests
 	r.realTimeRequest = map[int64]bool{
 		msg.C_MessagesSetTyping: true,
-		//msg.C_AuthRecall:        true,
-		//msg.C_InitConnect:       true,
-		//msg.C_InitCompleteAuth:  true,
+		// msg.C_AuthRecall:        true,
+		// msg.C_InitConnect:       true,
+		// msg.C_InitCompleteAuth:  true,
 	}
 
 	// Initialize filemanager
@@ -144,13 +144,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	})
 
 	// Initialize queueController
-	var h domain.DeferredRequestHandler
-	if r.mainDelegate != nil {
-		h = r.mainDelegate.OnDeferredRequests
-	} else {
-		h = nil
-	}
-	if q, err := queue.NewQueueController(r.networkCtrl, conf.QueuePath, h); err != nil {
+	if q, err := queue.NewQueueController(r.networkCtrl, conf.QueuePath); err != nil {
 		logs.Fatal("River::SetConfig() faild to initialize Queue",
 			zap.String("Error", err.Error()),
 		)
@@ -570,7 +564,6 @@ func (r *River) CreateAuthKey() (err error) {
 	logs.Info("River::CreateAuthKey() 1st Step Started :: InitConnect")
 
 	r.executeRemoteCommand(
-		//r.executeRealtimeCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_InitConnect,
 		req1Bytes,
@@ -669,7 +662,7 @@ func (r *River) CreateAuthKey() (err error) {
 	waitGroup.Add(1)
 	logs.Info("River::CreateAuthKey() 2nd Step Started :: InitConnect")
 	r.executeRemoteCommand(
-		//r.executeRealtimeCommand(
+		// r.executeRealtimeCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_InitCompleteAuth,
 		req2Bytes,
@@ -731,16 +724,6 @@ func (r *River) CreateAuthKey() (err error) {
 	// double set AuthID
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 	filemanager.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-	// inform external UI that authKey generated
-	if r.mainDelegate != nil {
-		if r.mainDelegate.OnAuthKeyCreated != nil {
-			r.mainDelegate.OnAuthKeyCreated(r.ConnInfo.AuthID)
-		}
-	}
-
-	// this is not required here :/
-	// call authRecall to receive data from websocket
-	// r.onNetworkControllerConnected()
 
 	return
 }

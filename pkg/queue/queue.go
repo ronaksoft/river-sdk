@@ -33,7 +33,6 @@ type Controller struct {
 	rateLimiter            *ratelimit.Bucket
 	waitingList            *goque.Queue
 	network                *network.Controller
-	deferredRequestHandler func(requestID int64, b []byte)
 
 	// Internal Flags
 	distributorRunning bool
@@ -44,7 +43,7 @@ type Controller struct {
 }
 
 // NewQueueController
-func NewQueueController(network *network.Controller, dataDir string, deferredRequestHandler domain.DeferredRequestHandler) (*Controller, error) {
+func NewQueueController(network *network.Controller, dataDir string) (*Controller, error) {
 	ctrl := new(Controller)
 	ctrl.rateLimiter = ratelimit.NewBucket(time.Second, 20)
 	if dataDir == "" {
@@ -58,7 +57,6 @@ func NewQueueController(network *network.Controller, dataDir string, deferredReq
 
 	ctrl.cancelledRequest = make(map[int64]bool)
 	ctrl.network = network
-	ctrl.deferredRequestHandler = deferredRequestHandler
 	return ctrl, nil
 }
 
@@ -157,12 +155,7 @@ func (ctrl *Controller) executor(req request) {
 
 		reqCallbacks = domain.AddRequestCallback(
 			req.ID,
-			func(m *msg.MessageEnvelope) {
-				b, _ := m.Marshal()
-				if ctrl.deferredRequestHandler != nil {
-					ctrl.deferredRequestHandler(int64(req.ID), b)
-				}
-			},
+			nil,
 			req.Timeout,
 			nil,
 			true,

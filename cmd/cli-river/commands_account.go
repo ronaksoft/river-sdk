@@ -142,7 +142,7 @@ var DownloadPhotoBig = &ishell.Cmd{
 	Name: "DownloadPhotoBig",
 	Func: func(c *ishell.Context) {
 		userID := fnGetPeerID(c)
-		strFilePath := _SDK.AccountGetPhoto_Big(userID)
+		strFilePath := _SDK.AccountGetPhotoBig(userID)
 		logs.Info("File Download Complete", zap.String("path", strFilePath))
 
 	},
@@ -151,7 +151,7 @@ var DownloadPhotoSmall = &ishell.Cmd{
 	Name: "DownloadPhotoSmall",
 	Func: func(c *ishell.Context) {
 		userID := fnGetPeerID(c)
-		strFilePath := _SDK.AccountGetPhoto_Small(userID)
+		strFilePath := _SDK.AccountGetPhotoSmall(userID)
 		logs.Info("File Download Complete", zap.String("path", strFilePath))
 
 	},

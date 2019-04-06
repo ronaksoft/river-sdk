@@ -145,7 +145,7 @@ var GroupDownloadPhotoBig = &ishell.Cmd{
 	Name: "DownloadPhotoBig",
 	Func: func(c *ishell.Context) {
 		groupID := fnGetGroupID(c)
-		strFilePath := _SDK.GroupGetPhoto_Big(groupID)
+		strFilePath := _SDK.GroupGetPhotoBig(groupID)
 		logs.Info("File Download Complete", zap.String("path", strFilePath))
 
 	},
@@ -154,7 +154,7 @@ var GroupDownloadPhotoSmall = &ishell.Cmd{
 	Name: "DownloadPhotoSmall",
 	Func: func(c *ishell.Context) {
 		groupID := fnGetGroupID(c)
-		strFilePath := _SDK.GroupGetPhoto_Small(groupID)
+		strFilePath := _SDK.GroupGetPhotoSmall(groupID)
 		logs.Info("File Download Complete", zap.String("path", strFilePath))
 	},
 }
