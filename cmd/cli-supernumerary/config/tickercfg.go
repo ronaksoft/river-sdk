@@ -3,7 +3,7 @@ package config
 import (
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/supernumerary"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/supernumerary"
 )
 
 type TickerCfg struct {

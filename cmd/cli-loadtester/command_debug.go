@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/actor"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/actor"
 	"github.com/kr/pretty"
 
 	"go.uber.org/zap"

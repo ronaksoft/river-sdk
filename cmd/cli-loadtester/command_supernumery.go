@@ -1,8 +1,8 @@
 package main
 
 import (
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/controller"
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/supernumerary"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/controller"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/supernumerary"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"go.uber.org/zap"
 	ishell "gopkg.in/abiosoft/ishell.v2"

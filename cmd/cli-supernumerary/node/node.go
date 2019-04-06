@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/supernumerary"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/supernumerary"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/config"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"git.ronaksoftware.com/ronak/riversdk/supernumerary/config"
 	"github.com/nats-io/go-nats"
 	"go.uber.org/zap"
 )

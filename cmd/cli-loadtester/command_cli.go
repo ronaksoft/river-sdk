@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ishell "gopkg.in/abiosoft/ishell.v2"

@@ -6,10 +6,10 @@ import (
 	"io/ioutil"
 	"os"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/actor"
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/actor"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/config"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"git.ronaksoftware.com/ronak/riversdk/supernumerary/config"
 	"go.uber.org/zap"
 )
 

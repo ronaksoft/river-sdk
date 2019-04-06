@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"

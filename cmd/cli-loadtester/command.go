@@ -4,9 +4,9 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/scenario"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/scenario"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )
 

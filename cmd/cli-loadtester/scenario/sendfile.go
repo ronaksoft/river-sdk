@@ -3,7 +3,7 @@ package scenario
 import (
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 )
 

@@ -10,9 +10,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/controller"
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/executer"
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/controller"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/executer"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 )

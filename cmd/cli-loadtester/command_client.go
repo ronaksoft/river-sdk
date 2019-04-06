@@ -3,14 +3,14 @@ package main
 import (
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/scenario"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/scenario"
 
 	"go.uber.org/zap"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/actor"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/actor"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 
-	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
 
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )
