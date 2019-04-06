@@ -10,8 +10,8 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/loadtester/shared"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 )
 
 var (

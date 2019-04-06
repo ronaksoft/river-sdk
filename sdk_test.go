@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"github.com/dustin/go-humanize"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"

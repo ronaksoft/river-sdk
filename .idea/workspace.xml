@@ -2,94 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4b3c8ed8-4f08-42a5-8fd4-fbfb58d0d314" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/cmd/cli/commands_Tests.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_Tests.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/cli/commands_account.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_account.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/cli/commands_auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_auth.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/cli/commands_contact.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_contact.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/cli/commands_debug.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_debug.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/cli/commands_file.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_file.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/cli/commands_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/cli/commands_init.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_init.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/cli/commands_message.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_message.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/cli/commands_sdk.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_sdk.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/cli/commands_user.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/commands_user.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/cli/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/cli/main_delegate.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/main_delegate.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/cli/printer_message.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/printer_message.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/cli/printer_updates.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/printer_updates.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/cli/request_delegate.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cli/request_delegate.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/supernumerary/cli/command.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/cli/command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/supernumerary/cli/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/cli/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/supernumerary/config/node-config.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/config/node-config.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/supernumerary/node/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/node/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/supernumerary/node/node.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/supernumerary/node/node.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/filemanager/filemanager.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/filemanager/filemanager.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/filemanager/filenetwork.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/filemanager/filenetwork.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/filemanager/filestatus.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/filemanager/filestatus.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/actor/actor.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/actor/actor.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/command.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/command_cli.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/command_cli.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/command_client.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/command_client.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/command_debug.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/command_debug.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/command_helper.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/command_helper.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/command_pcap.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/command_pcap.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/command_supernumery.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/command_supernumery.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/command_worker_queue.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/command_worker_queue.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/controller/file.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/controller/file.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/controller/net.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/controller/net.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/controller/packet_logger.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/controller/packet_logger.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/executer/executer.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/executer/executer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/keys.json" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/keys.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/pcap_parser/examples_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/pcap_parser/examples_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/pcap_parser/parser.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/pcap_parser/parser.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/pcap_parser/parser_wsutil.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/pcap_parser/parser_wsutil.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/pcap_parser/types.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/pcap_parser/types.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/report/pcap_report.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/report/pcap_report.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/report/report.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/report/report.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/scenario/authrecall.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/scenario/authrecall.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/scenario/base.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/scenario/base.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/scenario/createauthkey.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/scenario/createauthkey.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/scenario/importcontact.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/scenario/importcontact.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/scenario/login.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/scenario/login.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/scenario/register.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/scenario/register.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/scenario/request.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/scenario/request.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/scenario/sendfile.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/scenario/sendfile.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/scenario/sendgroupmessage.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/scenario/sendgroupmessage.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/scenario/sendmessage.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/scenario/sendmessage.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/shared/cache.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/shared/cache.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/shared/consts.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/shared/consts.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/shared/failed_request.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/shared/failed_request.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/shared/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/shared/handler.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/shared/interfaces.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/shared/interfaces.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/shared/metrics.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/shared/metrics.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/shared/peer_info.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/shared/peer_info.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/shared/serverkeys.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/shared/serverkeys.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/shared/serverkeys_easyjson.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/shared/serverkeys_easyjson.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/shared/status.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/shared/status.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/supernumerary/const.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/supernumerary/const.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loadtester/supernumerary/supernumerary.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/loadtester/supernumerary/supernumerary.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/logs.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/logs/logs.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/network/network.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/network/network.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/queue/queue.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/queue/queue.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/repo/repo.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/repo/repo_dialogs.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_dialogs.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/repo/repo_files.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_files.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/repo/repo_groups.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_groups.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/repo/repo_messages.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_messages.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/repo/repo_pending_messages.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_pending_messages.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/repo/repo_system.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_system.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/repo/repo_users.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_users.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/synchronizer/message_appliers.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/synchronizer/message_appliers.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/synchronizer/message_hole.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/synchronizer/message_hole.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/synchronizer/synchronizer.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/synchronizer/synchronizer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/synchronizer/update_appliers.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/synchronizer/update_appliers.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/uiexec/uiexec.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/uiexec/uiexec.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/river_conn.go" beforeDir="false" afterPath="$PROJECT_DIR$/river_conn.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sdk.go" beforeDir="false" afterPath="$PROJECT_DIR$/sdk.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sdk_commands.go" beforeDir="false" afterPath="$PROJECT_DIR$/sdk_commands.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sdk_commands_general.go" beforeDir="false" afterPath="$PROJECT_DIR$/sdk_commands_general.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sdk_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/sdk_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gofmt.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/govet.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -100,21 +15,13 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pkg/logs/logs.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="300">
-              <caret line="27" selection-start-line="27" selection-end-line="27" />
-            </state>
-          </provider>
+        <entry file="file://$PROJECT_DIR$/build-json.sh">
+          <provider selected="true" editor-type-id="text-editor" />
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/pkg/filemanager/filemanager.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="200">
-              <caret line="31" column="19" selection-start-line="31" selection-start-column="19" selection-end-line="31" selection-end-column="19" />
-            </state>
-          </provider>
+        <entry file="file://$PROJECT_DIR$/govet.sh">
+          <provider selected="true" editor-type-id="text-editor" />
         </entry>
       </file>
     </leaf>
@@ -166,6 +73,7 @@
         <option value="$PROJECT_DIR$/cli/main.go" />
         <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/pkg/queue/queue.go" />
+        <option value="$PROJECT_DIR$/gofmt.sh" />
       </list>
     </option>
   </component>
@@ -184,11 +92,6 @@
             <path>
               <item name="riversdk" type="b2602c69:ProjectViewProjectNode" />
               <item name="riversdk" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="riversdk" type="b2602c69:ProjectViewProjectNode" />
-              <item name="riversdk" type="462c0819:PsiDirectoryNode" />
-              <item name="pkg" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -210,6 +113,9 @@
     <property name="settings.editor.selected.configurable" value="configurable.group.appearance" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/pkg" />
       <recent name="$PROJECT_DIR$/cmd" />
@@ -229,7 +135,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1680" height="1050" extended-state="0" />
-    <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2020757" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -258,86 +163,7 @@
     <option name="version" value="1" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/cmd/cli/commands.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-170">
-          <caret line="32" column="1" lean-forward="true" selection-start-line="32" selection-start-column="1" selection-end-line="32" selection-end-column="1" />
-          <folding>
-            <element signature="n#!!block;n#fnGetPhone#0" />
-            <element signature="n#!!block;n#fnGetPhoneCode#0" />
-            <element signature="n#!!block;n#fnGetPhoneCodeHash#0" />
-            <element signature="n#!!block;n#fnGetFirstName#0" />
-            <element signature="n#!!block;n#fnGetLastName#0" />
-            <element signature="n#!!block;n#fnGetSearchPhrase#0" />
-            <element signature="n#!!block;n#fnGetPeerID#0" />
-            <element signature="e#874#1036#0" />
-            <element signature="e#967#996#0" />
-            <element signature="e#1002#1033#0" />
-            <element signature="n#!!block;n#fnGetAccessHash#0" />
-            <element signature="e#1132#1315#0" />
-            <element signature="e#1232#1275#0" />
-            <element signature="e#1281#1312#0" />
-            <element signature="n#!!block;n#fnGetTries#0" />
-            <element signature="e#1399#1566#0" />
-            <element signature="e#1492#1526#0" />
-            <element signature="e#1532#1563#0" />
-            <element signature="n#!!block;n#fnGetInterval#0" />
-            <element signature="e#1671#1872#0" />
-            <element signature="e#1766#1832#0" />
-            <element signature="e#1838#1869#0" />
-            <element signature="n#!!block;n#fnGetRequestID#0" />
-            <element signature="e#1966#2136#0" />
-            <element signature="e#2063#2096#0" />
-            <element signature="e#2102#2133#0" />
-            <element signature="n#!!block;n#fnGetBody#0" />
-            <element signature="n#!!block;n#fnGetMaxID#0" />
-            <element signature="e#2323#2485#0" />
-            <element signature="e#2416#2445#0" />
-            <element signature="e#2451#2482#0" />
-            <element signature="n#!!block;n#fnGetMinID#0" />
-            <element signature="e#2568#2730#0" />
-            <element signature="e#2661#2690#0" />
-            <element signature="e#2696#2727#0" />
-            <element signature="n#!!block;n#fnGetLimit#0" />
-            <element signature="e#2813#2981#0" />
-            <element signature="e#2905#2941#0" />
-            <element signature="e#2947#2978#0" />
-            <element signature="n#!!block;n#fnGetTypingAction#0" />
-            <element signature="e#3094#3306#0" />
-            <element signature="e#3213#3266#0" />
-            <element signature="e#3272#3303#0" />
-            <element signature="n#!!block;n#fnGetMessageIDs#0" />
-            <element signature="e#3413#3675#0" />
-            <element signature="e#3603#3617#0" />
-            <element signature="e#3623#3672#0" />
-            <element signature="n#!!block;n#fnGetFromUpdateID#0" />
-            <element signature="e#3774#3964#0" />
-            <element signature="e#3883#3924#0" />
-            <element signature="e#3930#3961#0" />
-            <element signature="n#!!block;n#fnGetInputUser#0" />
-            <element signature="e#4084#4500#0" />
-            <element signature="e#4249#4263#0" />
-            <element signature="e#4381#4395#0" />
-            <element signature="n#!!block;n#fnGetUsername#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/cli/commands_sdk.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="341">
-          <caret line="30" column="10" selection-start-line="30" selection-start-column="10" selection-end-line="30" selection-end-column="10" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/cli/build.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="80">
-          <caret line="4" lean-forward="true" selection-start-line="4" selection-end-line="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/cli/main_delegate.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-river/main_delegate.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="315">
           <caret line="45" lean-forward="true" selection-start-line="45" selection-end-line="45" />
@@ -361,7 +187,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/cli/printer_updates.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-river/printer_updates.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="280">
           <caret line="14" column="10" lean-forward="true" selection-start-line="14" selection-start-column="10" selection-end-line="14" selection-end-column="10" />
@@ -373,7 +199,7 @@
     <entry file="file://$PROJECT_DIR$/domain/queueMessages.go" />
     <entry file="file://$PROJECT_DIR$/log/log.go" />
     <entry file="file://$PROJECT_DIR$/loadtester/command_pool.go" />
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/scenario/request.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/scenario/request.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="374">
           <caret line="65" column="75" lean-forward="true" selection-start-line="65" selection-start-column="75" selection-end-line="65" selection-end-column="75" />
@@ -396,26 +222,26 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/scenario/login.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/scenario/login.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="435">
           <caret line="94" column="29" selection-start-line="94" selection-start-column="29" selection-end-line="94" selection-end-column="29" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/scenario/sendgroupmessage.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/scenario/sendgroupmessage.go">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/cmd/cmd.go" />
     <entry file="file://$PROJECT_DIR$/loadtester/command_plain.go" />
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/scenario/register.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/scenario/register.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="570">
           <caret line="59" column="39" selection-start-line="59" selection-start-column="39" selection-end-line="59" selection-end-column="39" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/scenario/base.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/scenario/base.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="570">
           <caret line="54" column="21" selection-start-line="54" selection-start-column="21" selection-end-line="54" selection-end-column="21" />
@@ -443,29 +269,29 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/command_worker_queue.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/command_worker_queue.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="732">
           <caret line="53" column="53" lean-forward="true" selection-start-line="53" selection-start-column="53" selection-end-line="53" selection-end-column="53" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/shared/cache.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/shared/cache.go">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/shared/failed_request.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/shared/failed_request.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-38" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/executer/executer.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/executer/executer.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="437">
           <caret line="29" column="10" lean-forward="true" selection-start-line="29" selection-start-column="10" selection-end-line="29" selection-end-column="10" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/command_pcap.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/command_pcap.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="240">
           <caret line="86" column="12" lean-forward="true" selection-start-line="86" selection-start-column="12" selection-end-line="86" selection-end-column="12" />
@@ -490,26 +316,26 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/command_debug.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/command_debug.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-2890" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/command_helper.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/command_helper.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-650">
           <caret line="9" column="5" selection-start-line="9" selection-start-column="5" selection-end-line="9" selection-end-column="5" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/controller/net.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/controller/net.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="223">
           <caret line="166" column="43" selection-start-line="166" selection-start-column="43" selection-end-line="166" selection-end-column="43" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/actor/actor.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/actor/actor.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-1610">
           <caret line="23" column="48" lean-forward="true" selection-start-line="23" selection-start-column="48" selection-end-line="23" selection-end-column="48" />
@@ -517,14 +343,14 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/loadtester/_cache/2374000001594" />
-    <entry file="file://$PROJECT_DIR$/cmd/cli/main.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-river/main.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="4">
           <caret line="90" column="41" selection-start-line="90" selection-start-column="41" selection-end-line="90" selection-end-column="41" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/main.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/main.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="80">
           <caret line="24" column="5" selection-start-line="24" selection-start-column="5" selection-end-line="24" selection-end-column="5" />
@@ -540,7 +366,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/scenario/createauthkey.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/scenario/createauthkey.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="578">
           <caret line="72" selection-start-line="72" selection-end-line="72" />
@@ -550,10 +376,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/scenario/sendmessage.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/scenario/sendmessage.go">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/command_cli.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/command_cli.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="578">
           <caret line="98" column="31" selection-start-line="98" selection-start-column="31" selection-end-line="98" selection-end-column="31" />
@@ -567,14 +393,14 @@
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/network/ctrl_network.go" />
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/shared/consts.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/shared/consts.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="120">
           <caret line="9" column="33" selection-start-line="9" selection-start-column="33" selection-end-line="9" selection-end-column="33" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/shared/interfaces.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/shared/interfaces.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="480">
           <caret line="28" column="4" selection-start-line="28" selection-start-column="4" selection-end-line="28" selection-end-column="4" />
@@ -666,7 +492,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/loadtester/command.go">
+    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/command.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="360">
           <caret line="18" selection-start-line="18" selection-end-line="18" />
@@ -720,6 +546,13 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/filemanager/filemanager.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="80">
+          <caret line="25" column="5" lean-forward="true" selection-start-line="25" selection-start-column="5" selection-end-line="25" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/pkg/logs/logs.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="300">
@@ -727,12 +560,18 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pkg/filemanager/filemanager.go">
+    <entry file="file://$PROJECT_DIR$/gofmt.sh">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="200">
-          <caret line="31" column="19" selection-start-line="31" selection-start-column="19" selection-end-line="31" selection-end-column="19" />
+        <state relative-caret-position="40">
+          <caret line="2" column="3" selection-start-line="2" selection-start-column="3" selection-end-line="2" selection-end-column="3" />
         </state>
       </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/build-json.sh">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/govet.sh">
+      <provider selected="true" editor-type-id="text-editor" />
     </entry>
   </component>
 </project>

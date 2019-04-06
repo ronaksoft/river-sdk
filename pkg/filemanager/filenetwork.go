@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 )
 
 // Send encrypt and send request to server and receive and decrypt its response

@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
+	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"github.com/dustin/go-humanize"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"

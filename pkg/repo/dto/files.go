@@ -3,8 +3,8 @@ package dto
 import (
 	"encoding/json"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 )
 
 type Files struct {

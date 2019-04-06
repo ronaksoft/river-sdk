@@ -12,9 +12,9 @@ import (
 
 	"go.uber.org/zap"
 
+	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )

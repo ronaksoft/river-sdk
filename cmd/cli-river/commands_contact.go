@@ -1,9 +1,9 @@
 package main
 
 import (
+	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"

@@ -26,8 +26,8 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 
 	"github.com/monnand/dhkx"
 	"go.uber.org/zap"
