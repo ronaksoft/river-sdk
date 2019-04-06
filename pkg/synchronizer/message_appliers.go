@@ -190,9 +190,9 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 	}
 
 	//Update doaligs
-	err = repo.Ctx().Dialogs.UpdateTopMesssageID(message.CreatedOn, message.PeerID, message.PeerType)
+	err = repo.Ctx().Dialogs.UpdateTopMessageID(message.CreatedOn, message.PeerID, message.PeerType)
 	if err != nil {
-		logs.Error("messageSent()-> UpdateTopMesssageID() failed to update doalogs", zap.Error(err))
+		logs.Error("messageSent()-> UpdateTopMessageID() failed to update doalogs", zap.Error(err))
 	}
 
 	// TODO : Notify UI that the pending message delivered to server

@@ -15,7 +15,7 @@ import (
 var (
 	ctx           *Context
 	r             *repository
-	singletone    sync.Mutex
+	singleton     sync.Mutex
 	repoLastError error
 )
 
@@ -47,11 +47,11 @@ func Ctx() *Context {
 	return ctx
 }
 
-// InitRepo initialize repo singletone
+// InitRepo initialize repo singleton
 func InitRepo(dialect, dbPath string) error {
 	if ctx == nil {
-		singletone.Lock()
-		defer singletone.Unlock()
+		singleton.Lock()
+		defer singleton.Unlock()
 		if ctx == nil {
 			repoLastError = repoSetDB(dialect, dbPath)
 			ctx = &Context{

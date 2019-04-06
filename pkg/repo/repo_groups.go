@@ -288,7 +288,6 @@ func (r *repoGroups) UpdateGroupPhoto(groupPhoto *msg.UpdateGroupPhoto) error {
 	return err
 }
 
-// RemoveGroupPhoto
 func (r *repoGroups) RemoveGroupPhoto(groupID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()

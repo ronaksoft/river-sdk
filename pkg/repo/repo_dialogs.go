@@ -20,7 +20,7 @@ type Dialogs interface {
 	UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID int64) error
 	UpdateDialogUnreadCount(peerID int64, peerTyep, unreadCount int32) error
 	UpdateAccessHash(accessHash int64, peerID int64, peerType int32) error
-	UpdateTopMesssageID(createdOn, peerID int64, peerType int32) error
+	UpdateTopMessageID(createdOn, peerID int64, peerType int32) error
 	UpdateNotifySetting(msg *msg.UpdateNotifySettings) error
 	UpdatePeerNotifySettings(peerID int64, peerType int32, notifySetting *msg.PeerNotifySettings) error
 	Delete(groupID int64, peerType int32) error
@@ -31,15 +31,15 @@ type repoDialogs struct {
 	*repository
 }
 
-// UpdateTopMesssageID
-func (r *repoDialogs) UpdateTopMesssageID(createdOn, peerID int64, peerType int32) error {
+// UpdateTopMessageID
+func (r *repoDialogs) UpdateTopMessageID(createdOn, peerID int64, peerType int32) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
 	em := dto.Messages{}
 	err := r.db.Table(em.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerType).Limit(1).Order("ID DESC").Find(&em).Error
 	if err != nil {
-		logs.Error("Dialogs::UpdateTopMesssageID() TopMessage", zap.Error(err))
+		logs.Error("Dialogs::UpdateTopMessageID() TopMessage", zap.Error(err))
 		return err
 	}
 

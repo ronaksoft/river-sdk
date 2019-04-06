@@ -2,8 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4b3c8ed8-4f08-42a5-8fd4-fbfb58d0d314" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/pkg/filemanager/filemanager.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/filemanager/filemanager.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sdk.go" beforeDir="false" afterPath="$PROJECT_DIR$/sdk.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/repo/repo.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/repo/repo_dialogs.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_dialogs.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/repo/repo_groups.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/repo/repo_groups.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/synchronizer/message_appliers.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/synchronizer/message_appliers.go" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -13,11 +15,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sdk.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="444">
-              <caret line="445" column="23" selection-start-line="445" selection-start-column="23" selection-end-line="445" selection-end-column="23" />
+            <state relative-caret-position="862">
+              <caret line="1001" column="20" lean-forward="true" selection-start-line="1001" selection-start-column="20" selection-end-line="1001" selection-end-column="20" />
               <folding>
                 <element signature="e#730#746#0" />
                 <element signature="n#!!block;n#SetConfig#0" />
@@ -78,16 +80,6 @@
                 <element signature="e#13015#13046#0" />
                 <element signature="e#13259#13525#0" />
                 <element signature="e#13342#13373#0" />
-                <element signature="e#13543#14496#0" />
-                <element signature="e#13625#13972#0" />
-                <element signature="e#13875#13968#0" />
-                <element signature="e#13978#14493#0" />
-                <element signature="e#14067#14334#0" />
-                <element signature="e#14094#14250#0" />
-                <element signature="e#14271#14295#0" />
-                <element signature="e#14301#14328#0" />
-                <element signature="e#14340#14489#0" />
-                <element signature="e#14502#14635#0" />
                 <element signature="n#!!block;n#executeLocalCommand#0" />
                 <element signature="e#15170#15215#0" />
                 <element signature="n#!!block;n#executeRemoteCommand#0" />
@@ -217,6 +209,95 @@
           </provider>
         </entry>
       </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pkg/repo/repo.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="200">
+              <caret line="20" lean-forward="true" selection-start-line="20" selection-end-line="20" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pkg/repo/repo_dialogs.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-2319">
+              <caret line="27" column="1" lean-forward="true" selection-start-line="27" selection-start-column="1" selection-end-line="27" selection-end-column="1" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pkg/repo/repo_groups.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="773">
+              <caret line="289" selection-start-line="289" selection-end-line="289" />
+              <folding>
+                <element signature="e#1175#1198#0" />
+                <element signature="n#!!block;n#Save#0" />
+                <element signature="e#1386#1421#0" />
+                <element signature="n#!!block;n#SaveMany#0" />
+                <element signature="e#1647#1675#0" />
+                <element signature="e#1847#1937#0" />
+                <element signature="e#1991#2043#0" />
+                <element signature="e#2071#2559#0" />
+                <element signature="e#2118#2242#0" />
+                <element signature="e#2248#2347#0" />
+                <element signature="e#2364#2556#0" />
+                <element signature="n#!!block;n#GetManyGroups#0" />
+                <element signature="e#2838#2941#0" />
+                <element signature="e#2969#3045#0" />
+                <element signature="n#!!block;n#GetGroup#0" />
+                <element signature="e#3279#3382#0" />
+                <element signature="n#!!block;n#DeleteGroupMember#0" />
+                <element signature="e#3674#3711#0" />
+                <element signature="n#!!block;n#DeleteAllGroupMember#0" />
+                <element signature="n#!!block;n#UpdateGroupTitle#0" />
+                <element signature="n#!!block;n#SaveParticipants#0" />
+                <element signature="e#4537#4575#0" />
+                <element signature="n#!!block;n#GetParticipants#0" />
+                <element signature="e#4946#4968#0" />
+                <element signature="e#5036#5115#0" />
+                <element signature="n#!!block;n#DeleteGroupMemberMany#0" />
+                <element signature="n#!!block;n#Delete#0" />
+                <element signature="n#!!block;n#UpdateGroupMemberType#0" />
+                <element signature="e#5728#5777#0" />
+                <element signature="n#!!block;n#SearchGroups#0" />
+                <element signature="e#6215#6310#0" />
+                <element signature="e#6370#6449#0" />
+                <element signature="n#!!block;n#GetGroupDTO#0" />
+                <element signature="e#6658#6761#0" />
+                <element signature="n#!!block;n#UpdateGroupPhotoPath#0" />
+                <element signature="e#6947#7084#0" />
+                <element signature="n#!!block;n#UpdateGroupPhoto#0" />
+                <element signature="e#7425#7549#0" />
+                <element signature="n#!!block;n#RemoveGroupPhoto#0" />
+                <element signature="e#7794#8086#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/pkg/repo/repo_message_holes.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="260">
+              <caret line="18" column="15" lean-forward="true" selection-start-line="18" selection-start-column="15" selection-end-line="18" selection-end-column="15" />
+              <folding>
+                <element signature="n#!!block;n#Save#0" />
+                <element signature="e#537#617#0" />
+                <element signature="e#645#680#0" />
+                <element signature="e#704#763#0" />
+                <element signature="e#908#942#0" />
+                <element signature="n#!!block;n#Delete#0" />
+                <element signature="n#!!block;n#DeleteAll#0" />
+                <element signature="n#!!block;n#GetHoles#0" />
+                <element signature="e#1577#1931#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
     </leaf>
   </component>
   <component name="FindInProjectRecents">
@@ -283,6 +364,9 @@
         <option value="$PROJECT_DIR$/sdk_commands_general.go" />
         <option value="$PROJECT_DIR$/pkg/filemanager/filemanager.go" />
         <option value="$PROJECT_DIR$/sdk.go" />
+        <option value="$PROJECT_DIR$/pkg/repo/repo.go" />
+        <option value="$PROJECT_DIR$/pkg/repo/repo_dialogs.go" />
+        <option value="$PROJECT_DIR$/pkg/repo/repo_groups.go" />
       </list>
     </option>
   </component>
@@ -311,7 +395,7 @@
               <item name="riversdk" type="b2602c69:ProjectViewProjectNode" />
               <item name="riversdk" type="462c0819:PsiDirectoryNode" />
               <item name="pkg" type="462c0819:PsiDirectoryNode" />
-              <item name="filemanager" type="462c0819:PsiDirectoryNode" />
+              <item name="repo" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -358,7 +442,7 @@
     <frame x="0" y="0" width="1680" height="1050" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.24969475" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24969475" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -371,7 +455,7 @@
       <window_info anchor="bottom" id="Docker" order="7" />
       <window_info anchor="bottom" id="Database Changes" order="8" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="9" show_stripe_button="false" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="10" visible="true" weight="0.32959184" />
+      <window_info anchor="bottom" id="Terminal" order="10" weight="0.32959184" />
       <window_info anchor="bottom" id="Event Log" order="11" side_tool="true" />
       <window_info anchor="bottom" id="Tail" order="12" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
@@ -390,18 +474,6 @@
     <proxy>off</proxy>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/scenario/sendgroupmessage.go">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/cmd.go" />
-    <entry file="file://$PROJECT_DIR$/loadtester/command_plain.go" />
-    <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/scenario/register.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="570">
-          <caret line="59" column="39" selection-start-line="59" selection-start-column="39" selection-end-line="59" selection-end-column="39" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/cmd/cli-loadtester/scenario/base.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="570">
@@ -1569,8 +1641,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/sdk.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="444">
-          <caret line="445" column="23" selection-start-line="445" selection-start-column="23" selection-end-line="445" selection-end-column="23" />
+        <state relative-caret-position="862">
+          <caret line="1001" column="20" lean-forward="true" selection-start-line="1001" selection-start-column="20" selection-end-line="1001" selection-end-column="20" />
           <folding>
             <element signature="e#730#746#0" />
             <element signature="n#!!block;n#SetConfig#0" />
@@ -1631,16 +1703,6 @@
             <element signature="e#13015#13046#0" />
             <element signature="e#13259#13525#0" />
             <element signature="e#13342#13373#0" />
-            <element signature="e#13543#14496#0" />
-            <element signature="e#13625#13972#0" />
-            <element signature="e#13875#13968#0" />
-            <element signature="e#13978#14493#0" />
-            <element signature="e#14067#14334#0" />
-            <element signature="e#14094#14250#0" />
-            <element signature="e#14271#14295#0" />
-            <element signature="e#14301#14328#0" />
-            <element signature="e#14340#14489#0" />
-            <element signature="e#14502#14635#0" />
             <element signature="n#!!block;n#executeLocalCommand#0" />
             <element signature="e#15170#15215#0" />
             <element signature="n#!!block;n#executeRemoteCommand#0" />
@@ -1765,6 +1827,87 @@
             <element signature="e#34805#34877#0" />
             <element signature="n#!!block;n#onFileDownloadError#0" />
             <element signature="e#35297#35371#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/repo/repo.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="200">
+          <caret line="20" lean-forward="true" selection-start-line="20" selection-end-line="20" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/repo/repo_dialogs.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2319">
+          <caret line="27" column="1" lean-forward="true" selection-start-line="27" selection-start-column="1" selection-end-line="27" selection-end-column="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/repo/repo_groups.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="773">
+          <caret line="289" selection-start-line="289" selection-end-line="289" />
+          <folding>
+            <element signature="e#1175#1198#0" />
+            <element signature="n#!!block;n#Save#0" />
+            <element signature="e#1386#1421#0" />
+            <element signature="n#!!block;n#SaveMany#0" />
+            <element signature="e#1647#1675#0" />
+            <element signature="e#1847#1937#0" />
+            <element signature="e#1991#2043#0" />
+            <element signature="e#2071#2559#0" />
+            <element signature="e#2118#2242#0" />
+            <element signature="e#2248#2347#0" />
+            <element signature="e#2364#2556#0" />
+            <element signature="n#!!block;n#GetManyGroups#0" />
+            <element signature="e#2838#2941#0" />
+            <element signature="e#2969#3045#0" />
+            <element signature="n#!!block;n#GetGroup#0" />
+            <element signature="e#3279#3382#0" />
+            <element signature="n#!!block;n#DeleteGroupMember#0" />
+            <element signature="e#3674#3711#0" />
+            <element signature="n#!!block;n#DeleteAllGroupMember#0" />
+            <element signature="n#!!block;n#UpdateGroupTitle#0" />
+            <element signature="n#!!block;n#SaveParticipants#0" />
+            <element signature="e#4537#4575#0" />
+            <element signature="n#!!block;n#GetParticipants#0" />
+            <element signature="e#4946#4968#0" />
+            <element signature="e#5036#5115#0" />
+            <element signature="n#!!block;n#DeleteGroupMemberMany#0" />
+            <element signature="n#!!block;n#Delete#0" />
+            <element signature="n#!!block;n#UpdateGroupMemberType#0" />
+            <element signature="e#5728#5777#0" />
+            <element signature="n#!!block;n#SearchGroups#0" />
+            <element signature="e#6215#6310#0" />
+            <element signature="e#6370#6449#0" />
+            <element signature="n#!!block;n#GetGroupDTO#0" />
+            <element signature="e#6658#6761#0" />
+            <element signature="n#!!block;n#UpdateGroupPhotoPath#0" />
+            <element signature="e#6947#7084#0" />
+            <element signature="n#!!block;n#UpdateGroupPhoto#0" />
+            <element signature="e#7425#7549#0" />
+            <element signature="n#!!block;n#RemoveGroupPhoto#0" />
+            <element signature="e#7794#8086#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pkg/repo/repo_message_holes.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="260">
+          <caret line="18" column="15" lean-forward="true" selection-start-line="18" selection-start-column="15" selection-end-line="18" selection-end-column="15" />
+          <folding>
+            <element signature="n#!!block;n#Save#0" />
+            <element signature="e#537#617#0" />
+            <element signature="e#645#680#0" />
+            <element signature="e#704#763#0" />
+            <element signature="e#908#942#0" />
+            <element signature="n#!!block;n#Delete#0" />
+            <element signature="n#!!block;n#DeleteAll#0" />
+            <element signature="n#!!block;n#GetHoles#0" />
+            <element signature="e#1577#1931#0" />
           </folding>
         </state>
       </provider>
