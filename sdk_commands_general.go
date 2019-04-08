@@ -943,3 +943,20 @@ func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, de
 		delegate.OnComplete(outBytes)
 	}
 }
+
+func (r *River) GetScrollStatus(peerID int64) int64 {
+	status, err := repo.Ctx().ScrollStatus.Get(peerID)
+	if err != nil {
+		logs.Error("GetScrollStatus::ScrollStatus not found", zap.Int64("PeerID", peerID))
+		return 0
+	} else {
+		return status
+	}
+}
+
+func (r *River) SetScrollStatus(peerID, msgID int64) {
+	if err := repo.Ctx().ScrollStatus.Save(peerID, msgID); err != nil {
+		logs.Error("SetScrollStatus::Failed to set scroll status")
+	}
+}
+

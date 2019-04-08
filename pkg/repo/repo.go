@@ -32,6 +32,7 @@ type Context struct {
 	Groups          Groups
 	MessageHoles    MessageHoles
 	Files           Files
+	ScrollStatus	ScrollStatus
 }
 
 type repository struct {
