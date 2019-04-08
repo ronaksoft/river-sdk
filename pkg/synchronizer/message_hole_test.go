@@ -47,7 +47,7 @@ func TestIsMessageInHole(t *testing.T) {
 		}
 	}
 
-	// surrended mode
+	// surrender mode
 	holes, err := repo.Ctx().MessageHoles.GetHoles(1, 0, 61)
 	if len(holes) != 3 || err != nil {
 		t.Error("Count is not equal to 3")

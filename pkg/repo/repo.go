@@ -25,14 +25,14 @@ type Context struct {
 	DBPath          string
 	Dialogs         Dialogs
 	Messages        Messages
+	MessagesExtra   MessagesExtra
+	MessageHoles    MessagesHole
 	PendingMessages MessagesPending
 	System          System
 	Users           Users
 	UISettings      UISettings
 	Groups          Groups
-	MessageHoles    MessagesHole
 	Files           Files
-	MessagesExtra   MessagesExtra
 }
 
 type repository struct {
@@ -61,13 +61,13 @@ func InitRepo(dialect, dbPath string) error {
 				Dialogs:         &repoDialogs{repository: r},
 				Messages:        &repoMessages{repository: r},
 				PendingMessages: &repoMessagesPending{repository: r},
+				MessagesExtra:   &repoMessagesExtra{repository: r},
+				MessageHoles:    &repoMessagesHole{repository: r},
 				System:          &repoSystem{repository: r},
 				Users:           &repoUsers{repository: r},
 				UISettings:      &repoUISettings{repository: r},
 				Groups:          &repoGroups{repository: r},
-				MessageHoles:    &repoMessagesHole{repository: r},
 				Files:           &repoFiles{repository: r},
-				MessagesExtra:   &repoMessagesExtra{repository: r},
 			}
 		}
 	}
@@ -123,6 +123,7 @@ func (c *Context) ReInitiateDatabase() error {
 		dto.Dialogs{},
 		dto.Messages{},
 		dto.MessagesPending{},
+		dto.MessagesExtra{},
 		dto.System{},
 		dto.Users{},
 		dto.Groups{},
@@ -152,6 +153,7 @@ func (r *repository) initDB() error {
 		dto.Dialogs{},
 		dto.Messages{},
 		dto.MessagesPending{},
+		dto.MessagesExtra{},
 		dto.System{},
 		dto.Users{},
 		dto.UISettings{},

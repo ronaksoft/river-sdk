@@ -49,6 +49,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	// init delegates
 	r.mainDelegate = conf.MainDelegate
 
+
 	// set loglevel
 	logs.SetLogLevel(conf.LogLevel)
 
@@ -60,6 +61,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 			r.logger.Log(logLevel, msg)
 		})
 	}
+
+
 
 	// set log file path
 	if conf.DocumentLogDirectory != "" {
@@ -138,7 +141,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	)
 	r.networkCtrl.SetNetworkStatusChangedCallback(func(newQuality domain.NetworkStatus) {
 		filemanager.Ctx().SetNetworkStatus(newQuality)
-		if r.mainDelegate != nil && r.mainDelegate.OnNetworkStatusChanged != nil {
+		if r.mainDelegate != nil {
 			r.mainDelegate.OnNetworkStatusChanged(int(newQuality))
 		}
 	})
@@ -163,13 +166,13 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// call external delegate on sync status changed
 	r.syncCtrl.SetSyncStatusChangedCallback(func(newStatus domain.SyncStatus) {
-		if r.mainDelegate != nil && r.mainDelegate.OnSyncStatusChanged != nil {
+		if r.mainDelegate != nil  {
 			r.mainDelegate.OnSyncStatusChanged(int(newStatus))
 		}
 	})
 	// call external delegate on OnUpdate
 	r.syncCtrl.SetOnUpdateCallback(func(constructorID int64, b []byte) {
-		if r.mainDelegate != nil && r.mainDelegate.OnUpdates != nil {
+		if r.mainDelegate != nil {
 			r.mainDelegate.OnUpdates(constructorID, b)
 		}
 	})
@@ -462,7 +465,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 				blockingMode,
 				true,
 			)
-			if err != nil && delegate != nil && delegate.OnTimeout != nil {
+			if err != nil && delegate != nil  {
 				logs.Error("ExecuteRealtimeCommand()", zap.Error(err))
 				delegate.OnTimeout(err)
 			}
@@ -734,7 +737,7 @@ func (r *River) onGeneralError(e *msg.Error) {
 		zap.String("Item", e.Items),
 	)
 
-	if r.mainDelegate != nil && r.mainDelegate.OnGeneralError != nil {
+	if r.mainDelegate != nil  {
 		buff, _ := e.Marshal()
 		r.mainDelegate.OnGeneralError(buff)
 	}
@@ -967,11 +970,11 @@ func (r *River) onFileProgressChanged(messageID, processedParts, totalParts int6
 
 	// Notify UI that upload is completed
 	if stateType == domain.FileStateDownload {
-		if r.mainDelegate.OnDownloadProgressChanged != nil {
+		if r.mainDelegate != nil {
 			r.mainDelegate.OnDownloadProgressChanged(messageID, processedParts, totalParts, percent)
 		}
 	} else if stateType == domain.FileStateUpload {
-		if r.mainDelegate.OnUploadProgressChanged != nil {
+		if r.mainDelegate != nil {
 			r.mainDelegate.OnUploadProgressChanged(messageID, processedParts, totalParts, percent)
 		}
 	}
@@ -1127,7 +1130,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 	}
 
 	// Notify UI that upload is completed
-	if r.mainDelegate.OnUploadCompleted != nil {
+	if r.mainDelegate != nil {
 		r.mainDelegate.OnUploadCompleted(messageID, filePath)
 	}
 }
@@ -1137,7 +1140,7 @@ func (r *River) onFileDownloadCompleted(messageID int64, filePath string, stateT
 	// update file path of documents that have same DocID
 	go repo.Ctx().Files.UpdateFilePathByDocumentID(messageID, filePath)
 	// Notify UI that download is completed
-	if r.mainDelegate.OnDownloadCompleted != nil {
+	if r.mainDelegate != nil {
 		r.mainDelegate.OnDownloadCompleted(messageID, filePath)
 	}
 }
@@ -1152,7 +1155,7 @@ func (r *River) onFileUploadError(messageID, requestID int64, filePath string, e
 		zap.String("Item", x.Items),
 	)
 	// Notify UI that upload encountered an error
-	if r.mainDelegate.OnUploadError != nil {
+	if r.mainDelegate != nil {
 		r.mainDelegate.OnUploadError(messageID, requestID, filePath, err)
 	}
 }
@@ -1167,7 +1170,7 @@ func (r *River) onFileDownloadError(messageID, requestID int64, filePath string,
 		zap.String("Item", x.Items),
 	)
 	// Notify UI that download encountered an error
-	if r.mainDelegate.OnDownloadError != nil {
+	if r.mainDelegate != nil {
 		r.mainDelegate.OnDownloadError(messageID, requestID, filePath, err)
 	}
 }

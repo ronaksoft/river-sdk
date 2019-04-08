@@ -136,7 +136,7 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 		r.syncCtrl.ClearUpdateID()
 	}
 
-	if r.mainDelegate != nil && r.mainDelegate.OnSessionClosed != nil {
+	if r.mainDelegate != nil  {
 		r.mainDelegate.OnSessionClosed(reason)
 	}
 
@@ -182,7 +182,7 @@ func (r *River) SearchContacts(requestID int64, searchPhrase string, delegate Re
 	res.Message, _ = contacts.Marshal()
 
 	buff, _ := res.Marshal()
-	if delegate.OnComplete != nil {
+	if delegate != nil {
 		delegate.OnComplete(buff)
 	}
 }
@@ -239,7 +239,7 @@ func (r *River) SearchInDialogs(requestID int64, searchPhrase string, delegate R
 
 	res.Message, _ = dlgs.Marshal()
 	buff, _ := res.Marshal()
-	if delegate.OnComplete != nil {
+	if delegate != nil {
 		delegate.OnComplete(buff)
 	}
 }
@@ -279,7 +279,7 @@ func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, 
 		out := new(msg.MessageEnvelope)
 		// Timeout Callback
 		timeoutCB := func() {
-			if delegate.OnTimeout != nil {
+			if delegate != nil {
 				delegate.OnTimeout(domain.ErrRequestTimeout)
 			}
 		}
@@ -288,7 +288,7 @@ func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, 
 		successCB := func(response *msg.MessageEnvelope) {
 			if response.Constructor != msg.C_GroupFull {
 				msg.ResultError(out, &msg.Error{Code: "00", Items: "response type is not GroupFull"})
-				if delegate.OnComplete != nil {
+				if delegate != nil {
 					outBytes, _ := out.Marshal()
 					delegate.OnComplete(outBytes)
 				}
@@ -299,7 +299,7 @@ func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, 
 			err := groupFull.Unmarshal(response.Message)
 			if err != nil {
 				msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
-				if delegate.OnComplete != nil {
+				if delegate != nil {
 					outBytes, _ := out.Marshal()
 					delegate.OnComplete(outBytes)
 				}
@@ -315,7 +315,7 @@ func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, 
 
 			res.Message, _ = user.Marshal()
 			resBytes, _ := res.Marshal()
-			if delegate.OnComplete != nil {
+			if delegate != nil {
 				delegate.OnComplete(resBytes)
 			}
 		}
@@ -327,7 +327,7 @@ func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, 
 		res.Message, _ = user.Marshal()
 
 		buff, _ := res.Marshal()
-		if delegate.OnComplete != nil {
+		if delegate != nil {
 			delegate.OnComplete(buff)
 		}
 	}
@@ -896,7 +896,7 @@ func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, de
 		res.Items = err.Error()
 		msg.ResultError(out, res)
 		outBytes, _ := out.Marshal()
-		if delegate.OnComplete != nil {
+		if delegate != nil {
 			delegate.OnComplete(outBytes)
 		}
 		return
@@ -939,7 +939,7 @@ func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, de
 	out.Constructor = msg.C_MessagesMany
 	out.Message, _ = msgMany.Marshal()
 	outBytes, _ := out.Marshal()
-	if delegate.OnComplete != nil {
+	if delegate != nil {
 		delegate.OnComplete(outBytes)
 	}
 }

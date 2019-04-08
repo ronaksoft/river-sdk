@@ -71,8 +71,6 @@ func (r *River) loadSystemConfig() {
 	r.ConnInfo = new(RiverConnection)
 	if err := r.ConnInfo.loadConfig(); err != nil {
 		r.ConnInfo.saveConfig()
-	} else {
-		logs.Error("River::loadSystemConfig()", zap.Error(err))
 	}
 }
 
