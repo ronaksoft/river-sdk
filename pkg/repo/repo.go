@@ -25,14 +25,14 @@ type Context struct {
 	DBPath          string
 	Dialogs         Dialogs
 	Messages        Messages
-	PendingMessages PendingMessages
+	PendingMessages MessagesPending
 	System          System
 	Users           Users
 	UISettings      UISettings
 	Groups          Groups
-	MessageHoles    MessageHoles
+	MessageHoles    MessagesHole
 	Files           Files
-	ScrollStatus	ScrollStatus
+	MessagesExtra   MessagesExtra
 }
 
 type repository struct {
@@ -60,13 +60,14 @@ func InitRepo(dialect, dbPath string) error {
 				DBPath:          dbPath,
 				Dialogs:         &repoDialogs{repository: r},
 				Messages:        &repoMessages{repository: r},
-				PendingMessages: &repoPendingMessages{repository: r},
+				PendingMessages: &repoMessagesPending{repository: r},
 				System:          &repoSystem{repository: r},
 				Users:           &repoUsers{repository: r},
 				UISettings:      &repoUISettings{repository: r},
 				Groups:          &repoGroups{repository: r},
-				MessageHoles:    &repoMessageHoles{repository: r},
+				MessageHoles:    &repoMessagesHole{repository: r},
 				Files:           &repoFiles{repository: r},
+				MessagesExtra:   &repoMessagesExtra{repository: r},
 			}
 		}
 	}
@@ -121,15 +122,15 @@ func (c *Context) ReInitiateDatabase() error {
 	err := r.db.DropTableIfExists(
 		dto.Dialogs{},
 		dto.Messages{},
-		dto.PendingMessages{},
+		dto.MessagesPending{},
 		dto.System{},
 		dto.Users{},
 		dto.Groups{},
-		dto.GroupParticipants{},
-		dto.MessageHoles{},
-		dto.FileStatus{},
+		dto.GroupsParticipants{},
+		dto.MessagesHole{},
+		dto.FilesStatus{},
 		dto.Files{},
-		dto.UserPhotos{},
+		dto.UsersPhoto{},
 		// dto.UISettings{}, //do not remove UISettings on logout
 	).Error
 
@@ -150,16 +151,16 @@ func (r *repository) initDB() error {
 	repoLastError = r.db.AutoMigrate(
 		dto.Dialogs{},
 		dto.Messages{},
-		dto.PendingMessages{},
+		dto.MessagesPending{},
 		dto.System{},
 		dto.Users{},
 		dto.UISettings{},
 		dto.Groups{},
-		dto.GroupParticipants{},
-		dto.MessageHoles{},
-		dto.FileStatus{},
+		dto.GroupsParticipants{},
+		dto.MessagesHole{},
+		dto.FilesStatus{},
 		dto.Files{},
-		dto.UserPhotos{},
+		dto.UsersPhoto{},
 	).Error
 
 	return repoLastError

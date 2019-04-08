@@ -12,7 +12,7 @@ const (
 	_ClientSendMessageGeoLocationType = -3
 )
 
-type PendingMessages struct {
+type MessagesPending struct {
 	dto
 	ID         int64  `gorm:"primary_key;column:ID;auto_increment:false" json:"ID"`
 	RequestID  int64  `gorm:"column:RequestID;index:ixRequestID" json:"RequestID"`
@@ -29,11 +29,11 @@ type PendingMessages struct {
 	Media      []byte `gorm:"type:blob;column:Media" json:"Media"`
 }
 
-func (PendingMessages) TableName() string {
-	return "pendingmessages"
+func (MessagesPending) TableName() string {
+	return "messages_pending"
 }
 
-func (m *PendingMessages) Map(v *msg.MessagesSend) {
+func (m *MessagesPending) Map(v *msg.MessagesSend) {
 	m.AccessHash = int64(v.Peer.AccessHash)
 	m.Body = v.Body
 	m.PeerID = v.Peer.ID
@@ -44,7 +44,7 @@ func (m *PendingMessages) Map(v *msg.MessagesSend) {
 	m.Entities, _ = json.Marshal(v.Entities)
 }
 
-func (m *PendingMessages) MapTo(v *msg.ClientPendingMessage) {
+func (m *MessagesPending) MapTo(v *msg.ClientPendingMessage) {
 	v.ID = m.ID
 	v.RequestID = m.RequestID
 	v.PeerID = m.PeerID
@@ -61,7 +61,7 @@ func (m *PendingMessages) MapTo(v *msg.ClientPendingMessage) {
 	v.MediaType = msg.InputMediaType(m.MediaType)
 	v.Media = m.Media
 }
-func (m *PendingMessages) MapToUserMessage(v *msg.UserMessage) {
+func (m *MessagesPending) MapToUserMessage(v *msg.UserMessage) {
 	v.ID = m.ID
 	v.PeerID = m.PeerID
 	v.PeerType = m.PeerType
@@ -79,7 +79,7 @@ func (m *PendingMessages) MapToUserMessage(v *msg.UserMessage) {
 	v.Media = m.Media
 }
 
-func (m *PendingMessages) MapToDtoMessage(v *Messages) {
+func (m *MessagesPending) MapToDtoMessage(v *Messages) {
 	v.ID = m.ID
 	v.PeerID = m.PeerID
 	v.PeerType = m.PeerType
@@ -94,7 +94,7 @@ func (m *PendingMessages) MapToDtoMessage(v *Messages) {
 
 }
 
-func (m *PendingMessages) MapToMessageSend(v *msg.MessagesSend) {
+func (m *MessagesPending) MapToMessageSend(v *msg.MessagesSend) {
 	v.Body = m.Body
 	v.Peer = new(msg.InputPeer)
 	v.Peer.AccessHash = uint64(m.AccessHash)
@@ -108,7 +108,7 @@ func (m *PendingMessages) MapToMessageSend(v *msg.MessagesSend) {
 	json.Unmarshal(m.Entities, &v.Entities)
 }
 
-func (m *PendingMessages) MapFromClientMessageMedia(fileID int64, v *msg.ClientSendMessageMedia) {
+func (m *MessagesPending) MapFromClientMessageMedia(fileID int64, v *msg.ClientSendMessageMedia) {
 	m.PeerID = v.Peer.ID
 	m.PeerType = int32(v.Peer.Type)
 	m.AccessHash = int64(v.Peer.AccessHash)
@@ -118,7 +118,7 @@ func (m *PendingMessages) MapFromClientMessageMedia(fileID int64, v *msg.ClientS
 	m.MediaType = int32(v.MediaType)
 	m.Media, _ = v.Marshal()
 }
-func (m *PendingMessages) MapFromMessageMedia(v *msg.MessagesSendMedia) {
+func (m *MessagesPending) MapFromMessageMedia(v *msg.MessagesSendMedia) {
 	m.RequestID = v.RandomID
 	m.PeerID = v.Peer.ID
 	m.PeerType = int32(v.Peer.Type)

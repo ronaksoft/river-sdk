@@ -2,7 +2,7 @@ package dto
 
 import "git.ronaksoftware.com/ronak/riversdk/msg"
 
-type GroupParticipants struct {
+type GroupsParticipants struct {
 	dto
 	GroupID    int64  `gorm:"type:bigint;primary_key;column:GroupID" json:"GroupID"` // type is required for composite primary key
 	UserID     int64  `gorm:"type:bigint;primary_key;column:UserID" json:"UserID"`   // type is required for composite primary key
@@ -14,11 +14,11 @@ type GroupParticipants struct {
 	Photo      []byte `gorm:"type:blob;column:Photo" json:"Photo"`
 }
 
-func (GroupParticipants) TableName() string {
-	return "group_participants"
+func (GroupsParticipants) TableName() string {
+	return "groups_participants"
 }
 
-func (m *GroupParticipants) MapFrom(groupID int64, v *msg.GroupParticipant) {
+func (m *GroupsParticipants) MapFrom(groupID int64, v *msg.GroupParticipant) {
 	m.GroupID = groupID
 	m.UserID = v.UserID
 	m.FirstName = v.FirstName
@@ -34,7 +34,7 @@ func (m *GroupParticipants) MapFrom(groupID int64, v *msg.GroupParticipant) {
 	}
 }
 
-func (m *GroupParticipants) MapTo(v *msg.GroupParticipant) {
+func (m *GroupsParticipants) MapTo(v *msg.GroupParticipant) {
 	v.UserID = m.UserID
 	v.FirstName = m.FirstName
 	v.LastName = m.LastName

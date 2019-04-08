@@ -12,16 +12,16 @@ import (
 
 // Files repoFiles interface
 type Files interface {
-	SaveFileStatus(fs *dto.FileStatus) (err error)
-	GetAllFileStatus() []dto.FileStatus
-	GetFileStatus(msgID int64) (*dto.FileStatus, error)
+	SaveFileStatus(fs *dto.FilesStatus) (err error)
+	GetAllFileStatus() []dto.FilesStatus
+	GetFileStatus(msgID int64) (*dto.FilesStatus, error)
 	DeleteFileStatus(msgID int64) error
 	DeleteManyFileStatus(msgIDs []int64) error
 	MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, fileSize int32, sent *msg.MessagesSent) (err error)
 	SaveFileDocument(m *msg.UserMessage, doc *msg.MediaDocument) error
 	GetExistingFileDocument(filePath string) *dto.Files
 	GetFilePath(msgID, docID int64) string
-	SaveDownloadingFile(fs *dto.FileStatus) error
+	SaveDownloadingFile(fs *dto.FilesStatus) error
 	UpdateFileStatus(msgID int64, state domain.RequestStatus) error
 	UpdateThumbnailPath(msgID int64, filePath string) error
 	GetFile(msgID int64) (*dto.Files, error)
@@ -36,11 +36,11 @@ type repoFiles struct {
 }
 
 // SaveFileStatus
-func (r *repoFiles) SaveFileStatus(fs *dto.FileStatus) (err error) {
+func (r *repoFiles) SaveFileStatus(fs *dto.FilesStatus) (err error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	dto := new(dto.FileStatus)
+	dto := new(dto.FilesStatus)
 	r.db.Find(dto, fs.MessageID)
 	if dto.FileID == 0 {
 		return r.db.Create(fs).Error
@@ -48,20 +48,20 @@ func (r *repoFiles) SaveFileStatus(fs *dto.FileStatus) (err error) {
 	return r.db.Save(fs).Error
 }
 
-func (r *repoFiles) GetAllFileStatus() []dto.FileStatus {
+func (r *repoFiles) GetAllFileStatus() []dto.FilesStatus {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	dtos := make([]dto.FileStatus, 0)
+	dtos := make([]dto.FilesStatus, 0)
 	r.db.Find(&dtos)
 	return dtos
 }
 
-func (r *repoFiles) GetFileStatus(msgID int64) (*dto.FileStatus, error) {
+func (r *repoFiles) GetFileStatus(msgID int64) (*dto.FilesStatus, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	mdl := new(dto.FileStatus)
+	mdl := new(dto.FilesStatus)
 	err := r.db.Find(mdl, msgID).Error
 	return mdl, err
 }
@@ -72,7 +72,7 @@ func (r *repoFiles) DeleteFileStatus(ID int64) error {
 	defer r.mx.Unlock()
 
 	// remove pending status
-	err := r.db.Where("MessageID = ?", ID).Delete(dto.FileStatus{}).Error
+	err := r.db.Where("MessageID = ?", ID).Delete(dto.FilesStatus{}).Error
 
 	return err
 }
@@ -83,7 +83,7 @@ func (r *repoFiles) DeleteManyFileStatus(msgIDs []int64) error {
 	defer r.mx.Unlock()
 
 	// remove pending status
-	err := r.db.Where("MessageID IN (?)", msgIDs).Delete(dto.FileStatus{}).Error
+	err := r.db.Where("MessageID IN (?)", msgIDs).Delete(dto.FilesStatus{}).Error
 
 	return err
 }
@@ -165,7 +165,7 @@ func (r *repoFiles) GetFilePath(msgID, docID int64) string {
 	return ""
 }
 
-func (r *repoFiles) SaveDownloadingFile(fs *dto.FileStatus) error {
+func (r *repoFiles) SaveDownloadingFile(fs *dto.FilesStatus) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -184,7 +184,7 @@ func (r *repoFiles) UpdateFileStatus(msgID int64, state domain.RequestStatus) er
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	mdl := dto.FileStatus{}
+	mdl := dto.FilesStatus{}
 	return r.db.Table(mdl.TableName()).Where("MessageID=? ", msgID).Updates(map[string]interface{}{
 		"RequestStatus": int32(state),
 	}).Error

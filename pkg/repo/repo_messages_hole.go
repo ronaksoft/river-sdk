@@ -7,20 +7,20 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 )
 
-// MessageHoles repoMessageHoles interface
-type MessageHoles interface {
+// MessagesHole repoMessagesHole interface
+type MessagesHole interface {
 	Save(peerID, minID, maxID int64) error
 	Delete(peerID, minID int64) error
 	DeleteAll(peerID int64) error
-	GetHoles(peerID, msgMinID, msgMaxID int64) ([]dto.MessageHoles, error)
+	GetHoles(peerID, msgMinID, msgMaxID int64) ([]dto.MessagesHole, error)
 }
 
-type repoMessageHoles struct {
+type repoMessagesHole struct {
 	*repository
 }
 
 // Save
-func (r *repoMessageHoles) Save(peerID, minID, maxID int64) error {
+func (r *repoMessagesHole) Save(peerID, minID, maxID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -33,13 +33,13 @@ func (r *repoMessageHoles) Save(peerID, minID, maxID int64) error {
 		Valid: true,
 	}
 
-	m := dto.MessageHoles{
+	m := dto.MessagesHole{
 		PeerID: peerID,
 		MinID:  nilInt64,
 		MaxID:  maxID,
 	}
 
-	entity := new(dto.MessageHoles)
+	entity := new(dto.MessagesHole)
 	r.db.Table(m.TableName()).Where("PeerID = ? AND MinID=?", peerID, minID).Find(entity)
 	if entity.PeerID == 0 {
 		return r.db.Create(m).Error
@@ -48,23 +48,23 @@ func (r *repoMessageHoles) Save(peerID, minID, maxID int64) error {
 }
 
 // Delete
-func (r *repoMessageHoles) Delete(peerID, minID int64) error {
+func (r *repoMessagesHole) Delete(peerID, minID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	return r.db.Where("PeerID = ? AND MinID=?", peerID, minID).Delete(dto.MessageHoles{}).Error
+	return r.db.Where("PeerID = ? AND MinID=?", peerID, minID).Delete(dto.MessagesHole{}).Error
 }
 
 // DeleteAll
-func (r *repoMessageHoles) DeleteAll(peerID int64) error {
+func (r *repoMessagesHole) DeleteAll(peerID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	return r.db.Where("PeerID = ?", peerID).Delete(dto.MessageHoles{}).Error
+	return r.db.Where("PeerID = ?", peerID).Delete(dto.MessagesHole{}).Error
 }
 
 // GetHoles
-func (r repoMessageHoles) GetHoles(peerID, msgMinID, msgMaxID int64) ([]dto.MessageHoles, error) {
+func (r repoMessagesHole) GetHoles(peerID, msgMinID, msgMaxID int64) ([]dto.MessagesHole, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 	/*
@@ -73,7 +73,7 @@ func (r repoMessageHoles) GetHoles(peerID, msgMinID, msgMaxID int64) ([]dto.Mess
 		C : MinID < msgMinID && MinID < msgMaxID && MaxID > msgMinID && MaxID < msgMaxID ||
 		D : MinID >= msgMinID && MinID < msgMaxID && MaxID > msgMinID && MaxID <= msgMaxID ||
 	*/
-	dtoHoles := make([]dto.MessageHoles, 0)
+	dtoHoles := make([]dto.MessagesHole, 0)
 	err := r.db.Where("PeerID = ? AND ("+
 		"(MinID <= ? AND MinID < ? AND MaxID > ? AND MaxID >= ?)"+" OR "+ // A : inside or exact size of hole
 		"(MinID > ? AND MinID < ? AND MaxID > ? AND MaxID > ?)"+" OR "+ // B : minside overlap

@@ -2,7 +2,7 @@ package dto
 
 import "git.ronaksoftware.com/ronak/riversdk/msg"
 
-type UserPhotos struct {
+type UsersPhoto struct {
 	dto
 	UserID           int64  `gorm:"type:bigint;primary_key;column:UserID" json:"UserID"`   // type is required for composite primary key
 	PhotoID         int64  `gorm:"type:bigint;primary_key;column:PhotoID" json:"PhotoID"` // type is required for composite primary key
@@ -18,11 +18,11 @@ type UserPhotos struct {
 	SmallFilePath   string `gorm:"column:SmallFilePath" json:"SmallFilePath"`
 }
 
-func (UserPhotos) TableName() string {
-	return "user_photos"
+func (UsersPhoto) TableName() string {
+	return "users_photo"
 }
 
-func (m *UserPhotos) Map(userId int64, v *msg.UserPhoto) {
+func (m *UsersPhoto) Map(userId int64, v *msg.UserPhoto) {
 	m.UserID = userId
 	m.PhotoID = v.PhotoID
 	m.BigFileID = v.PhotoBig.FileID
@@ -33,7 +33,7 @@ func (m *UserPhotos) Map(userId int64, v *msg.UserPhoto) {
 	m.SmallClusterID = v.PhotoSmall.ClusterID
 }
 
-func (m *UserPhotos) MapTo(v *msg.UserPhoto) {
+func (m *UsersPhoto) MapTo(v *msg.UserPhoto) {
 	v.PhotoID = m.PhotoID
 	v.PhotoBig = new(msg.FileLocation)
 	v.PhotoSmall = new(msg.FileLocation)

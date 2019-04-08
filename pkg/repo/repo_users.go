@@ -29,7 +29,7 @@ type Users interface {
 	SearchUsers(searchPhrase string) []*msg.User
 	UpdateUserProfile(userID int64, req *msg.AccountUpdateProfile) error
 	UpdateUsername(u *msg.UpdateUsername) error
-	GetUserPhoto(userID, photoID int64) *dto.UserPhotos
+	GetUserPhoto(userID, photoID int64) *dto.UsersPhoto
 	UpdateAccountPhotoPath(userID, photoID int64, isBig bool, filePath string) error
 	SaveUserPhoto(userPhoto *msg.UpdateUserPhoto) error
 	RemoveUserPhoto(userID int64) error
@@ -58,8 +58,8 @@ func (r *repoUsers) SaveUser(user *msg.User) error {
 	// save user Photos
 	if user.Photo != nil {
 
-		dtoPhoto := new(dto.UserPhotos)
-		r.db.Where(&dto.UserPhotos{UserID: user.ID, PhotoID: user.Photo.PhotoID}).Find(dtoPhoto)
+		dtoPhoto := new(dto.UsersPhoto)
+		r.db.Where(&dto.UsersPhoto{UserID: user.ID, PhotoID: user.Photo.PhotoID}).Find(dtoPhoto)
 		if dtoPhoto.UserID == 0 || dtoPhoto.PhotoID == 0 {
 			dtoPhoto.Map(user.ID, user.Photo)
 			r.db.Create(dtoPhoto)
@@ -463,7 +463,7 @@ func (r *repoUsers) UpdateUsername(u *msg.UpdateUsername) error {
 	}).Error
 }
 
-func (r *repoUsers) GetUserPhoto(userID, photoID int64) *dto.UserPhotos {
+func (r *repoUsers) GetUserPhoto(userID, photoID int64) *dto.UsersPhoto {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -472,7 +472,7 @@ func (r *repoUsers) GetUserPhoto(userID, photoID int64) *dto.UserPhotos {
 		zap.Int64("PhotoID", photoID),
 	)
 
-	dtoPhoto := dto.UserPhotos{}
+	dtoPhoto := dto.UsersPhoto{}
 
 	err := r.db.Where("UserID = ? AND PhotoID = ?", userID, photoID).First(&dtoPhoto).Error
 	if err != nil {
@@ -487,7 +487,7 @@ func (r *repoUsers) UpdateAccountPhotoPath(userID, photoID int64, isBig bool, fi
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	e := new(dto.UserPhotos)
+	e := new(dto.UsersPhoto)
 
 	if isBig {
 		return r.db.Table(e.TableName()).Where("UserID = ? AND PhotoID = ?", userID, photoID).Updates(map[string]interface{}{
@@ -517,8 +517,8 @@ func (r *repoUsers) SaveUserPhoto(userPhoto *msg.UpdateUserPhoto) error {
 	// save user Photos
 	if userPhoto.Photo != nil {
 
-		dtoPhoto := new(dto.UserPhotos)
-		r.db.Where(&dto.UserPhotos{UserID: userPhoto.UserID, PhotoID: userPhoto.Photo.PhotoID}).Find(dtoPhoto)
+		dtoPhoto := new(dto.UsersPhoto)
+		r.db.Where(&dto.UsersPhoto{UserID: userPhoto.UserID, PhotoID: userPhoto.Photo.PhotoID}).Find(dtoPhoto)
 		if dtoPhoto.UserID == 0 || dtoPhoto.PhotoID == 0 {
 			dtoPhoto.Map(userPhoto.UserID, userPhoto.Photo)
 			er = r.db.Create(dtoPhoto).Error
@@ -549,5 +549,5 @@ func (r *repoUsers) RemoveUserPhoto(userID int64) error {
 	r.db.Table(u.TableName()).Where("ID=?", userID).Updates(map[string]interface{}{
 		"Photo": []byte(""),
 	})
-	return r.db.Delete(dto.UserPhotos{}, "UserID = ?", userID).Error
+	return r.db.Delete(dto.UsersPhoto{}, "UserID = ?", userID).Error
 }

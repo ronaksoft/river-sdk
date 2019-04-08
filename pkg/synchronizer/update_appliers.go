@@ -128,7 +128,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			logs.Error("updateNewMessage() -> DeleteGroupMemberMany() Failed", zap.Error(err))
 		}
 
-		// Check if user left (deleted him/her self from group) remove its Group, Dialog and its PendingMessages
+		// Check if user left (deleted him/her self from group) remove its Group, Dialog and its MessagesPending
 		selfUserID := ctrl.connInfo.PickupUserID()
 		userLeft := false
 		for _, v := range act.UserIDs {
@@ -183,13 +183,13 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			repo.Ctx().Groups.DeleteAllGroupMember(x.Message.PeerID)
 			//delete MessageHole
 			DeleteMessageHole(x.Message.PeerID)
-			logs.Warn("handleMessageAction() deleted all MessageHoles", zap.Int64("PeerID", x.Message.PeerID))
+			logs.Warn("handleMessageAction() deleted all MessagesHole", zap.Int64("PeerID", x.Message.PeerID))
 		} else {
 			// get dialog and create first hole
 			dtoDlg := repo.Ctx().Dialogs.GetDialog(x.Message.PeerID, x.Message.PeerType)
 			if dtoDlg != nil {
 				DeleteMessageHole(x.Message.PeerID)
-				logs.Warn("handleMessageAction() deleted all MessageHoles", zap.Int64("PeerID", x.Message.PeerID))
+				logs.Warn("handleMessageAction() deleted all MessagesHole", zap.Int64("PeerID", x.Message.PeerID))
 				CreateMessageHole(dtoDlg.PeerID, 0, dtoDlg.TopMessageID-1)
 			}
 		}

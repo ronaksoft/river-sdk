@@ -8,16 +8,16 @@ import (
 )
 
 // GetHoles get holes between min & max
-func GetHoles(peerID, minID, maxID int64) []dto.MessageHoles {
+func GetHoles(peerID, minID, maxID int64) []dto.MessagesHole {
 	holes, err := repo.Ctx().MessageHoles.GetHoles(peerID, minID, maxID)
 	if err != nil {
-		return make([]dto.MessageHoles, 0)
+		return make([]dto.MessagesHole, 0)
 	}
 	return holes
 }
 
 // GetMinClosestHole find closest hole from lower side
-func GetMinClosestHole(minID int64, holes []dto.MessageHoles) *dto.MessageHoles {
+func GetMinClosestHole(minID int64, holes []dto.MessagesHole) *dto.MessagesHole {
 	minGapSizeIdx := -1
 	minGaSize := int64(^uint64(0) >> 1)
 
@@ -38,7 +38,7 @@ func GetMinClosestHole(minID int64, holes []dto.MessageHoles) *dto.MessageHoles 
 }
 
 // GetMaxClosestHole find closest hole from upper side
-func GetMaxClosestHole(maxID int64, holes []dto.MessageHoles) *dto.MessageHoles {
+func GetMaxClosestHole(maxID int64, holes []dto.MessagesHole) *dto.MessagesHole {
 	maxGapSizeIdx := -1
 	maxGapSize := int64(^uint64(0) >> 1)
 	for idx, h := range holes {

@@ -136,7 +136,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	req.RandomID = domain.SequentialUniqueID()
 
 	// TODO :
-	// 0. fix database and add PendingMessages table : Done
+	// 0. fix database and add MessagesPending table : Done
 
 	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 	dbID := -domain.SequentialUniqueID()

@@ -1,6 +1,6 @@
 package dto
 
-type FileStatus struct {
+type FilesStatus struct {
 	MessageID       int64  `gorm:"primary_key;column:MessageID" json:"MessageID"`
 	FileID          int64  `gorm:"column:FileID" json:"FileID"`
 	ClusterID       int32  `gorm:"column:ClusterID" json:"ClusterID"`
@@ -23,6 +23,6 @@ type FileStatus struct {
 	ThumbTotalParts int32  `gorm:"column:ThumbTotalParts" json:"ThumbTotalParts"`
 }
 
-func (FileStatus) TableName() string {
-	return "filestatus"
+func (FilesStatus) TableName() string {
+	return "files_status"
 }

@@ -15,7 +15,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 )
 
-// FileStatus monitors file upload/download state
+// FilesStatus monitors file upload/download state
 type FileStatus struct {
 	mx         sync.Mutex
 	mxPartList sync.Mutex
@@ -263,9 +263,9 @@ func (fs *FileStatus) ReadAsFileSavePart(isThumbnail bool, partIdx int64) (envel
 	return
 }
 
-// GetDTO map FileStatus to its repo DTO to save in DB
-func (fs *FileStatus) GetDTO() *dto.FileStatus {
-	m := new(dto.FileStatus)
+// GetDTO map FilesStatus to its repo DTO to save in DB
+func (fs *FileStatus) GetDTO() *dto.FilesStatus {
+	m := new(dto.FilesStatus)
 
 	m.MessageID = fs.MessageID
 	m.FileID = fs.FileID
@@ -299,8 +299,8 @@ func (fs *FileStatus) GetDTO() *dto.FileStatus {
 	return m
 }
 
-// LoadDTO Map related to repo DTO to FileStatus
-func (fs *FileStatus) LoadDTO(d dto.FileStatus, progress domain.OnFileStatusChanged) {
+// LoadDTO Map related to repo DTO to FilesStatus
+func (fs *FileStatus) LoadDTO(d dto.FilesStatus, progress domain.OnFileStatusChanged) {
 	fs.MessageID = d.MessageID
 	fs.FileID = d.FileID
 	fs.ClusterID = d.ClusterID
@@ -359,7 +359,7 @@ func (fs *FileStatus) ReadAsFileGet(partNo int64) (envelop *msg.MessageEnvelope,
 	envelop.Message, err = req.Marshal()
 	envelop.RequestID = uint64(domain.SequentialUniqueID())
 
-	logs.Debug("FileStatus::ReadAsFileGet()",
+	logs.Debug("FilesStatus::ReadAsFileGet()",
 		zap.Int64("MsgID", fs.MessageID),
 		zap.Int32("Offset", req.Offset),
 		zap.Int32("Limit", req.Limit),

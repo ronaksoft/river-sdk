@@ -133,7 +133,7 @@ func (r *repoGroups) DeleteGroupMember(groupID, userID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	dtoGP := new(dto.GroupParticipants)
+	dtoGP := new(dto.GroupsParticipants)
 	err := r.db.Where("GroupID = ? AND UserID = ?", groupID, userID).First(dtoGP).Error
 	if err == nil {
 		err = r.db.Delete(dtoGP).Error
@@ -145,7 +145,7 @@ func (r *repoGroups) DeleteAllGroupMember(groupID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	return r.db.Where("GroupID= ? ", groupID).Delete(dto.GroupParticipants{}).Error
+	return r.db.Where("GroupID= ? ", groupID).Delete(dto.GroupsParticipants{}).Error
 }
 
 func (r *repoGroups) UpdateGroupTitle(groupID int64, title string) error {
@@ -160,7 +160,7 @@ func (r *repoGroups) SaveParticipants(groupID int64, participant *msg.GroupParti
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	dtoGP := new(dto.GroupParticipants)
+	dtoGP := new(dto.GroupsParticipants)
 	err := r.db.Where("GroupID = ? AND UserID = ?", groupID, participant.UserID).First(dtoGP).Error
 	dtoGP.MapFrom(groupID, participant)
 	// if record does not exist, not found error returns
@@ -174,7 +174,7 @@ func (r *repoGroups) GetParticipants(groupID int64) ([]*msg.GroupParticipant, er
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	dtoGPs := make([]dto.GroupParticipants, 0)
+	dtoGPs := make([]dto.GroupsParticipants, 0)
 	err := r.db.Where("GroupID = ?", groupID).Find(&dtoGPs).Error
 	if err != nil {
 		return nil, err
@@ -193,7 +193,7 @@ func (r *repoGroups) DeleteGroupMemberMany(peerID int64, IDs []int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	return r.db.Where("GroupID= ? AND UserID IN (?)", peerID, IDs).Delete(dto.GroupParticipants{}).Error
+	return r.db.Where("GroupID= ? AND UserID IN (?)", peerID, IDs).Delete(dto.GroupsParticipants{}).Error
 }
 
 func (r *repoGroups) Delete(groupID int64) error {
@@ -207,7 +207,7 @@ func (r *repoGroups) UpdateGroupMemberType(groupID, userID int64, isAdmin bool) 
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	dtoGP := new(dto.GroupParticipants)
+	dtoGP := new(dto.GroupsParticipants)
 
 	userType := int32(msg.ParticipantTypeMember)
 	if isAdmin {

@@ -234,7 +234,7 @@ func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerTy
 	)
 
 	dtoMsgs := make([]dto.Messages, 0, limit)
-	dtoPendings := make([]dto.PendingMessages, 0, limit)
+	dtoPendings := make([]dto.MessagesPending, 0, limit)
 
 	var err error
 	if minID == 0 && maxID == 0 {

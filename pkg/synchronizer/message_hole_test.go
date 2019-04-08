@@ -22,18 +22,18 @@ func TestIsMessageInHole(t *testing.T) {
 	defer os.Remove("river.db")
 
 	// Insert Chunck Data
-	dtoHoles := []dto.MessageHoles{
-		dto.MessageHoles{
+	dtoHoles := []dto.MessagesHole{
+		dto.MessagesHole{
 			PeerID: 1,
 			MinID:  sql.NullInt64{Int64: 10, Valid: true},
 			MaxID:  20,
 		},
-		dto.MessageHoles{
+		dto.MessagesHole{
 			PeerID: 1,
 			MinID:  sql.NullInt64{Int64: 30, Valid: true},
 			MaxID:  40,
 		},
-		dto.MessageHoles{
+		dto.MessagesHole{
 			PeerID: 1,
 			MinID:  sql.NullInt64{Int64: 50, Valid: true},
 			MaxID:  60,
@@ -99,18 +99,18 @@ func TestFillMessageHolesSurrendedMode(t *testing.T) {
 	defer os.Remove("river.db")
 
 	// Insert CHunck Data
-	dtoHoles := []dto.MessageHoles{
-		dto.MessageHoles{
+	dtoHoles := []dto.MessagesHole{
+		dto.MessagesHole{
 			PeerID: 1,
 			MinID:  sql.NullInt64{Int64: 10, Valid: true},
 			MaxID:  20,
 		},
-		dto.MessageHoles{
+		dto.MessagesHole{
 			PeerID: 1,
 			MinID:  sql.NullInt64{Int64: 30, Valid: true},
 			MaxID:  40,
 		},
-		dto.MessageHoles{
+		dto.MessagesHole{
 			PeerID: 1,
 			MinID:  sql.NullInt64{Int64: 50, Valid: true},
 			MaxID:  60,
@@ -153,8 +153,8 @@ func TestFillMessageHolesMinSideMode(t *testing.T) {
 	defer os.Remove("river.db")
 
 	// Insert CHunck Data
-	dtoHoles := []dto.MessageHoles{
-		dto.MessageHoles{
+	dtoHoles := []dto.MessagesHole{
+		dto.MessagesHole{
 			PeerID: 1,
 			MinID:  sql.NullInt64{Int64: 10, Valid: true},
 			MaxID:  20,
@@ -204,8 +204,8 @@ func TestFillMessageHolesMaxSideMode(t *testing.T) {
 	defer os.Remove("river.db")
 
 	// Insert CHunck Data
-	dtoHoles := []dto.MessageHoles{
-		dto.MessageHoles{
+	dtoHoles := []dto.MessagesHole{
+		dto.MessagesHole{
 			PeerID: 1,
 			MinID:  sql.NullInt64{Int64: 10, Valid: true},
 			MaxID:  20,
@@ -255,8 +255,8 @@ func TestFillMessageHolesInsideMode(t *testing.T) {
 	defer os.Remove("river.db")
 
 	// Insert CHunck Data
-	dtoHoles := []dto.MessageHoles{
-		dto.MessageHoles{
+	dtoHoles := []dto.MessagesHole{
+		dto.MessagesHole{
 			PeerID: 1,
 			MinID:  sql.NullInt64{Int64: 10, Valid: true},
 			MaxID:  20,
@@ -312,8 +312,8 @@ func TestFillMessageHolesInsideExactMode(t *testing.T) {
 	defer os.Remove("river.db")
 
 	// Insert CHunck Data
-	dtoHoles := []dto.MessageHoles{
-		dto.MessageHoles{
+	dtoHoles := []dto.MessagesHole{
+		dto.MessagesHole{
 			PeerID: 1,
 			MinID:  sql.NullInt64{Int64: 10, Valid: true},
 			MaxID:  20,
@@ -356,8 +356,8 @@ func TestFillMessageHolesInsideMinOverlap(t *testing.T) {
 	defer os.Remove("river.db")
 
 	// Insert CHunck Data
-	dtoHoles := []dto.MessageHoles{
-		dto.MessageHoles{
+	dtoHoles := []dto.MessagesHole{
+		dto.MessagesHole{
 			PeerID: 1,
 			MinID:  sql.NullInt64{Int64: 10, Valid: true},
 			MaxID:  20,
@@ -407,8 +407,8 @@ func TestFillMessageHolesInsideMaxOverlap(t *testing.T) {
 	defer os.Remove("river.db")
 
 	// Insert CHunck Data
-	dtoHoles := []dto.MessageHoles{
-		dto.MessageHoles{
+	dtoHoles := []dto.MessagesHole{
+		dto.MessagesHole{
 			PeerID: 1,
 			MinID:  sql.NullInt64{Int64: 10, Valid: true},
 			MaxID:  20,
@@ -450,8 +450,8 @@ func TestFillMessageHolesInsideMaxOverlap(t *testing.T) {
 
 func TestGetMaxClosestHole(t *testing.T) {
 
-	holes := []dto.MessageHoles{
-		dto.MessageHoles{
+	holes := []dto.MessagesHole{
+		dto.MessagesHole{
 			PeerID: 1,
 			MinID:  sql.NullInt64{Int64: 0, Valid: true},
 			MaxID:  692,
@@ -466,8 +466,8 @@ func TestGetMaxClosestHole(t *testing.T) {
 
 func TestGetMonClosestHole(t *testing.T) {
 
-	holes := []dto.MessageHoles{
-		dto.MessageHoles{
+	holes := []dto.MessagesHole{
+		dto.MessagesHole{
 			PeerID: 1,
 			MinID:  sql.NullInt64{Int64: 0, Valid: true},
 			MaxID:  635,

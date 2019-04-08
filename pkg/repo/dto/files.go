@@ -86,7 +86,7 @@ func (m *Files) MapFromDocument(v *msg.MediaDocument) {
 	m.Attributes, _ = json.Marshal(v.Doc.Attributes)
 }
 
-func (m *Files) MapFromFileStatus(v *FileStatus) {
+func (m *Files) MapFromFileStatus(v *FilesStatus) {
 	m.MessageID = v.MessageID
 	m.DocumentID = v.FileID
 	m.ClusterID = v.ClusterID

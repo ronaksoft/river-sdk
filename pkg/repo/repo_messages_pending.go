@@ -10,11 +10,11 @@ import (
 	"go.uber.org/zap"
 )
 
-// PendingMessages repoPendingMessages interface
-type PendingMessages interface {
+// MessagesPending repoMessagesPending interface
+type MessagesPending interface {
 	Save(ID int64, senderID int64, message *msg.MessagesSend) (*msg.ClientPendingMessage, error)
-	GetPendingMessageByRequestID(requestID int64) (*dto.PendingMessages, error)
-	GetPendingMessageByID(id int64) (*dto.PendingMessages, error)
+	GetPendingMessageByRequestID(requestID int64) (*dto.MessagesPending, error)
+	GetPendingMessageByID(id int64) (*dto.MessagesPending, error)
 	DeletePendingMessage(ID int64) error
 	DeleteManyPendingMessage(IDs []int64) error
 	GetManyPendingMessages(messageIDs []int64) []*msg.UserMessage
@@ -26,25 +26,25 @@ type PendingMessages interface {
 	SaveMessageMedia(ID int64, senderID int64, message *msg.MessagesSendMedia) (*msg.ClientPendingMessage, error)
 }
 
-type repoPendingMessages struct {
+type repoMessagesPending struct {
 	*repository
 }
 
-func (r *repoPendingMessages) Save(ID int64, senderID int64, message *msg.MessagesSend) (*msg.ClientPendingMessage, error) {
+func (r *repoMessagesPending) Save(ID int64, senderID int64, message *msg.MessagesSend) (*msg.ClientPendingMessage, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
 	if message == nil {
-		logs.Debug("PendingMessages::Save() :",
+		logs.Debug("MessagesPending::Save() :",
 			zap.String("Error", "message is null"),
 		)
 		return nil, domain.ErrNotFound
 	}
-	logs.Debug("PendingMessages::Save()",
+	logs.Debug("MessagesPending::Save()",
 		zap.Int64("PendingMessageID", ID),
 	)
 
-	m := new(dto.PendingMessages)
+	m := new(dto.MessagesPending)
 	m.Map(message)
 	m.ID = ID
 	m.SenderID = senderID
@@ -53,7 +53,7 @@ func (r *repoPendingMessages) Save(ID int64, senderID int64, message *msg.Messag
 	res := new(msg.ClientPendingMessage)
 	m.MapTo(res)
 
-	ep := new(dto.PendingMessages)
+	ep := new(dto.MessagesPending)
 	r.db.Find(ep, m.ID)
 
 	var err error
@@ -85,18 +85,18 @@ func (r *repoPendingMessages) Save(ID int64, senderID int64, message *msg.Messag
 	return res, nil
 }
 
-func (r *repoPendingMessages) GetPendingMessageByRequestID(requestID int64) (*dto.PendingMessages, error) {
+func (r *repoMessagesPending) GetPendingMessageByRequestID(requestID int64) (*dto.MessagesPending, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("PendingMessages::GetPendingMessageByRequestID()",
+	logs.Debug("MessagesPending::GetPendingMessageByRequestID()",
 		zap.Int64("RandomID/RequestID", requestID),
 	)
 
-	pmsg := new(dto.PendingMessages)
+	pmsg := new(dto.MessagesPending)
 	err := r.db.Where("RequestID = ?", requestID).First(pmsg).Error
 	if err != nil {
-		logs.Error("PendingMessages::GetPendingMessageByRequestID()-> fetch pendingMessage entity", zap.Error(err))
+		logs.Error("MessagesPending::GetPendingMessageByRequestID()-> fetch pendingMessage entity", zap.Error(err))
 		return nil, err
 	}
 
@@ -104,17 +104,17 @@ func (r *repoPendingMessages) GetPendingMessageByRequestID(requestID int64) (*dt
 
 }
 
-func (r *repoPendingMessages) GetPendingMessageByID(id int64) (*dto.PendingMessages, error) {
+func (r *repoMessagesPending) GetPendingMessageByID(id int64) (*dto.MessagesPending, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-	logs.Debug("PendingMessages::GetPendingMessageByID()",
+	logs.Debug("MessagesPending::GetPendingMessageByID()",
 		zap.Int64("ID", id),
 	)
 
-	pmsg := new(dto.PendingMessages)
+	pmsg := new(dto.MessagesPending)
 	err := r.db.Where("ID = ?", id).First(pmsg).Error
 	if err != nil {
-		logs.Error("PendingMessages::GetPendingMessageByID()-> fetch pendingMessage entity", zap.Error(err))
+		logs.Error("MessagesPending::GetPendingMessageByID()-> fetch pendingMessage entity", zap.Error(err))
 		return nil, err
 	}
 
@@ -122,37 +122,37 @@ func (r *repoPendingMessages) GetPendingMessageByID(id int64) (*dto.PendingMessa
 
 }
 
-func (r *repoPendingMessages) DeletePendingMessage(ID int64) error {
+func (r *repoMessagesPending) DeletePendingMessage(ID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("PendingMessages::DeletePendingMessage()",
+	logs.Debug("MessagesPending::DeletePendingMessage()",
 		zap.Int64("ID", ID),
 	)
 	// get pending message
-	pmsg := new(dto.PendingMessages)
+	pmsg := new(dto.MessagesPending)
 	err := r.db.Where("ID = ?", ID).First(pmsg).Error
 	if err != nil {
-		logs.Error("PendingMessages::GetPendingMessageByID()-> fetch pendingMessage entity", zap.Error(err))
+		logs.Error("MessagesPending::GetPendingMessageByID()-> fetch pendingMessage entity", zap.Error(err))
 		return err
 	}
 	// get its dialog
 	d := new(dto.Dialogs)
 	err = r.db.Where("PeerID =? AND PeerType= ?", pmsg.PeerID, pmsg.PeerType).First(d).Error
 	if err != nil {
-		logs.Error("PendingMessages::GetPendingMessageByID()-> fetch dialog entity", zap.Error(err))
+		logs.Error("MessagesPending::GetPendingMessageByID()-> fetch dialog entity", zap.Error(err))
 		return err
 	}
 
-	err = r.db.Where("ID = ?", ID).Delete(dto.PendingMessages{}).Error
+	err = r.db.Where("ID = ?", ID).Delete(dto.MessagesPending{}).Error
 	if err != nil {
-		logs.Error("PendingMessages::DeletePendingMessage()-> delete pendingMessage entity", zap.Error(err))
+		logs.Error("MessagesPending::DeletePendingMessage()-> delete pendingMessage entity", zap.Error(err))
 		// return err
 	}
 
 	// if this message is this dialog top message id
 	if d.TopMessageID == pmsg.ID {
-		dtoPend := dto.PendingMessages{}
+		dtoPend := dto.MessagesPending{}
 		err = r.db.Table(dtoPend.TableName()).Where("PeerID =? AND PeerType= ?", d.PeerID, d.PeerType).First(&dtoPend).Error // cuz the pendMsg Ids are negative of nano time so the smallest is latest record
 		if err == nil && dtoPend.ID != 0 {
 			d.TopMessageID = dtoPend.ID
@@ -172,7 +172,7 @@ func (r *repoPendingMessages) DeletePendingMessage(ID int64) error {
 	return err
 }
 
-func (r *repoPendingMessages) DeleteManyPendingMessage(IDs []int64) error {
+func (r *repoMessagesPending) DeleteManyPendingMessage(IDs []int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -180,18 +180,18 @@ func (r *repoPendingMessages) DeleteManyPendingMessage(IDs []int64) error {
 	dtoDoalogs := make([]dto.Dialogs, 0)
 	err := r.db.Where("TopMessageID in (?)", IDs).Find(&dtoDoalogs).Error
 	if err != nil {
-		logs.Error("PendingMessages::DeleteMany() fetch dialogs", zap.Error(err))
+		logs.Error("MessagesPending::DeleteMany() fetch dialogs", zap.Error(err))
 	}
 
 	// remove pending message
-	err = r.db.Where("ID IN (?)", IDs).Delete(dto.PendingMessages{}).Error
+	err = r.db.Where("ID IN (?)", IDs).Delete(dto.MessagesPending{}).Error
 	if err != nil {
-		logs.Error("PendingMessages::DeleteMany() delete from Messages", zap.Error(err))
+		logs.Error("MessagesPending::DeleteMany() delete from Messages", zap.Error(err))
 	}
 
 	// fetch last message and set it as dialog top message
 	for _, d := range dtoDoalogs {
-		dtoPend := dto.PendingMessages{}
+		dtoPend := dto.MessagesPending{}
 		err := r.db.Table(dtoPend.TableName()).Where("PeerID =? AND PeerType= ?", d.PeerID, d.PeerType).First(&dtoPend).Error // cuz the pendMsg Ids are negative of nano time so the smallest is latest record
 		if err == nil && dtoPend.ID != 0 {
 			d.TopMessageID = dtoPend.ID
@@ -211,18 +211,18 @@ func (r *repoPendingMessages) DeleteManyPendingMessage(IDs []int64) error {
 	return nil
 }
 
-func (r *repoPendingMessages) GetManyPendingMessages(messageIDs []int64) []*msg.UserMessage {
+func (r *repoMessagesPending) GetManyPendingMessages(messageIDs []int64) []*msg.UserMessage {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("PendingMessages::GetManyPendingMessages()",
+	logs.Debug("MessagesPending::GetManyPendingMessages()",
 		zap.Int64s("MessageIDs", messageIDs),
 	)
 	messages := make([]*msg.UserMessage, 0, len(messageIDs))
-	dtoMsgs := make([]dto.PendingMessages, 0, len(messageIDs))
+	dtoMsgs := make([]dto.MessagesPending, 0, len(messageIDs))
 	err := r.db.Where("ID in (?)", messageIDs).Find(&dtoMsgs).Error
 	if err != nil {
-		logs.Error("PendingMessages::GetManyPendingMessages()-> fetch pendingMessage entities", zap.Error(err))
+		logs.Error("MessagesPending::GetManyPendingMessages()-> fetch pendingMessage entities", zap.Error(err))
 		return nil
 	}
 
@@ -236,17 +236,17 @@ func (r *repoPendingMessages) GetManyPendingMessages(messageIDs []int64) []*msg.
 	return messages
 }
 
-func (r *repoPendingMessages) GetManyPendingMessagesRequestID(messageIDs []int64) []int64 {
+func (r *repoMessagesPending) GetManyPendingMessagesRequestID(messageIDs []int64) []int64 {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("PendingMessages::GetManyPendingMessagesRequestID()",
+	logs.Debug("MessagesPending::GetManyPendingMessagesRequestID()",
 		zap.Int64s("MessageIDs", messageIDs),
 	)
-	dtoMsgs := make([]dto.PendingMessages, 0, len(messageIDs))
+	dtoMsgs := make([]dto.MessagesPending, 0, len(messageIDs))
 	err := r.db.Where("ID in (?)", messageIDs).Find(&dtoMsgs).Error
 	if err != nil {
-		logs.Error("PendingMessages::GetManyPendingMessages()-> fetch pendingMessage entities", zap.Error(err))
+		logs.Error("MessagesPending::GetManyPendingMessages()-> fetch pendingMessage entities", zap.Error(err))
 		return nil
 	}
 	requestIDs := make([]int64, 0)
@@ -257,12 +257,12 @@ func (r *repoPendingMessages) GetManyPendingMessagesRequestID(messageIDs []int64
 	return requestIDs
 }
 
-func (r *repoPendingMessages) GetAllPendingMessages() []*msg.MessagesSend {
+func (r *repoMessagesPending) GetAllPendingMessages() []*msg.MessagesSend {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
 	res := make([]*msg.MessagesSend, 0)
-	var dtos []dto.PendingMessages
+	var dtos []dto.MessagesPending
 	r.db.Where("MediaType=?", 0).Find(&dtos)
 
 	for _, v := range dtos {
@@ -274,12 +274,12 @@ func (r *repoPendingMessages) GetAllPendingMessages() []*msg.MessagesSend {
 	return res
 }
 
-func (r *repoPendingMessages) DeletePeerAllMessages(peerID int64, peerType int32) (*msg.ClientUpdateMessagesDeleted, error) {
+func (r *repoMessagesPending) DeletePeerAllMessages(peerID int64, peerType int32) (*msg.ClientUpdateMessagesDeleted, error) {
 
-	msgs := make([]dto.PendingMessages, 0)
+	msgs := make([]dto.MessagesPending, 0)
 	err := r.db.Where("PeerID=? AND PeerType=?", peerID, peerType).Find(&msgs).Error
 	if err != nil {
-		logs.Error("PendingMessages::DeletePeerAllMessages()-> fetch pendingMessage entities", zap.Error(err))
+		logs.Error("MessagesPending::DeletePeerAllMessages()-> fetch pendingMessage entities", zap.Error(err))
 		return nil, err
 	}
 	res := new(msg.ClientUpdateMessagesDeleted)
@@ -289,29 +289,29 @@ func (r *repoPendingMessages) DeletePeerAllMessages(peerID int64, peerType int32
 	for _, v := range msgs {
 		res.MessageIDs = append(res.MessageIDs, v.ID)
 	}
-	err = r.db.Where("PeerID=? AND PeerType=?", peerID, peerType).Delete(dto.PendingMessages{}).Error
+	err = r.db.Where("PeerID=? AND PeerType=?", peerID, peerType).Delete(dto.MessagesPending{}).Error
 	if err != nil {
-		logs.Error("PendingMessages::DeletePeerAllMessages()-> delete pendingMessage entities", zap.Error(err))
+		logs.Error("MessagesPending::DeletePeerAllMessages()-> delete pendingMessage entities", zap.Error(err))
 	}
 	return res, err
 }
 
-func (r *repoPendingMessages) SaveClientMessageMedia(ID, senderID, requestID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error) {
+func (r *repoMessagesPending) SaveClientMessageMedia(ID, senderID, requestID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
 	if msgMedia == nil {
-		logs.Debug("PendingMessages::msgMedia() :",
+		logs.Debug("MessagesPending::msgMedia() :",
 			zap.String("Error", "msgMedia is null"),
 		)
 		return nil, domain.ErrNotFound
 	}
-	logs.Debug("PendingMessages::SaveMedia()",
+	logs.Debug("MessagesPending::SaveMedia()",
 		zap.Int64("PendingMessageID", ID),
 	)
 
 	fileID := domain.SequentialUniqueID()
-	m := new(dto.PendingMessages)
+	m := new(dto.MessagesPending)
 	m.MapFromClientMessageMedia(fileID, msgMedia)
 	m.ID = ID
 	m.SenderID = senderID
@@ -320,7 +320,7 @@ func (r *repoPendingMessages) SaveClientMessageMedia(ID, senderID, requestID int
 
 	res := new(msg.ClientPendingMessage)
 	m.MapTo(res)
-	ep := new(dto.PendingMessages)
+	ep := new(dto.MessagesPending)
 	r.db.Find(ep, m.ID)
 
 	var err error
@@ -350,18 +350,18 @@ func (r *repoPendingMessages) SaveClientMessageMedia(ID, senderID, requestID int
 	return res, err
 }
 
-func (r *repoPendingMessages) GetPendingMessage(messageID int64) *msg.UserMessage {
+func (r *repoMessagesPending) GetPendingMessage(messageID int64) *msg.UserMessage {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("PendingMessages::GetPendingMessages()",
+	logs.Debug("MessagesPending::GetPendingMessages()",
 		zap.Int64("MessageID", messageID),
 	)
 	message := new(msg.UserMessage)
-	dtoMsg := new(dto.PendingMessages)
+	dtoMsg := new(dto.MessagesPending)
 	err := r.db.Where("ID = ?", messageID).Find(&dtoMsg).Error
 	if err != nil {
-		logs.Error("PendingMessages::GetPendingMessages()-> fetch messages", zap.Error(err))
+		logs.Error("MessagesPending::GetPendingMessages()-> fetch messages", zap.Error(err))
 		return nil
 	}
 
@@ -370,21 +370,21 @@ func (r *repoPendingMessages) GetPendingMessage(messageID int64) *msg.UserMessag
 	return message
 }
 
-func (r *repoPendingMessages) SaveMessageMedia(ID int64, senderID int64, message *msg.MessagesSendMedia) (*msg.ClientPendingMessage, error) {
+func (r *repoMessagesPending) SaveMessageMedia(ID int64, senderID int64, message *msg.MessagesSendMedia) (*msg.ClientPendingMessage, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
 	if message == nil {
-		logs.Debug("PendingMessages::SaveMessageMedia() :",
+		logs.Debug("MessagesPending::SaveMessageMedia() :",
 			zap.String("Error", "message is null"),
 		)
 		return nil, domain.ErrNotFound
 	}
-	logs.Debug("PendingMessages::SaveMessageMedia()",
+	logs.Debug("MessagesPending::SaveMessageMedia()",
 		zap.Int64("PendingMessageID", ID),
 	)
 
-	m := new(dto.PendingMessages)
+	m := new(dto.MessagesPending)
 	m.MapFromMessageMedia(message)
 	m.ID = ID
 	m.SenderID = senderID
@@ -393,7 +393,7 @@ func (r *repoPendingMessages) SaveMessageMedia(ID int64, senderID int64, message
 	res := new(msg.ClientPendingMessage)
 	m.MapTo(res)
 
-	ep := new(dto.PendingMessages)
+	ep := new(dto.MessagesPending)
 	r.db.Find(ep, m.ID)
 
 	var err error

@@ -457,7 +457,7 @@ func (r *River) PauseUpload(msgID int64) {
 	}
 	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatePaused)
 	_ = repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStatePaused)
-	// repo.Ctx().PendingMessages.DeletePendingMessage(fs.MessageID)
+	// repo.Ctx().MessagesPending.DeletePendingMessage(fs.MessageID)
 
 }
 
@@ -944,19 +944,19 @@ func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, de
 	}
 }
 
-func (r *River) GetScrollStatus(peerID int64) int64 {
-	status, err := repo.Ctx().ScrollStatus.Get(peerID)
+func (r *River) GetScrollStatus(peerID int64, peerType int32) int64 {
+	status, err := repo.Ctx().MessagesExtra.GetScrollID(peerID, peerType)
 	if err != nil {
-		logs.Error("GetScrollStatus::ScrollStatus not found", zap.Int64("PeerID", peerID))
+		logs.Error("GetScrollStatus::ScrollID not found", zap.Int64("PeerID", peerID))
 		return 0
 	} else {
 		return status
 	}
 }
 
-func (r *River) SetScrollStatus(peerID, msgID int64) {
-	if err := repo.Ctx().ScrollStatus.Save(peerID, msgID); err != nil {
-		logs.Error("SetScrollStatus::Failed to set scroll status")
+func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
+	if err := repo.Ctx().MessagesExtra.SaveScrollID(peerID, msgID, peerType); err != nil {
+		logs.Error("SetScrollStatus::Failed to set scroll ID")
 	}
 }
 
