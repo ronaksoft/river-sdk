@@ -5,7 +5,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"github.com/dustin/go-humanize"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"testing"
@@ -14,6 +13,70 @@ import (
 var (
 	_River *River
 )
+
+func init() {
+	logs.Info("Creating New River SDK Instance")
+	r := new(River)
+	r.SetConfig(&RiverConfig{
+		DbPath:                 "./_data/",
+		DbID:                   "test",
+		ServerKeysFilePath:     "./keys.json",
+		ServerEndpoint:         "ws://new.river.im",
+		QueuePath:              fmt.Sprintf("%s/%s", "./_queue", "test"),
+		MainDelegate:           new(MainDelegateDummy),
+		Logger:                 nil,
+		LogLevel:               int(zapcore.DebugLevel),
+		DocumentAudioDirectory: "./_files/audio",
+		DocumentVideoDirectory: "./_files/video",
+		DocumentPhotoDirectory: "./_files/photo",
+		DocumentFileDirectory:  "./_files/file",
+		DocumentCacheDirectory: "./_files/cache",
+		DocumentLogDirectory:   "./_files/logs",
+	})
+
+	// r.Start()
+	// if r.ConnInfo.AuthID == 0 {
+	// 	logs.Info("AuthKey has not been created yet.")
+	// 	if err := r.CreateAuthKey(); err != nil {
+	// 		return
+	// 	}
+	// 	logs.Info("AuthKey Created.")
+	// }
+	_River = r
+}
+
+func TestNewRiver(t *testing.T) {
+	logs.Info("Creating New River SDK Instance")
+	r := new(River)
+	r.SetConfig(&RiverConfig{
+		DbPath:             "./_data/",
+		DbID:               "test",
+		ServerKeysFilePath: "./keys.json",
+		ServerEndpoint:     "ws://river.im",
+	})
+
+	r.Start()
+	if r.ConnInfo.AuthID == 0 {
+		logs.Info("AuthKey has not been created yet.")
+		if err := r.CreateAuthKey(); err != nil {
+			t.Error(err.Error())
+			return
+		}
+		logs.Info("AuthKey Created.")
+	}
+}
+
+func TestRiver_SetScrollStatus(t *testing.T) {
+	peerID := int64(100)
+	peerType := int32(2)
+	msgID := int64(101)
+	_River.SetScrollStatus(peerID, msgID, peerType)
+
+	readMsgID := _River.GetScrollStatus(peerID, peerType)
+	if readMsgID != msgID {
+		t.Error("values do not match")
+	}
+}
 
 type MainDelegateDummy struct{}
 
@@ -88,58 +151,26 @@ func (d *MainDelegateDummy) OnDownloadError(messageID, requestID int64, filePath
 	)
 }
 
-
-func init() {
-	logs.Info("Creating New River SDK Instance")
-	r := new(River)
-	r.SetConfig(&RiverConfig{
-		DbPath:             "./_data/",
-		DbID:               "test",
-		ServerKeysFilePath: "./keys.json",
-		ServerEndpoint:     "ws://new.river.im",
-		QueuePath:              fmt.Sprintf("%s/%s", "./_queue", "test"),
-		MainDelegate:           new(MainDelegateDummy),
-		Logger:                 nil,
-		LogLevel:               int(zapcore.DebugLevel),
-		DocumentAudioDirectory: "./_files/audio",
-		DocumentVideoDirectory: "./_files/video",
-		DocumentPhotoDirectory: "./_files/photo",
-		DocumentFileDirectory:  "./_files/file",
-		DocumentCacheDirectory: "./_files/cache",
-		DocumentLogDirectory:   "./_files/logs",
-	})
-
-	// r.Start()
-	// if r.ConnInfo.AuthID == 0 {
-	// 	logs.Info("AuthKey has not been created yet.")
-	// 	if err := r.CreateAuthKey(); err != nil {
-	// 		return
-	// 	}
-	// 	logs.Info("AuthKey Created.")
-	// }
-	_River = r
-}
-
-func dummyMessageHandler(m *msg.MessageEnvelope) {
-	logs.Info("MessageEnvelope Handler",
-		zap.Uint64("REQ_ID", m.RequestID),
-		zap.String("CONSTRUCTOR", msg.ConstructorNames[m.Constructor]),
-		zap.String("LENGTH", humanize.Bytes(uint64(len(m.Message)))),
-	)
-}
-
-func dummyUpdateHandler(u *msg.UpdateContainer) {
-	logs.Info("UpdateContainer Handler",
-		zap.Int64("MIN_UPDATE_ID", u.MinUpdateID),
-		zap.Int64("MAX_UPDATE_ID", u.MaxUpdateID),
-		zap.Int32("LENGTH", u.Length),
-	)
-	for _, update := range u.Updates {
-		logs.Info("UpdateEnvelope",
-			zap.String("CONSTRUCTOR", msg.ConstructorNames[update.Constructor]),
-		)
-	}
-}
+//func dummyMessageHandler(m *msg.MessageEnvelope) {
+//	logs.Info("MessageEnvelope Handler",
+//		zap.Uint64("REQ_ID", m.RequestID),
+//		zap.String("CONSTRUCTOR", msg.ConstructorNames[m.Constructor]),
+//		zap.String("LENGTH", humanize.Bytes(uint64(len(m.Message)))),
+//	)
+//}
+//
+//func dummyUpdateHandler(u *msg.UpdateContainer) {
+//	logs.Info("UpdateContainer Handler",
+//		zap.Int64("MIN_UPDATE_ID", u.MinUpdateID),
+//		zap.Int64("MAX_UPDATE_ID", u.MaxUpdateID),
+//		zap.Int32("LENGTH", u.Length),
+//	)
+//	for _, update := range u.Updates {
+//		logs.Info("UpdateEnvelope",
+//			zap.String("CONSTRUCTOR", msg.ConstructorNames[update.Constructor]),
+//		)
+//	}
+//}
 
 // func dummyQualityUpdateHandler(q NetworkStatus) {
 // 	logs.Info("Network Quality Updated",
@@ -240,36 +271,3 @@ func dummyUpdateHandler(u *msg.UpdateContainer) {
 // 	ctl.Disconnect()
 // 	ctl.Stop()
 // }
-
-func TestNewRiver(t *testing.T) {
-	logs.Info("Creating New River SDK Instance")
-	r := new(River)
-	r.SetConfig(&RiverConfig{
-		DbPath:             "./_data/",
-		DbID:               "test",
-		ServerKeysFilePath: "./keys.json",
-		ServerEndpoint:     "ws://river.im",
-	})
-
-	r.Start()
-	if r.ConnInfo.AuthID == 0 {
-		logs.Info("AuthKey has not been created yet.")
-		if err := r.CreateAuthKey(); err != nil {
-			t.Error(err.Error())
-			return
-		}
-		logs.Info("AuthKey Created.")
-	}
-}
-
-func TestRiver_SetScrollStatus(t *testing.T) {
-	peerID := int64(100)
-	peerType := int32(2)
-	msgID := int64(101)
-	_River.SetScrollStatus(peerID, msgID, peerType)
-
-	readMsgID := _River.GetScrollStatus(peerID, peerType)
-	if readMsgID != msgID {
-		t.Error("values do not match")
-	}
-}

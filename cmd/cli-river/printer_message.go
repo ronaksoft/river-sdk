@@ -88,7 +88,6 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 				u.FirstName,
 				u.LastName,
 				u.Phone,
-				fmt.Sprintf("%d", u.ClientID),
 			})
 		}
 		tableContacts.Render()
