@@ -62,6 +62,22 @@ const (
 	NetworkFast
 )
 
+func (ns NetworkStatus) ToString() string {
+	switch ns {
+	case NetworkDisconnected:
+		return "Disconnected"
+	case NetworkConnecting:
+		return "Connecting"
+	case NetworkWeak:
+		return "Weak"
+	case NetworkSlow:
+		return "Slow"
+	case NetworkFast:
+		return "Fast"
+	}
+	return "Unknown"
+}
+
 // SyncStatus status of synchronizer
 type SyncStatus int
 

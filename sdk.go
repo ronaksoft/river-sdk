@@ -148,7 +148,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Initialize queueController
 	if q, err := queue.NewQueueController(r.networkCtrl, conf.QueuePath); err != nil {
-		logs.Fatal("River::SetConfig() faild to initialize Queue",
+		logs.Fatal("River::SetConfig() faild to initialize MessageQueue",
 			zap.String("Error", err.Error()),
 		)
 	} else {
@@ -952,12 +952,6 @@ readChannel:
 	updateContainer.MinUpdateID = minID
 	updateContainer.MaxUpdateID = maxID
 	r.syncCtrl.UpdateHandler(updateContainer)
-}
-
-// PrintDebouncerStatus ...
-func (r *River) PrintDebouncerStatus() {
-	logs.Debug("SDK::PrintDebouncerStatus()")
-	r.networkCtrl.PrintDebouncerStatus()
 }
 
 func (r *River) onFileProgressChanged(messageID, processedParts, totalParts int64, stateType domain.FileStateType) {

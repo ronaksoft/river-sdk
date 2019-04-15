@@ -57,9 +57,9 @@ type Controller struct {
 	pingIdx    int
 
 	// queue
-	messageQueue       *domain.QueueMessages
-	updateQueue        *domain.QueueUpdates
-	sendQueue          *domain.QueueMessages
+	messageQueue       *MessageQueue
+	updateQueue        *UpdateQueue
+	sendQueue          *MessageQueue
 	chMessageDebouncer chan bool
 	chUpdateDebouncer  chan bool
 	chSendDebouncer    chan bool
@@ -102,13 +102,14 @@ func NewNetworkController(config Config) *Controller {
 		WriteBufferSize:  64 * 1024, // 32kB
 		ReadBufferSize:   64 * 1024, // 32kB
 	}
+
 	m.stopChannel = make(chan bool)
 	m.connectChannel = make(chan bool)
 	m.pongChannel = make(chan bool)
 
-	m.updateQueue = domain.NewQueueUpdates()
-	m.messageQueue = domain.NewQueueMessages()
-	m.sendQueue = domain.NewQueueMessages()
+	m.updateQueue = NewUpdateQueue(1000)
+	m.messageQueue = NewMessageQueue(1000)
+	m.sendQueue = NewMessageQueue(1000)
 
 	m.chMessageDebouncer = make(chan bool)
 	m.chUpdateDebouncer = make(chan bool)
@@ -326,11 +327,6 @@ func (ctrl *Controller) keepAlive() {
 func (ctrl *Controller) receiver() {
 	res := msg.ProtoMessage{}
 	for {
-		// prevent webSocket.ReadMessage() request while writing message to websocket
-		// this will wait till sendFlush() finish's its job
-		ctrl.wsSendDebouncerLock.Lock()
-		ctrl.wsSendDebouncerLock.Unlock()
-
 		messageType, message, err := ctrl.wsConn.ReadMessage()
 		if err != nil {
 			logs.Error("receiver()-> ReadMessage()", zap.Error(err))
@@ -338,7 +334,8 @@ func (ctrl *Controller) receiver() {
 		}
 		logs.Debug("receiver() Message Received",
 			zap.Int("messageType", messageType),
-			zap.Int("messageSize", len(message)))
+			zap.Int("messageSize", len(message)),
+		)
 
 		switch messageType {
 		case websocket.BinaryMessage:
@@ -348,8 +345,8 @@ func (ctrl *Controller) receiver() {
 				logs.Error("receiver()", zap.Error(err), zap.String("Dump", string(message)))
 				continue
 			}
-			if res.AuthID == 0 {
 
+			if res.AuthID == 0 {
 				logs.Debug("receiver()",
 					zap.String("Warning", "res.AuthID is zero ProtoMessage is unencrypted"),
 					zap.Int64("AuthID", res.AuthID),
@@ -361,25 +358,33 @@ func (ctrl *Controller) receiver() {
 					continue
 				}
 				ctrl.messageHandler(receivedEnvelope)
-			} else {
-				decryptedBytes, err := domain.Decrypt(ctrl.authKey, res.MessageKey, res.Payload)
-				if err != nil {
-					logs.Error("receiver()->Decrypt()",
-						zap.String("Error", err.Error()),
-						zap.Int64("ctrl.authID", ctrl.authID),
-						zap.Int64("resp.AuthID", res.AuthID),
-						zap.String("resp.MessageKey", hex.Dump(res.MessageKey)))
-
-					continue
-				}
-				receivedEncryptedPayload := new(msg.ProtoEncryptedPayload)
-				err = receivedEncryptedPayload.Unmarshal(decryptedBytes)
-				if err != nil {
-					logs.Error("receiver() Failed to unmarshal", zap.Error(err))
-					continue
-				}
-				ctrl.messageHandler(receivedEncryptedPayload.Envelope)
+				continue
 			}
+
+			// We received an encrypted message
+			decryptedBytes, err := domain.Decrypt(ctrl.authKey, res.MessageKey, res.Payload)
+			if err != nil {
+				logs.Error("receiver()->Decrypt()",
+					zap.String("Error", err.Error()),
+					zap.Int64("ctrl.authID", ctrl.authID),
+					zap.Int64("resp.AuthID", res.AuthID),
+					zap.String("resp.MessageKey", hex.Dump(res.MessageKey)))
+
+				continue
+			}
+			receivedEncryptedPayload := new(msg.ProtoEncryptedPayload)
+			err = receivedEncryptedPayload.Unmarshal(decryptedBytes)
+			if err != nil {
+				logs.Error("receiver() Failed to unmarshal", zap.Error(err))
+				continue
+			}
+			// TODO:: check message id and server salt before handling the message
+			ctrl.messageHandler(receivedEncryptedPayload.Envelope)
+
+		default:
+			logs.Debug("receiver()",
+				zap.Int("MessageType", messageType),
+			)
 		}
 
 	}
@@ -390,19 +395,11 @@ func (ctrl *Controller) receiver() {
 // quality of service changed.
 func (ctrl *Controller) updateNetworkStatus(newStatus domain.NetworkStatus) {
 	if ctrl.wsQuality == newStatus {
-		logs.Debug("updateNetworkStatus() wsQuality not changed", zap.String("status", domain.NetworkStatusName[newStatus]))
 		return
 	}
-	switch newStatus {
-	case domain.NetworkDisconnected:
-		logs.Info("updateNetworkStatus() Disconnected")
-	case domain.NetworkWeak:
-		logs.Info("updateNetworkStatus() Weak")
-	case domain.NetworkSlow:
-		logs.Info("updateNetworkStatus() Slow")
-	case domain.NetworkFast:
-		logs.Info("updateNetworkStatus() Fast")
-	}
+	logs.Info("Network Status Updated",
+		zap.String("Status", newStatus.ToString()),
+	)
 	ctrl.wsQuality = newStatus
 	if ctrl.wsOnNetworkStatusChange != nil {
 		ctrl.wsOnNetworkStatusChange(newStatus)
@@ -524,32 +521,32 @@ func (ctrl *Controller) Connect() {
 		if ctrl.wsConn != nil {
 			ctrl.wsConn.Close()
 		}
-		if wsConn, _, err := ctrl.wsDialer.Dial(ctrl.websocketEndpoint, nil); err != nil {
+		wsConn, _, err := ctrl.wsDialer.Dial(ctrl.websocketEndpoint, nil)
+		if err != nil {
 			logs.Error("Connect()-> Dial()", zap.Error(err))
 			time.Sleep(3 * time.Second)
-		} else {
-			keepGoing = false
-			ctrl.wsConn = wsConn
-			ctrl.wsKeepConnection = true
-			ctrl.wsConn.SetPongHandler(func(appData string) error {
-				ctrl.pongChannel <- true
-				return nil
-			})
-
-			// it should be started here cuz we need receiver to get AuthRecall answer
-			// Send Signal to start the 'receiver' and 'keepAlive' routines
-			ctrl.connectChannel <- true
-
-			// Call the OnConnect handler here b4 changing network status that trigger queue to start working
-			// basically we send priority requests b4 queue starts to work
-			ctrl.wsOnConnect()
-
-			ctrl.updateNetworkStatus(domain.NetworkFast)
+			continue
 		}
+		keepGoing = false
+		ctrl.wsConn = wsConn
+		ctrl.wsKeepConnection = true
+		ctrl.wsConn.SetPongHandler(func(appData string) error {
+			ctrl.pongChannel <- true
+			return nil
+		})
+
+		// it should be started here cuz we need receiver to get AuthRecall answer
+		// Send Signal to start the 'receiver' and 'keepAlive' routines
+		ctrl.connectChannel <- true
+
+		// Call the OnConnect handler here b4 changing network status that trigger queue to start working
+		// basically we send priority requests b4 queue starts to work
+		ctrl.wsOnConnect()
+
+		ctrl.updateNetworkStatus(domain.NetworkFast)
 	}
 
 	logs.Info("Connect()  Connected")
-
 }
 
 // Disconnect close websocket
@@ -761,22 +758,11 @@ func (ctrl *Controller) Quality() domain.NetworkStatus {
 	return ctrl.wsQuality
 }
 
-// PrintDebouncerStatus displays debuncer queues status
-func (ctrl *Controller) PrintDebouncerStatus() {
-	logs.Debug("Messages queue",
-		zap.Int("Count", ctrl.messageQueue.Length()),
-		zap.Int("Items Count", len(ctrl.messageQueue.GetRawItems())),
-	)
-}
-
 // Reconnect by wsKeepConnection = true the watchdog will connect itself again no need to call ctrl.Connect()
 func (ctrl *Controller) Reconnect() {
 	if ctrl.wsConn != nil {
 		ctrl.wsKeepConnection = true
 		ctrl.wsConn.Close()
-		// watchDog() will take care of this
-		// go ctrl.Connect()
-
 		logs.Info("Disconnect() Reconnected")
 	}
 }

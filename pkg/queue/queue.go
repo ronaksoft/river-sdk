@@ -84,7 +84,7 @@ func (ctrl *Controller) distributor() {
 		}
 
 		logs.Debug("distributor()",
-			zap.Uint64("Queue Length", ctrl.waitingList.Length()),
+			zap.Uint64("MessageQueue Length", ctrl.waitingList.Length()),
 		)
 
 		if ctrl.waitingList.Length() == 0 {
@@ -391,7 +391,7 @@ func (ctrl *Controller) reinitializePendingMessages() {
 	}
 
 	logs.Info("reinitializePendingMessages() Finished",
-		zap.Uint64("Queue Length", ctrl.waitingList.Length()),
+		zap.Uint64("MessageQueue Length", ctrl.waitingList.Length()),
 	)
 }
 
