@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	LUA_POP_ALL = radix.NewEvalScript(
+	luaPopAll = radix.NewEvalScript(
 		1,
 		`
         local result = {}
@@ -18,7 +18,7 @@ var (
         end
         return result
 `)
-	LUA_PUSH_WITH_LIMIT = radix.NewEvalScript(
+	luaPushWithLimit = radix.NewEvalScript(
 		2,
 		`
         local result = 0
@@ -53,7 +53,7 @@ func (m *RedisQueueManager) PushBytes(queueName string, item []byte) (size int, 
 }
 
 func (m *RedisQueueManager) PushWithLimit(queueName string, item string, limit int) (size int, err error) {
-	err = m.redisCache.Do(LUA_PUSH_WITH_LIMIT.Cmd(&size, queueName, item))
+	err = m.redisCache.Do(luaPushWithLimit.Cmd(&size, queueName, item))
 	return
 }
 
@@ -62,7 +62,7 @@ func (m *RedisQueueManager) Pop(queueName string) (b []byte, err error) {
 }
 
 func (m *RedisQueueManager) PopAll(queueName string) (b [][]byte, err error) {
-	err = m.redisCache.Do(LUA_POP_ALL.Cmd(&b, queueName))
+	err = m.redisCache.Do(luaPopAll.Cmd(&b, queueName))
 	return
 }
 

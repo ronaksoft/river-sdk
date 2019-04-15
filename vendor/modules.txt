@@ -1,5 +1,6 @@
-# git.ronaksoftware.com/ronak/toolbox v0.7.8
+# git.ronaksoftware.com/ronak/toolbox v0.7.10
 git.ronaksoftware.com/ronak/toolbox
+git.ronaksoftware.com/ronak/toolbox/logger
 # github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db
 github.com/abiosoft/readline
 # github.com/beeker1121/goque v2.0.1+incompatible

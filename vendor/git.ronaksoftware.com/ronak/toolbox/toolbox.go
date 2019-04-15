@@ -1,9 +1,7 @@
 package ronak
 
 import (
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"os"
+	"git.ronaksoftware.com/ronak/toolbox/logger"
 )
 
 /*
@@ -16,28 +14,19 @@ import (
 */
 
 var (
-	_LOG       *zap.Logger
-	_LOG_LEVEL zap.AtomicLevel
+	_Log log.Logger
 )
 
 type (
-	M  map[string]interface{}
+	M map[string]interface{}
 	MS map[string]string
 	MI map[string]int64
 )
 
 func init() {
-	logConfig := zap.NewProductionConfig()
-	logConfig.Encoding = "console"
-	_LOG_LEVEL = zap.NewAtomicLevelAt(zapcore.ErrorLevel)
-	logConfig.Level = _LOG_LEVEL
-	if v, err := logConfig.Build(); err != nil {
-		os.Exit(1)
-	} else {
-		_LOG = v
-	}
+	_Log = log.NewNop()
 }
 
-func SetLogLevel(level int) {
-	_LOG_LEVEL.SetLevel(zapcore.Level(level))
+func SetLogger(l log.Logger) {
+	_Log = l
 }

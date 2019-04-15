@@ -113,17 +113,24 @@ func StrToInt32(s string) int32 {
 	return int32(v)
 }
 
-// b2s converts byte slice to a string without memory allocation.
-// See https://groups.google.com/forum/#!msg/Golang-Nuts/ENgbUzYvCuU/90yGx7GUAgAJ .
-//
+func StrToUInt64(s string) uint64 {
+	v, _ := strconv.ParseInt(s, 10, 64)
+	return uint64(v)
+}
+
+func StrToUInt32(s string) uint32 {
+	v, _ := strconv.ParseInt(s, 10, 32)
+	return uint32(v)
+}
+
+// ByteToStr converts byte slice to a string without memory allocation.
 // Note it may break if string and/or slice header will change
 // in the future go versions.
 func ByteToStr(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
 
-// s2b converts string to a byte slice without memory allocation.
-//
+// StrToByte converts string to a byte slice without memory allocation.
 // Note it may break if string and/or slice header will change
 // in the future go versions.
 func StrToByte(s string) []byte {
@@ -135,4 +142,3 @@ func StrToByte(s string) []byte {
 	}
 	return *(*[]byte)(unsafe.Pointer(&bh))
 }
-

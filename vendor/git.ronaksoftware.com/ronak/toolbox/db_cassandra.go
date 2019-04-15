@@ -20,7 +20,7 @@ import (
 */
 
 const (
-	CQL_VERSION = "3.4.4"
+	CqlVersion = "3.4.4"
 )
 
 var (
@@ -29,7 +29,6 @@ var (
     PRIMARY KEY (
         {{range $idx, $elem := .PrimaryKeys}}{{if ne $idx 0}}, {{end}}{{$elem}}{{end}}
     ))`
-
 	tpCreateTableWithClustering = `CREATE TABLE IF NOT EXISTS {{.TableName}} ( 
     {{range  .Columns}}{{.Name}} {{.Type}}, {{end}}
     PRIMARY KEY (
@@ -97,8 +96,8 @@ type CqlTableClusteringColumn struct {
 
 // CassDB
 type CassDB struct {
-	config        CassConfig
-	session       *gocql.Session
+	config  CassConfig
+	session *gocql.Session
 }
 
 // CassConfig
@@ -153,7 +152,7 @@ var (
 		SerialConsistency:  LocalSerial,
 		ReplicationClass:   "SimpleStrategy",
 		ReplicationFactor:  1,
-		CqlVersion:         CQL_VERSION,
+		CqlVersion:         CqlVersion,
 		DefaultIdempotence: true,
 		QueryObserver:      nil,
 	}
@@ -198,7 +197,7 @@ func NewCassDB(conf CassConfig) *CassDB {
 		cassCluster.SerialConsistency = gocql.SerialConsistency(conf.SerialConsistency)
 		cassCluster.CQLVersion = conf.CqlVersion
 		if session, err := cassCluster.CreateSession(); err != nil {
-			_LOG.Fatal(err.Error())
+			_Log.Fatal(err.Error())
 			return nil
 		} else {
 			db.session = session
@@ -211,40 +210,43 @@ func NewCassDB(conf CassConfig) *CassDB {
 func CreateKeySpace(conf CassConfig) error {
 	cassCluster := gocql.NewCluster(conf.Host)
 	cassCluster.Authenticator = gocql.PasswordAuthenticator{
-		conf.Username, conf.Password,
+		Username: conf.Username,
+		Password: conf.Password,
 	}
-	cassCluster.CQLVersion = CQL_VERSION
-	if session, err := cassCluster.CreateSession(); err != nil {
+	cassCluster.CQLVersion = CqlVersion
+	session, err := cassCluster.CreateSession()
+	if err != nil {
 		return err
-	} else {
-		session.Query(
-			fmt.Sprintf(
-				"CREATE KEYSPACE IF NOT EXISTS %s WITH REPLICATION = {'class' : 'SimpleStrategy', 'replication_factor' : 1 }",
-				conf.Keyspace,
-			),
-		).Exec()
-		session.Close()
 	}
+	_ = session.Query(
+		fmt.Sprintf(
+			"CREATE KEYSPACE IF NOT EXISTS %s WITH REPLICATION = {'class' : 'SimpleStrategy', 'replication_factor' : 1 }",
+			conf.Keyspace,
+		),
+	).Exec()
+	session.Close()
+
 	return nil
 }
 
 func DropKeySpace(conf CassConfig) error {
 	cassCluster := gocql.NewCluster(conf.Host)
 	cassCluster.Authenticator = gocql.PasswordAuthenticator{
-		conf.Username, conf.Password,
+		Username: conf.Username,
+		Password: conf.Password,
 	}
-	cassCluster.CQLVersion = CQL_VERSION
-	if session, err := cassCluster.CreateSession(); err != nil {
-		_LOG.Fatal(err.Error())
+	cassCluster.CQLVersion = CqlVersion
+	session, err := cassCluster.CreateSession()
+	if err != nil {
 		return err
-	} else {
-		session.Query(
-			fmt.Sprintf(
-				"DROP KEYSPACE IF EXISTS %s", conf.Keyspace,
-			),
-		).Exec()
-		session.Close()
 	}
+	_ = session.Query(
+		fmt.Sprintf(
+			"DROP KEYSPACE IF EXISTS %s", conf.Keyspace,
+		),
+	).Exec()
+	session.Close()
+
 	return nil
 }
 
@@ -265,7 +267,7 @@ func (db *CassDB) CreateTable(createTableQueries map[string]CqlCreateTable) erro
 		if len(query.ClusteringKeys) > 0 {
 			t, err := template.New(tableName).Parse(tpCreateTableWithClustering)
 			if err != nil {
-				_LOG.Warn(err.Error(),
+				_Log.Warn(err.Error(),
 					zap.String("TableName", tableName),
 				)
 				return err
@@ -273,7 +275,7 @@ func (db *CassDB) CreateTable(createTableQueries map[string]CqlCreateTable) erro
 			buf := new(bytes.Buffer)
 			t.Execute(buf, query)
 			if err := db.session.Query(buf.String()).Exec(); err != nil {
-				_LOG.Warn(err.Error(),
+				_Log.Warn(err.Error(),
 					zap.String("TableName", tableName),
 				)
 				return err
@@ -281,7 +283,7 @@ func (db *CassDB) CreateTable(createTableQueries map[string]CqlCreateTable) erro
 		} else {
 			t, err := template.New(tableName).Parse(tpCreateTable)
 			if err != nil {
-				_LOG.Warn(err.Error(),
+				_Log.Warn(err.Error(),
 					zap.String("TableName", tableName),
 				)
 				return err
@@ -289,7 +291,7 @@ func (db *CassDB) CreateTable(createTableQueries map[string]CqlCreateTable) erro
 			buf := new(bytes.Buffer)
 			t.Execute(buf, query)
 			if err := db.session.Query(buf.String()).Exec(); err != nil {
-				_LOG.Warn(err.Error(),
+				_Log.Warn(err.Error(),
 					zap.String("TableName", tableName),
 				)
 				return err
@@ -304,16 +306,16 @@ func (db *CassDB) AlterTable(alterTableQueries map[string]CqlAlterTable) error {
 	for tableName, query := range alterTableQueries {
 		t, err := template.New(tableName).Parse(tpAlterTable)
 		if err != nil {
-			_LOG.Warn(err.Error(),
+			_Log.Warn(err.Error(),
 				zap.String("TableName", tableName),
 			)
 			return err
 		}
 		buf := new(bytes.Buffer)
 		t.Execute(buf, query)
-		_LOG.Info(buf.String())
+		_Log.Info(buf.String())
 		if err := db.session.Query(buf.String()).Exec(); err != nil {
-			_LOG.Warn(err.Error(),
+			_Log.Warn(err.Error(),
 				zap.String("Query", buf.String()),
 				zap.String("TableName", tableName),
 			)
@@ -347,7 +349,7 @@ func (db *CassDB) ExecuteRelease(q *gocqlx.Queryx) error {
 
 		} else {
 			if retries > 1 {
-				_LOG.Debug("Successful after:",
+				_Log.Debug("Successful after:",
 					zap.Int("Attempts", q.Attempts()),
 					zap.Int("Retries", retries),
 				)

@@ -127,7 +127,7 @@ func NewRedisCache(conf RedisConfig) *RedisCache {
 		radix.PoolRefillInterval(conf.RefillInterval),
 	)
 	if err != nil {
-		_LOG.Fatal(err.Error())
+		_Log.Fatal(err.Error())
 	}
 	r.conn = pool
 	r.connType = connTypePool
@@ -158,7 +158,7 @@ func NewRedisCacheWithDB(conf RedisConfig, dbNum int) *RedisCache {
 
 	pool, err := radix.NewPool("tcp", conf.Host, 1, PoolOpt)
 	if err != nil {
-		_LOG.Fatal(err.Error())
+		_Log.Fatal(err.Error())
 	}
 	r.conn = pool
 	r.connType = connTypePool
@@ -183,7 +183,7 @@ func NewRedisClusterCache(conf RedisConfig) *RedisCache {
 	}
 	cluster, err := radix.NewCluster(conf.ClusterHosts, ClusterOpt)
 	if err != nil {
-		_LOG.Fatal(err.Error())
+		_Log.Fatal(err.Error())
 	}
 	r.conn = cluster
 	r.connType = connTypeCluster
@@ -264,73 +264,13 @@ func (r *RedisCache) Set(keyName string, value interface{}) (reply bool, err err
 	return
 }
 
-func (r *RedisCache) SetString(keyName string, value string) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "SET", keyName, value))
+func (r *RedisCache) SetNx(keyName string, value interface{}) (reply bool, err error) {
+	err = r.Do(radix.FlatCmd(&reply, "SETNX", keyName, value))
 	return
 }
 
-func (r *RedisCache) SetInt(keyName string, value int) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "SET", keyName, fmt.Sprintf("%d", value)))
-	return
-}
-
-func (r *RedisCache) SetInt32(keyName string, value int32) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "SET", keyName, fmt.Sprintf("%d", value)))
-	return
-}
-
-func (r *RedisCache) SetInt64(keyName string, value int64) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "SET", keyName, fmt.Sprintf("%d", value)))
-	return
-}
-
-func (r *RedisCache) SetUInt64(keyName string, value uint64) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "SET", keyName, fmt.Sprintf("%d", value)))
-	return
-}
-
-func (r *RedisCache) SetNxString(keyName string, value string) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "SETNX", keyName, value))
-	return
-}
-
-func (r *RedisCache) SetNxInt(keyName string, value int) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "SETNX", keyName, fmt.Sprintf("%d", value)))
-	return
-}
-
-func (r *RedisCache) SetNxInt32(keyName string, value int32) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "SETNX", keyName, fmt.Sprintf("%d", value)))
-	return
-}
-
-func (r *RedisCache) SetNxInt64(keyName string, value int64) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "SETNX", keyName, fmt.Sprintf("%d", value)))
-	return
-}
-
-func (r *RedisCache) SetExBytes(keyName string, ttl int, value []byte) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "SETEX", keyName, fmt.Sprintf("%d", ttl), string(value)))
-	return
-}
-
-func (r *RedisCache) SetExString(keyName string, ttl int, value string) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "SETEX", keyName, fmt.Sprintf("%d", ttl), value))
-	return
-}
-
-func (r *RedisCache) SetExInt(keyName string, ttl int, value int) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "SETEX", keyName, fmt.Sprintf("%d", ttl), fmt.Sprintf("%d", value)))
-	return
-}
-
-func (r *RedisCache) SetExInt32(keyName string, ttl int, value int32) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "SETEX", keyName, fmt.Sprintf("%d", ttl), fmt.Sprintf("%d", value)))
-	return
-}
-
-func (r *RedisCache) SetExInt64(keyName string, ttl int, value int64) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "SETEX", keyName, fmt.Sprintf("%d", ttl), fmt.Sprintf("%d", value)))
+func (r *RedisCache) SetEx(keyName string, value interface{}) (reply bool, err error) {
+	err = r.Do(radix.FlatCmd(&reply, "SETEX", keyName, value))
 	return
 }
 
@@ -389,48 +329,8 @@ func (r *RedisCache) IncBy(keyName string, n int64) (reply int64, err error) {
 	return
 }
 
-func (r *RedisCache) HSetString(keyName string, fieldName string, value string) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "HSET", keyName, fieldName, value))
-	return
-}
-
-func (r *RedisCache) HSetInt(keyName string, fieldName string, value int) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "HSET", keyName, fieldName, fmt.Sprintf("%d", value)))
-	return
-}
-
-func (r *RedisCache) HSetInt32(keyName string, fieldName string, value int32) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "HSET", keyName, fieldName, fmt.Sprintf("%d", value)))
-	return
-}
-
-func (r *RedisCache) HSetInt64(keyName string, fieldName string, value int64) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "HSET", keyName, fieldName, fmt.Sprintf("%d", value)))
-	return
-}
-
-func (r *RedisCache) HSetUInt64(keyName string, fieldName string, value uint64) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "HSET", keyName, fieldName, fmt.Sprintf("%d", value)))
-	return
-}
-
-func (r *RedisCache) HSetNxString(keyName string, fieldName string, value string) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "HSETNX", keyName, fieldName, value))
-	return
-}
-
-func (r *RedisCache) HSetNxInt(keyName string, fieldName string, value int) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "HSETNX", keyName, fieldName, fmt.Sprintf("%d", value)))
-	return
-}
-
-func (r *RedisCache) HSetNxInt32(keyName string, fieldName string, value int32) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "HSETNX", keyName, fieldName, fmt.Sprintf("%d", value)))
-	return
-}
-
-func (r *RedisCache) HSetNxInt64(keyName string, fieldName string, value int64) (reply bool, err error) {
-	err = r.Do(radix.Cmd(&reply, "HSETNX", keyName, fieldName, fmt.Sprintf("%d", value)))
+func (r *RedisCache) HSet(keyName string, fieldName interface{}, value interface{}) (reply bool, err error) {
+	err = r.Do(radix.FlatCmd(&reply, "HSET", keyName, fieldName, value))
 	return
 }
 
@@ -775,6 +675,7 @@ func (r *RedisCache) ZRem(keyName string, field string) (reply int, err error) {
 	err = r.Do(radix.Cmd(&reply, "ZREM", keyName, field))
 	return
 }
+
 func (r *RedisCache) ZCard(keyName string) (reply int, err error) {
 	err = r.Do(radix.Cmd(&reply, "ZCARD", keyName))
 	return

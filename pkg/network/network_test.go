@@ -1,10 +1,12 @@
 package network_test
 
 import (
-	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/network"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"go.uber.org/zap"
 	"testing"
 	"time"
 )
@@ -18,31 +20,57 @@ import (
    Copyright Ronak Software Group 2018
 */
 
-var (
-	_Log log.Logger
-)
-func init() {
-
-}
 func dummyMessageHandler(messages []*msg.MessageEnvelope) {
-	fmt.Println("Message Handler")
+	logs.Info("Message Handler")
+	for _, m := range messages {
+		logs.Info("Message",
+			zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
+			zap.Uint64("RequestID", m.RequestID),
+		)
+	}
 }
 
-func dummyUpdateHandler(updates []*msg.UpdateContainer) {
-
+func dummyUpdateHandler(updateContainers []*msg.UpdateContainer) {
+	logs.Info("Update Handler")
+	for _, uc := range updateContainers {
+		for _, u := range uc.Updates {
+			logs.Info("Update",
+				zap.String("Constructor", msg.ConstructorNames[u.Constructor]),
+				zap.Int64("UpdateID", u.UpdateID),
+			)
+		}
+	}
 }
 
 func dummyOnConnectHandler() {
-
+	logs.Info("Connected")
 }
-func dummyErrorHandler(e *msg.Error) {
 
+func dummyErrorHandler(e *msg.Error) {
+	logs.Info("Error Handler",
+		zap.String("Code", e.Code),
+		zap.String("Items", e.Items),
+	)
 }
 
 func dummyNetworkChangeHandler(newStatus domain.NetworkStatus) {
+	logs.Info("Network Status Changed",
+		zap.String("New Status", newStatus.ToString()),
+	)
+}
 
+func authRecall() *msg.MessageEnvelope {
+	m := new(msg.AuthRecall)
+	m.ClientID = 2374
+	b, _ := m.Marshal()
+	return &msg.MessageEnvelope{
+		Constructor: msg.C_AuthRecall,
+		RequestID: ronak.RandomUint64(),
+		Message: b,
+	}
 }
 func TestNewController(t *testing.T) {
+	logs.SetLogLevel(0)
 	ctrl := network.NewController(network.Config{
 		ServerEndpoint: "ws://new.river.im",
 		PingTime:       30 * time.Second,
@@ -59,7 +87,15 @@ func TestNewController(t *testing.T) {
 		t.Error(err)
 		return
 	}
-
+	ctrl.Connect()
+	for i := 0 ;i < 10; i++ {
+		err = ctrl.Send(authRecall(), false)
+		if err != nil {
+			t.Error(err)
+		}
+	}
 	time.Sleep(20 * time.Second)
+	ctrl.Disconnect()
+	time.Sleep(3 * time.Second)
 	ctrl.Stop()
 }

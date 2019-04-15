@@ -2,6 +2,7 @@ package network
 
 import (
 	"encoding/hex"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"net/http"
 	"sort"
 	"sync"
@@ -56,16 +57,10 @@ type Controller struct {
 	pingDelays [3]time.Duration
 	pingIdx    int
 
-	// queue
-	messageQueue       *MessageQueue
-	updateQueue        *UpdateQueue
-	sendQueue          *MessageQueue
-	chMessageDebouncer chan bool
-	chUpdateDebouncer  chan bool
-	chSendDebouncer    chan bool
-	// prevent write to socket concurrently
-	// it used to prevent invoke read request while qriting on socket too
-	wsSendDebouncerLock sync.Mutex
+	// flusher
+	updateFlusher  *ronak.Flusher
+	messageFlusher *ronak.Flusher
+	sendFlusher    *ronak.Flusher
 
 	OnMessage domain.ReceivedMessageHandler
 	OnUpdate  domain.ReceivedUpdateHandler
@@ -79,47 +74,43 @@ type Controller struct {
 
 // NewController
 func NewController(config Config) *Controller {
-	m := new(Controller)
+	ctrl := new(Controller)
 	if config.ServerEndpoint == "" {
-		m.websocketEndpoint = domain.WebsocketEndpoint
+		ctrl.websocketEndpoint = domain.WebsocketEndpoint
 	} else {
-		m.websocketEndpoint = config.ServerEndpoint
+		ctrl.websocketEndpoint = config.ServerEndpoint
 	}
 	if config.PingTime <= 0 {
-		m.wsPingTime = domain.WebsocketPingTime
+		ctrl.wsPingTime = domain.WebsocketPingTime
 	} else {
-		m.wsPingTime = config.PingTime
+		ctrl.wsPingTime = config.PingTime
 	}
 	if config.PongTimeout <= 0 {
-		m.wsPongTimeout = domain.WebsocketPongTime
+		ctrl.wsPongTimeout = domain.WebsocketPongTime
 	} else {
-		m.wsPongTimeout = config.PongTimeout
+		ctrl.wsPongTimeout = config.PongTimeout
 	}
 
-	m.wsDialer = &websocket.Dialer{
+	ctrl.wsDialer = &websocket.Dialer{
 		Proxy:            http.ProxyFromEnvironment,
 		HandshakeTimeout: 10 * time.Second,
 		WriteBufferSize:  64 * 1024, // 32kB
 		ReadBufferSize:   64 * 1024, // 32kB
 	}
 
-	m.stopChannel = make(chan bool)
-	m.connectChannel = make(chan bool)
-	m.pongChannel = make(chan bool)
+	ctrl.stopChannel = make(chan bool)
+	ctrl.connectChannel = make(chan bool)
+	ctrl.pongChannel = make(chan bool)
 
-	m.updateQueue = NewUpdateQueue(1000)
-	m.messageQueue = NewMessageQueue(1000)
-	m.sendQueue = NewMessageQueue(1000)
+	ctrl.updateFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.updateFlushFunc)
+	ctrl.messageFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.messageFlushFunc)
+	ctrl.sendFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.sendFlushFunc)
 
-	m.chMessageDebouncer = make(chan bool)
-	m.chUpdateDebouncer = make(chan bool)
-	m.chSendDebouncer = make(chan bool)
-
-	m.unauthorizedRequests = map[int64]bool{
+	ctrl.unauthorizedRequests = map[int64]bool{
 		msg.C_SystemGetServerTime: true,
 	}
 
-	return m
+	return ctrl
 }
 
 // Start
@@ -130,118 +121,89 @@ func (ctrl *Controller) Start() error {
 	}
 	go ctrl.keepAlive()
 	go ctrl.watchDog()
-	go ctrl.messageDebouncer()
-	go ctrl.updateDebouncer()
-	go ctrl.sendDebouncer()
 	return nil
 }
 
-func (ctrl *Controller) messageDebouncer() {
-	counter := 0
-	interval := 50 * time.Millisecond
-	timer := time.NewTimer(interval)
-	for {
-		select {
-		case <-ctrl.chMessageDebouncer:
-			counter++
-			logs.Debug("messageDebouncer() Received",
-				zap.Int("Counter", counter),
-			)
-			// on receive any update we wait another interval until we receive 3 update
-			if counter < 3 {
-				logs.Debug("messageDebouncer() Received Timer Reset",
-					zap.Int("Counter", counter),
-				)
-				timer.Reset(interval)
-			}
-		case <-timer.C:
-			if ctrl.OnMessage != nil && ctrl.messageQueue.Length() > 0 {
-				logs.Debug("messageDebouncer() Flushed",
-					zap.Int("ItemCount", ctrl.messageQueue.Length()),
-				)
-				ctrl.OnMessage(ctrl.messageQueue.PopAll())
-				counter = 0
-			}
-			timer.Reset(interval)
-		case <-ctrl.stopChannel:
-			logs.Debug("messageDebouncer() Stopped")
-			return
+func (ctrl *Controller) updateFlushFunc(entries []ronak.FlusherEntry) {
+	if ctrl.OnUpdate != nil {
+		itemsCount := len(entries)
+		updates := make([]*msg.UpdateContainer, 0, itemsCount)
+		for idx := range entries {
+			updates = append(updates, entries[idx].Value.(*msg.UpdateContainer))
 		}
-	}
-
-}
-
-func (ctrl *Controller) updateDebouncer() {
-	counter := 0
-	interval := 50 * time.Millisecond
-	timer := time.NewTimer(interval)
-	for {
-		select {
-		case <-ctrl.chUpdateDebouncer:
-			counter++
-			logs.Debug("updateDebouncer() Received",
-				zap.Int("Counter", counter),
-			)
-			// on receive any update we wait another interval until we receive 3 update
-			if counter < 3 {
-				logs.Debug("updateDebouncer() Received Timer Reset",
-					zap.Int("Counter", counter),
-				)
-				timer.Reset(interval)
-			}
-		case <-timer.C:
-			if ctrl.OnUpdate != nil && ctrl.updateQueue.Length() > 0 {
-				logs.Debug("updateDebouncer() Flushed",
-					zap.Int("ItemCount", ctrl.updateQueue.Length()),
-				)
-				ctrl.OnUpdate(ctrl.updateQueue.PopAll())
-				counter = 0
-			}
-			timer.Reset(interval)
-		case <-ctrl.stopChannel:
-			logs.Debug("updateDebouncer() Stopped")
-			return
-		}
+		ctrl.OnUpdate(updates)
+		logs.Debug("Updates Flushed",
+			zap.Int("Count", itemsCount),
+		)
 	}
 }
 
-func (ctrl *Controller) sendDebouncer() {
-	counter := 0
-	interval := 50 * time.Millisecond
-	timer := time.NewTimer(interval)
-	for {
-		// wait for network to connect
-		for ctrl.wsQuality == domain.NetworkConnecting || ctrl.wsQuality == domain.NetworkDisconnected {
-			time.Sleep(interval)
+func (ctrl *Controller) messageFlushFunc(entries []ronak.FlusherEntry) {
+	if ctrl.OnMessage != nil {
+		itemsCount := len(entries)
+		messages := make([]*msg.MessageEnvelope, 0, itemsCount)
+		for idx := range entries {
+			messages = append(messages, entries[idx].Value.(*msg.MessageEnvelope))
 		}
+		ctrl.OnMessage(messages)
+		logs.Debug("Messages Flushed",
+			zap.Int("Count", itemsCount),
+		)
+	}
+}
 
-		select {
-		case <-ctrl.chSendDebouncer:
-			counter++
-			logs.Debug("sendDebouncer() Received",
-				zap.Int("Counter", counter),
+func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
+	// wait for network to connect
+	for ctrl.wsQuality == domain.NetworkConnecting || ctrl.wsQuality == domain.NetworkDisconnected {
+		time.Sleep(time.Second)
+	}
+
+	itemsCount := len(entries)
+	messages := make([]*msg.MessageEnvelope, 0, itemsCount)
+	for idx := range entries {
+		messages = append(messages, entries[idx].Value.(*msg.MessageEnvelope))
+	}
+
+	// Make sure messages are sorted before sending to the wire
+	sort.Slice(
+		messages,
+		func(i, j int) bool {
+			return messages[i].RequestID < messages[j].RequestID
+		},
+	)
+
+	chunkSize := 50
+	startIdx := 0
+	endIdx := chunkSize
+	keepGoing := true
+	for keepGoing {
+		if endIdx > len(messages) {
+			endIdx = len(messages)
+			keepGoing = false
+		}
+		chunk := messages[startIdx:endIdx]
+
+		msgContainer := new(msg.MessageContainer)
+		msgContainer.Envelopes = chunk
+		msgContainer.Length = int32(len(chunk))
+		messageEnvelope := new(msg.MessageEnvelope)
+		messageEnvelope.Constructor = msg.C_MessageContainer
+		messageEnvelope.Message, _ = msgContainer.Marshal()
+		messageEnvelope.RequestID = 0
+		err := ctrl.send(messageEnvelope)
+		if err != nil {
+			logs.Error("Send Flush Error",
+				zap.Error(err),
 			)
-			// on receive any update we wait another interval until we receive 3 update
-			if counter < 3 {
-				logs.Debug("sendDebouncer() Received Timer Reset",
-					zap.Int("Counter", counter),
-				)
-				timer.Reset(interval)
-			}
-		case <-timer.C:
-			if ctrl.sendQueue.Length() > 0 {
-				logs.Debug("sendDebouncer() Flushed",
-					zap.Int("ItemCount", ctrl.sendQueue.Length()),
-				)
-				ctrl.sendFlush(ctrl.sendQueue.PopAll())
-				counter = 0
-			}
-			timer.Reset(interval)
-		case <-ctrl.stopChannel:
-			logs.Debug("sendDebouncer() Stopped")
 			return
 		}
+		startIdx = endIdx
+		endIdx += chunkSize
 	}
+
+	logs.Debug("Send Flushed",
+		zap.Int("Count", itemsCount),
+	)
 }
 
 // watchDog
@@ -444,36 +406,6 @@ func (ctrl *Controller) extractMessages(m *msg.MessageEnvelope) ([]*msg.MessageE
 	return messages, updates
 }
 
-// send signal to debouncer
-func (ctrl *Controller) messageReceived() {
-	select {
-	case ctrl.chMessageDebouncer <- true:
-		logs.Debug("messageReceived() Signal")
-	default:
-		logs.Debug("messageReceived() Skipped")
-	}
-}
-
-// send signal to debouncer
-func (ctrl *Controller) updateReceived() {
-	select {
-	case ctrl.chUpdateDebouncer <- true:
-		logs.Debug("updateReceived() Signal")
-	default:
-		logs.Debug("updateReceived() Skipped")
-	}
-}
-
-// send signal to debouncer
-func (ctrl *Controller) sendRequestReceived() {
-	select {
-	case ctrl.chSendDebouncer <- true:
-		logs.Debug("sendRequestReceived() Signal")
-	default:
-		logs.Debug("sendRequestReceived() Skipped")
-	}
-}
-
 // messageHandler
 // MessageEnvelopes will be extracted and separates updates and messages.
 func (ctrl *Controller) messageHandler(message *msg.MessageEnvelope) {
@@ -487,25 +419,17 @@ func (ctrl *Controller) messageHandler(message *msg.MessageEnvelope) {
 		zap.Int("Updates Count", updateCount),
 	)
 
-	// TODO : add to buffer queue and notify next processor to start processing received updates
-	ctrl.messageQueue.PushMany(messages)
-	ctrl.updateQueue.PushMany(updates)
-
-	if messageCount > 0 {
-		ctrl.messageReceived()
+	for _, m := range messages {
+		ctrl.messageFlusher.Enter(nil, m)
 	}
-	if updateCount > 0 {
-		ctrl.updateReceived()
+	for _, u := range updates {
+		ctrl.updateFlusher.Enter(nil, u)
 	}
-	logs.Debug("messageHandler() End")
 }
 
 // Stop sends stop signal to keepAlive and watchDog routines.
 func (ctrl *Controller) Stop() {
 	ctrl.stopChannel <- true // keepAlive
-	ctrl.stopChannel <- true // updateDebouncer
-	ctrl.stopChannel <- true // messageDebouncer
-	ctrl.stopChannel <- true // sendDebouncer
 	select {
 	case ctrl.stopChannel <- true: // receiver may or may not be listening
 	default:
@@ -601,18 +525,9 @@ func (ctrl *Controller) SetNetworkStatusChangedCallback(h domain.NetworkStatusUp
 func (ctrl *Controller) Send(msgEnvelope *msg.MessageEnvelope, direct bool) error {
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
 	if direct || unauthorized {
-		// this will wait till sendFlush() done its job
-		ctrl.wsSendDebouncerLock.Lock()
-		ctrl.wsSendDebouncerLock.Unlock()
-
 		return ctrl.send(msgEnvelope)
 	} else {
-		// this will probably solve queueController unordered message burst
-		// add to send buffer
-		ctrl.sendQueue.Push(msgEnvelope)
-
-		// signal the send debouncer
-		ctrl.sendRequestReceived()
+		ctrl.sendFlusher.Enter(nil, msgEnvelope)
 	}
 	return nil
 }
@@ -624,11 +539,6 @@ func (ctrl *Controller) send(msgEnvelope *msg.MessageEnvelope) error {
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
 	if ctrl.authID == 0 || unauthorized {
 		protoMessage.AuthID = 0
-		logs.Debug("send()",
-			zap.String("Warning", "AuthID is zero ProtoMessage is unencrypted"),
-			zap.Int64("ctrl.AuthID", ctrl.authID),
-			zap.Int64("protoMessage.AuthID", protoMessage.AuthID),
-		)
 		protoMessage.Payload, _ = msgEnvelope.Marshal()
 	} else {
 		protoMessage.AuthID = ctrl.authID
@@ -646,34 +556,22 @@ func (ctrl *Controller) send(msgEnvelope *msg.MessageEnvelope) error {
 	}
 
 	b, err := protoMessage.Marshal()
-
-	// // dump the message
-	// err = ioutil.WriteFile(fmt.Sprintf("_dump/%v_%v.bin", time.Now().UnixNano(), msg.ConstructorNames[msgEnvelope.Constructor]), b, 777)
-	// if err != nil {
-	// 	log.Debug("failed to write dump",
-	// 		zap.String("error", err.Error()),
-	// 	)
-	// }
-
 	if err != nil {
 		logs.Debug("send()-> Failed to marshal", zap.Error(err))
+		return err
 	}
 	if ctrl.wsConn == nil {
-		logs.Debug("send()->Marshal()",
-			zap.String("Error", domain.ErrNoConnection.Error()),
-		)
 		return domain.ErrNoConnection
 	}
 
 	ctrl.wsWriteLock.Lock()
-	ctrl.wsConn.SetWriteDeadline(time.Now().Add(domain.WebsocketWriteTime))
+	_ = ctrl.wsConn.SetWriteDeadline(time.Now().Add(domain.WebsocketWriteTime))
 	err = ctrl.wsConn.WriteMessage(websocket.BinaryMessage, b)
 	ctrl.wsWriteLock.Unlock()
 
 	if err != nil {
-		logs.Error("send() -> wsConn.WriteMessage()", zap.Error(domain.ErrNoConnection))
 		ctrl.updateNetworkStatus(domain.NetworkDisconnected)
-		ctrl.wsConn.SetReadDeadline(time.Now())
+		_ = ctrl.wsConn.SetReadDeadline(time.Now())
 		return err
 	}
 	logs.Debug("send() Message sent to the wire",
@@ -681,73 +579,6 @@ func (ctrl *Controller) send(msgEnvelope *msg.MessageEnvelope) error {
 		zap.String("Size", humanize.Bytes(uint64(protoMessage.Size()))),
 	)
 	return nil
-}
-
-// sendFlush will be called in sendDebouncer that running in another go routine so its ok to run in sync mode
-func (ctrl *Controller) sendFlush(queueMsgs []*msg.MessageEnvelope) {
-
-	logs.Debug("sendFlush()",
-		zap.Int("queueMsgs Count", len(queueMsgs)),
-	)
-
-	ctrl.wsSendDebouncerLock.Lock()
-
-	if len(queueMsgs) > 1 {
-		// Implemented domain.SequentialUniqueID() to make sure requestID are sequential and unique
-		sort.Slice(queueMsgs, func(i, j int) bool {
-			return queueMsgs[i].RequestID < queueMsgs[j].RequestID
-		})
-
-		// chunk data by 50 and send
-		limit := 50
-		length := len(queueMsgs)
-		rangeCount := length / limit
-		for i := 0; i <= rangeCount; i++ {
-			startIdx := i * limit
-			// empty already
-			if startIdx >= length {
-				break
-			}
-			endIdx := startIdx + limit
-			// check slice bounds
-			if endIdx > length {
-				endIdx = length
-			}
-			// fetch chunk
-			chunkMsgs := queueMsgs[startIdx:endIdx]
-
-			msgContainer := new(msg.MessageContainer)
-			msgContainer.Envelopes = chunkMsgs
-			msgContainer.Length = int32(len(chunkMsgs))
-
-			messageEnvelope := new(msg.MessageEnvelope)
-			messageEnvelope.Constructor = msg.C_MessageContainer
-			messageEnvelope.Message, _ = msgContainer.Marshal()
-			messageEnvelope.RequestID = 0 // uint64(domain.SequentialUniqueID())
-
-			err := ctrl.send(messageEnvelope)
-			if err != nil {
-				logs.Error("sendFlush() -> ctrl.send() many", zap.Error(err))
-
-				// add requests again to sendQueue and try again later
-				logs.Debug("sendFlush() -> ctrl.send() many : pushed requests back to sendQueue")
-				ctrl.sendQueue.PushMany(queueMsgs[startIdx:])
-				break
-			}
-		}
-
-	} else {
-		err := ctrl.send(queueMsgs[0])
-		if err != nil {
-			logs.Error("sendFlush() -> ctrl.send() one", zap.Error(err))
-
-			// add requests again to sendQueue and try again later
-			logs.Warn("sendFlush() -> ctrl.send() one : pushed request back to sendQueue")
-			ctrl.sendQueue.Push(queueMsgs[0])
-		}
-	}
-
-	ctrl.wsSendDebouncerLock.Unlock()
 }
 
 // Quality returns NetworkStatus

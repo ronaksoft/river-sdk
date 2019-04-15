@@ -42,7 +42,7 @@ func NewMongoDB(config MongoConfig) (*MongoDB, error) {
 	tlsConfig.InsecureSkipVerify = config.InsecureSkipVerify
 	dialInfo, err := mgo.ParseURL(config.Host)
 	if err != nil {
-		_LOG.Fatal(err.Error())
+		_Log.Fatal(err.Error())
 	}
 	dialInfo.Timeout = config.DialTimeout
 	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
@@ -57,12 +57,12 @@ func NewMongoDB(config MongoConfig) (*MongoDB, error) {
 		if mongoSession, err = mgo.Dial(config.Host); err != nil {
 			return nil, err
 		} else {
-			_LOG.Info("MongoDB Connected")
+			_Log.Info("MongoDB Connected")
 			mdb.s = mongoSession
 			return mdb, nil
 		}
 	}
-	_LOG.Info("MongoDB(TLS) Connected")
+	_Log.Info("MongoDB(TLS) Connected")
 
 	mdb.s = mongoSession
 	return mdb, nil
