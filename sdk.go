@@ -499,7 +499,7 @@ func (r *River) onGetServerTime(m *msg.MessageEnvelope) {
 		delta := serverTime - clientTime
 		r.networkCtrl.SetClientTimeDifference(delta)
 		logs.Debug("River::onGetServerTime()",
-			zap.Int64("Servertime", serverTime),
+			zap.Int64("ServerTime", serverTime),
 			zap.Int64("ClientTime", clientTime),
 			zap.Int64("Difference", delta),
 		)
@@ -798,7 +798,7 @@ func (r *River) Stop() {
 
 	// Close database connection
 	err := repo.Ctx().Close()
-	logs.Debug("River::Stop() faild to close DB context",
+	logs.Debug("River::Stop() failed to close DB context",
 		zap.String("Error", err.Error()),
 	)
 }
@@ -971,7 +971,6 @@ func (r *River) releaseDelegate(requestID int64) {
 // This function creates an AuthID and AuthKey to be used for transporting messages between client and server
 func (r *River) CreateAuthKey() (err error) {
 	logs.Debug("River::CreateAuthKey()")
-
 
 	// Wait for network
 	r.networkCtrl.WaitForNetwork()
@@ -1160,5 +1159,3 @@ func (r *River) AddRealTimeRequest(constructor int64) {
 func (r *River) RemoveRealTimeRequest(constructor int64) {
 	delete(r.realTimeRequest, constructor)
 }
-
-

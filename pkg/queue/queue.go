@@ -115,7 +115,7 @@ func (ctrl *Controller) distributor() {
 }
 
 // setDistributorState
-func (ctrl *Controller) setDistributorState(b bool)  {
+func (ctrl *Controller) setDistributorState(b bool) {
 	ctrl.distributorLock.Lock()
 	ctrl.distributorRunning = b
 	ctrl.distributorLock.Unlock()

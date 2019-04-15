@@ -393,7 +393,6 @@ func init() {
 	Debug.AddCmd(MessageSendByQueue)
 	Debug.AddCmd(ContactImportByNetwork)
 	Debug.AddCmd(MessageSendBulk)
-	Debug.AddCmd(DebuncerStatus)
 	Debug.AddCmd(GetTopMessageID)
 	Debug.AddCmd(ContactImportMany)
 

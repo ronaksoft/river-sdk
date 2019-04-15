@@ -65,8 +65,8 @@ func authRecall() *msg.MessageEnvelope {
 	b, _ := m.Marshal()
 	return &msg.MessageEnvelope{
 		Constructor: msg.C_AuthRecall,
-		RequestID: ronak.RandomUint64(),
-		Message: b,
+		RequestID:   ronak.RandomUint64(),
+		Message:     b,
 	}
 }
 func TestNewController(t *testing.T) {
@@ -88,7 +88,7 @@ func TestNewController(t *testing.T) {
 		return
 	}
 	ctrl.Connect()
-	for i := 0 ;i < 10; i++ {
+	for i := 0; i < 10; i++ {
 		err = ctrl.Send(authRecall(), false)
 		if err != nil {
 			t.Error(err)
