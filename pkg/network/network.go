@@ -250,7 +250,7 @@ func (ctrl *Controller) keepAlive() {
 				pingDelay := time.Now().Sub(pingTime)
 				logs.Debug("keepAlive() Ping/Pong",
 					zap.Duration("Duration", pingDelay),
-					zap.String("wsQuality", domain.NetworkStatusName[ctrl.wsQuality]),
+					zap.String("wsQuality", ctrl.wsQuality.ToString()),
 				)
 				ctrl.pingIdx++
 				ctrl.pingDelays[ctrl.pingIdx%3] = pingDelay

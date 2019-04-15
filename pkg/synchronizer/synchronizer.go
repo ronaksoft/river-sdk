@@ -142,7 +142,7 @@ func (ctrl *Controller) SetOnUpdateCallback(h domain.OnUpdateMainDelegateHandler
 // updateSyncStatus
 func (ctrl *Controller) updateSyncStatus(newStatus domain.SyncStatus) {
 	if ctrl.syncStatus == newStatus {
-		logs.Debug("updateSyncStatus() syncStatus not changed", zap.String("status", domain.SyncStatusName[newStatus]))
+		logs.Debug("updateSyncStatus() syncStatus not changed", zap.String("status", newStatus.ToString()))
 		return
 	}
 	switch newStatus {
@@ -244,7 +244,7 @@ func (ctrl *Controller) sync() {
 		}
 	}
 	ctrl.isSyncing = false
-	logs.Debug("sync() status : " + domain.SyncStatusName[ctrl.syncStatus])
+	logs.Debug("sync() status : " + ctrl.syncStatus.ToString())
 	ctrl.updateSyncStatus(domain.Synced)
 }
 

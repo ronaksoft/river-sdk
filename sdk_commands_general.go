@@ -66,7 +66,7 @@ func (r *River) GetNetworkStatus() int32 {
 func (r *River) GetSyncStatus() int32 {
 
 	logs.Debug("River::GetSyncStatus()",
-		zap.String("syncStatus", domain.SyncStatusName[r.syncCtrl.Status()]),
+		zap.String("syncStatus", r.syncCtrl.Status().ToString()),
 	)
 	return int32(r.syncCtrl.Status())
 }
@@ -390,7 +390,7 @@ func (r *River) FileDownload(msgID int64) {
 
 	status, progress, filePath := getFileStatus(msgID)
 	logs.Debug("SDK::FileDownload() current file progress status",
-		zap.String("Status", domain.RequestStatusNames[status]),
+		zap.String("Status", status.ToString()),
 		zap.Float64("Progress", progress),
 		zap.String("FilePath", filePath),
 	)

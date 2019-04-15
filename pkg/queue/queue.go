@@ -64,7 +64,6 @@ func NewController(network *network.Controller, dataDir string) (*Controller, er
 // Pulls the next request from the waitingList and pass it to the executor. It uses
 // a rate limiter to throttle the throughput
 func (ctrl *Controller) distributor() {
-
 	// double check
 	if ctrl.isDistributorRunning() {
 		return
@@ -74,11 +73,10 @@ func (ctrl *Controller) distributor() {
 	defer ctrl.setDistributorState(false)
 
 	for {
-
 		// Wait While Network is Disconnected or Connecting
 		for ctrl.network.Quality() == domain.NetworkDisconnected || ctrl.network.Quality() == domain.NetworkConnecting {
-			logs.Warn("distributor() Network is not connected ...",
-				zap.String("Quality", domain.NetworkStatusName[ctrl.network.Quality()]),
+			logs.Debug("Queue Controller waits for Network",
+				zap.String("Quality", ctrl.network.Quality().ToString()),
 			)
 			time.Sleep(time.Second)
 		}
@@ -127,7 +125,6 @@ func (ctrl *Controller) setDistributorState(b bool) bool {
 	changed = ctrl.distributorRunning != b
 	ctrl.distributorRunning = b
 	ctrl.distributorLock.Unlock()
-
 	return changed
 }
 
@@ -137,6 +134,74 @@ func (ctrl *Controller) isDistributorRunning() bool {
 	b := ctrl.distributorRunning
 	ctrl.distributorLock.Unlock()
 	return b
+}
+
+// addToWaitingList
+func (ctrl *Controller) addToWaitingList(req *request) {
+	jsonRequest, err := req.MarshalJSON()
+	if err != nil {
+		logs.Error("addToWaitingList()->MarshalJSON()", zap.Error(err))
+		return
+	}
+	if _, err := ctrl.waitingList.Enqueue(jsonRequest); err != nil {
+		logs.Error("addToWaitingList()->Enqueue()", zap.Error(err))
+		return
+	}
+	logs.Debug("addToWaitingList() Request added to waiting list",
+		zap.String("Constructor", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
+		zap.Uint64("RequestID", req.MessageEnvelope.RequestID),
+	)
+	if !ctrl.isDistributorRunning() {
+		go ctrl.distributor()
+	}
+}
+
+// reinitializePendingMessages load queue items from storage
+// FIXME:: this function must be removed
+func (ctrl *Controller) reinitializePendingMessages() {
+	logs.Info("reinitializePendingMessages()")
+	// Remove all MessageSend requests from queue and add all pending messages back to queue
+	items := make([]*goque.Item, 0)
+	for {
+		item, err := ctrl.waitingList.Dequeue()
+		if err != nil || item == nil {
+			break
+		}
+		tmp := new(msg.MessageEnvelope)
+		_ = tmp.Unmarshal(item.Value)
+		if tmp.Constructor != msg.C_MessagesSend {
+			items = append(items, item)
+		}
+	}
+
+	// get all pendingMessages
+	pendingMessages := repo.Ctx().PendingMessages.GetAllPendingMessages()
+
+	// add pendingMessages to queue
+	for _, v := range pendingMessages {
+		messageEnvelope := new(msg.MessageEnvelope)
+		messageEnvelope.RequestID = uint64(v.RandomID)
+		// v.RandomID = domain.SequentialUniqueID()
+		messageEnvelope.Constructor = msg.C_MessagesSend
+		messageEnvelope.Message, _ = v.Marshal()
+		req := &request{
+			ID:              messageEnvelope.RequestID,
+			Timeout:         domain.WebsocketRequestTime,
+			MessageEnvelope: messageEnvelope,
+		}
+
+		// add its callback here
+		ctrl.addToWaitingList(req)
+	}
+
+	// add items to queue
+	for _, v := range items {
+		_, _ = ctrl.waitingList.Enqueue(v.Value)
+	}
+
+	logs.Info("reinitializePendingMessages() Finished",
+		zap.Uint64("MessageQueue Length", ctrl.waitingList.Length()),
+	)
 }
 
 // executor
@@ -318,81 +383,13 @@ func (ctrl *Controller) ExecuteCommand(requestID uint64, constructor int64, requ
 	ctrl.addToWaitingList(&req)
 }
 
-// addToWaitingList
-func (ctrl *Controller) addToWaitingList(req *request) {
-	jsonRequest, err := req.MarshalJSON()
-	if err != nil {
-		logs.Error("addToWaitingList()->MarshalJSON()", zap.Error(err))
-		return
-	}
-	if _, err := ctrl.waitingList.Enqueue(jsonRequest); err != nil {
-		logs.Error("addToWaitingList()->Enqueue()", zap.Error(err))
-		return
-	}
-	logs.Debug("addToWaitingList() Request added to waiting list",
-		zap.String("Constructor", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
-		zap.Uint64("RequestID", req.MessageEnvelope.RequestID),
-	)
-	if !ctrl.isDistributorRunning() {
-		go ctrl.distributor()
-	}
-}
-
 // Start queue
 func (ctrl *Controller) Start() {
-	logs.Info("Start()")
+	logs.Info("Queue Controller Start")
 
 	ctrl.reinitializePendingMessages()
 
 	go ctrl.distributor()
-}
-
-// reinitializePendingMessages load queue items from storage
-func (ctrl *Controller) reinitializePendingMessages() {
-	logs.Info("reinitializePendingMessages()")
-	// Remove all MessageSend requests from queue and add all pending messages back to queue
-	items := make([]*goque.Item, 0)
-	for {
-		if item, err := ctrl.waitingList.Dequeue(); err == nil && item != nil {
-			tmp := new(msg.MessageEnvelope)
-			_ = tmp.Unmarshal(item.Value)
-			if tmp.Constructor != msg.C_MessagesSend {
-				items = append(items, item)
-			}
-		} else {
-			break
-		}
-	}
-
-	// get all pendingMessages
-	pendingMessages := repo.Ctx().PendingMessages.GetAllPendingMessages()
-
-	// add pendingMessages to queue
-	for _, v := range pendingMessages {
-		messageEnvelope := new(msg.MessageEnvelope)
-		messageEnvelope.RequestID = uint64(v.RandomID)
-		// v.RandomID = domain.SequentialUniqueID()
-		messageEnvelope.Constructor = msg.C_MessagesSend
-		messageEnvelope.Message, _ = v.Marshal()
-		req := &request{
-			ID:              messageEnvelope.RequestID,
-			Timeout:         domain.WebsocketRequestTime,
-			MessageEnvelope: messageEnvelope,
-		}
-
-		// add its callback here
-
-		ctrl.addToWaitingList(req)
-	}
-
-	// add items to queue
-	for _, v := range items {
-		_, _ = ctrl.waitingList.Enqueue(v.Value)
-	}
-
-	logs.Info("reinitializePendingMessages() Finished",
-		zap.Uint64("MessageQueue Length", ctrl.waitingList.Length()),
-	)
 }
 
 // Stop queue

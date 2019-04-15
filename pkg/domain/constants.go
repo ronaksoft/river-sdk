@@ -79,20 +79,16 @@ const (
 	Synced
 )
 
-// SyncStatusName log helper to retrive SyncStatus name
-var SyncStatusName = map[SyncStatus]string{
-	OutOfSync: "OutOfSync",
-	Syncing:   "Syncing",
-	Synced:    "Synced",
-}
-
-// NetworkStatusName log helper to retrive NetworkStatus name
-var NetworkStatusName = map[NetworkStatus]string{
-	NetworkDisconnected: "NetworkDisconnected",
-	NetworkConnecting:   "NetworkConnecting",
-	NetworkWeak:         "NetworkWeak",
-	NetworkSlow:         "NetworkSlow",
-	NetworkFast:         "NetworkFast",
+func (ss SyncStatus) ToString() string {
+	switch ss {
+	case OutOfSync:
+		return "OutOfSync"
+	case Syncing:
+		return "Syncing"
+	case Synced:
+		return "Synced"
+	}
+	return ""
 }
 
 // RequestStatus state of file download/upload request
@@ -113,14 +109,22 @@ const (
 	RequestStateError RequestStatus = 5
 )
 
-// RequestStatusNames log helper to retrive RequestStatus name
-var RequestStatusNames = map[RequestStatus]string{
-	RequestStateNone:       "None",
-	RequestStateInProgress: "InProgress",
-	RequestStateCompleted:  "Completed",
-	RequestStatePaused:     "Paused",
-	RequestStateCanceled:   "Canceled",
-	RequestStateError:      "Error",
+func (rs RequestStatus) ToString() string {
+	switch rs {
+	case RequestStateNone:
+		return "None"
+	case RequestStateInProgress:
+		return "InProgress"
+	case RequestStateCompleted:
+		return "Completed"
+	case RequestStatePaused:
+		return "Paused"
+	case RequestStateCanceled:
+		return "Canceled"
+	case RequestStateError:
+		return "Error"
+	}
+	return ""
 }
 
 // DocumentAttributeTypeNames log helper to retrive DocumentAttributeType name

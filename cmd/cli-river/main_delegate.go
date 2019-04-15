@@ -56,12 +56,12 @@ func (d *MainDelegate) OnDeferredRequests(requestID int64, b []byte) {
 
 func (d *MainDelegate) OnNetworkStatusChanged(quality int) {
 	state := domain.NetworkStatus(quality)
-	logs.Info("Network status changed", zap.String("Status", domain.NetworkStatusName[state]))
+	logs.Info("Network status changed", zap.String("Status", state.ToString()))
 }
 
 func (d *MainDelegate) OnSyncStatusChanged(newStatus int) {
 	state := domain.SyncStatus(newStatus)
-	logs.Info("Sync status changed", zap.String("Status", domain.SyncStatusName[state]))
+	logs.Info("Sync status changed", zap.String("Status", state.ToString()))
 }
 
 func (d *MainDelegate) OnAuthKeyCreated(authID int64) {
