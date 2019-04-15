@@ -22,7 +22,7 @@ require (
 	github.com/jinzhu/gorm v1.9.2
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
 	github.com/jinzhu/now v1.0.0 // indirect
-	github.com/jmoiron/sqlx v1.2.0
+	github.com/jmoiron/sqlx v1.2.0 // indirect
 	github.com/juju/ratelimit v1.0.1
 	github.com/kr/pretty v0.1.0
 	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983
