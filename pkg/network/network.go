@@ -108,20 +108,11 @@ func NewController(config Config) *Controller {
 
 	ctrl.unauthorizedRequests = map[int64]bool{
 		msg.C_SystemGetServerTime: true,
+		msg.C_InitConnect: true,
+		msg.C_InitCompleteAuth: true,
 	}
 
 	return ctrl
-}
-
-// Start
-// Starts the controller background controller and watcher routines
-func (ctrl *Controller) Start() error {
-	if ctrl.OnUpdate == nil || ctrl.OnMessage == nil {
-		return domain.ErrHandlerNotSet
-	}
-	go ctrl.keepAlive()
-	go ctrl.watchDog()
-	return nil
 }
 
 func (ctrl *Controller) updateFlushFunc(entries []ronak.FlusherEntry) {
@@ -231,7 +222,6 @@ func (ctrl *Controller) watchDog() {
 			logs.Debug("watchDog() Stopped")
 			return
 		}
-
 	}
 }
 
@@ -246,11 +236,11 @@ func (ctrl *Controller) keepAlive() {
 				continue
 			}
 			ctrl.wsWriteLock.Lock()
-			ctrl.wsConn.SetWriteDeadline(time.Now().Add(domain.WebsocketWriteTime))
+			_ = ctrl.wsConn.SetWriteDeadline(time.Now().Add(domain.WebsocketWriteTime))
 			err := ctrl.wsConn.WriteMessage(websocket.PingMessage, nil)
 			ctrl.wsWriteLock.Unlock()
 			if err != nil {
-				ctrl.wsConn.SetReadDeadline(time.Now())
+				_ = ctrl.wsConn.SetReadDeadline(time.Now())
 				logs.Error("keepAlive() -> wsConn.WriteMessage()", zap.Error(err))
 				continue
 			}
@@ -274,7 +264,7 @@ func (ctrl *Controller) keepAlive() {
 					ctrl.updateNetworkStatus(domain.NetworkFast)
 				}
 			case <-time.After(ctrl.wsPongTimeout):
-				ctrl.wsConn.SetReadDeadline(time.Now())
+				_ = ctrl.wsConn.SetReadDeadline(time.Now())
 			}
 		case <-ctrl.stopChannel:
 			logs.Debug("keepAlive() Stopped")
@@ -427,6 +417,17 @@ func (ctrl *Controller) messageHandler(message *msg.MessageEnvelope) {
 	}
 }
 
+// Start
+// Starts the controller background controller and watcher routines
+func (ctrl *Controller) Start() error {
+	if ctrl.OnUpdate == nil || ctrl.OnMessage == nil {
+		return domain.ErrHandlerNotSet
+	}
+	go ctrl.keepAlive()
+	go ctrl.watchDog()
+	return nil
+}
+
 // Stop sends stop signal to keepAlive and watchDog routines.
 func (ctrl *Controller) Stop() {
 	ctrl.stopChannel <- true // keepAlive
@@ -489,7 +490,7 @@ func (ctrl *Controller) Disconnect() {
 func (ctrl *Controller) SetAuthorization(authID int64, authKey []byte) {
 	logs.Info("SetAuthorization()",
 		zap.Int64("AuthID", authID),
-		zap.Binary("authKey", authKey),
+		zap.Binary("AuthKey", authKey),
 	)
 	ctrl.authKey = make([]byte, len(authKey))
 	ctrl.authID = authID
@@ -526,9 +527,8 @@ func (ctrl *Controller) Send(msgEnvelope *msg.MessageEnvelope, direct bool) erro
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
 	if direct || unauthorized {
 		return ctrl.send(msgEnvelope)
-	} else {
-		ctrl.sendFlusher.Enter(nil, msgEnvelope)
 	}
+	ctrl.sendFlusher.Enter(nil, msgEnvelope)
 	return nil
 }
 
