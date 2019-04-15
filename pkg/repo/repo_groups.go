@@ -294,7 +294,7 @@ func (r *repoGroups) RemoveGroupPhoto(groupID int64) error {
 
 	grp := new(dto.Groups)
 	return r.db.Table(grp.TableName()).Where("ID=?", groupID).Updates(map[string]interface{}{
-		"Photo":            []byte("[]"),
+		"Photo":           []byte("[]"),
 		"BigFileID":       0,
 		"BigAccessHash":   0,
 		"BigClusterID":    0,

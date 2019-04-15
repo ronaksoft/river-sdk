@@ -73,7 +73,6 @@ func (r *River) GetSyncStatus() int32 {
 
 // Logout drop queue & database , etc ...
 func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
-
 	// unregister device if token exist
 	if notifyServer && r.DeviceToken != nil {
 		reqID := uint64(domain.SequentialUniqueID())
@@ -136,7 +135,7 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 		r.syncCtrl.ClearUpdateID()
 	}
 
-	if r.mainDelegate != nil  {
+	if r.mainDelegate != nil {
 		r.mainDelegate.OnSessionClosed(reason)
 	}
 
@@ -959,4 +958,3 @@ func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
 		logs.Error("SetScrollStatus::Failed to set scroll ID")
 	}
 }
-

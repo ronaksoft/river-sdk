@@ -49,7 +49,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	// init delegates
 	r.mainDelegate = conf.MainDelegate
 
-
 	// set loglevel
 	logs.SetLogLevel(conf.LogLevel)
 
@@ -61,8 +60,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 			r.logger.Log(logLevel, msg)
 		})
 	}
-
-
 
 	// set log file path
 	if conf.DocumentLogDirectory != "" {
@@ -132,7 +129,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	)
 
 	// Initialize Network Controller
-	r.networkCtrl = network.NewNetworkController(
+	r.networkCtrl = network.NewController(
 		network.Config{
 			ServerEndpoint: conf.ServerEndpoint,
 			PingTime:       time.Duration(conf.PingTimeSec) * time.Second,
@@ -166,7 +163,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// call external delegate on sync status changed
 	r.syncCtrl.SetSyncStatusChangedCallback(func(newStatus domain.SyncStatus) {
-		if r.mainDelegate != nil  {
+		if r.mainDelegate != nil {
 			r.mainDelegate.OnSyncStatusChanged(int(newStatus))
 		}
 	})
@@ -201,8 +198,9 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.networkCtrl.SetUpdateHandler(r.onReceivedUpdate)
 	r.networkCtrl.SetOnConnectCallback(r.onNetworkControllerConnected)
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-	filemanager.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 
+	// Update FileManager
+	filemanager.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 	filemanager.Ctx().LoadQueueFromDB()
 }
 
@@ -465,7 +463,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 				blockingMode,
 				true,
 			)
-			if err != nil && delegate != nil  {
+			if err != nil && delegate != nil {
 				logs.Error("ExecuteRealtimeCommand()", zap.Error(err))
 				delegate.OnTimeout(err)
 			}
@@ -737,7 +735,7 @@ func (r *River) onGeneralError(e *msg.Error) {
 		zap.String("Item", e.Items),
 	)
 
-	if r.mainDelegate != nil  {
+	if r.mainDelegate != nil {
 		buff, _ := e.Marshal()
 		r.mainDelegate.OnGeneralError(buff)
 	}

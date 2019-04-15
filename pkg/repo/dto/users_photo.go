@@ -4,7 +4,7 @@ import "git.ronaksoftware.com/ronak/riversdk/msg"
 
 type UsersPhoto struct {
 	dto
-	UserID           int64  `gorm:"type:bigint;primary_key;column:UserID" json:"UserID"`   // type is required for composite primary key
+	UserID          int64  `gorm:"type:bigint;primary_key;column:UserID" json:"UserID"`   // type is required for composite primary key
 	PhotoID         int64  `gorm:"type:bigint;primary_key;column:PhotoID" json:"PhotoID"` // type is required for composite primary key
 	BigFileID       int64  `gorm:";column:BigFileID" json:"BigFileID"`
 	BigAccessHash   int64  `gorm:";column:BigAccessHash" json:"BigAccessHash"`

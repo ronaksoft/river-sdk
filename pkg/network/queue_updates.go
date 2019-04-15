@@ -64,7 +64,7 @@ func (q *UpdateQueue) PopAll() []*msg.UpdateContainer {
 	itemsCount := len(q.items)
 	items := make([]*msg.UpdateContainer, 0, itemsCount)
 	for i := 0; i < itemsCount; i++ {
-		items = append(items, <- q.items)
+		items = append(items, <-q.items)
 	}
 	return items
 }

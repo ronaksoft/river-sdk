@@ -7,34 +7,23 @@ import (
 )
 
 const (
-	// FilePayloadSize file upload chunk size
-	FilePayloadSize = 1024 * 256 // 256KB
-	// FileMaxAllowedSize max file size limit
+	FilePayloadSize    = 1024 * 256        // 256KB
 	FileMaxAllowedSize = 750 * 1024 * 1024 // 750MB
-	// FileMaxPhotoSize max allowed photo size
-	FileMaxPhotoSize = 1 * 1024 * 1024 // 1MB
-	// FileRetryThreshold downloader/uploader stops retry after this threshold
-	FileRetryThreshold = 10
-	// FilePipelineCount multiconnection download/upload
-	FilePipelineCount = 8
+	FileMaxPhotoSize   = 1 * 1024 * 1024   // 1MB
+	FileMaxRetry       = 10
+	FilePipelineCount  = 8
 )
 
 // Global Parameters
 const (
 	// WebsocketEndpoint production server address
-	WebsocketEndpoint = "ws://river.im"
-	// WebsocketPingTime ping timeout
-	WebsocketPingTime = 10 * time.Second
-	// WebsocketPongTime pong timeout
-	WebsocketPongTime = 3 * time.Second
-	// WebsocketWriteTime send request timeout
-	WebsocketWriteTime = 3 * time.Second
-	// WebsocketDirectTime send realtime request timeout
-	WebsocketDirectTime = 3 * time.Second
-	// WebsocketRequestTime wait for response timeout
-	WebsocketRequestTime = 30 * time.Second
-	// SnapshotSyncThreshold snapshot threshold
-	SnapshotSyncThreshold = 999
+	WebsocketEndpoint     = "ws://river.im"
+	WebsocketPingTime     = 10 * time.Second
+	WebsocketPongTime     = 3 * time.Second
+	WebsocketWriteTime    = 3 * time.Second
+	WebsocketDirectTime   = 3 * time.Second
+	WebsocketRequestTime  = 30 * time.Second
+	SnapshotSyncThreshold = 10000
 )
 
 // Table Column Names

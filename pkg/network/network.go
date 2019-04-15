@@ -77,8 +77,8 @@ type Controller struct {
 	clientTimeDifference int64
 }
 
-// NewNetworkController
-func NewNetworkController(config Config) *Controller {
+// NewController
+func NewController(config Config) *Controller {
 	m := new(Controller)
 	if config.ServerEndpoint == "" {
 		m.websocketEndpoint = domain.WebsocketEndpoint
@@ -599,10 +599,6 @@ func (ctrl *Controller) SetNetworkStatusChangedCallback(h domain.NetworkStatusUp
 
 // Send direct sends immediately else it put it in debouncer
 func (ctrl *Controller) Send(msgEnvelope *msg.MessageEnvelope, direct bool) error {
-
-	// send without debouncer
-	// return ctrl.send(msgEnvelope)
-
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
 	if direct || unauthorized {
 		// this will wait till sendFlush() done its job
@@ -614,6 +610,7 @@ func (ctrl *Controller) Send(msgEnvelope *msg.MessageEnvelope, direct bool) erro
 		// this will probably solve queueController unordered message burst
 		// add to send buffer
 		ctrl.sendQueue.Push(msgEnvelope)
+
 		// signal the send debouncer
 		ctrl.sendRequestReceived()
 	}
@@ -723,12 +720,12 @@ func (ctrl *Controller) sendFlush(queueMsgs []*msg.MessageEnvelope) {
 			msgContainer.Envelopes = chunkMsgs
 			msgContainer.Length = int32(len(chunkMsgs))
 
-			messageEnvelop := new(msg.MessageEnvelope)
-			messageEnvelop.Constructor = msg.C_MessageContainer
-			messageEnvelop.Message, _ = msgContainer.Marshal()
-			messageEnvelop.RequestID = 0 // uint64(domain.SequentialUniqueID())
+			messageEnvelope := new(msg.MessageEnvelope)
+			messageEnvelope.Constructor = msg.C_MessageContainer
+			messageEnvelope.Message, _ = msgContainer.Marshal()
+			messageEnvelope.RequestID = 0 // uint64(domain.SequentialUniqueID())
 
-			err := ctrl.send(messageEnvelop)
+			err := ctrl.send(messageEnvelope)
 			if err != nil {
 				logs.Error("sendFlush() -> ctrl.send() many", zap.Error(err))
 

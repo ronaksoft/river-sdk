@@ -30,9 +30,9 @@ type request struct {
 type Controller struct {
 	distributorLock sync.Mutex
 
-	rateLimiter            *ratelimit.Bucket
-	waitingList            *goque.Queue
-	network                *network.Controller
+	rateLimiter *ratelimit.Bucket
+	waitingList *goque.Queue
+	network     *network.Controller
 
 	// Internal Flags
 	distributorRunning bool
