@@ -377,7 +377,7 @@ func (ctrl *Controller) ExecuteCommand(requestID uint64, constructor int64, requ
 func (ctrl *Controller) Start() {
 	logs.Info("Queue Controller Start")
 
-	ctrl.reinitializePendingMessages()
+	// ctrl.reinitializePendingMessages()
 
 	go ctrl.distributor()
 }
