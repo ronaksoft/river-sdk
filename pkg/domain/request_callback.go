@@ -32,7 +32,6 @@ func init() {
 
 // NewRequestCallback create new instance
 func NewRequestCallback(reqID uint64, success MessageHandler, timeOut time.Duration, timeout TimeoutCallback, isUICallback bool) *RequestCallback {
-
 	return &RequestCallback{
 		RequestID:       reqID,
 		SuccessCallback: success,

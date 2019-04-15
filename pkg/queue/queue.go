@@ -76,13 +76,14 @@ func (ctrl *Controller) distributor() {
 		// Wait until network is available
 		ctrl.network.WaitForNetwork()
 
-		logs.Debug("distributor()",
-			zap.Uint64("MessageQueue Length", ctrl.waitingList.Length()),
+		logs.Debug("Queue Controller's distributor started",
+			zap.Uint64("Length", ctrl.waitingList.Length()),
 		)
 
 		if ctrl.waitingList.Length() == 0 {
 			break
 		}
+
 		// Peek item from the queue
 		item, err := ctrl.waitingList.Dequeue()
 		if err != nil {
@@ -104,7 +105,7 @@ func (ctrl *Controller) distributor() {
 			)
 			go ctrl.executor(req)
 		} else {
-			logs.Warn("distributor() Request cancelled",
+			logs.Debug("distributor() Request cancelled",
 				zap.Uint64("RequestID", req.ID),
 				zap.String("RequestName", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
 			)
@@ -114,13 +115,11 @@ func (ctrl *Controller) distributor() {
 }
 
 // setDistributorState
-func (ctrl *Controller) setDistributorState(b bool) bool {
-	changed := false
+func (ctrl *Controller) setDistributorState(b bool)  {
 	ctrl.distributorLock.Lock()
-	changed = ctrl.distributorRunning != b
 	ctrl.distributorRunning = b
 	ctrl.distributorLock.Unlock()
-	return changed
+	return
 }
 
 // isDistributorRunning
@@ -235,7 +234,6 @@ func (ctrl *Controller) executor(req request) {
 	case <-time.After(req.Timeout):
 		domain.RemoveRequestCallback(req.ID)
 		if reqCallbacks.TimeoutCallback != nil {
-
 			if reqCallbacks.IsUICallback {
 				uiexec.Ctx().Exec(func() { reqCallbacks.TimeoutCallback() })
 			} else {
@@ -285,7 +283,6 @@ func (ctrl *Controller) executor(req request) {
 
 // ExecuteRealtimeCommand run request immediately and do not save it in queue
 func (ctrl *Controller) ExecuteRealtimeCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, blockingMode, isUICallback bool) (err error) {
-
 	messageEnvelope := new(msg.MessageEnvelope)
 	messageEnvelope.Constructor = constructor
 	messageEnvelope.RequestID = requestID
@@ -313,17 +310,15 @@ func (ctrl *Controller) ExecuteRealtimeCommand(requestID uint64, constructor int
 					zap.String("ConstructorName", msg.ConstructorNames[req.Constructor]),
 					zap.Uint64("RequestID", requestID),
 				)
-
 				domain.RemoveRequestCallback(reqID)
 				if reqCB.TimeoutCallback != nil {
 					if reqCB.IsUICallback {
 						uiexec.Ctx().Exec(func() { reqCB.TimeoutCallback() })
 					} else {
-
 						reqCB.TimeoutCallback()
 					}
 				}
-				err = domain.ErrRequestTimeout
+				return domain.ErrRequestTimeout
 			case res := <-reqCB.ResponseChannel:
 				logs.Debug("ExecuteRealtimeCommand()->execBlock()  : Success",
 					zap.String("ConstructorName", msg.ConstructorNames[req.Constructor]),
@@ -343,7 +338,7 @@ func (ctrl *Controller) ExecuteRealtimeCommand(requestID uint64, constructor int
 				zap.Uint64("RequestID", requestID),
 			)
 		}
-		return err
+		return nil
 	}
 
 	if blockingMode {

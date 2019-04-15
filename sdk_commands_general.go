@@ -16,17 +16,15 @@ import (
 
 // CancelRequest remove given requestID callbacks&delegates and if its not processed by queue we skip it on queue distributor
 func (r *River) CancelRequest(requestID int64) {
-
 	// Remove delegate
 	r.delegateMutex.Lock()
 	delete(r.delegates, int64(requestID))
 	r.delegateMutex.Unlock()
 
-	// Remove callback
+	// Remove Callback
 	domain.RemoveRequestCallback(uint64(requestID))
 
-	// Remove from goque levelDB
-	// the goque pkg does not support this
+	// Cancel Request
 	r.queueCtrl.CancelRequest(requestID)
 
 }
