@@ -61,7 +61,7 @@ type River struct {
 	// request callbacks cache
 	delegateMutex sync.Mutex
 	delegates     map[int64]RequestDelegate
-	// user requests that they can be satisfied by clent cache
+	// user requests that they can be satisfied by client cache
 	localCommands map[int64]domain.LocalMessageHandler
 
 	// Internal Controllers

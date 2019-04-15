@@ -42,8 +42,8 @@ type Controller struct {
 	cancelledRequest map[int64]bool
 }
 
-// NewQueueController
-func NewQueueController(network *network.Controller, dataDir string) (*Controller, error) {
+// NewController
+func NewController(network *network.Controller, dataDir string) (*Controller, error) {
 	ctrl := new(Controller)
 	ctrl.rateLimiter = ratelimit.NewBucket(time.Second, 20)
 	if dataDir == "" {
