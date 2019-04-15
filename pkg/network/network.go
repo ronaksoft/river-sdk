@@ -108,8 +108,8 @@ func NewController(config Config) *Controller {
 
 	ctrl.unauthorizedRequests = map[int64]bool{
 		msg.C_SystemGetServerTime: true,
-		msg.C_InitConnect: true,
-		msg.C_InitCompleteAuth: true,
+		msg.C_InitConnect:         true,
+		msg.C_InitCompleteAuth:    true,
 	}
 
 	return ctrl
@@ -598,4 +598,23 @@ func (ctrl *Controller) Reconnect() {
 // SetClientTimeDifference set client and server time difference
 func (ctrl *Controller) SetClientTimeDifference(delta int64) {
 	ctrl.clientTimeDifference = delta
+}
+
+// WaitForNetwork
+func (ctrl *Controller) WaitForNetwork() {
+	// Wait While Network is Disconnected or Connecting
+	for ctrl.wsQuality == domain.NetworkDisconnected || ctrl.wsQuality == domain.NetworkConnecting {
+		logs.Debug("Queue Controller waits for Network",
+			zap.String("Quality", ctrl.wsQuality.ToString()),
+		)
+		time.Sleep(time.Second)
+	}
+}
+
+// Connected
+func (ctrl *Controller) Connected() bool {
+	if ctrl.wsQuality == domain.NetworkDisconnected || ctrl.wsQuality == domain.NetworkConnecting {
+		return false
+	}
+	return true
 }

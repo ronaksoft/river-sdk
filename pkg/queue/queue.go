@@ -73,13 +73,8 @@ func (ctrl *Controller) distributor() {
 	defer ctrl.setDistributorState(false)
 
 	for {
-		// Wait While Network is Disconnected or Connecting
-		for ctrl.network.Quality() == domain.NetworkDisconnected || ctrl.network.Quality() == domain.NetworkConnecting {
-			logs.Debug("Queue Controller waits for Network",
-				zap.String("Quality", ctrl.network.Quality().ToString()),
-			)
-			time.Sleep(time.Second)
-		}
+		// Wait until network is available
+		ctrl.network.WaitForNetwork()
 
 		logs.Debug("distributor()",
 			zap.Uint64("MessageQueue Length", ctrl.waitingList.Length()),

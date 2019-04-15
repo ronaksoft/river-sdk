@@ -219,8 +219,9 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		})
 		return
 	}
+
 	// Offline mode
-	if r.networkCtrl.Quality() == domain.NetworkDisconnected || r.networkCtrl.Quality() == domain.NetworkConnecting {
+	if !r.networkCtrl.Connected() {
 		if dtoDialog.TopMessageID < 0 {
 			messages, users := repo.Ctx().Messages.GetMessageHistoryWithPendingMessages(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 			messagesGetHistory(out, messages, users, in.RequestID, successCB)

@@ -971,10 +971,10 @@ func (r *River) releaseDelegate(requestID int64) {
 // This function creates an AuthID and AuthKey to be used for transporting messages between client and server
 func (r *River) CreateAuthKey() (err error) {
 	logs.Debug("River::CreateAuthKey()")
-	// wait untill network connects
-	for r.networkCtrl.Quality() == domain.NetworkDisconnected || r.networkCtrl.Quality() == domain.NetworkConnecting {
-		time.Sleep(200)
-	}
+
+
+	// Wait for network
+	r.networkCtrl.WaitForNetwork()
 
 	var clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64
 	// 1. Send InitConnect to Server

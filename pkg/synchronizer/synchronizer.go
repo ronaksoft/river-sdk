@@ -166,10 +166,9 @@ func (ctrl *Controller) watchDog() {
 	for {
 		select {
 		case <-time.After(30 * time.Second):
-			// make sure network is connected b4 start getUpdateDifference or snapshotSync
-			for ctrl.networkCtrl.Quality() == domain.NetworkDisconnected || ctrl.networkCtrl.Quality() == domain.NetworkConnecting {
-				time.Sleep(100 * time.Millisecond)
-			}
+			// Wait for network
+			ctrl.networkCtrl.WaitForNetwork()
+
 			if ctrl.syncStatus != domain.Syncing {
 				logs.Info("watchDog() -> sync() called")
 				ctrl.sync()
@@ -199,10 +198,8 @@ func (ctrl *Controller) sync() {
 		return
 	}
 
-	// make sure network is connected b4 start getUpdateDifference or snapshotSync
-	for ctrl.networkCtrl.Quality() == domain.NetworkDisconnected || ctrl.networkCtrl.Quality() == domain.NetworkConnecting {
-		time.Sleep(100 * time.Millisecond)
-	}
+	// Wait until network is available
+	ctrl.networkCtrl.WaitForNetwork()
 
 	var serverUpdateID int64
 	var err error
@@ -259,8 +256,8 @@ func (ctrl *Controller) SetUserID(userID int64) {
 // getUpdateState responsibility is to only get server updateID
 func (ctrl *Controller) getUpdateState() (updateID int64, err error) {
 	updateID = 0
-	// when network is disconnected no need to enqueue update request in goque
-	if ctrl.networkCtrl.Quality() == domain.NetworkDisconnected || ctrl.networkCtrl.Quality() == domain.NetworkConnecting {
+
+	if !ctrl.networkCtrl.Connected() {
 		return -1, domain.ErrNoConnection
 	}
 
@@ -271,7 +268,7 @@ func (ctrl *Controller) getUpdateState() (updateID int64, err error) {
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
 	// ctrl.queue.ExecuteCommand(
-	ctrl.queue.ExecuteRealtimeCommand(
+	_ = ctrl.queue.ExecuteRealtimeCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_UpdateGetState,
 		reqBytes,
