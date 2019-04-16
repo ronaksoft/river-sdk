@@ -2,9 +2,9 @@ package network_test
 
 import (
 	"git.ronaksoftware.com/ronak/riversdk/msg"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/network"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
 	"testing"

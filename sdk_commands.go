@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/synchronizer"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_sync"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 
 	"git.ronaksoftware.com/ronak/riversdk/msg"

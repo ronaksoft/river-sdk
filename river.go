@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/msg"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_queue"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/network"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/queue"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/synchronizer"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_sync"
 )
 
 // RiverConfig ...

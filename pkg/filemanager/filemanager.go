@@ -544,7 +544,7 @@ func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 	}
 }
 
-// LoadQueueFromDB load inprogress request from databse
+// LoadQueueFromDB load in progress request from database
 func (fm *FileManager) LoadQueueFromDB() {
 	// Load pended file status
 	dtos := repo.Ctx().Files.GetAllFileStatus()
@@ -584,7 +584,6 @@ func (fm *FileManager) uploadCompleted(msgID, fileID, targetID int64,
 	uploadRequest *msg.ClientSendMessageMedia,
 	thumbFileID int64,
 	thumbTotalParts int32,
-
 ) {
 	// delete file status
 	fm.DeleteFromQueue(msgID, domain.RequestStateCompleted)
