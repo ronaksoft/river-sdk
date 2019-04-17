@@ -137,7 +137,7 @@ func (fs *FileStatus) Read(isThumbnail bool, partIdx int64) ([]byte, int, error)
 	return buff, readCount, nil
 }
 
-// Write writes givin data to current position of file
+// Write writes giving data to current position of file
 func (fs *FileStatus) Write(data []byte, partIdx int64) (isCompleted bool, err error) {
 	fs.mx.Lock()
 	defer fs.mx.Unlock()
@@ -470,6 +470,7 @@ func (fs *FileStatus) downloaderJob(fm *FileManager) {
 		}
 	}
 }
+
 func (fs *FileStatus) uploaderJob(fm *FileManager) {
 	for {
 		if fs.stop {
@@ -517,6 +518,7 @@ func (fs *FileStatus) partListCount() int {
 	fs.mxPartList.Unlock()
 	return count
 }
+
 func (fs *FileStatus) deleteFromPartList(partIdx int64) {
 	fs.mxPartList.Lock()
 	delete(fs.PartList, partIdx)

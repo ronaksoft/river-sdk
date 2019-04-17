@@ -89,7 +89,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		}
 	}
 	res := make([]*msg.UpdateEnvelope, 0)
-	// Perevent calling external delegate
+	// Prevent calling external delegate
 	if !ctrl.isDeliveredMessage(x.Message.ID) {
 		res = append(res, u)
 	}
@@ -99,14 +99,11 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 
 	// handle Media message
 	if int32(x.Message.MediaType) > 0 {
-		go handleMediaMessage(x.Message)
+		go extractMessagesMedia(x.Message)
 	}
 	return res
 }
-
-// Parse message action and call required appliers
 func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.UpdateEnvelope, res []*msg.UpdateEnvelope) {
-
 	switch x.Message.MessageAction {
 	case domain.MessageActionNope:
 		// Do nothing
@@ -403,6 +400,6 @@ func (ctrl *Controller) updateTooLong(u *msg.UpdateEnvelope) []*msg.UpdateEnvelo
 
 	go ctrl.sync()
 
-	res := []*msg.UpdateEnvelope{}
+	res := make([]*msg.UpdateEnvelope, 0)
 	return res
 }

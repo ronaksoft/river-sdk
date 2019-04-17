@@ -2,10 +2,10 @@ package synchronizer
 
 import (
 	"fmt"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/filemanager"
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/filemanager"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
@@ -68,22 +68,19 @@ func NewSyncController(config Config) *Controller {
 	ctrl.syncStatus = domain.Synced
 
 	ctrl.updateAppliers = map[int64]domain.UpdateApplier{
-		msg.C_UpdateNewMessage:        ctrl.updateNewMessage,
-		msg.C_UpdateReadHistoryOutbox: ctrl.updateReadHistoryOutbox,
-		msg.C_UpdateReadHistoryInbox:  ctrl.updateReadHistoryInbox,
-		msg.C_UpdateMessageEdited:     ctrl.updateMessageEdited,
-		msg.C_UpdateMessageID:         ctrl.updateMessageID,
-		msg.C_UpdateNotifySettings:    ctrl.updateNotifySettings,
-		msg.C_UpdateUsername:          ctrl.updateUsername,
-
-		msg.C_UpdateMessagesDeleted: ctrl.updateMessagesDeleted,
-
+		msg.C_UpdateNewMessage:            ctrl.updateNewMessage,
+		msg.C_UpdateReadHistoryOutbox:     ctrl.updateReadHistoryOutbox,
+		msg.C_UpdateReadHistoryInbox:      ctrl.updateReadHistoryInbox,
+		msg.C_UpdateMessageEdited:         ctrl.updateMessageEdited,
+		msg.C_UpdateMessageID:             ctrl.updateMessageID,
+		msg.C_UpdateNotifySettings:        ctrl.updateNotifySettings,
+		msg.C_UpdateUsername:              ctrl.updateUsername,
+		msg.C_UpdateMessagesDeleted:       ctrl.updateMessagesDeleted,
 		msg.C_UpdateGroupParticipantAdmin: ctrl.updateGroupParticipantAdmin,
 		msg.C_UpdateReadMessagesContents:  ctrl.updateReadMessagesContents,
-
-		msg.C_UpdateUserPhoto:  ctrl.updateUserPhoto,
-		msg.C_UpdateGroupPhoto: ctrl.updateGroupPhoto,
-		msg.C_UpdateTooLong:    ctrl.updateTooLong,
+		msg.C_UpdateUserPhoto:             ctrl.updateUserPhoto,
+		msg.C_UpdateGroupPhoto:            ctrl.updateGroupPhoto,
+		msg.C_UpdateTooLong:               ctrl.updateTooLong,
 	}
 
 	ctrl.messageAppliers = map[int64]domain.MessageApplier{
@@ -103,56 +100,14 @@ func NewSyncController(config Config) *Controller {
 	return ctrl
 }
 
-// Start controller
-func (ctrl *Controller) Start() {
-	logs.Info("Start")
-
-	// Load the latest UpdateID stored in DB
-	if v, err := repo.Ctx().System.LoadInt(domain.ColumnUpdateID); err != nil {
-		err := repo.Ctx().System.SaveInt(domain.ColumnUpdateID, 0)
-		if err != nil {
-			logs.Error("Start()-> SaveInt()", zap.Error(err))
-		}
-		ctrl.updateID = 0
-	} else {
-		ctrl.updateID = int64(v)
-	}
-
-	// Sync with Server
-	go ctrl.sync()
-
-	go ctrl.watchDog()
-}
-
-// Stop controller
-func (ctrl *Controller) Stop() {
-	ctrl.stopChannel <- true // for watchDog()
-}
-
-// SetSyncStatusChangedCallback status change delegate/callback
-func (ctrl *Controller) SetSyncStatusChangedCallback(h domain.SyncStatusUpdateCallback) {
-	ctrl.onSyncStatusChange = h
-}
-
-// SetOnUpdateCallback set delegate to pass updates that received by getDifference to UI
-func (ctrl *Controller) SetOnUpdateCallback(h domain.OnUpdateMainDelegateHandler) {
-	ctrl.onUpdateMainDelegate = h
-}
-
 // updateSyncStatus
 func (ctrl *Controller) updateSyncStatus(newStatus domain.SyncStatus) {
 	if ctrl.syncStatus == newStatus {
-		logs.Debug("updateSyncStatus() syncStatus not changed", zap.String("status", newStatus.ToString()))
 		return
 	}
-	switch newStatus {
-	case domain.OutOfSync:
-		logs.Info("updateSyncStatus() OutOfSync")
-	case domain.Syncing:
-		logs.Info("updateSyncStatus() Syncing")
-	case domain.Synced:
-		logs.Info("updateSyncStatus() Synced")
-	}
+	logs.Info("Sync Controller Status Updated",
+		zap.String("Status", newStatus.ToString()),
+	)
 	ctrl.syncStatus = newStatus
 
 	if ctrl.onSyncStatusChange != nil {
@@ -264,7 +219,7 @@ func (ctrl *Controller) getUpdateState() (updateID int64, err error) {
 	req := new(msg.UpdateGetState)
 	reqBytes, _ := req.Marshal()
 
-	// this waitgroup is required cuz our callbacks will be called in UIExecutor go routine
+	// this waitGroup is required cuz our callbacks will be called in UIExecutor go routine
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
 	// ctrl.queue.ExecuteCommand(
@@ -299,7 +254,6 @@ func (ctrl *Controller) getUpdateState() (updateID int64, err error) {
 
 // getUpdateDifference
 func (ctrl *Controller) getUpdateDifference(minUpdateID int64) {
-
 	logs.Debug("getUpdateDifference()")
 
 	ctrl.isUpdatingDifferenceLock.Lock()
@@ -365,7 +319,6 @@ func (ctrl *Controller) getUpdateDifference(minUpdateID int64) {
 	ctrl.isUpdatingDifference = false
 	ctrl.updateSyncStatus(domain.Synced)
 }
-
 func (ctrl *Controller) onGetDifferenceSucceed(m *msg.MessageEnvelope) {
 	switch m.Constructor {
 	case msg.C_UpdateDifference:
@@ -391,24 +344,12 @@ func (ctrl *Controller) onGetDifferenceSucceed(m *msg.MessageEnvelope) {
 		// No need to wait here till DB gets synced cuz UI will have required data
 		go func() {
 			// Save Groups
-			repo.Ctx().Groups.SaveMany(x.Groups)
+			_ = repo.Ctx().Groups.SaveMany(x.Groups)
 			// Save Users
-			repo.Ctx().Users.SaveMany(x.Users)
+			_ = repo.Ctx().Users.SaveMany(x.Users)
 		}()
 
-		// take out updateMessageID
 		for _, update := range x.Updates {
-			if update.Constructor == msg.C_UpdateMessageID {
-				ctrl.updateMessageID(update)
-			}
-		}
-
-		for _, update := range x.Updates {
-			// we allready processed this update type
-			if update.Constructor == msg.C_UpdateMessageID {
-				continue
-			}
-
 			logs.Debug("onGetDifferenceSucceed() loop",
 				zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
 			)
@@ -567,12 +508,6 @@ func (ctrl *Controller) getAllDialogs(offset int32, limit int32) {
 
 }
 
-func (ctrl *Controller) addToDeliveredMessageList(id int64) {
-	ctrl.deliveredMessagesMutex.Lock()
-	ctrl.deliveredMessages[id] = true
-	ctrl.deliveredMessagesMutex.Unlock()
-}
-
 func (ctrl *Controller) isDeliveredMessage(id int64) bool {
 	ctrl.deliveredMessagesMutex.Lock()
 	var ok bool
@@ -583,6 +518,42 @@ func (ctrl *Controller) isDeliveredMessage(id int64) bool {
 	ctrl.deliveredMessagesMutex.Unlock()
 
 	return ok
+}
+
+// Start controller
+func (ctrl *Controller) Start() {
+	logs.Info("Start")
+
+	// Load the latest UpdateID stored in DB
+	if v, err := repo.Ctx().System.LoadInt(domain.ColumnUpdateID); err != nil {
+		err := repo.Ctx().System.SaveInt(domain.ColumnUpdateID, 0)
+		if err != nil {
+			logs.Error("Start()-> SaveInt()", zap.Error(err))
+		}
+		ctrl.updateID = 0
+	} else {
+		ctrl.updateID = int64(v)
+	}
+
+	// Sync with Server
+	go ctrl.sync()
+
+	go ctrl.watchDog()
+}
+
+// Stop controller
+func (ctrl *Controller) Stop() {
+	ctrl.stopChannel <- true // for watchDog()
+}
+
+// SetSyncStatusChangedCallback status change delegate/callback
+func (ctrl *Controller) SetSyncStatusChangedCallback(h domain.SyncStatusUpdateCallback) {
+	ctrl.onSyncStatusChange = h
+}
+
+// SetOnUpdateCallback set delegate to pass updates that received by getDifference to UI
+func (ctrl *Controller) SetOnUpdateCallback(h domain.OnUpdateMainDelegateHandler) {
+	ctrl.onUpdateMainDelegate = h
 }
 
 // Status displays SyncStatus
@@ -615,7 +586,6 @@ func (ctrl *Controller) MessageHandler(messages []*msg.MessageEnvelope) {
 
 // UpdateHandler receives update to cache them in client DB
 func (ctrl *Controller) UpdateHandler(u *msg.UpdateContainer) {
-
 	logs.Debug("UpdateHandler() Called",
 		zap.Int64("ctrl.UpdateID", ctrl.updateID),
 		zap.Int64("MaxID", u.MaxUpdateID),
@@ -729,20 +699,36 @@ func (ctrl *Controller) ClearUpdateID() {
 	ctrl.UserID = 0
 }
 
-// handleMediaMessage extract files info from messages that have Document object
-func handleMediaMessage(messages ...*msg.UserMessage) {
+// ContactImportFromServer import contact from server
+func (ctrl *Controller) ContactImportFromServer() {
+	contactsGetHash, err := repo.Ctx().System.LoadInt(domain.ColumnContactsGetHash)
+	if err != nil {
+		logs.Error("onNetworkControllerConnected() failed to get contactsGetHash", zap.Error(err))
+	}
+	contactGetReq := new(msg.ContactsGet)
+	contactGetReq.Crc32Hash = uint32(contactsGetHash)
+	contactGetBytes, _ := contactGetReq.Marshal()
+	_ = ctrl.queue.ExecuteRealtimeCommand(
+		uint64(domain.SequentialUniqueID()),
+		msg.C_ContactsGet, contactGetBytes,
+		nil, nil, false, false,
+	)
+}
+
+// extractMessagesMedia extract files info from messages that have Document object
+func extractMessagesMedia(messages ...*msg.UserMessage) {
 	for _, m := range messages {
 		switch m.MediaType {
 		case msg.MediaTypeEmpty:
 			// NOP
 		case msg.MediaTypePhoto:
-			logs.Info("handleMediaMessage() Message.SharedMediaType is msg.MediaTypePhoto")
+			logs.Info("extractMessagesMedia() Message.SharedMediaType is msg.MediaTypePhoto")
 			// TODO:: implement it
 		case msg.MediaTypeDocument:
 			mediaDoc := new(msg.MediaDocument)
 			err := mediaDoc.Unmarshal(m.Media)
 			if err != nil {
-				logs.Error("handleMediaMessage()-> connat unmarshal MediaTypeDocument", zap.Error(err))
+				logs.Error("extractMessagesMedia()-> connat unmarshal MediaTypeDocument", zap.Error(err))
 				break
 			}
 			_ = repo.Ctx().Files.SaveFileDocument(m, mediaDoc)
@@ -754,22 +740,10 @@ func handleMediaMessage(messages ...*msg.UserMessage) {
 			}
 
 		case msg.MediaTypeContact:
-			logs.Info("handleMediaMessage() Message.SharedMediaType is msg.MediaTypeContact")
+			logs.Info("extractMessagesMedia() Message.SharedMediaType is msg.MediaTypeContact")
 			// TODO:: implement it
 		default:
-			logs.Info("handleMediaMessage() Message.SharedMediaType is invalid")
+			logs.Info("extractMessagesMedia() Message.SharedMediaType is invalid")
 		}
 	}
-}
-
-// ContactImportFromServer import contact from server
-func (ctrl *Controller) ContactImportFromServer() {
-	contactsGetHash, err := repo.Ctx().System.LoadInt(domain.ColumnContactsGetHash)
-	if err != nil {
-		logs.Error("onNetworkControllerConnected() failed to get contactsGetHash", zap.Error(err))
-	}
-	contactGetReq := new(msg.ContactsGet)
-	contactGetReq.Crc32Hash = uint32(contactsGetHash)
-	contactGetBytes, _ := contactGetReq.Marshal()
-	ctrl.queue.ExecuteRealtimeCommand(uint64(domain.SequentialUniqueID()), msg.C_ContactsGet, contactGetBytes, nil, nil, false, false)
 }

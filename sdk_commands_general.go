@@ -62,7 +62,6 @@ func (r *River) GetNetworkStatus() int32 {
 
 // GetSyncStatus returns SyncController status
 func (r *River) GetSyncStatus() int32 {
-
 	logs.Debug("River::GetSyncStatus()",
 		zap.String("syncStatus", r.syncCtrl.Status().ToString()),
 	)
@@ -78,7 +77,12 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 		req.Token = r.DeviceToken.Token
 		req.TokenType = int32(r.DeviceToken.TokenType)
 		reqBytes, _ := req.Marshal()
-		_ = r.queueCtrl.ExecuteRealtimeCommand(reqID, msg.C_AccountUnregisterDevice, reqBytes, nil, nil, true, false)
+		_ = r.queueCtrl.ExecuteRealtimeCommand(
+			reqID,
+			msg.C_AccountUnregisterDevice,
+			reqBytes,
+			nil, nil, true, false,
+		)
 	}
 
 	dataDir, err := r.queueCtrl.DropQueue()
