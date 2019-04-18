@@ -75,7 +75,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		zap.String("Body", x.Message.Body),
 	)
 
-	// bug : sometime server do not sends accesshash
+	// bug : sometime server do not sends access hash
 	if x.AccessHash > 0 {
 		// update users access hash
 		err := repo.Ctx().Users.UpdateAccessHash(int64(x.AccessHash), x.Message.PeerID, x.Message.PeerType)
@@ -83,7 +83,6 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 			logs.Error("updateNewMessage() -> Users.UpdateAccessHash()", zap.Error(err))
 		}
 		err = repo.Ctx().Dialogs.UpdateAccessHash(int64(x.AccessHash), x.Message.PeerID, x.Message.PeerType)
-
 		if err != nil {
 			logs.Error("updateNewMessage() -> Dialogs.UpdateAccessHash()", zap.Error(err))
 		}
@@ -94,10 +93,10 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		res = append(res, u)
 	}
 
-	// handle glass messages
+	// handle Message's Action
 	ctrl.handleMessageAction(x, u, res)
 
-	// handle Media message
+	// handle Message's Media
 	if int32(x.Message.MediaType) > 0 {
 		go extractMessagesMedia(x.Message)
 	}

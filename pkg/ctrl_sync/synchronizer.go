@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/filemanager"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
@@ -28,32 +29,26 @@ type Config struct {
 
 // Controller cache received data from server to client DB
 type Controller struct {
-	connInfo domain.RiverConfigurator
-
+	connInfo             domain.RiverConfigurator
 	networkCtrl          *network.Controller
-	queue                *queue.Controller
+	queueCtrl            *queue.Controller
 	onSyncStatusChange   domain.SyncStatusUpdateCallback
 	onUpdateMainDelegate domain.OnUpdateMainDelegateHandler
-	// InternalChannel
-	stopChannel chan bool
-
-	// Internals
-	syncStatus         domain.SyncStatus
-	lastUpdateReceived time.Time
-	updateID           int64
-	updateAppliers     map[int64]domain.UpdateApplier
-	messageAppliers    map[int64]domain.MessageApplier
-	UserID             int64
+	syncStatus           domain.SyncStatus
+	lastUpdateReceived   time.Time
+	updateID             int64
+	updateAppliers       map[int64]domain.UpdateApplier
+	messageAppliers      map[int64]domain.MessageApplier
+	stopChannel          chan bool
+	UserID               int64
 
 	// delivered Message
 	deliveredMessagesMutex sync.Mutex
 	deliveredMessages      map[int64]bool
 
-	isUpdatingDifferenceLock sync.Mutex
-	isUpdatingDifference     bool
-
-	isSyncingLock sync.Mutex
-	isSyncing     bool
+	// internal locks
+	updateDifferenceLock int32
+	syncLock             int32
 }
 
 // NewSyncController create new instance
@@ -61,7 +56,7 @@ func NewSyncController(config Config) *Controller {
 	ctrl := new(Controller)
 	ctrl.stopChannel = make(chan bool)
 	ctrl.connInfo = config.ConnInfo
-	ctrl.queue = config.QueueCtrl
+	ctrl.queueCtrl = config.QueueCtrl
 	ctrl.networkCtrl = config.NetworkCtrl
 
 	// set default value to synced status
@@ -123,7 +118,6 @@ func (ctrl *Controller) watchDog() {
 		case <-time.After(30 * time.Second):
 			// Wait for network
 			ctrl.networkCtrl.WaitForNetwork()
-
 			if ctrl.syncStatus != domain.Syncing {
 				logs.Info("watchDog() -> sync() called")
 				ctrl.sync()
@@ -136,20 +130,18 @@ func (ctrl *Controller) watchDog() {
 }
 
 func (ctrl *Controller) sync() {
+	// Check if sync function is already running, then return otherwise lock it and continue
+	if !atomic.CompareAndSwapInt32(&ctrl.syncLock, 0, 1) {
+		return
+	}
+	defer atomic.StoreInt32(&ctrl.syncLock, 0)
+
 	logs.Debug("sync()",
 		zap.Int64("UpdateID", ctrl.updateID),
 	)
-	ctrl.isSyncingLock.Lock()
-	if ctrl.isSyncing {
-		ctrl.isSyncingLock.Unlock()
-		logs.Debug("sync() Exited already syncing")
-		return
-	}
-	ctrl.isSyncing = true
-	ctrl.isSyncingLock.Unlock()
 
+	// There is no need to sync when no user has been authorized
 	if ctrl.UserID == 0 {
-		ctrl.isSyncing = false
 		return
 	}
 
@@ -163,7 +155,6 @@ func (ctrl *Controller) sync() {
 	serverUpdateID, err = ctrl.getUpdateState()
 	if err != nil {
 		logs.Error("sync()-> getUpdateState()", zap.Error(err))
-		ctrl.isSyncing = false
 		return
 	}
 
@@ -195,80 +186,24 @@ func (ctrl *Controller) sync() {
 			ctrl.getUpdateDifference(serverUpdateID + 1) // +1 cuz in here we dont have serverUpdateID itself too
 		}
 	}
-	ctrl.isSyncing = false
-	logs.Debug("sync() status : " + ctrl.syncStatus.ToString())
+
 	ctrl.updateSyncStatus(domain.Synced)
 }
 
-// SetUserID set Controller userID
-func (ctrl *Controller) SetUserID(userID int64) {
-	ctrl.UserID = userID
-	logs.Debug("SetUserID()",
-		zap.Int64("UserID", userID),
-	)
-}
-
-// getUpdateState responsibility is to only get server updateID
-func (ctrl *Controller) getUpdateState() (updateID int64, err error) {
-	updateID = 0
-
-	if !ctrl.networkCtrl.Connected() {
-		return -1, domain.ErrNoConnection
-	}
-
-	req := new(msg.UpdateGetState)
-	reqBytes, _ := req.Marshal()
-
-	// this waitGroup is required cuz our callbacks will be called in UIExecutor go routine
-	waitGroup := new(sync.WaitGroup)
-	waitGroup.Add(1)
-	// ctrl.queue.ExecuteCommand(
-	_ = ctrl.queue.ExecuteRealtimeCommand(
-		uint64(domain.SequentialUniqueID()),
-		msg.C_UpdateGetState,
-		reqBytes,
-		func() {
-			defer waitGroup.Done()
-			err = domain.ErrRequestTimeout
-			logs.Debug("Controller.getUpdateState() Error : " + err.Error())
-		},
-		func(m *msg.MessageEnvelope) {
-			defer waitGroup.Done()
-			logs.Debug("Controller.getUpdateState() Success")
-			switch m.Constructor {
-			case msg.C_UpdateState:
-				x := new(msg.UpdateState)
-				x.Unmarshal(m.Message)
-				updateID = x.UpdateID
-			case msg.C_Error:
-				err = domain.ParseServerError(m.Message)
-				logs.Debug(err.Error())
-			}
-		},
-		true,
-		false,
-	)
-	waitGroup.Wait()
-	return
-}
-
-// getUpdateDifference
 func (ctrl *Controller) getUpdateDifference(minUpdateID int64) {
-	logs.Debug("getUpdateDifference()")
-
-	ctrl.isUpdatingDifferenceLock.Lock()
-	if ctrl.isUpdatingDifference {
-		ctrl.isUpdatingDifferenceLock.Unlock()
-		logs.Debug("getUpdateDifference() Exited already updatingDifference")
+	// Check if getUpdateDifference function is already running, then return otherwise lock it and continue
+	if !atomic.CompareAndSwapInt32(&ctrl.updateDifferenceLock, 0, 1) {
 		return
 	}
-	ctrl.isUpdatingDifference = true
-	ctrl.isUpdatingDifferenceLock.Unlock()
+	defer atomic.StoreInt32(&ctrl.updateDifferenceLock, 0)
+
+	logs.Debug("getUpdateDifference()",
+		zap.Int64("MinUpdateID", minUpdateID),
+	)
 
 	// if updateID is zero then wait for snapshot sync
 	// and when sending requests w8 till its finish
 	if ctrl.updateID == 0 && minUpdateID > domain.SnapshotSyncThreshold {
-		ctrl.isUpdatingDifference = false
 		logs.Debug("getUpdateDifference() Exited UpdateID is zero need snapshot sync")
 		return
 	}
@@ -298,7 +233,7 @@ func (ctrl *Controller) getUpdateDifference(minUpdateID int64) {
 		req.Limit = int32(limit)
 		req.From = fromUpdateID
 		reqBytes, _ := req.Marshal()
-		_ = ctrl.queue.ExecuteRealtimeCommand(
+		_ = ctrl.queueCtrl.ExecuteRealtimeCommand(
 			uint64(domain.SequentialUniqueID()),
 			msg.C_UpdateGetDifference,
 			reqBytes,
@@ -315,8 +250,6 @@ func (ctrl *Controller) getUpdateDifference(minUpdateID int64) {
 		logs.Debug("getUpdateDifference() Loop next")
 
 	}
-	logs.Debug("getUpdateDifference() Loop Finished")
-	ctrl.isUpdatingDifference = false
 	ctrl.updateSyncStatus(domain.Synced)
 }
 func (ctrl *Controller) onGetDifferenceSucceed(m *msg.MessageEnvelope) {
@@ -394,11 +327,61 @@ func (ctrl *Controller) onGetDifferenceSucceed(m *msg.MessageEnvelope) {
 	}
 }
 
+// SetUserID set Controller userID
+func (ctrl *Controller) SetUserID(userID int64) {
+	ctrl.UserID = userID
+	logs.Debug("SetUserID()",
+		zap.Int64("UserID", userID),
+	)
+}
+
+// getUpdateState responsibility is to only get server updateID
+func (ctrl *Controller) getUpdateState() (updateID int64, err error) {
+	updateID = 0
+
+	if !ctrl.networkCtrl.Connected() {
+		return -1, domain.ErrNoConnection
+	}
+
+	req := new(msg.UpdateGetState)
+	reqBytes, _ := req.Marshal()
+
+	// this waitGroup is required cuz our callbacks will be called in UIExecutor go routine
+	waitGroup := new(sync.WaitGroup)
+	waitGroup.Add(1)
+	// ctrl.queueCtrl.ExecuteCommand(
+	_ = ctrl.queueCtrl.ExecuteRealtimeCommand(
+		uint64(domain.SequentialUniqueID()),
+		msg.C_UpdateGetState,
+		reqBytes,
+		func() {
+			defer waitGroup.Done()
+			err = domain.ErrRequestTimeout
+		},
+		func(m *msg.MessageEnvelope) {
+			defer waitGroup.Done()
+			logs.Debug("Controller.getUpdateState() Success")
+			switch m.Constructor {
+			case msg.C_UpdateState:
+				x := new(msg.UpdateState)
+				_ = x.Unmarshal(m.Message)
+				updateID = x.UpdateID
+			case msg.C_Error:
+				err = domain.ParseServerError(m.Message)
+			}
+		},
+		true,
+		false,
+	)
+	waitGroup.Wait()
+	return
+}
+
 // getContacts
 func (ctrl *Controller) getContacts() {
 	req := new(msg.ContactsGet)
 	reqBytes, _ := req.Marshal()
-	ctrl.queue.ExecuteCommand(
+	ctrl.queueCtrl.ExecuteCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_ContactsGet,
 		reqBytes,
@@ -417,7 +400,7 @@ func (ctrl *Controller) getAllDialogs(offset int32, limit int32) {
 	req.Limit = limit
 	req.Offset = offset
 	reqBytes, _ := req.Marshal()
-	ctrl.queue.ExecuteCommand(
+	ctrl.queueCtrl.ExecuteCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_MessagesGetDialogs,
 		reqBytes,
@@ -596,7 +579,7 @@ func (ctrl *Controller) UpdateHandler(u *msg.UpdateContainer) {
 	if u.MinUpdateID != 0 {
 		// Check if we are out of sync with server, if yes, then get the difference and
 		// try to sync with server again
-		if ctrl.updateID < u.MinUpdateID-1 && !ctrl.isUpdatingDifference {
+		if ctrl.updateID < u.MinUpdateID-1 && atomic.LoadInt32(&ctrl.updateDifferenceLock) == 0 {
 			logs.Debug("UpdateHandler() calling getUpdateDifference()",
 				zap.Int64("UpdateID", ctrl.updateID),
 				zap.Int64("MinUpdateID", u.MinUpdateID),
@@ -708,7 +691,7 @@ func (ctrl *Controller) ContactImportFromServer() {
 	contactGetReq := new(msg.ContactsGet)
 	contactGetReq.Crc32Hash = uint32(contactsGetHash)
 	contactGetBytes, _ := contactGetReq.Marshal()
-	_ = ctrl.queue.ExecuteRealtimeCommand(
+	_ = ctrl.queueCtrl.ExecuteRealtimeCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_ContactsGet, contactGetBytes,
 		nil, nil, false, false,
