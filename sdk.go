@@ -98,7 +98,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.loadDeviceToken()
 
 	// Initialize realtime requests
-	r.realTimeRequest = map[int64]bool{
+	r.realTimeCommands = map[int64]bool{
 		msg.C_MessagesSetTyping: true,
 		// msg.C_AuthRecall:        true,
 		// msg.C_InitConnect:       true,
@@ -875,7 +875,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 
 	}
 	if !serverForce {
-		_, isRealTimeRequest := r.realTimeRequest[constructor]
+		_, isRealTimeRequest := r.realTimeCommands[constructor]
 		if isRealTimeRequest {
 			err := r.queueCtrl.ExecuteRealtimeCommand(
 				uint64(requestID),
@@ -1152,10 +1152,10 @@ func (r *River) CreateAuthKey() (err error) {
 
 // AddRealTimeRequest ...
 func (r *River) AddRealTimeRequest(constructor int64) {
-	r.realTimeRequest[constructor] = true
+	r.realTimeCommands[constructor] = true
 }
 
 // RemoveRealTimeRequest ...
 func (r *River) RemoveRealTimeRequest(constructor int64) {
-	delete(r.realTimeRequest, constructor)
+	delete(r.realTimeCommands, constructor)
 }

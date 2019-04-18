@@ -7,8 +7,8 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_queue"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_sync"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 )
 
 // RiverConfig ...
@@ -58,31 +58,26 @@ type RiverConfig struct {
 // by this SDK is Sqlite3, however with the least effort you can use other SQL databases. 'model' is the
 // package name selected to handle repository functions.
 type River struct {
-	// request callbacks cache
-	delegateMutex sync.Mutex
-	delegates     map[int64]RequestDelegate
-	// user requests that they can be satisfied by client cache
+	// Connection Info
+	ConnInfo *RiverConnection
+	// Device Token
+	DeviceToken *msg.AccountRegisterDevice
+
+	// localCommands can be satisfied by client cache
 	localCommands map[int64]domain.LocalMessageHandler
+	// realTimeCommands should not passed to queue to send they should directly pass to networkController
+	realTimeCommands map[int64]bool
 
 	// Internal Controllers
 	networkCtrl *network.Controller
 	queueCtrl   *queue.Controller
 	syncCtrl    *synchronizer.Controller
 
-	// RealTimeRequests is list of requests that should not passed to queue to send they should directly pass to networkController
-	realTimeRequest map[int64]bool
-
-	// main delegates
-	mainDelegate MainDelegate
-
-	// logger delegate
-	logger LoggerDelegate
-
-	// Connection Info
-	ConnInfo *RiverConnection
-
-	// Device Token
-	DeviceToken *msg.AccountRegisterDevice
+	// Delegates
+	delegateMutex sync.Mutex
+	delegates     map[int64]RequestDelegate
+	mainDelegate  MainDelegate
+	logger        LoggerDelegate
 
 	// implements wait 500 ms on out of sync to receive possible missed updates
 	lastOutOfSyncTime  time.Time
