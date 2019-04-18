@@ -82,4 +82,6 @@ type River struct {
 	// implements wait 500 ms on out of sync to receive possible missed updates
 	lastOutOfSyncTime  time.Time
 	chOutOfSyncUpdates chan []*msg.UpdateContainer
+	networkQuality     int32
+	syncStatus         int32
 }

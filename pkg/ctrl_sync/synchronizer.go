@@ -539,11 +539,6 @@ func (ctrl *Controller) SetOnUpdateCallback(h domain.OnUpdateMainDelegateHandler
 	ctrl.onUpdateMainDelegate = h
 }
 
-// Status displays SyncStatus
-func (ctrl *Controller) Status() domain.SyncStatus {
-	return ctrl.syncStatus
-}
-
 // MessageHandler call appliers-> repository and sync data
 func (ctrl *Controller) MessageHandler(messages []*msg.MessageEnvelope) {
 	for _, m := range messages {

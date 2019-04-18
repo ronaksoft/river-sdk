@@ -581,11 +581,6 @@ func (ctrl *Controller) send(msgEnvelope *msg.MessageEnvelope) error {
 	return nil
 }
 
-// Quality returns NetworkStatus
-func (ctrl *Controller) Quality() domain.NetworkStatus {
-	return ctrl.wsQuality
-}
-
 // Reconnect by wsKeepConnection = true the watchdog will connect itself again no need to call ctrl.Connect()
 func (ctrl *Controller) Reconnect() {
 	if ctrl.wsConn != nil {
