@@ -119,11 +119,10 @@ func (ctrl *Controller) watchDog() {
 			// Wait for network
 			ctrl.networkCtrl.WaitForNetwork()
 			if ctrl.syncStatus != domain.Syncing {
-				logs.Info("watchDog() -> sync() called")
 				ctrl.sync()
 			}
 		case <-ctrl.stopChannel:
-			logs.Warn("watchDog() Stopped")
+			logs.Info("watchDog() Stopped")
 			return
 		}
 	}
@@ -159,7 +158,7 @@ func (ctrl *Controller) sync() {
 	}
 
 	logs.Debug("sync()-> getUpdateState()",
-		zap.Int64("serverUpdateID", serverUpdateID),
+		zap.Int64("ServerUpdateID", serverUpdateID),
 		zap.Int64("UpdateID", ctrl.updateID),
 	)
 

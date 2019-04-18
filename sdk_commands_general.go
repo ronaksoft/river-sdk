@@ -83,7 +83,6 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 	}
 
 	dataDir, err := r.queueCtrl.DropQueue()
-
 	if err != nil {
 		logs.Error("River::Logout() failed to drop queue", zap.Error(err))
 	}
