@@ -69,7 +69,11 @@ func (r *repoSystem) SaveInt(keyName string, keyValue int32) error {
 
 	err := r.db.Where("KeyName = ?", keyName).First(&s).Error
 	if err != nil {
-		logs.Error("System::SaveInt()-> fetch system entity", zap.Error(err))
+		logs.Error("System::SaveInt()-> fetch system entity",
+			zap.String("Key", keyName),
+			zap.Int32("Value", keyValue),
+			zap.Error(err),
+		)
 	}
 
 	s.KeyName = keyName
