@@ -89,7 +89,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		}
 	}
 	res := make([]*msg.UpdateEnvelope, 0)
-	// Perevent calling external delegate
+	// Prevent calling external delegate
 	if !ctrl.isDeliveredMessage(x.Message.ID) {
 		res = append(res, u)
 	}
@@ -174,23 +174,47 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 		if err != nil {
 			logs.Error("updateNewMessage() -> DeleteDialogMessage() Failed", zap.Error(err))
 		}
+		// Delete Scroll Position
+		err = repo.Ctx().MessagesExtra.DeleteScrollID(x.Message.PeerID, x.Message.PeerType)
+		if err != nil {
+			logs.Error("updateNewMessage() -> DeleteScrollID() Failed", zap.Error(err))
+		}
+
 		if act.Delete {
 			// Delete Dialog
-			repo.Ctx().Dialogs.Delete(x.Message.PeerID, x.Message.PeerType)
+			err = repo.Ctx().Dialogs.Delete(x.Message.PeerID, x.Message.PeerType)
+			if err != nil {
+				logs.Error("updateNewMessage() -> Dialogs.Delete() Failed", zap.Error(err))
+			}
 			// Delete Group
-			repo.Ctx().Groups.Delete(x.Message.PeerID)
+			err = repo.Ctx().Groups.Delete(x.Message.PeerID)
+			if err != nil {
+				logs.Error("updateNewMessage() -> Groups.Delete() Failed", zap.Error(err))
+			}
 			// Delete Participants
-			repo.Ctx().Groups.DeleteAllGroupMember(x.Message.PeerID)
+			err = repo.Ctx().Groups.DeleteAllGroupMember(x.Message.PeerID)
+			if err != nil {
+				logs.Error("updateNewMessage() -> Groups.DeleteAllGroupMember() Failed", zap.Error(err))
+			}
 			//delete MessageHole
-			DeleteMessageHole(x.Message.PeerID)
-			logs.Warn("handleMessageAction() deleted all MessagesHole", zap.Int64("PeerID", x.Message.PeerID))
+			err = DeleteMessageHole(x.Message.PeerID)
+			if err != nil {
+				logs.Error("updateNewMessage() -> DeleteMessageHole1() Failed", zap.Error(err))
+			}
+			logs.Debug("handleMessageAction() deleted all MessagesHole", zap.Int64("PeerID", x.Message.PeerID))
 		} else {
 			// get dialog and create first hole
 			dtoDlg := repo.Ctx().Dialogs.GetDialog(x.Message.PeerID, x.Message.PeerType)
 			if dtoDlg != nil {
-				DeleteMessageHole(x.Message.PeerID)
-				logs.Warn("handleMessageAction() deleted all MessagesHole", zap.Int64("PeerID", x.Message.PeerID))
-				CreateMessageHole(dtoDlg.PeerID, 0, dtoDlg.TopMessageID-1)
+				err = DeleteMessageHole(x.Message.PeerID)
+				if err != nil {
+					logs.Error("updateNewMessage() -> DeleteMessageHole2() Failed", zap.Error(err))
+				}
+				logs.Debug("handleMessageAction() deleted all MessagesHole", zap.Int64("PeerID", x.Message.PeerID))
+				err = CreateMessageHole(dtoDlg.PeerID, 0, dtoDlg.TopMessageID-1)
+				if err != nil {
+					logs.Error("updateNewMessage() -> DeleteMessageHole2() Failed", zap.Error(err))
+				}
 			}
 		}
 	}

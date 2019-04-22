@@ -652,7 +652,7 @@ func (ctrl *Controller) UpdateHandler(u *msg.UpdateContainer) {
 
 	for _, update := range u.Updates {
 
-		// we allready processed this updte type
+		// we already processed this update type
 		if update.Constructor == msg.C_UpdateMessageID {
 			continue
 		}
