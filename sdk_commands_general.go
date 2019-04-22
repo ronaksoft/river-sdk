@@ -745,7 +745,6 @@ func (r *River) GroupGetPhotoSmall(groupID int64) string {
 
 // this function is sync
 func downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) string {
-
 	logs.Debug("SDK::downloadGroupPhoto",
 		zap.Int64("UserID", groupID),
 		zap.Bool("IsBig", isBig),

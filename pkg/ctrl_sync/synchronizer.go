@@ -533,44 +533,68 @@ func (ctrl *Controller) MessageHandler(messages []*msg.MessageEnvelope) {
 }
 
 // UpdateHandler receives update to cache them in client DB
-func (ctrl *Controller) UpdateHandler(u *msg.UpdateContainer) {
+func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 	logs.Debug("UpdateHandler() Called",
 		zap.Int64("ctrl.UpdateID", ctrl.updateID),
-		zap.Int64("MaxID", u.MaxUpdateID),
-		zap.Int64("MinID", u.MinUpdateID),
-		zap.Int("Count : ", len(u.Updates)),
+		zap.Int64("MaxID", updateContainer.MaxUpdateID),
+		zap.Int64("MinID", updateContainer.MinUpdateID),
+		zap.Int("Count : ", len(updateContainer.Updates)),
 	)
 	ctrl.lastUpdateReceived = time.Now()
-	if u.MinUpdateID != 0 && ctrl.updateID >= u.MinUpdateID {
+
+	// Check if update has been already applied
+	if updateContainer.MinUpdateID != 0 && ctrl.updateID >= updateContainer.MinUpdateID {
 		return
 	}
+
 	// Check if we are out of sync with server, if yes, then call the sync() function
 	// We call it in blocking mode,
-	if ctrl.updateID < u.MinUpdateID-1 {
+	if ctrl.updateID < updateContainer.MinUpdateID-1 {
 		ctrl.sync()
 		return
 	}
 
 	udpContainer := new(msg.UpdateContainer)
 	udpContainer.Updates = make([]*msg.UpdateEnvelope, 0)
-	udpContainer.MaxUpdateID = u.MaxUpdateID
-	udpContainer.MinUpdateID = u.MinUpdateID
-	udpContainer.Users = u.Users
-	udpContainer.Groups = u.Groups
-
-	// take out updateMessageID
-	for _, update := range u.Updates {
-		if update.Constructor == msg.C_UpdateMessageID {
-			ctrl.updateMessageID(update)
+	udpContainer.MaxUpdateID = updateContainer.MaxUpdateID
+	udpContainer.MinUpdateID = updateContainer.MinUpdateID
+	udpContainer.Users = updateContainer.Users
+	udpContainer.Groups = updateContainer.Groups
+	for _, u := range updateContainer.Users {
+		// Download users avatar if its not exist
+		if u.Photo != nil {
+			dtoPhoto := repo.Ctx().Users.GetUserPhoto(u.ID, u.Photo.PhotoID)
+			if dtoPhoto != nil {
+				if dtoPhoto.SmallFilePath == "" || dtoPhoto.SmallFileID != u.Photo.PhotoSmall.FileID {
+					go func(userID int64, photo *msg.UserPhoto) {
+						_, _ = filemanager.Ctx().DownloadAccountPhoto(userID, photo, false)
+					}(u.ID, u.Photo)
+				}
+			} else if u.Photo.PhotoID != 0 {
+				go func(userID int64, photo *msg.UserPhoto) {
+					_, _ = filemanager.Ctx().DownloadAccountPhoto(userID, photo, false)
+				}(u.ID, u.Photo)
+			}
 		}
 	}
-
-	for _, update := range u.Updates {
-		// we already processed this update type
-		if update.Constructor == msg.C_UpdateMessageID {
-			continue
+	for _, g := range updateContainer.Groups {
+		// Download group avatar if its not exist
+		if g.Photo != nil {
+			dtoGroup, err := repo.Ctx().Groups.GetGroupDTO(g.ID)
+			if err == nil && dtoGroup != nil {
+				if dtoGroup.SmallFilePath == "" || dtoGroup.SmallFileID != g.Photo.PhotoSmall.FileID {
+					go func(groupID int64, photo *msg.GroupPhoto) {
+						_, _ = filemanager.Ctx().DownloadGroupPhoto(groupID, photo, false)
+					}(g.ID, g.Photo)
+				}
+			} else if g.Photo.PhotoSmall.FileID != 0 {
+				go func(groupID int64, photo *msg.GroupPhoto) {
+					_, _ = filemanager.Ctx().DownloadGroupPhoto(groupID, photo, false)
+				}(g.ID, g.Photo)
+			}
 		}
-
+	}
+	for _, update := range updateContainer.Updates {
 		logs.Debug("UpdateHandler() Update Received",
 			zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
 		)
@@ -579,15 +603,19 @@ func (ctrl *Controller) UpdateHandler(u *msg.UpdateContainer) {
 		applier, ok := ctrl.updateAppliers[update.Constructor]
 		if ok {
 			externalHandlerUpdates := applier(update)
-			udpContainer.Updates = append(udpContainer.Updates, externalHandlerUpdates...)
+			switch update.Constructor {
+			case msg.C_UpdateMessageID:
+			default:
+				udpContainer.Updates = append(udpContainer.Updates, externalHandlerUpdates...)
+			}
 		} else {
 			udpContainer.Updates = append(udpContainer.Updates, update)
 		}
 	}
 
 	// save updateID after processing messages
-	if ctrl.updateID < u.MaxUpdateID {
-		ctrl.updateID = u.MaxUpdateID
+	if ctrl.updateID < updateContainer.MaxUpdateID {
+		ctrl.updateID = updateContainer.MaxUpdateID
 		err := repo.Ctx().System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
 		if err != nil {
 			logs.Error("UpdateHandler() -> SaveInt()", zap.Error(err))

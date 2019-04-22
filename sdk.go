@@ -316,162 +316,18 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 			)
 		}
 	}
-
 }
 
 // called when network flushes received updates
-func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
-	// if we receive any update in less than 500 ms push them to chOutOfSyncUpdates until 500ms passes
-	if time.Since(r.lastOutOfSyncTime) < time.Millisecond*500 {
-		r.chOutOfSyncUpdates <- upds
-		return
-	}
-
-	// read chOutOfSyncUpdates if there was any update left
-	resumeFromOutOfSyncWait := false
-readChannel:
-	for {
-		select {
-		case outOfSyncUpds := <-r.chOutOfSyncUpdates:
-			resumeFromOutOfSyncWait = true
-			upds = append(upds, outOfSyncUpds...)
-		default:
-			break readChannel
-		}
-	}
-
-	updateContainer := new(msg.UpdateContainer)
-
-	logs.Debug("SDK::onReceivedUpdate()",
-		zap.Int("Received Container Count", len(upds)),
-	)
-
-	minID := int64(^uint64(0) >> 1)
-	maxID := int64(0)
-
-	// remove duplicated users and updates and pass it to sync controller
-	userIDs := domain.MInt64B{}
-	groupIDs := domain.MInt64B{}
-	updateIDs := domain.MInt64B{}
-	users := make([]*msg.User, 0)
-	groups := make([]*msg.Group, 0)
-	updates := make([]*msg.UpdateEnvelope, 0)
-
-	currentUpdateID := r.syncCtrl.UpdateID()
-	for _, val := range upds {
-		for _, u := range val.Updates {
-			// extract min and max id
-			if u.UpdateID < minID && u.UpdateID > 0 {
-				minID = u.UpdateID
-			}
-			if u.UpdateID > maxID && u.UpdateID > 0 {
-				maxID = u.UpdateID
-			}
-
-			if u.UpdateID > 0 && u.UpdateID <= currentUpdateID {
-				logs.Error("SDK::onReceivedUpdate() Outdated update ",
-					zap.Int64("CurrentUpdateID", currentUpdateID),
-					zap.Int64("UpdateID", u.UpdateID),
-				)
-				continue
-			}
-			if _, ok := updateIDs[u.UpdateID]; !ok {
-				updateIDs[u.UpdateID] = true
-				updates = append(updates, u)
-			}
-		}
-		// get distinct users
-		for _, u := range val.Users {
-			if _, ok := userIDs[u.ID]; !ok {
-				userIDs[u.ID] = true
-				users = append(users, u)
-
-				// Download users avatar if its not exist
-				if u.Photo != nil {
-					dtoPhoto := repo.Ctx().Users.GetUserPhoto(u.ID, u.Photo.PhotoID)
-					if dtoPhoto != nil {
-						if dtoPhoto.SmallFilePath == "" || dtoPhoto.SmallFileID != u.Photo.PhotoSmall.FileID {
-							go downloadAccountPhoto(u.ID, u.Photo, false)
-						}
-					} else if u.Photo.PhotoID != 0 {
-						go downloadAccountPhoto(u.ID, u.Photo, false)
-					}
-				}
-
-			}
-		}
-		// get distinct groups
-		for _, g := range val.Groups {
-			if _, ok := groupIDs[g.ID]; !ok {
-				groupIDs[g.ID] = true
-				groups = append(groups, g)
-
-				// Download group avatar if its not exist
-				if g.Photo != nil {
-					dtoGroup, err := repo.Ctx().Groups.GetGroupDTO(g.ID)
-					if err == nil && dtoGroup != nil {
-						if dtoGroup.SmallFilePath == "" || dtoGroup.SmallFileID != g.Photo.PhotoSmall.FileID {
-							go downloadGroupPhoto(g.ID, g.Photo, false)
-						}
-					} else if g.Photo.PhotoSmall.FileID != 0 {
-						go downloadGroupPhoto(g.ID, g.Photo, false)
-					}
-				}
-			}
-		}
-
-	}
-
-	// on typing min max is equal to zero so meh
-	if minID > maxID {
-		minID = 0
-	}
-	logs.Debug("SDK::onReceivedUpdate()",
-		zap.Int("Received Updates Count", len(updates)),
-		zap.Int64("UpdateID", r.syncCtrl.UpdateID()),
-		zap.Int64("MaxID", maxID),
-		zap.Int64("MinID", minID),
-	)
-
-	// check max UpdateID if its greater than snapshot sync threshold discard recived updates and execute sanpshot sync
-	if maxID-r.syncCtrl.UpdateID() > domain.SnapshotSyncThreshold {
-		logs.Debug("SDK::onReceivedUpdate() snapshot threshold reached")
-		r.syncCtrl.CheckSyncState()
-		return
-	}
-	// if we met out of sync condition wait 500 ms and process updates
-	if !resumeFromOutOfSyncWait && minID > 0 && r.syncCtrl.UpdateID() < minID-1 {
-		r.chOutOfSyncUpdates <- upds
-		r.lastOutOfSyncTime = time.Now()
-		// insure that updates will be processed after 500ms
-		go func(r *River) {
-			time.Sleep(500 * time.Millisecond)
-			r.onReceivedUpdate([]*msg.UpdateContainer{})
-		}(r)
-
-		return
-	}
-
-	// No need to wait here till DB gets synced cuz UI will have required data
-	go func(u []*msg.User, g []*msg.Group) {
-		// Save Groups
-		_ = repo.Ctx().Groups.SaveMany(g)
-		// Save Users
-		_ = repo.Ctx().Users.SaveMany(u)
-	}(users, groups)
-
-	// sort updates
-	sort.Slice(updates, func(i, j int) bool {
-		return updates[i].UpdateID < updates[j].UpdateID
+func (r *River) onReceivedUpdate(updateContainers []*msg.UpdateContainer) {
+	// sort updateContainers
+	sort.Slice(updateContainers, func(i, j int) bool {
+		return updateContainers[i].MinUpdateID < updateContainers[j].MinUpdateID
 	})
 
-	updateContainer.Updates = updates
-	updateContainer.Users = users
-	updateContainer.Groups = groups
-	updateContainer.Length = int32(len(updates))
-	updateContainer.MinUpdateID = minID
-	updateContainer.MaxUpdateID = maxID
-	r.syncCtrl.UpdateHandler(updateContainer)
+	for idx := range updateContainers {
+		r.syncCtrl.UpdateHandler(updateContainers[idx])
+	}
 }
 
 // onGetServerTime update client & server time difference
