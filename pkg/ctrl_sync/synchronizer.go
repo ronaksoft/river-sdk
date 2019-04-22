@@ -124,9 +124,7 @@ func (ctrl *Controller) watchDog() {
 			if time.Now().Sub(ctrl.lastUpdateReceived) < syncTime {
 				break
 			}
-			if ctrl.syncStatus != domain.Syncing {
-				ctrl.sync()
-			}
+			ctrl.sync()
 		case <-ctrl.stopChannel:
 			logs.Info("watchDog() Stopped")
 			return
@@ -184,12 +182,13 @@ func (ctrl *Controller) sync() {
 			logs.Error("sync()-> SaveInt()", zap.Error(err))
 			return
 		}
-	} else  {
+	} else {
+		logs.Info("sync()-> Normal sync")
 		// if it is passed over 60 seconds from the last update received it fetches the update
 		// difference from the server
 		if serverUpdateID > ctrl.updateID+1 {
 			ctrl.updateSyncStatus(domain.OutOfSync)
-			getUpdateDifference(ctrl, serverUpdateID + 1) // +1 cuz in here we dont have serverUpdateID itself too
+			getUpdateDifference(ctrl, serverUpdateID+1) // +1 cuz in here we dont have serverUpdateID itself too
 		}
 	}
 
@@ -305,7 +304,7 @@ func getAllDialogs(ctrl *Controller, offset int32, limit int32) {
 	)
 
 }
-func getUpdateDifference(ctrl *Controller, minUpdateID int64) {
+func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 	// Check if getUpdateDifference function is already running, then return otherwise lock it and continue
 	if !atomic.CompareAndSwapInt32(&ctrl.updateDifferenceLock, 0, 1) {
 		return
@@ -313,22 +312,13 @@ func getUpdateDifference(ctrl *Controller, minUpdateID int64) {
 	defer atomic.StoreInt32(&ctrl.updateDifferenceLock, 0)
 
 	logs.Debug("getUpdateDifference()",
-		zap.Int64("MinUpdateID", minUpdateID),
+		zap.Int64("ServerUpdateID", serverUpdateID),
+		zap.Int64("ClientUpdateID", ctrl.updateID),
 	)
 
-	// if updateID is zero then wait for snapshot sync
-	// and when sending requests w8 till its finish
-	if ctrl.updateID == 0 && minUpdateID > domain.SnapshotSyncThreshold {
-		logs.Debug("getUpdateDifference() Exited UpdateID is zero need snapshot sync")
-		return
-	}
-
-	loopRepeatCounter := 0
-	for minUpdateID > ctrl.updateID {
-		loopRepeatCounter++
-
+	for serverUpdateID > ctrl.updateID {
 		fromUpdateID := ctrl.updateID + 1 // cuz we already have updateID itself
-		limit := minUpdateID - fromUpdateID
+		limit := serverUpdateID - fromUpdateID
 		if limit > 100 {
 			limit = 100
 		}
@@ -336,14 +326,6 @@ func getUpdateDifference(ctrl *Controller, minUpdateID int64) {
 			break
 		}
 
-		logs.Debug("getUpdateDifference() Entered loop",
-			zap.Int("LoopRepeatCounter", loopRepeatCounter),
-			zap.Int64("limit", limit),
-			zap.Int64("updateID", ctrl.updateID),
-			zap.Int64("minUpdateID", minUpdateID),
-		)
-
-		ctrl.updateSyncStatus(domain.Syncing)
 		req := new(msg.UpdateGetDifference)
 		req.Limit = int32(limit)
 		req.From = fromUpdateID
@@ -362,10 +344,7 @@ func getUpdateDifference(ctrl *Controller, minUpdateID int64) {
 			true,
 			false,
 		)
-		logs.Debug("getUpdateDifference() Loop next")
-
 	}
-	ctrl.updateSyncStatus(domain.Synced)
 }
 func onGetDifferenceSucceed(ctrl *Controller, m *msg.MessageEnvelope) {
 	switch m.Constructor {
@@ -401,16 +380,9 @@ func onGetDifferenceSucceed(ctrl *Controller, m *msg.MessageEnvelope) {
 			logs.Debug("onGetDifferenceSucceed() loop",
 				zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
 			)
-
 			if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
-
-				// TODO: hotfix added this cuz sync works awkwardly
 				externalHandlerUpdates := applier(update)
-				// check updateID to ensure to do not pass old updates to UI.
-				// TODO : server still sends typing updates
-				if update.UpdateID > ctrl.updateID && update.Constructor != msg.C_UpdateUserTyping {
-					updContainer.Updates = append(updContainer.Updates, externalHandlerUpdates...)
-				}
+				updContainer.Updates = append(updContainer.Updates, externalHandlerUpdates...)
 			}
 		}
 		updContainer.Length = int32(len(updContainer.Updates))
@@ -569,17 +541,14 @@ func (ctrl *Controller) UpdateHandler(u *msg.UpdateContainer) {
 		zap.Int("Count : ", len(u.Updates)),
 	)
 	ctrl.lastUpdateReceived = time.Now()
-	if u.MinUpdateID != 0 {
-		// Check if we are out of sync with server, if yes, then get the difference and
-		// try to sync with server again
-		if ctrl.updateID < u.MinUpdateID-1 && atomic.LoadInt32(&ctrl.updateDifferenceLock) == 0 {
-			logs.Debug("UpdateHandler() calling getUpdateDifference()",
-				zap.Int64("UpdateID", ctrl.updateID),
-				zap.Int64("MinUpdateID", u.MinUpdateID),
-			)
-			ctrl.updateSyncStatus(domain.OutOfSync)
-			getUpdateDifference(ctrl, u.MinUpdateID)
-		}
+	if u.MinUpdateID != 0 && ctrl.updateID >= u.MinUpdateID {
+		return
+	}
+	// Check if we are out of sync with server, if yes, then call the sync() function
+	// We call it in blocking mode,
+	if ctrl.updateID < u.MinUpdateID-1 {
+		ctrl.sync()
+		return
 	}
 
 	udpContainer := new(msg.UpdateContainer)
@@ -597,8 +566,7 @@ func (ctrl *Controller) UpdateHandler(u *msg.UpdateContainer) {
 	}
 
 	for _, update := range u.Updates {
-
-		// we allready processed this updte type
+		// we already processed this update type
 		if update.Constructor == msg.C_UpdateMessageID {
 			continue
 		}
@@ -607,29 +575,14 @@ func (ctrl *Controller) UpdateHandler(u *msg.UpdateContainer) {
 			zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
 		)
 
-		var externalHandlerUpdates []*msg.UpdateEnvelope
-		if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
-
-			externalHandlerUpdates = applier(update)
-			logs.Info("UpdateHandler() Update Applied",
-				zap.Int64("UPDATE_ID", update.UpdateID),
-				zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
-			)
+		// var externalHandlerUpdates []*msg.UpdateEnvelope
+		applier, ok := ctrl.updateAppliers[update.Constructor]
+		if ok {
+			externalHandlerUpdates := applier(update)
+			udpContainer.Updates = append(udpContainer.Updates, externalHandlerUpdates...)
 		} else {
-			// add update if not in update appliers
 			udpContainer.Updates = append(udpContainer.Updates, update)
 		}
-
-		if externalHandlerUpdates != nil {
-			udpContainer.Updates = append(udpContainer.Updates, externalHandlerUpdates...)
-
-		} else {
-			logs.Warn("UpdateHandler() Do not pass update to external handler",
-				zap.Int64("UPDATE_ID", update.UpdateID),
-				zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
-			)
-		}
-
 	}
 
 	// save updateID after processing messages
@@ -645,7 +598,6 @@ func (ctrl *Controller) UpdateHandler(u *msg.UpdateContainer) {
 
 	// call external handler
 	if ctrl.onUpdateMainDelegate != nil {
-
 		// wrapped to UpdateContainer
 		buff, _ := udpContainer.Marshal()
 

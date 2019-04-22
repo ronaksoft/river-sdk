@@ -122,6 +122,8 @@ func (ctrl *Controller) updateFlushFunc(entries []ronak.FlusherEntry) {
 		for idx := range entries {
 			updates = append(updates, entries[idx].Value.(*msg.UpdateContainer))
 		}
+
+		// Call the update handler in blocking mode
 		ctrl.OnUpdate(updates)
 		logs.Debug("Updates Flushed",
 			zap.Int("Count", itemsCount),
@@ -136,6 +138,8 @@ func (ctrl *Controller) messageFlushFunc(entries []ronak.FlusherEntry) {
 		for idx := range entries {
 			messages = append(messages, entries[idx].Value.(*msg.MessageEnvelope))
 		}
+
+		// Call the message handler in blocking mode
 		ctrl.OnMessage(messages)
 		logs.Debug("Messages Flushed",
 			zap.Int("Count", itemsCount),
