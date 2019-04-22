@@ -182,14 +182,11 @@ func (ctrl *Controller) sync() {
 			logs.Error("sync()-> SaveInt()", zap.Error(err))
 			return
 		}
-	} else {
-		logs.Info("sync()-> Normal sync")
+	} else if serverUpdateID > ctrl.updateID+1 {
 		// if it is passed over 60 seconds from the last update received it fetches the update
 		// difference from the server
-		if serverUpdateID > ctrl.updateID+1 {
-			ctrl.updateSyncStatus(domain.OutOfSync)
-			getUpdateDifference(ctrl, serverUpdateID+1) // +1 cuz in here we dont have serverUpdateID itself too
-		}
+		logs.Info("sync()-> Normal sync")
+		getUpdateDifference(ctrl, serverUpdateID+1) // +1 cuz in here we dont have serverUpdateID itself too
 	}
 
 	ctrl.updateSyncStatus(domain.Synced)
