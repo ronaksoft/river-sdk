@@ -63,7 +63,7 @@ func main() {
 		ServerKeysFilePath:     "./keys.json",
 		MainDelegate:           new(MainDelegate),
 		Logger:                 new(PrintDelegate),
-		LogLevel:               int(zapcore.DebugLevel),
+		LogLevel:               int(zapcore.InfoLevel),
 		DocumentAudioDirectory: "./_files/audio",
 		DocumentVideoDirectory: "./_files/video",
 		DocumentPhotoDirectory: "./_files/photo",

@@ -63,7 +63,7 @@ func (r *repoSystem) SaveInt(keyName string, keyValue int32) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Warn("repoSystem()", zap.Int32(keyName, keyValue))
+	logs.Info("repoSystem()", zap.Int32(keyName, keyValue))
 
 	s := dto.System{}
 

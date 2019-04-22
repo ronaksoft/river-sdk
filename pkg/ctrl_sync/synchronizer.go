@@ -150,20 +150,18 @@ func (ctrl *Controller) sync() {
 	// Wait until network is available
 	ctrl.networkCtrl.WaitForNetwork()
 
-	// Update the sync controller status
-	ctrl.updateSyncStatus(domain.Syncing)
-
 	// get updateID from server
 	serverUpdateID, err := ctrl.getUpdateState()
 	if err != nil {
 		logs.Error("sync()-> getUpdateState()", zap.Error(err))
 		return
 	}
+	if ctrl.updateID == serverUpdateID {
+		return
+	}
 
-	logs.Debug("sync()-> getUpdateState()",
-		zap.Int64("ServerUpdateID", serverUpdateID),
-		zap.Int64("ClientUpdateID", ctrl.updateID),
-	)
+	// Update the sync controller status
+	ctrl.updateSyncStatus(domain.Syncing)
 
 	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSyncThreshold {
 		logs.Info("sync()-> Snapshot sync")
