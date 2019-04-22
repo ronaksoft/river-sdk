@@ -393,7 +393,7 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	return res
 }
 
-// updateTooLong indicate that client updates exceed from server cache size so we should resync client with server
+// updateTooLong indicate that client updates exceed from server cache size so we should re-sync client with server
 func (ctrl *Controller) updateTooLong(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
 	logs.Info("updateTooLong() applier")
 

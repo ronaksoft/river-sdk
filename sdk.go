@@ -21,8 +21,8 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_queue"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_sync"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 
@@ -287,8 +287,7 @@ func (r *River) onGeneralError(e *msg.Error) {
 
 // called when network flushes received messages
 func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
-
-	// sort messages by reauestID
+	// sort messages by requestID
 	sort.Slice(msgs, func(i, j int) bool {
 		return msgs[i].RequestID < msgs[j].RequestID
 	})
@@ -322,7 +321,6 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 
 // called when network flushes received updates
 func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
-
 	// if we receive any update in less than 500 ms push them to chOutOfSyncUpdates until 500ms passes
 	if time.Since(r.lastOutOfSyncTime) < time.Millisecond*500 {
 		r.chOutOfSyncUpdates <- upds
@@ -361,7 +359,6 @@ readChannel:
 
 	currentUpdateID := r.syncCtrl.UpdateID()
 	for _, val := range upds {
-
 		for _, u := range val.Updates {
 			// extract min and max id
 			if u.UpdateID < minID && u.UpdateID > 0 {
@@ -372,7 +369,7 @@ readChannel:
 			}
 
 			if u.UpdateID > 0 && u.UpdateID <= currentUpdateID {
-				logs.Error("SDK::onReceivedUpdate() XXXXXXXX Outdated update ",
+				logs.Error("SDK::onReceivedUpdate() Outdated update ",
 					zap.Int64("CurrentUpdateID", currentUpdateID),
 					zap.Int64("UpdateID", u.UpdateID),
 				)
@@ -425,15 +422,6 @@ readChannel:
 
 	}
 
-	if int(maxID-minID) > len(updates) {
-		logs.Error("SDK::onReceivedUpdate() XXXXXXXX looks like there is missed update ",
-			zap.Int64("CurrentUpdateID", currentUpdateID),
-			zap.Int64("MaxID", maxID),
-			zap.Int64("MinID", minID),
-			zap.Int("len(updates)", len(updates)),
-		)
-	}
-
 	// on typing min max is equal to zero so meh
 	if minID > maxID {
 		minID = 0
@@ -467,9 +455,9 @@ readChannel:
 	// No need to wait here till DB gets synced cuz UI will have required data
 	go func(u []*msg.User, g []*msg.Group) {
 		// Save Groups
-		repo.Ctx().Groups.SaveMany(g)
+		_ = repo.Ctx().Groups.SaveMany(g)
 		// Save Users
-		repo.Ctx().Users.SaveMany(u)
+		_ = repo.Ctx().Users.SaveMany(u)
 	}(users, groups)
 
 	// sort updates

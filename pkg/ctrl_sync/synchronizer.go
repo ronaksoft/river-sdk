@@ -113,11 +113,17 @@ func (ctrl *Controller) updateSyncStatus(newStatus domain.SyncStatus) {
 // watchDog
 // Checks if we have not received any updates since last watch tries to re-sync with server.
 func (ctrl *Controller) watchDog() {
+	syncTime := 60 * time.Second
 	for {
 		select {
-		case <-time.After(30 * time.Second):
+		case <-time.After(syncTime):
 			// Wait for network
 			ctrl.networkCtrl.WaitForNetwork()
+
+			// Check if we were not syncing in the last 60 seconds
+			if time.Now().Sub(ctrl.lastUpdateReceived) < syncTime {
+				break
+			}
 			if ctrl.syncStatus != domain.Syncing {
 				ctrl.sync()
 			}
@@ -138,7 +144,6 @@ func (ctrl *Controller) sync() {
 	logs.Debug("sync()",
 		zap.Int64("UpdateID", ctrl.updateID),
 	)
-
 	// There is no need to sync when no user has been authorized
 	if ctrl.UserID == 0 {
 		return
@@ -147,11 +152,11 @@ func (ctrl *Controller) sync() {
 	// Wait until network is available
 	ctrl.networkCtrl.WaitForNetwork()
 
-	var serverUpdateID int64
-	var err error
+	// Update the sync controller status
+	ctrl.updateSyncStatus(domain.Syncing)
 
 	// get updateID from server
-	serverUpdateID, err = ctrl.getUpdateState()
+	serverUpdateID, err := ctrl.getUpdateState()
 	if err != nil {
 		logs.Error("sync()-> getUpdateState()", zap.Error(err))
 		return
@@ -159,37 +164,148 @@ func (ctrl *Controller) sync() {
 
 	logs.Debug("sync()-> getUpdateState()",
 		zap.Int64("ServerUpdateID", serverUpdateID),
-		zap.Int64("UpdateID", ctrl.updateID),
+		zap.Int64("ClientUpdateID", ctrl.updateID),
 	)
 
 	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSyncThreshold {
-		logs.Debug("sync()-> Snapshot sync")
+		logs.Info("sync()-> Snapshot sync")
 		// remove all messages
 		err := repo.Ctx().DropAndCreateTable(&dto.Messages{})
 		if err != nil {
 			logs.Error("sync()-> DropAndCreateTable()", zap.Error(err))
+			return
 		}
 		// Get Contacts from the server
-		ctrl.getContacts()
+		getContacts(ctrl)
 		ctrl.updateID = serverUpdateID
-		ctrl.getAllDialogs(0, 100)
+		getAllDialogs(ctrl, 0, 100)
 		err = repo.Ctx().System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
 		if err != nil {
 			logs.Error("sync()-> SaveInt()", zap.Error(err))
+			return
 		}
-	} else if time.Now().Sub(ctrl.lastUpdateReceived).Truncate(time.Second) > 30 {
+	} else  {
 		// if it is passed over 60 seconds from the last update received it fetches the update
 		// difference from the server
 		if serverUpdateID > ctrl.updateID+1 {
 			ctrl.updateSyncStatus(domain.OutOfSync)
-			ctrl.getUpdateDifference(serverUpdateID + 1) // +1 cuz in here we dont have serverUpdateID itself too
+			getUpdateDifference(ctrl, serverUpdateID + 1) // +1 cuz in here we dont have serverUpdateID itself too
 		}
 	}
 
 	ctrl.updateSyncStatus(domain.Synced)
 }
+func getContacts(ctrl *Controller) {
+	req := new(msg.ContactsGet)
+	reqBytes, _ := req.Marshal()
+	ctrl.queueCtrl.ExecuteCommand(
+		uint64(domain.SequentialUniqueID()),
+		msg.C_ContactsGet,
+		reqBytes,
+		nil,
+		func(m *msg.MessageEnvelope) {
+			// Controller applier will take care of this
+		},
+		false,
+	)
+}
+func getAllDialogs(ctrl *Controller, offset int32, limit int32) {
+	logs.Info("getAllDialogs()")
+	req := new(msg.MessagesGetDialogs)
+	req.Limit = limit
+	req.Offset = offset
+	reqBytes, _ := req.Marshal()
+	ctrl.queueCtrl.ExecuteCommand(
+		uint64(domain.SequentialUniqueID()),
+		msg.C_MessagesGetDialogs,
+		reqBytes,
+		func() {
+			logs.Warn("getAllDialogs() -> onTimeoutback() retry to getAllDialogs()")
+			getAllDialogs(ctrl, offset, limit)
+		},
+		func(m *msg.MessageEnvelope) {
+			switch m.Constructor {
+			case msg.C_MessagesDialogs:
+				x := new(msg.MessagesDialogs)
+				err := x.Unmarshal(m.Message)
+				if err != nil {
+					logs.Error("getAllDialogs() -> onSuccessCallback() -> Unmarshal() ", zap.Error(err))
+					return
+				}
+				logs.Debug("getAllDialogs() -> onSuccessCallback() -> MessagesDialogs",
+					zap.Int("DialogsLength", len(x.Dialogs)),
+					zap.Int32("Offset", offset),
+					zap.Int32("Total", x.Count),
+				)
+				mMessages := make(map[int64]*msg.UserMessage)
+				for _, message := range x.Messages {
+					err := repo.Ctx().Messages.SaveMessage(message)
+					if err != nil {
+						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveMessage() ", zap.Error(err))
+					}
 
-func (ctrl *Controller) getUpdateDifference(minUpdateID int64) {
+					mMessages[message.ID] = message
+				}
+
+				for _, dialog := range x.Dialogs {
+					topMessage, _ := mMessages[dialog.TopMessageID]
+					if topMessage == nil {
+						logs.Error("getAllDialogs() -> onSuccessCallback() -> dialog TopMessage is null ",
+							zap.Int64("MessageID", dialog.TopMessageID),
+						)
+						continue
+					}
+					// create MessageHole
+					err = CreateMessageHole(dialog.PeerID, 0, dialog.TopMessageID-1)
+					if err != nil {
+						logs.Error("getAllDialogs() -> createMessageHole() ", zap.Error(err))
+					}
+					// make sure to created the messagehole b4 creating dialog
+					err := repo.Ctx().Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
+					if err != nil {
+						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveDialog() ",
+							zap.String("Error", err.Error()),
+							zap.String("Dialog", fmt.Sprintf("%v", dialog)),
+						)
+					}
+				}
+
+				for _, user := range x.Users {
+					err := repo.Ctx().Users.SaveUser(user)
+					if err != nil {
+						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveUser() ",
+							zap.String("Error", err.Error()),
+							zap.String("User", fmt.Sprintf("%v", user)),
+						)
+					}
+				}
+				for _, group := range x.Groups {
+					err := repo.Ctx().Groups.Save(group)
+					if err != nil {
+						logs.Error("getAllDialogs() -> onSuccessCallback() -> Groups.Save() ",
+							zap.String("Error", err.Error()),
+							zap.String("Group", fmt.Sprintf("%v", group)),
+						)
+					}
+				}
+				if x.Count > offset+limit {
+					logs.Info("getAllDialogs() -> onSuccessCallback() retry to getAllDialogs()",
+						zap.Int32("x.Count", x.Count),
+						zap.Int32("offset+limit", offset+limit),
+					)
+					getAllDialogs(ctrl, offset+limit, limit)
+				}
+			case msg.C_Error:
+				logs.Error("onSuccessCallback()-> C_Error",
+					zap.String("Error", domain.ParseServerError(m.Message).Error()),
+				)
+			}
+		},
+		false,
+	)
+
+}
+func getUpdateDifference(ctrl *Controller, minUpdateID int64) {
 	// Check if getUpdateDifference function is already running, then return otherwise lock it and continue
 	if !atomic.CompareAndSwapInt32(&ctrl.updateDifferenceLock, 0, 1) {
 		return
@@ -240,7 +356,7 @@ func (ctrl *Controller) getUpdateDifference(minUpdateID int64) {
 				logs.Debug("getUpdateDifference() -> ExecuteRealtimeCommand() Timeout")
 			},
 			func(m *msg.MessageEnvelope) {
-				ctrl.onGetDifferenceSucceed(m)
+				onGetDifferenceSucceed(ctrl, m)
 				logs.Debug("getUpdateDifference() -> ExecuteRealtimeCommand() Success")
 			},
 			true,
@@ -251,7 +367,7 @@ func (ctrl *Controller) getUpdateDifference(minUpdateID int64) {
 	}
 	ctrl.updateSyncStatus(domain.Synced)
 }
-func (ctrl *Controller) onGetDifferenceSucceed(m *msg.MessageEnvelope) {
+func onGetDifferenceSucceed(ctrl *Controller, m *msg.MessageEnvelope) {
 	switch m.Constructor {
 	case msg.C_UpdateDifference:
 		x := new(msg.UpdateDifference)
@@ -337,7 +453,6 @@ func (ctrl *Controller) SetUserID(userID int64) {
 // getUpdateState responsibility is to only get server updateID
 func (ctrl *Controller) getUpdateState() (updateID int64, err error) {
 	updateID = 0
-
 	if !ctrl.networkCtrl.Connected() {
 		return -1, domain.ErrNoConnection
 	}
@@ -348,7 +463,6 @@ func (ctrl *Controller) getUpdateState() (updateID int64, err error) {
 	// this waitGroup is required cuz our callbacks will be called in UIExecutor go routine
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
-	// ctrl.queueCtrl.ExecuteCommand(
 	_ = ctrl.queueCtrl.ExecuteRealtimeCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_UpdateGetState,
@@ -359,7 +473,6 @@ func (ctrl *Controller) getUpdateState() (updateID int64, err error) {
 		},
 		func(m *msg.MessageEnvelope) {
 			defer waitGroup.Done()
-			logs.Debug("Controller.getUpdateState() Success")
 			switch m.Constructor {
 			case msg.C_UpdateState:
 				x := new(msg.UpdateState)
@@ -374,120 +487,6 @@ func (ctrl *Controller) getUpdateState() (updateID int64, err error) {
 	)
 	waitGroup.Wait()
 	return
-}
-
-// getContacts
-func (ctrl *Controller) getContacts() {
-	req := new(msg.ContactsGet)
-	reqBytes, _ := req.Marshal()
-	ctrl.queueCtrl.ExecuteCommand(
-		uint64(domain.SequentialUniqueID()),
-		msg.C_ContactsGet,
-		reqBytes,
-		nil,
-		func(m *msg.MessageEnvelope) {
-			// Controller applier will take care of this
-		},
-		false,
-	)
-}
-
-// getAllDialogs
-func (ctrl *Controller) getAllDialogs(offset int32, limit int32) {
-	logs.Info("getAllDialogs()")
-	req := new(msg.MessagesGetDialogs)
-	req.Limit = limit
-	req.Offset = offset
-	reqBytes, _ := req.Marshal()
-	ctrl.queueCtrl.ExecuteCommand(
-		uint64(domain.SequentialUniqueID()),
-		msg.C_MessagesGetDialogs,
-		reqBytes,
-		func() {
-			logs.Warn("getAllDialogs() -> onTimeoutback() retry to getAllDialogs()")
-			ctrl.getAllDialogs(offset, limit)
-		},
-		func(m *msg.MessageEnvelope) {
-			switch m.Constructor {
-			case msg.C_MessagesDialogs:
-				x := new(msg.MessagesDialogs)
-				err := x.Unmarshal(m.Message)
-				if err != nil {
-					logs.Error("getAllDialogs() -> onSuccessCallback() -> Unmarshal() ", zap.Error(err))
-					return
-				}
-				logs.Debug("getAllDialogs() -> onSuccessCallback() -> MessagesDialogs",
-					zap.Int("DialogsLength", len(x.Dialogs)),
-					zap.Int32("Offset", offset),
-					zap.Int32("Total", x.Count),
-				)
-				mMessages := make(map[int64]*msg.UserMessage)
-				for _, message := range x.Messages {
-					err := repo.Ctx().Messages.SaveMessage(message)
-					if err != nil {
-						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveMessage() ", zap.Error(err))
-					}
-
-					mMessages[message.ID] = message
-				}
-
-				for _, dialog := range x.Dialogs {
-					topMessage, _ := mMessages[dialog.TopMessageID]
-					if topMessage == nil {
-						logs.Error("getAllDialogs() -> onSuccessCallback() -> dialog TopMessage is null ",
-							zap.Int64("MessageID", dialog.TopMessageID),
-						)
-						continue
-					}
-					// create MessageHole
-					err = CreateMessageHole(dialog.PeerID, 0, dialog.TopMessageID-1)
-					if err != nil {
-						logs.Error("getAllDialogs() -> createMessageHole() ", zap.Error(err))
-					}
-					// make sure to created the messagehole b4 creating dialog
-					err := repo.Ctx().Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
-					if err != nil {
-						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveDialog() ",
-							zap.String("Error", err.Error()),
-							zap.String("Dialog", fmt.Sprintf("%v", dialog)),
-						)
-					}
-				}
-
-				for _, user := range x.Users {
-					err := repo.Ctx().Users.SaveUser(user)
-					if err != nil {
-						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveUser() ",
-							zap.String("Error", err.Error()),
-							zap.String("User", fmt.Sprintf("%v", user)),
-						)
-					}
-				}
-				for _, group := range x.Groups {
-					err := repo.Ctx().Groups.Save(group)
-					if err != nil {
-						logs.Error("getAllDialogs() -> onSuccessCallback() -> Groups.Save() ",
-							zap.String("Error", err.Error()),
-							zap.String("Group", fmt.Sprintf("%v", group)),
-						)
-					}
-				}
-				if x.Count > offset+limit {
-					logs.Info("getAllDialogs() -> onSuccessCallback() retry to getAllDialogs()",
-						zap.Int32("x.Count", x.Count),
-						zap.Int32("offset+limit", offset+limit),
-					)
-					ctrl.getAllDialogs(offset+limit, limit)
-				}
-			case msg.C_Error:
-				logs.Error("onSuccessCallback()-> C_Error",
-					zap.String("Error", domain.ParseServerError(m.Message).Error()),
-				)
-			}
-		},
-		false,
-	)
-
 }
 
 func (ctrl *Controller) isDeliveredMessage(id int64) bool {
@@ -579,7 +578,7 @@ func (ctrl *Controller) UpdateHandler(u *msg.UpdateContainer) {
 				zap.Int64("MinUpdateID", u.MinUpdateID),
 			)
 			ctrl.updateSyncStatus(domain.OutOfSync)
-			ctrl.getUpdateDifference(u.MinUpdateID)
+			getUpdateDifference(ctrl, u.MinUpdateID)
 		}
 	}
 
