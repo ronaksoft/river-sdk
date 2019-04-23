@@ -6,6 +6,7 @@ import "git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 type MessagesExtra interface {
 	SaveScrollID(peerID, msgID int64, peerType int32) error
 	GetScrollID(peerID int64, peerType int32) (int64, error)
+	DeleteScrollID(peerID int64, peerType int32) error
 }
 
 type repoMessagesExtra struct {
@@ -48,4 +49,13 @@ func (r *repoMessagesExtra) GetScrollID(peerID int64, peerType int32) (int64, er
 	} else {
 		return s.ScrollID, nil
 	}
+}
+
+// Delete
+func (r *repoMessagesExtra) DeleteScrollID(peerID int64, peerType int32) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	// Delete Row
+	return r.db.Where("PeerID=? AND  PeerType=?", peerID, peerType).Delete(dto.MessagesExtra{}).Error
 }
