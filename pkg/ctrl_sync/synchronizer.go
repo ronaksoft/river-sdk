@@ -162,6 +162,7 @@ func (ctrl *Controller) sync() {
 
 	// Update the sync controller status
 	ctrl.updateSyncStatus(domain.Syncing)
+	defer ctrl.updateSyncStatus(domain.Synced)
 
 	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSyncThreshold {
 		logs.Info("sync()-> Snapshot sync")
@@ -186,8 +187,6 @@ func (ctrl *Controller) sync() {
 		logs.Info("sync()-> Normal sync")
 		getUpdateDifference(ctrl, serverUpdateID+1) // +1 cuz in here we dont have serverUpdateID itself too
 	}
-
-	ctrl.updateSyncStatus(domain.Synced)
 }
 func getContacts(ctrl *Controller) {
 	req := new(msg.ContactsGet)
