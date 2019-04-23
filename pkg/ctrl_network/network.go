@@ -617,3 +617,8 @@ func (ctrl *Controller) Connected() bool {
 	}
 	return true
 }
+
+// GetQuality
+func (ctrl *Controller) GetQuality() domain.NetworkStatus {
+	return ctrl.wsQuality
+}

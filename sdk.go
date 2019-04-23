@@ -132,7 +132,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		},
 	)
 	r.networkCtrl.SetNetworkStatusChangedCallback(func(newQuality domain.NetworkStatus) {
-		r.networkQuality = int32(newQuality)
 		filemanager.Ctx().SetNetworkStatus(newQuality)
 		if r.mainDelegate != nil {
 			r.mainDelegate.OnNetworkStatusChanged(int(newQuality))
@@ -159,7 +158,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// call external delegate on sync status changed
 	r.syncCtrl.SetSyncStatusChangedCallback(func(newStatus domain.SyncStatus) {
-		r.syncStatus = int32(newStatus)
 		if r.mainDelegate != nil {
 			r.mainDelegate.OnSyncStatusChanged(int(newStatus))
 		}

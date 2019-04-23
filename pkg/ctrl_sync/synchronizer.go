@@ -665,6 +665,10 @@ func (ctrl *Controller) ContactImportFromServer() {
 	)
 }
 
+func (ctrl *Controller) GetSyncStatus() domain.SyncStatus {
+	return ctrl.syncStatus
+}
+
 // extractMessagesMedia extract files info from messages that have Document object
 func extractMessagesMedia(messages ...*msg.UserMessage) {
 	for _, m := range messages {

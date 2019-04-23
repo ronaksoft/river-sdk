@@ -57,12 +57,12 @@ func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
 
 // GetNetworkStatus returns NetworkController status
 func (r *River) GetNetworkStatus() int32 {
-	return r.networkQuality
+	return int32(r.networkCtrl.GetQuality())
 }
 
 // GetSyncStatus returns SyncController status
 func (r *River) GetSyncStatus() int32 {
-	return r.syncStatus
+	return int32(r.syncCtrl.GetSyncStatus())
 }
 
 // Logout drop queue & database , etc ...
