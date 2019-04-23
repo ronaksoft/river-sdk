@@ -201,6 +201,11 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	filemanager.Ctx().LoadQueueFromDB()
 }
 
+func (r *River) Version() string {
+	// TODO:: automatic generation
+	return "0.8.1"
+}
+
 // Get deviceToken
 func (r *River) loadDeviceToken() {
 	r.DeviceToken = new(msg.AccountRegisterDevice)
@@ -296,23 +301,21 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 	go r.syncCtrl.MessageHandler(msgs)
 
 	// check requestCallbacks and call callbacks
-	count := len(msgs)
-	for idx := 0; idx < count; idx++ {
-		m := msgs[idx]
-		cb := domain.GetRequestCallback(m.RequestID)
+	for idx := range msgs {
+		cb := domain.GetRequestCallback(msgs[idx].RequestID)
 		if cb != nil {
-			// if there was any listener maybe request already timedout
+			// if there was any listener maybe request already time-out
 			logs.Debug("River::onReceivedMessage() Request callback found", zap.Uint64("RequestID", cb.RequestID))
 			select {
-			case cb.ResponseChannel <- m:
+			case cb.ResponseChannel <- msgs[idx]:
 				logs.Debug("River::onReceivedMessage() passed to callback listener", zap.Uint64("RequestID", cb.RequestID))
 			default:
 				logs.Error("River::onReceivedMessage() there is no callback listener", zap.Uint64("RequestID", cb.RequestID))
 			}
-			domain.RemoveRequestCallback(m.RequestID)
+			domain.RemoveRequestCallback(msgs[idx].RequestID)
 		} else {
 			logs.Error("River::onReceivedMessage() callback does not exists",
-				zap.Uint64("RequestID", m.RequestID),
+				zap.Uint64("RequestID", msgs[idx].RequestID),
 			)
 		}
 	}
@@ -385,10 +388,10 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 		zap.Int64("messageID", messageID),
 		zap.Int64("fileID", fileID),
 	)
-	// if total parts are grater than zero it means we actually uploaded new file
+	// if total parts are greater than zero it means we actually uploaded new file
 	// else the doc was already uploaded we called this just to notify ui that upload finished
-
-	if stateType == domain.FileStateUpload {
+	switch stateType {
+	case domain.FileStateUpload:
 		// Create SendMessageMedia Request
 		x := new(msg.MessagesSendMedia)
 		x.Peer = req.Peer
@@ -441,7 +444,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 		requestID := uint64(fileID)
 		r.queueCtrl.ExecuteCommand(requestID, msg.C_MessagesSendMedia, reqBuff, nil, nil, false)
 
-	} else if stateType == domain.FileStateUploadAccountPhoto {
+	case domain.FileStateUploadAccountPhoto:
 		// TODO : AccountUploadPhoto
 		x := new(msg.AccountUploadPhoto)
 		x.File = &msg.InputFile{
@@ -479,8 +482,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 			logs.Debug("AccountUploadPhoto timeoput callback")
 		}
 		r.queueCtrl.ExecuteCommand(requestID, msg.C_AccountUploadPhoto, reqBuff, timeoutCB, successCB, false)
-
-	} else if stateType == domain.FileStateUploadGroupPhoto {
+	case domain.FileStateUploadGroupPhoto:
 		// TODO : GroupUploadPhoto
 		x := new(msg.GroupsUploadPhoto)
 		x.GroupID = targetID
@@ -649,18 +651,6 @@ func (r *River) Stop() {
 	)
 }
 
-// take a copy of commandBytes b4 IOS/Android GC/OS collect/alter them
-func deepCopy(commandBytes []byte) []byte {
-	length := len(commandBytes)
-	buff := make([]byte, length)
-	copy(buff, commandBytes)
-	// Deep Copy
-	// for i := 0; i < length; i++ {
-	// 	buff[i] = commandBytes[i]
-	// }
-	return buff
-}
-
 // ExecuteCommand ...
 // This is a wrapper function to pass the request to the queueController, to be passed to networkController for final
 // delivery to the server.
@@ -741,7 +731,8 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 			_, ok := r.localCommands[constructor]
 			if ok {
 				execBlock := func() {
-					r.executeLocalCommand(
+					executeLocalCommand(
+						r,
 						uint64(requestID),
 						constructor,
 						commandBytesDump,
@@ -756,7 +747,8 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 				}
 
 			} else {
-				r.executeRemoteCommand(
+				executeRemoteCommand(
+					r,
 					uint64(requestID),
 					constructor,
 					commandBytesDump,
@@ -766,7 +758,8 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 			}
 		}
 	} else {
-		r.executeRemoteCommand(
+		executeRemoteCommand(
+			r,
 			uint64(requestID),
 			constructor,
 			commandBytesDump,
@@ -777,8 +770,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 
 	return
 }
-
-func (r *River) executeLocalCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func executeLocalCommand(r *River, requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	logs.Debug("River::executeLocalCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
@@ -794,12 +786,18 @@ func (r *River) executeLocalCommand(requestID uint64, constructor int64, command
 		applier(in, out, timeoutCB, successCB)
 	}
 }
-
-func (r *River) executeRemoteCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func executeRemoteCommand(r *River, requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	logs.Debug("River::executeRemoteCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
 	r.queueCtrl.ExecuteCommand(requestID, constructor, commandBytes, timeoutCB, successCB, true)
+}
+func deepCopy(commandBytes []byte) []byte {
+	// Takes a copy of commandBytes b4 IOS/Android GC/OS collect/alter them
+	length := len(commandBytes)
+	buff := make([]byte, length)
+	copy(buff, commandBytes)
+	return buff
 }
 
 func (r *River) releaseDelegate(requestID int64) {
@@ -831,7 +829,8 @@ func (r *River) CreateAuthKey() (err error) {
 
 	logs.Info("River::CreateAuthKey() 1st Step Started :: InitConnect")
 
-	r.executeRemoteCommand(
+	executeRemoteCommand(
+		r,
 		uint64(domain.SequentialUniqueID()),
 		msg.C_InitConnect,
 		req1Bytes,
@@ -929,7 +928,8 @@ func (r *River) CreateAuthKey() (err error) {
 
 	waitGroup.Add(1)
 	logs.Info("River::CreateAuthKey() 2nd Step Started :: InitConnect")
-	r.executeRemoteCommand(
+	executeRemoteCommand(
+		r,
 		// r.executeRealtimeCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_InitCompleteAuth,

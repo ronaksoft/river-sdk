@@ -60,7 +60,7 @@ func NewSyncController(config Config) *Controller {
 	ctrl.networkCtrl = config.NetworkCtrl
 
 	// set default value to synced status
-	ctrl.syncStatus = domain.Synced
+	ctrl.updateSyncStatus(domain.Synced)
 
 	ctrl.updateAppliers = map[int64]domain.UpdateApplier{
 		msg.C_UpdateNewMessage:            ctrl.updateNewMessage,
