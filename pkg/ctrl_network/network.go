@@ -122,6 +122,8 @@ func (ctrl *Controller) updateFlushFunc(entries []ronak.FlusherEntry) {
 		for idx := range entries {
 			updates = append(updates, entries[idx].Value.(*msg.UpdateContainer))
 		}
+
+		// Call the update handler in blocking mode
 		ctrl.OnUpdate(updates)
 		logs.Debug("Updates Flushed",
 			zap.Int("Count", itemsCount),
@@ -136,6 +138,8 @@ func (ctrl *Controller) messageFlushFunc(entries []ronak.FlusherEntry) {
 		for idx := range entries {
 			messages = append(messages, entries[idx].Value.(*msg.MessageEnvelope))
 		}
+
+		// Call the message handler in blocking mode
 		ctrl.OnMessage(messages)
 		logs.Debug("Messages Flushed",
 			zap.Int("Count", itemsCount),
@@ -581,11 +585,6 @@ func (ctrl *Controller) send(msgEnvelope *msg.MessageEnvelope) error {
 	return nil
 }
 
-// Quality returns NetworkStatus
-func (ctrl *Controller) Quality() domain.NetworkStatus {
-	return ctrl.wsQuality
-}
-
 // Reconnect by wsKeepConnection = true the watchdog will connect itself again no need to call ctrl.Connect()
 func (ctrl *Controller) Reconnect() {
 	if ctrl.wsConn != nil {
@@ -617,4 +616,9 @@ func (ctrl *Controller) Connected() bool {
 		return false
 	}
 	return true
+}
+
+// GetQuality
+func (ctrl *Controller) GetQuality() domain.NetworkStatus {
+	return ctrl.wsQuality
 }

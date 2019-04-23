@@ -223,6 +223,11 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 		}
 	})
 }
+func (ctrl *Controller) addToDeliveredMessageList(id int64) {
+	ctrl.deliveredMessagesMutex.Lock()
+	ctrl.deliveredMessages[id] = true
+	ctrl.deliveredMessagesMutex.Unlock()
+}
 
 // usersMany
 func (ctrl *Controller) usersMany(e *msg.MessageEnvelope) {
@@ -272,7 +277,7 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 	}
 
 	// handle Media message
-	go handleMediaMessage(u.Messages...)
+	go extractMessagesMedia(u.Messages...)
 
 	// fill MessagesHole
 	for peerID := range peerMessages {

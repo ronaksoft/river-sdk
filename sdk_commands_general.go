@@ -57,16 +57,12 @@ func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
 
 // GetNetworkStatus returns NetworkController status
 func (r *River) GetNetworkStatus() int32 {
-	return int32(r.networkCtrl.Quality())
+	return int32(r.networkCtrl.GetQuality())
 }
 
 // GetSyncStatus returns SyncController status
 func (r *River) GetSyncStatus() int32 {
-
-	logs.Debug("River::GetSyncStatus()",
-		zap.String("syncStatus", r.syncCtrl.Status().ToString()),
-	)
-	return int32(r.syncCtrl.Status())
+	return int32(r.syncCtrl.GetSyncStatus())
 }
 
 // Logout drop queue & database , etc ...
@@ -78,11 +74,15 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 		req.Token = r.DeviceToken.Token
 		req.TokenType = int32(r.DeviceToken.TokenType)
 		reqBytes, _ := req.Marshal()
-		_ = r.queueCtrl.ExecuteRealtimeCommand(reqID, msg.C_AccountUnregisterDevice, reqBytes, nil, nil, true, false)
+		_ = r.queueCtrl.ExecuteRealtimeCommand(
+			reqID,
+			msg.C_AccountUnregisterDevice,
+			reqBytes,
+			nil, nil, true, false,
+		)
 	}
 
 	dataDir, err := r.queueCtrl.DropQueue()
-
 	if err != nil {
 		logs.Error("River::Logout() failed to drop queue", zap.Error(err))
 	}
@@ -745,7 +745,6 @@ func (r *River) GroupGetPhotoSmall(groupID int64) string {
 
 // this function is sync
 func downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) string {
-
 	logs.Debug("SDK::downloadGroupPhoto",
 		zap.Int64("UserID", groupID),
 		zap.Bool("IsBig", isBig),

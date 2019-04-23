@@ -27,7 +27,7 @@ var (
 )
 
 func init() {
-	logLevel = zap.NewAtomicLevelAt(zap.DebugLevel)
+	logLevel = zap.NewAtomicLevelAt(zap.InfoLevel)
 	green = color.New(color.FgHiGreen).SprintfFunc()
 	red = color.New(color.FgHiRed).SprintfFunc()
 	yellow = color.New(color.FgHiYellow).SprintfFunc()

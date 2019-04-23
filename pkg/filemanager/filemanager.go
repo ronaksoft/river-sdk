@@ -74,7 +74,7 @@ func Ctx() *FileManager {
 	return ctx
 }
 
-// InitFileManager initialize file manager and create singletone instance
+// InitFileManager initialize file manager and create singleton instance
 func InitFileManager(serverAddress string,
 	onUploadCompleted domain.OnFileUploadCompleted,
 	progressCallback domain.OnFileStatusChanged,
@@ -283,7 +283,8 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 
 // AddToQueue add request to queue
 func (fm *FileManager) AddToQueue(status *FileStatus) {
-	if status.Type == domain.FileStateUpload || status.Type == domain.FileStateUploadAccountPhoto || status.Type == domain.FileStateUploadGroupPhoto {
+	switch status.Type {
+	case domain.FileStateUpload, domain.FileStateUploadAccountPhoto, domain.FileStateUploadGroupPhoto:
 		fm.mxUp.Lock()
 		_, ok := fm.UploadQueue[status.MessageID]
 		if !ok {
@@ -293,7 +294,7 @@ func (fm *FileManager) AddToQueue(status *FileStatus) {
 		if !ok {
 			fm.chNewUploadItem <- true
 		}
-	} else if status.Type == domain.FileStateDownload {
+	case domain.FileStateDownload:
 		fm.mxDown.Lock()
 		_, ok := fm.DownloadQueue[status.MessageID]
 		if !ok {

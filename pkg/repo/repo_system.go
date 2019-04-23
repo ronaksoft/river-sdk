@@ -63,13 +63,17 @@ func (r *repoSystem) SaveInt(keyName string, keyValue int32) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Warn("repoSystem()", zap.Int32(keyName, keyValue))
+	logs.Info("repoSystem()", zap.Int32(keyName, keyValue))
 
 	s := dto.System{}
 
 	err := r.db.Where("KeyName = ?", keyName).First(&s).Error
 	if err != nil {
-		logs.Error("System::SaveInt()-> fetch system entity", zap.Error(err))
+		logs.Error("System::SaveInt()-> fetch system entity",
+			zap.String("Key", keyName),
+			zap.Int32("Value", keyValue),
+			zap.Error(err),
+		)
 	}
 
 	s.KeyName = keyName

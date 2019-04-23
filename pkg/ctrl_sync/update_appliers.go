@@ -75,7 +75,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		zap.String("Body", x.Message.Body),
 	)
 
-	// bug : sometime server do not sends accesshash
+	// bug : sometime server do not sends access hash
 	if x.AccessHash > 0 {
 		// update users access hash
 		err := repo.Ctx().Users.UpdateAccessHash(int64(x.AccessHash), x.Message.PeerID, x.Message.PeerType)
@@ -83,7 +83,6 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 			logs.Error("updateNewMessage() -> Users.UpdateAccessHash()", zap.Error(err))
 		}
 		err = repo.Ctx().Dialogs.UpdateAccessHash(int64(x.AccessHash), x.Message.PeerID, x.Message.PeerType)
-
 		if err != nil {
 			logs.Error("updateNewMessage() -> Dialogs.UpdateAccessHash()", zap.Error(err))
 		}
@@ -94,19 +93,16 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		res = append(res, u)
 	}
 
-	// handle glass messages
+	// handle Message's Action
 	ctrl.handleMessageAction(x, u, res)
 
-	// handle Media message
+	// handle Message's Media
 	if int32(x.Message.MediaType) > 0 {
-		go handleMediaMessage(x.Message)
+		go extractMessagesMedia(x.Message)
 	}
 	return res
 }
-
-// Parse message action and call required appliers
 func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.UpdateEnvelope, res []*msg.UpdateEnvelope) {
-
 	switch x.Message.MessageAction {
 	case domain.MessageActionNope:
 		// Do nothing
@@ -421,12 +417,12 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	return res
 }
 
-// updateTooLong indicate that client updates exceed from server cache size so we should resync client with server
+// updateTooLong indicate that client updates exceed from server cache size so we should re-sync client with server
 func (ctrl *Controller) updateTooLong(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
 	logs.Info("updateTooLong() applier")
 
 	go ctrl.sync()
 
-	res := []*msg.UpdateEnvelope{}
+	res := make([]*msg.UpdateEnvelope, 0)
 	return res
 }

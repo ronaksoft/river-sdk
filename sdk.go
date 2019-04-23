@@ -21,8 +21,8 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_queue"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_sync"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 
@@ -98,7 +98,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.loadDeviceToken()
 
 	// Initialize realtime requests
-	r.realTimeRequest = map[int64]bool{
+	r.realTimeCommands = map[int64]bool{
 		msg.C_MessagesSetTyping: true,
 		// msg.C_AuthRecall:        true,
 		// msg.C_InitConnect:       true,
@@ -199,6 +199,11 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	filemanager.Ctx().LoadQueueFromDB()
 }
 
+func (r *River) Version() string {
+	// TODO:: automatic generation
+	return "0.8.1"
+}
+
 // Get deviceToken
 func (r *River) loadDeviceToken() {
 	r.DeviceToken = new(msg.AccountRegisterDevice)
@@ -285,8 +290,7 @@ func (r *River) onGeneralError(e *msg.Error) {
 
 // called when network flushes received messages
 func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
-
-	// sort messages by reauestID
+	// sort messages by requestID
 	sort.Slice(msgs, func(i, j int) bool {
 		return msgs[i].RequestID < msgs[j].RequestID
 	})
@@ -295,193 +299,36 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 	go r.syncCtrl.MessageHandler(msgs)
 
 	// check requestCallbacks and call callbacks
-	count := len(msgs)
-	for idx := 0; idx < count; idx++ {
-		m := msgs[idx]
-		cb := domain.GetRequestCallback(m.RequestID)
+	for idx := range msgs {
+		cb := domain.GetRequestCallback(msgs[idx].RequestID)
 		if cb != nil {
-			// if there was any listener maybe request already timedout
+			// if there was any listener maybe request already time-out
 			logs.Debug("River::onReceivedMessage() Request callback found", zap.Uint64("RequestID", cb.RequestID))
 			select {
-			case cb.ResponseChannel <- m:
+			case cb.ResponseChannel <- msgs[idx]:
 				logs.Debug("River::onReceivedMessage() passed to callback listener", zap.Uint64("RequestID", cb.RequestID))
 			default:
 				logs.Error("River::onReceivedMessage() there is no callback listener", zap.Uint64("RequestID", cb.RequestID))
 			}
-			domain.RemoveRequestCallback(m.RequestID)
+			domain.RemoveRequestCallback(msgs[idx].RequestID)
 		} else {
 			logs.Error("River::onReceivedMessage() callback does not exists",
-				zap.Uint64("RequestID", m.RequestID),
+				zap.Uint64("RequestID", msgs[idx].RequestID),
 			)
 		}
 	}
-
 }
 
 // called when network flushes received updates
-func (r *River) onReceivedUpdate(upds []*msg.UpdateContainer) {
-
-	// if we receive any update in less than 500 ms push them to chOutOfSyncUpdates until 500ms passes
-	if time.Since(r.lastOutOfSyncTime) < time.Millisecond*500 {
-		r.chOutOfSyncUpdates <- upds
-		return
-	}
-
-	// read chOutOfSyncUpdates if there was any update left
-	resumeFromOutOfSyncWait := false
-readChannel:
-	for {
-		select {
-		case outOfSyncUpds := <-r.chOutOfSyncUpdates:
-			resumeFromOutOfSyncWait = true
-			upds = append(upds, outOfSyncUpds...)
-		default:
-			break readChannel
-		}
-	}
-
-	updateContainer := new(msg.UpdateContainer)
-
-	logs.Debug("SDK::onReceivedUpdate()",
-		zap.Int("Received Container Count", len(upds)),
-	)
-
-	minID := int64(^uint64(0) >> 1)
-	maxID := int64(0)
-
-	// remove duplicated users and updates and pass it to sync controller
-	userIDs := domain.MInt64B{}
-	groupIDs := domain.MInt64B{}
-	updateIDs := domain.MInt64B{}
-	users := make([]*msg.User, 0)
-	groups := make([]*msg.Group, 0)
-	updates := make([]*msg.UpdateEnvelope, 0)
-
-	currentUpdateID := r.syncCtrl.UpdateID()
-	for _, val := range upds {
-
-		for _, u := range val.Updates {
-			// extract min and max id
-			if u.UpdateID < minID && u.UpdateID > 0 {
-				minID = u.UpdateID
-			}
-			if u.UpdateID > maxID && u.UpdateID > 0 {
-				maxID = u.UpdateID
-			}
-
-			if u.UpdateID > 0 && u.UpdateID <= currentUpdateID {
-				logs.Error("SDK::onReceivedUpdate() XXXXXXXX Outdated update ",
-					zap.Int64("CurrentUpdateID", currentUpdateID),
-					zap.Int64("UpdateID", u.UpdateID),
-				)
-				continue
-			}
-			if _, ok := updateIDs[u.UpdateID]; !ok {
-				updateIDs[u.UpdateID] = true
-				updates = append(updates, u)
-			}
-		}
-		// get distinct users
-		for _, u := range val.Users {
-			if _, ok := userIDs[u.ID]; !ok {
-				userIDs[u.ID] = true
-				users = append(users, u)
-
-				// Download users avatar if its not exist
-				if u.Photo != nil {
-					dtoPhoto := repo.Ctx().Users.GetUserPhoto(u.ID, u.Photo.PhotoID)
-					if dtoPhoto != nil {
-						if dtoPhoto.SmallFilePath == "" || dtoPhoto.SmallFileID != u.Photo.PhotoSmall.FileID {
-							go downloadAccountPhoto(u.ID, u.Photo, false)
-						}
-					} else if u.Photo.PhotoID != 0 {
-						go downloadAccountPhoto(u.ID, u.Photo, false)
-					}
-				}
-
-			}
-		}
-		// get distinct groups
-		for _, g := range val.Groups {
-			if _, ok := groupIDs[g.ID]; !ok {
-				groupIDs[g.ID] = true
-				groups = append(groups, g)
-
-				// Download group avatar if its not exist
-				if g.Photo != nil {
-					dtoGroup, err := repo.Ctx().Groups.GetGroupDTO(g.ID)
-					if err == nil && dtoGroup != nil {
-						if dtoGroup.SmallFilePath == "" || dtoGroup.SmallFileID != g.Photo.PhotoSmall.FileID {
-							go downloadGroupPhoto(g.ID, g.Photo, false)
-						}
-					} else if g.Photo.PhotoSmall.FileID != 0 {
-						go downloadGroupPhoto(g.ID, g.Photo, false)
-					}
-				}
-			}
-		}
-
-	}
-
-	if int(maxID-minID) > len(updates) {
-		logs.Error("SDK::onReceivedUpdate() XXXXXXXX looks like there is missed update ",
-			zap.Int64("CurrentUpdateID", currentUpdateID),
-			zap.Int64("MaxID", maxID),
-			zap.Int64("MinID", minID),
-			zap.Int("len(updates)", len(updates)),
-		)
-	}
-
-	// on typing min max is equal to zero so meh
-	if minID > maxID {
-		minID = 0
-	}
-	logs.Debug("SDK::onReceivedUpdate()",
-		zap.Int("Received Updates Count", len(updates)),
-		zap.Int64("UpdateID", r.syncCtrl.UpdateID()),
-		zap.Int64("MaxID", maxID),
-		zap.Int64("MinID", minID),
-	)
-
-	// check max UpdateID if its greater than snapshot sync threshold discard recived updates and execute sanpshot sync
-	if maxID-r.syncCtrl.UpdateID() > domain.SnapshotSyncThreshold {
-		logs.Debug("SDK::onReceivedUpdate() snapshot threshold reached")
-		r.syncCtrl.CheckSyncState()
-		return
-	}
-	// if we met out of sync condition wait 500 ms and process updates
-	if !resumeFromOutOfSyncWait && minID > 0 && r.syncCtrl.UpdateID() < minID-1 {
-		r.chOutOfSyncUpdates <- upds
-		r.lastOutOfSyncTime = time.Now()
-		// insure that updates will be processed after 500ms
-		go func(r *River) {
-			time.Sleep(500 * time.Millisecond)
-			r.onReceivedUpdate([]*msg.UpdateContainer{})
-		}(r)
-
-		return
-	}
-
-	// No need to wait here till DB gets synced cuz UI will have required data
-	go func(u []*msg.User, g []*msg.Group) {
-		// Save Groups
-		repo.Ctx().Groups.SaveMany(g)
-		// Save Users
-		repo.Ctx().Users.SaveMany(u)
-	}(users, groups)
-
-	// sort updates
-	sort.Slice(updates, func(i, j int) bool {
-		return updates[i].UpdateID < updates[j].UpdateID
+func (r *River) onReceivedUpdate(updateContainers []*msg.UpdateContainer) {
+	// sort updateContainers
+	sort.Slice(updateContainers, func(i, j int) bool {
+		return updateContainers[i].MinUpdateID < updateContainers[j].MinUpdateID
 	})
 
-	updateContainer.Updates = updates
-	updateContainer.Users = users
-	updateContainer.Groups = groups
-	updateContainer.Length = int32(len(updates))
-	updateContainer.MinUpdateID = minID
-	updateContainer.MaxUpdateID = maxID
-	r.syncCtrl.UpdateHandler(updateContainer)
+	for idx := range updateContainers {
+		r.syncCtrl.UpdateHandler(updateContainers[idx])
+	}
 }
 
 // onGetServerTime update client & server time difference
@@ -539,10 +386,10 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 		zap.Int64("messageID", messageID),
 		zap.Int64("fileID", fileID),
 	)
-	// if total parts are grater than zero it means we actually uploaded new file
+	// if total parts are greater than zero it means we actually uploaded new file
 	// else the doc was already uploaded we called this just to notify ui that upload finished
-
-	if stateType == domain.FileStateUpload {
+	switch stateType {
+	case domain.FileStateUpload:
 		// Create SendMessageMedia Request
 		x := new(msg.MessagesSendMedia)
 		x.Peer = req.Peer
@@ -595,7 +442,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 		requestID := uint64(fileID)
 		r.queueCtrl.ExecuteCommand(requestID, msg.C_MessagesSendMedia, reqBuff, nil, nil, false)
 
-	} else if stateType == domain.FileStateUploadAccountPhoto {
+	case domain.FileStateUploadAccountPhoto:
 		// TODO : AccountUploadPhoto
 		x := new(msg.AccountUploadPhoto)
 		x.File = &msg.InputFile{
@@ -633,8 +480,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 			logs.Debug("AccountUploadPhoto timeoput callback")
 		}
 		r.queueCtrl.ExecuteCommand(requestID, msg.C_AccountUploadPhoto, reqBuff, timeoutCB, successCB, false)
-
-	} else if stateType == domain.FileStateUploadGroupPhoto {
+	case domain.FileStateUploadGroupPhoto:
 		// TODO : GroupUploadPhoto
 		x := new(msg.GroupsUploadPhoto)
 		x.GroupID = targetID
@@ -803,18 +649,6 @@ func (r *River) Stop() {
 	)
 }
 
-// take a copy of commandBytes b4 IOS/Android GC/OS collect/alter them
-func deepCopy(commandBytes []byte) []byte {
-	length := len(commandBytes)
-	buff := make([]byte, length)
-	copy(buff, commandBytes)
-	// Deep Copy
-	// for i := 0; i < length; i++ {
-	// 	buff[i] = commandBytes[i]
-	// }
-	return buff
-}
-
 // ExecuteCommand ...
 // This is a wrapper function to pass the request to the queueController, to be passed to networkController for final
 // delivery to the server.
@@ -875,7 +709,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 
 	}
 	if !serverForce {
-		_, isRealTimeRequest := r.realTimeRequest[constructor]
+		_, isRealTimeRequest := r.realTimeCommands[constructor]
 		if isRealTimeRequest {
 			err := r.queueCtrl.ExecuteRealtimeCommand(
 				uint64(requestID),
@@ -895,7 +729,8 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 			_, ok := r.localCommands[constructor]
 			if ok {
 				execBlock := func() {
-					r.executeLocalCommand(
+					executeLocalCommand(
+						r,
 						uint64(requestID),
 						constructor,
 						commandBytesDump,
@@ -910,7 +745,8 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 				}
 
 			} else {
-				r.executeRemoteCommand(
+				executeRemoteCommand(
+					r,
 					uint64(requestID),
 					constructor,
 					commandBytesDump,
@@ -920,7 +756,8 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 			}
 		}
 	} else {
-		r.executeRemoteCommand(
+		executeRemoteCommand(
+			r,
 			uint64(requestID),
 			constructor,
 			commandBytesDump,
@@ -931,8 +768,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 
 	return
 }
-
-func (r *River) executeLocalCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func executeLocalCommand(r *River, requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	logs.Debug("River::executeLocalCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
@@ -948,12 +784,18 @@ func (r *River) executeLocalCommand(requestID uint64, constructor int64, command
 		applier(in, out, timeoutCB, successCB)
 	}
 }
-
-func (r *River) executeRemoteCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func executeRemoteCommand(r *River, requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	logs.Debug("River::executeRemoteCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
 	r.queueCtrl.ExecuteCommand(requestID, constructor, commandBytes, timeoutCB, successCB, true)
+}
+func deepCopy(commandBytes []byte) []byte {
+	// Takes a copy of commandBytes b4 IOS/Android GC/OS collect/alter them
+	length := len(commandBytes)
+	buff := make([]byte, length)
+	copy(buff, commandBytes)
+	return buff
 }
 
 func (r *River) releaseDelegate(requestID int64) {
@@ -985,7 +827,8 @@ func (r *River) CreateAuthKey() (err error) {
 
 	logs.Info("River::CreateAuthKey() 1st Step Started :: InitConnect")
 
-	r.executeRemoteCommand(
+	executeRemoteCommand(
+		r,
 		uint64(domain.SequentialUniqueID()),
 		msg.C_InitConnect,
 		req1Bytes,
@@ -1083,7 +926,8 @@ func (r *River) CreateAuthKey() (err error) {
 
 	waitGroup.Add(1)
 	logs.Info("River::CreateAuthKey() 2nd Step Started :: InitConnect")
-	r.executeRemoteCommand(
+	executeRemoteCommand(
+		r,
 		// r.executeRealtimeCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_InitCompleteAuth,
@@ -1152,10 +996,10 @@ func (r *River) CreateAuthKey() (err error) {
 
 // AddRealTimeRequest ...
 func (r *River) AddRealTimeRequest(constructor int64) {
-	r.realTimeRequest[constructor] = true
+	r.realTimeCommands[constructor] = true
 }
 
 // RemoveRealTimeRequest ...
 func (r *River) RemoveRealTimeRequest(constructor int64) {
-	delete(r.realTimeRequest, constructor)
+	delete(r.realTimeCommands, constructor)
 }
