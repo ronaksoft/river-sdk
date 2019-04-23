@@ -52,7 +52,7 @@ func (r *repoUsers) SaveUser(user *msg.User) error {
 	}
 	logs.Debug("RepoUsers::SaveUser()",
 		zap.String("Name", fmt.Sprintf("%s %s", user.FirstName, user.LastName)),
-		zap.Int64("UserID", user.ID),
+		zap.Int64("userID", user.ID),
 	)
 
 	// save user Photos
@@ -65,7 +65,7 @@ func (r *repoUsers) SaveUser(user *msg.User) error {
 			r.db.Create(dtoPhoto)
 		} else {
 			dtoPhoto.Map(user.ID, user.Photo)
-			r.db.Table(dtoPhoto.TableName()).Where("UserID=? AND PhotoID=?", user.ID, user.Photo.PhotoID).Update(dtoPhoto)
+			r.db.Table(dtoPhoto.TableName()).Where("userID=? AND PhotoID=?", user.ID, user.Photo.PhotoID).Update(dtoPhoto)
 		}
 	}
 
@@ -114,7 +114,7 @@ func (r *repoUsers) SaveContactUser(user *msg.ContactUser) error {
 
 	logs.Debug("RepoUsers::SaveContactUser()",
 		zap.String("Name", fmt.Sprintf("%s %s", user.FirstName, user.LastName)),
-		zap.Int64("UserID", user.ID),
+		zap.Int64("userID", user.ID),
 	)
 
 	u := new(dto.Users)
@@ -304,7 +304,7 @@ func (r *repoUsers) GetUser(userID int64) *msg.User {
 	defer r.mx.Unlock()
 
 	logs.Debug("Users::GetUser()",
-		zap.Int64("UserID", userID),
+		zap.Int64("userID", userID),
 	)
 
 	pbUser := new(msg.User)
@@ -396,7 +396,7 @@ func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) 
 	defer r.mx.Unlock()
 
 	logs.Debug("Users::UpdateContactInfo()",
-		zap.Int64("UserID", userID),
+		zap.Int64("userID", userID),
 	)
 	dtoUser := new(dto.Users)
 	err := r.db.Table(dtoUser.TableName()).Where("ID=?", userID).Updates(map[string]interface{}{
@@ -468,13 +468,13 @@ func (r *repoUsers) GetUserPhoto(userID, photoID int64) *dto.UsersPhoto {
 	defer r.mx.Unlock()
 
 	logs.Debug("Users::GetUserPhoto()",
-		zap.Int64("UserID", userID),
+		zap.Int64("userID", userID),
 		zap.Int64("PhotoID", photoID),
 	)
 
 	dtoPhoto := dto.UsersPhoto{}
 
-	err := r.db.Where("UserID = ? AND PhotoID = ?", userID, photoID).First(&dtoPhoto).Error
+	err := r.db.Where("userID = ? AND PhotoID = ?", userID, photoID).First(&dtoPhoto).Error
 	if err != nil {
 		logs.Error("Users::GetUserPhoto()->fetch UserPhoto entity", zap.Error(err))
 		return nil
@@ -490,12 +490,12 @@ func (r *repoUsers) UpdateAccountPhotoPath(userID, photoID int64, isBig bool, fi
 	e := new(dto.UsersPhoto)
 
 	if isBig {
-		return r.db.Table(e.TableName()).Where("UserID = ? AND PhotoID = ?", userID, photoID).Updates(map[string]interface{}{
+		return r.db.Table(e.TableName()).Where("userID = ? AND PhotoID = ?", userID, photoID).Updates(map[string]interface{}{
 			"BigFilePath": filePath,
 		}).Error
 	}
 
-	return r.db.Table(e.TableName()).Where("UserID = ? AND PhotoID = ?", userID, photoID).Updates(map[string]interface{}{
+	return r.db.Table(e.TableName()).Where("userID = ? AND PhotoID = ?", userID, photoID).Updates(map[string]interface{}{
 		"SmallFilePath": filePath,
 	}).Error
 
@@ -524,7 +524,7 @@ func (r *repoUsers) SaveUserPhoto(userPhoto *msg.UpdateUserPhoto) error {
 			er = r.db.Create(dtoPhoto).Error
 		} else {
 			dtoPhoto.Map(userPhoto.UserID, userPhoto.Photo)
-			er = r.db.Table(dtoPhoto.TableName()).Where("UserID=? AND PhotoID=?", userPhoto.UserID, userPhoto.Photo.PhotoID).Update(dtoPhoto).Error
+			er = r.db.Table(dtoPhoto.TableName()).Where("userID=? AND PhotoID=?", userPhoto.UserID, userPhoto.Photo.PhotoID).Update(dtoPhoto).Error
 		}
 	}
 	user := new(dto.Users)
@@ -549,5 +549,5 @@ func (r *repoUsers) RemoveUserPhoto(userID int64) error {
 	r.db.Table(u.TableName()).Where("ID=?", userID).Updates(map[string]interface{}{
 		"Photo": []byte(""),
 	})
-	return r.db.Delete(dto.UsersPhoto{}, "UserID = ?", userID).Error
+	return r.db.Delete(dto.UsersPhoto{}, "userID = ?", userID).Error
 }

@@ -578,7 +578,7 @@ func (r *River) AccountGetPhotoSmall(userID int64) string {
 func downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) string {
 
 	logs.Debug("SDK::downloadAccountPhoto",
-		zap.Int64("UserID", userID),
+		zap.Int64("userID", userID),
 		zap.Bool("IsBig", isBig),
 		zap.Int64("PhotoBig.FileID", photo.PhotoBig.FileID),
 		zap.Uint64("PhotoBig.AccessHash", photo.PhotoBig.AccessHash),
@@ -746,7 +746,7 @@ func (r *River) GroupGetPhotoSmall(groupID int64) string {
 // this function is sync
 func downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) string {
 	logs.Debug("SDK::downloadGroupPhoto",
-		zap.Int64("UserID", groupID),
+		zap.Int64("userID", groupID),
 		zap.Bool("IsBig", isBig),
 		zap.Int64("PhotoBig.FileID", photo.PhotoBig.FileID),
 		zap.Uint64("PhotoBig.AccessHash", photo.PhotoBig.AccessHash),

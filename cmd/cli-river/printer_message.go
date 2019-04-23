@@ -117,7 +117,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		bufUsers := new(bytes.Buffer)
 		tableUsers := tablewriter.NewWriter(bufUsers)
 		tableUsers.SetHeader([]string{
-			"UserID", "FirstName", "LastName", "Photo",
+			"userID", "FirstName", "LastName", "Photo",
 		})
 		for _, x := range x.Users {
 			tableUsers.Append([]string{
@@ -203,7 +203,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		bufUsers := new(bytes.Buffer)
 		tableUsers := tablewriter.NewWriter(bufUsers)
 		tableUsers.SetHeader([]string{
-			"UserID", "FirstName", "LastName", "Photo",
+			"userID", "FirstName", "LastName", "Photo",
 		})
 		for _, x := range x.Users {
 			tableUsers.Append([]string{
@@ -225,7 +225,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		bufUsers := new(bytes.Buffer)
 		tableUsers := tablewriter.NewWriter(bufUsers)
 		tableUsers.SetHeader([]string{
-			"UserID", "FirstName", "LastName", "Photo",
+			"userID", "FirstName", "LastName", "Photo",
 		})
 		for _, x := range x.Users {
 			tableUsers.Append([]string{
@@ -303,7 +303,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			bufUsers := new(bytes.Buffer)
 			tableUsers := tablewriter.NewWriter(bufUsers)
 			tableUsers.SetHeader([]string{
-				"UserID", "FirstName", "LastName", "AccessHash", "Username", "Photo",
+				"userID", "FirstName", "LastName", "AccessHash", "Username", "Photo",
 			})
 			for _, x := range x.Participants {
 				tableUsers.Append([]string{
@@ -328,7 +328,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		bufUsers := new(bytes.Buffer)
 		tableUsers := tablewriter.NewWriter(bufUsers)
 		tableUsers.SetHeader([]string{
-			"UserID", "AccessHash",
+			"userID", "AccessHash",
 		})
 		tableUsers.Append([]string{
 			fmt.Sprintf("%d", x.UserID),

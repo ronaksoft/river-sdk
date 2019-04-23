@@ -44,7 +44,7 @@ func easyjson94b2531bDecodeGitRonaksoftwareComRonakRiversdk(in *jlexer.Lexer, ou
 			} else {
 				copy(out.AuthKey[:], in.Bytes())
 			}
-		case "UserID":
+		case "userID":
 			out.UserID = int64(in.Int64())
 		case "Username":
 			out.Username = string(in.String())
@@ -91,7 +91,7 @@ func easyjson94b2531bEncodeGitRonaksoftwareComRonakRiversdk(out *jwriter.Writer,
 		out.Base64Bytes(in.AuthKey[:])
 	}
 	{
-		const prefix string = ",\"UserID\":"
+		const prefix string = ",\"userID\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])

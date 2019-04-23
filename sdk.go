@@ -245,7 +245,7 @@ func (r *River) onNetworkConnect() {
 
 	req := msg.AuthRecall{}
 	reqBytes, _ := req.Marshal()
-	if r.syncCtrl.UserID != 0 {
+	if r.syncCtrl.GetUserID() != 0 {
 		// send auth recall until it succeed
 		for {
 			// this is priority command that should not passed to queue

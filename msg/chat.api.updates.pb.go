@@ -693,7 +693,7 @@ func (m *UpdateReadHistoryOutbox) GetMaxID() int64 {
 // UpdateUserTyping
 type UpdateUserTyping struct {
 	UCount int32        `protobuf:"varint,100,req,name=UCount" json:"UCount"`
-	UserID int64        `protobuf:"varint,1,req,name=UserID" json:"UserID"`
+	UserID int64        `protobuf:"varint,1,req,name=userID" json:"userID"`
 	Action TypingAction `protobuf:"varint,2,req,name=Action,enum=msg.TypingAction" json:"Action"`
 	PeerID int64        `protobuf:"varint,3,req,name=PeerID" json:"PeerID"`
 }
@@ -762,7 +762,7 @@ func (m *UpdateUserTyping) GetPeerID() int64 {
 // UpdateUserStatus
 type UpdateUserStatus struct {
 	UCount int32 `protobuf:"varint,100,req,name=UCount" json:"UCount"`
-	UserID int64 `protobuf:"varint,1,req,name=UserID" json:"UserID"`
+	UserID int64 `protobuf:"varint,1,req,name=userID" json:"userID"`
 	Status int32 `protobuf:"varint,2,req,name=Status" json:"Status"`
 }
 
@@ -824,7 +824,7 @@ func (m *UpdateUserStatus) GetStatus() int32 {
 type UpdateUsername struct {
 	UCount    int32  `protobuf:"varint,100,req,name=UCount" json:"UCount"`
 	UpdateID  int64  `protobuf:"varint,101,req,name=UpdateID" json:"UpdateID"`
-	UserID    int64  `protobuf:"varint,1,req,name=UserID" json:"UserID"`
+	UserID    int64  `protobuf:"varint,1,req,name=userID" json:"userID"`
 	Username  string `protobuf:"bytes,2,req,name=Username" json:"Username"`
 	FirstName string `protobuf:"bytes,3,req,name=FirstName" json:"FirstName"`
 	LastName  string `protobuf:"bytes,4,req,name=LastName" json:"LastName"`
@@ -917,7 +917,7 @@ func (m *UpdateUsername) GetBio() string {
 type UpdateUserPhoto struct {
 	UCount   int32      `protobuf:"varint,100,req,name=UCount" json:"UCount"`
 	UpdateID int64      `protobuf:"varint,101,req,name=UpdateID" json:"UpdateID"`
-	UserID   int64      `protobuf:"varint,1,req,name=UserID" json:"UserID"`
+	UserID   int64      `protobuf:"varint,1,req,name=userID" json:"userID"`
 	Photo    *UserPhoto `protobuf:"bytes,2,opt,name=Photo" json:"Photo,omitempty"`
 }
 
@@ -986,7 +986,7 @@ func (m *UpdateUserPhoto) GetPhoto() *UserPhoto {
 type UpdateNotifySettings struct {
 	UCount     int32               `protobuf:"varint,100,req,name=UCount" json:"UCount"`
 	UpdateID   int64               `protobuf:"varint,101,req,name=UpdateID" json:"UpdateID"`
-	UserID     int64               `protobuf:"varint,1,req,name=UserID" json:"UserID"`
+	UserID     int64               `protobuf:"varint,1,req,name=userID" json:"userID"`
 	NotifyPeer *Peer               `protobuf:"bytes,2,req,name=NotifyPeer" json:"NotifyPeer,omitempty"`
 	Settings   *PeerNotifySettings `protobuf:"bytes,3,req,name=Settings" json:"Settings,omitempty"`
 }
@@ -1064,7 +1064,7 @@ type UpdateGroupParticipantAdd struct {
 	UCount    int32 `protobuf:"varint,100,req,name=UCount" json:"UCount"`
 	UpdateID  int64 `protobuf:"varint,101,req,name=UpdateID" json:"UpdateID"`
 	GroupID   int64 `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
-	UserID    int64 `protobuf:"varint,2,req,name=UserID" json:"UserID"`
+	UserID    int64 `protobuf:"varint,2,req,name=userID" json:"userID"`
 	InviterID int64 `protobuf:"varint,3,req,name=InviterID" json:"InviterID"`
 	Date      int64 `protobuf:"varint,4,req,name=Date" json:"Date"`
 }
@@ -1149,7 +1149,7 @@ type UpdateGroupParticipantDeleted struct {
 	UCount   int32 `protobuf:"varint,100,req,name=UCount" json:"UCount"`
 	UpdateID int64 `protobuf:"varint,101,req,name=UpdateID" json:"UpdateID"`
 	GroupID  int64 `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
-	UserID   int64 `protobuf:"varint,2,req,name=UserID" json:"UserID"`
+	UserID   int64 `protobuf:"varint,2,req,name=userID" json:"userID"`
 }
 
 func (m *UpdateGroupParticipantDeleted) Reset()         { *m = UpdateGroupParticipantDeleted{} }
@@ -1218,7 +1218,7 @@ type UpdateGroupParticipantAdmin struct {
 	UCount   int32 `protobuf:"varint,100,req,name=UCount" json:"UCount"`
 	UpdateID int64 `protobuf:"varint,101,req,name=UpdateID" json:"UpdateID"`
 	GroupID  int64 `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
-	UserID   int64 `protobuf:"varint,2,req,name=UserID" json:"UserID"`
+	UserID   int64 `protobuf:"varint,2,req,name=userID" json:"userID"`
 	IsAdmin  bool  `protobuf:"varint,3,req,name=IsAdmin" json:"IsAdmin"`
 }
 
@@ -4363,7 +4363,7 @@ func (m *UpdateUserTyping) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field userID", wireType)
 			}
 			m.UserID = 0
 			for shift := uint(0); ; shift += 7 {
@@ -4457,7 +4457,7 @@ func (m *UpdateUserTyping) Unmarshal(dAtA []byte) error {
 		}
 	}
 	if hasFields[0]&uint64(0x00000001) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("UserID")
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("userID")
 	}
 	if hasFields[0]&uint64(0x00000002) == 0 {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Action")
@@ -4506,7 +4506,7 @@ func (m *UpdateUserStatus) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field userID", wireType)
 			}
 			m.UserID = 0
 			for shift := uint(0); ; shift += 7 {
@@ -4580,7 +4580,7 @@ func (m *UpdateUserStatus) Unmarshal(dAtA []byte) error {
 		}
 	}
 	if hasFields[0]&uint64(0x00000001) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("UserID")
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("userID")
 	}
 	if hasFields[0]&uint64(0x00000002) == 0 {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Status")
@@ -4626,7 +4626,7 @@ func (m *UpdateUsername) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field userID", wireType)
 			}
 			m.UserID = 0
 			for shift := uint(0); ; shift += 7 {
@@ -4820,7 +4820,7 @@ func (m *UpdateUsername) Unmarshal(dAtA []byte) error {
 		}
 	}
 	if hasFields[0]&uint64(0x00000001) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("UserID")
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("userID")
 	}
 	if hasFields[0]&uint64(0x00000002) == 0 {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Username")
@@ -4878,7 +4878,7 @@ func (m *UpdateUserPhoto) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field userID", wireType)
 			}
 			m.UserID = 0
 			for shift := uint(0); ; shift += 7 {
@@ -4985,7 +4985,7 @@ func (m *UpdateUserPhoto) Unmarshal(dAtA []byte) error {
 		}
 	}
 	if hasFields[0]&uint64(0x00000001) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("UserID")
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("userID")
 	}
 	if hasFields[0]&uint64(0x00000002) == 0 {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("UCount")
@@ -5031,7 +5031,7 @@ func (m *UpdateNotifySettings) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field userID", wireType)
 			}
 			m.UserID = 0
 			for shift := uint(0); ; shift += 7 {
@@ -5173,7 +5173,7 @@ func (m *UpdateNotifySettings) Unmarshal(dAtA []byte) error {
 		}
 	}
 	if hasFields[0]&uint64(0x00000001) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("UserID")
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("userID")
 	}
 	if hasFields[0]&uint64(0x00000002) == 0 {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("NotifyPeer")
@@ -5245,7 +5245,7 @@ func (m *UpdateGroupParticipantAdd) Unmarshal(dAtA []byte) error {
 			hasFields[0] |= uint64(0x00000001)
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field userID", wireType)
 			}
 			m.UserID = 0
 			for shift := uint(0); ; shift += 7 {
@@ -5362,7 +5362,7 @@ func (m *UpdateGroupParticipantAdd) Unmarshal(dAtA []byte) error {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("GroupID")
 	}
 	if hasFields[0]&uint64(0x00000002) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("UserID")
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("userID")
 	}
 	if hasFields[0]&uint64(0x00000004) == 0 {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("InviterID")
@@ -5434,7 +5434,7 @@ func (m *UpdateGroupParticipantDeleted) Unmarshal(dAtA []byte) error {
 			hasFields[0] |= uint64(0x00000001)
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field userID", wireType)
 			}
 			m.UserID = 0
 			for shift := uint(0); ; shift += 7 {
@@ -5511,7 +5511,7 @@ func (m *UpdateGroupParticipantDeleted) Unmarshal(dAtA []byte) error {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("GroupID")
 	}
 	if hasFields[0]&uint64(0x00000002) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("UserID")
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("userID")
 	}
 	if hasFields[0]&uint64(0x00000004) == 0 {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("UCount")
@@ -5577,7 +5577,7 @@ func (m *UpdateGroupParticipantAdmin) Unmarshal(dAtA []byte) error {
 			hasFields[0] |= uint64(0x00000001)
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field userID", wireType)
 			}
 			m.UserID = 0
 			for shift := uint(0); ; shift += 7 {
@@ -5675,7 +5675,7 @@ func (m *UpdateGroupParticipantAdmin) Unmarshal(dAtA []byte) error {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("GroupID")
 	}
 	if hasFields[0]&uint64(0x00000002) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("UserID")
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("userID")
 	}
 	if hasFields[0]&uint64(0x00000004) == 0 {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("IsAdmin")

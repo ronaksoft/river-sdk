@@ -134,7 +134,7 @@ func (r *repoGroups) DeleteGroupMember(groupID, userID int64) error {
 	defer r.mx.Unlock()
 
 	dtoGP := new(dto.GroupsParticipants)
-	err := r.db.Where("GroupID = ? AND UserID = ?", groupID, userID).First(dtoGP).Error
+	err := r.db.Where("GroupID = ? AND userID = ?", groupID, userID).First(dtoGP).Error
 	if err == nil {
 		err = r.db.Delete(dtoGP).Error
 	}
@@ -161,13 +161,13 @@ func (r *repoGroups) SaveParticipants(groupID int64, participant *msg.GroupParti
 	defer r.mx.Unlock()
 
 	dtoGP := new(dto.GroupsParticipants)
-	err := r.db.Where("GroupID = ? AND UserID = ?", groupID, participant.UserID).First(dtoGP).Error
+	err := r.db.Where("GroupID = ? AND userID = ?", groupID, participant.UserID).First(dtoGP).Error
 	dtoGP.MapFrom(groupID, participant)
 	// if record does not exist, not found error returns
 	if err != nil {
 		return r.db.Create(dtoGP).Error
 	}
-	return r.db.Table(dtoGP.TableName()).Where("GroupID = ? AND UserID = ?", groupID, participant.UserID).Update(dtoGP).Error
+	return r.db.Table(dtoGP.TableName()).Where("GroupID = ? AND userID = ?", groupID, participant.UserID).Update(dtoGP).Error
 }
 
 func (r *repoGroups) GetParticipants(groupID int64) ([]*msg.GroupParticipant, error) {
@@ -193,7 +193,7 @@ func (r *repoGroups) DeleteGroupMemberMany(peerID int64, IDs []int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	return r.db.Where("GroupID= ? AND UserID IN (?)", peerID, IDs).Delete(dto.GroupsParticipants{}).Error
+	return r.db.Where("GroupID= ? AND userID IN (?)", peerID, IDs).Delete(dto.GroupsParticipants{}).Error
 }
 
 func (r *repoGroups) Delete(groupID int64) error {
@@ -214,7 +214,7 @@ func (r *repoGroups) UpdateGroupMemberType(groupID, userID int64, isAdmin bool) 
 		userType = int32(msg.ParticipantTypeAdmin)
 	}
 
-	return r.db.Table(dtoGP.TableName()).Where("GroupID = ? AND UserID = ?", groupID, userID).Updates(map[string]interface{}{
+	return r.db.Table(dtoGP.TableName()).Where("GroupID = ? AND userID = ?", groupID, userID).Updates(map[string]interface{}{
 		"Type": userType,
 	}).Error
 }

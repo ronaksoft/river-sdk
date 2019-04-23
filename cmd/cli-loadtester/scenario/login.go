@@ -23,7 +23,7 @@ func NewLogin(isFinal bool) shared.Screenwriter {
 // Play execute Login scenario
 func (s *Login) Play(act shared.Acter) {
 	if act.GetUserID() > 0 {
-		s.log(act, "Actor already have UserID", 0, 0)
+		s.log(act, "Actor already have userID", 0, 0)
 		return
 	}
 	if act.GetAuthID() == 0 {

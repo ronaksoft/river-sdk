@@ -445,7 +445,7 @@ func fnGetEntities(c *ishell.Context) []*msg.MessageEntity {
 		}
 
 		for {
-			c.Print(len(entities), "UserID: ")
+			c.Print(len(entities), "userID: ")
 			tmp, err := strconv.ParseInt(c.ReadLine(), 10, 64)
 			if err == nil {
 				userID = tmp

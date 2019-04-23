@@ -5,7 +5,7 @@ import "git.ronaksoftware.com/ronak/riversdk/msg"
 type GroupsParticipants struct {
 	dto
 	GroupID    int64  `gorm:"type:bigint;primary_key;column:GroupID" json:"GroupID"` // type is required for composite primary key
-	UserID     int64  `gorm:"type:bigint;primary_key;column:UserID" json:"UserID"`   // type is required for composite primary key
+	UserID     int64  `gorm:"type:bigint;primary_key;column:userID" json:"userID"`   // type is required for composite primary key
 	FirstName  string `gorm:"column:FirstName" json:"FirstName"`
 	LastName   string `gorm:"column:LastName" json:"LastName"`
 	Type       int32  `gorm:"column:Type" json:"Type"`

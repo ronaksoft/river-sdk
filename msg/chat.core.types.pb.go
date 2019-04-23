@@ -1193,7 +1193,7 @@ func (m *InputPeer) GetAccessHash() uint64 {
 
 // InputUser
 type InputUser struct {
-	UserID     int64  `protobuf:"varint,1,req,name=UserID" json:"UserID"`
+	UserID     int64  `protobuf:"varint,1,req,name=userID" json:"userID"`
 	AccessHash uint64 `protobuf:"fixed64,2,req,name=AccessHash" json:"AccessHash"`
 }
 
@@ -1847,7 +1847,7 @@ type MessageEntity struct {
 	Type   MessageEntityType `protobuf:"varint,1,req,name=Type,enum=msg.MessageEntityType" json:"Type"`
 	Offset int32             `protobuf:"varint,2,req,name=Offset" json:"Offset"`
 	Length int32             `protobuf:"varint,3,req,name=Length" json:"Length"`
-	UserID int64             `protobuf:"varint,4,opt,name=UserID" json:"UserID"`
+	UserID int64             `protobuf:"varint,4,opt,name=userID" json:"userID"`
 }
 
 func (m *MessageEntity) Reset()         { *m = MessageEntity{} }
@@ -2449,7 +2449,7 @@ func (m *GroupFull) GetNotifySettings() *PeerNotifySettings {
 
 // GroupParticipant
 type GroupParticipant struct {
-	UserID     int64           `protobuf:"varint,1,req,name=UserID" json:"UserID"`
+	UserID     int64           `protobuf:"varint,1,req,name=userID" json:"userID"`
 	FirstName  string          `protobuf:"bytes,2,req,name=FirstName" json:"FirstName"`
 	LastName   string          `protobuf:"bytes,3,req,name=LastName" json:"LastName"`
 	Type       ParticipantType `protobuf:"varint,4,req,name=Type,enum=msg.ParticipantType" json:"Type"`
@@ -6184,7 +6184,7 @@ func (m *InputUser) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field userID", wireType)
 			}
 			m.UserID = 0
 			for shift := uint(0); ; shift += 7 {
@@ -6229,7 +6229,7 @@ func (m *InputUser) Unmarshal(dAtA []byte) error {
 		}
 	}
 	if hasFields[0]&uint64(0x00000001) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("UserID")
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("userID")
 	}
 	if hasFields[0]&uint64(0x00000002) == 0 {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("AccessHash")
@@ -7828,7 +7828,7 @@ func (m *MessageEntity) Unmarshal(dAtA []byte) error {
 			hasFields[0] |= uint64(0x00000004)
 		case 4:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field userID", wireType)
 			}
 			m.UserID = 0
 			for shift := uint(0); ; shift += 7 {
@@ -9208,7 +9208,7 @@ func (m *GroupParticipant) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field userID", wireType)
 			}
 			m.UserID = 0
 			for shift := uint(0); ; shift += 7 {
@@ -9405,7 +9405,7 @@ func (m *GroupParticipant) Unmarshal(dAtA []byte) error {
 		}
 	}
 	if hasFields[0]&uint64(0x00000001) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("UserID")
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("userID")
 	}
 	if hasFields[0]&uint64(0x00000002) == 0 {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("FirstName")

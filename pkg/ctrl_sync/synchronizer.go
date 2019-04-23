@@ -40,7 +40,7 @@ type Controller struct {
 	updateAppliers       map[int64]domain.UpdateApplier
 	messageAppliers      map[int64]domain.MessageApplier
 	stopChannel          chan bool
-	UserID               int64
+	userID               int64
 
 	// delivered Message
 	deliveredMessagesMutex sync.Mutex
@@ -60,7 +60,7 @@ func NewSyncController(config Config) *Controller {
 	ctrl.networkCtrl = config.NetworkCtrl
 
 	// set default value to synced status
-	ctrl.updateSyncStatus(domain.Synced)
+	updateSyncStatus(ctrl, domain.Synced)
 
 	ctrl.updateAppliers = map[int64]domain.UpdateApplier{
 		msg.C_UpdateNewMessage:            ctrl.updateNewMessage,
@@ -93,21 +93,6 @@ func NewSyncController(config Config) *Controller {
 	ctrl.deliveredMessages = make(map[int64]bool, 0)
 
 	return ctrl
-}
-
-// updateSyncStatus
-func (ctrl *Controller) updateSyncStatus(newStatus domain.SyncStatus) {
-	if ctrl.syncStatus == newStatus {
-		return
-	}
-	logs.Info("Sync Controller Status Updated",
-		zap.String("Status", newStatus.ToString()),
-	)
-	ctrl.syncStatus = newStatus
-
-	if ctrl.onSyncStatusChange != nil {
-		ctrl.onSyncStatusChange(newStatus)
-	}
 }
 
 // watchDog
@@ -143,7 +128,7 @@ func (ctrl *Controller) sync() {
 		zap.Int64("UpdateID", ctrl.updateID),
 	)
 	// There is no need to sync when no user has been authorized
-	if ctrl.UserID == 0 {
+	if ctrl.userID == 0 {
 		return
 	}
 
@@ -151,7 +136,7 @@ func (ctrl *Controller) sync() {
 	ctrl.networkCtrl.WaitForNetwork()
 
 	// get updateID from server
-	serverUpdateID, err := ctrl.getUpdateState()
+	serverUpdateID, err := getUpdateState(ctrl)
 	if err != nil {
 		logs.Error("sync()-> getUpdateState()", zap.Error(err))
 		return
@@ -161,8 +146,8 @@ func (ctrl *Controller) sync() {
 	}
 
 	// Update the sync controller status
-	ctrl.updateSyncStatus(domain.Syncing)
-	defer ctrl.updateSyncStatus(domain.Synced)
+	updateSyncStatus(ctrl, domain.Syncing)
+	defer updateSyncStatus(ctrl, domain.Synced)
 
 	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSyncThreshold {
 		logs.Info("sync()-> Snapshot sync")
@@ -187,6 +172,56 @@ func (ctrl *Controller) sync() {
 		logs.Info("sync()-> Normal sync")
 		getUpdateDifference(ctrl, serverUpdateID+1) // +1 cuz in here we dont have serverUpdateID itself too
 	}
+}
+func updateSyncStatus(ctrl *Controller, newStatus domain.SyncStatus) {
+	if ctrl.syncStatus == newStatus {
+		return
+	}
+	logs.Info("Sync Controller Status Updated",
+		zap.String("Status", newStatus.ToString()),
+	)
+	ctrl.syncStatus = newStatus
+
+	if ctrl.onSyncStatusChange != nil {
+		ctrl.onSyncStatusChange(newStatus)
+	}
+}
+func getUpdateState(ctrl *Controller) (updateID int64, err error) {
+	updateID = 0
+	if !ctrl.networkCtrl.Connected() {
+		return -1, domain.ErrNoConnection
+	}
+
+	req := new(msg.UpdateGetState)
+	reqBytes, _ := req.Marshal()
+
+	// this waitGroup is required cuz our callbacks will be called in UIExecutor go routine
+	waitGroup := new(sync.WaitGroup)
+	waitGroup.Add(1)
+	_ = ctrl.queueCtrl.ExecuteRealtimeCommand(
+		uint64(domain.SequentialUniqueID()),
+		msg.C_UpdateGetState,
+		reqBytes,
+		func() {
+			defer waitGroup.Done()
+			err = domain.ErrRequestTimeout
+		},
+		func(m *msg.MessageEnvelope) {
+			defer waitGroup.Done()
+			switch m.Constructor {
+			case msg.C_UpdateState:
+				x := new(msg.UpdateState)
+				_ = x.Unmarshal(m.Message)
+				updateID = x.UpdateID
+			case msg.C_Error:
+				err = domain.ParseServerError(m.Message)
+			}
+		},
+		true,
+		false,
+	)
+	waitGroup.Wait()
+	return
 }
 func getContacts(ctrl *Controller) {
 	req := new(msg.ContactsGet)
@@ -408,51 +443,15 @@ func onGetDifferenceSucceed(ctrl *Controller, m *msg.MessageEnvelope) {
 	}
 }
 
-// SetUserID set Controller userID
 func (ctrl *Controller) SetUserID(userID int64) {
-	ctrl.UserID = userID
+	ctrl.userID = userID
 	logs.Debug("SetUserID()",
-		zap.Int64("UserID", userID),
+		zap.Int64("userID", userID),
 	)
 }
 
-// getUpdateState responsibility is to only get server updateID
-func (ctrl *Controller) getUpdateState() (updateID int64, err error) {
-	updateID = 0
-	if !ctrl.networkCtrl.Connected() {
-		return -1, domain.ErrNoConnection
-	}
-
-	req := new(msg.UpdateGetState)
-	reqBytes, _ := req.Marshal()
-
-	// this waitGroup is required cuz our callbacks will be called in UIExecutor go routine
-	waitGroup := new(sync.WaitGroup)
-	waitGroup.Add(1)
-	_ = ctrl.queueCtrl.ExecuteRealtimeCommand(
-		uint64(domain.SequentialUniqueID()),
-		msg.C_UpdateGetState,
-		reqBytes,
-		func() {
-			defer waitGroup.Done()
-			err = domain.ErrRequestTimeout
-		},
-		func(m *msg.MessageEnvelope) {
-			defer waitGroup.Done()
-			switch m.Constructor {
-			case msg.C_UpdateState:
-				x := new(msg.UpdateState)
-				_ = x.Unmarshal(m.Message)
-				updateID = x.UpdateID
-			case msg.C_Error:
-				err = domain.ParseServerError(m.Message)
-			}
-		},
-		true,
-		false,
-	)
-	waitGroup.Wait()
-	return
+func (ctrl *Controller) GetUserID() int64 {
+	return ctrl.userID
 }
 
 func (ctrl *Controller) isDeliveredMessage(id int64) bool {
@@ -510,9 +509,10 @@ func (ctrl *Controller) MessageHandler(messages []*msg.MessageEnvelope) {
 			zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
 		)
 
-		if m.Constructor == msg.C_Error {
+		switch m.Constructor {
+		case msg.C_Error:
 			err := new(msg.Error)
-			err.Unmarshal(m.Message)
+			_ = err.Unmarshal(m.Message)
 			logs.Error("MessageHandler() Received Error ", zap.String("Code", err.Code), zap.String("Item", err.Items))
 		}
 
@@ -638,15 +638,10 @@ func (ctrl *Controller) UpdateID() int64 {
 	return ctrl.updateID
 }
 
-// CheckSyncState enforce to check client updateID with server getState updateID
-func (ctrl *Controller) CheckSyncState() {
-	go ctrl.sync()
-}
-
 // ClearUpdateID reset updateID
 func (ctrl *Controller) ClearUpdateID() {
 	ctrl.updateID = 0
-	ctrl.UserID = 0
+	ctrl.userID = 0
 }
 
 // ContactImportFromServer import contact from server
@@ -665,6 +660,7 @@ func (ctrl *Controller) ContactImportFromServer() {
 	)
 }
 
+// GetSyncStatus
 func (ctrl *Controller) GetSyncStatus() domain.SyncStatus {
 	return ctrl.syncStatus
 }

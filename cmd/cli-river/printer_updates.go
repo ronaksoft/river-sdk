@@ -30,7 +30,7 @@ func UpdatePrinter(envelope *msg.UpdateEnvelope) {
 	case msg.C_UpdateUserTyping:
 		x := new(msg.UpdateUserTyping)
 		x.Unmarshal(envelope.Update)
-		logs.Message(fmt.Sprintf("UpdateUserTyping \t UserID:%d , Action:%s", x.UserID, x.Action.String()))
+		logs.Message(fmt.Sprintf("UpdateUserTyping \t userID:%d , Action:%s", x.UserID, x.Action.String()))
 
 	case msg.C_ClientUpdatePendingMessageDelivery:
 		x := new(msg.ClientUpdatePendingMessageDelivery)

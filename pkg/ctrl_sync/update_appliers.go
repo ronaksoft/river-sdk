@@ -57,7 +57,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	repo.Ctx().Users.SaveUser(x.Sender)
 
 	// if the sender is not myself increase dialog counter else just save message
-	if x.Message.SenderID != ctrl.UserID {
+	if x.Message.SenderID != ctrl.userID {
 		err := repo.Ctx().Messages.SaveNewMessage(x.Message, dialog, ctrl.connInfo.PickupUserID())
 		if err != nil {
 			logs.Error("updateNewMessage()-> SaveNewMessage()", zap.Error(err))
@@ -202,7 +202,7 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) []*msg.Upd
 		return []*msg.UpdateEnvelope{}
 	}
 
-	err := repo.Ctx().Dialogs.UpdateReadInboxMaxID(ctrl.UserID, x.Peer.ID, x.Peer.Type, x.MaxID)
+	err := repo.Ctx().Dialogs.UpdateReadInboxMaxID(ctrl.userID, x.Peer.ID, x.Peer.Type, x.MaxID)
 	if err != nil {
 		logs.Error("updateReadHistoryInbox() -> UpdateReadInboxMaxID()", zap.Error(err))
 	}
@@ -284,7 +284,7 @@ func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) []*msg.UpdateEnvel
 	x := new(msg.UpdateUsername)
 	x.Unmarshal(u.Update)
 
-	if x.UserID == ctrl.UserID {
+	if x.UserID == ctrl.userID {
 		ctrl.connInfo.ChangeUserID(x.UserID)
 		ctrl.connInfo.ChangeUsername(x.Username)
 		ctrl.connInfo.ChangeFirstName(x.FirstName)
