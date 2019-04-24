@@ -71,7 +71,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 			logDir = logDir[7:]
 		}
 		logFilePath := path.Join(logDir, fName)
-		logs.SetLogFilePath(logFilePath)
+		_ = logs.SetLogFilePath(logFilePath)
 		logs.Info("SetConfig() ", zap.String("Log File Path", logFilePath))
 	}
 

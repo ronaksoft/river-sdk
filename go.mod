@@ -7,6 +7,7 @@ require (
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
 	github.com/beeker1121/goque v2.0.1+incompatible
 	github.com/c2fo/testify v0.0.0-20150827203832-fba96363964a // indirect
+	github.com/certifi/gocertifi v0.0.0-20190415143156-92f724a62f3e // indirect
 	github.com/chzyer/logex v1.1.10 // indirect
 	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect
 	github.com/denisenkom/go-mssqldb v0.0.0-20190315220205-a8ed825ac853 // indirect
@@ -15,6 +16,7 @@ require (
 	github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5 // indirect
 	github.com/fatih/color v1.7.0
 	github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
+	github.com/getsentry/raven-go v0.2.0
 	github.com/go-sql-driver/mysql v1.4.0 // indirect
 	github.com/gobwas/httphead v0.0.0-20180130184737-2c6c146eadee // indirect
 	github.com/gobwas/pool v0.2.0

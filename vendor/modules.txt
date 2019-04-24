@@ -7,6 +7,8 @@ github.com/abiosoft/readline
 github.com/beeker1121/goque
 # github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973
 github.com/beorn7/perks/quantile
+# github.com/certifi/gocertifi v0.0.0-20190415143156-92f724a62f3e
+github.com/certifi/gocertifi
 # github.com/doug-martin/goqu v5.0.0+incompatible
 github.com/doug-martin/goqu
 # github.com/dustin/go-humanize v1.0.0
@@ -15,6 +17,8 @@ github.com/dustin/go-humanize
 github.com/fatih/color
 # github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568
 github.com/flynn-archive/go-shlex
+# github.com/getsentry/raven-go v0.2.0
+github.com/getsentry/raven-go
 # github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 github.com/globalsign/mgo
 github.com/globalsign/mgo/bson
@@ -97,6 +101,8 @@ github.com/nats-io/nuid
 github.com/nyaruka/phonenumbers
 # github.com/olekukonko/tablewriter v0.0.1
 github.com/olekukonko/tablewriter
+# github.com/pkg/errors v0.8.1
+github.com/pkg/errors
 # github.com/prometheus/client_golang v0.9.2
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/promhttp
