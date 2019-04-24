@@ -2,7 +2,6 @@ package main
 
 import (
 	"git.ronaksoftware.com/ronak/riversdk/msg"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"go.uber.org/zap"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )

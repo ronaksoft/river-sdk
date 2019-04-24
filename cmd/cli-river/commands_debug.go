@@ -6,7 +6,6 @@ import (
 	"mime"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
 

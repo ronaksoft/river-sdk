@@ -7,10 +7,10 @@ import (
 )
 
 var (
-	_Shell *ishell.Shell
-	_NATS  *nats.Conn
-	_Log                     *zap.Logger
-	_LogLevel                zap.AtomicLevel
+	_Shell    *ishell.Shell
+	_NATS     *nats.Conn
+	_Log      *zap.Logger
+	_LogLevel zap.AtomicLevel
 )
 
 func init() {

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 
 	"git.ronaksoftware.com/ronak/riversdk/msg"
@@ -91,8 +89,8 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			})
 		}
 		tableContacts.Render()
-		logs.Message("\r\n" + bufUsers.String())
-		logs.Message("\r\n" + bufContacts.String())
+		_Log.Info("\r\n" + bufUsers.String())
+		_Log.Info("\r\n" + bufContacts.String())
 	case msg.C_MessagesDialogs:
 		x := new(msg.MessagesDialogs)
 		x.Unmarshal(envelope.Message)
@@ -142,10 +140,10 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		}
 		tableGroup.Render()
 
-		logs.Message("\r\n" + fmt.Sprintf("Total: %d", x.Count))
-		logs.Message("\r\n" + bufDialogs.String())
-		logs.Message("\r\n" + bufUsers.String())
-		logs.Message("\r\n" + bufGroup.String())
+		_Log.Info("\r\n" + fmt.Sprintf("Total: %d", x.Count))
+		_Log.Info("\r\n" + bufDialogs.String())
+		_Log.Info("\r\n" + bufUsers.String())
+		_Log.Info("\r\n" + bufGroup.String())
 	case msg.C_Dialog:
 		x := new(msg.Dialog)
 		x.Unmarshal(envelope.Message)
@@ -162,20 +160,20 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			fmt.Sprintf("%d", x.AccessHash),
 		})
 		table.Render()
-		logs.Message("\r\n" + buf.String())
+		_Log.Info("\r\n" + buf.String())
 
 	case msg.C_MessagesSent:
 		x := new(msg.MessagesSent)
 		x.Unmarshal(envelope.Message)
-		logs.Message(fmt.Sprintf("MessagesSent \t MsgID:%d , RandomID:%d", x.MessageID, x.RandomID))
+		_Log.Info(fmt.Sprintf("MessagesSent \t MsgID:%d , RandomID:%d", x.MessageID, x.RandomID))
 	case msg.C_Bool:
 		x := new(msg.Bool)
 		x.Unmarshal(envelope.Message)
-		logs.Message(fmt.Sprintf("Bool \t Res:%t", x.Result))
+		_Log.Info(fmt.Sprintf("Bool \t Res:%t", x.Result))
 	case msg.C_Error:
 		x := new(msg.Error)
 		x.Unmarshal(envelope.Message)
-		logs.Message(fmt.Sprintf("Error \t %s:%s", x.Code, x.Items))
+		_Log.Info(fmt.Sprintf("Error \t %s:%s", x.Code, x.Items))
 
 	case msg.C_MessagesMany:
 
@@ -215,9 +213,9 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		}
 		tableUsers.Render()
 
-		logs.Message(fmt.Sprintf("Total Message Count: %d", len(x.Messages)))
-		logs.Message("\r\n" + bufMessages.String())
-		logs.Message("\r\n" + bufUsers.String())
+		_Log.Info(fmt.Sprintf("Total Message Count: %d", len(x.Messages)))
+		_Log.Info("\r\n" + bufMessages.String())
+		_Log.Info("\r\n" + bufUsers.String())
 	case msg.C_UsersMany:
 
 		x := new(msg.UsersMany)
@@ -236,12 +234,12 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			})
 		}
 		tableUsers.Render()
-		logs.Message("\r\n" + bufUsers.String())
+		_Log.Info("\r\n" + bufUsers.String())
 	case msg.C_UpdateDifference:
 		x := new(msg.UpdateDifference)
 		x.Unmarshal(envelope.Message)
 
-		logs.Message(fmt.Sprintf("Received UpdateDifference \t MaxID:%d \t MinID:%d \t UpdateCounts:%d", x.MaxUpdateID, x.MinUpdateID, len(x.Updates)))
+		_Log.Info(fmt.Sprintf("Received UpdateDifference \t MaxID:%d \t MinID:%d \t UpdateCounts:%d", x.MaxUpdateID, x.MinUpdateID, len(x.Updates)))
 
 		for _, v := range x.Updates {
 			if v.Constructor == msg.C_UpdateNewMessage {
@@ -272,33 +270,33 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		})
 
 		tableMsg.Render()
-		logs.Message("\r\n" + bufMsg.String())
+		_Log.Info("\r\n" + bufMsg.String())
 
 	case msg.C_GroupFull:
 		x := new(msg.GroupFull)
 		err := x.Unmarshal(envelope.Message)
 		if err != nil {
-			logs.Error("Failed to unmarshal", zap.Error(err))
+			_Log.Error("Failed to unmarshal", zap.Error(err))
 			return
 		}
 		if x.Group != nil {
-			logs.Message(fmt.Sprintf("GroupID : %d \t Title : %s \t Flags :%v", x.Group.ID, x.Group.Title, x.Group.Flags))
+			_Log.Info(fmt.Sprintf("GroupID : %d \t Title : %s \t Flags :%v", x.Group.ID, x.Group.Title, x.Group.Flags))
 			if x.Group.Photo == nil {
-				logs.Message("GroupPhoto is null")
+				_Log.Info("GroupPhoto is null")
 			} else {
-				logs.Message("GroupPhoto", zap.String("Big", x.Group.Photo.PhotoBig.String()), zap.String("Small", x.Group.Photo.PhotoSmall.String()))
+				_Log.Info("GroupPhoto", zap.String("Big", x.Group.Photo.PhotoBig.String()), zap.String("Small", x.Group.Photo.PhotoSmall.String()))
 			}
 
 		} else {
-			logs.Error("x.Group is null")
+			_Log.Error("x.Group is null")
 		}
 		if x.NotifySettings != nil {
-			logs.Message(fmt.Sprintf("NotifySettings Sound: %s \t Mute : %d \t Flag : %d", x.NotifySettings.Sound, x.NotifySettings.MuteUntil, x.NotifySettings.Flags))
+			_Log.Info(fmt.Sprintf("NotifySettings Sound: %s \t Mute : %d \t Flag : %d", x.NotifySettings.Sound, x.NotifySettings.MuteUntil, x.NotifySettings.Flags))
 		} else {
-			logs.Error("x.NotifySettings is null")
+			_Log.Error("x.NotifySettings is null")
 		}
 		if x.Participants != nil {
-			logs.Message(fmt.Sprintf("Participants Count : %d ", len(x.Participants)))
+			_Log.Info(fmt.Sprintf("Participants Count : %d ", len(x.Participants)))
 
 			bufUsers := new(bytes.Buffer)
 			tableUsers := tablewriter.NewWriter(bufUsers)
@@ -316,10 +314,10 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 				})
 			}
 			tableUsers.Render()
-			logs.Message("\r\n" + bufUsers.String())
+			_Log.Info("\r\n" + bufUsers.String())
 
 		} else {
-			logs.Error("x.Participants is null")
+			_Log.Error("x.Participants is null")
 		}
 
 	case msg.C_InputUser:
@@ -335,21 +333,21 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			fmt.Sprintf("%d", x.AccessHash),
 		})
 		tableUsers.Render()
-		logs.Message("\r\n" + bufUsers.String())
+		_Log.Info("\r\n" + bufUsers.String())
 	case msg.C_SystemServerTime:
 		x := new(msg.SystemServerTime)
 		x.Unmarshal(envelope.Message)
 		serverTime := x.Timestamp
 		clientTime := time.Now().Unix()
 		delta := serverTime - clientTime
-		logs.Message(fmt.Sprintf("ServerTime : %d \t ClientTime : %d \t Delta: %d", serverTime, clientTime, delta))
+		_Log.Info(fmt.Sprintf("ServerTime : %d \t ClientTime : %d \t Delta: %d", serverTime, clientTime, delta))
 	case msg.C_UpdateState:
 		x := new(msg.UpdateState)
 		x.Unmarshal(envelope.Message)
-		logs.Message("\r\n" + x.String())
+		_Log.Info("\r\n" + x.String())
 	default:
 		constructorName, _ := msg.ConstructorNames[envelope.Constructor]
-		logs.Message("DEFAULT",
+		_Log.Info("DEFAULT",
 			zap.String("ConstructorName", constructorName),
 			zap.Int64("Constructor", envelope.Constructor),
 		)

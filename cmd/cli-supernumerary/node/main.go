@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	_node *Node
-	_Log                     *zap.Logger
-	_LogLevel                zap.AtomicLevel
+	_node     *Node
+	_Log      *zap.Logger
+	_LogLevel zap.AtomicLevel
 )
 
 func init() {

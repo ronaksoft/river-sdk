@@ -2,9 +2,8 @@ package main
 
 import (
 	"git.ronaksoftware.com/ronak/riversdk/msg"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"go.uber.org/zap"
-	ishell "gopkg.in/abiosoft/ishell.v2"
+	"gopkg.in/abiosoft/ishell.v2"
 )
 
 var Group = &ishell.Cmd{
@@ -20,7 +19,7 @@ var Create = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsCreate, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -39,7 +38,7 @@ var AddUser = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsAddUser, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -57,7 +56,7 @@ var DeleteUser = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsDeleteUser, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -73,7 +72,7 @@ var EditTitle = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsEditTitle, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -88,7 +87,7 @@ var GetFull = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsGetFull, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -108,7 +107,7 @@ var UpdateAdmin = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsUpdateAdmin, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -124,7 +123,7 @@ var ToggleAdmins = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsToggleAdmins, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -146,7 +145,7 @@ var GroupDownloadPhotoBig = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		groupID := fnGetGroupID(c)
 		strFilePath := _SDK.GroupGetPhotoBig(groupID)
-		logs.Info("File Download Complete", zap.String("path", strFilePath))
+		_Log.Info("File Download Complete", zap.String("path", strFilePath))
 
 	},
 }
@@ -156,7 +155,7 @@ var GroupDownloadPhotoSmall = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		groupID := fnGetGroupID(c)
 		strFilePath := _SDK.GroupGetPhotoSmall(groupID)
-		logs.Info("File Download Complete", zap.String("path", strFilePath))
+		_Log.Info("File Download Complete", zap.String("path", strFilePath))
 	},
 }
 
@@ -169,7 +168,7 @@ var GroupRemovePhoto = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsRemovePhoto, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
