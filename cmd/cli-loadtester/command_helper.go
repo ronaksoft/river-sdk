@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/controller"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/logs"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/report"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )
 

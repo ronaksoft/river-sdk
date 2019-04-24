@@ -696,7 +696,6 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 		r.releaseDelegate(requestID)
 	}
 
-
 	// If this request must be sent to the server then executeRemoteCommand
 	if serverForce {
 		executeRemoteCommand(

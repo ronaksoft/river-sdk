@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/logs"
 
 	"go.uber.org/zap"
 

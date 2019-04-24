@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/logs"
 	"go.uber.org/zap"
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/pcap_parser"

@@ -6,8 +6,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/logs"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 )
 
 // Report collects reporters statistics

@@ -150,4 +150,3 @@ func (d *MainDelegateDummy) OnDownloadError(messageID, requestID int64, filePath
 		zap.String("FilePath", filePath),
 	)
 }
-

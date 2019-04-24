@@ -10,25 +10,31 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/actor"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/controller"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/logs"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/pcap_parser"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/report"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/scenario"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/supernumerary"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
-	ishell "gopkg.in/abiosoft/ishell.v2"
+	"gopkg.in/abiosoft/ishell.v2"
 	// _ "net/http/pprof"
 )
 
 var (
+	_Log      *zap.Logger
+	_LogLevel zap.AtomicLevel
 	_Shell    *ishell.Shell
 	_Reporter shared.Reporter
 )
 
 func init() {
+	_LogLevel = zap.NewAtomicLevelAt(zap.DebugLevel)
+	cfg := zap.NewProductionConfig()
+	cfg.Level = _LogLevel
+	_Log, _ = cfg.Build()
 
 	// Initialize Shell
 	_Shell = ishell.New()

@@ -6,7 +6,7 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/logs"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )
 
