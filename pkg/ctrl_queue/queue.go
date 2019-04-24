@@ -99,13 +99,13 @@ func (ctrl *Controller) distributor() {
 		}
 
 		if !ctrl.IsRequestCancelled(int64(req.ID)) {
-			logs.Debug("distributor() Request peeked from waiting list",
+			logs.Debug("QueueController::distributor() Request peeked from waiting list",
 				zap.Uint64("RequestID", req.ID),
 				zap.String("RequestName", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
 			)
 			go ctrl.executor(req)
 		} else {
-			logs.Debug("distributor() Request cancelled",
+			logs.Debug("QueueController::distributor() Request cancelled",
 				zap.Uint64("RequestID", req.ID),
 				zap.String("RequestName", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
 			)
@@ -141,7 +141,7 @@ func (ctrl *Controller) addToWaitingList(req *request) {
 		logs.Error("addToWaitingList()->Enqueue()", zap.Error(err))
 		return
 	}
-	logs.Debug("addToWaitingList() Request added to waiting list",
+	logs.Debug("QueueController::addToWaitingList() Request added to waiting list",
 		zap.String("Constructor", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
 		zap.Uint64("RequestID", req.MessageEnvelope.RequestID),
 	)
@@ -204,7 +204,7 @@ func (ctrl *Controller) reinitializePendingMessages() {
 func (ctrl *Controller) executor(req request) {
 	reqCallbacks := domain.GetRequestCallback(req.ID)
 	if reqCallbacks == nil {
-		logs.Debug("executor() Callback not found",
+		logs.Debug("QueueController::executor() Callback not found",
 			zap.Uint64("RequestID", req.ID),
 		)
 
@@ -219,7 +219,7 @@ func (ctrl *Controller) executor(req request) {
 	if req.Timeout == 0 {
 		req.Timeout = domain.WebsocketRequestTime
 	}
-	logs.Debug("executor() Request handover to network controller",
+	logs.Debug("QueueController::executor() Request handover to network controller",
 		zap.Uint64("RequestID", req.ID),
 	)
 
@@ -261,7 +261,7 @@ func (ctrl *Controller) executor(req request) {
 		}
 
 	case res := <-reqCallbacks.ResponseChannel:
-		logs.Debug("executor() :: ResponseChannel received signal",
+		logs.Debug("QueueController::executor() ResponseChannel received signal",
 			zap.String("ConstructorName", msg.ConstructorNames[res.Constructor]),
 			zap.Uint64("RequestID", res.RequestID),
 		)
@@ -306,7 +306,7 @@ func (ctrl *Controller) ExecuteRealtimeCommand(requestID uint64, constructor int
 		if reqCB != nil {
 			select {
 			case <-time.After(domain.WebsocketDirectTime):
-				logs.Debug("ExecuteRealtimeCommand()->execBlock() : Timeout",
+				logs.Debug("QueueController::ExecuteRealtimeCommand()->execBlock() : Timeout",
 					zap.String("ConstructorName", msg.ConstructorNames[req.Constructor]),
 					zap.Uint64("RequestID", requestID),
 				)
@@ -320,7 +320,7 @@ func (ctrl *Controller) ExecuteRealtimeCommand(requestID uint64, constructor int
 				}
 				return domain.ErrRequestTimeout
 			case res := <-reqCB.ResponseChannel:
-				logs.Debug("ExecuteRealtimeCommand()->execBlock()  : Success",
+				logs.Debug("QueueController::ExecuteRealtimeCommand()->execBlock()  : Success",
 					zap.String("ConstructorName", msg.ConstructorNames[req.Constructor]),
 					zap.Uint64("RequestID", requestID),
 				)
@@ -333,7 +333,7 @@ func (ctrl *Controller) ExecuteRealtimeCommand(requestID uint64, constructor int
 				}
 			}
 		} else {
-			logs.Debug("ExecuteRealtimeCommand()->execBlock()  : RequestCallback not found",
+			logs.Debug("QueueController::ExecuteRealtimeCommand()->execBlock()  : RequestCallback not found",
 				zap.String("ConstructorName", msg.ConstructorNames[req.Constructor]),
 				zap.Uint64("RequestID", requestID),
 			)
@@ -352,7 +352,7 @@ func (ctrl *Controller) ExecuteRealtimeCommand(requestID uint64, constructor int
 
 // ExecuteCommand put request in queue and distributor will execute it later
 func (ctrl *Controller) ExecuteCommand(requestID uint64, constructor int64, requestBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, isUICallback bool) {
-	logs.Debug("ExecuteCommand()",
+	logs.Debug("QueueController::ExecuteCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 		zap.Uint64("RequestID", requestID),
 	)
@@ -375,7 +375,7 @@ func (ctrl *Controller) ExecuteCommand(requestID uint64, constructor int64, requ
 
 // Start queue
 func (ctrl *Controller) Start() {
-	logs.Info("Queue Controller Start")
+	logs.Info("QueueController:: Start")
 
 	// ctrl.reinitializePendingMessages()
 
