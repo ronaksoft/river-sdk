@@ -192,7 +192,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			if err != nil {
 				logs.Error("updateNewMessage() -> Groups.DeleteAllGroupMember() Failed", zap.Error(err))
 			}
-			//delete MessageHole
+			// delete MessageHole
 			err = DeleteMessageHole(x.Message.PeerID)
 			if err != nil {
 				logs.Error("updateNewMessage() -> DeleteMessageHole1() Failed", zap.Error(err))

@@ -56,7 +56,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	if conf.Logger != nil {
 		// set logger
 		r.logger = conf.Logger
-		logs.SetLogger(func(logLevel int, msg string) {
+		logs.SetHook(func(logLevel int, msg string) {
 			r.logger.Log(logLevel, msg)
 		})
 	}
