@@ -12,6 +12,7 @@ var (
 )
 
 func init() {
+	_LogLevel = zap.NewAtomicLevelAt(zapcore.InfoLevel)
 	_Log = zap.New(
 		zapcore.NewCore(
 			zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
