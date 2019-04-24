@@ -9,6 +9,8 @@ import (
 var (
 	_Log      *zap.Logger
 	_LogLevel zap.AtomicLevel
+	_UserID   int64
+	_AuthID   int64
 )
 
 func init() {
@@ -28,7 +30,7 @@ func init() {
 	)
 	_Sentry, err := NewSentryCore(zapcore.ErrorLevel, nil)
 	if err != nil {
-		return 
+		return
 	}
 	_Log = _Log.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
 		return zapcore.NewTee(core, _Sentry)

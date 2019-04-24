@@ -1,8 +1,8 @@
 package logs
 
 import (
-	"github.com/getsentry/raven-go"
 	"testing"
+	"time"
 )
 
 /*
@@ -15,14 +15,7 @@ import (
 */
 
 func TestSentry(t *testing.T) {
-	err := raven.SetDSN("***REMOVED***")
-	if err != nil {
-		t.Error(err)
-	}
-	raven.CaptureMessageAndWait("This is a message from Ehsan N. Moosa",
-		map[string]string{
-			"Label1": "v1",
-			"Label2": "v2",
-		},
-	)
+	_Log.Debug("This should not be sentry")
+	_Log.Error("This goes to sentry")
+	time.Sleep(5 * time.Second)
 }

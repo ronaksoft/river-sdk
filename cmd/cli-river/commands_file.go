@@ -56,7 +56,7 @@ var Upload = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -92,7 +92,7 @@ var DownloadMultiConnection = &ishell.Cmd{
 
 			err := x.Unmarshal(m.Media)
 			if err != nil {
-				logs.Error("Error", zap.Error(err))
+				_Log.Error("Error", zap.Error(err))
 				return
 			}
 
@@ -124,17 +124,17 @@ var DownloadMultiConnection = &ishell.Cmd{
 		strName := strconv.FormatInt(domain.SequentialUniqueID(), 10) + ".tmp"
 		f, err := os.Create(strName)
 		if err != nil {
-			logs.Error("Error", zap.Error(err))
+			_Log.Error("Error", zap.Error(err))
 		}
 		defer f.Close()
 		for partIdx, buff := range fileBuff {
 			position := partIdx * domain.FilePayloadSize
 			_, err := f.WriteAt(buff, int64(position))
 			if err != nil {
-				logs.Error("Error", zap.Error(err))
+				_Log.Error("Error", zap.Error(err))
 			}
 		}
-		logs.Info("File save Completed :", zap.String("fileName", f.Name()))
+		_Log.Info("File save Completed :", zap.String("fileName", f.Name()))
 	},
 }
 
@@ -166,7 +166,7 @@ var ShareContact = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSendMedia, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -179,7 +179,7 @@ var DownloadThumbnail = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		messageID := fnGetMessageID(c)
 		strFilePath := _SDK.FileDownloadThumbnail(messageID)
-		logs.Info("File Download Complete", zap.String("path", strFilePath))
+		_Log.Info("File Download Complete", zap.String("path", strFilePath))
 	},
 }
 
@@ -324,7 +324,7 @@ func init() {
 func downloadWorker(workerIdx int, wg *sync.WaitGroup, partQueue chan int, fileBuff map[int][]byte, fileLock *sync.Mutex, x *msg.MediaDocument) {
 	defer wg.Done()
 
-	logs.Info("Worker Started :", zap.Int("worker", workerIdx))
+	_Log.Info("Worker Started :", zap.Int("worker", workerIdx))
 	for {
 		select {
 		case partIdx := <-partQueue:
@@ -353,26 +353,26 @@ func downloadWorker(workerIdx int, wg *sync.WaitGroup, partQueue chan int, fileB
 
 			// Send
 			for _SDK.GetNetworkStatus() == int32(domain.NetworkDisconnected) || _SDK.GetNetworkStatus() == int32(domain.NetworkConnecting) {
-				logs.Warn("network is not connected", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx))
+				_Log.Warn("network is not connected", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx))
 				time.Sleep(500 * time.Millisecond)
 			}
 
-			logs.Debug("send download request", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx))
+			_Log.Debug("send download request", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx))
 			res, err := ctx.Send(envelop)
 
 			if err == nil {
 				responseID := res.RequestID
 				if requestID != responseID {
-					logs.Warn("RequestIDs are not equal", zap.Uint64("reqID", requestID), zap.Uint64("resID", responseID))
+					_Log.Warn("RequestIDs are not equal", zap.Uint64("reqID", requestID), zap.Uint64("resID", responseID))
 				} else {
-					logs.Debug("RequestIDs are equal", zap.Uint64("reqID", requestID), zap.Uint64("resID", responseID))
+					_Log.Debug("RequestIDs are equal", zap.Uint64("reqID", requestID), zap.Uint64("resID", responseID))
 				}
 
 				switch res.Constructor {
 				case msg.C_Error:
 					x := new(msg.Error)
 					x.Unmarshal(res.Message)
-					logs.Error("received Error response", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx), zap.String("Code", x.Code), zap.String("Item", x.Items))
+					_Log.Error("received Error response", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx), zap.String("Code", x.Code), zap.String("Item", x.Items))
 					// on error add to queue again
 					partQueue <- partIdx
 				case msg.C_File:
@@ -381,7 +381,7 @@ func downloadWorker(workerIdx int, wg *sync.WaitGroup, partQueue chan int, fileB
 					if err != nil {
 						// on error add to queue again
 						partQueue <- partIdx
-						logs.Error("failed to unmarshal C_File", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx), zap.Error(err))
+						_Log.Error("failed to unmarshal C_File", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx), zap.Error(err))
 					} else {
 						fileLock.Lock()
 						fileBuff[partIdx] = x.Bytes
@@ -390,16 +390,16 @@ func downloadWorker(workerIdx int, wg *sync.WaitGroup, partQueue chan int, fileB
 				default:
 					// on error add to queue again
 					partQueue <- partIdx
-					logs.Error("received unknown response", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx), zap.Error(err))
+					_Log.Error("received unknown response", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx), zap.Error(err))
 				}
 			} else {
 				// on error add to queue again
 				partQueue <- partIdx
-				logs.Error("downloadWorker()", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx), zap.Error(err))
+				_Log.Error("downloadWorker()", zap.Int("worker", workerIdx), zap.Int("PartIdx", partIdx), zap.Error(err))
 			}
 
 		default:
-			logs.Info("Worker Exited :", zap.Int("worker", workerIdx))
+			_Log.Info("Worker Exited :", zap.Int("worker", workerIdx))
 			return
 		}
 	}

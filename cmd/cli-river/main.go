@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk"
 	"github.com/fatih/color"
+	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/abiosoft/ishell.v2"
 )
@@ -16,10 +17,16 @@ var (
 var (
 	_Shell                   *ishell.Shell
 	_SDK                     *riversdk.River
+	_Log                     *zap.Logger
+	_LogLevel                zap.AtomicLevel
 	green, red, yellow, blue func(format string, a ...interface{}) string
 )
 
 func main() {
+	_LogLevel = zap.NewAtomicLevelAt(zap.DebugLevel)
+	cfg := zap.NewProductionConfig()
+	cfg.Level = _LogLevel
+	_Log, _ = cfg.Build()
 
 	green = color.New(color.FgHiGreen).SprintfFunc()
 	red = color.New(color.FgHiRed).SprintfFunc()

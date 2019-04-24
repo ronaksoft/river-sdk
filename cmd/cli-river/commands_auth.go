@@ -2,7 +2,6 @@ package main
 
 import (
 	"git.ronaksoftware.com/ronak/riversdk/msg"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"
 )
@@ -19,7 +18,7 @@ var AuthCheckPhone = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthCheckPhone, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -34,7 +33,7 @@ var AuthSendCode = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthSendCode, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -54,7 +53,7 @@ var AuthRegister = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthRegister, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -73,7 +72,7 @@ var AuthLogin = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthLogin, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -85,7 +84,7 @@ var AuthLogout = &ishell.Cmd{
 	Name: "Logout",
 	Func: func(c *ishell.Context) {
 		if _, err := _SDK.Logout(true, 0); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		}
 	},
 }
@@ -97,7 +96,7 @@ var AuthRecall = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthRecall, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -113,7 +112,7 @@ var AuthLoginByToken = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthLoginByToken, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}

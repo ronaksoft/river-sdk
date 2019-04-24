@@ -2,8 +2,8 @@ package main
 
 import (
 	"git.ronaksoftware.com/ronak/riversdk/msg"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"gopkg.in/abiosoft/ishell.v2"
 )
 
@@ -29,7 +29,7 @@ var SdkSetLogLevel = &ishell.Cmd{
 		choiceIndex := c.MultiChoice([]string{
 			"Debug", "Info", "Warn", "Error",
 		}, "Level")
-		logs.SetLogLevel(choiceIndex - 1)
+		_LogLevel.SetLevel(zapcore.Level(choiceIndex - 1))
 	},
 }
 
@@ -43,7 +43,7 @@ var SdkGetDiffrence = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_UpdateGetDifference, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -58,7 +58,7 @@ var SdkGetServerTime = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_SystemGetServerTime, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -73,7 +73,7 @@ var SdkUpdateGetState = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_UpdateGetState, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}

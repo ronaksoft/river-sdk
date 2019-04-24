@@ -653,19 +653,14 @@ func (r *River) Stop() {
 // This is a wrapper function to pass the request to the queueController, to be passed to networkController for final
 // delivery to the server.
 func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate, blockingMode, serverForce bool) (requestID int64, err error) {
-	// deleteMe
-	cmdID := fmt.Sprintf("%v : ", time.Now().UnixNano())
-	logs.Debug(cmdID + "SDK::ExecuteCommand() 1 ExecuteCommand Started req:" + msg.ConstructorNames[constructor])
-	defer logs.Debug(cmdID + "SDK::ExecuteCommand() 7 ExecuteCommand Ended req:" + msg.ConstructorNames[constructor])
-
-	commandBytesDump := deepCopy(commandBytes)
-
 	if _, ok := msg.ConstructorNames[constructor]; !ok {
 		return 0, domain.ErrInvalidConstructor
 	}
+
+	commandBytesDump := deepCopy(commandBytes)
+
 	waitGroup := new(sync.WaitGroup)
 	requestID = domain.SequentialUniqueID()
-
 	logs.Debug("River::ExecuteCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
@@ -673,7 +668,6 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	// if function is in blocking mode set the waitGroup to block until the job is done, otherwise
 	// save 'delegate' into delegates list to be fetched later.
 	if blockingMode {
-		logs.Debug(cmdID + "SDK::ExecuteCommand() 2 waitGroup.Add(1) / defer")
 		waitGroup.Add(1)
 		defer waitGroup.Wait()
 	} else if delegate != nil {
@@ -684,78 +678,27 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 
 	// Timeout Callback
 	timeoutCallback := func() {
-		logs.Debug(cmdID + "SDK::ExecuteCommand() 3 timeout called")
 		if blockingMode {
 			defer waitGroup.Done()
 		}
 		err = domain.ErrRequestTimeout
 		delegate.OnTimeout(err)
 		r.releaseDelegate(requestID)
-		logs.Debug(cmdID + "SDK::ExecuteCommand() 4 timeout ended")
-
 	}
 
 	// Success Callback
 	successCallback := func(envelope *msg.MessageEnvelope) {
-		logs.Debug(cmdID + "SDK::ExecuteCommand() 5 success called")
 		if blockingMode {
 			defer waitGroup.Done()
 		}
 		b, _ := envelope.Marshal()
 		delegate.OnComplete(b)
 		r.releaseDelegate(requestID)
-
-		logs.Debug(cmdID + "SDK::ExecuteCommand() 6 success ended")
-
 	}
-	if !serverForce {
-		_, isRealTimeRequest := r.realTimeCommands[constructor]
-		if isRealTimeRequest {
-			err := r.queueCtrl.ExecuteRealtimeCommand(
-				uint64(requestID),
-				constructor,
-				commandBytesDump,
-				timeoutCallback,
-				successCallback,
-				blockingMode,
-				true,
-			)
-			if err != nil && delegate != nil {
-				logs.Error("ExecuteRealtimeCommand()", zap.Error(err))
-				delegate.OnTimeout(err)
-			}
-		} else {
-			// else pass the request to queue
-			_, ok := r.localCommands[constructor]
-			if ok {
-				execBlock := func() {
-					executeLocalCommand(
-						r,
-						uint64(requestID),
-						constructor,
-						commandBytesDump,
-						timeoutCallback,
-						successCallback,
-					)
-				}
-				if blockingMode {
-					execBlock()
-				} else {
-					go execBlock()
-				}
 
-			} else {
-				executeRemoteCommand(
-					r,
-					uint64(requestID),
-					constructor,
-					commandBytesDump,
-					timeoutCallback,
-					successCallback,
-				)
-			}
-		}
-	} else {
+
+	// If this request must be sent to the server then executeRemoteCommand
+	if serverForce {
 		executeRemoteCommand(
 			r,
 			uint64(requestID),
@@ -764,7 +707,59 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 			timeoutCallback,
 			successCallback,
 		)
+		return
 	}
+
+	// If the constructor is a realtime command, then just send it to the server
+	if _, ok := r.realTimeCommands[constructor]; ok {
+		err = r.queueCtrl.ExecuteRealtimeCommand(
+			uint64(requestID),
+			constructor,
+			commandBytesDump,
+			timeoutCallback,
+			successCallback,
+			blockingMode,
+			true,
+		)
+		if err != nil {
+			logs.Error("ExecuteRealtimeCommand()", zap.Error(err))
+			if delegate != nil {
+				delegate.OnTimeout(err)
+			}
+		}
+		return
+	}
+
+	// If the constructor is a local command then
+	_, ok := r.localCommands[constructor]
+	if ok {
+		execBlock := func() {
+			executeLocalCommand(
+				r,
+				uint64(requestID),
+				constructor,
+				commandBytesDump,
+				timeoutCallback,
+				successCallback,
+			)
+		}
+		if blockingMode {
+			execBlock()
+		} else {
+			go execBlock()
+		}
+		return
+	}
+
+	// If we reached here, then execute the remote commands
+	executeRemoteCommand(
+		r,
+		uint64(requestID),
+		constructor,
+		commandBytesDump,
+		timeoutCallback,
+		successCallback,
+	)
 
 	return
 }

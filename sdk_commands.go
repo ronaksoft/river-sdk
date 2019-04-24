@@ -26,9 +26,8 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	res := new(msg.MessagesDialogs)
 	res.Dialogs = repo.Ctx().Dialogs.GetDialogs(req.Offset, req.Limit)
 
-	// if the localDB had no data send the request to server
+	// If the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {
-		logs.Debug("River::messagesGetDialogs()-> GetDialogs() nothing found in cacheDB pass request to server")
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
 	}
@@ -36,21 +35,22 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	mUsers := domain.MInt64B{}
 	mGroups := domain.MInt64B{}
 	mMessages := domain.MInt64B{}
-	mPendingMesssage := domain.MInt64B{}
+	mPendingMessage := domain.MInt64B{}
 	for _, d := range res.Dialogs {
 		if d.PeerType == int32(msg.PeerUser) {
 			mUsers[d.PeerID] = true
 		}
 		mMessages[d.TopMessageID] = true
 		if d.TopMessageID < 0 {
-			mPendingMesssage[d.TopMessageID] = true
+			mPendingMessage[d.TopMessageID] = true
 		}
 	}
 
+	// Load Messages
 	res.Messages = repo.Ctx().Messages.GetManyMessages(mMessages.ToArray())
 
 	// Load Pending messages
-	pendingMessages := repo.Ctx().PendingMessages.GetManyPendingMessages(mPendingMesssage.ToArray())
+	pendingMessages := repo.Ctx().PendingMessages.GetManyPendingMessages(mPendingMessage.ToArray())
 	res.Messages = append(res.Messages, pendingMessages...)
 
 	for _, m := range res.Messages {
@@ -95,7 +95,6 @@ func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain
 
 	// if the localDB had no data send the request to server
 	if res == nil {
-		logs.Debug("River::messagesGetDialog()-> GetDialog() nothing found in cacheDB pass request to server")
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
 	}
@@ -132,6 +131,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		})
 		return
 	}
+
 	// this will be used as next requestID
 	req.RandomID = domain.SequentialUniqueID()
 
@@ -164,14 +164,13 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	out.Message, _ = res.Marshal()
 
 	// 4. later when queue got processed and server returned response we should check if the requestID
-	//   exist in pendindTable we remove it and insert new message with new id to message table
-	//   invoke new OnUpdate with new protobuff to inform ui that pending message got delivered
+	//   exist in pendingTable we remove it and insert new message with new id to message table
+	//   invoke new OnUpdate with new proto buffer to inform ui that pending message got delivered
 	uiexec.Ctx().Exec(func() {
 		if successCB != nil {
 			successCB(out)
 		}
 	}) // successCB(out)
-
 }
 
 func (r *River) messagesReadHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {

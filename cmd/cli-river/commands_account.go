@@ -27,7 +27,7 @@ var RegisterDevice = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountRegisterDevice, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -44,7 +44,7 @@ var UpdateUsername = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUpdateUsername, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -61,7 +61,7 @@ var CheckUsername = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountCheckUsername, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -79,7 +79,7 @@ var UnregisterDevice = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUnregisterDevice, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -97,7 +97,7 @@ var UpdateProfile = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUpdateProfile, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -122,7 +122,7 @@ var SetNotifySettings = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountSetNotifySettings, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -143,7 +143,7 @@ var DownloadPhotoBig = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		userID := fnGetPeerID(c)
 		strFilePath := _SDK.AccountGetPhotoBig(userID)
-		logs.Info("File Download Complete", zap.String("path", strFilePath))
+		_Log.Info("File Download Complete", zap.String("path", strFilePath))
 
 	},
 }
@@ -152,7 +152,7 @@ var DownloadPhotoSmall = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		userID := fnGetPeerID(c)
 		strFilePath := _SDK.AccountGetPhotoSmall(userID)
-		logs.Info("File Download Complete", zap.String("path", strFilePath))
+		_Log.Info("File Download Complete", zap.String("path", strFilePath))
 
 	},
 }
@@ -165,7 +165,7 @@ var RemovePhoto = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountRemovePhoto, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}

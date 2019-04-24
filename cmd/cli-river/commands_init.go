@@ -15,9 +15,9 @@ var InitAuth = &ishell.Cmd{
 	Name: "Auth",
 	Func: func(c *ishell.Context) {
 		if err := _SDK.CreateAuthKey(); err != nil {
-			logs.Error("CreateAuthKey failed", zap.Error(err))
+			_Log.Error("CreateAuthKey failed", zap.Error(err))
 		} else {
-			logs.Message("CreateAuthKey == OK ==")
+			_Log.Info("CreateAuthKey == OK ==")
 		}
 	},
 }

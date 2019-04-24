@@ -46,7 +46,7 @@ var SendTyping = &ishell.Cmd{
 			reqBytes, _ := req.Marshal()
 			reqDelegate := new(RequestDelegate)
 			if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSetTyping, reqBytes, reqDelegate, false, false); err != nil {
-				logs.Error("ExecuteCommand failed", zap.Error(err))
+				_Log.Error("ExecuteCommand failed", zap.Error(err))
 			} else {
 				reqDelegate.RequestID = reqID
 			}
@@ -77,7 +77,7 @@ var MessageSendByNetwork = &ishell.Cmd{
 			reqBytes, _ := req.Marshal()
 			reqDelegate := new(RequestDelegate)
 			if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSend, reqBytes, reqDelegate, false, false); err != nil {
-				logs.Error("ExecuteCommand failed", zap.Error(err))
+				_Log.Error("ExecuteCommand failed", zap.Error(err))
 			} else {
 				reqDelegate.RequestID = reqID
 			}
@@ -109,7 +109,7 @@ var MessageSendByQueue = &ishell.Cmd{
 			reqBytes, _ := req.Marshal()
 			reqDelegate := new(RequestDelegate)
 			if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSend, reqBytes, reqDelegate, false, false); err != nil {
-				logs.Error("ExecuteCommand failed", zap.Error(err))
+				_Log.Error("ExecuteCommand failed", zap.Error(err))
 			} else {
 				reqDelegate.RequestID = reqID
 			}
@@ -137,7 +137,7 @@ var ContactImportByNetwork = &ishell.Cmd{
 		_SDK.RemoveRealTimeRequest(msg.C_ContactsImport)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsImport, reqBytes, reqDelegate, true, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -182,7 +182,7 @@ var MessageSendBulk = &ishell.Cmd{
 		reqBytes, _ := msgContainer.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessageContainer, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -219,7 +219,7 @@ var ContactImportMany = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsImport, reqBytes, reqDelegate, false, false); err != nil {
-			logs.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -336,7 +336,7 @@ var PrintMessage = &ishell.Cmd{
 		m := repo.Ctx().Messages.GetMessage(msgID)
 
 		if m == nil {
-			logs.Error("Message Is nil")
+			_Log.Error("Message Is nil")
 			return
 		}
 

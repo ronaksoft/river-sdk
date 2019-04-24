@@ -17,36 +17,36 @@ func UpdatePrinter(envelope *msg.UpdateEnvelope) {
 	case msg.C_UpdateNewMessage:
 		x := new(msg.UpdateNewMessage)
 		x.Unmarshal(envelope.Update)
-		logs.Message(fmt.Sprintf("UpdateNewMessage \t MsgID:%d, PeerID:%d , SenderID:%d , Body:%s",
+		_Log.Info(fmt.Sprintf("UpdateNewMessage \t MsgID:%d, PeerID:%d , SenderID:%d , Body:%s",
 			x.Message.ID, x.Message.PeerID, x.Message.SenderID, x.Message.Body))
 	case msg.C_UpdateReadHistoryInbox:
 		x := new(msg.UpdateReadHistoryInbox)
 		x.Unmarshal(envelope.Update)
-		logs.Message(fmt.Sprintf("UpdateReadHistoryInbox \t PeerID:%d , MaxID:%d", x.Peer.ID, x.MaxID))
+		_Log.Info(fmt.Sprintf("UpdateReadHistoryInbox \t PeerID:%d , MaxID:%d", x.Peer.ID, x.MaxID))
 	case msg.C_UpdateReadHistoryOutbox:
 		x := new(msg.UpdateReadHistoryOutbox)
 		x.Unmarshal(envelope.Update)
-		logs.Message(fmt.Sprintf("UpdateReadHistoryOutbox \t PeerID:%d , MaxID:%d", x.Peer.ID, x.MaxID))
+		_Log.Info(fmt.Sprintf("UpdateReadHistoryOutbox \t PeerID:%d , MaxID:%d", x.Peer.ID, x.MaxID))
 	case msg.C_UpdateUserTyping:
 		x := new(msg.UpdateUserTyping)
 		x.Unmarshal(envelope.Update)
-		logs.Message(fmt.Sprintf("UpdateUserTyping \t userID:%d , Action:%s", x.UserID, x.Action.String()))
+		_Log.Info(fmt.Sprintf("UpdateUserTyping \t userID:%d , Action:%s", x.UserID, x.Action.String()))
 
 	case msg.C_ClientUpdatePendingMessageDelivery:
 		x := new(msg.ClientUpdatePendingMessageDelivery)
 		err := x.Unmarshal(envelope.Update)
 		if err != nil {
-			logs.Error("Failed to unmarshal", zap.Error(err))
+			_Log.Error("Failed to unmarshal", zap.Error(err))
 			return
 		}
-		logs.Message(fmt.Sprintf("#UPDATE PendingMessageDelivery: %v", x.Success))
-		logs.Message(fmt.Sprintf("PendingMessage: %v", x.PendingMessage))
-		logs.Message(fmt.Sprintf("Messages: %v", x.Messages))
+		_Log.Info(fmt.Sprintf("#UPDATE PendingMessageDelivery: %v", x.Success))
+		_Log.Info(fmt.Sprintf("PendingMessage: %v", x.PendingMessage))
+		_Log.Info(fmt.Sprintf("Messages: %v", x.Messages))
 	case msg.C_UpdateContainer:
 		x := new(msg.UpdateContainer)
 		err := x.Unmarshal(envelope.Update)
 		if err != nil {
-			logs.Error("Failed to unmarshal", zap.Error(err))
+			_Log.Error("Failed to unmarshal", zap.Error(err))
 			return
 		}
 		for _, u := range x.Updates {
@@ -54,6 +54,6 @@ func UpdatePrinter(envelope *msg.UpdateEnvelope) {
 		}
 
 	default:
-		logs.Message("Received Update", zap.String("Constructor", msg.ConstructorNames[envelope.Constructor]))
+		_Log.Info("Received Update", zap.String("Constructor", msg.ConstructorNames[envelope.Constructor]))
 	}
 }

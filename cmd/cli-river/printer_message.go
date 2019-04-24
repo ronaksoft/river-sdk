@@ -19,20 +19,20 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 	case msg.C_AuthAuthorization:
 		x := new(msg.AuthAuthorization)
 		x.Unmarshal(envelope.Message)
-		logs.Message(fmt.Sprintf("AuthAuthorization \t %s %s (%d)", x.User.FirstName, x.User.LastName, x.User.ID))
+		_Log.Info(fmt.Sprintf("AuthAuthorization \t %s %s (%d)", x.User.FirstName, x.User.LastName, x.User.ID))
 
 	case msg.C_AuthCheckedPhone:
 		x := new(msg.AuthCheckedPhone)
 		x.Unmarshal(envelope.Message)
-		logs.Message(fmt.Sprintf("AuthCheckedPhone \t Registered:%t", x.Registered))
+		_Log.Info(fmt.Sprintf("AuthCheckedPhone \t Registered:%t", x.Registered))
 	case msg.C_AuthRecalled:
 		x := new(msg.AuthRecalled)
 		x.Unmarshal(envelope.Message)
-		logs.Message(fmt.Sprintf("AuthRecalled \t ClientID:%d , Timestamp:%d", x.ClientID, x.Timestamp))
+		_Log.Info(fmt.Sprintf("AuthRecalled \t ClientID:%d , Timestamp:%d", x.ClientID, x.Timestamp))
 	case msg.C_AuthSentCode:
 		x := new(msg.AuthSentCode)
 		x.Unmarshal(envelope.Message)
-		logs.Message(fmt.Sprintf("AuthSentCode \t Phone:%s , Hash:%s", x.Phone, x.PhoneCodeHash))
+		_Log.Info(fmt.Sprintf("AuthSentCode \t Phone:%s , Hash:%s", x.Phone, x.PhoneCodeHash))
 	case msg.C_ContactsImported:
 		x := new(msg.ContactsImported)
 		x.Unmarshal(envelope.Message)
@@ -52,7 +52,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			})
 		}
 		table.Render()
-		logs.Message("\r\n" + buf.String())
+		_Log.Info("\r\n" + buf.String())
 	case msg.C_ContactsMany:
 		x := new(msg.ContactsMany)
 		x.Unmarshal(envelope.Message)
