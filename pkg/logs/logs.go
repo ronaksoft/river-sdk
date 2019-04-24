@@ -9,8 +9,6 @@ import (
 var (
 	_Log      *zap.Logger
 	_LogLevel zap.AtomicLevel
-	_UserID   int64
-	_AuthID   int64
 )
 
 func init() {

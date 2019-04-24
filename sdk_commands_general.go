@@ -144,7 +144,7 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 func (r *River) UISettingGet(key string) string {
 	val, err := repo.Ctx().UISettings.Get(key)
 	if err != nil {
-		logs.Error("River::UISettingsGet()", zap.Error(err))
+		logs.Warn("River::UISettingsGet()", zap.Error(err))
 	}
 	return val
 }
@@ -933,7 +933,6 @@ func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, de
 func (r *River) GetScrollStatus(peerID int64, peerType int32) int64 {
 	status, err := repo.Ctx().MessagesExtra.GetScrollID(peerID, peerType)
 	if err != nil {
-		logs.Error("GetScrollStatus::ScrollID not found", zap.Int64("PeerID", peerID))
 		return 0
 	} else {
 		return status
