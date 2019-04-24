@@ -509,7 +509,6 @@ func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 
 // AccountGetPhoto_Big download user profile picture
 func (r *River) AccountGetPhotoBig(userID int64) string {
-
 	user := repo.Ctx().Users.GetUser(userID)
 	if user != nil {
 		if user.Photo != nil {
@@ -535,19 +534,16 @@ func (r *River) AccountGetPhotoBig(userID int64) string {
 		logs.Error("SDK::AccountGetPhoto_Big() user photo is null")
 		return ""
 	}
-	logs.Error("SDK::AccountGetPhoto_Big() user does not exist")
 	return ""
 }
 
 // AccountGetPhoto_Small download user profile picture thumbnail
 func (r *River) AccountGetPhotoSmall(userID int64) string {
-
 	user := repo.Ctx().Users.GetUser(userID)
 	if user != nil {
 		if user.Photo != nil {
 			dtoPhoto := repo.Ctx().Users.GetUserPhoto(userID, user.Photo.PhotoID)
 			if dtoPhoto != nil {
-
 				if dtoPhoto.SmallFilePath != "" {
 					// check if file exist
 					if _, err := os.Stat(dtoPhoto.SmallFilePath); os.IsNotExist(err) {
@@ -567,10 +563,8 @@ func (r *River) AccountGetPhotoSmall(userID int64) string {
 			}
 			return downloadAccountPhoto(userID, user.Photo, false)
 		}
-		logs.Error("SDK::AccountGetPhoto_Small() user photo is null")
 		return ""
 	}
-	logs.Error("SDK::AccountGetPhoto_Small() user does not exist")
 	return ""
 }
 
@@ -701,7 +695,6 @@ func (r *River) GroupGetPhotoBig(groupID int64) string {
 		logs.Error("SDK::GroupGetPhoto_Big() group photo is null")
 		return ""
 	}
-	logs.Error("SDK::GroupGetPhoto_Big() group does not exist")
 	return ""
 }
 
@@ -739,7 +732,6 @@ func (r *River) GroupGetPhotoSmall(groupID int64) string {
 		logs.Error("SDK::GroupGetPhoto_Small() group photo is null")
 		return ""
 	}
-	logs.Error("SDK::GroupGetPhoto_Small() group does not exist")
 	return ""
 }
 
@@ -767,7 +759,6 @@ func downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) string
 
 // FileDownloadThumbnail download file thumbnail
 func (r *River) FileDownloadThumbnail(msgID int64) string {
-
 	// its pending message
 	if msgID < 0 {
 		pmsg, err := repo.Ctx().PendingMessages.GetPendingMessageByID(msgID)
@@ -775,7 +766,6 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 			logs.Error("SDK::FileDownloadThumbnail()", zap.Int64("PendingMsgID", msgID), zap.Error(err))
 			return ""
 		}
-
 		switch msg.InputMediaType(pmsg.MediaType) {
 		case msg.InputMediaTypeEmpty:
 			// NOT IMPLEMENTED

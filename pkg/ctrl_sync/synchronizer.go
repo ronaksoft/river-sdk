@@ -271,7 +271,6 @@ func getAllDialogs(ctrl *Controller, offset int32, limit int32) {
 					if err != nil {
 						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveMessage() ", zap.Error(err))
 					}
-
 					mMessages[message.ID] = message
 				}
 
