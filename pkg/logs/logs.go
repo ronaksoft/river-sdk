@@ -16,12 +16,6 @@ func init() {
 	_Log = zap.New(
 		zapcore.NewCore(
 			zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
-				TimeKey:        "ts",
-				LevelKey:       "level",
-				NameKey:        "logger",
-				CallerKey:      "caller",
-				MessageKey:     "msg",
-				StacktraceKey:  "stacktrace",
 				LineEnding:     zapcore.DefaultLineEnding,
 				EncodeLevel:    zapcore.CapitalColorLevelEncoder,
 				EncodeTime:     zapcore.ISO8601TimeEncoder,
@@ -32,6 +26,13 @@ func init() {
 			_LogLevel,
 		),
 	)
+	_Sentry, err := NewSentryCore(zapcore.ErrorLevel, nil)
+	if err != nil {
+		return 
+	}
+	_Log = _Log.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
+		return zapcore.NewTee(core, _Sentry)
+	}))
 }
 
 func SetLogLevel(l int) {
@@ -51,7 +52,7 @@ func SetLogFilePath(filePath string) error {
 		if err != nil {
 			return err
 		}
-		_Log.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
+		_Log = _Log.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
 			return zapcore.NewTee(
 				core,
 				zapcore.NewCore(
@@ -79,7 +80,6 @@ func SetLogFilePath(filePath string) error {
 
 func Message(msg string, fields ...zap.Field) {
 	_Log.Debug(msg, fields...)
-
 }
 
 func Debug(msg string, fields ...zap.Field) {
@@ -101,4 +101,5 @@ func Error(msg string, fields ...zap.Field) {
 
 func Fatal(msg string, fields ...zap.Field) {
 	_Log.Fatal(msg, fields...)
+
 }
