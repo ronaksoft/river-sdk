@@ -7,7 +7,6 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/supernumerary"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/config"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"github.com/nats-io/go-nats"
 	"go.uber.org/zap"
 )
@@ -42,18 +41,18 @@ func NewNode(cfg *config.NodeConfig) (*Node, error) {
 }
 
 func (n *Node) cbStart(msg *nats.Msg) {
-	logs.Info("cbStart()")
+	_Log.Info("cbStart()")
 	cfg := config.StartCfg{}
 	err := json.Unmarshal(msg.Data, &cfg)
 	if err != nil {
-		logs.Error("Failed to unmarshal SatrtCfg", zap.Error(err))
+		_Log.Error("Failed to unmarshal SatrtCfg", zap.Error(err))
 		return
 	}
 
 	// check start state
 	if n.su != nil {
 		if len(n.su.Actors) > 0 {
-			logs.Error("cbStart() supernumerary already started")
+			_Log.Error("cbStart() supernumerary already started")
 			return
 		}
 	}
@@ -65,16 +64,16 @@ func (n *Node) cbStart(msg *nats.Msg) {
 
 	su, err := supernumerary.NewSupernumerary(n.Config.StartPhone, n.Config.EndPhone)
 	if err != nil {
-		logs.Error("cbStart()", zap.Error(err))
+		_Log.Error("cbStart()", zap.Error(err))
 	}
 	n.su = su
 }
 
 func (n *Node) cbStop(msg *nats.Msg) {
-	logs.Info("cbStop()")
+	_Log.Info("cbStop()")
 
 	if n.su == nil {
-		logs.Error("cbStop() supernumerary not initialized")
+		_Log.Error("cbStop() supernumerary not initialized")
 		return
 	}
 
@@ -82,30 +81,30 @@ func (n *Node) cbStop(msg *nats.Msg) {
 }
 
 func (n *Node) cbCreateAuthKey(msg *nats.Msg) {
-	logs.Info("cbCreateAuthKey()")
+	_Log.Info("cbCreateAuthKey()")
 
 	if n.su == nil {
-		logs.Error("cbCreateAuthKey() supernumerary not initialized")
+		_Log.Error("cbCreateAuthKey() supernumerary not initialized")
 		return
 	}
 	n.su.CreateAuthKey()
 }
 
 func (n *Node) cbLogin(msg *nats.Msg) {
-	logs.Info("cbLogin()")
+	_Log.Info("cbLogin()")
 
 	if n.su == nil {
-		logs.Error("cbLogin() supernumerary not initialized")
+		_Log.Error("cbLogin() supernumerary not initialized")
 		return
 	}
 	n.su.Login()
 }
 
 func (n *Node) cbRegister(msg *nats.Msg) {
-	logs.Info("cbRegister()")
+	_Log.Info("cbRegister()")
 
 	if n.su == nil {
-		logs.Error("cbRegister() supernumerary not initialized")
+		_Log.Error("cbRegister() supernumerary not initialized")
 		return
 	}
 	n.su.Register()
@@ -114,16 +113,16 @@ func (n *Node) cbRegister(msg *nats.Msg) {
 func (n *Node) cbTicker(msg *nats.Msg) {
 
 	if n.su == nil {
-		logs.Error("cbTicker() supernumerary not initialized")
+		_Log.Error("cbTicker() supernumerary not initialized")
 		return
 	}
 
-	logs.Info("cbTicker()", zap.String("Data", string(msg.Data)))
+	_Log.Info("cbTicker()", zap.String("Data", string(msg.Data)))
 
 	cfg := config.TickerCfg{}
 	err := json.Unmarshal(msg.Data, &cfg)
 	if err != nil {
-		logs.Error("cbTicker() failed to unmarshal", zap.Error(err))
+		_Log.Error("cbTicker() failed to unmarshal", zap.Error(err))
 		return
 	}
 

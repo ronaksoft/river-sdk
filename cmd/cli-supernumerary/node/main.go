@@ -9,12 +9,13 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/actor"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/config"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"go.uber.org/zap"
 )
 
 var (
 	_node *Node
+	_Log                     *zap.Logger
+	_LogLevel                zap.AtomicLevel
 )
 
 func init() {
@@ -25,11 +26,16 @@ func init() {
 }
 
 func main() {
+	_LogLevel = zap.NewAtomicLevelAt(zap.DebugLevel)
+	logConfig := zap.NewProductionConfig()
+	logConfig.Level = _LogLevel
+	_Log, _ = logConfig.Build()
+
 	cfg, err := config.NewNodeConfig()
 	if err != nil {
 		panic(err)
 	}
-	logs.Info("Config",
+	_Log.Info("Config",
 		zap.String("BoundleID", cfg.BoundleID),
 		zap.String("InstanceID", cfg.InstanceID),
 		zap.String("NatsURL", cfg.NatsURL),
@@ -57,7 +63,7 @@ func loadCachedActors() {
 
 	files, err := ioutil.ReadDir("_cache/")
 	if err != nil {
-		logs.Error("Fialed to load cached actors LoadCachedActors()", zap.Error(err))
+		_Log.Error("Fialed to load cached actors LoadCachedActors()", zap.Error(err))
 		return
 	}
 

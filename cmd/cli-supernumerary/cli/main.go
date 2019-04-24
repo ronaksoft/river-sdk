@@ -1,14 +1,16 @@
 package main
 
 import (
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"github.com/nats-io/go-nats"
+	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"
 )
 
 var (
 	_Shell *ishell.Shell
 	_NATS  *nats.Conn
+	_Log                     *zap.Logger
+	_LogLevel                zap.AtomicLevel
 )
 
 func init() {
@@ -25,11 +27,13 @@ func init() {
 	_Shell.AddCmd(cmdLogin)
 	_Shell.AddCmd(cmdRegister)
 	_Shell.AddCmd(cmdSetTicker)
-
-	logs.SetLogLevel(0) // DBG: -1, INF: 0, WRN: 1, ERR: 2
 }
 
 func main() {
+	_LogLevel = zap.NewAtomicLevelAt(zap.DebugLevel)
+	cfg := zap.NewProductionConfig()
+	cfg.Level = _LogLevel
+	_Log, _ = cfg.Build()
 
 	for {
 		_Shell.Print("NATS URL (nats://localhost:4222):")
