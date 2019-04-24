@@ -14,7 +14,7 @@ import (
 
 // authAuthorization
 func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
-	logs.Info("authAuthorization() applier")
+	logs.Info("SyncController::authAuthorization()")
 	x := new(msg.AuthAuthorization)
 	if err := x.Unmarshal(e.Message); err != nil {
 		logs.Error("authAuthorization()-> Unmarshal()", zap.Error(err))
@@ -34,7 +34,7 @@ func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
 
 // authSentCode
 func (ctrl *Controller) authSentCode(e *msg.MessageEnvelope) {
-	logs.Info("authSentCode() applier")
+	logs.Info("SyncController::authSentCode()")
 	x := new(msg.AuthSentCode)
 	if err := x.Unmarshal(e.Message); err != nil {
 		logs.Error("authSentCode()-> Unmarshal()", zap.Error(err))
@@ -47,7 +47,7 @@ func (ctrl *Controller) authSentCode(e *msg.MessageEnvelope) {
 
 // contactsImported
 func (ctrl *Controller) contactsImported(e *msg.MessageEnvelope) {
-	logs.Info("contactsImported() applier")
+	logs.Info("SyncController::contactsImported()")
 	x := new(msg.ContactsImported)
 	if err := x.Unmarshal(e.Message); err != nil {
 		logs.Error("contactsImported()-> Unmarshal()", zap.Error(err))
@@ -60,7 +60,7 @@ func (ctrl *Controller) contactsImported(e *msg.MessageEnvelope) {
 
 // contactsMany
 func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
-	logs.Info("contactsMany() applier")
+	logs.Info("SyncController::contactsMany()")
 	x := new(msg.ContactsMany)
 	if err := x.Unmarshal(e.Message); err != nil {
 		logs.Error("contactsMany()-> Unmarshal()", zap.Error(err))
@@ -85,7 +85,7 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 
 // messageDialogs
 func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
-	logs.Info("messagesDialogs() applier")
+	logs.Info("SyncController::messagesDialogs()")
 	x := new(msg.MessagesDialogs)
 	if err := x.Unmarshal(e.Message); err != nil {
 		logs.Error("messagesDialogs()-> Unmarshal()", zap.Error(err))
@@ -124,8 +124,7 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 
 // Check pending messages and notify UI
 func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
-
-	logs.Info("messageSent() applier")
+	logs.Info("SyncController::messageSent()")
 
 	sent := new(msg.MessagesSent)
 	err := sent.Unmarshal(e.Message)
@@ -231,7 +230,7 @@ func (ctrl *Controller) addToDeliveredMessageList(id int64) {
 
 // usersMany
 func (ctrl *Controller) usersMany(e *msg.MessageEnvelope) {
-	logs.Info("usersMany() applier")
+	logs.Info("SyncController::usersMany()")
 	u := new(msg.UsersMany)
 	err := u.Unmarshal(e.Message)
 	if err != nil {
@@ -245,7 +244,7 @@ func (ctrl *Controller) usersMany(e *msg.MessageEnvelope) {
 
 // messagesMany
 func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
-	logs.Info("messagesMany() applier")
+	logs.Info("SyncController::messagesMany()")
 	u := new(msg.MessagesMany)
 	err := u.Unmarshal(e.Message)
 	if err != nil {
@@ -291,7 +290,7 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 
 // groupFull
 func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
-	logs.Info("groupFull() applier")
+	logs.Info("SyncController::groupFull()")
 	u := new(msg.GroupFull)
 	err := u.Unmarshal(e.Message)
 	if err != nil {

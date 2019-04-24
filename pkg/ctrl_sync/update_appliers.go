@@ -13,7 +13,7 @@ import (
 
 // updateNewMessage
 func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("updateNewMessage() applier")
+	logs.Info("SyncController::updateNewMessage()")
 	x := new(msg.UpdateNewMessage)
 	err := x.Unmarshal(u.Update)
 	if err != nil {
@@ -218,7 +218,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 
 // updateReadHistoryInbox
 func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("updateReadHistoryInbox() applier")
+	logs.Info("SyncController::updateReadHistoryInbox()")
 	x := new(msg.UpdateReadHistoryInbox)
 	x.Unmarshal(u.Update)
 	dialog := repo.Ctx().Dialogs.GetDialog(x.Peer.ID, x.Peer.Type)
@@ -236,7 +236,7 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) []*msg.Upd
 
 // updateReadHistoryOutbox
 func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("updateReadHistoryOutbox() applier")
+	logs.Info("SyncController::updateReadHistoryOutbox()")
 	x := new(msg.UpdateReadHistoryOutbox)
 	x.Unmarshal(u.Update)
 	err := repo.Ctx().Dialogs.UpdateReadOutboxMaxID(x.Peer.ID, x.Peer.Type, x.MaxID)
@@ -249,7 +249,7 @@ func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) []*msg.Up
 
 // updateMessageEdited
 func (ctrl *Controller) updateMessageEdited(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("updateMessageEdited() applier")
+	logs.Info("SyncController::updateMessageEdited()")
 	x := new(msg.UpdateMessageEdited)
 	x.Unmarshal(u.Update)
 	err := repo.Ctx().Messages.SaveMessage(x.Message)
@@ -262,7 +262,7 @@ func (ctrl *Controller) updateMessageEdited(u *msg.UpdateEnvelope) []*msg.Update
 
 // updateMessageID
 func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("updateMessageID() applier")
+	logs.Info("SyncController::updateMessageID()")
 
 	x := new(msg.UpdateMessageID)
 	x.Unmarshal(u.Update)
@@ -290,7 +290,7 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 
 // updateNotifySettings
 func (ctrl *Controller) updateNotifySettings(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("updateNotifySettings() applier")
+	logs.Info("SyncController::updateNotifySettings()")
 	x := new(msg.UpdateNotifySettings)
 	x.Unmarshal(u.Update)
 
@@ -304,7 +304,7 @@ func (ctrl *Controller) updateNotifySettings(u *msg.UpdateEnvelope) []*msg.Updat
 
 // updateUsername
 func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("updateUsername() applier")
+	logs.Info("SyncController::updateUsername()")
 	x := new(msg.UpdateUsername)
 	x.Unmarshal(u.Update)
 
@@ -328,7 +328,7 @@ func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) []*msg.UpdateEnvel
 
 // updateMessagesDeleted
 func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("updateMessagesDeleted() applier")
+	logs.Info("SyncController::updateMessagesDeleted()")
 
 	x := new(msg.UpdateMessagesDeleted)
 	x.Unmarshal(u.Update)
@@ -355,7 +355,7 @@ func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) []*msg.Upda
 
 // updateGroupParticipantAdmin
 func (ctrl *Controller) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("updateGroupParticipantAdmin() applier")
+	logs.Info("SyncController::updateGroupParticipantAdmin()")
 
 	x := new(msg.UpdateGroupParticipantAdmin)
 	x.Unmarshal(u.Update)
@@ -371,7 +371,7 @@ func (ctrl *Controller) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) []*ms
 
 // updateReadMessagesContents
 func (ctrl *Controller) updateReadMessagesContents(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("updateReadMessagesContents() applier")
+	logs.Info("SyncController::updateReadMessagesContents()")
 
 	x := new(msg.UpdateReadMessagesContents)
 	x.Unmarshal(u.Update)
@@ -387,7 +387,7 @@ func (ctrl *Controller) updateReadMessagesContents(u *msg.UpdateEnvelope) []*msg
 
 // updateUserPhoto
 func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("updateUserPhoto() applier")
+	logs.Info("SyncController::updateUserPhoto()")
 
 	x := new(msg.UpdateUserPhoto)
 	x.Unmarshal(u.Update)
@@ -403,7 +403,7 @@ func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 
 // updateGroupPhoto
 func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("updateGroupPhoto() applier")
+	logs.Info("SyncController::updateGroupPhoto()")
 
 	x := new(msg.UpdateGroupPhoto)
 	x.Unmarshal(u.Update)
@@ -419,7 +419,7 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 
 // updateTooLong indicate that client updates exceed from server cache size so we should re-sync client with server
 func (ctrl *Controller) updateTooLong(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("updateTooLong() applier")
+	logs.Info("SyncController::updateTooLong()")
 
 	go ctrl.sync()
 

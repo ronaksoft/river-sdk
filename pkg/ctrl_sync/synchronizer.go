@@ -111,7 +111,7 @@ func (ctrl *Controller) watchDog() {
 			}
 			ctrl.sync()
 		case <-ctrl.stopChannel:
-			logs.Info("watchDog() Stopped")
+			logs.Info("SyncController::watchDog() Stopped")
 			return
 		}
 	}
@@ -150,7 +150,7 @@ func (ctrl *Controller) sync() {
 	defer updateSyncStatus(ctrl, domain.Synced)
 
 	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSyncThreshold {
-		logs.Info("sync()-> Snapshot sync")
+		logs.Info("SyncController::Snapshot sync")
 		// remove all messages
 		err := repo.Ctx().DropAndCreateTable(&dto.Messages{})
 		if err != nil {
@@ -169,7 +169,7 @@ func (ctrl *Controller) sync() {
 	} else if serverUpdateID > ctrl.updateID+1 {
 		// if it is passed over 60 seconds from the last update received it fetches the update
 		// difference from the server
-		logs.Info("sync()-> Normal sync")
+		logs.Info("SyncController::Sequential sync")
 		getUpdateDifference(ctrl, serverUpdateID+1) // +1 cuz in here we dont have serverUpdateID itself too
 	}
 }
@@ -238,7 +238,10 @@ func getContacts(ctrl *Controller) {
 	)
 }
 func getAllDialogs(ctrl *Controller, offset int32, limit int32) {
-	logs.Info("getAllDialogs()")
+	logs.Info("SyncController::getAllDialogs()",
+		zap.Int32("Offset", offset),
+		zap.Int32("Limit", limit),
+	)
 	req := new(msg.MessagesGetDialogs)
 	req.Limit = limit
 	req.Offset = offset
@@ -316,10 +319,6 @@ func getAllDialogs(ctrl *Controller, offset int32, limit int32) {
 					}
 				}
 				if x.Count > offset+limit {
-					logs.Info("getAllDialogs() -> onSuccessCallback() retry to getAllDialogs()",
-						zap.Int32("x.Count", x.Count),
-						zap.Int32("offset+limit", offset+limit),
-					)
 					getAllDialogs(ctrl, offset+limit, limit)
 				}
 			case msg.C_Error:
@@ -390,7 +389,7 @@ func onGetDifferenceSucceed(ctrl *Controller, m *msg.MessageEnvelope) {
 		updContainer.MaxUpdateID = x.MaxUpdateID
 		updContainer.MinUpdateID = x.MinUpdateID
 
-		logs.Info("onGetDifferenceSucceed()",
+		logs.Info("SyncController::onGetDifferenceSucceed()",
 			zap.Int64("UpdateID", ctrl.updateID),
 			zap.Int64("MaxUpdateID", x.MaxUpdateID),
 			zap.Int64("MinUpdateID", x.MinUpdateID),
@@ -467,7 +466,7 @@ func (ctrl *Controller) isDeliveredMessage(id int64) bool {
 
 // Start controller
 func (ctrl *Controller) Start() {
-	logs.Info("Start")
+	logs.Info("SyncController::  Start")
 
 	// Load the latest UpdateID stored in DB
 	if v, err := repo.Ctx().System.LoadInt(domain.ColumnUpdateID); err != nil {
@@ -671,13 +670,12 @@ func extractMessagesMedia(messages ...*msg.UserMessage) {
 		case msg.MediaTypeEmpty:
 			// NOP
 		case msg.MediaTypePhoto:
-			logs.Info("extractMessagesMedia() Message.SharedMediaType is msg.MediaTypePhoto")
 			// TODO:: implement it
 		case msg.MediaTypeDocument:
 			mediaDoc := new(msg.MediaDocument)
 			err := mediaDoc.Unmarshal(m.Media)
 			if err != nil {
-				logs.Error("extractMessagesMedia()-> connat unmarshal MediaTypeDocument", zap.Error(err))
+				logs.Error("extractMessagesMedia()-> connot unmarshal MediaTypeDocument", zap.Error(err))
 				break
 			}
 			_ = repo.Ctx().Files.SaveFileDocument(m, mediaDoc)
@@ -689,10 +687,7 @@ func extractMessagesMedia(messages ...*msg.UserMessage) {
 			}
 
 		case msg.MediaTypeContact:
-			logs.Info("extractMessagesMedia() Message.SharedMediaType is msg.MediaTypeContact")
-			// TODO:: implement it
 		default:
-			logs.Info("extractMessagesMedia() Message.SharedMediaType is invalid")
 		}
 	}
 }
