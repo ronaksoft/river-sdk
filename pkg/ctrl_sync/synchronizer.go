@@ -124,7 +124,7 @@ func (ctrl *Controller) sync() {
 	}
 	defer atomic.StoreInt32(&ctrl.syncLock, 0)
 
-	logs.Debug("sync()",
+	logs.Debug("SyncController::sync()",
 		zap.Int64("UpdateID", ctrl.updateID),
 	)
 	// There is no need to sync when no user has been authorized
@@ -263,11 +263,6 @@ func getAllDialogs(ctrl *Controller, offset int32, limit int32) {
 					logs.Error("getAllDialogs() -> onSuccessCallback() -> Unmarshal() ", zap.Error(err))
 					return
 				}
-				logs.Debug("getAllDialogs() -> onSuccessCallback() -> MessagesDialogs",
-					zap.Int("DialogsLength", len(x.Dialogs)),
-					zap.Int32("Offset", offset),
-					zap.Int32("Total", x.Count),
-				)
 				mMessages := make(map[int64]*msg.UserMessage)
 				for _, message := range x.Messages {
 					err := repo.Ctx().Messages.SaveMessage(message)
@@ -338,7 +333,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 	}
 	defer atomic.StoreInt32(&ctrl.updateDifferenceLock, 0)
 
-	logs.Debug("getUpdateDifference()",
+	logs.Debug("SyncController::getUpdateDifference()",
 		zap.Int64("ServerUpdateID", serverUpdateID),
 		zap.Int64("ClientUpdateID", ctrl.updateID),
 	)
@@ -362,11 +357,11 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 			msg.C_UpdateGetDifference,
 			reqBytes,
 			func() {
-				logs.Debug("getUpdateDifference() -> ExecuteRealtimeCommand() Timeout")
+				logs.Debug("SyncController::getUpdateDifference() -> ExecuteRealtimeCommand() Timeout")
 			},
 			func(m *msg.MessageEnvelope) {
 				onGetDifferenceSucceed(ctrl, m)
-				logs.Debug("getUpdateDifference() -> ExecuteRealtimeCommand() Success")
+				logs.Debug("SyncController::getUpdateDifference() -> ExecuteRealtimeCommand() Success")
 			},
 			true,
 			false,
@@ -404,9 +399,6 @@ func onGetDifferenceSucceed(ctrl *Controller, m *msg.MessageEnvelope) {
 		}()
 
 		for _, update := range x.Updates {
-			logs.Debug("onGetDifferenceSucceed() loop",
-				zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
-			)
 			if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
 				externalHandlerUpdates := applier(update)
 				updContainer.Updates = append(updContainer.Updates, externalHandlerUpdates...)
@@ -443,7 +435,7 @@ func onGetDifferenceSucceed(ctrl *Controller, m *msg.MessageEnvelope) {
 
 func (ctrl *Controller) SetUserID(userID int64) {
 	ctrl.userID = userID
-	logs.Debug("SetUserID()",
+	logs.Debug("SyncController::SetUserID()",
 		zap.Int64("userID", userID),
 	)
 }
@@ -503,7 +495,7 @@ func (ctrl *Controller) SetOnUpdateCallback(h domain.OnUpdateMainDelegateHandler
 // MessageHandler call appliers-> repository and sync data
 func (ctrl *Controller) MessageHandler(messages []*msg.MessageEnvelope) {
 	for _, m := range messages {
-		logs.Debug("MessageHandler() Received",
+		logs.Debug("SyncController::MessageHandler() Received",
 			zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
 		)
 
@@ -516,7 +508,7 @@ func (ctrl *Controller) MessageHandler(messages []*msg.MessageEnvelope) {
 
 		if applier, ok := ctrl.messageAppliers[m.Constructor]; ok {
 			applier(m)
-			logs.Debug("MessageHandler() Message Applied",
+			logs.Debug("SyncController::MessageHandler() Message Applied",
 				zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
 			)
 		}
@@ -526,7 +518,7 @@ func (ctrl *Controller) MessageHandler(messages []*msg.MessageEnvelope) {
 
 // UpdateHandler receives update to cache them in client DB
 func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
-	logs.Debug("UpdateHandler() Called",
+	logs.Debug("SyncController::UpdateHandler() Called",
 		zap.Int64("ctrl.UpdateID", ctrl.updateID),
 		zap.Int64("MaxID", updateContainer.MaxUpdateID),
 		zap.Int64("MinID", updateContainer.MinUpdateID),
@@ -587,7 +579,7 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 		}
 	}
 	for _, update := range updateContainer.Updates {
-		logs.Debug("UpdateHandler() Update Received",
+		logs.Debug("SyncController::UpdateHandler() Update Received",
 			zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
 		)
 

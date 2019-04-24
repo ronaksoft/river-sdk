@@ -114,7 +114,7 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 		repo.Ctx().Groups.Save(group)
 	}
 
-	logs.Debug("messagesDialogs()",
+	logs.Debug("SyncController::messagesDialogs()",
 		zap.Int("DialogsCount", len(x.Dialogs)),
 		zap.Int("GroupsCount", len(x.Groups)),
 		zap.Int("UsersCount", len(x.Users)),

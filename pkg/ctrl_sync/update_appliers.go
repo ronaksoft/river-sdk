@@ -69,12 +69,6 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		}
 	}
 
-	logs.Debug("UpdateNewMessage AccessHash ",
-		zap.Uint64("AccessHash Uint64", x.AccessHash),
-		zap.Int64("AccessHash Int64", int64(x.AccessHash)),
-		zap.String("Body", x.Message.Body),
-	)
-
 	// bug : sometime server do not sends access hash
 	if x.AccessHash > 0 {
 		// update users access hash
