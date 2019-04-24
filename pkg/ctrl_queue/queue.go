@@ -333,8 +333,8 @@ func (ctrl *Controller) ExecuteRealtimeCommand(requestID uint64, constructor int
 				}
 			}
 		} else {
-			logs.Debug("QueueController::ExecuteRealtimeCommand()->execBlock()  : RequestCallback not found",
-				zap.String("ConstructorName", msg.ConstructorNames[req.Constructor]),
+			logs.Debug("QueueController::ExecuteRealtimeCommand() RequestCallback not found",
+				zap.String("Constructor", msg.ConstructorNames[req.Constructor]),
 				zap.Uint64("RequestID", requestID),
 			)
 		}

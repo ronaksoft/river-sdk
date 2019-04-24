@@ -239,9 +239,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			messages, users := repo.Ctx().Messages.GetMessageHistoryWithPendingMessages(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 			messagesGetHistory(out, messages, users, in.RequestID, successCB)
 		} else {
-
 			maxID := dtoDialog.TopMessageID - 1
-
 			holes := synchronizer.GetHoles(dtoDialog.PeerID, req.MinID, maxID)
 			closestHole := synchronizer.GetMaxClosestHole(maxID, holes)
 			if len(holes) > 0 {
