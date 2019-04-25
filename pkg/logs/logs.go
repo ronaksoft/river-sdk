@@ -40,7 +40,7 @@ func SetLogLevel(l int) {
 }
 
 func SetHook(fn func(logLevel int, msg string)) {
-	_Log.WithOptions(zap.Hooks(func(entry zapcore.Entry) error {
+	_Log = _Log.WithOptions(zap.Hooks(func(entry zapcore.Entry) error {
 		fn(int(entry.Level), entry.Message)
 		return nil
 	}))
@@ -76,10 +76,6 @@ func SetLogFilePath(filePath string) error {
 		}))
 	}
 	return nil
-}
-
-func Message(msg string, fields ...zap.Field) {
-	_Log.Debug(msg, fields...)
 }
 
 func Debug(msg string, fields ...zap.Field) {

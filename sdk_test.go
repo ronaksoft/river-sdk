@@ -105,15 +105,15 @@ func (d *MainDelegateDummy) OnGeneralError(b []byte) {
 }
 
 func (d *MainDelegateDummy) OnSessionClosed(res int) {
-	logs.Message("Session Closed", zap.Int("Res", res))
+	logs.Info("Session Closed", zap.Int("Res", res))
 }
 
 func (d *MainDelegateDummy) OnDownloadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
-	logs.Message("Download progress changed", zap.Float64("Progress", percent))
+	logs.Info("Download progress changed", zap.Float64("Progress", percent))
 }
 
 func (d *MainDelegateDummy) OnUploadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
-	logs.Message("Upload progress changed", zap.Float64("Progress", percent))
+	logs.Info("Upload progress changed", zap.Float64("Progress", percent))
 }
 
 func (d *MainDelegateDummy) OnDownloadCompleted(messageID int64, filePath string) {
