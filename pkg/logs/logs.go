@@ -16,6 +16,9 @@ func init() {
 	_Log = zap.New(
 		zapcore.NewCore(
 			zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
+				CallerKey:      "caller",
+				LevelKey:       "level",
+				MessageKey:     "msg",
 				LineEnding:     zapcore.DefaultLineEnding,
 				EncodeLevel:    zapcore.CapitalColorLevelEncoder,
 				EncodeTime:     zapcore.ISO8601TimeEncoder,
@@ -69,7 +72,7 @@ func SetLogFilePath(filePath string) error {
 						EncodeDuration: zapcore.StringDurationEncoder,
 						EncodeCaller:   zapcore.ShortCallerEncoder,
 					}),
-					zapcore.AddSync(logFile),
+					zapcore.Lock(logFile),
 					_LogLevel,
 				),
 			)
@@ -84,7 +87,6 @@ func Debug(msg string, fields ...zap.Field) {
 
 func Warn(msg string, fields ...zap.Field) {
 	_Log.Warn(msg, fields...)
-
 }
 
 func Info(msg string, fields ...zap.Field) {

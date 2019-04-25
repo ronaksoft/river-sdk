@@ -59,9 +59,6 @@ func NewSyncController(config Config) *Controller {
 	ctrl.queueCtrl = config.QueueCtrl
 	ctrl.networkCtrl = config.NetworkCtrl
 
-	// set default value to synced status
-	updateSyncStatus(ctrl, domain.Synced)
-
 	ctrl.updateAppliers = map[int64]domain.UpdateApplier{
 		msg.C_UpdateNewMessage:            ctrl.updateNewMessage,
 		msg.C_UpdateReadHistoryOutbox:     ctrl.updateReadHistoryOutbox,
@@ -470,6 +467,9 @@ func (ctrl *Controller) Start() {
 	} else {
 		ctrl.updateID = int64(v)
 	}
+
+	// set default value to synced status
+	updateSyncStatus(ctrl, domain.Synced)
 
 	// Sync with Server
 	go ctrl.sync()

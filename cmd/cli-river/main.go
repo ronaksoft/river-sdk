@@ -23,7 +23,7 @@ var (
 )
 
 func main() {
-	_LogLevel = zap.NewAtomicLevelAt(zap.DebugLevel)
+	_LogLevel = zap.NewAtomicLevelAt(zap.WarnLevel)
 	cfg := zap.NewProductionConfig()
 	cfg.Level = _LogLevel
 	_Log, _ = cfg.Build()
@@ -69,8 +69,8 @@ func main() {
 		QueuePath:              fmt.Sprintf("%s/%s", qPath, dbID),
 		ServerKeysFilePath:     "./keys.json",
 		MainDelegate:           new(MainDelegate),
-		Logger:                 new(PrintDelegate),
-		LogLevel:               int(zapcore.InfoLevel),
+		// Logger:                 new(PrintDelegate),
+		LogLevel:               int(zapcore.DebugLevel),
 		DocumentAudioDirectory: "./_files/audio",
 		DocumentVideoDirectory: "./_files/video",
 		DocumentPhotoDirectory: "./_files/photo",

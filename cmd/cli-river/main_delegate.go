@@ -123,7 +123,6 @@ func (d *MainDelegate) OnDownloadError(messageID, requestID int64, filePath stri
 type PrintDelegate struct{}
 
 func (d *PrintDelegate) Log(logLevel int, msg string) {
-
 	switch logLevel {
 	case int(zap.DebugLevel):
 		_Shell.Println("DBG : \t", msg)
