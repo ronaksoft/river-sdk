@@ -54,7 +54,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		}
 	}
 	// save user if does not exist
-	repo.Ctx().Users.SaveUser(x.Sender)
+	_ = repo.Ctx().Users.SaveUser(x.Sender)
 
 	// if the sender is not myself increase dialog counter else just save message
 	if x.Message.SenderID != ctrl.userID {
