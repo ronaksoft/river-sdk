@@ -52,18 +52,24 @@ func (v BarType) String() string {
 }
 
 type Bar struct {
-	Min  int
-	Max  int
+	Min  int64
+	Max  int64
 	Type BarType
 }
 
+type Point struct {
+	Index int64
+	Type  PointType
+}
+
 type HoleManager struct {
-	pts map[int]PointType
+	pts  map[int64]PointType
+	bars []Bar
 }
 
 func newHoleManager() *HoleManager {
 	m := new(HoleManager)
-	m.pts = make(map[int]PointType)
+	m.pts = make(map[int64]PointType)
 	return m
 }
 
@@ -89,9 +95,9 @@ func (m *HoleManager) addBar(b Bar) {
 }
 
 func (m *HoleManager) update() {
-	bars := m.getBars()
-	m.pts = make(map[int]PointType)
-	for _, bar := range bars {
+	m.bars = m.getBars()
+	m.pts = make(map[int64]PointType)
+	for _, bar := range m.bars {
 		switch bar.Type {
 		case Filled:
 			m.pts[bar.Min] = FillStart
@@ -103,28 +109,10 @@ func (m *HoleManager) update() {
 	}
 }
 
-func (m *HoleManager) save() {
-	b, err := json.Marshal(m.pts)
-	if err != nil {
-		logs.Error("HoleManager Marshal Error",
-			zap.Error(err),
-		)
-	}
-	logs.Debug("HoleManager Saved",
-		zap.String("JSON", string(b)),
-	)
-}
-
 func (m *HoleManager) getBars() []Bar {
-	pts := make([]struct {
-		Index int
-		Type  PointType
-	}, 0, len(m.pts))
+	pts := make([]Point, 0, len(m.pts))
 	for idx, t := range m.pts {
-		pts = append(pts, struct {
-			Index int
-			Type  PointType
-		}{Index: idx, Type: t})
+		pts = append(pts, Point{Index: idx, Type: t})
 	}
 	sort.Slice(pts, func(i, j int) bool {
 		return pts[i].Index < pts[j].Index
@@ -217,18 +205,98 @@ func (m *HoleManager) getBars() []Bar {
 	return bars
 }
 
-func (m *HoleManager) isFilled(b Bar) bool {
-	bars := m.getBars()
-	for idx := range bars {
-		if bars[idx].Type == Hole {
+func (m *HoleManager) save() ([]byte, error) {
+	b, err := json.Marshal(m.pts)
+	return b, err
+}
+
+func (m *HoleManager) load(b []byte) error {
+	err := json.Unmarshal(b, &m.pts)
+	if err != nil {
+		return err
+	}
+	m.getBars()
+	return nil
+}
+
+func (m *HoleManager) isFilled(min, max int64) bool {
+	for idx := range m.bars {
+		if m.bars[idx].Type == Hole {
 			continue
 		}
-		if b.Min >= bars[idx].Min && b.Max <= bars[idx].Max {
+		if min >= m.bars[idx].Min && max <= m.bars[idx].Max {
 			return true
 		}
 	}
 	return false
 }
+
+func SaveHole(peerID int64, peerType int32, minID, maxID int64) error {
+	b, err := repo.Ctx().MessagesExtra.GetHoles(peerID, peerType)
+	if err != nil {
+		return err
+	}
+	hm := newHoleManager()
+	err = hm.load(b)
+	if err != nil {
+		return err
+	}
+
+	hm.addBar(Bar{Type:Hole, Min:minID, Max:maxID})
+	b, err = hm.save()
+	if err != nil {
+		return err
+	}
+
+	err = repo.Ctx().MessagesExtra.SaveHoles(peerID, peerType, b)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func FillHole(peerID int64, peerType int32, minID, maxID int64) error {
+	b, err := repo.Ctx().MessagesExtra.GetHoles(peerID, peerType)
+	if err != nil {
+		return err
+	}
+	hm := newHoleManager()
+	err = hm.load(b)
+	if err != nil {
+		return err
+	}
+
+	hm.addBar(Bar{Type:Filled, Min:minID, Max:maxID})
+	b, err = hm.save()
+	if err != nil {
+		return err
+	}
+
+	err = repo.Ctx().MessagesExtra.SaveHoles(peerID, peerType, b)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func IsHole(peerID int64, peerType int32, minID, maxID int64) (bool, error) {
+	b, err := repo.Ctx().MessagesExtra.GetHoles(peerID, peerType)
+	if err != nil {
+		return true, err
+	}
+	hm := newHoleManager()
+	err = hm.load(b)
+	if err != nil {
+		return true, err
+	}
+
+	return hm.isFilled(minID, maxID), nil
+}
+
+
+
 
 
 

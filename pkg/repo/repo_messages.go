@@ -32,7 +32,6 @@ type repoMessages struct {
 	*repository
 }
 
-// SaveNewMessage
 func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dialog, userID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -85,13 +84,6 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 			}
 		}
 	}
-	// var unreadCount int
-	// maxID := dtoDlg.ReadInboxMaxID
-	// err = r.db.Table(em.TableName()).Where("SenderID <> ? AND PeerID = ? AND PeerType = ? AND ID > ? ", userID, m.PeerID, m.PeerType, maxID).Count(&unreadCount).Error
-	// if err != nil {
-	// 	log.Error("RepoMessages::SaveNewMessage()-> fetch messages unread count",zap.Error(err))
-	// 	return err
-	// }
 
 	err = r.db.Table(em.TableName()).Where("PeerID=? AND PeerType=?", m.PeerID, m.PeerType).Limit(1).Order("ID DESC").Find(em).Error
 	if err != nil {
@@ -120,7 +112,6 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 
 }
 
-// SaveSelfMessage saves new message and set TopMessageID but do not increase unreadcount cuz sender is myself
 func (r *repoMessages) SaveSelfMessage(message *msg.UserMessage, dialog *msg.Dialog) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -166,7 +157,6 @@ func (r *repoMessages) SaveSelfMessage(message *msg.UserMessage, dialog *msg.Dia
 
 }
 
-// SaveMessage
 func (r *repoMessages) SaveMessage(message *msg.UserMessage) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -177,10 +167,6 @@ func (r *repoMessages) SaveMessage(message *msg.UserMessage) error {
 		)
 		return domain.ErrNotFound
 	}
-
-	// log.Debug("Messages::SaveMessage()",
-	// 	zap.Int64("MessageID", message.ID),
-	// )
 
 	m := new(dto.Messages)
 	m.Map(message)
@@ -194,7 +180,6 @@ func (r *repoMessages) SaveMessage(message *msg.UserMessage) error {
 	return r.db.Table(m.TableName()).Where("id=?", m.ID).Update(m).Error
 }
 
-// GetManyMessages
 func (r *repoMessages) GetManyMessages(messageIDs []int64) []*msg.UserMessage {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -220,7 +205,6 @@ func (r *repoMessages) GetManyMessages(messageIDs []int64) []*msg.UserMessage {
 	return messages
 }
 
-// GetMessageHistoryWithPendingMessages
 func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -294,7 +278,6 @@ func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerTy
 	return
 }
 
-// GetMessageHistoryWithMinMaxID
 func (r *repoMessages) GetMessageHistoryWithMinMaxID(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -371,7 +354,6 @@ func (r *repoMessages) GetUnreadMessageCount(peerID int64, peerType int32, userI
 	return int32(count)
 }
 
-// save message batch mode
 func (r *repoMessages) SaveMessageMany() {
 
 }
@@ -481,7 +463,6 @@ func (r *repoMessages) DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.Clie
 	return res, err
 }
 
-// GetTopMessageID
 func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -498,7 +479,6 @@ func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, err
 	return dtoMsg.ID, nil
 }
 
-// GetMessage
 func (r *repoMessages) GetMessage(messageID int64) *msg.UserMessage {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -519,7 +499,6 @@ func (r *repoMessages) GetMessage(messageID int64) *msg.UserMessage {
 	return message
 }
 
-// SetContentRead
 func (r *repoMessages) SetContentRead(messageIDs []int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
