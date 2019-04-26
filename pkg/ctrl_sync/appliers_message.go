@@ -1,10 +1,10 @@
 package synchronizer
 
 import (
+	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"os"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
@@ -188,7 +188,7 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 		logs.Error("messageSent()-> DeletePendingMessage() failed to delete pendingMessage", zap.Error(err))
 	}
 
-	//Update doaligs
+	// Update doaligs
 	err = repo.Ctx().Dialogs.UpdateTopMessageID(message.CreatedOn, message.PeerID, message.PeerType)
 	if err != nil {
 		logs.Error("messageSent()-> UpdateTopMessageID() failed to update doalogs", zap.Error(err))

@@ -1,11 +1,236 @@
 package synchronizer
 
 import (
+	"encoding/json"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	"go.uber.org/zap"
+	"sort"
 )
+
+type PointType int
+
+const (
+	_ PointType = iota
+	HoleStart
+	HoleStop
+	FillStart
+	FillStop
+)
+
+func (v PointType) String() string {
+	switch v {
+	case HoleStart:
+		return "HoleStart"
+	case HoleStop:
+		return "HoleStop"
+	case FillStart:
+		return "FillStart"
+	case FillStop:
+		return "FillStop"
+	}
+	panic("invalid point type")
+}
+
+type BarType int
+
+const (
+	_ BarType = iota
+	Hole
+	Filled
+)
+
+func (v BarType) String() string {
+	switch v {
+	case Hole:
+		return "H"
+	case Filled:
+		return "F"
+	}
+	panic("invalid bar type")
+}
+
+type Bar struct {
+	Min  int
+	Max  int
+	Type BarType
+}
+
+type HoleManager struct {
+	pts map[int]PointType
+}
+
+func newHoleManager() *HoleManager {
+	m := new(HoleManager)
+	m.pts = make(map[int]PointType)
+	return m
+}
+
+func (m *HoleManager) addBar(b Bar) {
+	switch b.Type {
+	case Hole:
+		m.pts[b.Min] = HoleStart
+		m.pts[b.Max] = HoleStop
+	case Filled:
+		m.pts[b.Min] = FillStart
+		if pt, ok := m.pts[b.Max]; ok {
+			switch pt {
+			case FillStart:
+				delete(m.pts, b.Max)
+			default:
+				m.pts[b.Max] = FillStop
+			}
+		} else {
+			m.pts[b.Max] = FillStop
+		}
+	}
+	m.update()
+}
+
+func (m *HoleManager) update() {
+	bars := m.getBars()
+	m.pts = make(map[int]PointType)
+	for _, bar := range bars {
+		switch bar.Type {
+		case Filled:
+			m.pts[bar.Min] = FillStart
+			m.pts[bar.Max] = FillStop
+		case Hole:
+			m.pts[bar.Min] = HoleStart
+			m.pts[bar.Max] = HoleStop
+		}
+	}
+}
+
+func (m *HoleManager) save() {
+	b, err := json.Marshal(m.pts)
+	if err != nil {
+		logs.Error("HoleManager Marshal Error",
+			zap.Error(err),
+		)
+	}
+	logs.Debug("HoleManager Saved",
+		zap.String("JSON", string(b)),
+	)
+}
+
+func (m *HoleManager) getBars() []Bar {
+	pts := make([]struct {
+		Index int
+		Type  PointType
+	}, 0, len(m.pts))
+	for idx, t := range m.pts {
+		pts = append(pts, struct {
+			Index int
+			Type  PointType
+		}{Index: idx, Type: t})
+	}
+	sort.Slice(pts, func(i, j int) bool {
+		return pts[i].Index < pts[j].Index
+	})
+	bars := make([]Bar, 0)
+
+	startIdx := 0
+	for startIdx < len(pts)-1 {
+		switch pts[startIdx].Type {
+		case HoleStart:
+			endIdx := startIdx + 1
+			keepGoing := true
+			depth := 0
+			for keepGoing {
+				if endIdx == len(pts)-1 {
+					bars = append(bars, Bar{Min: pts[startIdx].Index, Max: pts[endIdx].Index, Type: Hole})
+					startIdx = endIdx
+					break
+				}
+				switch pts[endIdx].Type {
+				case HoleStop:
+					if depth > 0 {
+						depth--
+						endIdx++
+						break
+					}
+					bars = append(bars, Bar{Min: pts[startIdx].Index, Max: pts[endIdx].Index, Type: Hole})
+					startIdx = endIdx
+					pts[startIdx].Index++
+					pts[startIdx].Type = FillStart
+					keepGoing = false
+				case FillStart:
+					if depth > 0 {
+						depth--
+						endIdx++
+						break
+					}
+					bars = append(bars, Bar{Min: pts[startIdx].Index, Max: pts[endIdx].Index - 1, Type: Hole})
+					startIdx = endIdx
+					keepGoing = false
+				case HoleStart, FillStop:
+					depth++
+					fallthrough
+				default:
+					endIdx++
+				}
+			}
+		case FillStart:
+			endIdx := startIdx + 1
+			keepGoing := true
+			depth := 0
+			for keepGoing {
+				if endIdx == len(pts)-1 {
+					bars = append(bars, Bar{Min: pts[startIdx].Index, Max: pts[endIdx].Index, Type: Filled})
+					startIdx = endIdx
+					break
+				}
+				switch pts[endIdx].Type {
+				case FillStop:
+					if depth > 0 {
+						depth--
+						endIdx++
+						break
+					}
+					bars = append(bars, Bar{Min: pts[startIdx].Index, Max: pts[endIdx].Index, Type: Filled})
+					startIdx = endIdx
+					pts[startIdx].Index++
+					pts[startIdx].Type = HoleStart
+					keepGoing = false
+				case HoleStart:
+					if depth > 0 {
+						depth--
+						endIdx++
+						break
+					}
+					bars = append(bars, Bar{Min: pts[startIdx].Index, Max: pts[endIdx].Index - 1, Type: Filled})
+					startIdx = endIdx
+					keepGoing = false
+				case FillStart, HoleStop:
+					depth++
+					fallthrough
+				default:
+					endIdx++
+				}
+			}
+		default:
+			startIdx++
+		}
+	}
+	return bars
+}
+
+func (m *HoleManager) isFilled(b Bar) bool {
+	bars := m.getBars()
+	for idx := range bars {
+		if bars[idx].Type == Hole {
+			continue
+		}
+		if b.Min >= bars[idx].Min && b.Max <= bars[idx].Max {
+			return true
+		}
+	}
+	return false
+}
+
+
 
 // GetHoles get holes between min & max
 func GetHoles(peerID, minID, maxID int64) []dto.MessagesHole {
@@ -93,7 +318,7 @@ func fillMessageHoles(peerID, msgMinID, msgMaxID int64) error {
 		}
 		// maxside overlap
 		if h.MinID.Int64 < msgMinID && h.MinID.Int64 < msgMaxID && h.MaxID > msgMinID && h.MaxID < msgMaxID {
-			err := repo.Ctx().MessageHoles.Save(h.PeerID, h.MinID.Int64, msgMinID-1) //Update
+			err := repo.Ctx().MessageHoles.Save(h.PeerID, h.MinID.Int64, msgMinID-1) // Update
 			if err != nil {
 				fnLogFillMessageHoles("Update", h.PeerID, h.MinID.Int64, msgMinID-1, err)
 			}
