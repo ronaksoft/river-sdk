@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"git.ronaksoftware.com/ronak/riversdk/msg"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 )
 
 var (

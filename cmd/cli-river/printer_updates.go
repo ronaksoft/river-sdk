@@ -5,7 +5,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"git.ronaksoftware.com/ronak/riversdk/msg"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 )
 
 func UpdatePrinter(envelope *msg.UpdateEnvelope) {

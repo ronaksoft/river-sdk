@@ -3,7 +3,7 @@ package dto
 import (
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/msg"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 )
 
 type Dialogs struct {

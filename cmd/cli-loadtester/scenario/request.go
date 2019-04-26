@@ -9,7 +9,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 
-	"git.ronaksoftware.com/ronak/riversdk/msg"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 )
 
 // getAccessHash

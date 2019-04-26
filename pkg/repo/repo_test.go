@@ -10,7 +10,7 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 
-	"git.ronaksoftware.com/ronak/riversdk/msg"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 
 	"github.com/doug-martin/goqu"
 	_ "github.com/mattn/go-sqlite3"

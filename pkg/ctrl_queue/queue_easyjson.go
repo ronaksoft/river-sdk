@@ -4,7 +4,7 @@ package queue
 
 import (
 	json "encoding/json"
-	msg "git.ronaksoftware.com/ronak/riversdk/msg"
+	ext "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
@@ -19,7 +19,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkPkgQueue(in *jlexer.Lexer, out *request) {
+func easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(in *jlexer.Lexer, out *request) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -48,9 +48,9 @@ func easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkPkgQueue(in *jlexer.L
 				out.MessageEnvelope = nil
 			} else {
 				if out.MessageEnvelope == nil {
-					out.MessageEnvelope = new(msg.MessageEnvelope)
+					out.MessageEnvelope = new(ext.MessageEnvelope)
 				}
-				easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkMsg(in, out.MessageEnvelope)
+				easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkMsgExt(in, out.MessageEnvelope)
 			}
 		default:
 			in.SkipRecursive()
@@ -62,7 +62,7 @@ func easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkPkgQueue(in *jlexer.L
 		in.Consumed()
 	}
 }
-func easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkPkgQueue(out *jwriter.Writer, in request) {
+func easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(out *jwriter.Writer, in request) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -97,7 +97,7 @@ func easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkPkgQueue(out *jwriter
 		if in.MessageEnvelope == nil {
 			out.RawString("null")
 		} else {
-			easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkMsg(out, *in.MessageEnvelope)
+			easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkMsgExt(out, *in.MessageEnvelope)
 		}
 	}
 	out.RawByte('}')
@@ -106,27 +106,27 @@ func easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkPkgQueue(out *jwriter
 // MarshalJSON supports json.Marshaler interface
 func (v request) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkPkgQueue(&w, v)
+	easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v request) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkPkgQueue(w, v)
+	easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *request) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkPkgQueue(&r, v)
+	easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *request) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkPkgQueue(l, v)
+	easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(l, v)
 }
-func easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkMsg(in *jlexer.Lexer, out *msg.MessageEnvelope) {
+func easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkMsgExt(in *jlexer.Lexer, out *ext.MessageEnvelope) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -166,7 +166,7 @@ func easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkMsg(in *jlexer.Lexer,
 		in.Consumed()
 	}
 }
-func easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkMsg(out *jwriter.Writer, in msg.MessageEnvelope) {
+func easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkMsgExt(out *jwriter.Writer, in ext.MessageEnvelope) {
 	out.RawByte('{')
 	first := true
 	_ = first

@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
-	"git.ronaksoftware.com/ronak/riversdk/msg"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 )
 
 type SendMessage struct {

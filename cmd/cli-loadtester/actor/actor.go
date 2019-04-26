@@ -14,7 +14,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/executer"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/logs"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
-	"git.ronaksoftware.com/ronak/riversdk/msg"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 )
 
 // Actor indicator as user

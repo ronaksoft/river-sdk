@@ -13,7 +13,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/logs"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
 
-	"git.ronaksoftware.com/ronak/riversdk/msg"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"github.com/monnand/dhkx"
 )

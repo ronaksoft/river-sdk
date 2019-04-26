@@ -1,6 +1,6 @@
 package dto
 
-import "git.ronaksoftware.com/ronak/riversdk/msg"
+import msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 
 type UsersPhoto struct {
 	dto

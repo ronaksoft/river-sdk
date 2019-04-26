@@ -5,7 +5,7 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
 
-	"git.ronaksoftware.com/ronak/riversdk/msg"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"

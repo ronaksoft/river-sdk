@@ -3,7 +3,7 @@ package controller
 import (
 	"sync"
 
-	"git.ronaksoftware.com/ronak/riversdk/msg"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 )
 
 var (
