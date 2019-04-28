@@ -91,6 +91,7 @@ func NewController(config Config) *Controller {
 		ctrl.wsPongTimeout = config.PongTimeout
 	}
 
+	ctrl.wsKeepConnection = true
 	ctrl.wsDialer = &websocket.Dialer{
 		Proxy:            http.ProxyFromEnvironment,
 		HandshakeTimeout: 10 * time.Second,
@@ -484,7 +485,7 @@ func (ctrl *Controller) Connect() {
 func (ctrl *Controller) Disconnect() {
 	if ctrl.wsConn != nil {
 		ctrl.wsKeepConnection = false
-		ctrl.wsConn.Close()
+		_ = ctrl.wsConn.Close()
 
 		logs.Info("NetworkController::Disconnect() Disconnected")
 	}

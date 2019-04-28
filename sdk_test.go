@@ -1,12 +1,10 @@
 package riversdk
 
 import (
-	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"testing"
 )
 
@@ -14,35 +12,21 @@ var (
 	_River *River
 )
 
-func init() {
-	logs.Info("Creating New River SDK Instance")
-	r := new(River)
-	r.SetConfig(&RiverConfig{
-		DbPath:                 "./_data/",
-		DbID:                   "test",
-		ServerKeysFilePath:     "./keys.json",
-		ServerEndpoint:         "ws://new.river.im",
-		QueuePath:              fmt.Sprintf("%s/%s", "./_queue", "test"),
-		MainDelegate:           new(MainDelegateDummy),
-		Logger:                 nil,
-		LogLevel:               int(zapcore.DebugLevel),
-		DocumentAudioDirectory: "./_files/audio",
-		DocumentVideoDirectory: "./_files/video",
-		DocumentPhotoDirectory: "./_files/photo",
-		DocumentFileDirectory:  "./_files/file",
-		DocumentCacheDirectory: "./_files/cache",
-		DocumentLogDirectory:   "./_files/logs",
-	})
+func init() {}
 
-	r.Start()
-	if r.ConnInfo.AuthID == 0 {
-		logs.Info("AuthKey has not been created yet.")
-		if err := r.CreateAuthKey(); err != nil {
-			return
-		}
-		logs.Info("AuthKey Created.")
+func TestGetWorkGroup(t *testing.T) {
+	b, err := GetWorkGroup("ws://new.river.im", 15)
+	if err != nil {
+		t.Error(err)
+		return
 	}
-	_River = r
+	si := new(msg.SystemInfo)
+	err = si.Unmarshal(b)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	t.Log("WorkGroupName:", si.WorkGroupName)
 }
 
 func TestNewRiver(t *testing.T) {
@@ -64,6 +48,7 @@ func TestNewRiver(t *testing.T) {
 		}
 		logs.Info("AuthKey Created.")
 	}
+	_River = r
 }
 
 func TestRiver_SetScrollStatus(t *testing.T) {

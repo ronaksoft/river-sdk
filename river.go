@@ -3,6 +3,7 @@ package riversdk
 import (
 	"context"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"sync"
 	"time"
@@ -107,13 +108,16 @@ func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 
 	ch := make(chan []byte)
 	networkCtrl.SetOnConnectCallback(func() {
+		logs.Info("Connected")
 		msgEnvelope := new(msg.MessageEnvelope)
 		msgEnvelope.RequestID = ronak.RandomUint64()
 		msgEnvelope.Constructor = msg.C_SystemGetInfo
-		msgEnvelope.Message, _ = msg.SystemGetInfo{}.Marshal()
+
+		msgEnvelope.Message, _ = (&msg.SystemGetInfo{}).Marshal()
 		_  = networkCtrl.Send(msgEnvelope, true)
 	})
 	networkCtrl.SetMessageHandler(func(messages []*msg.MessageEnvelope) {
+		logs.Info("Message Received")
 		for _, message := range messages {
 			switch message.Constructor {
 			case msg.C_SystemInfo:
@@ -122,10 +126,16 @@ func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 			}
 		}
 	})
+	networkCtrl.SetUpdateHandler(func(messages []*msg.UpdateContainer) {
+		return
+	})
 
 	// Blocking call to connect ot server
+	_ = networkCtrl.Start()
 	go networkCtrl.Connect()
+	defer networkCtrl.Stop()
 	defer networkCtrl.Disconnect()
+
 
 	for {
 		select {
