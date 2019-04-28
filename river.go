@@ -125,14 +125,13 @@ func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 
 	// Blocking call to connect ot server
 	go networkCtrl.Connect()
+	defer networkCtrl.Disconnect()
 
 	for {
 		select {
 		case <-ctx.Done():
-			networkCtrl.Disconnect()
 			return nil, ctx.Err()
 		case b := <-ch:
-			networkCtrl.Disconnect()
 			return b, nil
 		}
 	}
