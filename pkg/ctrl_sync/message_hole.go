@@ -298,8 +298,6 @@ func IsHole(peerID int64, peerType int32, minID, maxID int64) (bool, error) {
 
 
 
-
-
 // GetHoles get holes between min & max
 func GetHoles(peerID, minID, maxID int64) []dto.MessagesHole {
 	holes, err := repo.Ctx().MessageHoles.GetHoles(peerID, minID, maxID)

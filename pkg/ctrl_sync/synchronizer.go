@@ -597,6 +597,15 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 		}
 	}
 
+
+	// No need to wait here till DB gets synced cuz UI will have required data
+	go func() {
+		// Save Groups
+		_ = repo.Ctx().Groups.SaveMany(updateContainer.Groups)
+		// Save Users
+		_ = repo.Ctx().Users.SaveMany(updateContainer.Users)
+	}()
+
 	// save updateID after processing messages
 	if ctrl.updateID < updateContainer.MaxUpdateID {
 		ctrl.updateID = updateContainer.MaxUpdateID

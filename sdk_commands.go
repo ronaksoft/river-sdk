@@ -553,7 +553,7 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 }
 
 func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	// send Media
+	// Send Media
 	logs.Debug("River::clientSendMessageMedia()")
 	reqMedia := new(msg.ClientSendMessageMedia)
 	if err := reqMedia.Unmarshal(in.Message); err != nil {
@@ -581,7 +581,6 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		msgID := -domain.SequentialUniqueID()
 		fileID := uint64(domain.SequentialUniqueID())
 		res, err := repo.Ctx().PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, int64(fileID), reqMedia)
-
 		if err != nil {
 			e := new(msg.Error)
 			e.Code = "n/a"
@@ -769,7 +768,6 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 
 // sendChunkedImportContactRequest chunk contacts by size of 50 and send them to server
 func (r *River) sendChunkedImportContactRequest(replace bool, diffContacts []*msg.PhoneContact, out *msg.MessageEnvelope, successCB domain.MessageHandler) {
-
 	result := new(msg.ContactsImported)
 	result.Users = make([]*msg.ContactUser, 0)
 

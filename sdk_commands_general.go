@@ -186,7 +186,6 @@ func (r *River) SearchContacts(requestID int64, searchPhrase string, delegate Re
 
 // GetRealTopMessageID returns max message id
 func (r *River) GetRealTopMessageID(peerID int64, peerType int32) int64 {
-
 	topMsgID, err := repo.Ctx().Messages.GetTopMessageID(peerID, peerType)
 	if err != nil {
 		logs.Error("SDK::GetRealTopMessageID() => Messages.GetTopMessageID()", zap.Error(err))
