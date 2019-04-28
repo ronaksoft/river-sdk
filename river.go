@@ -129,6 +129,7 @@ func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 	for {
 		select {
 		case <-ctx.Done():
+			networkCtrl.Disconnect()
 			return nil, ctx.Err()
 		case b := <-ch:
 			networkCtrl.Disconnect()
