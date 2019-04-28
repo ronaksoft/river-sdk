@@ -87,6 +87,9 @@ type River struct {
 }
 
 // GetWorkGroup
+// Client call GetWorkGroup with a timeout set, if this function could connect to server and get its response back from
+// the server then it returns the serialized version of msg.SystemInfo, otherwise it returns an error
+// It is upto the caller to re-call this function if it did not receive any function in case of error returned.
 func GetWorkGroup(url string, timeoutSecond int) ([]byte, error) {
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Duration(timeoutSecond)*time.Second)
 	defer cancelFunc()
