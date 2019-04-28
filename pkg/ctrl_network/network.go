@@ -443,12 +443,16 @@ func (ctrl *Controller) Stop() {
 
 // Connect dial websocket
 func (ctrl *Controller) Connect() {
-	logs.Info("NetworkController::Connect() Connecting")
 	ctrl.updateNetworkStatus(domain.NetworkConnecting)
 	keepGoing := true
 	for keepGoing {
 		if ctrl.wsConn != nil {
-			ctrl.wsConn.Close()
+			_ = ctrl.wsConn.Close()
+		}
+
+		// Return if Disconnect() has been called
+		if !ctrl.wsKeepConnection {
+			return
 		}
 		wsConn, _, err := ctrl.wsDialer.Dial(ctrl.websocketEndpoint, nil)
 		if err != nil {
@@ -474,8 +478,6 @@ func (ctrl *Controller) Connect() {
 
 		ctrl.updateNetworkStatus(domain.NetworkFast)
 	}
-
-	logs.Info("NetworkController::Connect()  Connected")
 }
 
 // Disconnect close websocket

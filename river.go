@@ -1,7 +1,9 @@
 package riversdk
 
 import (
+	"context"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"sync"
 	"time"
 
@@ -82,4 +84,53 @@ type River struct {
 	// implements wait 500 ms on out of sync to receive possible missed updates
 	lastOutOfSyncTime  time.Time
 	chOutOfSyncUpdates chan []*msg.UpdateContainer
+}
+
+// GetWorkGroup
+func GetWorkGroup(url string, timeoutSecond int) ([]byte, error) {
+	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Duration(timeoutSecond)*time.Second)
+	defer cancelFunc()
+
+	b, err := getWorkGroup(ctx, url)
+	return b, err
+}
+
+func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
+	networkCtrl := network.NewController(
+		network.Config{
+			ServerEndpoint: url,
+		},
+	)
+
+	ch := make(chan []byte)
+	networkCtrl.SetOnConnectCallback(func() {
+		msgEnvelope := new(msg.MessageEnvelope)
+		msgEnvelope.RequestID = ronak.RandomUint64()
+		msgEnvelope.Constructor = msg.C_SystemGetInfo
+		msgEnvelope.Message, _ = msg.SystemGetInfo{}.Marshal()
+		_  = networkCtrl.Send(msgEnvelope, true)
+	})
+	networkCtrl.SetMessageHandler(func(messages []*msg.MessageEnvelope) {
+		for _, message := range messages {
+			switch message.Constructor {
+			case msg.C_SystemInfo:
+				ch <- message.Message
+				return
+			}
+		}
+	})
+
+	// Blocking call to connect ot server
+	go networkCtrl.Connect()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case b := <-ch:
+			networkCtrl.Disconnect()
+			return b, nil
+		}
+	}
+
 }

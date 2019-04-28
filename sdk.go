@@ -997,3 +997,4 @@ func (r *River) AddRealTimeRequest(constructor int64) {
 func (r *River) RemoveRealTimeRequest(constructor int64) {
 	delete(r.realTimeCommands, constructor)
 }
+
