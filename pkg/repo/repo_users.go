@@ -226,7 +226,7 @@ func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
 
 	users := make([]dto.Users, 0)
 
-	err := r.db.Where("AccessHash <> 0").Find(&users).Error
+	err := r.db.Where("IsContact = 1").Find(&users).Error
 	if err != nil {
 		logs.Error("Users::GetContacts()-> fetch user entities", zap.Error(err))
 		return nil, nil //, err
