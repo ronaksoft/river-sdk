@@ -849,26 +849,22 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 	}
 
 	dto, err := repo.Ctx().Files.GetFile(msgID)
-
-	if err == nil {
-		if _, err = os.Stat(dto.ThumbFilePath); os.IsNotExist(err) {
-			path, err := filemanager.Ctx().DownloadThumbnail(m.ID, docID, accessHash, clusterID, version)
-			if err != nil {
-				logs.Error("SDK::FileDownloadThumbnail()-> filemanager.DownloadThumbnail()", zap.Error(err))
-			}
-			filePath = path
-		} else {
-			filePath = dto.ThumbFilePath
-		}
-	} else {
-		path, _ := filemanager.Ctx().DownloadThumbnail(m.ID, docID, accessHash, clusterID, version)
+	if err != nil {
+		path, err := filemanager.Ctx().DownloadThumbnail(m.ID, docID, accessHash, clusterID, version)
 		if err != nil {
-			logs.Error("SDK::FileDownloadThumbnail()-> filemanager.DownloadThumbnail()", zap.Error(err))
+			logs.Error("SDK::FileDownloadThumbnail()-> DownloadThumbnail()", zap.Error(err))
 		}
-		filePath = path
+		return path
 	}
-
-	return filePath
+	_, err = os.Stat(dto.ThumbFilePath)
+	if os.IsNotExist(err) {
+		path, err := filemanager.Ctx().DownloadThumbnail(m.ID, docID, accessHash, clusterID, version)
+		if err != nil {
+			logs.Error("SDK::FileDownloadThumbnail()-> DownloadThumbnail()", zap.Error(err))
+		}
+		return path
+	}
+	return dto.ThumbFilePath
 }
 
 // GetSharedMedia search in given dialog files
