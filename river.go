@@ -127,14 +127,15 @@ func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 		}
 	})
 	networkCtrl.SetUpdateHandler(func(messages []*msg.UpdateContainer) {
+		// We don't need to handle updates
 		return
 	})
 
 	// Blocking call to connect ot server
 	_ = networkCtrl.Start()
 	go networkCtrl.Connect()
-	defer networkCtrl.Stop()
-	defer networkCtrl.Disconnect()
+	defer networkCtrl.Stop()			// 2nd Stop the controller
+	defer networkCtrl.Disconnect()		// 1st Disconnect
 
 
 	for {
