@@ -106,6 +106,8 @@ func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 	)
 
 	ch := make(chan []byte)
+	// Assign Handlers
+	// OnConnect Handler
 	networkCtrl.SetOnConnectCallback(func() {
 		msgEnvelope := new(msg.MessageEnvelope)
 		msgEnvelope.RequestID = ronak.RandomUint64()
@@ -114,6 +116,7 @@ func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 		msgEnvelope.Message, _ = (&msg.SystemGetInfo{}).Marshal()
 		_  = networkCtrl.Send(msgEnvelope, true)
 	})
+	// Message Handler
 	networkCtrl.SetMessageHandler(func(messages []*msg.MessageEnvelope) {
 		for _, message := range messages {
 			switch message.Constructor {
@@ -123,12 +126,13 @@ func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 			}
 		}
 	})
+	// Update Handler
 	networkCtrl.SetUpdateHandler(func(messages []*msg.UpdateContainer) {
 		// We don't need to handle updates
 		return
 	})
 
-	// Blocking call to connect ot server
+	// Start the Network Controller alone
 	_ = networkCtrl.Start()
 	go networkCtrl.Connect()
 	defer networkCtrl.Stop()			// 2nd Stop the controller
