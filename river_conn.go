@@ -64,26 +64,7 @@ type RiverConnection struct {
 	FirstName string
 	LastName  string
 	Bio       string
-	Delegates MainDelegate
-}
-
-// loadSystemConfig get system config from local DB
-func (r *River) loadSystemConfig(conf *RiverConfig) {
-	r.ConnInfo = new(RiverConnection)
-	r.ConnInfo.Delegates = conf.MainDelegate
-	conInfo, _ := r.mainDelegate.LoadConnInfo()
-	if err := r.ConnInfo.UnmarshalJSON(conInfo); err != nil {
-		logs.Error("loadSystemConfig::Load()->UnmarshalJSON()", zap.Error(err))
-	}
-}
-
-func (r *River) saveConnInfo() {
-	conInfo, err := json.Marshal(r.ConnInfo)
-	if err != nil {
-		logs.Warn("saveConnInfo()", zap.String("error", err.Error()))
-		return
-	}
-	r.mainDelegate.SaveConnInfo(conInfo)
+	Delegate  ConnInfoDelegate
 }
 
 // clearSystemConfig reset config
@@ -93,9 +74,7 @@ func (r *River) clearSystemConfig() {
 	r.ConnInfo.Phone = ""
 	r.ConnInfo.UserID = 0
 	r.ConnInfo.Username = ""
-	keyValue, _ := json.Marshal(r.ConnInfo)
-	r.mainDelegate.SaveConnInfo(keyValue)
-	//r.ConnInfo.Save()
+	r.ConnInfo.Save()
 	r.DeviceToken = new(msg.AccountRegisterDevice)
 	r.saveDeviceToken()
 }
@@ -114,33 +93,28 @@ func (r *River) saveDeviceToken() {
 	}
 }
 
-// saveConfig save to DB
-func (v *RiverConnection) saveConfig() {
-	logs.Debug("RiverConnection::Save()")
-	if bytes, err := v.MarshalJSON(); err != nil {
-		logs.Error("RiverConnection::Save()->MarshalJSON()", zap.Error(err))
-	} else if err := repo.Ctx().System.SaveString(domain.ColumnConnectionInfo, string(bytes)); err != nil {
-		logs.Error("RiverConnection::Save()->SaveString()", zap.Error(err))
+// Get deviceToken
+func (r *River) loadDeviceToken() {
+	r.DeviceToken = new(msg.AccountRegisterDevice)
+	str, err := repo.Ctx().System.LoadString(domain.ColumnDeviceToken)
+	if err != nil {
+		logs.Error("River::loadDeviceToken() failed to fetch DeviceToken",
+			zap.String("Error", err.Error()),
+		)
+		return
 	}
-}
-
-// loadConfig load from DB
-func (v *RiverConnection) loadConfig() error {
-	logs.Debug("RiverConnection::Load()")
-	if kv, err := repo.Ctx().System.LoadString(domain.ColumnConnectionInfo); err != nil {
-		logs.Error("RiverConnection::Load()->LoadString()", zap.Error(err))
-		return err
-	} else if err := v.UnmarshalJSON([]byte(kv)); err != nil {
-		logs.Error("RiverConnection::Load()->UnmarshalJSON()", zap.Error(err))
-		return err
+	err = json.Unmarshal([]byte(str), r.DeviceToken)
+	if err != nil {
+		logs.Error("River::loadDeviceToken() failed to unmarshal DeviceToken",
+			zap.String("Error", err.Error()),
+		)
 	}
-	return nil
 }
 
 // Save RiverConfig interface func
 func (v *RiverConnection) Save() {
 	b, _ := v.MarshalJSON()
-	v.Delegates.SaveConnInfo(b)
+	v.Delegate.SaveConnInfo(b)
 //	v.saveConfig()
 }
 
@@ -169,7 +143,6 @@ func (v *RiverConnection) ChangeLastName(lastName string) { v.LastName = lastNam
 func (v *RiverConnection) ChangeBio(bio string) { v.Bio = bio }
 
 // Load RiverConfig interface func
-// deprecated
 //func (v *RiverConnection) Load() error { return v.loadConfig() }
 
 // PickupAuthID RiverConfig interface func

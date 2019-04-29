@@ -60,6 +60,8 @@ func main() {
 		dbPath = "./_db"
 	}
 
+	conInfo := new(riversdk.RiverConnection)
+
 	qPath := "./_queue"
 	_SDK = new(riversdk.River)
 	_SDK.SetConfig(&riversdk.RiverConfig{
@@ -77,6 +79,7 @@ func main() {
 		DocumentFileDirectory:  "./_files/file",
 		DocumentCacheDirectory: "./_files/cache",
 		DocumentLogDirectory:   "./_files/logs",
+		ConnInfo: conInfo,
 	})
 
 	_SDK.Start()

@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/big"
@@ -26,7 +25,7 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 
 	"github.com/monnand/dhkx"
@@ -48,6 +47,10 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// init delegates
 	r.mainDelegate = conf.MainDelegate
+
+	r.ConnInfo = conf.ConnInfo
+
+	//r.ConnInfo.Delegates = conf.MainDelegate
 
 	// set loglevel
 	logs.SetLogLevel(conf.LogLevel)
@@ -90,9 +93,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 			zap.String("Error", err.Error()),
 		)
 	}
-
-	// init riverConfigs this should be after connect to DB
-	r.loadSystemConfig(conf)
 
 	// load DeviceToken
 	r.loadDeviceToken()
@@ -202,24 +202,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 func (r *River) Version() string {
 	// TODO:: automatic generation
 	return "0.8.1"
-}
-
-// Get deviceToken
-func (r *River) loadDeviceToken() {
-	r.DeviceToken = new(msg.AccountRegisterDevice)
-	str, err := repo.Ctx().System.LoadString(domain.ColumnDeviceToken)
-	if err != nil {
-		logs.Error("River::loadDeviceToken() failed to fetch DeviceToken",
-			zap.String("Error", err.Error()),
-		)
-		return
-	}
-	err = json.Unmarshal([]byte(str), r.DeviceToken)
-	if err != nil {
-		logs.Error("River::loadDeviceToken() failed to unmarshal DeviceToken",
-			zap.String("Error", err.Error()),
-		)
-	}
 }
 
 func (r *River) onNetworkConnect() {
