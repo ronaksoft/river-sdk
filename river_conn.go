@@ -64,14 +64,26 @@ type RiverConnection struct {
 	FirstName string
 	LastName  string
 	Bio       string
+	Delegates MainDelegate
 }
 
 // loadSystemConfig get system config from local DB
-func (r *River) loadSystemConfig() {
+func (r *River) loadSystemConfig(conf *RiverConfig) {
 	r.ConnInfo = new(RiverConnection)
-	if err := r.ConnInfo.loadConfig(); err != nil {
-		r.ConnInfo.saveConfig()
+	r.ConnInfo.Delegates = conf.MainDelegate
+	conInfo, _ := r.mainDelegate.LoadConnInfo()
+	if err := r.ConnInfo.UnmarshalJSON(conInfo); err != nil {
+		logs.Error("loadSystemConfig::Load()->UnmarshalJSON()", zap.Error(err))
 	}
+}
+
+func (r *River) saveConnInfo() {
+	conInfo, err := json.Marshal(r.ConnInfo)
+	if err != nil {
+		logs.Warn("saveConnInfo()", zap.String("error", err.Error()))
+		return
+	}
+	r.mainDelegate.SaveConnInfo(conInfo)
 }
 
 // clearSystemConfig reset config
@@ -81,7 +93,9 @@ func (r *River) clearSystemConfig() {
 	r.ConnInfo.Phone = ""
 	r.ConnInfo.UserID = 0
 	r.ConnInfo.Username = ""
-	r.ConnInfo.Save()
+	keyValue, _ := json.Marshal(r.ConnInfo)
+	r.mainDelegate.SaveConnInfo(keyValue)
+	//r.ConnInfo.Save()
 	r.DeviceToken = new(msg.AccountRegisterDevice)
 	r.saveDeviceToken()
 }
@@ -124,7 +138,11 @@ func (v *RiverConnection) loadConfig() error {
 }
 
 // Save RiverConfig interface func
-func (v *RiverConnection) Save() { v.saveConfig() }
+func (v *RiverConnection) Save() {
+	b, _ := v.MarshalJSON()
+	v.Delegates.SaveConnInfo(b)
+//	v.saveConfig()
+}
 
 // ChangeAuthID RiverConfig interface func
 func (v *RiverConnection) ChangeAuthID(authID int64) { v.AuthID = authID }
@@ -151,7 +169,8 @@ func (v *RiverConnection) ChangeLastName(lastName string) { v.LastName = lastNam
 func (v *RiverConnection) ChangeBio(bio string) { v.Bio = bio }
 
 // Load RiverConfig interface func
-func (v *RiverConnection) Load() error { return v.loadConfig() }
+// deprecated
+//func (v *RiverConnection) Load() error { return v.loadConfig() }
 
 // PickupAuthID RiverConfig interface func
 func (v *RiverConnection) PickupAuthID() int64 { return v.AuthID }

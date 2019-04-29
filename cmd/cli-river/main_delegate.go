@@ -8,6 +8,15 @@ import (
 
 type MainDelegate struct{}
 
+var ConnInfo []byte
+
+func (d *MainDelegate) LoadConnInfo() (connInfo []byte, err error) {
+	return ConnInfo, nil
+}
+func (d *MainDelegate) SaveConnInfo(connInfo []byte) {
+	ConnInfo = connInfo
+}
+
 func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 
 	_Log.Info("Update received", zap.String("Constructor", msg.ConstructorNames[constructor]))

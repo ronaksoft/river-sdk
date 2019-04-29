@@ -3,7 +3,7 @@ package domain
 // RiverConfigurator high level interface to prevent package conflict when pass RiverConfig to SyncController
 type RiverConfigurator interface {
 	Save()
-	Load() error
+	//Load() error
 	ChangeAuthID(authID int64)
 	ChangeAuthKey(authKey [256]byte)
 	ChangeUserID(userID int64)

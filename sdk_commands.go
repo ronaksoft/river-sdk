@@ -828,7 +828,7 @@ func (r *River) accountUpdateUsername(in, out *msg.MessageEnvelope, timeoutCB do
 	}
 
 	r.ConnInfo.Username = req.Username
-	r.ConnInfo.saveConfig()
+	r.saveConnInfo()
 
 	logs.Debug("River::accountUpdateUsername()-> pass request to server")
 	// send the request to server
@@ -930,7 +930,7 @@ func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB dom
 	r.ConnInfo.FirstName = req.FirstName
 	r.ConnInfo.LastName = req.LastName
 	r.ConnInfo.Bio = req.Bio
-	r.ConnInfo.Save()
+	r.saveConnInfo()
 
 	err := repo.Ctx().Users.UpdateUserProfile(r.ConnInfo.UserID, req)
 	if err != nil {

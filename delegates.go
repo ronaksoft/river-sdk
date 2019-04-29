@@ -14,6 +14,9 @@ type MainDelegate interface {
 	OnUploadCompleted(messageID int64, filePath string)
 	OnDownloadError(messageID, requestID int64, filePath string, err []byte)
 	OnUploadError(messageID, requestID int64, filePath string, err []byte)
+
+	LoadConnInfo() (connInfo []byte, err error)
+	SaveConnInfo(connInfo []byte)
 }
 
 // RequestDelegate each request should have this callbacks

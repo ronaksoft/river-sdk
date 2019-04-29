@@ -92,7 +92,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	}
 
 	// init riverConfigs this should be after connect to DB
-	r.loadSystemConfig()
+	r.loadSystemConfig(conf)
 
 	// load DeviceToken
 	r.loadDeviceToken()
@@ -965,7 +965,8 @@ func (r *River) CreateAuthKey() (err error) {
 					err = domain.ErrAuthFailed
 					return
 				}
-				r.ConnInfo.Save()
+				//r.saveConnInfo()
+
 				r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 				filemanager.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 			case msg.C_Error:
@@ -997,4 +998,3 @@ func (r *River) AddRealTimeRequest(constructor int64) {
 func (r *River) RemoveRealTimeRequest(constructor int64) {
 	delete(r.realTimeCommands, constructor)
 }
-
