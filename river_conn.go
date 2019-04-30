@@ -57,7 +57,7 @@ func (v *ServerKeys) GetDhGroup(keyFP int64) (DHGroup, error) {
 // easyjson:json
 type RiverConnection struct {
 	AuthID    int64
-	AuthKey   [256]byte
+	AuthKey   []byte
 	UserID    int64
 	Username  string
 	Phone     string
@@ -117,54 +117,3 @@ func (v *RiverConnection) Save() {
 	v.Delegate.SaveConnInfo(b)
 //	v.saveConfig()
 }
-
-// ChangeAuthID RiverConfig interface func
-func (v *RiverConnection) ChangeAuthID(authID int64) { v.AuthID = authID }
-
-// ChangeAuthKey RiverConfig interface func
-func (v *RiverConnection) ChangeAuthKey(authKey [256]byte) { v.AuthKey = authKey }
-
-// ChangeUserID RiverConfig interface func
-func (v *RiverConnection) ChangeUserID(userID int64) { v.UserID = userID }
-
-// ChangeUsername RiverConfig interface func
-func (v *RiverConnection) ChangeUsername(username string) { v.Username = username }
-
-// ChangePhone RiverConfig interface func
-func (v *RiverConnection) ChangePhone(phone string) { v.Phone = phone }
-
-// ChangeFirstName RiverConfig interface func
-func (v *RiverConnection) ChangeFirstName(firstName string) { v.FirstName = firstName }
-
-// ChangeLastName RiverConfig interface func
-func (v *RiverConnection) ChangeLastName(lastName string) { v.LastName = lastName }
-
-// ChangeBio RiverConfig interface func
-func (v *RiverConnection) ChangeBio(bio string) { v.Bio = bio }
-
-// Load RiverConfig interface func
-//func (v *RiverConnection) Load() error { return v.loadConfig() }
-
-// PickupAuthID RiverConfig interface func
-func (v *RiverConnection) PickupAuthID() int64 { return v.AuthID }
-
-// PickupAuthKey RiverConfig interface func
-func (v *RiverConnection) PickupAuthKey() [256]byte { return v.AuthKey }
-
-// PickupUserID RiverConfig interface func
-func (v *RiverConnection) PickupUserID() int64 { return v.UserID }
-
-// PickupUsername RiverConfig interface func
-func (v *RiverConnection) PickupUsername() string { return v.Username }
-
-// PickupPhone RiverConfig interface func
-func (v *RiverConnection) PickupPhone() string { return v.Phone }
-
-// PickupFirstName RiverConfig interface func
-func (v *RiverConnection) PickupFirstName() string { return v.FirstName }
-
-// PickupLastName RiverConfig interface func
-func (v *RiverConnection) PickupLastName() string { return v.LastName }
-
-// PickupBio RiverConfig interface func
-func (v *RiverConnection) PickupBio() string { return v.Bio }
