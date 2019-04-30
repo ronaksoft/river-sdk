@@ -5,7 +5,7 @@ type RiverConfigurator interface {
 	Save()
 	//Load() error
 	ChangeAuthID(authID int64)
-	ChangeAuthKey(authKey [256]byte)
+	ChangeAuthKey(authKey []byte)
 	ChangeUserID(userID int64)
 	ChangeUsername(username string)
 	ChangePhone(phone string)
