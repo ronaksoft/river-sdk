@@ -626,9 +626,11 @@ func (r *River) Stop() {
 
 	// Close database connection
 	err := repo.Ctx().Close()
-	logs.Debug("River::Stop() failed to close DB context",
-		zap.String("Error", err.Error()),
-	)
+	if err != nil {
+		logs.Debug("River::Stop() failed to close DB context",
+			zap.String("Error", err.Error()),
+		)
+	}
 }
 
 // ExecuteCommand ...
