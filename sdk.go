@@ -967,6 +967,7 @@ func (r *River) CreateAuthKey() (err error) {
 	// double set AuthID
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 	filemanager.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+	r.ConnInfo.Save()
 
 	return
 }
