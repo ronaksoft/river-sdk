@@ -17,7 +17,6 @@ type MainDelegate interface {
 }
 
 type ConnInfoDelegate interface {
-	LoadConnInfo() (connInfo []byte, err error)
 	SaveConnInfo(connInfo []byte)
 }
 

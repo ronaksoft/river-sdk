@@ -61,6 +61,7 @@ func main() {
 	}
 
 	conInfo := new(riversdk.RiverConnection)
+	conInfo.Delegate =  new(ConnInfoDelegates)
 
 	qPath := "./_queue"
 	_SDK = new(riversdk.River)

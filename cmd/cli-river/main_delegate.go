@@ -6,16 +6,15 @@ import (
 	"go.uber.org/zap"
 )
 
-type MainDelegate struct{}
-
 var ConnInfo []byte
 
-func (d *MainDelegate) LoadConnInfo() (connInfo []byte, err error) {
-	return ConnInfo, nil
-}
-func (d *MainDelegate) SaveConnInfo(connInfo []byte) {
+type ConnInfoDelegates struct {}
+
+func (c *ConnInfoDelegates) SaveConnInfo(connInfo []byte) {
 	ConnInfo = connInfo
 }
+
+type MainDelegate struct{}
 
 func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 
