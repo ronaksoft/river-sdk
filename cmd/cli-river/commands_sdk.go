@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -22,6 +23,15 @@ var SdkConnInfo = &ishell.Cmd{
 		c.Println("AuthKey:", _SDK.ConnInfo.AuthKey)
 	},
 }
+
+var GetAuthKey = &ishell.Cmd{
+	Name: "GetAuthKey",
+	Func: func(c *ishell.Context) {
+		authKey := _SDK.ConnInfo.GetAuthKey()
+		fmt.Println("authKey", authKey)
+	},
+}
+
 
 var SdkSetLogLevel = &ishell.Cmd{
 	Name: "SetLogLevel",
@@ -87,4 +97,5 @@ func init() {
 	SDK.AddCmd(SdkGetDiffrence)
 	SDK.AddCmd(SdkGetServerTime)
 	SDK.AddCmd(SdkUpdateGetState)
+	SDK.AddCmd(GetAuthKey)
 }

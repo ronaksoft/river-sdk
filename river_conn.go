@@ -127,8 +127,8 @@ func (v *RiverConnection) ChangeAuthKey(authKey []byte) {
 }
 
 func (v *RiverConnection) GetAuthKey() []byte {
-	var bytes []byte
-	copy(bytes, v.AuthKey[0:])
+	var bytes = make([]byte,256)
+	copy(bytes, v.AuthKey[0:256])
 	return bytes
 }
 
