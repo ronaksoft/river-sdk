@@ -949,8 +949,6 @@ func (r *River) CreateAuthKey() (err error) {
 					err = domain.ErrAuthFailed
 					return
 				}
-				//r.saveConnInfo()
-
 				r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 				filemanager.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 			case msg.C_Error:
