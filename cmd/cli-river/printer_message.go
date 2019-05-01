@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -32,6 +33,8 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		x := new(msg.AuthSentCode)
 		x.Unmarshal(envelope.Message)
 		if strings.HasPrefix(x.Phone ,"2374") {
+			os.Remove("./_connection/phone")
+			os.Remove("./_connection/phoneCodeHash")
 			ioutil.WriteFile("./_connection/phone", []byte(x.Phone), 0666)
 			ioutil.WriteFile("./_connection/phoneCodeHash", []byte(x.PhoneCodeHash), 0666)
 		}
