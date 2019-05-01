@@ -4,6 +4,9 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"
+	"io/ioutil"
+	"os"
+	"strings"
 )
 
 var Auth = &ishell.Cmd{
@@ -65,12 +68,31 @@ var AuthLogin = &ishell.Cmd{
 	Name: "Login",
 	Func: func(c *ishell.Context) {
 		req := msg.AuthLogin{}
-		req.Phone = fnGetPhone(c)
-		req.PhoneCode = fnGetPhoneCode(c)
-		req.PhoneCodeHash = fnGetPhoneCodeHash(c)
+		phoneFile, err := os.Open("./_connection/phone")
+		if err != nil {
+			req.Phone = fnGetPhone(c)
+			req.PhoneCode = fnGetPhoneCode(c)
+			req.PhoneCodeHash = fnGetPhoneCodeHash(c)
 
+		} else {
+			b, _ := ioutil.ReadAll(phoneFile)
+			req.Phone = string(b)
+			if strings.HasPrefix(req.Phone ,"2374") {
+				File, err := os.Open("./_connection/phoneCodeHash")
+				if err != nil {
+					req.PhoneCodeHash = fnGetPhoneCode(c)
+				} else {
+					req.PhoneCode = req.Phone[len(req.Phone) - 4:]
+					b, _ := ioutil.ReadAll(File)
+					req.PhoneCodeHash = string(b)
+				}
+			}
+		}
+		c.Print("req: ", req)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
+		os.Remove("./_connection/phone")
+		os.Remove("./_connection/phoneCodeHash")
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthLogin, reqBytes, reqDelegate, false, false); err != nil {
 			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		} else {
@@ -86,6 +108,7 @@ var AuthLogout = &ishell.Cmd{
 		if _, err := _SDK.Logout(true, 0); err != nil {
 			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		}
+		os.Remove("./_connection/connInfo")
 	},
 }
 

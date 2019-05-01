@@ -1,9 +1,11 @@
 package main
 
 import (
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"go.uber.org/zap"
+	"io/ioutil"
+	"os"
 )
 
 var ConnInfo []byte
@@ -11,7 +13,12 @@ var ConnInfo []byte
 type ConnInfoDelegates struct {}
 
 func (c *ConnInfoDelegates) SaveConnInfo(connInfo []byte) {
+	_ = os.MkdirAll("./_connection", os.ModePerm)
 	ConnInfo = connInfo
+	err := ioutil.WriteFile("./_connection/connInfo", connInfo, 0666)
+	if err != nil {
+		_Log.Error(err.Error())
+	}
 }
 
 type MainDelegate struct{}

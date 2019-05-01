@@ -3,11 +3,13 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
+	"strings"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"github.com/olekukonko/tablewriter"
 	"go.uber.org/zap"
 )
@@ -29,6 +31,10 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 	case msg.C_AuthSentCode:
 		x := new(msg.AuthSentCode)
 		x.Unmarshal(envelope.Message)
+		if strings.HasPrefix(x.Phone ,"2374") {
+			ioutil.WriteFile("./_connection/phone", []byte(x.Phone), 0666)
+			ioutil.WriteFile("./_connection/phoneCodeHash", []byte(x.PhoneCodeHash), 0666)
+		}
 		_Shell.Println(fmt.Sprintf("AuthSentCode \t Phone:%s , Hash:%s", x.Phone, x.PhoneCodeHash))
 	case msg.C_ContactsImported:
 		x := new(msg.ContactsImported)

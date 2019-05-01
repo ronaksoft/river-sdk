@@ -1,12 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk"
 	"github.com/fatih/color"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/abiosoft/ishell.v2"
+	"io/ioutil"
+	"os"
 )
 
 var (
@@ -61,6 +64,16 @@ func main() {
 	}
 
 	conInfo := new(riversdk.RiverConnection)
+
+	file, err := os.Open("./_connection/connInfo")
+	if err == nil {
+		b, _ := ioutil.ReadAll(file)
+		err := json.Unmarshal(b, conInfo)
+		if err != nil {
+			_Shell.Print(err.Error())
+		}
+	}
+
 	conInfo.Delegate =  new(ConnInfoDelegates)
 
 	qPath := "./_queue"
