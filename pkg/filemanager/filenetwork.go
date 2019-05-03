@@ -2,7 +2,6 @@ package filemanager
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -34,15 +33,13 @@ func (fm *FileManager) Send(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvel
 
 	b, err := protoMessage.Marshal()
 
-	//ioutil.WriteFile("dump.raw", b, os.ModePerm)
-
 	reqBuff := bytes.NewBuffer(b)
 	if err != nil {
 		return nil, err
 	}
 
 	// Set timeout
-	client := http.DefaultClient
+	client := &http.Client{}
 	client.Timeout = domain.WebsocketRequestTime
 
 	// Send Data
@@ -60,7 +57,7 @@ func (fm *FileManager) Send(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvel
 	res := new(msg.ProtoMessage)
 	err = res.Unmarshal(resBuff)
 	if err != nil {
-		return nil, fmt.Errorf("Error : %s , Response Dump : %s", err.Error(), string(resBuff))
+		return nil, err
 	}
 	if res.AuthID == 0 {
 		receivedEnvelope := new(msg.MessageEnvelope)

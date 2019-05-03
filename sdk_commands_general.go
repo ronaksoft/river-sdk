@@ -203,8 +203,8 @@ func (r *River) UpdateContactInfo(userID int64, firstName, lastName string) erro
 	return err
 }
 
-// SearchInDialogs search dialog title
-func (r *River) SearchInDialogs(requestID int64, searchPhrase string, delegate RequestDelegate) {
+// SearchDialogs search dialog title
+func (r *River) SearchDialogs(requestID int64, searchPhrase string, delegate RequestDelegate) {
 	res := new(msg.MessageEnvelope)
 	res.Constructor = msg.C_MessagesDialogs
 	res.RequestID = uint64(requestID)
@@ -348,7 +348,40 @@ func (r *River) GetFileStatus(msgID int64) string {
 
 	return string(buff)
 }
+func getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, filePath string) {
 
+	fs, err := repo.Files.GetFileStatus(msgID)
+	if err == nil && fs != nil {
+		// file is inprogress state
+		// double check
+
+		if fs.IsCompleted {
+			go repo.Files.DeleteFileStatus(fs.MessageID)
+		}
+		status = domain.RequestStatus(fs.RequestStatus)
+		filePath = fs.FilePath
+		if fs.TotalParts > 0 {
+			partList := domain.MInt64B{}
+			json.Unmarshal(fs.PartList, &partList)
+			processedParts := fs.TotalParts - int64(len(partList))
+			progress = (float64(processedParts) / float64(fs.TotalParts) * float64(100))
+		}
+	} else {
+		filePath = getFilePath(msgID)
+		if filePath != "" {
+			// file exists so it means download completed
+			status = domain.RequestStateCompleted
+			progress = 100
+		} else {
+			// file does not exist and its progress state does not exist too
+			status = domain.RequestStateNone
+			progress = 0
+			filePath = ""
+		}
+	}
+
+	return
+}
 func getFilePath(msgID int64) string {
 	m := repo.Messages.GetMessage(msgID)
 	if m != nil {
@@ -384,7 +417,6 @@ func getFilePath(msgID int64) string {
 
 // FileDownload add download request to filemanager queue
 func (r *River) FileDownload(msgID int64) {
-
 	status, progress, filePath := getFileStatus(msgID)
 	logs.Debug("SDK::FileDownload() current file progress status",
 		zap.String("Status", status.ToString()),
@@ -588,42 +620,6 @@ func downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) string
 		return ""
 	}
 	return filePath
-}
-
-// getFileStatus
-func getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, filePath string) {
-
-	fs, err := repo.Files.GetFileStatus(msgID)
-	if err == nil && fs != nil {
-		// file is inprogress state
-		// double check
-
-		if fs.IsCompleted {
-			go repo.Files.DeleteFileStatus(fs.MessageID)
-		}
-		status = domain.RequestStatus(fs.RequestStatus)
-		filePath = fs.FilePath
-		if fs.TotalParts > 0 {
-			partList := domain.MInt64B{}
-			json.Unmarshal(fs.PartList, &partList)
-			processedParts := fs.TotalParts - int64(len(partList))
-			progress = (float64(processedParts) / float64(fs.TotalParts) * float64(100))
-		}
-	} else {
-		filePath = getFilePath(msgID)
-		if filePath != "" {
-			// file exists so it means download completed
-			status = domain.RequestStateCompleted
-			progress = 100
-		} else {
-			// file does not exist and its progress state does not exist too
-			status = domain.RequestStateNone
-			progress = 0
-			filePath = ""
-		}
-	}
-
-	return
 }
 
 // GroupUploadPhoto upload group profile photo

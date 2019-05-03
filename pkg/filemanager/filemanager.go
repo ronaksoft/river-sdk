@@ -234,13 +234,7 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 		case msg.MediaTypeEmpty:
 			// TODO:: implement it
 		case msg.MediaTypePhoto:
-			// // TODO:: implement it
-			// x := new(msg.MediaPhoto)
-			// x.Unmarshal(req.Media)
-			// docID = x.Doc.ID
-			// clusterID = x.Doc.ClusterID
-			// accessHash = x.Doc.AccessHash
-			// fileSize = x.Doc.FileSize
+			// TODO:: implement it
 		case msg.MediaTypeDocument:
 			x := new(msg.MediaDocument)
 			x.Unmarshal(req.Media)
@@ -430,7 +424,6 @@ func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, 
 			// reset counter
 			fs.retryCounter = 0
 			if x.Result {
-
 				isThumbnail := fs.ThumbPosition < fs.ThumbTotalSize
 				if isThumbnail {
 					fs.ReadCommit(count, true, 0)
