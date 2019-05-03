@@ -17,16 +17,15 @@ var (
 	singleton     sync.Mutex
 	repoLastError error
 
-	Dialogs         = &repoDialogs{repository: r}
-	Messages        = &repoMessages{repository: r}
-	PendingMessages = &repoMessagesPending{repository: r}
-	MessagesExtra   = &repoMessagesExtra{repository: r}
-	MessageHoles    = &repoMessagesHole{repository: r}
-	System          = &repoSystem{repository: r}
-	Users           = &repoUsers{repository: r}
-	UISettings      = &repoUISettings{repository: r}
-	Groups          = &repoGroups{repository: r}
-	Files           = &repoFiles{repository: r}
+	Dialogs         *repoDialogs
+	Messages        *repoMessages
+	PendingMessages *repoMessagesPending
+	MessagesExtra   *repoMessagesExtra
+	System          *repoSystem
+	Users           *repoUsers
+	UISettings      *repoUISettings
+	Groups          *repoGroups
+	Files           *repoFiles
 )
 
 // Context container of repo
@@ -73,10 +72,18 @@ func InitRepo(dialect, dbPath string) error {
 			DBDialect: dialect,
 			DBPath:    dbPath,
 		}
+		Dialogs = &repoDialogs{repository: r}
+		Messages = &repoMessages{repository: r}
+		PendingMessages = &repoMessagesPending{repository: r}
+		MessagesExtra = &repoMessagesExtra{repository: r}
+		System = &repoSystem{repository: r}
+		Users = &repoUsers{repository: r}
+		UISettings = &repoUISettings{repository: r}
+		Groups = &repoGroups{repository: r}
+		Files = &repoFiles{repository: r}
 	}
 	return repoLastError
 }
-
 func repoSetDB(dialect, dbPath string) error {
 	r = new(repository)
 	r.db, repoLastError = gorm.Open(dialect, dbPath)
@@ -137,32 +144,3 @@ func Close() error {
 	ctx = nil
 	return repoLastError
 }
-
-// // Exec execute raw query
-// func (c *Context) Exec(qry string) error {
-// 	return r.db.Exec(qry).Error
-// }
-
-// // Map basic mapper don't use this define mapper for each dto
-// func (r *repository) Map(from interface{}, to interface{}) error {
-// 	buff, err := json.Marshal(from)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	err = json.Unmarshal(buff, to)
-// 	return err
-// }
-
-// // Exec execute raw query
-// func (r *repository) Exec(qry string) error {
-// 	return r.db.Exec(qry).Error
-// }
-
-
-// // LogMode set query logger if true prints all executed queries
-// func (c *Context) LogMode(enable bool) {
-// 	if r != nil {
-// 		r.db.LogMode(enable)
-// 	}
-// }
-
