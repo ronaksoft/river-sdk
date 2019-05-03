@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"git.ronaksoftware.com/ronak/riversdk"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -39,11 +40,12 @@ var SdkSetLogLevel = &ishell.Cmd{
 			"Debug", "Info", "Warn", "Error",
 		}, "Level")
 		_LogLevel.SetLevel(zapcore.Level(choiceIndex - 1))
+		riversdk.SetLogLevel(choiceIndex-1)
 	},
 }
 
-var SdkGetDiffrence = &ishell.Cmd{
-	Name: "GetDiffrence",
+var SdkGetDifference = &ishell.Cmd{
+	Name: "GetDifference",
 	Func: func(c *ishell.Context) {
 		req := msg.UpdateGetDifference{}
 		req.Limit = fnGetLimit(c)
@@ -93,7 +95,7 @@ var SdkUpdateGetState = &ishell.Cmd{
 func init() {
 	SDK.AddCmd(SdkConnInfo)
 	SDK.AddCmd(SdkSetLogLevel)
-	SDK.AddCmd(SdkGetDiffrence)
+	SDK.AddCmd(SdkGetDifference)
 	SDK.AddCmd(SdkGetServerTime)
 	SDK.AddCmd(SdkUpdateGetState)
 	SDK.AddCmd(GetAuthKey)

@@ -12,7 +12,6 @@ var Message = &ishell.Cmd{
 	Name: "Messages",
 }
 
-// MessageSend
 var MessageSend = &ishell.Cmd{
 	Name: "Send",
 	Func: func(c *ishell.Context) {
@@ -35,7 +34,6 @@ var MessageSend = &ishell.Cmd{
 	},
 }
 
-// MessageGetDialogs
 var MessageGetDialogs = &ishell.Cmd{
 	Name: "GetDialogs",
 	Func: func(c *ishell.Context) {
@@ -73,9 +71,8 @@ var MessageGetDialog = &ishell.Cmd{
 	},
 }
 
-// MessageGetHistory History
 var MessageGetHistory = &ishell.Cmd{
-	Name: "MessageGetHistory",
+	Name: "GetHistory",
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesGetHistory{}
 		req.Peer = &msg.InputPeer{}
@@ -98,7 +95,7 @@ var MessageGetHistory = &ishell.Cmd{
 }
 
 var MessageReadHistory = &ishell.Cmd{
-	Name: "MessageReadHistory",
+	Name: "ReadHistory",
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesReadHistory{}
 		req.Peer = &msg.InputPeer{}
@@ -119,7 +116,7 @@ var MessageReadHistory = &ishell.Cmd{
 }
 
 var MessageSetTyping = &ishell.Cmd{
-	Name: "MessageSetTyping",
+	Name: "SetTyping",
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesSetTyping{}
 		req.Peer = &msg.InputPeer{}
@@ -140,7 +137,7 @@ var MessageSetTyping = &ishell.Cmd{
 }
 
 var MessagesGet = &ishell.Cmd{
-	Name: "MessagesGet",
+	Name: "Get",
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesGet{}
 		req.Peer = &msg.InputPeer{}
@@ -162,7 +159,7 @@ var MessagesGet = &ishell.Cmd{
 }
 
 var MessagesClearHistory = &ishell.Cmd{
-	Name: "MessagesClearHistory",
+	Name: "ClearHistory",
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesClearHistory{}
 		req.Peer = &msg.InputPeer{}
@@ -184,7 +181,7 @@ var MessagesClearHistory = &ishell.Cmd{
 }
 
 var MessagesDelete = &ishell.Cmd{
-	Name: "MessagesDelete",
+	Name: "Delete",
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesDelete{}
 		req.Peer = &msg.InputPeer{}
@@ -206,7 +203,7 @@ var MessagesDelete = &ishell.Cmd{
 }
 
 var MessagesEdit = &ishell.Cmd{
-	Name: "MessagesEdit",
+	Name: "Edit",
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesEdit{}
 		req.Peer = &msg.InputPeer{}
@@ -228,7 +225,7 @@ var MessagesEdit = &ishell.Cmd{
 }
 
 var MessagesForward = &ishell.Cmd{
-	Name: "MessagesForward",
+	Name: "Forward",
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesForward{}
 		req.FromPeer = &msg.InputPeer{}
@@ -261,7 +258,7 @@ var MessagesForward = &ishell.Cmd{
 }
 
 var MessagesReadContents = &ishell.Cmd{
-	Name: "MessagesReadContents",
+	Name: "ReadContents",
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesReadContents{
 			Peer:       new(msg.InputPeer),

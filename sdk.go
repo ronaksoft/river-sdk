@@ -36,6 +36,10 @@ var (
 	_ServerKeys ServerKeys
 )
 
+func SetLogLevel(l int) {
+	logs.SetLogLevel(l)
+}
+
 // SetConfig ...
 // This function must be called before any other function, otherwise it panics
 func (r *River) SetConfig(conf *RiverConfig) {
@@ -211,7 +215,25 @@ func (r *River) onNetworkConnect() {
 			msg.C_SystemGetServerTime,
 			timeReqBytes,
 			nil,
-			r.onGetServerTime,
+			func(m *msg.MessageEnvelope) {
+				if m.Constructor == msg.C_SystemServerTime {
+					x := new(msg.SystemServerTime)
+					err := x.Unmarshal(m.Message)
+					if err != nil {
+						logs.Error("onGetServerTime()", zap.Error(err))
+						return
+					}
+					clientTime := time.Now().Unix()
+					serverTime := x.Timestamp
+					delta := serverTime - clientTime
+					r.networkCtrl.SetClientTimeDifference(delta)
+					logs.Debug("River::onGetServerTime()",
+						zap.Int64("ServerTime", serverTime),
+						zap.Int64("ClientTime", clientTime),
+						zap.Int64("Difference", delta),
+					)
+				}
+			},
 			true,
 			false,
 		)
@@ -234,7 +256,16 @@ func (r *River) onNetworkConnect() {
 				msg.C_AuthRecall,
 				reqBytes,
 				nil,
-				r.onAuthRecalled,
+				func(m *msg.MessageEnvelope) {
+					if m.Constructor == msg.C_AuthRecalled {
+						x := new(msg.AuthRecalled)
+						err := x.Unmarshal(m.Message)
+						if err != nil {
+							logs.Error("onAuthRecalled()", zap.Error(err))
+							return
+						}
+					}
+				},
 				true,
 				false,
 			)
@@ -307,28 +338,6 @@ func (r *River) onReceivedUpdate(updateContainers []*msg.UpdateContainer) {
 
 	for idx := range updateContainers {
 		r.syncCtrl.UpdateHandler(updateContainers[idx])
-	}
-}
-
-// onGetServerTime update client & server time difference
-func (r *River) onGetServerTime(m *msg.MessageEnvelope) {
-	if m.Constructor == msg.C_SystemServerTime {
-		x := new(msg.SystemServerTime)
-		err := x.Unmarshal(m.Message)
-		if err != nil {
-			logs.Error("onGetServerTime()", zap.Error(err))
-			return
-		}
-		// TODO : get time difference and apply it later on send packets to server
-		clientTime := time.Now().Unix()
-		serverTime := x.Timestamp
-		delta := serverTime - clientTime
-		r.networkCtrl.SetClientTimeDifference(delta)
-		logs.Debug("River::onGetServerTime()",
-			zap.Int64("ServerTime", serverTime),
-			zap.Int64("ClientTime", clientTime),
-			zap.Int64("Difference", delta),
-		)
 	}
 }
 
@@ -543,22 +552,6 @@ func (r *River) onFileDownloadError(messageID, requestID int64, filePath string,
 	// Notify UI that download encountered an error
 	if r.mainDelegate != nil {
 		r.mainDelegate.OnDownloadError(messageID, requestID, filePath, err)
-	}
-}
-
-// onAuthRecalled update cluster info
-func (r *River) onAuthRecalled(m *msg.MessageEnvelope) {
-	if m.Constructor == msg.C_AuthRecalled {
-		x := new(msg.AuthRecalled)
-		err := x.Unmarshal(m.Message)
-		if err != nil {
-			logs.Error("onAuthRecalled()", zap.Error(err))
-			return
-		}
-		// // TODO : get time difference and apply it later on send packets to server
-		// clientTime := time.Now().Unix()
-		// serverTime := x.Timestamp
-
 	}
 }
 
