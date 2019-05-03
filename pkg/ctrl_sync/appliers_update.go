@@ -65,7 +65,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		}
 	}
 
-	_ = messageHole.AddFill(x.Message.PeerID, x.Message.PeerType, x.Message.ID)
+	_ = messageHole.SetUpperFilled(x.Message.PeerID, x.Message.PeerType, x.Message.ID)
 
 	// bug : sometime server do not sends access hash
 	if x.AccessHash > 0 {

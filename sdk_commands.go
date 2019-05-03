@@ -246,8 +246,20 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		// Load more message, scroll up
 		b, bar := messageHole.GetLowerFilled(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 		if !b {
-			// TODO:: modify successCB to SaveFill if no messages received
-			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+			cb := func(m *msg.MessageEnvelope) {
+				switch m.Constructor {
+				case msg.C_MessagesMany:
+					x := new(msg.MessagesMany)
+					_ = x.Unmarshal(m.Message)
+					if len(x.Messages) < int(req.Limit) {
+						_ = messageHole.SetLowerFilled(req.Peer.ID, int32(req.Peer.Type))
+					}
+				case msg.C_Error:
+				default:
+				}
+				successCB(m)
+			}
+			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, cb, true)
 			return
 		}
 		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)

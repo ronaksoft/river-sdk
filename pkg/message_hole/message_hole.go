@@ -336,7 +336,7 @@ func InsertFill(peerID int64, peerType int32, minID, maxID int64) error {
 	return nil
 }
 
-func AddFill(peerID int64, peerType int32, msgID int64) error {
+func SetUpperFilled(peerID int64, peerType int32, msgID int64) error {
 	hm, err := loadManager(peerID, peerType)
 	if err != nil {
 		return err
@@ -355,6 +355,23 @@ func AddFill(peerID int64, peerType int32, msgID int64) error {
 
 	return nil
 }
+
+func SetLowerFilled(peerID int64, peerType int32) error {
+	hm, err := loadManager(peerID, peerType)
+	if err != nil {
+		return err
+	}
+
+	hm.addBar(Bar{Type: Filled, Min: 0, Max: hm.minIndex})
+
+	err = saveManager(peerID, peerType, hm)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func IsHole(peerID int64, peerType int32, minID, maxID int64) (bool, error) {
 	hm, err := loadManager(peerID, peerType)
 	if err != nil {
