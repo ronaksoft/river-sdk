@@ -22,7 +22,7 @@ func BenchmarkInsertORM(b *testing.B) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer Ctx().Close()
+	defer Close()
 	//defer os.Remove("river.db")
 
 	b.ResetTimer()
@@ -35,7 +35,7 @@ func BenchmarkInsertORM(b *testing.B) {
 		m.CreatedOn = time.Now().Unix()
 		m.Body = fmt.Sprintf("Test %v", i)
 		m.SenderID = 987654321
-		Ctx().Messages.SaveMessage(m)
+		Messages.SaveMessage(m)
 	}
 
 }
@@ -46,7 +46,7 @@ func BenchmarkInsertRAW(b *testing.B) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer Ctx().Close()
+	defer Close()
 	//defer os.Remove("river.db")
 
 	// Open DB
@@ -90,7 +90,7 @@ func BenchmarkInsertBatch(b *testing.B) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer Ctx().Close()
+	defer Close()
 	//defer os.Remove("river.db")
 
 	db, err := sql.Open("sqlite3", "river.db")

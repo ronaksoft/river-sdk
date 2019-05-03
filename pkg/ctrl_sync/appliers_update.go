@@ -25,7 +25,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	// used messageType to identify client & server messages on Media thingy
 	x.Message.MessageType = 1
 
-	dialog := repo.Ctx().Dialogs.GetDialog(x.Message.PeerID, x.Message.PeerType)
+	dialog := repo.Dialogs.GetDialog(x.Message.PeerID, x.Message.PeerType)
 	if dialog == nil {
 		_ = messageHole.InsertHole(x.Message.PeerID, x.Message.PeerType, 0, x.Message.ID-1)
 
@@ -37,7 +37,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 			UnreadCount:  0,
 			AccessHash:   x.AccessHash,
 		}
-		err := repo.Ctx().Dialogs.SaveDialog(dialog, x.Message.CreatedOn)
+		err := repo.Dialogs.SaveDialog(dialog, x.Message.CreatedOn)
 		if err != nil {
 			logs.Error("updateNewMessage() -> onSuccessCallback() -> SaveDialog() ",
 				zap.String("Error", err.Error()),
@@ -50,16 +50,16 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		}
 	}
 	// save user if does not exist
-	_ = repo.Ctx().Users.SaveUser(x.Sender)
+	_ = repo.Users.SaveUser(x.Sender)
 
 	// if the sender is not myself increase dialog counter else just save message
 	if x.Message.SenderID != ctrl.userID {
-		err := repo.Ctx().Messages.SaveNewMessage(x.Message, dialog, ctrl.connInfo.PickupUserID())
+		err := repo.Messages.SaveNewMessage(x.Message, dialog, ctrl.connInfo.PickupUserID())
 		if err != nil {
 			logs.Error("updateNewMessage()-> SaveNewMessage()", zap.Error(err))
 		}
 	} else {
-		err := repo.Ctx().Messages.SaveSelfMessage(x.Message, dialog)
+		err := repo.Messages.SaveSelfMessage(x.Message, dialog)
 		if err != nil {
 			logs.Error("updateNewMessage()-> SaveSelfMessage()", zap.Error(err))
 		}
@@ -70,11 +70,11 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	// bug : sometime server do not sends access hash
 	if x.AccessHash > 0 {
 		// update users access hash
-		err := repo.Ctx().Users.UpdateAccessHash(int64(x.AccessHash), x.Message.PeerID, x.Message.PeerType)
+		err := repo.Users.UpdateAccessHash(int64(x.AccessHash), x.Message.PeerID, x.Message.PeerType)
 		if err != nil {
 			logs.Error("updateNewMessage() -> Users.UpdateAccessHash()", zap.Error(err))
 		}
-		err = repo.Ctx().Dialogs.UpdateAccessHash(int64(x.AccessHash), x.Message.PeerID, x.Message.PeerType)
+		err = repo.Dialogs.UpdateAccessHash(int64(x.AccessHash), x.Message.PeerID, x.Message.PeerType)
 		if err != nil {
 			logs.Error("updateNewMessage() -> Dialogs.UpdateAccessHash()", zap.Error(err))
 		}
@@ -111,7 +111,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 		if err != nil {
 			logs.Error("updateNewMessage() -> MessageActionGroupDeleteUser Failed to Parse", zap.Error(err))
 		}
-		err = repo.Ctx().Groups.DeleteGroupMemberMany(x.Message.PeerID, act.UserIDs)
+		err = repo.Groups.DeleteGroupMemberMany(x.Message.PeerID, act.UserIDs)
 		if err != nil {
 			logs.Error("updateNewMessage() -> DeleteGroupMemberMany() Failed", zap.Error(err))
 		}
@@ -129,7 +129,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			// Delete Group		NOT REQUIRED
 			// Delete Dialog	NOT REQUIRED
 			// Delete PendingMessage
-			deletedMsgs, err := repo.Ctx().PendingMessages.DeletePeerAllMessages(x.Message.PeerID, x.Message.PeerType)
+			deletedMsgs, err := repo.PendingMessages.DeletePeerAllMessages(x.Message.PeerID, x.Message.PeerType)
 			if err != nil {
 				logs.Error("River::groupDeleteUser()-> DeleteGroupPendingMessage()", zap.Error(err))
 			} else {
@@ -158,35 +158,35 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			logs.Error("updateNewMessage() -> MessageActionClearHistory Failed to Parse", zap.Error(err))
 		}
 
-		err = repo.Ctx().Messages.DeleteDialogMessage(x.Message.PeerID, x.Message.PeerType, act.MaxID)
+		err = repo.Messages.DeleteDialogMessage(x.Message.PeerID, x.Message.PeerType, act.MaxID)
 		if err != nil {
 			logs.Error("updateNewMessage() -> DeleteDialogMessage() Failed", zap.Error(err))
 		}
 		// Delete Scroll Position
-		err = repo.Ctx().MessagesExtra.DeleteScrollID(x.Message.PeerID, x.Message.PeerType)
+		err = repo.MessagesExtra.DeleteScrollID(x.Message.PeerID, x.Message.PeerType)
 		if err != nil {
 			logs.Error("updateNewMessage() -> DeleteScrollID() Failed", zap.Error(err))
 		}
 
 		if act.Delete {
 			// Delete Dialog
-			err = repo.Ctx().Dialogs.Delete(x.Message.PeerID, x.Message.PeerType)
+			err = repo.Dialogs.Delete(x.Message.PeerID, x.Message.PeerType)
 			if err != nil {
 				logs.Error("updateNewMessage() -> Dialogs.Delete() Failed", zap.Error(err))
 			}
 			// Delete Group
-			err = repo.Ctx().Groups.Delete(x.Message.PeerID)
+			err = repo.Groups.Delete(x.Message.PeerID)
 			if err != nil {
 				logs.Error("updateNewMessage() -> Groups.Delete() Failed", zap.Error(err))
 			}
 			// Delete Participants
-			err = repo.Ctx().Groups.DeleteAllGroupMember(x.Message.PeerID)
+			err = repo.Groups.DeleteAllGroupMember(x.Message.PeerID)
 			if err != nil {
 				logs.Error("updateNewMessage() -> Groups.DeleteAllGroupMember() Failed", zap.Error(err))
 			}
 		} else {
 			// get dialog and create first hole
-			dtoDlg := repo.Ctx().Dialogs.GetDialog(x.Message.PeerID, x.Message.PeerType)
+			dtoDlg := repo.Dialogs.GetDialog(x.Message.PeerID, x.Message.PeerType)
 			if dtoDlg != nil {
 				_ = messageHole.InsertHole(dtoDlg.PeerID, dtoDlg.PeerType, 0, dtoDlg.TopMessageID-1)
 
@@ -200,12 +200,12 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) []*msg.Upd
 	logs.Info("SyncController::updateReadHistoryInbox()")
 	x := new(msg.UpdateReadHistoryInbox)
 	x.Unmarshal(u.Update)
-	dialog := repo.Ctx().Dialogs.GetDialog(x.Peer.ID, x.Peer.Type)
+	dialog := repo.Dialogs.GetDialog(x.Peer.ID, x.Peer.Type)
 	if dialog == nil {
 		return []*msg.UpdateEnvelope{}
 	}
 
-	err := repo.Ctx().Dialogs.UpdateReadInboxMaxID(ctrl.userID, x.Peer.ID, x.Peer.Type, x.MaxID)
+	err := repo.Dialogs.UpdateReadInboxMaxID(ctrl.userID, x.Peer.ID, x.Peer.Type, x.MaxID)
 	if err != nil {
 		logs.Error("updateReadHistoryInbox() -> UpdateReadInboxMaxID()", zap.Error(err))
 	}
@@ -218,7 +218,7 @@ func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) []*msg.Up
 	logs.Info("SyncController::updateReadHistoryOutbox()")
 	x := new(msg.UpdateReadHistoryOutbox)
 	x.Unmarshal(u.Update)
-	err := repo.Ctx().Dialogs.UpdateReadOutboxMaxID(x.Peer.ID, x.Peer.Type, x.MaxID)
+	err := repo.Dialogs.UpdateReadOutboxMaxID(x.Peer.ID, x.Peer.Type, x.MaxID)
 	if err != nil {
 		logs.Error("updateReadHistoryOutbox() -> UpdateReadOutboxMaxID()", zap.Error(err))
 	}
@@ -231,7 +231,7 @@ func (ctrl *Controller) updateMessageEdited(u *msg.UpdateEnvelope) []*msg.Update
 	logs.Info("SyncController::updateMessageEdited()")
 	x := new(msg.UpdateMessageEdited)
 	x.Unmarshal(u.Update)
-	err := repo.Ctx().Messages.SaveMessage(x.Message)
+	err := repo.Messages.SaveMessage(x.Message)
 	if err != nil {
 		logs.Error("updateMessageEdited() -> SaveMessage()", zap.Error(err))
 	}
@@ -273,7 +273,7 @@ func (ctrl *Controller) updateNotifySettings(u *msg.UpdateEnvelope) []*msg.Updat
 	x := new(msg.UpdateNotifySettings)
 	x.Unmarshal(u.Update)
 
-	err := repo.Ctx().Dialogs.UpdateNotifySetting(x)
+	err := repo.Dialogs.UpdateNotifySetting(x)
 	if err != nil {
 		logs.Error("updateNotifySettings() -> Dialogs.UpdateNotifySettings()", zap.Error(err))
 	}
@@ -296,7 +296,7 @@ func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) []*msg.UpdateEnvel
 		ctrl.connInfo.Save()
 	}
 
-	err := repo.Ctx().Users.UpdateUsername(x)
+	err := repo.Users.UpdateUsername(x)
 	if err != nil {
 		logs.Error("updateUsername() error save to DB", zap.Error(err))
 	}
@@ -312,7 +312,7 @@ func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) []*msg.Upda
 	x := new(msg.UpdateMessagesDeleted)
 	x.Unmarshal(u.Update)
 
-	udps, err := repo.Ctx().Messages.DeleteManyAndReturnClientUpdate(x.MessageIDs)
+	udps, err := repo.Messages.DeleteManyAndReturnClientUpdate(x.MessageIDs)
 	if err != nil {
 		logs.Error("updateMessagesDeleted() -> DeleteMany()", zap.Error(err))
 	}
@@ -341,7 +341,7 @@ func (ctrl *Controller) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) []*ms
 
 	res := []*msg.UpdateEnvelope{u}
 
-	err := repo.Ctx().Groups.UpdateGroupMemberType(x.GroupID, x.UserID, x.IsAdmin)
+	err := repo.Groups.UpdateGroupMemberType(x.GroupID, x.UserID, x.IsAdmin)
 	if err != nil {
 		logs.Error("updateGroupParticipantAdmin()-> UpdateGroupMemberType()", zap.Error(err))
 	}
@@ -355,7 +355,7 @@ func (ctrl *Controller) updateReadMessagesContents(u *msg.UpdateEnvelope) []*msg
 	x := new(msg.UpdateReadMessagesContents)
 	x.Unmarshal(u.Update)
 
-	err := repo.Ctx().Messages.SetContentRead(x.MessageIDs)
+	err := repo.Messages.SetContentRead(x.MessageIDs)
 	if err != nil {
 		logs.Error("updateReadMessagesContents()-> SetContentRead()", zap.Error(err))
 	}
@@ -371,7 +371,7 @@ func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 	x := new(msg.UpdateUserPhoto)
 	x.Unmarshal(u.Update)
 
-	err := repo.Ctx().Users.SaveUserPhoto(x)
+	err := repo.Users.SaveUserPhoto(x)
 	if err != nil {
 		logs.Error("updateUserPhoto()-> SaveUserPhoto()", zap.Error(err))
 	}
@@ -387,7 +387,7 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	x := new(msg.UpdateGroupPhoto)
 	x.Unmarshal(u.Update)
 
-	err := repo.Ctx().Groups.UpdateGroupPhoto(x)
+	err := repo.Groups.UpdateGroupPhoto(x)
 	if err != nil {
 		logs.Error("updateGroupPhoto()-> UpdateGroupPhoto()", zap.Error(err))
 	}

@@ -11,30 +11,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// Users repoUsers interface
-type Users interface {
-	SaveUser(user *msg.User) error
-	SaveContactUser(user *msg.ContactUser) error
-	UpdatePhoneContact(user *msg.PhoneContact) error
-	GetManyUsers(userIDs []int64) []*msg.User
-	GetManyContactUsers(userIDs []int64) []*msg.ContactUser
-	GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact)
-	SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*msg.PhoneContact)
-	GetAccessHash(userID int64) (uint64, error)
-	UpdateAccessHash(accessHash int64, peerID int64, peerType int32) error
-	GetUser(userID int64) *msg.User
-	GetAnyUsers(userIDs []int64) []*msg.User
-	SaveMany(users []*msg.User) error
-	UpdateContactInfo(userID int64, firstName, lastName string) error
-	SearchUsers(searchPhrase string) []*msg.User
-	UpdateUserProfile(userID int64, req *msg.AccountUpdateProfile) error
-	UpdateUsername(u *msg.UpdateUsername) error
-	GetUserPhoto(userID, photoID int64) *dto.UsersPhoto
-	UpdateAccountPhotoPath(userID, photoID int64, isBig bool, filePath string) error
-	SaveUserPhoto(userPhoto *msg.UpdateUserPhoto) error
-	RemoveUserPhoto(userID int64) error
-}
-
 type repoUsers struct {
 	*repository
 }

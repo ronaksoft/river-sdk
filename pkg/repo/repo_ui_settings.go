@@ -5,13 +5,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 )
 
-// UISettings repoUISettings interface
-type UISettings interface {
-	Get(key string) (value string, err error)
-	Put(key, value string) error
-	Delete(key string) error
-}
-
 type repoUISettings struct {
 	*repository
 }

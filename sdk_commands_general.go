@@ -31,14 +31,14 @@ func (r *River) CancelRequest(requestID int64) {
 
 // DeletePendingMessage removes pending message from DB
 func (r *River) DeletePendingMessage(id int64) (isSuccess bool) {
-	err := repo.Ctx().PendingMessages.DeletePendingMessage(id)
+	err := repo.PendingMessages.DeletePendingMessage(id)
 	isSuccess = err == nil
 	return
 }
 
 // RetryPendingMessage puts pending message again in command queue to re send it
 func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
-	pmsg, err := repo.Ctx().PendingMessages.GetPendingMessageByID(id)
+	pmsg, err := repo.PendingMessages.GetPendingMessageByID(id)
 	if err != nil {
 		logs.Error("River::RetryPendingMessage() -> GetPendingMessageByID()", zap.Error(err))
 		isSuccess = false
@@ -88,7 +88,7 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 	}
 
 	// drop and recreate database
-	err = repo.Ctx().ReInitiateDatabase()
+	err = repo.ReInitiateDatabase()
 	if err != nil {
 		logs.Error("River::Logout() failed to re initiate database", zap.Error(err))
 	}
@@ -142,7 +142,7 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 
 // UISettingGet fetch from key/value storage for UI settings
 func (r *River) UISettingGet(key string) string {
-	val, err := repo.Ctx().UISettings.Get(key)
+	val, err := repo.UISettings.Get(key)
 	if err != nil {
 		logs.Warn("River::UISettingsGet()", zap.Error(err))
 	}
@@ -151,7 +151,7 @@ func (r *River) UISettingGet(key string) string {
 
 // UISettingPut save to key/value storage for UI settings
 func (r *River) UISettingPut(key, value string) bool {
-	err := repo.Ctx().UISettings.Put(key, value)
+	err := repo.UISettings.Put(key, value)
 	if err != nil {
 		logs.Error("River::UISettingsPut()", zap.Error(err))
 	}
@@ -160,7 +160,7 @@ func (r *River) UISettingPut(key, value string) bool {
 
 // UISettingDelete remove from key/value storage for UI settings
 func (r *River) UISettingDelete(key string) bool {
-	err := repo.Ctx().UISettings.Delete(key)
+	err := repo.UISettings.Delete(key)
 	if err != nil {
 		logs.Error("River::UISettingsDelete()", zap.Error(err))
 	}
@@ -174,7 +174,7 @@ func (r *River) SearchContacts(requestID int64, searchPhrase string, delegate Re
 	res.RequestID = uint64(requestID)
 
 	contacts := new(msg.ContactsMany)
-	contacts.Users, contacts.Contacts = repo.Ctx().Users.SearchContacts(searchPhrase)
+	contacts.Users, contacts.Contacts = repo.Users.SearchContacts(searchPhrase)
 
 	res.Message, _ = contacts.Marshal()
 
@@ -186,7 +186,7 @@ func (r *River) SearchContacts(requestID int64, searchPhrase string, delegate Re
 
 // GetRealTopMessageID returns max message id
 func (r *River) GetRealTopMessageID(peerID int64, peerType int32) int64 {
-	topMsgID, err := repo.Ctx().Messages.GetTopMessageID(peerID, peerType)
+	topMsgID, err := repo.Messages.GetTopMessageID(peerID, peerType)
 	if err != nil {
 		logs.Error("SDK::GetRealTopMessageID() => Messages.GetTopMessageID()", zap.Error(err))
 		return -1
@@ -196,7 +196,7 @@ func (r *River) GetRealTopMessageID(peerID int64, peerType int32) int64 {
 
 // UpdateContactInfo update contact name
 func (r *River) UpdateContactInfo(userID int64, firstName, lastName string) error {
-	err := repo.Ctx().Users.UpdateContactInfo(userID, firstName, lastName)
+	err := repo.Users.UpdateContactInfo(userID, firstName, lastName)
 	if err != nil {
 		logs.Error("SDK::UpdateContactInfo() => Users.UpdateContactInfo()", zap.Error(err))
 	}
@@ -211,8 +211,8 @@ func (r *River) SearchInDialogs(requestID int64, searchPhrase string, delegate R
 
 	dlgs := new(msg.MessagesDialogs)
 
-	users := repo.Ctx().Users.SearchUsers(searchPhrase)
-	groups := repo.Ctx().Groups.SearchGroups(searchPhrase)
+	users := repo.Users.SearchUsers(searchPhrase)
+	groups := repo.Groups.SearchGroups(searchPhrase)
 	dlgs.Users = users
 	dlgs.Groups = groups
 
@@ -224,14 +224,14 @@ func (r *River) SearchInDialogs(requestID int64, searchPhrase string, delegate R
 		mDialogs[v.ID] = true
 	}
 
-	dialogs := repo.Ctx().Dialogs.GetManyDialog(mDialogs.ToArray())
+	dialogs := repo.Dialogs.GetManyDialog(mDialogs.ToArray())
 	dlgs.Dialogs = dialogs
 
 	mMessages := domain.MInt64B{}
 	for _, v := range dialogs {
 		mMessages[v.TopMessageID] = true
 	}
-	dlgs.Messages = repo.Ctx().Messages.GetManyMessages(mMessages.ToArray())
+	dlgs.Messages = repo.Messages.GetManyMessages(mMessages.ToArray())
 
 	res.Message, _ = dlgs.Marshal()
 	buff, _ := res.Marshal()
@@ -249,9 +249,9 @@ func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, 
 	user := new(msg.InputUser)
 	user.UserID = userID
 
-	accessHash, err := repo.Ctx().Users.GetAccessHash(userID)
+	accessHash, err := repo.Users.GetAccessHash(userID)
 	if err != nil || accessHash == 0 {
-		participant, err := repo.Ctx().Groups.GetParticipants(groupID)
+		participant, err := repo.Groups.GetParticipants(groupID)
 		if err == nil {
 			for _, p := range participant {
 				if p.UserID == userID {
@@ -350,7 +350,7 @@ func (r *River) GetFileStatus(msgID int64) string {
 }
 
 func getFilePath(msgID int64) string {
-	m := repo.Ctx().Messages.GetMessage(msgID)
+	m := repo.Messages.GetMessage(msgID)
 	if m != nil {
 
 		switch m.MediaType {
@@ -359,7 +359,7 @@ func getFilePath(msgID int64) string {
 			err := x.Unmarshal(m.Media)
 			if err == nil {
 				// check file existence
-				filePath := repo.Ctx().Files.GetFilePath(m.ID, x.Doc.ID)
+				filePath := repo.Files.GetFilePath(m.ID, x.Doc.ID)
 				if _, err = os.Stat(filePath); os.IsNotExist(err) {
 					filePath = ""
 				}
@@ -391,7 +391,7 @@ func (r *River) FileDownload(msgID int64) {
 		zap.Float64("Progress", progress),
 		zap.String("FilePath", filePath),
 	)
-	m := repo.Ctx().Messages.GetMessage(msgID)
+	m := repo.Messages.GetMessage(msgID)
 	if m == nil {
 		logs.Error("SDK::FileDownload()", zap.Int64("Message does not exist", msgID))
 		return
@@ -413,60 +413,60 @@ func (r *River) FileDownload(msgID int64) {
 		filemanager.Ctx().Download(m)
 	}
 
-	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
+	fs, err := repo.Files.GetFileStatus(msgID)
 	if err == nil && fs != nil {
 
 	} else {
-		m := repo.Ctx().Messages.GetMessage(msgID)
+		m := repo.Messages.GetMessage(msgID)
 		filemanager.Ctx().Download(m)
 	}
 }
 
 // PauseDownload pause download
 func (r *River) PauseDownload(msgID int64) {
-	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
+	fs, err := repo.Files.GetFileStatus(msgID)
 	if err != nil {
 		logs.Error("SDK::PauseDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
 	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatePaused)
-	_ = repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStatePaused)
+	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatePaused)
 }
 
 // CancelDownload cancel download
 func (r *River) CancelDownload(msgID int64) {
-	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
+	fs, err := repo.Files.GetFileStatus(msgID)
 	if err != nil {
 		logs.Error("SDK::CancelDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
 	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStateCanceled)
-	_ = repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStateCanceled)
+	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStateCanceled)
 }
 
 // PauseUpload pause upload
 func (r *River) PauseUpload(msgID int64) {
-	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
+	fs, err := repo.Files.GetFileStatus(msgID)
 	if err != nil {
 		logs.Error("SDK::PauseUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
 	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatePaused)
-	_ = repo.Ctx().Files.UpdateFileStatus(msgID, domain.RequestStatePaused)
-	// repo.Ctx().MessagesPending.DeletePendingMessage(fs.MessageID)
+	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatePaused)
+	// repo.MessagesPending.DeletePendingMessage(fs.MessageID)
 
 }
 
 // CancelUpload cancel upload
 func (r *River) CancelUpload(msgID int64) {
-	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
+	fs, err := repo.Files.GetFileStatus(msgID)
 	if err != nil {
 		logs.Error("SDK::CancelUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
 	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStateCanceled)
-	_ = repo.Ctx().Files.DeleteFileStatus(msgID)
-	_ = repo.Ctx().PendingMessages.DeletePendingMessage(fs.MessageID)
+	_ = repo.Files.DeleteFileStatus(msgID)
+	_ = repo.PendingMessages.DeletePendingMessage(fs.MessageID)
 
 }
 
@@ -508,10 +508,10 @@ func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 
 // AccountGetPhoto_Big download user profile picture
 func (r *River) AccountGetPhotoBig(userID int64) string {
-	user := repo.Ctx().Users.GetUser(userID)
+	user := repo.Users.GetUser(userID)
 	if user != nil {
 		if user.Photo != nil {
-			dtoPhoto := repo.Ctx().Users.GetUserPhoto(userID, user.Photo.PhotoID)
+			dtoPhoto := repo.Users.GetUserPhoto(userID, user.Photo.PhotoID)
 			if dtoPhoto != nil {
 				if dtoPhoto.BigFilePath != "" {
 					// check if file exist
@@ -538,10 +538,10 @@ func (r *River) AccountGetPhotoBig(userID int64) string {
 
 // AccountGetPhoto_Small download user profile picture thumbnail
 func (r *River) AccountGetPhotoSmall(userID int64) string {
-	user := repo.Ctx().Users.GetUser(userID)
+	user := repo.Users.GetUser(userID)
 	if user != nil {
 		if user.Photo != nil {
-			dtoPhoto := repo.Ctx().Users.GetUserPhoto(userID, user.Photo.PhotoID)
+			dtoPhoto := repo.Users.GetUserPhoto(userID, user.Photo.PhotoID)
 			if dtoPhoto != nil {
 				if dtoPhoto.SmallFilePath != "" {
 					// check if file exist
@@ -593,13 +593,13 @@ func downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) string
 // getFileStatus
 func getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, filePath string) {
 
-	fs, err := repo.Ctx().Files.GetFileStatus(msgID)
+	fs, err := repo.Files.GetFileStatus(msgID)
 	if err == nil && fs != nil {
 		// file is inprogress state
 		// double check
 
 		if fs.IsCompleted {
-			go repo.Ctx().Files.DeleteFileStatus(fs.MessageID)
+			go repo.Files.DeleteFileStatus(fs.MessageID)
 		}
 		status = domain.RequestStatus(fs.RequestStatus)
 		filePath = fs.FilePath
@@ -666,7 +666,7 @@ func (r *River) GroupUploadPhoto(groupID int64, filePath string) (msgID int64) {
 // GroupGetPhoto_Big download group profile picture
 func (r *River) GroupGetPhotoBig(groupID int64) string {
 
-	group, err := repo.Ctx().Groups.GetGroupDTO(groupID)
+	group, err := repo.Groups.GetGroupDTO(groupID)
 	if err == nil && group != nil {
 		if group.Photo != nil {
 			groupPhoto := new(msg.GroupPhoto)
@@ -700,7 +700,7 @@ func (r *River) GroupGetPhotoBig(groupID int64) string {
 // GroupGetPhoto_Small download group profile picture thumbnail
 func (r *River) GroupGetPhotoSmall(groupID int64) string {
 
-	group, err := repo.Ctx().Groups.GetGroupDTO(groupID)
+	group, err := repo.Groups.GetGroupDTO(groupID)
 	if err == nil && group != nil {
 		if group.Photo != nil {
 			groupPhoto := new(msg.GroupPhoto)
@@ -760,7 +760,7 @@ func downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) string
 func (r *River) FileDownloadThumbnail(msgID int64) string {
 	// its pending message
 	if msgID < 0 {
-		pmsg, err := repo.Ctx().PendingMessages.GetPendingMessageByID(msgID)
+		pmsg, err := repo.PendingMessages.GetPendingMessageByID(msgID)
 		if err != nil {
 			logs.Error("SDK::FileDownloadThumbnail()", zap.Int64("PendingMsgID", msgID), zap.Error(err))
 			return ""
@@ -785,7 +785,7 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 				return ""
 			}
 			// Get userMessage ID by DocumentID and extract thumbnail path from it
-			existedDocumentFile, err := repo.Ctx().Files.GetFileByDocumentID(doc.Document.ID)
+			existedDocumentFile, err := repo.Files.GetFileByDocumentID(doc.Document.ID)
 			if err != nil {
 				logs.Error("SDK::FileDownloadThumbnail() failed to fetch GetFileByDocumentID", zap.Int64("PendingMsgID", msgID), zap.Int64("DocID", doc.Document.ID), zap.Error(err))
 				return ""
@@ -814,7 +814,7 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 		}
 	}
 
-	m := repo.Ctx().Messages.GetMessage(msgID)
+	m := repo.Messages.GetMessage(msgID)
 	if m == nil {
 		logs.Error("SDK::FileDownloadThumbnail() message does not exist")
 		return ""
@@ -848,7 +848,7 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 		logs.Error("SDK::FileDownloadThumbnail() Invalid SharedMediaType")
 	}
 
-	dto, err := repo.Ctx().Files.GetFile(msgID)
+	dto, err := repo.Files.GetFile(msgID)
 	if err != nil {
 		path, err := filemanager.Ctx().DownloadThumbnail(m.ID, docID, accessHash, clusterID, version)
 		if err != nil {
@@ -869,7 +869,7 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 
 // GetSharedMedia search in given dialog files
 func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, delegate RequestDelegate) {
-	msgs, err := repo.Ctx().Files.GetSharedMedia(peerID, peerType, mediaType)
+	msgs, err := repo.Files.GetSharedMedia(peerID, peerType, mediaType)
 	if err != nil {
 		out := new(msg.MessageEnvelope)
 		res := new(msg.Error)
@@ -908,8 +908,8 @@ func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, de
 		}
 	}
 
-	users := repo.Ctx().Users.GetAnyUsers(userIDs.ToArray())
-	groups := repo.Ctx().Groups.GetManyGroups(groupIDs.ToArray())
+	users := repo.Users.GetAnyUsers(userIDs.ToArray())
+	groups := repo.Groups.GetManyGroups(groupIDs.ToArray())
 
 	msgMany := new(msg.MessagesMany)
 	msgMany.Messages = msgs
@@ -926,7 +926,7 @@ func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, de
 }
 
 func (r *River) GetScrollStatus(peerID int64, peerType int32) int64 {
-	status, err := repo.Ctx().MessagesExtra.GetScrollID(peerID, peerType)
+	status, err := repo.MessagesExtra.GetScrollID(peerID, peerType)
 	if err != nil {
 		return 0
 	} else {
@@ -935,7 +935,7 @@ func (r *River) GetScrollStatus(peerID int64, peerType int32) int64 {
 }
 
 func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
-	if err := repo.Ctx().MessagesExtra.SaveScrollID(peerID, msgID, peerType); err != nil {
+	if err := repo.MessagesExtra.SaveScrollID(peerID, msgID, peerType); err != nil {
 		logs.Error("SetScrollStatus::Failed to set scroll ID")
 	}
 }

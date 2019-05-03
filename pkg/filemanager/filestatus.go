@@ -187,7 +187,7 @@ func (fs *FileStatus) Write(data []byte, partIdx int64) (isCompleted bool, err e
 	}
 	isCompleted = fs.IsCompleted
 	if isCompleted {
-		repo.Ctx().Files.SaveDownloadingFile(fs.GetDTO())
+		repo.Files.SaveDownloadingFile(fs.GetDTO())
 	}
 
 	fs.fileStatusChanged()
@@ -200,7 +200,7 @@ func (fs *FileStatus) ReadCommit(count int64, isThumbnail bool, partIdx int64) (
 	if isThumbnail {
 		fs.ThumbPosition += count
 		fs.ThumbPartNo++
-		repo.Ctx().Files.SaveFileStatus(fs.GetDTO())
+		repo.Files.SaveFileStatus(fs.GetDTO())
 		return
 	}
 	if fs.stop {
@@ -220,7 +220,7 @@ func (fs *FileStatus) ReadCommit(count int64, isThumbnail bool, partIdx int64) (
 
 func (fs *FileStatus) fileStatusChanged() {
 	// TODO : save file status to DB
-	err := repo.Ctx().Files.SaveFileStatus(fs.GetDTO())
+	err := repo.Files.SaveFileStatus(fs.GetDTO())
 	if err != nil {
 		logs.Error("fileStatusChanged() failed to save in DB", zap.Error(err))
 	}

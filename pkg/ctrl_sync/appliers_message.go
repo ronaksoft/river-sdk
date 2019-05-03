@@ -55,7 +55,7 @@ func (ctrl *Controller) contactsImported(e *msg.MessageEnvelope) {
 		return
 	}
 	for _, u := range x.Users {
-		repo.Ctx().Users.SaveContactUser(u)
+		repo.Users.SaveContactUser(u)
 	}
 }
 
@@ -71,13 +71,13 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 	userIDs := domain.MInt64B{}
 	for _, u := range x.Users {
 		userIDs[u.ID] = true
-		repo.Ctx().Users.SaveContactUser(u)
+		repo.Users.SaveContactUser(u)
 	}
 	// server
 	if len(userIDs) > 0 {
 		// calculate contactsGethash and save
 		crc32Hash := domain.CalculateContactsGetHash(userIDs.ToArray())
-		err := repo.Ctx().System.SaveInt(domain.ColumnContactsGetHash, int32(crc32Hash))
+		err := repo.System.SaveInt(domain.ColumnContactsGetHash, int32(crc32Hash))
 		if err != nil {
 			logs.Error("contactsMany() failed to save ContactsGetHash to DB", zap.Error(err))
 		}
@@ -95,7 +95,7 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 
 	mMessages := make(map[int64]*msg.UserMessage)
 	for _, message := range x.Messages {
-		repo.Ctx().Messages.SaveMessage(message)
+		repo.Messages.SaveMessage(message)
 		mMessages[message.ID] = message
 	}
 	for _, dialog := range x.Dialogs {
@@ -106,13 +106,13 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 			)
 			continue
 		}
-		repo.Ctx().Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
+		repo.Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
 	}
 	for _, user := range x.Users {
-		repo.Ctx().Users.SaveUser(user)
+		repo.Users.SaveUser(user)
 	}
 	for _, group := range x.Groups {
-		repo.Ctx().Groups.Save(group)
+		repo.Groups.Save(group)
 	}
 
 	logs.Debug("SyncController::messagesDialogs()",
@@ -137,7 +137,7 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 	// Add delivered message to prevent invoking newMessage event later
 	ctrl.addToDeliveredMessageList(sent.MessageID)
 
-	pmsg, err := repo.Ctx().PendingMessages.GetPendingMessageByRequestID(int64(e.RequestID))
+	pmsg, err := repo.PendingMessages.GetPendingMessageByRequestID(int64(e.RequestID))
 	if err != nil {
 		logs.Error("messageSent()-> GetPendingMessageByRequestID()", zap.Uint64("RequestID", e.RequestID), zap.Error(err))
 		return
@@ -159,12 +159,12 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 				}
 			}
 			// save to local files
-			err = repo.Ctx().Files.MoveUploadedFileToFiles(clientSendMedia, int32(fileSize), sent)
+			err = repo.Files.MoveUploadedFileToFiles(clientSendMedia, int32(fileSize), sent)
 			if err != nil {
 				logs.Error("messageSent()-> MoveUploadedFileToLocalFile() failed ", zap.Error(err))
 			}
 			// delete file status
-			err = repo.Ctx().Files.DeleteFileStatus(pmsg.ID)
+			err = repo.Files.DeleteFileStatus(pmsg.ID)
 			if err != nil {
 				logs.Error("messageSent()-> DeleteFileStatus() failed to delete FileStatus", zap.Error(err))
 			}
@@ -177,20 +177,20 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 	message.CreatedOn = sent.CreatedOn
 
 	// save message
-	err = repo.Ctx().Messages.SaveMessage(message)
+	err = repo.Messages.SaveMessage(message)
 	if err != nil {
 		logs.Error("messageSent()-> SaveMessage() failed to move pendingMessage to message table", zap.Error(err))
 		return
 	}
 
 	// delete pending mesage
-	err = repo.Ctx().PendingMessages.DeletePendingMessage(pmsg.ID)
+	err = repo.PendingMessages.DeletePendingMessage(pmsg.ID)
 	if err != nil {
 		logs.Error("messageSent()-> DeletePendingMessage() failed to delete pendingMessage", zap.Error(err))
 	}
 
 	// Update doaligs
-	err = repo.Ctx().Dialogs.UpdateTopMessageID(message.CreatedOn, message.PeerID, message.PeerType)
+	err = repo.Dialogs.UpdateTopMessageID(message.CreatedOn, message.PeerID, message.PeerType)
 	if err != nil {
 		logs.Error("messageSent()-> UpdateTopMessageID() failed to update doalogs", zap.Error(err))
 	}
@@ -239,7 +239,7 @@ func (ctrl *Controller) usersMany(e *msg.MessageEnvelope) {
 		return
 	}
 	for _, v := range u.Users {
-		repo.Ctx().Users.SaveUser(v)
+		repo.Users.SaveUser(v)
 	}
 }
 
@@ -254,8 +254,8 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 	}
 
 	// Save Groups & Users
-	_ = repo.Ctx().Users.SaveMany(u.Users)
-	_ = repo.Ctx().Groups.SaveMany(u.Groups)
+	_ = repo.Users.SaveMany(u.Users)
+	_ = repo.Groups.SaveMany(u.Groups)
 
 	// handle Media message
 	go extractMessagesMedia(u.Messages...)
@@ -263,7 +263,7 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 	minID := int64(0)
 	maxID := int64(0)
 	for _, v := range u.Messages {
-		_ = repo.Ctx().Messages.SaveMessage(v)
+		_ = repo.Messages.SaveMessage(v)
 		if minID == 0 || v.ID < minID {
 			minID = v.ID
 		}
@@ -289,18 +289,18 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 		return
 	}
 	// Save Group
-	repo.Ctx().Groups.Save(u.Group)
+	repo.Groups.Save(u.Group)
 
 	// Save Group Members
 	for _, v := range u.Participants {
-		repo.Ctx().Groups.SaveParticipants(u.Group.ID, v)
+		repo.Groups.SaveParticipants(u.Group.ID, v)
 	}
 
 	// Save Users
 	for _, v := range u.Users {
-		repo.Ctx().Users.SaveUser(v)
+		repo.Users.SaveUser(v)
 	}
 
 	// Update NotifySettings
-	repo.Ctx().Dialogs.UpdatePeerNotifySettings(u.Group.ID, int32(msg.PeerGroup), u.NotifySettings)
+	repo.Dialogs.UpdatePeerNotifySettings(u.Group.ID, int32(msg.PeerGroup), u.NotifySettings)
 }

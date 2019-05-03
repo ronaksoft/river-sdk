@@ -279,7 +279,7 @@ func (m *HoleManager) getLowerFilled(pt int64) (bool, Bar) {
 }
 
 func loadManager(peerID int64, peerType int32) (*HoleManager, error) {
-	b, err := repo.Ctx().MessagesExtra.GetHoles(peerID, peerType)
+	b, err := repo.MessagesExtra.GetHoles(peerID, peerType)
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +297,7 @@ func saveManager(peerID int64, peerType int32, hm *HoleManager) error {
 		return err
 	}
 
-	err = repo.Ctx().MessagesExtra.SaveHoles(peerID, peerType, b)
+	err = repo.MessagesExtra.SaveHoles(peerID, peerType, b)
 	if err != nil {
 		return err
 	}

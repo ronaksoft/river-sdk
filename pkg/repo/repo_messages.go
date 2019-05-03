@@ -10,23 +10,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// Messages repoMessages interface
-type Messages interface {
-	SaveNewMessage(message *msg.UserMessage, dialog *msg.Dialog, userID int64) error
-	SaveMessage(message *msg.UserMessage) error
-	SaveSelfMessage(message *msg.UserMessage, dialog *msg.Dialog) error
-	GetManyMessages(messageIDs []int64) []*msg.UserMessage
-	GetMessageHistoryWithPendingMessages(peerID int64, peerType int32, minID, maxID int64, limit int32) ([]*msg.UserMessage, []*msg.User)
-	GetUnreadMessageCount(peerID int64, peerType int32, userID, maxID int64) int32
-	DeleteDialogMessage(peerID int64, peerType int32, maxID int64) error
-	DeleteMany(IDs []int64) error
-	DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.ClientUpdateMessagesDeleted, error)
-	GetTopMessageID(peerID int64, peerType int32) (int64, error)
-	GetMessageHistory(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User)
-	GetMessage(messageID int64) *msg.UserMessage
-	SetContentRead(messageIDs []int64) error
-	GetDialogMessageCount(peerID int64, peerType int32) int32
-}
 
 type repoMessages struct {
 	*repository

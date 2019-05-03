@@ -150,7 +150,7 @@ func (ctrl *Controller) sync() {
 	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSyncThreshold {
 		logs.Info("SyncController::Snapshot sync")
 		// remove all messages
-		err := repo.Ctx().DropAndCreateTable(&dto.Messages{})
+		err := repo.DropAndCreateTable(&dto.Messages{})
 		if err != nil {
 			logs.Error("sync()-> DropAndCreateTable()", zap.Error(err))
 			return
@@ -159,7 +159,7 @@ func (ctrl *Controller) sync() {
 		getContacts(ctrl)
 		ctrl.updateID = serverUpdateID
 		getAllDialogs(ctrl, 0, 100)
-		err = repo.Ctx().System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
+		err = repo.System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
 		if err != nil {
 			logs.Error("sync()-> SaveInt()", zap.Error(err))
 			return
@@ -263,7 +263,7 @@ func getAllDialogs(ctrl *Controller, offset int32, limit int32) {
 				}
 				mMessages := make(map[int64]*msg.UserMessage)
 				for _, message := range x.Messages {
-					err := repo.Ctx().Messages.SaveMessage(message)
+					err := repo.Messages.SaveMessage(message)
 					if err != nil {
 						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveMessage() ", zap.Error(err))
 					}
@@ -283,7 +283,7 @@ func getAllDialogs(ctrl *Controller, offset int32, limit int32) {
 					_ = messageHole.InsertHole(dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID-1)
 
 					// make sure to created the message hole b4 creating dialog
-					err := repo.Ctx().Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
+					err := repo.Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
 					if err != nil {
 						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveDialog() ",
 							zap.String("Error", err.Error()),
@@ -292,8 +292,8 @@ func getAllDialogs(ctrl *Controller, offset int32, limit int32) {
 					}
 				}
 
-				_ = repo.Ctx().Users.SaveMany(x.Users)
-				_ = repo.Ctx().Groups.SaveMany(x.Groups)
+				_ = repo.Users.SaveMany(x.Users)
+				_ = repo.Groups.SaveMany(x.Groups)
 
 				if x.Count > offset+limit {
 					getAllDialogs(ctrl, offset+limit, limit)
@@ -375,9 +375,9 @@ func onGetDifferenceSucceed(ctrl *Controller, m *msg.MessageEnvelope) {
 		// No need to wait here till DB gets synced cuz UI will have required data
 		go func() {
 			// Save Groups
-			_ = repo.Ctx().Groups.SaveMany(x.Groups)
+			_ = repo.Groups.SaveMany(x.Groups)
 			// Save Users
-			_ = repo.Ctx().Users.SaveMany(x.Users)
+			_ = repo.Users.SaveMany(x.Users)
 		}()
 
 		for _, update := range x.Updates {
@@ -393,7 +393,7 @@ func onGetDifferenceSucceed(ctrl *Controller, m *msg.MessageEnvelope) {
 			ctrl.updateID = x.MaxUpdateID
 
 			// Save UpdateID to DB
-			err := repo.Ctx().System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
+			err := repo.System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
 			if err != nil {
 				logs.Error("onGetDifferenceSucceed()-> SaveInt()", zap.Error(err))
 			}
@@ -443,8 +443,8 @@ func (ctrl *Controller) Start() {
 	logs.Info("SyncController::  Start")
 
 	// Load the latest UpdateID stored in DB
-	if v, err := repo.Ctx().System.LoadInt(domain.ColumnUpdateID); err != nil {
-		err := repo.Ctx().System.SaveInt(domain.ColumnUpdateID, 0)
+	if v, err := repo.System.LoadInt(domain.ColumnUpdateID); err != nil {
+		err := repo.System.SaveInt(domain.ColumnUpdateID, 0)
 		if err != nil {
 			logs.Error("Start()-> SaveInt()", zap.Error(err))
 		}
@@ -532,7 +532,7 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 	for _, u := range updateContainer.Users {
 		// Download users avatar if its not exist
 		if u.Photo != nil {
-			dtoPhoto := repo.Ctx().Users.GetUserPhoto(u.ID, u.Photo.PhotoID)
+			dtoPhoto := repo.Users.GetUserPhoto(u.ID, u.Photo.PhotoID)
 			if dtoPhoto != nil {
 				if dtoPhoto.SmallFilePath == "" || dtoPhoto.SmallFileID != u.Photo.PhotoSmall.FileID {
 					go func(userID int64, photo *msg.UserPhoto) {
@@ -549,7 +549,7 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 	for _, g := range updateContainer.Groups {
 		// Download group avatar if its not exist
 		if g.Photo != nil {
-			dtoGroup, err := repo.Ctx().Groups.GetGroupDTO(g.ID)
+			dtoGroup, err := repo.Groups.GetGroupDTO(g.ID)
 			if err == nil && dtoGroup != nil {
 				if dtoGroup.SmallFilePath == "" || dtoGroup.SmallFileID != g.Photo.PhotoSmall.FileID {
 					go func(groupID int64, photo *msg.GroupPhoto) {
@@ -585,15 +585,15 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 	// No need to wait here till DB gets synced cuz UI will have required data
 	go func() {
 		// Save Groups
-		_ = repo.Ctx().Groups.SaveMany(updateContainer.Groups)
+		_ = repo.Groups.SaveMany(updateContainer.Groups)
 		// Save Users
-		_ = repo.Ctx().Users.SaveMany(updateContainer.Users)
+		_ = repo.Users.SaveMany(updateContainer.Users)
 	}()
 
 	// save updateID after processing messages
 	if ctrl.updateID < updateContainer.MaxUpdateID {
 		ctrl.updateID = updateContainer.MaxUpdateID
-		err := repo.Ctx().System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
+		err := repo.System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
 		if err != nil {
 			logs.Error("UpdateHandler() -> SaveInt()", zap.Error(err))
 		}
@@ -629,7 +629,7 @@ func (ctrl *Controller) ClearUpdateID() {
 
 // ContactImportFromServer import contact from server
 func (ctrl *Controller) ContactImportFromServer() {
-	contactsGetHash, err := repo.Ctx().System.LoadInt(domain.ColumnContactsGetHash)
+	contactsGetHash, err := repo.System.LoadInt(domain.ColumnContactsGetHash)
 	if err != nil {
 		logs.Error("onNetworkControllerConnected() failed to get contactsGetHash", zap.Error(err))
 	}
@@ -663,7 +663,7 @@ func extractMessagesMedia(messages ...*msg.UserMessage) {
 				logs.Error("extractMessagesMedia()-> connot unmarshal MediaTypeDocument", zap.Error(err))
 				break
 			}
-			_ = repo.Ctx().Files.SaveFileDocument(m, mediaDoc)
+			_ = repo.Files.SaveFileDocument(m, mediaDoc)
 			t := mediaDoc.Doc.Thumbnail
 			if t != nil {
 				if t.FileID != 0 {

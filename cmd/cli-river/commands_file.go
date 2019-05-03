@@ -86,7 +86,7 @@ var DownloadMultiConnection = &ishell.Cmd{
 		messageID := fnGetMessageID(c)
 		segmentCount := 8
 		x := new(msg.MediaDocument)
-		m := repo.Ctx().Messages.GetMessage(messageID)
+		m := repo.Messages.GetMessage(messageID)
 		if m.MediaType == msg.MediaTypeDocument {
 
 			err := x.Unmarshal(m.Media)

@@ -2,15 +2,6 @@ package repo
 
 import "git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 
-// MessagesExtra repoScrollStatus interface
-type MessagesExtra interface {
-	SaveScrollID(peerID, msgID int64, peerType int32) error
-	GetScrollID(peerID int64, peerType int32) (int64, error)
-	DeleteScrollID(peerID int64, peerType int32) error
-	SaveHoles(peerID int64, peerType int32, data []byte) error
-	GetHoles(peerID int64, peerType int32) ([]byte, error)
-}
-
 type repoMessagesExtra struct {
 	*repository
 }

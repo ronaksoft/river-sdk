@@ -169,7 +169,7 @@ func (ctrl *Controller) reinitializePendingMessages() {
 	}
 
 	// get all pendingMessages
-	pendingMessages := repo.Ctx().PendingMessages.GetAllPendingMessages()
+	pendingMessages := repo.PendingMessages.GetAllPendingMessages()
 
 	// add pendingMessages to queue
 	for _, v := range pendingMessages {
@@ -243,7 +243,7 @@ func (ctrl *Controller) executor(req request) {
 
 		// hotfix check pendingMessage &&  messagesReadHistory on timeout
 		if req.MessageEnvelope.Constructor == msg.C_MessagesSend {
-			pmsg, err := repo.Ctx().PendingMessages.GetPendingMessageByRequestID(int64(req.ID))
+			pmsg, err := repo.PendingMessages.GetPendingMessageByRequestID(int64(req.ID))
 			if err == nil && pmsg != nil {
 				logs.Warn("executor() :: NOT SENT and request added to queue again !!",
 					zap.String("ConstructorName", msg.ConstructorNames[req.MessageEnvelope.Constructor]),

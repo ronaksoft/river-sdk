@@ -205,7 +205,7 @@ func (fm *FileManager) Upload(fileID int64, req *msg.ClientPendingMessage) error
 	}
 
 	fm.AddToQueue(state)
-	err = repo.Ctx().Files.SaveFileStatus(state.GetDTO())
+	err = repo.Files.SaveFileStatus(state.GetDTO())
 	return err
 }
 
@@ -213,7 +213,7 @@ func (fm *FileManager) Upload(fileID int64, req *msg.ClientPendingMessage) error
 func (fm *FileManager) Download(req *msg.UserMessage) {
 
 	var state *FileStatus
-	dtoState, err := repo.Ctx().Files.GetFileStatus(req.ID)
+	dtoState, err := repo.Files.GetFileStatus(req.ID)
 
 	if err == nil && dtoState != nil {
 		if dtoState.IsCompleted {
@@ -275,9 +275,9 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 	if state != nil {
 		state.RequestStatus = domain.RequestStateInProgress
 		fm.AddToQueue(state)
-		repo.Ctx().Files.SaveFileStatus(state.GetDTO())
-		repo.Ctx().Files.SaveDownloadingFile(state.GetDTO())
-		repo.Ctx().Files.UpdateFileStatus(state.MessageID, domain.RequestStateInProgress)
+		repo.Files.SaveFileStatus(state.GetDTO())
+		repo.Files.SaveDownloadingFile(state.GetDTO())
+		repo.Files.UpdateFileStatus(state.MessageID, domain.RequestStateInProgress)
 	}
 }
 
@@ -417,7 +417,7 @@ func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, 
 			fm.DeleteFromQueue(fs.MessageID, domain.RequestStateError)
 			logs.Error("SendUploadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
 			fs.RequestStatus = domain.RequestStateError
-			repo.Ctx().Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
+			repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 			if fm.onUploadError != nil {
 				fm.onUploadError(fs.MessageID, int64(req.RequestID), fs.FilePath, res.Message)
 			}
@@ -460,7 +460,7 @@ func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, 
 		fm.DeleteFromQueue(fs.MessageID, domain.RequestStateError)
 		logs.Error("SendUploadRequest() upload request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
 		fs.RequestStatus = domain.RequestStateError
-		repo.Ctx().Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
+		repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 		if fm.onUploadError != nil {
 			x := new(msg.Error)
 			x.Code = "00"
@@ -482,7 +482,7 @@ func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 			fm.DeleteFromQueue(fs.MessageID, domain.RequestStateError)
 			logs.Error("SendDownloadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
 			fs.RequestStatus = domain.RequestStateError
-			repo.Ctx().Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
+			repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 
 			if fm.onDownloadError != nil {
 				fm.onDownloadError(fs.MessageID, int64(req.RequestID), fs.FilePath, res.Message)
@@ -534,7 +534,7 @@ func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 		fm.DeleteFromQueue(fs.MessageID, domain.RequestStateError)
 		logs.Error("SendDownloadRequest() download request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
 		fs.RequestStatus = domain.RequestStateError
-		repo.Ctx().Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
+		repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 		if fm.onDownloadError != nil {
 			x := new(msg.Error)
 			x.Code = "00"
@@ -548,7 +548,7 @@ func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 // LoadQueueFromDB load in progress request from database
 func (fm *FileManager) LoadQueueFromDB() {
 	// Load pended file status
-	dtos := repo.Ctx().Files.GetAllFileStatus()
+	dtos := repo.Files.GetAllFileStatus()
 	for _, d := range dtos {
 		fs := new(FileStatus)
 		fs.LoadDTO(d, fm.progressCallback)
@@ -572,7 +572,7 @@ func (fm *FileManager) SetNetworkStatus(state domain.NetworkStatus) {
 func (fm *FileManager) downloadCompleted(msgID int64, filePath string, stateType domain.FileStateType) {
 	// delete file status
 	fm.DeleteFromQueue(msgID, domain.RequestStateCompleted)
-	repo.Ctx().Files.DeleteFileStatus(msgID)
+	repo.Files.DeleteFileStatus(msgID)
 	if fm.onDownloadCompleted != nil {
 		fm.onDownloadCompleted(msgID, filePath, stateType)
 	}
@@ -588,7 +588,7 @@ func (fm *FileManager) uploadCompleted(msgID, fileID, targetID int64,
 ) {
 	// delete file status
 	fm.DeleteFromQueue(msgID, domain.RequestStateCompleted)
-	repo.Ctx().Files.DeleteFileStatus(msgID)
+	repo.Files.DeleteFileStatus(msgID)
 	if fm.onUploadCompleted != nil {
 		fm.onUploadCompleted(msgID, fileID, targetID, clusterID, totalParts, stateType, filePath, uploadRequest, thumbFileID, thumbTotalParts)
 	}
@@ -643,7 +643,7 @@ func (fm *FileManager) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, 
 			}
 
 			// save to DB
-			return filePath, repo.Ctx().Users.UpdateAccountPhotoPath(userID, photo.PhotoID, isBig, filePath)
+			return filePath, repo.Users.UpdateAccountPhotoPath(userID, photo.PhotoID, isBig, filePath)
 
 		default:
 			return "", fmt.Errorf("received unknown response constructor {UserId : %d}", userID)
@@ -701,7 +701,7 @@ func (fm *FileManager) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, 
 			}
 
 			// save to DB
-			return filePath, repo.Ctx().Groups.UpdateGroupPhotoPath(groupID, isBig, filePath)
+			return filePath, repo.Groups.UpdateGroupPhotoPath(groupID, isBig, filePath)
 
 		default:
 			return "", fmt.Errorf("received unknown response constructor {GroupID : %d}", groupID)
@@ -754,7 +754,7 @@ func (fm *FileManager) DownloadThumbnail(msgID int64, fileID int64, accessHash u
 			}
 
 			// save to DB
-			return filePath, repo.Ctx().Files.UpdateThumbnailPath(msgID, filePath)
+			return filePath, repo.Files.UpdateThumbnailPath(msgID, filePath)
 
 		default:
 			return "", fmt.Errorf("DownloadThumbnail() received unknown response constructor {GroupID : %d}", msgID)

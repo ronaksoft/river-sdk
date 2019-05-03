@@ -7,14 +7,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// System repoSystem interface
-type System interface {
-	LoadInt(keyName string) (keyValue int, err error)
-	LoadString(keyName string) (keyValue string, err error)
-	SaveInt(keyName string, keyValue int32) error
-	SaveString(keyName string, keyValue string) error
-}
-
 type repoSystem struct {
 	*repository
 }

@@ -23,7 +23,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 	res := new(msg.MessagesDialogs)
-	res.Dialogs = repo.Ctx().Dialogs.GetDialogs(req.Offset, req.Limit)
+	res.Dialogs = repo.Dialogs.GetDialogs(req.Offset, req.Limit)
 
 	// If the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {
@@ -46,10 +46,10 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 
 	// Load Messages
-	res.Messages = repo.Ctx().Messages.GetManyMessages(mMessages.ToArray())
+	res.Messages = repo.Messages.GetManyMessages(mMessages.ToArray())
 
 	// Load Pending messages
-	pendingMessages := repo.Ctx().PendingMessages.GetManyPendingMessages(mPendingMessage.ToArray())
+	pendingMessages := repo.PendingMessages.GetManyPendingMessages(mPendingMessage.ToArray())
 	res.Messages = append(res.Messages, pendingMessages...)
 
 	for _, m := range res.Messages {
@@ -67,8 +67,8 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 			mUsers[id] = true
 		}
 	}
-	res.Groups = repo.Ctx().Groups.GetManyGroups(mGroups.ToArray())
-	res.Users = repo.Ctx().Users.GetAnyUsers(mUsers.ToArray())
+	res.Groups = repo.Groups.GetManyGroups(mGroups.ToArray())
+	res.Users = repo.Users.GetAnyUsers(mUsers.ToArray())
 	out.Constructor = msg.C_MessagesDialogs
 	buff, err := res.Marshal()
 	if err != nil {
@@ -89,7 +89,7 @@ func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain
 		return
 	}
 	res := new(msg.Dialog)
-	res = repo.Ctx().Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
+	res = repo.Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
 
 	// if the localDB had no data send the request to server
 	if res == nil {
@@ -136,7 +136,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 
 	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 	dbID := -domain.SequentialUniqueID()
-	res, err := repo.Ctx().PendingMessages.Save(dbID, r.ConnInfo.UserID, req)
+	res, err := repo.PendingMessages.Save(dbID, r.ConnInfo.UserID, req)
 	if err != nil {
 		e := new(msg.Error)
 		e.Code = "n/a"
@@ -175,7 +175,7 @@ func (r *River) messagesReadHistory(in, out *msg.MessageEnvelope, timeoutCB doma
 		logs.Error("River::messagesReadHistory()-> Unmarshal()", zap.Error(err))
 	}
 
-	dialog := repo.Ctx().Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
+	dialog := repo.Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
 		return
 	}
@@ -183,7 +183,7 @@ func (r *River) messagesReadHistory(in, out *msg.MessageEnvelope, timeoutCB doma
 		return
 	}
 
-	err := repo.Ctx().Dialogs.UpdateReadInboxMaxID(r.ConnInfo.UserID, req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+	err := repo.Dialogs.UpdateReadInboxMaxID(r.ConnInfo.UserID, req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 	if err != nil {
 		logs.Error("River::messagesReadHistory()-> UpdateReadInboxMaxID()", zap.Error(err))
 	}
@@ -199,7 +199,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 
-	dtoDialog := repo.Ctx().Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
+	dtoDialog := repo.Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
 	if dtoDialog == nil {
 		out.Constructor = msg.C_Error
 		out.RequestID = in.RequestID
@@ -215,10 +215,10 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	// Offline mode
 	if !r.networkCtrl.Connected() {
 		if dtoDialog.TopMessageID < 0 {
-			messages, users := repo.Ctx().Messages.GetMessageHistoryWithPendingMessages(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
+			messages, users := repo.Messages.GetMessageHistoryWithPendingMessages(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 			messagesGetHistory(out, messages, users, in.RequestID, successCB)
 		} else {
-			messages, users := repo.Ctx().Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
+			messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 			messagesGetHistory(out, messages, users, in.RequestID, successCB)
 		}
 		return
@@ -230,7 +230,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		if dtoDialog.TopMessageID < 0 {
 			// TODO:: WTF ?
 			// fetch messages from localDB cuz there is a pending message it means we are not connected to server
-			messages, users := repo.Ctx().Messages.GetMessageHistoryWithPendingMessages(req.Peer.ID, int32(req.Peer.Type), 0, 0, req.Limit)
+			messages, users := repo.Messages.GetMessageHistoryWithPendingMessages(req.Peer.ID, int32(req.Peer.Type), 0, 0, req.Limit)
 			messagesGetHistory(out, messages, users, in.RequestID, successCB)
 			return
 		}
@@ -239,7 +239,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 			return
 		}
-		messages, users := repo.Ctx().Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
+		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
 		messagesGetHistory(out, messages, users, in.RequestID, successCB)
 		return
 	case req.MinID == 0 && req.MaxID != 0:
@@ -250,7 +250,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 			return
 		}
-		messages, users := repo.Ctx().Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
+		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
 		messagesGetHistory(out, messages, users, in.RequestID, successCB)
 	case req.MinID != 0 && req.MaxID == 0:
 		// Load more message, scroll down
@@ -259,7 +259,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 			return
 		}
-		messages, users := repo.Ctx().Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
+		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
 		messagesGetHistory(out, messages, users, in.RequestID, successCB)
 	default:
 		// Load a range
@@ -268,7 +268,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 			return
 		}
-		messages, users := repo.Ctx().Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
+		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 		messagesGetHistory(out, messages, users, in.RequestID, successCB)
 	}
 }
@@ -306,19 +306,19 @@ func (r *River) messagesDelete(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	}
 	if len(pendingMessageIDs) > 0 {
 		// remove from queue
-		pendedRequestIDs := repo.Ctx().PendingMessages.GetManyPendingMessagesRequestID(pendingMessageIDs)
+		pendedRequestIDs := repo.PendingMessages.GetManyPendingMessagesRequestID(pendingMessageIDs)
 		for _, reqID := range pendedRequestIDs {
 			r.queueCtrl.CancelRequest(reqID)
 		}
 		// remove from DB
-		err := repo.Ctx().PendingMessages.DeleteManyPendingMessage(pendingMessageIDs)
+		err := repo.PendingMessages.DeleteManyPendingMessage(pendingMessageIDs)
 		if err != nil {
 			logs.Error("River::messagesDelete()-> DeletePendingMessage()", zap.Error(err))
 		}
 	}
 
 	// remove message
-	err := repo.Ctx().Messages.DeleteMany(req.MessageIDs)
+	err := repo.Messages.DeleteMany(req.MessageIDs)
 	if err != nil {
 		logs.Error("River::messagesDelete()-> DeleteMany()", zap.Error(err))
 	}
@@ -339,7 +339,7 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 		msgIDs[v] = true
 	}
 
-	messages := repo.Ctx().Messages.GetManyMessages(msgIDs.ToArray())
+	messages := repo.Messages.GetManyMessages(msgIDs.ToArray())
 	mUsers := domain.MInt64B{}
 	mUsers[req.Peer.ID] = true
 	for _, m := range messages {
@@ -350,7 +350,7 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 			mUsers[id] = true
 		}
 	}
-	users := repo.Ctx().Users.GetAnyUsers(mUsers.ToArray())
+	users := repo.Users.GetAnyUsers(mUsers.ToArray())
 
 	// if db already had all users
 	if len(messages) == len(msgIDs) && len(users) > 0 {
@@ -382,7 +382,7 @@ func (r *River) messagesClearHistory(in, out *msg.MessageEnvelope, timeoutCB dom
 		return
 	}
 	// this will be handled on message update appliers too
-	err := repo.Ctx().Messages.DeleteDialogMessage(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+	err := repo.Messages.DeleteDialogMessage(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 	if err != nil {
 		logs.Error("River::messagesClearHistory()-> DeleteDialogMessage()", zap.Error(err))
 	}
@@ -401,7 +401,7 @@ func (r *River) messagesReadContents(in, out *msg.MessageEnvelope, timeoutCB dom
 		return
 	}
 
-	err := repo.Ctx().Messages.SetContentRead(req.MessageIDs)
+	err := repo.Messages.SetContentRead(req.MessageIDs)
 	if err != nil {
 		logs.Error("River::groupUpdateAdmin()-> UpdateGroupMemberType()", zap.Error(err))
 	}
@@ -429,7 +429,7 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 		req.RandomID = domain.SequentialUniqueID()
 		// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 		dbID := -domain.SequentialUniqueID()
-		res, err := repo.Ctx().PendingMessages.SaveMessageMedia(dbID, r.ConnInfo.UserID, req)
+		res, err := repo.PendingMessages.SaveMessageMedia(dbID, r.ConnInfo.UserID, req)
 		if err != nil {
 			e := new(msg.Error)
 			e.Code = "n/a"
@@ -492,7 +492,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	}
 
 	// TODO : check if file has been uploaded b4
-	dtoFile := repo.Ctx().Files.GetExistingFileDocument(reqMedia.FilePath)
+	dtoFile := repo.Files.GetExistingFileDocument(reqMedia.FilePath)
 	fileAlreadyUploaded := false
 	if dtoFile != nil {
 		fileAlreadyUploaded = dtoFile.ClusterID > 0 && dtoFile.DocumentID > 0 && dtoFile.AccessHash > 0
@@ -500,7 +500,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	if fileAlreadyUploaded {
 		msgID := -domain.SequentialUniqueID()
 		fileID := uint64(domain.SequentialUniqueID())
-		res, err := repo.Ctx().PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, int64(fileID), reqMedia)
+		res, err := repo.PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, int64(fileID), reqMedia)
 		if err != nil {
 			e := new(msg.Error)
 			e.Code = "n/a"
@@ -554,7 +554,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 		msgID := -domain.SequentialUniqueID()
 		fileID := int64(in.RequestID)
-		res, err := repo.Ctx().PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, fileID, reqMedia)
+		res, err := repo.PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, fileID, reqMedia)
 
 		if err != nil {
 			e := new(msg.Error)
@@ -608,7 +608,7 @@ func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 	}
 
 	res := new(msg.ContactsMany)
-	res.Users, res.Contacts = repo.Ctx().Users.GetContacts()
+	res.Users, res.Contacts = repo.Users.GetContacts()
 
 	// if didn't find anything send request to server
 	if len(res.Users) == 0 || len(res.Contacts) == 0 {
@@ -643,9 +643,9 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	}
 
 	res := new(msg.ContactsMany)
-	res.Users, res.Contacts = repo.Ctx().Users.GetContacts()
+	res.Users, res.Contacts = repo.Users.GetContacts()
 
-	oldHash, err := repo.Ctx().System.LoadInt(domain.ColumnContactsImportHash)
+	oldHash, err := repo.System.LoadInt(domain.ColumnContactsImportHash)
 	if err != nil {
 		logs.Error("River::contactsImport()-> failed to get contactsImportHash ", zap.Error(err))
 	}
@@ -660,7 +660,7 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	}
 
 	// not equal save it to DB
-	err = repo.Ctx().System.SaveInt(domain.ColumnContactsImportHash, int32(newHash))
+	err = repo.System.SaveInt(domain.ColumnContactsImportHash, int32(newHash))
 	if err != nil {
 		logs.Error("River::contactsImport() failed to save ContactsImportHash to DB", zap.Error(err))
 	}
@@ -668,7 +668,7 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	// update phone contacts just a double check
 	if req.Replace {
 		for _, c := range req.Contacts {
-			err := repo.Ctx().Users.UpdatePhoneContact(c)
+			err := repo.Users.UpdatePhoneContact(c)
 			if err != nil {
 				logs.Error("River::contactsImport()-> UpdatePhoneContact()", zap.Error(err))
 			}
@@ -765,7 +765,7 @@ func (r *River) accountRegisterDevice(in, out *msg.MessageEnvelope, timeoutCB do
 		logs.Error("River::accountRegisterDevice()-> Json Marshal()", zap.Error(err))
 		return
 	}
-	err = repo.Ctx().System.SaveString(domain.ColumnDeviceToken, string(val))
+	err = repo.System.SaveString(domain.ColumnDeviceToken, string(val))
 	if err != nil {
 		logs.Error("River::accountRegisterDevice()-> SaveString()", zap.Error(err))
 		return
@@ -787,7 +787,7 @@ func (r *River) accountUnregisterDevice(in, out *msg.MessageEnvelope, timeoutCB 
 		logs.Error("River::accountUnregisterDevice()-> Json Marshal()", zap.Error(err))
 		return
 	}
-	err = repo.Ctx().System.SaveString(domain.ColumnDeviceToken, string(val))
+	err = repo.System.SaveString(domain.ColumnDeviceToken, string(val))
 	if err != nil {
 		logs.Error("River::accountUnregisterDevice()-> SaveString()", zap.Error(err))
 		return
@@ -803,7 +803,7 @@ func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB
 		return
 	}
 
-	dialog := repo.Ctx().Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
+	dialog := repo.Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
 		logs.Debug("River::accountSetNotifySettings()-> GetDialog()",
 			zap.String("Error", "Dialog is null"),
@@ -812,7 +812,7 @@ func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB
 	}
 
 	dialog.NotifySettings = req.Settings
-	err := repo.Ctx().Dialogs.SaveDialog(dialog, 0)
+	err := repo.Dialogs.SaveDialog(dialog, 0)
 	if err != nil {
 		logs.Error("River::accountSetNotifySettings()-> SaveDialog()", zap.Error(err))
 		return
@@ -828,7 +828,7 @@ func (r *River) accountRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domai
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 
-	err := repo.Ctx().Users.RemoveUserPhoto(r.ConnInfo.UserID)
+	err := repo.Users.RemoveUserPhoto(r.ConnInfo.UserID)
 	if err != nil {
 		logs.Error("accountRemovePhoto()", zap.Error(err))
 	}
@@ -849,7 +849,7 @@ func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB dom
 	r.ConnInfo.Bio = req.Bio
 	r.ConnInfo.Save()
 
-	err := repo.Ctx().Users.UpdateUserProfile(r.ConnInfo.UserID, req)
+	err := repo.Users.UpdateUserProfile(r.ConnInfo.UserID, req)
 	if err != nil {
 		logs.Error("River::accountUpdateProfile()-> UpdateUserProfile()", zap.Error(err))
 	}
@@ -867,7 +867,7 @@ func (r *River) groupsEditTitle(in, out *msg.MessageEnvelope, timeoutCB domain.T
 		return
 	}
 
-	err := repo.Ctx().Groups.UpdateGroupTitle(req.GroupID, req.Title)
+	err := repo.Groups.UpdateGroupTitle(req.GroupID, req.Title)
 	if err != nil {
 		logs.Error("River::messagesEditGroupTitle()-> UpdateGroupTitle()", zap.Error(err))
 	}
@@ -885,7 +885,7 @@ func (r *River) groupAddUser(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		successCB(out)
 		return
 	}
-	user := repo.Ctx().Users.GetUser(req.User.UserID)
+	user := repo.Users.GetUser(req.User.UserID)
 	if user != nil {
 		gp := &msg.GroupParticipant{
 			AccessHash: req.User.AccessHash,
@@ -894,7 +894,7 @@ func (r *River) groupAddUser(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 			UserID:     req.User.UserID,
 			Type:       msg.ParticipantTypeMember,
 		}
-		err := repo.Ctx().Groups.SaveParticipants(req.GroupID, gp)
+		err := repo.Groups.SaveParticipants(req.GroupID, gp)
 		// TODO : Increase group ParticipantCount
 		if err != nil {
 			logs.Error("River::groupAddUser()-> SaveParticipants()", zap.Error(err))
@@ -915,7 +915,7 @@ func (r *River) groupDeleteUser(in, out *msg.MessageEnvelope, timeoutCB domain.T
 		return
 	}
 
-	err := repo.Ctx().Groups.DeleteGroupMember(req.GroupID, req.User.UserID)
+	err := repo.Groups.DeleteGroupMember(req.GroupID, req.User.UserID)
 	// TODO : Decrease group ParticipantCount
 	if err != nil {
 		logs.Error("River::groupDeleteUser()-> SaveParticipants()", zap.Error(err))
@@ -937,7 +937,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 
 	res := new(msg.GroupFull)
 	// Group
-	group, err := repo.Ctx().Groups.GetGroup(req.GroupID)
+	group, err := repo.Groups.GetGroup(req.GroupID)
 	if err != nil {
 		logs.Error("River::groupsGetFull()-> GetGroup() Sending Request To Server !!!", zap.Error(err))
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
@@ -946,7 +946,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	res.Group = group
 
 	// Participants
-	participents, err := repo.Ctx().Groups.GetParticipants(req.GroupID)
+	participents, err := repo.Groups.GetParticipants(req.GroupID)
 	if err != nil {
 		logs.Error("River::groupsGetFull()-> GetParticipants() Sending Request To Server !!!", zap.Error(err))
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
@@ -955,7 +955,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	res.Participants = participents
 
 	// NotifySettings
-	dlg := repo.Ctx().Dialogs.GetDialog(req.GroupID, int32(msg.PeerGroup))
+	dlg := repo.Dialogs.GetDialog(req.GroupID, int32(msg.PeerGroup))
 	if dlg == nil {
 		logs.Warn("River::groupsGetFull()-> GetDialog() Sending Request To Server !!!")
 
@@ -969,7 +969,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	for _, v := range participents {
 		userIDs[v.UserID] = true
 	}
-	users := repo.Ctx().Users.GetAnyUsers(userIDs.ToArray())
+	users := repo.Users.GetAnyUsers(userIDs.ToArray())
 	if users == nil || len(participents) != len(users) || len(users) <= 0 {
 		logs.Warn("River::groupsGetFull()-> GetAnyUsers() Sending Request To Server !!!",
 			zap.Bool("Is user nil ? ", users == nil),
@@ -1000,7 +1000,7 @@ func (r *River) groupUpdateAdmin(in, out *msg.MessageEnvelope, timeoutCB domain.
 		return
 	}
 
-	err := repo.Ctx().Groups.UpdateGroupMemberType(req.GroupID, req.User.UserID, req.Admin)
+	err := repo.Groups.UpdateGroupMemberType(req.GroupID, req.User.UserID, req.Admin)
 	// TODO : Decrease group ParticipantCount
 	if err != nil {
 		logs.Error("River::groupUpdateAdmin()-> UpdateGroupMemberType()", zap.Error(err))
@@ -1021,7 +1021,7 @@ func (r *River) groupRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domain.
 		logs.Error("groupRemovePhoto() failed to unmarshal", zap.Error(err))
 	}
 
-	err = repo.Ctx().Groups.RemoveGroupPhoto(req.GroupID)
+	err = repo.Groups.RemoveGroupPhoto(req.GroupID)
 	if err != nil {
 		logs.Error("groupRemovePhoto()", zap.Error(err))
 	}
@@ -1038,7 +1038,7 @@ func (r *River) usersGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		userIDs[v.UserID] = true
 	}
 
-	users := repo.Ctx().Users.GetAnyUsers(userIDs.ToArray())
+	users := repo.Users.GetAnyUsers(userIDs.ToArray())
 
 	if len(users) == len(userIDs) {
 		res := new(msg.UsersMany)
@@ -1069,7 +1069,7 @@ func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 		userIDs[v.UserID] = true
 	}
 
-	users := repo.Ctx().Users.GetAnyUsers(userIDs.ToArray())
+	users := repo.Users.GetAnyUsers(userIDs.ToArray())
 
 	if len(users) == len(userIDs) {
 		res := new(msg.UsersMany)

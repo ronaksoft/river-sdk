@@ -10,22 +10,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// Dialogs repoDialogs interface
-type Dialogs interface {
-	SaveDialog(dialog *msg.Dialog, lastUpdate int64) error
-	GetDialogs(offset, limit int32) []*msg.Dialog
-	GetDialog(peerID int64, peerType int32) *msg.Dialog
-	CountDialogs() int32
-	UpdateReadInboxMaxID(userID, peerID int64, peerType int32, maxID int64) error
-	UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID int64) error
-	UpdateDialogUnreadCount(peerID int64, peerTyep, unreadCount int32) error
-	UpdateAccessHash(accessHash int64, peerID int64, peerType int32) error
-	UpdateTopMessageID(createdOn, peerID int64, peerType int32) error
-	UpdateNotifySetting(msg *msg.UpdateNotifySettings) error
-	UpdatePeerNotifySettings(peerID int64, peerType int32, notifySetting *msg.PeerNotifySettings) error
-	Delete(groupID int64, peerType int32) error
-	GetManyDialog(peerIDs []int64) []*msg.Dialog
-}
 
 type repoDialogs struct {
 	*repository

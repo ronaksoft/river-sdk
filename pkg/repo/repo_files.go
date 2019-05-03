@@ -10,27 +10,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// Files repoFiles interface
-type Files interface {
-	SaveFileStatus(fs *dto.FilesStatus) (err error)
-	GetAllFileStatus() []dto.FilesStatus
-	GetFileStatus(msgID int64) (*dto.FilesStatus, error)
-	DeleteFileStatus(msgID int64) error
-	DeleteManyFileStatus(msgIDs []int64) error
-	MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, fileSize int32, sent *msg.MessagesSent) (err error)
-	SaveFileDocument(m *msg.UserMessage, doc *msg.MediaDocument) error
-	GetExistingFileDocument(filePath string) *dto.Files
-	GetFilePath(msgID, docID int64) string
-	SaveDownloadingFile(fs *dto.FilesStatus) error
-	UpdateFileStatus(msgID int64, state domain.RequestStatus) error
-	UpdateThumbnailPath(msgID int64, filePath string) error
-	GetFile(msgID int64) (*dto.Files, error)
-	GetFileByDocumentID(documentID int64) (*dto.Files, error)
-
-	GetSharedMedia(peerID int64, peerType int32, mediaType int32) ([]*msg.UserMessage, error)
-	UpdateFilePathByDocumentID(messageID int64, filePath string)
-}
-
 type repoFiles struct {
 	*repository
 }

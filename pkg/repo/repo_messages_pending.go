@@ -10,22 +10,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// MessagesPending repoMessagesPending interface
-type MessagesPending interface {
-	Save(ID int64, senderID int64, message *msg.MessagesSend) (*msg.ClientPendingMessage, error)
-	GetPendingMessageByRequestID(requestID int64) (*dto.MessagesPending, error)
-	GetPendingMessageByID(id int64) (*dto.MessagesPending, error)
-	DeletePendingMessage(ID int64) error
-	DeleteManyPendingMessage(IDs []int64) error
-	GetManyPendingMessages(messageIDs []int64) []*msg.UserMessage
-	GetManyPendingMessagesRequestID(messageIDs []int64) []int64
-	GetAllPendingMessages() []*msg.MessagesSend
-	DeletePeerAllMessages(peerID int64, peerType int32) (*msg.ClientUpdateMessagesDeleted, error)
-	SaveClientMessageMedia(ID, senderID, requestID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error)
-	GetPendingMessage(messageID int64) *msg.UserMessage
-	SaveMessageMedia(ID int64, senderID int64, message *msg.MessagesSendMedia) (*msg.ClientPendingMessage, error)
-}
-
 type repoMessagesPending struct {
 	*repository
 }

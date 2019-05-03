@@ -8,27 +8,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// Groups repoGroups interface
-type Groups interface {
-	Save(g *msg.Group) (err error)
-	GetManyGroups(groupIDs []int64) []*msg.Group
-	GetGroup(groupID int64) (*msg.Group, error)
-	SaveMany(groups []*msg.Group) error
-	DeleteGroupMember(groupID, userID int64) error
-	DeleteAllGroupMember(groupID int64) error
-	UpdateGroupTitle(groupID int64, title string) error
-	SaveParticipants(groupID int64, participant *msg.GroupParticipant) error
-	GetParticipants(groupID int64) ([]*msg.GroupParticipant, error)
-	DeleteGroupMemberMany(peerID int64, IDs []int64) error
-	Delete(groupID int64) error
-	UpdateGroupMemberType(groupID, userID int64, isAdmin bool) error
-	SearchGroups(searchPhrase string) []*msg.Group
-	GetGroupDTO(groupID int64) (*dto.Groups, error)
-	UpdateGroupPhotoPath(groupID int64, isBig bool, filePath string) error
-	UpdateGroupPhoto(groupPhoto *msg.UpdateGroupPhoto) error
-	RemoveGroupPhoto(userID int64) error
-}
-
 type repoGroups struct {
 	*repository
 }
