@@ -115,7 +115,6 @@ func (r *River) loadDeviceToken() {
 func (v *RiverConnection) Save() {
 	b, _ := v.MarshalJSON()
 	v.Delegate.SaveConnInfo(b)
-	//	v.saveConfig()
 }
 
 // ChangeAuthID RiverConfig interface func
@@ -127,7 +126,7 @@ func (v *RiverConnection) ChangeAuthKey(authKey []byte) {
 }
 
 func (v *RiverConnection) GetAuthKey() []byte {
-	var bytes = make([]byte,256)
+	var bytes = make([]byte, 256)
 	copy(bytes, v.AuthKey[0:256])
 	return bytes
 }
@@ -151,7 +150,7 @@ func (v *RiverConnection) ChangeLastName(lastName string) { v.LastName = lastNam
 func (v *RiverConnection) ChangeBio(bio string) { v.Bio = bio }
 
 // Load RiverConfig interface func
-//func (v *RiverConnection) Load() error { return v.loadConfig() }
+// func (v *RiverConnection) Load() error { return v.loadConfig() }
 
 // PickupAuthID RiverConfig interface func
 func (v *RiverConnection) PickupAuthID() int64 { return v.AuthID }

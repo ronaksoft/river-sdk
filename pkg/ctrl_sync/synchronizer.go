@@ -597,7 +597,6 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 		}
 	}
 
-
 	// No need to wait here till DB gets synced cuz UI will have required data
 	go func() {
 		// Save Groups

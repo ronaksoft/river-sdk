@@ -100,9 +100,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	// Initialize realtime requests
 	r.realTimeCommands = map[int64]bool{
 		msg.C_MessagesSetTyping: true,
-		// msg.C_AuthRecall:        true,
-		// msg.C_InitConnect:       true,
-		// msg.C_InitCompleteAuth:  true,
 	}
 
 	// Initialize filemanager

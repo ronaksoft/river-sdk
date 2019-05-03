@@ -32,7 +32,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 	case msg.C_AuthSentCode:
 		x := new(msg.AuthSentCode)
 		x.Unmarshal(envelope.Message)
-		if strings.HasPrefix(x.Phone ,"2374") {
+		if strings.HasPrefix(x.Phone, "2374") {
 			os.Remove("./_connection/phone")
 			os.Remove("./_connection/phoneCodeHash")
 			ioutil.WriteFile("./_connection/phone", []byte(x.Phone), 0666)

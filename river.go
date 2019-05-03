@@ -51,7 +51,6 @@ type RiverConfig struct {
 	DocumentLogDirectory   string
 	// Connection Info
 	ConnInfo *RiverConnection
-
 }
 
 // River
@@ -117,7 +116,7 @@ func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 		msgEnvelope.Constructor = msg.C_SystemGetInfo
 
 		msgEnvelope.Message, _ = (&msg.SystemGetInfo{}).Marshal()
-		_  = networkCtrl.Send(msgEnvelope, true)
+		_ = networkCtrl.Send(msgEnvelope, true)
 	})
 	// Message Handler
 	networkCtrl.SetMessageHandler(func(messages []*msg.MessageEnvelope) {
@@ -138,9 +137,8 @@ func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 	// Start the Network Controller alone
 	_ = networkCtrl.Start()
 	go networkCtrl.Connect()
-	defer networkCtrl.Stop()			// 2nd Stop the controller
-	defer networkCtrl.Disconnect()		// 1st Disconnect
-
+	defer networkCtrl.Stop()       // 2nd Stop the controller
+	defer networkCtrl.Disconnect() // 1st Disconnect
 
 	for {
 		select {

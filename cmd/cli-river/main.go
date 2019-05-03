@@ -74,17 +74,17 @@ func main() {
 		}
 	}
 
-	conInfo.Delegate =  new(ConnInfoDelegates)
+	conInfo.Delegate = new(ConnInfoDelegates)
 
 	qPath := "./_queue"
 	_SDK = new(riversdk.River)
 	_SDK.SetConfig(&riversdk.RiverConfig{
-		ServerEndpoint:         "ws://new.river.im", // "ws://192.168.1.110/",
-		DbPath:                 dbPath,
-		DbID:                   dbID,
-		QueuePath:              fmt.Sprintf("%s/%s", qPath, dbID),
-		ServerKeysFilePath:     "./keys.json",
-		MainDelegate:           new(MainDelegate),
+		ServerEndpoint:     "ws://new.river.im", // "ws://192.168.1.110/",
+		DbPath:             dbPath,
+		DbID:               dbID,
+		QueuePath:          fmt.Sprintf("%s/%s", qPath, dbID),
+		ServerKeysFilePath: "./keys.json",
+		MainDelegate:       new(MainDelegate),
 		// Logger:                 new(PrintDelegate),
 		LogLevel:               int(zapcore.DebugLevel),
 		DocumentAudioDirectory: "./_files/audio",
@@ -93,7 +93,7 @@ func main() {
 		DocumentFileDirectory:  "./_files/file",
 		DocumentCacheDirectory: "./_files/cache",
 		DocumentLogDirectory:   "./_files/logs",
-		ConnInfo: conInfo,
+		ConnInfo:               conInfo,
 	})
 
 	_SDK.Start()

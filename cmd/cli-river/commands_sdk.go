@@ -32,7 +32,6 @@ var GetAuthKey = &ishell.Cmd{
 	},
 }
 
-
 var SdkSetLogLevel = &ishell.Cmd{
 	Name: "SetLogLevel",
 	Func: func(c *ishell.Context) {

@@ -77,12 +77,12 @@ var AuthLogin = &ishell.Cmd{
 		} else {
 			b, _ := ioutil.ReadAll(phoneFile)
 			req.Phone = string(b)
-			if strings.HasPrefix(req.Phone ,"2374") {
+			if strings.HasPrefix(req.Phone, "2374") {
 				File, err := os.Open("./_connection/phoneCodeHash")
 				if err != nil {
 					req.PhoneCodeHash = fnGetPhoneCode(c)
 				} else {
-					req.PhoneCode = req.Phone[len(req.Phone) - 4:]
+					req.PhoneCode = req.Phone[len(req.Phone)-4:]
 					b, _ := ioutil.ReadAll(File)
 					req.PhoneCodeHash = string(b)
 				}

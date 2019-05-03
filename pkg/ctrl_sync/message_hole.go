@@ -242,7 +242,7 @@ func SaveHole(peerID int64, peerType int32, minID, maxID int64) error {
 		return err
 	}
 
-	hm.addBar(Bar{Type:Hole, Min:minID, Max:maxID})
+	hm.addBar(Bar{Type: Hole, Min: minID, Max: maxID})
 	b, err = hm.save()
 	if err != nil {
 		return err
@@ -267,7 +267,7 @@ func FillHole(peerID int64, peerType int32, minID, maxID int64) error {
 		return err
 	}
 
-	hm.addBar(Bar{Type:Filled, Min:minID, Max:maxID})
+	hm.addBar(Bar{Type: Filled, Min: minID, Max: maxID})
 	b, err = hm.save()
 	if err != nil {
 		return err
@@ -294,9 +294,6 @@ func IsHole(peerID int64, peerType int32, minID, maxID int64) (bool, error) {
 
 	return hm.isFilled(minID, maxID), nil
 }
-
-
-
 
 // GetHoles get holes between min & max
 func GetHoles(peerID, minID, maxID int64) []dto.MessagesHole {

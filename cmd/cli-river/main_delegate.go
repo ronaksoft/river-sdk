@@ -10,7 +10,7 @@ import (
 
 var ConnInfo []byte
 
-type ConnInfoDelegates struct {}
+type ConnInfoDelegates struct{}
 
 func (c *ConnInfoDelegates) SaveConnInfo(connInfo []byte) {
 	_ = os.MkdirAll("./_connection", os.ModePerm)
