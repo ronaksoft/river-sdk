@@ -10,7 +10,6 @@ import (
 	"go.uber.org/zap"
 )
 
-
 type repoDialogs struct {
 	*repository
 }
