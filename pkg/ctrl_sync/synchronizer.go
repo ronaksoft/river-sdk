@@ -3,6 +3,7 @@ package synchronizer
 import (
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/filemanager"
+	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -277,12 +278,11 @@ func getAllDialogs(ctrl *Controller, offset int32, limit int32) {
 						)
 						continue
 					}
+
 					// create MessageHole
-					err = CreateMessageHole(dialog.PeerID, 0, dialog.TopMessageID-1)
-					if err != nil {
-						logs.Error("getAllDialogs() -> createMessageHole() ", zap.Error(err))
-					}
-					// make sure to created the messagehole b4 creating dialog
+					_ = messageHole.InsertHole(dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID-1)
+
+					// make sure to created the message hole b4 creating dialog
 					err := repo.Ctx().Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
 					if err != nil {
 						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveDialog() ",
@@ -292,24 +292,9 @@ func getAllDialogs(ctrl *Controller, offset int32, limit int32) {
 					}
 				}
 
-				for _, user := range x.Users {
-					err := repo.Ctx().Users.SaveUser(user)
-					if err != nil {
-						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveUser() ",
-							zap.String("Error", err.Error()),
-							zap.String("User", fmt.Sprintf("%v", user)),
-						)
-					}
-				}
-				for _, group := range x.Groups {
-					err := repo.Ctx().Groups.Save(group)
-					if err != nil {
-						logs.Error("getAllDialogs() -> onSuccessCallback() -> Groups.Save() ",
-							zap.String("Error", err.Error()),
-							zap.String("Group", fmt.Sprintf("%v", group)),
-						)
-					}
-				}
+				_ = repo.Ctx().Users.SaveMany(x.Users)
+				_ = repo.Ctx().Groups.SaveMany(x.Groups)
+
 				if x.Count > offset+limit {
 					getAllDialogs(ctrl, offset+limit, limit)
 				}

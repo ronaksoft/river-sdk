@@ -35,9 +35,6 @@ func (r *repoMessagesPending) Save(ID int64, senderID int64, message *msg.Messag
 	defer r.mx.Unlock()
 
 	if message == nil {
-		logs.Debug("MessagesPending::Save() :",
-			zap.String("Error", "message is null"),
-		)
 		return nil, domain.ErrNotFound
 	}
 	logs.Debug("MessagesPending::Save()",

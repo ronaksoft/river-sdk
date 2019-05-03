@@ -2,6 +2,7 @@ package synchronizer
 
 import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"os"
 	"time"
 
@@ -251,41 +252,31 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 		logs.Error("messagesMany()-> Unmarshal()", zap.Error(err))
 		return
 	}
-	for _, v := range u.Users {
-		repo.Ctx().Users.SaveUser(v)
-	}
 
-	// extract MessageHole info
-	peerMessageMinID := make(map[int64]int64)
-	peerMessageMaxID := make(map[int64]int64)
-	peerMessages := make(map[int64]bool)
-	for _, v := range u.Messages {
-		repo.Ctx().Messages.SaveMessage(v)
-		if _, ok := peerMessages[v.PeerID]; ok {
-			if v.ID < peerMessageMinID[v.PeerID] {
-				peerMessageMinID[v.PeerID] = v.ID
-			}
-			if v.ID > peerMessageMaxID[v.PeerID] {
-				peerMessageMaxID[v.PeerID] = v.ID
-			}
-		} else {
-			peerMessages[v.PeerID] = true
-			peerMessageMaxID[v.PeerID] = v.ID
-			peerMessageMinID[v.PeerID] = v.ID
-		}
-	}
+	// Save Groups & Users
+	_ = repo.Ctx().Users.SaveMany(u.Users)
+	_ = repo.Ctx().Groups.SaveMany(u.Groups)
 
 	// handle Media message
 	go extractMessagesMedia(u.Messages...)
 
-	// fill MessagesHole
-	for peerID := range peerMessages {
-		err := fillMessageHoles(peerID, peerMessageMinID[peerID], peerMessageMaxID[peerID])
-		if err != nil {
-			logs.Error("updateMessageHole()", zap.Error(err))
+	minID := int64(0)
+	maxID := int64(0)
+	for _, v := range u.Messages {
+		_ = repo.Ctx().Messages.SaveMessage(v)
+		if minID == 0 || v.ID < minID {
+			minID = v.ID
+		}
+		if maxID == 0 || v.ID > maxID {
+			maxID = v.ID
 		}
 	}
 
+	if u.Continuous && minID != 0 && minID != maxID {
+		peerID := u.Messages[0].PeerID
+		peerType := u.Messages[0].PeerType
+		_ = messageHole.InsertFill(peerID, peerType, minID, maxID)
+	}
 }
 
 // groupFull

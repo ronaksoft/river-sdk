@@ -2,6 +2,7 @@ package synchronizer
 
 import (
 	"fmt"
+	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"time"
 
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
@@ -26,14 +27,9 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 
 	dialog := repo.Ctx().Dialogs.GetDialog(x.Message.PeerID, x.Message.PeerType)
 	if dialog == nil {
+		_ = messageHole.InsertHole(x.Message.PeerID, x.Message.PeerType, 0, x.Message.ID-1)
 
-		// create MessageHole
-		err = CreateMessageHole(x.Message.PeerID, 0, x.Message.ID-1)
-		if err != nil {
-			logs.Error("updateNewMessage() -> createMessageHole() ", zap.Error(err))
-		}
-
-		// make sure to created the messagehole b4 creating dialog
+		// make sure to created the message hole b4 creating dialog
 		dialog = &msg.Dialog{
 			PeerID:       x.Message.PeerID,
 			PeerType:     x.Message.PeerType,
@@ -68,6 +64,8 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 			logs.Error("updateNewMessage()-> SaveSelfMessage()", zap.Error(err))
 		}
 	}
+
+	_ = messageHole.AddFill(x.Message.PeerID, x.Message.PeerType, x.Message.ID)
 
 	// bug : sometime server do not sends access hash
 	if x.AccessHash > 0 {
@@ -186,25 +184,12 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			if err != nil {
 				logs.Error("updateNewMessage() -> Groups.DeleteAllGroupMember() Failed", zap.Error(err))
 			}
-			// delete MessageHole
-			err = DeleteMessageHole(x.Message.PeerID)
-			if err != nil {
-				logs.Error("updateNewMessage() -> DeleteMessageHole1() Failed", zap.Error(err))
-			}
-			logs.Debug("handleMessageAction() deleted all MessagesHole", zap.Int64("PeerID", x.Message.PeerID))
 		} else {
 			// get dialog and create first hole
 			dtoDlg := repo.Ctx().Dialogs.GetDialog(x.Message.PeerID, x.Message.PeerType)
 			if dtoDlg != nil {
-				err = DeleteMessageHole(x.Message.PeerID)
-				if err != nil {
-					logs.Error("updateNewMessage() -> DeleteMessageHole2() Failed", zap.Error(err))
-				}
-				logs.Debug("handleMessageAction() deleted all MessagesHole", zap.Int64("PeerID", x.Message.PeerID))
-				err = CreateMessageHole(dtoDlg.PeerID, 0, dtoDlg.TopMessageID-1)
-				if err != nil {
-					logs.Error("updateNewMessage() -> DeleteMessageHole2() Failed", zap.Error(err))
-				}
+				_ = messageHole.InsertHole(dtoDlg.PeerID, dtoDlg.PeerType, 0, dtoDlg.TopMessageID-1)
+
 			}
 		}
 	}

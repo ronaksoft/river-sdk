@@ -3,10 +3,10 @@ package riversdk
 import (
 	"encoding/json"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/filemanager"
+	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"strings"
 	"sync"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_sync"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
@@ -225,126 +225,58 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			messages, users := repo.Ctx().Messages.GetMessageHistoryWithPendingMessages(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 			messagesGetHistory(out, messages, users, in.RequestID, successCB)
 		} else {
-			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
+			messages, users := repo.Ctx().Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 			messagesGetHistory(out, messages, users, in.RequestID, successCB)
 		}
 		return
 	}
 
-	if req.MinID == 0 && req.MaxID == 0 {
-		// Load type 0 : initial
+	switch {
+	case req.MinID == 0 && req.MaxID == 0:
+		// Get the latest messages
 		if dtoDialog.TopMessageID < 0 {
-			logs.Debug("River::messagesGetHistory() Load Type 0 : from localDB PendedMessage")
+			// TODO:: WTF ?
 			// fetch messages from localDB cuz there is a pending message it means we are not connected to server
-			messages, users := repo.Ctx().Messages.GetMessageHistoryWithPendingMessages(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
+			messages, users := repo.Ctx().Messages.GetMessageHistoryWithPendingMessages(req.Peer.ID, int32(req.Peer.Type), 0, 0, req.Limit)
 			messagesGetHistory(out, messages, users, in.RequestID, successCB)
-		} else {
-			maxID := dtoDialog.TopMessageID - 1
-			holes := synchronizer.GetHoles(dtoDialog.PeerID, req.MinID, maxID)
-			closestHole := synchronizer.GetMaxClosestHole(maxID, holes)
-			if len(holes) > 0 {
-				if closestHole != nil {
-					messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), closestHole.MaxID, dtoDialog.TopMessageID, req.Limit)
-					if len(messages) == int(req.Limit) {
-						logs.Debug("River::messagesGetHistory() Load Type 0:A1 from localDB")
-						messagesGetHistory(out, messages, users, in.RequestID, successCB)
-					} else {
-						logs.Debug("River::messagesGetHistory() Load Type 0:A2 sent to server")
-						r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
-					}
-				} else {
-					logs.Debug("River::messagesGetHistory() Load Type 0:A3 sent to server")
-					r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
-				}
-			} else {
-				// TOF
-				// TODO:: check why message holes not saved
-				count := repo.Ctx().Messages.GetDialogMessageCount(req.Peer.ID, int32(req.Peer.Type))
-				if count > 1 {
-					logs.Debug("River::messagesGetHistory() Load Type 0:A4:01 from localDB")
-					messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
-					messagesGetHistory(out, messages, users, in.RequestID, successCB)
-				} else {
-					synchronizer.CreateMessageHole(dtoDialog.PeerID, 0, dtoDialog.TopMessageID-1)
-					logs.Debug("River::messagesGetHistory() Load Type 0:A4:02 sent to server")
-					r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
-				}
-			}
-
+			return
 		}
-
-	} else if req.MinID == 0 && req.MaxID != 0 {
-		// Load type 1 : scroll to up
-		holes := synchronizer.GetHoles(dtoDialog.PeerID, req.MinID, req.MaxID)
-		closestHole := synchronizer.GetMaxClosestHole(req.MaxID, holes)
-
-		if len(holes) > 0 {
-			if closestHole != nil {
-				messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), closestHole.MaxID, req.MaxID, req.Limit)
-				if len(messages) == int(req.Limit) {
-					logs.Debug("River::messagesGetHistory() Load Type 1:B1 from localDB")
-					messagesGetHistory(out, messages, users, in.RequestID, successCB)
-				} else {
-					logs.Debug("River::messagesGetHistory() Load Type 1:B2 sent to server")
-					r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
-				}
-			} else {
-				logs.Debug("River::messagesGetHistory() Load Type 1:B3 sent to server")
-				r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
-			}
-		} else {
-			// TOF
-			// TODO:: check why message holes not saved
-			count := repo.Ctx().Messages.GetDialogMessageCount(req.Peer.ID, int32(req.Peer.Type))
-			if count > 1 {
-				logs.Debug("River::messagesGetHistory() Load Type 1:B4:01 from localDB")
-				messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
-				messagesGetHistory(out, messages, users, in.RequestID, successCB)
-			} else {
-				synchronizer.CreateMessageHole(dtoDialog.PeerID, 0, dtoDialog.TopMessageID-1)
-				logs.Debug("River::messagesGetHistory() Load Type 1:B4:02 sent to server")
-				r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
-			}
-
-		}
-
-	} else if req.MinID != 0 && req.MaxID == 0 {
-		// Load type 2 : scroll to down
-		maxID := dtoDialog.TopMessageID - 1
-
-		holes := synchronizer.GetHoles(dtoDialog.PeerID, req.MinID, maxID)
-		closestHole := synchronizer.GetMinClosestHole(req.MinID, holes)
-		if len(holes) > 0 {
-			if closestHole != nil {
-				messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, closestHole.MinID.Int64, req.Limit)
-				if len(messages) == int(req.Limit) {
-					logs.Debug("River::messagesGetHistory() Load Type 2:C1 from localDB")
-					messagesGetHistory(out, messages, users, in.RequestID, successCB)
-				} else {
-					logs.Debug("River::messagesGetHistory() Load Type 2:C2 sent to server")
-					r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
-				}
-			} else {
-				logs.Debug("River::messagesGetHistory() Load Type 2:C3 sent to server")
-				r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
-			}
-		} else {
-			logs.Debug("River::messagesGetHistory() Load Type 2:C4 from localDB")
-			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
-			messagesGetHistory(out, messages, users, in.RequestID, successCB)
-		}
-
-	} else {
-		// Load type 3 : exact size
-		holes := synchronizer.GetHoles(dtoDialog.PeerID, req.MinID, req.MaxID)
-		if len(holes) > 0 {
-			logs.Debug("River::messagesGetHistory() Load Type 3:C1 sent to server")
+		b, bar := messageHole.GetLowerFilled(req.Peer.ID, int32(req.Peer.Type), dtoDialog.TopMessageID)
+		if !b {
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
-		} else {
-			logs.Debug("River::messagesGetHistory() Load Type 3:C2 from localDB")
-			messages, users := repo.Ctx().Messages.GetMessageHistoryWithMinMaxID(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
-			messagesGetHistory(out, messages, users, in.RequestID, successCB)
+			return
 		}
+		messages, users := repo.Ctx().Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
+		messagesGetHistory(out, messages, users, in.RequestID, successCB)
+		return
+	case req.MinID == 0 && req.MaxID != 0:
+		// Load more message, scroll up
+		b, bar := messageHole.GetLowerFilled(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+		if !b {
+			// TODO:: modify successCB to SaveFill if no messages received
+			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+			return
+		}
+		messages, users := repo.Ctx().Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
+		messagesGetHistory(out, messages, users, in.RequestID, successCB)
+	case req.MinID != 0 && req.MaxID == 0:
+		// Load more message, scroll down
+		b, bar := messageHole.GetUpperFilled(req.Peer.ID, int32(req.Peer.Type), req.MinID)
+		if !b {
+			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+			return
+		}
+		messages, users := repo.Ctx().Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
+		messagesGetHistory(out, messages, users, in.RequestID, successCB)
+	default:
+		// Load a range
+		b, _ := messageHole.IsHole(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID)
+		if b {
+			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+			return
+		}
+		messages, users := repo.Ctx().Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
+		messagesGetHistory(out, messages, users, in.RequestID, successCB)
 	}
 }
 
