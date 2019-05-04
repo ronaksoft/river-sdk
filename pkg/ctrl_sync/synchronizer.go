@@ -280,7 +280,6 @@ func getAllDialogs(ctrl *Controller, offset int32, limit int32) {
 					}
 
 					// create MessageHole
-					_ = repo.MessagesExtra.SaveScrollID(dialog.PeerID, -1, dialog.PeerType)
 					_ = messageHole.InsertHole(dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID-1)
 					_ = messageHole.SetUpperFilled(dialog.PeerID, dialog.PeerType,  dialog.TopMessageID)
 
