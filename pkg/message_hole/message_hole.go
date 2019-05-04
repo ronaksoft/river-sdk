@@ -215,7 +215,8 @@ func (m *HoleManager) getBars() []Bar {
 }
 
 func (m *HoleManager) isRangeFilled(min, max int64) bool {
-	for idx := range m.getBars() {
+	m.bars = m.getBars()
+	for idx := range m.bars {
 		if m.bars[idx].Type == Hole {
 			continue
 		}
@@ -227,7 +228,8 @@ func (m *HoleManager) isRangeFilled(min, max int64) bool {
 }
 
 func (m *HoleManager) isPointHole(pt int64) bool {
-	for idx := range m.getBars() {
+	m.bars = m.getBars()
+	for idx := range m.bars {
 		if pt >= m.bars[idx].Min && pt <= m.bars[idx].Max {
 			switch m.bars[idx].Type {
 			case Filled:
@@ -241,7 +243,8 @@ func (m *HoleManager) isPointHole(pt int64) bool {
 }
 
 func (m *HoleManager) getUpperFilled(pt int64) (bool, Bar) {
-	for idx := range m.getBars() {
+	m.bars = m.getBars()
+	for idx := range m.bars {
 		if pt >= m.bars[idx].Min && pt <= m.bars[idx].Max {
 			switch m.bars[idx].Type {
 			case Filled:
@@ -255,7 +258,8 @@ func (m *HoleManager) getUpperFilled(pt int64) (bool, Bar) {
 }
 
 func (m *HoleManager) getLowerFilled(pt int64) (bool, Bar) {
-	for idx := range m.getBars() {
+	m.bars = m.getBars()
+	for idx := range m.bars {
 		if pt >= m.bars[idx].Min && pt <= m.bars[idx].Max {
 			switch m.bars[idx].Type {
 			case Filled:
