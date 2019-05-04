@@ -245,9 +245,17 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 			return
 		}
+		if bar.Min == 0 {
+			messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
+			messagesGetHistory(out, messages, users, in.RequestID, successCB)
+			return
+		}
 		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
+		if len(messages) < int(req.Limit) {
+			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+			return
+		}
 		messagesGetHistory(out, messages, users, in.RequestID, successCB)
-		return
 	case req.MinID == 0 && req.MaxID != 0:
 		// Load more message, scroll up
 		b, bar := messageHole.GetLowerFilled(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
@@ -274,7 +282,16 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, cb, true)
 			return
 		}
+		if bar.Min == 0 {
+			messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
+			messagesGetHistory(out, messages, users, in.RequestID, successCB)
+			return
+		}
 		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
+		if len(messages) < int(req.Limit) {
+			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+			return
+		}
 		messagesGetHistory(out, messages, users, in.RequestID, successCB)
 	case req.MinID != 0 && req.MaxID == 0:
 		// Load more message, scroll down
