@@ -2,8 +2,10 @@ package messageHole
 
 import (
 	"encoding/json"
+	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"sort"
+	"strings"
 )
 
 type PointType int
@@ -403,4 +405,16 @@ func GetLowerFilled(peerID int64, peerType int32, maxID int64) (bool, Bar) {
 		return false, Bar{}
 	}
 	return hm.getLowerFilled(maxID)
+}
+
+func PrintHole(peerID int64, peerType int32) string {
+	hm, err := loadManager(peerID, peerType)
+	if err != nil {
+		return err.Error()
+	}
+	sb := strings.Builder{}
+	for _, bar := range hm.bars {
+		sb.WriteString(fmt.Sprintf("[%s: %d - %d]", bar.Type.String(), bar.Min, bar.Max))
+	}
+	return sb.String()
 }
