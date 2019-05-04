@@ -14,7 +14,6 @@ type repoFiles struct {
 	*repository
 }
 
-// SaveFileStatus
 func (r *repoFiles) SaveFileStatus(fs *dto.FilesStatus) (err error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -45,7 +44,6 @@ func (r *repoFiles) GetFileStatus(msgID int64) (*dto.FilesStatus, error) {
 	return mdl, err
 }
 
-// DeleteFileStatus
 func (r *repoFiles) DeleteFileStatus(ID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -56,7 +54,6 @@ func (r *repoFiles) DeleteFileStatus(ID int64) error {
 	return err
 }
 
-// DeleteManyFileStatus
 func (r *repoFiles) DeleteManyFileStatus(msgIDs []int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()

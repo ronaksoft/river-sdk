@@ -336,6 +336,8 @@ func InsertFill(peerID int64, peerType int32, minID, maxID int64) error {
 	return nil
 }
 
+// SetUpperFilled Marks from the top index to 'msgID' as filled. This could be used
+// when UpdateNewMessage arrives we just add Fill bar to the end
 func SetUpperFilled(peerID int64, peerType int32, msgID int64) error {
 	hm, err := loadManager(peerID, peerType)
 	if err != nil {
@@ -356,6 +358,8 @@ func SetUpperFilled(peerID int64, peerType int32, msgID int64) error {
 	return nil
 }
 
+// SetLowerFilled Marks from the lowest index to zero as filled. This is useful when
+// we reached to the first message of the user/group.
 func SetLowerFilled(peerID int64, peerType int32) error {
 	hm, err := loadManager(peerID, peerType)
 	if err != nil {
@@ -372,6 +376,7 @@ func SetLowerFilled(peerID int64, peerType int32) error {
 	return nil
 }
 
+// IsHole Checks if there is any hole in the range [minID-maxID].
 func IsHole(peerID int64, peerType int32, minID, maxID int64) (bool, error) {
 	hm, err := loadManager(peerID, peerType)
 	if err != nil {
@@ -380,6 +385,8 @@ func IsHole(peerID int64, peerType int32, minID, maxID int64) (bool, error) {
 	return hm.isRangeFilled(minID, maxID), nil
 }
 
+// GetUpperFilled It returns a Bar starts from minID to the highest possible index,
+// which makes a continuous Filled section, otherwise it returns false.
 func GetUpperFilled(peerID int64, peerType int32, minID int64) (bool, Bar) {
 	hm, err := loadManager(peerID, peerType)
 	if err != nil {
@@ -388,6 +395,8 @@ func GetUpperFilled(peerID int64, peerType int32, minID int64) (bool, Bar) {
 	return hm.getUpperFilled(minID)
 }
 
+// GetLowerFilled It returns a Bar starts from the lowest possible index to maxID,
+// which makes a continuous Filled section, otherwise it returns false.
 func GetLowerFilled(peerID int64, peerType int32, maxID int64) (bool, Bar) {
 	hm, err := loadManager(peerID, peerType)
 	if err != nil {

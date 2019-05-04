@@ -100,7 +100,7 @@ func (r *repoGroups) GetGroup(groupID int64) (*msg.Group, error) {
 	err := r.db.Find(groups, groupID).Error
 	if err != nil {
 		logs.Error("Groups::GetGroup()-> fetch groups entity", zap.Error(err))
-		return nil, err //, err
+		return nil, err
 	}
 
 	groups.MapTo(pbGroup)

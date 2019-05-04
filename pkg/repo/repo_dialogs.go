@@ -14,7 +14,6 @@ type repoDialogs struct {
 	*repository
 }
 
-// UpdateTopMessageID
 func (r *repoDialogs) UpdateTopMessageID(createdOn, peerID int64, peerType int32) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -36,7 +35,6 @@ func (r *repoDialogs) UpdateTopMessageID(createdOn, peerID int64, peerType int32
 	return err
 }
 
-// SaveDialog
 func (r *repoDialogs) SaveDialog(dialog *msg.Dialog, lastUpdate int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -68,7 +66,6 @@ func (r *repoDialogs) SaveDialog(dialog *msg.Dialog, lastUpdate int64) error {
 	return r.db.Table(d.TableName()).Where("PeerID=? AND PeerType=?", d.PeerID, d.PeerType).Update(d).Error
 }
 
-// UpdateDialogUnreadCount
 func (r *repoDialogs) UpdateDialogUnreadCount(peerID int64, peerTyep, unreadCount int32) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -82,7 +79,6 @@ func (r *repoDialogs) UpdateDialogUnreadCount(peerID int64, peerTyep, unreadCoun
 	return r.db.Table(ed.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerTyep).Updates(map[string]interface{}{"UnreadCount": unreadCount}).Error
 }
 
-// GetDialogs
 func (r *repoDialogs) GetDialogs(offset, limit int32) []*msg.Dialog {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -110,7 +106,6 @@ func (r *repoDialogs) GetDialogs(offset, limit int32) []*msg.Dialog {
 	return dialogs
 }
 
-// GetDialog
 func (r *repoDialogs) GetDialog(peerID int64, peerType int32) *msg.Dialog {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -133,7 +128,6 @@ func (r *repoDialogs) GetDialog(peerID int64, peerType int32) *msg.Dialog {
 	return dialog
 }
 
-// CountDialogs
 func (r *repoDialogs) CountDialogs() int32 {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -147,7 +141,6 @@ func (r *repoDialogs) CountDialogs() int32 {
 	return count
 }
 
-// UpdateReadInboxMaxID
 func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32, maxID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -200,7 +193,6 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 	return nil
 }
 
-// UpdateReadOutboxMaxID
 func (r *repoDialogs) UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -267,7 +259,6 @@ func (r *repoDialogs) UpdateNotifySetting(msg *msg.UpdateNotifySettings) error {
 	return r.db.Save(dtoDlg).Error
 }
 
-// UpdatePeerNotifySettings
 func (r *repoDialogs) UpdatePeerNotifySettings(peerID int64, peerType int32, notifySetting *msg.PeerNotifySettings) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -289,7 +280,6 @@ func (r *repoDialogs) Delete(groupID int64, peerType int32) error {
 	return r.db.Where("PeerID=? AND  PeerType=?", groupID, peerType).Delete(dto.Dialogs{}).Error
 }
 
-// GetManyDialog
 func (r *repoDialogs) GetManyDialog(peerIDs []int64) []*msg.Dialog {
 	r.mx.Lock()
 	defer r.mx.Unlock()

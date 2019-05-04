@@ -15,7 +15,6 @@ type repoUsers struct {
 	*repository
 }
 
-// Save
 func (r *repoUsers) SaveUser(user *msg.User) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -76,7 +75,6 @@ func (r *repoUsers) SaveUser(user *msg.User) error {
 	return nil
 }
 
-// SaveContactUser
 func (r *repoUsers) SaveContactUser(user *msg.ContactUser) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -118,7 +116,6 @@ func (r *repoUsers) SaveContactUser(user *msg.ContactUser) error {
 	}).Error
 }
 
-// SavePhoneContact
 func (r *repoUsers) UpdatePhoneContact(user *msg.PhoneContact) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -138,7 +135,6 @@ func (r *repoUsers) UpdatePhoneContact(user *msg.PhoneContact) error {
 
 }
 
-// GetManyUsers
 func (r *repoUsers) GetManyUsers(userIDs []int64) []*msg.User {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -166,7 +162,6 @@ func (r *repoUsers) GetManyUsers(userIDs []int64) []*msg.User {
 	return pbUsers
 }
 
-// GetManyContactUsers
 func (r *repoUsers) GetManyContactUsers(userIDs []int64) []*msg.ContactUser {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -193,7 +188,6 @@ func (r *repoUsers) GetManyContactUsers(userIDs []int64) []*msg.ContactUser {
 	return pbUsers
 }
 
-// GetContacts
 func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -205,7 +199,7 @@ func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
 	err := r.db.Where("IsContact = 1").Find(&users).Error
 	if err != nil {
 		logs.Error("Users::GetContacts()-> fetch user entities", zap.Error(err))
-		return nil, nil //, err
+		return nil, nil
 	}
 	pbUsers := make([]*msg.ContactUser, 0)
 	pbContacts := make([]*msg.PhoneContact, 0)
@@ -222,7 +216,6 @@ func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
 
 }
 
-// SearchContacts
 func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*msg.PhoneContact) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -274,7 +267,6 @@ func (r *repoUsers) UpdateAccessHash(accessHash int64, peerID int64, peerType in
 	return err
 }
 
-// GetManyUsers
 func (r *repoUsers) GetUser(userID int64) *msg.User {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -297,7 +289,6 @@ func (r *repoUsers) GetUser(userID int64) *msg.User {
 	return pbUser
 }
 
-// GetAnyUsers
 func (r *repoUsers) GetAnyUsers(userIDs []int64) []*msg.User {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -418,7 +409,6 @@ func (r *repoUsers) UpdateUserProfile(userID int64, req *msg.AccountUpdateProfil
 	}).Error
 }
 
-// SaveContactUser
 func (r *repoUsers) UpdateUsername(u *msg.UpdateUsername) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -477,7 +467,6 @@ func (r *repoUsers) UpdateAccountPhotoPath(userID, photoID int64, isBig bool, fi
 
 }
 
-// SaveUserPhoto
 func (r *repoUsers) SaveUserPhoto(userPhoto *msg.UpdateUserPhoto) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -517,7 +506,6 @@ func (r *repoUsers) SaveUserPhoto(userPhoto *msg.UpdateUserPhoto) error {
 	return er
 }
 
-// RemoveUserPhoto
 func (r *repoUsers) RemoveUserPhoto(userID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
