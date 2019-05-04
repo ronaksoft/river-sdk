@@ -233,7 +233,7 @@ var SearchInDialogs = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		searchPhrase := fnGetTitle(c)
 		reqDelegate := new(RequestDelegate)
-		_SDK.SearchInDialogs(domain.SequentialUniqueID(), searchPhrase, reqDelegate)
+		_SDK.SearchDialogs(domain.SequentialUniqueID(), searchPhrase, reqDelegate)
 	},
 }
 

@@ -5,7 +5,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"gopkg.in/abiosoft/ishell.v2"
 )
 
@@ -39,10 +38,10 @@ var SdkSetLogLevel = &ishell.Cmd{
 		choiceIndex := c.MultiChoice([]string{
 			"Debug", "Info", "Warn", "Error",
 		}, "Level")
-		_LogLevel.SetLevel(zapcore.Level(choiceIndex - 1))
 		riversdk.SetLogLevel(choiceIndex-1)
 	},
 }
+
 
 var SdkGetDifference = &ishell.Cmd{
 	Name: "GetDifference",
