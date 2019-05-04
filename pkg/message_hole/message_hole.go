@@ -214,22 +214,8 @@ func (m *HoleManager) getBars() []Bar {
 	return bars
 }
 
-func (m *HoleManager) save() ([]byte, error) {
-	b, err := json.Marshal(m.pts)
-	return b, err
-}
-
-func (m *HoleManager) load(b []byte) error {
-	err := json.Unmarshal(b, &m.pts)
-	if err != nil {
-		return err
-	}
-	m.getBars()
-	return nil
-}
-
 func (m *HoleManager) isRangeFilled(min, max int64) bool {
-	for idx := range m.bars {
+	for idx := range m.getBars() {
 		if m.bars[idx].Type == Hole {
 			continue
 		}
@@ -241,7 +227,7 @@ func (m *HoleManager) isRangeFilled(min, max int64) bool {
 }
 
 func (m *HoleManager) isPointHole(pt int64) bool {
-	for idx := range m.bars {
+	for idx := range m.getBars() {
 		if pt >= m.bars[idx].Min && pt <= m.bars[idx].Max {
 			switch m.bars[idx].Type {
 			case Filled:
@@ -255,7 +241,7 @@ func (m *HoleManager) isPointHole(pt int64) bool {
 }
 
 func (m *HoleManager) getUpperFilled(pt int64) (bool, Bar) {
-	for idx := range m.bars {
+	for idx := range m.getBars() {
 		if pt >= m.bars[idx].Min && pt <= m.bars[idx].Max {
 			switch m.bars[idx].Type {
 			case Filled:
@@ -269,7 +255,7 @@ func (m *HoleManager) getUpperFilled(pt int64) (bool, Bar) {
 }
 
 func (m *HoleManager) getLowerFilled(pt int64) (bool, Bar) {
-	for idx := range m.bars {
+	for idx := range m.getBars() {
 		if pt >= m.bars[idx].Min && pt <= m.bars[idx].Max {
 			switch m.bars[idx].Type {
 			case Filled:
@@ -286,17 +272,17 @@ func loadManager(peerID int64, peerType int32) (*HoleManager, error) {
 	hm := newHoleManager()
 	b, err := repo.MessagesExtra.GetHoles(peerID, peerType)
 	if err == nil {
-		err = hm.load(b)
+		err = json.Unmarshal(b, &hm.pts)
 		if err != nil {
 			return nil, err
 		}
 	}
-
+	hm.getBars()
 	return hm, nil
 }
 
 func saveManager(peerID int64, peerType int32, hm *HoleManager) error {
-	b, err := hm.save()
+	b, err := json.Marshal(hm.pts)
 	if err != nil {
 		return err
 	}
@@ -411,6 +397,7 @@ func GetUpperFilled(peerID int64, peerType int32, minID int64) (bool, Bar) {
 func GetLowerFilled(peerID int64, peerType int32, maxID int64) (bool, Bar) {
 	hm, err := loadManager(peerID, peerType)
 	if err != nil {
+		logs.Error(err.Error())
 		return false, Bar{}
 	}
 	return hm.getLowerFilled(maxID)
@@ -422,7 +409,7 @@ func PrintHole(peerID int64, peerType int32) string {
 		return err.Error()
 	}
 	sb := strings.Builder{}
-	for _, bar := range hm.bars {
+	for _, bar := range hm.getBars() {
 		sb.WriteString(fmt.Sprintf("[%s: %d - %d]", bar.Type.String(), bar.Min, bar.Max))
 	}
 	return sb.String()
