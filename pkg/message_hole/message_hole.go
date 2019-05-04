@@ -3,7 +3,9 @@ package messageHole
 import (
 	"encoding/json"
 	"fmt"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"go.uber.org/zap"
 	"sort"
 	"strings"
 )
@@ -301,6 +303,9 @@ func saveManager(peerID int64, peerType int32, hm *HoleManager) error {
 
 	err = repo.MessagesExtra.SaveHoles(peerID, peerType, b)
 	if err != nil {
+		logs.Error("Error On Hole Save",
+			zap.Error(err),
+		)
 		return err
 	}
 	return nil
