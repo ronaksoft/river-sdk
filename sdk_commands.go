@@ -236,6 +236,11 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		}
 		b, bar := messageHole.GetLowerFilled(req.Peer.ID, int32(req.Peer.Type), dtoDialog.TopMessageID)
 		if !b {
+			logs.Info("Range in Hole",
+				zap.Int64("PeerID", req.Peer.ID),
+				zap.Int64("MaxID", dtoDialog.TopMessageID),
+				zap.Int64("MinID", req.MinID),
+			)
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 			return
 		}
@@ -246,6 +251,11 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		// Load more message, scroll up
 		b, bar := messageHole.GetLowerFilled(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 		if !b {
+			logs.Info("Range in Hole",
+				zap.Int64("PeerID", req.Peer.ID),
+				zap.Int64("MaxID", req.MaxID),
+				zap.Int64("MinID", req.MinID),
+			)
 			cb := func(m *msg.MessageEnvelope) {
 				switch m.Constructor {
 				case msg.C_MessagesMany:
@@ -268,6 +278,11 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		// Load more message, scroll down
 		b, bar := messageHole.GetUpperFilled(req.Peer.ID, int32(req.Peer.Type), req.MinID)
 		if !b {
+			logs.Info("Range in Hole",
+				zap.Int64("PeerID", req.Peer.ID),
+				zap.Int64("MaxID", req.MaxID),
+				zap.Int64("MinID", req.MinID),
+			)
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 			return
 		}
@@ -277,6 +292,11 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		// Load a range
 		b, _ := messageHole.IsHole(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID)
 		if b {
+			logs.Info("Range in Hole",
+				zap.Int64("PeerID", req.Peer.ID),
+				zap.Int64("MaxID", req.MaxID),
+				zap.Int64("MinID", req.MinID),
+			)
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 			return
 		}
