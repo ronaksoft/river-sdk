@@ -283,15 +283,15 @@ func (m *HoleManager) getLowerFilled(pt int64) (bool, Bar) {
 }
 
 func loadManager(peerID int64, peerType int32) (*HoleManager, error) {
-	b, err := repo.MessagesExtra.GetHoles(peerID, peerType)
-	if err != nil {
-		return nil, err
-	}
 	hm := newHoleManager()
-	err = hm.load(b)
-	if err != nil {
-		return nil, err
+	b, err := repo.MessagesExtra.GetHoles(peerID, peerType)
+	if err == nil {
+		err = hm.load(b)
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	return hm, nil
 }
 
@@ -303,15 +303,16 @@ func saveManager(peerID int64, peerType int32, hm *HoleManager) error {
 
 	err = repo.MessagesExtra.SaveHoles(peerID, peerType, b)
 	if err != nil {
-		logs.Error("Error On Hole Save",
-			zap.Error(err),
-		)
 		return err
 	}
 	return nil
 }
 
 func InsertHole(peerID int64, peerType int32, minID, maxID int64) error {
+	logs.Info("Insert Hole",
+		zap.Int64("MinID", minID),
+		zap.Int64("MaxID", maxID),
+	)
 	hm, err := loadManager(peerID, peerType)
 	if err != nil {
 		return err
@@ -346,6 +347,9 @@ func InsertFill(peerID int64, peerType int32, minID, maxID int64) error {
 // SetUpperFilled Marks from the top index to 'msgID' as filled. This could be used
 // when UpdateNewMessage arrives we just add Fill bar to the end
 func SetUpperFilled(peerID int64, peerType int32, msgID int64) error {
+	logs.Info("SetUpperFilled",
+		zap.Int64("MsgID", msgID),
+	)
 	hm, err := loadManager(peerID, peerType)
 	if err != nil {
 		return err

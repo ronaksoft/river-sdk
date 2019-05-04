@@ -1,7 +1,6 @@
 package repo
 
 import (
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	"go.uber.org/zap"
@@ -19,9 +18,6 @@ func (r *repoSystem) LoadInt(keyName string) (keyValue int, err error) {
 	row := new(dto.System)
 	err = r.db.Where("KeyName = ?", keyName).First(row).Error
 
-	if row == nil {
-		err = domain.ErrDoesNotExists
-	}
 	keyValue = int(row.IntValue)
 
 	logs.Debug("System::LoadInt()",
@@ -38,9 +34,6 @@ func (r *repoSystem) LoadString(keyName string) (keyValue string, err error) {
 	row := new(dto.System)
 	err = r.db.Where("KeyName = ?", keyName).First(row).Error
 
-	if row == nil {
-		err = domain.ErrDoesNotExists
-	}
 	keyValue = row.StrValue
 
 	logs.Debug("System::LoadString()",
