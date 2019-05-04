@@ -95,7 +95,7 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 
 	mMessages := make(map[int64]*msg.UserMessage)
 	for _, message := range x.Messages {
-		repo.Messages.SaveMessage(message)
+		_ = repo.Messages.SaveMessage(message)
 		mMessages[message.ID] = message
 	}
 	for _, dialog := range x.Dialogs {
@@ -106,7 +106,7 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 			)
 			continue
 		}
-		repo.Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
+		_ = repo.Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
 	}
 	for _, user := range x.Users {
 		repo.Users.SaveUser(user)

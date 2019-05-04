@@ -605,7 +605,7 @@ func (ctrl *Controller) SetClientTimeDifference(delta int64) {
 func (ctrl *Controller) WaitForNetwork() {
 	// Wait While Network is Disconnected or Connecting
 	for ctrl.wsQuality == domain.NetworkDisconnected || ctrl.wsQuality == domain.NetworkConnecting {
-		logs.Debug("Queue Controller waits for Network",
+		logs.Debug("Wait for Network",
 			zap.String("Quality", ctrl.wsQuality.ToString()),
 		)
 		time.Sleep(time.Second)

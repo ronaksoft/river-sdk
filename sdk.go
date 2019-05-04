@@ -54,7 +54,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	r.ConnInfo = conf.ConnInfo
 
-	//r.ConnInfo.Delegates = conf.MainDelegate
+	// r.ConnInfo.Delegates = conf.MainDelegate
 
 	// set loglevel
 	logs.SetLogLevel(conf.LogLevel)
@@ -271,9 +271,8 @@ func (r *River) onNetworkConnect() {
 			)
 			if err == nil {
 				break
-			} else {
-				time.Sleep(1 * time.Second)
 			}
+			time.Sleep(1 * time.Second)
 		}
 
 		if r.DeviceToken == nil || r.DeviceToken.Token == "" {

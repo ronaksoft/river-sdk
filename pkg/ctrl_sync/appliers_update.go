@@ -28,6 +28,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	dialog := repo.Dialogs.GetDialog(x.Message.PeerID, x.Message.PeerType)
 	if dialog == nil {
 		_ = messageHole.InsertHole(x.Message.PeerID, x.Message.PeerType, 0, x.Message.ID-1)
+		_ = messageHole.SetUpperFilled(x.Message.PeerID, x.Message.PeerType, x.Message.ID)
 
 		// make sure to created the message hole b4 creating dialog
 		dialog = &msg.Dialog{
@@ -189,6 +190,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			dtoDlg := repo.Dialogs.GetDialog(x.Message.PeerID, x.Message.PeerType)
 			if dtoDlg != nil {
 				_ = messageHole.InsertHole(dtoDlg.PeerID, dtoDlg.PeerType, 0, dtoDlg.TopMessageID-1)
+				_ = messageHole.SetUpperFilled(dtoDlg.PeerID, dtoDlg.PeerType, dtoDlg.TopMessageID)
 
 			}
 		}
