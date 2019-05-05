@@ -964,6 +964,14 @@ func (r *River) CreateAuthKey() (err error) {
 	return
 }
 
+func (r *River) ResetAuthKey() {
+	r.networkCtrl.SetAuthorization(0, nil)
+	filemanager.Ctx().SetAuthorization(0, nil)
+	r.ConnInfo.AuthID = 0
+	r.ConnInfo.AuthKey = [256]byte{}
+	r.ConnInfo.Save()
+}
+
 // AddRealTimeRequest ...
 func (r *River) AddRealTimeRequest(constructor int64) {
 	r.realTimeCommands[constructor] = true
