@@ -336,7 +336,10 @@ func (r *River) onReceivedUpdate(updateContainers []*msg.UpdateContainer) {
 	})
 
 	for idx := range updateContainers {
-		r.syncCtrl.UpdateHandler(updateContainers[idx])
+		err := r.syncCtrl.UpdateHandler(updateContainers[idx])
+		if err != nil {
+			break
+		}
 	}
 }
 
