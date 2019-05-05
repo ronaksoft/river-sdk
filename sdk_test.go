@@ -1,10 +1,14 @@
 package riversdk
 
 import (
+	"encoding/json"
+	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"go.uber.org/zap"
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 )
@@ -12,6 +16,19 @@ import (
 var (
 	_River *River
 )
+
+var ConnInfo []byte
+
+type ConnInfoDelegates struct{}
+
+func (c *ConnInfoDelegates) SaveConnInfo(connInfo []byte) {
+	_ = os.MkdirAll("./_connection", os.ModePerm)
+	ConnInfo = connInfo
+	err := ioutil.WriteFile("./_connection/connInfo", connInfo, 0666)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
 
 func init() {}
 
@@ -33,6 +50,80 @@ func TestGetWorkGroup(t *testing.T) {
 
 }
 
+func TestReconnect(t *testing.T) {
+	logs.Info("Creating New River SDK Instance")
+	conInfo := new(RiverConnection)
+
+	file, err := os.Open("./_connection/connInfo1")
+	if err == nil {
+		b, _ := ioutil.ReadAll(file)
+		err := json.Unmarshal(b, conInfo)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+	}
+
+	conInfo.Delegate = new(ConnInfoDelegates)
+
+	r := new(River)
+	r.SetConfig(&RiverConfig{
+		DbPath:             "./_data/",
+		DbID:               "test",
+		QueuePath:          "./_queue/",
+		ServerKeysFilePath: "./keys.json",
+		ServerEndpoint:     "ws://new.river.im",
+		LogLevel:           -1,
+		ConnInfo:           conInfo,
+	})
+
+	r.Start()
+	for r.ConnInfo.AuthID == 0 {
+		logs.Info("AuthKey has not been created yet.")
+		if err := r.CreateAuthKey(); err != nil {
+			t.Error(err.Error())
+			return
+		}
+		logs.Info("AuthKey Created.")
+	}
+
+
+	time.Sleep(10 * time.Second)
+	r.Stop()
+	r.ResetAuthKey()
+
+	// Connect to 2nd Server
+	file, err = os.Open("./_connection/connInfo2")
+	if err == nil {
+		b, _ := ioutil.ReadAll(file)
+		err := json.Unmarshal(b, conInfo)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+	}
+
+	conInfo.Delegate = new(ConnInfoDelegates)
+
+	r.SetConfig(&RiverConfig{
+		DbPath:             "./_data/",
+		DbID:               "test",
+		QueuePath:          "./_queue/",
+		ServerKeysFilePath: "./keys.json",
+		ServerEndpoint:     "ws://test.river.im",
+		ConnInfo:           conInfo,
+		LogLevel: -1,
+	})
+	r.Start()
+	for r.ConnInfo.AuthID == 0 {
+		logs.Info("AuthKey has not been created yet.")
+		if err := r.CreateAuthKey(); err != nil {
+			t.Error(err.Error())
+			return
+		}
+		logs.Info("AuthKey Created.")
+	}
+}
 func TestNewRiver(t *testing.T) {
 	logs.Info("Creating New River SDK Instance")
 	r := new(River)
