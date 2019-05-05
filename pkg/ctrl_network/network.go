@@ -142,7 +142,7 @@ func (ctrl *Controller) messageFlushFunc(entries []ronak.FlusherEntry) {
 
 		// Call the message handler in blocking mode
 		ctrl.OnMessage(messages)
-		logs.Info("Messages Flushed",
+		logs.Debug("Messages Flushed",
 			zap.Int("Count", itemsCount),
 		)
 	}
@@ -413,10 +413,6 @@ func (ctrl *Controller) messageHandler(message *msg.MessageEnvelope) {
 		zap.Int("Updates Count", updateCount),
 	)
 
-	logs.Info("Flusher Workers",
-		zap.Int("RunningJobs", ctrl.messageFlusher.RunningJobs()),
-		zap.Int("Pendings", ctrl.messageFlusher.PendingItems()),
-	)
 	for idx := range messages {
 		ctrl.messageFlusher.Enter(nil, messages[idx])
 	}
