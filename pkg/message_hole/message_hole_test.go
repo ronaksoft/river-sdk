@@ -2,38 +2,9 @@ package messageHole
 
 import (
 	"fmt"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"testing"
 )
 
-func TestMessageHole(t *testing.T) {
-	logs.SetLogLevel(-1)
-	hm := newHoleManager()
-	hm.addBar(Bar{0, 100, Hole})
-	hm.addBar(Bar{10, 30, Filled})
-	hm.addBar(Bar{60, 70, Filled})
-	b, err := hm.save()
-	if err != nil {
-		t.Error(err)
-	}
-
-	hm2 := newHoleManager()
-	err = hm2.load(b)
-	if err != nil {
-		t.Error(err)
-	}
-
-	if len(hm.pts) != len(hm.pts) {
-		t.Fail()
-	}
-
-	if hm.isRangeFilled(20, 40) {
-		t.Fail()
-	}
-	if !hm.isRangeFilled(65, 70) {
-		t.Fail()
-	}
-}
 
 func TestIsHole(t *testing.T) {
 	hm := newHoleManager()

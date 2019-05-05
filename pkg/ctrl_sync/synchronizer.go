@@ -614,7 +614,7 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) erro
 			}
 		})
 	}
-
+	return nil
 }
 
 // UpdateID returns current updateID
