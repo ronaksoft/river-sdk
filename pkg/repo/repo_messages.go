@@ -521,6 +521,5 @@ func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
 		dtoMsg.MapTo(message)
 		userMsgs = append(userMsgs, message)
 	}
-	logs.Debug("SearchText", zap.Any("", userMsgs))
 	return userMsgs
 }

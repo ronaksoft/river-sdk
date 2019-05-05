@@ -980,7 +980,7 @@ func (r *River) SearchGlobal(text string) {
 	searchResults.Messages = msgs
 	searchResults.Users = users
 	searchResults.Groups = groups
-	searchResults.MatchedUsers = NonContactUsersWithDialogs
+	searchResults.MatchedUsers = userContacts
 	searchResults.MatchedGroups = repo.Groups.SearchGroupsByTitle(text)
 
 	outBytes, _ := searchResults.Marshal()
