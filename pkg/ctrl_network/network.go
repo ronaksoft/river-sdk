@@ -289,7 +289,7 @@ func (ctrl *Controller) receiver() {
 			logs.Warn("NetworkController::receiver()-> ReadMessage()", zap.Error(err))
 			return
 		}
-		logs.Debug("NetworkController::receiver() Message Received",
+		logs.Debug("NetworkController:: Message Received",
 			zap.Int("messageType", messageType),
 			zap.Int("messageSize", len(message)),
 		)
@@ -304,7 +304,7 @@ func (ctrl *Controller) receiver() {
 			}
 
 			if res.AuthID == 0 {
-				logs.Debug("NetworkController::receiver()",
+				logs.Debug("NetworkController::",
 					zap.String("Warning", "res.AuthID is zero ProtoMessage is unencrypted"),
 					zap.Int64("AuthID", res.AuthID),
 				)
@@ -339,7 +339,7 @@ func (ctrl *Controller) receiver() {
 			ctrl.messageHandler(receivedEncryptedPayload.Envelope)
 
 		default:
-			logs.Debug("receiver()",
+			logs.Debug("NetworkController::",
 				zap.Int("MessageType", messageType),
 			)
 		}
@@ -408,7 +408,7 @@ func (ctrl *Controller) messageHandler(message *msg.MessageEnvelope) {
 	messages, updates := ctrl.extractMessages(message)
 	messageCount := len(messages)
 	updateCount := len(updates)
-	logs.Debug("NetworkController:: Message Received",
+	logs.Debug("NetworkController:: Message Handler Received",
 		zap.Int("Messages Count", messageCount),
 		zap.Int("Updates Count", updateCount),
 	)
