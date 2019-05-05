@@ -103,9 +103,9 @@ func NewController(config Config) *Controller {
 	ctrl.connectChannel = make(chan bool)
 	ctrl.pongChannel = make(chan bool)
 
-	ctrl.updateFlusher = ronak.NewFlusher(1000, 5, 50*time.Millisecond, ctrl.updateFlushFunc)
-	ctrl.messageFlusher = ronak.NewFlusher(1000, 5, 50*time.Millisecond, ctrl.messageFlushFunc)
-	ctrl.sendFlusher = ronak.NewFlusher(1000, 5, 50*time.Millisecond, ctrl.sendFlushFunc)
+	ctrl.updateFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.updateFlushFunc)
+	ctrl.messageFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.messageFlushFunc)
+	ctrl.sendFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.sendFlushFunc)
 
 	ctrl.unauthorizedRequests = map[int64]bool{
 		msg.C_SystemGetServerTime: true,
