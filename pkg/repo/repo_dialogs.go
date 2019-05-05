@@ -2,8 +2,7 @@ package repo
 
 import (
 	"errors"
-
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
@@ -305,7 +304,7 @@ func (r *repoDialogs) GetPeerIDs() []int64 {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	dialogs := make([]*msg.Dialog, 0)
+	dialogs := make([]dto.Dialogs, 0)
 	err := r.db.Where("PeerType = 1").Find(&dialogs).Error
 	if err != nil {
 		logs.Error("Dialogs::GetPeerIDs()", zap.Error(err))

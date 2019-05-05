@@ -287,7 +287,6 @@ var MessagesSearchText = &ishell.Cmd{
 	},
 }
 
-
 func init() {
 	Message.AddCmd(MessageGetDialogs)
 	Message.AddCmd(MessageGetDialog)

@@ -13,10 +13,10 @@ import (
 )
 
 var (
-	_River *River
-	wg *sync.WaitGroup
+	_River   *River
+	wg       *sync.WaitGroup
 	testCase int
-	test *testing.T
+	test     *testing.T
 )
 
 func init() {
@@ -39,7 +39,7 @@ func init() {
 		DocumentFileDirectory:  "./_files/file",
 		DocumentCacheDirectory: "./_files/cache",
 		DocumentLogDirectory:   "./_files/logs",
-		ConnInfo: conInfo,
+		ConnInfo:               conInfo,
 	})
 
 	// r.Start()
@@ -113,16 +113,18 @@ func TestRiver_SearchGlobal(t *testing.T) {
 
 	contact := new(msg.ContactUser)
 	contact.ID = 852
+	contact.AccessHash = 4548
 	contact.Username = ContactUser
 	_ = repo.Users.SaveContactUser(contact)
 
 	dialog := new(msg.Dialog)
 	dialog.PeerType = 1
 	dialog.PeerID = 321
-
+	_ = repo.Dialogs.SaveDialog(dialog, 0)
 	group := new(msg.Group)
 	group.ID = 987
 	group.Title = groupTitle
+	_ = repo.Groups.Save(group)
 
 	_ = repo.Messages.SaveMessage(message)
 	wg = new(sync.WaitGroup)
@@ -142,7 +144,10 @@ func TestRiver_SearchGlobal(t *testing.T) {
 	_River.SearchGlobal(nonContactWithDialogUser)
 	wg.Wait()
 
-
+	wg.Add(1)
+	testCase = 4
+	_River.SearchGlobal(nonContactWhitoutDialogUser)
+	wg.Wait()
 }
 
 func (d *MainDelegateDummy) OnSearchComplete(b []byte) {
@@ -156,34 +161,45 @@ func (d *MainDelegateDummy) OnSearchComplete(b []byte) {
 	}
 	switch testCase {
 	case 1:
-		if result.Messages[0].ID != 123 {
-			test.Error(fmt.Sprintf("expected msg ID 123, have %d", result.Messages[0].ID))
+		if len(result.Messages) > 0 {
+			if result.Messages[0].ID != 123 {
+				test.Error(fmt.Sprintf("expected msg ID 123, have %d", result.Messages[0].ID))
+			}
+		} else {
+			test.Error(fmt.Sprintf("expected msg ID 123, have not any"))
 		}
-		fmt.Println("result.Users", result.Users)
+
 		wg.Done()
 	case 2:
 		if len(result.Messages) > 0 {
 			test.Error(fmt.Sprintf("expected no messages"))
 		}
-		if result.MatchedUsers[0].ID != 123 {
-			test.Error(fmt.Sprintf("expected msg ID 123, have %d", result.Messages[0].ID))
+		if len(result.MatchedUsers) > 0 {
+			if result.MatchedUsers[0].ID != 852 {
+				test.Error(fmt.Sprintf("expected user ID 852, have %d", result.Messages[0].ID))
+			}
+		} else {
+			test.Error(fmt.Sprintf("expected user ID 852, have nothing, %+v", result))
 		}
 		wg.Done()
 	case 3:
 		if len(result.Messages) > 0 {
 			test.Error(fmt.Sprintf("expected no messages"))
 		}
-		if result.MatchedUsers[0].ID != 321 {
-			test.Error(fmt.Sprintf("expected msg ID 321, have %d", result.Messages[0].ID))
+		if len(result.MatchedUsers) > 0 {
+			if result.MatchedUsers[0].ID != 321 {
+				test.Error(fmt.Sprintf("expected user ID 321, have %d", result.Messages[0].ID))
+			}
+		} else {
+			test.Error(fmt.Sprintf("expected user ID 321, have nothing, %+v", result))
+		}
+		wg.Done()
+	case 4:
+		if len(result.Messages) > 0 || len(result.MatchedUsers) > 0 || len(result.MatchedGroups) > 0 {
+			test.Error(fmt.Sprintf("expected to found nothing but found %v", result))
 		}
 		wg.Done()
 	}
-	//logs.Debug("OnSearchComplete",
-	//	zap.Any("OnSearchComplete::Messages", result.Messages),
-	//	zap.Any("OnSearchComplete::Groups", result.Groups),
-	//	zap.Any("OnSearchComplete::MatchedGroups", result.MatchedGroups),
-	//	zap.Any("OnSearchComplete::MatchedUsers", result.MatchedUsers),
-	//)
 }
 
 func TestRiver_SetScrollStatus(t *testing.T) {
