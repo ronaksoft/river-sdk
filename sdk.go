@@ -591,9 +591,6 @@ func (r *River) registerCommandHandlers() {
 
 // Start ...
 func (r *River) Start() error {
-	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:256])
-	filemanager.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:256])
-
 	// Start Controllers
 	if err := r.networkCtrl.Start(); err != nil {
 		logs.Error("River::Start()", zap.Error(err))
@@ -785,7 +782,7 @@ func (r *River) releaseDelegate(requestID int64) {
 // CreateAuthKey ...
 // This function creates an AuthID and AuthKey to be used for transporting messages between client and server
 func (r *River) CreateAuthKey() (err error) {
-	logs.Debug("River::CreateAuthKey()")
+	logs.Info("River::CreateAuthKey()")
 
 	// Wait for network
 	r.networkCtrl.WaitForNetwork()
