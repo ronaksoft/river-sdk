@@ -269,8 +269,8 @@ func (r *RedisCache) SetNx(keyName string, value interface{}) (reply bool, err e
 	return
 }
 
-func (r *RedisCache) SetEx(keyName string, value interface{}) (reply bool, err error) {
-	err = r.Do(radix.FlatCmd(&reply, "SETEX", keyName, value))
+func (r *RedisCache) SetEx(keyName string, ttl, value interface{}) (reply bool, err error) {
+	err = r.Do(radix.FlatCmd(&reply, "SETEX", keyName, ttl, value))
 	return
 }
 
@@ -656,23 +656,13 @@ func (r *RedisCache) ZAddString(keyName string, score int, value string) (reply 
 	return
 }
 
-func (r *RedisCache) ZAddInt(keyName string, score int, value int) (reply int, err error) {
-	err = r.Do(radix.Cmd(&reply, "ZADD", keyName, fmt.Sprintf("%d", score), fmt.Sprintf("%d", value)))
+func (r *RedisCache) ZAdd(keyName string, score, value interface{}) (reply int, err error) {
+	err = r.Do(radix.FlatCmd(&reply, "ZADD", keyName, score, value))
 	return
 }
 
-func (r *RedisCache) ZAddInt32(keyName string, score int, value int32) (reply int, err error) {
-	err = r.Do(radix.Cmd(&reply, "ZADD", keyName, fmt.Sprintf("%d", score), fmt.Sprintf("%d", value)))
-	return
-}
-
-func (r *RedisCache) ZAddInt64(keyName string, score int, value int64) (reply int, err error) {
-	err = r.Do(radix.Cmd(&reply, "ZADD", keyName, fmt.Sprintf("%d", score), fmt.Sprintf("%d", value)))
-	return
-}
-
-func (r *RedisCache) ZRem(keyName string, field string) (reply int, err error) {
-	err = r.Do(radix.Cmd(&reply, "ZREM", keyName, field))
+func (r *RedisCache) ZRem(keyName string, field interface{}) (reply int, err error) {
+	err = r.Do(radix.FlatCmd(&reply, "ZREM", keyName, field))
 	return
 }
 

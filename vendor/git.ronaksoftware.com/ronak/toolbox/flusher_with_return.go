@@ -1,6 +1,7 @@
 package ronak
 
 import (
+	"sync/atomic"
 	"time"
 )
 
@@ -24,6 +25,7 @@ type Flusher struct {
 	next           chan struct{}
 	flushPeriod    time.Duration
 	maxWorkers     int32
+	maxBatchSize   int
 	runningWorkers int32
 	workerFunc     FlusherFunc
 }
@@ -36,6 +38,7 @@ func NewFlusher(maxBatchSize, maxConcurrency int32, flushPeriod time.Duration, f
 	f.next = make(chan struct{}, maxConcurrency)
 	f.flushPeriod = flushPeriod
 	f.maxWorkers = maxConcurrency
+	f.maxBatchSize = int(maxBatchSize)
 	f.workerFunc = ff
 
 	// Run the 1st instance in the background
@@ -71,33 +74,59 @@ func (f *Flusher) Enter(key, value interface{}) {
 	}
 }
 
+// PendingItems returns the number of items are still in the channel and are not picked by any job worker
+func (f *Flusher) PendingItems() int {
+	return len(f.entries)
+}
+
+// RunningJobs returns the number of job workers currently picking up items from the channel and/or running the flusher func
+func (f *Flusher) RunningJobs() int {
+	return int(f.runningWorkers)
+}
+
 func (f *Flusher) worker() {
 	items := make([]FlusherEntry, 0)
-	ticker := time.NewTicker(f.flushPeriod)
-	defer ticker.Stop()
+	timer := time.NewTimer(f.flushPeriod)
+
 	for {
 		items = items[:0]
 
 		// Wait for next signal to start the job
 		<-f.next
+		atomic.AddInt32(&f.runningWorkers, 1)
 
 		// Wait for next entry
 		select {
 		case item := <-f.entries:
 			items = append(items, item)
 		}
+		if !timer.Stop() {
+			<-timer.C
+		}
+		timer.Reset(f.flushPeriod)
 	InnerLoop:
 		for {
 			select {
 			case item := <-f.entries:
 				items = append(items, item)
-			case <-ticker.C:
+				if len(items) >= f.maxBatchSize {
+					// Send signal for the next worker to listen for entries
+					f.next <- struct{}{}
+
+					// Run the job synchronously
+					f.workerFunc(items)
+
+					atomic.AddInt32(&f.runningWorkers, -1)
+					break InnerLoop
+				}
+			case <-timer.C:
 				// Send signal for the next worker to listen for entries
 				f.next <- struct{}{}
 
 				// Run the job synchronously
 				f.workerFunc(items)
 
+				atomic.AddInt32(&f.runningWorkers, -1)
 				break InnerLoop
 			}
 		}

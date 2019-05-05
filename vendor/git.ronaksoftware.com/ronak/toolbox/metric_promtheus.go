@@ -40,8 +40,8 @@ func NewPrometheus(bundleID, instanceID string) *Prometheus {
 	m.registry = prometheus.NewRegistry()
 
 	m.labels = map[string]string{
-		"BundleID":   bundleID,
-		"InstanceID": instanceID,
+		"bundleID":   bundleID,
+		"instanceID": instanceID,
 	}
 
 	m.registry.MustRegister(prometheus.NewGoCollector())
