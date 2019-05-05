@@ -2,7 +2,7 @@ module git.ronaksoftware.com/ronak/riversdk
 
 require (
 	cloud.google.com/go v0.37.0 // indirect
-	git.ronaksoftware.com/ronak/toolbox v0.7.10
+	git.ronaksoftware.com/ronak/toolbox v0.8.3
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
 	github.com/beeker1121/goque v2.0.1+incompatible
@@ -18,7 +18,6 @@ require (
 	github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/getsentry/raven-go v0.2.0
 	github.com/go-sql-driver/mysql v1.4.0 // indirect
-	github.com/gobwas/httphead v0.0.0-20180130184737-2c6c146eadee // indirect
 	github.com/gobwas/pool v0.2.0
 	github.com/gobwas/ws v1.0.0
 	github.com/gofrs/uuid v3.2.0+incompatible // indirect
@@ -38,15 +37,11 @@ require (
 	github.com/mattn/go-sqlite3 v1.10.0
 	github.com/mdlayher/raw v0.0.0-20190315120451-8be9e99c38b6 // indirect
 	github.com/monnand/dhkx v0.0.0-20180522003156-9e5b033f1ac4
-	github.com/nats-io/gnatsd v1.4.1 // indirect
 	github.com/nats-io/go-nats v1.7.2
-	github.com/nats-io/nkeys v0.0.2 // indirect
-	github.com/nats-io/nuid v1.0.0 // indirect
 	github.com/nyaruka/phonenumbers v1.0.36
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	go.uber.org/zap v1.9.1
-	golang.org/x/sys v0.0.0-20190316082340-a2f829d7f35f // indirect
 	gopkg.in/abiosoft/ishell.v2 v2.0.0
 	gopkg.in/doug-martin/goqu.v5 v5.0.0 // indirect
 )

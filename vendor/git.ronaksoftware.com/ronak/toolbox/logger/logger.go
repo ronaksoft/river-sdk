@@ -122,6 +122,7 @@ func NewFileLogger(filename string) *zapLogger {
 		zap.AddCaller(),
 		zap.AddCallerSkip(2),
 	)
+	l.WithOptions()
 	return l
 }
 

@@ -503,7 +503,7 @@ func (ctrl *Controller) MessageHandler(messages []*msg.MessageEnvelope) {
 }
 
 // UpdateHandler receives update to cache them in client DB
-func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
+func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) error {
 	logs.Debug("SyncController::UpdateHandler() Called",
 		zap.Int64("ctrl.UpdateID", ctrl.updateID),
 		zap.Int64("MaxID", updateContainer.MaxUpdateID),
@@ -514,14 +514,14 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 
 	// Check if update has been already applied
 	if updateContainer.MinUpdateID != 0 && ctrl.updateID >= updateContainer.MinUpdateID {
-		return
+		return nil
 	}
 
 	// Check if we are out of sync with server, if yes, then call the sync() function
 	// We call it in blocking mode,
 	if ctrl.updateID < updateContainer.MinUpdateID-1 {
-		ctrl.sync()
-		return
+		go ctrl.sync()
+		return ErrOutOfSync
 	}
 
 	udpContainer := new(msg.UpdateContainer)
@@ -614,7 +614,7 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 			}
 		})
 	}
-
+	return nil
 }
 
 // UpdateID returns current updateID

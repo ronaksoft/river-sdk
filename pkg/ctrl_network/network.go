@@ -103,9 +103,9 @@ func NewController(config Config) *Controller {
 	ctrl.connectChannel = make(chan bool)
 	ctrl.pongChannel = make(chan bool)
 
-	ctrl.updateFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.updateFlushFunc)
-	ctrl.messageFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.messageFlushFunc)
-	ctrl.sendFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.sendFlushFunc)
+	ctrl.updateFlusher = ronak.NewFlusher(1000, 10, 50*time.Millisecond, ctrl.updateFlushFunc)
+	ctrl.messageFlusher = ronak.NewFlusher(1000, 10, 50*time.Millisecond, ctrl.messageFlushFunc)
+	ctrl.sendFlusher = ronak.NewFlusher(1000, 10, 50*time.Millisecond, ctrl.sendFlushFunc)
 
 	ctrl.unauthorizedRequests = map[int64]bool{
 		msg.C_SystemGetServerTime: true,
@@ -289,7 +289,7 @@ func (ctrl *Controller) receiver() {
 			logs.Warn("NetworkController::receiver()-> ReadMessage()", zap.Error(err))
 			return
 		}
-		logs.Debug("NetworkController::receiver() Message Received",
+		logs.Debug("NetworkController:: Message Received",
 			zap.Int("messageType", messageType),
 			zap.Int("messageSize", len(message)),
 		)
@@ -304,7 +304,7 @@ func (ctrl *Controller) receiver() {
 			}
 
 			if res.AuthID == 0 {
-				logs.Debug("NetworkController::receiver()",
+				logs.Debug("NetworkController::",
 					zap.String("Warning", "res.AuthID is zero ProtoMessage is unencrypted"),
 					zap.Int64("AuthID", res.AuthID),
 				)
@@ -339,7 +339,7 @@ func (ctrl *Controller) receiver() {
 			ctrl.messageHandler(receivedEncryptedPayload.Envelope)
 
 		default:
-			logs.Debug("receiver()",
+			logs.Debug("NetworkController::",
 				zap.Int("MessageType", messageType),
 			)
 		}
@@ -404,12 +404,11 @@ func (ctrl *Controller) extractMessages(m *msg.MessageEnvelope) ([]*msg.MessageE
 // messageHandler
 // MessageEnvelopes will be extracted and separates updates and messages.
 func (ctrl *Controller) messageHandler(message *msg.MessageEnvelope) {
-	logs.Debug("messageHandler() Begin")
 	// extract all updates/ messages
 	messages, updates := ctrl.extractMessages(message)
 	messageCount := len(messages)
 	updateCount := len(updates)
-	logs.Debug("messageHandler()->extractMessages()",
+	logs.Debug("NetworkController:: Message Handler Received",
 		zap.Int("Messages Count", messageCount),
 		zap.Int("Updates Count", updateCount),
 	)
@@ -483,8 +482,8 @@ func (ctrl *Controller) Connect() {
 
 // Disconnect close websocket
 func (ctrl *Controller) Disconnect() {
+	ctrl.wsKeepConnection = false
 	if ctrl.wsConn != nil {
-		ctrl.wsKeepConnection = false
 		_ = ctrl.wsConn.Close()
 
 		logs.Info("NetworkController::Disconnect() Disconnected")
@@ -530,6 +529,11 @@ func (ctrl *Controller) SetNetworkStatusChangedCallback(h domain.NetworkStatusUp
 
 // Send direct sends immediately else it put it in debouncer
 func (ctrl *Controller) Send(msgEnvelope *msg.MessageEnvelope, direct bool) error {
+	logs.Debug("NetworkController:: Send",
+		zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
+		zap.Bool("Direct", direct),
+		zap.Int64("AuthID", ctrl.authID),
+	)
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
 	if direct || unauthorized {
 		return ctrl.send(msgEnvelope)
@@ -563,7 +567,6 @@ func (ctrl *Controller) send(msgEnvelope *msg.MessageEnvelope) error {
 
 	b, err := protoMessage.Marshal()
 	if err != nil {
-		logs.Debug("send()-> Failed to marshal", zap.Error(err))
 		return err
 	}
 	if ctrl.wsConn == nil {
@@ -580,7 +583,7 @@ func (ctrl *Controller) send(msgEnvelope *msg.MessageEnvelope) error {
 		_ = ctrl.wsConn.SetReadDeadline(time.Now())
 		return err
 	}
-	logs.Debug("send() Message sent to the wire",
+	logs.Debug("NetworkController:: Message sent to the wire",
 		zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
 		zap.String("Size", humanize.Bytes(uint64(protoMessage.Size()))),
 	)
@@ -605,7 +608,7 @@ func (ctrl *Controller) SetClientTimeDifference(delta int64) {
 func (ctrl *Controller) WaitForNetwork() {
 	// Wait While Network is Disconnected or Connecting
 	for ctrl.wsQuality == domain.NetworkDisconnected || ctrl.wsQuality == domain.NetworkConnecting {
-		logs.Debug("Wait for Network",
+		logs.Debug("NetworkController:: Wait for Network",
 			zap.String("Quality", ctrl.wsQuality.ToString()),
 		)
 		time.Sleep(time.Second)

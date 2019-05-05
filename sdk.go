@@ -336,7 +336,10 @@ func (r *River) onReceivedUpdate(updateContainers []*msg.UpdateContainer) {
 	})
 
 	for idx := range updateContainers {
-		r.syncCtrl.UpdateHandler(updateContainers[idx])
+		err := r.syncCtrl.UpdateHandler(updateContainers[idx])
+		if err != nil {
+			break
+		}
 	}
 }
 
@@ -779,7 +782,7 @@ func (r *River) releaseDelegate(requestID int64) {
 // CreateAuthKey ...
 // This function creates an AuthID and AuthKey to be used for transporting messages between client and server
 func (r *River) CreateAuthKey() (err error) {
-	logs.Debug("River::CreateAuthKey()")
+	logs.Info("River::CreateAuthKey()")
 
 	// Wait for network
 	r.networkCtrl.WaitForNetwork()
@@ -959,6 +962,14 @@ func (r *River) CreateAuthKey() (err error) {
 	r.ConnInfo.Save()
 
 	return
+}
+
+func (r *River) ResetAuthKey() {
+	r.networkCtrl.SetAuthorization(0, nil)
+	filemanager.Ctx().SetAuthorization(0, nil)
+	r.ConnInfo.AuthID = 0
+	r.ConnInfo.AuthKey = [256]byte{}
+	r.ConnInfo.Save()
 }
 
 // AddRealTimeRequest ...

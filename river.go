@@ -140,6 +140,7 @@ func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 	defer networkCtrl.Stop()       // 2nd Stop the controller
 	defer networkCtrl.Disconnect() // 1st Disconnect
 
+
 	for {
 		select {
 		case <-ctx.Done():

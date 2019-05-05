@@ -76,7 +76,7 @@ func (ctrl *Controller) distributor() {
 		// Wait until network is available
 		ctrl.network.WaitForNetwork()
 
-		logs.Debug("Queue Controller's distributor started",
+		logs.Debug("QueueController:: distributor started",
 			zap.Uint64("Length", ctrl.waitingList.Length()),
 		)
 
@@ -87,25 +87,25 @@ func (ctrl *Controller) distributor() {
 		// Peek item from the queue
 		item, err := ctrl.waitingList.Dequeue()
 		if err != nil {
-			logs.Error("distributor()->Dequeue()", zap.Error(err))
+			logs.Error("QueueController:: distributor()->Dequeue()", zap.Error(err))
 			return
 		}
 
 		// Prepare
 		req := request{}
 		if err := req.UnmarshalJSON(item.Value); err != nil {
-			logs.Error("distributor()->UnmarshalJSON()", zap.Error(err))
+			logs.Error("QueueController:: distributor()->UnmarshalJSON()", zap.Error(err))
 			return
 		}
 
 		if !ctrl.IsRequestCancelled(int64(req.ID)) {
-			logs.Debug("QueueController::distributor() Request peeked from waiting list",
+			logs.Debug("QueueController:: Request peeked from waiting list",
 				zap.Uint64("RequestID", req.ID),
 				zap.String("RequestName", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
 			)
 			go ctrl.executor(req)
 		} else {
-			logs.Debug("QueueController::distributor() Request cancelled",
+			logs.Debug("QueueController:: Request cancelled",
 				zap.Uint64("RequestID", req.ID),
 				zap.String("RequestName", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
 			)
@@ -141,7 +141,7 @@ func (ctrl *Controller) addToWaitingList(req *request) {
 		logs.Error("addToWaitingList()->Enqueue()", zap.Error(err))
 		return
 	}
-	logs.Debug("QueueController::addToWaitingList() Request added to waiting list",
+	logs.Debug("QueueController:: Request added to waiting list",
 		zap.String("Constructor", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
 		zap.Uint64("RequestID", req.MessageEnvelope.RequestID),
 	)
@@ -204,7 +204,7 @@ func (ctrl *Controller) reinitializePendingMessages() {
 func (ctrl *Controller) executor(req request) {
 	reqCallbacks := domain.GetRequestCallback(req.ID)
 	if reqCallbacks == nil {
-		logs.Debug("QueueController::executor() Callback not found",
+		logs.Debug("QueueController:: Callback not found",
 			zap.Uint64("RequestID", req.ID),
 		)
 
@@ -219,7 +219,7 @@ func (ctrl *Controller) executor(req request) {
 	if req.Timeout == 0 {
 		req.Timeout = domain.WebsocketRequestTime
 	}
-	logs.Debug("QueueController::executor() Request handover to network controller",
+	logs.Debug("QueueController:: Request handover to network controller",
 		zap.Uint64("RequestID", req.ID),
 	)
 
@@ -261,7 +261,7 @@ func (ctrl *Controller) executor(req request) {
 		}
 
 	case res := <-reqCallbacks.ResponseChannel:
-		logs.Debug("QueueController::executor() ResponseChannel received signal",
+		logs.Debug("QueueController:: ResponseChannel received signal",
 			zap.String("ConstructorName", msg.ConstructorNames[res.Constructor]),
 			zap.Uint64("RequestID", res.RequestID),
 		)
@@ -272,7 +272,7 @@ func (ctrl *Controller) executor(req request) {
 				reqCallbacks.SuccessCallback(res)
 			}
 		} else {
-			logs.Warn("executor() :: ResponseChannel received signal SuccessCallback is null",
+			logs.Warn("QueueController:: ResponseChannel received signal SuccessCallback is null",
 				zap.String("ConstructorName", msg.ConstructorNames[res.Constructor]),
 				zap.Uint64("RequestID", res.RequestID),
 			)
@@ -352,7 +352,7 @@ func (ctrl *Controller) ExecuteRealtimeCommand(requestID uint64, constructor int
 
 // ExecuteCommand put request in queue and distributor will execute it later
 func (ctrl *Controller) ExecuteCommand(requestID uint64, constructor int64, requestBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, isUICallback bool) {
-	logs.Debug("QueueController::ExecuteCommand()",
+	logs.Debug("QueueController::",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 		zap.Uint64("RequestID", requestID),
 	)

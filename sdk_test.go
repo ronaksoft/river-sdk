@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap/zapcore"
 	"sync"
 	"testing"
+	"time"
 )
 
 var (
@@ -55,18 +56,21 @@ func init() {
 }
 
 func TestGetWorkGroup(t *testing.T) {
-	b, err := GetWorkGroup("ws://new.river.im", 15)
+	b, err := GetWorkGroup("ws://alaki.river.im", 5)
 	if err != nil {
 		t.Error(err)
+		time.Sleep(10 * time.Second)
 		return
 	}
 	si := new(msg.SystemInfo)
 	err = si.Unmarshal(b)
 	if err != nil {
 		t.Error(err)
+		time.Sleep(10 * time.Second)
 		return
 	}
 	t.Log("WorkGroupName:", si.WorkGroupName)
+
 }
 
 func TestNewRiver(t *testing.T) {
