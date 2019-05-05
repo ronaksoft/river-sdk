@@ -124,15 +124,34 @@ func TestReconnect(t *testing.T) {
 		logs.Info("AuthKey Created.")
 	}
 }
+
 func TestNewRiver(t *testing.T) {
 	logs.Info("Creating New River SDK Instance")
+	conInfo := new(RiverConnection)
+
+	file, err := os.Open("./_connection/connInfo1")
+	if err == nil {
+		b, _ := ioutil.ReadAll(file)
+		err := json.Unmarshal(b, conInfo)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+	}
+
+	conInfo.Delegate = new(ConnInfoDelegates)
+
 	r := new(River)
 	r.SetConfig(&RiverConfig{
 		DbPath:             "./_data/",
 		DbID:               "test",
+		QueuePath:          "./_queue/",
 		ServerKeysFilePath: "./keys.json",
-		ServerEndpoint:     "ws://river.im",
+		ServerEndpoint:     "ws://new.river.im",
+		LogLevel:           0,
+		ConnInfo:           conInfo,
 	})
+
 
 	r.Start()
 	if r.ConnInfo.AuthID == 0 {
@@ -143,7 +162,19 @@ func TestNewRiver(t *testing.T) {
 		}
 		logs.Info("AuthKey Created.")
 	}
-	_River = r
+
+	updateGetState := new(msg.UpdateGetState)
+	b,_ := updateGetState.Marshal()
+
+	for i := 0;i < 10 ;i++ {
+		reqID, err := r.ExecuteCommand(msg.C_UpdateGetState, b, new(RequestDelegateDummy), true, true)
+		if err != nil {
+			t.Error(reqID, ":::", err)
+			return
+		}
+		t.Log("RequestID:", reqID)
+	}
+
 }
 
 func TestRiver_SetScrollStatus(t *testing.T) {
@@ -229,4 +260,15 @@ func (d *MainDelegateDummy) OnDownloadError(messageID, requestID int64, filePath
 		zap.Int64("ReqID", requestID),
 		zap.String("FilePath", filePath),
 	)
+}
+
+
+type RequestDelegateDummy struct {}
+
+func (RequestDelegateDummy) OnComplete(b []byte) {
+	fmt.Println(b)
+}
+
+func (RequestDelegateDummy) OnTimeout(err error) {
+	fmt.Println(err)
 }

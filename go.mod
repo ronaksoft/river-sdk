@@ -2,7 +2,7 @@ module git.ronaksoftware.com/ronak/riversdk
 
 require (
 	cloud.google.com/go v0.37.0 // indirect
-	git.ronaksoftware.com/ronak/toolbox v0.8.3
+	git.ronaksoftware.com/ronak/toolbox v0.8.5
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
 	github.com/beeker1121/goque v2.0.1+incompatible
