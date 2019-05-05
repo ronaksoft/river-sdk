@@ -413,11 +413,11 @@ func (ctrl *Controller) messageHandler(message *msg.MessageEnvelope) {
 		zap.Int("Updates Count", updateCount),
 	)
 
-	for _, m := range messages {
-		ctrl.messageFlusher.Enter(nil, m)
+	for idx := range messages {
+		ctrl.messageFlusher.Enter(nil, messages[idx])
 	}
-	for _, u := range updates {
-		ctrl.updateFlusher.Enter(nil, u)
+	for idx := range updates {
+		ctrl.updateFlusher.Enter(nil, updates[idx])
 	}
 }
 
