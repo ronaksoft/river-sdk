@@ -591,6 +591,9 @@ func (r *River) registerCommandHandlers() {
 
 // Start ...
 func (r *River) Start() error {
+	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:256])
+	filemanager.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:256])
+
 	// Start Controllers
 	if err := r.networkCtrl.Start(); err != nil {
 		logs.Error("River::Start()", zap.Error(err))
