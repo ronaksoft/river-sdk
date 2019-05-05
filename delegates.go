@@ -14,6 +14,7 @@ type MainDelegate interface {
 	OnUploadCompleted(messageID int64, filePath string)
 	OnDownloadError(messageID, requestID int64, filePath string, err []byte)
 	OnUploadError(messageID, requestID int64, filePath string, err []byte)
+	OnSearchComplete (b []byte)
 }
 
 type ConnInfoDelegate interface {

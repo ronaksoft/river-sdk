@@ -935,3 +935,55 @@ func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
 		logs.Error("SetScrollStatus::Failed to set scroll ID")
 	}
 }
+
+// SearchGlobal returns messages, contacts and groups matching given text
+func (r *River) SearchGlobal(text string) {
+	msgs := repo.Messages.SearchText(text)
+
+	// get users && group IDs
+	userIDs := domain.MInt64B{}
+	groupIDs := domain.MInt64B{}
+	for _, m := range msgs {
+		if m.PeerType == int32(msg.PeerSelf) || m.PeerType == int32(msg.PeerUser) {
+			userIDs[m.PeerID] = true
+		}
+
+		if m.PeerType == int32(msg.PeerGroup) {
+			groupIDs[m.PeerID] = true
+		}
+
+		if m.SenderID > 0 {
+			userIDs[m.SenderID] = true
+		} else {
+			groupIDs[m.PeerID] = true
+		}
+
+		if m.FwdSenderID > 0 {
+			userIDs[m.FwdSenderID] = true
+		} else {
+			groupIDs[m.FwdSenderID] = true
+		}
+	}
+
+	users := repo.Users.GetAnyUsers(userIDs.ToArray())
+	groups := repo.Groups.GetManyGroups(groupIDs.ToArray())
+
+	userContacts, _ := repo.Users.SearchContacts(text)
+	peerIDs := repo.Dialogs.GetPeerIDs()
+
+	// Get users who have dialog with me, but are not my contact
+	NonContactUsersWithDialogs := repo.Users.SearchNonContactsWithIDs(peerIDs, text)
+
+	userContacts = append(userContacts, NonContactUsersWithDialogs...)
+
+	searchResults := new(msg.ClientSearchResult)
+	searchResults.Messages = msgs
+	searchResults.Users = users
+	searchResults.Groups = groups
+	searchResults.MatchedUsers = NonContactUsersWithDialogs
+	searchResults.MatchedGroups = repo.Groups.SearchGroupsByTitle(text)
+
+	outBytes, _ := searchResults.Marshal()
+
+	r.mainDelegate.OnSearchComplete(outBytes)
+}

@@ -300,3 +300,20 @@ func (r *repoDialogs) GetManyDialog(peerIDs []int64) []*msg.Dialog {
 
 	return dialogs
 }
+
+func (r *repoDialogs) GetPeerIDs() []int64 {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	dialogs := make([]*msg.Dialog, 0)
+	err := r.db.Where("PeerType = 1").Find(&dialogs).Error
+	if err != nil {
+		logs.Error("Dialogs::GetPeerIDs()", zap.Error(err))
+		return nil
+	}
+	var ids []int64
+	for _, dialog := range dialogs {
+		ids = append(ids, dialog.PeerID)
+	}
+	return ids
+}

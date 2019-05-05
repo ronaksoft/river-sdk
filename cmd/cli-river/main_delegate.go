@@ -12,6 +12,20 @@ var ConnInfo []byte
 
 type ConnInfoDelegates struct{}
 
+func (d *MainDelegate) OnSearchComplete(b []byte) {
+	_Log.Info("OnSearchComplete")
+	result := new(msg.ClientSearchResult)
+	err := result.Unmarshal(b)
+	if err != nil {
+		_Log.Warn("error Unmarshal", zap.String("", err.Error()))
+		return
+	}
+	_Shell.Println("OnSearchComplete::Messages", result.Messages)
+	_Shell.Println("OnSearchComplete::Groups", result.Groups)
+	_Shell.Println("OnSearchComplete::MatchedGroups", result.MatchedGroups)
+	_Shell.Println("OnSearchComplete::MatchedUsers", result.MatchedUsers)
+}
+
 func (c *ConnInfoDelegates) SaveConnInfo(connInfo []byte) {
 	_ = os.MkdirAll("./_connection", os.ModePerm)
 	ConnInfo = connInfo

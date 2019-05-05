@@ -279,6 +279,15 @@ var MessagesReadContents = &ishell.Cmd{
 	},
 }
 
+var MessagesSearchText = &ishell.Cmd{
+	Name: "SearchText",
+	Func: func(c *ishell.Context) {
+		text := fnGetBody(c)
+		_SDK.SearchGlobal(text)
+	},
+}
+
+
 func init() {
 	Message.AddCmd(MessageGetDialogs)
 	Message.AddCmd(MessageGetDialog)
@@ -292,4 +301,5 @@ func init() {
 	Message.AddCmd(MessagesEdit)
 	Message.AddCmd(MessagesForward)
 	Message.AddCmd(MessagesReadContents)
+	Message.AddCmd(MessagesSearchText)
 }
