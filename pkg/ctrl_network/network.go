@@ -482,8 +482,8 @@ func (ctrl *Controller) Connect() {
 
 // Disconnect close websocket
 func (ctrl *Controller) Disconnect() {
+	ctrl.wsKeepConnection = false
 	if ctrl.wsConn != nil {
-		ctrl.wsKeepConnection = false
 		_ = ctrl.wsConn.Close()
 
 		logs.Info("NetworkController::Disconnect() Disconnected")
