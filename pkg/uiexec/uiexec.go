@@ -57,6 +57,7 @@ func (c *UIExecutor) Stop() {
 	case <-time.After(uiExecInterval):
 		logs.Debug("CMD::Stop() cmd is not started")
 	}
+	exec = nil
 }
 
 // Exec pass given function to UIExecutor buffered channel

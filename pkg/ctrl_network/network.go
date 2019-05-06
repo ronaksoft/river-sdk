@@ -103,9 +103,9 @@ func NewController(config Config) *Controller {
 	ctrl.connectChannel = make(chan bool)
 	ctrl.pongChannel = make(chan bool)
 
-	ctrl.updateFlusher = ronak.NewFlusher(1000, 10, 50*time.Millisecond, ctrl.updateFlushFunc)
-	ctrl.messageFlusher = ronak.NewFlusher(1000, 10, 50*time.Millisecond, ctrl.messageFlushFunc)
-	ctrl.sendFlusher = ronak.NewFlusher(1000, 10, 50*time.Millisecond, ctrl.sendFlushFunc)
+	ctrl.updateFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.updateFlushFunc)
+	ctrl.messageFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.messageFlushFunc)
+	ctrl.sendFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.sendFlushFunc)
 
 	ctrl.unauthorizedRequests = map[int64]bool{
 		msg.C_SystemGetServerTime: true,
@@ -142,7 +142,7 @@ func (ctrl *Controller) messageFlushFunc(entries []ronak.FlusherEntry) {
 
 		// Call the message handler in blocking mode
 		ctrl.OnMessage(messages)
-		logs.Debug("Messages Flushed",
+		logs.Info("Messages Flushed",
 			zap.Int("Count", itemsCount),
 		)
 	}
@@ -413,11 +413,15 @@ func (ctrl *Controller) messageHandler(message *msg.MessageEnvelope) {
 		zap.Int("Updates Count", updateCount),
 	)
 
-	for _, m := range messages {
-		ctrl.messageFlusher.Enter(nil, m)
+	logs.Info("Flusher Workers",
+		zap.Int("RunningJobs", ctrl.messageFlusher.RunningJobs()),
+		zap.Int("Pendings", ctrl.messageFlusher.PendingItems()),
+	)
+	for idx := range messages {
+		ctrl.messageFlusher.Enter(nil, messages[idx])
 	}
-	for _, u := range updates {
-		ctrl.updateFlusher.Enter(nil, u)
+	for idx := range updates {
+		ctrl.updateFlusher.Enter(nil, updates[idx])
 	}
 }
 
