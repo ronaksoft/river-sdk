@@ -14,13 +14,16 @@ import (
 
 // updateNewMessage
 func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("SyncController::updateNewMessage()")
 	x := new(msg.UpdateNewMessage)
 	err := x.Unmarshal(u.Update)
 	if err != nil {
 		logs.Error("updateNewMessage()-> Unmarshal()", zap.Error(err))
 		return []*msg.UpdateEnvelope{}
 	}
+	logs.Info("SyncController::updateNewMessage",
+		zap.Int64("MessageID", x.Message.ID),
+		zap.Int64("UpdateID", x.UpdateID),
+	)
 
 	// used messageType to identify client & server messages on Media thingy
 	x.Message.MessageType = 1
@@ -199,13 +202,18 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 
 // updateReadHistoryInbox
 func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("SyncController::updateReadHistoryInbox()")
 	x := new(msg.UpdateReadHistoryInbox)
-	x.Unmarshal(u.Update)
+	_ = x.Unmarshal(u.Update)
+
 	dialog := repo.Dialogs.GetDialog(x.Peer.ID, x.Peer.Type)
 	if dialog == nil {
 		return []*msg.UpdateEnvelope{}
 	}
+	logs.Info("SyncController::updateReadHistoryInbox",
+		zap.Int64("MaxID", x.MaxID),
+		zap.Int64("UpdateID", x.UpdateID),
+		zap.Int64("PeerID", x.Peer.ID),
+	)
 
 	err := repo.Dialogs.UpdateReadInboxMaxID(ctrl.userID, x.Peer.ID, x.Peer.Type, x.MaxID)
 	if err != nil {
@@ -217,9 +225,14 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) []*msg.Upd
 
 // updateReadHistoryOutbox
 func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("SyncController::updateReadHistoryOutbox()")
 	x := new(msg.UpdateReadHistoryOutbox)
-	x.Unmarshal(u.Update)
+	_ = x.Unmarshal(u.Update)
+	logs.Info("SyncController::updateReadHistoryOutbox",
+		zap.Int64("MaxID", x.MaxID),
+		zap.Int64("UpdateID", x.UpdateID),
+		zap.Int64("PeerID", x.Peer.ID),
+	)
+
 	err := repo.Dialogs.UpdateReadOutboxMaxID(x.Peer.ID, x.Peer.Type, x.MaxID)
 	if err != nil {
 		logs.Error("updateReadHistoryOutbox() -> UpdateReadOutboxMaxID()", zap.Error(err))
@@ -230,9 +243,11 @@ func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) []*msg.Up
 
 // updateMessageEdited
 func (ctrl *Controller) updateMessageEdited(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("SyncController::updateMessageEdited()")
 	x := new(msg.UpdateMessageEdited)
-	x.Unmarshal(u.Update)
+	_ = x.Unmarshal(u.Update)
+	logs.Info("SyncController::updateMessageEdited",
+		zap.Int64("MessageID", x.Message.ID),
+	)
 	err := repo.Messages.SaveMessage(x.Message)
 	if err != nil {
 		logs.Error("updateMessageEdited() -> SaveMessage()", zap.Error(err))
@@ -243,10 +258,12 @@ func (ctrl *Controller) updateMessageEdited(u *msg.UpdateEnvelope) []*msg.Update
 
 // updateMessageID
 func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("SyncController::updateMessageID()")
-
 	x := new(msg.UpdateMessageID)
-	x.Unmarshal(u.Update)
+	_ = x.Unmarshal(u.Update)
+	logs.Info("SyncController::updateMessageID",
+		zap.Int64("RandomID", x.RandomID),
+		zap.Int64("MessageID", x.MessageID),
+	)
 
 	if ctrl.isDeliveredMessage(x.MessageID) {
 		logs.Debug("updateMessageID() message is already delivered")
@@ -352,10 +369,11 @@ func (ctrl *Controller) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) []*ms
 
 // updateReadMessagesContents
 func (ctrl *Controller) updateReadMessagesContents(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("SyncController::updateReadMessagesContents()")
-
 	x := new(msg.UpdateReadMessagesContents)
-	x.Unmarshal(u.Update)
+	_ = x.Unmarshal(u.Update)
+	logs.Info("SyncController::updateReadMessagesContents",
+		zap.Int64s("MessageIDs", x.MessageIDs),
+	)
 
 	err := repo.Messages.SetContentRead(x.MessageIDs)
 	if err != nil {
@@ -384,10 +402,12 @@ func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 
 // updateGroupPhoto
 func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("SyncController::updateGroupPhoto()")
-
 	x := new(msg.UpdateGroupPhoto)
-	x.Unmarshal(u.Update)
+	_ = x.Unmarshal(u.Update)
+
+	logs.Info("SyncController::updateGroupPhoto",
+		zap.Int64("GroupID", x.GroupID),
+	)
 
 	err := repo.Groups.UpdateGroupPhoto(x)
 	if err != nil {

@@ -109,7 +109,7 @@ func (ctrl *Controller) watchDog() {
 			}
 			ctrl.sync()
 		case <-ctrl.stopChannel:
-			logs.Info("SyncController::watchDog() Stopped")
+			logs.Info("SyncController:: watchDog Stopped")
 			return
 		}
 	}
@@ -148,7 +148,7 @@ func (ctrl *Controller) sync() {
 	defer updateSyncStatus(ctrl, domain.Synced)
 
 	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSyncThreshold {
-		logs.Info("SyncController::Snapshot sync")
+		logs.Info("SyncController:: Snapshot sync")
 		// remove all messages
 		err := repo.DropAndCreateTable(&dto.Messages{})
 		if err != nil {
@@ -167,7 +167,7 @@ func (ctrl *Controller) sync() {
 	} else if serverUpdateID > ctrl.updateID+1 {
 		// if it is passed over 60 seconds from the last update received it fetches the update
 		// difference from the server
-		logs.Info("SyncController::Sequential sync")
+		logs.Info("SyncController:: Sequential sync")
 		getUpdateDifference(ctrl, serverUpdateID+1) // +1 cuz in here we dont have serverUpdateID itself too
 	}
 }
@@ -175,7 +175,7 @@ func updateSyncStatus(ctrl *Controller, newStatus domain.SyncStatus) {
 	if ctrl.syncStatus == newStatus {
 		return
 	}
-	logs.Info("Sync Controller Status Updated",
+	logs.Info("Sync Controller:: Status Updated",
 		zap.String("Status", newStatus.ToString()),
 	)
 	ctrl.syncStatus = newStatus
@@ -236,7 +236,7 @@ func getContacts(ctrl *Controller) {
 	)
 }
 func getAllDialogs(ctrl *Controller, offset int32, limit int32) {
-	logs.Info("SyncController::getAllDialogs()",
+	logs.Info("SyncController:: getAllDialogs",
 		zap.Int32("Offset", offset),
 		zap.Int32("Limit", limit),
 	)
@@ -367,7 +367,7 @@ func onGetDifferenceSucceed(ctrl *Controller, m *msg.MessageEnvelope) {
 		updContainer.MaxUpdateID = x.MaxUpdateID
 		updContainer.MinUpdateID = x.MinUpdateID
 
-		logs.Info("SyncController::onGetDifferenceSucceed()",
+		logs.Info("SyncController:: onGetDifferenceSucceed",
 			zap.Int64("UpdateID", ctrl.updateID),
 			zap.Int64("MaxUpdateID", x.MaxUpdateID),
 			zap.Int64("MinUpdateID", x.MinUpdateID),
