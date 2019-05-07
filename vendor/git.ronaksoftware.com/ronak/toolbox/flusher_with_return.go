@@ -34,11 +34,11 @@ type FlusherFunc func(items []FlusherEntry)
 
 func NewFlusher(maxBatchSize, maxConcurrency int32, flushPeriod time.Duration, ff FlusherFunc) *Flusher {
 	f := new(Flusher)
-	f.entries = make(chan FlusherEntry, maxBatchSize)
-	f.next = make(chan struct{}, maxConcurrency)
 	f.flushPeriod = flushPeriod
 	f.maxWorkers = maxConcurrency
 	f.maxBatchSize = int(maxBatchSize)
+	f.entries = make(chan FlusherEntry, f.maxBatchSize)
+	f.next = make(chan struct{}, f.maxWorkers)
 	f.workerFunc = ff
 
 	// Run the 1st instance in the background
@@ -86,7 +86,7 @@ func (f *Flusher) RunningJobs() int {
 
 func (f *Flusher) worker() {
 	items := make([]FlusherEntry, 0)
-	timer := time.NewTimer(f.flushPeriod)
+	t := time.NewTimer(f.flushPeriod)
 
 	for {
 		items = items[:0]
@@ -100,10 +100,14 @@ func (f *Flusher) worker() {
 		case item := <-f.entries:
 			items = append(items, item)
 		}
-		if !timer.Stop() {
-			<-timer.C
+		if !t.Stop() {
+			select {
+			case <-t.C:
+			default:
+			}
+
 		}
-		timer.Reset(f.flushPeriod)
+		t.Reset(f.flushPeriod)
 	InnerLoop:
 		for {
 			select {
@@ -119,7 +123,7 @@ func (f *Flusher) worker() {
 					atomic.AddInt32(&f.runningWorkers, -1)
 					break InnerLoop
 				}
-			case <-timer.C:
+			case <-t.C:
 				// Send signal for the next worker to listen for entries
 				f.next <- struct{}{}
 
