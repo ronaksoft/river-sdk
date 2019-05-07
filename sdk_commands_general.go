@@ -937,7 +937,7 @@ func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
 }
 
 // SearchGlobal returns messages, contacts and groups matching given text
-func (r *River) SearchGlobal(text string) {
+func (r *River) SearchGlobal(text string , delegate RequestDelegate) {
 	msgs := repo.Messages.SearchText(text)
 
 	// get users && group IDs
@@ -985,5 +985,7 @@ func (r *River) SearchGlobal(text string) {
 
 	outBytes, _ := searchResults.Marshal()
 
-	r.mainDelegate.OnSearchComplete(outBytes)
+	if delegate != nil {
+		delegate.OnComplete(outBytes)
+	}
 }
