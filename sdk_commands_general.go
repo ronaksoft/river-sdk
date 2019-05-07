@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/filemanager"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
@@ -933,5 +933,59 @@ func (r *River) GetScrollStatus(peerID int64, peerType int32) int64 {
 func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
 	if err := repo.MessagesExtra.SaveScrollID(peerID, msgID, peerType); err != nil {
 		logs.Error("SetScrollStatus::Failed to set scroll ID")
+	}
+}
+
+// SearchGlobal returns messages, contacts and groups matching given text
+func (r *River) SearchGlobal(text string , delegate RequestDelegate) {
+	msgs := repo.Messages.SearchText(text)
+
+	// get users && group IDs
+	userIDs := domain.MInt64B{}
+	groupIDs := domain.MInt64B{}
+	for _, m := range msgs {
+		if m.PeerType == int32(msg.PeerSelf) || m.PeerType == int32(msg.PeerUser) {
+			userIDs[m.PeerID] = true
+		}
+
+		if m.PeerType == int32(msg.PeerGroup) {
+			groupIDs[m.PeerID] = true
+		}
+
+		if m.SenderID > 0 {
+			userIDs[m.SenderID] = true
+		} else {
+			groupIDs[m.PeerID] = true
+		}
+
+		if m.FwdSenderID > 0 {
+			userIDs[m.FwdSenderID] = true
+		} else {
+			groupIDs[m.FwdSenderID] = true
+		}
+	}
+
+	users := repo.Users.GetAnyUsers(userIDs.ToArray())
+	groups := repo.Groups.GetManyGroups(groupIDs.ToArray())
+
+	userContacts, _ := repo.Users.SearchContacts(text)
+	peerIDs := repo.Dialogs.GetPeerIDs()
+
+	// Get users who have dialog with me, but are not my contact
+	NonContactUsersWithDialogs := repo.Users.SearchNonContactsWithIDs(peerIDs, text)
+
+	userContacts = append(userContacts, NonContactUsersWithDialogs...)
+
+	searchResults := new(msg.ClientSearchResult)
+	searchResults.Messages = msgs
+	searchResults.Users = users
+	searchResults.Groups = groups
+	searchResults.MatchedUsers = userContacts
+	searchResults.MatchedGroups = repo.Groups.SearchGroupsByTitle(text)
+
+	outBytes, _ := searchResults.Marshal()
+
+	if delegate != nil {
+		delegate.OnComplete(outBytes)
 	}
 }

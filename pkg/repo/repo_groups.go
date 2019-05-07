@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
@@ -285,4 +286,26 @@ func (r *repoGroups) RemoveGroupPhoto(groupID int64) error {
 		"SmallVersion":    0,
 		"SmallFilePath":   "",
 	}).Error
+}
+
+func (r *repoGroups) SearchGroupsByTitle(title string) []*msg.Group {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	pbGroup := make([]*msg.Group, 0)
+	groups := make([]dto.Groups, 0)
+
+	err := r.db.Where("Title LIKE ?", "%"+fmt.Sprintf("%s", title)+"%").Find(&groups).Error
+	if err != nil {
+		logs.Error("Groups::SearchGroupsByTitle()-> fetch groups entity", zap.Error(err))
+		return nil
+	}
+
+	for _, v := range groups {
+		tmp := new(msg.Group)
+		v.MapTo(tmp)
+		pbGroup = append(pbGroup, tmp)
+	}
+
+	return pbGroup
 }

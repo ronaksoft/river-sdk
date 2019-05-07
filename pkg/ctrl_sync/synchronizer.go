@@ -281,7 +281,7 @@ func getAllDialogs(ctrl *Controller, offset int32, limit int32) {
 
 					// create MessageHole
 					_ = messageHole.InsertHole(dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID-1)
-					_ = messageHole.SetUpperFilled(dialog.PeerID, dialog.PeerType,  dialog.TopMessageID)
+					_ = messageHole.SetUpperFilled(dialog.PeerID, dialog.PeerType, dialog.TopMessageID)
 
 					// make sure to created the message hole b4 creating dialog
 					err := repo.Dialogs.SaveDialog(dialog, topMessage.CreatedOn)

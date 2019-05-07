@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"fmt"
 	"sort"
 
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
@@ -503,4 +504,22 @@ func (r *repoMessages) GetDialogMessageCount(peerID int64, peerType int32) int32
 	r.db.Table(mdl.TableName()).Where("PeerID =? AND PeerType= ?", peerID, peerType).Count(&count)
 
 	return count
+}
+
+func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+	var userMsgs []*msg.UserMessage
+	msgs := make([]dto.Messages, 0)
+	if err := r.db.Where("Body LIKE ?", "%"+fmt.Sprintf("%s", text)+"%").Find(&msgs).Error; err != nil {
+		logs.Warn("SearchText::error", zap.String("", err.Error()))
+		return userMsgs
+	}
+
+	for _, dtoMsg := range msgs {
+		message := new(msg.UserMessage)
+		dtoMsg.MapTo(message)
+		userMsgs = append(userMsgs, message)
+	}
+	return userMsgs
 }
