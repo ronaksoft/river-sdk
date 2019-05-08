@@ -1060,7 +1060,6 @@ func (r *River) getServerSalt() {
 }
 
 func (r *River) updateSalt(salt msg.SystemSalts) bool {
-	fmt.Println("dsssssssdddddddddddddddddddddddddddddddddd")
 	fmt.Println(salt)
 	// sort ASC
 	var saltArray []*msg.Salt
@@ -1081,6 +1080,8 @@ func (r *River) updateSalt(salt msg.SystemSalts) bool {
 			if len(salt.Salts) < 12 {
 				go r.getServerSalt()
 			}
+			sysSalt := new(msg.SystemSalts)
+			sysSalt.Salts = &salt
 			synced = true
 			// set timer to renew salt before it expires
 			nextTimeStamp := salt.Salts[i+1].Timestamp
