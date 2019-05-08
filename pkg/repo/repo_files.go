@@ -316,3 +316,88 @@ func (r *repoFiles) GetFileByDocumentID(documentID int64) (*dto.Files, error) {
 	err := r.db.Where("DocumentID = ?", documentID).First(mdl).Error
 	return mdl, err
 }
+
+func (r *repoFiles) GetDBStatus() (map[int64]map[int32]dto.MediaInfo, error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+	var peerID int64
+	var peerIDs []int64
+
+	peerMediaSizeMap := make(map[int64]map[int32]dto.MediaInfo)
+
+	f := dto.Files{}
+
+	rows, err := r.db.Table(f.TableName()).Select("PeerID").Group("PeerID").Rows()
+	defer rows.Close()
+	if err != nil {
+		logs.Error(err.Error())
+		return nil, err
+	}
+
+	for rows.Next() {
+		err := rows.Scan(&peerID)
+		if err != nil {
+			logs.Error(err.Error())
+		} else {
+			peerIDs = append(peerIDs, peerID)
+		}
+	}
+	logs.Debug("peerIDs", zap.Any("", peerIDs))
+
+	// range over peerIDs to collect each mediaType total size
+	for _, peerId := range peerIDs {
+		mMediaSize := make(map[int32]dto.MediaInfo)
+		var f []dto.Files
+		err := r.db.Where("FilePath <> ? AND PeerID = ?", "", peerID).Find(&f).Error
+		if err != nil {
+			logs.Error(err.Error())
+			return nil, err
+		}
+		if len(f) > 0 {
+			for _, file := range f {
+				if minfo, ok := mMediaSize[file.MediaType]; ok {
+					minfo.MessageIDs = append(minfo.MessageIDs, file.MessageID)
+					minfo.Size += file.FileSize
+					mMediaSize[file.MediaType] = minfo
+				} else {
+					mediaInfo := dto.MediaInfo{
+						MessageIDs: []int64{file.MessageID},
+						Size: file.FileSize,
+					}
+					mMediaSize[file.MediaType] = mediaInfo
+				}
+			}
+		}
+		peerMediaSizeMap[peerId] = mMediaSize
+	}
+	return peerMediaSizeMap, nil
+}
+
+// ClearMedia returns media file paths to remove from device and updates database
+func (r *repoFiles) ClearMedia(messageIDs []int64) ([]string ,error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+	dtoFiles := make([]dto.Files, 0, len(messageIDs))
+	var filePaths []string
+
+	f := dto.Files{}
+	err := r.db.Table(f.TableName()).Where("MessageID in (?)", messageIDs).Find(&dtoFiles).Error
+	if err != nil {
+		logs.Error(err.Error())
+		return filePaths, err
+	}
+	for _, file := range dtoFiles {
+		if file.FilePath != "" {
+			filePaths = append(filePaths, file.FilePath)
+		}
+		if file.ThumbFilePath != "" {
+			filePaths = append(filePaths, file.ThumbFilePath)
+		}
+	}
+	err = r.db.Table(f.TableName()).Where("MessageID in (?)", messageIDs).Updates(map[string]interface{}{"FilePath": "", "ThumbFilePath": ""}).Error
+	if err != nil {
+		logs.Error(err.Error())
+		return filePaths, err
+	}
+	return filePaths, nil
+}

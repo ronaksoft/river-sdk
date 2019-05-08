@@ -149,3 +149,8 @@ func (m *Files) MapFromUserMessageDocument(um *msg.UserMessage, v *msg.MediaDocu
 	m.Attributes, _ = json.Marshal(v.Doc.Attributes)
 
 }
+
+type MediaInfo struct {
+	MessageIDs []int64
+	Size        int32
+}

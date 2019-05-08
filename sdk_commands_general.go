@@ -2,6 +2,9 @@ package riversdk
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	"os"
 	"strconv"
 	"strings"
@@ -13,6 +16,9 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
 )
+
+var GetDBStatusIsRunning bool
+var DatabaseStatus map[int64]map[int32]dto.MediaInfo
 
 // CancelRequest remove given requestID callbacks&delegates and if its not processed by queue we skip it on queue distributor
 func (r *River) CancelRequest(requestID int64) {
@@ -988,4 +994,66 @@ func (r *River) SearchGlobal(text string , delegate RequestDelegate) {
 	if delegate != nil {
 		delegate.OnComplete(outBytes)
 	}
+}
+
+// GetGetDBStatus returns message IDs and total size of each media stored in user's database
+func (r *River) GetDBStatus(delegate RequestDelegate) {
+	res := msg.DBMediaInfo{}
+	if GetDBStatusIsRunning {
+		err := errors.New("GetDBStatus is running")
+		if delegate != nil {
+			delegate.OnTimeout(err)
+		}
+		return
+	}
+	GetDBStatusIsRunning = true
+	peerMediaSizeMap, err := repo.Files.GetDBStatus()
+	if err != nil {
+		GetDBStatusIsRunning = false
+		logs.Error(err.Error())
+		delegate.OnTimeout(err)
+		return
+	}
+	peerMediaInfo := make([]*msg.PeerMediaInfo, 0)
+	for peerID, mediaInfoMap := range peerMediaSizeMap {
+		mediaSize :=  make([]*msg.MediaSize, 0)
+		for mediaType, mediaInfo := range mediaInfoMap {
+			mediaSize = append(mediaSize, &msg.MediaSize{MediaType: mediaType, TotalSize:mediaInfo.Size})
+		}
+		peerMediaInfo = append(peerMediaInfo, &msg.PeerMediaInfo{PeerID:peerID, Media:mediaSize})
+	}
+	res.MediaInfo = peerMediaInfo
+	logs.Debug("MediaInfo", zap.String("", fmt.Sprintf("%+v", res.MediaInfo)))
+	pBytes, _ := res.Marshal()
+	if delegate != nil {
+		delegate.OnComplete(pBytes)
+	}
+	GetDBStatusIsRunning = false
+	DatabaseStatus = peerMediaSizeMap
+}
+
+func (r *River) ClearCache(peerID int64, mediaTypes []domain.SharedMediaType, all bool) bool {
+	var messageIDs []int64
+	mediaInfo := DatabaseStatus[peerID]
+	if all {
+		for _, mediaType := range mediaInfo {
+			messageIDs = append(messageIDs, mediaType.MessageIDs...)
+		}
+	} else {
+		for _, mediaType := range mediaTypes {
+			messageIDs = append(messageIDs, mediaInfo[int32(mediaType)].MessageIDs...)
+		}
+	}
+	logs.Debug("ClearCache", zap.Int64s("messageIDs", messageIDs))
+
+	if filePaths, err := repo.Files.ClearMedia(messageIDs); err != nil {
+		return false
+	} else {
+		logs.Debug("ClearCache", zap.Strings("media paths", filePaths))
+		err = filemanager.Ctx().ClearFiles(filePaths)
+		if err != nil {
+			return false
+		}
+	}
+	return true
 }

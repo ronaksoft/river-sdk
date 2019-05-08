@@ -283,7 +283,8 @@ var MessagesSearchText = &ishell.Cmd{
 	Name: "SearchText",
 	Func: func(c *ishell.Context) {
 		text := fnGetBody(c)
-		_SDK.SearchGlobal(text)
+		reqDelegate := new(RequestDelegate)
+		_SDK.SearchGlobal(text, reqDelegate)
 	},
 }
 
