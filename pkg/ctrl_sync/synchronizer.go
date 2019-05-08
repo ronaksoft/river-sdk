@@ -373,13 +373,10 @@ func onGetDifferenceSucceed(ctrl *Controller, m *msg.MessageEnvelope) {
 			zap.Int64("MinUpdateID", x.MinUpdateID),
 		)
 
-		// No need to wait here till DB gets synced cuz UI will have required data
-		go func() {
-			// Save Groups
-			_ = repo.Groups.SaveMany(x.Groups)
-			// Save Users
-			_ = repo.Users.SaveMany(x.Users)
-		}()
+		// Save Groups
+		_ = repo.Groups.SaveMany(x.Groups)
+		// Save Users
+		_ = repo.Users.SaveMany(x.Users)
 
 		for _, update := range x.Updates {
 			if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
