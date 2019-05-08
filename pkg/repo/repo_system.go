@@ -1,6 +1,8 @@
 package repo
 
 import (
+	"encoding/json"
+	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	"go.uber.org/zap"
@@ -92,4 +94,83 @@ func (r *repoSystem) SaveString(keyName string, keyValue string) error {
 		zap.String(keyName, keyValue),
 	)
 	return r.db.Save(s).Error
+}
+
+// SaveSalt
+func (r *repoSystem) SaveSalt(serverSlats *msg.SystemSalts) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	dtoSalts := make([]dto.ServerSalt,0)
+	for _, salt := range serverSlats.Salts {
+		s := dto.ServerSalt{}
+		s.Timestamp = salt.Timestamp
+		s.Salt = salt.Value
+		dtoSalts = append(dtoSalts, s)
+	}
+	s := new(dto.System)
+	keyName := "Salt"
+	r.db.Where("KeyName = ?", keyName).First(s)
+	//if len(s.Salt) > 0 {
+	//	r.db.Delete(s)
+	//}
+	logs.Info("repoSystem()::Save", zap.Any("salts", dtoSalts))
+	s.KeyName = "Salt"
+	b, _ := json.Marshal(dtoSalts)
+	s.Salt = string(b)
+
+	return r.db.Save(s).Error
+}
+
+// GetSalt
+func (r *repoSystem) GetSalt() (salt msg.SystemSalts ,err error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	salt = msg.SystemSalts{}
+
+	logs.Info("repoSystem()::GetSalt")
+	s := dto.System{}
+	keyName := "Salt"
+	err = r.db.Where("KeyName = ?", keyName).First(&s).Error
+	if err != nil {
+		return salt, err
+	}
+
+	var dtoSalts []dto.ServerSalt
+
+	err = json.Unmarshal([]byte(s.Salt), &dtoSalts)
+	if err != nil {
+		logs.Warn("repoSalt()::GetSalt", zap.String("error", err.Error()))
+		return
+	}
+
+
+
+	for _, dtoSalt := range dtoSalts {
+		sysSalt := new(msg.Salt)
+		sysSalt.Value = dtoSalt.Salt
+		sysSalt.Timestamp = dtoSalt.Timestamp
+		salt.Salts = append(salt.Salts, sysSalt)
+	}
+
+	logs.Debug("repoSalt()::GetSalt", zap.Any("salt", salt))
+
+	return
+}
+
+// SaveSalt
+func (r *repoSystem) RemoveSalt() error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	s := new(dto.System)
+
+	keyName := "Salt"
+	err := r.db.Where("KeyName = ?", keyName).First(s).Error
+	if err == nil {
+		return r.db.Delete(s).Error
+	} else {
+		return err
+	}
 }

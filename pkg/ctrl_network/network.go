@@ -40,6 +40,7 @@ type Controller struct {
 	authID     int64
 	authKey    []byte
 	messageSeq int64
+	salt       int64
 
 	// Websocket Settings
 	wsDialer                *websocket.Dialer
@@ -111,6 +112,7 @@ func NewController(config Config) *Controller {
 		msg.C_SystemGetServerTime: true,
 		msg.C_InitConnect:         true,
 		msg.C_InitCompleteAuth:    true,
+		msg.C_SystemGetSalts:      true,
 	}
 
 	return ctrl
@@ -554,7 +556,7 @@ func (ctrl *Controller) send(msgEnvelope *msg.MessageEnvelope) error {
 		protoMessage.AuthID = ctrl.authID
 		ctrl.messageSeq++
 		encryptedPayload := msg.ProtoEncryptedPayload{
-			ServerSalt: 234242, // TODO:: ServerSalt ?
+			ServerSalt: ctrl.salt,       //234242, // TODO:: ServerSalt ?
 			Envelope:   msgEnvelope,
 		}
 		encryptedPayload.MessageID = uint64((time.Now().Unix()+ctrl.clientTimeDifference)<<32 | ctrl.messageSeq)
@@ -626,4 +628,12 @@ func (ctrl *Controller) Connected() bool {
 // GetQuality
 func (ctrl *Controller) GetQuality() domain.NetworkStatus {
 	return ctrl.wsQuality
+}
+
+func (ctrl *Controller) SetServerSalt(salt int64) {
+	ctrl.salt = salt
+}
+
+func (ctrl *Controller) ClientTimeDifference() int64 {
+	return ctrl.clientTimeDifference
 }
