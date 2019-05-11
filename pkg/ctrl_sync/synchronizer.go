@@ -3,7 +3,8 @@ package synchronizer
 import (
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/filemanager"
-	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
+	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -15,7 +16,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_queue"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"go.uber.org/zap"
@@ -489,6 +490,9 @@ func (ctrl *Controller) MessageHandler(messages []*msg.MessageEnvelope) {
 		case msg.C_Error:
 			err := new(msg.Error)
 			_ = err.Unmarshal(m.Message)
+			if err.Code == msg.ErrItemSalt && err.Items == msg.ErrCodeInvalid {
+				ctrl.getServerSalt()
+			}
 			logs.Error("MessageHandler() Received Error ", zap.String("Code", err.Code), zap.String("Item", err.Items))
 		}
 
@@ -675,5 +679,136 @@ func extractMessagesMedia(messages ...*msg.UserMessage) {
 		case msg.MediaTypeContact:
 		default:
 		}
+	}
+}
+
+func (ctrl *Controller) CheckSalt() {
+	logs.Debug("synchronizer::checkSalt started")
+	for {
+		saltString ,err := repo.System.LoadString(domain.ColumnSystemSalts)
+		if err != nil {
+			logs.Error("River::loadServerSalt() failed to fetch salt",
+				zap.String("Error", err.Error()),
+			)
+			ctrl.getServerSalt()
+			return
+		}
+		sysSalts := new(msg.SystemSalts)
+		err = sysSalts.Unmarshal([]byte(saltString))
+		if err != nil {
+			logs.Error("River::loadServerSalt() failed to unmarshal salt",
+				zap.String("Error", err.Error()),
+			)
+			ctrl.getServerSalt()
+			return
+		}
+
+		if len(sysSalts.Salts) > 0 {
+			if !ctrl.updateSalt(sysSalts) {
+				continue
+			} else {
+				break
+			}
+		} else {
+			ctrl.getServerSalt()
+		}
+	}
+	logs.Debug("synchronizer::checkSalt finished")
+}
+
+func (ctrl *Controller) getServerSalt() {
+	logs.Debug("synchronizer::getServerSalt started")
+
+	serverSaltReq := new(msg.SystemGetSalts)
+	serverSaltReqBytes, _ := serverSaltReq.Marshal()
+
+	for {
+		err := ctrl.queueCtrl.ExecuteRealtimeCommand(
+			uint64(domain.SequentialUniqueID()),
+			msg.C_SystemGetSalts,
+			serverSaltReqBytes,
+			nil,
+			func(m *msg.MessageEnvelope) {
+				if m.Constructor == msg.C_SystemSalts {
+					s := new(msg.SystemSalts)
+					err := s.Unmarshal(m.Message)
+					if err != nil {
+						logs.Debug("synchronizer::SystemGetSalts()",
+							zap.String("error", err.Error()),
+						)
+					}
+					logs.Debug("getServerSalt", zap.Any("Salts", s))
+					err = repo.System.SaveString(domain.ColumnSystemSalts, string(m.Message))
+					if err != nil {
+						logs.Debug("synchronizer::SystemGetSalts()",
+							zap.String("error", err.Error()),
+						)
+					}
+				}
+			},
+			true,
+			false,
+		)
+		if err == nil {
+			break
+		} else {
+			time.Sleep(1 * time.Second)
+		}
+	}
+}
+
+func (ctrl *Controller) updateSalt(salt *msg.SystemSalts) bool {
+	// sort ASC
+	var saltArray []*msg.Salt
+	saltMap := make(map[int64]*msg.Salt, len(salt.Salts))
+	for _, s := range salt.Salts {
+		saltArray = append(saltArray, s)
+		saltMap[s.Timestamp] = s
+	}
+	sort.Slice(saltArray, func(i, j int) bool {
+		return saltArray[i].Timestamp < saltArray[j].Timestamp
+	})
+	var synced = false
+
+	for i, s := range saltArray {
+		if time.Now().Unix()+ctrl.networkCtrl.ClientTimeDifference() < s.Timestamp {
+			delete(saltMap, s.Timestamp)
+			continue
+		}
+		ctrl.networkCtrl.SetServerSalt(s.Value)
+		filemanager.Ctx().SetServerSalt(s.Value)
+
+		if len(saltMap) < 12 {
+			go ctrl.getServerSalt()
+		} else {
+			sysSalt := new(msg.SystemSalts)
+			for _, value := range saltMap {
+				sysSalt.Salts = append(sysSalt.Salts, value)
+			}
+
+			b, _ := sysSalt.Marshal()
+			_ = repo.System.SaveString(domain.ColumnSystemSalts, string(b))
+			synced = true
+			// set timer to renew salt before it expires
+			nextTimeStamp := salt.Salts[i+1].Timestamp
+			timeLeft := time.Duration(nextTimeStamp - time.Now().Unix() + ctrl.networkCtrl.ClientTimeDifference())
+			go ctrl.renewServerSaltAfter(timeLeft)
+			break
+		}
+	}
+	if !synced {
+		_ = repo.System.RemoveSalt()
+		ctrl.getServerSalt()
+		return false
+	} else {
+		return true
+	}
+}
+
+func (ctrl *Controller) renewServerSaltAfter(duration time.Duration) {
+	c := time.After(duration)
+	select {
+	case <-c:
+		ctrl.CheckSalt()
 	}
 }
