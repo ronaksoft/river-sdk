@@ -273,53 +273,53 @@ func (RequestDelegateDummy) OnTimeout(err error) {
 	fmt.Println(err)
 }
 
-func (d *MainDelegateDummy) OnSearchComplete(b []byte) {
-	logs.Info("OnSearchComplete")
-	result := new(msg.ClientSearchResult)
-	err := result.Unmarshal(b)
-	if err != nil {
-		test.Error("error Unmarshal", zap.String("", err.Error()))
-		return
-	}
-	switch testCase {
-	case 1:
-		if len(result.Messages) > 0 {
-			if result.Messages[0].ID != 123 {
-				test.Error(fmt.Sprintf("expected msg ID 123, have %d", result.Messages[0].ID))
-			}
-		} else {
-			test.Error(fmt.Sprintf("expected msg ID 123, have not any"))
-		}
-
-		wg.Done()
-	case 2:
-		if len(result.Messages) > 0 {
-			test.Error(fmt.Sprintf("expected no messages"))
-		}
-		if len(result.MatchedUsers) > 0 {
-			if result.MatchedUsers[0].ID != 852 {
-				test.Error(fmt.Sprintf("expected user ID 852, have %d", result.Messages[0].ID))
-			}
-		} else {
-			test.Error(fmt.Sprintf("expected user ID 852, have nothing, %+v", result))
-		}
-		wg.Done()
-	case 3:
-		if len(result.Messages) > 0 {
-			test.Error(fmt.Sprintf("expected no messages"))
-		}
-		if len(result.MatchedUsers) > 0 {
-			if result.MatchedUsers[0].ID != 321 {
-				test.Error(fmt.Sprintf("expected user ID 321, have %d", result.Messages[0].ID))
-			}
-		} else {
-			test.Error(fmt.Sprintf("expected user ID 321, have nothing, %+v", result))
-		}
-		wg.Done()
-	case 4:
-		if len(result.Messages) > 0 || len(result.MatchedUsers) > 0 || len(result.MatchedGroups) > 0 {
-			test.Error(fmt.Sprintf("expected to found nothing but found %v", result))
-		}
-		wg.Done()
-	}
-}
+//func (d *MainDelegateDummy) OnSearchComplete(b []byte) {
+//	logs.Info("OnSearchComplete")
+//	result := new(msg.ClientSearchResult)
+//	err := result.Unmarshal(b)
+//	if err != nil {
+//		test.Error("error Unmarshal", zap.String("", err.Error()))
+//		return
+//	}
+//	switch testCase {
+//	case 1:
+//		if len(result.Messages) > 0 {
+//			if result.Messages[0].ID != 123 {
+//				test.Error(fmt.Sprintf("expected msg ID 123, have %d", result.Messages[0].ID))
+//			}
+//		} else {
+//			test.Error(fmt.Sprintf("expected msg ID 123, have not any"))
+//		}
+//
+//		wg.Done()
+//	case 2:
+//		if len(result.Messages) > 0 {
+//			test.Error(fmt.Sprintf("expected no messages"))
+//		}
+//		if len(result.MatchedUsers) > 0 {
+//			if result.MatchedUsers[0].ID != 852 {
+//				test.Error(fmt.Sprintf("expected user ID 852, have %d", result.Messages[0].ID))
+//			}
+//		} else {
+//			test.Error(fmt.Sprintf("expected user ID 852, have nothing, %+v", result))
+//		}
+//		wg.Done()
+//	case 3:
+//		if len(result.Messages) > 0 {
+//			test.Error(fmt.Sprintf("expected no messages"))
+//		}
+//		if len(result.MatchedUsers) > 0 {
+//			if result.MatchedUsers[0].ID != 321 {
+//				test.Error(fmt.Sprintf("expected user ID 321, have %d", result.Messages[0].ID))
+//			}
+//		} else {
+//			test.Error(fmt.Sprintf("expected user ID 321, have nothing, %+v", result))
+//		}
+//		wg.Done()
+//	case 4:
+//		if len(result.Messages) > 0 || len(result.MatchedUsers) > 0 || len(result.MatchedGroups) > 0 {
+//			test.Error(fmt.Sprintf("expected to found nothing but found %v", result))
+//		}
+//		wg.Done()
+//	}
+//}

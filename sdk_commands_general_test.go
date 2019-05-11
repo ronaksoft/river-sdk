@@ -89,6 +89,7 @@ func (searchGlobalDelegateDummy) OnComplete(b []byte) {
 		} else {
 			test.Error(fmt.Sprintf("expected msg ID 123, have not any"))
 		}
+		logs.Debug("Result", zap.Any("", result))
 
 		wg.Done()
 	case 2:
