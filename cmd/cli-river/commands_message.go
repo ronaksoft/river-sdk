@@ -283,8 +283,23 @@ var MessagesSearchText = &ishell.Cmd{
 	Name: "SearchText",
 	Func: func(c *ishell.Context) {
 		text := fnGetBody(c)
-		_SDK.SearchGlobal(text)
+		reqDelegate := new(ClearCacheResult)
+		_SDK.SearchGlobal(text, reqDelegate)
 	},
+}
+
+type ClearCacheResult struct {
+	SuccessConst int64
+}
+
+func (d *ClearCacheResult) OnComplete(b []byte) {
+
+
+
+	return
+}
+
+func (d *ClearCacheResult) OnTimeout(err error) {
 }
 
 func init() {

@@ -258,6 +258,30 @@ func (r *repoDialogs) UpdateNotifySetting(msg *msg.UpdateNotifySettings) error {
 	return r.db.Save(dtoDlg).Error
 }
 
+func (r *repoDialogs) UpdateDialogPinned(msg *msg.UpdateDialogPinned) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	if msg.Peer == nil {
+		return errors.New("Dialogs::UpdateDialogPinned() => msg.Peer is null")
+	}
+
+	logs.Debug("Dialogs::UpdateDialogPinned()",
+		zap.Bool("Pinned", msg.Pinned),
+		zap.Int64("PeerID", msg.Peer.ID),
+	)
+
+	dtoDlg := new(dto.Dialogs)
+	err := r.db.Where("PeerID = ? AND PeerType = ?", msg.Peer.ID, msg.Peer.Type).First(dtoDlg).Error
+	if err != nil {
+		logs.Error("Dialogs::UpdateDialogPinned()->fetch dialog entity", zap.Error(err))
+		return err
+	}
+	dtoDlg.Pinned = msg.Pinned
+
+	return r.db.Save(dtoDlg).Error
+}
+
 func (r *repoDialogs) UpdatePeerNotifySettings(peerID int64, peerType int32, notifySetting *msg.PeerNotifySettings) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()

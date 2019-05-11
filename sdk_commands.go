@@ -887,6 +887,33 @@ func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB
 
 }
 
+func (r *River) dialogTogglePin(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.MessagesToggleDialogPin)
+	if err := req.Unmarshal(in.Message); err != nil {
+		logs.Error("River::dialogTogglePin()-> Unmarshal()", zap.Error(err))
+		return
+	}
+
+	dialog := repo.Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
+	if dialog == nil {
+		logs.Debug("River::dialogTogglePin()-> GetDialog()",
+			zap.String("Error", "Dialog is null"),
+		)
+		return
+	}
+
+	dialog.Pinned = req.Pin
+	err := repo.Dialogs.SaveDialog(dialog, 0)
+	if err != nil {
+		logs.Error("River::dialogTogglePin()-> SaveDialog()", zap.Error(err))
+		return
+	}
+
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+
+}
+
 func (r *River) accountRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 
 	// send the request to server
