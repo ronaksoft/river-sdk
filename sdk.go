@@ -1001,9 +1001,9 @@ func (r *River) checkSalt() {
 func (r *River) getServerSalt() {
 	logs.Debug("SDK::getServerSalt started")
 	salts := new(msg.SystemSalts)
-	for i := 0 ; i < 48; i++ {
+	for i := 0; i < 48; i++ {
 		salt := new(msg.Salt)
-		t := time.Now().Unix()+r.networkCtrl.ClientTimeDifference() + (time.Minute).Nanoseconds() * int64(i)
+		t := time.Now().Unix() + r.networkCtrl.ClientTimeDifference() + (time.Minute).Nanoseconds()*int64(i)
 		salt.Value = t
 		salt.Timestamp = t
 		salts.Salts = append(salts.Salts, salt)
@@ -1015,8 +1015,6 @@ func (r *River) getServerSalt() {
 		)
 	}
 	return
-
-
 
 	serverSaltReq := new(msg.SystemGetSalts)
 	serverSaltReqBytes, _ := serverSaltReq.Marshal()
@@ -1035,7 +1033,7 @@ func (r *River) getServerSalt() {
 						logs.Error("onGetServerSalts()", zap.Error(err))
 						return
 					}
-					logs.Debug("River::SystemGetSalts())", zap.Any("salt from server", salt) )
+					logs.Debug("River::SystemGetSalts())", zap.Any("salt from server", salt))
 
 					err = repo.System.SaveSalt(salt)
 					if err != nil {
@@ -1060,32 +1058,38 @@ func (r *River) getServerSalt() {
 }
 
 func (r *River) updateSalt(salt msg.SystemSalts) bool {
-	fmt.Println(salt)
 	// sort ASC
 	var saltArray []*msg.Salt
+	saltMap := make(map[int64]*msg.Salt, len(salt.Salts))
 	for _, s := range salt.Salts {
 		saltArray = append(saltArray, s)
+		saltMap[s.Timestamp] = s
 	}
 	sort.Slice(saltArray, func(i, j int) bool {
 		return saltArray[i].Timestamp < saltArray[j].Timestamp
 	})
 	var synced = false
+
 	for i, s := range saltArray {
 		if time.Now().Unix()+r.networkCtrl.ClientTimeDifference() < s.Timestamp {
+			delete(saltMap, s.Timestamp)
 			continue
+		}
+		r.networkCtrl.SetServerSalt(s.Value)
+		filemanager.Ctx().SetServerSalt(s.Value)
+
+		if len(saltMap) < 12 {
+			go r.getServerSalt()
 		} else {
-			r.networkCtrl.SetServerSalt(s.Value)
-			filemanager.Ctx().SetServerSalt(s.Value)
-			salt.Salts = salt.Salts[i:]
-			if len(salt.Salts) < 12 {
-				go r.getServerSalt()
-			}
 			sysSalt := new(msg.SystemSalts)
-			sysSalt.Salts = &salt
+			for _, value := range saltMap {
+				sysSalt.Salts = append(sysSalt.Salts, value)
+			}
+			_ = repo.System.SaveSalt(sysSalt)
 			synced = true
 			// set timer to renew salt before it expires
 			nextTimeStamp := salt.Salts[i+1].Timestamp
-			timeLeft := time.Duration(nextTimeStamp - time.Now().Unix()+r.networkCtrl.ClientTimeDifference())
+			timeLeft := time.Duration(nextTimeStamp - time.Now().Unix() + r.networkCtrl.ClientTimeDifference())
 			go r.renewServerSaltAfter(timeLeft)
 			break
 		}
@@ -1102,7 +1106,7 @@ func (r *River) updateSalt(salt msg.SystemSalts) bool {
 func (r *River) renewServerSaltAfter(duration time.Duration) {
 	c := time.After(duration)
 	select {
-	case <- c:
+	case <-c:
 		r.checkSalt()
 	}
 }

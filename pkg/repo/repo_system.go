@@ -100,7 +100,7 @@ func (r *repoSystem) SaveString(keyName string, keyValue string) error {
 func (r *repoSystem) SaveSalt(serverSlats *msg.SystemSalts) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
+	logs.Info("repoSystem()::SaveSalt", zap.Int("salt length", len(serverSlats.Salts)))
 	dtoSalts := make([]dto.ServerSalt,0)
 	for _, salt := range serverSlats.Salts {
 		s := dto.ServerSalt{}
@@ -136,26 +136,19 @@ func (r *repoSystem) GetSalt() (salt msg.SystemSalts ,err error) {
 	if err != nil {
 		return salt, err
 	}
-
 	var dtoSalts []dto.ServerSalt
-
 	err = json.Unmarshal([]byte(s.Salt), &dtoSalts)
 	if err != nil {
 		logs.Warn("repoSalt()::GetSalt", zap.String("error", err.Error()))
 		return
 	}
-
-
-
 	for _, dtoSalt := range dtoSalts {
 		sysSalt := new(msg.Salt)
 		sysSalt.Value = dtoSalt.Salt
 		sysSalt.Timestamp = dtoSalt.Timestamp
 		salt.Salts = append(salt.Salts, sysSalt)
 	}
-
-	logs.Debug("repoSalt()::GetSalt", zap.Any("salt", salt))
-
+	logs.Debug("repoSalt()::GetSalt", zap.Any("salt", len(salt.Salts)))
 	return
 }
 
