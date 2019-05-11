@@ -3,7 +3,7 @@ package synchronizer
 import (
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/filemanager"
-	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -15,7 +15,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_queue"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"go.uber.org/zap"
@@ -74,6 +74,7 @@ func NewSyncController(config Config) *Controller {
 		msg.C_UpdateUserPhoto:             ctrl.updateUserPhoto,
 		msg.C_UpdateGroupPhoto:            ctrl.updateGroupPhoto,
 		msg.C_UpdateTooLong:               ctrl.updateTooLong,
+		msg.C_UpdateDialogPinned:          ctrl.updateDialogPinned,
 	}
 
 	ctrl.messageAppliers = map[int64]domain.MessageApplier{
