@@ -5,6 +5,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"sync"
 	"testing"
@@ -47,24 +48,83 @@ func TestRiver_SearchGlobal(t *testing.T) {
 	var ContactUser = "contactUser"
 	var groupTitle = "groupTitle"
 	createDataForSearchGlobal(nonContactWithDialogUser, nonContactWhitoutDialogUser, ContactUser, groupTitle)
+	searchDelegate := new(searchGlobalDelegateDummy)
 	tests := []struct {
 		name       string
 		searchText string
+		peerID     int64
 	}{
-		{"search message body", "information about"},
-		{"search contact name", ContactUser},
-		{"search non contact name who has dialog with user", nonContactWithDialogUser},
-		{"search non contact name who has NOT dialog with user", nonContactWhitoutDialogUser},
+		{"search message body", "information about", 0},
+		{"search contact name", ContactUser, 0},
+		{"search non contact name who has dialog with user", nonContactWithDialogUser, 0},
+		{"search non contact name who has NOT dialog with user", nonContactWhitoutDialogUser, 0},
 	}
 	wg = new(sync.WaitGroup)
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			wg.Add(1)
 			testCase = i + 1
-			_River.SearchGlobal(tt.searchText)
+			_River.SearchGlobal(tt.searchText, tt.peerID, searchDelegate )
 			wg.Wait()
 		})
 	}
+}
+
+type searchGlobalDelegateDummy struct {}
+
+func (searchGlobalDelegateDummy) OnComplete(b []byte) {
+	logs.Info("OnSearchComplete")
+	result := new(msg.ClientSearchResult)
+	err := result.Unmarshal(b)
+	if err != nil {
+		test.Error("error Unmarshal", zap.String("", err.Error()))
+		return
+	}
+	switch testCase {
+	case 1:
+		if len(result.Messages) > 0 {
+			if result.Messages[0].ID != 123 {
+				test.Error(fmt.Sprintf("expected msg ID 123, have %d", result.Messages[0].ID))
+			}
+		} else {
+			test.Error(fmt.Sprintf("expected msg ID 123, have not any"))
+		}
+
+		wg.Done()
+	case 2:
+		if len(result.Messages) > 0 {
+			test.Error(fmt.Sprintf("expected no messages"))
+		}
+		if len(result.MatchedUsers) > 0 {
+			if result.MatchedUsers[0].ID != 852 {
+				test.Error(fmt.Sprintf("expected user ID 852, have %d", result.Messages[0].ID))
+			}
+		} else {
+			test.Error(fmt.Sprintf("expected user ID 852, have nothing, %+v", result))
+		}
+		wg.Done()
+	case 3:
+		if len(result.Messages) > 0 {
+			test.Error(fmt.Sprintf("expected no messages"))
+		}
+		if len(result.MatchedUsers) > 0 {
+			if result.MatchedUsers[0].ID != 321 {
+				test.Error(fmt.Sprintf("expected user ID 321, have %d", result.Messages[0].ID))
+			}
+		} else {
+			test.Error(fmt.Sprintf("expected user ID 321, have nothing, %+v", result))
+		}
+		wg.Done()
+	case 4:
+		if len(result.Messages) > 0 || len(result.MatchedUsers) > 0 || len(result.MatchedGroups) > 0 {
+			test.Error(fmt.Sprintf("expected to found nothing but found %v", result))
+		}
+		wg.Done()
+	}
+}
+
+func (searchGlobalDelegateDummy) OnTimeout(err error) {
+	fmt.Println(err)
 }
 
 type dummyConInfoDelegate struct{}
