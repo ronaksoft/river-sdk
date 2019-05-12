@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/toolbox"
+	"git.ronaksoftware.com/snappfood-social/feeder/log"
 	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"
 )
@@ -288,18 +290,40 @@ var MessagesSearchText = &ishell.Cmd{
 	},
 }
 
+var MessagesGetDBMediaStatus= &ishell.Cmd {
+	Name: "GetDBMediaStatus",
+	Func: func(c *ishell.Context) {
+		reqDelegate := new(dbMediaDelegate)
+		_SDK.GetDBStatus(reqDelegate)
+	},
+}
+
+type dbMediaDelegate struct {}
+
+func (d *dbMediaDelegate ) OnComplete(b []byte) {
+
+}
+
+func (d *dbMediaDelegate ) OnTimeout(err error) {
+
+}
+
 type ClearCacheResult struct {
 	SuccessConst int64
 }
 
 func (d *ClearCacheResult) OnComplete(b []byte) {
-
-
-
+	res := new(msg.DBMediaInfo)
+	err := res.Unmarshal(b)
+	if err != nil {
+		_Log.Error(err.Error())
+	}
+	_Log.Debug(fmt.Sprintf("%+v", res))
 	return
 }
 
 func (d *ClearCacheResult) OnTimeout(err error) {
+	_log.Debug(err.Error())
 }
 
 func init() {
@@ -316,4 +340,5 @@ func init() {
 	Message.AddCmd(MessagesForward)
 	Message.AddCmd(MessagesReadContents)
 	Message.AddCmd(MessagesSearchText)
+	Message.AddCmd(MessagesGetDBMediaStatus)
 }

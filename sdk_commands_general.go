@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
+	"git.ronaksoftware.com/snappfood-social/feeder/log"
 	"os"
 	"strconv"
 	"strings"
@@ -1014,6 +1015,7 @@ func (r *River) GetDBStatus(delegate RequestDelegate) {
 		delegate.OnTimeout(err)
 		return
 	}
+	_log.Logger.Debug("peerMediaSizeMap", )
 	peerMediaInfo := make([]*msg.PeerMediaInfo, 0)
 	for peerID, mediaInfoMap := range peerMediaSizeMap {
 		mediaSize :=  make([]*msg.MediaSize, 0)
