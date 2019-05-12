@@ -1,6 +1,7 @@
 package synchronizer
 
 import (
+	"encoding/json"
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/filemanager"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
@@ -691,19 +692,19 @@ func (ctrl *Controller) CheckSalt() {
 				zap.String("Error", err.Error()),
 			)
 			ctrl.getServerSalt()
-			return
+			continue
 		}
-		sysSalts := new(msg.SystemSalts)
-		err = sysSalts.Unmarshal([]byte(saltString))
+		var sysSalts []domain.Slt
+		err = json.Unmarshal([]byte(saltString), &sysSalts) //sysSalts.Unmarshal()
 		if err != nil {
 			logs.Error("River::loadServerSalt() failed to unmarshal salt",
 				zap.String("Error", err.Error()),
 			)
 			ctrl.getServerSalt()
-			return
+			continue
 		}
 
-		if len(sysSalts.Salts) > 0 {
+		if len(sysSalts) > 0 {
 			if !ctrl.updateSalt(sysSalts) {
 				continue
 			} else {
@@ -737,8 +738,20 @@ func (ctrl *Controller) getServerSalt() {
 							zap.String("error", err.Error()),
 						)
 					}
-					logs.Debug("getServerSalt", zap.Any("Salts", s))
-					err = repo.System.SaveString(domain.ColumnSystemSalts, string(m.Message))
+					logs.Debug("getServerSalt", zap.Int("len server salts", len(s.Salts)))
+					d := time.Duration( s.Duration)
+					var saltArray []domain.Slt
+
+					for i , saltValue := range s.Salts {
+						slt := domain.Slt{}
+						t := s.StartsFrom + int64( d/time.Second) * int64(i)
+						slt.Timestamp = time.Unix(t, 0).Unix()
+						slt.Value = saltValue
+						saltArray = append(saltArray, slt)
+					}
+					b, _ := json.Marshal(saltArray)
+
+					err = repo.System.SaveString(domain.ColumnSystemSalts, string(b))
 					if err != nil {
 						logs.Debug("synchronizer::SystemGetSalts()",
 							zap.String("error", err.Error()),
@@ -757,41 +770,54 @@ func (ctrl *Controller) getServerSalt() {
 	}
 }
 
-func (ctrl *Controller) updateSalt(salt *msg.SystemSalts) bool {
+func (ctrl *Controller) updateSalt(salt []domain.Slt) bool {
+	logs.Debug("***updateSalt started***")
 	// sort ASC
-	var saltArray []*msg.Salt
-	saltMap := make(map[int64]*msg.Salt, len(salt.Salts))
-	for _, s := range salt.Salts {
+	var saltArray []domain.Slt
+	saltMap := make(map[int64]domain.Slt, len(salt))
+
+	for _, s := range salt {
 		saltArray = append(saltArray, s)
 		saltMap[s.Timestamp] = s
 	}
-	sort.Slice(saltArray, func(i, j int) bool {
-		return saltArray[i].Timestamp < saltArray[j].Timestamp
+	sort.Slice(salt, func(i, j int) bool {
+		return salt[i].Timestamp < salt[j].Timestamp
 	})
 	var synced = false
 
 	for i, s := range saltArray {
-		if time.Now().Unix()+ctrl.networkCtrl.ClientTimeDifference() < s.Timestamp {
+		now := time.Now().Unix()
+		diff := ctrl.networkCtrl.ClientTimeDifference()
+		logs.Debug("#################",
+			zap.Any("now", now),
+			zap.Any("diff", diff),
+			zap.Any("s.Timestamp", s.Timestamp),
+			zap.Any("time.Unix", time.Unix(now + diff, 0).Unix()),
+			)
+
+		if time.Unix(now + diff, 0).Unix() > s.Timestamp + int64(time.Hour / time.Second) {
+			logs.Debug("did not match", zap.Any("salt", saltArray))
 			delete(saltMap, s.Timestamp)
 			continue
 		}
 		ctrl.networkCtrl.SetServerSalt(s.Value)
 		filemanager.Ctx().SetServerSalt(s.Value)
-
+		logs.Debug("**********current salt************", zap.Int64("salt", s.Value))
 		if len(saltMap) < 12 {
 			go ctrl.getServerSalt()
 		} else {
-			sysSalt := new(msg.SystemSalts)
+			var sysSalt []domain.Slt
 			for _, value := range saltMap {
-				sysSalt.Salts = append(sysSalt.Salts, value)
+				sysSalt = append(sysSalt, value)
 			}
-
-			b, _ := sysSalt.Marshal()
+			logs.Debug("**********len salt************", zap.Int("salt", len(sysSalt)))
+			b, _ := json.Marshal(sysSalt)
 			_ = repo.System.SaveString(domain.ColumnSystemSalts, string(b))
 			synced = true
 			// set timer to renew salt before it expires
-			nextTimeStamp := salt.Salts[i+1].Timestamp
+			nextTimeStamp := saltArray[i+1].Timestamp  //salt.Salts[i+1].Timestamp
 			timeLeft := time.Duration(nextTimeStamp - time.Now().Unix() + ctrl.networkCtrl.ClientTimeDifference()) + time.Duration(time.Minute)
+			logs.Debug("###########time left###########", zap.Any("to next timestamp", timeLeft.Minutes()))
 			go ctrl.renewServerSaltAfter(timeLeft)
 			break
 		}
