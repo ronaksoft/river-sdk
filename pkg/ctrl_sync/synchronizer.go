@@ -791,7 +791,7 @@ func (ctrl *Controller) updateSalt(salt *msg.SystemSalts) bool {
 			synced = true
 			// set timer to renew salt before it expires
 			nextTimeStamp := salt.Salts[i+1].Timestamp
-			timeLeft := time.Duration(nextTimeStamp - time.Now().Unix() + ctrl.networkCtrl.ClientTimeDifference())
+			timeLeft := time.Duration(nextTimeStamp - time.Now().Unix() + ctrl.networkCtrl.ClientTimeDifference()) + time.Duration(time.Minute)
 			go ctrl.renewServerSaltAfter(timeLeft)
 			break
 		}
