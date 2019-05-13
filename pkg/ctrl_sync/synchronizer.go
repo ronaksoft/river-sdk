@@ -666,7 +666,7 @@ func extractMessagesMedia(messages ...*msg.UserMessage) {
 			mediaDoc := new(msg.MediaDocument)
 			err := mediaDoc.Unmarshal(m.Media)
 			if err != nil {
-				logs.Error("extractMessagesMedia()-> connot unmarshal MediaTypeDocument", zap.Error(err))
+				logs.Error("extractMessagesMedia()-> con not unmarshal MediaTypeDocument", zap.Error(err))
 				break
 			}
 			_ = repo.Files.SaveFileDocument(m, mediaDoc)
@@ -771,52 +771,38 @@ func (ctrl *Controller) getServerSalt() {
 }
 
 func (ctrl *Controller) updateSalt(salt []domain.Slt) bool {
-	logs.Debug("***updateSalt started***")
-	// sort ASC
+	logs.Debug("updateSalt started")
+	var synced = false
 	var saltArray []domain.Slt
-	//saltMap := make(map[int64]domain.Slt, len(salt))
 
 	for _, s := range salt {
 		saltArray = append(saltArray, s)
-		//saltMap[s.Timestamp] = s
 	}
+	// sort ASC
 	sort.Slice(salt, func(i, j int) bool {
 		return salt[i].Timestamp < salt[j].Timestamp
 	})
-	var synced = false
 
 	for i, s := range saltArray {
 		now := time.Now().Unix()
 		diff := ctrl.networkCtrl.ClientTimeDifference()
-		logs.Debug("#################",
-			zap.Any("now", now),
-			zap.Any("diff", diff),
-			zap.Any("s.Timestamp", s.Timestamp),
-			zap.Any("time.Unix", time.Unix(now + diff, 0).Unix()),
-			)
 
 		if time.Unix(now + diff, 0).Unix() > s.Timestamp + int64(time.Hour / time.Second) {
 			logs.Debug("did not match", zap.Any("salt", saltArray))
-			//delete(saltMap, s.Timestamp)
 			continue
 		}
 		ctrl.networkCtrl.SetServerSalt(s.Value)
 		filemanager.Ctx().SetServerSalt(s.Value)
-		logs.Debug("**********current salt************", zap.Int64("salt", s.Value))
-		if i > 12 {
+		if i > 24 {
 			go ctrl.getServerSalt()
 		} else {
-			//var sysSalt []domain.Slt
-			//for _, value := range saltMap {
-			//	sysSalt = append(sysSalt, value)
-			//}
 			b, _ := json.Marshal(saltArray)
 			_ = repo.System.SaveString(domain.ColumnSystemSalts, string(b))
 			synced = true
-			// set timer to renew salt before it expires
-			nextTimeStamp := saltArray[i+1].Timestamp  //salt.Salts[i+1].Timestamp
+			// set timer to renew salt
+			nextTimeStamp := saltArray[i+1].Timestamp
 			timeLeft := time.Duration(nextTimeStamp - time.Now().Unix() + ctrl.networkCtrl.ClientTimeDifference()) * time.Second
-			logs.Debug("###########time left###########", zap.Any("to next timestamp", timeLeft.String()))
+			logs.Debug("synchronizer", zap.Any("Renew Salt after", timeLeft.String()))
 			go ctrl.renewServerSaltAfter(timeLeft)
 			break
 		}

@@ -935,3 +935,7 @@ func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
 		logs.Error("SetScrollStatus::Failed to set scroll ID")
 	}
 }
+
+func (r *River) GetSDKSalt() int64 {
+	return r.networkCtrl.GetServerSalt()
+}

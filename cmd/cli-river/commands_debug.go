@@ -247,6 +247,13 @@ var GetGroupInputPeer = &ishell.Cmd{
 	},
 }
 
+var GetSDKSalt = &ishell.Cmd{
+	Name: "GetSDKSalt",
+	Func: func(c *ishell.Context) {
+		_SDK.GetSDKSalt()
+	},
+}
+
 var UpdateNewMessageHexString = &ishell.Cmd{
 	Name: "UpdateNewMessageHexString",
 	Func: func(c *ishell.Context) {
@@ -402,4 +409,5 @@ func init() {
 
 	Debug.AddCmd(MimeToExt)
 	Debug.AddCmd(PrintMessage)
+	Debug.AddCmd(GetSDKSalt)
 }

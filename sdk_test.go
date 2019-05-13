@@ -3,10 +3,13 @@ package riversdk
 import (
 	"encoding/json"
 	"fmt"
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -30,7 +33,93 @@ func (c *ConnInfoDelegates) SaveConnInfo(connInfo []byte) {
 	}
 }
 
-func init() {}
+func init() {
+	logs.Info("Creating New River SDK Instance")
+	r := new(River)
+	conInfo := new(RiverConnection)
+	conInfo.Delegate = new(dummyConInfoDelegate)
+	r.SetConfig(&RiverConfig{
+		DbPath:                 "./_data/",
+		DbID:                   "test",
+		ServerKeysFilePath:     "./keys.json",
+		ServerEndpoint:         "ws://test.river.im",
+		QueuePath:              fmt.Sprintf("%s/%s", "./_queue", "test"),
+		MainDelegate:           new(MainDelegateDummy),
+		Logger:                 nil,
+		LogLevel:               int(zapcore.DebugLevel),
+		DocumentAudioDirectory: "./_files/audio",
+		DocumentVideoDirectory: "./_files/video",
+		DocumentPhotoDirectory: "./_files/photo",
+		DocumentFileDirectory:  "./_files/file",
+		DocumentCacheDirectory: "./_files/cache",
+		DocumentLogDirectory:   "./_files/logs",
+		ConnInfo:               conInfo,
+	})
+	_River = r
+}
+
+func TestController_CheckSalt(t *testing.T) {
+	_ = repo.InitRepo("sqlite3", fmt.Sprintf("%s/%s.db", "./_data", "test"))
+	var saltArrays [][]domain.Slt
+	var saltArray []domain.Slt
+	ti := time.Now()
+	for i := 0; i < 48; i++ {
+		slt := domain.Slt{}
+		next := ti.Add(time.Hour * time.Duration(i))
+		slt.Timestamp = time.Unix(next.Unix(), 0).Unix()
+		slt.Value = ronak.RandomInt64(0)
+		if i == 0 {
+			slt.Value = 5555
+		}
+		saltArray = append(saltArray, slt)
+	}
+	saltArrays = append(saltArrays, saltArray)
+
+	var saltArray2 []domain.Slt
+	for i := 0; i < 48; i++ {
+		slt := domain.Slt{}
+		next := ti.Add(time.Hour * time.Duration(i*48))
+		slt.Timestamp = time.Unix(next.Unix(), 0).Unix()
+		slt.Value = ronak.RandomInt64(0)
+		saltArray2 = append(saltArray2, slt)
+	}
+	saltArrays = append(saltArrays, saltArray2)
+	tests := []struct {
+		name  string
+		salts []domain.Slt
+	}{
+		{"test1", saltArrays[0]},
+		{"test2", saltArrays[1]},
+	}
+	for i, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b, _ := json.Marshal(tt.salts)
+			err := repo.System.SaveString(domain.ColumnSystemSalts, string(b))
+			if err != nil {
+				logs.Debug("synchronizer::SystemGetSalts()",
+					zap.String("error", err.Error()),
+				)
+			}
+			time.Sleep(time.Millisecond * 600)
+			_River.syncCtrl.CheckSalt()
+			salt := _River.GetSDKSalt()
+			if i == 0 {
+				if salt != 5555 {
+					t.Error(fmt.Sprintf("expecting 5555, have %d", salt))
+				}
+			}
+			if i == 1 {
+				logs.Debug("salt::()",
+					zap.Int64("salt", salt),
+				)
+			}
+		})
+	}
+}
+
+type dummyConInfoDelegate struct{}
+
+func (c *dummyConInfoDelegate) SaveConnInfo(connInfo []byte) {}
 
 func TestGetWorkGroup(t *testing.T) {
 	b, err := GetWorkGroup("ws://alaki.river.im", 5)
@@ -87,7 +176,6 @@ func TestReconnect(t *testing.T) {
 		logs.Info("AuthKey Created.")
 	}
 
-
 	time.Sleep(10 * time.Second)
 	r.Stop()
 	r.ResetAuthKey()
@@ -112,7 +200,7 @@ func TestReconnect(t *testing.T) {
 		ServerKeysFilePath: "./keys.json",
 		ServerEndpoint:     "ws://test.river.im",
 		ConnInfo:           conInfo,
-		LogLevel: -1,
+		LogLevel:           -1,
 	})
 	r.Start()
 	for r.ConnInfo.AuthID == 0 {
@@ -152,7 +240,6 @@ func TestNewRiver(t *testing.T) {
 		ConnInfo:           conInfo,
 	})
 
-
 	r.Start()
 	if r.ConnInfo.AuthID == 0 {
 		logs.Info("AuthKey has not been created yet.")
@@ -164,9 +251,9 @@ func TestNewRiver(t *testing.T) {
 	}
 
 	updateGetState := new(msg.UpdateGetState)
-	b,_ := updateGetState.Marshal()
+	b, _ := updateGetState.Marshal()
 
-	for i := 0;i < 10 ;i++ {
+	for i := 0; i < 10; i++ {
 		reqID, err := r.ExecuteCommand(msg.C_UpdateGetState, b, new(RequestDelegateDummy), true, true)
 		if err != nil {
 			t.Error(reqID, ":::", err)
@@ -262,8 +349,7 @@ func (d *MainDelegateDummy) OnDownloadError(messageID, requestID int64, filePath
 	)
 }
 
-
-type RequestDelegateDummy struct {}
+type RequestDelegateDummy struct{}
 
 func (RequestDelegateDummy) OnComplete(b []byte) {
 	fmt.Println(b)

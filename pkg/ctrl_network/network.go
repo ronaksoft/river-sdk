@@ -637,3 +637,7 @@ func (ctrl *Controller) SetServerSalt(salt int64) {
 func (ctrl *Controller) ClientTimeDifference() int64 {
 	return ctrl.clientTimeDifference
 }
+
+func (ctrl *Controller) GetServerSalt()  int64{
+	return ctrl.salt
+}
