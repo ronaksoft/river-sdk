@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"sync"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/supernumerary"
@@ -46,6 +47,7 @@ var cmdUpdateNodes = &ishell.Cmd{
 		}
 	},
 }
+
 var cmdUpdatePhoneRange = &ishell.Cmd{
 	Name: "UpdatePhoneRange",
 	Func: func(c *ishell.Context) {
@@ -64,23 +66,30 @@ var cmdUpdatePhoneRange = &ishell.Cmd{
 		phoneRange := totalPhone / totalNodes
 		rangeRemaining := totalPhone % totalNodes
 		idx := int32(0)
+		c.Println("Please wait to health check all the nodes.")
+		waitGroup := sync.WaitGroup{}
+		waitGroup.Add(len(instanceIDs))
 		for _, instanceID := range instanceIDs {
 			startPhone := idx * phoneRange
 			endPhone := startPhone + phoneRange
 			if idx == totalNodes-1 {
 				endPhone += rangeRemaining
 			}
-			cfg := config.PhoneRangeCfg{
-				StartPhone: int64(startPhone),
-				EndPhone:   int64(endPhone),
-			}
-			d, _ := json.Marshal(cfg)
-			_, err := _NATS.Request(fmt.Sprintf("%s.%s", instanceID, config.SubjectPhoneRange), d, time.Second*10)
-			_Log.Warn("Error On UpdatePhoneRange",
-				zap.Error(err),
-			)
+			go func(startPhone, endPhone int64 ) {
+				defer waitGroup.Done()
+				cfg := config.PhoneRangeCfg{
+					StartPhone: startPhone,
+					EndPhone:   endPhone,
+				}
+				d, _ := json.Marshal(cfg)
+				_, err := _NATS.Request(fmt.Sprintf("%s.%s", instanceID, config.SubjectPhoneRange), d, time.Second*10)
+				_Log.Warn("Error On UpdatePhoneRange",
+					zap.Error(err),
+				)
+			}(int64(startPhone),int64(endPhone) )
 			idx++
 		}
+		waitGroup.Wait()
 
 	},
 }
