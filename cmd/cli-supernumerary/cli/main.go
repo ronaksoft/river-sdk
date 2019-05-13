@@ -43,35 +43,33 @@ func main() {
 	cfg.Level = _LogLevel
 	_Log, _ = cfg.Build()
 
-	for {
-		_Shell.Print("NATS URL (nats://localhost:4222):")
-		natsURL := _Shell.ReadLine()
-		if natsURL == "" {
-			natsURL = "nats://localhost:4222"
-		}
-		if natsClient, err := nats.Connect(natsURL); err != nil {
-			_Shell.Println("Error : " + err.Error())
-		} else {
-			_NATS = natsClient
-			break
-		}
-		_, err := _NATS.Subscribe(config.SubjectCommander, func(msg *nats.Msg) {
-			cmd := config.NodeRegisterCmd{}
-			err := json.Unmarshal(msg.Data, &cmd)
-			if err != nil {
-				_Log.Warn("Error On Received NATS Message",
-					zap.Error(err),
-				)
-				return
-			}
-			_NodesLock.Lock()
-			_Nodes[cmd.InstanceID] = struct{}{}
-			_NodesLock.Unlock()
+	_Shell.Print("NATS URL (nats://localhost:4222):")
+	natsURL := _Shell.ReadLine()
+	if natsURL == "" {
+		natsURL = "nats://localhost:4222"
+	}
+	if natsClient, err := nats.Connect(natsURL); err != nil {
+		_Shell.Println("Error : " + err.Error())
+	} else {
+		_NATS = natsClient
+	}
 
-		})
+	_, err := _NATS.Subscribe(config.SubjectCommander, func(msg *nats.Msg) {
+		cmd := config.NodeRegisterCmd{}
+		err := json.Unmarshal(msg.Data, &cmd)
 		if err != nil {
-			_Log.Fatal(err.Error())
+			_Log.Warn("Error On Received NATS Message",
+				zap.Error(err),
+			)
+			return
 		}
+		_NodesLock.Lock()
+		_Nodes[cmd.InstanceID] = struct{}{}
+		_NodesLock.Unlock()
+
+	})
+	if err != nil {
+		_Log.Fatal(err.Error())
 	}
 
 	_Shell.Run()
