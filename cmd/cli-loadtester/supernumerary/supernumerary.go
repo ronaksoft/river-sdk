@@ -135,10 +135,8 @@ func (s *Supernumerary) Login() {
 // SetTickerApplier try to invoke certain action for all actors repeatedly
 func (s *Supernumerary) SetTickerApplier(duration time.Duration, action TickerAction) {
 	if s.ticker != nil {
-		logs.Debug("SetTickerApplier() send ticker stop signal")
 		s.chTickerStop <- true
 		s.ticker.Stop()
-		logs.Debug("SetTickerApplier() ticker stopped")
 	}
 	s.ticker = time.NewTicker(duration)
 	go s.tickerApplier(action)

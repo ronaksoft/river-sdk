@@ -7,9 +7,8 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/controller"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/logs"
-	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/report"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
-	ishell "gopkg.in/abiosoft/ishell.v2"
+	"gopkg.in/abiosoft/ishell.v2"
 )
 
 func fnStartPhone(c *ishell.Context) int64 {
@@ -81,25 +80,6 @@ func fnPrintReports(elapsed time.Duration) {
 
 	fmt.Println(_Reporter.String())
 	fmt.Printf("Failed Requests :\n%s", shared.PrintFailedRequest())
-
-	rpt := report.NewPcapReport()
-	requsetList := controller.GetLoggedSentPackets()
-	for _, p := range requsetList {
-		err := rpt.FeedPacket(p, false)
-		if err != nil {
-			fmt.Println("rpt.FeedPacket(p, requests) :", err)
-		}
-	}
-
-	responseList := controller.GetLoggedReceivedPackets()
-	n := len(responseList)
-	for i := 0; i < n; i++ {
-		err := rpt.FeedPacket(responseList[i], true)
-		if err != nil {
-			fmt.Println("rpt.FeedPacket(p, reponses) :", err)
-		}
-	}
-	fmt.Println(rpt.String())
 }
 
 func fnGetDuration(c *ishell.Context) time.Duration {
