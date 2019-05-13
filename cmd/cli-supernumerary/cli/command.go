@@ -37,14 +37,21 @@ var cmdUpdateNodes = &ishell.Cmd{
 		}
 		_NodesLock.RUnlock()
 
+		waitGroup := sync.WaitGroup{}
+		waitGroup.Add(len(instanceIDs))
 		for _, instanceID := range instanceIDs {
-			_, err := _NATS.Request(fmt.Sprintf("%s.%s", instanceID, config.SubjectHealthCheck), []byte("HEALTH_CHECK"), 5 * time.Second)
-			if err != nil {
-				_NodesLock.Lock()
-				delete(_Nodes, instanceID)
-				_NodesLock.Unlock()
-			}
+			go func() {
+				defer waitGroup.Done()
+				_, err := _NATS.Request(fmt.Sprintf("%s.%s", instanceID, config.SubjectHealthCheck), []byte("HEALTH_CHECK"), 5 * time.Second)
+				if err != nil {
+					_NodesLock.Lock()
+					delete(_Nodes, instanceID)
+					_NodesLock.Unlock()
+				}
+
+			}()
 		}
+		waitGroup.Wait()
 	},
 }
 
@@ -61,7 +68,6 @@ var cmdUpdatePhoneRange = &ishell.Cmd{
 			instanceIDs = append(instanceIDs, instanceID)
 		}
 		_NodesLock.RUnlock()
-
 
 		phoneRange := totalPhone / totalNodes
 		rangeRemaining := totalPhone % totalNodes
