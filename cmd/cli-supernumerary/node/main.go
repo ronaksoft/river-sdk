@@ -45,7 +45,7 @@ func main() {
 	// Run metrics
 	go shared.Metrics.Run(2374)
 
-	n, err := NewNode(cfg)
+	_, err = NewNode(cfg)
 	if err != nil {
 		panic(err)
 	}
