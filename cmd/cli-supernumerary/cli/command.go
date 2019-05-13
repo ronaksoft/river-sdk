@@ -81,7 +81,7 @@ var cmdUpdatePhoneRange = &ishell.Cmd{
 			if idx == totalNodes-1 {
 				endPhone += rangeRemaining
 			}
-			go func(startPhone, endPhone int64 ) {
+			go func(instanceID string, startPhone, endPhone int64 ) {
 				defer waitGroup.Done()
 				cfg := config.PhoneRangeCfg{
 					StartPhone: startPhone,
@@ -94,7 +94,8 @@ var cmdUpdatePhoneRange = &ishell.Cmd{
 						zap.Error(err),
 					)
 				}
-			}(int64(startPhone),int64(endPhone) )
+				c.Println(instanceID, startPhone, endPhone)
+			}(instanceID, int64(startPhone),int64(endPhone) )
 			idx++
 		}
 		waitGroup.Wait()
