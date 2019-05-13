@@ -492,7 +492,7 @@ func (ctrl *Controller) MessageHandler(messages []*msg.MessageEnvelope) {
 			err := new(msg.Error)
 			_ = err.Unmarshal(m.Message)
 			if err.Code == msg.ErrItemSalt && err.Items == msg.ErrCodeInvalid {
-				ctrl.getServerSalt()
+				ctrl.CheckSalt()
 			}
 			logs.Error("MessageHandler() Received Error ", zap.String("Code", err.Code), zap.String("Item", err.Items))
 		}
@@ -774,11 +774,11 @@ func (ctrl *Controller) updateSalt(salt []domain.Slt) bool {
 	logs.Debug("***updateSalt started***")
 	// sort ASC
 	var saltArray []domain.Slt
-	saltMap := make(map[int64]domain.Slt, len(salt))
+	//saltMap := make(map[int64]domain.Slt, len(salt))
 
 	for _, s := range salt {
 		saltArray = append(saltArray, s)
-		saltMap[s.Timestamp] = s
+		//saltMap[s.Timestamp] = s
 	}
 	sort.Slice(salt, func(i, j int) bool {
 		return salt[i].Timestamp < salt[j].Timestamp
@@ -797,27 +797,26 @@ func (ctrl *Controller) updateSalt(salt []domain.Slt) bool {
 
 		if time.Unix(now + diff, 0).Unix() > s.Timestamp + int64(time.Hour / time.Second) {
 			logs.Debug("did not match", zap.Any("salt", saltArray))
-			delete(saltMap, s.Timestamp)
+			//delete(saltMap, s.Timestamp)
 			continue
 		}
 		ctrl.networkCtrl.SetServerSalt(s.Value)
 		filemanager.Ctx().SetServerSalt(s.Value)
 		logs.Debug("**********current salt************", zap.Int64("salt", s.Value))
-		if len(saltMap) < 12 {
+		if i > 12 {
 			go ctrl.getServerSalt()
 		} else {
-			var sysSalt []domain.Slt
-			for _, value := range saltMap {
-				sysSalt = append(sysSalt, value)
-			}
-			logs.Debug("**********len salt************", zap.Int("salt", len(sysSalt)))
-			b, _ := json.Marshal(sysSalt)
+			//var sysSalt []domain.Slt
+			//for _, value := range saltMap {
+			//	sysSalt = append(sysSalt, value)
+			//}
+			b, _ := json.Marshal(saltArray)
 			_ = repo.System.SaveString(domain.ColumnSystemSalts, string(b))
 			synced = true
 			// set timer to renew salt before it expires
 			nextTimeStamp := saltArray[i+1].Timestamp  //salt.Salts[i+1].Timestamp
-			timeLeft := time.Duration(nextTimeStamp - time.Now().Unix() + ctrl.networkCtrl.ClientTimeDifference()) + time.Duration(time.Minute)
-			logs.Debug("###########time left###########", zap.Any("to next timestamp", timeLeft.Minutes()))
+			timeLeft := time.Duration(nextTimeStamp - time.Now().Unix() + ctrl.networkCtrl.ClientTimeDifference()) * time.Second
+			logs.Debug("###########time left###########", zap.Any("to next timestamp", timeLeft.String()))
 			go ctrl.renewServerSaltAfter(timeLeft)
 			break
 		}
