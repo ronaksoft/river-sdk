@@ -32,10 +32,16 @@ var cmdUpdatePhoneRange = &ishell.Cmd{
 
 		_NodesLock.RLock()
 		totalNodes := int32(len(_Nodes))
+		instanceIDs := make([]string, 0, totalNodes)
+		for instanceID := range _Nodes {
+			instanceIDs = append(instanceIDs, instanceID)
+		}
+		_NodesLock.RUnlock()
+
 		phoneRange := totalPhone / totalNodes
 		rangeRemaining := totalPhone % totalNodes
 		idx := int32(0)
-		for instanceID := range _Nodes {
+		for instanceID := range instanceIDs {
 			startPhone := idx * phoneRange
 			endPhone := startPhone + phoneRange
 			if idx == totalNodes-1 {
@@ -52,7 +58,6 @@ var cmdUpdatePhoneRange = &ishell.Cmd{
 			)
 			idx++
 		}
-		_NodesLock.RUnlock()
 
 	},
 }

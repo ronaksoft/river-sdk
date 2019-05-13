@@ -29,11 +29,11 @@ func NewNode(cfg *config.NodeConfig) (*Node, error) {
 		su:     nil,
 		subs:   make(map[string]*nats.Subscription),
 	}
-	nats, err := nats.Connect(cfg.NatsURL)
+	natsClient, err := nats.Connect(cfg.NatsURL)
 	if err != nil {
 		return nil, err
 	}
-	n.natsClient = nats
+	n.natsClient = natsClient
 
 	err = n.RegisterSubscription()
 	if err != nil {
@@ -46,7 +46,7 @@ func NewNode(cfg *config.NodeConfig) (*Node, error) {
 		}
 		cmdBytes, _ := json.Marshal(cmd)
 		for {
-			_ = nats.Publish(config.SubjectCommander, cmdBytes)
+			_ = natsClient.Publish(config.SubjectCommander, cmdBytes)
 			time.Sleep(10 * time.Second)
 		}
 	}()
@@ -152,6 +152,7 @@ func (n *Node) cbPhoneRange(msg *nats.Msg) {
 	}
 	n.StartPhone = cfg.StartPhone
 	n.EndPhone = cfg.EndPhone
+	_ = n.natsClient.Publish(msg.Reply, []byte("OK"))
 }
 
 // RegisterSubscription subscribe subjects
