@@ -298,15 +298,19 @@ var MessagesGetDBMediaStatus= &ishell.Cmd {
 	},
 }
 
+
 type dbMediaDelegate struct {}
 
 func (d *dbMediaDelegate ) OnComplete(b []byte) {
-
+	res := msg.DBMediaInfo{}
+	err := res.Unmarshal(b)
+	if err != nil {
+		_Log.Warn(err.Error())
+	}
+	_Log.Debug("GetDBMediaStatus::OnComplete", zap.Any("DBMediaInfo", fmt.Sprintf("%+v", res)))
 }
 
-func (d *dbMediaDelegate ) OnTimeout(err error) {
-
-}
+func (d *dbMediaDelegate ) OnTimeout(err error) {}
 
 type ClearCacheResult struct {
 	SuccessConst int64
@@ -326,6 +330,17 @@ func (d *ClearCacheResult) OnTimeout(err error) {
 	_log.Debug(err.Error())
 }
 
+var MessagesClearMedia= &ishell.Cmd {
+	Name: "ClearMedia",
+	Func: func(c *ishell.Context) {
+		peerId := fnGetPeerID(c)
+		all := fnClearAll(c)
+		mediaType := fnGetMediaTypes(c)
+		status := _SDK.ClearCache(peerId, mediaType, all)
+		_Log.Debug("MessagesClearMedia::status", zap.Bool("", status))
+	},
+}
+
 func init() {
 	Message.AddCmd(MessageGetDialogs)
 	Message.AddCmd(MessageGetDialog)
@@ -341,4 +356,5 @@ func init() {
 	Message.AddCmd(MessagesReadContents)
 	Message.AddCmd(MessagesSearchText)
 	Message.AddCmd(MessagesGetDBMediaStatus)
+	Message.AddCmd(MessagesClearMedia)
 }

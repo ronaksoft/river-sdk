@@ -746,3 +746,24 @@ func fnGetMediaType(c *ishell.Context) domain.SharedMediaType {
 	}
 	return mediaType
 }
+
+func fnGetMediaTypes(c *ishell.Context) string {
+	c.Print("Insert Media Types comma separated: Audio 1, Video 2, Photo 3, File 4, Animated 5")
+	t := c.ReadLine()
+	return t
+}
+
+func fnClearAll(c *ishell.Context) bool {
+	del := false
+	for {
+		c.Print("clear all? : (0 = false , >=1 : true)")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		if err == nil {
+			del = id > 0
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return del
+}
