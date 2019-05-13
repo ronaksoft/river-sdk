@@ -39,11 +39,10 @@ func main() {
 		zap.String("BundleID", cfg.BundleID),
 		zap.String("InstanceID", cfg.InstanceID),
 		zap.String("NatsURL", cfg.NatsURL),
-		zap.Int64("StartPhone", cfg.StartPhone),
-		zap.Int64("EndPhone", cfg.EndPhone),
 	)
 
 	shared.InitMetrics(cfg.BundleID, cfg.InstanceID)
+
 	// Run metrics
 	go shared.Metrics.Run(2374)
 

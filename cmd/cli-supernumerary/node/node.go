@@ -2,8 +2,9 @@ package main
 
 import (
 	"encoding/json"
-
+	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
+	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/supernumerary"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/config"
@@ -13,10 +14,12 @@ import (
 
 // Node supernumerary client
 type Node struct {
-	Config *config.NodeConfig
-	su     *supernumerary.Supernumerary
-	nats   *nats.Conn
-	subs   map[string]*nats.Subscription
+	Config     *config.NodeConfig
+	su         *supernumerary.Supernumerary
+	nats       *nats.Conn
+	subs       map[string]*nats.Subscription
+	StartPhone int64
+	EndPhone   int64
 }
 
 // NewNode create supernumerary new client
@@ -35,6 +38,17 @@ func NewNode(cfg *config.NodeConfig) (*Node, error) {
 	err = n.RegisterSubscription()
 	if err != nil {
 		return nil, err
+	}
+
+	cmd := config.NodeRegisterCmd{
+		InstanceID: cfg.InstanceID,
+	}
+	cmdBytes, _ := json.Marshal(cmd)
+	for {
+		_, err := nats.Request(config.SubjectCommander, cmdBytes, time.Second * 10)
+		if err == nil {
+			break
+		}
 	}
 
 	return n, nil
@@ -62,7 +76,7 @@ func (n *Node) cbStart(msg *nats.Msg) {
 	shared.DefaultTimeout = cfg.Timeout
 	shared.DefaultSendTimeout = cfg.Timeout
 
-	su, err := supernumerary.NewSupernumerary(n.Config.StartPhone, n.Config.EndPhone)
+	su, err := supernumerary.NewSupernumerary(n.StartPhone, n.EndPhone)
 	if err != nil {
 		_Log.Error("cbStart()", zap.Error(err))
 	}
@@ -102,7 +116,6 @@ func (n *Node) cbLogin(msg *nats.Msg) {
 
 func (n *Node) cbRegister(msg *nats.Msg) {
 	_Log.Info("cbRegister()")
-
 	if n.su == nil {
 		_Log.Error("cbRegister() supernumerary not initialized")
 		return
@@ -126,47 +139,67 @@ func (n *Node) cbTicker(msg *nats.Msg) {
 	}
 
 	n.su.SetTickerApplier(cfg.Duration, cfg.Action)
+}
 
+func (n *Node) cbPhoneRange(msg *nats.Msg) {
+	_Log.Info("cbPhoneRange()")
+	if n.su == nil {
+		_Log.Error("cbPhoneRange() supernumerary not initialized")
+		return
+	}
+	cfg := config.PhoneRangeCfg{}
+	err := json.Unmarshal(msg.Data, &cfg)
+	if err != nil {
+		_Log.Error("cbPhoneRange() failed to unmarshal", zap.Error(err))
+		return
+	}
+	n.StartPhone = cfg.StartPhone
+	n.EndPhone = cfg.EndPhone
 }
 
 // RegisterSubscription subscribe subjects
 func (n *Node) RegisterSubscription() error {
-	subStart, err := n.nats.Subscribe(config.SUBJECT_START, n.cbStart)
+	subStart, err := n.nats.Subscribe(config.SubjectStart, n.cbStart)
 	if err != nil {
 		return err
 	}
-	n.subs[config.SUBJECT_START] = subStart
+	n.subs[config.SubjectStart] = subStart
 
-	subStop, err := n.nats.Subscribe(config.SUBJECT_STOP, n.cbStop)
+	subStop, err := n.nats.Subscribe(config.SubjectStop, n.cbStop)
 	if err != nil {
 		return err
 	}
-	n.subs[config.SUBJECT_STOP] = subStop
+	n.subs[config.SubjectStop] = subStop
 
-	subCreateAuthKey, err := n.nats.Subscribe(config.SUBJECT_CREATEAUTHKEY, n.cbCreateAuthKey)
+	subCreateAuthKey, err := n.nats.Subscribe(config.SubjectCreateAuthKey, n.cbCreateAuthKey)
 	if err != nil {
 		return err
 	}
-	n.subs[config.SUBJECT_CREATEAUTHKEY] = subCreateAuthKey
+	n.subs[config.SubjectCreateAuthKey] = subCreateAuthKey
 
-	subLogin, err := n.nats.Subscribe(config.SUBJECT_LOGIN, n.cbLogin)
+	subLogin, err := n.nats.Subscribe(config.SubjectLogin, n.cbLogin)
 	if err != nil {
 		return err
 	}
-	n.subs[config.SUBJECT_LOGIN] = subLogin
+	n.subs[config.SubjectLogin] = subLogin
 
-	subRegister, err := n.nats.Subscribe(config.SUBJECT_RIGISTER, n.cbRegister)
+	subRegister, err := n.nats.Subscribe(config.SubjectRegister, n.cbRegister)
 	if err != nil {
 		return err
 	}
-	n.subs[config.SUBJECT_RIGISTER] = subRegister
+	n.subs[config.SubjectRegister] = subRegister
 
-	subTicker, err := n.nats.Subscribe(config.SUBJECT_TICKER, n.cbTicker)
+	subTicker, err := n.nats.Subscribe(config.SubjectTicker, n.cbTicker)
 	if err != nil {
 		return err
 	}
-	n.subs[config.SUBJECT_TICKER] = subTicker
+	n.subs[config.SubjectTicker] = subTicker
 
+	subPhoneRange, err := n.nats.Subscribe(fmt.Sprintf("%s.%s", n.Config.InstanceID, config.SubjectPhoneRange), n.cbPhoneRange)
+	if err != nil {
+		return err
+	}
+	n.subs[fmt.Sprintf("%s.%s", n.Config.InstanceID, config.SubjectPhoneRange)] = subPhoneRange
 	return nil
 }
 

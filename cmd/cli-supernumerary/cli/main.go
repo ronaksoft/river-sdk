@@ -1,19 +1,25 @@
 package main
 
 import (
+	"encoding/json"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/config"
 	"github.com/nats-io/go-nats"
 	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"
+	"sync"
 )
 
 var (
-	_Shell    *ishell.Shell
-	_NATS     *nats.Conn
-	_Log      *zap.Logger
-	_LogLevel zap.AtomicLevel
+	_Shell     *ishell.Shell
+	_NATS      *nats.Conn
+	_Nodes     map[string]struct{}
+	_NodesLock sync.RWMutex
+	_Log       *zap.Logger
+	_LogLevel  zap.AtomicLevel
 )
 
 func init() {
+	_Nodes = make(map[string]struct{})
 
 	// Initialize Shell
 	_Shell = ishell.New()
@@ -21,6 +27,8 @@ func init() {
 	_Shell.Println("## River Supernumerary Console ##")
 	_Shell.Println("=================================")
 
+	_Shell.AddCmd(cmdListNodes)
+	_Shell.AddCmd(cmdUpdatePhoneRange)
 	_Shell.AddCmd(cmdStart)
 	_Shell.AddCmd(cmdStop)
 	_Shell.AddCmd(cmdCreateAuthKey)
@@ -41,12 +49,28 @@ func main() {
 		if natsURL == "" {
 			natsURL = "nats://localhost:4222"
 		}
-		nats, err := nats.Connect(natsURL)
-		if err != nil {
+		if natsClient, err := nats.Connect(natsURL); err != nil {
 			_Shell.Println("Error : " + err.Error())
 		} else {
-			_NATS = nats
+			_NATS = natsClient
 			break
+		}
+		_, err := _NATS.Subscribe(config.SubjectCommander, func(msg *nats.Msg) {
+			cmd := config.NodeRegisterCmd{}
+			err := json.Unmarshal(msg.Data, &cmd)
+			if err != nil {
+				_Log.Warn("Error On Received NATS Message",
+					zap.Error(err),
+				)
+				return
+			}
+			_NodesLock.Lock()
+			_Nodes[cmd.InstanceID] = struct{}{}
+			_NodesLock.Unlock()
+
+		})
+		if err != nil {
+			_Log.Fatal(err.Error())
 		}
 	}
 
