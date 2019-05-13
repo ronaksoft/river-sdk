@@ -34,3 +34,4 @@ deploy:supernumerary-node:
     - cd ./cmd/cli-supernumerary/node
     - docker build --pull -t $CI_REGISTRY_IMAGE/supernumerary:$IMAGE_TAG .
     - docker push $CI_REGISTRY_IMAGE/supernumerary:$IMAGE_TAG
+    - echo $CI_REGISTRY_IMAGE
