@@ -11,7 +11,7 @@ import (
 
 // NodeConfig environment variables  to configs each docker container
 type NodeConfig struct {
-	BoundleID  string
+	BundleID   string
 	InstanceID string
 	NatsURL    string
 	StartPhone int64
@@ -21,7 +21,7 @@ type NodeConfig struct {
 // NewNodeConfig reads environment variables
 func NewNodeConfig() (*NodeConfig, error) {
 	cfg := &NodeConfig{
-		BoundleID:  os.Getenv(ENV_BOUNDLE_ID),
+		BundleID:   os.Getenv(ENV_BOUNDLE_ID),
 		InstanceID: os.Getenv(ENV_INSTANCE_ID),
 		NatsURL:    os.Getenv(ENV_NATS_URL),
 		StartPhone: 0,
@@ -29,7 +29,7 @@ func NewNodeConfig() (*NodeConfig, error) {
 	}
 
 	if cfg.NatsURL == "" {
-		return nil, errors.New("Invalid NATS endpoint")
+		return nil, errors.New("invalid nats endpoint")
 	}
 	// startPhone
 	s := os.Getenv(ENV_START_PHONE)

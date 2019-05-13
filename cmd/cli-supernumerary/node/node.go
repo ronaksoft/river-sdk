@@ -32,7 +32,7 @@ func NewNode(cfg *config.NodeConfig) (*Node, error) {
 	}
 	n.nats = nats
 
-	err = n.RegisterSubscribtion()
+	err = n.RegisterSubscription()
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,6 @@ func (n *Node) cbRegister(msg *nats.Msg) {
 }
 
 func (n *Node) cbTicker(msg *nats.Msg) {
-
 	if n.su == nil {
 		_Log.Error("cbTicker() supernumerary not initialized")
 		return
@@ -130,8 +129,8 @@ func (n *Node) cbTicker(msg *nats.Msg) {
 
 }
 
-// RegisterSubscribtion subscribe subjects
-func (n *Node) RegisterSubscribtion() error {
+// RegisterSubscription subscribe subjects
+func (n *Node) RegisterSubscription() error {
 	subStart, err := n.nats.Subscribe(config.SUBJECT_START, n.cbStart)
 	if err != nil {
 		return err

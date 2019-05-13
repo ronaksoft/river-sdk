@@ -36,14 +36,14 @@ func main() {
 		panic(err)
 	}
 	_Log.Info("Config",
-		zap.String("BoundleID", cfg.BoundleID),
+		zap.String("BundleID", cfg.BundleID),
 		zap.String("InstanceID", cfg.InstanceID),
 		zap.String("NatsURL", cfg.NatsURL),
 		zap.Int64("StartPhone", cfg.StartPhone),
 		zap.Int64("EndPhone", cfg.EndPhone),
 	)
 
-	shared.InitMetrics(cfg.BoundleID, cfg.InstanceID)
+	shared.InitMetrics(cfg.BundleID, cfg.InstanceID)
 	// Run metrics
 	go shared.Metrics.Run(2374)
 
@@ -53,14 +53,12 @@ func main() {
 	}
 	_node = n
 
-	//wait forever
+	// wait forever
 	select {}
 }
 
 func loadCachedActors() {
-
 	fmt.Printf("\n\n Start Loading Cached Actors ... \n\n")
-
 	files, err := ioutil.ReadDir("_cache/")
 	if err != nil {
 		_Log.Error("Fialed to load cached actors LoadCachedActors()", zap.Error(err))

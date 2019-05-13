@@ -19,7 +19,7 @@ func NewSendMessage(isFinal bool) shared.Screenwriter {
 }
 
 // Play execute SendMessage scenario
-func (s *SendMessage) Play(act shared.Acter) {
+func (s *SendMessage) Play(act shared.Actor) {
 	if act.GetAuthID() == 0 {
 		s.AddJobs(1)
 		success := Play(act, NewCreateAuthKey(false))
@@ -55,7 +55,7 @@ func (s *SendMessage) Play(act shared.Acter) {
 }
 
 // messageSend : Step 1
-func (s *SendMessage) messageSend(act shared.Acter, peer *shared.PeerInfo) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
+func (s *SendMessage) messageSend(act shared.Actor, peer *shared.PeerInfo) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 	reqEnv := MessageSend(peer)
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {

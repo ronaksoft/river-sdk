@@ -288,7 +288,7 @@ func (r *PcapReport) FeedPacket(p *msg.ProtoMessage, isResponse bool) error {
 	return nil
 }
 
-func decryptProto(act shared.Acter, protMsg *msg.ProtoMessage) (*msg.MessageEnvelope, error) {
+func decryptProto(act shared.Actor, protMsg *msg.ProtoMessage) (*msg.MessageEnvelope, error) {
 	if protMsg.AuthID == 0 {
 		env := new(msg.MessageEnvelope)
 		err := env.Unmarshal(protMsg.Payload)

@@ -20,7 +20,7 @@ func NewImportContact(isFinal bool) shared.Screenwriter {
 }
 
 // Play execute ImportContact scenario
-func (s *ImportContact) Play(act shared.Acter) {
+func (s *ImportContact) Play(act shared.Actor) {
 	if len(act.GetPeers()) > 0 {
 		s.log(act, "Actor already have Peers", 0, 0)
 		return
@@ -53,7 +53,7 @@ func (s *ImportContact) Play(act shared.Acter) {
 }
 
 // contactImport : Step 1
-func (s *ImportContact) contactImport(phone string, act shared.Acter) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
+func (s *ImportContact) contactImport(phone string, act shared.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 	reqEnv := ContactsImport(phone)
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {

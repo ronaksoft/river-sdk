@@ -11,7 +11,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/actor"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/controller"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/logs"
-	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/pcap_parser"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/report"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/scenario"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
@@ -51,9 +50,7 @@ func init() {
 	_Shell.AddCmd(cmdClient)
 	_Shell.AddCmd(cmdSendFile)
 	_Shell.AddCmd(cmdSupernumerary)
-
 	_Shell.AddCmd(cmdDebug)
-	_Shell.AddCmd(cmdPcap)
 
 	logs.SetLogLevel(0) // DBG: -1, INF: 0, WRN: 1, ERR: 2
 
@@ -199,26 +196,4 @@ func fnDebugDecrypt() {
 	fmt.Println(authID)
 	decryptProtoMessage(rawbytes, authKey)
 
-}
-
-func fnPcapParser() {
-	res, err := pcap_parser.Parse("/tmpfs/dump.pcap")
-	if err != nil {
-		logs.Error("Error", zap.Error(err))
-		return
-	}
-
-	rpt := report.NewPcapReport()
-	feedErrs := 0
-	for r := range res {
-		err := rpt.Feed(r)
-		if err != nil {
-			feedErrs++
-			flow := fmt.Sprintf("%v:%d-->%v:%d", r.SrcIP, r.SrcPort, r.DstIP, r.DstPort)
-			_, ok := shared.GetCachedActorByAuthID(r.Message.AuthID)
-			fmt.Printf("Feed() AuthID : %d \t Exist : %v \t %s \t %s \n", r.Message.AuthID, ok, flow, err.Error())
-		}
-	}
-	fmt.Println(rpt.String())
-	fmt.Println("Feed() Errors : ", feedErrs)
 }

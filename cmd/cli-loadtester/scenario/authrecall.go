@@ -19,13 +19,13 @@ func NewAuthRecall(isFinal bool) shared.Screenwriter {
 }
 
 // Play execute AuthRecall scenario
-func (s *AuthRecall) Play(act shared.Acter) {
+func (s *AuthRecall) Play(act shared.Actor) {
 	s.AddJobs(1)
 	act.ExecuteRequest(s.authRecall(act))
 }
 
 // authRecall : Step 1
-func (s *AuthRecall) authRecall(act shared.Acter) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
+func (s *AuthRecall) authRecall(act shared.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 	reqEnv := AuthRecallReq()
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {

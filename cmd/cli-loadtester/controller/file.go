@@ -19,7 +19,7 @@ var (
 )
 
 // ExecuteFileRequest encrypt and send request to server and receive and decrypt its response
-func ExecuteFileRequest(msgEnvelope *msg.MessageEnvelope, act shared.Acter) (*msg.MessageEnvelope, error) {
+func ExecuteFileRequest(msgEnvelope *msg.MessageEnvelope, act shared.Actor) (*msg.MessageEnvelope, error) {
 	authID, authKey := act.GetAuthInfo()
 	protoMessage := new(msg.ProtoMessage)
 	protoMessage.AuthID = authID

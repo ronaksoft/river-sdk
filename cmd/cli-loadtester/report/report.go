@@ -64,7 +64,7 @@ func (r *Report) SetIsActive(isActive bool) {
 }
 
 // Register add actor to be monitored by reporter
-func (r *Report) Register(act shared.Acter) {
+func (r *Report) Register(act shared.Actor) {
 	r.mx.Lock()
 	r.ActorStatus[act.GetPhone()] = act.GetStatus()
 	r.mx.Unlock()

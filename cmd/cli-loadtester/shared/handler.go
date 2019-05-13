@@ -13,4 +13,4 @@ type SuccessCallback func(response *msg.MessageEnvelope, elapsed time.Duration)
 type TimeoutCallback func(requestID uint64, elapsed time.Duration)
 
 // UpdateApplier function
-type UpdateApplier func(act Acter, u *msg.UpdateEnvelope)
+type UpdateApplier func(act Actor, u *msg.UpdateEnvelope)

@@ -29,7 +29,7 @@ type CtrlNetwork struct {
 
 	messageSeq int64
 
-	actor shared.Acter
+	actor shared.Actor
 
 	onError   domain.ErrorHandler
 	onMessage domain.ReceivedMessageHandler
@@ -37,7 +37,7 @@ type CtrlNetwork struct {
 }
 
 // NewCtrlNetwork create new instance
-func NewCtrlNetwork(act shared.Acter,
+func NewCtrlNetwork(act shared.Actor,
 	onMessage domain.ReceivedMessageHandler,
 	onUpdate domain.ReceivedUpdateHandler,
 	onError domain.ErrorHandler,
