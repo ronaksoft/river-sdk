@@ -89,9 +89,11 @@ var cmdUpdatePhoneRange = &ishell.Cmd{
 				}
 				d, _ := json.Marshal(cfg)
 				_, err := _NATS.Request(fmt.Sprintf("%s.%s", instanceID, config.SubjectPhoneRange), d, time.Second*10)
-				_Log.Warn("Error On UpdatePhoneRange",
-					zap.Error(err),
-				)
+				if err != nil {
+					_Log.Warn("Error On UpdatePhoneRange",
+						zap.Error(err),
+					)
+				}
 			}(int64(startPhone),int64(endPhone) )
 			idx++
 		}
