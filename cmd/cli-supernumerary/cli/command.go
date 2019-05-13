@@ -41,7 +41,7 @@ var cmdUpdatePhoneRange = &ishell.Cmd{
 		phoneRange := totalPhone / totalNodes
 		rangeRemaining := totalPhone % totalNodes
 		idx := int32(0)
-		for instanceID := range instanceIDs {
+		for _, instanceID := range instanceIDs {
 			startPhone := idx * phoneRange
 			endPhone := startPhone + phoneRange
 			if idx == totalNodes-1 {
