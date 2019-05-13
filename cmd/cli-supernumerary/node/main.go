@@ -13,7 +13,6 @@ import (
 )
 
 var (
-	_node     *Node
 	_Log      *zap.Logger
 	_LogLevel zap.AtomicLevel
 )
@@ -50,7 +49,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	_node = n
+
+
 
 	// wait forever
 	select {}

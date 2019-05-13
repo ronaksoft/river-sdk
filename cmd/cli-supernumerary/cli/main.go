@@ -71,6 +71,5 @@ func main() {
 	if err != nil {
 		_Log.Fatal(err.Error())
 	}
-
 	_Shell.Run()
 }
