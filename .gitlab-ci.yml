@@ -2,6 +2,9 @@ stages:
   - build
   - deploy
 
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
 build:supernumerary-node:
   stage: build
   image: registry.ronaksoftware.com/base/golang:1.11
