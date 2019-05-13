@@ -155,6 +155,11 @@ func (n *Node) cbPhoneRange(msg *nats.Msg) {
 	_ = n.natsClient.Publish(msg.Reply, []byte("OK"))
 }
 
+func (n *Node) cbHealthCheck(msg *nats.Msg) {
+	_Log.Info("cbHealthCheck()")
+	_ = n.natsClient.Publish(msg.Reply, []byte("OK"))
+}
+
 // RegisterSubscription subscribe subjects
 func (n *Node) RegisterSubscription() error {
 	subStart, err := n.natsClient.Subscribe(config.SubjectStart, n.cbStart)
@@ -198,6 +203,12 @@ func (n *Node) RegisterSubscription() error {
 		return err
 	}
 	n.subs[fmt.Sprintf("%s.%s", n.Config.InstanceID, config.SubjectPhoneRange)] = subPhoneRange
+
+	subHealthCheck, err := n.natsClient.Subscribe(fmt.Sprintf("%s.%s", n.Config.InstanceID, config.SubjectHealthCheck), n.cbHealthCheck)
+	if err != nil {
+		return err
+	}
+	n.subs[fmt.Sprintf("%s.%s", n.Config.InstanceID, config.SubjectHealthCheck)] = subHealthCheck
 	return nil
 }
 

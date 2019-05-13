@@ -29,6 +29,7 @@ func init() {
 
 	_Shell.AddCmd(cmdListNodes)
 	_Shell.AddCmd(cmdUpdatePhoneRange)
+	_Shell.AddCmd(cmdUpdateNodes)
 	_Shell.AddCmd(cmdStart)
 	_Shell.AddCmd(cmdStop)
 	_Shell.AddCmd(cmdCreateAuthKey)

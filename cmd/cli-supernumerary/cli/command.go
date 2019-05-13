@@ -24,6 +24,28 @@ var cmdListNodes = &ishell.Cmd{
 	},
 }
 
+var cmdUpdateNodes = &ishell.Cmd{
+	Name: "UpdateNodes",
+	Func: func(c *ishell.Context) {
+		instanceIDs := make([]string, 0)
+		_NodesLock.RLock()
+		c.Println("Total Nodes:", len(_Nodes))
+		for instanceID := range _Nodes {
+			instanceIDs = append(instanceIDs, instanceID)
+			c.Println(instanceID)
+		}
+		_NodesLock.RUnlock()
+
+		for _, instanceID := range instanceIDs {
+			_, err := _NATS.Request(fmt.Sprintf("%s.%s", instanceID, config.SubjectHealthCheck), []byte("HEALTH_CHECK"), 5 * time.Second)
+			if err != nil {
+				_NodesLock.Lock()
+				delete(_Nodes, instanceID)
+				_NodesLock.Unlock()
+			}
+		}
+	},
+}
 var cmdUpdatePhoneRange = &ishell.Cmd{
 	Name: "UpdatePhoneRange",
 	Func: func(c *ishell.Context) {
@@ -37,6 +59,7 @@ var cmdUpdatePhoneRange = &ishell.Cmd{
 			instanceIDs = append(instanceIDs, instanceID)
 		}
 		_NodesLock.RUnlock()
+
 
 		phoneRange := totalPhone / totalNodes
 		rangeRemaining := totalPhone % totalNodes
@@ -61,6 +84,7 @@ var cmdUpdatePhoneRange = &ishell.Cmd{
 
 	},
 }
+
 var cmdStart = &ishell.Cmd{
 	Name: "Start",
 	Func: func(c *ishell.Context) {
