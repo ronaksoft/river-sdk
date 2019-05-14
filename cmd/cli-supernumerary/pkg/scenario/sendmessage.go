@@ -20,6 +20,7 @@ func NewSendMessage(isFinal bool) shared.Screenwriter {
 
 // Play execute SendMessage scenario
 func (s *SendMessage) Play(act shared.Actor) {
+	s.AddJobs(1)
 	if act.GetAuthID() == 0 {
 		success := Play(act, NewCreateAuthKey(false))
 		if !success {
@@ -27,6 +28,8 @@ func (s *SendMessage) Play(act shared.Actor) {
 			return
 		}
 	}
+	s.wait.Done()
+	s.AddJobs(1)
 	if act.GetUserID() == 0 {
 		success := Play(act, NewLogin(false))
 		if !success {
@@ -34,6 +37,8 @@ func (s *SendMessage) Play(act shared.Actor) {
 			return
 		}
 	}
+	s.wait.Done()
+	s.AddJobs(1)
 	if len(act.GetPeers()) == 0 {
 		success := Play(act, NewImportContact(false))
 		if !success {
@@ -41,6 +46,7 @@ func (s *SendMessage) Play(act shared.Actor) {
 			return
 		}
 	}
+	s.wait.Done()
 	peers := act.GetPeers()
 	s.AddJobs(len(peers))
 	for _, p := range peers {
