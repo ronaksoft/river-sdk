@@ -2,7 +2,7 @@ package main
 
 import (
 	log "git.ronaksoftware.com/ronak/toolbox/logger"
-	"os"
+	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/config"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/shared"
@@ -13,11 +13,7 @@ var (
 	_Log log.Logger
 )
 
-func init() {
-	if _, err := os.Stat("_cache/"); os.IsNotExist(err) {
-		os.Mkdir("_cache/", os.ModePerm)
-	}
-}
+func init() {}
 
 func main() {
 	_Log = log.NewConsoleLogger()
@@ -25,6 +21,8 @@ func main() {
 
 	cfg, err := config.NewNodeConfig()
 	if err != nil {
+		_Log.Error(err.Error())
+		time.Sleep(time.Second * 10)
 		panic(err)
 	}
 	_Log.Info("Config",
