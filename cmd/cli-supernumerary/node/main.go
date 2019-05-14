@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	log "git.ronaksoftware.com/ronak/toolbox/logger"
 	"io/ioutil"
 	"os"
 
@@ -13,8 +14,7 @@ import (
 )
 
 var (
-	_Log      *zap.Logger
-	_LogLevel zap.AtomicLevel
+	_Log      log.Logger
 )
 
 func init() {
@@ -25,10 +25,8 @@ func init() {
 }
 
 func main() {
-	_LogLevel = zap.NewAtomicLevelAt(zap.DebugLevel)
-	logConfig := zap.NewProductionConfig()
-	logConfig.Level = _LogLevel
-	_Log, _ = logConfig.Build()
+	_Log = log.NewConsoleLogger()
+	_Log.SetLevel(log.Debug)
 
 	cfg, err := config.NewNodeConfig()
 	if err != nil {
