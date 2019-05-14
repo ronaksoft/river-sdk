@@ -42,6 +42,7 @@ func (s *SendMessage) Play(act shared.Actor) {
 		}
 	}
 	peers := act.GetPeers()
+	s.AddJobs(len(peers))
 	for _, p := range peers {
 		act.ExecuteRequest(s.messageSend(act, p))
 	}

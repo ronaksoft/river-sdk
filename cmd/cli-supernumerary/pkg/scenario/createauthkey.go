@@ -65,7 +65,7 @@ func (s *CreateAuthKey) initConnect(act shared.Actor) (*msg.MessageEnvelope, sha
 	reqEnv := InitConnect()
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
-		//Reporter failed
+		// Reporter failed
 		act.SetTimeout(msg.C_InitConnect, elapsed)
 		s.failed(act, elapsed, requestID, "initConnect() Timeout")
 	}
