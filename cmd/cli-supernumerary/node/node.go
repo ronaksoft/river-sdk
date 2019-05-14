@@ -13,9 +13,18 @@ import (
 	"go.uber.org/zap"
 )
 
+// NodeConfig environment variables  to configs each docker container
+type NodeConfig struct {
+	BundleID   string
+	InstanceID string
+	NatsURL    string
+	RedisPass  string
+	RedisHost  string
+}
+
 // Node supernumerary client
 type Node struct {
-	Config     *config.NodeConfig
+	Config     *NodeConfig
 	su         *supernumerary.Supernumerary
 	natsClient *nats.Conn
 	subs       map[string]*nats.Subscription
@@ -24,7 +33,7 @@ type Node struct {
 }
 
 // NewNode create supernumerary new client
-func NewNode(cfg *config.NodeConfig) (*Node, error) {
+func NewNode(cfg *NodeConfig) (*Node, error) {
 	n := &Node{
 		Config: cfg,
 		su:     nil,
@@ -35,6 +44,7 @@ func NewNode(cfg *config.NodeConfig) (*Node, error) {
 		return nil, err
 	}
 	n.natsClient = natsClient
+
 
 	err = n.RegisterSubscription()
 	if err != nil {
