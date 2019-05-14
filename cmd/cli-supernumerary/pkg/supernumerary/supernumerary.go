@@ -140,7 +140,7 @@ func (s *Supernumerary) Register() {
 func (s *Supernumerary) Login() {
 	for _, act := range s.Actors {
 		sen := scenario.NewLogin(false)
-		_Log.Info("Login() Loging in", zap.String("Phone", act.GetPhone()))
+		_Log.Info("Login() Logging in", zap.String("Phone", act.GetPhone()))
 		success := scenario.Play(act, sen)
 		if success {
 			err := act.Save()

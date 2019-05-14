@@ -45,7 +45,6 @@ func NewNode(cfg *NodeConfig) (*Node, error) {
 	}
 	n.natsClient = natsClient
 
-
 	err = n.RegisterSubscription()
 	if err != nil {
 		return nil, err
@@ -70,7 +69,6 @@ func NewNode(cfg *NodeConfig) (*Node, error) {
 }
 
 func (n *Node) cbStart(msg *nats.Msg) {
-	_Log.Info("cbStart()")
 	cfg := config.StartCfg{}
 	err := json.Unmarshal(msg.Data, &cfg)
 	if err != nil {
@@ -85,6 +83,10 @@ func (n *Node) cbStart(msg *nats.Msg) {
 			return
 		}
 	}
+
+	_Log.Info("cbStart()",
+		zap.String("ServerUrl", cfg.ServerURL),
+	)
 
 	shared.DefaultFileServerURL = cfg.FileServerURL
 	shared.DefaultServerURL = cfg.ServerURL
@@ -144,8 +146,6 @@ func (n *Node) cbTicker(msg *nats.Msg) {
 		return
 	}
 
-	_Log.Info("cbTicker()", zap.String("Data", string(msg.Data)))
-
 	cfg := config.TickerCfg{}
 	err := json.Unmarshal(msg.Data, &cfg)
 	if err != nil {
@@ -153,17 +153,25 @@ func (n *Node) cbTicker(msg *nats.Msg) {
 		return
 	}
 
+	_Log.Info("cbTicker()",
+		zap.Any("Action", cfg.Action),
+		zap.Duration("Duration", cfg.Duration),
+	)
+
 	n.su.SetTickerApplier(cfg.Duration, cfg.Action)
 }
 
 func (n *Node) cbPhoneRange(msg *nats.Msg) {
-	_Log.Info("cbPhoneRange()")
 	cfg := config.PhoneRangeCfg{}
 	err := json.Unmarshal(msg.Data, &cfg)
 	if err != nil {
 		_Log.Error("cbPhoneRange() failed to unmarshal", zap.Error(err))
 		return
 	}
+	_Log.Info("cbPhoneRange()",
+		zap.Int64("Start", cfg.StartPhone),
+		zap.Int64("End", cfg.EndPhone),
+	)
 	n.StartPhone = cfg.StartPhone
 	n.EndPhone = cfg.EndPhone
 	_ = n.natsClient.Publish(msg.Reply, []byte("OK"))

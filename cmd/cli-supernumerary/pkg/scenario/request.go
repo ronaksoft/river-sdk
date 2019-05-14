@@ -39,7 +39,7 @@ func wrapEnvelop(ctr int64, data []byte) *msg.MessageEnvelope {
 
 func InitConnect() (envelop *msg.MessageEnvelope) {
 	req := new(msg.InitConnect)
-	//req.ClientNonce = uint64(domain.SequentialUniqueID())
+	// req.ClientNonce = uint64(domain.SequentialUniqueID())
 	req.ClientNonce = uint64(shared.GetSeqID())
 	data, err := req.Marshal()
 	if err != nil {
@@ -128,7 +128,7 @@ func MessageSend(peer *shared.PeerInfo) (envelop *msg.MessageEnvelope) {
 	}
 	// req.RandomID = domain.SequentialUniqueID()
 	req.RandomID = shared.GetSeqID()
-	req.Body = "A" //strconv.FormatInt(req.RandomID, 10)
+	req.Body = "A" // strconv.FormatInt(req.RandomID, 10)
 	data, err := req.Marshal()
 	if err != nil {
 		panic(err)
