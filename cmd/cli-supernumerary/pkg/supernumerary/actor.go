@@ -2,9 +2,6 @@ package supernumerary
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -65,7 +62,7 @@ func NewActor(phone string) (shared.Actor, error) {
 	act.updateApplier = make(map[int64]shared.UpdateApplier)
 	act.netCtrl = controller.NewCtrlNetwork(act, act.onMessage, act.onUpdate, act.onError)
 	act.exec = executer.NewExecutor(act.netCtrl)
-	err := act.netCtrl.Start()
+	err = act.netCtrl.Start()
 	if err != nil {
 		return act, err
 	}
@@ -142,7 +139,7 @@ func (act *Actor) Save() error {
 	if err != nil {
 		return err
 	}
-	_ , err = _Redis.Set(act.Phone, buff)
+	_, err = _Redis.Set(act.Phone, buff)
 	return err
 }
 

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/shared"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/config"
@@ -40,7 +41,10 @@ func NewNode(cfg *config.NodeConfig) (*Node, error) {
 		return nil, err
 	}
 
-	supernumerary.SetLogger()
+	redisConf := ronak.DefaultRedisConfig
+	redisConf.Host = cfg.RedisHost
+	redisConf.Password = cfg.RedisPass
+	supernumerary.SetRedis(ronak.NewRedisCache(redisConf))
 	go func() {
 		cmd := config.NodeRegisterCmd{
 			InstanceID: cfg.InstanceID,

@@ -13,7 +13,7 @@ var (
 	CntResponse        = "response_count"         // vec
 	CntDiffered        = "differed_count"         // vec
 	CntTimeout         = "timeout_count"          // vec
-	CntSuccess         = "success_count"         // vec
+	CntSuccess         = "success_count"          // vec
 	CntError           = "error_count"            // counter
 	CntDisconnect      = "disconnect_count"       // counter
 	CntFile            = "file_count"             // counter
