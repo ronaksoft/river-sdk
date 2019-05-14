@@ -60,7 +60,6 @@ func main() {
 		_ = ioutil.WriteFile(".river-nats", ronak.StrToByte(natsURL), os.ModePerm)
 	}
 
-
 	if natsClient, err := nats.Connect(natsURL); err != nil {
 		_Shell.Println("Error : " + err.Error())
 	} else {

@@ -152,5 +152,5 @@ func (m *Files) MapFromUserMessageDocument(um *msg.UserMessage, v *msg.MediaDocu
 
 type MediaInfo struct {
 	MessageIDs []int64
-	Size        int32
+	Size       int32
 }

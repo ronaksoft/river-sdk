@@ -362,7 +362,7 @@ func (r *repoFiles) GetDBStatus() (map[int64]map[int32]dto.MediaInfo, error) {
 				} else {
 					mediaInfo := dto.MediaInfo{
 						MessageIDs: []int64{file.MessageID},
-						Size: file.FileSize,
+						Size:       file.FileSize,
 					}
 					mMediaSize[file.MediaType] = mediaInfo
 				}
@@ -374,7 +374,7 @@ func (r *repoFiles) GetDBStatus() (map[int64]map[int32]dto.MediaInfo, error) {
 }
 
 // ClearMedia returns media file paths to remove from device and updates database
-func (r *repoFiles) ClearMedia(messageIDs []int64) ([]string ,error) {
+func (r *repoFiles) ClearMedia(messageIDs []int64) ([]string, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 	dtoFiles := make([]dto.Files, 0, len(messageIDs))

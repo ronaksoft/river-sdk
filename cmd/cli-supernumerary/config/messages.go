@@ -1,7 +1,7 @@
 package config
 
 import (
-	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/supernumerary"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/supernumerary"
 	"time"
 )
 

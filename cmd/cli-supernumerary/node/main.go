@@ -7,14 +7,14 @@ import (
 	"io/ioutil"
 	"os"
 
-	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/actor"
-	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/config"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/actor"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/shared"
 	"go.uber.org/zap"
 )
 
 var (
-	_Log      log.Logger
+	_Log log.Logger
 )
 
 func init() {
@@ -47,8 +47,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-
 
 	// wait forever
 	select {}

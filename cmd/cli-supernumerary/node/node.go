@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/shared"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/supernumerary"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/config"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/supernumerary"
 	"github.com/nats-io/go-nats"
 	"go.uber.org/zap"
 )
@@ -50,7 +50,6 @@ func NewNode(cfg *config.NodeConfig) (*Node, error) {
 			time.Sleep(10 * time.Second)
 		}
 	}()
-
 
 	return n, nil
 }

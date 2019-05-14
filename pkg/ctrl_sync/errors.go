@@ -12,5 +12,5 @@ import "errors"
 */
 
 var (
-	ErrOutOfSync 	= errors.New("out of sync")
+	ErrOutOfSync = errors.New("out of sync")
 )

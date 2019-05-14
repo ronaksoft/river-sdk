@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/supernumerary"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/config"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/supernumerary"
 	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"
 )
@@ -40,16 +40,16 @@ var cmdUpdateNodes = &ishell.Cmd{
 		waitGroup := sync.WaitGroup{}
 		waitGroup.Add(len(instanceIDs))
 		for _, instanceID := range instanceIDs {
-			go func() {
+			go func(instanceID string) {
 				defer waitGroup.Done()
-				_, err := _NATS.Request(fmt.Sprintf("%s.%s", instanceID, config.SubjectHealthCheck), []byte("HEALTH_CHECK"), 5 * time.Second)
+				_, err := _NATS.Request(fmt.Sprintf("%s.%s", instanceID, config.SubjectHealthCheck), []byte("HEALTH_CHECK"), 5*time.Second)
 				if err != nil {
 					_NodesLock.Lock()
 					delete(_Nodes, instanceID)
 					_NodesLock.Unlock()
 				}
 
-			}()
+			}(instanceID)
 		}
 		waitGroup.Wait()
 	},
@@ -81,7 +81,7 @@ var cmdUpdatePhoneRange = &ishell.Cmd{
 			if idx == totalNodes-1 {
 				endPhone += rangeRemaining
 			}
-			go func(instanceID string, startPhone, endPhone int64 ) {
+			go func(instanceID string, startPhone, endPhone int64) {
 				defer waitGroup.Done()
 				cfg := config.PhoneRangeCfg{
 					StartPhone: startPhone,
@@ -95,7 +95,7 @@ var cmdUpdatePhoneRange = &ishell.Cmd{
 					)
 				}
 				c.Println(instanceID, startPhone, endPhone)
-			}(instanceID, int64(startPhone),int64(endPhone) )
+			}(instanceID, int64(startPhone), int64(endPhone))
 			idx++
 		}
 		waitGroup.Wait()
