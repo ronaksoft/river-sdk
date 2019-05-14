@@ -9,8 +9,8 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 )
 
-// Executer command executer
-type Executer struct {
+// Executor command executor
+type Executor struct {
 	netCtrl      shared.Neter
 	requestsLock sync.Mutex
 	requests     map[uint64]*Request
@@ -26,9 +26,9 @@ type Request struct {
 	ResponseWaitChannel chan *msg.MessageEnvelope
 }
 
-// NewExecuter create new instance of command executer
-func NewExecuter(netCtrl shared.Neter) *Executer {
-	exe := &Executer{
+// NewExecutor create new instance of command executor
+func NewExecutor(netCtrl shared.Neter) *Executor {
+	exe := &Executor{
 		netCtrl:  netCtrl,
 		requests: make(map[uint64]*Request),
 	}
@@ -36,7 +36,7 @@ func NewExecuter(netCtrl shared.Neter) *Executer {
 }
 
 // Exec execute command
-func (exec *Executer) Exec(message *msg.MessageEnvelope, onSuccess shared.SuccessCallback, onTimeOut shared.TimeoutCallback, timeout time.Duration) {
+func (exec *Executor) Exec(message *msg.MessageEnvelope, onSuccess shared.SuccessCallback, onTimeOut shared.TimeoutCallback, timeout time.Duration) {
 
 	if timeout == 0 {
 		timeout = shared.DefaultTimeout
@@ -53,11 +53,11 @@ func (exec *Executer) Exec(message *msg.MessageEnvelope, onSuccess shared.Succes
 	exec.requestsLock.Lock()
 	exec.requests[r.RequestID] = r
 	exec.requestsLock.Unlock()
-	go exec.executer(message, r)
+	go exec.executor(message, r)
 }
 
-// executer send and wait for response, call this on go routine
-func (exec *Executer) executer(message *msg.MessageEnvelope, r *Request) {
+// executor send and wait for response, call this on go routine
+func (exec *Executor) executor(message *msg.MessageEnvelope, r *Request) {
 	if exec.netCtrl == nil {
 		out := new(msg.MessageEnvelope)
 		out.RequestID = message.RequestID
@@ -88,7 +88,7 @@ func (exec *Executer) executer(message *msg.MessageEnvelope, r *Request) {
 }
 
 // GetRequest returns response callbacks
-func (exec *Executer) GetRequest(reqID uint64) *Request {
+func (exec *Executor) GetRequest(reqID uint64) *Request {
 	exec.requestsLock.Lock()
 	req, ok := exec.requests[reqID]
 	exec.requestsLock.Unlock()
@@ -99,7 +99,7 @@ func (exec *Executer) GetRequest(reqID uint64) *Request {
 }
 
 // RemoveRequest removes response callbacks
-func (exec *Executer) RemoveRequest(reqID uint64) {
+func (exec *Executor) RemoveRequest(reqID uint64) {
 	exec.requestsLock.Lock()
 	delete(exec.requests, reqID)
 	exec.requestsLock.Unlock()

@@ -40,7 +40,7 @@ type Actor struct {
 	OnStopHandler func(phone string) `json:"-"`
 
 	netCtrl shared.Neter
-	exec    *executer.Executer
+	exec    *executer.Executor
 
 	mxUpdate      sync.Mutex
 	updateApplier map[int64]shared.UpdateApplier
@@ -69,7 +69,7 @@ func NewActor(phone string) (shared.Actor, error) {
 	}
 	act.updateApplier = make(map[int64]shared.UpdateApplier)
 	act.netCtrl = controller.NewCtrlNetwork(act, act.onMessage, act.onUpdate, act.onError)
-	act.exec = executer.NewExecuter(act.netCtrl)
+	act.exec = executer.NewExecutor(act.netCtrl)
 	err := act.netCtrl.Start()
 	if err != nil {
 		return act, err
@@ -143,7 +143,6 @@ func (act *Actor) ExecuteRequest(message *msg.MessageEnvelope, onSuccess shared.
 
 // Save save actor after register/ login / contact import
 func (act *Actor) Save() error {
-
 	// save to cached actors
 	_, ok := shared.GetCachedActorByPhone(act.Phone)
 	if !ok {

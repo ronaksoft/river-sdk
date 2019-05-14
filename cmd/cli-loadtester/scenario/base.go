@@ -35,7 +35,7 @@ func (s *Scenario) Wait(act shared.Actor) bool {
 	return s.GetResult()
 }
 
-//AddJobs add delta to wait group
+// AddJobs add delta to wait group
 func (s *Scenario) AddJobs(delta int) {
 	s.wait.Add(delta)
 }
@@ -44,9 +44,9 @@ func (s *Scenario) failed(act shared.Actor, elapsed time.Duration, reqID uint64,
 	s.result = false
 	act.SetActorSucceed(false)
 
-	//----
+	// ----
 	shared.SetFailedRequest(reqID, act.GetAuthID(), act.GetPhone(), "Timeout Request "+str)
-	//----
+	// ----
 
 	logs.Error(act.GetPhone()+"\tReqID:"+strconv.FormatUint(reqID, 10)+"\t failed() : "+str, zap.Duration("elapsed", elapsed))
 	s.wait.Done()
@@ -75,9 +75,9 @@ func (s *Scenario) isErrorResponse(act shared.Actor, elapsed time.Duration, resp
 		s.result = false
 		act.SetActorSucceed(false)
 
-		//----
+		// ----
 		shared.SetFailedRequest(resp.RequestID, act.GetAuthID(), act.GetPhone(), "Error Response CallBackName :"+cbName+"\tErr:"+x.String())
-		//----
+		// ----
 
 		logs.Error(act.GetPhone()+"\tReqID:"+strconv.FormatUint(resp.RequestID, 10)+"\t isErrorResponse(): ", zap.String("CallBackName", cbName), zap.String("Err", x.String()), zap.Duration("elapsed", elapsed))
 		s.wait.Done()
