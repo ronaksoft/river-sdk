@@ -213,7 +213,7 @@ func (act *Actor) GetStatus() *shared.Status {
 	return act.Status
 }
 
-//SetStopHandler set on stop callback/delegate
+// SetStopHandler set on stop callback/delegate
 func (act *Actor) SetStopHandler(fn func(phone string)) {
 	act.OnStopHandler = fn
 }

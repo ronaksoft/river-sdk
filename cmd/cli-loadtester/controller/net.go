@@ -126,13 +126,6 @@ func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
 	if err != nil {
 		return err
 	}
-	// // dump request
-	// if msgEnvelope.Constructor == msg.C_ContactsImport {
-	// 	err := ioutil.WriteFile("ImportContact_Dump.raw", b, os.ModePerm)
-	// 	if err != nil {
-	// 		log.Error("Packet Dump Failed", zap.Error(err))
-	// 	}
-	// }
 
 	// metric
 	shared.Metrics.Counter(shared.CntSend).Add(float64(len(b)))
@@ -199,7 +192,7 @@ func (ctrl *CtrlNetwork) watchDog() {
 // onConnect send AuthRecall request to server
 func (ctrl *CtrlNetwork) onConnect() {
 
-	// if authkey not created skip
+	// if auth key not created skip
 	if ctrl.actor.GetAuthID() == 0 {
 		return
 	}
@@ -219,7 +212,7 @@ func (ctrl *CtrlNetwork) onConnect() {
 		logs.Error("onConnect() AuthRecall", zap.Error(err))
 	}
 
-	// // 3 is max retry to send authRecal
+	// // 3 is max retry to send authRecall
 	// for i := 0; i < 3; i++ {
 	// 	envelop := new(msg.MessageEnvelope)
 	// 	envelop.Constructor = msg.C_AuthRecall
@@ -250,7 +243,7 @@ func (ctrl *CtrlNetwork) receiver() {
 		if err != nil {
 			// on stop request we set keepConnectionAlive to false
 			if ctrl.keepConnectionAlive {
-				//metric
+				// metric
 				shared.Metrics.Counter(shared.CntDisconnect).Add(1)
 
 				atomic.AddInt64(&ctrl.Disconnected, 1)

@@ -21,34 +21,27 @@ func NewSendMessage(isFinal bool) shared.Screenwriter {
 // Play execute SendMessage scenario
 func (s *SendMessage) Play(act shared.Actor) {
 	if act.GetAuthID() == 0 {
-		s.AddJobs(1)
 		success := Play(act, NewCreateAuthKey(false))
 		if !success {
 			s.failed(act, 0, 0, "Play() : failed at pre requested scenario CreateAuthKey")
 			return
 		}
-		s.wait.Done()
 	}
 	if act.GetUserID() == 0 {
-		s.AddJobs(1)
 		success := Play(act, NewLogin(false))
 		if !success {
 			s.failed(act, 0, 0, "Play() : failed at pre requested scenario Login")
 			return
 		}
-		s.wait.Done()
 	}
 	if len(act.GetPeers()) == 0 {
-		s.AddJobs(1)
 		success := Play(act, NewImportContact(false))
 		if !success {
 			s.failed(act, 0, 0, "Play() : failed at pre requested scenario ImportContact")
 			return
 		}
-		s.wait.Done()
 	}
 	peers := act.GetPeers()
-	s.AddJobs(len(peers))
 	for _, p := range peers {
 		act.ExecuteRequest(s.messageSend(act, p))
 	}
@@ -71,12 +64,9 @@ func (s *SendMessage) messageSend(act shared.Actor, peer *shared.PeerInfo) (*msg
 		}
 		if resp.Constructor == msg.C_MessagesSent {
 			x := new(msg.MessagesSent)
-			x.Unmarshal(resp.Message)
-
-			// TODO : Complete Scenario
+			_ = x.Unmarshal(resp.Message)
 			s.completed(act, elapsed, resp.RequestID, "messageSend() Success")
 		} else {
-			// TODO : Reporter failed
 			s.failed(act, elapsed, resp.RequestID, "messageSend() SuccessCB response is not MessagesSent, Constructor :"+msg.ConstructorNames[resp.Constructor])
 		}
 	}
