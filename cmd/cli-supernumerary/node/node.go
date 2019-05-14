@@ -40,6 +40,7 @@ func NewNode(cfg *config.NodeConfig) (*Node, error) {
 		return nil, err
 	}
 
+	supernumerary.SetLogger()
 	go func() {
 		cmd := config.NodeRegisterCmd{
 			InstanceID: cfg.InstanceID,

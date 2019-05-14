@@ -12,13 +12,13 @@ var (
 	CntRequest         = "request_count"          // vec
 	CntResponse        = "response_count"         // vec
 	CntDiffered        = "differed_count"         // vec
-	CntTimedout        = "timeout_count"          // vec
-	CntSucceess        = "succeess_count"         // vec
+	CntTimeout         = "timeout_count"          // vec
+	CntSuccess         = "success_count"         // vec
 	CntError           = "error_count"            // counter
 	CntDisconnect      = "disconnect_count"       // counter
 	CntFile            = "file_count"             // counter
 	CntFileError       = "file_error_count"       // counter
-	CntFaildScenario   = "failed_scenario_count"  // counter
+	CntFailedScenario  = "failed_scenario_count"  // counter
 	CntSucceedScenario = "succeed_scenario_count" // counter
 
 	// Network Usage
@@ -47,15 +47,15 @@ func InitMetrics(boundleID, instanceID string) {
 	Metrics.RegisterCounterVec(CntRequest, "Number of message requests", nil, []string{"fn"})            // ok
 	Metrics.RegisterCounterVec(CntResponse, "Number of received responses/updates", nil, []string{"fn"}) // ok
 	Metrics.RegisterCounterVec(CntDiffered, "Number of late received responses", nil, []string{"fn"})    // ok
-	Metrics.RegisterCounterVec(CntTimedout, "Number of timeout requests", nil, []string{"fn"})           // ok
-	Metrics.RegisterCounterVec(CntSucceess, "Number of success requests", nil, []string{"fn"})           // ok
+	Metrics.RegisterCounterVec(CntTimeout, "Number of timeout requests", nil, []string{"fn"})            // ok
+	Metrics.RegisterCounterVec(CntSuccess, "Number of success requests", nil, []string{"fn"})            // ok
 
 	// Counter
 	Metrics.RegisterCounter(CntError, "Number of error responses", nil)                   // ok
 	Metrics.RegisterCounter(CntDisconnect, "Number of websocket disconnections", nil)     // ok
 	Metrics.RegisterCounter(CntFile, "Number of FileSavePart requests ", nil)             // ok
 	Metrics.RegisterCounter(CntFileError, "Number of failed FileSavePart requests ", nil) // ok
-	Metrics.RegisterCounter(CntFaildScenario, "Number of failed scenarios ", nil)         // ok
+	Metrics.RegisterCounter(CntFailedScenario, "Number of failed scenarios ", nil)        // ok
 	Metrics.RegisterCounter(CntSucceedScenario, "Number of succeed scenarios ", nil)      // ok
 	Metrics.RegisterCounter(CntSend, "Upload/Send bandwidth", nil)                        // ok
 	Metrics.RegisterCounter(CntReceive, "Download/Receive bandwidth", nil)                // ok

@@ -11,6 +11,8 @@ type NodeConfig struct {
 	BundleID   string
 	InstanceID string
 	NatsURL    string
+	RedisPass  string
+	RedisHost  string
 }
 
 // NewNodeConfig reads environment variables
@@ -19,6 +21,8 @@ func NewNodeConfig() (*NodeConfig, error) {
 		BundleID:   os.Getenv(EnvBundleID),
 		InstanceID: ronak.RandomID(24),
 		NatsURL:    os.Getenv(EnvNatsUrl),
+		RedisPass:  os.Getenv(EnvRedisPass),
+		RedisHost:  os.Getenv(EnvRedisDSN),
 	}
 
 	if cfg.NatsURL == "" {

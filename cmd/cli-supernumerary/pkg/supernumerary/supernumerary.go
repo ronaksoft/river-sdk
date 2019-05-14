@@ -1,6 +1,7 @@
 package supernumerary
 
 import (
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	log "git.ronaksoftware.com/ronak/toolbox/logger"
 	"math/rand"
 	"os"
@@ -12,12 +13,12 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/scenario"
 
-	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/actor"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/shared"
 )
 
 var (
-	_Log log.Logger
+	_Log   log.Logger
+	_Redis *ronak.RedisCache
 )
 
 func init() {
@@ -26,6 +27,10 @@ func init() {
 
 func SetLogger(l log.Logger) {
 	_Log = l
+}
+
+func SetRedis(r *ronak.RedisCache) {
+	_Redis = r
 }
 
 // Supernumerary bunch of active actors
@@ -57,7 +62,7 @@ func NewSupernumerary(fromPhoneNo, toPhoneNo int64) (*Supernumerary, error) {
 
 	for i := fromPhoneNo; i < toPhoneNo; i++ {
 		phone := shared.GetPhone(i)
-		act, err := actor.NewActor(phone)
+		act, err := NewActor(phone)
 		if err != nil {
 			_Log.Info("Initialized Actor Failed",
 				zap.String("Phone", phone),

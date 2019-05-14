@@ -1,8 +1,10 @@
 package config
 
 const (
-	EnvBundleID = "CFG_BUNDLE_ID"
-	EnvNatsUrl  = "CFG_NATS_URL"
+	EnvBundleID  = "CFG_BUNDLE_ID"
+	EnvNatsUrl   = "CFG_NATS_URL"
+	EnvRedisDSN  = "CFG_CACHE_REDIS_PERM_DSN"
+	EnvRedisPass = "CFG_CACHE_REDIS_PERM_PASS"
 )
 
 const (

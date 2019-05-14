@@ -36,7 +36,7 @@ type Report struct {
 
 	// statistics
 	RequestCount           int64
-	TimedoutRequests       int64
+	TimeoutRequests        int64
 	SucceedRequests        int64
 	ErrorResponses         int64
 	NetworkDisconnects     int64
@@ -96,9 +96,9 @@ func (r *Report) onActorStop(phone string) {
 		atomic.AddInt64(&r.StoppedActors, 1)
 		atomic.AddInt64(&r.ActiveActors, -1)
 		r.RequestCount += status.RequestCount
-		r.TimedoutRequests += status.TimedoutRequests
+		r.TimeoutRequests += status.TimeoutRequests
 		r.SucceedRequests += status.SucceedRequests
-		r.ErrorResponses += status.ErrorRespons
+		r.ErrorResponses += status.ErrorResponses
 		r.NetworkDisconnects += status.NetworkDisconnects
 
 		r.totalActorLifetime += status.LifeTime
@@ -131,8 +131,8 @@ func (r *Report) onActorStop(phone string) {
 		if r.SucceedRequests > 0 {
 			r.AverageSuccessInterval = r.totalSuccessInterval / time.Duration(r.SucceedRequests)
 		}
-		if r.TimedoutRequests > 0 {
-			r.AverageTimeoutInterval = r.totalTimeoutInterval / time.Duration(r.TimedoutRequests)
+		if r.TimeoutRequests > 0 {
+			r.AverageTimeoutInterval = r.totalTimeoutInterval / time.Duration(r.TimeoutRequests)
 		}
 
 		r.mx.Lock()
@@ -177,7 +177,7 @@ Total Exec Time			: %v
 		r.SucceedActors,
 		r.FailedActors,
 		r.RequestCount,
-		r.TimedoutRequests,
+		r.TimeoutRequests,
 		r.SucceedRequests,
 		r.ErrorResponses,
 		r.NetworkDisconnects,
@@ -207,7 +207,7 @@ func (r *Report) Clear() {
 	r.StoppedActors = 0
 	r.AverageActorLifetime = 0
 	r.RequestCount = 0
-	r.TimedoutRequests = 0
+	r.TimeoutRequests = 0
 	r.SucceedRequests = 0
 	r.NetworkDisconnects = 0
 	r.AverageSuccessInterval = 0

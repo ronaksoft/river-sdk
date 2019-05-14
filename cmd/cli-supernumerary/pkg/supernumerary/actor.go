@@ -1,8 +1,8 @@
-package actor
+package supernumerary
 
 import (
 	"encoding/json"
-	log "git.ronaksoftware.com/ronak/toolbox/logger"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"sync"
@@ -16,18 +16,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/shared"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 )
-
-var (
-	_Log log.Logger
-)
-
-func init() {
-	_Log = log.NewConsoleLogger()
-}
-
-func SetLogger(l log.Logger) {
-	_Log = l
-}
 
 // Actor indicator as user
 type Actor struct {
@@ -61,24 +49,19 @@ type Actor struct {
 // NewActor create new actor instance
 func NewActor(phone string) (shared.Actor, error) {
 	var act *Actor
-	actor, ok := shared.GetCachedActorByPhone(phone)
-	if !ok {
-		_Log.Warn("NewActor() Actor not found in Cache", zap.String("Phone", phone))
-		act = new(Actor)
-		err := act.Load(phone)
-		if err != nil {
-			act = &Actor{
-				Phone:     phone,
-				PhoneList: make([]string, 0),
-				UserID:    0,
-				AuthID:    0,
-				AuthKey:   make([]byte, 0),
-				Peers:     make([]*shared.PeerInfo, 0),
-			}
+	act = new(Actor)
+	err := act.Load(phone)
+	if err != nil {
+		act = &Actor{
+			Phone:     phone,
+			PhoneList: make([]string, 0),
+			UserID:    0,
+			AuthID:    0,
+			AuthKey:   make([]byte, 0),
+			Peers:     make([]*shared.PeerInfo, 0),
 		}
-	} else {
-		act = actor.(*Actor)
 	}
+
 	act.updateApplier = make(map[int64]shared.UpdateApplier)
 	act.netCtrl = controller.NewCtrlNetwork(act, act.onMessage, act.onUpdate, act.onError)
 	act.exec = executer.NewExecutor(act.netCtrl)
@@ -155,22 +138,17 @@ func (act *Actor) ExecuteRequest(message *msg.MessageEnvelope, onSuccess shared.
 
 // Save save actor after register/ login / contact import
 func (act *Actor) Save() error {
-	// save to cached actors
-	_, ok := shared.GetCachedActorByPhone(act.Phone)
-	if !ok {
-		shared.CacheActor(act)
-	}
-
 	buff, err := json.Marshal(act)
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile("_cache/"+act.Phone, buff, os.ModePerm)
+	_ , err = _Redis.Set(act.Phone, buff)
+	return err
 }
 
 // Load saved actor
 func (act *Actor) Load(phone string) error {
-	jsonBytes, err := ioutil.ReadFile("_cache/" + phone)
+	jsonBytes, err := _Redis.GetBytes(phone)
 	if err != nil {
 		return err
 	}
@@ -193,17 +171,17 @@ func (act *Actor) Stop() {
 // SetTimeout fill reporter data
 func (act *Actor) SetTimeout(constructor int64, elapsed time.Duration) {
 	// metric
-	shared.Metrics.CounterVec(shared.CntTimedout).WithLabelValues(msg.ConstructorNames[constructor]).Add(1)
+	shared.Metrics.CounterVec(shared.CntTimeout).WithLabelValues(msg.ConstructorNames[constructor]).Add(1)
 	shared.Metrics.Histogram(shared.HistTimeoutLatency).Observe(float64(elapsed / time.Millisecond))
 
 	act.Status.AverageTimeoutInterval += elapsed
-	atomic.AddInt64(&act.Status.TimedoutRequests, 1)
+	atomic.AddInt64(&act.Status.TimeoutRequests, 1)
 }
 
 // SetSuccess fill reporter data
 func (act *Actor) SetSuccess(constructor int64, elapsed time.Duration) {
 	// metric
-	shared.Metrics.CounterVec(shared.CntSucceess).WithLabelValues(msg.ConstructorNames[constructor]).Add(1)
+	shared.Metrics.CounterVec(shared.CntSuccess).WithLabelValues(msg.ConstructorNames[constructor]).Add(1)
 	shared.Metrics.Histogram(shared.HistSuccessLatency).Observe(float64(elapsed / time.Millisecond))
 
 	act.Status.AverageSuccessInterval += elapsed
@@ -216,7 +194,7 @@ func (act *Actor) SetActorSucceed(isSucceed bool) {
 	if isSucceed {
 		shared.Metrics.Counter(shared.CntSucceedScenario).Add(1)
 	} else {
-		shared.Metrics.Counter(shared.CntFaildScenario).Add(1)
+		shared.Metrics.Counter(shared.CntFailedScenario).Add(1)
 	}
 }
 
@@ -230,12 +208,12 @@ func (act *Actor) SetStopHandler(fn func(phone string)) {
 	act.OnStopHandler = fn
 }
 
-// ReceivedErrorResponse increase status ErrorRespons
+// ReceivedErrorResponse increase status ErrorResponses
 func (act *Actor) ReceivedErrorResponse() {
 	// metrics
 	shared.Metrics.Counter(shared.CntError).Add(1)
 
-	atomic.AddInt64(&act.Status.ErrorRespons, 1)
+	atomic.AddInt64(&act.Status.ErrorResponses, 1)
 }
 
 // onMessage check requestCallbacks and call callbacks
