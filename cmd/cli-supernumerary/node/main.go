@@ -24,12 +24,13 @@ func main() {
 			zap.Any("Config", cfg),
 			zap.Error(err),
 		)
+	} else {
+		_Log.Info("Config",
+			zap.String("BundleID", cfg.BundleID),
+			zap.String("InstanceID", cfg.InstanceID),
+			zap.String("NatsURL", cfg.NatsURL),
+		)
 	}
-	_Log.Info("Config",
-		zap.String("BundleID", cfg.BundleID),
-		zap.String("InstanceID", cfg.InstanceID),
-		zap.String("NatsURL", cfg.NatsURL),
-	)
 
 	shared.InitMetrics(cfg.BundleID, cfg.InstanceID)
 
