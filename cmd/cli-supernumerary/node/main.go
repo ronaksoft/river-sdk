@@ -20,7 +20,10 @@ func main() {
 
 	cfg, err := config.NewNodeConfig()
 	if err != nil {
-		_Log.Error(err.Error())
+		_Log.Error("Error On NodeConfig",
+			zap.Any("Config", cfg),
+			zap.Error(err),
+		)
 	}
 	_Log.Info("Config",
 		zap.String("BundleID", cfg.BundleID),
