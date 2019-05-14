@@ -2,8 +2,7 @@ package repo
 
 import (
 	"errors"
-
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
@@ -259,6 +258,30 @@ func (r *repoDialogs) UpdateNotifySetting(msg *msg.UpdateNotifySettings) error {
 	return r.db.Save(dtoDlg).Error
 }
 
+func (r *repoDialogs) UpdateDialogPinned(msg *msg.UpdateDialogPinned) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	if msg.Peer == nil {
+		return errors.New("Dialogs::UpdateDialogPinned() => msg.Peer is null")
+	}
+
+	logs.Debug("Dialogs::UpdateDialogPinned()",
+		zap.Bool("Pinned", msg.Pinned),
+		zap.Int64("PeerID", msg.Peer.ID),
+	)
+
+	dtoDlg := new(dto.Dialogs)
+	err := r.db.Where("PeerID = ? AND PeerType = ?", msg.Peer.ID, msg.Peer.Type).First(dtoDlg).Error
+	if err != nil {
+		logs.Error("Dialogs::UpdateDialogPinned()->fetch dialog entity", zap.Error(err))
+		return err
+	}
+	dtoDlg.Pinned = msg.Pinned
+
+	return r.db.Save(dtoDlg).Error
+}
+
 func (r *repoDialogs) UpdatePeerNotifySettings(peerID int64, peerType int32, notifySetting *msg.PeerNotifySettings) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -299,4 +322,21 @@ func (r *repoDialogs) GetManyDialog(peerIDs []int64) []*msg.Dialog {
 	}
 
 	return dialogs
+}
+
+func (r *repoDialogs) GetPeerIDs() []int64 {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	dialogs := make([]dto.Dialogs, 0)
+	err := r.db.Where("PeerType = 1").Find(&dialogs).Error
+	if err != nil {
+		logs.Error("Dialogs::GetPeerIDs()", zap.Error(err))
+		return nil
+	}
+	var ids []int64
+	for _, dialog := range dialogs {
+		ids = append(ids, dialog.PeerID)
+	}
+	return ids
 }

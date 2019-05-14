@@ -224,7 +224,7 @@ func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*
 
 	p := "%" + searchPhrase + "%"
 	users := make([]dto.Users, 0)
-	err := r.db.Where("AccessHash <> 0 AND (FirstName LIKE ? OR LastName LIKE ? OR Phone LIKE ? OR Username LIKE ?)", p, p, p, p).Find(&users).Error
+	err := r.db.Where("AccessHash <> 0 And IsContact = 1 AND (FirstName LIKE ? OR LastName LIKE ? OR Phone LIKE ? OR Username LIKE ?)", p, p, p, p).Find(&users).Error
 	if err != nil {
 		logs.Error("Users::SearchContacts()-> fetch user entities", zap.Error(err))
 		return nil, nil //, err
@@ -292,10 +292,6 @@ func (r *repoUsers) GetUser(userID int64) *msg.User {
 func (r *repoUsers) GetAnyUsers(userIDs []int64) []*msg.User {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
-	logs.Debug("Users::GetAnyUsers()",
-		zap.Int64s("UserIDs", userIDs),
-	)
 
 	pbUsers := make([]*msg.User, 0, len(userIDs))
 	users := make([]dto.Users, 0, len(userIDs))
@@ -514,4 +510,27 @@ func (r *repoUsers) RemoveUserPhoto(userID int64) error {
 		"Photo": []byte(""),
 	})
 	return r.db.Delete(dto.UsersPhoto{}, "userID = ?", userID).Error
+}
+
+func (r *repoUsers) SearchNonContactsWithIDs(ids []int64, searchPhrase string) []*msg.ContactUser {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	logs.Debug("Users::SearchNonContactsWithIDs()")
+
+	p := "%" + searchPhrase + "%"
+	users := make([]dto.Users, 0)
+	err := r.db.Where("IsContact = 0 AND ID in (?) AND (FirstName LIKE ? OR LastName LIKE ? OR Phone LIKE ? OR Username LIKE ?)", ids, p, p, p, p).Find(&users).Error
+	if err != nil {
+		logs.Error("Users::SearchNonContactsWithIDs()-> fetch user entities", zap.Error(err))
+		return nil
+	}
+	pbUsers := make([]*msg.ContactUser, 0)
+	for _, v := range users {
+		tmpUser := new(msg.ContactUser)
+		v.MapToContactUser(tmpUser)
+		pbUsers = append(pbUsers, tmpUser)
+	}
+
+	return pbUsers
 }

@@ -19,7 +19,7 @@ func NewSendFile(isFinal bool) shared.Screenwriter {
 }
 
 // Play execute SendFile scenario
-func (s *SendFile) Play(act shared.Acter) {
+func (s *SendFile) Play(act shared.Actor) {
 	if act.GetAuthID() == 0 {
 		s.AddJobs(1)
 		success := Play(act, NewCreateAuthKey(false))
@@ -55,7 +55,7 @@ func (s *SendFile) Play(act shared.Acter) {
 }
 
 // fileUpload : Step 1
-func (s *SendFile) fileUpload(act shared.Acter, peer *shared.PeerInfo) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
+func (s *SendFile) fileUpload(act shared.Actor, peer *shared.PeerInfo) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 
 	sw := time.Now()
 	req, fileID, totalParts := FileSavePart()

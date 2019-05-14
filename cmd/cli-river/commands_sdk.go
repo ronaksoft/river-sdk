@@ -38,10 +38,9 @@ var SdkSetLogLevel = &ishell.Cmd{
 		choiceIndex := c.MultiChoice([]string{
 			"Debug", "Info", "Warn", "Error",
 		}, "Level")
-		riversdk.SetLogLevel(choiceIndex-1)
+		riversdk.SetLogLevel(choiceIndex - 1)
 	},
 }
-
 
 var SdkGetDifference = &ishell.Cmd{
 	Name: "GetDifference",

@@ -25,7 +25,6 @@ func (r *repoMessagesExtra) SaveScrollID(peerID, msgID int64, peerType int32) er
 		return r.db.Create(scrollStatus).Error
 	}
 
-
 	scrollStatus.Holes = s.Holes
 	// update existing
 	return r.db.Table(scrollStatus.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerType).Update(scrollStatus).Error

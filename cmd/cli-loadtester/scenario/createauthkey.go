@@ -52,7 +52,7 @@ func NewCreateAuthKey(isFinal bool) shared.Screenwriter {
 }
 
 // Play execute CreateAuthKey scenario
-func (s *CreateAuthKey) Play(act shared.Acter) {
+func (s *CreateAuthKey) Play(act shared.Actor) {
 	if act.GetAuthID() > 0 {
 		s.log(act, "Actor already have AuthID", 0, 0)
 		return
@@ -62,7 +62,7 @@ func (s *CreateAuthKey) Play(act shared.Acter) {
 }
 
 // Step : 1
-func (s *CreateAuthKey) initConnect(act shared.Acter) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
+func (s *CreateAuthKey) initConnect(act shared.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 	reqEnv := InitConnect()
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
@@ -95,7 +95,7 @@ func (s *CreateAuthKey) initConnect(act shared.Acter) (*msg.MessageEnvelope, sha
 }
 
 // Step : 2
-func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acter) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
+func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 
 	clientNonce := resp.ClientNonce
 	serverNonce := resp.ServerNonce

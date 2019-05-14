@@ -21,7 +21,7 @@ func NewLogin(isFinal bool) shared.Screenwriter {
 }
 
 // Play execute Login scenario
-func (s *Login) Play(act shared.Acter) {
+func (s *Login) Play(act shared.Actor) {
 	if act.GetUserID() > 0 {
 		s.log(act, "Actor already have userID", 0, 0)
 		return
@@ -40,7 +40,7 @@ func (s *Login) Play(act shared.Acter) {
 }
 
 //sendCode : Step 1
-func (s *Login) sendCode(act shared.Acter) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
+func (s *Login) sendCode(act shared.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 	reqEnv := AuthSendCode(act.GetPhone())
 
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
@@ -69,7 +69,7 @@ func (s *Login) sendCode(act shared.Acter) (*msg.MessageEnvelope, shared.Success
 }
 
 // login Step : 2
-func (s *Login) login(resp *msg.AuthSentCode, act shared.Acter) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
+func (s *Login) login(resp *msg.AuthSentCode, act shared.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 	if strings.HasPrefix(resp.Phone, "237400") {
 		code := resp.Phone[len(resp.Phone)-4:]
 

@@ -2,8 +2,9 @@ package main
 
 import (
 	"encoding/json"
-
+	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/shared"
+	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-loadtester/supernumerary"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/config"
@@ -13,10 +14,12 @@ import (
 
 // Node supernumerary client
 type Node struct {
-	Config *config.NodeConfig
-	su     *supernumerary.Supernumerary
-	nats   *nats.Conn
-	subs   map[string]*nats.Subscription
+	Config     *config.NodeConfig
+	su         *supernumerary.Supernumerary
+	natsClient *nats.Conn
+	subs       map[string]*nats.Subscription
+	StartPhone int64
+	EndPhone   int64
 }
 
 // NewNode create supernumerary new client
@@ -26,16 +29,28 @@ func NewNode(cfg *config.NodeConfig) (*Node, error) {
 		su:     nil,
 		subs:   make(map[string]*nats.Subscription),
 	}
-	nats, err := nats.Connect(cfg.NatsURL)
+	natsClient, err := nats.Connect(cfg.NatsURL)
 	if err != nil {
 		return nil, err
 	}
-	n.nats = nats
+	n.natsClient = natsClient
 
-	err = n.RegisterSubscribtion()
+	err = n.RegisterSubscription()
 	if err != nil {
 		return nil, err
 	}
+
+	go func() {
+		cmd := config.NodeRegisterCmd{
+			InstanceID: cfg.InstanceID,
+		}
+		cmdBytes, _ := json.Marshal(cmd)
+		for {
+			_ = natsClient.Publish(config.SubjectCommander, cmdBytes)
+			time.Sleep(10 * time.Second)
+		}
+	}()
+
 
 	return n, nil
 }
@@ -45,7 +60,7 @@ func (n *Node) cbStart(msg *nats.Msg) {
 	cfg := config.StartCfg{}
 	err := json.Unmarshal(msg.Data, &cfg)
 	if err != nil {
-		_Log.Error("Failed to unmarshal SatrtCfg", zap.Error(err))
+		_Log.Error("Failed to unmarshal StartCfg", zap.Error(err))
 		return
 	}
 
@@ -62,7 +77,7 @@ func (n *Node) cbStart(msg *nats.Msg) {
 	shared.DefaultTimeout = cfg.Timeout
 	shared.DefaultSendTimeout = cfg.Timeout
 
-	su, err := supernumerary.NewSupernumerary(n.Config.StartPhone, n.Config.EndPhone)
+	su, err := supernumerary.NewSupernumerary(n.StartPhone, n.EndPhone)
 	if err != nil {
 		_Log.Error("cbStart()", zap.Error(err))
 	}
@@ -102,7 +117,6 @@ func (n *Node) cbLogin(msg *nats.Msg) {
 
 func (n *Node) cbRegister(msg *nats.Msg) {
 	_Log.Info("cbRegister()")
-
 	if n.su == nil {
 		_Log.Error("cbRegister() supernumerary not initialized")
 		return
@@ -111,7 +125,6 @@ func (n *Node) cbRegister(msg *nats.Msg) {
 }
 
 func (n *Node) cbTicker(msg *nats.Msg) {
-
 	if n.su == nil {
 		_Log.Error("cbTicker() supernumerary not initialized")
 		return
@@ -127,47 +140,75 @@ func (n *Node) cbTicker(msg *nats.Msg) {
 	}
 
 	n.su.SetTickerApplier(cfg.Duration, cfg.Action)
-
 }
 
-// RegisterSubscribtion subscribe subjects
-func (n *Node) RegisterSubscribtion() error {
-	subStart, err := n.nats.Subscribe(config.SUBJECT_START, n.cbStart)
+func (n *Node) cbPhoneRange(msg *nats.Msg) {
+	_Log.Info("cbPhoneRange()")
+	cfg := config.PhoneRangeCfg{}
+	err := json.Unmarshal(msg.Data, &cfg)
+	if err != nil {
+		_Log.Error("cbPhoneRange() failed to unmarshal", zap.Error(err))
+		return
+	}
+	n.StartPhone = cfg.StartPhone
+	n.EndPhone = cfg.EndPhone
+	_ = n.natsClient.Publish(msg.Reply, []byte("OK"))
+}
+
+func (n *Node) cbHealthCheck(msg *nats.Msg) {
+	_Log.Info("cbHealthCheck()")
+	_ = n.natsClient.Publish(msg.Reply, []byte("OK"))
+}
+
+// RegisterSubscription subscribe subjects
+func (n *Node) RegisterSubscription() error {
+	subStart, err := n.natsClient.Subscribe(config.SubjectStart, n.cbStart)
 	if err != nil {
 		return err
 	}
-	n.subs[config.SUBJECT_START] = subStart
+	n.subs[config.SubjectStart] = subStart
 
-	subStop, err := n.nats.Subscribe(config.SUBJECT_STOP, n.cbStop)
+	subStop, err := n.natsClient.Subscribe(config.SubjectStop, n.cbStop)
 	if err != nil {
 		return err
 	}
-	n.subs[config.SUBJECT_STOP] = subStop
+	n.subs[config.SubjectStop] = subStop
 
-	subCreateAuthKey, err := n.nats.Subscribe(config.SUBJECT_CREATEAUTHKEY, n.cbCreateAuthKey)
+	subCreateAuthKey, err := n.natsClient.Subscribe(config.SubjectCreateAuthKey, n.cbCreateAuthKey)
 	if err != nil {
 		return err
 	}
-	n.subs[config.SUBJECT_CREATEAUTHKEY] = subCreateAuthKey
+	n.subs[config.SubjectCreateAuthKey] = subCreateAuthKey
 
-	subLogin, err := n.nats.Subscribe(config.SUBJECT_LOGIN, n.cbLogin)
+	subLogin, err := n.natsClient.Subscribe(config.SubjectLogin, n.cbLogin)
 	if err != nil {
 		return err
 	}
-	n.subs[config.SUBJECT_LOGIN] = subLogin
+	n.subs[config.SubjectLogin] = subLogin
 
-	subRegister, err := n.nats.Subscribe(config.SUBJECT_RIGISTER, n.cbRegister)
+	subRegister, err := n.natsClient.Subscribe(config.SubjectRegister, n.cbRegister)
 	if err != nil {
 		return err
 	}
-	n.subs[config.SUBJECT_RIGISTER] = subRegister
+	n.subs[config.SubjectRegister] = subRegister
 
-	subTicker, err := n.nats.Subscribe(config.SUBJECT_TICKER, n.cbTicker)
+	subTicker, err := n.natsClient.Subscribe(config.SubjectTicker, n.cbTicker)
 	if err != nil {
 		return err
 	}
-	n.subs[config.SUBJECT_TICKER] = subTicker
+	n.subs[config.SubjectTicker] = subTicker
 
+	subPhoneRange, err := n.natsClient.Subscribe(fmt.Sprintf("%s.%s", n.Config.InstanceID, config.SubjectPhoneRange), n.cbPhoneRange)
+	if err != nil {
+		return err
+	}
+	n.subs[fmt.Sprintf("%s.%s", n.Config.InstanceID, config.SubjectPhoneRange)] = subPhoneRange
+
+	subHealthCheck, err := n.natsClient.Subscribe(fmt.Sprintf("%s.%s", n.Config.InstanceID, config.SubjectHealthCheck), n.cbHealthCheck)
+	if err != nil {
+		return err
+	}
+	n.subs[fmt.Sprintf("%s.%s", n.Config.InstanceID, config.SubjectHealthCheck)] = subHealthCheck
 	return nil
 }
 

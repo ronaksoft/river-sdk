@@ -289,7 +289,20 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		}
 		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
 		if len(messages) < int(req.Limit) {
-			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+			cb := func(m *msg.MessageEnvelope) {
+				switch m.Constructor {
+				case msg.C_MessagesMany:
+					x := new(msg.MessagesMany)
+					_ = x.Unmarshal(m.Message)
+					if len(x.Messages) < int(req.Limit) {
+						_ = messageHole.SetLowerFilled(req.Peer.ID, int32(req.Peer.Type))
+					}
+				case msg.C_Error:
+				default:
+				}
+				successCB(m)
+			}
+			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, cb, true)
 			return
 		}
 		messagesGetHistory(out, messages, users, in.RequestID, successCB)
@@ -866,6 +879,33 @@ func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB
 	err := repo.Dialogs.SaveDialog(dialog, 0)
 	if err != nil {
 		logs.Error("River::accountSetNotifySettings()-> SaveDialog()", zap.Error(err))
+		return
+	}
+
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+
+}
+
+func (r *River) dialogTogglePin(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.MessagesToggleDialogPin)
+	if err := req.Unmarshal(in.Message); err != nil {
+		logs.Error("River::dialogTogglePin()-> Unmarshal()", zap.Error(err))
+		return
+	}
+
+	dialog := repo.Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
+	if dialog == nil {
+		logs.Debug("River::dialogTogglePin()-> GetDialog()",
+			zap.String("Error", "Dialog is null"),
+		)
+		return
+	}
+
+	dialog.Pinned = req.Pin
+	err := repo.Dialogs.SaveDialog(dialog, 0)
+	if err != nil {
+		logs.Error("River::dialogTogglePin()-> SaveDialog()", zap.Error(err))
 		return
 	}
 

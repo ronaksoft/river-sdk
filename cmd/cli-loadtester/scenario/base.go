@@ -22,12 +22,12 @@ type Scenario struct {
 }
 
 // Play execute scenario
-func (s *Scenario) Play(act shared.Acter) {
+func (s *Scenario) Play(act shared.Actor) {
 	panic("Not implemented")
 }
 
 // Wait until play overs
-func (s *Scenario) Wait(act shared.Acter) bool {
+func (s *Scenario) Wait(act shared.Actor) bool {
 	s.wait.Wait()
 	if s.isFinal {
 		act.Stop()
@@ -40,7 +40,7 @@ func (s *Scenario) AddJobs(delta int) {
 	s.wait.Add(delta)
 }
 
-func (s *Scenario) failed(act shared.Acter, elapsed time.Duration, reqID uint64, str string) {
+func (s *Scenario) failed(act shared.Actor, elapsed time.Duration, reqID uint64, str string) {
 	s.result = false
 	act.SetActorSucceed(false)
 
@@ -52,14 +52,14 @@ func (s *Scenario) failed(act shared.Acter, elapsed time.Duration, reqID uint64,
 	s.wait.Done()
 }
 
-func (s *Scenario) completed(act shared.Acter, elapsed time.Duration, reqID uint64, str string) {
+func (s *Scenario) completed(act shared.Actor, elapsed time.Duration, reqID uint64, str string) {
 	s.result = true
 	act.SetActorSucceed(true)
 	logs.Info(act.GetPhone()+"\tReqID:"+strconv.FormatUint(reqID, 10)+"\t completed() : "+str, zap.Duration("elapsed", elapsed))
 	s.wait.Done()
 }
 
-func (s *Scenario) log(act shared.Acter, str string, elapsed time.Duration, reqID uint64) {
+func (s *Scenario) log(act shared.Actor, str string, elapsed time.Duration, reqID uint64) {
 	if elapsed > 0 {
 		logs.Warn(act.GetPhone()+"\tReqID:"+strconv.FormatUint(reqID, 10)+"\t log() : "+str, zap.Duration("elapsed", elapsed))
 	} else {
@@ -67,7 +67,7 @@ func (s *Scenario) log(act shared.Acter, str string, elapsed time.Duration, reqI
 	}
 }
 
-func (s *Scenario) isErrorResponse(act shared.Acter, elapsed time.Duration, resp *msg.MessageEnvelope, cbName string) bool {
+func (s *Scenario) isErrorResponse(act shared.Actor, elapsed time.Duration, resp *msg.MessageEnvelope, cbName string) bool {
 	if resp.Constructor == msg.C_Error {
 		act.ReceivedErrorResponse()
 		x := new(msg.Error)
@@ -102,7 +102,7 @@ func (s *Scenario) GetResult() bool {
 }
 
 // Play puts actor in scenario to play its role and wait to show overs
-func Play(act shared.Acter, scenario shared.Screenwriter) bool {
+func Play(act shared.Actor, scenario shared.Screenwriter) bool {
 	scenario.Play(act)
 	scenario.Wait(act)
 	return scenario.GetResult()

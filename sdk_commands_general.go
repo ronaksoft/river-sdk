@@ -2,17 +2,23 @@ package riversdk
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	"os"
 	"strconv"
 	"strings"
 
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/filemanager"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
 )
+
+var GetDBStatusIsRunning bool
+var DatabaseStatus map[int64]map[int32]dto.MediaInfo
 
 // CancelRequest remove given requestID callbacks&delegates and if its not processed by queue we skip it on queue distributor
 func (r *River) CancelRequest(requestID int64) {
@@ -934,6 +940,122 @@ func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
 	if err := repo.MessagesExtra.SaveScrollID(peerID, msgID, peerType); err != nil {
 		logs.Error("SetScrollStatus::Failed to set scroll ID")
 	}
+}
+
+// SearchGlobal returns messages, contacts and groups matching given text
+func (r *River) SearchGlobal(text string , delegate RequestDelegate) {
+	msgs := repo.Messages.SearchText(text)
+
+	// get users && group IDs
+	userIDs := domain.MInt64B{}
+	groupIDs := domain.MInt64B{}
+	for _, m := range msgs {
+		if m.PeerType == int32(msg.PeerSelf) || m.PeerType == int32(msg.PeerUser) {
+			userIDs[m.PeerID] = true
+		}
+
+		if m.PeerType == int32(msg.PeerGroup) {
+			groupIDs[m.PeerID] = true
+		}
+
+		if m.SenderID > 0 {
+			userIDs[m.SenderID] = true
+		} else {
+			groupIDs[m.PeerID] = true
+		}
+
+		if m.FwdSenderID > 0 {
+			userIDs[m.FwdSenderID] = true
+		} else {
+			groupIDs[m.FwdSenderID] = true
+		}
+	}
+
+	users := repo.Users.GetAnyUsers(userIDs.ToArray())
+	groups := repo.Groups.GetManyGroups(groupIDs.ToArray())
+
+	userContacts, _ := repo.Users.SearchContacts(text)
+	peerIDs := repo.Dialogs.GetPeerIDs()
+
+	// Get users who have dialog with me, but are not my contact
+	NonContactUsersWithDialogs := repo.Users.SearchNonContactsWithIDs(peerIDs, text)
+
+	userContacts = append(userContacts, NonContactUsersWithDialogs...)
+
+	searchResults := new(msg.ClientSearchResult)
+	searchResults.Messages = msgs
+	searchResults.Users = users
+	searchResults.Groups = groups
+	searchResults.MatchedUsers = userContacts
+	searchResults.MatchedGroups = repo.Groups.SearchGroupsByTitle(text)
+
+	outBytes, _ := searchResults.Marshal()
+
+	if delegate != nil {
+		delegate.OnComplete(outBytes)
+	}
+}
+
+// GetGetDBStatus returns message IDs and total size of each media stored in user's database
+func (r *River) GetDBStatus(delegate RequestDelegate) {
+	res := msg.DBMediaInfo{}
+	if GetDBStatusIsRunning {
+		err := errors.New("GetDBStatus is running")
+		if delegate != nil {
+			delegate.OnTimeout(err)
+		}
+		return
+	}
+	GetDBStatusIsRunning = true
+	peerMediaSizeMap, err := repo.Files.GetDBStatus()
+	if err != nil {
+		GetDBStatusIsRunning = false
+		logs.Error(err.Error())
+		delegate.OnTimeout(err)
+		return
+	}
+	peerMediaInfo := make([]*msg.PeerMediaInfo, 0)
+	for peerID, mediaInfoMap := range peerMediaSizeMap {
+		mediaSize :=  make([]*msg.MediaSize, 0)
+		for mediaType, mediaInfo := range mediaInfoMap {
+			mediaSize = append(mediaSize, &msg.MediaSize{MediaType: mediaType, TotalSize:mediaInfo.Size})
+		}
+		peerMediaInfo = append(peerMediaInfo, &msg.PeerMediaInfo{PeerID:peerID, Media:mediaSize})
+	}
+	res.MediaInfo = peerMediaInfo
+	logs.Debug("MediaInfo", zap.String("", fmt.Sprintf("%+v", res.MediaInfo)))
+	pBytes, _ := res.Marshal()
+	if delegate != nil {
+		delegate.OnComplete(pBytes)
+	}
+	GetDBStatusIsRunning = false
+	DatabaseStatus = peerMediaSizeMap
+}
+
+func (r *River) ClearCache(peerID int64, mediaTypes []domain.SharedMediaType, all bool) bool {
+	var messageIDs []int64
+	mediaInfo := DatabaseStatus[peerID]
+	if all {
+		for _, mediaType := range mediaInfo {
+			messageIDs = append(messageIDs, mediaType.MessageIDs...)
+		}
+	} else {
+		for _, mediaType := range mediaTypes {
+			messageIDs = append(messageIDs, mediaInfo[int32(mediaType)].MessageIDs...)
+		}
+	}
+	logs.Debug("ClearCache", zap.Int64s("messageIDs", messageIDs))
+
+	if filePaths, err := repo.Files.ClearMedia(messageIDs); err != nil {
+		return false
+	} else {
+		logs.Debug("ClearCache", zap.Strings("media paths", filePaths))
+		err = filemanager.Ctx().ClearFiles(filePaths)
+		if err != nil {
+			return false
+		}
+	}
+	return true
 }
 
 func (r *River) GetSDKSalt() int64 {

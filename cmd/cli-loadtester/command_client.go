@@ -15,7 +15,7 @@ import (
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )
 
-var _clientActer shared.Acter
+var _clientActer shared.Actor
 var _clientCreatedOn time.Time
 
 var cmdClient = &ishell.Cmd{

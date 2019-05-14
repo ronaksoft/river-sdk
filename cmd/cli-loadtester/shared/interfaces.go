@@ -6,8 +6,8 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 )
 
-// Acter actor interface
-type Acter interface {
+// Actor actor interface
+type Actor interface {
 	GetPhone() (phone string)
 	SetPhone(phone string)
 
@@ -45,8 +45,8 @@ type Acter interface {
 
 // Screenwriter scenario interface
 type Screenwriter interface {
-	Play(act Acter)
-	Wait(act Acter) bool
+	Play(act Actor)
+	Wait(act Actor) bool
 	SetFinal(isFinal bool)
 	IsFinal() bool
 	AddJobs(i int)
@@ -64,7 +64,7 @@ type Neter interface {
 
 // Reporter report interface
 type Reporter interface {
-	Register(act Acter)
+	Register(act Actor)
 	String() string
 	Print()
 	Clear()

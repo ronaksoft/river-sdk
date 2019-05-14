@@ -279,6 +279,29 @@ var MessagesReadContents = &ishell.Cmd{
 	},
 }
 
+var MessagesSearchText = &ishell.Cmd{
+	Name: "SearchText",
+	Func: func(c *ishell.Context) {
+		text := fnGetBody(c)
+		reqDelegate := new(ClearCacheResult)
+		_SDK.SearchGlobal(text, reqDelegate)
+	},
+}
+
+type ClearCacheResult struct {
+	SuccessConst int64
+}
+
+func (d *ClearCacheResult) OnComplete(b []byte) {
+
+
+
+	return
+}
+
+func (d *ClearCacheResult) OnTimeout(err error) {
+}
+
 func init() {
 	Message.AddCmd(MessageGetDialogs)
 	Message.AddCmd(MessageGetDialog)
@@ -292,4 +315,5 @@ func init() {
 	Message.AddCmd(MessagesEdit)
 	Message.AddCmd(MessagesForward)
 	Message.AddCmd(MessagesReadContents)
+	Message.AddCmd(MessagesSearchText)
 }

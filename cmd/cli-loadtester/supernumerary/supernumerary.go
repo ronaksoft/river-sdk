@@ -18,17 +18,16 @@ import (
 
 // Supernumerary bunch of active actors
 type Supernumerary struct {
-	Actors      map[int64]shared.Acter
+	Actors      map[int64]shared.Actor
 	FromPhoneNo int64
 	ToPhoneNo   int64
 
-	chTikerStop chan bool
-	ticker      *time.Ticker
+	chTickerStop chan bool
+	ticker       *time.Ticker
 }
 
 // NewSupernumerary creates new instance
 func NewSupernumerary(fromPhoneNo, toPhoneNo int64) (*Supernumerary, error) {
-
 	// create cache directory
 	if _, err := os.Stat("_cache/"); os.IsNotExist(err) {
 		err = os.Mkdir("_cache/", os.ModePerm)
@@ -38,18 +37,21 @@ func NewSupernumerary(fromPhoneNo, toPhoneNo int64) (*Supernumerary, error) {
 	}
 
 	s := &Supernumerary{
-		Actors:      make(map[int64]shared.Acter),
-		FromPhoneNo: fromPhoneNo,
-		ToPhoneNo:   toPhoneNo,
-		chTikerStop: make(chan bool),
+		Actors:       make(map[int64]shared.Actor),
+		FromPhoneNo:  fromPhoneNo,
+		ToPhoneNo:    toPhoneNo,
+		chTickerStop: make(chan bool),
 	}
 
 	for i := fromPhoneNo; i < toPhoneNo; i++ {
 		phone := shared.GetPhone(i)
 		act, err := actor.NewActor(phone)
 		if err != nil {
-			defer s.dispose()
-			return nil, err
+			logs.Info("Initialized Actor Failed",
+				zap.String("Phone", phone),
+				zap.Error(err),
+			)
+			continue
 		}
 		logs.Info("Initialized Actor", zap.String("Phone", phone))
 		s.Actors[i] = act
@@ -67,10 +69,9 @@ func (s *Supernumerary) Stop() {
 
 // dispose stops actors and cleans up
 func (s *Supernumerary) dispose() {
-
 	if s.ticker != nil {
 		logs.Debug("dispose() send ticker stop signal")
-		s.chTikerStop <- true
+		s.chTickerStop <- true
 		s.ticker.Stop()
 		logs.Debug("dispose() ticker stopped")
 		s.ticker = nil
@@ -134,10 +135,8 @@ func (s *Supernumerary) Login() {
 // SetTickerApplier try to invoke certain action for all actors repeatedly
 func (s *Supernumerary) SetTickerApplier(duration time.Duration, action TickerAction) {
 	if s.ticker != nil {
-		logs.Debug("SetTickerApplier() send ticker stop signal")
-		s.chTikerStop <- true
+		s.chTickerStop <- true
 		s.ticker.Stop()
-		logs.Debug("SetTickerApplier() ticker stopped")
 	}
 	s.ticker = time.NewTicker(duration)
 	go s.tickerApplier(action)
@@ -184,7 +183,7 @@ func (s *Supernumerary) tickerApplier(action TickerAction) {
 				}
 			}
 
-		case <-s.chTikerStop:
+		case <-s.chTickerStop:
 			logs.Warn("tickerApplier() stop signal")
 			return
 		}
@@ -193,7 +192,7 @@ func (s *Supernumerary) tickerApplier(action TickerAction) {
 
 func (s *Supernumerary) fnCheckStopSignal() bool {
 	select {
-	case <-s.chTikerStop:
+	case <-s.chTickerStop:
 		return true
 	default:
 		return false
@@ -201,7 +200,7 @@ func (s *Supernumerary) fnCheckStopSignal() bool {
 }
 
 // fnGetRandomPeer returns random peer
-func (s *Supernumerary) fnGetRandomPeer(act shared.Acter) *shared.PeerInfo {
+func (s *Supernumerary) fnGetRandomPeer(act shared.Actor) *shared.PeerInfo {
 	fromUserID := act.GetUserID()
 	for {
 		phone := s.fnGetRandomPhoneNo()

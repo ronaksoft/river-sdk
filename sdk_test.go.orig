@@ -1,15 +1,17 @@
 package riversdk
 
 import (
-	"encoding/json"
+<<<<<<< HEAD
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
+=======
+	"encoding/json"
+	"fmt"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+>>>>>>> 5f0c8e3473fd75f2124fa0ba5df1f08383dbb4d1
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	"git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -17,7 +19,7 @@ import (
 )
 
 var (
-	_River *River
+	_River   *River
 )
 
 var ConnInfo []byte
@@ -33,90 +35,7 @@ func (c *ConnInfoDelegates) SaveConnInfo(connInfo []byte) {
 	}
 }
 
-func init() {
-	logs.Info("Creating New River SDK Instance")
-	r := new(River)
-	conInfo := new(RiverConnection)
-	conInfo.Delegate = new(dummyConInfoDelegate)
-	r.SetConfig(&RiverConfig{
-		DbPath:                 "./_data/",
-		DbID:                   "test",
-		ServerKeysFilePath:     "./keys.json",
-		ServerEndpoint:         "ws://test.river.im",
-		QueuePath:              fmt.Sprintf("%s/%s", "./_queue", "test"),
-		MainDelegate:           new(MainDelegateDummy),
-		Logger:                 nil,
-		LogLevel:               int(zapcore.DebugLevel),
-		DocumentAudioDirectory: "./_files/audio",
-		DocumentVideoDirectory: "./_files/video",
-		DocumentPhotoDirectory: "./_files/photo",
-		DocumentFileDirectory:  "./_files/file",
-		DocumentCacheDirectory: "./_files/cache",
-		DocumentLogDirectory:   "./_files/logs",
-		ConnInfo:               conInfo,
-	})
-	_River = r
-}
-
-func TestController_CheckSalt(t *testing.T) {
-	_ = repo.InitRepo("sqlite3", fmt.Sprintf("%s/%s.db", "./_data", "test"))
-	var saltArrays [][]domain.Slt
-	var saltArray []domain.Slt
-	ti := time.Now()
-	for i := 0; i < 48; i++ {
-		slt := domain.Slt{}
-		next := ti.Add(time.Hour * time.Duration(i))
-		slt.Timestamp = time.Unix(next.Unix(), 0).Unix()
-		slt.Value = ronak.RandomInt64(0)
-		if i == 0 {
-			slt.Value = 5555
-		}
-		saltArray = append(saltArray, slt)
-	}
-	saltArrays = append(saltArrays, saltArray)
-
-	var saltArray2 []domain.Slt
-	for i := 0; i < 48; i++ {
-		slt := domain.Slt{}
-		next := ti.Add(time.Hour * time.Duration(i*48))
-		slt.Timestamp = time.Unix(next.Unix(), 0).Unix()
-		slt.Value = ronak.RandomInt64(0)
-		saltArray2 = append(saltArray2, slt)
-	}
-	saltArrays = append(saltArrays, saltArray2)
-	tests := []struct {
-		name  string
-		salts []domain.Slt
-	}{
-		{"test1", saltArrays[0]},
-		{"test2", saltArrays[1]},
-	}
-	for i, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			b, _ := json.Marshal(tt.salts)
-			err := repo.System.SaveString(domain.ColumnSystemSalts, string(b))
-			if err != nil {
-				logs.Debug("synchronizer::SystemGetSalts()",
-					zap.String("error", err.Error()),
-				)
-			}
-			time.Sleep(time.Millisecond * 600)
-			_River.syncCtrl.CheckSalt()
-			salt := _River.GetSDKSalt()
-			if i == 0 {
-				if salt != 5555 {
-					t.Error(fmt.Sprintf("expecting 5555, have %d", salt))
-				}
-			}
-			if i == 1 {
-				logs.Debug("salt::()",
-					zap.Int64("salt", salt),
-				)
-			}
-		})
-	}
-}
-
+func init() {}
 
 func TestGetWorkGroup(t *testing.T) {
 	b, err := GetWorkGroup("ws://alaki.river.im", 5)
@@ -173,6 +92,7 @@ func TestReconnect(t *testing.T) {
 		logs.Info("AuthKey Created.")
 	}
 
+
 	time.Sleep(10 * time.Second)
 	r.Stop()
 	r.ResetAuthKey()
@@ -197,7 +117,7 @@ func TestReconnect(t *testing.T) {
 		ServerKeysFilePath: "./keys.json",
 		ServerEndpoint:     "ws://test.river.im",
 		ConnInfo:           conInfo,
-		LogLevel:           -1,
+		LogLevel: -1,
 	})
 	r.Start()
 	for r.ConnInfo.AuthID == 0 {
@@ -237,6 +157,7 @@ func TestNewRiver(t *testing.T) {
 		ConnInfo:           conInfo,
 	})
 
+
 	r.Start()
 	if r.ConnInfo.AuthID == 0 {
 		logs.Info("AuthKey has not been created yet.")
@@ -248,9 +169,9 @@ func TestNewRiver(t *testing.T) {
 	}
 
 	updateGetState := new(msg.UpdateGetState)
-	b, _ := updateGetState.Marshal()
+	b,_ := updateGetState.Marshal()
 
-	for i := 0; i < 10; i++ {
+	for i := 0;i < 10 ;i++ {
 		reqID, err := r.ExecuteCommand(msg.C_UpdateGetState, b, new(RequestDelegateDummy), true, true)
 		if err != nil {
 			t.Error(reqID, ":::", err)
@@ -259,6 +180,58 @@ func TestNewRiver(t *testing.T) {
 		t.Log("RequestID:", reqID)
 	}
 
+}
+
+func (d *MainDelegateDummy) OnSearchComplete(b []byte) {
+	logs.Info("OnSearchComplete")
+	result := new(msg.ClientSearchResult)
+	err := result.Unmarshal(b)
+	if err != nil {
+		test.Error("error Unmarshal", zap.String("", err.Error()))
+		//logs.Warn("error Unmarshal", zap.String("", err.Error()))
+		return
+	}
+	switch testCase {
+	case 1:
+		if len(result.Messages) > 0 {
+			if result.Messages[0].ID != 123 {
+				test.Error(fmt.Sprintf("expected msg ID 123, have %d", result.Messages[0].ID))
+			}
+		} else {
+			test.Error(fmt.Sprintf("expected msg ID 123, have not any"))
+		}
+
+		wg.Done()
+	case 2:
+		if len(result.Messages) > 0 {
+			test.Error(fmt.Sprintf("expected no messages"))
+		}
+		if len(result.MatchedUsers) > 0 {
+			if result.MatchedUsers[0].ID != 852 {
+				test.Error(fmt.Sprintf("expected user ID 852, have %d", result.Messages[0].ID))
+			}
+		} else {
+			test.Error(fmt.Sprintf("expected user ID 852, have nothing, %+v", result))
+		}
+		wg.Done()
+	case 3:
+		if len(result.Messages) > 0 {
+			test.Error(fmt.Sprintf("expected no messages"))
+		}
+		if len(result.MatchedUsers) > 0 {
+			if result.MatchedUsers[0].ID != 321 {
+				test.Error(fmt.Sprintf("expected user ID 321, have %d", result.Messages[0].ID))
+			}
+		} else {
+			test.Error(fmt.Sprintf("expected user ID 321, have nothing, %+v", result))
+		}
+		wg.Done()
+	case 4:
+		if len(result.Messages) > 0 || len(result.MatchedUsers) > 0 || len(result.MatchedGroups) > 0 {
+			test.Error(fmt.Sprintf("expected to found nothing but found %v", result))
+		}
+		wg.Done()
+	}
 }
 
 func TestRiver_SetScrollStatus(t *testing.T) {
@@ -271,6 +244,7 @@ func TestRiver_SetScrollStatus(t *testing.T) {
 	if readMsgID != msgID {
 		t.Error("values do not match")
 	}
+
 }
 
 type MainDelegateDummy struct{}
@@ -346,7 +320,8 @@ func (d *MainDelegateDummy) OnDownloadError(messageID, requestID int64, filePath
 	)
 }
 
-type RequestDelegateDummy struct{}
+
+type RequestDelegateDummy struct {}
 
 func (RequestDelegateDummy) OnComplete(b []byte) {
 	fmt.Println(b)
@@ -354,55 +329,4 @@ func (RequestDelegateDummy) OnComplete(b []byte) {
 
 func (RequestDelegateDummy) OnTimeout(err error) {
 	fmt.Println(err)
-}
-
-func (d *MainDelegateDummy) OnSearchComplete(b []byte) {
-	logs.Info("OnSearchComplete")
-	result := new(msg.ClientSearchResult)
-	err := result.Unmarshal(b)
-	if err != nil {
-		test.Error("error Unmarshal", zap.String("", err.Error()))
-		return
-	}
-	switch testCase {
-	case 1:
-		if len(result.Messages) > 0 {
-			if result.Messages[0].ID != 123 {
-				test.Error(fmt.Sprintf("expected msg ID 123, have %d", result.Messages[0].ID))
-			}
-		} else {
-			test.Error(fmt.Sprintf("expected msg ID 123, have not any"))
-		}
-
-		wg.Done()
-	case 2:
-		if len(result.Messages) > 0 {
-			test.Error(fmt.Sprintf("expected no messages"))
-		}
-		if len(result.MatchedUsers) > 0 {
-			if result.MatchedUsers[0].ID != 852 {
-				test.Error(fmt.Sprintf("expected user ID 852, have %d", result.Messages[0].ID))
-			}
-		} else {
-			test.Error(fmt.Sprintf("expected user ID 852, have nothing, %+v", result))
-		}
-		wg.Done()
-	case 3:
-		if len(result.Messages) > 0 {
-			test.Error(fmt.Sprintf("expected no messages"))
-		}
-		if len(result.MatchedUsers) > 0 {
-			if result.MatchedUsers[0].ID != 321 {
-				test.Error(fmt.Sprintf("expected user ID 321, have %d", result.Messages[0].ID))
-			}
-		} else {
-			test.Error(fmt.Sprintf("expected user ID 321, have nothing, %+v", result))
-		}
-		wg.Done()
-	case 4:
-		if len(result.Messages) > 0 || len(result.MatchedUsers) > 0 || len(result.MatchedGroups) > 0 {
-			test.Error(fmt.Sprintf("expected to found nothing but found %v", result))
-		}
-		wg.Done()
-	}
 }

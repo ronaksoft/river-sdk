@@ -9,16 +9,16 @@ import (
 
 var (
 	mx                   sync.Mutex
-	cachedActorsByAuthID map[int64]Acter
-	cachedActorsByPhone  map[string]Acter
+	cachedActorsByAuthID map[int64]Actor
+	cachedActorsByPhone  map[string]Actor
 )
 
 func init() {
-	cachedActorsByAuthID = make(map[int64]Acter)
-	cachedActorsByPhone = make(map[string]Acter)
+	cachedActorsByAuthID = make(map[int64]Actor)
+	cachedActorsByPhone = make(map[string]Actor)
 }
 
-func CacheActor(act Acter) {
+func CacheActor(act Actor) {
 	mx.Lock()
 	authID := act.GetAuthID()
 	if a, ok := cachedActorsByAuthID[authID]; ok {
@@ -34,20 +34,20 @@ func CacheActor(act Acter) {
 	mx.Unlock()
 }
 
-func GetCachedActorByAuthID(authID int64) (act Acter, ok bool) {
+func GetCachedActorByAuthID(authID int64) (act Actor, ok bool) {
 	mx.Lock()
 	act, ok = cachedActorsByAuthID[authID]
 	mx.Unlock()
 	return
 }
 
-func GetCachedActorByPhone(phone string) (act Acter, ok bool) {
+func GetCachedActorByPhone(phone string) (act Actor, ok bool) {
 	mx.Lock()
 	act, ok = cachedActorsByPhone[phone]
 	mx.Unlock()
 	return
 }
 
-func GetCachedAllActors() map[string]Acter {
+func GetCachedAllActors() map[string]Actor {
 	return cachedActorsByPhone
 }

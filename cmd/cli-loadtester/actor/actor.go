@@ -47,9 +47,9 @@ type Actor struct {
 }
 
 // NewActor create new actor instance
-func NewActor(phone string) (shared.Acter, error) {
+func NewActor(phone string) (shared.Actor, error) {
 	var act *Actor
-	acter, ok := shared.GetCachedActorByPhone(phone)
+	actor, ok := shared.GetCachedActorByPhone(phone)
 	if !ok {
 		logs.Warn("NewActor() Actor not found in Cache", zap.String("Phone", phone))
 		act = new(Actor)
@@ -65,7 +65,7 @@ func NewActor(phone string) (shared.Acter, error) {
 			}
 		}
 	} else {
-		act = acter.(*Actor)
+		act = actor.(*Actor)
 	}
 	act.updateApplier = make(map[int64]shared.UpdateApplier)
 	act.netCtrl = controller.NewCtrlNetwork(act, act.onMessage, act.onUpdate, act.onError)
@@ -79,16 +79,16 @@ func NewActor(phone string) (shared.Acter, error) {
 	return act, nil
 }
 
-// GetPhone Acter interface func
+// GetPhone Actor interface func
 func (act *Actor) GetPhone() string { return act.Phone }
 
-// SetPhone Acter interface func
+// SetPhone Actor interface func
 func (act *Actor) SetPhone(phone string) { act.Phone = phone }
 
-// GetPhoneList Acter interface func
+// GetPhoneList Actor interface func
 func (act *Actor) GetPhoneList() []string { return act.PhoneList }
 
-// SetPhoneList Acter interface func
+// SetPhoneList Actor interface func
 func (act *Actor) SetPhoneList(phoneList []string) { act.PhoneList = phoneList }
 
 // SetAuthInfo set authID and authKey after CreateAuthKey completed
@@ -98,38 +98,38 @@ func (act *Actor) SetAuthInfo(authID int64, authKey []byte) {
 	copy(act.AuthKey, authKey)
 }
 
-// GetAuthInfo Acter interface func
+// GetAuthInfo Actor interface func
 func (act *Actor) GetAuthInfo() (int64, []byte) { return act.AuthID, act.AuthKey }
 
-// GetAuthID Acter interface func
+// GetAuthID Actor interface func
 func (act *Actor) GetAuthID() (authID int64) {
 	return act.AuthID
 }
 
-// GetAuthKey Acter interface func
+// GetAuthKey Actor interface func
 func (act *Actor) GetAuthKey() (authKey []byte) {
 	return act.AuthKey
 }
 
-// GetUserID Acter interface func
+// GetUserID Actor interface func
 func (act *Actor) GetUserID() int64 { return act.UserID }
 
-// GetUserInfo Acter interface func
+// GetUserInfo Actor interface func
 func (act *Actor) GetUserInfo() (userID int64, username, userFullName string) {
 	return act.UserID, act.UserName, act.UserFullName
 }
 
-// SetUserInfo Acter interface func
+// SetUserInfo Actor interface func
 func (act *Actor) SetUserInfo(userID int64, username, userFullName string) {
 	act.UserID = userID
 	act.UserName = username
 	act.UserFullName = userFullName
 }
 
-// GetPeers Acter interface func
+// GetPeers Actor interface func
 func (act *Actor) GetPeers() []*shared.PeerInfo { return act.Peers }
 
-// SetPeers Acter interface func
+// SetPeers Actor interface func
 func (act *Actor) SetPeers(peers []*shared.PeerInfo) { act.Peers = peers }
 
 // ExecuteRequest send request to server

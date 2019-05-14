@@ -15,13 +15,14 @@ import (
 
 // authAuthorization
 func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
-	logs.Info("SyncController::authAuthorization()")
 	x := new(msg.AuthAuthorization)
 	if err := x.Unmarshal(e.Message); err != nil {
 		logs.Error("authAuthorization()-> Unmarshal()", zap.Error(err))
 		return
 	}
-
+	logs.Info("SyncController::authAuthorization",
+		zap.Int64("UserID", x.User.ID),
+	)
 	ctrl.connInfo.ChangeFirstName(x.User.FirstName)
 	ctrl.connInfo.ChangeLastName(x.User.LastName)
 	ctrl.connInfo.ChangeUsername(x.User.Username)
@@ -35,12 +36,12 @@ func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
 
 // authSentCode
 func (ctrl *Controller) authSentCode(e *msg.MessageEnvelope) {
-	logs.Info("SyncController::authSentCode()")
 	x := new(msg.AuthSentCode)
 	if err := x.Unmarshal(e.Message); err != nil {
 		logs.Error("authSentCode()-> Unmarshal()", zap.Error(err))
 		return
 	}
+	logs.Info("SyncController::authSentCode")
 	ctrl.connInfo.ChangePhone(x.Phone)
 	// No need to save it here its gonna be saved on authAuthorization
 	// conf.Save()
@@ -48,12 +49,12 @@ func (ctrl *Controller) authSentCode(e *msg.MessageEnvelope) {
 
 // contactsImported
 func (ctrl *Controller) contactsImported(e *msg.MessageEnvelope) {
-	logs.Info("SyncController::contactsImported()")
 	x := new(msg.ContactsImported)
 	if err := x.Unmarshal(e.Message); err != nil {
 		logs.Error("contactsImported()-> Unmarshal()", zap.Error(err))
 		return
 	}
+	logs.Info("SyncController::contactsImported")
 	for _, u := range x.Users {
 		repo.Users.SaveContactUser(u)
 	}
@@ -61,12 +62,15 @@ func (ctrl *Controller) contactsImported(e *msg.MessageEnvelope) {
 
 // contactsMany
 func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
-	logs.Info("SyncController::contactsMany()")
 	x := new(msg.ContactsMany)
 	if err := x.Unmarshal(e.Message); err != nil {
 		logs.Error("contactsMany()-> Unmarshal()", zap.Error(err))
 		return
 	}
+	logs.Info("SyncController::contactsMany",
+		zap.Int("Users", len(x.Users)),
+		zap.Int("Contacts", len(x.Contacts)),
+	)
 
 	userIDs := domain.MInt64B{}
 	for _, u := range x.Users {
@@ -86,12 +90,16 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 
 // messageDialogs
 func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
-	logs.Info("SyncController::messagesDialogs()")
 	x := new(msg.MessagesDialogs)
 	if err := x.Unmarshal(e.Message); err != nil {
 		logs.Error("messagesDialogs()-> Unmarshal()", zap.Error(err))
 		return
 	}
+	logs.Info("SyncController::messagesDialogs",
+		zap.Int("Dialogs", len(x.Dialogs)),
+		zap.Int64("UpdateID", x.UpdateID),
+		zap.Int32("Count", x.Count),
+	)
 
 	mMessages := make(map[int64]*msg.UserMessage)
 	for _, message := range x.Messages {
@@ -125,14 +133,16 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 
 // Check pending messages and notify UI
 func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
-	logs.Info("SyncController::messageSent()")
-
 	sent := new(msg.MessagesSent)
 	err := sent.Unmarshal(e.Message)
 	if err != nil {
 		logs.Error("MessageSent() failed to unamarshal", zap.Error(err))
 		return
 	}
+	logs.Info("SyncController::messageSent",
+		zap.Int64("MessageID", sent.MessageID),
+		zap.Int64("RandomID", sent.RandomID),
+	)
 
 	// Add delivered message to prevent invoking newMessage event later
 	ctrl.addToDeliveredMessageList(sent.MessageID)
@@ -231,13 +241,15 @@ func (ctrl *Controller) addToDeliveredMessageList(id int64) {
 
 // usersMany
 func (ctrl *Controller) usersMany(e *msg.MessageEnvelope) {
-	logs.Info("SyncController::usersMany()")
 	u := new(msg.UsersMany)
 	err := u.Unmarshal(e.Message)
 	if err != nil {
 		logs.Error("usersMany()-> Unmarshal()", zap.Error(err))
 		return
 	}
+	logs.Info("SyncController::usersMany",
+		zap.Int("Users", len(u.Users)),
+	)
 	for _, v := range u.Users {
 		repo.Users.SaveUser(v)
 	}
@@ -245,13 +257,16 @@ func (ctrl *Controller) usersMany(e *msg.MessageEnvelope) {
 
 // messagesMany
 func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
-	logs.Info("SyncController::messagesMany()")
 	u := new(msg.MessagesMany)
 	err := u.Unmarshal(e.Message)
 	if err != nil {
 		logs.Error("messagesMany()-> Unmarshal()", zap.Error(err))
 		return
 	}
+	logs.Info("SyncController::messagesMany",
+		zap.Int("Messages", len(u.Messages)),
+		zap.Bool("Continues", u.Continuous),
+	)
 
 	// Save Groups & Users
 	_ = repo.Users.SaveMany(u.Users)
@@ -281,24 +296,27 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 
 // groupFull
 func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
-	logs.Info("SyncController::groupFull()")
 	u := new(msg.GroupFull)
 	err := u.Unmarshal(e.Message)
 	if err != nil {
 		logs.Error("groupFull()-> Unmarshal()", zap.Error(err))
 		return
 	}
+	logs.Info("SyncController::groupFull",
+		zap.Int64("GroupID", u.Group.ID),
+	)
+
 	// Save Group
-	repo.Groups.Save(u.Group)
+	_ = repo.Groups.Save(u.Group)
 
 	// Save Group Members
 	for _, v := range u.Participants {
-		repo.Groups.SaveParticipants(u.Group.ID, v)
+		_ = repo.Groups.SaveParticipants(u.Group.ID, v)
 	}
 
 	// Save Users
 	for _, v := range u.Users {
-		repo.Users.SaveUser(v)
+		_ = repo.Users.SaveUser(v)
 	}
 
 	// Update NotifySettings
