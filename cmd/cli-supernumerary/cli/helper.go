@@ -1,11 +1,21 @@
 package main
 
 import (
+	"fmt"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"io/ioutil"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"gopkg.in/abiosoft/ishell.v2"
 )
+
+type Params struct {
+	ServerUrl     string
+	FileServerUrl string
+}
 
 func fnGetDuration(c *ishell.Context) time.Duration {
 	var tmpNo time.Duration
@@ -38,19 +48,30 @@ func fnGetTickerAction(c *ishell.Context) int {
 }
 
 func fnGetServerURL(c *ishell.Context) string {
-	c.Print("Server URL (ws://test.river.im): ")
+	defaultServerUrl, _ := ioutil.ReadFile(".river-server")
+	if defaultServerUrl == nil {
+		defaultServerUrl = ronak.StrToByte("test.river.im")
+	}
+	c.Print(fmt.Sprintf("Server URL (ws://%s): ", defaultServerUrl))
 	tmp := c.ReadLine()
 	if tmp == "" {
-		tmp = "ws://test.river.im"
+		tmp = ronak.ByteToStr(defaultServerUrl)
+	} else {
+		tmp = strings.TrimPrefix(tmp, "ws://")
+		_ = ioutil.WriteFile(".river-server", ronak.StrToByte(tmp), os.ModePerm)
 	}
-	return tmp
+	return fmt.Sprintf("ws://%s", tmp)
 }
 
 func fnGetFileServerURL(c *ishell.Context) string {
-	c.Print("File Server URL (http://test.river.im/file): ")
+	defaultServerUrl, _ := ioutil.ReadFile(".river-server")
+	if defaultServerUrl == nil {
+		defaultServerUrl = ronak.StrToByte("test.river.im")
+	}
+	c.Print(fmt.Sprintf("File Server URL (http://%s/file): ", defaultServerUrl))
 	tmp := c.ReadLine()
 	if tmp == "" {
-		tmp = "http://test.river.im/file"
+		tmp = fmt.Sprintf("http://%s/file", ronak.ByteToStr(defaultServerUrl))
 	}
 	return tmp
 }
