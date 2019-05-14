@@ -1,12 +1,11 @@
 package main
 
 import (
-	log "git.ronaksoftware.com/ronak/toolbox/logger"
-	"time"
-
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/config"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/shared"
+	log "git.ronaksoftware.com/ronak/toolbox/logger"
 	"go.uber.org/zap"
+	"time"
 )
 
 var (
@@ -22,8 +21,6 @@ func main() {
 	cfg, err := config.NewNodeConfig()
 	if err != nil {
 		_Log.Error(err.Error())
-		time.Sleep(time.Second * 10)
-		panic(err)
 	}
 	_Log.Info("Config",
 		zap.String("BundleID", cfg.BundleID),
@@ -36,9 +33,16 @@ func main() {
 	// Run metrics
 	go shared.Metrics.Run(2374)
 
-	_, err = NewNode(cfg)
-	if err != nil {
-		panic(err)
+	for {
+		_, err = NewNode(cfg)
+		if err != nil {
+			_Log.Warn("Error On NewNode",
+				zap.Error(err),
+			)
+			time.Sleep(time.Second * 5)
+		} else {
+			break
+		}
 	}
 
 	// wait forever
