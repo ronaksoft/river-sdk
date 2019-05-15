@@ -83,7 +83,6 @@ func (s *Register) register(resp *msg.AuthSentCode, act shared.Actor) (*msg.Mess
 				x := new(msg.AuthAuthorization)
 				x.Unmarshal(resp.Message)
 
-
 				act.SetUserInfo(x.User.ID, x.User.Username, x.User.FirstName+" "+x.User.LastName)
 				if s.isFinal {
 					err := act.Save()
