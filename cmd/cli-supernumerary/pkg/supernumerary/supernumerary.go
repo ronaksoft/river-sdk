@@ -3,7 +3,6 @@ package supernumerary
 import (
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	log "git.ronaksoftware.com/ronak/toolbox/logger"
-	"math/rand"
 	"os"
 	"time"
 
@@ -231,7 +230,5 @@ func (s *Supernumerary) fnGetRandomPeer(act shared.Actor) *shared.PeerInfo {
 
 // fnGetRandomPhoneNo select a random phoneNo between fromPhoneNo - toPhoneNo
 func (s *Supernumerary) fnGetRandomPhoneNo() int64 {
-	src := rand.NewSource(time.Now().UnixNano())
-	rnd := rand.New(src)
-	return s.FromPhoneNo + rnd.Int63n(s.ToPhoneNo-s.FromPhoneNo) + 1 // +1 bcz Int63n(n) returns [0,n)
+	return s.FromPhoneNo + ronak.RandomInt64(s.ToPhoneNo-s.FromPhoneNo) + 1 // +1 bcz Int63n(n) returns [0,n)
 }
