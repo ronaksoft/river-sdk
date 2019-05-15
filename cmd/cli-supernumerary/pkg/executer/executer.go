@@ -37,7 +37,6 @@ func NewExecutor(netCtrl shared.Neter) *Executor {
 
 // Exec execute command
 func (exec *Executor) Exec(message *msg.MessageEnvelope, onSuccess shared.SuccessCallback, onTimeOut shared.TimeoutCallback, timeout time.Duration) {
-
 	if timeout == 0 {
 		timeout = shared.DefaultTimeout
 	}

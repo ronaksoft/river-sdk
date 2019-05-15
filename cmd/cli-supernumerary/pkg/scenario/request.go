@@ -32,7 +32,6 @@ func wrapEnvelope(ctr int64, data []byte) *msg.MessageEnvelope {
 	env := new(msg.MessageEnvelope)
 	env.Constructor = ctr
 	env.Message = data
-	// env.RequestID = uint64(domain.SequentialUniqueID())
 	env.RequestID = uint64(shared.GetSeqID())
 	return env
 }

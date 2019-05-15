@@ -52,7 +52,7 @@ func (s *Register) sendCode(act shared.Actor) (*msg.MessageEnvelope, shared.Succ
 		}
 		if resp.Constructor == msg.C_AuthSentCode {
 			x := new(msg.AuthSentCode)
-			x.Unmarshal(resp.Message)
+			_ = x.Unmarshal(resp.Message)
 			act.ExecuteRequest(s.register(x, act))
 		} else {
 			s.failed(act, elapsed, resp.RequestID, "sendCode() SuccessCB response is not AuthSentCode")
@@ -81,7 +81,7 @@ func (s *Register) register(resp *msg.AuthSentCode, act shared.Actor) (*msg.Mess
 			}
 			if resp.Constructor == msg.C_AuthAuthorization {
 				x := new(msg.AuthAuthorization)
-				x.Unmarshal(resp.Message)
+				_ = x.Unmarshal(resp.Message)
 
 				act.SetUserInfo(x.User.ID, x.User.Username, x.User.FirstName+" "+x.User.LastName)
 				if s.isFinal {
@@ -90,9 +90,7 @@ func (s *Register) register(resp *msg.AuthSentCode, act shared.Actor) (*msg.Mess
 						s.log(act, "register() Actor.Save(), Err : "+err.Error(), elapsed, resp.RequestID)
 					}
 				}
-
 				s.completed(act, elapsed, resp.RequestID, "register() Success")
-
 			} else {
 				s.failed(act, elapsed, resp.RequestID, "sendCode() SuccessCB response is not AuthAuthorization")
 			}

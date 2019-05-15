@@ -251,16 +251,22 @@ func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
 				if err == nil {
 					_Log.Error("onMessage() callback does not exists received Error",
 						zap.Uint64("RequestID", m.RequestID),
+						zap.String("Phone", act.GetPhone()),
 						zap.String("Code", x.Code),
 						zap.String("Item", x.Items),
 					)
 				} else {
 					_Log.Error("onMessage() callback does not exists received Error and filed to unmarshal Error",
 						zap.Uint64("RequestID", m.RequestID),
+						zap.String("Phone", act.GetPhone()),
 					)
 				}
 			} else {
-				_Log.Debug("onMessage() callback does not exists", zap.Uint64("RequestID", m.RequestID), zap.String("Constructor", msg.ConstructorNames[m.Constructor]))
+				_Log.Debug("onMessage() callback does not exists",
+					zap.Uint64("RequestID", m.RequestID),
+					zap.String("Phone", act.GetPhone()),
+					zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
+				)
 			}
 		}
 	}
@@ -283,7 +289,10 @@ func (act *Actor) onUpdate(updates []*msg.UpdateContainer) {
 			if fn, ok := act.updateApplier[u.Constructor]; ok {
 				fn(act, u)
 			}
-			_Log.Debug("onUpdate() Received ", zap.String("Constructor", msg.ConstructorNames[u.Constructor]))
+			_Log.Debug("onUpdate() Received ",
+				zap.String("Phone", act.GetPhone()),
+				zap.String("Constructor", msg.ConstructorNames[u.Constructor]),
+			)
 		}
 	}
 }
