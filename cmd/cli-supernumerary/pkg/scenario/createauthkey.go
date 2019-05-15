@@ -124,7 +124,6 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acto
 
 	serverPubKey, err := s.ServerKeys.GetPublicKey(int64(serverPubFP))
 	if err != nil {
-		// TODO : Reporter failed
 		s.failed(act, -1, 0, "ServerKeys.GetPublicKey(), Err : "+err.Error())
 	}
 	n := big.NewInt(0)
@@ -136,7 +135,6 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acto
 	decrypted, _ := q2Internal.Marshal()
 	encPayload, err := rsa.EncryptPKCS1v15(rand.Reader, &rsaPublicKey, decrypted)
 	if err != nil {
-		// TODO : Reporter failed
 		s.failed(act, -1, 0, "rsa.EncryptPKCS1v15(), Err : "+err.Error())
 	}
 
@@ -154,7 +152,7 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acto
 		if s.isErrorResponse(act, elapsed, resp, "InitCompleteAuth()") {
 			return
 		}
-		// TODO : chain next request here
+
 		if resp.Constructor == msg.C_InitAuthCompleted {
 			x := new(msg.InitAuthCompleted)
 			x.Unmarshal(resp.Message)
@@ -179,7 +177,6 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acto
 				clientSecretHash := binary.LittleEndian.Uint64(secretHash[24:32])
 				if x.SecretHash != clientSecretHash {
 					err = domain.ErrSecretNonceMismatch
-					// TODO : Reporter failed
 					s.failed(act, elapsed, resp.RequestID, "initCompleteAuth(), err : "+err.Error())
 					_Log.Error("initCompleteAuth(), err : secret hash does not match",
 						zap.Uint64("Server SecretHash", x.SecretHash),
@@ -198,20 +195,15 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acto
 				}
 				s.completed(act, elapsed, resp.RequestID, "initCompleteAuth() Success")
 			case msg.InitAuthCompleted_RETRY:
-				// TODO : Reporter failed && Retry with new DHKey
-				// s.failed(act, elapsed, resp.RequestID, "initCompleteAuth(), err : Retry with new DHKey")
-
-				// retry to create authkey
+				// retry to create auth key
 				act.ExecuteRequest(s.initConnect(act))
 
 			case msg.InitAuthCompleted_FAIL:
 				err = domain.ErrAuthFailed
-				// TODO : Reporter failed
 				s.failed(act, elapsed, resp.RequestID, "initCompleteAuth(), err : "+err.Error())
 			}
 
 		} else {
-			// TODO : Reporter failed
 			s.failed(act, elapsed, resp.RequestID, "initCompleteAuth() successCB response type is not InitAuthCompleted , Constructor :"+msg.ConstructorNames[resp.Constructor])
 		}
 	}

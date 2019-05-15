@@ -26,23 +26,12 @@ func (s *ImportContact) Play(act shared.Actor) {
 		return
 	}
 	if act.GetAuthID() == 0 {
-		s.AddJobs(1)
-		success := Play(act, NewCreateAuthKey(false))
-		if !success {
-
-			s.failed(act, 0, 0, "Play() : failed at pre requested scenario CreateAuthKey")
-			return
-		}
-		s.wait.Done()
+		_Log.Warn("AuthID is ZERO, Scenario Failed")
+		return
 	}
 	if act.GetUserID() == 0 {
-		s.AddJobs(1)
-		success := Play(act, NewLogin(false))
-		if !success {
-			s.failed(act, 0, 0, "Play() : failed at pre requested scenario Login")
-			return
-		}
-		s.wait.Done()
+		_Log.Warn("UserID is ZERO, Scenario Failed")
+		return
 	}
 
 	phoneList := act.GetPhoneList()

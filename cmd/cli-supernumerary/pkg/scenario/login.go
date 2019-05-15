@@ -27,19 +27,15 @@ func (s *Login) Play(act shared.Actor) {
 		return
 	}
 	if act.GetAuthID() == 0 {
-		s.AddJobs(1)
-		success := Play(act, NewCreateAuthKey(false))
-		if !success {
-			s.failed(act, 0, 0, "Play() : failed at pre requested scenario CreateAuthKey")
-			return
-		}
-		s.wait.Done()
+		_Log.Warn("AuthID is ZERO, Scenario Failed")
+		return
 	}
+
 	s.AddJobs(1)
 	act.ExecuteRequest(s.sendCode(act))
 }
 
-//sendCode : Step 1
+// sendCode : Step 1
 func (s *Login) sendCode(act shared.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 	reqEnv := AuthSendCode(act.GetPhone())
 
@@ -76,7 +72,7 @@ func (s *Login) login(resp *msg.AuthSentCode, act shared.Actor) (*msg.MessageEnv
 		reqEnv := AuthLogin(resp.Phone, code, resp.PhoneCodeHash)
 
 		timeoutCB := func(requestID uint64, elapsed time.Duration) {
-			//Reporter failed
+			// Reporter failed
 			act.SetTimeout(msg.C_AuthLogin, elapsed)
 			s.failed(act, elapsed, requestID, "login() TimedOut")
 		}

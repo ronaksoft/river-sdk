@@ -27,20 +27,17 @@ func (s *Register) Play(act shared.Actor) {
 		s.log(act, "Actor already have userID", 0, 0)
 		return
 	}
+
 	if act.GetAuthID() == 0 {
-		s.AddJobs(1)
-		success := Play(act, NewCreateAuthKey(false))
-		if !success {
-			s.failed(act, 0, 0, "Play() : failed at pre requested scenario CreateAuthKey")
-			return
-		}
-		s.wait.Done()
+		_Log.Warn("AuthID is ZERO, Scenario Failed")
+		return
 	}
+
 	s.AddJobs(1)
 	act.ExecuteRequest(s.sendCode(act))
 }
 
-//sendCode : Step 1
+// sendCode : Step 1
 func (s *Register) sendCode(act shared.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 	envReq := AuthSendCode(act.GetPhone())
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {

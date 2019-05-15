@@ -223,41 +223,27 @@ func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
 		if req != nil {
 			select {
 			case req.ResponseWaitChannel <- m:
-				_Log.Debug("onMessage() callback singnal sent",
+				_Log.Debug("onMessage() callback signal sent",
 					zap.Uint64("RequestID", m.RequestID),
 					zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
 					zap.Duration("Elapsed", time.Since(req.CreatedOn)),
 				)
 			default:
 				elapsed := time.Since(req.CreatedOn)
-				if elapsed < shared.DefaultTimeout {
-					// if elapsed time is less than timeout retry to pass request until 1 sec
-					go func(request *executer.Request, message *msg.MessageEnvelope) {
-						select {
-						case request.ResponseWaitChannel <- message:
-							return
-						case <-time.After(time.Second):
-						}
-						// this is not differed response
-						// // metric
-						// shared.Metrics.CounterVec(shared.CntDiffered).WithLabelValues(msg.ConstructorNames[message.Constructor]).Add(1)
-					}(req, m)
+				// metric
+				shared.Metrics.CounterVec(shared.CntDiffered).WithLabelValues(msg.ConstructorNames[m.Constructor]).Add(1)
+				shared.Metrics.Histogram(shared.HistDifferedLatency).Observe(float64(elapsed / time.Millisecond))
 
-				} else {
-
-					// metric
-					shared.Metrics.CounterVec(shared.CntDiffered).WithLabelValues(msg.ConstructorNames[m.Constructor]).Add(1)
-					shared.Metrics.Histogram(shared.HistDifferedLatency).Observe(float64(elapsed / time.Millisecond))
-
-					_Log.Error("onMessage() callback is skipped probably timedout before",
-						zap.Uint64("RequestID", m.RequestID),
-						zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
-						zap.Duration("Elapsed", elapsed),
-					)
-				}
+				_Log.Error("onMessage() callback is skipped probably timeout before",
+					zap.Uint64("RequestID", m.RequestID),
+					zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
+					zap.Duration("Elapsed", elapsed),
+				)
 			}
 			act.exec.RemoveRequest(m.RequestID)
-		} else if m.Constructor != msg.C_AuthRecalled {
+			return
+		}
+		if m.Constructor != msg.C_AuthRecalled {
 			if m.Constructor == msg.C_Error {
 				x := new(msg.Error)
 				err := x.Unmarshal(m.Message)

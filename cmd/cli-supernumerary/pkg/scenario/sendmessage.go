@@ -20,33 +20,25 @@ func NewSendMessage(isFinal bool) shared.Screenwriter {
 
 // Play execute SendMessage scenario
 func (s *SendMessage) Play(act shared.Actor) {
-	s.AddJobs(1)
 	if act.GetAuthID() == 0 {
-		success := Play(act, NewCreateAuthKey(false))
-		if !success {
-			s.failed(act, 0, 0, "Play() : failed at pre requested scenario CreateAuthKey")
-			return
-		}
+		_Log.Warn("AuthID is ZERO, Scenario Failed")
+		return
 	}
-	s.wait.Done()
-	s.AddJobs(1)
 	if act.GetUserID() == 0 {
-		success := Play(act, NewLogin(false))
-		if !success {
-			s.failed(act, 0, 0, "Play() : failed at pre requested scenario Login")
-			return
-		}
+		_Log.Warn("UserID is ZERO, Scenario Failed")
+		return
 	}
-	s.wait.Done()
-	s.AddJobs(1)
+
 	if len(act.GetPeers()) == 0 {
+		s.AddJobs(1)
 		success := Play(act, NewImportContact(false))
 		if !success {
 			s.failed(act, 0, 0, "Play() : failed at pre requested scenario ImportContact")
 			return
 		}
+		s.wait.Done()
 	}
-	s.wait.Done()
+
 	peers := act.GetPeers()
 	s.AddJobs(len(peers))
 	for _, p := range peers {
