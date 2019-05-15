@@ -26,11 +26,11 @@ func (s *ImportContact) Play(act shared.Actor) {
 		return
 	}
 	if act.GetAuthID() == 0 {
-		_Log.Warn("AuthID is ZERO, Scenario Failed")
+		s.log(act, "AuthID is ZERO, Scenario Failed", 0, 0)
 		return
 	}
 	if act.GetUserID() == 0 {
-		_Log.Warn("UserID is ZERO, Scenario Failed")
+		s.log(act, "UserID is ZERO, Scenario Failed", 0, 0)
 		return
 	}
 
@@ -58,8 +58,7 @@ func (s *ImportContact) contactImport(phone string, act shared.Actor) (*msg.Mess
 		}
 		if resp.Constructor == msg.C_ContactsImported {
 			x := new(msg.ContactsImported)
-			x.Unmarshal(resp.Message)
-			// TODO : Complete scenario
+			_ = x.Unmarshal(resp.Message)
 			peers := make([]*shared.PeerInfo, 0, len(x.Users))
 			for _, u := range x.Users {
 				peers = append(peers, &shared.PeerInfo{
@@ -79,7 +78,6 @@ func (s *ImportContact) contactImport(phone string, act shared.Actor) (*msg.Mess
 			}
 			s.completed(act, elapsed, resp.RequestID, "contactImport() Success")
 		} else {
-			// TODO : Reporter failed
 			s.failed(act, elapsed, resp.RequestID, "contactImport() SuccessCB response is not ContactsImported , Constructor :"+msg.ConstructorNames[resp.Constructor])
 		}
 	}

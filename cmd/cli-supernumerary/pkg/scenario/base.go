@@ -1,6 +1,7 @@
 package scenario
 
 import (
+	"fmt"
 	log "git.ronaksoftware.com/ronak/toolbox/logger"
 	"strconv"
 	"sync"
@@ -59,22 +60,34 @@ func (s *Scenario) failed(act shared.Actor, elapsed time.Duration, reqID uint64,
 	shared.SetFailedRequest(reqID, act.GetAuthID(), act.GetPhone(), "Timeout Request "+str)
 	// ----
 
-	_Log.Error(act.GetPhone()+"\tReqID:"+strconv.FormatUint(reqID, 10)+"\t failed() : "+str, zap.Duration("elapsed", elapsed))
+	_Log.Error("Scenario Failed",
+		zap.Uint64("ReqID", reqID),
+		zap.String("Phone", act.GetPhone()),
+		zap.String("Str", str),
+		zap.Duration("Elapsed", elapsed),
+	)
 	s.wait.Done()
 }
 
 func (s *Scenario) completed(act shared.Actor, elapsed time.Duration, reqID uint64, str string) {
 	s.result = true
 	act.SetActorSucceed(true)
-	_Log.Info(act.GetPhone()+"\tReqID:"+strconv.FormatUint(reqID, 10)+"\t completed() : "+str, zap.Duration("elapsed", elapsed))
+	_Log.Info("Scenario Completed",
+		zap.Uint64("ReqID", reqID),
+		zap.String("Phone", act.GetPhone()),
+		zap.String("Str", str),
+		zap.Duration("Elapsed", elapsed),
+	)
 	s.wait.Done()
 }
 
 func (s *Scenario) log(act shared.Actor, str string, elapsed time.Duration, reqID uint64) {
 	if elapsed > 0 {
-		_Log.Warn(act.GetPhone()+"\tReqID:"+strconv.FormatUint(reqID, 10)+"\t log() : "+str, zap.Duration("elapsed", elapsed))
+		_Log.Warn(fmt.Sprintf("%s: \t ReqID: %d \t %s", act.GetPhone(), reqID, str),
+			zap.Duration("Duration", elapsed),
+		)
 	} else {
-		_Log.Warn(act.GetPhone() + "\tReqID:" + strconv.FormatUint(reqID, 10) + "\t log() : " + str)
+		_Log.Warn(fmt.Sprintf("%s: \t ReqID: %d \t %s", act.GetPhone(), reqID, str))
 	}
 }
 

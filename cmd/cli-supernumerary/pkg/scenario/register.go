@@ -29,7 +29,7 @@ func (s *Register) Play(act shared.Actor) {
 	}
 
 	if act.GetAuthID() == 0 {
-		_Log.Warn("AuthID is ZERO, Scenario Failed")
+		s.log(act, "AuthID is ZERO, Scenario Failed", 0, 0)
 		return
 	}
 
@@ -50,13 +50,11 @@ func (s *Register) sendCode(act shared.Actor) (*msg.MessageEnvelope, shared.Succ
 		if s.isErrorResponse(act, elapsed, resp, "sendCode()") {
 			return
 		}
-		// TODO : chain next request here
 		if resp.Constructor == msg.C_AuthSentCode {
 			x := new(msg.AuthSentCode)
 			x.Unmarshal(resp.Message)
 			act.ExecuteRequest(s.register(x, act))
 		} else {
-			// TODO : Reporter failed
 			s.failed(act, elapsed, resp.RequestID, "sendCode() SuccessCB response is not AuthSentCode")
 		}
 	}
@@ -85,9 +83,8 @@ func (s *Register) register(resp *msg.AuthSentCode, act shared.Actor) (*msg.Mess
 				x := new(msg.AuthAuthorization)
 				x.Unmarshal(resp.Message)
 
-				// TODO : Complete Scenario
-				act.SetUserInfo(x.User.ID, x.User.Username, x.User.FirstName+" "+x.User.LastName)
 
+				act.SetUserInfo(x.User.ID, x.User.Username, x.User.FirstName+" "+x.User.LastName)
 				if s.isFinal {
 					err := act.Save()
 					if err != nil {
@@ -98,7 +95,6 @@ func (s *Register) register(resp *msg.AuthSentCode, act shared.Actor) (*msg.Mess
 				s.completed(act, elapsed, resp.RequestID, "register() Success")
 
 			} else {
-				// TODO : Reporter failed
 				s.failed(act, elapsed, resp.RequestID, "sendCode() SuccessCB response is not AuthAuthorization")
 			}
 		}
@@ -106,7 +102,6 @@ func (s *Register) register(resp *msg.AuthSentCode, act shared.Actor) (*msg.Mess
 		return envReq, successCB, timeoutCB
 	}
 
-	// TODO : Reporter failed
 	s.failed(act, -1, 0, "login() phone number does not start with 237400")
 
 	return nil, nil, nil

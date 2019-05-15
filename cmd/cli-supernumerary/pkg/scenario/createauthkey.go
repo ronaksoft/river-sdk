@@ -82,6 +82,7 @@ func (s *CreateAuthKey) initConnect(act shared.Actor) (*msg.MessageEnvelope, sha
 			// chain next request here
 			act.ExecuteRequest(s.initCompleteAuth(x, act))
 
+			_Log.Warn()
 			s.log(act, "initConnect() Success", elapsed, resp.RequestID)
 
 		} else {

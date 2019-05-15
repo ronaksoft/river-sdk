@@ -21,11 +21,11 @@ func NewSendMessage(isFinal bool) shared.Screenwriter {
 // Play execute SendMessage scenario
 func (s *SendMessage) Play(act shared.Actor) {
 	if act.GetAuthID() == 0 {
-		_Log.Warn("AuthID is ZERO, Scenario Failed")
+		s.log(act, "AuthID is ZERO, Scenario Failed", 0, 0)
 		return
 	}
 	if act.GetUserID() == 0 {
-		_Log.Warn("UserID is ZERO, Scenario Failed")
+		s.log(act, "UserID is ZERO, Scenario Failed", 0, 0)
 		return
 	}
 

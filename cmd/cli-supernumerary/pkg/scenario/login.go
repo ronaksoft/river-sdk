@@ -27,7 +27,7 @@ func (s *Login) Play(act shared.Actor) {
 		return
 	}
 	if act.GetAuthID() == 0 {
-		_Log.Warn("AuthID is ZERO, Scenario Failed")
+		s.log(act, "AuthID is ZERO, Scenario Failed", 0, 0)
 		return
 	}
 
@@ -56,7 +56,6 @@ func (s *Login) sendCode(act shared.Actor) (*msg.MessageEnvelope, shared.Success
 			// chain next request here
 			act.ExecuteRequest(s.login(x, act))
 		} else {
-			// TODO : Reporter failed
 			s.failed(act, elapsed, resp.RequestID, "sendCode() SuccessCB response is not AuthSentCode , Constructor :"+msg.ConstructorNames[resp.Constructor])
 		}
 	}
@@ -86,7 +85,6 @@ func (s *Login) login(resp *msg.AuthSentCode, act shared.Actor) (*msg.MessageEnv
 				x := new(msg.AuthAuthorization)
 				x.Unmarshal(resp.Message)
 
-				// TODO : Complete Scenario
 				act.SetUserInfo(x.User.ID, x.User.Username, x.User.FirstName+" "+x.User.LastName)
 
 				if s.isFinal {
@@ -99,7 +97,6 @@ func (s *Login) login(resp *msg.AuthSentCode, act shared.Actor) (*msg.MessageEnv
 				s.completed(act, elapsed, resp.RequestID, "login() Success")
 
 			} else {
-				// TODO : Reporter failed
 				s.failed(act, elapsed, resp.RequestID, "sendCode() SuccessCB response is not AuthAuthorization , Constructor :"+msg.ConstructorNames[resp.Constructor])
 			}
 		}
@@ -107,7 +104,6 @@ func (s *Login) login(resp *msg.AuthSentCode, act shared.Actor) (*msg.MessageEnv
 		return reqEnv, successCB, timeoutCB
 	}
 
-	// TODO : Reporter failed
 	s.failed(act, -1, 0, "login() phone number does not start with 237400")
 
 	return nil, nil, nil
