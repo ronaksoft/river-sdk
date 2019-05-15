@@ -203,9 +203,9 @@ func (ctrl *CtrlNetwork) watchDog() {
 
 // onConnect send AuthRecall request to server
 func (ctrl *CtrlNetwork) onConnect() {
-
 	// if auth key not created skip
 	if ctrl.actor.GetAuthID() == 0 {
+		_Log.Warn("OnConnect:: AuthID is ZERO")
 		return
 	}
 	req := msg.AuthRecall{}
@@ -217,6 +217,9 @@ func (ctrl *CtrlNetwork) onConnect() {
 	envelop.RequestID = reqID
 
 	if ctrl.conn == nil {
+		_Log.Warn("OnConnect:: Conn is Nil",
+			zap.String("Phone", ctrl.actor.GetPhone()),
+		)
 		return
 	}
 	err := ctrl.Send(envelop)
