@@ -28,7 +28,7 @@ func trimU52(num uint64) uint64 {
 	return num
 }
 
-func wrapEnvelop(ctr int64, data []byte) *msg.MessageEnvelope {
+func wrapEnvelope(ctr int64, data []byte) *msg.MessageEnvelope {
 	env := new(msg.MessageEnvelope)
 	env.Constructor = ctr
 	env.Message = data
@@ -46,7 +46,7 @@ func InitConnect() (envelop *msg.MessageEnvelope) {
 		panic(err)
 	}
 
-	envelop = wrapEnvelop(msg.C_InitConnect, data)
+	envelop = wrapEnvelope(msg.C_InitConnect, data)
 
 	return
 }
@@ -66,7 +66,7 @@ func InitCompleteAuth(clientNonce, serverNonce, p, q uint64, dhPubKey, encPayloa
 		panic(err)
 	}
 
-	envelop = wrapEnvelop(msg.C_InitCompleteAuth, data)
+	envelop = wrapEnvelope(msg.C_InitCompleteAuth, data)
 
 	return
 }
@@ -80,7 +80,7 @@ func AuthSendCode(phone string) (envelop *msg.MessageEnvelope) {
 		panic(err)
 	}
 
-	envelop = wrapEnvelop(msg.C_AuthSendCode, data)
+	envelop = wrapEnvelope(msg.C_AuthSendCode, data)
 
 	return
 }
@@ -98,7 +98,7 @@ func AuthRegister(phone, code, hash string) (envelop *msg.MessageEnvelope) {
 		panic(err)
 	}
 
-	envelop = wrapEnvelop(msg.C_AuthRegister, data)
+	envelop = wrapEnvelope(msg.C_AuthRegister, data)
 
 	return
 }
@@ -114,7 +114,7 @@ func AuthLogin(phone, code, hash string) (envelop *msg.MessageEnvelope) {
 		panic(err)
 	}
 
-	envelop = wrapEnvelop(msg.C_AuthLogin, data)
+	envelop = wrapEnvelope(msg.C_AuthLogin, data)
 
 	return
 }
@@ -133,7 +133,7 @@ func MessageSend(peer *shared.PeerInfo) (envelop *msg.MessageEnvelope) {
 	if err != nil {
 		panic(err)
 	}
-	envelop = wrapEnvelop(msg.C_MessagesSend, data)
+	envelop = wrapEnvelope(msg.C_MessagesSend, data)
 	return
 }
 
@@ -154,7 +154,7 @@ func ContactsImport(phone string) (envelop *msg.MessageEnvelope) {
 		panic(err)
 	}
 
-	envelop = wrapEnvelop(msg.C_ContactsImport, data)
+	envelop = wrapEnvelope(msg.C_ContactsImport, data)
 
 	return
 }
@@ -167,7 +167,7 @@ func AuthRecallReq() (envelop *msg.MessageEnvelope) {
 		panic(err)
 	}
 
-	envelop = wrapEnvelop(msg.C_AuthRecall, data)
+	envelop = wrapEnvelope(msg.C_AuthRecall, data)
 
 	return
 }
@@ -205,22 +205,16 @@ func FileSavePart() (envelop *msg.MessageEnvelope, fileID int64, fileParts int32
 	req.FileID = fileID
 	req.PartID = 1
 	req.TotalParts = 1
-	req.Bytes = fnGetRandomBuff(domain.FilePayloadSize)
-
+	req.Bytes = make([]byte, domain.FilePayloadSize)
+	rand.Read(req.Bytes)
 	data, err := req.Marshal()
 	if err != nil {
 		panic(err)
 	}
 
-	envelop = wrapEnvelop(msg.C_FileSavePart, data)
+	envelop = wrapEnvelope(msg.C_FileSavePart, data)
 
 	return
-}
-
-func fnGetRandomBuff(size int) []byte {
-	buff := make([]byte, size, size)
-	rand.Read(buff)
-	return buff
 }
 
 func MessageSendMedia(fileID int64, totalParts int32, peer *shared.PeerInfo) (envelop *msg.MessageEnvelope) {
@@ -262,6 +256,6 @@ func MessageSendMedia(fileID int64, totalParts int32, peer *shared.PeerInfo) (en
 		panic(err)
 	}
 
-	envelop = wrapEnvelop(msg.C_MessagesSendMedia, data)
+	envelop = wrapEnvelope(msg.C_MessagesSendMedia, data)
 	return
 }
