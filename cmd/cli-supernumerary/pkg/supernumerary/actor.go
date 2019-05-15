@@ -128,6 +128,9 @@ func (act *Actor) SetPeers(peers []*shared.PeerInfo) { act.Peers = peers }
 // ExecuteRequest send request to server
 func (act *Actor) ExecuteRequest(message *msg.MessageEnvelope, onSuccess shared.SuccessCallback, onTimeOut shared.TimeoutCallback) {
 	if message == nil {
+		_Log.Warn("Execute Message is Nil",
+			zap.String("Phone", act.GetPhone()),
+		)
 		return
 	}
 	atomic.AddInt64(&act.Status.RequestCount, 1)

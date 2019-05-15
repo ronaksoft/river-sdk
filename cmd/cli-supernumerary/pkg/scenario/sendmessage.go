@@ -49,7 +49,6 @@ func (s *SendMessage) Play(act shared.Actor) {
 // messageSend : Step 1
 func (s *SendMessage) messageSend(act shared.Actor, peer *shared.PeerInfo) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 	reqEnv := MessageSend(peer)
-
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
 		// Reporter failed
 		act.SetTimeout(msg.C_MessagesSend, elapsed)

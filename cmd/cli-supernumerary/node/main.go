@@ -2,6 +2,7 @@ package main
 
 import (
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/config"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/scenario"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/shared"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	log "git.ronaksoftware.com/ronak/toolbox/logger"
@@ -20,6 +21,8 @@ func main() {
 	_Log = log.NewConsoleLogger()
 	_Log.SetLevel(log.Debug)
 	ronak.SetLogger(_Log)
+	// supernumerary.SetLogger(_Log)
+	scenario.SetLogger(_Log)
 
 	cfg := &NodeConfig{
 		BundleID:   os.Getenv(config.EnvBundleID),

@@ -3,7 +3,6 @@ package scenario
 import (
 	"crypto/rand"
 	"fmt"
-
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/shared"

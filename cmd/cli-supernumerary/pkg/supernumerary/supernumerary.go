@@ -174,6 +174,13 @@ func (s *Supernumerary) tickerApplier(action TickerAction) {
 					sen := scenario.NewSendMessage(false)
 					// import random contact for actor
 					act.SetPeers([]*shared.PeerInfo{s.fnGetRandomPeer(act)})
+
+					_Log.Debug("Actor",
+						zap.String("Phone", act.GetPhone()),
+						zap.Int64("AuthID", act.GetAuthID()),
+						zap.Int64("UserID", act.GetUserID()),
+					)
+
 					// async
 					sen.Play(act)
 
