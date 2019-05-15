@@ -81,12 +81,9 @@ func (s *CreateAuthKey) initConnect(act shared.Actor) (*msg.MessageEnvelope, sha
 
 			// chain next request here
 			act.ExecuteRequest(s.initCompleteAuth(x, act))
-
-			_Log.Warn()
 			s.log(act, "initConnect() Success", elapsed, resp.RequestID)
 
 		} else {
-			// TODO : Reporter failed
 			s.failed(act, elapsed, resp.RequestID, "initConnect() successCB response type is not InitResponse , Constructor :"+msg.ConstructorNames[resp.Constructor])
 		}
 	}
@@ -96,7 +93,6 @@ func (s *CreateAuthKey) initConnect(act shared.Actor) (*msg.MessageEnvelope, sha
 
 // Step : 2
 func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
-
 	clientNonce := resp.ClientNonce
 	serverNonce := resp.ServerNonce
 	serverPubFP := resp.RSAPubKeyFingerPrint
