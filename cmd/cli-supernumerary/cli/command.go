@@ -16,42 +16,16 @@ import (
 var cmdListNodes = &ishell.Cmd{
 	Name: "ListNodes",
 	Func: func(c *ishell.Context) {
+		healthCheck(c)
+
 		_NodesLock.RLock()
 		c.Println("Total Nodes:", len(_Nodes))
+		idx := 0
 		for instanceID := range _Nodes {
-			c.Println(instanceID)
+			idx++
+			c.Println(fmt.Sprintf("%d: %s", idx, instanceID))
 		}
 		_NodesLock.RUnlock()
-	},
-}
-
-var cmdUpdateNodes = &ishell.Cmd{
-	Name: "UpdateNodes",
-	Func: func(c *ishell.Context) {
-		instanceIDs := make([]string, 0)
-		_NodesLock.RLock()
-		c.Println("Total Nodes:", len(_Nodes))
-		for instanceID := range _Nodes {
-			instanceIDs = append(instanceIDs, instanceID)
-			c.Println(instanceID)
-		}
-		_NodesLock.RUnlock()
-
-		waitGroup := sync.WaitGroup{}
-		waitGroup.Add(len(instanceIDs))
-		for _, instanceID := range instanceIDs {
-			go func(instanceID string) {
-				defer waitGroup.Done()
-				_, err := _NATS.Request(fmt.Sprintf("%s.%s", instanceID, config.SubjectHealthCheck), []byte("HEALTH_CHECK"), 5*time.Second)
-				if err != nil {
-					_NodesLock.Lock()
-					delete(_Nodes, instanceID)
-					_NodesLock.Unlock()
-				}
-
-			}(instanceID)
-		}
-		waitGroup.Wait()
 	},
 }
 
@@ -61,6 +35,7 @@ var cmdUpdatePhoneRange = &ishell.Cmd{
 		c.Print("Total Phones:")
 		totalPhone := ronak.StrToInt32(c.ReadLine())
 
+		healthCheck(c)
 		_NodesLock.RLock()
 		totalNodes := int32(len(_Nodes))
 		instanceIDs := make([]string, 0, totalNodes)
@@ -142,6 +117,7 @@ var cmdStop = &ishell.Cmd{
 var cmdCreateAuthKey = &ishell.Cmd{
 	Name: "CreateAuthKey",
 	Func: func(c *ishell.Context) {
+		healthCheck(c)
 		_Log.Info("Publishing CreateAuthKey ...")
 		err := _NATS.Publish(config.SubjectCreateAuthKey, []byte(config.SubjectCreateAuthKey))
 		if err != nil {
@@ -179,6 +155,7 @@ var cmdLogin = &ishell.Cmd{
 var cmdSetTicker = &ishell.Cmd{
 	Name: "SetTicker",
 	Func: func(c *ishell.Context) {
+		healthCheck(c)
 		duration := fnGetDuration(c)
 		tickerAction := fnGetTickerAction(c)
 		cfg := config.TickerCfg{

@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/config"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"gopkg.in/abiosoft/ishell.v2"
@@ -89,4 +91,30 @@ func fnGetTimeout(c *ishell.Context) time.Duration {
 		}
 	}
 	return duration
+}
+
+func healthCheck(c *ishell.Context) {
+	instanceIDs := make([]string, 0)
+	_NodesLock.RLock()
+	c.Println("Checking all node are alive")
+	for instanceID := range _Nodes {
+		instanceIDs = append(instanceIDs, instanceID)
+	}
+	_NodesLock.RUnlock()
+
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(len(instanceIDs))
+	for _, instanceID := range instanceIDs {
+		go func(instanceID string) {
+			defer waitGroup.Done()
+			_, err := _NATS.Request(fmt.Sprintf("%s.%s", instanceID, config.SubjectHealthCheck), []byte("HEALTH_CHECK"), 5*time.Second)
+			if err != nil {
+				_NodesLock.Lock()
+				delete(_Nodes, instanceID)
+				_NodesLock.Unlock()
+			}
+
+		}(instanceID)
+	}
+	waitGroup.Wait()
 }
