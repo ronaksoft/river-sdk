@@ -77,7 +77,6 @@ func main() {
 		_NodesLock.Lock()
 		_Nodes[cmd.InstanceID] = struct{}{}
 		_NodesLock.Unlock()
-
 	})
 	if err != nil {
 		_Log.Fatal(err.Error())

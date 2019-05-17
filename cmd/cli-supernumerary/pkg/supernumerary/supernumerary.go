@@ -4,6 +4,7 @@ import (
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	log "git.ronaksoftware.com/ronak/toolbox/logger"
 	"os"
+	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -155,12 +156,12 @@ func (s *Supernumerary) SetTickerApplier(duration time.Duration, action TickerAc
 		s.ticker.Stop()
 	}
 	s.ticker = time.NewTicker(duration)
-	go s.tickerApplier(action)
+	go s.tickerApplier(action, duration)
 	_Log.Debug("SetTickerApplier() Done")
 }
 
 // tickerApplier
-func (s *Supernumerary) tickerApplier(action TickerAction) {
+func (s *Supernumerary) tickerApplier(action TickerAction, duration time.Duration) {
 	for {
 		select {
 		case t := <-s.ticker.C:
@@ -170,19 +171,25 @@ func (s *Supernumerary) tickerApplier(action TickerAction) {
 				// NOP
 			case TickerActionSendMessage:
 				// try to send random message
+				waitGroup := sync.WaitGroup{}
+				waitGroup.Add(len(s.Actors))
 				for _, act := range s.Actors {
-					sen := scenario.NewSendMessage(false)
-					// import random contact for actor
-					act.SetPeers([]*shared.PeerInfo{s.fnGetRandomPeer(act)})
+					go func(act shared.Actor) {
+						time.Sleep(time.Duration(ronak.RandomInt64(duration.Nanoseconds())) * time.Nanosecond)
 
-					_Log.Debug("Actor",
-						zap.String("Phone", act.GetPhone()),
-						zap.Int64("AuthID", act.GetAuthID()),
-						zap.Int64("UserID", act.GetUserID()),
-					)
+						sen := scenario.NewSendMessage(false)
+						// import random contact for actor
+						act.SetPeers([]*shared.PeerInfo{s.fnGetRandomPeer(act)})
 
-					// async
-					sen.Play(act)
+						_Log.Debug("Actor",
+							zap.String("Phone", act.GetPhone()),
+							zap.Int64("AuthID", act.GetAuthID()),
+							zap.Int64("UserID", act.GetUserID()),
+						)
+
+						// async
+						sen.Play(act)
+					}(act)
 
 					// check stop signal while executing
 					if s.fnCheckStopSignal() {
