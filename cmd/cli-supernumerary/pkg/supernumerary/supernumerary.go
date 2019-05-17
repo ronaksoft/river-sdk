@@ -175,6 +175,7 @@ func (s *Supernumerary) tickerApplier(action TickerAction, duration time.Duratio
 				waitGroup.Add(len(s.Actors))
 				for _, act := range s.Actors {
 					go func(act shared.Actor) {
+						defer waitGroup.Done()
 						time.Sleep(time.Duration(ronak.RandomInt64(duration.Nanoseconds())) * time.Nanosecond)
 
 						sen := scenario.NewSendMessage(false)
