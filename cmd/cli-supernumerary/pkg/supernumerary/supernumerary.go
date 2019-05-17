@@ -190,13 +190,12 @@ func (s *Supernumerary) tickerApplier(action TickerAction, duration time.Duratio
 						// async
 						sen.Play(act)
 					}(act)
-
-					// check stop signal while executing
-					if s.fnCheckStopSignal() {
-						return
-					}
 				}
-
+				waitGroup.Wait()
+				// check stop signal while executing
+				if s.fnCheckStopSignal() {
+					return
+				}
 			case TickerActionSendFile:
 				// try to send random file
 				for _, act := range s.Actors {
