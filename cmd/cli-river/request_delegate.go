@@ -35,4 +35,3 @@ func (d *RequestDelegate) OnComplete(b []byte) {
 func (d *RequestDelegate) OnTimeout(err error) {
 	_Log.Error("Callback OnTimeout()", zap.Int64("ReqID", d.RequestID), zap.Error(err))
 }
-

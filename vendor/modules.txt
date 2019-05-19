@@ -25,16 +25,10 @@ github.com/globalsign/mgo/bson
 github.com/globalsign/mgo/internal/sasl
 github.com/globalsign/mgo/internal/scram
 github.com/globalsign/mgo/internal/json
-# github.com/gobwas/httphead v0.0.0-20180130184737-2c6c146eadee
-github.com/gobwas/httphead
 # github.com/gobwas/pool v0.2.0
 github.com/gobwas/pool/pbytes
 github.com/gobwas/pool
 github.com/gobwas/pool/internal/pmath
-github.com/gobwas/pool/pbufio
-# github.com/gobwas/ws v1.0.0
-github.com/gobwas/ws/wsutil
-github.com/gobwas/ws
 # github.com/gocql/gocql v0.0.0-20190208221138-c53c3654dc8a
 github.com/gocql/gocql
 github.com/gocql/gocql/internal/lru
@@ -48,11 +42,6 @@ github.com/gogo/protobuf/protoc-gen-gogo/descriptor
 github.com/golang/protobuf/proto
 # github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db
 github.com/golang/snappy
-# github.com/google/gopacket v1.1.16
-github.com/google/gopacket
-github.com/google/gopacket/layers
-github.com/google/gopacket/pcap
-github.com/google/gopacket/tcpassembly
 # github.com/gorilla/websocket v1.4.0
 github.com/gorilla/websocket
 # github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed

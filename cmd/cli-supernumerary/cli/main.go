@@ -2,10 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/config"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/nats-io/go-nats"
 	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"
+	"io/ioutil"
+	"os"
 	"sync"
 )
 
@@ -29,7 +33,6 @@ func init() {
 
 	_Shell.AddCmd(cmdListNodes)
 	_Shell.AddCmd(cmdUpdatePhoneRange)
-	_Shell.AddCmd(cmdUpdateNodes)
 	_Shell.AddCmd(cmdStart)
 	_Shell.AddCmd(cmdStop)
 	_Shell.AddCmd(cmdCreateAuthKey)
@@ -44,11 +47,18 @@ func main() {
 	cfg.Level = _LogLevel
 	_Log, _ = cfg.Build()
 
-	_Shell.Print("NATS URL (nats://localhost:4222):")
+	defaultNatsUrl, _ := ioutil.ReadFile(".river-nats")
+	if defaultNatsUrl == nil {
+		defaultNatsUrl = ronak.StrToByte("nats://localhost:4222")
+	}
+	_Shell.Print(fmt.Sprintf("NATS URL (%s):", defaultNatsUrl))
 	natsURL := _Shell.ReadLine()
 	if natsURL == "" {
-		natsURL = "nats://localhost:4222"
+		natsURL = ronak.ByteToStr(defaultNatsUrl)
+	} else {
+		_ = ioutil.WriteFile(".river-nats", ronak.StrToByte(natsURL), os.ModePerm)
 	}
+
 	if natsClient, err := nats.Connect(natsURL); err != nil {
 		_Shell.Println("Error : " + err.Error())
 	} else {
@@ -67,7 +77,6 @@ func main() {
 		_NodesLock.Lock()
 		_Nodes[cmd.InstanceID] = struct{}{}
 		_NodesLock.Unlock()
-
 	})
 	if err != nil {
 		_Log.Fatal(err.Error())
