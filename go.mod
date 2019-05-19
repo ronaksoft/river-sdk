@@ -19,10 +19,8 @@ require (
 	github.com/getsentry/raven-go v0.2.0
 	github.com/go-sql-driver/mysql v1.4.0 // indirect
 	github.com/gobwas/pool v0.2.0
-	github.com/gobwas/ws v1.0.0
 	github.com/gofrs/uuid v3.2.0+incompatible // indirect
 	github.com/gogo/protobuf v1.2.1
-	github.com/google/gopacket v1.1.16
 	github.com/gorilla/websocket v1.4.0
 	github.com/jinzhu/gorm v1.9.2
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
@@ -35,13 +33,13 @@ require (
 	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/mattn/go-sqlite3 v1.10.0
-	github.com/mdlayher/raw v0.0.0-20190315120451-8be9e99c38b6 // indirect
 	github.com/monnand/dhkx v0.0.0-20180522003156-9e5b033f1ac4
 	github.com/nats-io/go-nats v1.7.2
 	github.com/nyaruka/phonenumbers v1.0.36
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	go.uber.org/zap v1.9.1
+	golang.org/x/net v0.0.0-20190313220215-9f648a60d977 // indirect
 	gopkg.in/abiosoft/ishell.v2 v2.0.0
 	gopkg.in/doug-martin/goqu.v5 v5.0.0 // indirect
 )

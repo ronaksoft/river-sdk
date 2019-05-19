@@ -87,7 +87,6 @@ func TestReconnect(t *testing.T) {
 		logs.Info("AuthKey Created.")
 	}
 
-
 	time.Sleep(10 * time.Second)
 	r.Stop()
 	r.ResetAuthKey()
@@ -112,7 +111,7 @@ func TestReconnect(t *testing.T) {
 		ServerKeysFilePath: "./keys.json",
 		ServerEndpoint:     "ws://test.river.im",
 		ConnInfo:           conInfo,
-		LogLevel: -1,
+		LogLevel:           -1,
 	})
 	r.Start()
 	for r.ConnInfo.AuthID == 0 {
@@ -152,7 +151,6 @@ func TestNewRiver(t *testing.T) {
 		ConnInfo:           conInfo,
 	})
 
-
 	r.Start()
 	if r.ConnInfo.AuthID == 0 {
 		logs.Info("AuthKey has not been created yet.")
@@ -164,9 +162,9 @@ func TestNewRiver(t *testing.T) {
 	}
 
 	updateGetState := new(msg.UpdateGetState)
-	b,_ := updateGetState.Marshal()
+	b, _ := updateGetState.Marshal()
 
-	for i := 0;i < 10 ;i++ {
+	for i := 0; i < 10; i++ {
 		reqID, err := r.ExecuteCommand(msg.C_UpdateGetState, b, new(RequestDelegateDummy), true, true)
 		if err != nil {
 			t.Error(reqID, ":::", err)
@@ -262,8 +260,7 @@ func (d *MainDelegateDummy) OnDownloadError(messageID, requestID int64, filePath
 	)
 }
 
-
-type RequestDelegateDummy struct {}
+type RequestDelegateDummy struct{}
 
 func (RequestDelegateDummy) OnComplete(b []byte) {
 	fmt.Println(b)

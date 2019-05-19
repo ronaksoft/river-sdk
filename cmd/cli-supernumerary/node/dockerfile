@@ -1,7 +1,0 @@
-FROM registry.ronaksoftware.com/base/alpine
-WORKDIR /ronak
-RUN mkdir _cache
-COPY keys.json /ronak
-#COPY ./_build/supernumerary /ronak
-COPY main /ronak/supernumerary
-ENTRYPOINT ["/ronak/supernumerary"]

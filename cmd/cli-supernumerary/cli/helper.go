@@ -1,11 +1,23 @@
 package main
 
 import (
+	"fmt"
+	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/config"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"io/ioutil"
+	"os"
 	"strconv"
+	"strings"
+	"sync"
 	"time"
 
 	"gopkg.in/abiosoft/ishell.v2"
 )
+
+type Params struct {
+	ServerUrl     string
+	FileServerUrl string
+}
 
 func fnGetDuration(c *ishell.Context) time.Duration {
 	var tmpNo time.Duration
@@ -38,19 +50,30 @@ func fnGetTickerAction(c *ishell.Context) int {
 }
 
 func fnGetServerURL(c *ishell.Context) string {
-	c.Print("Server URL (ws://test.river.im): ")
+	defaultServerUrl, _ := ioutil.ReadFile(".river-server")
+	if defaultServerUrl == nil {
+		defaultServerUrl = ronak.StrToByte("test.river.im")
+	}
+	c.Print(fmt.Sprintf("Server URL (ws://%s): ", defaultServerUrl))
 	tmp := c.ReadLine()
 	if tmp == "" {
-		tmp = "ws://test.river.im"
+		tmp = ronak.ByteToStr(defaultServerUrl)
+	} else {
+		tmp = strings.TrimPrefix(tmp, "ws://")
+		_ = ioutil.WriteFile(".river-server", ronak.StrToByte(tmp), os.ModePerm)
 	}
-	return tmp
+	return fmt.Sprintf("ws://%s", tmp)
 }
 
 func fnGetFileServerURL(c *ishell.Context) string {
-	c.Print("File Server URL (http://test.river.im/file): ")
+	defaultServerUrl, _ := ioutil.ReadFile(".river-server")
+	if defaultServerUrl == nil {
+		defaultServerUrl = ronak.StrToByte("test.river.im")
+	}
+	c.Print(fmt.Sprintf("File Server URL (http://%s/file): ", defaultServerUrl))
 	tmp := c.ReadLine()
 	if tmp == "" {
-		tmp = "http://test.river.im/file"
+		tmp = fmt.Sprintf("http://%s/file", ronak.ByteToStr(defaultServerUrl))
 	}
 	return tmp
 }
@@ -68,4 +91,30 @@ func fnGetTimeout(c *ishell.Context) time.Duration {
 		}
 	}
 	return duration
+}
+
+func healthCheck(c *ishell.Context) {
+	instanceIDs := make([]string, 0)
+	_NodesLock.RLock()
+	c.Println("Checking all node are alive")
+	for instanceID := range _Nodes {
+		instanceIDs = append(instanceIDs, instanceID)
+	}
+	_NodesLock.RUnlock()
+
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(len(instanceIDs))
+	for _, instanceID := range instanceIDs {
+		go func(instanceID string) {
+			defer waitGroup.Done()
+			_, err := _NATS.Request(fmt.Sprintf("%s.%s", instanceID, config.SubjectHealthCheck), []byte("HEALTH_CHECK"), 5*time.Second)
+			if err != nil {
+				_NodesLock.Lock()
+				delete(_Nodes, instanceID)
+				_NodesLock.Unlock()
+			}
+
+		}(instanceID)
+	}
+	waitGroup.Wait()
 }

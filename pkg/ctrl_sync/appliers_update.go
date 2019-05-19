@@ -300,6 +300,20 @@ func (ctrl *Controller) updateNotifySettings(u *msg.UpdateEnvelope) []*msg.Updat
 	return res
 }
 
+// updateDialogPinned
+func (ctrl *Controller) updateDialogPinned(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+	logs.Info("SyncController::updateDialogPinned()")
+	x := new(msg.UpdateDialogPinned)
+	x.Unmarshal(u.Update)
+
+	err := repo.Dialogs.UpdateDialogPinned(x)
+	if err != nil {
+		logs.Error("updateDialogPinned() -> Dialogs.UpdateDialogPinned()", zap.Error(err))
+	}
+	res := []*msg.UpdateEnvelope{u}
+	return res
+}
+
 // updateUsername
 func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
 	logs.Info("SyncController::updateUsername()")

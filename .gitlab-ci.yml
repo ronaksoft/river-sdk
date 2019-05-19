@@ -2,16 +2,16 @@ stages:
   - build
   - deploy
 
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
 build:supernumerary-node:
   stage: build
   image: registry.ronaksoftware.com/base/golang:1.11
   script:
-    ## Server Supernumerary
-#    - mkdir -p /go/src/git.ronaksoftware.com/ronak/
-#    - cp -r $CI_PROJECT_DIR /go/src/git.ronaksoftware.com/ronak/
-    - cd supernumerary/node
-    - mkdir -p $CI_PROJECT_DIR/supernumerary/node/_build
-    - env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build --mod=vendor -ldflags "-s -w" -o $CI_PROJECT_DIR/supernumerary/node/_build/supernumerary
+    - cd cmd/cli-supernumerary/node
+    - mkdir -p $CI_PROJECT_DIR/cmd/cli-supernumerary/node/_build
+    - env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build --mod=vendor -ldflags "-s -w" -o $CI_PROJECT_DIR/cmd/cli-supernumerary/node/_build/supernumerary
   artifacts:
     untracked: true
     expire_in: 1 hour
@@ -20,7 +20,7 @@ build:supernumerary-node:
 deploy:supernumerary-node:
   stage: deploy
   only:
-    - feature/messagehole
+    - master
   image: docker:latest
   services:
     - docker:dind
@@ -28,6 +28,7 @@ deploy:supernumerary-node:
     IMAGE_TAG:  "0.1"
   script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
-    - cd ./supernumerary/node
+    - cd ./cmd/cli-supernumerary/node
     - docker build --pull -t $CI_REGISTRY_IMAGE/supernumerary:$IMAGE_TAG .
     - docker push $CI_REGISTRY_IMAGE/supernumerary:$IMAGE_TAG
+    - echo $CI_REGISTRY_IMAGE
