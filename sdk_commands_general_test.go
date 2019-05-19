@@ -61,7 +61,7 @@ func TestRiver_SearchGlobal(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			wg.Add(1)
 			testCase = i + 1
-			_River.SearchGlobal(tt.searchText)
+			_River.SearchGlobal(tt.searchText, nil)
 			wg.Wait()
 		})
 	}

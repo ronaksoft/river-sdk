@@ -759,7 +759,7 @@ func (fm *FileManager) DownloadThumbnail(msgID int64, fileID int64, accessHash u
 func (fm *FileManager) ClearFiles(filePaths []string) error {
 	for _, filePath := range filePaths {
 		if err := os.Remove(filePath); err != nil {
-			logs.Warn("ClearFiles::Error removing files" , zap.String(fmt.Sprintf(" file path: %s", filePath), err.Error()))
+			logs.Warn("ClearFiles::Error removing files", zap.String(fmt.Sprintf(" file path: %s", filePath), err.Error()))
 			return err
 		}
 	}

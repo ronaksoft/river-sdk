@@ -20,7 +20,7 @@ type Dialogs struct {
 	NotifyMuteUntil int64  `gorm:"column:NotifyMuteUntil" json:"NotifyMuteUntil"`
 	NotifySound     string `gorm:"column:NotifySound" json:"NotifySound"`
 	MentionedCount  int32  `gorm:"column:MentionedCount" json:"MentionedCount"`
-	Pinned        bool   `gorm:"column:IsPinned" json:"IsPinned"`
+	Pinned          bool   `gorm:"column:IsPinned" json:"IsPinned"`
 }
 
 func (Dialogs) TableName() string {

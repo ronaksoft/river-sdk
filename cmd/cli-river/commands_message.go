@@ -5,7 +5,6 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/toolbox"
-	"git.ronaksoftware.com/snappfood-social/feeder/log"
 	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"
 )
@@ -327,7 +326,7 @@ func (d *ClearCacheResult) OnComplete(b []byte) {
 }
 
 func (d *ClearCacheResult) OnTimeout(err error) {
-	_log.Debug(err.Error())
+	_Log.Debug(err.Error())
 }
 
 var MessagesClearMedia= &ishell.Cmd {

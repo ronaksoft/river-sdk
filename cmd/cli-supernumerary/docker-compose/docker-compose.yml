@@ -3,42 +3,17 @@ services:
 
 ## Supernumerary SERVICE 001
   supernumerary-001:
-    image: registry.ronaksoftware.com/ronak/riversdk/supernumerary:latest
+    image: registry.ronaksoftware.com/ronak/riversdk/supernumerary:0.1
     restart: always
     expose:
       - 2374
     volumes:
       - ./_cache:/ronak/_cache
     environment:
-      - CFG_BOUNDLE_ID=001
-      - CFG_INSTANCE_ID=001
+      - CFG_BUNDLE_ID=001
       - CFG_NATS_URL=nats://nats:4222
-      - CFG_START_PHONE=0
-      - CFG_END_PHONE=1000
-    networks:
-      - testing
-    ulimits:
-      nproc: 65535
-      nofile:
-        soft: 20000
-        hard: 40000
-    depends_on:
-      - nats
-
-## Supernumerary SERVICE 002
-  supernumerary-002:
-    image: registry.ronaksoftware.com/ronak/riversdk/supernumerary:latest
-    restart: always
-    expose:
-      - 2374
-    volumes:
-      - ./_cache:/ronak/_cache
-    environment:
-      - CFG_BOUNDLE_ID=002
-      - CFG_INSTANCE_ID=002
-      - CFG_NATS_URL=nats://nats:4222
-      - CFG_START_PHONE=1000
-      - CFG_END_PHONE=2000
+      - CFG_CACHE_REDIS_PERM_DSN=redis:6379
+      - CFG_CACHE_REDIS_PERM_PASS=ehsan2374
     networks:
       - testing
     ulimits:
@@ -51,7 +26,7 @@ services:
 
 ## NATS SERVICE        
   nats:
-    image: nats:latest
+    image: registry.ronaksoftware.com/base/nats
     restart: always
     ports:
       - 4222:4222
@@ -59,27 +34,17 @@ services:
     networks:
       - testing
 
-## PROMETHEUS Metrics:
-  prometheus:
-    image: prom/prometheus:latest
-    command: --config.file=/prometheus/prometheus.yml
+## REDIS SERVICE
+  redis:
+    restart: on-failure
+    image: registry.ronaksoftware.com/base/redis
+    command: redis-server --requirepass ehsan2374 --save 1 1
+    volumes:
+      - ./_redis:/data:rw
+    ports:
+      - 6379:6379
     networks:
       - testing
-    ports:
-      - 9090:9090
-    volumes:
-      - ./prometheus:/prometheus
-
-
-## GRAFANA Dashboard:
-  grafana:
-    image: grafana/grafana:latest
-    networks:
-      - testing
-    ports:
-      - 3000:3000
-    volumes:
-      - ./grafana:/var/lib/grafana
 
 networks:
   testing:

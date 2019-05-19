@@ -5,7 +5,6 @@ import (
 	"testing"
 )
 
-
 func TestIsHole(t *testing.T) {
 	hm := newHoleManager()
 	hm.addBar(Bar{0, 99, Hole})

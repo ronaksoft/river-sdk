@@ -1,3 +1,3 @@
 [submodule "msg"]
 	path = msg
-	url = git@git.ronaksoftware.com:river/msg.git
+	url = ../../river/msg.git
