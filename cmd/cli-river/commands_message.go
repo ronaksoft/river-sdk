@@ -289,7 +289,7 @@ var MessagesSearchText = &ishell.Cmd{
 	},
 }
 
-var MessagesGetDBMediaStatus= &ishell.Cmd {
+var MessagesGetDBMediaStatus = &ishell.Cmd{
 	Name: "GetDBMediaStatus",
 	Func: func(c *ishell.Context) {
 		reqDelegate := new(dbMediaDelegate)
@@ -297,10 +297,9 @@ var MessagesGetDBMediaStatus= &ishell.Cmd {
 	},
 }
 
+type dbMediaDelegate struct{}
 
-type dbMediaDelegate struct {}
-
-func (d *dbMediaDelegate ) OnComplete(b []byte) {
+func (d *dbMediaDelegate) OnComplete(b []byte) {
 	res := msg.DBMediaInfo{}
 	err := res.Unmarshal(b)
 	if err != nil {
@@ -309,7 +308,7 @@ func (d *dbMediaDelegate ) OnComplete(b []byte) {
 	_Log.Debug("GetDBMediaStatus::OnComplete", zap.Any("DBMediaInfo", fmt.Sprintf("%+v", res)))
 }
 
-func (d *dbMediaDelegate ) OnTimeout(err error) {}
+func (d *dbMediaDelegate) OnTimeout(err error) {}
 
 type ClearCacheResult struct {
 	SuccessConst int64
@@ -329,7 +328,7 @@ func (d *ClearCacheResult) OnTimeout(err error) {
 	_Log.Debug(err.Error())
 }
 
-var MessagesClearMedia= &ishell.Cmd {
+var MessagesClearMedia = &ishell.Cmd{
 	Name: "ClearMedia",
 	Func: func(c *ishell.Context) {
 		peerId := fnGetPeerID(c)
