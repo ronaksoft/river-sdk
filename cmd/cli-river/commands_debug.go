@@ -250,7 +250,7 @@ var GetGroupInputPeer = &ishell.Cmd{
 var GetSDKSalt = &ishell.Cmd{
 	Name: "GetSDKSalt",
 	Func: func(c *ishell.Context) {
-		_SDK.GetSDKSalt()
+		_Log.Info("SDK salt: ", zap.Int64("_SDK.GetSDKSalt", _SDK.GetSDKSalt()))
 	},
 }
 

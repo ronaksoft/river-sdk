@@ -735,6 +735,7 @@ func (ctrl *Controller) getServerSalt() {
 						logs.Debug("synchronizer::SystemGetSalts()",
 							zap.String("error", err.Error()),
 						)
+						return
 					}
 					logs.Debug("getServerSalt", zap.Int("len server salts", len(s.Salts)))
 					d := time.Duration( s.Duration)
@@ -780,30 +781,27 @@ func (ctrl *Controller) updateSalt(salt []domain.Slt) bool {
 	sort.Slice(salt, func(i, j int) bool {
 		return salt[i].Timestamp < salt[j].Timestamp
 	})
-
 	for i, s := range saltArray {
 		now := time.Now().Unix()
 		diff := ctrl.networkCtrl.ClientTimeDifference()
 
-		if time.Unix(now + diff, 0).Unix() > s.Timestamp + int64(time.Hour / time.Second) {
-			logs.Debug("did not match", zap.Any("salt", saltArray))
+		if time.Unix(now + diff, 0).Unix() >= s.Timestamp + int64(time.Hour / time.Second) {
+			logs.Debug("did not match", zap.Any("salt timestamp", s.Timestamp))
 			continue
 		}
 		ctrl.networkCtrl.SetServerSalt(s.Value)
 		filemanager.Ctx().SetServerSalt(s.Value)
+		synced = true
+		// set timer to renew salt
+		nextTimeStamp := saltArray[i+1].Timestamp
+		timeLeft := time.Duration(nextTimeStamp - time.Now().Unix() + ctrl.networkCtrl.ClientTimeDifference()) * time.Second
+		logs.Debug("synchronizer", zap.Any("Renew Salt after", timeLeft.String()))
+		go ctrl.renewServerSaltAfter(timeLeft)
+		// get new server salt for next 48 hours
 		if i > 24 {
 			go ctrl.getServerSalt()
-		} else {
-			b, _ := json.Marshal(saltArray)
-			_ = repo.System.SaveString(domain.ColumnSystemSalts, string(b))
-			synced = true
-			// set timer to renew salt
-			nextTimeStamp := saltArray[i+1].Timestamp
-			timeLeft := time.Duration(nextTimeStamp - time.Now().Unix() + ctrl.networkCtrl.ClientTimeDifference()) * time.Second
-			logs.Debug("synchronizer", zap.Any("Renew Salt after", timeLeft.String()))
-			go ctrl.renewServerSaltAfter(timeLeft)
-			break
 		}
+		break
 	}
 	if !synced {
 		_ = repo.System.RemoveSalt()
