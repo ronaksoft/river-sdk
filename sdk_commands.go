@@ -53,12 +53,14 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	res.Messages = append(res.Messages, pendingMessages...)
 
 	for _, m := range res.Messages {
-		if m.PeerType == int32(msg.PeerUser) {
-			mUsers[m.SenderID] = true
-		}
-		if m.PeerType == int32(msg.PeerGroup) {
+		switch msg.PeerType(m.PeerType) {
+		case msg.PeerUser:
+			mUsers[m.PeerID] = true
+		case msg.PeerGroup:
 			mGroups[m.PeerID] = true
 		}
+
+		mUsers[m.SenderID] = true
 		mUsers[m.FwdSenderID] = true
 
 		// load MessageActionData users
