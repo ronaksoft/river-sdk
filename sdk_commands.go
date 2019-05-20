@@ -226,6 +226,9 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 
+	if req.MaxID < 0 {
+		req.MaxID = 0
+	}
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:
 		// Get the latest messages
@@ -273,7 +276,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 				case msg.C_MessagesMany:
 					x := new(msg.MessagesMany)
 					_ = x.Unmarshal(m.Message)
-					if len(x.Messages) < int(req.Limit) {
+					if x.Continuous && len(x.Messages) < int(req.Limit) {
 						_ = messageHole.SetLowerFilled(req.Peer.ID, int32(req.Peer.Type))
 					}
 				case msg.C_Error:
@@ -296,7 +299,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 				case msg.C_MessagesMany:
 					x := new(msg.MessagesMany)
 					_ = x.Unmarshal(m.Message)
-					if len(x.Messages) < int(req.Limit) {
+					if x.Continuous && len(x.Messages) < int(req.Limit) {
 						_ = messageHole.SetLowerFilled(req.Peer.ID, int32(req.Peer.Type))
 					}
 				case msg.C_Error:
