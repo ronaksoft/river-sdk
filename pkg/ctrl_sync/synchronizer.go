@@ -118,6 +118,9 @@ func (ctrl *Controller) watchDog() {
 	}
 }
 
+func (ctrl *Controller) Sync() {
+	ctrl.sync()
+}
 func (ctrl *Controller) sync() {
 	// Check if sync function is already running, then return otherwise lock it and continue
 	if !atomic.CompareAndSwapInt32(&ctrl.syncLock, 0, 1) {
@@ -456,9 +459,6 @@ func (ctrl *Controller) Start() {
 
 	// set default value to synced status
 	updateSyncStatus(ctrl, domain.Synced)
-
-	// Sync with Server
-	go ctrl.sync()
 
 	go ctrl.watchDog()
 }
