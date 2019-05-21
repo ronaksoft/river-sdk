@@ -283,7 +283,7 @@ func (r *River) onNetworkConnect() {
 
 
 		// Sync with Server
-		go r.syncCtrl.Sync()
+		r.syncCtrl.Sync()
 
 		// import contact from server
 		r.syncCtrl.ContactImportFromServer()
