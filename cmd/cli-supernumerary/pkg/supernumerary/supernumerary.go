@@ -113,6 +113,10 @@ func (s *Supernumerary) dispose() {
 // CreateAuthKey init step required
 func (s *Supernumerary) CreateAuthKey() {
 	for _, act := range s.Actors {
+		if act == nil {
+			_Log.Warn("Actor is Nil")
+			continue
+		}
 		sen := scenario.NewCreateAuthKey(false)
 		_Log.Info("CreateAuthKey() CreatingAuthKey", zap.String("Phone", act.GetPhone()))
 		success := scenario.Play(act, sen)
