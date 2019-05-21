@@ -283,7 +283,7 @@ func (r *River) onNetworkConnect() {
 
 
 		// Sync with Server
-		r.syncCtrl.Sync()
+		go r.syncCtrl.Sync()
 
 		// import contact from server
 		r.syncCtrl.ContactImportFromServer()
@@ -291,7 +291,7 @@ func (r *River) onNetworkConnect() {
 }
 
 func (r *River) onGeneralError(e *msg.Error) {
-	// TODO:: calll external handler
+	// TODO:: call external handler
 	logs.Info("River::onGeneralError()",
 		zap.String("Code", e.Code),
 		zap.String("Item", e.Items),
