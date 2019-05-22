@@ -1046,6 +1046,7 @@ func (r *River) ClearCache(peerID int64, mediaTypes string, allMedia bool) bool 
 			delete(DatabaseStatus, k)
 		}
 	}
+	defer clearDatabaseStatus()
 	if allMedia {
 		// peerID = 0 means all peers
 		// all peers and all media types
@@ -1095,9 +1096,6 @@ func (r *River) ClearCache(peerID int64, mediaTypes string, allMedia bool) bool 
 		logs.Debug("River::ClearCache",
 			zap.String("clear media error", err.Error()),
 		)
-		for k := range DatabaseStatus {
-			delete(DatabaseStatus, k)
-		}
 		return false
 	} else {
 		logs.Debug("ClearCache", zap.Strings("media paths", filePaths))
@@ -1106,17 +1104,9 @@ func (r *River) ClearCache(peerID int64, mediaTypes string, allMedia bool) bool 
 			logs.Debug("River::ClearCache",
 				zap.String("clear files error", err.Error()),
 			)
-			for k := range DatabaseStatus {
-				delete(DatabaseStatus, k)
-			}
 			return false
 		}
 	}
-	for k := range DatabaseStatus {
-		delete(DatabaseStatus, k)
-	}
-
-	defer clearDatabaseStatus()
 	return true
 }
 
