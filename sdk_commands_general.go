@@ -1037,42 +1037,55 @@ func (r *River) GetDBStatus(delegate RequestDelegate) {
 	DatabaseStatus = peerMediaSizeMap
 }
 
-// ClearCache removes files from client device, all means clear all peerIds with all media types
-func (r *River) ClearCache(peerID int64, mediaTypes string, all bool) bool {
+// ClearCache removes files from client device, allMedia means clear all media types
+// peerID 0 means all peers
+func (r *River) ClearCache(peerID int64, mediaTypes string, allMedia bool) bool {
 	var messageIDs []int64
 	clearDatabaseStatus := func() {
 		for k := range DatabaseStatus {
 			delete(DatabaseStatus, k)
 		}
 	}
-	if all {
-		for _, mediaData := range DatabaseStatus {
-			for _, mediaInfo := range mediaData {
+	if allMedia {
+		// peerID = 0 means all peers
+		// all peers and all media types
+		if peerID == 0 {
+			for _, mediaData := range DatabaseStatus {
+				for _, mediaInfo := range mediaData {
+					messageIDs = append(messageIDs, mediaInfo.MessageIDs...)
+				}
+			}
+		} else {
+			// all media types of a specific peer
+			for _, mediaInfo := range DatabaseStatus[peerID] {
 				messageIDs = append(messageIDs, mediaInfo.MessageIDs...)
 			}
 		}
 	} else {
-		mediaInfo := DatabaseStatus[peerID]
-
-		mediaTypeSlices := strings.Split(mediaTypes, ",")
-
-		for _, mediaType := range mediaTypeSlices {
-			castedType, _ := strconv.Atoi(mediaType)
-
-			logs.Info("River::ClearCache",
-				zap.Any("mediaTypeArray", mediaTypeSlices),
-				zap.String("mediaType", mediaType),
-				zap.Int("castedMediaType", castedType),
-			)
-
-			messageIDs = append(messageIDs, mediaInfo[msg.DocumentAttributeType(castedType)].MessageIDs...)
+		// all peers with specific media types
+		if peerID == 0 {
+			for _, mediaData := range DatabaseStatus {
+				mediaTypeSlices := strings.Split(mediaTypes, ",")
+				for _, mediaType := range mediaTypeSlices {
+					castedType, _ := strconv.Atoi(mediaType)
+					messageIDs = append(messageIDs, mediaData[msg.DocumentAttributeType(castedType)].MessageIDs...)
+				}
+			}
+		} else {
+			// specific peer with specific media type
+			mediaInfo := DatabaseStatus[peerID]
+			mediaTypeSlices := strings.Split(mediaTypes, ",")
+			for _, mediaType := range mediaTypeSlices {
+				castedType, _ := strconv.Atoi(mediaType)
+				messageIDs = append(messageIDs, mediaInfo[msg.DocumentAttributeType(castedType)].MessageIDs...)
+			}
 		}
 	}
 
 	logs.Info("River::ClearCache",
 		zap.Any("peerID", peerID),
 		zap.String("mediaTypes", mediaTypes),
-		zap.Bool("all", all),
+		zap.Bool("all", allMedia),
 		zap.Any("DatabaseStatus Map", DatabaseStatus),
 	)
 
