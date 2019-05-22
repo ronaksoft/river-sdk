@@ -226,6 +226,9 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 
+	if req.MaxID < 0 {
+		req.MaxID = 0
+	}
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:
 		// Get the latest messages
@@ -273,7 +276,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 				case msg.C_MessagesMany:
 					x := new(msg.MessagesMany)
 					_ = x.Unmarshal(m.Message)
-					if len(x.Messages) < int(req.Limit) {
+					if x.Continuous && len(x.Messages) < int(req.Limit) {
 						_ = messageHole.SetLowerFilled(req.Peer.ID, int32(req.Peer.Type))
 					}
 				case msg.C_Error:
@@ -291,20 +294,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		}
 		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
 		if len(messages) < int(req.Limit) {
-			cb := func(m *msg.MessageEnvelope) {
-				switch m.Constructor {
-				case msg.C_MessagesMany:
-					x := new(msg.MessagesMany)
-					_ = x.Unmarshal(m.Message)
-					if len(x.Messages) < int(req.Limit) {
-						_ = messageHole.SetLowerFilled(req.Peer.ID, int32(req.Peer.Type))
-					}
-				case msg.C_Error:
-				default:
-				}
-				successCB(m)
-			}
-			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, cb, true)
+			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 			return
 		}
 		messagesGetHistory(out, messages, users, in.RequestID, successCB)

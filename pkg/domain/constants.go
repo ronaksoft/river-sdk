@@ -33,6 +33,7 @@ const (
 	ColumnDeviceToken        = "DEVICE_TOKEN_INFO"
 	ColumnContactsImportHash = "CONTACTS_IMPORT_HASH"
 	ColumnContactsGetHash    = "CONTACTS_GET_HASH"
+	ColumnSystemSalts        = "SERVER_SALTS"
 )
 
 // NetworkStatus network controller status
