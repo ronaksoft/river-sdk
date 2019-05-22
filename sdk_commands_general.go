@@ -1010,7 +1010,7 @@ func (r *River) GetDBStatus(delegate RequestDelegate) {
 	for k := range DatabaseStatus {
 		delete(DatabaseStatus, k)
 	}
-	logs.Debug("DatabaseStatus", zap.Any("", fmt.Sprintf("%+v", DatabaseStatus)))
+	logs.Debug("DatabaseStatus Must be Empty", zap.Any("", fmt.Sprintf("%+v", DatabaseStatus)))
 	peerMediaSizeMap, err := repo.Files.GetDBStatus()
 	if err != nil {
 		GetDBStatusIsRunning = false

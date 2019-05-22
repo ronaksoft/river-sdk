@@ -443,8 +443,8 @@ func (r *repoFiles) GetDBStatus() (map[int64]map[msg.DocumentAttributeType]dto.M
 					}
 				}
 			}
+			peerMediaSizeMap[peerId] = mMediaSize
 		}
-		peerMediaSizeMap[peerId] = mMediaSize
 	}
 	return peerMediaSizeMap, nil
 }
