@@ -52,7 +52,7 @@ func NewCreateAuthKey(isFinal bool) shared.Screenwriter {
 
 // Play execute CreateAuthKey scenario
 func (s *CreateAuthKey) Play(act shared.Actor) {
-	if act.GetAuthID() > 0 {
+	if act.GetAuthID() != 0 {
 		s.log(act, "Actor already have AuthID", 0, 0)
 		return
 	}
