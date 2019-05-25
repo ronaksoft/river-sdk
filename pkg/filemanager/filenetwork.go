@@ -20,7 +20,7 @@ func (fm *FileManager) Send(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvel
 	} else {
 		fm.messageSeq++
 		encryptedPayload := msg.ProtoEncryptedPayload{
-			ServerSalt: 234242, // TODO:: ServerSalt ?
+			ServerSalt: fm.salt,
 			Envelope:   msgEnvelope,
 		}
 		encryptedPayload.MessageID = uint64(time.Now().Unix()<<32 | fm.messageSeq)
