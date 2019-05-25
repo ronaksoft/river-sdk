@@ -1,18 +1,20 @@
 package config
 
 const (
-	ENV_BOUNDLE_ID  = "CFG_BOUNDLE_ID"
-	ENV_INSTANCE_ID = "CFG_INSTANCE_ID"
-	ENV_NATS_URL    = "CFG_NATS_URL"
-	ENV_START_PHONE = "CFG_START_PHONE"
-	ENV_END_PHONE   = "CFG_END_PHONE"
+	EnvBundleID  = "CFG_BUNDLE_ID"
+	EnvNatsUrl   = "CFG_NATS_URL"
+	EnvRedisDSN  = "CFG_CACHE_REDIS_PERM_DSN"
+	EnvRedisPass = "CFG_CACHE_REDIS_PERM_PASS"
 )
 
 const (
-	SUBJECT_START         = "SUBJECT_START"
-	SUBJECT_STOP          = "SUBJECT_STOP"
-	SUBJECT_TICKER        = "SUBJECT_TICKER"
-	SUBJECT_CREATEAUTHKEY = "SUBJECT_CREATEAUTHKEY"
-	SUBJECT_RIGISTER      = "SUBJECT_RIGISTER"
-	SUBJECT_LOGIN         = "SUBJECT_LOGIN"
+	SubjectCommander     = "SUBJECT_COMMANDER"
+	SubjectStart         = "SUBJECT_START"
+	SubjectStop          = "SUBJECT_STOP"
+	SubjectTicker        = "SUBJECT_TICKER"
+	SubjectCreateAuthKey = "SUBJECT_CREATE_AUTH_KEY"
+	SubjectRegister      = "SUBJECT_REGISTER"
+	SubjectLogin         = "SUBJECT_LOGIN"
+	SubjectPhoneRange    = "SUBJECT_PHONE_RANGE"
+	SubjectHealthCheck   = "SUBJECT_HEALTH_CHECK"
 )

@@ -43,6 +43,7 @@ type FileManager struct {
 	authKey    []byte
 	authID     int64
 	messageSeq int64
+	salt       int64
 
 	ServerEndpoint string
 	NetworkStatus  domain.NetworkStatus
@@ -346,6 +347,11 @@ func (fm *FileManager) SetAuthorization(authID int64, authKey []byte) {
 	fm.authKey = make([]byte, len(authKey))
 	fm.authID = authID
 	copy(fm.authKey, authKey)
+}
+
+// SetServerSalt sets server salt
+func (fm *FileManager) SetServerSalt(salt int64) {
+	fm.salt = salt
 }
 
 func (fm *FileManager) startDownloadQueue() {
@@ -759,7 +765,7 @@ func (fm *FileManager) DownloadThumbnail(msgID int64, fileID int64, accessHash u
 func (fm *FileManager) ClearFiles(filePaths []string) error {
 	for _, filePath := range filePaths {
 		if err := os.Remove(filePath); err != nil {
-			logs.Warn("ClearFiles::Error removing files" , zap.String(fmt.Sprintf(" file path: %s", filePath), err.Error()))
+			logs.Warn("ClearFiles::Error removing files", zap.String(fmt.Sprintf(" file path: %s", filePath), err.Error()))
 			return err
 		}
 	}

@@ -294,8 +294,6 @@ type ClearCacheResult struct {
 
 func (d *ClearCacheResult) OnComplete(b []byte) {
 
-
-
 	return
 }
 

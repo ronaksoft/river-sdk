@@ -943,7 +943,7 @@ func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
 }
 
 // SearchGlobal returns messages, contacts and groups matching given text
-func (r *River) SearchGlobal(text string , delegate RequestDelegate) {
+func (r *River) SearchGlobal(text string, delegate RequestDelegate) {
 	msgs := repo.Messages.SearchText(text)
 
 	// get users && group IDs
@@ -1016,11 +1016,11 @@ func (r *River) GetDBStatus(delegate RequestDelegate) {
 	}
 	peerMediaInfo := make([]*msg.PeerMediaInfo, 0)
 	for peerID, mediaInfoMap := range peerMediaSizeMap {
-		mediaSize :=  make([]*msg.MediaSize, 0)
+		mediaSize := make([]*msg.MediaSize, 0)
 		for mediaType, mediaInfo := range mediaInfoMap {
-			mediaSize = append(mediaSize, &msg.MediaSize{MediaType: mediaType, TotalSize:mediaInfo.Size})
+			mediaSize = append(mediaSize, &msg.MediaSize{MediaType: mediaType, TotalSize: mediaInfo.Size})
 		}
-		peerMediaInfo = append(peerMediaInfo, &msg.PeerMediaInfo{PeerID:peerID, Media:mediaSize})
+		peerMediaInfo = append(peerMediaInfo, &msg.PeerMediaInfo{PeerID: peerID, Media: mediaSize})
 	}
 	res.MediaInfo = peerMediaInfo
 	logs.Debug("MediaInfo", zap.String("", fmt.Sprintf("%+v", res.MediaInfo)))
@@ -1084,4 +1084,8 @@ func (r *River) ClearCache(peerID int64, mediaTypes string, all bool) bool {
 	}
 
 	return true
+}
+
+func (r *River) GetSDKSalt() int64 {
+	return r.networkCtrl.GetServerSalt()
 }
