@@ -39,6 +39,11 @@ type RedisConfig struct {
 	Db                    int
 }
 
+type (
+	CmdAction radix.CmdAction
+	Action radix.Action
+)
+
 var (
 	DefaultRedisConfig = RedisConfig{
 		ConnectionPoolSize:    10,

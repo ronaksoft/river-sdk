@@ -72,6 +72,10 @@ func (l *zapLogger) SetLevel(level Level) {
 	l.AtomicLevel.SetLevel(level)
 }
 
+func (l *zapLogger) WithOptions(opts ...zap.Option) *zapLogger {
+	return l.WithOptions(opts...)
+}
+
 func NewConsoleLogger() *zapLogger {
 	l := new(zapLogger)
 	l.AtomicLevel = zap.NewAtomicLevel()

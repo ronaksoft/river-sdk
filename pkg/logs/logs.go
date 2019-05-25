@@ -1,14 +1,20 @@
 package logs
 
 import (
+	"fmt"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
+	"path"
+	"strings"
+	"time"
 )
 
 var (
-	_Log      *zap.Logger
-	_LogLevel zap.AtomicLevel
+	_UpdateLog *zap.Logger
+	_Log       *zap.Logger
+	_LogLevel  zap.AtomicLevel
 )
 
 func init() {
@@ -42,42 +48,59 @@ func SetLogLevel(l int) {
 	_LogLevel.SetLevel(zapcore.Level(l))
 }
 
-func SetHook(fn func(logLevel int, msg string)) {
-	_Log = _Log.WithOptions(zap.Hooks(func(entry zapcore.Entry) error {
-		fn(int(entry.Level), entry.Message)
-		return nil
-	}))
-}
-
-func SetLogFilePath(filePath string) error {
-	if len(filePath) > 0 {
-		logFile, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
-		if err != nil {
-			return err
-		}
-		_Log = _Log.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
-			return zapcore.NewTee(
-				core,
-				zapcore.NewCore(
-					zapcore.NewJSONEncoder(zapcore.EncoderConfig{
-						TimeKey:        "ts",
-						LevelKey:       "level",
-						NameKey:        "logger",
-						CallerKey:      "caller",
-						MessageKey:     "msg",
-						StacktraceKey:  "stacktrace",
-						LineEnding:     zapcore.DefaultLineEnding,
-						EncodeLevel:    zapcore.CapitalColorLevelEncoder,
-						EncodeTime:     zapcore.ISO8601TimeEncoder,
-						EncodeDuration: zapcore.StringDurationEncoder,
-						EncodeCaller:   zapcore.ShortCallerEncoder,
-					}),
-					zapcore.Lock(logFile),
-					_LogLevel,
-				),
-			)
-		}))
+func SetLogFilePath(logDir string) error {
+	// support IOS file path
+	if strings.HasPrefix(logDir, "file://") {
+		logDir = logDir[7:]
 	}
+
+	t := time.Now()
+	logFileName := fmt.Sprintf("LOG-%d-%02d-%02d.log", t.Year(), t.Month(), t.Day())
+	logFile, err := os.OpenFile(path.Join(logDir, logFileName), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		return err
+	}
+	_Log = _Log.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
+		return zapcore.NewTee(
+			core,
+			zapcore.NewCore(
+				zapcore.NewJSONEncoder(zapcore.EncoderConfig{
+					TimeKey:        "ts",
+					LevelKey:       "level",
+					NameKey:        "logger",
+					CallerKey:      "caller",
+					MessageKey:     "msg",
+					StacktraceKey:  "stacktrace",
+					LineEnding:     zapcore.DefaultLineEnding,
+					EncodeLevel:    zapcore.CapitalColorLevelEncoder,
+					EncodeTime:     zapcore.ISO8601TimeEncoder,
+					EncodeDuration: zapcore.StringDurationEncoder,
+					EncodeCaller:   zapcore.ShortCallerEncoder,
+				}),
+				zapcore.Lock(logFile),
+				_LogLevel,
+			),
+		)
+	}))
+
+	updateLogFileName := fmt.Sprintf("UPDT-%04d-%02d-%02d.log", t.Year(), t.Month(), t.Day())
+	updateLogFile, err := os.OpenFile(path.Join(logDir, updateLogFileName), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		return err
+	}
+	_UpdateLog = zap.New(
+		zapcore.NewCore(
+			zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
+				LineEnding:     zapcore.DefaultLineEnding,
+				EncodeLevel:    zapcore.CapitalColorLevelEncoder,
+				EncodeTime:     zapcore.EpochTimeEncoder,
+				EncodeDuration: zapcore.StringDurationEncoder,
+				EncodeCaller:   zapcore.ShortCallerEncoder,
+			}),
+			zapcore.Lock(updateLogFile),
+			_LogLevel,
+		),
+	)
 	return nil
 }
 
@@ -100,4 +123,15 @@ func Error(msg string, fields ...zap.Field) {
 func Fatal(msg string, fields ...zap.Field) {
 	_Log.Fatal(msg, fields...)
 
+}
+
+func UpdateLog(updateID int64, constructor int64) {
+	if _UpdateLog != nil {
+		constructorName, _ := msg.ConstructorNames[constructor]
+		_UpdateLog.Info("Update",
+			zap.Int64("ID", updateID),
+			zap.String("Constructor", constructorName),
+			zap.Int64("ConstructorID", constructor),
+		)
+	}
 }
