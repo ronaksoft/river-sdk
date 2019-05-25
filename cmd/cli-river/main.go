@@ -79,7 +79,7 @@ func main() {
 	qPath := "./_queue"
 	_SDK = new(riversdk.River)
 	_SDK.SetConfig(&riversdk.RiverConfig{
-		ServerEndpoint:     "ws://192.168.1.113:8080", // "ws://test.river.im", // "ws://192.168.1.110/",
+		ServerEndpoint:     "ws://new.river.im", // "ws://test.river.im", // "ws://192.168.1.110/",
 		DbPath:             dbPath,
 		DbID:               dbID,
 		QueuePath:          fmt.Sprintf("%s/%s", qPath, dbID),
