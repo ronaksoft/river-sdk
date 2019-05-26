@@ -1113,3 +1113,11 @@ func (r *River) ClearCache(peerID int64, mediaTypes string, allMedia bool) bool 
 func (r *River) GetSDKSalt() int64 {
 	return r.networkCtrl.GetServerSalt()
 }
+
+func (r *River) StartNetwork() {
+	r.networkCtrl.Connect(true)
+}
+
+func (r *River) StopNetwork() {
+	r.networkCtrl.Disconnect()
+}
