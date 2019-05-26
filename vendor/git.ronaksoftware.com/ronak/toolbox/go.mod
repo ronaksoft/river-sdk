@@ -3,7 +3,9 @@ module git.ronaksoftware.com/ronak/toolbox
 require (
 	github.com/bitly/go-hostpool v0.0.0-20171023180738-a3a6125de932 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
+	github.com/certifi/gocertifi v0.0.0-20190506164543-d2eda7129713 // indirect
 	github.com/garyburd/redigo v1.6.0 // indirect
+	github.com/getsentry/raven-go v0.2.0
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/gobwas/httphead v0.0.0-20180130184737-2c6c146eadee // indirect
 	github.com/gobwas/pool v0.2.0

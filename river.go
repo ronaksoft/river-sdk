@@ -39,9 +39,6 @@ type RiverConfig struct {
 	// LogLevel
 	LogLevel int
 
-	// Logger pass logs to external handler
-	Logger LoggerDelegate
-
 	// Folder path to save files
 	DocumentPhotoDirectory string
 	DocumentVideoDirectory string

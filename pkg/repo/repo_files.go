@@ -317,13 +317,13 @@ func (r *repoFiles) GetFileByDocumentID(documentID int64) (*dto.Files, error) {
 	return mdl, err
 }
 
-func (r *repoFiles) GetDBStatus() (map[int64]map[int32]dto.MediaInfo, error) {
+func (r *repoFiles) GetDBStatus() (map[int64]map[msg.DocumentAttributeType]dto.MediaInfo, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 	var peerID int64
 	var peerIDs []int64
 
-	peerMediaSizeMap := make(map[int64]map[int32]dto.MediaInfo)
+	peerMediaSizeMap := make(map[int64]map[msg.DocumentAttributeType]dto.MediaInfo)
 
 	f := dto.Files{}
 
@@ -337,7 +337,7 @@ func (r *repoFiles) GetDBStatus() (map[int64]map[int32]dto.MediaInfo, error) {
 	for rows.Next() {
 		err := rows.Scan(&peerID)
 		if err != nil {
-			logs.Error(err.Error())
+			logs.Error("GetDBStatus", zap.String("rows::scan", err.Error()))
 		} else {
 			peerIDs = append(peerIDs, peerID)
 		}
@@ -346,29 +346,105 @@ func (r *repoFiles) GetDBStatus() (map[int64]map[int32]dto.MediaInfo, error) {
 
 	// range over peerIDs to collect each mediaType total size
 	for _, peerId := range peerIDs {
-		mMediaSize := make(map[int32]dto.MediaInfo)
+		mMediaSize := make(map[msg.DocumentAttributeType]dto.MediaInfo)
 		var f []dto.Files
-		err := r.db.Where("FilePath <> ? AND PeerID = ?", "", peerID).Find(&f).Error
+		err := r.db.Where("PeerID = ? AND (FilePath <> ? OR ThumbFilePath <> ?)", peerId, "", "").Find(&f).Error
 		if err != nil {
 			logs.Error(err.Error())
 			return nil, err
 		}
 		if len(f) > 0 {
 			for _, file := range f {
-				if minfo, ok := mMediaSize[file.MediaType]; ok {
-					minfo.MessageIDs = append(minfo.MessageIDs, file.MessageID)
-					minfo.Size += file.FileSize
-					mMediaSize[file.MediaType] = minfo
-				} else {
-					mediaInfo := dto.MediaInfo{
-						MessageIDs: []int64{file.MessageID},
-						Size:       file.FileSize,
+				attribs := make([]*msg.DocumentAttribute, 0)
+				err = json.Unmarshal(file.Attributes, &attribs)
+				if err != nil {
+					logs.Error(err.Error())
+					return nil, err
+				}
+				for _, a := range attribs {
+					switch a.Type {
+					case msg.AttributeTypeFile:
+						if len(attribs) > 1 {
+							continue
+						}
+						if minfo, ok := mMediaSize[msg.AttributeTypeFile]; ok {
+							minfo.MessageIDs = append(minfo.MessageIDs, file.MessageID)
+							minfo.Size += file.FileSize
+							mMediaSize[msg.AttributeTypeFile] = minfo
+						} else {
+							mediaInfo := dto.MediaInfo{
+								MessageIDs: []int64{file.MessageID},
+								Size:       file.FileSize,
+							}
+							mMediaSize[msg.AttributeTypeFile] = mediaInfo
+						}
+					case msg.AttributeTypeAudio:
+						if minfo, ok := mMediaSize[msg.AttributeTypeAudio]; ok {
+							minfo.MessageIDs = append(minfo.MessageIDs, file.MessageID)
+							minfo.Size += file.FileSize
+							mMediaSize[msg.AttributeTypeAudio] = minfo
+						} else {
+							mediaInfo := dto.MediaInfo{
+								MessageIDs: []int64{file.MessageID},
+								Size:       file.FileSize,
+							}
+							mMediaSize[msg.AttributeTypeAudio] = mediaInfo
+						}
+					case msg.AttributeTypeVideo:
+						if minfo, ok := mMediaSize[msg.AttributeTypeVideo]; ok {
+							minfo.MessageIDs = append(minfo.MessageIDs, file.MessageID)
+							minfo.Size += file.FileSize
+							mMediaSize[msg.AttributeTypeVideo] = minfo
+						} else {
+							mediaInfo := dto.MediaInfo{
+								MessageIDs: []int64{file.MessageID},
+								Size:       file.FileSize,
+							}
+							mMediaSize[msg.AttributeTypeVideo] = mediaInfo
+						}
+					case msg.AttributeTypePhoto:
+						if minfo, ok := mMediaSize[msg.AttributeTypePhoto]; ok {
+							minfo.MessageIDs = append(minfo.MessageIDs, file.MessageID)
+							minfo.Size += file.FileSize
+							mMediaSize[msg.AttributeTypePhoto] = minfo
+						} else {
+							mediaInfo := dto.MediaInfo{
+								MessageIDs: []int64{file.MessageID},
+								Size:       file.FileSize,
+							}
+							mMediaSize[msg.AttributeTypePhoto] = mediaInfo
+						}
+					case msg.AttributeAnimated:
+						if minfo, ok := mMediaSize[msg.AttributeAnimated]; ok {
+							minfo.MessageIDs = append(minfo.MessageIDs, file.MessageID)
+							minfo.Size += file.FileSize
+							mMediaSize[msg.AttributeAnimated] = minfo
+						} else {
+							mediaInfo := dto.MediaInfo{
+								MessageIDs: []int64{file.MessageID},
+								Size:       file.FileSize,
+							}
+							mMediaSize[msg.AttributeAnimated] = mediaInfo
+						}
+					case msg.AttributeTypeNone:
+						if minfo, ok := mMediaSize[msg.AttributeTypeNone]; ok {
+							minfo.MessageIDs = append(minfo.MessageIDs, file.MessageID)
+							minfo.Size += file.FileSize
+							mMediaSize[msg.AttributeTypeNone] = minfo
+						} else {
+							mediaInfo := dto.MediaInfo{
+								MessageIDs: []int64{file.MessageID},
+								Size:       file.FileSize,
+							}
+							mMediaSize[msg.AttributeTypeNone] = mediaInfo
+						}
+					default:
+						// not implemented
 					}
-					mMediaSize[file.MediaType] = mediaInfo
 				}
 			}
+			peerMediaSizeMap[peerId] = mMediaSize
 		}
-		peerMediaSizeMap[peerId] = mMediaSize
 	}
 	return peerMediaSizeMap, nil
 }

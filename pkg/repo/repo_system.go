@@ -93,3 +93,19 @@ func (r *repoSystem) SaveString(keyName string, keyValue string) error {
 	)
 	return r.db.Save(s).Error
 }
+
+// SaveSalt
+func (r *repoSystem) RemoveSalt() error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	s := new(dto.System)
+
+	keyName := "Salt"
+	err := r.db.Where("KeyName = ?", keyName).First(s).Error
+	if err == nil {
+		return r.db.Delete(s).Error
+	} else {
+		return err
+	}
+}
