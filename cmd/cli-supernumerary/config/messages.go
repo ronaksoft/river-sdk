@@ -33,3 +33,9 @@ type PhoneRangeCfg struct {
 type NodeRegisterCmd struct {
 	InstanceID string `json:"instance_id"`
 }
+
+type CreateGroup struct {
+	StartPhone int64 `json:"start_phone"`
+	EndPhone   int64 `json:"end_phone"`
+	GroupSize  int64 `json:"group_size"`
+}

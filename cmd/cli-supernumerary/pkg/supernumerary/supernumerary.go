@@ -153,6 +153,19 @@ func (s *Supernumerary) Login() {
 	}
 }
 
+// Create Group
+func (s *Supernumerary) CreateGroup(startPhone, endPhone, groupSize int64) {
+	for _, act := range s.Actors {
+		sen := scenario.NewCreateGroup(false)
+		_Log.Info("CreateGroup()", zap.String("Phone", act.GetPhone()))
+		success := scenario.Play(act, sen)
+		if success {
+			err := act.Save()
+			_Log.Debug("Login() save actor", zap.Error(err))
+		}
+	}
+}
+
 // SetTickerApplier try to invoke certain action for all actors repeatedly
 func (s *Supernumerary) SetTickerApplier(duration time.Duration, action TickerAction) {
 	if s.ticker != nil {
@@ -184,7 +197,7 @@ func (s *Supernumerary) tickerApplier(action TickerAction, duration time.Duratio
 
 						sen := scenario.NewSendMessage(false)
 						// import random contact for actor
-						act.SetPeers([]*shared.PeerInfo{s.fnGetRandomPeer(act)})
+						act.SetPeers([]*shared.PeerInfo{s.getRandomPeerUser(act)})
 
 						_Log.Debug("Actor",
 							zap.String("Phone", act.GetPhone()),
@@ -206,7 +219,7 @@ func (s *Supernumerary) tickerApplier(action TickerAction, duration time.Duratio
 				for _, act := range s.Actors {
 					sen := scenario.NewSendFile(false)
 					// import random contact for actor
-					act.SetPeers([]*shared.PeerInfo{s.fnGetRandomPeer(act)})
+					act.SetPeers([]*shared.PeerInfo{s.getRandomPeerUser(act)})
 					// async
 					sen.Play(act)
 
@@ -214,6 +227,34 @@ func (s *Supernumerary) tickerApplier(action TickerAction, duration time.Duratio
 					if s.fnCheckStopSignal() {
 						return
 					}
+				}
+			case TickerActionSendGroupMessage:
+				// try to send random message
+				waitGroup := sync.WaitGroup{}
+				waitGroup.Add(len(s.Actors))
+				for _, act := range s.Actors {
+					go func(act shared.Actor) {
+						defer waitGroup.Done()
+						time.Sleep(time.Duration(ronak.RandomInt64(duration.Nanoseconds())) * time.Nanosecond)
+
+						sen := scenario.NewSendMessage(false)
+						// import random contact for actor
+						act.SetPeers([]*shared.PeerInfo{s.getRandomPeerUser(act)})
+
+						_Log.Debug("Actor",
+							zap.String("Phone", act.GetPhone()),
+							zap.Int64("AuthID", act.GetAuthID()),
+							zap.Int64("UserID", act.GetUserID()),
+						)
+
+						// async
+						sen.Play(act)
+					}(act)
+				}
+				waitGroup.Wait()
+				// check stop signal while executing
+				if s.fnCheckStopSignal() {
+					return
 				}
 			}
 
@@ -233,11 +274,11 @@ func (s *Supernumerary) fnCheckStopSignal() bool {
 	}
 }
 
-// fnGetRandomPeer returns random peer
-func (s *Supernumerary) fnGetRandomPeer(act shared.Actor) *shared.PeerInfo {
+// getRandomPeerUser returns random peer
+func (s *Supernumerary) getRandomPeerUser(act shared.Actor) *shared.PeerInfo {
 	fromUserID := act.GetUserID()
 	for {
-		phone := s.fnGetRandomPhoneNo()
+		phone := s.getRandomPhoneNo()
 		if a, ok := s.Actors[phone]; ok {
 			if fromUserID != a.GetUserID() {
 				return scenario.GetPeerInfo(fromUserID, a.GetUserID(), msg.PeerUser)
@@ -246,7 +287,7 @@ func (s *Supernumerary) fnGetRandomPeer(act shared.Actor) *shared.PeerInfo {
 	}
 }
 
-// fnGetRandomPhoneNo select a random phoneNo between fromPhoneNo - toPhoneNo
-func (s *Supernumerary) fnGetRandomPhoneNo() int64 {
+// getRandomPhoneNo select a random phoneNo between fromPhoneNo - toPhoneNo
+func (s *Supernumerary) getRandomPhoneNo() int64 {
 	return s.FromPhoneNo + ronak.RandomInt64(s.ToPhoneNo-s.FromPhoneNo) + 1 // +1 bcz Int63n(n) returns [0,n)
 }

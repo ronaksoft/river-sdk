@@ -140,6 +140,25 @@ func (n *Node) cbRegister(msg *nats.Msg) {
 	n.su.Register()
 }
 
+func (n *Node) cbCreateGroup(msg *nats.Msg) {
+	if n.su == nil {
+		_Log.Error("cbRegister() supernumerary not initialized")
+		return
+	}
+	cfg := config.CreateGroup{}
+	err := json.Unmarshal(msg.Data, &cfg)
+	if err != nil {
+		_Log.Error("cbCreateGroup() failed to unmarshal", zap.Error(err))
+		return
+	}
+	_Log.Info("cbCreateGroup()",
+		zap.Int64("Start", cfg.StartPhone),
+		zap.Int64("End", cfg.EndPhone),
+		zap.Int64("Size", cfg.GroupSize),
+	)
+	n.su.CreateGroup(cfg.StartPhone, cfg.EndPhone, cfg.GroupSize)
+}
+
 func (n *Node) cbTicker(msg *nats.Msg) {
 	if n.su == nil {
 		_Log.Error("cbTicker() supernumerary not initialized")
