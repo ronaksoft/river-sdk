@@ -60,22 +60,31 @@ func NewSupernumerary(fromPhoneNo, toPhoneNo int64) (*Supernumerary, error) {
 		chTickerStop: make(chan bool),
 	}
 
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(int(toPhoneNo-fromPhoneNo))
+	ml := sync.Mutex{}
 	for i := fromPhoneNo; i < toPhoneNo; i++ {
-		phone := shared.GetPhone(i)
-		act, err := NewActor(phone)
-		if err != nil {
-			_Log.Info("Initialized Actor Failed",
-				zap.String("Phone", phone),
-				zap.Error(err),
-			)
-			continue
-		}
-		_Log.Info("Initialized Actor", zap.String("Phone", phone))
-		s.Actors[i] = act
+		go func(i int64) {
+			defer waitGroup.Done()
+			phone := shared.GetPhone(i)
+			act, err := NewActor(phone)
+			if err != nil {
+				_Log.Info("Initialized Actor Failed",
+					zap.String("Phone", phone),
+					zap.Error(err),
+				)
+				return
+			}
+			_Log.Info("Initialized Actor", zap.String("Phone", phone))
+			ml.Lock()
+			s.Actors[i] = act
+			ml.Unlock()
 
-		// metric
-		shared.Metrics.Gauge(shared.GaugeActors).Add(1)
+			// metric
+			shared.Metrics.Gauge(shared.GaugeActors).Add(1)
+		}(i)
 	}
+	waitGroup.Wait()
 	return s, nil
 }
 
