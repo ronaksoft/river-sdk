@@ -81,8 +81,6 @@ func (s *CreateAuthKey) initConnect(act shared.Actor) (*msg.MessageEnvelope, sha
 
 			// chain next request here
 			act.ExecuteRequest(s.initCompleteAuth(x, act))
-			s.log(act, "initConnect() Success", elapsed, resp.RequestID)
-
 		} else {
 			s.failed(act, elapsed, resp.RequestID, "initConnect() successCB response type is not InitResponse , Constructor :"+msg.ConstructorNames[resp.Constructor])
 		}

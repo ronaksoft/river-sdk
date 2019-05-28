@@ -156,6 +156,9 @@ func (n *Node) cbCreateGroup(msg *nats.Msg) {
 		zap.Int64("End", cfg.EndPhone),
 		zap.Int64("Size", cfg.GroupSize),
 	)
+	for i := int64(0); i < cfg.GroupSize; i++ {
+
+	}
 	n.su.CreateGroup(cfg.StartPhone, cfg.EndPhone, cfg.GroupSize)
 }
 

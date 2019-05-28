@@ -46,8 +46,8 @@ func (s *CreateGroup) Play(act shared.Actor) {
 }
 
 // messageSend : Step 1
-func (s *CreateGroup) createGroup(act shared.Actor, peer []*shared.PeerInfo) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
-	reqEnv := GroupsCreate(fmt.Sprintf("Group Created By %s", act.GetPhone()),peer)
+func (s *CreateGroup) createGroup(act shared.Actor, peers []*shared.PeerInfo) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
+	reqEnv := GroupsCreate(fmt.Sprintf("Group Created By %s", act.GetPhone()), peers)
 	timeoutCB := func(requestID uint64, elapsed time.Duration) {
 		// Reporter failed
 		act.SetTimeout(msg.C_GroupsCreate, elapsed)

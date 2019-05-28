@@ -223,7 +223,7 @@ func (r *River) onNetworkConnect() {
 		}
 	}
 
-	r.syncCtrl.CheckSalt() // r.checkSalt()
+	r.syncCtrl.CheckSalt()
 
 	req := msg.AuthRecall{}
 	reqBytes, _ := req.Marshal()

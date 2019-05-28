@@ -112,19 +112,26 @@ func (s *Supernumerary) dispose() {
 
 // CreateAuthKey init step required
 func (s *Supernumerary) CreateAuthKey() {
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(len(s.Actors))
 	for _, act := range s.Actors {
-		if act == nil {
-			_Log.Warn("Actor is Nil")
-			continue
-		}
-		sen := scenario.NewCreateAuthKey(false)
-		_Log.Info("CreateAuthKey() CreatingAuthKey", zap.String("Phone", act.GetPhone()))
-		success := scenario.Play(act, sen)
-		if success {
-			err := act.Save()
-			_Log.Debug("CreateAuthKey() save actor", zap.Error(err))
-		}
+		go func(act shared.Actor) {
+			defer waitGroup.Done()
+			if act == nil {
+				_Log.Warn("Actor is Nil")
+				return
+			}
+			sen := scenario.NewCreateAuthKey(false)
+			_Log.Info("CreateAuthKey() CreatingAuthKey", zap.String("Phone", act.GetPhone()))
+			success := scenario.Play(act, sen)
+			if success {
+				err := act.Save()
+				_Log.Debug("CreateAuthKey() save actor", zap.Error(err))
+			}
+		}(act)
+
 	}
+	waitGroup.Wait()
 }
 
 // Register init step required
@@ -158,6 +165,8 @@ func (s *Supernumerary) CreateGroup(startPhone, endPhone, groupSize int64) {
 	for _, act := range s.Actors {
 		sen := scenario.NewCreateGroup(false)
 		_Log.Info("CreateGroup()", zap.String("Phone", act.GetPhone()))
+
+
 		success := scenario.Play(act, sen)
 		if success {
 			err := act.Save()
@@ -210,10 +219,6 @@ func (s *Supernumerary) tickerApplier(action TickerAction, duration time.Duratio
 					}(act)
 				}
 				waitGroup.Wait()
-				// check stop signal while executing
-				if s.fnCheckStopSignal() {
-					return
-				}
 			case TickerActionSendFile:
 				// try to send random file
 				for _, act := range s.Actors {
@@ -222,11 +227,6 @@ func (s *Supernumerary) tickerApplier(action TickerAction, duration time.Duratio
 					act.SetPeers([]*shared.PeerInfo{s.getRandomPeerUser(act)})
 					// async
 					sen.Play(act)
-
-					// check stop signal while executing
-					if s.fnCheckStopSignal() {
-						return
-					}
 				}
 			case TickerActionSendGroupMessage:
 				// try to send random message
@@ -252,25 +252,12 @@ func (s *Supernumerary) tickerApplier(action TickerAction, duration time.Duratio
 					}(act)
 				}
 				waitGroup.Wait()
-				// check stop signal while executing
-				if s.fnCheckStopSignal() {
-					return
-				}
 			}
 
 		case <-s.chTickerStop:
 			_Log.Warn("tickerApplier() stop signal")
 			return
 		}
-	}
-}
-
-func (s *Supernumerary) fnCheckStopSignal() bool {
-	select {
-	case <-s.chTickerStop:
-		return true
-	default:
-		return false
 	}
 }
 
