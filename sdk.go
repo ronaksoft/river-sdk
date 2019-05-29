@@ -274,7 +274,7 @@ func (r *River) onGeneralError(e *msg.Error) {
 		zap.String("Code", e.Code),
 		zap.String("Item", e.Items),
 	)
-	if e.Code == msg.ErrItemSalt && e.Items == msg.ErrCodeInvalid {
+	if e.Code == msg.ErrCodeInvalid && e.Items == msg.ErrItemSalt {
 		r.syncCtrl.CheckSalt()
 	}
 	if r.mainDelegate != nil {
