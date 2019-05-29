@@ -661,8 +661,10 @@ func (ctrl *Controller) GetSaltExpiry() int64 {
 }
 
 func recoverPanic(funcName string, extraInfo interface{}) {
-	logs.Error("Panic Recovered",
-		zap.String("Func", funcName),
-		zap.Any("Info", extraInfo),
-	)
+	if r := recover(); r != nil {
+		logs.Error("Panic Recovered",
+			zap.String("Func", funcName),
+			zap.Any("Info", extraInfo),
+		)
+	}
 }
