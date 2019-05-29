@@ -450,10 +450,11 @@ func (ctrl *Controller) Stop() {
 // Connect dial websocket
 func (ctrl *Controller) Connect(force bool) {
 	defer func() {
-		recoverPanic("NetworkController:: Connect", ronak.M{
+		if recoverPanic("NetworkController:: Connect", ronak.M{
 			"AuthID": ctrl.authID,
-		})
-		ctrl.Connect(force)
+		}) {
+			ctrl.Connect(force)
+		}
 	}()
 	ctrl.updateNetworkStatus(domain.NetworkConnecting)
 	keepGoing := true
@@ -660,11 +661,13 @@ func (ctrl *Controller) GetSaltExpiry() int64 {
 	return ctrl.saltExpiry
 }
 
-func recoverPanic(funcName string, extraInfo interface{}) {
+func recoverPanic(funcName string, extraInfo interface{}) bool {
 	if r := recover(); r != nil {
 		logs.Error("Panic Recovered",
 			zap.String("Func", funcName),
 			zap.Any("Info", extraInfo),
 		)
+		return true
 	}
+	return false
 }
