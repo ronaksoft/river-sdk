@@ -37,11 +37,11 @@ type Controller struct {
 	pongChannel    chan bool
 
 	// Authorization Keys
-	authID        int64
-	authKey       []byte
-	messageSeq    int64
-	salt          int64
-	saltExpiry    int64
+	authID     int64
+	authKey    []byte
+	messageSeq int64
+	salt       int64
+	saltExpiry int64
 
 	// Websocket Settings
 	wsDialer                *websocket.Dialer
@@ -666,6 +666,7 @@ func recoverPanic(funcName string, extraInfo interface{}) bool {
 		logs.Error("Panic Recovered",
 			zap.String("Func", funcName),
 			zap.Any("Info", extraInfo),
+			zap.Any("Recover", r),
 		)
 		return true
 	}
