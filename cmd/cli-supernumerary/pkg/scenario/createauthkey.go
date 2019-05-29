@@ -52,7 +52,7 @@ func NewCreateAuthKey(isFinal bool) shared.Screenwriter {
 
 // Play execute CreateAuthKey scenario
 func (s *CreateAuthKey) Play(act shared.Actor) {
-	if act.GetAuthID() > 0 {
+	if act.GetAuthID() != 0 {
 		s.log(act, "Actor already have AuthID", 0, 0)
 		return
 	}
@@ -81,8 +81,6 @@ func (s *CreateAuthKey) initConnect(act shared.Actor) (*msg.MessageEnvelope, sha
 
 			// chain next request here
 			act.ExecuteRequest(s.initCompleteAuth(x, act))
-			s.log(act, "initConnect() Success", elapsed, resp.RequestID)
-
 		} else {
 			s.failed(act, elapsed, resp.RequestID, "initConnect() successCB response type is not InitResponse , Constructor :"+msg.ConstructorNames[resp.Constructor])
 		}

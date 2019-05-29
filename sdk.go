@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"math/big"
 	"os"
-	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -54,32 +53,12 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	r.ConnInfo = conf.ConnInfo
 
-	// r.ConnInfo.Delegates = conf.MainDelegate
-
 	// set loglevel
 	logs.SetLogLevel(conf.LogLevel)
 
-	// check logger
-	if conf.Logger != nil {
-		// set logger
-		r.logger = conf.Logger
-		logs.SetHook(func(logLevel int, msg string) {
-			r.logger.Log(logLevel, msg)
-		})
-	}
-
 	// set log file path
 	if conf.DocumentLogDirectory != "" {
-		t := time.Now()
-		fName := fmt.Sprintf("%d-%02d-%02d.log", t.Year(), t.Month(), t.Day())
-		logDir := conf.DocumentLogDirectory
-		// support IOS file path
-		if strings.HasPrefix(logDir, "file://") {
-			logDir = logDir[7:]
-		}
-		logFilePath := path.Join(logDir, fName)
-		_ = logs.SetLogFilePath(logFilePath)
-		logs.Info("SetConfig() ", zap.String("Log File Path", logFilePath))
+		_ = logs.SetLogFilePath(conf.DocumentLogDirectory)
 	}
 
 	// init UI Executor
@@ -244,7 +223,7 @@ func (r *River) onNetworkConnect() {
 		}
 	}
 
-	r.syncCtrl.CheckSalt() // r.checkSalt()
+	r.syncCtrl.CheckSalt()
 
 	req := msg.AuthRecall{}
 	reqBytes, _ := req.Marshal()
@@ -280,7 +259,6 @@ func (r *River) onNetworkConnect() {
 		if r.DeviceToken == nil || r.DeviceToken.Token == "" {
 			logs.Warn("onNetworkConnect() Device Token is not set")
 		}
-
 
 		// Sync with Server
 		go r.syncCtrl.Sync()
@@ -344,6 +322,11 @@ func (r *River) onReceivedUpdate(updateContainers []*msg.UpdateContainer) {
 	})
 
 	for idx := range updateContainers {
+		for _, update := range updateContainers[idx].Updates {
+			if update.UpdateID != 0 {
+				logs.UpdateLog(update.UpdateID, update.Constructor)
+			}
+		}
 		r.syncCtrl.UpdateHandler(updateContainers[idx])
 	}
 }
@@ -606,7 +589,7 @@ func (r *River) Start() error {
 	r.syncCtrl.Start()
 
 	// Connect to Server
-	go r.networkCtrl.Connect()
+	go r.networkCtrl.Connect(false)
 
 	return nil
 }

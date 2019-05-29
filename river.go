@@ -39,9 +39,6 @@ type RiverConfig struct {
 	// LogLevel
 	LogLevel int
 
-	// Logger pass logs to external handler
-	Logger LoggerDelegate
-
 	// Folder path to save files
 	DocumentPhotoDirectory string
 	DocumentVideoDirectory string
@@ -136,7 +133,7 @@ func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 
 	// Start the Network Controller alone
 	_ = networkCtrl.Start()
-	go networkCtrl.Connect()
+	go networkCtrl.Connect(false)
 	defer networkCtrl.Stop()       // 2nd Stop the controller
 	defer networkCtrl.Disconnect() // 1st Disconnect
 

@@ -18,7 +18,7 @@ import (
 )
 
 var GetDBStatusIsRunning bool
-var DatabaseStatus map[int64]map[int32]dto.MediaInfo
+var DatabaseStatus map[int64]map[msg.DocumentAttributeType]dto.MediaInfo
 
 // CancelRequest remove given requestID callbacks&delegates and if its not processed by queue we skip it on queue distributor
 func (r *River) CancelRequest(requestID int64) {
@@ -1007,6 +1007,10 @@ func (r *River) GetDBStatus(delegate RequestDelegate) {
 		return
 	}
 	GetDBStatusIsRunning = true
+	for k := range DatabaseStatus {
+		delete(DatabaseStatus, k)
+	}
+	logs.Debug("DatabaseStatus Must be Empty", zap.Any("", fmt.Sprintf("%+v", DatabaseStatus)))
 	peerMediaSizeMap, err := repo.Files.GetDBStatus()
 	if err != nil {
 		GetDBStatusIsRunning = false
@@ -1014,11 +1018,12 @@ func (r *River) GetDBStatus(delegate RequestDelegate) {
 		delegate.OnTimeout(err)
 		return
 	}
+	logs.Debug("peerMediaSizeMap", zap.Any("peerMediaSizeMap", peerMediaSizeMap))
 	peerMediaInfo := make([]*msg.PeerMediaInfo, 0)
 	for peerID, mediaInfoMap := range peerMediaSizeMap {
 		mediaSize := make([]*msg.MediaSize, 0)
 		for mediaType, mediaInfo := range mediaInfoMap {
-			mediaSize = append(mediaSize, &msg.MediaSize{MediaType: mediaType, TotalSize: mediaInfo.Size})
+			mediaSize = append(mediaSize, &msg.MediaSize{MediaType: int32(mediaType), TotalSize: mediaInfo.Size})
 		}
 		peerMediaInfo = append(peerMediaInfo, &msg.PeerMediaInfo{PeerID: peerID, Media: mediaSize})
 	}
@@ -1032,26 +1037,73 @@ func (r *River) GetDBStatus(delegate RequestDelegate) {
 	DatabaseStatus = peerMediaSizeMap
 }
 
-func (r *River) ClearCache(peerID int64, mediaTypes []domain.SharedMediaType, all bool) bool {
+// ClearCache removes files from client device, allMedia means clear all media types
+// peerID 0 means all peers
+func (r *River) ClearCache(peerID int64, mediaTypes string, allMedia bool) bool {
 	var messageIDs []int64
-	mediaInfo := DatabaseStatus[peerID]
-	if all {
-		for _, mediaType := range mediaInfo {
-			messageIDs = append(messageIDs, mediaType.MessageIDs...)
-		}
-	} else {
-		for _, mediaType := range mediaTypes {
-			messageIDs = append(messageIDs, mediaInfo[int32(mediaType)].MessageIDs...)
+	clearDatabaseStatus := func() {
+		for k := range DatabaseStatus {
+			delete(DatabaseStatus, k)
 		}
 	}
+	defer clearDatabaseStatus()
+	if allMedia {
+		// peerID = 0 means all peers
+		// all peers and all media types
+		if peerID == 0 {
+			for _, mediaData := range DatabaseStatus {
+				for _, mediaInfo := range mediaData {
+					messageIDs = append(messageIDs, mediaInfo.MessageIDs...)
+				}
+			}
+		} else {
+			// all media types of a specific peer
+			for _, mediaInfo := range DatabaseStatus[peerID] {
+				messageIDs = append(messageIDs, mediaInfo.MessageIDs...)
+			}
+		}
+	} else {
+		// all peers with specific media types
+		if peerID == 0 {
+			for _, mediaData := range DatabaseStatus {
+				mediaTypeSlices := strings.Split(mediaTypes, ",")
+				for _, mediaType := range mediaTypeSlices {
+					castedType, _ := strconv.Atoi(mediaType)
+					messageIDs = append(messageIDs, mediaData[msg.DocumentAttributeType(castedType)].MessageIDs...)
+				}
+			}
+		} else {
+			// specific peer with specific media type
+			mediaInfo := DatabaseStatus[peerID]
+			mediaTypeSlices := strings.Split(mediaTypes, ",")
+			for _, mediaType := range mediaTypeSlices {
+				castedType, _ := strconv.Atoi(mediaType)
+				messageIDs = append(messageIDs, mediaInfo[msg.DocumentAttributeType(castedType)].MessageIDs...)
+			}
+		}
+	}
+
+	logs.Info("River::ClearCache",
+		zap.Any("peerID", peerID),
+		zap.String("mediaTypes", mediaTypes),
+		zap.Bool("all", allMedia),
+		zap.Any("DatabaseStatus Map", DatabaseStatus),
+	)
+
 	logs.Debug("ClearCache", zap.Int64s("messageIDs", messageIDs))
 
 	if filePaths, err := repo.Files.ClearMedia(messageIDs); err != nil {
+		logs.Debug("River::ClearCache",
+			zap.String("clear media error", err.Error()),
+		)
 		return false
 	} else {
 		logs.Debug("ClearCache", zap.Strings("media paths", filePaths))
 		err = filemanager.Ctx().ClearFiles(filePaths)
 		if err != nil {
+			logs.Debug("River::ClearCache",
+				zap.String("clear files error", err.Error()),
+			)
 			return false
 		}
 	}
@@ -1060,4 +1112,12 @@ func (r *River) ClearCache(peerID int64, mediaTypes []domain.SharedMediaType, al
 
 func (r *River) GetSDKSalt() int64 {
 	return r.networkCtrl.GetServerSalt()
+}
+
+func (r *River) StartNetwork() {
+	r.networkCtrl.Connect(true)
+}
+
+func (r *River) StopNetwork() {
+	r.networkCtrl.Disconnect()
 }

@@ -437,8 +437,11 @@ func (r *River) messagesClearHistory(in, out *msg.MessageEnvelope, timeoutCB dom
 		successCB(out)
 		return
 	}
+
+	err := repo.Dialogs.UpdateDialogUnreadCount(req.Peer.ID,int32(req.Peer.Type),0)
+
 	// this will be handled on message update appliers too
-	err := repo.Messages.DeleteDialogMessage(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+	err = repo.Messages.DeleteDialogMessage(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 	if err != nil {
 		logs.Error("River::messagesClearHistory()-> DeleteDialogMessage()", zap.Error(err))
 	}

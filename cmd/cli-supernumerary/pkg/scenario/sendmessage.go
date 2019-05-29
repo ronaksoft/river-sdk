@@ -33,7 +33,7 @@ func (s *SendMessage) Play(act shared.Actor) {
 		s.AddJobs(1)
 		success := Play(act, NewImportContact(false))
 		if !success {
-			s.failed(act, 0, 0, "Play() : failed at pre requested scenario ImportContact")
+			s.failed(act, 0, 0, "Play() : failed at pre requested scenario SendMessage")
 			return
 		}
 		s.wait.Done()
