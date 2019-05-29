@@ -529,7 +529,7 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.User
 	defer r.mx.Unlock()
 	var userMsgs []*msg.UserMessage
 	msgs := make([]dto.Messages, 0)
-	if err := r.db.Where("Body LIKE ? AND PeerID = ?)", "%"+fmt.Sprintf("%s", text)+"%", peerID).Find(&msgs).Error; err != nil {
+	if err := r.db.Where("Body LIKE ? AND PeerID = ?", "%"+fmt.Sprintf("%s", text)+"%", peerID).Find(&msgs).Error; err != nil {
 		logs.Warn("SearchText::error", zap.String("", err.Error()))
 		return userMsgs
 	}
