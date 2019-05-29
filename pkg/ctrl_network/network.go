@@ -37,10 +37,11 @@ type Controller struct {
 	pongChannel    chan bool
 
 	// Authorization Keys
-	authID     int64
-	authKey    []byte
-	messageSeq int64
-	salt       int64
+	authID        int64
+	authKey       []byte
+	messageSeq    int64
+	salt          int64
+	saltExpiry    int64
 
 	// Websocket Settings
 	wsDialer                *websocket.Dialer
@@ -556,7 +557,7 @@ func (ctrl *Controller) send(msgEnvelope *msg.MessageEnvelope) error {
 		protoMessage.AuthID = ctrl.authID
 		ctrl.messageSeq++
 		encryptedPayload := msg.ProtoEncryptedPayload{
-			ServerSalt: ctrl.salt,       //234242, // TODO:: ServerSalt ?
+			ServerSalt: ctrl.salt,
 			Envelope:   msgEnvelope,
 		}
 		encryptedPayload.MessageID = uint64((time.Now().Unix()+ctrl.clientTimeDifference)<<32 | ctrl.messageSeq)
@@ -630,14 +631,22 @@ func (ctrl *Controller) GetQuality() domain.NetworkStatus {
 	return ctrl.wsQuality
 }
 
-func (ctrl *Controller) SetServerSalt(salt int64) {
-	ctrl.salt = salt
-}
-
 func (ctrl *Controller) ClientTimeDifference() int64 {
 	return ctrl.clientTimeDifference
 }
 
-func (ctrl *Controller) GetServerSalt()  int64{
+func (ctrl *Controller) SetServerSalt(salt int64) {
+	ctrl.salt = salt
+}
+
+func (ctrl *Controller) GetServerSalt() int64 {
 	return ctrl.salt
+}
+
+func (ctrl *Controller) SetSaltExpiry(timestamp int64) {
+	ctrl.saltExpiry = timestamp
+}
+
+func (ctrl *Controller) GetSaltExpiry() int64 {
+	return ctrl.saltExpiry
 }

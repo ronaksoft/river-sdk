@@ -683,6 +683,13 @@ func extractMessagesMedia(messages ...*msg.UserMessage) {
 
 func (ctrl *Controller) CheckSalt() {
 	logs.Debug("SyncController::CheckSalt()")
+	if ctrl.networkCtrl.GetSaltExpiry() > time.Now().Unix() {
+		logs.Info("salt is still valid",
+			zap.Int64("salt expiry", ctrl.networkCtrl.GetSaltExpiry()),
+			zap.Int64("device time", time.Now().Unix()),
+			)
+		return
+	}
 	for {
 		saltString, err := repo.System.LoadString(domain.ColumnSystemSalts)
 		if err != nil {
@@ -741,8 +748,6 @@ func (ctrl *Controller) getServerSalt() {
 					var saltArray []domain.Slt
 					for i, saltValue := range s.Salts {
 						slt := domain.Slt{}
-						// t := s.StartsFrom + s.Duration/int64(time.Second)*int64(i)
-						// slt.Timestamp = time.Unix(t, 0).Unix()
 						slt.Timestamp = s.StartsFrom + s.Duration/int64(time.Second)*int64(i)
 						slt.Value = saltValue
 						saltArray = append(saltArray, slt)
@@ -782,12 +787,15 @@ func (ctrl *Controller) updateSalt(salt []domain.Slt) bool {
 			logs.Debug("did not match", zap.Any("salt timestamp", s.Timestamp))
 			continue
 		}
+		nextTimeStamp := salt[i+1].Timestamp
 		ctrl.networkCtrl.SetServerSalt(s.Value)
 		filemanager.Ctx().SetServerSalt(s.Value)
+		ctrl.networkCtrl.SetSaltExpiry(nextTimeStamp)
 		synced = true
-		// set timer to renew salt
-		nextTimeStamp := salt[i+1].Timestamp
-		timeLeft := time.Duration(nextTimeStamp-time.Now().Unix()+ctrl.networkCtrl.ClientTimeDifference()) * time.Second
+		// set timer to renew salt, server accepts expired salts for 1 minute
+		// +20 to make sure timestamps do not overlap
+		timeLeft := (time.Second * 20) + time.Duration(nextTimeStamp-time.Now().Unix()+ctrl.networkCtrl.ClientTimeDifference()) * time.Second
+
 		logs.Debug("synchronizer", zap.Any("Renew Salt after", timeLeft.String()))
 		go ctrl.renewServerSaltAfter(timeLeft)
 		// get new server salt for next 48 hours
