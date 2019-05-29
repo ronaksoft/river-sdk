@@ -60,22 +60,31 @@ func NewSupernumerary(fromPhoneNo, toPhoneNo int64) (*Supernumerary, error) {
 		chTickerStop: make(chan bool),
 	}
 
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(int(toPhoneNo-fromPhoneNo))
+	ml := sync.Mutex{}
 	for i := fromPhoneNo; i < toPhoneNo; i++ {
-		phone := shared.GetPhone(i)
-		act, err := NewActor(phone)
-		if err != nil {
-			_Log.Info("Initialized Actor Failed",
-				zap.String("Phone", phone),
-				zap.Error(err),
-			)
-			continue
-		}
-		_Log.Info("Initialized Actor", zap.String("Phone", phone))
-		s.Actors[i] = act
+		go func(i int64) {
+			defer waitGroup.Done()
+			phone := shared.GetPhone(i)
+			act, err := NewActor(phone)
+			if err != nil {
+				_Log.Info("Initialized Actor Failed",
+					zap.String("Phone", phone),
+					zap.Error(err),
+				)
+				return
+			}
+			_Log.Info("Initialized Actor", zap.String("Phone", phone))
+			ml.Lock()
+			s.Actors[i] = act
+			ml.Unlock()
 
-		// metric
-		shared.Metrics.Gauge(shared.GaugeActors).Add(1)
+			// metric
+			shared.Metrics.Gauge(shared.GaugeActors).Add(1)
+		}(i)
 	}
+	waitGroup.Wait()
 	return s, nil
 }
 
@@ -112,19 +121,26 @@ func (s *Supernumerary) dispose() {
 
 // CreateAuthKey init step required
 func (s *Supernumerary) CreateAuthKey() {
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(len(s.Actors))
 	for _, act := range s.Actors {
-		if act == nil {
-			_Log.Warn("Actor is Nil")
-			continue
-		}
-		sen := scenario.NewCreateAuthKey(false)
-		_Log.Info("CreateAuthKey() CreatingAuthKey", zap.String("Phone", act.GetPhone()))
-		success := scenario.Play(act, sen)
-		if success {
-			err := act.Save()
-			_Log.Debug("CreateAuthKey() save actor", zap.Error(err))
-		}
+		go func(act shared.Actor) {
+			defer waitGroup.Done()
+			if act == nil {
+				_Log.Warn("Actor is Nil")
+				return
+			}
+			sen := scenario.NewCreateAuthKey(false)
+			_Log.Info("CreateAuthKey() CreatingAuthKey", zap.String("Phone", act.GetPhone()))
+			success := scenario.Play(act, sen)
+			if success {
+				err := act.Save()
+				_Log.Debug("CreateAuthKey() save actor", zap.Error(err))
+			}
+		}(act)
+
 	}
+	waitGroup.Wait()
 }
 
 // Register init step required
@@ -145,6 +161,21 @@ func (s *Supernumerary) Login() {
 	for _, act := range s.Actors {
 		sen := scenario.NewLogin(false)
 		_Log.Info("Login() Logging in", zap.String("Phone", act.GetPhone()))
+		success := scenario.Play(act, sen)
+		if success {
+			err := act.Save()
+			_Log.Debug("Login() save actor", zap.Error(err))
+		}
+	}
+}
+
+// Create Group
+func (s *Supernumerary) CreateGroup(startPhone, endPhone, groupSize int64) {
+	for _, act := range s.Actors {
+		sen := scenario.NewCreateGroup(false)
+		_Log.Info("CreateGroup()", zap.String("Phone", act.GetPhone()))
+
+
 		success := scenario.Play(act, sen)
 		if success {
 			err := act.Save()
@@ -184,7 +215,7 @@ func (s *Supernumerary) tickerApplier(action TickerAction, duration time.Duratio
 
 						sen := scenario.NewSendMessage(false)
 						// import random contact for actor
-						act.SetPeers([]*shared.PeerInfo{s.fnGetRandomPeer(act)})
+						act.SetPeers([]*shared.PeerInfo{s.getRandomPeerUser(act)})
 
 						_Log.Debug("Actor",
 							zap.String("Phone", act.GetPhone()),
@@ -197,24 +228,39 @@ func (s *Supernumerary) tickerApplier(action TickerAction, duration time.Duratio
 					}(act)
 				}
 				waitGroup.Wait()
-				// check stop signal while executing
-				if s.fnCheckStopSignal() {
-					return
-				}
 			case TickerActionSendFile:
 				// try to send random file
 				for _, act := range s.Actors {
 					sen := scenario.NewSendFile(false)
 					// import random contact for actor
-					act.SetPeers([]*shared.PeerInfo{s.fnGetRandomPeer(act)})
+					act.SetPeers([]*shared.PeerInfo{s.getRandomPeerUser(act)})
 					// async
 					sen.Play(act)
-
-					// check stop signal while executing
-					if s.fnCheckStopSignal() {
-						return
-					}
 				}
+			case TickerActionSendGroupMessage:
+				// try to send random message
+				waitGroup := sync.WaitGroup{}
+				waitGroup.Add(len(s.Actors))
+				for _, act := range s.Actors {
+					go func(act shared.Actor) {
+						defer waitGroup.Done()
+						time.Sleep(time.Duration(ronak.RandomInt64(duration.Nanoseconds())) * time.Nanosecond)
+
+						sen := scenario.NewSendMessage(false)
+						// import random contact for actor
+						act.SetPeers([]*shared.PeerInfo{s.getRandomPeerUser(act)})
+
+						_Log.Debug("Actor",
+							zap.String("Phone", act.GetPhone()),
+							zap.Int64("AuthID", act.GetAuthID()),
+							zap.Int64("UserID", act.GetUserID()),
+						)
+
+						// async
+						sen.Play(act)
+					}(act)
+				}
+				waitGroup.Wait()
 			}
 
 		case <-s.chTickerStop:
@@ -224,20 +270,11 @@ func (s *Supernumerary) tickerApplier(action TickerAction, duration time.Duratio
 	}
 }
 
-func (s *Supernumerary) fnCheckStopSignal() bool {
-	select {
-	case <-s.chTickerStop:
-		return true
-	default:
-		return false
-	}
-}
-
-// fnGetRandomPeer returns random peer
-func (s *Supernumerary) fnGetRandomPeer(act shared.Actor) *shared.PeerInfo {
+// getRandomPeerUser returns random peer
+func (s *Supernumerary) getRandomPeerUser(act shared.Actor) *shared.PeerInfo {
 	fromUserID := act.GetUserID()
 	for {
-		phone := s.fnGetRandomPhoneNo()
+		phone := s.getRandomPhoneNo()
 		if a, ok := s.Actors[phone]; ok {
 			if fromUserID != a.GetUserID() {
 				return scenario.GetPeerInfo(fromUserID, a.GetUserID(), msg.PeerUser)
@@ -246,7 +283,7 @@ func (s *Supernumerary) fnGetRandomPeer(act shared.Actor) *shared.PeerInfo {
 	}
 }
 
-// fnGetRandomPhoneNo select a random phoneNo between fromPhoneNo - toPhoneNo
-func (s *Supernumerary) fnGetRandomPhoneNo() int64 {
+// getRandomPhoneNo select a random phoneNo between fromPhoneNo - toPhoneNo
+func (s *Supernumerary) getRandomPhoneNo() int64 {
 	return s.FromPhoneNo + ronak.RandomInt64(s.ToPhoneNo-s.FromPhoneNo) + 1 // +1 bcz Int63n(n) returns [0,n)
 }

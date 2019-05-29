@@ -223,7 +223,7 @@ func (r *River) onNetworkConnect() {
 		}
 	}
 
-	r.syncCtrl.CheckSalt() // r.checkSalt()
+	r.syncCtrl.CheckSalt()
 
 	req := msg.AuthRecall{}
 	reqBytes, _ := req.Marshal()
@@ -589,7 +589,7 @@ func (r *River) Start() error {
 	r.syncCtrl.Start()
 
 	// Connect to Server
-	go r.networkCtrl.Connect()
+	go r.networkCtrl.Connect(false)
 
 	return nil
 }

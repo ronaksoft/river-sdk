@@ -223,7 +223,7 @@ func (ctrl *Controller) watchDog() {
 			if ctrl.wsKeepConnection {
 
 				logs.Debug("watchDog() Retry to Connect")
-				go ctrl.Connect()
+				go ctrl.Connect(false)
 			}
 		case <-ctrl.stopChannel:
 			logs.Debug("watchDog() Stopped")
@@ -444,7 +444,7 @@ func (ctrl *Controller) Stop() {
 }
 
 // Connect dial websocket
-func (ctrl *Controller) Connect() {
+func (ctrl *Controller) Connect(force bool) {
 	ctrl.updateNetworkStatus(domain.NetworkConnecting)
 	keepGoing := true
 	for keepGoing {
@@ -453,7 +453,7 @@ func (ctrl *Controller) Connect() {
 		}
 
 		// Return if Disconnect() has been called
-		if !ctrl.wsKeepConnection {
+		if !force && !ctrl.wsKeepConnection {
 			return
 		}
 		wsConn, _, err := ctrl.wsDialer.Dial(ctrl.websocketEndpoint, nil)
