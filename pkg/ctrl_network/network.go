@@ -285,6 +285,9 @@ func (ctrl *Controller) keepAlive() {
 // This is the background routine listen for incoming websocket packets and _Decrypt
 // the received message, if necessary, and  pass the extracted envelopes to messageHandler.
 func (ctrl *Controller) receiver() {
+	defer recoverPanic("NetworkController:: receiver", ronak.M{
+		"AuthID": ctrl.authID,
+	})
 	res := msg.ProtoMessage{}
 	for {
 		messageType, message, err := ctrl.wsConn.ReadMessage()
@@ -446,6 +449,12 @@ func (ctrl *Controller) Stop() {
 
 // Connect dial websocket
 func (ctrl *Controller) Connect(force bool) {
+	defer func() {
+		recoverPanic("NetworkController:: receiver", ronak.M{
+			"AuthID": ctrl.authID,
+		})
+		ctrl.Connect(force)
+	}()
 	ctrl.updateNetworkStatus(domain.NetworkConnecting)
 	keepGoing := true
 	for keepGoing {
@@ -649,4 +658,11 @@ func (ctrl *Controller) SetSaltExpiry(timestamp int64) {
 
 func (ctrl *Controller) GetSaltExpiry() int64 {
 	return ctrl.saltExpiry
+}
+
+func recoverPanic(funcName string, extraInfo interface{}) {
+	logs.Error("Panic Recovered",
+		zap.String("Func", funcName),
+		zap.Any("Info", extraInfo),
+	)
 }
