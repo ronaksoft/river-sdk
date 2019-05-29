@@ -450,7 +450,7 @@ func (ctrl *Controller) Stop() {
 // Connect dial websocket
 func (ctrl *Controller) Connect(force bool) {
 	defer func() {
-		recoverPanic("NetworkController:: receiver", ronak.M{
+		recoverPanic("NetworkController:: Connect", ronak.M{
 			"AuthID": ctrl.authID,
 		})
 		ctrl.Connect(force)
