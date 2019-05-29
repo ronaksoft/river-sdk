@@ -943,8 +943,18 @@ func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
 }
 
 // SearchGlobal returns messages, contacts and groups matching given text
-func (r *River) SearchGlobal(text string, delegate RequestDelegate) {
-	msgs := repo.Messages.SearchText(text)
+// peerID 0 means search is not limited to a specific peerID
+func (r *River) SearchGlobal(text string, peerID int64 , delegate RequestDelegate) {
+	searchResults := new(msg.ClientSearchResult)
+	var userContacts []*msg.ContactUser
+	var NonContactUsersWithDialogs []*msg.ContactUser
+	var msgs []*msg.UserMessage
+	var peerIDs []int64
+	if peerID != 0 {
+		msgs = repo.Messages.SearchTextByPeerID(text, peerID)
+	} else {
+		msgs = repo.Messages.SearchText(text)
+	}
 
 	// get users && group IDs
 	userIDs := domain.MInt64B{}
@@ -974,15 +984,17 @@ func (r *River) SearchGlobal(text string, delegate RequestDelegate) {
 	users := repo.Users.GetAnyUsers(userIDs.ToArray())
 	groups := repo.Groups.GetManyGroups(groupIDs.ToArray())
 
-	userContacts, _ := repo.Users.SearchContacts(text)
-	peerIDs := repo.Dialogs.GetPeerIDs()
+	// if peerID == 0 then look for group and contact names too
+	if peerID == 0 {
+		userContacts, _ = repo.Users.SearchContacts(text)
+		peerIDs = repo.Dialogs.GetPeerIDs()
 
-	// Get users who have dialog with me, but are not my contact
-	NonContactUsersWithDialogs := repo.Users.SearchNonContactsWithIDs(peerIDs, text)
+		// Get users who have dialog with me, but are not my contact
+		NonContactUsersWithDialogs = repo.Users.SearchNonContactsWithIDs(peerIDs, text)
 
-	userContacts = append(userContacts, NonContactUsersWithDialogs...)
+		userContacts = append(userContacts, NonContactUsersWithDialogs...)
+	}
 
-	searchResults := new(msg.ClientSearchResult)
 	searchResults.Messages = msgs
 	searchResults.Users = users
 	searchResults.Groups = groups
