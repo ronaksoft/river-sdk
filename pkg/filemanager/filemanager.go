@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"io"
 	"io/ioutil"
 	"mime"
@@ -13,8 +14,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 
 	"go.uber.org/zap"
 
@@ -110,6 +109,57 @@ func InitFileManager(serverAddress string,
 	go ctx.startUploadQueue()
 
 }
+func (fm *FileManager) startDownloadQueue() {
+	for {
+		if fm.NetworkStatus == domain.NetworkDisconnected || fm.NetworkStatus == domain.NetworkConnecting {
+			time.Sleep(100 * time.Millisecond)
+		}
+		fm.DownloadQueueStarted = true
+		select {
+		case <-fm.chStopDownloader:
+			fm.mxDown.Lock()
+			for _, v := range fm.DownloadQueue {
+				v.Stop()
+			}
+			fm.mxDown.Unlock()
+			fm.DownloadQueueStarted = false
+			return
+		case <-fm.chNewDownloadItem:
+			fm.mxDown.Lock()
+			for _, v := range fm.DownloadQueue {
+				go v.StartDownload(fm)
+			}
+			fm.mxDown.Unlock()
+		}
+	}
+}
+func (fm *FileManager) startUploadQueue() {
+	for {
+		if fm.NetworkStatus == domain.NetworkDisconnected || fm.NetworkStatus == domain.NetworkConnecting {
+			time.Sleep(100 * time.Millisecond)
+		}
+
+		fm.UploadQueueStarted = true
+		select {
+		case <-fm.chStopUploader:
+			fm.mxUp.Lock()
+			for _, v := range fm.UploadQueue {
+				v.Stop()
+			}
+			fm.mxUp.Unlock()
+			fm.UploadQueueStarted = false
+			return
+		case <-fm.chNewUploadItem:
+			fm.mxUp.Lock()
+			for _, v := range fm.UploadQueue {
+				go v.StartUpload(fm)
+			}
+			fm.mxUp.Unlock()
+
+		}
+	}
+}
+
 
 // SetRootFolders directory paths to download files
 func SetRootFolders(audioDir, fileDir, photoDir, videoDir, cacheDir string) {
@@ -352,58 +402,6 @@ func (fm *FileManager) SetAuthorization(authID int64, authKey []byte) {
 // SetServerSalt sets server salt
 func (fm *FileManager) SetServerSalt(salt int64) {
 	fm.salt = salt
-}
-
-func (fm *FileManager) startDownloadQueue() {
-	for {
-		if fm.NetworkStatus == domain.NetworkDisconnected || fm.NetworkStatus == domain.NetworkConnecting {
-			time.Sleep(100 * time.Millisecond)
-		}
-		fm.DownloadQueueStarted = true
-		select {
-		case <-fm.chStopDownloader:
-			fm.mxDown.Lock()
-			for _, v := range fm.DownloadQueue {
-				v.Stop()
-			}
-			fm.mxDown.Unlock()
-			fm.DownloadQueueStarted = false
-			return
-		case <-fm.chNewDownloadItem:
-			fm.mxDown.Lock()
-			for _, v := range fm.DownloadQueue {
-				go v.StartDownload(fm)
-			}
-			fm.mxDown.Unlock()
-		}
-	}
-}
-
-func (fm *FileManager) startUploadQueue() {
-	for {
-		if fm.NetworkStatus == domain.NetworkDisconnected || fm.NetworkStatus == domain.NetworkConnecting {
-			time.Sleep(100 * time.Millisecond)
-		}
-
-		fm.UploadQueueStarted = true
-		select {
-		case <-fm.chStopUploader:
-			fm.mxUp.Lock()
-			for _, v := range fm.UploadQueue {
-				v.Stop()
-			}
-			fm.mxUp.Unlock()
-			fm.UploadQueueStarted = false
-			return
-		case <-fm.chNewUploadItem:
-			fm.mxUp.Lock()
-			for _, v := range fm.UploadQueue {
-				go v.StartUpload(fm)
-			}
-			fm.mxUp.Unlock()
-
-		}
-	}
 }
 
 // SendUploadRequest send request to server
