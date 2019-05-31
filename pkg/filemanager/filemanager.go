@@ -268,11 +268,11 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 	}
 
 	if state != nil {
-		state.RequestStatus = domain.RequestStateInProgress
+		state.RequestStatus = domain.RequestStatusInProgress
 		fm.AddToQueue(state)
 		repo.Files.SaveFileStatus(state.GetDTO())
 		repo.Files.SaveDownloadingFile(state.GetDTO())
-		repo.Files.UpdateFileStatus(state.MessageID, domain.RequestStateInProgress)
+		repo.Files.UpdateFileStatus(state.MessageID, domain.RequestStatusInProgress)
 	}
 }
 
@@ -414,9 +414,9 @@ func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, 
 		switch res.Constructor {
 		case msg.C_Error:
 			// remove upload from
-			fm.DeleteFromQueue(fs.MessageID, domain.RequestStateError)
+			fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
 			logs.Error("SendUploadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
-			fs.RequestStatus = domain.RequestStateError
+			fs.RequestStatus = domain.RequestStatusError
 			repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 			if fm.onUploadError != nil {
 				fm.onUploadError(fs.MessageID, int64(req.RequestID), fs.FilePath, res.Message)
@@ -456,9 +456,9 @@ func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, 
 	if fs.retryCounter > domain.FileMaxRetry {
 
 		// remove upload from queue
-		fm.DeleteFromQueue(fs.MessageID, domain.RequestStateError)
+		fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
 		logs.Error("SendUploadRequest() upload request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
-		fs.RequestStatus = domain.RequestStateError
+		fs.RequestStatus = domain.RequestStatusError
 		repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 		if fm.onUploadError != nil {
 			x := new(msg.Error)
@@ -478,9 +478,9 @@ func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 		switch res.Constructor {
 		case msg.C_Error:
 			// remove download from queue
-			fm.DeleteFromQueue(fs.MessageID, domain.RequestStateError)
+			fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
 			logs.Error("SendDownloadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
-			fs.RequestStatus = domain.RequestStateError
+			fs.RequestStatus = domain.RequestStatusError
 			repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 
 			if fm.onDownloadError != nil {
@@ -530,9 +530,9 @@ func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 	}
 	if fs.retryCounter > domain.FileMaxRetry {
 		// remove download from queue
-		fm.DeleteFromQueue(fs.MessageID, domain.RequestStateError)
+		fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
 		logs.Error("SendDownloadRequest() download request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
-		fs.RequestStatus = domain.RequestStateError
+		fs.RequestStatus = domain.RequestStatusError
 		repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 		if fm.onDownloadError != nil {
 			x := new(msg.Error)
@@ -551,9 +551,9 @@ func (fm *FileManager) LoadQueueFromDB() {
 	for _, d := range dtos {
 		fs := new(FileStatus)
 		fs.LoadDTO(d, fm.progressCallback)
-		if fs.RequestStatus == domain.RequestStatePaused ||
-			fs.RequestStatus == domain.RequestStateCanceled ||
-			fs.RequestStatus == domain.RequestStateCompleted {
+		if fs.RequestStatus == domain.RequestStatusPaused ||
+			fs.RequestStatus == domain.RequestStatusCanceled ||
+			fs.RequestStatus == domain.RequestStatusCompleted {
 			continue
 		}
 		fm.AddToQueue(fs)
@@ -570,7 +570,7 @@ func (fm *FileManager) SetNetworkStatus(state domain.NetworkStatus) {
 
 func (fm *FileManager) downloadCompleted(msgID int64, filePath string, stateType domain.FileStateType) {
 	// delete file status
-	fm.DeleteFromQueue(msgID, domain.RequestStateCompleted)
+	fm.DeleteFromQueue(msgID, domain.RequestStatusCompleted)
 	repo.Files.DeleteFileStatus(msgID)
 	if fm.onDownloadCompleted != nil {
 		fm.onDownloadCompleted(msgID, filePath, stateType)
@@ -586,7 +586,7 @@ func (fm *FileManager) uploadCompleted(msgID, fileID, targetID int64,
 	thumbTotalParts int32,
 ) {
 	// delete file status
-	fm.DeleteFromQueue(msgID, domain.RequestStateCompleted)
+	fm.DeleteFromQueue(msgID, domain.RequestStatusCompleted)
 	repo.Files.DeleteFileStatus(msgID)
 	if fm.onUploadCompleted != nil {
 		fm.onUploadCompleted(msgID, fileID, targetID, clusterID, totalParts, stateType, filePath, uploadRequest, thumbFileID, thumbTotalParts)

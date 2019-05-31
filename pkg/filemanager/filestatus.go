@@ -78,7 +78,7 @@ func NewFileStatus(messageID int64,
 		TotalParts:          0,
 		onFileStatusChanged: progress,
 		Type:                stateType,
-		RequestStatus:       domain.RequestStateInProgress,
+		RequestStatus:       domain.RequestStatusInProgress,
 	}
 
 	// create partlist
@@ -183,7 +183,7 @@ func (fs *FileStatus) Write(data []byte, partIdx int64) (isCompleted bool, err e
 	fs.IsCompleted = count == 0
 
 	if fs.IsCompleted {
-		fs.RequestStatus = domain.RequestStateCompleted
+		fs.RequestStatus = domain.RequestStatusCompleted
 	}
 	isCompleted = fs.IsCompleted
 	if isCompleted {
@@ -212,14 +212,13 @@ func (fs *FileStatus) ReadCommit(count int64, isThumbnail bool, partIdx int64) (
 	fs.IsCompleted = partCount == 0
 
 	if fs.IsCompleted {
-		fs.RequestStatus = domain.RequestStateCompleted
+		fs.RequestStatus = domain.RequestStatusCompleted
 	}
 	fs.fileStatusChanged()
 	return fs.IsCompleted
 }
 
 func (fs *FileStatus) fileStatusChanged() {
-	// TODO : save file status to DB
 	err := repo.Files.SaveFileStatus(fs.GetDTO())
 	if err != nil {
 		logs.Error("fileStatusChanged() failed to save in DB", zap.Error(err))

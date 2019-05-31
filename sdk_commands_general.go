@@ -376,11 +376,11 @@ func getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, 
 		filePath = getFilePath(msgID)
 		if filePath != "" {
 			// file exists so it means download completed
-			status = domain.RequestStateCompleted
+			status = domain.RequestStatusCompleted
 			progress = 100
 		} else {
 			// file does not exist and its progress state does not exist too
-			status = domain.RequestStateNone
+			status = domain.RequestStatusNone
 			progress = 0
 			filePath = ""
 		}
@@ -436,18 +436,18 @@ func (r *River) FileDownload(msgID int64) {
 	}
 
 	switch status {
-	case domain.RequestStateNone:
+	case domain.RequestStatusNone:
 		filemanager.Ctx().Download(m)
-	case domain.RequestStateInProgress:
+	case domain.RequestStatusInProgress:
 		// already downloading
 		// filemanager.Ctx().Download(m)
-	case domain.RequestStateCompleted:
+	case domain.RequestStatusCompleted:
 		r.onFileDownloadCompleted(m.ID, filePath, domain.FileStateExistedDownload)
-	case domain.RequestStatePaused:
+	case domain.RequestStatusPaused:
 		filemanager.Ctx().Download(m)
-	case domain.RequestStateCanceled:
+	case domain.RequestStatusCanceled:
 		filemanager.Ctx().Download(m)
-	case domain.RequestStateError:
+	case domain.RequestStatusError:
 		filemanager.Ctx().Download(m)
 	}
 
@@ -467,8 +467,8 @@ func (r *River) PauseDownload(msgID int64) {
 		logs.Error("SDK::PauseDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
-	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatePaused)
-	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatePaused)
+	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
+	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatusPaused)
 }
 
 // CancelDownload cancel download
@@ -478,8 +478,8 @@ func (r *River) CancelDownload(msgID int64) {
 		logs.Error("SDK::CancelDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
-	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStateCanceled)
-	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStateCanceled)
+	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
+	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatusCanceled)
 }
 
 // PauseUpload pause upload
@@ -489,8 +489,8 @@ func (r *River) PauseUpload(msgID int64) {
 		logs.Error("SDK::PauseUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
-	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatePaused)
-	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatePaused)
+	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
+	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatusPaused)
 	// repo.MessagesPending.DeletePendingMessage(fs.MessageID)
 
 }
@@ -502,7 +502,7 @@ func (r *River) CancelUpload(msgID int64) {
 		logs.Error("SDK::CancelUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
-	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStateCanceled)
+	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
 	_ = repo.Files.DeleteFileStatus(msgID)
 	_ = repo.PendingMessages.DeletePendingMessage(fs.MessageID)
 

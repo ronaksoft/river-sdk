@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"github.com/olekukonko/tablewriter"
 	"go.uber.org/zap"
@@ -202,7 +200,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 				fmt.Sprintf("%d", d.Flags),
 				fmt.Sprintf("%v", string(d.Body)),
 				fmt.Sprintf("%v", d.Entities),
-				fmt.Sprintf("%s", domain.MediaTypeNames[d.MediaType]),
+				fmt.Sprintf("%s", d.MediaType.String()),
 			})
 		}
 		tableMessages.Render()
