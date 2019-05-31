@@ -290,7 +290,7 @@ func getAllDialogs(ctrl *Controller, offset int32, limit int32) {
 					_ = messageHole.SetUpperFilled(dialog.PeerID, dialog.PeerType, dialog.TopMessageID)
 
 					// make sure to created the message hole b4 creating dialog
-					err := repo.Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
+					err := repo.Dialogs.Save(dialog, topMessage.CreatedOn)
 					if err != nil {
 						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveDialog() ",
 							zap.String("Error", err.Error()),

@@ -114,7 +114,7 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 			)
 			continue
 		}
-		_ = repo.Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
+		_ = repo.Dialogs.Save(dialog, topMessage.CreatedOn)
 	}
 	for _, user := range x.Users {
 		repo.Users.SaveUser(user)

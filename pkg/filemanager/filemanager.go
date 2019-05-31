@@ -700,7 +700,7 @@ func (fm *FileManager) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, 
 			}
 
 			// save to DB
-			return filePath, repo.Groups.UpdateGroupPhotoPath(groupID, isBig, filePath)
+			return filePath, repo.Groups.UpdatePhotoPath(groupID, isBig, filePath)
 
 		default:
 			return "", fmt.Errorf("received unknown response constructor {GroupID : %d}", groupID)

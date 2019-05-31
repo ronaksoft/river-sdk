@@ -28,7 +28,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	// used messageType to identify client & server messages on Media thingy
 	x.Message.MessageType = 1
 
-	dialog := repo.Dialogs.GetDialog(x.Message.PeerID, x.Message.PeerType)
+	dialog := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
 	if dialog == nil {
 		_ = messageHole.InsertHole(x.Message.PeerID, x.Message.PeerType, 0, x.Message.ID-1)
 		_ = messageHole.SetUpperFilled(x.Message.PeerID, x.Message.PeerType, x.Message.ID)
@@ -41,7 +41,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 			UnreadCount:  0,
 			AccessHash:   x.AccessHash,
 		}
-		err := repo.Dialogs.SaveDialog(dialog, x.Message.CreatedOn)
+		err := repo.Dialogs.Save(dialog, x.Message.CreatedOn)
 		if err != nil {
 			logs.Error("updateNewMessage() -> onSuccessCallback() -> SaveDialog() ",
 				zap.String("Error", err.Error()),
@@ -115,7 +115,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 		if err != nil {
 			logs.Error("updateNewMessage() -> MessageActionGroupDeleteUser Failed to Parse", zap.Error(err))
 		}
-		err = repo.Groups.DeleteGroupMemberMany(x.Message.PeerID, act.UserIDs)
+		err = repo.Groups.DeleteMemberMany(x.Message.PeerID, act.UserIDs)
 		if err != nil {
 			logs.Error("updateNewMessage() -> DeleteGroupMemberMany() Failed", zap.Error(err))
 		}
@@ -184,13 +184,13 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 				logs.Error("updateNewMessage() -> Groups.Delete() Failed", zap.Error(err))
 			}
 			// Delete Participants
-			err = repo.Groups.DeleteAllGroupMember(x.Message.PeerID)
+			err = repo.Groups.DeleteAllMembers(x.Message.PeerID)
 			if err != nil {
 				logs.Error("updateNewMessage() -> Groups.DeleteAllGroupMember() Failed", zap.Error(err))
 			}
 		} else {
 			// get dialog and create first hole
-			dtoDlg := repo.Dialogs.GetDialog(x.Message.PeerID, x.Message.PeerType)
+			dtoDlg := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
 			if dtoDlg != nil {
 				_ = messageHole.InsertHole(dtoDlg.PeerID, dtoDlg.PeerType, 0, dtoDlg.TopMessageID-1)
 				_ = messageHole.SetUpperFilled(dtoDlg.PeerID, dtoDlg.PeerType, dtoDlg.TopMessageID)
@@ -205,7 +205,7 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) []*msg.Upd
 	x := new(msg.UpdateReadHistoryInbox)
 	_ = x.Unmarshal(u.Update)
 
-	dialog := repo.Dialogs.GetDialog(x.Peer.ID, x.Peer.Type)
+	dialog := repo.Dialogs.Get(x.Peer.ID, x.Peer.Type)
 	if dialog == nil {
 		return []*msg.UpdateEnvelope{}
 	}
@@ -306,7 +306,7 @@ func (ctrl *Controller) updateDialogPinned(u *msg.UpdateEnvelope) []*msg.UpdateE
 	x := new(msg.UpdateDialogPinned)
 	x.Unmarshal(u.Update)
 
-	err := repo.Dialogs.UpdateDialogPinned(x)
+	err := repo.Dialogs.UpdatePinned(x)
 	if err != nil {
 		logs.Error("updateDialogPinned() -> Dialogs.UpdateDialogPinned()", zap.Error(err))
 	}
@@ -374,7 +374,7 @@ func (ctrl *Controller) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) []*ms
 
 	res := []*msg.UpdateEnvelope{u}
 
-	err := repo.Groups.UpdateGroupMemberType(x.GroupID, x.UserID, x.IsAdmin)
+	err := repo.Groups.UpdateMemberType(x.GroupID, x.UserID, x.IsAdmin)
 	if err != nil {
 		logs.Error("updateGroupParticipantAdmin()-> UpdateGroupMemberType()", zap.Error(err))
 	}
@@ -423,7 +423,7 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		zap.Int64("GroupID", x.GroupID),
 	)
 
-	err := repo.Groups.UpdateGroupPhoto(x)
+	err := repo.Groups.UpdatePhoto(x)
 	if err != nil {
 		logs.Error("updateGroupPhoto()-> UpdateGroupPhoto()", zap.Error(err))
 	}

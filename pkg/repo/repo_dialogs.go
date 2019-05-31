@@ -34,7 +34,7 @@ func (r *repoDialogs) UpdateTopMessageID(createdOn, peerID int64, peerType int32
 	return err
 }
 
-func (r *repoDialogs) SaveDialog(dialog *msg.Dialog, lastUpdate int64) error {
+func (r *repoDialogs) Save(dialog *msg.Dialog, lastUpdate int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -65,7 +65,7 @@ func (r *repoDialogs) SaveDialog(dialog *msg.Dialog, lastUpdate int64) error {
 	return r.db.Table(d.TableName()).Where("PeerID=? AND PeerType=?", d.PeerID, d.PeerType).Update(d).Error
 }
 
-func (r *repoDialogs) UpdateDialogUnreadCount(peerID int64, peerTyep, unreadCount int32) error {
+func (r *repoDialogs) UpdateUnreadCount(peerID int64, peerTyep, unreadCount int32) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -78,7 +78,7 @@ func (r *repoDialogs) UpdateDialogUnreadCount(peerID int64, peerTyep, unreadCoun
 	return r.db.Table(ed.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerTyep).Updates(map[string]interface{}{"UnreadCount": unreadCount}).Error
 }
 
-func (r *repoDialogs) GetDialogs(offset, limit int32) []*msg.Dialog {
+func (r *repoDialogs) List(offset, limit int32) []*msg.Dialog {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -105,7 +105,7 @@ func (r *repoDialogs) GetDialogs(offset, limit int32) []*msg.Dialog {
 	return dialogs
 }
 
-func (r *repoDialogs) GetDialog(peerID int64, peerType int32) *msg.Dialog {
+func (r *repoDialogs) Get(peerID int64, peerType int32) *msg.Dialog {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -127,7 +127,7 @@ func (r *repoDialogs) GetDialog(peerID int64, peerType int32) *msg.Dialog {
 	return dialog
 }
 
-func (r *repoDialogs) CountDialogs() int32 {
+func (r *repoDialogs) Count() int32 {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -258,7 +258,7 @@ func (r *repoDialogs) UpdateNotifySetting(msg *msg.UpdateNotifySettings) error {
 	return r.db.Save(dtoDlg).Error
 }
 
-func (r *repoDialogs) UpdateDialogPinned(msg *msg.UpdateDialogPinned) error {
+func (r *repoDialogs) UpdatePinned(msg *msg.UpdateDialogPinned) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -303,7 +303,7 @@ func (r *repoDialogs) Delete(groupID int64, peerType int32) error {
 	return r.db.Where("PeerID=? AND  PeerType=?", groupID, peerType).Delete(dto.Dialogs{}).Error
 }
 
-func (r *repoDialogs) GetManyDialog(peerIDs []int64) []*msg.Dialog {
+func (r *repoDialogs) GetMany(peerIDs []int64) []*msg.Dialog {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 

@@ -218,7 +218,7 @@ func (r *River) SearchDialogs(requestID int64, searchPhrase string, delegate Req
 	dlgs := new(msg.MessagesDialogs)
 
 	users := repo.Users.SearchUsers(searchPhrase)
-	groups := repo.Groups.SearchGroups(searchPhrase)
+	groups := repo.Groups.Search(searchPhrase)
 	dlgs.Users = users
 	dlgs.Groups = groups
 
@@ -230,7 +230,7 @@ func (r *River) SearchDialogs(requestID int64, searchPhrase string, delegate Req
 		mDialogs[v.ID] = true
 	}
 
-	dialogs := repo.Dialogs.GetManyDialog(mDialogs.ToArray())
+	dialogs := repo.Dialogs.GetMany(mDialogs.ToArray())
 	dlgs.Dialogs = dialogs
 
 	mMessages := domain.MInt64B{}
@@ -911,7 +911,7 @@ func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, de
 	}
 
 	users := repo.Users.GetAnyUsers(userIDs.ToArray())
-	groups := repo.Groups.GetManyGroups(groupIDs.ToArray())
+	groups := repo.Groups.GetMany(groupIDs.ToArray())
 
 	msgMany := new(msg.MessagesMany)
 	msgMany.Messages = msgs
@@ -982,7 +982,7 @@ func (r *River) SearchGlobal(text string, peerID int64 , delegate RequestDelegat
 	}
 
 	users := repo.Users.GetAnyUsers(userIDs.ToArray())
-	groups := repo.Groups.GetManyGroups(groupIDs.ToArray())
+	groups := repo.Groups.GetMany(groupIDs.ToArray())
 
 	// if peerID == 0 then look for group and contact names too
 	if peerID == 0 {
@@ -999,7 +999,7 @@ func (r *River) SearchGlobal(text string, peerID int64 , delegate RequestDelegat
 	searchResults.Users = users
 	searchResults.Groups = groups
 	searchResults.MatchedUsers = userContacts
-	searchResults.MatchedGroups = repo.Groups.SearchGroupsByTitle(text)
+	searchResults.MatchedGroups = repo.Groups.SearchByTitle(text)
 
 	outBytes, _ := searchResults.Marshal()
 

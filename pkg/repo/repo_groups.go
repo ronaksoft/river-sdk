@@ -69,7 +69,7 @@ func (r *repoGroups) SaveMany(groups []*msg.Group) error {
 	return err
 }
 
-func (r *repoGroups) GetManyGroups(groupIDs []int64) []*msg.Group {
+func (r *repoGroups) GetMany(groupIDs []int64) []*msg.Group {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -91,7 +91,7 @@ func (r *repoGroups) GetManyGroups(groupIDs []int64) []*msg.Group {
 	return pbGroup
 }
 
-func (r *repoGroups) GetGroup(groupID int64) (*msg.Group, error) {
+func (r *repoGroups) Get(groupID int64) (*msg.Group, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -109,7 +109,7 @@ func (r *repoGroups) GetGroup(groupID int64) (*msg.Group, error) {
 	return pbGroup, nil
 }
 
-func (r *repoGroups) DeleteGroupMember(groupID, userID int64) error {
+func (r *repoGroups) DeleteMember(groupID, userID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -121,14 +121,14 @@ func (r *repoGroups) DeleteGroupMember(groupID, userID int64) error {
 	return err
 }
 
-func (r *repoGroups) DeleteAllGroupMember(groupID int64) error {
+func (r *repoGroups) DeleteAllMembers(groupID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
 	return r.db.Where("GroupID= ? ", groupID).Delete(dto.GroupsParticipants{}).Error
 }
 
-func (r *repoGroups) UpdateGroupTitle(groupID int64, title string) error {
+func (r *repoGroups) UpdateTitle(groupID int64, title string) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -169,7 +169,7 @@ func (r *repoGroups) GetParticipants(groupID int64) ([]*msg.GroupParticipant, er
 	return res, nil
 }
 
-func (r *repoGroups) DeleteGroupMemberMany(peerID int64, IDs []int64) error {
+func (r *repoGroups) DeleteMemberMany(peerID int64, IDs []int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -183,7 +183,7 @@ func (r *repoGroups) Delete(groupID int64) error {
 	return r.db.Where("ID= ? ", groupID).Delete(dto.Groups{}).Error
 }
 
-func (r *repoGroups) UpdateGroupMemberType(groupID, userID int64, isAdmin bool) error {
+func (r *repoGroups) UpdateMemberType(groupID, userID int64, isAdmin bool) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -199,7 +199,7 @@ func (r *repoGroups) UpdateGroupMemberType(groupID, userID int64, isAdmin bool) 
 	}).Error
 }
 
-func (r *repoGroups) SearchGroups(searchPhrase string) []*msg.Group {
+func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -237,7 +237,7 @@ func (r *repoGroups) GetGroupDTO(groupID int64) (*dto.Groups, error) {
 	return group, nil
 }
 
-func (r *repoGroups) UpdateGroupPhotoPath(groupID int64, isBig bool, filePath string) error {
+func (r *repoGroups) UpdatePhotoPath(groupID int64, isBig bool, filePath string) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -255,7 +255,7 @@ func (r *repoGroups) UpdateGroupPhotoPath(groupID int64, isBig bool, filePath st
 
 }
 
-func (r *repoGroups) UpdateGroupPhoto(groupPhoto *msg.UpdateGroupPhoto) error {
+func (r *repoGroups) UpdatePhoto(groupPhoto *msg.UpdateGroupPhoto) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -268,7 +268,7 @@ func (r *repoGroups) UpdateGroupPhoto(groupPhoto *msg.UpdateGroupPhoto) error {
 	return err
 }
 
-func (r *repoGroups) RemoveGroupPhoto(groupID int64) error {
+func (r *repoGroups) RemovePhoto(groupID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -288,7 +288,7 @@ func (r *repoGroups) RemoveGroupPhoto(groupID int64) error {
 	}).Error
 }
 
-func (r *repoGroups) SearchGroupsByTitle(title string) []*msg.Group {
+func (r *repoGroups) SearchByTitle(title string) []*msg.Group {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
