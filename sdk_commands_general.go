@@ -546,10 +546,10 @@ func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 
 // AccountGetPhoto_Big download user profile picture
 func (r *River) AccountGetPhotoBig(userID int64) string {
-	user := repo.Users.GetUser(userID)
+	user := repo.Users.Get(userID)
 	if user != nil {
 		if user.Photo != nil {
-			dtoPhoto := repo.Users.GetUserPhoto(userID, user.Photo.PhotoID)
+			dtoPhoto := repo.Users.GetPhoto(userID, user.Photo.PhotoID)
 			if dtoPhoto != nil {
 				if dtoPhoto.BigFilePath != "" {
 					// check if file exist
@@ -576,10 +576,10 @@ func (r *River) AccountGetPhotoBig(userID int64) string {
 
 // AccountGetPhoto_Small download user profile picture thumbnail
 func (r *River) AccountGetPhotoSmall(userID int64) string {
-	user := repo.Users.GetUser(userID)
+	user := repo.Users.Get(userID)
 	if user != nil {
 		if user.Photo != nil {
-			dtoPhoto := repo.Users.GetUserPhoto(userID, user.Photo.PhotoID)
+			dtoPhoto := repo.Users.GetPhoto(userID, user.Photo.PhotoID)
 			if dtoPhoto != nil {
 				if dtoPhoto.SmallFilePath != "" {
 					// check if file exist
@@ -910,7 +910,7 @@ func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, de
 		}
 	}
 
-	users := repo.Users.GetAnyUsers(userIDs.ToArray())
+	users := repo.Users.GetMany(userIDs.ToArray())
 	groups := repo.Groups.GetMany(groupIDs.ToArray())
 
 	msgMany := new(msg.MessagesMany)
@@ -944,7 +944,7 @@ func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
 
 // SearchGlobal returns messages, contacts and groups matching given text
 // peerID 0 means search is not limited to a specific peerID
-func (r *River) SearchGlobal(text string, peerID int64 , delegate RequestDelegate) {
+func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate) {
 	searchResults := new(msg.ClientSearchResult)
 	var userContacts []*msg.ContactUser
 	var NonContactUsersWithDialogs []*msg.ContactUser
@@ -981,7 +981,7 @@ func (r *River) SearchGlobal(text string, peerID int64 , delegate RequestDelegat
 		}
 	}
 
-	users := repo.Users.GetAnyUsers(userIDs.ToArray())
+	users := repo.Users.GetMany(userIDs.ToArray())
 	groups := repo.Groups.GetMany(groupIDs.ToArray())
 
 	// if peerID == 0 then look for group and contact names too

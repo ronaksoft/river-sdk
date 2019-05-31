@@ -536,7 +536,7 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 	for _, u := range updateContainer.Users {
 		// Download users avatar if its not exist
 		if u.Photo != nil {
-			dtoPhoto := repo.Users.GetUserPhoto(u.ID, u.Photo.PhotoID)
+			dtoPhoto := repo.Users.GetPhoto(u.ID, u.Photo.PhotoID)
 			if dtoPhoto != nil {
 				if dtoPhoto.SmallFilePath == "" || dtoPhoto.SmallFileID != u.Photo.PhotoSmall.FileID {
 					go func(userID int64, photo *msg.UserPhoto) {
@@ -687,7 +687,7 @@ func (ctrl *Controller) CheckSalt() {
 		logs.Info("salt is still valid",
 			zap.Int64("salt expiry", ctrl.networkCtrl.GetSaltExpiry()),
 			zap.Int64("device time", time.Now().Unix()),
-			)
+		)
 		return
 	}
 	for {
@@ -794,7 +794,7 @@ func (ctrl *Controller) updateSalt(salt []domain.Slt) bool {
 		synced = true
 		// set timer to renew salt, server accepts expired salts for 1 minute
 		// +20 to make sure timestamps do not overlap
-		timeLeft := (time.Second * 20) + time.Duration(nextTimeStamp-time.Now().Unix()+ctrl.networkCtrl.ClientTimeDifference()) * time.Second
+		timeLeft := (time.Second * 20) + time.Duration(nextTimeStamp-time.Now().Unix()+ctrl.networkCtrl.ClientTimeDifference())*time.Second
 
 		logs.Debug("synchronizer", zap.Any("Renew Salt after", timeLeft.String()))
 		go ctrl.renewServerSaltAfter(timeLeft)

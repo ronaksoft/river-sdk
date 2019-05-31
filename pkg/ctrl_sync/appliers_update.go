@@ -54,7 +54,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		}
 	}
 	// save user if does not exist
-	_ = repo.Users.SaveUser(x.Sender)
+	_ = repo.Users.Save(x.Sender)
 
 	// if the sender is not myself increase dialog counter else just save message
 	if x.Message.SenderID != ctrl.userID {
@@ -405,9 +405,9 @@ func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 	x := new(msg.UpdateUserPhoto)
 	x.Unmarshal(u.Update)
 
-	err := repo.Users.SaveUserPhoto(x)
+	err := repo.Users.SavePhoto(x)
 	if err != nil {
-		logs.Error("updateUserPhoto()-> SaveUserPhoto()", zap.Error(err))
+		logs.Error("updateUserPhoto()-> SavePhoto()", zap.Error(err))
 	}
 
 	res := []*msg.UpdateEnvelope{u}

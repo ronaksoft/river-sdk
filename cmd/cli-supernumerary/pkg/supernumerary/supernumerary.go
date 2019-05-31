@@ -61,7 +61,7 @@ func NewSupernumerary(fromPhoneNo, toPhoneNo int64) (*Supernumerary, error) {
 	}
 
 	waitGroup := sync.WaitGroup{}
-	waitGroup.Add(int(toPhoneNo-fromPhoneNo))
+	waitGroup.Add(int(toPhoneNo - fromPhoneNo))
 	ml := sync.Mutex{}
 	for i := fromPhoneNo; i < toPhoneNo; i++ {
 		go func(i int64) {
@@ -174,7 +174,6 @@ func (s *Supernumerary) CreateGroup(startPhone, endPhone, groupSize int64) {
 	for _, act := range s.Actors {
 		sen := scenario.NewCreateGroup(false)
 		_Log.Info("CreateGroup()", zap.String("Phone", act.GetPhone()))
-
 
 		success := scenario.Play(act, sen)
 		if success {

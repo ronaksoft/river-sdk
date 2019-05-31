@@ -289,7 +289,8 @@ var MessagesSearchText = &ishell.Cmd{
 		_SDK.SearchGlobal(text, peerId, reqDelegate)
 	},
 }
-type searchGlobalDelegateDummy struct {}
+
+type searchGlobalDelegateDummy struct{}
 
 func (searchGlobalDelegateDummy) OnComplete(b []byte) {
 	searchResults := new(msg.ClientSearchResult)

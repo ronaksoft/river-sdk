@@ -116,7 +116,6 @@ func TestController_CheckSalt(t *testing.T) {
 	}
 }
 
-
 func TestGetWorkGroup(t *testing.T) {
 	b, err := GetWorkGroup("ws://alaki.river.im", 5)
 	if err != nil {

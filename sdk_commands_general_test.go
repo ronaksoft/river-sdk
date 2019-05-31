@@ -63,13 +63,13 @@ func TestRiver_SearchGlobal(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			wg.Add(1)
 			testCase = i + 1
-			_River.SearchGlobal(tt.searchText, tt.peerID, searchDelegate )
+			_River.SearchGlobal(tt.searchText, tt.peerID, searchDelegate)
 			wg.Wait()
 		})
 	}
 }
 
-type searchGlobalDelegateDummy struct {}
+type searchGlobalDelegateDummy struct{}
 
 func (searchGlobalDelegateDummy) OnComplete(b []byte) {
 	logs.Info("OnSearchComplete")
@@ -140,18 +140,18 @@ func createDataForSearchGlobal(nonContactWithDialogUser, nonContactWhitoutDialog
 	nonContactWithDialog := new(msg.User)
 	nonContactWithDialog.ID = 321
 	nonContactWithDialog.Username = nonContactWithDialogUser
-	_ = repo.Users.SaveUser(nonContactWithDialog)
+	_ = repo.Users.Save(nonContactWithDialog)
 
 	nonContactWithoutDialog := new(msg.User)
 	nonContactWithoutDialog.ID = 654
 	nonContactWithoutDialog.Username = nonContactWhitoutDialogUser
-	_ = repo.Users.SaveUser(nonContactWithoutDialog)
+	_ = repo.Users.Save(nonContactWithoutDialog)
 
 	contact := new(msg.ContactUser)
 	contact.ID = 852
 	contact.AccessHash = 4548
 	contact.Username = ContactUser
-	_ = repo.Users.SaveContactUser(contact)
+	_ = repo.Users.SaveContact(contact)
 
 	dialog := new(msg.Dialog)
 	dialog.PeerType = 1
