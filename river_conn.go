@@ -74,6 +74,7 @@ func (r *River) clearSystemConfig() {
 	r.ConnInfo.Phone = ""
 	r.ConnInfo.UserID = 0
 	r.ConnInfo.Username = ""
+	r.ConnInfo.Bio = ""
 	r.ConnInfo.Save()
 	r.DeviceToken = new(msg.AccountRegisterDevice)
 	r.saveDeviceToken()

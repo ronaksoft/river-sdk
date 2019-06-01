@@ -93,6 +93,10 @@ func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain
 	res := new(msg.Dialog)
 	res = repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
 
+	logs.Debug("River::messagesGetDialog()",
+		zap.Bool("Res null : ", res != nil),
+	)
+
 	// if the localDB had no data send the request to server
 	if res == nil {
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
@@ -101,6 +105,10 @@ func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain
 
 	out.Constructor = msg.C_Dialog
 	out.Message, _ = res.Marshal()
+
+	logs.Debug("River::messagesGetDialog()",
+		zap.Bool("Res null : ", res != nil),
+	)
 
 	uiexec.Ctx().Exec(func() {
 		if successCB != nil {
