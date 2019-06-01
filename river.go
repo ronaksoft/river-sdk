@@ -133,7 +133,7 @@ func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 
 	// Start the Network Controller alone
 	_ = networkCtrl.Start()
-	go networkCtrl.Connect()
+	go networkCtrl.Connect(false)
 	defer networkCtrl.Stop()       // 2nd Stop the controller
 	defer networkCtrl.Disconnect() // 1st Disconnect
 

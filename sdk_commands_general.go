@@ -218,7 +218,7 @@ func (r *River) SearchDialogs(requestID int64, searchPhrase string, delegate Req
 	dlgs := new(msg.MessagesDialogs)
 
 	users := repo.Users.SearchUsers(searchPhrase)
-	groups := repo.Groups.SearchGroups(searchPhrase)
+	groups := repo.Groups.Search(searchPhrase)
 	dlgs.Users = users
 	dlgs.Groups = groups
 
@@ -230,7 +230,7 @@ func (r *River) SearchDialogs(requestID int64, searchPhrase string, delegate Req
 		mDialogs[v.ID] = true
 	}
 
-	dialogs := repo.Dialogs.GetManyDialog(mDialogs.ToArray())
+	dialogs := repo.Dialogs.GetMany(mDialogs.ToArray())
 	dlgs.Dialogs = dialogs
 
 	mMessages := domain.MInt64B{}
@@ -376,11 +376,11 @@ func getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, 
 		filePath = getFilePath(msgID)
 		if filePath != "" {
 			// file exists so it means download completed
-			status = domain.RequestStateCompleted
+			status = domain.RequestStatusCompleted
 			progress = 100
 		} else {
 			// file does not exist and its progress state does not exist too
-			status = domain.RequestStateNone
+			status = domain.RequestStatusNone
 			progress = 0
 			filePath = ""
 		}
@@ -436,18 +436,18 @@ func (r *River) FileDownload(msgID int64) {
 	}
 
 	switch status {
-	case domain.RequestStateNone:
+	case domain.RequestStatusNone:
 		filemanager.Ctx().Download(m)
-	case domain.RequestStateInProgress:
+	case domain.RequestStatusInProgress:
 		// already downloading
 		// filemanager.Ctx().Download(m)
-	case domain.RequestStateCompleted:
+	case domain.RequestStatusCompleted:
 		r.onFileDownloadCompleted(m.ID, filePath, domain.FileStateExistedDownload)
-	case domain.RequestStatePaused:
+	case domain.RequestStatusPaused:
 		filemanager.Ctx().Download(m)
-	case domain.RequestStateCanceled:
+	case domain.RequestStatusCanceled:
 		filemanager.Ctx().Download(m)
-	case domain.RequestStateError:
+	case domain.RequestStatusError:
 		filemanager.Ctx().Download(m)
 	}
 
@@ -467,8 +467,8 @@ func (r *River) PauseDownload(msgID int64) {
 		logs.Error("SDK::PauseDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
-	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatePaused)
-	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatePaused)
+	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
+	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatusPaused)
 }
 
 // CancelDownload cancel download
@@ -478,8 +478,8 @@ func (r *River) CancelDownload(msgID int64) {
 		logs.Error("SDK::CancelDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
-	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStateCanceled)
-	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStateCanceled)
+	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
+	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatusCanceled)
 }
 
 // PauseUpload pause upload
@@ -489,8 +489,8 @@ func (r *River) PauseUpload(msgID int64) {
 		logs.Error("SDK::PauseUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
-	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatePaused)
-	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatePaused)
+	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
+	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatusPaused)
 	// repo.MessagesPending.DeletePendingMessage(fs.MessageID)
 
 }
@@ -502,7 +502,7 @@ func (r *River) CancelUpload(msgID int64) {
 		logs.Error("SDK::CancelUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
-	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStateCanceled)
+	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
 	_ = repo.Files.DeleteFileStatus(msgID)
 	_ = repo.PendingMessages.DeletePendingMessage(fs.MessageID)
 
@@ -546,10 +546,10 @@ func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 
 // AccountGetPhoto_Big download user profile picture
 func (r *River) AccountGetPhotoBig(userID int64) string {
-	user := repo.Users.GetUser(userID)
+	user := repo.Users.Get(userID)
 	if user != nil {
 		if user.Photo != nil {
-			dtoPhoto := repo.Users.GetUserPhoto(userID, user.Photo.PhotoID)
+			dtoPhoto := repo.Users.GetPhoto(userID, user.Photo.PhotoID)
 			if dtoPhoto != nil {
 				if dtoPhoto.BigFilePath != "" {
 					// check if file exist
@@ -576,10 +576,10 @@ func (r *River) AccountGetPhotoBig(userID int64) string {
 
 // AccountGetPhoto_Small download user profile picture thumbnail
 func (r *River) AccountGetPhotoSmall(userID int64) string {
-	user := repo.Users.GetUser(userID)
+	user := repo.Users.Get(userID)
 	if user != nil {
 		if user.Photo != nil {
-			dtoPhoto := repo.Users.GetUserPhoto(userID, user.Photo.PhotoID)
+			dtoPhoto := repo.Users.GetPhoto(userID, user.Photo.PhotoID)
 			if dtoPhoto != nil {
 				if dtoPhoto.SmallFilePath != "" {
 					// check if file exist
@@ -910,8 +910,8 @@ func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, de
 		}
 	}
 
-	users := repo.Users.GetAnyUsers(userIDs.ToArray())
-	groups := repo.Groups.GetManyGroups(groupIDs.ToArray())
+	users := repo.Users.GetMany(userIDs.ToArray())
+	groups := repo.Groups.GetMany(groupIDs.ToArray())
 
 	msgMany := new(msg.MessagesMany)
 	msgMany.Messages = msgs
@@ -943,8 +943,18 @@ func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
 }
 
 // SearchGlobal returns messages, contacts and groups matching given text
-func (r *River) SearchGlobal(text string, delegate RequestDelegate) {
-	msgs := repo.Messages.SearchText(text)
+// peerID 0 means search is not limited to a specific peerID
+func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate) {
+	searchResults := new(msg.ClientSearchResult)
+	var userContacts []*msg.ContactUser
+	var NonContactUsersWithDialogs []*msg.ContactUser
+	var msgs []*msg.UserMessage
+	var peerIDs []int64
+	if peerID != 0 {
+		msgs = repo.Messages.SearchTextByPeerID(text, peerID)
+	} else {
+		msgs = repo.Messages.SearchText(text)
+	}
 
 	// get users && group IDs
 	userIDs := domain.MInt64B{}
@@ -971,23 +981,25 @@ func (r *River) SearchGlobal(text string, delegate RequestDelegate) {
 		}
 	}
 
-	users := repo.Users.GetAnyUsers(userIDs.ToArray())
-	groups := repo.Groups.GetManyGroups(groupIDs.ToArray())
+	users := repo.Users.GetMany(userIDs.ToArray())
+	groups := repo.Groups.GetMany(groupIDs.ToArray())
 
-	userContacts, _ := repo.Users.SearchContacts(text)
-	peerIDs := repo.Dialogs.GetPeerIDs()
+	// if peerID == 0 then look for group and contact names too
+	if peerID == 0 {
+		userContacts, _ = repo.Users.SearchContacts(text)
+		peerIDs = repo.Dialogs.GetPeerIDs()
 
-	// Get users who have dialog with me, but are not my contact
-	NonContactUsersWithDialogs := repo.Users.SearchNonContactsWithIDs(peerIDs, text)
+		// Get users who have dialog with me, but are not my contact
+		NonContactUsersWithDialogs = repo.Users.SearchNonContactsWithIDs(peerIDs, text)
 
-	userContacts = append(userContacts, NonContactUsersWithDialogs...)
+		userContacts = append(userContacts, NonContactUsersWithDialogs...)
+	}
 
-	searchResults := new(msg.ClientSearchResult)
 	searchResults.Messages = msgs
 	searchResults.Users = users
 	searchResults.Groups = groups
 	searchResults.MatchedUsers = userContacts
-	searchResults.MatchedGroups = repo.Groups.SearchGroupsByTitle(text)
+	searchResults.MatchedGroups = repo.Groups.SearchByTitle(text)
 
 	outBytes, _ := searchResults.Marshal()
 
@@ -1112,4 +1124,12 @@ func (r *River) ClearCache(peerID int64, mediaTypes string, allMedia bool) bool 
 
 func (r *River) GetSDKSalt() int64 {
 	return r.networkCtrl.GetServerSalt()
+}
+
+func (r *River) StartNetwork() {
+	r.networkCtrl.Connect(true)
+}
+
+func (r *River) StopNetwork() {
+	r.networkCtrl.Disconnect()
 }

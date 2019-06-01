@@ -223,7 +223,7 @@ func (r *River) onNetworkConnect() {
 		}
 	}
 
-	r.syncCtrl.CheckSalt() // r.checkSalt()
+	r.syncCtrl.CheckSalt()
 
 	req := msg.AuthRecall{}
 	reqBytes, _ := req.Marshal()
@@ -274,7 +274,7 @@ func (r *River) onGeneralError(e *msg.Error) {
 		zap.String("Code", e.Code),
 		zap.String("Item", e.Items),
 	)
-	if e.Code == msg.ErrItemSalt && e.Items == msg.ErrCodeInvalid {
+	if e.Code == msg.ErrCodeInvalid && e.Items == msg.ErrItemSalt {
 		r.syncCtrl.CheckSalt()
 	}
 	if r.mainDelegate != nil {
@@ -589,7 +589,7 @@ func (r *River) Start() error {
 	r.syncCtrl.Start()
 
 	// Connect to Server
-	go r.networkCtrl.Connect()
+	go r.networkCtrl.Connect(false)
 
 	return nil
 }
@@ -970,157 +970,3 @@ func (r *River) AddRealTimeRequest(constructor int64) {
 func (r *River) RemoveRealTimeRequest(constructor int64) {
 	delete(r.realTimeCommands, constructor)
 }
-
-// func (r *River) checkSalt() {
-// 	logs.Debug("SDK::checkSalt started")
-// 	for {
-// 		saltString ,err := repo.System.LoadString(domain.ColumnSystemSalts)
-// 		if err != nil {
-// 			logs.Error("River::loadServerSalt() failed to fetch salt",
-// 				zap.String("Error", err.Error()),
-// 			)
-// 			return
-// 		}
-// 		sysSalts := new(msg.SystemSalts)
-// 		err = sysSalts.Unmarshal([]byte(saltString))
-// 		if err != nil {
-// 			logs.Error("River::loadServerSalt() failed to unmarshal salt",
-// 				zap.String("Error", err.Error()),
-// 			)
-// 			return
-// 		}
-//
-// 		if len(sysSalts.Salts) > 0 {
-// 			if !r.updateSalt(sysSalts) {
-// 				continue
-// 			} else {
-// 				break
-// 			}
-// 		} else {
-// 			r.getServerSalt()
-// 		}
-// 	}
-// 	logs.Debug("SDK::checkSalt finished")
-// }
-//
-// func (r *River) getServerSalt() {
-// 	logs.Debug("SDK::getServerSalt started")
-// 	//salts := new(msg.SystemSalts)
-// 	//for i := 0; i < 48; i++ {
-// 	//	salt := new(msg.Salt)
-// 	//	t := time.Now().Unix() + r.networkCtrl.ClientTimeDifference() + (time.Minute).Nanoseconds()*int64(i)
-// 	//	salt.Value = t
-// 	//	salt.Timestamp = t
-// 	//	salts.Salts = append(salts.Salts, salt)
-// 	//}
-// 	//err := repo.System.SaveSalt(salts)
-// 	//if err != nil {
-// 	//	logs.Debug("River::SystemSaveSalt()",
-// 	//		zap.String("error", err.Error()),
-// 	//	)
-// 	//}
-// 	//return
-//
-// 	serverSaltReq := new(msg.SystemGetSalts)
-// 	serverSaltReqBytes, _ := serverSaltReq.Marshal()
-//
-// 	for {
-// 		err := r.queueCtrl.ExecuteRealtimeCommand(
-// 			uint64(domain.SequentialUniqueID()),
-// 			msg.C_SystemGetSalts,
-// 			serverSaltReqBytes,
-// 			nil,
-// 			func(m *msg.MessageEnvelope) {
-// 				if m.Constructor == msg.C_SystemSalts {
-// 					salts := new(msg.SystemSalts)
-// 					err := salts.Unmarshal(m.Message)
-// 					if err != nil {
-// 						logs.Error("onGetServerSalts()", zap.Error(err))
-// 						return
-// 					}
-// 					logs.Debug("River::SystemGetSalts())", zap.Any("salt from server", salts))
-// 					dtoSalts := make([]dto.ServerSalt,0)
-// 					for _, salt := range salts.Salts {
-// 						s := dto.ServerSalt{}
-// 						s.Timestamp = salt.Timestamp
-// 						s.Salt = salt.Value
-// 						dtoSalts = append(dtoSalts, s)
-// 					}
-// 					b, _ := json.Marshal(dtoSalts)
-// 					err = repo.System.SaveString(domain.ColumnSystemSalts, string(b))
-// 					if err != nil {
-// 						logs.Debug("River::SystemGetSalts()",
-// 							zap.String("error", err.Error()),
-// 						)
-// 					}
-// 					logs.Debug("River::SystemGetSalts()",
-// 						zap.Any("ServerSalt", salts),
-// 					)
-// 				}
-// 			},
-// 			true,
-// 			false,
-// 		)
-// 		if err == nil {
-// 			break
-// 		} else {
-// 			time.Sleep(1 * time.Second)
-// 		}
-// 	}
-// }
-//
-// func (r *River) updateSalt(salt *msg.SystemSalts) bool {
-// 	// sort ASC
-// 	var saltArray []*msg.Salt
-// 	saltMap := make(map[int64]*msg.Salt, len(salt.Salts))
-// 	for _, s := range salt.Salts {
-// 		saltArray = append(saltArray, s)
-// 		saltMap[s.Timestamp] = s
-// 	}
-// 	sort.Slice(saltArray, func(i, j int) bool {
-// 		return saltArray[i].Timestamp < saltArray[j].Timestamp
-// 	})
-// 	var synced = false
-//
-// 	for i, s := range saltArray {
-// 		if time.Now().Unix()+r.networkCtrl.ClientTimeDifference() < s.Timestamp {
-// 			delete(saltMap, s.Timestamp)
-// 			continue
-// 		}
-// 		r.networkCtrl.SetServerSalt(s.Value)
-// 		filemanager.Ctx().SetServerSalt(s.Value)
-//
-// 		if len(saltMap) < 12 {
-// 			go r.getServerSalt()
-// 		} else {
-// 			sysSalt := new(msg.SystemSalts)
-// 			for _, value := range saltMap {
-// 				sysSalt.Salts = append(sysSalt.Salts, value)
-// 			}
-//
-// 			b, _ := sysSalt.Marshal()
-// 			_ = repo.System.SaveString(domain.ColumnSystemSalts, string(b))
-// 			synced = true
-// 			// set timer to renew salt before it expires
-// 			nextTimeStamp := salt.Salts[i+1].Timestamp
-// 			timeLeft := time.Duration(nextTimeStamp - time.Now().Unix() + r.networkCtrl.ClientTimeDifference())
-// 			go r.renewServerSaltAfter(timeLeft)
-// 			break
-// 		}
-// 	}
-// 	if !synced {
-// 		_ = repo.System.RemoveSalt()
-// 		r.getServerSalt()
-// 		return false
-// 	} else {
-// 		return true
-// 	}
-// }
-//
-// func (r *River) renewServerSaltAfter(duration time.Duration) {
-// 	c := time.After(duration)
-// 	select {
-// 	case <-c:
-// 		r.checkSalt()
-// 	}
-// }

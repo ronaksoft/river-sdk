@@ -2,8 +2,6 @@ package domain
 
 import (
 	"time"
-
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 )
 
 const (
@@ -16,7 +14,6 @@ const (
 
 // Global Parameters
 const (
-	// WebsocketEndpoint production server address
 	WebsocketEndpoint     = "ws://river.im"
 	WebsocketPingTime     = 10 * time.Second
 	WebsocketPongTime     = 3 * time.Second
@@ -40,15 +37,10 @@ const (
 type NetworkStatus int
 
 const (
-	// NetworkDisconnected no internet
 	NetworkDisconnected NetworkStatus = iota
-	// NetworkConnecting websocket dialing
 	NetworkConnecting
-	// NetworkWeak weak
 	NetworkWeak
-	// NetworkSlow slow
 	NetworkSlow
-	// NetworkFast fast
 	NetworkFast
 )
 
@@ -93,48 +85,30 @@ func (ss SyncStatus) ToString() string {
 type RequestStatus int32
 
 const (
-	RequestStateNone       RequestStatus = 0 // RequestStateNone no request invoked
-	RequestStateInProgress RequestStatus = 1 // RequestStateInProgress downloading/uploading
-	RequestStateCompleted  RequestStatus = 2 // RequestStateCompleted already file is downloaded/uploaded
-	RequestStatePaused     RequestStatus = 3 // RequestStatePaused paused
-	RequestStateCanceled   RequestStatus = 4 // RequestStateCanceled canceled by user
-	RequestStateError      RequestStatus = 5 // RequestStateError encountered error
+	RequestStatusNone       RequestStatus = 0 // RequestStatusNone no request invoked
+	RequestStatusInProgress RequestStatus = 1 // RequestStatusInProgress downloading/uploading
+	RequestStatusCompleted  RequestStatus = 2 // RequestStatusCompleted already file is downloaded/uploaded
+	RequestStatusPaused     RequestStatus = 3 // RequestStatusPaused paused
+	RequestStatusCanceled   RequestStatus = 4 // RequestStatusCanceled canceled by user
+	RequestStatusError      RequestStatus = 5 // RequestStatusError encountered error
 )
 
 func (rs RequestStatus) ToString() string {
 	switch rs {
-	case RequestStateNone:
+	case RequestStatusNone:
 		return "None"
-	case RequestStateInProgress:
+	case RequestStatusInProgress:
 		return "InProgress"
-	case RequestStateCompleted:
+	case RequestStatusCompleted:
 		return "Completed"
-	case RequestStatePaused:
+	case RequestStatusPaused:
 		return "Paused"
-	case RequestStateCanceled:
+	case RequestStatusCanceled:
 		return "Canceled"
-	case RequestStateError:
+	case RequestStatusError:
 		return "Error"
 	}
 	return ""
-}
-
-// DocumentAttributeTypeNames log helper to retrive DocumentAttributeType name
-var DocumentAttributeTypeNames = map[msg.DocumentAttributeType]string{
-	msg.AttributeTypeNone:  "AttributeTypeNone",
-	msg.AttributeTypeAudio: "AttributeTypeAudio",
-	msg.AttributeTypeVideo: "AttributeTypeVideo",
-	msg.AttributeTypePhoto: "AttributeTypePhoto",
-	msg.AttributeTypeFile:  "AttributeTypeFile",
-	msg.AttributeAnimated:  "AttributeAnimated",
-}
-
-// MediaTypeNames log helper to retrieve SharedMediaType name
-var MediaTypeNames = map[msg.MediaType]string{
-	msg.MediaTypeEmpty:    "Empty",
-	msg.MediaTypePhoto:    "Photo",
-	msg.MediaTypeDocument: "Document",
-	msg.MediaTypeContact:  "Contact",
 }
 
 // FileStateType provide some status to distinguish file upload/download and its progress types

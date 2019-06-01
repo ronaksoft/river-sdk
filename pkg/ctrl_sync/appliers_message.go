@@ -56,7 +56,7 @@ func (ctrl *Controller) contactsImported(e *msg.MessageEnvelope) {
 	}
 	logs.Info("SyncController::contactsImported")
 	for _, u := range x.Users {
-		repo.Users.SaveContactUser(u)
+		repo.Users.SaveContact(u)
 	}
 }
 
@@ -75,7 +75,7 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 	userIDs := domain.MInt64B{}
 	for _, u := range x.Users {
 		userIDs[u.ID] = true
-		repo.Users.SaveContactUser(u)
+		repo.Users.SaveContact(u)
 	}
 	// server
 	if len(userIDs) > 0 {
@@ -114,10 +114,10 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 			)
 			continue
 		}
-		_ = repo.Dialogs.SaveDialog(dialog, topMessage.CreatedOn)
+		_ = repo.Dialogs.Save(dialog, topMessage.CreatedOn)
 	}
 	for _, user := range x.Users {
-		repo.Users.SaveUser(user)
+		repo.Users.Save(user)
 	}
 	for _, group := range x.Groups {
 		repo.Groups.Save(group)
@@ -251,7 +251,7 @@ func (ctrl *Controller) usersMany(e *msg.MessageEnvelope) {
 		zap.Int("Users", len(u.Users)),
 	)
 	for _, v := range u.Users {
-		repo.Users.SaveUser(v)
+		repo.Users.Save(v)
 	}
 }
 
@@ -316,7 +316,7 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 
 	// Save Users
 	for _, v := range u.Users {
-		_ = repo.Users.SaveUser(v)
+		_ = repo.Users.Save(v)
 	}
 
 	// Update NotifySettings

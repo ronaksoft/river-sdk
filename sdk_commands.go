@@ -23,7 +23,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 	res := new(msg.MessagesDialogs)
-	res.Dialogs = repo.Dialogs.GetDialogs(req.Offset, req.Limit)
+	res.Dialogs = repo.Dialogs.List(req.Offset, req.Limit)
 
 	// If the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {
@@ -69,8 +69,8 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 			mUsers[id] = true
 		}
 	}
-	res.Groups = repo.Groups.GetManyGroups(mGroups.ToArray())
-	res.Users = repo.Users.GetAnyUsers(mUsers.ToArray())
+	res.Groups = repo.Groups.GetMany(mGroups.ToArray())
+	res.Users = repo.Users.GetMany(mUsers.ToArray())
 	out.Constructor = msg.C_MessagesDialogs
 	buff, err := res.Marshal()
 	if err != nil {
@@ -91,7 +91,7 @@ func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain
 		return
 	}
 	res := new(msg.Dialog)
-	res = repo.Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
+	res = repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
 
 	logs.Debug("River::messagesGetDialog()",
 		zap.Bool("Res null : ", res != nil),
@@ -185,7 +185,7 @@ func (r *River) messagesReadHistory(in, out *msg.MessageEnvelope, timeoutCB doma
 		logs.Error("River::messagesReadHistory()-> Unmarshal()", zap.Error(err))
 	}
 
-	dialog := repo.Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
+	dialog := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
 		return
 	}
@@ -209,7 +209,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 
-	dtoDialog := repo.Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
+	dtoDialog := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
 	if dtoDialog == nil {
 		out.Constructor = msg.C_Error
 		out.RequestID = in.RequestID
@@ -414,7 +414,7 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 			mUsers[id] = true
 		}
 	}
-	users := repo.Users.GetAnyUsers(mUsers.ToArray())
+	users := repo.Users.GetMany(mUsers.ToArray())
 
 	// if db already had all users
 	if len(messages) == len(msgIDs) && len(users) > 0 {
@@ -446,7 +446,7 @@ func (r *River) messagesClearHistory(in, out *msg.MessageEnvelope, timeoutCB dom
 		return
 	}
 
-	err := repo.Dialogs.UpdateDialogUnreadCount(req.Peer.ID,int32(req.Peer.Type),0)
+	err := repo.Dialogs.UpdateUnreadCount(req.Peer.ID, int32(req.Peer.Type), 0)
 
 	// this will be handled on message update appliers too
 	err = repo.Messages.DeleteDialogMessage(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
@@ -870,7 +870,7 @@ func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB
 		return
 	}
 
-	dialog := repo.Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
+	dialog := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
 		logs.Debug("River::accountSetNotifySettings()-> GetDialog()",
 			zap.String("Error", "Dialog is null"),
@@ -879,7 +879,7 @@ func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB
 	}
 
 	dialog.NotifySettings = req.Settings
-	err := repo.Dialogs.SaveDialog(dialog, 0)
+	err := repo.Dialogs.Save(dialog, 0)
 	if err != nil {
 		logs.Error("River::accountSetNotifySettings()-> SaveDialog()", zap.Error(err))
 		return
@@ -897,7 +897,7 @@ func (r *River) dialogTogglePin(in, out *msg.MessageEnvelope, timeoutCB domain.T
 		return
 	}
 
-	dialog := repo.Dialogs.GetDialog(req.Peer.ID, int32(req.Peer.Type))
+	dialog := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
 		logs.Debug("River::dialogTogglePin()-> GetDialog()",
 			zap.String("Error", "Dialog is null"),
@@ -906,7 +906,7 @@ func (r *River) dialogTogglePin(in, out *msg.MessageEnvelope, timeoutCB domain.T
 	}
 
 	dialog.Pinned = req.Pin
-	err := repo.Dialogs.SaveDialog(dialog, 0)
+	err := repo.Dialogs.Save(dialog, 0)
 	if err != nil {
 		logs.Error("River::dialogTogglePin()-> SaveDialog()", zap.Error(err))
 		return
@@ -922,7 +922,7 @@ func (r *River) accountRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domai
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 
-	err := repo.Users.RemoveUserPhoto(r.ConnInfo.UserID)
+	err := repo.Users.RemovePhoto(r.ConnInfo.UserID)
 	if err != nil {
 		logs.Error("accountRemovePhoto()", zap.Error(err))
 	}
@@ -961,7 +961,7 @@ func (r *River) groupsEditTitle(in, out *msg.MessageEnvelope, timeoutCB domain.T
 		return
 	}
 
-	err := repo.Groups.UpdateGroupTitle(req.GroupID, req.Title)
+	err := repo.Groups.UpdateTitle(req.GroupID, req.Title)
 	if err != nil {
 		logs.Error("River::messagesEditGroupTitle()-> UpdateGroupTitle()", zap.Error(err))
 	}
@@ -979,7 +979,7 @@ func (r *River) groupAddUser(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		successCB(out)
 		return
 	}
-	user := repo.Users.GetUser(req.User.UserID)
+	user := repo.Users.Get(req.User.UserID)
 	if user != nil {
 		gp := &msg.GroupParticipant{
 			AccessHash: req.User.AccessHash,
@@ -1009,7 +1009,7 @@ func (r *River) groupDeleteUser(in, out *msg.MessageEnvelope, timeoutCB domain.T
 		return
 	}
 
-	err := repo.Groups.DeleteGroupMember(req.GroupID, req.User.UserID)
+	err := repo.Groups.DeleteMember(req.GroupID, req.User.UserID)
 	// TODO : Decrease group ParticipantCount
 	if err != nil {
 		logs.Error("River::groupDeleteUser()-> SaveParticipants()", zap.Error(err))
@@ -1031,7 +1031,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 
 	res := new(msg.GroupFull)
 	// Group
-	group, err := repo.Groups.GetGroup(req.GroupID)
+	group, err := repo.Groups.Get(req.GroupID)
 	if err != nil {
 		logs.Error("River::groupsGetFull()-> GetGroup() Sending Request To Server !!!", zap.Error(err))
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
@@ -1049,7 +1049,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	res.Participants = participents
 
 	// NotifySettings
-	dlg := repo.Dialogs.GetDialog(req.GroupID, int32(msg.PeerGroup))
+	dlg := repo.Dialogs.Get(req.GroupID, int32(msg.PeerGroup))
 	if dlg == nil {
 		logs.Warn("River::groupsGetFull()-> GetDialog() Sending Request To Server !!!")
 
@@ -1063,9 +1063,9 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	for _, v := range participents {
 		userIDs[v.UserID] = true
 	}
-	users := repo.Users.GetAnyUsers(userIDs.ToArray())
+	users := repo.Users.GetMany(userIDs.ToArray())
 	if users == nil || len(participents) != len(users) || len(users) <= 0 {
-		logs.Warn("River::groupsGetFull()-> GetAnyUsers() Sending Request To Server !!!",
+		logs.Warn("River::groupsGetFull()-> GetMany() Sending Request To Server !!!",
 			zap.Bool("Is user nil ? ", users == nil),
 			zap.Int("Participanr Count", len(participents)),
 			zap.Int("Users Count", len(users)),
@@ -1094,7 +1094,7 @@ func (r *River) groupUpdateAdmin(in, out *msg.MessageEnvelope, timeoutCB domain.
 		return
 	}
 
-	err := repo.Groups.UpdateGroupMemberType(req.GroupID, req.User.UserID, req.Admin)
+	err := repo.Groups.UpdateMemberType(req.GroupID, req.User.UserID, req.Admin)
 	// TODO : Decrease group ParticipantCount
 	if err != nil {
 		logs.Error("River::groupUpdateAdmin()-> UpdateGroupMemberType()", zap.Error(err))
@@ -1114,7 +1114,7 @@ func (r *River) groupRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domain.
 		logs.Error("groupRemovePhoto() failed to unmarshal", zap.Error(err))
 	}
 
-	err = repo.Groups.RemoveGroupPhoto(req.GroupID)
+	err = repo.Groups.RemovePhoto(req.GroupID)
 	if err != nil {
 		logs.Error("groupRemovePhoto()", zap.Error(err))
 	}
@@ -1131,7 +1131,7 @@ func (r *River) usersGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		userIDs[v.UserID] = true
 	}
 
-	users := repo.Users.GetAnyUsers(userIDs.ToArray())
+	users := repo.Users.GetMany(userIDs.ToArray())
 
 	if len(users) == len(userIDs) {
 		res := new(msg.UsersMany)
@@ -1162,7 +1162,7 @@ func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 		userIDs[v.UserID] = true
 	}
 
-	users := repo.Users.GetAnyUsers(userIDs.ToArray())
+	users := repo.Users.GetMany(userIDs.ToArray())
 
 	if len(users) == len(userIDs) {
 		res := new(msg.UsersMany)

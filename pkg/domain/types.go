@@ -11,7 +11,8 @@ func (m MInt64B) ToArray() []int64 {
 	}
 	return a
 }
+
 type Slt struct {
-	Value      int64 `json:"value"`
-	Timestamp int64  `json:"timestamp"`
+	Value     int64 `json:"value"`
+	Timestamp int64 `json:"timestamp"`
 }

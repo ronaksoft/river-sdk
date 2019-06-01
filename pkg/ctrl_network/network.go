@@ -41,6 +41,7 @@ type Controller struct {
 	authKey    []byte
 	messageSeq int64
 	salt       int64
+	saltExpiry int64
 
 	// Websocket Settings
 	wsDialer                *websocket.Dialer
@@ -223,7 +224,7 @@ func (ctrl *Controller) watchDog() {
 			if ctrl.wsKeepConnection {
 
 				logs.Debug("watchDog() Retry to Connect")
-				go ctrl.Connect()
+				go ctrl.Connect(false)
 			}
 		case <-ctrl.stopChannel:
 			logs.Debug("watchDog() Stopped")
@@ -284,6 +285,9 @@ func (ctrl *Controller) keepAlive() {
 // This is the background routine listen for incoming websocket packets and _Decrypt
 // the received message, if necessary, and  pass the extracted envelopes to messageHandler.
 func (ctrl *Controller) receiver() {
+	defer recoverPanic("NetworkController:: receiver", ronak.M{
+		"AuthID": ctrl.authID,
+	})
 	res := msg.ProtoMessage{}
 	for {
 		messageType, message, err := ctrl.wsConn.ReadMessage()
@@ -444,7 +448,14 @@ func (ctrl *Controller) Stop() {
 }
 
 // Connect dial websocket
-func (ctrl *Controller) Connect() {
+func (ctrl *Controller) Connect(force bool) {
+	defer func() {
+		if recoverPanic("NetworkController:: Connect", ronak.M{
+			"AuthID": ctrl.authID,
+		}) {
+			ctrl.Connect(force)
+		}
+	}()
 	ctrl.updateNetworkStatus(domain.NetworkConnecting)
 	keepGoing := true
 	for keepGoing {
@@ -453,7 +464,7 @@ func (ctrl *Controller) Connect() {
 		}
 
 		// Return if Disconnect() has been called
-		if !ctrl.wsKeepConnection {
+		if !force && !ctrl.wsKeepConnection {
 			return
 		}
 		wsConn, _, err := ctrl.wsDialer.Dial(ctrl.websocketEndpoint, nil)
@@ -556,7 +567,7 @@ func (ctrl *Controller) send(msgEnvelope *msg.MessageEnvelope) error {
 		protoMessage.AuthID = ctrl.authID
 		ctrl.messageSeq++
 		encryptedPayload := msg.ProtoEncryptedPayload{
-			ServerSalt: ctrl.salt,       //234242, // TODO:: ServerSalt ?
+			ServerSalt: ctrl.salt,
 			Envelope:   msgEnvelope,
 		}
 		encryptedPayload.MessageID = uint64((time.Now().Unix()+ctrl.clientTimeDifference)<<32 | ctrl.messageSeq)
@@ -630,14 +641,34 @@ func (ctrl *Controller) GetQuality() domain.NetworkStatus {
 	return ctrl.wsQuality
 }
 
-func (ctrl *Controller) SetServerSalt(salt int64) {
-	ctrl.salt = salt
-}
-
 func (ctrl *Controller) ClientTimeDifference() int64 {
 	return ctrl.clientTimeDifference
 }
 
-func (ctrl *Controller) GetServerSalt()  int64{
+func (ctrl *Controller) SetServerSalt(salt int64) {
+	ctrl.salt = salt
+}
+
+func (ctrl *Controller) GetServerSalt() int64 {
 	return ctrl.salt
+}
+
+func (ctrl *Controller) SetSaltExpiry(timestamp int64) {
+	ctrl.saltExpiry = timestamp
+}
+
+func (ctrl *Controller) GetSaltExpiry() int64 {
+	return ctrl.saltExpiry
+}
+
+func recoverPanic(funcName string, extraInfo interface{}) bool {
+	if r := recover(); r != nil {
+		logs.Error("Panic Recovered",
+			zap.String("Func", funcName),
+			zap.Any("Info", extraInfo),
+			zap.Any("Recover", r),
+		)
+		return true
+	}
+	return false
 }

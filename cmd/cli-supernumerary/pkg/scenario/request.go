@@ -135,6 +135,26 @@ func MessageSend(peer *shared.PeerInfo) (envelop *msg.MessageEnvelope) {
 	return
 }
 
+func GroupsCreate(title string, peers []*shared.PeerInfo) (envelop *msg.MessageEnvelope) {
+	req := new(msg.GroupsCreate)
+	req.Title = title
+	for _, p := range peers {
+		if p.PeerType != msg.PeerUser {
+			continue
+		}
+		req.Users = append(req.Users, &msg.InputUser{
+			UserID:     p.PeerID,
+			AccessHash: p.AccessHash,
+		})
+	}
+	data, err := req.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	envelop = wrapEnvelope(msg.C_GroupsCreate, data)
+	return
+}
+
 func ContactsImport(phone string) (envelop *msg.MessageEnvelope) {
 	req := new(msg.ContactsImport)
 	req.Contacts = []*msg.PhoneContact{
@@ -170,14 +190,13 @@ func AuthRecallReq() (envelop *msg.MessageEnvelope) {
 	return
 }
 
-func GetPeerInfo(fromUserID, toUserID int64, peerType msg.PeerType) (peerInfo *shared.PeerInfo) {
-
+func GetPeerInfo(userID, peerID int64, peerType msg.PeerType) (peerInfo *shared.PeerInfo) {
 	accessHash := uint64(0)
 	switch peerType {
 	case msg.PeerSelf:
 		accessHash = 0
 	case msg.PeerUser:
-		accessHash = getAccessHash(fromUserID, toUserID)
+		accessHash = getAccessHash(userID, peerID)
 	case msg.PeerGroup:
 		accessHash = 0
 	case msg.PeerSuperGroup:
@@ -189,7 +208,7 @@ func GetPeerInfo(fromUserID, toUserID int64, peerType msg.PeerType) (peerInfo *s
 	peerInfo = &shared.PeerInfo{
 		AccessHash: accessHash,
 		Name:       "ZZ",
-		PeerID:     toUserID,
+		PeerID:     peerID,
 		PeerType:   peerType,
 	}
 

@@ -15,7 +15,7 @@ type repoUsers struct {
 	*repository
 }
 
-func (r *repoUsers) SaveUser(user *msg.User) error {
+func (r *repoUsers) Save(user *msg.User) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -75,7 +75,7 @@ func (r *repoUsers) SaveUser(user *msg.User) error {
 	return nil
 }
 
-func (r *repoUsers) SaveContactUser(user *msg.ContactUser) error {
+func (r *repoUsers) SaveContact(user *msg.ContactUser) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -133,33 +133,6 @@ func (r *repoUsers) UpdatePhoneContact(user *msg.PhoneContact) error {
 		"LastName":  user.LastName,
 	}).Error
 
-}
-
-func (r *repoUsers) GetManyUsers(userIDs []int64) []*msg.User {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	logs.Debug("Users::GetManyUsers()",
-		zap.Int64s("UserIDs", userIDs),
-	)
-
-	pbUsers := make([]*msg.User, 0, len(userIDs))
-	users := make([]dto.Users, 0, len(userIDs))
-
-	err := r.db.Where("IsContact = 0 AND ID in (?)", userIDs).Find(&users).Error
-	if err != nil {
-		logs.Error("Users::GetManyUsers()-> fetch user entity", zap.Error(err))
-		return nil //, err
-	}
-
-	for _, v := range users {
-		tmp := new(msg.User)
-		v.MapToUser(tmp)
-		pbUsers = append(pbUsers, tmp)
-
-	}
-
-	return pbUsers
 }
 
 func (r *repoUsers) GetManyContactUsers(userIDs []int64) []*msg.ContactUser {
@@ -267,11 +240,11 @@ func (r *repoUsers) UpdateAccessHash(accessHash int64, peerID int64, peerType in
 	return err
 }
 
-func (r *repoUsers) GetUser(userID int64) *msg.User {
+func (r *repoUsers) Get(userID int64) *msg.User {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("Users::GetUser()",
+	logs.Debug("Users::Get()",
 		zap.Int64("userID", userID),
 	)
 
@@ -280,7 +253,7 @@ func (r *repoUsers) GetUser(userID int64) *msg.User {
 
 	err := r.db.Find(user, userID).Error
 	if err != nil {
-		logs.Error("Users::GetUser()-> fetch user entity", zap.Error(err))
+		logs.Error("Users::Get()-> fetch user entity", zap.Error(err))
 		return nil //, err
 	}
 
@@ -289,7 +262,7 @@ func (r *repoUsers) GetUser(userID int64) *msg.User {
 	return pbUser
 }
 
-func (r *repoUsers) GetAnyUsers(userIDs []int64) []*msg.User {
+func (r *repoUsers) GetMany(userIDs []int64) []*msg.User {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -298,7 +271,7 @@ func (r *repoUsers) GetAnyUsers(userIDs []int64) []*msg.User {
 
 	err := r.db.Where("ID in (?)", userIDs).Find(&users).Error
 	if err != nil {
-		logs.Error("Users::GetAnyUsers()-> fetch user entity", zap.Error(err))
+		logs.Error("Users::GetMany()-> fetch user entity", zap.Error(err))
 		return nil //, err
 	}
 
@@ -425,11 +398,11 @@ func (r *repoUsers) UpdateUsername(u *msg.UpdateUsername) error {
 	}).Error
 }
 
-func (r *repoUsers) GetUserPhoto(userID, photoID int64) *dto.UsersPhoto {
+func (r *repoUsers) GetPhoto(userID, photoID int64) *dto.UsersPhoto {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("Users::GetUserPhoto()",
+	logs.Debug("Users::GetPhoto()",
 		zap.Int64("userID", userID),
 		zap.Int64("PhotoID", photoID),
 	)
@@ -438,7 +411,7 @@ func (r *repoUsers) GetUserPhoto(userID, photoID int64) *dto.UsersPhoto {
 
 	err := r.db.Where("userID = ? AND PhotoID = ?", userID, photoID).First(&dtoPhoto).Error
 	if err != nil {
-		logs.Error("Users::GetUserPhoto()->fetch UserPhoto entity", zap.Error(err))
+		logs.Error("Users::GetPhoto()->fetch UserPhoto entity", zap.Error(err))
 		return nil
 	}
 
@@ -463,12 +436,12 @@ func (r *repoUsers) UpdateAccountPhotoPath(userID, photoID int64, isBig bool, fi
 
 }
 
-func (r *repoUsers) SaveUserPhoto(userPhoto *msg.UpdateUserPhoto) error {
+func (r *repoUsers) SavePhoto(userPhoto *msg.UpdateUserPhoto) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
 	if userPhoto == nil {
-		logs.Debug("RepoUsers::SaveUserPhoto()",
+		logs.Debug("RepoUsers::SavePhoto()",
 			zap.String("User", "user is null"),
 		)
 		return domain.ErrNotFound
@@ -502,7 +475,7 @@ func (r *repoUsers) SaveUserPhoto(userPhoto *msg.UpdateUserPhoto) error {
 	return er
 }
 
-func (r *repoUsers) RemoveUserPhoto(userID int64) error {
+func (r *repoUsers) RemovePhoto(userID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 	u := dto.Users{}
