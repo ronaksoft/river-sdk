@@ -20,16 +20,8 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 	defer r.mx.Unlock()
 
 	if message == nil {
-		logs.Debug("RepoMessages::SaveNewMessage()",
-			zap.String("Error", "message is null"),
-		)
 		return domain.ErrNotFound
 	}
-
-	logs.Debug("RepoMessages::SaveNewMessage()",
-		zap.Int64("MessageID", message.ID),
-		zap.Int64("DialogPeerID", dialog.PeerID),
-	)
 
 	m := new(dto.Messages)
 	m.Map(message)
@@ -38,28 +30,22 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 	dlg.Map(dialog)
 
 	em := new(dto.Messages)
-	isNewMsg := false
-	r.db.Find(em, m.ID)
-	if em.ID == 0 {
-		isNewMsg = true
-		r.db.Create(m)
-	} else {
-		r.db.Table(m.TableName()).Where("ID=?", m.ID).Update(m)
+	if err := r.db.Create(m).Error; err != nil {
+		logs.Error("Repo::SaveNewMessage()-> save message", zap.Error(err))
 	}
 
 	// calculate unread count
-
 	dtoDlg := new(dto.Dialogs)
 	err := r.db.Where("PeerID = ? AND PeerType = ?", m.PeerID, m.PeerType).First(dtoDlg).Error
 	if err != nil {
-		logs.Error("RepoMessages::SaveNewMessage()-> fetch dialog entity", zap.Error(err))
+		logs.Error("Repo::SaveNewMessage()-> fetch dialog entity", zap.Error(err))
 		return err
 	}
 	unreadCount := dtoDlg.UnreadCount
 	mentionedCount := dtoDlg.MentionedCount
 	// newMessage : m.ID > topMessage
 	// isNewMsg : if message delivered unordered or late
-	if m.SenderID != userID && (isNewMsg || m.ID > dtoDlg.TopMessageID) {
+	if m.SenderID != userID && m.ID > dtoDlg.TopMessageID {
 		unreadCount++
 		for _, entity := range message.Entities {
 			if entity.Type == msg.MessageEntityTypeMention && entity.UserID == userID {
@@ -70,7 +56,7 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 
 	err = r.db.Table(em.TableName()).Where("PeerID=? AND PeerType=?", m.PeerID, m.PeerType).Limit(1).Order("ID DESC").Find(em).Error
 	if err != nil {
-		logs.Error("RepoMessages::SaveNewMessage()-> fetch top message", zap.Error(err))
+		logs.Error("Repo::SaveNewMessage()-> fetch top message", zap.Error(err))
 		return err
 	}
 
@@ -87,7 +73,7 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 		"MentionedCount": mentionedCount,
 	}).Error
 	if err != nil {
-		logs.Error("RepoMessages::SaveNewMessage()-> update dialog entity", zap.Error(err))
+		logs.Error("Repo::SaveNewMessage()-> update dialog entity", zap.Error(err))
 		return err
 	}
 
@@ -100,13 +86,13 @@ func (r *repoMessages) SaveSelfMessage(message *msg.UserMessage, dialog *msg.Dia
 	defer r.mx.Unlock()
 
 	if message == nil {
-		logs.Debug("RepoMessages::SaveSelfMessage()",
+		logs.Debug("Repo::SaveSelfMessage()",
 			zap.String("Error", "message is null"),
 		)
 		return domain.ErrNotFound
 	}
 
-	logs.Debug("RepoMessages::SaveSelfMessage()",
+	logs.Debug("Repo::SaveSelfMessage()",
 		zap.Int64("MessageID", message.ID),
 		zap.Int64("DialogPeerID", dialog.PeerID),
 	)
@@ -145,7 +131,7 @@ func (r *repoMessages) SaveMessage(message *msg.UserMessage) error {
 	defer r.mx.Unlock()
 
 	if message == nil {
-		logs.Debug("RepoMessages::SaveMessage()",
+		logs.Debug("Repo::SaveMessage()",
 			zap.String("Error", "message is null"),
 		)
 		return domain.ErrNotFound
@@ -174,7 +160,7 @@ func (r *repoMessages) GetManyMessages(messageIDs []int64) []*msg.UserMessage {
 	dtoMsgs := make([]dto.Messages, 0, len(messageIDs))
 	err := r.db.Where("ID in (?)", messageIDs).Find(&dtoMsgs).Error
 	if err != nil {
-		logs.Error("RepoMessages::GetManyMessages()-> fetch messages", zap.Error(err))
+		logs.Error("Repo::GetManyMessages()-> fetch messages", zap.Error(err))
 		return nil
 	}
 
@@ -211,7 +197,7 @@ func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerTy
 	}
 
 	if err != nil {
-		logs.Error("RepoMessages::GetMessageHistory()-> fetch messages", zap.Error(err))
+		logs.Error("Repo::GetMessageHistory()-> fetch messages", zap.Error(err))
 		return
 	}
 
@@ -248,7 +234,7 @@ func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerTy
 
 	err = r.db.Where("ID in (?)", userIDs.ToArray()).Find(&users).Error
 	if err != nil {
-		logs.Error("RepoMessages::GetMessageHistory()-> fetch users", zap.Error(err))
+		logs.Error("Repo::GetMessageHistory()-> fetch users", zap.Error(err))
 		return
 	}
 
@@ -293,7 +279,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 	}
 
 	if err != nil {
-		logs.Error("RepoMessages::GetMessageHistory()-> fetch messages", zap.Error(err))
+		logs.Error("Repo::GetMessageHistory()-> fetch messages", zap.Error(err))
 		return
 	}
 	userIDs := domain.MInt64B{}
@@ -315,7 +301,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 
 	err = r.db.Where("ID in (?)", userIDs.ToArray()).Find(&users).Error
 	if err != nil {
-		logs.Error("RepoMessages::GetMessageHistory()-> fetch users", zap.Error(err))
+		logs.Error("Repo::GetMessageHistory()-> fetch users", zap.Error(err))
 		return
 	}
 
@@ -422,7 +408,7 @@ func (r *repoMessages) DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.Clie
 			}
 			if removedUnreadCount > 0 && removedUnreadCount <= dtoDlg.UnreadCount {
 				err = r.db.Table(dtoDlg.TableName()).Where("PeerID=? AND PeerType=?", v.PeerID, v.PeerType).Updates(map[string]interface{}{
-					"UnreadCount": (dtoDlg.UnreadCount - removedUnreadCount), //gorm.Expr("UnreadCount - ?", removedUnreadCount),
+					"UnreadCount": (dtoDlg.UnreadCount - removedUnreadCount), // gorm.Expr("UnreadCount - ?", removedUnreadCount),
 				}).Error
 			}
 		}
@@ -456,7 +442,7 @@ func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, err
 	dtoMsg := dto.Messages{}
 	err := r.db.Table(dtoMsg.TableName()).Where("PeerID =? AND PeerType= ?", peerID, peerType).Last(&dtoMsg).Error
 	if err != nil {
-		logs.Error("RepoMessages::GetTopMessageID()-> fetch message", zap.Error(err))
+		logs.Error("Repo::GetTopMessageID()-> fetch message", zap.Error(err))
 		return -1, err
 	}
 	return dtoMsg.ID, nil
@@ -473,7 +459,7 @@ func (r *repoMessages) GetMessage(messageID int64) *msg.UserMessage {
 	dtoMsg := new(dto.Messages)
 	err := r.db.Where("ID = ?", messageID).Find(&dtoMsg).Error
 	if err != nil {
-		logs.Error("RepoMessages::GetMessage()-> fetch messages", zap.Error(err))
+		logs.Error("Repo::GetMessage()-> fetch messages", zap.Error(err))
 		return nil
 	}
 

@@ -671,7 +671,7 @@ func extractMessagesMedia(messages ...*msg.UserMessage) {
 			t := mediaDoc.Doc.Thumbnail
 			if t != nil {
 				if t.FileID != 0 {
-					go filemanager.Ctx().DownloadThumbnail(m.ID, t.FileID, t.AccessHash, t.ClusterID, 0)
+					filemanager.Ctx().DownloadThumbnail(m.ID, t.FileID, t.AccessHash, t.ClusterID, 0)
 				}
 			}
 
