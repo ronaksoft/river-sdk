@@ -1,6 +1,7 @@
 package scenario
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -104,7 +105,7 @@ func (s *Login) login(resp *msg.AuthSentCode, act shared.Actor) (*msg.MessageEnv
 		return reqEnv, successCB, timeoutCB
 	}
 
-	s.failed(act, -1, 0, "login() phone number does not start with 237400")
+	s.failed(act, -1, 0, fmt.Sprintf("login() phone number does not start with 237400 (%s)", resp.Phone))
 
 	return nil, nil, nil
 }
