@@ -353,7 +353,7 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 	users := make([]dto.Users, 0)
 	err := r.db.Where("FirstName LIKE ? OR LastName LIKE ? OR Phone LIKE ? OR Username LIKE ?", p, p, p, p).Find(&users).Error
 	if err != nil {
-		logs.Error("Users::SearchUsers()-> fetch user entities", zap.Error(err))
+		logs.Warn("Users::SearchUsers()-> fetch user entities", zap.Error(err))
 		return nil
 	}
 	pbUsers := make([]*msg.User, 0)
@@ -411,7 +411,7 @@ func (r *repoUsers) GetPhoto(userID, photoID int64) *dto.UsersPhoto {
 
 	err := r.db.Where("userID = ? AND PhotoID = ?", userID, photoID).First(&dtoPhoto).Error
 	if err != nil {
-		logs.Error("Users::GetPhoto()->fetch UserPhoto entity", zap.Error(err))
+		logs.Warn("Users::GetPhoto()->fetch UserPhoto entity", zap.Error(err))
 		return nil
 	}
 

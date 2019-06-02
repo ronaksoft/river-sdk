@@ -485,7 +485,7 @@ func (fs *FileStatus) uploaderJob(fm *FileManager) {
 			}
 			envelop, readCount, err := fs.ReadAsFileSavePart(false, partIdx)
 			if err != nil {
-				logs.Error("uploaderJob()", zap.Error(err), zap.String("filePath", fs.FilePath))
+				logs.Warn("uploaderJob()", zap.Error(err), zap.String("filePath", fs.FilePath))
 				break
 			}
 			fm.SendUploadRequest(envelop, int64(readCount), fs, partIdx)

@@ -413,7 +413,7 @@ func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, 
 		case msg.C_Error:
 			// remove upload from
 			fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
-			logs.Error("SendUploadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
+			logs.Warn("SendUploadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
 			fs.RequestStatus = domain.RequestStatusError
 			repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 			if fm.onUploadError != nil {
@@ -423,7 +423,7 @@ func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, 
 			x := new(msg.Bool)
 			err := x.Unmarshal(res.Message)
 			if err != nil {
-				logs.Error("SendUploadRequest() failed to unmarshal C_Bool", zap.Error(err))
+				logs.Error("SendUploadRequest()->Unmarshal()", zap.Error(err))
 			}
 			// reset counter
 			fs.retryCounter = 0
@@ -442,13 +442,13 @@ func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, 
 		default:
 			// increase counter
 			fs.retryCounter++
-			logs.Error("SendUploadRequest() received unknown response", zap.Error(err))
+			logs.Warn("SendUploadRequest() received unknown response", zap.Error(err))
 
 		}
 	} else {
 		// increase counter
 		fs.retryCounter++
-		logs.Error("SendUploadRequest()", zap.Error(err))
+		logs.Warn("SendUploadRequest()", zap.Error(err))
 	}
 
 	if fs.retryCounter > domain.FileMaxRetry {
@@ -511,7 +511,7 @@ func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 			if err != nil {
 				logs.Error("SendDownloadRequest() failed write to file", zap.Error(err))
 			} else if isCompleted {
-				//call completed delegate
+				// call completed delegate
 				fm.downloadCompleted(fs.MessageID, fs.FilePath, fs.Type)
 
 			}
@@ -529,9 +529,9 @@ func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 	if fs.retryCounter > domain.FileMaxRetry {
 		// remove download from queue
 		fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
-		logs.Error("SendDownloadRequest() download request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
+		logs.Warn("SendDownloadRequest() download request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
 		fs.RequestStatus = domain.RequestStatusError
-		repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
+		_ = repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 		if fm.onDownloadError != nil {
 			x := new(msg.Error)
 			x.Code = "00"

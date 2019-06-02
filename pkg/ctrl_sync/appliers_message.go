@@ -17,7 +17,7 @@ import (
 func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
 	x := new(msg.AuthAuthorization)
 	if err := x.Unmarshal(e.Message); err != nil {
-		logs.Error("authAuthorization()-> Unmarshal()", zap.Error(err))
+		logs.Warn("authAuthorization()-> Unmarshal()", zap.Error(err))
 		return
 	}
 	logs.Info("SyncController::authAuthorization",
@@ -136,7 +136,7 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 	sent := new(msg.MessagesSent)
 	err := sent.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("MessageSent() failed to unamarshal", zap.Error(err))
+		logs.Error("MessageSent()-> Unmarshal", zap.Error(err))
 		return
 	}
 	logs.Info("SyncController::messageSent",
@@ -149,7 +149,6 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 
 	pmsg, err := repo.PendingMessages.GetPendingMessageByRequestID(int64(e.RequestID))
 	if err != nil {
-		logs.Error("messageSent()-> GetPendingMessageByRequestID()", zap.Uint64("RequestID", e.RequestID), zap.Error(err))
 		return
 	}
 
@@ -171,12 +170,12 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 			// save to local files
 			err = repo.Files.MoveUploadedFileToFiles(clientSendMedia, int32(fileSize), sent)
 			if err != nil {
-				logs.Error("messageSent()-> MoveUploadedFileToLocalFile() failed ", zap.Error(err))
+				logs.Warn("messageSent()-> MoveUploadedFileToLocalFile() failed ", zap.Error(err))
 			}
 			// delete file status
 			err = repo.Files.DeleteFileStatus(pmsg.ID)
 			if err != nil {
-				logs.Error("messageSent()-> DeleteFileStatus() failed to delete FileStatus", zap.Error(err))
+				logs.Warn("messageSent()-> DeleteFileStatus() failed to delete FileStatus", zap.Error(err))
 			}
 		}
 	}
@@ -189,20 +188,20 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 	// save message
 	err = repo.Messages.SaveMessage(message)
 	if err != nil {
-		logs.Error("messageSent()-> SaveMessage() failed to move pendingMessage to message table", zap.Error(err))
+		logs.Warn("messageSent()-> SaveMessage() failed to move pendingMessage to message table", zap.Error(err))
 		return
 	}
 
 	// delete pending mesage
 	err = repo.PendingMessages.DeletePendingMessage(pmsg.ID)
 	if err != nil {
-		logs.Error("messageSent()-> DeletePendingMessage() failed to delete pendingMessage", zap.Error(err))
+		logs.Warn("messageSent()-> DeletePendingMessage() failed to delete pendingMessage", zap.Error(err))
 	}
 
-	// Update doaligs
+	// Update dialogs
 	err = repo.Dialogs.UpdateTopMessageID(message.CreatedOn, message.PeerID, message.PeerType)
 	if err != nil {
-		logs.Error("messageSent()-> UpdateTopMessageID() failed to update doalogs", zap.Error(err))
+		logs.Warn("messageSent()-> UpdateTopMessageID() failed to update doalogs", zap.Error(err))
 	}
 
 	// TODO : Notify UI that the pending message delivered to server

@@ -100,7 +100,7 @@ func repoSetDB(dialect, dbPath string) error {
 func DropAndCreateTable(dtoTable interface{}) error {
 	err := r.db.DropTable(dtoTable).Error
 	if err != nil {
-		logs.Error("Context::DropAndCreateTable() failed to DROP", zap.Error(err))
+		logs.Warn("Context::DropAndCreateTable() failed to DROP", zap.Error(err))
 	}
 	err = r.db.AutoMigrate(dtoTable).Error
 	if err != nil {

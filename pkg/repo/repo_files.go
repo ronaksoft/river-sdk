@@ -330,14 +330,14 @@ func (r *repoFiles) GetDBStatus() (map[int64]map[msg.DocumentAttributeType]dto.M
 	rows, err := r.db.Table(f.TableName()).Select("PeerID").Group("PeerID").Rows()
 	defer rows.Close()
 	if err != nil {
-		logs.Error(err.Error())
+		logs.Warn(err.Error())
 		return nil, err
 	}
 
 	for rows.Next() {
 		err := rows.Scan(&peerID)
 		if err != nil {
-			logs.Error("GetDBStatus", zap.String("rows::scan", err.Error()))
+			logs.Warn("GetDBStatus", zap.String("rows::scan", err.Error()))
 		} else {
 			peerIDs = append(peerIDs, peerID)
 		}
@@ -350,7 +350,7 @@ func (r *repoFiles) GetDBStatus() (map[int64]map[msg.DocumentAttributeType]dto.M
 		var f []dto.Files
 		err := r.db.Where("PeerID = ? AND (FilePath <> ? OR ThumbFilePath <> ?)", peerId, "", "").Find(&f).Error
 		if err != nil {
-			logs.Error(err.Error())
+			logs.Warn(err.Error())
 			return nil, err
 		}
 		if len(f) > 0 {
@@ -358,7 +358,7 @@ func (r *repoFiles) GetDBStatus() (map[int64]map[msg.DocumentAttributeType]dto.M
 				attribs := make([]*msg.DocumentAttribute, 0)
 				err = json.Unmarshal(file.Attributes, &attribs)
 				if err != nil {
-					logs.Error(err.Error())
+					logs.Warn(err.Error())
 					return nil, err
 				}
 				for _, a := range attribs {
@@ -459,7 +459,7 @@ func (r *repoFiles) ClearMedia(messageIDs []int64) ([]string, error) {
 	f := dto.Files{}
 	err := r.db.Table(f.TableName()).Where("MessageID in (?)", messageIDs).Find(&dtoFiles).Error
 	if err != nil {
-		logs.Error(err.Error())
+		logs.Warn(err.Error())
 		return filePaths, err
 	}
 	for _, file := range dtoFiles {
@@ -472,7 +472,7 @@ func (r *repoFiles) ClearMedia(messageIDs []int64) ([]string, error) {
 	}
 	err = r.db.Table(f.TableName()).Where("MessageID in (?)", messageIDs).Updates(map[string]interface{}{"FilePath": "", "ThumbFilePath": ""}).Error
 	if err != nil {
-		logs.Error(err.Error())
+		logs.Warn(err.Error())
 		return filePaths, err
 	}
 	return filePaths, nil

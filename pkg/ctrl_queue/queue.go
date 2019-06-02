@@ -87,7 +87,7 @@ func (ctrl *Controller) distributor() {
 		// Peek item from the queue
 		item, err := ctrl.waitingList.Dequeue()
 		if err != nil {
-			logs.Error("QueueController:: distributor()->Dequeue()", zap.Error(err))
+			logs.Warn("QueueController:: distributor()->Dequeue()", zap.Error(err))
 			return
 		}
 

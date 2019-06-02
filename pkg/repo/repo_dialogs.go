@@ -91,7 +91,7 @@ func (r *repoDialogs) List(offset, limit int32) []*msg.Dialog {
 
 	err := r.db.Limit(limit).Offset(offset).Order("LastUpdate DESC").Find(&dtoDlgs).Error
 	if err != nil {
-		logs.Error("Dialogs::GetDialogs()", zap.Error(err))
+		logs.Warn("Dialogs::GetDialogs()", zap.Error(err))
 		return nil
 	}
 
@@ -117,7 +117,7 @@ func (r *repoDialogs) Get(peerID int64, peerType int32) *msg.Dialog {
 	dtoDlg := new(dto.Dialogs)
 	err := r.db.Where("PeerID = ? AND PeerType = ?", peerID, peerType).First(dtoDlg).Error
 	if err != nil {
-		logs.Error("Dialogs::GetDialog()->fetch dialog entity", zap.Error(err))
+		logs.Warn("Dialogs::GetDialog()->fetch dialog entity", zap.Error(err))
 		return nil
 	}
 
@@ -174,19 +174,19 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 	em := new(dto.Messages)
 	err = r.db.Table(em.TableName()).Where("SenderID <> ? AND PeerID = ? AND PeerType = ? AND ID > ? ", userID, peerID, peerType, maxID).Count(&unreadCount).Error
 	if err != nil {
-		logs.Error("Dialogs::UpdateReadInboxMaxID()-> fetch messages unread count", zap.Error(err))
+		logs.Warn("Dialogs::UpdateReadInboxMaxID()-> fetch messages unread count", zap.Error(err))
 		return err
 	}
 
 	ed := new(dto.Dialogs)
 	err = r.db.Table(ed.TableName()).Where("PeerID = ? AND PeerType = ?", peerID, peerType).Updates(map[string]interface{}{
 		"ReadInboxMaxID": maxID,
-		"UnreadCount":    unreadCount, //gorm.Expr("UnreadCount + ?", unreadCount), // in snapshot mode if unread message lefted
+		"UnreadCount":    unreadCount, // gorm.Expr("UnreadCount + ?", unreadCount), // in snapshot mode if unread message lefted
 		"MentionedCount": 0,           // Hotfix :: on each ReadHistoryInbox set mentioned count to zero
 	}).Error
 
 	if err != nil {
-		logs.Error("Dialogs::UpdateReadInboxMaxID()-> update dialog entity", zap.Error(err))
+		logs.Warn("Dialogs::UpdateReadInboxMaxID()-> update dialog entity", zap.Error(err))
 		return err
 	}
 	return nil
@@ -208,7 +208,7 @@ func (r *repoDialogs) UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID 
 	}).Error
 
 	if err != nil {
-		logs.Error("Dialogs::UpdateReadOutboxMaxID()-> update dialog entity", zap.Error(err))
+		logs.Warn("Dialogs::UpdateReadOutboxMaxID()-> update dialog entity", zap.Error(err))
 		return err
 	}
 	return nil
@@ -248,7 +248,7 @@ func (r *repoDialogs) UpdateNotifySetting(msg *msg.UpdateNotifySettings) error {
 	dtoDlg := new(dto.Dialogs)
 	err := r.db.Where("PeerID = ? AND PeerType = ?", msg.NotifyPeer.ID, msg.NotifyPeer.Type).First(dtoDlg).Error
 	if err != nil {
-		logs.Error("Dialogs::UpdateNotifySetting()->fetch dialog entity", zap.Error(err))
+		logs.Warn("Dialogs::UpdateNotifySetting()->fetch dialog entity", zap.Error(err))
 		return err
 	}
 	dtoDlg.NotifyFlags = msg.Settings.Flags

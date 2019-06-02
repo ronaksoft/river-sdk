@@ -431,7 +431,7 @@ func (r *River) FileDownload(msgID int64) {
 	)
 	m := repo.Messages.GetMessage(msgID)
 	if m == nil {
-		logs.Error("SDK::FileDownload()", zap.Int64("Message does not exist", msgID))
+		logs.Warn("SDK::FileDownload()", zap.Int64("Message does not exist", msgID))
 		return
 	}
 
@@ -464,7 +464,7 @@ func (r *River) FileDownload(msgID int64) {
 func (r *River) PauseDownload(msgID int64) {
 	fs, err := repo.Files.GetFileStatus(msgID)
 	if err != nil {
-		logs.Error("SDK::PauseDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
+		logs.Warn("SDK::PauseDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
 	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
@@ -475,7 +475,7 @@ func (r *River) PauseDownload(msgID int64) {
 func (r *River) CancelDownload(msgID int64) {
 	fs, err := repo.Files.GetFileStatus(msgID)
 	if err != nil {
-		logs.Error("SDK::CancelDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
+		logs.Warn("SDK::CancelDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
 	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
@@ -486,7 +486,7 @@ func (r *River) CancelDownload(msgID int64) {
 func (r *River) PauseUpload(msgID int64) {
 	fs, err := repo.Files.GetFileStatus(msgID)
 	if err != nil {
-		logs.Error("SDK::PauseUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
+		logs.Warn("SDK::PauseUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
 	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
@@ -499,7 +499,7 @@ func (r *River) PauseUpload(msgID int64) {
 func (r *River) CancelUpload(msgID int64) {
 	fs, err := repo.Files.GetFileStatus(msgID)
 	if err != nil {
-		logs.Error("SDK::CancelUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
+		logs.Warn("SDK::CancelUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
 	filemanager.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
@@ -521,12 +521,12 @@ func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		logs.Error("SDK::AccountUploadPhoto()", zap.Error(err))
+		logs.Warn("SDK::AccountUploadPhoto()", zap.Error(err))
 		return 0
 	}
 	fileInfo, err := file.Stat()
 	if err != nil {
-		logs.Error("SDK::AccountUploadPhoto()", zap.Error(err))
+		logs.Warn("SDK::AccountUploadPhoto()", zap.Error(err))
 		return 0
 	}
 
@@ -568,7 +568,7 @@ func (r *River) AccountGetPhotoBig(userID int64) string {
 			return downloadAccountPhoto(userID, user.Photo, true)
 
 		}
-		logs.Error("SDK::AccountGetPhoto_Big() user photo is null")
+		logs.Warn("SDK::AccountGetPhoto_Big() user photo is null")
 		return ""
 	}
 	return ""
@@ -642,12 +642,12 @@ func (r *River) GroupUploadPhoto(groupID int64, filePath string) (msgID int64) {
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		logs.Error("SDK::GroupUploadPhoto()", zap.Error(err))
+		logs.Warn("SDK::GroupUploadPhoto()", zap.Error(err))
 		return 0
 	}
 	fileInfo, err := file.Stat()
 	if err != nil {
-		logs.Error("SDK::GroupUploadPhoto()", zap.Error(err))
+		logs.Warn("SDK::GroupUploadPhoto()", zap.Error(err))
 		return 0
 	}
 

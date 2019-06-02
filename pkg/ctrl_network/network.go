@@ -191,9 +191,7 @@ func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
 		messageEnvelope.RequestID = 0
 		err := ctrl.send(messageEnvelope)
 		if err != nil {
-			logs.Error("NetworkController::Send Flush Error",
-				zap.Error(err),
-			)
+			logs.Error("NetworkController::Send Flush Error", zap.Error(err))
 			return
 		}
 		startIdx = endIdx
@@ -317,7 +315,7 @@ func (ctrl *Controller) receiver() {
 				receivedEnvelope := new(msg.MessageEnvelope)
 				err = receivedEnvelope.Unmarshal(res.Payload)
 				if err != nil {
-					logs.Error("NetworkController::receiver() Failed to unmarshal", zap.Error(err))
+					logs.Error("NetworkController::receiver()-> Unmarshal()", zap.Error(err))
 					continue
 				}
 				ctrl.messageHandler(receivedEnvelope)
