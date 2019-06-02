@@ -160,7 +160,6 @@ func (fm *FileManager) startUploadQueue() {
 	}
 }
 
-
 // SetRootFolders directory paths to download files
 func SetRootFolders(audioDir, fileDir, photoDir, videoDir, cacheDir string) {
 	dirAudio = audioDir

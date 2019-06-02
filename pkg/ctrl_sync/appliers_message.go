@@ -201,7 +201,7 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 	// Update dialogs
 	err = repo.Dialogs.UpdateTopMessageID(message.CreatedOn, message.PeerID, message.PeerType)
 	if err != nil {
-		logs.Warn("messageSent()-> UpdateTopMessageID() failed to update doalogs", zap.Error(err))
+		logs.Warn("messageSent()-> UpdateTopMessageID() failed to update dialogs", zap.Error(err))
 	}
 
 	// TODO : Notify UI that the pending message delivered to server
