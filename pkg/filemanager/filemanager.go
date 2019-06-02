@@ -708,7 +708,6 @@ func (fm *FileManager) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, 
 
 // DownloadThumbnail download thumbnail from server its sync
 func (fm *FileManager) DownloadThumbnail(msgID int64, fileID int64, accessHash uint64, clusterID, version int32) (string, error) {
-
 	req := new(msg.FileGet)
 	req.Location = &msg.InputFileLocation{
 		AccessHash: accessHash,

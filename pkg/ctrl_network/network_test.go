@@ -87,7 +87,7 @@ func TestNewController(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	ctrl.Connect()
+	ctrl.Connect(true)
 	for i := 0; i < 10; i++ {
 		err = ctrl.Send(authRecall(), false)
 		if err != nil {
