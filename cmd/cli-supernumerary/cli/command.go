@@ -171,3 +171,15 @@ var cmdSetTicker = &ishell.Cmd{
 		_Log.Info("Publishing Ticker ... Done")
 	},
 }
+
+var cmdResetAuth = &ishell.Cmd{
+	Name: "ResetAuth",
+	Func: func(c *ishell.Context) {
+		_Log.Info("Publishing ResetAuth ...")
+		err := _NATS.Publish(config.SubjectResetAuth, []byte(config.SubjectResetAuth))
+		if err != nil {
+			_Log.Error("Error ResetAuth", zap.Error(err))
+		}
+		_Log.Info("Publishing ResetAuth ... Done")
+	},
+}

@@ -39,6 +39,7 @@ func init() {
 	_Shell.AddCmd(cmdLogin)
 	_Shell.AddCmd(cmdRegister)
 	_Shell.AddCmd(cmdSetTicker)
+	_Shell.AddCmd(cmdResetAuth)
 }
 
 func main() {
