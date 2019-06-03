@@ -17,4 +17,5 @@ const (
 	SubjectLogin         = "SUBJECT_LOGIN"
 	SubjectPhoneRange    = "SUBJECT_PHONE_RANGE"
 	SubjectHealthCheck   = "SUBJECT_HEALTH_CHECK"
+	SubjectResetAuth     = "SUBJECT_RESET_AUTH"
 )

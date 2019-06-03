@@ -263,6 +263,12 @@ func (n *Node) RegisterSubscription() error {
 		return err
 	}
 	n.subs[fmt.Sprintf("%s.%s", n.Config.InstanceID, config.SubjectHealthCheck)] = subHealthCheck
+
+	subResetAuth, err := n.natsClient.Subscribe(fmt.Sprintf("%s.%s", n.Config.InstanceID, config.SubjectResetAuth), n.cbResetAuthorizations)
+	if err != nil {
+		return err
+	}
+	n.subs[fmt.Sprintf("%s.%s", n.Config.InstanceID, config.SubjectResetAuth)] = subResetAuth
 	return nil
 }
 
