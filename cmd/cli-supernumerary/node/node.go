@@ -131,6 +131,16 @@ func (n *Node) cbLogin(msg *nats.Msg) {
 	n.su.Login()
 }
 
+func (n *Node) cbResetAuthorizations(msg *nats.Msg) {
+	_Log.Info("cbResetAuthorizations()")
+
+	if n.su == nil {
+		_Log.Error("cbResetAuthorizations() supernumerary not initialized")
+		return
+	}
+	n.su.ResetAuthorizations()
+}
+
 func (n *Node) cbRegister(msg *nats.Msg) {
 	_Log.Info("cbRegister()")
 	if n.su == nil {

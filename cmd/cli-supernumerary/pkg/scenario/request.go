@@ -69,6 +69,18 @@ func InitCompleteAuth(clientNonce, serverNonce, p, q uint64, dhPubKey, encPayloa
 	return
 }
 
+func AccountResetAuthorizations() (envelop *msg.MessageEnvelope) {
+	req := new(msg.AccountResetAuthorization)
+	req.AuthID = 0
+
+	data, err := req.Marshal()
+	if err != nil {
+		panic(err)
+	}
+
+	envelop = wrapEnvelope(msg.C_AccountResetAuthorization, data)
+	return
+}
 func AuthSendCode(phone string) (envelop *msg.MessageEnvelope) {
 	req := new(msg.AuthSendCode)
 	req.Phone = phone

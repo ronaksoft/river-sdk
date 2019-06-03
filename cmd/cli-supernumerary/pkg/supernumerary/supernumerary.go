@@ -169,6 +169,14 @@ func (s *Supernumerary) Login() {
 	}
 }
 
+func (s *Supernumerary) ResetAuthorizations() {
+	for _, act := range s.Actors {
+		sen := scenario.NewResetAuthorizations(false)
+		_Log.Info("ResetAuthorization()", zap.String("Phone", act.GetPhone()))
+		_ = scenario.Play(act, sen)
+	}
+}
+
 // Create Group
 func (s *Supernumerary) CreateGroup(startPhone, endPhone, groupSize int64) {
 	for _, act := range s.Actors {
