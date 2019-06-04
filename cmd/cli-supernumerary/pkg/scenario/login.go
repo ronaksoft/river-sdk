@@ -66,7 +66,7 @@ func (s *Login) sendCode(act shared.Actor) (*msg.MessageEnvelope, shared.Success
 
 // login Step : 2
 func (s *Login) login(resp *msg.AuthSentCode, act shared.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
-	if strings.HasPrefix(strings.TrimLeft("+", resp.Phone), "237400") {
+	if strings.HasPrefix(resp.Phone, "237400") {
 		code := resp.Phone[len(resp.Phone)-4:]
 
 		reqEnv := AuthLogin(resp.Phone, code, resp.PhoneCodeHash)
