@@ -145,28 +145,39 @@ func (s *Supernumerary) CreateAuthKey() {
 
 // Register init step required
 func (s *Supernumerary) Register() {
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(len(s.Actors))
 	for _, act := range s.Actors {
-		sen := scenario.NewRegister(false)
-		_Log.Info("Register() Registering", zap.String("Phone", act.GetPhone()))
-		success := scenario.Play(act, sen)
-		if success {
-			err := act.Save()
-			_Log.Debug("Register() save actor", zap.Error(err))
-		}
+		go func(act shared.Actor) {
+			sen := scenario.NewRegister(false)
+			_Log.Info("Register() Registering", zap.String("Phone", act.GetPhone()))
+			success := scenario.Play(act, sen)
+			if success {
+				err := act.Save()
+				_Log.Debug("Register() save actor", zap.Error(err))
+			}
+		}(act)
+		time.Sleep(time.Millisecond)
 	}
+	waitGroup.Wait()
 }
 
 // Login init step required
 func (s *Supernumerary) Login() {
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(len(s.Actors))
 	for _, act := range s.Actors {
-		sen := scenario.NewLogin(false)
-		_Log.Info("Login() Logging in", zap.String("Phone", act.GetPhone()))
-		success := scenario.Play(act, sen)
-		if success {
-			err := act.Save()
-			_Log.Debug("Login() save actor", zap.Error(err))
-		}
+		go func(act shared.Actor) {
+			sen := scenario.NewLogin(false)
+			_Log.Info("Login() Logging in", zap.String("Phone", act.GetPhone()))
+			success := scenario.Play(act, sen)
+			if success {
+				err := act.Save()
+				_Log.Debug("Login() save actor", zap.Error(err))
+			}
+		}(act)
 	}
+	waitGroup.Wait()
 }
 
 func (s *Supernumerary) ResetAuthorizations() {
