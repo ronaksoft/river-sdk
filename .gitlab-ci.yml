@@ -16,7 +16,6 @@ build:supernumerary-node:
     untracked: true
     expire_in: 1 hour
 
-
 deploy:supernumerary-node:
   stage: deploy
   only:

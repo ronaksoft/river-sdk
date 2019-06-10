@@ -138,7 +138,7 @@ func (s *Supernumerary) CreateAuthKey() {
 				_Log.Debug("CreateAuthKey() save actor", zap.Error(err))
 			}
 		}(act)
-		time.Sleep(5 * time.Millisecond)
+		time.Sleep(time.Millisecond)
 	}
 	waitGroup.Wait()
 }
@@ -176,6 +176,7 @@ func (s *Supernumerary) Login() {
 				_Log.Debug("Login() save actor", zap.Error(err))
 			}
 		}(act)
+		time.Sleep(time.Millisecond)
 	}
 	waitGroup.Wait()
 }
