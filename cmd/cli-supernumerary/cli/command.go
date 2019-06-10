@@ -130,6 +130,7 @@ var cmdCreateAuthKey = &ishell.Cmd{
 var cmdRegister = &ishell.Cmd{
 	Name: "Register",
 	Func: func(c *ishell.Context) {
+		healthCheck(c)
 		_Log.Info("Publishing Register ...")
 		err := _NATS.Publish(config.SubjectRegister, []byte(config.SubjectRegister))
 		if err != nil {
@@ -142,6 +143,7 @@ var cmdRegister = &ishell.Cmd{
 var cmdLogin = &ishell.Cmd{
 	Name: "Login",
 	Func: func(c *ishell.Context) {
+		healthCheck(c)
 		_Log.Info("Publishing Login ...")
 		err := _NATS.Publish(config.SubjectLogin, []byte(config.SubjectLogin))
 		if err != nil {
