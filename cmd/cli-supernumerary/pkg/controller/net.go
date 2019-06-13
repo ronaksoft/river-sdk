@@ -70,11 +70,17 @@ func NewCtrlNetwork(act shared.Actor,
 
 // Start start websocket
 func (ctrl *CtrlNetwork) Start() error {
-	err := ctrl.connect()
-	if err == nil {
-		ctrl.keepConnectionAlive = true
-		go ctrl.watchDog()
-		ctrl.onConnect()
+	var err error
+	maxTry := 100
+	for maxTry > 0 {
+		err = ctrl.connect()
+		if err == nil {
+			ctrl.keepConnectionAlive = true
+			go ctrl.watchDog()
+			ctrl.onConnect()
+			return nil
+		}
+		maxTry--
 	}
 	return err
 }

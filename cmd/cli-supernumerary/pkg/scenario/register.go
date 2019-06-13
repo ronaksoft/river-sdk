@@ -64,7 +64,7 @@ func (s *Register) sendCode(act shared.Actor) (*msg.MessageEnvelope, shared.Succ
 
 // register : Step 2
 func (s *Register) register(resp *msg.AuthSentCode, act shared.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
-	if strings.HasPrefix(strings.TrimLeft(resp.Phone, "+"), "237400") {
+	if strings.HasPrefix(resp.Phone, "237400") {
 		code := resp.Phone[len(resp.Phone)-4:]
 		envReq := AuthRegister(resp.Phone, code, resp.PhoneCodeHash)
 
@@ -99,7 +99,7 @@ func (s *Register) register(resp *msg.AuthSentCode, act shared.Actor) (*msg.Mess
 		return envReq, successCB, timeoutCB
 	}
 
-	s.failed(act, -1, 0, "login() phone number does not start with 237400")
+	s.failed(act, -1, 0, "register() phone number does not start with 237400")
 
 	return nil, nil, nil
 }
