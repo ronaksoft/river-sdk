@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	log "git.ronaksoftware.com/ronak/toolbox/logger"
 	"hash/crc32"
 	"sync"
@@ -80,6 +81,7 @@ func (ctrl *CtrlNetwork) Start() error {
 			ctrl.onConnect()
 			return nil
 		}
+		time.Sleep(time.Duration(ronak.RandomInt(2000)) * time.Second)
 		maxTry--
 	}
 	return err
