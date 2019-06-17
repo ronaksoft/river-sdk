@@ -61,12 +61,11 @@ func NewSupernumerary(fromPhoneNo, toPhoneNo int64) (*Supernumerary, error) {
 		chTickerStop: make(chan bool),
 	}
 
-	waitGroup := sync.WaitGroup{}
-	waitGroup.Add(int(toPhoneNo - fromPhoneNo))
+
 	ml := sync.Mutex{}
 	for i := fromPhoneNo; i < toPhoneNo; i++ {
 		go func(i int64) {
-			defer waitGroup.Done()
+			time.Sleep(time.Duration(ronak.RandomInt(int(shared.DefaultMaxInterval/time.Second))) * time.Second)
 			phone := shared.GetPhone(i)
 			act, err := NewActor(phone)
 			if err != nil {
@@ -85,7 +84,6 @@ func NewSupernumerary(fromPhoneNo, toPhoneNo int64) (*Supernumerary, error) {
 			shared.Metrics.Gauge(shared.GaugeActors).Add(1)
 		}(i)
 	}
-	waitGroup.Wait()
 	return s, nil
 }
 
