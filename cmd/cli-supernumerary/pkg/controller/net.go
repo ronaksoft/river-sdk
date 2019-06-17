@@ -72,7 +72,7 @@ func NewCtrlNetwork(act shared.Actor,
 // Start start websocket
 func (ctrl *CtrlNetwork) Start() error {
 	var err error
-	maxTry := 100
+	maxTry := 5
 	for maxTry > 0 {
 		err = ctrl.connect()
 		if err == nil {
@@ -81,7 +81,7 @@ func (ctrl *CtrlNetwork) Start() error {
 			ctrl.onConnect()
 			return nil
 		}
-		time.Sleep(time.Duration(ronak.RandomInt(2000)) * time.Second)
+		time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Second)
 		maxTry--
 	}
 	return err
