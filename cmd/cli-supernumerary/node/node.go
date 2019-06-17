@@ -92,6 +92,7 @@ func (n *Node) cbStart(msg *nats.Msg) {
 	shared.DefaultServerURL = cfg.ServerURL
 	shared.DefaultTimeout = cfg.Timeout
 	shared.DefaultSendTimeout = cfg.Timeout
+	shared.DefaultMaxInterval = cfg.MaxInterval
 
 	su, err := supernumerary.NewSupernumerary(n.StartPhone, n.EndPhone)
 	if err != nil {

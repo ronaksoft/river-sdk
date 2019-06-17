@@ -93,6 +93,21 @@ func fnGetTimeout(c *ishell.Context) time.Duration {
 	return duration
 }
 
+func fnGetMaxInterval(c *ishell.Context) time.Duration {
+	var duration time.Duration
+	for {
+		c.Print("MaxInterval (second): ")
+		tmp, err := strconv.ParseInt(c.ReadLine(), 10, 64)
+		if err == nil {
+			duration = time.Duration(tmp) * time.Second
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return duration
+}
+
 func healthCheck(c *ishell.Context) {
 	instanceIDs := make([]string, 0)
 	_NodesLock.RLock()

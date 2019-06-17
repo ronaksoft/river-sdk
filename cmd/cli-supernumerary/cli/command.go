@@ -84,10 +84,13 @@ var cmdStart = &ishell.Cmd{
 		serverURL := fnGetServerURL(c)
 		fileServerURL := fnGetFileServerURL(c)
 		timeout := fnGetTimeout(c)
+		maxInterval := fnGetMaxInterval(c)
+
 		cfg := config.StartCfg{
 			ServerURL:     serverURL,
 			FileServerURL: fileServerURL,
 			Timeout:       timeout,
+			MaxInterval:   maxInterval,
 		}
 
 		data, _ := json.Marshal(cfg)

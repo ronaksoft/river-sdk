@@ -18,6 +18,8 @@ var (
 	// DefaultSendTimeout write to ws timeout
 	DefaultSendTimeout = 10 * time.Second
 
+	DefaultMaxInterval = 60 * time.Second
+
 	// MaxWorker concurrent go routines
 	MaxWorker = 100
 

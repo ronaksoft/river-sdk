@@ -4,6 +4,7 @@ import (
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	log "git.ronaksoftware.com/ronak/toolbox/logger"
 	"os"
+	"runtime"
 	"sync"
 	"time"
 
@@ -125,6 +126,7 @@ func (s *Supernumerary) CreateAuthKey() {
 	waitGroup.Add(len(s.Actors))
 	for _, act := range s.Actors {
 		go func(act shared.Actor) {
+			time.Sleep(time.Duration(ronak.RandomInt(int(shared.DefaultMaxInterval/time.Second))) * time.Second)
 			defer waitGroup.Done()
 			if act == nil {
 				_Log.Warn("Actor is Nil")
@@ -138,7 +140,7 @@ func (s *Supernumerary) CreateAuthKey() {
 				_Log.Debug("CreateAuthKey() save actor", zap.Error(err))
 			}
 		}(act)
-		time.Sleep(time.Millisecond)
+		runtime.Gosched()
 	}
 	waitGroup.Wait()
 }
@@ -149,6 +151,7 @@ func (s *Supernumerary) Register() {
 	waitGroup.Add(len(s.Actors))
 	for _, act := range s.Actors {
 		go func(act shared.Actor) {
+			time.Sleep(time.Duration(ronak.RandomInt(int(shared.DefaultMaxInterval/time.Second))) * time.Second)
 			sen := scenario.NewRegister(false)
 			_Log.Info("Register() Registering", zap.String("Phone", act.GetPhone()))
 			success := scenario.Play(act, sen)
@@ -157,7 +160,7 @@ func (s *Supernumerary) Register() {
 				_Log.Debug("Register() save actor", zap.Error(err))
 			}
 		}(act)
-		time.Sleep(time.Millisecond)
+		runtime.Gosched()
 	}
 	waitGroup.Wait()
 }
@@ -168,6 +171,7 @@ func (s *Supernumerary) Login() {
 	waitGroup.Add(len(s.Actors))
 	for _, act := range s.Actors {
 		go func(act shared.Actor) {
+			time.Sleep(time.Duration(ronak.RandomInt(int(shared.DefaultMaxInterval/time.Second))) * time.Second)
 			sen := scenario.NewLogin(false)
 			_Log.Info("Login() Logging in", zap.String("Phone", act.GetPhone()))
 			success := scenario.Play(act, sen)
@@ -176,11 +180,12 @@ func (s *Supernumerary) Login() {
 				_Log.Debug("Login() save actor", zap.Error(err))
 			}
 		}(act)
-		time.Sleep(time.Millisecond)
+		runtime.Gosched()
 	}
 	waitGroup.Wait()
 }
 
+// Reset Authorizations
 func (s *Supernumerary) ResetAuthorizations() {
 	for _, act := range s.Actors {
 		sen := scenario.NewResetAuthorizations(false)
