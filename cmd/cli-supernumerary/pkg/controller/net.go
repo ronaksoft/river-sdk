@@ -90,9 +90,9 @@ func (ctrl *CtrlNetwork) Start() error {
 // Stop disconnect websocket and signal stop chan
 func (ctrl *CtrlNetwork) Stop() {
 	ctrl.keepConnectionAlive = false
-	ctrl.disconnect()
 	// signal watchDog
 	ctrl.stop <- true
+
 	ctrl.isConnected = false
 	ctrl.conn = nil
 }
@@ -193,6 +193,7 @@ func (ctrl *CtrlNetwork) watchDog() {
 	for {
 		select {
 		case <-ctrl.stop:
+			_  = ctrl.disconnect()
 			return
 		default:
 			if ctrl.conn != nil {
