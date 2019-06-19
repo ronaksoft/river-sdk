@@ -107,7 +107,6 @@ func InitFileManager(serverAddress string,
 
 	go ctx.startDownloadQueue()
 	go ctx.startUploadQueue()
-
 }
 func (fm *FileManager) startDownloadQueue() {
 	for {

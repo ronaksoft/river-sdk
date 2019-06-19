@@ -85,7 +85,7 @@ func main() {
 		QueuePath:          fmt.Sprintf("%s/%s", qPath, dbID),
 		ServerKeysFilePath: "./keys.json",
 		MainDelegate:       new(MainDelegate),
-		// Logger:                 new(PrintDelegate),
+		FileDelegate:       new(FileDelegate),
 		LogLevel:               int(zapcore.DebugLevel),
 		DocumentAudioDirectory: "./_files/audio",
 		DocumentVideoDirectory: "./_files/video",

@@ -32,7 +32,6 @@ func (r *River) CancelRequest(requestID int64) {
 
 	// Cancel Request
 	r.queueCtrl.CancelRequest(requestID)
-
 }
 
 // DeletePendingMessage removes pending message from DB
@@ -607,7 +606,6 @@ func (r *River) AccountGetPhotoSmall(userID int64) string {
 
 // downloadAccountPhoto this function is sync
 func downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) string {
-
 	logs.Debug("SDK::downloadAccountPhoto",
 		zap.Int64("userID", userID),
 		zap.Bool("IsBig", isBig),

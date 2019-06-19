@@ -106,48 +106,6 @@ func (d *MainDelegate) OnSessionClosed(res int) {
 	_Log.Info("Session Closed", zap.Int("Res", res))
 }
 
-func (d *MainDelegate) OnDownloadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
-	_Log.Info("Download progress changed", zap.Float64("Progress", percent))
-}
-
-func (d *MainDelegate) OnUploadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
-	_Log.Info("Upload progress changed", zap.Float64("Progress", percent))
-}
-
-func (d *MainDelegate) OnDownloadCompleted(messageID int64, filePath string) {
-	_Log.Info("Download completed", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
-}
-
-func (d *MainDelegate) OnUploadCompleted(messageID int64, filePath string) {
-	_Log.Info("Upload completed", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
-}
-
-func (d *MainDelegate) OnUploadError(messageID, requestID int64, filePath string, err []byte) {
-	x := new(msg.Error)
-	x.Unmarshal(err)
-
-	_Log.Error("OnUploadError",
-		zap.String("Code", x.Code),
-		zap.String("Item", x.Items),
-		zap.Int64("MsgID", messageID),
-		zap.Int64("ReqID", requestID),
-		zap.String("FilePath", filePath),
-	)
-
-}
-
-func (d *MainDelegate) OnDownloadError(messageID, requestID int64, filePath string, err []byte) {
-	x := new(msg.Error)
-	x.Unmarshal(err)
-
-	_Log.Error("OnDownloadError",
-		zap.String("Code", x.Code),
-		zap.String("Item", x.Items),
-		zap.Int64("MsgID", messageID),
-		zap.Int64("ReqID", requestID),
-		zap.String("FilePath", filePath),
-	)
-}
 
 type PrintDelegate struct{}
 
@@ -167,3 +125,28 @@ func (d *PrintDelegate) Log(logLevel int, msg string) {
 		_Shell.Println(blue("MSG : \t %s", msg))
 	}
 }
+
+type FileDelegate struct {}
+
+func (d *FileDelegate) OnProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
+	_Log.Info("progress changed", zap.Float64("Progress", percent))
+}
+
+func (d *FileDelegate) OnCompleted(messageID int64, filePath string) {
+	_Log.Info("OnCompleted", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
+}
+
+func (d *FileDelegate) OnError(messageID, requestID int64, filePath string, err []byte) {
+	x := new(msg.Error)
+	x.Unmarshal(err)
+
+	_Log.Error("OnError",
+		zap.String("Code", x.Code),
+		zap.String("Item", x.Items),
+		zap.Int64("MsgID", messageID),
+		zap.Int64("ReqID", requestID),
+		zap.String("FilePath", filePath),
+	)
+
+}
+

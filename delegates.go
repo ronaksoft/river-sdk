@@ -7,13 +7,12 @@ type MainDelegate interface {
 	OnUpdates(constructor int64, b []byte)
 	OnGeneralError(b []byte)
 	OnSessionClosed(res int)
+}
 
-	OnDownloadProgressChanged(messageID, processedParts, totalParts int64, percent float64)
-	OnUploadProgressChanged(messageID, processedParts, totalParts int64, percent float64)
-	OnDownloadCompleted(messageID int64, filePath string)
-	OnUploadCompleted(messageID int64, filePath string)
-	OnDownloadError(messageID, requestID int64, filePath string, err []byte)
-	OnUploadError(messageID, requestID int64, filePath string, err []byte)
+type FileDelegate interface {
+	OnProgressChanged(messageID, processedParts, totalParts int64, percent float64)
+	OnCompleted(messageID int64, filePath string)
+	OnError(messageID, requestID int64, filePath string, err []byte)
 }
 
 type ConnInfoDelegate interface {
@@ -24,9 +23,4 @@ type ConnInfoDelegate interface {
 type RequestDelegate interface {
 	OnComplete(b []byte)
 	OnTimeout(err error)
-}
-
-// LoggerDelegate callback to attack logs to external (UI) handler
-type LoggerDelegate interface {
-	Log(logLevel int, msg string)
 }

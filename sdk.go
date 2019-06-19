@@ -50,6 +50,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// init delegates
 	r.mainDelegate = conf.MainDelegate
+	r.fileDelegate = conf.FileDelegate
 
 	r.ConnInfo = conf.ConnInfo
 

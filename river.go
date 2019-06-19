@@ -35,6 +35,8 @@ type RiverConfig struct {
 	// MainDelegate holds all the general callback functions that let the user of this SDK
 	// get notified of the events.
 	MainDelegate MainDelegate
+	// FileDelegate holds all the callbacks required by file related functions
+	FileDelegate FileDelegate
 
 	// LogLevel
 	LogLevel int
@@ -78,7 +80,7 @@ type River struct {
 	delegateMutex sync.Mutex
 	delegates     map[int64]RequestDelegate
 	mainDelegate  MainDelegate
-	logger        LoggerDelegate
+	fileDelegate  FileDelegate
 
 	// implements wait 500 ms on out of sync to receive possible missed updates
 	lastOutOfSyncTime  time.Time
