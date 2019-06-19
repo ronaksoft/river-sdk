@@ -1,14 +1,13 @@
 package main
 
 import (
+	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"mime"
 	"os"
 	"path"
 	"strconv"
 	"sync"
 	"time"
-
-	"git.ronaksoftware.com/ronak/riversdk/pkg/file_ctrl"
 
 	"go.uber.org/zap"
 
