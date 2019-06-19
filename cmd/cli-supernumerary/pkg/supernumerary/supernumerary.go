@@ -64,7 +64,7 @@ func NewSupernumerary(fromPhoneNo, toPhoneNo int64) (*Supernumerary, error) {
 	ml := sync.Mutex{}
 	for i := fromPhoneNo; i < toPhoneNo; i++ {
 		go func(i int64) {
-			time.Sleep(time.Duration(ronak.RandomInt(int(shared.DefaultMaxInterval/time.Second))) * time.Second)
+			// time.Sleep(time.Duration(ronak.RandomInt(int(shared.DefaultMaxInterval/time.Second))) * time.Second)
 			phone := shared.GetPhone(i)
 			act, err := NewActor(phone)
 			if err != nil {
