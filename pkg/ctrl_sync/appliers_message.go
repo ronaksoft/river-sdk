@@ -1,4 +1,4 @@
-package synchronizer
+package syncCtrl
 
 import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"

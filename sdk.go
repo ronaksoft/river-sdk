@@ -94,9 +94,9 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		fileServerAddress = conf.ServerEndpoint + "/file"
 	}
 	fileServerAddress = strings.Replace(fileServerAddress, "ws://", "http://", 1)
-	filemanager.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory, conf.DocumentCacheDirectory)
+	fileCtrl.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory, conf.DocumentCacheDirectory)
 
-	filemanager.InitFileManager(fileServerAddress,
+	fileCtrl.InitFileManager(fileServerAddress,
 		r.onFileUploadCompleted,
 		r.onFileProgressChanged,
 		r.onFileDownloadCompleted,
@@ -105,22 +105,22 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	)
 
 	// Initialize Network Controller
-	r.networkCtrl = network.NewController(
-		network.Config{
+	r.networkCtrl = networkCtrl.New(
+		networkCtrl.Config{
 			ServerEndpoint: conf.ServerEndpoint,
 			PingTime:       time.Duration(conf.PingTimeSec) * time.Second,
 			PongTimeout:    time.Duration(conf.PongTimeoutSec) * time.Second,
 		},
 	)
 	r.networkCtrl.SetNetworkStatusChangedCallback(func(newQuality domain.NetworkStatus) {
-		filemanager.Ctx().SetNetworkStatus(newQuality)
+		fileCtrl.Ctx().SetNetworkStatus(newQuality)
 		if r.mainDelegate != nil {
 			r.mainDelegate.OnNetworkStatusChanged(int(newQuality))
 		}
 	})
 
 	// Initialize queueController
-	if q, err := queue.NewController(r.networkCtrl, conf.QueuePath); err != nil {
+	if q, err := queueCtrl.New(r.networkCtrl, conf.QueuePath); err != nil {
 		logs.Fatal("River::SetConfig() faild to initialize MessageQueue",
 			zap.String("Error", err.Error()),
 		)
@@ -129,8 +129,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	}
 
 	// Initialize Sync Controller
-	r.syncCtrl = synchronizer.NewSyncController(
-		synchronizer.Config{
+	r.syncCtrl = syncCtrl.NewSyncController(
+		syncCtrl.Config{
 			ConnInfo:    r.ConnInfo,
 			NetworkCtrl: r.networkCtrl,
 			QueueCtrl:   r.queueCtrl,
@@ -176,8 +176,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 
 	// Update FileManager
-	filemanager.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-	filemanager.Ctx().LoadQueueFromDB()
+	fileCtrl.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+	fileCtrl.Ctx().LoadQueueFromDB()
 }
 
 func (r *River) Version() string {
@@ -932,7 +932,7 @@ func (r *River) CreateAuthKey() (err error) {
 					return
 				}
 				r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-				filemanager.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+				fileCtrl.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 			case msg.C_Error:
 				err = domain.ParseServerError(res.Message)
 				return
@@ -948,7 +948,7 @@ func (r *River) CreateAuthKey() (err error) {
 
 	// double set AuthID
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-	filemanager.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+	fileCtrl.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 	r.ConnInfo.Save()
 
 	return
@@ -956,7 +956,7 @@ func (r *River) CreateAuthKey() (err error) {
 
 func (r *River) ResetAuthKey() {
 	r.networkCtrl.SetAuthorization(0, nil)
-	filemanager.Ctx().SetAuthorization(0, nil)
+	fileCtrl.Ctx().SetAuthorization(0, nil)
 	r.ConnInfo.AuthID = 0
 	r.ConnInfo.AuthKey = [256]byte{}
 	r.ConnInfo.Save()

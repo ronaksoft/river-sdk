@@ -1,4 +1,4 @@
-package network_test
+package networkCtrl_test
 
 import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
@@ -71,7 +71,7 @@ func authRecall() *msg.MessageEnvelope {
 }
 func TestNewController(t *testing.T) {
 	logs.SetLogLevel(0)
-	ctrl := network.NewController(network.Config{
+	ctrl := networkCtrl.New(networkCtrl.Config{
 		ServerEndpoint: "ws://new.river.im",
 		PingTime:       30 * time.Second,
 		PongTimeout:    30 * time.Second,

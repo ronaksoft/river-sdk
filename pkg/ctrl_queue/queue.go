@@ -1,4 +1,4 @@
-package queue
+package queueCtrl
 
 import (
 	"sync"
@@ -32,7 +32,7 @@ type Controller struct {
 
 	rateLimiter *ratelimit.Bucket
 	waitingList *goque.Queue
-	network     *network.Controller
+	network     *networkCtrl.Controller
 
 	// Internal Flags
 	distributorRunning bool
@@ -42,8 +42,8 @@ type Controller struct {
 	cancelledRequest map[int64]bool
 }
 
-// NewController
-func NewController(network *network.Controller, dataDir string) (*Controller, error) {
+// New
+func New(network *networkCtrl.Controller, dataDir string) (*Controller, error) {
 	ctrl := new(Controller)
 	ctrl.rateLimiter = ratelimit.NewBucket(time.Second, 20)
 	if dataDir == "" {

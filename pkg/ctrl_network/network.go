@@ -1,4 +1,4 @@
-package network
+package networkCtrl
 
 import (
 	"encoding/hex"
@@ -74,8 +74,8 @@ type Controller struct {
 	clientTimeDifference int64
 }
 
-// NewController
-func NewController(config Config) *Controller {
+// New
+func New(config Config) *Controller {
 	ctrl := new(Controller)
 	if config.ServerEndpoint == "" {
 		ctrl.websocketEndpoint = domain.WebsocketEndpoint

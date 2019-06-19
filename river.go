@@ -72,9 +72,9 @@ type River struct {
 	realTimeCommands map[int64]bool
 
 	// Internal Controllers
-	networkCtrl *network.Controller
-	queueCtrl   *queue.Controller
-	syncCtrl    *synchronizer.Controller
+	networkCtrl *networkCtrl.Controller
+	queueCtrl   *queueCtrl.Controller
+	syncCtrl    *syncCtrl.Controller
 
 	// Delegates
 	delegateMutex sync.Mutex
@@ -100,8 +100,8 @@ func GetWorkGroup(url string, timeoutSecond int) ([]byte, error) {
 }
 
 func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
-	networkCtrl := network.NewController(
-		network.Config{
+	networkCtrl := networkCtrl.New(
+		networkCtrl.Config{
 			ServerEndpoint: url,
 		},
 	)

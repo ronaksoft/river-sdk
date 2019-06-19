@@ -1,4 +1,4 @@
-package filemanager
+package fileCtrl
 
 import (
 	"encoding/json"
