@@ -3,7 +3,7 @@ package syncCtrl
 import (
 	"encoding/json"
 	"fmt"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/filemanager"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/file_ctrl"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"sort"
 	"sync"

@@ -2,7 +2,7 @@ package riversdk
 
 import (
 	"encoding/json"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/filemanager"
+	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"strings"
 	"sync"

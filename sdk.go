@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/filemanager"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/file_ctrl"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"

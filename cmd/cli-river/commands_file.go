@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/filemanager"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/file_ctrl"
 
 	"go.uber.org/zap"
 
