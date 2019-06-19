@@ -5,21 +5,15 @@ import (
 	"crypto/rsa"
 	"encoding/binary"
 	"fmt"
-	"io/ioutil"
 	"math/big"
-	"os"
 	"sort"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_queue"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_sync"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
@@ -37,152 +31,6 @@ var (
 
 func SetLogLevel(l int) {
 	logs.SetLogLevel(l)
-}
-
-// SetConfig ...
-// This function must be called before any other function, otherwise it panics
-func (r *River) SetConfig(conf *RiverConfig) {
-	r.lastOutOfSyncTime = time.Now().Add(1 * time.Second)
-	r.chOutOfSyncUpdates = make(chan []*msg.UpdateContainer, 500)
-
-	r.registerCommandHandlers()
-	r.delegates = make(map[int64]RequestDelegate)
-
-	// init delegates
-	r.mainDelegate = conf.MainDelegate
-	r.fileDelegate = conf.FileDelegate
-
-	r.ConnInfo = conf.ConnInfo
-
-	// set loglevel
-	logs.SetLogLevel(conf.LogLevel)
-
-	// set log file path
-	if conf.DocumentLogDirectory != "" {
-		_ = logs.SetLogFilePath(conf.DocumentLogDirectory)
-	}
-
-	// init UI Executor
-	uiexec.InitUIExec()
-
-	// Initialize Database
-	_ = os.MkdirAll(conf.DbPath, os.ModePerm)
-	conf.DbPath = strings.TrimRight(conf.DbPath, "/ ")
-
-	// Initialize DB replaced with ORM
-	var err error
-	err = repo.InitRepo("sqlite3", fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID))
-	if err != nil {
-		logs.Fatal("River::SetConfig() faild to initialize DB context",
-			zap.String("Error", err.Error()),
-		)
-	}
-
-	// load DeviceToken
-	r.loadDeviceToken()
-
-	// Initialize realtime requests
-	r.realTimeCommands = map[int64]bool{
-		msg.C_MessagesSetTyping: true,
-	}
-
-	// Initialize filemanager
-	fileServerAddress := ""
-	if strings.HasSuffix(conf.ServerEndpoint, "/") {
-		fileServerAddress = conf.ServerEndpoint + "file"
-	} else {
-		fileServerAddress = conf.ServerEndpoint + "/file"
-	}
-	fileServerAddress = strings.Replace(fileServerAddress, "ws://", "http://", 1)
-	fileCtrl.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory, conf.DocumentCacheDirectory)
-
-	fileCtrl.InitFileManager(fileServerAddress,
-		r.onFileUploadCompleted,
-		r.onFileProgressChanged,
-		r.onFileDownloadCompleted,
-		r.onFileUploadError,
-		r.onFileDownloadError,
-	)
-
-	// Initialize Network Controller
-	r.networkCtrl = networkCtrl.New(
-		networkCtrl.Config{
-			ServerEndpoint: conf.ServerEndpoint,
-			PingTime:       time.Duration(conf.PingTimeSec) * time.Second,
-			PongTimeout:    time.Duration(conf.PongTimeoutSec) * time.Second,
-		},
-	)
-	r.networkCtrl.SetNetworkStatusChangedCallback(func(newQuality domain.NetworkStatus) {
-		fileCtrl.Ctx().SetNetworkStatus(newQuality)
-		if r.mainDelegate != nil {
-			r.mainDelegate.OnNetworkStatusChanged(int(newQuality))
-		}
-	})
-
-	// Initialize queueController
-	if q, err := queueCtrl.New(r.networkCtrl, conf.QueuePath); err != nil {
-		logs.Fatal("River::SetConfig() faild to initialize MessageQueue",
-			zap.String("Error", err.Error()),
-		)
-	} else {
-		r.queueCtrl = q
-	}
-
-	// Initialize Sync Controller
-	r.syncCtrl = syncCtrl.NewSyncController(
-		syncCtrl.Config{
-			ConnInfo:    r.ConnInfo,
-			NetworkCtrl: r.networkCtrl,
-			QueueCtrl:   r.queueCtrl,
-		},
-	)
-
-	// call external delegate on sync status changed
-	r.syncCtrl.SetSyncStatusChangedCallback(func(newStatus domain.SyncStatus) {
-		if r.mainDelegate != nil {
-			r.mainDelegate.OnSyncStatusChanged(int(newStatus))
-		}
-	})
-	// call external delegate on OnUpdate
-	r.syncCtrl.SetOnUpdateCallback(func(constructorID int64, b []byte) {
-		if r.mainDelegate != nil {
-			r.mainDelegate.OnUpdates(constructorID, b)
-		}
-	})
-
-	// Initialize Server Keys
-	if jsonBytes, err := ioutil.ReadFile(conf.ServerKeysFilePath); err != nil {
-		logs.Fatal("River::SetConfig() faild to open server keys",
-			zap.String("Error", err.Error()),
-		)
-	} else if err := _ServerKeys.UnmarshalJSON(jsonBytes); err != nil {
-		logs.Fatal("River::SetConfig() faild to unmarshal server keys",
-			zap.String("Error", err.Error()),
-		)
-	}
-
-	// Initialize River Connection
-	logs.Info("River::SetConfig() Load/Create New River Connection")
-
-	if r.ConnInfo.UserID != 0 {
-		r.syncCtrl.SetUserID(r.ConnInfo.UserID)
-	}
-
-	// Update Network Controller
-	r.networkCtrl.SetErrorHandler(r.onGeneralError)
-	r.networkCtrl.SetMessageHandler(r.onReceivedMessage)
-	r.networkCtrl.SetUpdateHandler(r.onReceivedUpdate)
-	r.networkCtrl.SetOnConnectCallback(r.onNetworkConnect)
-	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-
-	// Update FileManager
-	fileCtrl.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-	fileCtrl.Ctx().LoadQueueFromDB()
-}
-
-func (r *River) Version() string {
-	// TODO:: automatic generation
-	return "0.8.1"
 }
 
 func (r *River) onNetworkConnect() {
@@ -342,12 +190,12 @@ func (r *River) onFileProgressChanged(messageID, processedParts, totalParts int6
 
 	// Notify UI that upload is completed
 	if stateType == domain.FileStateDownload {
-		if r.mainDelegate != nil {
-			r.mainDelegate.OnDownloadProgressChanged(messageID, processedParts, totalParts, percent)
+		if r.fileDelegate != nil {
+			r.fileDelegate.OnDownloadProgressChanged(messageID, processedParts, totalParts, percent)
 		}
 	} else if stateType == domain.FileStateUpload {
-		if r.mainDelegate != nil {
-			r.mainDelegate.OnUploadProgressChanged(messageID, processedParts, totalParts, percent)
+		if r.fileDelegate != nil {
+			r.fileDelegate.OnUploadProgressChanged(messageID, processedParts, totalParts, percent)
 		}
 	}
 
@@ -501,8 +349,8 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 	}
 
 	// Notify UI that upload is completed
-	if r.mainDelegate != nil {
-		r.mainDelegate.OnUploadCompleted(messageID, filePath)
+	if r.fileDelegate != nil {
+		r.fileDelegate.OnUploadCompleted(messageID, filePath)
 	}
 }
 
@@ -511,8 +359,8 @@ func (r *River) onFileDownloadCompleted(messageID int64, filePath string, stateT
 	// update file path of documents that have same DocID
 	go repo.Files.UpdateFilePathByDocumentID(messageID, filePath)
 	// Notify UI that download is completed
-	if r.mainDelegate != nil {
-		r.mainDelegate.OnDownloadCompleted(messageID, filePath)
+	if r.fileDelegate != nil {
+		r.fileDelegate.OnDownloadCompleted(messageID, filePath)
 	}
 }
 
@@ -526,8 +374,8 @@ func (r *River) onFileUploadError(messageID, requestID int64, filePath string, e
 		zap.String("Item", x.Items),
 	)
 	// Notify UI that upload encountered an error
-	if r.mainDelegate != nil {
-		r.mainDelegate.OnUploadError(messageID, requestID, filePath, err)
+	if r.fileDelegate != nil {
+		r.fileDelegate.OnUploadError(messageID, requestID, filePath, err)
 	}
 }
 
@@ -541,8 +389,8 @@ func (r *River) onFileDownloadError(messageID, requestID int64, filePath string,
 		zap.String("Item", x.Items),
 	)
 	// Notify UI that download encountered an error
-	if r.mainDelegate != nil {
-		r.mainDelegate.OnDownloadError(messageID, requestID, filePath, err)
+	if r.fileDelegate != nil {
+		r.fileDelegate.OnDownloadError(messageID, requestID, filePath, err)
 	}
 }
 

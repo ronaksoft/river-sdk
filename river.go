@@ -2,8 +2,17 @@ package riversdk
 
 import (
 	"context"
+	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"go.uber.org/zap"
+	"io/ioutil"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -85,6 +94,152 @@ type River struct {
 	// implements wait 500 ms on out of sync to receive possible missed updates
 	lastOutOfSyncTime  time.Time
 	chOutOfSyncUpdates chan []*msg.UpdateContainer
+}
+
+// SetConfig ...
+// This function must be called before any other function, otherwise it panics
+func (r *River) SetConfig(conf *RiverConfig) {
+	r.lastOutOfSyncTime = time.Now().Add(1 * time.Second)
+	r.chOutOfSyncUpdates = make(chan []*msg.UpdateContainer, 500)
+
+	r.registerCommandHandlers()
+	r.delegates = make(map[int64]RequestDelegate)
+
+	// init delegates
+	r.mainDelegate = conf.MainDelegate
+	r.fileDelegate = conf.FileDelegate
+
+	r.ConnInfo = conf.ConnInfo
+
+	// set loglevel
+	logs.SetLogLevel(conf.LogLevel)
+
+	// set log file path
+	if conf.DocumentLogDirectory != "" {
+		_ = logs.SetLogFilePath(conf.DocumentLogDirectory)
+	}
+
+	// init UI Executor
+	uiexec.InitUIExec()
+
+	// Initialize Database
+	_ = os.MkdirAll(conf.DbPath, os.ModePerm)
+	conf.DbPath = strings.TrimRight(conf.DbPath, "/ ")
+
+	// Initialize DB replaced with ORM
+	var err error
+	err = repo.InitRepo("sqlite3", fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID))
+	if err != nil {
+		logs.Fatal("River::SetConfig() faild to initialize DB context",
+			zap.String("Error", err.Error()),
+		)
+	}
+
+	// load DeviceToken
+	r.loadDeviceToken()
+
+	// Initialize realtime requests
+	r.realTimeCommands = map[int64]bool{
+		msg.C_MessagesSetTyping: true,
+	}
+
+	// Initialize filemanager
+	fileServerAddress := ""
+	if strings.HasSuffix(conf.ServerEndpoint, "/") {
+		fileServerAddress = conf.ServerEndpoint + "file"
+	} else {
+		fileServerAddress = conf.ServerEndpoint + "/file"
+	}
+	fileServerAddress = strings.Replace(fileServerAddress, "ws://", "http://", 1)
+	fileCtrl.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory, conf.DocumentCacheDirectory)
+
+	fileCtrl.InitFileManager(fileServerAddress,
+		r.onFileUploadCompleted,
+		r.onFileProgressChanged,
+		r.onFileDownloadCompleted,
+		r.onFileUploadError,
+		r.onFileDownloadError,
+	)
+
+	// Initialize Network Controller
+	r.networkCtrl = networkCtrl.New(
+		networkCtrl.Config{
+			ServerEndpoint: conf.ServerEndpoint,
+			PingTime:       time.Duration(conf.PingTimeSec) * time.Second,
+			PongTimeout:    time.Duration(conf.PongTimeoutSec) * time.Second,
+		},
+	)
+	r.networkCtrl.SetNetworkStatusChangedCallback(func(newQuality domain.NetworkStatus) {
+		fileCtrl.Ctx().SetNetworkStatus(newQuality)
+		if r.mainDelegate != nil {
+			r.mainDelegate.OnNetworkStatusChanged(int(newQuality))
+		}
+	})
+
+	// Initialize queueController
+	if q, err := queueCtrl.New(r.networkCtrl, conf.QueuePath); err != nil {
+		logs.Fatal("River::SetConfig() faild to initialize MessageQueue",
+			zap.String("Error", err.Error()),
+		)
+	} else {
+		r.queueCtrl = q
+	}
+
+	// Initialize Sync Controller
+	r.syncCtrl = syncCtrl.NewSyncController(
+		syncCtrl.Config{
+			ConnInfo:    r.ConnInfo,
+			NetworkCtrl: r.networkCtrl,
+			QueueCtrl:   r.queueCtrl,
+		},
+	)
+
+	// call external delegate on sync status changed
+	r.syncCtrl.SetSyncStatusChangedCallback(func(newStatus domain.SyncStatus) {
+		if r.mainDelegate != nil {
+			r.mainDelegate.OnSyncStatusChanged(int(newStatus))
+		}
+	})
+	// call external delegate on OnUpdate
+	r.syncCtrl.SetOnUpdateCallback(func(constructorID int64, b []byte) {
+		if r.mainDelegate != nil {
+			r.mainDelegate.OnUpdates(constructorID, b)
+		}
+	})
+
+	// Initialize Server Keys
+	if jsonBytes, err := ioutil.ReadFile(conf.ServerKeysFilePath); err != nil {
+		logs.Fatal("River::SetConfig() faild to open server keys",
+			zap.String("Error", err.Error()),
+		)
+	} else if err := _ServerKeys.UnmarshalJSON(jsonBytes); err != nil {
+		logs.Fatal("River::SetConfig() faild to unmarshal server keys",
+			zap.String("Error", err.Error()),
+		)
+	}
+
+	// Initialize River Connection
+	logs.Info("River::SetConfig() Load/Create New River Connection")
+
+	if r.ConnInfo.UserID != 0 {
+		r.syncCtrl.SetUserID(r.ConnInfo.UserID)
+	}
+
+	// Update Network Controller
+	r.networkCtrl.SetErrorHandler(r.onGeneralError)
+	r.networkCtrl.SetMessageHandler(r.onReceivedMessage)
+	r.networkCtrl.SetUpdateHandler(r.onReceivedUpdate)
+	r.networkCtrl.SetOnConnectCallback(r.onNetworkConnect)
+	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+
+	// Update FileManager
+	fileCtrl.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+	fileCtrl.Ctx().LoadQueueFromDB()
+}
+
+func (r *River) Version() string {
+	// TODO:: automatic generation
+	return "0.8.1"
 }
 
 // GetWorkGroup

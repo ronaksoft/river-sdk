@@ -337,7 +337,6 @@ func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, 
 // GetFileStatus returns file status
 // TODO :: change response to protobuff
 func (r *River) GetFileStatus(msgID int64) string {
-
 	status, progress, filePath := getFileStatus(msgID)
 	x := struct {
 		Status   int32   `json:"status"`

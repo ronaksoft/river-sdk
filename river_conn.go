@@ -150,9 +150,6 @@ func (v *RiverConnection) ChangeLastName(lastName string) { v.LastName = lastNam
 // ChangeBio RiverConfig interface func
 func (v *RiverConnection) ChangeBio(bio string) { v.Bio = bio }
 
-// Load RiverConfig interface func
-// func (v *RiverConnection) Load() error { return v.loadConfig() }
-
 // PickupAuthID RiverConfig interface func
 func (v *RiverConnection) PickupAuthID() int64 { return v.AuthID }
 

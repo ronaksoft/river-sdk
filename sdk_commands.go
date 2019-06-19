@@ -106,10 +106,6 @@ func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain
 	out.Constructor = msg.C_Dialog
 	out.Message, _ = res.Marshal()
 
-	logs.Debug("River::messagesGetDialog()",
-		zap.Bool("Res null : ", res != nil),
-	)
-
 	uiexec.Ctx().Exec(func() {
 		if successCB != nil {
 			successCB(out)

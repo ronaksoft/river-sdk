@@ -9,10 +9,14 @@ type MainDelegate interface {
 	OnSessionClosed(res int)
 }
 
+// FileDelegate
 type FileDelegate interface {
-	OnProgressChanged(messageID, processedParts, totalParts int64, percent float64)
-	OnCompleted(messageID int64, filePath string)
-	OnError(messageID, requestID int64, filePath string, err []byte)
+	OnDownloadProgressChanged(messageID, processedParts, totalParts int64, percent float64)
+	OnUploadProgressChanged(messageID, processedParts, totalParts int64, percent float64)
+	OnDownloadCompleted(messageID int64, filePath string)
+	OnUploadCompleted(messageID int64, filePath string)
+	OnDownloadError(messageID, requestID int64, filePath string, err []byte)
+	OnUploadError(messageID, requestID int64, filePath string, err []byte)
 }
 
 type ConnInfoDelegate interface {
