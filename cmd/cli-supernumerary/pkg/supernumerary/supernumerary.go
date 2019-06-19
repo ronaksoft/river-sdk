@@ -4,7 +4,6 @@ import (
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	log "git.ronaksoftware.com/ronak/toolbox/logger"
 	"os"
-	"runtime"
 	"sync"
 	"time"
 
@@ -65,7 +64,7 @@ func NewSupernumerary(fromPhoneNo, toPhoneNo int64) (*Supernumerary, error) {
 	ml := sync.Mutex{}
 	for i := fromPhoneNo; i < toPhoneNo; i++ {
 		go func(i int64) {
-			time.Sleep(time.Duration(ronak.RandomInt(int(shared.DefaultMaxInterval/time.Second))) * time.Second)
+			// time.Sleep(time.Duration(ronak.RandomInt(int(shared.DefaultMaxInterval/time.Second))) * time.Second)
 			phone := shared.GetPhone(i)
 			act, err := NewActor(phone)
 			if err != nil {
@@ -83,7 +82,7 @@ func NewSupernumerary(fromPhoneNo, toPhoneNo int64) (*Supernumerary, error) {
 			// metric
 			shared.Metrics.Gauge(shared.GaugeActors).Add(1)
 		}(i)
-		runtime.Gosched()
+		time.Sleep(time.Millisecond)
 	}
 	return s, nil
 }
@@ -139,7 +138,7 @@ func (s *Supernumerary) CreateAuthKey() {
 				_Log.Debug("CreateAuthKey() save actor", zap.Error(err))
 			}
 		}(act)
-		runtime.Gosched()
+		time.Sleep(time.Millisecond)
 	}
 	waitGroup.Wait()
 }
@@ -159,7 +158,7 @@ func (s *Supernumerary) Register() {
 				_Log.Debug("Register() save actor", zap.Error(err))
 			}
 		}(act)
-		runtime.Gosched()
+		time.Sleep(time.Millisecond)
 	}
 	waitGroup.Wait()
 }
@@ -179,7 +178,7 @@ func (s *Supernumerary) Login() {
 				_Log.Debug("Login() save actor", zap.Error(err))
 			}
 		}(act)
-		runtime.Gosched()
+		time.Sleep(time.Millisecond)
 	}
 	waitGroup.Wait()
 }
