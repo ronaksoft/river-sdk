@@ -6,6 +6,8 @@ import (
 	"encoding/binary"
 	"io/ioutil"
 	"math/big"
+	"runtime"
+	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -18,22 +20,15 @@ import (
 )
 
 const (
-	// ServerKeysFilePath server public key
 	ServerKeysFilePath = "keys.json"
 )
 
-// CreateAuthKey scenario
-type CreateAuthKey struct {
-	Scenario
-	ServerKeys *shared.ServerKeys
-}
+var (
+	_ServerKeys *shared.ServerKeys
+)
 
-// NewCreateAuthKey initiate CreateAuthKey scenario
-func NewCreateAuthKey(isFinal bool) shared.Screenwriter {
-
-	s := new(CreateAuthKey)
-	s.isFinal = isFinal
-	s.ServerKeys = &shared.ServerKeys{
+func init() {
+	_ServerKeys = &shared.ServerKeys{
 		DHGroups:   make([]shared.DHGroup, 0),
 		PublicKeys: make([]shared.PublicKey, 0),
 	}
@@ -43,10 +38,22 @@ func NewCreateAuthKey(isFinal bool) shared.Screenwriter {
 	if err != nil {
 		panic(err)
 	}
-	err = s.ServerKeys.UnmarshalJSON(jsonBytes)
+	err = _ServerKeys.UnmarshalJSON(jsonBytes)
 	if err != nil {
 		panic(err)
 	}
+}
+
+// CreateAuthKey scenario
+type CreateAuthKey struct {
+	Scenario
+}
+
+// NewCreateAuthKey initiate CreateAuthKey scenario
+func NewCreateAuthKey(isFinal bool) shared.Screenwriter {
+	s := new(CreateAuthKey)
+	s.isFinal = isFinal
+
 	return s
 }
 
@@ -100,14 +107,15 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acto
 	serverPQ := resp.PQ
 
 	// Generate DH Pub Key
-	dhGroup, err := s.ServerKeys.GetDhGroup(int64(serverDHFP))
-	if err != nil {
-		// TODO : Reporter failed
-	}
+	dhGroup, _ := _ServerKeys.GetDhGroup(int64(serverDHFP))
 	dhPrime := big.NewInt(0)
 	dhPrime.SetString(dhGroup.Prime, 16)
+
 	dh := dhkx.CreateGroup(dhPrime, big.NewInt(int64(dhGroup.Gen)))
-	dhPubKey, _ := dh.GeneratePrivateKey(rand.Reader)
+	// dhPubKey, _ := dh.GeneratePrivateKey(rand.Reader)
+	dhPubKey := GetDhPrivateKey()
+	defer PutDhPrivateKey(dhPubKey)
+
 	pp, qq := domain.SplitPQ(big.NewInt(int64(serverPQ)))
 	var p, q uint64
 	if pp.Cmp(qq) < 0 {
@@ -119,7 +127,7 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acto
 	q2Internal := new(msg.InitCompleteAuthInternal)
 	q2Internal.SecretNonce = []byte(domain.RandomID(16))
 
-	serverPubKey, err := s.ServerKeys.GetPublicKey(int64(serverPubFP))
+	serverPubKey, err := _ServerKeys.GetPublicKey(int64(serverPubFP))
 	if err != nil {
 		s.failed(act, -1, 0, "ServerKeys.GetPublicKey(), Err : "+err.Error())
 	}
@@ -206,4 +214,59 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acto
 	}
 
 	return reqEnv, successCB, timeoutCB
+}
+
+
+const (
+	dhKeys		= 5000
+)
+
+type generator struct {
+	dhKeyChan  chan *dhkx.DHKey
+}
+
+var (
+	_Generator = generator{
+		dhKeyChan:  make(chan *dhkx.DHKey, dhKeys),
+	}
+)
+
+func GetDhPrivateKey() *dhkx.DHKey {
+	return <-_Generator.dhKeyChan
+}
+
+func PutDhPrivateKey(key *dhkx.DHKey) {
+	_Generator.dhKeyChan <- key
+}
+
+func GenDhPrivateKey() {
+	dhGroup := _ServerKeys.DHGroups[0]
+	dhPrime := big.NewInt(0)
+	dhPrime.SetString(dhGroup.Prime, 16)
+
+	dh := dhkx.CreateGroup(dhPrime, big.NewInt(int64(dhGroup.Gen)))
+
+	n := runtime.NumCPU()
+	waitGroup := sync.WaitGroup{}
+	genFunc := func() {
+		for {
+			key, err := dh.GeneratePrivateKey(rand.Reader)
+			if err != nil {
+				_Log.Warn("Error On DhPrivateKey Generator")
+				time.Sleep(time.Second)
+			}
+			select {
+			case _Generator.dhKeyChan <- key:
+			default:
+				waitGroup.Done()
+				return
+			}
+		}
+	}
+
+	waitGroup.Add(n)
+	for i := 0; i < n; i++ {
+		go genFunc()
+	}
+	waitGroup.Wait()
 }
