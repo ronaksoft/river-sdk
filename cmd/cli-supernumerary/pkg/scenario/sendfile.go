@@ -21,23 +21,14 @@ func NewSendFile(isFinal bool) shared.Screenwriter {
 // Play execute SendFile scenario
 func (s *SendFile) Play(act shared.Actor) {
 	if act.GetAuthID() == 0 {
-		s.AddJobs(1)
-		success := Play(act, NewCreateAuthKey(false))
-		if !success {
-			s.failed(act, 0, 0, "Play() : failed at pre requested scenario CreateAuthKey")
-			return
-		}
-		s.wait.Done()
+		s.log(act, "AuthID is ZERO, Scenario Failed", 0, 0)
+		return
 	}
 	if act.GetUserID() == 0 {
-		s.AddJobs(1)
-		success := Play(act, NewLogin(false))
-		if !success {
-			s.failed(act, 0, 0, "Play() : failed at pre requested scenario Login")
-			return
-		}
-		s.wait.Done()
+		s.log(act, "UserID is ZERO, Scenario Failed", 0, 0)
+		return
 	}
+
 	if len(act.GetPeers()) == 0 {
 		s.AddJobs(1)
 		success := Play(act, NewImportContact(false))
