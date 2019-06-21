@@ -27,22 +27,6 @@ var (
 	_ServerKeys *shared.ServerKeys
 )
 
-func init() {
-	_ServerKeys = &shared.ServerKeys{
-		DHGroups:   make([]shared.DHGroup, 0),
-		PublicKeys: make([]shared.PublicKey, 0),
-	}
-
-	// Initialize Server Keys
-	jsonBytes, err := ioutil.ReadFile(ServerKeysFilePath)
-	if err != nil {
-		panic(err)
-	}
-	err = _ServerKeys.UnmarshalJSON(jsonBytes)
-	if err != nil {
-		panic(err)
-	}
-}
 
 // CreateAuthKey scenario
 type CreateAuthKey struct {
@@ -53,7 +37,6 @@ type CreateAuthKey struct {
 func NewCreateAuthKey(isFinal bool) shared.Screenwriter {
 	s := new(CreateAuthKey)
 	s.isFinal = isFinal
-
 	return s
 }
 
@@ -217,9 +200,6 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acto
 }
 
 
-
-
-
 const (
 	dhKeys		= 5000
 )
@@ -233,6 +213,23 @@ var (
 		dhKeyChan:  make(chan *dhkx.DHKey, dhKeys),
 	}
 )
+
+func LoadServerKeys() {
+	_ServerKeys = &shared.ServerKeys{
+		DHGroups:   make([]shared.DHGroup, 0),
+		PublicKeys: make([]shared.PublicKey, 0),
+	}
+
+	// Initialize Server Keys
+	jsonBytes, err := ioutil.ReadFile(ServerKeysFilePath)
+	if err != nil {
+		panic(err)
+	}
+	err = _ServerKeys.UnmarshalJSON(jsonBytes)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func GetDhPrivateKey() *dhkx.DHKey {
 	return <-_Generator.dhKeyChan

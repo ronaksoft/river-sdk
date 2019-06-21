@@ -11,11 +11,11 @@ services:
       - ./_cache:/ronak/_cache
     environment:
       - CFG_BUNDLE_ID=001
-      - CFG_NATS_URL=nats://nats:4222
-      - CFG_CACHE_REDIS_PERM_DSN=redis:6379
+      - CFG_NATS_URL=nats://nats-super:4222
+      - CFG_CACHE_REDIS_PERM_DSN=redis-super:6379
       - CFG_CACHE_REDIS_PERM_PASS=ehsan2374
     networks:
-      - testing
+      - river
     ulimits:
       nproc: 65535
       nofile:
@@ -25,17 +25,17 @@ services:
       - nats
 
 ## NATS SERVICE        
-  nats:
+  nats-super:
     image: registry.ronaksoftware.com/base/nats
     restart: always
     ports:
       - 4222:4222
       - 8222:8222
     networks:
-      - testing
+      - river
 
 ## REDIS SERVICE
-  redis:
+  redis-super:
     restart: on-failure
     image: registry.ronaksoftware.com/base/redis
     command: redis-server --requirepass ehsan2374 --save 1 1
@@ -44,9 +44,9 @@ services:
     ports:
       - 6379:6379
     networks:
-      - testing
+      - river
 
 networks:
-  testing:
+  river:
     external:
-      name: testing      
+      name: river
