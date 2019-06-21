@@ -123,6 +123,7 @@ func (s *Supernumerary) CreateAuthKey() {
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(len(s.Actors))
 	_Log.Info("Creating DH Keys ...")
+	scenario.LoadServerKeys()
 	scenario.GenDhPrivateKey()
 	_Log.Info("Dh Keys Generated ...")
 	for _, act := range s.Actors {
