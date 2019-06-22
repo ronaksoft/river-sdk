@@ -95,9 +95,9 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acto
 	dhPrime.SetString(dhGroup.Prime, 16)
 
 	dh := dhkx.CreateGroup(dhPrime, big.NewInt(int64(dhGroup.Gen)))
-	// dhPubKey, _ := dh.GeneratePrivateKey(rand.Reader)
-	dhPubKey := GetDhPrivateKey()
-	defer PutDhPrivateKey(dhPubKey)
+	dhPubKey, _ := dh.GeneratePrivateKey(rand.Reader)
+	// dhPubKey := GetDhPrivateKey()
+	// defer PutDhPrivateKey(dhPubKey)
 
 	pp, qq := domain.SplitPQ(big.NewInt(int64(serverPQ)))
 	var p, q uint64

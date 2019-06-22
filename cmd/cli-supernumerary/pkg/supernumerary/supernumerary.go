@@ -121,10 +121,10 @@ func (s *Supernumerary) dispose() {
 func (s *Supernumerary) CreateAuthKey() {
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(len(s.Actors))
-	_Log.Info("Creating DH Keys ...")
+	// _Log.Info("Creating DH Keys ...")
 	scenario.LoadServerKeys()
-	scenario.GenDhPrivateKey()
-	_Log.Info("Dh Keys Generated ...")
+	// scenario.GenDhPrivateKey()
+	// _Log.Info("Dh Keys Generated ...")
 	sleepTime := shared.DefaultMaxInterval / time.Duration(len(s.Actors))
 	for _, act := range s.Actors {
 		go func(act shared.Actor) {
