@@ -55,7 +55,7 @@ func (s *CreateAuthKeyTest) initConnectTest(act shared.Actor) (*msg.MessageEnvel
 			if s.isFinal {
 				err := act.Save()
 				if err != nil {
-					s.log(act, "initCompleteAuth() Actor.Save(), Err : "+err.Error(), elapsed, resp.RequestID)
+					s.log(act, "initConnectTest() Actor.Save(), Err : "+err.Error(), elapsed, resp.RequestID)
 				}
 			}
 			s.completed(act, elapsed, resp.RequestID, "initConnectTest() Success")

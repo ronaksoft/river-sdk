@@ -158,7 +158,7 @@ func (s *Supernumerary) CreateAuthKeyTest() {
 				_Log.Warn("Actor is Nil")
 				return
 			}
-			sen := scenario.NewCreateAuthKeyTest(true)
+			sen := scenario.NewCreateAuthKeyTest(false)
 			_Log.Info("CreateAuthKeyTest() CreatingAuthKey", zap.String("Phone", act.GetPhone()))
 			success := scenario.Play(act, sen)
 			if success {
