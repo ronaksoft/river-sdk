@@ -60,7 +60,6 @@ func NewSupernumerary(fromPhoneNo, toPhoneNo int64) (*Supernumerary, error) {
 		chTickerStop: make(chan bool),
 	}
 
-
 	ml := sync.Mutex{}
 	for i := fromPhoneNo; i < toPhoneNo; i++ {
 		go func(i int64) {
@@ -126,9 +125,9 @@ func (s *Supernumerary) CreateAuthKey() {
 	scenario.LoadServerKeys()
 	scenario.GenDhPrivateKey()
 	_Log.Info("Dh Keys Generated ...")
+	sleepTime := shared.DefaultMaxInterval / time.Duration(len(s.Actors))
 	for _, act := range s.Actors {
 		go func(act shared.Actor) {
-			time.Sleep(time.Duration(ronak.RandomInt(int(shared.DefaultMaxInterval/time.Second))) * time.Second)
 			defer waitGroup.Done()
 			if act == nil {
 				_Log.Warn("Actor is Nil")
@@ -142,7 +141,7 @@ func (s *Supernumerary) CreateAuthKey() {
 				_Log.Debug("CreateAuthKey() save actor", zap.Error(err))
 			}
 		}(act)
-		time.Sleep(time.Millisecond)
+		time.Sleep(sleepTime)
 	}
 	waitGroup.Wait()
 }
@@ -151,9 +150,9 @@ func (s *Supernumerary) CreateAuthKey() {
 func (s *Supernumerary) Register() {
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(len(s.Actors))
+	sleepTime := shared.DefaultMaxInterval / time.Duration(len(s.Actors))
 	for _, act := range s.Actors {
 		go func(act shared.Actor) {
-			time.Sleep(time.Duration(ronak.RandomInt(int(shared.DefaultMaxInterval/time.Second))) * time.Second)
 			sen := scenario.NewRegister(false)
 			_Log.Info("Register() Registering", zap.String("Phone", act.GetPhone()))
 			success := scenario.Play(act, sen)
@@ -162,7 +161,7 @@ func (s *Supernumerary) Register() {
 				_Log.Debug("Register() save actor", zap.Error(err))
 			}
 		}(act)
-		time.Sleep(time.Millisecond)
+		time.Sleep(sleepTime)
 	}
 	waitGroup.Wait()
 }
@@ -171,9 +170,9 @@ func (s *Supernumerary) Register() {
 func (s *Supernumerary) Login() {
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(len(s.Actors))
+	sleepTime := shared.DefaultMaxInterval / time.Duration(len(s.Actors))
 	for _, act := range s.Actors {
 		go func(act shared.Actor) {
-			time.Sleep(time.Duration(ronak.RandomInt(int(shared.DefaultMaxInterval/time.Second))) * time.Second)
 			sen := scenario.NewLogin(false)
 			_Log.Info("Login() Logging in", zap.String("Phone", act.GetPhone()))
 			success := scenario.Play(act, sen)
@@ -182,7 +181,7 @@ func (s *Supernumerary) Login() {
 				_Log.Debug("Login() save actor", zap.Error(err))
 			}
 		}(act)
-		time.Sleep(time.Millisecond)
+		time.Sleep(sleepTime)
 	}
 	waitGroup.Wait()
 }
