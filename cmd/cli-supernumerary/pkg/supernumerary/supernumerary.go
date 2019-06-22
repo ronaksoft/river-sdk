@@ -146,6 +146,31 @@ func (s *Supernumerary) CreateAuthKey() {
 	waitGroup.Wait()
 }
 
+// CreateAuthKey init step required
+func (s *Supernumerary) CreateAuthKeyTest() {
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(len(s.Actors))
+	sleepTime := shared.DefaultMaxInterval / time.Duration(len(s.Actors))
+	for _, act := range s.Actors {
+		go func(act shared.Actor) {
+			defer waitGroup.Done()
+			if act == nil {
+				_Log.Warn("Actor is Nil")
+				return
+			}
+			sen := scenario.NewCreateAuthKeyTest(true)
+			_Log.Info("CreateAuthKeyTest() CreatingAuthKey", zap.String("Phone", act.GetPhone()))
+			success := scenario.Play(act, sen)
+			if success {
+				err := act.Save()
+				_Log.Debug("CreateAuthKeyTest() save actor", zap.Error(err))
+			}
+		}(act)
+		time.Sleep(sleepTime)
+	}
+	waitGroup.Wait()
+}
+
 // Register init step required
 func (s *Supernumerary) Register() {
 	waitGroup := sync.WaitGroup{}

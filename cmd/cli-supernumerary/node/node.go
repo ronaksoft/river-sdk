@@ -119,7 +119,7 @@ func (n *Node) cbCreateAuthKey(msg *nats.Msg) {
 		_Log.Error("cbCreateAuthKey() supernumerary not initialized")
 		return
 	}
-	n.su.CreateAuthKey()
+	n.su.CreateAuthKeyTest()
 }
 
 func (n *Node) cbLogin(msg *nats.Msg) {

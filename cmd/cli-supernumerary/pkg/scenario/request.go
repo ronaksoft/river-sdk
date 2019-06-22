@@ -49,6 +49,18 @@ func InitConnect() (envelop *msg.MessageEnvelope) {
 	return
 }
 
+func InitConnectTest() (envelop *msg.MessageEnvelope) {
+	req := new(msg.InitConnectTest)
+	data, err := req.Marshal()
+	if err != nil {
+		panic(err)
+	}
+
+	envelop = wrapEnvelope(msg.C_InitConnectTest, data)
+
+	return
+}
+
 func InitCompleteAuth(clientNonce, serverNonce, p, q uint64, dhPubKey, encPayload []byte) (envelop *msg.MessageEnvelope) {
 	req := new(msg.InitCompleteAuth)
 
