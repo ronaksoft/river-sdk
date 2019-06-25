@@ -5,7 +5,6 @@ import (
 	"context"
 	"io/ioutil"
 	"net/http"
-	"sync"
 	"time"
 
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
@@ -13,13 +12,14 @@ import (
 )
 
 func (fm *Controller) SendWithContext(ctx context.Context, in *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
-	waitGroup := sync.WaitGroup{}
-	waitGroup.Add(1)
-	select {
-	case ctx.Done():
-
-
-	}
+	// waitGroup := sync.WaitGroup{}
+	// waitGroup.Add(1)
+	// select {
+	// case ctx.Done():
+	//
+	//
+	// }
+	panic("not implemented")
 }
 // Send encrypt and send request to server and receive and decrypt its response
 func (fm *Controller) Send(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
