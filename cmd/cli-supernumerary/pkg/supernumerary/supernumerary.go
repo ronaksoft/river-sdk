@@ -123,13 +123,6 @@ func (s *Supernumerary) CreateAuthKey() {
 	waitGroup.Add(len(s.Actors))
 	// _Log.Info("Creating DH Keys ...")
 	scenario.LoadServerKeys()
-<<<<<<< HEAD
-	scenario.GenDhPrivateKey()
-	_Log.Info("Dh Keys Generated ...")
-=======
-	// scenario.GenDhPrivateKey()
-	// _Log.Info("Dh Keys Generated ...")
->>>>>>> master
 	sleepTime := shared.DefaultMaxInterval / time.Duration(len(s.Actors))
 	for _, act := range s.Actors {
 		go func(act shared.Actor) {
@@ -147,8 +140,6 @@ func (s *Supernumerary) CreateAuthKey() {
 			}
 		}(act)
 		time.Sleep(sleepTime)
-<<<<<<< HEAD
-=======
 	}
 	waitGroup.Wait()
 }
@@ -174,7 +165,6 @@ func (s *Supernumerary) CreateAuthKeyTest() {
 			}
 		}(act)
 		time.Sleep(sleepTime)
->>>>>>> master
 	}
 	waitGroup.Wait()
 }
@@ -186,10 +176,7 @@ func (s *Supernumerary) Register() {
 	sleepTime := shared.DefaultMaxInterval / time.Duration(len(s.Actors))
 	for _, act := range s.Actors {
 		go func(act shared.Actor) {
-<<<<<<< HEAD
-=======
 			defer waitGroup.Done()
->>>>>>> master
 			sen := scenario.NewRegister(false)
 			_Log.Info("Register() Registering", zap.String("Phone", act.GetPhone()))
 			success := scenario.Play(act, sen)
@@ -210,10 +197,7 @@ func (s *Supernumerary) Login() {
 	sleepTime := shared.DefaultMaxInterval / time.Duration(len(s.Actors))
 	for _, act := range s.Actors {
 		go func(act shared.Actor) {
-<<<<<<< HEAD
-=======
 			defer waitGroup.Done()
->>>>>>> master
 			sen := scenario.NewLogin(false)
 			_Log.Info("Login() Logging in", zap.String("Phone", act.GetPhone()))
 			success := scenario.Play(act, sen)
