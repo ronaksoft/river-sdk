@@ -121,10 +121,15 @@ func (s *Supernumerary) dispose() {
 func (s *Supernumerary) CreateAuthKey() {
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(len(s.Actors))
-	_Log.Info("Creating DH Keys ...")
+	// _Log.Info("Creating DH Keys ...")
 	scenario.LoadServerKeys()
+<<<<<<< HEAD
 	scenario.GenDhPrivateKey()
 	_Log.Info("Dh Keys Generated ...")
+=======
+	// scenario.GenDhPrivateKey()
+	// _Log.Info("Dh Keys Generated ...")
+>>>>>>> master
 	sleepTime := shared.DefaultMaxInterval / time.Duration(len(s.Actors))
 	for _, act := range s.Actors {
 		go func(act shared.Actor) {
@@ -142,6 +147,34 @@ func (s *Supernumerary) CreateAuthKey() {
 			}
 		}(act)
 		time.Sleep(sleepTime)
+<<<<<<< HEAD
+=======
+	}
+	waitGroup.Wait()
+}
+
+// CreateAuthKey init step required
+func (s *Supernumerary) CreateAuthKeyTest() {
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(len(s.Actors))
+	sleepTime := shared.DefaultMaxInterval / time.Duration(len(s.Actors))
+	for _, act := range s.Actors {
+		go func(act shared.Actor) {
+			defer waitGroup.Done()
+			if act == nil {
+				_Log.Warn("Actor is Nil")
+				return
+			}
+			sen := scenario.NewCreateAuthKeyTest(false)
+			_Log.Info("CreateAuthKeyTest() CreatingAuthKey", zap.String("Phone", act.GetPhone()))
+			success := scenario.Play(act, sen)
+			if success {
+				err := act.Save()
+				_Log.Debug("CreateAuthKeyTest() save actor", zap.Error(err))
+			}
+		}(act)
+		time.Sleep(sleepTime)
+>>>>>>> master
 	}
 	waitGroup.Wait()
 }
@@ -153,6 +186,10 @@ func (s *Supernumerary) Register() {
 	sleepTime := shared.DefaultMaxInterval / time.Duration(len(s.Actors))
 	for _, act := range s.Actors {
 		go func(act shared.Actor) {
+<<<<<<< HEAD
+=======
+			defer waitGroup.Done()
+>>>>>>> master
 			sen := scenario.NewRegister(false)
 			_Log.Info("Register() Registering", zap.String("Phone", act.GetPhone()))
 			success := scenario.Play(act, sen)
@@ -173,6 +210,10 @@ func (s *Supernumerary) Login() {
 	sleepTime := shared.DefaultMaxInterval / time.Duration(len(s.Actors))
 	for _, act := range s.Actors {
 		go func(act shared.Actor) {
+<<<<<<< HEAD
+=======
+			defer waitGroup.Done()
+>>>>>>> master
 			sen := scenario.NewLogin(false)
 			_Log.Info("Login() Logging in", zap.String("Phone", act.GetPhone()))
 			success := scenario.Play(act, sen)
