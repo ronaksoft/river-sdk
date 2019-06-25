@@ -2,14 +2,25 @@ package fileCtrl
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"net/http"
+	"sync"
 	"time"
 
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 )
 
+func (fm *Controller) SendWithContext(ctx context.Context, in *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(1)
+	select {
+	case ctx.Done():
+
+
+	}
+}
 // Send encrypt and send request to server and receive and decrypt its response
 func (fm *Controller) Send(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
 	protoMessage := new(msg.ProtoMessage)
