@@ -372,7 +372,7 @@ func (fs *FileStatus) ReadAsFileGet(partNo int64) (envelop *msg.MessageEnvelope,
 }
 
 // StartDownload begins download
-func (fs *FileStatus) StartDownload(fm *FileManager) {
+func (fs *FileStatus) StartDownload(fm *Controller) {
 	fs.mx.Lock()
 	if fs.started {
 		fs.mx.Unlock()
@@ -398,7 +398,7 @@ func (fs *FileStatus) StartDownload(fm *FileManager) {
 }
 
 // StartUpload begins upload
-func (fs *FileStatus) StartUpload(fm *FileManager) {
+func (fs *FileStatus) StartUpload(fm *Controller) {
 
 	fs.mx.Lock()
 	if fs.started {
@@ -430,7 +430,7 @@ func (fs *FileStatus) StartUpload(fm *FileManager) {
 	}
 }
 
-func (fs *FileStatus) monitorUploadProgress(fm *FileManager) {
+func (fs *FileStatus) monitorUploadProgress(fm *Controller) {
 	for {
 		select {
 		case partIdx := <-fs.chUploadProgress:
@@ -450,7 +450,7 @@ func (fs *FileStatus) Stop() {
 	fs.started = false
 }
 
-func (fs *FileStatus) downloaderJob(fm *FileManager) {
+func (fs *FileStatus) downloaderJob(fm *Controller) {
 	for {
 		if fs.stop {
 			return
@@ -470,7 +470,7 @@ func (fs *FileStatus) downloaderJob(fm *FileManager) {
 	}
 }
 
-func (fs *FileStatus) uploaderJob(fm *FileManager) {
+func (fs *FileStatus) uploaderJob(fm *Controller) {
 	for {
 		if fs.stop {
 			return
@@ -496,7 +496,7 @@ func (fs *FileStatus) uploaderJob(fm *FileManager) {
 
 }
 
-func (fs *FileStatus) uploadThumbnail(fm *FileManager) {
+func (fs *FileStatus) uploadThumbnail(fm *Controller) {
 	for fs.ThumbPosition < fs.ThumbTotalSize {
 		if fs.stop {
 			return

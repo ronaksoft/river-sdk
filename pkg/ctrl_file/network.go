@@ -11,7 +11,7 @@ import (
 )
 
 // Send encrypt and send request to server and receive and decrypt its response
-func (fm *FileManager) Send(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
+func (fm *Controller) Send(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
 	protoMessage := new(msg.ProtoMessage)
 	protoMessage.AuthID = fm.authID
 	protoMessage.MessageKey = make([]byte, 32)

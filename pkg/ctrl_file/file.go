@@ -24,7 +24,7 @@ import (
 
 var (
 	mx       sync.Mutex
-	ctx      *FileManager
+	ctx      *Controller
 	dirAudio string
 	dirFile  string
 	dirPhoto string
@@ -37,8 +37,8 @@ const (
 	FileSizeThresholdForCheckHash = 10 * 1024 * 1024 // 10MB
 )
 
-// FileManager manages files download/upload/status and cache
-type FileManager struct {
+// Controller manages files download/upload/status and cache
+type Controller struct {
 	authKey    []byte
 	authID     int64
 	messageSeq int64
@@ -66,10 +66,10 @@ type FileManager struct {
 	onDownloadError     domain.OnFileDownloadError
 }
 
-// Ctx return filemanager singleton instance
-func Ctx() *FileManager {
+// Ctx return Controller singleton instance
+func Ctx() *Controller {
 	if ctx == nil {
-		panic("FileManager::Ctx() file manager not initialized !")
+		panic("Controller::Ctx() file manager not initialized !")
 	}
 	return ctx
 }
@@ -87,7 +87,7 @@ func InitFileManager(serverAddress string,
 		mx.Lock()
 		defer mx.Unlock()
 		if ctx == nil {
-			ctx = &FileManager{
+			ctx = &Controller{
 				ServerEndpoint:      serverAddress,
 				UploadQueue:         make(map[int64]*FileStatus, 0),
 				DownloadQueue:       make(map[int64]*FileStatus, 0),
@@ -108,7 +108,7 @@ func InitFileManager(serverAddress string,
 	go ctx.startDownloadQueue()
 	go ctx.startUploadQueue()
 }
-func (fm *FileManager) startDownloadQueue() {
+func (fm *Controller) startDownloadQueue() {
 	for {
 		if fm.NetworkStatus == domain.NetworkDisconnected || fm.NetworkStatus == domain.NetworkConnecting {
 			time.Sleep(100 * time.Millisecond)
@@ -132,7 +132,7 @@ func (fm *FileManager) startDownloadQueue() {
 		}
 	}
 }
-func (fm *FileManager) startUploadQueue() {
+func (fm *Controller) startUploadQueue() {
 	for {
 		if fm.NetworkStatus == domain.NetworkDisconnected || fm.NetworkStatus == domain.NetworkConnecting {
 			time.Sleep(100 * time.Millisecond)
@@ -204,7 +204,7 @@ func GetFilePath(mimeType string, docID int64, fileName string) string {
 }
 
 // Stop set stop flag
-func (fm *FileManager) Stop() {
+func (fm *Controller) Stop() {
 	if fm.UploadQueueStarted {
 		fm.chStopUploader <- true
 	}
@@ -214,7 +214,7 @@ func (fm *FileManager) Stop() {
 }
 
 // Upload file to server
-func (fm *FileManager) Upload(fileID int64, req *msg.ClientPendingMessage) error {
+func (fm *Controller) Upload(fileID int64, req *msg.ClientPendingMessage) error {
 	x := new(msg.ClientSendMessageMedia)
 	err := x.Unmarshal(req.Media)
 	if err != nil {
@@ -259,7 +259,7 @@ func (fm *FileManager) Upload(fileID int64, req *msg.ClientPendingMessage) error
 }
 
 // Download add download request
-func (fm *FileManager) Download(req *msg.UserMessage) {
+func (fm *Controller) Download(req *msg.UserMessage) {
 
 	var state *FileStatus
 	dtoState, err := repo.Files.GetFileStatus(req.ID)
@@ -325,7 +325,7 @@ func (fm *FileManager) Download(req *msg.UserMessage) {
 }
 
 // AddToQueue add request to queue
-func (fm *FileManager) AddToQueue(status *FileStatus) {
+func (fm *Controller) AddToQueue(status *FileStatus) {
 	switch status.Type {
 	case domain.FileStateUpload, domain.FileStateUploadAccountPhoto, domain.FileStateUploadGroupPhoto:
 		fm.mxUp.Lock()
@@ -351,7 +351,7 @@ func (fm *FileManager) AddToQueue(status *FileStatus) {
 }
 
 // DeleteFromQueue remove items from download/upload queue and stop them
-func (fm *FileManager) DeleteFromQueue(msgID int64, status domain.RequestStatus) {
+func (fm *Controller) DeleteFromQueue(msgID int64, status domain.RequestStatus) {
 	fm.mxUp.Lock()
 	up, uok := fm.UploadQueue[msgID]
 	if uok {
@@ -372,7 +372,7 @@ func (fm *FileManager) DeleteFromQueue(msgID int64, status domain.RequestStatus)
 }
 
 // CalculateMD5 this will calculate md5 hash for files that are smaller than threshold
-func (fm *FileManager) CalculateMD5(file *os.File) (string, error) {
+func (fm *Controller) CalculateMD5(file *os.File) (string, error) {
 	// get file info
 	fileInfo, err := file.Stat()
 	if err != nil {
@@ -391,19 +391,19 @@ func (fm *FileManager) CalculateMD5(file *os.File) (string, error) {
 }
 
 // SetAuthorization set client AuthID and AuthKey to encrypt&decrypt network requests
-func (fm *FileManager) SetAuthorization(authID int64, authKey []byte) {
+func (fm *Controller) SetAuthorization(authID int64, authKey []byte) {
 	fm.authKey = make([]byte, len(authKey))
 	fm.authID = authID
 	copy(fm.authKey, authKey)
 }
 
 // SetServerSalt sets server salt
-func (fm *FileManager) SetServerSalt(salt int64) {
+func (fm *Controller) SetServerSalt(salt int64) {
 	fm.salt = salt
 }
 
 // SendUploadRequest send request to server
-func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, fs *FileStatus, partIdx int64) {
+func (fm *Controller) SendUploadRequest(req *msg.MessageEnvelope, count int64, fs *FileStatus, partIdx int64) {
 	// time out has been set in Send()
 	res, err := fm.Send(req)
 	if err == nil {
@@ -467,7 +467,7 @@ func (fm *FileManager) SendUploadRequest(req *msg.MessageEnvelope, count int64, 
 }
 
 // SendDownloadRequest send request to server
-func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileStatus, partIdx int64) {
+func (fm *Controller) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileStatus, partIdx int64) {
 	// time out has been set in Send()
 	res, err := fm.Send(req)
 	if err == nil {
@@ -541,7 +541,7 @@ func (fm *FileManager) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileSta
 }
 
 // LoadQueueFromDB load in progress request from database
-func (fm *FileManager) LoadQueueFromDB() {
+func (fm *Controller) LoadQueueFromDB() {
 	// Load pended file status
 	dtos := repo.Files.GetAllFileStatus()
 	for _, d := range dtos {
@@ -557,14 +557,14 @@ func (fm *FileManager) LoadQueueFromDB() {
 }
 
 // SetNetworkStatus called on network controller state changes to inform filemanager
-func (fm *FileManager) SetNetworkStatus(state domain.NetworkStatus) {
+func (fm *Controller) SetNetworkStatus(state domain.NetworkStatus) {
 	fm.NetworkStatus = state
 	if state == domain.NetworkWeak || state == domain.NetworkSlow || state == domain.NetworkFast {
 		fm.LoadQueueFromDB()
 	}
 }
 
-func (fm *FileManager) downloadCompleted(msgID int64, filePath string, stateType domain.FileStateType) {
+func (fm *Controller) downloadCompleted(msgID int64, filePath string, stateType domain.FileStateType) {
 	// delete file status
 	fm.DeleteFromQueue(msgID, domain.RequestStatusCompleted)
 	repo.Files.DeleteFileStatus(msgID)
@@ -573,7 +573,7 @@ func (fm *FileManager) downloadCompleted(msgID int64, filePath string, stateType
 	}
 }
 
-func (fm *FileManager) uploadCompleted(msgID, fileID, targetID int64,
+func (fm *Controller) uploadCompleted(msgID, fileID, targetID int64,
 	clusterID int32, totalParts int64,
 	stateType domain.FileStateType,
 	filePath string,
@@ -590,7 +590,7 @@ func (fm *FileManager) uploadCompleted(msgID, fileID, targetID int64,
 }
 
 // DownloadAccountPhoto download account photo from server its sync
-func (fm *FileManager) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) (string, error) {
+func (fm *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) (string, error) {
 	req := new(msg.FileGet)
 	req.Location = new(msg.InputFileLocation)
 	if isBig {
@@ -648,7 +648,7 @@ func (fm *FileManager) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, 
 }
 
 // DownloadGroupPhoto download group photo from server its sync
-func (fm *FileManager) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) (string, error) {
+func (fm *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) (string, error) {
 	req := new(msg.FileGet)
 	req.Location = new(msg.InputFileLocation)
 	if isBig {
@@ -706,7 +706,7 @@ func (fm *FileManager) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, 
 }
 
 // DownloadThumbnail download thumbnail from server its sync
-func (fm *FileManager) DownloadThumbnail(msgID int64, fileID int64, accessHash uint64, clusterID, version int32) (string, error) {
+func (fm *Controller) DownloadThumbnail(msgID int64, fileID int64, accessHash uint64, clusterID, version int32) (string, error) {
 	req := new(msg.FileGet)
 	req.Location = &msg.InputFileLocation{
 		AccessHash: accessHash,
@@ -757,7 +757,7 @@ func (fm *FileManager) DownloadThumbnail(msgID int64, fileID int64, accessHash u
 	return "", err
 }
 
-func (fm *FileManager) ClearFiles(filePaths []string) error {
+func (fm *Controller) ClearFiles(filePaths []string) error {
 	for _, filePath := range filePaths {
 		if err := os.Remove(filePath); err != nil {
 			logs.Warn("ClearFiles::Error removing files", zap.String(fmt.Sprintf(" file path: %s", filePath), err.Error()))

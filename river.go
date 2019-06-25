@@ -232,7 +232,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.networkCtrl.SetOnConnectCallback(r.onNetworkConnect)
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 
-	// Update FileManager
+	// Update Controller
 	fileCtrl.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 	fileCtrl.Ctx().LoadQueueFromDB()
 }
