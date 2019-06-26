@@ -3,15 +3,11 @@ package riversdk
 import (
 	"errors"
 	"fmt"
-	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
-	"strconv"
-	"strings"
-
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	"go.uber.org/zap"
 )
 
@@ -186,16 +182,6 @@ func (r *River) SearchContacts(requestID int64, searchPhrase string, delegate Re
 	if delegate != nil {
 		delegate.OnComplete(buff)
 	}
-}
-
-// GetRealTopMessageID returns max message id
-func (r *River) GetRealTopMessageID(peerID int64, peerType int32) int64 {
-	topMsgID, err := repo.Messages.GetTopMessageID(peerID, peerType)
-	if err != nil {
-		logs.Error("SDK::GetRealTopMessageID() => Messages.GetTopMessageID()", zap.Error(err))
-		return -1
-	}
-	return topMsgID
 }
 
 // UpdateContactInfo update contact name
@@ -511,79 +497,6 @@ func (r *River) GetDBStatus(delegate RequestDelegate) {
 	}
 	GetDBStatusIsRunning = false
 	DatabaseStatus = peerMediaSizeMap
-}
-
-// ClearCache removes files from client device, allMedia means clear all media types
-// peerID 0 means all peers
-func (r *River) ClearCache(peerID int64, mediaTypes string, allMedia bool) bool {
-	var messageIDs []int64
-	clearDatabaseStatus := func() {
-		for k := range DatabaseStatus {
-			delete(DatabaseStatus, k)
-		}
-	}
-	defer clearDatabaseStatus()
-	if allMedia {
-		// peerID = 0 means all peers
-		// all peers and all media types
-		if peerID == 0 {
-			for _, mediaData := range DatabaseStatus {
-				for _, mediaInfo := range mediaData {
-					messageIDs = append(messageIDs, mediaInfo.MessageIDs...)
-				}
-			}
-		} else {
-			// all media types of a specific peer
-			for _, mediaInfo := range DatabaseStatus[peerID] {
-				messageIDs = append(messageIDs, mediaInfo.MessageIDs...)
-			}
-		}
-	} else {
-		// all peers with specific media types
-		if peerID == 0 {
-			for _, mediaData := range DatabaseStatus {
-				mediaTypeSlices := strings.Split(mediaTypes, ",")
-				for _, mediaType := range mediaTypeSlices {
-					castedType, _ := strconv.Atoi(mediaType)
-					messageIDs = append(messageIDs, mediaData[msg.DocumentAttributeType(castedType)].MessageIDs...)
-				}
-			}
-		} else {
-			// specific peer with specific media type
-			mediaInfo := DatabaseStatus[peerID]
-			mediaTypeSlices := strings.Split(mediaTypes, ",")
-			for _, mediaType := range mediaTypeSlices {
-				castedType, _ := strconv.Atoi(mediaType)
-				messageIDs = append(messageIDs, mediaInfo[msg.DocumentAttributeType(castedType)].MessageIDs...)
-			}
-		}
-	}
-
-	logs.Info("River::ClearCache",
-		zap.Any("peerID", peerID),
-		zap.String("mediaTypes", mediaTypes),
-		zap.Bool("all", allMedia),
-		zap.Any("DatabaseStatus Map", DatabaseStatus),
-	)
-
-	logs.Debug("ClearCache", zap.Int64s("messageIDs", messageIDs))
-
-	if filePaths, err := repo.Files.ClearMedia(messageIDs); err != nil {
-		logs.Debug("River::ClearCache",
-			zap.String("clear media error", err.Error()),
-		)
-		return false
-	} else {
-		logs.Debug("ClearCache", zap.Strings("media paths", filePaths))
-		err = fileCtrl.Ctx().ClearFiles(filePaths)
-		if err != nil {
-			logs.Debug("River::ClearCache",
-				zap.String("clear files error", err.Error()),
-			)
-			return false
-		}
-	}
-	return true
 }
 
 func (r *River) GetSDKSalt() int64 {

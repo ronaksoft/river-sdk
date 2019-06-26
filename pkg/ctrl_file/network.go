@@ -21,6 +21,7 @@ func (fm *Controller) SendWithContext(ctx context.Context, in *msg.MessageEnvelo
 	// }
 	panic("not implemented")
 }
+
 // Send encrypt and send request to server and receive and decrypt its response
 func (fm *Controller) Send(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
 	protoMessage := new(msg.ProtoMessage)

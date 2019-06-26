@@ -49,8 +49,8 @@ type Controller struct {
 
 	mxDown               sync.Mutex
 	mxUp                 sync.Mutex
-	UploadQueue          map[int64]*FileStatus
-	DownloadQueue        map[int64]*FileStatus
+	UploadQueue          map[int64]*File
+	DownloadQueue        map[int64]*File
 	UploadQueueStarted   bool
 	DownloadQueueStarted bool
 
@@ -89,8 +89,8 @@ func InitFileManager(serverAddress string,
 		if ctx == nil {
 			ctx = &Controller{
 				ServerEndpoint:      serverAddress,
-				UploadQueue:         make(map[int64]*FileStatus, 0),
-				DownloadQueue:       make(map[int64]*FileStatus, 0),
+				UploadQueue:         make(map[int64]*File, 0),
+				DownloadQueue:       make(map[int64]*File, 0),
 				chStopUploader:      make(chan bool),
 				chStopDownloader:    make(chan bool),
 				chNewDownloadItem:   make(chan bool),
@@ -237,7 +237,7 @@ func (fm *Controller) Upload(fileID int64, req *msg.ClientPendingMessage) error 
 		return errors.New("max allowed file size is 750 MB")
 	}
 
-	state := NewFileStatus(req.ID, fileID, 0, fileSize, x.FilePath, domain.FileStateUpload, 0, 0, 0, fm.progressCallback)
+	state := NewFile(req.ID, fileID, 0, fileSize, x.FilePath, domain.FileStateUpload, 0, 0, 0, fm.progressCallback)
 	state.UploadRequest = x
 
 	thumbFile, err := os.Open(x.ThumbFilePath)
@@ -261,7 +261,7 @@ func (fm *Controller) Upload(fileID int64, req *msg.ClientPendingMessage) error 
 // Download add download request
 func (fm *Controller) Download(req *msg.UserMessage) {
 
-	var state *FileStatus
+	var state *File
 	dtoState, err := repo.Files.GetFileStatus(req.ID)
 
 	if err == nil && dtoState != nil {
@@ -269,7 +269,7 @@ func (fm *Controller) Download(req *msg.UserMessage) {
 			fm.downloadCompleted(dtoState.MessageID, dtoState.FilePath, domain.FileStateType(dtoState.Type))
 			return
 		}
-		state = new(FileStatus)
+		state = new(File)
 		state.LoadDTO(*dtoState, fm.progressCallback)
 
 	} else {
@@ -305,7 +305,7 @@ func (fm *Controller) Download(req *msg.UserMessage) {
 			version = x.Doc.Version
 			fileSize = x.Doc.FileSize
 			filePath = GetFilePath(x.Doc.MimeType, x.Doc.ID, fileName)
-			state = NewFileStatus(req.ID, docID, 0, int64(fileSize), filePath, domain.FileStateDownload, clusterID, accessHash, version, fm.progressCallback)
+			state = NewFile(req.ID, docID, 0, int64(fileSize), filePath, domain.FileStateDownload, clusterID, accessHash, version, fm.progressCallback)
 			state.DownloadRequest = x.Doc
 
 		case msg.MediaTypeContact:
@@ -325,7 +325,7 @@ func (fm *Controller) Download(req *msg.UserMessage) {
 }
 
 // AddToQueue add request to queue
-func (fm *Controller) AddToQueue(status *FileStatus) {
+func (fm *Controller) AddToQueue(status *File) {
 	switch status.Type {
 	case domain.FileStateUpload, domain.FileStateUploadAccountPhoto, domain.FileStateUploadGroupPhoto:
 		fm.mxUp.Lock()
@@ -403,7 +403,7 @@ func (fm *Controller) SetServerSalt(salt int64) {
 }
 
 // SendUploadRequest send request to server
-func (fm *Controller) SendUploadRequest(req *msg.MessageEnvelope, count int64, fs *FileStatus, partIdx int64) {
+func (fm *Controller) SendUploadRequest(req *msg.MessageEnvelope, count int64, fs *File, partIdx int64) {
 	// time out has been set in Send()
 	res, err := fm.Send(req)
 	if err == nil {
@@ -467,7 +467,7 @@ func (fm *Controller) SendUploadRequest(req *msg.MessageEnvelope, count int64, f
 }
 
 // SendDownloadRequest send request to server
-func (fm *Controller) SendDownloadRequest(req *msg.MessageEnvelope, fs *FileStatus, partIdx int64) {
+func (fm *Controller) SendDownloadRequest(req *msg.MessageEnvelope, fs *File, partIdx int64) {
 	// time out has been set in Send()
 	res, err := fm.Send(req)
 	if err == nil {
@@ -545,7 +545,7 @@ func (fm *Controller) LoadQueueFromDB() {
 	// Load pended file status
 	dtos := repo.Files.GetAllFileStatus()
 	for _, d := range dtos {
-		fs := new(FileStatus)
+		fs := new(File)
 		fs.LoadDTO(d, fm.progressCallback)
 		if fs.RequestStatus == domain.RequestStatusPaused ||
 			fs.RequestStatus == domain.RequestStatusCanceled ||
@@ -556,7 +556,7 @@ func (fm *Controller) LoadQueueFromDB() {
 	}
 }
 
-// SetNetworkStatus called on network controller state changes to inform filemanager
+// SetNetworkStatus called on network controller state changes to inform file controller
 func (fm *Controller) SetNetworkStatus(state domain.NetworkStatus) {
 	fm.NetworkStatus = state
 	if state == domain.NetworkWeak || state == domain.NetworkSlow || state == domain.NetworkFast {

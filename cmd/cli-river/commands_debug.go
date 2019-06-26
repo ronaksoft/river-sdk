@@ -190,17 +190,6 @@ var MessageSendBulk = &ishell.Cmd{
 	},
 }
 
-var GetTopMessageID = &ishell.Cmd{
-	Name: "GetTopMessageID",
-	Func: func(c *ishell.Context) {
-
-		peerID := fnGetPeerID(c)
-		peerType := fnGetPeerType(c)
-		maxID := _SDK.GetRealTopMessageID(peerID, int32(peerType))
-		c.Println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX MaxID = ", maxID)
-	},
-}
-
 var ContactImportMany = &ishell.Cmd{
 	Name: "ContactImportMany",
 	Func: func(c *ishell.Context) {
@@ -399,7 +388,6 @@ func init() {
 	Debug.AddCmd(MessageSendByQueue)
 	Debug.AddCmd(ContactImportByNetwork)
 	Debug.AddCmd(MessageSendBulk)
-	Debug.AddCmd(GetTopMessageID)
 	Debug.AddCmd(ContactImportMany)
 
 	Debug.AddCmd(SearchInDialogs)

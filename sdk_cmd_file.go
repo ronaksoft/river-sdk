@@ -215,7 +215,7 @@ func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 	// 	return 0
 	// }
 
-	state := fileCtrl.NewFileStatus(msgID, fileID, 0, totalSize, filePath, domain.FileStateUploadAccountPhoto, 0, 0, 0, r.onFileProgressChanged)
+	state := fileCtrl.NewFile(msgID, fileID, 0, totalSize, filePath, domain.FileStateUploadAccountPhoto, 0, 0, 0, r.onFileProgressChanged)
 
 	fileCtrl.Ctx().AddToQueue(state)
 
@@ -335,7 +335,7 @@ func (r *River) GroupUploadPhoto(groupID int64, filePath string) (msgID int64) {
 	// 	return 0
 	// }
 
-	state := fileCtrl.NewFileStatus(msgID, fileID, groupID, totalSize, filePath, domain.FileStateUploadGroupPhoto, 0, 0, 0, r.onFileProgressChanged)
+	state := fileCtrl.NewFile(msgID, fileID, groupID, totalSize, filePath, domain.FileStateUploadGroupPhoto, 0, 0, 0, r.onFileProgressChanged)
 
 	fileCtrl.Ctx().AddToQueue(state)
 
@@ -544,4 +544,77 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 		return path
 	}
 	return dto.ThumbFilePath
+}
+
+// ClearCache removes files from client device, allMedia means clear all media types
+// peerID 0 means all peers
+func (r *River) ClearCache(peerID int64, mediaTypes string, allMedia bool) bool {
+	var messageIDs []int64
+	clearDatabaseStatus := func() {
+		for k := range DatabaseStatus {
+			delete(DatabaseStatus, k)
+		}
+	}
+	defer clearDatabaseStatus()
+	if allMedia {
+		// peerID = 0 means all peers
+		// all peers and all media types
+		if peerID == 0 {
+			for _, mediaData := range DatabaseStatus {
+				for _, mediaInfo := range mediaData {
+					messageIDs = append(messageIDs, mediaInfo.MessageIDs...)
+				}
+			}
+		} else {
+			// all media types of a specific peer
+			for _, mediaInfo := range DatabaseStatus[peerID] {
+				messageIDs = append(messageIDs, mediaInfo.MessageIDs...)
+			}
+		}
+	} else {
+		// all peers with specific media types
+		if peerID == 0 {
+			for _, mediaData := range DatabaseStatus {
+				mediaTypeSlices := strings.Split(mediaTypes, ",")
+				for _, mediaType := range mediaTypeSlices {
+					castedType, _ := strconv.Atoi(mediaType)
+					messageIDs = append(messageIDs, mediaData[msg.DocumentAttributeType(castedType)].MessageIDs...)
+				}
+			}
+		} else {
+			// specific peer with specific media type
+			mediaInfo := DatabaseStatus[peerID]
+			mediaTypeSlices := strings.Split(mediaTypes, ",")
+			for _, mediaType := range mediaTypeSlices {
+				castedType, _ := strconv.Atoi(mediaType)
+				messageIDs = append(messageIDs, mediaInfo[msg.DocumentAttributeType(castedType)].MessageIDs...)
+			}
+		}
+	}
+
+	logs.Info("River::ClearCache",
+		zap.Any("peerID", peerID),
+		zap.String("mediaTypes", mediaTypes),
+		zap.Bool("all", allMedia),
+		zap.Any("DatabaseStatus Map", DatabaseStatus),
+	)
+
+	logs.Debug("ClearCache", zap.Int64s("messageIDs", messageIDs))
+
+	if filePaths, err := repo.Files.ClearMedia(messageIDs); err != nil {
+		logs.Debug("River::ClearCache",
+			zap.String("clear media error", err.Error()),
+		)
+		return false
+	} else {
+		logs.Debug("ClearCache", zap.Strings("media paths", filePaths))
+		err = fileCtrl.Ctx().ClearFiles(filePaths)
+		if err != nil {
+			logs.Debug("River::ClearCache",
+				zap.String("clear files error", err.Error()),
+			)
+			return false
+		}
+	}
+	return true
 }
