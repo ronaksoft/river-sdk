@@ -2,7 +2,6 @@ package controller
 
 import (
 	"fmt"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	log "git.ronaksoftware.com/ronak/toolbox/logger"
 	"hash/crc32"
 	"sync"
@@ -71,18 +70,12 @@ func NewCtrlNetwork(act shared.Actor,
 
 // Start start websocket
 func (ctrl *CtrlNetwork) Start() error {
-	var err error
-	maxTry := 5
-	for maxTry > 0 {
-		err = ctrl.connect()
-		if err == nil {
-			ctrl.keepConnectionAlive = true
-			go ctrl.watchDog()
-			ctrl.onConnect()
-			return nil
-		}
-		time.Sleep(time.Duration(ronak.RandomInt(10)) * time.Second)
-		maxTry--
+	err := ctrl.connect()
+	if err == nil {
+		ctrl.keepConnectionAlive = true
+		go ctrl.watchDog()
+		ctrl.onConnect()
+		return nil
 	}
 	return err
 }
