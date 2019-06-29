@@ -63,8 +63,8 @@ func NewCtrlNetwork(act shared.Actor,
 		onMessage: onMessage,
 		onUpdate:  onUpdate,
 	}
-	n.wsDialer.ReadBufferSize = 32 * 1024  // 32KB
-	n.wsDialer.WriteBufferSize = 32 * 1024 // 32KB
+	n.wsDialer.ReadBufferSize = 32 << 10  // 32KB
+	n.wsDialer.WriteBufferSize = 32 << 10 // 32KB
 
 	return n
 }
@@ -81,7 +81,7 @@ func (ctrl *CtrlNetwork) Start() error {
 			ctrl.onConnect()
 			return nil
 		}
-		time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Second)
+		time.Sleep(time.Duration(ronak.RandomInt(10)) * time.Second)
 		maxTry--
 	}
 	return err

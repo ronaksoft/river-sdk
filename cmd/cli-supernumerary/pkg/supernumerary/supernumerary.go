@@ -149,9 +149,9 @@ func (s *Supernumerary) CreateAuthKey() {
 // CreateAuthKey init step required
 func (s *Supernumerary) CreateAuthKeyTest() {
 	waitGroup := sync.WaitGroup{}
-	waitGroup.Add(len(s.Actors))
 	sleepTime := shared.DefaultMaxInterval / time.Duration(len(s.Actors))
 	for _, act := range s.Actors {
+		waitGroup.Add(1)
 		go func(act shared.Actor) {
 			defer waitGroup.Done()
 			if act == nil {
@@ -174,9 +174,9 @@ func (s *Supernumerary) CreateAuthKeyTest() {
 // Register init step required
 func (s *Supernumerary) Register() {
 	waitGroup := sync.WaitGroup{}
-	waitGroup.Add(len(s.Actors))
 	sleepTime := shared.DefaultMaxInterval / time.Duration(len(s.Actors))
 	for _, act := range s.Actors {
+		waitGroup.Add(1)
 		go func(act shared.Actor) {
 			defer waitGroup.Done()
 			sen := scenario.NewRegister(false)
@@ -195,9 +195,9 @@ func (s *Supernumerary) Register() {
 // Login init step required
 func (s *Supernumerary) Login() {
 	waitGroup := sync.WaitGroup{}
-	waitGroup.Add(len(s.Actors))
 	sleepTime := shared.DefaultMaxInterval / time.Duration(len(s.Actors))
 	for _, act := range s.Actors {
+		waitGroup.Add(1)
 		go func(act shared.Actor) {
 			defer waitGroup.Done()
 			sen := scenario.NewLogin(false)

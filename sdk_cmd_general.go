@@ -589,4 +589,3 @@ func (r *River) ClearCache(peerID int64, mediaTypes string, allMedia bool) bool 
 func (r *River) GetSDKSalt() int64 {
 	return r.networkCtrl.GetServerSalt()
 }
-

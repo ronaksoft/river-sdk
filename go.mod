@@ -39,6 +39,7 @@ require (
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	go.uber.org/zap v1.9.1
 	golang.org/x/net v0.0.0-20190313220215-9f648a60d977 // indirect
+	google.golang.org/grpc v1.19.0
 	gopkg.in/abiosoft/ishell.v2 v2.0.0
 	gopkg.in/doug-martin/goqu.v5 v5.0.0 // indirect
 )

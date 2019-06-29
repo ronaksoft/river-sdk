@@ -199,18 +199,17 @@ func (s *CreateAuthKey) initCompleteAuth(resp *msg.InitResponse, act shared.Acto
 	return reqEnv, successCB, timeoutCB
 }
 
-
 const (
-	dhKeys		= 5000
+	dhKeys = 5000
 )
 
 type generator struct {
-	dhKeyChan  chan *dhkx.DHKey
+	dhKeyChan chan *dhkx.DHKey
 }
 
 var (
 	_Generator = generator{
-		dhKeyChan:  make(chan *dhkx.DHKey, dhKeys),
+		dhKeyChan: make(chan *dhkx.DHKey, dhKeys),
 	}
 )
 
