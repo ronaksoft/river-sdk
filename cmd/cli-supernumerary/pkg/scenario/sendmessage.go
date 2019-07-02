@@ -29,15 +29,15 @@ func (s *SendMessage) Play(act shared.Actor) {
 		return
 	}
 
-	if len(act.GetPeers()) == 0 {
-		s.AddJobs(1)
-		success := Play(act, NewImportContact(false))
-		if !success {
-			s.failed(act, 0, 0, "Play() : failed at pre requested scenario SendMessage")
-			return
-		}
-		s.wait.Done()
-	}
+	// if len(act.GetPeers()) == 0 {
+	// 	s.AddJobs(1)
+	// 	success := Play(act, NewImportContact(false))
+	// 	if !success {
+	// 		s.failed(act, 0, 0, "Play() : failed at pre requested scenario SendMessage")
+	// 		return
+	// 	}
+	// 	s.wait.Done()
+	// }
 
 	peers := act.GetPeers()
 	s.AddJobs(len(peers))

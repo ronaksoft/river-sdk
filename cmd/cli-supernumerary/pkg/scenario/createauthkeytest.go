@@ -8,7 +8,6 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 )
 
-
 // CreateAuthKeyTest scenario
 type CreateAuthKeyTest struct {
 	Scenario

@@ -49,7 +49,6 @@ func NewActor(phone string) (shared.Actor, error) {
 	act = new(Actor)
 	err := act.Load(phone)
 	if err != nil {
-		_Log.Warn("Actor Load Failed, Initialize it")
 		act = &Actor{
 			Phone:     phone,
 			PhoneList: make([]string, 0),

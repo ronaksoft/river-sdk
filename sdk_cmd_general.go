@@ -502,4 +502,3 @@ func (r *River) GetDBStatus(delegate RequestDelegate) {
 func (r *River) GetSDKSalt() int64 {
 	return r.networkCtrl.GetServerSalt()
 }
-
