@@ -50,11 +50,7 @@ func (r *repoGroups) readFromCache(groupID int64) *msg.Group {
 }
 
 func (r *repoGroups) readManyFromCache(groupIDs []int64) []*msg.Group {
-	keyNames := make([]string, 0, len(groupIDs))
 	groups := make([]*msg.Group, 0, len(groupIDs))
-	for _, groupID := range groupIDs {
-		keyNames = append(keyNames, fmt.Sprintf("OBJ.GROUP.{%d}", groupID))
-	}
 	for _, groupID := range groupIDs {
 		if group := r.readFromCache(groupID); group != nil {
 			groups = append(groups, group)

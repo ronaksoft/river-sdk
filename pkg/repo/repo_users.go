@@ -55,11 +55,7 @@ func (r *repoUsers) readFromCache(userID int64) *msg.User {
 }
 
 func (r *repoUsers) readManyFromCache(userIDs []int64) []*msg.User {
-	keyNames := make([]string, 0, len(userIDs))
 	users := make([]*msg.User, 0, len(userIDs))
-	for _, userID := range userIDs {
-		keyNames = append(keyNames, fmt.Sprintf("OBJ.USER.{%d}", userID))
-	}
 	for _, userID := range userIDs {
 		if user := r.readFromCache(userID); user != nil {
 			users = append(users, user)
