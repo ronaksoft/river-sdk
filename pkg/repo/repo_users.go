@@ -16,6 +16,9 @@ type repoUsers struct {
 }
 
 func (r *repoUsers) Save(user *msg.User) error {
+	if alreadySaved(fmt.Sprintf("U.%d", user.ID), user) {
+		return nil
+	}
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -291,6 +294,9 @@ func (r *repoUsers) SaveMany(users []*msg.User) error {
 
 	userIDs := domain.MInt64B{}
 	for _, v := range users {
+		if alreadySaved(fmt.Sprintf("U.%d", v.ID), v) {
+			continue
+		}
 		userIDs[v.ID] = true
 	}
 	mapDTOUsers := make(map[int64]*dto.Users)
@@ -436,12 +442,15 @@ func (r *repoUsers) UpdateAccountPhotoPath(userID, photoID int64, isBig bool, fi
 
 }
 
-func (r *repoUsers) SavePhoto(userPhoto *msg.UpdateUserPhoto) error {
+func (r *repoUsers) UpdatePhoto(userPhoto *msg.UpdateUserPhoto) error {
+	if alreadySaved(fmt.Sprintf("UPHOTO.%d", userPhoto.UserID), userPhoto) {
+		return nil
+	}
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
 	if userPhoto == nil {
-		logs.Debug("RepoUsers::SavePhoto()",
+		logs.Debug("RepoUsers::UpdatePhoto()",
 			zap.String("User", "user is null"),
 		)
 		return domain.ErrNotFound

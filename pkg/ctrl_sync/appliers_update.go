@@ -405,9 +405,9 @@ func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 	x := new(msg.UpdateUserPhoto)
 	x.Unmarshal(u.Update)
 
-	err := repo.Users.SavePhoto(x)
+	err := repo.Users.UpdatePhoto(x)
 	if err != nil {
-		logs.Error("updateUserPhoto()-> SavePhoto()", zap.Error(err))
+		logs.Error("updateUserPhoto()-> UpdatePhoto()", zap.Error(err))
 	}
 
 	res := []*msg.UpdateEnvelope{u}

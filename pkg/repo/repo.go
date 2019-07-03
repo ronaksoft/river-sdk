@@ -1,7 +1,9 @@
 package repo
 
 import (
+	"github.com/allegro/bigcache"
 	"sync"
+	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
@@ -16,6 +18,7 @@ var (
 	r             *repository
 	singleton     sync.Mutex
 	repoLastError error
+	lCache        *bigcache.BigCache
 
 	Dialogs         *repoDialogs
 	Messages        *repoMessages
@@ -65,7 +68,10 @@ func (r *repository) initDB() error {
 func InitRepo(dialect, dbPath string) error {
 	if ctx == nil {
 		singleton.Lock()
-		defer singleton.Unlock()
+		lcConfig := bigcache.DefaultConfig(time.Second*360)
+		lcConfig.CleanWindow = time.Second * 30
+		lcConfig.HardMaxCacheSize = 128
+		lCache, _ = bigcache.NewBigCache(lcConfig)
 		repoLastError = repoSetDB(dialect, dbPath)
 		ctx = &Context{
 			DBDialect: dialect,
@@ -80,6 +86,7 @@ func InitRepo(dialect, dbPath string) error {
 		UISettings = &repoUISettings{repository: r}
 		Groups = &repoGroups{repository: r}
 		Files = &repoFiles{repository: r}
+		singleton.Unlock()
 	}
 	return repoLastError
 }

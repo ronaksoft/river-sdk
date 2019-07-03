@@ -15,6 +15,9 @@ type repoGroups struct {
 
 // Get
 func (r *repoGroups) Save(g *msg.Group) (err error) {
+	if alreadySaved(fmt.Sprintf("G.%d", g.ID), g) {
+		return nil
+	}
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -34,6 +37,9 @@ func (r *repoGroups) SaveMany(groups []*msg.Group) error {
 
 	groupIDs := domain.MInt64B{}
 	for _, v := range groups {
+		if alreadySaved(fmt.Sprintf("G.%d", v.ID), v) {
+			continue
+		}
 		groupIDs[v.ID] = true
 	}
 	mapDTOGroups := make(map[int64]*dto.Groups)
@@ -256,6 +262,9 @@ func (r *repoGroups) UpdatePhotoPath(groupID int64, isBig bool, filePath string)
 }
 
 func (r *repoGroups) UpdatePhoto(groupPhoto *msg.UpdateGroupPhoto) error {
+	if alreadySaved(fmt.Sprintf("GPHOTO.%d", groupPhoto.GroupID), groupPhoto) {
+		return nil
+	}
 	r.mx.Lock()
 	defer r.mx.Unlock()
 

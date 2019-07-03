@@ -5,6 +5,7 @@ require (
 	git.ronaksoftware.com/ronak/toolbox v0.8.9
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
+	github.com/allegro/bigcache v1.2.1
 	github.com/beeker1121/goque v2.0.1+incompatible
 	github.com/c2fo/testify v0.0.0-20150827203832-fba96363964a // indirect
 	github.com/chzyer/logex v1.1.10 // indirect
