@@ -34,7 +34,7 @@ func alreadySaved(id string, message proto.Message) bool {
 }
 
 func readGroupFromCache(id string) *msg.Group {
-
+	return nil
 }
 
 func readManyGroupsFromCache(groupID uint64) {
