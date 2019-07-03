@@ -13,7 +13,56 @@ type repoGroups struct {
 	*repository
 }
 
-// Get
+func (r *repoGroups) readFromDb(groupID int64) *msg.Group {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	pbGroup := new(msg.Group)
+	groups := new(dto.Groups)
+
+	err := r.db.Find(groups, groupID).Error
+	if err != nil {
+		logs.Error("Groups::GetGroup()-> fetch groups entity", zap.Error(err))
+		return nil
+	}
+
+	groups.MapTo(pbGroup)
+
+	return pbGroup
+}
+
+func (r *repoGroups) readFromCache(groupID int64) *msg.Group {
+	group := new(msg.Group)
+	keyID := fmt.Sprintf("OBJ.GROUP.{%d}", groupID)
+
+	if jsonGroup, err := lCache.Get(keyID); err != nil || len(jsonGroup) == 0 {
+		group := r.readFromDb(groupID)
+		if group == nil {
+			return nil
+		}
+		jsonGroup, _ = group.Marshal()
+		_ = lCache.Set(keyID, jsonGroup)
+		return group
+	} else {
+		_ = group.Unmarshal(jsonGroup)
+	}
+	return group
+}
+
+func (r *repoGroups) readManyFromCache(groupIDs []int64) []*msg.Group {
+	keyNames := make([]string, 0, len(groupIDs))
+	groups := make([]*msg.Group, 0, len(groupIDs))
+	for _, groupID := range groupIDs {
+		keyNames = append(keyNames, fmt.Sprintf("OBJ.GROUP.{%d}", groupID))
+	}
+	for _, groupID := range groupIDs {
+		if group := r.readFromCache(groupID); group != nil {
+			groups = append(groups, group)
+		}
+	}
+	return groups
+}
+
 func (r *repoGroups) Save(g *msg.Group) (err error) {
 	if alreadySaved(fmt.Sprintf("G.%d", g.ID), g) {
 		return nil
@@ -76,43 +125,11 @@ func (r *repoGroups) SaveMany(groups []*msg.Group) error {
 }
 
 func (r *repoGroups) GetMany(groupIDs []int64) []*msg.Group {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	pbGroup := make([]*msg.Group, 0)
-	groups := make([]dto.Groups, 0, len(groupIDs))
-
-	err := r.db.Where("ID in (?)", groupIDs).Find(&groups).Error
-	if err != nil {
-		logs.Error("Groups::GetManyGroups()-> fetch groups entity", zap.Error(err))
-		return nil //, err
-	}
-
-	for _, v := range groups {
-		tmp := new(msg.Group)
-		v.MapTo(tmp)
-		pbGroup = append(pbGroup, tmp)
-	}
-
-	return pbGroup
+	return r.readManyFromCache(groupIDs)
 }
 
-func (r *repoGroups) Get(groupID int64) (*msg.Group, error) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	pbGroup := new(msg.Group)
-	groups := new(dto.Groups)
-
-	err := r.db.Find(groups, groupID).Error
-	if err != nil {
-		logs.Error("Groups::GetGroup()-> fetch groups entity", zap.Error(err))
-		return nil, err
-	}
-
-	groups.MapTo(pbGroup)
-
-	return pbGroup, nil
+func (r *repoGroups) Get(groupID int64) *msg.Group {
+	return r.readFromCache(groupID)
 }
 
 func (r *repoGroups) DeleteMember(groupID, userID int64) error {
@@ -237,7 +254,7 @@ func (r *repoGroups) GetGroupDTO(groupID int64) (*dto.Groups, error) {
 	err := r.db.Find(group, groupID).Error
 	if err != nil {
 		logs.Error("Groups::GetGroup()-> fetch groups entity", zap.Error(err))
-		return nil, err //, err
+		return nil, err // , err
 	}
 
 	return group, nil

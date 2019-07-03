@@ -3,6 +3,7 @@ package repo
 import (
 	"bytes"
 	"encoding/binary"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"github.com/gobwas/pool/pbytes"
 	"github.com/gogo/protobuf/proto"
 	"hash/crc32"
@@ -30,4 +31,12 @@ func alreadySaved(id string, message proto.Message) bool {
 		return true
 	}
 	return false
+}
+
+func readGroupFromCache(id string) *msg.Group {
+
+}
+
+func readManyGroupsFromCache(groupID uint64) {
+
 }

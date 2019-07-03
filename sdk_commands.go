@@ -1027,9 +1027,8 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 
 	res := new(msg.GroupFull)
 	// Group
-	group, err := repo.Groups.Get(req.GroupID)
-	if err != nil {
-		logs.Error("River::groupsGetFull()-> GetGroup() Sending Request To Server !!!", zap.Error(err))
+	group := repo.Groups.Get(req.GroupID)
+	if group == nil {
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
 	}

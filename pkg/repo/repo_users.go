@@ -15,6 +15,59 @@ type repoUsers struct {
 	*repository
 }
 
+func (r *repoUsers) readFromDb(userID int64) *msg.User {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	logs.Debug("Users::Get()",
+		zap.Int64("userID", userID),
+	)
+
+	pbUser := new(msg.User)
+	user := new(dto.Users)
+
+	err := r.db.Find(user, userID).Error
+	if err != nil {
+		logs.Error("Users::Get()-> fetch user entity", zap.Error(err))
+		return nil
+	}
+
+	user.MapToUser(pbUser)
+	return pbUser
+}
+
+func (r *repoUsers) readFromCache(userID int64) *msg.User {
+	user := new(msg.User)
+	keyID := fmt.Sprintf("OBJ.USER.{%d}", userID)
+
+	if jsonGroup, err := lCache.Get(keyID); err != nil || len(jsonGroup) == 0 {
+		user := r.readFromDb(userID)
+		if user == nil {
+			return nil
+		}
+		jsonGroup, _ = user.Marshal()
+		_ = lCache.Set(keyID, jsonGroup)
+		return user
+	} else {
+		_ = user.Unmarshal(jsonGroup)
+	}
+	return user
+}
+
+func (r *repoUsers) readManyFromCache(userIDs []int64) []*msg.User {
+	keyNames := make([]string, 0, len(userIDs))
+	users := make([]*msg.User, 0, len(userIDs))
+	for _, userID := range userIDs {
+		keyNames = append(keyNames, fmt.Sprintf("OBJ.USER.{%d}", userID))
+	}
+	for _, userID := range userIDs {
+		if user := r.readFromCache(userID); user != nil {
+			users = append(users, user)
+		}
+	}
+	return users
+}
+
 func (r *repoUsers) Save(user *msg.User) error {
 	if alreadySaved(fmt.Sprintf("U.%d", user.ID), user) {
 		return nil
@@ -244,48 +297,11 @@ func (r *repoUsers) UpdateAccessHash(accessHash int64, peerID int64, peerType in
 }
 
 func (r *repoUsers) Get(userID int64) *msg.User {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	logs.Debug("Users::Get()",
-		zap.Int64("userID", userID),
-	)
-
-	pbUser := new(msg.User)
-	user := new(dto.Users)
-
-	err := r.db.Find(user, userID).Error
-	if err != nil {
-		logs.Error("Users::Get()-> fetch user entity", zap.Error(err))
-		return nil //, err
-	}
-
-	user.MapToUser(pbUser)
-
-	return pbUser
+	return r.readFromCache(userID)
 }
 
 func (r *repoUsers) GetMany(userIDs []int64) []*msg.User {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	pbUsers := make([]*msg.User, 0, len(userIDs))
-	users := make([]dto.Users, 0, len(userIDs))
-
-	err := r.db.Where("ID in (?)", userIDs).Find(&users).Error
-	if err != nil {
-		logs.Error("Users::GetMany()-> fetch user entity", zap.Error(err))
-		return nil //, err
-	}
-
-	for _, v := range users {
-		tmp := new(msg.User)
-		v.MapToUser(tmp)
-		pbUsers = append(pbUsers, tmp)
-
-	}
-
-	return pbUsers
+	return r.readManyFromCache(userIDs)
 }
 
 func (r *repoUsers) SaveMany(users []*msg.User) error {
