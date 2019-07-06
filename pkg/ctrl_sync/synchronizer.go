@@ -163,8 +163,11 @@ func (ctrl *Controller) sync() {
 		}
 		// Get Contacts from the server
 		getContacts(ctrl)
+		waitGroup := &sync.WaitGroup{}
+		waitGroup.Add(1)
+		getAllDialogs(waitGroup, ctrl, 0, 100)
+		waitGroup.Wait()
 		ctrl.updateID = serverUpdateID
-		getAllDialogs(ctrl, 0, 100)
 		err = repo.System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
 		if err != nil {
 			logs.Error("sync()-> SaveInt()", zap.Error(err))
@@ -241,7 +244,7 @@ func getContacts(ctrl *Controller) {
 		false,
 	)
 }
-func getAllDialogs(ctrl *Controller, offset int32, limit int32) {
+func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, limit int32) {
 	logs.Info("SyncController:: getAllDialogs",
 		zap.Int32("Offset", offset),
 		zap.Int32("Limit", limit),
@@ -256,7 +259,7 @@ func getAllDialogs(ctrl *Controller, offset int32, limit int32) {
 		reqBytes,
 		func() {
 			logs.Warn("getAllDialogs() -> onTimeoutback() retry to getAllDialogs()")
-			getAllDialogs(ctrl, offset, limit)
+			getAllDialogs(waitGroup, ctrl, offset, limit)
 		},
 		func(m *msg.MessageEnvelope) {
 			switch m.Constructor {
@@ -303,7 +306,9 @@ func getAllDialogs(ctrl *Controller, offset int32, limit int32) {
 				_ = repo.Groups.SaveMany(x.Groups)
 
 				if x.Count > offset+limit {
-					getAllDialogs(ctrl, offset+limit, limit)
+					getAllDialogs(waitGroup, ctrl, offset+limit, limit)
+				} else {
+					waitGroup.Done()
 				}
 			case msg.C_Error:
 				logs.Error("onSuccessCallback()-> C_Error",
