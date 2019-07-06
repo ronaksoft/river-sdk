@@ -162,10 +162,12 @@ func (ctrl *Controller) sync() {
 			return
 		}
 		// Get Contacts from the server
-		getContacts(ctrl)
 		waitGroup := &sync.WaitGroup{}
 		waitGroup.Add(1)
-		getAllDialogs(waitGroup, ctrl, 0, 100)
+		go getContacts(waitGroup, ctrl)
+
+		waitGroup.Add(1)
+		go getAllDialogs(waitGroup, ctrl, 0, 100)
 		waitGroup.Wait()
 		ctrl.updateID = serverUpdateID
 		err = repo.System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
@@ -230,15 +232,18 @@ func getUpdateState(ctrl *Controller) (updateID int64, err error) {
 	waitGroup.Wait()
 	return
 }
-func getContacts(ctrl *Controller) {
+func getContacts(waitGroup *sync.WaitGroup, ctrl *Controller) {
 	req := new(msg.ContactsGet)
 	reqBytes, _ := req.Marshal()
 	ctrl.queueCtrl.ExecuteCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_ContactsGet,
 		reqBytes,
-		nil,
+		func () {
+			getContacts(waitGroup, ctrl)
+		},
 		func(m *msg.MessageEnvelope) {
+			waitGroup.Done()
 			// Controller applier will take care of this
 		},
 		false,
