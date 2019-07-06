@@ -21,3 +21,13 @@ func (r *River) GetRealTopMessageID(peerID int64, peerType int32) int64 {
 	}
 	return topMsgID
 }
+
+func (r *River) GetPinnedDialogsCount() int {
+	dialogs := repo.Dialogs.GetPinnedDialogs()
+
+	if dialogs != nil {
+		return len(dialogs)
+	}
+
+	return 0
+}

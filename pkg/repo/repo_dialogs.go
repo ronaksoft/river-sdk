@@ -225,6 +225,29 @@ func (r *repoDialogs) UpdateAccessHash(accessHash int64, peerID int64, peerType 
 	return err
 }
 
+func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	ed := new(dto.Dialogs)
+	dtoDlgs := make([]dto.Dialogs, 0)
+	err := r.db.Table(ed.TableName()).Where("IsPinned=?",1).Find(&dtoDlgs).Error
+
+	if err != nil {
+		logs.Error("Dialogs::GetPinnedDialogs()->fetch dialogs entity", zap.Error(err))
+		return nil
+	}
+
+	dialogs := make([]*msg.Dialog, 0)
+	for _, v := range dtoDlgs {
+		tmp := new(msg.Dialog)
+		v.MapTo(tmp)
+		dialogs = append(dialogs, tmp)
+	}
+
+	return dialogs
+}
+
 func (r *repoDialogs) UpdateNotifySetting(msg *msg.UpdateNotifySettings) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
