@@ -21,12 +21,17 @@ func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
 		return
 	}
 	logs.Info("SyncController::authAuthorization",
+		zap.String("FirstName",x.User.FirstName),
+		zap.String("LastName",x.User.LastName),
 		zap.Int64("UserID", x.User.ID),
+		zap.String("Bio",x.User.Bio),
+		zap.String("Username",x.User.Username),
 	)
 	ctrl.connInfo.ChangeFirstName(x.User.FirstName)
 	ctrl.connInfo.ChangeLastName(x.User.LastName)
-	ctrl.connInfo.ChangeUsername(x.User.Username)
 	ctrl.connInfo.ChangeUserID(x.User.ID)
+	ctrl.connInfo.ChangeBio(x.User.Bio)
+	ctrl.connInfo.ChangeUsername(x.User.Username)
 	ctrl.connInfo.Save()
 
 	ctrl.SetUserID(x.User.ID)
