@@ -417,7 +417,7 @@ func (fs *File) downloaderJob(fm *Controller) {
 
 		select {
 		case partIdx := <-fs.chPartList:
-			fm.SendDownloadRequest(generateFileGet(fs, partIdx), fs, partIdx)
+			fm.downloadRequest(generateFileGet(fs, partIdx), fs, partIdx)
 		default:
 			return
 		}
@@ -475,7 +475,7 @@ func (fs *File) uploaderJob(fm *Controller) {
 				logs.Warn("uploaderJob()", zap.Error(err), zap.String("filePath", fs.FilePath))
 				break
 			}
-			fm.SendUploadRequest(envelop, int64(readCount), fs, partIdx)
+			fm.uploadRequest(envelop, int64(readCount), fs, partIdx)
 		default:
 			return
 		}
@@ -494,7 +494,7 @@ func (fs *File) uploadThumbnail(fm *Controller) {
 			logs.Error("uploaderJob()", zap.Error(err), zap.String("filePath", fs.FilePath))
 			continue
 		}
-		fm.SendUploadRequest(envelop, int64(readCount), fs, 0)
+		fm.uploadRequest(envelop, int64(readCount), fs, 0)
 	}
 }
 

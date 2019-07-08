@@ -108,6 +108,7 @@ func InitFileManager(serverAddress string,
 	go ctx.startDownloadQueue()
 	go ctx.startUploadQueue()
 }
+
 func (fm *Controller) startDownloadQueue() {
 	for {
 		if fm.NetworkStatus == domain.NetworkDisconnected || fm.NetworkStatus == domain.NetworkConnecting {
@@ -132,6 +133,7 @@ func (fm *Controller) startDownloadQueue() {
 		}
 	}
 }
+
 func (fm *Controller) startUploadQueue() {
 	for {
 		if fm.NetworkStatus == domain.NetworkDisconnected || fm.NetworkStatus == domain.NetworkConnecting {
@@ -159,48 +161,167 @@ func (fm *Controller) startUploadQueue() {
 	}
 }
 
-// SetRootFolders directory paths to download files
-func SetRootFolders(audioDir, fileDir, photoDir, videoDir, cacheDir string) {
-	dirAudio = audioDir
-	dirFile = fileDir
-	dirPhoto = photoDir
-	dirVideo = videoDir
-	dirCache = cacheDir
-}
+// downloadRequest send request to server
+func (fm *Controller) downloadRequest(req *msg.MessageEnvelope, fs *File, partIdx int64) {
+	// time out has been set in Send()
+	res, err := fm.Send(req)
+	if err == nil {
+		switch res.Constructor {
+		case msg.C_Error:
+			// remove download from queue
+			fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
+			logs.Error("downloadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
+			fs.RequestStatus = domain.RequestStatusError
+			repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 
-// GetFilePath generate related file path by its mime type
-func GetFilePath(mimeType string, docID int64, fileName string) string {
-	lower := strings.ToLower(mimeType)
-	strDocID := strconv.FormatInt(docID, 10)
-	ext := path.Ext(fileName)
-	if ext == "" {
-		exts, err := mime.ExtensionsByType(mimeType)
-		if err == nil {
-			for _, val := range exts {
-				ext = val
+			if fm.onDownloadError != nil {
+				fm.onDownloadError(fs.MessageID, int64(req.RequestID), fs.FilePath, res.Message)
 			}
+		case msg.C_File:
+			x := new(msg.File)
+			err := x.Unmarshal(res.Message)
+			if err != nil {
+				logs.Error("downloadRequest() failed to unmarshal C_File", zap.Error(err))
+				fs.retryCounter++
+				break
+			}
+
+			if len(x.Bytes) == 0 {
+				logs.Error("downloadRequest() Received 0 bytes from server ",
+					zap.Int64("MsgID", fs.MessageID),
+					zap.Int64("PartNo", partIdx),
+					zap.Int64("TotalSize", fs.TotalSize),
+				)
+				fs.retryCounter++
+				break
+
+			} else {
+				// reset counter
+				fs.retryCounter = 0
+			}
+
+			isCompleted, err := fs.Write(x.Bytes, partIdx)
+			if err != nil {
+				logs.Error("downloadRequest() failed write to file", zap.Error(err))
+			} else if isCompleted {
+				// call completed delegate
+				fm.downloadCompleted(fs.MessageID, fs.FilePath, fs.Type)
+
+			}
+		default:
+			// increase counter
+			fs.retryCounter++
+			logs.Error("downloadRequest() received unknown response", zap.Error(err))
+		}
+	} else {
+		// increase counter
+		fs.chPartList <- partIdx
+		fs.retryCounter++
+		logs.Error("downloadRequest()", zap.Error(err))
+	}
+	if fs.retryCounter > domain.FileMaxRetry {
+		// remove download from queue
+		fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
+		logs.Warn("downloadRequest() download request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
+		fs.RequestStatus = domain.RequestStatusError
+		_ = repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
+		if fm.onDownloadError != nil {
+			x := new(msg.Error)
+			x.Code = "00"
+			x.Items = "download request errors passed retry threshold"
+			xbuff, _ := x.Marshal()
+			fm.onDownloadError(fs.MessageID, int64(req.RequestID), fs.FilePath, xbuff)
 		}
 	}
+}
 
-	// if the file is opus type,
-	// means its voice file so it should be saved in cache folder
-	// so user could not access to it by file manager
-	if lower == "audio/ogg" {
-		ext = ".ogg"
-		return path.Join(dirCache, fmt.Sprintf("%s%s", strDocID, ext))
+func (fm *Controller) downloadCompleted(msgID int64, filePath string, stateType domain.FileStateType) {
+	// delete file status
+	fm.DeleteFromQueue(msgID, domain.RequestStatusCompleted)
+	repo.Files.DeleteFileStatus(msgID)
+	if fm.onDownloadCompleted != nil {
+		fm.onDownloadCompleted(msgID, filePath, stateType)
+	}
+}
+
+// uploadRequest send request to server
+func (fm *Controller) uploadRequest(req *msg.MessageEnvelope, count int64, fs *File, partIdx int64) {
+	// time out has been set in Send()
+	res, err := fm.Send(req)
+	if err == nil {
+		switch res.Constructor {
+		case msg.C_Error:
+			// remove upload from
+			fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
+			logs.Warn("uploadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
+			fs.RequestStatus = domain.RequestStatusError
+			repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
+			if fm.onUploadError != nil {
+				fm.onUploadError(fs.MessageID, int64(req.RequestID), fs.FilePath, res.Message)
+			}
+		case msg.C_Bool:
+			x := new(msg.Bool)
+			err := x.Unmarshal(res.Message)
+			if err != nil {
+				logs.Error("uploadRequest()->Unmarshal()", zap.Error(err))
+			}
+			// reset counter
+			fs.retryCounter = 0
+			if x.Result {
+				isThumbnail := fs.ThumbPosition < fs.ThumbTotalSize
+				if isThumbnail {
+					fs.ReadCommit(count, true, 0)
+				} else {
+					select {
+					case fs.chUploadProgress <- partIdx:
+					default:
+						// progress monitor is exited already
+					}
+				}
+			}
+		default:
+			// increase counter
+			fs.retryCounter++
+			logs.Warn("uploadRequest() received unknown response", zap.Error(err))
+
+		}
+	} else {
+		// increase counter
+		fs.retryCounter++
+		logs.Warn("uploadRequest()", zap.Error(err))
 	}
 
-	if strings.HasPrefix(lower, "video/") {
-		return path.Join(dirVideo, fmt.Sprintf("%s%s", strDocID, ext))
-	}
-	if strings.HasPrefix(lower, "audio/") {
-		return path.Join(dirAudio, fmt.Sprintf("%s%s", strDocID, ext))
-	}
-	if strings.HasPrefix(lower, "image/") {
-		return path.Join(dirPhoto, fmt.Sprintf("%s%s", strDocID, ext))
-	}
+	if fs.retryCounter > domain.FileMaxRetry {
 
-	return path.Join(dirFile, fmt.Sprintf("%s%s", strDocID, ext))
+		// remove upload from queue
+		fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
+		logs.Error("uploadRequest() upload request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
+		fs.RequestStatus = domain.RequestStatusError
+		repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
+		if fm.onUploadError != nil {
+			x := new(msg.Error)
+			x.Code = "00"
+			x.Items = "upload request errors passed retry threshold"
+			xbuff, _ := x.Marshal()
+			fm.onUploadError(fs.MessageID, int64(req.RequestID), fs.FilePath, xbuff)
+		}
+	}
+}
+
+func (fm *Controller) uploadCompleted(msgID, fileID, targetID int64,
+	clusterID int32, totalParts int64,
+	stateType domain.FileStateType,
+	filePath string,
+	uploadRequest *msg.ClientSendMessageMedia,
+	thumbFileID int64,
+	thumbTotalParts int32,
+) {
+	// delete file status
+	fm.DeleteFromQueue(msgID, domain.RequestStatusCompleted)
+	repo.Files.DeleteFileStatus(msgID)
+	if fm.onUploadCompleted != nil {
+		fm.onUploadCompleted(msgID, fileID, targetID, clusterID, totalParts, stateType, filePath, uploadRequest, thumbFileID, thumbTotalParts)
+	}
 }
 
 // Stop set stop flag
@@ -402,144 +523,6 @@ func (fm *Controller) SetServerSalt(salt int64) {
 	fm.salt = salt
 }
 
-// SendUploadRequest send request to server
-func (fm *Controller) SendUploadRequest(req *msg.MessageEnvelope, count int64, fs *File, partIdx int64) {
-	// time out has been set in Send()
-	res, err := fm.Send(req)
-	if err == nil {
-		switch res.Constructor {
-		case msg.C_Error:
-			// remove upload from
-			fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
-			logs.Warn("SendUploadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
-			fs.RequestStatus = domain.RequestStatusError
-			repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
-			if fm.onUploadError != nil {
-				fm.onUploadError(fs.MessageID, int64(req.RequestID), fs.FilePath, res.Message)
-			}
-		case msg.C_Bool:
-			x := new(msg.Bool)
-			err := x.Unmarshal(res.Message)
-			if err != nil {
-				logs.Error("SendUploadRequest()->Unmarshal()", zap.Error(err))
-			}
-			// reset counter
-			fs.retryCounter = 0
-			if x.Result {
-				isThumbnail := fs.ThumbPosition < fs.ThumbTotalSize
-				if isThumbnail {
-					fs.ReadCommit(count, true, 0)
-				} else {
-					select {
-					case fs.chUploadProgress <- partIdx:
-					default:
-						// progress monitor is exited already
-					}
-				}
-			}
-		default:
-			// increase counter
-			fs.retryCounter++
-			logs.Warn("SendUploadRequest() received unknown response", zap.Error(err))
-
-		}
-	} else {
-		// increase counter
-		fs.retryCounter++
-		logs.Warn("SendUploadRequest()", zap.Error(err))
-	}
-
-	if fs.retryCounter > domain.FileMaxRetry {
-
-		// remove upload from queue
-		fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
-		logs.Error("SendUploadRequest() upload request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
-		fs.RequestStatus = domain.RequestStatusError
-		repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
-		if fm.onUploadError != nil {
-			x := new(msg.Error)
-			x.Code = "00"
-			x.Items = "upload request errors passed retry threshold"
-			xbuff, _ := x.Marshal()
-			fm.onUploadError(fs.MessageID, int64(req.RequestID), fs.FilePath, xbuff)
-		}
-	}
-}
-
-// SendDownloadRequest send request to server
-func (fm *Controller) SendDownloadRequest(req *msg.MessageEnvelope, fs *File, partIdx int64) {
-	// time out has been set in Send()
-	res, err := fm.Send(req)
-	if err == nil {
-		switch res.Constructor {
-		case msg.C_Error:
-			// remove download from queue
-			fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
-			logs.Error("SendDownloadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
-			fs.RequestStatus = domain.RequestStatusError
-			repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
-
-			if fm.onDownloadError != nil {
-				fm.onDownloadError(fs.MessageID, int64(req.RequestID), fs.FilePath, res.Message)
-			}
-		case msg.C_File:
-			x := new(msg.File)
-			err := x.Unmarshal(res.Message)
-			if err != nil {
-				logs.Error("SendDownloadRequest() failed to unmarshal C_File", zap.Error(err))
-				fs.retryCounter++
-				break
-			}
-
-			if len(x.Bytes) == 0 {
-				logs.Error("SendDownloadRequest() Received 0 bytes from server ",
-					zap.Int64("MsgID", fs.MessageID),
-					zap.Int64("PartNo", partIdx),
-					zap.Int64("TotalSize", fs.TotalSize),
-				)
-				fs.retryCounter++
-				break
-
-			} else {
-				// reset counter
-				fs.retryCounter = 0
-			}
-
-			isCompleted, err := fs.Write(x.Bytes, partIdx)
-			if err != nil {
-				logs.Error("SendDownloadRequest() failed write to file", zap.Error(err))
-			} else if isCompleted {
-				// call completed delegate
-				fm.downloadCompleted(fs.MessageID, fs.FilePath, fs.Type)
-
-			}
-		default:
-			// increase counter
-			fs.retryCounter++
-			logs.Error("SendDownloadRequest() received unknown response", zap.Error(err))
-		}
-	} else {
-		// increase counter
-		fs.chPartList <- partIdx
-		fs.retryCounter++
-		logs.Error("SendDownloadRequest()", zap.Error(err))
-	}
-	if fs.retryCounter > domain.FileMaxRetry {
-		// remove download from queue
-		fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
-		logs.Warn("SendDownloadRequest() download request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
-		fs.RequestStatus = domain.RequestStatusError
-		_ = repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
-		if fm.onDownloadError != nil {
-			x := new(msg.Error)
-			x.Code = "00"
-			x.Items = "download request errors passed retry threshold"
-			xbuff, _ := x.Marshal()
-			fm.onDownloadError(fs.MessageID, int64(req.RequestID), fs.FilePath, xbuff)
-		}
-	}
-}
-
 // LoadQueueFromDB load in progress request from database
 func (fm *Controller) LoadQueueFromDB() {
 	// Load pended file status
@@ -561,31 +544,6 @@ func (fm *Controller) SetNetworkStatus(state domain.NetworkStatus) {
 	fm.NetworkStatus = state
 	if state == domain.NetworkWeak || state == domain.NetworkSlow || state == domain.NetworkFast {
 		fm.LoadQueueFromDB()
-	}
-}
-
-func (fm *Controller) downloadCompleted(msgID int64, filePath string, stateType domain.FileStateType) {
-	// delete file status
-	fm.DeleteFromQueue(msgID, domain.RequestStatusCompleted)
-	repo.Files.DeleteFileStatus(msgID)
-	if fm.onDownloadCompleted != nil {
-		fm.onDownloadCompleted(msgID, filePath, stateType)
-	}
-}
-
-func (fm *Controller) uploadCompleted(msgID, fileID, targetID int64,
-	clusterID int32, totalParts int64,
-	stateType domain.FileStateType,
-	filePath string,
-	uploadRequest *msg.ClientSendMessageMedia,
-	thumbFileID int64,
-	thumbTotalParts int32,
-) {
-	// delete file status
-	fm.DeleteFromQueue(msgID, domain.RequestStatusCompleted)
-	repo.Files.DeleteFileStatus(msgID)
-	if fm.onUploadCompleted != nil {
-		fm.onUploadCompleted(msgID, fileID, targetID, clusterID, totalParts, stateType, filePath, uploadRequest, thumbFileID, thumbTotalParts)
 	}
 }
 
@@ -613,7 +571,12 @@ func (fm *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, i
 	envelop.Message, _ = req.Marshal()
 	envelop.RequestID = uint64(domain.SequentialUniqueID())
 
-	filePath := GetFilePath("image/jpeg", req.Location.FileID, "avatar.jpg")
+	// filePath := GetFilePath("image/jpeg", req.Location.FileID, "avatar.jpg")
+	suffix := "small"
+	if isBig {
+		suffix = "big"
+	}
+	filePath := path.Join(dirCache, fmt.Sprintf("u%d_%s%s", userID, suffix, ".jpg"))
 	res, err := fm.Send(envelop)
 	if err == nil {
 		switch res.Constructor {
@@ -671,7 +634,12 @@ func (fm *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, i
 	envelop.Message, _ = req.Marshal()
 	envelop.RequestID = uint64(domain.SequentialUniqueID())
 
-	filePath := GetFilePath("image/jpeg", req.Location.FileID, "group_avatar.jpg")
+	// filePath := GetFilePath("image/jpeg", req.Location.FileID, "group_avatar.jpg")
+	suffix := "small"
+	if isBig {
+		suffix = "big"
+	}
+	filePath := path.Join(dirCache, fmt.Sprintf("g%d_%s%s", groupID, suffix, ".jpg"))
 	res, err := fm.Send(envelop)
 	if err == nil {
 		switch res.Constructor {
@@ -765,4 +733,50 @@ func (fm *Controller) ClearFiles(filePaths []string) error {
 		}
 	}
 	return nil
+}
+
+
+
+// SetRootFolders directory paths to download files
+func SetRootFolders(audioDir, fileDir, photoDir, videoDir, cacheDir string) {
+	dirAudio = audioDir
+	dirFile = fileDir
+	dirPhoto = photoDir
+	dirVideo = videoDir
+	dirCache = cacheDir
+}
+
+// GetFilePath generate related file path by its mime type
+func GetFilePath(mimeType string, docID int64, fileName string) string {
+	lower := strings.ToLower(mimeType)
+	strDocID := strconv.FormatInt(docID, 10)
+	ext := path.Ext(fileName)
+	if ext == "" {
+		exts, err := mime.ExtensionsByType(mimeType)
+		if err == nil {
+			for _, val := range exts {
+				ext = val
+			}
+		}
+	}
+
+	// if the file is opus type,
+	// means its voice file so it should be saved in cache folder
+	// so user could not access to it by file manager
+	if lower == "audio/ogg" {
+		ext = ".ogg"
+		return path.Join(dirCache, fmt.Sprintf("%s%s", strDocID, ext))
+	}
+
+	if strings.HasPrefix(lower, "video/") {
+		return path.Join(dirVideo, fmt.Sprintf("%s%s", strDocID, ext))
+	}
+	if strings.HasPrefix(lower, "audio/") {
+		return path.Join(dirAudio, fmt.Sprintf("%s%s", strDocID, ext))
+	}
+	if strings.HasPrefix(lower, "image/") {
+		return path.Join(dirPhoto, fmt.Sprintf("%s%s", strDocID, ext))
+	}
+
+	return path.Join(dirFile, fmt.Sprintf("%s%s", strDocID, ext))
 }
