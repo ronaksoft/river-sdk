@@ -59,10 +59,17 @@ func (r *repoGroups) readManyFromCache(groupIDs []int64) []*msg.Group {
 	return groups
 }
 
+func (r *repoGroups) deleteFromCache(groupIDs ...int64) {
+	for _, groupID := range groupIDs {
+		_ = lCache.Delete(fmt.Sprintf("OBJ.GROUP.{%d}", groupID))
+	}
+}
+
 func (r *repoGroups) Save(g *msg.Group) (err error) {
 	if alreadySaved(fmt.Sprintf("G.%d", g.ID), g) {
 		return nil
 	}
+	defer r.deleteFromCache(g.ID)
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -79,7 +86,6 @@ func (r *repoGroups) Save(g *msg.Group) (err error) {
 func (r *repoGroups) SaveMany(groups []*msg.Group) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
 	groupIDs := domain.MInt64B{}
 	for _, v := range groups {
 		if alreadySaved(fmt.Sprintf("G.%d", v.ID), v) {
@@ -87,6 +93,7 @@ func (r *repoGroups) SaveMany(groups []*msg.Group) error {
 		}
 		groupIDs[v.ID] = true
 	}
+	defer r.deleteFromCache(groupIDs.ToArray()...)
 	mapDTOGroups := make(map[int64]*dto.Groups)
 	dtoGroups := make([]dto.Groups, 0)
 	err := r.db.Where("ID in (?)", groupIDs.ToArray()).Find(&dtoGroups).Error
@@ -151,6 +158,7 @@ func (r *repoGroups) UpdateTitle(groupID int64, title string) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
+	defer r.deleteFromCache(groupID)
 	dtoG := new(dto.Groups)
 	return r.db.Table(dtoG.TableName()).Where("ID = ? ", groupID).Updates(map[string]interface{}{"Title": title}).Error
 }
@@ -158,7 +166,7 @@ func (r *repoGroups) UpdateTitle(groupID int64, title string) error {
 func (r *repoGroups) SaveParticipants(groupID int64, participant *msg.GroupParticipant) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
+	defer r.deleteFromCache(groupID)
 	dtoGP := new(dto.GroupsParticipants)
 	err := r.db.Where("GroupID = ? AND userID = ?", groupID, participant.UserID).First(dtoGP).Error
 	dtoGP.MapFrom(groupID, participant)
@@ -206,6 +214,7 @@ func (r *repoGroups) UpdateMemberType(groupID, userID int64, isAdmin bool) error
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
+	defer r.deleteFromCache(groupID)
 	dtoGP := new(dto.GroupsParticipants)
 
 	userType := int32(msg.ParticipantTypeMember)
@@ -259,7 +268,7 @@ func (r *repoGroups) GetGroupDTO(groupID int64) (*dto.Groups, error) {
 func (r *repoGroups) UpdatePhotoPath(groupID int64, isBig bool, filePath string) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
+	defer r.deleteFromCache(groupID)
 	e := new(dto.Groups)
 
 	if isBig {
@@ -280,7 +289,7 @@ func (r *repoGroups) UpdatePhoto(groupPhoto *msg.UpdateGroupPhoto) error {
 	}
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
+	defer r.deleteFromCache(groupPhoto.GroupID)
 	grp := new(dto.Groups)
 	err := r.db.Find(grp, groupPhoto.GroupID).Error
 	if err == nil {
@@ -293,7 +302,7 @@ func (r *repoGroups) UpdatePhoto(groupPhoto *msg.UpdateGroupPhoto) error {
 func (r *repoGroups) RemovePhoto(groupID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
+	defer r.deleteFromCache(groupID)
 	grp := new(dto.Groups)
 	return r.db.Table(grp.TableName()).Where("ID=?", groupID).Updates(map[string]interface{}{
 		"Photo":           []byte("[]"),

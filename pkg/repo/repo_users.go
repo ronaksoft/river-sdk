@@ -64,6 +64,13 @@ func (r *repoUsers) readManyFromCache(userIDs []int64) []*msg.User {
 	return users
 }
 
+func (r *repoUsers) deleteFromCache(userIDs ...int64) {
+	for _, userID := range userIDs {
+		_ = lCache.Delete(fmt.Sprintf("OBJ.USER.{%d}", userID))
+	}
+
+}
+
 func (r *repoUsers) Save(user *msg.User) error {
 	if alreadySaved(fmt.Sprintf("U.%d", user.ID), user) {
 		return nil
@@ -282,6 +289,8 @@ func (r *repoUsers) GetAccessHash(userID int64) (uint64, error) {
 }
 
 func (r *repoUsers) UpdateAccessHash(accessHash int64, peerID int64, peerType int32) error {
+	defer r.deleteFromCache(peerID)
+
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -311,6 +320,7 @@ func (r *repoUsers) SaveMany(users []*msg.User) error {
 		}
 		userIDs[v.ID] = true
 	}
+	defer r.deleteFromCache(userIDs.ToArray()...)
 	mapDTOUsers := make(map[int64]*dto.Users)
 	dtoUsers := make([]dto.Users, 0)
 	err := r.db.Where("ID in (?)", userIDs.ToArray()).Find(&dtoUsers).Error
@@ -346,6 +356,7 @@ func (r *repoUsers) SaveMany(users []*msg.User) error {
 }
 
 func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) error {
+	defer r.deleteFromCache(userID)
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -388,6 +399,7 @@ func (r *repoUsers) UpdateUserProfile(userID int64, req *msg.AccountUpdateProfil
 	r.mx.Lock()
 	defer r.mx.Unlock()
 	dtoUser := dto.Users{}
+	defer r.deleteFromCache(userID)
 	// just need to edit existing contacts info
 	return r.db.Table(dtoUser.TableName()).Where("ID=?", userID).Updates(map[string]interface{}{
 		"FirstName": req.FirstName,
@@ -406,6 +418,7 @@ func (r *repoUsers) UpdateUsername(u *msg.UpdateUsername) error {
 		)
 		return domain.ErrNotFound
 	}
+	defer r.deleteFromCache(u.UserID)
 	mdl := dto.Users{}
 
 	return r.db.Table(mdl.TableName()).Where("ID=?", u.UserID).Updates(map[string]interface{}{
@@ -467,11 +480,11 @@ func (r *repoUsers) UpdatePhoto(userPhoto *msg.UpdateUserPhoto) error {
 		)
 		return domain.ErrNotFound
 	}
+	defer r.deleteFromCache(userPhoto.UserID)
 
 	var er error
 	// save user Photos
 	if userPhoto.Photo != nil {
-
 		dtoPhoto := new(dto.UsersPhoto)
 		r.db.Where(&dto.UsersPhoto{UserID: userPhoto.UserID, PhotoID: userPhoto.Photo.PhotoID}).Find(dtoPhoto)
 		if dtoPhoto.UserID == 0 || dtoPhoto.PhotoID == 0 {
@@ -500,6 +513,7 @@ func (r *repoUsers) RemovePhoto(userID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 	u := dto.Users{}
+	defer r.deleteFromCache(userID)
 	r.db.Table(u.TableName()).Where("ID=?", userID).Updates(map[string]interface{}{
 		"Photo": []byte(""),
 	})
