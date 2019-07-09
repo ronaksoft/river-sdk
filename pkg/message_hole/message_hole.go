@@ -46,7 +46,6 @@ func newHoleManager() *HoleManager {
 }
 
 func (m *HoleManager) insertBar(b Bar) {
-	fmt.Println("Add Bar", b)
 	// If it is the first bar
 	if len(m.bars) == 0 {
 		if b.Min > 0 {
@@ -133,6 +132,7 @@ func (m *HoleManager) appendBar(bars ...Bar) {
 		}
 	}
 }
+
 func (m *HoleManager) isRangeFilled(min, max int64) bool {
 	for idx := range m.bars {
 		if m.bars[idx].Type == Hole {
@@ -191,8 +191,7 @@ func (m *HoleManager) setUpperFilled(pt int64) bool {
 	if pt <= m.maxIndex {
 		return false
 	}
-
-	m.insertBar(Bar{Type: Filled, Min: m.maxIndex, Max: pt})
+	m.insertBar(Bar{Type: Filled, Min: m.maxIndex+1, Max: pt})
 	return true
 }
 
