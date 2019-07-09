@@ -64,7 +64,8 @@ type RiverConnection struct {
 	FirstName string
 	LastName  string
 	Bio       string
-	Delegate  ConnInfoDelegate
+	Delegate  ConnInfoDelegate `json:"-"`
+	Version   int
 }
 
 // clearSystemConfig reset config

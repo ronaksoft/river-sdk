@@ -7,51 +7,36 @@ import (
 
 func TestIsHole(t *testing.T) {
 	hm := newHoleManager()
-	hm.addBar(Bar{0, 99, Hole})
-	hm.addBar(Bar{10, 30, Filled})
-	hm.addBar(Bar{60, 70, Filled})
+	hm.insertBar(Bar{0, 99, Hole})
+	fmt.Println(hm.bars)
+	hm.insertBar(Bar{10, 30, Filled})
+	fmt.Println(hm.bars)
+	hm.insertBar(Bar{60, 70, Filled})
+	fmt.Println(hm.bars)
 
-	bars := hm.getBars()
-	for _, b := range bars {
+	for _, b := range hm.bars {
 		t.Log(fmt.Sprintf("%s: %d ---> %d", b.Type.String(), b.Min, b.Max))
 	}
+}
 
-	t.Log("Point: 20 [Lower Filled]")
-	b, bar := hm.getLowerFilled(20)
-	if b {
-		t.Log(fmt.Sprintf("%s: %d ---> %d", bar.Type.String(), bar.Min, bar.Max))
-	} else {
-		t.Log("It is Hole")
-	}
-	t.Log("Point: 20 [Upper Filled]")
-	b, bar = hm.getUpperFilled(20)
-	if b {
-		t.Log(fmt.Sprintf("%s: %d ---> %d", bar.Type.String(), bar.Min, bar.Max))
-	} else {
-		t.Log("It is Hole")
-	}
+func TestMessageID(t *testing.T) {
+	hm := newHoleManager()
+	hm.insertBar(Bar{0, 9873, Hole})
+	hm.insertBar(Bar{9872, 9873, Filled})
+	hm.insertBar(Bar{8721, 9872, Filled})
+	hm.insertBar(Bar{7269, 8167, Filled})
 
-	t.Log("Point: 35 [Lower Filled]")
-	b, bar = hm.getLowerFilled(35)
-	if b {
-		t.Log(fmt.Sprintf("%s: %d ---> %d", bar.Type.String(), bar.Min, bar.Max))
-	} else {
-		t.Log("It is Hole")
-	}
+	fmt.Println(hm.bars)
+	hm.insertBar(Bar{6977, 7268, Filled})
+	fmt.Println(hm.bars)
+}
 
-	t.Log("Point: 101 [Lower Filled]")
-	b, bar = hm.getLowerFilled(101)
-	if b {
-		t.Log(fmt.Sprintf("%s: %d ---> %d", bar.Type.String(), bar.Min, bar.Max))
-	} else {
-		t.Log("It is Hole")
-	}
-
-	t.Log("Point: 101 [Upper Filled]")
-	b, bar = hm.getUpperFilled(101)
-	if b {
-		t.Log(fmt.Sprintf("%s: %d ---> %d", bar.Type.String(), bar.Min, bar.Max))
-	} else {
-		t.Log("It is Hole")
-	}
+func TestHole1(t *testing.T) {
+	hm := newHoleManager()
+	hm.insertBar(Bar{0, 100, Hole})
+	fmt.Println(hm.bars)
+	hm.insertBar(Bar{10, 101, Filled})
+	fmt.Println(hm.bars)
+	hm.insertBar(Bar{10,15, Hole})
+	fmt.Println(hm.bars)
 }

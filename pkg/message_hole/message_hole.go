@@ -64,7 +64,6 @@ type Point struct {
 }
 
 type HoleManager struct {
-	minIndex int64
 	maxIndex int64
 	pts      map[int64]PointType
 	bars     []Bar
@@ -76,146 +75,94 @@ func newHoleManager() *HoleManager {
 	return m
 }
 
-func (m *HoleManager) addBar(b Bar) {
-	switch b.Type {
-	case Hole:
-		m.pts[b.Min] = HoleStart
-		m.pts[b.Max] = HoleStop
-	case Filled:
-		m.pts[b.Min] = FillStart
-		if pt, ok := m.pts[b.Max]; ok {
-			switch pt {
-			case FillStart:
-				delete(m.pts, b.Max)
-			default:
-				m.pts[b.Max] = FillStop
-			}
-		} else {
-			m.pts[b.Max] = FillStop
+func (m *HoleManager) insertBar(b Bar) {
+	fmt.Println("Add Bar", b)
+	// If it is the first bar
+	if len(m.bars) == 0 {
+		if b.Min > 0 {
+			m.bars = append(m.bars, Bar{Min: 0, Max: b.Min - 1, Type: Hole})
 		}
+		m.maxIndex = b.Max
+		m.bars = append(m.bars, b)
+		return
 	}
-	m.update()
-}
 
-func (m *HoleManager) update() {
-	m.bars = m.getBars()
-	m.pts = make(map[int64]PointType)
-	for _, bar := range m.bars {
-		switch bar.Type {
-		case Filled:
-			m.pts[bar.Min] = FillStart
-			m.pts[bar.Max] = FillStop
-		case Hole:
-			m.pts[bar.Min] = HoleStart
-			m.pts[bar.Max] = HoleStop
-		}
+	// Insert hole to increase our domain
+	if b.Max > m.maxIndex {
+		m.bars = append(m.bars, Bar{Min: m.maxIndex + 1, Max: b.Max, Type: Hole})
+		m.maxIndex = b.Max
 	}
-}
 
-func (m *HoleManager) getBars() []Bar {
-	pts := make([]Point, 0, len(m.pts))
-	for idx, t := range m.pts {
-		pts = append(pts, Point{Index: idx, Type: t})
-	}
-	sort.Slice(pts, func(i, j int) bool {
-		return pts[i].Index < pts[j].Index
+	sort.Slice(m.bars, func(i, j int) bool {
+		return m.bars[i].Min < m.bars[j].Min
 	})
-	bars := make([]Bar, 0)
-	if len(pts) == 0 {
-		return bars
-	}
 
-	m.minIndex = pts[0].Index
-	m.maxIndex = pts[len(pts)-1].Index
+	oldBars := m.bars
+	m.bars = make([]Bar, 0, len(oldBars))
+	newBarAdded := false
 
-	startIdx := 0
-	for startIdx < len(pts)-1 {
-		switch pts[startIdx].Type {
-		case HoleStart:
-			endIdx := startIdx + 1
-			keepGoing := true
-			depth := 0
-			for keepGoing {
-				if endIdx == len(pts)-1 {
-					bars = append(bars, Bar{Min: pts[startIdx].Index, Max: pts[endIdx].Index, Type: Hole})
-					startIdx = endIdx
-					break
+	for _, bar := range oldBars {
+		if newBarAdded {
+			switch {
+			case b.Max == bar.Min:
+				if bar.Max > bar.Min {
+					m.appendBar( Bar{Min: bar.Min + 1, Max: bar.Max, Type: bar.Type})
 				}
-				switch pts[endIdx].Type {
-				case HoleStop:
-					if depth > 0 {
-						depth--
-						endIdx++
-						break
-					}
-					bars = append(bars, Bar{Min: pts[startIdx].Index, Max: pts[endIdx].Index, Type: Hole})
-					startIdx = endIdx
-					pts[startIdx].Index++
-					pts[startIdx].Type = FillStart
-					keepGoing = false
-				case FillStart:
-					if depth > 0 {
-						depth--
-						endIdx++
-						break
-					}
-					bars = append(bars, Bar{Min: pts[startIdx].Index, Max: pts[endIdx].Index - 1, Type: Hole})
-					startIdx = endIdx
-					keepGoing = false
-				case HoleStart, FillStop:
-					depth++
-					fallthrough
-				default:
-					endIdx++
-				}
+			case b.Max > bar.Min && b.Max < bar.Max:
+				m.appendBar( Bar{Min: b.Max + 1, Max: bar.Max, Type: bar.Type})
 			}
-		case FillStart:
-			endIdx := startIdx + 1
-			keepGoing := true
-			depth := 0
-			for keepGoing {
-				if endIdx == len(pts)-1 {
-					bars = append(bars, Bar{Min: pts[startIdx].Index, Max: pts[endIdx].Index, Type: Filled})
-					startIdx = endIdx
-					break
-				}
-				switch pts[endIdx].Type {
-				case FillStop:
-					if depth > 0 {
-						depth--
-						endIdx++
-						break
-					}
-					bars = append(bars, Bar{Min: pts[startIdx].Index, Max: pts[endIdx].Index, Type: Filled})
-					startIdx = endIdx
-					pts[startIdx].Index++
-					pts[startIdx].Type = HoleStart
-					keepGoing = false
-				case HoleStart:
-					if depth > 0 {
-						depth--
-						endIdx++
-						break
-					}
-					bars = append(bars, Bar{Min: pts[startIdx].Index, Max: pts[endIdx].Index - 1, Type: Filled})
-					startIdx = endIdx
-					keepGoing = false
-				case FillStart, HoleStop:
-					depth++
-					fallthrough
-				default:
-					endIdx++
-				}
+			continue
+		}
+		switch {
+		case b.Min > bar.Max:
+			m.appendBar( bar)
+		case b.Min > bar.Min:
+			switch {
+			case b.Max < bar.Max:
+				m.appendBar(
+					Bar{Min: bar.Min, Max: b.Min - 1, Type: bar.Type},
+					b,
+					Bar{Min: b.Max + 1, Max: bar.Max, Type: bar.Type},
+				)
+			case b.Max == bar.Max:
+				m.appendBar(
+					Bar{Min: bar.Min, Max: b.Min - 1, Type: bar.Type},
+					b,
+				)
+			case b.Max > bar.Max:
+				m.appendBar(
+					Bar{Min: bar.Min, Max: b.Min - 1, Type: bar.Type},
+					b,
+				)
 			}
-		default:
-			startIdx++
+			newBarAdded = true
+		case b.Min == bar.Min:
+			switch {
+			case b.Max < bar.Max:
+				m.appendBar(
+					Bar{Min: b.Min, Max: b.Max, Type: b.Type},
+					Bar{Min: b.Max + 1, Max: bar.Max, Type: bar.Type},
+				)
+			default:
+				m.appendBar( b)
+			}
+			newBarAdded = true
+
 		}
 	}
-	return bars
 }
 
+func (m *HoleManager) appendBar(bars ...Bar) {
+	for _, b := range bars {
+		lastIndex :=len(m.bars)-1
+		if lastIndex >= 0 && m.bars[lastIndex].Type == b.Type {
+			m.bars[lastIndex].Max = b.Max
+		} else {
+			m.bars = append(m.bars, b)
+		}
+	}
+}
 func (m *HoleManager) isRangeFilled(min, max int64) bool {
-	m.bars = m.getBars()
 	for idx := range m.bars {
 		if m.bars[idx].Type == Hole {
 			continue
@@ -228,7 +175,6 @@ func (m *HoleManager) isRangeFilled(min, max int64) bool {
 }
 
 func (m *HoleManager) isPointHole(pt int64) bool {
-	m.bars = m.getBars()
 	for idx := range m.bars {
 		if pt >= m.bars[idx].Min && pt <= m.bars[idx].Max {
 			switch m.bars[idx].Type {
@@ -243,7 +189,6 @@ func (m *HoleManager) isPointHole(pt int64) bool {
 }
 
 func (m *HoleManager) getUpperFilled(pt int64) (bool, Bar) {
-	m.bars = m.getBars()
 	for idx := range m.bars {
 		if pt >= m.bars[idx].Min && pt <= m.bars[idx].Max {
 			switch m.bars[idx].Type {
@@ -258,7 +203,6 @@ func (m *HoleManager) getUpperFilled(pt int64) (bool, Bar) {
 }
 
 func (m *HoleManager) getLowerFilled(pt int64) (bool, Bar) {
-	m.bars = m.getBars()
 	for idx := range m.bars {
 		if pt >= m.bars[idx].Min && pt <= m.bars[idx].Max {
 			switch m.bars[idx].Type {
@@ -272,6 +216,25 @@ func (m *HoleManager) getLowerFilled(pt int64) (bool, Bar) {
 	return false, Bar{}
 }
 
+func (m *HoleManager) setUpperFilled(pt int64) bool {
+	if pt <= m.maxIndex {
+		return false
+	}
+
+	m.insertBar(Bar{Type: Filled, Min: m.maxIndex, Max: pt})
+	return true
+}
+
+func (m *HoleManager) setLowerFilled() {
+	for _, b := range m.bars {
+		if b.Type == Filled {
+			if b.Min != 0 {
+				m.insertBar(Bar{Min: 0, Max: b.Min, Type: Filled})
+			}
+		}
+	}
+}
+
 func loadManager(peerID int64, peerType int32) (*HoleManager, error) {
 	hm := newHoleManager()
 	b, err := repo.MessagesExtra.GetHoles(peerID, peerType)
@@ -281,7 +244,6 @@ func loadManager(peerID int64, peerType int32) (*HoleManager, error) {
 			return nil, err
 		}
 	}
-	hm.getBars()
 	return hm, nil
 }
 
@@ -308,7 +270,7 @@ func InsertHole(peerID int64, peerType int32, minID, maxID int64) error {
 		return err
 	}
 
-	hm.addBar(Bar{Type: Hole, Min: minID, Max: maxID})
+	hm.insertBar(Bar{Type: Hole, Min: minID, Max: maxID})
 
 	err = saveManager(peerID, peerType, hm)
 	if err != nil {
@@ -324,7 +286,7 @@ func InsertFill(peerID int64, peerType int32, minID, maxID int64) error {
 		return err
 	}
 
-	hm.addBar(Bar{Type: Filled, Min: minID, Max: maxID})
+	hm.insertBar(Bar{Type: Filled, Min: minID, Max: maxID})
 
 	err = saveManager(peerID, peerType, hm)
 	if err != nil {
@@ -345,11 +307,9 @@ func SetUpperFilled(peerID int64, peerType int32, msgID int64) error {
 		return err
 	}
 
-	if msgID <= hm.maxIndex {
+	if !hm.setUpperFilled(msgID) {
 		return nil
 	}
-
-	hm.addBar(Bar{Type: Filled, Min: hm.maxIndex, Max: msgID})
 
 	err = saveManager(peerID, peerType, hm)
 	if err != nil {
@@ -367,7 +327,7 @@ func SetLowerFilled(peerID int64, peerType int32) error {
 		return err
 	}
 
-	hm.addBar(Bar{Type: Filled, Min: 0, Max: hm.minIndex})
+	hm.setLowerFilled()
 
 	err = saveManager(peerID, peerType, hm)
 	if err != nil {
@@ -413,7 +373,7 @@ func PrintHole(peerID int64, peerType int32) string {
 		return err.Error()
 	}
 	sb := strings.Builder{}
-	for _, bar := range hm.getBars() {
+	for _, bar := range hm.bars {
 		sb.WriteString(fmt.Sprintf("[%s: %d - %d]", bar.Type.String(), bar.Min, bar.Max))
 	}
 	return sb.String()

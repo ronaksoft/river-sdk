@@ -463,6 +463,23 @@ func (r *River) Stop() {
 	}
 }
 
+// Migrate
+func (r *River) Migrate() int {
+	ver := r.ConnInfo.Version
+	for {
+		if f, ok := funcHolders[ver]; ok {
+			f(r)
+			ver++
+		} else {
+			if r.ConnInfo.Version != ver {
+				r.ConnInfo.Version = ver
+				r.ConnInfo.Save()
+			}
+			return ver
+		}
+	}
+}
+
 // ExecuteCommand ...
 // This is a wrapper function to pass the request to the queueController, to be passed to networkController for final
 // delivery to the server.
