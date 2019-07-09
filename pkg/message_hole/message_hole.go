@@ -45,7 +45,7 @@ func newHoleManager() *HoleManager {
 	return m
 }
 
-func (m *HoleManager) insertBar(b Bar) {
+func (m *HoleManager) InsertBar(b Bar) {
 	// If it is the first bar
 	if len(m.bars) == 0 {
 		if b.Min > 0 {
@@ -133,7 +133,7 @@ func (m *HoleManager) appendBar(bars ...Bar) {
 	}
 }
 
-func (m *HoleManager) isRangeFilled(min, max int64) bool {
+func (m *HoleManager) IsRangeFilled(min, max int64) bool {
 	for idx := range m.bars {
 		if m.bars[idx].Type == Hole {
 			continue
@@ -145,7 +145,7 @@ func (m *HoleManager) isRangeFilled(min, max int64) bool {
 	return false
 }
 
-func (m *HoleManager) isPointHole(pt int64) bool {
+func (m *HoleManager) IsPointHole(pt int64) bool {
 	for idx := range m.bars {
 		if pt >= m.bars[idx].Min && pt <= m.bars[idx].Max {
 			switch m.bars[idx].Type {
@@ -159,7 +159,7 @@ func (m *HoleManager) isPointHole(pt int64) bool {
 	return true
 }
 
-func (m *HoleManager) getUpperFilled(pt int64) (bool, Bar) {
+func (m *HoleManager) GetUpperFilled(pt int64) (bool, Bar) {
 	for idx := range m.bars {
 		if pt >= m.bars[idx].Min && pt <= m.bars[idx].Max {
 			switch m.bars[idx].Type {
@@ -173,7 +173,7 @@ func (m *HoleManager) getUpperFilled(pt int64) (bool, Bar) {
 	return false, Bar{}
 }
 
-func (m *HoleManager) getLowerFilled(pt int64) (bool, Bar) {
+func (m *HoleManager) GetLowerFilled(pt int64) (bool, Bar) {
 	for idx := range m.bars {
 		if pt >= m.bars[idx].Min && pt <= m.bars[idx].Max {
 			switch m.bars[idx].Type {
@@ -187,19 +187,19 @@ func (m *HoleManager) getLowerFilled(pt int64) (bool, Bar) {
 	return false, Bar{}
 }
 
-func (m *HoleManager) setUpperFilled(pt int64) bool {
+func (m *HoleManager) SetUpperFilled(pt int64) bool {
 	if pt <= m.maxIndex {
 		return false
 	}
-	m.insertBar(Bar{Type: Filled, Min: m.maxIndex+1, Max: pt})
+	m.InsertBar(Bar{Type: Filled, Min: m.maxIndex+1, Max: pt})
 	return true
 }
 
-func (m *HoleManager) setLowerFilled() {
+func (m *HoleManager) SetLowerFilled() {
 	for _, b := range m.bars {
 		if b.Type == Filled {
 			if b.Min != 0 {
-				m.insertBar(Bar{Min: 0, Max: b.Min, Type: Filled})
+				m.InsertBar(Bar{Min: 0, Max: b.Min, Type: Filled})
 			}
 		}
 	}
@@ -240,7 +240,7 @@ func InsertHole(peerID int64, peerType int32, minID, maxID int64) error {
 		return err
 	}
 
-	hm.insertBar(Bar{Type: Hole, Min: minID, Max: maxID})
+	hm.InsertBar(Bar{Type: Hole, Min: minID, Max: maxID})
 
 	err = saveManager(peerID, peerType, hm)
 	if err != nil {
@@ -256,7 +256,7 @@ func InsertFill(peerID int64, peerType int32, minID, maxID int64) error {
 		return err
 	}
 
-	hm.insertBar(Bar{Type: Filled, Min: minID, Max: maxID})
+	hm.InsertBar(Bar{Type: Filled, Min: minID, Max: maxID})
 
 	err = saveManager(peerID, peerType, hm)
 	if err != nil {
@@ -277,7 +277,7 @@ func SetUpperFilled(peerID int64, peerType int32, msgID int64) error {
 		return err
 	}
 
-	if !hm.setUpperFilled(msgID) {
+	if !hm.SetUpperFilled(msgID) {
 		return nil
 	}
 
@@ -297,7 +297,7 @@ func SetLowerFilled(peerID int64, peerType int32) error {
 		return err
 	}
 
-	hm.setLowerFilled()
+	hm.SetLowerFilled()
 
 	err = saveManager(peerID, peerType, hm)
 	if err != nil {
@@ -313,7 +313,7 @@ func IsHole(peerID int64, peerType int32, minID, maxID int64) (bool, error) {
 	if err != nil {
 		return true, err
 	}
-	return hm.isRangeFilled(minID, maxID), nil
+	return hm.IsRangeFilled(minID, maxID), nil
 }
 
 // GetUpperFilled It returns a Bar starts from minID to the highest possible index,
@@ -323,7 +323,7 @@ func GetUpperFilled(peerID int64, peerType int32, minID int64) (bool, Bar) {
 	if err != nil {
 		return false, Bar{}
 	}
-	return hm.getUpperFilled(minID)
+	return hm.GetUpperFilled(minID)
 }
 
 // GetLowerFilled It returns a Bar starts from the lowest possible index to maxID,
@@ -334,7 +334,7 @@ func GetLowerFilled(peerID int64, peerType int32, maxID int64) (bool, Bar) {
 		logs.Error(err.Error())
 		return false, Bar{}
 	}
-	return hm.getLowerFilled(maxID)
+	return hm.GetLowerFilled(maxID)
 }
 
 func PrintHole(peerID int64, peerType int32) string {
