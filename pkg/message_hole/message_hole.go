@@ -10,30 +10,6 @@ import (
 	"strings"
 )
 
-type PointType int
-
-const (
-	_ PointType = iota
-	HoleStart
-	HoleStop
-	FillStart
-	FillStop
-)
-
-func (v PointType) String() string {
-	switch v {
-	case HoleStart:
-		return "HoleStart"
-	case HoleStop:
-		return "HoleStop"
-	case FillStart:
-		return "FillStart"
-	case FillStop:
-		return "FillStop"
-	}
-	panic("invalid point type")
-}
-
 type BarType int
 
 const (
@@ -58,20 +34,13 @@ type Bar struct {
 	Type BarType
 }
 
-type Point struct {
-	Index int64
-	Type  PointType
-}
-
 type HoleManager struct {
 	maxIndex int64
-	pts      map[int64]PointType
 	bars     []Bar
 }
 
 func newHoleManager() *HoleManager {
 	m := new(HoleManager)
-	m.pts = make(map[int64]PointType)
 	return m
 }
 
@@ -239,7 +208,7 @@ func loadManager(peerID int64, peerType int32) (*HoleManager, error) {
 	hm := newHoleManager()
 	b, err := repo.MessagesExtra.GetHoles(peerID, peerType)
 	if err == nil {
-		err = json.Unmarshal(b, &hm.pts)
+		err = json.Unmarshal(b, &hm.bars)
 		if err != nil {
 			return nil, err
 		}
@@ -248,7 +217,7 @@ func loadManager(peerID int64, peerType int32) (*HoleManager, error) {
 }
 
 func saveManager(peerID int64, peerType int32, hm *HoleManager) error {
-	b, err := json.Marshal(hm.pts)
+	b, err := json.Marshal(hm.bars)
 	if err != nil {
 		return err
 	}
