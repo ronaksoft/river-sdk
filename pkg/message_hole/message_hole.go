@@ -37,6 +37,7 @@ type Bar struct {
 type HoleManager struct {
 	maxIndex int64
 	bars     []Bar
+
 }
 
 func newHoleManager() *HoleManager {
@@ -79,12 +80,14 @@ func (m *HoleManager) insertBar(b Bar) {
 				}
 			case b.Max > bar.Min && b.Max < bar.Max:
 				m.appendBar( Bar{Min: b.Max + 1, Max: bar.Max, Type: bar.Type})
+			default:
+				m.appendBar(bar)
 			}
 			continue
 		}
 		switch {
 		case b.Min > bar.Max:
-			m.appendBar( bar)
+			m.appendBar(bar)
 		case b.Min > bar.Min:
 			switch {
 			case b.Max < bar.Max:
@@ -116,7 +119,6 @@ func (m *HoleManager) insertBar(b Bar) {
 				m.appendBar( b)
 			}
 			newBarAdded = true
-
 		}
 	}
 }

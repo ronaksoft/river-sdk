@@ -25,7 +25,6 @@ func TestMessageID(t *testing.T) {
 	hm.insertBar(Bar{9872, 9873, Filled})
 	hm.insertBar(Bar{8721, 9872, Filled})
 	hm.insertBar(Bar{7269, 8167, Filled})
-
 	fmt.Println(hm.bars)
 	hm.insertBar(Bar{6977, 7268, Filled})
 	fmt.Println(hm.bars)
