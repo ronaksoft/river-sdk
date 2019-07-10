@@ -255,7 +255,7 @@ func (ctrl *Controller) usersMany(e *msg.MessageEnvelope) {
 		zap.Int("Users", len(u.Users)),
 	)
 	for _, v := range u.Users {
-		repo.Users.Save(v)
+		_ = repo.Users.Save(v)
 	}
 }
 
@@ -324,5 +324,5 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 	}
 
 	// Update NotifySettings
-	repo.Dialogs.UpdatePeerNotifySettings(u.Group.ID, int32(msg.PeerGroup), u.NotifySettings)
+	_ = repo.Dialogs.UpdatePeerNotifySettings(u.Group.ID, int32(msg.PeerGroup), u.NotifySettings)
 }

@@ -332,6 +332,8 @@ func (fm *Controller) Stop() {
 	if fm.DownloadQueueStarted {
 		fm.chStopDownloader <- true
 	}
+
+	ctx = nil
 }
 
 // Upload file to server
