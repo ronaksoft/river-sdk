@@ -43,3 +43,17 @@ func TestHole1(t *testing.T) {
 	// hm.SetUpperFilled(110)
 	// fmt.Println(hm.bars)
 }
+
+func TestSDKHole(t *testing.T) {
+	hm := newHoleManager()
+	hm.InsertBar(Bar{0, 10172, Hole})
+	hm.SetUpperFilled(10173)
+	b, bar := hm.GetLowerFilled(9868)
+	fmt.Println(b, bar)
+	hm.SetLowerFilled()
+	// hm := newHoleManager()
+	// hm.InsertHole(10, 1, 0, 100)
+	// SetUpperFilled(10, 1, 101)
+	// PrintHole(10, 1)
+	fmt.Println(hm.bars)
+}

@@ -26,7 +26,7 @@ func (v BarType) String() string {
 	case Filled:
 		return "F"
 	}
-	panic("invalid bar type")
+	return ""
 }
 
 type Bar struct {
