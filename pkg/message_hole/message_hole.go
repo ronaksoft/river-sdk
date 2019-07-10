@@ -200,8 +200,6 @@ func (m *HoleManager) GetLowerFilled(pt int64) (bool, Bar) {
 }
 
 func (m *HoleManager) SetUpperFilled(pt int64) bool {
-	m.mtxLock.Lock()
-	defer m.mtxLock.Unlock()
 	if pt <= m.maxIndex {
 		return false
 	}
@@ -210,8 +208,6 @@ func (m *HoleManager) SetUpperFilled(pt int64) bool {
 }
 
 func (m *HoleManager) SetLowerFilled() {
-	m.mtxLock.Lock()
-	defer m.mtxLock.Unlock()
 	for _, b := range m.bars {
 		if b.Type == Filled {
 			if b.Min != 0 {
