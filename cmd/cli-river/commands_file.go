@@ -322,10 +322,6 @@ func init() {
 func downloadWorker(workerIdx int, wg *sync.WaitGroup, partQueue chan int, fileBuff map[int][]byte, fileLock *sync.Mutex, x *msg.MediaDocument) {
 	defer wg.Done()
 
-	if !fileCtrl.HasInstance() {
-		return
-	}
-
 	_Log.Info("Worker Started :", zap.Int("worker", workerIdx))
 	for {
 		select {

@@ -538,10 +538,6 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 }
 
 func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	if !fileCtrl.HasInstance() {
-		return
-	}
-
 	reqMedia := new(msg.ClientSendMessageMedia)
 	if err := reqMedia.Unmarshal(in.Message); err != nil {
 		logs.Error("River::clientSendMessageMedia()-> Unmarshal()", zap.Error(err))

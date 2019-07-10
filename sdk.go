@@ -457,10 +457,7 @@ func (r *River) Stop() {
 	r.queueCtrl.Stop()
 	r.networkCtrl.Stop()
 
-	if fileCtrl.HasInstance() {
-		fileCtrl.Ctx().Stop()
-	}
-
+	fileCtrl.Ctx().Stop()
 	uiexec.Ctx().Stop()
 
 	// Close database connection
@@ -806,9 +803,7 @@ func (r *River) CreateAuthKey() (err error) {
 					return
 				}
 				r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-				if fileCtrl.HasInstance() {
-					fileCtrl.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-				}
+				fileCtrl.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 			case msg.C_Error:
 				err = domain.ParseServerError(res.Message)
 				return
@@ -824,9 +819,9 @@ func (r *River) CreateAuthKey() (err error) {
 
 	// double set AuthID
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-	if fileCtrl.HasInstance() {
-		fileCtrl.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-	}
+
+	fileCtrl.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+
 	r.ConnInfo.Save()
 
 	return
@@ -834,9 +829,8 @@ func (r *River) CreateAuthKey() (err error) {
 
 func (r *River) ResetAuthKey() {
 	r.networkCtrl.SetAuthorization(0, nil)
-	if fileCtrl.HasInstance() {
-		fileCtrl.Ctx().SetAuthorization(0, nil)
-	}
+
+	fileCtrl.Ctx().SetAuthorization(0, nil)
 	r.ConnInfo.AuthID = 0
 	r.ConnInfo.AuthKey = [256]byte{}
 	r.ConnInfo.Save()

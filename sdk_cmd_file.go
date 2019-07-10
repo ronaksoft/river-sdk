@@ -101,10 +101,6 @@ func getFilePath(msgID int64) string {
 
 // FileDownload add download request to filemanager queue
 func (r *River) FileDownload(msgID int64) {
-	if !fileCtrl.HasInstance() {
-		return
-	}
-
 	status, progress, filePath := getFileStatus(msgID)
 	logs.Debug("SDK::FileDownload() current file progress status",
 		zap.String("Status", status.ToString()),
@@ -150,9 +146,7 @@ func (r *River) PauseDownload(msgID int64) {
 		return
 	}
 
-	if fileCtrl.HasInstance() {
-		fileCtrl.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
-	}
+	fileCtrl.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
 
 	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatusPaused)
 }
@@ -164,9 +158,9 @@ func (r *River) CancelDownload(msgID int64) {
 		logs.Warn("SDK::CancelDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
-	if fileCtrl.HasInstance() {
-		fileCtrl.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
-	}
+
+	fileCtrl.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
+
 	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatusCanceled)
 }
 
@@ -177,9 +171,9 @@ func (r *River) PauseUpload(msgID int64) {
 		logs.Warn("SDK::PauseUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
-	if fileCtrl.HasInstance() {
-		fileCtrl.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
-	}
+
+	fileCtrl.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
+
 	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatusPaused)
 	// repo.MessagesPending.DeletePendingMessage(fs.MessageID)
 
@@ -192,9 +186,8 @@ func (r *River) CancelUpload(msgID int64) {
 		logs.Warn("SDK::CancelUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
-	if fileCtrl.HasInstance() {
-		fileCtrl.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
-	}
+	fileCtrl.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
+
 	_ = repo.Files.DeleteFileStatus(msgID)
 	_ = repo.PendingMessages.DeletePendingMessage(fs.MessageID)
 
@@ -202,10 +195,6 @@ func (r *River) CancelUpload(msgID int64) {
 
 // AccountUploadPhoto upload user profile photo
 func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
-	if !fileCtrl.HasInstance() {
-		return
-	}
-
 	// TOF
 	msgID = domain.SequentialUniqueID()
 	fileID := domain.SequentialUniqueID()
@@ -303,10 +292,6 @@ func (r *River) AccountGetPhotoSmall(userID int64) string {
 
 // downloadAccountPhoto this function is sync
 func downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) string {
-	if !fileCtrl.HasInstance() {
-		return ""
-	}
-
 	logs.Debug("SDK::downloadAccountPhoto",
 		zap.Int64("userID", userID),
 		zap.Bool("IsBig", isBig),
@@ -329,10 +314,6 @@ func downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) string
 
 // GroupUploadPhoto upload group profile photo
 func (r *River) GroupUploadPhoto(groupID int64, filePath string) (msgID int64) {
-	if !fileCtrl.HasInstance() {
-		return 0
-	}
-
 	// TOF
 	msgID = domain.SequentialUniqueID()
 	fileID := domain.SequentialUniqueID()
@@ -440,10 +421,6 @@ func (r *River) GroupGetPhotoSmall(groupID int64) string {
 
 // this function is sync
 func downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) string {
-	if !fileCtrl.HasInstance() {
-		return ""
-	}
-
 	logs.Debug("SDK::downloadGroupPhoto",
 		zap.Int64("userID", groupID),
 		zap.Bool("IsBig", isBig),
@@ -466,10 +443,6 @@ func downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) string
 
 // FileDownloadThumbnail download file thumbnail
 func (r *River) FileDownloadThumbnail(msgID int64) string {
-	if fileCtrl.HasInstance() {
-		return ""
-	}
-
 	// its pending message
 	if msgID < 0 {
 		pmsg, err := repo.PendingMessages.GetPendingMessageByID(msgID)
@@ -641,9 +614,7 @@ func (r *River) ClearCache(peerID int64, mediaTypes string, allMedia bool) bool 
 		return false
 	} else {
 		logs.Debug("ClearCache", zap.Strings("media paths", filePaths))
-		if fileCtrl.HasInstance() {
-			err = fileCtrl.Ctx().ClearFiles(filePaths)
-		}
+		err = fileCtrl.Ctx().ClearFiles(filePaths)
 		if err != nil {
 			logs.Debug("River::ClearCache",
 				zap.String("clear files error", err.Error()),
