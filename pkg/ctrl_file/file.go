@@ -74,10 +74,6 @@ func Ctx() *Controller {
 	return ctx
 }
 
-func HasInstance() bool {
-	return ctx != nil
-}
-
 // InitFileManager initialize file manager and create singleton instance
 func InitFileManager(serverAddress string,
 	onUploadCompleted domain.OnFileUploadCompleted,

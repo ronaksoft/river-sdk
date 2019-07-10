@@ -551,18 +551,14 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 			dtoPhoto := repo.Users.GetPhoto(u.ID, u.Photo.PhotoID)
 			if dtoPhoto != nil {
 				if dtoPhoto.SmallFilePath == "" || dtoPhoto.SmallFileID != u.Photo.PhotoSmall.FileID {
-					if fileCtrl.HasInstance() {
-						go func(userID int64, photo *msg.UserPhoto) {
-							_, _ = fileCtrl.Ctx().DownloadAccountPhoto(userID, photo, false)
-						}(u.ID, u.Photo)
-					}
-				}
-			} else if u.Photo.PhotoID != 0 {
-				if fileCtrl.HasInstance() {
 					go func(userID int64, photo *msg.UserPhoto) {
 						_, _ = fileCtrl.Ctx().DownloadAccountPhoto(userID, photo, false)
 					}(u.ID, u.Photo)
 				}
+			} else if u.Photo.PhotoID != 0 {
+				go func(userID int64, photo *msg.UserPhoto) {
+					_, _ = fileCtrl.Ctx().DownloadAccountPhoto(userID, photo, false)
+				}(u.ID, u.Photo)
 			}
 		}
 	}
@@ -572,18 +568,14 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 			dtoGroup, err := repo.Groups.GetGroupDTO(g.ID)
 			if err == nil && dtoGroup != nil {
 				if dtoGroup.SmallFilePath == "" || dtoGroup.SmallFileID != g.Photo.PhotoSmall.FileID {
-					if fileCtrl.HasInstance() {
-						go func(groupID int64, photo *msg.GroupPhoto) {
-							_, _ = fileCtrl.Ctx().DownloadGroupPhoto(groupID, photo, false)
-						}(g.ID, g.Photo)
-					}
-				}
-			} else if g.Photo.PhotoSmall.FileID != 0 {
-				if fileCtrl.HasInstance() {
 					go func(groupID int64, photo *msg.GroupPhoto) {
 						_, _ = fileCtrl.Ctx().DownloadGroupPhoto(groupID, photo, false)
 					}(g.ID, g.Photo)
 				}
+			} else if g.Photo.PhotoSmall.FileID != 0 {
+				go func(groupID int64, photo *msg.GroupPhoto) {
+					_, _ = fileCtrl.Ctx().DownloadGroupPhoto(groupID, photo, false)
+				}(g.ID, g.Photo)
 			}
 		}
 	}
@@ -811,9 +803,7 @@ func (ctrl *Controller) updateSalt(salt []domain.Slt) bool {
 		}
 		nextTimeStamp := salt[i+1].Timestamp
 		ctrl.networkCtrl.SetServerSalt(s.Value)
-		if fileCtrl.HasInstance() {
-			fileCtrl.Ctx().SetServerSalt(s.Value)
-		}
+		fileCtrl.Ctx().SetServerSalt(s.Value)
 		ctrl.networkCtrl.SetSaltExpiry(nextTimeStamp)
 		synced = true
 		// set timer to renew salt, server accepts expired salts for 1 minute
