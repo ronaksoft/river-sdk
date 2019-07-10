@@ -50,7 +50,7 @@ func TestSDKHole(t *testing.T) {
 	hm.SetUpperFilled(10173)
 	b, bar := hm.GetLowerFilled(9868)
 	fmt.Println(b, bar)
-	hm.SetLowerFilled()
+	hm.InsertBar(Bar{9763, 9856, Filled})
 	// hm := newHoleManager()
 	// hm.InsertHole(10, 1, 0, 100)
 	// SetUpperFilled(10, 1, 101)

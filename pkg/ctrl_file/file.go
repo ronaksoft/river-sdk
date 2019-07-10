@@ -78,12 +78,6 @@ func HasInstance() bool {
 	return ctx != nil
 }
 
-func removeInstance() {
-	if ctx != nil {
-		ctx = nil
-	}
-}
-
 // InitFileManager initialize file manager and create singleton instance
 func InitFileManager(serverAddress string,
 	onUploadCompleted domain.OnFileUploadCompleted,
@@ -345,7 +339,9 @@ func (fm *Controller) Stop() {
 		fm.chStopDownloader <- true
 	}
 
-	removeInstance()
+	if ctx != nil {
+		ctx = nil
+	}
 }
 
 // Upload file to server
