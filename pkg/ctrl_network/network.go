@@ -209,6 +209,8 @@ func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
 // to listen and accept web-socket packets. If stop signal received it means we are
 // going to shutdown, hence returns from the function.
 func (ctrl *Controller) watchDog() {
+	logs.Debug("StopServices-River::watchDog() -> watch() called")
+
 	for {
 		select {
 		case <-ctrl.connectChannel:
@@ -222,6 +224,8 @@ func (ctrl *Controller) watchDog() {
 			if ctrl.wsKeepConnection {
 
 				logs.Debug("watchDog() Retry to Connect")
+
+				logs.Debug("StopServices-River::watchDog() -> connect channel call Connect()")
 				go ctrl.Connect(false)
 			}
 		case <-ctrl.stopChannel:
@@ -273,6 +277,7 @@ func (ctrl *Controller) keepAlive() {
 				_ = ctrl.wsConn.SetReadDeadline(time.Now())
 			}
 		case <-ctrl.stopChannel:
+			logs.Debug("StopServices-NetworkController::Stop channel signal received")
 			logs.Debug("keepAlive() Stopped")
 			return
 		}
@@ -438,6 +443,8 @@ func (ctrl *Controller) Start() error {
 
 // Stop sends stop signal to keepAlive and watchDog routines.
 func (ctrl *Controller) Stop() {
+	logs.Debug("StopServices-NetworkController::Stop() called")
+
 	ctrl.stopChannel <- true // keepAlive
 	select {
 	case ctrl.stopChannel <- true: // receiver may or may not be listening
@@ -447,6 +454,9 @@ func (ctrl *Controller) Stop() {
 
 // Connect dial websocket
 func (ctrl *Controller) Connect(force bool) {
+	logs.Debug("StopServices-NetworkController:: -> Connect() called",
+		zap.Bool("force", force))
+
 	defer func() {
 		if recoverPanic("NetworkController:: Connect", ronak.M{
 			"AuthID": ctrl.authID,
@@ -462,6 +472,10 @@ func (ctrl *Controller) Connect(force bool) {
 		}
 
 		// Return if Disconnect() has been called
+		logs.Debug("StopServices-NetworkController:: -> return if disconnect called",
+			zap.Bool("force", force),
+			zap.Bool("wsKeepConnection",ctrl.wsKeepConnection))
+
 		if !force && !ctrl.wsKeepConnection {
 			return
 		}
@@ -482,6 +496,7 @@ func (ctrl *Controller) Connect(force bool) {
 		// it should be started here cuz we need receiver to get AuthRecall answer
 		// Send Signal to start the 'receiver' and 'keepAlive' routines
 		ctrl.connectChannel <- true
+		logs.Debug("StopServices-NetowrkController::Connect() -> call connect channel!")
 
 		// Call the OnConnect handler here b4 changing network status that trigger queue to start working
 		// basically we send priority requests b4 queue starts to work
@@ -493,6 +508,8 @@ func (ctrl *Controller) Connect(force bool) {
 
 // Disconnect close websocket
 func (ctrl *Controller) Disconnect() {
+	logs.Debug("StopServices-NetworkController::Disconnect() called")
+
 	ctrl.wsKeepConnection = false
 	if ctrl.wsConn != nil {
 		_ = ctrl.wsConn.Close()

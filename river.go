@@ -170,6 +170,9 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		},
 	)
 	r.networkCtrl.SetNetworkStatusChangedCallback(func(newQuality domain.NetworkStatus) {
+		if !fileCtrl.HasInstance() {
+			return
+		}
 		fileCtrl.Ctx().SetNetworkStatus(newQuality)
 		if r.mainDelegate != nil {
 			r.mainDelegate.OnNetworkStatusChanged(int(newQuality))
@@ -233,8 +236,10 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 
 	// Update Controller
-	fileCtrl.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-	fileCtrl.Ctx().LoadQueueFromDB()
+	if fileCtrl.HasInstance() {
+		fileCtrl.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+		fileCtrl.Ctx().LoadQueueFromDB()
+	}
 }
 
 func (r *River) Version() string {

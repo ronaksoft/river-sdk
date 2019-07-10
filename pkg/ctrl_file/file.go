@@ -74,6 +74,16 @@ func Ctx() *Controller {
 	return ctx
 }
 
+func HasInstance() bool {
+	return ctx != nil
+}
+
+func removeInstance() {
+	if ctx != nil {
+		ctx = nil
+	}
+}
+
 // InitFileManager initialize file manager and create singleton instance
 func InitFileManager(serverAddress string,
 	onUploadCompleted domain.OnFileUploadCompleted,
@@ -326,12 +336,16 @@ func (fm *Controller) uploadCompleted(msgID, fileID, targetID int64,
 
 // Stop set stop flag
 func (fm *Controller) Stop() {
+	logs.Debug("StopServices-FileController::Stop() called")
+
 	if fm.UploadQueueStarted {
 		fm.chStopUploader <- true
 	}
 	if fm.DownloadQueueStarted {
 		fm.chStopDownloader <- true
 	}
+
+	removeInstance()
 }
 
 // Upload file to server

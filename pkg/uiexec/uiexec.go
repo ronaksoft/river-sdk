@@ -51,6 +51,8 @@ func (c *UIExecutor) Start() {
 
 // Stop sent stop signal
 func (c *UIExecutor) Stop() {
+	logs.Debug("StopServices-UIExecutor::Stop() called")
+
 	select {
 	case c.chStop <- true:
 		logs.Debug("CMD::Stop() sent stop signal")

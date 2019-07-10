@@ -105,18 +105,14 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 		err = domain.ErrRequestTimeout
 		r.releaseDelegate(requestID)
 
+		r.networkCtrl.Disconnect()
 		r.clearSystemConfig()
-		r.syncCtrl.ClearUpdateID()
-		r.networkCtrl.Reconnect()
-		r.syncCtrl.ClearUpdateID()
 	}
 	successCallback := func(envelope *msg.MessageEnvelope) {
 		r.releaseDelegate(requestID)
 
+		r.networkCtrl.Disconnect()
 		r.clearSystemConfig()
-		r.syncCtrl.ClearUpdateID() // TOF
-		r.networkCtrl.Reconnect()
-		r.syncCtrl.ClearUpdateID()
 	}
 
 	if notifyServer {
@@ -127,10 +123,8 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 			r.releaseDelegate(requestID)
 		}
 	} else {
+		r.networkCtrl.Disconnect()
 		r.clearSystemConfig()
-		r.syncCtrl.ClearUpdateID() // TOF
-		r.networkCtrl.Reconnect()
-		r.syncCtrl.ClearUpdateID()
 	}
 
 	if r.mainDelegate != nil {

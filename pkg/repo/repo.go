@@ -144,6 +144,8 @@ func ReInitiateDatabase() error {
 
 // Close underlying DB connection
 func Close() error {
+	logs.Debug("StopServices-Repo::Close() called")
+
 	repoLastError = r.db.Close()
 	r = nil
 	ctx = nil

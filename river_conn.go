@@ -70,6 +70,7 @@ type RiverConnection struct {
 
 // clearSystemConfig reset config
 func (r *River) clearSystemConfig() {
+	r.syncCtrl.ClearUpdateID()
 	r.ConnInfo.FirstName = ""
 	r.ConnInfo.LastName = ""
 	r.ConnInfo.Phone = ""

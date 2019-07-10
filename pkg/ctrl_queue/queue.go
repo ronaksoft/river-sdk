@@ -384,6 +384,7 @@ func (ctrl *Controller) Start() {
 
 // Stop queue
 func (ctrl *Controller) Stop() {
+	logs.Debug("StopServices-SyncController::Stop() called")
 	ctrl.waitingList.Close()
 }
 
