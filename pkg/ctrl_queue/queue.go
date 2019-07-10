@@ -333,7 +333,7 @@ func (ctrl *Controller) ExecuteRealtimeCommand(requestID uint64, constructor int
 				}
 			}
 		} else {
-			logs.Debug("QueueController::ExecuteRealtimeCommand() RequestCallback not found",
+			logs.Warn("QueueController::ExecuteRealtimeCommand() RequestCallback not found",
 				zap.String("Constructor", msg.ConstructorNames[req.Constructor]),
 				zap.Uint64("RequestID", requestID),
 			)
@@ -384,7 +384,7 @@ func (ctrl *Controller) Start() {
 
 // Stop queue
 func (ctrl *Controller) Stop() {
-	logs.Debug("StopServices-SyncController::Stop() called")
+	logs.Info("SyncController Stopped")
 	ctrl.waitingList.Close()
 }
 

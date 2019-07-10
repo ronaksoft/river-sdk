@@ -129,9 +129,6 @@ func (ctrl *Controller) updateFlushFunc(entries []ronak.FlusherEntry) {
 
 		// Call the update handler in blocking mode
 		ctrl.OnUpdate(updates)
-		logs.Debug("Updates Flushed",
-			zap.Int("Count", itemsCount),
-		)
 	}
 }
 
@@ -209,23 +206,16 @@ func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
 // to listen and accept web-socket packets. If stop signal received it means we are
 // going to shutdown, hence returns from the function.
 func (ctrl *Controller) watchDog() {
-	logs.Debug("StopServices-River::watchDog() -> watch() called")
-
 	for {
 		select {
 		case <-ctrl.connectChannel:
-			logs.Debug("watchDog() Received connect signal")
 			if ctrl.wsConn != nil {
 				ctrl.receiver()
 			}
-
-			logs.Debug("watchDog() NetworkDisconnected")
+			logs.Info("watchDog() NetworkDisconnected")
 			ctrl.updateNetworkStatus(domain.NetworkDisconnected)
 			if ctrl.wsKeepConnection {
-
-				logs.Debug("watchDog() Retry to Connect")
-
-				logs.Debug("StopServices-River::watchDog() -> connect channel call Connect()")
+				logs.Info("NetworkController Reconnects")
 				go ctrl.Connect(false)
 			}
 		case <-ctrl.stopChannel:
@@ -258,10 +248,6 @@ func (ctrl *Controller) keepAlive() {
 			select {
 			case <-ctrl.pongChannel:
 				pingDelay := time.Now().Sub(pingTime)
-				logs.Debug("keepAlive() Ping/Pong",
-					zap.Duration("Duration", pingDelay),
-					zap.String("wsQuality", ctrl.wsQuality.ToString()),
-				)
 				ctrl.pingIdx++
 				ctrl.pingDelays[ctrl.pingIdx%3] = pingDelay
 				avgDelay := (ctrl.pingDelays[0] + ctrl.pingDelays[1] + ctrl.pingDelays[2]) / 3
@@ -277,8 +263,6 @@ func (ctrl *Controller) keepAlive() {
 				_ = ctrl.wsConn.SetReadDeadline(time.Now())
 			}
 		case <-ctrl.stopChannel:
-			logs.Debug("StopServices-NetworkController::Stop channel signal received")
-			logs.Debug("keepAlive() Stopped")
 			return
 		}
 	}
@@ -298,11 +282,6 @@ func (ctrl *Controller) receiver() {
 			logs.Warn("NetworkController::receiver()-> ReadMessage()", zap.Error(err))
 			return
 		}
-		logs.Debug("NetworkController:: Message Received",
-			zap.Int("messageType", messageType),
-			zap.Int("messageSize", len(message)),
-		)
-
 		switch messageType {
 		case websocket.BinaryMessage:
 			// If it is a BINARY message
@@ -313,10 +292,6 @@ func (ctrl *Controller) receiver() {
 			}
 
 			if res.AuthID == 0 {
-				logs.Debug("NetworkController::",
-					zap.String("Warning", "res.AuthID is zero ProtoMessage is unencrypted"),
-					zap.Int64("AuthID", res.AuthID),
-				)
 				receivedEnvelope := new(msg.MessageEnvelope)
 				err = receivedEnvelope.Unmarshal(res.Payload)
 				if err != nil {
@@ -348,7 +323,7 @@ func (ctrl *Controller) receiver() {
 			ctrl.messageHandler(receivedEncryptedPayload.Envelope)
 
 		default:
-			logs.Debug("NetworkController::",
+			logs.Warn("NetworkController::",
 				zap.Int("MessageType", messageType),
 			)
 		}

@@ -86,16 +86,8 @@ func (r *repoMessages) SaveSelfMessage(message *msg.UserMessage, dialog *msg.Dia
 	defer r.mx.Unlock()
 
 	if message == nil {
-		logs.Debug("Repo::SaveSelfMessage()",
-			zap.String("Error", "message is null"),
-		)
 		return domain.ErrNotFound
 	}
-
-	logs.Debug("Repo::SaveSelfMessage()",
-		zap.Int64("MessageID", message.ID),
-		zap.Int64("DialogPeerID", dialog.PeerID),
-	)
 
 	m := new(dto.Messages)
 	m.Map(message)

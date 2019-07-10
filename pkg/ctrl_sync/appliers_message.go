@@ -114,7 +114,7 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 	for _, dialog := range x.Dialogs {
 		topMessage, _ := mMessages[dialog.TopMessageID]
 		if topMessage == nil {
-			logs.Debug(domain.ErrNotFound.Error(),
+			logs.Error("Top Message Is Nil",
 				zap.Int64("MessageID", dialog.TopMessageID),
 			)
 			continue

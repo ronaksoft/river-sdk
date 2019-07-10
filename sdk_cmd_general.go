@@ -135,7 +135,7 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 }
 
 // UISettingGet fetch from key/value storage for UI settings
-func (r *River) UISettingGet(key string) string {
+func (r *River) UISettingsGet(key string) string {
 	val, err := repo.UISettings.Get(key)
 	if err != nil {
 		logs.Warn("River::UISettingsGet()", zap.Error(err))
@@ -144,7 +144,7 @@ func (r *River) UISettingGet(key string) string {
 }
 
 // UISettingPut save to key/value storage for UI settings
-func (r *River) UISettingPut(key, value string) bool {
+func (r *River) UISettingsPut(key, value string) bool {
 	err := repo.UISettings.Put(key, value)
 	if err != nil {
 		logs.Error("River::UISettingsPut()", zap.Error(err))
@@ -153,7 +153,7 @@ func (r *River) UISettingPut(key, value string) bool {
 }
 
 // UISettingDelete remove from key/value storage for UI settings
-func (r *River) UISettingDelete(key string) bool {
+func (r *River) UISettingsDelete(key string) bool {
 	err := repo.UISettings.Delete(key)
 	if err != nil {
 		logs.Error("River::UISettingsDelete()", zap.Error(err))

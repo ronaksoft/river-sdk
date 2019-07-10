@@ -19,10 +19,6 @@ func (r *repoSystem) LoadInt(keyName string) (keyValue int, err error) {
 	err = r.db.Where("KeyName = ?", keyName).First(row).Error
 
 	keyValue = int(row.IntValue)
-
-	logs.Debug("System::LoadInt()",
-		zap.Int(keyName, keyValue),
-	)
 	return
 }
 
@@ -35,11 +31,6 @@ func (r *repoSystem) LoadString(keyName string) (keyValue string, err error) {
 	err = r.db.Where("KeyName = ?", keyName).First(row).Error
 
 	keyValue = row.StrValue
-
-	logs.Debug("System::LoadString()",
-		zap.String(keyName, keyValue),
-	)
-
 	return
 }
 
@@ -47,8 +38,6 @@ func (r *repoSystem) LoadString(keyName string) (keyValue string, err error) {
 func (r *repoSystem) SaveInt(keyName string, keyValue int32) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
-	logs.Info("repoSystem()", zap.Int32(keyName, keyValue))
 
 	s := dto.System{}
 
@@ -88,9 +77,6 @@ func (r *repoSystem) SaveString(keyName string, keyValue string) error {
 	s.StrValue = keyValue
 	s.IntValue = 0
 
-	logs.Debug("System::SaveString()",
-		zap.String(keyName, keyValue),
-	)
 	return r.db.Save(s).Error
 }
 

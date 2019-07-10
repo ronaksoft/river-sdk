@@ -129,9 +129,6 @@ func (ctrl *Controller) sync() {
 	}
 	defer atomic.StoreInt32(&ctrl.syncLock, 0)
 
-	logs.Debug("SyncController::sync()",
-		zap.Int64("UpdateID", ctrl.updateID),
-	)
 	// There is no need to sync when no user has been authorized
 	if ctrl.userID == 0 {
 		return
@@ -333,7 +330,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 	}
 	defer atomic.StoreInt32(&ctrl.updateDifferenceLock, 0)
 
-	logs.Debug("SyncController::getUpdateDifference()",
+	logs.Info("SyncController::getUpdateDifference()",
 		zap.Int64("ServerUpdateID", serverUpdateID),
 		zap.Int64("ClientUpdateID", ctrl.updateID),
 	)
@@ -357,11 +354,10 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 			msg.C_UpdateGetDifference,
 			reqBytes,
 			func() {
-				logs.Debug("SyncController::getUpdateDifference() -> ExecuteRealtimeCommand() Timeout")
+				logs.Warn("SyncController::getUpdateDifference() -> ExecuteRealtimeCommand() Timeout")
 			},
 			func(m *msg.MessageEnvelope) {
 				onGetDifferenceSucceed(ctrl, m)
-				logs.Debug("SyncController::getUpdateDifference() -> ExecuteRealtimeCommand() Success")
 			},
 			true,
 			false,
@@ -493,10 +489,6 @@ func (ctrl *Controller) SetOnUpdateCallback(h domain.OnUpdateMainDelegateHandler
 // MessageHandler call appliers-> repository and sync data
 func (ctrl *Controller) MessageHandler(messages []*msg.MessageEnvelope) {
 	for _, m := range messages {
-		logs.Debug("SyncController::MessageHandler() Received",
-			zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
-		)
-
 		switch m.Constructor {
 		case msg.C_Error:
 			err := new(msg.Error)
@@ -509,9 +501,6 @@ func (ctrl *Controller) MessageHandler(messages []*msg.MessageEnvelope) {
 
 		if applier, ok := ctrl.messageAppliers[m.Constructor]; ok {
 			applier(m)
-			logs.Debug("SyncController::MessageHandler() Message Applied",
-				zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
-			)
 		}
 	}
 
@@ -580,10 +569,6 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 		}
 	}
 	for _, update := range updateContainer.Updates {
-		logs.Debug("SyncController::UpdateHandler() Update Received",
-			zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
-		)
-
 		// var externalHandlerUpdates []*msg.UpdateEnvelope
 		applier, ok := ctrl.updateAppliers[update.Constructor]
 		if ok {
@@ -697,10 +682,6 @@ func extractMessagesMedia(messages ...*msg.UserMessage) {
 func (ctrl *Controller) CheckSalt() {
 	logs.Debug("SyncController::CheckSalt()")
 	if ctrl.networkCtrl.GetSaltExpiry() > time.Now().Unix() {
-		logs.Info("salt is still valid",
-			zap.Int64("salt expiry", ctrl.networkCtrl.GetSaltExpiry()),
-			zap.Int64("device time", time.Now().Unix()),
-		)
 		return
 	}
 	for {

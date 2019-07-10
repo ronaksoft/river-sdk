@@ -45,11 +45,6 @@ func (r *repoDialogs) Save(dialog *msg.Dialog, lastUpdate int64) error {
 		return domain.ErrNotFound
 	}
 
-	logs.Debug("Dialogs::SaveDialog",
-		zap.Int64("PeerID", dialog.PeerID),
-		zap.Uint64("AccessHash", dialog.AccessHash),
-		zap.Int32("UnreadCount", dialog.UnreadCount),
-	)
 	d := new(dto.Dialogs)
 	d.Map(dialog)
 
@@ -69,11 +64,6 @@ func (r *repoDialogs) UpdateUnreadCount(peerID int64, peerTyep, unreadCount int3
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("Dialogs::UpdateDialogUnreadCount()",
-		zap.Int64("PeerID", peerID),
-		zap.Int32("PeerType", peerTyep),
-		zap.Int32("UnreadCount", unreadCount),
-	)
 	ed := new(dto.Dialogs)
 	return r.db.Table(ed.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerTyep).Updates(map[string]interface{}{"UnreadCount": unreadCount}).Error
 }
@@ -81,11 +71,6 @@ func (r *repoDialogs) UpdateUnreadCount(peerID int64, peerTyep, unreadCount int3
 func (r *repoDialogs) List(offset, limit int32) []*msg.Dialog {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
-	logs.Debug("Dialogs::GetDialogs()",
-		zap.Int32("Offset", offset),
-		zap.Int32("Limit", limit),
-	)
 
 	dtoDlgs := make([]dto.Dialogs, 0, limit)
 
@@ -108,11 +93,6 @@ func (r *repoDialogs) List(offset, limit int32) []*msg.Dialog {
 func (r *repoDialogs) Get(peerID int64, peerType int32) *msg.Dialog {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
-	logs.Debug("Dialogs::GetDialog()",
-		zap.Int64("PeerID", peerID),
-		zap.Int32("PeerType", peerType),
-	)
 
 	dtoDlg := new(dto.Dialogs)
 	err := r.db.Where("PeerID = ? AND PeerType = ?", peerID, peerType).First(dtoDlg).Error
@@ -144,12 +124,6 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("Dialogs::UpdateReadInboxMaxID()",
-		zap.Int64("PeerID", peerID),
-		zap.Int32("PeerType", peerType),
-		zap.Int64("MaxID", maxID),
-	)
-
 	// get dialog
 	dtoDlg := new(dto.Dialogs)
 	err := r.db.Where("PeerID = ? AND PeerType = ?", peerID, peerType).First(dtoDlg).Error
@@ -160,10 +134,6 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 
 	// current maxID is newer so skip updating dialog unread counts
 	if dtoDlg.ReadInboxMaxID > maxID {
-		logs.Debug("repoDialogs::UpdateReadInboxMaxID() skipped dialogs unreadCount update",
-			zap.Int64("Current MaxID", dtoDlg.ReadInboxMaxID),
-			zap.Int64("Server MaxID", maxID),
-		)
 		return nil
 	}
 
@@ -195,12 +165,6 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 func (r *repoDialogs) UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
-	logs.Debug("Dialogs::UpdateReadOutboxMaxID",
-		zap.Int64("PeerID", peerID),
-		zap.Int32("PeerType", peerType),
-		zap.Int64("MaxID", maxID),
-	)
 
 	ed := new(dto.Dialogs)
 	err := r.db.Table(ed.TableName()).Where("PeerID = ? AND PeerType = ?", peerID, peerType).Updates(map[string]interface{}{
@@ -259,15 +223,6 @@ func (r *repoDialogs) UpdateNotifySetting(msg *msg.UpdateNotifySettings) error {
 		return errors.New("Dialogs::UpdateNotifySetting() => msg.Settings is null")
 	}
 
-	logs.Debug("Dialogs::UpdateNotifySetting()",
-		zap.Int64("UserId", msg.UserID),
-		zap.Int64("PeerID", msg.NotifyPeer.ID),
-		zap.Uint64("AccessHash", msg.NotifyPeer.AccessHash),
-		zap.Int32("Flag", msg.Settings.Flags),
-		zap.Int64("MuteUntil", msg.Settings.MuteUntil),
-		zap.String("Sound", msg.Settings.Sound),
-	)
-
 	dtoDlg := new(dto.Dialogs)
 	err := r.db.Where("PeerID = ? AND PeerType = ?", msg.NotifyPeer.ID, msg.NotifyPeer.Type).First(dtoDlg).Error
 	if err != nil {
@@ -288,11 +243,6 @@ func (r *repoDialogs) UpdatePinned(msg *msg.UpdateDialogPinned) error {
 	if msg.Peer == nil {
 		return errors.New("Dialogs::UpdateDialogPinned() => msg.Peer is null")
 	}
-
-	logs.Debug("Dialogs::UpdateDialogPinned()",
-		zap.Bool("Pinned", msg.Pinned),
-		zap.Int64("PeerID", msg.Peer.ID),
-	)
 
 	dtoDlg := new(dto.Dialogs)
 	err := r.db.Where("PeerID = ? AND PeerType = ?", msg.Peer.ID, msg.Peer.Type).First(dtoDlg).Error
