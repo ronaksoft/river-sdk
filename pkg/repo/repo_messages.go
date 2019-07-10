@@ -123,9 +123,6 @@ func (r *repoMessages) SaveMessage(message *msg.UserMessage) error {
 	defer r.mx.Unlock()
 
 	if message == nil {
-		logs.Debug("Repo::SaveMessage()",
-			zap.String("Error", "message is null"),
-		)
 		return domain.ErrNotFound
 	}
 
@@ -145,9 +142,6 @@ func (r *repoMessages) GetManyMessages(messageIDs []int64) []*msg.UserMessage {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("Messages::GetManyMessages()",
-		zap.Int64s("MessageIDs", messageIDs),
-	)
 	messages := make([]*msg.UserMessage, 0, len(messageIDs))
 	dtoMsgs := make([]dto.Messages, 0, len(messageIDs))
 	err := r.db.Where("ID in (?)", messageIDs).Find(&dtoMsgs).Error
@@ -169,14 +163,6 @@ func (r *repoMessages) GetManyMessages(messageIDs []int64) []*msg.UserMessage {
 func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
-	logs.Debug("Messages::GetMessageHistory()",
-		zap.Int64("PeerID", peerID),
-		zap.Int32("PeerType", peerType),
-		zap.Int64("MinID", minID),
-		zap.Int64("MaxID", maxID),
-		zap.Int32("Limit", limit),
-	)
 
 	dtoMsgs := make([]dto.Messages, 0, limit)
 	dtoPendings := make([]dto.MessagesPending, 0, limit)
@@ -242,14 +228,6 @@ func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerTy
 func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
-	logs.Debug("Messages::GetMessageHistory()",
-		zap.Int64("PeerID", peerID),
-		zap.Int32("PeerType", peerType),
-		zap.Int64("MinID", minID),
-		zap.Int64("MaxID", maxID),
-		zap.Int32("Limit", limit),
-	)
 
 	dtoResult := make([]dto.Messages, 0, limit)
 
@@ -428,9 +406,6 @@ func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, err
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("Messages::GetTopMessageID()",
-		zap.Int64("PeerID", peerID),
-	)
 	dtoMsg := dto.Messages{}
 	err := r.db.Table(dtoMsg.TableName()).Where("PeerID =? AND PeerType= ?", peerID, peerType).Last(&dtoMsg).Error
 	if err != nil {
@@ -444,9 +419,6 @@ func (r *repoMessages) GetMessage(messageID int64) *msg.UserMessage {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("Messages::GetManyMessages()",
-		zap.Int64("MessageID", messageID),
-	)
 	message := new(msg.UserMessage)
 	dtoMsg := new(dto.Messages)
 	err := r.db.Where("ID = ?", messageID).Find(&dtoMsg).Error
@@ -464,9 +436,6 @@ func (r *repoMessages) SetContentRead(messageIDs []int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	logs.Debug("Messages::SetContentRead()",
-		zap.Int64s("MessageIDs", messageIDs),
-	)
 	mdl := dto.Messages{}
 	return r.db.Table(mdl.TableName()).Where("ID in (?)", messageIDs).Updates(map[string]interface{}{
 		"ContentRead": true,
