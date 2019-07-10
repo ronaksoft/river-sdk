@@ -106,7 +106,6 @@ func (d *MainDelegate) OnSessionClosed(res int) {
 	_Log.Info("Session Closed", zap.Int("Res", res))
 }
 
-
 type PrintDelegate struct{}
 
 func (d *PrintDelegate) Log(logLevel int, msg string) {
@@ -126,7 +125,7 @@ func (d *PrintDelegate) Log(logLevel int, msg string) {
 	}
 }
 
-type FileDelegate struct {}
+type FileDelegate struct{}
 
 func (d *FileDelegate) OnUploadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
 	_Log.Info("upload progress changed", zap.Float64("Progress", percent))
@@ -171,4 +170,3 @@ func (d *FileDelegate) OnDownloadError(messageID, requestID int64, filePath stri
 	)
 
 }
-

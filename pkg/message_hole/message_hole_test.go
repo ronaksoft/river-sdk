@@ -37,9 +37,9 @@ func TestHole1(t *testing.T) {
 	fmt.Println(hm.bars)
 	hm.InsertBar(Bar{200, 210, Filled})
 	fmt.Println(hm.bars)
-	fmt.Println(hm.IsRangeFilled(99,101))
-	fmt.Println(hm.IsRangeFilled(50,100))
-	fmt.Println(hm.IsRangeFilled(200,210))
+	fmt.Println(hm.IsRangeFilled(99, 101))
+	fmt.Println(hm.IsRangeFilled(50, 100))
+	fmt.Println(hm.IsRangeFilled(200, 210))
 	// hm.SetUpperFilled(110)
 	// fmt.Println(hm.bars)
 }

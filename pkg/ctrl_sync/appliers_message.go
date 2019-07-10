@@ -21,11 +21,11 @@ func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
 		return
 	}
 	logs.Info("SyncController::authAuthorization",
-		zap.String("FirstName",x.User.FirstName),
-		zap.String("LastName",x.User.LastName),
+		zap.String("FirstName", x.User.FirstName),
+		zap.String("LastName", x.User.LastName),
 		zap.Int64("UserID", x.User.ID),
-		zap.String("Bio",x.User.Bio),
-		zap.String("Username",x.User.Username),
+		zap.String("Bio", x.User.Bio),
+		zap.String("Username", x.User.Username),
 	)
 	ctrl.connInfo.ChangeFirstName(x.User.FirstName)
 	ctrl.connInfo.ChangeLastName(x.User.LastName)
@@ -294,7 +294,7 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 	if u.Continuous && minID != 0 && minID != maxID {
 		peerID := u.Messages[0].PeerID
 		peerType := u.Messages[0].PeerType
-		_ = messageHole.InsertFill(peerID, peerType, minID, maxID)
+		messageHole.InsertFill(peerID, peerType, minID, maxID)
 	}
 }
 

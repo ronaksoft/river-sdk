@@ -216,6 +216,7 @@ func (m *HoleManager) SetLowerFilled() {
 		}
 	}
 }
+
 func (m *HoleManager) String() string {
 	sb := strings.Builder{}
 	for _, bar := range m.bars {
@@ -224,143 +225,104 @@ func (m *HoleManager) String() string {
 	return sb.String()
 }
 
-func loadManager(peerID int64, peerType int32) (*HoleManager, error) {
-	hm := newHoleManager()
-	b, err := repo.MessagesExtra.GetHoles(peerID, peerType)
-	if err == nil {
-		err = json.Unmarshal(b, &hm.bars)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return hm, nil
+var holder = struct {
+	list map[string]*HoleManager
+}{
+	list: make(map[string]*HoleManager),
 }
 
-func saveManager(peerID int64, peerType int32, hm *HoleManager) error {
+func loadManager(peerID int64, peerType int32) *HoleManager {
+	keyID := fmt.Sprintf("%d.%d", peerID, peerType)
+	hm, ok := holder.list[keyID]
+	if !ok {
+		hm = newHoleManager()
+		b, err := repo.MessagesExtra.GetHoles(peerID, peerType)
+		if err == nil {
+			_ = json.Unmarshal(b, &hm.bars)
+		}
+		holder.list[keyID] = hm
+	}
+	return hm
+}
+
+func saveManager(peerID int64, peerType int32, hm *HoleManager) {
 	b, err := json.Marshal(hm.bars)
 	if err != nil {
-		return err
+		return
 	}
-
-	err = repo.MessagesExtra.SaveHoles(peerID, peerType, b)
-	if err != nil {
-		return err
-	}
-	return nil
+	_ = repo.MessagesExtra.SaveHoles(peerID, peerType, b)
+	return
 }
 
-func InsertHole(peerID int64, peerType int32, minID, maxID int64) error {
+func InsertHole(peerID int64, peerType int32, minID, maxID int64) {
 	logs.Info("Insert Hole",
 		zap.Int64("MinID", minID),
 		zap.Int64("MaxID", maxID),
 	)
-	hm, err := loadManager(peerID, peerType)
-	if err != nil {
-		return err
-	}
+	hm := loadManager(peerID, peerType)
 
 	hm.InsertBar(Bar{Type: Hole, Min: minID, Max: maxID})
 
-	err = saveManager(peerID, peerType, hm)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	saveManager(peerID, peerType, hm)
+	return
 }
 
-func InsertFill(peerID int64, peerType int32, minID, maxID int64) error {
-	hm, err := loadManager(peerID, peerType)
-	if err != nil {
-		return err
-	}
+func InsertFill(peerID int64, peerType int32, minID, maxID int64) {
+	hm := loadManager(peerID, peerType)
 
 	hm.InsertBar(Bar{Type: Filled, Min: minID, Max: maxID})
 
-	err = saveManager(peerID, peerType, hm)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	saveManager(peerID, peerType, hm)
+	return
 }
 
 // SetUpperFilled Marks from the top index to 'msgID' as filled. This could be used
 // when UpdateNewMessage arrives we just add Fill bar to the end
-func SetUpperFilled(peerID int64, peerType int32, msgID int64) error {
+func SetUpperFilled(peerID int64, peerType int32, msgID int64) {
 	logs.Info("SetUpperFilled",
 		zap.Int64("MsgID", msgID),
 	)
-	hm, err := loadManager(peerID, peerType)
-	if err != nil {
-		return err
-	}
+	hm := loadManager(peerID, peerType)
 
 	if !hm.SetUpperFilled(msgID) {
-		return nil
+		return
 	}
 
-	err = saveManager(peerID, peerType, hm)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	saveManager(peerID, peerType, hm)
+	return
 }
 
 // SetLowerFilled Marks from the lowest index to zero as filled. This is useful when
 // we reached to the first message of the user/group.
-func SetLowerFilled(peerID int64, peerType int32) error {
-	hm, err := loadManager(peerID, peerType)
-	if err != nil {
-		return err
-	}
-
+func SetLowerFilled(peerID int64, peerType int32) {
+	hm := loadManager(peerID, peerType)
 	hm.SetLowerFilled()
-
-	err = saveManager(peerID, peerType, hm)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	saveManager(peerID, peerType, hm)
+	return
 }
 
 // IsHole Checks if there is any hole in the range [minID-maxID].
-func IsHole(peerID int64, peerType int32, minID, maxID int64) (bool, error) {
-	hm, err := loadManager(peerID, peerType)
-	if err != nil {
-		return true, err
-	}
-	return hm.IsRangeFilled(minID, maxID), nil
+func IsHole(peerID int64, peerType int32, minID, maxID int64) bool {
+	hm := loadManager(peerID, peerType)
+	return hm.IsRangeFilled(minID, maxID)
 }
 
 // GetUpperFilled It returns a Bar starts from minID to the highest possible index,
 // which makes a continuous Filled section, otherwise it returns false.
 func GetUpperFilled(peerID int64, peerType int32, minID int64) (bool, Bar) {
-	hm, err := loadManager(peerID, peerType)
-	if err != nil {
-		return false, Bar{}
-	}
+	hm := loadManager(peerID, peerType)
 	return hm.GetUpperFilled(minID)
 }
 
 // GetLowerFilled It returns a Bar starts from the lowest possible index to maxID,
 // which makes a continuous Filled section, otherwise it returns false.
 func GetLowerFilled(peerID int64, peerType int32, maxID int64) (bool, Bar) {
-	hm, err := loadManager(peerID, peerType)
-	if err != nil {
-		logs.Error(err.Error())
-		return false, Bar{}
-	}
+	hm := loadManager(peerID, peerType)
 	return hm.GetLowerFilled(maxID)
 }
 
 func PrintHole(peerID int64, peerType int32) string {
-	hm, err := loadManager(peerID, peerType)
-	if err != nil {
-		return err.Error()
-	}
+	hm := loadManager(peerID, peerType)
 	sb := strings.Builder{}
 	for _, bar := range hm.bars {
 		sb.WriteString(fmt.Sprintf("[%s: %d - %d]", bar.Type.String(), bar.Min, bar.Max))

@@ -68,7 +68,7 @@ func (r *repository) initDB() error {
 func InitRepo(dialect, dbPath string) error {
 	if ctx == nil {
 		singleton.Lock()
-		lcConfig := bigcache.DefaultConfig(time.Second*360)
+		lcConfig := bigcache.DefaultConfig(time.Second * 360)
 		lcConfig.CleanWindow = time.Second * 30
 		lcConfig.HardMaxCacheSize = 128
 		lCache, _ = bigcache.NewBigCache(lcConfig)

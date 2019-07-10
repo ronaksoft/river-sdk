@@ -27,7 +27,6 @@ var (
 	_ServerKeys *shared.ServerKeys
 )
 
-
 // CreateAuthKey scenario
 type CreateAuthKey struct {
 	Scenario

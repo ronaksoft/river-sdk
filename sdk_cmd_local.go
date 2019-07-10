@@ -281,7 +281,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 					x := new(msg.MessagesMany)
 					_ = x.Unmarshal(m.Message)
 					if x.Continuous && len(x.Messages) < int(req.Limit) {
-						_ = messageHole.SetLowerFilled(req.Peer.ID, int32(req.Peer.Type))
+						messageHole.SetLowerFilled(req.Peer.ID, int32(req.Peer.Type))
 					}
 				case msg.C_Error:
 				default:
@@ -318,7 +318,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		messagesGetHistory(out, messages, users, in.RequestID, successCB)
 	default:
 		// Load a range
-		b, _ := messageHole.IsHole(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID)
+		b := messageHole.IsHole(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID)
 		if b {
 			logs.Info("Range in Hole",
 				zap.Int64("PeerID", req.Peer.ID),

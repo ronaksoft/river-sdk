@@ -30,12 +30,12 @@ func (mh *MessageHole) getManager(key string) *messageHole.HoleManager {
 
 func (mh *MessageHole) InsertHole(key string, min, max int64) {
 	m := mh.getManager(key)
-	m.InsertBar(messageHole.Bar{Min: min, Max:max, Type:messageHole.Hole})
+	m.InsertBar(messageHole.Bar{Min: min, Max: max, Type: messageHole.Hole})
 }
 
 func (mh *MessageHole) InsertFill(key string, min, max int64) {
 	m := mh.getManager(key)
-	m.InsertBar(messageHole.Bar{Min: min, Max:max, Type:messageHole.Filled})
+	m.InsertBar(messageHole.Bar{Min: min, Max: max, Type: messageHole.Filled})
 }
 
 func (mh *MessageHole) IsInHole(key string, msgID int64) bool {
@@ -43,7 +43,7 @@ func (mh *MessageHole) IsInHole(key string, msgID int64) bool {
 	return m.IsPointHole(msgID)
 }
 
-func (mh *MessageHole) IsRangeFilled (key string, min, max int64) bool {
+func (mh *MessageHole) IsRangeFilled(key string, min, max int64) bool {
 	m := mh.getManager(key)
 	return m.IsRangeFilled(min, max)
 }

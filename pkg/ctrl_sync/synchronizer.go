@@ -239,7 +239,7 @@ func getContacts(waitGroup *sync.WaitGroup, ctrl *Controller) {
 		uint64(domain.SequentialUniqueID()),
 		msg.C_ContactsGet,
 		reqBytes,
-		func () {
+		func() {
 			getContacts(waitGroup, ctrl)
 		},
 		func(m *msg.MessageEnvelope) {
@@ -294,8 +294,8 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 					}
 
 					// create MessageHole
-					_ = messageHole.InsertHole(dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID-1)
-					_ = messageHole.SetUpperFilled(dialog.PeerID, dialog.PeerType, dialog.TopMessageID)
+					messageHole.InsertHole(dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID-1)
+					messageHole.SetUpperFilled(dialog.PeerID, dialog.PeerType, dialog.TopMessageID)
 
 					// make sure to created the message hole b4 creating dialog
 					err := repo.Dialogs.Save(dialog, topMessage.CreatedOn)

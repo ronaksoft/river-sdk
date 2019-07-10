@@ -735,8 +735,6 @@ func (fm *Controller) ClearFiles(filePaths []string) error {
 	return nil
 }
 
-
-
 // SetRootFolders directory paths to download files
 func SetRootFolders(audioDir, fileDir, photoDir, videoDir, cacheDir string) {
 	dirAudio = audioDir

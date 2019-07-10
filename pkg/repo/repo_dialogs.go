@@ -231,7 +231,7 @@ func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
 
 	ed := new(dto.Dialogs)
 	dtoDlgs := make([]dto.Dialogs, 0)
-	err := r.db.Table(ed.TableName()).Where("IsPinned=?",1).Find(&dtoDlgs).Error
+	err := r.db.Table(ed.TableName()).Where("IsPinned=?", 1).Find(&dtoDlgs).Error
 
 	if err != nil {
 		logs.Error("Dialogs::GetPinnedDialogs()->fetch dialogs entity", zap.Error(err))
