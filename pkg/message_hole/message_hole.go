@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"sort"
 	"strings"
+	"sync"
 )
 
 type BarType int
@@ -35,9 +36,9 @@ type Bar struct {
 }
 
 type HoleManager struct {
+	mtxLock  sync.Mutex
 	maxIndex int64
 	bars     []Bar
-
 }
 
 func newHoleManager() *HoleManager {
@@ -46,6 +47,9 @@ func newHoleManager() *HoleManager {
 }
 
 func (m *HoleManager) InsertBar(b Bar) {
+	m.mtxLock.Lock()
+	defer m.mtxLock.Unlock()
+
 	// If it is the first bar
 	if len(m.bars) == 0 {
 		if b.Min > 0 {
@@ -75,10 +79,10 @@ func (m *HoleManager) InsertBar(b Bar) {
 			switch {
 			case b.Max == bar.Min:
 				if bar.Max > bar.Min {
-					m.appendBar( Bar{Min: bar.Min + 1, Max: bar.Max, Type: bar.Type})
+					m.appendBar(Bar{Min: bar.Min + 1, Max: bar.Max, Type: bar.Type})
 				}
 			case b.Max > bar.Min && b.Max < bar.Max:
-				m.appendBar( Bar{Min: b.Max + 1, Max: bar.Max, Type: bar.Type})
+				m.appendBar(Bar{Min: b.Max + 1, Max: bar.Max, Type: bar.Type})
 			default:
 				m.appendBar(bar)
 			}
@@ -115,7 +119,7 @@ func (m *HoleManager) InsertBar(b Bar) {
 					Bar{Min: b.Max + 1, Max: bar.Max, Type: bar.Type},
 				)
 			default:
-				m.appendBar( b)
+				m.appendBar(b)
 			}
 			newBarAdded = true
 		}
@@ -124,7 +128,7 @@ func (m *HoleManager) InsertBar(b Bar) {
 
 func (m *HoleManager) appendBar(bars ...Bar) {
 	for _, b := range bars {
-		lastIndex :=len(m.bars)-1
+		lastIndex := len(m.bars) - 1
 		if lastIndex >= 0 && m.bars[lastIndex].Type == b.Type {
 			m.bars[lastIndex].Max = b.Max
 		} else {
@@ -134,6 +138,8 @@ func (m *HoleManager) appendBar(bars ...Bar) {
 }
 
 func (m *HoleManager) IsRangeFilled(min, max int64) bool {
+	m.mtxLock.Lock()
+	defer m.mtxLock.Unlock()
 	for idx := range m.bars {
 		if m.bars[idx].Type == Hole {
 			continue
@@ -146,6 +152,8 @@ func (m *HoleManager) IsRangeFilled(min, max int64) bool {
 }
 
 func (m *HoleManager) IsPointHole(pt int64) bool {
+	m.mtxLock.Lock()
+	defer m.mtxLock.Unlock()
 	for idx := range m.bars {
 		if pt >= m.bars[idx].Min && pt <= m.bars[idx].Max {
 			switch m.bars[idx].Type {
@@ -160,6 +168,8 @@ func (m *HoleManager) IsPointHole(pt int64) bool {
 }
 
 func (m *HoleManager) GetUpperFilled(pt int64) (bool, Bar) {
+	m.mtxLock.Lock()
+	defer m.mtxLock.Unlock()
 	for idx := range m.bars {
 		if pt >= m.bars[idx].Min && pt <= m.bars[idx].Max {
 			switch m.bars[idx].Type {
@@ -174,6 +184,8 @@ func (m *HoleManager) GetUpperFilled(pt int64) (bool, Bar) {
 }
 
 func (m *HoleManager) GetLowerFilled(pt int64) (bool, Bar) {
+	m.mtxLock.Lock()
+	defer m.mtxLock.Unlock()
 	for idx := range m.bars {
 		if pt >= m.bars[idx].Min && pt <= m.bars[idx].Max {
 			switch m.bars[idx].Type {
@@ -188,14 +200,18 @@ func (m *HoleManager) GetLowerFilled(pt int64) (bool, Bar) {
 }
 
 func (m *HoleManager) SetUpperFilled(pt int64) bool {
+	m.mtxLock.Lock()
+	defer m.mtxLock.Unlock()
 	if pt <= m.maxIndex {
 		return false
 	}
-	m.InsertBar(Bar{Type: Filled, Min: m.maxIndex+1, Max: pt})
+	m.InsertBar(Bar{Type: Filled, Min: m.maxIndex + 1, Max: pt})
 	return true
 }
 
 func (m *HoleManager) SetLowerFilled() {
+	m.mtxLock.Lock()
+	defer m.mtxLock.Unlock()
 	for _, b := range m.bars {
 		if b.Type == Filled {
 			if b.Min != 0 {
