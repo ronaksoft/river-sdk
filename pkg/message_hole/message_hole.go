@@ -220,6 +220,13 @@ func (m *HoleManager) SetLowerFilled() {
 		}
 	}
 }
+func (m *HoleManager) String() string {
+	sb := strings.Builder{}
+	for _, bar := range m.bars {
+		sb.WriteString(fmt.Sprintf("[%s: %d - %d]", bar.Type.String(), bar.Min, bar.Max))
+	}
+	return sb.String()
+}
 
 func loadManager(peerID int64, peerType int32) (*HoleManager, error) {
 	hm := newHoleManager()

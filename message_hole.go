@@ -58,6 +58,11 @@ func (mh *MessageHole) SetUpperFilled(key string, maxID int64) {
 	m.SetUpperFilled(maxID)
 }
 
+func (mh *MessageHole) String(key string) string {
+	m := mh.getManager(key)
+	return m.String()
+}
+
 func (mh *MessageHole) Release(key string) {
 	delete(mh.lists, key)
 }
