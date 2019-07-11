@@ -11,7 +11,6 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"github.com/dustin/go-humanize"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 )
@@ -142,9 +141,6 @@ func (ctrl *Controller) messageFlushFunc(entries []ronak.FlusherEntry) {
 
 		// Call the message handler in blocking mode
 		ctrl.OnMessage(messages)
-		logs.Debug("Messages Flushed",
-			zap.Int("Count", itemsCount),
-		)
 	}
 }
 
@@ -212,14 +208,11 @@ func (ctrl *Controller) watchDog() {
 			if ctrl.wsConn != nil {
 				ctrl.receiver()
 			}
-			logs.Info("watchDog() NetworkDisconnected")
 			ctrl.updateNetworkStatus(domain.NetworkDisconnected)
 			if ctrl.wsKeepConnection {
-				logs.Info("NetworkController Reconnects")
 				go ctrl.Connect(false)
 			}
 		case <-ctrl.stopChannel:
-			logs.Debug("watchDog() Stopped")
 			return
 		}
 	}
@@ -241,7 +234,6 @@ func (ctrl *Controller) keepAlive() {
 			ctrl.wsWriteLock.Unlock()
 			if err != nil {
 				_ = ctrl.wsConn.SetReadDeadline(time.Now())
-				logs.Warn("NetworkController::keepAlive() -> wsConn.WriteMessage()", zap.Error(err))
 				continue
 			}
 			pingTime := time.Now()
@@ -279,7 +271,6 @@ func (ctrl *Controller) receiver() {
 	for {
 		messageType, message, err := ctrl.wsConn.ReadMessage()
 		if err != nil {
-			logs.Warn("NetworkController::receiver()-> ReadMessage()", zap.Error(err))
 			return
 		}
 		switch messageType {
@@ -323,7 +314,7 @@ func (ctrl *Controller) receiver() {
 			ctrl.messageHandler(receivedEncryptedPayload.Envelope)
 
 		default:
-			logs.Warn("NetworkController::",
+			logs.Warn("NetworkController received unhandled message type",
 				zap.Int("MessageType", messageType),
 			)
 		}
@@ -338,9 +329,6 @@ func (ctrl *Controller) updateNetworkStatus(newStatus domain.NetworkStatus) {
 	if ctrl.wsQuality == newStatus {
 		return
 	}
-	logs.Info("Network Status Updated",
-		zap.String("Status", newStatus.ToString()),
-	)
 	ctrl.wsQuality = newStatus
 	if ctrl.wsOnNetworkStatusChange != nil {
 		ctrl.wsOnNetworkStatusChange(newStatus)
@@ -390,13 +378,6 @@ func (ctrl *Controller) extractMessages(m *msg.MessageEnvelope) ([]*msg.MessageE
 func (ctrl *Controller) messageHandler(message *msg.MessageEnvelope) {
 	// extract all updates/ messages
 	messages, updates := ctrl.extractMessages(message)
-	messageCount := len(messages)
-	updateCount := len(updates)
-	logs.Debug("NetworkController:: Message Handler Received",
-		zap.Int("Messages Count", messageCount),
-		zap.Int("Updates Count", updateCount),
-	)
-
 	for idx := range messages {
 		ctrl.messageFlusher.Enter(nil, messages[idx])
 	}
@@ -418,19 +399,20 @@ func (ctrl *Controller) Start() error {
 
 // Stop sends stop signal to keepAlive and watchDog routines.
 func (ctrl *Controller) Stop() {
-	logs.Debug("StopServices-NetworkController::Stop() called")
-
+	logs.Info("NetworkController is stopping")
 	ctrl.stopChannel <- true // keepAlive
 	select {
 	case ctrl.stopChannel <- true: // receiver may or may not be listening
 	default:
 	}
+	logs.Info("NetworkController stopped")
 }
 
 // Connect dial websocket
 func (ctrl *Controller) Connect(force bool) {
-	logs.Debug("StopServices-NetworkController:: -> Connect() called",
-		zap.Bool("force", force))
+	logs.Info("NetworkController is connecting",
+		zap.Bool("force", force),
+	)
 
 	defer func() {
 		if recoverPanic("NetworkController:: Connect", ronak.M{
@@ -445,11 +427,6 @@ func (ctrl *Controller) Connect(force bool) {
 		if ctrl.wsConn != nil {
 			_ = ctrl.wsConn.Close()
 		}
-
-		// Return if Disconnect() has been called
-		logs.Debug("StopServices-NetworkController:: -> return if disconnect called",
-			zap.Bool("force", force),
-			zap.Bool("wsKeepConnection",ctrl.wsKeepConnection))
 
 		if !force && !ctrl.wsKeepConnection {
 			return
@@ -471,7 +448,7 @@ func (ctrl *Controller) Connect(force bool) {
 		// it should be started here cuz we need receiver to get AuthRecall answer
 		// Send Signal to start the 'receiver' and 'keepAlive' routines
 		ctrl.connectChannel <- true
-		logs.Debug("StopServices-NetowrkController::Connect() -> call connect channel!")
+		logs.Info("NetworkController connected")
 
 		// Call the OnConnect handler here b4 changing network status that trigger queue to start working
 		// basically we send priority requests b4 queue starts to work
@@ -483,13 +460,10 @@ func (ctrl *Controller) Connect(force bool) {
 
 // Disconnect close websocket
 func (ctrl *Controller) Disconnect() {
-	logs.Debug("StopServices-NetworkController::Disconnect() called")
-
 	ctrl.wsKeepConnection = false
 	if ctrl.wsConn != nil {
 		_ = ctrl.wsConn.Close()
-
-		logs.Info("NetworkController::Disconnect() Disconnected")
+		logs.Info("NetworkController disconnected")
 	}
 }
 
@@ -532,11 +506,6 @@ func (ctrl *Controller) SetNetworkStatusChangedCallback(h domain.NetworkStatusUp
 
 // Send direct sends immediately else it put it in debouncer
 func (ctrl *Controller) Send(msgEnvelope *msg.MessageEnvelope, direct bool) error {
-	logs.Debug("NetworkController:: Send",
-		zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
-		zap.Bool("Direct", direct),
-		zap.Int64("AuthID", ctrl.authID),
-	)
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
 	if direct || unauthorized {
 		return ctrl.send(msgEnvelope)
@@ -586,10 +555,6 @@ func (ctrl *Controller) send(msgEnvelope *msg.MessageEnvelope) error {
 		_ = ctrl.wsConn.SetReadDeadline(time.Now())
 		return err
 	}
-	logs.Debug("NetworkController:: Message sent to the wire",
-		zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
-		zap.String("Size", humanize.Bytes(uint64(protoMessage.Size()))),
-	)
 	return nil
 }
 
@@ -597,8 +562,7 @@ func (ctrl *Controller) send(msgEnvelope *msg.MessageEnvelope) error {
 func (ctrl *Controller) Reconnect() {
 	if ctrl.wsConn != nil {
 		ctrl.wsKeepConnection = true
-		ctrl.wsConn.Close()
-		logs.Info("NetworkController::Reconnect() Reconnected")
+		_ = ctrl.wsConn.Close()
 	}
 }
 

@@ -1,6 +1,7 @@
 package networkCtrl_test
 
 import (
+	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
@@ -69,6 +70,17 @@ func authRecall() *msg.MessageEnvelope {
 		Message:     b,
 	}
 }
+
+func getServerTime() *msg.MessageEnvelope {
+	m := new(msg.SystemGetServerTime)
+	b, _ := m.Marshal()
+	return &msg.MessageEnvelope{
+		Constructor: msg.C_SystemGetServerTime,
+		RequestID:   ronak.RandomUint64(),
+		Message:     b,
+	}
+}
+
 func TestNewController(t *testing.T) {
 	logs.SetLogLevel(0)
 	ctrl := networkCtrl.New(networkCtrl.Config{
@@ -87,15 +99,23 @@ func TestNewController(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	ctrl.Connect(true)
-	for i := 0; i < 10; i++ {
-		err = ctrl.Send(authRecall(), false)
-		if err != nil {
-			t.Error(err)
+	for j := 0; j < 10 ; j++ {
+		fmt.Println("Connect Called")
+		ctrl.Connect(true)
+		for i := 0; i < 10; i++ {
+			fmt.Println("Send Message:", i)
+			err = ctrl.Send(getServerTime(), false)
+			if err != nil {
+				t.Error(err)
+			}
+			time.Sleep(time.Second)
 		}
+		time.Sleep(5 * time.Second)
+		fmt.Println("Disconnect called")
+		ctrl.Disconnect()
+		time.Sleep(5 * time.Second)
 	}
-	time.Sleep(20 * time.Second)
-	ctrl.Disconnect()
-	time.Sleep(3 * time.Second)
+
+	logs.Info("Stop called")
 	ctrl.Stop()
 }

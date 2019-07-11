@@ -25,6 +25,7 @@ func init() {
 				CallerKey:      "caller",
 				LevelKey:       "level",
 				MessageKey:     "msg",
+				NameKey:        "name",
 				LineEnding:     zapcore.DefaultLineEnding,
 				EncodeLevel:    zapcore.CapitalColorLevelEncoder,
 				EncodeTime:     zapcore.ISO8601TimeEncoder,
