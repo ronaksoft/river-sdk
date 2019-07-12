@@ -195,7 +195,7 @@ func TestSDKReconnect(t *testing.T) {
 		DbID:               "test",
 		QueuePath:          "./_queue/",
 		ServerKeysFilePath: "./keys.json",
-		ServerEndpoint:     "ws://test.river.im",
+		ServerEndpoint:     "ws://new.river.im",
 		ConnInfo:           conInfo,
 		LogLevel:           -1,
 	})
