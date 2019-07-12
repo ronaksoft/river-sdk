@@ -99,7 +99,7 @@ func NewSyncController(config Config) *Controller {
 // watchDog
 // Checks if we have not received any updates since last watch tries to re-sync with server.
 func (ctrl *Controller) watchDog() {
-	syncTime := 60 * time.Second
+	syncTime := 15 * time.Second
 	for {
 		select {
 		case <-time.After(syncTime):
@@ -112,7 +112,6 @@ func (ctrl *Controller) watchDog() {
 			}
 			ctrl.sync()
 		case <-ctrl.stopChannel:
-			logs.Debug("StopServices-SyncController::Stop channel signal received")
 			logs.Info("SyncController:: watchDog Stopped")
 			return
 		}

@@ -110,7 +110,7 @@ func (r *River) onNetworkConnect() {
 		}
 
 		// Sync with Server
-		go r.syncCtrl.Sync()
+		r.syncCtrl.Sync()
 
 		// import contact from server
 		r.syncCtrl.ContactImportFromServer()
@@ -429,7 +429,7 @@ func (r *River) registerCommandHandlers() {
 
 // Start ...
 func (r *River) Start() error {
-	logs.Debug("StopServices-River::Start() -> Called")
+	logs.Info("River Starting")
 
 	// Start Controllers
 	if err := r.networkCtrl.Start(); err != nil {
@@ -442,6 +442,7 @@ func (r *River) Start() error {
 	// Connect to Server
 	go r.networkCtrl.Connect(false)
 
+	logs.Info("River Started")
 	return nil
 }
 
@@ -829,7 +830,6 @@ func (r *River) CreateAuthKey() (err error) {
 
 func (r *River) ResetAuthKey() {
 	r.networkCtrl.SetAuthorization(0, nil)
-
 	fileCtrl.Ctx().SetAuthorization(0, nil)
 	r.ConnInfo.AuthID = 0
 	r.ConnInfo.AuthKey = [256]byte{}

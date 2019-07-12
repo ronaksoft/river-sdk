@@ -9,7 +9,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -34,27 +33,27 @@ func (c *ConnInfoDelegates) SaveConnInfo(connInfo []byte) {
 }
 
 func init() {
-	logs.Info("Creating New River SDK Instance")
-	r := new(River)
-	conInfo := new(RiverConnection)
-	conInfo.Delegate = new(dummyConInfoDelegate)
-	r.SetConfig(&RiverConfig{
-		DbPath:                 "./_data/",
-		DbID:                   "test",
-		ServerKeysFilePath:     "./keys.json",
-		ServerEndpoint:         "ws://test.river.im",
-		QueuePath:              fmt.Sprintf("%s/%s", "./_queue", "test"),
-		MainDelegate:           new(MainDelegateDummy),
-		LogLevel:               int(zapcore.DebugLevel),
-		DocumentAudioDirectory: "./_files/audio",
-		DocumentVideoDirectory: "./_files/video",
-		DocumentPhotoDirectory: "./_files/photo",
-		DocumentFileDirectory:  "./_files/file",
-		DocumentCacheDirectory: "./_files/cache",
-		DocumentLogDirectory:   "./_files/logs",
-		ConnInfo:               conInfo,
-	})
-	_River = r
+	// logs.Info("Creating New River SDK Instance")
+	// r := new(River)
+	// conInfo := new(RiverConnection)
+	// conInfo.Delegate = new(dummyConInfoDelegate)
+	// r.SetConfig(&RiverConfig{
+	// 	DbPath:                 "./_data/",
+	// 	DbID:                   "test",
+	// 	ServerKeysFilePath:     "./keys.json",
+	// 	ServerEndpoint:         "ws://test.river.im",
+	// 	QueuePath:              fmt.Sprintf("%s/%s", "./_queue", "test"),
+	// 	MainDelegate:           new(MainDelegateDummy),
+	// 	LogLevel:               int(zapcore.DebugLevel),
+	// 	DocumentAudioDirectory: "./_files/audio",
+	// 	DocumentVideoDirectory: "./_files/video",
+	// 	DocumentPhotoDirectory: "./_files/photo",
+	// 	DocumentFileDirectory:  "./_files/file",
+	// 	DocumentCacheDirectory: "./_files/cache",
+	// 	DocumentLogDirectory:   "./_files/logs",
+	// 	ConnInfo:               conInfo,
+	// })
+	// _River = r
 }
 
 func TestController_CheckSalt(t *testing.T) {
@@ -134,8 +133,9 @@ func TestGetWorkGroup(t *testing.T) {
 
 }
 
-func TestReconnect(t *testing.T) {
-	logs.Info("Creating New River SDK Instance")
+func TestSDKReconnect(t *testing.T) {
+	logs.SetLogLevel(0)
+	fmt.Println("Creating New River SDK Instance")
 	conInfo := new(RiverConnection)
 
 	file, err := os.Open("./_connection/connInfo1")
@@ -151,6 +151,7 @@ func TestReconnect(t *testing.T) {
 	conInfo.Delegate = new(ConnInfoDelegates)
 
 	r := new(River)
+	fmt.Println("SetConfig called")
 	r.SetConfig(&RiverConfig{
 		DbPath:             "./_data/",
 		DbID:               "test",
@@ -161,20 +162,20 @@ func TestReconnect(t *testing.T) {
 		ConnInfo:           conInfo,
 	})
 
-	r.Start()
+	fmt.Println("Start called")
+	_ = r.Start()
 	for r.ConnInfo.AuthID == 0 {
-		logs.Info("AuthKey has not been created yet.")
 		if err := r.CreateAuthKey(); err != nil {
 			t.Error(err.Error())
 			return
 		}
-		logs.Info("AuthKey Created.")
 	}
 
 	time.Sleep(10 * time.Second)
 	r.Stop()
 	r.ResetAuthKey()
 
+	time.Sleep(10 * time.Second)
 	// Connect to 2nd Server
 	file, err = os.Open("./_connection/connInfo2")
 	if err == nil {
@@ -197,7 +198,7 @@ func TestReconnect(t *testing.T) {
 		ConnInfo:           conInfo,
 		LogLevel:           -1,
 	})
-	r.Start()
+	_ = r.Start()
 	for r.ConnInfo.AuthID == 0 {
 		logs.Info("AuthKey has not been created yet.")
 		if err := r.CreateAuthKey(); err != nil {
@@ -301,23 +302,36 @@ func (d *MainDelegateDummy) OnSessionClosed(res int) {
 	logs.Info("Session Closed", zap.Int("Res", res))
 }
 
-func (d *MainDelegateDummy) OnDownloadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
+
+type RequestDelegateDummy struct{}
+
+func (RequestDelegateDummy) OnComplete(b []byte) {
+	fmt.Println(b)
+}
+
+func (RequestDelegateDummy) OnTimeout(err error) {
+	fmt.Println(err)
+}
+
+type FileDelegateDummy struct {}
+
+func (d *FileDelegateDummy) OnDownloadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
 	logs.Info("Download progress changed", zap.Float64("Progress", percent))
 }
 
-func (d *MainDelegateDummy) OnUploadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
+func (d *FileDelegateDummy) OnUploadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
 	logs.Info("Upload progress changed", zap.Float64("Progress", percent))
 }
 
-func (d *MainDelegateDummy) OnDownloadCompleted(messageID int64, filePath string) {
+func (d *FileDelegateDummy) OnDownloadCompleted(messageID int64, filePath string) {
 	logs.Info("Download completed", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
 }
 
-func (d *MainDelegateDummy) OnUploadCompleted(messageID int64, filePath string) {
+func (d *FileDelegateDummy) OnUploadCompleted(messageID int64, filePath string) {
 	logs.Info("Upload completed", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
 }
 
-func (d *MainDelegateDummy) OnUploadError(messageID, requestID int64, filePath string, err []byte) {
+func (d *FileDelegateDummy) OnUploadError(messageID, requestID int64, filePath string, err []byte) {
 	x := new(msg.Error)
 	x.Unmarshal(err)
 
@@ -331,7 +345,7 @@ func (d *MainDelegateDummy) OnUploadError(messageID, requestID int64, filePath s
 
 }
 
-func (d *MainDelegateDummy) OnDownloadError(messageID, requestID int64, filePath string, err []byte) {
+func (d *FileDelegateDummy) OnDownloadError(messageID, requestID int64, filePath string, err []byte) {
 	x := new(msg.Error)
 	x.Unmarshal(err)
 
@@ -342,16 +356,6 @@ func (d *MainDelegateDummy) OnDownloadError(messageID, requestID int64, filePath
 		zap.Int64("ReqID", requestID),
 		zap.String("FilePath", filePath),
 	)
-}
-
-type RequestDelegateDummy struct{}
-
-func (RequestDelegateDummy) OnComplete(b []byte) {
-	fmt.Println(b)
-}
-
-func (RequestDelegateDummy) OnTimeout(err error) {
-	fmt.Println(err)
 }
 
 //func (d *MainDelegateDummy) OnSearchComplete(b []byte) {
