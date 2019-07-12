@@ -239,18 +239,18 @@ func (r *River) AccountGetPhotoBig(userID int64) string {
 				if dtoPhoto.BigFilePath != "" {
 					// check if file exist
 					if _, err := os.Stat(dtoPhoto.BigFilePath); os.IsNotExist(err) {
-						return downloadAccountPhoto(userID, user.Photo, true)
+						return r.downloadAccountPhoto(userID, user.Photo, true)
 					}
 					// check if fileID is changed re-download
 					strFileID := strconv.FormatInt(dtoPhoto.BigFileID, 10)
 					if strings.Index(dtoPhoto.BigFilePath, strFileID) < 0 {
-						return downloadAccountPhoto(user.ID, user.Photo, true)
+						return r.downloadAccountPhoto(user.ID, user.Photo, true)
 					}
 					return dtoPhoto.BigFilePath
 				}
-				return downloadAccountPhoto(userID, user.Photo, true)
+				return r.downloadAccountPhoto(userID, user.Photo, true)
 			}
-			return downloadAccountPhoto(userID, user.Photo, true)
+			return r.downloadAccountPhoto(userID, user.Photo, true)
 
 		}
 		logs.Warn("SDK::AccountGetPhoto_Big() user photo is null")
@@ -269,21 +269,21 @@ func (r *River) AccountGetPhotoSmall(userID int64) string {
 				if dtoPhoto.SmallFilePath != "" {
 					// check if file exist
 					if _, err := os.Stat(dtoPhoto.SmallFilePath); os.IsNotExist(err) {
-						return downloadAccountPhoto(userID, user.Photo, false)
+						return r.downloadAccountPhoto(userID, user.Photo, false)
 					}
 
 					// check if fileID is changed re-download
 					strFileID := strconv.FormatInt(dtoPhoto.SmallFileID, 10)
 					if strings.Index(dtoPhoto.SmallFilePath, strFileID) < 0 {
-						return downloadAccountPhoto(user.ID, user.Photo, true)
+						return r.downloadAccountPhoto(user.ID, user.Photo, true)
 					}
 
 					return dtoPhoto.SmallFilePath
 				}
-				return downloadAccountPhoto(userID, user.Photo, false)
+				return r.downloadAccountPhoto(userID, user.Photo, false)
 
 			}
-			return downloadAccountPhoto(userID, user.Photo, false)
+			return r.downloadAccountPhoto(userID, user.Photo, false)
 		}
 		return ""
 	}
@@ -291,7 +291,7 @@ func (r *River) AccountGetPhotoSmall(userID int64) string {
 }
 
 // downloadAccountPhoto this function is sync
-func downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) string {
+func (r *River) downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) string {
 	logs.Debug("SDK::downloadAccountPhoto",
 		zap.Int64("userID", userID),
 		zap.Bool("IsBig", isBig),
@@ -363,17 +363,17 @@ func (r *River) GroupGetPhotoBig(groupID int64) string {
 			if group.BigFilePath != "" {
 				// check if file exist
 				if _, err := os.Stat(group.BigFilePath); os.IsNotExist(err) {
-					return downloadGroupPhoto(groupID, groupPhoto, true)
+					return r.downloadGroupPhoto(groupID, groupPhoto, true)
 				}
 				// check if fileID is changed redownload
 				strFileID := strconv.FormatInt(groupPhoto.PhotoBig.FileID, 10)
 				if strings.Index(group.BigFilePath, strFileID) < 0 {
-					return downloadGroupPhoto(groupID, groupPhoto, true)
+					return r.downloadGroupPhoto(groupID, groupPhoto, true)
 				}
 				return group.BigFilePath
 
 			}
-			return downloadGroupPhoto(groupID, groupPhoto, true)
+			return r.downloadGroupPhoto(groupID, groupPhoto, true)
 
 		}
 		logs.Error("SDK::GroupGetPhoto_Big() group photo is null")
@@ -398,19 +398,19 @@ func (r *River) GroupGetPhotoSmall(groupID int64) string {
 
 				// check if file exist
 				if _, err := os.Stat(group.SmallFilePath); os.IsNotExist(err) {
-					return downloadGroupPhoto(groupID, groupPhoto, false)
+					return r.downloadGroupPhoto(groupID, groupPhoto, false)
 				}
 
 				// check if fileID is changed redownload
 				strFileID := strconv.FormatInt(groupPhoto.PhotoSmall.FileID, 10)
 				if strings.Index(group.SmallFilePath, strFileID) < 0 {
-					return downloadGroupPhoto(groupID, groupPhoto, false)
+					return r.downloadGroupPhoto(groupID, groupPhoto, false)
 				}
 
 				return group.SmallFilePath
 
 			}
-			return downloadGroupPhoto(groupID, groupPhoto, false)
+			return r.downloadGroupPhoto(groupID, groupPhoto, false)
 
 		}
 		logs.Error("SDK::GroupGetPhoto_Small() group photo is null")
@@ -420,7 +420,7 @@ func (r *River) GroupGetPhotoSmall(groupID int64) string {
 }
 
 // this function is sync
-func downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) string {
+func (r *River) downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) string {
 	logs.Debug("SDK::downloadGroupPhoto",
 		zap.Int64("userID", groupID),
 		zap.Bool("IsBig", isBig),

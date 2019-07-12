@@ -236,7 +236,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 
 	// Update Controller
-	ctrl.fileCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+	r.fileCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 	r.fileCtrl.LoadQueueFromDB()
 }
 

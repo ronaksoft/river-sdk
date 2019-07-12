@@ -175,39 +175,39 @@ func TestSDKReconnect(t *testing.T) {
 	r.ResetAuthKey()
 	r.Stop()
 
-	// time.Sleep(10 * time.Second)
-	//
-	// // Connect to 2nd Server
-	// file, err = os.Open("./_connection/connInfo2")
-	// if err == nil {
-	// 	b, _ := ioutil.ReadAll(file)
-	// 	err := json.Unmarshal(b, conInfo)
-	// 	if err != nil {
-	// 		t.Error(err)
-	// 		return
-	// 	}
-	// }
-	//
-	// conInfo.Delegate = new(ConnInfoDelegates)
-	//
-	// r.SetConfig(&RiverConfig{
-	// 	DbPath:             "./_data/",
-	// 	DbID:               "test",
-	// 	QueuePath:          "./_queue/",
-	// 	ServerKeysFilePath: "./keys.json",
-	// 	ServerEndpoint:     "ws://test.river.im",
-	// 	ConnInfo:           conInfo,
-	// 	LogLevel:           -1,
-	// })
-	// _ = r.Start()
-	// for r.ConnInfo.AuthID == 0 {
-	// 	logs.Info("AuthKey has not been created yet.")
-	// 	if err := r.CreateAuthKey(); err != nil {
-	// 		t.Error(err.Error())
-	// 		return
-	// 	}
-	// 	logs.Info("AuthKey Created.")
-	// }
+	time.Sleep(10 * time.Second)
+
+	// Connect to 2nd Server
+	file, err = os.Open("./_connection/connInfo2")
+	if err == nil {
+		b, _ := ioutil.ReadAll(file)
+		err := json.Unmarshal(b, conInfo)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+	}
+
+	conInfo.Delegate = new(ConnInfoDelegates)
+
+	r.SetConfig(&RiverConfig{
+		DbPath:             "./_data/",
+		DbID:               "test",
+		QueuePath:          "./_queue/",
+		ServerKeysFilePath: "./keys.json",
+		ServerEndpoint:     "ws://test.river.im",
+		ConnInfo:           conInfo,
+		LogLevel:           -1,
+	})
+	_ = r.Start()
+	for r.ConnInfo.AuthID == 0 {
+		logs.Info("AuthKey has not been created yet.")
+		if err := r.CreateAuthKey(); err != nil {
+			t.Error(err.Error())
+			return
+		}
+		logs.Info("AuthKey Created.")
+	}
 	time.Sleep(time.Minute)
 }
 
