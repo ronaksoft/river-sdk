@@ -67,7 +67,6 @@ func (ctrl *Controller) distributor() {
 		// Wait until network is available
 		ctrl.network.WaitForNetwork()
 
-
 		ctrl.distributorLock.Lock()
 		if ctrl.waitingList.Length() == 0 {
 			ctrl.distributorRunning = false

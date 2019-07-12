@@ -457,8 +457,7 @@ func (r *River) Stop() {
 	r.syncCtrl.Stop()
 	r.queueCtrl.Stop()
 	r.networkCtrl.Stop()
-
-	fileCtrl.Ctx().Stop()
+	r.fileCtrl.Stop()
 	uiexec.Ctx().Stop()
 
 	// Close database connection
@@ -804,7 +803,7 @@ func (r *River) CreateAuthKey() (err error) {
 					return
 				}
 				r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-				fileCtrl.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+				r.fileCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 			case msg.C_Error:
 				err = domain.ParseServerError(res.Message)
 				return
@@ -821,7 +820,7 @@ func (r *River) CreateAuthKey() (err error) {
 	// double set AuthID
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 
-	fileCtrl.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+	r.fileCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 
 	r.ConnInfo.Save()
 
@@ -830,7 +829,7 @@ func (r *River) CreateAuthKey() (err error) {
 
 func (r *River) ResetAuthKey() {
 	r.networkCtrl.SetAuthorization(0, nil)
-	fileCtrl.Ctx().SetAuthorization(0, nil)
+	r.fileCtrl.SetAuthorization(0, nil)
 	r.ConnInfo.AuthID = 0
 	r.ConnInfo.AuthKey = [256]byte{}
 	r.ConnInfo.Save()

@@ -326,7 +326,7 @@ func downloadWorker(workerIdx int, wg *sync.WaitGroup, partQueue chan int, fileB
 	for {
 		select {
 		case partIdx := <-partQueue:
-			ctx := fileCtrl.Ctx()
+			ctx := fileCtrl.New(fileCtrl.Config{})
 			req := new(msg.FileGet)
 			req.Location = &msg.InputFileLocation{
 				AccessHash: x.Doc.AccessHash,

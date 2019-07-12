@@ -99,7 +99,7 @@ func TestNewController(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	for j := 0; j < 10 ; j++ {
+	for j := 0; j < 10; j++ {
 		fmt.Println("Connect Called")
 		ctrl.Connect(true)
 		for i := 0; i < 10; i++ {

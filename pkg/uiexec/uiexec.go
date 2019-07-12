@@ -51,7 +51,7 @@ func (c *UIExecutor) Start() {
 
 // Stop sent stop signal
 func (c *UIExecutor) Stop() {
-	logs.Debug("StopServices-UIExecutor::Stop() called")
+	logs.Debug("UIExecutor Stopping")
 
 	select {
 	case c.chStop <- true:
@@ -60,6 +60,7 @@ func (c *UIExecutor) Stop() {
 		logs.Debug("CMD::Stop() cmd is not started")
 	}
 	exec = nil
+	logs.Debug("UIExecutor Stopped")
 }
 
 // Exec pass given function to UIExecutor buffered channel

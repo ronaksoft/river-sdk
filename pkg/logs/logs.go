@@ -26,6 +26,7 @@ func init() {
 				LevelKey:       "level",
 				MessageKey:     "msg",
 				NameKey:        "name",
+				StacktraceKey:  "stack",
 				LineEnding:     zapcore.DefaultLineEnding,
 				EncodeLevel:    zapcore.CapitalColorLevelEncoder,
 				EncodeTime:     zapcore.ISO8601TimeEncoder,

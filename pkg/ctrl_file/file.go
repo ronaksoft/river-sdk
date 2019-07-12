@@ -23,7 +23,6 @@ import (
 )
 
 var (
-	mx       sync.Mutex
 	ctx      *Controller
 	dirAudio string
 	dirFile  string
@@ -36,6 +35,16 @@ const (
 	// FileSizeThresholdForCheckHash for files that are smaller than this number we will calculate md5 hash to do not reupload same file twice
 	FileSizeThresholdForCheckHash = 10 * 1024 * 1024 // 10MB
 )
+
+// Config network controller config
+type Config struct {
+	ServerAddress       string
+	OnUploadCompleted   domain.OnFileUploadCompleted
+	ProgressCallback    domain.OnFileStatusChanged
+	OnDownloadCompleted domain.OnFileDownloadCompleted
+	OnFileUploadError   domain.OnFileUploadError
+	OnFileDownloadError domain.OnFileDownloadError
+}
 
 // Controller manages files download/upload/status and cache
 type Controller struct {
@@ -66,47 +75,24 @@ type Controller struct {
 	onDownloadError     domain.OnFileDownloadError
 }
 
-// Ctx return Controller singleton instance
-func Ctx() *Controller {
-	if ctx == nil {
-		panic("Controller::Ctx() file manager not initialized !")
+func New(config Config) *Controller {
+	ctx = &Controller{
+		ServerEndpoint:      config.ServerAddress,
+		UploadQueue:         make(map[int64]*File, 0),
+		DownloadQueue:       make(map[int64]*File, 0),
+		chStopUploader:      make(chan bool),
+		chStopDownloader:    make(chan bool),
+		chNewDownloadItem:   make(chan bool),
+		chNewUploadItem:     make(chan bool),
+		onUploadCompleted:   config.OnUploadCompleted,
+		progressCallback:    config.ProgressCallback,
+		onDownloadCompleted: config.OnDownloadCompleted,
+		onUploadError:       config.OnFileUploadError,
+		onDownloadError:     config.OnFileDownloadError,
 	}
-	return ctx
-}
-
-// InitFileManager initialize file manager and create singleton instance
-func InitFileManager(serverAddress string,
-	onUploadCompleted domain.OnFileUploadCompleted,
-	progressCallback domain.OnFileStatusChanged,
-	onDownloadCompleted domain.OnFileDownloadCompleted,
-	onFileUploadError domain.OnFileUploadError,
-	onFileDownloadError domain.OnFileDownloadError,
-) {
-
-	if ctx == nil {
-		mx.Lock()
-		defer mx.Unlock()
-		if ctx == nil {
-			ctx = &Controller{
-				ServerEndpoint:      serverAddress,
-				UploadQueue:         make(map[int64]*File, 0),
-				DownloadQueue:       make(map[int64]*File, 0),
-				chStopUploader:      make(chan bool),
-				chStopDownloader:    make(chan bool),
-				chNewDownloadItem:   make(chan bool),
-				chNewUploadItem:     make(chan bool),
-				onUploadCompleted:   onUploadCompleted,
-				progressCallback:    progressCallback,
-				onDownloadCompleted: onDownloadCompleted,
-				onUploadError:       onFileUploadError,
-				onDownloadError:     onFileDownloadError,
-			}
-
-		}
-	}
-
 	go ctx.startDownloadQueue()
 	go ctx.startUploadQueue()
+	return ctx
 }
 
 func (fm *Controller) startDownloadQueue() {
@@ -170,7 +156,7 @@ func (fm *Controller) downloadRequest(req *msg.MessageEnvelope, fs *File, partId
 		case msg.C_Error:
 			// remove download from queue
 			fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
-			logs.Error("downloadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
+			logs.Warn("downloadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
 			fs.RequestStatus = domain.RequestStatusError
 			repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 
@@ -297,7 +283,7 @@ func (fm *Controller) uploadRequest(req *msg.MessageEnvelope, count int64, fs *F
 		fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
 		logs.Error("uploadRequest() upload request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
 		fs.RequestStatus = domain.RequestStatusError
-		repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
+		_ = repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 		if fm.onUploadError != nil {
 			x := new(msg.Error)
 			x.Code = "00"
@@ -326,7 +312,7 @@ func (fm *Controller) uploadCompleted(msgID, fileID, targetID int64,
 
 // Stop set stop flag
 func (fm *Controller) Stop() {
-	logs.Debug("StopServices-FileController::Stop() called")
+	logs.Debug("FileController Stopping")
 
 	if fm.UploadQueueStarted {
 		fm.chStopUploader <- true
@@ -338,6 +324,7 @@ func (fm *Controller) Stop() {
 	if ctx != nil {
 		ctx = nil
 	}
+	logs.Debug("FileController Stopped")
 }
 
 // Upload file to server

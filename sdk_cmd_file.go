@@ -115,18 +115,18 @@ func (r *River) FileDownload(msgID int64) {
 
 	switch status {
 	case domain.RequestStatusNone:
-		fileCtrl.Ctx().Download(m)
+		r.fileCtrl.Download(m)
 	case domain.RequestStatusInProgress:
 		// already downloading
 		// filemanager.Ctx().Download(m)
 	case domain.RequestStatusCompleted:
 		r.onFileDownloadCompleted(m.ID, filePath, domain.FileStateExistedDownload)
 	case domain.RequestStatusPaused:
-		fileCtrl.Ctx().Download(m)
+		r.fileCtrl.Download(m)
 	case domain.RequestStatusCanceled:
-		fileCtrl.Ctx().Download(m)
+		r.fileCtrl.Download(m)
 	case domain.RequestStatusError:
-		fileCtrl.Ctx().Download(m)
+		r.fileCtrl.Download(m)
 	}
 
 	fs, err := repo.Files.GetFileStatus(msgID)
@@ -134,7 +134,7 @@ func (r *River) FileDownload(msgID int64) {
 
 	} else {
 		m := repo.Messages.GetMessage(msgID)
-		fileCtrl.Ctx().Download(m)
+		r.fileCtrl.Download(m)
 	}
 }
 
@@ -146,7 +146,7 @@ func (r *River) PauseDownload(msgID int64) {
 		return
 	}
 
-	fileCtrl.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
+	r.fileCtrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
 
 	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatusPaused)
 }
@@ -159,7 +159,7 @@ func (r *River) CancelDownload(msgID int64) {
 		return
 	}
 
-	fileCtrl.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
+	r.fileCtrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
 
 	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatusCanceled)
 }
@@ -172,7 +172,7 @@ func (r *River) PauseUpload(msgID int64) {
 		return
 	}
 
-	fileCtrl.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
+	r.fileCtrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
 
 	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatusPaused)
 	// repo.MessagesPending.DeletePendingMessage(fs.MessageID)
@@ -186,7 +186,7 @@ func (r *River) CancelUpload(msgID int64) {
 		logs.Warn("SDK::CancelUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
-	fileCtrl.Ctx().DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
+	r.fileCtrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
 
 	_ = repo.Files.DeleteFileStatus(msgID)
 	_ = repo.PendingMessages.DeletePendingMessage(fs.MessageID)
@@ -224,7 +224,7 @@ func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 
 	state := fileCtrl.NewFile(msgID, fileID, 0, totalSize, filePath, domain.FileStateUploadAccountPhoto, 0, 0, 0, r.onFileProgressChanged)
 
-	fileCtrl.Ctx().AddToQueue(state)
+	r.fileCtrl.AddToQueue(state)
 
 	return msgID
 }
@@ -304,7 +304,7 @@ func downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) string
 	)
 
 	// send Download request
-	filePath, err := fileCtrl.Ctx().DownloadAccountPhoto(userID, photo, isBig)
+	filePath, err := r.fileCtrl.DownloadAccountPhoto(userID, photo, isBig)
 	if err != nil {
 		logs.Error("SDK::downloadAccountPhoto() error", zap.Error(err))
 		return ""
@@ -343,7 +343,7 @@ func (r *River) GroupUploadPhoto(groupID int64, filePath string) (msgID int64) {
 
 	state := fileCtrl.NewFile(msgID, fileID, groupID, totalSize, filePath, domain.FileStateUploadGroupPhoto, 0, 0, 0, r.onFileProgressChanged)
 
-	fileCtrl.Ctx().AddToQueue(state)
+	r.fileCtrl.AddToQueue(state)
 
 	return msgID
 }
@@ -433,7 +433,7 @@ func downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) string
 	)
 
 	// send Download request
-	filePath, err := fileCtrl.Ctx().DownloadGroupPhoto(groupID, photo, isBig)
+	filePath, err := r.fileCtrl.DownloadGroupPhoto(groupID, photo, isBig)
 	if err != nil {
 		logs.Error("SDK::downloadGroupPhoto() error", zap.Error(err))
 		return ""
@@ -535,7 +535,7 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 
 	dto, err := repo.Files.GetFile(msgID)
 	if err != nil {
-		path, err := fileCtrl.Ctx().DownloadThumbnail(m.ID, docID, accessHash, clusterID, version)
+		path, err := r.fileCtrl.DownloadThumbnail(m.ID, docID, accessHash, clusterID, version)
 		if err != nil {
 			logs.Error("SDK::FileDownloadThumbnail()-> DownloadThumbnail()", zap.Error(err))
 		}
@@ -543,7 +543,7 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 	}
 	_, err = os.Stat(dto.ThumbFilePath)
 	if os.IsNotExist(err) {
-		path, err := fileCtrl.Ctx().DownloadThumbnail(m.ID, docID, accessHash, clusterID, version)
+		path, err := r.fileCtrl.DownloadThumbnail(m.ID, docID, accessHash, clusterID, version)
 		if err != nil {
 			logs.Error("SDK::FileDownloadThumbnail()-> DownloadThumbnail()", zap.Error(err))
 		}
@@ -614,7 +614,7 @@ func (r *River) ClearCache(peerID int64, mediaTypes string, allMedia bool) bool 
 		return false
 	} else {
 		logs.Debug("ClearCache", zap.Strings("media paths", filePaths))
-		err = fileCtrl.Ctx().ClearFiles(filePaths)
+		err = r.fileCtrl.ClearFiles(filePaths)
 		if err != nil {
 			logs.Debug("River::ClearCache",
 				zap.String("clear files error", err.Error()),

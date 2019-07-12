@@ -172,41 +172,43 @@ func TestSDKReconnect(t *testing.T) {
 	}
 
 	time.Sleep(10 * time.Second)
-	r.Stop()
 	r.ResetAuthKey()
+	r.Stop()
 
-	time.Sleep(10 * time.Second)
-	// Connect to 2nd Server
-	file, err = os.Open("./_connection/connInfo2")
-	if err == nil {
-		b, _ := ioutil.ReadAll(file)
-		err := json.Unmarshal(b, conInfo)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-	}
-
-	conInfo.Delegate = new(ConnInfoDelegates)
-
-	r.SetConfig(&RiverConfig{
-		DbPath:             "./_data/",
-		DbID:               "test",
-		QueuePath:          "./_queue/",
-		ServerKeysFilePath: "./keys.json",
-		ServerEndpoint:     "ws://test.river.im",
-		ConnInfo:           conInfo,
-		LogLevel:           -1,
-	})
-	_ = r.Start()
-	for r.ConnInfo.AuthID == 0 {
-		logs.Info("AuthKey has not been created yet.")
-		if err := r.CreateAuthKey(); err != nil {
-			t.Error(err.Error())
-			return
-		}
-		logs.Info("AuthKey Created.")
-	}
+	// time.Sleep(10 * time.Second)
+	//
+	// // Connect to 2nd Server
+	// file, err = os.Open("./_connection/connInfo2")
+	// if err == nil {
+	// 	b, _ := ioutil.ReadAll(file)
+	// 	err := json.Unmarshal(b, conInfo)
+	// 	if err != nil {
+	// 		t.Error(err)
+	// 		return
+	// 	}
+	// }
+	//
+	// conInfo.Delegate = new(ConnInfoDelegates)
+	//
+	// r.SetConfig(&RiverConfig{
+	// 	DbPath:             "./_data/",
+	// 	DbID:               "test",
+	// 	QueuePath:          "./_queue/",
+	// 	ServerKeysFilePath: "./keys.json",
+	// 	ServerEndpoint:     "ws://test.river.im",
+	// 	ConnInfo:           conInfo,
+	// 	LogLevel:           -1,
+	// })
+	// _ = r.Start()
+	// for r.ConnInfo.AuthID == 0 {
+	// 	logs.Info("AuthKey has not been created yet.")
+	// 	if err := r.CreateAuthKey(); err != nil {
+	// 		t.Error(err.Error())
+	// 		return
+	// 	}
+	// 	logs.Info("AuthKey Created.")
+	// }
+	time.Sleep(time.Minute)
 }
 
 func TestNewRiver(t *testing.T) {
@@ -302,7 +304,6 @@ func (d *MainDelegateDummy) OnSessionClosed(res int) {
 	logs.Info("Session Closed", zap.Int("Res", res))
 }
 
-
 type RequestDelegateDummy struct{}
 
 func (RequestDelegateDummy) OnComplete(b []byte) {
@@ -313,7 +314,7 @@ func (RequestDelegateDummy) OnTimeout(err error) {
 	fmt.Println(err)
 }
 
-type FileDelegateDummy struct {}
+type FileDelegateDummy struct{}
 
 func (d *FileDelegateDummy) OnDownloadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
 	logs.Info("Download progress changed", zap.Float64("Progress", percent))

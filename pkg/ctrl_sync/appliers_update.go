@@ -94,7 +94,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 
 	// handle Message's Media
 	if int32(x.Message.MediaType) > 0 {
-		go extractMessagesMedia(x.Message)
+		go ctrl.extractMessagesMedia(x.Message)
 	}
 	return res
 }

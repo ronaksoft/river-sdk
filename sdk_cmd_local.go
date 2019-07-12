@@ -2,7 +2,6 @@ package riversdk
 
 import (
 	"encoding/json"
-	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"strings"
 	"sync"
@@ -629,7 +628,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		}
 
 		// 2. start file upload and send process
-		err = fileCtrl.Ctx().Upload(fileID, res)
+		err = r.fileCtrl.Upload(fileID, res)
 		if err != nil {
 			e := new(msg.Error)
 			e.Code = "n/a"

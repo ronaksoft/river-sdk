@@ -84,6 +84,7 @@ type River struct {
 	networkCtrl *networkCtrl.Controller
 	queueCtrl   *queueCtrl.Controller
 	syncCtrl    *syncCtrl.Controller
+	fileCtrl    *fileCtrl.Controller
 
 	// Delegates
 	delegateMutex sync.Mutex
@@ -143,7 +144,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		msg.C_MessagesSetTyping: true,
 	}
 
-	// Initialize filemanager
+	// Initialize FileController
 	fileServerAddress := ""
 	if strings.HasSuffix(conf.ServerEndpoint, "/") {
 		fileServerAddress = conf.ServerEndpoint + "file"
@@ -153,13 +154,14 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	fileServerAddress = strings.Replace(fileServerAddress, "ws://", "http://", 1)
 	fileCtrl.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory, conf.DocumentCacheDirectory)
 
-	fileCtrl.InitFileManager(fileServerAddress,
-		r.onFileUploadCompleted,
-		r.onFileProgressChanged,
-		r.onFileDownloadCompleted,
-		r.onFileUploadError,
-		r.onFileDownloadError,
-	)
+	r.fileCtrl = fileCtrl.New(fileCtrl.Config{
+		ServerAddress:       fileServerAddress,
+		OnUploadCompleted:   r.onFileUploadCompleted,
+		ProgressCallback:    r.onFileProgressChanged,
+		OnDownloadCompleted: r.onFileDownloadCompleted,
+		OnFileUploadError:   r.onFileUploadError,
+		OnFileDownloadError: r.onFileDownloadError,
+	})
 
 	// Initialize Network Controller
 	r.networkCtrl = networkCtrl.New(
@@ -170,7 +172,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		},
 	)
 	r.networkCtrl.SetNetworkStatusChangedCallback(func(newQuality domain.NetworkStatus) {
-		fileCtrl.Ctx().SetNetworkStatus(newQuality)
+		r.fileCtrl.SetNetworkStatus(newQuality)
 		if r.mainDelegate != nil {
 			r.mainDelegate.OnNetworkStatusChanged(int(newQuality))
 		}
@@ -191,6 +193,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 			ConnInfo:    r.ConnInfo,
 			NetworkCtrl: r.networkCtrl,
 			QueueCtrl:   r.queueCtrl,
+			FileCtrl:    r.fileCtrl,
 		},
 	)
 
@@ -233,8 +236,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 
 	// Update Controller
-	fileCtrl.Ctx().SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-	fileCtrl.Ctx().LoadQueueFromDB()
+	ctrl.fileCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+	r.fileCtrl.LoadQueueFromDB()
 }
 
 func (r *River) Version() string {
