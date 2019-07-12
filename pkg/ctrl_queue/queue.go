@@ -157,23 +157,15 @@ func (ctrl *Controller) executor(req request) {
 		}
 
 		// hotfix check pendingMessage &&  messagesReadHistory on timeout
-		if req.MessageEnvelope.Constructor == msg.C_MessagesSend {
-			pmsg, err := repo.PendingMessages.GetPendingMessageByRequestID(int64(req.ID))
+		switch req.MessageEnvelope.Constructor {
+		case msg.C_MessagesSend:
+			pmsg, err := repo.PendingMessages.GetPendingMessageByRequestID(int64(-req.ID))
 			if err == nil && pmsg != nil {
-				logs.Warn("executor() :: NOT SENT and request added to queue again !!",
-					zap.String("ConstructorName", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
-					zap.Uint64("RequestID", req.ID),
-				)
 				ctrl.addToWaitingList(&req)
 			}
-		} else if req.MessageEnvelope.Constructor == msg.C_MessagesReadHistory {
-			logs.Warn("executor() :: NOT SENT and request added to queue again !!",
-				zap.String("ConstructorName", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
-				zap.Uint64("RequestID", req.ID),
-			)
+		case msg.C_MessagesReadHistory:
 			ctrl.addToWaitingList(&req)
 		}
-
 	case res := <-reqCallbacks.ResponseChannel:
 		if reqCallbacks.SuccessCallback != nil {
 			if reqCallbacks.IsUICallback {
@@ -182,7 +174,7 @@ func (ctrl *Controller) executor(req request) {
 				reqCallbacks.SuccessCallback(res)
 			}
 		} else {
-			logs.Warn("QueueController:: ResponseChannel received signal SuccessCallback is null",
+			logs.Error("QueueController:: ResponseChannel received signal SuccessCallback is null",
 				zap.String("ConstructorName", msg.ConstructorNames[res.Constructor]),
 				zap.Uint64("RequestID", res.RequestID),
 			)
@@ -262,10 +254,6 @@ func (ctrl *Controller) ExecuteRealtimeCommand(requestID uint64, constructor int
 
 // ExecuteCommand put request in queue and distributor will execute it later
 func (ctrl *Controller) ExecuteCommand(requestID uint64, constructor int64, requestBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, isUICallback bool) {
-	logs.Debug("QueueController::",
-		zap.String("Constructor", msg.ConstructorNames[constructor]),
-		zap.Uint64("RequestID", requestID),
-	)
 	messageEnvelope := new(msg.MessageEnvelope)
 	messageEnvelope.RequestID = requestID
 	messageEnvelope.Constructor = constructor
