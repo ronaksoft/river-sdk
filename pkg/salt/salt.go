@@ -39,6 +39,10 @@ func Get() int64 {
 }
 
 func UpdateSalt() bool {
+	logs.Info("Salts",
+		zap.Any("CurrentSalt", curSalt),
+		zap.Any("Salts", salts),
+	)
 	// 1st try to load from already stored salts
 	saltString, err := repo.System.LoadString(domain.ColumnSystemSalts)
 	if err != nil {
