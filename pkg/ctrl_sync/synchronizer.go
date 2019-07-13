@@ -488,18 +488,6 @@ func (ctrl *Controller) SetOnUpdateCallback(h domain.OnUpdateMainDelegateHandler
 // MessageHandler call appliers-> repository and sync data
 func (ctrl *Controller) MessageHandler(messages []*msg.MessageEnvelope) {
 	for _, m := range messages {
-		switch m.Constructor {
-		case msg.C_Error:
-			err := new(msg.Error)
-			_ = err.Unmarshal(m.Message)
-			if err.Code == msg.ErrItemSalt && err.Items == msg.ErrCodeInvalid {
-				for !salt.UpdateSalt() {
-					ctrl.getServerSalt()
-				}
-			}
-			logs.Error("MessageHandler() Received Error ", zap.String("Code", err.Code), zap.String("Item", err.Items))
-		}
-
 		if applier, ok := ctrl.messageAppliers[m.Constructor]; ok {
 			applier(m)
 		}
@@ -680,6 +668,11 @@ func (ctrl *Controller) extractMessagesMedia(messages ...*msg.UserMessage) {
 	}
 }
 
+func (ctrl *Controller) UpdateSalt() {
+	for !salt.UpdateSalt() {
+		ctrl.getServerSalt()
+	}
+}
 func (ctrl *Controller) getServerSalt() {
 	serverSaltReq := new(msg.SystemGetSalts)
 	serverSaltReqBytes, _ := serverSaltReq.Marshal()

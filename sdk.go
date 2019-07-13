@@ -69,7 +69,7 @@ func (r *River) onNetworkConnect() {
 	}
 
 
-	r.syncCtrl.CheckSalt()
+	r.syncCtrl.UpdateSalt()
 
 	req := msg.AuthRecall{}
 	reqBytes, _ := req.Marshal()
@@ -121,7 +121,7 @@ func (r *River) onGeneralError(e *msg.Error) {
 		zap.String("Item", e.Items),
 	)
 	if e.Code == msg.ErrCodeInvalid && e.Items == msg.ErrItemSalt {
-		r.syncCtrl.CheckSalt()
+		r.syncCtrl.UpdateSalt()
 	}
 	if r.mainDelegate != nil {
 		buff, _ := e.Marshal()
