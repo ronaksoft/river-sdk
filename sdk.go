@@ -9,6 +9,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"github.com/monnand/dhkx"
 	"go.uber.org/zap"
@@ -49,6 +50,7 @@ func (r *River) onNetworkConnect() {
 					serverTime := x.Timestamp
 					delta := serverTime - clientTime
 					r.networkCtrl.SetClientTimeDifference(delta)
+					salt.SetTimeDifference(delta)
 					logs.Debug("River::onGetServerTime()",
 						zap.Int64("ServerTime", serverTime),
 						zap.Int64("ClientTime", clientTime),
@@ -65,6 +67,7 @@ func (r *River) onNetworkConnect() {
 			time.Sleep(1 * time.Second)
 		}
 	}
+
 
 	r.syncCtrl.CheckSalt()
 

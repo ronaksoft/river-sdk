@@ -51,7 +51,6 @@ type Controller struct {
 	authKey    []byte
 	authID     int64
 	messageSeq int64
-	salt       int64
 
 	ServerEndpoint string
 	NetworkStatus  domain.NetworkStatus
@@ -509,11 +508,6 @@ func (fm *Controller) SetAuthorization(authID int64, authKey []byte) {
 	fm.authKey = make([]byte, len(authKey))
 	fm.authID = authID
 	copy(fm.authKey, authKey)
-}
-
-// SetServerSalt sets server salt
-func (fm *Controller) SetServerSalt(salt int64) {
-	fm.salt = salt
 }
 
 // LoadQueueFromDB load in progress request from database

@@ -2,6 +2,7 @@ package networkCtrl
 
 import (
 	"encoding/hex"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"net/http"
 	"sort"
@@ -39,8 +40,8 @@ type Controller struct {
 	authID     int64
 	authKey    []byte
 	messageSeq int64
-	salt       int64
-	saltExpiry int64
+	// salt       int64
+	// saltExpiry int64
 
 	// Websocket Settings
 	wsDialer                *websocket.Dialer
@@ -526,7 +527,7 @@ func (ctrl *Controller) send(msgEnvelope *msg.MessageEnvelope) error {
 		protoMessage.AuthID = ctrl.authID
 		ctrl.messageSeq++
 		encryptedPayload := msg.ProtoEncryptedPayload{
-			ServerSalt: ctrl.salt,
+			ServerSalt: salt.Get(),
 			Envelope:   msgEnvelope,
 		}
 		encryptedPayload.MessageID = uint64((time.Now().Unix()+ctrl.clientTimeDifference)<<32 | ctrl.messageSeq)
@@ -597,22 +598,6 @@ func (ctrl *Controller) GetQuality() domain.NetworkStatus {
 
 func (ctrl *Controller) ClientTimeDifference() int64 {
 	return ctrl.clientTimeDifference
-}
-
-func (ctrl *Controller) SetServerSalt(salt int64) {
-	ctrl.salt = salt
-}
-
-func (ctrl *Controller) GetServerSalt() int64 {
-	return ctrl.salt
-}
-
-func (ctrl *Controller) SetSaltExpiry(timestamp int64) {
-	ctrl.saltExpiry = timestamp
-}
-
-func (ctrl *Controller) GetSaltExpiry() int64 {
-	return ctrl.saltExpiry
 }
 
 func recoverPanic(funcName string, extraInfo interface{}) bool {

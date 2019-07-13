@@ -3,6 +3,7 @@ package fileCtrl
 import (
 	"bytes"
 	"context"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -32,7 +33,7 @@ func (fm *Controller) Send(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelo
 	} else {
 		fm.messageSeq++
 		encryptedPayload := msg.ProtoEncryptedPayload{
-			ServerSalt: fm.salt,
+			ServerSalt: salt.Get(),
 			Envelope:   msgEnvelope,
 		}
 		encryptedPayload.MessageID = uint64(time.Now().Unix()<<32 | fm.messageSeq)

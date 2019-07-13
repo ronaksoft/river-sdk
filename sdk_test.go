@@ -7,6 +7,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
 	"io/ioutil"
@@ -99,16 +100,17 @@ func TestController_CheckSalt(t *testing.T) {
 				)
 			}
 			time.Sleep(time.Millisecond * 600)
-			_River.syncCtrl.CheckSalt()
-			salt := _River.GetSDKSalt()
+
+			salt.UpdateSalt()
+			s := _River.GetSDKSalt()
 			if i == 0 {
-				if salt != 5555 {
-					t.Error(fmt.Sprintf("expecting 5555, have %d", salt))
+				if s != 5555 {
+					t.Error(fmt.Sprintf("expecting 5555, have %d", s))
 				}
 			}
 			if i == 1 {
-				logs.Debug("salt::()",
-					zap.Int64("salt", salt),
+				logs.Debug("s::()",
+					zap.Int64("s", s),
 				)
 			}
 		})

@@ -8,6 +8,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"go.uber.org/zap"
 )
 
@@ -494,5 +495,5 @@ func (r *River) GetDBStatus(delegate RequestDelegate) {
 }
 
 func (r *River) GetSDKSalt() int64 {
-	return r.networkCtrl.GetServerSalt()
+	return salt.Get()
 }
