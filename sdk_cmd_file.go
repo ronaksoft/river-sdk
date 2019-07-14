@@ -2,16 +2,15 @@ package riversdk
 
 import (
 	"encoding/json"
-	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
-	"os"
-	"strconv"
-	"strings"
-
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
+	"os"
+	"strconv"
+	"strings"
 )
 
 // GetFileStatus returns file status
@@ -282,7 +281,7 @@ func (r *River) AccountGetPhotoSmall(userID int64) string {
 							zap.String("OldPath:", dtoPhoto.BigFilePath),
 							zap.String("NewPath", newFilePath),
 						)
-						return r.downloadAccountPhoto(user.ID, user.Photo, true)
+						return r.downloadAccountPhoto(user.ID, user.Photo, false)
 					}
 
 					return dtoPhoto.SmallFilePath
@@ -536,7 +535,6 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 			logs.Warn("SDK::FileDownloadThumbnail() Message does not have thumbnail", zap.Int64("MsgID", msgID))
 			return filePath
 		}
-
 	case msg.MediaTypeContact:
 		// TODO:: implement it
 	default:
