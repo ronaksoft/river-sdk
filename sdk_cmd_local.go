@@ -265,19 +265,6 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 				zap.Int64("MinID", req.MinID),
 				zap.String("Holes", messageHole.PrintHole(req.Peer.ID, int32(req.Peer.Type))),
 			)
-			// cb := func(m *msg.MessageEnvelope) {
-			// 	switch m.Constructor {
-			// 	case msg.C_MessagesMany:
-			// 		x := new(msg.MessagesMany)
-			// 		_ = x.Unmarshal(m.Message)
-			// 		if x.Continuous && len(x.Messages) < int(req.Limit) {
-			// 			// messageHole.SetLowerFilled(req.Peer.ID, int32(req.Peer.Type))
-			// 		}
-			// 	case msg.C_Error:
-			// 	default:
-			// 	}
-			// 	successCB(m)
-			// }
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 			return
 		}

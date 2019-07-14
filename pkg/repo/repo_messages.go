@@ -168,11 +168,22 @@ func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerTy
 	dtoPendings := make([]dto.MessagesPending, 0, limit)
 
 	var err error
-	if minID == 0 && maxID == 0 {
-		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? ", peerID, peerType).Find(&dtoMsgs).Error
+	if maxID == 0 && minID == 0 {
+		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ?", peerID, peerType).Find(&dtoMsgs).Error
+	} else if minID == 0 && maxID != 0 {
+		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID <= ?", peerID, peerType, maxID).Find(&dtoMsgs).Error
+	} else if minID != 0 && maxID == 0 {
+		err = r.db.Order("ID ASC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID >= ?", peerID, peerType, minID).Find(&dtoMsgs).Error
+		// sort DESC again
+		if err == nil {
+			sort.Slice(dtoMsgs, func(i, j int) bool {
+				return dtoMsgs[i].ID > dtoMsgs[j].ID
+			})
+		}
 	} else {
-		// there is no way this will happens :/
+		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID >= ? AND messages.ID <= ?", peerID, peerType, minID, maxID).Find(&dtoResult).Error
 	}
+
 
 	if err != nil {
 		logs.Warn("Repo::GetMessageHistory()-> fetch messages", zap.Error(err))
