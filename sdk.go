@@ -68,7 +68,6 @@ func (r *River) onNetworkConnect() {
 		}
 	}
 
-
 	r.syncCtrl.UpdateSalt()
 
 	req := msg.AuthRecall{}
@@ -170,6 +169,16 @@ func (r *River) onReceivedUpdate(updateContainers []*msg.UpdateContainer) {
 	for idx := range updateContainers {
 		for _, update := range updateContainers[idx].Updates {
 			if update.UpdateID != 0 {
+				switch update.Constructor {
+				case msg.C_UpdateNewMessage:
+					u := new(msg.UpdateNewMessage)
+					u.Unmarshal(update.Update)
+					logs.Info("UpdatesNewMessage",
+						zap.Int64("MsgID", u.Message.ID),
+						zap.String("Body", u.Message.Body),
+					)
+
+				}
 				logs.UpdateLog(update.UpdateID, update.Constructor)
 			}
 		}

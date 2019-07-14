@@ -197,7 +197,7 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 		return
 	}
 
-	// delete pending mesage
+	// delete pending message
 	err = repo.PendingMessages.DeletePendingMessage(pmsg.ID)
 	if err != nil {
 		logs.Warn("messageSent()-> DeletePendingMessage() failed to delete pendingMessage", zap.Error(err))
