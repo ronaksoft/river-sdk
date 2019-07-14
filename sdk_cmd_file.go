@@ -253,7 +253,6 @@ func (r *River) AccountGetPhotoBig(userID int64) string {
 			return r.downloadAccountPhoto(userID, user.Photo, true)
 
 		}
-		logs.Warn("SDK::AccountGetPhoto_Big() user photo is null")
 		return ""
 	}
 	return ""
@@ -306,7 +305,7 @@ func (r *River) downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig b
 	// send Download request
 	filePath, err := r.fileCtrl.DownloadAccountPhoto(userID, photo, isBig)
 	if err != nil {
-		logs.Error("SDK::downloadAccountPhoto() error", zap.Error(err))
+		logs.Debug("SDK::downloadAccountPhoto() error", zap.Error(err))
 		return ""
 	}
 	return filePath
@@ -350,7 +349,6 @@ func (r *River) GroupUploadPhoto(groupID int64, filePath string) (msgID int64) {
 
 // GroupGetPhoto_Big download group profile picture
 func (r *River) GroupGetPhotoBig(groupID int64) string {
-
 	group, err := repo.Groups.GetGroupDTO(groupID)
 	if err == nil && group != nil {
 		if group.Photo != nil {
@@ -376,7 +374,6 @@ func (r *River) GroupGetPhotoBig(groupID int64) string {
 			return r.downloadGroupPhoto(groupID, groupPhoto, true)
 
 		}
-		logs.Error("SDK::GroupGetPhoto_Big() group photo is null")
 		return ""
 	}
 	return ""
@@ -413,7 +410,6 @@ func (r *River) GroupGetPhotoSmall(groupID int64) string {
 			return r.downloadGroupPhoto(groupID, groupPhoto, false)
 
 		}
-		logs.Error("SDK::GroupGetPhoto_Small() group photo is null")
 		return ""
 	}
 	return ""
@@ -435,7 +431,7 @@ func (r *River) downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig b
 	// send Download request
 	filePath, err := r.fileCtrl.DownloadGroupPhoto(groupID, photo, isBig)
 	if err != nil {
-		logs.Error("SDK::downloadGroupPhoto() error", zap.Error(err))
+		logs.Debug("SDK::downloadGroupPhoto() error", zap.Error(err))
 		return ""
 	}
 	return filePath

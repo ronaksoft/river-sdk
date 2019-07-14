@@ -207,7 +207,7 @@ func (r *repoUsers) GetManyContactUsers(userIDs []int64) []*msg.ContactUser {
 	err := r.db.Where("IsContact = 1 AND ID in (?)", userIDs).Find(&users).Error
 	if err != nil {
 		logs.Error("Users::GetManyContactUsers()-> fetch user entities", zap.Error(err))
-		return nil //, err
+		return nil
 	}
 
 	for _, v := range users {
