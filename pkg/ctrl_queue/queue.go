@@ -78,9 +78,6 @@ func (ctrl *Controller) distributor() {
 		// Peek item from the queue
 		item, err := ctrl.waitingList.Dequeue()
 		if err != nil {
-			if err == goque.ErrEmpty {
-				break
-			}
 			continue
 		}
 
@@ -92,7 +89,7 @@ func (ctrl *Controller) distributor() {
 		}
 
 		if !ctrl.IsRequestCancelled(int64(req.ID)) {
-			ctrl.executor(req)
+			go ctrl.executor(req)
 		} else {
 			logs.Info("QueueController:: Request cancelled",
 				zap.Uint64("RequestID", req.ID),
