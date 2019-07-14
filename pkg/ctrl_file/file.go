@@ -373,7 +373,6 @@ func (fm *Controller) Upload(fileID int64, req *msg.ClientPendingMessage) error 
 
 // Download add download request
 func (fm *Controller) Download(req *msg.UserMessage) {
-
 	var state *File
 	dtoState, err := repo.Files.GetFileStatus(req.ID)
 

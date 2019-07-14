@@ -17,7 +17,7 @@ const (
 	WebsocketEndpoint     = "ws://river.im"
 	WebsocketPingTime     = 10 * time.Second
 	WebsocketPongTime     = 3 * time.Second
-	WebsocketWriteTime    = 3 * time.Second
+	WebsocketWriteTime    = 15 * time.Second
 	WebsocketDirectTime   = 3 * time.Second
 	WebsocketRequestTime  = 30 * time.Second
 	SnapshotSyncThreshold = 10000
