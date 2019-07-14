@@ -98,7 +98,7 @@ func getFilePath(msgID int64) string {
 	return ""
 }
 
-// FileDownload add download request to filemanager queue
+// FileDownload add download request to file controller queue
 func (r *River) FileDownload(msgID int64) {
 	status, progress, filePath := getFileStatus(msgID)
 	logs.Debug("SDK::FileDownload() current file progress status",
