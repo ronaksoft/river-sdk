@@ -242,8 +242,8 @@ func (r *River) AccountGetPhotoBig(userID int64) string {
 						return r.downloadAccountPhoto(userID, user.Photo, true)
 					}
 					// check if fileID is changed re-download
-					strFileID := strconv.FormatInt(dtoPhoto.BigFileID, 10)
-					if strings.Index(dtoPhoto.BigFilePath, strFileID) < 0 {
+					newFilePath := fileCtrl.GetAccountAvatarPath(userID, dtoPhoto.BigFileID)
+					if strings.Index(dtoPhoto.BigFilePath, newFilePath) < 0 {
 						return r.downloadAccountPhoto(user.ID, user.Photo, true)
 					}
 					return dtoPhoto.BigFilePath
@@ -272,8 +272,8 @@ func (r *River) AccountGetPhotoSmall(userID int64) string {
 					}
 
 					// check if fileID is changed re-download
-					strFileID := strconv.FormatInt(dtoPhoto.SmallFileID, 10)
-					if strings.Index(dtoPhoto.SmallFilePath, strFileID) < 0 {
+					newFilePath := fileCtrl.GetAccountAvatarPath(userID, dtoPhoto.SmallFileID)
+					if strings.Index(dtoPhoto.SmallFilePath, newFilePath) < 0 {
 						return r.downloadAccountPhoto(user.ID, user.Photo, true)
 					}
 
@@ -363,13 +363,12 @@ func (r *River) GroupGetPhotoBig(groupID int64) string {
 				if _, err := os.Stat(group.BigFilePath); os.IsNotExist(err) {
 					return r.downloadGroupPhoto(groupID, groupPhoto, true)
 				}
-				// check if fileID is changed redownload
-				strFileID := strconv.FormatInt(groupPhoto.PhotoBig.FileID, 10)
-				if strings.Index(group.BigFilePath, strFileID) < 0 {
+				// check if fileID is changed re-download
+				newFilePath := fileCtrl.GetGroupAvatarPath(groupID, groupPhoto.PhotoBig.FileID)
+				if strings.Index(group.BigFilePath, newFilePath) < 0 {
 					return r.downloadGroupPhoto(groupID, groupPhoto, true)
 				}
 				return group.BigFilePath
-
 			}
 			return r.downloadGroupPhoto(groupID, groupPhoto, true)
 
@@ -381,7 +380,6 @@ func (r *River) GroupGetPhotoBig(groupID int64) string {
 
 // GroupGetPhoto_Small download group profile picture thumbnail
 func (r *River) GroupGetPhotoSmall(groupID int64) string {
-
 	group, err := repo.Groups.GetGroupDTO(groupID)
 	if err == nil && group != nil {
 		if group.Photo != nil {
@@ -398,9 +396,9 @@ func (r *River) GroupGetPhotoSmall(groupID int64) string {
 					return r.downloadGroupPhoto(groupID, groupPhoto, false)
 				}
 
-				// check if fileID is changed redownload
-				strFileID := strconv.FormatInt(groupPhoto.PhotoSmall.FileID, 10)
-				if strings.Index(group.SmallFilePath, strFileID) < 0 {
+				// check if fileID is changed re-download
+				newFilePath := fileCtrl.GetGroupAvatarPath(groupID, groupPhoto.PhotoSmall.FileID)
+				if strings.Index(group.SmallFilePath, newFilePath) < 0 {
 					return r.downloadGroupPhoto(groupID, groupPhoto, false)
 				}
 

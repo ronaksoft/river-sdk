@@ -558,12 +558,7 @@ func (fm *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, i
 	envelop.Message, _ = req.Marshal()
 	envelop.RequestID = uint64(domain.SequentialUniqueID())
 
-	// filePath := GetFilePath("image/jpeg", req.Location.FileID, "avatar.jpg")
-	suffix := "small"
-	if isBig {
-		suffix = "big"
-	}
-	filePath := path.Join(dirCache, fmt.Sprintf("u%d_%s%s", userID, suffix, ".jpg"))
+	filePath := GetAccountAvatarPath(userID, req.Location.FileID)
 	res, err := fm.Send(envelop)
 	if err == nil {
 		switch res.Constructor {
@@ -621,12 +616,7 @@ func (fm *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, i
 	envelop.Message, _ = req.Marshal()
 	envelop.RequestID = uint64(domain.SequentialUniqueID())
 
-	// filePath := GetFilePath("image/jpeg", req.Location.FileID, "group_avatar.jpg")
-	suffix := "small"
-	if isBig {
-		suffix = "big"
-	}
-	filePath := path.Join(dirCache, fmt.Sprintf("g%d_%s%s", groupID, suffix, ".jpg"))
+	filePath := GetGroupAvatarPath(groupID, req.Location.FileID)
 	res, err := fm.Send(envelop)
 	if err == nil {
 		switch res.Constructor {
@@ -764,4 +754,12 @@ func GetFilePath(mimeType string, docID int64, fileName string) string {
 	}
 
 	return path.Join(dirFile, fmt.Sprintf("%s%s", strDocID, ext))
+}
+
+func GetAccountAvatarPath(userID int64, fileID int64) string {
+	return path.Join(dirCache, fmt.Sprintf("u%d_%d%s", userID, fileID, ".jpg"))
+}
+
+func GetGroupAvatarPath(groupID int64, fileID int64) string {
+	return path.Join(dirCache, fmt.Sprintf("g%d_%d%s", groupID, fileID, ".jpg"))
 }

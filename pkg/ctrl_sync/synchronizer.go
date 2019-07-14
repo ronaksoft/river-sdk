@@ -528,12 +528,14 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 		if u.Photo != nil {
 			dtoPhoto := repo.Users.GetPhoto(u.ID, u.Photo.PhotoID)
 			if dtoPhoto != nil {
+				// Download the photo if the FileID has been changed
 				if dtoPhoto.SmallFilePath == "" || dtoPhoto.SmallFileID != u.Photo.PhotoSmall.FileID {
 					go func(userID int64, photo *msg.UserPhoto) {
 						_, _ = ctrl.fileCtrl.DownloadAccountPhoto(userID, photo, false)
 					}(u.ID, u.Photo)
 				}
 			} else if u.Photo.PhotoID != 0 {
+				// Or download the photo if the was no photo already saved
 				go func(userID int64, photo *msg.UserPhoto) {
 					_, _ = ctrl.fileCtrl.DownloadAccountPhoto(userID, photo, false)
 				}(u.ID, u.Photo)
@@ -545,12 +547,14 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 		if g.Photo != nil {
 			dtoGroup, err := repo.Groups.GetGroupDTO(g.ID)
 			if err == nil && dtoGroup != nil {
+				// Download the photo if the FileID has been changed
 				if dtoGroup.SmallFilePath == "" || dtoGroup.SmallFileID != g.Photo.PhotoSmall.FileID {
 					go func(groupID int64, photo *msg.GroupPhoto) {
 						_, _ = ctrl.fileCtrl.DownloadGroupPhoto(groupID, photo, false)
 					}(g.ID, g.Photo)
 				}
 			} else if g.Photo.PhotoSmall.FileID != 0 {
+				// Or download the photo if the was no photo already saved
 				go func(groupID int64, photo *msg.GroupPhoto) {
 					_, _ = ctrl.fileCtrl.DownloadGroupPhoto(groupID, photo, false)
 				}(g.ID, g.Photo)
