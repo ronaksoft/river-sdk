@@ -181,7 +181,7 @@ func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerTy
 			})
 		}
 	} else {
-		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID >= ? AND messages.ID <= ?", peerID, peerType, minID, maxID).Find(&dtoResult).Error
+		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID >= ? AND messages.ID <= ?", peerID, peerType, minID, maxID).Find(&dtoMsgs).Error
 	}
 
 
