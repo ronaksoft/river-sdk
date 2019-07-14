@@ -521,7 +521,7 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 	version := int32(0)
 	switch m.MediaType {
 	case msg.MediaTypeEmpty:
-		// TODO:: implement it
+		return ""
 	case msg.MediaTypePhoto:
 		// // TODO:: implement it
 	case msg.MediaTypeDocument:
@@ -541,6 +541,7 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 		// TODO:: implement it
 	default:
 		logs.Error("SDK::FileDownloadThumbnail() Invalid SharedMediaType")
+		return ""
 	}
 
 	dto, err := repo.Files.GetFile(msgID)
