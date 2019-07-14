@@ -244,6 +244,10 @@ func (r *River) AccountGetPhotoBig(userID int64) string {
 					// check if fileID is changed re-download
 					newFilePath := fileCtrl.GetAccountAvatarPath(userID, dtoPhoto.BigFileID)
 					if strings.Index(dtoPhoto.BigFilePath, newFilePath) < 0 {
+						logs.Warn("AccountGetPhotoBig",
+							zap.String("OldPath:", dtoPhoto.BigFilePath),
+							zap.String("NewPath", newFilePath),
+						)
 						return r.downloadAccountPhoto(user.ID, user.Photo, true)
 					}
 					return dtoPhoto.BigFilePath
@@ -274,6 +278,10 @@ func (r *River) AccountGetPhotoSmall(userID int64) string {
 					// check if fileID is changed re-download
 					newFilePath := fileCtrl.GetAccountAvatarPath(userID, dtoPhoto.SmallFileID)
 					if strings.Index(dtoPhoto.SmallFilePath, newFilePath) < 0 {
+						logs.Warn("AccountGetPhotoSmall",
+							zap.String("OldPath:", dtoPhoto.BigFilePath),
+							zap.String("NewPath", newFilePath),
+						)
 						return r.downloadAccountPhoto(user.ID, user.Photo, true)
 					}
 
@@ -366,6 +374,10 @@ func (r *River) GroupGetPhotoBig(groupID int64) string {
 				// check if fileID is changed re-download
 				newFilePath := fileCtrl.GetGroupAvatarPath(groupID, groupPhoto.PhotoBig.FileID)
 				if strings.Index(group.BigFilePath, newFilePath) < 0 {
+					logs.Warn("GroupGetPhotoBig",
+						zap.String("OldPath:", group.BigFilePath),
+						zap.String("NewPath", newFilePath),
+					)
 					return r.downloadGroupPhoto(groupID, groupPhoto, true)
 				}
 				return group.BigFilePath
@@ -399,6 +411,10 @@ func (r *River) GroupGetPhotoSmall(groupID int64) string {
 				// check if fileID is changed re-download
 				newFilePath := fileCtrl.GetGroupAvatarPath(groupID, groupPhoto.PhotoSmall.FileID)
 				if strings.Index(group.SmallFilePath, newFilePath) < 0 {
+					logs.Warn("GroupGetPhotoSmall",
+						zap.String("OldPath:", group.BigFilePath),
+						zap.String("NewPath", newFilePath),
+					)
 					return r.downloadGroupPhoto(groupID, groupPhoto, false)
 				}
 
