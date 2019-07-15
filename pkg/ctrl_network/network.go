@@ -124,7 +124,11 @@ func (ctrl *Controller) updateFlushFunc(entries []ronak.FlusherEntry) {
 		itemsCount := len(entries)
 		updates := make([]*msg.UpdateContainer, 0, itemsCount)
 		for idx := range entries {
-			updates = append(updates, entries[idx].Value.(*msg.UpdateContainer))
+			uc := entries[idx].Value.(*msg.UpdateContainer)
+			sort.Slice(uc.Updates, func(i, j int) bool {
+				return uc.Updates[i].UpdateID < uc.Updates[j].UpdateID
+			})
+			updates = append(updates, uc)
 		}
 
 		// Call the update handler in blocking mode
