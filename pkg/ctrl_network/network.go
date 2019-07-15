@@ -253,7 +253,6 @@ func (ctrl *Controller) keepAlive() {
 					ctrl.updateNetworkStatus(domain.NetworkFast)
 				}
 			case <-time.After(ctrl.wsPongTimeout):
-				_ = ctrl.wsConn.SetReadDeadline(time.Now())
 			}
 		case <-ctrl.stopChannel:
 			return
@@ -313,7 +312,6 @@ func (ctrl *Controller) receiver() {
 			}
 			// TODO:: check message id and server salt before handling the message
 			ctrl.messageHandler(receivedEncryptedPayload.Envelope)
-
 		default:
 			logs.Warn("NetworkController received unhandled message type",
 				zap.Int("MessageType", messageType),
