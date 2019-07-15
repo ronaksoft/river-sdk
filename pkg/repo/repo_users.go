@@ -28,7 +28,9 @@ func (r *repoUsers) readFromDb(userID int64) *msg.User {
 
 	err := r.db.Find(user, userID).Error
 	if err != nil {
-		logs.Error("Users::Get()-> fetch user entity", zap.Error(err))
+		logs.Warn("Users::Get()-> fetch user entity",
+			zap.Error(err),
+		)
 		return nil
 	}
 
@@ -259,7 +261,7 @@ func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*
 	err := r.db.Where("AccessHash <> 0 And IsContact = 1 AND (FirstName LIKE ? OR LastName LIKE ? OR Phone LIKE ? OR Username LIKE ?)", p, p, p, p).Find(&users).Error
 	if err != nil {
 		logs.Error("Users::SearchContacts()-> fetch user entities", zap.Error(err))
-		return nil, nil //, err
+		return nil, nil // , err
 	}
 	pbUsers := make([]*msg.ContactUser, 0)
 	pbContacts := make([]*msg.PhoneContact, 0)

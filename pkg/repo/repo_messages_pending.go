@@ -77,7 +77,7 @@ func (r *repoMessagesPending) GetPendingMessageByRequestID(requestID int64) (*dt
 	pmsg := new(dto.MessagesPending)
 	err := r.db.Where("RequestID = ?", requestID).First(pmsg).Error
 	if err != nil {
-		logs.Error("MessagesPending::GetPendingMessageByRequestID()-> fetch pendingMessage entity", zap.Error(err))
+		logs.Warn("MessagesPending::GetPendingMessageByRequestID()-> fetch pendingMessage entity", zap.Error(err))
 		return nil, err
 	}
 

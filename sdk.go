@@ -152,8 +152,8 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 			}
 			domain.RemoveRequestCallback(msgs[idx].RequestID)
 		} else {
-			logs.Error("River::onReceivedMessage() callback does not exists",
-				zap.Uint64("RequestID", msgs[idx].RequestID),
+			logs.Error("River::onReceivedMessage() callback does not exist",
+				zap.String("Constructor", msg.ConstructorNames[msgs[idx].Constructor]),
 			)
 		}
 	}
