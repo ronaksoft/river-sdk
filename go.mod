@@ -36,10 +36,11 @@ require (
 	github.com/nats-io/go-nats v1.7.2
 	github.com/nyaruka/phonenumbers v1.0.36
 	github.com/olekukonko/tablewriter v0.0.1
+	github.com/spf13/viper v1.4.0
 	github.com/syndtr/goleveldb v1.0.0 // indirect
-	go.uber.org/zap v1.9.1
-	golang.org/x/net v0.0.0-20190313220215-9f648a60d977 // indirect
-	google.golang.org/grpc v1.19.0
+	go.uber.org/zap v1.10.0
+	google.golang.org/appengine v1.4.0 // indirect
+	google.golang.org/grpc v1.21.0
 	gopkg.in/abiosoft/ishell.v2 v2.0.0
 	gopkg.in/doug-martin/goqu.v5 v5.0.0 // indirect
 )

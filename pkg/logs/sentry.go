@@ -52,7 +52,6 @@ func (c *sentryCore) Write(ent zapcore.Entry, fs []zapcore.Field) error {
 	event.Level = sentryLevel(ent.Level)
 	event.Platform = ""
 	event.Extra = clone.fields
-
 	c.hub.CaptureEvent(event)
 
 
