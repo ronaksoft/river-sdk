@@ -17,7 +17,7 @@ import (
 
 func NewSentryCore(level zapcore.Level, tags map[string]string) (zapcore.Core, error) {
 	err := sentry.Init(sentry.ClientOptions{
-		Dsn: "https://aa7732a081ce4a69b4490e11b81791af@sentry.ronaksoftware.com/river-sdk",
+		Dsn: "***REMOVED***",
 		Release: "v0.5.0",
 	})
 	if err != nil {
