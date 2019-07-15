@@ -25,7 +25,8 @@ import (
 
 // RiverConfig
 type RiverConfig struct {
-	ServerEndpoint string
+	ServerEndpoint     string
+	FileServerEndpoint string
 	// PingTimeSec sets how often a ping message will be sent to the server. Ping messages
 	// are used to calculate the quality of the network.
 	PingTimeSec int32
@@ -153,17 +154,9 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	}
 
 	// Initialize FileController
-	fileServerAddress := ""
-	if strings.HasSuffix(conf.ServerEndpoint, "/") {
-		fileServerAddress = conf.ServerEndpoint + "file"
-	} else {
-		fileServerAddress = conf.ServerEndpoint + "/file"
-	}
-	fileServerAddress = strings.Replace(fileServerAddress, "ws://", "http://", 1)
 	fileCtrl.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory, conf.DocumentCacheDirectory)
-
 	r.fileCtrl = fileCtrl.New(fileCtrl.Config{
-		ServerAddress:       fileServerAddress,
+		ServerAddress:       conf.FileServerEndpoint,
 		OnUploadCompleted:   r.onFileUploadCompleted,
 		ProgressCallback:    r.onFileProgressChanged,
 		OnDownloadCompleted: r.onFileDownloadCompleted,
