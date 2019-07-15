@@ -14,14 +14,14 @@ github.com/beorn7/perks/quantile
 github.com/certifi/gocertifi
 # github.com/doug-martin/goqu v5.0.0+incompatible
 github.com/doug-martin/goqu
-# github.com/dustin/go-humanize v1.0.0
-github.com/dustin/go-humanize
 # github.com/fatih/color v1.7.0
 github.com/fatih/color
 # github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568
 github.com/flynn-archive/go-shlex
 # github.com/getsentry/raven-go v0.2.0
 github.com/getsentry/raven-go
+# github.com/getsentry/sentry-go v0.1.3
+github.com/getsentry/sentry-go
 # github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 github.com/globalsign/mgo
 github.com/globalsign/mgo/bson

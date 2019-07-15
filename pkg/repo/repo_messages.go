@@ -199,7 +199,6 @@ func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerTy
 			tmp := new(dto.Messages)
 			v.MapToDtoMessage(tmp)
 			dtoResult = append(dtoResult, *tmp)
-			// dtoMsgs = append(dtoMsgs, *tmp)
 		}
 	}
 	dtoResult = append(dtoResult, dtoMsgs...)

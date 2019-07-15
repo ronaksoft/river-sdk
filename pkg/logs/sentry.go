@@ -1,8 +1,9 @@
 package logs
 
 import (
-	"github.com/getsentry/raven-go"
+	"github.com/getsentry/sentry-go"
 	"go.uber.org/zap/zapcore"
+	"time"
 )
 
 /*
@@ -14,17 +15,17 @@ import (
    Copyright Ronak Software Group 2018
 */
 
-const (
-	sentryDSN = "***REMOVED***"
-)
-
 func NewSentryCore(level zapcore.Level, tags map[string]string) (zapcore.Core, error) {
-	client, err := raven.New(sentryDSN)
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn: "https://aa7732a081ce4a69b4490e11b81791af@sentry.ronaksoftware.com/river-sdk",
+		Release: "v0.5.0",
+	})
 	if err != nil {
 		return zapcore.NewNopCore(), err
 	}
+
 	return &sentryCore{
-		client:       client,
+		hub:          sentry.CurrentHub(),
 		tags:         tags,
 		LevelEnabler: level,
 		fields:       make(map[string]interface{}),
@@ -45,25 +46,25 @@ func (c *sentryCore) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore
 func (c *sentryCore) Write(ent zapcore.Entry, fs []zapcore.Field) error {
 	clone := c.with(fs)
 
-	packet := &raven.Packet{
-		Message:   ent.Message,
-		Timestamp: raven.Timestamp(ent.Time),
-		Level:     ravenSeverity(ent.Level),
-		Platform:  "Golang",
-		Extra:     clone.fields,
-	}
+	event := sentry.NewEvent()
+	event.Message = ent.Message
+	event.Timestamp = ent.Time.Unix()
+	event.Level = sentryLevel(ent.Level)
+	event.Platform = ""
+	event.Extra = clone.fields
 
-	_, _ = c.client.Capture(packet, c.tags)
+	c.hub.CaptureEvent(event)
+
 
 	// We may be crashing the program, so should flush any buffered events.
 	if ent.Level > zapcore.ErrorLevel {
-		c.client.Wait()
+		c.hub.Flush(time.Second)
 	}
 	return nil
 }
 
 func (c *sentryCore) Sync() error {
-	c.client.Wait()
+	c.hub.Flush(time.Second * 3)
 	return nil
 }
 
@@ -86,7 +87,7 @@ func (c *sentryCore) with(fs []zapcore.Field) *sentryCore {
 	}
 
 	return &sentryCore{
-		client:       c.client,
+		hub:          c.hub,
 		tags:         c.tags,
 		fields:       m,
 		LevelEnabler: c.LevelEnabler,
@@ -94,39 +95,39 @@ func (c *sentryCore) with(fs []zapcore.Field) *sentryCore {
 }
 
 type ClientGetter interface {
-	GetClient() *raven.Client
+	GetHub() *sentry.Hub
 }
 
-func (c *sentryCore) GetClient() *raven.Client {
-	return c.client
+func (c *sentryCore) GetHub() *sentry.Hub {
+	return c.hub
 }
 
 type sentryCore struct {
-	client *raven.Client
+	hub *sentry.Hub
 	zapcore.LevelEnabler
 
 	tags   map[string]string
 	fields map[string]interface{}
 }
 
-func ravenSeverity(lvl zapcore.Level) raven.Severity {
+func sentryLevel(lvl zapcore.Level) sentry.Level {
 	switch lvl {
 	case zapcore.DebugLevel:
-		return raven.INFO
+		return sentry.LevelDebug
 	case zapcore.InfoLevel:
-		return raven.INFO
+		return sentry.LevelInfo
 	case zapcore.WarnLevel:
-		return raven.WARNING
+		return sentry.LevelWarning
 	case zapcore.ErrorLevel:
-		return raven.ERROR
+		return sentry.LevelError
 	case zapcore.DPanicLevel:
-		return raven.FATAL
+		return sentry.LevelFatal
 	case zapcore.PanicLevel:
-		return raven.FATAL
+		return sentry.LevelFatal
 	case zapcore.FatalLevel:
-		return raven.FATAL
+		return sentry.LevelFatal
 	default:
 		// Unrecognized levels are fatal.
-		return raven.FATAL
+		return sentry.LevelFatal
 	}
 }
