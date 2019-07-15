@@ -456,7 +456,7 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 	if msgID < 0 {
 		pmsg, err := repo.PendingMessages.GetPendingMessageByID(msgID)
 		if err != nil {
-			logs.Error("SDK::FileDownloadThumbnail()", zap.Int64("PendingMsgID", msgID), zap.Error(err))
+			logs.Warn("SDK::FileDownloadThumbnail()", zap.Int64("PendingMsgID", msgID), zap.Error(err))
 			return ""
 		}
 		switch msg.InputMediaType(pmsg.MediaType) {

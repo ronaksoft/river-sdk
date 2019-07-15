@@ -31,7 +31,7 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 
 	em := new(dto.Messages)
 	if err := r.db.Create(m).Error; err != nil {
-		logs.Error("Repo::SaveNewMessage()-> save message", zap.Error(err))
+		return err
 	}
 
 	// calculate unread count

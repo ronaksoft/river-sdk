@@ -41,7 +41,7 @@ func (r *River) DeletePendingMessage(id int64) (isSuccess bool) {
 func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
 	pmsg, err := repo.PendingMessages.GetPendingMessageByID(id)
 	if err != nil {
-		logs.Error("River::RetryPendingMessage() -> GetPendingMessageByID()", zap.Error(err))
+		logs.Warn("River::RetryPendingMessage() -> GetPendingMessageByID()", zap.Error(err))
 		isSuccess = false
 		return
 	}

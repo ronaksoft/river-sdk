@@ -60,7 +60,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	if x.Message.SenderID != ctrl.userID {
 		err := repo.Messages.SaveNewMessage(x.Message, dialog, ctrl.connInfo.PickupUserID())
 		if err != nil {
-			logs.Error("updateNewMessage()-> SaveNewMessage()", zap.Error(err))
+			logs.Warn("updateNewMessage()-> SaveNewMessage()", zap.Error(err))
 		}
 	} else {
 		err := repo.Messages.SaveSelfMessage(x.Message, dialog)
