@@ -22,7 +22,6 @@ func (r *repoGroups) readFromDb(groupID int64) *msg.Group {
 
 	err := r.db.Find(groups, groupID).Error
 	if err != nil {
-		logs.Error("Groups::GetGroup()-> fetch groups entity", zap.Error(err))
 		return nil
 	}
 
@@ -258,8 +257,7 @@ func (r *repoGroups) GetGroupDTO(groupID int64) (*dto.Groups, error) {
 
 	err := r.db.Find(group, groupID).Error
 	if err != nil {
-		logs.Error("Groups::GetGroup()-> fetch groups entity", zap.Error(err))
-		return nil, err // , err
+		return nil, err
 	}
 
 	return group, nil
