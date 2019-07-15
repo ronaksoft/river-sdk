@@ -513,7 +513,7 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 	// Check if we are out of sync with server, if yes, then call the sync() function
 	// We call it in blocking mode,
 	if ctrl.updateID < updateContainer.MinUpdateID-1 {
-		ctrl.sync()
+		go ctrl.sync()
 		return
 	}
 
@@ -576,13 +576,9 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 		}
 	}
 
-	// No need to wait here till DB gets synced cuz UI will have required data
-	go func() {
-		// Save Groups
-		_ = repo.Groups.SaveMany(updateContainer.Groups)
-		// Save Users
-		_ = repo.Users.SaveMany(updateContainer.Users)
-	}()
+	// Save Groups & Users
+	_ = repo.Groups.SaveMany(updateContainer.Groups)
+	_ = repo.Users.SaveMany(updateContainer.Users)
 
 	// save updateID after processing messages
 	if ctrl.updateID < updateContainer.MaxUpdateID {
