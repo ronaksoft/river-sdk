@@ -13,6 +13,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/monnand/dhkx"
 	"go.uber.org/zap"
 	"math/big"
@@ -70,7 +71,6 @@ func (r *River) onNetworkConnect() {
 	}
 
 	r.syncCtrl.UpdateSalt()
-
 	req := msg.AuthRecall{}
 	reqBytes, _ := req.Marshal()
 	if r.syncCtrl.GetUserID() != 0 {
@@ -838,6 +838,22 @@ func (r *River) ResetAuthKey() {
 }
 
 func (r *River) GetMonitorStats() []byte {
-	b, _ := json.Marshal(mon.Stats)
+	s := mon.Stats
+	m := ronak.M{
+		"AvgServerTime":   s.AvgServerResponseTime.String(),
+		"MaxServerTime":   s.MaxServerResponseTime.String(),
+		"MinServerTime":   s.MinServerResponseTime.String(),
+		"ServerRequests":  s.TotalServerRequests,
+		"AvgFunctionTime": s.AvgFunctionResponseTime.String(),
+		"MaxFunctionTime": s.MaxFunctionResponseTime.String(),
+		"MinFunctionTime": s.MinFunctionResponseTime.String(),
+		"FunctionCalls":   s.TotalFunctionCalls,
+		"AvgQueueTime":    s.AvgQueueTime.String(),
+		"MaxQueueTime":    s.MaxQueueTime.String(),
+		"MinQueueTime":    s.MinQueueTime.String(),
+		"QueueItems":      s.TotalQueueItems,
+	}
+
+	b, _ := json.MarshalIndent(m, "", "    ")
 	return b
 }

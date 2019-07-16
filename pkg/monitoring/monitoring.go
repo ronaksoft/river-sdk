@@ -27,17 +27,17 @@ const (
 type stats struct {
 	mtx                     sync.Mutex
 	AvgServerResponseTime   time.Duration
-	AvgFunctionResponseTime time.Duration
-	AvgQueueTime            time.Duration
 	MaxServerResponseTime   time.Duration
-	MaxFunctionResponseTime time.Duration
-	MaxQueueTime            time.Duration
 	MinServerResponseTime   time.Duration
+	TotalServerRequests     int32
+	AvgFunctionResponseTime time.Duration
+	MaxFunctionResponseTime time.Duration
 	MinFunctionResponseTime time.Duration
+	TotalFunctionCalls      int32
+	AvgQueueTime            time.Duration
+	MaxQueueTime            time.Duration
 	MinQueueTime            time.Duration
 	TotalQueueItems         int32
-	TotalServerRequests     int32
-	TotalFunctionCalls      int32
 }
 
 var Stats stats

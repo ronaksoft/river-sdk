@@ -1,6 +1,7 @@
 package riversdk
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
@@ -160,7 +161,7 @@ func TestSDKReconnect(t *testing.T) {
 		QueuePath:          "./_queue/",
 		ServerKeysFilePath: "./keys.json",
 		ServerEndpoint:     "ws://new.river.im",
-		LogLevel:           -1,
+		LogLevel:           0,
 		ConnInfo:           conInfo,
 	})
 
@@ -199,7 +200,7 @@ func TestSDKReconnect(t *testing.T) {
 		ServerKeysFilePath: "./keys.json",
 		ServerEndpoint:     "ws://new.river.im",
 		ConnInfo:           conInfo,
-		LogLevel:           -1,
+		LogLevel:           0,
 	})
 	_ = r.Start()
 	for r.ConnInfo.AuthID == 0 {
@@ -210,9 +211,63 @@ func TestSDKReconnect(t *testing.T) {
 		}
 		logs.Info("AuthKey Created.")
 	}
-	time.Sleep(time.Minute)
+	fmt.Println("AuthID", r.ConnInfo.AuthID)
+	fmt.Println("AuthKey", r.ConnInfo.AuthKey)
+	time.Sleep(time.Second * 10)
+	b := r.GetMonitorStats()
+	fmt.Println(string(b))
+
 }
 
+func TestConnectTime(t *testing.T) {
+	fmt.Println("Creating New River SDK Instance")
+	conInfo := new(RiverConnection)
+
+	file, err := os.Open("./_connection/connInfo1")
+	if err == nil {
+		b, _ := ioutil.ReadAll(file)
+		err := json.Unmarshal(b, conInfo)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+	}
+
+	conInfo.Delegate = new(ConnInfoDelegates)
+	conInfo.UserID = 10
+	conInfo.AuthID =-309683086834753830
+	authKey, _ := base64.StdEncoding.DecodeString(
+		"w5lswq0Vw6Eqwq/DrMKSRTHDu2rDsMOmE1XDuXLCgsKiwqVfwp7Cpk7CrTUgexXDlALDl1bCi8OSBcOYw7AIw4jCvsK9wrkgwqjDvsOpwrTDtMKQwqA9MEPCg2Q6cR8" +
+			"+Qi1hw6fCmsK9RcK3UsOifcKAPcOZw4zDtksbwohGF8OiTMOGw6pRe8K/AsKTwqdsTsO/aRINw7/DnCvDumrDtgc3RcKHcV5UwqLDs8OTDsK" +
+			"+csODXyPCu8KQw4UjHEnDjcO2b8KRwrlCw57Cs8KCIsOlwqdcS0PCr8OGwrnCgAvCu0TCisOeRF8nwrNqIF3CqyMkw7HCi8KVF2zDlG5JVsKuf8KYMyLClHbCvcOGED5rwqVTLi1NVcOOLcKjHsKqw51jdB1xKMOoGcKBEMOeJcO4VgtAw6LCt2MRVznDqMOawpjDgcOvwq7CiHJDwrrCpcO4OcKOwpEwJxITwp8Xw5guwoJ7fMOJTl3Ctz0CXjQlwpHCrBTDvQES")
+	copy(conInfo.AuthKey[:], authKey)
+
+	r := new(River)
+	fmt.Println("SetConfig called")
+	r.SetConfig(&RiverConfig{
+		DbPath:             "./_data/",
+		DbID:               "test",
+		QueuePath:          "./_queue/",
+		ServerKeysFilePath: "./keys.json",
+		ServerEndpoint:     "ws://new.river.im",
+		LogLevel:           0,
+		ConnInfo:           conInfo,
+	})
+
+	fmt.Println("Start called")
+	_ = r.Start()
+	for r.ConnInfo.AuthID == 0 {
+		if err := r.CreateAuthKey(); err != nil {
+			t.Error(err.Error())
+			return
+		}
+	}
+
+	time.Sleep(time.Second * 10)
+	b := r.GetMonitorStats()
+	fmt.Println(string(b))
+
+}
 func TestNewRiver(t *testing.T) {
 	logs.Info("Creating New River SDK Instance")
 	conInfo := new(RiverConnection)
