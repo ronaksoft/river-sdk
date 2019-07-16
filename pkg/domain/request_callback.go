@@ -24,23 +24,11 @@ type RequestCallback struct {
 	CreatedOn       time.Time
 	Timeout         time.Duration
 	IsUICallback    bool
+	RequestTime     time.Time
 }
 
 func init() {
 	requestCallbacks = make(map[uint64]*RequestCallback, 0)
-}
-
-// NewRequestCallback create new instance
-func NewRequestCallback(reqID uint64, success MessageHandler, timeOut time.Duration, timeout TimeoutCallback, isUICallback bool) *RequestCallback {
-	return &RequestCallback{
-		RequestID:       reqID,
-		SuccessCallback: success,
-		TimeoutCallback: timeout,
-		ResponseChannel: make(chan *msg.MessageEnvelope),
-		CreatedOn:       time.Now(),
-		Timeout:         timeOut,
-		IsUICallback:    isUICallback,
-	}
 }
 
 // AddRequestCallback in memory cache to save requests
@@ -53,6 +41,7 @@ func AddRequestCallback(reqID uint64, success MessageHandler, timeOut time.Durat
 		CreatedOn:       time.Now(),
 		Timeout:         timeOut,
 		IsUICallback:    isUICallback,
+		RequestTime:     time.Now(),
 	}
 	mxCB.Lock()
 	requestCallbacks[reqID] = cb

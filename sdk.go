@@ -4,10 +4,12 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
@@ -141,6 +143,7 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 	for idx := range msgs {
 		cb := domain.GetRequestCallback(msgs[idx].RequestID)
 		if cb != nil {
+			mon.ServerResponseTime(msgs[idx].Constructor, time.Now().Sub(cb.RequestTime))
 			// if there was any listener maybe request already time-out
 			logs.Debug("River::onReceivedMessage() Request callback found", zap.Uint64("RequestID", cb.RequestID))
 			select {
@@ -830,12 +833,7 @@ func (r *River) ResetAuthKey() {
 	r.ConnInfo.Save()
 }
 
-// AddRealTimeRequest ...
-func (r *River) AddRealTimeRequest(constructor int64) {
-	r.realTimeCommands[constructor] = true
-}
-
-// RemoveRealTimeRequest ...
-func (r *River) RemoveRealTimeRequest(constructor int64) {
-	delete(r.realTimeCommands, constructor)
+func (r *River) GetMonitorStats() []byte {
+	b, _ := json.Marshal(mon.Stats)
+	return b
 }

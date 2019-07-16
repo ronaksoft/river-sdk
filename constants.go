@@ -11,5 +11,5 @@ package riversdk
 
 const (
 	ConfClientPlatform = "CLIENT_PLATFORM"
-	ConfClientVersion = "CLIENT_VERSION"
+	ConfClientVersion  = "CLIENT_VERSION"
 )

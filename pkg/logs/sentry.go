@@ -17,7 +17,7 @@ import (
 
 func NewSentryCore(level zapcore.Level, tags map[string]string) (zapcore.Core, error) {
 	err := sentry.Init(sentry.ClientOptions{
-		Dsn: "***REMOVED***",
+		Dsn:     "***REMOVED***",
 		Release: "v0.5.0",
 	})
 	if err != nil {
@@ -53,7 +53,6 @@ func (c *sentryCore) Write(ent zapcore.Entry, fs []zapcore.Field) error {
 	event.Platform = ""
 	event.Extra = clone.fields
 	c.hub.CaptureEvent(event)
-
 
 	// We may be crashing the program, so should flush any buffered events.
 	if ent.Level > zapcore.ErrorLevel {

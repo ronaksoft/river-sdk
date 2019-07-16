@@ -184,7 +184,6 @@ func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerTy
 		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID >= ? AND messages.ID <= ?", peerID, peerType, minID, maxID).Find(&dtoMsgs).Error
 	}
 
-
 	if err != nil {
 		logs.Warn("Repo::GetMessageHistory()-> fetch messages", zap.Error(err))
 		return

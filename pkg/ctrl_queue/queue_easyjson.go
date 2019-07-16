@@ -52,6 +52,10 @@ func easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(in *jlex
 				}
 				easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkMsgExt(in, out.MessageEnvelope)
 			}
+		case "insert_time":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.InsertTime).UnmarshalJSON(data))
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -99,6 +103,16 @@ func easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(out *jwr
 		} else {
 			easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkMsgExt(out, *in.MessageEnvelope)
 		}
+	}
+	{
+		const prefix string = ",\"insert_time\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Raw((in.InsertTime).MarshalJSON())
 	}
 	out.RawByte('}')
 }

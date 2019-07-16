@@ -1,6 +1,7 @@
 package queueCtrl
 
 import (
+	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"sync"
 	"time"
 
@@ -22,6 +23,7 @@ type request struct {
 	ID              uint64               `json:"id"`
 	Timeout         time.Duration        `json:"timeout"`
 	MessageEnvelope *msg.MessageEnvelope `json:"message_envelope"`
+	InsertTime      time.Time            `json:"insert_time"`
 }
 
 // Controller ...
@@ -88,6 +90,7 @@ func (ctrl *Controller) distributor() {
 			continue
 		}
 
+		mon.QueueTime(req.MessageEnvelope.Constructor, time.Now().Sub(req.InsertTime))
 		if !ctrl.IsRequestCancelled(int64(req.ID)) {
 			go ctrl.executor(req)
 		} else {
@@ -101,6 +104,7 @@ func (ctrl *Controller) distributor() {
 
 // addToWaitingList
 func (ctrl *Controller) addToWaitingList(req *request) {
+	req.InsertTime = time.Now()
 	jsonRequest, err := req.MarshalJSON()
 	if err != nil {
 		logs.Error("addToWaitingList()->MarshalJSON()", zap.Error(err))
