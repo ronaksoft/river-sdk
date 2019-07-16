@@ -488,6 +488,10 @@ func (r *River) Migrate() int {
 // This is a wrapper function to pass the request to the queueController, to be passed to networkController for final
 // delivery to the server.
 func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate, blockingMode, serverForce bool) (requestID int64, err error) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("ExecuteCommand", time.Now().Sub(startTime), blockingMode)
+	}()
 	if _, ok := msg.ConstructorNames[constructor]; !ok {
 		return 0, domain.ErrInvalidConstructor
 	}

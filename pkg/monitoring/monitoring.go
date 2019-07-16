@@ -71,9 +71,12 @@ func QueueTime(constructor int64, t time.Duration) {
 	Stats.mtx.Unlock()
 }
 
-func FunctionResponseTime(funcName string, t time.Duration) {
+func FunctionResponseTime(funcName string, t time.Duration, v ...interface{}) {
 	if t > serverLongThreshold {
-		logs.Warn("Too Long FunctionResponse", zap.Duration("T", t), zap.String("FN", funcName))
+		logs.Warn("Too Long FunctionResponse", zap.Duration("T", t),
+			zap.String("FN", funcName),
+			zap.Any("Extra", v),
+		)
 	}
 	Stats.mtx.Lock()
 	Stats.AvgFunctionResponseTime = (Stats.AvgFunctionResponseTime*time.Duration(Stats.TotalFunctionCalls) + t) / time.Duration(Stats.TotalServerRequests)
