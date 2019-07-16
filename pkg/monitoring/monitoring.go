@@ -38,9 +38,14 @@ type stats struct {
 	MaxQueueTime            time.Duration
 	MinQueueTime            time.Duration
 	TotalQueueItems         int32
+	StartTime 				time.Time
 }
 
 var Stats stats
+
+func init() {
+	Stats.StartTime = time.Now()
+}
 
 func ServerResponseTime(constructor int64, t time.Duration) {
 	if t > serverLongThreshold {

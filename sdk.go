@@ -852,6 +852,7 @@ func (r *River) GetMonitorStats() []byte {
 		"MaxQueueTime":    s.MaxQueueTime.String(),
 		"MinQueueTime":    s.MinQueueTime.String(),
 		"QueueItems":      s.TotalQueueItems,
+		"RecordTime":      time.Now().Sub(s.StartTime).String(),
 	}
 
 	b, _ := json.MarshalIndent(m, "", "    ")
