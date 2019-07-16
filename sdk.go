@@ -119,14 +119,16 @@ func (r *River) onNetworkConnect() {
 	waitGroup.Wait()
 
 	go func() {
-		// A short wait to make sure network state has been updated
-		time.Sleep(100 * time.Millisecond)
+		if r.syncCtrl.GetUserID() != 0 {
+			// A short wait to make sure network state has been updated
+			time.Sleep(100 * time.Millisecond)
 
-		// Sync with Server
-		r.syncCtrl.Sync()
+			// Sync with Server
+			r.syncCtrl.Sync()
 
-		// import contact from server
-		r.syncCtrl.ContactImportFromServer()
+			// import contact from server
+			r.syncCtrl.ContactImportFromServer()
+		}
 	}()
 }
 
