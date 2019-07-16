@@ -48,7 +48,7 @@ func ServerResponseTime(constructor int64, t time.Duration) {
 	}
 	total := atomic.AddInt32(&Stats.TotalServerRequests, 1)
 	Stats.mtx.Lock()
-	Stats.AvgServerResponseTime = (Stats.AvgServerResponseTime*time.Duration(total) + t) / time.Duration(total)
+	Stats.AvgServerResponseTime = (Stats.AvgServerResponseTime*time.Duration(total-1) + t) / time.Duration(total)
 	if t > Stats.MaxServerResponseTime {
 		Stats.MaxServerResponseTime = t
 	}
@@ -64,7 +64,7 @@ func QueueTime(constructor int64, t time.Duration) {
 	}
 	total := atomic.AddInt32(&Stats.TotalQueueItems, 1)
 	Stats.mtx.Lock()
-	Stats.AvgQueueTime = (Stats.AvgQueueTime*time.Duration(total) + t) / time.Duration(total)
+	Stats.AvgQueueTime = (Stats.AvgQueueTime*time.Duration(total-1) + t) / time.Duration(total)
 	if t > Stats.MaxQueueTime {
 		Stats.MaxQueueTime = t
 	}
@@ -83,7 +83,7 @@ func FunctionResponseTime(funcName string, t time.Duration, v ...interface{}) {
 	}
 	total := atomic.AddInt32(&Stats.TotalFunctionCalls, 1)
 	Stats.mtx.Lock()
-	Stats.AvgFunctionResponseTime = (Stats.AvgFunctionResponseTime*time.Duration(total) + t) / time.Duration(total)
+	Stats.AvgFunctionResponseTime = (Stats.AvgFunctionResponseTime*time.Duration(total-1) + t) / time.Duration(total)
 	if t > Stats.MaxFunctionResponseTime {
 		Stats.MaxFunctionResponseTime = t
 	}

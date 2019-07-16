@@ -150,10 +150,7 @@ func (ctrl *Controller) messageFlushFunc(entries []ronak.FlusherEntry) {
 }
 
 func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
-	// wait for network to connect
-	for ctrl.wsQuality == domain.NetworkConnecting || ctrl.wsQuality == domain.NetworkDisconnected {
-		time.Sleep(time.Second)
-	}
+	ctrl.WaitForNetwork()
 
 	itemsCount := len(entries)
 	messages := make([]*msg.MessageEnvelope, 0, itemsCount)
