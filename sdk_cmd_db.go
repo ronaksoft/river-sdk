@@ -2,11 +2,17 @@ package riversdk
 
 import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
+	"time"
 )
 
 func (r *River) IsMessageExist(messageID int64) bool {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("IsMessageExists", time.Now().Sub(startTime))
+	}()
 	message := repo.Messages.GetMessage(messageID)
 
 	return message != nil
@@ -14,6 +20,10 @@ func (r *River) IsMessageExist(messageID int64) bool {
 
 // GetRealTopMessageID returns max message id
 func (r *River) GetRealTopMessageID(peerID int64, peerType int32) int64 {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("GetRealTopMessageID", time.Now().Sub(startTime))
+	}()
 	topMsgID, err := repo.Messages.GetTopMessageID(peerID, peerType)
 	if err != nil {
 		logs.Error("SDK::GetRealTopMessageID() => Messages.GetTopMessageID()", zap.Error(err))
@@ -23,6 +33,10 @@ func (r *River) GetRealTopMessageID(peerID int64, peerType int32) int64 {
 }
 
 func (r *River) GetPinnedDialogsCount() int32 {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("GetPinnedDialogCount", time.Now().Sub(startTime))
+	}()
 	dialogs := repo.Dialogs.GetPinnedDialogs()
 
 	if dialogs != nil {

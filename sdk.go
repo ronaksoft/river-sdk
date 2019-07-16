@@ -58,13 +58,12 @@ func (r *River) onNetworkConnect() {
 					)
 				}
 			},
-			true,
-			false,
+			true, false,
 		)
 		if err == nil {
 			break
 		} else {
-			time.Sleep(1 * time.Second)
+			time.Sleep(time.Second)
 		}
 	}
 

@@ -6,10 +6,12 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"go.uber.org/zap"
+	"time"
 )
 
 var GetDBStatusIsRunning bool
@@ -17,6 +19,10 @@ var DatabaseStatus map[int64]map[msg.DocumentAttributeType]dto.MediaInfo
 
 // CancelRequest remove given requestID callbacks&delegates and if its not processed by queue we skip it on queue distributor
 func (r *River) CancelRequest(requestID int64) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("CancelRequest", time.Now().Sub(startTime))
+	}()
 	// Remove delegate
 	r.delegateMutex.Lock()
 	delete(r.delegates, int64(requestID))
@@ -32,6 +38,10 @@ func (r *River) CancelRequest(requestID int64) {
 
 // DeletePendingMessage removes pending message from DB
 func (r *River) DeletePendingMessage(id int64) (isSuccess bool) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("DeletePendingMessage", time.Now().Sub(startTime))
+	}()
 	err := repo.PendingMessages.DeletePendingMessage(id)
 	isSuccess = err == nil
 	return
@@ -39,6 +49,10 @@ func (r *River) DeletePendingMessage(id int64) (isSuccess bool) {
 
 // RetryPendingMessage puts pending message again in command queue to re send it
 func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("RetryPendingMessage", time.Now().Sub(startTime))
+	}()
 	pmsg, err := repo.PendingMessages.GetPendingMessageByID(id)
 	if err != nil {
 		logs.Warn("River::RetryPendingMessage() -> GetPendingMessageByID()", zap.Error(err))
@@ -58,16 +72,28 @@ func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
 
 // GetNetworkStatus returns NetworkController status
 func (r *River) GetNetworkStatus() int32 {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("GetNetworkStatus", time.Now().Sub(startTime))
+	}()
 	return int32(r.networkCtrl.GetQuality())
 }
 
 // GetSyncStatus returns SyncController status
 func (r *River) GetSyncStatus() int32 {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("GetSyncStatus", time.Now().Sub(startTime))
+	}()
 	return int32(r.syncCtrl.GetSyncStatus())
 }
 
 // Logout drop queue & database , etc ...
 func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("Logout", time.Now().Sub(startTime))
+	}()
 	// unregister device if token exist
 	if notifyServer && r.DeviceToken != nil {
 		reqID := uint64(domain.SequentialUniqueID())
@@ -137,6 +163,10 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 
 // UISettingGet fetch from key/value storage for UI settings
 func (r *River) UISettingsGet(key string) string {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("UISettingsGet", time.Now().Sub(startTime))
+	}()
 	val, err := repo.UISettings.Get(key)
 	if err != nil {
 		logs.Warn("River::UISettingsGet()", zap.Error(err))
@@ -146,6 +176,10 @@ func (r *River) UISettingsGet(key string) string {
 
 // UISettingPut save to key/value storage for UI settings
 func (r *River) UISettingsPut(key, value string) bool {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("UISettingsPut", time.Now().Sub(startTime))
+	}()
 	err := repo.UISettings.Put(key, value)
 	if err != nil {
 		logs.Error("River::UISettingsPut()", zap.Error(err))
@@ -155,6 +189,10 @@ func (r *River) UISettingsPut(key, value string) bool {
 
 // UISettingDelete remove from key/value storage for UI settings
 func (r *River) UISettingsDelete(key string) bool {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("UISettingsDelete", time.Now().Sub(startTime))
+	}()
 	err := repo.UISettings.Delete(key)
 	if err != nil {
 		logs.Error("River::UISettingsDelete()", zap.Error(err))
@@ -164,6 +202,10 @@ func (r *River) UISettingsDelete(key string) bool {
 
 // SearchContacts searches contacts
 func (r *River) SearchContacts(requestID int64, searchPhrase string, delegate RequestDelegate) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("SearchContacts", time.Now().Sub(startTime))
+	}()
 	res := new(msg.MessageEnvelope)
 	res.Constructor = msg.C_ContactsMany
 	res.RequestID = uint64(requestID)
@@ -181,6 +223,10 @@ func (r *River) SearchContacts(requestID int64, searchPhrase string, delegate Re
 
 // UpdateContactInfo update contact name
 func (r *River) UpdateContactInfo(userID int64, firstName, lastName string) error {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("UpdateContactInfo", time.Now().Sub(startTime))
+	}()
 	err := repo.Users.UpdateContactInfo(userID, firstName, lastName)
 	if err != nil {
 		logs.Error("SDK::UpdateContactInfo() => Users.UpdateContactInfo()", zap.Error(err))
@@ -190,6 +236,10 @@ func (r *River) UpdateContactInfo(userID int64, firstName, lastName string) erro
 
 // SearchDialogs search dialog title
 func (r *River) SearchDialogs(requestID int64, searchPhrase string, delegate RequestDelegate) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("SearchDialogs", time.Now().Sub(startTime))
+	}()
 	res := new(msg.MessageEnvelope)
 	res.Constructor = msg.C_MessagesDialogs
 	res.RequestID = uint64(requestID)
@@ -227,6 +277,10 @@ func (r *River) SearchDialogs(requestID int64, searchPhrase string, delegate Req
 
 // GetGroupInputUser get group participant user
 func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, delegate RequestDelegate) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("GetGroupInputUser", time.Now().Sub(startTime))
+	}()
 	res := new(msg.MessageEnvelope)
 	res.Constructor = msg.C_InputUser
 	res.RequestID = uint64(requestID)
@@ -316,6 +370,10 @@ func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, 
 
 // GetSharedMedia search in given dialog files
 func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, delegate RequestDelegate) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("GetSharedMedia", time.Now().Sub(startTime))
+	}()
 	msgs, err := repo.Files.GetSharedMedia(peerID, peerType, mediaType)
 	if err != nil {
 		out := new(msg.MessageEnvelope)
@@ -373,6 +431,10 @@ func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, de
 }
 
 func (r *River) GetScrollStatus(peerID int64, peerType int32) int64 {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("GetScrollStatus", time.Now().Sub(startTime))
+	}()
 	status, err := repo.MessagesExtra.GetScrollID(peerID, peerType)
 	if err != nil {
 		return 0
@@ -382,6 +444,10 @@ func (r *River) GetScrollStatus(peerID int64, peerType int32) int64 {
 }
 
 func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("SetScrollStatus", time.Now().Sub(startTime))
+	}()
 	if err := repo.MessagesExtra.SaveScrollID(peerID, msgID, peerType); err != nil {
 		logs.Error("SetScrollStatus::Failed to set scroll ID")
 	}
@@ -390,6 +456,10 @@ func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
 // SearchGlobal returns messages, contacts and groups matching given text
 // peerID 0 means search is not limited to a specific peerID
 func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("SearchGlobal", time.Now().Sub(startTime))
+	}()
 	searchResults := new(msg.ClientSearchResult)
 	var userContacts []*msg.ContactUser
 	var NonContactUsersWithDialogs []*msg.ContactUser
@@ -455,6 +525,10 @@ func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate
 
 // GetGetDBStatus returns message IDs and total size of each media stored in user's database
 func (r *River) GetDBStatus(delegate RequestDelegate) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("GetDBStatus", time.Now().Sub(startTime))
+	}()
 	res := msg.DBMediaInfo{}
 	if GetDBStatusIsRunning {
 		err := errors.New("GetDBStatus is running")

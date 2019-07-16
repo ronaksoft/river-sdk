@@ -6,11 +6,13 @@ import (
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // GetFileStatus returns file status
@@ -100,6 +102,10 @@ func getFilePath(msgID int64) string {
 
 // FileDownload add download request to file controller queue
 func (r *River) FileDownload(msgID int64) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("FileDownload", time.Now().Sub(startTime))
+	}()
 	status, progress, filePath := getFileStatus(msgID)
 	logs.Debug("SDK::FileDownload() current file progress status",
 		zap.String("Status", status.ToString()),
@@ -139,6 +145,10 @@ func (r *River) FileDownload(msgID int64) {
 
 // PauseDownload pause download
 func (r *River) PauseDownload(msgID int64) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("PauseDownload", time.Now().Sub(startTime))
+	}()
 	fs, err := repo.Files.GetFileStatus(msgID)
 	if err != nil {
 		logs.Warn("SDK::PauseDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
@@ -152,6 +162,10 @@ func (r *River) PauseDownload(msgID int64) {
 
 // CancelDownload cancel download
 func (r *River) CancelDownload(msgID int64) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("CancelDownload", time.Now().Sub(startTime))
+	}()
 	fs, err := repo.Files.GetFileStatus(msgID)
 	if err != nil {
 		logs.Warn("SDK::CancelDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
@@ -165,6 +179,10 @@ func (r *River) CancelDownload(msgID int64) {
 
 // PauseUpload pause upload
 func (r *River) PauseUpload(msgID int64) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("PauseUpload", time.Now().Sub(startTime))
+	}()
 	fs, err := repo.Files.GetFileStatus(msgID)
 	if err != nil {
 		logs.Warn("SDK::PauseUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
@@ -180,6 +198,10 @@ func (r *River) PauseUpload(msgID int64) {
 
 // CancelUpload cancel upload
 func (r *River) CancelUpload(msgID int64) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("CancelUpload", time.Now().Sub(startTime))
+	}()
 	fs, err := repo.Files.GetFileStatus(msgID)
 	if err != nil {
 		logs.Warn("SDK::CancelUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
@@ -194,6 +216,10 @@ func (r *River) CancelUpload(msgID int64) {
 
 // AccountUploadPhoto upload user profile photo
 func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("AccountUploadPhoto", time.Now().Sub(startTime))
+	}()
 	// TOF
 	msgID = domain.SequentialUniqueID()
 	fileID := domain.SequentialUniqueID()
@@ -230,6 +256,10 @@ func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 
 // AccountGetPhoto_Big download user profile picture
 func (r *River) AccountGetPhotoBig(userID int64) string {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("AccountGetPhotoBig", time.Now().Sub(startTime))
+	}()
 	user := repo.Users.Get(userID)
 	if user != nil {
 		if user.Photo != nil {
@@ -263,6 +293,10 @@ func (r *River) AccountGetPhotoBig(userID int64) string {
 
 // AccountGetPhoto_Small download user profile picture thumbnail
 func (r *River) AccountGetPhotoSmall(userID int64) string {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("AccountGetPhotoSmall", time.Now().Sub(startTime))
+	}()
 	user := repo.Users.Get(userID)
 	if user != nil {
 		if user.Photo != nil {
@@ -320,6 +354,10 @@ func (r *River) downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig b
 
 // GroupUploadPhoto upload group profile photo
 func (r *River) GroupUploadPhoto(groupID int64, filePath string) (msgID int64) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("GroupUploadPhoto", time.Now().Sub(startTime))
+	}()
 	// TOF
 	msgID = domain.SequentialUniqueID()
 	fileID := domain.SequentialUniqueID()
@@ -356,6 +394,10 @@ func (r *River) GroupUploadPhoto(groupID int64, filePath string) (msgID int64) {
 
 // GroupGetPhoto_Big download group profile picture
 func (r *River) GroupGetPhotoBig(groupID int64) string {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("GroupGetPhotoBig", time.Now().Sub(startTime))
+	}()
 	group, err := repo.Groups.GetGroupDTO(groupID)
 	if err == nil && group != nil {
 		if group.Photo != nil {
@@ -391,6 +433,10 @@ func (r *River) GroupGetPhotoBig(groupID int64) string {
 
 // GroupGetPhoto_Small download group profile picture thumbnail
 func (r *River) GroupGetPhotoSmall(groupID int64) string {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("GroupGetPhotoSmall", time.Now().Sub(startTime))
+	}()
 	group, err := repo.Groups.GetGroupDTO(groupID)
 	if err == nil && group != nil {
 		if group.Photo != nil {
@@ -452,6 +498,10 @@ func (r *River) downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig b
 
 // FileDownloadThumbnail download file thumbnail
 func (r *River) FileDownloadThumbnail(msgID int64) string {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("FileDownloadThumbnail", time.Now().Sub(startTime))
+	}()
 	// its pending message
 	if msgID < 0 {
 		pmsg, err := repo.PendingMessages.GetPendingMessageByID(msgID)
@@ -564,6 +614,10 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 // ClearCache removes files from client device, allMedia means clear all media types
 // peerID 0 means all peers
 func (r *River) ClearCache(peerID int64, mediaTypes string, allMedia bool) bool {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("ClearCache", time.Now().Sub(startTime))
+	}()
 	var messageIDs []int64
 	clearDatabaseStatus := func() {
 		for k := range DatabaseStatus {
