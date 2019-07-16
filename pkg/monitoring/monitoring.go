@@ -5,6 +5,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"go.uber.org/zap"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -45,8 +46,9 @@ func ServerResponseTime(constructor int64, t time.Duration) {
 	if t > serverLongThreshold {
 		logs.Warn("Too Long ServerResponse", zap.Duration("T", t), zap.String("Constructor", msg.ConstructorNames[constructor]))
 	}
+	total := atomic.AddInt32(&Stats.TotalServerRequests, 1)
 	Stats.mtx.Lock()
-	Stats.AvgServerResponseTime = (Stats.AvgServerResponseTime*time.Duration(Stats.TotalServerRequests) + t) / time.Duration(Stats.TotalServerRequests)
+	Stats.AvgServerResponseTime = (Stats.AvgServerResponseTime*time.Duration(total) + t) / time.Duration(Stats.TotalServerRequests)
 	if t > Stats.MaxServerResponseTime {
 		Stats.MaxServerResponseTime = t
 	}
@@ -60,8 +62,9 @@ func QueueTime(constructor int64, t time.Duration) {
 	if t > serverLongThreshold {
 		logs.Warn("Too Long QueueTime", zap.Duration("T", t), zap.String("Constructor", msg.ConstructorNames[constructor]))
 	}
+	total := atomic.AddInt32(&Stats.TotalQueueItems, 1)
 	Stats.mtx.Lock()
-	Stats.AvgQueueTime = (Stats.AvgQueueTime*time.Duration(Stats.TotalQueueItems) + t) / time.Duration(Stats.TotalServerRequests)
+	Stats.AvgQueueTime = (Stats.AvgQueueTime*time.Duration(total) + t) / time.Duration(Stats.TotalServerRequests)
 	if t > Stats.MaxQueueTime {
 		Stats.MaxQueueTime = t
 	}
@@ -78,8 +81,9 @@ func FunctionResponseTime(funcName string, t time.Duration, v ...interface{}) {
 			zap.Any("Extra", v),
 		)
 	}
+	total := atomic.AddInt32(&Stats.TotalFunctionCalls, 1)
 	Stats.mtx.Lock()
-	Stats.AvgFunctionResponseTime = (Stats.AvgFunctionResponseTime*time.Duration(Stats.TotalFunctionCalls) + t) / time.Duration(Stats.TotalServerRequests)
+	Stats.AvgFunctionResponseTime = (Stats.AvgFunctionResponseTime*time.Duration(total) + t) / time.Duration(Stats.TotalServerRequests)
 	if t > Stats.MaxFunctionResponseTime {
 		Stats.MaxFunctionResponseTime = t
 	}
