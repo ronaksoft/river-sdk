@@ -35,86 +35,101 @@ func (r *River) onNetworkConnect() {
 	// Get Server Time and set server time difference
 	timeReq := new(msg.SystemGetServerTime)
 	timeReqBytes, _ := timeReq.Marshal()
-	for {
-		err := r.queueCtrl.ExecuteRealtimeCommand(
-			uint64(domain.SequentialUniqueID()),
-			msg.C_SystemGetServerTime,
-			timeReqBytes,
-			nil,
-			func(m *msg.MessageEnvelope) {
-				if m.Constructor == msg.C_SystemServerTime {
-					x := new(msg.SystemServerTime)
-					err := x.Unmarshal(m.Message)
-					if err != nil {
-						logs.Error("onGetServerTime()", zap.Error(err))
-						return
-					}
-					clientTime := time.Now().Unix()
-					serverTime := x.Timestamp
-					delta := serverTime - clientTime
-					r.networkCtrl.SetClientTimeDifference(delta)
-					salt.SetTimeDifference(delta)
-					logs.Debug("River::onGetServerTime()",
-						zap.Int64("ServerTime", serverTime),
-						zap.Int64("ClientTime", clientTime),
-						zap.Int64("Difference", delta),
-					)
-				}
-			},
-			true, false,
-		)
-		if err == nil {
-			break
-		} else {
-			time.Sleep(time.Second)
-		}
-	}
-
-	r.syncCtrl.UpdateSalt()
-	req := msg.AuthRecall{}
-	reqBytes, _ := req.Marshal()
-	if r.syncCtrl.GetUserID() != 0 {
-		// send auth recall until it succeed
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(1)
+	go func() {
+		defer waitGroup.Done()
 		for {
-			// this is priority command that should not passed to queue
-			// after auth recall answer got back the queue should send its requests in order to get related updates
 			err := r.queueCtrl.ExecuteRealtimeCommand(
 				uint64(domain.SequentialUniqueID()),
-				msg.C_AuthRecall,
-				reqBytes,
+				msg.C_SystemGetServerTime,
+				timeReqBytes,
 				nil,
 				func(m *msg.MessageEnvelope) {
-					if m.Constructor == msg.C_AuthRecalled {
-						x := new(msg.AuthRecalled)
+					if m.Constructor == msg.C_SystemServerTime {
+						x := new(msg.SystemServerTime)
 						err := x.Unmarshal(m.Message)
 						if err != nil {
-							logs.Error("onAuthRecalled()", zap.Error(err))
+							logs.Error("onGetServerTime()", zap.Error(err))
 							return
 						}
+						clientTime := time.Now().Unix()
+						serverTime := x.Timestamp
+						delta := serverTime - clientTime
+						r.networkCtrl.SetClientTimeDifference(delta)
+						salt.SetTimeDifference(delta)
+						logs.Debug("River::onGetServerTime()",
+							zap.Int64("ServerTime", serverTime),
+							zap.Int64("ClientTime", clientTime),
+							zap.Int64("Difference", delta),
+						)
 					}
 				},
-				true,
-				false,
+				true, false,
 			)
 			if err == nil {
 				break
+			} else {
+				time.Sleep(time.Second)
 			}
-			time.Sleep(1 * time.Second)
 		}
+	}()
 
+	waitGroup.Add(1)
+	go func() {
+		defer waitGroup.Done()
+		r.syncCtrl.UpdateSalt()
+		req := msg.AuthRecall{}
+		reqBytes, _ := req.Marshal()
+		if r.syncCtrl.GetUserID() != 0 {
+			// send auth recall until it succeed
+			for {
+				// this is priority command that should not passed to queue
+				// after auth recall answer got back the queue should send its requests in order to get related updates
+				err := r.queueCtrl.ExecuteRealtimeCommand(
+					uint64(domain.SequentialUniqueID()),
+					msg.C_AuthRecall,
+					reqBytes,
+					nil,
+					func(m *msg.MessageEnvelope) {
+						if m.Constructor == msg.C_AuthRecalled {
+							x := new(msg.AuthRecalled)
+							err := x.Unmarshal(m.Message)
+							if err != nil {
+								logs.Error("onAuthRecalled()", zap.Error(err))
+								return
+							}
+						}
+					},
+					true,
+					false,
+				)
+				if err == nil {
+					break
+				}
+				time.Sleep(1 * time.Second)
+			}
+		}
 		if r.DeviceToken == nil || r.DeviceToken.Token == "" {
 			logs.Warn("onNetworkConnect() Device Token is not set")
 		}
 
-		go func() {
-			// Sync with Server
-			r.syncCtrl.Sync()
+	}()
 
-			// import contact from server
-			r.syncCtrl.ContactImportFromServer()
-		}()
-	}
+	waitGroup.Wait()
+
+	go func() {
+		// A short wait to make sure network state has been updated
+		time.Sleep(100 * time.Millisecond)
+
+		// Sync with Server
+		r.syncCtrl.Sync()
+
+		// import contact from server
+		r.syncCtrl.ContactImportFromServer()
+	}()
 }
+
 
 func (r *River) onGeneralError(e *msg.Error) {
 	// TODO:: call external handler
