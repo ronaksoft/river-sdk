@@ -106,11 +106,13 @@ func (r *River) onNetworkConnect() {
 			logs.Warn("onNetworkConnect() Device Token is not set")
 		}
 
-		// Sync with Server
-		r.syncCtrl.Sync()
+		go func() {
+			// Sync with Server
+			r.syncCtrl.Sync()
 
-		// import contact from server
-		r.syncCtrl.ContactImportFromServer()
+			// import contact from server
+			r.syncCtrl.ContactImportFromServer()
+		}()
 	}
 }
 

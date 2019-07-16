@@ -450,12 +450,11 @@ func (ctrl *Controller) Connect(force bool) {
 		ctrl.connectChannel <- true
 		logs.Info("NetworkController connected")
 
-		ctrl.updateNetworkStatus(domain.NetworkFast)
-
 		// Call the OnConnect handler here b4 changing network status that trigger queue to start working
 		// basically we send priority requests b4 queue starts to work
 		ctrl.wsOnConnect()
 
+		ctrl.updateNetworkStatus(domain.NetworkFast)
 	}
 }
 
