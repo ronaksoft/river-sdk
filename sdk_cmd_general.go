@@ -115,10 +115,17 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 	}
 
 	// drop and recreate database
-	err = repo.ReInitiateDatabase()
-	if err != nil {
-		logs.Error("River::Logout() failed to re initiate database", zap.Error(err))
+	keepGoing := true
+	for keepGoing {
+		err = repo.ReInitiateDatabase()
+		if err != nil {
+			logs.Error("River::Logout() failed to re initiate database", zap.Error(err))
+			time.Sleep(time.Millisecond * 500)
+		}	else {
+			keepGoing = false
+		}
 	}
+
 
 	// open queue
 	err = r.queueCtrl.OpenQueue(dataDir)
@@ -131,13 +138,11 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 	timeoutCallback := func() {
 		err = domain.ErrRequestTimeout
 		r.releaseDelegate(requestID)
-
 		r.networkCtrl.Disconnect()
 		r.clearSystemConfig()
 	}
 	successCallback := func(envelope *msg.MessageEnvelope) {
 		r.releaseDelegate(requestID)
-
 		r.networkCtrl.Disconnect()
 		r.clearSystemConfig()
 	}
