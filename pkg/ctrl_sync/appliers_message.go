@@ -267,10 +267,6 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 		logs.Error("messagesMany()-> Unmarshal()", zap.Error(err))
 		return
 	}
-	logs.Info("SyncController::messagesMany",
-		zap.Int("Messages", len(u.Messages)),
-		zap.Bool("Continues", u.Continuous),
-	)
 
 	// Save Groups & Users
 	_ = repo.Users.SaveMany(u.Users)
@@ -283,13 +279,20 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 	maxID := int64(0)
 	for _, v := range u.Messages {
 		_ = repo.Messages.SaveMessage(v)
-		if minID == 0 || v.ID < minID {
+		if v.ID < minID || minID == 0 {
 			minID = v.ID
 		}
-		if maxID == 0 || v.ID > maxID {
+		if v.ID > maxID {
 			maxID = v.ID
 		}
 	}
+
+	logs.Info("SyncController::messagesMany",
+		zap.Int("Messages", len(u.Messages)),
+		zap.Bool("Continues", u.Continuous),
+		zap.Int64("MinID", minID),
+		zap.Int64("MaxID", maxID),
+	)
 
 	if u.Continuous && minID != 0 && minID != maxID {
 		peerID := u.Messages[0].PeerID
