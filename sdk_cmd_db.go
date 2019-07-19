@@ -13,7 +13,7 @@ func (r *River) IsMessageExist(messageID int64) bool {
 	defer func() {
 		mon.FunctionResponseTime("IsMessageExists", time.Now().Sub(startTime))
 	}()
-	message := repo.Messages.GetMessage(messageID)
+	message := repo.Messages.Get(messageID)
 
 	return message != nil
 }

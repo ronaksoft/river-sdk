@@ -274,9 +274,9 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 				}
 				mMessages := make(map[int64]*msg.UserMessage)
 				for _, message := range x.Messages {
-					err := repo.Messages.SaveMessage(message)
+					err := repo.Messages.Save(message)
 					if err != nil {
-						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveMessage() ", zap.Error(err))
+						logs.Error("getAllDialogs() -> onSuccessCallback() -> Save() ", zap.Error(err))
 					}
 					mMessages[message.ID] = message
 				}
@@ -295,7 +295,7 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 					messageHole.SetUpperFilled(dialog.PeerID, dialog.PeerType, dialog.TopMessageID)
 
 					// make sure to created the message hole b4 creating dialog
-					err := repo.Dialogs.Save(dialog, topMessage.CreatedOn)
+					err := repo.Dialogs.SaveNew(dialog, topMessage.CreatedOn)
 					if err != nil {
 						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveDialog() ",
 							zap.String("Error", err.Error()),

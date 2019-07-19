@@ -256,22 +256,25 @@ func (r *River) SearchDialogs(requestID int64, searchPhrase string, delegate Req
 	dlgs.Users = users
 	dlgs.Groups = groups
 
-	mDialogs := domain.MInt64B{}
+
+	mUserDialogs := domain.MInt64B{}
+	mGroupDialogs := domain.MInt64B{}
 	for _, v := range users {
-		mDialogs[v.ID] = true
+		mUserDialogs[v.ID] = true
 	}
 	for _, v := range groups {
-		mDialogs[v.ID] = true
+		mGroupDialogs[v.ID] = true
 	}
 
-	dialogs := repo.Dialogs.GetMany(mDialogs.ToArray())
+	dialogs := repo.Dialogs.GetManyUsers(mUserDialogs.ToArray())
+	dialogs = append(dialogs, repo.Dialogs.GetManyGroups(mGroupDialogs.ToArray())...)
 	dlgs.Dialogs = dialogs
 
 	mMessages := domain.MInt64B{}
 	for _, v := range dialogs {
 		mMessages[v.TopMessageID] = true
 	}
-	dlgs.Messages = repo.Messages.GetManyMessages(mMessages.ToArray())
+	dlgs.Messages = repo.Messages.GetMany(mMessages.ToArray())
 
 	res.Message, _ = dlgs.Marshal()
 	buff, _ := res.Marshal()

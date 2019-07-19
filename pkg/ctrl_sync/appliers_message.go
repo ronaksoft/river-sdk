@@ -108,7 +108,7 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 
 	mMessages := make(map[int64]*msg.UserMessage)
 	for _, message := range x.Messages {
-		_ = repo.Messages.SaveMessage(message)
+		_ = repo.Messages.Save(message)
 		mMessages[message.ID] = message
 	}
 	for _, dialog := range x.Dialogs {
@@ -119,7 +119,7 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 			)
 			continue
 		}
-		_ = repo.Dialogs.Save(dialog, topMessage.CreatedOn)
+		repo.Dialogs.SaveNew(dialog, topMessage.CreatedOn)
 	}
 	for _, user := range x.Users {
 		repo.Users.Save(user)
@@ -192,9 +192,9 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 
 	// save message
 	dialog := repo.Dialogs.Get(message.PeerID, message.PeerType)
-	err = repo.Messages.SaveNewMessage(message, dialog, ctrl.userID)
+	err = repo.Messages.SaveNew(message, dialog, ctrl.userID)
 	if err != nil {
-		logs.Warn("messageSent()-> SaveMessage() failed to move pendingMessage to message table", zap.Error(err))
+		logs.Warn("messageSent()-> Save() failed to move pendingMessage to message table", zap.Error(err))
 		return
 	}
 
@@ -273,7 +273,7 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 	minID := int64(0)
 	maxID := int64(0)
 	for _, v := range u.Messages {
-		_ = repo.Messages.SaveMessage(v)
+		_ = repo.Messages.Save(v)
 		if v.ID < minID || minID == 0 {
 			minID = v.ID
 		}
@@ -322,5 +322,5 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 	}
 
 	// Update NotifySettings
-	_ = repo.Dialogs.UpdatePeerNotifySettings(u.Group.ID, int32(msg.PeerGroup), u.NotifySettings)
+	_ = repo.Dialogs.UpdateNotifySetting(u.Group.ID, int32(msg.PeerGroup), u.NotifySettings)
 }

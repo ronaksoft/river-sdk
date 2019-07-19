@@ -34,7 +34,7 @@ var RegisterDevice = &ishell.Cmd{
 }
 
 var UpdateUsername = &ishell.Cmd{
-	Name: "UpdateUsername",
+	Name: "UpdateProfile",
 	Func: func(c *ishell.Context) {
 		req := msg.AccountUpdateUsername{}
 		req.Username = fnGetUsername(c)

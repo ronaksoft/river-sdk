@@ -2,40 +2,42 @@ package repo
 
 import (
 	"fmt"
-	"time"
-
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"github.com/dgraph-io/badger"
 	"go.uber.org/zap"
+)
+
+const (
+	prefixUsers = "USERS"
 )
 
 type repoUsers struct {
 	*repository
 }
 
+func (r *repoUsers) getUserKey(userID int64) []byte {
+	return ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixUsers, userID))
+}
+
 func (r *repoUsers) readFromDb(userID int64) *msg.User {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	logs.Debug("Users::Get()",
-		zap.Int64("userID", userID),
-	)
-
-	pbUser := new(msg.User)
-	user := new(dto.Users)
-
-	err := r.db.Find(user, userID).Error
+	user := new(msg.User)
+	err := r.badger.View(func(txn *badger.Txn) error {
+		item, err := txn.Get(r.getUserKey(userID))
+		if err != nil {
+			return err
+		}
+		return item.Value(func(val []byte) error {
+			return user.Unmarshal(val)
+		})
+	})
 	if err != nil {
-		logs.Warn("Users::Get()-> fetch user entity",
-			zap.Error(err),
-		)
 		return nil
 	}
-
-	user.MapToUser(pbUser)
-	return pbUser
+	return user
 }
 
 func (r *repoUsers) readFromCache(userID int64) *msg.User {
@@ -73,68 +75,137 @@ func (r *repoUsers) deleteFromCache(userIDs ...int64) {
 
 }
 
-func (r *repoUsers) Save(user *msg.User) error {
+func (r *repoUsers) Get(userID int64) *msg.User {
+	return r.readFromCache(userID)
+}
+
+func (r *repoUsers) GetMany(userIDs []int64) []*msg.User {
+	return r.readManyFromCache(userIDs)
+}
+
+func (r *repoUsers) GetPhoto(userID, photoID int64) *msg.UserPhoto {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	user := r.Get(userID)
+	return user.Photo
+}
+
+func (r *repoUsers) Save(user *msg.User) {
 	if alreadySaved(fmt.Sprintf("U.%d", user.ID), user) {
-		return nil
+		return
 	}
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
 	if user == nil {
-		logs.Debug("RepoUsers::SaveUser()",
-			zap.String("User", "user is null"),
-		)
-		return domain.ErrNotFound
-	}
-	logs.Debug("RepoUsers::SaveUser()",
-		zap.String("Name", fmt.Sprintf("%s %s", user.FirstName, user.LastName)),
-		zap.Int64("userID", user.ID),
-	)
-
-	// save user Photos
-	if user.Photo != nil {
-
-		dtoPhoto := new(dto.UsersPhoto)
-		r.db.Where(&dto.UsersPhoto{UserID: user.ID, PhotoID: user.Photo.PhotoID}).Find(dtoPhoto)
-		if dtoPhoto.UserID == 0 || dtoPhoto.PhotoID == 0 {
-			dtoPhoto.Map(user.ID, user.Photo)
-			r.db.Create(dtoPhoto)
-		} else {
-			dtoPhoto.Map(user.ID, user.Photo)
-			r.db.Table(dtoPhoto.TableName()).Where("userID=? AND PhotoID=?", user.ID, user.Photo.PhotoID).Update(dtoPhoto)
-		}
+		return
 	}
 
-	u := new(dto.Users)
-	u.MapFromUser(user)
-
-	eu := new(dto.Users)
-	r.db.Find(eu, u.ID)
-	if eu.ID == 0 {
-		return r.db.Create(u).Error
-	}
-
-	// if user not exist just add it no need to update existing user
-	// just update user photo and its last status info
-	if user.Photo != nil {
-		// update user photo info if exist
-		buff, err := user.Photo.Marshal()
-		if err == nil {
-			return r.db.Table(u.TableName()).Where("ID=?", u.ID).Updates(map[string]interface{}{
-				"Photo":      buff,
-				"Status":     int32(user.Status),
-				"StatusTime": time.Now().Unix(),
-			}).Error
-		}
-	} else {
-		return r.db.Table(u.TableName()).Where("ID=?", u.ID).Updates(map[string]interface{}{
-			"Photo":      []byte("[]"),
-			"Status":     int32(user.Status),
-			"StatusTime": time.Now().Unix(),
-		}).Error
-	}
-	return nil
+	userBytes, _ := user.Marshal()
+	_ = r.badger.Update(func(txn *badger.Txn) error {
+		return txn.SetEntry(badger.NewEntry(
+			r.getUserKey(user.ID), userBytes,
+		))
+	})
 }
+
+func (r *repoUsers) SaveMany(users []*msg.User) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	userIDs := domain.MInt64B{}
+	for _, v := range users {
+		if alreadySaved(fmt.Sprintf("U.%d", v.ID), v) {
+			continue
+		}
+		userIDs[v.ID] = true
+	}
+	defer r.deleteFromCache(userIDs.ToArray()...)
+
+	for idx := range users {
+		r.Save(users[idx])
+	}
+
+	return
+}
+
+func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType int32) error {
+	defer r.deleteFromCache(peerID)
+
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	user := r.Get(peerID)
+	if user == nil {
+		return domain.ErrDoesNotExists
+	}
+	user.AccessHash = accessHash
+	return Dialogs.updateAccessHash(accessHash, peerID, peerType)
+}
+
+func (r *repoUsers) GetAccessHash(userID int64) (uint64, error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	user := r.Get(userID)
+	if user == nil {
+		return 0, domain.ErrDoesNotExists
+	}
+	return user.AccessHash, nil
+}
+
+func (r *repoUsers) UpdatePhoto(userPhoto *msg.UpdateUserPhoto) {
+	if alreadySaved(fmt.Sprintf("UPHOTO.%d", userPhoto.UserID), userPhoto) {
+		return
+	}
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	defer r.deleteFromCache(userPhoto.UserID)
+
+	user := r.Get(userPhoto.UserID)
+	if user == nil {
+		return
+	}
+	user.Photo = userPhoto.Photo
+	r.Save(user)
+}
+
+func (r *repoUsers) RemovePhoto(userID int64)  {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+	defer r.deleteFromCache(userID)
+	user := r.Get(userID)
+	if user == nil {
+		return
+	}
+	user.Photo = nil
+	r.Save(user)
+}
+
+func (r *repoUsers) UpdateProfile(userID int64, firstName, lastName, username, bio string) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	user := r.Get(userID)
+	if user == nil {
+		return
+	}
+	defer r.deleteFromCache(userID)
+	user.FirstName = firstName
+	user.LastName = lastName
+	user.Username = username
+	user.Bio = bio
+
+	r.Save(user)
+}
+
+
+
+
+
+// OLD
 
 func (r *repoUsers) SaveContact(user *msg.ContactUser) error {
 	r.mx.Lock()
@@ -278,85 +349,6 @@ func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*
 
 }
 
-func (r *repoUsers) GetAccessHash(userID int64) (uint64, error) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	eu := new(dto.Users)
-	r.db.Find(eu, userID)
-	if eu.ID > 0 {
-		return uint64(eu.AccessHash), nil
-	}
-	return 0, domain.ErrNotFound
-}
-
-func (r *repoUsers) UpdateAccessHash(accessHash int64, peerID int64, peerType int32) error {
-	defer r.deleteFromCache(peerID)
-
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	ed := new(dto.Users)
-	err := r.db.Table(ed.TableName()).Where("ID=? ", peerID).Updates(map[string]interface{}{
-		"AccessHash": int64(accessHash),
-	}).Error
-	return err
-}
-
-func (r *repoUsers) Get(userID int64) *msg.User {
-	return r.readFromCache(userID)
-}
-
-func (r *repoUsers) GetMany(userIDs []int64) []*msg.User {
-	return r.readManyFromCache(userIDs)
-}
-
-func (r *repoUsers) SaveMany(users []*msg.User) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	userIDs := domain.MInt64B{}
-	for _, v := range users {
-		if alreadySaved(fmt.Sprintf("U.%d", v.ID), v) {
-			continue
-		}
-		userIDs[v.ID] = true
-	}
-	defer r.deleteFromCache(userIDs.ToArray()...)
-	mapDTOUsers := make(map[int64]*dto.Users)
-	dtoUsers := make([]dto.Users, 0)
-	err := r.db.Where("ID in (?)", userIDs.ToArray()).Find(&dtoUsers).Error
-	if err != nil {
-		logs.Error("Users::SaveMany()-> fetch groups entity", zap.Error(err))
-		return err
-	}
-	count := len(dtoUsers)
-	for i := 0; i < count; i++ {
-		mapDTOUsers[dtoUsers[i].ID] = &dtoUsers[i]
-	}
-
-	for _, v := range users {
-		if dtoEntity, ok := mapDTOUsers[v.ID]; ok {
-			dtoEntity.MapFromUser(v)
-			err = r.db.Table(dtoEntity.TableName()).Where("ID=?", dtoEntity.ID).Update(dtoEntity).Error
-		} else {
-			dtoEntity := new(dto.Users)
-			dtoEntity.MapFromUser(v)
-			err = r.db.Create(dtoEntity).Error
-		}
-		if err != nil {
-			logs.Error("Users::SaveMany()-> save group entity",
-				zap.Int64("ID", v.ID),
-				zap.String("FirstName", v.FirstName),
-				zap.String("Lastname", v.LastName),
-				zap.String("UserName", v.Username),
-				zap.Error(err))
-			break
-		}
-	}
-	return err
-}
-
 func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) error {
 	defer r.deleteFromCache(userID)
 	r.mx.Lock()
@@ -397,60 +389,6 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 	return pbUsers
 }
 
-func (r *repoUsers) UpdateUserProfile(userID int64, req *msg.AccountUpdateProfile) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-	dtoUser := dto.Users{}
-	defer r.deleteFromCache(userID)
-	// just need to edit existing contacts info
-	return r.db.Table(dtoUser.TableName()).Where("ID=?", userID).Updates(map[string]interface{}{
-		"FirstName": req.FirstName,
-		"LastName":  req.LastName,
-		"Bio":       req.Bio,
-	}).Error
-}
-
-func (r *repoUsers) UpdateUsername(u *msg.UpdateUsername) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	if u == nil {
-		logs.Debug("RepoUsers::SaveContactUser()",
-			zap.String("User", "user is null"),
-		)
-		return domain.ErrNotFound
-	}
-	defer r.deleteFromCache(u.UserID)
-	mdl := dto.Users{}
-
-	return r.db.Table(mdl.TableName()).Where("ID=?", u.UserID).Updates(map[string]interface{}{
-		"FirstName": u.FirstName,
-		"LastName":  u.LastName,
-		"Username":  u.Username,
-		"Bio":       u.Bio,
-	}).Error
-}
-
-func (r *repoUsers) GetPhoto(userID, photoID int64) *dto.UsersPhoto {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	logs.Debug("Users::GetPhoto()",
-		zap.Int64("userID", userID),
-		zap.Int64("PhotoID", photoID),
-	)
-
-	dtoPhoto := dto.UsersPhoto{}
-
-	err := r.db.Where("userID = ? AND PhotoID = ?", userID, photoID).First(&dtoPhoto).Error
-	if err != nil {
-		logs.Warn("Users::GetPhoto()->fetch UserPhoto entity", zap.Error(err))
-		return nil
-	}
-
-	return &dtoPhoto
-}
-
 func (r *repoUsers) UpdateAccountPhotoPath(userID, photoID int64, isBig bool, filePath string) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -467,59 +405,6 @@ func (r *repoUsers) UpdateAccountPhotoPath(userID, photoID int64, isBig bool, fi
 		"SmallFilePath": filePath,
 	}).Error
 
-}
-
-func (r *repoUsers) UpdatePhoto(userPhoto *msg.UpdateUserPhoto) error {
-	if alreadySaved(fmt.Sprintf("UPHOTO.%d", userPhoto.UserID), userPhoto) {
-		return nil
-	}
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	if userPhoto == nil {
-		logs.Debug("RepoUsers::UpdatePhoto()",
-			zap.String("User", "user is null"),
-		)
-		return domain.ErrNotFound
-	}
-	defer r.deleteFromCache(userPhoto.UserID)
-
-	var er error
-	// save user Photos
-	if userPhoto.Photo != nil {
-		dtoPhoto := new(dto.UsersPhoto)
-		r.db.Where(&dto.UsersPhoto{UserID: userPhoto.UserID, PhotoID: userPhoto.Photo.PhotoID}).Find(dtoPhoto)
-		if dtoPhoto.UserID == 0 || dtoPhoto.PhotoID == 0 {
-			dtoPhoto.Map(userPhoto.UserID, userPhoto.Photo)
-			er = r.db.Create(dtoPhoto).Error
-		} else {
-			dtoPhoto.Map(userPhoto.UserID, userPhoto.Photo)
-			er = r.db.Table(dtoPhoto.TableName()).Where("userID=? AND PhotoID=?", userPhoto.UserID, userPhoto.Photo.PhotoID).Update(dtoPhoto).Error
-		}
-	}
-	user := new(dto.Users)
-	r.db.Find(user, userPhoto.UserID)
-	if user.ID != 0 && userPhoto.Photo != nil {
-		// update user photo info if exist
-		buff, err := userPhoto.Photo.Marshal()
-		if err == nil {
-			return r.db.Table(user.TableName()).Where("ID=?", user.ID).Updates(map[string]interface{}{
-				"Photo": buff,
-			}).Error
-		}
-	}
-	return er
-}
-
-func (r *repoUsers) RemovePhoto(userID int64) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-	u := dto.Users{}
-	defer r.deleteFromCache(userID)
-	r.db.Table(u.TableName()).Where("ID=?", userID).Updates(map[string]interface{}{
-		"Photo": []byte(""),
-	})
-	return r.db.Delete(dto.UsersPhoto{}, "userID = ?", userID).Error
 }
 
 func (r *repoUsers) SearchNonContactsWithIDs(ids []int64, searchPhrase string) []*msg.ContactUser {

@@ -29,10 +29,11 @@ require (
 	github.com/nats-io/go-nats v1.7.2
 	github.com/nyaruka/phonenumbers v1.0.36
 	github.com/olekukonko/tablewriter v0.0.1
+	github.com/scylladb/go-set v1.0.2
 	github.com/spf13/viper v1.4.0
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tidwall/btree v0.0.0-20170113224114-9876f1454cf0 // indirect
-	github.com/tidwall/buntdb v1.1.0 // indirect
+	github.com/tidwall/buntdb v1.1.0
 	github.com/tidwall/gjson v1.3.2 // indirect
 	github.com/tidwall/grect v0.0.0-20161006141115-ba9a043346eb // indirect
 	github.com/tidwall/rtree v0.0.0-20180113144539-6cd427091e0e // indirect

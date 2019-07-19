@@ -45,7 +45,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 
 	// Load Messages
-	res.Messages = repo.Messages.GetManyMessages(mMessages.ToArray())
+	res.Messages = repo.Messages.GetMany(mMessages.ToArray())
 
 	// Load Pending messages
 	pendingMessages := repo.PendingMessages.GetManyPendingMessages(mPendingMessage.ToArray())
@@ -375,7 +375,7 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 		msgIDs[v] = true
 	}
 
-	messages := repo.Messages.GetManyMessages(msgIDs.ToArray())
+	messages := repo.Messages.GetMany(msgIDs.ToArray())
 	mUsers := domain.MInt64B{}
 	mUsers[req.Peer.ID] = true
 	for _, m := range messages {
@@ -848,7 +848,7 @@ func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB
 	}
 
 	dialog.NotifySettings = req.Settings
-	err := repo.Dialogs.Save(dialog, 0)
+	err := repo.Dialogs.Save(dialog)
 	if err != nil {
 		logs.Error("River::accountSetNotifySettings()-> SaveDialog()", zap.Error(err))
 		return
@@ -875,7 +875,7 @@ func (r *River) dialogTogglePin(in, out *msg.MessageEnvelope, timeoutCB domain.T
 	}
 
 	dialog.Pinned = req.Pin
-	err := repo.Dialogs.Save(dialog, 0)
+	err := repo.Dialogs.Save(dialog)
 	if err != nil {
 		logs.Error("River::dialogTogglePin()-> SaveDialog()", zap.Error(err))
 		return
@@ -912,10 +912,9 @@ func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB dom
 	r.ConnInfo.Bio = req.Bio
 	r.ConnInfo.Save()
 
-	err := repo.Users.UpdateUserProfile(r.ConnInfo.UserID, req)
-	if err != nil {
-		logs.Error("River::accountUpdateProfile()-> UpdateUserProfile()", zap.Error(err))
-	}
+	repo.Users.UpdateProfile(r.ConnInfo.UserID,
+		req.FirstName, req.LastName, r.ConnInfo.Username, req.Bio,
+	)
 
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)

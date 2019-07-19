@@ -23,14 +23,12 @@ const (
 
 // ExtractActionUserIDs get user ids from  MessageActions
 func ExtractActionUserIDs(act int32, data []byte) []int64 {
-
 	res := make([]int64, 0)
 	switch act {
 	case MessageActionNope:
-		// Do Nothing
+		// TODO:: implement it
 	case MessageActionContactRegistered:
-		//x :=new(msg.MessageActionContactRegistered)
-
+		// TODO:: implement it
 	case MessageActionGroupCreated:
 		x := new(msg.MessageActionGroupCreated)
 		err := x.Unmarshal(data)
@@ -50,9 +48,9 @@ func ExtractActionUserIDs(act int32, data []byte) []int64 {
 			res = append(res, x.UserIDs...)
 		}
 	case MessageActionGroupTitleChanged:
-		// x := new(msg.MessageActionGroupTitleChanged)
+		// TODO:: implement it
 	case MessageActionClearHistory:
-		// x := new(msg.MessageActionClearHistory)
+		// TODO:: implement it
 	}
 
 	return res

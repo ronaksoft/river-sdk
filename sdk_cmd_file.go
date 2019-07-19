@@ -68,7 +68,7 @@ func getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, 
 	return
 }
 func getFilePath(msgID int64) string {
-	m := repo.Messages.GetMessage(msgID)
+	m := repo.Messages.Get(msgID)
 	if m != nil {
 
 		switch m.MediaType {
@@ -112,7 +112,7 @@ func (r *River) FileDownload(msgID int64) {
 		zap.Float64("Progress", progress),
 		zap.String("FilePath", filePath),
 	)
-	m := repo.Messages.GetMessage(msgID)
+	m := repo.Messages.Get(msgID)
 	if m == nil {
 		logs.Warn("SDK::FileDownload()", zap.Int64("Message does not exist", msgID))
 		return
@@ -138,7 +138,7 @@ func (r *River) FileDownload(msgID int64) {
 	if err == nil && fs != nil {
 
 	} else {
-		m := repo.Messages.GetMessage(msgID)
+		m := repo.Messages.Get(msgID)
 		r.fileCtrl.Download(m)
 	}
 }
@@ -558,7 +558,7 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 		}
 	}
 
-	m := repo.Messages.GetMessage(msgID)
+	m := repo.Messages.Get(msgID)
 	if m == nil {
 		logs.Error("SDK::FileDownloadThumbnail() message does not exist")
 		return ""

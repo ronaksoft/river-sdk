@@ -118,7 +118,7 @@ func repoSetDB(dialect, dbPath string) error {
 		return repoLastError
 	}
 	_ = r.bunt.Update(func(tx *buntdb.Tx) error {
-		return tx.CreateIndex(prefixDialogs, fmt.Sprintf("%s.*", prefixDialogs), buntdb.IndexBinary)
+		return tx.CreateIndex(indexDialogs, fmt.Sprintf("%s.*", prefixDialogs), buntdb.IndexBinary)
 	})
 
 	return r.initDB()

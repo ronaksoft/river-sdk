@@ -8,6 +8,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
+	"github.com/scylladb/go-set/i64set"
 	"github.com/tidwall/buntdb"
 	"go.uber.org/zap"
 	"sort"
@@ -58,7 +59,33 @@ func (r *repoMessages) getUserMessage(msgID int64) (*msg.UserMessage, error) {
 	return message, nil
 }
 
-func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dialog, userID int64) error {
+func (r *repoMessages) Get(messageID int64) *msg.UserMessage {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	userMessage, err := r.getUserMessage(messageID)
+	if err != nil {
+		return nil
+	}
+	return userMessage
+}
+
+func (r *repoMessages) GetMany(messageIDs []int64) []*msg.UserMessage {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	userMessages := make([]*msg.UserMessage, 0, len(messageIDs))
+	for _, messageID := range messageIDs {
+		userMessage, err := r.getUserMessage(messageID)
+		if err == nil {
+			userMessages = append(userMessages, userMessage)
+		}
+
+	}
+	return userMessages
+}
+
+func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, userID int64) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -91,7 +118,7 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 		}
 
 		// 3. Read Dialog
-		dialogKey := Dialogs.getKey(message.PeerID, message.PeerType)
+		dialogKey := Dialogs.getDialogKey(message.PeerID, message.PeerType)
 		item, err := txn.Get(dialogKey)
 		if err != nil {
 			return err
@@ -103,15 +130,7 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 			if message.ID > dialog.TopMessageID {
 				dialog.TopMessageID = message.ID
 				if !dialog.Pinned {
-					// update the list order
-					err = r.bunt.Update(func(tx *buntdb.Tx) error {
-						_, _, err := tx.Set(
-							ronak.ByteToStr(Dialogs.getKey(message.PeerID, message.PeerType)),
-							fmt.Sprintf("%021d", message.CreatedOn),
-							nil,
-						)
-						return err
-					})
+					err = Dialogs.updateLastUpdate(message.PeerID, message.PeerType, message.CreatedOn)
 					if err != nil {
 						return err
 					}
@@ -125,17 +144,14 @@ func (r *repoMessages) SaveNewMessage(message *msg.UserMessage, dialog *msg.Dial
 						}
 					}
 				}
-
-				dialogBytes, _ := dialog.Marshal()
-				return txn.SetEntry(badger.NewEntry(dialogKey, dialogBytes))
+				return Dialogs.Save(dialog)
 			}
-
 			return nil
 		})
 	})
 }
 
-func (r *repoMessages) SaveMessage(message *msg.UserMessage) error {
+func (r *repoMessages) Save(message *msg.UserMessage) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -166,20 +182,189 @@ func (r *repoMessages) SaveMessage(message *msg.UserMessage) error {
 	})
 }
 
-func (r *repoMessages) GetManyMessages(messageIDs []int64) []*msg.UserMessage {
+func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, maxID int64, limit int32) (userMessages []*msg.UserMessage, users []*msg.User) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	userMessages := make([]*msg.UserMessage, 0, len(messageIDs))
-	for _, messageID := range messageIDs {
-		userMessage, err := r.getUserMessage(messageID)
-		if err == nil {
-			userMessages = append(userMessages, userMessage)
-		}
+	userMessages = make([]*msg.UserMessage, 0, limit)
+	userIDs := i64set.New()
+	switch {
+	case maxID == 0 && minID == 0:
+		maxID = Dialogs.Get(peerID, peerType).TopMessageID
+		fallthrough
+	case maxID != 0 && minID == 0:
+		_ = r.badger.View(func(txn *badger.Txn) error {
+			opts := badger.DefaultIteratorOptions
+			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%d.%d.", prefixMessages, peerID, peerType))
+			opts.Reverse = true
+			it := txn.NewIterator(opts)
+			for it.Seek(r.getMessageKey(peerID, peerType, maxID)); it.Valid(); it.Next() {
+				if limit--; limit < 0 {
+					break
+				}
+				_ = it.Item().Value(func(val []byte) error {
+					userMessage := new(msg.UserMessage)
+					err := userMessage.Unmarshal(val)
+					if err != nil {
+						return err
+					}
+					userIDs.Add(userMessage.SenderID)
+					if userMessage.FwdSenderID != 0 {
+						userIDs.Add(userMessage.FwdSenderID)
+					}
+					userIDs.Add(domain.ExtractActionUserIDs(userMessage.MessageAction, userMessage.MessageActionData)...)
+					userMessages = append(userMessages, userMessage)
+					return nil
+				})
+			}
+			return nil
+		})
+	case maxID == 0 && minID != 0:
+		_ = r.badger.View(func(txn *badger.Txn) error {
+			opts := badger.DefaultIteratorOptions
+			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%d.%d.", prefixMessages, peerID, peerType))
+			opts.Reverse = false
+			it := txn.NewIterator(opts)
+			for it.Seek(r.getMessageKey(peerID, peerType, minID)); it.Valid(); it.Next() {
+				if limit--; limit < 0 {
+					break
+				}
+				_ = it.Item().Value(func(val []byte) error {
+					userMessage := new(msg.UserMessage)
+					err := userMessage.Unmarshal(val)
+					if err != nil {
+						return err
+					}
+					userIDs.Add(userMessage.SenderID)
+					if userMessage.FwdSenderID != 0 {
+						userIDs.Add(userMessage.FwdSenderID)
+					}
+					userIDs.Add(domain.ExtractActionUserIDs(userMessage.MessageAction, userMessage.MessageActionData)...)
+					userMessages = append(userMessages, userMessage)
+					return nil
+				})
+			}
+			sort.Slice(userMessages, func(i, j int) bool {
+				return userMessages[i].ID > userMessages[j].ID
+			})
+			return nil
+		})
+	default:
+		_ = r.badger.View(func(txn *badger.Txn) error {
+			opts := badger.DefaultIteratorOptions
+			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%d.%d.", prefixMessages, peerID, peerType))
+			opts.Reverse = true
+			it := txn.NewIterator(opts)
+			for it.Seek(r.getMessageKey(peerID, peerType, maxID)); it.Valid(); it.Next() {
+				if limit--; limit < 0 {
+					break
+				}
+
+				userMessage := new(msg.UserMessage)
+				_ = it.Item().Value(func(val []byte) error {
+					err := userMessage.Unmarshal(val)
+					if err != nil {
+						return err
+					}
+					userIDs.Add(userMessage.SenderID)
+					if userMessage.FwdSenderID != 0 {
+						userIDs.Add(userMessage.FwdSenderID)
+					}
+					userIDs.Add(domain.ExtractActionUserIDs(userMessage.MessageAction, userMessage.MessageActionData)...)
+					userMessages = append(userMessages, userMessage)
+					return nil
+				})
+				if userMessage.ID <= minID {
+					break
+				}
+			}
+			return nil
+		})
 
 	}
-	return userMessages
+
+	users = Users.GetMany(userIDs.List())
+	return
 }
+
+func (r *repoMessages) DeleteDialogMessage(peerID int64, peerType int32, msgID int64) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	// 1. Delete the Message
+	err := r.badger.Update(func(txn *badger.Txn) error {
+		// delete from messages
+		err := txn.Delete(r.getMessageKey(peerID, peerType, msgID))
+		if err != nil {
+			return err
+		}
+		// delete from user messages
+		return txn.Delete(r.getUserMessageKey(msgID))
+	})
+	if err != nil {
+		return err
+ 	}
+
+	// 2. Update the Dialog if necessary
+	dialog := Dialogs.Get(peerID, peerType)
+	if dialog == nil {
+		return nil
+	}
+	if dialog.TopMessageID == msgID {
+		Dialogs.updateTopMessageID(peerID, peerType)
+	}
+	return err
+}
+
+func (r *repoMessages) SetContentRead(peerID int64, peerType int32, messageIDs []int64) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	for _, msgID := range messageIDs {
+		err := r.badger.Update(func(txn *badger.Txn) error {
+			userMessage, err := r.getUserMessage(msgID)
+			if err != nil {
+				return err
+			}
+			userMessage.ContentRead = true
+			return r.Save(userMessage)
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	topMessageID := int64(0)
+	err := r.badger.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%d.%d.", prefixMessages, peerID, peerType))
+		opts.Reverse = true
+		it := txn.NewIterator(opts)
+		it.Seek(Messages.getMessageKey(peerID, peerType, 2<<31))
+		if it.Valid() {
+			userMessage := new(msg.UserMessage)
+			_ = it.Item().Value(func(val []byte) error {
+				return userMessage.Unmarshal(val)
+			})
+			topMessageID = userMessage.ID
+		}
+		it.Close()
+		return nil
+	})
+	return topMessageID, err
+}
+
+
+
+
+
+
 
 func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User) {
 	r.mx.Lock()
@@ -255,214 +440,6 @@ func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerTy
 	return
 }
 
-func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	userMessages := make([]*msg.UserMessage, 0, limit)
-	switch {
-	case maxID == 0 && minID == 0:
-		maxID = Dialogs.Get(peerID, peerType).TopMessageID
-		fallthrough
-	case maxID != 0 && minID == 0:
-		_ = r.badger.View(func(txn *badger.Txn) error {
-			opts := badger.DefaultIteratorOptions
-			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%d.%d.", prefixMessages, peerID, peerType))
-			opts.Reverse = true
-			it := txn.NewIterator(opts)
-			for it.Seek(r.getMessageKey(peerID, peerType, maxID)); it.Valid(); it.Next() {
-				if limit--; limit < 0 {
-					break
-				}
-
-				_ = it.Item().Value(func(val []byte) error {
-					userMessage := new(msg.UserMessage)
-					err := userMessage.Unmarshal(val)
-					if err != nil {
-						return err
-					}
-					userMessages = append(userMessages, userMessage)
-					return nil
-				})
-			}
-			return nil
-		})
-	case maxID == 0 && minID != 0:
-		_ = r.badger.View(func(txn *badger.Txn) error {
-			opts := badger.DefaultIteratorOptions
-			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%d.%d.", prefixMessages, peerID, peerType))
-			opts.Reverse = false
-			it := txn.NewIterator(opts)
-			for it.Seek(r.getMessageKey(peerID, peerType, minID)); it.Valid(); it.Next() {
-				if limit--; limit < 0 {
-					break
-				}
-				_ = it.Item().Value(func(val []byte) error {
-					userMessage := new(msg.UserMessage)
-					err := userMessage.Unmarshal(val)
-					if err != nil {
-						return err
-					}
-					userMessages = append(userMessages, userMessage)
-					return nil
-				})
-			}
-			sort.Slice(userMessages, func(i, j int) bool {
-				return userMessages[i].ID > userMessages[j].ID
-			})
-			return nil
-		})
-	default:
-		_ = r.badger.View(func(txn *badger.Txn) error {
-			opts := badger.DefaultIteratorOptions
-			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%d.%d.", prefixMessages, peerID, peerType))
-			opts.Reverse = true
-			it := txn.NewIterator(opts)
-			for it.Seek(r.getMessageKey(peerID, peerType, maxID)); it.Valid(); it.Next() {
-				if limit--; limit < 0 {
-					break
-				}
-
-				userMessage := new(msg.UserMessage)
-				_ = it.Item().Value(func(val []byte) error {
-					err := userMessage.Unmarshal(val)
-					if err != nil {
-						return err
-					}
-					userMessages = append(userMessages, userMessage)
-					return nil
-				})
-				if userMessage.ID <= minID {
-					break
-				}
-			}
-			return nil
-		})
-
-	}
-
-
-
-	userIDs := domain.MInt64B{}
-	for _, v := range dtoResult {
-		tmp := new(msg.UserMessage)
-		v.MapTo(tmp)
-		protoMsgs = append(protoMsgs, tmp)
-		userIDs[v.SenderID] = true
-		userIDs[v.FwdSenderID] = true
-		// load MessageActionData users
-		actionUserIds := domain.ExtractActionUserIDs(v.MessageAction, v.MessageActionData)
-		for _, id := range actionUserIds {
-			userIDs[id] = true
-		}
-	}
-
-	// Get users <rewrite it here to remove coupling>
-	users := make([]dto.Users, 0, len(userIDs))
-
-	err = r.db.Where("ID in (?)", userIDs.ToArray()).Find(&users).Error
-	if err != nil {
-		logs.Warn("Repo::GetMessageHistory()-> fetch users", zap.Error(err))
-		return
-	}
-
-	for _, v := range users {
-		tmp := new(msg.User)
-		v.MapToUser(tmp)
-		protoUsers = append(protoUsers, tmp)
-
-	}
-	return
-}
-
-func (r *repoMessages) GetUnreadMessageCount(peerID int64, peerType int32, userID, maxID int64) int32 {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	count := int32(0)
-	_ = r.badger.View(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%d.%d.", prefixMessages, peerID, peerType))
-		opts.Reverse = false
-		it := txn.NewIterator(opts)
-		for it.Seek(r.getMessageKey(peerID, peerType, maxID)); it.Valid(); it.Next() {
-
-			_ = it.Item().Value(func(val []byte) error {
-				userMessage := new(msg.UserMessage)
-				err := userMessage.Unmarshal(val)
-				if err != nil {
-					return err
-				}
-				if userMessage.SenderID != userID {
-					count++
-				}
-				return nil
-			})
-		}
-		return nil
-	})
-	return count
-}
-
-func (r *repoMessages) DeleteDialogMessage(peerID int64, peerType int32, msgID int64) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	err := r.badger.Update(func(txn *badger.Txn) error {
-		err := txn.Delete(r.getMessageKey(peerID, peerType, msgID))
-		if err != nil {
-			return err
-		}
-		return txn.Delete(r.getUserMessageKey(msgID))
-	})
-	if err != nil {
-		return err
- 	}
-
-	err = r.badger.Update(func(txn *badger.Txn) error {
-		dialog := Dialogs.Get(peerID, peerType)
-		if dialog == nil {
-			return nil
-		}
-		if dialog.TopMessageID == msgID {
-
-		}
-
-	})
-	return err
-}
-
-func (r *repoMessages) DeleteMany(IDs []int64) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	// Get dialogs that their top message is going to be removed
-	dtoDialogs := make([]dto.Dialogs, 0)
-	err := r.db.Where("TopMessageID in (?)", IDs).Find(&dtoDialogs).Error
-	if err != nil {
-		logs.Warn("Messages::DeleteMany() fetch dialogs", zap.Error(err))
-	}
-
-	// remove message
-	err = r.db.Where("ID IN (?)", IDs).Delete(dto.Messages{}).Error
-	if err != nil {
-		logs.Warn("Messages::DeleteMany() delete from Messages", zap.Error(err))
-	}
-
-	// fetch last message and set it as dialog top message
-	for _, d := range dtoDialogs {
-		dtoMsg := dto.Messages{}
-		err := r.db.Table(dtoMsg.TableName()).Where("PeerID =? AND PeerType= ?", d.PeerID, d.PeerType).Last(&dtoMsg).Error
-		if err == nil && dtoMsg.ID != 0 {
-			d.TopMessageID = dtoMsg.ID
-			d.LastUpdate = dtoMsg.CreatedOn
-			r.db.Save(d)
-		}
-	}
-
-	return err
-}
-
 func (r *repoMessages) DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.ClientUpdateMessagesDeleted, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -528,57 +505,6 @@ func (r *repoMessages) DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.Clie
 	}
 
 	return res, err
-}
-
-func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, error) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	dtoMsg := dto.Messages{}
-	err := r.db.Table(dtoMsg.TableName()).Where("PeerID =? AND PeerType= ?", peerID, peerType).Last(&dtoMsg).Error
-	if err != nil {
-		logs.Warn("Repo::GetTopMessageID()-> fetch message", zap.Error(err))
-		return -1, err
-	}
-	return dtoMsg.ID, nil
-}
-
-func (r *repoMessages) GetMessage(messageID int64) *msg.UserMessage {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	message := new(msg.UserMessage)
-	dtoMsg := new(dto.Messages)
-	err := r.db.Where("ID = ?", messageID).Find(&dtoMsg).Error
-	if err != nil {
-		logs.Warn("Repo::GetMessage()-> fetch messages", zap.Error(err))
-		return nil
-	}
-
-	dtoMsg.MapTo(message)
-
-	return message
-}
-
-func (r *repoMessages) SetContentRead(messageIDs []int64) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	mdl := dto.Messages{}
-	return r.db.Table(mdl.TableName()).Where("ID in (?)", messageIDs).Updates(map[string]interface{}{
-		"ContentRead": true,
-	}).Error
-}
-
-func (r *repoMessages) GetDialogMessageCount(peerID int64, peerType int32) int32 {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	count := int32(0)
-	mdl := &dto.Messages{}
-	r.db.Table(mdl.TableName()).Where("PeerID =? AND PeerType= ?", peerID, peerType).Count(&count)
-
-	return count
 }
 
 func (r *repoMessages) SearchText(text string) []*msg.UserMessage {

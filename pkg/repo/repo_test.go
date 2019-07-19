@@ -35,7 +35,7 @@ func BenchmarkInsertORM(b *testing.B) {
 		m.CreatedOn = time.Now().Unix()
 		m.Body = fmt.Sprintf("Test %v", i)
 		m.SenderID = 987654321
-		Messages.SaveMessage(m)
+		Messages.Save(m)
 	}
 
 }

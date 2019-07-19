@@ -42,7 +42,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 			MentionedCount: 0,
 			AccessHash:   x.AccessHash,
 		}
-		err := repo.Dialogs.Save(dialog, x.Message.CreatedOn)
+		err := repo.Dialogs.SaveNew(dialog, x.Message.CreatedOn)
 		if err != nil {
 			logs.Error("updateNewMessage() -> onSuccessCallback() -> SaveDialog() ",
 				zap.String("Error", err.Error()),
@@ -55,25 +55,21 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		}
 	}
 	// save user if does not exist
-	_ = repo.Users.Save(x.Sender)
+	repo.Users.Save(x.Sender)
 
 
-	err = repo.Messages.SaveNewMessage(x.Message, dialog, ctrl.connInfo.PickupUserID())
+	err = repo.Messages.SaveNew(x.Message, dialog, ctrl.connInfo.PickupUserID())
 	if err != nil {
-		logs.Warn("updateNewMessage()-> SaveNewMessage()", zap.Error(err))
+		logs.Warn("updateNewMessage()-> SaveNew()", zap.Error(err))
 	}
 	messageHole.SetUpperFilled(x.Message.PeerID, x.Message.PeerType, x.Message.ID)
 
 	// bug : sometime server do not sends access hash
 	if x.AccessHash > 0 {
 		// update users access hash
-		err := repo.Users.UpdateAccessHash(int64(x.AccessHash), x.Message.PeerID, x.Message.PeerType)
+		err := repo.Users.UpdateAccessHash(x.AccessHash, x.Message.PeerID, x.Message.PeerType)
 		if err != nil {
-			logs.Error("updateNewMessage() -> Users.UpdateAccessHash()", zap.Error(err))
-		}
-		err = repo.Dialogs.UpdateAccessHash(int64(x.AccessHash), x.Message.PeerID, x.Message.PeerType)
-		if err != nil {
-			logs.Error("updateNewMessage() -> Dialogs.UpdateAccessHash()", zap.Error(err))
+			logs.Error("updateNewMessage() -> Users.updateAccessHash()", zap.Error(err))
 		}
 	}
 	res := make([]*msg.UpdateEnvelope, 0)
@@ -241,9 +237,9 @@ func (ctrl *Controller) updateMessageEdited(u *msg.UpdateEnvelope) []*msg.Update
 	logs.Info("SyncController::updateMessageEdited",
 		zap.Int64("MessageID", x.Message.ID),
 	)
-	err := repo.Messages.SaveMessage(x.Message)
+	err := repo.Messages.Save(x.Message)
 	if err != nil {
-		logs.Error("updateMessageEdited() -> SaveMessage()", zap.Error(err))
+		logs.Error("updateMessageEdited() -> Save()", zap.Error(err))
 	}
 	res := []*msg.UpdateEnvelope{u}
 	return res
@@ -285,7 +281,7 @@ func (ctrl *Controller) updateNotifySettings(u *msg.UpdateEnvelope) []*msg.Updat
 	x := new(msg.UpdateNotifySettings)
 	x.Unmarshal(u.Update)
 
-	err := repo.Dialogs.UpdateNotifySetting(x)
+	err := repo.Dialogs.UpdateNotifySetting(x.NotifyPeer.ID, x.NotifyPeer.Type, x.Settings)
 	if err != nil {
 		logs.Error("updateNotifySettings() -> Dialogs.UpdateNotifySettings()", zap.Error(err))
 	}
@@ -322,10 +318,7 @@ func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) []*msg.UpdateEnvel
 		ctrl.connInfo.Save()
 	}
 
-	err := repo.Users.UpdateUsername(x)
-	if err != nil {
-		logs.Error("updateUsername() error save to DB", zap.Error(err))
-	}
+	repo.Users.UpdateProfile(x)
 
 	res := []*msg.UpdateEnvelope{u}
 	return res
@@ -381,6 +374,7 @@ func (ctrl *Controller) updateReadMessagesContents(u *msg.UpdateEnvelope) []*msg
 	logs.Info("SyncController::updateReadMessagesContents",
 		zap.Int64s("MessageIDs", x.MessageIDs),
 	)
+
 
 	err := repo.Messages.SetContentRead(x.MessageIDs)
 	if err != nil {

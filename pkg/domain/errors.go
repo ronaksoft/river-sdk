@@ -18,6 +18,7 @@ var (
 	ErrDoesNotExists       = errors.New("does not exists")
 	ErrQueuePathIsNotSet   = errors.New("queue path is not set")
 	ErrInvalidUserMessageKey = errors.New("invalid user message key")
+	ErrNilDialog = errors.New("nil dialog")
 )
 
 // ParseServerError ...
