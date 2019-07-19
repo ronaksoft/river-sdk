@@ -1,12 +1,15 @@
 package repo
 
 import (
+	"fmt"
 	"github.com/allegro/bigcache"
+	"github.com/tidwall/buntdb"
 	"sync"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
+	"github.com/dgraph-io/badger"
 	"github.com/jinzhu/gorm"
 	"go.uber.org/zap"
 
@@ -38,8 +41,10 @@ type Context struct {
 }
 
 type repository struct {
-	db *gorm.DB
-	mx sync.Mutex
+	db     *gorm.DB
+	badger *badger.DB
+	bunt   *buntdb.DB
+	mx     sync.Mutex
 }
 
 // create tables
@@ -48,7 +53,6 @@ func (r *repository) initDB() error {
 	// and WON’T change existing column’s type or delete unused columns to protect your data.
 	repoLastError = r.db.AutoMigrate(
 		dto.Dialogs{},
-		dto.Messages{},
 		dto.MessagesPending{},
 		dto.MessagesExtra{},
 		dto.System{},
@@ -99,6 +103,23 @@ func repoSetDB(dialect, dbPath string) error {
 		)
 		return repoLastError
 	}
+	r.badger, repoLastError = badger.Open(badger.DefaultOptions(dbPath).WithLogger(nil))
+	if repoLastError != nil {
+		logs.Debug("Context::repoSetDB()->badger Open()",
+			zap.String("Error", repoLastError.Error()),
+		)
+		return repoLastError
+	}
+	r.bunt, repoLastError = buntdb.Open(dbPath)
+	if repoLastError != nil {
+		logs.Debug("Context::repoSetDB()->bunt Open()",
+			zap.String("Error", repoLastError.Error()),
+		)
+		return repoLastError
+	}
+	_ = r.bunt.Update(func(tx *buntdb.Tx) error {
+		return tx.CreateIndex(prefixDialogs, fmt.Sprintf("%s.*", prefixDialogs), buntdb.IndexBinary)
+	})
 
 	return r.initDB()
 }
@@ -146,6 +167,8 @@ func ReInitiateDatabase() error {
 func Close() error {
 	logs.Debug("Repo Stopping")
 
+	_ = r.bunt.Close()
+	_ = r.badger.Close()
 	repoLastError = r.db.Close()
 	r = nil
 	ctx = nil

@@ -2,36 +2,27 @@ package repo
 
 import (
 	"errors"
+	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"github.com/dgraph-io/badger"
+	"github.com/gobwas/pool/pbytes"
 	"go.uber.org/zap"
+)
+
+const (
+	prefixDialogs       = "DLG"
 )
 
 type repoDialogs struct {
 	*repository
 }
 
-func (r *repoDialogs) UpdateTopMessageID(createdOn, peerID int64, peerType int32) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	em := dto.Messages{}
-	err := r.db.Table(em.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerType).Limit(1).Order("ID DESC").Find(&em).Error
-	if err != nil {
-		logs.Error("Dialogs::UpdateTopMessageID() TopMessage", zap.Error(err))
-		return err
-	}
-
-	topMessageID := em.ID
-	ed := new(dto.Dialogs)
-	err = r.db.Table(ed.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerType).Updates(map[string]interface{}{
-		"TopMessageID": topMessageID,
-		"LastUpdate":   createdOn,
-	}).Error
-
-	return err
+func (r *repoDialogs) getKey(peerID int64, peerType int32) []byte {
+	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%d", prefixDialogs, peerID, peerType))
 }
 
 func (r *repoDialogs) Save(dialog *msg.Dialog, lastUpdate int64) error {

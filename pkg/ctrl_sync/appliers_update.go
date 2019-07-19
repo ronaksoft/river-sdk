@@ -39,6 +39,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 			PeerType:     x.Message.PeerType,
 			TopMessageID: x.Message.ID,
 			UnreadCount:  0,
+			MentionedCount: 0,
 			AccessHash:   x.AccessHash,
 		}
 		err := repo.Dialogs.Save(dialog, x.Message.CreatedOn)
@@ -56,19 +57,11 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	// save user if does not exist
 	_ = repo.Users.Save(x.Sender)
 
-	// if the sender is not myself increase dialog counter else just save message
-	if x.Message.SenderID != ctrl.userID {
-		err := repo.Messages.SaveNewMessage(x.Message, dialog, ctrl.connInfo.PickupUserID())
-		if err != nil {
-			logs.Warn("updateNewMessage()-> SaveNewMessage()", zap.Error(err))
-		}
-	} else {
-		err := repo.Messages.SaveSelfMessage(x.Message, dialog)
-		if err != nil {
-			logs.Error("updateNewMessage()-> SaveSelfMessage()", zap.Error(err))
-		}
-	}
 
+	err = repo.Messages.SaveNewMessage(x.Message, dialog, ctrl.connInfo.PickupUserID())
+	if err != nil {
+		logs.Warn("updateNewMessage()-> SaveNewMessage()", zap.Error(err))
+	}
 	messageHole.SetUpperFilled(x.Message.PeerID, x.Message.PeerType, x.Message.ID)
 
 	// bug : sometime server do not sends access hash
@@ -278,7 +271,7 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 	sent.RandomID = x.RandomID
 	sent.CreatedOn = time.Now().Unix()
 
-	// used message randomID as requestID of pending message se we can retrive it here
+	// used message randomID as requestID of pending message se we can retrieve it here
 	msgEnvelop.RequestID = uint64(x.RandomID)
 	msgEnvelop.Message, _ = sent.Marshal()
 	ctrl.messageSent(msgEnvelop)

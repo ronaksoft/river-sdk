@@ -9,6 +9,7 @@ require (
 	github.com/c2fo/testify v0.0.0-20150827203832-fba96363964a // indirect
 	github.com/chzyer/logex v1.1.10 // indirect
 	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect
+	github.com/dgraph-io/badger v1.6.0
 	github.com/doug-martin/goqu v5.0.0+incompatible
 	github.com/fatih/color v1.7.0
 	github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
@@ -30,6 +31,12 @@ require (
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/spf13/viper v1.4.0
 	github.com/syndtr/goleveldb v1.0.0 // indirect
+	github.com/tidwall/btree v0.0.0-20170113224114-9876f1454cf0 // indirect
+	github.com/tidwall/buntdb v1.1.0 // indirect
+	github.com/tidwall/gjson v1.3.2 // indirect
+	github.com/tidwall/grect v0.0.0-20161006141115-ba9a043346eb // indirect
+	github.com/tidwall/rtree v0.0.0-20180113144539-6cd427091e0e // indirect
+	github.com/tidwall/tinyqueue v0.0.0-20180302190814-1e39f5511563 // indirect
 	go.uber.org/zap v1.10.0
 	google.golang.org/grpc v1.21.0
 	gopkg.in/abiosoft/ishell.v2 v2.0.0

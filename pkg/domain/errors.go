@@ -17,6 +17,7 @@ var (
 	ErrNotFound            = errors.New("not found")
 	ErrDoesNotExists       = errors.New("does not exists")
 	ErrQueuePathIsNotSet   = errors.New("queue path is not set")
+	ErrInvalidUserMessageKey = errors.New("invalid user message key")
 )
 
 // ParseServerError ...

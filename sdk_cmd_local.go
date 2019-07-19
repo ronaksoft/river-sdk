@@ -355,9 +355,8 @@ func (r *River) messagesDelete(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	}
 
 	// remove message
-	err := repo.Messages.DeleteMany(req.MessageIDs)
-	if err != nil {
-		logs.Error("River::messagesDelete()-> DeleteMany()", zap.Error(err))
+	for _, msgID := range req.MessageIDs {
+		_ = repo.Messages.DeleteDialogMessage(req.Peer.ID, int32(req.Peer.Type), msgID)
 	}
 
 	// send the request to server

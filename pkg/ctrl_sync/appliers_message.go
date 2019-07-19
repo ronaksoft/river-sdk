@@ -191,7 +191,8 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 	message.CreatedOn = sent.CreatedOn
 
 	// save message
-	err = repo.Messages.SaveMessage(message)
+	dialog := repo.Dialogs.Get(message.PeerID, message.PeerType)
+	err = repo.Messages.SaveNewMessage(message, dialog, ctrl.userID)
 	if err != nil {
 		logs.Warn("messageSent()-> SaveMessage() failed to move pendingMessage to message table", zap.Error(err))
 		return
@@ -201,12 +202,6 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 	err = repo.PendingMessages.DeletePendingMessage(pmsg.ID)
 	if err != nil {
 		logs.Warn("messageSent()-> DeletePendingMessage() failed to delete pendingMessage", zap.Error(err))
-	}
-
-	// Update dialogs
-	err = repo.Dialogs.UpdateTopMessageID(message.CreatedOn, message.PeerID, message.PeerType)
-	if err != nil {
-		logs.Warn("messageSent()-> UpdateTopMessageID() failed to update dialogs", zap.Error(err))
 	}
 
 	// TODO : Notify UI that the pending message delivered to server
