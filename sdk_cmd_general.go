@@ -232,11 +232,8 @@ func (r *River) UpdateContactInfo(userID int64, firstName, lastName string) erro
 	defer func() {
 		mon.FunctionResponseTime("UpdateContactInfo", time.Now().Sub(startTime))
 	}()
-	err := repo.Users.UpdateContactInfo(userID, firstName, lastName)
-	if err != nil {
-		logs.Error("SDK::UpdateContactInfo() => Users.UpdateContactInfo()", zap.Error(err))
-	}
-	return err
+	repo.Users.UpdateContactInfo(userID, firstName, lastName)
+	return nil
 }
 
 // SearchDialogs search dialog title

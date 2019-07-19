@@ -13,6 +13,7 @@ import (
 
 const (
 	prefixUsers = "USERS"
+	prefixContacts = "CONTACTS"
 )
 
 type repoUsers struct {
@@ -21,6 +22,10 @@ type repoUsers struct {
 
 func (r *repoUsers) getUserKey(userID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixUsers, userID))
+}
+
+func (r *repoUsers) getContactKey(userID int64) []byte {
+	return ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixContacts, userID))
 }
 
 func (r *repoUsers) readFromDb(userID int64) *msg.User {
@@ -83,6 +88,74 @@ func (r *repoUsers) GetMany(userIDs []int64) []*msg.User {
 	return r.readManyFromCache(userIDs)
 }
 
+func (r *repoUsers) GetContact(userID int64) *msg.ContactUser {
+	contactUser := new(msg.ContactUser)
+	err := r.badger.View(func(txn *badger.Txn) error {
+		item, err := txn.Get(r.getContactKey(userID))
+		if err != nil {
+			return err
+		}
+		return item.Value(func(val []byte) error {
+			return contactUser.Unmarshal(val)
+		})
+	})
+	if err != nil {
+		return nil
+	}
+	return contactUser
+}
+
+func (r *repoUsers) GetManyContactUsers(userIDs []int64) []*msg.ContactUser {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	contactUsers := make([]*msg.ContactUser,0 ,len(userIDs))
+	for _, userID := range userIDs {
+		contactUsers = append(contactUsers, r.GetContact(userID))
+	}
+
+	return contactUsers
+}
+
+func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	logs.Debug("Users::GetContacts()")
+
+	contactUsers := make([]*msg.ContactUser, 0, 100)
+	phoneContacts := make([]*msg.PhoneContact, 0, 100)
+
+	_ = r.badger.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%d", prefixContacts))
+		opts.Reverse = true
+		it := txn.NewIterator(opts)
+		for it.Seek(r.getContactKey(0)); it.Valid(); it.Next() {
+			contactUser := new(msg.ContactUser)
+			phoneContact := new(msg.PhoneContact)
+			_ = it.Item().Value(func(val []byte) error {
+				err := contactUser.Unmarshal(val)
+				if err != nil {
+					return err
+				}
+				return nil
+			})
+			contactUsers = append(contactUsers, contactUser)
+			phoneContact.FirstName = contactUser.FirstName
+			phoneContact.LastName = contactUser.LastName
+			phoneContact.Phone = contactUser.Phone
+			phoneContact.ClientID = contactUser.ClientID
+			phoneContacts = append(phoneContacts, phoneContact)
+		}
+		it.Close()
+		return nil
+	})
+
+	return contactUsers, phoneContacts
+
+}
+
 func (r *repoUsers) GetPhoto(userID, photoID int64) *msg.UserPhoto {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -130,6 +203,22 @@ func (r *repoUsers) SaveMany(users []*msg.User) {
 	return
 }
 
+func (r *repoUsers) SaveContact(contactUser *msg.ContactUser)  {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	if contactUser == nil {
+		return
+	}
+
+	userBytes, _ := contactUser.Marshal()
+	_ = r.badger.Update(func(txn *badger.Txn) error {
+		return txn.SetEntry(badger.NewEntry(
+			r.getContactKey(contactUser.ID), userBytes,
+		))
+	})
+}
+
 func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType int32) error {
 	defer r.deleteFromCache(peerID)
 
@@ -161,7 +250,6 @@ func (r *repoUsers) UpdatePhoto(userPhoto *msg.UpdateUserPhoto) {
 	}
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
 	defer r.deleteFromCache(userPhoto.UserID)
 
 	user := r.Get(userPhoto.UserID)
@@ -201,125 +289,25 @@ func (r *repoUsers) UpdateProfile(userID int64, firstName, lastName, username, b
 	r.Save(user)
 }
 
+func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	defer r.deleteFromCache(userID)
+
+	contact := r.GetContact(userID)
+	contact.FirstName = firstName
+	contact.LastName = lastName
+	r.SaveContact(contact)
+}
+
 
 
 
 
 // OLD
 
-func (r *repoUsers) SaveContact(user *msg.ContactUser) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
-	if user == nil {
-		logs.Debug("RepoUsers::SaveContactUser()",
-			zap.String("User", "user is null"),
-		)
-		return domain.ErrNotFound
-	}
-
-	logs.Debug("RepoUsers::SaveContactUser()",
-		zap.String("Name", fmt.Sprintf("%s %s", user.FirstName, user.LastName)),
-		zap.Int64("userID", user.ID),
-	)
-
-	u := new(dto.Users)
-	u.MapFromContactUser(user)
-
-	eu := new(dto.Users)
-	r.db.Find(eu, u.ID)
-
-	if eu.ID == 0 {
-
-		return r.db.Create(u).Error
-	}
-
-	// WARNING when update with struct, GORM will only update those fields that with non blank value
-	// fix bug : if we had user and later we add its contact with fname or lname empty the fname and lname from user will remain unchanged
-	return r.db.Table(u.TableName()).Where("ID=?", u.ID).Updates(map[string]interface{}{
-		"FirstName":  u.FirstName,
-		"LastName":   u.LastName,
-		"AccessHash": u.AccessHash,
-		"Phone":      u.Phone,
-		"Username":   u.Username,
-		"ClientID":   u.ClientID,
-		"IsContact":  u.IsContact,
-		"Photo":      u.Photo,
-	}).Error
-}
-
-func (r *repoUsers) UpdatePhoneContact(user *msg.PhoneContact) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	if user == nil {
-		logs.Debug("RepoUsers::SaveContactUser()",
-			zap.String("User", "user is null"),
-		)
-		return domain.ErrNotFound
-	}
-	dtoUser := new(dto.Users)
-	// just need to edit existing contacts info
-	return r.db.Table(dtoUser.TableName()).Where("Phone=?", user.Phone).Updates(map[string]interface{}{
-		"FirstName": user.FirstName,
-		"LastName":  user.LastName,
-	}).Error
-
-}
-
-func (r *repoUsers) GetManyContactUsers(userIDs []int64) []*msg.ContactUser {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	logs.Debug("Users::GetManyContactUsers()",
-		zap.Int64s("UserIDs", userIDs),
-	)
-	pbUsers := make([]*msg.ContactUser, 0, len(userIDs))
-	users := make([]dto.Users, 0, len(userIDs))
-
-	err := r.db.Where("IsContact = 1 AND ID in (?)", userIDs).Find(&users).Error
-	if err != nil {
-		logs.Error("Users::GetManyContactUsers()-> fetch user entities", zap.Error(err))
-		return nil
-	}
-
-	for _, v := range users {
-		tmp := new(msg.ContactUser)
-		v.MapToContactUser(tmp)
-		pbUsers = append(pbUsers, tmp)
-
-	}
-
-	return pbUsers
-}
-
-func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	logs.Debug("Users::GetContacts()")
-
-	users := make([]dto.Users, 0)
-
-	err := r.db.Where("IsContact = 1").Find(&users).Error
-	if err != nil {
-		logs.Error("Users::GetContacts()-> fetch user entities", zap.Error(err))
-		return nil, nil
-	}
-	pbUsers := make([]*msg.ContactUser, 0)
-	pbContacts := make([]*msg.PhoneContact, 0)
-	for _, v := range users {
-		tmpUser := new(msg.ContactUser)
-		tmpContact := new(msg.PhoneContact)
-		v.MapToContactUser(tmpUser)
-		v.MapToPhoneContact(tmpContact)
-		pbUsers = append(pbUsers, tmpUser)
-		pbContacts = append(pbContacts, tmpContact)
-	}
-
-	return pbUsers, pbContacts
-
-}
 
 func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*msg.PhoneContact) {
 	r.mx.Lock()
@@ -347,23 +335,6 @@ func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*
 
 	return pbUsers, pbContacts
 
-}
-
-func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) error {
-	defer r.deleteFromCache(userID)
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	logs.Debug("Users::UpdateContactInfo()",
-		zap.Int64("userID", userID),
-	)
-	dtoUser := new(dto.Users)
-	err := r.db.Table(dtoUser.TableName()).Where("ID=?", userID).Updates(map[string]interface{}{
-		"FirstName": firstName,
-		"LasttName": lastName,
-	}).Error
-
-	return err
 }
 
 func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {

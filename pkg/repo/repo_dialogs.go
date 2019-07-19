@@ -197,65 +197,70 @@ func (r *repoDialogs) Save(dialog *msg.Dialog) error {
 	})
 }
 
-func (r *repoDialogs) UpdateUnreadCount(peerID int64, peerType, unreadCount int32) error {
+func (r *repoDialogs) UpdateUnreadCount(peerID int64, peerType, unreadCount int32)  {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
 	dialog := r.Get(peerID, peerType)
 	if dialog == nil {
-		return domain.ErrDoesNotExists
+		return
 	}
 
 	dialog.UnreadCount = unreadCount
-	return r.Save(dialog)
+	_ = r.Save(dialog)
+	return
 }
 
-func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32, maxID int64) error {
+func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32, maxID int64)  {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
 	dialog := r.Get(peerID, peerType)
 	// current maxID is newer so skip updating dialog unread counts
 	if dialog.ReadInboxMaxID > maxID || maxID > dialog.TopMessageID {
-		return nil
+		return
 	}
 	dialog.UnreadCount = r.countUnread(peerID, peerType, userID)
 	dialog.ReadInboxMaxID = maxID
-	return r.Save(dialog)
+	_ = r.Save(dialog)
+	return
 }
 
-func (r *repoDialogs) UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID int64) error {
+func (r *repoDialogs) UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID int64)  {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
 	dialog := r.Get(peerID, peerType)
 	if maxID > dialog.TopMessageID {
-		return nil
+		return
 	}
 
 	// current maxID is newer so skip updating dialog unread counts
 	if dialog.ReadOutboxMaxID > maxID || maxID > dialog.TopMessageID {
-		return nil
+		return
 	}
 	dialog.ReadOutboxMaxID = maxID
-	return r.Save(dialog)
+	_ = r.Save(dialog)
+	return
 }
 
-func (r *repoDialogs) UpdateNotifySetting(peerID int64, peerType int32, notifySettings *msg.PeerNotifySettings) error {
+func (r *repoDialogs) UpdateNotifySetting(peerID int64, peerType int32, notifySettings *msg.PeerNotifySettings) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 	dialog := r.Get(peerID, peerType)
 	dialog.NotifySettings = notifySettings
-	return r.Save(dialog)
+	_ = r.Save(dialog)
+	return
 }
 
-func (r *repoDialogs) UpdatePinned(in *msg.UpdateDialogPinned) error {
+func (r *repoDialogs) UpdatePinned(in *msg.UpdateDialogPinned)  {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
 	dialog := r.Get(in.Peer.ID, in.Peer.Type)
 	dialog.Pinned = in.Pinned
-	return r.Save(dialog)
+	_ = r.Save(dialog)
+	return
 }
 
 func (r *repoDialogs) Delete(peerID int64, peerType int32) error {
@@ -312,6 +317,7 @@ func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
 				return nil
 			})
 		}
+		it.Close()
 		return nil
 	})
 	return dialogs

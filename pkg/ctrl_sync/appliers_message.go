@@ -250,7 +250,7 @@ func (ctrl *Controller) usersMany(e *msg.MessageEnvelope) {
 		zap.Int("Users", len(u.Users)),
 	)
 	for _, v := range u.Users {
-		_ = repo.Users.Save(v)
+		repo.Users.Save(v)
 	}
 }
 
@@ -264,8 +264,8 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 	}
 
 	// Save Groups & Users
-	_ = repo.Users.SaveMany(u.Users)
-	_ = repo.Groups.SaveMany(u.Groups)
+	repo.Users.SaveMany(u.Users)
+	repo.Groups.SaveMany(u.Groups)
 
 	// handle Media message
 	go ctrl.extractMessagesMedia(u.Messages...)
@@ -309,18 +309,18 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 	)
 
 	// Save Group
-	_ = repo.Groups.Save(u.Group)
+	repo.Groups.Save(u.Group)
 
 	// Save Group Members
 	for _, v := range u.Participants {
-		_ = repo.Groups.SaveParticipants(u.Group.ID, v)
+		repo.Groups.SaveParticipants(u.Group.ID, v)
 	}
 
 	// Save Users
 	for _, v := range u.Users {
-		_ = repo.Users.Save(v)
+		repo.Users.Save(v)
 	}
 
 	// Update NotifySettings
-	_ = repo.Dialogs.UpdateNotifySetting(u.Group.ID, int32(msg.PeerGroup), u.NotifySettings)
+	repo.Dialogs.UpdateNotifySetting(u.Group.ID, int32(msg.PeerGroup), u.NotifySettings)
 }

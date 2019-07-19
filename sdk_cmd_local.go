@@ -179,10 +179,7 @@ func (r *River) messagesReadHistory(in, out *msg.MessageEnvelope, timeoutCB doma
 		return
 	}
 
-	err := repo.Dialogs.UpdateReadInboxMaxID(r.ConnInfo.UserID, req.Peer.ID, int32(req.Peer.Type), req.MaxID)
-	if err != nil {
-		logs.Error("River::messagesReadHistory()-> UpdateReadInboxMaxID()", zap.Error(err))
-	}
+	repo.Dialogs.UpdateReadInboxMaxID(r.ConnInfo.UserID, req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
@@ -418,7 +415,7 @@ func (r *River) messagesClearHistory(in, out *msg.MessageEnvelope, timeoutCB dom
 		return
 	}
 
-	err := repo.Dialogs.UpdateUnreadCount(req.Peer.ID, int32(req.Peer.Type), 0)
+	repo.Dialogs.UpdateUnreadCount(req.Peer.ID, int32(req.Peer.Type), 0)
 
 	// this will be handled on message update appliers too
 	err = repo.Messages.DeleteDialogMessage(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
@@ -704,10 +701,7 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	// update phone contacts just a double check
 	if req.Replace {
 		for _, c := range req.Contacts {
-			err := repo.Users.UpdatePhoneContact(c)
-			if err != nil {
-				logs.Error("River::contactsImport()-> UpdatePhoneContact()", zap.Error(err))
-			}
+			repo.Users.SaveContact(c)
 		}
 	}
 	// extract differences between existing contacts and new contacts

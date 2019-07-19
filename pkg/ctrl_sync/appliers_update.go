@@ -203,10 +203,7 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) []*msg.Upd
 		zap.Int64("PeerID", x.Peer.ID),
 	)
 
-	err := repo.Dialogs.UpdateReadInboxMaxID(ctrl.userID, x.Peer.ID, x.Peer.Type, x.MaxID)
-	if err != nil {
-		logs.Error("updateReadHistoryInbox() -> UpdateReadInboxMaxID()", zap.Error(err))
-	}
+	repo.Dialogs.UpdateReadInboxMaxID(ctrl.userID, x.Peer.ID, x.Peer.Type, x.MaxID)
 	res := []*msg.UpdateEnvelope{u}
 	return res
 }
@@ -221,10 +218,7 @@ func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) []*msg.Up
 		zap.Int64("PeerID", x.Peer.ID),
 	)
 
-	err := repo.Dialogs.UpdateReadOutboxMaxID(x.Peer.ID, x.Peer.Type, x.MaxID)
-	if err != nil {
-		logs.Error("updateReadHistoryOutbox() -> UpdateReadOutboxMaxID()", zap.Error(err))
-	}
+	repo.Dialogs.UpdateReadOutboxMaxID(x.Peer.ID, x.Peer.Type, x.MaxID)
 	res := []*msg.UpdateEnvelope{u}
 	return res
 }
@@ -278,12 +272,10 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 func (ctrl *Controller) updateNotifySettings(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
 	logs.Info("SyncController::updateNotifySettings()")
 	x := new(msg.UpdateNotifySettings)
-	x.Unmarshal(u.Update)
+	_ = x.Unmarshal(u.Update)
 
-	err := repo.Dialogs.UpdateNotifySetting(x.NotifyPeer.ID, x.NotifyPeer.Type, x.Settings)
-	if err != nil {
-		logs.Error("updateNotifySettings() -> Dialogs.UpdateNotifySettings()", zap.Error(err))
-	}
+	repo.Dialogs.UpdateNotifySetting(x.NotifyPeer.ID, x.NotifyPeer.Type, x.Settings)
+
 	res := []*msg.UpdateEnvelope{u}
 	return res
 }
@@ -292,12 +284,8 @@ func (ctrl *Controller) updateNotifySettings(u *msg.UpdateEnvelope) []*msg.Updat
 func (ctrl *Controller) updateDialogPinned(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
 	logs.Info("SyncController::updateDialogPinned()")
 	x := new(msg.UpdateDialogPinned)
-	x.Unmarshal(u.Update)
-
-	err := repo.Dialogs.UpdatePinned(x)
-	if err != nil {
-		logs.Error("updateDialogPinned() -> Dialogs.UpdateDialogPinned()", zap.Error(err))
-	}
+	_ = x.Unmarshal(u.Update)
+	repo.Dialogs.UpdatePinned(x)
 	res := []*msg.UpdateEnvelope{u}
 	return res
 }
@@ -328,25 +316,26 @@ func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) []*msg.Upda
 	logs.Info("SyncController::updateMessagesDeleted()")
 
 	x := new(msg.UpdateMessagesDeleted)
-	x.Unmarshal(u.Update)
+	_ = x.Unmarshal(u.Update)
 
-	udps, err := repo.Messages.DeleteManyAndReturnClientUpdate(x.MessageIDs)
-	if err != nil {
-		logs.Error("updateMessagesDeleted() -> DeleteMany()", zap.Error(err))
+	for _, msgID := range x.MessageIDs {
+		_ = repo.Messages.DeleteDialogMessage(x.Peer.ID, x.Peer.Type, msgID)
 	}
+
+	update := new(msg.ClientUpdateMessagesDeleted)
+	update.PeerID = x.Peer.ID
+	update.PeerType = x.Peer.Type
+	update.MessageIDs = x.MessageIDs
 
 	res := []*msg.UpdateEnvelope{u}
 
-	for _, v := range udps {
-		udp := new(msg.UpdateEnvelope)
-		udp.Constructor = msg.C_ClientUpdateMessagesDeleted
-		udp.Timestamp = u.Timestamp
-		udp.UCount = 1
-		udp.UpdateID = u.UpdateID
-		udp.Update, _ = v.Marshal()
-		res = append(res, udp)
-	}
-
+	updateEnvelope := new(msg.UpdateEnvelope)
+	updateEnvelope.Constructor = msg.C_ClientUpdateMessagesDeleted
+	updateEnvelope.Timestamp = u.Timestamp
+	updateEnvelope.UCount = 1
+	updateEnvelope.UpdateID = u.UpdateID
+	updateEnvelope.Update, _ = update.Marshal()
+	res = append(res, updateEnvelope)
 	return res
 }
 

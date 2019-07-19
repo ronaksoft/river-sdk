@@ -9,7 +9,6 @@ import (
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
 	"github.com/scylladb/go-set/i64set"
-	"github.com/tidwall/buntdb"
 	"go.uber.org/zap"
 	"sort"
 	"strings"
@@ -217,6 +216,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 					return nil
 				})
 			}
+			it.Close()
 			return nil
 		})
 	case maxID == 0 && minID != 0:
@@ -244,6 +244,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 					return nil
 				})
 			}
+			it.Close()
 			sort.Slice(userMessages, func(i, j int) bool {
 				return userMessages[i].ID > userMessages[j].ID
 			})
@@ -278,6 +279,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 					break
 				}
 			}
+			it.Close()
 			return nil
 		})
 
@@ -359,10 +361,7 @@ func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, err
 }
 
 
-
-
-
-
+// OLD
 
 func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User) {
 	r.mx.Lock()
@@ -436,73 +435,6 @@ func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerTy
 
 	}
 	return
-}
-
-func (r *repoMessages) DeleteManyAndReturnClientUpdate(IDs []int64) ([]*msg.ClientUpdateMessagesDeleted, error) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	// Get dialogs that their top message is going to be removed
-	dtoDialogs := make([]dto.Dialogs, 0)
-	err := r.db.Where("TopMessageID in (?)", IDs).Find(&dtoDialogs).Error
-	if err != nil {
-		logs.Warn("Messages::DeleteMany() fetch dialogs", zap.Error(err))
-	}
-
-	res := make([]*msg.ClientUpdateMessagesDeleted, 0)
-	msgs := make([]dto.Messages, 0)
-	mpeer := make(map[int64]*msg.ClientUpdateMessagesDeleted)
-	err = r.db.Where("ID in (?)", IDs).Find(&msgs).Error
-	if err == nil {
-		for _, v := range msgs {
-
-			if udp, ok := mpeer[v.PeerID]; ok {
-				udp.MessageIDs = append(udp.MessageIDs, v.ID)
-			} else {
-				tmp := new(msg.ClientUpdateMessagesDeleted)
-				tmp.PeerID = v.PeerID
-				tmp.PeerType = v.PeerType
-				tmp.MessageIDs = []int64{v.ID}
-				mpeer[v.PeerID] = tmp
-			}
-		}
-	}
-
-	for _, v := range mpeer {
-		// Update Dialog Counter on delete message
-		dtoDlg := new(dto.Dialogs)
-		err := r.db.Where("PeerID = ? AND PeerType = ?", v.PeerID, v.PeerType).First(dtoDlg).Error
-		if err == nil {
-			removedUnreadCount := int32(0)
-			for _, msgID := range v.MessageIDs {
-				if msgID > dtoDlg.ReadInboxMaxID {
-					removedUnreadCount++
-				}
-			}
-			if removedUnreadCount > 0 && removedUnreadCount <= dtoDlg.UnreadCount {
-				err = r.db.Table(dtoDlg.TableName()).Where("PeerID=? AND PeerType=?", v.PeerID, v.PeerType).Updates(map[string]interface{}{
-					"UnreadCount": (dtoDlg.UnreadCount - removedUnreadCount), // gorm.Expr("UnreadCount - ?", removedUnreadCount),
-				}).Error
-			}
-		}
-		res = append(res, v)
-	}
-
-	err = r.db.Where("ID IN (?)", IDs).Delete(dto.Messages{}).Error
-
-	// fetch last message and set it as dialog top message
-	for _, d := range dtoDialogs {
-		dtoMsg := dto.Messages{}
-		err := r.db.Table(dtoMsg.TableName()).Where("PeerID =? AND PeerType= ?", d.PeerID, d.PeerType).Last(&dtoMsg).Error
-		if err == nil && dtoMsg.ID != 0 {
-			err = r.db.Table(d.TableName()).Where("PeerID=? AND PeerType=?", d.PeerID, d.PeerType).Updates(map[string]interface{}{
-				"TopMessageID": dtoMsg.ID,
-				"LastUpdate":   dtoMsg.CreatedOn,
-			}).Error
-		}
-	}
-
-	return res, err
 }
 
 func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
