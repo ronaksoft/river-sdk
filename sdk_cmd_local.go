@@ -440,10 +440,7 @@ func (r *River) messagesReadContents(in, out *msg.MessageEnvelope, timeoutCB dom
 		return
 	}
 
-	err := repo.Messages.SetContentRead(req.MessageIDs)
-	if err != nil {
-		logs.Error("River::groupUpdateAdmin()-> UpdateGroupMemberType()", zap.Error(err))
-	}
+	repo.Messages.SetContentRead(req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
 
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
@@ -891,10 +888,7 @@ func (r *River) accountRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domai
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 
-	err := repo.Users.RemovePhoto(r.ConnInfo.UserID)
-	if err != nil {
-		logs.Error("accountRemovePhoto()", zap.Error(err))
-	}
+	repo.Users.RemovePhoto(r.ConnInfo.UserID)
 }
 
 func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {

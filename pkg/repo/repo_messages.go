@@ -316,12 +316,12 @@ func (r *repoMessages) DeleteDialogMessage(peerID int64, peerType int32, msgID i
 	return err
 }
 
-func (r *repoMessages) SetContentRead(peerID int64, peerType int32, messageIDs []int64) error {
+func (r *repoMessages) SetContentRead(peerID int64, peerType int32, messageIDs []int64) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
 	for _, msgID := range messageIDs {
-		err := r.badger.Update(func(txn *badger.Txn) error {
+		_ = r.badger.Update(func(txn *badger.Txn) error {
 			userMessage, err := r.getUserMessage(msgID)
 			if err != nil {
 				return err
@@ -329,11 +329,9 @@ func (r *repoMessages) SetContentRead(peerID int64, peerType int32, messageIDs [
 			userMessage.ContentRead = true
 			return r.Save(userMessage)
 		})
-		if err != nil {
-			return err
-		}
+
 	}
-	return nil
+	return
 }
 
 func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, error) {

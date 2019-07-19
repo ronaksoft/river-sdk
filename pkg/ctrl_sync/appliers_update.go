@@ -35,12 +35,12 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 
 		// make sure to created the message hole b4 creating dialog
 		dialog = &msg.Dialog{
-			PeerID:       x.Message.PeerID,
-			PeerType:     x.Message.PeerType,
-			TopMessageID: x.Message.ID,
-			UnreadCount:  0,
+			PeerID:         x.Message.PeerID,
+			PeerType:       x.Message.PeerType,
+			TopMessageID:   x.Message.ID,
+			UnreadCount:    0,
 			MentionedCount: 0,
-			AccessHash:   x.AccessHash,
+			AccessHash:     x.AccessHash,
 		}
 		err := repo.Dialogs.SaveNew(dialog, x.Message.CreatedOn)
 		if err != nil {
@@ -56,7 +56,6 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	}
 	// save user if does not exist
 	repo.Users.Save(x.Sender)
-
 
 	err = repo.Messages.SaveNew(x.Message, dialog, ctrl.connInfo.PickupUserID())
 	if err != nil {
@@ -318,7 +317,7 @@ func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) []*msg.UpdateEnvel
 		ctrl.connInfo.Save()
 	}
 
-	repo.Users.UpdateProfile(x)
+	repo.Users.UpdateProfile(x.UserID, x.FirstName, x.LastName, x.Username, x.Bio)
 
 	res := []*msg.UpdateEnvelope{u}
 	return res
@@ -375,11 +374,7 @@ func (ctrl *Controller) updateReadMessagesContents(u *msg.UpdateEnvelope) []*msg
 		zap.Int64s("MessageIDs", x.MessageIDs),
 	)
 
-
-	err := repo.Messages.SetContentRead(x.MessageIDs)
-	if err != nil {
-		logs.Error("updateReadMessagesContents()-> SetContentRead()", zap.Error(err))
-	}
+	repo.Messages.SetContentRead(x.Peer.ID, int32(x.Peer.Type), x.MessageIDs)
 
 	res := []*msg.UpdateEnvelope{u}
 	return res
@@ -390,12 +385,9 @@ func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 	logs.Info("SyncController::updateUserPhoto()")
 
 	x := new(msg.UpdateUserPhoto)
-	x.Unmarshal(u.Update)
+	_ = x.Unmarshal(u.Update)
 
-	err := repo.Users.UpdatePhoto(x)
-	if err != nil {
-		logs.Error("updateUserPhoto()-> UpdatePhoto()", zap.Error(err))
-	}
+	repo.Users.UpdatePhoto(x)
 
 	res := []*msg.UpdateEnvelope{u}
 	return res
