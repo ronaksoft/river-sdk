@@ -120,9 +120,7 @@ const (
 	FileStateExistedDownload      FileStateType = 3 // FileStateExistedDownload file already exist
 	FileStateExistedUpload        FileStateType = 4 // FileStateExistedUpload file uploaded document already exist
 	FileStateUploadAccountPhoto   FileStateType = 5 // FileStateUploadAccountPhoto the request AccountUploadPhoto
-	FileStateDownloadAccountPhoto FileStateType = 6 // FileStateDownloadAccountPhoto the request AccountDownloadPhoto
 	FileStateUploadGroupPhoto     FileStateType = 7 // FileStateUploadGroupPhoto the request GroupUploadPhoto
-	FileStateDownloadGroupPhoto   FileStateType = 8 // FileStateDownloadGroupPhoto the request GroupDownloadPhoto
 )
 
 // SharedMediaType filter for displaying shared medias

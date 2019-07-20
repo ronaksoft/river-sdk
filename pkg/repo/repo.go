@@ -59,9 +59,7 @@ func (r *repository) initDB() error {
 	// WARNING: AutoMigrate will ONLY create tables, missing columns and missing indexes,
 	// and WON’T change existing column’s type or delete unused columns to protect your data.
 	repoLastError = r.db.AutoMigrate(
-		dto.MessagesPending{},
 		dto.MessagesExtra{},
-		dto.UISettings{},
 		dto.FilesStatus{},
 		dto.Files{},
 	).Error

@@ -372,8 +372,6 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 
 func (r *River) onFileDownloadCompleted(messageID int64, filePath string, stateType domain.FileStateType) {
 	logs.Info("onFileDownloadCompleted()", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
-	// update file path of documents that have same DocID
-	go repo.Files.UpdateFilePathByDocumentID(messageID, filePath)
 	// Notify UI that download is completed
 	if r.fileDelegate != nil {
 		r.fileDelegate.OnDownloadCompleted(messageID, filePath)

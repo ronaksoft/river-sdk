@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-// GetFileStatus returns file status
+// GetStatus returns file status
 // TODO :: change response to protobuff
 func (r *River) GetFileStatus(msgID int64) string {
 	status, progress, filePath := getFileStatus(msgID)
@@ -34,14 +34,12 @@ func (r *River) GetFileStatus(msgID int64) string {
 	return string(buff)
 }
 func getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, filePath string) {
-
-	fs, err := repo.Files.GetFileStatus(msgID)
+	fs, err := repo.Files.GetStatus(msgID)
 	if err == nil && fs != nil {
-		// file is inprogress state
+		// file is in-progress state
 		// double check
-
 		if fs.IsCompleted {
-			go repo.Files.DeleteFileStatus(fs.MessageID)
+			go repo.Files.DeleteStatus(fs.MessageID)
 		}
 		status = domain.RequestStatus(fs.RequestStatus)
 		filePath = fs.FilePath
@@ -49,7 +47,7 @@ func getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, 
 			partList := domain.MInt64B{}
 			json.Unmarshal(fs.PartList, &partList)
 			processedParts := fs.TotalParts - int64(len(partList))
-			progress = (float64(processedParts) / float64(fs.TotalParts) * float64(100))
+			progress = float64(processedParts) / float64(fs.TotalParts) * float64(100)
 		}
 	} else {
 		filePath = getFilePath(msgID)
@@ -69,32 +67,34 @@ func getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, 
 }
 func getFilePath(msgID int64) string {
 	m := repo.Messages.Get(msgID)
-	if m != nil {
+	if m == nil {
+		return ""
+	}
 
-		switch m.MediaType {
-		case msg.MediaTypeDocument:
-			x := new(msg.MediaDocument)
-			err := x.Unmarshal(m.Media)
-			if err == nil {
-				// check file existence
-				filePath := repo.Files.GetFilePath(m.ID, x.Doc.ID)
-				if _, err = os.Stat(filePath); os.IsNotExist(err) {
-					filePath = ""
-				}
-				return filePath
+	switch m.MediaType {
+	case msg.MediaTypeDocument:
+		x := new(msg.MediaDocument)
+		err := x.Unmarshal(m.Media)
+		if err == nil {
+			// check file existence
+
+			filePath := fileCtrl.GetFilePath(x.Doc.MimeType, x.Doc.ID)
+			if _, err = os.Stat(filePath); os.IsNotExist(err) {
+				filePath = ""
 			}
-		default:
-			// Probably this is pendingMessage so MediaData is ClientSendMessageMedia
-			x := new(msg.ClientSendMessageMedia)
-			err := x.Unmarshal(m.Media)
-			if err == nil {
-				// check file existence
-				filePath := x.FilePath
-				if _, err = os.Stat(filePath); os.IsNotExist(err) {
-					filePath = ""
-				}
-				return filePath
+			return filePath
+		}
+	default:
+		// Probably this is pendingMessage so MediaData is ClientSendMessageMedia
+		x := new(msg.ClientSendMessageMedia)
+		err := x.Unmarshal(m.Media)
+		if err == nil {
+			// check file existence
+			filePath := x.FilePath
+			if _, err = os.Stat(filePath); os.IsNotExist(err) {
+				filePath = ""
 			}
+			return filePath
 		}
 	}
 	return ""
@@ -121,20 +121,14 @@ func (r *River) FileDownload(msgID int64) {
 	switch status {
 	case domain.RequestStatusNone:
 		r.fileCtrl.Download(m)
-	case domain.RequestStatusInProgress:
-		// already downloading
-		// filemanager.Ctx().Download(m)
 	case domain.RequestStatusCompleted:
 		r.onFileDownloadCompleted(m.ID, filePath, domain.FileStateExistedDownload)
-	case domain.RequestStatusPaused:
+	case domain.RequestStatusPaused, domain.RequestStatusCanceled, domain.RequestStatusError:
 		r.fileCtrl.Download(m)
-	case domain.RequestStatusCanceled:
-		r.fileCtrl.Download(m)
-	case domain.RequestStatusError:
-		r.fileCtrl.Download(m)
+	case domain.RequestStatusInProgress:
 	}
 
-	fs, err := repo.Files.GetFileStatus(msgID)
+	fs, err := repo.Files.GetStatus(msgID)
 	if err == nil && fs != nil {
 
 	} else {
@@ -149,7 +143,7 @@ func (r *River) PauseDownload(msgID int64) {
 	defer func() {
 		mon.FunctionResponseTime("PauseDownload", time.Now().Sub(startTime))
 	}()
-	fs, err := repo.Files.GetFileStatus(msgID)
+	fs, err := repo.Files.GetStatus(msgID)
 	if err != nil {
 		logs.Warn("SDK::PauseDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
@@ -166,7 +160,7 @@ func (r *River) CancelDownload(msgID int64) {
 	defer func() {
 		mon.FunctionResponseTime("CancelDownload", time.Now().Sub(startTime))
 	}()
-	fs, err := repo.Files.GetFileStatus(msgID)
+	fs, err := repo.Files.GetStatus(msgID)
 	if err != nil {
 		logs.Warn("SDK::CancelDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
@@ -183,7 +177,7 @@ func (r *River) PauseUpload(msgID int64) {
 	defer func() {
 		mon.FunctionResponseTime("PauseUpload", time.Now().Sub(startTime))
 	}()
-	fs, err := repo.Files.GetFileStatus(msgID)
+	fs, err := repo.Files.GetStatus(msgID)
 	if err != nil {
 		logs.Warn("SDK::PauseUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
@@ -202,14 +196,14 @@ func (r *River) CancelUpload(msgID int64) {
 	defer func() {
 		mon.FunctionResponseTime("CancelUpload", time.Now().Sub(startTime))
 	}()
-	fs, err := repo.Files.GetFileStatus(msgID)
+	fs, err := repo.Files.GetStatus(msgID)
 	if err != nil {
 		logs.Warn("SDK::CancelUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
 		return
 	}
 	r.fileCtrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
 
-	_ = repo.Files.DeleteFileStatus(msgID)
+	repo.Files.DeleteStatus(msgID)
 	repo.PendingMessages.Delete(fs.MessageID)
 
 }
@@ -240,7 +234,7 @@ func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 		return 0
 	}
 
-	// // fileName := fileInfo.Name()
+
 	totalSize := fileInfo.Size() // size in Byte
 	// if totalSize > domain.FileMaxPhotoSize {
 	// 	log.Error("SDK::AccountUploadPhoto()", zap.Error(errors.New("max allowed file size is 1 MB")))
@@ -426,6 +420,7 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 	defer func() {
 		mon.FunctionResponseTime("FileDownloadThumbnail", time.Now().Sub(startTime))
 	}()
+
 	// its pending message
 	if msgID < 0 {
 		return r.downloadPendingThumbnail(msgID)
@@ -444,98 +439,61 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 	switch m.MediaType {
 	case msg.MediaTypeEmpty:
 		return ""
-	case msg.MediaTypePhoto:
-		// // TODO:: implement it
 	case msg.MediaTypeDocument:
 		x := new(msg.MediaDocument)
-		x.Unmarshal(m.Media)
-		if x.Doc.Thumbnail != nil {
-			docID = x.Doc.Thumbnail.FileID
-			clusterID = x.Doc.Thumbnail.ClusterID
-			accessHash = x.Doc.Thumbnail.AccessHash
-			// version = x.Doc.Thumbnail.Version
-		} else {
-			logs.Warn("SDK::FileDownloadThumbnail() Message does not have thumbnail", zap.Int64("MsgID", msgID))
-			return filePath
+		_ = x.Unmarshal(m.Media)
+		if x.Doc.Thumbnail == nil {
+			return ""
+		}
+		docID = x.Doc.Thumbnail.FileID
+		clusterID = x.Doc.Thumbnail.ClusterID
+		accessHash = x.Doc.Thumbnail.AccessHash
+
+		filePath = fileCtrl.GetThumbnailPath(docID, clusterID)
+		// check if file exist
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			filePath, err = r.fileCtrl.DownloadThumbnail(docID, accessHash, clusterID, version)
 		}
 	case msg.MediaTypeContact:
-		// TODO:: implement it
+	case msg.MediaTypePhoto:
 	default:
-		logs.Error("SDK::FileDownloadThumbnail() Invalid SharedMediaType")
 		return ""
 	}
 
-	dto, err := repo.Files.GetFile(msgID)
-	if err != nil {
-		path, err := r.fileCtrl.DownloadThumbnail(m.ID, docID, accessHash, clusterID, version)
-		if err != nil {
-			logs.Error("SDK::FileDownloadThumbnail()-> DownloadThumbnail()", zap.Error(err))
-		}
-		return path
-	}
-	_, err = os.Stat(dto.ThumbFilePath)
-	if os.IsNotExist(err) {
-		path, err := r.fileCtrl.DownloadThumbnail(m.ID, docID, accessHash, clusterID, version)
-		if err != nil {
-			logs.Error("SDK::FileDownloadThumbnail()-> DownloadThumbnail()", zap.Error(err))
-		}
-		return path
-	}
-	return dto.ThumbFilePath
+	return filePath
 }
 func (r *River) downloadPendingThumbnail(msgID int64) string {
-	// pmsg, err := repo.PendingMessages.GetByID(msgID)
-	// if err != nil {
-	// 	logs.Warn("SDK::FileDownloadThumbnail()", zap.Int64("PendingMsgID", msgID), zap.Error(err))
-	// 	return ""
-	// }
-	// switch msg.InputMediaType(pmsg.MediaType) {
-	// case msg.InputMediaTypeEmpty:
-	// 	// NOT IMPLEMENTED
-	// case msg.InputMediaTypeUploadedPhoto:
-	// 	// NOT IMPLEMENTED
-	// case msg.InputMediaTypePhoto:
-	// 	// NOT IMPLEMENTED
-	// case msg.InputMediaTypeGeoLocation:
-	// 	// NOT IMPLEMENTED
-	// case msg.InputMediaTypeContact:
-	// 	// NOT IMPLEMENTED
-	// case msg.InputMediaTypeDocument:
-	// 	// pending message media is a file that already has been uploaded so pending message media is InputMediaDocument
-	// 	doc := new(msg.InputMediaDocument)
-	// 	err := doc.Unmarshal(pmsg.Media)
-	// 	if err != nil {
-	// 		logs.Error("SDK::FileDownloadThumbnail() failed to unmarshal to InputMediaDocument", zap.Int64("PendingMsgID", msgID), zap.Error(err))
-	// 		return ""
-	// 	}
-	// 	// Get userMessage ID by DocumentID and extract thumbnail path from it
-	// 	existedDocumentFile, err := repo.Files.GetFileByDocumentID(doc.Document.ID)
-	// 	if err != nil {
-	// 		logs.Error("SDK::FileDownloadThumbnail() failed to fetch GetFileByDocumentID", zap.Int64("PendingMsgID", msgID), zap.Int64("DocID", doc.Document.ID), zap.Error(err))
-	// 		return ""
-	// 	}
-	// 	return r.FileDownloadThumbnail(existedDocumentFile.MessageID)
-	//
-	// case msg.InputMediaTypeUploadedDocument:
-	// 	// pending message media is new upload so its type should be ClientSendMessageMedia
-	// 	clientMedia := new(msg.ClientSendMessageMedia)
-	// 	err := clientMedia.Unmarshal(pmsg.Media)
-	// 	if err != nil {
-	// 		logs.Error("SDK::FileDownloadThumbnail() failed to unmarshal to ClientSendMessageMedia", zap.Int64("PendingMsgID", msgID), zap.Error(err))
-	// 		return ""
-	// 	}
-	// 	return clientMedia.ThumbFilePath
-	// case msg.Reserved1:
-	// 	// NOT IMPLEMENTED
-	// case msg.Reserved2:
-	// 	// NOT IMPLEMENTED
-	// case msg.Reserved3:
-	// 	// NOT IMPLEMENTED
-	// case msg.Reserved4:
-	// 	// NOT IMPLEMENTED
-	// case msg.Reserved5:
-	// 	// NOT IMPLEMENTED
-	// }
+	pmsg := repo.PendingMessages.GetByID(msgID)
+	if pmsg == nil {
+		return ""
+	}
+	switch msg.InputMediaType(pmsg.MediaType) {
+	case msg.InputMediaTypeDocument:
+		// pending message media is a file that already has been uploaded so pending message media is InputMediaDocument
+		doc := new(msg.InputMediaDocument)
+		err := doc.Unmarshal(pmsg.Media)
+		if err != nil {
+			logs.Error("SDK::FileDownloadThumbnail() failed to unmarshal to InputMediaDocument", zap.Int64("PendingMsgID", msgID), zap.Error(err))
+			return ""
+		}
+
+		filePath := fileCtrl.GetThumbnailPath(doc.Document.ID, doc.Document.ClusterID)
+		// check if file exist
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			filePath, err = r.fileCtrl.DownloadThumbnail(doc.Document.ID, doc.Document.AccessHash, doc.Document.ClusterID, 0)
+			return filePath
+		}
+		return filePath
+	case msg.InputMediaTypeUploadedDocument:
+		// pending message media is new upload so its type should be ClientSendMessageMedia
+		clientMedia := new(msg.ClientSendMessageMedia)
+		err := clientMedia.Unmarshal(pmsg.Media)
+		if err != nil {
+			logs.Error("SDK::FileDownloadThumbnail() failed to unmarshal to ClientSendMessageMedia", zap.Int64("PendingMsgID", msgID), zap.Error(err))
+			return ""
+		}
+		return clientMedia.ThumbFilePath
+	}
 	return ""
 }
 

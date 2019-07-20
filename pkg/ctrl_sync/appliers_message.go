@@ -173,15 +173,10 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 				}
 			}
 			// save to local files
-			err = repo.Files.MoveUploadedFileToFiles(clientSendMedia, int32(fileSize), sent)
-			if err != nil {
-				logs.Warn("messageSent()-> MoveUploadedFileToLocalFile() failed ", zap.Error(err))
-			}
+			repo.Files.MoveUploadedFileToFiles(clientSendMedia, int32(fileSize), sent)
+
 			// delete file status
-			err = repo.Files.DeleteFileStatus(pmsg.ID)
-			if err != nil {
-				logs.Warn("messageSent()-> DeleteFileStatus() failed to delete FileStatus", zap.Error(err))
-			}
+			repo.Files.DeleteStatus(pmsg.ID)
 		}
 	}
 
@@ -262,7 +257,7 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 	repo.Groups.SaveMany(u.Groups)
 
 	// handle Media message
-	go ctrl.extractMessagesMedia(u.Messages...)
+	ctrl.extractMessagesMedia(u.Messages...)
 
 	minID := int64(0)
 	maxID := int64(0)

@@ -512,117 +512,54 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		reqMedia.FilePath = reqMedia.FilePath[7:]
 		in.Message, _ = reqMedia.Marshal()
 	}
-	if strings.HasPrefix(reqMedia.ThumbFilePath, "file://") {
-		reqMedia.ThumbFilePath = reqMedia.ThumbFilePath[7:]
-		in.Message, _ = reqMedia.Marshal()
-	}
 
 	// TODO : check if file has been uploaded b4
-	dtoFile := repo.Files.GetExistingFileDocument(reqMedia.FilePath)
-	fileAlreadyUploaded := false
-	if dtoFile != nil {
-		fileAlreadyUploaded = dtoFile.ClusterID > 0 && dtoFile.DocumentID > 0 && dtoFile.AccessHash > 0
-	}
-	if fileAlreadyUploaded {
-		msgID := -domain.SequentialUniqueID()
-		fileID := uint64(domain.SequentialUniqueID())
-		res, err := repo.PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, int64(fileID), reqMedia)
-		if err != nil {
-			e := new(msg.Error)
-			e.Code = "n/a"
-			e.Items = "Failed to save to pendingMessages : " + err.Error()
-			msg.ResultError(out, e)
-			uiexec.Ctx().Exec(func() {
-				if successCB != nil {
-					successCB(out)
-				}
-			})
-			return
-		}
 
-		req := new(msg.MessagesSendMedia)
-		req.ClearDraft = reqMedia.ClearDraft
-		req.MediaType = msg.InputMediaTypeDocument
-		doc := new(msg.InputMediaDocument)
-		doc.Caption = reqMedia.Caption
-		doc.Document = new(msg.InputDocument)
-		doc.Document.AccessHash = uint64(dtoFile.AccessHash)
-		doc.Document.ClusterID = dtoFile.ClusterID
-		doc.Document.ID = dtoFile.DocumentID
-		req.MediaData, _ = doc.Marshal()
-		req.Peer = reqMedia.Peer
-		req.RandomID = domain.SequentialUniqueID()
-		req.ReplyTo = reqMedia.ReplyTo
+	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
+	msgID := -domain.SequentialUniqueID()
+	fileID := int64(in.RequestID)
+	res, err := repo.PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, fileID, reqMedia)
 
-		reqBytes, _ := req.Marshal()
-		in.Constructor = msg.C_MessagesSendMedia
-		in.Message = reqBytes
-
-		// TODO :FIX THIS : required behaviour add to pending message and put this to progress pipe line and etc ...
-		// 3. return to CallBack with pending message data : Done
-		out.Constructor = msg.C_ClientPendingMessage
-		out.Message, _ = res.Marshal()
-
-		// 4. later when queue got processed and server returned response we should check if the requestID
-		//   exist in pendingTable we remove it and insert new message with new id to message table
-		//   invoke new OnUpdate with new protobuff to inform ui that pending message got delivered
+	if err != nil {
+		e := new(msg.Error)
+		e.Code = "n/a"
+		e.Items = "Failed to save to pendingMessages : " + err.Error()
+		msg.ResultError(out, e)
 		uiexec.Ctx().Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
-		}) // successCB(out)
+		})
+		return
+	}
 
-		r.onFileUploadCompleted(msgID, int64(fileID), 0, dtoFile.ClusterID, -1, domain.FileStateExistedUpload, dtoFile.FilePath, reqMedia, 0, 0)
-		// send the request to server
-		r.queueCtrl.ExecuteCommand(fileID, in.Constructor, in.Message, nil, nil, false)
-
-	} else {
-		// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
-		msgID := -domain.SequentialUniqueID()
-		fileID := int64(in.RequestID)
-		res, err := repo.PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, fileID, reqMedia)
-
-		if err != nil {
-			e := new(msg.Error)
-			e.Code = "n/a"
-			e.Items = "Failed to save to pendingMessages : " + err.Error()
-			msg.ResultError(out, e)
-			uiexec.Ctx().Exec(func() {
-				if successCB != nil {
-					successCB(out)
-				}
-			})
-			return
-		}
-
-		// 2. start file upload and send process
-		err = r.fileCtrl.Upload(fileID, res)
-		if err != nil {
-			e := new(msg.Error)
-			e.Code = "n/a"
-			e.Items = "Failed to start Upload : " + err.Error()
-			msg.ResultError(out, e)
-			uiexec.Ctx().Exec(func() {
-				if successCB != nil {
-					successCB(out)
-				}
-			})
-			return
-		}
-
-		// 3. return to CallBack with pending message data : Done
-		out.Constructor = msg.C_ClientPendingMessage
-		out.Message, _ = res.Marshal()
-
-		// 4. later when queue got processed and server returned response we should check if the requestID
-		//   exist in pendingTable we remove it and insert new message with new id to message table
-		//   invoke new OnUpdate with new protobuff to inform ui that pending message got delivered
+	// 2. start file upload and send process
+	err = r.fileCtrl.Upload(fileID, res)
+	if err != nil {
+		e := new(msg.Error)
+		e.Code = "n/a"
+		e.Items = "Failed to start Upload : " + err.Error()
+		msg.ResultError(out, e)
 		uiexec.Ctx().Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
-		}) // successCB(out)
+		})
+		return
 	}
+
+	// 3. return to CallBack with pending message data : Done
+	out.Constructor = msg.C_ClientPendingMessage
+	out.Message, _ = res.Marshal()
+
+	// 4. later when queue got processed and server returned response we should check if the requestID
+	//   exist in pendingTable we remove it and insert new message with new id to message table
+	//   invoke new OnUpdate with new protobuff to inform ui that pending message got delivered
+	uiexec.Ctx().Exec(func() {
+		if successCB != nil {
+			successCB(out)
+		}
+	}) // successCB(out)
 
 }
 

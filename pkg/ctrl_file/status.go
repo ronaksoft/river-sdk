@@ -185,7 +185,7 @@ func (fs *File) Write(data []byte, partIdx int64) (isCompleted bool, err error) 
 	}
 	isCompleted = fs.IsCompleted
 	if isCompleted {
-		_ = repo.Files.SaveDownloadingFile(fs.GetDTO())
+		repo.Files.SaveStatus(fs.GetDTO())
 	}
 
 	fs.fileStatusChanged()
@@ -198,7 +198,7 @@ func (fs *File) ReadCommit(count int64, isThumbnail bool, partIdx int64) (isComp
 	if isThumbnail {
 		fs.ThumbPosition += count
 		fs.ThumbPartNo++
-		repo.Files.SaveFileStatus(fs.GetDTO())
+		repo.Files.SaveStatus(fs.GetDTO())
 		return
 	}
 	if fs.stop {
@@ -217,10 +217,7 @@ func (fs *File) ReadCommit(count int64, isThumbnail bool, partIdx int64) (isComp
 }
 
 func (fs *File) fileStatusChanged() {
-	err := repo.Files.SaveFileStatus(fs.GetDTO())
-	if err != nil {
-		logs.Error("fileStatusChanged() failed to save in DB", zap.Error(err))
-	}
+	repo.Files.SaveStatus(fs.GetDTO())
 
 	lenParts := int64(fs.partListCount())
 

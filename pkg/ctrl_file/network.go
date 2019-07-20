@@ -12,7 +12,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 )
 
-func (fm *Controller) SendWithContext(ctx context.Context, in *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
+func (ctrl *Controller) SendWithContext(ctx context.Context, in *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
 	// waitGroup := sync.WaitGroup{}
 	// waitGroup.Add(1)
 	// select {
@@ -24,22 +24,22 @@ func (fm *Controller) SendWithContext(ctx context.Context, in *msg.MessageEnvelo
 }
 
 // Send encrypt and send request to server and receive and decrypt its response
-func (fm *Controller) Send(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
+func (ctrl *Controller) Send(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
 	protoMessage := new(msg.ProtoMessage)
-	protoMessage.AuthID = fm.authID
+	protoMessage.AuthID = ctrl.authID
 	protoMessage.MessageKey = make([]byte, 32)
-	if fm.authID == 0 {
+	if ctrl.authID == 0 {
 		protoMessage.Payload, _ = msgEnvelope.Marshal()
 	} else {
-		fm.messageSeq++
+		ctrl.messageSeq++
 		encryptedPayload := msg.ProtoEncryptedPayload{
 			ServerSalt: salt.Get(),
 			Envelope:   msgEnvelope,
 		}
-		encryptedPayload.MessageID = uint64(time.Now().Unix()<<32 | fm.messageSeq)
+		encryptedPayload.MessageID = uint64(time.Now().Unix()<<32 | ctrl.messageSeq)
 		unencryptedBytes, _ := encryptedPayload.Marshal()
-		encryptedPayloadBytes, _ := domain.Encrypt(fm.authKey, unencryptedBytes)
-		messageKey := domain.GenerateMessageKey(fm.authKey, unencryptedBytes)
+		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes)
+		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes)
 		copy(protoMessage.MessageKey, messageKey)
 		protoMessage.Payload = encryptedPayloadBytes
 	}
@@ -56,7 +56,7 @@ func (fm *Controller) Send(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelo
 	client.Timeout = domain.WebsocketRequestTime
 
 	// Send Data
-	httpResp, err := client.Post(fm.ServerEndpoint, "application/protobuf", reqBuff)
+	httpResp, err := client.Post(ctrl.ServerEndpoint, "application/protobuf", reqBuff)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (fm *Controller) Send(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelo
 		err = receivedEnvelope.Unmarshal(res.Payload)
 		return receivedEnvelope, err
 	}
-	decryptedBytes, err := domain.Decrypt(fm.authKey, res.MessageKey, res.Payload)
+	decryptedBytes, err := domain.Decrypt(ctrl.authKey, res.MessageKey, res.Payload)
 
 	receivedEncryptedPayload := new(msg.ProtoEncryptedPayload)
 	err = receivedEncryptedPayload.Unmarshal(decryptedBytes)

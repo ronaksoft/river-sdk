@@ -22,7 +22,3 @@ type FilesStatus struct {
 	ThumbPartNo     int32  `gorm:"column:ThumbPartNo" json:"ThumbPartNo"`
 	ThumbTotalParts int32  `gorm:"column:ThumbTotalParts" json:"ThumbTotalParts"`
 }
-
-func (FilesStatus) TableName() string {
-	return "files_status"
-}

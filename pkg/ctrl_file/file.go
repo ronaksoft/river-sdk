@@ -10,7 +10,6 @@ import (
 	"mime"
 	"os"
 	"path"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -75,6 +74,8 @@ type Controller struct {
 }
 
 func New(config Config) *Controller {
+	maxUploadConcurrency := 3
+	maxDownloadConcurrency := 3
 	ctx = &Controller{
 		ServerEndpoint:      config.ServerAddress,
 		UploadQueue:         make(map[int64]*File, 0),
@@ -89,78 +90,57 @@ func New(config Config) *Controller {
 		onUploadError:       config.OnFileUploadError,
 		onDownloadError:     config.OnFileDownloadError,
 	}
-	go ctx.startDownloadQueue()
-	go ctx.startUploadQueue()
+	for i := 0; i < maxDownloadConcurrency; i++ {
+		go ctx.startDownloadQueue()
+	}
+	for i := 0; i < maxUploadConcurrency; i++ {
+		go ctx.startUploadQueue()
+	}
+
+
 	return ctx
 }
 
-func (fm *Controller) startDownloadQueue() {
+func (ctrl *Controller) startDownloadQueue() {
 	for {
-		if fm.NetworkStatus == domain.NetworkDisconnected || fm.NetworkStatus == domain.NetworkConnecting {
+		if ctrl.NetworkStatus == domain.NetworkDisconnected || ctrl.NetworkStatus == domain.NetworkConnecting {
 			time.Sleep(100 * time.Millisecond)
 		}
-		fm.DownloadQueueStarted = true
+		ctrl.DownloadQueueStarted = true
 		select {
-		case <-fm.chStopDownloader:
-			fm.mxDown.Lock()
-			for _, v := range fm.DownloadQueue {
+		case <-ctrl.chStopDownloader:
+			ctrl.mxDown.Lock()
+			for _, v := range ctrl.DownloadQueue {
 				v.Stop()
 			}
-			fm.mxDown.Unlock()
-			fm.DownloadQueueStarted = false
+			ctrl.mxDown.Unlock()
+			ctrl.DownloadQueueStarted = false
 			return
-		case <-fm.chNewDownloadItem:
-			fm.mxDown.Lock()
-			for _, v := range fm.DownloadQueue {
-				go v.StartDownload(fm)
+		case <-ctrl.chNewDownloadItem:
+			ctrl.mxDown.Lock()
+			for _, v := range ctrl.DownloadQueue {
+				v.StartDownload(ctrl)
 			}
-			fm.mxDown.Unlock()
-		}
-	}
-}
-
-func (fm *Controller) startUploadQueue() {
-	for {
-		if fm.NetworkStatus == domain.NetworkDisconnected || fm.NetworkStatus == domain.NetworkConnecting {
-			time.Sleep(100 * time.Millisecond)
-		}
-
-		fm.UploadQueueStarted = true
-		select {
-		case <-fm.chStopUploader:
-			fm.mxUp.Lock()
-			for _, v := range fm.UploadQueue {
-				v.Stop()
-			}
-			fm.mxUp.Unlock()
-			fm.UploadQueueStarted = false
-			return
-		case <-fm.chNewUploadItem:
-			fm.mxUp.Lock()
-			for _, v := range fm.UploadQueue {
-				go v.StartUpload(fm)
-			}
-			fm.mxUp.Unlock()
-
+			ctrl.mxDown.Unlock()
 		}
 	}
 }
 
 // downloadRequest send request to server
-func (fm *Controller) downloadRequest(req *msg.MessageEnvelope, fs *File, partIdx int64) {
+func (ctrl *Controller) downloadRequest(req *msg.MessageEnvelope, fs *File, partIdx int64) {
 	// time out has been set in Send()
-	res, err := fm.Send(req)
+	res, err := ctrl.Send(req)
 	if err == nil {
 		switch res.Constructor {
 		case msg.C_Error:
 			// remove download from queue
-			fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
+			ctrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
 			logs.Warn("downloadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
 			fs.RequestStatus = domain.RequestStatusError
 			repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 
-			if fm.onDownloadError != nil {
-				fm.onDownloadError(fs.MessageID, int64(req.RequestID), fs.FilePath, res.Message)
+			if ctrl.onDownloadError != nil {
+				ctrl.onDownloadError(fs.MessageID, int64(req.RequestID), fs.FilePath, res.Message)
 			}
 		case msg.C_File:
 			x := new(msg.File)
@@ -190,7 +170,7 @@ func (fm *Controller) downloadRequest(req *msg.MessageEnvelope, fs *File, partId
 				logs.Error("downloadRequest() failed write to file", zap.Error(err))
 			} else if isCompleted {
 				// call completed delegate
-				fm.downloadCompleted(fs.MessageID, fs.FilePath, fs.Type)
+				ctrl.downloadCompleted(fs.MessageID, fs.FilePath, fs.Type)
 
 			}
 		default:
@@ -206,43 +186,70 @@ func (fm *Controller) downloadRequest(req *msg.MessageEnvelope, fs *File, partId
 	}
 	if fs.retryCounter > domain.FileMaxRetry {
 		// remove download from queue
-		fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
+		ctrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
 		logs.Warn("downloadRequest() download request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
 		fs.RequestStatus = domain.RequestStatusError
 		_ = repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
-		if fm.onDownloadError != nil {
+		if ctrl.onDownloadError != nil {
 			x := new(msg.Error)
 			x.Code = "00"
 			x.Items = "download request errors passed retry threshold"
 			xbuff, _ := x.Marshal()
-			fm.onDownloadError(fs.MessageID, int64(req.RequestID), fs.FilePath, xbuff)
+			ctrl.onDownloadError(fs.MessageID, int64(req.RequestID), fs.FilePath, xbuff)
 		}
 	}
 }
 
-func (fm *Controller) downloadCompleted(msgID int64, filePath string, stateType domain.FileStateType) {
+func (ctrl *Controller) downloadCompleted(msgID int64, filePath string, stateType domain.FileStateType) {
 	// delete file status
-	fm.DeleteFromQueue(msgID, domain.RequestStatusCompleted)
-	repo.Files.DeleteFileStatus(msgID)
-	if fm.onDownloadCompleted != nil {
-		fm.onDownloadCompleted(msgID, filePath, stateType)
+	ctrl.DeleteFromQueue(msgID, domain.RequestStatusCompleted)
+	repo.Files.DeleteStatus(msgID)
+	if ctrl.onDownloadCompleted != nil {
+		ctrl.onDownloadCompleted(msgID, filePath, stateType)
+	}
+}
+
+func (ctrl *Controller) startUploadQueue() {
+	for {
+		if ctrl.NetworkStatus == domain.NetworkDisconnected || ctrl.NetworkStatus == domain.NetworkConnecting {
+			time.Sleep(1000 * time.Millisecond)
+		}
+
+		ctrl.UploadQueueStarted = true
+		select {
+		case <-ctrl.chStopUploader:
+			ctrl.mxUp.Lock()
+			for _, v := range ctrl.UploadQueue {
+				v.Stop()
+			}
+			ctrl.mxUp.Unlock()
+			ctrl.UploadQueueStarted = false
+			return
+		case <-ctrl.chNewUploadItem:
+			ctrl.mxUp.Lock()
+			for _, v := range ctrl.UploadQueue {
+				go v.StartUpload(ctrl)
+			}
+			ctrl.mxUp.Unlock()
+
+		}
 	}
 }
 
 // uploadRequest send request to server
-func (fm *Controller) uploadRequest(req *msg.MessageEnvelope, count int64, fs *File, partIdx int64) {
+func (ctrl *Controller) uploadRequest(req *msg.MessageEnvelope, count int64, fs *File, partIdx int64) {
 	// time out has been set in Send()
-	res, err := fm.Send(req)
+	res, err := ctrl.Send(req)
 	if err == nil {
 		switch res.Constructor {
 		case msg.C_Error:
 			// remove upload from
-			fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
+			ctrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
 			logs.Warn("uploadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
 			fs.RequestStatus = domain.RequestStatusError
 			repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
-			if fm.onUploadError != nil {
-				fm.onUploadError(fs.MessageID, int64(req.RequestID), fs.FilePath, res.Message)
+			if ctrl.onUploadError != nil {
+				ctrl.onUploadError(fs.MessageID, int64(req.RequestID), fs.FilePath, res.Message)
 			}
 		case msg.C_Bool:
 			x := new(msg.Bool)
@@ -279,21 +286,21 @@ func (fm *Controller) uploadRequest(req *msg.MessageEnvelope, count int64, fs *F
 	if fs.retryCounter > domain.FileMaxRetry {
 
 		// remove upload from queue
-		fm.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
+		ctrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
 		logs.Error("uploadRequest() upload request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
 		fs.RequestStatus = domain.RequestStatusError
 		_ = repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
-		if fm.onUploadError != nil {
+		if ctrl.onUploadError != nil {
 			x := new(msg.Error)
 			x.Code = "00"
 			x.Items = "upload request errors passed retry threshold"
 			xbuff, _ := x.Marshal()
-			fm.onUploadError(fs.MessageID, int64(req.RequestID), fs.FilePath, xbuff)
+			ctrl.onUploadError(fs.MessageID, int64(req.RequestID), fs.FilePath, xbuff)
 		}
 	}
 }
 
-func (fm *Controller) uploadCompleted(msgID, fileID, targetID int64,
+func (ctrl *Controller) uploadCompleted(msgID, fileID, targetID int64,
 	clusterID int32, totalParts int64,
 	stateType domain.FileStateType,
 	filePath string,
@@ -302,22 +309,22 @@ func (fm *Controller) uploadCompleted(msgID, fileID, targetID int64,
 	thumbTotalParts int32,
 ) {
 	// delete file status
-	fm.DeleteFromQueue(msgID, domain.RequestStatusCompleted)
-	repo.Files.DeleteFileStatus(msgID)
-	if fm.onUploadCompleted != nil {
-		fm.onUploadCompleted(msgID, fileID, targetID, clusterID, totalParts, stateType, filePath, uploadRequest, thumbFileID, thumbTotalParts)
+	ctrl.DeleteFromQueue(msgID, domain.RequestStatusCompleted)
+	repo.Files.DeleteStatus(msgID)
+	if ctrl.onUploadCompleted != nil {
+		ctrl.onUploadCompleted(msgID, fileID, targetID, clusterID, totalParts, stateType, filePath, uploadRequest, thumbFileID, thumbTotalParts)
 	}
 }
 
 // Stop set stop flag
-func (fm *Controller) Stop() {
+func (ctrl *Controller) Stop() {
 	logs.Debug("FileController Stopping")
 
-	if fm.UploadQueueStarted {
-		fm.chStopUploader <- true
+	if ctrl.UploadQueueStarted {
+		ctrl.chStopUploader <- true
 	}
-	if fm.DownloadQueueStarted {
-		fm.chStopDownloader <- true
+	if ctrl.DownloadQueueStarted {
+		ctrl.chStopDownloader <- true
 	}
 
 	if ctx != nil {
@@ -327,7 +334,7 @@ func (fm *Controller) Stop() {
 }
 
 // Upload file to server
-func (fm *Controller) Upload(fileID int64, req *msg.ClientPendingMessage) error {
+func (ctrl *Controller) Upload(fileID int64, req *msg.ClientPendingMessage) error {
 	x := new(msg.ClientSendMessageMedia)
 	err := x.Unmarshal(req.Media)
 	if err != nil {
@@ -350,7 +357,7 @@ func (fm *Controller) Upload(fileID int64, req *msg.ClientPendingMessage) error 
 		return errors.New("max allowed file size is 750 MB")
 	}
 
-	state := NewFile(req.ID, fileID, 0, fileSize, x.FilePath, domain.FileStateUpload, 0, 0, 0, fm.progressCallback)
+	state := NewFile(req.ID, fileID, 0, fileSize, x.FilePath, domain.FileStateUpload, 0, 0, 0, ctrl.progressCallback)
 	state.UploadRequest = x
 
 	thumbFile, err := os.Open(x.ThumbFilePath)
@@ -366,23 +373,23 @@ func (fm *Controller) Upload(fileID int64, req *msg.ClientPendingMessage) error 
 		}
 	}
 
-	fm.AddToQueue(state)
-	err = repo.Files.SaveFileStatus(state.GetDTO())
-	return err
+	ctrl.AddToQueue(state)
+	repo.Files.SaveStatus(state.GetDTO())
+	return nil
 }
 
 // Download add download request
-func (fm *Controller) Download(req *msg.UserMessage) {
-	var state *File
-	dtoState, err := repo.Files.GetFileStatus(req.ID)
+func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
+	var theFile *File
+	filesStatus, err := repo.Files.GetStatus(userMessage.ID)
 
-	if err == nil && dtoState != nil {
-		if dtoState.IsCompleted {
-			fm.downloadCompleted(dtoState.MessageID, dtoState.FilePath, domain.FileStateType(dtoState.Type))
+	if err == nil && filesStatus != nil {
+		if filesStatus.IsCompleted {
+			ctrl.downloadCompleted(filesStatus.MessageID, filesStatus.FilePath, domain.FileStateType(filesStatus.Type))
 			return
 		}
-		state = new(File)
-		state.LoadDTO(*dtoState, fm.progressCallback)
+		theFile = new(File)
+		theFile.LoadDTO(*filesStatus, ctrl.progressCallback)
 
 	} else {
 		var docID int64
@@ -391,100 +398,84 @@ func (fm *Controller) Download(req *msg.UserMessage) {
 		var version int32
 		var fileSize int32
 		var filePath string
-		switch req.MediaType {
+		switch userMessage.MediaType {
 		case msg.MediaTypeEmpty:
-			// TODO:: implement it
-		case msg.MediaTypePhoto:
-			// TODO:: implement it
 		case msg.MediaTypeDocument:
 			x := new(msg.MediaDocument)
-			x.Unmarshal(req.Media)
+			_ = x.Unmarshal(userMessage.Media)
 
-			fileName := ""
-			for _, attr := range x.Doc.Attributes {
-				if attr.Type == msg.AttributeTypeFile {
-					attrFile := new(msg.DocumentAttributeFile)
-					err := attrFile.Unmarshal(attr.Data)
-					if err == nil {
-						fileName = attrFile.Filename
-					}
-				}
-			}
 
 			docID = x.Doc.ID
 			clusterID = x.Doc.ClusterID
 			accessHash = x.Doc.AccessHash
 			version = x.Doc.Version
 			fileSize = x.Doc.FileSize
-			filePath = GetFilePath(x.Doc.MimeType, x.Doc.ID, fileName)
-			state = NewFile(req.ID, docID, 0, int64(fileSize), filePath, domain.FileStateDownload, clusterID, accessHash, version, fm.progressCallback)
-			state.DownloadRequest = x.Doc
+			filePath = GetFilePath(x.Doc.MimeType, x.Doc.ID)
 
-		case msg.MediaTypeContact:
-			// TODO:: implement it
+			theFile = NewFile(userMessage.ID, docID, 0, int64(fileSize), filePath, domain.FileStateDownload, clusterID, accessHash, version, ctrl.progressCallback)
+			theFile.DownloadRequest = x.Doc
 		default:
-			logs.Error("Download() Invalid SharedMediaType")
+			return
 		}
 	}
 
-	if state != nil {
-		state.RequestStatus = domain.RequestStatusInProgress
-		fm.AddToQueue(state)
-		repo.Files.SaveFileStatus(state.GetDTO())
-		repo.Files.SaveDownloadingFile(state.GetDTO())
-		repo.Files.UpdateFileStatus(state.MessageID, domain.RequestStatusInProgress)
+	if theFile != nil {
+		theFile.RequestStatus = domain.RequestStatusInProgress
+		ctrl.AddToQueue(theFile)
+		repo.Files.SaveStatus(theFile.GetDTO())
+		_ = repo.Files.UpdateFileStatus(theFile.MessageID, domain.RequestStatusInProgress)
 	}
 }
 
 // AddToQueue add request to queue
-func (fm *Controller) AddToQueue(status *File) {
-	switch status.Type {
+func (ctrl *Controller) AddToQueue(theFile *File) {
+	switch theFile.Type {
 	case domain.FileStateUpload, domain.FileStateUploadAccountPhoto, domain.FileStateUploadGroupPhoto:
-		fm.mxUp.Lock()
-		_, ok := fm.UploadQueue[status.MessageID]
+		ctrl.mxUp.Lock()
+		_, ok := ctrl.UploadQueue[theFile.MessageID]
 		if !ok {
-			fm.UploadQueue[status.MessageID] = status
+			ctrl.UploadQueue[theFile.MessageID] = theFile
 		}
-		fm.mxUp.Unlock()
+		ctrl.mxUp.Unlock()
 		if !ok {
-			fm.chNewUploadItem <- true
+			ctrl.chNewUploadItem <- true
 		}
 	case domain.FileStateDownload:
-		fm.mxDown.Lock()
-		_, ok := fm.DownloadQueue[status.MessageID]
+		ctrl.mxDown.Lock()
+		_, ok := ctrl.DownloadQueue[theFile.MessageID]
 		if !ok {
-			fm.DownloadQueue[status.MessageID] = status
+			ctrl.DownloadQueue[theFile.MessageID] = theFile
 		}
-		fm.mxDown.Unlock()
+		ctrl.mxDown.Unlock()
 		if !ok {
-			fm.chNewDownloadItem <- true
+			ctrl.chNewDownloadItem <- true
 		}
 	}
 }
 
 // DeleteFromQueue remove items from download/upload queue and stop them
-func (fm *Controller) DeleteFromQueue(msgID int64, status domain.RequestStatus) {
-	fm.mxUp.Lock()
-	up, uok := fm.UploadQueue[msgID]
+func (ctrl *Controller) DeleteFromQueue(msgID int64, status domain.RequestStatus) {
+	ctrl.mxUp.Lock()
+	up, uok := ctrl.UploadQueue[msgID]
 	if uok {
 		up.RequestStatus = status
-		delete(fm.UploadQueue, msgID)
+		delete(ctrl.UploadQueue, msgID)
 		up.Stop()
 	}
-	fm.mxUp.Unlock()
+	ctrl.mxUp.Unlock()
 
-	fm.mxDown.Lock()
-	down, dok := fm.DownloadQueue[msgID]
+	ctrl.mxDown.Lock()
+	down, dok := ctrl.DownloadQueue[msgID]
 	if dok {
 		down.RequestStatus = status
-		delete(fm.DownloadQueue, msgID)
+		delete(ctrl.DownloadQueue, msgID)
 		down.Stop()
 	}
-	fm.mxDown.Unlock()
+	ctrl.mxDown.Unlock()
 }
 
 // CalculateMD5 this will calculate md5 hash for files that are smaller than threshold
-func (fm *Controller) CalculateMD5(file *os.File) (string, error) {
+func (ctrl *Controller) CalculateMD5(file *os.File) (string, error) {
 	// get file info
 	fileInfo, err := file.Stat()
 	if err != nil {
@@ -503,38 +494,38 @@ func (fm *Controller) CalculateMD5(file *os.File) (string, error) {
 }
 
 // SetAuthorization set client AuthID and AuthKey to encrypt&decrypt network requests
-func (fm *Controller) SetAuthorization(authID int64, authKey []byte) {
-	fm.authKey = make([]byte, len(authKey))
-	fm.authID = authID
-	copy(fm.authKey, authKey)
+func (ctrl *Controller) SetAuthorization(authID int64, authKey []byte) {
+	ctrl.authKey = make([]byte, len(authKey))
+	ctrl.authID = authID
+	copy(ctrl.authKey, authKey)
 }
 
 // LoadQueueFromDB load in progress request from database
-func (fm *Controller) LoadQueueFromDB() {
+func (ctrl *Controller) LoadQueueFromDB() {
 	// Load pended file status
-	dtos := repo.Files.GetAllFileStatus()
-	for _, d := range dtos {
+	filesStatuses := repo.Files.GetAllStatuses()
+	for _, filesStatus := range filesStatuses {
 		fs := new(File)
-		fs.LoadDTO(d, fm.progressCallback)
+		fs.LoadDTO(filesStatus, ctrl.progressCallback)
 		if fs.RequestStatus == domain.RequestStatusPaused ||
 			fs.RequestStatus == domain.RequestStatusCanceled ||
 			fs.RequestStatus == domain.RequestStatusCompleted {
 			continue
 		}
-		fm.AddToQueue(fs)
+		ctrl.AddToQueue(fs)
 	}
 }
 
 // SetNetworkStatus called on network controller state changes to inform file controller
-func (fm *Controller) SetNetworkStatus(state domain.NetworkStatus) {
-	fm.NetworkStatus = state
+func (ctrl *Controller) SetNetworkStatus(state domain.NetworkStatus) {
+	ctrl.NetworkStatus = state
 	if state == domain.NetworkWeak || state == domain.NetworkSlow || state == domain.NetworkFast {
-		fm.LoadQueueFromDB()
+		ctrl.LoadQueueFromDB()
 	}
 }
 
 // DownloadAccountPhoto download account photo from server its sync
-func (fm *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) (string, error) {
+func (ctrl *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) (string, error) {
 	req := new(msg.FileGet)
 	req.Location = new(msg.InputFileLocation)
 	if isBig {
@@ -558,7 +549,7 @@ func (fm *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, i
 	envelop.RequestID = uint64(domain.SequentialUniqueID())
 
 	filePath := GetAccountAvatarPath(userID, req.Location.FileID)
-	res, err := fm.Send(envelop)
+	res, err := ctrl.Send(envelop)
 	if err == nil {
 		switch res.Constructor {
 		case msg.C_Error:
@@ -592,7 +583,7 @@ func (fm *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, i
 }
 
 // DownloadGroupPhoto download group photo from server its sync
-func (fm *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) (string, error) {
+func (ctrl *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) (string, error) {
 	req := new(msg.FileGet)
 	req.Location = new(msg.InputFileLocation)
 	if isBig {
@@ -616,7 +607,7 @@ func (fm *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, i
 	envelop.RequestID = uint64(domain.SequentialUniqueID())
 
 	filePath := GetGroupAvatarPath(groupID, req.Location.FileID)
-	res, err := fm.Send(envelop)
+	res, err := ctrl.Send(envelop)
 	if err == nil {
 		switch res.Constructor {
 		case msg.C_Error:
@@ -650,7 +641,7 @@ func (fm *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, i
 }
 
 // DownloadThumbnail download thumbnail from server its sync
-func (fm *Controller) DownloadThumbnail(msgID int64, fileID int64, accessHash uint64, clusterID, version int32) (string, error) {
+func (ctrl *Controller) DownloadThumbnail(fileID int64, accessHash uint64, clusterID, version int32) (string, error) {
 	req := new(msg.FileGet)
 	req.Location = &msg.InputFileLocation{
 		AccessHash: accessHash,
@@ -667,8 +658,8 @@ func (fm *Controller) DownloadThumbnail(msgID int64, fileID int64, accessHash ui
 	envelop.Message, _ = req.Marshal()
 	envelop.RequestID = uint64(domain.SequentialUniqueID())
 
-	filePath := path.Join(dirCache, fmt.Sprintf("%d%s", fileID, ".jpg"))
-	res, err := fm.Send(envelop)
+	filePath := GetThumbnailPath(fileID, clusterID)
+	res, err := ctrl.Send(envelop)
 	if err == nil {
 		switch res.Constructor {
 		case msg.C_Error:
@@ -677,7 +668,7 @@ func (fm *Controller) DownloadThumbnail(msgID int64, fileID int64, accessHash ui
 			if err := x.Unmarshal(res.Message); err == nil {
 				strErr = "Code :" + x.Code + ", Items :" + x.Items
 			}
-			return "", fmt.Errorf("DownloadThumbnail() received error response {MsgID: %d,  %s }", msgID, strErr)
+			return "", fmt.Errorf("DownloadThumbnail() received error response { %s }", strErr)
 		case msg.C_File:
 			x := new(msg.File)
 			err := x.Unmarshal(res.Message)
@@ -692,16 +683,16 @@ func (fm *Controller) DownloadThumbnail(msgID int64, fileID int64, accessHash ui
 			}
 
 			// save to DB
-			return filePath, repo.Files.UpdateThumbnailPath(msgID, filePath)
+			return filePath, nil
 
 		default:
-			return "", fmt.Errorf("DownloadThumbnail() received unknown response constructor {GroupID : %d}", msgID)
+			return "", fmt.Errorf("DownloadThumbnail() received unknown response constructor")
 		}
 	}
 	return "", err
 }
 
-func (fm *Controller) ClearFiles(filePaths []string) error {
+func (ctrl *Controller) ClearFiles(filePaths []string) error {
 	for _, filePath := range filePaths {
 		if err := os.Remove(filePath); err != nil {
 			logs.Warn("ClearFiles::Error removing files", zap.String(fmt.Sprintf(" file path: %s", filePath), err.Error()))
@@ -720,39 +711,36 @@ func SetRootFolders(audioDir, fileDir, photoDir, videoDir, cacheDir string) {
 	dirCache = cacheDir
 }
 
-// GetFilePath generate related file path by its mime type
-func GetFilePath(mimeType string, docID int64, fileName string) string {
-	lower := strings.ToLower(mimeType)
-	strDocID := strconv.FormatInt(docID, 10)
-	ext := path.Ext(fileName)
+func GetFilePath(mimeType string, docID int64) string {
+	mimeType = strings.ToLower(mimeType)
+	var ext string
 	if ext == "" {
-		exts, err := mime.ExtensionsByType(mimeType)
-		if err == nil {
-			for _, val := range exts {
-				ext = val
-			}
+		exts, _ := mime.ExtensionsByType(mimeType)
+		if len(exts) > 0 {
+			ext = exts[len(exts)-1]
 		}
 	}
 
 	// if the file is opus type,
 	// means its voice file so it should be saved in cache folder
 	// so user could not access to it by file manager
-	if lower == "audio/ogg" {
+	switch {
+	case mimeType == "audio/ogg":
 		ext = ".ogg"
-		return path.Join(dirCache, fmt.Sprintf("%s%s", strDocID, ext))
+		return path.Join(dirCache, fmt.Sprintf("%d%s", docID, ext))
+	case strings.HasPrefix(mimeType, "video/"):
+		return path.Join(dirVideo, fmt.Sprintf("%d%s", docID, ext))
+	case strings.HasPrefix(mimeType, "audio/"):
+		return path.Join(dirAudio, fmt.Sprintf("%d%s", docID, ext))
+	case strings.HasPrefix(mimeType, "image/"):
+		return path.Join(dirPhoto, fmt.Sprintf("%d%s", docID, ext))
+	default:
+		return path.Join(dirFile, fmt.Sprintf("%d%s", docID, ext))
 	}
+}
 
-	if strings.HasPrefix(lower, "video/") {
-		return path.Join(dirVideo, fmt.Sprintf("%s%s", strDocID, ext))
-	}
-	if strings.HasPrefix(lower, "audio/") {
-		return path.Join(dirAudio, fmt.Sprintf("%s%s", strDocID, ext))
-	}
-	if strings.HasPrefix(lower, "image/") {
-		return path.Join(dirPhoto, fmt.Sprintf("%s%s", strDocID, ext))
-	}
-
-	return path.Join(dirFile, fmt.Sprintf("%s%s", strDocID, ext))
+func GetThumbnailPath(fileID int64, clusterID int32) string {
+	return path.Join(dirCache, fmt.Sprintf("%d%d%s", fileID, clusterID, ".jpg"))
 }
 
 func GetAccountAvatarPath(userID int64, fileID int64) string {

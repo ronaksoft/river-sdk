@@ -641,13 +641,9 @@ func (ctrl *Controller) extractMessagesMedia(messages ...*msg.UserMessage) {
 				logs.Error("extractMessagesMedia()-> con not unmarshal MediaTypeDocument", zap.Error(err))
 				break
 			}
-			_ = repo.Files.SaveFileDocument(m, mediaDoc)
 			t := mediaDoc.Doc.Thumbnail
-			if t != nil {
-				if t.FileID != 0 {
-					ctrl.fileCtrl.DownloadThumbnail(m.ID, t.FileID, t.AccessHash, t.ClusterID, 0)
-
-				}
+			if t != nil && t.FileID != 0 {
+				_, _ = ctrl.fileCtrl.DownloadThumbnail(t.FileID, t.AccessHash, t.ClusterID, 0)
 			}
 
 		case msg.MediaTypeContact:
