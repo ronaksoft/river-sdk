@@ -14,9 +14,7 @@ import (
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	"github.com/dgraph-io/badger"
-	"github.com/jinzhu/gorm"
 	"go.uber.org/zap"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -41,12 +39,10 @@ var (
 
 // Context container of repo
 type Context struct {
-	DBDialect string
 	DBPath    string
 }
 
 type repository struct {
-	db          *gorm.DB
 	badger      *badger.DB
 	bunt        *buntdb.DB
 	searchIndex bleve.Index
@@ -55,27 +51,19 @@ type repository struct {
 
 // create tables
 func (r *repository) initDB() error {
-	// WARNING: AutoMigrate will ONLY create tables, missing columns and missing indexes,
-	// and WON’T change existing column’s type or delete unused columns to protect your data.
-	repoLastError = r.db.AutoMigrate(
-		dto.MessagesExtra{},
-		dto.FilesStatus{},
-	).Error
-
 	return repoLastError
 }
 
 // InitRepo initialize repo singleton
-func InitRepo(dialect, dbPath string) error {
+func InitRepo(dbPath string) error {
 	if ctx == nil {
 		singleton.Lock()
 		lcConfig := bigcache.DefaultConfig(time.Second * 360)
 		lcConfig.CleanWindow = time.Second * 30
 		lcConfig.HardMaxCacheSize = 128
 		lCache, _ = bigcache.NewBigCache(lcConfig)
-		repoLastError = repoSetDB(dialect, dbPath)
+		repoLastError = repoSetDB(dbPath)
 		ctx = &Context{
-			DBDialect: dialect,
 			DBPath:    dbPath,
 		}
 		Dialogs = &repoDialogs{repository: r}
@@ -90,15 +78,8 @@ func InitRepo(dialect, dbPath string) error {
 	}
 	return repoLastError
 }
-func repoSetDB(dialect, dbPath string) error {
+func repoSetDB(dbPath string) error {
 	r = new(repository)
-	r.db, repoLastError = gorm.Open(dialect, dbPath)
-	if repoLastError != nil {
-		logs.Debug("Context::repoSetDB()->gorm.Open()",
-			zap.String("Error", repoLastError.Error()),
-		)
-		return repoLastError
-	}
 	r.badger, repoLastError = badger.Open(badger.DefaultOptions(dbPath).WithLogger(nil))
 	if repoLastError != nil {
 		logs.Debug("Context::repoSetDB()->badger Open()",
@@ -180,15 +161,7 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 
 // ReInitiateDatabase runs auto migrate
 func ReInitiateDatabase() error {
-	err := r.db.DropTableIfExists(
-		dto.MessagesExtra{},
-		dto.FilesStatus{},
-	).Error
-
-	if err != nil {
-		return err
-	}
-
+	err := r.badger.DropAll()
 	err = r.initDB()
 
 	return err
@@ -200,7 +173,7 @@ func Close() error {
 
 	_ = r.bunt.Close()
 	_ = r.badger.Close()
-	repoLastError = r.db.Close()
+	_ = r.searchIndex.Close()
 	r = nil
 	ctx = nil
 	logs.Debug("Repo Stopped")

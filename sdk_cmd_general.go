@@ -403,12 +403,7 @@ func (r *River) GetScrollStatus(peerID int64, peerType int32) int64 {
 	defer func() {
 		mon.FunctionResponseTime("GetScrollStatus", time.Now().Sub(startTime))
 	}()
-	status, err := repo.MessagesExtra.GetScrollID(peerID, peerType)
-	if err != nil {
-		return 0
-	} else {
-		return status
-	}
+	return repo.MessagesExtra.GetScrollID(peerID, peerType)
 }
 
 func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
@@ -416,9 +411,8 @@ func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
 	defer func() {
 		mon.FunctionResponseTime("SetScrollStatus", time.Now().Sub(startTime))
 	}()
-	if err := repo.MessagesExtra.SaveScrollID(peerID, msgID, peerType); err != nil {
-		logs.Error("SetScrollStatus::Failed to set scroll ID")
-	}
+	repo.MessagesExtra.SaveScrollID(peerID, peerType, msgID)
+
 }
 
 // SearchGlobal returns messages, contacts and groups matching given text

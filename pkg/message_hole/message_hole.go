@@ -236,10 +236,8 @@ func loadManager(peerID int64, peerType int32) *HoleManager {
 	hm, ok := holder.list[keyID]
 	if !ok {
 		hm = newHoleManager()
-		b, err := repo.MessagesExtra.GetHoles(peerID, peerType)
-		if err == nil {
-			_ = json.Unmarshal(b, &hm.bars)
-		}
+		b := repo.MessagesExtra.GetHoles(peerID, peerType)
+		_ = json.Unmarshal(b, &hm.bars)
 		holder.list[keyID] = hm
 	}
 	return hm
@@ -250,7 +248,7 @@ func saveManager(peerID int64, peerType int32, hm *HoleManager) {
 	if err != nil {
 		return
 	}
-	_ = repo.MessagesExtra.SaveHoles(peerID, peerType, b)
+	repo.MessagesExtra.SaveHoles(peerID, peerType, b)
 	return
 }
 

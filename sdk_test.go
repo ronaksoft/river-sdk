@@ -59,7 +59,7 @@ func init() {
 }
 
 func TestController_CheckSalt(t *testing.T) {
-	_ = repo.InitRepo("sqlite3", fmt.Sprintf("%s/%s.db", "./_data", "test"))
+	_ = repo.InitRepo( fmt.Sprintf("%s/%s.db", "./_data", "test"))
 	var saltArrays [][]domain.Slt
 	var saltArray []domain.Slt
 	ti := time.Now()

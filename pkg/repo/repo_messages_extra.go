@@ -1,89 +1,96 @@
 package repo
 
-import "git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
+import (
+	"encoding/json"
+	"fmt"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"github.com/dgraph-io/badger"
+)
+
+const (
+	prefixMessageExtra = "MSG_EX"
+)
 
 type repoMessagesExtra struct {
 	*repository
 }
 
-func (r *repoMessagesExtra) SaveScrollID(peerID, msgID int64, peerType int32) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	scrollStatus := dto.MessagesExtra{
-		PeerID:   peerID,
-		PeerType: peerType,
-		ScrollID: msgID,
-	}
-	s := new(dto.MessagesExtra)
-
-	// check if scroll status for this peerID has been created before
-	r.db.Table(scrollStatus.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerType).Find(s)
-
-	// create new entry in db
-	if s.PeerID == 0 {
-		return r.db.Create(scrollStatus).Error
-	}
-
-	scrollStatus.Holes = s.Holes
-	// update existing
-	return r.db.Table(scrollStatus.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerType).Update(scrollStatus).Error
+func (r *repoMessagesExtra) getKey(peerID int64, peerType int32) []byte {
+	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%d", prefixMessageExtra, peerID, peerType))
 }
 
-func (r *repoMessagesExtra) GetScrollID(peerID int64, peerType int32) (int64, error) {
+func (r *repoMessagesExtra) get(peerID int64, peerType int32) *dto.MessagesExtra {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	s := dto.MessagesExtra{}
-	err := r.db.Table(s.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerType).Find(&s).Error
+	message := new(dto.MessagesExtra)
+	err := r.badger.View(func(txn *badger.Txn) error {
+		item, err := txn.Get(r.getKey(peerID, peerType))
+		if err != nil {
+			return err
+		}
+		return item.Value(func(val []byte) error {
+			return json.Unmarshal(val, message)
+		})
+	})
 	if err != nil {
-		return 0, err
-	} else {
-		return s.ScrollID, nil
+		return nil
 	}
+	return message
 }
 
-func (r *repoMessagesExtra) DeleteScrollID(peerID int64, peerType int32) error {
+func (r *repoMessagesExtra) save(key []byte, m *dto.MessagesExtra) {
+	bytes, _ := json.Marshal(m)
+	_ = r.badger.Update(func(txn *badger.Txn) error {
+		return txn.SetEntry(badger.NewEntry(key, bytes))
+	})
+}
+
+func (r *repoMessagesExtra) SaveScrollID(peerID int64, peerType int32, msgID int64) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	// Delete Row
-	return r.db.Where("PeerID=? AND  PeerType=?", peerID, peerType).Delete(dto.MessagesExtra{}).Error
+	key := r.getKey(peerID, peerType)
+	m := r.get(peerID, peerType)
+	if m == nil {
+		return
+	}
+	m.ScrollID = msgID
+	r.save(key, m)
 }
 
-func (r *repoMessagesExtra) SaveHoles(peerID int64, peerType int32, data []byte) error {
+func (r *repoMessagesExtra) GetScrollID(peerID int64, peerType int32) int64  {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	messageHole := dto.MessagesExtra{
-		PeerID:   peerID,
-		PeerType: peerType,
-		Holes:    data,
+	m := r.get(peerID, peerType)
+	if m == nil {
+		return 0
 	}
-	s := new(dto.MessagesExtra)
-
-	// check if scroll status for this peerID has been created before
-	r.db.Table(messageHole.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerType).Find(s)
-
-	// create new entry in db
-	if s.PeerID == 0 {
-		return r.db.Create(messageHole).Error
-	}
-
-	messageHole.ScrollID = s.ScrollID
-	// update existing
-	return r.db.Table(messageHole.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerType).Update(messageHole).Error
+	return m.ScrollID
 }
 
-func (r *repoMessagesExtra) GetHoles(peerID int64, peerType int32) ([]byte, error) {
+func (r *repoMessagesExtra) SaveHoles(peerID int64, peerType int32, data []byte)  {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	s := dto.MessagesExtra{}
-	err := r.db.Table(s.TableName()).Where("PeerID=? AND PeerType=?", peerID, peerType).Find(&s).Error
-	if err != nil {
-		return nil, err
-	} else {
-		return s.Holes, nil
+	key := r.getKey(peerID, peerType)
+	m := r.get(peerID, peerType)
+	if m == nil {
+		return
 	}
+	m.Holes = data
+	r.save(key, m)
+}
+
+func (r *repoMessagesExtra) GetHoles(peerID int64, peerType int32) []byte {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	m := r.get(peerID, peerType)
+	if m == nil {
+		return nil
+	}
+	return m.Holes
 }

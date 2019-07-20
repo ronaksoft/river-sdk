@@ -151,10 +151,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			logs.Error("updateNewMessage() -> DeleteDialogMessage() Failed", zap.Error(err))
 		}
 		// Delete Scroll Position
-		err = repo.MessagesExtra.DeleteScrollID(x.Message.PeerID, x.Message.PeerType)
-		if err != nil {
-			logs.Error("updateNewMessage() -> DeleteScrollID() Failed", zap.Error(err))
-		}
+		repo.MessagesExtra.SaveScrollID(x.Message.PeerID, x.Message.PeerType, 0)
 
 		if act.Delete {
 			// Delete Dialog
