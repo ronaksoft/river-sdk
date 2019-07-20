@@ -313,7 +313,7 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 
 	// Save Group Members
 	for _, v := range u.Participants {
-		repo.Groups.SaveParticipants(u.Group.ID, v)
+		repo.Groups.SaveParticipant(u.Group.ID, v)
 	}
 
 	// Save Users

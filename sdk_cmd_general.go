@@ -515,7 +515,7 @@ func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate
 	searchResults.Users = users
 	searchResults.Groups = groups
 	searchResults.MatchedUsers = userContacts
-	searchResults.MatchedGroups = repo.Groups.SearchByTitle(text)
+	searchResults.MatchedGroups = repo.Groups.Search(text)
 
 	outBytes, _ := searchResults.Marshal()
 

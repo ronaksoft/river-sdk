@@ -160,19 +160,10 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 
 		if act.Delete {
 			// Delete Dialog
-			err = repo.Dialogs.Delete(x.Message.PeerID, x.Message.PeerType)
-			if err != nil {
-				logs.Error("updateNewMessage() -> Dialogs.Delete() Failed", zap.Error(err))
-			}
+			repo.Dialogs.Delete(x.Message.PeerID, x.Message.PeerType)
+
 			// Delete Group
-			err = repo.Groups.Delete(x.Message.PeerID)
-			if err != nil {
-				logs.Error("updateNewMessage() -> Groups.Delete() Failed", zap.Error(err))
-			}
-
-			// Delete Participants
-			repo.Groups.DeleteAllMembers(x.Message.PeerID)
-
+			repo.Groups.Delete(x.Message.PeerID)
 		} else {
 			// get dialog and create first hole
 			dtoDlg := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
@@ -343,10 +334,8 @@ func (ctrl *Controller) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) []*ms
 
 	res := []*msg.UpdateEnvelope{u}
 
-	err := repo.Groups.UpdateMemberType(x.GroupID, x.UserID, x.IsAdmin)
-	if err != nil {
-		logs.Error("updateGroupParticipantAdmin()-> UpdateGroupMemberType()", zap.Error(err))
-	}
+	repo.Groups.UpdateMemberType(x.GroupID, x.UserID, x.IsAdmin)
+
 	return res
 }
 

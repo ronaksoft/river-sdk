@@ -262,11 +262,11 @@ func (r *repoDialogs) UpdatePinned(in *msg.UpdateDialogPinned)  {
 	return
 }
 
-func (r *repoDialogs) Delete(peerID int64, peerType int32) error {
+func (r *repoDialogs) Delete(peerID int64, peerType int32) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	return r.badger.Update(func(txn *badger.Txn) error {
+	_ = r.badger.Update(func(txn *badger.Txn) error {
 		return txn.Delete(r.getDialogKey(peerID, peerType))
 	})
 }

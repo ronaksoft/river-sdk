@@ -935,7 +935,7 @@ func (r *River) groupAddUser(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 			UserID:     req.User.UserID,
 			Type:       msg.ParticipantTypeMember,
 		}
-		repo.Groups.SaveParticipants(req.GroupID, gp)
+		repo.Groups.SaveParticipant(req.GroupID, gp)
 	}
 
 	// send the request to server
@@ -1032,11 +1032,7 @@ func (r *River) groupUpdateAdmin(in, out *msg.MessageEnvelope, timeoutCB domain.
 		return
 	}
 
-	err := repo.Groups.UpdateMemberType(req.GroupID, req.User.UserID, req.Admin)
-	// TODO : Decrease group ParticipantCount
-	if err != nil {
-		logs.Error("River::groupUpdateAdmin()-> UpdateGroupMemberType()", zap.Error(err))
-	}
+	repo.Groups.UpdateMemberType(req.GroupID, req.User.UserID, req.Admin)
 
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
@@ -1052,10 +1048,7 @@ func (r *River) groupRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domain.
 		logs.Error("groupRemovePhoto() failed to unmarshal", zap.Error(err))
 	}
 
-	err = repo.Groups.RemovePhoto(req.GroupID)
-	if err != nil {
-		logs.Error("groupRemovePhoto()", zap.Error(err))
-	}
+	repo.Groups.RemovePhoto(req.GroupID)
 }
 
 func (r *River) usersGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {

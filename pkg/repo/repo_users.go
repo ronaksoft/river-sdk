@@ -413,8 +413,6 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 }
 
 
-
-
 // OLD
 func (r *repoUsers) UpdateAccountPhotoPath(userID, photoID int64, isBig bool, filePath string) error {
 	r.mx.Lock()

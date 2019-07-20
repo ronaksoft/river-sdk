@@ -261,34 +261,18 @@ func (r *River) AccountGetPhotoBig(userID int64) string {
 		mon.FunctionResponseTime("AccountGetPhotoBig", time.Now().Sub(startTime))
 	}()
 	user := repo.Users.Get(userID)
-	if user != nil {
-		if user.Photo != nil {
-			dtoPhoto := repo.Users.GetPhoto(userID, user.Photo.PhotoID)
-			if dtoPhoto != nil {
-				if dtoPhoto.BigFilePath != "" {
-					// check if file exist
-					if _, err := os.Stat(dtoPhoto.BigFilePath); os.IsNotExist(err) {
-						return r.downloadAccountPhoto(userID, user.Photo, true)
-					}
-					// check if fileID is changed re-download
-					newFilePath := fileCtrl.GetAccountAvatarPath(userID, dtoPhoto.BigFileID)
-					if strings.Index(dtoPhoto.BigFilePath, newFilePath) < 0 {
-						logs.Warn("AccountGetPhotoBig",
-							zap.String("OldPath:", dtoPhoto.BigFilePath),
-							zap.String("NewPath", newFilePath),
-						)
-						return r.downloadAccountPhoto(user.ID, user.Photo, true)
-					}
-					return dtoPhoto.BigFilePath
-				}
-				return r.downloadAccountPhoto(userID, user.Photo, true)
-			}
-			return r.downloadAccountPhoto(userID, user.Photo, true)
-
-		}
+	if user == nil || user.Photo == nil {
 		return ""
 	}
-	return ""
+
+	filePath := fileCtrl.GetAccountAvatarPath(user.ID, user.Photo.PhotoBig.FileID)
+
+	// check if file exist
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return r.downloadAccountPhoto(user.ID, user.Photo, true)
+	}
+	return filePath
+
 }
 
 // AccountGetPhoto_Small download user profile picture thumbnail
@@ -298,36 +282,17 @@ func (r *River) AccountGetPhotoSmall(userID int64) string {
 		mon.FunctionResponseTime("AccountGetPhotoSmall", time.Now().Sub(startTime))
 	}()
 	user := repo.Users.Get(userID)
-	if user != nil {
-		if user.Photo != nil {
-			dtoPhoto := repo.Users.GetPhoto(userID, user.Photo.PhotoID)
-			if dtoPhoto != nil {
-				if dtoPhoto.SmallFilePath != "" {
-					// check if file exist
-					if _, err := os.Stat(dtoPhoto.SmallFilePath); os.IsNotExist(err) {
-						return r.downloadAccountPhoto(userID, user.Photo, false)
-					}
-
-					// check if fileID is changed re-download
-					newFilePath := fileCtrl.GetAccountAvatarPath(userID, dtoPhoto.SmallFileID)
-					if strings.Index(dtoPhoto.SmallFilePath, newFilePath) < 0 {
-						logs.Warn("AccountGetPhotoSmall",
-							zap.String("OldPath:", dtoPhoto.BigFilePath),
-							zap.String("NewPath", newFilePath),
-						)
-						return r.downloadAccountPhoto(user.ID, user.Photo, false)
-					}
-
-					return dtoPhoto.SmallFilePath
-				}
-				return r.downloadAccountPhoto(userID, user.Photo, false)
-
-			}
-			return r.downloadAccountPhoto(userID, user.Photo, false)
-		}
+	if user == nil || user.Photo == nil {
 		return ""
 	}
-	return ""
+
+	filePath := fileCtrl.GetAccountAvatarPath(user.ID, user.Photo.PhotoSmall.FileID)
+
+	// check if file exist
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return r.downloadAccountPhoto(user.ID, user.Photo, true)
+	}
+	return filePath
 }
 
 // downloadAccountPhoto this function is sync
@@ -398,37 +363,17 @@ func (r *River) GroupGetPhotoBig(groupID int64) string {
 	defer func() {
 		mon.FunctionResponseTime("GroupGetPhotoBig", time.Now().Sub(startTime))
 	}()
-	group, err := repo.Groups.GetGroupDTO(groupID)
-	if err == nil && group != nil {
-		if group.Photo != nil {
-			groupPhoto := new(msg.GroupPhoto)
-			err = groupPhoto.Unmarshal(group.Photo)
-			if err != nil {
-				logs.Error("SDK::GroupGetPhoto_Big() failed to unmarshal GroupPhoto", zap.Error(err))
-				return ""
-			}
-			if group.BigFilePath != "" {
-				// check if file exist
-				if _, err := os.Stat(group.BigFilePath); os.IsNotExist(err) {
-					return r.downloadGroupPhoto(groupID, groupPhoto, true)
-				}
-				// check if fileID is changed re-download
-				newFilePath := fileCtrl.GetGroupAvatarPath(groupID, groupPhoto.PhotoBig.FileID)
-				if strings.Index(group.BigFilePath, newFilePath) < 0 {
-					logs.Warn("GroupGetPhotoBig",
-						zap.String("OldPath:", group.BigFilePath),
-						zap.String("NewPath", newFilePath),
-					)
-					return r.downloadGroupPhoto(groupID, groupPhoto, true)
-				}
-				return group.BigFilePath
-			}
-			return r.downloadGroupPhoto(groupID, groupPhoto, true)
-
-		}
+	group := repo.Groups.Get(groupID)
+	if group == nil || group.Photo == nil {
 		return ""
 	}
-	return ""
+
+	filePath := fileCtrl.GetGroupAvatarPath(group.ID, group.Photo.PhotoBig.FileID)
+	// check if file exist
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return r.downloadGroupPhoto(groupID, group.Photo, true)
+	}
+	return filePath
 }
 
 // GroupGetPhoto_Small download group profile picture thumbnail
@@ -437,41 +382,20 @@ func (r *River) GroupGetPhotoSmall(groupID int64) string {
 	defer func() {
 		mon.FunctionResponseTime("GroupGetPhotoSmall", time.Now().Sub(startTime))
 	}()
-	group, err := repo.Groups.GetGroupDTO(groupID)
-	if err == nil && group != nil {
-		if group.Photo != nil {
-			groupPhoto := new(msg.GroupPhoto)
-			err = groupPhoto.Unmarshal(group.Photo)
-			if err != nil {
-				logs.Error("SDK::GroupGetPhoto_Small() failed to unmarshal GroupPhoto", zap.Error(err))
-				return ""
-			}
-			if group.SmallFilePath != "" {
-
-				// check if file exist
-				if _, err := os.Stat(group.SmallFilePath); os.IsNotExist(err) {
-					return r.downloadGroupPhoto(groupID, groupPhoto, false)
-				}
-
-				// check if fileID is changed re-download
-				newFilePath := fileCtrl.GetGroupAvatarPath(groupID, groupPhoto.PhotoSmall.FileID)
-				if strings.Index(group.SmallFilePath, newFilePath) < 0 {
-					logs.Warn("GroupGetPhotoSmall",
-						zap.String("OldPath:", group.BigFilePath),
-						zap.String("NewPath", newFilePath),
-					)
-					return r.downloadGroupPhoto(groupID, groupPhoto, false)
-				}
-
-				return group.SmallFilePath
-
-			}
-			return r.downloadGroupPhoto(groupID, groupPhoto, false)
-
-		}
+	group := repo.Groups.Get(groupID)
+	if group == nil {
 		return ""
 	}
-	return ""
+	if group.Photo == nil {
+		return ""
+	}
+
+	filePath := fileCtrl.GetGroupAvatarPath(group.ID, group.Photo.PhotoSmall.FileID)
+	// check if file exist
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return r.downloadGroupPhoto(groupID, group.Photo, true)
+	}
+	return filePath
 }
 
 // this function is sync
