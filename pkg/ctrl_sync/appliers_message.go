@@ -119,10 +119,7 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 			)
 			continue
 		}
-		err := repo.Dialogs.SaveNew(dialog, topMessage.CreatedOn)
-		if err != nil {
-			logs.Error(err.Error())
-		}
+		repo.Dialogs.SaveNew(dialog, topMessage.CreatedOn)
 	}
 	for _, user := range x.Users {
 		repo.Users.Save(user)
@@ -189,11 +186,7 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 
 	// save message
 	dialog := repo.Dialogs.Get(message.PeerID, message.PeerType)
-	err = repo.Messages.SaveNew(message, dialog, ctrl.userID)
-	if err != nil {
-		logs.Warn("messageSent()-> Save() failed to move pendingMessage to message table", zap.Error(err))
-		return
-	}
+	repo.Messages.SaveNew(message, dialog, ctrl.userID)
 
 	// delete pending message
 	repo.PendingMessages.Delete(pmsg.ID)

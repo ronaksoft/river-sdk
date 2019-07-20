@@ -2,7 +2,6 @@ package syncCtrl
 
 import (
 	"encoding/json"
-	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
@@ -296,13 +295,7 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 					messageHole.SetUpperFilled(dialog.PeerID, dialog.PeerType, dialog.TopMessageID)
 
 					// make sure to created the message hole b4 creating dialog
-					err := repo.Dialogs.SaveNew(dialog, topMessage.CreatedOn)
-					if err != nil {
-						logs.Error("getAllDialogs() -> onSuccessCallback() -> SaveDialog() ",
-							zap.String("Error", err.Error()),
-							zap.String("Dialog", fmt.Sprintf("%v", dialog)),
-						)
-					}
+					repo.Dialogs.SaveNew(dialog, topMessage.CreatedOn)
 				}
 
 				repo.Users.SaveMany(x.Users)

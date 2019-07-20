@@ -61,7 +61,7 @@ func (r *repoMessagesPending) Save(msgID int64, senderID int64, message *msg.Mes
 		)
 	})
 
-	_ = Dialogs.updateLastUpdate(pm.PeerID, pm.PeerType, pm.CreatedOn)
+	Dialogs.updateLastUpdate(pm.PeerID, pm.PeerType, pm.CreatedOn)
 
 	return pm, nil
 }
@@ -99,7 +99,7 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, randomID i
 		)
 	})
 
-	_ = Dialogs.updateLastUpdate(pm.PeerID, pm.PeerType, pm.CreatedOn)
+	Dialogs.updateLastUpdate(pm.PeerID, pm.PeerType, pm.CreatedOn)
 
 	return pm, nil
 }
@@ -136,7 +136,7 @@ func (r *repoMessagesPending) SaveMessageMedia(msgID int64, senderID int64, msgM
 		)
 	})
 
-	_ = Dialogs.updateLastUpdate(pm.PeerID, pm.PeerType, pm.CreatedOn)
+	Dialogs.updateLastUpdate(pm.PeerID, pm.PeerType, pm.CreatedOn)
 
 	return pm, nil
 }

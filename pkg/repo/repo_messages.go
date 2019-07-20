@@ -82,9 +82,9 @@ func (r *repoMessages) GetMany(messageIDs []int64) []*msg.UserMessage {
 	return userMessages
 }
 
-func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, userID int64) error {
+func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, userID int64) {
 	if message == nil {
-		return domain.ErrNotFound
+		return
 	}
 
 	messageBytes, _ := message.Marshal()
@@ -114,9 +114,9 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, use
 	if message.ID > dialog.TopMessageID {
 		dialog.TopMessageID = message.ID
 		if !dialog.Pinned {
-			err = Dialogs.updateLastUpdate(message.PeerID, message.PeerType, message.CreatedOn)
+			Dialogs.updateLastUpdate(message.PeerID, message.PeerType, message.CreatedOn)
 			if err != nil {
-				return err
+				return
 			}
 		}
 		// Update counters if necessary
@@ -128,9 +128,9 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, use
 				}
 			}
 		}
-		return Dialogs.Save(dialog)
+		Dialogs.Save(dialog)
 	}
-	return nil
+	return
 }
 
 func (r *repoMessages) Save(message *msg.UserMessage) error {

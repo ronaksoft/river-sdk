@@ -1,7 +1,6 @@
 package syncCtrl
 
 import (
-	"fmt"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"time"
 
@@ -42,34 +41,19 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 			MentionedCount: 0,
 			AccessHash:     x.AccessHash,
 		}
-		err := repo.Dialogs.SaveNew(dialog, x.Message.CreatedOn)
-		if err != nil {
-			logs.Error("updateNewMessage() -> onSuccessCallback() -> SaveDialog() ",
-				zap.String("Error", err.Error()),
-				zap.String("Dialog", fmt.Sprintf("%v", dialog)),
-			)
-		}
-
-		if err != nil {
-			logs.Error("updateNewMessage()-> SaveDialog()", zap.Error(err))
-		}
+		repo.Dialogs.SaveNew(dialog, x.Message.CreatedOn)
 	}
 	// save user if does not exist
 	repo.Users.Save(x.Sender)
 
-	err = repo.Messages.SaveNew(x.Message, dialog, ctrl.connInfo.PickupUserID())
-	if err != nil {
-		logs.Warn("updateNewMessage()-> SaveNew()", zap.Error(err))
-	}
+	repo.Messages.SaveNew(x.Message, dialog, ctrl.connInfo.PickupUserID())
+
 	messageHole.SetUpperFilled(x.Message.PeerID, x.Message.PeerType, x.Message.ID)
 
 	// bug : sometime server do not sends access hash
 	if x.AccessHash > 0 {
 		// update users access hash
-		err := repo.Users.UpdateAccessHash(x.AccessHash, x.Message.PeerID, x.Message.PeerType)
-		if err != nil {
-			logs.Error("updateNewMessage() -> Users.updateAccessHash()", zap.Error(err))
-		}
+		repo.Users.UpdateAccessHash(x.AccessHash, x.Message.PeerID, x.Message.PeerType)
 	}
 	res := make([]*msg.UpdateEnvelope, 0)
 	// Prevent calling external delegate

@@ -257,15 +257,16 @@ func (r *repoUsers) SaveContact(contactUser *msg.ContactUser) {
 	})
 }
 
-func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType int32) error {
+func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType int32) {
 	defer r.deleteFromCache(peerID)
 
 	user := r.Get(peerID)
 	if user == nil {
-		return domain.ErrDoesNotExists
+		return
 	}
 	user.AccessHash = accessHash
-	return Dialogs.updateAccessHash(accessHash, peerID, peerType)
+	Dialogs.updateAccessHash(accessHash, peerID, peerType)
+	return
 }
 
 func (r *repoUsers) GetAccessHash(userID int64) (uint64, error) {

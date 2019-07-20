@@ -35,10 +35,8 @@ func TestRepoDialogs(t *testing.T) {
 	// if err != nil {
 	// 	t.Fatal(err)
 	// }
-	err := repo.Dialogs.SaveNew(dialog, time.Now().Unix())
-	if err != nil {
-		t.Fatal(err)
-	}
+	repo.Dialogs.SaveNew(dialog, time.Now().Unix())
+
 	d := repo.Dialogs.Get(100, 1)
 	t.Log(dialog)
 	t.Log(d)

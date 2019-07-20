@@ -3,7 +3,6 @@ package repo
 import (
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
 	"github.com/tidwall/buntdb"
@@ -57,15 +56,15 @@ func (r *repoDialogs) updateTopMessageID(peerID int64, peerType int32) {
 				return userMessage.Unmarshal(val)
 			})
 			dialog.TopMessageID = userMessage.ID
-			_ = r.Save(dialog)
+			r.Save(dialog)
 		}
 		it.Close()
 		return nil
 	})
 }
 
-func (r *repoDialogs) updateLastUpdate(peerID int64, peerType int32, lastUpdate int64) error {
-	return r.bunt.Update(func(tx *buntdb.Tx) error {
+func (r *repoDialogs) updateLastUpdate(peerID int64, peerType int32, lastUpdate int64) {
+	_ = r.bunt.Update(func(tx *buntdb.Tx) error {
 		_, _, err := tx.Set(
 			ronak.ByteToStr(Dialogs.getDialogKey(peerID, peerType)),
 			fmt.Sprintf("%021d", lastUpdate),
@@ -76,10 +75,10 @@ func (r *repoDialogs) updateLastUpdate(peerID int64, peerType int32, lastUpdate 
 	})
 }
 
-func (r *repoDialogs) updateAccessHash(accessHash uint64, peerID int64, peerType int32) error {
+func (r *repoDialogs) updateAccessHash(accessHash uint64, peerID int64, peerType int32) {
 	dialog := r.Get(peerID, peerType)
 	dialog.AccessHash = accessHash
-	return r.Save(dialog)
+	r.Save(dialog)
 }
 
 func (r *repoDialogs) countUnread(peerID int64, peerType int32, userID int64) int32 {
@@ -145,21 +144,18 @@ func (r *repoDialogs) GetManyGroups(peerIDs []int64) []*msg.Dialog {
 	return dialogs
 }
 
-func (r *repoDialogs) SaveNew(dialog *msg.Dialog, lastUpdate int64) error {
-	err := r.Save(dialog)
-	if err != nil {
-		return err
-	}
-	return r.updateLastUpdate(dialog.PeerID, dialog.PeerType, lastUpdate)
+func (r *repoDialogs) SaveNew(dialog *msg.Dialog, lastUpdate int64) {
+	r.Save(dialog)
+	r.updateLastUpdate(dialog.PeerID, dialog.PeerType, lastUpdate)
 }
 
-func (r *repoDialogs) Save(dialog *msg.Dialog) error {
+func (r *repoDialogs) Save(dialog *msg.Dialog) {
 	if dialog == nil {
-		return domain.ErrNilDialog
+		return
 	}
 
 	dialogBytes, _ := dialog.Marshal()
-	return r.badger.Update(func(txn *badger.Txn) error {
+	_ = r.badger.Update(func(txn *badger.Txn) error {
 		err := txn.SetEntry(badger.NewEntry(
 			r.getDialogKey(dialog.PeerID, dialog.PeerType),
 			dialogBytes,
@@ -185,7 +181,7 @@ func (r *repoDialogs) UpdateUnreadCount(peerID int64, peerType, unreadCount int3
 	}
 
 	dialog.UnreadCount = unreadCount
-	_ = r.Save(dialog)
+	r.Save(dialog)
 	return
 }
 
@@ -197,7 +193,7 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 	}
 	dialog.UnreadCount = r.countUnread(peerID, peerType, userID)
 	dialog.ReadInboxMaxID = maxID
-	_ = r.Save(dialog)
+	r.Save(dialog)
 	return
 }
 
@@ -212,21 +208,21 @@ func (r *repoDialogs) UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID 
 		return
 	}
 	dialog.ReadOutboxMaxID = maxID
-	_ = r.Save(dialog)
+	r.Save(dialog)
 	return
 }
 
 func (r *repoDialogs) UpdateNotifySetting(peerID int64, peerType int32, notifySettings *msg.PeerNotifySettings) {
 	dialog := r.Get(peerID, peerType)
 	dialog.NotifySettings = notifySettings
-	_ = r.Save(dialog)
+	r.Save(dialog)
 	return
 }
 
 func (r *repoDialogs) UpdatePinned(in *msg.UpdateDialogPinned) {
 	dialog := r.Get(in.Peer.ID, in.Peer.Type)
 	dialog.Pinned = in.Pinned
-	_ = r.Save(dialog)
+	r.Save(dialog)
 	return
 }
 
