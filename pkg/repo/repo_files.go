@@ -51,6 +51,7 @@ func (r *repoFiles) GetAllStatuses() []dto.FilesStatus {
 				return nil
 			})
 		}
+		it.Close()
 		return nil
 	})
 	return dtos

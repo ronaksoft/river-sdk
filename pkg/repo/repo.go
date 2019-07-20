@@ -9,7 +9,8 @@ import (
 	"github.com/blevesearch/bleve/mapping"
 	"github.com/blevesearch/blevex/detectlang"
 	"github.com/tidwall/buntdb"
-	"log"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -78,16 +79,19 @@ func InitRepo(dbPath string) error {
 	}
 	return repoLastError
 }
+
 func repoSetDB(dbPath string) error {
 	r = new(repository)
-	r.badger, repoLastError = badger.Open(badger.DefaultOptions(dbPath).WithLogger(nil))
+	_ = os.MkdirAll(fmt.Sprintf("%s/badger", strings.TrimRight(dbPath, "/")), os.ModePerm)
+	r.badger, repoLastError = badger.Open(badger.DefaultOptions(fmt.Sprintf("%s/badger", strings.TrimRight(dbPath, "/"))).WithLogger(nil))
 	if repoLastError != nil {
 		logs.Debug("Context::repoSetDB()->badger Open()",
 			zap.String("Error", repoLastError.Error()),
 		)
 		return repoLastError
 	}
-	r.bunt, repoLastError = buntdb.Open(dbPath)
+	_ = os.MkdirAll(fmt.Sprintf("%s/bunty", strings.TrimRight(dbPath, "/")), os.ModePerm)
+	r.bunt, repoLastError = buntdb.Open(fmt.Sprintf("%s/bunty/dialogs.db", strings.TrimRight(dbPath, "/")))
 	if repoLastError != nil {
 		logs.Debug("Context::repoSetDB()->bunt Open()",
 			zap.String("Error", repoLastError.Error()),
@@ -98,19 +102,21 @@ func repoSetDB(dbPath string) error {
 		return tx.CreateIndex(indexDialogs, fmt.Sprintf("%s.*", prefixDialogs), buntdb.IndexBinary)
 	})
 
-	r.searchIndex, repoLastError = bleve.Open(dbPath)
+	// _ = os.MkdirAll(fmt.Sprintf("%s", strings.TrimRight(dbPath, "/")), os.ModePerm)
+	r.searchIndex, repoLastError = bleve.Open(fmt.Sprintf("%s/bleve/", strings.TrimRight(dbPath, "/")))
 	if repoLastError == bleve.ErrorIndexPathDoesNotExist {
+		repoLastError = nil
 		// create a mapping
 		indexMapping, err := buildIndexMapping()
 		if err != nil {
-			log.Fatal(err)
+			logs.Fatal("Build Index", zap.Error(err))
 		}
-		r.searchIndex, err = bleve.New(dbPath, indexMapping)
+		r.searchIndex, err = bleve.New(fmt.Sprintf("%s/bleve", strings.TrimRight(dbPath, "/")), indexMapping)
 		if err != nil {
-			log.Fatal(err)
+			logs.Fatal("SearchIndex", zap.Error(err))
 		}
 	} else if repoLastError != nil {
-		log.Fatal(repoLastError)
+		logs.Fatal("Another", zap.Error(repoLastError))
 	}
 
 	return r.initDB()
