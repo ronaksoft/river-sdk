@@ -193,7 +193,6 @@ func (r *repoMessagesPending) GetMany(messageIDs []int64) []*msg.UserMessage {
 }
 
 func (r *repoMessagesPending) GetByPeer(peerID int64, peerType int32) []*msg.UserMessage {
-
 	userMessages := make([]*msg.UserMessage, 0, 10)
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		opt := badger.DefaultIteratorOptions
@@ -209,6 +208,7 @@ func (r *repoMessagesPending) GetByPeer(peerID int64, peerType int32) []*msg.Use
 				return nil
 			})
 		}
+		it.Close()
 		return nil
 	})
 	return userMessages
@@ -269,6 +269,7 @@ func (r *repoMessagesPending) DeletePeerAllMessages(peerID int64, peerType int32
 				return nil
 			})
 		}
+		it.Close()
 		return nil
 	})
 
