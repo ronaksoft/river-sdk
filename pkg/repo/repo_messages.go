@@ -83,13 +83,12 @@ func (r *repoMessages) GetMany(messageIDs []int64) []*msg.UserMessage {
 }
 
 func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, userID int64) error {
-
 	if message == nil {
 		return domain.ErrNotFound
 	}
 
 	messageBytes, _ := message.Marshal()
-	return r.badger.Update(func(txn *badger.Txn) error {
+	err := r.badger.Update(func(txn *badger.Txn) error {
 		// 1. Write Message
 		err := txn.SetEntry(
 			badger.NewEntry(
@@ -102,48 +101,36 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, use
 		}
 
 		// 2. WriteUserMessage
-		err = txn.SetEntry(
+		return txn.SetEntry(
 			badger.NewEntry(
 				r.getUserMessageKey(message.ID),
 				ronak.StrToByte(fmt.Sprintf("%d.%d", message.PeerID, message.PeerType)),
 			).WithMeta(byte(message.MediaType)),
 		)
-		if err != nil {
-			return err
-		}
-
-		// 3. Read Dialog
-		dialogKey := Dialogs.getDialogKey(message.PeerID, message.PeerType)
-		item, err := txn.Get(dialogKey)
-		if err != nil {
-			return err
-		}
-		dialog := new(msg.Dialog)
-		return item.Value(func(val []byte) error {
-			_ = dialog.Unmarshal(val)
-			// Update Dialog if it is a new message
-			if message.ID > dialog.TopMessageID {
-				dialog.TopMessageID = message.ID
-				if !dialog.Pinned {
-					err = Dialogs.updateLastUpdate(message.PeerID, message.PeerType, message.CreatedOn)
-					if err != nil {
-						return err
-					}
-				}
-				// Update counters if necessary
-				if message.SenderID != userID {
-					dialog.UnreadCount += 1
-					for _, entity := range message.Entities {
-						if entity.Type == msg.MessageEntityTypeMention && entity.UserID == userID {
-							dialog.MentionedCount += 1
-						}
-					}
-				}
-				return Dialogs.Save(dialog)
-			}
-			return nil
-		})
 	})
+
+	dialog = Dialogs.Get(message.PeerID, message.PeerType)
+	// Update Dialog if it is a new message
+	if message.ID > dialog.TopMessageID {
+		dialog.TopMessageID = message.ID
+		if !dialog.Pinned {
+			err = Dialogs.updateLastUpdate(message.PeerID, message.PeerType, message.CreatedOn)
+			if err != nil {
+				return err
+			}
+		}
+		// Update counters if necessary
+		if message.SenderID != userID {
+			dialog.UnreadCount += 1
+			for _, entity := range message.Entities {
+				if entity.Type == msg.MessageEntityTypeMention && entity.UserID == userID {
+					dialog.MentionedCount += 1
+				}
+			}
+		}
+		return Dialogs.Save(dialog)
+	}
+	return nil
 }
 
 func (r *repoMessages) Save(message *msg.UserMessage) error {
