@@ -436,7 +436,6 @@ func (ctrl *Controller) isDeliveredMessage(id int64) bool {
 		// delete(ctrl.deliveredMessages, id)
 	}
 	ctrl.deliveredMessagesMutex.Unlock()
-
 	return ok
 }
 
