@@ -7,7 +7,6 @@ import (
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/blevesearch/bleve"
 	"github.com/dgraph-io/badger"
-	"github.com/scylladb/go-set/i64set"
 	"sort"
 	"strings"
 )
@@ -172,9 +171,8 @@ func (r *repoMessages) Save(message *msg.UserMessage) error {
 }
 
 func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, maxID int64, limit int32) (userMessages []*msg.UserMessage, users []*msg.User) {
-
 	userMessages = make([]*msg.UserMessage, 0, limit)
-	userIDs := i64set.New()
+	userIDs := domain.MInt64B{}
 	switch {
 	case maxID == 0 && minID == 0:
 		maxID = Dialogs.Get(peerID, peerType).TopMessageID
@@ -195,11 +193,13 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 					if err != nil {
 						return err
 					}
-					userIDs.Add(userMessage.SenderID)
+					userIDs[userMessage.SenderID] = true
 					if userMessage.FwdSenderID != 0 {
-						userIDs.Add(userMessage.FwdSenderID)
+						userIDs[userMessage.FwdSenderID] = true
 					}
-					userIDs.Add(domain.ExtractActionUserIDs(userMessage.MessageAction, userMessage.MessageActionData)...)
+					for _, userID := range domain.ExtractActionUserIDs(userMessage.MessageAction, userMessage.MessageActionData) {
+						userIDs[userID] = true
+					}
 					userMessages = append(userMessages, userMessage)
 					return nil
 				})
@@ -223,11 +223,13 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 					if err != nil {
 						return err
 					}
-					userIDs.Add(userMessage.SenderID)
+					userIDs[userMessage.SenderID] = true
 					if userMessage.FwdSenderID != 0 {
-						userIDs.Add(userMessage.FwdSenderID)
+						userIDs[userMessage.FwdSenderID] = true
 					}
-					userIDs.Add(domain.ExtractActionUserIDs(userMessage.MessageAction, userMessage.MessageActionData)...)
+					for _, userID := range domain.ExtractActionUserIDs(userMessage.MessageAction, userMessage.MessageActionData) {
+						userIDs[userID] = true
+					}
 					userMessages = append(userMessages, userMessage)
 					return nil
 				})
@@ -255,11 +257,13 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 					if err != nil {
 						return err
 					}
-					userIDs.Add(userMessage.SenderID)
+					userIDs[userMessage.SenderID] = true
 					if userMessage.FwdSenderID != 0 {
-						userIDs.Add(userMessage.FwdSenderID)
+						userIDs[userMessage.FwdSenderID] = true
 					}
-					userIDs.Add(domain.ExtractActionUserIDs(userMessage.MessageAction, userMessage.MessageActionData)...)
+					for _, userID := range domain.ExtractActionUserIDs(userMessage.MessageAction, userMessage.MessageActionData) {
+						userIDs[userID] = true
+					}
 					userMessages = append(userMessages, userMessage)
 					return nil
 				})
@@ -273,7 +277,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 
 	}
 
-	users = Users.GetMany(userIDs.List())
+	users = Users.GetMany(userIDs.ToArray())
 	return
 }
 

@@ -30,25 +30,22 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 
+	pendingMessages := repo.PendingMessages.GetAll()
+
 	mUsers := domain.MInt64B{}
 	mGroups := domain.MInt64B{}
 	mMessages := domain.MInt64B{}
-	mPendingMessage := domain.MInt64B{}
 	for _, d := range res.Dialogs {
 		if d.PeerType == int32(msg.PeerUser) {
 			mUsers[d.PeerID] = true
 		}
 		mMessages[d.TopMessageID] = true
-		if d.TopMessageID < 0 {
-			mPendingMessage[d.TopMessageID] = true
-		}
 	}
 
 	// Load Messages
 	res.Messages = repo.Messages.GetMany(mMessages.ToArray())
 
 	// Load Pending messages
-	pendingMessages := repo.PendingMessages.GetMany(mPendingMessage.ToArray())
 	res.Messages = append(res.Messages, pendingMessages...)
 
 	for _, m := range res.Messages {

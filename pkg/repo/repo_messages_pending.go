@@ -4,6 +4,7 @@ import (
 	"fmt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
+	"math"
 	"time"
 
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
@@ -20,7 +21,7 @@ type repoMessagesPending struct {
 }
 
 func (r *repoMessagesPending) getKey(msgID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%012d", prefixPMessagesByID, msgID))
+	return ronak.StrToByte(fmt.Sprintf("%s.%012d", prefixPMessagesByID, int64(math.Abs(float64(msgID)))))
 }
 
 func (r *repoMessagesPending) getRandomKey(randomID int64) []byte {
@@ -205,6 +206,26 @@ func (r *repoMessagesPending) GetByPeer(peerID int64, peerType int32) []*msg.Use
 				if pm.PeerID == peerID && pm.PeerType == peerType {
 					userMessages = append(userMessages, r.ToUserMessage(pm))
 				}
+				return nil
+			})
+		}
+		it.Close()
+		return nil
+	})
+	return userMessages
+}
+
+func (r *repoMessagesPending) GetAll() []*msg.UserMessage {
+	userMessages := make([]*msg.UserMessage, 0, 10)
+	_ = r.badger.Update(func(txn *badger.Txn) error {
+		opt := badger.DefaultIteratorOptions
+		opt.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
+		it := txn.NewIterator(opt)
+		for it.Rewind(); it.Valid(); it.Next() {
+			_ = it.Item().Value(func(val []byte) error {
+				pm := new(msg.ClientPendingMessage)
+				_ = pm.Unmarshal(val)
+				userMessages = append(userMessages, r.ToUserMessage(pm))
 				return nil
 			})
 		}
