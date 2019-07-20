@@ -9,7 +9,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_queue"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
+	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
@@ -321,7 +321,6 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 		},
 		false,
 	)
-
 }
 func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 	// Check if getUpdateDifference function is already running, then return otherwise lock it and continue

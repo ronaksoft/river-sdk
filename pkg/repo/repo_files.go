@@ -25,8 +25,6 @@ func (r *repoFiles) getKey(msgID int64) []byte {
 }
 
 func (r *repoFiles) SaveStatus(fs *dto.FilesStatus) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	bytes, _ := json.Marshal(fs)
 	_ = r.badger.Update(func(txn *badger.Txn) error {
@@ -35,8 +33,6 @@ func (r *repoFiles) SaveStatus(fs *dto.FilesStatus) {
 }
 
 func (r *repoFiles) GetAllStatuses() []dto.FilesStatus {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	dtos := make([]dto.FilesStatus, 0)
 	_ = r.badger.Update(func(txn *badger.Txn) error {
@@ -58,8 +54,6 @@ func (r *repoFiles) GetAllStatuses() []dto.FilesStatus {
 }
 
 func (r *repoFiles) GetStatus(msgID int64) (*dto.FilesStatus, error) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	mdl := new(dto.FilesStatus)
 	err := r.badger.View(func(txn *badger.Txn) error {
@@ -76,8 +70,6 @@ func (r *repoFiles) GetStatus(msgID int64) (*dto.FilesStatus, error) {
 }
 
 func (r *repoFiles) DeleteStatus(msgID int64) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		return txn.Delete(r.getKey(msgID))
@@ -85,8 +77,6 @@ func (r *repoFiles) DeleteStatus(msgID int64) {
 }
 
 func (r *repoFiles) UpdateFileStatus(msgID int64, state domain.RequestStatus) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	fileStatus, err := r.GetStatus(msgID)
 	if err != nil {
@@ -98,8 +88,6 @@ func (r *repoFiles) UpdateFileStatus(msgID int64, state domain.RequestStatus) er
 }
 
 func (r *repoFiles) MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, fileSize int32, sent *msg.MessagesSent) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	fileStatus, err := r.GetStatus(sent.MessageID)
 	if err != nil {
@@ -111,8 +99,6 @@ func (r *repoFiles) MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, fil
 }
 
 func (r *repoFiles) GetSharedMedia(peerID int64, peerType int32, mediaType int32) ([]*msg.UserMessage, error) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	limit := 50
 	userMessages := make([]*msg.UserMessage, 0, limit)
@@ -147,8 +133,8 @@ func (r *repoFiles) GetSharedMedia(peerID int64, peerType int32, mediaType int32
 }
 
 // func (r *repoFiles) GetDBStatus() (map[int64]map[msg.DocumentAttributeType]dto.MediaInfo, error) {
-// 	r.mx.Lock()
-// 	defer r.mx.Unlock()
+//
+//
 // 	var peerID int64
 // 	var peerIDs []int64
 //
@@ -280,8 +266,8 @@ func (r *repoFiles) GetSharedMedia(peerID int64, peerType int32, mediaType int32
 //
 // // ClearMedia returns media file paths to remove from device and updates database
 // func (r *repoFiles) ClearMedia(messageIDs []int64) ([]string, error) {
-// 	r.mx.Lock()
-// 	defer r.mx.Unlock()
+//
+//
 // 	dtoFiles := make([]dto.Files, 0, len(messageIDs))
 // 	var filePaths []string
 //

@@ -28,8 +28,6 @@ func (r *repoMessagesPending) getRandomKey(randomID int64) []byte {
 }
 
 func (r *repoMessagesPending) Save(msgID int64, senderID int64, message *msg.MessagesSend) (*msg.ClientPendingMessage, error) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	if message == nil {
 		return nil, domain.ErrNotFound
@@ -69,8 +67,6 @@ func (r *repoMessagesPending) Save(msgID int64, senderID int64, message *msg.Mes
 }
 
 func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, randomID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	if msgMedia == nil {
 		return nil, domain.ErrNotFound
@@ -109,8 +105,6 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, randomID i
 }
 
 func (r *repoMessagesPending) SaveMessageMedia(msgID int64, senderID int64, msgMedia *msg.MessagesSendMedia) (*msg.ClientPendingMessage, error) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	if msgMedia == nil {
 		return nil, domain.ErrNotFound
@@ -148,8 +142,6 @@ func (r *repoMessagesPending) SaveMessageMedia(msgID int64, senderID int64, msgM
 }
 
 func (r *repoMessagesPending) GetByRandomID(randomID int64) (*msg.ClientPendingMessage, error) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	pm := new(msg.ClientPendingMessage)
 	err := r.badger.View(func(txn *badger.Txn) error {
@@ -169,8 +161,7 @@ func (r *repoMessagesPending) GetByRandomID(randomID int64) (*msg.ClientPendingM
 }
 
 func (r *repoMessagesPending) GetByID(id int64) *msg.ClientPendingMessage {
-	r.mx.Lock()
-	defer r.mx.Unlock()
+
 	pm := new(msg.ClientPendingMessage)
 	err := r.badger.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(r.getKey(id))
@@ -190,8 +181,6 @@ func (r *repoMessagesPending) GetByID(id int64) *msg.ClientPendingMessage {
 }
 
 func (r *repoMessagesPending) GetMany(messageIDs []int64) []*msg.UserMessage {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	userMessages := make([]*msg.UserMessage, 0, len(messageIDs))
 	for _, msgID := range messageIDs {
@@ -204,8 +193,6 @@ func (r *repoMessagesPending) GetMany(messageIDs []int64) []*msg.UserMessage {
 }
 
 func (r *repoMessagesPending) GetByPeer(peerID int64, peerType int32) []*msg.UserMessage {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	userMessages := make([]*msg.UserMessage, 0, 10)
 	_ = r.badger.Update(func(txn *badger.Txn) error {
@@ -228,8 +215,6 @@ func (r *repoMessagesPending) GetByPeer(peerID int64, peerType int32) []*msg.Use
 }
 
 func (r *repoMessagesPending) Delete(msgID int64) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	pm := r.GetByID(msgID)
 	if pm == nil {
@@ -244,8 +229,6 @@ func (r *repoMessagesPending) Delete(msgID int64) {
 }
 
 func (r *repoMessagesPending) DeleteMany(msgIDs []int64) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	for _, msgID := range msgIDs {
 		r.Delete(msgID)
@@ -253,8 +236,6 @@ func (r *repoMessagesPending) DeleteMany(msgIDs []int64) {
 }
 
 func (r *repoMessagesPending) GetManyRequestIDs(msgIDs []int64) []int64 {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	requestIDs := make([]int64, 0, len(msgIDs))
 	for _, msgID := range msgIDs {
@@ -268,9 +249,6 @@ func (r *repoMessagesPending) GetManyRequestIDs(msgIDs []int64) []int64 {
 }
 
 func (r *repoMessagesPending) DeletePeerAllMessages(peerID int64, peerType int32) *msg.ClientUpdateMessagesDeleted {
-
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	res := new(msg.ClientUpdateMessagesDeleted)
 	res.PeerID = peerID

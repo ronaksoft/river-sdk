@@ -167,7 +167,6 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		})
 		table.Render()
 		_Shell.Println("\r\n" + buf.String())
-
 	case msg.C_MessagesSent:
 		x := new(msg.MessagesSent)
 		x.Unmarshal(envelope.Message)
@@ -180,7 +179,6 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		x := new(msg.Error)
 		x.Unmarshal(envelope.Message)
 		_Shell.Println(fmt.Sprintf("Error \t %s:%s", x.Code, x.Items))
-
 	case msg.C_MessagesMany:
 
 		x := new(msg.MessagesMany)
@@ -277,7 +275,6 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 
 		tableMsg.Render()
 		_Shell.Println("\r\n" + bufMsg.String())
-
 	case msg.C_GroupFull:
 		x := new(msg.GroupFull)
 		err := x.Unmarshal(envelope.Message)
@@ -325,7 +322,6 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		} else {
 			_Log.Error("x.Participants is null")
 		}
-
 	case msg.C_InputUser:
 		x := new(msg.InputUser)
 		x.Unmarshal(envelope.Message)

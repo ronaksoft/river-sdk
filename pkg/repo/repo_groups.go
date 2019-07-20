@@ -121,8 +121,6 @@ func (r *repoGroups) Save(group *msg.Group) {
 		return
 	}
 	defer r.deleteFromCache(group.ID)
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	if group == nil {
 		return
@@ -144,8 +142,6 @@ func (r *repoGroups) Save(group *msg.Group) {
 }
 
 func (r *repoGroups) SaveMany(groups []*msg.Group) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	groupIDs := domain.MInt64B{}
 	for _, v := range groups {
@@ -164,8 +160,7 @@ func (r *repoGroups) SaveMany(groups []*msg.Group) {
 }
 
 func (r *repoGroups) SaveParticipant(groupID int64, participant *msg.GroupParticipant) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
+
 	defer r.deleteFromCache(groupID)
 
 	if participant == nil {
@@ -190,8 +185,6 @@ func (r *repoGroups) Get(groupID int64) *msg.Group {
 }
 
 func (r *repoGroups) GetParticipant(groupID int64, memberID int64) *msg.GroupParticipant {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	gp := new(msg.GroupParticipant)
 	_ = r.badger.View(func(txn *badger.Txn) error {
@@ -207,8 +200,6 @@ func (r *repoGroups) GetParticipant(groupID int64, memberID int64) *msg.GroupPar
 }
 
 func (r *repoGroups) GetParticipants(groupID int64) ([]*msg.GroupParticipant, error) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	participants := make([]*msg.GroupParticipant, 0, 100)
 	_ = r.badger.View(func(txn *badger.Txn) error {
@@ -230,8 +221,6 @@ func (r *repoGroups) GetParticipants(groupID int64) ([]*msg.GroupParticipant, er
 }
 
 func (r *repoGroups) DeleteMember(groupID, userID int64) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	group := r.Get(groupID)
 	if group == nil {
@@ -246,8 +235,6 @@ func (r *repoGroups) DeleteMember(groupID, userID int64) {
 }
 
 func (r *repoGroups) DeleteAllMembers(groupID int64) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	_ = r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
@@ -267,8 +254,7 @@ func (r *repoGroups) DeleteAllMembers(groupID int64) {
 }
 
 func (r *repoGroups) UpdateTitle(groupID int64, title string) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
+
 	defer r.deleteFromCache(groupID)
 
 	group := r.Get(groupID)
@@ -277,8 +263,6 @@ func (r *repoGroups) UpdateTitle(groupID int64, title string) {
 }
 
 func (r *repoGroups) DeleteMemberMany(groupID int64, memberIDs []int64) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	for _, memberID := range memberIDs {
 		r.DeleteMember(groupID, memberID)
@@ -286,8 +270,7 @@ func (r *repoGroups) DeleteMemberMany(groupID int64, memberIDs []int64) {
 }
 
 func (r *repoGroups) Delete(groupID int64) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
+
 	defer r.deleteFromCache(groupID)
 
 	_ = r.badger.Update(func(txn *badger.Txn) error {
@@ -301,8 +284,7 @@ func (r *repoGroups) Delete(groupID int64) {
 }
 
 func (r *repoGroups) UpdateMemberType(groupID, userID int64, isAdmin bool) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
+
 	defer r.deleteFromCache(groupID)
 
 	group := r.Get(groupID)
@@ -328,8 +310,7 @@ func (r *repoGroups) UpdateMemberType(groupID, userID int64, isAdmin bool) {
 }
 
 func (r *repoGroups) RemovePhoto(groupID int64) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
+
 	defer r.deleteFromCache(groupID)
 
 	group := r.Get(groupID)
@@ -344,8 +325,7 @@ func (r *repoGroups) UpdatePhoto(groupPhoto *msg.UpdateGroupPhoto) {
 	if alreadySaved(fmt.Sprintf("GPHOTO.%d", groupPhoto.GroupID), groupPhoto) {
 		return
 	}
-	r.mx.Lock()
-	defer r.mx.Unlock()
+
 	defer r.deleteFromCache(groupPhoto.GroupID)
 
 	group := r.Get(groupPhoto.GroupID)
@@ -354,8 +334,7 @@ func (r *repoGroups) UpdatePhoto(groupPhoto *msg.UpdateGroupPhoto) {
 }
 
 func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
-	r.mx.Lock()
-	defer r.mx.Unlock()
+
 	textTerm := bleve.NewQueryStringQuery(searchPhrase)
 	searchRequest := bleve.NewSearchRequest(textTerm)
 	searchResult, _ := r.searchIndex.Search(searchRequest)

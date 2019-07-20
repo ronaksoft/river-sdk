@@ -21,8 +21,7 @@ func (r *repoSystem) getKey(keyName string) []byte {
 
 // LoadInt
 func (r *repoSystem) LoadInt(keyName string) (int, error) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
+
 	keyValue := uint32(0)
 
 	err := r.badger.View(func(txn *badger.Txn) error {
@@ -44,8 +43,6 @@ func (r *repoSystem) LoadInt(keyName string) (int, error) {
 
 // LoadString
 func (r *repoSystem) LoadString(keyName string) (string, error) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	var v []byte
 	err := r.badger.View(func(txn *badger.Txn) error {
@@ -65,8 +62,6 @@ func (r *repoSystem) LoadString(keyName string) (string, error) {
 
 // SaveInt
 func (r *repoSystem) SaveInt(keyName string, keyValue int32) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, uint32(keyValue))
@@ -79,8 +74,6 @@ func (r *repoSystem) SaveInt(keyName string, keyValue int32) error {
 
 // SaveString
 func (r *repoSystem) SaveString(keyName string, keyValue string) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	return r.badger.Update(func(txn *badger.Txn) error {
 		return txn.SetEntry(

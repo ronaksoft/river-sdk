@@ -21,8 +21,6 @@ func (r *repoMessagesExtra) getKey(peerID int64, peerType int32) []byte {
 }
 
 func (r *repoMessagesExtra) get(peerID int64, peerType int32) *dto.MessagesExtra {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	message := new(dto.MessagesExtra)
 	err := r.badger.View(func(txn *badger.Txn) error {
@@ -48,8 +46,6 @@ func (r *repoMessagesExtra) save(key []byte, m *dto.MessagesExtra) {
 }
 
 func (r *repoMessagesExtra) SaveScrollID(peerID int64, peerType int32, msgID int64) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	key := r.getKey(peerID, peerType)
 	m := r.get(peerID, peerType)
@@ -60,9 +56,7 @@ func (r *repoMessagesExtra) SaveScrollID(peerID int64, peerType int32, msgID int
 	r.save(key, m)
 }
 
-func (r *repoMessagesExtra) GetScrollID(peerID int64, peerType int32) int64  {
-	r.mx.Lock()
-	defer r.mx.Unlock()
+func (r *repoMessagesExtra) GetScrollID(peerID int64, peerType int32) int64 {
 
 	m := r.get(peerID, peerType)
 	if m == nil {
@@ -71,9 +65,7 @@ func (r *repoMessagesExtra) GetScrollID(peerID int64, peerType int32) int64  {
 	return m.ScrollID
 }
 
-func (r *repoMessagesExtra) SaveHoles(peerID int64, peerType int32, data []byte)  {
-	r.mx.Lock()
-	defer r.mx.Unlock()
+func (r *repoMessagesExtra) SaveHoles(peerID int64, peerType int32, data []byte) {
 
 	key := r.getKey(peerID, peerType)
 	m := r.get(peerID, peerType)
@@ -85,8 +77,6 @@ func (r *repoMessagesExtra) SaveHoles(peerID int64, peerType int32, data []byte)
 }
 
 func (r *repoMessagesExtra) GetHoles(peerID int64, peerType int32) []byte {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	m := r.get(peerID, peerType)
 	if m == nil {

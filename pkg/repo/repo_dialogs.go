@@ -71,14 +71,12 @@ func (r *repoDialogs) updateLastUpdate(peerID int64, peerType int32, lastUpdate 
 			fmt.Sprintf("%021d", lastUpdate),
 			nil,
 		)
+
 		return err
 	})
 }
 
 func (r *repoDialogs) updateAccessHash(accessHash uint64, peerID int64, peerType int32) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
 	dialog := r.Get(peerID, peerType)
 	dialog.AccessHash = accessHash
 	return r.Save(dialog)
@@ -111,9 +109,6 @@ func (r *repoDialogs) countUnread(peerID int64, peerType int32, userID int64) in
 }
 
 func (r *repoDialogs) Get(peerID int64, peerType int32) *msg.Dialog {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
 	dialog := new(msg.Dialog)
 	_ = r.badger.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(r.getDialogKey(peerID, peerType))
@@ -129,9 +124,6 @@ func (r *repoDialogs) Get(peerID int64, peerType int32) *msg.Dialog {
 }
 
 func (r *repoDialogs) GetManyUsers(peerIDs []int64) []*msg.Dialog {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
 	dialogs := make([]*msg.Dialog, 0, len(peerIDs))
 	for _, peerID := range peerIDs {
 		dialog := r.Get(peerID, int32(msg.PeerUser))
@@ -143,9 +135,6 @@ func (r *repoDialogs) GetManyUsers(peerIDs []int64) []*msg.Dialog {
 }
 
 func (r *repoDialogs) GetManyGroups(peerIDs []int64) []*msg.Dialog {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
 	dialogs := make([]*msg.Dialog, 0, len(peerIDs))
 	for _, peerID := range peerIDs {
 		dialog := r.Get(peerID, int32(msg.PeerGroup))
@@ -157,21 +146,14 @@ func (r *repoDialogs) GetManyGroups(peerIDs []int64) []*msg.Dialog {
 }
 
 func (r *repoDialogs) SaveNew(dialog *msg.Dialog, lastUpdate int64) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
 	err := r.Save(dialog)
 	if err != nil {
 		return err
 	}
-
 	return r.updateLastUpdate(dialog.PeerID, dialog.PeerType, lastUpdate)
 }
 
 func (r *repoDialogs) Save(dialog *msg.Dialog) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
 	if dialog == nil {
 		return domain.ErrNilDialog
 	}
@@ -197,9 +179,6 @@ func (r *repoDialogs) Save(dialog *msg.Dialog) error {
 }
 
 func (r *repoDialogs) UpdateUnreadCount(peerID int64, peerType, unreadCount int32) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
 	dialog := r.Get(peerID, peerType)
 	if dialog == nil {
 		return
@@ -211,9 +190,6 @@ func (r *repoDialogs) UpdateUnreadCount(peerID int64, peerType, unreadCount int3
 }
 
 func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32, maxID int64) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
 	dialog := r.Get(peerID, peerType)
 	// current maxID is newer so skip updating dialog unread counts
 	if dialog.ReadInboxMaxID > maxID || maxID > dialog.TopMessageID {
@@ -226,9 +202,6 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 }
 
 func (r *repoDialogs) UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID int64) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
 	dialog := r.Get(peerID, peerType)
 	if maxID > dialog.TopMessageID {
 		return
@@ -244,8 +217,6 @@ func (r *repoDialogs) UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID 
 }
 
 func (r *repoDialogs) UpdateNotifySetting(peerID int64, peerType int32, notifySettings *msg.PeerNotifySettings) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 	dialog := r.Get(peerID, peerType)
 	dialog.NotifySettings = notifySettings
 	_ = r.Save(dialog)
@@ -253,9 +224,6 @@ func (r *repoDialogs) UpdateNotifySetting(peerID int64, peerType int32, notifySe
 }
 
 func (r *repoDialogs) UpdatePinned(in *msg.UpdateDialogPinned) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
 	dialog := r.Get(in.Peer.ID, in.Peer.Type)
 	dialog.Pinned = in.Pinned
 	_ = r.Save(dialog)
@@ -263,17 +231,12 @@ func (r *repoDialogs) UpdatePinned(in *msg.UpdateDialogPinned) {
 }
 
 func (r *repoDialogs) Delete(peerID int64, peerType int32) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		return txn.Delete(r.getDialogKey(peerID, peerType))
 	})
 }
 
 func (r *repoDialogs) List(offset, limit int32) []*msg.Dialog {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	dialogs := make([]*msg.Dialog, 0, limit)
 	_ = r.bunt.View(func(tx *buntdb.Tx) error {
@@ -294,8 +257,6 @@ func (r *repoDialogs) List(offset, limit int32) []*msg.Dialog {
 }
 
 func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	dialogs := make([]*msg.Dialog, 0, 7)
 	_ = r.badger.View(func(txn *badger.Txn) error {
@@ -323,8 +284,6 @@ func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
 }
 
 func (r *repoDialogs) GetPeerIDs() []int64 {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	peerIDs := make([]int64, 0, 100)
 	_ = r.bunt.View(func(tx *buntdb.Tx) error {

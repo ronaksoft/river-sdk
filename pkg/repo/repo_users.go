@@ -139,8 +139,6 @@ func (r *repoUsers) GetContact(userID int64) *msg.ContactUser {
 }
 
 func (r *repoUsers) GetManyContactUsers(userIDs []int64) []*msg.ContactUser {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	contactUsers := make([]*msg.ContactUser, 0, len(userIDs))
 	for _, userID := range userIDs {
@@ -151,8 +149,6 @@ func (r *repoUsers) GetManyContactUsers(userIDs []int64) []*msg.ContactUser {
 }
 
 func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	logs.Debug("Users::GetContacts()")
 
@@ -190,8 +186,6 @@ func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
 }
 
 func (r *repoUsers) GetPhoto(userID, photoID int64) *msg.UserPhoto {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	user := r.Get(userID)
 	return user.Photo
@@ -201,8 +195,6 @@ func (r *repoUsers) Save(user *msg.User) {
 	if alreadySaved(fmt.Sprintf("U.%d", user.ID), user) {
 		return
 	}
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	if user == nil {
 		return
@@ -226,8 +218,6 @@ func (r *repoUsers) Save(user *msg.User) {
 }
 
 func (r *repoUsers) SaveMany(users []*msg.User) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	userIDs := domain.MInt64B{}
 	for _, v := range users {
@@ -246,8 +236,6 @@ func (r *repoUsers) SaveMany(users []*msg.User) {
 }
 
 func (r *repoUsers) SaveContact(contactUser *msg.ContactUser) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	if contactUser == nil {
 		return
@@ -272,9 +260,6 @@ func (r *repoUsers) SaveContact(contactUser *msg.ContactUser) {
 func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType int32) error {
 	defer r.deleteFromCache(peerID)
 
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
 	user := r.Get(peerID)
 	if user == nil {
 		return domain.ErrDoesNotExists
@@ -284,8 +269,6 @@ func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType i
 }
 
 func (r *repoUsers) GetAccessHash(userID int64) (uint64, error) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	user := r.Get(userID)
 	if user == nil {
@@ -298,8 +281,7 @@ func (r *repoUsers) UpdatePhoto(userPhoto *msg.UpdateUserPhoto) {
 	if alreadySaved(fmt.Sprintf("UPHOTO.%d", userPhoto.UserID), userPhoto) {
 		return
 	}
-	r.mx.Lock()
-	defer r.mx.Unlock()
+
 	defer r.deleteFromCache(userPhoto.UserID)
 
 	user := r.Get(userPhoto.UserID)
@@ -311,8 +293,7 @@ func (r *repoUsers) UpdatePhoto(userPhoto *msg.UpdateUserPhoto) {
 }
 
 func (r *repoUsers) RemovePhoto(userID int64) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
+
 	defer r.deleteFromCache(userID)
 	user := r.Get(userID)
 	if user == nil {
@@ -323,8 +304,6 @@ func (r *repoUsers) RemovePhoto(userID int64) {
 }
 
 func (r *repoUsers) UpdateProfile(userID int64, firstName, lastName, username, bio string) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	user := r.Get(userID)
 	if user == nil {
@@ -340,8 +319,6 @@ func (r *repoUsers) UpdateProfile(userID int64, firstName, lastName, username, b
 }
 
 func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
 	defer r.deleteFromCache(userID)
 
@@ -352,8 +329,7 @@ func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) 
 }
 
 func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*msg.PhoneContact) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
+
 	textTerm := bleve.NewQueryStringQuery(searchPhrase)
 	searchRequest := bleve.NewSearchRequest(textTerm)
 	searchResult, _ := r.searchIndex.Search(searchRequest)
@@ -375,8 +351,7 @@ func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*
 }
 
 func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
-	r.mx.Lock()
-	defer r.mx.Unlock()
+
 	textTerm := bleve.NewQueryStringQuery(searchPhrase)
 	searchRequest := bleve.NewSearchRequest(textTerm)
 	searchResult, _ := r.searchIndex.Search(searchRequest)
@@ -395,8 +370,7 @@ func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
 }
 
 func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
-	r.mx.Lock()
-	defer r.mx.Unlock()
+
 	textTerm := bleve.NewQueryStringQuery(searchPhrase)
 	searchRequest := bleve.NewSearchRequest(textTerm)
 	searchResult, _ := r.searchIndex.Search(searchRequest)

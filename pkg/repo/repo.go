@@ -40,14 +40,14 @@ var (
 
 // Context container of repo
 type Context struct {
-	DBPath    string
+	DBPath string
 }
 
 type repository struct {
 	badger      *badger.DB
 	bunt        *buntdb.DB
 	searchIndex bleve.Index
-	mx          sync.Mutex
+	// mx          sync.Mutex
 }
 
 // create tables
@@ -65,7 +65,7 @@ func InitRepo(dbPath string) error {
 		lCache, _ = bigcache.NewBigCache(lcConfig)
 		repoLastError = repoSetDB(dbPath)
 		ctx = &Context{
-			DBPath:    dbPath,
+			DBPath: dbPath,
 		}
 		Dialogs = &repoDialogs{repository: r}
 		Messages = &repoMessages{repository: r}

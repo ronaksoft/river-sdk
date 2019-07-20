@@ -138,7 +138,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Initialize DB replaced with ORM
 	var err error
-	err = repo.InitRepo( fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID))
+	err = repo.InitRepo(fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID))
 	if err != nil {
 		logs.Fatal("River::SetConfig() faild to initialize DB context",
 			zap.String("Error", err.Error()),

@@ -119,7 +119,10 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 			)
 			continue
 		}
-		repo.Dialogs.SaveNew(dialog, topMessage.CreatedOn)
+		err := repo.Dialogs.SaveNew(dialog, topMessage.CreatedOn)
+		if err != nil {
+			logs.Error(err.Error())
+		}
 	}
 	for _, user := range x.Users {
 		repo.Users.Save(user)

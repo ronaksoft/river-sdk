@@ -20,7 +20,6 @@ type RequestDelegate struct {
 }
 
 func (d *RequestDelegate) OnComplete(b []byte) {
-
 	err := d.Envelope.Unmarshal(b)
 	if err != nil {
 		_Log.Error("Failed to unmarshal", zap.Error(err))
