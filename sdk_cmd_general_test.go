@@ -140,18 +140,18 @@ func createDataForSearchGlobal(nonContactWithDialogUser, nonContactWhitoutDialog
 	nonContactWithDialog := new(msg.User)
 	nonContactWithDialog.ID = 321
 	nonContactWithDialog.Username = nonContactWithDialogUser
-	_ = repo.Users.Save(nonContactWithDialog)
+	repo.Users.Save(nonContactWithDialog)
 
 	nonContactWithoutDialog := new(msg.User)
 	nonContactWithoutDialog.ID = 654
 	nonContactWithoutDialog.Username = nonContactWhitoutDialogUser
-	_ = repo.Users.Save(nonContactWithoutDialog)
+	repo.Users.Save(nonContactWithoutDialog)
 
 	contact := new(msg.ContactUser)
 	contact.ID = 852
 	contact.AccessHash = 4548
 	contact.Username = ContactUser
-	_ = repo.Users.SaveContact(contact)
+	repo.Users.SaveContact(contact)
 
 	dialog := new(msg.Dialog)
 	dialog.PeerType = 1
@@ -160,7 +160,7 @@ func createDataForSearchGlobal(nonContactWithDialogUser, nonContactWhitoutDialog
 	group := new(msg.Group)
 	group.ID = 987
 	group.Title = groupTitle
-	_ = repo.Groups.Save(group)
+	repo.Groups.Save(group)
 
 	_ = repo.Messages.Save(message)
 }

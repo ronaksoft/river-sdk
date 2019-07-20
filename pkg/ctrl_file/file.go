@@ -97,7 +97,6 @@ func New(config Config) *Controller {
 		go ctx.startUploadQueue()
 	}
 
-
 	return ctx
 }
 
@@ -403,7 +402,6 @@ func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
 		case msg.MediaTypeDocument:
 			x := new(msg.MediaDocument)
 			_ = x.Unmarshal(userMessage.Media)
-
 
 			docID = x.Doc.ID
 			clusterID = x.Doc.ClusterID

@@ -227,7 +227,6 @@ func (r *repoMessagesPending) GetByPeer(peerID int64, peerType int32) []*msg.Use
 	return userMessages
 }
 
-
 func (r *repoMessagesPending) Delete(msgID int64) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -297,7 +296,6 @@ func (r *repoMessagesPending) DeletePeerAllMessages(peerID int64, peerType int32
 
 	return res
 }
-
 
 const (
 	_ClientSendMessageMediaType       = -1

@@ -368,4 +368,3 @@ func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
 	}
 	return groups
 }
-

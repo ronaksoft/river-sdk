@@ -309,8 +309,8 @@ func (searchGlobalDelegateDummy) OnTimeout(err error) {
 var MessagesGetDBMediaStatus = &ishell.Cmd{
 	Name: "GetDBMediaStatus",
 	Func: func(c *ishell.Context) {
-		reqDelegate := new(dbMediaDelegate)
-		_SDK.GetDBStatus(reqDelegate)
+		// reqDelegate := new(dbMediaDelegate)
+		// _SDK.GetDBStatus(reqDelegate)
 	},
 }
 
@@ -348,11 +348,11 @@ func (d *ClearCacheResult) OnTimeout(err error) {
 var MessagesClearMedia = &ishell.Cmd{
 	Name: "ClearMedia",
 	Func: func(c *ishell.Context) {
-		peerId := fnGetPeerID(c)
-		all := fnClearAll(c)
-		mediaType := fnGetMediaTypes(c)
-		status := _SDK.ClearCache(peerId, mediaType, all)
-		_Log.Debug("MessagesClearMedia::status", zap.Bool("", status))
+		// peerId := fnGetPeerID(c)
+		// all := fnClearAll(c)
+		// mediaType := fnGetMediaTypes(c)
+		// status := _SDK.ClearCache(peerId, mediaType, all)
+		// _Log.Debug("MessagesClearMedia::status", zap.Bool("", status))
 	},
 }
 

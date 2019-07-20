@@ -96,7 +96,7 @@ func (r *repoFiles) UpdateFileStatus(msgID int64, state domain.RequestStatus) er
 	return nil
 }
 
-func (r *repoFiles) MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, fileSize int32, sent *msg.MessagesSent)  {
+func (r *repoFiles) MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, fileSize int32, sent *msg.MessagesSent) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 

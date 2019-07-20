@@ -115,12 +115,12 @@ func (rs RequestStatus) ToString() string {
 type FileStateType int32
 
 const (
-	FileStateDownload             FileStateType = 1 // FileStateDownload download
-	FileStateUpload               FileStateType = 2 // FileStateUpload upload
-	FileStateExistedDownload      FileStateType = 3 // FileStateExistedDownload file already exist
-	FileStateExistedUpload        FileStateType = 4 // FileStateExistedUpload file uploaded document already exist
-	FileStateUploadAccountPhoto   FileStateType = 5 // FileStateUploadAccountPhoto the request AccountUploadPhoto
-	FileStateUploadGroupPhoto     FileStateType = 7 // FileStateUploadGroupPhoto the request GroupUploadPhoto
+	FileStateDownload           FileStateType = 1 // FileStateDownload download
+	FileStateUpload             FileStateType = 2 // FileStateUpload upload
+	FileStateExistedDownload    FileStateType = 3 // FileStateExistedDownload file already exist
+	FileStateExistedUpload      FileStateType = 4 // FileStateExistedUpload file uploaded document already exist
+	FileStateUploadAccountPhoto FileStateType = 5 // FileStateUploadAccountPhoto the request AccountUploadPhoto
+	FileStateUploadGroupPhoto   FileStateType = 7 // FileStateUploadGroupPhoto the request GroupUploadPhoto
 )
 
 // SharedMediaType filter for displaying shared medias

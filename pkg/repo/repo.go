@@ -35,7 +35,6 @@ var (
 	MessagesExtra   *repoMessagesExtra
 	System          *repoSystem
 	Users           *repoUsers
-	UISettings      *repoUISettings
 	Groups          *repoGroups
 	Files           *repoFiles
 )
@@ -61,7 +60,6 @@ func (r *repository) initDB() error {
 	repoLastError = r.db.AutoMigrate(
 		dto.MessagesExtra{},
 		dto.FilesStatus{},
-		dto.Files{},
 	).Error
 
 	return repoLastError
@@ -86,7 +84,6 @@ func InitRepo(dialect, dbPath string) error {
 		MessagesExtra = &repoMessagesExtra{repository: r}
 		System = &repoSystem{repository: r}
 		Users = &repoUsers{repository: r}
-		UISettings = &repoUISettings{repository: r}
 		Groups = &repoGroups{repository: r}
 		Files = &repoFiles{repository: r}
 		singleton.Unlock()
@@ -186,8 +183,6 @@ func ReInitiateDatabase() error {
 	err := r.db.DropTableIfExists(
 		dto.MessagesExtra{},
 		dto.FilesStatus{},
-		dto.Files{},
-		// dto.UISettings{}, //do not remove UISettings on logout
 	).Error
 
 	if err != nil {

@@ -1,21 +1,19 @@
 package riversdk
 
 import (
-	"errors"
-	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"go.uber.org/zap"
 	"time"
 )
 
 var GetDBStatusIsRunning bool
-var DatabaseStatus map[int64]map[msg.DocumentAttributeType]dto.MediaInfo
+
+// var DatabaseStatus map[int64]map[msg.DocumentAttributeType]dto.MediaInfo
 
 // CancelRequest remove given requestID callbacks&delegates and if its not processed by queue we skip it on queue distributor
 func (r *River) CancelRequest(requestID int64) {
@@ -54,7 +52,7 @@ func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
 		mon.FunctionResponseTime("RetryPendingMessage", time.Now().Sub(startTime))
 	}()
 	pmsg := repo.PendingMessages.GetByID(id)
-	if pmsg == nil  {
+	if pmsg == nil {
 		isSuccess = false
 		return
 	}
@@ -169,45 +167,6 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 	}
 
 	return requestID, err
-}
-
-// UISettingGet fetch from key/value storage for UI settings
-func (r *River) UISettingsGet(key string) string {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("UISettingsGet", time.Now().Sub(startTime))
-	}()
-	val, err := repo.UISettings.Get(key)
-	if err != nil {
-		logs.Warn("River::UISettingsGet()", zap.Error(err))
-	}
-	return val
-}
-
-// UISettingPut save to key/value storage for UI settings
-func (r *River) UISettingsPut(key, value string) bool {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("UISettingsPut", time.Now().Sub(startTime))
-	}()
-	err := repo.UISettings.Put(key, value)
-	if err != nil {
-		logs.Error("River::UISettingsPut()", zap.Error(err))
-	}
-	return err == nil
-}
-
-// UISettingDelete remove from key/value storage for UI settings
-func (r *River) UISettingsDelete(key string) bool {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("UISettingsDelete", time.Now().Sub(startTime))
-	}()
-	err := repo.UISettings.Delete(key)
-	if err != nil {
-		logs.Error("River::UISettingsDelete()", zap.Error(err))
-	}
-	return err == nil
 }
 
 // SearchContacts searches contacts
@@ -526,51 +485,6 @@ func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate
 	if delegate != nil {
 		delegate.OnComplete(outBytes)
 	}
-}
-
-// GetGetDBStatus returns message IDs and total size of each media stored in user's database
-func (r *River) GetDBStatus(delegate RequestDelegate) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("GetDBStatus", time.Now().Sub(startTime))
-	}()
-	res := msg.DBMediaInfo{}
-	if GetDBStatusIsRunning {
-		err := errors.New("GetDBStatus is running")
-		if delegate != nil {
-			delegate.OnTimeout(err)
-		}
-		return
-	}
-	GetDBStatusIsRunning = true
-	for k := range DatabaseStatus {
-		delete(DatabaseStatus, k)
-	}
-	logs.Debug("DatabaseStatus Must be Empty", zap.Any("", fmt.Sprintf("%+v", DatabaseStatus)))
-	peerMediaSizeMap, err := repo.Files.GetDBStatus()
-	if err != nil {
-		GetDBStatusIsRunning = false
-		logs.Error(err.Error())
-		delegate.OnTimeout(err)
-		return
-	}
-	logs.Debug("peerMediaSizeMap", zap.Any("peerMediaSizeMap", peerMediaSizeMap))
-	peerMediaInfo := make([]*msg.PeerMediaInfo, 0)
-	for peerID, mediaInfoMap := range peerMediaSizeMap {
-		mediaSize := make([]*msg.MediaSize, 0)
-		for mediaType, mediaInfo := range mediaInfoMap {
-			mediaSize = append(mediaSize, &msg.MediaSize{MediaType: int32(mediaType), TotalSize: mediaInfo.Size})
-		}
-		peerMediaInfo = append(peerMediaInfo, &msg.PeerMediaInfo{PeerID: peerID, Media: mediaSize})
-	}
-	res.MediaInfo = peerMediaInfo
-	logs.Debug("MediaInfo", zap.String("", fmt.Sprintf("%+v", res.MediaInfo)))
-	pBytes, _ := res.Marshal()
-	if delegate != nil {
-		delegate.OnComplete(pBytes)
-	}
-	GetDBStatusIsRunning = false
-	DatabaseStatus = peerMediaSizeMap
 }
 
 func (r *River) GetSDKSalt() int64 {

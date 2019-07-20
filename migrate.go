@@ -20,6 +20,6 @@ func add(ver int, f func(river *River)) {
 func init() {
 	funcHolders = make(map[int]func(r *River))
 	add(0, func(r *River) {
-		r.ClearCache(0, "", true)
+		// r.ClearCache(0, "", true)
 	})
 }
