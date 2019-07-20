@@ -303,7 +303,7 @@ func (r *repoGroups) Delete(groupID int64) {
 	})
 }
 
-func (r *repoGroups) UpdateMemberType(groupID, userID int64, isAdmin bool)  {
+func (r *repoGroups) UpdateMemberType(groupID, userID int64, isAdmin bool) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 	defer r.deleteFromCache(groupID)
@@ -372,8 +372,6 @@ func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
 	return groups
 }
 
-
-
 func (r *repoGroups) GetGroupDTO(groupID int64) (*dto.Groups, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -405,6 +403,3 @@ func (r *repoGroups) UpdatePhotoPath(groupID int64, isBig bool, filePath string)
 	}).Error
 
 }
-
-
-

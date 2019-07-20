@@ -122,7 +122,7 @@ func repoSetDB(dialect, dbPath string) error {
 		return tx.CreateIndex(indexDialogs, fmt.Sprintf("%s.*", prefixDialogs), buntdb.IndexBinary)
 	})
 
-	r.searchIndex,repoLastError = bleve.Open(dbPath)
+	r.searchIndex, repoLastError = bleve.Open(dbPath)
 	if repoLastError == bleve.ErrorIndexPathDoesNotExist {
 		// create a mapping
 		indexMapping, err := buildIndexMapping()
@@ -171,7 +171,6 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 	contactMapping.AddFieldMappingsAt("Username", keywordFieldMapping)
 	contactMapping.AddFieldMappingsAt("Phone", keywordFieldMapping)
 
-
 	indexMapping := bleve.NewIndexMapping()
 	indexMapping.AddDocumentMapping("msg", messageMapping)
 	indexMapping.AddDocumentMapping("user", userMapping)
@@ -183,7 +182,6 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 
 	return indexMapping, nil
 }
-
 
 // ReInitiateDatabase runs auto migrate
 func ReInitiateDatabase() error {

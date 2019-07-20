@@ -38,7 +38,7 @@ type stats struct {
 	MaxQueueTime            time.Duration
 	MinQueueTime            time.Duration
 	TotalQueueItems         int32
-	StartTime 				time.Time
+	StartTime               time.Time
 }
 
 var Stats stats

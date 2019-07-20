@@ -235,7 +235,7 @@ func TestConnectTime(t *testing.T) {
 
 	conInfo.Delegate = new(ConnInfoDelegates)
 	conInfo.UserID = 10
-	conInfo.AuthID =-309683086834753830
+	conInfo.AuthID = -309683086834753830
 	authKey, _ := base64.StdEncoding.DecodeString(
 		"w5lswq0Vw6Eqwq/DrMKSRTHDu2rDsMOmE1XDuXLCgsKiwqVfwp7Cpk7CrTUgexXDlALDl1bCi8OSBcOYw7AIw4jCvsK9wrkgwqjDvsOpwrTDtMKQwqA9MEPCg2Q6cR8" +
 			"+Qi1hw6fCmsK9RcK3UsOifcKAPcOZw4zDtksbwohGF8OiTMOGw6pRe8K/AsKTwqdsTsO/aRINw7/DnCvDumrDtgc3RcKHcV5UwqLDs8OTDsK" +

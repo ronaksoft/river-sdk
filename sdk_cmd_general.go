@@ -121,11 +121,10 @@ func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
 		if err != nil {
 			logs.Error("River::Logout() failed to re initiate database", zap.Error(err))
 			time.Sleep(time.Millisecond * 500)
-		}	else {
+		} else {
 			keepGoing = false
 		}
 	}
-
 
 	// open queue
 	err = r.queueCtrl.OpenQueue(dataDir)
@@ -252,7 +251,6 @@ func (r *River) SearchDialogs(requestID int64, searchPhrase string, delegate Req
 	groups := repo.Groups.Search(searchPhrase)
 	dlgs.Users = users
 	dlgs.Groups = groups
-
 
 	mUserDialogs := domain.MInt64B{}
 	mGroupDialogs := domain.MInt64B{}

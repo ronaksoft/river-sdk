@@ -132,7 +132,6 @@ func (r *River) onNetworkConnect() {
 	}()
 }
 
-
 func (r *River) onGeneralError(e *msg.Error) {
 	// TODO:: call external handler
 	logs.Info("River::onGeneralError()",

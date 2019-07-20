@@ -196,7 +196,7 @@ func (r *repoDialogs) Save(dialog *msg.Dialog) error {
 	})
 }
 
-func (r *repoDialogs) UpdateUnreadCount(peerID int64, peerType, unreadCount int32)  {
+func (r *repoDialogs) UpdateUnreadCount(peerID int64, peerType, unreadCount int32) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -210,7 +210,7 @@ func (r *repoDialogs) UpdateUnreadCount(peerID int64, peerType, unreadCount int3
 	return
 }
 
-func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32, maxID int64)  {
+func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32, maxID int64) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -225,7 +225,7 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 	return
 }
 
-func (r *repoDialogs) UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID int64)  {
+func (r *repoDialogs) UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID int64) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -252,7 +252,7 @@ func (r *repoDialogs) UpdateNotifySetting(peerID int64, peerType int32, notifySe
 	return
 }
 
-func (r *repoDialogs) UpdatePinned(in *msg.UpdateDialogPinned)  {
+func (r *repoDialogs) UpdatePinned(in *msg.UpdateDialogPinned) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -338,10 +338,5 @@ func (r *repoDialogs) GetPeerIDs() []int64 {
 		})
 	})
 
-
 	return peerIDs
 }
-
-
-
-

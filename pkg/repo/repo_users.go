@@ -365,10 +365,10 @@ func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*
 		contactUser := r.getContactByKey(ronak.StrToByte(hit.ID))
 		if contactUser != nil {
 			phoneContacts = append(phoneContacts, &msg.PhoneContact{
-				ClientID: contactUser.ClientID,
+				ClientID:  contactUser.ClientID,
 				FirstName: contactUser.FirstName,
-				LastName: contactUser.LastName,
-				Phone: contactUser.Phone,
+				LastName:  contactUser.LastName,
+				Phone:     contactUser.Phone,
 			})
 			contactUsers = append(contactUsers, contactUser)
 		}
@@ -388,8 +388,8 @@ func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
 		if user != nil {
 			contactUsers = append(contactUsers, &msg.ContactUser{
 				FirstName: user.FirstName,
-				LastName: user.LastName,
-				Username: user.Username,
+				LastName:  user.LastName,
+				Username:  user.Username,
 			})
 		}
 	}
@@ -412,7 +412,6 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 	return users
 }
 
-
 // OLD
 func (r *repoUsers) UpdateAccountPhotoPath(userID, photoID int64, isBig bool, filePath string) error {
 	r.mx.Lock()
@@ -431,4 +430,3 @@ func (r *repoUsers) UpdateAccountPhotoPath(userID, photoID int64, isBig bool, fi
 	}).Error
 
 }
-

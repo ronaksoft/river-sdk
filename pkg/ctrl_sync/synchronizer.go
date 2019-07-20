@@ -153,7 +153,6 @@ func (ctrl *Controller) sync() {
 	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSyncThreshold {
 		logs.Info("SyncController:: Snapshot sync")
 
-
 		// remove all messages
 		err := repo.Messages.ClearAll()
 		if err != nil {
