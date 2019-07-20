@@ -763,11 +763,7 @@ func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB
 	}
 
 	dialog.NotifySettings = req.Settings
-	err := repo.Dialogs.Save(dialog)
-	if err != nil {
-		logs.Error("River::accountSetNotifySettings()-> SaveDialog()", zap.Error(err))
-		return
-	}
+	repo.Dialogs.Save(dialog)
 
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
@@ -790,11 +786,7 @@ func (r *River) dialogTogglePin(in, out *msg.MessageEnvelope, timeoutCB domain.T
 	}
 
 	dialog.Pinned = req.Pin
-	err := repo.Dialogs.Save(dialog)
-	if err != nil {
-		logs.Error("River::dialogTogglePin()-> SaveDialog()", zap.Error(err))
-		return
-	}
+	repo.Dialogs.Save(dialog)
 
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)

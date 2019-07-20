@@ -156,7 +156,7 @@ func createDataForSearchGlobal(nonContactWithDialogUser, nonContactWhitoutDialog
 	dialog := new(msg.Dialog)
 	dialog.PeerType = 1
 	dialog.PeerID = 321
-	_ = repo.Dialogs.Save(dialog)
+	repo.Dialogs.Save(dialog)
 	group := new(msg.Group)
 	group.ID = 987
 	group.Title = groupTitle
