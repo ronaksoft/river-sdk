@@ -495,124 +495,125 @@ func (r *River) downloadPendingThumbnail(msgID int64) string {
 	return ""
 }
 
-// // ClearCache removes files from client device, allMedia means clear all media types
-// // peerID 0 means all peers
-// func (r *River) ClearCache(peerID int64, mediaTypes string, allMedia bool) bool {
-// 	startTime := time.Now()
-// 	defer func() {
-// 		mon.FunctionResponseTime("ClearCache", time.Now().Sub(startTime))
-// 	}()
-// 	var messageIDs []int64
-// 	clearDatabaseStatus := func() {
-// 		for k := range DatabaseStatus {
-// 			delete(DatabaseStatus, k)
-// 		}
-// 	}
-// 	defer clearDatabaseStatus()
-// 	if allMedia {
-// 		// peerID = 0 means all peers
-// 		// all peers and all media types
-// 		if peerID == 0 {
-// 			for _, mediaData := range DatabaseStatus {
-// 				for _, mediaInfo := range mediaData {
-// 					messageIDs = append(messageIDs, mediaInfo.MessageIDs...)
-// 				}
-// 			}
-// 		} else {
-// 			// all media types of a specific peer
-// 			for _, mediaInfo := range DatabaseStatus[peerID] {
-// 				messageIDs = append(messageIDs, mediaInfo.MessageIDs...)
-// 			}
-// 		}
-// 	} else {
-// 		// all peers with specific media types
-// 		if peerID == 0 {
-// 			for _, mediaData := range DatabaseStatus {
-// 				mediaTypeSlices := strings.Split(mediaTypes, ",")
-// 				for _, mediaType := range mediaTypeSlices {
-// 					castedType, _ := strconv.Atoi(mediaType)
-// 					messageIDs = append(messageIDs, mediaData[msg.DocumentAttributeType(castedType)].MessageIDs...)
-// 				}
-// 			}
-// 		} else {
-// 			// specific peer with specific media type
-// 			mediaInfo := DatabaseStatus[peerID]
-// 			mediaTypeSlices := strings.Split(mediaTypes, ",")
-// 			for _, mediaType := range mediaTypeSlices {
-// 				castedType, _ := strconv.Atoi(mediaType)
-// 				messageIDs = append(messageIDs, mediaInfo[msg.DocumentAttributeType(castedType)].MessageIDs...)
-// 			}
-// 		}
-// 	}
-//
-// 	logs.Info("River::ClearCache",
-// 		zap.Any("peerID", peerID),
-// 		zap.String("mediaTypes", mediaTypes),
-// 		zap.Bool("all", allMedia),
-// 		zap.Any("DatabaseStatus Map", DatabaseStatus),
-// 	)
-//
-// 	logs.Debug("ClearCache", zap.Int64s("messageIDs", messageIDs))
-//
-// 	if filePaths, err := repo.Files.ClearMedia(messageIDs); err != nil {
-// 		logs.Debug("River::ClearCache",
-// 			zap.String("clear media error", err.Error()),
-// 		)
-// 		return false
-// 	} else {
-// 		logs.Debug("ClearCache", zap.Strings("media paths", filePaths))
-// 		err = r.fileCtrl.ClearFiles(filePaths)
-// 		if err != nil {
-// 			logs.Debug("River::ClearCache",
-// 				zap.String("clear files error", err.Error()),
-// 			)
-// 			return false
-// 		}
-// 	}
-// 	return true
-// }
+// ClearCache removes files from client device, allMedia means clear all media types
+// peerID 0 means all peers
+func (r *River) ClearCache(peerID int64, mediaTypes string, allMedia bool) bool {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("ClearCache", time.Now().Sub(startTime))
+	}()
+	// var messageIDs []int64
+	// clearDatabaseStatus := func() {
+	// 	for k := range DatabaseStatus {
+	// 		delete(DatabaseStatus, k)
+	// 	}
+	// }
+	// defer clearDatabaseStatus()
+	// if allMedia {
+	// 	// peerID = 0 means all peers
+	// 	// all peers and all media types
+	// 	if peerID == 0 {
+	// 		for _, mediaData := range DatabaseStatus {
+	// 			for _, mediaInfo := range mediaData {
+	// 				messageIDs = append(messageIDs, mediaInfo.MessageIDs...)
+	// 			}
+	// 		}
+	// 	} else {
+	// 		// all media types of a specific peer
+	// 		for _, mediaInfo := range DatabaseStatus[peerID] {
+	// 			messageIDs = append(messageIDs, mediaInfo.MessageIDs...)
+	// 		}
+	// 	}
+	// } else {
+	// 	// all peers with specific media types
+	// 	if peerID == 0 {
+	// 		for _, mediaData := range DatabaseStatus {
+	// 			mediaTypeSlices := strings.Split(mediaTypes, ",")
+	// 			for _, mediaType := range mediaTypeSlices {
+	// 				castedType, _ := strconv.Atoi(mediaType)
+	// 				messageIDs = append(messageIDs, mediaData[msg.DocumentAttributeType(castedType)].MessageIDs...)
+	// 			}
+	// 		}
+	// 	} else {
+	// 		// specific peer with specific media type
+	// 		mediaInfo := DatabaseStatus[peerID]
+	// 		mediaTypeSlices := strings.Split(mediaTypes, ",")
+	// 		for _, mediaType := range mediaTypeSlices {
+	// 			castedType, _ := strconv.Atoi(mediaType)
+	// 			messageIDs = append(messageIDs, mediaInfo[msg.DocumentAttributeType(castedType)].MessageIDs...)
+	// 		}
+	// 	}
+	// }
+	//
+	// logs.Info("River::ClearCache",
+	// 	zap.Any("peerID", peerID),
+	// 	zap.String("mediaTypes", mediaTypes),
+	// 	zap.Bool("all", allMedia),
+	// 	zap.Any("DatabaseStatus Map", DatabaseStatus),
+	// )
+	//
+	// logs.Debug("ClearCache", zap.Int64s("messageIDs", messageIDs))
+	//
+	// if filePaths, err := repo.Files.ClearMedia(messageIDs); err != nil {
+	// 	logs.Debug("River::ClearCache",
+	// 		zap.String("clear media error", err.Error()),
+	// 	)
+	// 	return false
+	// } else {
+	// 	logs.Debug("ClearCache", zap.Strings("media paths", filePaths))
+	// 	err = r.fileCtrl.ClearFiles(filePaths)
+	// 	if err != nil {
+	// 		logs.Debug("River::ClearCache",
+	// 			zap.String("clear files error", err.Error()),
+	// 		)
+	// 		return false
+	// 	}
+	// }
+	return true
+}
 
-// // GetGetDBStatus returns message IDs and total size of each media stored in user's database
-// func (r *River) GetDBStatus(delegate RequestDelegate) {
-// 	startTime := time.Now()
-// 	defer func() {
-// 		mon.FunctionResponseTime("GetDBStatus", time.Now().Sub(startTime))
-// 	}()
-// 	res := msg.DBMediaInfo{}
-// 	if GetDBStatusIsRunning {
-// 		err := errors.New("GetDBStatus is running")
-// 		if delegate != nil {
-// 			delegate.OnTimeout(err)
-// 		}
-// 		return
-// 	}
-// 	GetDBStatusIsRunning = true
-// 	for k := range DatabaseStatus {
-// 		delete(DatabaseStatus, k)
-// 	}
-// 	logs.Debug("DatabaseStatus Must be Empty", zap.Any("", fmt.Sprintf("%+v", DatabaseStatus)))
-// 	peerMediaSizeMap, err := repo.Files.GetDBStatus()
-// 	if err != nil {
-// 		GetDBStatusIsRunning = false
-// 		logs.Error(err.Error())
-// 		delegate.OnTimeout(err)
-// 		return
-// 	}
-// 	logs.Debug("peerMediaSizeMap", zap.Any("peerMediaSizeMap", peerMediaSizeMap))
-// 	peerMediaInfo := make([]*msg.PeerMediaInfo, 0)
-// 	for peerID, mediaInfoMap := range peerMediaSizeMap {
-// 		mediaSize := make([]*msg.MediaSize, 0)
-// 		for mediaType, mediaInfo := range mediaInfoMap {
-// 			mediaSize = append(mediaSize, &msg.MediaSize{MediaType: int32(mediaType), TotalSize: mediaInfo.Size})
-// 		}
-// 		peerMediaInfo = append(peerMediaInfo, &msg.PeerMediaInfo{PeerID: peerID, Media: mediaSize})
-// 	}
-// 	res.MediaInfo = peerMediaInfo
-// 	logs.Debug("MediaInfo", zap.String("", fmt.Sprintf("%+v", res.MediaInfo)))
-// 	pBytes, _ := res.Marshal()
-// 	if delegate != nil {
-// 		delegate.OnComplete(pBytes)
-// 	}
-// 	GetDBStatusIsRunning = false
-// 	DatabaseStatus = peerMediaSizeMap
-// }
+// GetGetDBStatus returns message IDs and total size of each media stored in user's database
+func (r *River) GetDBStatus(delegate RequestDelegate) {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("GetDBStatus", time.Now().Sub(startTime))
+	}()
+	delegate.OnTimeout(domain.ErrDoesNotExists)
+	// res := msg.DBMediaInfo{}
+	// if GetDBStatusIsRunning {
+	// 	err := errors.New("GetDBStatus is running")
+	// 	if delegate != nil {
+	// 		delegate.OnTimeout(err)
+	// 	}
+	// 	return
+	// }
+	// GetDBStatusIsRunning = true
+	// for k := range DatabaseStatus {
+	// 	delete(DatabaseStatus, k)
+	// }
+	// logs.Debug("DatabaseStatus Must be Empty", zap.Any("", fmt.Sprintf("%+v", DatabaseStatus)))
+	// peerMediaSizeMap, err := repo.Files.GetDBStatus()
+	// if err != nil {
+	// 	GetDBStatusIsRunning = false
+	// 	logs.Error(err.Error())
+	// 	delegate.OnTimeout(err)
+	// 	return
+	// }
+	// logs.Debug("peerMediaSizeMap", zap.Any("peerMediaSizeMap", peerMediaSizeMap))
+	// peerMediaInfo := make([]*msg.PeerMediaInfo, 0)
+	// for peerID, mediaInfoMap := range peerMediaSizeMap {
+	// 	mediaSize := make([]*msg.MediaSize, 0)
+	// 	for mediaType, mediaInfo := range mediaInfoMap {
+	// 		mediaSize = append(mediaSize, &msg.MediaSize{MediaType: int32(mediaType), TotalSize: mediaInfo.Size})
+	// 	}
+	// 	peerMediaInfo = append(peerMediaInfo, &msg.PeerMediaInfo{PeerID: peerID, Media: mediaSize})
+	// }
+	// res.MediaInfo = peerMediaInfo
+	// logs.Debug("MediaInfo", zap.String("", fmt.Sprintf("%+v", res.MediaInfo)))
+	// pBytes, _ := res.Marshal()
+	// if delegate != nil {
+	// 	delegate.OnComplete(pBytes)
+	// }
+	// GetDBStatusIsRunning = false
+	// DatabaseStatus = peerMediaSizeMap
+}
