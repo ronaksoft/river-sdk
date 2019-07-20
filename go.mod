@@ -14,7 +14,6 @@ require (
 	github.com/blevesearch/go-porterstemmer v1.0.2 // indirect
 	github.com/blevesearch/segment v0.0.0-20160915185041-762005e7a34f // indirect
 	github.com/boltdb/bolt v1.3.1 // indirect
-	github.com/c2fo/testify v0.0.0-20150827203832-fba96363964a // indirect
 	github.com/chzyer/logex v1.1.10 // indirect
 	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect
 	github.com/couchbase/vellum v0.0.0-20190626091642-41f2deade2cf // indirect
@@ -22,7 +21,6 @@ require (
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
 	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
 	github.com/dgraph-io/badger v1.6.0
-	github.com/doug-martin/goqu v5.0.0+incompatible
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51 // indirect
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
@@ -33,10 +31,8 @@ require (
 	github.com/gobwas/pool v0.2.0
 	github.com/gogo/protobuf v1.2.1
 	github.com/gorilla/websocket v1.4.0
-	github.com/jinzhu/gorm v1.9.10
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/juju/ratelimit v1.0.1
-	github.com/kisielk/errcheck v1.2.0 // indirect
 	github.com/kr/pretty v0.1.0
 	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983
 	github.com/mattn/go-colorable v0.1.1 // indirect
@@ -48,7 +44,6 @@ require (
 	github.com/nyaruka/phonenumbers v1.0.36
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/remyoudompheng/bigfft v0.0.0-20190512091148-babf20351dd7 // indirect
-	github.com/scylladb/go-set v1.0.2
 	github.com/spf13/viper v1.4.0
 	github.com/steveyen/gtreap v0.0.0-20150807155958-0abe01ef9be2 // indirect
 	github.com/syndtr/goleveldb v1.0.0 // indirect
@@ -64,8 +59,8 @@ require (
 	golang.org/x/net v0.0.0-20190628185345-da137c7871d7 // indirect
 	golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7 // indirect
 	golang.org/x/text v0.3.2 // indirect
-	golang.org/x/tools v0.0.0-20190719005602-e377ae9d6386 // indirect
+	google.golang.org/appengine v1.4.0 // indirect
+	google.golang.org/genproto v0.0.0-20190404172233-64821d5d2107 // indirect
 	google.golang.org/grpc v1.21.0
 	gopkg.in/abiosoft/ishell.v2 v2.0.0
-	gopkg.in/doug-martin/goqu.v5 v5.0.0 // indirect
 )
