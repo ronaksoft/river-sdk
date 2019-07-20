@@ -150,7 +150,7 @@ func (r *River) PauseDownload(msgID int64) {
 
 	r.fileCtrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
 
-	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatusPaused)
+	repo.Files.UpdateFileStatus(msgID, domain.RequestStatusPaused)
 }
 
 // CancelDownload cancel download
@@ -167,7 +167,7 @@ func (r *River) CancelDownload(msgID int64) {
 
 	r.fileCtrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
 
-	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatusCanceled)
+	repo.Files.UpdateFileStatus(msgID, domain.RequestStatusCanceled)
 }
 
 // PauseUpload pause upload
@@ -184,7 +184,7 @@ func (r *River) PauseUpload(msgID int64) {
 
 	r.fileCtrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
 
-	_ = repo.Files.UpdateFileStatus(msgID, domain.RequestStatusPaused)
+	repo.Files.UpdateFileStatus(msgID, domain.RequestStatusPaused)
 	// repo.MessagesPending.Delete(fs.MessageID)
 
 }

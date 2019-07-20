@@ -188,7 +188,7 @@ func (ctrl *Controller) downloadRequest(req *msg.MessageEnvelope, fs *File, part
 		ctrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
 		logs.Warn("downloadRequest() download request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
 		fs.RequestStatus = domain.RequestStatusError
-		_ = repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
+		repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 		if ctrl.onDownloadError != nil {
 			x := new(msg.Error)
 			x.Code = "00"
@@ -288,7 +288,7 @@ func (ctrl *Controller) uploadRequest(req *msg.MessageEnvelope, count int64, fs 
 		ctrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
 		logs.Error("uploadRequest() upload request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
 		fs.RequestStatus = domain.RequestStatusError
-		_ = repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
+		repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
 		if ctrl.onUploadError != nil {
 			x := new(msg.Error)
 			x.Code = "00"
@@ -421,7 +421,7 @@ func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
 		theFile.RequestStatus = domain.RequestStatusInProgress
 		ctrl.AddToQueue(theFile)
 		repo.Files.SaveStatus(theFile.GetDTO())
-		_ = repo.Files.UpdateFileStatus(theFile.MessageID, domain.RequestStatusInProgress)
+		repo.Files.UpdateFileStatus(theFile.MessageID, domain.RequestStatusInProgress)
 	}
 }
 
