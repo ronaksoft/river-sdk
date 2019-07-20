@@ -36,6 +36,7 @@ require (
 	github.com/jinzhu/gorm v1.9.10
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/juju/ratelimit v1.0.1
+	github.com/kisielk/errcheck v1.2.0 // indirect
 	github.com/kr/pretty v0.1.0
 	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983
 	github.com/mattn/go-colorable v0.1.1 // indirect
@@ -59,6 +60,11 @@ require (
 	github.com/tidwall/rtree v0.0.0-20180113144539-6cd427091e0e // indirect
 	github.com/tidwall/tinyqueue v0.0.0-20180302190814-1e39f5511563 // indirect
 	go.uber.org/zap v1.10.0
+	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 // indirect
+	golang.org/x/net v0.0.0-20190628185345-da137c7871d7 // indirect
+	golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7 // indirect
+	golang.org/x/text v0.3.2 // indirect
+	golang.org/x/tools v0.0.0-20190719005602-e377ae9d6386 // indirect
 	google.golang.org/grpc v1.21.0
 	gopkg.in/abiosoft/ishell.v2 v2.0.0
 	gopkg.in/doug-martin/goqu.v5 v5.0.0 // indirect

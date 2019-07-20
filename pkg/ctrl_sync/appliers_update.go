@@ -119,10 +119,8 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			// Delete Group		NOT REQUIRED
 			// Delete Dialog	NOT REQUIRED
 			// Delete PendingMessage
-			deletedMsgs, err := repo.PendingMessages.DeletePeerAllMessages(x.Message.PeerID, x.Message.PeerType)
-			if err != nil {
-				logs.Error("River::groupDeleteUser()-> DeleteGroupPendingMessage()", zap.Error(err))
-			} else {
+			deletedMsgs := repo.PendingMessages.DeletePeerAllMessages(x.Message.PeerID, x.Message.PeerType)
+			if deletedMsgs != nil {
 				buff, err := deletedMsgs.Marshal()
 				if err != nil {
 					logs.Error("River::groupDeleteUser()-> Unmarshal ClientUpdateMessagesDeleted", zap.Error(err))
@@ -375,10 +373,7 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		zap.Int64("GroupID", x.GroupID),
 	)
 
-	err := repo.Groups.UpdatePhoto(x)
-	if err != nil {
-		logs.Error("updateGroupPhoto()-> UpdateGroupPhoto()", zap.Error(err))
-	}
+	repo.Groups.UpdatePhoto(x)
 
 	res := []*msg.UpdateEnvelope{u}
 	return res

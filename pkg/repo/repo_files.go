@@ -256,20 +256,8 @@ func (r *repoFiles) GetSharedMedia(peerID int64, peerType int32, mediaType int32
 	}
 
 	messageIDs := msgIDs.ToArray()
-	messages := make([]*msg.UserMessage, 0, len(messageIDs))
-	dtoMsgs := make([]dto.Messages, 0, len(messageIDs))
-	err = r.db.Where("ID in (?)", messageIDs).Find(&dtoMsgs).Error
-	if err != nil {
-		return nil, err
-	}
 
-	for _, v := range dtoMsgs {
-
-		tmp := new(msg.UserMessage)
-		v.MapTo(tmp)
-		messages = append(messages, tmp)
-	}
-
+	messages := Messages.GetMany(messageIDs)
 	return messages, nil
 
 }

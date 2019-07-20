@@ -161,7 +161,7 @@ func (ctrl *Controller) executor(req request) {
 		// hotfix check pendingMessage &&  messagesReadHistory on timeout
 		switch req.MessageEnvelope.Constructor {
 		case msg.C_MessagesSend:
-			pmsg, err := repo.PendingMessages.GetPendingMessageByRequestID(int64(-req.ID))
+			pmsg, err := repo.PendingMessages.GetByRandomID(int64(-req.ID))
 			if err == nil && pmsg != nil {
 				ctrl.addToWaitingList(&req)
 			}

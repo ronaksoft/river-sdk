@@ -582,7 +582,7 @@ func (fm *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, i
 			}
 
 			// save to DB
-			return filePath, repo.Users.UpdateAccountPhotoPath(userID, photo.PhotoID, isBig, filePath)
+			return filePath, nil
 
 		default:
 			return "", fmt.Errorf("received unknown response constructor {UserId : %d}", userID)
@@ -640,7 +640,7 @@ func (fm *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, i
 			}
 
 			// save to DB
-			return filePath, repo.Groups.UpdatePhotoPath(groupID, isBig, filePath)
+			return filePath, nil
 
 		default:
 			return "", fmt.Errorf("received unknown response constructor {GroupID : %d}", groupID)

@@ -186,7 +186,6 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 // ReInitiateDatabase runs auto migrate
 func ReInitiateDatabase() error {
 	err := r.db.DropTableIfExists(
-		dto.MessagesPending{},
 		dto.MessagesExtra{},
 		dto.FilesStatus{},
 		dto.Files{},

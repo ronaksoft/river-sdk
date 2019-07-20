@@ -156,7 +156,7 @@ func (ctrl *Controller) sync() {
 		// remove all messages
 		err := repo.Messages.ClearAll()
 		if err != nil {
-			logs.Error("sync()-> DropAndCreateTable()", zap.Error(err))
+			logs.Error("sync()-> Messages ClearAll", zap.Error(err))
 			return
 		}
 		// Get Contacts from the server

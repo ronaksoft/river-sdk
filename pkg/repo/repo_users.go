@@ -5,11 +5,9 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/blevesearch/bleve"
 	"github.com/dgraph-io/badger"
-	"go.uber.org/zap"
 )
 
 const (
@@ -410,23 +408,4 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 		}
 	}
 	return users
-}
-
-// OLD
-func (r *repoUsers) UpdateAccountPhotoPath(userID, photoID int64, isBig bool, filePath string) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	e := new(dto.UsersPhoto)
-
-	if isBig {
-		return r.db.Table(e.TableName()).Where("userID = ? AND PhotoID = ?", userID, photoID).Updates(map[string]interface{}{
-			"BigFilePath": filePath,
-		}).Error
-	}
-
-	return r.db.Table(e.TableName()).Where("userID = ? AND PhotoID = ?", userID, photoID).Updates(map[string]interface{}{
-		"SmallFilePath": filePath,
-	}).Error
-
 }

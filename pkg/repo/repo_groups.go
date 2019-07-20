@@ -4,12 +4,9 @@ import (
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/blevesearch/bleve"
 	"github.com/dgraph-io/badger"
-	"go.uber.org/zap"
 )
 
 const (
@@ -372,34 +369,3 @@ func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
 	return groups
 }
 
-func (r *repoGroups) GetGroupDTO(groupID int64) (*dto.Groups, error) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	group := new(dto.Groups)
-
-	err := r.db.Find(group, groupID).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return group, nil
-}
-
-func (r *repoGroups) UpdatePhotoPath(groupID int64, isBig bool, filePath string) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-	defer r.deleteFromCache(groupID)
-	e := new(dto.Groups)
-
-	if isBig {
-		return r.db.Table(e.TableName()).Where("ID = ? ", groupID).Updates(map[string]interface{}{
-			"BigFilePath": filePath,
-		}).Error
-	}
-
-	return r.db.Table(e.TableName()).Where("ID = ? ", groupID).Updates(map[string]interface{}{
-		"SmallFilePath": filePath,
-	}).Error
-
-}

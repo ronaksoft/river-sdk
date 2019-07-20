@@ -152,7 +152,7 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 	// Add delivered message to prevent invoking newMessage event later
 	ctrl.addToDeliveredMessageList(sent.MessageID)
 
-	pmsg, err := repo.PendingMessages.GetPendingMessageByRequestID(int64(e.RequestID))
+	pmsg, err := repo.PendingMessages.GetByRandomID(int64(e.RequestID))
 	if err != nil {
 		return
 	}
@@ -185,8 +185,7 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 		}
 	}
 
-	message := new(msg.UserMessage)
-	pmsg.MapToUserMessage(message)
+	message := repo.PendingMessages.ToUserMessage(pmsg)
 	message.ID = sent.MessageID
 	message.CreatedOn = sent.CreatedOn
 
@@ -199,19 +198,14 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 	}
 
 	// delete pending message
-	err = repo.PendingMessages.DeletePendingMessage(pmsg.ID)
-	if err != nil {
-		logs.Warn("messageSent()-> DeletePendingMessage() failed to delete pendingMessage", zap.Error(err))
-	}
+	repo.PendingMessages.Delete(pmsg.ID)
 
 	// TODO : Notify UI that the pending message delivered to server
 	e.Constructor = msg.C_ClientUpdatePendingMessageDelivery
-	pbcpm := new(msg.ClientPendingMessage)
-	pmsg.MapTo(pbcpm)
 
 	out := msg.ClientUpdatePendingMessageDelivery{
 		Messages:       message,
-		PendingMessage: pbcpm,
+		PendingMessage: pmsg,
 		Success:        true,
 	}
 

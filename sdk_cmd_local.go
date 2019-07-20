@@ -48,7 +48,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	res.Messages = repo.Messages.GetMany(mMessages.ToArray())
 
 	// Load Pending messages
-	pendingMessages := repo.PendingMessages.GetManyPendingMessages(mPendingMessage.ToArray())
+	pendingMessages := repo.PendingMessages.GetMany(mPendingMessage.ToArray())
 	res.Messages = append(res.Messages, pendingMessages...)
 
 	for _, m := range res.Messages {
@@ -131,8 +131,8 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 
 	// this will be used as next requestID
 	req.RandomID = domain.SequentialUniqueID()
-	dbID := -domain.SequentialUniqueID()
-	res, err := repo.PendingMessages.Save(dbID, r.ConnInfo.UserID, req)
+	msgID := -domain.SequentialUniqueID()
+	res, err := repo.PendingMessages.Save(msgID, r.ConnInfo.UserID, req)
 	if err != nil {
 		e := new(msg.Error)
 		e.Code = "n/a"
@@ -207,13 +207,12 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 
 	// Offline mode
 	if !r.networkCtrl.Connected() {
-		if dtoDialog.TopMessageID < 0 {
-			messages, users := repo.Messages.GetMessageHistoryWithPendingMessages(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
-			messagesGetHistory(out, messages, users, in.RequestID, successCB)
-		} else {
-			messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
-			messagesGetHistory(out, messages, users, in.RequestID, successCB)
+		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
+		pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
+		if len(pendingMessages) > 0 {
+			messages = append(messages, pendingMessages...)
 		}
+		messagesGetHistory(out, messages, users, in.RequestID, successCB)
 		return
 	}
 
@@ -222,14 +221,6 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:
-		// Get the latest messages
-		if dtoDialog.TopMessageID < 0 {
-			// TODO:: WTF ?
-			// fetch messages from localDB cuz there is a pending message it means we are not connected to server
-			messages, users := repo.Messages.GetMessageHistoryWithPendingMessages(req.Peer.ID, int32(req.Peer.Type), 0, 0, req.Limit)
-			messagesGetHistory(out, messages, users, in.RequestID, successCB)
-			return
-		}
 		b, bar := messageHole.GetLowerFilled(req.Peer.ID, int32(req.Peer.Type), dtoDialog.TopMessageID)
 		if !b {
 			logs.Info("Range in Hole",
@@ -251,7 +242,12 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 			return
 		}
+		pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
+		if len(pendingMessages) > 0 {
+			messages = append(messages, pendingMessages...)
+		}
 		messagesGetHistory(out, messages, users, in.RequestID, successCB)
+
 	case req.MinID == 0 && req.MaxID != 0:
 		// Load more message, scroll up
 		b, bar := messageHole.GetLowerFilled(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
@@ -340,15 +336,12 @@ func (r *River) messagesDelete(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	}
 	if len(pendingMessageIDs) > 0 {
 		// remove from queue
-		pendedRequestIDs := repo.PendingMessages.GetManyPendingMessagesRequestID(pendingMessageIDs)
+		pendedRequestIDs := repo.PendingMessages.GetManyRequestIDs(pendingMessageIDs)
 		for _, reqID := range pendedRequestIDs {
 			r.queueCtrl.CancelRequest(reqID)
 		}
 		// remove from DB
-		err := repo.PendingMessages.DeleteManyPendingMessage(pendingMessageIDs)
-		if err != nil {
-			logs.Error("River::messagesDelete()-> DeletePendingMessage()", zap.Error(err))
-		}
+		repo.PendingMessages.DeleteMany(pendingMessageIDs)
 	}
 
 	// remove message

@@ -36,14 +36,14 @@ func (r *River) CancelRequest(requestID int64) {
 
 }
 
-// DeletePendingMessage removes pending message from DB
+// Delete removes pending message from DB
 func (r *River) DeletePendingMessage(id int64) (isSuccess bool) {
 	startTime := time.Now()
 	defer func() {
-		mon.FunctionResponseTime("DeletePendingMessage", time.Now().Sub(startTime))
+		mon.FunctionResponseTime("Delete", time.Now().Sub(startTime))
 	}()
-	err := repo.PendingMessages.DeletePendingMessage(id)
-	isSuccess = err == nil
+	repo.PendingMessages.Delete(id)
+	isSuccess = true
 	return
 }
 
@@ -53,15 +53,21 @@ func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
 	defer func() {
 		mon.FunctionResponseTime("RetryPendingMessage", time.Now().Sub(startTime))
 	}()
-	pmsg, err := repo.PendingMessages.GetPendingMessageByID(id)
-	if err != nil {
-		logs.Warn("River::RetryPendingMessage() -> GetPendingMessageByID()", zap.Error(err))
+	pmsg := repo.PendingMessages.GetByID(id)
+	if pmsg == nil  {
 		isSuccess = false
 		return
 	}
 	req := new(msg.MessagesSend)
-	pmsg.MapToMessageSend(req)
-
+	req.Body = pmsg.Body
+	req.Peer = new(msg.InputPeer)
+	req.Peer.AccessHash = pmsg.AccessHash
+	req.Peer.ID = pmsg.PeerID
+	req.Peer.Type = msg.PeerType(pmsg.PeerType)
+	req.RandomID = pmsg.RequestID
+	req.ReplyTo = pmsg.ReplyTo
+	req.ClearDraft = pmsg.ClearDraft
+	req.Entities = pmsg.Entities
 	buff, _ := req.Marshal()
 	r.queueCtrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSend, buff, nil, nil, true)
 	isSuccess = true

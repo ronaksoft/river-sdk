@@ -416,7 +416,6 @@ func (r *River) registerCommandHandlers() {
 	r.localCommands[msg.C_MessagesGetDialog] = r.messagesGetDialog
 	r.localCommands[msg.C_MessagesGetHistory] = r.messagesGetHistory
 	r.localCommands[msg.C_MessagesSend] = r.messagesSend
-	r.localCommands[msg.C_ClientSendMessageMedia] = r.clientSendMessageMedia
 	r.localCommands[msg.C_ContactsGet] = r.contactsGet
 	r.localCommands[msg.C_MessagesReadHistory] = r.messagesReadHistory
 	r.localCommands[msg.C_UsersGet] = r.usersGet
@@ -436,10 +435,11 @@ func (r *River) registerCommandHandlers() {
 	r.localCommands[msg.C_GroupsUpdateAdmin] = r.groupUpdateAdmin
 	r.localCommands[msg.C_ContactsImport] = r.contactsImport
 	r.localCommands[msg.C_MessagesReadContents] = r.messagesReadContents
-	r.localCommands[msg.C_MessagesSendMedia] = r.messagesSendMedia
 	r.localCommands[msg.C_UsersGetFull] = r.usersGetFull
 	r.localCommands[msg.C_AccountRemovePhoto] = r.accountRemovePhoto
 	r.localCommands[msg.C_GroupsRemovePhoto] = r.groupRemovePhoto
+	r.localCommands[msg.C_MessagesSendMedia] = r.messagesSendMedia
+	r.localCommands[msg.C_ClientSendMessageMedia] = r.clientSendMessageMedia
 
 }
 
