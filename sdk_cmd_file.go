@@ -586,7 +586,7 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 			return filePath
 		}
 	case msg.MediaTypeContact:
-		// TODO:: implement it
+	// TODO:: implement it
 	default:
 		logs.Error("SDK::FileDownloadThumbnail() Invalid SharedMediaType")
 		return ""

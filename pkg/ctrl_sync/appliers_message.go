@@ -273,7 +273,7 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 	_ = repo.Groups.SaveMany(u.Groups)
 
 	// handle Media message
-	go ctrl.extractMessagesMedia(u.Messages...)
+	ctrl.extractMessagesMedia(u.Messages...)
 
 	minID := int64(0)
 	maxID := int64(0)
