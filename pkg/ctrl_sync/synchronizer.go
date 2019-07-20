@@ -11,10 +11,10 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"go.uber.org/zap"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -152,8 +152,10 @@ func (ctrl *Controller) sync() {
 
 	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSyncThreshold {
 		logs.Info("SyncController:: Snapshot sync")
+
+
 		// remove all messages
-		err := repo.DropAndCreateTable(&dto.Messages{})
+		err := repo.Messages.ClearAll()
 		if err != nil {
 			logs.Error("sync()-> DropAndCreateTable()", zap.Error(err))
 			return
@@ -304,8 +306,8 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 					}
 				}
 
-				_ = repo.Users.SaveMany(x.Users)
-				_ = repo.Groups.SaveMany(x.Groups)
+				repo.Users.SaveMany(x.Users)
+				repo.Groups.SaveMany(x.Groups)
 
 				if x.Count > offset+limit {
 					getAllDialogs(waitGroup, ctrl, offset+limit, limit)
@@ -385,10 +387,9 @@ func onGetDifferenceSucceed(ctrl *Controller, m *msg.MessageEnvelope) {
 			zap.Int64("MinUpdateID", x.MinUpdateID),
 		)
 
-		// Save Groups
-		_ = repo.Groups.SaveMany(x.Groups)
-		// Save Users
-		_ = repo.Users.SaveMany(x.Users)
+		// Save Groups & Users
+		repo.Groups.SaveMany(x.Groups)
+		repo.Users.SaveMany(x.Users)
 
 		for _, update := range x.Updates {
 			if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
@@ -525,40 +526,28 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 	udpContainer.Groups = updateContainer.Groups
 	for _, u := range updateContainer.Users {
 		// Download users avatar if its not exist
-		if u.Photo != nil {
-			dtoPhoto := repo.Users.GetPhoto(u.ID, u.Photo.PhotoID)
-			if dtoPhoto != nil {
-				// Download the photo if the FileID has been changed
-				if dtoPhoto.SmallFilePath == "" || dtoPhoto.SmallFileID != u.Photo.PhotoSmall.FileID {
-					go func(userID int64, photo *msg.UserPhoto) {
-						_, _ = ctrl.fileCtrl.DownloadAccountPhoto(userID, photo, false)
-					}(u.ID, u.Photo)
-				}
-			} else if u.Photo.PhotoID != 0 {
-				// Or download the photo if the was no photo already saved
-				go func(userID int64, photo *msg.UserPhoto) {
-					_, _ = ctrl.fileCtrl.DownloadAccountPhoto(userID, photo, false)
-				}(u.ID, u.Photo)
-			}
+		if u.Photo == nil {
+			continue
+		}
+		filePath := fileCtrl.GetAccountAvatarPath(u.ID, u.Photo.PhotoSmall.FileID)
+		// check if file exist
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			go func(userID int64, photo *msg.UserPhoto) {
+				_, _ = ctrl.fileCtrl.DownloadAccountPhoto(userID, photo, false)
+			}(u.ID, u.Photo)
 		}
 	}
 	for _, g := range updateContainer.Groups {
 		// Download group avatar if its not exist
-		if g.Photo != nil {
-			dtoGroup, err := repo.Groups.GetGroupDTO(g.ID)
-			if err == nil && dtoGroup != nil {
-				// Download the photo if the FileID has been changed
-				if dtoGroup.SmallFilePath == "" || dtoGroup.SmallFileID != g.Photo.PhotoSmall.FileID {
-					go func(groupID int64, photo *msg.GroupPhoto) {
-						_, _ = ctrl.fileCtrl.DownloadGroupPhoto(groupID, photo, false)
-					}(g.ID, g.Photo)
-				}
-			} else if g.Photo.PhotoSmall.FileID != 0 {
-				// Or download the photo if the was no photo already saved
-				go func(groupID int64, photo *msg.GroupPhoto) {
-					_, _ = ctrl.fileCtrl.DownloadGroupPhoto(groupID, photo, false)
-				}(g.ID, g.Photo)
-			}
+		if g.Photo == nil {
+			continue
+		}
+		filePath := fileCtrl.GetGroupAvatarPath(g.ID, g.Photo.PhotoSmall.FileID)
+		// check if file exist
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			go func(groupID int64, photo *msg.GroupPhoto) {
+				_, _ = ctrl.fileCtrl.DownloadGroupPhoto(groupID, photo, false)
+			}(g.ID, g.Photo)
 		}
 	}
 	for _, update := range updateContainer.Updates {
@@ -577,8 +566,8 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 	}
 
 	// Save Groups & Users
-	_ = repo.Groups.SaveMany(updateContainer.Groups)
-	_ = repo.Users.SaveMany(updateContainer.Users)
+	repo.Groups.SaveMany(updateContainer.Groups)
+	repo.Users.SaveMany(updateContainer.Users)
 
 	// save updateID after processing messages
 	if ctrl.updateID < updateContainer.MaxUpdateID {

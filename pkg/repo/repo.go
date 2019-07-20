@@ -61,10 +61,7 @@ func (r *repository) initDB() error {
 	repoLastError = r.db.AutoMigrate(
 		dto.MessagesPending{},
 		dto.MessagesExtra{},
-		dto.System{},
 		dto.UISettings{},
-		dto.Groups{},
-		dto.GroupsParticipants{},
 		dto.FilesStatus{},
 		dto.Files{},
 	).Error
@@ -187,27 +184,12 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 	return indexMapping, nil
 }
 
-// DropAndCreateTable remove and create elated dto object table
-func DropAndCreateTable(dtoTable interface{}) error {
-	err := r.db.DropTable(dtoTable).Error
-	if err != nil {
-		logs.Warn("Context::DropAndCreateTable() failed to DROP", zap.Error(err))
-	}
-	err = r.db.AutoMigrate(dtoTable).Error
-	if err != nil {
-		logs.Error("Context::DropAndCreateTable() failed to AutoMigrate", zap.Error(err))
-	}
-	return err
-}
 
 // ReInitiateDatabase runs auto migrate
 func ReInitiateDatabase() error {
 	err := r.db.DropTableIfExists(
 		dto.MessagesPending{},
 		dto.MessagesExtra{},
-		dto.System{},
-		dto.Groups{},
-		dto.GroupsParticipants{},
 		dto.FilesStatus{},
 		dto.Files{},
 		// dto.UISettings{}, //do not remove UISettings on logout

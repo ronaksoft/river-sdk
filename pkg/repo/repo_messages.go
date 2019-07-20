@@ -28,6 +28,7 @@ func (r *repoMessages) getMessageKey(peerID int64, peerType int32, msgID int64) 
 func (r *repoMessages) getPrefix(peerID int64, peerType int32) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%d.", prefixMessages, peerID, peerType))
 }
+
 func (r *repoMessages) getUserMessageKey(msgID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%012d", prefixUserMessages, msgID))
 }
@@ -408,6 +409,53 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.User
 
 	}
 	return userMessages
+}
+
+func (r *repoMessages) ClearAll() error {
+	err := r.badger.Update(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixMessages))
+		opts.Reverse = true
+		it := txn.NewIterator(opts)
+		count := 0
+		for it.Rewind(); it.Valid(); it.Next() {
+			count++
+			err := txn.Delete(it.Item().Key())
+			if err != nil {
+				return err
+			}
+			if count%100 == 0 {
+				_ = txn.Commit()
+			}
+		}
+		it.Close()
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	err = r.badger.Update(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixUserMessages))
+		opts.Reverse = true
+		it := txn.NewIterator(opts)
+		count := 0
+		for it.Rewind(); it.Valid(); it.Next() {
+			count++
+			err := txn.Delete(it.Item().Key())
+			if err != nil {
+				return err
+			}
+			if count%100 == 0 {
+				_ = txn.Commit()
+			}
+		}
+		it.Close()
+		return nil
+	})
+
+	return err
 }
 
 // OLD
