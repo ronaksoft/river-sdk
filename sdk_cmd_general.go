@@ -469,7 +469,6 @@ func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate
 	var userContacts []*msg.ContactUser
 	var NonContactUsersWithDialogs []*msg.ContactUser
 	var msgs []*msg.UserMessage
-	var peerIDs []int64
 	if peerID != 0 {
 		msgs = repo.Messages.SearchTextByPeerID(text, peerID)
 	} else {
@@ -507,11 +506,8 @@ func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate
 	// if peerID == 0 then look for group and contact names too
 	if peerID == 0 {
 		userContacts, _ = repo.Users.SearchContacts(text)
-		peerIDs = repo.Dialogs.GetPeerIDs()
-
 		// Get users who have dialog with me, but are not my contact
-		NonContactUsersWithDialogs = repo.Users.SearchNonContactsWithIDs(peerIDs, text)
-
+		NonContactUsersWithDialogs = repo.Users.SearchNonContacts(text)
 		userContacts = append(userContacts, NonContactUsersWithDialogs...)
 	}
 

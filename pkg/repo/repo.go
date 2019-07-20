@@ -3,7 +3,13 @@ package repo
 import (
 	"fmt"
 	"github.com/allegro/bigcache"
+	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
+	"github.com/blevesearch/bleve/analysis/lang/en"
+	"github.com/blevesearch/bleve/mapping"
+	"github.com/blevesearch/blevex/detectlang"
 	"github.com/tidwall/buntdb"
+	"log"
 	"sync"
 	"time"
 
@@ -41,10 +47,11 @@ type Context struct {
 }
 
 type repository struct {
-	db     *gorm.DB
-	badger *badger.DB
-	bunt   *buntdb.DB
-	mx     sync.Mutex
+	db          *gorm.DB
+	badger      *badger.DB
+	bunt        *buntdb.DB
+	searchIndex bleve.Index
+	mx          sync.Mutex
 }
 
 // create tables
@@ -52,17 +59,14 @@ func (r *repository) initDB() error {
 	// WARNING: AutoMigrate will ONLY create tables, missing columns and missing indexes,
 	// and WON’T change existing column’s type or delete unused columns to protect your data.
 	repoLastError = r.db.AutoMigrate(
-		dto.Dialogs{},
 		dto.MessagesPending{},
 		dto.MessagesExtra{},
 		dto.System{},
-		dto.Users{},
 		dto.UISettings{},
 		dto.Groups{},
 		dto.GroupsParticipants{},
 		dto.FilesStatus{},
 		dto.Files{},
-		dto.UsersPhoto{},
 	).Error
 
 	return repoLastError
@@ -121,7 +125,66 @@ func repoSetDB(dialect, dbPath string) error {
 		return tx.CreateIndex(indexDialogs, fmt.Sprintf("%s.*", prefixDialogs), buntdb.IndexBinary)
 	})
 
+	r.searchIndex,repoLastError = bleve.Open(dbPath)
+	if repoLastError == bleve.ErrorIndexPathDoesNotExist {
+		// create a mapping
+		indexMapping, err := buildIndexMapping()
+		if err != nil {
+			log.Fatal(err)
+		}
+		r.searchIndex, err = bleve.New(dbPath, indexMapping)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else if repoLastError != nil {
+		log.Fatal(repoLastError)
+	}
+
 	return r.initDB()
+}
+
+func buildIndexMapping() (mapping.IndexMapping, error) {
+	// a generic reusable mapping for english text
+	textFieldMapping := bleve.NewTextFieldMapping()
+	textFieldMapping.Analyzer = detectlang.AnalyzerName
+	textFieldMapping.Store = false
+	keywordFieldMapping := bleve.NewTextFieldMapping()
+	keywordFieldMapping.Analyzer = keyword.Name
+
+	// Message
+	messageMapping := bleve.NewDocumentStaticMapping()
+	messageMapping.AddFieldMappingsAt("Body", textFieldMapping)
+	messageMapping.AddFieldMappingsAt("PeerID", keywordFieldMapping)
+
+	// User
+	userMapping := bleve.NewDocumentStaticMapping()
+	userMapping.AddFieldMappingsAt("FirstName", textFieldMapping)
+	userMapping.AddFieldMappingsAt("LastName", textFieldMapping)
+	userMapping.AddFieldMappingsAt("Username", keywordFieldMapping)
+	userMapping.AddFieldMappingsAt("Phone", keywordFieldMapping)
+
+	// Group
+	groupMapping := bleve.NewDocumentStaticMapping()
+	groupMapping.AddFieldMappingsAt("Title", textFieldMapping)
+
+	// Contact
+	contactMapping := bleve.NewDocumentStaticMapping()
+	contactMapping.AddFieldMappingsAt("FirstName", textFieldMapping)
+	contactMapping.AddFieldMappingsAt("LastName", textFieldMapping)
+	contactMapping.AddFieldMappingsAt("Username", keywordFieldMapping)
+	contactMapping.AddFieldMappingsAt("Phone", keywordFieldMapping)
+
+
+	indexMapping := bleve.NewIndexMapping()
+	indexMapping.AddDocumentMapping("msg", messageMapping)
+	indexMapping.AddDocumentMapping("user", userMapping)
+	indexMapping.AddDocumentMapping("group", groupMapping)
+	indexMapping.AddDocumentMapping("contact", contactMapping)
+
+	indexMapping.TypeField = "type"
+	indexMapping.DefaultAnalyzer = en.AnalyzerName
+
+	return indexMapping, nil
 }
 
 // DropAndCreateTable remove and create elated dto object table
@@ -140,17 +203,13 @@ func DropAndCreateTable(dtoTable interface{}) error {
 // ReInitiateDatabase runs auto migrate
 func ReInitiateDatabase() error {
 	err := r.db.DropTableIfExists(
-		dto.Dialogs{},
-		dto.Messages{},
 		dto.MessagesPending{},
 		dto.MessagesExtra{},
 		dto.System{},
-		dto.Users{},
 		dto.Groups{},
 		dto.GroupsParticipants{},
 		dto.FilesStatus{},
 		dto.Files{},
-		dto.UsersPhoto{},
 		// dto.UISettings{}, //do not remove UISettings on logout
 	).Error
 

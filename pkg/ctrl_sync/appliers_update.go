@@ -103,10 +103,8 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 		if err != nil {
 			logs.Error("updateNewMessage() -> MessageActionGroupDeleteUser Failed to Parse", zap.Error(err))
 		}
-		err = repo.Groups.DeleteMemberMany(x.Message.PeerID, act.UserIDs)
-		if err != nil {
-			logs.Error("updateNewMessage() -> DeleteGroupMemberMany() Failed", zap.Error(err))
-		}
+
+		repo.Groups.DeleteMemberMany(x.Message.PeerID, act.UserIDs)
 
 		// Check if user left (deleted him/her self from group) remove its Group, Dialog and its MessagesPending
 		selfUserID := ctrl.connInfo.PickupUserID()
@@ -171,11 +169,10 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			if err != nil {
 				logs.Error("updateNewMessage() -> Groups.Delete() Failed", zap.Error(err))
 			}
+
 			// Delete Participants
-			err = repo.Groups.DeleteAllMembers(x.Message.PeerID)
-			if err != nil {
-				logs.Error("updateNewMessage() -> Groups.DeleteAllGroupMember() Failed", zap.Error(err))
-			}
+			repo.Groups.DeleteAllMembers(x.Message.PeerID)
+
 		} else {
 			// get dialog and create first hole
 			dtoDlg := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
@@ -230,10 +227,8 @@ func (ctrl *Controller) updateMessageEdited(u *msg.UpdateEnvelope) []*msg.Update
 	logs.Info("SyncController::updateMessageEdited",
 		zap.Int64("MessageID", x.Message.ID),
 	)
-	err := repo.Messages.Save(x.Message)
-	if err != nil {
-		logs.Error("updateMessageEdited() -> Save()", zap.Error(err))
-	}
+	_ = repo.Messages.Save(x.Message)
+
 	res := []*msg.UpdateEnvelope{u}
 	return res
 }

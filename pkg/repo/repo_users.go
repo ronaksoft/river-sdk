@@ -7,12 +7,13 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"github.com/blevesearch/bleve"
 	"github.com/dgraph-io/badger"
 	"go.uber.org/zap"
 )
 
 const (
-	prefixUsers = "USERS"
+	prefixUsers    = "USERS"
 	prefixContacts = "CONTACTS"
 )
 
@@ -24,8 +25,42 @@ func (r *repoUsers) getUserKey(userID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixUsers, userID))
 }
 
+func (r *repoUsers) getUserByKey(userKey []byte) *msg.User {
+	user := new(msg.User)
+	err := r.badger.View(func(txn *badger.Txn) error {
+		item, err := txn.Get(userKey)
+		if err != nil {
+			return err
+		}
+		return item.Value(func(val []byte) error {
+			return user.Unmarshal(val)
+		})
+	})
+	if err != nil {
+		return nil
+	}
+	return user
+}
+
 func (r *repoUsers) getContactKey(userID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixContacts, userID))
+}
+
+func (r *repoUsers) getContactByKey(contactKey []byte) *msg.ContactUser {
+	contactUser := new(msg.ContactUser)
+	err := r.badger.View(func(txn *badger.Txn) error {
+		item, err := txn.Get(contactKey)
+		if err != nil {
+			return err
+		}
+		return item.Value(func(val []byte) error {
+			return contactUser.Unmarshal(val)
+		})
+	})
+	if err != nil {
+		return nil
+	}
+	return contactUser
 }
 
 func (r *repoUsers) readFromDb(userID int64) *msg.User {
@@ -109,7 +144,7 @@ func (r *repoUsers) GetManyContactUsers(userIDs []int64) []*msg.ContactUser {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	contactUsers := make([]*msg.ContactUser,0 ,len(userIDs))
+	contactUsers := make([]*msg.ContactUser, 0, len(userIDs))
 	for _, userID := range userIDs {
 		contactUsers = append(contactUsers, r.GetContact(userID))
 	}
@@ -128,7 +163,7 @@ func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
 
 	_ = r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%d", prefixContacts))
+		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixContacts))
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
 		for it.Seek(r.getContactKey(0)); it.Valid(); it.Next() {
@@ -175,11 +210,20 @@ func (r *repoUsers) Save(user *msg.User) {
 		return
 	}
 
+	userKey := r.getUserKey(user.ID)
 	userBytes, _ := user.Marshal()
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		return txn.SetEntry(badger.NewEntry(
-			r.getUserKey(user.ID), userBytes,
+			userKey, userBytes,
 		))
+	})
+
+	_ = r.searchIndex.Index(ronak.ByteToStr(userKey), UserSearch{
+		Type:      "user",
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		PeerID:    user.ID,
+		Username:  user.Username,
 	})
 }
 
@@ -203,7 +247,7 @@ func (r *repoUsers) SaveMany(users []*msg.User) {
 	return
 }
 
-func (r *repoUsers) SaveContact(contactUser *msg.ContactUser)  {
+func (r *repoUsers) SaveContact(contactUser *msg.ContactUser) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -212,10 +256,18 @@ func (r *repoUsers) SaveContact(contactUser *msg.ContactUser)  {
 	}
 
 	userBytes, _ := contactUser.Marshal()
+	contactKey := r.getContactKey(contactUser.ID)
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		return txn.SetEntry(badger.NewEntry(
-			r.getContactKey(contactUser.ID), userBytes,
+			contactKey, userBytes,
 		))
+	})
+
+	_ = r.searchIndex.Index(ronak.ByteToStr(contactKey), ContactSearch{
+		Type:      "user",
+		FirstName: contactUser.FirstName,
+		LastName:  contactUser.LastName,
+		Username:  contactUser.Username,
 	})
 }
 
@@ -260,7 +312,7 @@ func (r *repoUsers) UpdatePhoto(userPhoto *msg.UpdateUserPhoto) {
 	r.Save(user)
 }
 
-func (r *repoUsers) RemovePhoto(userID int64)  {
+func (r *repoUsers) RemovePhoto(userID int64) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 	defer r.deleteFromCache(userID)
@@ -301,65 +353,69 @@ func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) 
 	r.SaveContact(contact)
 }
 
-
-
-
-
-// OLD
-
-
-
 func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*msg.PhoneContact) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
-	logs.Debug("Users::SearchContacts()")
-
-	p := "%" + searchPhrase + "%"
-	users := make([]dto.Users, 0)
-	err := r.db.Where("AccessHash <> 0 And IsContact = 1 AND (FirstName LIKE ? OR LastName LIKE ? OR Phone LIKE ? OR Username LIKE ?)", p, p, p, p).Find(&users).Error
-	if err != nil {
-		logs.Error("Users::SearchContacts()-> fetch user entities", zap.Error(err))
-		return nil, nil // , err
+	textTerm := bleve.NewQueryStringQuery(searchPhrase)
+	searchRequest := bleve.NewSearchRequest(textTerm)
+	searchResult, _ := r.searchIndex.Search(searchRequest)
+	contactUsers := make([]*msg.ContactUser, 0, 100)
+	phoneContacts := make([]*msg.PhoneContact, 0, 100)
+	for _, hit := range searchResult.Hits {
+		contactUser := r.getContactByKey(ronak.StrToByte(hit.ID))
+		if contactUser != nil {
+			phoneContacts = append(phoneContacts, &msg.PhoneContact{
+				ClientID: contactUser.ClientID,
+				FirstName: contactUser.FirstName,
+				LastName: contactUser.LastName,
+				Phone: contactUser.Phone,
+			})
+			contactUsers = append(contactUsers, contactUser)
+		}
 	}
-	pbUsers := make([]*msg.ContactUser, 0)
-	pbContacts := make([]*msg.PhoneContact, 0)
-	for _, v := range users {
-		tmpUser := new(msg.ContactUser)
-		tmpContact := new(msg.PhoneContact)
-		v.MapToContactUser(tmpUser)
-		v.MapToPhoneContact(tmpContact)
-		pbUsers = append(pbUsers, tmpUser)
-		pbContacts = append(pbContacts, tmpContact)
+	return contactUsers, phoneContacts
+}
+
+func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+	textTerm := bleve.NewQueryStringQuery(searchPhrase)
+	searchRequest := bleve.NewSearchRequest(textTerm)
+	searchResult, _ := r.searchIndex.Search(searchRequest)
+	contactUsers := make([]*msg.ContactUser, 0, 100)
+	for _, hit := range searchResult.Hits {
+		user := r.getUserByKey(ronak.StrToByte(hit.ID))
+		if user != nil {
+			contactUsers = append(contactUsers, &msg.ContactUser{
+				FirstName: user.FirstName,
+				LastName: user.LastName,
+				Username: user.Username,
+			})
+		}
 	}
-
-	return pbUsers, pbContacts
-
+	return contactUsers
 }
 
 func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
-	logs.Debug("Users::SearchContacts()")
-
-	p := "%" + searchPhrase + "%"
-	users := make([]dto.Users, 0)
-	err := r.db.Where("FirstName LIKE ? OR LastName LIKE ? OR Phone LIKE ? OR Username LIKE ?", p, p, p, p).Find(&users).Error
-	if err != nil {
-		logs.Warn("Users::SearchUsers()-> fetch user entities", zap.Error(err))
-		return nil
+	textTerm := bleve.NewQueryStringQuery(searchPhrase)
+	searchRequest := bleve.NewSearchRequest(textTerm)
+	searchResult, _ := r.searchIndex.Search(searchRequest)
+	users := make([]*msg.User, 0, 100)
+	for _, hit := range searchResult.Hits {
+		user := r.getUserByKey(ronak.StrToByte(hit.ID))
+		if user != nil {
+			users = append(users, user)
+		}
 	}
-	pbUsers := make([]*msg.User, 0)
-	for _, v := range users {
-		tmpUser := new(msg.User)
-		v.MapToUser(tmpUser)
-		pbUsers = append(pbUsers, tmpUser)
-	}
-
-	return pbUsers
+	return users
 }
 
+
+
+
+// OLD
 func (r *repoUsers) UpdateAccountPhotoPath(userID, photoID int64, isBig bool, filePath string) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -378,25 +434,3 @@ func (r *repoUsers) UpdateAccountPhotoPath(userID, photoID int64, isBig bool, fi
 
 }
 
-func (r *repoUsers) SearchNonContactsWithIDs(ids []int64, searchPhrase string) []*msg.ContactUser {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	logs.Debug("Users::SearchNonContactsWithIDs()")
-
-	p := "%" + searchPhrase + "%"
-	users := make([]dto.Users, 0)
-	err := r.db.Where("IsContact = 0 AND ID in (?) AND (FirstName LIKE ? OR LastName LIKE ? OR Phone LIKE ? OR Username LIKE ?)", ids, p, p, p, p).Find(&users).Error
-	if err != nil {
-		logs.Error("Users::SearchNonContactsWithIDs()-> fetch user entities", zap.Error(err))
-		return nil
-	}
-	pbUsers := make([]*msg.ContactUser, 0)
-	for _, v := range users {
-		tmpUser := new(msg.ContactUser)
-		v.MapToContactUser(tmpUser)
-		pbUsers = append(pbUsers, tmpUser)
-	}
-
-	return pbUsers
-}

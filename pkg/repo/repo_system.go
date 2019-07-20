@@ -1,37 +1,66 @@
 package repo
 
 import (
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
-	"go.uber.org/zap"
+	"encoding/binary"
+	"fmt"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"github.com/dgraph-io/badger"
+)
+
+const (
+	systemPrefix = "SYS"
 )
 
 type repoSystem struct {
 	*repository
 }
 
+func (r *repoSystem) getKey(keyName string) []byte {
+	return ronak.StrToByte(fmt.Sprintf("%s.%s", systemPrefix, keyName))
+}
+
 // LoadInt
-func (r *repoSystem) LoadInt(keyName string) (keyValue int, err error) {
+func (r *repoSystem) LoadInt(keyName string) (int, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-	keyValue = 0
-	row := new(dto.System)
-	err = r.db.Where("KeyName = ?", keyName).First(row).Error
+	keyValue := uint32(0)
 
-	keyValue = int(row.IntValue)
-	return
+	err := r.badger.View(func(txn *badger.Txn) error {
+		item, err := txn.Get(r.getKey(keyName))
+		if err != nil {
+			return err
+		}
+		return item.Value(func(val []byte) error {
+			keyValue = binary.BigEndian.Uint32(val)
+			return nil
+		})
+	})
+	if err != nil {
+		return 0, err
+	}
+
+	return int(keyValue), nil
 }
 
 // LoadString
-func (r *repoSystem) LoadString(keyName string) (keyValue string, err error) {
+func (r *repoSystem) LoadString(keyName string) (string, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	row := new(dto.System)
-	err = r.db.Where("KeyName = ?", keyName).First(row).Error
+	var v []byte
+	err := r.badger.View(func(txn *badger.Txn) error {
+		item, err := txn.Get(r.getKey(keyName))
+		if err != nil {
+			return err
+		}
+		v, err = item.ValueCopy(nil)
+		return err
+	})
+	if err != nil {
+		return "", err
+	}
 
-	keyValue = row.StrValue
-	return
+	return string(v), nil
 }
 
 // SaveInt
@@ -39,26 +68,13 @@ func (r *repoSystem) SaveInt(keyName string, keyValue int32) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	s := dto.System{}
-
-	err := r.db.Where("KeyName = ?", keyName).First(&s).Error
-	if err != nil {
-		logs.Error("System::SaveInt()-> fetch system entity",
-			zap.String("Key", keyName),
-			zap.Int32("Value", keyValue),
-			zap.Error(err),
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, uint32(keyValue))
+	return r.badger.Update(func(txn *badger.Txn) error {
+		return txn.SetEntry(
+			badger.NewEntry(r.getKey(keyName), b),
 		)
-	}
-
-	s.KeyName = keyName
-	s.StrValue = ""
-	s.IntValue = keyValue
-
-	logs.Debug("System::SaveInt()",
-		zap.Int32(keyName, keyValue),
-	)
-
-	return r.db.Save(s).Error
+	})
 }
 
 // SaveString
@@ -66,32 +82,15 @@ func (r *repoSystem) SaveString(keyName string, keyValue string) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
-	s := dto.System{}
-
-	err := r.db.Where("KeyName = ?", keyName).First(&s).Error
-	if err != nil {
-		logs.Error("System::SaveString()-> fetch system entity", zap.Error(err))
-	}
-
-	s.KeyName = keyName
-	s.StrValue = keyValue
-	s.IntValue = 0
-
-	return r.db.Save(s).Error
+	return r.badger.Update(func(txn *badger.Txn) error {
+		return txn.SetEntry(
+			badger.NewEntry(r.getKey(keyName), ronak.StrToByte(keyValue)),
+		)
+	})
 }
 
-// SaveSalt
-func (r *repoSystem) RemoveSalt() error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
 
-	s := new(dto.System)
-
-	keyName := "Salt"
-	err := r.db.Where("KeyName = ?", keyName).First(s).Error
-	if err == nil {
-		return r.db.Delete(s).Error
-	} else {
-		return err
-	}
+type ServerSalt struct {
+	Timestamp int64 `json:"timestamp`
+	Salt      int64 `json:"salt`
 }

@@ -418,7 +418,7 @@ func (r *River) messagesClearHistory(in, out *msg.MessageEnvelope, timeoutCB dom
 	repo.Dialogs.UpdateUnreadCount(req.Peer.ID, int32(req.Peer.Type), 0)
 
 	// this will be handled on message update appliers too
-	err = repo.Messages.DeleteDialogMessage(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+	err := repo.Messages.DeleteDialogMessage(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 	if err != nil {
 		logs.Error("River::messagesClearHistory()-> DeleteDialogMessage()", zap.Error(err))
 	}
@@ -698,12 +698,6 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 		logs.Error("River::contactsImport() failed to save ContactsImportHash to DB", zap.Error(err))
 	}
 
-	// update phone contacts just a double check
-	if req.Replace {
-		for _, c := range req.Contacts {
-			repo.Users.SaveContact(c)
-		}
-	}
 	// extract differences between existing contacts and new contacts
 	diffContacts := domain.ExtractsContactsDifference(res.Contacts, req.Contacts)
 	if len(diffContacts) <= 50 {
@@ -917,10 +911,7 @@ func (r *River) groupsEditTitle(in, out *msg.MessageEnvelope, timeoutCB domain.T
 		return
 	}
 
-	err := repo.Groups.UpdateTitle(req.GroupID, req.Title)
-	if err != nil {
-		logs.Error("River::messagesEditGroupTitle()-> UpdateGroupTitle()", zap.Error(err))
-	}
+	repo.Groups.UpdateTitle(req.GroupID, req.Title)
 
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
@@ -944,11 +935,7 @@ func (r *River) groupAddUser(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 			UserID:     req.User.UserID,
 			Type:       msg.ParticipantTypeMember,
 		}
-		err := repo.Groups.SaveParticipants(req.GroupID, gp)
-		// TODO : Increase group ParticipantCount
-		if err != nil {
-			logs.Error("River::groupAddUser()-> SaveParticipants()", zap.Error(err))
-		}
+		repo.Groups.SaveParticipants(req.GroupID, gp)
 	}
 
 	// send the request to server
@@ -965,11 +952,7 @@ func (r *River) groupDeleteUser(in, out *msg.MessageEnvelope, timeoutCB domain.T
 		return
 	}
 
-	err := repo.Groups.DeleteMember(req.GroupID, req.User.UserID)
-	// TODO : Decrease group ParticipantCount
-	if err != nil {
-		logs.Error("River::groupDeleteUser()-> SaveParticipants()", zap.Error(err))
-	}
+	repo.Groups.DeleteMember(req.GroupID, req.User.UserID)
 
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)

@@ -47,7 +47,7 @@ func (r *repoDialogs) updateTopMessageID(peerID int64, peerType int32) {
 	}
 	_ = r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%d.%d.", prefixMessages, peerID, peerType))
+		opts.Prefix = Messages.getPrefix(peerID, peerType)
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
 		it.Seek(Messages.getMessageKey(peerID, peerType, dialog.TopMessageID))
@@ -92,10 +92,9 @@ func (r *repoDialogs) countUnread(peerID int64, peerType int32, userID int64) in
 	count := int32(0)
 	_ = r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%d.%d.", prefixMessages, peerID, peerType))
+		opts.Prefix = Messages.getPrefix(peerID, peerType)
 		opts.Reverse = false
 		it := txn.NewIterator(opts)
-		it.Seek(Messages.getMessageKey(peerID, peerType, dialog.ReadInboxMaxID))
 		for it.Seek(Messages.getMessageKey(peerID, peerType, dialog.ReadInboxMaxID)); it.Valid(); it.Next() {
 			userMessage := new(msg.UserMessage)
 			_ = it.Item().Value(func(val []byte) error {

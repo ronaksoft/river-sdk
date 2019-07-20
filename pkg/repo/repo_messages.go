@@ -4,12 +4,10 @@ import (
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"github.com/blevesearch/bleve"
 	"github.com/dgraph-io/badger"
 	"github.com/scylladb/go-set/i64set"
-	"go.uber.org/zap"
 	"sort"
 	"strings"
 )
@@ -27,6 +25,9 @@ func (r *repoMessages) getMessageKey(peerID int64, peerType int32, msgID int64) 
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%d.%012d", prefixMessages, peerID, peerType, msgID))
 }
 
+func (r *repoMessages) getPrefix(peerID int64, peerType int32) []byte {
+	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%d.", prefixMessages, peerID, peerType))
+}
 func (r *repoMessages) getUserMessageKey(msgID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%012d", prefixUserMessages, msgID))
 }
@@ -159,8 +160,9 @@ func (r *repoMessages) Save(message *msg.UserMessage) error {
 	}
 
 	messageBytes, _ := message.Marshal()
-	return r.badger.Update(func(txn *badger.Txn) error {
+	err := r.badger.Update(func(txn *badger.Txn) error {
 		// 1. Write Message
+
 		err := txn.SetEntry(
 			badger.NewEntry(
 				r.getMessageKey(message.PeerID, message.PeerType, message.ID),
@@ -179,6 +181,14 @@ func (r *repoMessages) Save(message *msg.UserMessage) error {
 			).WithMeta(byte(message.MediaType)),
 		)
 	})
+
+	_ = r.searchIndex.Index(ronak.ByteToStr(r.getUserMessageKey(message.ID)), MessageSearch{
+		Type:   "msg",
+		Body:   message.Body,
+		PeerID: message.PeerID,
+	})
+
+	return err
 }
 
 func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, maxID int64, limit int32) (userMessages []*msg.UserMessage, users []*msg.User) {
@@ -194,7 +204,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 	case maxID != 0 && minID == 0:
 		_ = r.badger.View(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
-			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%d.%d.", prefixMessages, peerID, peerType))
+			opts.Prefix = r.getPrefix(peerID, peerType)
 			opts.Reverse = true
 			it := txn.NewIterator(opts)
 			for it.Seek(r.getMessageKey(peerID, peerType, maxID)); it.Valid(); it.Next() {
@@ -222,7 +232,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 	case maxID == 0 && minID != 0:
 		_ = r.badger.View(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
-			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%d.%d.", prefixMessages, peerID, peerType))
+			opts.Prefix = r.getPrefix(peerID, peerType)
 			opts.Reverse = false
 			it := txn.NewIterator(opts)
 			for it.Seek(r.getMessageKey(peerID, peerType, minID)); it.Valid(); it.Next() {
@@ -253,7 +263,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 	default:
 		_ = r.badger.View(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
-			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%d.%d.", prefixMessages, peerID, peerType))
+			opts.Prefix = r.getPrefix(peerID, peerType)
 			opts.Reverse = true
 			it := txn.NewIterator(opts)
 			for it.Seek(r.getMessageKey(peerID, peerType, maxID)); it.Valid(); it.Next() {
@@ -305,7 +315,7 @@ func (r *repoMessages) DeleteDialogMessage(peerID int64, peerType int32, msgID i
 	})
 	if err != nil {
 		return err
- 	}
+	}
 
 	// 2. Update the Dialog if necessary
 	dialog := Dialogs.Get(peerID, peerType)
@@ -343,7 +353,7 @@ func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, err
 	topMessageID := int64(0)
 	err := r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%d.%d.", prefixMessages, peerID, peerType))
+		opts.Prefix = r.getPrefix(peerID, peerType)
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
 		it.Seek(Messages.getMessageKey(peerID, peerType, 2<<31))
@@ -360,115 +370,121 @@ func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, err
 	return topMessageID, err
 }
 
-
-// OLD
-
-func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	dtoMsgs := make([]dto.Messages, 0, limit)
-	dtoPendings := make([]dto.MessagesPending, 0, limit)
-
-	var err error
-	if maxID == 0 && minID == 0 {
-		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ?", peerID, peerType).Find(&dtoMsgs).Error
-	} else if minID == 0 && maxID != 0 {
-		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID <= ?", peerID, peerType, maxID).Find(&dtoMsgs).Error
-	} else if minID != 0 && maxID == 0 {
-		err = r.db.Order("ID ASC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID >= ?", peerID, peerType, minID).Find(&dtoMsgs).Error
-		// sort DESC again
-		if err == nil {
-			sort.Slice(dtoMsgs, func(i, j int) bool {
-				return dtoMsgs[i].ID > dtoMsgs[j].ID
-			})
-		}
-	} else {
-		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID >= ? AND messages.ID <= ?", peerID, peerType, minID, maxID).Find(&dtoMsgs).Error
-	}
-
-	if err != nil {
-		logs.Warn("Repo::GetMessageHistory()-> fetch messages", zap.Error(err))
-		return
-	}
-
-	dtoResult := make([]dto.Messages, 0, limit)
-
-	// get all pending message for this user
-	err = r.db.Order("ID ASC").Limit(limit).Where("PeerID = ? AND PeerType = ? ", peerID, peerType).Find(&dtoPendings).Error
-	if err == nil {
-		for _, v := range dtoPendings {
-			tmp := new(dto.Messages)
-			v.MapToDtoMessage(tmp)
-			dtoResult = append(dtoResult, *tmp)
-		}
-	}
-	dtoResult = append(dtoResult, dtoMsgs...)
-
-	userIDs := domain.MInt64B{}
-	for _, v := range dtoResult {
-		tmp := new(msg.UserMessage)
-		v.MapTo(tmp)
-		protoMsgs = append(protoMsgs, tmp)
-		userIDs[v.SenderID] = true
-		userIDs[v.FwdSenderID] = true
-		// load MessageActionData users
-		actionUserIds := domain.ExtractActionUserIDs(v.MessageAction, v.MessageActionData)
-		for _, id := range actionUserIds {
-			userIDs[id] = true
-		}
-	}
-
-	// Get users <rewrite it here to remove coupling>
-	users := make([]dto.Users, 0, len(userIDs))
-
-	err = r.db.Where("ID in (?)", userIDs.ToArray()).Find(&users).Error
-	if err != nil {
-		logs.Warn("Repo::GetMessageHistory()-> fetch users", zap.Error(err))
-		return
-	}
-
-	for _, v := range users {
-		tmp := new(msg.User)
-		v.MapToUser(tmp)
-		protoUsers = append(protoUsers, tmp)
-
-	}
-	return
-}
-
 func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-	var userMsgs []*msg.UserMessage
-	msgs := make([]dto.Messages, 0)
-	if err := r.db.Where("Body LIKE ?", "%"+fmt.Sprintf("%s", text)+"%").Find(&msgs).Error; err != nil {
-		logs.Warn("SearchText::error", zap.String("", err.Error()))
-		return userMsgs
-	}
 
-	for _, dtoMsg := range msgs {
-		message := new(msg.UserMessage)
-		dtoMsg.MapTo(message)
-		userMsgs = append(userMsgs, message)
+	textTerm := bleve.NewTermQuery(text)
+	textTerm.SetField("Body")
+	searchRequest := bleve.NewSearchRequest(textTerm)
+	searchResult, _ := r.searchIndex.Search(searchRequest)
+	userMessages := make([]*msg.UserMessage, 0, 100)
+	for _, hit := range searchResult.Hits {
+		userMessage := r.Get(ronak.StrToInt64(hit.Fields["Body"].(string)))
+		if userMessage != nil {
+			userMessages = append(userMessages, userMessage)
+		}
+
 	}
-	return userMsgs
+	return userMessages
 }
 
 func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.UserMessage {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-	var userMsgs []*msg.UserMessage
-	msgs := make([]dto.Messages, 0)
-	if err := r.db.Where("Body LIKE ? AND PeerID = ?", "%"+fmt.Sprintf("%s", text)+"%", peerID).Find(&msgs).Error; err != nil {
-		logs.Warn("SearchText::error", zap.String("", err.Error()))
-		return userMsgs
-	}
+	textTerm := bleve.NewTermQuery(text)
+	textTerm.SetField("Body")
+	peerTerm := bleve.NewTermQuery(fmt.Sprintf("%d", peerID))
+	peerTerm.SetField("PeerID")
+	q := bleve.NewConjunctionQuery(textTerm, peerTerm)
+	searchRequest := bleve.NewSearchRequest(q)
+	searchResult, _ := r.searchIndex.Search(searchRequest)
+	userMessages := make([]*msg.UserMessage, 0, 100)
+	for _, hit := range searchResult.Hits {
+		userMessage := r.Get(ronak.StrToInt64(hit.Fields["Body"].(string)))
+		if userMessage != nil {
+			userMessages = append(userMessages, userMessage)
+		}
 
-	for _, dtoMsg := range msgs {
-		message := new(msg.UserMessage)
-		dtoMsg.MapTo(message)
-		userMsgs = append(userMsgs, message)
 	}
-	return userMsgs
+	return userMessages
 }
+
+// OLD
+
+// func (r *repoMessages) GetMessageHistoryWithPendingMessages(peerID int64, peerType int32, minID, maxID int64, limit int32) (protoMsgs []*msg.UserMessage, protoUsers []*msg.User) {
+// 	r.mx.Lock()
+// 	defer r.mx.Unlock()
+//
+// 	dtoMsgs := make([]dto.Messages, 0, limit)
+// 	dtoPendings := make([]dto.MessagesPending, 0, limit)
+//
+// 	var err error
+// 	if maxID == 0 && minID == 0 {
+// 		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ?", peerID, peerType).Find(&dtoMsgs).Error
+// 	} else if minID == 0 && maxID != 0 {
+// 		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID <= ?", peerID, peerType, maxID).Find(&dtoMsgs).Error
+// 	} else if minID != 0 && maxID == 0 {
+// 		err = r.db.Order("ID ASC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID >= ?", peerID, peerType, minID).Find(&dtoMsgs).Error
+// 		// sort DESC again
+// 		if err == nil {
+// 			sort.Slice(dtoMsgs, func(i, j int) bool {
+// 				return dtoMsgs[i].ID > dtoMsgs[j].ID
+// 			})
+// 		}
+// 	} else {
+// 		err = r.db.Order("ID DESC").Limit(limit).Where("PeerID = ? AND PeerType = ? AND messages.ID >= ? AND messages.ID <= ?", peerID, peerType, minID, maxID).Find(&dtoMsgs).Error
+// 	}
+//
+// 	if err != nil {
+// 		logs.Warn("Repo::GetMessageHistory()-> fetch messages", zap.Error(err))
+// 		return
+// 	}
+//
+// 	dtoResult := make([]dto.Messages, 0, limit)
+//
+// 	// get all pending message for this user
+// 	err = r.db.Order("ID ASC").Limit(limit).Where("PeerID = ? AND PeerType = ? ", peerID, peerType).Find(&dtoPendings).Error
+// 	if err == nil {
+// 		for _, v := range dtoPendings {
+// 			tmp := new(dto.Messages)
+// 			v.MapToDtoMessage(tmp)
+// 			dtoResult = append(dtoResult, *tmp)
+// 		}
+// 	}
+// 	dtoResult = append(dtoResult, dtoMsgs...)
+//
+// 	userIDs := domain.MInt64B{}
+// 	for _, v := range dtoResult {
+// 		tmp := new(msg.UserMessage)
+// 		v.MapTo(tmp)
+// 		protoMsgs = append(protoMsgs, tmp)
+// 		userIDs[v.SenderID] = true
+// 		userIDs[v.FwdSenderID] = true
+// 		// load MessageActionData users
+// 		actionUserIds := domain.ExtractActionUserIDs(v.MessageAction, v.MessageActionData)
+// 		for _, id := range actionUserIds {
+// 			userIDs[id] = true
+// 		}
+// 	}
+//
+// 	// Get users <rewrite it here to remove coupling>
+// 	users := make([]dto.Users, 0, len(userIDs))
+//
+// 	err = r.db.Where("ID in (?)", userIDs.ToArray()).Find(&users).Error
+// 	if err != nil {
+// 		logs.Warn("Repo::GetMessageHistory()-> fetch users", zap.Error(err))
+// 		return
+// 	}
+//
+// 	for _, v := range users {
+// 		tmp := new(msg.User)
+// 		v.MapToUser(tmp)
+// 		protoUsers = append(protoUsers, tmp)
+//
+// 	}
+// 	return
+// }
+//
+//
+//
