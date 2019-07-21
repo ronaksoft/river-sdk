@@ -37,6 +37,8 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		pm := repo.PendingMessages.GetByRealID(x.Message.ID)
 		if pm != nil {
 			ctrl.handlePendingMessage(x)
+			repo.PendingMessages.Delete(pm.ID)
+			repo.PendingMessages.DeleteByRealID(x.Message.ID)
 		}
 	}
 

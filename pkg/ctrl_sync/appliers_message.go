@@ -150,7 +150,7 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 	userMessage := repo.Messages.Get(sent.MessageID)
 	if userMessage != nil {
 		// If we are here, it means we receive UpdateNewMessage before UpdateMessageID / MessagesSent
-		pm := repo.PendingMessages.GetByRealID(sent.MessageID)
+		pm, _ := repo.PendingMessages.GetByRandomID(int64(e.RequestID))
 		if pm == nil {
 			return
 		}
@@ -174,8 +174,6 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 				ctrl.onUpdateMainDelegate(msg.C_UpdateEnvelope, buff)
 			}
 		})
-		repo.PendingMessages.Delete(pm.ID)
-		repo.PendingMessages.DeleteByRealID(sent.MessageID)
 		return
 	}
 
