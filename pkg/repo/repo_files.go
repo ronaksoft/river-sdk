@@ -53,7 +53,6 @@ func (r *repoFiles) GetAllStatuses() []dto.FilesStatus {
 }
 
 func (r *repoFiles) GetStatus(msgID int64) (*dto.FilesStatus, error) {
-
 	mdl := new(dto.FilesStatus)
 	err := r.badger.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(r.getKey(msgID))
@@ -64,8 +63,10 @@ func (r *repoFiles) GetStatus(msgID int64) (*dto.FilesStatus, error) {
 			return json.Unmarshal(val, mdl)
 		})
 	})
-
-	return mdl, err
+	if err != nil {
+		return nil, err
+	}
+	return mdl, nil
 }
 
 func (r *repoFiles) DeleteStatus(msgID int64) {
