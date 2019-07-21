@@ -236,35 +236,32 @@ func (ctrl *Controller) startUploadQueue() {
 }
 
 // uploadRequest send request to server
-func (ctrl *Controller) uploadRequest(req *msg.MessageEnvelope, count int64, fs *File, partIdx int64) {
+func (ctrl *Controller) uploadRequest(req *msg.MessageEnvelope, count int64, theFile *File, partIdx int64) {
 	// time out has been set in Send()
 	res, err := ctrl.Send(req)
 	if err == nil {
 		switch res.Constructor {
 		case msg.C_Error:
 			// remove upload from
-			ctrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
-			logs.Warn("uploadRequest() received error response and removed item from queue", zap.Int64("MsgID", fs.MessageID))
-			fs.RequestStatus = domain.RequestStatusError
-			repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
+			ctrl.DeleteFromQueue(theFile.MessageID, domain.RequestStatusError)
+			logs.Warn("uploadRequest() received error response and removed item from queue", zap.Int64("MsgID", theFile.MessageID))
+			theFile.RequestStatus = domain.RequestStatusError
+			repo.Files.UpdateFileStatus(theFile.MessageID, theFile.RequestStatus)
 			if ctrl.onUploadError != nil {
-				ctrl.onUploadError(fs.MessageID, int64(req.RequestID), fs.FilePath, res.Message)
+				ctrl.onUploadError(theFile.MessageID, int64(req.RequestID), theFile.FilePath, res.Message)
 			}
 		case msg.C_Bool:
 			x := new(msg.Bool)
-			err := x.Unmarshal(res.Message)
-			if err != nil {
-				logs.Error("uploadRequest()->Unmarshal()", zap.Error(err))
-			}
+			_ = x.Unmarshal(res.Message)
 			// reset counter
-			fs.retryCounter = 0
+			theFile.retryCounter = 0
 			if x.Result {
-				isThumbnail := fs.ThumbPosition < fs.ThumbTotalSize
+				isThumbnail := theFile.ThumbPosition < theFile.ThumbTotalSize
 				if isThumbnail {
-					fs.ReadCommit(count, true, 0)
+					theFile.ReadCommit(count, true, 0)
 				} else {
 					select {
-					case fs.chUploadProgress <- partIdx:
+					case theFile.chUploadProgress <- partIdx:
 					default:
 						// progress monitor is exited already
 					}
@@ -272,29 +269,28 @@ func (ctrl *Controller) uploadRequest(req *msg.MessageEnvelope, count int64, fs 
 			}
 		default:
 			// increase counter
-			fs.retryCounter++
+			theFile.retryCounter++
 			logs.Warn("uploadRequest() received unknown response", zap.Error(err))
 
 		}
 	} else {
 		// increase counter
-		fs.retryCounter++
+		theFile.retryCounter++
 		logs.Warn("uploadRequest()", zap.Error(err))
 	}
 
-	if fs.retryCounter > domain.FileMaxRetry {
-
+	if theFile.retryCounter > domain.FileMaxRetry {
 		// remove upload from queue
-		ctrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusError)
-		logs.Error("uploadRequest() upload request errors passed retry threshold", zap.Int64("MsgID", fs.MessageID))
-		fs.RequestStatus = domain.RequestStatusError
-		repo.Files.UpdateFileStatus(fs.MessageID, fs.RequestStatus)
+		ctrl.DeleteFromQueue(theFile.MessageID, domain.RequestStatusError)
+		logs.Error("uploadRequest() upload request errors passed retry threshold", zap.Int64("MsgID", theFile.MessageID))
+		theFile.RequestStatus = domain.RequestStatusError
+		repo.Files.UpdateFileStatus(theFile.MessageID, theFile.RequestStatus)
 		if ctrl.onUploadError != nil {
 			x := new(msg.Error)
 			x.Code = "00"
 			x.Items = "upload request errors passed retry threshold"
 			xbuff, _ := x.Marshal()
-			ctrl.onUploadError(fs.MessageID, int64(req.RequestID), fs.FilePath, xbuff)
+			ctrl.onUploadError(theFile.MessageID, int64(req.RequestID), theFile.FilePath, xbuff)
 		}
 	}
 }

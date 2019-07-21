@@ -29,26 +29,11 @@ func (r *River) GetFileStatus(msgID int64) string {
 	}
 
 	buff, _ := json.Marshal(x)
-
 	return string(buff)
 }
 func getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, filePath string) {
-	fs, err := repo.Files.GetStatus(msgID)
-	if err == nil && fs != nil {
-		// file is in-progress state
-		// double check
-		if fs.IsCompleted {
-			go repo.Files.DeleteStatus(fs.MessageID)
-		}
-		status = domain.RequestStatus(fs.RequestStatus)
-		filePath = fs.FilePath
-		if fs.TotalParts > 0 {
-			partList := domain.MInt64B{}
-			json.Unmarshal(fs.PartList, &partList)
-			processedParts := fs.TotalParts - int64(len(partList))
-			progress = float64(processedParts) / float64(fs.TotalParts) * float64(100)
-		}
-	} else {
+	fs, _ := repo.Files.GetStatus(msgID)
+	if fs == nil {
 		filePath = getFilePath(msgID)
 		if filePath != "" {
 			// file exists so it means download completed
@@ -60,8 +45,22 @@ func getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, 
 			progress = 0
 			filePath = ""
 		}
+		return
 	}
 
+	// file is in-progress state
+	// double check
+	if fs.IsCompleted {
+		repo.Files.DeleteStatus(fs.MessageID)
+	}
+	status = domain.RequestStatus(fs.RequestStatus)
+	filePath = fs.FilePath
+	if fs.TotalParts > 0 {
+		partList := domain.MInt64B{}
+		_ = json.Unmarshal(fs.PartList, &partList)
+		processedParts := fs.TotalParts - int64(len(partList))
+		progress = float64(processedParts) / float64(fs.TotalParts) * float64(100)
+	}
 	return
 }
 func getFilePath(msgID int64) string {

@@ -373,7 +373,7 @@ func (fs *File) StartUpload(fm *Controller) {
 		workersCount = partCount
 	}
 
-	// call onProgresschange to notify ui
+	// call onProgressChange to notify ui
 	fs.fileStatusChanged()
 
 	// upload thumbnail first
