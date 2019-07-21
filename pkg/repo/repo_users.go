@@ -208,13 +208,13 @@ func (r *repoUsers) Save(user *msg.User) {
 		))
 	})
 
-	// _ = r.searchIndex.Index(ronak.ByteToStr(userKey), UserSearch{
-	// 	Type:      "user",
-	// 	FirstName: user.FirstName,
-	// 	LastName:  user.LastName,
-	// 	PeerID:    user.ID,
-	// 	Username:  user.Username,
-	// })
+	_ = r.searchIndex.Index(ronak.ByteToStr(userKey), UserSearch{
+		Type:      "user",
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		PeerID:    user.ID,
+		Username:  user.Username,
+	})
 }
 
 func (r *repoUsers) SaveMany(users []*msg.User) {
@@ -236,7 +236,6 @@ func (r *repoUsers) SaveMany(users []*msg.User) {
 }
 
 func (r *repoUsers) SaveContact(contactUser *msg.ContactUser) {
-
 	if contactUser == nil {
 		return
 	}
@@ -249,12 +248,12 @@ func (r *repoUsers) SaveContact(contactUser *msg.ContactUser) {
 		))
 	})
 
-	// _ = r.searchIndex.Index(ronak.ByteToStr(contactKey), ContactSearch{
-	// 	Type:      "user",
-	// 	FirstName: contactUser.FirstName,
-	// 	LastName:  contactUser.LastName,
-	// 	Username:  contactUser.Username,
-	// })
+	_ = r.searchIndex.Index(ronak.ByteToStr(contactKey), ContactSearch{
+		Type:      "contact",
+		FirstName: contactUser.FirstName,
+		LastName:  contactUser.LastName,
+		Username:  contactUser.Username,
+	})
 }
 
 func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType int32) {
@@ -330,7 +329,6 @@ func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) 
 }
 
 func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*msg.PhoneContact) {
-
 	textTerm := bleve.NewQueryStringQuery(searchPhrase)
 	searchRequest := bleve.NewSearchRequest(textTerm)
 	searchResult, _ := r.searchIndex.Search(searchRequest)
@@ -352,7 +350,6 @@ func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*
 }
 
 func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
-
 	textTerm := bleve.NewQueryStringQuery(searchPhrase)
 	searchRequest := bleve.NewSearchRequest(textTerm)
 	searchResult, _ := r.searchIndex.Search(searchRequest)

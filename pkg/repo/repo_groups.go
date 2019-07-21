@@ -134,11 +134,11 @@ func (r *repoGroups) Save(group *msg.Group) {
 		))
 	})
 
-	// _ = r.searchIndex.Index(ronak.ByteToStr(groupKey), Group{
-	// 	Type:   "group",
-	// 	Title:  group.Title,
-	// 	PeerID: group.ID,
-	// })
+	_ = r.searchIndex.Index(ronak.ByteToStr(groupKey), Group{
+		Type:   "group",
+		Title:  group.Title,
+		PeerID: group.ID,
+	})
 }
 
 func (r *repoGroups) SaveMany(groups []*msg.Group) {
