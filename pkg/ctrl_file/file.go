@@ -102,6 +102,7 @@ func (ctrl *Controller) startDownloadQueue() {
 		if ctrl.NetworkStatus == domain.NetworkDisconnected || ctrl.NetworkStatus == domain.NetworkConnecting {
 			time.Sleep(100 * time.Millisecond)
 		}
+		logs.Info("StartDownloadQueue")
 		ctrl.DownloadQueueStarted = true
 		select {
 		case <-ctrl.chStopDownloader:
