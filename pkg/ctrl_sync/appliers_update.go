@@ -1,7 +1,12 @@
 package syncCtrl
 
 import (
+	"fmt"
+	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
+	"io"
+	"os"
 	"time"
 
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
@@ -26,6 +31,14 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 
 	// used messageType to identify client & server messages on Media thingy
 	x.Message.MessageType = 1
+
+	// If sender is me, check for pending
+	if x.Message.SenderID == ctrl.userID {
+		pm, _ := repo.PendingMessages.GetByRealID(x.Message.ID)
+		if pm != nil {
+
+		}
+	}
 
 	dialog := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
 	if dialog == nil {
@@ -152,6 +165,78 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 		}
 	}
 }
+func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
+	pmsg, _ := repo.PendingMessages.GetByRealID(x.Message.ID)
+	if pmsg == nil {
+		return
+	}
+	// if it was file upload request
+	switch x.Message.MediaType {
+	case msg.MediaTypeDocument:
+		d := new(msg.MediaDocument)
+		_ = d.Unmarshal(x.Message.Media)
+		// save to local files and delete file status
+		clientSendMedia := new(msg.ClientSendMessageMedia)
+		err := clientSendMedia.Unmarshal(pmsg.Media)
+		if err != nil {
+			return
+		}
+		_, err = copyUploadedFile(clientSendMedia.FilePath, fileCtrl.GetFilePath(d.Doc.MimeType, d.Doc.ID))
+		if err != nil {
+			return
+		}
+	}
+	// delete pending message
+	repo.PendingMessages.Delete(pmsg.ID)
+
+	// TODO : Notify UI that the pending message delivered to server
+
+	clientUpdate := new(msg.ClientUpdatePendingMessageDelivery)
+	clientUpdate.Messages = x.Message
+	clientUpdate.PendingMessage = pmsg
+	clientUpdate.Success = true
+
+	bytes, _ := clientUpdate.Marshal()
+
+	udpMsg := new(msg.UpdateEnvelope)
+	udpMsg.Constructor = msg.C_ClientUpdatePendingMessageDelivery
+	udpMsg.Update = bytes
+	udpMsg.UpdateID = 0
+	udpMsg.Timestamp = time.Now().Unix()
+
+	buff, _ := udpMsg.Marshal()
+
+	// call external handler
+	uiexec.Ctx().Exec(func() {
+		if ctrl.onUpdateMainDelegate != nil {
+			ctrl.onUpdateMainDelegate(msg.C_UpdateEnvelope, buff)
+		}
+	})
+}
+func copyUploadedFile(src, dst string) (int64, error) {
+	sourceFileStat, err := os.Stat(src)
+	if err != nil {
+		return 0, err
+	}
+
+	if !sourceFileStat.Mode().IsRegular() {
+		return 0, fmt.Errorf("%s is not a regular file", src)
+	}
+
+	source, err := os.Open(src)
+	if err != nil {
+		return 0, err
+	}
+	defer source.Close()
+
+	destination, err := os.Create(dst)
+	if err != nil {
+		return 0, err
+	}
+	defer destination.Close()
+	nBytes, err := io.Copy(destination, source)
+	return nBytes, err
+}
 
 // updateReadHistoryInbox
 func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
@@ -223,7 +308,7 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 	sent.RandomID = x.RandomID
 	sent.CreatedOn = time.Now().Unix()
 
-	// used message randomID as requestID of pending message se we can retrieve it here
+	// used message randomID as requestID of pending message so we can retrieve it here
 	msgEnvelop.RequestID = uint64(x.RandomID)
 	msgEnvelop.Message, _ = sent.Marshal()
 	ctrl.messageSent(msgEnvelop)

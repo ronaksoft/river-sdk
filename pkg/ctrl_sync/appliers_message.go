@@ -2,14 +2,10 @@ package syncCtrl
 
 import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
-	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
-	"os"
-	"time"
-
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"go.uber.org/zap"
 )
 
@@ -152,70 +148,11 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 	// Add delivered message to prevent invoking newMessage event later
 	ctrl.addToDeliveredMessageList(sent.MessageID)
 
-	pmsg, err := repo.PendingMessages.GetByRandomID(int64(e.RequestID))
+	_, err = repo.PendingMessages.GetByRandomID(int64(e.RequestID))
 	if err != nil {
 		return
 	}
-
-	// if it was file upload request
-	if pmsg.MediaType > 0 {
-		// save to local files and delete file status
-		clientSendMedia := new(msg.ClientSendMessageMedia)
-		err := clientSendMedia.Unmarshal(pmsg.Media)
-		// get file size
-		fileSize := int64(0)
-		if err == nil {
-			f, err := os.Open(clientSendMedia.FilePath)
-			if err == nil {
-				fstate, err := f.Stat()
-				if err == nil {
-					fileSize = fstate.Size()
-				}
-			}
-			// save to local files
-			repo.Files.MoveUploadedFileToFiles(clientSendMedia, int32(fileSize), sent)
-
-			// delete file status
-			repo.Files.DeleteStatus(pmsg.ID)
-		}
-	}
-
-	message := repo.PendingMessages.ToUserMessage(pmsg)
-	message.ID = sent.MessageID
-	message.CreatedOn = sent.CreatedOn
-
-	// save message
-	dialog := repo.Dialogs.Get(message.PeerID, message.PeerType)
-	repo.Messages.SaveNew(message, dialog, ctrl.userID)
-
-	// delete pending message
-	repo.PendingMessages.Delete(pmsg.ID)
-
-	// TODO : Notify UI that the pending message delivered to server
-	e.Constructor = msg.C_ClientUpdatePendingMessageDelivery
-
-	out := msg.ClientUpdatePendingMessageDelivery{
-		Messages:       message,
-		PendingMessage: pmsg,
-		Success:        true,
-	}
-
-	e.Message, _ = out.Marshal()
-
-	udpMsg := new(msg.UpdateEnvelope)
-	udpMsg.Constructor = e.Constructor
-	udpMsg.Update = e.Message
-	udpMsg.UpdateID = 0
-	udpMsg.Timestamp = time.Now().Unix()
-
-	buff, _ := udpMsg.Marshal()
-
-	// call external handler
-	uiexec.Ctx().Exec(func() {
-		if ctrl.onUpdateMainDelegate != nil {
-			ctrl.onUpdateMainDelegate(msg.C_UpdateEnvelope, buff)
-		}
-	})
+	repo.PendingMessages.SaveByRealID(int64(e.RequestID), sent.MessageID)
 }
 func (ctrl *Controller) addToDeliveredMessageList(id int64) {
 	ctrl.deliveredMessagesMutex.Lock()

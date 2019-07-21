@@ -85,17 +85,6 @@ func (r *repoFiles) UpdateFileStatus(msgID int64, state domain.RequestStatus) {
 	return
 }
 
-func (r *repoFiles) MoveUploadedFileToFiles(req *msg.ClientSendMessageMedia, fileSize int32, sent *msg.MessagesSent) {
-
-	fileStatus, err := r.GetStatus(sent.MessageID)
-	if err != nil {
-		fileStatus = new(dto.FilesStatus)
-	}
-	fileStatus.MessageID = sent.MessageID
-	fileStatus.TotalSize = int64(fileSize)
-	r.SaveStatus(fileStatus)
-}
-
 func (r *repoFiles) GetSharedMedia(peerID int64, peerType int32, mediaType int32) ([]*msg.UserMessage, error) {
 	limit := 50
 	userMessages := make([]*msg.UserMessage, 0, limit)

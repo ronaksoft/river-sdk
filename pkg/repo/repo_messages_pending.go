@@ -14,6 +14,7 @@ import (
 const (
 	prefixPMessagesByID       = "PMSG_ID"
 	prefixPMessagesByRandomID = "PMSG_RND"
+	prefixPMessagesByRealID   = "PMSG_RID"
 )
 
 type repoMessagesPending struct {
@@ -26,6 +27,10 @@ func (r *repoMessagesPending) getKey(msgID int64) []byte {
 
 func (r *repoMessagesPending) getRandomKey(randomID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%012d", prefixPMessagesByRandomID, randomID))
+}
+
+func (r *repoMessagesPending) getRealKey(msgID int64) []byte {
+	return ronak.StrToByte(fmt.Sprintf("%s.%012d", prefixPMessagesByRealID, msgID))
 }
 
 func (r *repoMessagesPending) Save(msgID int64, senderID int64, message *msg.MessagesSend) (*msg.ClientPendingMessage, error) {
@@ -68,7 +73,6 @@ func (r *repoMessagesPending) Save(msgID int64, senderID int64, message *msg.Mes
 }
 
 func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, randomID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error) {
-
 	if msgMedia == nil {
 		return nil, domain.ErrNotFound
 	}
@@ -142,6 +146,23 @@ func (r *repoMessagesPending) SaveMessageMedia(msgID int64, senderID int64, msgM
 	return pm, nil
 }
 
+func (r *repoMessagesPending) GetByRealID(msgID int64) (*msg.ClientPendingMessage, error) {
+	pm := new(msg.ClientPendingMessage)
+	err := r.badger.View(func(txn *badger.Txn) error {
+		item, err := txn.Get(r.getRealKey(msgID))
+		if err != nil {
+			return err
+		}
+		return item.Value(func(val []byte) error {
+			return pm.Unmarshal(val)
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return pm, nil
+}
 func (r *repoMessagesPending) GetByRandomID(randomID int64) (*msg.ClientPendingMessage, error) {
 
 	pm := new(msg.ClientPendingMessage)
@@ -297,6 +318,20 @@ func (r *repoMessagesPending) DeletePeerAllMessages(peerID int64, peerType int32
 	return res
 }
 
+func (r *repoMessagesPending) SaveByRealID(randomID, realMsgID int64) {
+	// TODO:: Remove old keys
+	pm, err := r.GetByRandomID(randomID)
+	if err != nil {
+		return
+	}
+	bytes, _ := pm.Marshal()
+	_ = r.badger.Update(func(txn *badger.Txn) error {
+		return txn.SetEntry(badger.NewEntry(
+			r.getRealKey(pm.ID), bytes),
+		)
+	})
+
+}
 const (
 	_ClientSendMessageMediaType       = -1
 	_ClientSendMessageContactType     = -2

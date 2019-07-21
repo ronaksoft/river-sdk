@@ -79,15 +79,6 @@ var ContactImportMany = &ishell.Cmd{
 	},
 }
 
-var SearchInDialogs = &ishell.Cmd{
-	Name: "SearchInDialogs",
-	Func: func(c *ishell.Context) {
-		searchPhrase := fnGetTitle(c)
-		reqDelegate := new(RequestDelegate)
-		_SDK.SearchDialogs(domain.SequentialUniqueID(), searchPhrase, reqDelegate)
-	},
-}
-
 var GetGroupInputPeer = &ishell.Cmd{
 	Name: "GetGroupInputPeer",
 	Func: func(c *ishell.Context) {
@@ -248,7 +239,6 @@ func init() {
 	Debug.AddCmd(SendTyping)
 	Debug.AddCmd(ContactImportMany)
 
-	Debug.AddCmd(SearchInDialogs)
 	Debug.AddCmd(GetGroupInputPeer)
 
 	Debug.AddCmd(UpdateNewMessageHexString)
