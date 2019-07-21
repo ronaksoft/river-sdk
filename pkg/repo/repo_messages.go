@@ -5,7 +5,6 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
-	"github.com/blevesearch/bleve"
 	"github.com/dgraph-io/badger"
 	"sort"
 	"strings"
@@ -161,11 +160,11 @@ func (r *repoMessages) Save(message *msg.UserMessage) error {
 		)
 	})
 
-	_ = r.searchIndex.Index(ronak.ByteToStr(r.getUserMessageKey(message.ID)), MessageSearch{
-		Type:   "msg",
-		Body:   message.Body,
-		PeerID: message.PeerID,
-	})
+	// _ = r.searchIndex.Index(ronak.ByteToStr(r.getUserMessageKey(message.ID)), MessageSearch{
+	// 	Type:   "msg",
+	// 	Body:   message.Body,
+	// 	PeerID: message.PeerID,
+	// })
 
 	return err
 }
@@ -348,38 +347,38 @@ func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, err
 
 func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
 
-	textTerm := bleve.NewTermQuery(text)
-	textTerm.SetField("Body")
-	searchRequest := bleve.NewSearchRequest(textTerm)
-	searchResult, _ := r.searchIndex.Search(searchRequest)
+	// textTerm := bleve.NewTermQuery(text)
+	// textTerm.SetField("Body")
+	// searchRequest := bleve.NewSearchRequest(textTerm)
+	// searchResult, _ := r.searchIndex.Search(searchRequest)
 	userMessages := make([]*msg.UserMessage, 0, 100)
-	for _, hit := range searchResult.Hits {
-		userMessage := r.Get(ronak.StrToInt64(hit.Fields["Body"].(string)))
-		if userMessage != nil {
-			userMessages = append(userMessages, userMessage)
-		}
-
-	}
+	// for _, hit := range searchResult.Hits {
+	// 	userMessage := r.Get(ronak.StrToInt64(hit.Fields["Body"].(string)))
+	// 	if userMessage != nil {
+	// 		userMessages = append(userMessages, userMessage)
+	// 	}
+	//
+	// }
 	return userMessages
 }
 
 func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.UserMessage {
 
-	textTerm := bleve.NewTermQuery(text)
-	textTerm.SetField("Body")
-	peerTerm := bleve.NewTermQuery(fmt.Sprintf("%d", peerID))
-	peerTerm.SetField("PeerID")
-	q := bleve.NewConjunctionQuery(textTerm, peerTerm)
-	searchRequest := bleve.NewSearchRequest(q)
-	searchResult, _ := r.searchIndex.Search(searchRequest)
+	// textTerm := bleve.NewTermQuery(text)
+	// textTerm.SetField("Body")
+	// peerTerm := bleve.NewTermQuery(fmt.Sprintf("%d", peerID))
+	// peerTerm.SetField("PeerID")
+	// q := bleve.NewConjunctionQuery(textTerm, peerTerm)
+	// searchRequest := bleve.NewSearchRequest(q)
+	// searchResult, _ := r.searchIndex.Search(searchRequest)
 	userMessages := make([]*msg.UserMessage, 0, 100)
-	for _, hit := range searchResult.Hits {
-		userMessage := r.Get(ronak.StrToInt64(hit.Fields["Body"].(string)))
-		if userMessage != nil {
-			userMessages = append(userMessages, userMessage)
-		}
-
-	}
+	// for _, hit := range searchResult.Hits {
+	// 	userMessage := r.Get(ronak.StrToInt64(hit.Fields["Body"].(string)))
+	// 	if userMessage != nil {
+	// 		userMessages = append(userMessages, userMessage)
+	// 	}
+	//
+	// }
 	return userMessages
 }
 

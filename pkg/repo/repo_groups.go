@@ -5,7 +5,6 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
-	"github.com/blevesearch/bleve"
 	"github.com/dgraph-io/badger"
 )
 
@@ -134,11 +133,11 @@ func (r *repoGroups) Save(group *msg.Group) {
 		))
 	})
 
-	_ = r.searchIndex.Index(ronak.ByteToStr(groupKey), Group{
-		Type:   "group",
-		Title:  group.Title,
-		PeerID: group.ID,
-	})
+	// _ = r.searchIndex.Index(ronak.ByteToStr(groupKey), Group{
+	// 	Type:   "group",
+	// 	Title:  group.Title,
+	// 	PeerID: group.ID,
+	// })
 }
 
 func (r *repoGroups) SaveMany(groups []*msg.Group) {
@@ -335,15 +334,15 @@ func (r *repoGroups) UpdatePhoto(groupPhoto *msg.UpdateGroupPhoto) {
 
 func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
 
-	textTerm := bleve.NewQueryStringQuery(searchPhrase)
-	searchRequest := bleve.NewSearchRequest(textTerm)
-	searchResult, _ := r.searchIndex.Search(searchRequest)
+	// textTerm := bleve.NewQueryStringQuery(searchPhrase)
+	// searchRequest := bleve.NewSearchRequest(textTerm)
+	// searchResult, _ := r.searchIndex.Search(searchRequest)
 	groups := make([]*msg.Group, 0, 100)
-	for _, hit := range searchResult.Hits {
-		group := r.getGroupByKey(ronak.StrToByte(hit.ID))
-		if group != nil {
-			groups = append(groups, group)
-		}
-	}
+	// for _, hit := range searchResult.Hits {
+	// 	group := r.getGroupByKey(ronak.StrToByte(hit.ID))
+	// 	if group != nil {
+	// 		groups = append(groups, group)
+	// 	}
+	// }
 	return groups
 }

@@ -46,8 +46,7 @@ type Context struct {
 type repository struct {
 	badger      *badger.DB
 	bunt        *buntdb.DB
-	searchIndex bleve.Index
-	// mx          sync.Mutex
+	// searchIndex bleve.Index
 }
 
 // create tables
@@ -103,21 +102,21 @@ func repoSetDB(dbPath string) error {
 	})
 
 	// _ = os.MkdirAll(fmt.Sprintf("%s", strings.TrimRight(dbPath, "/")), os.ModePerm)
-	r.searchIndex, repoLastError = bleve.Open(fmt.Sprintf("%s/bleve/", strings.TrimRight(dbPath, "/")))
-	if repoLastError == bleve.ErrorIndexPathDoesNotExist {
-		repoLastError = nil
-		// create a mapping
-		indexMapping, err := buildIndexMapping()
-		if err != nil {
-			logs.Fatal("Build Index", zap.Error(err))
-		}
-		r.searchIndex, err = bleve.New(fmt.Sprintf("%s/bleve", strings.TrimRight(dbPath, "/")), indexMapping)
-		if err != nil {
-			logs.Fatal("SearchIndex", zap.Error(err))
-		}
-	} else if repoLastError != nil {
-		logs.Fatal("Another", zap.Error(repoLastError))
-	}
+	// r.searchIndex, repoLastError = bleve.Open(fmt.Sprintf("%s/bleve/", strings.TrimRight(dbPath, "/")))
+	// if repoLastError == bleve.ErrorIndexPathDoesNotExist {
+	// 	repoLastError = nil
+	// 	// create a mapping
+	// 	indexMapping, err := buildIndexMapping()
+	// 	if err != nil {
+	// 		logs.Fatal("Build Index", zap.Error(err))
+	// 	}
+	// 	r.searchIndex, err = bleve.New(fmt.Sprintf("%s/bleve", strings.TrimRight(dbPath, "/")), indexMapping)
+	// 	if err != nil {
+	// 		logs.Fatal("SearchIndex", zap.Error(err))
+	// 	}
+	// } else if repoLastError != nil {
+	// 	logs.Fatal("Another", zap.Error(repoLastError))
+	// }
 
 	return r.initDB()
 }
@@ -179,7 +178,7 @@ func Close() error {
 
 	_ = r.bunt.Close()
 	_ = r.badger.Close()
-	_ = r.searchIndex.Close()
+	// _ = r.searchIndex.Close()
 	r = nil
 	ctx = nil
 	logs.Debug("Repo Stopped")
