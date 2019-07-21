@@ -28,6 +28,11 @@ func (r *River) GetFileStatus(msgID int64) string {
 		Filepath: filePath,
 	}
 
+	m := repo.Messages.Get(msgID)
+	logs.Info("GetFileStatus",
+		zap.Int64("MsgID", msgID),
+		zap.Any("Message", m),
+	)
 	buff, _ := json.Marshal(x)
 	return string(buff)
 }
