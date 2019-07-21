@@ -28,14 +28,6 @@ func (r *River) GetFileStatus(msgID int64) string {
 		Filepath: filePath,
 	}
 
-	m := repo.Messages.Get(msgID)
-	mm := new(msg.MediaDocument)
-	_ = mm.Unmarshal(m.Media)
-	logs.Info("GetFileStatus",
-		zap.Int64("MsgID", msgID),
-		zap.Any("Message", m.MediaType),
-		zap.Any("Doc", mm),
-	)
 	buff, _ := json.Marshal(x)
 	return string(buff)
 }
@@ -113,7 +105,7 @@ func (r *River) FileDownload(msgID int64) {
 		mon.FunctionResponseTime("FileDownload", time.Now().Sub(startTime))
 	}()
 	status, progress, filePath := getFileStatus(msgID)
-	logs.Debug("SDK::FileDownload() current file progress status",
+	logs.Info("SDK::FileDownload() current file progress status",
 		zap.String("Status", status.ToString()),
 		zap.Float64("Progress", progress),
 		zap.String("FilePath", filePath),
@@ -132,14 +124,8 @@ func (r *River) FileDownload(msgID int64) {
 	case domain.RequestStatusPaused, domain.RequestStatusCanceled, domain.RequestStatusError:
 		r.fileCtrl.Download(m)
 	case domain.RequestStatusInProgress:
-	}
-
-	fs, err := repo.Files.GetStatus(msgID)
-	if err == nil && fs != nil {
-
-	} else {
-		m := repo.Messages.Get(msgID)
-		r.fileCtrl.Download(m)
+	default:
+		return
 	}
 }
 

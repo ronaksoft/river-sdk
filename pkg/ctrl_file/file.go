@@ -117,8 +117,8 @@ func (ctrl *Controller) startDownloadQueue() {
 			return
 		case <-ctrl.chNewDownloadItem:
 			ctrl.mxDown.Lock()
-			for _, v := range ctrl.DownloadQueue {
-				v.StartDownload(ctrl)
+			for _, theFile := range ctrl.DownloadQueue {
+				theFile.StartDownload(ctrl)
 			}
 			ctrl.mxDown.Unlock()
 		}
@@ -376,16 +376,14 @@ func (ctrl *Controller) Upload(fileID int64, req *msg.ClientPendingMessage) erro
 // Download add download request
 func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
 	var theFile *File
-	filesStatus, err := repo.Files.GetStatus(userMessage.ID)
-
-	if err == nil && filesStatus != nil {
+	filesStatus, _ := repo.Files.GetStatus(userMessage.ID)
+	if filesStatus != nil {
 		if filesStatus.IsCompleted {
 			ctrl.downloadCompleted(filesStatus.MessageID, filesStatus.FilePath, domain.FileStateType(filesStatus.Type))
 			return
 		}
 		theFile = new(File)
 		theFile.LoadDTO(*filesStatus, ctrl.progressCallback)
-
 	} else {
 		var docID int64
 		var clusterID int32
@@ -398,7 +396,6 @@ func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
 		case msg.MediaTypeDocument:
 			x := new(msg.MediaDocument)
 			_ = x.Unmarshal(userMessage.Media)
-
 			docID = x.Doc.ID
 			clusterID = x.Doc.ClusterID
 			accessHash = x.Doc.AccessHash
@@ -417,7 +414,7 @@ func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
 		theFile.RequestStatus = domain.RequestStatusInProgress
 		ctrl.AddToQueue(theFile)
 		repo.Files.SaveStatus(theFile.GetDTO())
-		repo.Files.UpdateFileStatus(theFile.MessageID, domain.RequestStatusInProgress)
+		repo.Files.UpdateFileStatus(theFile.MessageID, theFile.RequestStatus)
 	}
 }
 

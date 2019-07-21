@@ -25,7 +25,6 @@ func (r *repoFiles) getKey(msgID int64) []byte {
 }
 
 func (r *repoFiles) SaveStatus(fs *dto.FilesStatus) {
-
 	bytes, _ := json.Marshal(fs)
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		return txn.SetEntry(badger.NewEntry(r.getKey(fs.MessageID), bytes))

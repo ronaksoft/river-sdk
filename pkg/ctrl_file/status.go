@@ -304,16 +304,16 @@ func (fs *File) LoadDTO(d dto.FilesStatus, progress domain.OnFileStatusChanged) 
 	fs.TotalSize = d.TotalSize
 
 	fs.PartList = make(map[int64]bool)
-	json.Unmarshal(d.PartList, &fs.PartList)
+	_ = json.Unmarshal(d.PartList, &fs.PartList)
 
 	fs.TotalParts = d.TotalParts
 	fs.Type = domain.FileStateType(d.Type)
 	fs.IsCompleted = d.IsCompleted
 	fs.RequestStatus = domain.RequestStatus(d.RequestStatus)
 	fs.UploadRequest = new(msg.ClientSendMessageMedia)
-	fs.UploadRequest.Unmarshal(d.UploadRequest)
+	_ = fs.UploadRequest.Unmarshal(d.UploadRequest)
 	fs.DownloadRequest = new(msg.Document)
-	fs.DownloadRequest.Unmarshal(d.DownloadRequest)
+	_ = fs.DownloadRequest.Unmarshal(d.DownloadRequest)
 	fs.onFileStatusChanged = progress
 
 	fs.ThumbFileID = d.ThumbFileID
