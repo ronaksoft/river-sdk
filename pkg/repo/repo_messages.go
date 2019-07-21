@@ -127,8 +127,8 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, use
 				}
 			}
 		}
-		Dialogs.Save(dialog)
 	}
+	Dialogs.Save(dialog)
 	return
 }
 

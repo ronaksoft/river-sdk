@@ -45,9 +45,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	}
 	// save user if does not exist
 	repo.Users.Save(x.Sender)
-
 	repo.Messages.SaveNew(x.Message, dialog, ctrl.connInfo.PickupUserID())
-
 	messageHole.SetUpperFilled(x.Message.PeerID, x.Message.PeerType, x.Message.ID)
 
 	// bug : sometime server do not sends access hash
