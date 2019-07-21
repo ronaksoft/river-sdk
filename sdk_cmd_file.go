@@ -29,9 +29,12 @@ func (r *River) GetFileStatus(msgID int64) string {
 	}
 
 	m := repo.Messages.Get(msgID)
+	mm := new(msg.MediaDocument)
+	_ = mm.Unmarshal(m.Media)
 	logs.Info("GetFileStatus",
 		zap.Int64("MsgID", msgID),
-		zap.Any("Message", m),
+		zap.Any("Message", m.MediaType),
+		zap.Any("Doc", mm),
 	)
 	buff, _ := json.Marshal(x)
 	return string(buff)
