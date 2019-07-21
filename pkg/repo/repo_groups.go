@@ -334,7 +334,6 @@ func (r *repoGroups) UpdatePhoto(groupPhoto *msg.UpdateGroupPhoto) {
 }
 
 func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
-
 	textTerm := bleve.NewQueryStringQuery(searchPhrase)
 	searchRequest := bleve.NewSearchRequest(textTerm)
 	searchResult, _ := r.searchIndex.Search(searchRequest)

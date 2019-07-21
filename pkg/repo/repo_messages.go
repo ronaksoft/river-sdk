@@ -345,10 +345,7 @@ func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, err
 }
 
 func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
-
-	textTerm := bleve.NewTermQuery(text)
-	textTerm.SetField("Body")
-	searchRequest := bleve.NewSearchRequest(textTerm)
+	searchRequest := bleve.NewSearchRequest(bleve.NewQueryStringQuery(text))
 	searchResult, _ := r.searchIndex.Search(searchRequest)
 	userMessages := make([]*msg.UserMessage, 0, 100)
 	for _, hit := range searchResult.Hits {
@@ -362,12 +359,7 @@ func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
 }
 
 func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.UserMessage {
-	textTerm := bleve.NewTermQuery(text)
-	textTerm.SetField("Body")
-	peerTerm := bleve.NewTermQuery(fmt.Sprintf("%d", peerID))
-	peerTerm.SetField("PeerID")
-	q := bleve.NewConjunctionQuery(textTerm, peerTerm)
-	searchRequest := bleve.NewSearchRequest(q)
+	searchRequest := bleve.NewSearchRequest(bleve.NewQueryStringQuery(text))
 	searchResult, _ := r.searchIndex.Search(searchRequest)
 	userMessages := make([]*msg.UserMessage, 0, 100)
 	for _, hit := range searchResult.Hits {

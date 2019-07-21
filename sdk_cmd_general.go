@@ -178,12 +178,9 @@ func (r *River) SearchContacts(requestID int64, searchPhrase string, delegate Re
 	res := new(msg.MessageEnvelope)
 	res.Constructor = msg.C_ContactsMany
 	res.RequestID = uint64(requestID)
-
 	contacts := new(msg.ContactsMany)
 	contacts.Users, contacts.Contacts = repo.Users.SearchContacts(searchPhrase)
-
 	res.Message, _ = contacts.Marshal()
-
 	buff, _ := res.Marshal()
 	if delegate != nil {
 		delegate.OnComplete(buff)
@@ -198,49 +195,6 @@ func (r *River) UpdateContactInfo(userID int64, firstName, lastName string) erro
 	}()
 	repo.Users.UpdateContactInfo(userID, firstName, lastName)
 	return nil
-}
-
-// SearchDialogs search dialog title
-func (r *River) SearchDialogs(requestID int64, searchPhrase string, delegate RequestDelegate) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("SearchDialogs", time.Now().Sub(startTime))
-	}()
-	res := new(msg.MessageEnvelope)
-	res.Constructor = msg.C_MessagesDialogs
-	res.RequestID = uint64(requestID)
-
-	dlgs := new(msg.MessagesDialogs)
-
-	users := repo.Users.SearchUsers(searchPhrase)
-	groups := repo.Groups.Search(searchPhrase)
-	dlgs.Users = users
-	dlgs.Groups = groups
-
-	mUserDialogs := domain.MInt64B{}
-	mGroupDialogs := domain.MInt64B{}
-	for _, v := range users {
-		mUserDialogs[v.ID] = true
-	}
-	for _, v := range groups {
-		mGroupDialogs[v.ID] = true
-	}
-
-	dialogs := repo.Dialogs.GetManyUsers(mUserDialogs.ToArray())
-	dialogs = append(dialogs, repo.Dialogs.GetManyGroups(mGroupDialogs.ToArray())...)
-	dlgs.Dialogs = dialogs
-
-	mMessages := domain.MInt64B{}
-	for _, v := range dialogs {
-		mMessages[v.TopMessageID] = true
-	}
-	dlgs.Messages = repo.Messages.GetMany(mMessages.ToArray())
-
-	res.Message, _ = dlgs.Marshal()
-	buff, _ := res.Marshal()
-	if delegate != nil {
-		delegate.OnComplete(buff)
-	}
 }
 
 // GetGroupInputUser get group participant user
@@ -424,7 +378,7 @@ func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate
 	}()
 	searchResults := new(msg.ClientSearchResult)
 	var userContacts []*msg.ContactUser
-	var NonContactUsersWithDialogs []*msg.ContactUser
+	var nonContacts []*msg.ContactUser
 	var msgs []*msg.UserMessage
 	if peerID != 0 {
 		msgs = repo.Messages.SearchTextByPeerID(text, peerID)
@@ -463,9 +417,9 @@ func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate
 	// if peerID == 0 then look for group and contact names too
 	if peerID == 0 {
 		userContacts, _ = repo.Users.SearchContacts(text)
+		nonContacts = repo.Users.SearchNonContacts(text)
 		// Get users who have dialog with me, but are not my contact
-		NonContactUsersWithDialogs = repo.Users.SearchNonContacts(text)
-		userContacts = append(userContacts, NonContactUsersWithDialogs...)
+		userContacts = append(userContacts, nonContacts...)
 	}
 
 	searchResults.Messages = msgs
@@ -475,7 +429,6 @@ func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate
 	searchResults.MatchedGroups = repo.Groups.Search(text)
 
 	outBytes, _ := searchResults.Marshal()
-
 	if delegate != nil {
 		delegate.OnComplete(outBytes)
 	}
