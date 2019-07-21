@@ -1,6 +1,7 @@
 package repo_test
 
 import (
+	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
@@ -40,4 +41,10 @@ func TestRepoDialogs(t *testing.T) {
 	d := repo.Dialogs.Get(100, 1)
 	t.Log(dialog)
 	t.Log(d)
+}
+
+func TestRepoMessagesExtra_SaveScrollID(t *testing.T) {
+	repo.MessagesExtra.SaveScrollID(11, 1, 101)
+	x := repo.MessagesExtra.GetScrollID(11,1)
+	fmt.Println(x)
 }
