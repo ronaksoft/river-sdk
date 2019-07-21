@@ -411,7 +411,6 @@ func (fs *File) downloaderJob(fm *Controller) {
 		if fs.stop {
 			return
 		}
-
 		select {
 		case partIdx := <-fs.chPartList:
 			fm.downloadRequest(generateFileGet(fs, partIdx), fs, partIdx)

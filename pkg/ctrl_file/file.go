@@ -74,8 +74,8 @@ type Controller struct {
 }
 
 func New(config Config) *Controller {
-	maxUploadConcurrency := 3
-	maxDownloadConcurrency := 3
+	// maxUploadConcurrency := 3
+	// maxDownloadConcurrency := 3
 	ctx = &Controller{
 		ServerEndpoint:      config.ServerAddress,
 		UploadQueue:         make(map[int64]*File, 0),
@@ -90,12 +90,9 @@ func New(config Config) *Controller {
 		onUploadError:       config.OnFileUploadError,
 		onDownloadError:     config.OnFileDownloadError,
 	}
-	for i := 0; i < maxDownloadConcurrency; i++ {
-		go ctx.startDownloadQueue()
-	}
-	for i := 0; i < maxUploadConcurrency; i++ {
-		go ctx.startUploadQueue()
-	}
+
+	go ctx.startDownloadQueue()
+	go ctx.startUploadQueue()
 
 	return ctx
 }
@@ -118,6 +115,12 @@ func (ctrl *Controller) startDownloadQueue() {
 		case <-ctrl.chNewDownloadItem:
 			ctrl.mxDown.Lock()
 			for _, theFile := range ctrl.DownloadQueue {
+				logs.Info("NewDownload",
+					zap.Any("MessageID", theFile.MessageID),
+					zap.Any("TotalSize", theFile.TotalSize),
+					zap.Any("PartList", theFile.PartList),
+					zap.Any("FilePath", theFile.FilePath),
+				)
 				theFile.StartDownload(ctrl)
 			}
 			ctrl.mxDown.Unlock()
@@ -170,7 +173,6 @@ func (ctrl *Controller) downloadRequest(req *msg.MessageEnvelope, fs *File, part
 			} else if isCompleted {
 				// call completed delegate
 				ctrl.downloadCompleted(fs.MessageID, fs.FilePath, fs.Type)
-
 			}
 		default:
 			// increase counter
