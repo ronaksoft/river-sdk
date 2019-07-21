@@ -93,13 +93,13 @@ func (r *repoDialogs) countUnread(peerID int64, peerType int32, userID int64) in
 		opts.Reverse = false
 		it := txn.NewIterator(opts)
 		for it.Seek(Messages.getMessageKey(peerID, peerType, dialog.ReadInboxMaxID)); it.Valid(); it.Next() {
-			userMessage := new(msg.UserMessage)
 			_ = it.Item().Value(func(val []byte) error {
+				userMessage := new(msg.UserMessage)
+				if userMessage.SenderID != userID {
+					count++
+				}
 				return userMessage.Unmarshal(val)
 			})
-			if userMessage.SenderID != userID {
-				count++
-			}
 		}
 		it.Close()
 		return nil

@@ -109,8 +109,8 @@ func (r *repoFiles) GetSharedMedia(peerID int64, peerType int32, mediaType int32
 			if limit--; limit < 0 {
 				break
 			}
-			userMessage := new(msg.UserMessage)
 			_ = it.Item().Value(func(val []byte) error {
+				userMessage := new(msg.UserMessage)
 				err := userMessage.Unmarshal(val)
 				if err != nil {
 					return err

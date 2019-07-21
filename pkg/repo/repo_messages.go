@@ -249,9 +249,8 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 				if limit--; limit < 0 {
 					break
 				}
-
-				userMessage := new(msg.UserMessage)
 				_ = it.Item().Value(func(val []byte) error {
+					userMessage := new(msg.UserMessage)
 					err := userMessage.Unmarshal(val)
 					if err != nil {
 						return err
@@ -264,11 +263,11 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 						userIDs[userID] = true
 					}
 					userMessages = append(userMessages, userMessage)
+					if userMessage.ID <= minID {
+						limit = 0
+					}
 					return nil
 				})
-				if userMessage.ID <= minID {
-					break
-				}
 			}
 			it.Close()
 			return nil
@@ -363,7 +362,6 @@ func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
 }
 
 func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.UserMessage {
-
 	textTerm := bleve.NewTermQuery(text)
 	textTerm.SetField("Body")
 	peerTerm := bleve.NewTermQuery(fmt.Sprintf("%d", peerID))
