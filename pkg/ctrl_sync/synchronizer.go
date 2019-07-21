@@ -147,11 +147,8 @@ func (ctrl *Controller) sync() {
 		logs.Info("SyncController:: Snapshot sync")
 
 		// remove all messages
-		err := repo.Messages.ClearAll()
-		if err != nil {
-			logs.Error("sync()-> Messages ClearAll", zap.Error(err))
-			return
-		}
+		repo.Messages.ClearAll()
+
 		// Get Contacts from the server
 		waitGroup := &sync.WaitGroup{}
 		waitGroup.Add(1)

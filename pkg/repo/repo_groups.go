@@ -104,7 +104,7 @@ func (r *repoGroups) updateParticipantsCount(groupID int64) {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = r.getPrefix(groupID)
 		it := txn.NewIterator(opts)
-		for it.Seek(r.getGroupParticipantKey(groupID, 0)); it.Valid(); it.Next() {
+		for it.Seek(r.getGroupParticipantKey(groupID, 0)); it.ValidForPrefix(opts.Prefix); it.Next() {
 			count++
 		}
 		it.Close()
@@ -206,7 +206,7 @@ func (r *repoGroups) GetParticipants(groupID int64) ([]*msg.GroupParticipant, er
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = r.getPrefix(groupID)
 		it := txn.NewIterator(opts)
-		for it.Seek(r.getGroupParticipantKey(groupID, 0)); it.Valid(); it.Next() {
+		for it.Seek(r.getGroupParticipantKey(groupID, 0)); it.ValidForPrefix(opts.Prefix); it.Next() {
 			p := new(msg.GroupParticipant)
 			_ = it.Item().Value(func(val []byte) error {
 				return p.Unmarshal(val)
@@ -240,7 +240,7 @@ func (r *repoGroups) DeleteAllMembers(groupID int64) {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = r.getPrefix(groupID)
 		it := txn.NewIterator(opts)
-		for it.Seek(r.getGroupParticipantKey(groupID, 0)); it.Valid(); it.Next() {
+		for it.Seek(r.getGroupParticipantKey(groupID, 0)); it.ValidForPrefix(opts.Prefix); it.Next() {
 			_ = txn.Delete(it.Item().Key())
 		}
 		it.Close()

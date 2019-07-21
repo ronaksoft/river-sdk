@@ -50,7 +50,7 @@ func (r *repoDialogs) updateTopMessageID(peerID int64, peerType int32) {
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
 		it.Seek(Messages.getMessageKey(peerID, peerType, dialog.TopMessageID))
-		if it.Valid() {
+		if it.ValidForPrefix(opts.Prefix) {
 			userMessage := new(msg.UserMessage)
 			_ = it.Item().Value(func(val []byte) error {
 				return userMessage.Unmarshal(val)
@@ -88,7 +88,7 @@ func (r *repoDialogs) countUnread(peerID int64, peerType int32, userID, maxID in
 		opts.Prefix = Messages.getPrefix(peerID, peerType)
 		opts.Reverse = false
 		it := txn.NewIterator(opts)
-		for it.Seek(Messages.getMessageKey(peerID, peerType, maxID)); it.Valid(); it.Next() {
+		for it.Seek(Messages.getMessageKey(peerID, peerType, maxID)); it.ValidForPrefix(opts.Prefix); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
 				userMessage := new(msg.UserMessage)
 				if userMessage.SenderID != userID {
@@ -257,7 +257,7 @@ func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
 		opts.Prefix = ronak.StrToByte(prefixDialogs)
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
-		for it.Rewind(); it.Valid(); it.Next() {
+		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
 			dialog := new(msg.Dialog)
 			_ = it.Item().Value(func(val []byte) error {
 				err := dialog.Unmarshal(val)

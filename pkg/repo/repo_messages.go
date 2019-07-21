@@ -182,7 +182,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 			opts.Prefix = r.getPrefix(peerID, peerType)
 			opts.Reverse = true
 			it := txn.NewIterator(opts)
-			for it.Seek(r.getMessageKey(peerID, peerType, maxID)); it.Valid(); it.Next() {
+			for it.Seek(r.getMessageKey(peerID, peerType, maxID)); it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
 					break
 				}
@@ -212,7 +212,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 			opts.Prefix = r.getPrefix(peerID, peerType)
 			opts.Reverse = false
 			it := txn.NewIterator(opts)
-			for it.Seek(r.getMessageKey(peerID, peerType, minID)); it.Valid(); it.Next() {
+			for it.Seek(r.getMessageKey(peerID, peerType, minID)); it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
 					break
 				}
@@ -245,7 +245,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 			opts.Prefix = r.getPrefix(peerID, peerType)
 			opts.Reverse = true
 			it := txn.NewIterator(opts)
-			for it.Seek(r.getMessageKey(peerID, peerType, maxID)); it.Valid(); it.Next() {
+			for it.Seek(r.getMessageKey(peerID, peerType, maxID)); it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
 					break
 				}
@@ -331,7 +331,7 @@ func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, err
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
 		it.Seek(Messages.getMessageKey(peerID, peerType, 2<<31))
-		if it.Valid() {
+		if it.ValidForPrefix(opts.Prefix) {
 			userMessage := new(msg.UserMessage)
 			_ = it.Item().Value(func(val []byte) error {
 				return userMessage.Unmarshal(val)
@@ -370,14 +370,16 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.User
 	return userMessages
 }
 
-func (r *repoMessages) ClearAll() error {
-	err := r.badger.Update(func(txn *badger.Txn) error {
+func (r *repoMessages) ClearAll() {
+	keepGoing := true
+	for keepGoing {
+		keepGoing = false
+		txn := r.badger.NewTransaction(true)
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixMessages))
-		opts.Reverse = true
 		it := txn.NewIterator(opts)
 		count := 0
-		for it.Rewind(); it.Valid(); it.Next() {
+		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
 			count++
 			err := txn.Delete(it.Item().Key())
 			if err != nil {
@@ -385,22 +387,24 @@ func (r *repoMessages) ClearAll() error {
 			}
 			if count%100 == 0 {
 				_ = txn.Commit()
+				txn.Discard()
+				keepGoing = true
+				break
 			}
 		}
 		it.Close()
-		return nil
-	})
-	if err != nil {
-		return err
 	}
 
-	err = r.badger.Update(func(txn *badger.Txn) error {
+	keepGoing = true
+	for keepGoing {
+		keepGoing = false
+		txn := r.badger.NewTransaction(true)
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixUserMessages))
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
 		count := 0
-		for it.Rewind(); it.Valid(); it.Next() {
+		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
 			count++
 			err := txn.Delete(it.Item().Key())
 			if err != nil {
@@ -408,11 +412,13 @@ func (r *repoMessages) ClearAll() error {
 			}
 			if count%100 == 0 {
 				_ = txn.Commit()
+				txn.Discard()
+				keepGoing = true
+				break
 			}
 		}
 		it.Close()
-		return nil
-	})
+	}
 
-	return err
+	return
 }

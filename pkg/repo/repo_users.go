@@ -160,7 +160,7 @@ func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
 		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixContacts))
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
-		for it.Seek(r.getContactKey(0)); it.Valid(); it.Next() {
+		for it.Seek(r.getContactKey(0)); it.ValidForPrefix(opts.Prefix); it.Next() {
 			contactUser := new(msg.ContactUser)
 			phoneContact := new(msg.PhoneContact)
 			_ = it.Item().Value(func(val []byte) error {

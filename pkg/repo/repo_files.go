@@ -94,7 +94,7 @@ func (r *repoFiles) GetSharedMedia(peerID int64, peerType int32, mediaType int32
 		opts.Reverse = true
 
 		it := txn.NewIterator(opts)
-		for it.Seek(Messages.getMessageKey(peerID, peerType, 1<<31)); it.Valid(); it.Next() {
+		for it.Seek(Messages.getMessageKey(peerID, peerType, 1<<31)); it.ValidForPrefix(opts.Prefix); it.Next() {
 			if limit--; limit < 0 {
 				break
 			}
