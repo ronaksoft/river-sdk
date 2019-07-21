@@ -80,3 +80,19 @@ func TestRepoFiles(t *testing.T) {
 	fmt.Println(s)
 
 }
+
+func TestPending(t *testing.T) {
+	pm := new(msg.ClientSendMessageMedia)
+	pm.Peer = new(msg.InputPeer)
+	_, err := repo.PendingMessages.SaveClientMessageMedia(10, 1, 11, pm)
+	if err != nil {
+		t.Error(err)
+	}
+	pm1 := repo.PendingMessages.GetByID(10)
+	fmt.Println(pm1)
+
+	repo.PendingMessages.Delete(10)
+
+	pm2 := repo.PendingMessages.GetByID(10)
+	fmt.Println(pm2)
+}

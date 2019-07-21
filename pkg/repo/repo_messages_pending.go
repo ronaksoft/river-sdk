@@ -182,7 +182,6 @@ func (r *repoMessagesPending) GetByRandomID(randomID int64) (*msg.ClientPendingM
 }
 
 func (r *repoMessagesPending) GetByID(id int64) *msg.ClientPendingMessage {
-
 	pm := new(msg.ClientPendingMessage)
 	err := r.badger.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(r.getKey(id))
@@ -260,7 +259,6 @@ func (r *repoMessagesPending) Delete(msgID int64) {
 	if pm == nil {
 		return
 	}
-
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		_ = txn.Delete(r.getKey(pm.ID))
 		_ = txn.Delete(r.getRandomKey(pm.RequestID))
@@ -269,10 +267,6 @@ func (r *repoMessagesPending) Delete(msgID int64) {
 }
 
 func (r *repoMessagesPending) DeleteByRealID(msgID int64) {
-	pm := r.GetByRealID(msgID)
-	if pm == nil {
-		return
-	}
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		_ = txn.Delete(r.getRealKey(msgID))
 		return nil
@@ -339,7 +333,6 @@ func (r *repoMessagesPending) SaveByRealID(randomID, realMsgID int64) {
 			r.getRealKey(realMsgID), bytes),
 		)
 	})
-
 }
 const (
 	_ClientSendMessageMediaType       = -1
