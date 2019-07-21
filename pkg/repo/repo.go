@@ -3,11 +3,11 @@ package repo
 import (
 	"fmt"
 	"github.com/allegro/bigcache"
-	"github.com/blevesearch/bleve"
-	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
-	"github.com/blevesearch/bleve/analysis/lang/en"
-	"github.com/blevesearch/bleve/mapping"
-	"github.com/blevesearch/blevex/detectlang"
+	// "github.com/blevesearch/bleve"
+	// "github.com/blevesearch/bleve/analysis/analyzer/keyword"
+	// "github.com/blevesearch/bleve/analysis/lang/en"
+	// "github.com/blevesearch/bleve/mapping"
+	// "github.com/blevesearch/blevex/detectlang"
 	"github.com/tidwall/buntdb"
 	"os"
 	"strings"
@@ -121,48 +121,48 @@ func repoSetDB(dbPath string) error {
 	return r.initDB()
 }
 
-func buildIndexMapping() (mapping.IndexMapping, error) {
-	// a generic reusable mapping for english text
-	textFieldMapping := bleve.NewTextFieldMapping()
-	textFieldMapping.Analyzer = detectlang.AnalyzerName
-	textFieldMapping.Store = false
-	keywordFieldMapping := bleve.NewTextFieldMapping()
-	keywordFieldMapping.Analyzer = keyword.Name
-
-	// Message
-	messageMapping := bleve.NewDocumentStaticMapping()
-	messageMapping.AddFieldMappingsAt("Body", textFieldMapping)
-	messageMapping.AddFieldMappingsAt("PeerID", keywordFieldMapping)
-
-	// User
-	userMapping := bleve.NewDocumentStaticMapping()
-	userMapping.AddFieldMappingsAt("FirstName", textFieldMapping)
-	userMapping.AddFieldMappingsAt("LastName", textFieldMapping)
-	userMapping.AddFieldMappingsAt("Username", keywordFieldMapping)
-	userMapping.AddFieldMappingsAt("Phone", keywordFieldMapping)
-
-	// Group
-	groupMapping := bleve.NewDocumentStaticMapping()
-	groupMapping.AddFieldMappingsAt("Title", textFieldMapping)
-
-	// Contact
-	contactMapping := bleve.NewDocumentStaticMapping()
-	contactMapping.AddFieldMappingsAt("FirstName", textFieldMapping)
-	contactMapping.AddFieldMappingsAt("LastName", textFieldMapping)
-	contactMapping.AddFieldMappingsAt("Username", keywordFieldMapping)
-	contactMapping.AddFieldMappingsAt("Phone", keywordFieldMapping)
-
-	indexMapping := bleve.NewIndexMapping()
-	indexMapping.AddDocumentMapping("msg", messageMapping)
-	indexMapping.AddDocumentMapping("user", userMapping)
-	indexMapping.AddDocumentMapping("group", groupMapping)
-	indexMapping.AddDocumentMapping("contact", contactMapping)
-
-	indexMapping.TypeField = "type"
-	indexMapping.DefaultAnalyzer = en.AnalyzerName
-
-	return indexMapping, nil
-}
+// func buildIndexMapping() (mapping.IndexMapping, error) {
+// 	// a generic reusable mapping for english text
+// 	textFieldMapping := bleve.NewTextFieldMapping()
+// 	textFieldMapping.Analyzer = detectlang.AnalyzerName
+// 	textFieldMapping.Store = false
+// 	keywordFieldMapping := bleve.NewTextFieldMapping()
+// 	keywordFieldMapping.Analyzer = keyword.Name
+//
+// 	// Message
+// 	messageMapping := bleve.NewDocumentStaticMapping()
+// 	messageMapping.AddFieldMappingsAt("Body", textFieldMapping)
+// 	messageMapping.AddFieldMappingsAt("PeerID", keywordFieldMapping)
+//
+// 	// User
+// 	userMapping := bleve.NewDocumentStaticMapping()
+// 	userMapping.AddFieldMappingsAt("FirstName", textFieldMapping)
+// 	userMapping.AddFieldMappingsAt("LastName", textFieldMapping)
+// 	userMapping.AddFieldMappingsAt("Username", keywordFieldMapping)
+// 	userMapping.AddFieldMappingsAt("Phone", keywordFieldMapping)
+//
+// 	// Group
+// 	groupMapping := bleve.NewDocumentStaticMapping()
+// 	groupMapping.AddFieldMappingsAt("Title", textFieldMapping)
+//
+// 	// Contact
+// 	contactMapping := bleve.NewDocumentStaticMapping()
+// 	contactMapping.AddFieldMappingsAt("FirstName", textFieldMapping)
+// 	contactMapping.AddFieldMappingsAt("LastName", textFieldMapping)
+// 	contactMapping.AddFieldMappingsAt("Username", keywordFieldMapping)
+// 	contactMapping.AddFieldMappingsAt("Phone", keywordFieldMapping)
+//
+// 	indexMapping := bleve.NewIndexMapping()
+// 	indexMapping.AddDocumentMapping("msg", messageMapping)
+// 	indexMapping.AddDocumentMapping("user", userMapping)
+// 	indexMapping.AddDocumentMapping("group", groupMapping)
+// 	indexMapping.AddDocumentMapping("contact", contactMapping)
+//
+// 	indexMapping.TypeField = "type"
+// 	indexMapping.DefaultAnalyzer = en.AnalyzerName
+//
+// 	return indexMapping, nil
+// }
 
 // ReInitiateDatabase runs auto migrate
 func ReInitiateDatabase() error {
