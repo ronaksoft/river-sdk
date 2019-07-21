@@ -6,7 +6,9 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"go.uber.org/zap"
+	"time"
 )
 
 // authAuthorization
@@ -145,19 +147,40 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 		zap.Int64("RandomID", sent.RandomID),
 	)
 
-	// Add delivered message to prevent invoking newMessage event later
-	ctrl.addToDeliveredMessageList(sent.MessageID)
+	userMessage := repo.Messages.Get(sent.MessageID)
+	if userMessage != nil {
+		pm, _ := repo.PendingMessages.GetByRealID(sent.MessageID)
+		if pm == nil {
+			return
+		}
+		// It means we have received the NewMessag
+		update := new(msg.UpdateMessagesDeleted)
+		update.Peer = &msg.Peer{ID: pm.PeerID, Type:pm.PeerType}
+		update.MessageIDs = []int64{pm.ID}
+		bytes, _ := update.Marshal()
+
+		updateEnvelope := new(msg.UpdateEnvelope)
+		updateEnvelope.Constructor = msg.C_UpdateMessagesDeleted
+		updateEnvelope.Update = bytes
+		updateEnvelope.UpdateID = 0
+		updateEnvelope.Timestamp = time.Now().Unix()
+
+		buff, _ := updateEnvelope.Marshal()
+
+		// call external handler
+		uiexec.Ctx().Exec(func() {
+			if ctrl.onUpdateMainDelegate != nil {
+				ctrl.onUpdateMainDelegate(msg.C_UpdateEnvelope, buff)
+			}
+		})
+		return
+	}
 
 	_, err = repo.PendingMessages.GetByRandomID(int64(e.RequestID))
 	if err != nil {
 		return
 	}
 	repo.PendingMessages.SaveByRealID(int64(e.RequestID), sent.MessageID)
-}
-func (ctrl *Controller) addToDeliveredMessageList(id int64) {
-	ctrl.deliveredMessagesMutex.Lock()
-	ctrl.deliveredMessages[id] = true
-	ctrl.deliveredMessagesMutex.Unlock()
 }
 
 // usersMany

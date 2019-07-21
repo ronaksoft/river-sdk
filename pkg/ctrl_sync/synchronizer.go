@@ -43,10 +43,6 @@ type Controller struct {
 	stopChannel          chan bool
 	userID               int64
 
-	// delivered Message
-	deliveredMessagesMutex sync.Mutex
-	deliveredMessages      map[int64]bool
-
 	// internal locks
 	updateDifferenceLock int32
 	syncLock             int32
@@ -89,8 +85,6 @@ func NewSyncController(config Config) *Controller {
 		msg.C_MessagesMany:      ctrl.messagesMany,
 		msg.C_GroupFull:         ctrl.groupFull,
 	}
-
-	ctrl.deliveredMessages = make(map[int64]bool, 0)
 
 	return ctrl
 }
@@ -426,17 +420,6 @@ func (ctrl *Controller) SetUserID(userID int64) {
 
 func (ctrl *Controller) GetUserID() int64 {
 	return ctrl.userID
-}
-
-func (ctrl *Controller) isDeliveredMessage(id int64) bool {
-	ctrl.deliveredMessagesMutex.Lock()
-	var ok bool
-	if _, ok = ctrl.deliveredMessages[id]; ok {
-		// cuz server sends duplicated updates again do not remove deliveredMessages
-		// delete(ctrl.deliveredMessages, id)
-	}
-	ctrl.deliveredMessagesMutex.Unlock()
-	return ok
 }
 
 // Start controller

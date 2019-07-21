@@ -32,11 +32,13 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	// used messageType to identify client & server messages on Media thingy
 	x.Message.MessageType = 1
 
+
+
 	// If sender is me, check for pending
 	if x.Message.SenderID == ctrl.userID {
 		pm, _ := repo.PendingMessages.GetByRealID(x.Message.ID)
 		if pm != nil {
-
+			ctrl.handlePendingMessage(x)
 		}
 	}
 
@@ -66,13 +68,9 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		// update users access hash
 		repo.Users.UpdateAccessHash(x.AccessHash, x.Message.PeerID, x.Message.PeerType)
 	}
-	res := make([]*msg.UpdateEnvelope, 0)
-	// Prevent calling external delegate
-	if !ctrl.isDeliveredMessage(x.Message.ID) {
-		res = append(res, u)
-	}
 
 	// handle Message's Action
+	res := []*msg.UpdateEnvelope{u}
 	ctrl.handleMessageAction(x, u, res)
 
 	// handle Message's Media
@@ -186,11 +184,8 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 			return
 		}
 	}
-	// delete pending message
-	repo.PendingMessages.Delete(pmsg.ID)
 
 	// TODO : Notify UI that the pending message delivered to server
-
 	clientUpdate := new(msg.ClientUpdatePendingMessageDelivery)
 	clientUpdate.Messages = x.Message
 	clientUpdate.PendingMessage = pmsg
@@ -294,11 +289,6 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 		zap.Int64("RandomID", x.RandomID),
 		zap.Int64("MessageID", x.MessageID),
 	)
-
-	if ctrl.isDeliveredMessage(x.MessageID) {
-		logs.Debug("updateMessageID() message is already delivered")
-		return []*msg.UpdateEnvelope{}
-	}
 
 	msgEnvelop := new(msg.MessageEnvelope)
 	msgEnvelop.Constructor = msg.C_MessageEnvelope

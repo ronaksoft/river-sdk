@@ -163,6 +163,7 @@ func (r *repoMessagesPending) GetByRealID(msgID int64) (*msg.ClientPendingMessag
 
 	return pm, nil
 }
+
 func (r *repoMessagesPending) GetByRandomID(randomID int64) (*msg.ClientPendingMessage, error) {
 
 	pm := new(msg.ClientPendingMessage)
@@ -257,7 +258,6 @@ func (r *repoMessagesPending) GetAll() []*msg.UserMessage {
 }
 
 func (r *repoMessagesPending) Delete(msgID int64) {
-
 	pm := r.GetByID(msgID)
 	if pm == nil {
 		return
@@ -266,6 +266,17 @@ func (r *repoMessagesPending) Delete(msgID int64) {
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		_ = txn.Delete(r.getKey(pm.ID))
 		_ = txn.Delete(r.getRandomKey(pm.RequestID))
+		return nil
+	})
+}
+
+func (r *repoMessagesPending) DeleteByRealID(msgID int64) {
+	pm, _ := r.GetByRealID(msgID)
+	if pm == nil {
+		return
+	}
+	_ = r.badger.Update(func(txn *badger.Txn) error {
+		_ = txn.Delete(r.getRealKey(msgID))
 		return nil
 	})
 }
