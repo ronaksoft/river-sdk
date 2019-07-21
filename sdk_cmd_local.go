@@ -35,11 +35,18 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	mUsers := domain.MInt64B{}
 	mGroups := domain.MInt64B{}
 	mMessages := domain.MInt64B{}
-	for _, d := range res.Dialogs {
-		if d.PeerType == int32(msg.PeerUser) {
-			mUsers[d.PeerID] = true
+	for idx := range res.Dialogs {
+		if res.Dialogs[idx].PeerType == int32(msg.PeerUser) {
+			mUsers[res.Dialogs[idx].PeerID] = true
 		}
-		mMessages[d.TopMessageID] = true
+		mMessages[res.Dialogs[idx].TopMessageID] = true
+		for idx2 := range pendingMessages {
+			if pendingMessages[idx2].PeerID == res.Dialogs[idx].PeerID && pendingMessages[idx2].PeerType == res.Dialogs[idx].PeerType {
+				if pendingMessages[idx2].ID < res.Dialogs[idx].TopMessageID {
+					res.Dialogs[idx].TopMessageID = pendingMessages[idx2].ID
+				}
+			}
+		}
 	}
 
 	// Load Messages
