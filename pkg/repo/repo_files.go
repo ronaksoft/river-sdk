@@ -75,7 +75,7 @@ func (r *repoFiles) DeleteStatus(msgID int64) {
 	})
 }
 
-func (r *repoFiles) UpdateFileStatus(msgID int64, state domain.RequestStatus)  {
+func (r *repoFiles) UpdateFileStatus(msgID int64, state domain.RequestStatus) {
 	fileStatus, err := r.GetStatus(msgID)
 	if err != nil {
 		return

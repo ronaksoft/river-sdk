@@ -368,7 +368,6 @@ func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
 }
 
 func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
-
 	textTerm := bleve.NewQueryStringQuery(searchPhrase)
 	searchRequest := bleve.NewSearchRequest(textTerm)
 	searchResult, _ := r.searchIndex.Search(searchRequest)
