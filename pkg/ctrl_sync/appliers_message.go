@@ -181,6 +181,7 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 		return
 	}
 	repo.PendingMessages.SaveByRealID(int64(e.RequestID), sent.MessageID)
+	logs.Info("Pending Message:: MessageSent", zap.Uint64("RequestID", e.RequestID), zap.Int64("MsgID", sent.MessageID))
 }
 
 // usersMany

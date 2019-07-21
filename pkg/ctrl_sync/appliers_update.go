@@ -38,6 +38,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	if x.Message.SenderID == ctrl.userID {
 		pm, _ := repo.PendingMessages.GetByRealID(x.Message.ID)
 		if pm != nil {
+			logs.Info("Handle Pending Message")
 			ctrl.handlePendingMessage(x)
 		}
 	}
@@ -165,9 +166,11 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 }
 func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 	pmsg, _ := repo.PendingMessages.GetByRealID(x.Message.ID)
+	logs.Info("Pending Message:: Handle")
 	if pmsg == nil {
 		return
 	}
+
 	// if it was file upload request
 	switch x.Message.MediaType {
 	case msg.MediaTypeDocument:
