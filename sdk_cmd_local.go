@@ -250,8 +250,8 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		if len(pendingMessages) > 0 {
 			messages = append(messages, pendingMessages...)
 		}
-		messagesGetHistory(out, messages, users, in.RequestID, successCB)
 
+		messagesGetHistory(out, messages, users, in.RequestID, successCB)
 	case req.MinID == 0 && req.MaxID != 0:
 		// Load more message, scroll up
 		b, bar := messageHole.GetLowerFilled(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
