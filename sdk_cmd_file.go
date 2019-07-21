@@ -445,8 +445,6 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
 			filePath, err = r.fileCtrl.DownloadThumbnail(docID, accessHash, clusterID, version)
 		}
-	case msg.MediaTypeContact:
-	case msg.MediaTypePhoto:
 	default:
 		return ""
 	}
