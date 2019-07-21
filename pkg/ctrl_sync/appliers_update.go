@@ -32,13 +32,10 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	// used messageType to identify client & server messages on Media thingy
 	x.Message.MessageType = 1
 
-
-
 	// If sender is me, check for pending
 	if x.Message.SenderID == ctrl.userID {
-		pm, _ := repo.PendingMessages.GetByRealID(x.Message.ID)
+		pm := repo.PendingMessages.GetByRealID(x.Message.ID)
 		if pm != nil {
-			logs.Info("Handle Pending Message")
 			ctrl.handlePendingMessage(x)
 		}
 	}
@@ -165,8 +162,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 	}
 }
 func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
-	pmsg, _ := repo.PendingMessages.GetByRealID(x.Message.ID)
-	logs.Info("Pending Message:: Handle")
+	pmsg := repo.PendingMessages.GetByRealID(x.Message.ID)
 	if pmsg == nil {
 		return
 	}

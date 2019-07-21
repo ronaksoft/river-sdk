@@ -149,11 +149,12 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 
 	userMessage := repo.Messages.Get(sent.MessageID)
 	if userMessage != nil {
-		pm, _ := repo.PendingMessages.GetByRealID(sent.MessageID)
+		// If we are here, it means we receive UpdateNewMessage before UpdateMessageID / MessagesSent
+		pm := repo.PendingMessages.GetByRealID(sent.MessageID)
 		if pm == nil {
 			return
 		}
-		// It means we have received the NewMessag
+		// It means we have received the NewMessage
 		update := new(msg.UpdateMessagesDeleted)
 		update.Peer = &msg.Peer{ID: pm.PeerID, Type:pm.PeerType}
 		update.MessageIDs = []int64{pm.ID}
@@ -173,6 +174,8 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 				ctrl.onUpdateMainDelegate(msg.C_UpdateEnvelope, buff)
 			}
 		})
+		repo.PendingMessages.Delete(pm.ID)
+		repo.PendingMessages.DeleteByRealID(sent.MessageID)
 		return
 	}
 
@@ -181,7 +184,6 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 		return
 	}
 	repo.PendingMessages.SaveByRealID(int64(e.RequestID), sent.MessageID)
-	logs.Info("Pending Message:: MessageSent", zap.Uint64("RequestID", e.RequestID), zap.Int64("MsgID", sent.MessageID))
 }
 
 // usersMany

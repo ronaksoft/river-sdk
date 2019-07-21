@@ -146,7 +146,7 @@ func (r *repoMessagesPending) SaveMessageMedia(msgID int64, senderID int64, msgM
 	return pm, nil
 }
 
-func (r *repoMessagesPending) GetByRealID(msgID int64) (*msg.ClientPendingMessage, error) {
+func (r *repoMessagesPending) GetByRealID(msgID int64) *msg.ClientPendingMessage {
 	pm := new(msg.ClientPendingMessage)
 	err := r.badger.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(r.getRealKey(msgID))
@@ -158,14 +158,12 @@ func (r *repoMessagesPending) GetByRealID(msgID int64) (*msg.ClientPendingMessag
 		})
 	})
 	if err != nil {
-		return nil, err
+		return nil
 	}
-
-	return pm, nil
+	return pm
 }
 
 func (r *repoMessagesPending) GetByRandomID(randomID int64) (*msg.ClientPendingMessage, error) {
-
 	pm := new(msg.ClientPendingMessage)
 	err := r.badger.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(r.getRandomKey(randomID))
@@ -271,7 +269,7 @@ func (r *repoMessagesPending) Delete(msgID int64) {
 }
 
 func (r *repoMessagesPending) DeleteByRealID(msgID int64) {
-	pm, _ := r.GetByRealID(msgID)
+	pm := r.GetByRealID(msgID)
 	if pm == nil {
 		return
 	}
@@ -338,7 +336,7 @@ func (r *repoMessagesPending) SaveByRealID(randomID, realMsgID int64) {
 	bytes, _ := pm.Marshal()
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		return txn.SetEntry(badger.NewEntry(
-			r.getRealKey(pm.ID), bytes),
+			r.getRealKey(realMsgID), bytes),
 		)
 	})
 
