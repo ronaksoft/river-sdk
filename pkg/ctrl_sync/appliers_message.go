@@ -254,10 +254,10 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 		zap.Int64("GroupID", u.Group.ID),
 	)
 
-	// Save Group
+	// Save GroupSearch
 	repo.Groups.Save(u.Group)
 
-	// Save Group Members
+	// Save GroupSearch Members
 	for _, v := range u.Participants {
 		repo.Groups.SaveParticipant(u.Group.ID, v)
 	}

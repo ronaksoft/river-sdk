@@ -7,7 +7,9 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/search/query"
 	"github.com/dgraph-io/badger"
+	"strings"
 )
 
 const (
@@ -329,8 +331,15 @@ func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) 
 }
 
 func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*msg.PhoneContact) {
-	textTerm := bleve.NewQueryStringQuery(searchPhrase)
-	searchRequest := bleve.NewSearchRequest(textTerm)
+	t1 := bleve.NewTermQuery("contact")
+	t1.SetField("type")
+	terms := strings.Fields(searchPhrase)
+	qs := make([]query.Query, 0)
+	for _, term := range terms {
+		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
+	}
+	t2 := bleve.NewDisjunctionQuery(qs...)
+	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
 	searchResult, _ := r.searchIndex.Search(searchRequest)
 	contactUsers := make([]*msg.ContactUser, 0, 100)
 	phoneContacts := make([]*msg.PhoneContact, 0, 100)
@@ -350,8 +359,15 @@ func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*
 }
 
 func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
-	textTerm := bleve.NewQueryStringQuery(searchPhrase)
-	searchRequest := bleve.NewSearchRequest(textTerm)
+	t1 := bleve.NewTermQuery("user")
+	t1.SetField("type")
+	terms := strings.Fields(searchPhrase)
+	qs := make([]query.Query, 0)
+	for _, term := range terms {
+		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
+	}
+	t2 := bleve.NewDisjunctionQuery(qs...)
+	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
 	searchResult, _ := r.searchIndex.Search(searchRequest)
 	contactUsers := make([]*msg.ContactUser, 0, 100)
 	for _, hit := range searchResult.Hits {
@@ -368,8 +384,15 @@ func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
 }
 
 func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
-	textTerm := bleve.NewQueryStringQuery(searchPhrase)
-	searchRequest := bleve.NewSearchRequest(textTerm)
+	t1 := bleve.NewTermQuery("user")
+	t1.SetField("type")
+	terms := strings.Fields(searchPhrase)
+	qs := make([]query.Query, 0)
+	for _, term := range terms {
+		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
+	}
+	t2 := bleve.NewDisjunctionQuery(qs...)
+	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
 	searchResult, _ := r.searchIndex.Search(searchRequest)
 	users := make([]*msg.User, 0, 100)
 	for _, hit := range searchResult.Hits {

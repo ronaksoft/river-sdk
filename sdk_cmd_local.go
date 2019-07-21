@@ -895,7 +895,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	}
 
 	res := new(msg.GroupFull)
-	// Group
+	// GroupSearch
 	group := repo.Groups.Get(req.GroupID)
 	if group == nil {
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)

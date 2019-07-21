@@ -125,6 +125,7 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 	textFieldMapping := bleve.NewTextFieldMapping()
 	textFieldMapping.Analyzer = en.AnalyzerName
 	textFieldMapping.Store = false
+	textFieldMapping.IncludeTermVectors = true
 	keywordFieldMapping := bleve.NewTextFieldMapping()
 	keywordFieldMapping.Analyzer = keyword.Name
 
@@ -140,7 +141,7 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 	userMapping.AddFieldMappingsAt("Username", keywordFieldMapping)
 	userMapping.AddFieldMappingsAt("Phone", keywordFieldMapping)
 
-	// Group
+	// GroupSearch
 	groupMapping := bleve.NewDocumentStaticMapping()
 	groupMapping.AddFieldMappingsAt("Title", textFieldMapping)
 

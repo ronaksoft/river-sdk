@@ -6,6 +6,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/search/query"
 	"github.com/dgraph-io/badger"
 	"sort"
 	"strings"
@@ -348,7 +349,15 @@ func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, err
 }
 
 func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
-	searchRequest := bleve.NewSearchRequest(bleve.NewQueryStringQuery(text))
+	t1 := bleve.NewTermQuery("msg")
+	t1.SetField("type")
+	terms := strings.Fields(text)
+	qs := make([]query.Query, 0)
+	for _, term := range terms {
+		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
+	}
+	t2 := bleve.NewDisjunctionQuery(qs...)
+	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
 	searchResult, _ := r.searchIndex.Search(searchRequest)
 	userMessages := make([]*msg.UserMessage, 0, 100)
 	for _, hit := range searchResult.Hits {
@@ -361,7 +370,17 @@ func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
 }
 
 func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.UserMessage {
-	searchRequest := bleve.NewSearchRequest(bleve.NewQueryStringQuery(text))
+	t1 := bleve.NewTermQuery("msg")
+	t1.SetField("type")
+	terms := strings.Fields(text)
+	qs := make([]query.Query, 0)
+	for _, term := range terms {
+		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
+	}
+	t2 := bleve.NewDisjunctionQuery(qs...)
+	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", peerID))
+	t3.SetField("peer_id")
+	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3))
 	searchResult, _ := r.searchIndex.Search(searchRequest)
 	userMessages := make([]*msg.UserMessage, 0, 100)
 	for _, hit := range searchResult.Hits {

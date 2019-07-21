@@ -6,7 +6,9 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/search/query"
 	"github.com/dgraph-io/badger"
+	"strings"
 )
 
 const (
@@ -135,7 +137,7 @@ func (r *repoGroups) Save(group *msg.Group) {
 		))
 	})
 
-	_ = r.searchIndex.Index(ronak.ByteToStr(groupKey), Group{
+	_ = r.searchIndex.Index(ronak.ByteToStr(groupKey), GroupSearch{
 		Type:   "group",
 		Title:  group.Title,
 		PeerID: group.ID,
@@ -335,8 +337,15 @@ func (r *repoGroups) UpdatePhoto(groupPhoto *msg.UpdateGroupPhoto) {
 }
 
 func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
-	textTerm := bleve.NewQueryStringQuery(searchPhrase)
-	searchRequest := bleve.NewSearchRequest(textTerm)
+	t1 := bleve.NewTermQuery("group")
+	t1.SetField("type")
+	terms := strings.Fields(searchPhrase)
+	qs := make([]query.Query, 0)
+	for _, term := range terms {
+		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
+	}
+	t2 := bleve.NewDisjunctionQuery(qs...)
+	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
 	searchResult, _ := r.searchIndex.Search(searchRequest)
 	groups := make([]*msg.Group, 0, 100)
 	for _, hit := range searchResult.Hits {

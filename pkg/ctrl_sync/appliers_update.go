@@ -99,7 +99,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 
 		repo.Groups.DeleteMemberMany(x.Message.PeerID, act.UserIDs)
 
-		// Check if user left (deleted him/her self from group) remove its Group, Dialog and its MessagesPending
+		// Check if user left (deleted him/her self from group) remove its GroupSearch, Dialog and its MessagesPending
 		selfUserID := ctrl.connInfo.PickupUserID()
 		userLeft := false
 		for _, v := range act.UserIDs {
@@ -109,7 +109,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			}
 		}
 		if userLeft {
-			// Delete Group		NOT REQUIRED
+			// Delete GroupSearch		NOT REQUIRED
 			// Delete Dialog	NOT REQUIRED
 			// Delete PendingMessage
 			deletedMsgs := repo.PendingMessages.DeletePeerAllMessages(x.Message.PeerID, x.Message.PeerType)
@@ -150,7 +150,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			// Delete Dialog
 			repo.Dialogs.Delete(x.Message.PeerID, x.Message.PeerType)
 
-			// Delete Group
+			// Delete GroupSearch
 			repo.Groups.Delete(x.Message.PeerID)
 		} else {
 			// get dialog and create first hole
