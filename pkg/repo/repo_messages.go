@@ -349,11 +349,10 @@ func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
 	searchResult, _ := r.searchIndex.Search(searchRequest)
 	userMessages := make([]*msg.UserMessage, 0, 100)
 	for _, hit := range searchResult.Hits {
-		userMessage := r.Get(ronak.StrToInt64(hit.Fields["Body"].(string)))
+		userMessage := r.Get(ronak.StrToInt64(hit.ID))
 		if userMessage != nil {
 			userMessages = append(userMessages, userMessage)
 		}
-
 	}
 	return userMessages
 }
@@ -363,11 +362,10 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.User
 	searchResult, _ := r.searchIndex.Search(searchRequest)
 	userMessages := make([]*msg.UserMessage, 0, 100)
 	for _, hit := range searchResult.Hits {
-		userMessage := r.Get(ronak.StrToInt64(hit.Fields["Body"].(string)))
+		userMessage := r.Get(ronak.StrToInt64(hit.ID))
 		if userMessage != nil {
 			userMessages = append(userMessages, userMessage)
 		}
-
 	}
 	return userMessages
 }
