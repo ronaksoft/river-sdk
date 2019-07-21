@@ -156,7 +156,7 @@ func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
 		}
 		// It means we have received the NewMessage
 		update := new(msg.UpdateMessagesDeleted)
-		update.Peer = &msg.Peer{ID: pm.PeerID, Type:pm.PeerType}
+		update.Peer = &msg.Peer{ID: pm.PeerID, Type: pm.PeerType}
 		update.MessageIDs = []int64{pm.ID}
 		bytes, _ := update.Marshal()
 

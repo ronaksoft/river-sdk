@@ -46,16 +46,16 @@ func TestRepoDialogs(t *testing.T) {
 
 func TestRepoMessagesExtra(t *testing.T) {
 	repo.MessagesExtra.SaveScrollID(11, 1, 101)
-	x := repo.MessagesExtra.GetScrollID(11,1)
+	x := repo.MessagesExtra.GetScrollID(11, 1)
 	fmt.Println(x)
 }
 
 func TestRepoFiles(t *testing.T) {
 	fs := &dto.FilesStatus{
-		MessageID: 1,
-		FileID: 10,
-		AccessHash: 11,
-		ClusterID: 2,
+		MessageID:     1,
+		FileID:        10,
+		AccessHash:    11,
+		ClusterID:     2,
 		RequestStatus: 1,
 	}
 	repo.Files.SaveStatus(fs)
@@ -68,7 +68,6 @@ func TestRepoFiles(t *testing.T) {
 
 	fs.RequestStatus = 2
 	repo.Files.SaveStatus(fs)
-
 
 	fs2, err = repo.Files.GetStatus(1)
 	if err != nil {

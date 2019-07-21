@@ -334,6 +334,7 @@ func (r *repoMessagesPending) SaveByRealID(randomID, realMsgID int64) {
 		)
 	})
 }
+
 const (
 	_ClientSendMessageMediaType       = -1
 	_ClientSendMessageContactType     = -2

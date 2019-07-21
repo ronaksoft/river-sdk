@@ -413,7 +413,6 @@ func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
 		}
 	}
 
-
 	if theFile != nil {
 		theFile.RequestStatus = domain.RequestStatusInProgress
 		ctrl.AddToQueue(theFile)
