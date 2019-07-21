@@ -103,6 +103,7 @@ func (r *repoGroups) updateParticipantsCount(groupID int64) {
 	_ = r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = r.getPrefix(groupID)
+		opts.PrefetchValues = false
 		it := txn.NewIterator(opts)
 		for it.Seek(r.getGroupParticipantKey(groupID, 0)); it.ValidForPrefix(opts.Prefix); it.Next() {
 			count++

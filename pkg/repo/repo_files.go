@@ -32,10 +32,10 @@ func (r *repoFiles) SaveStatus(fs *dto.FilesStatus) {
 }
 
 func (r *repoFiles) GetAllStatuses() []dto.FilesStatus {
-
 	dtos := make([]dto.FilesStatus, 0)
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		opt := badger.DefaultIteratorOptions
+		opt.PrefetchValues = false
 		opt.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixFileStatus))
 		it := txn.NewIterator(opt)
 		for it.Rewind(); it.Valid(); it.Next() {
@@ -90,9 +90,9 @@ func (r *repoFiles) GetSharedMedia(peerID int64, peerType int32, mediaType int32
 	userMessages := make([]*msg.UserMessage, 0, limit)
 	_ = r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
 		opts.Prefix = Messages.getPrefix(peerID, peerType)
 		opts.Reverse = true
-
 		it := txn.NewIterator(opts)
 		for it.Seek(Messages.getMessageKey(peerID, peerType, 1<<31)); it.ValidForPrefix(opts.Prefix); it.Next() {
 			if limit--; limit < 0 {
