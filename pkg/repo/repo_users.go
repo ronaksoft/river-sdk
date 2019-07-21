@@ -6,6 +6,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"github.com/blevesearch/bleve"
 	"github.com/dgraph-io/badger"
 )
 
@@ -330,56 +331,56 @@ func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) 
 
 func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*msg.PhoneContact) {
 
-	// textTerm := bleve.NewQueryStringQuery(searchPhrase)
-	// searchRequest := bleve.NewSearchRequest(textTerm)
-	// searchResult, _ := r.searchIndex.Search(searchRequest)
+	textTerm := bleve.NewQueryStringQuery(searchPhrase)
+	searchRequest := bleve.NewSearchRequest(textTerm)
+	searchResult, _ := r.searchIndex.Search(searchRequest)
 	contactUsers := make([]*msg.ContactUser, 0, 100)
 	phoneContacts := make([]*msg.PhoneContact, 0, 100)
-	// for _, hit := range searchResult.Hits {
-	// 	contactUser := r.getContactByKey(ronak.StrToByte(hit.ID))
-	// 	if contactUser != nil {
-	// 		phoneContacts = append(phoneContacts, &msg.PhoneContact{
-	// 			ClientID:  contactUser.ClientID,
-	// 			FirstName: contactUser.FirstName,
-	// 			LastName:  contactUser.LastName,
-	// 			Phone:     contactUser.Phone,
-	// 		})
-	// 		contactUsers = append(contactUsers, contactUser)
-	// 	}
-	// }
+	for _, hit := range searchResult.Hits {
+		contactUser := r.getContactByKey(ronak.StrToByte(hit.ID))
+		if contactUser != nil {
+			phoneContacts = append(phoneContacts, &msg.PhoneContact{
+				ClientID:  contactUser.ClientID,
+				FirstName: contactUser.FirstName,
+				LastName:  contactUser.LastName,
+				Phone:     contactUser.Phone,
+			})
+			contactUsers = append(contactUsers, contactUser)
+		}
+	}
 	return contactUsers, phoneContacts
 }
 
 func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
 
-	// textTerm := bleve.NewQueryStringQuery(searchPhrase)
-	// searchRequest := bleve.NewSearchRequest(textTerm)
-	// searchResult, _ := r.searchIndex.Search(searchRequest)
+	textTerm := bleve.NewQueryStringQuery(searchPhrase)
+	searchRequest := bleve.NewSearchRequest(textTerm)
+	searchResult, _ := r.searchIndex.Search(searchRequest)
 	contactUsers := make([]*msg.ContactUser, 0, 100)
-	// for _, hit := range searchResult.Hits {
-	// 	user := r.getUserByKey(ronak.StrToByte(hit.ID))
-	// 	if user != nil {
-	// 		contactUsers = append(contactUsers, &msg.ContactUser{
-	// 			FirstName: user.FirstName,
-	// 			LastName:  user.LastName,
-	// 			Username:  user.Username,
-	// 		})
-	// 	}
-	// }
+	for _, hit := range searchResult.Hits {
+		user := r.getUserByKey(ronak.StrToByte(hit.ID))
+		if user != nil {
+			contactUsers = append(contactUsers, &msg.ContactUser{
+				FirstName: user.FirstName,
+				LastName:  user.LastName,
+				Username:  user.Username,
+			})
+		}
+	}
 	return contactUsers
 }
 
 func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 
-	// textTerm := bleve.NewQueryStringQuery(searchPhrase)
-	// searchRequest := bleve.NewSearchRequest(textTerm)
-	// searchResult, _ := r.searchIndex.Search(searchRequest)
+	textTerm := bleve.NewQueryStringQuery(searchPhrase)
+	searchRequest := bleve.NewSearchRequest(textTerm)
+	searchResult, _ := r.searchIndex.Search(searchRequest)
 	users := make([]*msg.User, 0, 100)
-	// for _, hit := range searchResult.Hits {
-	// 	user := r.getUserByKey(ronak.StrToByte(hit.ID))
-	// 	if user != nil {
-	// 		users = append(users, user)
-	// 	}
-	// }
+	for _, hit := range searchResult.Hits {
+		user := r.getUserByKey(ronak.StrToByte(hit.ID))
+		if user != nil {
+			users = append(users, user)
+		}
+	}
 	return users
 }

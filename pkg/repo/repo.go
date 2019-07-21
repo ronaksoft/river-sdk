@@ -3,11 +3,10 @@ package repo
 import (
 	"fmt"
 	"github.com/allegro/bigcache"
-	// "github.com/blevesearch/bleve"
-	// "github.com/blevesearch/bleve/analysis/analyzer/keyword"
-	// "github.com/blevesearch/bleve/analysis/lang/en"
-	// "github.com/blevesearch/bleve/mapping"
-	// "github.com/blevesearch/blevex/detectlang"
+	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
+	"github.com/blevesearch/bleve/analysis/lang/en"
+	"github.com/blevesearch/bleve/mapping"
 	"github.com/tidwall/buntdb"
 	"os"
 	"strings"
@@ -46,7 +45,7 @@ type Context struct {
 type repository struct {
 	badger      *badger.DB
 	bunt        *buntdb.DB
-	// searchIndex bleve.Index
+	searchIndex bleve.Index
 }
 
 // create tables
@@ -101,68 +100,68 @@ func repoSetDB(dbPath string) error {
 		return tx.CreateIndex(indexDialogs, fmt.Sprintf("%s.*", prefixDialogs), buntdb.IndexBinary)
 	})
 
-	// _ = os.MkdirAll(fmt.Sprintf("%s", strings.TrimRight(dbPath, "/")), os.ModePerm)
-	// r.searchIndex, repoLastError = bleve.Open(fmt.Sprintf("%s/bleve/", strings.TrimRight(dbPath, "/")))
-	// if repoLastError == bleve.ErrorIndexPathDoesNotExist {
-	// 	repoLastError = nil
-	// 	// create a mapping
-	// 	indexMapping, err := buildIndexMapping()
-	// 	if err != nil {
-	// 		logs.Fatal("Build Index", zap.Error(err))
-	// 	}
-	// 	r.searchIndex, err = bleve.New(fmt.Sprintf("%s/bleve", strings.TrimRight(dbPath, "/")), indexMapping)
-	// 	if err != nil {
-	// 		logs.Fatal("SearchIndex", zap.Error(err))
-	// 	}
-	// } else if repoLastError != nil {
-	// 	logs.Fatal("Another", zap.Error(repoLastError))
-	// }
+	_ = os.MkdirAll(fmt.Sprintf("%s", strings.TrimRight(dbPath, "/")), os.ModePerm)
+	r.searchIndex, repoLastError = bleve.Open(fmt.Sprintf("%s/bleve/", strings.TrimRight(dbPath, "/")))
+	if repoLastError == bleve.ErrorIndexPathDoesNotExist {
+		repoLastError = nil
+		// create a mapping
+		indexMapping, err := buildIndexMapping()
+		if err != nil {
+			logs.Fatal("Build Index", zap.Error(err))
+		}
+		r.searchIndex, err = bleve.New(fmt.Sprintf("%s/bleve", strings.TrimRight(dbPath, "/")), indexMapping)
+		if err != nil {
+			logs.Fatal("SearchIndex", zap.Error(err))
+		}
+	} else if repoLastError != nil {
+		logs.Fatal("Another", zap.Error(repoLastError))
+	}
 
 	return r.initDB()
 }
 
-// func buildIndexMapping() (mapping.IndexMapping, error) {
-// 	// a generic reusable mapping for english text
-// 	textFieldMapping := bleve.NewTextFieldMapping()
-// 	textFieldMapping.Analyzer = detectlang.AnalyzerName
-// 	textFieldMapping.Store = false
-// 	keywordFieldMapping := bleve.NewTextFieldMapping()
-// 	keywordFieldMapping.Analyzer = keyword.Name
-//
-// 	// Message
-// 	messageMapping := bleve.NewDocumentStaticMapping()
-// 	messageMapping.AddFieldMappingsAt("Body", textFieldMapping)
-// 	messageMapping.AddFieldMappingsAt("PeerID", keywordFieldMapping)
-//
-// 	// User
-// 	userMapping := bleve.NewDocumentStaticMapping()
-// 	userMapping.AddFieldMappingsAt("FirstName", textFieldMapping)
-// 	userMapping.AddFieldMappingsAt("LastName", textFieldMapping)
-// 	userMapping.AddFieldMappingsAt("Username", keywordFieldMapping)
-// 	userMapping.AddFieldMappingsAt("Phone", keywordFieldMapping)
-//
-// 	// Group
-// 	groupMapping := bleve.NewDocumentStaticMapping()
-// 	groupMapping.AddFieldMappingsAt("Title", textFieldMapping)
-//
-// 	// Contact
-// 	contactMapping := bleve.NewDocumentStaticMapping()
-// 	contactMapping.AddFieldMappingsAt("FirstName", textFieldMapping)
-// 	contactMapping.AddFieldMappingsAt("LastName", textFieldMapping)
-// 	contactMapping.AddFieldMappingsAt("Username", keywordFieldMapping)
-// 	contactMapping.AddFieldMappingsAt("Phone", keywordFieldMapping)
-//
-// 	indexMapping := bleve.NewIndexMapping()
-// 	indexMapping.AddDocumentMapping("msg", messageMapping)
-// 	indexMapping.AddDocumentMapping("user", userMapping)
-// 	indexMapping.AddDocumentMapping("group", groupMapping)
-// 	indexMapping.AddDocumentMapping("contact", contactMapping)
-//
-// 	indexMapping.TypeField = "type"
-// 	indexMapping.DefaultAnalyzer = en.AnalyzerName
-//
-// 	return indexMapping, nil
-// }
+func buildIndexMapping() (mapping.IndexMapping, error) {
+	// a generic reusable mapping for english text
+	textFieldMapping := bleve.NewTextFieldMapping()
+	textFieldMapping.Analyzer = en.AnalyzerName
+	textFieldMapping.Store = false
+	keywordFieldMapping := bleve.NewTextFieldMapping()
+	keywordFieldMapping.Analyzer = keyword.Name
+
+	// Message
+	messageMapping := bleve.NewDocumentStaticMapping()
+	messageMapping.AddFieldMappingsAt("Body", textFieldMapping)
+	messageMapping.AddFieldMappingsAt("PeerID", keywordFieldMapping)
+
+	// User
+	userMapping := bleve.NewDocumentStaticMapping()
+	userMapping.AddFieldMappingsAt("FirstName", textFieldMapping)
+	userMapping.AddFieldMappingsAt("LastName", textFieldMapping)
+	userMapping.AddFieldMappingsAt("Username", keywordFieldMapping)
+	userMapping.AddFieldMappingsAt("Phone", keywordFieldMapping)
+
+	// Group
+	groupMapping := bleve.NewDocumentStaticMapping()
+	groupMapping.AddFieldMappingsAt("Title", textFieldMapping)
+
+	// Contact
+	contactMapping := bleve.NewDocumentStaticMapping()
+	contactMapping.AddFieldMappingsAt("FirstName", textFieldMapping)
+	contactMapping.AddFieldMappingsAt("LastName", textFieldMapping)
+	contactMapping.AddFieldMappingsAt("Username", keywordFieldMapping)
+	contactMapping.AddFieldMappingsAt("Phone", keywordFieldMapping)
+
+	indexMapping := bleve.NewIndexMapping()
+	indexMapping.AddDocumentMapping("msg", messageMapping)
+	indexMapping.AddDocumentMapping("user", userMapping)
+	indexMapping.AddDocumentMapping("group", groupMapping)
+	indexMapping.AddDocumentMapping("contact", contactMapping)
+
+	indexMapping.TypeField = "type"
+	indexMapping.DefaultAnalyzer = en.AnalyzerName
+
+	return indexMapping, nil
+}
 
 // ReInitiateDatabase runs auto migrate
 func ReInitiateDatabase() error {
@@ -178,7 +177,7 @@ func Close() error {
 
 	_ = r.bunt.Close()
 	_ = r.badger.Close()
-	// _ = r.searchIndex.Close()
+	_ = r.searchIndex.Close()
 	r = nil
 	ctx = nil
 	logs.Debug("Repo Stopped")
