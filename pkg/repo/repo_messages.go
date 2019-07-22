@@ -391,3 +391,38 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.User
 	}
 	return userMessages
 }
+
+func (r *repoMessages) GetSharedMedia(peerID int64, peerType int32, mediaType int32) ([]*msg.UserMessage, error) {
+	limit := 50
+	userMessages := make([]*msg.UserMessage, 0, limit)
+	_ = r.badger.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		opts.Prefix = r.getPrefix(peerID, peerType)
+		opts.Reverse = true
+		it := txn.NewIterator(opts)
+		for it.Seek(Messages.getMessageKey(peerID, peerType, 1<<31)); it.ValidForPrefix(opts.Prefix); it.Next() {
+			if limit--; limit < 0 {
+				break
+			}
+			if it.Item().UserMeta() == byte(mediaType) {
+				_ = it.Item().Value(func(val []byte) error {
+					userMessage := new(msg.UserMessage)
+					err := userMessage.Unmarshal(val)
+					if err != nil {
+						return err
+					}
+					if userMessage.MediaType == msg.MediaType(mediaType) {
+						userMessages = append(userMessages, userMessage)
+					}
+					return nil
+				})
+			}
+		}
+		it.Close()
+		return nil
+	})
+
+	return userMessages, nil
+
+}

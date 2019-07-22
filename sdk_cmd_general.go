@@ -287,7 +287,7 @@ func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, de
 	defer func() {
 		mon.FunctionResponseTime("GetSharedMedia", time.Now().Sub(startTime))
 	}()
-	msgs, err := repo.Files.GetSharedMedia(peerID, peerType, mediaType)
+	msgs, err := repo.Messages.GetSharedMedia(peerID, peerType, mediaType)
 	if err != nil {
 		out := new(msg.MessageEnvelope)
 		res := new(msg.Error)
