@@ -36,6 +36,8 @@ github.com/blevesearch/go-porterstemmer v1.0.2 h1:qe7n69gBd1OLY5sHKnxQHIbzn0LNJA
 github.com/blevesearch/go-porterstemmer v1.0.2/go.mod h1:haWQqFT3RdOGz7PJuM3or/pWNJS1pKkoZJWCkWu0DVA=
 github.com/blevesearch/segment v0.0.0-20160915185041-762005e7a34f h1:kqbi9lqXLLs+zfWlgo1PIiRQ86n33K1JKotjj4rSYOg=
 github.com/blevesearch/segment v0.0.0-20160915185041-762005e7a34f/go.mod h1:IInt5XRvpiGE09KOk9mmCMLjHhydIhNPKPPFLFBB7L8=
+github.com/blevesearch/snowballstem v0.0.0-20180110192139-26b06a2c243d h1:iPCfLXcTYDotqO1atEOQyoRDwlGaZVuMI4wSaKQlI2I=
+github.com/blevesearch/snowballstem v0.0.0-20180110192139-26b06a2c243d/go.mod h1:cdytUvf6FKWA9NpXJihYdZq8TN2AiQ5HOS0UZUz0C9g=
 github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 h1:DDGfHa7BWjL4YnC6+E63dPcxHo2sUxDIu8g3QgEJdRY=
 github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869/go.mod h1:Ekp36dRnpXw/yCqJaO+ZrUyxD+3VXMFFr56k5XYrpB4=
 github.com/boltdb/bolt v1.3.1 h1:JQmyP4ZBrce+ZQu0dY660FMfatumYDLun9hBCUVIkF4=
@@ -54,6 +56,10 @@ github.com/coreos/go-etcd v2.0.0+incompatible/go.mod h1:Jez6KQU2B/sWsbdaef3ED8Nz
 github.com/coreos/go-semver v0.2.0/go.mod h1:nnelYz7RCh+5ahJtPPxZlU+153eP4D4r3EedlOD2RNk=
 github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
 github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f/go.mod h1:E3G3o1h8I7cfcXa63jLwjI0eiQQMgzzUDFVpN/nH/eA=
+github.com/couchbase/ghistogram v0.0.0 h1:NFnZziKRgasWhNaIB4h3C4sTVV86+mY4I37goTZh9yM=
+github.com/couchbase/ghistogram v0.0.0/go.mod h1:s1Jhy76zqfEecpNWJfWUiKZookAFaiGOEoyzgHt9i7k=
+github.com/couchbase/moss v0.0.0-20190322010551-a0cae174c498 h1:b8rnI4JWbakUNfpmYDxGobTY/jTuF5zHLw0ID75yzuM=
+github.com/couchbase/moss v0.0.0-20190322010551-a0cae174c498/go.mod h1:mGI1GcdgmlL3Imff7Z+OjkkQ8qSKr443BuZ+qFgWbPQ=
 github.com/couchbase/vellum v0.0.0-20190626091642-41f2deade2cf h1:B4yFDSyYolVT4DsKpztKYPeme6/kRdLV7iPZmAv2tEE=
 github.com/couchbase/vellum v0.0.0-20190626091642-41f2deade2cf/go.mod h1:prYTC8EgTu3gwbqJihkud9zRXISvyulAplQ6exdCo1g=
 github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwcJI5acqYI6dE=

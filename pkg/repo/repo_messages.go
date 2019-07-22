@@ -302,8 +302,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 	return
 }
 
-func (r *repoMessages) DeleteDialogMessage(peerID int64, peerType int32, msgID int64) error {
-
+func (r *repoMessages) DeleteDialogMessage(userID int64, peerID int64, peerType int32, msgID int64) error {
 	// 1. Delete the Message
 	err := r.badger.Update(func(txn *badger.Txn) error {
 		// delete from messages
@@ -326,6 +325,8 @@ func (r *repoMessages) DeleteDialogMessage(peerID int64, peerType int32, msgID i
 	if dialog.TopMessageID == msgID {
 		Dialogs.updateTopMessageID(peerID, peerType)
 	}
+
+	dialog.UnreadCount, dialog.MentionedCount = Dialogs.countUnread(dialog.PeerID, dialog.PeerType, userID, dialog.ReadInboxMaxID)
 	return err
 }
 

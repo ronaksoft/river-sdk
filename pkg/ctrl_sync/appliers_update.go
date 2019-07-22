@@ -139,7 +139,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			logs.Error("updateNewMessage() -> MessageActionClearHistory Failed to Parse", zap.Error(err))
 		}
 
-		err = repo.Messages.DeleteDialogMessage(x.Message.PeerID, x.Message.PeerType, act.MaxID)
+		err = repo.Messages.DeleteDialogMessage(ctrl.userID, x.Message.PeerID, x.Message.PeerType, act.MaxID)
 		if err != nil {
 			logs.Error("updateNewMessage() -> DeleteDialogMessage() Failed", zap.Error(err))
 		}
@@ -358,7 +358,7 @@ func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) []*msg.Upda
 	_ = x.Unmarshal(u.Update)
 
 	for _, msgID := range x.MessageIDs {
-		_ = repo.Messages.DeleteDialogMessage(x.Peer.ID, x.Peer.Type, msgID)
+		_ = repo.Messages.DeleteDialogMessage(ctrl.userID, x.Peer.ID, x.Peer.Type, msgID)
 	}
 
 	update := new(msg.ClientUpdateMessagesDeleted)

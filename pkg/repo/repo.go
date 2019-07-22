@@ -173,7 +173,6 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 func ReInitiateDatabase() error {
 	err := r.badger.DropAll()
 	err = r.initDB()
-
 	return err
 }
 
