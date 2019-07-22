@@ -7,6 +7,7 @@ import (
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/analysis/lang/en"
 	"github.com/blevesearch/bleve/mapping"
+	"github.com/dgraph-io/badger/options"
 	"github.com/tidwall/buntdb"
 	"os"
 	"strings"
@@ -81,9 +82,13 @@ func InitRepo(dbPath string) error {
 func repoSetDB(dbPath string) error {
 	r = new(repository)
 	_ = os.MkdirAll(fmt.Sprintf("%s/badger", strings.TrimRight(dbPath, "/")), os.ModePerm)
-	r.badger, repoLastError = badger.Open(badger.DefaultOptions(fmt.Sprintf("%s/badger", strings.TrimRight(dbPath, "/"))).WithLogger(nil))
+	badgerOpts := badger.DefaultOptions(fmt.Sprintf("%s/badger", strings.TrimRight(dbPath, "/"))).
+		WithLogger(nil).
+		WithTableLoadingMode(options.LoadToRAM).
+		WithValueLogLoadingMode(options.FileIO)
+	r.badger, repoLastError = badger.Open(badgerOpts)
 	if repoLastError != nil {
-		logs.Debug("Context::repoSetDB()->badger Open()",
+		logs.Info("Context::repoSetDB()->badger Open()",
 			zap.String("Error", repoLastError.Error()),
 		)
 		return repoLastError
@@ -91,7 +96,7 @@ func repoSetDB(dbPath string) error {
 	_ = os.MkdirAll(fmt.Sprintf("%s/bunty", strings.TrimRight(dbPath, "/")), os.ModePerm)
 	r.bunt, repoLastError = buntdb.Open(fmt.Sprintf("%s/bunty/dialogs.db", strings.TrimRight(dbPath, "/")))
 	if repoLastError != nil {
-		logs.Debug("Context::repoSetDB()->bunt Open()",
+		logs.Info("Context::repoSetDB()->bunt Open()",
 			zap.String("Error", repoLastError.Error()),
 		)
 		return repoLastError
