@@ -311,7 +311,24 @@ func messagesGetHistory(out *msg.MessageEnvelope, messages []*msg.UserMessage, u
 	res := new(msg.MessagesMany)
 	res.Messages = messages
 	res.Users = users
+
+	// for idx := range messages {
+	// 	switch messages[idx].MediaType {
+	// 	case msg.MediaTypeDocument:
+	// 		doc := new(msg.MediaDocument)
+	// 		_ = doc.Unmarshal(messages[idx].Media)
+	// 		filePath := fileCtrl.GetThumbnailPath(doc.Doc.ID, doc.Doc.ClusterID)
+	// 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+	// 			filePath = ""
+	// 		}
+	// 		if filePath == "" {
+	// 			_, _ = fileCtrl.DownloadThumbnail(doc.Doc.ID, doc.Doc.AccessHash, doc.Doc.ClusterID, 0)
+	// 		}
+	// 	}
+	//
+	// }
 	// result
+
 	out.RequestID = requestID
 	out.Constructor = msg.C_MessagesMany
 	out.Message, _ = res.Marshal()

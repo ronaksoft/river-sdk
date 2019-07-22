@@ -160,7 +160,6 @@ func (r *repoMessages) Save(message *msg.UserMessage) error {
 	messageBytes, _ := message.Marshal()
 	err := r.badger.Update(func(txn *badger.Txn) error {
 		// 1. Write Message
-
 		err := txn.SetEntry(
 			badger.NewEntry(
 				r.getMessageKey(message.PeerID, message.PeerType, message.ID),

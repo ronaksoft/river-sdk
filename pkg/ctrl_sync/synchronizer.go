@@ -614,9 +614,14 @@ func (ctrl *Controller) extractMessagesMedia(messages ...*msg.UserMessage) {
 			}
 			t := mediaDoc.Doc.Thumbnail
 			if t != nil && t.FileID != 0 {
-				_, _ = ctrl.fileCtrl.DownloadThumbnail(t.FileID, t.AccessHash, t.ClusterID, 0)
+				filePath := fileCtrl.GetThumbnailPath(t.FileID, t.ClusterID)
+				if _, err = os.Stat(filePath); os.IsNotExist(err) {
+					filePath = ""
+				}
+				if filePath == "" {
+					_, _ = ctrl.fileCtrl.DownloadThumbnail(t.FileID, t.AccessHash, t.ClusterID, 0)
+				}
 			}
-
 		case msg.MediaTypeContact:
 		default:
 		}

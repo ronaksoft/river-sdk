@@ -213,9 +213,6 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 	repo.Users.SaveMany(u.Users)
 	repo.Groups.SaveMany(u.Groups)
 
-	// handle Media message
-	ctrl.extractMessagesMedia(u.Messages...)
-
 	minID := int64(0)
 	maxID := int64(0)
 	for _, v := range u.Messages {
@@ -227,6 +224,9 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 			maxID = v.ID
 		}
 	}
+
+	// handle Media message
+	ctrl.extractMessagesMedia(u.Messages...)
 
 	logs.Info("SyncController::messagesMany",
 		zap.Int("Messages", len(u.Messages)),

@@ -198,3 +198,10 @@ func GC() {
 	_ = r.bunt.Shrink()
 	_ = r.badger.RunValueLogGC(0.5)
 }
+
+func WarnOnErr(guideTxt string, err error, fields ...zap.Field) {
+	if err != nil {
+		fields = append(fields, zap.Error(err))
+		logs.Warn(guideTxt, fields...)
+	}
+}
