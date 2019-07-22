@@ -134,15 +134,11 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 	// this will be handled by upper level on UpdateContainer
 	case domain.MessageActionClearHistory:
 		act := new(msg.MessageActionClearHistory)
-		err := act.Unmarshal(x.Message.MessageActionData)
-		if err != nil {
-			logs.Error("updateNewMessage() -> MessageActionClearHistory Failed to Parse", zap.Error(err))
-		}
+		_ = act.Unmarshal(x.Message.MessageActionData)
 
-		err = repo.Messages.DeleteDialogMessage(ctrl.userID, x.Message.PeerID, x.Message.PeerType, act.MaxID)
-		if err != nil {
-			logs.Error("updateNewMessage() -> DeleteDialogMessage() Failed", zap.Error(err))
-		}
+		// 1. Delete All Messages < x.MessageID
+		repo.Messages.DeleteAll(ctrl.userID, x.Message.PeerID, x.Message.PeerType, act.MaxID-1)
+
 		// Delete Scroll Position
 		repo.MessagesExtra.SaveScrollID(x.Message.PeerID, x.Message.PeerType, 0)
 
@@ -158,7 +154,6 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			if dtoDlg != nil {
 				messageHole.InsertHole(dtoDlg.PeerID, dtoDlg.PeerType, 0, dtoDlg.TopMessageID-1)
 				messageHole.SetUpperFilled(dtoDlg.PeerID, dtoDlg.PeerType, dtoDlg.TopMessageID)
-
 			}
 		}
 	}
@@ -358,7 +353,7 @@ func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) []*msg.Upda
 	_ = x.Unmarshal(u.Update)
 
 	for _, msgID := range x.MessageIDs {
-		_ = repo.Messages.DeleteDialogMessage(ctrl.userID, x.Peer.ID, x.Peer.Type, msgID)
+		repo.Messages.Delete(ctrl.userID, x.Peer.ID, x.Peer.Type, msgID)
 	}
 
 	update := new(msg.ClientUpdateMessagesDeleted)

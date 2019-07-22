@@ -302,7 +302,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 	return
 }
 
-func (r *repoMessages) DeleteDialogMessage(userID int64, peerID int64, peerType int32, msgID int64) error {
+func (r *repoMessages) Delete(userID int64, peerID int64, peerType int32, msgID int64) {
 	// 1. Delete the Message
 	err := r.badger.Update(func(txn *badger.Txn) error {
 		// delete from messages
@@ -314,20 +314,39 @@ func (r *repoMessages) DeleteDialogMessage(userID int64, peerID int64, peerType 
 		return txn.Delete(r.getUserMessageKey(msgID))
 	})
 	if err != nil {
-		return err
+		return
 	}
 
 	// 2. Update the Dialog if necessary
 	dialog := Dialogs.Get(peerID, peerType)
 	if dialog == nil {
-		return nil
+		return
 	}
 	if dialog.TopMessageID == msgID {
 		Dialogs.updateTopMessageID(peerID, peerType)
 	}
 
 	dialog.UnreadCount, dialog.MentionedCount = Dialogs.countUnread(dialog.PeerID, dialog.PeerType, userID, dialog.ReadInboxMaxID)
-	return err
+	return
+}
+
+func (r *repoMessages) DeleteAll(userID int64, peerID int64, peerType int32, maxID int64) {
+	_ = r.badger.Update(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = r.getPrefix(peerID, peerType)
+		opts.PrefetchValues = false
+		opts.Reverse = true
+		it := txn.NewIterator(opts)
+		for it.Seek(r.getMessageKey(peerID, peerType, maxID)); it.ValidForPrefix(opts.Prefix); it.Next() {
+			_ = txn.Delete(it.Item().KeyCopy(nil))
+		}
+		it.Close()
+		return nil
+	})
+
+	dialog := Dialogs.Get(peerID, peerType)
+	dialog.UnreadCount, dialog.MentionedCount = Dialogs.countUnread(peerID, peerType, userID, maxID)
+	Dialogs.Save(dialog)
 }
 
 func (r *repoMessages) SetContentRead(peerID int64, peerType int32, messageIDs []int64) {

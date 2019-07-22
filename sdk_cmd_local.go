@@ -350,7 +350,7 @@ func (r *River) messagesDelete(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 
 	// remove message
 	for _, msgID := range req.MessageIDs {
-		_ = repo.Messages.DeleteDialogMessage(r.ConnInfo.UserID, req.Peer.ID, int32(req.Peer.Type), msgID)
+		repo.Messages.Delete(r.ConnInfo.UserID, req.Peer.ID, int32(req.Peer.Type), msgID)
 	}
 
 	// send the request to server
@@ -415,10 +415,7 @@ func (r *River) messagesClearHistory(in, out *msg.MessageEnvelope, timeoutCB dom
 	repo.Dialogs.UpdateUnreadCount(req.Peer.ID, int32(req.Peer.Type), 0)
 
 	// this will be handled on message update appliers too
-	err := repo.Messages.DeleteDialogMessage(r.ConnInfo.UserID, req.Peer.ID, int32(req.Peer.Type), req.MaxID)
-	if err != nil {
-		logs.Error("River::messagesClearHistory()-> DeleteDialogMessage()", zap.Error(err))
-	}
+	repo.Messages.Delete(r.ConnInfo.UserID, req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
