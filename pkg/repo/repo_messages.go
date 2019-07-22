@@ -60,8 +60,24 @@ func (r *repoMessages) getUserMessage(msgID int64) (*msg.UserMessage, error) {
 	return message, nil
 }
 
-func (r *repoMessages) Get(messageID int64) *msg.UserMessage {
+func (r *repoMessages) getByKey(msgKey []byte) *msg.UserMessage {
+	message := new(msg.UserMessage)
+	err := r.badger.View(func(txn *badger.Txn) error {
+		item, err := txn.Get(msgKey)
+		if err != nil {
+			return err
+		}
+		return item.Value(func(val []byte) error {
+			return message.Unmarshal(val)
+		})
+	})
+	if err != nil {
+		return nil
+	}
+	return message
+}
 
+func (r *repoMessages) Get(messageID int64) *msg.UserMessage {
 	userMessage, err := r.getUserMessage(messageID)
 	if err != nil {
 		return nil
@@ -363,7 +379,7 @@ func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
 	searchResult, _ := r.searchIndex.Search(searchRequest)
 	userMessages := make([]*msg.UserMessage, 0, 100)
 	for _, hit := range searchResult.Hits {
-		userMessage := r.Get(ronak.StrToInt64(hit.ID))
+		userMessage := r.getByKey(ronak.StrToByte(hit.ID))
 		if userMessage != nil {
 			userMessages = append(userMessages, userMessage)
 		}
@@ -385,7 +401,7 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.User
 	searchResult, _ := r.searchIndex.Search(searchRequest)
 	userMessages := make([]*msg.UserMessage, 0, 100)
 	for _, hit := range searchResult.Hits {
-		userMessage := r.Get(ronak.StrToInt64(hit.ID))
+		userMessage := r.getByKey(ronak.StrToByte(hit.ID))
 		if userMessage != nil {
 			userMessages = append(userMessages, userMessage)
 		}
