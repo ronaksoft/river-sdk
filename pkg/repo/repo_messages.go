@@ -120,9 +120,6 @@ func (r *repoMessages) save(message *msg.UserMessage) {
 		PeerID: message.PeerID,
 	})
 
-	// This is just to make sure the data has been written
-	_ = r.badger.Sync()
-
 	return
 }
 
@@ -172,11 +169,26 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, use
 		}
 	}
 	Dialogs.Save(dialog)
+
+	// This is just to make sure the data has been written
+	_ = r.badger.Sync()
 	return
 }
 
 func (r *repoMessages) Save(message *msg.UserMessage) {
 	r.save(message)
+
+	// This is just to make sure the data has been written
+	_ = r.badger.Sync()
+
+}
+
+func (r *repoMessages) SaveMany(messages []*msg.UserMessage) {
+	for _, message := range messages {
+		r.save(message)
+	}
+	// This is just to make sure the data has been written
+	_ = r.badger.Sync()
 }
 
 func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, maxID int64, limit int32) (userMessages []*msg.UserMessage, users []*msg.User) {
@@ -357,7 +369,6 @@ func (r *repoMessages) SetContentRead(peerID int64, peerType int32, messageIDs [
 }
 
 func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, error) {
-
 	topMessageID := int64(0)
 	err := r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions

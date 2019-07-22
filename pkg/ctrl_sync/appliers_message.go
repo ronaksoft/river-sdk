@@ -209,14 +209,14 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 		return
 	}
 
-	// save Groups & Users
+	// save Groups & Users & Messages
 	repo.Users.SaveMany(u.Users)
 	repo.Groups.SaveMany(u.Groups)
+	repo.Messages.SaveMany(u.Messages)
 
 	minID := int64(0)
 	maxID := int64(0)
 	for _, v := range u.Messages {
-		repo.Messages.Save(v)
 		if v.ID < minID || minID == 0 {
 			minID = v.ID
 		}

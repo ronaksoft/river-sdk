@@ -265,7 +265,6 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 				}
 				mMessages := make(map[int64]*msg.UserMessage)
 				for _, message := range x.Messages {
-					repo.Messages.Save(message)
 					mMessages[message.ID] = message
 				}
 
@@ -277,17 +276,14 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 						)
 						continue
 					}
-
 					// create MessageHole
 					messageHole.InsertHole(dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID-1)
 					messageHole.SetUpperFilled(dialog.PeerID, dialog.PeerType, dialog.TopMessageID)
-
-					// make sure to created the message hole b4 creating dialog
-					repo.Dialogs.SaveNew(dialog, topMessage.CreatedOn)
 				}
 
 				repo.Users.SaveMany(x.Users)
 				repo.Groups.SaveMany(x.Groups)
+				repo.Messages.SaveMany(x.Messages)
 
 				if x.Count > offset+limit {
 					getAllDialogs(waitGroup, ctrl, offset+limit, limit)
@@ -599,9 +595,6 @@ func (ctrl *Controller) extractMessagesMedia(messages ...*msg.UserMessage) {
 	for _, m := range messages {
 		switch m.MediaType {
 		case msg.MediaTypeEmpty:
-			// NOP
-		case msg.MediaTypePhoto:
-			// TODO:: implement it
 		case msg.MediaTypeDocument:
 			mediaDoc := new(msg.MediaDocument)
 			err := mediaDoc.Unmarshal(m.Media)
@@ -619,7 +612,6 @@ func (ctrl *Controller) extractMessagesMedia(messages ...*msg.UserMessage) {
 					_, _ = ctrl.fileCtrl.DownloadThumbnail(t.FileID, t.AccessHash, t.ClusterID, 0)
 				}
 			}
-		case msg.MediaTypeContact:
 		default:
 		}
 	}
