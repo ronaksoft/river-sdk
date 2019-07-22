@@ -74,15 +74,6 @@ func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
 	return
 }
 
-// GetNetworkStatus returns NetworkController status
-func (r *River) GetNetworkStatus() int32 {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("GetNetworkStatus", time.Now().Sub(startTime))
-	}()
-	return int32(r.networkCtrl.GetQuality())
-}
-
 // GetSyncStatus returns SyncController status
 func (r *River) GetSyncStatus() int32 {
 	startTime := time.Now()
@@ -393,7 +384,6 @@ func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate
 		if m.PeerType == int32(msg.PeerSelf) || m.PeerType == int32(msg.PeerUser) {
 			userIDs[m.PeerID] = true
 		}
-
 		if m.PeerType == int32(msg.PeerGroup) {
 			groupIDs[m.PeerID] = true
 		}
