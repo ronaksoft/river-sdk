@@ -184,3 +184,13 @@ func Close() error {
 	logs.Debug("Repo Stopped")
 	return repoLastError
 }
+
+func DropAll() {
+	_ = r.badger.DropAll()
+	_ = r.bunt.Shrink()
+}
+
+func GC() {
+	_ = r.bunt.Shrink()
+	_ = r.badger.RunValueLogGC(0.5)
+}

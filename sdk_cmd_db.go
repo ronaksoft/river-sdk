@@ -46,6 +46,8 @@ func (r *River) GetPinnedDialogsCount() int32 {
 	return 0
 }
 
+// Run the garbage collector on db, this releases more space on the space, make sure to call
+// this function when app is not busy
 func (r *River) GC() {
-	
+	repo.GC()
 }
