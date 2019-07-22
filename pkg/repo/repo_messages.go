@@ -356,9 +356,7 @@ func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
 	t1.SetField("type")
 	qs := make([]query.Query, 0)
 	for _, term := range strings.Fields(text) {
-		tBody := bleve.NewTermQuery(term)
-		tBody.SetField("body")
-		qs = append(qs, tBody)
+		qs = append(qs, bleve.NewMatchQuery(term), bleve.NewPrefixQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
@@ -378,9 +376,7 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.User
 	t1.SetField("type")
 	qs := make([]query.Query, 0)
 	for _, term := range strings.Fields(text) {
-		tBody := bleve.NewTermQuery(term)
-		tBody.SetField("body")
-		qs = append(qs, tBody)
+		qs = append(qs, bleve.NewMatchQuery(term), bleve.NewPrefixQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", peerID))

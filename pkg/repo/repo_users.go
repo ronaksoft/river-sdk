@@ -332,7 +332,7 @@ func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*
 	t1.SetField("type")
 	qs := make([]query.Query, 0)
 	for _, term := range strings.Fields(searchPhrase) {
-		qs = append(qs, bleve.NewPrefixQuery(term))
+		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewMatchQuery(term), bleve.NewFuzzyQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
@@ -359,7 +359,7 @@ func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
 	t1.SetField("type")
 	qs := make([]query.Query, 0)
 	for _, term := range strings.Fields(searchPhrase) {
-		qs = append(qs, bleve.NewPrefixQuery(term))
+		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewMatchQuery(term), bleve.NewFuzzyQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
@@ -383,7 +383,7 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 	t1.SetField("type")
 	qs := make([]query.Query, 0)
 	for _, term := range strings.Fields(searchPhrase) {
-		qs = append(qs, bleve.NewPrefixQuery(term))
+		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewMatchQuery(term), bleve.NewFuzzyQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
