@@ -197,11 +197,9 @@ func (r *repoUsers) Save(user *msg.User) {
 	if alreadySaved(fmt.Sprintf("U.%d", user.ID), user) {
 		return
 	}
-
 	if user == nil {
 		return
 	}
-
 	userKey := r.getUserKey(user.ID)
 	userBytes, _ := user.Marshal()
 	_ = r.badger.Update(func(txn *badger.Txn) error {
@@ -241,7 +239,6 @@ func (r *repoUsers) SaveContact(contactUser *msg.ContactUser) {
 	if contactUser == nil {
 		return
 	}
-
 	userBytes, _ := contactUser.Marshal()
 	contactKey := r.getContactKey(contactUser.ID)
 	_ = r.badger.Update(func(txn *badger.Txn) error {
@@ -333,10 +330,9 @@ func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) 
 func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*msg.PhoneContact) {
 	t1 := bleve.NewTermQuery("contact")
 	t1.SetField("type")
-	terms := strings.Fields(searchPhrase)
 	qs := make([]query.Query, 0)
-	for _, term := range terms {
-		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
+	for _, term := range strings.Fields(searchPhrase) {
+		qs = append(qs, bleve.NewPrefixQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
@@ -361,10 +357,9 @@ func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*
 func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
 	t1 := bleve.NewTermQuery("user")
 	t1.SetField("type")
-	terms := strings.Fields(searchPhrase)
 	qs := make([]query.Query, 0)
-	for _, term := range terms {
-		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
+	for _, term := range strings.Fields(searchPhrase) {
+		qs = append(qs, bleve.NewPrefixQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
@@ -386,10 +381,9 @@ func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
 func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 	t1 := bleve.NewTermQuery("user")
 	t1.SetField("type")
-	terms := strings.Fields(searchPhrase)
 	qs := make([]query.Query, 0)
-	for _, term := range terms {
-		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
+	for _, term := range strings.Fields(searchPhrase) {
+		qs = append(qs, bleve.NewPrefixQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))

@@ -111,7 +111,6 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, randomID i
 }
 
 func (r *repoMessagesPending) SaveMessageMedia(msgID int64, senderID int64, msgMedia *msg.MessagesSendMedia) (*msg.ClientPendingMessage, error) {
-
 	if msgMedia == nil {
 		return nil, domain.ErrNotFound
 	}

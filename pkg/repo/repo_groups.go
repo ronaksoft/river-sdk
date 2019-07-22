@@ -342,7 +342,7 @@ func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
 	terms := strings.Fields(searchPhrase)
 	qs := make([]query.Query, 0)
 	for _, term := range terms {
-		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
+		qs = append(qs, bleve.NewPrefixQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))

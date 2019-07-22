@@ -88,7 +88,7 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, use
 	}
 
 	messageBytes, _ := message.Marshal()
-	err := r.badger.Update(func(txn *badger.Txn) error {
+	_ = r.badger.Update(func(txn *badger.Txn) error {
 		// 1. Write Message
 		err := txn.SetEntry(
 			badger.NewEntry(
@@ -109,15 +109,18 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, use
 		)
 	})
 
+	_ = r.searchIndex.Index(ronak.ByteToStr(r.getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
+		Type:   "msg",
+		Body:   message.Body,
+		PeerID: message.PeerID,
+	})
+
 	dialog = Dialogs.Get(message.PeerID, message.PeerType)
 	// Update Dialog if it is a new message
 	if message.ID > dialog.TopMessageID {
 		dialog.TopMessageID = message.ID
 		if !dialog.Pinned {
 			Dialogs.updateLastUpdate(message.PeerID, message.PeerType, message.CreatedOn)
-			if err != nil {
-				return
-			}
 		}
 		// Update counters if necessary
 		if message.SenderID != userID {
@@ -161,7 +164,7 @@ func (r *repoMessages) Save(message *msg.UserMessage) error {
 		)
 	})
 
-	_ = r.searchIndex.Index(ronak.ByteToStr(r.getUserMessageKey(message.ID)), MessageSearch{
+	_ = r.searchIndex.Index(ronak.ByteToStr(r.getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
 		Type:   "msg",
 		Body:   message.Body,
 		PeerID: message.PeerID,
@@ -351,10 +354,11 @@ func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, err
 func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
 	t1 := bleve.NewTermQuery("msg")
 	t1.SetField("type")
-	terms := strings.Fields(text)
 	qs := make([]query.Query, 0)
-	for _, term := range terms {
-		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
+	for _, term := range strings.Fields(text) {
+		tBody := bleve.NewTermQuery(term)
+		tBody.SetField("body")
+		qs = append(qs, tBody)
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
@@ -372,10 +376,11 @@ func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
 func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.UserMessage {
 	t1 := bleve.NewTermQuery("msg")
 	t1.SetField("type")
-	terms := strings.Fields(text)
 	qs := make([]query.Query, 0)
-	for _, term := range terms {
-		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
+	for _, term := range strings.Fields(text) {
+		tBody := bleve.NewTermQuery(term)
+		tBody.SetField("body")
+		qs = append(qs, tBody)
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", peerID))
