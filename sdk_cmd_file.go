@@ -419,7 +419,7 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 
 	m := repo.Messages.Get(msgID)
 	if m == nil {
-		logs.Error("SDK::FileDownloadThumbnail() message does not exist")
+		logs.Error("SDK::FileDownloadThumbnail() message does not exist", zap.Int64("MsgID", msgID))
 		return ""
 	}
 	filePath := ""
