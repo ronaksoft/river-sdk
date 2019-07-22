@@ -81,8 +81,7 @@ func (r *repoDialogs) updateAccessHash(accessHash uint64, peerID int64, peerType
 	r.Save(dialog)
 }
 
-func (r *repoDialogs) countUnread(peerID int64, peerType int32, userID, maxID int64) int32 {
-	count := int32(0)
+func (r *repoDialogs) countUnread(peerID int64, peerType int32, userID, maxID int64) (unread, mentioned int32) {
 	_ = r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = Messages.getPrefix(peerID, peerType)
@@ -91,10 +90,16 @@ func (r *repoDialogs) countUnread(peerID int64, peerType int32, userID, maxID in
 		for it.Seek(Messages.getMessageKey(peerID, peerType, maxID)); it.ValidForPrefix(opts.Prefix); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
 				userMessage := new(msg.UserMessage)
+				_ = userMessage.Unmarshal(val)
 				if userMessage.SenderID != userID {
-					count++
+					unread++
 				}
-				return userMessage.Unmarshal(val)
+				for _, entity := range userMessage.Entities {
+					if entity.Type == msg.MessageEntityTypeMention && entity.UserID == userID {
+						mentioned++
+					}
+				}
+				return nil
 			})
 		}
 		it.Close()
