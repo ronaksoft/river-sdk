@@ -123,7 +123,7 @@ func (r *repoMessagesPending) SaveMessageMedia(msgID int64, senderID int64, msgM
 	pm.ReplyTo = msgMedia.ReplyTo
 	pm.ClearDraft = msgMedia.ClearDraft
 	pm.MediaType = msgMedia.MediaType
-	pm.Media, _ = msgMedia.Marshal()
+	pm.Media  = msgMedia.MediaData
 	pm.ID = msgID
 	pm.SenderID = senderID
 	pm.CreatedOn = time.Now().Unix()
@@ -201,16 +201,16 @@ func (r *repoMessagesPending) GetByID(id int64) *msg.ClientPendingMessage {
 
 }
 
-// func (r *repoMessagesPending) GetMany(messageIDs []int64) []*msg.UserMessage {
-// 	userMessages := make([]*msg.UserMessage, 0, len(messageIDs))
-// 	for _, msgID := range messageIDs {
-// 		pm := r.GetByID(msgID)
-// 		if pm != nil {
-// 			userMessages = append(userMessages, r.ToUserMessage(pm))
-// 		}
-// 	}
-// 	return userMessages
-// }
+func (r *repoMessagesPending) GetMany(messageIDs []int64) []*msg.UserMessage {
+	userMessages := make([]*msg.UserMessage, 0, len(messageIDs))
+	for _, msgID := range messageIDs {
+		pm := r.GetByID(msgID)
+		if pm != nil {
+			userMessages = append(userMessages, r.ToUserMessage(pm))
+		}
+	}
+	return userMessages
+}
 
 func (r *repoMessagesPending) GetByPeer(peerID int64, peerType int32) []*msg.UserMessage {
 	userMessages := make([]*msg.UserMessage, 0, 10)
