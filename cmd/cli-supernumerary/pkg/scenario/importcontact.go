@@ -73,7 +73,7 @@ func (s *ImportContact) contactImport(phone string, act shared.Actor) (*msg.Mess
 			if s.isFinal {
 				err := act.Save()
 				if err != nil {
-					s.log(act, "contactImport() Actor.Save(), Err : "+err.Error(), elapsed, resp.RequestID)
+					s.log(act, "contactImport() Actor.save(), Err : "+err.Error(), elapsed, resp.RequestID)
 				}
 			}
 			s.completed(act, elapsed, resp.RequestID, "contactImport() Success")

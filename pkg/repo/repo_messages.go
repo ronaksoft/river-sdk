@@ -56,6 +56,9 @@ func (r *repoMessages) getUserMessage(msgID int64) (*msg.UserMessage, error) {
 		})
 	})
 	if err != nil {
+		WarnOnErr("RepoMessage::getUserMessage", err,
+			zap.Int64("MsgID", msgID),
+		)
 		return nil, err
 	}
 	return message, nil
@@ -76,6 +79,51 @@ func (r *repoMessages) getByKey(msgKey []byte) *msg.UserMessage {
 		return nil
 	}
 	return message
+}
+
+func (r *repoMessages) save(message *msg.UserMessage) {
+	if message == nil {
+		return
+	}
+
+	messageBytes, _ := message.Marshal()
+
+	err := r.badger.Update(func(txn *badger.Txn) error {
+		// 1. Write Message
+		err := txn.SetEntry(
+			badger.NewEntry(
+				r.getMessageKey(message.PeerID, message.PeerType, message.ID),
+				messageBytes,
+			).WithMeta(byte(message.MediaType)),
+		)
+		if err != nil {
+			return err
+		}
+
+		// 2. WriteUserMessage
+		return txn.SetEntry(
+			badger.NewEntry(
+				r.getUserMessageKey(message.ID),
+				ronak.StrToByte(fmt.Sprintf("%d.%d", message.PeerID, message.PeerType)),
+			).WithMeta(byte(message.MediaType)),
+		)
+	})
+	if err != nil {
+		WarnOnErr("RepoMessage::save", err,
+			zap.Int64("MsgID", message.ID),
+		)
+	}
+
+	_ = r.searchIndex.Index(ronak.ByteToStr(r.getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
+		Type:   "msg",
+		Body:   message.Body,
+		PeerID: message.PeerID,
+	})
+
+	// This is just to make sure the data has been written
+	_ = r.badger.Sync()
+
+	return
 }
 
 func (r *repoMessages) Get(messageID int64) *msg.UserMessage {
@@ -104,7 +152,7 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, use
 		return
 	}
 
-	r.Save(message)
+	r.save(message)
 
 	dialog = Dialogs.Get(message.PeerID, message.PeerType)
 	// Update Dialog if it is a new message
@@ -128,54 +176,7 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, use
 }
 
 func (r *repoMessages) Save(message *msg.UserMessage) {
-	if message == nil {
-		return
-	}
-
-	messageBytes, _ := message.Marshal()
-	maxRetry := 10
-	keepGoing := true
-	for keepGoing {
-		err := r.badger.Update(func(txn *badger.Txn) error {
-			// 1. Write Message
-			err := txn.SetEntry(
-				badger.NewEntry(
-					r.getMessageKey(message.PeerID, message.PeerType, message.ID),
-					messageBytes,
-				).WithMeta(byte(message.MediaType)),
-			)
-			if err != nil {
-				return err
-			}
-
-			// 2. WriteUserMessage
-			return txn.SetEntry(
-				badger.NewEntry(
-					r.getUserMessageKey(message.ID),
-					ronak.StrToByte(fmt.Sprintf("%d.%d", message.PeerID, message.PeerType)),
-				).WithMeta(byte(message.MediaType)),
-			)
-		})
-		if err != nil {
-			WarnOnErr("RepoMessage::Save", err,
-				zap.Int64("MsgID", message.ID),
-			)
-			maxRetry--
-			if maxRetry <= 0 {
-				keepGoing = false
-			}
-		} else {
-			keepGoing = false
-		}
-	}
-
-	_ = r.searchIndex.Index(ronak.ByteToStr(r.getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
-		Type:   "msg",
-		Body:   message.Body,
-		PeerID: message.PeerID,
-	})
-
-	return
+	r.save(message)
 }
 
 func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, maxID int64, limit int32) (userMessages []*msg.UserMessage, users []*msg.User) {
@@ -347,7 +348,7 @@ func (r *repoMessages) SetContentRead(peerID int64, peerType int32, messageIDs [
 				return err
 			}
 			userMessage.ContentRead = true
-			r.Save(userMessage)
+			r.save(userMessage)
 			return nil
 		})
 

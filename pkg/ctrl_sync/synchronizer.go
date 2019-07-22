@@ -366,7 +366,7 @@ func onGetDifferenceSucceed(ctrl *Controller, m *msg.MessageEnvelope) {
 			zap.Int64("MinUpdateID", x.MinUpdateID),
 		)
 
-		// Save Groups & Users
+		// save Groups & Users
 		repo.Groups.SaveMany(x.Groups)
 		repo.Users.SaveMany(x.Users)
 
@@ -382,7 +382,7 @@ func onGetDifferenceSucceed(ctrl *Controller, m *msg.MessageEnvelope) {
 		if ctrl.updateID < x.MaxUpdateID {
 			ctrl.updateID = x.MaxUpdateID
 
-			// Save UpdateID to DB
+			// save UpdateID to DB
 			err := repo.System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
 			if err != nil {
 				logs.Error("onGetDifferenceSucceed()-> SaveInt()", zap.Error(err))
@@ -532,7 +532,7 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 		}
 	}
 
-	// Save Groups & Users
+	// save Groups & Users
 	repo.Groups.SaveMany(updateContainer.Groups)
 	repo.Users.SaveMany(updateContainer.Users)
 
@@ -660,7 +660,7 @@ func (ctrl *Controller) getServerSalt() {
 					b, _ := json.Marshal(saltArray)
 					err = repo.System.SaveString(domain.ColumnSystemSalts, string(b))
 					if err != nil {
-						logs.Error("Salt:: Save To DB", zap.Error(err))
+						logs.Error("Salt:: save To DB", zap.Error(err))
 					}
 				case msg.C_Error:
 					e := new(msg.Error)

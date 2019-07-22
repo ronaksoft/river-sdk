@@ -88,7 +88,7 @@ func (s *Login) login(resp *msg.AuthSentCode, act shared.Actor) (*msg.MessageEnv
 				if s.isFinal {
 					err := act.Save()
 					if err != nil {
-						s.log(act, "login() Actor.Save(), Err : "+err.Error(), elapsed, resp.RequestID)
+						s.log(act, "login() Actor.save(), Err : "+err.Error(), elapsed, resp.RequestID)
 					}
 				}
 

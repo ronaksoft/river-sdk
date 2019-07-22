@@ -136,7 +136,7 @@ func (act *Actor) ExecuteRequest(message *msg.MessageEnvelope, onSuccess shared.
 	act.exec.Exec(message, onSuccess, onTimeOut, shared.DefaultSendTimeout)
 }
 
-// Save save actor after register/ login / contact import
+// save save actor after register/ login / contact import
 func (act *Actor) Save() error {
 	buff, err := json.Marshal(act)
 	if err != nil {

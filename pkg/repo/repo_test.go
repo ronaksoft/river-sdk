@@ -33,7 +33,7 @@ func TestRepoDialogs(t *testing.T) {
 	dialog.TopMessageID = 1000
 	dialog.ReadOutboxMaxID = 900
 	dialog.ReadInboxMaxID = 901
-	// err := repo.Dialogs.Save(dialog)
+	// err := repo.Dialogs.save(dialog)
 	// if err != nil {
 	// 	t.Fatal(err)
 	// }

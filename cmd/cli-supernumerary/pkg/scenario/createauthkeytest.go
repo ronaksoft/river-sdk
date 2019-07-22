@@ -49,12 +49,12 @@ func (s *CreateAuthKeyTest) initConnectTest(act shared.Actor) (*msg.MessageEnvel
 			x := new(msg.InitTestAuth)
 			x.Unmarshal(resp.Message)
 
-			// Save authKey && authID
+			// save authKey && authID
 			act.SetAuthInfo(x.AuthID, x.AuthKey)
 			if s.isFinal {
 				err := act.Save()
 				if err != nil {
-					s.log(act, "initConnectTest() Actor.Save(), Err : "+err.Error(), elapsed, resp.RequestID)
+					s.log(act, "initConnectTest() Actor.save(), Err : "+err.Error(), elapsed, resp.RequestID)
 				}
 			}
 			s.completed(act, elapsed, resp.RequestID, "initConnectTest() Success")

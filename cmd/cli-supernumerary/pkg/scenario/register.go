@@ -87,7 +87,7 @@ func (s *Register) register(resp *msg.AuthSentCode, act shared.Actor) (*msg.Mess
 				if s.isFinal {
 					err := act.Save()
 					if err != nil {
-						s.log(act, "register() Actor.Save(), Err : "+err.Error(), elapsed, resp.RequestID)
+						s.log(act, "register() Actor.save(), Err : "+err.Error(), elapsed, resp.RequestID)
 					}
 				}
 				s.completed(act, elapsed, resp.RequestID, "register() Success")

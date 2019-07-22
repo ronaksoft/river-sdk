@@ -47,7 +47,7 @@ func (ctrl *Controller) authSentCode(e *msg.MessageEnvelope) {
 	logs.Info("SyncController::authSentCode")
 	ctrl.connInfo.ChangePhone(x.Phone)
 	// No need to save it here its gonna be saved on authAuthorization
-	// conf.Save()
+	// conf.save()
 }
 
 // contactsImported
@@ -209,7 +209,7 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 		return
 	}
 
-	// Save Groups & Users
+	// save Groups & Users
 	repo.Users.SaveMany(u.Users)
 	repo.Groups.SaveMany(u.Groups)
 
@@ -254,15 +254,15 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 		zap.Int64("GroupID", u.Group.ID),
 	)
 
-	// Save GroupSearch
+	// save GroupSearch
 	repo.Groups.Save(u.Group)
 
-	// Save GroupSearch Members
+	// save GroupSearch Members
 	for _, v := range u.Participants {
 		repo.Groups.SaveParticipant(u.Group.ID, v)
 	}
 
-	// Save Users
+	// save Users
 	for _, v := range u.Users {
 		repo.Users.Save(v)
 	}
