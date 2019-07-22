@@ -193,7 +193,7 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 		return
 	}
 	dialog.ReadInboxMaxID = maxID
-	dialog.UnreadCount = r.countUnread(peerID, peerType, userID, maxID+1)
+	dialog.UnreadCount, dialog.MentionedCount = r.countUnread(peerID, peerType, userID, maxID+1)
 	r.Save(dialog)
 
 	return
