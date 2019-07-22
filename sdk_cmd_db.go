@@ -45,3 +45,7 @@ func (r *River) GetPinnedDialogsCount() int32 {
 
 	return 0
 }
+
+func (r *River) GC() {
+	
+}

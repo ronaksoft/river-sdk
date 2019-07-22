@@ -105,7 +105,7 @@ func (r *repoDialogs) countUnread(peerID int64, peerType int32, userID, maxID in
 		it.Close()
 		return nil
 	})
-	return count
+	return
 }
 
 func (r *repoDialogs) Get(peerID int64, peerType int32) *msg.Dialog {
