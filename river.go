@@ -132,6 +132,11 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	// init UI Executor
 	uiexec.InitUIExec()
 
+	// support IOS file path
+	if strings.HasPrefix(conf.DbPath, "file://") {
+		conf.DbPath = conf.DbPath[7:]
+	}
+
 	// Initialize Database
 	_ = os.MkdirAll(conf.DbPath, os.ModePerm)
 	conf.DbPath = strings.TrimRight(conf.DbPath, "/ ")
