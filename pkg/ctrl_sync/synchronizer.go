@@ -265,10 +265,7 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 				}
 				mMessages := make(map[int64]*msg.UserMessage)
 				for _, message := range x.Messages {
-					err := repo.Messages.Save(message)
-					if err != nil {
-						logs.Error("getAllDialogs() -> onSuccessCallback() -> Save() ", zap.Error(err))
-					}
+					repo.Messages.Save(message)
 					mMessages[message.ID] = message
 				}
 

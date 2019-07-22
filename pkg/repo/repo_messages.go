@@ -8,6 +8,7 @@ import (
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
 	"github.com/dgraph-io/badger"
+	"go.uber.org/zap"
 	"sort"
 	"strings"
 )
@@ -103,33 +104,7 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, use
 		return
 	}
 
-	messageBytes, _ := message.Marshal()
-	_ = r.badger.Update(func(txn *badger.Txn) error {
-		// 1. Write Message
-		err := txn.SetEntry(
-			badger.NewEntry(
-				r.getMessageKey(message.PeerID, message.PeerType, message.ID),
-				messageBytes,
-			).WithMeta(byte(message.MediaType)),
-		)
-		if err != nil {
-			return err
-		}
-
-		// 2. WriteUserMessage
-		return txn.SetEntry(
-			badger.NewEntry(
-				r.getUserMessageKey(message.ID),
-				ronak.StrToByte(fmt.Sprintf("%d.%d", message.PeerID, message.PeerType)),
-			).WithMeta(byte(message.MediaType)),
-		)
-	})
-
-	_ = r.searchIndex.Index(ronak.ByteToStr(r.getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
-		Type:   "msg",
-		Body:   message.Body,
-		PeerID: message.PeerID,
-	})
+	r.Save(message)
 
 	dialog = Dialogs.Get(message.PeerID, message.PeerType)
 	// Update Dialog if it is a new message
@@ -152,32 +127,47 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, use
 	return
 }
 
-func (r *repoMessages) Save(message *msg.UserMessage) error {
+func (r *repoMessages) Save(message *msg.UserMessage) {
 	if message == nil {
-		return domain.ErrNotFound
+		return
 	}
 
 	messageBytes, _ := message.Marshal()
-	err := r.badger.Update(func(txn *badger.Txn) error {
-		// 1. Write Message
-		err := txn.SetEntry(
-			badger.NewEntry(
-				r.getMessageKey(message.PeerID, message.PeerType, message.ID),
-				messageBytes,
-			).WithMeta(byte(message.MediaType)),
-		)
-		if err != nil {
-			return err
-		}
+	maxRetry := 10
+	keepGoing := true
+	for keepGoing {
+		err := r.badger.Update(func(txn *badger.Txn) error {
+			// 1. Write Message
+			err := txn.SetEntry(
+				badger.NewEntry(
+					r.getMessageKey(message.PeerID, message.PeerType, message.ID),
+					messageBytes,
+				).WithMeta(byte(message.MediaType)),
+			)
+			if err != nil {
+				return err
+			}
 
-		// 2. WriteUserMessage
-		return txn.SetEntry(
-			badger.NewEntry(
-				r.getUserMessageKey(message.ID),
-				ronak.StrToByte(fmt.Sprintf("%d.%d", message.PeerID, message.PeerType)),
-			).WithMeta(byte(message.MediaType)),
-		)
-	})
+			// 2. WriteUserMessage
+			return txn.SetEntry(
+				badger.NewEntry(
+					r.getUserMessageKey(message.ID),
+					ronak.StrToByte(fmt.Sprintf("%d.%d", message.PeerID, message.PeerType)),
+				).WithMeta(byte(message.MediaType)),
+			)
+		})
+		if err != nil {
+			WarnOnErr("RepoMessage::Save", err,
+				zap.Int64("MsgID", message.ID),
+			)
+			maxRetry--
+			if maxRetry <= 0 {
+				keepGoing = false
+			}
+		} else {
+			keepGoing = false
+		}
+	}
 
 	_ = r.searchIndex.Index(ronak.ByteToStr(r.getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
 		Type:   "msg",
@@ -185,7 +175,7 @@ func (r *repoMessages) Save(message *msg.UserMessage) error {
 		PeerID: message.PeerID,
 	})
 
-	return err
+	return
 }
 
 func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, maxID int64, limit int32) (userMessages []*msg.UserMessage, users []*msg.User) {
@@ -357,7 +347,8 @@ func (r *repoMessages) SetContentRead(peerID int64, peerType int32, messageIDs [
 				return err
 			}
 			userMessage.ContentRead = true
-			return r.Save(userMessage)
+			r.Save(userMessage)
+			return nil
 		})
 
 	}

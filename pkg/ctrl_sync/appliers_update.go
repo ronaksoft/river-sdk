@@ -271,7 +271,7 @@ func (ctrl *Controller) updateMessageEdited(u *msg.UpdateEnvelope) []*msg.Update
 	logs.Info("SyncController::updateMessageEdited",
 		zap.Int64("MessageID", x.Message.ID),
 	)
-	_ = repo.Messages.Save(x.Message)
+	repo.Messages.Save(x.Message)
 
 	res := []*msg.UpdateEnvelope{u}
 	return res

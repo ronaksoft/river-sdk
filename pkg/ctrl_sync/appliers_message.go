@@ -106,7 +106,7 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 
 	mMessages := make(map[int64]*msg.UserMessage)
 	for _, message := range x.Messages {
-		_ = repo.Messages.Save(message)
+		repo.Messages.Save(message)
 		mMessages[message.ID] = message
 	}
 	for _, dialog := range x.Dialogs {
@@ -216,7 +216,7 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 	minID := int64(0)
 	maxID := int64(0)
 	for _, v := range u.Messages {
-		_ = repo.Messages.Save(v)
+		repo.Messages.Save(v)
 		if v.ID < minID || minID == 0 {
 			minID = v.ID
 		}
