@@ -212,7 +212,7 @@ func (ctrl *Controller) watchDog() {
 			}
 			ctrl.updateNetworkStatus(domain.NetworkDisconnected)
 			if ctrl.wsKeepConnection {
-				go ctrl.Connect(false)
+				go ctrl.Connect(true)
 			}
 		case <-ctrl.stopChannel:
 			return
