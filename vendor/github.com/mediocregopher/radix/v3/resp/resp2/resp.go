@@ -24,14 +24,46 @@ import (
 
 var delim = []byte{'\r', '\n'}
 
+// prefix enumerates the possible RESP types by enumerating the different
+// prefixes a RESP message might start with.
+type prefix []byte
+
+// Enumeration of each of RESP's message types, each denoted by the prefix which
+// is prepended to messages of that type.
+//
+// In order to determine the type of a message which is being written to a
+// *bufio.Reader, without actually consuming it, one can use the Peek method and
+// compare it against these values.
 var (
-	simpleStrPrefix = []byte{'+'}
-	errPrefix       = []byte{'-'}
-	intPrefix       = []byte{':'}
-	bulkStrPrefix   = []byte{'$'}
-	arrayPrefix     = []byte{'*'}
-	nilBulkString   = []byte("$-1\r\n")
-	nilArray        = []byte("*-1\r\n")
+	SimpleStringPrefix = []byte{'+'}
+	ErrorPrefix        = []byte{'-'}
+	IntPrefix          = []byte{':'}
+	BulkStringPrefix   = []byte{'$'}
+	ArrayPrefix        = []byte{'*'}
+)
+
+// String formats a prefix into a human-readable name for the type it denotes.
+func (p prefix) String() string {
+	pStr := string(p)
+	switch pStr {
+	case string(SimpleStringPrefix):
+		return "simple-string"
+	case string(ErrorPrefix):
+		return "error"
+	case string(IntPrefix):
+		return "integer"
+	case string(BulkStringPrefix):
+		return "bulk-string"
+	case string(ArrayPrefix):
+		return "array"
+	default:
+		return pStr
+	}
+}
+
+var (
+	nilBulkString = []byte("$-1\r\n")
+	nilArray      = []byte("*-1\r\n")
 )
 
 var bools = [][]byte{
@@ -40,6 +72,17 @@ var bools = [][]byte{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+func assertBufferedPrefix(br *bufio.Reader, pref prefix) error {
+	b, err := br.Peek(len(pref))
+	if err != nil {
+		return err
+	} else if !bytes.Equal(b, []byte(pref)) {
+		return fmt.Errorf("expected prefix %q, got %q", pref.String(), prefix(b).String())
+	}
+	_, err = br.Discard(len(pref))
+	return err
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -50,12 +93,18 @@ type SimpleString struct {
 
 // MarshalRESP implements the Marshaler method
 func (ss SimpleString) MarshalRESP(w io.Writer) error {
-	return bytesutil.MultiWrite(w, simpleStrPrefix, []byte(ss.S), delim)
+	scratch := bytesutil.GetBytes()
+	*scratch = append(*scratch, SimpleStringPrefix...)
+	*scratch = append(*scratch, ss.S...)
+	*scratch = append(*scratch, delim...)
+	_, err := w.Write(*scratch)
+	bytesutil.PutBytes(scratch)
+	return err
 }
 
 // UnmarshalRESP implements the Unmarshaler method
 func (ss *SimpleString) UnmarshalRESP(br *bufio.Reader) error {
-	if err := bytesutil.BufferedPrefix(br, simpleStrPrefix); err != nil {
+	if err := assertBufferedPrefix(br, SimpleStringPrefix); err != nil {
 		return err
 	}
 	b, err := bytesutil.BufferedBytesDelim(br)
@@ -83,18 +132,20 @@ func (e Error) Error() string {
 
 // MarshalRESP implements the Marshaler method
 func (e Error) MarshalRESP(w io.Writer) error {
-	if e.E == nil {
-		return bytesutil.MultiWrite(w, errPrefix, delim)
-	}
 	scratch := bytesutil.GetBytes()
-	defer bytesutil.PutBytes(scratch)
-	*scratch = append(*scratch, e.E.Error()...)
-	return bytesutil.MultiWrite(w, errPrefix, *scratch, delim)
+	*scratch = append(*scratch, ErrorPrefix...)
+	if e.E != nil {
+		*scratch = append(*scratch, e.E.Error()...)
+	}
+	*scratch = append(*scratch, delim...)
+	_, err := w.Write(*scratch)
+	bytesutil.PutBytes(scratch)
+	return err
 }
 
 // UnmarshalRESP implements the Unmarshaler method
 func (e *Error) UnmarshalRESP(br *bufio.Reader) error {
-	if err := bytesutil.BufferedPrefix(br, errPrefix); err != nil {
+	if err := assertBufferedPrefix(br, ErrorPrefix); err != nil {
 		return err
 	}
 	b, err := bytesutil.BufferedBytesDelim(br)
@@ -112,14 +163,17 @@ type Int struct {
 // MarshalRESP implements the Marshaler method
 func (i Int) MarshalRESP(w io.Writer) error {
 	scratch := bytesutil.GetBytes()
-	defer bytesutil.PutBytes(scratch)
-	*scratch = strconv.AppendInt(*scratch, int64(i.I), 10)
-	return bytesutil.MultiWrite(w, intPrefix, *scratch, delim)
+	*scratch = append(*scratch, IntPrefix...)
+	*scratch = strconv.AppendInt(*scratch, i.I, 10)
+	*scratch = append(*scratch, delim...)
+	_, err := w.Write(*scratch)
+	bytesutil.PutBytes(scratch)
+	return err
 }
 
 // UnmarshalRESP implements the Unmarshaler method
 func (i *Int) UnmarshalRESP(br *bufio.Reader) error {
-	if err := bytesutil.BufferedPrefix(br, intPrefix); err != nil {
+	if err := assertBufferedPrefix(br, IntPrefix); err != nil {
 		return err
 	}
 	n, err := bytesutil.BufferedIntDelim(br)
@@ -143,17 +197,23 @@ type BulkStringBytes struct {
 // MarshalRESP implements the Marshaler method
 func (b BulkStringBytes) MarshalRESP(w io.Writer) error {
 	if b.B == nil && !b.MarshalNotNil {
-		return bytesutil.MultiWrite(w, nilBulkString)
+		_, err := w.Write(nilBulkString)
+		return err
 	}
 	scratch := bytesutil.GetBytes()
-	defer bytesutil.PutBytes(scratch)
+	*scratch = append(*scratch, BulkStringPrefix...)
 	*scratch = strconv.AppendInt(*scratch, int64(len(b.B)), 10)
-	return bytesutil.MultiWrite(w, bulkStrPrefix, *scratch, delim, b.B, delim)
+	*scratch = append(*scratch, delim...)
+	*scratch = append(*scratch, b.B...)
+	*scratch = append(*scratch, delim...)
+	_, err := w.Write(*scratch)
+	bytesutil.PutBytes(scratch)
+	return err
 }
 
 // UnmarshalRESP implements the Unmarshaler method
 func (b *BulkStringBytes) UnmarshalRESP(br *bufio.Reader) error {
-	if err := bytesutil.BufferedPrefix(br, bulkStrPrefix); err != nil {
+	if err := assertBufferedPrefix(br, BulkStringPrefix); err != nil {
 		return err
 	}
 	n, err := bytesutil.BufferedIntDelim(br)
@@ -189,17 +249,20 @@ type BulkString struct {
 // MarshalRESP implements the Marshaler method
 func (b BulkString) MarshalRESP(w io.Writer) error {
 	scratch := bytesutil.GetBytes()
-	defer bytesutil.PutBytes(scratch)
+	*scratch = append(*scratch, BulkStringPrefix...)
 	*scratch = strconv.AppendInt(*scratch, int64(len(b.S)), 10)
-	ll := len(*scratch)
+	*scratch = append(*scratch, delim...)
 	*scratch = append(*scratch, b.S...)
-	return bytesutil.MultiWrite(w, bulkStrPrefix, (*scratch)[:ll], delim, (*scratch)[ll:], delim)
+	*scratch = append(*scratch, delim...)
+	_, err := w.Write(*scratch)
+	bytesutil.PutBytes(scratch)
+	return err
 }
 
 // UnmarshalRESP implements the Unmarshaler method. This treats a Nil bulk
 // string message as empty string.
 func (b *BulkString) UnmarshalRESP(br *bufio.Reader) error {
-	if err := bytesutil.BufferedPrefix(br, bulkStrPrefix); err != nil {
+	if err := assertBufferedPrefix(br, BulkStringPrefix); err != nil {
 		return err
 	}
 	n, err := bytesutil.BufferedIntDelim(br)
@@ -236,19 +299,27 @@ type BulkReader struct {
 // MarshalRESP implements the Marshaler method
 func (b BulkReader) MarshalRESP(w io.Writer) error {
 	if b.LR == nil {
-		return bytesutil.MultiWrite(w, nilBulkString)
-	}
-	scratch := bytesutil.GetBytes()
-	defer bytesutil.PutBytes(scratch)
-	l := b.LR.Len()
-	*scratch = strconv.AppendInt(*scratch, l, 10)
-	if err := bytesutil.MultiWrite(w, bulkStrPrefix, *scratch, delim); err != nil {
+		_, err := w.Write(nilBulkString)
 		return err
 	}
+
+	l := b.LR.Len()
+	scratch := bytesutil.GetBytes()
+	*scratch = append(*scratch, BulkStringPrefix...)
+	*scratch = strconv.AppendInt(*scratch, l, 10)
+	*scratch = append(*scratch, delim...)
+	_, err := w.Write(*scratch)
+	bytesutil.PutBytes(scratch)
+	if err != nil {
+		return err
+	}
+
 	if _, err := io.CopyN(w, b.LR, l); err != nil {
 		return err
+	} else if _, err := w.Write(delim); err != nil {
+		return err
 	}
-	return bytesutil.MultiWrite(w, delim)
+	return nil
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -265,14 +336,17 @@ type ArrayHeader struct {
 // MarshalRESP implements the Marshaler method
 func (ah ArrayHeader) MarshalRESP(w io.Writer) error {
 	scratch := bytesutil.GetBytes()
-	defer bytesutil.PutBytes(scratch)
+	*scratch = append(*scratch, ArrayPrefix...)
 	*scratch = strconv.AppendInt(*scratch, int64(ah.N), 10)
-	return bytesutil.MultiWrite(w, arrayPrefix, *scratch, delim)
+	*scratch = append(*scratch, delim...)
+	_, err := w.Write(*scratch)
+	bytesutil.PutBytes(scratch)
+	return err
 }
 
 // UnmarshalRESP implements the Unmarshaler method
 func (ah *ArrayHeader) UnmarshalRESP(br *bufio.Reader) error {
-	if err := bytesutil.BufferedPrefix(br, arrayPrefix); err != nil {
+	if err := assertBufferedPrefix(br, ArrayPrefix); err != nil {
 		return err
 	}
 	n, err := bytesutil.BufferedIntDelim(br)
@@ -351,20 +425,40 @@ var byteSliceT = reflect.TypeOf([]byte{})
 // NumElems returns the number of non-array elements which would be marshalled
 // based on I. For example:
 //
-// Any{I: "foo"}.NumElems() == 1
-// Any{I: []string{}}.NumElems() == 0
-// Any{I: []string{"foo"}}.NumElems() == 2
-// Any{I: []string{"foo", "bar"}}.NumElems() == 2
-// Any{I: [][]string{{"foo"}, {"bar", "baz"}, {}}}.NumElems() == 3
+//	Any{I: "foo"}.NumElems() == 1
+//	Any{I: []string{}}.NumElems() == 0
+//	Any{I: []string{"foo"}}.NumElems() == 1
+//	Any{I: []string{"foo", "bar"}}.NumElems() == 2
+//	Any{I: [][]string{{"foo"}, {"bar", "baz"}, {}}}.NumElems() == 3
 //
 func (a Any) NumElems() int {
 	return numElems(reflect.ValueOf(a.I))
 }
 
+var (
+	lenReaderT               = reflect.TypeOf(new(resp.LenReader)).Elem()
+	encodingTextMarshalerT   = reflect.TypeOf(new(encoding.TextMarshaler)).Elem()
+	encodingBinaryMarshalerT = reflect.TypeOf(new(encoding.BinaryMarshaler)).Elem()
+)
+
 func numElems(vv reflect.Value) int {
-	vv = reflect.Indirect(vv)
+	if !vv.IsValid() {
+		return 1
+	}
+
+	tt := vv.Type()
+	switch {
+	case tt.Implements(lenReaderT):
+		return 1
+	case tt.Implements(encodingTextMarshalerT):
+		return 1
+	case tt.Implements(encodingBinaryMarshalerT):
+		return 1
+	}
 
 	switch vv.Kind() {
+	case reflect.Ptr:
+		return numElems(reflect.Indirect(vv))
 	case reflect.Slice, reflect.Array:
 		// TODO does []rune need extra support here?
 		if vv.Type() == byteSliceT {
@@ -524,7 +618,8 @@ func (a Any) MarshalRESP(w io.Writer) error {
 	switch vv.Kind() {
 	case reflect.Slice, reflect.Array:
 		if vv.IsNil() && !a.MarshalNoArrayHeaders {
-			return bytesutil.MultiWrite(w, nilArray)
+			_, err := w.Write(nilArray)
+			return err
 		}
 		l := vv.Len()
 		arrHeader(l)
@@ -534,7 +629,8 @@ func (a Any) MarshalRESP(w io.Writer) error {
 
 	case reflect.Map:
 		if vv.IsNil() && !a.MarshalNoArrayHeaders {
-			return bytesutil.MultiWrite(w, nilArray)
+			_, err := w.Write(nilArray)
+			return err
 		}
 		kkv := vv.MapKeys()
 		arrHeader(len(kkv) * 2)
@@ -592,18 +688,18 @@ func (a Any) marshalStruct(w io.Writer, vv reflect.Value, inline bool) error {
 }
 
 func saneDefault(prefix byte) interface{} {
-	// we don't handle errPrefix because that always returns an error and
+	// we don't handle ErrorPrefix because that always returns an error and
 	// doesn't touch I
 	switch prefix {
-	case arrayPrefix[0]:
+	case ArrayPrefix[0]:
 		ii := make([]interface{}, 8)
 		return &ii
-	case bulkStrPrefix[0]:
+	case BulkStringPrefix[0]:
 		bb := make([]byte, 16)
 		return &bb
-	case simpleStrPrefix[0]:
+	case SimpleStringPrefix[0]:
 		return new(string)
-	case intPrefix[0]:
+	case IntPrefix[0]:
 		return new(int64)
 	}
 	panic("should never get here")
@@ -614,10 +710,15 @@ func saneDefault(prefix byte) interface{} {
 // which has a simple string or bulk string (the vast majority of them) is going
 // to go through one of these.
 var (
-	// RawMessage.UnmarshalInto also uses this
+	// RawMessage.UnmarshalInto also uses these
 	byteReaderPool = sync.Pool{
 		New: func() interface{} {
 			return bytes.NewReader(nil)
+		},
+	}
+	bufioReaderPool = sync.Pool{
+		New: func() interface{} {
+			return bufio.NewReader(nil)
 		},
 	}
 )
@@ -655,9 +756,9 @@ func (a Any) UnmarshalRESP(br *bufio.Reader) error {
 	}
 
 	switch prefix {
-	case errPrefix[0]:
+	case ErrorPrefix[0]:
 		return Error{E: errors.New(string(b))}
-	case arrayPrefix[0]:
+	case ArrayPrefix[0]:
 		l, err := bytesutil.ParseInt(b)
 		if err != nil {
 			return err
@@ -665,7 +766,7 @@ func (a Any) UnmarshalRESP(br *bufio.Reader) error {
 			return a.unmarshalNil()
 		}
 		return a.unmarshalArray(br, l)
-	case bulkStrPrefix[0]:
+	case BulkStringPrefix[0]:
 		l, err := bytesutil.ParseInt(b) // fuck DRY
 		if err != nil {
 			return err
@@ -677,11 +778,12 @@ func (a Any) UnmarshalRESP(br *bufio.Reader) error {
 		}
 		_, err = br.Discard(2)
 		return err
-	case simpleStrPrefix[0], intPrefix[0]:
+	case SimpleStringPrefix[0], IntPrefix[0]:
 		reader := byteReaderPool.Get().(*bytes.Reader)
-		defer byteReaderPool.Put(reader)
 		reader.Reset(b)
-		return a.unmarshalSingle(reader, reader.Len())
+		err := a.unmarshalSingle(reader, reader.Len())
+		byteReaderPool.Put(reader)
+		return err
 	default:
 		return fmt.Errorf("unknown type prefix %q", b[0])
 	}
@@ -722,7 +824,7 @@ func (a Any) unmarshalSingle(body io.Reader, n int) error {
 		*ai = int32(i)
 	case *int64:
 		i, err = bytesutil.ReadInt(body, n)
-		*ai = int64(i)
+		*ai = i
 	case *uint:
 		ui, err = bytesutil.ReadUint(body, n)
 		*ai = uint(ui)
@@ -737,7 +839,7 @@ func (a Any) unmarshalSingle(body io.Reader, n int) error {
 		*ai = uint32(ui)
 	case *uint64:
 		ui, err = bytesutil.ReadUint(body, n)
-		*ai = uint64(ui)
+		*ai = ui
 	case *float32:
 		var f float64
 		f, err = bytesutil.ReadFloat(body, 32, n)
@@ -820,13 +922,29 @@ func (a Any) unmarshalArray(br *bufio.Reader, l int64) error {
 			v.Set(reflect.MakeMapWithSize(v.Type(), size/2))
 		}
 
+		var kvs reflect.Value
+		if size > 0 && canShareReflectValue(v.Type().Key()) {
+			kvs = reflect.New(v.Type().Key())
+		}
+
+		var vvs reflect.Value
+		if size > 0 && canShareReflectValue(v.Type().Elem()) {
+			vvs = reflect.New(v.Type().Elem())
+		}
+
 		for i := 0; i < size; i += 2 {
-			kv := reflect.New(v.Type().Key())
+			kv := kvs
+			if !kv.IsValid() {
+				kv = reflect.New(v.Type().Key())
+			}
 			if err := (Any{I: kv.Interface()}).UnmarshalRESP(br); err != nil {
 				return err
 			}
 
-			vv := reflect.New(v.Type().Elem())
+			vv := vvs
+			if !vv.IsValid() {
+				vv = reflect.New(v.Type().Elem())
+			}
 			if err := (Any{I: vv.Interface()}).UnmarshalRESP(br); err != nil {
 				return err
 			}
@@ -841,14 +959,15 @@ func (a Any) unmarshalArray(br *bufio.Reader, l int64) error {
 		}
 
 		structFields := getStructFields(v.Type())
+		var field BulkStringBytes
+
 		for i := 0; i < size; i += 2 {
-			var bs BulkString
-			if err := bs.UnmarshalRESP(br); err != nil {
+			if err := field.UnmarshalRESP(br); err != nil {
 				return err
 			}
 
 			var vv reflect.Value
-			structField, ok := structFields[bs.S]
+			structField, ok := structFields[string(field.B)] // no allocation, since Go 1.3
 			if ok {
 				vv = getStructField(v, structField.indices)
 			}
@@ -870,6 +989,31 @@ func (a Any) unmarshalArray(br *bufio.Reader, l int64) error {
 
 	default:
 		return fmt.Errorf("cannot decode redis array into %v", v.Type())
+	}
+}
+
+func canShareReflectValue(ty reflect.Type) bool {
+	switch ty.Kind() {
+	case reflect.Bool,
+		reflect.Int,
+		reflect.Int8,
+		reflect.Int16,
+		reflect.Int32,
+		reflect.Int64,
+		reflect.Uint,
+		reflect.Uint8,
+		reflect.Uint16,
+		reflect.Uint32,
+		reflect.Uint64,
+		reflect.Uintptr,
+		reflect.Float32,
+		reflect.Float64,
+		reflect.Complex64,
+		reflect.Complex128,
+		reflect.String:
+		return true
+	default:
+		return false
 	}
 }
 
@@ -1003,7 +1147,7 @@ func (rm *RawMessage) unmarshal(br *bufio.Reader) error {
 	body := b[1 : len(b)-2]
 
 	switch b[0] {
-	case arrayPrefix[0]:
+	case ArrayPrefix[0]:
 		l, err := bytesutil.ParseInt(body)
 		if err != nil {
 			return err
@@ -1016,7 +1160,7 @@ func (rm *RawMessage) unmarshal(br *bufio.Reader) error {
 			}
 		}
 		return nil
-	case bulkStrPrefix[0]:
+	case BulkStringPrefix[0]:
 		l, err := bytesutil.ParseInt(body) // fuck DRY
 		if err != nil {
 			return err
@@ -1025,7 +1169,7 @@ func (rm *RawMessage) unmarshal(br *bufio.Reader) error {
 		}
 		*rm, err = bytesutil.ReadNAppend(br, *rm, int(l+2))
 		return err
-	case errPrefix[0], simpleStrPrefix[0], intPrefix[0]:
+	case ErrorPrefix[0], SimpleStringPrefix[0], IntPrefix[0]:
 		return nil
 	default:
 		return fmt.Errorf("unknown type prefix %q", b[0])
@@ -1038,9 +1182,13 @@ func (rm *RawMessage) unmarshal(br *bufio.Reader) error {
 // all cases.
 func (rm RawMessage) UnmarshalInto(u resp.Unmarshaler) error {
 	r := byteReaderPool.Get().(*bytes.Reader)
-	defer byteReaderPool.Put(r)
 	r.Reset(rm)
-	return u.UnmarshalRESP(bufio.NewReader(r))
+	br := bufioReaderPool.Get().(*bufio.Reader)
+	br.Reset(r)
+	err := u.UnmarshalRESP(br)
+	bufioReaderPool.Put(br)
+	byteReaderPool.Put(r)
+	return err
 }
 
 // IsNil returns true if the contents of RawMessage are one of the nil values.

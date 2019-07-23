@@ -8,14 +8,13 @@ import (
 	"time"
 
 	"github.com/mediocregopher/radix/v3/resp"
+	"github.com/mediocregopher/radix/v3/trace"
 )
 
 // ErrPoolEmpty is used by Pools created using the PoolOnEmptyErrAfter option
 var ErrPoolEmpty = errors.New("connection pool is empty")
 
 var errPoolFull = errors.New("connection pool is full")
-
-// TODO do something with errors which happen asynchronously
 
 // ioErrConn is a Conn which tracks the last net.Error which was seen either
 // during an Encode call or a Decode call
@@ -71,6 +70,7 @@ type poolOpts struct {
 	pipelineConcurrency   int
 	pipelineLimit         int
 	pipelineWindow        time.Duration
+	pt                    trace.PoolTrace
 }
 
 // PoolOpt is an optional behavior which can be applied to the NewPool function
@@ -199,6 +199,14 @@ func PoolPipelineWindow(window time.Duration, limit int) PoolOpt {
 	}
 }
 
+// PoolWithTrace tells the Pool to trace itself with the given PoolTrace
+// Note that PoolTrace will block every point that you set to trace.
+func PoolWithTrace(pt trace.PoolTrace) PoolOpt {
+	return func(po *poolOpts) {
+		po.pt = pt
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Pool is a semi-dynamic pool which holds a fixed number of connections open
@@ -223,6 +231,11 @@ type Pool struct {
 	wg       sync.WaitGroup
 	closeCh  chan bool
 	initDone chan struct{} // used for tests
+
+	// Any errors encountered internally will be written to this channel. If
+	// nothing is reading the channel the errors will be dropped. The channel
+	// will be closed when Close is called.
+	ErrCh chan error
 }
 
 // NewPool creates a *Pool which will keep open at least the given number of
@@ -246,6 +259,7 @@ func NewPool(network, addr string, size int, opts ...PoolOpt) (*Pool, error) {
 		size:     size,
 		closeCh:  make(chan bool),
 		initDone: make(chan struct{}),
+		ErrCh:    make(chan error, 1),
 	}
 
 	defaultPoolOpts := []PoolOpt{
@@ -255,6 +269,7 @@ func NewPool(network, addr string, size int, opts ...PoolOpt) (*Pool, error) {
 		PoolOnFullBuffer((size/3)+1, 1*time.Second),
 		PoolPingInterval(5 * time.Second / time.Duration(size+1)),
 		PoolPipelineConcurrency(size),
+		// NOTE if 150us is changed the benchmarks need to be updated too
 		PoolPipelineWindow(150*time.Microsecond, 0),
 	}
 
@@ -272,7 +287,7 @@ func NewPool(network, addr string, size int, opts ...PoolOpt) (*Pool, error) {
 
 	// make one Conn synchronously to ensure there's actually a redis instance
 	// present. The rest will be created asynchronously.
-	ioc, err := p.newConn(false) // false in case size is zero
+	ioc, err := p.newConn(false, trace.PoolConnCreatedReasonInitialization) // false in case size is zero
 	if err != nil {
 		return nil, err
 	}
@@ -280,15 +295,22 @@ func NewPool(network, addr string, size int, opts ...PoolOpt) (*Pool, error) {
 
 	p.wg.Add(1)
 	go func() {
+		startTime := time.Now()
 		defer p.wg.Done()
 		for i := 0; i < size-1; i++ {
-			ioc, err := p.newConn(true)
+			ioc, err := p.newConn(true, trace.PoolConnCreatedReasonInitialization)
 			if err == nil {
 				p.put(ioc)
+			} else {
+				p.err(err)
+				// if there was an error connecting to the instance than it
+				// might need a little breathing room, redis can sometimes get
+				// sad if too many connections are created simultaneously.
+				time.Sleep(100 * time.Millisecond)
 			}
-			// TODO do something with that error?
 		}
 		close(p.initDone)
+		p.traceInitCompleted(time.Since(startTime))
 	}()
 
 	// needs to be created before starting any background goroutines to avoid
@@ -317,9 +339,57 @@ func NewPool(network, addr string, size int, opts ...PoolOpt) (*Pool, error) {
 	return p, nil
 }
 
+func (p *Pool) traceInitCompleted(elapsedTime time.Duration) {
+	if p.opts.pt.InitCompleted != nil {
+		p.opts.pt.InitCompleted(trace.PoolInitCompleted{
+			PoolCommon:  p.traceCommon(),
+			AvailCount:  len(p.pool),
+			ElapsedTime: elapsedTime,
+		})
+	}
+}
+
+func (p *Pool) err(err error) {
+	select {
+	case p.ErrCh <- err:
+	default:
+	}
+}
+
+func (p *Pool) traceCommon() trace.PoolCommon {
+	return trace.PoolCommon{
+		Network: p.network, Addr: p.addr,
+		PoolSize: p.size, BufferSize: p.opts.overflowSize,
+	}
+}
+
+func (p *Pool) traceConnCreated(connectTime time.Duration, reason trace.PoolConnCreatedReason, err error) {
+	if p.opts.pt.ConnCreated != nil {
+		p.opts.pt.ConnCreated(trace.PoolConnCreated{
+			PoolCommon:  p.traceCommon(),
+			Reason:      reason,
+			ConnectTime: connectTime,
+			Err:         err,
+		})
+	}
+}
+
+func (p *Pool) traceConnClosed(reason trace.PoolConnClosedReason) {
+	if p.opts.pt.ConnClosed != nil {
+		p.opts.pt.ConnClosed(trace.PoolConnClosed{
+			PoolCommon: p.traceCommon(),
+			AvailCount: len(p.pool),
+			Reason:     reason,
+		})
+	}
+}
+
 // this must always be called with p.l unlocked
-func (p *Pool) newConn(errIfFull bool) (*ioErrConn, error) {
+func (p *Pool) newConn(errIfFull bool, reason trace.PoolConnCreatedReason) (*ioErrConn, error) {
+	start := time.Now()
 	c, err := p.opts.cf(p.network, p.addr)
+	elapsed := time.Since(start)
+	p.traceConnCreated(elapsed, reason, err)
 	if err != nil {
 		return nil, err
 	}
@@ -332,9 +402,11 @@ func (p *Pool) newConn(errIfFull bool) (*ioErrConn, error) {
 	defer p.l.Unlock()
 	if p.closed {
 		ioc.Close()
+		p.traceConnClosed(trace.PoolConnClosedReasonPoolClosed)
 		return nil, errClientClosed
 	} else if errIfFull && p.totalConns >= p.size {
 		ioc.Close()
+		p.traceConnClosed(trace.PoolConnClosedReasonPoolFull)
 		return nil, errPoolFull
 	}
 	p.totalConns++
@@ -371,10 +443,12 @@ func (p *Pool) doRefill() {
 	}
 	p.l.RUnlock()
 
-	ioc, err := p.newConn(true)
-	// TODO do something with this error? not if it's errPoolFull
+	ioc, err := p.newConn(true, trace.PoolConnCreatedReasonRefill)
+
 	if err == nil {
 		p.put(ioc)
+	} else if err != errPoolFull {
+		p.err(err)
 	}
 }
 
@@ -402,6 +476,7 @@ func (p *Pool) doOverflowDrain() {
 	}
 
 	ioc.Close()
+	p.traceConnClosed(trace.PoolConnClosedReasonBufferDrain)
 	p.l.Lock()
 	p.totalConns--
 	p.l.Unlock()
@@ -456,7 +531,7 @@ func (p *Pool) get() (*ioErrConn, error) {
 	// at this point everything is unlocked and the conn needs to be created.
 	// newConn will handle checking if the pool has been closed since the inner
 	// was called.
-	return p.newConn(false)
+	return p.newConn(false, trace.PoolConnCreatedReasonPoolEmpty)
 }
 
 func (p *Pool) put(ioc *ioErrConn) {
@@ -474,6 +549,7 @@ func (p *Pool) put(ioc *ioErrConn) {
 	// the pool might close here, but that's fine, because all that's happening
 	// at this point is that the connection is being closed
 	ioc.Close()
+	p.traceConnClosed(trace.PoolConnClosedReasonPoolClosed)
 	p.l.Lock()
 	p.totalConns--
 	p.l.Unlock()
@@ -493,17 +569,35 @@ func (p *Pool) put(ioc *ioErrConn) {
 // Due to a limitation in the implementation, custom CmdAction implementations
 // are currently not automatically pipelined.
 func (p *Pool) Do(a Action) error {
+	startTime := time.Now()
 	if p.pipeliner != nil && p.pipeliner.CanDo(a) {
-		return p.pipeliner.Do(a)
+		err := p.pipeliner.Do(a)
+		p.traceDoCompleted(time.Since(startTime), err)
+
+		return err
 	}
 
 	c, err := p.get()
 	if err != nil {
 		return err
 	}
-	defer p.put(c)
 
-	return c.Do(a)
+	err = c.Do(a)
+	p.put(c)
+	p.traceDoCompleted(time.Since(startTime), err)
+
+	return err
+}
+
+func (p *Pool) traceDoCompleted(elapsedTime time.Duration, err error) {
+	if p.opts.pt.DoCompleted != nil {
+		p.opts.pt.DoCompleted(trace.PoolDoCompleted{
+			PoolCommon:  p.traceCommon(),
+			AvailCount:  len(p.pool),
+			ElapsedTime: elapsedTime,
+			Err:         err,
+		})
+	}
 }
 
 // NumAvailConns returns the number of connections currently available in the
@@ -529,6 +623,7 @@ emptyLoop:
 		select {
 		case ioc := <-p.pool:
 			ioc.Close()
+			p.traceConnClosed(trace.PoolConnClosedReasonPoolClosed)
 			p.totalConns--
 		default:
 			close(p.pool)
@@ -546,5 +641,6 @@ emptyLoop:
 	// by now the pool's go-routines should have bailed, wait to make sure they
 	// do
 	p.wg.Wait()
+	close(p.ErrCh)
 	return nil
 }

@@ -18,6 +18,12 @@ type SentinelOpt func(*sentinelOpts)
 
 // SentinelConnFunc tells the Sentinel to use the given ConnFunc when connecting
 // to sentinel instances.
+//
+// NOTE that if SentinelConnFunc is not used then Sentinel will attempt to
+// retrieve AUTH and SELECT information from the address provided to
+// NewSentinel, and use that for dialing all Sentinels. If SentinelConnFunc is
+// provided, however, those options must be given through
+// DialAuthPass/DialSelectDB within the ConnFunc.
 func SentinelConnFunc(cf ConnFunc) SentinelOpt {
 	return func(so *sentinelOpts) {
 		so.cf = cf
@@ -98,8 +104,11 @@ func NewSentinel(primaryName string, sentinelAddrs []string, opts ...SentinelOpt
 		testEventCh:   make(chan string, 1),
 	}
 
+	// If the given sentinelAddrs have AUTH/SELECT info encoded into them then
+	// use that for all sentinel connections going forward (unless overwritten
+	// by a SentinelConnFunc in opts).
+	sc.so.cf = wrapDefaultConnFunc(sentinelAddrs[0])
 	defaultSentinelOpts := []SentinelOpt{
-		SentinelConnFunc(DefaultConnFunc),
 		SentinelPoolFunc(DefaultClientFunc),
 	}
 
@@ -203,6 +212,18 @@ func (sc *Sentinel) Addrs() (string, []string) {
 		secAddrs = append(secAddrs, addr)
 	}
 	return sc.primAddr, secAddrs
+}
+
+// SentinelAddrs returns the addresses of all known sentinels.
+func (sc *Sentinel) SentinelAddrs() []string {
+	sc.l.RLock()
+	defer sc.l.RUnlock()
+
+	sentAddrs := make([]string, 0, len(sc.sentinelAddrs))
+	for addr := range sc.sentinelAddrs {
+		sentAddrs = append(sentAddrs, addr)
+	}
+	return sentAddrs
 }
 
 // Client returns a Client for the given address, which could be either the

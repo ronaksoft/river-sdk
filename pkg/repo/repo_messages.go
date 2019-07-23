@@ -202,7 +202,6 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 		_ = r.badger.View(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
 			opts.Prefix = r.getPrefix(peerID, peerType)
-			opts.PrefetchValues = false
 			opts.Reverse = true
 			it := txn.NewIterator(opts)
 			for it.Seek(r.getMessageKey(peerID, peerType, maxID)); it.ValidForPrefix(opts.Prefix); it.Next() {
@@ -233,7 +232,6 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 		_ = r.badger.View(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
 			opts.Prefix = r.getPrefix(peerID, peerType)
-			opts.PrefetchValues = false
 			opts.Reverse = false
 			it := txn.NewIterator(opts)
 			for it.Seek(r.getMessageKey(peerID, peerType, minID)); it.ValidForPrefix(opts.Prefix); it.Next() {
@@ -267,7 +265,6 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 		_ = r.badger.View(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
 			opts.Prefix = r.getPrefix(peerID, peerType)
-			opts.PrefetchValues = false
 			opts.Reverse = true
 			it := txn.NewIterator(opts)
 			for it.Seek(r.getMessageKey(peerID, peerType, maxID)); it.ValidForPrefix(opts.Prefix); it.Next() {

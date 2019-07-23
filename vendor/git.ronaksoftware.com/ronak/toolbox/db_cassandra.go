@@ -184,11 +184,12 @@ func NewCassDB(conf CassConfig) *CassDB {
 	cassCluster.ReconnectInterval = conf.ReconnectInterval
 	cassCluster.DefaultIdempotence = conf.DefaultIdempotence
 	cassCluster.QueryObserver = conf.QueryObserver
-
+	cassCluster.Compressor = gocql.SnappyCompressor{}
 	cassCluster.Authenticator = gocql.PasswordAuthenticator{
 		Username: conf.Username,
 		Password: conf.Password,
 	}
+	cassCluster.PoolConfig.HostSelectionPolicy = gocql.TokenAwareHostPolicy(gocql.RoundRobinHostPolicy())
 
 	cassCluster.NumConns = conf.Concurrency
 	if len(conf.Keyspace) > 0 {

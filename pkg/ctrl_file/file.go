@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"io"
 	"io/ioutil"
 	"mime"
@@ -33,6 +34,8 @@ var (
 const (
 	// FileSizeThresholdForCheckHash for files that are smaller than this number we will calculate md5 hash to do not reupload same file twice
 	FileSizeThresholdForCheckHash = 10 * 1024 * 1024 // 10MB
+	retryMaxAttempts              = 10
+	retryWaitTime                 = 100 * time.Millisecond
 )
 
 // Config network controller config
@@ -520,31 +523,36 @@ func (ctrl *Controller) SetNetworkStatus(state domain.NetworkStatus) {
 
 // DownloadAccountPhoto download account photo from server its sync
 func (ctrl *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) (string, error) {
-	req := new(msg.FileGet)
-	req.Location = new(msg.InputFileLocation)
-	if isBig {
-		req.Location.ClusterID = photo.PhotoBig.ClusterID
-		req.Location.AccessHash = photo.PhotoBig.AccessHash
-		req.Location.FileID = photo.PhotoBig.FileID
-		req.Location.Version = 0
-	} else {
-		req.Location.ClusterID = photo.PhotoSmall.ClusterID
-		req.Location.AccessHash = photo.PhotoSmall.AccessHash
-		req.Location.FileID = photo.PhotoSmall.FileID
-		req.Location.Version = 0
-	}
-	// get all bytes
-	req.Offset = 0
-	req.Limit = 0
+	var filePath string
+	err := ronak.Try(retryMaxAttempts, retryWaitTime, func() error {
+		req := new(msg.FileGet)
+		req.Location = new(msg.InputFileLocation)
+		if isBig {
+			req.Location.ClusterID = photo.PhotoBig.ClusterID
+			req.Location.AccessHash = photo.PhotoBig.AccessHash
+			req.Location.FileID = photo.PhotoBig.FileID
+			req.Location.Version = 0
+		} else {
+			req.Location.ClusterID = photo.PhotoSmall.ClusterID
+			req.Location.AccessHash = photo.PhotoSmall.AccessHash
+			req.Location.FileID = photo.PhotoSmall.FileID
+			req.Location.Version = 0
+		}
+		// get all bytes
+		req.Offset = 0
+		req.Limit = 0
 
-	envelop := new(msg.MessageEnvelope)
-	envelop.Constructor = msg.C_FileGet
-	envelop.Message, _ = req.Marshal()
-	envelop.RequestID = uint64(domain.SequentialUniqueID())
+		envelop := new(msg.MessageEnvelope)
+		envelop.Constructor = msg.C_FileGet
+		envelop.Message, _ = req.Marshal()
+		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
-	filePath := GetAccountAvatarPath(userID, req.Location.FileID)
-	res, err := ctrl.Send(envelop)
-	if err == nil {
+		filePath = GetAccountAvatarPath(userID, req.Location.FileID)
+		res, err := ctrl.Send(envelop)
+		if err != nil {
+			return err
+		}
+
 		switch res.Constructor {
 		case msg.C_Error:
 			strErr := ""
@@ -552,57 +560,66 @@ func (ctrl *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto,
 			if err := x.Unmarshal(res.Message); err == nil {
 				strErr = "Code :" + x.Code + ", Items :" + x.Items
 			}
-			return "", fmt.Errorf("received error response {userID: %d,  %s }", userID, strErr)
+			return fmt.Errorf("received error response {userID: %d,  %s }", userID, strErr)
 		case msg.C_File:
 			x := new(msg.File)
 			err := x.Unmarshal(res.Message)
 			if err != nil {
-				return "", err
+				return err
 			}
 
 			// write to file path
 			err = ioutil.WriteFile(filePath, x.Bytes, 0666)
 			if err != nil {
-				return "", err
+				return err
 			}
 
 			// save to DB
-			return filePath, nil
+			return nil
 
 		default:
-			return "", fmt.Errorf("received unknown response constructor {UserId : %d}", userID)
+			return fmt.Errorf("received unknown response constructor {UserId : %d}", userID)
 		}
+
+	})
+	if err != nil {
+		return "", err
 	}
-	return "", err
+
+	return filePath, nil
 }
 
 // DownloadGroupPhoto download group photo from server its sync
 func (ctrl *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) (string, error) {
-	req := new(msg.FileGet)
-	req.Location = new(msg.InputFileLocation)
-	if isBig {
-		req.Location.ClusterID = photo.PhotoBig.ClusterID
-		req.Location.AccessHash = photo.PhotoBig.AccessHash
-		req.Location.FileID = photo.PhotoBig.FileID
-		req.Location.Version = 0
-	} else {
-		req.Location.ClusterID = photo.PhotoSmall.ClusterID
-		req.Location.AccessHash = photo.PhotoSmall.AccessHash
-		req.Location.FileID = photo.PhotoSmall.FileID
-		req.Location.Version = 0
-	}
-	// get all bytes
-	req.Offset = 0
-	req.Limit = 0
+	var filePath string
+	err := ronak.Try(retryMaxAttempts, retryWaitTime, func() error {
+		req := new(msg.FileGet)
+		req.Location = new(msg.InputFileLocation)
+		if isBig {
+			req.Location.ClusterID = photo.PhotoBig.ClusterID
+			req.Location.AccessHash = photo.PhotoBig.AccessHash
+			req.Location.FileID = photo.PhotoBig.FileID
+			req.Location.Version = 0
+		} else {
+			req.Location.ClusterID = photo.PhotoSmall.ClusterID
+			req.Location.AccessHash = photo.PhotoSmall.AccessHash
+			req.Location.FileID = photo.PhotoSmall.FileID
+			req.Location.Version = 0
+		}
+		// get all bytes
+		req.Offset = 0
+		req.Limit = 0
 
-	envelop := new(msg.MessageEnvelope)
-	envelop.Constructor = msg.C_FileGet
-	envelop.Message, _ = req.Marshal()
-	envelop.RequestID = uint64(domain.SequentialUniqueID())
+		envelop := new(msg.MessageEnvelope)
+		envelop.Constructor = msg.C_FileGet
+		envelop.Message, _ = req.Marshal()
+		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
-	filePath := GetGroupAvatarPath(groupID, req.Location.FileID)
-	res, err := ctrl.Send(envelop)
-	if err == nil {
+		filePath = GetGroupAvatarPath(groupID, req.Location.FileID)
+		res, err := ctrl.Send(envelop)
+		if err != nil {
+			return err
+		}
 		switch res.Constructor {
 		case msg.C_Error:
 			strErr := ""
@@ -610,51 +627,60 @@ func (ctrl *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto,
 			if err := x.Unmarshal(res.Message); err == nil {
 				strErr = "Code :" + x.Code + ", Items :" + x.Items
 			}
-			return "", fmt.Errorf("received error response {GroupID: %d,  %s }", groupID, strErr)
+			return fmt.Errorf("received error response {GroupID: %d,  %s }", groupID, strErr)
 		case msg.C_File:
 			x := new(msg.File)
 			err := x.Unmarshal(res.Message)
 			if err != nil {
-				return "", err
+				return err
 			}
 
 			// write to file path
 			err = ioutil.WriteFile(filePath, x.Bytes, 0666)
 			if err != nil {
-				return "", err
+				return err
 			}
 
 			// save to DB
-			return filePath, nil
+			return nil
 
 		default:
-			return "", fmt.Errorf("received unknown response constructor {GroupID : %d}", groupID)
+			return fmt.Errorf("received unknown response constructor {GroupID : %d}", groupID)
 		}
+
+	})
+	if err != nil {
+		return "", err
 	}
-	return "", err
+	return filePath, nil
 }
 
 // DownloadThumbnail download thumbnail from server its sync
 func (ctrl *Controller) DownloadThumbnail(fileID int64, accessHash uint64, clusterID, version int32) (string, error) {
-	req := new(msg.FileGet)
-	req.Location = &msg.InputFileLocation{
-		AccessHash: accessHash,
-		ClusterID:  clusterID,
-		FileID:     fileID,
-		Version:    version,
-	}
-	// get all bytes
-	req.Offset = 0
-	req.Limit = 0
+	filePath := ""
+	err := ronak.Try(10, 100*time.Millisecond, func() error {
+		req := new(msg.FileGet)
+		req.Location = &msg.InputFileLocation{
+			AccessHash: accessHash,
+			ClusterID:  clusterID,
+			FileID:     fileID,
+			Version:    version,
+		}
+		// get all bytes
+		req.Offset = 0
+		req.Limit = 0
 
-	envelop := new(msg.MessageEnvelope)
-	envelop.Constructor = msg.C_FileGet
-	envelop.Message, _ = req.Marshal()
-	envelop.RequestID = uint64(domain.SequentialUniqueID())
+		envelop := new(msg.MessageEnvelope)
+		envelop.Constructor = msg.C_FileGet
+		envelop.Message, _ = req.Marshal()
+		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
-	filePath := GetThumbnailPath(fileID, clusterID)
-	res, err := ctrl.Send(envelop)
-	if err == nil {
+		filePath = GetThumbnailPath(fileID, clusterID)
+		res, err := ctrl.Send(envelop)
+		if err != nil {
+			return err
+		}
+
 		switch res.Constructor {
 		case msg.C_Error:
 			strErr := ""
@@ -662,28 +688,32 @@ func (ctrl *Controller) DownloadThumbnail(fileID int64, accessHash uint64, clust
 			if err := x.Unmarshal(res.Message); err == nil {
 				strErr = "Code :" + x.Code + ", Items :" + x.Items
 			}
-			return "", fmt.Errorf("DownloadThumbnail() received error response { %s }", strErr)
+			return fmt.Errorf("received error response {%s}", strErr)
 		case msg.C_File:
 			x := new(msg.File)
 			err := x.Unmarshal(res.Message)
 			if err != nil {
-				return "", err
+				return err
 			}
 
 			// write to file path
 			err = ioutil.WriteFile(filePath, x.Bytes, 0666)
 			if err != nil {
-				return "", err
+				return err
 			}
 
 			// save to DB
-			return filePath, nil
+			return nil
 
 		default:
-			return "", fmt.Errorf("DownloadThumbnail() received unknown response constructor")
+			return nil
 		}
+
+	})
+	if err != nil {
+		return "", err
 	}
-	return "", err
+	return filePath, nil
 }
 
 func (ctrl *Controller) ClearFiles(filePaths []string) error {

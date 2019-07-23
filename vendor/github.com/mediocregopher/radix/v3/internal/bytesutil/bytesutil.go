@@ -4,7 +4,6 @@ package bytesutil
 
 import (
 	"bufio"
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -123,19 +122,6 @@ func Expand(b []byte, n int) []byte {
 	return b[:n]
 }
 
-// BufferedPrefix checks that the next bytes in the given *bufio.Reader are equal to prefix and discards them if
-// they are equal.
-func BufferedPrefix(br *bufio.Reader, prefix []byte) error {
-	b, err := br.Peek(len(prefix))
-	if err != nil {
-		return err
-	} else if !bytes.Equal(b, prefix) {
-		return fmt.Errorf("expected prefix %q, got %q", prefix, b)
-	}
-	_, err = br.Discard(len(prefix))
-	return err
-}
-
 // BufferedBytesDelim reads a line from br and checks that the line ends with \r\n, returning the line without \r\n.
 func BufferedBytesDelim(br *bufio.Reader) ([]byte, error) {
 	b, err := br.ReadSlice('\n')
@@ -175,8 +161,14 @@ func ReadNDiscard(r io.Reader, n int) error {
 
 	if n == 0 {
 		return nil
-	} else if d, ok := r.(discarder); ok {
-		_, err := d.Discard(n)
+	}
+
+	switch v := r.(type) {
+	case discarder:
+		_, err := v.Discard(n)
+		return err
+	case io.Seeker:
+		_, err := v.Seek(int64(n), io.SeekCurrent)
 		return err
 	}
 
@@ -198,19 +190,6 @@ func ReadNDiscard(r io.Reader, n int) error {
 			return err
 		}
 	}
-}
-
-// MultiWrite writes multiple byte slices into one writer.
-//
-// This is equivalent to calling w.Write for each byte slice in bb, but may be optimized to reduce calls
-// for some types of io.Writer.
-func MultiWrite(w io.Writer, bb ...[]byte) error {
-	for _, b := range bb {
-		if _, err := w.Write(b); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // ReadInt reads the next n bytes from r as a signed 64 bit integer.

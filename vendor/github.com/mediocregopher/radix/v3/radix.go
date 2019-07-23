@@ -19,8 +19,9 @@
 // Commands
 //
 // Any redis command can be performed by passing a Cmd into a Client's Do
-// method. The return from the Cmd can be captured into any appopriate go
-// primitive type, or a slice or map if the command returns an array.
+// method. Each Cmd should only be used once. The return from the Cmd can be
+// captured into any appopriate go primitive type, or a slice or map if the
+// command returns an array.
 //
 //	err := client.Do(radix.Cmd(nil, "SET", "foo", "someval"))
 //
@@ -55,7 +56,7 @@
 //		Baz string `redis:"-"`   // Will not be populated
 //	}
 //
-// Embedded struct will inline that struct's fields into the parent's:
+// Embedded structs will inline that struct's fields into the parent's:
 //
 //	type MyOtherType struct {
 //		// adds fields "Foo" and "BAR" (from above example) to MyOtherType
@@ -131,6 +132,7 @@ package radix
 
 import (
 	"bufio"
+	"crypto/tls"
 	"errors"
 	"net"
 	"net/url"
@@ -164,7 +166,7 @@ type ClientFunc func(network, addr string) (Client, error)
 // DefaultClientFunc is a ClientFunc which will return a Client for a redis
 // instance using sane defaults.
 var DefaultClientFunc = func(network, addr string) (Client, error) {
-	return NewPool(network, addr, 20)
+	return NewPool(network, addr, 4)
 }
 
 // Conn is a Client wrapping a single network connection which synchronously
@@ -195,24 +197,6 @@ type Conn interface {
 	// Returns the underlying network connection, as-is. Read, Write, and Close
 	// should not be called on the returned Conn.
 	NetConn() net.Conn
-}
-
-// a wrapper around net.Conn which prevents Read, Write, and Close from being
-// called
-type connLimited struct {
-	net.Conn
-}
-
-func (cl connLimited) Read(b []byte) (int, error) {
-	return 0, errors.New("Read not allowed to be called on net.Conn returned from radix")
-}
-
-func (cl connLimited) Write(b []byte) (int, error) {
-	return 0, errors.New("Write not allowed to be called on net.Conn returned from radix")
-}
-
-func (cl connLimited) Close() error {
-	return errors.New("Close not allowed to be called on net.Conn returned from radix")
 }
 
 type connWrap struct {
@@ -246,7 +230,7 @@ func (cw *connWrap) Decode(u resp.Unmarshaler) error {
 }
 
 func (cw *connWrap) NetConn() net.Conn {
-	return connLimited{cw.Conn}
+	return cw.Conn
 }
 
 // ConnFunc is a function which returns an initialized, ready-to-be-used Conn.
@@ -261,12 +245,21 @@ var DefaultConnFunc = func(network, addr string) (Conn, error) {
 	return Dial(network, addr)
 }
 
+func wrapDefaultConnFunc(addr string) ConnFunc {
+	_, opts := parseRedisURL(addr)
+	return func(network, addr string) (Conn, error) {
+		return Dial(network, addr, opts...)
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 type dialOpts struct {
 	connectTimeout, readTimeout, writeTimeout time.Duration
 	authPass                                  string
 	selectDB                                  string
+	useTLSConfig                              bool
+	tlsConfig                                 *tls.Config
 }
 
 // DialOpt is an optional behavior which can be applied to the Dial function to
@@ -329,6 +322,16 @@ func DialSelectDB(db int) DialOpt {
 	}
 }
 
+// DialUseTLS will cause Dial to perform a TLS handshake using the provided
+// config. If config is nil the config is interpreted as equivalent to the zero
+// configuration. See https://golang.org/pkg/crypto/tls/#Config
+func DialUseTLS(config *tls.Config) DialOpt {
+	return func(do *dialOpts) {
+		do.tlsConfig = config
+		do.useTLSConfig = true
+	}
+}
+
 type timeoutConn struct {
 	net.Conn
 	readTimeout, writeTimeout time.Duration
@@ -352,6 +355,38 @@ var defaultDialOpts = []DialOpt{
 	DialTimeout(10 * time.Second),
 }
 
+func parseRedisURL(urlStr string) (string, []DialOpt) {
+	// do a quick check before we bust out url.Parse, in case that is very
+	// unperformant
+	if !strings.HasPrefix(urlStr, "redis://") {
+		return urlStr, nil
+	}
+
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		return urlStr, nil
+	}
+
+	var opts []DialOpt
+	q := u.Query()
+	if p, ok := u.User.Password(); ok {
+		opts = append(opts, DialAuthPass(p))
+	} else if qpw := q.Get("password"); qpw != "" {
+		opts = append(opts, DialAuthPass(qpw))
+	}
+
+	dbStr := q.Get("db")
+	if u.Path != "" && u.Path != "/" {
+		dbStr = u.Path[1:]
+	}
+
+	if dbStr, err := strconv.Atoi(dbStr); err == nil {
+		opts = append(opts, DialSelectDB(dbStr))
+	}
+
+	return u.Host, opts
+}
+
 // Dial is a ConnFunc which creates a Conn using net.Dial and NewConn. It takes
 // in a number of options which can overwrite its default behavior as well.
 //
@@ -372,39 +407,24 @@ func Dial(network, addr string, opts ...DialOpt) (Conn, error) {
 	for _, opt := range defaultDialOpts {
 		opt(&do)
 	}
+	addr, addrOpts := parseRedisURL(addr)
+	for _, opt := range addrOpts {
+		opt(&do)
+	}
 	for _, opt := range opts {
 		opt(&do)
 	}
 
-	// do a quick check before we bust out url.Parse, in case that is very
-	// unperformant
-	if strings.HasPrefix(addr, "redis://") {
-		if u, err := url.Parse(addr); err == nil {
-			addr = u.Host
-			q := u.Query()
-			if do.authPass == "" {
-				if p, ok := u.User.Password(); ok {
-					do.authPass = p
-				} else if qpw := q.Get("password"); qpw != "" {
-					do.authPass = qpw
-				}
-			}
-			if do.selectDB == "" {
-				if u.Path != "" && u.Path != "/" {
-					do.selectDB = u.Path[1:]
-				} else if qdb := q.Get("db"); qdb != "" {
-					do.selectDB = qdb
-				}
-			}
-		}
-	}
-
 	var netConn net.Conn
 	var err error
+	dialer := net.Dialer{}
 	if do.connectTimeout > 0 {
-		netConn, err = net.DialTimeout(network, addr, do.connectTimeout)
+		dialer.Timeout = do.connectTimeout
+	}
+	if do.useTLSConfig {
+		netConn, err = tls.DialWithDialer(&dialer, network, addr, do.tlsConfig)
 	} else {
-		netConn, err = net.Dial(network, addr)
+		netConn, err = dialer.Dial(network, addr)
 	}
 
 	if err != nil {

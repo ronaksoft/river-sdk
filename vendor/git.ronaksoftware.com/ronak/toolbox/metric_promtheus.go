@@ -44,9 +44,13 @@ func NewPrometheus(bundleID, instanceID string) *Prometheus {
 		"instanceID": instanceID,
 	}
 
-	m.registry.MustRegister(prometheus.NewGoCollector())
+
 
 	return m
+}
+
+func (p *Prometheus) RegisterGoCollector() {
+	p.registry.MustRegister(prometheus.NewGoCollector())
 }
 
 func (p *Prometheus) SetConstLabels(m map[string]string) {
