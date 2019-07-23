@@ -155,7 +155,7 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 	})
 
 	// sync localDB with responses in the background
-	go r.syncCtrl.MessageHandler(msgs)
+	r.syncCtrl.MessageHandler(msgs)
 
 	// check requestCallbacks and call callbacks
 	for idx := range msgs {
