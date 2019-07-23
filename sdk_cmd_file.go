@@ -440,10 +440,12 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 	version := int32(0)
 	switch m.MediaType {
 	case msg.MediaTypeEmpty:
+		logs.Warn("SDK::FileDownloadThumbnail - MediaEmpty", zap.Any("MediaType", m.MediaType))
 		return ""
 	case msg.MediaTypeDocument:
 		x := new(msg.MediaDocument)
 		_ = x.Unmarshal(m.Media)
+		logs.Warn("SDK::FileDownloadThumbnail - MediaEmpty", zap.Any("MediaType", m.MediaType), zap.Any("Thumb", x.Doc.Thumbnail))
 		if x.Doc.Thumbnail == nil {
 			return ""
 		}
