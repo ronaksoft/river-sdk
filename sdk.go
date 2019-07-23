@@ -454,7 +454,7 @@ func (r *River) Start() error {
 	r.syncCtrl.Start()
 
 	// Connect to Server
-	go r.networkCtrl.Connect(false)
+	go r.networkCtrl.Connect(true)
 
 	logs.Info("River Started")
 	return nil
