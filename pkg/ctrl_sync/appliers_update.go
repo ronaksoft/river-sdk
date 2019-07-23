@@ -32,16 +32,6 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	// used messageType to identify client & server messages on Media thingy
 	x.Message.MessageType = 1
 
-	// If sender is me, check for pending
-	if x.Message.SenderID == ctrl.userID {
-		pm := repo.PendingMessages.GetByRealID(x.Message.ID)
-		if pm != nil {
-			ctrl.handlePendingMessage(x)
-			repo.PendingMessages.Delete(pm.ID)
-			repo.PendingMessages.DeleteByRealID(x.Message.ID)
-		}
-	}
-
 	dialog := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
 	if dialog == nil {
 		messageHole.InsertHole(x.Message.PeerID, x.Message.PeerType, 0, x.Message.ID-1)
@@ -68,6 +58,17 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		// update users access hash
 		repo.Users.UpdateAccessHash(x.AccessHash, x.Message.PeerID, x.Message.PeerType)
 	}
+
+	// If sender is me, check for pending
+	if x.Message.SenderID == ctrl.userID {
+		pm := repo.PendingMessages.GetByRealID(x.Message.ID)
+		if pm != nil {
+			ctrl.handlePendingMessage(x)
+			repo.PendingMessages.Delete(pm.ID)
+			repo.PendingMessages.DeleteByRealID(x.Message.ID)
+		}
+	}
+
 
 	// handle Message's Action
 	res := []*msg.UpdateEnvelope{u}
