@@ -34,9 +34,6 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 
 	dialog := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
 	if dialog == nil {
-		messageHole.InsertHole(x.Message.PeerID, x.Message.PeerType, 0, x.Message.ID-1)
-		messageHole.SetUpperFilled(x.Message.PeerID, x.Message.PeerType, x.Message.ID)
-
 		// make sure to created the message hole b4 creating dialog
 		dialog = &msg.Dialog{
 			PeerID:         x.Message.PeerID,
@@ -47,6 +44,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 			AccessHash:     x.AccessHash,
 		}
 		repo.Dialogs.SaveNew(dialog, x.Message.CreatedOn)
+		messageHole.InsertHole(x.Message.PeerID, x.Message.PeerType, 0, x.Message.ID-1)
 	}
 	// save user if does not exist
 	repo.Users.Save(x.Sender)

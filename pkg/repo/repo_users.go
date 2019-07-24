@@ -194,12 +194,13 @@ func (r *repoUsers) GetPhoto(userID, photoID int64) *msg.UserPhoto {
 }
 
 func (r *repoUsers) Save(user *msg.User) {
-	if alreadySaved(fmt.Sprintf("U.%d", user.ID), user) {
-		return
-	}
 	if user == nil {
 		return
 	}
+	if alreadySaved(fmt.Sprintf("U.%d", user.ID), user) {
+		return
+	}
+
 	userKey := r.getUserKey(user.ID)
 	userBytes, _ := user.Marshal()
 	_ = r.badger.Update(func(txn *badger.Txn) error {

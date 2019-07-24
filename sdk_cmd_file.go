@@ -502,10 +502,11 @@ func (r *River) downloadPendingThumbnail(msgID int64) string {
 // ClearCache removes files from client device, allMedia means clear all media types
 // peerID 0 means all peers
 func (r *River) ClearCache(peerID int64, mediaTypes string, allMedia bool) bool {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("ClearCache", time.Now().Sub(startTime))
-	}()
+	return false
+	// startTime := time.Now()
+	// defer func() {
+	// 	mon.FunctionResponseTime("ClearCache", time.Now().Sub(startTime))
+	// }()
 	// var messageIDs []int64
 	// clearDatabaseStatus := func() {
 	// 	for k := range DatabaseStatus {
@@ -573,7 +574,7 @@ func (r *River) ClearCache(peerID int64, mediaTypes string, allMedia bool) bool 
 	// 		return false
 	// 	}
 	// }
-	return true
+	// return true
 }
 
 // GetSharedMedia search in given dialog files

@@ -120,14 +120,14 @@ func (r *repoGroups) updateParticipantsCount(groupID int64) {
 }
 
 func (r *repoGroups) Save(group *msg.Group) {
+	if group == nil {
+		return
+	}
+
 	if alreadySaved(fmt.Sprintf("G.%d", group.ID), group) {
 		return
 	}
 	defer r.deleteFromCache(group.ID)
-
-	if group == nil {
-		return
-	}
 
 	groupKey := r.getGroupKey(group.ID)
 	groupBytes, _ := group.Marshal()
