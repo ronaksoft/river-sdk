@@ -17,7 +17,6 @@ import (
    Copyright Ronak Software Group 2018
 */
 
-
 // SearchContacts searches contacts
 func (r *River) SearchContacts(requestID int64, searchPhrase string, delegate RequestDelegate) {
 	startTime := time.Now()

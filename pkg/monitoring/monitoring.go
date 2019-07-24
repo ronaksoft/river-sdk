@@ -25,7 +25,7 @@ const (
 )
 
 type stats struct {
-	mtx                     sync.Mutex
+	mtx                     *sync.Mutex
 	AvgServerResponseTime   time.Duration
 	MaxServerResponseTime   time.Duration
 	MinServerResponseTime   time.Duration
@@ -45,6 +45,7 @@ var Stats stats
 
 func init() {
 	Stats.StartTime = time.Now()
+	Stats.mtx = &sync.Mutex{}
 }
 
 func ServerResponseTime(constructor int64, t time.Duration) {

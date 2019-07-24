@@ -25,7 +25,6 @@ var (
 	lastUpdate time.Time
 )
 
-
 func Get() int64 {
 	return curSalt
 }

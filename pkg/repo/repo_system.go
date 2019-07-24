@@ -81,8 +81,3 @@ func (r *repoSystem) SaveString(keyName string, keyValue string) error {
 		)
 	})
 }
-
-type ServerSalt struct {
-	Timestamp int64 `json:"timestamp`
-	Salt      int64 `json:"salt`
-}
