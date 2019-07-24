@@ -3,6 +3,7 @@ package riversdk
 import (
 	"encoding/json"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
+	"sort"
 	"strings"
 	"sync"
 
@@ -196,6 +197,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 
+	// Load the dialog
 	dtoDialog := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
 	if dtoDialog == nil {
 		out.Constructor = msg.C_Error
@@ -209,6 +211,13 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 
+	// Prepare the request and update its parameters if necessary
+	if req.MaxID <= 0 {
+		req.MaxID = dtoDialog.TopMessageID
+	}
+	// Update the request before sending to server
+	in.Message, _ = req.Marshal()
+
 	// Offline mode
 	if !r.networkCtrl.Connected() {
 		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
@@ -220,90 +229,92 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 
-	if req.MaxID < 0 {
-		req.MaxID = 0
+	// Prepare the the result before sending back to the client
+	preSuccessCB := func(cb domain.MessageHandler) domain.MessageHandler {
+		return cb
+	}(successCB)
+	pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
+	if len(pendingMessages) > 0 {
+		preSuccessCB = func(cb domain.MessageHandler, pms []*msg.UserMessage, reqMin, reqMax int64) domain.MessageHandler {
+			// TODO:: Think about ways to optimize this
+			return func(m *msg.MessageEnvelope) {
+				switch m.Constructor {
+				case msg.C_MessagesMany:
+					x := new(msg.MessagesMany)
+					_ = x.Unmarshal(m.Message)
+					// 1st sort the received messages by id
+					sort.Slice(x.Messages, func(i, j int) bool {
+						return x.Messages[i].ID < x.Messages[j].ID
+					})
+
+					// 2nd base on the reqMin values add the appropriate pending messages
+					switch {
+					case reqMin == 0:
+						x.Messages = append(x.Messages, pms...)
+					default:
+						// Min != 0
+						for idx := range pms {
+							if pms[idx].CreatedOn > x.Messages[0].CreatedOn {
+								x.Messages = append(x.Messages, pms[idx])
+							}
+						}
+					}
+
+					// 3rd sort again, to sort pending messages and actual messages
+					sort.Slice(x.Messages, func(i, j int) bool {
+						if x.Messages[i].ID < 0 || x.Messages[j].ID < 0 {
+							return x.Messages[i].CreatedOn < x.Messages[j].CreatedOn
+						} else {
+							return x.Messages[i].ID < x.Messages[j].ID
+						}
+					})
+					m.Message, _ = x.Marshal()
+				default:
+				}
+				// Call the actual success callback function
+				successCB(m)
+			}
+		}(successCB, pendingMessages, req.MinID, req.MaxID)
 	}
+
 	switch {
-	case req.MinID == 0 && req.MaxID == 0:
-		b, bar := messageHole.GetLowerFilled(req.Peer.ID, int32(req.Peer.Type), dtoDialog.TopMessageID)
-		if !b {
+	case req.MinID == 0:
+		if b, bar := messageHole.GetLowerFilled(req.Peer.ID, int32(req.Peer.Type), req.MaxID); !b {
 			logs.Info("Range in Hole",
 				zap.Int64("PeerID", req.Peer.ID),
-				zap.Int64("MaxID", dtoDialog.TopMessageID),
+				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("MinID", req.MinID),
 				zap.String("Holes", messageHole.PrintHole(req.Peer.ID, int32(req.Peer.Type))),
 			)
-			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
 			return
-		}
-		if bar.Min == 0 {
+		} else if bar.Min == 0 {
 			messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
-			messagesGetHistory(out, messages, users, in.RequestID, successCB)
+			messagesGetHistory(out, messages, users, in.RequestID, preSuccessCB)
 			return
-		}
-		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
-		if len(messages) < int(req.Limit) {
-			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
-			return
-		}
-		pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
-		if len(pendingMessages) > 0 {
-			messages = append(messages, pendingMessages...)
+		} else {
+			messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
+			if len(messages) < int(req.Limit) {
+				r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
+				return
+			}
+			messagesGetHistory(out, messages, users, in.RequestID, preSuccessCB)
 		}
 
-		messagesGetHistory(out, messages, users, in.RequestID, successCB)
-	case req.MinID == 0 && req.MaxID != 0:
-		// Load more message, scroll up
-		b, bar := messageHole.GetLowerFilled(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
-		if !b {
-			logs.Info("Range in Hole",
-				zap.Int64("PeerID", req.Peer.ID),
-				zap.Int64("MaxID", req.MaxID),
-				zap.Int64("MinID", req.MinID),
-				zap.String("Holes", messageHole.PrintHole(req.Peer.ID, int32(req.Peer.Type))),
-			)
-			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
-			return
-		}
-		if bar.Min == 0 {
-			messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
-			messagesGetHistory(out, messages, users, in.RequestID, successCB)
-			return
-		}
-		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
-		if len(messages) < int(req.Limit) {
-			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
-			return
-		}
-		messagesGetHistory(out, messages, users, in.RequestID, successCB)
-	case req.MinID != 0 && req.MaxID == 0:
-		// Load more message, scroll down
-		b, bar := messageHole.GetUpperFilled(req.Peer.ID, int32(req.Peer.Type), req.MinID)
-		if !b {
-			logs.Info("Range in Hole",
-				zap.Int64("PeerID", req.Peer.ID),
-				zap.Int64("MaxID", req.MaxID),
-				zap.Int64("MinID", req.MinID),
-			)
-			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
-			return
-		}
-		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, req.MaxID, req.Limit)
-		messagesGetHistory(out, messages, users, in.RequestID, successCB)
 	default:
-		// Load a range
-		b := messageHole.IsHole(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID)
-		if b {
+		// Min != 0
+		if b := messageHole.IsHole(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID); b {
 			logs.Info("Range in Hole",
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("MinID", req.MinID),
 			)
-			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
 			return
+		} else {
+			messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
+			messagesGetHistory(out, messages, users, in.RequestID, preSuccessCB)
 		}
-		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
-		messagesGetHistory(out, messages, users, in.RequestID, successCB)
 	}
 }
 
@@ -311,23 +322,6 @@ func messagesGetHistory(out *msg.MessageEnvelope, messages []*msg.UserMessage, u
 	res := new(msg.MessagesMany)
 	res.Messages = messages
 	res.Users = users
-
-	// for idx := range messages {
-	// 	switch messages[idx].MediaType {
-	// 	case msg.MediaTypeDocument:
-	// 		doc := new(msg.MediaDocument)
-	// 		_ = doc.Unmarshal(messages[idx].Media)
-	// 		filePath := fileCtrl.GetThumbnailPath(doc.Doc.ID, doc.Doc.ClusterID)
-	// 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
-	// 			filePath = ""
-	// 		}
-	// 		if filePath == "" {
-	// 			_, _ = fileCtrl.DownloadThumbnail(doc.Doc.ID, doc.Doc.AccessHash, doc.Doc.ClusterID, 0)
-	// 		}
-	// 	}
-	//
-	// }
-	// result
 
 	out.RequestID = requestID
 	out.Constructor = msg.C_MessagesMany
