@@ -413,7 +413,6 @@ func (ctrl *Controller) Connect(force bool) {
 	logs.Info("NetworkController is connecting",
 		zap.Bool("force", force),
 	)
-
 	defer func() {
 		if recoverPanic("NetworkController:: Connect", ronak.M{
 			"AuthID": ctrl.authID,
@@ -421,6 +420,7 @@ func (ctrl *Controller) Connect(force bool) {
 			ctrl.Connect(force)
 		}
 	}()
+	ctrl.wsKeepConnection = true
 	ctrl.updateNetworkStatus(domain.NetworkConnecting)
 	keepGoing := true
 	for keepGoing {
