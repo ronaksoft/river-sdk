@@ -110,7 +110,7 @@ func (r *repoDialogs) countUnread(peerID int64, peerType int32, userID, maxID in
 
 func (r *repoDialogs) Get(peerID int64, peerType int32) *msg.Dialog {
 	dialog := new(msg.Dialog)
-	_ = r.badger.View(func(txn *badger.Txn) error {
+	err := r.badger.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(r.getDialogKey(peerID, peerType))
 		if err != nil {
 			return err
@@ -119,7 +119,9 @@ func (r *repoDialogs) Get(peerID int64, peerType int32) *msg.Dialog {
 			return dialog.Unmarshal(val)
 		})
 	})
-
+	if err != nil {
+		return nil
+	}
 	return dialog
 }
 
