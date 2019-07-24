@@ -530,6 +530,11 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		reqMedia.FilePath = reqMedia.FilePath[7:]
 		in.Message, _ = reqMedia.Marshal()
 	}
+	// support IOS file path
+	if strings.HasPrefix(reqMedia.ThumbFilePath, "file://") {
+		reqMedia.FilePath = reqMedia.FilePath[7:]
+		in.Message, _ = reqMedia.Marshal()
+	}
 
 	// TODO : check if file has been uploaded b4
 
