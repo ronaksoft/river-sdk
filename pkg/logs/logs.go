@@ -66,7 +66,7 @@ func SetLogFilePath(logDir string) error {
 		return zapcore.NewTee(
 			core,
 			zapcore.NewCore(
-				zapcore.NewJSONEncoder(zapcore.EncoderConfig{
+				zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
 					TimeKey:        "ts",
 					LevelKey:       "level",
 					NameKey:        "logger",
@@ -95,7 +95,7 @@ func SetLogFilePath(logDir string) error {
 			zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
 				TimeKey:        "ts",
 				LineEnding:     zapcore.DefaultLineEnding,
-				EncodeLevel:    zapcore.CapitalColorLevelEncoder,
+				EncodeLevel:    zapcore.CapitalLevelEncoder,
 				EncodeTime:     zapcore.EpochTimeEncoder,
 				EncodeDuration: zapcore.StringDurationEncoder,
 				EncodeCaller:   zapcore.ShortCallerEncoder,

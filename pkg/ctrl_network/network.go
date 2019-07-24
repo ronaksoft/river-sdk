@@ -193,7 +193,7 @@ func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
 		endIdx += chunkSize
 	}
 
-	logs.Info("NetworkController::Send Flushed",
+	logs.Debug("NetworkController::Send Flushed",
 		zap.Int("Count", itemsCount),
 	)
 }

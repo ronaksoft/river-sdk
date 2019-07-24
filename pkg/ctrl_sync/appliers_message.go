@@ -47,8 +47,6 @@ func (ctrl *Controller) authSentCode(e *msg.MessageEnvelope) {
 	}
 	logs.Info("SyncController::authSentCode")
 	ctrl.connInfo.ChangePhone(x.Phone)
-	// No need to save it here its gonna be saved on authAuthorization
-	// conf.save()
 }
 
 // contactsImported
