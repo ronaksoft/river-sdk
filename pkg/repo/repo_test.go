@@ -6,6 +6,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"testing"
 	"time"
 )
@@ -94,4 +95,12 @@ func TestPending(t *testing.T) {
 
 	pm2 := repo.PendingMessages.GetByID(10)
 	fmt.Println(pm2)
+}
+
+func TestGetUserMessageKey(t *testing.T) {
+	peerID := 10001
+	peerType := 1
+	msgID := 1 << 32
+	ronak.StrToByte(fmt.Sprintf("%s.%021d.%d.%012d", "MSG", peerID, peerType, msgID))
+	fmt.Println(fmt.Sprintf("%s.%021d.%d.%012d", "MSG", peerID, peerType, msgID))
 }

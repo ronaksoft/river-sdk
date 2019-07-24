@@ -281,68 +281,6 @@ func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, 
 	}
 }
 
-// GetSharedMedia search in given dialog files
-func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, delegate RequestDelegate) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("GetSharedMedia", time.Now().Sub(startTime))
-	}()
-	msgs, err := repo.Messages.GetSharedMedia(peerID, peerType, mediaType)
-	if err != nil {
-		out := new(msg.MessageEnvelope)
-		res := new(msg.Error)
-		res.Code = "00"
-		res.Items = err.Error()
-		msg.ResultError(out, res)
-		outBytes, _ := out.Marshal()
-		if delegate != nil {
-			delegate.OnComplete(outBytes)
-		}
-		return
-	}
-
-	// get users && group IDs
-	userIDs := domain.MInt64B{}
-	groupIDs := domain.MInt64B{}
-	for _, m := range msgs {
-		if m.PeerType == int32(msg.PeerSelf) || m.PeerType == int32(msg.PeerUser) {
-			userIDs[m.PeerID] = true
-		}
-
-		if m.PeerType == int32(msg.PeerGroup) {
-			groupIDs[m.PeerID] = true
-		}
-
-		if m.SenderID > 0 {
-			userIDs[m.SenderID] = true
-		} else {
-			groupIDs[m.PeerID] = true
-		}
-
-		if m.FwdSenderID > 0 {
-			userIDs[m.FwdSenderID] = true
-		} else {
-			groupIDs[m.FwdSenderID] = true
-		}
-	}
-
-	users := repo.Users.GetMany(userIDs.ToArray())
-	groups := repo.Groups.GetMany(groupIDs.ToArray())
-
-	msgMany := new(msg.MessagesMany)
-	msgMany.Messages = msgs
-	msgMany.Users = users
-	msgMany.Groups = groups
-
-	out := new(msg.MessageEnvelope)
-	out.Constructor = msg.C_MessagesMany
-	out.Message, _ = msgMany.Marshal()
-	outBytes, _ := out.Marshal()
-	if delegate != nil {
-		delegate.OnComplete(outBytes)
-	}
-}
-
 func (r *River) GetScrollStatus(peerID int64, peerType int32) int64 {
 	startTime := time.Now()
 	defer func() {

@@ -199,7 +199,11 @@ func GC() {
 	_ = r.badger.RunValueLogGC(0.5)
 }
 
+func DbSize() (int64, int64) {
+	return r.badger.Size()
+}
 func TableInfo() []badger.TableInfo {
+	r.badger.Size()
 	return r.badger.Tables(true)
 }
 

@@ -14,6 +14,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"github.com/dustin/go-humanize"
 	"github.com/monnand/dhkx"
 	"go.uber.org/zap"
 	"math/big"
@@ -854,6 +855,7 @@ func (r *River) ResetAuthKey() {
 }
 
 func (r *River) GetMonitorStats() []byte {
+	lsmSize, logSize := repo.DbSize()
 	s := mon.Stats
 	m := ronak.M{
 		"AvgServerTime":   s.AvgServerResponseTime.String(),
@@ -870,6 +872,8 @@ func (r *River) GetMonitorStats() []byte {
 		"QueueItems":      s.TotalQueueItems,
 		"RecordTime":      time.Now().Sub(s.StartTime).String(),
 		"TableInfos":      repo.TableInfo(),
+		"LsmSize":         humanize.Bytes(uint64(lsmSize)),
+		"LogSize":         humanize.Bytes(uint64(logSize)),
 	}
 
 	b, _ := json.MarshalIndent(m, "", "    ")

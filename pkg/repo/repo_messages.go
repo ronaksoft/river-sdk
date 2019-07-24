@@ -87,6 +87,32 @@ func (r *repoMessages) save(message *msg.UserMessage) {
 	}
 
 	messageBytes, _ := message.Marshal()
+	docType := domain.SharedMediaTypeAll
+	switch message.MediaType {
+	case msg.MediaTypeDocument:
+		doc := new(msg.MediaDocument)
+		_ = doc.Unmarshal(message.Media)
+		for _, da := range doc.Doc.Attributes {
+			switch da.Type {
+			case msg.AttributeTypeAudio:
+				a := new(msg.DocumentAttributeAudio)
+				_ = a.Unmarshal(da.Data)
+				if a.Voice {
+					docType = domain.SharedMediaTypeVoice
+				} else {
+					docType = domain.SharedMediaTypeAudio
+				}
+			case msg.AttributeTypeVideo, msg.AttributeTypePhoto:
+				docType = domain.SharedMediaTypeMedia
+			case msg.AttributeTypeFile:
+				if docType == domain.SharedMediaTypeAll {
+					docType = domain.SharedMediaTypeFile
+				}
+			}
+		}
+	default:
+		// Do nothing
+	}
 
 	err := r.badger.Update(func(txn *badger.Txn) error {
 		// 1. Write Message
@@ -94,7 +120,7 @@ func (r *repoMessages) save(message *msg.UserMessage) {
 			badger.NewEntry(
 				r.getMessageKey(message.PeerID, message.PeerType, message.ID),
 				messageBytes,
-			).WithMeta(byte(message.MediaType)),
+			).WithMeta(byte(docType)),
 		)
 		if err != nil {
 			return err
@@ -105,7 +131,7 @@ func (r *repoMessages) save(message *msg.UserMessage) {
 			badger.NewEntry(
 				r.getUserMessageKey(message.ID),
 				ronak.StrToByte(fmt.Sprintf("%d.%d", message.PeerID, message.PeerType)),
-			).WithMeta(byte(message.MediaType)),
+			).WithMeta(byte(docType)),
 		)
 	})
 	if err != nil {
@@ -428,8 +454,8 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.User
 	return userMessages
 }
 
-func (r *repoMessages) GetSharedMedia(peerID int64, peerType int32, mediaType int32) ([]*msg.UserMessage, error) {
-	limit := 50
+func (r *repoMessages) GetSharedMedia(peerID int64, peerType int32, documentType domain.SharedMediaType) ([]*msg.UserMessage, error) {
+	limit := 500
 	userMessages := make([]*msg.UserMessage, 0, limit)
 	_ = r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
@@ -441,14 +467,14 @@ func (r *repoMessages) GetSharedMedia(peerID int64, peerType int32, mediaType in
 			if limit--; limit < 0 {
 				break
 			}
-			if it.Item().UserMeta() == byte(mediaType) {
+			if it.Item().UserMeta() == byte(documentType) {
 				_ = it.Item().Value(func(val []byte) error {
 					userMessage := new(msg.UserMessage)
 					err := userMessage.Unmarshal(val)
 					if err != nil {
 						return err
 					}
-					if userMessage.MediaType == msg.MediaType(mediaType) {
+					if userMessage.MediaType == msg.MediaType(documentType) {
 						userMessages = append(userMessages, userMessage)
 					}
 					return nil
