@@ -627,7 +627,7 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 
 	oldHash, err := repo.System.LoadInt(domain.ColumnContactsImportHash)
 	if err != nil {
-		logs.Error("River::contactsImport()-> failed to get contactsImportHash ", zap.Error(err))
+		logs.Warn("River::contactsImport()-> failed to get contactsImportHash ", zap.Error(err))
 	}
 	// calculate ContactsImportHash and compare with oldHash
 	newHash := domain.CalculateContactsImportHash(req)
