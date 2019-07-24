@@ -40,8 +40,6 @@ type Controller struct {
 	authID     int64
 	authKey    []byte
 	messageSeq int64
-	// salt       int64
-	// saltExpiry int64
 
 	// Websocket Settings
 	wsDialer                *websocket.Dialer
@@ -69,9 +67,6 @@ type Controller struct {
 
 	// requests that it should sent unencrypted
 	unauthorizedRequests map[int64]bool
-
-	// client and server time difference
-	clientTimeDifference int64
 }
 
 // New
@@ -528,7 +523,7 @@ func (ctrl *Controller) send(msgEnvelope *msg.MessageEnvelope) error {
 			ServerSalt: salt.Get(),
 			Envelope:   msgEnvelope,
 		}
-		encryptedPayload.MessageID = uint64((time.Now().Unix()+ctrl.clientTimeDifference)<<32 | ctrl.messageSeq)
+		encryptedPayload.MessageID = uint64(domain.Now().Unix()<<32 | ctrl.messageSeq)
 		unencryptedBytes, _ := encryptedPayload.Marshal()
 		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes)
 		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes)
@@ -565,11 +560,6 @@ func (ctrl *Controller) Reconnect() {
 	}
 }
 
-// SetClientTimeDifference set client and server time difference
-func (ctrl *Controller) SetClientTimeDifference(delta int64) {
-	ctrl.clientTimeDifference = delta
-}
-
 // WaitForNetwork
 func (ctrl *Controller) WaitForNetwork() {
 	// Wait While Network is Disconnected or Connecting
@@ -592,10 +582,6 @@ func (ctrl *Controller) Connected() bool {
 // GetQuality
 func (ctrl *Controller) GetQuality() domain.NetworkStatus {
 	return ctrl.wsQuality
-}
-
-func (ctrl *Controller) ClientTimeDifference() int64 {
-	return ctrl.clientTimeDifference
 }
 
 func recoverPanic(funcName string, extraInfo interface{}) bool {

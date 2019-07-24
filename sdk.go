@@ -11,7 +11,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dustin/go-humanize"
@@ -47,7 +46,8 @@ func (r *River) onNetworkConnect() {
 				timeReqBytes,
 				nil,
 				func(m *msg.MessageEnvelope) {
-					if m.Constructor == msg.C_SystemServerTime {
+					switch m.Constructor {
+					case msg.C_SystemServerTime:
 						x := new(msg.SystemServerTime)
 						err := x.Unmarshal(m.Message)
 						if err != nil {
@@ -56,13 +56,12 @@ func (r *River) onNetworkConnect() {
 						}
 						clientTime := time.Now().Unix()
 						serverTime := x.Timestamp
-						delta := serverTime - clientTime
-						r.networkCtrl.SetClientTimeDifference(delta)
-						salt.SetTimeDifference(delta)
+						domain.TimeDelta = time.Duration(serverTime-clientTime) * time.Second
+
 						logs.Debug("River::onGetServerTime()",
 							zap.Int64("ServerTime", serverTime),
 							zap.Int64("ClientTime", clientTime),
-							zap.Int64("Difference", delta),
+							zap.Duration("Difference", domain.TimeDelta),
 						)
 					}
 				},

@@ -22,17 +22,9 @@ import (
 var (
 	salts      []domain.Slt
 	curSalt    int64
-	timeDiff   int64
 	lastUpdate time.Time
 )
 
-func SetTimeDifference(diff int64) {
-	timeDiff = diff
-}
-
-func serverTime() time.Time {
-	return time.Now().Add(time.Duration(timeDiff) * time.Second)
-}
 
 func Get() int64 {
 	return curSalt
@@ -58,7 +50,7 @@ func UpdateSalt() bool {
 
 		saltFound := false
 		for idx, s := range sysSalts {
-			validUntil := s.Timestamp + int64(time.Hour/time.Second) - serverTime().Unix()
+			validUntil := s.Timestamp + int64(time.Hour/time.Second) - domain.Now().Unix()
 			if validUntil <= 0 {
 				logs.Debug("did not match", zap.Any("salt timestamp", s.Timestamp))
 				continue

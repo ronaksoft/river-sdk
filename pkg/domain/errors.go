@@ -24,6 +24,6 @@ var (
 // ParseServerError ...
 func ParseServerError(b []byte) error {
 	x := new(msg.Error)
-	x.Unmarshal(b)
+	_ = x.Unmarshal(b)
 	return fmt.Errorf("%s:%s", x.Code, x.Items)
 }

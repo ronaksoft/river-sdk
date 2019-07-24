@@ -27,12 +27,12 @@ func init() {
 }
 
 var (
+	TimeDelta     time.Duration
 	uniqueCounter int64
 	_RegExPhone   *regexp.Regexp
 )
 
 const (
-	DIGITS        = "0123456789"
 	ALPHANUMERICS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 )
 
@@ -368,4 +368,8 @@ func ExtractsContactsDifference(oldContacts, newContacts []*msg.PhoneContact) []
 		result = append(result, v)
 	}
 	return result
+}
+
+func Now() time.Time {
+	return time.Now().Add(TimeDelta)
 }

@@ -81,7 +81,7 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 	}
 	// server
 	if len(userIDs) > 0 {
-		// calculate contactsGethash and save
+		// calculate contactsGetHash and save
 		crc32Hash := domain.CalculateContactsGetHash(userIDs.ToArray())
 		err := repo.System.SaveInt(domain.ColumnContactsGetHash, int32(crc32Hash))
 		if err != nil {

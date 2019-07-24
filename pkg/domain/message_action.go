@@ -26,9 +26,7 @@ func ExtractActionUserIDs(act int32, data []byte) []int64 {
 	res := make([]int64, 0)
 	switch act {
 	case MessageActionNope:
-		// TODO:: implement it
 	case MessageActionContactRegistered:
-		// TODO:: implement it
 	case MessageActionGroupCreated:
 		x := new(msg.MessageActionGroupCreated)
 		err := x.Unmarshal(data)

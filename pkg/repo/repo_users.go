@@ -4,7 +4,6 @@ import (
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
@@ -141,7 +140,6 @@ func (r *repoUsers) GetContact(userID int64) *msg.ContactUser {
 }
 
 func (r *repoUsers) GetManyContactUsers(userIDs []int64) []*msg.ContactUser {
-
 	contactUsers := make([]*msg.ContactUser, 0, len(userIDs))
 	for _, userID := range userIDs {
 		contactUsers = append(contactUsers, r.GetContact(userID))
@@ -151,16 +149,12 @@ func (r *repoUsers) GetManyContactUsers(userIDs []int64) []*msg.ContactUser {
 }
 
 func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
-
-	logs.Debug("Users::GetContacts()")
-
 	contactUsers := make([]*msg.ContactUser, 0, 100)
 	phoneContacts := make([]*msg.PhoneContact, 0, 100)
 
 	_ = r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixContacts))
-		opts.Reverse = true
 		it := txn.NewIterator(opts)
 		for it.Seek(r.getContactKey(0)); it.ValidForPrefix(opts.Prefix); it.Next() {
 			contactUser := new(msg.ContactUser)
