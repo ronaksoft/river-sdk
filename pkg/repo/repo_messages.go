@@ -474,9 +474,7 @@ func (r *repoMessages) GetSharedMedia(peerID int64, peerType int32, documentType
 					if err != nil {
 						return err
 					}
-					if userMessage.MediaType == msg.MediaType(documentType) {
-						userMessages = append(userMessages, userMessage)
-					}
+					userMessages = append(userMessages, userMessage)
 					return nil
 				})
 			}
