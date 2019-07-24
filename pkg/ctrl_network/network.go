@@ -439,7 +439,6 @@ func (ctrl *Controller) Connect(force bool) {
 		}
 		keepGoing = false
 		ctrl.wsConn = wsConn
-		ctrl.wsKeepConnection = true
 		ctrl.wsConn.SetPongHandler(func(appData string) error {
 			ctrl.pongChannel <- true
 			return nil
