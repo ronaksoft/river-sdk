@@ -528,14 +528,14 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	// support IOS file path
 	if strings.HasPrefix(reqMedia.FilePath, "file://") {
 		reqMedia.FilePath = reqMedia.FilePath[7:]
-		in.Message, _ = reqMedia.Marshal()
+
 	}
 	// support IOS file path
 	if strings.HasPrefix(reqMedia.ThumbFilePath, "file://") {
-		reqMedia.FilePath = reqMedia.FilePath[7:]
-		in.Message, _ = reqMedia.Marshal()
+		reqMedia.ThumbFilePath = reqMedia.ThumbFilePath[7:]
 	}
 
+	in.Message, _ = reqMedia.Marshal()
 	// TODO : check if file has been uploaded b4
 
 	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
