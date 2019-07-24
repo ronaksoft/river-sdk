@@ -392,12 +392,10 @@ func onGetDifferenceSucceed(ctrl *Controller, m *msg.MessageEnvelope) {
 				ctrl.onUpdateMainDelegate(msg.C_UpdateContainer, buff)
 			}
 		})
-
 	case msg.C_Error:
 		logs.Debug("onGetDifferenceSucceed()-> C_Error",
 			zap.String("Error", domain.ParseServerError(m.Message).Error()),
 		)
-		// TODO:: Handle error
 	}
 }
 

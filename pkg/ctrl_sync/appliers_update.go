@@ -79,15 +79,8 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 }
 func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.UpdateEnvelope, res []*msg.UpdateEnvelope) {
 	switch x.Message.MessageAction {
-	case domain.MessageActionNope:
-		// Do nothing
 	case domain.MessageActionContactRegistered:
 		go ctrl.ContactImportFromServer()
-	case domain.MessageActionGroupCreated:
-		// this will be handled by upper level on UpdateContainer
-	case domain.MessageActionGroupAddUser:
-		// TODO : this should be implemented
-
 	case domain.MessageActionGroupDeleteUser:
 		act := new(msg.MessageActionGroupAddUser)
 		err := act.Unmarshal(x.Message.MessageActionData)
@@ -127,9 +120,6 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			}
 
 		}
-
-	case domain.MessageActionGroupTitleChanged:
-	// this will be handled by upper level on UpdateContainer
 	case domain.MessageActionClearHistory:
 		act := new(msg.MessageActionClearHistory)
 		_ = act.Unmarshal(x.Message.MessageActionData)
@@ -179,7 +169,6 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 		}
 	}
 
-	// TODO : Notify UI that the pending message delivered to server
 	clientUpdate := new(msg.ClientUpdatePendingMessageDelivery)
 	clientUpdate.Messages = x.Message
 	clientUpdate.PendingMessage = pmsg

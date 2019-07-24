@@ -897,7 +897,6 @@ func (r *River) groupDeleteUser(in, out *msg.MessageEnvelope, timeoutCB domain.T
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 }
 
-// FIXME : until implementation of GroupFull.Participants we dont get info of users that added to group when group created
 func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.GroupsGetFull)
 	if err := req.Unmarshal(in.Message); err != nil {

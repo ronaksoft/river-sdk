@@ -133,7 +133,6 @@ func (r *River) onNetworkConnect() {
 }
 
 func (r *River) onGeneralError(e *msg.Error) {
-	// TODO:: call external handler
 	logs.Info("River::onGeneralError()",
 		zap.String("Code", e.Code),
 		zap.String("Item", e.Items),
@@ -241,18 +240,8 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 		x.RandomID = fileID
 		x.ReplyTo = req.ReplyTo
 
-		//
 		switch x.MediaType {
-		case msg.InputMediaTypeEmpty:
-			panic("SDK:onFileUploadCompleted() not implemented")
-		case msg.InputMediaTypeUploadedPhoto:
-			panic("SDK:onFileUploadCompleted() not implemented")
-		case msg.InputMediaTypePhoto:
-			panic("SDK:onFileUploadCompleted() not implemented")
-		case msg.InputMediaTypeContact:
-			panic("SDK:onFileUploadCompleted() not implemented")
 		case msg.InputMediaTypeUploadedDocument:
-
 			doc := new(msg.InputMediaUploadedDocument)
 			doc.MimeType = req.FileMIME
 			doc.Attributes = req.Attributes
@@ -275,18 +264,13 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 			}
 
 			x.MediaData, _ = doc.Marshal()
-
-		case msg.InputMediaTypeDocument:
-			panic("SDK:onFileUploadCompleted() not implemented")
 		default:
-			panic("SDK:onFileUploadCompleted() invalid input media type")
+
 		}
 		reqBuff, _ := x.Marshal()
 		requestID := uint64(fileID)
 		r.queueCtrl.ExecuteCommand(requestID, msg.C_MessagesSendMedia, reqBuff, nil, nil, false)
-
 	case domain.FileStateUploadAccountPhoto:
-		// TODO : AccountUploadPhoto
 		x := new(msg.AccountUploadPhoto)
 		x.File = &msg.InputFile{
 			FileID:      fileID,
@@ -324,7 +308,6 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 		}
 		r.queueCtrl.ExecuteCommand(requestID, msg.C_AccountUploadPhoto, reqBuff, timeoutCB, successCB, false)
 	case domain.FileStateUploadGroupPhoto:
-		// TODO : GroupUploadPhoto
 		x := new(msg.GroupsUploadPhoto)
 		x.GroupID = targetID
 		x.File = &msg.InputFile{
@@ -873,6 +856,7 @@ func (r *River) GetMonitorStats() []byte {
 		"TableInfos":      repo.TableInfo(),
 		"LsmSize":         humanize.Bytes(uint64(lsmSize)),
 		"LogSize":         humanize.Bytes(uint64(logSize)),
+		"Version":         r.Version(),
 	}
 
 	b, _ := json.MarshalIndent(m, "", "    ")
