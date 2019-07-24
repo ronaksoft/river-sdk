@@ -199,6 +199,10 @@ func GC() {
 	_ = r.badger.RunValueLogGC(0.5)
 }
 
+func TableInfo() []badger.TableInfo {
+	return r.badger.Tables(true)
+}
+
 func WarnOnErr(guideTxt string, err error, fields ...zap.Field) {
 	if err != nil {
 		fields = append(fields, zap.Error(err))
