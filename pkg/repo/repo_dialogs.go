@@ -235,7 +235,6 @@ func (r *repoDialogs) Delete(peerID int64, peerType int32) {
 }
 
 func (r *repoDialogs) List(offset, limit int32) []*msg.Dialog {
-
 	dialogs := make([]*msg.Dialog, 0, limit)
 	_ = r.bunt.View(func(tx *buntdb.Tx) error {
 		return tx.Descend(indexDialogs, func(key, value string) bool {
