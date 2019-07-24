@@ -8,6 +8,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"go.uber.org/zap"
+	"sync"
 	"time"
 )
 
@@ -209,6 +210,13 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 		return
 	}
 
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(1)
+	go func() {
+		// handle Media message
+		ctrl.extractMessagesMedia(u.Messages...)
+		waitGroup.Done()
+	}()
 	// save Groups & Users & Messages
 	repo.Users.SaveMany(u.Users)
 	repo.Groups.SaveMany(u.Groups)
@@ -225,8 +233,6 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 		}
 	}
 
-	// handle Media message
-	ctrl.extractMessagesMedia(u.Messages...)
 
 	logs.Info("SyncController::messagesMany",
 		zap.Int("Messages", len(u.Messages)),
@@ -240,6 +246,7 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 		peerType := u.Messages[0].PeerType
 		messageHole.InsertFill(peerID, peerType, minID, maxID)
 	}
+	waitGroup.Wait()
 }
 
 // groupFull

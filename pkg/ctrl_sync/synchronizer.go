@@ -592,6 +592,8 @@ func (ctrl *Controller) GetSyncStatus() domain.SyncStatus {
 
 // extractMessagesMedia extract files info from messages that have Document object
 func (ctrl *Controller) extractMessagesMedia(messages ...*msg.UserMessage) {
+	waitGroup := sync.WaitGroup{}
+
 	for _, m := range messages {
 		switch m.MediaType {
 		case msg.MediaTypeEmpty:
@@ -604,17 +606,24 @@ func (ctrl *Controller) extractMessagesMedia(messages ...*msg.UserMessage) {
 			}
 			t := mediaDoc.Doc.Thumbnail
 			if t != nil && t.FileID != 0 {
-				filePath := fileCtrl.GetThumbnailPath(t.FileID, t.ClusterID)
-				if _, err = os.Stat(filePath); os.IsNotExist(err) {
-					filePath = ""
-				}
-				if filePath == "" {
-					_, _ = ctrl.fileCtrl.DownloadThumbnail(t.FileID, t.AccessHash, t.ClusterID, 0)
-				}
+				waitGroup.Add(1)
+				go func(t msg.FileLocation) {
+					filePath := fileCtrl.GetThumbnailPath(t.FileID, t.ClusterID)
+					if _, err = os.Stat(filePath); os.IsNotExist(err) {
+						filePath = ""
+					}
+					if filePath == "" {
+						_, _ = ctrl.fileCtrl.DownloadThumbnail(t.FileID, t.AccessHash, t.ClusterID, 0)
+					}
+					waitGroup.Done()
+				}(*t)
+
 			}
+
 		default:
 		}
 	}
+	waitGroup.Wait()
 }
 
 func (ctrl *Controller) UpdateSalt() {
