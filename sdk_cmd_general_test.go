@@ -162,5 +162,4 @@ func createDataForSearchGlobal(nonContactWithDialogUser, nonContactWhitoutDialog
 	group.Title = groupTitle
 	repo.Groups.Save(group)
 
-	repo.Messages.save(message)
 }

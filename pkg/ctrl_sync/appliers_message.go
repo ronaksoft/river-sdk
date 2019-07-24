@@ -233,7 +233,6 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 		}
 	}
 
-
 	logs.Info("SyncController::messagesMany",
 		zap.Int("Messages", len(u.Messages)),
 		zap.Bool("Continues", u.Continuous),

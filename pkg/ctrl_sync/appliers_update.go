@@ -67,7 +67,6 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		}
 	}
 
-
 	// handle Message's Action
 	res := []*msg.UpdateEnvelope{u}
 	ctrl.handleMessageAction(x, u, res)

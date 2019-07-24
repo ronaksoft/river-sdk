@@ -122,7 +122,7 @@ func (r *repoMessagesPending) SaveMessageMedia(msgID int64, senderID int64, msgM
 	pm.ReplyTo = msgMedia.ReplyTo
 	pm.ClearDraft = msgMedia.ClearDraft
 	pm.MediaType = msgMedia.MediaType
-	pm.Media  = msgMedia.MediaData
+	pm.Media = msgMedia.MediaData
 	pm.ID = msgID
 	pm.SenderID = senderID
 	pm.CreatedOn = time.Now().Unix()
