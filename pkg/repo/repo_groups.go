@@ -251,6 +251,9 @@ func (r *repoGroups) DeleteAllMembers(groupID int64) {
 	})
 
 	group := r.Get(groupID)
+	if group == nil {
+		return
+	}
 	group.Participants = 0
 	r.Save(group)
 	return
