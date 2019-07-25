@@ -84,9 +84,9 @@ func getServerTime() *msg.MessageEnvelope {
 func TestNewController(t *testing.T) {
 	logs.SetLogLevel(0)
 	ctrl := networkCtrl.New(networkCtrl.Config{
-		ServerEndpoint: "ws://new.river.im",
-		PingTime:       30 * time.Second,
-		PongTimeout:    30 * time.Second,
+		WebsocketEndpoint: "ws://new.river.im",
+		PingTime:          30 * time.Second,
+		PongTimeout:       30 * time.Second,
 	})
 	ctrl.SetMessageHandler(dummyMessageHandler)
 	ctrl.SetErrorHandler(dummyErrorHandler)
@@ -103,8 +103,8 @@ func TestNewController(t *testing.T) {
 		fmt.Println("Connect Called")
 		ctrl.Connect(true)
 		for i := 0; i < 10; i++ {
-			fmt.Println("Send Message:", i)
-			err = ctrl.Send(getServerTime(), false)
+			fmt.Println("SendWebsocket Message:", i)
+			err = ctrl.SendWebsocket(getServerTime(), false)
 			if err != nil {
 				t.Error(err)
 			}

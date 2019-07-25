@@ -158,31 +158,32 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		msg.C_MessagesSetTyping: true,
 	}
 
-	// Initialize FileController
-	fileCtrl.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory, conf.DocumentCacheDirectory)
-	r.fileCtrl = fileCtrl.New(fileCtrl.Config{
-		ServerAddress:       conf.FileServerEndpoint,
-		OnUploadCompleted:   r.onFileUploadCompleted,
-		ProgressCallback:    r.onFileProgressChanged,
-		OnDownloadCompleted: r.onFileDownloadCompleted,
-		OnFileUploadError:   r.onFileUploadError,
-		OnFileDownloadError: r.onFileDownloadError,
-	})
-
 	// Initialize Network Controller
 	r.networkCtrl = networkCtrl.New(
 		networkCtrl.Config{
-			ServerEndpoint: conf.ServerEndpoint,
-			PingTime:       time.Duration(conf.PingTimeSec) * time.Second,
-			PongTimeout:    time.Duration(conf.PongTimeoutSec) * time.Second,
+			WebsocketEndpoint: conf.ServerEndpoint,
+			HttpEndpoint:      conf.FileServerEndpoint,
+			PingTime:          time.Duration(conf.PingTimeSec) * time.Second,
+			PongTimeout:       time.Duration(conf.PongTimeoutSec) * time.Second,
 		},
 	)
 	r.networkCtrl.SetNetworkStatusChangedCallback(func(newQuality domain.NetworkStatus) {
-		r.fileCtrl.SetNetworkStatus(newQuality)
 		if r.mainDelegate != nil {
 			r.mainDelegate.OnNetworkStatusChanged(int(newQuality))
 		}
 	})
+
+	// Initialize FileController
+	fileCtrl.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory, conf.DocumentCacheDirectory)
+	r.fileCtrl = fileCtrl.New(r.networkCtrl,
+		fileCtrl.Config{
+			OnUploadCompleted:   r.onFileUploadCompleted,
+			ProgressCallback:    r.onFileProgressChanged,
+			OnDownloadCompleted: r.onFileDownloadCompleted,
+			OnFileUploadError:   r.onFileUploadError,
+			OnFileDownloadError: r.onFileDownloadError,
+		},
+	)
 
 	// Initialize queueController
 	if q, err := queueCtrl.New(r.networkCtrl, conf.QueuePath); err != nil {
@@ -266,7 +267,7 @@ func GetWorkGroup(url string, timeoutSecond int) ([]byte, error) {
 func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 	networkCtrl := networkCtrl.New(
 		networkCtrl.Config{
-			ServerEndpoint: url,
+			WebsocketEndpoint: url,
 		},
 	)
 
@@ -279,7 +280,7 @@ func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 		msgEnvelope.Constructor = msg.C_SystemGetInfo
 
 		msgEnvelope.Message, _ = (&msg.SystemGetInfo{}).Marshal()
-		_ = networkCtrl.Send(msgEnvelope, true)
+		_ = networkCtrl.SendWebsocket(msgEnvelope, true)
 	})
 	// Message Handler
 	networkCtrl.SetMessageHandler(func(messages []*msg.MessageEnvelope) {

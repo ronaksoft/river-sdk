@@ -14,7 +14,7 @@ var Message = &ishell.Cmd{
 }
 
 var MessageSend = &ishell.Cmd{
-	Name: "Send",
+	Name: "SendWebsocket",
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesSend{}
 		req.RandomID = ronak.RandomInt64(0)

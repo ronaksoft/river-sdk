@@ -1,9 +1,11 @@
 package networkCtrl
 
 import (
+	"bytes"
 	"encoding/hex"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"io/ioutil"
 	"net/http"
 	"sort"
 	"sync"
@@ -18,7 +20,8 @@ import (
 
 // Config network controller config
 type Config struct {
-	ServerEndpoint string
+	WebsocketEndpoint string
+	HttpEndpoint      string
 	// PingTime is the interval between each ping sent to server
 	PingTime time.Duration
 	// PongTimeout is the duration that will wait for the ping response (PONG) is received from
@@ -52,6 +55,9 @@ type Controller struct {
 	wsOnConnect             domain.OnConnectCallback
 	wsOnNetworkStatusChange domain.NetworkStatusUpdateCallback
 
+	// Http Settings
+	httpEndpoint string
+
 	// Internals
 	wsQuality  domain.NetworkStatus
 	pingDelays [3]time.Duration
@@ -72,10 +78,11 @@ type Controller struct {
 // New
 func New(config Config) *Controller {
 	ctrl := new(Controller)
-	if config.ServerEndpoint == "" {
+	ctrl.httpEndpoint = config.HttpEndpoint
+	if config.WebsocketEndpoint == "" {
 		ctrl.websocketEndpoint = domain.WebsocketEndpoint
 	} else {
-		ctrl.websocketEndpoint = config.ServerEndpoint
+		ctrl.websocketEndpoint = config.WebsocketEndpoint
 	}
 	if config.PingTime <= 0 {
 		ctrl.wsPingTime = domain.WebsocketPingTime
@@ -179,16 +186,16 @@ func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
 		messageEnvelope.Constructor = msg.C_MessageContainer
 		messageEnvelope.Message, _ = msgContainer.Marshal()
 		messageEnvelope.RequestID = 0
-		err := ctrl.send(messageEnvelope)
+		err := ctrl.sendWebsocket(messageEnvelope)
 		if err != nil {
-			logs.Error("NetworkController::Send Flush Error", zap.Error(err))
+			logs.Error("NetworkController::SendWebsocket Flush Error", zap.Error(err))
 			return
 		}
 		startIdx = endIdx
 		endIdx += chunkSize
 	}
 
-	logs.Debug("NetworkController::Send Flushed",
+	logs.Debug("NetworkController::SendWebsocket Flushed",
 		zap.Int("Count", itemsCount),
 	)
 }
@@ -440,12 +447,12 @@ func (ctrl *Controller) Connect(force bool) {
 		})
 
 		// it should be started here cuz we need receiver to get AuthRecall answer
-		// Send Signal to start the 'receiver' and 'keepAlive' routines
+		// SendWebsocket Signal to start the 'receiver' and 'keepAlive' routines
 		ctrl.connectChannel <- true
 		logs.Info("NetworkController connected")
 
 		// Call the OnConnect handler here b4 changing network status that trigger queue to start working
-		// basically we send priority requests b4 queue starts to work
+		// basically we sendWebsocket priority requests b4 queue starts to work
 		ctrl.wsOnConnect()
 
 		ctrl.updateNetworkStatus(domain.NetworkFast)
@@ -498,18 +505,16 @@ func (ctrl *Controller) SetNetworkStatusChangedCallback(h domain.NetworkStatusUp
 	ctrl.wsOnNetworkStatusChange = h
 }
 
-// Send direct sends immediately else it put it in debouncer
-func (ctrl *Controller) Send(msgEnvelope *msg.MessageEnvelope, direct bool) error {
+// SendWebsocket direct sends immediately else it put it in flusher
+func (ctrl *Controller) SendWebsocket(msgEnvelope *msg.MessageEnvelope, direct bool) error {
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
 	if direct || unauthorized {
-		return ctrl.send(msgEnvelope)
+		return ctrl.sendWebsocket(msgEnvelope)
 	}
 	ctrl.sendFlusher.Enter(nil, msgEnvelope)
 	return nil
 }
-
-// send Writes the message on the wire. It will encrypts the message if authorization has been set.
-func (ctrl *Controller) send(msgEnvelope *msg.MessageEnvelope) error {
+func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 	protoMessage := new(msg.ProtoMessage)
 	protoMessage.MessageKey = make([]byte, 32)
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
@@ -550,6 +555,71 @@ func (ctrl *Controller) send(msgEnvelope *msg.MessageEnvelope) error {
 		return err
 	}
 	return nil
+}
+
+// Send encrypt and send request to server and receive and decrypt its response
+func (ctrl *Controller) SendHttp(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
+	protoMessage := new(msg.ProtoMessage)
+	protoMessage.AuthID = ctrl.authID
+	protoMessage.MessageKey = make([]byte, 32)
+	if ctrl.authID == 0 {
+		protoMessage.Payload, _ = msgEnvelope.Marshal()
+	} else {
+		ctrl.messageSeq++
+		encryptedPayload := msg.ProtoEncryptedPayload{
+			ServerSalt: salt.Get(),
+			Envelope:   msgEnvelope,
+		}
+		encryptedPayload.MessageID = uint64(time.Now().Unix()<<32 | ctrl.messageSeq)
+		unencryptedBytes, _ := encryptedPayload.Marshal()
+		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes)
+		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes)
+		copy(protoMessage.MessageKey, messageKey)
+		protoMessage.Payload = encryptedPayloadBytes
+	}
+
+	b, err := protoMessage.Marshal()
+
+	reqBuff := bytes.NewBuffer(b)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set timeout
+	client := &http.Client{}
+	client.Timeout = domain.WebsocketRequestTime
+
+	// Send Data
+	httpResp, err := client.Post(ctrl.httpEndpoint, "application/protobuf", reqBuff)
+	if err != nil {
+		return nil, err
+	}
+	// Read response
+	resBuff, err := ioutil.ReadAll(httpResp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Decrypt response
+	res := new(msg.ProtoMessage)
+	err = res.Unmarshal(resBuff)
+	if err != nil {
+		return nil, err
+	}
+	if res.AuthID == 0 {
+		receivedEnvelope := new(msg.MessageEnvelope)
+		err = receivedEnvelope.Unmarshal(res.Payload)
+		return receivedEnvelope, err
+	}
+	decryptedBytes, err := domain.Decrypt(ctrl.authKey, res.MessageKey, res.Payload)
+
+	receivedEncryptedPayload := new(msg.ProtoEncryptedPayload)
+	err = receivedEncryptedPayload.Unmarshal(decryptedBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return receivedEncryptedPayload.Envelope, nil
 }
 
 // Reconnect by wsKeepConnection = true the watchdog will connect itself again no need to call ctrl.Connect()

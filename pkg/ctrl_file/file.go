@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
+	networkCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"io"
@@ -40,7 +41,6 @@ const (
 
 // Config network controller config
 type Config struct {
-	ServerAddress       string
 	OnUploadCompleted   domain.OnFileUploadCompleted
 	ProgressCallback    domain.OnFileStatusChanged
 	OnDownloadCompleted domain.OnFileDownloadCompleted
@@ -53,9 +53,7 @@ type Controller struct {
 	authKey    []byte
 	authID     int64
 	messageSeq int64
-
-	ServerEndpoint string
-	NetworkStatus  domain.NetworkStatus
+	network    *networkCtrl.Controller
 
 	mxDown               sync.Mutex
 	mxUp                 sync.Mutex
@@ -76,11 +74,8 @@ type Controller struct {
 	onDownloadError     domain.OnFileDownloadError
 }
 
-func New(config Config) *Controller {
-	// maxUploadConcurrency := 3
-	// maxDownloadConcurrency := 3
+func New(network *networkCtrl.Controller, config Config) *Controller {
 	ctx = &Controller{
-		ServerEndpoint:      config.ServerAddress,
 		UploadQueue:         make(map[int64]*File, 0),
 		DownloadQueue:       make(map[int64]*File, 0),
 		chStopUploader:      make(chan bool, 1),
@@ -92,6 +87,7 @@ func New(config Config) *Controller {
 		onDownloadCompleted: config.OnDownloadCompleted,
 		onUploadError:       config.OnFileUploadError,
 		onDownloadError:     config.OnFileDownloadError,
+		network:             network,
 	}
 
 	go ctx.startDownloadQueue()
@@ -102,9 +98,7 @@ func New(config Config) *Controller {
 
 func (ctrl *Controller) startDownloadQueue() {
 	for {
-		if ctrl.NetworkStatus == domain.NetworkDisconnected || ctrl.NetworkStatus == domain.NetworkConnecting {
-			time.Sleep(100 * time.Millisecond)
-		}
+		ctrl.network.WaitForNetwork()
 		logs.Info("StartDownloadQueue")
 		ctrl.DownloadQueueStarted = true
 		select {
@@ -134,8 +128,8 @@ func (ctrl *Controller) startDownloadQueue() {
 
 // downloadRequest send request to server
 func (ctrl *Controller) downloadRequest(req *msg.MessageEnvelope, fs *File, partIdx int64) {
-	// time out has been set in Send()
-	res, err := ctrl.Send(req)
+	// time out has been set in SendWebsocket()
+	res, err := ctrl.network.SendHttp(req)
 	if err == nil {
 		switch res.Constructor {
 		case msg.C_Error:
@@ -216,9 +210,7 @@ func (ctrl *Controller) downloadCompleted(msgID int64, filePath string, stateTyp
 
 func (ctrl *Controller) startUploadQueue() {
 	for {
-		if ctrl.NetworkStatus == domain.NetworkDisconnected || ctrl.NetworkStatus == domain.NetworkConnecting {
-			time.Sleep(1000 * time.Millisecond)
-		}
+		ctrl.network.WaitForNetwork()
 
 		ctrl.UploadQueueStarted = true
 		select {
@@ -243,8 +235,8 @@ func (ctrl *Controller) startUploadQueue() {
 
 // uploadRequest send request to server
 func (ctrl *Controller) uploadRequest(req *msg.MessageEnvelope, count int64, theFile *File, partIdx int64) {
-	// time out has been set in Send()
-	res, err := ctrl.Send(req)
+	// time out has been set in SendWebsocket()
+	res, err := ctrl.network.SendHttp(req)
 	if err == nil {
 		switch res.Constructor {
 		case msg.C_Error:
@@ -451,7 +443,7 @@ func (ctrl *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto,
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
 		filePath = GetAccountAvatarPath(userID, req.Location.FileID)
-		res, err := ctrl.Send(envelop)
+		res, err := ctrl.network.SendHttp(envelop)
 		if err != nil {
 			return err
 		}
@@ -519,7 +511,7 @@ func (ctrl *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto,
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
 		filePath = GetGroupAvatarPath(groupID, req.Location.FileID)
-		res, err := ctrl.Send(envelop)
+		res, err := ctrl.network.SendHttp(envelop)
 		if err != nil {
 			return err
 		}
@@ -579,7 +571,7 @@ func (ctrl *Controller) DownloadThumbnail(fileID int64, accessHash uint64, clust
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
 		filePath = GetThumbnailPath(fileID, clusterID)
-		res, err := ctrl.Send(envelop)
+		res, err := ctrl.network.SendHttp(envelop)
 		if err != nil {
 			return err
 		}
@@ -705,14 +697,6 @@ func (ctrl *Controller) LoadQueueFromDB() {
 			continue
 		}
 		ctrl.AddToQueue(fs)
-	}
-}
-
-// SetNetworkStatus called on network controller state changes to inform file controller
-func (ctrl *Controller) SetNetworkStatus(state domain.NetworkStatus) {
-	ctrl.NetworkStatus = state
-	if state == domain.NetworkWeak || state == domain.NetworkSlow || state == domain.NetworkFast {
-		ctrl.LoadQueueFromDB()
 	}
 }
 

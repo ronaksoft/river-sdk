@@ -141,8 +141,8 @@ func (ctrl *Controller) executor(req request) {
 	}
 
 	// Try to send it over wire, if error happened put it back into the queue
-	if err := ctrl.network.Send(req.MessageEnvelope, false); err != nil {
-		logs.Error("executor() -> network.Send()", zap.Error(err))
+	if err := ctrl.network.SendWebsocket(req.MessageEnvelope, false); err != nil {
+		logs.Error("executor() -> network.SendWebsocket()", zap.Error(err))
 		ctrl.addToWaitingList(&req)
 		return
 	}
@@ -196,9 +196,9 @@ func (ctrl *Controller) ExecuteRealtimeCommand(requestID uint64, constructor int
 	domain.AddRequestCallback(requestID, successCB, domain.WebsocketDirectTime, timeoutCB, isUICallback)
 
 	execBlock := func(reqID uint64, req *msg.MessageEnvelope) error {
-		err := ctrl.network.Send(req, blockingMode)
+		err := ctrl.network.SendWebsocket(req, blockingMode)
 		if err != nil {
-			logs.Error("ExecuteRealtimeCommand()->network.Send()",
+			logs.Error("ExecuteRealtimeCommand()->network.SendWebsocket()",
 				zap.String("Error", err.Error()),
 				zap.String("ConstructorName", msg.ConstructorNames[req.Constructor]),
 				zap.Uint64("RequestID", requestID),

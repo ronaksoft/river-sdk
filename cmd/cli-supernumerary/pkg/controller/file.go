@@ -55,7 +55,7 @@ func ExecuteFileRequest(msgEnvelope *msg.MessageEnvelope, act shared.Actor) (*ms
 	client := http.DefaultClient
 	client.Timeout = shared.DefaultTimeout
 
-	// Send Data
+	// SendWebsocket Data
 	httpResp, err := client.Post(shared.DefaultFileServerURL, "application/protobuf", reqBuff)
 	if err != nil {
 		return nil, err

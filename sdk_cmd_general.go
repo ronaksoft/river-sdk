@@ -249,7 +249,7 @@ func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, 
 				delegate.OnComplete(resBytes)
 			}
 		}
-		// Send GroupsGetFull request to get user AccessHash
+		// SendWebsocket GroupsGetFull request to get user AccessHash
 		r.queueCtrl.ExecuteRealtimeCommand(uint64(requestID), msg.C_GroupsGetFull, reqBytes, timeoutCB, successCB, true, false)
 
 	} else {

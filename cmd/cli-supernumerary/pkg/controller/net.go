@@ -92,7 +92,7 @@ func (ctrl *CtrlNetwork) Stop() {
 	ctrl.conn = nil
 }
 
-// Send the data payload is binary
+// SendWebsocket the data payload is binary
 func (ctrl *CtrlNetwork) Send(msgEnvelope *msg.MessageEnvelope) error {
 	shared.Metrics.CounterVec(shared.CntRequest).WithLabelValues(msg.ConstructorNames[msgEnvelope.Constructor]).Add(1)
 
@@ -239,7 +239,7 @@ func (ctrl *CtrlNetwork) onConnect() {
 	// 	if ctrl.conn == nil {
 	// 		return
 	// 	}
-	// 	err := ctrl.Send(envelop)
+	// 	err := ctrl.SendWebsocket(envelop)
 	// 	if err == nil {
 	// 		break
 	// 	} else {

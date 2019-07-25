@@ -650,7 +650,7 @@ func (r *River) CreateAuthKey() (err error) {
 	r.networkCtrl.WaitForNetwork()
 
 	var clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64
-	// 1. Send InitConnect to Server
+	// 1. SendWebsocket InitConnect to Server
 	req1 := new(msg.InitConnect)
 	req1.ClientNonce = uint64(domain.SequentialUniqueID())
 	req1Bytes, _ := req1.Marshal()
@@ -705,7 +705,7 @@ func (r *River) CreateAuthKey() (err error) {
 	}
 	logs.Info("River::CreateAuthKey() 1st Step Finished")
 
-	// 2. Send InitCompleteAuth
+	// 2. SendWebsocket InitCompleteAuth
 	req2 := new(msg.InitCompleteAuth)
 	req2.ServerNonce = serverNonce
 	req2.ClientNonce = clientNonce

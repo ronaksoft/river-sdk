@@ -43,7 +43,7 @@ func init() {
 	// 	DbPath:                 "./_data/",
 	// 	DbID:                   "test",
 	// 	ServerKeysFilePath:     "./keys.json",
-	// 	ServerEndpoint:         "ws://test.river.im",
+	// 	WebsocketEndpoint:         "ws://test.river.im",
 	// 	QueuePath:              fmt.Sprintf("%s/%s", "./_queue", "test"),
 	// 	MainDelegate:           new(MainDelegateDummy),
 	// 	LogLevel:               int(zapcore.DebugLevel),

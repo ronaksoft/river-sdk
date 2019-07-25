@@ -57,7 +57,7 @@ func InitMetrics(boundleID, instanceID string) {
 	Metrics.RegisterCounter(CntFileError, "Number of failed FileSavePart requests ", nil) // ok
 	Metrics.RegisterCounter(CntFailedScenario, "Number of failed scenarios ", nil)        // ok
 	Metrics.RegisterCounter(CntSucceedScenario, "Number of succeed scenarios ", nil)      // ok
-	Metrics.RegisterCounter(CntSend, "Upload/Send bandwidth", nil)                        // ok
+	Metrics.RegisterCounter(CntSend, "Upload/SendWebsocket bandwidth", nil)               // ok
 	Metrics.RegisterCounter(CntReceive, "Download/Receive bandwidth", nil)                // ok
 
 	// Histogram
