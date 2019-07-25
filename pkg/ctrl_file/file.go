@@ -358,24 +358,24 @@ func (ctrl *Controller) Upload(fileID int64, req *msg.ClientPendingMessage) erro
 		return errors.New("max allowed file size is 750 MB")
 	}
 
-	state := NewFile(req.ID, fileID, 0, fileSize, x.FilePath, domain.FileStateUpload, 0, 0, 0, ctrl.progressCallback)
-	state.UploadRequest = x
+	theFile := NewFile(req.ID, fileID, 0, fileSize, x.FilePath, domain.FileStateUpload, 0, 0, 0, ctrl.progressCallback)
+	theFile.UploadRequest = x
 
 	thumbFile, err := os.Open(x.ThumbFilePath)
 	if err == nil {
 		thumbInfo, err := thumbFile.Stat()
 		if err == nil {
-			state.ThumbFileID = domain.SequentialUniqueID()
-			state.ThumbFilePath = x.ThumbFilePath
-			state.ThumbPosition = 0
-			state.ThumbTotalSize = thumbInfo.Size()
-			state.ThumbPartNo = 0
-			state.ThumbTotalParts = int32(CalculatePartsCount(thumbInfo.Size()))
+			theFile.ThumbFileID = domain.SequentialUniqueID()
+			theFile.ThumbFilePath = x.ThumbFilePath
+			theFile.ThumbPosition = 0
+			theFile.ThumbTotalSize = thumbInfo.Size()
+			theFile.ThumbPartNo = 0
+			theFile.ThumbTotalParts = int32(CalculatePartsCount(thumbInfo.Size()))
 		}
 	}
 
-	ctrl.AddToQueue(state)
-	repo.Files.SaveStatus(state.GetDTO())
+	ctrl.AddToQueue(theFile)
+	repo.Files.SaveStatus(theFile.GetStatus())
 	return nil
 }
 
@@ -389,7 +389,7 @@ func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
 			return
 		}
 		theFile = new(File)
-		theFile.LoadDTO(*filesStatus, ctrl.progressCallback)
+		theFile.LoadStatus(*filesStatus, ctrl.progressCallback)
 	} else {
 		var docID int64
 		var clusterID int32
@@ -419,105 +419,8 @@ func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
 	if theFile != nil {
 		theFile.RequestStatus = domain.RequestStatusInProgress
 		ctrl.AddToQueue(theFile)
-		repo.Files.SaveStatus(theFile.GetDTO())
+		repo.Files.SaveStatus(theFile.GetStatus())
 		repo.Files.UpdateFileStatus(theFile.MessageID, theFile.RequestStatus)
-	}
-}
-
-// AddToQueue add request to queue
-func (ctrl *Controller) AddToQueue(theFile *File) {
-	switch theFile.Type {
-	case domain.FileStateUpload, domain.FileStateUploadAccountPhoto, domain.FileStateUploadGroupPhoto:
-		ctrl.mxUp.Lock()
-		_, ok := ctrl.UploadQueue[theFile.MessageID]
-		if !ok {
-			ctrl.UploadQueue[theFile.MessageID] = theFile
-		}
-		ctrl.mxUp.Unlock()
-		if !ok {
-			ctrl.chNewUploadItem <- true
-		}
-	case domain.FileStateDownload:
-		ctrl.mxDown.Lock()
-		_, ok := ctrl.DownloadQueue[theFile.MessageID]
-		if !ok {
-			ctrl.DownloadQueue[theFile.MessageID] = theFile
-		}
-		ctrl.mxDown.Unlock()
-		if !ok {
-			ctrl.chNewDownloadItem <- true
-		}
-	}
-}
-
-// DeleteFromQueue remove items from download/upload queue and stop them
-func (ctrl *Controller) DeleteFromQueue(msgID int64, status domain.RequestStatus) {
-	ctrl.mxUp.Lock()
-	up, uok := ctrl.UploadQueue[msgID]
-	if uok {
-		up.RequestStatus = status
-		delete(ctrl.UploadQueue, msgID)
-		up.Stop()
-	}
-	ctrl.mxUp.Unlock()
-
-	ctrl.mxDown.Lock()
-	down, dok := ctrl.DownloadQueue[msgID]
-	if dok {
-		down.RequestStatus = status
-		delete(ctrl.DownloadQueue, msgID)
-		down.Stop()
-	}
-	ctrl.mxDown.Unlock()
-}
-
-// CalculateMD5 this will calculate md5 hash for files that are smaller than threshold
-func (ctrl *Controller) CalculateMD5(file *os.File) (string, error) {
-	// get file info
-	fileInfo, err := file.Stat()
-	if err != nil {
-		return "", err
-	}
-	// check file size
-	if fileInfo.Size() < FileSizeThresholdForCheckHash {
-		h := md5.New()
-		if _, err := io.Copy(h, file); err != nil {
-			return "", err
-		}
-		strMD5 := fmt.Sprintf("%x", h.Sum(nil))
-		return strMD5, nil
-	}
-	return "", errors.New("file size is grater than threshold")
-}
-
-// SetAuthorization set client AuthID and AuthKey to encrypt&decrypt network requests
-func (ctrl *Controller) SetAuthorization(authID int64, authKey []byte) {
-	ctrl.authKey = make([]byte, len(authKey))
-	ctrl.authID = authID
-	copy(ctrl.authKey, authKey)
-}
-
-// LoadQueueFromDB load in progress request from database
-func (ctrl *Controller) LoadQueueFromDB() {
-	// Load pended file status
-	filesStatuses := repo.Files.GetAllStatuses()
-	for _, filesStatus := range filesStatuses {
-		fs := new(File)
-		fs.LoadDTO(filesStatus, ctrl.progressCallback)
-		if fs.RequestStatus == domain.RequestStatusPaused ||
-			fs.RequestStatus == domain.RequestStatusCanceled ||
-			fs.RequestStatus == domain.RequestStatusCompleted {
-			continue
-		}
-		ctrl.AddToQueue(fs)
-	}
-}
-
-// SetNetworkStatus called on network controller state changes to inform file controller
-func (ctrl *Controller) SetNetworkStatus(state domain.NetworkStatus) {
-	ctrl.NetworkStatus = state
-	if state == domain.NetworkWeak || state == domain.NetworkSlow || state == domain.NetworkFast {
-		ctrl.LoadQueueFromDB()
 	}
 }
 
@@ -714,6 +617,103 @@ func (ctrl *Controller) DownloadThumbnail(fileID int64, accessHash uint64, clust
 		return "", err
 	}
 	return filePath, nil
+}
+
+// AddToQueue add request to queue
+func (ctrl *Controller) AddToQueue(theFile *File) {
+	switch theFile.Type {
+	case domain.FileStateUpload, domain.FileStateUploadAccountPhoto, domain.FileStateUploadGroupPhoto:
+		ctrl.mxUp.Lock()
+		_, ok := ctrl.UploadQueue[theFile.MessageID]
+		if !ok {
+			ctrl.UploadQueue[theFile.MessageID] = theFile
+		}
+		ctrl.mxUp.Unlock()
+		if !ok {
+			ctrl.chNewUploadItem <- true
+		}
+	case domain.FileStateDownload:
+		ctrl.mxDown.Lock()
+		_, ok := ctrl.DownloadQueue[theFile.MessageID]
+		if !ok {
+			ctrl.DownloadQueue[theFile.MessageID] = theFile
+		}
+		ctrl.mxDown.Unlock()
+		if !ok {
+			ctrl.chNewDownloadItem <- true
+		}
+	}
+}
+
+// DeleteFromQueue remove items from download/upload queue and stop them
+func (ctrl *Controller) DeleteFromQueue(msgID int64, status domain.RequestStatus) {
+	ctrl.mxUp.Lock()
+	up, uok := ctrl.UploadQueue[msgID]
+	if uok {
+		up.RequestStatus = status
+		delete(ctrl.UploadQueue, msgID)
+		up.Stop()
+	}
+	ctrl.mxUp.Unlock()
+
+	ctrl.mxDown.Lock()
+	down, dok := ctrl.DownloadQueue[msgID]
+	if dok {
+		down.RequestStatus = status
+		delete(ctrl.DownloadQueue, msgID)
+		down.Stop()
+	}
+	ctrl.mxDown.Unlock()
+}
+
+// CalculateMD5 this will calculate md5 hash for files that are smaller than threshold
+func (ctrl *Controller) CalculateMD5(file *os.File) (string, error) {
+	// get file info
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return "", err
+	}
+	// check file size
+	if fileInfo.Size() < FileSizeThresholdForCheckHash {
+		h := md5.New()
+		if _, err := io.Copy(h, file); err != nil {
+			return "", err
+		}
+		strMD5 := fmt.Sprintf("%x", h.Sum(nil))
+		return strMD5, nil
+	}
+	return "", errors.New("file size is grater than threshold")
+}
+
+// SetAuthorization set client AuthID and AuthKey to encrypt&decrypt network requests
+func (ctrl *Controller) SetAuthorization(authID int64, authKey []byte) {
+	ctrl.authKey = make([]byte, len(authKey))
+	ctrl.authID = authID
+	copy(ctrl.authKey, authKey)
+}
+
+// LoadQueueFromDB load in progress request from database
+func (ctrl *Controller) LoadQueueFromDB() {
+	// Load pended file status
+	filesStatuses := repo.Files.GetAllStatuses()
+	for _, filesStatus := range filesStatuses {
+		fs := new(File)
+		fs.LoadStatus(filesStatus, ctrl.progressCallback)
+		if fs.RequestStatus == domain.RequestStatusPaused ||
+			fs.RequestStatus == domain.RequestStatusCanceled ||
+			fs.RequestStatus == domain.RequestStatusCompleted {
+			continue
+		}
+		ctrl.AddToQueue(fs)
+	}
+}
+
+// SetNetworkStatus called on network controller state changes to inform file controller
+func (ctrl *Controller) SetNetworkStatus(state domain.NetworkStatus) {
+	ctrl.NetworkStatus = state
+	if state == domain.NetworkWeak || state == domain.NetworkSlow || state == domain.NetworkFast {
+		ctrl.LoadQueueFromDB()
+	}
 }
 
 func (ctrl *Controller) ClearFiles(filePaths []string) error {

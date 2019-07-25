@@ -176,8 +176,8 @@ func (fs *File) Write(data []byte, partIdx int64) (isCompleted bool, err error) 
 		return
 	}
 
-	fs.deleteFromPartList(partIdx)
-	count := fs.partListCount()
+	fs.deletePart(partIdx)
+	count := fs.countParts()
 	fs.IsCompleted = count == 0
 
 	if fs.IsCompleted {
@@ -185,7 +185,7 @@ func (fs *File) Write(data []byte, partIdx int64) (isCompleted bool, err error) 
 	}
 	isCompleted = fs.IsCompleted
 	if isCompleted {
-		repo.Files.SaveStatus(fs.GetDTO())
+		repo.Files.SaveStatus(fs.GetStatus())
 	}
 
 	fs.fileStatusChanged()
@@ -198,15 +198,15 @@ func (fs *File) ReadCommit(count int64, isThumbnail bool, partIdx int64) (isComp
 	if isThumbnail {
 		fs.ThumbPosition += count
 		fs.ThumbPartNo++
-		repo.Files.SaveStatus(fs.GetDTO())
+		repo.Files.SaveStatus(fs.GetStatus())
 		return
 	}
 	if fs.stop {
 		return
 	}
 
-	fs.deleteFromPartList(partIdx)
-	partCount := fs.partListCount()
+	fs.deletePart(partIdx)
+	partCount := fs.countParts()
 	fs.IsCompleted = partCount == 0
 
 	if fs.IsCompleted {
@@ -216,48 +216,8 @@ func (fs *File) ReadCommit(count int64, isThumbnail bool, partIdx int64) (isComp
 	return fs.IsCompleted
 }
 
-func (fs *File) fileStatusChanged() {
-	repo.Files.SaveStatus(fs.GetDTO())
-
-	lenParts := int64(fs.partListCount())
-
-	processedParts := fs.TotalParts - lenParts
-	if fs.onFileStatusChanged != nil {
-		fs.onFileStatusChanged(fs.MessageID, processedParts, fs.TotalParts, fs.Type)
-	}
-}
-
-// ReadAsFileSavePart read required chunk of data and pack them into FileSavePart
-func (fs *File) ReadAsFileSavePart(isThumbnail bool, partIdx int64) (envelop *msg.MessageEnvelope, readCount int, err error) {
-
-	var buff []byte
-	buff, readCount, err = fs.Read(isThumbnail, partIdx)
-	if err != nil {
-		return
-	}
-	req := new(msg.FileSavePart)
-	req.Bytes = buff
-
-	if isThumbnail {
-		req.FileID = fs.ThumbFileID
-		req.PartID = fs.ThumbPartNo + 1
-		req.TotalParts = fs.ThumbTotalParts
-	} else {
-		req.FileID = fs.FileID
-		req.PartID = int32(partIdx + 1)
-		req.TotalParts = int32(fs.TotalParts)
-	}
-
-	envelop = new(msg.MessageEnvelope)
-	envelop.Constructor = msg.C_FileSavePart
-	envelop.Message, err = req.Marshal()
-	envelop.RequestID = uint64(domain.SequentialUniqueID())
-
-	return
-}
-
-// GetDTO map FilesStatus to its repo DTO to save in DB
-func (fs *File) GetDTO() *dto.FilesStatus {
+// GetStatus map FilesStatus to its repo DTO to save in DB
+func (fs *File) GetStatus() *dto.FilesStatus {
 	m := new(dto.FilesStatus)
 
 	m.MessageID = fs.MessageID
@@ -292,8 +252,8 @@ func (fs *File) GetDTO() *dto.FilesStatus {
 	return m
 }
 
-// LoadDTO Map related to repo DTO to FilesStatus
-func (fs *File) LoadDTO(d dto.FilesStatus, progress domain.OnFileStatusChanged) {
+// LoadStatus Map related to repo DTO to FilesStatus
+func (fs *File) LoadStatus(d dto.FilesStatus, progress domain.OnFileStatusChanged) {
 	fs.MessageID = d.MessageID
 	fs.FileID = d.FileID
 	fs.ClusterID = d.ClusterID
@@ -341,7 +301,7 @@ func (fs *File) StartDownload(fm *Controller) {
 
 	fs.stop = false
 
-	partCount := fs.partListCount()
+	partCount := fs.countParts()
 	workersCount := domain.FilePipelineCount
 	if partCount < domain.FilePipelineCount {
 		workersCount = partCount
@@ -367,7 +327,7 @@ func (fs *File) StartUpload(fm *Controller) {
 
 	fs.stop = false
 
-	partCount := fs.partListCount()
+	partCount := fs.countParts()
 	workersCount := domain.FilePipelineCount
 	if partCount < domain.FilePipelineCount {
 		workersCount = partCount
@@ -461,12 +421,12 @@ func (fs *File) uploaderJob(fm *Controller) {
 		select {
 		case partIdx := <-fs.chPartList:
 			// keep last part until all other parts upload successfully
-			partCount := fs.partListCount()
+			partCount := fs.countParts()
 			if (partIdx+1) == fs.TotalParts && partCount > 1 {
 				fs.chPartList <- partIdx
 				break
 			}
-			envelop, readCount, err := fs.ReadAsFileSavePart(false, partIdx)
+			envelop, readCount, err := fs.generateFileSavePart(false, partIdx)
 			if err != nil {
 				logs.Warn("uploaderJob()", zap.Error(err), zap.String("filePath", fs.FilePath))
 				break
@@ -478,14 +438,13 @@ func (fs *File) uploaderJob(fm *Controller) {
 	}
 
 }
-
 func (fs *File) uploadThumbnail(fm *Controller) {
 	for fs.ThumbPosition < fs.ThumbTotalSize {
 		if fs.stop {
 			return
 		}
 
-		envelop, readCount, err := fs.ReadAsFileSavePart(true, 0)
+		envelop, readCount, err := fs.generateFileSavePart(true, 0)
 		if err != nil {
 			logs.Error("uploaderJob()", zap.Error(err), zap.String("filePath", fs.FilePath))
 			continue
@@ -493,16 +452,53 @@ func (fs *File) uploadThumbnail(fm *Controller) {
 		fm.uploadRequest(envelop, int64(readCount), fs, 0)
 	}
 }
+func (fs *File) generateFileSavePart(isThumbnail bool, partIdx int64) (envelop *msg.MessageEnvelope, readCount int, err error) {
 
-func (fs *File) partListCount() int {
+	var buff []byte
+	buff, readCount, err = fs.Read(isThumbnail, partIdx)
+	if err != nil {
+		return
+	}
+	req := new(msg.FileSavePart)
+	req.Bytes = buff
+
+	if isThumbnail {
+		req.FileID = fs.ThumbFileID
+		req.PartID = fs.ThumbPartNo + 1
+		req.TotalParts = fs.ThumbTotalParts
+	} else {
+		req.FileID = fs.FileID
+		req.PartID = int32(partIdx + 1)
+		req.TotalParts = int32(fs.TotalParts)
+	}
+
+	envelop = new(msg.MessageEnvelope)
+	envelop.Constructor = msg.C_FileSavePart
+	envelop.Message, err = req.Marshal()
+	envelop.RequestID = uint64(domain.SequentialUniqueID())
+
+	return
+}
+
+func (fs *File) countParts() int {
 	fs.mxPartList.Lock()
 	count := len(fs.PartList)
 	fs.mxPartList.Unlock()
 	return count
 }
-
-func (fs *File) deleteFromPartList(partIdx int64) {
+func (fs *File) deletePart(partIdx int64) {
 	fs.mxPartList.Lock()
 	delete(fs.PartList, partIdx)
 	fs.mxPartList.Unlock()
+}
+
+func (fs *File) fileStatusChanged() {
+	repo.Files.SaveStatus(fs.GetStatus())
+
+	lenParts := int64(fs.countParts())
+
+	processedParts := fs.TotalParts - lenParts
+	if fs.onFileStatusChanged != nil {
+		fs.onFileStatusChanged(fs.MessageID, processedParts, fs.TotalParts, fs.Type)
+	}
 }
