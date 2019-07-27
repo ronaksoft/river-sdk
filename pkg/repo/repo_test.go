@@ -21,7 +21,7 @@ import (
 */
 
 func init() {
-	err := repo.InitRepo("./_data")
+	err := repo.InitRepo("./_data", false)
 	if err != nil {
 		logs.Fatal(err.Error())
 	}
