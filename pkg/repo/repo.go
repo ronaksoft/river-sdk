@@ -55,14 +55,19 @@ func (r *repository) initDB() error {
 }
 
 // InitRepo initialize repo singleton
-func InitRepo(dbPath string) error {
+func InitRepo(dbPath string, lowMemory bool) error {
 	if ctx == nil {
 		singleton.Lock()
 		lcConfig := bigcache.DefaultConfig(time.Second * 360)
 		lcConfig.CleanWindow = time.Second * 30
-		lcConfig.HardMaxCacheSize = 128
+		if lowMemory {
+			lcConfig.HardMaxCacheSize = 8
+		} else {
+			lcConfig.HardMaxCacheSize = 128
+		}
+
 		lCache, _ = bigcache.NewBigCache(lcConfig)
-		repoLastError = repoSetDB(dbPath)
+		repoLastError = repoSetDB(dbPath, lowMemory)
 		ctx = &Context{
 			DBPath: dbPath,
 		}
@@ -79,13 +84,19 @@ func InitRepo(dbPath string) error {
 	return repoLastError
 }
 
-func repoSetDB(dbPath string) error {
+func repoSetDB(dbPath string, lowMemory bool) error {
 	r = new(repository)
 	_ = os.MkdirAll(fmt.Sprintf("%s/badger", strings.TrimRight(dbPath, "/")), os.ModePerm)
 	badgerOpts := badger.DefaultOptions(fmt.Sprintf("%s/badger", strings.TrimRight(dbPath, "/"))).
-		WithLogger(nil).
-		WithTableLoadingMode(options.LoadToRAM).
-		WithValueLogLoadingMode(options.FileIO)
+		WithLogger(nil)
+	if lowMemory {
+		badgerOpts = badgerOpts.WithTableLoadingMode(options.FileIO).
+			WithValueLogLoadingMode(options.FileIO).
+			WithValueLogFileSize(1 << 24) // 16MB
+	} else {
+		badgerOpts = badgerOpts.WithTableLoadingMode(options.LoadToRAM).
+			WithValueLogLoadingMode(options.FileIO)
+	}
 	r.badger, repoLastError = badger.Open(badgerOpts)
 	if repoLastError != nil {
 		logs.Info("Context::repoSetDB()->badger Open()",
@@ -202,6 +213,7 @@ func GC() {
 func DbSize() (int64, int64) {
 	return r.badger.Size()
 }
+
 func TableInfo() []badger.TableInfo {
 	r.badger.Size()
 	return r.badger.Tables(true)

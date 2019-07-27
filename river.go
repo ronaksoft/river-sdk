@@ -65,6 +65,9 @@ type RiverConfig struct {
 	// ClientInfo
 	ClientPlatform string
 	ClientVersion  string
+
+	// OptimizeForLowMemory if is set then SDK tries to use the lowest possible ram
+	OptimizeForLowMemory	bool
 }
 
 // River
