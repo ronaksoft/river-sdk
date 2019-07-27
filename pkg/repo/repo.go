@@ -92,7 +92,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 	if lowMemory {
 		badgerOpts = badgerOpts.WithTableLoadingMode(options.FileIO).
 			WithValueLogLoadingMode(options.FileIO).
-			WithValueLogFileSize(1 << 24) // 16MB
+			WithValueLogFileSize(1 << 24)    // 16MB
 	} else {
 		badgerOpts = badgerOpts.WithTableLoadingMode(options.LoadToRAM).
 			WithValueLogLoadingMode(options.FileIO)
@@ -115,6 +115,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 	_ = r.bunt.Update(func(tx *buntdb.Tx) error {
 		return tx.CreateIndex(indexDialogs, fmt.Sprintf("%s.*", prefixDialogs), buntdb.IndexBinary)
 	})
+
 
 	_ = os.MkdirAll(fmt.Sprintf("%s", strings.TrimRight(dbPath, "/")), os.ModePerm)
 	r.searchIndex, repoLastError = bleve.Open(fmt.Sprintf("%s/bleve/", strings.TrimRight(dbPath, "/")))
@@ -141,7 +142,8 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 	textFieldMapping := bleve.NewTextFieldMapping()
 	textFieldMapping.Analyzer = en.AnalyzerName
 	textFieldMapping.Store = false
-	textFieldMapping.IncludeTermVectors = true
+	textFieldMapping.IncludeTermVectors = false
+	textFieldMapping.DocValues = false
 	keywordFieldMapping := bleve.NewTextFieldMapping()
 	keywordFieldMapping.Analyzer = keyword.Name
 
