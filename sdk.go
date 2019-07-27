@@ -171,7 +171,7 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 			}
 			domain.RemoveRequestCallback(msgs[idx].RequestID)
 		} else {
-			logs.Error("River::onReceivedMessage() callback does not exist",
+			logs.Warn("River::onReceivedMessage() callback does not exist",
 				zap.String("Constructor", msg.ConstructorNames[msgs[idx].Constructor]),
 			)
 		}
@@ -700,7 +700,7 @@ func (r *River) CreateAuthKey() (err error) {
 	// Wait for 1st step to complete
 	waitGroup.Wait()
 	if err != nil {
-		logs.Error("River::CreateAuthKey() InitConnect", zap.Error(err))
+		logs.Warn("River::CreateAuthKey() InitConnect", zap.Error(err))
 		return
 	}
 	logs.Info("River::CreateAuthKey() 1st Step Finished")

@@ -101,14 +101,14 @@ func (r *River) loadDeviceToken() {
 	r.DeviceToken = new(msg.AccountRegisterDevice)
 	str, err := repo.System.LoadString(domain.ColumnDeviceToken)
 	if err != nil {
-		logs.Error("River::loadDeviceToken() failed to fetch DeviceToken",
+		logs.Warn("River::loadDeviceToken() failed to fetch DeviceToken",
 			zap.String("Error", err.Error()),
 		)
 		return
 	}
 	err = json.Unmarshal([]byte(str), r.DeviceToken)
 	if err != nil {
-		logs.Error("River::loadDeviceToken() failed to unmarshal DeviceToken",
+		logs.Warn("River::loadDeviceToken() failed to unmarshal DeviceToken",
 			zap.String("Error", err.Error()),
 		)
 	}
