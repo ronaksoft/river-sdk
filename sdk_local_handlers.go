@@ -254,7 +254,9 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 					default:
 						// Min != 0
 						for idx := range pms {
-							if pms[idx].CreatedOn > x.Messages[0].CreatedOn {
+							if len(x.Messages) == 0 {
+								x.Messages = append(x.Messages, pms[idx])
+							} else if pms[idx].CreatedOn > x.Messages[0].CreatedOn {
 								x.Messages = append(x.Messages, pms[idx])
 							}
 						}
