@@ -63,7 +63,7 @@ func InitRepo(dbPath string, lowMemory bool) error {
 		if lowMemory {
 			lcConfig.HardMaxCacheSize = 8
 		} else {
-			lcConfig.HardMaxCacheSize = 128
+			lcConfig.HardMaxCacheSize = 64
 		}
 
 		lCache, _ = bigcache.NewBigCache(lcConfig)
