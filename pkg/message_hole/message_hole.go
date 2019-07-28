@@ -226,6 +226,7 @@ func (m *HoleManager) String() string {
 }
 
 var holder = struct {
+	mtx  sync.Mutex
 	list map[string]*HoleManager
 }{
 	list: make(map[string]*HoleManager),
@@ -233,6 +234,8 @@ var holder = struct {
 
 func loadManager(peerID int64, peerType int32) *HoleManager {
 	keyID := fmt.Sprintf("%d.%d", peerID, peerType)
+	holder.mtx.Lock()
+	defer holder.mtx.Unlock()
 	hm, ok := holder.list[keyID]
 	if !ok {
 		hm = newHoleManager()
@@ -262,10 +265,15 @@ func InsertHole(peerID int64, peerType int32, minID, maxID int64) {
 	hm.InsertBar(Bar{Type: Hole, Min: minID, Max: maxID})
 
 	saveManager(peerID, peerType, hm)
+
 	return
 }
 
 func InsertFill(peerID int64, peerType int32, minID, maxID int64) {
+	logs.Info("Insert Fill",
+		zap.Int64("MinID", minID),
+		zap.Int64("MaxID", maxID),
+	)
 	hm := loadManager(peerID, peerType)
 
 	hm.InsertBar(Bar{Type: Filled, Min: minID, Max: maxID})
@@ -277,9 +285,7 @@ func InsertFill(peerID int64, peerType int32, minID, maxID int64) {
 // SetUpperFilled Marks from the top index to 'msgID' as filled. This could be used
 // when UpdateNewMessage arrives we just add Fill bar to the end
 func SetUpperFilled(peerID int64, peerType int32, msgID int64) {
-	logs.Info("SetUpperFilled",
-		zap.Int64("MsgID", msgID),
-	)
+	logs.Info("SetUpperFilled", zap.Int64("MsgID", msgID))
 	hm := loadManager(peerID, peerType)
 
 	if !hm.SetUpperFilled(msgID) {

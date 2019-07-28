@@ -1,59 +1,27 @@
 package messageHole
 
 import (
-	"fmt"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"testing"
+	"time"
 )
 
-func TestIsHole(t *testing.T) {
-	hm := newHoleManager()
-	hm.InsertBar(Bar{0, 99, Hole})
-	fmt.Println(hm.bars)
-	hm.InsertBar(Bar{10, 30, Filled})
-	fmt.Println(hm.bars)
-	hm.InsertBar(Bar{60, 70, Filled})
-	fmt.Println(hm.bars)
-
-	for _, b := range hm.bars {
-		t.Log(fmt.Sprintf("%s: %d ---> %d", b.Type.String(), b.Min, b.Max))
+func init() {
+	err := repo.InitRepo("./_data", false)
+	if err != nil {
+		logs.Fatal(err.Error())
 	}
 }
+func TestHole(t *testing.T) {
+	peerID := ronak.RandomInt64(0)
+	peerType := int32(1)
+	go InsertHole(peerID, peerType, 0, 10)
+	time.Sleep(time.Millisecond)
+	go SetUpperFilled(peerID, peerType, 15)
+	// go SetUpperFilled(peerID, peerType, 11)
+	time.Sleep(5 * time.Second)
+	logs.Info(PrintHole(peerID, peerType))
 
-func TestMessageID(t *testing.T) {
-	hm := newHoleManager()
-	hm.InsertBar(Bar{0, 9873, Hole})
-	hm.InsertBar(Bar{9872, 9873, Filled})
-	hm.InsertBar(Bar{8721, 9872, Filled})
-	hm.InsertBar(Bar{7269, 8167, Filled})
-	fmt.Println(hm.bars)
-	hm.InsertBar(Bar{6977, 7268, Filled})
-	fmt.Println(hm.bars)
-}
-
-func TestHole1(t *testing.T) {
-	hm := newHoleManager()
-	hm.InsertBar(Bar{0, 100, Hole})
-	hm.SetUpperFilled(101)
-	fmt.Println(hm.bars)
-	hm.InsertBar(Bar{200, 210, Filled})
-	fmt.Println(hm.bars)
-	fmt.Println(hm.IsRangeFilled(99, 101))
-	fmt.Println(hm.IsRangeFilled(50, 100))
-	fmt.Println(hm.IsRangeFilled(200, 210))
-	// hm.SetUpperFilled(110)
-	// fmt.Println(hm.bars)
-}
-
-func TestSDKHole(t *testing.T) {
-	hm := newHoleManager()
-	hm.InsertBar(Bar{0, 10172, Hole})
-	hm.SetUpperFilled(10173)
-	b, bar := hm.GetLowerFilled(9868)
-	fmt.Println(b, bar)
-	hm.InsertBar(Bar{9763, 9856, Filled})
-	// hm := newHoleManager()
-	// hm.InsertHole(10, 1, 0, 100)
-	// SetUpperFilled(10, 1, 101)
-	// PrintHole(10, 1)
-	fmt.Println(hm.bars)
 }
