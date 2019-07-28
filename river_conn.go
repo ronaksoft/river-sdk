@@ -35,6 +35,11 @@ type ServerKeys struct {
 
 // GetPublicKey ...
 func (v *ServerKeys) GetPublicKey(keyFP int64) (PublicKey, error) {
+	logs.Info("River::CreateAuthKey() Check GetPublicKeys",
+		zap.Any("Public Keys", v.PublicKeys),
+		zap.Int64("keyFP", keyFP),
+	)
+
 	for _, pk := range v.PublicKeys {
 		if pk.FingerPrint == keyFP {
 			return pk, nil
@@ -45,13 +50,8 @@ func (v *ServerKeys) GetPublicKey(keyFP int64) (PublicKey, error) {
 
 // GetDhGroup ...
 func (v *ServerKeys) GetDhGroup(keyFP int64) (DHGroup, error) {
-
 	for _, dh := range v.DHGroups {
 		if dh.FingerPrint == keyFP {
-			logs.Info("River::CreateAuthKey() Check DH Group",
-				zap.Int64("FingerPrint", dh.FingerPrint),
-				zap.Int64("keyFP", keyFP),
-			)
 			return dh, nil
 		}
 	}
