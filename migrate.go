@@ -22,4 +22,8 @@ func init() {
 	add(0, func(r *River) {
 		// r.ClearCache(0, "", true)
 	})
+	add (1, func(r *River) {
+		//
+	})
+
 }

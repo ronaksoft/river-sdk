@@ -263,7 +263,6 @@ func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType i
 }
 
 func (r *repoUsers) GetAccessHash(userID int64) (uint64, error) {
-
 	user := r.Get(userID)
 	if user == nil {
 		return 0, domain.ErrDoesNotExists
@@ -391,4 +390,15 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 		}
 	}
 	return users
+}
+
+func (r *repoUsers) IndexAll() {
+
+	// _ = r.peerSearch.Index(ronak.ByteToStr(userKey), UserSearch{
+	// 	Type:      "user",
+	// 	FirstName: user.FirstName,
+	// 	LastName:  user.LastName,
+	// 	PeerID:    user.ID,
+	// 	Username:  user.Username,
+	// })
 }
