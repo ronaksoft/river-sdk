@@ -352,6 +352,7 @@ func (r *repoMessages) Delete(userID int64, peerID int64, peerType int32, msgID 
 	}
 
 	dialog.UnreadCount, dialog.MentionedCount = Dialogs.countUnread(dialog.PeerID, dialog.PeerType, userID, dialog.ReadInboxMaxID)
+	Dialogs.Save(dialog)
 	return
 }
 
