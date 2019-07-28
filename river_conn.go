@@ -47,12 +47,11 @@ func (v *ServerKeys) GetPublicKey(keyFP int64) (PublicKey, error) {
 func (v *ServerKeys) GetDhGroup(keyFP int64) (DHGroup, error) {
 
 	for _, dh := range v.DHGroups {
-		logs.Info("River::CreateAuthKey() Check DH Group",
-			zap.Int64("FingerPrint", dh.FingerPrint),
-			zap.Int64("keyFP", keyFP),
-		)
-
 		if dh.FingerPrint == keyFP {
+			logs.Info("River::CreateAuthKey() Check DH Group",
+				zap.Int64("FingerPrint", dh.FingerPrint),
+				zap.Int64("keyFP", keyFP),
+			)
 			return dh, nil
 		}
 	}
