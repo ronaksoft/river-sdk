@@ -711,7 +711,11 @@ func (r *River) CreateAuthKey() (err error) {
 	req2.ClientNonce = clientNonce
 
 	// Generate DH Pub Key
+	logs.Info("River::CreateAuthKey()",
+		zap.Int64("ServerDHFP", int64(serverDHFP)))
+
 	dhGroup, err := _ServerKeys.GetDhGroup(int64(serverDHFP))
+
 	if err != nil {
 		return err
 	}

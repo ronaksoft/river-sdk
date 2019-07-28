@@ -45,6 +45,9 @@ func (v *ServerKeys) GetPublicKey(keyFP int64) (PublicKey, error) {
 
 // GetDhGroup ...
 func (v *ServerKeys) GetDhGroup(keyFP int64) (DHGroup, error) {
+	logs.Info("River::CreateAuthKey()",
+		zap.Any("DHGroups in cache", v.DHGroups))
+
 	for _, dh := range v.DHGroups {
 		if dh.FingerPrint == keyFP {
 			return dh, nil
