@@ -306,7 +306,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			messagesGetHistory(out, messages, users, in.RequestID, preSuccessCB)
 		}
 	case req.MinID != 0 && req.MaxID == 0:
-		if b, bar := messageHole.GetUpperFilled(req.Peer.ID, int32(req.Peer.Type), dtoDialog.TopMessageID); !b {
+		if b, bar := messageHole.GetUpperFilled(req.Peer.ID, int32(req.Peer.Type), req.MinID); !b {
 			logs.Info("Range in Hole",
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("MaxID", req.MaxID),
