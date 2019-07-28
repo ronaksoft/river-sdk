@@ -11,7 +11,6 @@ import (
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
-	"io/ioutil"
 	"os"
 	"strings"
 	"sync"
@@ -41,8 +40,8 @@ type RiverConfig struct {
 	DbPath string
 	// DbID is used to save data for different accounts in separate databases.
 	DbID string
-	// ServerKeysFilePath is the path of a json file holding finger print and public keys.
-	ServerKeysFilePath string
+	// ServerKeysFilePath is a json file holding finger print and public keys.
+	ServerKeys string
 	// MainDelegate holds all the general callback functions that let the user of this SDK
 	// get notified of the events.
 	MainDelegate MainDelegate
@@ -221,12 +220,9 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	})
 
 	// Initialize Server Keys
-	if jsonBytes, err := ioutil.ReadFile(conf.ServerKeysFilePath); err != nil {
-		logs.Fatal("River::SetConfig() faild to open server keys",
-			zap.String("Error", err.Error()),
-		)
-	} else if err := _ServerKeys.UnmarshalJSON(jsonBytes); err != nil {
-		logs.Fatal("River::SetConfig() faild to unmarshal server keys",
+
+	if err := _ServerKeys.UnmarshalJSON([]byte(conf.ServerKeys)); err != nil {
+		logs.Fatal("River::SetConfig() failed to unmarshal server keys",
 			zap.String("Error", err.Error()),
 		)
 	}
