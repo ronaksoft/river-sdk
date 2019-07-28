@@ -53,7 +53,9 @@ func easyjson94b2531bDecodeGitRonaksoftwareComRonakRiversdk(in *jlexer.Lexer, ou
 				}
 				for !in.IsDelim(']') {
 					var v1 PublicKey
-					(v1).UnmarshalEasyJSON(in)
+					if data := in.Raw(); in.Ok() {
+						in.AddError((v1).UnmarshalJSON(data))
+					}
 					out.PublicKeys = append(out.PublicKeys, v1)
 					in.WantComma()
 				}
@@ -76,7 +78,9 @@ func easyjson94b2531bDecodeGitRonaksoftwareComRonakRiversdk(in *jlexer.Lexer, ou
 				}
 				for !in.IsDelim(']') {
 					var v2 DHGroup
-					(v2).UnmarshalEasyJSON(in)
+					if data := in.Raw(); in.Ok() {
+						in.AddError((v2).UnmarshalJSON(data))
+					}
 					out.DHGroups = append(out.DHGroups, v2)
 					in.WantComma()
 				}
@@ -98,12 +102,7 @@ func easyjson94b2531bEncodeGitRonaksoftwareComRonakRiversdk(out *jwriter.Writer,
 	_ = first
 	{
 		const prefix string = ",\"PublicKeys\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix[1:])
 		if in.PublicKeys == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
 			out.RawString("null")
 		} else {
@@ -112,19 +111,14 @@ func easyjson94b2531bEncodeGitRonaksoftwareComRonakRiversdk(out *jwriter.Writer,
 				if v3 > 0 {
 					out.RawByte(',')
 				}
-				(v4).MarshalEasyJSON(out)
+				out.Raw((v4).MarshalJSON())
 			}
 			out.RawByte(']')
 		}
 	}
 	{
 		const prefix string = ",\"DHGroups\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix)
 		if in.DHGroups == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
 			out.RawString("null")
 		} else {
@@ -133,7 +127,7 @@ func easyjson94b2531bEncodeGitRonaksoftwareComRonakRiversdk(out *jwriter.Writer,
 				if v5 > 0 {
 					out.RawByte(',')
 				}
-				(v6).MarshalEasyJSON(out)
+				out.Raw((v6).MarshalJSON())
 			}
 			out.RawByte(']')
 		}
@@ -221,92 +215,47 @@ func easyjson94b2531bEncodeGitRonaksoftwareComRonakRiversdk1(out *jwriter.Writer
 	_ = first
 	{
 		const prefix string = ",\"AuthID\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix[1:])
 		out.Int64(int64(in.AuthID))
 	}
 	{
 		const prefix string = ",\"AuthKey\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix)
 		out.Base64Bytes(in.AuthKey[:])
 	}
 	{
 		const prefix string = ",\"UserID\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix)
 		out.Int64(int64(in.UserID))
 	}
 	{
 		const prefix string = ",\"Username\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix)
 		out.String(string(in.Username))
 	}
 	{
 		const prefix string = ",\"Phone\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix)
 		out.String(string(in.Phone))
 	}
 	{
 		const prefix string = ",\"FirstName\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix)
 		out.String(string(in.FirstName))
 	}
 	{
 		const prefix string = ",\"LastName\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix)
 		out.String(string(in.LastName))
 	}
 	{
 		const prefix string = ",\"Bio\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix)
 		out.String(string(in.Bio))
 	}
 	{
 		const prefix string = ",\"Version\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix)
 		out.Int(int(in.Version))
 	}
 	out.RawByte('}')
@@ -376,32 +325,17 @@ func easyjson94b2531bEncodeGitRonaksoftwareComRonakRiversdk2(out *jwriter.Writer
 	_ = first
 	{
 		const prefix string = ",\"N\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix[1:])
 		out.String(string(in.N))
 	}
 	{
 		const prefix string = ",\"FingerPrint\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix)
 		out.Int64(int64(in.FingerPrint))
 	}
 	{
 		const prefix string = ",\"E\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix)
 		out.Uint32(uint32(in.E))
 	}
 	out.RawByte('}')
@@ -471,32 +405,17 @@ func easyjson94b2531bEncodeGitRonaksoftwareComRonakRiversdk3(out *jwriter.Writer
 	_ = first
 	{
 		const prefix string = ",\"Prime\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix[1:])
 		out.String(string(in.Prime))
 	}
 	{
 		const prefix string = ",\"Gen\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix)
 		out.Int32(int32(in.Gen))
 	}
 	{
 		const prefix string = ",\"FingerPrint\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix)
 		out.Int64(int64(in.FingerPrint))
 	}
 	out.RawByte('}')
