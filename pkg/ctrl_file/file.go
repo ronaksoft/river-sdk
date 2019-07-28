@@ -228,7 +228,6 @@ func (ctrl *Controller) startUploadQueue() {
 				go v.StartUpload(ctrl)
 			}
 			ctrl.mxUp.Unlock()
-
 		}
 	}
 }

@@ -268,6 +268,7 @@ func TestConnectTime(t *testing.T) {
 	fmt.Println(string(b))
 
 }
+
 func TestNewRiver(t *testing.T) {
 	logs.Info("Creating New River SDK Instance")
 	conInfo := new(RiverConnection)
@@ -329,6 +330,13 @@ func TestRiver_SetScrollStatus(t *testing.T) {
 	if readMsgID != msgID {
 		t.Error("values do not match")
 	}
+}
+
+func TestMessageHole(t *testing.T) {
+	mh := new(MessageHole)
+	mh.Init()
+	mh.InsertFill("REZA", 21923, 21658)
+	mh.SetUpperFilled("REZA", 21923)
 }
 
 type MainDelegateDummy struct{}
