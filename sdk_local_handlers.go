@@ -212,7 +212,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 
 	// Prepare the request and update its parameters if necessary
-	if req.MaxID <= 0 {
+	if req.MaxID < 0 {
 		req.MaxID = dtoDialog.TopMessageID
 	}
 	// Update the request before sending to server
@@ -280,7 +280,10 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 
 	switch {
-	case req.MinID == 0:
+	case req.MinID == 0 && req.MaxID == 0:
+		req.MaxID = dtoDialog.TopMessageID
+		fallthrough
+	case req.MinID == 0 && req.MaxID != 0:
 		if b, bar := messageHole.GetLowerFilled(req.Peer.ID, int32(req.Peer.Type), req.MaxID); !b {
 			logs.Info("Range in Hole",
 				zap.Int64("PeerID", req.Peer.ID),
@@ -302,9 +305,26 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			}
 			messagesGetHistory(out, messages, users, in.RequestID, preSuccessCB)
 		}
-
+	case req.MinID != 0 && req.MaxID == 0:
+		if b, bar := messageHole.GetUpperFilled(req.Peer.ID, int32(req.Peer.Type), dtoDialog.TopMessageID); !b {
+			logs.Info("Range in Hole",
+				zap.Int64("PeerID", req.Peer.ID),
+				zap.Int64("MaxID", req.MaxID),
+				zap.Int64("MinID", req.MinID),
+				zap.String("Holes", messageHole.PrintHole(req.Peer.ID, int32(req.Peer.Type))),
+			)
+			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
+			return
+		} else {
+			messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
+			if len(messages) < int(req.Limit) {
+				r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
+				return
+			}
+			messagesGetHistory(out, messages, users, in.RequestID, preSuccessCB)
+		}
 	default:
-		// Min != 0
+		// Min != 0 && MaxID != 0
 		if b := messageHole.IsHole(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID); b {
 			logs.Info("Range in Hole",
 				zap.Int64("PeerID", req.Peer.ID),
