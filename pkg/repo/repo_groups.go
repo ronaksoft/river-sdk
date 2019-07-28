@@ -137,7 +137,7 @@ func (r *repoGroups) Save(group *msg.Group) {
 		))
 	})
 
-	_ = r.searchIndex.Index(ronak.ByteToStr(groupKey), GroupSearch{
+	_ = r.peerSearch.Index(ronak.ByteToStr(groupKey), GroupSearch{
 		Type:   "group",
 		Title:  group.Title,
 		PeerID: group.ID,
@@ -349,7 +349,7 @@ func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
-	searchResult, _ := r.searchIndex.Search(searchRequest)
+	searchResult, _ := r.peerSearch.Search(searchRequest)
 	groups := make([]*msg.Group, 0, 100)
 	for _, hit := range searchResult.Hits {
 		group := r.getGroupByKey(ronak.StrToByte(hit.ID))

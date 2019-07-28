@@ -140,7 +140,7 @@ func (r *repoMessages) save(message *msg.UserMessage) {
 		)
 	}
 
-	_ = r.searchIndex.Index(ronak.ByteToStr(r.getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
+	_ = r.msgSearch.Index(ronak.ByteToStr(r.getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
 		Type:   "msg",
 		Body:   message.Body,
 		PeerID: message.PeerID,
@@ -422,7 +422,7 @@ func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
-	searchResult, _ := r.searchIndex.Search(searchRequest)
+	searchResult, _ := r.msgSearch.Search(searchRequest)
 	userMessages := make([]*msg.UserMessage, 0, 100)
 	for _, hit := range searchResult.Hits {
 		userMessage := r.getByKey(ronak.StrToByte(hit.ID))
@@ -444,7 +444,7 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.User
 	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", peerID))
 	t3.SetField("peer_id")
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3))
-	searchResult, _ := r.searchIndex.Search(searchRequest)
+	searchResult, _ := r.msgSearch.Search(searchRequest)
 	userMessages := make([]*msg.UserMessage, 0, 100)
 	for _, hit := range searchResult.Hits {
 		userMessage := r.getByKey(ronak.StrToByte(hit.ID))

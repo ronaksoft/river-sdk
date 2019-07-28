@@ -203,7 +203,7 @@ func (r *repoUsers) Save(user *msg.User) {
 		))
 	})
 
-	_ = r.searchIndex.Index(ronak.ByteToStr(userKey), UserSearch{
+	_ = r.peerSearch.Index(ronak.ByteToStr(userKey), UserSearch{
 		Type:      "user",
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
@@ -242,7 +242,7 @@ func (r *repoUsers) SaveContact(contactUser *msg.ContactUser) {
 		))
 	})
 
-	_ = r.searchIndex.Index(ronak.ByteToStr(contactKey), ContactSearch{
+	_ = r.peerSearch.Index(ronak.ByteToStr(contactKey), ContactSearch{
 		Type:      "contact",
 		FirstName: contactUser.FirstName,
 		LastName:  contactUser.LastName,
@@ -331,7 +331,7 @@ func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
-	searchResult, _ := r.searchIndex.Search(searchRequest)
+	searchResult, _ := r.peerSearch.Search(searchRequest)
 	contactUsers := make([]*msg.ContactUser, 0, 100)
 	phoneContacts := make([]*msg.PhoneContact, 0, 100)
 	for _, hit := range searchResult.Hits {
@@ -358,7 +358,7 @@ func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
-	searchResult, _ := r.searchIndex.Search(searchRequest)
+	searchResult, _ := r.peerSearch.Search(searchRequest)
 	contactUsers := make([]*msg.ContactUser, 0, 100)
 	for _, hit := range searchResult.Hits {
 		user := r.getUserByKey(ronak.StrToByte(hit.ID))
@@ -382,7 +382,7 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
-	searchResult, _ := r.searchIndex.Search(searchRequest)
+	searchResult, _ := r.peerSearch.Search(searchRequest)
 	users := make([]*msg.User, 0, 100)
 	for _, hit := range searchResult.Hits {
 		user := r.getUserByKey(ronak.StrToByte(hit.ID))

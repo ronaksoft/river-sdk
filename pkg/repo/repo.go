@@ -44,9 +44,10 @@ type Context struct {
 }
 
 type repository struct {
-	badger      *badger.DB
-	bunt        *buntdb.DB
-	searchIndex bleve.Index
+	badger     *badger.DB
+	bunt       *buntdb.DB
+	msgSearch  bleve.Index
+	peerSearch bleve.Index
 }
 
 // create tables
@@ -86,13 +87,15 @@ func InitRepo(dbPath string, lowMemory bool) error {
 
 func repoSetDB(dbPath string, lowMemory bool) error {
 	r = new(repository)
+
+	// Initialize BadgerDB
 	_ = os.MkdirAll(fmt.Sprintf("%s/badger", strings.TrimRight(dbPath, "/")), os.ModePerm)
 	badgerOpts := badger.DefaultOptions(fmt.Sprintf("%s/badger", strings.TrimRight(dbPath, "/"))).
 		WithLogger(nil)
 	if lowMemory {
 		badgerOpts = badgerOpts.WithTableLoadingMode(options.FileIO).
 			WithValueLogLoadingMode(options.FileIO).
-			WithValueLogFileSize(1 << 24)    // 16MB
+			WithValueLogFileSize(1 << 24) // 16MB
 	} else {
 		badgerOpts = badgerOpts.WithTableLoadingMode(options.LoadToRAM).
 			WithValueLogLoadingMode(options.FileIO)
@@ -104,6 +107,8 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 		)
 		return repoLastError
 	}
+
+	// Initialize BuntDB Indexer
 	_ = os.MkdirAll(fmt.Sprintf("%s/bunty", strings.TrimRight(dbPath, "/")), os.ModePerm)
 	r.bunt, repoLastError = buntdb.Open(fmt.Sprintf("%s/bunty/dialogs.db", strings.TrimRight(dbPath, "/")))
 	if repoLastError != nil {
@@ -116,28 +121,49 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 		return tx.CreateIndex(indexDialogs, fmt.Sprintf("%s.*", prefixDialogs), buntdb.IndexBinary)
 	})
 
+	// Initialize Search
+	// 1. Messages Search
+	if !lowMemory {
+		searchDbPath := fmt.Sprintf("%s/searchdb/msg", strings.TrimRight(dbPath, "/"))
+		r.msgSearch, repoLastError = bleve.Open(searchDbPath)
+		if repoLastError == bleve.ErrorIndexPathDoesNotExist {
+			repoLastError = nil
+			// create a mapping
+			indexMapping, err := indexMapForMessages()
+			if err != nil {
+				logs.Fatal("BuildIndexMapping For Messages", zap.Error(err))
+			}
+			r.msgSearch, err = bleve.New(searchDbPath, indexMapping)
+			if err != nil {
+				logs.Fatal("New SearchIndex for Messages", zap.Error(err))
+			}
+		} else if repoLastError != nil {
+			logs.Fatal("Error Opening SearchIndex for Messages", zap.Error(repoLastError))
+		}
+	}
 
-	_ = os.MkdirAll(fmt.Sprintf("%s", strings.TrimRight(dbPath, "/")), os.ModePerm)
-	r.searchIndex, repoLastError = bleve.Open(fmt.Sprintf("%s/bleve/", strings.TrimRight(dbPath, "/")))
+	// 2. Peer Search
+	peerDbSearch := fmt.Sprintf("%s/searchdb/peer", strings.TrimRight(dbPath, "/"))
+	r.msgSearch, repoLastError = bleve.Open(peerDbSearch)
 	if repoLastError == bleve.ErrorIndexPathDoesNotExist {
 		repoLastError = nil
 		// create a mapping
-		indexMapping, err := buildIndexMapping()
+		indexMapping, err := indexMapForPeers()
 		if err != nil {
-			logs.Fatal("Build Index", zap.Error(err))
+			logs.Fatal("BuildIndexMapping For Peers", zap.Error(err))
 		}
-		r.searchIndex, err = bleve.New(fmt.Sprintf("%s/bleve", strings.TrimRight(dbPath, "/")), indexMapping)
+		r.msgSearch, err = bleve.New(peerDbSearch, indexMapping)
 		if err != nil {
-			logs.Fatal("SearchIndex", zap.Error(err))
+			logs.Fatal("New SearchIndex for Peers", zap.Error(err))
 		}
 	} else if repoLastError != nil {
-		logs.Fatal("Another", zap.Error(repoLastError))
+		logs.Fatal("Error Opening SearchIndex for Peers", zap.Error(repoLastError))
 	}
 
 	return r.initDB()
 }
 
-func buildIndexMapping() (mapping.IndexMapping, error) {
+func indexMapForMessages() (mapping.IndexMapping, error) {
 	// a generic reusable mapping for english text
 	textFieldMapping := bleve.NewTextFieldMapping()
 	textFieldMapping.Analyzer = en.AnalyzerName
@@ -151,6 +177,24 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 	messageMapping := bleve.NewDocumentStaticMapping()
 	messageMapping.AddFieldMappingsAt("Body", textFieldMapping)
 	messageMapping.AddFieldMappingsAt("PeerID", keywordFieldMapping)
+
+
+	indexMapping := bleve.NewIndexMapping()
+	indexMapping.AddDocumentMapping("msg", messageMapping)
+
+	indexMapping.TypeField = "type"
+	indexMapping.DefaultAnalyzer = en.AnalyzerName
+
+	return indexMapping, nil
+}
+func indexMapForPeers() (mapping.IndexMapping, error) {
+	// a generic reusable mapping for english text
+	textFieldMapping := bleve.NewTextFieldMapping()
+	textFieldMapping.Store = false
+	textFieldMapping.IncludeTermVectors = false
+	textFieldMapping.DocValues = false
+	keywordFieldMapping := bleve.NewTextFieldMapping()
+	keywordFieldMapping.Analyzer = keyword.Name
 
 	// User
 	userMapping := bleve.NewDocumentStaticMapping()
@@ -171,7 +215,6 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 	contactMapping.AddFieldMappingsAt("Phone", keywordFieldMapping)
 
 	indexMapping := bleve.NewIndexMapping()
-	indexMapping.AddDocumentMapping("msg", messageMapping)
 	indexMapping.AddDocumentMapping("user", userMapping)
 	indexMapping.AddDocumentMapping("group", groupMapping)
 	indexMapping.AddDocumentMapping("contact", contactMapping)
@@ -195,7 +238,8 @@ func Close() error {
 
 	_ = r.bunt.Close()
 	_ = r.badger.Close()
-	_ = r.searchIndex.Close()
+	_ = r.msgSearch.Close()
+	_ = r.peerSearch.Close()
 	r = nil
 	ctx = nil
 	logs.Debug("Repo Stopped")
