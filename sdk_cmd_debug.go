@@ -12,6 +12,6 @@ import "git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 */
 
 
-func GetHole(peerID int64, peerType int32) []byte {
+func (r *River) GetHole(peerID int64, peerType int32) []byte {
 	return repo.MessagesExtra.GetHoles(peerID, peerType)
 }
