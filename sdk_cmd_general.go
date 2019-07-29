@@ -11,8 +11,6 @@ import (
 	"time"
 )
 
-var GetDBStatusIsRunning bool
-
 // var DatabaseStatus map[int64]map[msg.DocumentAttributeType]dto.MediaInfo
 
 // CancelRequest remove given requestID callbacks&delegates and if its not processed by queue we skip it on queue distributor
