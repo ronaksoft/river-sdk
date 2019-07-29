@@ -18,7 +18,6 @@ func (r *River) IsMessageExist(messageID int64) bool {
 	return message != nil
 }
 
-// GetRealTopMessageID returns max message id
 func (r *River) GetRealTopMessageID(peerID int64, peerType int32) int64 {
 	startTime := time.Now()
 	defer func() {
