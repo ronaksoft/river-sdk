@@ -95,11 +95,13 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 	badgerOpts := badger.DefaultOptions(fmt.Sprintf("%s/badger", strings.TrimRight(dbPath, "/"))).
 		WithLogger(nil)
 	if lowMemory {
-		badgerOpts = badgerOpts.WithTableLoadingMode(options.FileIO).
+		badgerOpts = badgerOpts.
+			WithTableLoadingMode(options.FileIO).
 			WithValueLogLoadingMode(options.FileIO).
 			WithValueLogFileSize(1 << 24) // 16MB
 	} else {
-		badgerOpts = badgerOpts.WithTableLoadingMode(options.LoadToRAM).
+		badgerOpts = badgerOpts.
+			WithTableLoadingMode(options.LoadToRAM).
 			WithValueLogLoadingMode(options.FileIO)
 	}
 	r.badger, repoLastError = badger.Open(badgerOpts)
