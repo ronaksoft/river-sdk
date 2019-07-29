@@ -44,6 +44,7 @@ func (r *repoDialogs) updateTopMessageID(peerID int64, peerType int32) {
 	if dialog == nil {
 		return
 	}
+	var topMessageID int64
 	_ = r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = Messages.getPrefix(peerID, peerType)
@@ -55,12 +56,13 @@ func (r *repoDialogs) updateTopMessageID(peerID int64, peerType int32) {
 			_ = it.Item().Value(func(val []byte) error {
 				return userMessage.Unmarshal(val)
 			})
-			dialog.TopMessageID = userMessage.ID
-			r.Save(dialog)
+			topMessageID = userMessage.ID
 		}
 		it.Close()
 		return nil
 	})
+	dialog.TopMessageID = topMessageID
+	r.Save(dialog)
 }
 
 func (r *repoDialogs) updateLastUpdate(peerID int64, peerType int32, lastUpdate int64) {

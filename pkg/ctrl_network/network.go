@@ -429,7 +429,6 @@ func (ctrl *Controller) Connect(force bool) {
 		if ctrl.wsConn != nil {
 			_ = ctrl.wsConn.Close()
 		}
-
 		if !force && !ctrl.wsKeepConnection {
 			return
 		}
