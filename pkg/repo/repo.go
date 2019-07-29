@@ -144,7 +144,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 
 	// 2. Peer Search
 	peerDbSearch := fmt.Sprintf("%s/searchdb/peer", strings.TrimRight(dbPath, "/"))
-	r.msgSearch, repoLastError = bleve.Open(peerDbSearch)
+	r.peerSearch, repoLastError = bleve.Open(peerDbSearch)
 	if repoLastError == bleve.ErrorIndexPathDoesNotExist {
 		repoLastError = nil
 		// create a mapping
@@ -152,7 +152,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 		if err != nil {
 			logs.Fatal("BuildIndexMapping For Peers", zap.Error(err))
 		}
-		r.msgSearch, err = bleve.New(peerDbSearch, indexMapping)
+		r.peerSearch, err = bleve.New(peerDbSearch, indexMapping)
 		if err != nil {
 			logs.Fatal("New SearchIndex for Peers", zap.Error(err))
 		}
