@@ -21,12 +21,19 @@ type repoMessagesPending struct {
 	*repository
 }
 
+func abs(x int64) int64 {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
 func (r *repoMessagesPending) getKey(msgID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%012d", prefixPMessagesByID, int64(math.Abs(float64(msgID)))))
 }
 
 func (r *repoMessagesPending) getRandomKey(randomID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%012d", prefixPMessagesByRandomID, randomID))
+	return ronak.StrToByte(fmt.Sprintf("%s.%012d", prefixPMessagesByRandomID, abs(randomID)))
 }
 
 func (r *repoMessagesPending) getRealKey(msgID int64) []byte {
@@ -34,7 +41,6 @@ func (r *repoMessagesPending) getRealKey(msgID int64) []byte {
 }
 
 func (r *repoMessagesPending) Save(msgID int64, senderID int64, message *msg.MessagesSend) (*msg.ClientPendingMessage, error) {
-
 	if message == nil {
 		return nil, domain.ErrNotFound
 	}

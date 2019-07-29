@@ -188,7 +188,7 @@ func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
 		messageEnvelope.RequestID = 0
 		err := ctrl.sendWebsocket(messageEnvelope)
 		if err != nil {
-			logs.Error("NetworkController::SendWebsocket Flush Error", zap.Error(err))
+			logs.Warn("NetworkController::SendWebsocket Flush Error", zap.Error(err))
 			return
 		}
 		startIdx = endIdx

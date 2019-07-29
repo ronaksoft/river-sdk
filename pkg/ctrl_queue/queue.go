@@ -107,11 +107,11 @@ func (ctrl *Controller) addToWaitingList(req *request) {
 	req.InsertTime = time.Now()
 	jsonRequest, err := req.MarshalJSON()
 	if err != nil {
-		logs.Error("addToWaitingList()->MarshalJSON()", zap.Error(err))
+		logs.Warn("addToWaitingList()->MarshalJSON()", zap.Error(err))
 		return
 	}
 	if _, err := ctrl.waitingList.Enqueue(jsonRequest); err != nil {
-		logs.Error("addToWaitingList()->Enqueue()", zap.Error(err))
+		logs.Warn("addToWaitingList()->Enqueue()", zap.Error(err))
 		return
 	}
 	ctrl.distributorLock.Lock()
