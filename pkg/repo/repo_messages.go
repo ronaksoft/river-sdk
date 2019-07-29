@@ -4,6 +4,7 @@ import (
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
@@ -140,13 +141,12 @@ func (r *repoMessages) save(message *msg.UserMessage) {
 		)
 	}
 
-	if r.msgSearch != nil {
-		_ = r.msgSearch.Index(ronak.ByteToStr(r.getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
-			Type:   "msg",
-			Body:   message.Body,
-			PeerID: message.PeerID,
-		})
-	}
+	_ = r.msgSearch.Index(ronak.ByteToStr(r.getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
+		Type:   "msg",
+		Body:   message.Body,
+		PeerID: message.PeerID,
+	})
+
 	return
 }
 
@@ -348,13 +348,19 @@ func (r *repoMessages) Delete(userID int64, peerID int64, peerType int32, msgID 
 	if dialog == nil {
 		return
 	}
+
+	// 3. Update top message if necessary
 	if dialog.TopMessageID == msgID {
 		Dialogs.updateTopMessageID(dialog)
 
 	}
 
+	// 4. Update unread/mention counter
 	dialog.UnreadCount, dialog.MentionedCount = Dialogs.countUnread(dialog.PeerID, dialog.PeerType, userID, dialog.ReadInboxMaxID)
 	Dialogs.Save(dialog)
+
+	// 5. Delete the entry from the index
+	_ = r.msgSearch.Delete(ronak.ByteToStr(r.getMessageKey(peerID, peerType, msgID)))
 	return
 }
 
@@ -495,4 +501,29 @@ func (r *repoMessages) GetSharedMedia(peerID int64, peerType int32, documentType
 
 	return userMessages, nil
 
+}
+
+func (r *repoMessages) ReIndex() {
+	err := r.badger.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = ronak.StrToByte(prefixMessages)
+		it := txn.NewIterator(opts)
+		for it.Rewind(); it.Valid(); it.Next() {
+			_ = it.Item().Value(func(val []byte) error {
+				message := new(msg.UserMessage)
+				_ = message.Unmarshal(val)
+				_ = r.msgSearch.Index(ronak.ByteToStr(r.getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
+					Type:   "msg",
+					Body:   message.Body,
+					PeerID: message.PeerID,
+				})
+				return nil
+			})
+		}
+		it.Close()
+		return nil
+	})
+	if err != nil {
+		logs.Warn("Error On ReIndex", zap.Error(err))
+	}
 }

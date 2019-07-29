@@ -4,10 +4,12 @@ import (
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
 	"github.com/dgraph-io/badger"
+	"go.uber.org/zap"
 	"strings"
 )
 
@@ -202,7 +204,6 @@ func (r *repoUsers) Save(user *msg.User) {
 			userKey, userBytes,
 		))
 	})
-
 	_ = r.peerSearch.Index(ronak.ByteToStr(userKey), UserSearch{
 		Type:      "user",
 		FirstName: user.FirstName,
@@ -392,13 +393,52 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 	return users
 }
 
-func (r *repoUsers) IndexAll() {
-
-	// _ = r.peerSearch.Index(ronak.ByteToStr(userKey), UserSearch{
-	// 	Type:      "user",
-	// 	FirstName: user.FirstName,
-	// 	LastName:  user.LastName,
-	// 	PeerID:    user.ID,
-	// 	Username:  user.Username,
-	// })
+func (r *repoUsers) ReIndex() {
+	err := r.badger.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = ronak.StrToByte(prefixUsers)
+		it := txn.NewIterator(opts)
+		for it.Rewind(); it.Valid(); it.Next() {
+			_ = it.Item().Value(func(val []byte) error {
+				user := new(msg.User)
+				_ = user.Unmarshal(val)
+				_ = r.peerSearch.Index(ronak.ByteToStr(r.getUserKey(user.ID)), UserSearch{
+					Type:      "user",
+					FirstName: user.FirstName,
+					LastName:  user.LastName,
+					PeerID:    user.ID,
+					Username:  user.Username,
+				})
+				return nil
+			})
+		}
+		it.Close()
+		return nil
+	})
+	if err != nil {
+		logs.Warn("Error On ReIndex Users", zap.Error(err))
+	}
+	err = r.badger.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = ronak.StrToByte(prefixContacts)
+		it := txn.NewIterator(opts)
+		for it.Rewind(); it.Valid(); it.Next() {
+			_ = it.Item().Value(func(val []byte) error {
+				contactUser := new(msg.ContactUser)
+				_ = contactUser.Unmarshal(val)
+				_ = r.peerSearch.Index(ronak.ByteToStr(r.getContactKey(contactUser.ID)), ContactSearch{
+					Type:      "contact",
+					FirstName: contactUser.FirstName,
+					LastName:  contactUser.LastName,
+					Username:  contactUser.Username,
+				})
+				return nil
+			})
+		}
+		it.Close()
+		return nil
+	})
+	if err != nil {
+		logs.Warn("Error On ReIndex Contacts", zap.Error(err))
+	}
 }

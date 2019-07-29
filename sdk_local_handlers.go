@@ -231,7 +231,21 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 
 	// Prepare the the result before sending back to the client
 	preSuccessCB := func(cb domain.MessageHandler) domain.MessageHandler {
-		return cb
+		return func(m *msg.MessageEnvelope) {
+			switch m.Constructor {
+			case msg.C_MessagesMany:
+				x := new(msg.MessagesMany)
+				_ = x.Unmarshal(m.Message)
+				// 1st sort the received messages by id
+				sort.Slice(x.Messages, func(i, j int) bool {
+					return x.Messages[i].ID > x.Messages[j].ID
+				})
+				m.Message, _ = x.Marshal()
+			}
+			// Call the actual success callback function
+			successCB(m)
+		}
+				// return cb
 	}(successCB)
 	pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
 	if len(pendingMessages) > 0 {
@@ -244,7 +258,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 					_ = x.Unmarshal(m.Message)
 					// 1st sort the received messages by id
 					sort.Slice(x.Messages, func(i, j int) bool {
-						return x.Messages[i].ID < x.Messages[j].ID
+						return x.Messages[i].ID > x.Messages[j].ID
 					})
 
 					// 2nd base on the reqMin values add the appropriate pending messages
@@ -256,7 +270,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 						for idx := range pms {
 							if len(x.Messages) == 0 {
 								x.Messages = append(x.Messages, pms[idx])
-							} else if pms[idx].CreatedOn > x.Messages[0].CreatedOn {
+							} else if pms[idx].CreatedOn > x.Messages[len(x.Messages)-1].CreatedOn {
 								x.Messages = append(x.Messages, pms[idx])
 							}
 						}
@@ -265,9 +279,9 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 					// 3rd sort again, to sort pending messages and actual messages
 					sort.Slice(x.Messages, func(i, j int) bool {
 						if x.Messages[i].ID < 0 || x.Messages[j].ID < 0 {
-							return x.Messages[i].CreatedOn < x.Messages[j].CreatedOn
+							return x.Messages[i].CreatedOn > x.Messages[j].CreatedOn
 						} else {
-							return x.Messages[i].ID < x.Messages[j].ID
+							return x.Messages[i].ID > x.Messages[j].ID
 						}
 					})
 					m.Message, _ = x.Marshal()

@@ -1,5 +1,7 @@
 package riversdk
 
+import "git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+
 /*
    Creation Time: 2019 - Jul - 08
    Created by:  (ehsan)
@@ -19,11 +21,10 @@ func add(ver int, f func(river *River)) {
 
 func init() {
 	funcHolders = make(map[int]func(r *River))
-	add(0, func(r *River) {
-		// r.ClearCache(0, "", true)
-	})
+	add(0, func(r *River) {})
 	add (1, func(r *River) {
-		//
+		repo.Messages.ReIndex()
+		repo.Users.ReIndex()
 	})
 
 }
