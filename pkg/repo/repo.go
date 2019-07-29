@@ -62,7 +62,7 @@ func InitRepo(dbPath string, lowMemory bool) error {
 		lcConfig := bigcache.DefaultConfig(time.Second * 360)
 		lcConfig.CleanWindow = time.Second * 30
 		lcConfig.MaxEntrySize = 1024
-		lcConfig.MaxEntriesInWindow = 1000
+		lcConfig.MaxEntriesInWindow = 10000
 		if lowMemory {
 			lcConfig.HardMaxCacheSize = 8
 		} else {
@@ -125,23 +125,21 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 
 	// Initialize Search
 	// 1. Messages Search
-	if !lowMemory {
-		searchDbPath := fmt.Sprintf("%s/searchdb/msg", strings.TrimRight(dbPath, "/"))
-		r.msgSearch, repoLastError = bleve.Open(searchDbPath)
-		if repoLastError == bleve.ErrorIndexPathDoesNotExist {
-			repoLastError = nil
-			// create a mapping
-			indexMapping, err := indexMapForMessages()
-			if err != nil {
-				logs.Fatal("BuildIndexMapping For Messages", zap.Error(err))
-			}
-			r.msgSearch, err = bleve.New(searchDbPath, indexMapping)
-			if err != nil {
-				logs.Fatal("New SearchIndex for Messages", zap.Error(err))
-			}
-		} else if repoLastError != nil {
-			logs.Fatal("Error Opening SearchIndex for Messages", zap.Error(repoLastError))
+	searchDbPath := fmt.Sprintf("%s/searchdb/msg", strings.TrimRight(dbPath, "/"))
+	r.msgSearch, repoLastError = bleve.Open(searchDbPath)
+	if repoLastError == bleve.ErrorIndexPathDoesNotExist {
+		repoLastError = nil
+		// create a mapping
+		indexMapping, err := indexMapForMessages()
+		if err != nil {
+			logs.Fatal("BuildIndexMapping For Messages", zap.Error(err))
 		}
+		r.msgSearch, err = bleve.New(searchDbPath, indexMapping)
+		if err != nil {
+			logs.Fatal("New SearchIndex for Messages", zap.Error(err))
+		}
+	} else if repoLastError != nil {
+		logs.Fatal("Error Opening SearchIndex for Messages", zap.Error(repoLastError))
 	}
 
 	// 2. Peer Search
@@ -180,7 +178,6 @@ func indexMapForMessages() (mapping.IndexMapping, error) {
 	messageMapping.AddFieldMappingsAt("Body", textFieldMapping)
 	messageMapping.AddFieldMappingsAt("PeerID", keywordFieldMapping)
 
-
 	indexMapping := bleve.NewIndexMapping()
 	indexMapping.AddDocumentMapping("msg", messageMapping)
 
@@ -189,6 +186,7 @@ func indexMapForMessages() (mapping.IndexMapping, error) {
 
 	return indexMapping, nil
 }
+
 func indexMapForPeers() (mapping.IndexMapping, error) {
 	// a generic reusable mapping for english text
 	textFieldMapping := bleve.NewTextFieldMapping()
