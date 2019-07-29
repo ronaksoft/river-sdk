@@ -61,6 +61,8 @@ func InitRepo(dbPath string, lowMemory bool) error {
 		singleton.Lock()
 		lcConfig := bigcache.DefaultConfig(time.Second * 360)
 		lcConfig.CleanWindow = time.Second * 30
+		lcConfig.MaxEntrySize = 1024
+		lcConfig.MaxEntriesInWindow = 1000
 		if lowMemory {
 			lcConfig.HardMaxCacheSize = 8
 		} else {
