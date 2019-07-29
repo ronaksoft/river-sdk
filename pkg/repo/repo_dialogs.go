@@ -156,7 +156,6 @@ func (r *repoDialogs) Save(dialog *msg.Dialog) {
 	if dialog == nil {
 		return
 	}
-
 	dialogBytes, _ := dialog.Marshal()
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		err := txn.SetEntry(badger.NewEntry(
