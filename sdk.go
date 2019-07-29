@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
@@ -12,8 +11,6 @@ import (
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
-	"github.com/dustin/go-humanize"
 	"github.com/monnand/dhkx"
 	"go.uber.org/zap"
 	"math/big"
@@ -838,31 +835,4 @@ func (r *River) ResetAuthKey() {
 	r.ConnInfo.AuthID = 0
 	r.ConnInfo.AuthKey = [256]byte{}
 	r.ConnInfo.Save()
-}
-
-func (r *River) GetMonitorStats() []byte {
-	lsmSize, logSize := repo.DbSize()
-	s := mon.Stats
-	m := ronak.M{
-		"AvgServerTime":   s.AvgServerResponseTime.String(),
-		"MaxServerTime":   s.MaxServerResponseTime.String(),
-		"MinServerTime":   s.MinServerResponseTime.String(),
-		"ServerRequests":  s.TotalServerRequests,
-		"AvgFunctionTime": s.AvgFunctionResponseTime.String(),
-		"MaxFunctionTime": s.MaxFunctionResponseTime.String(),
-		"MinFunctionTime": s.MinFunctionResponseTime.String(),
-		"FunctionCalls":   s.TotalFunctionCalls,
-		"AvgQueueTime":    s.AvgQueueTime.String(),
-		"MaxQueueTime":    s.MaxQueueTime.String(),
-		"MinQueueTime":    s.MinQueueTime.String(),
-		"QueueItems":      s.TotalQueueItems,
-		"RecordTime":      time.Now().Sub(s.StartTime).String(),
-		"TableInfos":      repo.TableInfo(),
-		"LsmSize":         humanize.Bytes(uint64(lsmSize)),
-		"LogSize":         humanize.Bytes(uint64(logSize)),
-		"Version":         r.Version(),
-	}
-
-	b, _ := json.MarshalIndent(m, "", "    ")
-	return b
 }
