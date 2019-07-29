@@ -238,7 +238,10 @@ func Close() error {
 
 	_ = r.bunt.Close()
 	_ = r.badger.Close()
-	_ = r.msgSearch.Close()
+
+	if r.msgSearch != nil {
+		_ = r.msgSearch.Close()
+	}
 	_ = r.peerSearch.Close()
 	r = nil
 	ctx = nil
