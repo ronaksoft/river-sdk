@@ -349,7 +349,8 @@ func (r *repoMessages) Delete(userID int64, peerID int64, peerType int32, msgID 
 		return
 	}
 	if dialog.TopMessageID == msgID {
-		Dialogs.updateTopMessageID(peerID, peerType)
+		Dialogs.updateTopMessageID(dialog)
+
 	}
 
 	dialog.UnreadCount, dialog.MentionedCount = Dialogs.countUnread(dialog.PeerID, dialog.PeerType, userID, dialog.ReadInboxMaxID)

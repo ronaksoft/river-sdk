@@ -104,3 +104,40 @@ func TestGetUserMessageKey(t *testing.T) {
 	ronak.StrToByte(fmt.Sprintf("%s.%021d.%d.%012d", "MSG", peerID, peerType, msgID))
 	fmt.Println(fmt.Sprintf("%s.%021d.%d.%012d", "MSG", peerID, peerType, msgID))
 }
+
+func TestRepoDeleteMessage(t *testing.T) {
+	peerID := int64(10001)
+	peerType := int32(1)
+
+	d := repo.Dialogs.Get(peerID, peerType)
+	if d == nil {
+		d = new(msg.Dialog)
+		d.PeerID = peerID
+		d.PeerType = peerType
+		repo.Dialogs.Save(d)
+	}
+
+	for i := int64(10); i < 20; i++ {
+		m := new(msg.UserMessage)
+		m.ID = i
+		m.PeerID = peerID
+		m.PeerType = peerType
+		m.SenderID = peerID
+		m.Body = fmt.Sprintf("Text %d", i)
+		repo.Messages.SaveNew(m, d, 10002)
+	}
+
+	d = repo.Dialogs.Get(peerID, peerType)
+	fmt.Println(d)
+
+	repo.Messages.Delete(10002, peerID, peerType, 19)
+	d = repo.Dialogs.Get(peerID, peerType)
+	fmt.Println(d)
+
+
+	msgs, _ := repo.Messages.GetMessageHistory(peerID, peerType, 0, 0, 5)
+	for idx := range msgs {
+		fmt.Println(msgs[idx].ID)
+	}
+
+}

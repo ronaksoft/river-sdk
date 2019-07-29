@@ -39,25 +39,23 @@ func (r *repoDialogs) getPeerFromKey(key string) *msg.Peer {
 	}
 }
 
-func (r *repoDialogs) updateTopMessageID(peerID int64, peerType int32) {
-	dialog := r.Get(peerID, peerType)
+func (r *repoDialogs) updateTopMessageID(dialog *msg.Dialog) {
 	if dialog == nil {
 		return
 	}
 	var topMessageID int64
 	_ = r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = Messages.getPrefix(peerID, peerType)
+		opts.Prefix = Messages.getPrefix(dialog.PeerID, dialog.PeerType)
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
-		it.Seek(Messages.getMessageKey(peerID, peerType, dialog.TopMessageID))
-		if it.ValidForPrefix(opts.Prefix) {
-			userMessage := new(msg.UserMessage)
-			_ = it.Item().Value(func(val []byte) error {
-				return userMessage.Unmarshal(val)
-			})
-			topMessageID = userMessage.ID
-		}
+		it.Seek(Messages.getMessageKey(dialog.PeerID, dialog.PeerType, dialog.TopMessageID))
+		userMessage := new(msg.UserMessage)
+		_ = it.Item().Value(func(val []byte) error {
+			return userMessage.Unmarshal(val)
+		})
+		topMessageID = userMessage.ID
+		fmt.Println("UPDATE:", userMessage.ID)
 		it.Close()
 		return nil
 	})
