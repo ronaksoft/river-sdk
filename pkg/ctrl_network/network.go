@@ -3,6 +3,7 @@ package networkCtrl
 import (
 	"bytes"
 	"encoding/hex"
+	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"io/ioutil"
@@ -303,8 +304,8 @@ func (ctrl *Controller) receiver() {
 					zap.String("Error", err.Error()),
 					zap.Int64("ctrl.authID", ctrl.authID),
 					zap.Int64("resp.AuthID", res.AuthID),
-					zap.String("resp.MessageKey", hex.Dump(res.MessageKey)))
-
+					zap.String("resp.MessageKey", hex.Dump(res.MessageKey)),
+				)
 				continue
 			}
 			receivedEncryptedPayload := new(msg.ProtoEncryptedPayload)
@@ -432,7 +433,9 @@ func (ctrl *Controller) Connect(force bool) {
 		if !force && !ctrl.wsKeepConnection {
 			return
 		}
-		wsConn, _, err := ctrl.wsDialer.Dial(ctrl.websocketEndpoint, nil)
+		reqHdr := http.Header{}
+		reqHdr.Set("X-Client-Type", fmt.Sprintf("SDK-%s", domain.SDKVersion))
+		wsConn, _, err := ctrl.wsDialer.Dial(ctrl.websocketEndpoint, reqHdr)
 		if err != nil {
 			logs.Warn("Connect()-> Dial()", zap.Error(err))
 			time.Sleep(1 * time.Second)
