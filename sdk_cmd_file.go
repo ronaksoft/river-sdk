@@ -288,9 +288,9 @@ func (r *River) downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig b
 		zap.Int64("PhotoBig.FileID", photo.PhotoBig.FileID),
 		zap.Uint64("PhotoBig.AccessHash", photo.PhotoBig.AccessHash),
 		zap.Int32("PhotoBig.ClusterID", photo.PhotoBig.ClusterID),
-		zap.Int64("SmallBig.FileID", photo.PhotoSmall.FileID),
-		zap.Uint64("SmallBig.AccessHash", photo.PhotoSmall.AccessHash),
-		zap.Int32("SmallBig.ClusterID", photo.PhotoSmall.ClusterID),
+		zap.Int64("PhotoSmall.FileID", photo.PhotoSmall.FileID),
+		zap.Uint64("PhotoSmall.AccessHash", photo.PhotoSmall.AccessHash),
+		zap.Int32("PhotoSmall.ClusterID", photo.PhotoSmall.ClusterID),
 	)
 
 	// send Download request
@@ -391,9 +391,9 @@ func (r *River) downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig b
 		zap.Int64("PhotoBig.FileID", photo.PhotoBig.FileID),
 		zap.Uint64("PhotoBig.AccessHash", photo.PhotoBig.AccessHash),
 		zap.Int32("PhotoBig.ClusterID", photo.PhotoBig.ClusterID),
-		zap.Int64("SmallBig.FileID", photo.PhotoSmall.FileID),
-		zap.Uint64("SmallBig.AccessHash", photo.PhotoSmall.AccessHash),
-		zap.Int32("SmallBig.ClusterID", photo.PhotoSmall.ClusterID),
+		zap.Int64("PhotoSmall.FileID", photo.PhotoSmall.FileID),
+		zap.Uint64("PhotoSmall.AccessHash", photo.PhotoSmall.AccessHash),
+		zap.Int32("PhotoSmall.ClusterID", photo.PhotoSmall.ClusterID),
 	)
 
 	// send Download request
