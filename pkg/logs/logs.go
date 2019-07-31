@@ -5,7 +5,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -109,16 +108,34 @@ func SetLogFilePath(logDir string) error {
 }
 
 func SetRemoteLog(url string) {
-	_Log = _Log.WithOptions(zap.Hooks(func(entry zapcore.Entry) error {
-		sb := strings.Builder{}
-		sb.WriteString(entry.Level.String())
-		sb.WriteString(":")
-		sb.WriteString(" ")
-		sb.WriteString(entry.Message)
-		sb.WriteString(entry.Stack)
-		_, err := http.DefaultClient.Post(url, "", strings.NewReader(sb.String()))
-		return err
-	}))
+
+	remoteWriter := RemoteWrite{Url: url}
+	_Log = _Log.WithOptions(
+		zap.WrapCore(func(core zapcore.Core) zapcore.Core {
+			return zapcore.NewTee(
+				core,
+				zapcore.NewCore(
+					zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
+						TimeKey:        "",
+						LevelKey:       "level",
+						NameKey:        "logger",
+						CallerKey:      "caller",
+						MessageKey:     "msg",
+						StacktraceKey:  "stacktrace",
+						LineEnding:     zapcore.DefaultLineEnding,
+						EncodeLevel:    zapcore.CapitalColorLevelEncoder,
+						EncodeTime:     zapcore.ISO8601TimeEncoder,
+						EncodeDuration: zapcore.StringDurationEncoder,
+						EncodeCaller:   zapcore.ShortCallerEncoder,
+					}),
+					remoteWriter,
+					_LogLevel,
+				),
+			)
+		}),
+		zap.AddCaller(),
+		zap.AddCallerSkip(1),
+	)
 }
 
 func Debug(msg string, fields ...zap.Field) {
