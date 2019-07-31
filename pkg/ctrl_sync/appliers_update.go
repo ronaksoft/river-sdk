@@ -266,6 +266,7 @@ func (ctrl *Controller) updateMessageEdited(u *msg.UpdateEnvelope) []*msg.Update
 
 // updateMessageID
 func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+	res := make([]*msg.UpdateEnvelope, 0)
 	x := new(msg.UpdateMessageID)
 	_ = x.Unmarshal(u.Update)
 	logs.Info("SyncController::updateMessageID",
@@ -273,19 +274,55 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 		zap.Int64("MessageID", x.MessageID),
 	)
 
-	// msgEnvelop := new(msg.MessageEnvelope)
-	// msgEnvelop.Constructor = msg.C_MessageEnvelope
-	//
-	// sent := new(msg.MessagesSent)
-	// sent.MessageID = x.MessageID
-	// sent.RandomID = x.RandomID
-	// sent.CreatedOn = time.Now().Unix()
-	//
-	// // used message randomID as requestID of pending message so we can retrieve it here
-	// msgEnvelop.RequestID = uint64(x.RandomID)
-	// msgEnvelop.Message, _ = sent.Marshal()
-	// ctrl.messageSent(msgEnvelop)
-	res := make([]*msg.UpdateEnvelope, 0)
+	msgEnvelop := new(msg.MessageEnvelope)
+	msgEnvelop.Constructor = msg.C_MessageEnvelope
+
+	sent := new(msg.MessagesSent)
+	sent.MessageID = x.MessageID
+	sent.RandomID = x.RandomID
+	sent.CreatedOn = time.Now().Unix()
+
+	logs.Info("SyncController::messageSent",
+		zap.Int64("MessageID", sent.MessageID),
+		zap.Int64("RandomID", sent.RandomID),
+	)
+
+	userMessage := repo.Messages.Get(sent.MessageID)
+	if userMessage != nil {
+		// If we are here, it means we receive UpdateNewMessage before UpdateMessageID / MessagesSent
+		pm, _ := repo.PendingMessages.GetByRandomID(sent.RandomID)
+		if pm == nil {
+			return res
+		}
+		// It means we have received the NewMessage
+		update := new(msg.UpdateMessagesDeleted)
+		update.Peer = &msg.Peer{ID: pm.PeerID, Type: pm.PeerType}
+		update.MessageIDs = []int64{pm.ID}
+		bytes, _ := update.Marshal()
+
+		updateEnvelope := new(msg.UpdateEnvelope)
+		updateEnvelope.Constructor = msg.C_UpdateMessagesDeleted
+		updateEnvelope.Update = bytes
+		updateEnvelope.UpdateID = 0
+		updateEnvelope.Timestamp = time.Now().Unix()
+
+		buff, _ := updateEnvelope.Marshal()
+
+		// call external handler
+		uiexec.Ctx().Exec(func() {
+			if ctrl.onUpdateMainDelegate != nil {
+				ctrl.onUpdateMainDelegate(msg.C_UpdateEnvelope, buff)
+			}
+		})
+		return res
+	}
+
+	_, err := repo.PendingMessages.GetByRandomID(sent.RandomID)
+	if err != nil {
+		return res
+	}
+	repo.PendingMessages.SaveByRealID(sent.RandomID, sent.MessageID)
+
 	return res
 }
 

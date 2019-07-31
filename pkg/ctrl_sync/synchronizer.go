@@ -79,7 +79,6 @@ func NewSyncController(config Config) *Controller {
 		msg.C_ContactsImported:  ctrl.contactsImported,
 		msg.C_ContactsMany:      ctrl.contactsMany,
 		msg.C_MessagesDialogs:   ctrl.messagesDialogs,
-		msg.C_MessagesSent:      ctrl.messageSent,
 		msg.C_AuthSentCode:      ctrl.authSentCode,
 		msg.C_UsersMany:         ctrl.usersMany,
 		msg.C_MessagesMany:      ctrl.messagesMany,
@@ -450,11 +449,15 @@ func (ctrl *Controller) SetOnUpdateCallback(h domain.OnUpdateMainDelegateHandler
 // MessageHandler call appliers-> repository and sync data
 func (ctrl *Controller) MessageHandler(messages []*msg.MessageEnvelope) {
 	for _, m := range messages {
-		if applier, ok := ctrl.messageAppliers[m.Constructor]; ok {
-			applier(m)
+		switch m.Constructor {
+		case msg.C_MessagesSent:
+			// Do nothing
+		default:
+			if applier, ok := ctrl.messageAppliers[m.Constructor]; ok {
+				applier(m)
+			}
 		}
 	}
-
 }
 
 // UpdateHandler receives update to cache them in client DB

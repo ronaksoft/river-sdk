@@ -6,10 +6,8 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"go.uber.org/zap"
 	"sync"
-	"time"
 )
 
 // authAuthorization
@@ -131,56 +129,6 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 		zap.Int("UsersCount", len(x.Users)),
 		zap.Int("MessagesCount", len(x.Messages)),
 	)
-}
-
-// Check pending messages and notify UI
-func (ctrl *Controller) messageSent(e *msg.MessageEnvelope) {
-	sent := new(msg.MessagesSent)
-	err := sent.Unmarshal(e.Message)
-	if err != nil {
-		logs.Error("MessageSent()-> Unmarshal", zap.Error(err))
-		return
-	}
-	logs.Info("SyncController::messageSent",
-		zap.Int64("MessageID", sent.MessageID),
-		zap.Int64("RandomID", sent.RandomID),
-	)
-
-	userMessage := repo.Messages.Get(sent.MessageID)
-	if userMessage != nil {
-		// If we are here, it means we receive UpdateNewMessage before UpdateMessageID / MessagesSent
-		pm, _ := repo.PendingMessages.GetByRandomID(int64(e.RequestID))
-		if pm == nil {
-			return
-		}
-		// It means we have received the NewMessage
-		update := new(msg.UpdateMessagesDeleted)
-		update.Peer = &msg.Peer{ID: pm.PeerID, Type: pm.PeerType}
-		update.MessageIDs = []int64{pm.ID}
-		bytes, _ := update.Marshal()
-
-		updateEnvelope := new(msg.UpdateEnvelope)
-		updateEnvelope.Constructor = msg.C_UpdateMessagesDeleted
-		updateEnvelope.Update = bytes
-		updateEnvelope.UpdateID = 0
-		updateEnvelope.Timestamp = time.Now().Unix()
-
-		buff, _ := updateEnvelope.Marshal()
-
-		// call external handler
-		uiexec.Ctx().Exec(func() {
-			if ctrl.onUpdateMainDelegate != nil {
-				ctrl.onUpdateMainDelegate(msg.C_UpdateEnvelope, buff)
-			}
-		})
-		return
-	}
-
-	_, err = repo.PendingMessages.GetByRandomID(int64(e.RequestID))
-	if err != nil {
-		return
-	}
-	repo.PendingMessages.SaveByRealID(int64(e.RequestID), sent.MessageID)
 }
 
 // usersMany
