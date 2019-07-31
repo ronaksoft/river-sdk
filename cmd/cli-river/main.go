@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/fatih/color"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -75,6 +76,7 @@ func main() {
 	}
 
 	conInfo.Delegate = new(ConnInfoDelegates)
+	skBytes, _ := ioutil.ReadFile("./keys.json")
 
 	qPath := "./_queue"
 	_SDK = new(riversdk.River)
@@ -83,7 +85,7 @@ func main() {
 		DbPath:                 dbPath,
 		DbID:                   dbID,
 		QueuePath:              fmt.Sprintf("%s/%s", qPath, dbID),
-		ServerKeysFilePath:     "./keys.json",
+		ServerKeys:             ronak.ByteToStr(skBytes),
 		MainDelegate:           new(MainDelegate),
 		FileDelegate:           new(FileDelegate),
 		LogLevel:               int(zapcore.DebugLevel),
@@ -96,6 +98,7 @@ func main() {
 		ConnInfo:               conInfo,
 	})
 
+	_SDK.TurnOnLiveLogger("http://localhost:2374")
 	_SDK.Start()
 	if _SDK.ConnInfo.AuthID == 0 {
 		if err := _SDK.CreateAuthKey(); err != nil {

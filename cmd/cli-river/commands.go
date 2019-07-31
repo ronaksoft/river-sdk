@@ -231,6 +231,7 @@ func fnGetMessageIDs(c *ishell.Context) []int64 {
 	}
 	return messagesIDs
 }
+
 func fnGetMessageID(c *ishell.Context) int64 {
 	messageID := int64(0)
 	for {

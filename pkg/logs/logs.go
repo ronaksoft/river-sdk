@@ -5,6 +5,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -105,6 +106,19 @@ func SetLogFilePath(logDir string) error {
 		),
 	)
 	return nil
+}
+
+func SetRemoteLog(url string) {
+	_Log = _Log.WithOptions(zap.Hooks(func(entry zapcore.Entry) error {
+		sb := strings.Builder{}
+		sb.WriteString(entry.Level.String())
+		sb.WriteString(":")
+		sb.WriteString(" ")
+		sb.WriteString(entry.Message)
+		sb.WriteString(entry.Stack)
+		_, err := http.DefaultClient.Post(url, "", strings.NewReader(sb.String()))
+		return err
+	}))
 }
 
 func Debug(msg string, fields ...zap.Field) {
