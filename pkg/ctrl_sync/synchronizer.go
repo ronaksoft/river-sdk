@@ -463,7 +463,7 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 		zap.Int64("ctrl.UpdateID", ctrl.updateID),
 		zap.Int64("MaxID", updateContainer.MaxUpdateID),
 		zap.Int64("MinID", updateContainer.MinUpdateID),
-		zap.Int("Count : ", len(updateContainer.Updates)),
+		zap.Int("Count", len(updateContainer.Updates)),
 	)
 	ctrl.lastUpdateReceived = time.Now()
 

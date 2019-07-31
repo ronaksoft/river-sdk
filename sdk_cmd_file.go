@@ -250,7 +250,7 @@ func (r *River) AccountGetPhotoBig(userID int64) string {
 		return ""
 	}
 
-	filePath := fileCtrl.GetAccountAvatarPath(user.ID, user.Photo.PhotoBig.FileID)
+	filePath := fileCtrl.GetAccountAvatarPath(userID, user.Photo.PhotoBig.FileID)
 
 	// check if file exist
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
