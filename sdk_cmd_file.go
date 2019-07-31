@@ -271,11 +271,11 @@ func (r *River) AccountGetPhotoSmall(userID int64) string {
 		return ""
 	}
 
-	filePath := fileCtrl.GetAccountAvatarPath(user.ID, user.Photo.PhotoSmall.FileID)
+	filePath := fileCtrl.GetAccountAvatarPath(userID, user.Photo.PhotoSmall.FileID)
 
 	// check if file exist
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		return r.downloadAccountPhoto(user.ID, user.Photo, true)
+		return r.downloadAccountPhoto(user.ID, user.Photo, false)
 	}
 	return filePath
 }
@@ -378,7 +378,7 @@ func (r *River) GroupGetPhotoSmall(groupID int64) string {
 	filePath := fileCtrl.GetGroupAvatarPath(group.ID, group.Photo.PhotoSmall.FileID)
 	// check if file exist
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		return r.downloadGroupPhoto(groupID, group.Photo, true)
+		return r.downloadGroupPhoto(groupID, group.Photo, false)
 	}
 	return filePath
 }
