@@ -273,18 +273,18 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 		zap.Int64("MessageID", x.MessageID),
 	)
 
-	msgEnvelop := new(msg.MessageEnvelope)
-	msgEnvelop.Constructor = msg.C_MessageEnvelope
-
-	sent := new(msg.MessagesSent)
-	sent.MessageID = x.MessageID
-	sent.RandomID = x.RandomID
-	sent.CreatedOn = time.Now().Unix()
-
-	// used message randomID as requestID of pending message so we can retrieve it here
-	msgEnvelop.RequestID = uint64(x.RandomID)
-	msgEnvelop.Message, _ = sent.Marshal()
-	ctrl.messageSent(msgEnvelop)
+	// msgEnvelop := new(msg.MessageEnvelope)
+	// msgEnvelop.Constructor = msg.C_MessageEnvelope
+	//
+	// sent := new(msg.MessagesSent)
+	// sent.MessageID = x.MessageID
+	// sent.RandomID = x.RandomID
+	// sent.CreatedOn = time.Now().Unix()
+	//
+	// // used message randomID as requestID of pending message so we can retrieve it here
+	// msgEnvelop.RequestID = uint64(x.RandomID)
+	// msgEnvelop.Message, _ = sent.Marshal()
+	// ctrl.messageSent(msgEnvelop)
 	res := make([]*msg.UpdateEnvelope, 0)
 	return res
 }
