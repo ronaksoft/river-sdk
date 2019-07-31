@@ -31,3 +31,30 @@ deploy:supernumerary-node:
     - docker build --pull -t $CI_REGISTRY_IMAGE/supernumerary:$IMAGE_TAG .
     - docker push $CI_REGISTRY_IMAGE/supernumerary:$IMAGE_TAG
     - echo $CI_REGISTRY_IMAGE
+    
+    
+build:live-logger:
+  stage: build
+  image: registry.ronaksoftware.com/base/golang:1.11
+  script:
+    - cd cmd/cli-livelog/
+    - env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build --mod=vendor -ldflags "-s -w" -o $CI_PROJECT_DIR/cmd/cli-livelog/cli-livelog
+  artifacts:
+    untracked: true
+    expire_in: 1 hour
+
+deploy:live-logger:
+  stage: deploy
+  only:
+    - master
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    IMAGE_TAG:  "latest"
+  script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+    - cd ./cmd/cli-livelog/
+    - docker build --pull -t $CI_REGISTRY_IMAGE/live-logger:$IMAGE_TAG .
+    - docker push $CI_REGISTRY_IMAGE/live-logger:$IMAGE_TAG
+    - echo $CI_REGISTRY_IMAGE
