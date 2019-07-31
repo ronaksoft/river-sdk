@@ -282,11 +282,6 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 	sent.RandomID = x.RandomID
 	sent.CreatedOn = time.Now().Unix()
 
-	logs.Info("SyncController::messageSent",
-		zap.Int64("MessageID", sent.MessageID),
-		zap.Int64("RandomID", sent.RandomID),
-	)
-
 	userMessage := repo.Messages.Get(sent.MessageID)
 	if userMessage != nil {
 		// If we are here, it means we receive UpdateNewMessage before UpdateMessageID / MessagesSent
