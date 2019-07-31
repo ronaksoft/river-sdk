@@ -572,10 +572,7 @@ func (ctrl *Controller) ClearUpdateID() {
 
 // ContactImportFromServer import contact from server
 func (ctrl *Controller) ContactImportFromServer() {
-	contactsGetHash, err := repo.System.LoadInt(domain.ColumnContactsGetHash)
-	if err != nil {
-		logs.Error("onNetworkControllerConnected() failed to get contactsGetHash", zap.Error(err))
-	}
+	contactsGetHash, _ := repo.System.LoadInt(domain.ColumnContactsGetHash)
 	contactGetReq := new(msg.ContactsGet)
 	contactGetReq.Crc32Hash = uint32(contactsGetHash)
 	contactGetBytes, _ := contactGetReq.Marshal()

@@ -108,7 +108,6 @@ func SetLogFilePath(logDir string) error {
 }
 
 func SetRemoteLog(url string) {
-
 	remoteWriter := RemoteWrite{Url: url}
 	_Log = _Log.WithOptions(
 		zap.WrapCore(func(core zapcore.Core) zapcore.Core {
@@ -116,8 +115,8 @@ func SetRemoteLog(url string) {
 				core,
 				zapcore.NewCore(
 					zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
-						TimeKey:        "",
-						LevelKey:       "level",
+						TimeKey:        "ts",
+						LevelKey:       "",
 						NameKey:        "logger",
 						CallerKey:      "caller",
 						MessageKey:     "msg",
