@@ -313,11 +313,13 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			return
 		} else {
 			messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
-			if len(messages) < int(req.Limit) {
-				r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
-				return
-			}
 			messagesGetHistory(out, messages, users, in.RequestID, preSuccessCB)
+			if len(messages) < int(req.Limit) {
+				// Update In Background, just in case
+				// FIXME:: this must not happen
+				go r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, nil, nil, false)
+			}
+
 		}
 	case req.MinID != 0 && req.MaxID == 0:
 		if b, bar := messageHole.GetUpperFilled(req.Peer.ID, int32(req.Peer.Type), req.MinID); !b {
