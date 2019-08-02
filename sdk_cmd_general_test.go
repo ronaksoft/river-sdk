@@ -23,9 +23,9 @@ func init() {
 	conInfo := new(RiverConnection)
 	conInfo.Delegate = new(dummyConInfoDelegate)
 	r.SetConfig(&RiverConfig{
-		DbPath:                 "./_data/",
-		DbID:                   "test",
-		ServerKeysFilePath:     "./keys.json",
+		DbPath: "./_data/",
+		DbID:   "test",
+		// ServerKeysFilePath:     "./keys.json",
 		ServerEndpoint:         "ws://new.river.im",
 		QueuePath:              fmt.Sprintf("%s/%s", "./_queue", "test"),
 		MainDelegate:           new(MainDelegateDummy),

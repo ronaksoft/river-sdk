@@ -22,7 +22,7 @@ func add(ver int, f func(river *River)) {
 func init() {
 	funcHolders = make(map[int]func(r *River))
 	add(0, func(r *River) {})
-	add (1, func(r *River) {
+	add(1, func(r *River) {
 		repo.Messages.ReIndex()
 		repo.Users.ReIndex()
 	})

@@ -245,7 +245,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			// Call the actual success callback function
 			successCB(m)
 		}
-				// return cb
+		// return cb
 	}(successCB)
 	pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
 	if len(pendingMessages) > 0 {

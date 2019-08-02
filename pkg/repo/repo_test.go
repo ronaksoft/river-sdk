@@ -134,7 +134,6 @@ func TestRepoDeleteMessage(t *testing.T) {
 	d = repo.Dialogs.Get(peerID, peerType)
 	fmt.Println(d)
 
-
 	msgs, _ := repo.Messages.GetMessageHistory(peerID, peerType, 0, 0, 5)
 	for idx := range msgs {
 		fmt.Println(msgs[idx].ID)

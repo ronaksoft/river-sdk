@@ -156,14 +156,14 @@ func TestSDKReconnect(t *testing.T) {
 	r := new(River)
 	fmt.Println("SetConfig called")
 	r.SetConfig(&RiverConfig{
-		DbPath:             "./_data/",
-		DbID:               "test",
-		QueuePath:          "./_queue/",
-		ServerKeysFilePath: "./keys.json",
+		DbPath:    "./_data/",
+		DbID:      "test",
+		QueuePath: "./_queue/",
+		// ServerKeysFilePath: "./keys.json",
 
-		ServerEndpoint:     "ws://new.river.im",
-		LogLevel:           0,
-		ConnInfo:           conInfo,
+		ServerEndpoint: "ws://new.river.im",
+		LogLevel:       0,
+		ConnInfo:       conInfo,
 	})
 
 	fmt.Println("Start called")
@@ -195,13 +195,13 @@ func TestSDKReconnect(t *testing.T) {
 	conInfo.Delegate = new(ConnInfoDelegates)
 
 	r.SetConfig(&RiverConfig{
-		DbPath:             "./_data/",
-		DbID:               "test",
-		QueuePath:          "./_queue/",
-		ServerKeysFilePath: "./keys.json",
-		ServerEndpoint:     "ws://new.river.im",
-		ConnInfo:           conInfo,
-		LogLevel:           0,
+		DbPath:    "./_data/",
+		DbID:      "test",
+		QueuePath: "./_queue/",
+		// ServerKeysFilePath: "./keys.json",
+		ServerEndpoint: "ws://new.river.im",
+		ConnInfo:       conInfo,
+		LogLevel:       0,
 	})
 	_ = r.Start()
 	for r.ConnInfo.AuthID == 0 {
@@ -246,13 +246,13 @@ func TestConnectTime(t *testing.T) {
 	r := new(River)
 	fmt.Println("SetConfig called")
 	r.SetConfig(&RiverConfig{
-		DbPath:             "./_data/",
-		DbID:               "test",
-		QueuePath:          "./_queue/",
-		ServerKeysFilePath: "./keys.json",
-		ServerEndpoint:     "ws://new.river.im",
-		LogLevel:           0,
-		ConnInfo:           conInfo,
+		DbPath:    "./_data/",
+		DbID:      "test",
+		QueuePath: "./_queue/",
+		// ServerKeysFilePath: "./keys.json",
+		ServerEndpoint: "ws://new.river.im",
+		LogLevel:       0,
+		ConnInfo:       conInfo,
 	})
 
 	fmt.Println("Start called")
@@ -288,13 +288,13 @@ func TestNewRiver(t *testing.T) {
 
 	r := new(River)
 	r.SetConfig(&RiverConfig{
-		DbPath:             "./_data/",
-		DbID:               "test",
-		QueuePath:          "./_queue/",
-		ServerKeysFilePath: "./keys.json",
-		ServerEndpoint:     "ws://new.river.im",
-		LogLevel:           0,
-		ConnInfo:           conInfo,
+		DbPath:    "./_data/",
+		DbID:      "test",
+		QueuePath: "./_queue/",
+		// ServerKeysFilePath: "./keys.json",
+		ServerEndpoint: "ws://new.river.im",
+		LogLevel:       0,
+		ConnInfo:       conInfo,
 	})
 
 	r.Start()
