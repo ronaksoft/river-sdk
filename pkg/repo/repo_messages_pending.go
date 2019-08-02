@@ -3,7 +3,7 @@ package repo
 import (
 	"fmt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
-	"github.com/ronaksoft/badger"
+	"github.com/dgraph-io/badger"
 	"math"
 	"time"
 

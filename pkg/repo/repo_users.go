@@ -8,7 +8,7 @@ import (
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
-	"github.com/ronaksoft/badger"
+	"github.com/dgraph-io/badger"
 	"go.uber.org/zap"
 	"strings"
 )

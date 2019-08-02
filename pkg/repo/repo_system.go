@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
-	"github.com/ronaksoft/badger"
+	"github.com/dgraph-io/badger"
 )
 
 const (
