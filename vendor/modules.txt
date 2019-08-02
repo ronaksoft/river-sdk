@@ -203,7 +203,7 @@ github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
 # github.com/prometheus/procfs v0.0.2
 github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
-# github.com/ronaksoft/badger v1.6.3
+# github.com/ronaksoft/badger v1.6.4
 github.com/ronaksoft/badger
 github.com/ronaksoft/badger/options
 github.com/ronaksoft/badger/pb

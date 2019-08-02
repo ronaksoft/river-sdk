@@ -263,8 +263,8 @@ github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40T
 github.com/remyoudompheng/bigfft v0.0.0-20190512091148-babf20351dd7 h1:FUL3b97ZY2EPqg2NbXKuMHs5pXJB9hjj1fDHnF2vl28=
 github.com/remyoudompheng/bigfft v0.0.0-20190512091148-babf20351dd7/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=
 github.com/rogpeppe/fastuuid v0.0.0-20150106093220-6724a57986af/go.mod h1:XWv6SoW27p1b0cqNHllgS5HIMJraePCO15w5zCzIWYg=
-github.com/ronaksoft/badger v1.6.3 h1:AcDhmHuwzqWNjxxFRcIiYg5LepxLgnyMiftjfR17QFs=
-github.com/ronaksoft/badger v1.6.3/go.mod h1:X4FZmTbmsIiCfAoA0wk/aT0ddapZ5XEnb4NXBzS0A2M=
+github.com/ronaksoft/badger v1.6.4 h1:L6wHFeQ+8uQEoRGzev8aJtrNNLA/uwlL+u4A+xyH7pQ=
+github.com/ronaksoft/badger v1.6.4/go.mod h1:X4FZmTbmsIiCfAoA0wk/aT0ddapZ5XEnb4NXBzS0A2M=
 github.com/russross/blackfriday v1.5.2/go.mod h1:JO/DiYxRf+HjHt06OyowR9PTA263kcR/rfWxYHBV53g=
 github.com/scylladb/go-reflectx v1.0.1 h1:b917wZM7189pZdlND9PbIJ6NQxfDPfBvUaQ7cjj1iZQ=
 github.com/scylladb/go-reflectx v1.0.1/go.mod h1:rWnOfDIRWBGN0miMLIcoPt/Dhi2doCMZqwMCJ3KupFc=
