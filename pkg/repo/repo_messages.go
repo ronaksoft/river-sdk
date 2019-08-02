@@ -354,7 +354,7 @@ func (r *repoMessages) Delete(userID int64, peerID int64, peerType int32, msgID 
 	}
 
 	// 4. Update unread/mention counter
-	dialog.UnreadCount, dialog.MentionedCount = Dialogs.countUnread(dialog.PeerID, dialog.PeerType, userID, dialog.ReadInboxMaxID)
+	dialog.UnreadCount, dialog.MentionedCount = Dialogs.countUnread(dialog.PeerID, dialog.PeerType, userID, dialog.ReadInboxMaxID+1)
 	Dialogs.Save(dialog)
 
 	// 5. Delete the entry from the index
