@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
-	"github.com/dgraph-io/badger"
+	"github.com/ronaksoft/badger"
 )
 
 const (

@@ -7,7 +7,7 @@ import (
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/analysis/lang/en"
 	"github.com/blevesearch/bleve/mapping"
-	"github.com/dgraph-io/badger/options"
+	"github.com/ronaksoft/badger/options"
 	"github.com/tidwall/buntdb"
 	"os"
 	"strings"
@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"github.com/dgraph-io/badger"
+	"github.com/ronaksoft/badger"
 	"go.uber.org/zap"
 
 	_ "github.com/mattn/go-sqlite3"

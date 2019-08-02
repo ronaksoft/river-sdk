@@ -117,9 +117,6 @@ func (r *River) onNetworkConnect() {
 
 	go func() {
 		if r.syncCtrl.GetUserID() != 0 {
-			// A short wait to make sure network state has been updated
-			time.Sleep(100 * time.Millisecond)
-
 			// Sync with Server
 			r.syncCtrl.Sync()
 

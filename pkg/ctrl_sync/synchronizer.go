@@ -131,7 +131,7 @@ func (ctrl *Controller) sync() {
 	// get updateID from server
 	serverUpdateID, err := getUpdateState(ctrl)
 	if err != nil {
-		logs.Error("sync()-> getUpdateState()", zap.Error(err))
+		logs.Warn("sync()-> getUpdateState()", zap.Error(err))
 		return
 	}
 	if ctrl.updateID == serverUpdateID {

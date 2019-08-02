@@ -147,7 +147,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	var err error
 	err = repo.InitRepo(fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID), conf.OptimizeForLowMemory)
 	if err != nil {
-		logs.Fatal("River::SetConfig() faild to initialize DB context",
+		logs.Fatal("River::SetConfig() failed to initialize DB context",
 			zap.String("Error", err.Error()),
 		)
 	}
