@@ -4,7 +4,6 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
 	"sync"
@@ -186,11 +185,11 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 		zap.Int64("MaxID", maxID),
 	)
 
-	if u.Continuous && minID != 0 && minID != maxID {
-		peerID := u.Messages[0].PeerID
-		peerType := u.Messages[0].PeerType
-		messageHole.InsertFill(peerID, peerType, minID, maxID)
-	}
+	// if u.Continuous && minID != 0 && minID != maxID {
+	// 	peerID := u.Messages[0].PeerID
+	// 	peerType := u.Messages[0].PeerType
+	// 	messageHole.InsertFill(peerID, peerType, minID, maxID)
+	// }
 	waitGroup.Wait()
 }
 

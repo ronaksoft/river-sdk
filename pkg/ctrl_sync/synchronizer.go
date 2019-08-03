@@ -276,8 +276,7 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 						continue
 					}
 					// create MessageHole
-					messageHole.InsertHole(dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID-1)
-					messageHole.SetUpperFilled(dialog.PeerID, dialog.PeerType, dialog.TopMessageID)
+					messageHole.InsertFill(dialog.PeerID, dialog.PeerType, dialog.TopMessageID, dialog.TopMessageID)
 				}
 
 				repo.Users.SaveMany(x.Users)

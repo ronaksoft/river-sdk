@@ -44,12 +44,12 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 			AccessHash:     x.AccessHash,
 		}
 		repo.Dialogs.SaveNew(dialog, x.Message.CreatedOn)
-		messageHole.InsertHole(x.Message.PeerID, x.Message.PeerType, 0, x.Message.ID-1)
 	}
 	// save user if does not exist
 	repo.Users.Save(x.Sender)
 	repo.Messages.SaveNew(x.Message, dialog, ctrl.userID)
-	messageHole.SetUpperFilled(x.Message.PeerID, x.Message.PeerType, x.Message.ID)
+	messageHole.InsertFill(dialog.PeerID, dialog.PeerType, dialog.TopMessageID, x.Message.ID)
+
 
 	// bug : sometime server do not sends access hash
 	if x.AccessHash > 0 {
@@ -140,8 +140,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			// get dialog and create first hole
 			dtoDlg := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
 			if dtoDlg != nil {
-				messageHole.InsertHole(dtoDlg.PeerID, dtoDlg.PeerType, 0, dtoDlg.TopMessageID-1)
-				messageHole.SetUpperFilled(dtoDlg.PeerID, dtoDlg.PeerType, dtoDlg.TopMessageID)
+				messageHole.InsertFill(dtoDlg.PeerID, dtoDlg.PeerType, dtoDlg.TopMessageID, dtoDlg.TopMessageID)
 			}
 		}
 	}
