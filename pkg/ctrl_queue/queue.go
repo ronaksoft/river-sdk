@@ -283,7 +283,7 @@ func (ctrl *Controller) Start() {
 			if pmsg.MediaType == msg.InputMediaTypeEmpty {
 				req := repo.PendingMessages.ToMessagesSend(pmsg)
 				reqBytes, _ := req.Marshal()
-				ctrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSendMedia, reqBytes, nil, nil, false)
+				ctrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSend, reqBytes, nil, nil, false)
 			} else {
 				req := repo.PendingMessages.ToMessagesSendMedia(pmsg)
 				reqBytes, _ := req.Marshal()
