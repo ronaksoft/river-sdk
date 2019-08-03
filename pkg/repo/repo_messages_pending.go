@@ -394,8 +394,8 @@ func (r *repoMessagesPending) ToMessagesSend(m *msg.ClientPendingMessage) *msg.M
 	v.RandomID = m.RequestID
 	v.Body = m.Body
 	v.Peer = &msg.InputPeer{
-		ID: m.PeerID,
-		Type: msg.PeerType(m.PeerType),
+		ID:         m.PeerID,
+		Type:       msg.PeerType(m.PeerType),
 		AccessHash: m.AccessHash,
 	}
 	v.ClearDraft = m.ClearDraft
@@ -407,8 +407,8 @@ func (r *repoMessagesPending) ToMessagesSendMedia(m *msg.ClientPendingMessage) *
 	v := new(msg.MessagesSendMedia)
 	v.RandomID = m.RequestID
 	v.Peer = &msg.InputPeer{
-		ID: m.PeerID,
-		Type: msg.PeerType(m.PeerType),
+		ID:         m.PeerID,
+		Type:       msg.PeerType(m.PeerType),
 		AccessHash: m.AccessHash,
 	}
 	v.ClearDraft = m.ClearDraft

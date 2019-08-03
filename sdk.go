@@ -430,7 +430,6 @@ func (r *River) Start() error {
 	r.queueCtrl.Start()
 	r.syncCtrl.Start()
 
-
 	// Connect to Server
 	go r.networkCtrl.Connect(true)
 
