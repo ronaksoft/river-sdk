@@ -260,6 +260,9 @@ func InsertHole(peerID int64, peerType int32, minID, maxID int64) {
 		zap.Int64("MinID", minID),
 		zap.Int64("MaxID", maxID),
 	)
+	if minID > maxID {
+		return
+	}
 	hm := loadManager(peerID, peerType)
 
 	hm.InsertBar(Bar{Type: Hole, Min: minID, Max: maxID})
@@ -274,6 +277,9 @@ func InsertFill(peerID int64, peerType int32, minID, maxID int64) {
 		zap.Int64("MinID", minID),
 		zap.Int64("MaxID", maxID),
 	)
+	if minID > maxID {
+		return
+	}
 	hm := loadManager(peerID, peerType)
 
 	hm.InsertBar(Bar{Type: Filled, Min: minID, Max: maxID})

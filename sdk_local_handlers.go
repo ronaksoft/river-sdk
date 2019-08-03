@@ -230,7 +230,8 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 
 	// Prepare the the result before sending back to the client
-	preSuccessCB := func(cb domain.MessageHandler, req *msg.MessagesGetHistory) domain.MessageHandler {
+	pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
+	preSuccessCB := func(cb domain.MessageHandler, pms []*msg.UserMessage, req *msg.MessagesGetHistory) domain.MessageHandler {
 		return func(m *msg.MessageEnvelope) {
 			switch m.Constructor {
 			case msg.C_MessagesMany:
@@ -241,10 +242,9 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 					return x.Messages[i].ID > x.Messages[j].ID
 				})
 
-
 				// Fill Messages Hole
 				if msgCount := len(x.Messages); msgCount > 0 {
-					switch  {
+					switch {
 					case req.MinID == 0 && req.MaxID != 0:
 						messageHole.InsertFill(req.Peer.ID, int32(req.Peer.Type), x.Messages[msgCount-1].ID, req.MaxID)
 					case req.MinID != 0 && req.MaxID == 0:
@@ -254,39 +254,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 					}
 				}
 
-				m.Message, _ = x.Marshal()
-			}
-			// Call the actual success callback function
-			successCB(m)
-		}
-		// return cb
-	}(successCB, req)
-	pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
-	if len(pendingMessages) > 0 {
-		preSuccessCB = func(cb domain.MessageHandler, pms []*msg.UserMessage, req *msg.MessagesGetHistory) domain.MessageHandler {
-			// TODO:: Think about ways to optimize this
-			return func(m *msg.MessageEnvelope) {
-				switch m.Constructor {
-				case msg.C_MessagesMany:
-					x := new(msg.MessagesMany)
-					_ = x.Unmarshal(m.Message)
-					// 1st sort the received messages by id
-					sort.Slice(x.Messages, func(i, j int) bool {
-						return x.Messages[i].ID > x.Messages[j].ID
-					})
-
-					// Fill Messages Hole
-					if msgCount := len(x.Messages); msgCount > 0 {
-						switch  {
-						case req.MinID == 0 && req.MaxID != 0:
-							messageHole.InsertFill(req.Peer.ID, int32(req.Peer.Type), x.Messages[msgCount-1].ID, req.MaxID)
-						case req.MinID != 0 && req.MaxID == 0:
-							messageHole.InsertFill(req.Peer.ID, int32(req.Peer.Type), req.MinID, x.Messages[0].ID)
-						case req.MinID == 0 && req.MaxID == 0:
-							messageHole.InsertFill(req.Peer.ID, int32(req.Peer.Type), x.Messages[msgCount-1].ID, x.Messages[0].ID)
-						}
-					}
-
+				if len(pms) > 0 {
 					// 2nd base on the reqMin values add the appropriate pending messages
 					switch {
 					case req.MinID == 0:
@@ -310,14 +278,15 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 							return x.Messages[i].ID > x.Messages[j].ID
 						}
 					})
-					m.Message, _ = x.Marshal()
-				default:
 				}
-				// Call the actual success callback function
-				successCB(m)
+
+				m.Message, _ = x.Marshal()
+			default:
 			}
-		}(successCB, pendingMessages, req)
-	}
+			// Call the actual success callback function
+			successCB(m)
+		}
+	}(successCB, pendingMessages, req)
 
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:
