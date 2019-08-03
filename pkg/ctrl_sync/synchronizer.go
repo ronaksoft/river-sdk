@@ -91,7 +91,7 @@ func NewSyncController(config Config) *Controller {
 // watchDog
 // Checks if we have not received any updates since last watch tries to re-sync with server.
 func (ctrl *Controller) watchDog() {
-	syncTime := 15 * time.Second
+	syncTime := 3 * time.Minute
 	for {
 		select {
 		case <-time.After(syncTime):
