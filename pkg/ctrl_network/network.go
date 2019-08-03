@@ -589,7 +589,7 @@ func (ctrl *Controller) SendHttp(msgEnvelope *msg.MessageEnvelope) (*msg.Message
 
 	// Set timeout
 	client := &http.Client{}
-	client.Timeout = domain.WebsocketRequestTime
+	client.Timeout = domain.HttpRequestTime
 
 	// Send Data
 	httpResp, err := client.Post(ctrl.httpEndpoint, "application/protobuf", reqBuff)
