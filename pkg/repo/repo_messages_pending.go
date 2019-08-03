@@ -239,7 +239,7 @@ func (r *repoMessagesPending) GetByPeer(peerID int64, peerType int32) []*msg.Use
 	return userMessages
 }
 
-func (r *repoMessagesPending) GetAll() []*msg.UserMessage {
+func (r *repoMessagesPending) GetAndConvertAll() []*msg.UserMessage {
 	userMessages := make([]*msg.UserMessage, 0, 10)
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		opt := badger.DefaultIteratorOptions
@@ -257,6 +257,26 @@ func (r *repoMessagesPending) GetAll() []*msg.UserMessage {
 		return nil
 	})
 	return userMessages
+}
+
+func (r *repoMessagesPending) GetAll() []*msg.ClientPendingMessage {
+	pendingMessages := make([]*msg.ClientPendingMessage, 0, 10)
+	_ = r.badger.Update(func(txn *badger.Txn) error {
+		opt := badger.DefaultIteratorOptions
+		opt.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
+		it := txn.NewIterator(opt)
+		for it.Rewind(); it.Valid(); it.Next() {
+			_ = it.Item().Value(func(val []byte) error {
+				pm := new(msg.ClientPendingMessage)
+				_ = pm.Unmarshal(val)
+				pendingMessages = append(pendingMessages, pm)
+				return nil
+			})
+		}
+		it.Close()
+		return nil
+	})
+	return pendingMessages
 }
 
 func (r *repoMessagesPending) Delete(msgID int64) {
@@ -366,5 +386,34 @@ func (r *repoMessagesPending) ToUserMessage(m *msg.ClientPendingMessage) *msg.Us
 	}
 	v.MediaType = msg.MediaType(m.MediaType)
 	v.Media = m.Media
+	return v
+}
+
+func (r *repoMessagesPending) ToMessagesSend(m *msg.ClientPendingMessage) *msg.MessagesSend {
+	v := new(msg.MessagesSend)
+	v.RandomID = m.RequestID
+	v.Body = m.Body
+	v.Peer = &msg.InputPeer{
+		ID: m.PeerID,
+		Type: msg.PeerType(m.PeerType),
+		AccessHash: m.AccessHash,
+	}
+	v.ClearDraft = m.ClearDraft
+	v.Entities = m.Entities
+	v.ReplyTo = m.ReplyTo
+	return v
+}
+func (r *repoMessagesPending) ToMessagesSendMedia(m *msg.ClientPendingMessage) *msg.MessagesSendMedia {
+	v := new(msg.MessagesSendMedia)
+	v.RandomID = m.RequestID
+	v.Peer = &msg.InputPeer{
+		ID: m.PeerID,
+		Type: msg.PeerType(m.PeerType),
+		AccessHash: m.AccessHash,
+	}
+	v.ClearDraft = m.ClearDraft
+	v.ReplyTo = m.ReplyTo
+	v.MediaType = m.MediaType
+	v.MediaData = m.Media
 	return v
 }

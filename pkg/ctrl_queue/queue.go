@@ -277,6 +277,21 @@ func (ctrl *Controller) ExecuteCommand(requestID uint64, constructor int64, requ
 func (ctrl *Controller) Start() {
 	logs.Info("QueueController started")
 
+	// Try to resend unsent messages
+	if ctrl.waitingList.Length() == 0 {
+		for _, pmsg := range repo.PendingMessages.GetAll() {
+			if pmsg.MediaType == msg.InputMediaTypeEmpty {
+				req := repo.PendingMessages.ToMessagesSend(pmsg)
+				reqBytes, _ := req.Marshal()
+				ctrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSendMedia, reqBytes, nil, nil, false)
+			} else {
+				req := repo.PendingMessages.ToMessagesSendMedia(pmsg)
+				reqBytes, _ := req.Marshal()
+				ctrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSendMedia, reqBytes, nil, nil, false)
+			}
+		}
+	}
+
 	go ctrl.distributor()
 }
 

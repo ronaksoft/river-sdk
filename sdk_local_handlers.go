@@ -31,7 +31,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 
-	pendingMessages := repo.PendingMessages.GetAll()
+	pendingMessages := repo.PendingMessages.GetAndConvertAll()
 
 	mUsers := domain.MInt64B{}
 	mGroups := domain.MInt64B{}
