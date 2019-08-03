@@ -249,6 +249,7 @@ func loadManager(peerID int64, peerType int32) *HoleManager {
 func saveManager(peerID int64, peerType int32, hm *HoleManager) {
 	b, err := json.Marshal(hm.bars)
 	if err != nil {
+		logs.Error("Error On HoleManager", zap.Error(err))
 		return
 	}
 	repo.MessagesExtra.SaveHoles(peerID, peerType, b)
