@@ -73,10 +73,18 @@ func (m *HoleManager) InsertBar(b Bar) {
 	}
 
 	// Insert hole to increase our domain
-	if b.Max > m.maxIndex {
-		m.bars = append(m.bars, Bar{Min: m.maxIndex + 1, Max: b.Max, Type: Hole})
-		m.maxIndex = b.Max
+	switch b.Type {
+	case Filled:
+		switch  {
+		case b.Min > m.maxIndex:
+			m.bars = append(m.bars, Bar{Min: m.maxIndex + 1, Max: b.Max, Type: Hole})
+			m.maxIndex = b.Max
+		case b.Min == m.maxIndex && b.Max > b.Min:
+			m.bars = append(m.bars, Bar{Min: m.maxIndex + 1, Max: b.Max, Type: Hole})
+			m.maxIndex = b.Max
+		}
 	}
+
 
 	sort.Slice(m.bars, func(i, j int) bool {
 		return m.bars[i].Min < m.bars[j].Min
@@ -296,23 +304,6 @@ func saveManager(peerID int64, peerType int32, hm *HoleManager) {
 	return
 }
 
-func InsertHole(peerID int64, peerType int32, minID, maxID int64) {
-	logs.Info("Insert Hole",
-		zap.Int64("MinID", minID),
-		zap.Int64("MaxID", maxID),
-	)
-	if minID > maxID {
-		return
-	}
-	hm := loadManager(peerID, peerType)
-
-	hm.InsertBar(Bar{Type: Hole, Min: minID, Max: maxID})
-
-	saveManager(peerID, peerType, hm)
-
-	return
-}
-
 func InsertFill(peerID int64, peerType int32, minID, maxID int64) {
 	logs.Info("Insert Fill",
 		zap.Int64("MinID", minID),
@@ -322,10 +313,7 @@ func InsertFill(peerID int64, peerType int32, minID, maxID int64) {
 		return
 	}
 	hm := loadManager(peerID, peerType)
-	logs.Info("Before", zap.String("Obj", hm.String()))
 	hm.InsertBar(Bar{Type: Filled, Min: minID, Max: maxID})
-	logs.Info("After", zap.String("Obj", hm.String()))
-
 	saveManager(peerID, peerType, hm)
 	return
 }
