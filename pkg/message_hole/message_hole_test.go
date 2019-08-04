@@ -8,10 +8,7 @@ import (
 )
 
 func init() {
-	err := repo.InitRepo("./_data", false)
-	if err != nil {
-		logs.Fatal(err.Error())
-	}
+	repo.InitRepo("./_data", false)
 }
 func TestHole(t *testing.T) {
 	peerID := ronak.RandomInt64(0)

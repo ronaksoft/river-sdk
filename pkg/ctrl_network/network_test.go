@@ -94,17 +94,13 @@ func TestNewController(t *testing.T) {
 	ctrl.SetNetworkStatusChangedCallback(dummyNetworkChangeHandler)
 	ctrl.SetOnConnectCallback(dummyOnConnectHandler)
 
-	err := ctrl.Start()
-	if err != nil {
-		t.Error(err)
-		return
-	}
+	ctrl.Start()
 	for j := 0; j < 10; j++ {
 		fmt.Println("Connect Called")
 		ctrl.Connect(true)
 		for i := 0; i < 10; i++ {
 			fmt.Println("SendWebsocket Message:", i)
-			err = ctrl.SendWebsocket(getServerTime(), false)
+			err := ctrl.SendWebsocket(getServerTime(), false)
 			if err != nil {
 				t.Error(err)
 			}

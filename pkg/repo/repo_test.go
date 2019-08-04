@@ -3,7 +3,6 @@ package repo_test
 import (
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
@@ -21,10 +20,7 @@ import (
 */
 
 func init() {
-	err := repo.InitRepo("./_data", false)
-	if err != nil {
-		logs.Fatal(err.Error())
-	}
+	repo.InitRepo("./_data", false)
 }
 
 func TestRepoDialogs(t *testing.T) {

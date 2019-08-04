@@ -446,7 +446,6 @@ func (r *River) Start() error {
 	go r.fileCtrl.LoadQueueFromDB()
 
 
-
 	logs.Info("River Started")
 	return nil
 }

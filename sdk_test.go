@@ -59,7 +59,7 @@ func init() {
 }
 
 func TestController_CheckSalt(t *testing.T) {
-	_ = repo.InitRepo(fmt.Sprintf("%s/%s.db", "./_data", "test"), false)
+	repo.InitRepo(fmt.Sprintf("%s/%s.db", "./_data", "test"), false)
 	var saltArrays [][]domain.Slt
 	var saltArray []domain.Slt
 	ti := time.Now()
@@ -177,7 +177,7 @@ func TestSDKReconnect(t *testing.T) {
 
 	time.Sleep(10 * time.Second)
 	r.ResetAuthKey()
-	r.Stop()
+	r.stop()
 
 	time.Sleep(10 * time.Second)
 
