@@ -218,10 +218,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	if r.ConnInfo.UserID != 0 {
 		r.syncCtrl.SetUserID(r.ConnInfo.UserID)
 	}
-
-	// Update Controller
-	r.fileCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-	r.fileCtrl.LoadQueueFromDB()
 }
 
 func (r *River) Version() string {
