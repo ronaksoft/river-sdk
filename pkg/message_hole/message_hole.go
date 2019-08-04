@@ -228,12 +228,12 @@ func (m *HoleManager) String() string {
 func (m *HoleManager) Valid() bool {
 	m.mtxLock.Lock()
 	defer m.mtxLock.Unlock()
-	idx := int64(0)
+	idx := int64(-1)
 	for _, bar := range m.bars {
 		if bar.Min > bar.Max {
 			return false
 		}
-		if bar.Max < idx {
+		if bar.Min <= idx {
 			return false
 		}
 		idx = bar.Max
