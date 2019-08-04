@@ -253,11 +253,16 @@ func (m *HoleManager) Valid() bool {
 	return true
 }
 
+
 var holder = struct {
 	mtx  sync.Mutex
 	list map[string]*HoleManager
 }{
 	list: make(map[string]*HoleManager),
+}
+
+func Init() {
+	holder.list = make(map[string]*HoleManager)
 }
 
 func loadManager(peerID int64, peerType int32) *HoleManager {

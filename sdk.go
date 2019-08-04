@@ -8,6 +8,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
@@ -422,6 +423,8 @@ func (r *River) registerCommandHandlers() {
 func (r *River) Start() error {
 	logs.Info("River Starting")
 
+	// Initialize MessageHole
+	messageHole.Init()
 
 	// Initialize DB replaced with ORM
 	repo.InitRepo(r.dbPath, r.optimizeForLowMemory)
