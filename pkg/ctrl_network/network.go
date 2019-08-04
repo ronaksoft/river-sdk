@@ -354,14 +354,10 @@ func (ctrl *Controller) messageHandler(message *msg.MessageEnvelope) {
 
 // Start
 // Starts the controller background controller and watcher routines
-func (ctrl *Controller) Start() error {
-	if ctrl.OnUpdate == nil || ctrl.OnMessage == nil {
-		return domain.ErrHandlerNotSet
-	}
-
+func (ctrl *Controller) Start()  {
 	// Run the keepAlive and watchDog in background
 	go ctrl.watchDog()
-	return nil
+	return
 }
 
 // Stop sends stop signal to keepAlive and watchDog routines.

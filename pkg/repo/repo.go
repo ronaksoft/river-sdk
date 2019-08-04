@@ -22,11 +22,10 @@ import (
 )
 
 var (
-	ctx           *Context
-	r             *repository
-	singleton     sync.Mutex
-	repoLastError error
-	lCache        *bigcache.BigCache
+	ctx       *Context
+	r         *repository
+	singleton sync.Mutex
+	lCache    *bigcache.BigCache
 
 	Dialogs         *repoDialogs
 	Messages        *repoMessages
@@ -51,7 +50,7 @@ type repository struct {
 }
 
 // InitRepo initialize repo singleton
-func InitRepo(dbPath string, lowMemory bool) error {
+func InitRepo(dbPath string, lowMemory bool) {
 	if ctx == nil {
 		singleton.Lock()
 		lcConfig := bigcache.DefaultConfig(time.Second * 360)
@@ -65,7 +64,8 @@ func InitRepo(dbPath string, lowMemory bool) error {
 		}
 
 		lCache, _ = bigcache.NewBigCache(lcConfig)
-		repoLastError = repoSetDB(dbPath, lowMemory)
+		repoSetDB(dbPath, lowMemory)
+
 		ctx = &Context{
 			DBPath: dbPath,
 		}
@@ -79,10 +79,10 @@ func InitRepo(dbPath string, lowMemory bool) error {
 		Files = &repoFiles{repository: r}
 		singleton.Unlock()
 	}
-	return repoLastError
+	return
 }
 
-func repoSetDB(dbPath string, lowMemory bool) error {
+func repoSetDB(dbPath string, lowMemory bool) {
 	r = new(repository)
 
 	_ = os.MkdirAll(dbPath, os.ModePerm)
@@ -100,22 +100,18 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 			WithTableLoadingMode(options.LoadToRAM).
 			WithValueLogLoadingMode(options.FileIO)
 	}
-	r.badger, repoLastError = badger.Open(badgerOpts)
-	if repoLastError != nil {
-		logs.Info("Context::repoSetDB()->badger Open()",
-			zap.String("Error", repoLastError.Error()),
-		)
-		return repoLastError
+	if badgerDB, err := badger.Open(badgerOpts); err != nil {
+		logs.Fatal("Context::repoSetDB()->badger Open()", zap.Error(err))
+	} else {
+		r.badger = badgerDB
 	}
 
 	// Initialize BuntDB Indexer
 	_ = os.MkdirAll(fmt.Sprintf("%s/bunty", strings.TrimRight(dbPath, "/")), os.ModePerm)
-	r.bunt, repoLastError = buntdb.Open(fmt.Sprintf("%s/bunty/dialogs.db", strings.TrimRight(dbPath, "/")))
-	if repoLastError != nil {
-		logs.Info("Context::repoSetDB()->bunt Open()",
-			zap.String("Error", repoLastError.Error()),
-		)
-		return repoLastError
+	if buntIndex, err :=  buntdb.Open(fmt.Sprintf("%s/bunty/dialogs.db", strings.TrimRight(dbPath, "/"))); err != nil {
+		logs.Fatal("Context::repoSetDB()->bunt Open()", zap.Error(err))
+	} else {
+		r.bunt = buntIndex
 	}
 	_ = r.bunt.Update(func(tx *buntdb.Tx) error {
 		return tx.CreateIndex(indexDialogs, fmt.Sprintf("%s.*", prefixDialogs), buntdb.IndexBinary)
@@ -124,41 +120,45 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 	// Initialize Search
 	// 1. Messages Search
 	searchDbPath := fmt.Sprintf("%s/searchdb/msg", strings.TrimRight(dbPath, "/"))
-	r.msgSearch, repoLastError = bleve.Open(searchDbPath)
-	if repoLastError == bleve.ErrorIndexPathDoesNotExist {
-		repoLastError = nil
-		// create a mapping
-		indexMapping, err := indexMapForMessages()
-		if err != nil {
-			logs.Fatal("BuildIndexMapping For Messages", zap.Error(err))
+	if msgSearch, err := bleve.Open(searchDbPath); err != nil {
+		switch err {
+		case  bleve.ErrorIndexPathDoesNotExist:
+			// create a mapping
+			indexMapping, err := indexMapForMessages()
+			if err != nil {
+				logs.Fatal("BuildIndexMapping For Messages", zap.Error(err))
+			}
+			r.msgSearch, err = bleve.New(searchDbPath, indexMapping)
+			if err != nil {
+				logs.Fatal("New SearchIndex for Messages", zap.Error(err))
+			}
+		default:
+			logs.Fatal("Error Opening SearchIndex for Messages", zap.Error(err))
 		}
-		r.msgSearch, err = bleve.New(searchDbPath, indexMapping)
-		if err != nil {
-			logs.Fatal("New SearchIndex for Messages", zap.Error(err))
-		}
-	} else if repoLastError != nil {
-		logs.Fatal("Error Opening SearchIndex for Messages", zap.Error(repoLastError))
+	} else {
+		r.msgSearch = msgSearch
 	}
 
 	// 2. Peer Search
 	peerDbSearch := fmt.Sprintf("%s/searchdb/peer", strings.TrimRight(dbPath, "/"))
-	r.peerSearch, repoLastError = bleve.Open(peerDbSearch)
-	if repoLastError == bleve.ErrorIndexPathDoesNotExist {
-		repoLastError = nil
-		// create a mapping
-		indexMapping, err := indexMapForPeers()
-		if err != nil {
-			logs.Fatal("BuildIndexMapping For Peers", zap.Error(err))
+	if peerSearch, err := bleve.Open(peerDbSearch); err != nil {
+		switch err {
+		case bleve.ErrorIndexPathDoesNotExist:
+			// create a mapping
+			indexMapping, err := indexMapForPeers()
+			if err != nil {
+				logs.Fatal("BuildIndexMapping For Peers", zap.Error(err))
+			}
+			r.peerSearch, err = bleve.New(peerDbSearch, indexMapping)
+			if err != nil {
+				logs.Fatal("New SearchIndex for Peers", zap.Error(err))
+			}
+		default:
+			logs.Fatal("Error Opening SearchIndex for Peers", zap.Error(err))
 		}
-		r.peerSearch, err = bleve.New(peerDbSearch, indexMapping)
-		if err != nil {
-			logs.Fatal("New SearchIndex for Peers", zap.Error(err))
-		}
-	} else if repoLastError != nil {
-		logs.Fatal("Error Opening SearchIndex for Peers", zap.Error(repoLastError))
+	} else {
+		r.peerSearch = peerSearch
 	}
-
-	return repoLastError
 }
 
 func indexMapForMessages() (mapping.IndexMapping, error) {
@@ -230,7 +230,6 @@ func Close() error {
 	_ = r.badger.DropAll()
 	_ = r.bunt.Close()
 	_ = r.badger.Close()
-
 
 	_ = r.msgSearch.Close()
 	_ = r.peerSearch.Close()

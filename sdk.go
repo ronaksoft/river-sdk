@@ -423,35 +423,28 @@ func (r *River) Start() error {
 	logs.Info("River Starting")
 
 	// Initialize DB replaced with ORM
-	var err error
-	err = repo.InitRepo(r.dbPath, r.optimizeForLowMemory)
-	if err != nil {
-		logs.Fatal("River::SetConfig() failed to initialize DB context",
-			zap.String("Error", err.Error()),
-		)
-	}
+	repo.InitRepo(r.dbPath, r.optimizeForLowMemory)
 
-	// Update FileController
+	// Update Authorizations
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 	r.fileCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-	go r.fileCtrl.LoadQueueFromDB()
+	r.loadDeviceToken()
 
 	// init UI Executor
 	uiexec.InitUIExec()
 
-	// load DeviceToken
-	r.loadDeviceToken()
-
 	// Start Controllers
-	if err := r.networkCtrl.Start(); err != nil {
-		logs.Error("River::Start()", zap.Error(err))
-		return err
-	}
+	r.networkCtrl.Start()
+	r.queueCtrl.Start()
+	r.syncCtrl.Start()
+
+
 	// Connect to Server
 	go r.networkCtrl.Connect(true)
 
-	r.queueCtrl.Start()
-	r.syncCtrl.Start()
+	// Start to download unfinished jobs
+	go r.fileCtrl.LoadQueueFromDB()
+
 
 
 	logs.Info("River Started")
