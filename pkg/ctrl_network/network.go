@@ -7,6 +7,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"sort"
 	"sync"
@@ -74,6 +75,10 @@ type Controller struct {
 
 	// requests that it should sent unencrypted
 	unauthorizedRequests map[int64]bool
+
+	// internal parameters to detect network switch
+	localIP       *net.IPNet
+	interfaceName string
 }
 
 // New
@@ -207,8 +212,15 @@ func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
 // to listen and accept web-socket packets. If stop signal received it means we are
 // going to shutdown, hence returns from the function.
 func (ctrl *Controller) watchDog() {
+	ticker := time.NewTicker(time.Second)
 	for {
 		select {
+		case <-ticker.C:
+			if ctrl.interfaceChanged() {
+				// Disconnects
+				_ = ctrl.wsConn.SetReadDeadline(time.Now())
+			}
+
 		case <-ctrl.connectChannel:
 			if ctrl.wsConn != nil {
 				ctrl.receiver()
@@ -221,6 +233,21 @@ func (ctrl *Controller) watchDog() {
 			return
 		}
 	}
+}
+
+func (ctrl *Controller) interfaceChanged() bool {
+	if localInterface, err := net.InterfaceByName(ctrl.interfaceName); err == nil {
+		if addrs, err := localInterface.Addrs(); err == nil {
+			for _, a := range addrs {
+				if interfaceIP, ok := a.(*net.IPNet); ok {
+					if interfaceIP.String() == ctrl.localIP.String() {
+						return false
+					}
+				}
+			}
+		}
+	}
+	return true
 }
 
 // keepAlive
@@ -395,6 +422,8 @@ func (ctrl *Controller) Start() error {
 	if ctrl.OnUpdate == nil || ctrl.OnMessage == nil {
 		return domain.ErrHandlerNotSet
 	}
+
+	// Run the keepAlive and watchDog in background
 	go ctrl.keepAlive()
 	go ctrl.watchDog()
 	return nil
@@ -441,6 +470,15 @@ func (ctrl *Controller) Connect(force bool) {
 			time.Sleep(1 * time.Second)
 			continue
 		}
+		if ip, ok := wsConn.UnderlyingConn().LocalAddr().(*net.IPNet); ok {
+			if localInterface := ctrl.detectInterface(ip); localInterface != nil {
+				ctrl.interfaceName = localInterface.Name
+			}
+			ctrl.localIP = ip
+		} else {
+			ctrl.localIP = nil
+		}
+
 		keepGoing = false
 		ctrl.wsConn = wsConn
 		ctrl.wsConn.SetPongHandler(func(appData string) error {
@@ -459,6 +497,27 @@ func (ctrl *Controller) Connect(force bool) {
 
 		ctrl.updateNetworkStatus(domain.NetworkFast)
 	}
+}
+func (ctrl *Controller) detectInterface(ip *net.IPNet) *net.Interface {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return nil
+	}
+
+	for _, iface := range ifaces {
+		addrs, err := iface.Addrs()
+		if err != nil {
+			continue
+		}
+		for _, a := range addrs {
+			if interfaceIP, ok := a.(*net.IPNet); ok {
+				if interfaceIP.String() == ip.String() {
+					return &iface
+				}
+			}
+		}
+	}
+	return nil
 }
 
 // Disconnect close websocket

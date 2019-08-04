@@ -30,6 +30,7 @@ require (
 	github.com/getsentry/sentry-go v0.1.3
 	github.com/gobwas/pool v0.2.0
 	github.com/gogo/protobuf v1.2.1
+	github.com/google/gopacket v1.1.17 // indirect
 	github.com/gorilla/websocket v1.4.0
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/juju/ratelimit v1.0.1
