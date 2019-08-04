@@ -224,19 +224,17 @@ func indexMapForPeers() (mapping.IndexMapping, error) {
 }
 
 // Close underlying DB connection
-func Close() error {
+func Close()  {
 	logs.Debug("Repo Stopping")
-
 	_ = r.badger.DropAll()
 	_ = r.bunt.Close()
 	_ = r.badger.Close()
-
 	_ = r.msgSearch.Close()
 	_ = r.peerSearch.Close()
 	r = nil
 	ctx = nil
 	logs.Debug("Repo Stopped")
-	return repoLastError
+	return
 }
 
 func DropAll() {

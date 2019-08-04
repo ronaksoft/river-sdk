@@ -129,7 +129,7 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 
 
 	// Stop all the controllers and repo
-	r.logout()
+	r.stop()
 
 	for os.RemoveAll(r.dbPath) != nil {
 		time.Sleep(time.Second)
@@ -142,10 +142,9 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 	}
 
 	r.clearSystemConfig()
-
 	return err
 }
-func (r *River) logout() {
+func (r *River) stop() {
 	logs.Debug("StopServices-River::Stop() -> Called")
 
 	// Disconnect from Server
@@ -156,15 +155,12 @@ func (r *River) logout() {
 	r.queueCtrl.Stop()
 	r.networkCtrl.Stop()
 	r.fileCtrl.Stop()
+
+	// Close UI Executor
 	uiexec.Ctx().Stop()
 
 	// Close database connection
-	err := repo.Close()
-	if err != nil {
-		logs.Debug("River::Stop() failed to close DB context",
-			zap.String("Error", err.Error()),
-		)
-	}
+	repo.Close()
 }
 
 
