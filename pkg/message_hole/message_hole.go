@@ -225,6 +225,22 @@ func (m *HoleManager) String() string {
 	return sb.String()
 }
 
+func (m *HoleManager) Valid() bool {
+	m.mtxLock.Lock()
+	defer m.mtxLock.Unlock()
+	idx := int64(0)
+	for _, bar := range m.bars {
+		if bar.Min > bar.Max {
+			return false
+		}
+		if bar.Max < idx {
+			return false
+		}
+		idx = bar.Max
+	}
+	return true
+}
+
 var holder = struct {
 	mtx  sync.Mutex
 	list map[string]*HoleManager
@@ -241,6 +257,13 @@ func loadManager(peerID int64, peerType int32) *HoleManager {
 		hm = newHoleManager()
 		b := repo.MessagesExtra.GetHoles(peerID, peerType)
 		_ = json.Unmarshal(b, &hm.bars)
+		holder.list[keyID] = hm
+	}
+	if !hm.Valid() {
+		logs.Error("HoleManager Not Valid", zap.String("Dump", hm.String()))
+		hm = newHoleManager()
+		b, _ := json.Marshal(hm)
+		repo.MessagesExtra.SaveHoles(peerID, peerType, b)
 		holder.list[keyID] = hm
 	}
 	return hm
