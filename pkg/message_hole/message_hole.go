@@ -46,6 +46,18 @@ func newHoleManager() *HoleManager {
 	return m
 }
 
+func (m *HoleManager) LoadFromDB(peerID int64, peerType int32) {
+	b := repo.MessagesExtra.GetHoles(peerID, peerType)
+	_ = json.Unmarshal(b, &m.bars)
+	m.maxIndex = 0
+	for idx := range m.bars {
+		if m.bars[idx].Max > m.maxIndex {
+			m.maxIndex = m.bars[idx].Max
+		}
+	}
+
+}
+
 func (m *HoleManager) InsertBar(b Bar) {
 	m.mtxLock.Lock()
 	defer m.mtxLock.Unlock()
@@ -255,10 +267,10 @@ func loadManager(peerID int64, peerType int32) *HoleManager {
 	hm, ok := holder.list[keyID]
 	if !ok {
 		hm = newHoleManager()
-		b := repo.MessagesExtra.GetHoles(peerID, peerType)
-		_ = json.Unmarshal(b, &hm.bars)
+		hm.LoadFromDB(peerID, peerType)
 		holder.list[keyID] = hm
 	}
+
 	if !hm.Valid() {
 		logs.Error("HoleManager Not Valid", zap.String("Dump", hm.String()))
 		hm = newHoleManager()
@@ -305,8 +317,9 @@ func InsertFill(peerID int64, peerType int32, minID, maxID int64) {
 		return
 	}
 	hm := loadManager(peerID, peerType)
-
+	logs.Info("Before", zap.String("Obj", hm.String()))
 	hm.InsertBar(Bar{Type: Filled, Min: minID, Max: maxID})
+	logs.Info("After", zap.String("Obj", hm.String()))
 
 	saveManager(peerID, peerType, hm)
 	return
