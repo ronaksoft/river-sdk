@@ -432,6 +432,7 @@ func (r *River) Start() error {
 	}
 
 	// Update FileController
+	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 	r.fileCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 	go r.fileCtrl.LoadQueueFromDB()
 

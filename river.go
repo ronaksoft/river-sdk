@@ -159,7 +159,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.networkCtrl.SetMessageHandler(r.onReceivedMessage)
 	r.networkCtrl.SetUpdateHandler(r.onReceivedUpdate)
 	r.networkCtrl.SetOnConnectCallback(r.onNetworkConnect)
-	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+
 
 	// Initialize FileController
 	fileCtrl.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory, conf.DocumentCacheDirectory)

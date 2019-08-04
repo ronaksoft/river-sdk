@@ -227,8 +227,10 @@ func indexMapForPeers() (mapping.IndexMapping, error) {
 func Close() error {
 	logs.Debug("Repo Stopping")
 
+	_ = r.badger.DropAll()
 	_ = r.bunt.Close()
 	_ = r.badger.Close()
+
 
 	_ = r.msgSearch.Close()
 	_ = r.peerSearch.Close()
