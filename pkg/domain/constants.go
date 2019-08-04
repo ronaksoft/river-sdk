@@ -16,7 +16,7 @@ const (
 // Global Parameters
 const (
 	WebsocketEndpoint     = "ws://river.im"
-	WebsocketPingTime     = 30 * time.Second
+	WebsocketPingTime     = 60 * time.Second
 	WebsocketPongTime     = 10 * time.Second
 	WebsocketWriteTime    = 3 * time.Second
 	WebsocketDirectTime   = 3 * time.Second

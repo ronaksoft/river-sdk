@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"reflect"
 	"sort"
 	"sync"
 	"time"
@@ -77,7 +78,7 @@ type Controller struct {
 	unauthorizedRequests map[int64]bool
 
 	// internal parameters to detect network switch
-	localIP       *net.IPNet
+	localIP       net.IP
 	interfaceName string
 }
 
@@ -212,15 +213,8 @@ func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
 // to listen and accept web-socket packets. If stop signal received it means we are
 // going to shutdown, hence returns from the function.
 func (ctrl *Controller) watchDog() {
-	ticker := time.NewTicker(time.Second)
 	for {
 		select {
-		case <-ticker.C:
-			if ctrl.interfaceChanged() {
-				// Disconnects
-				_ = ctrl.wsConn.SetReadDeadline(time.Now())
-			}
-
 		case <-ctrl.connectChannel:
 			if ctrl.wsConn != nil {
 				ctrl.receiver()
@@ -230,17 +224,21 @@ func (ctrl *Controller) watchDog() {
 				go ctrl.Connect(true)
 			}
 		case <-ctrl.stopChannel:
+			logs.Info("Stop Called")
 			return
 		}
 	}
 }
 
 func (ctrl *Controller) interfaceChanged() bool {
+	if ctrl.localIP.IsUnspecified() {
+		return false
+	}
 	if localInterface, err := net.InterfaceByName(ctrl.interfaceName); err == nil {
 		if addrs, err := localInterface.Addrs(); err == nil {
 			for _, a := range addrs {
-				if interfaceIP, ok := a.(*net.IPNet); ok {
-					if interfaceIP.String() == ctrl.localIP.String() {
+				if interfaceIP, ok := a.(*net.IPNet); ok && interfaceIP.IP[0] != 127 {
+					if interfaceIP.IP.String() == ctrl.localIP.String() {
 						return false
 					}
 				}
@@ -254,8 +252,15 @@ func (ctrl *Controller) interfaceChanged() bool {
 // This function by sending ping messages to server and measuring the server's response time
 // calculates the quality of network
 func (ctrl *Controller) keepAlive() {
+	ticker := time.NewTicker(time.Second)
 	for {
 		select {
+		case <-ticker.C:
+			ctrl.WaitForNetwork()
+			if ctrl.interfaceChanged() {
+				// Disconnects
+				_ = ctrl.wsConn.SetReadDeadline(time.Now())
+			}
 		case <-time.After(ctrl.wsPingTime):
 			if ctrl.wsConn == nil {
 				continue
@@ -470,12 +475,23 @@ func (ctrl *Controller) Connect(force bool) {
 			time.Sleep(1 * time.Second)
 			continue
 		}
-		if ip, ok := wsConn.UnderlyingConn().LocalAddr().(*net.IPNet); ok {
-			if localInterface := ctrl.detectInterface(ip); localInterface != nil {
+		localIP := wsConn.UnderlyingConn().LocalAddr()
+		switch x := localIP.(type) {
+		case *net.IPNet:
+			if localInterface := ctrl.detectInterface(x.IP); localInterface != nil {
 				ctrl.interfaceName = localInterface.Name
 			}
-			ctrl.localIP = ip
-		} else {
+			ctrl.localIP = x.IP
+		case *net.TCPAddr:
+			if localInterface := ctrl.detectInterface(x.IP); localInterface != nil {
+				ctrl.interfaceName = localInterface.Name
+			}
+			ctrl.localIP = x.IP
+		default:
+			logs.Info("LocalIP",
+				zap.Any("Addr", wsConn.UnderlyingConn().LocalAddr()),
+				zap.Any("Type", reflect.TypeOf(wsConn.UnderlyingConn().LocalAddr())),
+			)
 			ctrl.localIP = nil
 		}
 
@@ -498,7 +514,7 @@ func (ctrl *Controller) Connect(force bool) {
 		ctrl.updateNetworkStatus(domain.NetworkFast)
 	}
 }
-func (ctrl *Controller) detectInterface(ip *net.IPNet) *net.Interface {
+func (ctrl *Controller) detectInterface(ip net.IP) *net.Interface {
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		return nil
@@ -511,7 +527,7 @@ func (ctrl *Controller) detectInterface(ip *net.IPNet) *net.Interface {
 		}
 		for _, a := range addrs {
 			if interfaceIP, ok := a.(*net.IPNet); ok {
-				if interfaceIP.String() == ip.String() {
+				if interfaceIP.IP.String() == ip.String() {
 					return &iface
 				}
 			}
