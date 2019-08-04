@@ -30,11 +30,14 @@ func (r *River) StopNetwork() {
 	r.networkCtrl.Disconnect()
 }
 
-// GetNetworkStatus returns NetworkController status
 func (r *River) GetNetworkStatus() int32 {
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("GetNetworkStatus", time.Now().Sub(startTime))
 	}()
 	return int32(r.networkCtrl.GetQuality())
+}
+
+func (r *River) UnderlyingNetworkChange() {
+	r.networkCtrl.Reconnect()
 }

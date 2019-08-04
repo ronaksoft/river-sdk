@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"reflect"
 	"sort"
 	"sync"
 	"time"
@@ -40,7 +39,6 @@ type Controller struct {
 	// Internal Controller Channels
 	connectChannel chan bool
 	stopChannel    chan bool
-	pongChannel    chan bool
 
 	// Authorization Keys
 	authID     int64
@@ -112,7 +110,6 @@ func New(config Config) *Controller {
 
 	ctrl.stopChannel = make(chan bool)
 	ctrl.connectChannel = make(chan bool)
-	ctrl.pongChannel = make(chan bool)
 
 	ctrl.updateFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.updateFlushFunc)
 	ctrl.messageFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.messageFlushFunc)
@@ -225,72 +222,6 @@ func (ctrl *Controller) watchDog() {
 			}
 		case <-ctrl.stopChannel:
 			logs.Info("Stop Called")
-			return
-		}
-	}
-}
-
-func (ctrl *Controller) interfaceChanged() bool {
-	if ctrl.localIP.IsUnspecified() {
-		return false
-	}
-	if localInterface, err := net.InterfaceByName(ctrl.interfaceName); err == nil {
-		if addrs, err := localInterface.Addrs(); err == nil {
-			for _, a := range addrs {
-				if interfaceIP, ok := a.(*net.IPNet); ok && interfaceIP.IP[0] != 127 {
-					if interfaceIP.IP.String() == ctrl.localIP.String() {
-						return false
-					}
-				}
-			}
-		}
-	}
-	return true
-}
-
-// keepAlive
-// This function by sending ping messages to server and measuring the server's response time
-// calculates the quality of network
-func (ctrl *Controller) keepAlive() {
-	ticker := time.NewTicker(time.Second)
-	for {
-		select {
-		case <-ticker.C:
-			ctrl.WaitForNetwork()
-			if ctrl.interfaceChanged() {
-				// Disconnects
-				_ = ctrl.wsConn.SetReadDeadline(time.Now())
-			}
-		case <-time.After(ctrl.wsPingTime):
-			if ctrl.wsConn == nil {
-				continue
-			}
-			ctrl.wsWriteLock.Lock()
-			_ = ctrl.wsConn.SetWriteDeadline(time.Now().Add(domain.WebsocketWriteTime))
-			err := ctrl.wsConn.WriteMessage(websocket.PingMessage, nil)
-			ctrl.wsWriteLock.Unlock()
-			if err != nil {
-				_ = ctrl.wsConn.SetReadDeadline(time.Now())
-				continue
-			}
-			pingTime := time.Now()
-			select {
-			case <-ctrl.pongChannel:
-				pingDelay := time.Now().Sub(pingTime)
-				ctrl.pingIdx++
-				ctrl.pingDelays[ctrl.pingIdx%3] = pingDelay
-				avgDelay := (ctrl.pingDelays[0] + ctrl.pingDelays[1] + ctrl.pingDelays[2]) / 3
-				switch {
-				case avgDelay > 1500*time.Millisecond:
-					ctrl.updateNetworkStatus(domain.NetworkWeak)
-				case avgDelay > 500*time.Millisecond:
-					ctrl.updateNetworkStatus(domain.NetworkSlow)
-				default:
-					ctrl.updateNetworkStatus(domain.NetworkFast)
-				}
-			case <-time.After(ctrl.wsPongTimeout):
-			}
-		case <-ctrl.stopChannel:
 			return
 		}
 	}
@@ -429,7 +360,6 @@ func (ctrl *Controller) Start() error {
 	}
 
 	// Run the keepAlive and watchDog in background
-	go ctrl.keepAlive()
 	go ctrl.watchDog()
 	return nil
 }
@@ -437,7 +367,6 @@ func (ctrl *Controller) Start() error {
 // Stop sends stop signal to keepAlive and watchDog routines.
 func (ctrl *Controller) Stop() {
 	logs.Info("NetworkController is stopping")
-	ctrl.stopChannel <- true // keepAlive
 	select {
 	case ctrl.stopChannel <- true: // receiver may or may not be listening
 	default:
@@ -478,29 +407,15 @@ func (ctrl *Controller) Connect(force bool) {
 		localIP := wsConn.UnderlyingConn().LocalAddr()
 		switch x := localIP.(type) {
 		case *net.IPNet:
-			if localInterface := ctrl.detectInterface(x.IP); localInterface != nil {
-				ctrl.interfaceName = localInterface.Name
-			}
 			ctrl.localIP = x.IP
 		case *net.TCPAddr:
-			if localInterface := ctrl.detectInterface(x.IP); localInterface != nil {
-				ctrl.interfaceName = localInterface.Name
-			}
 			ctrl.localIP = x.IP
 		default:
-			logs.Info("LocalIP",
-				zap.Any("Addr", wsConn.UnderlyingConn().LocalAddr()),
-				zap.Any("Type", reflect.TypeOf(wsConn.UnderlyingConn().LocalAddr())),
-			)
 			ctrl.localIP = nil
 		}
 
 		keepGoing = false
 		ctrl.wsConn = wsConn
-		ctrl.wsConn.SetPongHandler(func(appData string) error {
-			ctrl.pongChannel <- true
-			return nil
-		})
 
 		// it should be started here cuz we need receiver to get AuthRecall answer
 		// SendWebsocket Signal to start the 'receiver' and 'keepAlive' routines
@@ -513,27 +428,6 @@ func (ctrl *Controller) Connect(force bool) {
 
 		ctrl.updateNetworkStatus(domain.NetworkFast)
 	}
-}
-func (ctrl *Controller) detectInterface(ip net.IP) *net.Interface {
-	ifaces, err := net.Interfaces()
-	if err != nil {
-		return nil
-	}
-
-	for _, iface := range ifaces {
-		addrs, err := iface.Addrs()
-		if err != nil {
-			continue
-		}
-		for _, a := range addrs {
-			if interfaceIP, ok := a.(*net.IPNet); ok {
-				if interfaceIP.IP.String() == ip.String() {
-					return &iface
-				}
-			}
-		}
-	}
-	return nil
 }
 
 // Disconnect close websocket

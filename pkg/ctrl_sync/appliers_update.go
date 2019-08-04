@@ -50,7 +50,6 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	repo.Messages.SaveNew(x.Message, dialog, ctrl.userID)
 	messageHole.InsertFill(dialog.PeerID, dialog.PeerType, dialog.TopMessageID, x.Message.ID)
 
-
 	// bug : sometime server do not sends access hash
 	if x.AccessHash > 0 {
 		// update users access hash

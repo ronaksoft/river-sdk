@@ -21,7 +21,7 @@ const (
 	WebsocketWriteTime    = 3 * time.Second
 	WebsocketDirectTime   = 3 * time.Second
 	WebsocketRequestTime  = 8 * time.Second
-	HttpRequestTime 	  = 30 * time.Second
+	HttpRequestTime       = 30 * time.Second
 	SnapshotSyncThreshold = 10000
 )
 
