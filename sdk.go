@@ -421,6 +421,9 @@ func (r *River) registerCommandHandlers() {
 // Start ...
 func (r *River) Start() error {
 	logs.Info("River Starting")
+	if r.ConnInfo.UserID != 0 {
+		r.syncCtrl.SetUserID(r.ConnInfo.UserID)
+	}
 
 	// Initialize DB replaced with ORM
 	repo.InitRepo(r.dbPath, r.optimizeForLowMemory)

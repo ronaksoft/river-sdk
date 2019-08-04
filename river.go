@@ -112,8 +112,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	r.lastOutOfSyncTime = time.Now().Add(1 * time.Second)
 	r.chOutOfSyncUpdates = make(chan []*msg.UpdateContainer, 500)
-	r.ConnInfo = conf.ConnInfo
 	r.optimizeForLowMemory = conf.OptimizeForLowMemory
+	r.ConnInfo = conf.ConnInfo
 
 	// Initialize DB Path
 	if strings.HasPrefix(conf.DbPath, "file://") {
@@ -214,10 +214,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Initialize River Connection
 	logs.Info("River::SetConfig() Load/Create New River Connection")
-
-	if r.ConnInfo.UserID != 0 {
-		r.syncCtrl.SetUserID(r.ConnInfo.UserID)
-	}
 }
 
 func (r *River) Version() string {
