@@ -211,7 +211,7 @@ func (ctrl *Controller) downloadCompleted(msgID int64, filePath string, stateTyp
 func (ctrl *Controller) startUploadQueue() {
 	for {
 		ctrl.network.WaitForNetwork()
-
+		logs.Info("StartUploadQueue")
 		ctrl.UploadQueueStarted = true
 		select {
 		case <-ctrl.chStopUploader:

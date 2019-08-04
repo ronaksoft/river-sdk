@@ -105,7 +105,7 @@ var AuthLogin = &ishell.Cmd{
 var AuthLogout = &ishell.Cmd{
 	Name: "Logout",
 	Func: func(c *ishell.Context) {
-		if _, err := _SDK.Logout(true, 0); err != nil {
+		if err := _SDK.Logout(true, 0); err != nil {
 			_Log.Error("ExecuteCommand failed", zap.Error(err))
 		}
 		os.Remove("./_connection/connInfo")

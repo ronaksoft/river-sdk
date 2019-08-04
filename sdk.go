@@ -433,7 +433,7 @@ func (r *River) Start() error {
 
 	// Update FileController
 	r.fileCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-	r.fileCtrl.LoadQueueFromDB()
+	go r.fileCtrl.LoadQueueFromDB()
 
 	// init UI Executor
 	uiexec.InitUIExec()
@@ -446,11 +446,12 @@ func (r *River) Start() error {
 		logs.Error("River::Start()", zap.Error(err))
 		return err
 	}
+	// Connect to Server
+	go r.networkCtrl.Connect(true)
+
 	r.queueCtrl.Start()
 	r.syncCtrl.Start()
 
-	// Connect to Server
-	go r.networkCtrl.Connect(true)
 
 	logs.Info("River Started")
 	return nil
