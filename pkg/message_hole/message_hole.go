@@ -72,23 +72,15 @@ func (m *HoleManager) InsertBar(b Bar) {
 		return
 	}
 
-	// Insert hole to increase our domain
-	switch b.Type {
-	case Filled:
-		switch  {
-		case b.Min > m.maxIndex:
-			m.bars = append(m.bars, Bar{Min: m.maxIndex + 1, Max: b.Max, Type: Hole})
-			m.maxIndex = b.Max
-		case b.Min == m.maxIndex && b.Max > b.Min:
-			m.bars = append(m.bars, Bar{Min: m.maxIndex + 1, Max: b.Max, Type: Hole})
-			m.maxIndex = b.Max
-		}
-	}
-
-
 	sort.Slice(m.bars, func(i, j int) bool {
 		return m.bars[i].Min < m.bars[j].Min
 	})
+	m.maxIndex = m.bars[len(m.bars)-1].Max
+
+	if b.Max > m.maxIndex {
+		m.bars = append(m.bars, Bar{Min: m.maxIndex + 1, Max: b.Max, Type: Hole})
+		m.maxIndex = b.Max
+	}
 
 	oldBars := m.bars
 	m.bars = make([]Bar, 0, len(oldBars))
@@ -97,14 +89,14 @@ func (m *HoleManager) InsertBar(b Bar) {
 	for _, bar := range oldBars {
 		if newBarAdded {
 			switch {
-			case b.Max == bar.Min:
+			case bar.Min < b.Max && bar.Max > b.Max:
+				m.appendBar(Bar{Min: b.Max + 1, Max: bar.Max, Type: bar.Type})
+			case bar.Min == b.Max:
 				if bar.Max > bar.Min {
 					m.appendBar(Bar{Min: bar.Min + 1, Max: bar.Max, Type: bar.Type})
 				}
-			case b.Max > bar.Min && b.Max < bar.Max:
-				m.appendBar(Bar{Min: b.Max + 1, Max: bar.Max, Type: bar.Type})
 			default:
-				m.appendBar(bar)
+
 			}
 			continue
 		}
@@ -260,7 +252,6 @@ func (m *HoleManager) Valid() bool {
 	}
 	return true
 }
-
 
 var holder = struct {
 	mtx  sync.Mutex
