@@ -421,9 +421,7 @@ func (r *River) registerCommandHandlers() {
 // Start ...
 func (r *River) Start() error {
 	logs.Info("River Starting")
-	if r.ConnInfo.UserID != 0 {
-		r.syncCtrl.SetUserID(r.ConnInfo.UserID)
-	}
+
 
 	// Initialize DB replaced with ORM
 	repo.InitRepo(r.dbPath, r.optimizeForLowMemory)
@@ -431,6 +429,7 @@ func (r *River) Start() error {
 	// Update Authorizations
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 	r.fileCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+	r.syncCtrl.SetUserID(r.ConnInfo.UserID)
 	r.loadDeviceToken()
 
 	// init UI Executor
