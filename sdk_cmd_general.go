@@ -7,7 +7,9 @@ import (
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"go.uber.org/zap"
+	"os"
 	"time"
 )
 
@@ -82,81 +84,89 @@ func (r *River) GetSyncStatus() int32 {
 }
 
 // Logout drop queue & database , etc ...
-func (r *River) Logout(notifyServer bool, reason int) (int64, error) {
+func (r *River) Logout(notifyServer bool, reason int) error {
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("Logout", time.Now().Sub(startTime))
 	}()
 	// unregister device if token exist
-	if notifyServer && r.DeviceToken != nil {
-		reqID := uint64(domain.SequentialUniqueID())
-		req := new(msg.AccountUnregisterDevice)
-		req.Token = r.DeviceToken.Token
-		req.TokenType = int32(r.DeviceToken.TokenType)
-		reqBytes, _ := req.Marshal()
-		_ = r.queueCtrl.ExecuteRealtimeCommand(
-			reqID,
-			msg.C_AccountUnregisterDevice,
-			reqBytes,
-			nil, nil, true, false,
-		)
-	}
-
-	dataDir, err := r.queueCtrl.DropQueue()
-	if err != nil {
-		logs.Error("River::Logout() failed to drop queue", zap.Error(err))
-	}
-
-	// drop and recreate database
-	keepGoing := true
-	for keepGoing {
-		err = repo.ReInitiateDatabase()
-		if err != nil {
-			logs.Error("River::Logout() failed to re initiate database", zap.Error(err))
-			time.Sleep(time.Millisecond * 500)
-		} else {
-			keepGoing = false
-		}
-	}
-
-	// open queue
-	err = r.queueCtrl.OpenQueue(dataDir)
-	if err != nil {
-		logs.Error("River::Logout() failed to re open queue", zap.Error(err))
-	}
-
-	// send logout request to server
-	requestID := domain.RandomInt63()
-	timeoutCallback := func() {
-		err = domain.ErrRequestTimeout
-		r.releaseDelegate(requestID)
-		r.networkCtrl.Disconnect()
-		r.clearSystemConfig()
-	}
-	successCallback := func(envelope *msg.MessageEnvelope) {
-		r.releaseDelegate(requestID)
-		r.networkCtrl.Disconnect()
-		r.clearSystemConfig()
-	}
-
 	if notifyServer {
+		if r.DeviceToken != nil {
+			reqID := uint64(domain.SequentialUniqueID())
+			req := new(msg.AccountUnregisterDevice)
+			req.Token = r.DeviceToken.Token
+			req.TokenType = int32(r.DeviceToken.TokenType)
+			reqBytes, _ := req.Marshal()
+			_ = r.queueCtrl.ExecuteRealtimeCommand(
+				reqID,
+				msg.C_AccountUnregisterDevice,
+				reqBytes,
+				nil, nil, true, false,
+			)
+		}
+		// send logout request to server
+		requestID := domain.RandomInt63()
+		timeoutCallback := func() {
+			r.releaseDelegate(requestID)
+			r.networkCtrl.Disconnect()
+			r.clearSystemConfig()
+		}
+		successCallback := func(envelope *msg.MessageEnvelope) {
+			r.releaseDelegate(requestID)
+			r.networkCtrl.Disconnect()
+			r.clearSystemConfig()
+		}
 		req := new(msg.AuthLogout)
 		buff, _ := req.Marshal()
-		err = r.queueCtrl.ExecuteRealtimeCommand(uint64(requestID), msg.C_AuthLogout, buff, timeoutCallback, successCallback, true, false)
+		err := r.queueCtrl.ExecuteRealtimeCommand(uint64(requestID), msg.C_AuthLogout, buff, timeoutCallback, successCallback, true, false)
 		if err != nil {
 			r.releaseDelegate(requestID)
 		}
-	} else {
-		r.networkCtrl.Disconnect()
-		r.clearSystemConfig()
 	}
-
 	if r.mainDelegate != nil {
 		r.mainDelegate.OnSessionClosed(reason)
 	}
 
-	return requestID, err
+
+	// Stop all the controllers and repo
+	r.logout()
+
+	for os.RemoveAll(r.dbPath) != nil {
+		time.Sleep(time.Second)
+	}
+	r.queueCtrl.DropQueue()
+
+	err := r.Start()
+	if err != nil {
+		return err
+	}
+
+	r.clearSystemConfig()
+
+	return err
 }
+func (r *River) logout() {
+	logs.Debug("StopServices-River::Stop() -> Called")
+
+	// Disconnect from Server
+	r.networkCtrl.Disconnect()
+
+	// Stop Controllers
+	r.syncCtrl.Stop()
+	r.queueCtrl.Stop()
+	r.networkCtrl.Stop()
+	r.fileCtrl.Stop()
+	uiexec.Ctx().Stop()
+
+	// Close database connection
+	err := repo.Close()
+	if err != nil {
+		logs.Debug("River::Stop() failed to close DB context",
+			zap.String("Error", err.Error()),
+		)
+	}
+}
+
 
 // UpdateContactInfo update contact name
 func (r *River) UpdateContactInfo(userID int64, firstName, lastName string) error {

@@ -50,11 +50,6 @@ type repository struct {
 	peerSearch bleve.Index
 }
 
-// create tables
-func (r *repository) initDB() error {
-	return repoLastError
-}
-
 // InitRepo initialize repo singleton
 func InitRepo(dbPath string, lowMemory bool) error {
 	if ctx == nil {
@@ -90,6 +85,7 @@ func InitRepo(dbPath string, lowMemory bool) error {
 func repoSetDB(dbPath string, lowMemory bool) error {
 	r = new(repository)
 
+	_ = os.MkdirAll(dbPath, os.ModePerm)
 	// Initialize BadgerDB
 	_ = os.MkdirAll(fmt.Sprintf("%s/badger", strings.TrimRight(dbPath, "/")), os.ModePerm)
 	badgerOpts := badger.DefaultOptions(fmt.Sprintf("%s/badger", strings.TrimRight(dbPath, "/"))).
@@ -162,7 +158,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 		logs.Fatal("Error Opening SearchIndex for Peers", zap.Error(repoLastError))
 	}
 
-	return r.initDB()
+	return repoLastError
 }
 
 func indexMapForMessages() (mapping.IndexMapping, error) {
@@ -225,13 +221,6 @@ func indexMapForPeers() (mapping.IndexMapping, error) {
 	indexMapping.DefaultAnalyzer = en.AnalyzerName
 
 	return indexMapping, nil
-}
-
-// ReInitiateDatabase runs auto migrate
-func ReInitiateDatabase() error {
-	err := r.badger.DropAll()
-	err = r.initDB()
-	return err
 }
 
 // Close underlying DB connection

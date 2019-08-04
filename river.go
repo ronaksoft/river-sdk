@@ -6,12 +6,9 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -101,8 +98,10 @@ type River struct {
 	fileDelegate  FileDelegate
 
 	// implements wait 500 ms on out of sync to receive possible missed updates
-	lastOutOfSyncTime  time.Time
-	chOutOfSyncUpdates chan []*msg.UpdateContainer
+	lastOutOfSyncTime    time.Time
+	chOutOfSyncUpdates   chan []*msg.UpdateContainer
+	dbPath               string
+	optimizeForLowMemory bool
 }
 
 // SetConfig ...
@@ -113,15 +112,21 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	r.lastOutOfSyncTime = time.Now().Add(1 * time.Second)
 	r.chOutOfSyncUpdates = make(chan []*msg.UpdateContainer, 500)
+	r.ConnInfo = conf.ConnInfo
+	r.optimizeForLowMemory = conf.OptimizeForLowMemory
+
+	// Initialize DB Path
+	if strings.HasPrefix(conf.DbPath, "file://") {
+		conf.DbPath = conf.DbPath[7:]
+	}
+	conf.DbPath = strings.TrimRight(conf.DbPath, "/ ")
+	r.dbPath = fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID)
+
 
 	r.registerCommandHandlers()
 	r.delegates = make(map[int64]RequestDelegate)
-
-	// init delegates
 	r.mainDelegate = conf.MainDelegate
 	r.fileDelegate = conf.FileDelegate
-
-	r.ConnInfo = conf.ConnInfo
 
 	// set loglevel
 	logs.SetLogLevel(conf.LogLevel)
@@ -130,30 +135,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	if conf.DocumentLogDirectory != "" {
 		_ = logs.SetLogFilePath(conf.DocumentLogDirectory)
 	}
-
-	// init UI Executor
-	uiexec.InitUIExec()
-
-	// support IOS file path
-	if strings.HasPrefix(conf.DbPath, "file://") {
-		conf.DbPath = conf.DbPath[7:]
-	}
-
-	// Initialize Database
-	_ = os.MkdirAll(conf.DbPath, os.ModePerm)
-	conf.DbPath = strings.TrimRight(conf.DbPath, "/ ")
-
-	// Initialize DB replaced with ORM
-	var err error
-	err = repo.InitRepo(fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID), conf.OptimizeForLowMemory)
-	if err != nil {
-		logs.Fatal("River::SetConfig() failed to initialize DB context",
-			zap.String("Error", err.Error()),
-		)
-	}
-
-	// load DeviceToken
-	r.loadDeviceToken()
 
 	// Initialize realtime requests
 	r.realTimeCommands = map[int64]bool{
@@ -174,6 +155,11 @@ func (r *River) SetConfig(conf *RiverConfig) {
 			r.mainDelegate.OnNetworkStatusChanged(int(newQuality))
 		}
 	})
+	r.networkCtrl.SetErrorHandler(r.onGeneralError)
+	r.networkCtrl.SetMessageHandler(r.onReceivedMessage)
+	r.networkCtrl.SetUpdateHandler(r.onReceivedUpdate)
+	r.networkCtrl.SetOnConnectCallback(r.onNetworkConnect)
+	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 
 	// Initialize FileController
 	fileCtrl.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory, conf.DocumentCacheDirectory)
@@ -220,7 +206,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	})
 
 	// Initialize Server Keys
-
 	if err := _ServerKeys.UnmarshalJSON([]byte(conf.ServerKeys)); err != nil {
 		logs.Fatal("River::SetConfig() failed to unmarshal server keys",
 			zap.String("Error", err.Error()),
@@ -233,13 +218,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	if r.ConnInfo.UserID != 0 {
 		r.syncCtrl.SetUserID(r.ConnInfo.UserID)
 	}
-
-	// Update Network Controller
-	r.networkCtrl.SetErrorHandler(r.onGeneralError)
-	r.networkCtrl.SetMessageHandler(r.onReceivedMessage)
-	r.networkCtrl.SetUpdateHandler(r.onReceivedUpdate)
-	r.networkCtrl.SetOnConnectCallback(r.onNetworkConnect)
-	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 
 	// Update Controller
 	r.fileCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])

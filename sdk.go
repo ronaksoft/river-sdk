@@ -422,6 +422,21 @@ func (r *River) registerCommandHandlers() {
 func (r *River) Start() error {
 	logs.Info("River Starting")
 
+	// Initialize DB replaced with ORM
+	var err error
+	err = repo.InitRepo(r.dbPath, r.optimizeForLowMemory)
+	if err != nil {
+		logs.Fatal("River::SetConfig() failed to initialize DB context",
+			zap.String("Error", err.Error()),
+		)
+	}
+
+	// init UI Executor
+	uiexec.InitUIExec()
+
+	// load DeviceToken
+	r.loadDeviceToken()
+
 	// Start Controllers
 	if err := r.networkCtrl.Start(); err != nil {
 		logs.Error("River::Start()", zap.Error(err))
@@ -435,29 +450,6 @@ func (r *River) Start() error {
 
 	logs.Info("River Started")
 	return nil
-}
-
-// Stop ...
-func (r *River) Stop() {
-	logs.Debug("StopServices-River::Stop() -> Called")
-
-	// Disconnect from Server
-	r.networkCtrl.Disconnect()
-
-	// Stop Controllers
-	r.syncCtrl.Stop()
-	r.queueCtrl.Stop()
-	r.networkCtrl.Stop()
-	r.fileCtrl.Stop()
-	uiexec.Ctx().Stop()
-
-	// Close database connection
-	err := repo.Close()
-	if err != nil {
-		logs.Debug("River::Stop() failed to close DB context",
-			zap.String("Error", err.Error()),
-		)
-	}
 }
 
 // Migrate

@@ -30,6 +30,7 @@ type request struct {
 // This controller will be connected to networkController and messages will be queued here
 // before passing to the networkController.
 type Controller struct {
+	dataDir     string
 	rateLimiter *ratelimit.Bucket
 	waitingList *goque.Queue
 	network     *networkCtrl.Controller
@@ -46,14 +47,10 @@ type Controller struct {
 // New
 func New(network *networkCtrl.Controller, dataDir string) (*Controller, error) {
 	ctrl := new(Controller)
+	ctrl.dataDir = dataDir
 	ctrl.rateLimiter = ratelimit.NewBucket(time.Second, 20)
 	if dataDir == "" {
 		return nil, domain.ErrQueuePathIsNotSet
-	}
-	if q, err := goque.OpenQueue(dataDir); err != nil {
-		return nil, err
-	} else {
-		ctrl.waitingList = q
 	}
 
 	ctrl.cancelledRequest = make(map[int64]bool)
@@ -276,6 +273,11 @@ func (ctrl *Controller) ExecuteCommand(requestID uint64, constructor int64, requ
 // Start queue
 func (ctrl *Controller) Start() {
 	logs.Info("QueueController started")
+	if q, err := goque.OpenQueue(ctrl.dataDir); err != nil {
+		logs.Fatal("Error On QueueStart", zap.Error(err))
+	} else {
+		ctrl.waitingList = q
+	}
 
 	// Try to resend unsent messages
 	if ctrl.waitingList.Length() == 0 {
@@ -320,10 +322,8 @@ func (ctrl *Controller) CancelRequest(reqID int64) {
 }
 
 // DropQueue remove queue from storage
-func (ctrl *Controller) DropQueue() (dataDir string, err error) {
-	dataDir = ctrl.waitingList.DataDir
+func (ctrl *Controller) DropQueue()  {
 	ctrl.waitingList.Drop()
-	return
 }
 
 // OpenQueue init queue files in storage
