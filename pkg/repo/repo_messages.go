@@ -96,6 +96,7 @@ func (r *repoMessages) save(message *msg.UserMessage) {
 				zap.Int64("MessageID", message.ID),
 				zap.Int64("SenderID", message.SenderID),
 			)
+			return
 		}
 		for _, da := range doc.Doc.Attributes {
 			switch da.Type {
