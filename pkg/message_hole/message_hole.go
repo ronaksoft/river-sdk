@@ -72,74 +72,86 @@ func (m *HoleManager) InsertBar(b Bar) {
 		return
 	}
 
+	// We sort the bar to find the max point, if b.Max is larger than biggest index, then we have to
+	// insert a hole to increase the domain
+	// TODO:: We must make sure that bars are sorted all the time then we don't need to sort every time
 	sort.Slice(m.bars, func(i, j int) bool {
 		return m.bars[i].Min < m.bars[j].Min
 	})
-	if b.Max > m.bars[len(m.bars)-1].Max {
-		m.bars = append(m.bars, Bar{Min: m.maxIndex + 1, Max: b.Max, Type: Hole})
+	maxIndex := m.bars[len(m.bars)-1].Max
+	if b.Max > maxIndex {
+		m.bars = append(m.bars, Bar{Min: maxIndex + 1, Max: b.Max, Type: Hole})
 	}
+
+
+
+	currentBars := m.bars
+	m.bars = make([]Bar, 0, len(currentBars)+1)
+
+
+	// Initially the biggest index is b.Max. We will update the maxIndex during the range over bars if
+	// necessary. In the first loop (InsertLoop) we go until we can insert the new bar into the list
+	idx := 0
 	m.maxIndex = b.Max
-
-	oldBars := m.bars
-	m.bars = make([]Bar, 0, len(oldBars))
-	newBarAdded := false
-
-	for _, bar := range oldBars {
-		if newBarAdded {
-			switch {
-			case bar.Min < m.maxIndex:
-				switch {
-				case bar.Max > m.maxIndex:
-					m.appendBar(Bar{Min: m.maxIndex + 1, Max: bar.Max, Type: bar.Type})
-					m.maxIndex = bar.Max
-				}
-			case bar.Min == m.maxIndex:
-				if bar.Max > bar.Min {
-					m.appendBar(Bar{Min: bar.Min + 1, Max: bar.Max, Type: bar.Type})
-					m.maxIndex = bar.Max
-				}
-			default:
-				m.appendBar(bar)
-				m.maxIndex = bar.Max
-			}
-			continue
-		}
+	InsertLoop:
+	for idx := 0; idx < len(currentBars); idx++ {
 		switch {
-		case b.Min > bar.Max:
-			m.appendBar(bar)
-		case b.Min > bar.Min:
+		case b.Min > currentBars[idx].Max:
+			m.appendBar(currentBars[idx])
+		case b.Min > currentBars[idx].Min:
 			switch {
-			case b.Max < bar.Max:
+			case b.Max < currentBars[idx].Max:
 				m.appendBar(
-					Bar{Min: bar.Min, Max: b.Min - 1, Type: bar.Type},
+					Bar{Min: currentBars[idx].Min, Max: b.Min - 1, Type: currentBars[idx].Type},
 					b,
-					Bar{Min: b.Max + 1, Max: bar.Max, Type: bar.Type},
+					Bar{Min: b.Max + 1, Max: currentBars[idx].Max, Type: currentBars[idx].Type},
 				)
-				m.maxIndex = bar.Max
-			case b.Max == bar.Max:
+				m.maxIndex = currentBars[idx].Max
+			case b.Max == currentBars[idx].Max:
 				m.appendBar(
-					Bar{Min: bar.Min, Max: b.Min - 1, Type: bar.Type},
+					Bar{Min: currentBars[idx].Min, Max: b.Min - 1, Type: currentBars[idx].Type},
 					b,
 				)
-			case b.Max > bar.Max:
+			case b.Max > currentBars[idx].Max:
 				m.appendBar(
-					Bar{Min: bar.Min, Max: b.Min - 1, Type: bar.Type},
+					Bar{Min: currentBars[idx].Min, Max: b.Min - 1, Type: currentBars[idx].Type},
 					b,
 				)
 			}
-			newBarAdded = true
-		case b.Min == bar.Min:
+			break InsertLoop
+		case b.Min == currentBars[idx].Min:
 			switch {
-			case b.Max < bar.Max:
+			case b.Max < currentBars[idx].Max:
 				m.appendBar(
 					Bar{Min: b.Min, Max: b.Max, Type: b.Type},
-					Bar{Min: b.Max + 1, Max: bar.Max, Type: bar.Type},
+					Bar{Min: b.Max + 1, Max: currentBars[idx].Max, Type: currentBars[idx].Type},
 				)
-				m.maxIndex = bar.Max
+				m.maxIndex = currentBars[idx].Max
 			default:
 				m.appendBar(b)
 			}
-			newBarAdded = true
+			break InsertLoop
+		}
+	}
+
+	// In this loop, we are assured that the new bar has been already added, we try to append the remaining
+	// bars to the list
+	for ; idx < len(currentBars); idx++ {
+		switch {
+		case currentBars[idx].Min < m.maxIndex:
+			switch {
+			case currentBars[idx].Max > m.maxIndex:
+				m.appendBar(Bar{Min: m.maxIndex + 1, Max: currentBars[idx].Max, Type: currentBars[idx].Type})
+				m.maxIndex = currentBars[idx].Max
+			}
+		case currentBars[idx].Min == m.maxIndex:
+			if currentBars[idx].Max > currentBars[idx].Min {
+				m.appendBar(Bar{Min: currentBars[idx].Min + 1, Max: currentBars[idx].Max, Type: currentBars[idx].Type})
+				m.maxIndex = currentBars[idx].Max
+			}
+		default:
+			m.appendBar(currentBars[idx])
+			m.maxIndex = currentBars[idx].Max
 		}
 	}
 }
