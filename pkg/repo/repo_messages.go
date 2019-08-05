@@ -91,6 +91,13 @@ func (r *repoMessages) save(message *msg.UserMessage) {
 	case msg.MediaTypeDocument:
 		doc := new(msg.MediaDocument)
 		_ = doc.Unmarshal(message.Media)
+		if doc.Doc == nil {
+			logs.Error("Error On RepoMessages Save, Document is Nil",
+				zap.Int64("MessageID", message.ID),
+				zap.Int64("SenderID", message.SenderID),
+				zap.Any("MediaType", message.MediaType),
+			)
+		}
 		for _, da := range doc.Doc.Attributes {
 			switch da.Type {
 			case msg.AttributeTypeAudio:
