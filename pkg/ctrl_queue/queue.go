@@ -195,7 +195,7 @@ func (ctrl *Controller) ExecuteRealtimeCommand(requestID uint64, constructor int
 	execBlock := func(reqID uint64, req *msg.MessageEnvelope) error {
 		err := ctrl.network.SendWebsocket(req, blockingMode)
 		if err != nil {
-			logs.Error("ExecuteRealtimeCommand()->network.SendWebsocket()",
+			logs.Warn("ExecuteRealtimeCommand()->network.SendWebsocket()",
 				zap.String("Error", err.Error()),
 				zap.String("ConstructorName", msg.ConstructorNames[req.Constructor]),
 				zap.Uint64("RequestID", requestID),
