@@ -89,14 +89,20 @@ func (m *HoleManager) InsertBar(b Bar) {
 	for _, bar := range oldBars {
 		if newBarAdded {
 			switch {
-			case bar.Min < b.Max && bar.Max > b.Max:
-				m.appendBar(Bar{Min: b.Max + 1, Max: bar.Max, Type: bar.Type})
-			case bar.Min == b.Max:
+			case bar.Min < m.maxIndex:
+				switch {
+				case bar.Max > m.maxIndex:
+					m.appendBar(Bar{Min: m.maxIndex + 1, Max: bar.Max, Type: bar.Type})
+					m.maxIndex = bar.Max
+				}
+			case bar.Min == m.maxIndex:
 				if bar.Max > bar.Min {
 					m.appendBar(Bar{Min: bar.Min + 1, Max: bar.Max, Type: bar.Type})
+					m.maxIndex = bar.Max
 				}
 			default:
-
+				m.appendBar(bar)
+				m.maxIndex = bar.Max
 			}
 			continue
 		}
@@ -111,6 +117,7 @@ func (m *HoleManager) InsertBar(b Bar) {
 					b,
 					Bar{Min: b.Max + 1, Max: bar.Max, Type: bar.Type},
 				)
+				m.maxIndex = bar.Max
 			case b.Max == bar.Max:
 				m.appendBar(
 					Bar{Min: bar.Min, Max: b.Min - 1, Type: bar.Type},
@@ -130,6 +137,7 @@ func (m *HoleManager) InsertBar(b Bar) {
 					Bar{Min: b.Min, Max: b.Max, Type: b.Type},
 					Bar{Min: b.Max + 1, Max: bar.Max, Type: bar.Type},
 				)
+				m.maxIndex = bar.Max
 			default:
 				m.appendBar(b)
 			}
