@@ -298,6 +298,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("MinID", req.MinID),
+				zap.Int64("TopMsgID", dtoDialog.TopMessageID),
 				zap.String("Holes", messageHole.PrintHole(req.Peer.ID, int32(req.Peer.Type))),
 			)
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
@@ -316,6 +317,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("MinID", req.MinID),
+				zap.Int64("TopMsgID", dtoDialog.TopMessageID),
 				zap.String("Holes", messageHole.PrintHole(req.Peer.ID, int32(req.Peer.Type))),
 			)
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
@@ -335,6 +337,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("MinID", req.MinID),
+				zap.Int64("TopMsgID", dtoDialog.TopMessageID),
 			)
 			r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
 			return

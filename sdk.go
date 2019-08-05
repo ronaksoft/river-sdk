@@ -156,8 +156,6 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 		cb := domain.GetRequestCallback(msgs[idx].RequestID)
 		if cb != nil {
 			mon.ServerResponseTime(msgs[idx].Constructor, time.Now().Sub(cb.RequestTime))
-			// if there was any listener maybe request already time-out
-			logs.Debug("River::onReceivedMessage() Request callback found", zap.Uint64("RequestID", cb.RequestID))
 			select {
 			case cb.ResponseChannel <- msgs[idx]:
 				logs.Debug("River::onReceivedMessage() passed to callback listener", zap.Uint64("RequestID", cb.RequestID))

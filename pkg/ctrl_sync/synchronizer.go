@@ -250,7 +250,8 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 		msg.C_MessagesGetDialogs,
 		reqBytes,
 		func() {
-			logs.Warn("getAllDialogs() -> onTimeoutback() retry to getAllDialogs()")
+			// If timeout, then retry the request
+			logs.Warn("getAllDialogs() -> onTimeout() retry to getAllDialogs()")
 			getAllDialogs(waitGroup, ctrl, offset, limit)
 		},
 		func(m *msg.MessageEnvelope) {
@@ -270,7 +271,7 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 				for _, dialog := range x.Dialogs {
 					topMessage, _ := mMessages[dialog.TopMessageID]
 					if topMessage == nil {
-						logs.Error("getAllDialogs() -> onSuccessCallback() -> dialog TopMessage is null ",
+						logs.Error("getAllDialogs() -> onSuccessCallback() -> dialog TopMessage is null",
 							zap.Int64("MessageID", dialog.TopMessageID),
 						)
 						continue
