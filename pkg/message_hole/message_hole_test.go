@@ -60,4 +60,14 @@ func TestHole(t *testing.T) {
 	InsertFill(peerID, peerType, 100, 699)
 	logs.Info(PrintHole(peerID, peerType))
 
+	// Test 5
+	logs.Info("Test 5")
+	peerID = ronak.RandomInt64(0)
+	InsertFill(peerID, peerType, 1001, 1001)
+	InsertFill(peerID, peerType, 400, 500)
+	InsertFill(peerID, peerType, 600, 700)
+	InsertFill(peerID, peerType, 399, 699)
+	logs.Info(PrintHole(peerID, peerType))
+
+
 }

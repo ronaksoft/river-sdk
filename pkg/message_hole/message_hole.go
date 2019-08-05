@@ -75,12 +75,10 @@ func (m *HoleManager) InsertBar(b Bar) {
 	sort.Slice(m.bars, func(i, j int) bool {
 		return m.bars[i].Min < m.bars[j].Min
 	})
-	m.maxIndex = m.bars[len(m.bars)-1].Max
-
-	if b.Max > m.maxIndex {
+	if b.Max > m.bars[len(m.bars)-1].Max {
 		m.bars = append(m.bars, Bar{Min: m.maxIndex + 1, Max: b.Max, Type: Hole})
-		m.maxIndex = b.Max
 	}
+	m.maxIndex = b.Max
 
 	oldBars := m.bars
 	m.bars = make([]Bar, 0, len(oldBars))
