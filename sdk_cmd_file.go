@@ -200,6 +200,51 @@ func (r *River) CancelUpload(msgID int64) {
 
 }
 
+// ResumeUpload resume upload
+func (r *River) ResumeUpload(msgID int64) bool {
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("ResumeUpload", time.Now().Sub(startTime))
+	}()
+
+	status, progress, filePath := getFileStatus(msgID)
+
+	logs.Info("SDK::ResumeUpload() current file progress status",
+		zap.String("Status", status.ToString()),
+		zap.Float64("Progress", progress),
+		zap.String("FilePath", filePath),
+	)
+
+	m := repo.PendingMessages.GetByID(msgID)
+	if m == nil {
+		logs.Warn("SDK::ResumeUpload()", zap.Int64("Message does not exist", msgID))
+		return false
+	}
+
+	switch status {
+	case domain.RequestStatusNone:
+		err := r.fileCtrl.Upload(m.RequestID,m)
+		if err != nil {
+			logs.Error("SDK::ResumeUpload()", zap.Error(err))
+			return false
+		}
+	case domain.RequestStatusCompleted:
+		return false
+	case domain.RequestStatusPaused, domain.RequestStatusCanceled, domain.RequestStatusError:
+		err := r.fileCtrl.Upload(m.RequestID,m)
+		if err != nil {
+			logs.Error("SDK::ResumeUpload()", zap.Error(err))
+			return false
+		}
+	case domain.RequestStatusInProgress:
+		return false
+	default:
+		return false
+	}
+
+	return true
+}
+
 // AccountUploadPhoto upload user profile photo
 func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 	startTime := time.Now()

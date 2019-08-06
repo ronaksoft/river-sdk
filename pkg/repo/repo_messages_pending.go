@@ -203,7 +203,6 @@ func (r *repoMessagesPending) GetByID(id int64) *msg.ClientPendingMessage {
 	}
 
 	return pm
-
 }
 
 func (r *repoMessagesPending) GetMany(messageIDs []int64) []*msg.UserMessage {
