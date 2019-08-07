@@ -45,6 +45,7 @@ require (
 	github.com/nats-io/go-nats v1.7.2
 	github.com/nyaruka/phonenumbers v1.0.36
 	github.com/olekukonko/tablewriter v0.0.1
+	github.com/pion/webrtc/v2 v2.1.2 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20190512091148-babf20351dd7 // indirect
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.4.0
@@ -59,8 +60,8 @@ require (
 	github.com/tidwall/tinyqueue v0.0.0-20180302190814-1e39f5511563 // indirect
 	github.com/valyala/fasthttp v1.3.0
 	go.uber.org/zap v1.10.0
+	gocv.io/x/gocv v0.20.0 // indirect
 	golang.org/x/net v0.0.0-20190628185345-da137c7871d7
-	golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7 // indirect
 	golang.org/x/text v0.3.2 // indirect
 	google.golang.org/appengine v1.4.0 // indirect
 	google.golang.org/genproto v0.0.0-20190404172233-64821d5d2107 // indirect
