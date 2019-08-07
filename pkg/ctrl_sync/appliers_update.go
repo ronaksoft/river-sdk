@@ -433,12 +433,12 @@ func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 
 // updateGroupPhoto
 func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+	x := new(msg.UpdateGroupPhoto)
+	_ = x.Unmarshal(u.Update)
+
 	logs.Info("SyncController::updateGroupPhoto",
 		zap.Int64("GroupID", x.GroupID),
 	)
-
-	x := new(msg.UpdateGroupPhoto)
-	_ = x.Unmarshal(u.Update)
 
 	repo.Groups.UpdatePhoto(x)
 
