@@ -692,6 +692,7 @@ func (ctrl *Controller) LoadQueueFromDB() {
 		fs.LoadStatus(filesStatus, ctrl.progressCallback)
 		if fs.RequestStatus == domain.RequestStatusPaused ||
 			fs.RequestStatus == domain.RequestStatusCanceled ||
+			fs.RequestStatus == domain.RequestStatusError ||
 			fs.RequestStatus == domain.RequestStatusCompleted {
 			continue
 		}
