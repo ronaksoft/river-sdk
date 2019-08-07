@@ -1080,3 +1080,26 @@ func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 }
+
+func (r *River) accountGetPrivacy(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.AccountGetPrivacy)
+	if err := req.Unmarshal(in.Message); err != nil {
+		logs.Error("River::usersGet()-> Unmarshal()", zap.Error(err))
+		return
+	}
+
+	res, err := repo.Account.GetPrivacy(req.Key)
+	if err != nil {
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+		return
+	}
+
+	out.Constructor = msg.C_AccountPrivacyRules
+	out.Message, _ = res.Marshal()
+	uiexec.Ctx().Exec(func() {
+		if successCB != nil {
+			successCB(out)
+		}
+	}) // successCB(out)
+
+}

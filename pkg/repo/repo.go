@@ -27,6 +27,7 @@ var (
 	singleton sync.Mutex
 	lCache    *bigcache.BigCache
 
+	Account         *repoAccount
 	Dialogs         *repoDialogs
 	Messages        *repoMessages
 	PendingMessages *repoMessagesPending
@@ -69,6 +70,7 @@ func InitRepo(dbPath string, lowMemory bool) {
 		ctx = &Context{
 			DBPath: dbPath,
 		}
+		Account = &repoAccount{repository: r}
 		Dialogs = &repoDialogs{repository: r}
 		Messages = &repoMessages{repository: r}
 		PendingMessages = &repoMessagesPending{repository: r}
@@ -108,7 +110,7 @@ func repoSetDB(dbPath string, lowMemory bool) {
 
 	// Initialize BuntDB Indexer
 	_ = os.MkdirAll(fmt.Sprintf("%s/bunty", strings.TrimRight(dbPath, "/")), os.ModePerm)
-	if buntIndex, err :=  buntdb.Open(fmt.Sprintf("%s/bunty/dialogs.db", strings.TrimRight(dbPath, "/"))); err != nil {
+	if buntIndex, err := buntdb.Open(fmt.Sprintf("%s/bunty/dialogs.db", strings.TrimRight(dbPath, "/"))); err != nil {
 		logs.Fatal("Context::repoSetDB()->bunt Open()", zap.Error(err))
 	} else {
 		r.bunt = buntIndex
@@ -122,7 +124,7 @@ func repoSetDB(dbPath string, lowMemory bool) {
 	searchDbPath := fmt.Sprintf("%s/searchdb/msg", strings.TrimRight(dbPath, "/"))
 	if msgSearch, err := bleve.Open(searchDbPath); err != nil {
 		switch err {
-		case  bleve.ErrorIndexPathDoesNotExist:
+		case bleve.ErrorIndexPathDoesNotExist:
 			// create a mapping
 			indexMapping, err := indexMapForMessages()
 			if err != nil {
@@ -224,7 +226,7 @@ func indexMapForPeers() (mapping.IndexMapping, error) {
 }
 
 // Close underlying DB connection
-func Close()  {
+func Close() {
 	logs.Debug("Repo Stopping")
 	_ = r.badger.DropAll()
 	_ = r.bunt.Close()

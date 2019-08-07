@@ -345,7 +345,7 @@ func (ctrl *Controller) updateDialogPinned(u *msg.UpdateEnvelope) []*msg.UpdateE
 func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
 	logs.Info("SyncController::updateUsername()")
 	x := new(msg.UpdateUsername)
-	x.Unmarshal(u.Update)
+	_ = x.Unmarshal(u.Update)
 
 	if x.UserID == ctrl.userID {
 		ctrl.connInfo.ChangeUserID(x.UserID)
@@ -433,12 +433,12 @@ func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 
 // updateGroupPhoto
 func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	x := new(msg.UpdateGroupPhoto)
-	_ = x.Unmarshal(u.Update)
-
 	logs.Info("SyncController::updateGroupPhoto",
 		zap.Int64("GroupID", x.GroupID),
 	)
+
+	x := new(msg.UpdateGroupPhoto)
+	_ = x.Unmarshal(u.Update)
 
 	repo.Groups.UpdatePhoto(x)
 
@@ -453,5 +453,22 @@ func (ctrl *Controller) updateTooLong(u *msg.UpdateEnvelope) []*msg.UpdateEnvelo
 	go ctrl.sync()
 
 	res := make([]*msg.UpdateEnvelope, 0)
+	return res
+}
+
+func (ctrl *Controller) updateAccountPrivacy(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+	logs.Info("SyncController::updateAccountPrivacy")
+
+	x := new(msg.UpdateAccountPrivacy)
+	_ = x.Unmarshal(u.Update)
+
+	_ = repo.Account.SetPrivacy(msg.PrivacyKeyChatInvite, x.ChatInvite)
+	_ = repo.Account.SetPrivacy(msg.PrivacyKeyLastSeen, x.LastSeen)
+	_ = repo.Account.SetPrivacy(msg.PrivacyKeyPhoneNumber, x.PhoneNumber)
+	_ = repo.Account.SetPrivacy(msg.PrivacyKeyProfilePhoto, x.ProfilePhoto)
+	_ = repo.Account.SetPrivacy(msg.PrivacyKeyForwardedMessage, x.ForwardedMessage)
+	_ = repo.Account.SetPrivacy(msg.PrivacyKeyCall, x.Call)
+
+	res := []*msg.UpdateEnvelope{u}
 	return res
 }

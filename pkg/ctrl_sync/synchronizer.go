@@ -72,6 +72,7 @@ func NewSyncController(config Config) *Controller {
 		msg.C_UpdateGroupPhoto:            ctrl.updateGroupPhoto,
 		msg.C_UpdateTooLong:               ctrl.updateTooLong,
 		msg.C_UpdateDialogPinned:          ctrl.updateDialogPinned,
+		msg.C_UpdateAccountPrivacy:        ctrl.updateAccountPrivacy,
 	}
 
 	ctrl.messageAppliers = map[int64]domain.MessageApplier{

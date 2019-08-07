@@ -385,35 +385,37 @@ func (r *River) onFileDownloadError(messageID, requestID int64, filePath string,
 }
 
 func (r *River) registerCommandHandlers() {
-	r.localCommands = make(map[int64]domain.LocalMessageHandler)
-	r.localCommands[msg.C_MessagesGetDialogs] = r.messagesGetDialogs
-	r.localCommands[msg.C_MessagesGetDialog] = r.messagesGetDialog
-	r.localCommands[msg.C_MessagesGetHistory] = r.messagesGetHistory
-	r.localCommands[msg.C_MessagesSend] = r.messagesSend
-	r.localCommands[msg.C_ContactsGet] = r.contactsGet
-	r.localCommands[msg.C_MessagesReadHistory] = r.messagesReadHistory
-	r.localCommands[msg.C_UsersGet] = r.usersGet
-	r.localCommands[msg.C_MessagesGet] = r.messagesGet
-	r.localCommands[msg.C_AccountUpdateUsername] = r.accountUpdateUsername
-	r.localCommands[msg.C_AccountUpdateProfile] = r.accountUpdateProfile
-	r.localCommands[msg.C_AccountRegisterDevice] = r.accountRegisterDevice
-	r.localCommands[msg.C_AccountUnregisterDevice] = r.accountUnregisterDevice
-	r.localCommands[msg.C_AccountSetNotifySettings] = r.accountSetNotifySettings
-	r.localCommands[msg.C_MessagesToggleDialogPin] = r.dialogTogglePin
-	r.localCommands[msg.C_GroupsEditTitle] = r.groupsEditTitle
-	r.localCommands[msg.C_MessagesClearHistory] = r.messagesClearHistory
-	r.localCommands[msg.C_MessagesDelete] = r.messagesDelete
-	r.localCommands[msg.C_GroupsAddUser] = r.groupAddUser
-	r.localCommands[msg.C_GroupsDeleteUser] = r.groupDeleteUser
-	r.localCommands[msg.C_GroupsGetFull] = r.groupsGetFull
-	r.localCommands[msg.C_GroupsUpdateAdmin] = r.groupUpdateAdmin
-	r.localCommands[msg.C_ContactsImport] = r.contactsImport
-	r.localCommands[msg.C_MessagesReadContents] = r.messagesReadContents
-	r.localCommands[msg.C_UsersGetFull] = r.usersGetFull
-	r.localCommands[msg.C_AccountRemovePhoto] = r.accountRemovePhoto
-	r.localCommands[msg.C_GroupsRemovePhoto] = r.groupRemovePhoto
-	r.localCommands[msg.C_MessagesSendMedia] = r.messagesSendMedia
-	r.localCommands[msg.C_ClientSendMessageMedia] = r.clientSendMessageMedia
+	r.localCommands = map[int64]domain.LocalMessageHandler{
+		msg.C_MessagesGetDialogs:       r.messagesGetDialogs,
+		msg.C_MessagesGetDialog:        r.messagesGetDialog,
+		msg.C_MessagesGetHistory:       r.messagesGetHistory,
+		msg.C_MessagesSend:             r.messagesSend,
+		msg.C_ContactsGet:              r.contactsGet,
+		msg.C_MessagesReadHistory:      r.messagesReadHistory,
+		msg.C_UsersGet:                 r.usersGet,
+		msg.C_MessagesGet:              r.messagesGet,
+		msg.C_AccountUpdateUsername:    r.accountUpdateUsername,
+		msg.C_AccountUpdateProfile:     r.accountUpdateProfile,
+		msg.C_AccountRegisterDevice:    r.accountRegisterDevice,
+		msg.C_AccountUnregisterDevice:  r.accountUnregisterDevice,
+		msg.C_AccountSetNotifySettings: r.accountSetNotifySettings,
+		msg.C_MessagesToggleDialogPin:  r.dialogTogglePin,
+		msg.C_GroupsEditTitle:          r.groupsEditTitle,
+		msg.C_MessagesClearHistory:     r.messagesClearHistory,
+		msg.C_MessagesDelete:           r.messagesDelete,
+		msg.C_GroupsAddUser:            r.groupAddUser,
+		msg.C_GroupsDeleteUser:         r.groupDeleteUser,
+		msg.C_GroupsGetFull:            r.groupsGetFull,
+		msg.C_GroupsUpdateAdmin:        r.groupUpdateAdmin,
+		msg.C_ContactsImport:           r.contactsImport,
+		msg.C_MessagesReadContents:     r.messagesReadContents,
+		msg.C_UsersGetFull:             r.usersGetFull,
+		msg.C_AccountRemovePhoto:       r.accountRemovePhoto,
+		msg.C_GroupsRemovePhoto:        r.groupRemovePhoto,
+		msg.C_MessagesSendMedia:        r.messagesSendMedia,
+		msg.C_ClientSendMessageMedia:   r.clientSendMessageMedia,
+		msg.C_AccountGetPrivacy:        r.accountGetPrivacy,
+	}
 
 }
 
@@ -441,13 +443,11 @@ func (r *River) Start() error {
 	r.queueCtrl.Start()
 	r.syncCtrl.Start()
 
-
 	// Connect to Server
 	go r.networkCtrl.Connect(true)
 
 	// Start to download unfinished jobs
 	go r.fileCtrl.LoadQueueFromDB()
-
 
 	logs.Info("River Started")
 	return nil
