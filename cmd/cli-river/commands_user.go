@@ -46,7 +46,35 @@ var UsersGetFull = &ishell.Cmd{
 	},
 }
 
+var SetLangCode = &ishell.Cmd{
+	Name: "SetLangCode",
+	Func: func(c *ishell.Context) {
+		// for just one user
+		req := msg.AccountSetLang{}
+
+		code := fnGetLangCode(c)
+
+		switch code {
+		case "en":
+			req.LangCode = msg.LangCode_LangCodeEn
+		case "fa":
+			req.LangCode = msg.LangCode_LangCodeFa
+		default:
+			req.LangCode = msg.LangCode_LangCodeUnknown
+		}
+
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountSetLang, reqBytes, reqDelegate, false, false); err != nil {
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
 func init() {
 	User.AddCmd(UsersGet)
 	User.AddCmd(UsersGetFull)
+	User.AddCmd(SetLangCode)
 }
