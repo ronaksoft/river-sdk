@@ -311,9 +311,17 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 		zap.Int64("ClientUpdateID", ctrl.updateID),
 	)
 
+	waitGroup := new(sync.WaitGroup)
+	moreTries := 10
+	fromUpdateID := ctrl.updateID
 	for serverUpdateID > ctrl.updateID {
-		fromUpdateID := ctrl.updateID + 1 // cuz we already have updateID itself
-		limit := serverUpdateID - fromUpdateID
+		if fromUpdateID == ctrl.updateID {
+			if moreTries--; moreTries < 0 {
+				break
+			}
+		}
+		fromUpdateID = ctrl.updateID
+		limit := serverUpdateID - ctrl.updateID
 		if limit > 100 {
 			limit = 100
 		}
@@ -323,7 +331,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 
 		req := new(msg.UpdateGetDifference)
 		req.Limit = int32(limit)
-		req.From = fromUpdateID
+		req.From = ctrl.updateID + 1 // +1 cuz we already have ctrl.updateID itself
 		reqBytes, _ := req.Marshal()
 		_ = ctrl.queueCtrl.ExecuteRealtimeCommand(
 			uint64(domain.SequentialUniqueID()),
@@ -331,72 +339,80 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 			reqBytes,
 			func() {
 				logs.Warn("SyncController::getUpdateDifference() -> ExecuteRealtimeCommand() Timeout")
+				time.Sleep(time.Second)
 			},
 			func(m *msg.MessageEnvelope) {
-				onGetDifferenceSucceed(ctrl, m)
+				switch m.Constructor {
+				case msg.C_UpdateDifference:
+					x := new(msg.UpdateDifference)
+					err := x.Unmarshal(m.Message)
+					if err != nil {
+						logs.Error("onGetDifferenceSucceed()-> Unmarshal()", zap.Error(err))
+						return
+					}
+					waitGroup.Wait()		// We wait here, because we DON'T want to process update batches in parallel,
+											// just we go to pre-fetch the next batch from the server if any
+					if x.MaxUpdateID > ctrl.updateID {
+						ctrl.updateID = x.MaxUpdateID
+					}
+					waitGroup.Add(1)
+					go func() {
+						onGetDifferenceSucceed(ctrl, x)
+						// save UpdateID to DB
+						err := repo.System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
+						if err != nil {
+							logs.Error("onGetDifferenceSucceed()-> SaveInt()", zap.Error(err))
+						}
+						waitGroup.Done()
+					}()
+				case msg.C_Error:
+					logs.Debug("onGetDifferenceSucceed()-> C_Error",
+						zap.String("Error", domain.ParseServerError(m.Message).Error()),
+					)
+				}
+
 			},
 			true,
 			false,
 		)
 	}
+	waitGroup.Wait()
 }
-func onGetDifferenceSucceed(ctrl *Controller, m *msg.MessageEnvelope) {
-	switch m.Constructor {
-	case msg.C_UpdateDifference:
-		x := new(msg.UpdateDifference)
-		err := x.Unmarshal(m.Message)
-		if err != nil {
-			logs.Error("onGetDifferenceSucceed()-> Unmarshal()", zap.Error(err))
-			return
+func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
+
+	updContainer := new(msg.UpdateContainer)
+	updContainer.Updates = make([]*msg.UpdateEnvelope, 0)
+	updContainer.Users = x.Users
+	updContainer.Groups = x.Groups
+	updContainer.MaxUpdateID = x.MaxUpdateID
+	updContainer.MinUpdateID = x.MinUpdateID
+
+	logs.Info("SyncController:: onGetDifferenceSucceed",
+		zap.Int64("MaxUpdateID", x.MaxUpdateID),
+		zap.Int64("MinUpdateID", x.MinUpdateID),
+	)
+
+	// save Groups & Users
+	repo.Groups.SaveMany(x.Groups)
+	repo.Users.SaveMany(x.Users)
+
+	for _, update := range x.Updates {
+		if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
+			externalHandlerUpdates := applier(update)
+			updContainer.Updates = append(updContainer.Updates, externalHandlerUpdates...)
 		}
-		updContainer := new(msg.UpdateContainer)
-		updContainer.Updates = make([]*msg.UpdateEnvelope, 0)
-		updContainer.Users = x.Users
-		updContainer.Groups = x.Groups
-		updContainer.MaxUpdateID = x.MaxUpdateID
-		updContainer.MinUpdateID = x.MinUpdateID
-
-		logs.Info("SyncController:: onGetDifferenceSucceed",
-			zap.Int64("UpdateID", ctrl.updateID),
-			zap.Int64("MaxUpdateID", x.MaxUpdateID),
-			zap.Int64("MinUpdateID", x.MinUpdateID),
-		)
-
-		// save Groups & Users
-		repo.Groups.SaveMany(x.Groups)
-		repo.Users.SaveMany(x.Users)
-
-		for _, update := range x.Updates {
-			if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
-				externalHandlerUpdates := applier(update)
-				updContainer.Updates = append(updContainer.Updates, externalHandlerUpdates...)
-			}
-		}
-		updContainer.Length = int32(len(updContainer.Updates))
-
-		// update last updateID
-		if ctrl.updateID < x.MaxUpdateID {
-			ctrl.updateID = x.MaxUpdateID
-
-			// save UpdateID to DB
-			err := repo.System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
-			if err != nil {
-				logs.Error("onGetDifferenceSucceed()-> SaveInt()", zap.Error(err))
-			}
-		}
-
-		// wrapped to UpdateContainer
-		buff, _ := updContainer.Marshal()
-		uiexec.Ctx().Exec(func() {
-			if ctrl.onUpdateMainDelegate != nil {
-				ctrl.onUpdateMainDelegate(msg.C_UpdateContainer, buff)
-			}
-		})
-	case msg.C_Error:
-		logs.Debug("onGetDifferenceSucceed()-> C_Error",
-			zap.String("Error", domain.ParseServerError(m.Message).Error()),
-		)
 	}
+	updContainer.Length = int32(len(updContainer.Updates))
+
+
+	// wrapped to UpdateContainer
+	buff, _ := updContainer.Marshal()
+	uiexec.Ctx().Exec(func() {
+		if ctrl.onUpdateMainDelegate != nil {
+			ctrl.onUpdateMainDelegate(msg.C_UpdateContainer, buff)
+		}
+	})
+
 }
 
 func (ctrl *Controller) SetUserID(userID int64) {
@@ -592,7 +608,6 @@ func (ctrl *Controller) GetSyncStatus() domain.SyncStatus {
 // extractMessagesMedia extract files info from messages that have Document object
 func (ctrl *Controller) extractMessagesMedia(messages ...*msg.UserMessage) {
 	waitGroup := sync.WaitGroup{}
-
 	for _, m := range messages {
 		switch m.MediaType {
 		case msg.MediaTypeEmpty:

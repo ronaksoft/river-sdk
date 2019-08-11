@@ -145,7 +145,6 @@ func (r *repoGroups) Save(group *msg.Group) {
 }
 
 func (r *repoGroups) SaveMany(groups []*msg.Group) {
-
 	groupIDs := domain.MInt64B{}
 	for _, v := range groups {
 		if alreadySaved(fmt.Sprintf("G.%d", v.ID), v) {

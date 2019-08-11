@@ -98,25 +98,29 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 				break
 			}
 		}
-		if userLeft {
-			// Delete GroupSearch		NOT REQUIRED
-			// Delete Dialog	NOT REQUIRED
-			// Delete PendingMessage
-			deletedMsgs := repo.PendingMessages.DeletePeerAllMessages(x.Message.PeerID, x.Message.PeerType)
-			if deletedMsgs != nil {
-				buff, err := deletedMsgs.Marshal()
-				if err != nil {
-					logs.Error("River::groupDeleteUser()-> Unmarshal ClientUpdateMessagesDeleted", zap.Error(err))
-				} else {
-					udp := new(msg.UpdateEnvelope)
-					udp.Constructor = msg.C_ClientUpdateMessagesDeleted
-					udp.Update = buff
-					udp.UCount = 1
-					udp.Timestamp = u.Timestamp
-					udp.UpdateID = u.UpdateID
-					res = append(res, udp)
-				}
+
+		// Don't go further if the user itself has not been left or removed
+		if !userLeft {
+			break
+		}
+
+		// Delete GroupSearch		NOT REQUIRED
+		// Delete Dialog			NOT REQUIRED
+		// Delete PendingMessage
+		deletedMsgs := repo.PendingMessages.DeletePeerAllMessages(x.Message.PeerID, x.Message.PeerType)
+		if deletedMsgs != nil {
+			buff, err := deletedMsgs.Marshal()
+			if err != nil {
+				logs.Error("River::groupDeleteUser()-> Unmarshal ClientUpdateMessagesDeleted", zap.Error(err))
+				break
 			}
+			udp := new(msg.UpdateEnvelope)
+			udp.Constructor = msg.C_ClientUpdateMessagesDeleted
+			udp.Update = buff
+			udp.UCount = 1
+			udp.Timestamp = u.Timestamp
+			udp.UpdateID = u.UpdateID
+			res = append(res, udp)
 
 		}
 	case domain.MessageActionClearHistory:
