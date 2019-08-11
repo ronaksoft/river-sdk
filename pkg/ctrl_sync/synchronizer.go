@@ -29,6 +29,7 @@ type Config struct {
 
 // Controller cache received data from server to client DB
 type Controller struct {
+	waitGroup            sync.WaitGroup
 	connInfo             domain.RiverConfigurator
 	networkCtrl          *networkCtrl.Controller
 	queueCtrl            *queueCtrl.Controller
@@ -56,7 +57,6 @@ func NewSyncController(config Config) *Controller {
 	ctrl.queueCtrl = config.QueueCtrl
 	ctrl.networkCtrl = config.NetworkCtrl
 	ctrl.fileCtrl = config.FileCtrl
-
 	ctrl.updateAppliers = map[int64]domain.UpdateApplier{
 		msg.C_UpdateNewMessage:            ctrl.updateNewMessage,
 		msg.C_UpdateReadHistoryOutbox:     ctrl.updateReadHistoryOutbox,
@@ -350,8 +350,8 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 						logs.Error("onGetDifferenceSucceed()-> Unmarshal()", zap.Error(err))
 						return
 					}
-					waitGroup.Wait()		// We wait here, because we DON'T want to process update batches in parallel,
-											// just we go to pre-fetch the next batch from the server if any
+					waitGroup.Wait() // We wait here, because we DON'T want to process update batches in parallel,
+					// just we go to pre-fetch the next batch from the server if any
 					if x.MaxUpdateID > ctrl.updateID {
 						ctrl.updateID = x.MaxUpdateID
 					}
@@ -379,7 +379,6 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 	waitGroup.Wait()
 }
 func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
-
 	updContainer := new(msg.UpdateContainer)
 	updContainer.Updates = make([]*msg.UpdateEnvelope, 0)
 	updContainer.Users = x.Users
@@ -404,6 +403,8 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 	}
 	updContainer.Length = int32(len(updContainer.Updates))
 
+	// We wait here, if any unfinished parallel job has not been finished yet
+	ctrl.waitGroup.Wait()
 
 	// wrapped to UpdateContainer
 	buff, _ := updContainer.Marshal()
@@ -545,6 +546,9 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 			udpContainer.Updates = append(udpContainer.Updates, update)
 		}
 	}
+
+	// We wait here, if any unfinished parallel job has not been finished yet
+	ctrl.waitGroup.Wait()
 
 	// save Groups & Users
 	repo.Groups.SaveMany(updateContainer.Groups)
