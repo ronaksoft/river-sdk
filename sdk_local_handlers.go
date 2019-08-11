@@ -1062,7 +1062,6 @@ func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 	}
 
 	users := repo.Users.GetMany(userIDs.ToArray())
-
 	if len(users) == len(userIDs) {
 		res := new(msg.UsersMany)
 		res.Users = users
