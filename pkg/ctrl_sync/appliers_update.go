@@ -316,6 +316,8 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 				ctrl.onUpdateMainDelegate(msg.C_UpdateEnvelope, buff)
 			}
 		})
+
+		repo.PendingMessages.Delete(pm.ID)
 		return res
 	}
 
