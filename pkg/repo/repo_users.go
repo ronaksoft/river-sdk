@@ -11,6 +11,7 @@ import (
 	"github.com/dgraph-io/badger"
 	"go.uber.org/zap"
 	"strings"
+	"time"
 )
 
 const (
@@ -103,6 +104,19 @@ func (r *repoUsers) readManyFromCache(userIDs []int64) []*msg.User {
 	users := make([]*msg.User, 0, len(userIDs))
 	for _, userID := range userIDs {
 		if user := r.readFromCache(userID); user != nil {
+			delta := time.Now().Unix() - user.LastSeen
+			switch {
+			case delta < domain.Minute:
+				user.Status = msg.UserStatusOnline
+			case delta < domain.Week:
+				user.Status = msg.UserStatusRecently
+			case delta < domain.Month:
+				user.Status = msg.UserStatusLastWeek
+			case delta < domain.TwoMonth:
+				user.Status = msg.UserStatusLastMonth
+			default:
+				user.Status = msg.UserStatusOffline
+			}
 			users = append(users, user)
 		}
 	}

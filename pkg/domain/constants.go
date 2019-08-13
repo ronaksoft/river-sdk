@@ -136,3 +136,14 @@ const (
 	SharedMediaTypeAudio SharedMediaType = 4 // SharedMediaTypeAudio audio document that its IsVoice flag is false
 	SharedMediaTypeLink  SharedMediaType = 5 // SharedMediaTypeLink displays all messages that have link entity
 )
+
+
+// UserStatus Times
+const (
+	Minute   = 60
+	Hour     = Minute * 60
+	Day      = Hour * 24
+	Week     = Day * 7
+	Month    = Week * 4
+	TwoMonth = Month * 2
+)
