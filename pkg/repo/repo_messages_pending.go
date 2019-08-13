@@ -44,7 +44,6 @@ func (r *repoMessagesPending) Save(msgID int64, senderID int64, message *msg.Mes
 	if message == nil {
 		return nil, domain.ErrNotFound
 	}
-
 	pm := &msg.ClientPendingMessage{
 		AccessHash: message.Peer.AccessHash,
 		Body:       message.Body,
@@ -55,7 +54,7 @@ func (r *repoMessagesPending) Save(msgID int64, senderID int64, message *msg.Mes
 		Entities:   message.Entities,
 		ClearDraft: message.ClearDraft,
 		// Filled by SDK
-		CreatedOn: time.Now().Unix(),
+		CreatedOn: domain.Now().Unix(),
 		SenderID:  senderID,
 		ID:        msgID,
 	}
@@ -95,7 +94,7 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, randomID i
 	pm.Media, _ = msgMedia.Marshal()
 	pm.ID = msgID
 	pm.SenderID = senderID
-	pm.CreatedOn = time.Now().Unix()
+	pm.CreatedOn = domain.Now().Unix()
 	pm.RequestID = randomID
 
 	bytes, _ := pm.Marshal()
