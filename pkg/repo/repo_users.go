@@ -339,7 +339,7 @@ func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) 
 func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*msg.PhoneContact) {
 	t1 := bleve.NewTermQuery("contact")
 	t1.SetField("type")
-	qs := make([]query.Query, 0)
+	qs := make([]query.Query, 0, 2)
 	for _, term := range strings.Fields(searchPhrase) {
 		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewMatchQuery(term))
 	}

@@ -168,7 +168,7 @@ func indexMapForMessages() (mapping.IndexMapping, error) {
 	textFieldMapping := bleve.NewTextFieldMapping()
 	textFieldMapping.Analyzer = en.AnalyzerName
 	textFieldMapping.Store = false
-	textFieldMapping.IncludeTermVectors = false
+	textFieldMapping.IncludeTermVectors = true
 	textFieldMapping.DocValues = false
 	keywordFieldMapping := bleve.NewTextFieldMapping()
 	keywordFieldMapping.Analyzer = keyword.Name
@@ -191,7 +191,7 @@ func indexMapForPeers() (mapping.IndexMapping, error) {
 	// a generic reusable mapping for english text
 	textFieldMapping := bleve.NewTextFieldMapping()
 	textFieldMapping.Store = false
-	textFieldMapping.IncludeTermVectors = false
+	textFieldMapping.IncludeTermVectors = true
 	textFieldMapping.DocValues = false
 	keywordFieldMapping := bleve.NewTextFieldMapping()
 	keywordFieldMapping.Analyzer = keyword.Name
