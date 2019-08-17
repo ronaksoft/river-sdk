@@ -3,16 +3,14 @@ module git.ronaksoftware.com/ronak/riversdk
 require (
 	git.ronaksoftware.com/ronak/toolbox v1.1.3
 	github.com/RoaringBitmap/roaring v0.4.18 // indirect
-	github.com/Smerity/govarint v0.0.0-20150407073650-7265e41f48f1 // indirect
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
 	github.com/allegro/bigcache v1.2.1
 	github.com/beeker1121/goque v2.0.1+incompatible
-	github.com/blevesearch/bleve v0.7.0
+	github.com/blevesearch/bleve v0.8.0
 	github.com/blevesearch/blevex v0.0.0-20180227211930-4b158bb555a3 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.2 // indirect
 	github.com/blevesearch/segment v0.0.0-20160915185041-762005e7a34f // indirect
-	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/chzyer/logex v1.1.10 // indirect
 	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect
 	github.com/couchbase/vellum v0.0.0-20190626091642-41f2deade2cf // indirect
@@ -22,6 +20,7 @@ require (
 	github.com/dgraph-io/badger v1.6.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
+	github.com/etcd-io/bbolt v1.3.3 // indirect
 	github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51 // indirect
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
 	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
@@ -30,7 +29,6 @@ require (
 	github.com/getsentry/sentry-go v0.1.3
 	github.com/gobwas/pool v0.2.0
 	github.com/gogo/protobuf v1.2.1
-	github.com/google/gopacket v1.1.17 // indirect
 	github.com/gorilla/websocket v1.4.0
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/juju/ratelimit v1.0.1
@@ -45,7 +43,6 @@ require (
 	github.com/nats-io/go-nats v1.7.2
 	github.com/nyaruka/phonenumbers v1.0.36
 	github.com/olekukonko/tablewriter v0.0.1
-	github.com/pion/webrtc/v2 v2.1.2 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20190512091148-babf20351dd7 // indirect
 	github.com/smartystreets/goconvey v0.0.0-20190306220146-200a235640ff
 	github.com/spf13/cobra v0.0.5
@@ -61,8 +58,8 @@ require (
 	github.com/tidwall/tinyqueue v0.0.0-20180302190814-1e39f5511563 // indirect
 	github.com/valyala/fasthttp v1.3.0
 	go.uber.org/zap v1.10.0
-	gocv.io/x/gocv v0.20.0 // indirect
-	golang.org/x/net v0.0.0-20190628185345-da137c7871d7
+	golang.org/x/net v0.0.0-20190628185345-da137c7871d7 // indirect
+	golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7 // indirect
 	golang.org/x/text v0.3.2 // indirect
 	google.golang.org/appengine v1.4.0 // indirect
 	google.golang.org/genproto v0.0.0-20190404172233-64821d5d2107 // indirect
