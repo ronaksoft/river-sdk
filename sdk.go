@@ -451,6 +451,7 @@ func (r *River) Start() error {
 	lastReIndexTime, err := repo.System.LoadInt(domain.SkReIndexTime)
 	if err != nil || time.Now().Unix() - int64(lastReIndexTime) > domain.Day {
 		go func() {
+			logs.Info("ReIndexing Users & Groups")
 			repo.Users.ReIndex()
 			repo.Groups.ReIndex()
 			_ = repo.System.SaveInt(domain.SkReIndexTime, uint64(time.Now().Unix()))

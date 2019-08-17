@@ -98,8 +98,3 @@ func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate
 		delegate.OnComplete(outBytes)
 	}
 }
-
-func (r *River) ReIndex() {
-	repo.Users.ReIndex()
-	repo.Groups.ReIndex()
-}
