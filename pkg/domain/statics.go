@@ -305,7 +305,7 @@ func CalculateContactsGetHash(userIDs []int64) uint32 {
 }
 
 // CalculateContactsImportHash crc32 of phones
-func CalculateContactsImportHash(req *msg.ContactsImport) uint32 {
+func CalculateContactsImportHash(req *msg.ContactsImport) uint64 {
 	phoneContacts := make(map[string]*msg.PhoneContact)
 	for _, c := range req.Contacts {
 		phoneContacts[c.Phone] = c
@@ -321,7 +321,7 @@ func CalculateContactsImportHash(req *msg.ContactsImport) uint32 {
 		bb.Write([]byte(phones[idx].Phone))
 	}
 	crc32Hash := crc32.ChecksumIEEE(bb.Bytes())
-	return crc32Hash
+	return uint64(crc32Hash)
 }
 
 // SanitizePhone copy of server side function

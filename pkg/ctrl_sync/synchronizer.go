@@ -158,7 +158,7 @@ func (ctrl *Controller) sync() {
 		go getAllDialogs(waitGroup, ctrl, 0, 100)
 		waitGroup.Wait()
 		ctrl.updateID = serverUpdateID
-		err = repo.System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
+		err = repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
 		if err != nil {
 			logs.Error("sync()-> SaveInt()", zap.Error(err))
 			return
@@ -359,7 +359,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 					go func() {
 						onGetDifferenceSucceed(ctrl, x)
 						// save UpdateID to DB
-						err := repo.System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
+						err := repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
 						if err != nil {
 							logs.Error("onGetDifferenceSucceed()-> SaveInt()", zap.Error(err))
 						}
@@ -432,8 +432,8 @@ func (ctrl *Controller) Start() {
 	logs.Info("SyncController::  Start")
 
 	// Load the latest UpdateID stored in DB
-	if v, err := repo.System.LoadInt(domain.ColumnUpdateID); err != nil {
-		err := repo.System.SaveInt(domain.ColumnUpdateID, 0)
+	if v, err := repo.System.LoadInt(domain.SkUpdateID); err != nil {
+		err := repo.System.SaveInt(domain.SkUpdateID, 0)
 		if err != nil {
 			logs.Error("Start()-> SaveInt()", zap.Error(err))
 		}
@@ -557,7 +557,7 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 	// save updateID after processing messages
 	if ctrl.updateID < updateContainer.MaxUpdateID {
 		ctrl.updateID = updateContainer.MaxUpdateID
-		err := repo.System.SaveInt(domain.ColumnUpdateID, int32(ctrl.updateID))
+		err := repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
 		if err != nil {
 			logs.Error("UpdateHandler() -> SaveInt()", zap.Error(err))
 		}
@@ -593,7 +593,7 @@ func (ctrl *Controller) ClearUpdateID() {
 
 // ContactImportFromServer import contact from server
 func (ctrl *Controller) ContactImportFromServer() {
-	contactsGetHash, _ := repo.System.LoadInt(domain.ColumnContactsGetHash)
+	contactsGetHash, _ := repo.System.LoadInt(domain.SkContactsGetHash)
 	contactGetReq := new(msg.ContactsGet)
 	contactGetReq.Crc32Hash = uint32(contactsGetHash)
 	contactGetBytes, _ := contactGetReq.Marshal()
@@ -677,7 +677,7 @@ func (ctrl *Controller) getServerSalt() {
 						saltArray = append(saltArray, slt)
 					}
 					b, _ := json.Marshal(saltArray)
-					err = repo.System.SaveString(domain.ColumnSystemSalts, string(b))
+					err = repo.System.SaveString(domain.SkSystemSalts, string(b))
 					if err != nil {
 						logs.Error("Salt:: save To DB", zap.Error(err))
 					}

@@ -31,7 +31,7 @@ func Get() int64 {
 
 func UpdateSalt() bool {
 	// 1st try to load from already stored salts
-	saltString, err := repo.System.LoadString(domain.ColumnSystemSalts)
+	saltString, err := repo.System.LoadString(domain.SkSystemSalts)
 	if err != nil {
 		return false
 	}
@@ -57,7 +57,7 @@ func UpdateSalt() bool {
 			curSalt = s.Value
 			salts = sysSalts[idx:]
 			b, _ := json.Marshal(sysSalts[idx:])
-			_ = repo.System.SaveString(domain.ColumnSystemSalts, string(b))
+			_ = repo.System.SaveString(domain.SkSystemSalts, string(b))
 			saltFound = true
 			lastUpdate = time.Now()
 			break

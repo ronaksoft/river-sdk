@@ -80,7 +80,7 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 	if len(userIDs) > 0 {
 		// calculate contactsGetHash and save
 		crc32Hash := domain.CalculateContactsGetHash(userIDs.ToArray())
-		err := repo.System.SaveInt(domain.ColumnContactsGetHash, int32(crc32Hash))
+		err := repo.System.SaveInt(domain.SkContactsGetHash, uint64(crc32Hash))
 		if err != nil {
 			logs.Error("contactsMany() failed to save ContactsGetHash to DB", zap.Error(err))
 		}

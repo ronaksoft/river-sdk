@@ -25,14 +25,14 @@ const (
 	SnapshotSyncThreshold = 10000
 )
 
-// Table Column Names
+// System Keys
 const (
-	ColumnConnectionInfo     = "CONN_INFO"
-	ColumnUpdateID           = "UPDATE_ID"
-	ColumnDeviceToken        = "DEVICE_TOKEN_INFO"
-	ColumnContactsImportHash = "CONTACTS_IMPORT_HASH"
-	ColumnContactsGetHash    = "CONTACTS_GET_HASH"
-	ColumnSystemSalts        = "SERVER_SALTS"
+	SkUpdateID           = "UPDATE_ID"
+	SkDeviceToken        = "DEVICE_TOKEN_INFO"
+	SkContactsImportHash = "CONTACTS_IMPORT_HASH"
+	SkContactsGetHash    = "CONTACTS_GET_HASH"
+	SkSystemSalts        = "SERVER_SALTS"
+	SkReIndexTime		 = "RE_INDEX_TS"
 )
 
 // NetworkStatus network controller status

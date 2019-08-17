@@ -655,7 +655,7 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	res := new(msg.ContactsMany)
 	res.Users, res.Contacts = repo.Users.GetContacts()
 
-	oldHash, err := repo.System.LoadInt(domain.ColumnContactsImportHash)
+	oldHash, err := repo.System.LoadInt(domain.SkContactsImportHash)
 	if err != nil {
 		logs.Warn("River::contactsImport()-> failed to get contactsImportHash ", zap.Error(err))
 	}
@@ -663,14 +663,14 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	newHash := domain.CalculateContactsImportHash(req)
 
 	// compare two hashes if equal return existing contacts
-	if int(newHash) == oldHash {
+	if newHash == oldHash {
 		msg.ResultContactsMany(out, res)
 		successCB(out)
 		return
 	}
 
 	// not equal save it to DB
-	err = repo.System.SaveInt(domain.ColumnContactsImportHash, int32(newHash))
+	err = repo.System.SaveInt(domain.SkContactsImportHash, newHash)
 	if err != nil {
 		logs.Error("River::contactsImport() failed to save ContactsImportHash to DB", zap.Error(err))
 	}
@@ -766,7 +766,7 @@ func (r *River) accountRegisterDevice(in, out *msg.MessageEnvelope, timeoutCB do
 		logs.Error("River::accountRegisterDevice()-> Json Marshal()", zap.Error(err))
 		return
 	}
-	err = repo.System.SaveString(domain.ColumnDeviceToken, string(val))
+	err = repo.System.SaveString(domain.SkDeviceToken, string(val))
 	if err != nil {
 		logs.Error("River::accountRegisterDevice()-> SaveString()", zap.Error(err))
 		return
@@ -788,7 +788,7 @@ func (r *River) accountUnregisterDevice(in, out *msg.MessageEnvelope, timeoutCB 
 		logs.Error("River::accountUnregisterDevice()-> Json Marshal()", zap.Error(err))
 		return
 	}
-	err = repo.System.SaveString(domain.ColumnDeviceToken, string(val))
+	err = repo.System.SaveString(domain.SkDeviceToken, string(val))
 	if err != nil {
 		logs.Error("River::accountUnregisterDevice()-> SaveString()", zap.Error(err))
 		return

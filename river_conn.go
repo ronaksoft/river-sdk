@@ -94,7 +94,7 @@ func (r *River) saveDeviceToken() {
 		logs.Error("River::saveDeviceToken()-> Json Marshal()", zap.Error(err))
 		return
 	}
-	err = repo.System.SaveString(domain.ColumnDeviceToken, string(val))
+	err = repo.System.SaveString(domain.SkDeviceToken, string(val))
 	if err != nil {
 		logs.Error("River::saveDeviceToken()-> SaveString()", zap.Error(err))
 		return
@@ -104,7 +104,7 @@ func (r *River) saveDeviceToken() {
 // Get deviceToken
 func (r *River) loadDeviceToken() {
 	r.DeviceToken = new(msg.AccountRegisterDevice)
-	str, err := repo.System.LoadString(domain.ColumnDeviceToken)
+	str, err := repo.System.LoadString(domain.SkDeviceToken)
 	if err != nil {
 		logs.Warn("River::loadDeviceToken() failed to fetch DeviceToken",
 			zap.String("Error", err.Error()),

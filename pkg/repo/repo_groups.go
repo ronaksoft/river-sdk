@@ -4,10 +4,12 @@ import (
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
 	"github.com/dgraph-io/badger"
+	"go.uber.org/zap"
 	"strings"
 )
 
@@ -357,4 +359,30 @@ func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
 		}
 	}
 	return groups
+}
+
+func (r *repoGroups) ReIndex() {
+	err := r.badger.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = ronak.StrToByte(prefixGroups)
+		it := txn.NewIterator(opts)
+		for it.Rewind(); it.Valid(); it.Next() {
+			_ = it.Item().Value(func(val []byte) error {
+				group := new(msg.Group)
+				_ = group.Unmarshal(val)
+				groupKey := r.getGroupKey(group.ID)
+				_ = r.peerSearch.Index(ronak.ByteToStr(groupKey), GroupSearch{
+					Type:   "group",
+					Title:  group.Title,
+					PeerID: group.ID,
+				})
+				return nil
+			})
+		}
+		it.Close()
+		return nil
+	})
+	if err != nil {
+		logs.Warn("Error On ReIndex Users", zap.Error(err))
+	}
 }

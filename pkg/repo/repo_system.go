@@ -20,17 +20,15 @@ func (r *repoSystem) getKey(keyName string) []byte {
 }
 
 // LoadInt
-func (r *repoSystem) LoadInt(keyName string) (int, error) {
-
-	keyValue := uint32(0)
-
+func (r *repoSystem) LoadInt(keyName string) (uint64, error) {
+	keyValue := uint64(0)
 	err := r.badger.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(r.getKey(keyName))
 		if err != nil {
 			return err
 		}
 		return item.Value(func(val []byte) error {
-			keyValue = binary.BigEndian.Uint32(val)
+			keyValue = binary.BigEndian.Uint64(val)
 			return nil
 		})
 	})
@@ -38,7 +36,7 @@ func (r *repoSystem) LoadInt(keyName string) (int, error) {
 		return 0, err
 	}
 
-	return int(keyValue), nil
+	return keyValue, nil
 }
 
 // LoadString
@@ -61,10 +59,9 @@ func (r *repoSystem) LoadString(keyName string) (string, error) {
 }
 
 // SaveInt
-func (r *repoSystem) SaveInt(keyName string, keyValue int32) error {
-
-	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, uint32(keyValue))
+func (r *repoSystem) SaveInt(keyName string, keyValue uint64) error {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, keyValue)
 	return r.badger.Update(func(txn *badger.Txn) error {
 		return txn.SetEntry(
 			badger.NewEntry(r.getKey(keyName), b),
