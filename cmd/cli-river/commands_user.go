@@ -54,14 +54,12 @@ var SetLangCode = &ishell.Cmd{
 
 		code := fnGetLangCode(c)
 
-		switch code {
-		case "en":
-			req.LangCode = msg.LangCode_LangCodeEn
-		case "fa":
-			req.LangCode = msg.LangCode_LangCodeFa
-		default:
-			req.LangCode = msg.LangCode_LangCodeUnknown
+		if code != "en" && code != "fa" {
+			_Log.Info("Invalid lang code. Using en as default", zap.String("LangCode", code))
+			code = "en"
 		}
+		_Log.Debug("input", zap.String("LangCode", code))
+		req.LangCode = code
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
