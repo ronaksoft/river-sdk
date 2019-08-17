@@ -28,7 +28,12 @@ func (r *repoSystem) LoadInt(keyName string) (uint64, error) {
 			return err
 		}
 		return item.Value(func(val []byte) error {
-			keyValue = binary.BigEndian.Uint64(val)
+			switch len(val) {
+			case 4:
+				keyValue = uint64(binary.BigEndian.Uint32(val))
+			case 8:
+				keyValue = binary.BigEndian.Uint64(val)
+			}
 			return nil
 		})
 	})
