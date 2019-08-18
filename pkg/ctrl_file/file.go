@@ -6,6 +6,7 @@ import (
 	networkCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"io/ioutil"
 	"os"
@@ -33,6 +34,8 @@ func New(network *networkCtrl.Controller) *Controller {
 	return ctrl
 }
 
+
+func (ctrl *Controller) UploadProfilePhoto() {}
 
 // Upload file to server
 func (ctrl *Controller) Upload(fileID int64, req *msg.ClientPendingMessage) error {
@@ -64,7 +67,9 @@ func (ctrl *Controller) Upload(fileID int64, req *msg.ClientPendingMessage) erro
 // Download add download request
 func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
 	filesStatus, _ := repo.Files.GetStatus(userMessage.ID)
-	if filesStatus != nil {
+	if filesStatus == nil {
+		filesStatus = new(dto.FilesStatus)
+		filesStatus.
 
 	}
 
