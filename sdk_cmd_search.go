@@ -27,11 +27,14 @@ func (r *River) SearchContacts(requestID int64, searchPhrase string, delegate Re
 	}()
 	logs.Info("SearchContacts", zap.String("Phrase", searchPhrase))
 	res := new(msg.MessageEnvelope)
-	res.Constructor = msg.C_ContactsMany
+	res.Constructor = msg.C_UsersMany
 	res.RequestID = uint64(requestID)
-	contacts := new(msg.ContactsMany)
-	contacts.Users, contacts.Contacts = repo.Users.SearchContacts(searchPhrase)
-	res.Message, _ = contacts.Marshal()
+	users := new(msg.UsersMany)
+
+	contactUsers, _ := repo.Users.SearchContacts(searchPhrase)
+	userIDs := make([]int64, 0, len(contactUsers))
+	users.Users = repo.Users.GetMany(userIDs)
+	res.Message, _ = users.Marshal()
 	buff, _ := res.Marshal()
 	if delegate != nil {
 		delegate.OnComplete(buff)
@@ -79,23 +82,26 @@ func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate
 		}
 	}
 
-	users := repo.Users.GetMany(userIDs.ToArray())
-	groups := repo.Groups.GetMany(groupIDs.ToArray())
 
 	// if peerID == 0 then look for group and contact names too
 	if peerID == 0 {
 		userContacts, _ = repo.Users.SearchContacts(text)
+		for _, userContact := range userContacts {
+			userIDs[userContact.ID] = true
+		}
 		nonContacts = repo.Users.SearchNonContacts(text)
-		// Get users who have dialog with me, but are not my contact
-		userContacts = append(userContacts, nonContacts...)
+		for _, userContact := range nonContacts {
+			userIDs[userContact.ID] = true
+		}
 	}
+
+	users := repo.Users.GetMany(userIDs.ToArray())
+	groups := repo.Groups.GetMany(groupIDs.ToArray())
+
 
 	searchResults.Messages = msgs
 	searchResults.Users = users
 	searchResults.Groups = groups
-	searchResults.MatchedUsers = userContacts
-	searchResults.MatchedGroups = repo.Groups.Search(text)
-
 	outBytes, _ := searchResults.Marshal()
 	if delegate != nil {
 		delegate.OnComplete(outBytes)
