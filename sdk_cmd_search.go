@@ -3,8 +3,10 @@ package riversdk
 import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -23,6 +25,7 @@ func (r *River) SearchContacts(requestID int64, searchPhrase string, delegate Re
 	defer func() {
 		mon.FunctionResponseTime("SearchContacts", time.Now().Sub(startTime))
 	}()
+	logs.Info("SearchContacts", zap.String("Phrase", searchPhrase))
 	res := new(msg.MessageEnvelope)
 	res.Constructor = msg.C_ContactsMany
 	res.RequestID = uint64(requestID)
