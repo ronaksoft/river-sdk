@@ -301,7 +301,6 @@ func (r *repoUsers) UpdatePhoto(userPhoto *msg.UpdateUserPhoto) {
 }
 
 func (r *repoUsers) RemovePhoto(userID int64) {
-
 	defer r.deleteFromCache(userID)
 	user := r.Get(userID)
 	if user == nil {
@@ -312,7 +311,6 @@ func (r *repoUsers) RemovePhoto(userID int64) {
 }
 
 func (r *repoUsers) UpdateProfile(userID int64, firstName, lastName, username, bio string) {
-
 	user := r.Get(userID)
 	if user == nil {
 		return
