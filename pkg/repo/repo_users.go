@@ -301,7 +301,6 @@ func (r *repoUsers) UpdatePhoto(userPhoto *msg.UpdateUserPhoto) {
 }
 
 func (r *repoUsers) RemovePhoto(userID int64) {
-
 	defer r.deleteFromCache(userID)
 	user := r.Get(userID)
 	if user == nil {
@@ -312,7 +311,6 @@ func (r *repoUsers) RemovePhoto(userID int64) {
 }
 
 func (r *repoUsers) UpdateProfile(userID int64, firstName, lastName, username, bio string) {
-
 	user := r.Get(userID)
 	if user == nil {
 		return
@@ -455,22 +453,4 @@ func (r *repoUsers) ReIndex() {
 	if err != nil {
 		logs.Warn("Error On ReIndex Contacts", zap.Error(err))
 	}
-}
-
-func (r *repoUsers) ShowIndex() error {
-	_, kv, err := r.peerSearch.Advanced()
-	if err != nil {
-		return err
-	}
-	rd, err := kv.Reader()
-	if err != nil {
-		return err
-	}
-	it := rd.RangeIterator(nil, nil)
-	for ; it.Valid(); it.Next() {
-		key := it.Key()
-		val := it.Value()
-		logs.Debug("PeerIndex", zap.String("Key", ronak.ByteToStr(key)), zap.String("Value", ronak.ByteToStr(val)))
-	}
-	return nil
 }
