@@ -60,6 +60,7 @@ func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate
 
 	// get users && group IDs
 	userIDs := domain.MInt64B{}
+	matchedUserIDs := domain.MInt64B{}
 	groupIDs := domain.MInt64B{}
 	for _, m := range msgs {
 		if m.PeerType == int32(msg.PeerSelf) || m.PeerType == int32(msg.PeerUser) {
@@ -68,13 +69,11 @@ func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate
 		if m.PeerType == int32(msg.PeerGroup) {
 			groupIDs[m.PeerID] = true
 		}
-
 		if m.SenderID > 0 {
 			userIDs[m.SenderID] = true
 		} else {
 			groupIDs[m.PeerID] = true
 		}
-
 		if m.FwdSenderID > 0 {
 			userIDs[m.FwdSenderID] = true
 		} else {
@@ -87,21 +86,24 @@ func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate
 	if peerID == 0 {
 		userContacts, _ = repo.Users.SearchContacts(text)
 		for _, userContact := range userContacts {
-			userIDs[userContact.ID] = true
+			matchedUserIDs[userContact.ID] = true
 		}
 		nonContacts = repo.Users.SearchNonContacts(text)
 		for _, userContact := range nonContacts {
-			userIDs[userContact.ID] = true
+			matchedUserIDs[userContact.ID] = true
 		}
+		searchResults.MatchedGroups = repo.Groups.Search(text)
 	}
 
 	users := repo.Users.GetMany(userIDs.ToArray())
 	groups := repo.Groups.GetMany(groupIDs.ToArray())
-
+	matchedUsers := repo.Users.GetMany(matchedUserIDs.ToArray())
 
 	searchResults.Messages = msgs
 	searchResults.Users = users
 	searchResults.Groups = groups
+	searchResults.MatchedUsers = matchedUsers
+
 	outBytes, _ := searchResults.Marshal()
 	if delegate != nil {
 		delegate.OnComplete(outBytes)
