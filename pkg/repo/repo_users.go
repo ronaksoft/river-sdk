@@ -456,3 +456,21 @@ func (r *repoUsers) ReIndex() {
 		logs.Warn("Error On ReIndex Contacts", zap.Error(err))
 	}
 }
+
+func (r *repoUsers) ShowIndex() error {
+	_, kv, err := r.peerSearch.Advanced()
+	if err != nil {
+		return err
+	}
+	rd, err := kv.Reader()
+	if err != nil {
+		return err
+	}
+	it := rd.RangeIterator(nil, nil)
+	for ; it.Valid(); it.Next() {
+		key := it.Key()
+		val := it.Value()
+		logs.Debug("PeerIndex", zap.String("Key", ronak.ByteToStr(key)), zap.String("Value", ronak.ByteToStr(val)))
+	}
+	return nil
+}

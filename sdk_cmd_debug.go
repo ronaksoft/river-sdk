@@ -81,3 +81,10 @@ func (r *River) GetHeapProfile() []byte {
 func (r *River) TurnOnLiveLogger(url string) {
 	logs.SetRemoteLog(url)
 }
+
+func (r *River) GetPeerSearchIndex() {
+	err := repo.Users.ShowIndex()
+	if err != nil {
+		logs.Warn("Error On GetPeerSearchIndex", zap.Error(err))
+	}
+}
