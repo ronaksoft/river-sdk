@@ -69,7 +69,7 @@ func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
 	filesStatus, _ := repo.Files.GetStatus(userMessage.ID)
 	if filesStatus == nil {
 		filesStatus = new(dto.FilesStatus)
-		filesStatus.
+		filesStatus
 
 	}
 
