@@ -8,7 +8,6 @@ import (
 )
 
 var (
-	ErrHandlerNotSet         = errors.New("handlers are not set")
 	ErrRequestTimeout        = errors.New("request timeout")
 	ErrInvalidConstructor    = errors.New("constructor did not expected")
 	ErrSecretNonceMismatch   = errors.New("secret hash does not match")
@@ -18,7 +17,7 @@ var (
 	ErrDoesNotExists         = errors.New("does not exists")
 	ErrQueuePathIsNotSet     = errors.New("queue path is not set")
 	ErrInvalidUserMessageKey = errors.New("invalid user message key")
-	ErrNilDialog             = errors.New("nil dialog")
+	ErrMaxFileSize           = errors.New("max file size limit")
 )
 
 // ParseServerError ...

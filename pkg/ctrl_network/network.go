@@ -34,8 +34,6 @@ type Config struct {
 
 // Controller websocket network controller
 type Controller struct {
-	wsWriteLock sync.Mutex
-
 	// Internal Controller Channels
 	connectChannel chan bool
 	stopChannel    chan bool
@@ -46,6 +44,7 @@ type Controller struct {
 	messageSeq int64
 
 	// Websocket Settings
+	wsWriteLock             sync.Mutex
 	wsDialer                *websocket.Dialer
 	websocketEndpoint       string
 	wsKeepConnection        bool
@@ -77,7 +76,6 @@ type Controller struct {
 
 	// internal parameters to detect network switch
 	localIP       net.IP
-	interfaceName string
 }
 
 // New
@@ -354,7 +352,7 @@ func (ctrl *Controller) messageHandler(message *msg.MessageEnvelope) {
 
 // Start
 // Starts the controller background controller and watcher routines
-func (ctrl *Controller) Start()  {
+func (ctrl *Controller) Start() {
 	// Run the keepAlive and watchDog in background
 	go ctrl.watchDog()
 	return
