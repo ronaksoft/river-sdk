@@ -688,7 +688,8 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 
 func (r *River) sendChunkedImportContactRequest(replace bool, diffContacts []*msg.PhoneContact, out *msg.MessageEnvelope, successCB domain.MessageHandler) {
 	result := new(msg.ContactsImported)
-	result.Users = make([]*msg.ContactUser, 0)
+	result.Users = make([]*msg.User, 0)
+	result.ContactUsers = make([]*msg.ContactUser, 0)
 
 	mx := sync.Mutex{}
 	wg := sync.WaitGroup{}
@@ -710,6 +711,7 @@ func (r *River) sendChunkedImportContactRequest(replace bool, diffContacts []*ms
 				return
 			}
 			result.Users = append(result.Users, x.Users...)
+			result.ContactUsers = append(result.ContactUsers, x.ContactUsers...)
 		} else {
 			logs.Error("sendChunkedImportContactRequest() -> cbSuccess() received unexpected response", zap.String("Constructor", msg.ConstructorNames[env.Constructor]))
 		}
