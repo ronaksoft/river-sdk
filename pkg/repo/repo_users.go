@@ -376,6 +376,7 @@ func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
 		user := r.getUserByKey(ronak.StrToByte(hit.ID))
 		if user != nil {
 			contactUsers = append(contactUsers, &msg.ContactUser{
+				ID:        user.ID,
 				FirstName: user.FirstName,
 				LastName:  user.LastName,
 				Username:  user.Username,
