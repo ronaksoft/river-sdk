@@ -618,7 +618,7 @@ func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 	}
 
 	res := new(msg.ContactsMany)
-	res.Users, res.Contacts = repo.Users.GetContacts()
+	res.ContactUsers, res.Contacts = repo.Users.GetContacts()
 
 	// if didn't find anything send request to server
 	if len(res.Users) == 0 || len(res.Contacts) == 0 {
@@ -653,7 +653,7 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	}
 
 	res := new(msg.ContactsMany)
-	res.Users, res.Contacts = repo.Users.GetContacts()
+	res.ContactUsers, res.Contacts = repo.Users.GetContacts()
 
 	oldHash, err := repo.System.LoadInt(domain.SkContactsImportHash)
 	if err != nil {
