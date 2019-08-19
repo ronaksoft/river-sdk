@@ -29,6 +29,12 @@ type downloadJob struct {
 	Limit      int32
 }
 
+type downloadStatus struct {
+	TotalParts 	int32
+	FilePath 	string
+
+}
+
 type downloader struct {
 	jobChan     chan *downloadJob
 	stopChan    chan struct{}

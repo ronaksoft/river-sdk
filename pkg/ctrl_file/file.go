@@ -9,7 +9,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"io/ioutil"
-	"os"
 	"time"
 )
 
@@ -22,9 +21,9 @@ import (
    Copyright Ronak Software Group 2018
 */
 
-
 type Controller struct {
-	network *networkCtrl.Controller
+	network   *networkCtrl.Controller
+	downloads map[int64]*downloadStatus
 }
 
 func New(network *networkCtrl.Controller) *Controller {
@@ -34,42 +33,11 @@ func New(network *networkCtrl.Controller) *Controller {
 	return ctrl
 }
 
-
-func (ctrl *Controller) UploadProfilePhoto() {}
-
-// Upload file to server
-func (ctrl *Controller) Upload(fileID int64, req *msg.ClientPendingMessage) error {
-	x := new(msg.ClientSendMessageMedia)
-	err := x.Unmarshal(req.Media)
-	if err != nil {
-		return err
-	}
-	file, err := os.Open(x.FilePath)
-	if err != nil {
-		return err
-	}
-	fileInfo, err := file.Stat()
-	if err != nil {
-		return err
-	}
-	if x.FileName == "" {
-		x.FileName = fileInfo.Name()
-	}
-	fileSize := fileInfo.Size() // size in Byte
-	if fileSize > domain.FileMaxAllowedSize {
-		return domain.ErrMaxFileSize
-	}
-
-	return nil
-}
-
 // Download add download request
 func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
 	filesStatus, _ := repo.Files.GetStatus(userMessage.ID)
 	if filesStatus == nil {
 		filesStatus = new(dto.FilesStatus)
-		filesStatus
-
 	}
 
 	switch userMessage.MediaType {
@@ -81,9 +49,36 @@ func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
 	default:
 		return
 	}
-
-
 }
+
+// func (ctrl *Controller) UploadProfilePhoto() {}
+//
+// // Upload file to server
+// func (ctrl *Controller) Upload(fileID int64, req *msg.ClientPendingMessage) error {
+// 	x := new(msg.ClientSendMessageMedia)
+// 	err := x.Unmarshal(req.Media)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	file, err := os.Open(x.FilePath)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	fileInfo, err := file.Stat()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if x.FileName == "" {
+// 		x.FileName = fileInfo.Name()
+// 	}
+// 	fileSize := fileInfo.Size() // size in Byte
+// 	if fileSize > domain.FileMaxAllowedSize {
+// 		return domain.ErrMaxFileSize
+// 	}
+//
+//
+// 	return nil
+// }
 
 // DownloadAccountPhoto download account photo from server its sync
 func (ctrl *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) (string, error) {
@@ -278,4 +273,3 @@ func (ctrl *Controller) DownloadThumbnail(fileID int64, accessHash uint64, clust
 	}
 	return filePath, nil
 }
-

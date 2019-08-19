@@ -430,7 +430,6 @@ func (r *River) Start() error {
 
 	// Update Authorizations
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-	r.fileCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 	r.syncCtrl.SetUserID(r.ConnInfo.UserID)
 	r.loadDeviceToken()
 
