@@ -54,9 +54,10 @@ func (ctrl *Controller) contactsImported(e *msg.MessageEnvelope) {
 		return
 	}
 	logs.Info("SyncController::contactsImported")
-	for _, u := range x.Users {
+	for _, u := range x.ContactUsers {
 		repo.Users.SaveContact(u)
 	}
+	repo.Users.SaveMany(x.Users)
 }
 
 // contactsMany
