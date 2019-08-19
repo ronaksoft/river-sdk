@@ -164,9 +164,7 @@ func (r *repoGroups) SaveMany(groups []*msg.Group) {
 }
 
 func (r *repoGroups) SaveParticipant(groupID int64, participant *msg.GroupParticipant) {
-
 	defer r.deleteFromCache(groupID)
-
 	if participant == nil {
 		return
 	}
@@ -204,7 +202,6 @@ func (r *repoGroups) GetParticipant(groupID int64, memberID int64) *msg.GroupPar
 }
 
 func (r *repoGroups) GetParticipants(groupID int64) ([]*msg.GroupParticipant, error) {
-
 	participants := make([]*msg.GroupParticipant, 0, 100)
 	_ = r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions

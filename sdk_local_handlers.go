@@ -946,13 +946,13 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	res.Group = group
 
 	// Participants
-	participents, err := repo.Groups.GetParticipants(req.GroupID)
+	participants, err := repo.Groups.GetParticipants(req.GroupID)
 	if err != nil {
 		logs.Error("River::groupsGetFull()-> GetParticipants() Sending Request To Server !!!", zap.Error(err))
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
 	}
-	res.Participants = participents
+	res.Participants = participants
 
 	// NotifySettings
 	dlg := repo.Dialogs.Get(req.GroupID, int32(msg.PeerGroup))
@@ -966,14 +966,14 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 
 	// Users
 	userIDs := domain.MInt64B{}
-	for _, v := range participents {
+	for _, v := range participants {
 		userIDs[v.UserID] = true
 	}
 	users := repo.Users.GetMany(userIDs.ToArray())
-	if users == nil || len(participents) != len(users) || len(users) <= 0 {
+	if users == nil || len(participants) != len(users) || len(users) <= 0 {
 		logs.Warn("River::groupsGetFull()-> GetMany() Sending Request To Server !!!",
 			zap.Bool("Is user nil ? ", users == nil),
-			zap.Int("Participanr Count", len(participents)),
+			zap.Int("Participants Count", len(participants)),
 			zap.Int("Users Count", len(users)),
 		)
 

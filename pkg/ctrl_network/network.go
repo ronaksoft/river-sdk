@@ -61,8 +61,6 @@ type Controller struct {
 
 	// Internals
 	wsQuality  domain.NetworkStatus
-	pingDelays [3]time.Duration
-	pingIdx    int
 
 	// flusher
 	updateFlusher  *ronak.Flusher
@@ -77,7 +75,6 @@ type Controller struct {
 
 	// internal parameters to detect network switch
 	localIP       net.IP
-	interfaceName string
 }
 
 // New
@@ -297,7 +294,13 @@ func (ctrl *Controller) updateNetworkStatus(newStatus domain.NetworkStatus) {
 	}
 	ctrl.wsQuality = newStatus
 	if ctrl.wsOnNetworkStatusChange != nil {
-		ctrl.wsOnNetworkStatusChange(newStatus)
+		go func(status domain.NetworkStatus) {
+			time.Sleep(3 * time.Second)
+			if ctrl.GetQuality() ==  newStatus {
+				ctrl.wsOnNetworkStatusChange(newStatus)
+			}
+		}(newStatus)
+
 	}
 }
 
