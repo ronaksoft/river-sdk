@@ -33,6 +33,9 @@ func (r *River) SearchContacts(requestID int64, searchPhrase string, delegate Re
 
 	contactUsers, _ := repo.Users.SearchContacts(searchPhrase)
 	userIDs := make([]int64, 0, len(contactUsers))
+	for _, contactUser := range contactUsers {
+		userIDs = append(userIDs, contactUser.ID)
+	}
 	users.Users = repo.Users.GetMany(userIDs)
 	res.Message, _ = users.Marshal()
 	buff, _ := res.Marshal()
