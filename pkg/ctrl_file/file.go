@@ -44,7 +44,6 @@ func (ctrl *Controller) Upload(fileID int64, req *msg.ClientPendingMessage) erro
 	if err != nil {
 		return err
 	}
-
 	file, err := os.Open(x.FilePath)
 	if err != nil {
 		return err
