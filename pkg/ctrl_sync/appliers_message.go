@@ -73,10 +73,11 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 	)
 
 	userIDs := domain.MInt64B{}
-	for _, u := range x.Users {
+	for _, u := range x.ContactUsers {
 		userIDs[u.ID] = true
 		repo.Users.SaveContact(u)
 	}
+	repo.Users.SaveMany(x.Users)
 	// server
 	if len(userIDs) > 0 {
 		// calculate contactsGetHash and save
