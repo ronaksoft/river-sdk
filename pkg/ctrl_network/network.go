@@ -24,12 +24,6 @@ import (
 type Config struct {
 	WebsocketEndpoint string
 	HttpEndpoint      string
-	// PingTime is the interval between each ping sent to server
-	PingTime time.Duration
-	// PongTimeout is the duration that will wait for the ping response (PONG) is received from
-	// server. If we did not receive the pong message in PongTimeout then we assume connection
-	// is not active, then we close it and try to re-connect.
-	PongTimeout time.Duration
 }
 
 // Controller websocket network controller
@@ -49,8 +43,6 @@ type Controller struct {
 	wsDialer                *websocket.Dialer
 	websocketEndpoint       string
 	wsKeepConnection        bool
-	wsPingTime              time.Duration
-	wsPongTimeout           time.Duration
 	wsConn                  *websocket.Conn
 	wsOnError               domain.ErrorHandler
 	wsOnConnect             domain.OnConnectCallback
@@ -86,17 +78,6 @@ func New(config Config) *Controller {
 	} else {
 		ctrl.websocketEndpoint = config.WebsocketEndpoint
 	}
-	if config.PingTime <= 0 {
-		ctrl.wsPingTime = domain.WebsocketPingTime
-	} else {
-		ctrl.wsPingTime = config.PingTime
-	}
-	if config.PongTimeout <= 0 {
-		ctrl.wsPongTimeout = domain.WebsocketPongTime
-	} else {
-		ctrl.wsPongTimeout = config.PongTimeout
-	}
-
 	ctrl.wsKeepConnection = true
 	ctrl.wsDialer = &websocket.Dialer{
 		Proxy:            http.ProxyFromEnvironment,

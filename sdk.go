@@ -154,20 +154,21 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 	// check requestCallbacks and call callbacks
 	for idx := range msgs {
 		cb := domain.GetRequestCallback(msgs[idx].RequestID)
-		if cb != nil {
-			mon.ServerResponseTime(msgs[idx].Constructor, time.Now().Sub(cb.RequestTime))
-			select {
-			case cb.ResponseChannel <- msgs[idx]:
-				logs.Debug("River::onReceivedMessage() passed to callback listener", zap.Uint64("RequestID", cb.RequestID))
-			default:
-				logs.Error("River::onReceivedMessage() there is no callback listener", zap.Uint64("RequestID", cb.RequestID))
-			}
-			domain.RemoveRequestCallback(msgs[idx].RequestID)
-		} else {
+		if cb == nil {
 			logs.Warn("River::onReceivedMessage() callback does not exist",
 				zap.String("Constructor", msg.ConstructorNames[msgs[idx].Constructor]),
 			)
+			continue
 		}
+
+		mon.ServerResponseTime(msgs[idx].Constructor, time.Now().Sub(cb.RequestTime))
+		select {
+		case cb.ResponseChannel <- msgs[idx]:
+			logs.Debug("River::onReceivedMessage() passed to callback listener", zap.Uint64("RequestID", cb.RequestID))
+		default:
+			logs.Error("River::onReceivedMessage() there is no callback listener", zap.Uint64("RequestID", cb.RequestID))
+		}
+		domain.RemoveRequestCallback(msgs[idx].RequestID)
 	}
 }
 
@@ -449,7 +450,7 @@ func (r *River) Start() error {
 	go r.fileCtrl.LoadQueueFromDB()
 
 	lastReIndexTime, err := repo.System.LoadInt(domain.SkReIndexTime)
-	if err != nil || time.Now().Unix() - int64(lastReIndexTime) > domain.Day {
+	if err != nil || time.Now().Unix()-int64(lastReIndexTime) > domain.Day {
 		go func() {
 			logs.Info("ReIndexing Users & Groups")
 			repo.Users.ReIndex()

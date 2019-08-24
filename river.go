@@ -23,13 +23,6 @@ import (
 type RiverConfig struct {
 	ServerEndpoint     string
 	FileServerEndpoint string
-	// PingTimeSec sets how often a ping message will be sent to the server. Ping messages
-	// are used to calculate the quality of the network.
-	PingTimeSec int32
-	// PongTimeoutSec is the amount of time in seconds which SDK will wait after sending
-	// a ping to server to get the pong back. If it does not receive the pong message in
-	// this period of time, it disconnects and reconnect.
-	PongTimeoutSec int32
 	// QueuePath is the path of a folder that pending requests will be saved there until sending
 	// to the server.
 	QueuePath string
@@ -146,8 +139,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		networkCtrl.Config{
 			WebsocketEndpoint: conf.ServerEndpoint,
 			HttpEndpoint:      conf.FileServerEndpoint,
-			PingTime:          time.Duration(conf.PingTimeSec) * time.Second,
-			PongTimeout:       time.Duration(conf.PongTimeoutSec) * time.Second,
 		},
 	)
 	r.networkCtrl.SetNetworkStatusChangedCallback(func(newQuality domain.NetworkStatus) {

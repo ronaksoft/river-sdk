@@ -164,8 +164,6 @@ func (ctrl *Controller) sync() {
 			return
 		}
 	} else if serverUpdateID > ctrl.updateID+1 {
-		// if it is passed over 60 seconds from the last update received it fetches the update
-		// difference from the server
 		logs.Info("SyncController:: Sequential sync")
 		getUpdateDifference(ctrl, serverUpdateID+1) // +1 cuz in here we dont have serverUpdateID itself too
 	}
@@ -277,7 +275,6 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 						)
 						continue
 					}
-					// create MessageHole
 					messageHole.InsertFill(dialog.PeerID, dialog.PeerType, dialog.TopMessageID, dialog.TopMessageID)
 				}
 

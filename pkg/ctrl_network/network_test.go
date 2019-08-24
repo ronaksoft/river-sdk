@@ -85,8 +85,6 @@ func TestNewController(t *testing.T) {
 	logs.SetLogLevel(0)
 	ctrl := networkCtrl.New(networkCtrl.Config{
 		WebsocketEndpoint: "ws://new.river.im",
-		PingTime:          30 * time.Second,
-		PongTimeout:       30 * time.Second,
 	})
 	ctrl.SetMessageHandler(dummyMessageHandler)
 	ctrl.SetErrorHandler(dummyErrorHandler)
