@@ -110,7 +110,6 @@ func (ctrl *Controller) watchDog() {
 		}
 	}
 }
-
 func (ctrl *Controller) Sync() {
 	ctrl.sync()
 }
@@ -483,12 +482,13 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 		zap.Int64("MinID", updateContainer.MinUpdateID),
 		zap.Int("Count", len(updateContainer.Updates)),
 	)
-	ctrl.lastUpdateReceived = time.Now()
 
 	// Check if update has been already applied
 	if updateContainer.MinUpdateID != 0 && ctrl.updateID >= updateContainer.MinUpdateID {
 		return
 	}
+
+	ctrl.lastUpdateReceived = time.Now()
 
 	// Check if we are out of sync with server, if yes, then call the sync() function
 	// We call it in blocking mode,
