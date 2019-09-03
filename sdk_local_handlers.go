@@ -1120,7 +1120,7 @@ func (r *River) messagesClearDraft(in, out *msg.MessageEnvelope, timeoutCB domai
 	dialog := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
 
 	if dialog != nil {
-		dialog.Draft = new
+		dialog.Draft = nil
 		repo.Dialogs.Save(dialog)
 	}
 
