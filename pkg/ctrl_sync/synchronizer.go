@@ -73,6 +73,8 @@ func NewSyncController(config Config) *Controller {
 		msg.C_UpdateTooLong:               ctrl.updateTooLong,
 		msg.C_UpdateDialogPinned:          ctrl.updateDialogPinned,
 		msg.C_UpdateAccountPrivacy:        ctrl.updateAccountPrivacy,
+		msg.C_UpdateDraftMessage:          ctrl.updateDraftMessage,
+		msg.C_UpdateDraftMessageCleared:   ctrl.updateDraftMessageCleared,
 	}
 
 	ctrl.messageAppliers = map[int64]domain.MessageApplier{
