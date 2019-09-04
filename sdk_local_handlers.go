@@ -3,11 +3,11 @@ package riversdk
 import (
 	"encoding/json"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"sort"
 	"strings"
 	"sync"
-
-	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
+	"time"
 
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
@@ -1076,6 +1076,52 @@ func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 			}
 		}) // successCB(out)
 		return
+	}
+
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+}
+
+func (r *River) messagesSaveDraft(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.MessagesSaveDraft)
+	if err := req.Unmarshal(in.Message); err != nil {
+		logs.Error("River::messagesSaveDraft()-> Unmarshal()", zap.Error(err))
+		return
+	}
+
+	dialog := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
+
+	if dialog != nil {
+		draftMessage := msg.DraftMessage{
+			Body:     req.Body,
+			Entities: req.Entities,
+			PeerID:   req.Peer.ID,
+			PeerType: int32(req.Peer.Type),
+			Date:     time.Now().Unix(),
+			ReplyTo:  req.ReplyTo,
+		}
+
+		dialog.Draft = &draftMessage
+
+		repo.Dialogs.Save(dialog)
+	}
+
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+}
+
+func (r *River) messagesClearDraft(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.MessagesClearDraft)
+	if err := req.Unmarshal(in.Message); err != nil {
+		logs.Error("River::messagesClearDraft()-> Unmarshal()", zap.Error(err))
+		return
+	}
+
+	dialog := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
+
+	if dialog != nil {
+		dialog.Draft = nil
+		repo.Dialogs.Save(dialog)
 	}
 
 	// send the request to server

@@ -415,6 +415,8 @@ func (r *River) registerCommandHandlers() {
 		msg.C_GroupsRemovePhoto:        r.groupRemovePhoto,
 		msg.C_MessagesSendMedia:        r.messagesSendMedia,
 		msg.C_ClientSendMessageMedia:   r.clientSendMessageMedia,
+		msg.C_MessagesSaveDraft:        r.messagesSaveDraft,
+		msg.C_MessagesClearDraft:       r.messagesClearDraft,
 	}
 
 }
