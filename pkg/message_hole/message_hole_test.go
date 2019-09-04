@@ -15,7 +15,6 @@ func TestHole(t *testing.T) {
 	// peerID := int64(239992)
 	peerType := int32(1)
 
-
 	// Test 1
 	logs.Info("Test 1")
 	peerID = ronak.RandomInt64(0)
@@ -47,7 +46,6 @@ func TestHole(t *testing.T) {
 	InsertFill(peerID, peerType, 143, 143)
 	logs.Info(PrintHole(peerID, peerType))
 
-
 	// Test 4
 	logs.Info("Test 4")
 	peerID = ronak.RandomInt64(0)
@@ -68,6 +66,5 @@ func TestHole(t *testing.T) {
 	InsertFill(peerID, peerType, 600, 700)
 	InsertFill(peerID, peerType, 399, 699)
 	logs.Info(PrintHole(peerID, peerType))
-
 
 }

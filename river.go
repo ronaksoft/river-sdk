@@ -115,7 +115,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	conf.DbPath = strings.TrimRight(conf.DbPath, "/ ")
 	r.dbPath = fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID)
 
-
 	r.registerCommandHandlers()
 	r.delegates = make(map[int64]RequestDelegate)
 	r.mainDelegate = conf.MainDelegate
@@ -150,7 +149,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.networkCtrl.SetMessageHandler(r.onReceivedMessage)
 	r.networkCtrl.SetUpdateHandler(r.onReceivedUpdate)
 	r.networkCtrl.SetOnConnectCallback(r.onNetworkConnect)
-
 
 	// Initialize FileController
 	fileCtrl.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory, conf.DocumentCacheDirectory)

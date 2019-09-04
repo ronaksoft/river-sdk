@@ -52,7 +52,7 @@ type Controller struct {
 	httpEndpoint string
 
 	// Internals
-	wsQuality  domain.NetworkStatus
+	wsQuality domain.NetworkStatus
 
 	// flusher
 	updateFlusher  *ronak.Flusher
@@ -66,7 +66,7 @@ type Controller struct {
 	unauthorizedRequests map[int64]bool
 
 	// internal parameters to detect network switch
-	localIP       net.IP
+	localIP net.IP
 }
 
 // New
@@ -277,7 +277,7 @@ func (ctrl *Controller) updateNetworkStatus(newStatus domain.NetworkStatus) {
 	if ctrl.wsOnNetworkStatusChange != nil {
 		go func(status domain.NetworkStatus) {
 			time.Sleep(3 * time.Second)
-			if ctrl.GetQuality() ==  newStatus {
+			if ctrl.GetQuality() == newStatus {
 				ctrl.wsOnNetworkStatusChange(newStatus)
 			}
 		}(newStatus)
@@ -338,7 +338,7 @@ func (ctrl *Controller) messageHandler(message *msg.MessageEnvelope) {
 
 // Start
 // Starts the controller background controller and watcher routines
-func (ctrl *Controller) Start()  {
+func (ctrl *Controller) Start() {
 	// Run the keepAlive and watchDog in background
 	go ctrl.watchDog()
 	return

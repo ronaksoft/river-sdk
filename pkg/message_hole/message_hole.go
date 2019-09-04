@@ -83,17 +83,14 @@ func (m *HoleManager) InsertBar(b Bar) {
 		m.bars = append(m.bars, Bar{Min: maxIndex + 1, Max: b.Max, Type: Hole})
 	}
 
-
-
 	currentBars := m.bars
 	m.bars = make([]Bar, 0, len(currentBars)+1)
-
 
 	// Initially the biggest index is b.Max. We will update the maxIndex during the range over bars if
 	// necessary. In the first loop (InsertLoop) we go until we can insert the new bar into the list
 	idx := 0
 	m.maxIndex = b.Max
-	InsertLoop:
+InsertLoop:
 	for idx := 0; idx < len(currentBars); idx++ {
 		switch {
 		case b.Min > currentBars[idx].Max:

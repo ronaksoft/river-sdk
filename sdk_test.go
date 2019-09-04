@@ -23,8 +23,6 @@ var (
 	_River *River
 )
 
-
-
 func TestSDK(t *testing.T) {
 	Convey("Check Salt", t, func() {
 		repo.InitRepo(fmt.Sprintf("%s/%s.db", "./_data", "test"), false)
@@ -94,7 +92,7 @@ func TestSDK(t *testing.T) {
 		So(err, ShouldBeNil)
 		t.Log("WorkGroupName:", si.WorkGroupName)
 	})
-	Convey("Check Reconnect", t , func() {
+	Convey("Check Reconnect", t, func() {
 		logs.SetLogLevel(0)
 		fmt.Println("Creating New River SDK Instance")
 		conInfo := new(RiverConnection)
@@ -189,7 +187,6 @@ func init() {
 	})
 	_River = r
 }
-
 
 type ConnInfoDelegates struct{}
 

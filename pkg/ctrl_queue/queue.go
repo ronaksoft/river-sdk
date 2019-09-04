@@ -322,7 +322,7 @@ func (ctrl *Controller) CancelRequest(reqID int64) {
 }
 
 // DropQueue remove queue from storage
-func (ctrl *Controller) DropQueue()  {
+func (ctrl *Controller) DropQueue() {
 	ctrl.waitingList.Drop()
 }
 

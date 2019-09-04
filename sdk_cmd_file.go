@@ -223,7 +223,7 @@ func (r *River) ResumeUpload(msgID int64) bool {
 
 	switch status {
 	case domain.RequestStatusNone:
-		err := r.fileCtrl.Upload(m.RequestID,m)
+		err := r.fileCtrl.Upload(m.RequestID, m)
 		if err != nil {
 			logs.Error("SDK::ResumeUpload()", zap.Error(err))
 			return false
@@ -231,7 +231,7 @@ func (r *River) ResumeUpload(msgID int64) bool {
 	case domain.RequestStatusCompleted:
 		return false
 	case domain.RequestStatusPaused, domain.RequestStatusCanceled, domain.RequestStatusError:
-		err := r.fileCtrl.Upload(m.RequestID,m)
+		err := r.fileCtrl.Upload(m.RequestID, m)
 		if err != nil {
 			logs.Error("SDK::ResumeUpload()", zap.Error(err))
 			return false

@@ -127,7 +127,6 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 		r.mainDelegate.OnSessionClosed(reason)
 	}
 
-
 	// Stop all the controllers and repo
 	r.stop()
 
@@ -162,7 +161,6 @@ func (r *River) stop() {
 	// Close database connection
 	repo.Close()
 }
-
 
 // UpdateContactInfo update contact name
 func (r *River) UpdateContactInfo(userID int64, firstName, lastName string) error {
