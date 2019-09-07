@@ -345,7 +345,6 @@ func (r *River) CreateAuthKey() (err error) {
 					return
 				}
 				r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-				r.fileCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 			case msg.C_Error:
 				err = domain.ParseServerError(res.Message)
 				return
@@ -362,8 +361,6 @@ func (r *River) CreateAuthKey() (err error) {
 	// double set AuthID
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 
-	r.fileCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-
 	r.ConnInfo.Save()
 
 	return
@@ -371,7 +368,6 @@ func (r *River) CreateAuthKey() (err error) {
 
 func (r *River) ResetAuthKey() {
 	r.networkCtrl.SetAuthorization(0, nil)
-	r.fileCtrl.SetAuthorization(0, nil)
 	r.ConnInfo.AuthID = 0
 	r.ConnInfo.AuthKey = [256]byte{}
 	r.ConnInfo.Save()
@@ -515,7 +511,6 @@ func (r *River) stop() {
 	r.syncCtrl.Stop()
 	r.queueCtrl.Stop()
 	r.networkCtrl.Stop()
-	r.fileCtrl.Stop()
 
 	// Close UI Executor
 	uiexec.Ctx().Stop()

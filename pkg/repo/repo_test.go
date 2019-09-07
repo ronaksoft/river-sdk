@@ -4,7 +4,6 @@ import (
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"testing"
 	"time"
@@ -45,36 +44,6 @@ func TestRepoMessagesExtra(t *testing.T) {
 	repo.MessagesExtra.SaveScrollID(11, 1, 101)
 	x := repo.MessagesExtra.GetScrollID(11, 1)
 	fmt.Println(x)
-}
-
-func TestRepoFiles(t *testing.T) {
-	fs := &dto.FilesStatus{
-		MessageID:     1,
-		FileID:        10,
-		AccessHash:    11,
-		ClusterID:     2,
-		RequestStatus: 1,
-	}
-	repo.Files.SaveStatus(fs)
-
-	fs2, err := repo.Files.GetStatus(1)
-	if err != nil {
-		t.Error(err)
-	}
-	fmt.Println(fs2.RequestStatus)
-
-	fs.RequestStatus = 2
-	repo.Files.SaveStatus(fs)
-
-	fs2, err = repo.Files.GetStatus(1)
-	if err != nil {
-		t.Error(err)
-	}
-	fmt.Println(fs2.RequestStatus)
-
-	s := repo.Files.GetAllStatuses()
-	fmt.Println(s)
-
 }
 
 func TestPending(t *testing.T) {

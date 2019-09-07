@@ -3,7 +3,6 @@ package fileCtrl
 import (
 	"encoding/json"
 	"fmt"
-	"git.ronaksoftware.com/ronak/riversdk"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	networkCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
@@ -30,13 +29,11 @@ type Config struct {
 	Network              *networkCtrl.Controller
 	MaxInflightDownloads int32
 	MaxInflightUploads   int32
-	Delegates            riversdk.FileDelegate
 }
 type Controller struct {
 	network           *networkCtrl.Controller
 	rateLimitDownload chan struct{}
 	rateLimitUpload   chan struct{}
-	delegates         riversdk.FileDelegate
 	mtxDownloads      sync.Mutex
 	downloadRequests  map[int64]DownloadRequest
 	saveSnapshot      *ronak.Flusher
@@ -47,13 +44,12 @@ func New(config Config) *Controller {
 	ctrl.network = config.Network
 	ctrl.rateLimitDownload = make(chan struct{}, config.MaxInflightDownloads)
 	ctrl.rateLimitUpload = make(chan struct{}, config.MaxInflightUploads)
-	ctrl.delegates = config.Delegates
 
 	dBytes, err := repo.System.LoadBytes("Downloads")
 	if err != nil {
 		ctrl.downloadRequests = make(map[int64]DownloadRequest)
 	} else {
-		_ = json.Unmarshal(dBytes, ctrl.downloadRequests)
+		_ = json.Unmarshal(dBytes, &ctrl.downloadRequests)
 		for _, req := range ctrl.downloadRequests {
 			_ = ctrl.startDownload(req)
 		}

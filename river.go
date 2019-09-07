@@ -170,7 +170,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		Network:              r.networkCtrl,
 		MaxInflightDownloads: 5,
 		MaxInflightUploads:   5,
-		Delegates:            r.fileDelegate,
 	})
 
 	// Initialize queueController

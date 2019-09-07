@@ -45,13 +45,13 @@ type DownloadRequest struct {
 }
 
 type downloadStatus struct {
-	mtx       sync.Mutex      `json:"-"`
-	ctx       context.Context `json:"-"`
-	rateLimit chan struct{}   `json:"-"`
-	parts     chan int32      `json:"-"`
-	file      *os.File        `json:"-"`
+	mtx       sync.Mutex
+	ctx       context.Context
+	rateLimit chan struct{}
+	parts     chan int32
+	file      *os.File
 	ctrl      *Controller
-	Request   DownloadRequest `json:"request"`
+	Request   DownloadRequest
 }
 
 func (ds *downloadStatus) isDownloaded(partIndex int32) bool {

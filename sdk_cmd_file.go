@@ -10,7 +10,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -161,35 +160,35 @@ func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
 	defer func() {
 		mon.FunctionResponseTime("AccountUploadPhoto", time.Now().Sub(startTime))
 	}()
-	// TOF
-	msgID = domain.SequentialUniqueID()
-	fileID := domain.SequentialUniqueID()
-
-	// support IOS file path
-	if strings.HasPrefix(filePath, "file://") {
-		filePath = filePath[7:]
-	}
-
-	file, err := os.Open(filePath)
-	if err != nil {
-		logs.Warn("SDK::AccountUploadPhoto()", zap.Error(err))
-		return 0
-	}
-	fileInfo, err := file.Stat()
-	if err != nil {
-		logs.Warn("SDK::AccountUploadPhoto()", zap.Error(err))
-		return 0
-	}
-
-	totalSize := fileInfo.Size() // size in Byte
-	// if totalSize > domain.FileMaxPhotoSize {
-	// 	log.Error("SDK::AccountUploadPhoto()", zap.Error(errors.New("max allowed file size is 1 MB")))
+	// // TOF
+	// msgID = domain.SequentialUniqueID()
+	// fileID := domain.SequentialUniqueID()
+	//
+	// // support IOS file path
+	// if strings.HasPrefix(filePath, "file://") {
+	// 	filePath = filePath[7:]
+	// }
+	//
+	// file, err := os.Open(filePath)
+	// if err != nil {
+	// 	logs.Warn("SDK::AccountUploadPhoto()", zap.Error(err))
 	// 	return 0
 	// }
-
-	theFile := fileCtrl.NewFile(msgID, fileID, 0, totalSize, filePath, domain.FileStateUploadAccountPhoto, 0, 0, 0, r.onFileProgressChanged)
-
-	r.fileCtrl.AddToQueue(theFile)
+	// fileInfo, err := file.Stat()
+	// if err != nil {
+	// 	logs.Warn("SDK::AccountUploadPhoto()", zap.Error(err))
+	// 	return 0
+	// }
+	//
+	// totalSize := fileInfo.Size() // size in Byte
+	// // if totalSize > domain.FileMaxPhotoSize {
+	// // 	log.Error("SDK::AccountUploadPhoto()", zap.Error(errors.New("max allowed file size is 1 MB")))
+	// // 	return 0
+	// // }
+	//
+	// theFile := fileCtrl.NewFile(msgID, fileID, 0, totalSize, filePath, domain.FileStateUploadAccountPhoto, 0, 0, 0, r.onFileProgressChanged)
+	//
+	// r.fileCtrl.AddToQueue(theFile)
 
 	return msgID
 }
@@ -263,36 +262,36 @@ func (r *River) GroupUploadPhoto(groupID int64, filePath string) (msgID int64) {
 	defer func() {
 		mon.FunctionResponseTime("GroupUploadPhoto", time.Now().Sub(startTime))
 	}()
-	// TOF
-	msgID = domain.SequentialUniqueID()
-	fileID := domain.SequentialUniqueID()
-
-	// support IOS file path
-	if strings.HasPrefix(filePath, "file://") {
-		filePath = filePath[7:]
-	}
-
-	file, err := os.Open(filePath)
-	if err != nil {
-		logs.Warn("SDK::GroupUploadPhoto()", zap.Error(err))
-		return 0
-	}
-	fileInfo, err := file.Stat()
-	if err != nil {
-		logs.Warn("SDK::GroupUploadPhoto()", zap.Error(err))
-		return 0
-	}
-
-	// // fileName := fileInfo.Name()
-	totalSize := fileInfo.Size() // size in Byte
-	// if totalSize > domain.FileMaxPhotoSize {
-	// 	log.Error("SDK::GroupUploadPhoto()", zap.Error(errors.New("max allowed file size is 1 MB")))
+	// // TOF
+	// msgID = domain.SequentialUniqueID()
+	// fileID := domain.SequentialUniqueID()
+	//
+	// // support IOS file path
+	// if strings.HasPrefix(filePath, "file://") {
+	// 	filePath = filePath[7:]
+	// }
+	//
+	// file, err := os.Open(filePath)
+	// if err != nil {
+	// 	logs.Warn("SDK::GroupUploadPhoto()", zap.Error(err))
 	// 	return 0
 	// }
-
-	theFile := fileCtrl.NewFile(msgID, fileID, groupID, totalSize, filePath, domain.FileStateUploadGroupPhoto, 0, 0, 0, r.onFileProgressChanged)
-
-	r.fileCtrl.AddToQueue(theFile)
+	// fileInfo, err := file.Stat()
+	// if err != nil {
+	// 	logs.Warn("SDK::GroupUploadPhoto()", zap.Error(err))
+	// 	return 0
+	// }
+	//
+	// // // fileName := fileInfo.Name()
+	// totalSize := fileInfo.Size() // size in Byte
+	// // if totalSize > domain.FileMaxPhotoSize {
+	// // 	log.Error("SDK::GroupUploadPhoto()", zap.Error(errors.New("max allowed file size is 1 MB")))
+	// // 	return 0
+	// // }
+	//
+	// theFile := fileCtrl.NewFile(msgID, fileID, groupID, totalSize, filePath, domain.FileStateUploadGroupPhoto, 0, 0, 0, r.onFileProgressChanged)
+	//
+	// r.fileCtrl.AddToQueue(theFile)
 
 	return msgID
 }
