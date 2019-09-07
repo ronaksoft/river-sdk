@@ -467,7 +467,7 @@ func (ctrl *Controller) MessageHandler(messages []*msg.MessageEnvelope) {
 	for _, m := range messages {
 		switch m.Constructor {
 		case msg.C_MessagesSent:
-			// Do nothing
+		// Do nothing
 		default:
 			if applier, ok := ctrl.messageAppliers[m.Constructor]; ok {
 				applier(m)

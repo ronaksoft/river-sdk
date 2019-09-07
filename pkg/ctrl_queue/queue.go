@@ -280,17 +280,15 @@ func (ctrl *Controller) Start() {
 	}
 
 	// Try to resend unsent messages
-	if ctrl.waitingList.Length() == 0 {
-		for _, pmsg := range repo.PendingMessages.GetAll() {
-			if pmsg.MediaType == msg.InputMediaTypeEmpty {
-				req := repo.PendingMessages.ToMessagesSend(pmsg)
-				reqBytes, _ := req.Marshal()
-				ctrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSend, reqBytes, nil, nil, false)
-			} else {
-				req := repo.PendingMessages.ToMessagesSendMedia(pmsg)
-				reqBytes, _ := req.Marshal()
-				ctrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSendMedia, reqBytes, nil, nil, false)
-			}
+	for _, pmsg := range repo.PendingMessages.GetAll() {
+		if pmsg.MediaType == msg.InputMediaTypeEmpty {
+			req := repo.PendingMessages.ToMessagesSend(pmsg)
+			reqBytes, _ := req.Marshal()
+			ctrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSend, reqBytes, nil, nil, false)
+		} else {
+			req := repo.PendingMessages.ToMessagesSendMedia(pmsg)
+			reqBytes, _ := req.Marshal()
+			ctrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSendMedia, reqBytes, nil, nil, false)
 		}
 	}
 
