@@ -6,9 +6,15 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
+	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -19,17 +25,18 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 )
 
+var (
+	_ServerKeys ServerKeys
+)
+
+func SetLogLevel(l int) {
+	logs.SetLogLevel(l)
+}
+
 // RiverConfig
 type RiverConfig struct {
 	ServerEndpoint     string
 	FileServerEndpoint string
-	// PingTimeSec sets how often a ping message will be sent to the server. Ping messages
-	// are used to calculate the quality of the network.
-	PingTimeSec int32
-	// PongTimeoutSec is the amount of time in seconds which SDK will wait after sending
-	// a ping to server to get the pong back. If it does not receive the pong message in
-	// this period of time, it disconnects and reconnect.
-	PongTimeoutSec int32
 	// QueuePath is the path of a folder that pending requests will be saved there until sending
 	// to the server.
 	QueuePath string
@@ -122,7 +129,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	conf.DbPath = strings.TrimRight(conf.DbPath, "/ ")
 	r.dbPath = fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID)
 
-
 	r.registerCommandHandlers()
 	r.delegates = make(map[int64]RequestDelegate)
 	r.mainDelegate = conf.MainDelegate
@@ -146,8 +152,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		networkCtrl.Config{
 			WebsocketEndpoint: conf.ServerEndpoint,
 			HttpEndpoint:      conf.FileServerEndpoint,
-			PingTime:          time.Duration(conf.PingTimeSec) * time.Second,
-			PongTimeout:       time.Duration(conf.PongTimeoutSec) * time.Second,
 		},
 	)
 	r.networkCtrl.SetNetworkStatusChangedCallback(func(newQuality domain.NetworkStatus) {
@@ -160,18 +164,9 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.networkCtrl.SetUpdateHandler(r.onReceivedUpdate)
 	r.networkCtrl.SetOnConnectCallback(r.onNetworkConnect)
 
-
 	// Initialize FileController
 	fileCtrl.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory, conf.DocumentCacheDirectory)
-	r.fileCtrl = fileCtrl.New(r.networkCtrl,
-		fileCtrl.Config{
-			OnUploadCompleted:   r.onFileUploadCompleted,
-			ProgressCallback:    r.onFileProgressChanged,
-			OnDownloadCompleted: r.onFileDownloadCompleted,
-			OnFileUploadError:   r.onFileUploadError,
-			OnFileDownloadError: r.onFileDownloadError,
-		},
-	)
+	r.fileCtrl = fileCtrl.New(r.networkCtrl)
 
 	// Initialize queueController
 	if q, err := queueCtrl.New(r.networkCtrl, conf.QueuePath); err != nil {
@@ -219,6 +214,455 @@ func (r *River) SetConfig(conf *RiverConfig) {
 func (r *River) Version() string {
 	// TODO:: automatic generation
 	return "0.8.1"
+}
+
+// Start ...
+func (r *River) Start() error {
+	logs.Info("River Starting")
+
+	// Initialize MessageHole
+	messageHole.Init()
+
+	// Initialize DB replaced with ORM
+	repo.InitRepo(r.dbPath, r.optimizeForLowMemory)
+
+	// Update Authorizations
+	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+	r.syncCtrl.SetUserID(r.ConnInfo.UserID)
+	r.loadDeviceToken()
+
+	// init UI Executor
+	uiexec.InitUIExec()
+
+	// Start Controllers
+	r.networkCtrl.Start()
+	r.queueCtrl.Start()
+	r.syncCtrl.Start()
+
+	// Connect to Server
+	go r.networkCtrl.Connect(true)
+
+	lastReIndexTime, err := repo.System.LoadInt(domain.SkReIndexTime)
+	if err != nil || time.Now().Unix()-int64(lastReIndexTime) > domain.Day {
+		go func() {
+			logs.Info("ReIndexing Users & Groups")
+			repo.Users.ReIndex()
+			repo.Groups.ReIndex()
+			_ = repo.System.SaveInt(domain.SkReIndexTime, uint64(time.Now().Unix()))
+		}()
+	}
+
+	logs.Info("River Started")
+	return nil
+}
+
+// Migrate
+func (r *River) Migrate() int {
+	ver := r.ConnInfo.Version
+	for {
+		if f, ok := funcHolders[ver]; ok {
+			f(r)
+			ver++
+		} else {
+			if r.ConnInfo.Version != ver {
+				r.ConnInfo.Version = ver
+				r.ConnInfo.Save()
+			}
+			return ver
+		}
+	}
+}
+
+func (r *River) onNetworkConnect() {
+	// Get Server Time and set server time difference
+	timeReq := new(msg.SystemGetServerTime)
+	timeReqBytes, _ := timeReq.Marshal()
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(1)
+	go func() {
+		defer waitGroup.Done()
+		for {
+			err := r.queueCtrl.ExecuteRealtimeCommand(
+				uint64(domain.SequentialUniqueID()),
+				msg.C_SystemGetServerTime,
+				timeReqBytes,
+				nil,
+				func(m *msg.MessageEnvelope) {
+					switch m.Constructor {
+					case msg.C_SystemServerTime:
+						x := new(msg.SystemServerTime)
+						err := x.Unmarshal(m.Message)
+						if err != nil {
+							logs.Error("onGetServerTime()", zap.Error(err))
+							return
+						}
+						clientTime := time.Now().Unix()
+						serverTime := x.Timestamp
+						domain.TimeDelta = time.Duration(serverTime-clientTime) * time.Second
+
+						logs.Debug("River::onGetServerTime()",
+							zap.Int64("ServerTime", serverTime),
+							zap.Int64("ClientTime", clientTime),
+							zap.Duration("Difference", domain.TimeDelta),
+						)
+					}
+				},
+				true, false,
+			)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
+
+		}
+	}()
+
+	waitGroup.Add(1)
+	go func() {
+		defer waitGroup.Done()
+		r.syncCtrl.UpdateSalt()
+		req := msg.AuthRecall{}
+		reqBytes, _ := req.Marshal()
+		if r.syncCtrl.GetUserID() != 0 {
+			// send auth recall until it succeed
+			for {
+				// this is priority command that should not passed to queue
+				// after auth recall answer got back the queue should send its requests in order to get related updates
+				err := r.queueCtrl.ExecuteRealtimeCommand(
+					uint64(domain.SequentialUniqueID()),
+					msg.C_AuthRecall,
+					reqBytes,
+					nil,
+					func(m *msg.MessageEnvelope) {
+						if m.Constructor == msg.C_AuthRecalled {
+							x := new(msg.AuthRecalled)
+							err := x.Unmarshal(m.Message)
+							if err != nil {
+								logs.Error("onAuthRecalled()", zap.Error(err))
+								return
+							}
+						}
+					},
+					true,
+					false,
+				)
+				if err == nil {
+					break
+				}
+				time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
+			}
+		}
+		if r.DeviceToken == nil || r.DeviceToken.Token == "" {
+			logs.Warn("onNetworkConnect() Device Token is not set")
+		}
+
+	}()
+
+	waitGroup.Wait()
+
+	go func() {
+		if r.syncCtrl.GetUserID() != 0 {
+			// Sync with Server
+			r.syncCtrl.Sync()
+
+			// import contact from server
+			r.syncCtrl.ContactImportFromServer()
+		}
+	}()
+}
+
+func (r *River) onGeneralError(e *msg.Error) {
+	logs.Info("River::onGeneralError()",
+		zap.String("Code", e.Code),
+		zap.String("Item", e.Items),
+	)
+	if e.Code == msg.ErrCodeInvalid && e.Items == msg.ErrItemSalt {
+		r.syncCtrl.UpdateSalt()
+	}
+	if r.mainDelegate != nil {
+		buff, _ := e.Marshal()
+		r.mainDelegate.OnGeneralError(buff)
+	}
+}
+
+// called when network flushes received messages
+func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
+	// sort messages by requestID
+	sort.Slice(msgs, func(i, j int) bool {
+		return msgs[i].RequestID < msgs[j].RequestID
+	})
+
+	// sync localDB with responses in the background
+	r.syncCtrl.MessageHandler(msgs)
+
+	// check requestCallbacks and call callbacks
+	for idx := range msgs {
+		cb := domain.GetRequestCallback(msgs[idx].RequestID)
+		if cb == nil {
+			logs.Warn("River::onReceivedMessage() callback does not exist",
+				zap.String("Constructor", msg.ConstructorNames[msgs[idx].Constructor]),
+			)
+			continue
+		}
+
+		mon.ServerResponseTime(msgs[idx].Constructor, time.Now().Sub(cb.RequestTime))
+		select {
+		case cb.ResponseChannel <- msgs[idx]:
+			logs.Debug("River::onReceivedMessage() passed to callback listener", zap.Uint64("RequestID", cb.RequestID))
+		default:
+			logs.Error("River::onReceivedMessage() there is no callback listener", zap.Uint64("RequestID", cb.RequestID))
+		}
+		domain.RemoveRequestCallback(msgs[idx].RequestID)
+	}
+}
+
+// called when network flushes received updates
+func (r *River) onReceivedUpdate(updateContainers []*msg.UpdateContainer) {
+	// sort updateContainers
+	sort.Slice(updateContainers, func(i, j int) bool {
+		return updateContainers[i].MinUpdateID < updateContainers[j].MinUpdateID
+	})
+
+	for idx := range updateContainers {
+		for _, update := range updateContainers[idx].Updates {
+			if update.UpdateID != 0 {
+				logs.UpdateLog(update.UpdateID, update.Constructor)
+			}
+		}
+		r.syncCtrl.UpdateHandler(updateContainers[idx])
+	}
+}
+
+func (r *River) onFileProgressChanged(messageID, processedParts, totalParts int64, stateType domain.FileStateType) {
+	percent := float64(processedParts) / float64(totalParts) * float64(100)
+
+	logs.Debug("onFileProgressChanged()",
+		zap.Int64("MsgID", messageID),
+		zap.Float64("Percent", percent),
+	)
+
+	// Notify UI that upload is completed
+	if stateType == domain.FileStateDownload {
+		if r.fileDelegate != nil {
+			r.fileDelegate.OnDownloadProgressChanged(messageID, processedParts, totalParts, percent)
+		}
+	} else if stateType == domain.FileStateUpload {
+		if r.fileDelegate != nil {
+			r.fileDelegate.OnUploadProgressChanged(messageID, processedParts, totalParts, percent)
+		}
+	}
+
+}
+
+func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
+	clusterID int32, totalParts int64,
+	stateType domain.FileStateType,
+	filePath string,
+	req *msg.ClientSendMessageMedia,
+	thumbFileID int64,
+	thumbTotalParts int32,
+) {
+	logs.Debug("onFileUploadCompleted()",
+		zap.Int64("messageID", messageID),
+		zap.Int64("fileID", fileID),
+	)
+	// if total parts are greater than zero it means we actually uploaded new file
+	// else the doc was already uploaded we called this just to notify ui that upload finished
+	switch stateType {
+	case domain.FileStateUpload:
+		// Create SendMessageMedia Request
+		x := new(msg.MessagesSendMedia)
+		x.Peer = req.Peer
+		x.ClearDraft = req.ClearDraft
+		x.MediaType = req.MediaType
+		x.RandomID = fileID
+		x.ReplyTo = req.ReplyTo
+
+		switch x.MediaType {
+		case msg.InputMediaTypeUploadedDocument:
+			doc := new(msg.InputMediaUploadedDocument)
+			doc.MimeType = req.FileMIME
+			doc.Attributes = req.Attributes
+
+			doc.Caption = req.Caption
+			doc.File = &msg.InputFile{
+				FileID:      fileID,
+				FileName:    req.FileName,
+				MD5Checksum: "",
+				TotalParts:  int32(totalParts),
+			}
+
+			if thumbFileID > 0 && thumbTotalParts > 0 {
+				doc.Thumbnail = &msg.InputFile{
+					FileID:      thumbFileID,
+					FileName:    "thumb_" + req.FileName,
+					MD5Checksum: "",
+					TotalParts:  thumbTotalParts,
+				}
+			}
+
+			x.MediaData, _ = doc.Marshal()
+		default:
+
+		}
+		reqBuff, _ := x.Marshal()
+		requestID := uint64(fileID)
+		r.queueCtrl.ExecuteCommand(requestID, msg.C_MessagesSendMedia, reqBuff, nil, nil, false)
+	case domain.FileStateUploadAccountPhoto:
+		x := new(msg.AccountUploadPhoto)
+		x.File = &msg.InputFile{
+			FileID:      fileID,
+			FileName:    strconv.FormatInt(fileID, 10) + ".jpg",
+			TotalParts:  int32(totalParts),
+			MD5Checksum: "",
+		}
+		reqBuff, err := x.Marshal()
+		if err != nil {
+			logs.Error("SDK::onFileUploadCompleted() marshal AccountUploadPhoto", zap.Error(err))
+			return
+		}
+		requestID := uint64(domain.SequentialUniqueID())
+		successCB := func(m *msg.MessageEnvelope) {
+			logs.Debug("AccountUploadPhoto success callback")
+			if m.Constructor == msg.C_Bool {
+				x := new(msg.Bool)
+				err := x.Unmarshal(m.Message)
+				if err != nil {
+					logs.Error("AccountUploadPhoto success callback", zap.Error(err))
+				}
+
+			}
+			if m.Constructor == msg.C_Error {
+				x := new(msg.Error)
+				err := x.Unmarshal(m.Message)
+				if err != nil {
+					logs.Error("AccountUploadPhoto timeout callback", zap.Error(err))
+				}
+				logs.Error("AccountUploadPhoto timeout callback", zap.String("Code", x.Code), zap.String("Item", x.Items))
+			}
+		}
+		timeoutCB := func() {
+			logs.Debug("AccountUploadPhoto timeoput callback")
+		}
+		r.queueCtrl.ExecuteCommand(requestID, msg.C_AccountUploadPhoto, reqBuff, timeoutCB, successCB, false)
+	case domain.FileStateUploadGroupPhoto:
+		x := new(msg.GroupsUploadPhoto)
+		x.GroupID = targetID
+		x.File = &msg.InputFile{
+			FileID:      fileID,
+			FileName:    strconv.FormatInt(fileID, 10) + ".jpg",
+			TotalParts:  int32(totalParts),
+			MD5Checksum: "",
+		}
+		reqBuff, err := x.Marshal()
+		if err != nil {
+			logs.Error("SDK::onFileUploadCompleted() marshal GroupUploadPhoto", zap.Error(err))
+			return
+		}
+		requestID := uint64(domain.SequentialUniqueID())
+		successCB := func(m *msg.MessageEnvelope) {
+			logs.Debug("GroupUploadPhoto success callback")
+			if m.Constructor == msg.C_Bool {
+				x := new(msg.Bool)
+				err := x.Unmarshal(m.Message)
+				if err != nil {
+					logs.Error("GroupUploadPhoto success callback", zap.Error(err))
+				}
+
+			}
+			if m.Constructor == msg.C_Error {
+				x := new(msg.Error)
+				err := x.Unmarshal(m.Message)
+				if err != nil {
+					logs.Error("GroupUploadPhoto timeout callback", zap.Error(err))
+				}
+				logs.Error("GroupUploadPhoto timeout callback", zap.String("Code", x.Code), zap.String("Item", x.Items))
+			}
+		}
+		timeoutCB := func() {
+			logs.Debug("GroupUploadPhoto timeoput callback")
+		}
+		r.queueCtrl.ExecuteCommand(requestID, msg.C_GroupsUploadPhoto, reqBuff, timeoutCB, successCB, false)
+	}
+
+	// Notify UI that upload is completed
+	if r.fileDelegate != nil {
+		r.fileDelegate.OnUploadCompleted(messageID, filePath)
+	}
+}
+
+func (r *River) onFileDownloadCompleted(messageID int64, filePath string, stateType domain.FileStateType) {
+	logs.Info("onFileDownloadCompleted()", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
+	// Notify UI that download is completed
+	if r.fileDelegate != nil {
+		r.fileDelegate.OnDownloadCompleted(messageID, filePath)
+	}
+}
+
+func (r *River) onFileUploadError(messageID, requestID int64, filePath string, err []byte) {
+	x := new(msg.Error)
+	x.Unmarshal(err)
+	logs.Error("onFileUploadError() received Error response",
+		zap.Int64("MsgID", messageID),
+		zap.Int64("ReqID", requestID),
+		zap.String("Code", x.Code),
+		zap.String("Item", x.Items),
+	)
+	// Notify UI that upload encountered an error
+	if r.fileDelegate != nil {
+		r.fileDelegate.OnUploadError(messageID, requestID, filePath, err)
+	}
+}
+
+func (r *River) onFileDownloadError(messageID, requestID int64, filePath string, err []byte) {
+	x := new(msg.Error)
+	x.Unmarshal(err)
+	logs.Error("onFileDownloadError() received Error response",
+		zap.Int64("MsgID", messageID),
+		zap.Int64("ReqID", requestID),
+		zap.String("Code", x.Code),
+		zap.String("Item", x.Items),
+	)
+	// Notify UI that download encountered an error
+	if r.fileDelegate != nil {
+		r.fileDelegate.OnDownloadError(messageID, requestID, filePath, err)
+	}
+}
+
+func (r *River) registerCommandHandlers() {
+	r.localCommands = map[int64]domain.LocalMessageHandler{
+		msg.C_MessagesGetDialogs:       r.messagesGetDialogs,
+		msg.C_MessagesGetDialog:        r.messagesGetDialog,
+		msg.C_MessagesGetHistory:       r.messagesGetHistory,
+		msg.C_MessagesSend:             r.messagesSend,
+		msg.C_ContactsGet:              r.contactsGet,
+		msg.C_MessagesReadHistory:      r.messagesReadHistory,
+		msg.C_UsersGet:                 r.usersGet,
+		msg.C_MessagesGet:              r.messagesGet,
+		msg.C_AccountUpdateUsername:    r.accountUpdateUsername,
+		msg.C_AccountUpdateProfile:     r.accountUpdateProfile,
+		msg.C_AccountRegisterDevice:    r.accountRegisterDevice,
+		msg.C_AccountUnregisterDevice:  r.accountUnregisterDevice,
+		msg.C_AccountSetNotifySettings: r.accountSetNotifySettings,
+		msg.C_MessagesToggleDialogPin:  r.dialogTogglePin,
+		msg.C_GroupsEditTitle:          r.groupsEditTitle,
+		msg.C_MessagesClearHistory:     r.messagesClearHistory,
+		msg.C_MessagesDelete:           r.messagesDelete,
+		msg.C_GroupsAddUser:            r.groupAddUser,
+		msg.C_GroupsDeleteUser:         r.groupDeleteUser,
+		msg.C_GroupsGetFull:            r.groupsGetFull,
+		msg.C_GroupsUpdateAdmin:        r.groupUpdateAdmin,
+		msg.C_ContactsImport:           r.contactsImport,
+		msg.C_MessagesReadContents:     r.messagesReadContents,
+		msg.C_UsersGetFull:             r.usersGetFull,
+		msg.C_AccountRemovePhoto:       r.accountRemovePhoto,
+		msg.C_GroupsRemovePhoto:        r.groupRemovePhoto,
+		msg.C_MessagesSendMedia:        r.messagesSendMedia,
+		msg.C_ClientSendMessageMedia:   r.clientSendMessageMedia,
+		msg.C_MessagesSaveDraft:        r.messagesSaveDraft,
+		msg.C_MessagesClearDraft:       r.messagesClearDraft,
+	}
+
 }
 
 // GetWorkGroup

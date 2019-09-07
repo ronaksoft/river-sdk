@@ -84,7 +84,6 @@ func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate
 		}
 	}
 
-
 	// if peerID == 0 then look for group and contact names too
 	if peerID == 0 {
 		userContacts, _ = repo.Users.SearchContacts(text)

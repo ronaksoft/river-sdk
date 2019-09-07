@@ -73,6 +73,8 @@ func NewSyncController(config Config) *Controller {
 		msg.C_UpdateTooLong:               ctrl.updateTooLong,
 		msg.C_UpdateDialogPinned:          ctrl.updateDialogPinned,
 		msg.C_UpdateAccountPrivacy:        ctrl.updateAccountPrivacy,
+		msg.C_UpdateDraftMessage:          ctrl.updateDraftMessage,
+		msg.C_UpdateDraftMessageCleared:   ctrl.updateDraftMessageCleared,
 	}
 
 	ctrl.messageAppliers = map[int64]domain.MessageApplier{
@@ -110,7 +112,6 @@ func (ctrl *Controller) watchDog() {
 		}
 	}
 }
-
 func (ctrl *Controller) Sync() {
 	ctrl.sync()
 }
@@ -164,8 +165,6 @@ func (ctrl *Controller) sync() {
 			return
 		}
 	} else if serverUpdateID > ctrl.updateID+1 {
-		// if it is passed over 60 seconds from the last update received it fetches the update
-		// difference from the server
 		logs.Info("SyncController:: Sequential sync")
 		getUpdateDifference(ctrl, serverUpdateID+1) // +1 cuz in here we dont have serverUpdateID itself too
 	}
@@ -277,7 +276,6 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 						)
 						continue
 					}
-					// create MessageHole
 					messageHole.InsertFill(dialog.PeerID, dialog.PeerType, dialog.TopMessageID, dialog.TopMessageID)
 				}
 
@@ -486,12 +484,13 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 		zap.Int64("MinID", updateContainer.MinUpdateID),
 		zap.Int("Count", len(updateContainer.Updates)),
 	)
-	ctrl.lastUpdateReceived = time.Now()
 
 	// Check if update has been already applied
 	if updateContainer.MinUpdateID != 0 && ctrl.updateID >= updateContainer.MinUpdateID {
 		return
 	}
+
+	ctrl.lastUpdateReceived = time.Now()
 
 	// Check if we are out of sync with server, if yes, then call the sync() function
 	// We call it in blocking mode,

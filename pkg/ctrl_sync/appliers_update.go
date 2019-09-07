@@ -483,3 +483,41 @@ func (ctrl *Controller) updateAccountPrivacy(u *msg.UpdateEnvelope) []*msg.Updat
 	res := []*msg.UpdateEnvelope{u}
 	return res
 }
+
+func (ctrl *Controller) updateDraftMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+	logs.Info("SyncController::updateDraftMessage")
+
+	x := new(msg.UpdateDraftMessage)
+	_ = x.Unmarshal(u.Update)
+
+	dialog := repo.Dialogs.Get(x.Message.PeerID, int32(x.Message.PeerType))
+
+	if dialog != nil {
+
+		dialog.Draft = x.Message
+
+		repo.Dialogs.Save(dialog)
+	}
+
+	res := []*msg.UpdateEnvelope{u}
+	return res
+}
+
+func (ctrl *Controller) updateDraftMessageCleared(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+	logs.Info("SyncController::updateDraftMessageCleared")
+
+	x := new(msg.UpdateDraftMessageCleared)
+	_ = x.Unmarshal(u.Update)
+
+	dialog := repo.Dialogs.Get(x.Peer.ID, int32(x.Peer.Type))
+
+	if dialog != nil {
+
+		dialog.Draft = nil
+
+		repo.Dialogs.Save(dialog)
+	}
+
+	res := []*msg.UpdateEnvelope{u}
+	return res
+}

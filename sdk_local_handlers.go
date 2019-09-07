@@ -3,11 +3,11 @@ package riversdk
 import (
 	"encoding/json"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"sort"
 	"strings"
 	"sync"
-
-	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
+	"time"
 
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
@@ -618,7 +618,7 @@ func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 	}
 
 	res := new(msg.ContactsMany)
-	res.Users, res.Contacts = repo.Users.GetContacts()
+	res.ContactUsers, res.Contacts = repo.Users.GetContacts()
 
 	// if didn't find anything send request to server
 	if len(res.Users) == 0 || len(res.Contacts) == 0 {
@@ -653,7 +653,7 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	}
 
 	res := new(msg.ContactsMany)
-	res.Users, res.Contacts = repo.Users.GetContacts()
+	res.ContactUsers, res.Contacts = repo.Users.GetContacts()
 
 	oldHash, err := repo.System.LoadInt(domain.SkContactsImportHash)
 	if err != nil {
@@ -688,7 +688,8 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 
 func (r *River) sendChunkedImportContactRequest(replace bool, diffContacts []*msg.PhoneContact, out *msg.MessageEnvelope, successCB domain.MessageHandler) {
 	result := new(msg.ContactsImported)
-	result.Users = make([]*msg.ContactUser, 0)
+	result.Users = make([]*msg.User, 0)
+	result.ContactUsers = make([]*msg.ContactUser, 0)
 
 	mx := sync.Mutex{}
 	wg := sync.WaitGroup{}
@@ -710,6 +711,7 @@ func (r *River) sendChunkedImportContactRequest(replace bool, diffContacts []*ms
 				return
 			}
 			result.Users = append(result.Users, x.Users...)
+			result.ContactUsers = append(result.ContactUsers, x.ContactUsers...)
 		} else {
 			logs.Error("sendChunkedImportContactRequest() -> cbSuccess() received unexpected response", zap.String("Constructor", msg.ConstructorNames[env.Constructor]))
 		}
@@ -946,13 +948,13 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	res.Group = group
 
 	// Participants
-	participents, err := repo.Groups.GetParticipants(req.GroupID)
+	participants, err := repo.Groups.GetParticipants(req.GroupID)
 	if err != nil {
 		logs.Error("River::groupsGetFull()-> GetParticipants() Sending Request To Server !!!", zap.Error(err))
 		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
 	}
-	res.Participants = participents
+	res.Participants = participants
 
 	// NotifySettings
 	dlg := repo.Dialogs.Get(req.GroupID, int32(msg.PeerGroup))
@@ -966,14 +968,14 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 
 	// Users
 	userIDs := domain.MInt64B{}
-	for _, v := range participents {
+	for _, v := range participants {
 		userIDs[v.UserID] = true
 	}
 	users := repo.Users.GetMany(userIDs.ToArray())
-	if users == nil || len(participents) != len(users) || len(users) <= 0 {
+	if users == nil || len(participants) != len(users) || len(users) <= 0 {
 		logs.Warn("River::groupsGetFull()-> GetMany() Sending Request To Server !!!",
 			zap.Bool("Is user nil ? ", users == nil),
-			zap.Int("Participanr Count", len(participents)),
+			zap.Int("Participants Count", len(participants)),
 			zap.Int("Users Count", len(users)),
 		)
 
@@ -1074,6 +1076,52 @@ func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 			}
 		}) // successCB(out)
 		return
+	}
+
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+}
+
+func (r *River) messagesSaveDraft(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.MessagesSaveDraft)
+	if err := req.Unmarshal(in.Message); err != nil {
+		logs.Error("River::messagesSaveDraft()-> Unmarshal()", zap.Error(err))
+		return
+	}
+
+	dialog := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
+
+	if dialog != nil {
+		draftMessage := msg.DraftMessage{
+			Body:     req.Body,
+			Entities: req.Entities,
+			PeerID:   req.Peer.ID,
+			PeerType: int32(req.Peer.Type),
+			Date:     time.Now().Unix(),
+			ReplyTo:  req.ReplyTo,
+		}
+
+		dialog.Draft = &draftMessage
+
+		repo.Dialogs.Save(dialog)
+	}
+
+	// send the request to server
+	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+}
+
+func (r *River) messagesClearDraft(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.MessagesClearDraft)
+	if err := req.Unmarshal(in.Message); err != nil {
+		logs.Error("River::messagesClearDraft()-> Unmarshal()", zap.Error(err))
+		return
+	}
+
+	dialog := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
+
+	if dialog != nil {
+		dialog.Draft = nil
+		repo.Dialogs.Save(dialog)
 	}
 
 	// send the request to server

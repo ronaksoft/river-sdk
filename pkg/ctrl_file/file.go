@@ -2,6 +2,7 @@ package fileCtrl
 
 import (
 	"fmt"
+	"git.ronaksoftware.com/ronak/riversdk"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	networkCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
@@ -23,13 +24,13 @@ import (
 
 type Controller struct {
 	network   *networkCtrl.Controller
-	downloads map[int64]*downloadStatus
+	delegate  riversdk.FileDelegate
 }
 
-func New(network *networkCtrl.Controller) *Controller {
+func New(network *networkCtrl.Controller, delegate riversdk.FileDelegate) *Controller {
 	ctrl := new(Controller)
 	ctrl.network = network
-
+	ctrl.delegate = delegate
 	return ctrl
 }
 

@@ -28,7 +28,7 @@ func InitUIExec() {
 	Ctx()
 }
 
-// Ctx singleton
+// ctx singleton
 func Ctx() *UIExecutor {
 	if exec == nil {
 		mx.Lock()

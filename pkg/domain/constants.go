@@ -10,7 +10,7 @@ const (
 	FileMaxPhotoSize   = 1 * 1024 * 1024   // 1MB
 	FileMaxRetry       = 10
 	FilePipelineCount  = 8
-	SDKVersion         = "v0.8.1"
+	SDKVersion         = "v0.8.2"
 )
 
 // Global Parameters
@@ -32,7 +32,7 @@ const (
 	SkContactsImportHash = "CONTACTS_IMPORT_HASH"
 	SkContactsGetHash    = "CONTACTS_GET_HASH"
 	SkSystemSalts        = "SERVER_SALTS"
-	SkReIndexTime		 = "RE_INDEX_TS"
+	SkReIndexTime        = "RE_INDEX_TS"
 )
 
 // NetworkStatus network controller status
@@ -136,7 +136,6 @@ const (
 	SharedMediaTypeAudio SharedMediaType = 4 // SharedMediaTypeAudio audio document that its IsVoice flag is false
 	SharedMediaTypeLink  SharedMediaType = 5 // SharedMediaTypeLink displays all messages that have link entity
 )
-
 
 // UserStatus Times
 const (
