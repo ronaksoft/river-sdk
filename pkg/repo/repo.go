@@ -78,7 +78,6 @@ func InitRepo(dbPath string, lowMemory bool) {
 		System = &repoSystem{repository: r}
 		Users = &repoUsers{repository: r}
 		Groups = &repoGroups{repository: r}
-		Files = &repoFiles{repository: r}
 		singleton.Unlock()
 	}
 	return

@@ -17,6 +17,8 @@ import (
 // GetStatus returns file status
 // TODO :: change response to protobuff
 func (r *River) GetFileStatus(msgID int64) string {
+	filePath := getFilePath(msgID)
+
 	status, progress, filePath := getFileStatus(msgID)
 	x := struct {
 		Status   int32   `json:"status"`
@@ -129,23 +131,6 @@ func (r *River) FileDownload(msgID int64) {
 	}
 }
 
-// PauseDownload pause download
-func (r *River) PauseDownload(msgID int64) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("PauseDownload", time.Now().Sub(startTime))
-	}()
-	fs, err := repo.Files.GetStatus(msgID)
-	if err != nil {
-		logs.Warn("SDK::PauseDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
-		return
-	}
-
-	r.fileCtrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
-
-	repo.Files.UpdateFileStatus(msgID, domain.RequestStatusPaused)
-}
-
 // CancelDownload cancel download
 func (r *River) CancelDownload(msgID int64) {
 	startTime := time.Now()
@@ -161,25 +146,6 @@ func (r *River) CancelDownload(msgID int64) {
 	r.fileCtrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
 
 	repo.Files.UpdateFileStatus(msgID, domain.RequestStatusCanceled)
-}
-
-// PauseUpload pause upload
-func (r *River) PauseUpload(msgID int64) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("PauseUpload", time.Now().Sub(startTime))
-	}()
-	fs, err := repo.Files.GetStatus(msgID)
-	if err != nil {
-		logs.Warn("SDK::PauseUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
-		return
-	}
-
-	r.fileCtrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
-
-	repo.Files.UpdateFileStatus(msgID, domain.RequestStatusPaused)
-	// repo.MessagesPending.Delete(fs.MessageID)
-
 }
 
 // CancelUpload cancel upload
@@ -198,51 +164,6 @@ func (r *River) CancelUpload(msgID int64) {
 	repo.Files.DeleteStatus(msgID)
 	repo.PendingMessages.Delete(fs.MessageID)
 
-}
-
-// ResumeUpload resume upload
-func (r *River) ResumeUpload(msgID int64) bool {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("ResumeUpload", time.Now().Sub(startTime))
-	}()
-
-	status, progress, filePath := getFileStatus(msgID)
-
-	logs.Info("SDK::ResumeUpload() current file progress status",
-		zap.String("Status", status.ToString()),
-		zap.Float64("Progress", progress),
-		zap.String("FilePath", filePath),
-	)
-
-	m := repo.PendingMessages.GetByID(msgID)
-	if m == nil {
-		logs.Warn("SDK::ResumeUpload()", zap.Int64("Message does not exist", msgID))
-		return false
-	}
-
-	switch status {
-	case domain.RequestStatusNone:
-		err := r.fileCtrl.Upload(m.RequestID, m)
-		if err != nil {
-			logs.Error("SDK::ResumeUpload()", zap.Error(err))
-			return false
-		}
-	case domain.RequestStatusCompleted:
-		return false
-	case domain.RequestStatusPaused, domain.RequestStatusCanceled, domain.RequestStatusError:
-		err := r.fileCtrl.Upload(m.RequestID, m)
-		if err != nil {
-			logs.Error("SDK::ResumeUpload()", zap.Error(err))
-			return false
-		}
-	case domain.RequestStatusInProgress:
-		return false
-	default:
-		return false
-	}
-
-	return true
 }
 
 // AccountUploadPhoto upload user profile photo

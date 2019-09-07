@@ -2,14 +2,14 @@ package fileCtrl
 
 import (
 	"fmt"
-	"git.ronaksoftware.com/ronak/riversdk"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	networkCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"go.uber.org/zap"
 	"io/ioutil"
+	"os"
 	"time"
 )
 
@@ -22,31 +22,96 @@ import (
    Copyright Ronak Software Group 2018
 */
 
+type Config struct {
+	Network              *networkCtrl.Controller
+	MaxInflightDownloads int32
+	MaxInflightUploads   int32
+}
 type Controller struct {
-	network   *networkCtrl.Controller
-	delegate  riversdk.FileDelegate
+	network             *networkCtrl.Controller
+	rateLimitDownload   chan struct{}
+	rateLimitUpload     chan struct{}
 }
 
-func New(network *networkCtrl.Controller, delegate riversdk.FileDelegate) *Controller {
+func New(config Config) *Controller {
 	ctrl := new(Controller)
-	ctrl.network = network
-	ctrl.delegate = delegate
+	ctrl.network = config.Network
+	ctrl.rateLimitDownload = make(chan struct{}, config.MaxInflightDownloads)
+	ctrl.rateLimitUpload = make(chan struct{}, config.MaxInflightUploads)
+
+
 	return ctrl
+}
+
+func (ctrl *Controller) startDownload(req DownloadRequest) (err error) {
+	ds := &downloadStatus{
+		rateLimit:   make(chan struct{}, req.MaxInFlights),
+		networkCtrl: ctrl.network,
+		Request:     req,
+		StartTime:   time.Now(),
+		Status:      domain.RequestStatusNone,
+	}
+
+	ds.file, err = os.Create(req.FilePath)
+	if err != nil {
+		return err
+	}
+	if req.FileSize > 0 {
+		err := os.Truncate(req.FilePath, req.FileSize)
+		if err != nil {
+			return err
+		}
+
+		dividend := int32(req.FileSize / int64(req.ChunkSize))
+		if req.FileSize%int64(req.ChunkSize) > 0 {
+			ds.TotalParts = dividend + 1
+		} else {
+			ds.TotalParts = dividend
+		}
+	} else {
+		ds.TotalParts = 1
+	}
+
+	ds.parts = make(chan int32, ds.TotalParts)
+	for partIndex := int32(0); partIndex < ds.TotalParts; partIndex++ {
+		if ds.isDownloaded(partIndex) {
+			continue
+		}
+		ds.parts <- partIndex
+	}
+
+	// This is blocking call, until all the parts are downloaded
+	ds.run()
+
+	return nil
 }
 
 // Download add download request
 func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
-	filesStatus, _ := repo.Files.GetStatus(userMessage.ID)
-	if filesStatus == nil {
-		filesStatus = new(dto.FilesStatus)
-	}
-
 	switch userMessage.MediaType {
 	case msg.MediaTypeEmpty:
 	case msg.MediaTypeDocument:
 		x := new(msg.MediaDocument)
-		_ = x.Unmarshal(userMessage.Media)
-
+		err := x.Unmarshal(userMessage.Media)
+		if err != nil {
+			logs.Error("Error In Download", zap.Error(err))
+			return
+		}
+		err = ctrl.startDownload(DownloadRequest{
+			MaxRetries:   10,
+			MessageID:    userMessage.ID,
+			ClusterID:    x.Doc.ClusterID,
+			FileID:       x.Doc.ID,
+			AccessHash:   x.Doc.AccessHash,
+			Version:      x.Doc.Version,
+			FileSize:     int64(x.Doc.FileSize),
+			ChunkSize:    downloadChunkSize,
+			MaxInFlights: maxDownloadInFlights,
+			FilePath:     GetFilePath(x.Doc.MimeType, x.Doc.ID),
+		})
+		if err != nil {
+			logs.Error("Error In Download", zap.Error(err))
+		}
 	default:
 		return
 	}

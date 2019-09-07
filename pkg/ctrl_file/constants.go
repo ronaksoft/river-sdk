@@ -12,6 +12,8 @@ import "time"
 */
 
 const (
-	retryMaxAttempts              = 10
-	retryWaitTime                 = 100 * time.Millisecond
+	downloadChunkSize    = 256 * 1 << 10 // 256 KB
+	maxDownloadInFlights = 10
+	retryMaxAttempts     = 10
+	retryWaitTime        = 100 * time.Millisecond
 )

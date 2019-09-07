@@ -63,6 +63,24 @@ func (r *repoSystem) LoadString(keyName string) (string, error) {
 	return string(v), nil
 }
 
+// LoadBytes
+func (r *repoSystem) LoadBytes(keyName string) ([]byte, error) {
+	var v []byte
+	err := r.badger.View(func(txn *badger.Txn) error {
+		item, err := txn.Get(r.getKey(keyName))
+		if err != nil {
+			return err
+		}
+		v, err = item.ValueCopy(nil)
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return v, nil
+}
+
 // SaveInt
 func (r *repoSystem) SaveInt(keyName string, keyValue uint64) error {
 	b := make([]byte, 8)
@@ -76,10 +94,18 @@ func (r *repoSystem) SaveInt(keyName string, keyValue uint64) error {
 
 // SaveString
 func (r *repoSystem) SaveString(keyName string, keyValue string) error {
-
 	return r.badger.Update(func(txn *badger.Txn) error {
 		return txn.SetEntry(
 			badger.NewEntry(r.getKey(keyName), ronak.StrToByte(keyValue)),
+		)
+	})
+}
+
+// SaveBytes
+func (r *repoSystem) SaveBytes(keyName string, keyValue []byte) error {
+	return r.badger.Update(func(txn *badger.Txn) error {
+		return txn.SetEntry(
+			badger.NewEntry(r.getKey(keyName), keyValue),
 		)
 	})
 }
