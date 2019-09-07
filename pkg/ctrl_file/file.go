@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -36,6 +37,9 @@ type Controller struct {
 	rateLimitDownload chan struct{}
 	rateLimitUpload   chan struct{}
 	delegates         riversdk.FileDelegate
+	mtxDownloads      sync.Mutex
+	downloadRequests  map[int64]DownloadRequest
+	saveSnapshot      *ronak.Flusher
 }
 
 func New(config Config) *Controller {
@@ -47,13 +51,22 @@ func New(config Config) *Controller {
 
 	dBytes, err := repo.System.LoadBytes("Downloads")
 	if err != nil {
-		downloads = make(map[int64]DownloadRequest)
+		ctrl.downloadRequests = make(map[int64]DownloadRequest)
 	} else {
-		_ = json.Unmarshal(dBytes, downloads)
-		for _, req := range downloads {
+		_ = json.Unmarshal(dBytes, ctrl.downloadRequests)
+		for _, req := range ctrl.downloadRequests {
 			_ = ctrl.startDownload(req)
 		}
 	}
+
+	ctrl.saveSnapshot = ronak.NewFlusher(100, 1, time.Millisecond*100, func(items []ronak.FlusherEntry) {
+		if dBytes, err := json.Marshal(ctrl.downloadRequests); err == nil {
+			_ = repo.System.SaveBytes("Downloads", dBytes)
+		}
+		for idx := range items {
+			items[idx].Callback(nil)
+		}
+	})
 	return ctrl
 }
 
@@ -115,6 +128,13 @@ func (ctrl *Controller) startDownload(req DownloadRequest) (err error) {
 	return nil
 }
 
+func (ctrl *Controller) GetDownloadRequest(messageID int64) (DownloadRequest, bool) {
+	ctrl.mtxDownloads.Lock()
+	req, ok := ctrl.downloadRequests[messageID]
+	ctrl.mtxDownloads.Unlock()
+	return req, ok
+}
+
 // Download add download request
 func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
 	switch userMessage.MediaType {
@@ -145,8 +165,6 @@ func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
 		return
 	}
 }
-
-
 
 // func (ctrl *Controller) UploadProfilePhoto() {}
 //

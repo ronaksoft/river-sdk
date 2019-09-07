@@ -3,7 +3,6 @@ package fileCtrl
 import (
 	"context"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
-	networkCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"go.uber.org/zap"
@@ -50,7 +49,7 @@ type downloadStatus struct {
 	rateLimit   chan struct{}           `json:"-"`
 	parts       chan int32              `json:"-"`
 	file        *os.File                `json:"-"`
-	networkCtrl *networkCtrl.Controller `json:"-"`
+	ctrl 		*Controller
 
 	Request         DownloadRequest      `json:"request"`
 	Status          domain.RequestStatus `json:"status"`
@@ -72,8 +71,8 @@ func (ds *downloadStatus) isDownloaded(partIndex int32) bool {
 func (ds *downloadStatus) addToDownloaded(partIndex int32) {
 	ds.mtx.Lock()
 	ds.Request.DownloadedParts = append(ds.Request.DownloadedParts, partIndex)
-	downloads[ds.Request.MessageID] = ds.Request
-	saveSnapshot.EnterWithResult(nil, nil)
+	ds.ctrl.downloadRequests[ds.Request.MessageID] = ds.Request
+	ds.ctrl.saveSnapshot.EnterWithResult(nil, nil)
 	ds.mtx.Unlock()
 }
 
@@ -118,7 +117,7 @@ func (ds *downloadStatus) run() {
 			}()
 
 			offset := partIndex * ds.Request.ChunkSize
-			res, err := ds.networkCtrl.SendHttp(ds.generateFileGet(offset, ds.Request.ChunkSize))
+			res, err := ds.ctrl.network.SendHttp(ds.generateFileGet(offset, ds.Request.ChunkSize))
 			if err != nil {
 				ds.parts <- partIndex
 				return

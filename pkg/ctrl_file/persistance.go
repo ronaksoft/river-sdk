@@ -17,16 +17,4 @@ import (
 */
 
 
-var (
-	downloads map[int64]DownloadRequest
-)
-
-var saveSnapshot = ronak.NewFlusher(100, 1, time.Millisecond * 100, func(items []ronak.FlusherEntry) {
-	if dBytes, err := json.Marshal(downloads); err == nil {
-		_ = repo.System.SaveBytes("Downloads", dBytes)
-	}
-	for idx := range items {
-		items[idx].Callback(nil)
-	}
-})
 
