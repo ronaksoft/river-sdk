@@ -166,7 +166,12 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Initialize FileController
 	fileCtrl.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory, conf.DocumentCacheDirectory)
-	r.fileCtrl = fileCtrl.New(r.networkCtrl)
+	r.fileCtrl = fileCtrl.New(fileCtrl.Config{
+		Network:              r.networkCtrl,
+		MaxInflightDownloads: 5,
+		MaxInflightUploads:   5,
+		Delegates:            r.fileDelegate,
+	})
 
 	// Initialize queueController
 	if q, err := queueCtrl.New(r.networkCtrl, conf.QueuePath); err != nil {

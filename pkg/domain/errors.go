@@ -18,6 +18,7 @@ var (
 	ErrQueuePathIsNotSet     = errors.New("queue path is not set")
 	ErrInvalidUserMessageKey = errors.New("invalid user message key")
 	ErrMaxFileSize           = errors.New("max file size limit")
+	ErrUnknownFileSize       = errors.New("unknown file size")
 )
 
 // ParseServerError ...

@@ -1,11 +1,14 @@
 package fileCtrl
 
 import (
+	"encoding/json"
 	"fmt"
+	"git.ronaksoftware.com/ronak/riversdk"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	networkCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
 	"io/ioutil"
@@ -26,11 +29,13 @@ type Config struct {
 	Network              *networkCtrl.Controller
 	MaxInflightDownloads int32
 	MaxInflightUploads   int32
+	Delegates            riversdk.FileDelegate
 }
 type Controller struct {
-	network             *networkCtrl.Controller
-	rateLimitDownload   chan struct{}
-	rateLimitUpload     chan struct{}
+	network           *networkCtrl.Controller
+	rateLimitDownload chan struct{}
+	rateLimitUpload   chan struct{}
+	delegates         riversdk.FileDelegate
 }
 
 func New(config Config) *Controller {
@@ -38,12 +43,26 @@ func New(config Config) *Controller {
 	ctrl.network = config.Network
 	ctrl.rateLimitDownload = make(chan struct{}, config.MaxInflightDownloads)
 	ctrl.rateLimitUpload = make(chan struct{}, config.MaxInflightUploads)
+	ctrl.delegates = config.Delegates
 
-
+	dBytes, err := repo.System.LoadBytes("Downloads")
+	if err != nil {
+		downloads = make(map[int64]DownloadRequest)
+	} else {
+		_ = json.Unmarshal(dBytes, downloads)
+		for _, req := range downloads {
+			_ = ctrl.startDownload(req)
+		}
+	}
 	return ctrl
 }
 
 func (ctrl *Controller) startDownload(req DownloadRequest) (err error) {
+	ctrl.rateLimitDownload <- struct{}{}
+	defer func() {
+		<-ctrl.rateLimitDownload
+	}()
+
 	ds := &downloadStatus{
 		rateLimit:   make(chan struct{}, req.MaxInFlights),
 		networkCtrl: ctrl.network,
@@ -52,16 +71,25 @@ func (ctrl *Controller) startDownload(req DownloadRequest) (err error) {
 		Status:      domain.RequestStatusNone,
 	}
 
-	ds.file, err = os.Create(req.FilePath)
+	_, err = os.Stat(req.FilePath)
 	if err != nil {
-		return err
-	}
-	if req.FileSize > 0 {
-		err := os.Truncate(req.FilePath, req.FileSize)
-		if err != nil {
+		if os.IsNotExist(err) {
+			ds.file, err = os.Create(req.FilePath)
+			if err != nil {
+				return err
+			}
+			if req.FileSize > 0 {
+				err := os.Truncate(req.FilePath, req.FileSize)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
 			return err
 		}
+	}
 
+	if req.FileSize > 0 {
 		dividend := int32(req.FileSize / int64(req.ChunkSize))
 		if req.FileSize%int64(req.ChunkSize) > 0 {
 			ds.TotalParts = dividend + 1
@@ -70,6 +98,7 @@ func (ctrl *Controller) startDownload(req DownloadRequest) (err error) {
 		}
 	} else {
 		ds.TotalParts = 1
+		ds.Request.ChunkSize = 0
 	}
 
 	ds.parts = make(chan int32, ds.TotalParts)
@@ -116,6 +145,8 @@ func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
 		return
 	}
 }
+
+
 
 // func (ctrl *Controller) UploadProfilePhoto() {}
 //

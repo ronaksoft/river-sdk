@@ -18,16 +18,8 @@ import (
 
 
 var (
-	downloads map[int64]*downloadStatus
+	downloads map[int64]DownloadRequest
 )
-
-func init() {
-	downloads = make(map[int64]*downloadStatus)
-}
-
-func persistDownloads() {
-	saveSnapshot.EnterWithResult(nil, nil)
-}
 
 var saveSnapshot = ronak.NewFlusher(100, 1, time.Millisecond * 100, func(items []ronak.FlusherEntry) {
 	if dBytes, err := json.Marshal(downloads); err == nil {
@@ -37,3 +29,4 @@ var saveSnapshot = ronak.NewFlusher(100, 1, time.Millisecond * 100, func(items [
 		items[idx].Callback(nil)
 	}
 })
+

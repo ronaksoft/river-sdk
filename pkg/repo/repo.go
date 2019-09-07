@@ -35,7 +35,6 @@ var (
 	System          *repoSystem
 	Users           *repoUsers
 	Groups          *repoGroups
-	Files           *repoFiles
 )
 
 // Context container of repo

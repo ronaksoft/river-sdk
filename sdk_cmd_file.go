@@ -19,7 +19,6 @@ import (
 func (r *River) GetFileStatus(msgID int64) string {
 	filePath := getFilePath(msgID)
 
-	status, progress, filePath := getFileStatus(msgID)
 	x := struct {
 		Status   int32   `json:"status"`
 		Progress float64 `json:"progress"`
@@ -166,44 +165,44 @@ func (r *River) CancelUpload(msgID int64) {
 
 }
 
-// AccountUploadPhoto upload user profile photo
-func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("AccountUploadPhoto", time.Now().Sub(startTime))
-	}()
-	// TOF
-	msgID = domain.SequentialUniqueID()
-	fileID := domain.SequentialUniqueID()
-
-	// support IOS file path
-	if strings.HasPrefix(filePath, "file://") {
-		filePath = filePath[7:]
-	}
-
-	file, err := os.Open(filePath)
-	if err != nil {
-		logs.Warn("SDK::AccountUploadPhoto()", zap.Error(err))
-		return 0
-	}
-	fileInfo, err := file.Stat()
-	if err != nil {
-		logs.Warn("SDK::AccountUploadPhoto()", zap.Error(err))
-		return 0
-	}
-
-	totalSize := fileInfo.Size() // size in Byte
-	// if totalSize > domain.FileMaxPhotoSize {
-	// 	log.Error("SDK::AccountUploadPhoto()", zap.Error(errors.New("max allowed file size is 1 MB")))
-	// 	return 0
-	// }
-
-	theFile := fileCtrl.NewFile(msgID, fileID, 0, totalSize, filePath, domain.FileStateUploadAccountPhoto, 0, 0, 0, r.onFileProgressChanged)
-
-	r.fileCtrl.AddToQueue(theFile)
-
-	return msgID
-}
+// // AccountUploadPhoto upload user profile photo
+// func (r *River) AccountUploadPhoto(filePath string) (msgID int64) {
+// 	startTime := time.Now()
+// 	defer func() {
+// 		mon.FunctionResponseTime("AccountUploadPhoto", time.Now().Sub(startTime))
+// 	}()
+// 	// TOF
+// 	msgID = domain.SequentialUniqueID()
+// 	fileID := domain.SequentialUniqueID()
+//
+// 	// support IOS file path
+// 	if strings.HasPrefix(filePath, "file://") {
+// 		filePath = filePath[7:]
+// 	}
+//
+// 	file, err := os.Open(filePath)
+// 	if err != nil {
+// 		logs.Warn("SDK::AccountUploadPhoto()", zap.Error(err))
+// 		return 0
+// 	}
+// 	fileInfo, err := file.Stat()
+// 	if err != nil {
+// 		logs.Warn("SDK::AccountUploadPhoto()", zap.Error(err))
+// 		return 0
+// 	}
+//
+// 	totalSize := fileInfo.Size() // size in Byte
+// 	// if totalSize > domain.FileMaxPhotoSize {
+// 	// 	log.Error("SDK::AccountUploadPhoto()", zap.Error(errors.New("max allowed file size is 1 MB")))
+// 	// 	return 0
+// 	// }
+//
+// 	theFile := fileCtrl.NewFile(msgID, fileID, 0, totalSize, filePath, domain.FileStateUploadAccountPhoto, 0, 0, 0, r.onFileProgressChanged)
+//
+// 	r.fileCtrl.AddToQueue(theFile)
+//
+// 	return msgID
+// }
 
 // AccountGetPhoto_Big download user profile picture
 func (r *River) AccountGetPhotoBig(userID int64) string {
@@ -268,45 +267,45 @@ func (r *River) downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig b
 	return filePath
 }
 
-// GroupUploadPhoto upload group profile photo
-func (r *River) GroupUploadPhoto(groupID int64, filePath string) (msgID int64) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("GroupUploadPhoto", time.Now().Sub(startTime))
-	}()
-	// TOF
-	msgID = domain.SequentialUniqueID()
-	fileID := domain.SequentialUniqueID()
-
-	// support IOS file path
-	if strings.HasPrefix(filePath, "file://") {
-		filePath = filePath[7:]
-	}
-
-	file, err := os.Open(filePath)
-	if err != nil {
-		logs.Warn("SDK::GroupUploadPhoto()", zap.Error(err))
-		return 0
-	}
-	fileInfo, err := file.Stat()
-	if err != nil {
-		logs.Warn("SDK::GroupUploadPhoto()", zap.Error(err))
-		return 0
-	}
-
-	// // fileName := fileInfo.Name()
-	totalSize := fileInfo.Size() // size in Byte
-	// if totalSize > domain.FileMaxPhotoSize {
-	// 	log.Error("SDK::GroupUploadPhoto()", zap.Error(errors.New("max allowed file size is 1 MB")))
-	// 	return 0
-	// }
-
-	theFile := fileCtrl.NewFile(msgID, fileID, groupID, totalSize, filePath, domain.FileStateUploadGroupPhoto, 0, 0, 0, r.onFileProgressChanged)
-
-	r.fileCtrl.AddToQueue(theFile)
-
-	return msgID
-}
+// // GroupUploadPhoto upload group profile photo
+// func (r *River) GroupUploadPhoto(groupID int64, filePath string) (msgID int64) {
+// 	startTime := time.Now()
+// 	defer func() {
+// 		mon.FunctionResponseTime("GroupUploadPhoto", time.Now().Sub(startTime))
+// 	}()
+// 	// TOF
+// 	msgID = domain.SequentialUniqueID()
+// 	fileID := domain.SequentialUniqueID()
+//
+// 	// support IOS file path
+// 	if strings.HasPrefix(filePath, "file://") {
+// 		filePath = filePath[7:]
+// 	}
+//
+// 	file, err := os.Open(filePath)
+// 	if err != nil {
+// 		logs.Warn("SDK::GroupUploadPhoto()", zap.Error(err))
+// 		return 0
+// 	}
+// 	fileInfo, err := file.Stat()
+// 	if err != nil {
+// 		logs.Warn("SDK::GroupUploadPhoto()", zap.Error(err))
+// 		return 0
+// 	}
+//
+// 	// // fileName := fileInfo.Name()
+// 	totalSize := fileInfo.Size() // size in Byte
+// 	// if totalSize > domain.FileMaxPhotoSize {
+// 	// 	log.Error("SDK::GroupUploadPhoto()", zap.Error(errors.New("max allowed file size is 1 MB")))
+// 	// 	return 0
+// 	// }
+//
+// 	theFile := fileCtrl.NewFile(msgID, fileID, groupID, totalSize, filePath, domain.FileStateUploadGroupPhoto, 0, 0, 0, r.onFileProgressChanged)
+//
+// 	r.fileCtrl.AddToQueue(theFile)
+//
+// 	return msgID
+// }
 
 // GroupGetPhoto_Big download group profile picture
 func (r *River) GroupGetPhotoBig(groupID int64) string {

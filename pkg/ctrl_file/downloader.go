@@ -40,7 +40,8 @@ type DownloadRequest struct {
 	MaxInFlights int `json:"max_in_flights"`
 	// FilePath defines the path which downloaded file will be stored. It must be a file not a directory.
 	// Also it will be overwritten if Overwrite is TRUE
-	FilePath string `json:"file_path"`
+	FilePath        string  `json:"file_path"`
+	DownloadedParts []int32 `json:"downloaded_parts"`
 }
 
 type downloadStatus struct {
@@ -54,14 +55,13 @@ type downloadStatus struct {
 	Request         DownloadRequest      `json:"request"`
 	Status          domain.RequestStatus `json:"status"`
 	StartTime       time.Time            `json:"start_time"`
-	DownloadedParts []int32              `json:"downloaded_parts"`
 	TotalParts      int32                `json:"total_parts"`
 }
 
 func (ds *downloadStatus) isDownloaded(partIndex int32) bool {
 	ds.mtx.Lock()
 	defer ds.mtx.Unlock()
-	for _, index := range ds.DownloadedParts {
+	for _, index := range ds.Request.DownloadedParts {
 		if partIndex == index {
 			return true
 		}
@@ -71,8 +71,9 @@ func (ds *downloadStatus) isDownloaded(partIndex int32) bool {
 
 func (ds *downloadStatus) addToDownloaded(partIndex int32) {
 	ds.mtx.Lock()
-	ds.DownloadedParts = append(ds.DownloadedParts, partIndex)
-	persistDownloads()
+	ds.Request.DownloadedParts = append(ds.Request.DownloadedParts, partIndex)
+	downloads[ds.Request.MessageID] = ds.Request
+	saveSnapshot.EnterWithResult(nil, nil)
 	ds.mtx.Unlock()
 }
 
@@ -113,7 +114,7 @@ func (ds *downloadStatus) run() {
 		go func(partIndex int32) {
 			defer waitGroup.Done()
 			defer func() {
-				<- ds.rateLimit
+				<-ds.rateLimit
 			}()
 
 			offset := partIndex * ds.Request.ChunkSize
