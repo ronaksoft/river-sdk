@@ -323,9 +323,9 @@ func (r *River) onNetworkConnect() {
 			)
 			if err == nil {
 				break
-			} else {
-				time.Sleep(time.Second)
 			}
+			time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
+
 		}
 	}()
 
@@ -361,7 +361,7 @@ func (r *River) onNetworkConnect() {
 				if err == nil {
 					break
 				}
-				time.Sleep(1 * time.Second)
+				time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
 			}
 		}
 		if r.DeviceToken == nil || r.DeviceToken.Token == "" {
@@ -676,10 +676,6 @@ func (r *River) registerCommandHandlers() {
 	}
 
 }
-
-
-
-
 
 // GetWorkGroup
 // Client call GetWorkGroup with a timeout set, if this function could connect to server and get its response back from
