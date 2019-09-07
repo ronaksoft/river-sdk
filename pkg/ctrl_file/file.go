@@ -77,11 +77,9 @@ func (ctrl *Controller) startDownload(req DownloadRequest) (err error) {
 	}()
 
 	ds := &downloadStatus{
-		rateLimit:   make(chan struct{}, req.MaxInFlights),
-		networkCtrl: ctrl.network,
-		Request:     req,
-		StartTime:   time.Now(),
-		Status:      domain.RequestStatusNone,
+		rateLimit: make(chan struct{}, req.MaxInFlights),
+		ctrl:      ctrl,
+		Request:   req,
 	}
 
 	_, err = os.Stat(req.FilePath)
@@ -105,17 +103,17 @@ func (ctrl *Controller) startDownload(req DownloadRequest) (err error) {
 	if req.FileSize > 0 {
 		dividend := int32(req.FileSize / int64(req.ChunkSize))
 		if req.FileSize%int64(req.ChunkSize) > 0 {
-			ds.TotalParts = dividend + 1
+			ds.Request.TotalParts = dividend + 1
 		} else {
-			ds.TotalParts = dividend
+			ds.Request.TotalParts = dividend
 		}
 	} else {
-		ds.TotalParts = 1
+		ds.Request.TotalParts = 1
 		ds.Request.ChunkSize = 0
 	}
 
-	ds.parts = make(chan int32, ds.TotalParts)
-	for partIndex := int32(0); partIndex < ds.TotalParts; partIndex++ {
+	ds.parts = make(chan int32, ds.Request.TotalParts)
+	for partIndex := int32(0); partIndex < ds.Request.TotalParts; partIndex++ {
 		if ds.isDownloaded(partIndex) {
 			continue
 		}

@@ -8,7 +8,6 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"sync"
-	"time"
 )
 
 /*
@@ -39,22 +38,20 @@ type DownloadRequest struct {
 	MaxInFlights int `json:"max_in_flights"`
 	// FilePath defines the path which downloaded file will be stored. It must be a file not a directory.
 	// Also it will be overwritten if Overwrite is TRUE
-	FilePath        string  `json:"file_path"`
-	DownloadedParts []int32 `json:"downloaded_parts"`
+	FilePath        string               `json:"file_path"`
+	DownloadedParts []int32              `json:"downloaded_parts"`
+	TotalParts      int32                `json:"total_parts"`
+	Status          domain.RequestStatus `json:"status"`
 }
 
 type downloadStatus struct {
-	mtx         sync.Mutex              `json:"-"`
-	ctx         context.Context         `json:"-"`
-	rateLimit   chan struct{}           `json:"-"`
-	parts       chan int32              `json:"-"`
-	file        *os.File                `json:"-"`
-	ctrl 		*Controller
-
-	Request         DownloadRequest      `json:"request"`
-	Status          domain.RequestStatus `json:"status"`
-	StartTime       time.Time            `json:"start_time"`
-	TotalParts      int32                `json:"total_parts"`
+	mtx       sync.Mutex      `json:"-"`
+	ctx       context.Context `json:"-"`
+	rateLimit chan struct{}   `json:"-"`
+	parts     chan int32      `json:"-"`
+	file      *os.File        `json:"-"`
+	ctrl      *Controller
+	Request   DownloadRequest `json:"request"`
 }
 
 func (ds *downloadStatus) isDownloaded(partIndex int32) bool {
@@ -104,7 +101,7 @@ func (ds *downloadStatus) generateFileGet(offset, limit int32) *msg.MessageEnvel
 }
 
 func (ds *downloadStatus) run() {
-	ds.Status = domain.RequestStatusInProgress
+	ds.Request.Status = domain.RequestStatusInProgress
 	waitGroup := sync.WaitGroup{}
 	for partIndex := range ds.parts {
 		ds.rateLimit <- struct{}{}
@@ -140,5 +137,5 @@ func (ds *downloadStatus) run() {
 
 	}
 	waitGroup.Wait()
-	ds.Status = domain.RequestStatusCompleted
+	ds.Request.Status = domain.RequestStatusCompleted
 }

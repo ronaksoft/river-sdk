@@ -17,7 +17,7 @@ import (
 // GetStatus returns file status
 // TODO :: change response to protobuff
 func (r *River) GetFileStatus(msgID int64) string {
-	status, progress, filePath := getFileStatus(msgID)
+	status, progress, filePath := r.getFileStatus(msgID)
 	x := struct {
 		Status   int32   `json:"status"`
 		Progress float64 `json:"progress"`
@@ -31,9 +31,9 @@ func (r *River) GetFileStatus(msgID int64) string {
 	buff, _ := json.Marshal(x)
 	return string(buff)
 }
-func getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, filePath string) {
-	fs, _ := repo.Files.GetStatus(msgID)
-	if fs == nil {
+func (r *River) getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, filePath string) {
+	downloadRequest, ok := r.fileCtrl.GetDownloadRequest(msgID)
+	if !ok {
 		filePath = getFilePath(msgID)
 		if filePath != "" {
 			// file exists so it means download completed
@@ -45,21 +45,12 @@ func getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, 
 			progress = 0
 			filePath = ""
 		}
-		return
-	}
-
-	// file is in-progress state
-	// double check
-	if fs.IsCompleted {
-		repo.Files.DeleteStatus(fs.MessageID)
-	}
-	status = domain.RequestStatus(fs.RequestStatus)
-	filePath = fs.FilePath
-	if fs.TotalParts > 0 {
-		partList := domain.MInt64B{}
-		_ = json.Unmarshal(fs.PartList, &partList)
-		processedParts := fs.TotalParts - int64(len(partList))
-		progress = float64(processedParts) / float64(fs.TotalParts) * float64(100)
+	} else {
+		filePath = downloadRequest.FilePath
+		if downloadRequest.TotalParts > 1 {
+			status = downloadRequest.Status
+			progress = float64(len(downloadRequest.DownloadedParts)) / float64(downloadRequest.TotalParts) * 100
+		}
 	}
 	return
 }
@@ -104,7 +95,7 @@ func (r *River) FileDownload(msgID int64) {
 	defer func() {
 		mon.FunctionResponseTime("FileDownload", time.Now().Sub(startTime))
 	}()
-	status, progress, filePath := getFileStatus(msgID)
+	status, progress, filePath := r.getFileStatus(msgID)
 	logs.Info("SDK::FileDownload() current file progress status",
 		zap.String("Status", status.ToString()),
 		zap.Float64("Progress", progress),
@@ -129,57 +120,21 @@ func (r *River) FileDownload(msgID int64) {
 	}
 }
 
-// PauseDownload pause download
-func (r *River) PauseDownload(msgID int64) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("PauseDownload", time.Now().Sub(startTime))
-	}()
-	fs, err := repo.Files.GetStatus(msgID)
-	if err != nil {
-		logs.Warn("SDK::PauseDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
-		return
-	}
-
-	r.fileCtrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
-
-	repo.Files.UpdateFileStatus(msgID, domain.RequestStatusPaused)
-}
-
 // CancelDownload cancel download
 func (r *River) CancelDownload(msgID int64) {
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("CancelDownload", time.Now().Sub(startTime))
 	}()
-	fs, err := repo.Files.GetStatus(msgID)
-	if err != nil {
-		logs.Warn("SDK::CancelDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
-		return
-	}
-
-	r.fileCtrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
-
-	repo.Files.UpdateFileStatus(msgID, domain.RequestStatusCanceled)
-}
-
-// PauseUpload pause upload
-func (r *River) PauseUpload(msgID int64) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("PauseUpload", time.Now().Sub(startTime))
-	}()
-	fs, err := repo.Files.GetStatus(msgID)
-	if err != nil {
-		logs.Warn("SDK::PauseUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
-		return
-	}
-
-	r.fileCtrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusPaused)
-
-	repo.Files.UpdateFileStatus(msgID, domain.RequestStatusPaused)
-	// repo.MessagesPending.Delete(fs.MessageID)
-
+	// fs, err := repo.Files.GetStatus(msgID)
+	// if err != nil {
+	// 	logs.Warn("SDK::CancelDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
+	// 	return
+	// }
+	//
+	// r.fileCtrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
+	//
+	// repo.Files.UpdateFileStatus(msgID, domain.RequestStatusCanceled)
 }
 
 // CancelUpload cancel upload
@@ -188,61 +143,16 @@ func (r *River) CancelUpload(msgID int64) {
 	defer func() {
 		mon.FunctionResponseTime("CancelUpload", time.Now().Sub(startTime))
 	}()
-	fs, err := repo.Files.GetStatus(msgID)
-	if err != nil {
-		logs.Warn("SDK::CancelUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
-		return
-	}
-	r.fileCtrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
+	// fs, err := repo.Files.GetStatus(msgID)
+	// if err != nil {
+	// 	logs.Warn("SDK::CancelUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
+	// 	return
+	// }
+	// r.fileCtrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
+	//
+	// repo.Files.DeleteStatus(msgID)
+	// repo.PendingMessages.Delete(fs.MessageID)
 
-	repo.Files.DeleteStatus(msgID)
-	repo.PendingMessages.Delete(fs.MessageID)
-
-}
-
-// ResumeUpload resume upload
-func (r *River) ResumeUpload(msgID int64) bool {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("ResumeUpload", time.Now().Sub(startTime))
-	}()
-
-	status, progress, filePath := getFileStatus(msgID)
-
-	logs.Info("SDK::ResumeUpload() current file progress status",
-		zap.String("Status", status.ToString()),
-		zap.Float64("Progress", progress),
-		zap.String("FilePath", filePath),
-	)
-
-	m := repo.PendingMessages.GetByID(msgID)
-	if m == nil {
-		logs.Warn("SDK::ResumeUpload()", zap.Int64("Message does not exist", msgID))
-		return false
-	}
-
-	switch status {
-	case domain.RequestStatusNone:
-		err := r.fileCtrl.Upload(m.RequestID, m)
-		if err != nil {
-			logs.Error("SDK::ResumeUpload()", zap.Error(err))
-			return false
-		}
-	case domain.RequestStatusCompleted:
-		return false
-	case domain.RequestStatusPaused, domain.RequestStatusCanceled, domain.RequestStatusError:
-		err := r.fileCtrl.Upload(m.RequestID, m)
-		if err != nil {
-			logs.Error("SDK::ResumeUpload()", zap.Error(err))
-			return false
-		}
-	case domain.RequestStatusInProgress:
-		return false
-	default:
-		return false
-	}
-
-	return true
 }
 
 // AccountUploadPhoto upload user profile photo
