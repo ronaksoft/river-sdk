@@ -111,7 +111,7 @@ func TestDownload(t *testing.T) {
 				FileSize:        2560,
 				ChunkSize:       256,
 				MaxInFlights:    3,
-				FilePath:        fmt.Sprintf("./FILE_%d", i),
+				FilePath:        fmt.Sprintf("./_FILE_%d", i),
 				DownloadedParts: nil,
 				TotalParts:      0,
 				Status:          0,
