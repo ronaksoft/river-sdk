@@ -108,9 +108,9 @@ func (r *River) FileDownload(msgID int64) {
 
 	switch status {
 	case domain.RequestStatusNone:
-		r.fileCtrl.Download(m)
+		r.fileCtrl.DownloadByMessage(m)
 	case domain.RequestStatusPaused, domain.RequestStatusCanceled, domain.RequestStatusError:
-		r.fileCtrl.Download(m)
+		r.fileCtrl.DownloadByMessage(m)
 	case domain.RequestStatusInProgress:
 	default:
 		return

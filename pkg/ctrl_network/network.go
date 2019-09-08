@@ -529,7 +529,6 @@ func (ctrl *Controller) SendHttp(msgEnvelope *msg.MessageEnvelope) (*msg.Message
 	}
 
 	b, err := protoMessage.Marshal()
-
 	reqBuff := bytes.NewBuffer(b)
 	if err != nil {
 		return nil, err

@@ -77,7 +77,6 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 			ctrl.extractMessagesMedia(x.Message)
 			ctrl.waitGroup.Done()
 		}()
-
 	}
 	return res
 }
@@ -493,9 +492,7 @@ func (ctrl *Controller) updateDraftMessage(u *msg.UpdateEnvelope) []*msg.UpdateE
 	dialog := repo.Dialogs.Get(x.Message.PeerID, int32(x.Message.PeerType))
 
 	if dialog != nil {
-
 		dialog.Draft = x.Message
-
 		repo.Dialogs.Save(dialog)
 	}
 

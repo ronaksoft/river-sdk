@@ -51,7 +51,7 @@ func New(config Config) *Controller {
 	if err == nil {
 		_ = json.Unmarshal(dBytes, &ctrl.downloadRequests)
 		for _, req := range ctrl.downloadRequests {
-			go ctrl.download(req)
+			go ctrl.Download(req)
 		}
 	}
 
@@ -74,7 +74,12 @@ func New(config Config) *Controller {
 	return ctrl
 }
 
-
+func (ctrl *Controller) saveDownloadRequests(req DownloadRequest) {
+	ctrl.mtxDownloads.Lock()
+	ctrl.downloadRequests[req.MessageID] = req
+	ctrl.mtxDownloads.Unlock()
+	ctrl.downloadsSaver.EnterWithResult(nil, nil)
+}
 func (ctrl *Controller) GetDownloadRequest(messageID int64) (DownloadRequest, bool) {
 	ctrl.mtxDownloads.Lock()
 	req, ok := ctrl.downloadRequests[messageID]
@@ -82,8 +87,7 @@ func (ctrl *Controller) GetDownloadRequest(messageID int64) (DownloadRequest, bo
 	return req, ok
 }
 
-// Download add download request
-func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
+func (ctrl *Controller) DownloadByMessage(userMessage *msg.UserMessage) {
 	switch userMessage.MediaType {
 	case msg.MediaTypeEmpty:
 	case msg.MediaTypeDocument:
@@ -93,7 +97,7 @@ func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
 			logs.Error("Error In Download", zap.Error(err))
 			return
 		}
-		ctrl.download(DownloadRequest{
+		ctrl.Download(DownloadRequest{
 			MaxRetries:   10,
 			MessageID:    userMessage.ID,
 			ClusterID:    x.Doc.ClusterID,
@@ -110,7 +114,8 @@ func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
 		return
 	}
 }
-func (ctrl *Controller) download(req DownloadRequest)  {
+
+func (ctrl *Controller) Download(req DownloadRequest)  {
 	ctrl.downloadsRateLimit <- struct{}{}
 	defer func() {
 		<-ctrl.downloadsRateLimit
@@ -127,15 +132,24 @@ func (ctrl *Controller) download(req DownloadRequest)  {
 		if os.IsNotExist(err) {
 			ds.file, err = os.Create(req.FilePath)
 			if err != nil {
+				logs.Warn("Error in CreateFile", zap.Error(err))
 				return
 			}
-			if req.FileSize > 0 {
-				err := os.Truncate(req.FilePath, req.FileSize)
-				if err != nil {
-					return
-				}
-			}
 		} else {
+			return
+		}
+	} else {
+		ds.file, err = os.OpenFile(req.FilePath, os.O_RDWR, 0666)
+		if err != nil {
+			logs.Warn("Error In OpenFile", zap.Error(err))
+			return
+		}
+	}
+
+	if req.FileSize > 0 {
+		err := os.Truncate(req.FilePath, req.FileSize)
+		if err != nil {
+			logs.Warn("Error in Truncate", zap.Error(err))
 			return
 		}
 	}
@@ -163,7 +177,7 @@ func (ctrl *Controller) download(req DownloadRequest)  {
 	// This is blocking call, until all the parts are downloaded
 	ds.execute()
 
-	// Remove the download request from the list
+	// Remove the Download request from the list
 	ctrl.mtxDownloads.Lock()
 	delete(ctrl.downloadRequests, req.MessageID)
 	ctrl.mtxDownloads.Unlock()
@@ -199,7 +213,7 @@ func (ctrl *Controller) download(req DownloadRequest)  {
 // 	return nil
 // }
 
-// DownloadAccountPhoto download account photo from server its sync
+// DownloadAccountPhoto Download account photo from server its sync
 func (ctrl *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) (string, error) {
 	var filePath string
 	err := ronak.Try(retryMaxAttempts, retryWaitTime, func() error {
@@ -266,7 +280,7 @@ func (ctrl *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto,
 	return filePath, nil
 }
 
-// DownloadGroupPhoto download group photo from server its sync
+// DownloadGroupPhoto Download group photo from server its sync
 func (ctrl *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) (string, error) {
 	var filePath string
 	err := ronak.Try(retryMaxAttempts, retryWaitTime, func() error {
@@ -332,7 +346,7 @@ func (ctrl *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto,
 	return filePath, nil
 }
 
-// DownloadThumbnail download thumbnail from server its sync
+// DownloadThumbnail Download thumbnail from server its sync
 func (ctrl *Controller) DownloadThumbnail(fileID int64, accessHash uint64, clusterID, version int32) (string, error) {
 	filePath := ""
 	err := ronak.Try(10, 100*time.Millisecond, func() error {

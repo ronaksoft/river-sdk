@@ -24,7 +24,7 @@ var (
 	dirCache string
 )
 
-// SetRootFolders directory paths to download files
+// SetRootFolders directory paths to Download files
 func SetRootFolders(audioDir, fileDir, photoDir, videoDir, cacheDir string) {
 	dirAudio = audioDir
 	dirFile = fileDir

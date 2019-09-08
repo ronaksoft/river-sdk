@@ -32,7 +32,7 @@ type DownloadRequest struct {
 	Version    int32  `json:"version"`
 	// FileSize (Optional) if is set then progress will be calculated
 	FileSize int64 `json:"file_size"`
-	// ChunkSize identifies how many request we need to send to server to download a file.
+	// ChunkSize identifies how many request we need to send to server to Download a file.
 	ChunkSize int32 `json:"chunk_size"`
 	// MaxInFlights defines that how many requests could be send concurrently
 	MaxInFlights int `json:"max_in_flights"`
@@ -68,9 +68,8 @@ func (ds *downloadStatus) isDownloaded(partIndex int32) bool {
 func (ds *downloadStatus) addToDownloaded(partIndex int32) {
 	ds.mtx.Lock()
 	ds.Request.DownloadedParts = append(ds.Request.DownloadedParts, partIndex)
-	ds.ctrl.downloadRequests[ds.Request.MessageID] = ds.Request
-	ds.ctrl.downloadsSaver.EnterWithResult(nil, nil)
 	ds.mtx.Unlock()
+	ds.ctrl.saveDownloadRequests(ds.Request)
 }
 
 func (ds *downloadStatus) generateFileGet(offset, limit int32) *msg.MessageEnvelope {
@@ -103,40 +102,57 @@ func (ds *downloadStatus) generateFileGet(offset, limit int32) *msg.MessageEnvel
 func (ds *downloadStatus) execute() {
 	ds.Request.Status = domain.RequestStatusInProgress
 	waitGroup := sync.WaitGroup{}
-	for partIndex := range ds.parts {
-		ds.rateLimit <- struct{}{}
-		waitGroup.Add(1)
 
-		go func(partIndex int32) {
-			defer waitGroup.Done()
-			defer func() {
-				<-ds.rateLimit
-			}()
+	for  {
+		select {
+		case partIndex := <- ds.parts:
+			ds.rateLimit <- struct{}{}
+			waitGroup.Add(1)
 
-			offset := partIndex * ds.Request.ChunkSize
-			res, err := ds.ctrl.network.SendHttp(ds.generateFileGet(offset, ds.Request.ChunkSize))
-			if err != nil {
-				ds.parts <- partIndex
-				return
-			}
-			switch res.Constructor {
-			case msg.C_File:
-				file := new(msg.File)
-				_ = file.Unmarshal(res.Message)
-				_, err := ds.file.WriteAt(file.Bytes, int64(offset))
+			go func(partIndex int32) {
+				defer waitGroup.Done()
+				defer func() {
+					<-ds.rateLimit
+				}()
+
+				offset := partIndex * ds.Request.ChunkSize
+				res, err := ds.ctrl.network.SendHttp(ds.generateFileGet(offset, ds.Request.ChunkSize))
 				if err != nil {
+					logs.Warn("Error in SentHTTP", zap.Error(err))
 					ds.parts <- partIndex
 					return
 				}
-				ds.addToDownloaded(partIndex)
-			default:
-				ds.parts <- partIndex
+				switch res.Constructor {
+				case msg.C_File:
+					file := new(msg.File)
+					_ = file.Unmarshal(res.Message)
+					_, err := ds.file.WriteAt(file.Bytes, int64(offset))
+					if err != nil {
+						logs.Warn("Error in WriteFile",
+							zap.Error(err),
+							zap.Int32("Offset", offset),
+							zap.Int("Byte", len(file.Bytes)),
+						)
+						ds.parts <- partIndex
+						return
+					}
+					ds.addToDownloaded(partIndex)
+				default:
+					ds.parts <- partIndex
+					return
+				}
+			}(partIndex)
+		default:
+			waitGroup.Wait()
+			if int32(len(ds.Request.DownloadedParts)) == ds.Request.TotalParts {
+				_ = ds.file.Close()
+				ds.Request.Status = domain.RequestStatusCompleted
 				return
 			}
-		}(partIndex)
-
+			if ds.Request.MaxRetries--; ds.Request.MaxRetries < 0 {
+				logs.Warn("File did not download completely")
+				return
+			}
+		}
 	}
-	waitGroup.Wait()
-	ds.Request.Status = domain.RequestStatusCompleted
-
 }
