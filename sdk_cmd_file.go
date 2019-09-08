@@ -44,12 +44,12 @@ func (r *River) getFileStatus(msgID int64) (status domain.RequestStatus, progres
 			progress = 0
 			filePath = ""
 		}
-	} else {
-		filePath = downloadRequest.FilePath
-		if downloadRequest.TotalParts > 1 {
-			status = downloadRequest.Status
-			progress = float64(len(downloadRequest.DownloadedParts)) / float64(downloadRequest.TotalParts) * 100
-		}
+		return
+	}
+	filePath = downloadRequest.FilePath
+	if downloadRequest.TotalParts > 1 {
+		status = downloadRequest.Status
+		progress = float64(len(downloadRequest.DownloadedParts)) / float64(downloadRequest.TotalParts) * 100
 	}
 	return
 }
@@ -109,8 +109,6 @@ func (r *River) FileDownload(msgID int64) {
 	switch status {
 	case domain.RequestStatusNone:
 		r.fileCtrl.Download(m)
-	case domain.RequestStatusCompleted:
-		r.onFileDownloadCompleted(m.ID, filePath, domain.FileStateExistedDownload)
 	case domain.RequestStatusPaused, domain.RequestStatusCanceled, domain.RequestStatusError:
 		r.fileCtrl.Download(m)
 	case domain.RequestStatusInProgress:

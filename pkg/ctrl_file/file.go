@@ -31,33 +31,41 @@ type Config struct {
 	MaxInflightUploads   int32
 }
 type Controller struct {
-	network           *networkCtrl.Controller
-	rateLimitDownload chan struct{}
-	rateLimitUpload   chan struct{}
-	mtxDownloads      sync.Mutex
-	downloadRequests  map[int64]DownloadRequest
-	saveSnapshot      *ronak.Flusher
+	network            *networkCtrl.Controller
+	mtxDownloads       sync.Mutex
+	downloadRequests   map[int64]DownloadRequest
+	downloadsSaver     *ronak.Flusher
+	downloadsRateLimit chan struct{}
+	uploadRequests     map[int64]UploadRequest
+	uploadsSaver       *ronak.Flusher
+	uploadsRateLimit   chan struct{}
 }
 
 func New(config Config) *Controller {
 	ctrl := new(Controller)
 	ctrl.network = config.Network
-	ctrl.rateLimitDownload = make(chan struct{}, config.MaxInflightDownloads)
-	ctrl.rateLimitUpload = make(chan struct{}, config.MaxInflightUploads)
-
+	ctrl.downloadsRateLimit = make(chan struct{}, config.MaxInflightDownloads)
+	ctrl.uploadsRateLimit = make(chan struct{}, config.MaxInflightUploads)
+	ctrl.downloadRequests = make(map[int64]DownloadRequest)
 	dBytes, err := repo.System.LoadBytes("Downloads")
-	if err != nil {
-		ctrl.downloadRequests = make(map[int64]DownloadRequest)
-	} else {
+	if err == nil {
 		_ = json.Unmarshal(dBytes, &ctrl.downloadRequests)
 		for _, req := range ctrl.downloadRequests {
-			_ = ctrl.startDownload(req)
+			go ctrl.download(req)
 		}
 	}
 
-	ctrl.saveSnapshot = ronak.NewFlusher(100, 1, time.Millisecond*100, func(items []ronak.FlusherEntry) {
+	ctrl.downloadsSaver = ronak.NewFlusher(100, 1, time.Millisecond*100, func(items []ronak.FlusherEntry) {
 		if dBytes, err := json.Marshal(ctrl.downloadRequests); err == nil {
 			_ = repo.System.SaveBytes("Downloads", dBytes)
+		}
+		for idx := range items {
+			items[idx].Callback(nil)
+		}
+	})
+	ctrl.uploadsSaver = ronak.NewFlusher(100, 1, time.Millisecond*100, func(items []ronak.FlusherEntry) {
+		if dBytes, err := json.Marshal(ctrl.uploadRequests); err == nil {
+			_ = repo.System.SaveBytes("Uploads", dBytes)
 		}
 		for idx := range items {
 			items[idx].Callback(nil)
@@ -66,10 +74,46 @@ func New(config Config) *Controller {
 	return ctrl
 }
 
-func (ctrl *Controller) startDownload(req DownloadRequest) (err error) {
-	ctrl.rateLimitDownload <- struct{}{}
+
+func (ctrl *Controller) GetDownloadRequest(messageID int64) (DownloadRequest, bool) {
+	ctrl.mtxDownloads.Lock()
+	req, ok := ctrl.downloadRequests[messageID]
+	ctrl.mtxDownloads.Unlock()
+	return req, ok
+}
+
+// Download add download request
+func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
+	switch userMessage.MediaType {
+	case msg.MediaTypeEmpty:
+	case msg.MediaTypeDocument:
+		x := new(msg.MediaDocument)
+		err := x.Unmarshal(userMessage.Media)
+		if err != nil {
+			logs.Error("Error In Download", zap.Error(err))
+			return
+		}
+		ctrl.download(DownloadRequest{
+			MaxRetries:   10,
+			MessageID:    userMessage.ID,
+			ClusterID:    x.Doc.ClusterID,
+			FileID:       x.Doc.ID,
+			AccessHash:   x.Doc.AccessHash,
+			Version:      x.Doc.Version,
+			FileSize:     int64(x.Doc.FileSize),
+			ChunkSize:    downloadChunkSize,
+			MaxInFlights: maxDownloadInFlights,
+			FilePath:     GetFilePath(x.Doc.MimeType, x.Doc.ID),
+		})
+
+	default:
+		return
+	}
+}
+func (ctrl *Controller) download(req DownloadRequest)  {
+	ctrl.downloadsRateLimit <- struct{}{}
 	defer func() {
-		<-ctrl.rateLimitDownload
+		<-ctrl.downloadsRateLimit
 	}()
 
 	ds := &downloadStatus{
@@ -78,21 +122,21 @@ func (ctrl *Controller) startDownload(req DownloadRequest) (err error) {
 		Request:   req,
 	}
 
-	_, err = os.Stat(req.FilePath)
+	_, err := os.Stat(req.FilePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			ds.file, err = os.Create(req.FilePath)
 			if err != nil {
-				return err
+				return
 			}
 			if req.FileSize > 0 {
 				err := os.Truncate(req.FilePath, req.FileSize)
 				if err != nil {
-					return err
+					return
 				}
 			}
 		} else {
-			return err
+			return
 		}
 	}
 
@@ -117,48 +161,14 @@ func (ctrl *Controller) startDownload(req DownloadRequest) (err error) {
 	}
 
 	// This is blocking call, until all the parts are downloaded
-	ds.run()
+	ds.execute()
 
-	return nil
-}
-
-func (ctrl *Controller) GetDownloadRequest(messageID int64) (DownloadRequest, bool) {
+	// Remove the download request from the list
 	ctrl.mtxDownloads.Lock()
-	req, ok := ctrl.downloadRequests[messageID]
+	delete(ctrl.downloadRequests, req.MessageID)
 	ctrl.mtxDownloads.Unlock()
-	return req, ok
 }
 
-// Download add download request
-func (ctrl *Controller) Download(userMessage *msg.UserMessage) {
-	switch userMessage.MediaType {
-	case msg.MediaTypeEmpty:
-	case msg.MediaTypeDocument:
-		x := new(msg.MediaDocument)
-		err := x.Unmarshal(userMessage.Media)
-		if err != nil {
-			logs.Error("Error In Download", zap.Error(err))
-			return
-		}
-		err = ctrl.startDownload(DownloadRequest{
-			MaxRetries:   10,
-			MessageID:    userMessage.ID,
-			ClusterID:    x.Doc.ClusterID,
-			FileID:       x.Doc.ID,
-			AccessHash:   x.Doc.AccessHash,
-			Version:      x.Doc.Version,
-			FileSize:     int64(x.Doc.FileSize),
-			ChunkSize:    downloadChunkSize,
-			MaxInFlights: maxDownloadInFlights,
-			FilePath:     GetFilePath(x.Doc.MimeType, x.Doc.ID),
-		})
-		if err != nil {
-			logs.Error("Error In Download", zap.Error(err))
-		}
-	default:
-		return
-	}
-}
 
 // func (ctrl *Controller) UploadProfilePhoto() {}
 //

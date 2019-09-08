@@ -69,7 +69,7 @@ func (ds *downloadStatus) addToDownloaded(partIndex int32) {
 	ds.mtx.Lock()
 	ds.Request.DownloadedParts = append(ds.Request.DownloadedParts, partIndex)
 	ds.ctrl.downloadRequests[ds.Request.MessageID] = ds.Request
-	ds.ctrl.saveSnapshot.EnterWithResult(nil, nil)
+	ds.ctrl.downloadsSaver.EnterWithResult(nil, nil)
 	ds.mtx.Unlock()
 }
 
@@ -100,7 +100,7 @@ func (ds *downloadStatus) generateFileGet(offset, limit int32) *msg.MessageEnvel
 	return envelop
 }
 
-func (ds *downloadStatus) run() {
+func (ds *downloadStatus) execute() {
 	ds.Request.Status = domain.RequestStatusInProgress
 	waitGroup := sync.WaitGroup{}
 	for partIndex := range ds.parts {
@@ -138,4 +138,5 @@ func (ds *downloadStatus) run() {
 	}
 	waitGroup.Wait()
 	ds.Request.Status = domain.RequestStatusCompleted
+
 }
