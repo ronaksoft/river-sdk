@@ -2,8 +2,10 @@ package riversdk
 
 import (
 	"encoding/json"
+	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"sort"
 	"strings"
 	"sync"
@@ -580,20 +582,34 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		return
 	}
 
-	// 2. start file upload and send process
-	err = r.fileCtrl.Upload(fileID, res)
-	if err != nil {
-		e := new(msg.Error)
-		e.Code = "n/a"
-		e.Items = "Failed to start Upload : " + err.Error()
-		msg.ResultError(out, e)
-		uiexec.Ctx().Exec(func() {
-			if successCB != nil {
-				successCB(out)
-			}
-		})
-		return
-	}
+
+	// Upload Thumbnail
+	r.fileCtrl.Upload(fileCtrl.UploadRequest{
+		MessageID:    res.ID,
+		FileID:       ronak.RandomInt64(0),
+		MaxInFlights: 3,
+		FilePath:     reqMedia.ThumbFilePath,
+	})
+
+	// Upload File
+	r.fileCtrl.Upload(fileCtrl.UploadRequest{
+		MessageID:    res.ID,
+		FileID:       ronak.RandomInt64(0),
+		MaxInFlights: 3,
+		FilePath:     reqMedia.FilePath,
+	})
+	// if err != nil {
+	// 	e := new(msg.Error)
+	// 	e.Code = "n/a"
+	// 	e.Items = "Failed to start Upload : " + err.Error()
+	// 	msg.ResultError(out, e)
+	// 	uiexec.Ctx().Exec(func() {
+	// 		if successCB != nil {
+	// 			successCB(out)
+	// 		}
+	// 	})
+	// 	return
+	// }
 
 	// 3. return to CallBack with pending message data : Done
 	out.Constructor = msg.C_ClientPendingMessage

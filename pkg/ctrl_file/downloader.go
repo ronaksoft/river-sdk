@@ -1,13 +1,13 @@
 package fileCtrl
 
 import (
-	"context"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"go.uber.org/zap"
 	"os"
 	"sync"
+	"sync/atomic"
 )
 
 /*
@@ -21,7 +21,7 @@ import (
 
 type DownloadRequest struct {
 	// MaxRetries defines how many time each request could encounter error before giving up
-	MaxRetries int `json:"max_retries"`
+	MaxRetries int32 `json:"max_retries"`
 	// MessageID (Optional) if is set then (ClusterID, FileID, AccessHash, Version) will be read from the message
 	// document object, or if message has no document then return error
 	MessageID int64 `json:"message_id"`
@@ -46,7 +46,6 @@ type DownloadRequest struct {
 
 type downloadStatus struct {
 	mtx       sync.Mutex
-	ctx       context.Context
 	rateLimit chan struct{}
 	parts     chan int32
 	file      *os.File
@@ -69,7 +68,7 @@ func (ds *downloadStatus) addToDownloaded(partIndex int32) {
 	ds.mtx.Lock()
 	ds.Request.DownloadedParts = append(ds.Request.DownloadedParts, partIndex)
 	ds.mtx.Unlock()
-	ds.ctrl.saveDownloadRequests(ds.Request)
+	ds.ctrl.saveDownloads(ds.Request)
 }
 
 func (ds *downloadStatus) generateFileGet(offset, limit int32) *msg.MessageEnvelope {
@@ -103,7 +102,7 @@ func (ds *downloadStatus) execute() {
 	ds.Request.Status = domain.RequestStatusInProgress
 	waitGroup := sync.WaitGroup{}
 
-	for {
+	for ds.Request.MaxRetries > 0 {
 		select {
 		case partIndex := <-ds.parts:
 			ds.rateLimit <- struct{}{}
@@ -119,13 +118,24 @@ func (ds *downloadStatus) execute() {
 				res, err := ds.ctrl.network.SendHttp(ds.generateFileGet(offset, ds.Request.ChunkSize))
 				if err != nil {
 					logs.Warn("Error in SentHTTP", zap.Error(err))
+					atomic.AddInt32(&ds.Request.MaxRetries, -1)
 					ds.parts <- partIndex
 					return
 				}
 				switch res.Constructor {
 				case msg.C_File:
 					file := new(msg.File)
-					_ = file.Unmarshal(res.Message)
+					err = file.Unmarshal(res.Message)
+					if err != nil {
+						logs.Warn("Error in Unmarshal",
+							zap.Error(err),
+							zap.Int32("Offset", offset),
+							zap.Int("Byte", len(file.Bytes)),
+						)
+						atomic.AddInt32(&ds.Request.MaxRetries, -1)
+						ds.parts <- partIndex
+						return
+					}
 					_, err := ds.file.WriteAt(file.Bytes, int64(offset))
 					if err != nil {
 						logs.Warn("Error in WriteFile",
@@ -133,11 +143,13 @@ func (ds *downloadStatus) execute() {
 							zap.Int32("Offset", offset),
 							zap.Int("Byte", len(file.Bytes)),
 						)
+						atomic.AddInt32(&ds.Request.MaxRetries, -1)
 						ds.parts <- partIndex
 						return
 					}
 					ds.addToDownloaded(partIndex)
 				default:
+					atomic.AddInt32(&ds.Request.MaxRetries, -1)
 					ds.parts <- partIndex
 					return
 				}
@@ -147,10 +159,6 @@ func (ds *downloadStatus) execute() {
 			if int32(len(ds.Request.DownloadedParts)) == ds.Request.TotalParts {
 				_ = ds.file.Close()
 				ds.Request.Status = domain.RequestStatusCompleted
-				return
-			}
-			if ds.Request.MaxRetries--; ds.Request.MaxRetries < 0 {
-				logs.Warn("File did not download completely")
 				return
 			}
 		}

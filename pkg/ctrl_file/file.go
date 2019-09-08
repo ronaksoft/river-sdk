@@ -36,6 +36,7 @@ type Controller struct {
 	downloadRequests   map[int64]DownloadRequest
 	downloadsSaver     *ronak.Flusher
 	downloadsRateLimit chan struct{}
+	mtxUploads         sync.Mutex
 	uploadRequests     map[int64]UploadRequest
 	uploadsSaver       *ronak.Flusher
 	uploadsRateLimit   chan struct{}
@@ -47,6 +48,9 @@ func New(config Config) *Controller {
 	ctrl.downloadsRateLimit = make(chan struct{}, config.MaxInflightDownloads)
 	ctrl.uploadsRateLimit = make(chan struct{}, config.MaxInflightUploads)
 	ctrl.downloadRequests = make(map[int64]DownloadRequest)
+	ctrl.uploadRequests = make(map[int64]UploadRequest)
+
+	// Resume downloads
 	dBytes, err := repo.System.LoadBytes("Downloads")
 	if err == nil {
 		_ = json.Unmarshal(dBytes, &ctrl.downloadRequests)
@@ -55,6 +59,14 @@ func New(config Config) *Controller {
 		}
 	}
 
+	// Resume uploads
+	dBytes, err = repo.System.LoadBytes("Uploads")
+	if err == nil {
+		_ = json.Unmarshal(dBytes, &ctrl.uploadRequests)
+		for _, req := range ctrl.uploadRequests {
+			go ctrl.Upload(req)
+		}
+	}
 	ctrl.downloadsSaver = ronak.NewFlusher(100, 1, time.Millisecond*100, func(items []ronak.FlusherEntry) {
 		if dBytes, err := json.Marshal(ctrl.downloadRequests); err == nil {
 			_ = repo.System.SaveBytes("Downloads", dBytes)
@@ -74,11 +86,17 @@ func New(config Config) *Controller {
 	return ctrl
 }
 
-func (ctrl *Controller) saveDownloadRequests(req DownloadRequest) {
+func (ctrl *Controller) saveDownloads(req DownloadRequest) {
 	ctrl.mtxDownloads.Lock()
 	ctrl.downloadRequests[req.MessageID] = req
 	ctrl.mtxDownloads.Unlock()
 	ctrl.downloadsSaver.EnterWithResult(nil, nil)
+}
+func (ctrl *Controller) saveUploads(req UploadRequest) {
+	ctrl.mtxUploads.Lock()
+	ctrl.uploadRequests[req.MessageID] = req
+	ctrl.mtxUploads.Unlock()
+	ctrl.uploadsSaver.EnterWithResult(nil, nil)
 }
 func (ctrl *Controller) GetDownloadRequest(messageID int64) (DownloadRequest, bool) {
 	ctrl.mtxDownloads.Lock()
@@ -183,34 +201,63 @@ func (ctrl *Controller) Download(req DownloadRequest) {
 	ctrl.mtxDownloads.Unlock()
 }
 
-// func (ctrl *Controller) UploadProfilePhoto() {}
-//
-// // Upload file to server
-// func (ctrl *Controller) Upload(fileID int64, req *msg.ClientPendingMessage) error {
-// 	x := new(msg.ClientSendMessageMedia)
-// 	err := x.Unmarshal(req.Media)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	file, err := os.Open(x.FilePath)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	fileInfo, err := file.Stat()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if x.FileName == "" {
-// 		x.FileName = fileInfo.Name()
-// 	}
-// 	fileSize := fileInfo.Size() // size in Byte
-// 	if fileSize > domain.FileMaxAllowedSize {
-// 		return domain.ErrMaxFileSize
-// 	}
-//
-//
-// 	return nil
-// }
+func (ctrl *Controller) UploadByMessage(pendingMessage *msg.ClientPendingMessage) {
+
+}
+
+func (ctrl *Controller) Upload(req UploadRequest) {
+	ctrl.uploadsRateLimit <- struct{}{}
+	defer func() {
+		<-ctrl.uploadsRateLimit
+	}()
+
+	ds := &uploadStatus{
+		rateLimit: make(chan struct{}, req.MaxInFlights),
+		ctrl:      ctrl,
+	}
+
+	fileInfo, err := os.Stat(req.FilePath)
+	if err != nil {
+		return
+	}
+	ds.file, err = os.OpenFile(req.FilePath, os.O_RDONLY, 0666)
+	if err != nil {
+		logs.Warn("Error In OpenFile", zap.Error(err))
+		return
+	}
+
+	req.FileSize = fileInfo.Size()
+	if req.FileSize <= 0 {
+		return
+	}
+	if req.FileSize > domain.FileMaxAllowedSize {
+		return
+	}
+
+	ds.Request = req
+	dividend := int32(req.FileSize / int64(req.ChunkSize))
+	if req.FileSize%int64(req.ChunkSize) > 0 {
+		ds.Request.TotalParts = dividend + 1
+	} else {
+		ds.Request.TotalParts = dividend
+	}
+
+	ds.parts = make(chan int32, ds.Request.TotalParts)
+	for partIndex := int32(0); partIndex < ds.Request.TotalParts-1; partIndex++ {
+		if ds.isUploaded(partIndex) {
+			continue
+		}
+		ds.parts <- partIndex
+	}
+
+	// This is blocking call, until all the parts are downloaded
+	ds.execute()
+
+	// Remove the Download request from the list
+	ctrl.mtxUploads.Lock()
+	delete(ctrl.uploadRequests, req.MessageID)
+	ctrl.mtxUploads.Unlock()
+}
 
 // DownloadAccountPhoto Download account photo from server its sync
 func (ctrl *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) (string, error) {

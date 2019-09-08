@@ -7,7 +7,6 @@ import (
 	networkCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/valyala/tcplisten"
 	"go.uber.org/zap"
 	"io/ioutil"
@@ -46,14 +45,16 @@ func init() {
 }
 
 type TestServer struct {
+	sync.Mutex
+	uploadTracker map[int64]map[int32]struct{}
 }
 
 func (t TestServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	// time.Sleep(3 * time.Second)
-	if ronak.RandomInt(10) < 5 {
-		res.WriteHeader(http.StatusForbidden)
-		return
-	}
+	// if ronak.RandomInt(10) < 5 {
+	// 	res.WriteHeader(http.StatusForbidden)
+	// 	return
+	// }
 	body, _ := ioutil.ReadAll(req.Body)
 	protoMessage := new(msg.ProtoMessage)
 	_ = protoMessage.Unmarshal(body)
@@ -63,9 +64,7 @@ func (t TestServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	case msg.C_FileGet:
 		req := new(msg.FileGet)
 		_ = req.Unmarshal(eIn.Message)
-		logs.Info("Request Received:",
-			zap.Int64("AuthID", protoMessage.AuthID),
-			zap.String("Constructor", msg.ConstructorNames[eIn.Constructor]),
+		logs.Info("FileGet",
 			zap.Int32("Offset", req.Offset),
 			zap.Int32("Limit", req.Limit),
 		)
@@ -83,14 +82,44 @@ func (t TestServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		_, _ = res.Write(b)
 
 	case msg.C_FileSavePart:
-
+		req := new(msg.FileSavePart)
+		_ = req.Unmarshal(eIn.Message)
+		logs.Info("SavePart:",
+			zap.Int64("FileID", req.FileID),
+			zap.Int32("PartID", req.PartID),
+			zap.Int32("TotalParts", req.TotalParts),
+		)
+		t.Lock()
+		if _, ok := t.uploadTracker[req.FileID]; !ok {
+			t.uploadTracker[req.FileID] = make(map[int32]struct{})
+		}
+		t.uploadTracker[req.FileID][req.PartID] = struct{}{}
+		t.Unlock()
+		if req.PartID == req.TotalParts {
+			sum := int32(0)
+			t.Lock()
+			for partID := range t.uploadTracker[req.FileID] {
+				sum += partID
+			}
+			t.Unlock()
+			if sum == (req.TotalParts * (req.TotalParts + 1)) / 2 {
+				logs.Info("CORRECT UPLOAD")
+			}
+		}
+		eIn.Constructor = msg.C_Bool
+		eIn.Message, _ = (&msg.Bool{}).Marshal()
+		protoMessage.Payload, _ = eIn.Marshal()
+		b, _ := protoMessage.Marshal()
+		_, _ = res.Write(b)
 	}
 }
 
 func TestDownload(t *testing.T) {
 	var err error
 	tcpConfig := new(tcplisten.Config)
-	s := httptest.NewUnstartedServer(TestServer{})
+	s := httptest.NewUnstartedServer(TestServer{
+		uploadTracker: make(map[int64]map[int32]struct{}),
+	})
 	s.Listener, err = tcpConfig.NewListener("tcp4", ":8080")
 	if err != nil {
 		logs.Fatal(err.Error())
@@ -105,7 +134,7 @@ func TestDownload(t *testing.T) {
 				MaxRetries:      10,
 				MessageID:       1000,
 				ClusterID:       11,
-				FileID:          111,
+				FileID:          int64(i),
 				AccessHash:      1111,
 				Version:         1,
 				FileSize:        2560,
@@ -115,6 +144,36 @@ func TestDownload(t *testing.T) {
 				DownloadedParts: nil,
 				TotalParts:      0,
 				Status:          0,
+			})
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
+}
+
+func TestUpload(t *testing.T) {
+	var err error
+	tcpConfig := new(tcplisten.Config)
+	s := httptest.NewUnstartedServer(TestServer{
+		uploadTracker: make(map[int64]map[int32]struct{}),
+	})
+	s.Listener, err = tcpConfig.NewListener("tcp4", ":8080")
+	if err != nil {
+		logs.Fatal(err.Error())
+	}
+	s.Start()
+
+	wg := sync.WaitGroup{}
+	for i := 0; i < 1; i++ {
+		wg.Add(1)
+		go func(i int) {
+			_File.Upload(fileCtrl.UploadRequest{
+				MaxRetries:      10,
+				MessageID:       1000,
+				FileID:          int64(i),
+				ChunkSize:       256,
+				MaxInFlights:    3,
+				FilePath:        fmt.Sprintf("./_FILE_%d", i),
 			})
 			wg.Done()
 		}(i)
