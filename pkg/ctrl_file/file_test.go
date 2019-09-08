@@ -82,7 +82,6 @@ func (t TestServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		b, _ := protoMessage.Marshal()
 		_, _ = res.Write(b)
 
-
 	case msg.C_FileSavePart:
 
 	}
@@ -99,7 +98,7 @@ func TestDownload(t *testing.T) {
 	s.Start()
 
 	wg := sync.WaitGroup{}
-	for i := 0; i < 10 ;i++ {
+	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func(i int) {
 			_File.Download(fileCtrl.DownloadRequest{

@@ -103,9 +103,9 @@ func (ds *downloadStatus) execute() {
 	ds.Request.Status = domain.RequestStatusInProgress
 	waitGroup := sync.WaitGroup{}
 
-	for  {
+	for {
 		select {
-		case partIndex := <- ds.parts:
+		case partIndex := <-ds.parts:
 			ds.rateLimit <- struct{}{}
 			waitGroup.Add(1)
 

@@ -115,7 +115,7 @@ func (ctrl *Controller) DownloadByMessage(userMessage *msg.UserMessage) {
 	}
 }
 
-func (ctrl *Controller) Download(req DownloadRequest)  {
+func (ctrl *Controller) Download(req DownloadRequest) {
 	ctrl.downloadsRateLimit <- struct{}{}
 	defer func() {
 		<-ctrl.downloadsRateLimit
@@ -182,7 +182,6 @@ func (ctrl *Controller) Download(req DownloadRequest)  {
 	delete(ctrl.downloadRequests, req.MessageID)
 	ctrl.mtxDownloads.Unlock()
 }
-
 
 // func (ctrl *Controller) UploadProfilePhoto() {}
 //

@@ -10,5 +10,4 @@ package fileCtrl
 */
 
 type UploadRequest struct {
-
 }
