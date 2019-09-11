@@ -99,7 +99,10 @@ func main() {
 	})
 
 	// _SDK.TurnOnLiveLogger("http://localhost:2374")
-	_SDK.Start()
+	err = _SDK.Start()
+	if err != nil {
+		_Log.Fatal(err.Error())
+	}
 	if _SDK.ConnInfo.AuthID == 0 {
 		if err := _SDK.CreateAuthKey(); err != nil {
 			_Shell.Println("CreateAuthKey::", err.Error())

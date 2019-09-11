@@ -31,7 +31,7 @@ var (
 )
 
 func init() {
-	repo.InitRepo("./db", true)
+	repo.InitRepo("./_db", true)
 	_Network = networkCtrl.New(networkCtrl.Config{
 		WebsocketEndpoint: "",
 		HttpEndpoint:      "http://127.0.0.1:8080",
