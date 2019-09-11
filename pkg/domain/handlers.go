@@ -42,25 +42,3 @@ type ReceivedMessageHandler func(messages []*msg.MessageEnvelope)
 
 // ReceivedUpdateHandler NetworkController pass all received update messages to this callback/delegate
 type ReceivedUpdateHandler func(messages []*msg.UpdateContainer)
-
-// OnFileStatusChanged delegate to rise file progress event
-type OnFileStatusChanged func(messageID, processedParts, totalParts int64, stateType FileStateType)
-
-// OnFileUploadCompleted delegate to rise upload completed event
-type OnFileUploadCompleted func(messageID, fileID, targetID int64,
-	clusterID int32, totalParts int64,
-	stateType FileStateType,
-	filePath string,
-	req *msg.ClientSendMessageMedia,
-	thumbFileID int64,
-	thumbTotalParts int32,
-)
-
-// OnFileDownloadCompleted delegate to rise download completed event
-type OnFileDownloadCompleted func(messageID int64, filePath string, stateType FileStateType)
-
-// OnFileUploadError on receive error from server
-type OnFileUploadError func(messageID, requestID int64, filePath string, err []byte)
-
-// OnFileDownloadError on receive error from server
-type OnFileDownloadError func(messageID, requestID int64, filePath string, err []byte)

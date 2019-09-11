@@ -55,7 +55,7 @@ func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 			UpdatePrinter(update)
 		}
 	case msg.C_ClientUpdatePendingMessageDelivery:
-		//wrapping it to update envelop to pass UpdatePrinter
+		// wrapping it to update envelop to pass UpdatePrinter
 		udp := new(msg.UpdateEnvelope)
 		udp.Constructor = constructor
 		udp.Update = b
@@ -127,15 +127,15 @@ func (d *PrintDelegate) Log(logLevel int, msg string) {
 
 type FileDelegate struct{}
 
-func (d *FileDelegate) OnUploadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
-	_Log.Info("upload progress changed", zap.Float64("Progress", percent))
+func (d *FileDelegate) OnProgressChanged(messageID int64, percent int64) {
+	_Log.Info("upload progress changed", zap.Int64("Progress", percent))
 }
 
-func (d *FileDelegate) OnUploadCompleted(messageID int64, filePath string) {
+func (d *FileDelegate) OnCompleted(messageID int64, filePath string) {
 	_Log.Info("On upload Completed", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
 }
 
-func (d *FileDelegate) OnUploadError(messageID, requestID int64, filePath string, err []byte) {
+func (d *FileDelegate) OnError(messageID int64, filePath string, err []byte) {
 	x := new(msg.Error)
 	x.Unmarshal(err)
 
@@ -143,7 +143,6 @@ func (d *FileDelegate) OnUploadError(messageID, requestID int64, filePath string
 		zap.String("Code", x.Code),
 		zap.String("Item", x.Items),
 		zap.Int64("MsgID", messageID),
-		zap.Int64("ReqID", requestID),
 		zap.String("FilePath", filePath),
 	)
 
