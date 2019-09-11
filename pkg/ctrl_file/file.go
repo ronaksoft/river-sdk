@@ -75,23 +75,6 @@ func New(config Config) *Controller {
 		ctrl.onError = config.OnError
 	}
 
-	// Resume downloads
-	dBytes, err := repo.System.LoadBytes("Downloads")
-	if err == nil {
-		_ = json.Unmarshal(dBytes, &ctrl.downloadRequests)
-		for _, req := range ctrl.downloadRequests {
-			go ctrl.Download(req)
-		}
-	}
-
-	// Resume uploads
-	dBytes, err = repo.System.LoadBytes("Uploads")
-	if err == nil {
-		_ = json.Unmarshal(dBytes, &ctrl.uploadRequests)
-		for _, req := range ctrl.uploadRequests {
-			go ctrl.Upload(req)
-		}
-	}
 	ctrl.downloadsSaver = ronak.NewFlusher(100, 1, time.Millisecond*100, func(items []ronak.FlusherEntry) {
 		if dBytes, err := json.Marshal(ctrl.downloadRequests); err == nil {
 			_ = repo.System.SaveBytes("Downloads", dBytes)
@@ -108,6 +91,26 @@ func New(config Config) *Controller {
 			items[idx].Callback(nil)
 		}
 	})
+
+	// Resume downloads
+	dBytes, err := repo.System.LoadBytes("Downloads")
+	if err == nil {
+		_ = json.Unmarshal(dBytes, &ctrl.downloadRequests)
+		for _, req := range ctrl.downloadRequests {
+			go ctrl.Download(req)
+		}
+	}
+
+	// Resume uploads
+	dBytes, err = repo.System.LoadBytes("Uploads")
+	if err == nil {
+		_ = json.Unmarshal(dBytes, &ctrl.uploadRequests)
+		for _, req := range ctrl.uploadRequests {
+			logs.Info("Unfinished Upload", )
+			go ctrl.Upload(req)
+		}
+	}
+
 	return ctrl
 }
 
@@ -117,12 +120,25 @@ func (ctrl *Controller) saveDownloads(req DownloadRequest) {
 	ctrl.mtxDownloads.Unlock()
 	ctrl.downloadsSaver.EnterWithResult(nil, nil)
 }
+func (ctrl *Controller) deleteDownloadRequest(msgID int64) {
+	ctrl.mtxDownloads.Lock()
+	delete(ctrl.downloadRequests, msgID)
+	ctrl.mtxDownloads.Unlock()
+	ctrl.downloadsSaver.EnterWithResult(nil, nil)
+}
 func (ctrl *Controller) saveUploads(req UploadRequest) {
 	ctrl.mtxUploads.Lock()
 	ctrl.uploadRequests[req.MessageID] = req
 	ctrl.mtxUploads.Unlock()
 	ctrl.uploadsSaver.EnterWithResult(nil, nil)
 }
+func (ctrl *Controller) deleteUpdateRequest(msgID int64) {
+	ctrl.mtxUploads.Lock()
+	delete(ctrl.uploadRequests, msgID)
+	ctrl.mtxUploads.Unlock()
+	ctrl.uploadsSaver.EnterWithResult(nil, nil)
+}
+
 func (ctrl *Controller) GetDownloadRequest(messageID int64) (DownloadRequest, bool) {
 	ctrl.mtxDownloads.Lock()
 	req, ok := ctrl.downloadRequests[messageID]
@@ -221,9 +237,7 @@ func (ctrl *Controller) Download(req DownloadRequest) {
 	ds.execute()
 
 	// Remove the Download request from the list
-	ctrl.mtxDownloads.Lock()
-	delete(ctrl.downloadRequests, req.MessageID)
-	ctrl.mtxDownloads.Unlock()
+	ctrl.deleteDownloadRequest(req.MessageID)
 }
 
 func (ctrl *Controller) UploadUserPhoto(filePath string) {
@@ -324,16 +338,26 @@ func (ctrl *Controller) Upload(req UploadRequest) {
 		return
 	}
 
-	ds.req = req
-	dividend := int32(req.FileSize / int64(req.ChunkSize))
-	if req.FileSize%int64(req.ChunkSize) > 0 {
-		ds.req.TotalParts = dividend + 1
-	} else {
-		ds.req.TotalParts = dividend
+	if req.ChunkSize == 0 {
+		req.ChunkSize = downloadChunkSize
 	}
 
-	ds.parts = make(chan int32, ds.req.TotalParts)
-	for partIndex := int32(0); partIndex < ds.req.TotalParts-1; partIndex++ {
+
+	dividend := int32(req.FileSize / int64(req.ChunkSize))
+	if req.FileSize%int64(req.ChunkSize) > 0 {
+		req.TotalParts = dividend + 1
+	} else {
+		req.TotalParts = dividend
+	}
+
+
+	// maxPartID := req.TotalParts
+	// if req.TotalParts > 1 {
+	// 	maxPartID = req.TotalParts - 1
+	// }
+	ds.parts = make(chan int32, req.TotalParts+req.MaxInFlights)
+	ds.req = req
+	for partIndex := int32(0); partIndex < req.TotalParts - 1; partIndex++ {
 		if ds.isUploaded(partIndex) {
 			continue
 		}
@@ -344,9 +368,7 @@ func (ctrl *Controller) Upload(req UploadRequest) {
 	ds.execute()
 
 	// Remove the Download request from the list
-	ctrl.mtxUploads.Lock()
-	delete(ctrl.uploadRequests, req.MessageID)
-	ctrl.mtxUploads.Unlock()
+	ctrl.deleteUpdateRequest(req.MessageID)
 	return
 }
 

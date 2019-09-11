@@ -7,6 +7,7 @@ import (
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/gobwas/pool/pbytes"
 	"go.uber.org/zap"
+	"io"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -48,10 +49,9 @@ type UploadRequest struct {
 	// ChunkSize identifies how many request we need to send to server to Download a file.
 	ChunkSize int32 `json:"chunk_size"`
 	// MaxInFlights defines that how many requests could be send concurrently
-	MaxInFlights    int     `json:"max_in_flights"`
+	MaxInFlights    int32     `json:"max_in_flights"`
 	UploadedParts   []int32 `json:"downloaded_parts"`
 	TotalParts      int32   `json:"total_parts"`
-	ThumbTotalParts int32 `json:"thumb_total_parts"`
 }
 
 type uploadStatus struct {
@@ -113,6 +113,7 @@ func (us *uploadStatus) execute() domain.RequestStatus {
 			waitGroup.Add(1)
 
 			go func(partIndex int32) {
+				logs.Warn("H", zap.Int32("IDX", partIndex))
 				defer waitGroup.Done()
 				defer func() {
 					<-us.rateLimit
@@ -122,7 +123,7 @@ func (us *uploadStatus) execute() domain.RequestStatus {
 				defer pbytes.Put(bytes)
 				offset := partIndex * us.req.ChunkSize
 				_, err := us.file.ReadAt(bytes, int64(offset))
-				if err != nil {
+				if err != nil && err != io.EOF{
 					logs.Warn("Error in ReadFile", zap.Error(err))
 					atomic.AddInt32(&us.req.MaxRetries, -1)
 					us.parts <- partIndex
@@ -141,16 +142,17 @@ func (us *uploadStatus) execute() domain.RequestStatus {
 				default:
 					atomic.AddInt32(&us.req.MaxRetries, -1)
 					us.parts <- partIndex
-					return
 				}
 			}(partIndex)
 		default:
 			waitGroup.Wait()
 			switch int32(len(us.req.UploadedParts)) {
 			case us.req.TotalParts - 1:
+				logs.Warn("HERE1")
 				// If we finished uploading n-1 parts then run the last loop with the last part
 				us.parts <- us.req.TotalParts - 1
 			case us.req.TotalParts:
+				logs.Warn("HERE2")
 				// We have finished our uploads
 				_ = us.file.Close()
 				us.ctrl.onCompleted(us.req.MessageID, us.req.FilePath)

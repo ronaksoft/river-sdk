@@ -7,6 +7,7 @@ import (
 	networkCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/valyala/tcplisten"
 	"go.uber.org/zap"
 	"io/ioutil"
@@ -40,6 +41,15 @@ func init() {
 		Network:              _Network,
 		MaxInflightDownloads: 2,
 		MaxInflightUploads:   10,
+		OnProgressChanged: func(messageID int64, percent int64) {
+			logs.Info("Progress Changed", zap.Int64("MsgID", messageID), zap.Int64("Percent", percent))
+		},
+		OnError: func(messageID int64, filePath string, err []byte) {
+			logs.Warn("Error On File", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath), zap.String("Err", ronak.ByteToStr(err)))
+		},
+		PostUploadProcess: func(req fileCtrl.UploadRequest) {
+			logs.Info("PostProcess:", zap.Any("TotalParts", req.TotalParts))
+		},
 	})
 
 }
@@ -51,10 +61,10 @@ type TestServer struct {
 
 func (t TestServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	// time.Sleep(3 * time.Second)
-	// if ronak.RandomInt(10) < 5 {
-	// 	res.WriteHeader(http.StatusForbidden)
-	// 	return
-	// }
+	if ronak.RandomInt(100) > 5 {
+		res.WriteHeader(http.StatusForbidden)
+		return
+	}
 	body, _ := ioutil.ReadAll(req.Body)
 	protoMessage := new(msg.ProtoMessage)
 	_ = protoMessage.Unmarshal(body)
@@ -80,7 +90,6 @@ func (t TestServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		protoMessage.Payload, _ = eIn.Marshal()
 		b, _ := protoMessage.Marshal()
 		_, _ = res.Write(b)
-
 	case msg.C_FileSavePart:
 		req := new(msg.FileSavePart)
 		_ = req.Unmarshal(eIn.Message)
@@ -162,20 +171,28 @@ func TestUpload(t *testing.T) {
 	}
 	s.Start()
 
-	wg := sync.WaitGroup{}
-	for i := 0; i < 1; i++ {
-		wg.Add(1)
-		go func(i int) {
-			_File.Upload(fileCtrl.UploadRequest{
-				MaxRetries:      10,
-				MessageID:       1000,
-				FileID:          int64(i),
-				ChunkSize:       256,
-				MaxInFlights:    3,
-				FilePath:        fmt.Sprintf("./_FILE_%d", i),
-			})
-			wg.Done()
-		}(i)
-	}
-	wg.Wait()
+
+	// _File.Upload(fileCtrl.UploadRequest{
+	// 	MaxRetries:      10,
+	// 	MessageID:       1000,
+	// 	FileID:          int64(1),
+	// 	MaxInFlights:    3,
+	// 	FilePath:        "./testdata/big",
+	// })
+
+	_File.Upload(fileCtrl.UploadRequest{
+		MaxRetries:      10,
+		MessageID:       1000,
+		FileID:          int64(2),
+		MaxInFlights:    3,
+		FilePath:        "./testdata/medium",
+	})
+	//
+	// _File.Upload(fileCtrl.UploadRequest{
+	// 	MaxRetries:      10,
+	// 	MessageID:       1000,
+	// 	FileID:          int64(3),
+	// 	MaxInFlights:    3,
+	// 	FilePath:        "./testdata/small",
+	// })
 }
