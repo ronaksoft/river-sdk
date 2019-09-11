@@ -8,10 +8,8 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -155,24 +153,13 @@ func (r *River) CancelUpload(msgID int64) {
 }
 
 // AccountUploadPhoto upload user profile photo
-func (r *River) AccountUploadPhoto(filePath string)  {
+func (r *River) AccountUploadPhoto(filePath string) {
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("AccountUploadPhoto", time.Now().Sub(startTime))
 	}()
-	
-	// support IOS file path
-	if strings.HasPrefix(filePath, "file://") {
-		filePath = filePath[7:]
-	}
-	r.fileCtrl.Upload(fileCtrl.UploadRequest{
-		MessageID: 0,
-		FileID: ronak.RandomInt64(0),
-		MaxInFlights: 3,
-		FilePath: filePath,
-	})
 
-
+	r.fileCtrl.UploadUserPhoto(filePath)
 	return
 }
 
@@ -246,17 +233,7 @@ func (r *River) GroupUploadPhoto(groupID int64, filePath string) {
 		mon.FunctionResponseTime("GroupUploadPhoto", time.Now().Sub(startTime))
 	}()
 
-	// support IOS file path
-	if strings.HasPrefix(filePath, "file://") {
-		filePath = filePath[7:]
-	}
-	r.fileCtrl.Upload(fileCtrl.UploadRequest{
-		MessageID: 0,
-		FileID: ronak.RandomInt64(0),
-		MaxInFlights: 3,
-		FilePath: filePath,
-	})
-
+	r.fileCtrl.UploadGroupPhoto(groupID, filePath)
 	return
 }
 

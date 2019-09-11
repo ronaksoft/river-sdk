@@ -2,10 +2,8 @@ package riversdk
 
 import (
 	"encoding/json"
-	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"sort"
 	"strings"
 	"sync"
@@ -551,16 +549,6 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		return
 	}
 
-	// support IOS file path
-	if strings.HasPrefix(reqMedia.FilePath, "file://") {
-		reqMedia.FilePath = reqMedia.FilePath[7:]
-
-	}
-	// support IOS file path
-	if strings.HasPrefix(reqMedia.ThumbFilePath, "file://") {
-		reqMedia.ThumbFilePath = reqMedia.ThumbFilePath[7:]
-	}
-
 	in.Message, _ = reqMedia.Marshal()
 	// TODO : check if file has been uploaded b4
 
@@ -582,45 +570,6 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		return
 	}
 
-
-	waitGroup := sync.WaitGroup{}
-	waitGroup.Add(2)
-	go func() {
-		// Upload Thumbnail
-		r.fileCtrl.Upload(fileCtrl.UploadRequest{
-			MessageID:    res.ID,
-			FileID:       ronak.RandomInt64(0),
-			MaxInFlights: 3,
-			FilePath:     reqMedia.ThumbFilePath,
-		})
-		waitGroup.Done()
-	}()
-	go func() {
-		// Upload File
-		r.fileCtrl.Upload(fileCtrl.UploadRequest{
-			MessageID:    res.ID,
-			FileID:       ronak.RandomInt64(0),
-			MaxInFlights: 3,
-			FilePath:     reqMedia.FilePath,
-		})
-		waitGroup.Done()
-	}()
-	waitGroup.Wait()
-
-
-	// if err != nil {
-	// 	e := new(msg.Error)
-	// 	e.Code = "n/a"
-	// 	e.Items = "Failed to start Upload : " + err.Error()
-	// 	msg.ResultError(out, e)
-	// 	uiexec.Ctx().Exec(func() {
-	// 		if successCB != nil {
-	// 			successCB(out)
-	// 		}
-	// 	})
-	// 	return
-	// }
-
 	// 3. return to CallBack with pending message data : Done
 	out.Constructor = msg.C_ClientPendingMessage
 	out.Message, _ = res.Marshal()
@@ -634,6 +583,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		}
 	}) // successCB(out)
 
+	go r.fileCtrl.UploadMessageDocument(res.ID, reqMedia.FilePath, reqMedia.ThumbFilePath)
 }
 
 func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {

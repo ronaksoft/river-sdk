@@ -113,18 +113,6 @@ func (rs RequestStatus) ToString() string {
 	return ""
 }
 
-// FileStateType provide some status to distinguish file upload/download and its progress types
-type FileStateType int32
-
-const (
-	FileStateDownload           FileStateType = 1 // FileStateDownload download
-	FileStateUpload             FileStateType = 2 // FileStateUpload upload
-	FileStateExistedDownload    FileStateType = 3 // FileStateExistedDownload file already exist
-	FileStateExistedUpload      FileStateType = 4 // FileStateExistedUpload file uploaded document already exist
-	FileStateUploadAccountPhoto FileStateType = 5 // FileStateUploadAccountPhoto the request AccountUploadPhoto
-	FileStateUploadGroupPhoto   FileStateType = 7 // FileStateUploadGroupPhoto the request GroupUploadPhoto
-)
-
 // SharedMediaType filter for displaying shared medias
 type SharedMediaType int
 

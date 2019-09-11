@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -29,7 +30,8 @@ type Config struct {
 	Network              *networkCtrl.Controller
 	MaxInflightDownloads int32
 	MaxInflightUploads   int32
-	OnProgressChanged    func(messageID, percent int64)
+	PostUploadProcess    func(req UploadRequest)
+	OnProgressChanged    func(messageID int64, percent int64)
 	OnCompleted          func(messageID int64, filePath string)
 	OnError              func(messageID int64, filePath string, err []byte)
 }
@@ -46,6 +48,7 @@ type Controller struct {
 	onProgressChanged  func(messageID, percent int64)
 	onCompleted        func(messageID int64, filePath string)
 	onError            func(messageID int64, filePath string, err []byte)
+	postUploadProcess  func(req UploadRequest)
 }
 
 func New(config Config) *Controller {
@@ -55,6 +58,7 @@ func New(config Config) *Controller {
 	ctrl.uploadsRateLimit = make(chan struct{}, config.MaxInflightUploads)
 	ctrl.downloadRequests = make(map[int64]DownloadRequest)
 	ctrl.uploadRequests = make(map[int64]UploadRequest)
+	ctrl.postUploadProcess = config.PostUploadProcess
 	if config.OnCompleted == nil {
 		ctrl.onCompleted = func(messageID int64, filePath string) {}
 	} else {
@@ -70,7 +74,6 @@ func New(config Config) *Controller {
 	} else {
 		ctrl.onError = config.OnError
 	}
-
 
 	// Resume downloads
 	dBytes, err := repo.System.LoadBytes("Downloads")
@@ -223,7 +226,73 @@ func (ctrl *Controller) Download(req DownloadRequest) {
 	ctrl.mtxDownloads.Unlock()
 }
 
+func (ctrl *Controller) UploadUserPhoto(filePath string) {
+	// support IOS file path
+	if strings.HasPrefix(filePath, "file://") {
+		filePath = filePath[7:]
+	}
+	ctrl.Upload(UploadRequest{
+		IsProfilePhoto: true,
+		FileID:         ronak.RandomInt64(0),
+		MaxInFlights:   3,
+		FilePath:       filePath,
+	})
+}
+func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) {
+	// support IOS file path
+	if strings.HasPrefix(filePath, "file://") {
+		filePath = filePath[7:]
+	}
+
+	ctrl.Upload(UploadRequest{
+		IsProfilePhoto: true,
+		GroupID:        groupID,
+		FileID:         ronak.RandomInt64(0),
+		MaxInFlights:   3,
+		FilePath:       filePath,
+	})
+
+}
+func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPath string) {
+	// support IOS file path
+	if strings.HasPrefix(filePath, "file://") {
+		filePath = filePath[7:]
+
+	}
+	// support IOS file path
+	if strings.HasPrefix(thumbPath, "file://") {
+		thumbPath = thumbPath[7:]
+	}
+
+	thumbID := ronak.RandomInt64(0)
+	fileID := ronak.RandomInt64(0)
+
+
+	// We prepare upload request for the actual file before uploading the thumbnail to save it
+	// in case of execution stopped, then we are assured that we will continue the upload process
+	req := UploadRequest{
+		MessageID:    messageID,
+		FileID:       fileID,
+		FilePath:     filePath,
+		ThumbID:      thumbID,
+		ThumbPath:    thumbPath,
+		MaxInFlights: 3,
+	}
+	ctrl.saveUploads(req)
+
+	// Upload Thumbnail
+	ctrl.Upload(UploadRequest{
+		MessageID:    0,
+		FileID:       thumbID,
+		MaxInFlights: 3,
+		FilePath:     thumbPath,
+	})
+
+	// Upload File
+	ctrl.Upload(req)
+}
 func (ctrl *Controller) Upload(req UploadRequest) {
+	ctrl.saveUploads(req)
 	ctrl.uploadsRateLimit <- struct{}{}
 	defer func() {
 		<-ctrl.uploadsRateLimit

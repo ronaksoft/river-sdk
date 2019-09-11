@@ -170,6 +170,10 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		Network:              r.networkCtrl,
 		MaxInflightDownloads: 5,
 		MaxInflightUploads:   5,
+		OnCompleted:          r.fileDelegate.OnCompleted,
+		OnProgressChanged:    r.fileDelegate.OnProgressChanged,
+		OnError:              r.fileDelegate.OnError,
+		PostUploadProcess:    r.postUploadProcess,
 	})
 
 	// Initialize queueController
@@ -437,29 +441,22 @@ func (r *River) onReceivedUpdate(updateContainers []*msg.UpdateContainer) {
 	}
 }
 
+func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) {
+	switch {
+	case uploadRequest.IsProfilePhoto == false && uploadRequest.MessageID != 0:
+		pendingMessage := repo.PendingMessages.GetByID(uploadRequest.MessageID)
+		if pendingMessage == nil {
+			return
+		}
+		req := new(msg.ClientSendMessageMedia)
+		_ = req.Unmarshal(pendingMessage.Media)
 
-func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
-	clusterID int32, totalParts int64,
-	stateType domain.FileStateType,
-	filePath string,
-	req *msg.ClientSendMessageMedia,
-	thumbFileID int64,
-	thumbTotalParts int32,
-) {
-	logs.Debug("onFileUploadCompleted()",
-		zap.Int64("messageID", messageID),
-		zap.Int64("fileID", fileID),
-	)
-	// if total parts are greater than zero it means we actually uploaded new file
-	// else the doc was already uploaded we called this just to notify ui that upload finished
-	switch stateType {
-	case domain.FileStateUpload:
 		// Create SendMessageMedia Request
 		x := new(msg.MessagesSendMedia)
 		x.Peer = req.Peer
 		x.ClearDraft = req.ClearDraft
 		x.MediaType = req.MediaType
-		x.RandomID = fileID
+		x.RandomID = uploadRequest.FileID
 		x.ReplyTo = req.ReplyTo
 
 		switch x.MediaType {
@@ -470,18 +467,16 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 
 			doc.Caption = req.Caption
 			doc.File = &msg.InputFile{
-				FileID:      fileID,
+				FileID:      uploadRequest.FileID,
 				FileName:    req.FileName,
 				MD5Checksum: "",
-				TotalParts:  int32(totalParts),
 			}
 
-			if thumbFileID > 0 && thumbTotalParts > 0 {
+			if uploadRequest.ThumbID != 0 {
 				doc.Thumbnail = &msg.InputFile{
-					FileID:      thumbFileID,
+					FileID:      uploadRequest.ThumbID,
 					FileName:    "thumb_" + req.FileName,
 					MD5Checksum: "",
-					TotalParts:  thumbTotalParts,
 				}
 			}
 
@@ -490,33 +485,32 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 
 		}
 		reqBuff, _ := x.Marshal()
-		requestID := uint64(fileID)
+		requestID := uint64(uploadRequest.FileID)
 		r.queueCtrl.ExecuteCommand(requestID, msg.C_MessagesSendMedia, reqBuff, nil, nil, false)
-	case domain.FileStateUploadAccountPhoto:
+	case uploadRequest.IsProfilePhoto && uploadRequest.GroupID == 0:
 		x := new(msg.AccountUploadPhoto)
 		x.File = &msg.InputFile{
-			FileID:      fileID,
-			FileName:    strconv.FormatInt(fileID, 10) + ".jpg",
-			TotalParts:  int32(totalParts),
+			FileID:      uploadRequest.FileID,
+			FileName:    strconv.FormatInt(uploadRequest.FileID, 10) + ".jpg",
+			TotalParts:  uploadRequest.TotalParts,
 			MD5Checksum: "",
 		}
 		reqBuff, err := x.Marshal()
 		if err != nil {
-			logs.Error("SDK::onFileUploadCompleted() marshal AccountUploadPhoto", zap.Error(err))
+			logs.Error("SDK::postUploadProcess() marshal AccountUploadPhoto", zap.Error(err))
 			return
 		}
 		requestID := uint64(domain.SequentialUniqueID())
 		successCB := func(m *msg.MessageEnvelope) {
 			logs.Debug("AccountUploadPhoto success callback")
-			if m.Constructor == msg.C_Bool {
+			switch m.Constructor {
+			case msg.C_Bool:
 				x := new(msg.Bool)
 				err := x.Unmarshal(m.Message)
 				if err != nil {
 					logs.Error("AccountUploadPhoto success callback", zap.Error(err))
 				}
-
-			}
-			if m.Constructor == msg.C_Error {
+			case msg.C_Error:
 				x := new(msg.Error)
 				err := x.Unmarshal(m.Message)
 				if err != nil {
@@ -529,18 +523,18 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 			logs.Debug("AccountUploadPhoto timeoput callback")
 		}
 		r.queueCtrl.ExecuteCommand(requestID, msg.C_AccountUploadPhoto, reqBuff, timeoutCB, successCB, false)
-	case domain.FileStateUploadGroupPhoto:
+	case uploadRequest.IsProfilePhoto && uploadRequest.GroupID != 0:
 		x := new(msg.GroupsUploadPhoto)
-		x.GroupID = targetID
+		x.GroupID = uploadRequest.GroupID
 		x.File = &msg.InputFile{
-			FileID:      fileID,
-			FileName:    strconv.FormatInt(fileID, 10) + ".jpg",
-			TotalParts:  int32(totalParts),
+			FileID:      uploadRequest.FileID,
+			FileName:    strconv.FormatInt(uploadRequest.FileID, 10) + ".jpg",
+			TotalParts:  uploadRequest.TotalParts,
 			MD5Checksum: "",
 		}
 		reqBuff, err := x.Marshal()
 		if err != nil {
-			logs.Error("SDK::onFileUploadCompleted() marshal GroupUploadPhoto", zap.Error(err))
+			logs.Error("SDK::postUploadProcess() marshal GroupUploadPhoto", zap.Error(err))
 			return
 		}
 		requestID := uint64(domain.SequentialUniqueID())
@@ -569,12 +563,7 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 		r.queueCtrl.ExecuteCommand(requestID, msg.C_GroupsUploadPhoto, reqBuff, timeoutCB, successCB, false)
 	}
 
-	// Notify UI that upload is completed
-	if r.fileDelegate != nil {
-		r.fileDelegate.OnCompleted(messageID, filePath)
-	}
 }
-
 
 func (r *River) registerCommandHandlers() {
 	r.localCommands = map[int64]domain.LocalMessageHandler{

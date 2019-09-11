@@ -22,23 +22,36 @@ import (
 */
 
 type UploadRequest struct {
+	// IsProfilePhoto indicates that the uploaded file will be used as a profile photo for Group or User
+	IsProfilePhoto bool `json:"is_profile_photo"`
+	// PeerID will be set if IsProfilePhoto has been set to TRUE and user is going to upload group photo
+	GroupID int64 `json:"group_id"`
 	// MaxRetries defines how many time each request could encounter error before giving up
 	MaxRetries int32 `json:"max_retries"`
 	// MessageID (Optional) if is set then (ClusterID, FileID, AccessHash, Version) will be read from the message
 	// document object, or if message has no document then return error
 	MessageID int64 `json:"message_id"`
-	FileID    int64 `json:"file_id"`
+	// FilePath defines the path which downloaded file will be stored. It must be a file not a directory.
+	// Also it will be overwritten if Overwrite is TRUE
+	FilePath string `json:"file_path"`
+	// FileID is a random id which must be unique for the client, it will be used to reference the uploaded document
+	// in the server
+	FileID int64 `json:"file_id"`
 	// FileSize (Optional) if is set then progress will be calculated
 	FileSize int64 `json:"file_size"`
+	// ThumbPath (Optional) defines the path of thumbnail of the file will be stored. It must be a file not a directory.
+	// Also it will be overwritten if Overwrite is TRUE
+	ThumbPath string `json:"thumb_path"`
+	// ThumbID is a random id which must be unique for the client, it will be used to reference the uploaded document
+	// thumbnail in the server
+	ThumbID int64
 	// ChunkSize identifies how many request we need to send to server to Download a file.
 	ChunkSize int32 `json:"chunk_size"`
 	// MaxInFlights defines that how many requests could be send concurrently
-	MaxInFlights int `json:"max_in_flights"`
-	// FilePath defines the path which downloaded file will be stored. It must be a file not a directory.
-	// Also it will be overwritten if Overwrite is TRUE
-	FilePath      string               `json:"file_path"`
-	UploadedParts []int32              `json:"downloaded_parts"`
-	TotalParts    int32                `json:"total_parts"`
+	MaxInFlights    int     `json:"max_in_flights"`
+	UploadedParts   []int32 `json:"downloaded_parts"`
+	TotalParts      int32   `json:"total_parts"`
+	ThumbTotalParts int32 `json:"thumb_total_parts"`
 }
 
 type uploadStatus struct {
@@ -133,14 +146,17 @@ func (us *uploadStatus) execute() domain.RequestStatus {
 			}(partIndex)
 		default:
 			waitGroup.Wait()
-			switch int32(len(us.req.UploadedParts)){
-			case us.req.TotalParts -1:
+			switch int32(len(us.req.UploadedParts)) {
+			case us.req.TotalParts - 1:
 				// If we finished uploading n-1 parts then run the last loop with the last part
 				us.parts <- us.req.TotalParts - 1
 			case us.req.TotalParts:
 				// We have finished our uploads
 				_ = us.file.Close()
 				us.ctrl.onCompleted(us.req.MessageID, us.req.FilePath)
+				if us.ctrl.postUploadProcess != nil {
+					us.ctrl.postUploadProcess(us.req)
+				}
 				return domain.RequestStatusCompleted
 			}
 		}
