@@ -50,7 +50,7 @@ func (r *River) getFileStatus(msgID int64) (status domain.RequestStatus, progres
 	}
 	filePath = downloadRequest.FilePath
 	if downloadRequest.TotalParts > 1 {
-		status = downloadRequest.Status
+		status = domain.RequestStatusInProgress
 		progress = float64(len(downloadRequest.DownloadedParts)) / float64(downloadRequest.TotalParts) * 100
 	}
 	return
@@ -171,6 +171,7 @@ func (r *River) AccountUploadPhoto(filePath string)  {
 		MaxInFlights: 3,
 		FilePath: filePath,
 	})
+
 
 	return
 }

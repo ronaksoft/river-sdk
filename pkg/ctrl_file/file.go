@@ -29,6 +29,9 @@ type Config struct {
 	Network              *networkCtrl.Controller
 	MaxInflightDownloads int32
 	MaxInflightUploads   int32
+	OnProgressChanged    func(messageID, percent int64)
+	OnCompleted          func(messageID int64, filePath string)
+	OnError              func(messageID int64, filePath string, err []byte)
 }
 type Controller struct {
 	network            *networkCtrl.Controller
@@ -40,6 +43,9 @@ type Controller struct {
 	uploadRequests     map[int64]UploadRequest
 	uploadsSaver       *ronak.Flusher
 	uploadsRateLimit   chan struct{}
+	onProgressChanged  func(messageID, percent int64)
+	onCompleted        func(messageID int64, filePath string)
+	onError            func(messageID int64, filePath string, err []byte)
 }
 
 func New(config Config) *Controller {
@@ -49,6 +55,22 @@ func New(config Config) *Controller {
 	ctrl.uploadsRateLimit = make(chan struct{}, config.MaxInflightUploads)
 	ctrl.downloadRequests = make(map[int64]DownloadRequest)
 	ctrl.uploadRequests = make(map[int64]UploadRequest)
+	if config.OnCompleted == nil {
+		ctrl.onCompleted = func(messageID int64, filePath string) {}
+	} else {
+		ctrl.onCompleted = config.OnCompleted
+	}
+	if config.OnProgressChanged == nil {
+		ctrl.onProgressChanged = func(messageID, percent int64) {}
+	} else {
+		ctrl.onProgressChanged = config.OnProgressChanged
+	}
+	if config.OnError == nil {
+		ctrl.onError = func(messageID int64, filePath string, err []byte) {}
+	} else {
+		ctrl.onError = config.OnError
+	}
+
 
 	// Resume downloads
 	dBytes, err := repo.System.LoadBytes("Downloads")
@@ -142,7 +164,7 @@ func (ctrl *Controller) Download(req DownloadRequest) {
 	ds := &downloadStatus{
 		rateLimit: make(chan struct{}, req.MaxInFlights),
 		ctrl:      ctrl,
-		Request:   req,
+		req:       req,
 	}
 
 	_, err := os.Stat(req.FilePath)
@@ -167,7 +189,7 @@ func (ctrl *Controller) Download(req DownloadRequest) {
 	if req.FileSize > 0 {
 		err := os.Truncate(req.FilePath, req.FileSize)
 		if err != nil {
-			logs.Warn("Error in Truncate", zap.Error(err))
+			ctrl.onError(req.MessageID, req.FilePath, ronak.StrToByte(err.Error()))
 			return
 		}
 	}
@@ -175,17 +197,17 @@ func (ctrl *Controller) Download(req DownloadRequest) {
 	if req.FileSize > 0 {
 		dividend := int32(req.FileSize / int64(req.ChunkSize))
 		if req.FileSize%int64(req.ChunkSize) > 0 {
-			ds.Request.TotalParts = dividend + 1
+			ds.req.TotalParts = dividend + 1
 		} else {
-			ds.Request.TotalParts = dividend
+			ds.req.TotalParts = dividend
 		}
 	} else {
-		ds.Request.TotalParts = 1
-		ds.Request.ChunkSize = 0
+		ds.req.TotalParts = 1
+		ds.req.ChunkSize = 0
 	}
 
-	ds.parts = make(chan int32, ds.Request.TotalParts)
-	for partIndex := int32(0); partIndex < ds.Request.TotalParts; partIndex++ {
+	ds.parts = make(chan int32, ds.req.TotalParts)
+	for partIndex := int32(0); partIndex < ds.req.TotalParts; partIndex++ {
 		if ds.isDownloaded(partIndex) {
 			continue
 		}
@@ -201,10 +223,6 @@ func (ctrl *Controller) Download(req DownloadRequest) {
 	ctrl.mtxDownloads.Unlock()
 }
 
-func (ctrl *Controller) UploadByMessage(pendingMessage *msg.ClientPendingMessage) {
-
-}
-
 func (ctrl *Controller) Upload(req UploadRequest) {
 	ctrl.uploadsRateLimit <- struct{}{}
 	defer func() {
@@ -218,32 +236,35 @@ func (ctrl *Controller) Upload(req UploadRequest) {
 
 	fileInfo, err := os.Stat(req.FilePath)
 	if err != nil {
+		ctrl.onError(req.MessageID, req.FilePath, ronak.StrToByte(err.Error()))
 		return
 	}
 	ds.file, err = os.OpenFile(req.FilePath, os.O_RDONLY, 0666)
 	if err != nil {
-		logs.Warn("Error In OpenFile", zap.Error(err))
+		ctrl.onError(req.MessageID, req.FilePath, ronak.StrToByte(err.Error()))
 		return
 	}
 
 	req.FileSize = fileInfo.Size()
 	if req.FileSize <= 0 {
+		ctrl.onError(req.MessageID, req.FilePath, ronak.StrToByte("file size is not positive"))
 		return
 	}
 	if req.FileSize > domain.FileMaxAllowedSize {
+		ctrl.onError(req.MessageID, req.FilePath, ronak.StrToByte("file size is bigger than maximum allowed"))
 		return
 	}
 
-	ds.Request = req
+	ds.req = req
 	dividend := int32(req.FileSize / int64(req.ChunkSize))
 	if req.FileSize%int64(req.ChunkSize) > 0 {
-		ds.Request.TotalParts = dividend + 1
+		ds.req.TotalParts = dividend + 1
 	} else {
-		ds.Request.TotalParts = dividend
+		ds.req.TotalParts = dividend
 	}
 
-	ds.parts = make(chan int32, ds.Request.TotalParts)
-	for partIndex := int32(0); partIndex < ds.Request.TotalParts-1; partIndex++ {
+	ds.parts = make(chan int32, ds.req.TotalParts)
+	for partIndex := int32(0); partIndex < ds.req.TotalParts-1; partIndex++ {
 		if ds.isUploaded(partIndex) {
 			continue
 		}
@@ -257,6 +278,7 @@ func (ctrl *Controller) Upload(req UploadRequest) {
 	ctrl.mtxUploads.Lock()
 	delete(ctrl.uploadRequests, req.MessageID)
 	ctrl.mtxUploads.Unlock()
+	return
 }
 
 // DownloadAccountPhoto Download account photo from server its sync

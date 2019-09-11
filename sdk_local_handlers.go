@@ -583,21 +583,31 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	}
 
 
-	// Upload Thumbnail
-	r.fileCtrl.Upload(fileCtrl.UploadRequest{
-		MessageID:    res.ID,
-		FileID:       ronak.RandomInt64(0),
-		MaxInFlights: 3,
-		FilePath:     reqMedia.ThumbFilePath,
-	})
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(2)
+	go func() {
+		// Upload Thumbnail
+		r.fileCtrl.Upload(fileCtrl.UploadRequest{
+			MessageID:    res.ID,
+			FileID:       ronak.RandomInt64(0),
+			MaxInFlights: 3,
+			FilePath:     reqMedia.ThumbFilePath,
+		})
+		waitGroup.Done()
+	}()
+	go func() {
+		// Upload File
+		r.fileCtrl.Upload(fileCtrl.UploadRequest{
+			MessageID:    res.ID,
+			FileID:       ronak.RandomInt64(0),
+			MaxInFlights: 3,
+			FilePath:     reqMedia.FilePath,
+		})
+		waitGroup.Done()
+	}()
+	waitGroup.Wait()
 
-	// Upload File
-	r.fileCtrl.Upload(fileCtrl.UploadRequest{
-		MessageID:    res.ID,
-		FileID:       ronak.RandomInt64(0),
-		MaxInFlights: 3,
-		FilePath:     reqMedia.FilePath,
-	})
+
 	// if err != nil {
 	// 	e := new(msg.Error)
 	// 	e.Code = "n/a"

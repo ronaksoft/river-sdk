@@ -4,6 +4,7 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
 	"os"
 	"sync"
@@ -41,7 +42,6 @@ type DownloadRequest struct {
 	FilePath        string               `json:"file_path"`
 	DownloadedParts []int32              `json:"downloaded_parts"`
 	TotalParts      int32                `json:"total_parts"`
-	Status          domain.RequestStatus `json:"status"`
 }
 
 type downloadStatus struct {
@@ -50,13 +50,13 @@ type downloadStatus struct {
 	parts     chan int32
 	file      *os.File
 	ctrl      *Controller
-	Request   DownloadRequest
+	req       DownloadRequest
 }
 
 func (ds *downloadStatus) isDownloaded(partIndex int32) bool {
 	ds.mtx.Lock()
 	defer ds.mtx.Unlock()
-	for _, index := range ds.Request.DownloadedParts {
+	for _, index := range ds.req.DownloadedParts {
 		if partIndex == index {
 			return true
 		}
@@ -66,18 +66,20 @@ func (ds *downloadStatus) isDownloaded(partIndex int32) bool {
 
 func (ds *downloadStatus) addToDownloaded(partIndex int32) {
 	ds.mtx.Lock()
-	ds.Request.DownloadedParts = append(ds.Request.DownloadedParts, partIndex)
+	ds.req.DownloadedParts = append(ds.req.DownloadedParts, partIndex)
+	progress := int64(float64(len(ds.req.DownloadedParts)) / float64(ds.req.TotalParts) * 100)
 	ds.mtx.Unlock()
-	ds.ctrl.saveDownloads(ds.Request)
+	ds.ctrl.saveDownloads(ds.req)
+	ds.ctrl.onProgressChanged(ds.req.MessageID, progress)
 }
 
 func (ds *downloadStatus) generateFileGet(offset, limit int32) *msg.MessageEnvelope {
 	req := new(msg.FileGet)
 	req.Location = &msg.InputFileLocation{
-		ClusterID:  ds.Request.ClusterID,
-		FileID:     ds.Request.FileID,
-		AccessHash: ds.Request.AccessHash,
-		Version:    ds.Request.Version,
+		ClusterID:  ds.req.ClusterID,
+		FileID:     ds.req.FileID,
+		AccessHash: ds.req.AccessHash,
+		Version:    ds.req.Version,
 	}
 	req.Offset = offset
 	req.Limit = limit
@@ -87,7 +89,7 @@ func (ds *downloadStatus) generateFileGet(offset, limit int32) *msg.MessageEnvel
 	envelop.Message, _ = req.Marshal()
 	envelop.RequestID = uint64(domain.SequentialUniqueID())
 	logs.Debug("FilesStatus::generateFileGet()",
-		zap.Int64("MsgID", ds.Request.MessageID),
+		zap.Int64("MsgID", ds.req.MessageID),
 		zap.Int32("Offset", req.Offset),
 		zap.Int32("Limit", req.Limit),
 		zap.Int64("FileID", req.Location.FileID),
@@ -98,11 +100,10 @@ func (ds *downloadStatus) generateFileGet(offset, limit int32) *msg.MessageEnvel
 	return envelop
 }
 
-func (ds *downloadStatus) execute() {
-	ds.Request.Status = domain.RequestStatusInProgress
+func (ds *downloadStatus) execute() domain.RequestStatus {
 	waitGroup := sync.WaitGroup{}
 
-	for ds.Request.MaxRetries > 0 {
+	for ds.req.MaxRetries > 0 {
 		select {
 		case partIndex := <-ds.parts:
 			ds.rateLimit <- struct{}{}
@@ -114,11 +115,11 @@ func (ds *downloadStatus) execute() {
 					<-ds.rateLimit
 				}()
 
-				offset := partIndex * ds.Request.ChunkSize
-				res, err := ds.ctrl.network.SendHttp(ds.generateFileGet(offset, ds.Request.ChunkSize))
+				offset := partIndex * ds.req.ChunkSize
+				res, err := ds.ctrl.network.SendHttp(ds.generateFileGet(offset, ds.req.ChunkSize))
 				if err != nil {
 					logs.Warn("Error in SentHTTP", zap.Error(err))
-					atomic.AddInt32(&ds.Request.MaxRetries, -1)
+					atomic.AddInt32(&ds.req.MaxRetries, -1)
 					ds.parts <- partIndex
 					return
 				}
@@ -132,7 +133,7 @@ func (ds *downloadStatus) execute() {
 							zap.Int32("Offset", offset),
 							zap.Int("Byte", len(file.Bytes)),
 						)
-						atomic.AddInt32(&ds.Request.MaxRetries, -1)
+						atomic.AddInt32(&ds.req.MaxRetries, -1)
 						ds.parts <- partIndex
 						return
 					}
@@ -143,24 +144,26 @@ func (ds *downloadStatus) execute() {
 							zap.Int32("Offset", offset),
 							zap.Int("Byte", len(file.Bytes)),
 						)
-						atomic.AddInt32(&ds.Request.MaxRetries, -1)
+						atomic.AddInt32(&ds.req.MaxRetries, -1)
 						ds.parts <- partIndex
 						return
 					}
 					ds.addToDownloaded(partIndex)
 				default:
-					atomic.AddInt32(&ds.Request.MaxRetries, -1)
+					atomic.AddInt32(&ds.req.MaxRetries, -1)
 					ds.parts <- partIndex
 					return
 				}
 			}(partIndex)
 		default:
 			waitGroup.Wait()
-			if int32(len(ds.Request.DownloadedParts)) == ds.Request.TotalParts {
+			if int32(len(ds.req.DownloadedParts)) == ds.req.TotalParts {
 				_ = ds.file.Close()
-				ds.Request.Status = domain.RequestStatusCompleted
-				return
+				ds.ctrl.onCompleted(ds.req.MessageID, ds.req.FilePath)
+				return domain.RequestStatusCompleted
 			}
 		}
 	}
+	ds.ctrl.onError(ds.req.MessageID, ds.req.FilePath, ronak.StrToByte("max retry exceeded without success"))
+	return domain.RequestStatusError
 }

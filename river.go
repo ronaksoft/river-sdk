@@ -437,26 +437,6 @@ func (r *River) onReceivedUpdate(updateContainers []*msg.UpdateContainer) {
 	}
 }
 
-func (r *River) onFileProgressChanged(messageID, processedParts, totalParts int64, stateType domain.FileStateType) {
-	percent := float64(processedParts) / float64(totalParts) * float64(100)
-
-	logs.Debug("onFileProgressChanged()",
-		zap.Int64("MsgID", messageID),
-		zap.Float64("Percent", percent),
-	)
-
-	// Notify UI that upload is completed
-	if stateType == domain.FileStateDownload {
-		if r.fileDelegate != nil {
-			r.fileDelegate.OnDownloadProgressChanged(messageID, processedParts, totalParts, percent)
-		}
-	} else if stateType == domain.FileStateUpload {
-		if r.fileDelegate != nil {
-			r.fileDelegate.OnUploadProgressChanged(messageID, processedParts, totalParts, percent)
-		}
-	}
-
-}
 
 func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 	clusterID int32, totalParts int64,
@@ -591,47 +571,10 @@ func (r *River) onFileUploadCompleted(messageID, fileID, targetID int64,
 
 	// Notify UI that upload is completed
 	if r.fileDelegate != nil {
-		r.fileDelegate.OnUploadCompleted(messageID, filePath)
+		r.fileDelegate.OnCompleted(messageID, filePath)
 	}
 }
 
-func (r *River) onFileDownloadCompleted(messageID int64, filePath string, stateType domain.FileStateType) {
-	logs.Info("onFileDownloadCompleted()", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
-	// Notify UI that download is completed
-	if r.fileDelegate != nil {
-		r.fileDelegate.OnDownloadCompleted(messageID, filePath)
-	}
-}
-
-func (r *River) onFileUploadError(messageID, requestID int64, filePath string, err []byte) {
-	x := new(msg.Error)
-	x.Unmarshal(err)
-	logs.Error("onFileUploadError() received Error response",
-		zap.Int64("MsgID", messageID),
-		zap.Int64("ReqID", requestID),
-		zap.String("Code", x.Code),
-		zap.String("Item", x.Items),
-	)
-	// Notify UI that upload encountered an error
-	if r.fileDelegate != nil {
-		r.fileDelegate.OnUploadError(messageID, requestID, filePath, err)
-	}
-}
-
-func (r *River) onFileDownloadError(messageID, requestID int64, filePath string, err []byte) {
-	x := new(msg.Error)
-	x.Unmarshal(err)
-	logs.Error("onFileDownloadError() received Error response",
-		zap.Int64("MsgID", messageID),
-		zap.Int64("ReqID", requestID),
-		zap.String("Code", x.Code),
-		zap.String("Item", x.Items),
-	)
-	// Notify UI that download encountered an error
-	if r.fileDelegate != nil {
-		r.fileDelegate.OnDownloadError(messageID, requestID, filePath, err)
-	}
-}
 
 func (r *River) registerCommandHandlers() {
 	r.localCommands = map[int64]domain.LocalMessageHandler{

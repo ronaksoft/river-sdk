@@ -143,7 +143,6 @@ func TestDownload(t *testing.T) {
 				FilePath:        fmt.Sprintf("./_FILE_%d", i),
 				DownloadedParts: nil,
 				TotalParts:      0,
-				Status:          0,
 			})
 			wg.Done()
 		}(i)

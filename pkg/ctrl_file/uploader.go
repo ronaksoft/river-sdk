@@ -4,6 +4,7 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/gobwas/pool/pbytes"
 	"go.uber.org/zap"
 	"os"
@@ -38,7 +39,6 @@ type UploadRequest struct {
 	FilePath      string               `json:"file_path"`
 	UploadedParts []int32              `json:"downloaded_parts"`
 	TotalParts    int32                `json:"total_parts"`
-	Status        domain.RequestStatus `json:"status"`
 }
 
 type uploadStatus struct {
@@ -47,13 +47,13 @@ type uploadStatus struct {
 	parts     chan int32
 	file      *os.File
 	ctrl      *Controller
-	Request   UploadRequest
+	req       UploadRequest
 }
 
 func (us *uploadStatus) isUploaded(partIndex int32) bool {
 	us.mtx.Lock()
 	defer us.mtx.Unlock()
-	for _, index := range us.Request.UploadedParts {
+	for _, index := range us.req.UploadedParts {
 		if partIndex == index {
 			return true
 		}
@@ -63,9 +63,11 @@ func (us *uploadStatus) isUploaded(partIndex int32) bool {
 
 func (us *uploadStatus) addToUploaded(partIndex int32) {
 	us.mtx.Lock()
-	us.Request.UploadedParts = append(us.Request.UploadedParts, partIndex)
+	us.req.UploadedParts = append(us.req.UploadedParts, partIndex)
+	progress := int64(float64(len(us.req.UploadedParts)) / float64(us.req.TotalParts) * 100)
 	us.mtx.Unlock()
-	us.ctrl.saveUploads(us.Request)
+	us.ctrl.saveUploads(us.req)
+	us.ctrl.onProgressChanged(us.req.MessageID, progress)
 }
 
 func (us *uploadStatus) generateFileSavePart(fileID int64, partID int32, totalParts int32, bytes []byte) *msg.MessageEnvelope {
@@ -80,7 +82,7 @@ func (us *uploadStatus) generateFileSavePart(fileID int64, partID int32, totalPa
 	envelop.Message, _ = req.Marshal()
 	envelop.RequestID = uint64(domain.SequentialUniqueID())
 	logs.Debug("FilesStatus::generateFileSavePart()",
-		zap.Int64("MsgID", us.Request.MessageID),
+		zap.Int64("MsgID", us.req.MessageID),
 		zap.Int64("FileID", req.FileID),
 		zap.Int32("PartID", req.PartID),
 		zap.Int32("TotalParts", req.TotalParts),
@@ -89,10 +91,9 @@ func (us *uploadStatus) generateFileSavePart(fileID int64, partID int32, totalPa
 	return envelop
 }
 
-func (us *uploadStatus) execute() {
-	us.Request.Status = domain.RequestStatusInProgress
+func (us *uploadStatus) execute() domain.RequestStatus {
 	waitGroup := sync.WaitGroup{}
-	for us.Request.MaxRetries > 0 {
+	for us.req.MaxRetries > 0 {
 		select {
 		case partIndex := <-us.parts:
 			us.rateLimit <- struct{}{}
@@ -104,20 +105,20 @@ func (us *uploadStatus) execute() {
 					<-us.rateLimit
 				}()
 
-				bytes := pbytes.GetLen(int(us.Request.ChunkSize))
+				bytes := pbytes.GetLen(int(us.req.ChunkSize))
 				defer pbytes.Put(bytes)
-				offset := partIndex * us.Request.ChunkSize
+				offset := partIndex * us.req.ChunkSize
 				_, err := us.file.ReadAt(bytes, int64(offset))
 				if err != nil {
 					logs.Warn("Error in ReadFile", zap.Error(err))
-					atomic.AddInt32(&us.Request.MaxRetries, -1)
+					atomic.AddInt32(&us.req.MaxRetries, -1)
 					us.parts <- partIndex
 					return
 				}
-				res, err := us.ctrl.network.SendHttp(us.generateFileSavePart(us.Request.FileID, partIndex+1, us.Request.TotalParts, bytes))
+				res, err := us.ctrl.network.SendHttp(us.generateFileSavePart(us.req.FileID, partIndex+1, us.req.TotalParts, bytes))
 				if err != nil {
 					logs.Warn("Error in SendHttp", zap.Error(err))
-					atomic.AddInt32(&us.Request.MaxRetries, -1)
+					atomic.AddInt32(&us.req.MaxRetries, -1)
 					us.parts <- partIndex
 					return
 				}
@@ -125,23 +126,25 @@ func (us *uploadStatus) execute() {
 				case msg.C_Bool:
 					us.addToUploaded(partIndex)
 				default:
-					atomic.AddInt32(&us.Request.MaxRetries, -1)
+					atomic.AddInt32(&us.req.MaxRetries, -1)
 					us.parts <- partIndex
 					return
 				}
 			}(partIndex)
 		default:
 			waitGroup.Wait()
-			switch int32(len(us.Request.UploadedParts)){
-			case us.Request.TotalParts -1:
+			switch int32(len(us.req.UploadedParts)){
+			case us.req.TotalParts -1:
 				// If we finished uploading n-1 parts then run the last loop with the last part
-				us.parts <- us.Request.TotalParts - 1
-			case us.Request.TotalParts:
+				us.parts <- us.req.TotalParts - 1
+			case us.req.TotalParts:
 				// We have finished our uploads
 				_ = us.file.Close()
-				us.Request.Status = domain.RequestStatusCompleted
-				return
+				us.ctrl.onCompleted(us.req.MessageID, us.req.FilePath)
+				return domain.RequestStatusCompleted
 			}
 		}
 	}
+	us.ctrl.onError(us.req.MessageID, us.req.FilePath, ronak.StrToByte("max retry exceeded without success"))
+	return domain.RequestStatusError
 }
