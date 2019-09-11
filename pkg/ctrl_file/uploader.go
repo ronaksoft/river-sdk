@@ -113,7 +113,6 @@ func (us *uploadStatus) execute() domain.RequestStatus {
 			waitGroup.Add(1)
 
 			go func(partIndex int32) {
-				logs.Warn("H", zap.Int32("IDX", partIndex))
 				defer waitGroup.Done()
 				defer func() {
 					<-us.rateLimit
@@ -148,11 +147,9 @@ func (us *uploadStatus) execute() domain.RequestStatus {
 			waitGroup.Wait()
 			switch int32(len(us.req.UploadedParts)) {
 			case us.req.TotalParts - 1:
-				logs.Warn("HERE1")
 				// If we finished uploading n-1 parts then run the last loop with the last part
 				us.parts <- us.req.TotalParts - 1
 			case us.req.TotalParts:
-				logs.Warn("HERE2")
 				// We have finished our uploads
 				_ = us.file.Close()
 				us.ctrl.onCompleted(us.req.MessageID, us.req.FilePath)

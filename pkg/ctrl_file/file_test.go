@@ -61,7 +61,7 @@ type TestServer struct {
 
 func (t TestServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	// time.Sleep(3 * time.Second)
-	if ronak.RandomInt(100) > 5 {
+	if ronak.RandomInt(30) > 5 {
 		res.WriteHeader(http.StatusForbidden)
 		return
 	}
@@ -172,13 +172,13 @@ func TestUpload(t *testing.T) {
 	s.Start()
 
 
-	// _File.Upload(fileCtrl.UploadRequest{
-	// 	MaxRetries:      10,
-	// 	MessageID:       1000,
-	// 	FileID:          int64(1),
-	// 	MaxInFlights:    3,
-	// 	FilePath:        "./testdata/big",
-	// })
+	_File.Upload(fileCtrl.UploadRequest{
+		MaxRetries:      10,
+		MessageID:       1000,
+		FileID:          int64(1),
+		MaxInFlights:    3,
+		FilePath:        "./testdata/big",
+	})
 
 	_File.Upload(fileCtrl.UploadRequest{
 		MaxRetries:      10,
@@ -187,12 +187,12 @@ func TestUpload(t *testing.T) {
 		MaxInFlights:    3,
 		FilePath:        "./testdata/medium",
 	})
-	//
-	// _File.Upload(fileCtrl.UploadRequest{
-	// 	MaxRetries:      10,
-	// 	MessageID:       1000,
-	// 	FileID:          int64(3),
-	// 	MaxInFlights:    3,
-	// 	FilePath:        "./testdata/small",
-	// })
+
+	_File.Upload(fileCtrl.UploadRequest{
+		MaxRetries:      10,
+		MessageID:       1000,
+		FileID:          int64(3),
+		MaxInFlights:    3,
+		FilePath:        "./testdata/small",
+	})
 }
