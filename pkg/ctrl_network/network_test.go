@@ -1,7 +1,6 @@
 package networkCtrl_test
 
 import (
-	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
@@ -82,9 +81,9 @@ func getServerTime() *msg.MessageEnvelope {
 }
 
 func TestNewController(t *testing.T) {
-	logs.SetLogLevel(0)
+	logs.SetLogLevel(-1)
 	ctrl := networkCtrl.New(networkCtrl.Config{
-		WebsocketEndpoint: "ws://new.river.im",
+		WebsocketEndpoint: "ws://river.ronaksoftware.com",
 	})
 	ctrl.SetMessageHandler(dummyMessageHandler)
 	ctrl.SetErrorHandler(dummyErrorHandler)
@@ -93,23 +92,22 @@ func TestNewController(t *testing.T) {
 	ctrl.SetOnConnectCallback(dummyOnConnectHandler)
 
 	ctrl.Start()
-	for j := 0; j < 10; j++ {
-		fmt.Println("Connect Called")
-		ctrl.Connect(true)
-		for i := 0; i < 10; i++ {
-			fmt.Println("SendWebsocket Message:", i)
-			err := ctrl.SendWebsocket(getServerTime(), false)
-			if err != nil {
-				t.Error(err)
-			}
-			time.Sleep(time.Second)
-		}
-		time.Sleep(5 * time.Second)
-		fmt.Println("Disconnect called")
-		ctrl.Disconnect()
-		time.Sleep(5 * time.Second)
-	}
+	ctrl.Connect(true)
+	time.Sleep(5 * time.Second)
+	ctrl.Disconnect()
+	time.Sleep(5 * time.Second)
+	// for j := 0; j < 10; j++ {
+	//
+	// 	// for i := 0; i < 10; i++ {
+	// 	// 	err := ctrl.SendWebsocket(getServerTime(), false)
+	// 	// 	if err != nil {
+	// 	// 		t.Error(err)
+	// 	// 	}
+	// 	// 	time.Sleep(time.Second)
+	// 	// }
+	//
+	// }
 
-	logs.Info("Stop called")
+
 	ctrl.Stop()
 }

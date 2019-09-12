@@ -383,7 +383,12 @@ func (ctrl *Controller) Connect(force bool) {
 			time.Sleep(1 * time.Second)
 			continue
 		}
-		localIP := wsConn.UnderlyingConn().LocalAddr()
+		underlyingConn := wsConn.UnderlyingConn()
+		if tcpConn, ok := underlyingConn.(*net.TCPConn); ok {
+			_ = tcpConn.SetKeepAlive(true)
+			_ = tcpConn.SetKeepAlivePeriod(50 * time.Second)
+		}
+		localIP := underlyingConn.LocalAddr()
 		switch x := localIP.(type) {
 		case *net.IPNet:
 			ctrl.localIP = x.IP
