@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 	"sort"
 	"strings"
+	"time"
 )
 
 const (
@@ -120,30 +121,32 @@ func (r *repoMessages) save(message *msg.UserMessage) {
 		// Do nothing
 	}
 
-	err := r.badger.Update(func(txn *badger.Txn) error {
-		// 1. Write Message
-		err := txn.SetEntry(
-			badger.NewEntry(
-				r.getMessageKey(message.PeerID, message.PeerType, message.ID),
-				messageBytes,
-			).WithMeta(byte(docType)),
-		)
-		if err != nil {
-			return err
-		}
+	err := ronak.Try(10, 100 * time.Millisecond, func() error {
+		err := r.badger.Update(func(txn *badger.Txn) error {
+			// 1. Write Message
+			err := txn.SetEntry(
+				badger.NewEntry(
+					r.getMessageKey(message.PeerID, message.PeerType, message.ID),
+					messageBytes,
+				).WithMeta(byte(docType)),
+			)
+			if err != nil {
+				return err
+			}
 
-		// 2. WriteUserMessage
-		return txn.SetEntry(
-			badger.NewEntry(
-				r.getUserMessageKey(message.ID),
-				ronak.StrToByte(fmt.Sprintf("%d.%d", message.PeerID, message.PeerType)),
-			).WithMeta(byte(docType)),
-		)
+			// 2. WriteUserMessage
+			return txn.SetEntry(
+				badger.NewEntry(
+					r.getUserMessageKey(message.ID),
+					ronak.StrToByte(fmt.Sprintf("%d.%d", message.PeerID, message.PeerType)),
+				).WithMeta(byte(docType)),
+			)
+		})
+		WarnOnErr("RepoMessage::save", err, zap.Int64("MsgID", message.ID))
+		return err
 	})
 	if err != nil {
-		WarnOnErr("RepoMessage::save", err,
-			zap.Int64("MsgID", message.ID),
-		)
+		logs.Error("Error In SaveMessage")
 	}
 
 	_ = r.msgSearch.Index(ronak.ByteToStr(r.getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
