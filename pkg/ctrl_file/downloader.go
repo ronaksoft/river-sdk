@@ -44,7 +44,7 @@ type DownloadRequest struct {
 	TotalParts      int32   `json:"total_parts"`
 }
 
-type downloadStatus struct {
+type downloadContext struct {
 	mtx       sync.Mutex
 	rateLimit chan struct{}
 	parts     chan int32
@@ -53,10 +53,10 @@ type downloadStatus struct {
 	req       DownloadRequest
 }
 
-func (ds *downloadStatus) isDownloaded(partIndex int32) bool {
-	ds.mtx.Lock()
-	defer ds.mtx.Unlock()
-	for _, index := range ds.req.DownloadedParts {
+func (ctx *downloadContext) isDownloaded(partIndex int32) bool {
+	ctx.mtx.Lock()
+	defer ctx.mtx.Unlock()
+	for _, index := range ctx.req.DownloadedParts {
 		if partIndex == index {
 			return true
 		}
@@ -64,22 +64,22 @@ func (ds *downloadStatus) isDownloaded(partIndex int32) bool {
 	return false
 }
 
-func (ds *downloadStatus) addToDownloaded(partIndex int32) {
-	ds.mtx.Lock()
-	ds.req.DownloadedParts = append(ds.req.DownloadedParts, partIndex)
-	progress := int64(float64(len(ds.req.DownloadedParts)) / float64(ds.req.TotalParts) * 100)
-	ds.mtx.Unlock()
-	ds.ctrl.saveDownloads(ds.req)
-	ds.ctrl.onProgressChanged(ds.req.MessageID, progress)
+func (ctx *downloadContext) addToDownloaded(partIndex int32) {
+	ctx.mtx.Lock()
+	ctx.req.DownloadedParts = append(ctx.req.DownloadedParts, partIndex)
+	progress := int64(float64(len(ctx.req.DownloadedParts)) / float64(ctx.req.TotalParts) * 100)
+	ctx.mtx.Unlock()
+	ctx.ctrl.saveDownloads(ctx.req)
+	ctx.ctrl.onProgressChanged(ctx.req.MessageID, progress)
 }
 
-func (ds *downloadStatus) generateFileGet(offset, limit int32) *msg.MessageEnvelope {
+func (ctx *downloadContext) generateFileGet(offset, limit int32) *msg.MessageEnvelope {
 	req := new(msg.FileGet)
 	req.Location = &msg.InputFileLocation{
-		ClusterID:  ds.req.ClusterID,
-		FileID:     ds.req.FileID,
-		AccessHash: ds.req.AccessHash,
-		Version:    ds.req.Version,
+		ClusterID:  ctx.req.ClusterID,
+		FileID:     ctx.req.FileID,
+		AccessHash: ctx.req.AccessHash,
+		Version:    ctx.req.Version,
 	}
 	req.Offset = offset
 	req.Limit = limit
@@ -89,7 +89,7 @@ func (ds *downloadStatus) generateFileGet(offset, limit int32) *msg.MessageEnvel
 	envelop.Message, _ = req.Marshal()
 	envelop.RequestID = uint64(domain.SequentialUniqueID())
 	logs.Debug("FilesStatus::generateFileGet()",
-		zap.Int64("MsgID", ds.req.MessageID),
+		zap.Int64("MsgID", ctx.req.MessageID),
 		zap.Int32("Offset", req.Offset),
 		zap.Int32("Limit", req.Limit),
 		zap.Int64("FileID", req.Location.FileID),
@@ -100,27 +100,27 @@ func (ds *downloadStatus) generateFileGet(offset, limit int32) *msg.MessageEnvel
 	return envelop
 }
 
-func (ds *downloadStatus) execute() domain.RequestStatus {
+func (ctx *downloadContext) execute() domain.RequestStatus {
 	waitGroup := sync.WaitGroup{}
 
-	for ds.req.MaxRetries > 0 {
+	for ctx.req.MaxRetries > 0 {
 		select {
-		case partIndex := <-ds.parts:
-			ds.rateLimit <- struct{}{}
+		case partIndex := <-ctx.parts:
+			ctx.rateLimit <- struct{}{}
 			waitGroup.Add(1)
 
 			go func(partIndex int32) {
 				defer waitGroup.Done()
 				defer func() {
-					<-ds.rateLimit
+					<-ctx.rateLimit
 				}()
 
-				offset := partIndex * ds.req.ChunkSize
-				res, err := ds.ctrl.network.SendHttp(ds.generateFileGet(offset, ds.req.ChunkSize))
+				offset := partIndex * ctx.req.ChunkSize
+				res, err := ctx.ctrl.network.SendHttp(ctx.generateFileGet(offset, ctx.req.ChunkSize))
 				if err != nil {
 					logs.Warn("Error in SentHTTP", zap.Error(err))
-					atomic.AddInt32(&ds.req.MaxRetries, -1)
-					ds.parts <- partIndex
+					atomic.AddInt32(&ctx.req.MaxRetries, -1)
+					ctx.parts <- partIndex
 					return
 				}
 				switch res.Constructor {
@@ -133,37 +133,37 @@ func (ds *downloadStatus) execute() domain.RequestStatus {
 							zap.Int32("Offset", offset),
 							zap.Int("Byte", len(file.Bytes)),
 						)
-						atomic.AddInt32(&ds.req.MaxRetries, -1)
-						ds.parts <- partIndex
+						atomic.AddInt32(&ctx.req.MaxRetries, -1)
+						ctx.parts <- partIndex
 						return
 					}
-					_, err := ds.file.WriteAt(file.Bytes, int64(offset))
+					_, err := ctx.file.WriteAt(file.Bytes, int64(offset))
 					if err != nil {
 						logs.Warn("Error in WriteFile",
 							zap.Error(err),
 							zap.Int32("Offset", offset),
 							zap.Int("Byte", len(file.Bytes)),
 						)
-						atomic.AddInt32(&ds.req.MaxRetries, -1)
-						ds.parts <- partIndex
+						atomic.AddInt32(&ctx.req.MaxRetries, -1)
+						ctx.parts <- partIndex
 						return
 					}
-					ds.addToDownloaded(partIndex)
+					ctx.addToDownloaded(partIndex)
 				default:
-					atomic.AddInt32(&ds.req.MaxRetries, -1)
-					ds.parts <- partIndex
+					atomic.AddInt32(&ctx.req.MaxRetries, -1)
+					ctx.parts <- partIndex
 					return
 				}
 			}(partIndex)
 		default:
 			waitGroup.Wait()
-			if int32(len(ds.req.DownloadedParts)) == ds.req.TotalParts {
-				_ = ds.file.Close()
-				ds.ctrl.onCompleted(ds.req.MessageID, ds.req.FilePath)
+			if int32(len(ctx.req.DownloadedParts)) == ctx.req.TotalParts {
+				_ = ctx.file.Close()
+				ctx.ctrl.onCompleted(ctx.req.MessageID, ctx.req.FilePath)
 				return domain.RequestStatusCompleted
 			}
 		}
 	}
-	ds.ctrl.onError(ds.req.MessageID, ds.req.FilePath, ronak.StrToByte("max retry exceeded without success"))
+	ctx.ctrl.onError(ctx.req.MessageID, ctx.req.FilePath, ronak.StrToByte("max retry exceeded without success"))
 	return domain.RequestStatusError
 }

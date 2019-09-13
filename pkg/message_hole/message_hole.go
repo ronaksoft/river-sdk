@@ -55,7 +55,6 @@ func (m *HoleManager) LoadFromDB(peerID int64, peerType int32) {
 			m.maxIndex = m.bars[idx].Max
 		}
 	}
-
 }
 
 func (m *HoleManager) InsertBar(b Bar) {

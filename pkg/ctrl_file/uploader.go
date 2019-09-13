@@ -54,7 +54,7 @@ type UploadRequest struct {
 	TotalParts    int32   `json:"total_parts"`
 }
 
-type uploadStatus struct {
+type uploadContext struct {
 	mtx       sync.Mutex
 	rateLimit chan struct{}
 	parts     chan int32
@@ -63,10 +63,10 @@ type uploadStatus struct {
 	req       UploadRequest
 }
 
-func (us *uploadStatus) isUploaded(partIndex int32) bool {
-	us.mtx.Lock()
-	defer us.mtx.Unlock()
-	for _, index := range us.req.UploadedParts {
+func (ctx *uploadContext) isUploaded(partIndex int32) bool {
+	ctx.mtx.Lock()
+	defer ctx.mtx.Unlock()
+	for _, index := range ctx.req.UploadedParts {
 		if partIndex == index {
 			return true
 		}
@@ -74,16 +74,16 @@ func (us *uploadStatus) isUploaded(partIndex int32) bool {
 	return false
 }
 
-func (us *uploadStatus) addToUploaded(partIndex int32) {
-	us.mtx.Lock()
-	us.req.UploadedParts = append(us.req.UploadedParts, partIndex)
-	progress := int64(float64(len(us.req.UploadedParts)) / float64(us.req.TotalParts) * 100)
-	us.mtx.Unlock()
-	us.ctrl.saveUploads(us.req)
-	us.ctrl.onProgressChanged(us.req.MessageID, progress)
+func (ctx *uploadContext) addToUploaded(partIndex int32) {
+	ctx.mtx.Lock()
+	ctx.req.UploadedParts = append(ctx.req.UploadedParts, partIndex)
+	progress := int64(float64(len(ctx.req.UploadedParts)) / float64(ctx.req.TotalParts) * 100)
+	ctx.mtx.Unlock()
+	ctx.ctrl.saveUploads(ctx.req)
+	ctx.ctrl.onProgressChanged(ctx.req.MessageID, progress)
 }
 
-func (us *uploadStatus) generateFileSavePart(fileID int64, partID int32, totalParts int32, bytes []byte) *msg.MessageEnvelope {
+func (ctx *uploadContext) generateFileSavePart(fileID int64, partID int32, totalParts int32, bytes []byte) *msg.MessageEnvelope {
 	req := new(msg.FileSavePart)
 	req.TotalParts = totalParts
 	req.Bytes = bytes
@@ -95,7 +95,7 @@ func (us *uploadStatus) generateFileSavePart(fileID int64, partID int32, totalPa
 	envelop.Message, _ = req.Marshal()
 	envelop.RequestID = uint64(domain.SequentialUniqueID())
 	logs.Debug("FilesStatus::generateFileSavePart()",
-		zap.Int64("MsgID", us.req.MessageID),
+		zap.Int64("MsgID", ctx.req.MessageID),
 		zap.Int64("FileID", req.FileID),
 		zap.Int32("PartID", req.PartID),
 		zap.Int32("TotalParts", req.TotalParts),
@@ -104,62 +104,62 @@ func (us *uploadStatus) generateFileSavePart(fileID int64, partID int32, totalPa
 	return envelop
 }
 
-func (us *uploadStatus) execute() domain.RequestStatus {
+func (ctx *uploadContext) execute() domain.RequestStatus {
 	waitGroup := sync.WaitGroup{}
-	for us.req.MaxRetries > 0 {
+	for ctx.req.MaxRetries > 0 {
 		select {
-		case partIndex := <-us.parts:
-			us.rateLimit <- struct{}{}
+		case partIndex := <-ctx.parts:
+			ctx.rateLimit <- struct{}{}
 			waitGroup.Add(1)
 
 			go func(partIndex int32) {
 				defer waitGroup.Done()
 				defer func() {
-					<-us.rateLimit
+					<-ctx.rateLimit
 				}()
 
-				bytes := pbytes.GetLen(int(us.req.ChunkSize))
+				bytes := pbytes.GetLen(int(ctx.req.ChunkSize))
 				defer pbytes.Put(bytes)
-				offset := partIndex * us.req.ChunkSize
-				_, err := us.file.ReadAt(bytes, int64(offset))
+				offset := partIndex * ctx.req.ChunkSize
+				_, err := ctx.file.ReadAt(bytes, int64(offset))
 				if err != nil && err != io.EOF {
 					logs.Warn("Error in ReadFile", zap.Error(err))
-					atomic.AddInt32(&us.req.MaxRetries, -1)
-					us.parts <- partIndex
+					atomic.AddInt32(&ctx.req.MaxRetries, -1)
+					ctx.parts <- partIndex
 					return
 				}
-				res, err := us.ctrl.network.SendHttp(us.generateFileSavePart(us.req.FileID, partIndex+1, us.req.TotalParts, bytes))
+				res, err := ctx.ctrl.network.SendHttp(ctx.generateFileSavePart(ctx.req.FileID, partIndex+1, ctx.req.TotalParts, bytes))
 				if err != nil {
 					logs.Warn("Error in SendHttp", zap.Error(err))
-					atomic.AddInt32(&us.req.MaxRetries, -1)
-					us.parts <- partIndex
+					atomic.AddInt32(&ctx.req.MaxRetries, -1)
+					ctx.parts <- partIndex
 					return
 				}
 				switch res.Constructor {
 				case msg.C_Bool:
-					us.addToUploaded(partIndex)
+					ctx.addToUploaded(partIndex)
 				default:
-					atomic.AddInt32(&us.req.MaxRetries, -1)
-					us.parts <- partIndex
+					atomic.AddInt32(&ctx.req.MaxRetries, -1)
+					ctx.parts <- partIndex
 				}
 			}(partIndex)
 		default:
 			waitGroup.Wait()
-			switch int32(len(us.req.UploadedParts)) {
-			case us.req.TotalParts - 1:
+			switch int32(len(ctx.req.UploadedParts)) {
+			case ctx.req.TotalParts - 1:
 				// If we finished uploading n-1 parts then run the last loop with the last part
-				us.parts <- us.req.TotalParts - 1
-			case us.req.TotalParts:
+				ctx.parts <- ctx.req.TotalParts - 1
+			case ctx.req.TotalParts:
 				// We have finished our uploads
-				_ = us.file.Close()
-				us.ctrl.onCompleted(us.req.MessageID, us.req.FilePath)
-				if us.ctrl.postUploadProcess != nil {
-					us.ctrl.postUploadProcess(us.req)
+				_ = ctx.file.Close()
+				ctx.ctrl.onCompleted(ctx.req.MessageID, ctx.req.FilePath)
+				if ctx.ctrl.postUploadProcess != nil {
+					ctx.ctrl.postUploadProcess(ctx.req)
 				}
 				return domain.RequestStatusCompleted
 			}
 		}
 	}
-	us.ctrl.onError(us.req.MessageID, us.req.FilePath, ronak.StrToByte("max retry exceeded without success"))
+	ctx.ctrl.onError(ctx.req.MessageID, ctx.req.FilePath, ronak.StrToByte("max retry exceeded without success"))
 	return domain.RequestStatusError
 }
