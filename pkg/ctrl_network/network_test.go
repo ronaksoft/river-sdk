@@ -7,6 +7,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -20,8 +21,11 @@ import (
    Copyright Ronak Software Group 2018
 */
 
+var (
+	requestID uint64
+)
+
 func dummyMessageHandler(messages []*msg.MessageEnvelope) {
-	logs.Info("Message Handler")
 	for _, m := range messages {
 		logs.Info("Message",
 			zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
@@ -75,7 +79,7 @@ func getServerTime() *msg.MessageEnvelope {
 	b, _ := m.Marshal()
 	return &msg.MessageEnvelope{
 		Constructor: msg.C_SystemGetServerTime,
-		RequestID:   ronak.RandomUint64(),
+		RequestID:   atomic.AddUint64(&requestID, 1),
 		Message:     b,
 	}
 }
@@ -93,20 +97,19 @@ func TestNewController(t *testing.T) {
 
 	ctrl.Start()
 	ctrl.Connect(true)
-	time.Sleep(5 * time.Second)
+
+	go func() {
+		for {
+			err := ctrl.SendWebsocket(getServerTime(), true)
+			if err != nil {
+				t.Error(err)
+			}
+			time.Sleep(time.Second)
+		}
+	}()
+	time.Sleep(5000 * time.Second)
 	ctrl.Disconnect()
 	time.Sleep(5 * time.Second)
-	// for j := 0; j < 10; j++ {
-	//
-	// 	// for i := 0; i < 10; i++ {
-	// 	// 	err := ctrl.SendWebsocket(getServerTime(), false)
-	// 	// 	if err != nil {
-	// 	// 		t.Error(err)
-	// 	// 	}
-	// 	// 	time.Sleep(time.Second)
-	// 	// }
-	//
-	// }
 
 	ctrl.Stop()
 }

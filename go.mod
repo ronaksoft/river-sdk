@@ -28,6 +28,7 @@ require (
 	github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/getsentry/sentry-go v0.1.3
 	github.com/gobwas/pool v0.2.0
+	github.com/gobwas/ws v1.0.1
 	github.com/gogo/protobuf v1.2.1
 	github.com/gorilla/websocket v1.4.0
 	github.com/jmhodges/levigo v1.0.0 // indirect

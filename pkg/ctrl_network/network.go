@@ -274,13 +274,17 @@ func (ctrl *Controller) updateNetworkStatus(newStatus domain.NetworkStatus) {
 	}
 	ctrl.wsQuality = newStatus
 	if ctrl.wsOnNetworkStatusChange != nil {
-		go func(status domain.NetworkStatus) {
-			time.Sleep(3 * time.Second)
-			if ctrl.GetQuality() == newStatus {
-				ctrl.wsOnNetworkStatusChange(newStatus)
-			}
-		}(newStatus)
-
+		switch newStatus {
+		case domain.NetworkDisconnected, domain.NetworkConnecting:
+			go func(status domain.NetworkStatus) {
+				time.Sleep(3 * time.Second)
+				if ctrl.GetQuality() == newStatus {
+					ctrl.wsOnNetworkStatusChange(newStatus)
+				}
+			}(newStatus)
+		default:
+			ctrl.wsOnNetworkStatusChange(newStatus)
+		}
 	}
 }
 
@@ -385,8 +389,9 @@ func (ctrl *Controller) Connect(force bool) {
 		}
 		underlyingConn := wsConn.UnderlyingConn()
 		if tcpConn, ok := underlyingConn.(*net.TCPConn); ok {
+			_ = tcpConn.SetLinger(0)
 			_ = tcpConn.SetKeepAlive(true)
-			_ = tcpConn.SetKeepAlivePeriod(50 * time.Second)
+			_ = tcpConn.SetKeepAlivePeriod(30 * time.Second)
 		}
 		localIP := underlyingConn.LocalAddr()
 		switch x := localIP.(type) {
@@ -505,6 +510,7 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 	ctrl.wsWriteLock.Unlock()
 
 	if err != nil {
+		logs.Warn("Error On SendWebsocket", zap.Error(err))
 		ctrl.updateNetworkStatus(domain.NetworkDisconnected)
 		_ = ctrl.wsConn.SetReadDeadline(time.Now())
 		return err
