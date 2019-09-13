@@ -108,6 +108,5 @@ func TestNewController(t *testing.T) {
 	//
 	// }
 
-
 	ctrl.Stop()
 }

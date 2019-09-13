@@ -121,7 +121,7 @@ func (r *repoMessages) save(message *msg.UserMessage) {
 		// Do nothing
 	}
 
-	err := ronak.Try(10, 100 * time.Millisecond, func() error {
+	err := ronak.Try(10, 100*time.Millisecond, func() error {
 		err := r.badger.Update(func(txn *badger.Txn) error {
 			// 1. Write Message
 			err := txn.SetEntry(

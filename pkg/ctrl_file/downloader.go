@@ -39,9 +39,9 @@ type DownloadRequest struct {
 	MaxInFlights int `json:"max_in_flights"`
 	// FilePath defines the path which downloaded file will be stored. It must be a file not a directory.
 	// Also it will be overwritten if Overwrite is TRUE
-	FilePath        string               `json:"file_path"`
-	DownloadedParts []int32              `json:"downloaded_parts"`
-	TotalParts      int32                `json:"total_parts"`
+	FilePath        string  `json:"file_path"`
+	DownloadedParts []int32 `json:"downloaded_parts"`
+	TotalParts      int32   `json:"total_parts"`
 }
 
 type downloadStatus struct {

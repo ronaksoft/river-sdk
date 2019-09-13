@@ -106,7 +106,7 @@ func New(config Config) *Controller {
 	if err == nil {
 		_ = json.Unmarshal(dBytes, &ctrl.uploadRequests)
 		for _, req := range ctrl.uploadRequests {
-			logs.Info("Unfinished Upload", )
+			logs.Info("Unfinished Upload")
 			go ctrl.Upload(req)
 		}
 	}
@@ -281,7 +281,6 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 	thumbID := ronak.RandomInt64(0)
 	fileID := ronak.RandomInt64(0)
 
-
 	// We prepare upload request for the actual file before uploading the thumbnail to save it
 	// in case of execution stopped, then we are assured that we will continue the upload process
 	req := UploadRequest{
@@ -342,7 +341,6 @@ func (ctrl *Controller) Upload(req UploadRequest) {
 		req.ChunkSize = downloadChunkSize
 	}
 
-
 	dividend := int32(req.FileSize / int64(req.ChunkSize))
 	if req.FileSize%int64(req.ChunkSize) > 0 {
 		req.TotalParts = dividend + 1
@@ -350,14 +348,13 @@ func (ctrl *Controller) Upload(req UploadRequest) {
 		req.TotalParts = dividend
 	}
 
-
 	// maxPartID := req.TotalParts
 	// if req.TotalParts > 1 {
 	// 	maxPartID = req.TotalParts - 1
 	// }
 	ds.parts = make(chan int32, req.TotalParts+req.MaxInFlights)
 	ds.req = req
-	for partIndex := int32(0); partIndex < req.TotalParts - 1; partIndex++ {
+	for partIndex := int32(0); partIndex < req.TotalParts-1; partIndex++ {
 		if ds.isUploaded(partIndex) {
 			continue
 		}

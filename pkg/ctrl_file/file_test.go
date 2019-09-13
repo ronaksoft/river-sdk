@@ -111,7 +111,7 @@ func (t TestServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 				sum += partID
 			}
 			t.Unlock()
-			if sum == (req.TotalParts * (req.TotalParts + 1)) / 2 {
+			if sum == (req.TotalParts*(req.TotalParts+1))/2 {
 				logs.Info("CORRECT UPLOAD")
 			}
 		}
@@ -171,28 +171,27 @@ func TestUpload(t *testing.T) {
 	}
 	s.Start()
 
-
 	_File.Upload(fileCtrl.UploadRequest{
-		MaxRetries:      10,
-		MessageID:       1000,
-		FileID:          int64(1),
-		MaxInFlights:    3,
-		FilePath:        "./testdata/big",
+		MaxRetries:   10,
+		MessageID:    1000,
+		FileID:       int64(1),
+		MaxInFlights: 3,
+		FilePath:     "./testdata/big",
 	})
 
 	_File.Upload(fileCtrl.UploadRequest{
-		MaxRetries:      10,
-		MessageID:       1000,
-		FileID:          int64(2),
-		MaxInFlights:    3,
-		FilePath:        "./testdata/medium",
+		MaxRetries:   10,
+		MessageID:    1000,
+		FileID:       int64(2),
+		MaxInFlights: 3,
+		FilePath:     "./testdata/medium",
 	})
 
 	_File.Upload(fileCtrl.UploadRequest{
-		MaxRetries:      10,
-		MessageID:       1000,
-		FileID:          int64(3),
-		MaxInFlights:    3,
-		FilePath:        "./testdata/small",
+		MaxRetries:   10,
+		MessageID:    1000,
+		FileID:       int64(3),
+		MaxInFlights: 3,
+		FilePath:     "./testdata/small",
 	})
 }
