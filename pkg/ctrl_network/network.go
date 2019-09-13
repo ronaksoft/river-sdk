@@ -515,6 +515,11 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 		_ = ctrl.wsConn.SetReadDeadline(time.Now())
 		return err
 	}
+
+	if tcpConn, ok := ctrl.wsConn.UnderlyingConn().(*net.TCPConn); ok {
+		_ = tcpConn.SetWriteBuffer(len(b))
+	}
+
 	return nil
 }
 
