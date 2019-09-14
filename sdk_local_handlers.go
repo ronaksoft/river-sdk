@@ -232,6 +232,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	// Prepare the the result before sending back to the client
 	pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
 	preSuccessCB := func(cb domain.MessageHandler, pms []*msg.UserMessage, req *msg.MessagesGetHistory) domain.MessageHandler {
+		topMessageID := dtoDialog.TopMessageID
 		return func(m *msg.MessageEnvelope) {
 			switch m.Constructor {
 			case msg.C_MessagesMany:
@@ -257,7 +258,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 				if len(pms) > 0 {
 					// 2nd base on the reqMin values add the appropriate pending messages
 					switch {
-					case req.MaxID >= dtoDialog.TopMessageID:
+					case req.MaxID >= topMessageID:
 						x.Messages = append(x.Messages, pms...)
 					default:
 						// Min != 0
