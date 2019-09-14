@@ -45,9 +45,9 @@ type Controller struct {
 	uploadRequests     map[int64]UploadRequest
 	uploadsSaver       *ronak.Flusher
 	uploadsRateLimit   chan struct{}
-	onProgressChanged  func(messageID, percent int64)
-	onCompleted        func(messageID int64, filePath string)
-	onError            func(messageID int64, filePath string, err []byte)
+	onProgressChanged  func(fileID, percent int64)
+	onCompleted        func(fileID int64, filePath string)
+	onError            func(fileID int64, filePath string, err []byte)
 	postUploadProcess  func(req UploadRequest)
 }
 
@@ -60,17 +60,17 @@ func New(config Config) *Controller {
 	ctrl.uploadRequests = make(map[int64]UploadRequest)
 	ctrl.postUploadProcess = config.PostUploadProcess
 	if config.OnCompleted == nil {
-		ctrl.onCompleted = func(messageID int64, filePath string) {}
+		ctrl.onCompleted = func(fileID int64, filePath string) {}
 	} else {
 		ctrl.onCompleted = config.OnCompleted
 	}
 	if config.OnProgressChanged == nil {
-		ctrl.onProgressChanged = func(messageID, percent int64) {}
+		ctrl.onProgressChanged = func(fileID, percent int64) {}
 	} else {
 		ctrl.onProgressChanged = config.OnProgressChanged
 	}
 	if config.OnError == nil {
-		ctrl.onError = func(messageID int64, filePath string, err []byte) {}
+		ctrl.onError = func(fileID int64, filePath string, err []byte) {}
 	} else {
 		ctrl.onError = config.OnError
 	}
@@ -118,36 +118,36 @@ func (ctrl *Controller) Start() {
 
 func (ctrl *Controller) saveDownloads(req DownloadRequest) {
 	ctrl.mtxDownloads.Lock()
-	ctrl.downloadRequests[req.MessageID] = req
+	ctrl.downloadRequests[req.FileID] = req
 	ctrl.mtxDownloads.Unlock()
 	ctrl.downloadsSaver.EnterWithResult(nil, nil)
 }
-func (ctrl *Controller) deleteDownloadRequest(msgID int64) {
+func (ctrl *Controller) deleteDownloadRequest(fileID int64) {
 	ctrl.mtxDownloads.Lock()
-	delete(ctrl.downloadRequests, msgID)
+	delete(ctrl.downloadRequests, fileID)
 	ctrl.mtxDownloads.Unlock()
 	ctrl.downloadsSaver.EnterWithResult(nil, nil)
 }
 func (ctrl *Controller) saveUploads(req UploadRequest) {
 	ctrl.mtxUploads.Lock()
-	ctrl.uploadRequests[req.MessageID] = req
+	ctrl.uploadRequests[req.FileID] = req
 	ctrl.mtxUploads.Unlock()
 	ctrl.uploadsSaver.EnterWithResult(nil, nil)
 }
-func (ctrl *Controller) deleteUpdateRequest(msgID int64) {
+func (ctrl *Controller) deleteUpdateRequest(fileID int64) {
 	ctrl.mtxUploads.Lock()
-	delete(ctrl.uploadRequests, msgID)
+	delete(ctrl.uploadRequests, fileID)
 	ctrl.mtxUploads.Unlock()
 	ctrl.uploadsSaver.EnterWithResult(nil, nil)
 }
 
-func (ctrl *Controller) GetDownloadRequest(messageID int64) (DownloadRequest, bool) {
+func (ctrl *Controller) GetDownloadRequestByMessageID(messageID int64) (DownloadRequest, bool) {
 	ctrl.mtxDownloads.Lock()
 	req, ok := ctrl.downloadRequests[messageID]
 	ctrl.mtxDownloads.Unlock()
 	return req, ok
 }
-func (ctrl *Controller) GetUploadRequest(messageID int64) (UploadRequest, bool) {
+func (ctrl *Controller) GetUploadRequestByMessageID(messageID int64) (UploadRequest, bool) {
 	ctrl.mtxUploads.Lock()
 	req, ok := ctrl.uploadRequests[messageID]
 	ctrl.mtxUploads.Unlock()
@@ -402,7 +402,7 @@ func (ctrl *Controller) Download(req DownloadRequest) {
 	if req.FileSize > 0 {
 		err := os.Truncate(req.TempFilePath, req.FileSize)
 		if err != nil {
-			ctrl.onError(req.MessageID, req.TempFilePath, ronak.StrToByte(err.Error()))
+			ctrl.onError(req.FileID, req.TempFilePath, ronak.StrToByte(err.Error()))
 			return
 		}
 		dividend := int32(req.FileSize / int64(req.ChunkSize))
@@ -432,7 +432,7 @@ func (ctrl *Controller) Download(req DownloadRequest) {
 	ds.execute()
 
 	// Remove the Download request from the list
-	ctrl.deleteDownloadRequest(req.MessageID)
+	ctrl.deleteDownloadRequest(req.FileID)
 }
 
 func (ctrl *Controller) UploadUserPhoto(filePath string) int64 {
@@ -441,14 +441,14 @@ func (ctrl *Controller) UploadUserPhoto(filePath string) int64 {
 		filePath = filePath[7:]
 	}
 
+	fileID := ronak.RandomInt64(0)
 	ctrl.Upload(UploadRequest{
-		MessageID:      -1,
 		IsProfilePhoto: true,
-		FileID:         ronak.RandomInt64(0),
+		FileID:         fileID,
 		MaxInFlights:   3,
 		FilePath:       filePath,
 	})
-	return -1
+	return fileID
 }
 func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) int64 {
 	// support IOS file path
@@ -456,16 +456,17 @@ func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) int64 {
 		filePath = filePath[7:]
 	}
 
+
+	fileID := ronak.RandomInt64(0)
 	ctrl.Upload(UploadRequest{
-		MessageID:      groupID,
 		IsProfilePhoto: true,
 		GroupID:        groupID,
-		FileID:         ronak.RandomInt64(0),
+		FileID:         fileID,
 		MaxInFlights:   3,
 		FilePath:       filePath,
 	})
 
-	return groupID
+	return fileID
 }
 func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPath string) {
 	// support IOS file path
@@ -518,23 +519,23 @@ func (ctrl *Controller) Upload(req UploadRequest) {
 
 	fileInfo, err := os.Stat(req.FilePath)
 	if err != nil {
-		ctrl.onError(req.MessageID, req.FilePath, ronak.StrToByte(err.Error()))
+		ctrl.onError(req.FileID, req.FilePath, ronak.StrToByte(err.Error()))
 		return
 	}
 	ds.file, err = os.OpenFile(req.FilePath, os.O_RDONLY, 0666)
 	if err != nil {
-		ctrl.onError(req.MessageID, req.FilePath, ronak.StrToByte(err.Error()))
+		ctrl.onError(req.FileID, req.FilePath, ronak.StrToByte(err.Error()))
 		return
 	}
 
 	req.FileSize = fileInfo.Size()
 	if req.FileSize <= 0 {
-		ctrl.onError(req.MessageID, req.FilePath, ronak.StrToByte("file size is not positive"))
+		ctrl.onError(req.FileID, req.FilePath, ronak.StrToByte("file size is not positive"))
 		return
 	}
 
 	if req.FileSize > domain.FileMaxAllowedSize {
-		ctrl.onError(req.MessageID, req.FilePath, ronak.StrToByte("file size is bigger than maximum allowed"))
+		ctrl.onError(req.FileID, req.FilePath, ronak.StrToByte("file size is bigger than maximum allowed"))
 		return
 	}
 
@@ -566,6 +567,6 @@ func (ctrl *Controller) Upload(req UploadRequest) {
 	ds.execute()
 
 	// Remove the Download request from the list
-	ctrl.deleteUpdateRequest(req.MessageID)
+	ctrl.deleteUpdateRequest(req.FileID)
 	return
 }

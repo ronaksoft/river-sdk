@@ -71,7 +71,7 @@ func (ctx *downloadContext) addToDownloaded(partIndex int32) {
 	progress := int64(float64(len(ctx.req.DownloadedParts)) / float64(ctx.req.TotalParts) * 100)
 	ctx.mtx.Unlock()
 	ctx.ctrl.saveDownloads(ctx.req)
-	ctx.ctrl.onProgressChanged(ctx.req.MessageID, progress)
+	ctx.ctrl.onProgressChanged(ctx.req.FileID, progress)
 }
 
 func (ctx *downloadContext) generateFileGet(offset, limit int32) *msg.MessageEnvelope {
@@ -163,16 +163,16 @@ func (ctx *downloadContext) execute() domain.RequestStatus {
 				err := os.Rename(ctx.req.TempFilePath, ctx.req.FilePath)
 				if err != nil {
 					_ = os.Remove(ctx.req.TempFilePath)
-					ctx.ctrl.onError(ctx.req.MessageID, ctx.req.TempFilePath, ronak.StrToByte(err.Error()))
+					ctx.ctrl.onError(ctx.req.FileID, ctx.req.TempFilePath, ronak.StrToByte(err.Error()))
 					return domain.RequestStatusError
 				}
-				ctx.ctrl.onCompleted(ctx.req.MessageID, ctx.req.FilePath)
+				ctx.ctrl.onCompleted(ctx.req.FileID, ctx.req.FilePath)
 				return domain.RequestStatusCompleted
 			}
 		}
 	}
 	_ = ctx.file.Close()
 	_ = os.Remove(ctx.req.TempFilePath)
-	ctx.ctrl.onError(ctx.req.MessageID, ctx.req.TempFilePath, ronak.StrToByte("max retry exceeded without success"))
+	ctx.ctrl.onError(ctx.req.FileID, ctx.req.TempFilePath, ronak.StrToByte("max retry exceeded without success"))
 	return domain.RequestStatusError
 }

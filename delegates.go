@@ -11,9 +11,9 @@ type MainDelegate interface {
 
 // FileDelegate
 type FileDelegate interface {
-	OnProgressChanged(messageID int64, percent int64)
-	OnCompleted(messageID int64, filePath string)
-	OnError(messageID int64, filePath string, err []byte)
+	OnProgressChanged(fileID int64, percent int64)
+	OnCompleted(fileID int64, filePath string)
+	OnError(fileID int64, filePath string, err []byte)
 }
 
 type ConnInfoDelegate interface {

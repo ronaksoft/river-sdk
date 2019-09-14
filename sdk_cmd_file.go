@@ -31,7 +31,7 @@ func (r *River) GetFileStatus(msgID int64) string {
 	return string(buff)
 }
 func (r *River) getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, filePath string) {
-	downloadRequest, ok := r.fileCtrl.GetDownloadRequest(msgID)
+	downloadRequest, ok := r.fileCtrl.GetDownloadRequestByMessageID(msgID)
 	if !ok {
 		filePath = getFilePath(msgID)
 		if filePath != "" {
@@ -164,7 +164,7 @@ func (r *River) ResumeUpload(msgID int64) {
 	req := new(msg.ClientSendMessageMedia)
 	_ = req.Unmarshal(pendingMessage.Media)
 
-	if _, ok := r.fileCtrl.GetUploadRequest(msgID); !ok {
+	if _, ok := r.fileCtrl.GetUploadRequestByMessageID(msgID); !ok {
 		go r.fileCtrl.UploadMessageDocument(msgID, req.FilePath, req.ThumbFilePath)
 	}
 }
@@ -176,8 +176,8 @@ func (r *River) AccountUploadPhoto(filePath string) int64 {
 		mon.FunctionResponseTime("AccountUploadPhoto", time.Now().Sub(startTime))
 	}()
 
-	r.fileCtrl.UploadUserPhoto(filePath)
-	return -1
+	fileID := r.fileCtrl.UploadUserPhoto(filePath)
+	return fileID
 }
 
 // AccountGetPhoto_Big download user profile picture
@@ -250,8 +250,8 @@ func (r *River) GroupUploadPhoto(groupID int64, filePath string) int64 {
 		mon.FunctionResponseTime("GroupUploadPhoto", time.Now().Sub(startTime))
 	}()
 
-	r.fileCtrl.UploadGroupPhoto(groupID, filePath)
-	return groupID
+	fileID := r.fileCtrl.UploadGroupPhoto(groupID, filePath)
+	return fileID
 }
 
 // GroupGetPhoto_Big download group profile picture
