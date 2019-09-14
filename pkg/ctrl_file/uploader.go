@@ -160,6 +160,9 @@ func (ctx *uploadContext) execute() domain.RequestStatus {
 			}
 		}
 	}
+
+	_ = ctx.file.Close()
+	_ = os.Remove(ctx.req.FilePath)
 	ctx.ctrl.onError(ctx.req.MessageID, ctx.req.FilePath, ronak.StrToByte("max retry exceeded without success"))
 	return domain.RequestStatusError
 }
