@@ -257,7 +257,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 				if len(pms) > 0 {
 					// 2nd base on the reqMin values add the appropriate pending messages
 					switch {
-					case req.MinID == 0:
+					case req.MaxID >= dtoDialog.TopMessageID:
 						x.Messages = append(x.Messages, pms...)
 					default:
 						// Min != 0
