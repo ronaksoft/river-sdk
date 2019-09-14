@@ -167,6 +167,7 @@ func (r *River) ResumeUpload(msgID int64) {
 		go r.fileCtrl.UploadMessageDocument(msgID, req.FilePath, req.ThumbFilePath)
 	}
 }
+
 // AccountUploadPhoto upload user profile photo
 func (r *River) AccountUploadPhoto(filePath string) {
 	startTime := time.Now()
