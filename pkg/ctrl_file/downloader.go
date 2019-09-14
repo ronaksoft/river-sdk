@@ -40,6 +40,7 @@ type DownloadRequest struct {
 	// FilePath defines the path which downloaded file will be stored. It must be a file not a directory.
 	// Also it will be overwritten if Overwrite is TRUE
 	FilePath        string  `json:"file_path"`
+	TempFilePath    string  `json:"temp_file_path"`
 	DownloadedParts []int32 `json:"downloaded_parts"`
 	TotalParts      int32   `json:"total_parts"`
 }
@@ -159,13 +160,19 @@ func (ctx *downloadContext) execute() domain.RequestStatus {
 			waitGroup.Wait()
 			if int32(len(ctx.req.DownloadedParts)) == ctx.req.TotalParts {
 				_ = ctx.file.Close()
+				err := os.Rename(ctx.req.TempFilePath, ctx.req.FilePath)
+				if err != nil {
+					_ = os.Remove(ctx.req.TempFilePath)
+					ctx.ctrl.onError(ctx.req.MessageID, ctx.req.TempFilePath, ronak.StrToByte(err.Error()))
+					return domain.RequestStatusError
+				}
 				ctx.ctrl.onCompleted(ctx.req.MessageID, ctx.req.FilePath)
 				return domain.RequestStatusCompleted
 			}
 		}
 	}
 	_ = ctx.file.Close()
-	_ = os.Remove(ctx.req.FilePath)
-	ctx.ctrl.onError(ctx.req.MessageID, ctx.req.FilePath, ronak.StrToByte("max retry exceeded without success"))
+	_ = os.Remove(ctx.req.TempFilePath)
+	ctx.ctrl.onError(ctx.req.MessageID, ctx.req.TempFilePath, ronak.StrToByte("max retry exceeded without success"))
 	return domain.RequestStatusError
 }

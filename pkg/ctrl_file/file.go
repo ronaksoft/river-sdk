@@ -375,10 +375,11 @@ func (ctrl *Controller) Download(req DownloadRequest) {
 		req:       req,
 	}
 
-	_, err := os.Stat(req.FilePath)
+	req.TempFilePath = fmt.Sprintf("%s.tmp", req.FilePath)
+	_, err := os.Stat(req.TempFilePath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			ds.file, err = os.Create(req.FilePath)
+			ds.file, err = os.Create(req.TempFilePath)
 			if err != nil {
 				logs.Warn("Error in CreateFile", zap.Error(err))
 				return
@@ -387,7 +388,7 @@ func (ctrl *Controller) Download(req DownloadRequest) {
 			return
 		}
 	} else {
-		ds.file, err = os.OpenFile(req.FilePath, os.O_RDWR, 0666)
+		ds.file, err = os.OpenFile(req.TempFilePath, os.O_RDWR, 0666)
 		if err != nil {
 			logs.Warn("Error In OpenFile", zap.Error(err))
 			return
@@ -395,9 +396,9 @@ func (ctrl *Controller) Download(req DownloadRequest) {
 	}
 
 	if req.FileSize > 0 {
-		err := os.Truncate(req.FilePath, req.FileSize)
+		err := os.Truncate(req.TempFilePath, req.FileSize)
 		if err != nil {
-			ctrl.onError(req.MessageID, req.FilePath, ronak.StrToByte(err.Error()))
+			ctrl.onError(req.MessageID, req.TempFilePath, ronak.StrToByte(err.Error()))
 			return
 		}
 		dividend := int32(req.FileSize / int64(req.ChunkSize))
