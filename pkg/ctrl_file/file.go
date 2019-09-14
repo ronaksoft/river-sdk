@@ -92,7 +92,6 @@ func New(config Config) *Controller {
 		}
 	})
 
-
 	return ctrl
 }
 
@@ -436,25 +435,29 @@ func (ctrl *Controller) Download(req DownloadRequest) {
 	ctrl.deleteDownloadRequest(req.MessageID)
 }
 
-func (ctrl *Controller) UploadUserPhoto(filePath string) {
-	// support IOS file path
-	if strings.HasPrefix(filePath, "file://") {
-		filePath = filePath[7:]
-	}
-	ctrl.Upload(UploadRequest{
-		IsProfilePhoto: true,
-		FileID:         ronak.RandomInt64(0),
-		MaxInFlights:   3,
-		FilePath:       filePath,
-	})
-}
-func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) {
+func (ctrl *Controller) UploadUserPhoto(filePath string) int64 {
 	// support IOS file path
 	if strings.HasPrefix(filePath, "file://") {
 		filePath = filePath[7:]
 	}
 
 	ctrl.Upload(UploadRequest{
+		MessageID:      -1,
+		IsProfilePhoto: true,
+		FileID:         ronak.RandomInt64(0),
+		MaxInFlights:   3,
+		FilePath:       filePath,
+	})
+	return -1
+}
+func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) int64 {
+	// support IOS file path
+	if strings.HasPrefix(filePath, "file://") {
+		filePath = filePath[7:]
+	}
+
+	ctrl.Upload(UploadRequest{
+		MessageID:      groupID,
 		IsProfilePhoto: true,
 		GroupID:        groupID,
 		FileID:         ronak.RandomInt64(0),
@@ -462,6 +465,7 @@ func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) {
 		FilePath:       filePath,
 	})
 
+	return groupID
 }
 func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPath string) {
 	// support IOS file path
@@ -565,5 +569,3 @@ func (ctrl *Controller) Upload(req UploadRequest) {
 	ctrl.deleteUpdateRequest(req.MessageID)
 	return
 }
-
-

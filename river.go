@@ -521,7 +521,7 @@ func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) {
 			}
 		}
 		timeoutCB := func() {
-			logs.Debug("AccountUploadPhoto timeoput callback")
+			logs.Debug("AccountUploadPhoto time out callback")
 		}
 		r.queueCtrl.ExecuteCommand(requestID, msg.C_AccountUploadPhoto, reqBuff, timeoutCB, successCB, false)
 	case uploadRequest.IsProfilePhoto && uploadRequest.GroupID != 0:

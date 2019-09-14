@@ -155,6 +155,7 @@ func (r *River) CancelUpload(msgID int64) {
 
 }
 
+// ResumeDownload
 func (r *River) ResumeUpload(msgID int64) {
 	pendingMessage := repo.PendingMessages.GetByID(msgID)
 	if pendingMessage == nil {
@@ -169,14 +170,14 @@ func (r *River) ResumeUpload(msgID int64) {
 }
 
 // AccountUploadPhoto upload user profile photo
-func (r *River) AccountUploadPhoto(filePath string) {
+func (r *River) AccountUploadPhoto(filePath string) int64 {
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("AccountUploadPhoto", time.Now().Sub(startTime))
 	}()
 
 	r.fileCtrl.UploadUserPhoto(filePath)
-	return
+	return -1
 }
 
 // AccountGetPhoto_Big download user profile picture
@@ -243,14 +244,14 @@ func (r *River) downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig b
 }
 
 // GroupUploadPhoto upload group profile photo
-func (r *River) GroupUploadPhoto(groupID int64, filePath string) {
+func (r *River) GroupUploadPhoto(groupID int64, filePath string) int64 {
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("GroupUploadPhoto", time.Now().Sub(startTime))
 	}()
 
 	r.fileCtrl.UploadGroupPhoto(groupID, filePath)
-	return
+	return groupID
 }
 
 // GroupGetPhoto_Big download group profile picture
