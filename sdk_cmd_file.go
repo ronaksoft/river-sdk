@@ -140,6 +140,9 @@ func (r *River) CancelUpload(msgID int64) {
 	defer func() {
 		mon.FunctionResponseTime("CancelUpload", time.Now().Sub(startTime))
 	}()
+
+	// TODO:: implement it
+
 	// fs, err := repo.Files.GetStatus(msgID)
 	// if err != nil {
 	// 	logs.Warn("SDK::CancelUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
@@ -152,6 +155,18 @@ func (r *River) CancelUpload(msgID int64) {
 
 }
 
+func (r *River) ResumeUpload(msgID int64) {
+	pendingMessage := repo.PendingMessages.GetByID(msgID)
+	if pendingMessage == nil {
+		return
+	}
+	req := new(msg.ClientSendMessageMedia)
+	_ = req.Unmarshal(pendingMessage.Media)
+
+	if _, ok := r.fileCtrl.GetUploadRequest(msgID); !ok {
+		go r.fileCtrl.UploadMessageDocument(msgID, req.FilePath, req.ThumbFilePath)
+	}
+}
 // AccountUploadPhoto upload user profile photo
 func (r *River) AccountUploadPhoto(filePath string) {
 	startTime := time.Now()

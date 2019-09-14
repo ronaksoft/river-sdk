@@ -148,7 +148,12 @@ func (ctrl *Controller) GetDownloadRequest(messageID int64) (DownloadRequest, bo
 	ctrl.mtxDownloads.Unlock()
 	return req, ok
 }
-
+func (ctrl *Controller) GetUploadRequest(messageID int64) (UploadRequest, bool) {
+	ctrl.mtxUploads.Lock()
+	req, ok := ctrl.uploadRequests[messageID]
+	ctrl.mtxUploads.Unlock()
+	return req, ok
+}
 func (ctrl *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) (string, error) {
 	var filePath string
 	err := ronak.Try(retryMaxAttempts, retryWaitTime, func() error {

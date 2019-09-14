@@ -49,9 +49,9 @@ type UploadRequest struct {
 	// ChunkSize identifies how many request we need to send to server to Download a file.
 	ChunkSize int32 `json:"chunk_size"`
 	// MaxInFlights defines that how many requests could be send concurrently
-	MaxInFlights  int32   `json:"max_in_flights"`
-	UploadedParts []int32 `json:"downloaded_parts"`
-	TotalParts    int32   `json:"total_parts"`
+	MaxInFlights  int32                `json:"max_in_flights"`
+	UploadedParts []int32              `json:"downloaded_parts"`
+	TotalParts    int32                `json:"total_parts"`
 }
 
 type uploadContext struct {
