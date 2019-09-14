@@ -348,7 +348,6 @@ func (ctrl *Controller) DownloadByMessage(userMessage *msg.UserMessage) {
 			return
 		}
 		ctrl.Download(DownloadRequest{
-			MaxRetries:   10,
 			MessageID:    userMessage.ID,
 			ClusterID:    x.Doc.ClusterID,
 			FileID:       x.Doc.ID,
@@ -410,6 +409,10 @@ func (ctrl *Controller) Download(req DownloadRequest) {
 	} else {
 		ds.req.TotalParts = 1
 		ds.req.ChunkSize = 0
+	}
+
+	if req.MaxRetries <= 0 {
+		req.MaxRetries = retryMaxAttempts
 	}
 
 	ds.parts = make(chan int32, ds.req.TotalParts)
@@ -527,6 +530,10 @@ func (ctrl *Controller) Upload(req UploadRequest) {
 
 	if req.ChunkSize == 0 {
 		req.ChunkSize = downloadChunkSize
+	}
+
+	if req.MaxRetries <= 0 {
+		req.MaxRetries = retryMaxAttempts
 	}
 
 	dividend := int32(req.FileSize / int64(req.ChunkSize))
