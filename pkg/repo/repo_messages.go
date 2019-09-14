@@ -58,7 +58,6 @@ func (r *repoMessages) getUserMessage(msgID int64) (*msg.UserMessage, error) {
 		})
 	})
 	if err != nil {
-		logs.Warn("Error On getUserMessage", zap.Int64("MsgID", msgID))
 		return nil, err
 	}
 	return message, nil

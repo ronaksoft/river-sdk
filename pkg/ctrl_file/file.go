@@ -9,7 +9,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
-	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -31,23 +30,23 @@ type Config struct {
 	MaxInflightDownloads int32
 	MaxInflightUploads   int32
 	PostUploadProcess    func(req UploadRequest)
-	OnProgressChanged    func(messageID int64, percent int64)
-	OnCompleted          func(messageID int64, filePath string)
-	OnError              func(messageID int64, filePath string, err []byte)
+	OnProgressChanged    func(reqID string, percent int64)
+	OnCompleted          func(reqID string, filePath string)
+	OnError              func(reqID string, filePath string, err []byte)
 }
 type Controller struct {
 	network            *networkCtrl.Controller
 	mtxDownloads       sync.Mutex
-	downloadRequests   map[int64]DownloadRequest
+	downloadRequests   map[string]DownloadRequest
 	downloadsSaver     *ronak.Flusher
 	downloadsRateLimit chan struct{}
 	mtxUploads         sync.Mutex
-	uploadRequests     map[int64]UploadRequest
+	uploadRequests     map[string]UploadRequest
 	uploadsSaver       *ronak.Flusher
 	uploadsRateLimit   chan struct{}
-	onProgressChanged  func(fileID, percent int64)
-	onCompleted        func(fileID int64, filePath string)
-	onError            func(fileID int64, filePath string, err []byte)
+	onProgressChanged  func(reqID string, percent int64)
+	onCompleted        func(reqID string, filePath string)
+	onError            func(reqID string, filePath string, err []byte)
 	postUploadProcess  func(req UploadRequest)
 }
 
@@ -56,21 +55,21 @@ func New(config Config) *Controller {
 	ctrl.network = config.Network
 	ctrl.downloadsRateLimit = make(chan struct{}, config.MaxInflightDownloads)
 	ctrl.uploadsRateLimit = make(chan struct{}, config.MaxInflightUploads)
-	ctrl.downloadRequests = make(map[int64]DownloadRequest)
-	ctrl.uploadRequests = make(map[int64]UploadRequest)
+	ctrl.downloadRequests = make(map[string]DownloadRequest)
+	ctrl.uploadRequests = make(map[string]UploadRequest)
 	ctrl.postUploadProcess = config.PostUploadProcess
 	if config.OnCompleted == nil {
-		ctrl.onCompleted = func(fileID int64, filePath string) {}
+		ctrl.onCompleted = func(reqID string, filePath string) {}
 	} else {
 		ctrl.onCompleted = config.OnCompleted
 	}
 	if config.OnProgressChanged == nil {
-		ctrl.onProgressChanged = func(fileID, percent int64) {}
+		ctrl.onProgressChanged = func(reqID string, percent int64) {}
 	} else {
 		ctrl.onProgressChanged = config.OnProgressChanged
 	}
 	if config.OnError == nil {
-		ctrl.onError = func(fileID int64, filePath string, err []byte) {}
+		ctrl.onError = func(reqID string, filePath string, err []byte) {}
 	} else {
 		ctrl.onError = config.OnError
 	}
@@ -101,7 +100,9 @@ func (ctrl *Controller) Start() {
 	if err == nil {
 		_ = json.Unmarshal(dBytes, &ctrl.downloadRequests)
 		for _, req := range ctrl.downloadRequests {
-			go ctrl.Download(req)
+			go func(req DownloadRequest) {
+				_ = ctrl.Download(req)
+			}(req)
 		}
 	}
 
@@ -118,44 +119,52 @@ func (ctrl *Controller) Start() {
 
 func (ctrl *Controller) saveDownloads(req DownloadRequest) {
 	ctrl.mtxDownloads.Lock()
-	ctrl.downloadRequests[req.FileID] = req
+	ctrl.downloadRequests[req.GetID()] = req
 	ctrl.mtxDownloads.Unlock()
 	ctrl.downloadsSaver.EnterWithResult(nil, nil)
 }
-func (ctrl *Controller) deleteDownloadRequest(fileID int64) {
+func (ctrl *Controller) deleteDownloadRequest(reqID string) {
 	ctrl.mtxDownloads.Lock()
-	delete(ctrl.downloadRequests, fileID)
+	delete(ctrl.downloadRequests, reqID)
 	ctrl.mtxDownloads.Unlock()
 	ctrl.downloadsSaver.EnterWithResult(nil, nil)
 }
 func (ctrl *Controller) saveUploads(req UploadRequest) {
 	ctrl.mtxUploads.Lock()
-	ctrl.uploadRequests[req.FileID] = req
+	ctrl.uploadRequests[req.GetID()] = req
 	ctrl.mtxUploads.Unlock()
 	ctrl.uploadsSaver.EnterWithResult(nil, nil)
 }
-func (ctrl *Controller) deleteUpdateRequest(fileID int64) {
+func (ctrl *Controller) deleteUpdateRequest(reqID string) {
 	ctrl.mtxUploads.Lock()
-	delete(ctrl.uploadRequests, fileID)
+	delete(ctrl.uploadRequests, reqID)
 	ctrl.mtxUploads.Unlock()
 	ctrl.uploadsSaver.EnterWithResult(nil, nil)
 }
 
-func (ctrl *Controller) GetDownloadRequestByMessageID(messageID int64) (DownloadRequest, bool) {
+func GetDownloadRequestID(clusterID int32, fileID, accessHash int64) string {
+	return fmt.Sprintf("%d.%d.%d", clusterID, fileID, accessHash)
+}
+func (ctrl *Controller) GetDownloadRequest(clusterID int32, fileID, accessHash int64) (DownloadRequest, bool) {
 	ctrl.mtxDownloads.Lock()
-	req, ok := ctrl.downloadRequests[messageID]
+	req, ok := ctrl.downloadRequests[GetDownloadRequestID(clusterID, fileID, accessHash)]
 	ctrl.mtxDownloads.Unlock()
 	return req, ok
 }
-func (ctrl *Controller) GetUploadRequestByMessageID(messageID int64) (UploadRequest, bool) {
+func GetUploadRequestID(fileID int64) string {
+	return fmt.Sprintf("%d", fileID)
+}
+func (ctrl *Controller) GetUploadRequest(fileID int64) (UploadRequest, bool) {
 	ctrl.mtxUploads.Lock()
-	req, ok := ctrl.uploadRequests[messageID]
+	req, ok := ctrl.uploadRequests[GetUploadRequestID(fileID)]
 	ctrl.mtxUploads.Unlock()
 	return req, ok
 }
-func (ctrl *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) (string, error) {
-	var filePath string
-	err := ronak.Try(retryMaxAttempts, retryWaitTime, func() error {
+
+// DownloadAccountPhoto downloads the account profile photo (Big/Small) and returns the file path of the stored
+// image.
+func (ctrl *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) (filePath string, err error) {
+	err = ronak.Try(retryMaxAttempts, retryWaitTime, func() error {
 		req := new(msg.FileGet)
 		req.Location = new(msg.InputFileLocation)
 		if isBig {
@@ -212,15 +221,13 @@ func (ctrl *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto,
 		}
 
 	})
-	if err != nil {
-		return "", err
-	}
-
-	return filePath, nil
+	return
 }
-func (ctrl *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) (string, error) {
-	var filePath string
-	err := ronak.Try(retryMaxAttempts, retryWaitTime, func() error {
+
+// DownloadGroupPhoto downloads the profile photo of the group 'groupID' and returns the file path which
+// the file has been stored.
+func (ctrl *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) (filePath string, err error) {
+	err = ronak.Try(retryMaxAttempts, retryWaitTime, func() error {
 		req := new(msg.FileGet)
 		req.Location = new(msg.InputFileLocation)
 		if isBig {
@@ -277,14 +284,12 @@ func (ctrl *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto,
 		}
 
 	})
-	if err != nil {
-		return "", err
-	}
-	return filePath, nil
+	return
 }
-func (ctrl *Controller) DownloadThumbnail(fileID int64, accessHash uint64, clusterID, version int32) (string, error) {
-	filePath := ""
-	err := ronak.Try(10, 100*time.Millisecond, func() error {
+
+// DownloadThumbnail downloads the thumbnail file
+func (ctrl *Controller) DownloadThumbnail(fileID int64, accessHash uint64, clusterID, version int32) (filePath string, err error) {
+	err = ronak.Try(10, 100*time.Millisecond, func() error {
 		req := new(msg.FileGet)
 		req.Location = &msg.InputFileLocation{
 			AccessHash: accessHash,
@@ -336,22 +341,22 @@ func (ctrl *Controller) DownloadThumbnail(fileID int64, accessHash uint64, clust
 		}
 
 	})
-	if err != nil {
-		return "", err
-	}
-	return filePath, nil
+	return
 }
-func (ctrl *Controller) DownloadByMessage(userMessage *msg.UserMessage) {
+
+// DownloadByMessage downloads the attachment of the message, if any.
+func (ctrl *Controller) DownloadByMessage(userMessage *msg.UserMessage) (filePath string, err error) {
 	switch userMessage.MediaType {
 	case msg.MediaTypeEmpty:
 	case msg.MediaTypeDocument:
 		x := new(msg.MediaDocument)
-		err := x.Unmarshal(userMessage.Media)
+		err = x.Unmarshal(userMessage.Media)
 		if err != nil {
-			logs.Error("Error In Download", zap.Error(err))
 			return
 		}
-		ctrl.Download(DownloadRequest{
+
+		filePath = GetFilePath(x.Doc.MimeType, x.Doc.ID)
+		err = ctrl.Download(DownloadRequest{
 			MessageID:    userMessage.ID,
 			ClusterID:    x.Doc.ClusterID,
 			FileID:       x.Doc.ID,
@@ -360,14 +365,14 @@ func (ctrl *Controller) DownloadByMessage(userMessage *msg.UserMessage) {
 			FileSize:     int64(x.Doc.FileSize),
 			ChunkSize:    downloadChunkSize,
 			MaxInFlights: maxDownloadInFlights,
-			FilePath:     GetFilePath(x.Doc.MimeType, x.Doc.ID),
+			FilePath:     filePath,
 		})
-
-	default:
-		return
 	}
+	return
 }
-func (ctrl *Controller) Download(req DownloadRequest) {
+func (ctrl *Controller) Download(req DownloadRequest) error {
+	req.TempFilePath = fmt.Sprintf("%s.tmp", req.FilePath)
+	ctrl.saveDownloads(req)
 	ctrl.downloadsRateLimit <- struct{}{}
 	defer func() {
 		<-ctrl.downloadsRateLimit
@@ -379,31 +384,28 @@ func (ctrl *Controller) Download(req DownloadRequest) {
 		req:       req,
 	}
 
-	req.TempFilePath = fmt.Sprintf("%s.tmp", req.FilePath)
 	_, err := os.Stat(req.TempFilePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			ds.file, err = os.Create(req.TempFilePath)
 			if err != nil {
-				logs.Warn("Error in CreateFile", zap.Error(err))
-				return
+				return err
 			}
 		} else {
-			return
+			return err
 		}
 	} else {
 		ds.file, err = os.OpenFile(req.TempFilePath, os.O_RDWR, 0666)
 		if err != nil {
-			logs.Warn("Error In OpenFile", zap.Error(err))
-			return
+			return err
 		}
 	}
 
 	if req.FileSize > 0 {
 		err := os.Truncate(req.TempFilePath, req.FileSize)
 		if err != nil {
-			ctrl.onError(req.FileID, req.TempFilePath, ronak.StrToByte(err.Error()))
-			return
+			ctrl.onError(req.GetID(), req.TempFilePath, ronak.StrToByte(err.Error()))
+			return err
 		}
 		dividend := int32(req.FileSize / int64(req.ChunkSize))
 		if req.FileSize%int64(req.ChunkSize) > 0 {
@@ -432,10 +434,11 @@ func (ctrl *Controller) Download(req DownloadRequest) {
 	ds.execute()
 
 	// Remove the Download request from the list
-	ctrl.deleteDownloadRequest(req.FileID)
+	ctrl.deleteDownloadRequest(req.GetID())
+	return nil
 }
 
-func (ctrl *Controller) UploadUserPhoto(filePath string) int64 {
+func (ctrl *Controller) UploadUserPhoto(filePath string) (reqID string) {
 	// support IOS file path
 	if strings.HasPrefix(filePath, "file://") {
 		filePath = filePath[7:]
@@ -448,14 +451,14 @@ func (ctrl *Controller) UploadUserPhoto(filePath string) int64 {
 		MaxInFlights:   3,
 		FilePath:       filePath,
 	})
-	return fileID
+	reqID = GetUploadRequestID(fileID)
+	return
 }
-func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) int64 {
+func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) (reqID string) {
 	// support IOS file path
 	if strings.HasPrefix(filePath, "file://") {
 		filePath = filePath[7:]
 	}
-
 
 	fileID := ronak.RandomInt64(0)
 	ctrl.Upload(UploadRequest{
@@ -466,7 +469,8 @@ func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) int64 {
 		FilePath:       filePath,
 	})
 
-	return fileID
+	reqID = GetUploadRequestID(fileID)
+	return
 }
 func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPath string) {
 	// support IOS file path
@@ -519,23 +523,23 @@ func (ctrl *Controller) Upload(req UploadRequest) {
 
 	fileInfo, err := os.Stat(req.FilePath)
 	if err != nil {
-		ctrl.onError(req.FileID, req.FilePath, ronak.StrToByte(err.Error()))
+		ctrl.onError(req.GetID(), req.FilePath, ronak.StrToByte(err.Error()))
 		return
 	}
 	ds.file, err = os.OpenFile(req.FilePath, os.O_RDONLY, 0666)
 	if err != nil {
-		ctrl.onError(req.FileID, req.FilePath, ronak.StrToByte(err.Error()))
+		ctrl.onError(req.GetID(), req.FilePath, ronak.StrToByte(err.Error()))
 		return
 	}
 
 	req.FileSize = fileInfo.Size()
 	if req.FileSize <= 0 {
-		ctrl.onError(req.FileID, req.FilePath, ronak.StrToByte("file size is not positive"))
+		ctrl.onError(req.GetID(), req.FilePath, ronak.StrToByte("file size is not positive"))
 		return
 	}
 
 	if req.FileSize > domain.FileMaxAllowedSize {
-		ctrl.onError(req.FileID, req.FilePath, ronak.StrToByte("file size is bigger than maximum allowed"))
+		ctrl.onError(req.GetID(), req.FilePath, ronak.StrToByte("file size is bigger than maximum allowed"))
 		return
 	}
 
@@ -567,6 +571,6 @@ func (ctrl *Controller) Upload(req UploadRequest) {
 	ds.execute()
 
 	// Remove the Download request from the list
-	ctrl.deleteUpdateRequest(req.FileID)
+	ctrl.deleteUpdateRequest(req.GetID())
 	return
 }

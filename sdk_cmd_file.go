@@ -13,25 +13,46 @@ import (
 	"time"
 )
 
-// GetStatus returns file status
-// TODO :: change response to protobuff
-func (r *River) GetFileStatus(msgID int64) string {
-	status, progress, filePath := r.getFileStatus(msgID)
-	x := struct {
-		Status   int32   `json:"status"`
-		Progress float64 `json:"progress"`
-		Filepath string  `json:"filepath"`
-	}{
-		Status:   int32(status),
-		Progress: progress,
-		Filepath: filePath,
+func (r *River) GetFileStatus(clusterID int32, fileID, accessHash int64) string {
+	dr, ok := r.fileCtrl.GetDownloadRequest(clusterID, fileID, accessHash)
+	if ok {
+			x := struct {
+				Status   int32   `json:"status"`
+				Progress int64 `json:"progress"`
+				Filepath string  `json:"filepath"`
+			}{
+				Status:   int32(domain.RequestStatusInProgress),
+				Progress: int64(float64(len(dr.DownloadedParts)) / float64(dr.TotalParts) * 100),
+				Filepath: dr.FilePath,
+			}
+
+			buff, _ := json.Marshal(x)
+			return string(buff)
 	}
 
-	buff, _ := json.Marshal(x)
-	return string(buff)
+	// TODO:: We need to detect file path based on the input
+	return ""
 }
-func (r *River) getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, filePath string) {
-	downloadRequest, ok := r.fileCtrl.GetDownloadRequestByMessageID(msgID)
+
+// GetStatus returns file status
+// TODO :: change response to protobuff
+// func (r *River) GetFileStatus(msgID int64) string {
+// 	status, progress, filePath := r.getFileStatus(msgID)
+// 	x := struct {
+// 		Status   int32   `json:"status"`
+// 		Progress float64 `json:"progress"`
+// 		Filepath string  `json:"filepath"`
+// 	}{
+// 		Status:   int32(status),
+// 		Progress: progress,
+// 		Filepath: filePath,
+// 	}
+//
+// 	buff, _ := json.Marshal(x)
+// 	return string(buff)
+// }
+func (r *River) getFileStatus(clusterID int32, fileID, accessHash int64) (status domain.RequestStatus, progress float64, filePath string) {
+	downloadRequest, ok := r.fileCtrl.GetDownloadRequest(fileCtrl.GetDownloadRequestID(clusterID, fileID, accessHash))
 	if !ok {
 		filePath = getFilePath(msgID)
 		if filePath != "" {
@@ -107,9 +128,7 @@ func (r *River) FileDownload(msgID int64) {
 	}
 
 	switch status {
-	case domain.RequestStatusNone:
-		r.fileCtrl.DownloadByMessage(m)
-	case domain.RequestStatusPaused, domain.RequestStatusCanceled, domain.RequestStatusError:
+	case domain.RequestStatusNone, domain.RequestStatusPaused, domain.RequestStatusCanceled, domain.RequestStatusError:
 		r.fileCtrl.DownloadByMessage(m)
 	case domain.RequestStatusInProgress:
 	default:
@@ -141,7 +160,8 @@ func (r *River) CancelUpload(msgID int64) {
 		mon.FunctionResponseTime("CancelUpload", time.Now().Sub(startTime))
 	}()
 
-	// TODO:: implement it
+
+	repo.PendingMessages.Delete(msgID)
 
 	// fs, err := repo.Files.GetStatus(msgID)
 	// if err != nil {
@@ -164,24 +184,24 @@ func (r *River) ResumeUpload(msgID int64) {
 	req := new(msg.ClientSendMessageMedia)
 	_ = req.Unmarshal(pendingMessage.Media)
 
-	if _, ok := r.fileCtrl.GetUploadRequestByMessageID(msgID); !ok {
+	if _, ok := r.fileCtrl.GetUploadRequest(msgID); !ok {
 		go r.fileCtrl.UploadMessageDocument(msgID, req.FilePath, req.ThumbFilePath)
 	}
 }
 
 // AccountUploadPhoto upload user profile photo
-func (r *River) AccountUploadPhoto(filePath string) int64 {
+func (r *River) AccountUploadPhoto(filePath string) (reqID string) {
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("AccountUploadPhoto", time.Now().Sub(startTime))
 	}()
 
-	fileID := r.fileCtrl.UploadUserPhoto(filePath)
-	return fileID
+	reqID = r.fileCtrl.UploadUserPhoto(filePath)
+	return
 }
 
 // AccountGetPhoto_Big download user profile picture
-func (r *River) AccountGetPhotoBig(userID int64) string {
+func (r *River) AccountGetPhotoBig(userID int64) (filePath string) {
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("AccountGetPhotoBig", time.Now().Sub(startTime))
@@ -191,18 +211,18 @@ func (r *River) AccountGetPhotoBig(userID int64) string {
 		return ""
 	}
 
-	filePath := fileCtrl.GetAccountAvatarPath(userID, user.Photo.PhotoBig.FileID)
+	filePath = fileCtrl.GetAccountAvatarPath(userID, user.Photo.PhotoBig.FileID)
 
 	// check if file exist
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		return r.downloadAccountPhoto(user.ID, user.Photo, true)
+		filePath = r.downloadAccountPhoto(user.ID, user.Photo, true)
 	}
-	return filePath
+	return
 
 }
 
 // AccountGetPhoto_Small download user profile picture thumbnail
-func (r *River) AccountGetPhotoSmall(userID int64) string {
+func (r *River) AccountGetPhotoSmall(userID int64) (filePath string) {
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("AccountGetPhotoSmall", time.Now().Sub(startTime))
@@ -212,50 +232,39 @@ func (r *River) AccountGetPhotoSmall(userID int64) string {
 		return ""
 	}
 
-	filePath := fileCtrl.GetAccountAvatarPath(userID, user.Photo.PhotoSmall.FileID)
+	filePath = fileCtrl.GetAccountAvatarPath(userID, user.Photo.PhotoSmall.FileID)
 
 	// check if file exist
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		return r.downloadAccountPhoto(user.ID, user.Photo, false)
+		filePath = r.downloadAccountPhoto(user.ID, user.Photo, false)
 	}
-	return filePath
+	return
 }
 
 // downloadAccountPhoto this function is sync
-func (r *River) downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) string {
-	logs.Debug("SDK::downloadAccountPhoto",
-		zap.Int64("userID", userID),
-		zap.Bool("IsBig", isBig),
-		zap.Int64("PhotoBig.FileID", photo.PhotoBig.FileID),
-		zap.Uint64("PhotoBig.AccessHash", photo.PhotoBig.AccessHash),
-		zap.Int32("PhotoBig.ClusterID", photo.PhotoBig.ClusterID),
-		zap.Int64("PhotoSmall.FileID", photo.PhotoSmall.FileID),
-		zap.Uint64("PhotoSmall.AccessHash", photo.PhotoSmall.AccessHash),
-		zap.Int32("PhotoSmall.ClusterID", photo.PhotoSmall.ClusterID),
-	)
-
+func (r *River) downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) (filePath string) {
 	// send Download request
-	filePath, err := r.fileCtrl.DownloadAccountPhoto(userID, photo, isBig)
+	var err error
+	filePath, err = r.fileCtrl.DownloadAccountPhoto(userID, photo, isBig)
 	if err != nil {
-		logs.Debug("SDK::downloadAccountPhoto() error", zap.Error(err))
 		return ""
 	}
-	return filePath
+	return
 }
 
 // GroupUploadPhoto upload group profile photo
-func (r *River) GroupUploadPhoto(groupID int64, filePath string) int64 {
+func (r *River) GroupUploadPhoto(groupID int64, filePath string) (reqID string) {
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("GroupUploadPhoto", time.Now().Sub(startTime))
 	}()
 
-	fileID := r.fileCtrl.UploadGroupPhoto(groupID, filePath)
-	return fileID
+	reqID = r.fileCtrl.UploadGroupPhoto(groupID, filePath)
+	return
 }
 
 // GroupGetPhoto_Big download group profile picture
-func (r *River) GroupGetPhotoBig(groupID int64) string {
+func (r *River) GroupGetPhotoBig(groupID int64) (filePath string) {
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("GroupGetPhotoBig", time.Now().Sub(startTime))
@@ -265,16 +274,16 @@ func (r *River) GroupGetPhotoBig(groupID int64) string {
 		return ""
 	}
 
-	filePath := fileCtrl.GetGroupAvatarPath(group.ID, group.Photo.PhotoBig.FileID)
+	filePath = fileCtrl.GetGroupAvatarPath(group.ID, group.Photo.PhotoBig.FileID)
 	// check if file exist
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		return r.downloadGroupPhoto(groupID, group.Photo, true)
+		filePath = r.downloadGroupPhoto(groupID, group.Photo, true)
 	}
-	return filePath
+	return
 }
 
 // GroupGetPhoto_Small download group profile picture thumbnail
-func (r *River) GroupGetPhotoSmall(groupID int64) string {
+func (r *River) GroupGetPhotoSmall(groupID int64) (filePath string) {
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("GroupGetPhotoSmall", time.Now().Sub(startTime))
@@ -287,38 +296,27 @@ func (r *River) GroupGetPhotoSmall(groupID int64) string {
 		return ""
 	}
 
-	filePath := fileCtrl.GetGroupAvatarPath(group.ID, group.Photo.PhotoSmall.FileID)
+	filePath = fileCtrl.GetGroupAvatarPath(group.ID, group.Photo.PhotoSmall.FileID)
 	// check if file exist
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		return r.downloadGroupPhoto(groupID, group.Photo, false)
+		filePath = r.downloadGroupPhoto(groupID, group.Photo, false)
 	}
-	return filePath
+	return
 }
 
 // this function is sync
-func (r *River) downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) string {
-	logs.Debug("SDK::downloadGroupPhoto",
-		zap.Int64("userID", groupID),
-		zap.Bool("IsBig", isBig),
-		zap.Int64("PhotoBig.FileID", photo.PhotoBig.FileID),
-		zap.Uint64("PhotoBig.AccessHash", photo.PhotoBig.AccessHash),
-		zap.Int32("PhotoBig.ClusterID", photo.PhotoBig.ClusterID),
-		zap.Int64("PhotoSmall.FileID", photo.PhotoSmall.FileID),
-		zap.Uint64("PhotoSmall.AccessHash", photo.PhotoSmall.AccessHash),
-		zap.Int32("PhotoSmall.ClusterID", photo.PhotoSmall.ClusterID),
-	)
-
-	// send Download request
-	filePath, err := r.fileCtrl.DownloadGroupPhoto(groupID, photo, isBig)
+func (r *River) downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) (filePath string) {
+	var err error
+	filePath, err = r.fileCtrl.DownloadGroupPhoto(groupID, photo, isBig)
 	if err != nil {
 		logs.Debug("SDK::downloadGroupPhoto() error", zap.Error(err))
 		return ""
 	}
-	return filePath
+	return
 }
 
 // FileDownloadThumbnail download file thumbnail
-func (r *River) FileDownloadThumbnail(msgID int64) string {
+func (r *River) FileDownloadThumbnail(msgID int64) (filePath string) {
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("FileDownloadThumbnail", time.Now().Sub(startTime))
@@ -326,26 +324,16 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 
 	// its pending message
 	if msgID < 0 {
-		return r.downloadPendingThumbnail(msgID)
+		filePath = r.downloadPendingThumbnail(msgID)
+		return
 	}
 
 	m := repo.Messages.Get(msgID)
 	if m == nil {
-		retry := 10
-		for retry > 0 {
-			m = repo.Messages.Get(msgID)
-			if m != nil {
-				break
-			}
-			retry--
-		}
-		if m == nil {
-			logs.Error("SDK::FileDownloadThumbnail() message does not exist", zap.Int64("MsgID", msgID))
-			return ""
-		}
+		logs.Error("SDK::FileDownloadThumbnail() message does not exist", zap.Int64("MsgID", msgID))
+		return
 	}
 
-	filePath := ""
 	docID := int64(0)
 	clusterID := int32(0)
 	accessHash := uint64(0)
@@ -371,12 +359,12 @@ func (r *River) FileDownloadThumbnail(msgID int64) string {
 			filePath, err = r.fileCtrl.DownloadThumbnail(docID, accessHash, clusterID, version)
 		}
 	default:
-		return ""
+		return
 	}
 
-	return filePath
+	return
 }
-func (r *River) downloadPendingThumbnail(msgID int64) string {
+func (r *River) downloadPendingThumbnail(msgID int64) (filePath string) {
 	pmsg := repo.PendingMessages.GetByID(msgID)
 	if pmsg == nil {
 		return ""
@@ -391,7 +379,7 @@ func (r *River) downloadPendingThumbnail(msgID int64) string {
 			return ""
 		}
 
-		filePath := fileCtrl.GetThumbnailPath(doc.Document.ID, doc.Document.ClusterID)
+		filePath = fileCtrl.GetThumbnailPath(doc.Document.ID, doc.Document.ClusterID)
 		// check if file exist
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
 			filePath, err = r.fileCtrl.DownloadThumbnail(doc.Document.ID, doc.Document.AccessHash, doc.Document.ClusterID, 0)

@@ -41,16 +41,30 @@ func init() {
 		Network:              _Network,
 		MaxInflightDownloads: 2,
 		MaxInflightUploads:   10,
-		OnProgressChanged: func(messageID int64, percent int64) {
-			logs.Info("Progress Changed", zap.Int64("MsgID", messageID), zap.Int64("Percent", percent))
+		OnProgressChanged: func(reqID string, percent int64) {
+			logs.Info("Progress Changed", zap.String("ReqID", reqID), zap.Int64("Percent", percent))
 		},
-		OnError: func(messageID int64, filePath string, err []byte) {
-			logs.Warn("Error On File", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath), zap.String("Err", ronak.ByteToStr(err)))
+		OnError: func(reqID string, filePath string, err []byte) {
+			logs.Warn("Error On File", zap.String("ReqID", reqID), zap.String("FilePath", filePath), zap.String("Err", ronak.ByteToStr(err)))
 		},
 		PostUploadProcess: func(req fileCtrl.UploadRequest) {
 			logs.Info("PostProcess:", zap.Any("TotalParts", req.TotalParts))
 		},
 	})
+	_File.Start()
+
+	tcpConfig := new(tcplisten.Config)
+	s := httptest.NewUnstartedServer(TestServer{
+		uploadTracker: make(map[int64]map[int32]struct{}),
+	})
+
+	var err error
+	s.Listener, err = tcpConfig.NewListener("tcp4", ":8080")
+	if err != nil {
+		logs.Fatal(err.Error())
+	}
+	s.Start()
+
 
 }
 
@@ -61,10 +75,10 @@ type TestServer struct {
 
 func (t TestServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	// time.Sleep(3 * time.Second)
-	if ronak.RandomInt(30) > 5 {
-		res.WriteHeader(http.StatusForbidden)
-		return
-	}
+	// if ronak.RandomInt(30) > 5 {
+	// 	res.WriteHeader(http.StatusForbidden)
+	// 	return
+	// }
 	body, _ := ioutil.ReadAll(req.Body)
 	protoMessage := new(msg.ProtoMessage)
 	_ = protoMessage.Unmarshal(body)
@@ -124,17 +138,6 @@ func (t TestServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 }
 
 func TestDownload(t *testing.T) {
-	var err error
-	tcpConfig := new(tcplisten.Config)
-	s := httptest.NewUnstartedServer(TestServer{
-		uploadTracker: make(map[int64]map[int32]struct{}),
-	})
-	s.Listener, err = tcpConfig.NewListener("tcp4", ":8080")
-	if err != nil {
-		logs.Fatal(err.Error())
-	}
-	s.Start()
-
 	wg := sync.WaitGroup{}
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
@@ -160,17 +163,6 @@ func TestDownload(t *testing.T) {
 }
 
 func TestUpload(t *testing.T) {
-	var err error
-	tcpConfig := new(tcplisten.Config)
-	s := httptest.NewUnstartedServer(TestServer{
-		uploadTracker: make(map[int64]map[int32]struct{}),
-	})
-	s.Listener, err = tcpConfig.NewListener("tcp4", ":8080")
-	if err != nil {
-		logs.Fatal(err.Error())
-	}
-	s.Start()
-
 	_File.Upload(fileCtrl.UploadRequest{
 		MaxRetries:   10,
 		MessageID:    1000,

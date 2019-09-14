@@ -311,7 +311,7 @@ func (ctrl *Controller) extractMessages(m *msg.MessageEnvelope) ([]*msg.MessageE
 		}
 	case msg.C_Error:
 		e := new(msg.Error)
-		e.Unmarshal(m.Message)
+		_ = e.Unmarshal(m.Message)
 		// its general error
 		if ctrl.wsOnError != nil && m.RequestID == 0 {
 			ctrl.wsOnError(e)
