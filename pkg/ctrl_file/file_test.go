@@ -65,7 +65,6 @@ func init() {
 	}
 	s.Start()
 
-
 }
 
 type TestServer struct {
@@ -142,7 +141,7 @@ func TestDownload(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func(i int) {
-			_File.Download(fileCtrl.DownloadRequest{
+			_ = _File.Download(fileCtrl.DownloadRequest{
 				MaxRetries:      10,
 				MessageID:       1000,
 				ClusterID:       11,

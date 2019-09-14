@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"sort"
 	"strings"
 	"sync"
@@ -555,8 +556,13 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 
 	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 	msgID := -domain.SequentialUniqueID()
-	fileID := int64(in.RequestID)
-	res, err := repo.PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, fileID, reqMedia)
+
+	fileID := ronak.RandomInt64(0)
+	thumbID := int64(0)
+	if reqMedia.ThumbFilePath != "" {
+		thumbID = ronak.RandomInt64(0)
+	}
+	pendingMessage, err := repo.PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, int64(in.RequestID), fileID, thumbID, reqMedia)
 
 	if err != nil {
 		e := new(msg.Error)
@@ -573,7 +579,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 
 	// 3. return to CallBack with pending message data : Done
 	out.Constructor = msg.C_ClientPendingMessage
-	out.Message, _ = res.Marshal()
+	out.Message, _ = pendingMessage.Marshal()
 
 	// 4. later when queue got processed and server returned response we should check if the requestID
 	//   exist in pendingTable we remove it and insert new message with new id to message table
@@ -584,7 +590,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		}
 	}) // successCB(out)
 
-	go r.fileCtrl.UploadMessageDocument(res.ID, reqMedia.FilePath, reqMedia.ThumbFilePath)
+	go r.fileCtrl.UploadMessageDocument(pendingMessage.ID, reqMedia.FilePath, reqMedia.ThumbFilePath, fileID, thumbID)
 }
 
 func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {

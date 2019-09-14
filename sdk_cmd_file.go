@@ -13,46 +13,49 @@ import (
 	"time"
 )
 
-func (r *River) GetFileStatus(clusterID int32, fileID, accessHash int64) string {
-	dr, ok := r.fileCtrl.GetDownloadRequest(clusterID, fileID, accessHash)
-	if ok {
-			x := struct {
-				Status   int32   `json:"status"`
-				Progress int64 `json:"progress"`
-				Filepath string  `json:"filepath"`
-			}{
-				Status:   int32(domain.RequestStatusInProgress),
-				Progress: int64(float64(len(dr.DownloadedParts)) / float64(dr.TotalParts) * 100),
-				Filepath: dr.FilePath,
-			}
-
-			buff, _ := json.Marshal(x)
-			return string(buff)
-	}
-
-	// TODO:: We need to detect file path based on the input
-	return ""
-}
 
 // GetStatus returns file status
 // TODO :: change response to protobuff
-// func (r *River) GetFileStatus(msgID int64) string {
-// 	status, progress, filePath := r.getFileStatus(msgID)
-// 	x := struct {
-// 		Status   int32   `json:"status"`
-// 		Progress float64 `json:"progress"`
-// 		Filepath string  `json:"filepath"`
-// 	}{
-// 		Status:   int32(status),
-// 		Progress: progress,
-// 		Filepath: filePath,
-// 	}
-//
-// 	buff, _ := json.Marshal(x)
-// 	return string(buff)
-// }
-func (r *River) getFileStatus(clusterID int32, fileID, accessHash int64) (status domain.RequestStatus, progress float64, filePath string) {
-	downloadRequest, ok := r.fileCtrl.GetDownloadRequest(fileCtrl.GetDownloadRequestID(clusterID, fileID, accessHash))
+func (r *River) GetFileStatus(msgID int64) string {
+	status, progress, filePath := r.getFileStatus(msgID)
+	x := struct {
+		Status   int32   `json:"status"`
+		Progress float64 `json:"progress"`
+		Filepath string  `json:"filepath"`
+	}{
+		Status:   int32(status),
+		Progress: progress,
+		Filepath: filePath,
+	}
+
+	buff, _ := json.Marshal(x)
+	return string(buff)
+}
+func (r *River) getFileDetails(msgID int64) (clusterID int32, fileID int64, accessHash uint64) {
+	m := repo.Messages.Get(msgID)
+	if m == nil {
+		logs.Warn("SDK::FileDownload()", zap.Int64("Message does not exist", msgID))
+		return
+	}
+	switch m.MediaType {
+	case msg.MediaTypeEmpty:
+	case msg.MediaTypeDocument:
+		x := new(msg.MediaDocument)
+		err := x.Unmarshal(m.Media)
+		if err != nil {
+			return
+		}
+
+
+		clusterID = x.Doc.ClusterID
+		fileID = x.Doc.ID
+		accessHash = x.Doc.AccessHash
+	}
+	return
+}
+func (r *River) getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, filePath string) {
+	clusterID, fileID, accessHash := r.getFileDetails(msgID)
+	downloadRequest, ok := r.fileCtrl.GetDownloadRequest(clusterID, fileID, accessHash)
 	if !ok {
 		filePath = getFilePath(msgID)
 		if filePath != "" {
@@ -160,7 +163,6 @@ func (r *River) CancelUpload(msgID int64) {
 		mon.FunctionResponseTime("CancelUpload", time.Now().Sub(startTime))
 	}()
 
-
 	repo.PendingMessages.Delete(msgID)
 
 	// fs, err := repo.Files.GetStatus(msgID)
@@ -185,7 +187,7 @@ func (r *River) ResumeUpload(msgID int64) {
 	_ = req.Unmarshal(pendingMessage.Media)
 
 	if _, ok := r.fileCtrl.GetUploadRequest(msgID); !ok {
-		go r.fileCtrl.UploadMessageDocument(msgID, req.FilePath, req.ThumbFilePath)
+		go r.fileCtrl.UploadMessageDocument(msgID, req.FilePath, req.ThumbFilePath, pendingMessage.FileID, pendingMessage.ThumbID)
 	}
 }
 

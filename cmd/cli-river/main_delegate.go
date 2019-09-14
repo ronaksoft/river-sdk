@@ -127,22 +127,22 @@ func (d *PrintDelegate) Log(logLevel int, msg string) {
 
 type FileDelegate struct{}
 
-func (d *FileDelegate) OnProgressChanged(messageID int64, percent int64) {
+func (d *FileDelegate) OnProgressChanged(reqID string, percent int64) {
 	_Log.Info("upload progress changed", zap.Int64("Progress", percent))
 }
 
-func (d *FileDelegate) OnCompleted(messageID int64, filePath string) {
-	_Log.Info("On upload Completed", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
+func (d *FileDelegate) OnCompleted(reqID string, filePath string) {
+	_Log.Info("On upload Completed", zap.String("ReqID", reqID), zap.String("FilePath", filePath))
 }
 
-func (d *FileDelegate) OnError(messageID int64, filePath string, err []byte) {
+func (d *FileDelegate) OnError(reqID string, filePath string, err []byte) {
 	x := new(msg.Error)
 	x.Unmarshal(err)
 
 	_Log.Error("OnError",
 		zap.String("Code", x.Code),
 		zap.String("Item", x.Items),
-		zap.Int64("MsgID", messageID),
+		zap.String("ReqID", reqID),
 		zap.String("FilePath", filePath),
 	)
 

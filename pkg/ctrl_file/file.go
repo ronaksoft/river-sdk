@@ -142,10 +142,10 @@ func (ctrl *Controller) deleteUpdateRequest(reqID string) {
 	ctrl.uploadsSaver.EnterWithResult(nil, nil)
 }
 
-func GetDownloadRequestID(clusterID int32, fileID, accessHash int64) string {
+func GetDownloadRequestID(clusterID int32, fileID int64, accessHash uint64) string {
 	return fmt.Sprintf("%d.%d.%d", clusterID, fileID, accessHash)
 }
-func (ctrl *Controller) GetDownloadRequest(clusterID int32, fileID, accessHash int64) (DownloadRequest, bool) {
+func (ctrl *Controller) GetDownloadRequest(clusterID int32, fileID int64, accessHash uint64) (DownloadRequest, bool) {
 	ctrl.mtxDownloads.Lock()
 	req, ok := ctrl.downloadRequests[GetDownloadRequestID(clusterID, fileID, accessHash)]
 	ctrl.mtxDownloads.Unlock()
@@ -472,7 +472,7 @@ func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) (reqID 
 	reqID = GetUploadRequestID(fileID)
 	return
 }
-func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPath string) {
+func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPath string, fileID, thumbID int64) {
 	// support IOS file path
 	if strings.HasPrefix(filePath, "file://") {
 		filePath = filePath[7:]
@@ -482,10 +482,7 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 	if strings.HasPrefix(thumbPath, "file://") {
 		thumbPath = thumbPath[7:]
 	}
-
-	thumbID := ronak.RandomInt64(0)
-	fileID := ronak.RandomInt64(0)
-
+	
 	// We prepare upload request for the actual file before uploading the thumbnail to save it
 	// in case of execution stopped, then we are assured that we will continue the upload process
 	req := UploadRequest{

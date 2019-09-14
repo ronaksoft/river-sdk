@@ -2,6 +2,7 @@ package repo
 
 import (
 	"fmt"
+	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
 	"math"
@@ -77,7 +78,7 @@ func (r *repoMessagesPending) Save(msgID int64, senderID int64, message *msg.Mes
 	return pm, nil
 }
 
-func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, randomID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error) {
+func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, requestID, fileID, thumbID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error) {
 	if msgMedia == nil {
 		return nil, domain.ErrNotFound
 	}
@@ -95,7 +96,15 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, randomID i
 	pm.ID = msgID
 	pm.SenderID = senderID
 	pm.CreatedOn = domain.Now().Unix()
-	pm.RequestID = randomID
+	pm.RequestID = requestID
+
+	pm.FileUploadID = fileCtrl.GetUploadRequestID(fileID)
+	pm.FileID = fileID
+	if thumbID > 0 {
+		pm.ThumbID = thumbID
+		pm.ThumbUploadID = fileCtrl.GetUploadRequestID(thumbID)
+	}
+
 
 	bytes, _ := pm.Marshal()
 	_ = r.badger.Update(func(txn *badger.Txn) error {
