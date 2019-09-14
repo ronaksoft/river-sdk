@@ -246,6 +246,7 @@ func (r *River) Start() error {
 	r.networkCtrl.Start()
 	r.queueCtrl.Start()
 	r.syncCtrl.Start()
+	r.fileCtrl.Start()
 
 	// Connect to Server
 	go r.networkCtrl.Connect(true)

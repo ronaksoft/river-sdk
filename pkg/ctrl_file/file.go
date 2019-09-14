@@ -92,6 +92,11 @@ func New(config Config) *Controller {
 		}
 	})
 
+
+	return ctrl
+}
+
+func (ctrl *Controller) Start() {
 	// Resume downloads
 	dBytes, err := repo.System.LoadBytes("Downloads")
 	if err == nil {
@@ -110,8 +115,6 @@ func New(config Config) *Controller {
 			go ctrl.Upload(req)
 		}
 	}
-
-	return ctrl
 }
 
 func (ctrl *Controller) saveDownloads(req DownloadRequest) {
