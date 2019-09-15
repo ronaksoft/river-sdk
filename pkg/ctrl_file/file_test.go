@@ -25,26 +25,25 @@ import (
 */
 
 var (
-	_File    *fileCtrl.Controller
-	_Network *networkCtrl.Controller
+	_File *fileCtrl.Controller
+	// _Network *networkCtrl.Controller
 )
 
 func init() {
 	repo.InitRepo("./_db", true)
-	_Network = networkCtrl.New(networkCtrl.Config{
-		WebsocketEndpoint: "",
-		HttpEndpoint:      "http://127.0.0.1:8080",
-	})
 	fileCtrl.SetRootFolders("_data/audio", "_data/file", "_data/photo", "_data/video", "_data/cache")
 	_File = fileCtrl.New(fileCtrl.Config{
-		Network:              _Network,
+		Network: networkCtrl.New(networkCtrl.Config{
+			WebsocketEndpoint: "",
+			HttpEndpoint:      "http://127.0.0.1:8080",
+		}),
 		MaxInflightDownloads: 2,
 		MaxInflightUploads:   10,
 		OnProgressChanged: func(reqID string, clusterID int32, fileID, accessHash int64, percent int64) {
 			logs.Info("Progress Changed", zap.String("ReqID", reqID), zap.Int64("Percent", percent))
 		},
 		OnCancel: func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool) {
-			logs.Warn("Error On File", zap.String("ReqID", reqID), zap.Bool("HasError", hasError))
+			logs.Warn("File Canceled", zap.String("ReqID", reqID), zap.Bool("HasError", hasError))
 		},
 		PostUploadProcess: func(req fileCtrl.UploadRequest) {
 			logs.Info("PostProcess:", zap.Any("TotalParts", req.TotalParts))
