@@ -35,7 +35,7 @@ var (
 	System          *repoSystem
 	Users           *repoUsers
 	Groups          *repoGroups
-	Files 			*repoFiles
+	Files           *repoFiles
 )
 
 // Context container of repo
@@ -257,4 +257,3 @@ func TableInfo() []badger.TableInfo {
 	r.badger.Size()
 	return r.badger.Tables(true)
 }
-

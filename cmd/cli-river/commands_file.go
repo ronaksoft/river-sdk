@@ -56,7 +56,6 @@ var Upload = &ishell.Cmd{
 	},
 }
 
-
 var ShareContact = &ishell.Cmd{
 	Name: "ShareContact",
 	Func: func(c *ishell.Context) {

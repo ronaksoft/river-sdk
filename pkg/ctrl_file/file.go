@@ -158,7 +158,6 @@ func (ctrl *Controller) GetUploadRequest(fileID int64) (UploadRequest, bool) {
 	return req, ok
 }
 
-
 func (ctrl *Controller) DownloadFile(clusterID int32, fileID int64, accessHash uint64) (filePath string, err error) {
 	clientFile, err := repo.Files.Get(clusterID, fileID, accessHash)
 	if err != nil {

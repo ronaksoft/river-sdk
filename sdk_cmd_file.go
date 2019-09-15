@@ -104,7 +104,6 @@ func (r *River) GroupUploadPhoto(groupID int64, filePath string) (reqID string) 
 	return
 }
 
-
 // GetSharedMedia search in given dialog files
 func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, delegate RequestDelegate) {
 	startTime := time.Now()

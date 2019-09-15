@@ -104,7 +104,6 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, requestID,
 		pm.ThumbUploadID = fmt.Sprintf("%d", thumbID)
 	}
 
-
 	bytes, _ := pm.Marshal()
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		err := txn.SetEntry(badger.NewEntry(
