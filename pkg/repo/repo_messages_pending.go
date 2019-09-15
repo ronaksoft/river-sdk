@@ -409,6 +409,7 @@ func (r *repoMessagesPending) ToMessagesSend(m *msg.ClientPendingMessage) *msg.M
 	v.ReplyTo = m.ReplyTo
 	return v
 }
+
 func (r *repoMessagesPending) ToMessagesSendMedia(m *msg.ClientPendingMessage) *msg.MessagesSendMedia {
 	v := new(msg.MessagesSendMedia)
 	v.RandomID = m.RequestID

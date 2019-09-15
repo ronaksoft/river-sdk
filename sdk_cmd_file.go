@@ -4,137 +4,45 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	"go.uber.org/zap"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"os"
 	"time"
 )
 
-
-// GetStatus returns file status
-// TODO :: change response to protobuff
-func (r *River) GetFileStatus(msgID int64) string {
-	status, progress, filePath := r.getFileStatus(msgID)
-	x := new(msg.ClientFileStatus)
-	x.Status = int32(status)
-	x.Progress = progress
-	x.FilePath = filePath
-
-	buff, _ := x.Marshal()
-	return string(buff)
-}
-func (r *River) getFileDetails(msgID int64) (clusterID int32, fileID int64, accessHash uint64) {
-	m := repo.Messages.Get(msgID)
-	if m == nil {
-		logs.Warn("SDK::FileDownload()", zap.Int64("Message does not exist", msgID))
-		return
-	}
-	switch m.MediaType {
-	case msg.MediaTypeEmpty:
-	case msg.MediaTypeDocument:
-		x := new(msg.MediaDocument)
-		err := x.Unmarshal(m.Media)
-		if err != nil {
-			return
-		}
-
-
-		clusterID = x.Doc.ClusterID
-		fileID = x.Doc.ID
-		accessHash = x.Doc.AccessHash
-	}
-	return
-}
-func (r *River) getFileStatus(msgID int64) (status domain.RequestStatus, progress int64, filePath string) {
-	clusterID, fileID, accessHash := r.getFileDetails(msgID)
+func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash uint64) string {
+	fileStatus := new(msg.ClientFileStatus)
 	downloadRequest, ok := r.fileCtrl.GetDownloadRequest(clusterID, fileID, accessHash)
-	if !ok {
-		filePath = getFilePath(msgID)
-		if filePath != "" {
-			// file exists so it means download completed
-			status = domain.RequestStatusCompleted
-			progress = 100
-		} else {
-			// file does not exist and its progress state does not exist too
-			status = domain.RequestStatusNone
-			progress = 0
-			filePath = ""
+	if ok {
+		fileStatus.FilePath = downloadRequest.FilePath
+		fileStatus.Status = int32(domain.RequestStatusInProgress)
+		fileStatus.Progress = int64(float64(len(downloadRequest.DownloadedParts)) / float64(downloadRequest.TotalParts) * 100)
+	} else {
+		clientFile, err := repo.Files.Get(clusterID, fileID, accessHash)
+		if err == nil {
+			filePath := fileCtrl.GetFilePath(clientFile)
+			if _, err = os.Stat(filePath); os.IsNotExist(err) {
+				fileStatus.FilePath = ""
+			} else {
+				fileStatus.FilePath = filePath
+				fileStatus.Progress = 100
+				fileStatus.Status = int32(domain.RequestStatusCompleted)
+			}
 		}
-		return
-	}
-	filePath = downloadRequest.FilePath
-	if downloadRequest.TotalParts > 1 {
-		status = domain.RequestStatusInProgress
-		progress = int64(float64(len(downloadRequest.DownloadedParts)) / float64(downloadRequest.TotalParts) * 100)
-	}
-	return
-}
-func getFilePath(msgID int64) string {
-	m := repo.Messages.Get(msgID)
-	if m == nil {
-		return ""
 	}
 
-	switch m.MediaType {
-	case msg.MediaTypeDocument:
-		x := new(msg.MediaDocument)
-		err := x.Unmarshal(m.Media)
-		if err == nil {
-			// check file existence
-
-			filePath := fileCtrl.GetFilePath(x.Doc.MimeType, x.Doc.ID)
-			if _, err = os.Stat(filePath); os.IsNotExist(err) {
-				filePath = ""
-			}
-			return filePath
-		}
-	default:
-		// Probably this is pendingMessage so MediaData is ClientSendMessageMedia
-		x := new(msg.ClientSendMessageMedia)
-		err := x.Unmarshal(m.Media)
-		if err == nil {
-			// check file existence
-			filePath := x.FilePath
-			if _, err = os.Stat(filePath); os.IsNotExist(err) {
-				filePath = ""
-			}
-			return filePath
-		}
-	}
-	return ""
+	buf, _ := fileStatus.Marshal()
+	return ronak.ByteToStr(buf)
 }
 
-// FileDownload add download request to file controller queue
-func (r *River) FileDownload(msgID int64) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("FileDownload", time.Now().Sub(startTime))
-	}()
-	status, progress, filePath := r.getFileStatus(msgID)
-	logs.Info("SDK::FileDownload() current file progress status",
-		zap.String("Status", status.ToString()),
-		zap.Int64("Progress", progress),
-		zap.String("FilePath", filePath),
-	)
-	m := repo.Messages.Get(msgID)
-	if m == nil {
-		logs.Warn("SDK::FileDownload()", zap.Int64("Message does not exist", msgID))
-		return
-	}
-
-	switch status {
-	case domain.RequestStatusNone, domain.RequestStatusPaused, domain.RequestStatusCanceled, domain.RequestStatusError:
-		r.fileCtrl.DownloadByMessage(m)
-	case domain.RequestStatusInProgress:
-	default:
-		return
-	}
+func (r *River) FileDownload(clusterID int32, fileID int64, accessHash uint64) error {
+	_, err := r.fileCtrl.DownloadFile(clusterID, fileID, accessHash)
+	return err
 }
 
 // CancelDownload cancel download
-func (r *River) CancelDownload(msgID int64) {
+func (r *River) CancelDownload(clusterID int32, fileID int64, accessHash uint64) {
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("CancelDownload", time.Now().Sub(startTime))
@@ -151,37 +59,26 @@ func (r *River) CancelDownload(msgID int64) {
 }
 
 // CancelUpload cancel upload
-func (r *River) CancelUpload(msgID int64) {
+func (r *River) CancelUpload(clusterID int32, fileID int64, accessHash uint64) {
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("CancelUpload", time.Now().Sub(startTime))
 	}()
 
-	repo.PendingMessages.Delete(msgID)
-
-	// fs, err := repo.Files.GetStatus(msgID)
-	// if err != nil {
-	// 	logs.Warn("SDK::CancelUpload()", zap.Int64("MsgID", msgID), zap.Error(err))
-	// 	return
-	// }
-	// r.fileCtrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
-	//
-	// repo.Files.DeleteStatus(msgID)
-	// repo.PendingMessages.Delete(fs.MessageID)
-
+	// TODO:: implement it
 }
 
 // ResumeDownload
-func (r *River) ResumeUpload(msgID int64) {
-	pendingMessage := repo.PendingMessages.GetByID(msgID)
+func (r *River) ResumeUpload(pendingMessageID int64) {
+	pendingMessage := repo.PendingMessages.GetByID(pendingMessageID)
 	if pendingMessage == nil {
 		return
 	}
 	req := new(msg.ClientSendMessageMedia)
 	_ = req.Unmarshal(pendingMessage.Media)
 
-	if _, ok := r.fileCtrl.GetUploadRequest(msgID); !ok {
-		go r.fileCtrl.UploadMessageDocument(msgID, req.FilePath, req.ThumbFilePath, pendingMessage.FileID, pendingMessage.ThumbID)
+	if _, ok := r.fileCtrl.GetUploadRequest(pendingMessage.FileID); !ok {
+		go r.fileCtrl.UploadMessageDocument(pendingMessageID, req.FilePath, req.ThumbFilePath, pendingMessage.FileID, pendingMessage.ThumbID)
 	}
 }
 
@@ -196,58 +93,6 @@ func (r *River) AccountUploadPhoto(filePath string) (reqID string) {
 	return
 }
 
-// AccountGetPhoto_Big download user profile picture
-func (r *River) AccountGetPhotoBig(userID int64) (filePath string) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("AccountGetPhotoBig", time.Now().Sub(startTime))
-	}()
-	user := repo.Users.Get(userID)
-	if user == nil || user.Photo == nil {
-		return ""
-	}
-
-	filePath = fileCtrl.GetAccountAvatarPath(userID, user.Photo.PhotoBig.FileID)
-
-	// check if file exist
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		filePath = r.downloadAccountPhoto(user.ID, user.Photo, true)
-	}
-	return
-
-}
-
-// AccountGetPhoto_Small download user profile picture thumbnail
-func (r *River) AccountGetPhotoSmall(userID int64) (filePath string) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("AccountGetPhotoSmall", time.Now().Sub(startTime))
-	}()
-	user := repo.Users.Get(userID)
-	if user == nil || user.Photo == nil {
-		return ""
-	}
-
-	filePath = fileCtrl.GetAccountAvatarPath(userID, user.Photo.PhotoSmall.FileID)
-
-	// check if file exist
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		filePath = r.downloadAccountPhoto(user.ID, user.Photo, false)
-	}
-	return
-}
-
-// downloadAccountPhoto this function is sync
-func (r *River) downloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) (filePath string) {
-	// send Download request
-	var err error
-	filePath, err = r.fileCtrl.DownloadAccountPhoto(userID, photo, isBig)
-	if err != nil {
-		return ""
-	}
-	return
-}
-
 // GroupUploadPhoto upload group profile photo
 func (r *River) GroupUploadPhoto(groupID int64, filePath string) (reqID string) {
 	startTime := time.Now()
@@ -259,141 +104,6 @@ func (r *River) GroupUploadPhoto(groupID int64, filePath string) (reqID string) 
 	return
 }
 
-// GroupGetPhoto_Big download group profile picture
-func (r *River) GroupGetPhotoBig(groupID int64) (filePath string) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("GroupGetPhotoBig", time.Now().Sub(startTime))
-	}()
-	group := repo.Groups.Get(groupID)
-	if group == nil || group.Photo == nil {
-		return ""
-	}
-
-	filePath = fileCtrl.GetGroupAvatarPath(group.ID, group.Photo.PhotoBig.FileID)
-	// check if file exist
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		filePath = r.downloadGroupPhoto(groupID, group.Photo, true)
-	}
-	return
-}
-
-// GroupGetPhoto_Small download group profile picture thumbnail
-func (r *River) GroupGetPhotoSmall(groupID int64) (filePath string) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("GroupGetPhotoSmall", time.Now().Sub(startTime))
-	}()
-	group := repo.Groups.Get(groupID)
-	if group == nil {
-		return ""
-	}
-	if group.Photo == nil {
-		return ""
-	}
-
-	filePath = fileCtrl.GetGroupAvatarPath(group.ID, group.Photo.PhotoSmall.FileID)
-	// check if file exist
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		filePath = r.downloadGroupPhoto(groupID, group.Photo, false)
-	}
-	return
-}
-
-// this function is sync
-func (r *River) downloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) (filePath string) {
-	var err error
-	filePath, err = r.fileCtrl.DownloadGroupPhoto(groupID, photo, isBig)
-	if err != nil {
-		logs.Debug("SDK::downloadGroupPhoto() error", zap.Error(err))
-		return ""
-	}
-	return
-}
-
-// FileDownloadThumbnail download file thumbnail
-func (r *River) FileDownloadThumbnail(msgID int64) (filePath string) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("FileDownloadThumbnail", time.Now().Sub(startTime))
-	}()
-
-	// its pending message
-	if msgID < 0 {
-		filePath = r.downloadPendingThumbnail(msgID)
-		return
-	}
-
-	m := repo.Messages.Get(msgID)
-	if m == nil {
-		logs.Error("SDK::FileDownloadThumbnail() message does not exist", zap.Int64("MsgID", msgID))
-		return
-	}
-
-	docID := int64(0)
-	clusterID := int32(0)
-	accessHash := uint64(0)
-	version := int32(0)
-	switch m.MediaType {
-	case msg.MediaTypeEmpty:
-		logs.Warn("SDK::FileDownloadThumbnail - MediaEmpty", zap.Any("MediaType", m.MediaType))
-		return ""
-	case msg.MediaTypeDocument:
-		x := new(msg.MediaDocument)
-		_ = x.Unmarshal(m.Media)
-		logs.Warn("SDK::FileDownloadThumbnail - MediaEmpty", zap.Any("MediaType", m.MediaType), zap.Any("Thumb", x.Doc.Thumbnail))
-		if x.Doc.Thumbnail == nil {
-			return ""
-		}
-		docID = x.Doc.Thumbnail.FileID
-		clusterID = x.Doc.Thumbnail.ClusterID
-		accessHash = x.Doc.Thumbnail.AccessHash
-
-		filePath = fileCtrl.GetThumbnailPath(docID, clusterID)
-		// check if file exist
-		if _, err := os.Stat(filePath); os.IsNotExist(err) {
-			filePath, err = r.fileCtrl.DownloadThumbnail(docID, accessHash, clusterID, version)
-		}
-	default:
-		return
-	}
-
-	return
-}
-func (r *River) downloadPendingThumbnail(msgID int64) (filePath string) {
-	pmsg := repo.PendingMessages.GetByID(msgID)
-	if pmsg == nil {
-		return ""
-	}
-	switch msg.InputMediaType(pmsg.MediaType) {
-	case msg.InputMediaTypeDocument:
-		// pending message media is a file that already has been uploaded so pending message media is InputMediaDocument
-		doc := new(msg.InputMediaDocument)
-		err := doc.Unmarshal(pmsg.Media)
-		if err != nil {
-			logs.Error("SDK::FileDownloadThumbnail() failed to unmarshal to InputMediaDocument", zap.Int64("PendingMsgID", msgID), zap.Error(err))
-			return ""
-		}
-
-		filePath = fileCtrl.GetThumbnailPath(doc.Document.ID, doc.Document.ClusterID)
-		// check if file exist
-		if _, err := os.Stat(filePath); os.IsNotExist(err) {
-			filePath, err = r.fileCtrl.DownloadThumbnail(doc.Document.ID, doc.Document.AccessHash, doc.Document.ClusterID, 0)
-			return filePath
-		}
-		return filePath
-	case msg.InputMediaTypeUploadedDocument:
-		// pending message media is new upload so its type should be ClientSendMessageMedia
-		clientMedia := new(msg.ClientSendMessageMedia)
-		err := clientMedia.Unmarshal(pmsg.Media)
-		if err != nil {
-			logs.Error("SDK::FileDownloadThumbnail() failed to unmarshal to ClientSendMessageMedia", zap.Int64("PendingMsgID", msgID), zap.Error(err))
-			return ""
-		}
-		return clientMedia.ThumbFilePath
-	}
-	return ""
-}
 
 // GetSharedMedia search in given dialog files
 func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, delegate RequestDelegate) {

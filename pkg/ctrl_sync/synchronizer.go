@@ -13,7 +13,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"go.uber.org/zap"
-	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -510,26 +509,17 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 		if u.Photo == nil {
 			continue
 		}
-		filePath := fileCtrl.GetAccountAvatarPath(u.ID, u.Photo.PhotoSmall.FileID)
-		// check if file exist
-		if _, err := os.Stat(filePath); os.IsNotExist(err) {
-			go func(userID int64, photo *msg.UserPhoto) {
-				_, _ = ctrl.fileCtrl.DownloadAccountPhoto(userID, photo, false)
-			}(u.ID, u.Photo)
-		}
+
+		err := repo.Files.SaveUserPhotos(u)
+		logs.WarnOnErr("Error On SaveUserPhoto", err, zap.Int64("UserID", u.ID))
 	}
 	for _, g := range updateContainer.Groups {
 		// Download group avatar if its not exist
 		if g.Photo == nil {
 			continue
 		}
-		filePath := fileCtrl.GetGroupAvatarPath(g.ID, g.Photo.PhotoSmall.FileID)
-		// check if file exist
-		if _, err := os.Stat(filePath); os.IsNotExist(err) {
-			go func(groupID int64, photo *msg.GroupPhoto) {
-				_, _ = ctrl.fileCtrl.DownloadGroupPhoto(groupID, photo, false)
-			}(g.ID, g.Photo)
-		}
+		err := repo.Files.SaveGroupPhoto(g)
+		logs.WarnOnErr("Error On SaveGroupPhoto", err, zap.Int64("GroupID", g.ID))
 	}
 	for _, update := range updateContainer.Updates {
 		// var externalHandlerUpdates []*msg.UpdateEnvelope
@@ -625,18 +615,11 @@ func (ctrl *Controller) extractMessagesMedia(messages ...*msg.UserMessage) {
 			if t != nil && t.FileID != 0 {
 				waitGroup.Add(1)
 				go func(t msg.FileLocation) {
-					filePath := fileCtrl.GetThumbnailPath(t.FileID, t.ClusterID)
-					if _, err = os.Stat(filePath); os.IsNotExist(err) {
-						filePath = ""
-					}
-					if filePath == "" {
-						_, _ = ctrl.fileCtrl.DownloadThumbnail(t.FileID, t.AccessHash, t.ClusterID, 0)
-					}
+					err := repo.Files.SaveMediaDocument(m, mediaDoc)
+					logs.WarnOnErr("Error On SaveMediaDoc", err, zap.Int64("MessageID", m.ID))
 					waitGroup.Done()
 				}(*t)
-
 			}
-
 		default:
 		}
 	}

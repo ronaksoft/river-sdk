@@ -35,6 +35,7 @@ var (
 	System          *repoSystem
 	Users           *repoUsers
 	Groups          *repoGroups
+	Files 			*repoFiles
 )
 
 // Context container of repo
@@ -77,6 +78,7 @@ func InitRepo(dbPath string, lowMemory bool) {
 		System = &repoSystem{repository: r}
 		Users = &repoUsers{repository: r}
 		Groups = &repoGroups{repository: r}
+		Files = &repoFiles{repository: r}
 		singleton.Unlock()
 	}
 	return
@@ -256,9 +258,3 @@ func TableInfo() []badger.TableInfo {
 	return r.badger.Tables(true)
 }
 
-func WarnOnErr(guideTxt string, err error, fields ...zap.Field) {
-	if err != nil {
-		fields = append(fields, zap.Error(err))
-		logs.Warn(guideTxt, fields...)
-	}
-}

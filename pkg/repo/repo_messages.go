@@ -141,7 +141,7 @@ func (r *repoMessages) save(message *msg.UserMessage) {
 				).WithMeta(byte(docType)),
 			)
 		})
-		WarnOnErr("RepoMessage::save", err, zap.Int64("MsgID", message.ID))
+		logs.WarnOnErr("RepoMessage::save", err, zap.Int64("MsgID", message.ID))
 		return err
 	})
 	if err != nil {

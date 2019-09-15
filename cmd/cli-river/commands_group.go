@@ -140,25 +140,6 @@ var GroupUploadPhoto = &ishell.Cmd{
 	},
 }
 
-var GroupDownloadPhotoBig = &ishell.Cmd{
-	Name: "DownloadPhotoBig",
-	Func: func(c *ishell.Context) {
-		groupID := fnGetGroupID(c)
-		strFilePath := _SDK.GroupGetPhotoBig(groupID)
-		_Log.Info("File Download Complete", zap.String("path", strFilePath))
-
-	},
-}
-
-var GroupDownloadPhotoSmall = &ishell.Cmd{
-	Name: "DownloadPhotoSmall",
-	Func: func(c *ishell.Context) {
-		groupID := fnGetGroupID(c)
-		strFilePath := _SDK.GroupGetPhotoSmall(groupID)
-		_Log.Info("File Download Complete", zap.String("path", strFilePath))
-	},
-}
-
 var GroupRemovePhoto = &ishell.Cmd{
 	Name: "RemovePhoto",
 	Func: func(c *ishell.Context) {
@@ -184,7 +165,5 @@ func init() {
 	Group.AddCmd(UpdateAdmin)
 	Group.AddCmd(ToggleAdmins)
 	Group.AddCmd(GroupUploadPhoto)
-	Group.AddCmd(GroupDownloadPhotoBig)
-	Group.AddCmd(GroupDownloadPhotoSmall)
 	Group.AddCmd(GroupRemovePhoto)
 }

@@ -101,7 +101,7 @@ func (ctrl *Controller) Start() {
 		_ = json.Unmarshal(dBytes, &ctrl.downloadRequests)
 		for _, req := range ctrl.downloadRequests {
 			go func(req DownloadRequest) {
-				_ = ctrl.Download(req)
+				_ = ctrl.download(req)
 			}(req)
 		}
 	}
@@ -142,42 +142,61 @@ func (ctrl *Controller) deleteUpdateRequest(reqID string) {
 	ctrl.uploadsSaver.EnterWithResult(nil, nil)
 }
 
-func GetDownloadRequestID(clusterID int32, fileID int64, accessHash uint64) string {
+func GetRequestID(clusterID int32, fileID int64, accessHash uint64) string {
 	return fmt.Sprintf("%d.%d.%d", clusterID, fileID, accessHash)
 }
 func (ctrl *Controller) GetDownloadRequest(clusterID int32, fileID int64, accessHash uint64) (DownloadRequest, bool) {
 	ctrl.mtxDownloads.Lock()
-	req, ok := ctrl.downloadRequests[GetDownloadRequestID(clusterID, fileID, accessHash)]
+	req, ok := ctrl.downloadRequests[GetRequestID(clusterID, fileID, accessHash)]
 	ctrl.mtxDownloads.Unlock()
 	return req, ok
 }
-func GetUploadRequestID(fileID int64) string {
-	return fmt.Sprintf("%d", fileID)
-}
 func (ctrl *Controller) GetUploadRequest(fileID int64) (UploadRequest, bool) {
 	ctrl.mtxUploads.Lock()
-	req, ok := ctrl.uploadRequests[GetUploadRequestID(fileID)]
+	req, ok := ctrl.uploadRequests[GetRequestID(0, fileID, 0)]
 	ctrl.mtxUploads.Unlock()
 	return req, ok
 }
 
-// DownloadAccountPhoto downloads the account profile photo (Big/Small) and returns the file path of the stored
-// image.
-func (ctrl *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto, isBig bool) (filePath string, err error) {
+
+func (ctrl *Controller) DownloadFile(clusterID int32, fileID int64, accessHash uint64) (filePath string, err error) {
+	clientFile, err := repo.Files.Get(clusterID, fileID, accessHash)
+	if err != nil {
+		return "", err
+	}
+	filePath = GetFilePath(clientFile)
+	switch clientFile.Type {
+	case msg.ClientFileType_GroupProfilePhoto:
+		return ctrl.downloadGroupPhoto(clientFile)
+	case msg.ClientFileType_AccountProfilePhoto:
+		return ctrl.downloadAccountPhoto(clientFile)
+	case msg.ClientFileType_Thumbnail:
+		return ctrl.downloadThumbnail(clientFile)
+
+	}
+	err = ctrl.download(DownloadRequest{
+		MessageID:    clientFile.MessageID,
+		ClusterID:    clientFile.ClusterID,
+		FileID:       clientFile.FileID,
+		AccessHash:   clientFile.AccessHash,
+		Version:      clientFile.Version,
+		FileSize:     clientFile.FileSize,
+		ChunkSize:    downloadChunkSize,
+		MaxInFlights: maxDownloadInFlights,
+		FilePath:     filePath,
+	})
+
+	return
+}
+func (ctrl *Controller) downloadAccountPhoto(clientFile *msg.ClientFile) (filePath string, err error) {
 	err = ronak.Try(retryMaxAttempts, retryWaitTime, func() error {
 		req := new(msg.FileGet)
 		req.Location = new(msg.InputFileLocation)
-		if isBig {
-			req.Location.ClusterID = photo.PhotoBig.ClusterID
-			req.Location.AccessHash = photo.PhotoBig.AccessHash
-			req.Location.FileID = photo.PhotoBig.FileID
-			req.Location.Version = 0
-		} else {
-			req.Location.ClusterID = photo.PhotoSmall.ClusterID
-			req.Location.AccessHash = photo.PhotoSmall.AccessHash
-			req.Location.FileID = photo.PhotoSmall.FileID
-			req.Location.Version = 0
-		}
+		req.Location.ClusterID = clientFile.ClusterID
+		req.Location.FileID = clientFile.FileID
+		req.Location.AccessHash = clientFile.AccessHash
+		req.Location.Version = clientFile.Version
+
 		// get all bytes
 		req.Offset = 0
 		req.Limit = 0
@@ -187,7 +206,7 @@ func (ctrl *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto,
 		envelop.Message, _ = req.Marshal()
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
-		filePath = GetAccountAvatarPath(userID, req.Location.FileID)
+		filePath = getAccountProfilePath(clientFile.UserID, req.Location.FileID)
 		res, err := ctrl.network.SendHttp(envelop)
 		if err != nil {
 			return err
@@ -200,7 +219,7 @@ func (ctrl *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto,
 			if err := x.Unmarshal(res.Message); err == nil {
 				strErr = "Code :" + x.Code + ", Items :" + x.Items
 			}
-			return fmt.Errorf("received error response {userID: %d,  %s }", userID, strErr)
+			return fmt.Errorf("received error response {userID: %d,  %s }", clientFile.UserID, strErr)
 		case msg.C_File:
 			x := new(msg.File)
 			err := x.Unmarshal(res.Message)
@@ -215,32 +234,24 @@ func (ctrl *Controller) DownloadAccountPhoto(userID int64, photo *msg.UserPhoto,
 			}
 
 			// save to DB
+			_ = repo.Files.Save(clientFile)
 			return nil
 		default:
-			return fmt.Errorf("received unknown response constructor {UserId : %d}", userID)
+			return fmt.Errorf("received unknown response constructor {UserId : %d}", clientFile.UserID)
 		}
 
 	})
 	return
 }
-
-// DownloadGroupPhoto downloads the profile photo of the group 'groupID' and returns the file path which
-// the file has been stored.
-func (ctrl *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto, isBig bool) (filePath string, err error) {
+func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath string, err error) {
 	err = ronak.Try(retryMaxAttempts, retryWaitTime, func() error {
 		req := new(msg.FileGet)
 		req.Location = new(msg.InputFileLocation)
-		if isBig {
-			req.Location.ClusterID = photo.PhotoBig.ClusterID
-			req.Location.AccessHash = photo.PhotoBig.AccessHash
-			req.Location.FileID = photo.PhotoBig.FileID
-			req.Location.Version = 0
-		} else {
-			req.Location.ClusterID = photo.PhotoSmall.ClusterID
-			req.Location.AccessHash = photo.PhotoSmall.AccessHash
-			req.Location.FileID = photo.PhotoSmall.FileID
-			req.Location.Version = 0
-		}
+		req.Location.ClusterID = clientFile.ClusterID
+		req.Location.FileID = clientFile.FileID
+		req.Location.AccessHash = clientFile.AccessHash
+		req.Location.Version = clientFile.Version
+
 		// get all bytes
 		req.Offset = 0
 		req.Limit = 0
@@ -250,7 +261,7 @@ func (ctrl *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto,
 		envelop.Message, _ = req.Marshal()
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
-		filePath = GetGroupAvatarPath(groupID, req.Location.FileID)
+		filePath = getGroupProfilePath(clientFile.GroupID, req.Location.FileID)
 		res, err := ctrl.network.SendHttp(envelop)
 		if err != nil {
 			return err
@@ -262,7 +273,7 @@ func (ctrl *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto,
 			if err := x.Unmarshal(res.Message); err == nil {
 				strErr = "Code :" + x.Code + ", Items :" + x.Items
 			}
-			return fmt.Errorf("received error response {GroupID: %d,  %s }", groupID, strErr)
+			return fmt.Errorf("received error response {GroupID: %d,  %s }", clientFile.GroupID, strErr)
 		case msg.C_File:
 			x := new(msg.File)
 			err := x.Unmarshal(res.Message)
@@ -277,25 +288,24 @@ func (ctrl *Controller) DownloadGroupPhoto(groupID int64, photo *msg.GroupPhoto,
 			}
 
 			// save to DB
+			_ = repo.Files.Save(clientFile)
 			return nil
 
 		default:
-			return fmt.Errorf("received unknown response constructor {GroupID : %d}", groupID)
+			return fmt.Errorf("received unknown response constructor {GroupID : %d}", clientFile.GroupID)
 		}
 
 	})
 	return
 }
-
-// DownloadThumbnail downloads the thumbnail file
-func (ctrl *Controller) DownloadThumbnail(fileID int64, accessHash uint64, clusterID, version int32) (filePath string, err error) {
+func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath string, err error) {
 	err = ronak.Try(10, 100*time.Millisecond, func() error {
 		req := new(msg.FileGet)
 		req.Location = &msg.InputFileLocation{
-			AccessHash: accessHash,
-			ClusterID:  clusterID,
-			FileID:     fileID,
-			Version:    version,
+			AccessHash: clientFile.AccessHash,
+			ClusterID:  clientFile.ClusterID,
+			FileID:     clientFile.FileID,
+			Version:    clientFile.Version,
 		}
 		// get all bytes
 		req.Offset = 0
@@ -306,7 +316,7 @@ func (ctrl *Controller) DownloadThumbnail(fileID int64, accessHash uint64, clust
 		envelop.Message, _ = req.Marshal()
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
-		filePath = GetThumbnailPath(fileID, clusterID)
+		filePath = getThumbnailPath(clientFile.FileID, clientFile.ClusterID)
 		res, err := ctrl.network.SendHttp(envelop)
 		if err != nil {
 			return err
@@ -334,6 +344,8 @@ func (ctrl *Controller) DownloadThumbnail(fileID int64, accessHash uint64, clust
 			}
 
 			// save to DB
+			_ = repo.Files.Save(clientFile)
+
 			return nil
 
 		default:
@@ -343,34 +355,7 @@ func (ctrl *Controller) DownloadThumbnail(fileID int64, accessHash uint64, clust
 	})
 	return
 }
-
-// DownloadByMessage downloads the attachment of the message, if any.
-func (ctrl *Controller) DownloadByMessage(userMessage *msg.UserMessage) (filePath string, err error) {
-	switch userMessage.MediaType {
-	case msg.MediaTypeEmpty:
-	case msg.MediaTypeDocument:
-		x := new(msg.MediaDocument)
-		err = x.Unmarshal(userMessage.Media)
-		if err != nil {
-			return
-		}
-
-		filePath = GetFilePath(x.Doc.MimeType, x.Doc.ID)
-		err = ctrl.Download(DownloadRequest{
-			MessageID:    userMessage.ID,
-			ClusterID:    x.Doc.ClusterID,
-			FileID:       x.Doc.ID,
-			AccessHash:   x.Doc.AccessHash,
-			Version:      x.Doc.Version,
-			FileSize:     int64(x.Doc.FileSize),
-			ChunkSize:    downloadChunkSize,
-			MaxInFlights: maxDownloadInFlights,
-			FilePath:     filePath,
-		})
-	}
-	return
-}
-func (ctrl *Controller) Download(req DownloadRequest) error {
+func (ctrl *Controller) download(req DownloadRequest) error {
 	req.TempFilePath = fmt.Sprintf("%s.tmp", req.FilePath)
 	ctrl.saveDownloads(req)
 	ctrl.downloadsRateLimit <- struct{}{}
@@ -451,7 +436,7 @@ func (ctrl *Controller) UploadUserPhoto(filePath string) (reqID string) {
 		MaxInFlights:   3,
 		FilePath:       filePath,
 	})
-	reqID = GetUploadRequestID(fileID)
+	reqID = GetRequestID(0, fileID, 0)
 	return
 }
 func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) (reqID string) {
@@ -469,7 +454,7 @@ func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) (reqID 
 		FilePath:       filePath,
 	})
 
-	reqID = GetUploadRequestID(fileID)
+	reqID = GetRequestID(0, fileID, 0)
 	return
 }
 func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPath string, fileID, thumbID int64) {
@@ -482,7 +467,7 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 	if strings.HasPrefix(thumbPath, "file://") {
 		thumbPath = thumbPath[7:]
 	}
-	
+
 	// We prepare upload request for the actual file before uploading the thumbnail to save it
 	// in case of execution stopped, then we are assured that we will continue the upload process
 	req := UploadRequest{

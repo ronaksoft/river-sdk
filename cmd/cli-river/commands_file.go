@@ -56,22 +56,6 @@ var Upload = &ishell.Cmd{
 	},
 }
 
-var Download = &ishell.Cmd{
-	Name: "Download",
-	Func: func(c *ishell.Context) {
-		messageID := fnGetMessageID(c)
-		_SDK.FileDownload(messageID)
-	},
-}
-
-var Status = &ishell.Cmd{
-	Name: "Status",
-	Func: func(c *ishell.Context) {
-		messageID := fnGetMessageID(c)
-		str := _SDK.GetFileStatus(messageID)
-		c.Println(str)
-	},
-}
 
 var ShareContact = &ishell.Cmd{
 	Name: "ShareContact",
@@ -106,15 +90,6 @@ var ShareContact = &ishell.Cmd{
 			reqDelegate.RequestID = reqID
 		}
 
-	},
-}
-
-var DownloadThumbnail = &ishell.Cmd{
-	Name: "DownloadThumbnail",
-	Func: func(c *ishell.Context) {
-		messageID := fnGetMessageID(c)
-		strFilePath := _SDK.FileDownloadThumbnail(messageID)
-		_Log.Info("File Download Complete", zap.String("path", strFilePath))
 	},
 }
 
@@ -245,12 +220,8 @@ var TestUpload = &ishell.Cmd{
 
 func init() {
 	File.AddCmd(Upload)
-	File.AddCmd(Download)
 	File.AddCmd(ShareContact)
-	File.AddCmd(Status)
-	File.AddCmd(DownloadThumbnail)
 	File.AddCmd(GetSharedMedia)
-
 	File.AddCmd(TestUpload)
 
 }

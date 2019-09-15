@@ -2,6 +2,7 @@ package fileCtrl
 
 import (
 	"fmt"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"mime"
 	"path"
 	"strings"
@@ -33,7 +34,21 @@ func SetRootFolders(audioDir, fileDir, photoDir, videoDir, cacheDir string) {
 	dirCache = cacheDir
 }
 
-func GetFilePath(mimeType string, docID int64) string {
+func GetFilePath(clientFile *msg.ClientFile) string {
+	switch clientFile.Type {
+	case msg.ClientFileType_Message:
+		return getMessageFilePath(clientFile.MimeType, clientFile.FileID)
+	case msg.ClientFileType_AccountProfilePhoto:
+		return getAccountProfilePath(clientFile.UserID, clientFile.FileID)
+	case msg.ClientFileType_GroupProfilePhoto:
+		return getGroupProfilePath(clientFile.GroupID, clientFile.GroupID)
+	case msg.ClientFileType_Thumbnail:
+		return getThumbnailPath(clientFile.FileID, clientFile.ClusterID)
+	}
+	return ""
+}
+
+func getMessageFilePath(mimeType string, docID int64) string {
 	mimeType = strings.ToLower(mimeType)
 	var ext string
 	if ext == "" {
@@ -61,14 +76,14 @@ func GetFilePath(mimeType string, docID int64) string {
 	}
 }
 
-func GetThumbnailPath(fileID int64, clusterID int32) string {
+func getThumbnailPath(fileID int64, clusterID int32) string {
 	return path.Join(dirCache, fmt.Sprintf("%d%d%s", fileID, clusterID, ".jpg"))
 }
 
-func GetAccountAvatarPath(userID int64, fileID int64) string {
+func getAccountProfilePath(userID int64, fileID int64) string {
 	return path.Join(dirCache, fmt.Sprintf("u%d_%d%s", userID, fileID, ".jpg"))
 }
 
-func GetGroupAvatarPath(groupID int64, fileID int64) string {
+func getGroupProfilePath(groupID int64, fileID int64) string {
 	return path.Join(dirCache, fmt.Sprintf("g%d_%d%s", groupID, fileID, ".jpg"))
 }

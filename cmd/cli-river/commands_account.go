@@ -137,25 +137,6 @@ var UploadPhoto = &ishell.Cmd{
 	},
 }
 
-var DownloadPhotoBig = &ishell.Cmd{
-	Name: "DownloadPhotoBig",
-	Func: func(c *ishell.Context) {
-		userID := fnGetPeerID(c)
-		strFilePath := _SDK.AccountGetPhotoBig(userID)
-		_Log.Info("File Download Complete", zap.String("path", strFilePath))
-
-	},
-}
-var DownloadPhotoSmall = &ishell.Cmd{
-	Name: "DownloadPhotoSmall",
-	Func: func(c *ishell.Context) {
-		userID := fnGetPeerID(c)
-		strFilePath := _SDK.AccountGetPhotoSmall(userID)
-		_Log.Info("File Download Complete", zap.String("path", strFilePath))
-
-	},
-}
-
 var RemovePhoto = &ishell.Cmd{
 	Name: "RemovePhoto",
 	Func: func(c *ishell.Context) {
@@ -179,7 +160,5 @@ func init() {
 	Account.AddCmd(UpdateProfile)
 	Account.AddCmd(SetNotifySettings)
 	Account.AddCmd(UploadPhoto)
-	Account.AddCmd(DownloadPhotoBig)
-	Account.AddCmd(DownloadPhotoSmall)
 	Account.AddCmd(RemovePhoto)
 }

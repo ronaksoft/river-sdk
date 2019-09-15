@@ -233,7 +233,6 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	// Prepare the the result before sending back to the client
 	pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
 	preSuccessCB := func(cb domain.MessageHandler, pms []*msg.UserMessage, req *msg.MessagesGetHistory) domain.MessageHandler {
-		topMsgID, _ := repo.Messages.GetTopMessageID(req.Peer.ID, int32(req.Peer.Type))
 		return func(m *msg.MessageEnvelope) {
 			switch m.Constructor {
 			case msg.C_MessagesMany:
@@ -259,7 +258,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 				if len(pms) > 0 {
 					// 2nd base on the reqMin values add the appropriate pending messages
 					switch {
-					case topMsgID > 0 && req.MaxID >= topMsgID:
+					case req.MaxID == 0:
 						x.Messages = append(x.Messages, pms...)
 					default:
 						// Min != 0
@@ -556,7 +555,6 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 
 	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 	msgID := -domain.SequentialUniqueID()
-
 	fileID := ronak.RandomInt64(0)
 	thumbID := int64(0)
 	if reqMedia.ThumbFilePath != "" {
