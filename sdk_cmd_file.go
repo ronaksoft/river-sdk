@@ -46,6 +46,22 @@ func (r *River) CancelDownload(clusterID int32, fileID int64, accessHash int64) 
 	defer func() {
 		mon.FunctionResponseTime("CancelDownload", time.Now().Sub(startTime))
 	}()
+
+	clientFile, err := repo.Files.Get(clusterID, fileID, uint64(accessHash))
+	if err != nil {
+		return
+	}
+	if clientFile.MessageID == 0 {
+		return
+	}
+
+	downloadRequest, ok := r.fileCtrl.GetDownloadRequest(clusterID, fileID, uint64(accessHash))
+	if !ok {
+		return
+	}
+
+	_ = downloadRequest
+	// TODO:: cancel the download request too
 	// fs, err := repo.Files.GetStatus(msgID)
 	// if err != nil {
 	// 	logs.Warn("SDK::CancelDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
@@ -64,7 +80,20 @@ func (r *River) CancelUpload(clusterID int32, fileID int64, accessHash int64) {
 		mon.FunctionResponseTime("CancelUpload", time.Now().Sub(startTime))
 	}()
 
-	// TODO:: implement it
+	clientFile, err := repo.Files.Get(clusterID, fileID, uint64(accessHash))
+	if err != nil {
+		return
+	}
+	if clientFile.MessageID == 0 {
+		return
+	}
+	pendingMessage := repo.PendingMessages.GetByID(clientFile.MessageID)
+	if pendingMessage == nil {
+		return
+	}
+	repo.PendingMessages.Delete(pendingMessage.ID)
+
+	// TODO:: cancel the upload request too
 }
 
 // ResumeDownload

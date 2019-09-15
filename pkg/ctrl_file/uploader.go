@@ -5,7 +5,6 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/gobwas/pool/pbytes"
 	"go.uber.org/zap"
 	"io"
@@ -167,6 +166,6 @@ func (ctx *uploadContext) execute() domain.RequestStatus {
 	}
 
 	_ = ctx.file.Close()
-	ctx.ctrl.onError(ctx.req.GetID(), 0, ctx.req.FileID, 0, ctx.req.FilePath, ronak.StrToByte("max retry exceeded without success"))
+	ctx.ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, true)
 	return domain.RequestStatusError
 }

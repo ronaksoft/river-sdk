@@ -5,7 +5,6 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
 	"os"
 	"sync"
@@ -167,7 +166,7 @@ func (ctx *downloadContext) execute() domain.RequestStatus {
 				err := os.Rename(ctx.req.TempFilePath, ctx.req.FilePath)
 				if err != nil {
 					_ = os.Remove(ctx.req.TempFilePath)
-					ctx.ctrl.onError(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), ctx.req.TempFilePath, ronak.StrToByte(err.Error()))
+					ctx.ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), true)
 					return domain.RequestStatusError
 				}
 				ctx.ctrl.onCompleted(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), ctx.req.FilePath)
@@ -177,6 +176,6 @@ func (ctx *downloadContext) execute() domain.RequestStatus {
 	}
 	_ = ctx.file.Close()
 	_ = os.Remove(ctx.req.TempFilePath)
-	ctx.ctrl.onError(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), ctx.req.TempFilePath, ronak.StrToByte("max retry exceeded without success"))
+	ctx.ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), true)
 	return domain.RequestStatusError
 }

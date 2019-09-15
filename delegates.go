@@ -13,7 +13,7 @@ type MainDelegate interface {
 type FileDelegate interface {
 	OnProgressChanged(reqID string, clusterID int32, fileID, accessHash, percent int64)
 	OnCompleted(reqID string, clusterID int32, fileID, accessHash int64, filePath string)
-	OnError(reqID string, clusterID int32, fileID, accessHash int64, filePath string, err []byte)
+	OnCancel(reqID string, clusterID int32, fileID, accessHash int64,  hasError bool)
 }
 
 type ConnInfoDelegate interface {

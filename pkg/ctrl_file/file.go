@@ -32,7 +32,7 @@ type Config struct {
 	PostUploadProcess    func(req UploadRequest)
 	OnProgressChanged    func(reqID string, clusterID int32, fileID, accessHash int64, percent int64)
 	OnCompleted          func(reqID string, clusterID int32, fileID, accessHash int64, filePath string)
-	OnError              func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, err []byte)
+	OnCancel             func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool)
 }
 type Controller struct {
 	network            *networkCtrl.Controller
@@ -46,7 +46,7 @@ type Controller struct {
 	uploadsRateLimit   chan struct{}
 	onProgressChanged  func(reqID string, clusterID int32, fileID, accessHash int64, percent int64)
 	onCompleted        func(reqID string, clusterID int32, fileID, accessHash int64, filePath string)
-	onError            func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, err []byte)
+	onCancel           func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool)
 	postUploadProcess  func(req UploadRequest)
 }
 
@@ -68,10 +68,10 @@ func New(config Config) *Controller {
 	} else {
 		ctrl.onProgressChanged = config.OnProgressChanged
 	}
-	if config.OnError == nil {
-		ctrl.onError = func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, err []byte) {}
+	if config.OnCancel == nil {
+		ctrl.onCancel = func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool) {}
 	} else {
-		ctrl.onError = config.OnError
+		ctrl.onCancel = config.OnCancel
 	}
 
 	ctrl.downloadsSaver = ronak.NewFlusher(100, 1, time.Millisecond*100, func(items []ronak.FlusherEntry) {
@@ -362,7 +362,6 @@ func (ctrl *Controller) download(req DownloadRequest) error {
 		<-ctrl.downloadsRateLimit
 	}()
 
-
 	ds := &downloadContext{
 		rateLimit: make(chan struct{}, req.MaxInFlights),
 		ctrl:      ctrl,
@@ -388,7 +387,7 @@ func (ctrl *Controller) download(req DownloadRequest) error {
 	if req.FileSize > 0 {
 		err := os.Truncate(req.TempFilePath, req.FileSize)
 		if err != nil {
-			ctrl.onError(req.GetID(), req.ClusterID, req.FileID, int64(req.AccessHash), req.TempFilePath, ronak.StrToByte(err.Error()))
+			ctrl.onCancel(req.GetID(), req.ClusterID, req.FileID, int64(req.AccessHash), true)
 			return err
 		}
 		dividend := int32(req.FileSize / int64(req.ChunkSize))
@@ -505,23 +504,23 @@ func (ctrl *Controller) upload(req UploadRequest) {
 
 	fileInfo, err := os.Stat(req.FilePath)
 	if err != nil {
-		ctrl.onError(req.GetID(), 0, req.FileID, 0, req.FilePath, ronak.StrToByte(err.Error()))
+		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
 		return
 	}
 	ds.file, err = os.OpenFile(req.FilePath, os.O_RDONLY, 0666)
 	if err != nil {
-		ctrl.onError(req.GetID(), 0, req.FileID, 0, req.FilePath, ronak.StrToByte(err.Error()))
+		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
 		return
 	}
 
 	req.FileSize = fileInfo.Size()
 	if req.FileSize <= 0 {
-		ctrl.onError(req.GetID(), 0, req.FileID, 0, req.FilePath, ronak.StrToByte("file size is not positive"))
+		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
 		return
 	}
 
 	if req.FileSize > domain.FileMaxAllowedSize {
-		ctrl.onError(req.GetID(), 0, req.FileID, 0, req.FilePath, ronak.StrToByte("file size is bigger than maximum allowed"))
+		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
 		return
 	}
 

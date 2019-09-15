@@ -172,7 +172,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		MaxInflightUploads:   5,
 		OnCompleted:          r.fileDelegate.OnCompleted,
 		OnProgressChanged:    r.fileDelegate.OnProgressChanged,
-		OnError:              r.fileDelegate.OnError,
+		OnCancel:              r.fileDelegate.OnCancel,
 		PostUploadProcess:    r.postUploadProcess,
 	})
 

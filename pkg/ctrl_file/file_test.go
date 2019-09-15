@@ -6,7 +6,6 @@ import (
 	networkCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/valyala/tcplisten"
 	"go.uber.org/zap"
 	"io/ioutil"
@@ -44,8 +43,8 @@ func init() {
 		OnProgressChanged: func(reqID string, clusterID int32, fileID, accessHash int64, percent int64) {
 			logs.Info("Progress Changed", zap.String("ReqID", reqID), zap.Int64("Percent", percent))
 		},
-		OnError: func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, err []byte) {
-			logs.Warn("Error On File", zap.String("ReqID", reqID), zap.String("FilePath", filePath), zap.String("Err", ronak.ByteToStr(err)))
+		OnCancel: func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool) {
+			logs.Warn("Error On File", zap.String("ReqID", reqID), zap.Bool("HasError", hasError))
 		},
 		PostUploadProcess: func(req fileCtrl.UploadRequest) {
 			logs.Info("PostProcess:", zap.Any("TotalParts", req.TotalParts))
