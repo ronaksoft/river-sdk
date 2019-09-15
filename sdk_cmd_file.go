@@ -6,12 +6,11 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"os"
 	"time"
 )
 
-func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash int64) string {
+func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash int64) []byte {
 	fileStatus := new(msg.ClientFileStatus)
 	downloadRequest, ok := r.fileCtrl.GetDownloadRequest(clusterID, fileID, uint64(accessHash))
 	if ok {
@@ -33,7 +32,7 @@ func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash int64) s
 	}
 
 	buf, _ := fileStatus.Marshal()
-	return ronak.ByteToStr(buf)
+	return buf
 }
 
 func (r *River) FileDownload(clusterID int32, fileID int64, accessHash int64) error {

@@ -41,10 +41,10 @@ func init() {
 		Network:              _Network,
 		MaxInflightDownloads: 2,
 		MaxInflightUploads:   10,
-		OnProgressChanged: func(reqID string, percent int64) {
+		OnProgressChanged: func(reqID string, clusterID int32, fileID, accessHash int64, percent int64) {
 			logs.Info("Progress Changed", zap.String("ReqID", reqID), zap.Int64("Percent", percent))
 		},
-		OnError: func(reqID string, filePath string, err []byte) {
+		OnError: func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, err []byte) {
 			logs.Warn("Error On File", zap.String("ReqID", reqID), zap.String("FilePath", filePath), zap.String("Err", ronak.ByteToStr(err)))
 		},
 		PostUploadProcess: func(req fileCtrl.UploadRequest) {
@@ -185,27 +185,7 @@ func TestDownload(t *testing.T) {
 }
 
 func TestUpload(t *testing.T) {
-	_File.Upload(fileCtrl.UploadRequest{
-		MaxRetries:   10,
-		MessageID:    1000,
-		FileID:       int64(1),
-		MaxInFlights: 3,
-		FilePath:     "./testdata/big",
-	})
+	_File.UploadUserPhoto("./testdata/big")
 
-	_File.Upload(fileCtrl.UploadRequest{
-		MaxRetries:   10,
-		MessageID:    1000,
-		FileID:       int64(2),
-		MaxInFlights: 3,
-		FilePath:     "./testdata/medium",
-	})
-
-	_File.Upload(fileCtrl.UploadRequest{
-		MaxRetries:   10,
-		MessageID:    1000,
-		FileID:       int64(3),
-		MaxInFlights: 3,
-		FilePath:     "./testdata/small",
-	})
+	_File.UploadMessageDocument(1000, "./testdata/big", "", 2, 0)
 }

@@ -112,7 +112,7 @@ func (ctrl *Controller) Start() {
 		_ = json.Unmarshal(dBytes, &ctrl.uploadRequests)
 		for _, req := range ctrl.uploadRequests {
 			logs.Info("Unfinished Upload")
-			go ctrl.Upload(req)
+			go ctrl.upload(req)
 		}
 	}
 }
@@ -429,7 +429,7 @@ func (ctrl *Controller) UploadUserPhoto(filePath string) (reqID string) {
 	}
 
 	fileID := ronak.RandomInt64(0)
-	ctrl.Upload(UploadRequest{
+	ctrl.upload(UploadRequest{
 		IsProfilePhoto: true,
 		FileID:         fileID,
 		MaxInFlights:   3,
@@ -445,7 +445,7 @@ func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) (reqID 
 	}
 
 	fileID := ronak.RandomInt64(0)
-	ctrl.Upload(UploadRequest{
+	ctrl.upload(UploadRequest{
 		IsProfilePhoto: true,
 		GroupID:        groupID,
 		FileID:         fileID,
@@ -480,7 +480,7 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 	ctrl.saveUploads(req)
 
 	// Upload Thumbnail
-	ctrl.Upload(UploadRequest{
+	ctrl.upload(UploadRequest{
 		MessageID:    0,
 		FileID:       thumbID,
 		MaxInFlights: 3,
@@ -488,9 +488,9 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 	})
 
 	// Upload File
-	ctrl.Upload(req)
+	ctrl.upload(req)
 }
-func (ctrl *Controller) Upload(req UploadRequest) {
+func (ctrl *Controller) upload(req UploadRequest) {
 	ctrl.saveUploads(req)
 	ctrl.uploadsRateLimit <- struct{}{}
 	defer func() {
