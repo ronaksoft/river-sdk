@@ -1,7 +1,6 @@
 package riversdk
 
 import (
-	"encoding/json"
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
@@ -18,17 +17,12 @@ import (
 // TODO :: change response to protobuff
 func (r *River) GetFileStatus(msgID int64) string {
 	status, progress, filePath := r.getFileStatus(msgID)
-	x := struct {
-		Status   int32   `json:"status"`
-		Progress float64 `json:"progress"`
-		Filepath string  `json:"filepath"`
-	}{
-		Status:   int32(status),
-		Progress: progress,
-		Filepath: filePath,
-	}
+	x := new(msg.ClientFileStatus)
+	x.Status = int32(status)
+	x.Progress = progress
+	x.FilePath = filePath
 
-	buff, _ := json.Marshal(x)
+	buff, _ := x.Marshal()
 	return string(buff)
 }
 func (r *River) getFileDetails(msgID int64) (clusterID int32, fileID int64, accessHash uint64) {
@@ -53,7 +47,7 @@ func (r *River) getFileDetails(msgID int64) (clusterID int32, fileID int64, acce
 	}
 	return
 }
-func (r *River) getFileStatus(msgID int64) (status domain.RequestStatus, progress float64, filePath string) {
+func (r *River) getFileStatus(msgID int64) (status domain.RequestStatus, progress int64, filePath string) {
 	clusterID, fileID, accessHash := r.getFileDetails(msgID)
 	downloadRequest, ok := r.fileCtrl.GetDownloadRequest(clusterID, fileID, accessHash)
 	if !ok {
@@ -73,7 +67,7 @@ func (r *River) getFileStatus(msgID int64) (status domain.RequestStatus, progres
 	filePath = downloadRequest.FilePath
 	if downloadRequest.TotalParts > 1 {
 		status = domain.RequestStatusInProgress
-		progress = float64(len(downloadRequest.DownloadedParts)) / float64(downloadRequest.TotalParts) * 100
+		progress = int64(float64(len(downloadRequest.DownloadedParts)) / float64(downloadRequest.TotalParts) * 100)
 	}
 	return
 }
@@ -121,7 +115,7 @@ func (r *River) FileDownload(msgID int64) {
 	status, progress, filePath := r.getFileStatus(msgID)
 	logs.Info("SDK::FileDownload() current file progress status",
 		zap.String("Status", status.ToString()),
-		zap.Float64("Progress", progress),
+		zap.Int64("Progress", progress),
 		zap.String("FilePath", filePath),
 	)
 	m := repo.Messages.Get(msgID)
