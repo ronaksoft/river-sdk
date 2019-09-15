@@ -59,18 +59,7 @@ func (r *River) CancelDownload(clusterID int32, fileID int64, accessHash int64) 
 	if !ok {
 		return
 	}
-
-	_ = downloadRequest
-	// TODO:: cancel the download request too
-	// fs, err := repo.Files.GetStatus(msgID)
-	// if err != nil {
-	// 	logs.Warn("SDK::CancelDownload()", zap.Int64("MsgID", msgID), zap.Error(err))
-	// 	return
-	// }
-	//
-	// r.fileCtrl.DeleteFromQueue(fs.MessageID, domain.RequestStatusCanceled)
-	//
-	// repo.Files.UpdateFileStatus(msgID, domain.RequestStatusCanceled)
+	r.fileCtrl.CancelDownloadRequest(downloadRequest.GetID())
 }
 
 // CancelUpload cancel upload
@@ -93,7 +82,11 @@ func (r *River) CancelUpload(clusterID int32, fileID int64, accessHash int64) {
 	}
 	repo.PendingMessages.Delete(pendingMessage.ID)
 
-	// TODO:: cancel the upload request too
+	uploadRequest, ok := r.fileCtrl.GetUploadRequest(fileID)
+	if !ok {
+		return
+	}
+	r.fileCtrl.CancelUploadRequest(uploadRequest.GetID())
 }
 
 // ResumeDownload

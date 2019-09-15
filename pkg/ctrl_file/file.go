@@ -129,19 +129,30 @@ func (ctrl *Controller) deleteDownloadRequest(reqID string) {
 	ctrl.mtxDownloads.Unlock()
 	ctrl.downloadsSaver.EnterWithResult(nil, nil)
 }
+func (ctrl *Controller) existDownloadRequest(reqID string) bool {
+	ctrl.mtxDownloads.Lock()
+	_, ok := ctrl.downloadRequests[reqID]
+	ctrl.mtxDownloads.Unlock()
+	return ok
+}
 func (ctrl *Controller) saveUploads(req UploadRequest) {
 	ctrl.mtxUploads.Lock()
 	ctrl.uploadRequests[req.GetID()] = req
 	ctrl.mtxUploads.Unlock()
 	ctrl.uploadsSaver.EnterWithResult(nil, nil)
 }
-func (ctrl *Controller) deleteUpdateRequest(reqID string) {
+func (ctrl *Controller) deleteUploadRequest(reqID string) {
 	ctrl.mtxUploads.Lock()
 	delete(ctrl.uploadRequests, reqID)
 	ctrl.mtxUploads.Unlock()
 	ctrl.uploadsSaver.EnterWithResult(nil, nil)
 }
-
+func (ctrl *Controller) existUploadRequest(reqID string) bool {
+	ctrl.mtxUploads.Lock()
+	_, ok := ctrl.uploadRequests[reqID]
+	ctrl.mtxUploads.Unlock()
+	return ok
+}
 func GetRequestID(clusterID int32, fileID int64, accessHash uint64) string {
 	return fmt.Sprintf("%d.%d.%d", clusterID, fileID, accessHash)
 }
@@ -151,11 +162,17 @@ func (ctrl *Controller) GetDownloadRequest(clusterID int32, fileID int64, access
 	ctrl.mtxDownloads.Unlock()
 	return req, ok
 }
+func (ctrl *Controller) CancelDownloadRequest(reqID string) {
+	ctrl.deleteDownloadRequest(reqID)
+}
 func (ctrl *Controller) GetUploadRequest(fileID int64) (UploadRequest, bool) {
 	ctrl.mtxUploads.Lock()
 	req, ok := ctrl.uploadRequests[GetRequestID(0, fileID, 0)]
 	ctrl.mtxUploads.Unlock()
 	return req, ok
+}
+func (ctrl *Controller) CancelUploadRequest(reqID string) {
+	ctrl.deleteUploadRequest(reqID)
 }
 
 func (ctrl *Controller) DownloadFile(clusterID int32, fileID int64, accessHash uint64) (filePath string, err error) {
@@ -552,6 +569,6 @@ func (ctrl *Controller) upload(req UploadRequest) {
 	ds.execute()
 
 	// Remove the Download request from the list
-	ctrl.deleteUpdateRequest(req.GetID())
+	ctrl.deleteUploadRequest(req.GetID())
 	return
 }

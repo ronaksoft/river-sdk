@@ -172,7 +172,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		MaxInflightUploads:   5,
 		OnCompleted:          r.fileDelegate.OnCompleted,
 		OnProgressChanged:    r.fileDelegate.OnProgressChanged,
-		OnCancel:              r.fileDelegate.OnCancel,
+		OnCancel:             r.fileDelegate.OnCancel,
 		PostUploadProcess:    r.postUploadProcess,
 	})
 
@@ -224,7 +224,6 @@ func (r *River) Version() string {
 	return "0.8.1"
 }
 
-// Start ...
 func (r *River) Start() error {
 	logs.Info("River Starting")
 
@@ -265,7 +264,6 @@ func (r *River) Start() error {
 	return nil
 }
 
-// Migrate
 func (r *River) Migrate() int {
 	ver := r.ConnInfo.Version
 	for {
@@ -394,7 +392,6 @@ func (r *River) onGeneralError(e *msg.Error) {
 	}
 }
 
-// called when network flushes received messages
 func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 	// sort messages by requestID
 	sort.Slice(msgs, func(i, j int) bool {
@@ -425,7 +422,6 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 	}
 }
 
-// called when network flushes received updates
 func (r *River) onReceivedUpdate(updateContainers []*msg.UpdateContainer) {
 	// sort updateContainers
 	sort.Slice(updateContainers, func(i, j int) bool {

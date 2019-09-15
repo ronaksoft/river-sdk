@@ -52,10 +52,11 @@ type UploadRequest struct {
 	MaxInFlights  int32   `json:"max_in_flights"`
 	UploadedParts []int32 `json:"downloaded_parts"`
 	TotalParts    int32   `json:"total_parts"`
+	Canceled      bool    `json:"canceled"`
 }
 
 func (r UploadRequest) GetID() string {
-	return fmt.Sprintf("%d", r.FileID)
+	return fmt.Sprintf("0.%d.0", r.FileID)
 }
 
 type uploadContext struct {
@@ -113,6 +114,12 @@ func (ctx *uploadContext) execute() domain.RequestStatus {
 	for ctx.req.MaxRetries > 0 {
 		select {
 		case partIndex := <-ctx.parts:
+			if !ctx.ctrl.existUploadRequest(ctx.req.GetID()) {
+				waitGroup.Wait()
+				_ = ctx.file.Close()
+				ctx.ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, false)
+				return domain.RequestStatusCanceled
+			}
 			ctx.rateLimit <- struct{}{}
 			waitGroup.Add(1)
 

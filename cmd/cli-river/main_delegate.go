@@ -135,15 +135,9 @@ func (d *FileDelegate) OnCompleted(reqID string, clusterID int32, fileID, access
 	_Log.Info("On upload Completed", zap.String("ReqID", reqID), zap.String("FilePath", filePath))
 }
 
-func (d *FileDelegate) OnError(reqID string, clusterID int32, fileID, accessHash int64, filePath string, err []byte) {
-	x := new(msg.Error)
-	_ = x.Unmarshal(err)
-
-	_Log.Error("OnError",
-		zap.String("Code", x.Code),
-		zap.String("Item", x.Items),
+func (d *FileDelegate) OnCancel(reqID string, clusterID int32, fileID, accessHash int64, hasError bool) {
+	_Log.Error("OnCancel",
 		zap.String("ReqID", reqID),
-		zap.String("FilePath", filePath),
 	)
 
 }

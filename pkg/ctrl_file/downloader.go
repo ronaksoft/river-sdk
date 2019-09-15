@@ -43,6 +43,7 @@ type DownloadRequest struct {
 	TempFilePath    string  `json:"temp_file_path"`
 	DownloadedParts []int32 `json:"downloaded_parts"`
 	TotalParts      int32   `json:"total_parts"`
+	Canceled        bool    `json:"canceled"`
 }
 
 func (r DownloadRequest) GetID() string {
@@ -110,6 +111,13 @@ func (ctx *downloadContext) execute() domain.RequestStatus {
 	for ctx.req.MaxRetries > 0 {
 		select {
 		case partIndex := <-ctx.parts:
+			if !ctx.ctrl.existDownloadRequest(ctx.req.GetID()) {
+				waitGroup.Wait()
+				_ = ctx.file.Close()
+				_ = os.Remove(ctx.req.TempFilePath)
+				ctx.ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), false)
+				return domain.RequestStatusCanceled
+			}
 			ctx.rateLimit <- struct{}{}
 			waitGroup.Add(1)
 
