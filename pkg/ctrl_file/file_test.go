@@ -171,7 +171,7 @@ func TestDownload(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			filePath, err := _File.DownloadFile(clientFile.ClusterID, clientFile.FileID, clientFile.AccessHash)
+			filePath, err := _File.DownloadSync(clientFile.ClusterID, clientFile.FileID, clientFile.AccessHash)
 			if err != nil {
 				t.Fatal(err)
 			}
