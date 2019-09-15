@@ -121,32 +121,7 @@ func (r *repoGroups) updateParticipantsCount(groupID int64) {
 	r.Save(group)
 }
 
-func (r *repoGroups) Save(group *msg.Group) {
-	if group == nil {
-		return
-	}
-
-	if alreadySaved(fmt.Sprintf("G.%d", group.ID), group) {
-		return
-	}
-	defer r.deleteFromCache(group.ID)
-
-	groupKey := r.getGroupKey(group.ID)
-	groupBytes, _ := group.Marshal()
-	_ = r.badger.Update(func(txn *badger.Txn) error {
-		return txn.SetEntry(badger.NewEntry(
-			groupKey, groupBytes,
-		))
-	})
-
-	_ = r.peerSearch.Index(ronak.ByteToStr(groupKey), GroupSearch{
-		Type:   "group",
-		Title:  group.Title,
-		PeerID: group.ID,
-	})
-}
-
-func (r *repoGroups) SaveMany(groups []*msg.Group) {
+func (r *repoGroups) Save(groups ...*msg.Group) {
 	groupIDs := domain.MInt64B{}
 	for _, v := range groups {
 		if alreadySaved(fmt.Sprintf("G.%d", v.ID), v) {
@@ -157,10 +132,25 @@ func (r *repoGroups) SaveMany(groups []*msg.Group) {
 	defer r.deleteFromCache(groupIDs.ToArray()...)
 
 	for idx := range groups {
-		r.Save(groups[idx])
+		r.save(groups[idx])
 	}
 
 	return
+}
+func (r *repoGroups) save(group *msg.Group) {
+	groupKey := r.getGroupKey(group.ID)
+	groupBytes, _ := group.Marshal()
+	_ = r.badger.Update(func(txn *badger.Txn) error {
+		return txn.SetEntry(badger.NewEntry(
+			groupKey, groupBytes,
+		))
+	})
+	_ = r.peerSearch.Index(ronak.ByteToStr(groupKey), GroupSearch{
+		Type:   "group",
+		Title:  group.Title,
+		PeerID: group.ID,
+	})
+	_ = Files.SaveGroupPhoto(group)
 }
 
 func (r *repoGroups) SaveParticipant(groupID int64, participant *msg.GroupParticipant) {

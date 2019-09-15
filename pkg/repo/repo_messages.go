@@ -184,6 +184,7 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, use
 	}
 
 	r.save(message)
+	_ = Files.SaveMessageMedia(message)
 
 	dialog = Dialogs.Get(message.PeerID, message.PeerType)
 	// Update Dialog if it is a new message
@@ -209,17 +210,10 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, use
 	return
 }
 
-func (r *repoMessages) Save(message *msg.UserMessage) {
-	r.save(message)
-
-	// This is just to make sure the data has been written
-	_ = r.badger.Sync()
-
-}
-
-func (r *repoMessages) SaveMany(messages []*msg.UserMessage) {
+func (r *repoMessages) Save(messages ...*msg.UserMessage) {
 	for _, message := range messages {
 		r.save(message)
+		_ = Files.SaveMessageMedia(message)
 	}
 	// This is just to make sure the data has been written
 	_ = r.badger.Sync()

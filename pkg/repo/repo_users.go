@@ -203,14 +203,23 @@ func (r *repoUsers) GetPhoto(userID, photoID int64) *msg.UserPhoto {
 	return user.Photo
 }
 
-func (r *repoUsers) Save(user *msg.User) {
-	if user == nil {
-		return
+func (r *repoUsers) Save(users ...*msg.User) {
+	userIDs := domain.MInt64B{}
+	for _, v := range users {
+		if alreadySaved(fmt.Sprintf("U.%d", v.ID), v) {
+			continue
+		}
+		userIDs[v.ID] = true
 	}
-	if alreadySaved(fmt.Sprintf("U.%d", user.ID), user) {
-		return
+	defer r.deleteFromCache(userIDs.ToArray()...)
+
+	for idx := range users {
+		r.save(users[idx])
 	}
 
+	return
+}
+func (r *repoUsers) save(user *msg.User) {
 	userKey := r.getUserKey(user.ID)
 	userBytes, _ := user.Marshal()
 	_ = r.badger.Update(func(txn *badger.Txn) error {
@@ -225,27 +234,15 @@ func (r *repoUsers) Save(user *msg.User) {
 		PeerID:    user.ID,
 		Username:  user.Username,
 	})
+	_ = Files.SaveUserPhotos(user)
 }
 
-func (r *repoUsers) SaveMany(users []*msg.User) {
-
-	userIDs := domain.MInt64B{}
-	for _, v := range users {
-		if alreadySaved(fmt.Sprintf("U.%d", v.ID), v) {
-			continue
-		}
-		userIDs[v.ID] = true
+func (r *repoUsers) SaveContact(contactUsers ...*msg.ContactUser) {
+	for _, contactUser := range contactUsers {
+		r.saveContact(contactUser)
 	}
-	defer r.deleteFromCache(userIDs.ToArray()...)
-
-	for idx := range users {
-		r.Save(users[idx])
-	}
-
-	return
 }
-
-func (r *repoUsers) SaveContact(contactUser *msg.ContactUser) {
+func (r *repoUsers) saveContact(contactUser *msg.ContactUser) {
 	if contactUser == nil {
 		return
 	}
@@ -256,13 +253,14 @@ func (r *repoUsers) SaveContact(contactUser *msg.ContactUser) {
 			contactKey, userBytes,
 		))
 	})
-
 	_ = r.peerSearch.Index(ronak.ByteToStr(contactKey), ContactSearch{
 		Type:      "contact",
 		FirstName: contactUser.FirstName,
 		LastName:  contactUser.LastName,
 		Username:  contactUser.Username,
 	})
+	_ = Files.SaveContactPhoto(contactUser)
+
 }
 
 func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType int32) {

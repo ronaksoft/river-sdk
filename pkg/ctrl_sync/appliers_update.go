@@ -70,7 +70,6 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	res := []*msg.UpdateEnvelope{u}
 	ctrl.handleMessageAction(x, u, res)
 
-	_ = repo.Files.SaveMessageMedia(x.Message)
 	return res
 }
 func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.UpdateEnvelope, res []*msg.UpdateEnvelope) {

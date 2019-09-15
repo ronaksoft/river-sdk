@@ -53,6 +53,47 @@ func (r *repoFiles) GetMediaDocument(m *msg.UserMessage) (*msg.ClientFile, error
 }
 
 func (r *repoFiles) SaveUserPhotos(u *msg.User) error {
+	if u.Photo == nil {
+		return nil
+	}
+	err := r.Save(&msg.ClientFile{
+		ClusterID:  u.Photo.PhotoBig.ClusterID,
+		FileID:     u.Photo.PhotoBig.FileID,
+		AccessHash: u.Photo.PhotoBig.AccessHash,
+		Type:       msg.ClientFileType_AccountProfilePhoto,
+		MimeType:   "",
+		UserID:     u.ID,
+		GroupID:    0,
+		FileSize:   0,
+		MessageID:  0,
+		PeerID:     u.ID,
+		PeerType:   int32(msg.PeerUser),
+		Version:    0,
+	})
+	if err != nil {
+		return err
+	}
+	err = r.Save(&msg.ClientFile{
+		ClusterID:  u.Photo.PhotoSmall.ClusterID,
+		FileID:     u.Photo.PhotoSmall.FileID,
+		AccessHash: u.Photo.PhotoSmall.AccessHash,
+		Type:       msg.ClientFileType_Thumbnail,
+		MimeType:   "",
+		UserID:     u.ID,
+		GroupID:    0,
+		FileSize:   0,
+		MessageID:  0,
+		PeerID:     u.ID,
+		PeerType:   int32(msg.PeerUser),
+		Version:    0,
+	})
+	return err
+}
+
+func (r *repoFiles) SaveContactPhoto(u *msg.ContactUser) error {
+	if u.Photo == nil {
+		return nil
+	}
 	err := r.Save(&msg.ClientFile{
 		ClusterID:  u.Photo.PhotoBig.ClusterID,
 		FileID:     u.Photo.PhotoBig.FileID,
@@ -88,6 +129,9 @@ func (r *repoFiles) SaveUserPhotos(u *msg.User) error {
 }
 
 func (r *repoFiles) SaveGroupPhoto(g *msg.Group) error {
+	if g.Photo == nil {
+		return nil
+	}
 	err := r.Save(&msg.ClientFile{
 		ClusterID:  g.Photo.PhotoBig.ClusterID,
 		FileID:     g.Photo.PhotoBig.FileID,

@@ -1,11 +1,15 @@
 package syncCtrl
 
 import (
+	"bytes"
+	"encoding/binary"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
+	"hash/crc32"
+	"sort"
 )
 
 // authAuthorization
@@ -53,10 +57,8 @@ func (ctrl *Controller) contactsImported(e *msg.MessageEnvelope) {
 		return
 	}
 	logs.Info("SyncController::contactsImported")
-	for _, u := range x.ContactUsers {
-		repo.Users.SaveContact(u)
-	}
-	repo.Users.SaveMany(x.Users)
+	repo.Users.SaveContact(x.ContactUsers...)
+	repo.Users.Save(x.Users...)
 }
 
 // contactsMany
@@ -71,16 +73,22 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 		zap.Int("Contacts", len(x.Contacts)),
 	)
 
-	userIDs := domain.MInt64B{}
-	for _, u := range x.ContactUsers {
-		userIDs[u.ID] = true
-		repo.Users.SaveContact(u)
-	}
-	repo.Users.SaveMany(x.Users)
+	// Sort the contact users by their ids
+	sort.Slice(x.ContactUsers, func(i, j int) bool { return x.ContactUsers[i].ID < x.ContactUsers[j].ID })
+
+	repo.Users.SaveContact(x.ContactUsers...)
+	repo.Users.Save(x.Users...)
 	// server
-	if len(userIDs) > 0 {
-		// calculate contactsGetHash and save
-		crc32Hash := domain.CalculateContactsGetHash(userIDs.ToArray())
+	if len(x.ContactUsers) > 0 {
+		// sort ASC
+
+		buff := bytes.Buffer{}
+		b := make([]byte, 8)
+		for _, contactUser := range x.ContactUsers {
+			binary.BigEndian.PutUint64(b, uint64(contactUser.ID))
+			buff.Write(b)
+		}
+		crc32Hash := crc32.ChecksumIEEE(buff.Bytes())
 		err := repo.System.SaveInt(domain.SkContactsGetHash, uint64(crc32Hash))
 		if err != nil {
 			logs.Error("contactsMany() failed to save ContactsGetHash to DB", zap.Error(err))
@@ -156,14 +164,10 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 		return
 	}
 
-	for _, m := range u.Messages {
-		_ = repo.Files.SaveMessageMedia(m)
-	}
-
 	// save Groups & Users & Messages
-	repo.Users.SaveMany(u.Users)
-	repo.Groups.SaveMany(u.Groups)
-	repo.Messages.SaveMany(u.Messages)
+	repo.Users.Save(u.Users...)
+	repo.Groups.Save(u.Groups...)
+	repo.Messages.Save(u.Messages...)
 
 	minID := int64(0)
 	maxID := int64(0)

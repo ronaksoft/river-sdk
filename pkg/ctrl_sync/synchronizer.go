@@ -278,9 +278,9 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 					messageHole.InsertFill(dialog.PeerID, dialog.PeerType, dialog.TopMessageID, dialog.TopMessageID)
 				}
 
-				repo.Users.SaveMany(x.Users)
-				repo.Groups.SaveMany(x.Groups)
-				repo.Messages.SaveMany(x.Messages)
+				repo.Users.Save(x.Users...)
+				repo.Groups.Save(x.Groups...)
+				repo.Messages.Save(x.Messages...)
 
 				if x.Count > offset+limit {
 					getAllDialogs(waitGroup, ctrl, offset+limit, limit)
@@ -389,8 +389,8 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 	)
 
 	// save Groups & Users
-	repo.Groups.SaveMany(x.Groups)
-	repo.Users.SaveMany(x.Users)
+	repo.Groups.Save(x.Groups...)
+	repo.Users.Save(x.Users...)
 
 	for _, update := range x.Updates {
 		if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
@@ -504,23 +504,11 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 	udpContainer.MinUpdateID = updateContainer.MinUpdateID
 	udpContainer.Users = updateContainer.Users
 	udpContainer.Groups = updateContainer.Groups
-	for _, u := range updateContainer.Users {
-		// Download users avatar if its not exist
-		if u.Photo == nil {
-			continue
-		}
 
-		err := repo.Files.SaveUserPhotos(u)
-		logs.WarnOnErr("Error On SaveUserPhoto", err, zap.Int64("UserID", u.ID))
-	}
-	for _, g := range updateContainer.Groups {
-		// Download group avatar if its not exist
-		if g.Photo == nil {
-			continue
-		}
-		err := repo.Files.SaveGroupPhoto(g)
-		logs.WarnOnErr("Error On SaveGroupPhoto", err, zap.Int64("GroupID", g.ID))
-	}
+	// save Groups & Users
+	repo.Groups.Save(updateContainer.Groups...)
+	repo.Users.Save(updateContainer.Users...)
+
 	for _, update := range updateContainer.Updates {
 		// var externalHandlerUpdates []*msg.UpdateEnvelope
 		applier, ok := ctrl.updateAppliers[update.Constructor]
@@ -538,10 +526,6 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 
 	// We wait here, if any unfinished parallel job has not been finished yet
 	ctrl.waitGroup.Wait()
-
-	// save Groups & Users
-	repo.Groups.SaveMany(updateContainer.Groups)
-	repo.Users.SaveMany(updateContainer.Users)
 
 	// save updateID after processing messages
 	if ctrl.updateID < updateContainer.MaxUpdateID {

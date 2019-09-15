@@ -6,7 +6,6 @@ import (
 	"crypto/cipher"
 	"crypto/sha256"
 	"crypto/sha512"
-	"encoding/binary"
 	"fmt"
 	"hash/crc32"
 	"log"
@@ -288,20 +287,6 @@ func SequentialUniqueID() int64 {
 		atomic.StoreInt64(&uniqueCounter, 0)
 	}
 	return res
-}
-
-// CalculateContactsGetHash crc32 of UserIDs
-func CalculateContactsGetHash(userIDs []int64) uint32 {
-	// sort ASC
-	sort.Slice(userIDs, func(i, j int) bool { return userIDs[i] < userIDs[j] })
-	buff := bytes.Buffer{}
-	b := make([]byte, 8)
-	for _, id := range userIDs {
-		binary.BigEndian.PutUint64(b, uint64(id))
-		buff.Write(b)
-	}
-	crc32Hash := crc32.ChecksumIEEE(buff.Bytes())
-	return crc32Hash
 }
 
 // CalculateContactsImportHash crc32 of phones
