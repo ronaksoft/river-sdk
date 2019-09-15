@@ -35,8 +35,13 @@ func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash int64) [
 	return buf
 }
 
-func (r *River) FileDownload(clusterID int32, fileID int64, accessHash int64) error {
-	_, err := r.fileCtrl.DownloadFile(clusterID, fileID, uint64(accessHash))
+func (r *River) FileDownloadAsync(clusterID int32, fileID int64, accessHash int64) (reqID string) {
+	reqID, _ = r.fileCtrl.DownloadAsync(clusterID, fileID, uint64(accessHash))
+	return
+}
+
+func (r *River) FileDownloadSync(clusterID int32, fileID int64, accessHash int64) error {
+	_, err := r.fileCtrl.DownloadSync(clusterID, fileID, uint64(accessHash))
 	return err
 }
 

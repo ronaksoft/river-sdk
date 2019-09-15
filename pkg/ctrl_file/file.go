@@ -9,6 +9,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -175,7 +176,33 @@ func (ctrl *Controller) CancelUploadRequest(reqID string) {
 	ctrl.deleteUploadRequest(reqID)
 }
 
-func (ctrl *Controller) DownloadFile(clusterID int32, fileID int64, accessHash uint64) (filePath string, err error) {
+func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash uint64) (reqID string, err error) {
+	clientFile, err := repo.Files.Get(clusterID, fileID, accessHash)
+	if err != nil {
+		return "", err
+	}
+	go func() {
+		err = ctrl.download(DownloadRequest{
+			MessageID:    clientFile.MessageID,
+			ClusterID:    clientFile.ClusterID,
+			FileID:       clientFile.FileID,
+			AccessHash:   clientFile.AccessHash,
+			Version:      clientFile.Version,
+			FileSize:     clientFile.FileSize,
+			ChunkSize:    downloadChunkSize,
+			MaxInFlights: maxDownloadInFlights,
+			FilePath:     GetFilePath(clientFile),
+		})
+		logs.WarnOnErr("Error On DownloadAsync", err,
+			zap.Int32("ClusterID", clusterID),
+			zap.Int64("FileID", fileID),
+			zap.Uint64("AccessHash", accessHash),
+		)
+	}()
+	return GetRequestID(clusterID, fileID, accessHash), nil
+
+}
+func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash uint64) (filePath string, err error) {
 	clientFile, err := repo.Files.Get(clusterID, fileID, accessHash)
 	if err != nil {
 		return "", err
@@ -188,19 +215,19 @@ func (ctrl *Controller) DownloadFile(clusterID int32, fileID int64, accessHash u
 		return ctrl.downloadAccountPhoto(clientFile)
 	case msg.ClientFileType_Thumbnail:
 		return ctrl.downloadThumbnail(clientFile)
-
+	default:
+		err = ctrl.download(DownloadRequest{
+			MessageID:    clientFile.MessageID,
+			ClusterID:    clientFile.ClusterID,
+			FileID:       clientFile.FileID,
+			AccessHash:   clientFile.AccessHash,
+			Version:      clientFile.Version,
+			FileSize:     clientFile.FileSize,
+			ChunkSize:    downloadChunkSize,
+			MaxInFlights: maxDownloadInFlights,
+			FilePath:     filePath,
+		})
 	}
-	err = ctrl.download(DownloadRequest{
-		MessageID:    clientFile.MessageID,
-		ClusterID:    clientFile.ClusterID,
-		FileID:       clientFile.FileID,
-		AccessHash:   clientFile.AccessHash,
-		Version:      clientFile.Version,
-		FileSize:     clientFile.FileSize,
-		ChunkSize:    downloadChunkSize,
-		MaxInFlights: maxDownloadInFlights,
-		FilePath:     filePath,
-	})
 
 	return
 }
