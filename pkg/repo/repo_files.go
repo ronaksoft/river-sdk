@@ -46,7 +46,9 @@ func (r *repoFiles) Get(clusterID int32, fileID int64, accessHash uint64) (*msg.
 	return file, nil
 }
 
-func (r *repoFiles) GetMediaDocument(md *msg.MediaDocument) (*msg.ClientFile, error) {
+func (r *repoFiles) GetMediaDocument(m *msg.UserMessage) (*msg.ClientFile, error) {
+	md := new(msg.MediaDocument)
+	_ = md.Unmarshal(m.Media)
 	return r.Get(md.Doc.ClusterID, md.Doc.ID, md.Doc.AccessHash)
 }
 
@@ -120,40 +122,50 @@ func (r *repoFiles) SaveGroupPhoto(g *msg.Group) error {
 	return err
 }
 
-func (r *repoFiles) SaveMediaDocument(um *msg.UserMessage, md *msg.MediaDocument) error {
-	err := r.Save(&msg.ClientFile{
-		ClusterID:  md.Doc.ClusterID,
-		FileID:     md.Doc.ID,
-		AccessHash: md.Doc.AccessHash,
-		Type:       msg.ClientFileType_Message,
-		MimeType:   md.Doc.MimeType,
-		UserID:     0,
-		GroupID:    0,
-		FileSize:   int64(md.Doc.FileSize),
-		MessageID:  um.ID,
-		PeerID:     um.PeerID,
-		PeerType:   um.PeerType,
-		Version:    md.Doc.Version,
-	})
-	if err != nil {
-		return err
-	}
-	if md.Doc.Thumbnail != nil {
-		err = r.Save(&msg.ClientFile{
-			ClusterID:  md.Doc.Thumbnail.ClusterID,
-			FileID:     md.Doc.Thumbnail.FileID,
-			AccessHash: md.Doc.Thumbnail.AccessHash,
-			Type:       msg.ClientFileType_Thumbnail,
-			MimeType:   "",
-			UserID:     0,
-			GroupID:    0,
-			FileSize:   0,
-			MessageID:  um.ID,
-			PeerID:     um.PeerID,
-			PeerType:   um.PeerType,
-			Version:    0,
-		})
-		return err
+func (r *repoFiles) SaveMessageMedia(m *msg.UserMessage) error {
+	switch m.MediaType {
+	case msg.MediaTypeDocument:
+		md := new(msg.MediaDocument)
+		err := md.Unmarshal(m.Media)
+		if err != nil {
+			return err
+		}
+		if md.Doc.Thumbnail != nil {
+			err := r.Save(&msg.ClientFile{
+				ClusterID:  md.Doc.ClusterID,
+				FileID:     md.Doc.ID,
+				AccessHash: md.Doc.AccessHash,
+				Type:       msg.ClientFileType_Message,
+				MimeType:   md.Doc.MimeType,
+				UserID:     0,
+				GroupID:    0,
+				FileSize:   int64(md.Doc.FileSize),
+				MessageID:  m.ID,
+				PeerID:     m.PeerID,
+				PeerType:   m.PeerType,
+				Version:    md.Doc.Version,
+			})
+			if err != nil {
+				return err
+			}
+			if md.Doc.Thumbnail != nil {
+				err = r.Save(&msg.ClientFile{
+					ClusterID:  md.Doc.Thumbnail.ClusterID,
+					FileID:     md.Doc.Thumbnail.FileID,
+					AccessHash: md.Doc.Thumbnail.AccessHash,
+					Type:       msg.ClientFileType_Thumbnail,
+					MimeType:   "",
+					UserID:     0,
+					GroupID:    0,
+					FileSize:   0,
+					MessageID:  m.ID,
+					PeerID:     m.PeerID,
+					PeerType:   m.PeerType,
+					Version:    0,
+				})
+				return err
+			}
+		}
 	}
 
 	return nil

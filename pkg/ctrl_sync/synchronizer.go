@@ -598,34 +598,6 @@ func (ctrl *Controller) GetSyncStatus() domain.SyncStatus {
 	return ctrl.syncStatus
 }
 
-// extractMessagesMedia extract files info from messages that have Document object
-func (ctrl *Controller) extractMessagesMedia(messages ...*msg.UserMessage) {
-	waitGroup := sync.WaitGroup{}
-	for _, m := range messages {
-		switch m.MediaType {
-		case msg.MediaTypeEmpty:
-		case msg.MediaTypeDocument:
-			mediaDoc := new(msg.MediaDocument)
-			err := mediaDoc.Unmarshal(m.Media)
-			if err != nil {
-				logs.Error("extractMessagesMedia()-> con not unmarshal MediaTypeDocument", zap.Error(err))
-				break
-			}
-			t := mediaDoc.Doc.Thumbnail
-			if t != nil && t.FileID != 0 {
-				waitGroup.Add(1)
-				go func(t msg.FileLocation) {
-					err := repo.Files.SaveMediaDocument(m, mediaDoc)
-					logs.WarnOnErr("Error On SaveMediaDoc", err, zap.Int64("MessageID", m.ID))
-					waitGroup.Done()
-				}(*t)
-			}
-		default:
-		}
-	}
-	waitGroup.Wait()
-}
-
 func (ctrl *Controller) UpdateSalt() {
 	for !salt.UpdateSalt() {
 		ctrl.getServerSalt()

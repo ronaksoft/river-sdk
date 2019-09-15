@@ -70,14 +70,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	res := []*msg.UpdateEnvelope{u}
 	ctrl.handleMessageAction(x, u, res)
 
-	// handle Message's Media
-	if int32(x.Message.MediaType) > 0 {
-		ctrl.waitGroup.Add(1)
-		go func() {
-			ctrl.extractMessagesMedia(x.Message)
-			ctrl.waitGroup.Done()
-		}()
-	}
+	_ = repo.Files.SaveMessageMedia(x.Message)
 	return res
 }
 func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.UpdateEnvelope, res []*msg.UpdateEnvelope) {
@@ -161,8 +154,6 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 	// if it was file upload request
 	switch x.Message.MediaType {
 	case msg.MediaTypeDocument:
-		d := new(msg.MediaDocument)
-		_ = d.Unmarshal(x.Message.Media)
 		// save to local files and delete file status
 		clientSendMedia := new(msg.ClientSendMessageMedia)
 		err := clientSendMedia.Unmarshal(pmsg.Media)
@@ -170,9 +161,7 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 			return
 		}
 
-		err = repo.Files.SaveMediaDocument(x.Message, d)
-		logs.WarnOnErr("Error On HandlePendingMessage", err, zap.Int64("MsgID", x.Message.ID))
-		clientFile, err := repo.Files.GetMediaDocument(d)
+		clientFile, err := repo.Files.GetMediaDocument(x.Message)
 		logs.WarnOnErr("Error On GetMediaDocument", err)
 		_, err = copyUploadedFile(clientSendMedia.FilePath, fileCtrl.GetFilePath(clientFile))
 		if err != nil {

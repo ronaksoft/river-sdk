@@ -6,7 +6,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
-	"sync"
 )
 
 // authAuthorization
@@ -157,13 +156,10 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 		return
 	}
 
-	waitGroup := sync.WaitGroup{}
-	waitGroup.Add(1)
-	go func() {
-		// handle Media message
-		ctrl.extractMessagesMedia(u.Messages...)
-		waitGroup.Done()
-	}()
+	for _, m := range u.Messages {
+		_ = repo.Files.SaveMessageMedia(m)
+	}
+
 	// save Groups & Users & Messages
 	repo.Users.SaveMany(u.Users)
 	repo.Groups.SaveMany(u.Groups)
@@ -179,20 +175,6 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 			maxID = v.ID
 		}
 	}
-
-	logs.Info("SyncController::messagesMany",
-		zap.Int("Messages", len(u.Messages)),
-		zap.Bool("Continues", u.Continuous),
-		zap.Int64("MinID", minID),
-		zap.Int64("MaxID", maxID),
-	)
-
-	// if u.Continuous && minID != 0 && minID != maxID {
-	// 	peerID := u.Messages[0].PeerID
-	// 	peerType := u.Messages[0].PeerType
-	// 	messageHole.InsertFill(peerID, peerType, minID, maxID)
-	// }
-	waitGroup.Wait()
 }
 
 // groupFull
