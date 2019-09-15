@@ -108,7 +108,6 @@ func (ctx *downloadContext) generateFileGet(offset, limit int32) *msg.MessageEnv
 
 func (ctx *downloadContext) execute() domain.RequestStatus {
 	waitGroup := sync.WaitGroup{}
-
 	for ctx.req.MaxRetries > 0 {
 		select {
 		case partIndex := <-ctx.parts:

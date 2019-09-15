@@ -362,10 +362,10 @@ func (ctrl *Controller) download(req DownloadRequest) error {
 		<-ctrl.downloadsRateLimit
 	}()
 
+
 	ds := &downloadContext{
 		rateLimit: make(chan struct{}, req.MaxInFlights),
 		ctrl:      ctrl,
-		req:       req,
 	}
 
 	_, err := os.Stat(req.TempFilePath)
@@ -393,19 +393,20 @@ func (ctrl *Controller) download(req DownloadRequest) error {
 		}
 		dividend := int32(req.FileSize / int64(req.ChunkSize))
 		if req.FileSize%int64(req.ChunkSize) > 0 {
-			ds.req.TotalParts = dividend + 1
+			req.TotalParts = dividend + 1
 		} else {
-			ds.req.TotalParts = dividend
+			req.TotalParts = dividend
 		}
 	} else {
-		ds.req.TotalParts = 1
-		ds.req.ChunkSize = 0
+		req.TotalParts = 1
+		req.ChunkSize = 0
 	}
 
 	if req.MaxRetries <= 0 {
 		req.MaxRetries = retryMaxAttempts
 	}
 
+	ds.req = req
 	ds.parts = make(chan int32, ds.req.TotalParts)
 	for partIndex := int32(0); partIndex < ds.req.TotalParts; partIndex++ {
 		if ds.isDownloaded(partIndex) {
