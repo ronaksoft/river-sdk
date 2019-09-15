@@ -1,7 +1,6 @@
 package fileCtrl_test
 
 import (
-	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	networkCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
@@ -37,6 +36,7 @@ func init() {
 		WebsocketEndpoint: "",
 		HttpEndpoint:      "http://127.0.0.1:8080",
 	})
+	fileCtrl.SetRootFolders("_data/audio", "_data/file", "_data/photo", "_data/video", "_data/cache")
 	_File = fileCtrl.New(fileCtrl.Config{
 		Network:              _Network,
 		MaxInflightDownloads: 2,
@@ -54,9 +54,36 @@ func init() {
 	_File.Start()
 
 	tcpConfig := new(tcplisten.Config)
-	s := httptest.NewUnstartedServer(TestServer{
+	s := httptest.NewUnstartedServer(server{
 		uploadTracker: make(map[int64]map[int32]struct{}),
 	})
+
+	wg := sync.WaitGroup{}
+
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func(i int) {
+			err := repo.Files.Save(&msg.ClientFile{
+				ClusterID:  1,
+				FileID:     int64(i),
+				AccessHash: 10,
+				Type:       msg.ClientFileType_Message,
+				MimeType:   "video/mp4",
+				UserID:     0,
+				GroupID:    0,
+				FileSize:   102400,
+				MessageID:  int64(i),
+				PeerID:     0,
+				PeerType:   0,
+				Version:    0,
+			})
+			if err != nil {
+				panic(err)
+			}
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
 
 	var err error
 	s.Listener, err = tcpConfig.NewListener("tcp4", ":8080")
@@ -67,12 +94,12 @@ func init() {
 
 }
 
-type TestServer struct {
+type server struct {
 	sync.Mutex
 	uploadTracker map[int64]map[int32]struct{}
 }
 
-func (t TestServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+func (t server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	// time.Sleep(3 * time.Second)
 	// if ronak.RandomInt(30) > 5 {
 	// 	res.WriteHeader(http.StatusForbidden)
@@ -138,23 +165,19 @@ func (t TestServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 func TestDownload(t *testing.T) {
 	wg := sync.WaitGroup{}
+
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func(i int) {
-			_ = _File.Download(fileCtrl.DownloadRequest{
-				MaxRetries:      10,
-				MessageID:       1000,
-				ClusterID:       11,
-				FileID:          int64(i),
-				AccessHash:      1111,
-				Version:         1,
-				FileSize:        2560,
-				ChunkSize:       256,
-				MaxInFlights:    3,
-				FilePath:        fmt.Sprintf("./_FILE_%d", i),
-				DownloadedParts: nil,
-				TotalParts:      0,
-			})
+			clientFile, err := repo.Files.Get(1, int64(i), 10)
+			if err != nil {
+				t.Fatal(err)
+			}
+			filePath, err := _File.DownloadFile(clientFile.ClusterID, clientFile.FileID, clientFile.AccessHash)
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Log(i, filePath)
 			wg.Done()
 		}(i)
 	}

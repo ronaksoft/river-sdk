@@ -4,6 +4,7 @@ import (
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"mime"
+	"os"
 	"path"
 	"strings"
 )
@@ -28,10 +29,15 @@ var (
 // SetRootFolders directory paths to Download files
 func SetRootFolders(audioDir, fileDir, photoDir, videoDir, cacheDir string) {
 	dirAudio = audioDir
+	_ = os.MkdirAll(audioDir, os.ModePerm)
 	dirFile = fileDir
+	_ = os.MkdirAll(fileDir, os.ModePerm)
 	dirPhoto = photoDir
+	_ = os.MkdirAll(photoDir, os.ModePerm)
 	dirVideo = videoDir
+	_ = os.MkdirAll(videoDir, os.ModePerm)
 	dirCache = cacheDir
+	_ = os.MkdirAll(cacheDir, os.ModePerm)
 }
 
 func GetFilePath(clientFile *msg.ClientFile) string {

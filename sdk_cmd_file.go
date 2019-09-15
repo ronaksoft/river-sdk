@@ -36,13 +36,13 @@ func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash uint64) 
 	return ronak.ByteToStr(buf)
 }
 
-func (r *River) FileDownload(clusterID int32, fileID int64, accessHash uint64) error {
-	_, err := r.fileCtrl.DownloadFile(clusterID, fileID, accessHash)
+func (r *River) FileDownload(clusterID int32, fileID int64, accessHash int64) error {
+	_, err := r.fileCtrl.DownloadFile(clusterID, fileID, uint64(accessHash))
 	return err
 }
 
 // CancelDownload cancel download
-func (r *River) CancelDownload(clusterID int32, fileID int64, accessHash uint64) {
+func (r *River) CancelDownload(clusterID int32, fileID int64, accessHash int64) {
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("CancelDownload", time.Now().Sub(startTime))
@@ -59,7 +59,7 @@ func (r *River) CancelDownload(clusterID int32, fileID int64, accessHash uint64)
 }
 
 // CancelUpload cancel upload
-func (r *River) CancelUpload(clusterID int32, fileID int64, accessHash uint64) {
+func (r *River) CancelUpload(clusterID int32, fileID int64, accessHash int64) {
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("CancelUpload", time.Now().Sub(startTime))
