@@ -11,15 +11,15 @@ import (
 	"time"
 )
 
-func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash uint64) string {
+func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash int64) string {
 	fileStatus := new(msg.ClientFileStatus)
-	downloadRequest, ok := r.fileCtrl.GetDownloadRequest(clusterID, fileID, accessHash)
+	downloadRequest, ok := r.fileCtrl.GetDownloadRequest(clusterID, fileID, uint64(accessHash))
 	if ok {
 		fileStatus.FilePath = downloadRequest.FilePath
 		fileStatus.Status = int32(domain.RequestStatusInProgress)
 		fileStatus.Progress = int64(float64(len(downloadRequest.DownloadedParts)) / float64(downloadRequest.TotalParts) * 100)
 	} else {
-		clientFile, err := repo.Files.Get(clusterID, fileID, accessHash)
+		clientFile, err := repo.Files.Get(clusterID, fileID, uint64(accessHash))
 		if err == nil {
 			filePath := fileCtrl.GetFilePath(clientFile)
 			if _, err = os.Stat(filePath); os.IsNotExist(err) {

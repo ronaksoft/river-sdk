@@ -30,9 +30,9 @@ type Config struct {
 	MaxInflightDownloads int32
 	MaxInflightUploads   int32
 	PostUploadProcess    func(req UploadRequest)
-	OnProgressChanged    func(reqID string, percent int64)
-	OnCompleted          func(reqID string, filePath string)
-	OnError              func(reqID string, filePath string, err []byte)
+	OnProgressChanged    func(reqID string, clusterID int32, fileID, accessHash int64, percent int64)
+	OnCompleted          func(reqID string, clusterID int32, fileID, accessHash int64, filePath string)
+	OnError              func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, err []byte)
 }
 type Controller struct {
 	network            *networkCtrl.Controller
@@ -44,9 +44,9 @@ type Controller struct {
 	uploadRequests     map[string]UploadRequest
 	uploadsSaver       *ronak.Flusher
 	uploadsRateLimit   chan struct{}
-	onProgressChanged  func(reqID string, percent int64)
-	onCompleted        func(reqID string, filePath string)
-	onError            func(reqID string, filePath string, err []byte)
+	onProgressChanged  func(reqID string, clusterID int32, fileID, accessHash int64, percent int64)
+	onCompleted        func(reqID string, clusterID int32, fileID, accessHash int64, filePath string)
+	onError            func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, err []byte)
 	postUploadProcess  func(req UploadRequest)
 }
 
@@ -59,17 +59,17 @@ func New(config Config) *Controller {
 	ctrl.uploadRequests = make(map[string]UploadRequest)
 	ctrl.postUploadProcess = config.PostUploadProcess
 	if config.OnCompleted == nil {
-		ctrl.onCompleted = func(reqID string, filePath string) {}
+		ctrl.onCompleted = func(reqID string, clusterID int32, fileID, accessHash int64, filePath string) {}
 	} else {
 		ctrl.onCompleted = config.OnCompleted
 	}
 	if config.OnProgressChanged == nil {
-		ctrl.onProgressChanged = func(reqID string, percent int64) {}
+		ctrl.onProgressChanged = func(reqID string, clusterID int32, fileID, accessHash int64, percent int64) {}
 	} else {
 		ctrl.onProgressChanged = config.OnProgressChanged
 	}
 	if config.OnError == nil {
-		ctrl.onError = func(reqID string, filePath string, err []byte) {}
+		ctrl.onError = func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, err []byte) {}
 	} else {
 		ctrl.onError = config.OnError
 	}
@@ -388,7 +388,7 @@ func (ctrl *Controller) download(req DownloadRequest) error {
 	if req.FileSize > 0 {
 		err := os.Truncate(req.TempFilePath, req.FileSize)
 		if err != nil {
-			ctrl.onError(req.GetID(), req.TempFilePath, ronak.StrToByte(err.Error()))
+			ctrl.onError(req.GetID(), req.ClusterID, req.FileID, int64(req.AccessHash), req.TempFilePath, ronak.StrToByte(err.Error()))
 			return err
 		}
 		dividend := int32(req.FileSize / int64(req.ChunkSize))
@@ -504,23 +504,23 @@ func (ctrl *Controller) Upload(req UploadRequest) {
 
 	fileInfo, err := os.Stat(req.FilePath)
 	if err != nil {
-		ctrl.onError(req.GetID(), req.FilePath, ronak.StrToByte(err.Error()))
+		ctrl.onError(req.GetID(), 0, req.FileID, 0, req.FilePath, ronak.StrToByte(err.Error()))
 		return
 	}
 	ds.file, err = os.OpenFile(req.FilePath, os.O_RDONLY, 0666)
 	if err != nil {
-		ctrl.onError(req.GetID(), req.FilePath, ronak.StrToByte(err.Error()))
+		ctrl.onError(req.GetID(), 0, req.FileID, 0, req.FilePath, ronak.StrToByte(err.Error()))
 		return
 	}
 
 	req.FileSize = fileInfo.Size()
 	if req.FileSize <= 0 {
-		ctrl.onError(req.GetID(), req.FilePath, ronak.StrToByte("file size is not positive"))
+		ctrl.onError(req.GetID(), 0, req.FileID, 0, req.FilePath, ronak.StrToByte("file size is not positive"))
 		return
 	}
 
 	if req.FileSize > domain.FileMaxAllowedSize {
-		ctrl.onError(req.GetID(), req.FilePath, ronak.StrToByte("file size is bigger than maximum allowed"))
+		ctrl.onError(req.GetID(), 0, req.FileID, 0, req.FilePath, ronak.StrToByte("file size is bigger than maximum allowed"))
 		return
 	}
 

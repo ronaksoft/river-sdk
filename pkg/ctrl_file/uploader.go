@@ -85,7 +85,7 @@ func (ctx *uploadContext) addToUploaded(partIndex int32) {
 	progress := int64(float64(len(ctx.req.UploadedParts)) / float64(ctx.req.TotalParts) * 100)
 	ctx.mtx.Unlock()
 	ctx.ctrl.saveUploads(ctx.req)
-	ctx.ctrl.onProgressChanged(ctx.req.GetID(), progress)
+	ctx.ctrl.onProgressChanged(ctx.req.GetID(), 0, ctx.req.FileID, 0, progress)
 }
 
 func (ctx *uploadContext) generateFileSavePart(fileID int64, partID int32, totalParts int32, bytes []byte) *msg.MessageEnvelope {
@@ -157,7 +157,7 @@ func (ctx *uploadContext) execute() domain.RequestStatus {
 			case ctx.req.TotalParts:
 				// We have finished our uploads
 				_ = ctx.file.Close()
-				ctx.ctrl.onCompleted(ctx.req.GetID(), ctx.req.FilePath)
+				ctx.ctrl.onCompleted(ctx.req.GetID(), 0, ctx.req.FileID, 0, ctx.req.FilePath)
 				if ctx.ctrl.postUploadProcess != nil {
 					ctx.ctrl.postUploadProcess(ctx.req)
 				}
@@ -167,6 +167,6 @@ func (ctx *uploadContext) execute() domain.RequestStatus {
 	}
 
 	_ = ctx.file.Close()
-	ctx.ctrl.onError(ctx.req.GetID(), ctx.req.FilePath, ronak.StrToByte("max retry exceeded without success"))
+	ctx.ctrl.onError(ctx.req.GetID(), 0, ctx.req.FileID, 0, ctx.req.FilePath, ronak.StrToByte("max retry exceeded without success"))
 	return domain.RequestStatusError
 }
