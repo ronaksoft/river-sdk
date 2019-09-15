@@ -80,6 +80,66 @@ func (r *repoMessages) getByKey(msgKey []byte) *msg.UserMessage {
 	return message
 }
 
+func (r *repoMessages) Get(messageID int64) *msg.UserMessage {
+	userMessage, err := r.getUserMessage(messageID)
+	if err != nil {
+		return nil
+	}
+	return userMessage
+}
+
+func (r *repoMessages) GetMany(messageIDs []int64) []*msg.UserMessage {
+
+	userMessages := make([]*msg.UserMessage, 0, len(messageIDs))
+	for _, messageID := range messageIDs {
+		userMessage, err := r.getUserMessage(messageID)
+		if err == nil {
+			userMessages = append(userMessages, userMessage)
+		}
+
+	}
+	return userMessages
+}
+
+func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, userID int64) {
+	if message == nil {
+		return
+	}
+
+	r.save(message)
+	_ = Files.SaveMessageMedia(message)
+
+	dialog = Dialogs.Get(message.PeerID, message.PeerType)
+	// Update Dialog if it is a new message
+	if message.ID > dialog.TopMessageID {
+		dialog.TopMessageID = message.ID
+		if !dialog.Pinned {
+			Dialogs.updateLastUpdate(message.PeerID, message.PeerType, message.CreatedOn)
+		}
+		// Update counters if necessary
+		if message.SenderID != userID {
+			dialog.UnreadCount += 1
+			for _, entity := range message.Entities {
+				if entity.Type == msg.MessageEntityTypeMention && entity.UserID == userID {
+					dialog.MentionedCount += 1
+				}
+			}
+		}
+	}
+	Dialogs.Save(dialog)
+
+	// This is just to make sure the data has been written
+	_ = r.badger.Sync()
+	return
+}
+func (r *repoMessages) Save(messages ...*msg.UserMessage) {
+	for _, message := range messages {
+		r.save(message)
+		_ = Files.SaveMessageMedia(message)
+	}
+	// This is just to make sure the data has been written
+	_ = r.badger.Sync()
+}
 func (r *repoMessages) save(message *msg.UserMessage) {
 	if message == nil {
 		return
@@ -155,68 +215,6 @@ func (r *repoMessages) save(message *msg.UserMessage) {
 	})
 
 	return
-}
-
-func (r *repoMessages) Get(messageID int64) *msg.UserMessage {
-	userMessage, err := r.getUserMessage(messageID)
-	if err != nil {
-		return nil
-	}
-	return userMessage
-}
-
-func (r *repoMessages) GetMany(messageIDs []int64) []*msg.UserMessage {
-
-	userMessages := make([]*msg.UserMessage, 0, len(messageIDs))
-	for _, messageID := range messageIDs {
-		userMessage, err := r.getUserMessage(messageID)
-		if err == nil {
-			userMessages = append(userMessages, userMessage)
-		}
-
-	}
-	return userMessages
-}
-
-func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, userID int64) {
-	if message == nil {
-		return
-	}
-
-	r.save(message)
-	_ = Files.SaveMessageMedia(message)
-
-	dialog = Dialogs.Get(message.PeerID, message.PeerType)
-	// Update Dialog if it is a new message
-	if message.ID > dialog.TopMessageID {
-		dialog.TopMessageID = message.ID
-		if !dialog.Pinned {
-			Dialogs.updateLastUpdate(message.PeerID, message.PeerType, message.CreatedOn)
-		}
-		// Update counters if necessary
-		if message.SenderID != userID {
-			dialog.UnreadCount += 1
-			for _, entity := range message.Entities {
-				if entity.Type == msg.MessageEntityTypeMention && entity.UserID == userID {
-					dialog.MentionedCount += 1
-				}
-			}
-		}
-	}
-	Dialogs.Save(dialog)
-
-	// This is just to make sure the data has been written
-	_ = r.badger.Sync()
-	return
-}
-
-func (r *repoMessages) Save(messages ...*msg.UserMessage) {
-	for _, message := range messages {
-		r.save(message)
-		_ = Files.SaveMessageMedia(message)
-	}
-	// This is just to make sure the data has been written
-	_ = r.badger.Sync()
 }
 
 func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, maxID int64, limit int32) (userMessages []*msg.UserMessage, users []*msg.User) {
