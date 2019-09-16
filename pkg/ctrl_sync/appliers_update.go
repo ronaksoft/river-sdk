@@ -38,7 +38,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 		dialog = &msg.Dialog{
 			PeerID:         x.Message.PeerID,
 			PeerType:       x.Message.PeerType,
-			TopMessageID:   0,
+			TopMessageID:   x.Message.ID,
 			UnreadCount:    0,
 			MentionedCount: 0,
 			AccessHash:     x.AccessHash,

@@ -258,6 +258,7 @@ func (r *repoUsers) saveContact(contactUser *msg.ContactUser) {
 		FirstName: contactUser.FirstName,
 		LastName:  contactUser.LastName,
 		Username:  contactUser.Username,
+		Phone:     contactUser.Phone,
 	})
 	_ = Files.SaveContactPhoto(contactUser)
 
