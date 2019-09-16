@@ -6,6 +6,7 @@ import (
 	networkCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/valyala/tcplisten"
 	"go.uber.org/zap"
 	"io/ioutil"
@@ -13,6 +14,7 @@ import (
 	"net/http/httptest"
 	"sync"
 	"testing"
+	"time"
 )
 
 /*
@@ -26,7 +28,6 @@ import (
 
 var (
 	_File *fileCtrl.Controller
-	// _Network *networkCtrl.Controller
 )
 
 func init() {
@@ -98,11 +99,11 @@ type server struct {
 }
 
 func (t server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	// time.Sleep(3 * time.Second)
-	// if ronak.RandomInt(30) > 5 {
-	// 	res.WriteHeader(http.StatusForbidden)
-	// 	return
-	// }
+	time.Sleep(3 * time.Second)
+	if ronak.RandomInt(30) > 5 {
+		res.WriteHeader(http.StatusForbidden)
+		return
+	}
 	body, _ := ioutil.ReadAll(req.Body)
 	protoMessage := new(msg.ProtoMessage)
 	_ = protoMessage.Unmarshal(body)
@@ -161,7 +162,7 @@ func (t server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func TestDownload(t *testing.T) {
+func TestDownloadFileSync(t *testing.T) {
 	wg := sync.WaitGroup{}
 
 	for i := 0; i < 10; i++ {
@@ -180,6 +181,22 @@ func TestDownload(t *testing.T) {
 		}(i)
 	}
 	wg.Wait()
+}
+
+func TestDownloadFileASync(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		clientFile, err := repo.Files.Get(1, int64(i), 10)
+		if err != nil {
+			t.Fatal(err)
+		}
+		filePath, err := _File.DownloadAsync(clientFile.ClusterID, clientFile.FileID, clientFile.AccessHash)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log(i, filePath)
+	}
+	time.Sleep(10 * time.Second)
+
 }
 
 func TestUpload(t *testing.T) {

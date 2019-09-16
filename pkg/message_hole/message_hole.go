@@ -323,29 +323,6 @@ func InsertFill(peerID int64, peerType int32, minID, maxID int64) {
 	return
 }
 
-// SetUpperFilled Marks from the top index to 'msgID' as filled. This could be used
-// when UpdateNewMessage arrives we just add Fill bar to the end
-func SetUpperFilled(peerID int64, peerType int32, msgID int64) {
-	logs.Info("SetUpperFilled", zap.Int64("MsgID", msgID))
-	hm := loadManager(peerID, peerType)
-
-	if !hm.SetUpperFilled(msgID) {
-		return
-	}
-
-	saveManager(peerID, peerType, hm)
-	return
-}
-
-// SetLowerFilled Marks from the lowest index to zero as filled. This is useful when
-// we reached to the first message of the user/group.
-func SetLowerFilled(peerID int64, peerType int32) {
-	hm := loadManager(peerID, peerType)
-	hm.SetLowerFilled()
-	saveManager(peerID, peerType, hm)
-	return
-}
-
 // IsHole Checks if there is any hole in the range [minID-maxID].
 func IsHole(peerID int64, peerType int32, minID, maxID int64) bool {
 	hm := loadManager(peerID, peerType)
