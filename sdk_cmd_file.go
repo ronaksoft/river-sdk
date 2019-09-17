@@ -35,6 +35,15 @@ func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash int64) [
 	return buf
 }
 
+func (r *River) GetFilePath(clusterID int32, fileID int64, accessHash int64) string {
+	clientFile, err := repo.Files.Get(clusterID, fileID, uint64(accessHash))
+	if err == nil {
+		filePath := fileCtrl.GetFilePath(clientFile)
+		return filePath
+	}
+	return ""
+}
+
 func (r *River) FileDownloadAsync(clusterID int32, fileID int64, accessHash int64) (reqID string) {
 	reqID, _ = r.fileCtrl.DownloadAsync(clusterID, fileID, uint64(accessHash))
 	return

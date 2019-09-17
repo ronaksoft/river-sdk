@@ -320,7 +320,6 @@ func (r *River) onNetworkConnect() {
 				break
 			}
 			time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
-
 		}
 	}()
 
