@@ -559,7 +559,7 @@ func (ctrl *Controller) UpdateID() int64 {
 }
 
 // ClearUpdateID reset updateID
-func (ctrl *Controller) ClearUpdateID() {
+func (ctrl *Controller) ResetIDs() {
 	ctrl.updateID = 0
 	ctrl.userID = 0
 }
