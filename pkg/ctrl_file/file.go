@@ -76,17 +76,21 @@ func New(config Config) *Controller {
 	}
 
 	ctrl.downloadsSaver = ronak.NewFlusher(100, 1, time.Millisecond*100, func(items []ronak.FlusherEntry) {
+		ctrl.mtxDownloads.Lock()
 		if dBytes, err := json.Marshal(ctrl.downloadRequests); err == nil {
 			_ = repo.System.SaveBytes("Downloads", dBytes)
 		}
+		ctrl.mtxDownloads.Unlock()
 		for idx := range items {
 			items[idx].Callback(nil)
 		}
 	})
 	ctrl.uploadsSaver = ronak.NewFlusher(100, 1, time.Millisecond*100, func(items []ronak.FlusherEntry) {
+		ctrl.mtxUploads.Lock()
 		if dBytes, err := json.Marshal(ctrl.uploadRequests); err == nil {
 			_ = repo.System.SaveBytes("Uploads", dBytes)
 		}
+		ctrl.mtxUploads.Unlock()
 		for idx := range items {
 			items[idx].Callback(nil)
 		}
