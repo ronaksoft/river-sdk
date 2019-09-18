@@ -194,23 +194,21 @@ func (r *repoFiles) SaveMessageMedia(m *msg.UserMessage) error {
 		}
 
 		if md.Doc.Thumbnail != nil {
-			if md.Doc.Thumbnail != nil {
-				err = r.Save(&msg.ClientFile{
-					ClusterID:  md.Doc.Thumbnail.ClusterID,
-					FileID:     md.Doc.Thumbnail.FileID,
-					AccessHash: md.Doc.Thumbnail.AccessHash,
-					Type:       msg.ClientFileType_Thumbnail,
-					MimeType:   "",
-					UserID:     0,
-					GroupID:    0,
-					FileSize:   0,
-					MessageID:  m.ID,
-					PeerID:     m.PeerID,
-					PeerType:   m.PeerType,
-					Version:    0,
-				})
-				return err
-			}
+			err = r.Save(&msg.ClientFile{
+				ClusterID:  md.Doc.Thumbnail.ClusterID,
+				FileID:     md.Doc.Thumbnail.FileID,
+				AccessHash: md.Doc.Thumbnail.AccessHash,
+				Type:       msg.ClientFileType_Thumbnail,
+				MimeType:   "",
+				UserID:     0,
+				GroupID:    0,
+				FileSize:   0,
+				MessageID:  m.ID,
+				PeerID:     m.PeerID,
+				PeerType:   m.PeerType,
+				Version:    0,
+			})
+			return err
 		}
 	}
 
