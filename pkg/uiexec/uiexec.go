@@ -67,7 +67,6 @@ func (c *UIExecutor) Stop() {
 func (c *UIExecutor) Exec(fn func()) {
 	select {
 	case c.chUIExecutor <- fn:
-		logs.Debug("CMD::Exec() sent to channel")
 	case <-time.After(uiExecInterval):
 		logs.Warn("CMD::Exec() cmd is not started")
 	}

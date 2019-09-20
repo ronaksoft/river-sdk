@@ -383,7 +383,6 @@ func (r *repoMessages) DeleteAll(userID int64, peerID int64, peerType int32, max
 }
 
 func (r *repoMessages) SetContentRead(peerID int64, peerType int32, messageIDs []int64) {
-
 	for _, msgID := range messageIDs {
 		_ = r.badger.Update(func(txn *badger.Txn) error {
 			userMessage, err := r.getUserMessage(msgID)
