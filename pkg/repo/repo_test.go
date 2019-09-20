@@ -113,7 +113,7 @@ func TestConcurrent(t *testing.T) {
 	waitGroup := sync.WaitGroup{}
 	for i := int64(1); i < 10000; i++ {
 		waitGroup.Add(1)
-		go func() {
+		go func(i int64) {
 			_, err := repo.PendingMessages.SaveMessageMedia(i, 1001, &msg.MessagesSendMedia{
 				RandomID:   ronak.RandomInt64(0),
 				Peer:       &msg.InputPeer{
@@ -130,15 +130,15 @@ func TestConcurrent(t *testing.T) {
 			if err != nil {
 				logs.Fatal("Error On Save Pending",zap.Error(err))
 			}
-		}()
+		}(i)
 		waitGroup.Add(1)
-		go func() {
+		go func(i int64) {
 			err := repo.PendingMessages.Delete(i)
 			waitGroup.Done()
 			if err != nil {
 				logs.Fatal("Error On Save Pending",zap.Error(err))
 			}
-		}()
+		}(i)
 	}
 	waitGroup.Wait()
 
