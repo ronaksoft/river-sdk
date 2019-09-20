@@ -28,7 +28,6 @@ type Config struct {
 
 // Controller cache received data from server to client DB
 type Controller struct {
-	waitGroup            sync.WaitGroup
 	connInfo             domain.RiverConfigurator
 	networkCtrl          *networkCtrl.Controller
 	queueCtrl            *queueCtrl.Controller
@@ -308,16 +307,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 		zap.Int64("ClientUpdateID", ctrl.updateID),
 	)
 
-	waitGroup := new(sync.WaitGroup)
-	moreTries := 10
-	fromUpdateID := ctrl.updateID
 	for serverUpdateID > ctrl.updateID {
-		if fromUpdateID == ctrl.updateID {
-			if moreTries--; moreTries < 0 {
-				break
-			}
-		}
-		fromUpdateID = ctrl.updateID
 		limit := serverUpdateID - ctrl.updateID
 		if limit > 100 {
 			limit = 100
@@ -336,7 +326,6 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 			reqBytes,
 			func() {
 				logs.Warn("SyncController::getUpdateDifference() -> ExecuteRealtimeCommand() Timeout")
-				time.Sleep(time.Second)
 			},
 			func(m *msg.MessageEnvelope) {
 				switch m.Constructor {
@@ -347,21 +336,13 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 						logs.Error("onGetDifferenceSucceed()-> Unmarshal()", zap.Error(err))
 						return
 					}
-					waitGroup.Wait() // We wait here, because we DON'T want to process update batches in parallel,
-					// just we go to pre-fetch the next batch from the server if any
-					if x.MaxUpdateID > ctrl.updateID {
-						ctrl.updateID = x.MaxUpdateID
+					onGetDifferenceSucceed(ctrl, x)
+					// save UpdateID to DB
+					err = repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
+					if err != nil {
+						logs.Error("onGetDifferenceSucceed()-> SaveInt()", zap.Error(err))
 					}
-					waitGroup.Add(1)
-					go func() {
-						onGetDifferenceSucceed(ctrl, x)
-						// save UpdateID to DB
-						err := repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
-						if err != nil {
-							logs.Error("onGetDifferenceSucceed()-> SaveInt()", zap.Error(err))
-						}
-						waitGroup.Done()
-					}()
+
 				case msg.C_Error:
 					logs.Debug("onGetDifferenceSucceed()-> C_Error",
 						zap.String("Error", domain.ParseServerError(m.Message).Error()),
@@ -373,7 +354,6 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 			false,
 		)
 	}
-	waitGroup.Wait()
 }
 func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 	updContainer := new(msg.UpdateContainer)
@@ -394,14 +374,17 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 
 	for _, update := range x.Updates {
 		if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
-			externalHandlerUpdates := applier(update)
+			externalHandlerUpdates, err := applier(update)
+			if err != nil {
+				return
+			}
+			if update.UpdateID != 0 {
+				ctrl.updateID = update.UpdateID
+			}
 			updContainer.Updates = append(updContainer.Updates, externalHandlerUpdates...)
 		}
 	}
 	updContainer.Length = int32(len(updContainer.Updates))
-
-	// We wait here, if any unfinished parallel job has not been finished yet
-	ctrl.waitGroup.Wait()
 
 	// wrapped to UpdateContainer
 	buff, _ := updContainer.Marshal()
@@ -510,10 +493,17 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 	repo.Users.Save(updateContainer.Users...)
 
 	for _, update := range updateContainer.Updates {
-		// var externalHandlerUpdates []*msg.UpdateEnvelope
 		applier, ok := ctrl.updateAppliers[update.Constructor]
 		if ok {
-			externalHandlerUpdates := applier(update)
+			externalHandlerUpdates, err := applier(update)
+			if err != nil {
+				logs.Error("UpdateHandler() -> UpdateAppliers", zap.Error(err))
+				go ctrl.sync()
+				return
+			}
+			if update.UpdateID != 0 {
+				ctrl.updateID = update.UpdateID
+			}
 			switch update.Constructor {
 			case msg.C_UpdateMessageID:
 			default:
@@ -524,16 +514,9 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 		}
 	}
 
-	// We wait here, if any unfinished parallel job has not been finished yet
-	ctrl.waitGroup.Wait()
-
-	// save updateID after processing messages
-	if ctrl.updateID < updateContainer.MaxUpdateID {
-		ctrl.updateID = updateContainer.MaxUpdateID
-		err := repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
-		if err != nil {
-			logs.Error("UpdateHandler() -> SaveInt()", zap.Error(err))
-		}
+	err := repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
+	if err != nil {
+		logs.Error("UpdateHandler() -> SaveInt()", zap.Error(err))
 	}
 
 	udpContainer.Length = int32(len(udpContainer.Updates))

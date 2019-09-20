@@ -29,7 +29,7 @@ type SyncStatusUpdateCallback func(newStatus SyncStatus)
 type TimeoutCallback func()
 
 // UpdateApplier on receive update in SyncController, cache client data, there are some applier function for each proto message
-type UpdateApplier func(envelope *msg.UpdateEnvelope) []*msg.UpdateEnvelope
+type UpdateApplier func(envelope *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error)
 
 // MessageApplier on receive response in SyncController, cache client data, there are some applier function for each proto message
 type MessageApplier func(envelope *msg.MessageEnvelope)

@@ -17,13 +17,14 @@ import (
 )
 
 // updateNewMessage
-func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateNewMessage)
 	err := x.Unmarshal(u.Update)
 	if err != nil {
 		logs.Error("updateNewMessage()-> Unmarshal()", zap.Error(err))
-		return []*msg.UpdateEnvelope{}
+		return nil, err
 	}
+
 	logs.Info("SyncController::updateNewMessage",
 		zap.Int64("MessageID", x.Message.ID),
 		zap.Int64("UpdateID", x.UpdateID),
@@ -70,7 +71,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	res := []*msg.UpdateEnvelope{u}
 	ctrl.handleMessageAction(x, u, res)
 
-	return res
+	return res, nil
 }
 func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.UpdateEnvelope, res []*msg.UpdateEnvelope) {
 	switch x.Message.MessageAction {
@@ -216,14 +217,18 @@ func copyUploadedFile(src, dst string) (int64, error) {
 }
 
 // updateReadHistoryInbox
-func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateReadHistoryInbox)
-	_ = x.Unmarshal(u.Update)
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
 
 	dialog := repo.Dialogs.Get(x.Peer.ID, x.Peer.Type)
 	if dialog == nil {
-		return []*msg.UpdateEnvelope{}
+		return nil, err
 	}
+
 	logs.Info("SyncController::updateReadHistoryInbox",
 		zap.Int64("MaxID", x.MaxID),
 		zap.Int64("UpdateID", x.UpdateID),
@@ -232,13 +237,17 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) []*msg.Upd
 
 	repo.Dialogs.UpdateReadInboxMaxID(ctrl.userID, x.Peer.ID, x.Peer.Type, x.MaxID)
 	res := []*msg.UpdateEnvelope{u}
-	return res
+	return res, nil
 }
 
 // updateReadHistoryOutbox
-func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateReadHistoryOutbox)
-	_ = x.Unmarshal(u.Update)
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
 	logs.Info("SyncController::updateReadHistoryOutbox",
 		zap.Int64("MaxID", x.MaxID),
 		zap.Int64("UpdateID", x.UpdateID),
@@ -247,27 +256,36 @@ func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) []*msg.Up
 
 	repo.Dialogs.UpdateReadOutboxMaxID(x.Peer.ID, x.Peer.Type, x.MaxID)
 	res := []*msg.UpdateEnvelope{u}
-	return res
+	return res, nil
 }
 
 // updateMessageEdited
-func (ctrl *Controller) updateMessageEdited(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+func (ctrl *Controller) updateMessageEdited(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateMessageEdited)
-	_ = x.Unmarshal(u.Update)
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
 	logs.Info("SyncController::updateMessageEdited",
 		zap.Int64("MessageID", x.Message.ID),
 	)
+
 	repo.Messages.Save(x.Message)
 
 	res := []*msg.UpdateEnvelope{u}
-	return res
+	return res, nil
 }
 
 // updateMessageID
-func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	res := make([]*msg.UpdateEnvelope, 0)
 	x := new(msg.UpdateMessageID)
-	_ = x.Unmarshal(u.Update)
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
 	logs.Info("SyncController::updateMessageID",
 		zap.Int64("RandomID", x.RandomID),
 		zap.Int64("MessageID", x.MessageID),
@@ -284,9 +302,10 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 	userMessage := repo.Messages.Get(sent.MessageID)
 	if userMessage != nil {
 		// If we are here, it means we receive UpdateNewMessage before UpdateMessageID / MessagesSent
+		// so we create a fake UpdateMessageDelete to remove the pending from the view
 		pm, _ := repo.PendingMessages.GetByRandomID(sent.RandomID)
 		if pm == nil {
-			return res
+			return res, nil
 		}
 		// It means we have received the NewMessage
 		update := new(msg.UpdateMessagesDeleted)
@@ -309,46 +328,59 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) []*msg.UpdateEnve
 			}
 		})
 
-		repo.PendingMessages.Delete(pm.ID)
-		return res
+		_ = repo.PendingMessages.Delete(pm.ID)
+		return res, nil
 	}
 
-	_, err := repo.PendingMessages.GetByRandomID(sent.RandomID)
+	_, err = repo.PendingMessages.GetByRandomID(sent.RandomID)
 	if err != nil {
-		return res
+		return nil, err
 	}
 	repo.PendingMessages.SaveByRealID(sent.RandomID, sent.MessageID)
 
-	return res
+	return res, nil
 }
 
 // updateNotifySettings
-func (ctrl *Controller) updateNotifySettings(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("SyncController::updateNotifySettings()")
+func (ctrl *Controller) updateNotifySettings(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateNotifySettings)
-	_ = x.Unmarshal(u.Update)
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Info("SyncController::updateNotifySettings()")
 
 	repo.Dialogs.UpdateNotifySetting(x.NotifyPeer.ID, x.NotifyPeer.Type, x.Settings)
 
 	res := []*msg.UpdateEnvelope{u}
-	return res
+	return res, nil
 }
 
 // updateDialogPinned
-func (ctrl *Controller) updateDialogPinned(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("SyncController::updateDialogPinned()")
+func (ctrl *Controller) updateDialogPinned(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateDialogPinned)
-	_ = x.Unmarshal(u.Update)
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Info("SyncController::updateDialogPinned()")
+
 	repo.Dialogs.UpdatePinned(x)
 	res := []*msg.UpdateEnvelope{u}
-	return res
+	return res, nil
 }
 
 // updateUsername
-func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("SyncController::updateUsername()")
+func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateUsername)
-	_ = x.Unmarshal(u.Update)
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Info("SyncController::updateUsername()")
 
 	if x.UserID == ctrl.userID {
 		ctrl.connInfo.ChangeUserID(x.UserID)
@@ -362,15 +394,18 @@ func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) []*msg.UpdateEnvel
 	repo.Users.UpdateProfile(x.UserID, x.FirstName, x.LastName, x.Username, x.Bio)
 
 	res := []*msg.UpdateEnvelope{u}
-	return res
+	return res, nil
 }
 
 // updateMessagesDeleted
-func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("SyncController::updateMessagesDeleted()")
-
+func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateMessagesDeleted)
-	_ = x.Unmarshal(u.Update)
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Info("SyncController::updateMessagesDeleted()")
 
 	for _, msgID := range x.MessageIDs {
 		repo.Messages.Delete(ctrl.userID, x.Peer.ID, x.Peer.Type, msgID)
@@ -390,27 +425,32 @@ func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) []*msg.Upda
 	updateEnvelope.UpdateID = u.UpdateID
 	updateEnvelope.Update, _ = update.Marshal()
 	res = append(res, updateEnvelope)
-	return res
+	return res, nil
 }
 
 // updateGroupParticipantAdmin
-func (ctrl *Controller) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+func (ctrl *Controller) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := new(msg.UpdateGroupParticipantAdmin)
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
 	logs.Info("SyncController::updateGroupParticipantAdmin()")
 
-	x := new(msg.UpdateGroupParticipantAdmin)
-	x.Unmarshal(u.Update)
-
 	res := []*msg.UpdateEnvelope{u}
-
 	repo.Groups.UpdateMemberType(x.GroupID, x.UserID, x.IsAdmin)
-
-	return res
+	return res, nil
 }
 
 // updateReadMessagesContents
-func (ctrl *Controller) updateReadMessagesContents(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+func (ctrl *Controller) updateReadMessagesContents(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateReadMessagesContents)
-	_ = x.Unmarshal(u.Update)
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
 	logs.Info("SyncController::updateReadMessagesContents",
 		zap.Int64s("MessageIDs", x.MessageIDs),
 	)
@@ -418,26 +458,32 @@ func (ctrl *Controller) updateReadMessagesContents(u *msg.UpdateEnvelope) []*msg
 	repo.Messages.SetContentRead(x.Peer.ID, int32(x.Peer.Type), x.MessageIDs)
 
 	res := []*msg.UpdateEnvelope{u}
-	return res
+	return res, nil
 }
 
 // updateUserPhoto
-func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("SyncController::updateUserPhoto()")
-
+func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateUserPhoto)
-	_ = x.Unmarshal(u.Update)
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Info("SyncController::updateUserPhoto()")
 
 	repo.Users.UpdatePhoto(x)
 
 	res := []*msg.UpdateEnvelope{u}
-	return res
+	return res, nil
 }
 
 // updateGroupPhoto
-func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateGroupPhoto)
-	_ = x.Unmarshal(u.Update)
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
 
 	logs.Info("SyncController::updateGroupPhoto",
 		zap.Int64("GroupID", x.GroupID),
@@ -446,24 +492,27 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) []*msg.UpdateEnv
 	repo.Groups.UpdatePhoto(x)
 
 	res := []*msg.UpdateEnvelope{u}
-	return res
+	return res, nil
 }
 
 // updateTooLong indicate that client updates exceed from server cache size so we should re-sync client with server
-func (ctrl *Controller) updateTooLong(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+func (ctrl *Controller) updateTooLong(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	logs.Info("SyncController::updateTooLong()")
 
 	go ctrl.sync()
 
 	res := make([]*msg.UpdateEnvelope, 0)
-	return res
+	return res, nil
 }
 
-func (ctrl *Controller) updateAccountPrivacy(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("SyncController::updateAccountPrivacy")
-
+func (ctrl *Controller) updateAccountPrivacy(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateAccountPrivacy)
-	_ = x.Unmarshal(u.Update)
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Info("SyncController::updateAccountPrivacy")
 
 	_ = repo.Account.SetPrivacy(msg.PrivacyKeyChatInvite, x.ChatInvite)
 	_ = repo.Account.SetPrivacy(msg.PrivacyKeyLastSeen, x.LastSeen)
@@ -473,14 +522,17 @@ func (ctrl *Controller) updateAccountPrivacy(u *msg.UpdateEnvelope) []*msg.Updat
 	_ = repo.Account.SetPrivacy(msg.PrivacyKeyCall, x.Call)
 
 	res := []*msg.UpdateEnvelope{u}
-	return res
+	return res, nil
 }
 
-func (ctrl *Controller) updateDraftMessage(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("SyncController::updateDraftMessage")
-
+func (ctrl *Controller) updateDraftMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateDraftMessage)
-	_ = x.Unmarshal(u.Update)
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Info("SyncController::updateDraftMessage")
 
 	dialog := repo.Dialogs.Get(x.Message.PeerID, int32(x.Message.PeerType))
 
@@ -490,14 +542,17 @@ func (ctrl *Controller) updateDraftMessage(u *msg.UpdateEnvelope) []*msg.UpdateE
 	}
 
 	res := []*msg.UpdateEnvelope{u}
-	return res
+	return res, nil
 }
 
-func (ctrl *Controller) updateDraftMessageCleared(u *msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	logs.Info("SyncController::updateDraftMessageCleared")
-
+func (ctrl *Controller) updateDraftMessageCleared(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateDraftMessageCleared)
-	_ = x.Unmarshal(u.Update)
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Info("SyncController::updateDraftMessageCleared")
 
 	dialog := repo.Dialogs.Get(x.Peer.ID, int32(x.Peer.Type))
 
@@ -509,5 +564,5 @@ func (ctrl *Controller) updateDraftMessageCleared(u *msg.UpdateEnvelope) []*msg.
 	}
 
 	res := []*msg.UpdateEnvelope{u}
-	return res
+	return res, nil
 }

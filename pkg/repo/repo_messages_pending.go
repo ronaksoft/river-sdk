@@ -289,7 +289,7 @@ func (r *repoMessagesPending) Delete(msgID int64) error {
 	if pm == nil {
 		return nil
 	}
-	 return r.badger.Update(func(txn *badger.Txn) error {
+	return r.badger.Update(func(txn *badger.Txn) error {
 		err := txn.Delete(r.getKey(pm.ID))
 		if err != nil {
 			return err
