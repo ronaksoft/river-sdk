@@ -16,7 +16,7 @@ import (
 func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
 	x := new(msg.AuthAuthorization)
 	if err := x.Unmarshal(e.Message); err != nil {
-		logs.Warn("authAuthorization()-> Unmarshal()", zap.Error(err))
+		logs.Error("authAuthorization()-> Unmarshal()", zap.Error(err))
 		return
 	}
 	logs.Info("SyncController::authAuthorization",
@@ -130,13 +130,6 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 	for _, group := range x.Groups {
 		repo.Groups.Save(group)
 	}
-
-	logs.Debug("SyncController::messagesDialogs()",
-		zap.Int("DialogsCount", len(x.Dialogs)),
-		zap.Int("GroupsCount", len(x.Groups)),
-		zap.Int("UsersCount", len(x.Users)),
-		zap.Int("MessagesCount", len(x.Messages)),
-	)
 }
 
 // usersMany

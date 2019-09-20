@@ -3,8 +3,11 @@ package repo_test
 import (
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"go.uber.org/zap"
+	"sync"
 	"testing"
 	"time"
 )
@@ -103,5 +106,40 @@ func TestRepoDeleteMessage(t *testing.T) {
 	for idx := range msgs {
 		fmt.Println(msgs[idx].ID)
 	}
+
+}
+
+func TestConcurrent(t *testing.T) {
+	waitGroup := sync.WaitGroup{}
+	for i := int64(1); i < 10000; i++ {
+		waitGroup.Add(1)
+		go func() {
+			_, err := repo.PendingMessages.SaveMessageMedia(i, 1001, &msg.MessagesSendMedia{
+				RandomID:   ronak.RandomInt64(0),
+				Peer:       &msg.InputPeer{
+					ID:         i,
+					Type:       msg.PeerUser,
+					AccessHash: 0,
+				},
+				MediaType:  0,
+				MediaData:  nil,
+				ReplyTo:    0,
+				ClearDraft: false,
+			})
+			waitGroup.Done()
+			if err != nil {
+				logs.Fatal("Error On Save Pending",zap.Error(err))
+			}
+		}()
+		waitGroup.Add(1)
+		go func() {
+			err := repo.PendingMessages.Delete(i)
+			waitGroup.Done()
+			if err != nil {
+				logs.Fatal("Error On Save Pending",zap.Error(err))
+			}
+		}()
+	}
+	waitGroup.Wait()
 
 }

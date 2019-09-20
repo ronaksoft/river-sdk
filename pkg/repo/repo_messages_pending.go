@@ -284,15 +284,18 @@ func (r *repoMessagesPending) GetAll() []*msg.ClientPendingMessage {
 	return pendingMessages
 }
 
-func (r *repoMessagesPending) Delete(msgID int64) {
+func (r *repoMessagesPending) Delete(msgID int64) error {
 	pm := r.GetByID(msgID)
 	if pm == nil {
-		return
-	}
-	_ = r.badger.Update(func(txn *badger.Txn) error {
-		_ = txn.Delete(r.getKey(pm.ID))
-		_ = txn.Delete(r.getRandomKey(pm.RequestID))
 		return nil
+	}
+	 return r.badger.Update(func(txn *badger.Txn) error {
+		err := txn.Delete(r.getKey(pm.ID))
+		if err != nil {
+			return err
+		}
+		err = txn.Delete(r.getRandomKey(pm.RequestID))
+		return err
 	})
 }
 
@@ -304,7 +307,6 @@ func (r *repoMessagesPending) DeleteByRealID(msgID int64) {
 }
 
 func (r *repoMessagesPending) DeleteMany(msgIDs []int64) {
-
 	for _, msgID := range msgIDs {
 		r.Delete(msgID)
 	}
