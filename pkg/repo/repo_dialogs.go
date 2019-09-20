@@ -3,10 +3,13 @@ package repo
 import (
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
 	"github.com/tidwall/buntdb"
+	"go.uber.org/zap"
 	"strings"
+	"time"
 )
 
 const (
@@ -110,41 +113,31 @@ func (r *repoDialogs) countUnread(peerID int64, peerType int32, userID, maxID in
 
 func (r *repoDialogs) Get(peerID int64, peerType int32) *msg.Dialog {
 	dialog := new(msg.Dialog)
-	err := r.badger.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(r.getDialogKey(peerID, peerType))
-		if err != nil {
-			return err
-		}
-		return item.Value(func(val []byte) error {
-			return dialog.Unmarshal(val)
+	err := ronak.Try(10, time.Millisecond, func() error {
+		err := r.badger.View(func(txn *badger.Txn) error {
+			item, err := txn.Get(r.getDialogKey(peerID, peerType))
+			if err != nil {
+				return err
+			}
+			return item.Value(func(val []byte) error {
+				return dialog.Unmarshal(val)
+			})
 		})
+		if err != nil {
+			dialog = nil
+			switch err {
+			case badger.ErrKeyNotFound:
+				return nil
+			default:
+				return err
+			}
+		}
+		return nil
 	})
 	if err != nil {
-		return nil
+		logs.Fatal("Error In repoDialog::Get", zap.Error(err))
 	}
 	return dialog
-}
-
-func (r *repoDialogs) GetManyUsers(peerIDs []int64) []*msg.Dialog {
-	dialogs := make([]*msg.Dialog, 0, len(peerIDs))
-	for _, peerID := range peerIDs {
-		dialog := r.Get(peerID, int32(msg.PeerUser))
-		if dialog != nil {
-			dialogs = append(dialogs, dialog)
-		}
-	}
-	return dialogs
-}
-
-func (r *repoDialogs) GetManyGroups(peerIDs []int64) []*msg.Dialog {
-	dialogs := make([]*msg.Dialog, 0, len(peerIDs))
-	for _, peerID := range peerIDs {
-		dialog := r.Get(peerID, int32(msg.PeerGroup))
-		if dialog != nil {
-			dialogs = append(dialogs, dialog)
-		}
-	}
-	return dialogs
 }
 
 func (r *repoDialogs) SaveNew(dialog *msg.Dialog, lastUpdate int64) {

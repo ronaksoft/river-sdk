@@ -198,17 +198,25 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 
+	fillOutput := func (out *msg.MessageEnvelope, messages []*msg.UserMessage, users []*msg.User, requestID uint64, successCB domain.MessageHandler) {
+		res := new(msg.MessagesMany)
+		res.Messages = messages
+		res.Users = users
+
+		out.RequestID = requestID
+		out.Constructor = msg.C_MessagesMany
+		out.Message, _ = res.Marshal()
+		if successCB != nil {
+			uiexec.Ctx().Exec(func() {
+				successCB(out)
+			})
+		}
+	}
+
 	// Load the dialog
 	dtoDialog := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
 	if dtoDialog == nil {
-		out.Constructor = msg.C_Error
-		out.RequestID = in.RequestID
-		msg.ResultError(out, &msg.Error{Code: "-1", Items: "dialog does not exist"})
-		uiexec.Ctx().Exec(func() {
-			if successCB != nil {
-				successCB(out)
-			}
-		})
+		logs.Fatal("Panic, asking for a nil dialog")
 		return
 	}
 
@@ -216,6 +224,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	if req.MaxID < 0 {
 		req.MaxID = dtoDialog.TopMessageID
 	}
+
 	// Update the request before sending to server
 	in.Message, _ = req.Marshal()
 
@@ -226,7 +235,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		if len(pendingMessages) > 0 {
 			messages = append(messages, pendingMessages...)
 		}
-		messagesGetHistory(out, messages, users, in.RequestID, successCB)
+		fillOutput(out, messages, users, in.RequestID, successCB)
 		return
 	}
 
@@ -307,11 +316,11 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			return
 		} else if bar.Min == 0 {
 			messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
-			messagesGetHistory(out, messages, users, in.RequestID, preSuccessCB)
+			fillOutput(out, messages, users, in.RequestID, preSuccessCB)
 			return
 		} else {
 			messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
-			messagesGetHistory(out, messages, users, in.RequestID, preSuccessCB)
+			fillOutput(out, messages, users, in.RequestID, preSuccessCB)
 		}
 	case req.MinID != 0 && req.MaxID == 0:
 		if b, bar := messageHole.GetUpperFilled(req.Peer.ID, int32(req.Peer.Type), req.MinID); !b {
@@ -330,7 +339,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 				r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
 				return
 			}
-			messagesGetHistory(out, messages, users, in.RequestID, preSuccessCB)
+			fillOutput(out, messages, users, in.RequestID, preSuccessCB)
 		}
 	default:
 		// Min != 0 && MaxID != 0
@@ -345,26 +354,11 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			return
 		} else {
 			messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
-			messagesGetHistory(out, messages, users, in.RequestID, preSuccessCB)
+			fillOutput(out, messages, users, in.RequestID, preSuccessCB)
 		}
 	}
 }
 
-func messagesGetHistory(out *msg.MessageEnvelope, messages []*msg.UserMessage, users []*msg.User, requestID uint64, successCB domain.MessageHandler) {
-	res := new(msg.MessagesMany)
-	res.Messages = messages
-	res.Users = users
-
-	out.RequestID = requestID
-	out.Constructor = msg.C_MessagesMany
-	out.Message, _ = res.Marshal()
-	if successCB != nil {
-		uiexec.Ctx().Exec(func() {
-			successCB(out)
-		})
-	}
-
-}
 
 func (r *River) messagesDelete(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.MessagesDelete)
