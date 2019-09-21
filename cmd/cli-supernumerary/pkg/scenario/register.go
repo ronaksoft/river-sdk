@@ -65,7 +65,7 @@ func (s *Register) sendCode(act shared.Actor) (*msg.MessageEnvelope, shared.Succ
 // register : Step 2
 func (s *Register) register(resp *msg.AuthSentCode, act shared.Actor) (*msg.MessageEnvelope, shared.SuccessCallback, shared.TimeoutCallback) {
 	if strings.HasPrefix(resp.Phone, "237400") {
-		code := resp.Phone[len(resp.Phone)-4:]
+		code := resp.Phone[len(resp.Phone)-5:]
 		envReq := AuthRegister(resp.Phone, code, resp.PhoneCodeHash)
 
 		timeoutCB := func(requestID uint64, elapsed time.Duration) {
