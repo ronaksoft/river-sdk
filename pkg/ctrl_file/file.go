@@ -403,6 +403,10 @@ func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath 
 	return
 }
 func (ctrl *Controller) download(req DownloadRequest) error {
+	if ctrl.existDownloadRequest(req.GetID()) {
+		return domain.ErrAlreadyDownloading
+	}
+
 	req.TempFilePath = fmt.Sprintf("%s.tmp", req.FilePath)
 	ctrl.saveDownloads(req)
 	ctrl.downloadsRateLimit <- struct{}{}
@@ -461,6 +465,7 @@ func (ctrl *Controller) download(req DownloadRequest) error {
 		}
 		ds.parts <- partIndex
 	}
+
 
 	// This is blocking call, until all the parts are downloaded
 	ds.execute()

@@ -41,10 +41,13 @@ func init() {
 		MaxInflightDownloads: 2,
 		MaxInflightUploads:   10,
 		OnProgressChanged: func(reqID string, clusterID int32, fileID, accessHash int64, percent int64) {
-			logs.Info("Progress Changed", zap.String("ReqID", reqID), zap.Int64("Percent", percent))
+			// logs.Info("Progress Changed", zap.String("ReqID", reqID), zap.Int64("Percent", percent))
 		},
 		OnCancel: func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool) {
-			logs.Warn("File Canceled", zap.String("ReqID", reqID), zap.Bool("HasError", hasError))
+			logs.Error("File Canceled", zap.String("ReqID", reqID), zap.Bool("HasError", hasError))
+		},
+		OnCompleted: func(reqID string, clusterID int32, fileID, accessHash int64, filePath string) {
+			logs.Info("File Completed", zap.String("ReqID", reqID))
 		},
 		PostUploadProcess: func(req fileCtrl.UploadRequest) {
 			logs.Info("PostProcess:", zap.Any("TotalParts", req.TotalParts))
@@ -70,7 +73,7 @@ func init() {
 				MimeType:   "video/mp4",
 				UserID:     0,
 				GroupID:    0,
-				FileSize:   102400,
+				FileSize:   1024000,
 				MessageID:  int64(i),
 				PeerID:     0,
 				PeerType:   0,
@@ -99,7 +102,7 @@ type server struct {
 }
 
 func (t server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	time.Sleep(3 * time.Second)
+	// time.Sleep(3 * time.Second)
 	if ronak.RandomInt(30) > 5 {
 		res.WriteHeader(http.StatusForbidden)
 		return
@@ -165,7 +168,7 @@ func (t server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 func TestDownloadFileSync(t *testing.T) {
 	wg := sync.WaitGroup{}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 1; i++ {
 		wg.Add(1)
 		go func(i int) {
 			clientFile, err := repo.Files.Get(1, int64(i), 10)
@@ -184,7 +187,7 @@ func TestDownloadFileSync(t *testing.T) {
 }
 
 func TestDownloadFileASync(t *testing.T) {
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 1; i++ {
 		clientFile, err := repo.Files.Get(1, int64(i), 10)
 		if err != nil {
 			t.Fatal(err)

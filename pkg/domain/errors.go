@@ -19,6 +19,7 @@ var (
 	ErrInvalidUserMessageKey = errors.New("invalid user message key")
 	ErrMaxFileSize           = errors.New("max file size limit")
 	ErrUnknownFileSize       = errors.New("unknown file size")
+	ErrAlreadyDownloading    = errors.New("already is downloading")
 )
 
 // ParseServerError ...
