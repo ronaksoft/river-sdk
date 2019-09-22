@@ -116,8 +116,9 @@ func (ctrl *Controller) Start() {
 	if err == nil {
 		_ = json.Unmarshal(dBytes, &ctrl.uploadRequests)
 		for _, req := range ctrl.uploadRequests {
-			logs.Info("Unfinished Upload")
-			go ctrl.upload(req)
+			go func(req UploadRequest) {
+				ctrl.upload(req)
+			}(req)
 		}
 	}
 }
@@ -544,6 +545,10 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 	ctrl.upload(req)
 }
 func (ctrl *Controller) upload(req UploadRequest) {
+	if ctrl.existUploadRequest(req.GetID()) {
+		return
+	}
+
 	ctrl.saveUploads(req)
 	ctrl.uploadsRateLimit <- struct{}{}
 	defer func() {

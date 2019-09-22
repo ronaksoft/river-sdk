@@ -198,7 +198,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 
-	fillOutput := func (out *msg.MessageEnvelope, messages []*msg.UserMessage, users []*msg.User, requestID uint64, successCB domain.MessageHandler) {
+	fillOutput := func(out *msg.MessageEnvelope, messages []*msg.UserMessage, users []*msg.User, requestID uint64, successCB domain.MessageHandler) {
 		res := new(msg.MessagesMany)
 		res.Messages = messages
 		res.Users = users
@@ -359,7 +359,6 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 }
 
-
 func (r *River) messagesDelete(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.MessagesDelete)
 	if err := req.Unmarshal(in.Message); err != nil {
@@ -483,12 +482,6 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 	}
 
 	switch req.MediaType {
-	case msg.InputMediaTypeEmpty:
-		// NOT IMPLEMENTED
-	case msg.InputMediaTypeUploadedPhoto:
-		// NOT IMPLEMENTED
-	case msg.InputMediaTypePhoto:
-		// NOT IMPLEMENTED
 	case msg.InputMediaTypeContact, msg.InputMediaTypeDocument, msg.InputMediaTypeGeoLocation:
 		// this will be used as next requestID
 		req.RandomID = domain.SequentialUniqueID()
@@ -519,22 +512,11 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 
 		requestBytes, _ := req.Marshal()
 		r.queueCtrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSendMedia, requestBytes, timeoutCB, successCB, true)
-
 	case msg.InputMediaTypeUploadedDocument:
 		// no need to insert pending message cuz we already insert one b4 start uploading
 		requestBytes, _ := req.Marshal()
 		r.queueCtrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSendMedia, requestBytes, timeoutCB, successCB, true)
 
-	case msg.Reserved1:
-		// NOT IMPLEMENTED
-	case msg.Reserved2:
-		// NOT IMPLEMENTED
-	case msg.Reserved3:
-		// NOT IMPLEMENTED
-	case msg.Reserved4:
-		// NOT IMPLEMENTED
-	case msg.Reserved5:
-		// NOT IMPLEMENTED
 	}
 
 }
