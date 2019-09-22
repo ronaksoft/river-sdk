@@ -551,7 +551,6 @@ func (ctrl *Controller) upload(req UploadRequest) {
 
 	ds := &uploadContext{
 		rateLimit: make(chan struct{}, req.MaxInFlights),
-		ctrl:      ctrl,
 	}
 
 	fileInfo, err := os.Stat(req.FilePath)
@@ -601,7 +600,7 @@ func (ctrl *Controller) upload(req UploadRequest) {
 	}
 
 	// This is blocking call, until all the parts are downloaded
-	ds.execute()
+	ds.execute(ctrl)
 
 	// Remove the Download request from the list
 	ctrl.deleteUploadRequest(req.GetID())
