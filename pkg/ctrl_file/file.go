@@ -159,9 +159,11 @@ func (ctrl *Controller) existUploadRequest(reqID string) bool {
 	ctrl.mtxUploads.Unlock()
 	return ok
 }
+
 func GetRequestID(clusterID int32, fileID int64, accessHash uint64) string {
 	return fmt.Sprintf("%d.%d.%d", clusterID, fileID, accessHash)
 }
+
 func (ctrl *Controller) GetDownloadRequest(clusterID int32, fileID int64, accessHash uint64) (DownloadRequest, bool) {
 	ctrl.mtxDownloads.Lock()
 	req, ok := ctrl.downloadRequests[GetRequestID(clusterID, fileID, accessHash)]

@@ -39,13 +39,13 @@ type DownloadRequest struct {
 	MaxInFlights int `json:"max_in_flights"`
 	// FilePath defines the path which downloaded file will be stored. It must be a file not a directory.
 	// Also it will be overwritten if Overwrite is TRUE
-	FilePath         string  `json:"file_path"`
-	TempFilePath     string  `json:"temp_file_path"`
-	DownloadedParts  []int32 `json:"downloaded_parts"`
-	TotalParts       int32   `json:"total_parts"`
-	Canceled         bool    `json:"canceled"`
+	FilePath        string  `json:"file_path"`
+	TempFilePath    string  `json:"temp_file_path"`
+	DownloadedParts []int32 `json:"downloaded_parts"`
+	TotalParts      int32   `json:"total_parts"`
+	Canceled        bool    `json:"canceled"`
 	// SkipDelegateCall identifies to call delegate function on specified states
-	SkipDelegateCall bool    `json:"skip_delegate_call"`
+	SkipDelegateCall bool `json:"skip_delegate_call"`
 }
 
 func (r DownloadRequest) GetID() string {
@@ -53,11 +53,12 @@ func (r DownloadRequest) GetID() string {
 }
 
 type downloadContext struct {
-	mtx       sync.Mutex
-	rateLimit chan struct{}
-	parts     chan int32
-	file      *os.File
-	req       DownloadRequest
+	mtx          sync.Mutex
+	rateLimit    chan struct{}
+	parts        chan int32
+	file         *os.File
+	req          DownloadRequest
+	lastProgress int64
 }
 
 func (ctx *downloadContext) isDownloaded(partIndex int32) bool {
@@ -75,9 +76,17 @@ func (ctx *downloadContext) addToDownloaded(ctrl *Controller, partIndex int32) {
 	ctx.mtx.Lock()
 	ctx.req.DownloadedParts = append(ctx.req.DownloadedParts, partIndex)
 	progress := int64(float64(len(ctx.req.DownloadedParts)) / float64(ctx.req.TotalParts) * 100)
+	skipOnProgress := false
+	if ctx.lastProgress > progress {
+		skipOnProgress = true
+	} else {
+		ctx.lastProgress = progress
+	}
 	ctx.mtx.Unlock()
 	ctrl.saveDownloads(ctx.req)
-	ctrl.onProgressChanged(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), progress)
+	if !skipOnProgress {
+		ctrl.onProgressChanged(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), progress)
+	}
 }
 
 func (ctx *downloadContext) generateFileGet(offset, limit int32) *msg.MessageEnvelope {
