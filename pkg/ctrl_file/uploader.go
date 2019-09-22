@@ -54,7 +54,7 @@ type UploadRequest struct {
 	TotalParts    int32   `json:"total_parts"`
 	Canceled      bool    `json:"canceled"`
 	// SkipDelegateCall identifies to call delegate function on specified states
-	SkipDelegateCall bool    `json:"skip_delegate_call"`
+	SkipDelegateCall bool `json:"skip_delegate_call"`
 }
 
 func (r UploadRequest) GetID() string {
@@ -62,11 +62,12 @@ func (r UploadRequest) GetID() string {
 }
 
 type uploadContext struct {
-	mtx       sync.Mutex
-	rateLimit chan struct{}
-	parts     chan int32
-	file      *os.File
-	req       UploadRequest
+	mtx          sync.Mutex
+	rateLimit    chan struct{}
+	parts        chan int32
+	file         *os.File
+	req          UploadRequest
+	lastProgress int64
 }
 
 func (ctx *uploadContext) isUploaded(partIndex int32) bool {
@@ -84,9 +85,15 @@ func (ctx *uploadContext) addToUploaded(ctrl *Controller, partIndex int32) {
 	ctx.mtx.Lock()
 	ctx.req.UploadedParts = append(ctx.req.UploadedParts, partIndex)
 	progress := int64(float64(len(ctx.req.UploadedParts)) / float64(ctx.req.TotalParts) * 100)
+	skipOnProgress := false
+	if ctx.lastProgress > progress {
+		skipOnProgress = true
+	} else {
+		ctx.lastProgress = progress
+	}
 	ctx.mtx.Unlock()
 	ctrl.saveUploads(ctx.req)
-	if ctx.req.SkipDelegateCall {
+	if ctx.req.SkipDelegateCall && !skipOnProgress {
 		ctrl.onProgressChanged(ctx.req.GetID(), 0, ctx.req.FileID, 0, progress)
 	}
 }

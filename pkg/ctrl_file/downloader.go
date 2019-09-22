@@ -84,7 +84,8 @@ func (ctx *downloadContext) addToDownloaded(ctrl *Controller, partIndex int32) {
 	}
 	ctx.mtx.Unlock()
 	ctrl.saveDownloads(ctx.req)
-	if !skipOnProgress {
+
+	if !ctx.req.SkipDelegateCall && !skipOnProgress {
 		ctrl.onProgressChanged(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), progress)
 	}
 }
