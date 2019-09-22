@@ -81,3 +81,4 @@ func (r *River) GetHeapProfile() []byte {
 func (r *River) TurnOnLiveLogger(url string) {
 	logs.SetRemoteLog(url)
 }
+

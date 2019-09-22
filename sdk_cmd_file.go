@@ -4,8 +4,10 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"go.uber.org/zap"
 	"os"
 	"time"
 )
@@ -50,6 +52,7 @@ func (r *River) FileDownloadAsync(clusterID int32, fileID int64, accessHash int6
 }
 
 func (r *River) FileDownloadSync(clusterID int32, fileID int64, accessHash int64, skipDelegate bool) error {
+	logs.Info("FileDownloadSync", zap.Int32("ClusterID", clusterID), zap.Int64("FileID", fileID), zap.Int64("AccessHash", accessHash))
 	_, err := r.fileCtrl.DownloadSync(clusterID, fileID, uint64(accessHash), skipDelegate)
 	return err
 }

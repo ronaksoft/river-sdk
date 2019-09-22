@@ -175,7 +175,7 @@ func TestDownloadFileSync(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			filePath, err := _File.DownloadSync(clientFile.ClusterID, clientFile.FileID, clientFile.AccessHash)
+			filePath, err := _File.DownloadSync(clientFile.ClusterID, clientFile.FileID, clientFile.AccessHash, false)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -192,7 +192,7 @@ func TestDownloadFileASync(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		filePath, err := _File.DownloadAsync(clientFile.ClusterID, clientFile.FileID, clientFile.AccessHash)
+		filePath, err := _File.DownloadAsync(clientFile.ClusterID, clientFile.FileID, clientFile.AccessHash, false)
 		if err != nil {
 			t.Fatal(err)
 		}
