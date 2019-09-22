@@ -180,22 +180,23 @@ func (ctrl *Controller) CancelUploadRequest(reqID string) {
 	ctrl.deleteUploadRequest(reqID)
 }
 
-func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash uint64) (reqID string, err error) {
+func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash uint64, skipDelegates bool) (reqID string, err error) {
 	clientFile, err := repo.Files.Get(clusterID, fileID, accessHash)
 	if err != nil {
 		return "", err
 	}
 	go func() {
 		err = ctrl.download(DownloadRequest{
-			MessageID:    clientFile.MessageID,
-			ClusterID:    clientFile.ClusterID,
-			FileID:       clientFile.FileID,
-			AccessHash:   clientFile.AccessHash,
-			Version:      clientFile.Version,
-			FileSize:     clientFile.FileSize,
-			ChunkSize:    downloadChunkSize,
-			MaxInFlights: maxDownloadInFlights,
-			FilePath:     GetFilePath(clientFile),
+			MessageID:        clientFile.MessageID,
+			ClusterID:        clientFile.ClusterID,
+			FileID:           clientFile.FileID,
+			AccessHash:       clientFile.AccessHash,
+			Version:          clientFile.Version,
+			FileSize:         clientFile.FileSize,
+			ChunkSize:        downloadChunkSize,
+			MaxInFlights:     maxDownloadInFlights,
+			FilePath:         GetFilePath(clientFile),
+			SkipDelegateCall: skipDelegates,
 		})
 		logs.WarnOnErr("Error On DownloadAsync", err,
 			zap.Int32("ClusterID", clusterID),
@@ -206,7 +207,7 @@ func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash 
 	return GetRequestID(clusterID, fileID, accessHash), nil
 
 }
-func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash uint64) (filePath string, err error) {
+func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash uint64, skipDelegate bool) (filePath string, err error) {
 	clientFile, err := repo.Files.Get(clusterID, fileID, accessHash)
 	if err != nil {
 		return "", err
@@ -221,15 +222,16 @@ func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash u
 		return ctrl.downloadThumbnail(clientFile)
 	default:
 		err = ctrl.download(DownloadRequest{
-			MessageID:    clientFile.MessageID,
-			ClusterID:    clientFile.ClusterID,
-			FileID:       clientFile.FileID,
-			AccessHash:   clientFile.AccessHash,
-			Version:      clientFile.Version,
-			FileSize:     clientFile.FileSize,
-			ChunkSize:    downloadChunkSize,
-			MaxInFlights: maxDownloadInFlights,
-			FilePath:     filePath,
+			MessageID:        clientFile.MessageID,
+			ClusterID:        clientFile.ClusterID,
+			FileID:           clientFile.FileID,
+			AccessHash:       clientFile.AccessHash,
+			Version:          clientFile.Version,
+			FileSize:         clientFile.FileSize,
+			ChunkSize:        downloadChunkSize,
+			MaxInFlights:     maxDownloadInFlights,
+			FilePath:         filePath,
+			SkipDelegateCall: skipDelegate,
 		})
 	}
 
@@ -464,7 +466,6 @@ func (ctrl *Controller) download(req DownloadRequest) error {
 		}
 		ds.parts <- partIndex
 	}
-
 
 	// This is blocking call, until all the parts are downloaded
 	ds.execute(ctrl)

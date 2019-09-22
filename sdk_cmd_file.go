@@ -44,13 +44,13 @@ func (r *River) GetFilePath(clusterID int32, fileID int64, accessHash int64) str
 	return ""
 }
 
-func (r *River) FileDownloadAsync(clusterID int32, fileID int64, accessHash int64) (reqID string) {
-	reqID, _ = r.fileCtrl.DownloadAsync(clusterID, fileID, uint64(accessHash))
+func (r *River) FileDownloadAsync(clusterID int32, fileID int64, accessHash int64, skipDelegate bool) (reqID string) {
+	reqID, _ = r.fileCtrl.DownloadAsync(clusterID, fileID, uint64(accessHash), skipDelegate)
 	return
 }
 
-func (r *River) FileDownloadSync(clusterID int32, fileID int64, accessHash int64) error {
-	_, err := r.fileCtrl.DownloadSync(clusterID, fileID, uint64(accessHash))
+func (r *River) FileDownloadSync(clusterID int32, fileID int64, accessHash int64, skipDelegate bool) error {
+	_, err := r.fileCtrl.DownloadSync(clusterID, fileID, uint64(accessHash), skipDelegate)
 	return err
 }
 

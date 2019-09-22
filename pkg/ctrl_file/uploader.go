@@ -53,6 +53,8 @@ type UploadRequest struct {
 	UploadedParts []int32 `json:"downloaded_parts"`
 	TotalParts    int32   `json:"total_parts"`
 	Canceled      bool    `json:"canceled"`
+	// SkipDelegateCall identifies to call delegate function on specified states
+	SkipDelegateCall bool    `json:"skip_delegate_call"`
 }
 
 func (r UploadRequest) GetID() string {
@@ -84,7 +86,9 @@ func (ctx *uploadContext) addToUploaded(ctrl *Controller, partIndex int32) {
 	progress := int64(float64(len(ctx.req.UploadedParts)) / float64(ctx.req.TotalParts) * 100)
 	ctx.mtx.Unlock()
 	ctrl.saveUploads(ctx.req)
-	ctrl.onProgressChanged(ctx.req.GetID(), 0, ctx.req.FileID, 0, progress)
+	if ctx.req.SkipDelegateCall {
+		ctrl.onProgressChanged(ctx.req.GetID(), 0, ctx.req.FileID, 0, progress)
+	}
 }
 
 func (ctx *uploadContext) generateFileSavePart(fileID int64, partID int32, totalParts int32, bytes []byte) *msg.MessageEnvelope {
@@ -116,7 +120,9 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 			if !ctrl.existUploadRequest(ctx.req.GetID()) {
 				waitGroup.Wait()
 				_ = ctx.file.Close()
-				ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, false)
+				if !ctx.req.SkipDelegateCall {
+					ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, false)
+				}
 				return domain.RequestStatusCanceled
 			}
 			ctx.rateLimit <- struct{}{}
@@ -162,7 +168,9 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 			case ctx.req.TotalParts:
 				// We have finished our uploads
 				_ = ctx.file.Close()
-				ctrl.onCompleted(ctx.req.GetID(), 0, ctx.req.FileID, 0, ctx.req.FilePath)
+				if !ctx.req.SkipDelegateCall {
+					ctrl.onCompleted(ctx.req.GetID(), 0, ctx.req.FileID, 0, ctx.req.FilePath)
+				}
 				if ctrl.postUploadProcess != nil {
 					ctrl.postUploadProcess(ctx.req)
 				}
@@ -172,6 +180,8 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 	}
 
 	_ = ctx.file.Close()
-	ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, true)
+	if !ctx.req.SkipDelegateCall {
+		ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, true)
+	}
 	return domain.RequestStatusError
 }

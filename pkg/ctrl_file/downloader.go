@@ -39,11 +39,13 @@ type DownloadRequest struct {
 	MaxInFlights int `json:"max_in_flights"`
 	// FilePath defines the path which downloaded file will be stored. It must be a file not a directory.
 	// Also it will be overwritten if Overwrite is TRUE
-	FilePath        string  `json:"file_path"`
-	TempFilePath    string  `json:"temp_file_path"`
-	DownloadedParts []int32 `json:"downloaded_parts"`
-	TotalParts      int32   `json:"total_parts"`
-	Canceled        bool    `json:"canceled"`
+	FilePath         string  `json:"file_path"`
+	TempFilePath     string  `json:"temp_file_path"`
+	DownloadedParts  []int32 `json:"downloaded_parts"`
+	TotalParts       int32   `json:"total_parts"`
+	Canceled         bool    `json:"canceled"`
+	// SkipDelegateCall identifies to call delegate function on specified states
+	SkipDelegateCall bool    `json:"skip_delegate_call"`
 }
 
 func (r DownloadRequest) GetID() string {
@@ -114,7 +116,10 @@ func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 				waitGroup.Wait()
 				_ = ctx.file.Close()
 				_ = os.Remove(ctx.req.TempFilePath)
-				ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), false)
+				if !ctx.req.SkipDelegateCall {
+					ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), false)
+				}
+
 				return domain.RequestStatusCanceled
 			}
 			ctx.rateLimit <- struct{}{}
@@ -173,16 +178,24 @@ func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 				err := os.Rename(ctx.req.TempFilePath, ctx.req.FilePath)
 				if err != nil {
 					_ = os.Remove(ctx.req.TempFilePath)
-					ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), true)
+					if !ctx.req.SkipDelegateCall {
+						ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), true)
+					}
 					return domain.RequestStatusError
 				}
-				ctrl.onCompleted(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), ctx.req.FilePath)
+				if !ctx.req.SkipDelegateCall {
+					ctrl.onCompleted(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), ctx.req.FilePath)
+				}
+
 				return domain.RequestStatusCompleted
 			}
 		}
 	}
 	_ = ctx.file.Close()
 	_ = os.Remove(ctx.req.TempFilePath)
-	ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), true)
+	if !ctx.req.SkipDelegateCall {
+		ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), true)
+	}
+
 	return domain.RequestStatusError
 }
