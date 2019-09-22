@@ -55,7 +55,6 @@ type downloadContext struct {
 	rateLimit chan struct{}
 	parts     chan int32
 	file      *os.File
-	ctrl      *Controller
 	req       DownloadRequest
 }
 
@@ -70,13 +69,13 @@ func (ctx *downloadContext) isDownloaded(partIndex int32) bool {
 	return false
 }
 
-func (ctx *downloadContext) addToDownloaded(partIndex int32) {
+func (ctx *downloadContext) addToDownloaded(ctrl *Controller, partIndex int32) {
 	ctx.mtx.Lock()
 	ctx.req.DownloadedParts = append(ctx.req.DownloadedParts, partIndex)
 	progress := int64(float64(len(ctx.req.DownloadedParts)) / float64(ctx.req.TotalParts) * 100)
 	ctx.mtx.Unlock()
-	ctx.ctrl.saveDownloads(ctx.req)
-	ctx.ctrl.onProgressChanged(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), progress)
+	ctrl.saveDownloads(ctx.req)
+	ctrl.onProgressChanged(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), progress)
 }
 
 func (ctx *downloadContext) generateFileGet(offset, limit int32) *msg.MessageEnvelope {
@@ -106,16 +105,16 @@ func (ctx *downloadContext) generateFileGet(offset, limit int32) *msg.MessageEnv
 	return envelop
 }
 
-func (ctx *downloadContext) execute() domain.RequestStatus {
+func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 	waitGroup := sync.WaitGroup{}
 	for ctx.req.MaxRetries > 0 {
 		select {
 		case partIndex := <-ctx.parts:
-			if !ctx.ctrl.existDownloadRequest(ctx.req.GetID()) {
+			if !ctrl.existDownloadRequest(ctx.req.GetID()) {
 				waitGroup.Wait()
 				_ = ctx.file.Close()
 				_ = os.Remove(ctx.req.TempFilePath)
-				ctx.ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), false)
+				ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), false)
 				return domain.RequestStatusCanceled
 			}
 			ctx.rateLimit <- struct{}{}
@@ -128,7 +127,7 @@ func (ctx *downloadContext) execute() domain.RequestStatus {
 				}()
 
 				offset := partIndex * ctx.req.ChunkSize
-				res, err := ctx.ctrl.network.SendHttp(ctx.generateFileGet(offset, ctx.req.ChunkSize))
+				res, err := ctrl.network.SendHttp(ctx.generateFileGet(offset, ctx.req.ChunkSize))
 				if err != nil {
 					logs.Warn("Error in SentHTTP", zap.Error(err))
 					atomic.AddInt32(&ctx.req.MaxRetries, -1)
@@ -160,7 +159,7 @@ func (ctx *downloadContext) execute() domain.RequestStatus {
 						ctx.parts <- partIndex
 						return
 					}
-					ctx.addToDownloaded(partIndex)
+					ctx.addToDownloaded(ctrl, partIndex)
 				default:
 					atomic.AddInt32(&ctx.req.MaxRetries, -1)
 					ctx.parts <- partIndex
@@ -174,16 +173,16 @@ func (ctx *downloadContext) execute() domain.RequestStatus {
 				err := os.Rename(ctx.req.TempFilePath, ctx.req.FilePath)
 				if err != nil {
 					_ = os.Remove(ctx.req.TempFilePath)
-					ctx.ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), true)
+					ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), true)
 					return domain.RequestStatusError
 				}
-				ctx.ctrl.onCompleted(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), ctx.req.FilePath)
+				ctrl.onCompleted(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), ctx.req.FilePath)
 				return domain.RequestStatusCompleted
 			}
 		}
 	}
 	_ = ctx.file.Close()
 	_ = os.Remove(ctx.req.TempFilePath)
-	ctx.ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), true)
+	ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), true)
 	return domain.RequestStatusError
 }

@@ -64,7 +64,6 @@ type uploadContext struct {
 	rateLimit chan struct{}
 	parts     chan int32
 	file      *os.File
-	ctrl      *Controller
 	req       UploadRequest
 }
 
@@ -79,13 +78,13 @@ func (ctx *uploadContext) isUploaded(partIndex int32) bool {
 	return false
 }
 
-func (ctx *uploadContext) addToUploaded(partIndex int32) {
+func (ctx *uploadContext) addToUploaded(ctrl *Controller, partIndex int32) {
 	ctx.mtx.Lock()
 	ctx.req.UploadedParts = append(ctx.req.UploadedParts, partIndex)
 	progress := int64(float64(len(ctx.req.UploadedParts)) / float64(ctx.req.TotalParts) * 100)
 	ctx.mtx.Unlock()
-	ctx.ctrl.saveUploads(ctx.req)
-	ctx.ctrl.onProgressChanged(ctx.req.GetID(), 0, ctx.req.FileID, 0, progress)
+	ctrl.saveUploads(ctx.req)
+	ctrl.onProgressChanged(ctx.req.GetID(), 0, ctx.req.FileID, 0, progress)
 }
 
 func (ctx *uploadContext) generateFileSavePart(fileID int64, partID int32, totalParts int32, bytes []byte) *msg.MessageEnvelope {
@@ -109,15 +108,15 @@ func (ctx *uploadContext) generateFileSavePart(fileID int64, partID int32, total
 	return envelop
 }
 
-func (ctx *uploadContext) execute() domain.RequestStatus {
+func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 	waitGroup := sync.WaitGroup{}
 	for ctx.req.MaxRetries > 0 {
 		select {
 		case partIndex := <-ctx.parts:
-			if !ctx.ctrl.existUploadRequest(ctx.req.GetID()) {
+			if !ctrl.existUploadRequest(ctx.req.GetID()) {
 				waitGroup.Wait()
 				_ = ctx.file.Close()
-				ctx.ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, false)
+				ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, false)
 				return domain.RequestStatusCanceled
 			}
 			ctx.rateLimit <- struct{}{}
@@ -139,7 +138,7 @@ func (ctx *uploadContext) execute() domain.RequestStatus {
 					ctx.parts <- partIndex
 					return
 				}
-				res, err := ctx.ctrl.network.SendHttp(ctx.generateFileSavePart(ctx.req.FileID, partIndex+1, ctx.req.TotalParts, bytes))
+				res, err := ctrl.network.SendHttp(ctx.generateFileSavePart(ctx.req.FileID, partIndex+1, ctx.req.TotalParts, bytes))
 				if err != nil {
 					logs.Warn("Error in SendHttp", zap.Error(err))
 					atomic.AddInt32(&ctx.req.MaxRetries, -1)
@@ -148,7 +147,7 @@ func (ctx *uploadContext) execute() domain.RequestStatus {
 				}
 				switch res.Constructor {
 				case msg.C_Bool:
-					ctx.addToUploaded(partIndex)
+					ctx.addToUploaded(ctrl, partIndex)
 				default:
 					atomic.AddInt32(&ctx.req.MaxRetries, -1)
 					ctx.parts <- partIndex
@@ -163,9 +162,9 @@ func (ctx *uploadContext) execute() domain.RequestStatus {
 			case ctx.req.TotalParts:
 				// We have finished our uploads
 				_ = ctx.file.Close()
-				ctx.ctrl.onCompleted(ctx.req.GetID(), 0, ctx.req.FileID, 0, ctx.req.FilePath)
-				if ctx.ctrl.postUploadProcess != nil {
-					ctx.ctrl.postUploadProcess(ctx.req)
+				ctrl.onCompleted(ctx.req.GetID(), 0, ctx.req.FileID, 0, ctx.req.FilePath)
+				if ctrl.postUploadProcess != nil {
+					ctrl.postUploadProcess(ctx.req)
 				}
 				return domain.RequestStatusCompleted
 			}
@@ -173,6 +172,6 @@ func (ctx *uploadContext) execute() domain.RequestStatus {
 	}
 
 	_ = ctx.file.Close()
-	ctx.ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, true)
+	ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, true)
 	return domain.RequestStatusError
 }
