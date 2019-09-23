@@ -116,6 +116,7 @@ func (ctrl *Controller) Start() {
 	if err == nil {
 		_ = json.Unmarshal(dBytes, &ctrl.uploadRequests)
 		for _, req := range ctrl.uploadRequests {
+			fmt.Println(req.FileID, req.FilePath, req.MaxInFlights, req.MaxRetries)
 			go func(req UploadRequest) {
 				ctrl.upload(req)
 			}(req)
@@ -545,24 +546,26 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 		ThumbPath:    thumbPath,
 		MaxInFlights: 3,
 	}
+
 	ctrl.saveUploads(req)
 
 	// Upload Thumbnail
 	ctrl.upload(UploadRequest{
-		MessageID:    0,
-		FileID:       thumbID,
-		MaxInFlights: 3,
-		FilePath:     thumbPath,
+		MessageID:        0,
+		FileID:           thumbID,
+		MaxInFlights:     3,
+		FilePath:         thumbPath,
+		SkipDelegateCall: true,
 	})
 
 	// Upload File
 	ctrl.upload(req)
 }
 func (ctrl *Controller) upload(req UploadRequest) {
-	if ctrl.existUploadRequest(req.GetID()) {
+	if req.FilePath == "" {
+		ctrl.deleteUploadRequest(req.GetID())
 		return
 	}
-
 	ctrl.saveUploads(req)
 	ctrl.uploadsRateLimit <- struct{}{}
 	defer func() {
@@ -572,6 +575,8 @@ func (ctrl *Controller) upload(req UploadRequest) {
 	ds := &uploadContext{
 		rateLimit: make(chan struct{}, req.MaxInFlights),
 	}
+
+
 
 	fileInfo, err := os.Stat(req.FilePath)
 	if err != nil {

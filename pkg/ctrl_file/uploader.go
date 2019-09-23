@@ -82,6 +82,9 @@ func (ctx *uploadContext) isUploaded(partIndex int32) bool {
 }
 
 func (ctx *uploadContext) addToUploaded(ctrl *Controller, partIndex int32) {
+	if ctx.isUploaded(partIndex) {
+		return
+	}
 	ctx.mtx.Lock()
 	ctx.req.UploadedParts = append(ctx.req.UploadedParts, partIndex)
 	progress := int64(float64(len(ctx.req.UploadedParts)) / float64(ctx.req.TotalParts) * 100)
@@ -134,7 +137,6 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 			}
 			ctx.rateLimit <- struct{}{}
 			waitGroup.Add(1)
-
 			go func(partIndex int32) {
 				defer waitGroup.Done()
 				defer func() {
@@ -170,12 +172,7 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 			waitGroup.Wait()
 			switch int32(len(ctx.req.UploadedParts)) {
 			case ctx.req.TotalParts - 1:
-				if ctx.req.TotalParts != 1 {
-					// If we finished uploading n-1 parts then run the last loop with the last part
-					ctx.parts <- ctx.req.TotalParts - 1
-					break
-				}
-				fallthrough
+				ctx.parts <- ctx.req.TotalParts - 1
 			case ctx.req.TotalParts:
 				ctrl.postUploadProcess(ctx.req)
 				// We have finished our uploads
@@ -185,6 +182,8 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 				}
 
 				return domain.RequestStatusCompleted
+			default:
+				return domain.RequestStatusError
 			}
 		}
 	}

@@ -6,7 +6,6 @@ import (
 	networkCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/valyala/tcplisten"
 	"go.uber.org/zap"
 	"io/ioutil"
@@ -103,10 +102,10 @@ type server struct {
 
 func (t server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	// time.Sleep(3 * time.Second)
-	if ronak.RandomInt(30) > 5 {
-		res.WriteHeader(http.StatusForbidden)
-		return
-	}
+	// if ronak.RandomInt(30) > 5 {
+	// 	res.WriteHeader(http.StatusForbidden)
+	// 	return
+	// }
 	body, _ := ioutil.ReadAll(req.Body)
 	protoMessage := new(msg.ProtoMessage)
 	_ = protoMessage.Unmarshal(body)
@@ -203,7 +202,6 @@ func TestDownloadFileASync(t *testing.T) {
 }
 
 func TestUpload(t *testing.T) {
-	_File.UploadUserPhoto("./testdata/big")
-
-	_File.UploadMessageDocument(1000, "./testdata/big", "", 2, 0)
+	// _File.UploadUserPhoto("./testdata/big")
+	_File.UploadMessageDocument(1000, "./testdata/big", "", 323232, 10)
 }
