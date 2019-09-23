@@ -341,6 +341,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 					if err != nil {
 						logs.Error("onGetDifferenceSucceed()-> SaveInt()", zap.Error(err))
 					}
+					logs.Info("updateGetDifference", zap.Int64("ClientUpdateID", ctrl.updateID))
 
 				case msg.C_Error:
 					logs.Debug("onGetDifferenceSucceed()-> C_Error",
@@ -375,6 +376,11 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 		if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
 			externalHandlerUpdates, err := applier(update)
 			if err != nil {
+				logs.Warn("Error On UpdateDiff",
+					zap.Error(err),
+					zap.Int64("UpdateID", update.UpdateID),
+					zap.String("Consturctor", msg.ConstructorNames[update.Constructor]),
+				)
 				return
 			}
 			if update.UpdateID != 0 {
