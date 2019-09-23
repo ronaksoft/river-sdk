@@ -64,8 +64,8 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 			zap.Int64("MID", x.Message.ID),
 			zap.String("Body", x.Message.Body),
 		)
-		logs.Info("Pending Message:: PendingID", zap.Int64("PendingID", pm.ID))
 		if pm != nil {
+			logs.Info("Pending Message:: PendingID", zap.Int64("PendingID", pm.ID))
 			ctrl.handlePendingMessage(x)
 			repo.PendingMessages.Delete(pm.ID)
 			repo.PendingMessages.DeleteByRealID(x.Message.ID)
@@ -304,6 +304,10 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 	sent.RandomID = x.RandomID
 	sent.CreatedOn = time.Now().Unix()
 
+	// If we are here, it means we receive UpdateNewMessage before UpdateMessageID / MessagesSent
+	// so we create a fake UpdateMessageDelete to remove the pending from the view
+	pm, err := repo.PendingMessages.GetByRandomID(sent.RandomID)
+
 	userMessage := repo.Messages.Get(sent.MessageID)
 	if userMessage != nil {
 		logs.Info("Pending Message:: UpdateMessageID after UpdateNewMessage",
@@ -311,11 +315,9 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 			zap.Int64("RandomID", x.RandomID),
 			zap.String("Body", userMessage.Body),
 		)
-		// If we are here, it means we receive UpdateNewMessage before UpdateMessageID / MessagesSent
-		// so we create a fake UpdateMessageDelete to remove the pending from the view
-		pm, err := repo.PendingMessages.GetByRandomID(sent.RandomID)
+
 		if pm == nil {
-			logs.WarnOnErr("Pending Message NOT FOUND", err,
+			logs.Warn("Pending Message NOT FOUND",
 				zap.Int64("RandomID", sent.RandomID),
 				zap.Int64("RealID", sent.MessageID),
 			)
@@ -347,8 +349,8 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 	}
 
 	_, err = repo.PendingMessages.GetByRandomID(sent.RandomID)
-	if err != nil {
-		return nil, err
+	if pm == nil {
+		return nil, nil
 	}
 	repo.PendingMessages.SaveByRealID(sent.RandomID, sent.MessageID)
 
