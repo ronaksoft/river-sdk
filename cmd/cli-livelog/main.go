@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/valyala/fasthttp"
+	"strings"
 )
 
 func main() {
@@ -19,10 +20,10 @@ var RootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Server is running on: ", viper.GetInt(ConfListenPort))
 		_ = fasthttp.ListenAndServe(fmt.Sprintf(":%d", viper.GetInt(ConfListenPort)), func(ctx *fasthttp.RequestCtx) {
-			fmt.Print(ronak.ByteToStr(ctx.Request.Body()))
-			// if strings.Contains(ronak.ByteToStr(ctx.Request.Body()), "Pending Message") {
-			//
-			// }
+			if strings.Contains(ronak.ByteToStr(ctx.Request.Body()), "Pending Message") ||
+				strings.Contains(ronak.ByteToStr(ctx.Request.Body()), "updateMessageID") {
+				fmt.Print(ronak.ByteToStr(ctx.Request.Body()))
+			}
 		})
 	},
 }
