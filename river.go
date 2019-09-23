@@ -71,6 +71,8 @@ type RiverConfig struct {
 
 	// OptimizeForLowMemory if is set then SDK tries to use the lowest possible ram
 	OptimizeForLowMemory bool
+	MaxInFlightDownloads int32
+	MaxInFlightUploads   int32
 }
 
 // River
@@ -122,6 +124,13 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.optimizeForLowMemory = conf.OptimizeForLowMemory
 	r.ConnInfo = conf.ConnInfo
 
+	if conf.MaxInFlightDownloads <= 0 {
+		conf.MaxInFlightDownloads = 10
+	}
+	if conf.MaxInFlightUploads <= 0 {
+		conf.MaxInFlightUploads = 10
+	}
+
 	// Initialize DB Path
 	if strings.HasPrefix(conf.DbPath, "file://") {
 		conf.DbPath = conf.DbPath[7:]
@@ -168,8 +177,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	fileCtrl.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory, conf.DocumentCacheDirectory)
 	r.fileCtrl = fileCtrl.New(fileCtrl.Config{
 		Network:              r.networkCtrl,
-		MaxInflightDownloads: 5,
-		MaxInflightUploads:   5,
+		MaxInflightDownloads: conf.MaxInFlightDownloads,
+		MaxInflightUploads:   conf.MaxInFlightUploads,
 		OnCompleted:          r.fileDelegate.OnCompleted,
 		OnProgressChanged:    r.fileDelegate.OnProgressChanged,
 		OnCancel:             r.fileDelegate.OnCancel,

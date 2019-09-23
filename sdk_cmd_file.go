@@ -30,7 +30,6 @@ func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash int64) [
 			}
 		}
 	}
-
 	buf, _ := fileStatus.Marshal()
 	return buf
 }
