@@ -306,7 +306,7 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 
 	// If we are here, it means we receive UpdateNewMessage before UpdateMessageID / MessagesSent
 	// so we create a fake UpdateMessageDelete to remove the pending from the view
-	pm, err := repo.PendingMessages.GetByRandomID(sent.RandomID)
+	pm, _ := repo.PendingMessages.GetByRandomID(sent.RandomID)
 
 	userMessage := repo.Messages.Get(sent.MessageID)
 	if userMessage != nil {
@@ -348,7 +348,7 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 		return res, nil
 	}
 
-	_, err = repo.PendingMessages.GetByRandomID(sent.RandomID)
+
 	if pm == nil {
 		return nil, nil
 	}
