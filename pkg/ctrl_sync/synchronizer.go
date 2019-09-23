@@ -306,6 +306,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 		zap.Int64("ClientUpdateID", ctrl.updateID),
 	)
 
+	waitGroup := sync.WaitGroup{}
 	for serverUpdateID > ctrl.updateID {
 		limit := serverUpdateID - ctrl.updateID
 		if limit > 100 {
@@ -319,14 +320,17 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 		req.Limit = int32(limit)
 		req.From = ctrl.updateID + 1 // +1 cuz we already have ctrl.updateID itself
 		reqBytes, _ := req.Marshal()
+		waitGroup.Add(1)
 		_ = ctrl.queueCtrl.ExecuteRealtimeCommand(
 			uint64(domain.SequentialUniqueID()),
 			msg.C_UpdateGetDifference,
 			reqBytes,
 			func() {
+				waitGroup.Done()
 				logs.Warn("SyncController::getUpdateDifference() -> ExecuteRealtimeCommand() Timeout")
 			},
 			func(m *msg.MessageEnvelope) {
+				waitGroup.Done()
 				switch m.Constructor {
 				case msg.C_UpdateDifference:
 					x := new(msg.UpdateDifference)
@@ -353,6 +357,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 			true,
 			false,
 		)
+		waitGroup.Wait()
 	}
 }
 func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
