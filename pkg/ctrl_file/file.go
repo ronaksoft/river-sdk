@@ -116,7 +116,6 @@ func (ctrl *Controller) Start() {
 	if err == nil {
 		_ = json.Unmarshal(dBytes, &ctrl.uploadRequests)
 		for _, req := range ctrl.uploadRequests {
-			fmt.Println(req.FileID, req.FilePath, req.MaxInFlights, req.MaxRetries)
 			go func(req UploadRequest) {
 				ctrl.upload(req)
 			}(req)
