@@ -437,7 +437,7 @@ func (r *River) onReceivedUpdate(updateContainers []*msg.UpdateContainer) {
 	})
 
 	for idx := range updateContainers {
-		// sort updateContainers
+		// sort updateEnvelopes
 		sort.Slice(updateContainers[idx].Updates, func(i, j int) bool {
 			return updateContainers[idx].Updates[i].UpdateID < updateContainers[idx].Updates[j].UpdateID
 		})
@@ -449,11 +449,12 @@ func (r *River) onReceivedUpdate(updateContainers []*msg.UpdateContainer) {
 }
 
 func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) {
+	logs.Info("UploadProcess",
+		zap.Bool("IsProfile", uploadRequest.IsProfilePhoto),
+		zap.Int64("ur.MessageID", uploadRequest.MessageID),
+	)
 	switch {
 	case uploadRequest.IsProfilePhoto == false && uploadRequest.MessageID != 0:
-		logs.Info("UploadProcess",
-			zap.Int64("ur.MessageID", uploadRequest.MessageID),
-		)
 		pendingMessage := repo.PendingMessages.GetByID(uploadRequest.MessageID)
 		if pendingMessage == nil {
 			return
