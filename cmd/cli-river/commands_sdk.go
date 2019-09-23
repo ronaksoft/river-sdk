@@ -15,7 +15,7 @@ var SDK = &ishell.Cmd{
 var SdkConnInfo = &ishell.Cmd{
 	Name: "ConnInfo",
 	Func: func(c *ishell.Context) {
-		c.Println("userID:", _SDK.ConnInfo.UserID)
+		c.Println("UserID:", _SDK.ConnInfo.UserID)
 		c.Println("AuthID:", _SDK.ConnInfo.AuthID)
 		c.Println("Phone:", _SDK.ConnInfo.Phone)
 		c.Println("FirstName:", _SDK.ConnInfo.FirstName)

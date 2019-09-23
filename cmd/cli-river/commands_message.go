@@ -14,7 +14,7 @@ var Message = &ishell.Cmd{
 }
 
 var MessageSend = &ishell.Cmd{
-	Name: "SendWebsocket",
+	Name: "SendMessage",
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesSend{}
 		req.RandomID = ronak.RandomInt64(0)
@@ -24,6 +24,28 @@ var MessageSend = &ishell.Cmd{
 		req.Peer.AccessHash = fnGetAccessHash(c)
 		req.Body = fnGetBody(c)
 		req.Entities = fnGetEntities(c)
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSend, reqBytes, reqDelegate, false, false); err != nil {
+			_Log.Error("ExecuteCommand failed", zap.Error(err))
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+
+	},
+}
+
+var MessageSendToSelf = &ishell.Cmd{
+	Name: "SendToMe",
+	Func: func(c *ishell.Context) {
+		req := msg.MessagesSend{}
+		req.RandomID = ronak.RandomInt64(0)
+		req.Peer = &msg.InputPeer{}
+		req.Peer.Type = msg.PeerUser
+		req.Peer.ID = _SDK.ConnInfo.UserID
+		req.Peer.AccessHash = 0
+		req.Body = fnGetBody(c)
+		req.Entities = nil
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSend, reqBytes, reqDelegate, false, false); err != nil {
@@ -360,6 +382,7 @@ func init() {
 	Message.AddCmd(MessageGetDialogs)
 	Message.AddCmd(MessageGetDialog)
 	Message.AddCmd(MessageSend)
+	Message.AddCmd(MessageSendToSelf)
 	Message.AddCmd(MessageGetHistory)
 	Message.AddCmd(MessageReadHistory)
 	Message.AddCmd(MessageSetTyping)

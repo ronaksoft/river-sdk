@@ -170,17 +170,20 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 			waitGroup.Wait()
 			switch int32(len(ctx.req.UploadedParts)) {
 			case ctx.req.TotalParts - 1:
-				// If we finished uploading n-1 parts then run the last loop with the last part
-				ctx.parts <- ctx.req.TotalParts - 1
+				if ctx.req.TotalParts != 1 {
+					// If we finished uploading n-1 parts then run the last loop with the last part
+					ctx.parts <- ctx.req.TotalParts - 1
+					break
+				}
+				fallthrough
 			case ctx.req.TotalParts:
+				ctrl.postUploadProcess(ctx.req)
 				// We have finished our uploads
 				_ = ctx.file.Close()
 				if !ctx.req.SkipDelegateCall {
 					ctrl.onCompleted(ctx.req.GetID(), 0, ctx.req.FileID, 0, ctx.req.FilePath)
 				}
-				if ctrl.postUploadProcess != nil {
-					ctrl.postUploadProcess(ctx.req)
-				}
+
 				return domain.RequestStatusCompleted
 			}
 		}
