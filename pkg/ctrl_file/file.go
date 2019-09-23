@@ -186,6 +186,12 @@ func (ctrl *Controller) CancelUploadRequest(reqID string) {
 func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash uint64, skipDelegates bool) (reqID string, err error) {
 	clientFile, err := repo.Files.Get(clusterID, fileID, accessHash)
 	if err != nil {
+		logs.Warn("Error On GetFile",
+			zap.Int32("ClusterID", clusterID),
+			zap.Int64("FileID", fileID),
+			zap.Int64("AccessHash", int64(accessHash)),
+			zap.Error(err),
+		)
 		return "", err
 	}
 	go func() {
@@ -213,6 +219,12 @@ func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash 
 func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash uint64, skipDelegate bool) (filePath string, err error) {
 	clientFile, err := repo.Files.Get(clusterID, fileID, accessHash)
 	if err != nil {
+		logs.Warn("Error On GetFile",
+			zap.Int32("ClusterID", clusterID),
+			zap.Int64("FileID", fileID),
+			zap.Int64("AccessHash", int64(accessHash)),
+			zap.Error(err),
+		)
 		return "", err
 	}
 	filePath = GetFilePath(clientFile)
