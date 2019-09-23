@@ -438,7 +438,7 @@ func (r *River) onReceivedUpdate(updateContainers []*msg.UpdateContainer) {
 
 	outOfSync := false
 	for idx := range updateContainers {
-		if updateContainers[idx].MinUpdateID != 0 && updateContainers[idx].MinUpdateID > r.syncCtrl.UpdateID() {
+		if updateContainers[idx].MinUpdateID != 0 && updateContainers[idx].MinUpdateID > r.syncCtrl.UpdateID()+1 {
 			logs.Info("We are out of sync",
 				zap.Int64("ContainerMinID", updateContainers[idx].MinUpdateID),
 				zap.Int64("ClientUpdateID", r.syncCtrl.UpdateID()),
