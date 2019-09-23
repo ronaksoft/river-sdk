@@ -342,8 +342,13 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 		_ = repo.PendingMessages.Delete(pm.ID)
 		return res, nil
 	} else {
+		pendinID := int64(0)
+		if pm != nil {
+			pendinID = pm.ID
+		}
 		logs.Info("Pending Message:: UpdateMessageID before UpdateNewMessage",
 			zap.Int64("MID", x.MessageID),
+			zap.Int64("PendingID", pendinID),
 		)
 	}
 

@@ -458,7 +458,7 @@ func (ctrl *Controller) MessageHandler(messages []*msg.MessageEnvelope) {
 }
 
 // UpdateHandler receives update to cache them in client DB
-func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
+func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer, outOfSync bool) {
 	logs.Debug("SyncController::UpdateHandler() Called",
 		zap.Int64("ctrl.UpdateID", ctrl.updateID),
 		zap.Int64("MaxID", updateContainer.MaxUpdateID),
@@ -466,19 +466,7 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 		zap.Int("Count", len(updateContainer.Updates)),
 	)
 
-	// Check if update has been already applied
-	if updateContainer.MinUpdateID != 0 && ctrl.updateID >= updateContainer.MinUpdateID {
-		return
-	}
-
 	ctrl.lastUpdateReceived = time.Now()
-
-	// Check if we are out of sync with server, if yes, then call the sync() function
-	// We call it in blocking mode,
-	if ctrl.updateID < updateContainer.MinUpdateID-1 {
-		go ctrl.sync()
-		return
-	}
 
 	udpContainer := new(msg.UpdateContainer)
 	udpContainer.Updates = make([]*msg.UpdateEnvelope, 0)
@@ -493,11 +481,14 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 
 	for _, update := range updateContainer.Updates {
 		applier, ok := ctrl.updateAppliers[update.Constructor]
+		// If we are out of sync with server, only apply update ids with UpdateID == 0
+		if outOfSync && update.UpdateID != 0 {
+			continue
+		}
 		if ok {
 			externalHandlerUpdates, err := applier(update)
 			if err != nil {
 				logs.Error("UpdateHandler() -> UpdateAppliers", zap.Error(err))
-				go ctrl.sync()
 				return
 			}
 			if update.UpdateID != 0 {

@@ -436,7 +436,11 @@ func (r *River) onReceivedUpdate(updateContainers []*msg.UpdateContainer) {
 		return updateContainers[i].MinUpdateID < updateContainers[j].MinUpdateID
 	})
 
+	outOfSync := false
 	for idx := range updateContainers {
+		if updateContainers[idx].MinUpdateID != 0 && updateContainers[idx].MinUpdateID > r.syncCtrl.UpdateID() {
+			outOfSync = true
+		}
 		// sort updateEnvelopes
 		sort.Slice(updateContainers[idx].Updates, func(i, j int) bool {
 			return updateContainers[idx].Updates[i].UpdateID < updateContainers[idx].Updates[j].UpdateID
@@ -444,7 +448,11 @@ func (r *River) onReceivedUpdate(updateContainers []*msg.UpdateContainer) {
 		for _, update := range updateContainers[idx].Updates {
 			logs.UpdateLog(update.UpdateID, update.Constructor)
 		}
-		r.syncCtrl.UpdateHandler(updateContainers[idx])
+		r.syncCtrl.UpdateHandler(updateContainers[idx], outOfSync)
+	}
+
+	if outOfSync {
+		go r.syncCtrl.Sync()
 	}
 }
 
