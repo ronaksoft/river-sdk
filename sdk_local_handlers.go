@@ -538,7 +538,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	if reqMedia.ThumbFilePath != "" {
 		thumbID = ronak.RandomInt64(0)
 	}
-	pendingMessage, err := repo.PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, int64(in.RequestID), fileID, thumbID, reqMedia)
+	pendingMessage, err := repo.PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, fileID, fileID, thumbID, reqMedia)
 
 	if err != nil {
 		e := new(msg.Error)
