@@ -13,7 +13,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"go.uber.org/zap"
-	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -471,7 +470,6 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 	if updateContainer.MinUpdateID != 0 && ctrl.updateID >= updateContainer.MinUpdateID {
 		return
 	}
-
 
 	ctrl.lastUpdateReceived = time.Now()
 

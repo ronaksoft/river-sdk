@@ -451,6 +451,9 @@ func (r *River) onReceivedUpdate(updateContainers []*msg.UpdateContainer) {
 func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) {
 	switch {
 	case uploadRequest.IsProfilePhoto == false && uploadRequest.MessageID != 0:
+		logs.Info("UploadProcess",
+			zap.Int64("ur.MessageID", uploadRequest.MessageID),
+		)
 		pendingMessage := repo.PendingMessages.GetByID(uploadRequest.MessageID)
 		if pendingMessage == nil {
 			return
