@@ -75,7 +75,9 @@ func (r *River) CancelDownload(clusterID int32, fileID int64, accessHash int64) 
 	r.fileCtrl.CancelDownloadRequest(downloadRequest.GetID())
 }
 
-// CancelUpload cancel upload
+// CancelUpload cancels the upload and deletes the pending message associated with that media.
+// This function MAY NOT stop the upload instantly but for sure it will be canceled in the first
+// possible time in future.
 func (r *River) CancelUpload(clusterID int32, fileID int64, accessHash int64) {
 	startTime := time.Now()
 	defer func() {
@@ -102,7 +104,9 @@ func (r *River) CancelUpload(clusterID int32, fileID int64, accessHash int64) {
 	r.fileCtrl.CancelUploadRequest(uploadRequest.GetID())
 }
 
-// ResumeDownload
+// ResumeDownload must be called if for any reason the upload of a ClientSendMediaMessage failed,
+// then client should call this function by providing the pending message id, or if delete the pending
+// message.
 func (r *River) ResumeUpload(pendingMessageID int64) {
 	pendingMessage := repo.PendingMessages.GetByID(pendingMessageID)
 	if pendingMessage == nil {
