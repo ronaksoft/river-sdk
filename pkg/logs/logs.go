@@ -5,6 +5,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -108,7 +109,12 @@ func SetLogFilePath(logDir string) error {
 }
 
 func SetRemoteLog(url string) {
-	remoteWriter := RemoteWrite{Url: url}
+	remoteWriter := RemoteWrite{
+		HttpClient: http.Client{
+			Timeout: time.Millisecond * 250,
+		},
+		Url: url,
+	}
 	_Log = _Log.WithOptions(
 		zap.WrapCore(func(core zapcore.Core) zapcore.Core {
 			return zapcore.NewTee(

@@ -6,12 +6,13 @@ import (
 )
 
 type RemoteWrite struct {
-	Url string
+	HttpClient http.Client
+	Url        string
 }
 
 func (r RemoteWrite) Write(p []byte) (n int, err error) {
 	n = len(p)
-	_, err = http.DefaultClient.Post(r.Url, "", bytes.NewBuffer(p))
+	_, err = r.HttpClient.Post(r.Url, "", bytes.NewBuffer(p))
 	return
 }
 
