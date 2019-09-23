@@ -344,7 +344,6 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 	} else {
 		logs.Info("Pending Message:: UpdateMessageID before UpdateNewMessage",
 			zap.Int64("MID", x.MessageID),
-			zap.Int64("PendingID", pm.ID),
 		)
 	}
 
