@@ -437,10 +437,12 @@ func (r *River) onReceivedUpdate(updateContainers []*msg.UpdateContainer) {
 	})
 
 	for idx := range updateContainers {
+		// sort updateContainers
+		sort.Slice(updateContainers[idx].Updates, func(i, j int) bool {
+			return updateContainers[idx].Updates[i].UpdateID < updateContainers[idx].Updates[j].UpdateID
+		})
 		for _, update := range updateContainers[idx].Updates {
-			if update.UpdateID != 0 {
-				logs.UpdateLog(update.UpdateID, update.Constructor)
-			}
+			logs.UpdateLog(update.UpdateID, update.Constructor)
 		}
 		r.syncCtrl.UpdateHandler(updateContainers[idx])
 	}

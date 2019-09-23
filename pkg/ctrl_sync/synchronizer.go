@@ -13,6 +13,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"go.uber.org/zap"
+	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -74,7 +75,6 @@ func NewSyncController(config Config) *Controller {
 		msg.C_UpdateDraftMessage:          ctrl.updateDraftMessage,
 		msg.C_UpdateDraftMessageCleared:   ctrl.updateDraftMessageCleared,
 	}
-
 	ctrl.messageAppliers = map[int64]domain.MessageApplier{
 		msg.C_AuthAuthorization: ctrl.authAuthorization,
 		msg.C_ContactsImported:  ctrl.contactsImported,
@@ -471,6 +471,7 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer) {
 	if updateContainer.MinUpdateID != 0 && ctrl.updateID >= updateContainer.MinUpdateID {
 		return
 	}
+
 
 	ctrl.lastUpdateReceived = time.Now()
 

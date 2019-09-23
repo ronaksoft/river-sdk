@@ -61,11 +61,6 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	if x.Message.SenderID == ctrl.userID {
 		pm := repo.PendingMessages.GetByRealID(x.Message.ID)
 		if pm != nil {
-			logs.Info("Pending Message:: UpdateMessageID before UpdateNewMessage",
-				zap.Int64("MID", x.Message.ID),
-				zap.Int64("PendingID", pm.ID),
-				zap.String("Body", x.Message.Body),
-			)
 			ctrl.handlePendingMessage(x)
 			repo.PendingMessages.Delete(pm.ID)
 			repo.PendingMessages.DeleteByRealID(x.Message.ID)
