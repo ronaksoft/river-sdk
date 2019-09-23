@@ -105,15 +105,7 @@ func (ctx *downloadContext) generateFileGet(offset, limit int32) *msg.MessageEnv
 	envelop.Constructor = msg.C_FileGet
 	envelop.Message, _ = req.Marshal()
 	envelop.RequestID = uint64(domain.SequentialUniqueID())
-	logs.Debug("FilesStatus::generateFileGet()",
-		zap.Int64("MsgID", ctx.req.MessageID),
-		zap.Int32("Offset", req.Offset),
-		zap.Int32("Limit", req.Limit),
-		zap.Int64("FileID", req.Location.FileID),
-		zap.Uint64("AccessHash", req.Location.AccessHash),
-		zap.Int32("ClusterID", req.Location.ClusterID),
-		zap.Int32("Version", req.Location.Version),
-	)
+
 	return envelop
 }
 
