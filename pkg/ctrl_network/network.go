@@ -300,17 +300,7 @@ func (ctrl *Controller) updateNetworkStatus(newStatus domain.NetworkStatus) {
 	}
 	ctrl.wsQuality = newStatus
 	if ctrl.wsOnNetworkStatusChange != nil {
-		switch newStatus {
-		case domain.NetworkDisconnected, domain.NetworkConnecting:
-			go func(status domain.NetworkStatus) {
-				time.Sleep(3 * time.Second)
-				if ctrl.GetQuality() == newStatus {
-					ctrl.wsOnNetworkStatusChange(newStatus)
-				}
-			}(newStatus)
-		default:
-			ctrl.wsOnNetworkStatusChange(newStatus)
-		}
+		ctrl.wsOnNetworkStatusChange(newStatus)
 	}
 }
 
