@@ -500,7 +500,7 @@ func (ctrl *Controller) UploadUserPhoto(filePath string) (reqID string) {
 	ctrl.upload(UploadRequest{
 		IsProfilePhoto: true,
 		FileID:         fileID,
-		MaxInFlights:   3,
+		MaxInFlights:   8,
 		FilePath:       filePath,
 	})
 	reqID = GetRequestID(0, fileID, 0)
@@ -517,7 +517,7 @@ func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) (reqID 
 		IsProfilePhoto: true,
 		GroupID:        groupID,
 		FileID:         fileID,
-		MaxInFlights:   3,
+		MaxInFlights:   8,
 		FilePath:       filePath,
 	})
 
@@ -543,7 +543,7 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 		FilePath:     filePath,
 		ThumbID:      thumbID,
 		ThumbPath:    thumbPath,
-		MaxInFlights: 3,
+		MaxInFlights: 8,
 	}
 	ctrl.saveUploads(req)
 
@@ -551,7 +551,7 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 	ctrl.upload(UploadRequest{
 		MessageID:        0,
 		FileID:           thumbID,
-		MaxInFlights:     3,
+		MaxInFlights:     8,
 		FilePath:         thumbPath,
 		SkipDelegateCall: false,
 	})
