@@ -340,6 +340,12 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 						return
 					}
 					onGetDifferenceSucceed(ctrl, x)
+
+					// If there is no more update then set ClientUpdateID to the ServerUpdateID
+					if !x.More {
+						ctrl.updateID = x.CurrentUpdateID
+					}
+
 					// save UpdateID to DB
 					err = repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
 					if err != nil {
@@ -384,7 +390,7 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 				logs.Warn("Error On UpdateDiff",
 					zap.Error(err),
 					zap.Int64("UpdateID", update.UpdateID),
-					zap.String("Consturctor", msg.ConstructorNames[update.Constructor]),
+					zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
 				)
 				return
 			}
