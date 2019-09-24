@@ -1,6 +1,7 @@
 package fileCtrl_test
 
 import (
+	"crypto/md5"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	networkCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
@@ -8,6 +9,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"github.com/valyala/tcplisten"
 	"go.uber.org/zap"
+	"hash"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -57,6 +59,7 @@ func init() {
 	tcpConfig := new(tcplisten.Config)
 	s := httptest.NewUnstartedServer(server{
 		uploadTracker: make(map[int64]map[int32]struct{}),
+		sha: make(map[int64]hash.Hash),
 	})
 
 	wg := sync.WaitGroup{}
@@ -98,6 +101,7 @@ func init() {
 type server struct {
 	sync.Mutex
 	uploadTracker map[int64]map[int32]struct{}
+	sha map[int64]hash.Hash
 }
 
 func (t server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
@@ -142,8 +146,12 @@ func (t server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		t.Lock()
 		if _, ok := t.uploadTracker[req.FileID]; !ok {
 			t.uploadTracker[req.FileID] = make(map[int32]struct{})
+			t.sha[req.FileID] = md5.New()
 		}
 		t.uploadTracker[req.FileID][req.PartID] = struct{}{}
+		t.sha[req.FileID].Write(req.Bytes)
+		// println(hex.Dump(req.Bytes[:100]))
+		println(len(req.Bytes))
 		t.Unlock()
 		if req.PartID == req.TotalParts {
 			sum := int32(0)
@@ -203,5 +211,10 @@ func TestDownloadFileASync(t *testing.T) {
 
 func TestUpload(t *testing.T) {
 	// _File.UploadUserPhoto("./testdata/big")
-	_File.UploadMessageDocument(1000, "./testdata/big", "", 323232, 10)
+	b, _ := ioutil.ReadFile("./testdata/medium")
+	// hash := md5.Sum(b)
+	// fmt.Println(hash)
+	// println(hex.Dump(b[:100]))
+	println("SENT", len(b))
+	_File.UploadMessageDocument(1000, "./testdata/medium", "", 323232, 10)
 }

@@ -146,14 +146,14 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 				bytes := pbytes.GetLen(int(ctx.req.ChunkSize))
 				defer pbytes.Put(bytes)
 				offset := partIndex * ctx.req.ChunkSize
-				_, err := ctx.file.ReadAt(bytes, int64(offset))
+				n, err := ctx.file.ReadAt(bytes, int64(offset))
 				if err != nil && err != io.EOF {
 					logs.Warn("Error in ReadFile", zap.Error(err))
 					atomic.AddInt32(&ctx.req.MaxRetries, -1)
 					ctx.parts <- partIndex
 					return
 				}
-				res, err := ctrl.network.SendHttp(ctx.generateFileSavePart(ctx.req.FileID, partIndex+1, ctx.req.TotalParts, bytes))
+				res, err := ctrl.network.SendHttp(ctx.generateFileSavePart(ctx.req.FileID, partIndex+1, ctx.req.TotalParts, bytes[:n]))
 				if err != nil {
 					logs.Warn("Error in SendHttp", zap.Error(err))
 					atomic.AddInt32(&ctx.req.MaxRetries, -1)
