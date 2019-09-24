@@ -96,7 +96,7 @@ func (ctx *uploadContext) addToUploaded(ctrl *Controller, partIndex int32) {
 	}
 	ctx.mtx.Unlock()
 	ctrl.saveUploads(ctx.req)
-	if ctx.req.SkipDelegateCall && !skipOnProgress {
+	if !ctx.req.SkipDelegateCall && !skipOnProgress {
 		ctrl.onProgressChanged(ctx.req.GetID(), 0, ctx.req.FileID, 0, progress)
 	}
 }
