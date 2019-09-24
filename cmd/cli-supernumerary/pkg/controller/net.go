@@ -361,6 +361,9 @@ func (ctrl *CtrlNetwork) messageHandler(message *msg.MessageEnvelope) {
 		ctrl.onMessage(messages)
 	}
 	if ctrl.onUpdate != nil {
-		ctrl.onUpdate(updates)
+		for _, update := range updates {
+			ctrl.onUpdate(update)
+		}
+
 	}
 }

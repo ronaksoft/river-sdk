@@ -104,18 +104,44 @@ func New(config Config) *Controller {
 
 func (ctrl *Controller) updateFlushFunc(entries []ronak.FlusherEntry) {
 	if ctrl.OnUpdate != nil {
-		itemsCount := len(entries)
-		updates := make([]*msg.UpdateContainer, 0, itemsCount)
+		updateContainer := new(msg.UpdateContainer)
+		sort.Slice(entries, func(i, j int) bool {
+			return entries[i].Value.(*msg.UpdateContainer).MinUpdateID < entries[j].Value.(*msg.UpdateContainer).MinUpdateID
+		})
+		users := make(map[int64]*msg.User)
+		groups := make(map[int64]*msg.Group)
 		for idx := range entries {
 			uc := entries[idx].Value.(*msg.UpdateContainer)
 			sort.Slice(uc.Updates, func(i, j int) bool {
 				return uc.Updates[i].UpdateID < uc.Updates[j].UpdateID
 			})
-			updates = append(updates, uc)
+
+			if uc.MinUpdateID != 0  && (updateContainer.MinUpdateID ==0 || uc.MinUpdateID < updateContainer.MinUpdateID) {
+				updateContainer.MinUpdateID = uc.MinUpdateID
+			}
+			if uc.MaxUpdateID > updateContainer.MaxUpdateID {
+				updateContainer.MaxUpdateID = uc.MaxUpdateID
+			}
+			for _, u := range uc.Updates {
+				updateContainer.Updates = append(updateContainer.Updates, u)
+			}
+			for _, u := range uc.Users {
+				users[u.ID] = u
+			}
+			for _, g := range uc.Groups {
+				groups[g.ID] = g
+			}
+
+			for _, g := range groups {
+				updateContainer.Groups = append(updateContainer.Groups, g)
+			}
+			for _, u := range users {
+				updateContainer.Users = append(updateContainer.Users, u)
+			}
 		}
 
 		// Call the update handler in blocking mode
-		ctrl.OnUpdate(updates)
+		ctrl.OnUpdate(updateContainer)
 	}
 }
 

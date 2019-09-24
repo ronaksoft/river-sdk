@@ -34,16 +34,15 @@ func dummyMessageHandler(messages []*msg.MessageEnvelope) {
 	}
 }
 
-func dummyUpdateHandler(updateContainers []*msg.UpdateContainer) {
+func dummyUpdateHandler(updateContainer *msg.UpdateContainer) {
 	logs.Info("Update Handler")
-	for _, uc := range updateContainers {
-		for _, u := range uc.Updates {
-			logs.Info("Update",
-				zap.String("Constructor", msg.ConstructorNames[u.Constructor]),
-				zap.Int64("UpdateID", u.UpdateID),
-			)
-		}
+	for _, u := range updateContainer.Updates {
+		logs.Info("Update",
+			zap.String("Constructor", msg.ConstructorNames[u.Constructor]),
+			zap.Int64("UpdateID", u.UpdateID),
+		)
 	}
+
 }
 
 func dummyOnConnectHandler() {

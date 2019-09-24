@@ -502,11 +502,10 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer, outO
 	repo.Users.Save(updateContainer.Users...)
 
 	for _, update := range updateContainer.Updates {
-		applier, ok := ctrl.updateAppliers[update.Constructor]
-		// If we are out of sync with server, only apply update ids with UpdateID == 0
 		if outOfSync && update.UpdateID != 0 {
 			continue
 		}
+		applier, ok := ctrl.updateAppliers[update.Constructor]
 		if ok {
 			externalHandlerUpdates, err := applier(update)
 			if err != nil {

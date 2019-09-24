@@ -430,30 +430,21 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 	}
 }
 
-func (r *River) onReceivedUpdate(updateContainers []*msg.UpdateContainer) {
-	// sort updateContainers
-	sort.Slice(updateContainers, func(i, j int) bool {
-		return updateContainers[i].MinUpdateID < updateContainers[j].MinUpdateID
-	})
+func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {
+	for _, update := range updateContainer.Updates {
+		logs.UpdateLog(update.UpdateID, update.Constructor)
+	}
 
 	outOfSync := false
-	for idx := range updateContainers {
-		if updateContainers[idx].MinUpdateID != 0 && updateContainers[idx].MinUpdateID > r.syncCtrl.UpdateID()+1 {
-			logs.Info("We are out of sync",
-				zap.Int64("ContainerMinID", updateContainers[idx].MinUpdateID),
-				zap.Int64("ClientUpdateID", r.syncCtrl.UpdateID()),
-			)
-			outOfSync = true
-		}
-		// sort updateEnvelopes
-		sort.Slice(updateContainers[idx].Updates, func(i, j int) bool {
-			return updateContainers[idx].Updates[i].UpdateID < updateContainers[idx].Updates[j].UpdateID
-		})
-		for _, update := range updateContainers[idx].Updates {
-			logs.UpdateLog(update.UpdateID, update.Constructor)
-		}
-		r.syncCtrl.UpdateHandler(updateContainers[idx], outOfSync)
+	if updateContainer.MinUpdateID != 0 && updateContainer.MinUpdateID > r.syncCtrl.UpdateID()+1 {
+		logs.Info("We are out of sync",
+			zap.Int64("ContainerMinID", updateContainer.MinUpdateID),
+			zap.Int64("ClientUpdateID", r.syncCtrl.UpdateID()),
+		)
+		outOfSync = true
 	}
+
+	r.syncCtrl.UpdateHandler(updateContainer, outOfSync)
 
 	if outOfSync {
 		go r.syncCtrl.Sync()
@@ -665,7 +656,7 @@ func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 		}
 	})
 	// Update Handler
-	networkCtrl.SetUpdateHandler(func(messages []*msg.UpdateContainer) {
+	networkCtrl.SetUpdateHandler(func(messages *msg.UpdateContainer) {
 		// We don't need to handle updates
 		return
 	})

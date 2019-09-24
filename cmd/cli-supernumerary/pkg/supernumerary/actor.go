@@ -274,7 +274,8 @@ func (act *Actor) onMessage(messages []*msg.MessageEnvelope) {
 	}
 }
 
-func (act *Actor) onUpdate(updates []*msg.UpdateContainer) {
+func (act *Actor) onUpdate(update *msg.UpdateContainer) {
+	updates := []*msg.UpdateContainer{update}
 	_Log.Debug("onUpdate() Debounced UpdateContainer",
 		zap.Int("Length", len(updates)),
 	)

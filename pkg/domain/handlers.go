@@ -41,4 +41,4 @@ type LocalMessageHandler func(in, out *msg.MessageEnvelope, timeoutCB TimeoutCal
 type ReceivedMessageHandler func(messages []*msg.MessageEnvelope)
 
 // ReceivedUpdateHandler NetworkController pass all received update messages to this callback/delegate
-type ReceivedUpdateHandler func(messages []*msg.UpdateContainer)
+type ReceivedUpdateHandler func(container *msg.UpdateContainer)
