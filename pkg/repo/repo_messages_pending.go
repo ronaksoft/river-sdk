@@ -5,6 +5,7 @@ import (
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
 	"math"
+	"strings"
 	"time"
 
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
@@ -90,6 +91,11 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, requestID,
 	pm.ReplyTo = msgMedia.ReplyTo
 	pm.ClearDraft = msgMedia.ClearDraft
 	pm.MediaType = msgMedia.MediaType
+
+	// support IOS file path
+	if strings.HasPrefix(msgMedia.FilePath, "file://") {
+		msgMedia.FilePath = msgMedia.FilePath[7:]
+	}
 
 	pm.Media, _ = msgMedia.Marshal()
 	pm.ID = msgID

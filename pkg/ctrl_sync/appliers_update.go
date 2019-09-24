@@ -166,10 +166,6 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 		clientFile, err := repo.Files.GetMediaDocument(x.Message)
 		logs.WarnOnErr("Error On GetMediaDocument", err)
 
-		// support IOS file path
-		if strings.HasPrefix(clientSendMedia.FilePath, "file://") {
-			clientSendMedia.FilePath = clientSendMedia.FilePath[7:]
-		}
 
 		_, err = copyUploadedFile(clientSendMedia.FilePath, fileCtrl.GetFilePath(clientFile))
 		if err != nil {
