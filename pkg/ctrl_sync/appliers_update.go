@@ -158,6 +158,7 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 		clientSendMedia := new(msg.ClientSendMessageMedia)
 		err := clientSendMedia.Unmarshal(pmsg.Media)
 		if err != nil {
+			logs.Warn("Error On HandlePendingMessage", zap.Error(err))
 			return
 		}
 
@@ -165,6 +166,7 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 		logs.WarnOnErr("Error On GetMediaDocument", err)
 		_, err = copyUploadedFile(clientSendMedia.FilePath, fileCtrl.GetFilePath(clientFile))
 		if err != nil {
+			logs.Warn("Error On HandlePendingMessage", zap.Error(err))
 			return
 		}
 	}
@@ -173,7 +175,6 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 	clientUpdate.Messages = x.Message
 	clientUpdate.PendingMessage = pmsg
 	clientUpdate.Success = true
-
 	bytes, _ := clientUpdate.Marshal()
 
 	udpMsg := new(msg.UpdateEnvelope)
