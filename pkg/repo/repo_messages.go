@@ -371,9 +371,10 @@ func (r *repoMessages) DeleteAll(userID int64, peerID int64, peerType int32, max
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
 		for it.Seek(r.getMessageKey(peerID, peerType, maxID)); it.ValidForPrefix(opts.Prefix); it.Next() {
-			_ = ronak.Try(100, time.Millisecond, func() error {
+			err := ronak.Try(100, time.Millisecond, func() error {
 				return txn.Delete(it.Item().KeyCopy(nil))
 			})
+			logs.ErrorOnErr("Error On RepoMessage::DeleteAll", err, zap.Int64("UserID", userID))
 		}
 		it.Close()
 		return nil

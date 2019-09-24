@@ -158,6 +158,13 @@ func WarnOnErr(guideTxt string, err error, fields ...zap.Field) {
 	}
 }
 
+func ErrorOnErr(guideTxt string, err error, fields ...zap.Field) {
+	if err != nil {
+		fields = append(fields, zap.Error(err))
+		Error(guideTxt, fields...)
+	}
+}
+
 func Info(msg string, fields ...zap.Field) {
 	_Log.Info(msg, fields...)
 }
