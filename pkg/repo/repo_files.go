@@ -137,42 +137,39 @@ func (r *repoFiles) SaveContactPhoto(u *msg.ContactUser) error {
 	return err
 }
 
-func (r *repoFiles) SaveGroupPhoto(g *msg.Group) error {
-	if g.Photo == nil {
-		return nil
-	}
-	err := r.Save(&msg.ClientFile{
-		ClusterID:  g.Photo.PhotoBig.ClusterID,
-		FileID:     g.Photo.PhotoBig.FileID,
-		AccessHash: g.Photo.PhotoBig.AccessHash,
-		Type:       msg.ClientFileType_GroupProfilePhoto,
-		MimeType:   "",
-		UserID:     0,
-		GroupID:    g.ID,
-		FileSize:   0,
-		MessageID:  0,
-		PeerID:     g.ID,
-		PeerType:   int32(msg.PeerGroup),
-		Version:    0,
+func (r *repoFiles) SaveGroupPhoto(groupID int64, gphoto *msg.GroupPhoto) {
+	_ = ronak.Try(100, time.Millisecond, func() error {
+		return Files.Save(&msg.ClientFile{
+			ClusterID:  gphoto.PhotoBig.ClusterID,
+			FileID:     gphoto.PhotoBig.FileID,
+			AccessHash: gphoto.PhotoBig.AccessHash,
+			Type:       msg.ClientFileType_GroupProfilePhoto,
+			MimeType:   "",
+			UserID:     0,
+			GroupID:    groupID,
+			FileSize:   0,
+			MessageID:  0,
+			PeerID:     groupID,
+			PeerType:   int32(msg.PeerGroup),
+			Version:    0,
+		})
 	})
-	if err != nil {
-		return err
-	}
-	err = r.Save(&msg.ClientFile{
-		ClusterID:  g.Photo.PhotoSmall.ClusterID,
-		FileID:     g.Photo.PhotoSmall.FileID,
-		AccessHash: g.Photo.PhotoSmall.AccessHash,
-		Type:       msg.ClientFileType_Thumbnail,
-		MimeType:   "",
-		UserID:     0,
-		GroupID:    g.ID,
-		FileSize:   0,
-		MessageID:  0,
-		PeerID:     g.ID,
-		PeerType:   int32(msg.PeerGroup),
-		Version:    0,
+	_ = ronak.Try(100, time.Millisecond, func() error {
+		return Files.Save(&msg.ClientFile{
+			ClusterID:  gphoto.PhotoSmall.ClusterID,
+			FileID:     gphoto.PhotoSmall.FileID,
+			AccessHash: gphoto.PhotoSmall.AccessHash,
+			Type:       msg.ClientFileType_Thumbnail,
+			MimeType:   "",
+			UserID:     0,
+			GroupID:    groupID,
+			FileSize:   0,
+			MessageID:  0,
+			PeerID:     groupID,
+			PeerType:   int32(msg.PeerGroup),
+			Version:    0,
+		})
 	})
-	return err
 }
 
 func (r *repoFiles) SaveMessageMedia(m *msg.UserMessage) error {

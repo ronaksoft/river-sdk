@@ -11,6 +11,7 @@ import (
 	"github.com/dgraph-io/badger"
 	"go.uber.org/zap"
 	"strings"
+	"time"
 )
 
 const (
@@ -150,7 +151,40 @@ func (r *repoGroups) save(group *msg.Group) {
 		Title:  group.Title,
 		PeerID: group.ID,
 	})
-	_ = Files.SaveGroupPhoto(group)
+	if group.Photo != nil {
+		_ = ronak.Try(100, time.Millisecond, func() error {
+			return Files.Save(&msg.ClientFile{
+				ClusterID:  group.Photo.PhotoBig.ClusterID,
+				FileID:     group.Photo.PhotoBig.FileID,
+				AccessHash: group.Photo.PhotoBig.AccessHash,
+				Type:       msg.ClientFileType_GroupProfilePhoto,
+				MimeType:   "",
+				UserID:     0,
+				GroupID:    group.ID,
+				FileSize:   0,
+				MessageID:  0,
+				PeerID:     group.ID,
+				PeerType:   int32(msg.PeerGroup),
+				Version:    0,
+			})
+		})
+		_ = ronak.Try(100, time.Millisecond, func() error {
+			return Files.Save(&msg.ClientFile{
+				ClusterID:  group.Photo.PhotoSmall.ClusterID,
+				FileID:     group.Photo.PhotoSmall.FileID,
+				AccessHash: group.Photo.PhotoSmall.AccessHash,
+				Type:       msg.ClientFileType_Thumbnail,
+				MimeType:   "",
+				UserID:     0,
+				GroupID:    group.ID,
+				FileSize:   0,
+				MessageID:  0,
+				PeerID:     group.ID,
+				PeerType:   int32(msg.PeerGroup),
+				Version:    0,
+			})
+		})
+	}
 }
 
 func (r *repoGroups) SaveParticipant(groupID int64, participant *msg.GroupParticipant) {
