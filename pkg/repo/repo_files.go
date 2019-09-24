@@ -5,6 +5,7 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
+	"time"
 )
 
 /*
@@ -53,41 +54,49 @@ func (r *repoFiles) GetMediaDocument(m *msg.UserMessage) (*msg.ClientFile, error
 }
 
 func (r *repoFiles) SaveUserPhotos(u *msg.User) error {
-	if u.Photo == nil {
-		return nil
+	photos := make([]*msg.UserPhoto, 1+len(u.PhotoGallery))
+	if u.Photo != nil {
+		photos = append(photos, u.Photo)
 	}
-	err := r.Save(&msg.ClientFile{
-		ClusterID:  u.Photo.PhotoBig.ClusterID,
-		FileID:     u.Photo.PhotoBig.FileID,
-		AccessHash: u.Photo.PhotoBig.AccessHash,
-		Type:       msg.ClientFileType_AccountProfilePhoto,
-		MimeType:   "",
-		UserID:     u.ID,
-		GroupID:    0,
-		FileSize:   0,
-		MessageID:  0,
-		PeerID:     u.ID,
-		PeerType:   int32(msg.PeerUser),
-		Version:    0,
-	})
-	if err != nil {
-		return err
+	for _, photo := range u.PhotoGallery {
+		photos = append(photos, photo)
 	}
-	err = r.Save(&msg.ClientFile{
-		ClusterID:  u.Photo.PhotoSmall.ClusterID,
-		FileID:     u.Photo.PhotoSmall.FileID,
-		AccessHash: u.Photo.PhotoSmall.AccessHash,
-		Type:       msg.ClientFileType_Thumbnail,
-		MimeType:   "",
-		UserID:     u.ID,
-		GroupID:    0,
-		FileSize:   0,
-		MessageID:  0,
-		PeerID:     u.ID,
-		PeerType:   int32(msg.PeerUser),
-		Version:    0,
-	})
-	return err
+	for _, photo := range photos {
+		_ = ronak.Try(100, time.Millisecond, func() error {
+			return r.Save(&msg.ClientFile{
+				ClusterID:  photo.PhotoBig.ClusterID,
+				FileID:     photo.PhotoBig.FileID,
+				AccessHash: photo.PhotoBig.AccessHash,
+				Type:       msg.ClientFileType_AccountProfilePhoto,
+				MimeType:   "",
+				UserID:     u.ID,
+				GroupID:    0,
+				FileSize:   0,
+				MessageID:  0,
+				PeerID:     u.ID,
+				PeerType:   int32(msg.PeerUser),
+				Version:    0,
+			})
+		})
+		_ = ronak.Try(100, time.Millisecond, func() error {
+			return r.Save(&msg.ClientFile{
+				ClusterID:  photo.PhotoSmall.ClusterID,
+				FileID:     photo.PhotoSmall.FileID,
+				AccessHash: photo.PhotoSmall.AccessHash,
+				Type:       msg.ClientFileType_Thumbnail,
+				MimeType:   "",
+				UserID:     u.ID,
+				GroupID:    0,
+				FileSize:   0,
+				MessageID:  0,
+				PeerID:     u.ID,
+				PeerType:   int32(msg.PeerUser),
+				Version:    0,
+			})
+		})
+
+	}
+	return nil
 }
 
 func (r *repoFiles) SaveContactPhoto(u *msg.ContactUser) error {
@@ -136,7 +145,7 @@ func (r *repoFiles) SaveGroupPhoto(g *msg.Group) error {
 		ClusterID:  g.Photo.PhotoBig.ClusterID,
 		FileID:     g.Photo.PhotoBig.FileID,
 		AccessHash: g.Photo.PhotoBig.AccessHash,
-		Type:       msg.ClientFileType_AccountProfilePhoto,
+		Type:       msg.ClientFileType_GroupProfilePhoto,
 		MimeType:   "",
 		UserID:     0,
 		GroupID:    g.ID,
