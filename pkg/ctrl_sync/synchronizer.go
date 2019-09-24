@@ -330,7 +330,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 				logs.Warn("SyncController::getUpdateDifference() -> ExecuteRealtimeCommand() Timeout")
 			},
 			func(m *msg.MessageEnvelope) {
-				waitGroup.Done()
+				defer waitGroup.Done()
 				switch m.Constructor {
 				case msg.C_UpdateDifference:
 					x := new(msg.UpdateDifference)
@@ -377,7 +377,12 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 	logs.Info("SyncController:: onGetDifferenceSucceed",
 		zap.Int64("MaxUpdateID", x.MaxUpdateID),
 		zap.Int64("MinUpdateID", x.MinUpdateID),
+		zap.Int("Length", len(x.Updates)),
 	)
+
+	if len(x.Updates) == 0 {
+		return
+	}
 
 	// save Groups & Users
 	repo.Groups.Save(x.Groups...)
