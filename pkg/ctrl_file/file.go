@@ -545,7 +545,6 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 		ThumbPath:    thumbPath,
 		MaxInFlights: 3,
 	}
-
 	ctrl.saveUploads(req)
 
 	// Upload Thumbnail
@@ -554,7 +553,7 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 		FileID:           thumbID,
 		MaxInFlights:     3,
 		FilePath:         thumbPath,
-		SkipDelegateCall: true,
+		SkipDelegateCall: false,
 	})
 
 	// Upload File
