@@ -158,17 +158,16 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 		clientSendMedia := new(msg.ClientSendMessageMedia)
 		err := clientSendMedia.Unmarshal(pmsg.Media)
 		if err != nil {
-			logs.Warn("Error On HandlePendingMessage", zap.Error(err))
+			logs.Error("Error On HandlePendingMessage", zap.Error(err))
 			return
 		}
 
 		clientFile, err := repo.Files.GetMediaDocument(x.Message)
 		logs.WarnOnErr("Error On GetMediaDocument", err)
 
-
 		_, err = copyUploadedFile(clientSendMedia.FilePath, fileCtrl.GetFilePath(clientFile))
 		if err != nil {
-			logs.Warn("Error On HandlePendingMessage", zap.Error(err))
+			logs.Error("Error On HandlePendingMessage", zap.Error(err))
 			return
 		}
 	}

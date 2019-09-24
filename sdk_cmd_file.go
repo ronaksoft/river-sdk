@@ -127,6 +127,7 @@ func (r *River) AccountUploadPhoto(filePath string) (reqID string) {
 		mon.FunctionResponseTime("AccountUploadPhoto", time.Now().Sub(startTime))
 	}()
 
+
 	reqID = r.fileCtrl.UploadUserPhoto(filePath)
 	return
 }
