@@ -7,6 +7,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
@@ -164,6 +165,12 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 
 		clientFile, err := repo.Files.GetMediaDocument(x.Message)
 		logs.WarnOnErr("Error On GetMediaDocument", err)
+
+		// support IOS file path
+		if strings.HasPrefix(clientSendMedia.FilePath, "file://") {
+			clientSendMedia.FilePath = clientSendMedia.FilePath[7:]
+		}
+
 		_, err = copyUploadedFile(clientSendMedia.FilePath, fileCtrl.GetFilePath(clientFile))
 		if err != nil {
 			logs.Warn("Error On HandlePendingMessage", zap.Error(err))
