@@ -223,7 +223,7 @@ func (r *repoUsers) save(user *msg.User) {
 	currentUser := r.Get(user.ID)
 
 	if currentUser != nil && len(currentUser.PhotoGallery) > 0 {
-		if user.PhotoGallery == nil || len(user.PhotoGallery) == 0 {
+		if len(user.PhotoGallery) == 0 {
 			user.PhotoGallery = currentUser.PhotoGallery
 		}
 	}
