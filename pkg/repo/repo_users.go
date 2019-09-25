@@ -298,12 +298,29 @@ func (r *repoUsers) UpdatePhoto(userPhoto *msg.UpdateUserPhoto) {
 	}
 
 	defer r.deleteFromCache(userPhoto.UserID)
-
 	user := r.Get(userPhoto.UserID)
 	if user == nil {
 		return
 	}
-	user.Photo = userPhoto.Photo
+
+	var photoGallery []*msg.UserPhoto
+	if user.PhotoGallery != nil && len(user.PhotoGallery) > 0 {
+		for _,photo := range user.PhotoGallery {
+			if photo.PhotoID != userPhoto.PhotoID {
+				photoGallery = append(photoGallery,photo)
+			}
+		}
+	}
+	if userPhoto.Photo != nil {
+		photoGallery = append([]*msg.UserPhoto{userPhoto.Photo}, photoGallery...)
+	}
+	user.PhotoGallery = photoGallery
+	if len(user.PhotoGallery) > 0 {
+		user.Photo = user.PhotoGallery[0]
+	}else {
+		user.Photo = nil
+	}
+
 	r.Save(user)
 }
 
