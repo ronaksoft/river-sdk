@@ -492,7 +492,7 @@ func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 
 	logs.Info("SyncController::updateUserPhoto()")
 
-	repo.Users.UpdatePhoto(x)
+	repo.Users.UpdatePhoto(x.UserID, x.Photo)
 
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil
