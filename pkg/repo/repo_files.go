@@ -62,39 +62,44 @@ func (r *repoFiles) SaveUserPhotos(u *msg.User) error {
 		photos = append(photos, photo)
 	}
 	for _, photo := range photos {
-		_ = ronak.Try(100, time.Millisecond, func() error {
-			return r.Save(&msg.ClientFile{
-				ClusterID:  photo.PhotoBig.ClusterID,
-				FileID:     photo.PhotoBig.FileID,
-				AccessHash: photo.PhotoBig.AccessHash,
-				Type:       msg.ClientFileType_AccountProfilePhoto,
-				MimeType:   "",
-				UserID:     u.ID,
-				GroupID:    0,
-				FileSize:   0,
-				MessageID:  0,
-				PeerID:     u.ID,
-				PeerType:   int32(msg.PeerUser),
-				Version:    0,
-			})
-		})
-		_ = ronak.Try(100, time.Millisecond, func() error {
-			return r.Save(&msg.ClientFile{
-				ClusterID:  photo.PhotoSmall.ClusterID,
-				FileID:     photo.PhotoSmall.FileID,
-				AccessHash: photo.PhotoSmall.AccessHash,
-				Type:       msg.ClientFileType_Thumbnail,
-				MimeType:   "",
-				UserID:     u.ID,
-				GroupID:    0,
-				FileSize:   0,
-				MessageID:  0,
-				PeerID:     u.ID,
-				PeerType:   int32(msg.PeerUser),
-				Version:    0,
-			})
-		})
-
+		if photo != nil {
+			if photo.PhotoBig != nil {
+				_ = ronak.Try(100, time.Millisecond, func() error {
+					return r.Save(&msg.ClientFile{
+						ClusterID:  photo.PhotoBig.ClusterID,
+						FileID:     photo.PhotoBig.FileID,
+						AccessHash: photo.PhotoBig.AccessHash,
+						Type:       msg.ClientFileType_AccountProfilePhoto,
+						MimeType:   "",
+						UserID:     u.ID,
+						GroupID:    0,
+						FileSize:   0,
+						MessageID:  0,
+						PeerID:     u.ID,
+						PeerType:   int32(msg.PeerUser),
+						Version:    0,
+					})
+				})
+			}
+			if photo.PhotoSmall != nil {
+				_ = ronak.Try(100, time.Millisecond, func() error {
+					return r.Save(&msg.ClientFile{
+						ClusterID:  photo.PhotoSmall.ClusterID,
+						FileID:     photo.PhotoSmall.FileID,
+						AccessHash: photo.PhotoSmall.AccessHash,
+						Type:       msg.ClientFileType_Thumbnail,
+						MimeType:   "",
+						UserID:     u.ID,
+						GroupID:    0,
+						FileSize:   0,
+						MessageID:  0,
+						PeerID:     u.ID,
+						PeerType:   int32(msg.PeerUser),
+						Version:    0,
+					})
+				})
+			}
+		}
 	}
 	return nil
 }
@@ -103,73 +108,88 @@ func (r *repoFiles) SaveContactPhoto(u *msg.ContactUser) error {
 	if u.Photo == nil {
 		return nil
 	}
-	err := r.Save(&msg.ClientFile{
-		ClusterID:  u.Photo.PhotoBig.ClusterID,
-		FileID:     u.Photo.PhotoBig.FileID,
-		AccessHash: u.Photo.PhotoBig.AccessHash,
-		Type:       msg.ClientFileType_AccountProfilePhoto,
-		MimeType:   "",
-		UserID:     u.ID,
-		GroupID:    0,
-		FileSize:   0,
-		MessageID:  0,
-		PeerID:     u.ID,
-		PeerType:   int32(msg.PeerUser),
-		Version:    0,
-	})
-	if err != nil {
+	if u.Photo.PhotoBig != nil {
+		err := r.Save(&msg.ClientFile{
+			ClusterID:  u.Photo.PhotoBig.ClusterID,
+			FileID:     u.Photo.PhotoBig.FileID,
+			AccessHash: u.Photo.PhotoBig.AccessHash,
+			Type:       msg.ClientFileType_AccountProfilePhoto,
+			MimeType:   "",
+			UserID:     u.ID,
+			GroupID:    0,
+			FileSize:   0,
+			MessageID:  0,
+			PeerID:     u.ID,
+			PeerType:   int32(msg.PeerUser),
+			Version:    0,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	if u.Photo.PhotoSmall != nil {
+		err := r.Save(&msg.ClientFile{
+			ClusterID:  u.Photo.PhotoSmall.ClusterID,
+			FileID:     u.Photo.PhotoSmall.FileID,
+			AccessHash: u.Photo.PhotoSmall.AccessHash,
+			Type:       msg.ClientFileType_Thumbnail,
+			MimeType:   "",
+			UserID:     u.ID,
+			GroupID:    0,
+			FileSize:   0,
+			MessageID:  0,
+			PeerID:     u.ID,
+			PeerType:   int32(msg.PeerUser),
+			Version:    0,
+		})
+
 		return err
 	}
-	err = r.Save(&msg.ClientFile{
-		ClusterID:  u.Photo.PhotoSmall.ClusterID,
-		FileID:     u.Photo.PhotoSmall.FileID,
-		AccessHash: u.Photo.PhotoSmall.AccessHash,
-		Type:       msg.ClientFileType_Thumbnail,
-		MimeType:   "",
-		UserID:     u.ID,
-		GroupID:    0,
-		FileSize:   0,
-		MessageID:  0,
-		PeerID:     u.ID,
-		PeerType:   int32(msg.PeerUser),
-		Version:    0,
-	})
-	return err
+	return nil
 }
 
 func (r *repoFiles) SaveGroupPhoto(groupID int64, gphoto *msg.GroupPhoto) {
-	_ = ronak.Try(100, time.Millisecond, func() error {
-		return Files.Save(&msg.ClientFile{
-			ClusterID:  gphoto.PhotoBig.ClusterID,
-			FileID:     gphoto.PhotoBig.FileID,
-			AccessHash: gphoto.PhotoBig.AccessHash,
-			Type:       msg.ClientFileType_GroupProfilePhoto,
-			MimeType:   "",
-			UserID:     0,
-			GroupID:    groupID,
-			FileSize:   0,
-			MessageID:  0,
-			PeerID:     groupID,
-			PeerType:   int32(msg.PeerGroup),
-			Version:    0,
+	if gphoto == nil {
+		return
+	}
+
+	if gphoto.PhotoBig != nil {
+		_ = ronak.Try(100, time.Millisecond, func() error {
+			return Files.Save(&msg.ClientFile{
+				ClusterID:  gphoto.PhotoBig.ClusterID,
+				FileID:     gphoto.PhotoBig.FileID,
+				AccessHash: gphoto.PhotoBig.AccessHash,
+				Type:       msg.ClientFileType_GroupProfilePhoto,
+				MimeType:   "",
+				UserID:     0,
+				GroupID:    groupID,
+				FileSize:   0,
+				MessageID:  0,
+				PeerID:     groupID,
+				PeerType:   int32(msg.PeerGroup),
+				Version:    0,
+			})
 		})
-	})
-	_ = ronak.Try(100, time.Millisecond, func() error {
-		return Files.Save(&msg.ClientFile{
-			ClusterID:  gphoto.PhotoSmall.ClusterID,
-			FileID:     gphoto.PhotoSmall.FileID,
-			AccessHash: gphoto.PhotoSmall.AccessHash,
-			Type:       msg.ClientFileType_Thumbnail,
-			MimeType:   "",
-			UserID:     0,
-			GroupID:    groupID,
-			FileSize:   0,
-			MessageID:  0,
-			PeerID:     groupID,
-			PeerType:   int32(msg.PeerGroup),
-			Version:    0,
+	}
+
+	if gphoto.PhotoSmall != nil {
+		_ = ronak.Try(100, time.Millisecond, func() error {
+			return Files.Save(&msg.ClientFile{
+				ClusterID:  gphoto.PhotoSmall.ClusterID,
+				FileID:     gphoto.PhotoSmall.FileID,
+				AccessHash: gphoto.PhotoSmall.AccessHash,
+				Type:       msg.ClientFileType_Thumbnail,
+				MimeType:   "",
+				UserID:     0,
+				GroupID:    groupID,
+				FileSize:   0,
+				MessageID:  0,
+				PeerID:     groupID,
+				PeerType:   int32(msg.PeerGroup),
+				Version:    0,
+			})
 		})
-	})
+	}
 }
 
 func (r *repoFiles) SaveMessageMedia(m *msg.UserMessage) error {
