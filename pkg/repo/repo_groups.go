@@ -17,6 +17,7 @@ import (
 const (
 	prefixGroups             = "GRP"
 	prefixGroupsParticipants = "GRP_P"
+	prefixGroupsPhotoGallery = "GRP_PH"
 )
 
 type repoGroups struct {
@@ -29,6 +30,10 @@ func (r *repoGroups) getGroupKey(groupID int64) []byte {
 
 func (r *repoGroups) getGroupParticipantKey(groupID, memberID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixGroupsParticipants, groupID, memberID))
+}
+
+func (r *repoGroups) getPhotoGalleryKey(groupID, photoID int64) []byte {
+	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixGroupsParticipants, groupID, photoID))
 }
 
 func (r *repoGroups) getPrefix(groupID int64) []byte {
@@ -202,6 +207,16 @@ func (r *repoGroups) SaveParticipant(groupID int64, participant *msg.GroupPartic
 	})
 }
 
+func (r *repoGroups) SavePhotoGallery(groupID int64, photos ...*msg.GroupPhoto) {
+	for _, photo := range photos {
+		key := r.getPhotoGalleryKey(groupID, photo.PhotoID)
+		bytes, _ := photo.Marshal()
+		_ = r.badger.Update(func(txn *badger.Txn) error {
+			return txn.SetEntry(badger.NewEntry(key, bytes))
+		})
+	}
+}
+
 func (r *repoGroups) GetMany(groupIDs []int64) []*msg.Group {
 	return r.readManyFromCache(groupIDs)
 }
@@ -291,7 +306,6 @@ func (r *repoGroups) UpdateTitle(groupID int64, title string) {
 }
 
 func (r *repoGroups) DeleteMemberMany(groupID int64, memberIDs []int64) {
-
 	for _, memberID := range memberIDs {
 		r.DeleteMember(groupID, memberID)
 	}
@@ -338,7 +352,6 @@ func (r *repoGroups) UpdateMemberType(groupID, userID int64, isAdmin bool) {
 }
 
 func (r *repoGroups) RemovePhoto(groupID int64) {
-
 	defer r.deleteFromCache(groupID)
 
 	group := r.Get(groupID)
@@ -347,18 +360,24 @@ func (r *repoGroups) RemovePhoto(groupID int64) {
 	}
 	group.Photo = nil
 	r.Save(group)
+
+	_ = r.badger.Update(func(txn *badger.Txn) error {
+		return txn.Delete(r.getPhotoGalleryKey(groupID, group.Photo.PhotoID))
+	})
 }
 
-func (r *repoGroups) UpdatePhoto(groupPhoto *msg.UpdateGroupPhoto) {
-	if alreadySaved(fmt.Sprintf("GPHOTO.%d", groupPhoto.GroupID), groupPhoto) {
+func (r *repoGroups) UpdatePhoto(groupID int64, groupPhoto *msg.GroupPhoto) {
+	if alreadySaved(fmt.Sprintf("GPHOTO.%d", groupID), groupPhoto) {
 		return
 	}
 
-	defer r.deleteFromCache(groupPhoto.GroupID)
+	defer r.deleteFromCache(groupID)
 
-	group := r.Get(groupPhoto.GroupID)
-	group.Photo = groupPhoto.Photo
+	group := r.Get(groupID)
+	group.Photo = groupPhoto
 	r.Save(group)
+
+	r.SavePhotoGallery(groupID, groupPhoto)
 }
 
 func (r *repoGroups) Search(searchPhrase string) []*msg.Group {

@@ -510,7 +510,7 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 		zap.Int64("GroupID", x.GroupID),
 	)
 
-	repo.Groups.UpdatePhoto(x)
+	repo.Groups.UpdatePhoto(x.GroupID, x.Photo)
 
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil
