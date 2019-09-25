@@ -43,8 +43,7 @@ type Controller struct {
 	userID               int64
 
 	// internal locks
-	updateDifferenceLock int32
-	syncLock             int32
+	syncLock int32
 }
 
 // NewSyncController create new instance
@@ -293,12 +292,6 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 	)
 }
 func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
-	// Check if getUpdateDifference function is already running, then return otherwise lock it and continue
-	if !atomic.CompareAndSwapInt32(&ctrl.updateDifferenceLock, 0, 1) {
-		return
-	}
-	defer atomic.StoreInt32(&ctrl.updateDifferenceLock, 0)
-
 	logs.Info("SyncController::getUpdateDifference()",
 		zap.Int64("ServerUpdateID", serverUpdateID),
 		zap.Int64("ClientUpdateID", ctrl.updateID),
@@ -349,7 +342,10 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 					if err != nil {
 						logs.Error("onGetDifferenceSucceed()-> SaveInt()", zap.Error(err))
 					}
-					logs.Info("updateGetDifference", zap.Int64("ClientUpdateID", ctrl.updateID))
+					logs.Info("updateGetDifference",
+						zap.Int64("ClientUpdateID", ctrl.updateID),
+						zap.Bool("More", x.More),
+					)
 
 				case msg.C_Error:
 					logs.Debug("onGetDifferenceSucceed()-> C_Error",
