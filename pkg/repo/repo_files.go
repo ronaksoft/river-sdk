@@ -108,44 +108,45 @@ func (r *repoFiles) SaveContactPhoto(u *msg.ContactUser) error {
 	if u.Photo == nil {
 		return nil
 	}
-	if u.Photo.PhotoBig != nil {
-		err := r.Save(&msg.ClientFile{
-			ClusterID:  u.Photo.PhotoBig.ClusterID,
-			FileID:     u.Photo.PhotoBig.FileID,
-			AccessHash: u.Photo.PhotoBig.AccessHash,
-			Type:       msg.ClientFileType_AccountProfilePhoto,
-			MimeType:   "",
-			UserID:     u.ID,
-			GroupID:    0,
-			FileSize:   0,
-			MessageID:  0,
-			PeerID:     u.ID,
-			PeerType:   int32(msg.PeerUser),
-			Version:    0,
-		})
-		if err != nil {
-			return err
-		}
+	if u.Photo.PhotoBig == nil || u.Photo.PhotoSmall == nil {
+		return nil
 	}
-	if u.Photo.PhotoSmall != nil {
-		err := r.Save(&msg.ClientFile{
-			ClusterID:  u.Photo.PhotoSmall.ClusterID,
-			FileID:     u.Photo.PhotoSmall.FileID,
-			AccessHash: u.Photo.PhotoSmall.AccessHash,
-			Type:       msg.ClientFileType_Thumbnail,
-			MimeType:   "",
-			UserID:     u.ID,
-			GroupID:    0,
-			FileSize:   0,
-			MessageID:  0,
-			PeerID:     u.ID,
-			PeerType:   int32(msg.PeerUser),
-			Version:    0,
-		})
 
+	err := r.Save(&msg.ClientFile{
+		ClusterID:  u.Photo.PhotoBig.ClusterID,
+		FileID:     u.Photo.PhotoBig.FileID,
+		AccessHash: u.Photo.PhotoBig.AccessHash,
+		Type:       msg.ClientFileType_AccountProfilePhoto,
+		MimeType:   "",
+		UserID:     u.ID,
+		GroupID:    0,
+		FileSize:   0,
+		MessageID:  0,
+		PeerID:     u.ID,
+		PeerType:   int32(msg.PeerUser),
+		Version:    0,
+	})
+	if err != nil {
 		return err
 	}
-	return nil
+
+	err = r.Save(&msg.ClientFile{
+		ClusterID:  u.Photo.PhotoSmall.ClusterID,
+		FileID:     u.Photo.PhotoSmall.FileID,
+		AccessHash: u.Photo.PhotoSmall.AccessHash,
+		Type:       msg.ClientFileType_Thumbnail,
+		MimeType:   "",
+		UserID:     u.ID,
+		GroupID:    0,
+		FileSize:   0,
+		MessageID:  0,
+		PeerID:     u.ID,
+		PeerType:   int32(msg.PeerUser),
+		Version:    0,
+	})
+
+	return err
+
 }
 
 func (r *repoFiles) SaveGroupPhoto(groupID int64, gphoto *msg.GroupPhoto) {
