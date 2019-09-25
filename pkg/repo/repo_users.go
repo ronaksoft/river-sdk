@@ -17,6 +17,7 @@ import (
 const (
 	prefixUsers    = "USERS"
 	prefixContacts = "CONTACTS"
+	prefixUsersPhotoGallery = "USERS_PHG"
 )
 
 type repoUsers struct {
@@ -63,6 +64,10 @@ func (r *repoUsers) getContactByKey(contactKey []byte) *msg.ContactUser {
 		return nil
 	}
 	return contactUser
+}
+
+func (r *repoUsers) getPhotoGalleryKey(userID, photoID int64) []byte {
+	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixUsersPhotoGallery, userID, photoID))
 }
 
 func (r *repoUsers) readFromDb(userID int64) *msg.User {
@@ -272,6 +277,16 @@ func (r *repoUsers) saveContact(contactUser *msg.ContactUser) {
 
 }
 
+func (r *repoUsers) SavePhotoGallery(userID int64, photos ...*msg.UserPhoto) {
+	for _, photo := range photos {
+		key := r.getPhotoGalleryKey(userID, photo.PhotoID)
+		bytes, _ := photo.Marshal()
+		_ = r.badger.Update(func(txn *badger.Txn) error {
+			return txn.SetEntry(badger.NewEntry(key, bytes))
+		})
+	}
+}
+
 func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType int32) {
 	defer r.deleteFromCache(peerID)
 
@@ -292,36 +307,19 @@ func (r *repoUsers) GetAccessHash(userID int64) (uint64, error) {
 	return user.AccessHash, nil
 }
 
-func (r *repoUsers) UpdatePhoto(userPhoto *msg.UpdateUserPhoto) {
-	if alreadySaved(fmt.Sprintf("UPHOTO.%d", userPhoto.UserID), userPhoto) {
+func (r *repoUsers) UpdatePhoto(userID int64, userPhoto *msg.UserPhoto) {
+	if alreadySaved(fmt.Sprintf("UPHOTO.%d", userID), userPhoto) {
 		return
 	}
 
-	defer r.deleteFromCache(userPhoto.UserID)
-	user := r.Get(userPhoto.UserID)
+	defer r.deleteFromCache(userID)
+	user := r.Get(userID)
 	if user == nil {
 		return
 	}
-
-	var photoGallery []*msg.UserPhoto
-	if user.PhotoGallery != nil && len(user.PhotoGallery) > 0 {
-		for _,photo := range user.PhotoGallery {
-			if photo.PhotoID != userPhoto.PhotoID {
-				photoGallery = append(photoGallery,photo)
-			}
-		}
-	}
-	if userPhoto.Photo != nil {
-		photoGallery = append([]*msg.UserPhoto{userPhoto.Photo}, photoGallery...)
-	}
-	user.PhotoGallery = photoGallery
-	if len(user.PhotoGallery) > 0 {
-		user.Photo = user.PhotoGallery[0]
-	}else {
-		user.Photo = nil
-	}
-
 	r.Save(user)
+
+	r.SavePhotoGallery(userID, userPhoto)
 }
 
 func (r *repoUsers) RemovePhoto(userID int64) {

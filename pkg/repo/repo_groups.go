@@ -17,7 +17,7 @@ import (
 const (
 	prefixGroups             = "GRP"
 	prefixGroupsParticipants = "GRP_P"
-	prefixGroupsPhotoGallery = "GRP_PH"
+	prefixGroupsPhotoGallery = "GRP_PHG"
 )
 
 type repoGroups struct {
@@ -33,7 +33,7 @@ func (r *repoGroups) getGroupParticipantKey(groupID, memberID int64) []byte {
 }
 
 func (r *repoGroups) getPhotoGalleryKey(groupID, photoID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixGroupsParticipants, groupID, photoID))
+	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixGroupsPhotoGallery, groupID, photoID))
 }
 
 func (r *repoGroups) getPrefix(groupID int64) []byte {
