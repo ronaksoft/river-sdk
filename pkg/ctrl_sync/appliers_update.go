@@ -520,7 +520,7 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 func (ctrl *Controller) updateTooLong(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	logs.Info("SyncController::updateTooLong()")
 
-	go ctrl.sync()
+	go ctrl.Sync()
 
 	res := make([]*msg.UpdateEnvelope, 0)
 	return res, nil

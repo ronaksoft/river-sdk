@@ -102,17 +102,15 @@ func (ctrl *Controller) watchDog() {
 			if time.Now().Sub(ctrl.lastUpdateReceived) < syncTime {
 				break
 			}
-			ctrl.sync()
+			ctrl.Sync()
 		case <-ctrl.stopChannel:
 			logs.Info("SyncController:: watchDog Stopped")
 			return
 		}
 	}
 }
+
 func (ctrl *Controller) Sync() {
-	ctrl.sync()
-}
-func (ctrl *Controller) sync() {
 	// Check if sync function is already running, then return otherwise lock it and continue
 	if !atomic.CompareAndSwapInt32(&ctrl.syncLock, 0, 1) {
 		return
@@ -163,7 +161,7 @@ func (ctrl *Controller) sync() {
 		}
 	} else if serverUpdateID > ctrl.updateID+1 {
 		logs.Info("SyncController:: Sequential sync")
-		getUpdateDifference(ctrl, serverUpdateID+1) // +1 cuz in here we dont have serverUpdateID itself too
+		getUpdateDifference(ctrl, serverUpdateID)
 	}
 }
 func updateSyncStatus(ctrl *Controller, newStatus domain.SyncStatus) {
