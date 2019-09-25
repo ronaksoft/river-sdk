@@ -220,6 +220,12 @@ func (r *repoUsers) Save(users ...*msg.User) {
 	return
 }
 func (r *repoUsers) save(user *msg.User) {
+	currentUser := r.Get(user.ID)
+
+	if currentUser != nil && currentUser.PhotoGallery != nil && len(currentUser.PhotoGallery) > 0 && (user.PhotoGallery == nil || len(user.PhotoGallery) == 0) {
+		user.PhotoGallery = currentUser.PhotoGallery
+	}
+
 	userKey := r.getUserKey(user.ID)
 	userBytes, _ := user.Marshal()
 	_ = r.badger.Update(func(txn *badger.Txn) error {
