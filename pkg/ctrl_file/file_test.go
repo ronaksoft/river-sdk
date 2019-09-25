@@ -59,7 +59,7 @@ func init() {
 	tcpConfig := new(tcplisten.Config)
 	s := httptest.NewUnstartedServer(server{
 		uploadTracker: make(map[int64]map[int32]struct{}),
-		sha: make(map[int64]hash.Hash),
+		sha:           make(map[int64]hash.Hash),
 	})
 
 	wg := sync.WaitGroup{}
@@ -101,7 +101,7 @@ func init() {
 type server struct {
 	sync.Mutex
 	uploadTracker map[int64]map[int32]struct{}
-	sha map[int64]hash.Hash
+	sha           map[int64]hash.Hash
 }
 
 func (t server) ServeHTTP(res http.ResponseWriter, req *http.Request) {

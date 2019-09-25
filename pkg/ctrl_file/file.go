@@ -574,8 +574,6 @@ func (ctrl *Controller) upload(req UploadRequest) {
 		rateLimit: make(chan struct{}, req.MaxInFlights),
 	}
 
-
-
 	fileInfo, err := os.Stat(req.FilePath)
 	if err != nil {
 		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)

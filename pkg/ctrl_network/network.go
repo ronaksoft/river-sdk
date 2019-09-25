@@ -116,7 +116,7 @@ func (ctrl *Controller) updateFlushFunc(entries []ronak.FlusherEntry) {
 				return uc.Updates[i].UpdateID < uc.Updates[j].UpdateID
 			})
 
-			if uc.MinUpdateID != 0  && (updateContainer.MinUpdateID ==0 || uc.MinUpdateID < updateContainer.MinUpdateID) {
+			if uc.MinUpdateID != 0 && (updateContainer.MinUpdateID == 0 || uc.MinUpdateID < updateContainer.MinUpdateID) {
 				updateContainer.MinUpdateID = uc.MinUpdateID
 			}
 			if uc.MaxUpdateID > updateContainer.MaxUpdateID {
