@@ -36,6 +36,10 @@ func (r *repoGroups) getPhotoGalleryKey(groupID, photoID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixGroupsPhotoGallery, groupID, photoID))
 }
 
+func (r *repoGroups) getPhotoGalleryPrefix(groupID int64) []byte {
+	return ronak.StrToByte(fmt.Sprintf("%s.%021d.", prefixGroupsPhotoGallery, groupID))
+}
+
 func (r *repoGroups) getPrefix(groupID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d.", prefixGroupsParticipants, groupID))
 }
@@ -217,6 +221,37 @@ func (r *repoGroups) SavePhotoGallery(groupID int64, photos ...*msg.GroupPhoto) 
 	}
 }
 
+func (r *repoGroups) RemovePhotoGallery(groupID int64, photoIDs ...int64) {
+	for _, photoID := range photoIDs {
+		_ = r.badger.Update(func(txn *badger.Txn) error {
+			return txn.Delete(r.getPhotoGalleryKey(groupID, photoID))
+		})
+	}
+}
+
+func (r *repoGroups) GetPhotoGallery(groupID int64) []*msg.GroupPhoto {
+	photos := make([]*msg.GroupPhoto, 0, 5)
+	_ = r.badger.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = r.getPhotoGalleryPrefix(groupID)
+		it := txn.NewIterator(opts)
+		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
+			_ = it.Item().Value(func(val []byte) error {
+				groupPhoto := new(msg.GroupPhoto)
+				err := groupPhoto.Unmarshal(val)
+				if err != nil {
+					return err
+				}
+				photos = append(photos, groupPhoto)
+				return nil
+			})
+		}
+		it.Close()
+		return nil
+	})
+	return photos
+}
+
 func (r *repoGroups) GetMany(groupIDs []int64) []*msg.Group {
 	return r.readManyFromCache(groupIDs)
 }
@@ -351,21 +386,6 @@ func (r *repoGroups) UpdateMemberType(groupID, userID int64, isAdmin bool) {
 	r.Save(group)
 }
 
-func (r *repoGroups) RemovePhoto(groupID int64) {
-	defer r.deleteFromCache(groupID)
-
-	group := r.Get(groupID)
-	if group == nil {
-		return
-	}
-	group.Photo = nil
-	r.Save(group)
-
-	_ = r.badger.Update(func(txn *badger.Txn) error {
-		return txn.Delete(r.getPhotoGalleryKey(groupID, group.Photo.PhotoID))
-	})
-}
-
 func (r *repoGroups) UpdatePhoto(groupID int64, groupPhoto *msg.GroupPhoto) {
 	if alreadySaved(fmt.Sprintf("GPHOTO.%d", groupID), groupPhoto) {
 		return
@@ -377,7 +397,25 @@ func (r *repoGroups) UpdatePhoto(groupID int64, groupPhoto *msg.GroupPhoto) {
 	group.Photo = groupPhoto
 	r.Save(group)
 
-	r.SavePhotoGallery(groupID, groupPhoto)
+	if groupPhoto.PhotoBig.FileID != 0 {
+		r.SavePhotoGallery(groupID, groupPhoto)
+	}
+}
+
+func (r *repoGroups) RemovePhoto(groupID int64) {
+	defer r.deleteFromCache(groupID)
+
+	group := r.Get(groupID)
+	if group == nil {
+		return
+	}
+
+	// 1. Remove the photo from the photo gallery of the user
+	r.RemovePhotoGallery(groupID, group.Photo.PhotoID)
+
+	// 2. Save Group object into the db again
+	group.Photo = nil
+	r.Save(group)
 }
 
 func (r *repoGroups) Search(searchPhrase string) []*msg.Group {

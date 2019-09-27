@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	prefixUsers    = "USERS"
-	prefixContacts = "CONTACTS"
+	prefixUsers             = "USERS"
+	prefixContacts          = "CONTACTS"
 	prefixUsersPhotoGallery = "USERS_PHG"
 )
 
@@ -69,6 +69,9 @@ func (r *repoUsers) getContactByKey(contactKey []byte) *msg.ContactUser {
 func (r *repoUsers) getPhotoGalleryKey(userID, photoID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixUsersPhotoGallery, userID, photoID))
 }
+func (r *repoUsers) getPhotoGalleryPrefix(userID int64) []byte {
+	return ronak.StrToByte(fmt.Sprintf("%s.%021d.", prefixUsersPhotoGallery, userID))
+}
 
 func (r *repoUsers) readFromDb(userID int64) *msg.User {
 	user := new(msg.User)
@@ -77,13 +80,33 @@ func (r *repoUsers) readFromDb(userID int64) *msg.User {
 		if err != nil {
 			return err
 		}
-		return item.Value(func(val []byte) error {
+		err = item.Value(func(val []byte) error {
 			return user.Unmarshal(val)
 		})
+		if err != nil {
+			return err
+		}
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = r.getPhotoGalleryPrefix(userID)
+		it := txn.NewIterator(opts)
+		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
+			_ = it.Item().Value(func(val []byte) error {
+				userPhoto := new(msg.UserPhoto)
+				err := userPhoto.Unmarshal(val)
+				if err != nil {
+					return err
+				}
+				user.PhotoGallery = append(user.PhotoGallery, userPhoto)
+				return nil
+			})
+		}
+		it.Close()
+		return nil
 	})
 	if err != nil {
 		return nil
 	}
+
 	return user
 }
 
@@ -287,6 +310,14 @@ func (r *repoUsers) SavePhotoGallery(userID int64, photos ...*msg.UserPhoto) {
 	}
 }
 
+func (r *repoUsers) RemovePhotoGallery(userID int64, photoIDs ...int64) {
+	for _, photoID := range photoIDs {
+		_ = r.badger.Update(func(txn *badger.Txn) error {
+			return txn.Delete(r.getPhotoGalleryKey(userID, photoID))
+		})
+	}
+}
+
 func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType int32) {
 	defer r.deleteFromCache(peerID)
 
@@ -319,7 +350,9 @@ func (r *repoUsers) UpdatePhoto(userID int64, userPhoto *msg.UserPhoto) {
 	}
 	r.Save(user)
 
-	r.SavePhotoGallery(userID, userPhoto)
+	if userPhoto.PhotoBig.FileID != 0 {
+		r.SavePhotoGallery(userID, userPhoto)
+	}
 }
 
 func (r *repoUsers) RemovePhoto(userID int64) {
@@ -328,6 +361,11 @@ func (r *repoUsers) RemovePhoto(userID int64) {
 	if user == nil {
 		return
 	}
+
+	// 1. Remove the photo from the photo gallery of the user
+	r.RemovePhotoGallery(userID, user.Photo.PhotoID)
+
+	// 2. Update user's object and save it again.
 	user.Photo = nil
 	r.Save(user)
 }

@@ -925,6 +925,9 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	}
 	res.NotifySettings = dlg.NotifySettings
 
+	// Get Group PhotoGallery
+	res.PhotoGallery = repo.Groups.GetPhotoGallery(req.GroupID)
+
 	// Users
 	userIDs := domain.MInt64B{}
 	for _, v := range participants {
