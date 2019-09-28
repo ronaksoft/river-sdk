@@ -86,6 +86,7 @@ func (r *repoUsers) readFromDb(userID int64) *msg.User {
 		if err != nil {
 			return err
 		}
+		user.PhotoGallery = user.PhotoGallery[:0]
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = r.getPhotoGalleryPrefix(userID)
 		it := txn.NewIterator(opts)
