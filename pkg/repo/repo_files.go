@@ -59,7 +59,9 @@ func (r *repoFiles) SaveUserPhotos(u *msg.User) error {
 		photos = append(photos, u.Photo)
 	}
 	for _, photo := range u.PhotoGallery {
-		photos = append(photos, photo)
+		if photo != nil {
+			photos = append(photos, photo)
+		}
 	}
 
 	Users.SavePhotoGallery(u.ID, photos...)
