@@ -53,13 +53,15 @@ func (r *repoDialogs) updateTopMessageID(dialog *msg.Dialog) {
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
 		it.Seek(Messages.getMessageKey(dialog.PeerID, dialog.PeerType, dialog.TopMessageID))
-		userMessage := new(msg.UserMessage)
-		_ = it.Item().Value(func(val []byte) error {
-			return userMessage.Unmarshal(val)
-		})
-		topMessageID = userMessage.ID
-		fmt.Println("UPDATE:", userMessage.ID)
+		if it.ValidForPrefix(opts.Prefix) {
+			userMessage := new(msg.UserMessage)
+			_ = it.Item().Value(func(val []byte) error {
+				return userMessage.Unmarshal(val)
+			})
+			topMessageID = userMessage.ID
+		}
 		it.Close()
+
 		return nil
 	})
 	dialog.TopMessageID = topMessageID
