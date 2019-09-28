@@ -2,6 +2,7 @@ package riversdk
 
 import (
 	"encoding/json"
+	"fmt"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
@@ -537,6 +538,12 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	thumbID := int64(0)
 	if reqMedia.ThumbFilePath != "" {
 		thumbID = ronak.RandomInt64(0)
+	}
+	reqMedia.FileUploadID = fmt.Sprintf("%d", fileID)
+	reqMedia.FileID = fileID
+	if thumbID > 0 {
+		reqMedia.ThumbID = thumbID
+		reqMedia.ThumbUploadID = fmt.Sprintf("%d", thumbID)
 	}
 	pendingMessage, err := repo.PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, fileID, fileID, thumbID, reqMedia)
 
