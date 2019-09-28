@@ -302,11 +302,13 @@ func (r *repoUsers) saveContact(contactUser *msg.ContactUser) {
 
 func (r *repoUsers) SavePhotoGallery(userID int64, photos ...*msg.UserPhoto) {
 	for _, photo := range photos {
-		key := r.getPhotoGalleryKey(userID, photo.PhotoID)
-		bytes, _ := photo.Marshal()
-		_ = r.badger.Update(func(txn *badger.Txn) error {
-			return txn.SetEntry(badger.NewEntry(key, bytes))
-		})
+		if photo != nil {
+			key := r.getPhotoGalleryKey(userID, photo.PhotoID)
+			bytes, _ := photo.Marshal()
+			_ = r.badger.Update(func(txn *badger.Txn) error {
+				return txn.SetEntry(badger.NewEntry(key, bytes))
+			})
+		}
 	}
 }
 

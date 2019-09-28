@@ -217,7 +217,8 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	// Load the dialog
 	dtoDialog := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
 	if dtoDialog == nil {
-		logs.Fatal("Panic, asking for a nil dialog")
+		logs.Debug("asking for a nil dialog")
+		fillOutput(out, []*msg.UserMessage{}, []*msg.User{}, in.RequestID, successCB)
 		return
 	}
 
