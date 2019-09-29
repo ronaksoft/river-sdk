@@ -281,10 +281,6 @@ func (r *repoGroups) UpdatePhoto(groupID int64, groupPhoto *msg.GroupPhoto) {
 	group := r.Get(groupID)
 	group.Photo = groupPhoto
 	r.Save(group)
-
-	if groupPhoto.PhotoBig.FileID != 0 {
-		r.SavePhotoGallery(groupID, groupPhoto)
-	}
 }
 
 func (r *repoGroups) RemovePhoto(groupID int64) {

@@ -816,11 +816,20 @@ func (r *River) accountRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domai
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 
-	repo.Users.UpdatePhoto(r.ConnInfo.UserID, &msg.UserPhoto{
-		PhotoBig:   &msg.FileLocation{},
-		PhotoSmall: &msg.FileLocation{},
-		PhotoID:    0,
-	})
+	user := repo.Users.Get(r.ConnInfo.UserID)
+	if user == nil {
+		logs.Error("AccountRemovePhoto but user is nil")
+		return
+	}
+
+	if user.Photo != nil && user.Photo.PhotoID == x.PhotoID {
+		repo.Users.UpdatePhoto(r.ConnInfo.UserID, &msg.UserPhoto{
+			PhotoBig:   &msg.FileLocation{},
+			PhotoSmall: &msg.FileLocation{},
+			PhotoID:    0,
+		})
+	}
+
 
 	repo.Users.RemovePhotoGallery(r.ConnInfo.UserID, x.PhotoID)
 }
@@ -996,7 +1005,22 @@ func (r *River) groupRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domain.
 		logs.Error("groupRemovePhoto() failed to unmarshal", zap.Error(err))
 	}
 
-	repo.Groups.RemovePhoto(req.GroupID)
+	group := repo.Groups.Get(req.GroupID)
+	if group == nil {
+		logs.Error("AccountRemovePhoto but user is nil")
+		return
+	}
+
+	if group.Photo != nil && group.Photo.PhotoID == req.PhotoID {
+		repo.Groups.UpdatePhoto(req.GroupID, &msg.GroupPhoto{
+			PhotoBig:   &msg.FileLocation{},
+			PhotoSmall: &msg.FileLocation{},
+			PhotoID:    0,
+		})
+	}
+
+
+	repo.Users.RemovePhotoGallery(r.ConnInfo.UserID, req.PhotoID)
 }
 
 func (r *River) usersGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {

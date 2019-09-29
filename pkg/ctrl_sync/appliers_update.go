@@ -521,6 +521,15 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 
 	repo.Groups.UpdatePhoto(x.GroupID, x.Photo)
 
+	if x.PhotoID != 0 {
+		if x.Photo != nil && x.Photo.PhotoSmall.FileID != 0 {
+			repo.Groups.SavePhotoGallery(x.GroupID, x.Photo)
+		} else {
+			repo.Groups.RemovePhotoGallery(x.GroupID, x.PhotoID)
+		}
+	}
+
+
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil
 }
