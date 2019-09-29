@@ -90,7 +90,6 @@ const (
 	RequestStatusNone       RequestStatus = 0 // RequestStatusNone no request invoked
 	RequestStatusInProgress RequestStatus = 1 // RequestStatusInProgress downloading/uploading
 	RequestStatusCompleted  RequestStatus = 2 // RequestStatusCompleted already file is downloaded/uploaded
-	RequestStatusPaused     RequestStatus = 3 // RequestStatusPaused paused
 	RequestStatusCanceled   RequestStatus = 4 // RequestStatusCanceled canceled by user
 	RequestStatusError      RequestStatus = 5 // RequestStatusError encountered error
 )
@@ -103,8 +102,6 @@ func (rs RequestStatus) ToString() string {
 		return "InProgress"
 	case RequestStatusCompleted:
 		return "Completed"
-	case RequestStatusPaused:
-		return "Paused"
 	case RequestStatusCanceled:
 		return "Canceled"
 	case RequestStatusError:

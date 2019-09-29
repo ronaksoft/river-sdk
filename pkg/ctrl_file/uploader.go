@@ -184,7 +184,6 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 				if !ctx.req.SkipDelegateCall {
 					ctrl.onCompleted(ctx.req.GetID(), 0, ctx.req.FileID, 0, ctx.req.FilePath)
 				}
-
 				return domain.RequestStatusCompleted
 			default:
 				return domain.RequestStatusError
