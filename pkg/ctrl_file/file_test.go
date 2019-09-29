@@ -1,6 +1,7 @@
 package fileCtrl_test
 
 import (
+	"context"
 	"crypto/md5"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
@@ -28,17 +29,19 @@ import (
 */
 
 var (
+	_Network *networkCtrl.Controller
 	_File *fileCtrl.Controller
 )
 
 func init() {
 	repo.InitRepo("./_db", true)
 	fileCtrl.SetRootFolders("_data/audio", "_data/file", "_data/photo", "_data/video", "_data/cache")
+	_Network = networkCtrl.New(networkCtrl.Config{
+		WebsocketEndpoint: "",
+		HttpEndpoint:      "http://127.0.0.1:8080",
+	})
 	_File = fileCtrl.New(fileCtrl.Config{
-		Network: networkCtrl.New(networkCtrl.Config{
-			WebsocketEndpoint: "",
-			HttpEndpoint:      "http://127.0.0.1:8080",
-		}),
+		Network: _Network ,
 		MaxInflightDownloads: 2,
 		MaxInflightUploads:   10,
 		OnProgressChanged: func(reqID string, clusterID int32, fileID, accessHash int64, percent int64) {
@@ -105,7 +108,7 @@ type server struct {
 }
 
 func (t server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	// time.Sleep(3 * time.Second)
+	time.Sleep(30 * time.Second)
 	// if ronak.RandomInt(30) > 5 {
 	// 	res.WriteHeader(http.StatusForbidden)
 	// 	return
@@ -217,4 +220,23 @@ func TestUpload(t *testing.T) {
 	// println(hex.Dump(b[:100]))
 	println("SENT", len(b))
 	_File.UploadMessageDocument(1000, "./testdata/medium", "", 323232, 10)
+}
+
+func TestContext(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		_, err := _Network.SendHttp(ctx, &msg.MessageEnvelope{
+			Constructor: 0,
+			RequestID:   0,
+			Message:     nil,
+		})
+		if err != nil && err != context.Canceled {
+			t.Error(err)
+		}
+	}()
+	time.Sleep(time.Second * 3)
+	cancel()
+
+	time.Sleep(time.Second)
+
 }

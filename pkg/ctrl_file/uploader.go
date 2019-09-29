@@ -1,6 +1,7 @@
 package fileCtrl
 
 import (
+	"context"
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
@@ -23,6 +24,9 @@ import (
 */
 
 type UploadRequest struct {
+	httpContext context.Context    `json:"-"`
+	cancelFunc  context.CancelFunc `json:"-"`
+
 	// IsProfilePhoto indicates that the uploaded file will be used as a profile photo for Group or User
 	IsProfilePhoto bool `json:"is_profile_photo"`
 	// PeerID will be set if IsProfilePhoto has been set to TRUE and user is going to upload group photo
@@ -153,7 +157,7 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 					ctx.parts <- partIndex
 					return
 				}
-				res, err := ctrl.network.SendHttp(ctx.generateFileSavePart(ctx.req.FileID, partIndex+1, ctx.req.TotalParts, bytes[:n]))
+				res, err := ctrl.network.SendHttp(nil, ctx.generateFileSavePart(ctx.req.FileID, partIndex+1, ctx.req.TotalParts, bytes[:n]))
 				if err != nil {
 					logs.Warn("Error in SendHttp", zap.Error(err))
 					atomic.AddInt32(&ctx.req.MaxRetries, -1)

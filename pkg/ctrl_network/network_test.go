@@ -23,6 +23,7 @@ import (
 
 var (
 	requestID uint64
+	ctrl      *networkCtrl.Controller
 )
 
 func dummyMessageHandler(messages []*msg.MessageEnvelope) {
@@ -83,9 +84,9 @@ func getServerTime() *msg.MessageEnvelope {
 	}
 }
 
-func TestNewController(t *testing.T) {
+func init() {
 	logs.SetLogLevel(-1)
-	ctrl := networkCtrl.New(networkCtrl.Config{
+	ctrl = networkCtrl.New(networkCtrl.Config{
 		WebsocketEndpoint: "ws://river.ronaksoftware.com",
 	})
 	ctrl.SetMessageHandler(dummyMessageHandler)
@@ -97,6 +98,9 @@ func TestNewController(t *testing.T) {
 	ctrl.Start()
 	ctrl.Connect(true)
 
+}
+
+func TestNewController(t *testing.T) {
 	go func() {
 		for {
 			err := ctrl.SendWebsocket(getServerTime(), true)

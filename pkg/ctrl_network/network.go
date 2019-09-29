@@ -2,6 +2,7 @@ package networkCtrl
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
@@ -49,6 +50,7 @@ type Controller struct {
 
 	// Http Settings
 	httpEndpoint string
+	httpClient   http.Client
 
 	// Internals
 	wsQuality domain.NetworkStatus
@@ -540,7 +542,10 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 }
 
 // Send encrypt and send request to server and receive and decrypt its response
-func (ctrl *Controller) SendHttp(msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
+func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	protoMessage := new(msg.ProtoMessage)
 	protoMessage.AuthID = ctrl.authID
 	protoMessage.MessageKey = make([]byte, 32)
@@ -567,11 +572,15 @@ func (ctrl *Controller) SendHttp(msgEnvelope *msg.MessageEnvelope) (*msg.Message
 	}
 
 	// Set timeout
-	client := &http.Client{}
-	client.Timeout = domain.HttpRequestTime
+	ctrl.httpClient.Timeout = domain.HttpRequestTime
 
 	// Send Data
-	httpResp, err := client.Post(ctrl.httpEndpoint, "application/protobuf", reqBuff)
+	httpReq, err := http.NewRequest(http.MethodPost, ctrl.httpEndpoint, reqBuff)
+	if err != nil {
+		return nil, err
+	}
+	httpReq.Header.Set("Content-Type", "application/protobuf")
+	httpResp, err := ctrl.httpClient.Do(httpReq.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package fileCtrl
 
 import (
+	"context"
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
@@ -21,6 +22,8 @@ import (
 */
 
 type DownloadRequest struct {
+	httpContext context.Context    `json:"-"`
+	cancelFunc  context.CancelFunc `json:"-"`
 	// MaxRetries defines how many time each request could encounter error before giving up
 	MaxRetries int32 `json:"max_retries"`
 	// MessageID (Optional) if is set then (ClusterID, FileID, AccessHash, Version) will be read from the message
@@ -134,7 +137,7 @@ func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 				}()
 
 				offset := partIndex * ctx.req.ChunkSize
-				res, err := ctrl.network.SendHttp(ctx.generateFileGet(offset, ctx.req.ChunkSize))
+				res, err := ctrl.network.SendHttp(ctx.req.httpContext, ctx.generateFileGet(offset, ctx.req.ChunkSize))
 				if err != nil {
 					logs.Warn("Error in SentHTTP", zap.Error(err))
 					atomic.AddInt32(&ctx.req.MaxRetries, -1)
@@ -176,7 +179,7 @@ func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 		default:
 			waitGroup.Wait()
 			totalDownloadedParts := int32(len(ctx.req.DownloadedParts))
-			switch  {
+			switch {
 			case totalDownloadedParts > ctx.req.TotalParts:
 				ctx.req.DownloadedParts = unique(ctx.req.DownloadedParts)
 				totalDownloadedParts = int32(len(ctx.req.DownloadedParts))

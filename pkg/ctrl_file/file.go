@@ -1,6 +1,7 @@
 package fileCtrl
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
@@ -129,6 +130,12 @@ func (ctrl *Controller) saveDownloads(req DownloadRequest) {
 	ctrl.mtxDownloads.Unlock()
 	ctrl.downloadsSaver.EnterWithResult(nil, nil)
 }
+func (ctrl *Controller) getDownloadRequest(reqID string) (DownloadRequest, bool) {
+	ctrl.mtxDownloads.Lock()
+	req, ok := ctrl.downloadRequests[reqID]
+	ctrl.mtxDownloads.Unlock()
+	return req, ok
+}
 func (ctrl *Controller) deleteDownloadRequest(reqID string) {
 	ctrl.mtxDownloads.Lock()
 	delete(ctrl.downloadRequests, reqID)
@@ -146,6 +153,12 @@ func (ctrl *Controller) saveUploads(req UploadRequest) {
 	ctrl.uploadRequests[req.GetID()] = req
 	ctrl.mtxUploads.Unlock()
 	ctrl.uploadsSaver.EnterWithResult(nil, nil)
+}
+func (ctrl *Controller) getUploadRequest(reqID string) (UploadRequest, bool) {
+	ctrl.mtxUploads.Lock()
+	req, ok := ctrl.uploadRequests[reqID]
+	ctrl.mtxUploads.Unlock()
+	return req, ok
 }
 func (ctrl *Controller) deleteUploadRequest(reqID string) {
 	ctrl.mtxUploads.Lock()
@@ -165,22 +178,24 @@ func GetRequestID(clusterID int32, fileID int64, accessHash uint64) string {
 }
 
 func (ctrl *Controller) GetDownloadRequest(clusterID int32, fileID int64, accessHash uint64) (DownloadRequest, bool) {
-	ctrl.mtxDownloads.Lock()
-	req, ok := ctrl.downloadRequests[GetRequestID(clusterID, fileID, accessHash)]
-	ctrl.mtxDownloads.Unlock()
-	return req, ok
+	return ctrl.getDownloadRequest(GetRequestID(clusterID, fileID, accessHash))
 }
 func (ctrl *Controller) CancelDownloadRequest(reqID string) {
+	req, ok := ctrl.getDownloadRequest(reqID)
 	ctrl.deleteDownloadRequest(reqID)
+	if ok {
+		req.cancelFunc()
+	}
 }
 func (ctrl *Controller) GetUploadRequest(fileID int64) (UploadRequest, bool) {
-	ctrl.mtxUploads.Lock()
-	req, ok := ctrl.uploadRequests[GetRequestID(0, fileID, 0)]
-	ctrl.mtxUploads.Unlock()
-	return req, ok
+	return ctrl.getUploadRequest(GetRequestID(0, fileID, 0))
 }
 func (ctrl *Controller) CancelUploadRequest(reqID string) {
+	req, ok := ctrl.getUploadRequest(reqID)
 	ctrl.deleteUploadRequest(reqID)
+	if ok {
+		req.cancelFunc()
+	}
 }
 
 func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash uint64, skipDelegates bool) (reqID string, err error) {
@@ -271,7 +286,7 @@ func (ctrl *Controller) downloadAccountPhoto(clientFile *msg.ClientFile) (filePa
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
 		filePath = getAccountProfilePath(clientFile.UserID, req.Location.FileID)
-		res, err := ctrl.network.SendHttp(envelop)
+		res, err := ctrl.network.SendHttp(nil, envelop)
 		if err != nil {
 			return err
 		}
@@ -326,7 +341,7 @@ func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
 		filePath = getGroupProfilePath(clientFile.GroupID, req.Location.FileID)
-		res, err := ctrl.network.SendHttp(envelop)
+		res, err := ctrl.network.SendHttp(nil, envelop)
 		if err != nil {
 			return err
 		}
@@ -381,7 +396,7 @@ func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath 
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
 		filePath = getThumbnailPath(clientFile.FileID, clientFile.ClusterID)
-		res, err := ctrl.network.SendHttp(envelop)
+		res, err := ctrl.network.SendHttp(nil, envelop)
 		if err != nil {
 			return err
 		}
@@ -423,7 +438,7 @@ func (ctrl *Controller) download(req DownloadRequest) error {
 	if ctrl.existDownloadRequest(req.GetID()) {
 		return domain.ErrAlreadyDownloading
 	}
-
+	req.httpContext, req.cancelFunc = context.WithCancel(context.Background())
 	req.TempFilePath = fmt.Sprintf("%s.tmp", req.FilePath)
 	ctrl.saveDownloads(req)
 	ctrl.downloadsRateLimit <- struct{}{}
@@ -434,7 +449,6 @@ func (ctrl *Controller) download(req DownloadRequest) error {
 	ds := &downloadContext{
 		rateLimit: make(chan struct{}, req.MaxInFlights),
 	}
-
 	_, err := os.Stat(req.TempFilePath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -564,6 +578,8 @@ func (ctrl *Controller) upload(req UploadRequest) {
 		ctrl.deleteUploadRequest(req.GetID())
 		return
 	}
+	req.httpContext, req.cancelFunc = context.WithCancel(context.Background())
+
 	ctrl.saveUploads(req)
 	ctrl.uploadsRateLimit <- struct{}{}
 	defer func() {

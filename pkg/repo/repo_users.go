@@ -69,6 +69,7 @@ func (r *repoUsers) getContactByKey(contactKey []byte) *msg.ContactUser {
 func (r *repoUsers) getPhotoGalleryKey(userID, photoID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixUsersPhotoGallery, userID, photoID))
 }
+
 func (r *repoUsers) getPhotoGalleryPrefix(userID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d.", prefixUsersPhotoGallery, userID))
 }
