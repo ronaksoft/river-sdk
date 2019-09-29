@@ -167,6 +167,110 @@ func (r *repoUsers) GetMany(userIDs []int64) []*msg.User {
 	return r.readManyFromCache(userIDs)
 }
 
+func (r *repoUsers) Save(users ...*msg.User) {
+	userIDs := domain.MInt64B{}
+	for _, v := range users {
+		if alreadySaved(fmt.Sprintf("U.%d", v.ID), v) {
+			continue
+		}
+		userIDs[v.ID] = true
+	}
+	defer r.deleteFromCache(userIDs.ToArray()...)
+
+	for idx := range users {
+		r.save(users[idx])
+	}
+
+	return
+}
+func (r *repoUsers) save(user *msg.User) {
+	currentUser := r.Get(user.ID)
+
+	if currentUser != nil && len(currentUser.PhotoGallery) > 0 {
+		if len(user.PhotoGallery) == 0 {
+			user.PhotoGallery = currentUser.PhotoGallery
+		}
+	}
+
+	userKey := r.getUserKey(user.ID)
+	userBytes, _ := user.Marshal()
+	_ = r.badger.Update(func(txn *badger.Txn) error {
+		return txn.SetEntry(badger.NewEntry(
+			userKey, userBytes,
+		))
+	})
+	_ = r.peerSearch.Index(ronak.ByteToStr(userKey), UserSearch{
+		Type:      "user",
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		PeerID:    user.ID,
+		Username:  user.Username,
+	})
+
+	_ = Files.SaveUserPhotos(user)
+
+	if len(user.PhotoGallery) > 0 {
+		r.SavePhotoGallery(user.ID, user.PhotoGallery...)
+	}
+
+}
+
+func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType int32) {
+	defer r.deleteFromCache(peerID)
+
+	user := r.Get(peerID)
+	if user == nil {
+		return
+	}
+	user.AccessHash = accessHash
+	Dialogs.updateAccessHash(accessHash, peerID, peerType)
+	return
+}
+
+func (r *repoUsers) GetAccessHash(userID int64) (uint64, error) {
+	user := r.Get(userID)
+	if user == nil {
+		return 0, domain.ErrDoesNotExists
+	}
+	return user.AccessHash, nil
+}
+
+func (r *repoUsers) UpdateProfile(userID int64, firstName, lastName, username, bio string) {
+	user := r.Get(userID)
+	if user == nil {
+		return
+	}
+	defer r.deleteFromCache(userID)
+	user.FirstName = firstName
+	user.LastName = lastName
+	user.Username = username
+	user.Bio = bio
+
+	r.Save(user)
+}
+
+func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
+	t1 := bleve.NewTermQuery("user")
+	t1.SetField("type")
+	qs := make([]query.Query, 0)
+	for _, term := range strings.Fields(searchPhrase) {
+		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewMatchQuery(term))
+	}
+	t2 := bleve.NewDisjunctionQuery(qs...)
+	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
+	searchResult, _ := r.peerSearch.Search(searchRequest)
+	users := make([]*msg.User, 0, 100)
+	for _, hit := range searchResult.Hits {
+		user := r.getUserByKey(ronak.StrToByte(hit.ID))
+		if user != nil {
+			users = append(users, user)
+		}
+	}
+	return users
+}
+
+
+
 func (r *repoUsers) GetContact(userID int64) *msg.ContactUser {
 	contactUser := new(msg.ContactUser)
 	err := r.badger.View(func(txn *badger.Txn) error {
@@ -226,177 +330,6 @@ func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
 
 }
 
-func (r *repoUsers) GetPhoto(userID, photoID int64) *msg.UserPhoto {
-
-	user := r.Get(userID)
-	return user.Photo
-}
-
-func (r *repoUsers) Save(users ...*msg.User) {
-	userIDs := domain.MInt64B{}
-	for _, v := range users {
-		if alreadySaved(fmt.Sprintf("U.%d", v.ID), v) {
-			continue
-		}
-		userIDs[v.ID] = true
-	}
-	defer r.deleteFromCache(userIDs.ToArray()...)
-
-	for idx := range users {
-		r.save(users[idx])
-	}
-
-	return
-}
-func (r *repoUsers) save(user *msg.User) {
-	currentUser := r.Get(user.ID)
-
-	if currentUser != nil && len(currentUser.PhotoGallery) > 0 {
-		if len(user.PhotoGallery) == 0 {
-			user.PhotoGallery = currentUser.PhotoGallery
-		}
-	}
-
-	userKey := r.getUserKey(user.ID)
-	userBytes, _ := user.Marshal()
-	_ = r.badger.Update(func(txn *badger.Txn) error {
-		return txn.SetEntry(badger.NewEntry(
-			userKey, userBytes,
-		))
-	})
-	_ = r.peerSearch.Index(ronak.ByteToStr(userKey), UserSearch{
-		Type:      "user",
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		PeerID:    user.ID,
-		Username:  user.Username,
-	})
-	_ = Files.SaveUserPhotos(user)
-}
-
-func (r *repoUsers) SaveContact(contactUsers ...*msg.ContactUser) {
-	for _, contactUser := range contactUsers {
-		r.saveContact(contactUser)
-	}
-}
-func (r *repoUsers) saveContact(contactUser *msg.ContactUser) {
-	if contactUser == nil {
-		return
-	}
-	userBytes, _ := contactUser.Marshal()
-	contactKey := r.getContactKey(contactUser.ID)
-	_ = r.badger.Update(func(txn *badger.Txn) error {
-		return txn.SetEntry(badger.NewEntry(
-			contactKey, userBytes,
-		))
-	})
-	_ = r.peerSearch.Index(ronak.ByteToStr(contactKey), ContactSearch{
-		Type:      "contact",
-		FirstName: contactUser.FirstName,
-		LastName:  contactUser.LastName,
-		Username:  contactUser.Username,
-		Phone:     contactUser.Phone,
-	})
-	_ = Files.SaveContactPhoto(contactUser)
-
-}
-
-func (r *repoUsers) SavePhotoGallery(userID int64, photos ...*msg.UserPhoto) {
-	for _, photo := range photos {
-		if photo != nil {
-			key := r.getPhotoGalleryKey(userID, photo.PhotoID)
-			bytes, _ := photo.Marshal()
-			_ = r.badger.Update(func(txn *badger.Txn) error {
-				return txn.SetEntry(badger.NewEntry(key, bytes))
-			})
-		}
-	}
-}
-
-func (r *repoUsers) RemovePhotoGallery(userID int64, photoIDs ...int64) {
-	for _, photoID := range photoIDs {
-		_ = r.badger.Update(func(txn *badger.Txn) error {
-			return txn.Delete(r.getPhotoGalleryKey(userID, photoID))
-		})
-	}
-}
-
-func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType int32) {
-	defer r.deleteFromCache(peerID)
-
-	user := r.Get(peerID)
-	if user == nil {
-		return
-	}
-	user.AccessHash = accessHash
-	Dialogs.updateAccessHash(accessHash, peerID, peerType)
-	return
-}
-
-func (r *repoUsers) GetAccessHash(userID int64) (uint64, error) {
-	user := r.Get(userID)
-	if user == nil {
-		return 0, domain.ErrDoesNotExists
-	}
-	return user.AccessHash, nil
-}
-
-func (r *repoUsers) UpdatePhoto(userID int64, userPhoto *msg.UserPhoto) {
-	if alreadySaved(fmt.Sprintf("UPHOTO.%d", userID), userPhoto) {
-		return
-	}
-
-	defer r.deleteFromCache(userID)
-	user := r.Get(userID)
-	if user == nil {
-		return
-	}
-	r.Save(user)
-
-	if userPhoto.PhotoBig.FileID != 0 {
-		r.SavePhotoGallery(userID, userPhoto)
-	}
-}
-
-func (r *repoUsers) RemovePhoto(userID int64) {
-	defer r.deleteFromCache(userID)
-	user := r.Get(userID)
-	if user == nil {
-		return
-	}
-
-	// 1. Remove the photo from the photo gallery of the user
-	r.RemovePhotoGallery(userID, user.Photo.PhotoID)
-
-	// 2. Update user's object and save it again.
-	user.Photo = nil
-	r.Save(user)
-}
-
-func (r *repoUsers) UpdateProfile(userID int64, firstName, lastName, username, bio string) {
-	user := r.Get(userID)
-	if user == nil {
-		return
-	}
-	defer r.deleteFromCache(userID)
-	user.FirstName = firstName
-	user.LastName = lastName
-	user.Username = username
-	user.Bio = bio
-
-	r.Save(user)
-}
-
-func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) {
-
-	defer r.deleteFromCache(userID)
-
-	contact := r.GetContact(userID)
-	contact.FirstName = firstName
-	contact.LastName = lastName
-	r.SaveContact(contact)
-}
-
 func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*msg.PhoneContact) {
 	t1 := bleve.NewTermQuery("contact")
 	t1.SetField("type")
@@ -449,25 +382,80 @@ func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
 	return contactUsers
 }
 
-func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
-	t1 := bleve.NewTermQuery("user")
-	t1.SetField("type")
-	qs := make([]query.Query, 0)
-	for _, term := range strings.Fields(searchPhrase) {
-		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewMatchQuery(term))
+func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) {
+
+	defer r.deleteFromCache(userID)
+
+	contact := r.GetContact(userID)
+	contact.FirstName = firstName
+	contact.LastName = lastName
+	r.SaveContact(contact)
+}
+
+func (r *repoUsers) SaveContact(contactUsers ...*msg.ContactUser) {
+	for _, contactUser := range contactUsers {
+		r.saveContact(contactUser)
 	}
-	t2 := bleve.NewDisjunctionQuery(qs...)
-	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
-	searchResult, _ := r.peerSearch.Search(searchRequest)
-	users := make([]*msg.User, 0, 100)
-	for _, hit := range searchResult.Hits {
-		user := r.getUserByKey(ronak.StrToByte(hit.ID))
-		if user != nil {
-			users = append(users, user)
+}
+func (r *repoUsers) saveContact(contactUser *msg.ContactUser) {
+	if contactUser == nil {
+		return
+	}
+	userBytes, _ := contactUser.Marshal()
+	contactKey := r.getContactKey(contactUser.ID)
+	_ = r.badger.Update(func(txn *badger.Txn) error {
+		return txn.SetEntry(badger.NewEntry(
+			contactKey, userBytes,
+		))
+	})
+	_ = r.peerSearch.Index(ronak.ByteToStr(contactKey), ContactSearch{
+		Type:      "contact",
+		FirstName: contactUser.FirstName,
+		LastName:  contactUser.LastName,
+		Username:  contactUser.Username,
+		Phone:     contactUser.Phone,
+	})
+	_ = Files.SaveContactPhoto(contactUser)
+
+}
+
+
+func (r *repoUsers) GetPhoto(userID, photoID int64) *msg.UserPhoto {
+
+	user := r.Get(userID)
+	return user.Photo
+}
+
+func (r *repoUsers) UpdatePhoto(userID int64, userPhoto *msg.UserPhoto) {
+	defer r.deleteFromCache(userID)
+	user := r.Get(userID)
+	if user == nil {
+		return
+	}
+	user.Photo = userPhoto
+	r.Save(user)
+}
+
+func (r *repoUsers) SavePhotoGallery(userID int64, photos ...*msg.UserPhoto) {
+	for _, photo := range photos {
+		if photo != nil {
+			key := r.getPhotoGalleryKey(userID, photo.PhotoID)
+			bytes, _ := photo.Marshal()
+			_ = r.badger.Update(func(txn *badger.Txn) error {
+				return txn.SetEntry(badger.NewEntry(key, bytes))
+			})
 		}
 	}
-	return users
 }
+
+func (r *repoUsers) RemovePhotoGallery(userID int64, photoIDs ...int64) {
+	for _, photoID := range photoIDs {
+		_ = r.badger.Update(func(txn *badger.Txn) error {
+			return txn.Delete(r.getPhotoGalleryKey(userID, photoID))
+		})
+	}
+}
+
 
 func (r *repoUsers) ReIndex() {
 	err := r.badger.View(func(txn *badger.Txn) error {

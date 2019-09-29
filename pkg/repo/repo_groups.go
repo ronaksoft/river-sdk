@@ -196,6 +196,29 @@ func (r *repoGroups) save(group *msg.Group) {
 	}
 }
 
+func (r *repoGroups) GetMany(groupIDs []int64) []*msg.Group {
+	return r.readManyFromCache(groupIDs)
+}
+
+func (r *repoGroups) Get(groupID int64) *msg.Group {
+	return r.readFromCache(groupID)
+}
+
+func (r *repoGroups) Delete(groupID int64) {
+
+	defer r.deleteFromCache(groupID)
+
+	_ = r.badger.Update(func(txn *badger.Txn) error {
+		err := txn.Delete(r.getGroupKey(groupID))
+		if err != nil {
+			return err
+		}
+		r.DeleteAllMembers(groupID)
+		return nil
+	})
+}
+
+
 func (r *repoGroups) SaveParticipant(groupID int64, participant *msg.GroupParticipant) {
 	defer r.deleteFromCache(groupID)
 	if participant == nil {
@@ -209,6 +232,75 @@ func (r *repoGroups) SaveParticipant(groupID int64, participant *msg.GroupPartic
 			groupParticipantKey, participantBytes,
 		))
 	})
+}
+
+func (r *repoGroups) GetParticipant(groupID int64, memberID int64) *msg.GroupParticipant {
+
+	gp := new(msg.GroupParticipant)
+	_ = r.badger.View(func(txn *badger.Txn) error {
+		item, err := txn.Get(r.getGroupParticipantKey(groupID, memberID))
+		if err != nil {
+			return err
+		}
+		return item.Value(func(val []byte) error {
+			return gp.Unmarshal(val)
+		})
+	})
+	return gp
+}
+
+func (r *repoGroups) GetParticipants(groupID int64) ([]*msg.GroupParticipant, error) {
+	participants := make([]*msg.GroupParticipant, 0, 100)
+	_ = r.badger.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = r.getPrefix(groupID)
+		it := txn.NewIterator(opts)
+		for it.Seek(r.getGroupParticipantKey(groupID, 0)); it.ValidForPrefix(opts.Prefix); it.Next() {
+			p := new(msg.GroupParticipant)
+			_ = it.Item().Value(func(val []byte) error {
+				return p.Unmarshal(val)
+			})
+			participants = append(participants, p)
+		}
+		it.Close()
+		return nil
+	})
+
+	return participants, nil
+}
+
+
+
+func (r *repoGroups) UpdatePhoto(groupID int64, groupPhoto *msg.GroupPhoto) {
+	if alreadySaved(fmt.Sprintf("GPHOTO.%d", groupID), groupPhoto) {
+		return
+	}
+
+	defer r.deleteFromCache(groupID)
+
+	group := r.Get(groupID)
+	group.Photo = groupPhoto
+	r.Save(group)
+
+	if groupPhoto.PhotoBig.FileID != 0 {
+		r.SavePhotoGallery(groupID, groupPhoto)
+	}
+}
+
+func (r *repoGroups) RemovePhoto(groupID int64) {
+	defer r.deleteFromCache(groupID)
+
+	group := r.Get(groupID)
+	if group == nil {
+		return
+	}
+
+	// 1. Remove the photo from the photo gallery of the user
+	r.RemovePhotoGallery(groupID, group.Photo.PhotoID)
+
+	// 2. Save Group object into the db again
+	group.Photo = nil
+	r.Save(group)
 }
 
 func (r *repoGroups) SavePhotoGallery(groupID int64, photos ...*msg.GroupPhoto) {
@@ -252,48 +344,7 @@ func (r *repoGroups) GetPhotoGallery(groupID int64) []*msg.GroupPhoto {
 	return photos
 }
 
-func (r *repoGroups) GetMany(groupIDs []int64) []*msg.Group {
-	return r.readManyFromCache(groupIDs)
-}
 
-func (r *repoGroups) Get(groupID int64) *msg.Group {
-	return r.readFromCache(groupID)
-}
-
-func (r *repoGroups) GetParticipant(groupID int64, memberID int64) *msg.GroupParticipant {
-
-	gp := new(msg.GroupParticipant)
-	_ = r.badger.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(r.getGroupParticipantKey(groupID, memberID))
-		if err != nil {
-			return err
-		}
-		return item.Value(func(val []byte) error {
-			return gp.Unmarshal(val)
-		})
-	})
-	return gp
-}
-
-func (r *repoGroups) GetParticipants(groupID int64) ([]*msg.GroupParticipant, error) {
-	participants := make([]*msg.GroupParticipant, 0, 100)
-	_ = r.badger.View(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.Prefix = r.getPrefix(groupID)
-		it := txn.NewIterator(opts)
-		for it.Seek(r.getGroupParticipantKey(groupID, 0)); it.ValidForPrefix(opts.Prefix); it.Next() {
-			p := new(msg.GroupParticipant)
-			_ = it.Item().Value(func(val []byte) error {
-				return p.Unmarshal(val)
-			})
-			participants = append(participants, p)
-		}
-		it.Close()
-		return nil
-	})
-
-	return participants, nil
-}
 
 func (r *repoGroups) DeleteMember(groupID, userID int64) {
 
@@ -346,20 +397,6 @@ func (r *repoGroups) DeleteMemberMany(groupID int64, memberIDs []int64) {
 	}
 }
 
-func (r *repoGroups) Delete(groupID int64) {
-
-	defer r.deleteFromCache(groupID)
-
-	_ = r.badger.Update(func(txn *badger.Txn) error {
-		err := txn.Delete(r.getGroupKey(groupID))
-		if err != nil {
-			return err
-		}
-		r.DeleteAllMembers(groupID)
-		return nil
-	})
-}
-
 func (r *repoGroups) UpdateMemberType(groupID, userID int64, isAdmin bool) {
 
 	defer r.deleteFromCache(groupID)
@@ -383,38 +420,6 @@ func (r *repoGroups) UpdateMemberType(groupID, userID int64, isAdmin bool) {
 	}
 	group.Flags = flags
 	r.SaveParticipant(groupID, gp)
-	r.Save(group)
-}
-
-func (r *repoGroups) UpdatePhoto(groupID int64, groupPhoto *msg.GroupPhoto) {
-	if alreadySaved(fmt.Sprintf("GPHOTO.%d", groupID), groupPhoto) {
-		return
-	}
-
-	defer r.deleteFromCache(groupID)
-
-	group := r.Get(groupID)
-	group.Photo = groupPhoto
-	r.Save(group)
-
-	if groupPhoto.PhotoBig.FileID != 0 {
-		r.SavePhotoGallery(groupID, groupPhoto)
-	}
-}
-
-func (r *repoGroups) RemovePhoto(groupID int64) {
-	defer r.deleteFromCache(groupID)
-
-	group := r.Get(groupID)
-	if group == nil {
-		return
-	}
-
-	// 1. Remove the photo from the photo gallery of the user
-	r.RemovePhotoGallery(groupID, group.Photo.PhotoID)
-
-	// 2. Save Group object into the db again
-	group.Photo = nil
 	r.Save(group)
 }
 

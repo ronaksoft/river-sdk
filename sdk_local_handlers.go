@@ -810,11 +810,19 @@ func (r *River) dialogTogglePin(in, out *msg.MessageEnvelope, timeoutCB domain.T
 }
 
 func (r *River) accountRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	x := new(msg.AccountRemovePhoto)
+	_ = x.Unmarshal(in.Message)
 
 	// send the request to server
 	r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 
-	repo.Users.RemovePhoto(r.ConnInfo.UserID)
+	repo.Users.UpdatePhoto(r.ConnInfo.UserID, &msg.UserPhoto{
+		PhotoBig:   &msg.FileLocation{},
+		PhotoSmall: &msg.FileLocation{},
+		PhotoID:    0,
+	})
+
+	repo.Users.RemovePhotoGallery(r.ConnInfo.UserID, x.PhotoID)
 }
 
 func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {

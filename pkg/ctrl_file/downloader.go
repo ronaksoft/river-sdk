@@ -157,7 +157,7 @@ func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 					}
 					_, err := ctx.file.WriteAt(file.Bytes, int64(offset))
 					if err != nil {
-						logs.Warn("Error in WriteFile",
+						logs.Error("Error in WriteFile",
 							zap.Error(err),
 							zap.Int32("Offset", offset),
 							zap.Int("Byte", len(file.Bytes)),
