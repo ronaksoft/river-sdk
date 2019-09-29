@@ -175,7 +175,16 @@ func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 			}(partIndex)
 		default:
 			waitGroup.Wait()
-			if int32(len(ctx.req.DownloadedParts)) == ctx.req.TotalParts {
+			totalDownloadedParts := int32(len(ctx.req.DownloadedParts))
+			switch  {
+			case totalDownloadedParts > ctx.req.TotalParts:
+				ctx.req.DownloadedParts = unique(ctx.req.DownloadedParts)
+				totalDownloadedParts = int32(len(ctx.req.DownloadedParts))
+				if totalDownloadedParts < ctx.req.TotalParts {
+					break
+				}
+				fallthrough
+			case totalDownloadedParts == ctx.req.TotalParts:
 				_ = ctx.file.Close()
 				err := os.Rename(ctx.req.TempFilePath, ctx.req.FilePath)
 				if err != nil {
@@ -190,6 +199,8 @@ func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 				}
 
 				return domain.RequestStatusCompleted
+			default:
+				// Keep downloading
 			}
 		}
 	}

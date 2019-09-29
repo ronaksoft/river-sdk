@@ -93,3 +93,15 @@ func getAccountProfilePath(userID int64, fileID int64) string {
 func getGroupProfilePath(groupID int64, fileID int64) string {
 	return path.Join(dirCache, fmt.Sprintf("g%d_%d%s", groupID, fileID, ".jpg"))
 }
+
+func unique(intSlice []int32) []int32 {
+	keys := make(map[int32]bool)
+	list := make([]int32, 0)
+	for _, entry := range intSlice {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	return list
+}
