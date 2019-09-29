@@ -18,7 +18,7 @@ func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash int64) [
 		if ok {
 			fileStatus.FilePath = uploadRequest.FilePath
 			fileStatus.Progress = int64(float64(len(uploadRequest.UploadedParts)) / float64(uploadRequest.TotalParts) * 100)
-			if fileStatus.Progress == 100 {
+			if repo.Files.IsMarkedAsUploaded(fileID) {
 				fileStatus.Status = int32(domain.RequestStatusCompleted)
 			} else {
 				fileStatus.Status = int32(domain.RequestStatusInProgress)

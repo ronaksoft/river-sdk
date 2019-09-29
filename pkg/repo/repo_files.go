@@ -18,7 +18,8 @@ import (
 */
 
 const (
-	prefixFiles = "FILES"
+	prefixFiles    = "FILES"
+	prefixUploaded = "UPLOADED"
 )
 
 type repoFiles struct {
@@ -268,4 +269,31 @@ func (r *repoFiles) Delete(clusterID int32, fileID int64, accessHash uint64) err
 	return r.badger.Update(func(txn *badger.Txn) error {
 		return txn.Delete(r.getKey(clusterID, fileID, accessHash))
 	})
+}
+
+func (r *repoFiles) MarkAsUploaded(fileID int64) error {
+	return r.badger.Update(func(txn *badger.Txn) error {
+		return txn.Set(
+			ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixUploaded, fileID)),
+			ronak.StrToByte("OK"),
+		)
+	})
+}
+
+func (r *repoFiles) UnmarkAsUploaded(fileID int64) error {
+	return r.badger.Update(func(txn *badger.Txn) error {
+		return txn.Delete(ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixUploaded, fileID)))
+	})
+}
+
+func (r *repoFiles) IsMarkedAsUploaded(fileID int64) bool {
+	var res bool
+	_ = r.badger.View(func(txn *badger.Txn) error {
+		_, err := txn.Get(ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixUploaded, fileID)))
+		if err != nil {
+			res = false
+		}
+		return nil
+	})
+	return true
 }

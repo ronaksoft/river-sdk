@@ -170,6 +170,7 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 			logs.Error("Error On HandlePendingMessage", zap.Error(err))
 			return
 		}
+		_ = repo.Files.UnmarkAsUploaded(clientSendMedia.FileID)
 	}
 
 	clientUpdate := new(msg.ClientUpdatePendingMessageDelivery)
