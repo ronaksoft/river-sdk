@@ -495,7 +495,7 @@ func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 	repo.Users.UpdatePhoto(x.UserID, x.Photo)
 
 	if x.PhotoID != 0 {
-		if x.Photo.PhotoSmall.FileID != 0 {
+		if x.Photo != nil && x.Photo.PhotoSmall.FileID != 0 {
 			repo.Users.SavePhotoGallery(x.UserID, x.Photo)
 		} else {
 			repo.Users.RemovePhotoGallery(x.UserID, x.PhotoID)
