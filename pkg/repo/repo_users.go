@@ -90,6 +90,7 @@ func (r *repoUsers) readFromDb(userID int64) *msg.User {
 		user.PhotoGallery = user.PhotoGallery[:0]
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = r.getPhotoGalleryPrefix(userID)
+		opts.Reverse = true
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
