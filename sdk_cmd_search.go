@@ -7,6 +7,7 @@ import (
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
+	"strings"
 	"time"
 )
 
@@ -21,6 +22,7 @@ import (
 
 // SearchContacts searches contacts
 func (r *River) SearchContacts(requestID int64, searchPhrase string, delegate RequestDelegate) {
+	searchPhrase = strings.ToLower(searchPhrase)
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("SearchContacts", time.Now().Sub(startTime))
@@ -46,7 +48,8 @@ func (r *River) SearchContacts(requestID int64, searchPhrase string, delegate Re
 
 // SearchGlobal returns messages, contacts and groups matching given text
 // peerID 0 means search is not limited to a specific peerID
-func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate) {
+func (r *River) SearchGlobal(searchPhrase string, peerID int64, delegate RequestDelegate) {
+	searchPhrase = strings.ToLower(searchPhrase)
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("SearchGlobal", time.Now().Sub(startTime))
@@ -56,9 +59,9 @@ func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate
 	var nonContacts []*msg.ContactUser
 	var msgs []*msg.UserMessage
 	if peerID != 0 {
-		msgs = repo.Messages.SearchTextByPeerID(text, peerID)
+		msgs = repo.Messages.SearchTextByPeerID(searchPhrase, peerID)
 	} else {
-		msgs = repo.Messages.SearchText(text)
+		msgs = repo.Messages.SearchText(searchPhrase)
 	}
 
 	// get users && group IDs
@@ -86,15 +89,15 @@ func (r *River) SearchGlobal(text string, peerID int64, delegate RequestDelegate
 
 	// if peerID == 0 then look for group and contact names too
 	if peerID == 0 {
-		userContacts, _ = repo.Users.SearchContacts(text)
+		userContacts, _ = repo.Users.SearchContacts(searchPhrase)
 		for _, userContact := range userContacts {
 			matchedUserIDs[userContact.ID] = true
 		}
-		nonContacts = repo.Users.SearchNonContacts(text)
+		nonContacts = repo.Users.SearchNonContacts(searchPhrase)
 		for _, userContact := range nonContacts {
 			matchedUserIDs[userContact.ID] = true
 		}
-		searchResults.MatchedGroups = repo.Groups.Search(text)
+		searchResults.MatchedGroups = repo.Groups.Search(searchPhrase)
 	}
 
 	users := repo.Users.GetMany(userIDs.ToArray())
