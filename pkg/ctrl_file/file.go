@@ -579,7 +579,6 @@ func (ctrl *Controller) upload(req UploadRequest) {
 		return
 	}
 	req.httpContext, req.cancelFunc = context.WithCancel(context.Background())
-
 	ctrl.saveUploads(req)
 	ctrl.uploadsRateLimit <- struct{}{}
 	defer func() {
