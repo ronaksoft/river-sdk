@@ -457,14 +457,17 @@ func (ctrl *Controller) download(req DownloadRequest) error {
 		if os.IsNotExist(err) {
 			ds.file, err = os.Create(req.TempFilePath)
 			if err != nil {
+				ctrl.onCancel(req.GetID(), req.ClusterID, req.FileID, int64(req.AccessHash), true)
 				return err
 			}
 		} else {
+			ctrl.onCancel(req.GetID(), req.ClusterID, req.FileID, int64(req.AccessHash), true)
 			return err
 		}
 	} else {
 		ds.file, err = os.OpenFile(req.TempFilePath, os.O_RDWR, 0666)
 		if err != nil {
+			ctrl.onCancel(req.GetID(), req.ClusterID, req.FileID, int64(req.AccessHash), true)
 			return err
 		}
 	}
