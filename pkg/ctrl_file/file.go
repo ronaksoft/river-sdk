@@ -443,6 +443,9 @@ func (ctrl *Controller) download(req DownloadRequest) error {
 	ctrl.saveDownloads(req)
 	ctrl.downloadsRateLimit <- struct{}{}
 	defer func() {
+		// Remove the Download request from the list
+		ctrl.deleteDownloadRequest(req.GetID())
+
 		<-ctrl.downloadsRateLimit
 	}()
 
@@ -499,8 +502,6 @@ func (ctrl *Controller) download(req DownloadRequest) error {
 	// This is blocking call, until all the parts are downloaded
 	ds.execute(ctrl)
 
-	// Remove the Download request from the list
-	ctrl.deleteDownloadRequest(req.GetID())
 	return nil
 }
 
@@ -587,6 +588,9 @@ func (ctrl *Controller) upload(req UploadRequest) {
 	ctrl.saveUploads(req)
 	ctrl.uploadsRateLimit <- struct{}{}
 	defer func() {
+		// Remove the Download request from the list
+		ctrl.deleteUploadRequest(req.GetID())
+
 		<-ctrl.uploadsRateLimit
 	}()
 
@@ -642,8 +646,5 @@ func (ctrl *Controller) upload(req UploadRequest) {
 
 	// This is blocking call, until all the parts are downloaded
 	ds.execute(ctrl)
-
-	// Remove the Download request from the list
-	ctrl.deleteUploadRequest(req.GetID())
 	return
 }
