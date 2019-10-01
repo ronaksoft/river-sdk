@@ -87,23 +87,6 @@ func (r *repoUsers) readFromDb(userID int64) *msg.User {
 		if err != nil {
 			return err
 		}
-		user.PhotoGallery = user.PhotoGallery[:0]
-		opts := badger.DefaultIteratorOptions
-		opts.Prefix = r.getPhotoGalleryPrefix(userID)
-		opts.Reverse = true
-		it := txn.NewIterator(opts)
-		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
-			_ = it.Item().Value(func(val []byte) error {
-				userPhoto := new(msg.UserPhoto)
-				err := userPhoto.Unmarshal(val)
-				if err != nil {
-					return err
-				}
-				user.PhotoGallery = append(user.PhotoGallery, userPhoto)
-				return nil
-			})
-		}
-		it.Close()
 		return nil
 	})
 	if err != nil {
@@ -271,8 +254,6 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 	return users
 }
 
-
-
 func (r *repoUsers) GetContact(userID int64) *msg.ContactUser {
 	contactUser := new(msg.ContactUser)
 	err := r.badger.View(func(txn *badger.Txn) error {
@@ -421,7 +402,6 @@ func (r *repoUsers) saveContact(contactUser *msg.ContactUser) {
 
 }
 
-
 func (r *repoUsers) GetPhoto(userID, photoID int64) *msg.UserPhoto {
 
 	user := r.Get(userID)
@@ -458,6 +438,29 @@ func (r *repoUsers) RemovePhotoGallery(userID int64, photoIDs ...int64) {
 	}
 }
 
+func (r *repoUsers) GetPhotoGallery(userID int64) []*msg.UserPhoto {
+	photoGallery := make([]*msg.UserPhoto, 0, 4)
+	_ = r.badger.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = r.getPhotoGalleryPrefix(userID)
+		opts.Reverse = true
+		it := txn.NewIterator(opts)
+		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
+			_ = it.Item().Value(func(val []byte) error {
+				userPhoto := new(msg.UserPhoto)
+				err := userPhoto.Unmarshal(val)
+				if err != nil {
+					return err
+				}
+				photoGallery = append(photoGallery, userPhoto)
+				return nil
+			})
+		}
+		it.Close()
+		return nil
+	})
+	return photoGallery
+}
 
 func (r *repoUsers) ReIndex() {
 	err := r.badger.View(func(txn *badger.Txn) error {

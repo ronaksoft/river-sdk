@@ -1039,7 +1039,11 @@ func (r *River) usersGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 
 	if len(users) == len(userIDs) {
 		res := new(msg.UsersMany)
+		for _, user := range users {
+			user.PhotoGallery = repo.Users.GetPhotoGallery(user.ID)
+		}
 		res.Users = users
+
 
 		out.Constructor = msg.C_UsersMany
 		out.Message, _ = res.Marshal()
