@@ -299,9 +299,6 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			successCB(m)
 		}
 	}(successCB, req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID)
-	timeoutCB = func() {
-		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, )
-	}
 
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:
