@@ -572,17 +572,19 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 
 	go func() {
 		// Upload Thumbnail
-		ctrl.upload(reqThumb)
+		err := ctrl.upload(reqThumb)
+		logs.WarnOnErr("Error On Upload Thumbnail", err,zap.Int64("FileID", reqThumb.ThumbID))
 
 		// Upload File
-		ctrl.upload(reqFile)
+		err =ctrl.upload(reqFile)
+		logs.WarnOnErr("Error On Upload Message Media", err, zap.Int64("FileID", reqFile.FileID))
 	}()
 
 }
-func (ctrl *Controller) upload(req UploadRequest) {
+func (ctrl *Controller) upload(req UploadRequest) error {
 	if req.FilePath == "" {
 		ctrl.deleteUploadRequest(req.GetID())
-		return
+		return domain.ErrNoFilePath
 	}
 	req.httpContext, req.cancelFunc = context.WithCancel(context.Background())
 	ctrl.saveUploads(req)
@@ -601,23 +603,23 @@ func (ctrl *Controller) upload(req UploadRequest) {
 	fileInfo, err := os.Stat(req.FilePath)
 	if err != nil {
 		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
-		return
+		return err
 	}
 	ds.file, err = os.OpenFile(req.FilePath, os.O_RDONLY, 0666)
 	if err != nil {
 		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
-		return
+		return err
 	}
 
 	req.FileSize = fileInfo.Size()
 	if req.FileSize <= 0 {
 		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
-		return
+		return err
 	}
 
 	if req.FileSize > domain.FileMaxAllowedSize {
 		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
-		return
+		return err
 	}
 
 	if req.ChunkSize == 0 {
@@ -646,5 +648,5 @@ func (ctrl *Controller) upload(req UploadRequest) {
 
 	// This is blocking call, until all the parts are downloaded
 	ds.execute(ctrl)
-	return
+	return nil
 }

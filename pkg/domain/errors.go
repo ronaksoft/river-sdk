@@ -20,6 +20,7 @@ var (
 	ErrMaxFileSize           = errors.New("max file size limit")
 	ErrUnknownFileSize       = errors.New("unknown file size")
 	ErrAlreadyDownloading    = errors.New("already is downloading")
+	ErrNoFilePath            = errors.New("no file path")
 )
 
 // ParseServerError ...
