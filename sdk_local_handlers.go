@@ -242,7 +242,6 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 
 	// Prepare the the result before sending back to the client
-
 	preSuccessCB := func(cb domain.MessageHandler, peerID int64, peerType int32, minID, maxID int64) domain.MessageHandler {
 		return func(m *msg.MessageEnvelope) {
 			pendingMessages := repo.PendingMessages.GetByPeer(peerID, peerType)
@@ -300,6 +299,9 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			successCB(m)
 		}
 	}(successCB, req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID)
+	timeoutCB = func() {
+		r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, )
+	}
 
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:

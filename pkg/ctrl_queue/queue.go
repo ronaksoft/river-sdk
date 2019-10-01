@@ -147,23 +147,22 @@ func (ctrl *Controller) executor(req request) {
 	select {
 	case <-time.After(req.Timeout):
 		domain.RemoveRequestCallback(req.ID)
-		if reqCallbacks.TimeoutCallback != nil {
-			if reqCallbacks.IsUICallback {
-				uiexec.Ctx().Exec(func() { reqCallbacks.TimeoutCallback() })
-			} else {
-				reqCallbacks.TimeoutCallback()
-			}
-		}
-
-		// hotfix check pendingMessage &&  messagesReadHistory on timeout
 		switch req.MessageEnvelope.Constructor {
 		case msg.C_MessagesSend:
 			pmsg, err := repo.PendingMessages.GetByRandomID(int64(-req.ID))
 			if err == nil && pmsg != nil {
 				ctrl.addToWaitingList(&req)
 			}
-		case msg.C_MessagesReadHistory:
+		case msg.C_MessagesReadHistory, msg.C_MessagesGetHistory:
 			ctrl.addToWaitingList(&req)
+		default:
+			if reqCallbacks.TimeoutCallback != nil {
+				if reqCallbacks.IsUICallback {
+					uiexec.Ctx().Exec(func() { reqCallbacks.TimeoutCallback() })
+				} else {
+					reqCallbacks.TimeoutCallback()
+				}
+			}
 		}
 	case res := <-reqCallbacks.ResponseChannel:
 		if reqCallbacks.SuccessCallback != nil {
