@@ -517,12 +517,13 @@ func (ctrl *Controller) UploadUserPhoto(filePath string) (reqID string) {
 	}
 
 	fileID := ronak.RandomInt64(0)
-	ctrl.upload(UploadRequest{
+	err := ctrl.upload(UploadRequest{
 		IsProfilePhoto: true,
 		FileID:         fileID,
 		MaxInFlights:   maxUploadInFlights,
 		FilePath:       filePath,
 	})
+	logs.WarnOnErr("Error On UploadUserPhoto", err)
 	reqID = GetRequestID(0, fileID, 0)
 	return
 }
@@ -533,14 +534,14 @@ func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) (reqID 
 	}
 
 	fileID := ronak.RandomInt64(0)
-	ctrl.upload(UploadRequest{
+	err := ctrl.upload(UploadRequest{
 		IsProfilePhoto: true,
 		GroupID:        groupID,
 		FileID:         fileID,
 		MaxInFlights:   maxUploadInFlights,
 		FilePath:       filePath,
 	})
-
+	logs.WarnOnErr("Error On UploadGroupPhoto", err)
 	reqID = GetRequestID(0, fileID, 0)
 	return
 }
