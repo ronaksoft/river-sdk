@@ -47,7 +47,7 @@ func GetFilePath(clientFile *msg.ClientFile) string {
 	case msg.ClientFileType_AccountProfilePhoto:
 		return getAccountProfilePath(clientFile.UserID, clientFile.FileID)
 	case msg.ClientFileType_GroupProfilePhoto:
-		return getGroupProfilePath(clientFile.GroupID, clientFile.GroupID)
+		return getGroupProfilePath(clientFile.GroupID, clientFile.FileID)
 	case msg.ClientFileType_Thumbnail:
 		return getThumbnailPath(clientFile.FileID, clientFile.ClusterID)
 	}
