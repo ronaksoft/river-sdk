@@ -287,7 +287,7 @@ func (r *repoFiles) UnmarkAsUploaded(fileID int64) error {
 }
 
 func (r *repoFiles) IsMarkedAsUploaded(fileID int64) bool {
-	var res bool
+	res := true
 	_ = r.badger.View(func(txn *badger.Txn) error {
 		_, err := txn.Get(ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixUploaded, fileID)))
 		if err != nil {
@@ -295,5 +295,5 @@ func (r *repoFiles) IsMarkedAsUploaded(fileID int64) bool {
 		}
 		return nil
 	})
-	return true
+	return res
 }

@@ -139,7 +139,7 @@ func (r *River) ResumeUpload(pendingMessageID int64) {
 	_ = req.Unmarshal(pendingMessage.Media)
 
 	if _, ok := r.fileCtrl.GetUploadRequest(pendingMessage.FileID); !ok {
-		go r.fileCtrl.UploadMessageDocument(pendingMessageID, req.FilePath, req.ThumbFilePath, pendingMessage.FileID, pendingMessage.ThumbID)
+		r.fileCtrl.UploadMessageDocument(pendingMessageID, req.FilePath, req.ThumbFilePath, pendingMessage.FileID, pendingMessage.ThumbID)
 	}
 }
 

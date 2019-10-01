@@ -551,7 +551,7 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 
 	// We prepare upload request for the actual file before uploading the thumbnail to save it
 	// in case of execution stopped, then we are assured that we will continue the upload process
-	req := UploadRequest{
+	reqFile := UploadRequest{
 		MessageID:    messageID,
 		FileID:       fileID,
 		FilePath:     filePath,
@@ -559,19 +559,24 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 		ThumbPath:    thumbPath,
 		MaxInFlights: maxUploadInFlights,
 	}
-	ctrl.saveUploads(req)
-
-	// Upload Thumbnail
-	ctrl.upload(UploadRequest{
+	reqThumb := UploadRequest{
 		MessageID:        0,
 		FileID:           thumbID,
 		MaxInFlights:     maxUploadInFlights,
 		FilePath:         thumbPath,
 		SkipDelegateCall: false,
-	})
+	}
+	ctrl.saveUploads(reqThumb)
+	ctrl.saveUploads(reqFile)
 
-	// Upload File
-	ctrl.upload(req)
+	go func() {
+		// Upload Thumbnail
+		ctrl.upload(reqThumb)
+
+		// Upload File
+		ctrl.upload(reqFile)
+	}()
+
 }
 func (ctrl *Controller) upload(req UploadRequest) {
 	if req.FilePath == "" {
