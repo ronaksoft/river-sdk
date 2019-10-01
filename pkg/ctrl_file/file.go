@@ -107,7 +107,8 @@ func (ctrl *Controller) Start() {
 		_ = json.Unmarshal(dBytes, &ctrl.downloadRequests)
 		for _, req := range ctrl.downloadRequests {
 			go func(req DownloadRequest) {
-				_ = ctrl.download(req)
+				err := ctrl.download(req)
+				logs.WarnOnErr("Error On Download Start", err)
 			}(req)
 		}
 	}
@@ -118,7 +119,8 @@ func (ctrl *Controller) Start() {
 		_ = json.Unmarshal(dBytes, &ctrl.uploadRequests)
 		for _, req := range ctrl.uploadRequests {
 			go func(req UploadRequest) {
-				ctrl.upload(req)
+				err := ctrl.upload(req)
+				logs.WarnOnErr("Error On Upload Start", err)
 			}(req)
 		}
 	}
