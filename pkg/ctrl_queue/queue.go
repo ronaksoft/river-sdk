@@ -165,6 +165,22 @@ func (ctrl *Controller) executor(req request) {
 			}
 		}
 	case res := <-reqCallbacks.ResponseChannel:
+		switch req.MessageEnvelope.Constructor {
+		case msg.C_MessagesSend, msg.C_MessagesSendMedia:
+			switch res.Constructor {
+			case msg.C_Error:
+				errMsg := new(msg.Error)
+				_ = errMsg.Unmarshal(res.Message)
+				if errMsg.Code == msg.ErrCodeAlreadyExists && errMsg.Items == msg.ErrItemRandomID {
+					pm, _ := repo.PendingMessages.GetByRandomID(int64(req.ID))
+					if pm != nil {
+						err := repo.PendingMessages.Delete(pm.ID)
+						logs.WarnOnErr("Error On DeletePendingMessage", err)
+					}
+				}
+			default:
+			}
+		}
 		if reqCallbacks.SuccessCallback != nil {
 			if reqCallbacks.IsUICallback {
 				uiexec.Ctx().Exec(func() { reqCallbacks.SuccessCallback(res) })
