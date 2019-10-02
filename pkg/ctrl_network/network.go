@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
@@ -29,6 +30,7 @@ type Config struct {
 
 // Controller websocket network controller
 type Controller struct {
+	isRunning int32
 	// Internal Controller Channels
 	connectChannel chan bool
 	stopChannel    chan bool
@@ -360,6 +362,13 @@ func (ctrl *Controller) messageHandler(message *msg.MessageEnvelope) {
 // Start
 // Starts the controller background controller and watcher routines
 func (ctrl *Controller) Start() {
+	// Check if sync function is already running, then return otherwise lock it and continue
+	if !atomic.CompareAndSwapInt32(&ctrl.isRunning, 0, 1) {
+		logs.Debug("Network Controller already started ...")
+		return
+	}
+
+
 	// Run the keepAlive and watchDog in background
 	go ctrl.watchDog()
 	return
@@ -373,6 +382,7 @@ func (ctrl *Controller) Stop() {
 	default:
 	}
 	logs.Info("NetworkController stopped")
+	atomic.StoreInt32(&ctrl.isRunning, 0)
 }
 
 // Connect dial websocket
