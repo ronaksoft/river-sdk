@@ -464,6 +464,8 @@ func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) {
 			return
 		}
 
+		repo.PendingMessages.UpdateClientMessageMedia(pendingMessage, uploadRequest.TotalParts)
+
 		req := new(msg.ClientSendMessageMedia)
 		_ = req.Unmarshal(pendingMessage.Media)
 
