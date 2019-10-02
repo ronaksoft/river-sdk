@@ -1,11 +1,9 @@
 package syncCtrl
 
 import (
-	"fmt"
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
-	"io"
 	"os"
 	"time"
 
@@ -165,9 +163,9 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 		clientFile, err := repo.Files.GetMediaDocument(x.Message)
 		logs.WarnOnErr("Error On GetMediaDocument", err)
 
-		_, err = copyUploadedFile(clientSendMedia.FilePath, fileCtrl.GetFilePath(clientFile))
+		err = os.Rename(clientSendMedia.FilePath, fileCtrl.GetFilePath(clientFile))
 		if err != nil {
-			logs.Error("Error On HandlePendingMessage", zap.Error(err))
+			logs.Error("Error On HandlePendingMessage (Rename)", zap.Error(err))
 			return
 		}
 		_ = repo.Files.UnmarkAsUploaded(clientSendMedia.FileID)
@@ -194,30 +192,30 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 		}
 	})
 }
-func copyUploadedFile(src, dst string) (int64, error) {
-	sourceFileStat, err := os.Stat(src)
-	if err != nil {
-		return 0, err
-	}
-
-	if !sourceFileStat.Mode().IsRegular() {
-		return 0, fmt.Errorf("%s is not a regular file", src)
-	}
-
-	source, err := os.Open(src)
-	if err != nil {
-		return 0, err
-	}
-	defer source.Close()
-
-	destination, err := os.Create(dst)
-	if err != nil {
-		return 0, err
-	}
-	defer destination.Close()
-	nBytes, err := io.Copy(destination, source)
-	return nBytes, err
-}
+// func copyUploadedFile(src, dst string) (int64, error) {
+// 	sourceFileStat, err := os.Stat(src)
+// 	if err != nil {
+// 		return 0, err
+// 	}
+//
+// 	if !sourceFileStat.Mode().IsRegular() {
+// 		return 0, fmt.Errorf("%s is not a regular file", src)
+// 	}
+//
+// 	source, err := os.Open(src)
+// 	if err != nil {
+// 		return 0, err
+// 	}
+// 	defer source.Close()
+//
+// 	destination, err := os.Create(dst)
+// 	if err != nil {
+// 		return 0, err
+// 	}
+// 	defer destination.Close()
+// 	nBytes, err := io.Copy(destination, source)
+// 	return nBytes, err
+// }
 
 // updateReadHistoryInbox
 func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
