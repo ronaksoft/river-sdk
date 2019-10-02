@@ -112,6 +112,7 @@ func (ctrl *Controller) watchDog() {
 func (ctrl *Controller) Sync() {
 	// Check if sync function is already running, then return otherwise lock it and continue
 	if !atomic.CompareAndSwapInt32(&ctrl.syncLock, 0, 1) {
+		logs.Debug("Already Syncing ...")
 		return
 	}
 	defer atomic.StoreInt32(&ctrl.syncLock, 0)
