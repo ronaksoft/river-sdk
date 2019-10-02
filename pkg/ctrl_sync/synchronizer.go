@@ -123,11 +123,6 @@ func (ctrl *Controller) Sync() {
 		return
 	}
 
-	// Wait until network is available
-	logs.Debug("WaitForNetwork Before")
-	ctrl.networkCtrl.WaitForNetwork()
-	logs.Debug("WaitForNetwork After")
-
 	// get updateID from server
 	serverUpdateID, err := getUpdateState(ctrl)
 	if err != nil {
@@ -139,9 +134,7 @@ func (ctrl *Controller) Sync() {
 	}
 
 	// Update the sync controller status
-	logs.Debug("Call UpdateSyncStatus Before")
 	updateSyncStatus(ctrl, domain.Syncing)
-	logs.Debug("Call UpdateSyncStatus After")
 	defer updateSyncStatus(ctrl, domain.Synced)
 
 	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSyncThreshold {
