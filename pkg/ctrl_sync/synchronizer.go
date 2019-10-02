@@ -119,6 +119,7 @@ func (ctrl *Controller) Sync() {
 
 	// There is no need to sync when no user has been authorized
 	if ctrl.userID == 0 {
+		logs.Debug("Sync UserID is zero ...")
 		return
 	}
 
