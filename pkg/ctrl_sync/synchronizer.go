@@ -224,7 +224,14 @@ func getContacts(waitGroup *sync.WaitGroup, ctrl *Controller) {
 			getContacts(waitGroup, ctrl)
 		},
 		func(m *msg.MessageEnvelope) {
-			waitGroup.Done()
+			switch m.Constructor {
+			case msg.C_Error:
+				errMsg := new(msg.Error)
+				_ = errMsg.Unmarshal(m.Message)
+				getContacts(waitGroup, ctrl)
+			default:
+				waitGroup.Done()
+			}
 			// Controller applier will take care of this
 		},
 		false,
@@ -250,6 +257,11 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 		},
 		func(m *msg.MessageEnvelope) {
 			switch m.Constructor {
+			case msg.C_Error:
+				logs.Error("onSuccessCallback()-> C_Error",
+					zap.String("Error", domain.ParseServerError(m.Message).Error()),
+				)
+				getAllDialogs(waitGroup, ctrl, offset, limit)
 			case msg.C_MessagesDialogs:
 				x := new(msg.MessagesDialogs)
 				err := x.Unmarshal(m.Message)
@@ -282,10 +294,6 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 				} else {
 					waitGroup.Done()
 				}
-			case msg.C_Error:
-				logs.Error("onSuccessCallback()-> C_Error",
-					zap.String("Error", domain.ParseServerError(m.Message).Error()),
-				)
 			}
 		},
 		false,
