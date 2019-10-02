@@ -546,7 +546,6 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		reqMedia.ThumbUploadID = fmt.Sprintf("%d", thumbID)
 	}
 	pendingMessage, err := repo.PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, fileID, fileID, thumbID, reqMedia)
-
 	if err != nil {
 		e := new(msg.Error)
 		e.Code = "n/a"

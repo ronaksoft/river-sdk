@@ -148,8 +148,8 @@ func (ctrl *Controller) executor(req request) {
 	case <-time.After(req.Timeout):
 		domain.RemoveRequestCallback(req.ID)
 		switch req.MessageEnvelope.Constructor {
-		case msg.C_MessagesSend:
-			pmsg, err := repo.PendingMessages.GetByRandomID(int64(-req.ID))
+		case msg.C_MessagesSend, msg.C_MessagesSendMedia:
+			pmsg, err := repo.PendingMessages.GetByRandomID(int64(req.ID))
 			if err == nil && pmsg != nil {
 				ctrl.addToWaitingList(&req)
 			}
@@ -280,12 +280,18 @@ func (ctrl *Controller) Start() {
 
 	// Try to resend unsent messages
 	for _, pmsg := range repo.PendingMessages.GetAll() {
-		if pmsg.MediaType == msg.InputMediaTypeEmpty {
+		switch pmsg.MediaType {
+		case msg.InputMediaTypeEmpty:
+			// it will be MessagesSend
 			req := repo.PendingMessages.ToMessagesSend(pmsg)
 			reqBytes, _ := req.Marshal()
 			ctrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSend, reqBytes, nil, nil, false)
-		} else {
+		default:
+			// it will be MessagesSendMedia
 			req := repo.PendingMessages.ToMessagesSendMedia(pmsg)
+			if req == nil {
+				continue
+			}
 			reqBytes, _ := req.Marshal()
 			ctrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSendMedia, reqBytes, nil, nil, false)
 		}

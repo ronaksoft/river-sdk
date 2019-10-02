@@ -82,6 +82,19 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, requestID,
 	if msgMedia == nil {
 		return nil, domain.ErrNotFound
 	}
+	switch msgMedia.MediaType {
+	case msg.InputMediaTypeUploadedDocument, msg.InputMediaTypeUploadedPhoto:
+	default:
+		panic("Invalid MediaInputType")
+		return nil, domain.ErrInvalidConstructor
+	}
+
+	// support IOS file path
+	if strings.HasPrefix(msgMedia.FilePath, "file://") {
+		msgMedia.FilePath = msgMedia.FilePath[7:]
+	}
+
+	msgMedia.FileTotalParts = 0
 
 	pm := new(msg.ClientPendingMessage)
 	pm.PeerID = msgMedia.Peer.ID
@@ -91,12 +104,6 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, requestID,
 	pm.ReplyTo = msgMedia.ReplyTo
 	pm.ClearDraft = msgMedia.ClearDraft
 	pm.MediaType = msgMedia.MediaType
-
-	// support IOS file path
-	if strings.HasPrefix(msgMedia.FilePath, "file://") {
-		msgMedia.FilePath = msgMedia.FilePath[7:]
-	}
-
 	pm.Media, _ = msgMedia.Marshal()
 	pm.ID = msgID
 	pm.SenderID = senderID
@@ -112,6 +119,38 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, requestID,
 
 	bytes, _ := pm.Marshal()
 	_ = r.badger.Update(func(txn *badger.Txn) error {
+		// 1. Save PendingMessage by ID
+		err := txn.SetEntry(badger.NewEntry(
+			r.getKey(pm.ID), bytes),
+		)
+		if err != nil {
+			return err
+		}
+
+		// 2. Save PendingMessage by RequestID/RandomID
+		return txn.SetEntry(badger.NewEntry(
+			r.getRandomKey(pm.RequestID), bytes),
+		)
+	})
+
+	Dialogs.updateLastUpdate(pm.PeerID, pm.PeerType, pm.CreatedOn)
+
+	return pm, nil
+}
+
+func (r *repoMessagesPending) UpdateClientMessageMedia(pm *msg.ClientPendingMessage, totalParts int32) {
+	switch pm.MediaType {
+	case msg.InputMediaTypeUploadedDocument:
+	default:
+		panic("invalid input MediaType in pending message for ClientMessageMedia")
+	}
+	csmm := new(msg.ClientSendMessageMedia)
+	_ = csmm.Unmarshal(pm.Media)
+	csmm.FileTotalParts = totalParts
+	pm.Media, _ = csmm.Marshal()
+
+	bytes, _ := pm.Marshal()
+	_ = r.badger.Update(func(txn *badger.Txn) error {
 		err := txn.SetEntry(badger.NewEntry(
 			r.getKey(pm.ID), bytes),
 		)
@@ -123,9 +162,7 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, requestID,
 		)
 	})
 
-	Dialogs.updateLastUpdate(pm.PeerID, pm.PeerType, pm.CreatedOn)
 
-	return pm, nil
 }
 
 func (r *repoMessagesPending) SaveMessageMedia(msgID int64, senderID int64, msgMedia *msg.MessagesSendMedia) (*msg.ClientPendingMessage, error) {
@@ -428,6 +465,39 @@ func (r *repoMessagesPending) ToMessagesSendMedia(m *msg.ClientPendingMessage) *
 	v.ClearDraft = m.ClearDraft
 	v.ReplyTo = m.ReplyTo
 	v.MediaType = m.MediaType
-	v.MediaData = m.Media
+
+	switch m.MediaType {
+	case msg.InputMediaTypeUploadedDocument:
+		csmm := new(msg.ClientSendMessageMedia)
+		_ = csmm.Unmarshal(m.Media)
+		uploadedDocument := new(msg.InputMediaUploadedDocument)
+
+		if csmm.FileTotalParts == 0 {
+			// If FileTotalParts is still zero it means we have not upload the document yet
+			return nil
+		}
+		uploadedDocument.File = &msg.InputFile{
+			FileID:      csmm.FileID,
+			TotalParts:  csmm.FileTotalParts,
+			FileName:    csmm.FileName,
+			MD5Checksum: "",
+		}
+		if csmm.ThumbID != 0 {
+			uploadedDocument.Thumbnail = &msg.InputFile{
+				FileID:      csmm.ThumbID,
+				TotalParts:  0,
+				FileName:    "",
+				MD5Checksum: "",
+			}
+		}
+		uploadedDocument.MimeType = csmm.FileMIME
+		uploadedDocument.Attributes = csmm.Attributes
+		uploadedDocument.Caption = csmm.Caption
+		v.MediaData, _ = uploadedDocument.Marshal()
+	default:
+		v.MediaData = m.Media
+	}
+
+
 	return v
 }

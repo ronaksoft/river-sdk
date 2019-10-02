@@ -458,10 +458,12 @@ func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) {
 	)
 	switch {
 	case uploadRequest.IsProfilePhoto == false && uploadRequest.MessageID != 0:
+		// This is a upload for message send media
 		pendingMessage := repo.PendingMessages.GetByID(uploadRequest.MessageID)
 		if pendingMessage == nil {
 			return
 		}
+
 		req := new(msg.ClientSendMessageMedia)
 		_ = req.Unmarshal(pendingMessage.Media)
 
@@ -500,8 +502,14 @@ func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) {
 		}
 		reqBuff, _ := x.Marshal()
 		requestID := uint64(uploadRequest.FileID)
-		r.queueCtrl.ExecuteCommand(requestID, msg.C_MessagesSendMedia, reqBuff, nil, nil, false)
+		waitGroup :=sync.WaitGroup{}
+		waitGroup.Add(1)
+		r.queueCtrl.ExecuteCommand(requestID, msg.C_MessagesSendMedia, reqBuff, nil, func(m *msg.MessageEnvelope) {
+			waitGroup.Done()
+		}, false)
+		waitGroup.Wait()
 	case uploadRequest.IsProfilePhoto && uploadRequest.GroupID == 0:
+		// This is a upload account profile picture
 		x := new(msg.AccountUploadPhoto)
 		x.File = &msg.InputFile{
 			FileID:      uploadRequest.FileID,
@@ -528,9 +536,9 @@ func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) {
 				x := new(msg.Error)
 				err := x.Unmarshal(m.Message)
 				if err != nil {
-					logs.Error("AccountUploadPhoto timeout callback", zap.Error(err))
+					logs.Error("AccountUploadPhoto Error callback", zap.Error(err))
 				}
-				logs.Error("AccountUploadPhoto timeout callback", zap.String("Code", x.Code), zap.String("Item", x.Items))
+				logs.Error("AccountUploadPhoto Error callback", zap.String("Code", x.Code), zap.String("Item", x.Items))
 			}
 		}
 		timeoutCB := func() {
@@ -538,6 +546,7 @@ func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) {
 		}
 		r.queueCtrl.ExecuteCommand(requestID, msg.C_AccountUploadPhoto, reqBuff, timeoutCB, successCB, false)
 	case uploadRequest.IsProfilePhoto && uploadRequest.GroupID != 0:
+		// This is a upload group profile picture
 		x := new(msg.GroupsUploadPhoto)
 		x.GroupID = uploadRequest.GroupID
 		x.File = &msg.InputFile{
