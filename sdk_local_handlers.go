@@ -204,6 +204,8 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 
 	fillOutput := func(out *msg.MessageEnvelope, messages []*msg.UserMessage, users []*msg.User, requestID uint64, successCB domain.MessageHandler) {
+		logs.Debug("MessageGetHistory -> fillOutput called")
+
 		res := new(msg.MessagesMany)
 		res.Messages = messages
 		res.Users = users
