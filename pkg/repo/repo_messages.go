@@ -218,6 +218,12 @@ func (r *repoMessages) save(message *msg.UserMessage) {
 }
 
 func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, maxID int64, limit int32) (userMessages []*msg.UserMessage, users []*msg.User) {
+	logs.Info("GetMessageHistory",
+		zap.Int64("PeerID", peerID),
+		zap.Int64("MinID", minID),
+		zap.Int64("MaxID", maxID),
+		zap.Int32("Limit", limit),
+	)
 	userMessages = make([]*msg.UserMessage, 0, limit)
 	userIDs := domain.MInt64B{}
 	switch {
