@@ -304,6 +304,8 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 				m.Message, _ = x.Marshal()
 			default:
 			}
+
+			logs.Debug("MessageGetHistory -> preSuccessCB called")
 			// Call the actual success callback function
 			successCB(m)
 		}
