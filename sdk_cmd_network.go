@@ -42,11 +42,11 @@ func (r *River) GetNetworkStatus() int32 {
 
 
 // UnderlyingNetworkChange
-func (r *River) UnderlyingNetworkChange() {
+func (r *River) UnderlyingNetworkChange(connected bool) {
 	r.networkCtrl.Reconnect()
 }
 
 // UnderlyingNetworkSpeedChange
-func (r *River) UnderlyingNetworkSpeedChange() {
+func (r *River) UnderlyingNetworkSpeedChange(fast bool) {
 	// TODO:: update timeout values
 }
