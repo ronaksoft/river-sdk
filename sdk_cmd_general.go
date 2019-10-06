@@ -642,3 +642,7 @@ func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
 func (r *River) GetSDKSalt() int64 {
 	return salt.Get()
 }
+
+func (r *River) GetServerTimeUnix() int64 {
+	return domain.Now().Unix()
+}
