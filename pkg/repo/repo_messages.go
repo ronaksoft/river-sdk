@@ -218,12 +218,6 @@ func (r *repoMessages) save(message *msg.UserMessage) {
 }
 
 func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, maxID int64, limit int32) (userMessages []*msg.UserMessage, users []*msg.User) {
-	logs.Info("GetMessageHistory",
-		zap.Int64("PeerID", peerID),
-		zap.Int64("MinID", minID),
-		zap.Int64("MaxID", maxID),
-		zap.Int32("Limit", limit),
-	)
 	userMessages = make([]*msg.UserMessage, 0, limit)
 	userIDs := domain.MInt64B{}
 	switch {
@@ -314,12 +308,16 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 			zap.Duration("SP3", stopWatch3.Sub(startTime)),
 		)
 	default:
+		startTime := time.Now()
+		var stopWatch1, stopWatch2 time.Time
 		_ = r.badger.View(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
 			opts.Prefix = r.getPrefix(peerID, peerType)
 			opts.Reverse = true
 			it := txn.NewIterator(opts)
-			for it.Seek(r.getMessageKey(peerID, peerType, maxID)); it.ValidForPrefix(opts.Prefix); it.Next() {
+			it.Seek(r.getMessageKey(peerID, peerType, maxID))
+			stopWatch1 = time.Now()
+			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
 					break
 				}
@@ -344,6 +342,11 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 				})
 			}
 			it.Close()
+			stopWatch2 = time.Now()
+			logs.Info("GetMessageHistory", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID),
+				zap.Duration("SP1", stopWatch1.Sub(startTime)),
+				zap.Duration("SP2", stopWatch2.Sub(startTime)),
+			)
 			return nil
 		})
 
