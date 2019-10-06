@@ -40,6 +40,13 @@ func (r *River) GetNetworkStatus() int32 {
 	return int32(r.networkCtrl.GetQuality())
 }
 
+
+// UnderlyingNetworkChange
 func (r *River) UnderlyingNetworkChange() {
 	r.networkCtrl.Reconnect()
+}
+
+// UnderlyingNetworkSpeedChange
+func (r *River) UnderlyingNetworkSpeedChange() {
+	// TODO:: update timeout values
 }
