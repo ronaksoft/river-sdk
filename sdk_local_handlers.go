@@ -212,8 +212,11 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		out.Constructor = msg.C_MessagesMany
 		out.Message, _ = res.Marshal()
 		if successCB != nil {
+			successCBCallStart := time.Now()
+
 			uiexec.Ctx().Exec(func() {
 				successCB(out)
+				logs.Debug("MessageGetHistory", zap.Duration("SuccessCB UIExec called", time.Now().Sub(successCBCallStart)))
 			})
 		}
 	}
