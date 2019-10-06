@@ -20,7 +20,7 @@ func (r *River) StartNetwork() {
 		mon.FunctionResponseTime("StartNetwork", time.Now().Sub(startTime))
 	}()
 	r.networkCtrl.Start()
-	r.networkCtrl.Connect(true)
+	r.networkCtrl.Connect()
 }
 
 func (r *River) StopNetwork() {

@@ -220,12 +220,10 @@ func (ctrl *Controller) watchDog() {
 	for {
 		select {
 		case <-ctrl.connectChannel:
-			if ctrl.wsConn != nil {
-				ctrl.receiver()
-			}
+			ctrl.receiver()
 			ctrl.updateNetworkStatus(domain.NetworkDisconnected)
 			if ctrl.wsKeepConnection {
-				go ctrl.Connect(true)
+				go ctrl.Connect()
 			}
 		case <-ctrl.stopChannel:
 			logs.Info("Stop Called")
@@ -238,7 +236,7 @@ func (ctrl *Controller) watchDog() {
 // This is the background routine listen for incoming websocket packets and _Decrypt
 // the received message, if necessary, and  pass the extracted envelopes to messageHandler.
 func (ctrl *Controller) receiver() {
-	defer recoverPanic("NetworkController:: receiver", ronak.M{
+	defer ctrl.recoverPanic("NetworkController:: receiver", ronak.M{
 		"AuthID": ctrl.authID,
 	})
 	res := msg.ProtoMessage{}
@@ -386,25 +384,26 @@ func (ctrl *Controller) Stop() {
 }
 
 // Connect dial websocket
-func (ctrl *Controller) Connect(force bool) {
-	logs.Info("NetworkController is connecting",
-		zap.Bool("force", force),
-	)
+func (ctrl *Controller) Connect() {
+	logs.Info("NetworkController is connecting")
 	defer func() {
-		if recoverPanic("NetworkController:: Connect", ronak.M{
+		if ctrl.recoverPanic("NetworkController:: Connect", ronak.M{
 			"AuthID": ctrl.authID,
 		}) {
-			ctrl.Connect(force)
+			ctrl.Connect()
 		}
 	}()
 	ctrl.wsKeepConnection = true
 	ctrl.updateNetworkStatus(domain.NetworkConnecting)
 	keepGoing := true
 	for keepGoing {
+		// If there is a wsConn then close it before creating a new one
 		if ctrl.wsConn != nil {
 			_ = ctrl.wsConn.Close()
 		}
-		if !force && !ctrl.wsKeepConnection {
+
+		// Stop connecting if KeepConnection is FALSE
+		if !ctrl.wsKeepConnection {
 			return
 		}
 		reqHdr := http.Header{}
@@ -451,6 +450,7 @@ func (ctrl *Controller) Connect(force bool) {
 func (ctrl *Controller) Disconnect() {
 	ctrl.wsKeepConnection = false
 	if ctrl.wsConn != nil {
+		_ = ctrl.wsConn.SetReadDeadline(time.Now())
 		_ = ctrl.wsConn.Close()
 		logs.Info("NetworkController disconnected")
 	}
@@ -539,7 +539,6 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 
 	if err != nil {
 		logs.Warn("Error On SendWebsocket", zap.Error(err))
-		ctrl.updateNetworkStatus(domain.NetworkDisconnected)
 		_ = ctrl.wsConn.SetReadDeadline(time.Now())
 		return err
 	}
@@ -656,13 +655,14 @@ func (ctrl *Controller) GetQuality() domain.NetworkStatus {
 	return ctrl.wsQuality
 }
 
-func recoverPanic(funcName string, extraInfo interface{}) bool {
+func (ctrl *Controller) recoverPanic(funcName string, extraInfo interface{}) bool {
 	if r := recover(); r != nil {
 		logs.Error("Panic Recovered",
 			zap.String("Func", funcName),
 			zap.Any("Info", extraInfo),
 			zap.Any("Recover", r),
 		)
+		go ctrl.Connect()
 		return true
 	}
 	return false

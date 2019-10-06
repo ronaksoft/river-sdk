@@ -257,7 +257,7 @@ func (r *River) Start() error {
 	r.fileCtrl.Start()
 
 	// Connect to Server
-	go r.networkCtrl.Connect(true)
+	go r.networkCtrl.Connect()
 
 	lastReIndexTime, err := repo.System.LoadInt(domain.SkReIndexTime)
 	if err != nil || time.Now().Unix()-int64(lastReIndexTime) > domain.Day {
@@ -674,7 +674,7 @@ func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 
 	// Start the Network Controller alone
 	networkCtrl.Start()
-	go networkCtrl.Connect(false)
+	go networkCtrl.Connect()
 	defer networkCtrl.Stop()       // 2nd Stop the controller
 	defer networkCtrl.Disconnect() // 1st Disconnect
 

@@ -86,7 +86,6 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, requestID,
 	case msg.InputMediaTypeUploadedDocument, msg.InputMediaTypeUploadedPhoto:
 	default:
 		panic("Invalid MediaInputType")
-		return nil, domain.ErrInvalidConstructor
 	}
 
 	// support IOS file path

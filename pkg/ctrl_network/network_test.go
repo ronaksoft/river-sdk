@@ -96,7 +96,7 @@ func init() {
 	ctrl.SetOnConnectCallback(dummyOnConnectHandler)
 
 	ctrl.Start()
-	ctrl.Connect(true)
+	ctrl.Connect()
 
 }
 

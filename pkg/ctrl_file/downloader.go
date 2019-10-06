@@ -22,8 +22,8 @@ import (
 */
 
 type DownloadRequest struct {
-	httpContext context.Context    `json:"-"`
-	cancelFunc  context.CancelFunc `json:"-"`
+	httpContext context.Context
+	cancelFunc  context.CancelFunc
 	// MaxRetries defines how many time each request could encounter error before giving up
 	MaxRetries int32 `json:"max_retries"`
 	// MessageID (Optional) if is set then (ClusterID, FileID, AccessHash, Version) will be read from the message

@@ -25,8 +25,8 @@ import (
 */
 
 type UploadRequest struct {
-	httpContext context.Context    `json:"-"`
-	cancelFunc  context.CancelFunc `json:"-"`
+	httpContext context.Context
+	cancelFunc  context.CancelFunc
 
 	// IsProfilePhoto indicates that the uploaded file will be used as a profile photo for Group or User
 	IsProfilePhoto bool `json:"is_profile_photo"`

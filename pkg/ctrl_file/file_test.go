@@ -30,7 +30,7 @@ import (
 
 var (
 	_Network *networkCtrl.Controller
-	_File *fileCtrl.Controller
+	_File    *fileCtrl.Controller
 )
 
 func init() {
@@ -41,7 +41,7 @@ func init() {
 		HttpEndpoint:      "http://127.0.0.1:8080",
 	})
 	_File = fileCtrl.New(fileCtrl.Config{
-		Network: _Network ,
+		Network:              _Network,
 		MaxInflightDownloads: 2,
 		MaxInflightUploads:   10,
 		OnProgressChanged: func(reqID string, clusterID int32, fileID, accessHash int64, percent int64) {
@@ -61,6 +61,7 @@ func init() {
 
 	tcpConfig := new(tcplisten.Config)
 	s := httptest.NewUnstartedServer(server{
+		mtx:           &sync.Mutex{},
 		uploadTracker: make(map[int64]map[int32]struct{}),
 		sha:           make(map[int64]hash.Hash),
 	})
@@ -102,7 +103,7 @@ func init() {
 }
 
 type server struct {
-	sync.Mutex
+	mtx           *sync.Mutex
 	uploadTracker map[int64]map[int32]struct{}
 	sha           map[int64]hash.Hash
 }
@@ -146,7 +147,7 @@ func (t server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 			zap.Int32("PartID", req.PartID),
 			zap.Int32("TotalParts", req.TotalParts),
 		)
-		t.Lock()
+		t.mtx.Lock()
 		if _, ok := t.uploadTracker[req.FileID]; !ok {
 			t.uploadTracker[req.FileID] = make(map[int32]struct{})
 			t.sha[req.FileID] = md5.New()
@@ -155,14 +156,14 @@ func (t server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		t.sha[req.FileID].Write(req.Bytes)
 		// println(hex.Dump(req.Bytes[:100]))
 		println(len(req.Bytes))
-		t.Unlock()
+		t.mtx.Unlock()
 		if req.PartID == req.TotalParts {
 			sum := int32(0)
-			t.Lock()
+			t.mtx.Lock()
 			for partID := range t.uploadTracker[req.FileID] {
 				sum += partID
 			}
-			t.Unlock()
+			t.mtx.Unlock()
 			if sum == (req.TotalParts*(req.TotalParts+1))/2 {
 				logs.Info("CORRECT UPLOAD")
 			}
