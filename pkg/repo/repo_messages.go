@@ -225,12 +225,15 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 		maxID = Dialogs.Get(peerID, peerType).TopMessageID
 		fallthrough
 	case maxID != 0 && minID == 0:
+		startTime := time.Now()
 		_ = r.badger.View(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
 			opts.Prefix = r.getPrefix(peerID, peerType)
 			opts.Reverse = true
 			it := txn.NewIterator(opts)
-			for it.Seek(r.getMessageKey(peerID, peerType, maxID)); it.ValidForPrefix(opts.Prefix); it.Next() {
+			it.Seek(r.getMessageKey(peerID, peerType, maxID))
+			stopWatch1 := time.Now()
+			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
 					break
 				}
@@ -252,15 +255,23 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 				})
 			}
 			it.Close()
+			stopWatch2 := time.Now()
+			logs.Info("GetMessageHistory", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID),
+				zap.Duration("SP1", stopWatch1.Sub(startTime)),
+				zap.Duration("SP2", stopWatch2.Sub(startTime)),
+			)
 			return nil
 		})
 	case maxID == 0 && minID != 0:
+		startTime := time.Now()
 		_ = r.badger.View(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
 			opts.Prefix = r.getPrefix(peerID, peerType)
 			opts.Reverse = false
 			it := txn.NewIterator(opts)
-			for it.Seek(r.getMessageKey(peerID, peerType, minID)); it.ValidForPrefix(opts.Prefix); it.Next() {
+			it.Seek(r.getMessageKey(peerID, peerType, minID))
+			stopWatch1 := time.Now()
+			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
 					break
 				}
@@ -282,9 +293,16 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 				})
 			}
 			it.Close()
+			stopWatch2 := time.Now()
 			sort.Slice(userMessages, func(i, j int) bool {
 				return userMessages[i].ID > userMessages[j].ID
 			})
+			stopWatch3 := time.Now()
+			logs.Info("GetMessageHistory", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID),
+				zap.Duration("SP1", stopWatch1.Sub(startTime)),
+				zap.Duration("SP2", stopWatch2.Sub(startTime)),
+				zap.Duration("SP3", stopWatch3.Sub(startTime)),
+			)
 			return nil
 		})
 	default:
