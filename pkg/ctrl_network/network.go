@@ -562,7 +562,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 			ServerSalt: salt.Get(),
 			Envelope:   msgEnvelope,
 		}
-		encryptedPayload.MessageID = uint64(time.Now().Unix()<<32 | ctrl.messageSeq)
+		encryptedPayload.MessageID = uint64(domain.Now().Unix()<<32 | ctrl.messageSeq)
 		unencryptedBytes, _ := encryptedPayload.Marshal()
 		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes)
 		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes)
