@@ -289,7 +289,6 @@ func (ctrl *Controller) receiver() {
 				zap.Int("MessageType", messageType),
 			)
 		}
-
 	}
 }
 
@@ -416,7 +415,6 @@ func (ctrl *Controller) Connect() {
 		}
 		underlyingConn := wsConn.UnderlyingConn()
 		if tcpConn, ok := underlyingConn.(*net.TCPConn); ok {
-			_ = tcpConn.SetLinger(0)
 			_ = tcpConn.SetKeepAlive(true)
 			_ = tcpConn.SetKeepAlivePeriod(30 * time.Second)
 		}
@@ -541,10 +539,6 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 		logs.Warn("Error On SendWebsocket", zap.Error(err))
 		_ = ctrl.wsConn.SetReadDeadline(time.Now())
 		return err
-	}
-
-	if tcpConn, ok := ctrl.wsConn.UnderlyingConn().(*net.TCPConn); ok {
-		_ = tcpConn.SetWriteBuffer(len(b))
 	}
 
 	return nil
