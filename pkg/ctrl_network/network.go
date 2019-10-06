@@ -620,9 +620,9 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 // Reconnect by wsKeepConnection = true the watchdog will connect itself again no need to call ctrl.Connect()
 func (ctrl *Controller) Reconnect() {
 	if ctrl.wsConn != nil {
-		ctrl.wsKeepConnection = true
-		_ = ctrl.wsConn.Close()
+		ctrl.Disconnect()
 	}
+	ctrl.Connect()
 }
 
 // WaitForNetwork

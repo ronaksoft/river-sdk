@@ -43,7 +43,12 @@ func (r *River) GetNetworkStatus() int32 {
 
 // UnderlyingNetworkChange
 func (r *River) UnderlyingNetworkChange(connected bool) {
-	r.networkCtrl.Reconnect()
+	if connected {
+		r.networkCtrl.Reconnect()
+	} else {
+		r.networkCtrl.Disconnect()
+	}
+
 }
 
 // UnderlyingNetworkSpeedChange
