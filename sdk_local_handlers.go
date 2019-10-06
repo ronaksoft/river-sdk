@@ -193,6 +193,10 @@ func (r *River) messagesReadHistory(in, out *msg.MessageEnvelope, timeoutCB doma
 }
 
 func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	startTime := time.Now()
+	defer func() {
+		logs.Debug("MessageGetHistory", zap.Duration("Time", time.Now().Sub(startTime)))
+	}()
 	req := new(msg.MessagesGetHistory)
 	if err := req.Unmarshal(in.Message); err != nil {
 		logs.Error("River::messagesGetHistory()-> Unmarshal()", zap.Error(err))
