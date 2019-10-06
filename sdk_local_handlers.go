@@ -193,10 +193,6 @@ func (r *River) messagesReadHistory(in, out *msg.MessageEnvelope, timeoutCB doma
 }
 
 func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	startTime := time.Now()
-	defer func() {
-		logs.Debug("MessageGetHistory", zap.Duration("Time", time.Now().Sub(startTime)))
-	}()
 	req := new(msg.MessagesGetHistory)
 	if err := req.Unmarshal(in.Message); err != nil {
 		logs.Error("River::messagesGetHistory()-> Unmarshal()", zap.Error(err))
@@ -204,7 +200,6 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 
 	fillOutput := func(out *msg.MessageEnvelope, messages []*msg.UserMessage, users []*msg.User, requestID uint64, successCB domain.MessageHandler) {
-		logs.Debug("MessageGetHistory -> fillOutput called")
 
 		res := new(msg.MessagesMany)
 		res.Messages = messages
@@ -214,11 +209,8 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		out.Constructor = msg.C_MessagesMany
 		out.Message, _ = res.Marshal()
 		if successCB != nil {
-			successCBCallStart := time.Now()
-
 			uiexec.Ctx().Exec(func() {
 				successCB(out)
-				logs.Debug("MessageGetHistory", zap.Duration("SuccessCB UIExec called", time.Now().Sub(successCBCallStart)))
 			})
 		}
 	}
@@ -305,7 +297,6 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			default:
 			}
 
-			logs.Debug("MessageGetHistory -> preSuccessCB called")
 			// Call the actual success callback function
 			successCB(m)
 		}
@@ -349,7 +340,6 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, 0, req.Limit)
 			if len(messages) < int(req.Limit) {
 				r.queueCtrl.ExecuteCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
-				return
 			}
 			fillOutput(out, messages, users, in.RequestID, preSuccessCB)
 		}
