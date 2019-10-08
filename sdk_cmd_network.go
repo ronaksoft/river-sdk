@@ -1,7 +1,6 @@
 package riversdk
 
 import (
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"time"
 )
@@ -41,17 +40,13 @@ func (r *River) GetNetworkStatus() int32 {
 	return int32(r.networkCtrl.GetQuality())
 }
 
-
 // UnderlyingNetworkChange
 func (r *River) UnderlyingNetworkChange(connected bool) {
-	_, _, _ = domain.SingleFlight.Do("NetworkChange", func() (i interface{}, e error) {
-		if connected {
-			r.networkCtrl.Reconnect()
-		} else {
-			r.networkCtrl.Disconnect()
-		}
-		return nil, nil
-	})
+	if connected {
+		r.networkCtrl.Reconnect()
+	} else {
+		r.networkCtrl.Disconnect()
+	}
 }
 
 // UnderlyingNetworkSpeedChange

@@ -449,12 +449,15 @@ func (ctrl *Controller) Connect() {
 
 // Disconnect close websocket
 func (ctrl *Controller) Disconnect() {
-	ctrl.wsKeepConnection = false
-	if ctrl.wsConn != nil {
-		_ = ctrl.wsConn.SetReadDeadline(time.Now())
-		_ = ctrl.wsConn.Close()
-		logs.Info("NetworkController disconnected")
-	}
+	_, _, _ = domain.SingleFlight.Do("Disconnect", func() (i interface{}, e error) {
+		ctrl.wsKeepConnection = false
+		if ctrl.wsConn != nil {
+			_ = ctrl.wsConn.SetReadDeadline(time.Now())
+			_ = ctrl.wsConn.Close()
+			logs.Info("NetworkController disconnected")
+		}
+		return nil, nil
+	})
 }
 
 // SetAuthorization ...
