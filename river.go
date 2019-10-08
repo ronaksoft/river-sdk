@@ -256,9 +256,6 @@ func (r *River) Start() error {
 	r.syncCtrl.Start()
 	r.fileCtrl.Start()
 
-	// Connect to Server
-	go r.networkCtrl.Connect()
-
 	lastReIndexTime, err := repo.System.LoadInt(domain.SkReIndexTime)
 	if err != nil || time.Now().Unix()-int64(lastReIndexTime) > domain.Day {
 		go func() {

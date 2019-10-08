@@ -384,64 +384,67 @@ func (ctrl *Controller) Stop() {
 
 // Connect dial websocket
 func (ctrl *Controller) Connect() {
-	logs.Info("NetworkController is connecting")
-	defer func() {
-		if ctrl.recoverPanic("NetworkController:: Connect", ronak.M{
-			"AuthID": ctrl.authID,
-		}) {
-			ctrl.Connect()
-		}
-	}()
-	ctrl.wsKeepConnection = true
-	ctrl.updateNetworkStatus(domain.NetworkConnecting)
-	keepGoing := true
-	for keepGoing {
-		// If there is a wsConn then close it before creating a new one
-		if ctrl.wsConn != nil {
-			_ = ctrl.wsConn.Close()
-		}
+	_, _, _ = domain.SingleFlight.Do("Connect", func() (i interface{}, e error) {
+		logs.Info("NetworkController is connecting")
+		defer func() {
+			if ctrl.recoverPanic("NetworkController:: Connect", ronak.M{
+				"AuthID": ctrl.authID,
+			}) {
+				ctrl.Connect()
+			}
+		}()
+		ctrl.wsKeepConnection = true
+		ctrl.updateNetworkStatus(domain.NetworkConnecting)
+		keepGoing := true
+		for keepGoing {
+			// If there is a wsConn then close it before creating a new one
+			if ctrl.wsConn != nil {
+				_ = ctrl.wsConn.Close()
+			}
 
-		// Stop connecting if KeepConnection is FALSE
-		if !ctrl.wsKeepConnection {
-			return
-		}
-		reqHdr := http.Header{}
-		reqHdr.Set("X-Client-Type", fmt.Sprintf("SDK-%s", domain.SDKVersion))
-		wsConn, _, err := ctrl.wsDialer.Dial(ctrl.websocketEndpoint, reqHdr)
-		if err != nil {
-			logs.Warn("Connect()-> Dial()", zap.Error(err))
-			time.Sleep(1 * time.Second)
-			continue
-		}
-		underlyingConn := wsConn.UnderlyingConn()
-		if tcpConn, ok := underlyingConn.(*net.TCPConn); ok {
-			_ = tcpConn.SetKeepAlive(true)
-			_ = tcpConn.SetKeepAlivePeriod(30 * time.Second)
-		}
-		localIP := underlyingConn.LocalAddr()
-		switch x := localIP.(type) {
-		case *net.IPNet:
-			ctrl.localIP = x.IP
-		case *net.TCPAddr:
-			ctrl.localIP = x.IP
-		default:
-			ctrl.localIP = nil
-		}
+			// Stop connecting if KeepConnection is FALSE
+			if !ctrl.wsKeepConnection {
+				return
+			}
+			reqHdr := http.Header{}
+			reqHdr.Set("X-Client-Type", fmt.Sprintf("SDK-%s", domain.SDKVersion))
+			wsConn, _, err := ctrl.wsDialer.Dial(ctrl.websocketEndpoint, reqHdr)
+			if err != nil {
+				logs.Warn("Connect()-> Dial()", zap.Error(err))
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			underlyingConn := wsConn.UnderlyingConn()
+			if tcpConn, ok := underlyingConn.(*net.TCPConn); ok {
+				_ = tcpConn.SetKeepAlive(true)
+				_ = tcpConn.SetKeepAlivePeriod(30 * time.Second)
+			}
+			localIP := underlyingConn.LocalAddr()
+			switch x := localIP.(type) {
+			case *net.IPNet:
+				ctrl.localIP = x.IP
+			case *net.TCPAddr:
+				ctrl.localIP = x.IP
+			default:
+				ctrl.localIP = nil
+			}
 
-		keepGoing = false
-		ctrl.wsConn = wsConn
+			keepGoing = false
+			ctrl.wsConn = wsConn
 
-		// it should be started here cuz we need receiver to get AuthRecall answer
-		// SendWebsocket Signal to start the 'receiver' and 'keepAlive' routines
-		ctrl.connectChannel <- true
-		logs.Info("NetworkController connected")
+			// it should be started here cuz we need receiver to get AuthRecall answer
+			// SendWebsocket Signal to start the 'receiver' and 'keepAlive' routines
+			ctrl.connectChannel <- true
+			logs.Info("NetworkController connected")
 
-		// Call the OnConnect handler here b4 changing network status that trigger queue to start working
-		// basically we sendWebsocket priority requests b4 queue starts to work
-		ctrl.wsOnConnect()
+			// Call the OnConnect handler here b4 changing network status that trigger queue to start working
+			// basically we sendWebsocket priority requests b4 queue starts to work
+			ctrl.wsOnConnect()
 
-		ctrl.updateNetworkStatus(domain.NetworkFast)
-	}
+			ctrl.updateNetworkStatus(domain.NetworkFast)
+		}
+		return nil, nil
+	})
 }
 
 // Disconnect close websocket
