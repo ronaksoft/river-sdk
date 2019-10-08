@@ -56,6 +56,7 @@ require (
 	github.com/valyala/fasthttp v1.3.0
 	github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a
 	go.uber.org/zap v1.10.0
+	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
 	golang.org/x/text v0.3.2 // indirect
 	google.golang.org/grpc v1.21.0
 	gopkg.in/abiosoft/ishell.v2 v2.0.0

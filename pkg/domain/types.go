@@ -1,5 +1,7 @@
 package domain
 
+import "golang.org/x/sync/singleflight"
+
 // MInt64B simple type to get distinct IDs
 type MInt64B map[int64]bool
 
@@ -16,3 +18,5 @@ type Slt struct {
 	Value     int64 `json:"value"`
 	Timestamp int64 `json:"timestamp"`
 }
+
+var SingleFlight singleflight.Group
