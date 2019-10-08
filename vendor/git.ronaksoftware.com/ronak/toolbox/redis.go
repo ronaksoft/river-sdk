@@ -28,30 +28,34 @@ const (
 
 // RedisConfig
 type RedisConfig struct {
-	ConnectionPoolSize    int
-	ConnectionDialTimeout time.Duration
-	ConnectionTimeout     time.Duration
-	Password              string
-	Host                  string
-	ClusterHosts          []string
-	PingTime              time.Duration
-	RefillInterval        time.Duration
-	Db                    int
+	PoolSize       int
+	MaxPoolSize    int
+	NewConnOnEmpty bool
+	DialTimeout    time.Duration
+	Timeout        time.Duration
+	Password       string
+	Host           string
+	ClusterHosts   []string
+	PingTime       time.Duration
+	RefillInterval time.Duration
+	Db             int
 }
 
 type (
 	CmdAction radix.CmdAction
-	Action radix.Action
+	Action    radix.Action
 )
 
 var (
 	DefaultRedisConfig = RedisConfig{
-		ConnectionPoolSize:    10,
-		ConnectionDialTimeout: 5 * time.Second,
-		ConnectionTimeout:     5 * time.Second,
-		PingTime:              time.Minute,
-		RefillInterval:        time.Second,
-		Db:                    0,
+		PoolSize:       10,
+		MaxPoolSize:    100,
+		NewConnOnEmpty: false,
+		DialTimeout:    5 * time.Second,
+		Timeout:        5 * time.Second,
+		PingTime:       time.Minute,
+		RefillInterval: time.Second,
+		Db:             0,
 	}
 )
 
@@ -87,7 +91,7 @@ func NewRedisCache(conf RedisConfig) *RedisCache {
 	r := new(RedisCache)
 	r.scripts = make(map[string]radix.EvalScript)
 	var poolConnFuncOpt = radix.PoolConnFunc(func(network, addr string) (radix.Conn, error) {
-		c, err := net.DialTimeout(network, addr, conf.ConnectionDialTimeout)
+		c, err := net.DialTimeout(network, addr, conf.DialTimeout)
 		if err != nil {
 			return nil, err
 		}
@@ -99,12 +103,11 @@ func NewRedisCache(conf RedisConfig) *RedisCache {
 				return nil, err
 			}
 		}
-
 		return conn, nil
 	})
 	if len(conf.Password) > 0 {
 		poolConnFuncOpt = radix.PoolConnFunc(func(network, addr string) (radix.Conn, error) {
-			c, err := net.DialTimeout(network, addr, conf.ConnectionDialTimeout)
+			c, err := net.DialTimeout(network, addr, conf.DialTimeout)
 			if err != nil {
 				return nil, err
 			}
@@ -125,43 +128,23 @@ func NewRedisCache(conf RedisConfig) *RedisCache {
 		})
 	}
 
-	pool, err := radix.NewPool("tcp", conf.Host, conf.ConnectionPoolSize,
+	PoolOpts := make([]radix.PoolOpt, 0)
+	PoolOpts = append(PoolOpts,
 		poolConnFuncOpt,
-		radix.PoolPingInterval(conf.PingTime/time.Duration(conf.ConnectionPoolSize)),
-		radix.PoolOnEmptyErrAfter(conf.ConnectionTimeout),
+		radix.PoolPingInterval(conf.PingTime),
 		radix.PoolRefillInterval(conf.RefillInterval),
 	)
-	if err != nil {
-		_Log.Fatal(err.Error())
+	if conf.NewConnOnEmpty {
+		PoolOpts = append(PoolOpts,
+			radix.PoolOnFullBuffer(conf.MaxPoolSize, time.Second),
+			radix.PoolOnEmptyCreateAfter(0),
+		)
+	} else {
+		PoolOpts = append(PoolOpts,
+			radix.PoolOnEmptyErrAfter(conf.Timeout),
+		)
 	}
-	r.conn = pool
-	r.connType = connTypePool
-	r.pool = pool
-	return r
-}
-
-func NewRedisCacheWithDB(conf RedisConfig, dbNum int) *RedisCache {
-	r := new(RedisCache)
-	r.scripts = make(map[string]radix.EvalScript)
-	var PoolOpt radix.PoolOpt = nil
-	if len(conf.Password) > 0 {
-		PoolOpt = radix.PoolConnFunc(func(network, addr string) (radix.Conn, error) {
-			c, err := net.Dial(network, addr)
-			if err != nil {
-				return nil, err
-			}
-			conn := radix.NewConn(c)
-			conn.Do(radix.Cmd(nil, "AUTH", conf.Password))
-			err = conn.Do(radix.Cmd(nil, "SELECT", fmt.Sprintf("%d", dbNum)))
-			if err != nil {
-				c.Close()
-				return nil, err
-			}
-			return conn, nil
-		})
-	}
-
-	pool, err := radix.NewPool("tcp", conf.Host, 1, PoolOpt)
+	pool, err := radix.NewPool("tcp", conf.Host, conf.PoolSize, PoolOpts...)
 	if err != nil {
 		_Log.Fatal(err.Error())
 	}

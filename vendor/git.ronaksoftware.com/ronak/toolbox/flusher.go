@@ -134,7 +134,8 @@ func (f *Flusher) RunningJobs() int {
 
 func (f *Flusher) worker() {
 	items := make([]FlusherEntry, 0, f.maxBatchSize)
-	t := time.NewTimer(f.flushPeriod)
+	t := AcquireTimer(f.flushPeriod)
+	defer ReleaseTimer(t)
 
 	for {
 		items = items[:0]
@@ -148,14 +149,7 @@ func (f *Flusher) worker() {
 		case item := <-f.entries:
 			items = append(items, item)
 		}
-		if !t.Stop() {
-			select {
-			case <-t.C:
-			default:
-			}
-
-		}
-		t.Reset(f.flushPeriod)
+		ResetTimer(t, f.flushPeriod)
 	InnerLoop:
 		for {
 			select {
@@ -328,7 +322,8 @@ type flusherWorker struct {
 
 func (fw *flusherWorker) run() {
 	items := make([]FlusherEntry, 0, fw.flusher.maxBatchSize)
-	t := time.NewTimer(fw.flusher.flushPeriod)
+	t := AcquireTimer(fw.flusher.flushPeriod)
+	defer ReleaseTimer(t)
 	for {
 		fw.lastRun = time.Now()
 		items = items[:0]
@@ -343,7 +338,7 @@ func (fw *flusherWorker) run() {
 			atomic.AddInt32(&fw.flusher.runningWorkers, -1)
 			return
 		}
-		resetTimer(t, fw.flusher.flushPeriod)
+		ResetTimer(t, fw.flusher.flushPeriod)
 	InnerLoop:
 		for {
 			select {
@@ -382,16 +377,6 @@ func (fw *flusherWorker) stop() bool {
 /*
 	Helper Functions
 */
-
-func resetTimer(t *time.Timer, period time.Duration) {
-	if !t.Stop() {
-		select {
-		case <-t.C:
-		default:
-		}
-	}
-	t.Reset(period)
-}
 
 type entryPool struct {
 	pool sync.Pool

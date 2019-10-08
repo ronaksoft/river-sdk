@@ -102,24 +102,26 @@ type CassDB struct {
 
 // CassConfig
 type CassConfig struct {
-	Host               string
-	Username           string
-	Password           string
-	Keyspace           string
-	Retries            int
-	RetryMinBackOff    time.Duration
-	RetryMaxBackOff    time.Duration
-	ConnectTimeout     time.Duration
-	Timeout            time.Duration
-	ReconnectInterval  time.Duration
-	Concurrency        int
-	Consistency        Consistency
-	SerialConsistency  SerialConsistency
-	ReplicationClass   string
-	ReplicationFactor  int
-	CqlVersion         string
-	DefaultIdempotence bool
-	QueryObserver      gocql.QueryObserver
+	Host                  string
+	Username              string
+	Password              string
+	Keyspace              string
+	Retries               int
+	RetryMinBackOff       time.Duration
+	RetryMaxBackOff       time.Duration
+	ConnectTimeout        time.Duration
+	Timeout               time.Duration
+	ReconnectInterval     time.Duration
+	Concurrency           int
+	Consistency           Consistency
+	SerialConsistency     SerialConsistency
+	ReplicationClass      string
+	ReplicationFactor     int
+	CqlVersion            string
+	DefaultIdempotence    bool
+	QueryObserver         gocql.QueryObserver
+	PageSize              int
+	WriteCoalesceWaitTime time.Duration
 }
 
 type Consistency uint16
@@ -141,20 +143,22 @@ const (
 
 var (
 	DefaultCassConfig = CassConfig{
-		Concurrency:        5,
-		Timeout:            600 * time.Millisecond,
-		ConnectTimeout:     600 * time.Millisecond,
-		Retries:            10,
-		RetryMinBackOff:    100 * time.Millisecond,
-		RetryMaxBackOff:    10 * time.Second,
-		ReconnectInterval:  10 * time.Second,
-		Consistency:        LocalQuorum,
-		SerialConsistency:  LocalSerial,
-		ReplicationClass:   "SimpleStrategy",
-		ReplicationFactor:  1,
-		CqlVersion:         CqlVersion,
-		DefaultIdempotence: true,
-		QueryObserver:      nil,
+		Concurrency:           5,
+		Timeout:               600 * time.Millisecond,
+		ConnectTimeout:        600 * time.Millisecond,
+		Retries:               10,
+		RetryMinBackOff:       100 * time.Millisecond,
+		RetryMaxBackOff:       10 * time.Second,
+		ReconnectInterval:     10 * time.Second,
+		Consistency:           LocalQuorum,
+		SerialConsistency:     LocalSerial,
+		ReplicationClass:      "SimpleStrategy",
+		ReplicationFactor:     1,
+		CqlVersion:            CqlVersion,
+		DefaultIdempotence:    true,
+		QueryObserver:         nil,
+		PageSize:              100,
+		WriteCoalesceWaitTime: time.Millisecond,
 	}
 )
 
@@ -190,8 +194,9 @@ func NewCassDB(conf CassConfig) *CassDB {
 		Password: conf.Password,
 	}
 	cassCluster.PoolConfig.HostSelectionPolicy = gocql.TokenAwareHostPolicy(gocql.RoundRobinHostPolicy())
-
 	cassCluster.NumConns = conf.Concurrency
+	cassCluster.PageSize = conf.PageSize
+	cassCluster.WriteCoalesceWaitTime = conf.WriteCoalesceWaitTime
 	if len(conf.Keyspace) > 0 {
 		cassCluster.Keyspace = conf.Keyspace
 		cassCluster.Consistency = gocql.Consistency(conf.Consistency)
