@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"sort"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
@@ -30,7 +29,6 @@ type Config struct {
 
 // Controller websocket network controller
 type Controller struct {
-	isRunning int32
 	// Internal Controller Channels
 	connectChannel chan bool
 	stopChannel    chan bool
@@ -359,13 +357,6 @@ func (ctrl *Controller) messageHandler(message *msg.MessageEnvelope) {
 // Start
 // Starts the controller background controller and watcher routines
 func (ctrl *Controller) Start() {
-	// Check if sync function is already running, then return otherwise lock it and continue
-	if !atomic.CompareAndSwapInt32(&ctrl.isRunning, 0, 1) {
-		logs.Debug("Network Controller already started ...")
-		return
-	}
-
-
 	// Run the keepAlive and watchDog in background
 	go ctrl.watchDog()
 	return
@@ -379,12 +370,11 @@ func (ctrl *Controller) Stop() {
 	default:
 	}
 	logs.Info("NetworkController stopped")
-	atomic.StoreInt32(&ctrl.isRunning, 0)
 }
 
 // Connect dial websocket
 func (ctrl *Controller) Connect() {
-	_, _, _ = domain.SingleFlight.Do("Connect", func() (i interface{}, e error) {
+	_, _, _ = domain.SingleFlight.Do("NetworkConnect", func() (i interface{}, e error) {
 		logs.Info("NetworkController is connecting")
 		defer func() {
 			if ctrl.recoverPanic("NetworkController:: Connect", ronak.M{
@@ -416,6 +406,7 @@ func (ctrl *Controller) Connect() {
 			}
 			underlyingConn := wsConn.UnderlyingConn()
 			if tcpConn, ok := underlyingConn.(*net.TCPConn); ok {
+				logs.Info("TCP is the underlying network, keep alive activated")
 				_ = tcpConn.SetKeepAlive(true)
 				_ = tcpConn.SetKeepAlivePeriod(30 * time.Second)
 			}
@@ -449,7 +440,7 @@ func (ctrl *Controller) Connect() {
 
 // Disconnect close websocket
 func (ctrl *Controller) Disconnect() {
-	_, _, _ = domain.SingleFlight.Do("Disconnect", func() (i interface{}, e error) {
+	_, _, _ = domain.SingleFlight.Do("NetworkDisconnect", func() (i interface{}, e error) {
 		ctrl.wsKeepConnection = false
 		if ctrl.wsConn != nil {
 			_ = ctrl.wsConn.SetReadDeadline(time.Now())
@@ -625,10 +616,13 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 
 // Reconnect by wsKeepConnection = true the watchdog will connect itself again no need to call ctrl.Connect()
 func (ctrl *Controller) Reconnect() {
-	if ctrl.wsConn != nil {
-		ctrl.Disconnect()
-	}
-	ctrl.Connect()
+	_, _, _ = domain.SingleFlight.Do("NetworkReconnect", func() (i interface{}, e error) {
+		if ctrl.wsConn != nil {
+			ctrl.Disconnect()
+		}
+		ctrl.Connect()
+		return nil, nil
+	})
 }
 
 // WaitForNetwork
