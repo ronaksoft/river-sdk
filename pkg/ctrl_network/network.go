@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"github.com/felixge/tcpkeepalive"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -404,12 +405,10 @@ func (ctrl *Controller) Connect() {
 				time.Sleep(1 * time.Second)
 				continue
 			}
+
 			underlyingConn := wsConn.UnderlyingConn()
-			if tcpConn, ok := underlyingConn.(*net.TCPConn); ok {
-				logs.Info("TCP is the underlying network, keep alive activated")
-				_ = tcpConn.SetKeepAlive(true)
-				_ = tcpConn.SetKeepAlivePeriod(30 * time.Second)
-			}
+			_ = tcpkeepalive.SetKeepAlive(underlyingConn, 30 * time.Second, 2, 5 * time.Second)
+
 			localIP := underlyingConn.LocalAddr()
 			switch x := localIP.(type) {
 			case *net.IPNet:
