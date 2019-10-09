@@ -252,13 +252,13 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 		reqBytes,
 		func() {
 			// If timeout, then retry the request
-			logs.Warn("getAllDialogs() -> onTimeout() retry to getAllDialogs()")
+			logs.Warn("Timeout! on GetAllDialogs, retrying ...")
 			getAllDialogs(waitGroup, ctrl, offset, limit)
 		},
 		func(m *msg.MessageEnvelope) {
 			switch m.Constructor {
 			case msg.C_Error:
-				logs.Error("onSuccessCallback()-> C_Error",
+				logs.Error("We got error response on MessagesGetDialogs",
 					zap.String("Error", domain.ParseServerError(m.Message).Error()),
 				)
 				getAllDialogs(waitGroup, ctrl, offset, limit)
@@ -266,7 +266,7 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 				x := new(msg.MessagesDialogs)
 				err := x.Unmarshal(m.Message)
 				if err != nil {
-					logs.Error("getAllDialogs() -> onSuccessCallback() -> Unmarshal() ", zap.Error(err))
+					logs.Error("We cannot unmarshal server response on MessagesGetDialogs", zap.Error(err))
 					return
 				}
 				mMessages := make(map[int64]*msg.UserMessage)
@@ -277,7 +277,7 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 				for _, dialog := range x.Dialogs {
 					topMessage, _ := mMessages[dialog.TopMessageID]
 					if topMessage == nil {
-						logs.Error("getAllDialogs() -> onSuccessCallback() -> dialog TopMessage is null",
+						logs.Error("We received a dialog with no top message",
 							zap.Int64("MessageID", dialog.TopMessageID),
 						)
 						continue

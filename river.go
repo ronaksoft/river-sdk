@@ -410,9 +410,6 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 	for idx := range msgs {
 		cb := domain.GetRequestCallback(msgs[idx].RequestID)
 		if cb == nil {
-			logs.Warn("River::onReceivedMessage() callback does not exist",
-				zap.String("Constructor", msg.ConstructorNames[msgs[idx].Constructor]),
-			)
 			continue
 		}
 
