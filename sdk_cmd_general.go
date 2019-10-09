@@ -102,7 +102,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	return
 }
 func executeLocalCommand(r *River, requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	logs.Debug("River::executeLocalCommand()",
+	logs.Debug("River calls executeLocalCommand",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
 
@@ -118,7 +118,7 @@ func executeLocalCommand(r *River, requestID uint64, constructor int64, commandB
 	}
 }
 func executeRemoteCommand(r *River, requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	logs.Debug("River::executeRemoteCommand()",
+	logs.Debug("River calls executeRemoteCommand",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
 	r.queueCtrl.EnqueueCommand(requestID, constructor, commandBytes, timeoutCB, successCB, true)
