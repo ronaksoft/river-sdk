@@ -196,7 +196,7 @@ func getUpdateState(ctrl *Controller) (updateID int64, err error) {
 	// this waitGroup is required cuz our callbacks will be called in UIExecutor go routine
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
-	_ = ctrl.queueCtrl.ExecuteRealtimeCommand(
+	ctrl.queueCtrl.ExecuteRealtimeCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_UpdateGetState,
 		reqBytes,
@@ -329,7 +329,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 		req.From = ctrl.updateID + 1 // +1 cuz we already have ctrl.updateID itself
 		reqBytes, _ := req.Marshal()
 		waitGroup.Add(1)
-		_ = ctrl.queueCtrl.ExecuteRealtimeCommand(
+		ctrl.queueCtrl.ExecuteRealtimeCommand(
 			uint64(domain.SequentialUniqueID()),
 			msg.C_UpdateGetDifference,
 			reqBytes,
@@ -571,7 +571,7 @@ func (ctrl *Controller) ContactImportFromServer() {
 	contactGetReq := new(msg.ContactsGet)
 	contactGetReq.Crc32Hash = uint32(contactsGetHash)
 	contactGetBytes, _ := contactGetReq.Marshal()
-	_ = ctrl.queueCtrl.ExecuteRealtimeCommand(
+	ctrl.queueCtrl.ExecuteRealtimeCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_ContactsGet, contactGetBytes,
 		nil, nil, false, false,
@@ -592,12 +592,15 @@ func (ctrl *Controller) getServerSalt() {
 	serverSaltReq := new(msg.SystemGetSalts)
 	serverSaltReqBytes, _ := serverSaltReq.Marshal()
 
-	for {
-		err := ctrl.queueCtrl.ExecuteRealtimeCommand(
+	keepGoing := true
+	for keepGoing {
+		ctrl.queueCtrl.ExecuteRealtimeCommand(
 			uint64(domain.SequentialUniqueID()),
 			msg.C_SystemGetSalts,
 			serverSaltReqBytes,
-			nil,
+			func() {
+				time.Sleep(time.Second)
+			},
 			func(m *msg.MessageEnvelope) {
 				switch m.Constructor {
 				case msg.C_SystemSalts:
@@ -619,7 +622,9 @@ func (ctrl *Controller) getServerSalt() {
 					err = repo.System.SaveString(domain.SkSystemSalts, string(b))
 					if err != nil {
 						logs.Error("Salt:: save To DB", zap.Error(err))
+						return
 					}
+					keepGoing = false
 				case msg.C_Error:
 					e := new(msg.Error)
 					_ = m.Unmarshal(m.Message)
@@ -627,15 +632,12 @@ func (ctrl *Controller) getServerSalt() {
 						zap.String("Code", e.Code),
 						zap.String("Item", e.Items),
 					)
+					time.Sleep(time.Second)
 				}
 			},
 			true,
 			false,
 		)
-		if err == nil {
-			break
-		} else {
-			time.Sleep(1 * time.Second)
-		}
+
 	}
 }

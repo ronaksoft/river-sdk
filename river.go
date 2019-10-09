@@ -294,12 +294,15 @@ func (r *River) onNetworkConnect() {
 	waitGroup.Add(1)
 	go func() {
 		defer waitGroup.Done()
-		for {
-			err := r.queueCtrl.ExecuteRealtimeCommand(
+		keepGoing := true
+		for keepGoing {
+			r.queueCtrl.ExecuteRealtimeCommand(
 				uint64(domain.SequentialUniqueID()),
 				msg.C_SystemGetServerTime,
 				timeReqBytes,
-				nil,
+				func() {
+					time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
+				},
 				func(m *msg.MessageEnvelope) {
 					switch m.Constructor {
 					case msg.C_SystemServerTime:
@@ -318,14 +321,14 @@ func (r *River) onNetworkConnect() {
 							zap.Int64("ClientTime", clientTime),
 							zap.Duration("Difference", domain.TimeDelta),
 						)
+						keepGoing = false
+					case msg.C_Error:
+						logs.Warn("We received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
+						time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
 					}
 				},
 				true, false,
 			)
-			if err == nil {
-				break
-			}
-			time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
 		}
 	}()
 
@@ -337,14 +340,17 @@ func (r *River) onNetworkConnect() {
 		reqBytes, _ := req.Marshal()
 		if r.syncCtrl.GetUserID() != 0 {
 			// send auth recall until it succeed
-			for {
+			keepGoing := true
+			for keepGoing {
 				// this is priority command that should not passed to queue
 				// after auth recall answer got back the queue should send its requests in order to get related updates
-				err := r.queueCtrl.ExecuteRealtimeCommand(
+				r.queueCtrl.ExecuteRealtimeCommand(
 					uint64(domain.SequentialUniqueID()),
 					msg.C_AuthRecall,
 					reqBytes,
-					nil,
+					func() {
+						time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
+					},
 					func(m *msg.MessageEnvelope) {
 						if m.Constructor == msg.C_AuthRecalled {
 							x := new(msg.AuthRecalled)
@@ -353,15 +359,12 @@ func (r *River) onNetworkConnect() {
 								logs.Error("We couldn't unmarshal AuthRecall (AuthRecalled) response", zap.Error(err))
 								return
 							}
+							keepGoing = false
 						}
 					},
 					true,
 					false,
 				)
-				if err == nil {
-					break
-				}
-				time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
 			}
 		}
 		if r.DeviceToken == nil || r.DeviceToken.Token == "" {

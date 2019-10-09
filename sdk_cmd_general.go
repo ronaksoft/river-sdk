@@ -45,7 +45,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	if blockingMode {
 		waitGroup.Add(1)
 		defer waitGroup.Wait()
-	} else if delegate != nil {
+	} else {
 		r.delegateMutex.Lock()
 		r.delegates[requestID] = delegate
 		r.delegateMutex.Unlock()
@@ -53,87 +53,51 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 
 	// Timeout Callback
 	timeoutCallback := func() {
-		if blockingMode {
-			defer waitGroup.Done()
-		}
 		err = domain.ErrRequestTimeout
 		delegate.OnTimeout(err)
 		r.releaseDelegate(requestID)
+		if blockingMode {
+			waitGroup.Done()
+		}
 	}
 
 	// Success Callback
 	successCallback := func(envelope *msg.MessageEnvelope) {
-		if blockingMode {
-			defer waitGroup.Done()
-		}
 		b, _ := envelope.Marshal()
 		delegate.OnComplete(b)
 		r.releaseDelegate(requestID)
+		if blockingMode {
+			waitGroup.Done()
+		}
 	}
 
 	// If this request must be sent to the server then executeRemoteCommand
 	if serverForce {
-		executeRemoteCommand(
-			r,
-			uint64(requestID),
-			constructor,
-			commandBytesDump,
-			timeoutCallback,
-			successCallback,
-		)
+		executeRemoteCommand(r, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
 		return
 	}
 
 	// If the constructor is a realtime command, then just send it to the server
 	if _, ok := r.realTimeCommands[constructor]; ok {
-		err = r.queueCtrl.ExecuteRealtimeCommand(
-			uint64(requestID),
-			constructor,
-			commandBytesDump,
-			timeoutCallback,
-			successCallback,
-			blockingMode,
-			true,
+		r.queueCtrl.ExecuteRealtimeCommand(
+			uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback, blockingMode, true,
 		)
-		if err != nil {
-			logs.Error("ExecuteRealtimeCommand()", zap.Error(err))
-			if delegate != nil {
-				delegate.OnTimeout(err)
-			}
-		}
 		return
 	}
 
 	// If the constructor is a local command then
 	_, ok := r.localCommands[constructor]
 	if ok {
-		execBlock := func() {
-			executeLocalCommand(
-				r,
-				uint64(requestID),
-				constructor,
-				commandBytesDump,
-				timeoutCallback,
-				successCallback,
-			)
-		}
 		if blockingMode {
-			execBlock()
+			executeLocalCommand(r, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
 		} else {
-			go execBlock()
+			go executeLocalCommand(r, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
 		}
 		return
 	}
 
 	// If we reached here, then execute the remote commands
-	executeRemoteCommand(
-		r,
-		uint64(requestID),
-		constructor,
-		commandBytesDump,
-		timeoutCallback,
-		successCallback,
-	)
+	executeRemoteCommand(r, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
 
 	return
 }
@@ -398,21 +362,20 @@ func (r *River) DeletePendingMessage(id int64) (isSuccess bool) {
 	defer func() {
 		mon.FunctionResponseTime("Delete", time.Now().Sub(startTime))
 	}()
-	repo.PendingMessages.Delete(id)
-	isSuccess = true
+	err := repo.PendingMessages.Delete(id)
+	isSuccess = err == nil
 	return
 }
 
 // RetryPendingMessage puts pending message again in command queue to re send it
-func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
+func (r *River) RetryPendingMessage(id int64) bool {
 	startTime := time.Now()
 	defer func() {
 		mon.FunctionResponseTime("RetryPendingMessage", time.Now().Sub(startTime))
 	}()
 	pmsg := repo.PendingMessages.GetByID(id)
 	if pmsg == nil {
-		isSuccess = false
-		return
+		return false
 	}
 	req := new(msg.MessagesSend)
 	req.Body = pmsg.Body
@@ -426,10 +389,9 @@ func (r *River) RetryPendingMessage(id int64) (isSuccess bool) {
 	req.Entities = pmsg.Entities
 	buff, _ := req.Marshal()
 	r.queueCtrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSend, buff, nil, nil, true)
-	isSuccess = true
-	logs.Debug("River::RetryPendingMessage() Request enqueued")
 
-	return
+	logs.Debug("River::RetryPendingMessage() Request enqueued")
+	return true
 }
 
 // GetSyncStatus returns SyncController status
@@ -450,20 +412,18 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 	// unregister device if token exist
 	if notifyServer {
 		if r.DeviceToken != nil {
-			reqID := uint64(domain.SequentialUniqueID())
 			req := new(msg.AccountUnregisterDevice)
 			req.Token = r.DeviceToken.Token
 			req.TokenType = int32(r.DeviceToken.TokenType)
 			reqBytes, _ := req.Marshal()
-			_ = r.queueCtrl.ExecuteRealtimeCommand(
-				reqID,
+			r.queueCtrl.ExecuteRealtimeCommand(
+				uint64(domain.SequentialUniqueID()),
 				msg.C_AccountUnregisterDevice,
-				reqBytes,
-				nil, nil, true, false,
+				reqBytes, nil, nil, true, false,
 			)
 		}
 		// send logout request to server
-		requestID := domain.RandomInt63()
+		requestID := domain.SequentialUniqueID()
 		timeoutCallback := func() {
 			r.releaseDelegate(requestID)
 			r.networkCtrl.Disconnect()
@@ -476,10 +436,7 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 		}
 		req := new(msg.AuthLogout)
 		buff, _ := req.Marshal()
-		err := r.queueCtrl.ExecuteRealtimeCommand(uint64(requestID), msg.C_AuthLogout, buff, timeoutCallback, successCallback, true, false)
-		if err != nil {
-			r.releaseDelegate(requestID)
-		}
+		r.queueCtrl.ExecuteRealtimeCommand(uint64(requestID), msg.C_AuthLogout, buff, timeoutCallback, successCallback, true, false)
 	}
 	if r.mainDelegate != nil {
 		r.mainDelegate.OnSessionClosed(reason)
@@ -489,7 +446,7 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 	r.stop()
 
 	for os.RemoveAll(r.dbPath) != nil {
-		time.Sleep(time.Second)
+		time.Sleep(time.Millisecond * 100)
 	}
 	r.queueCtrl.DropQueue()
 
