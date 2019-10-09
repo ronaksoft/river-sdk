@@ -163,15 +163,15 @@ func (r *River) SetConfig(conf *RiverConfig) {
 			HttpEndpoint:      conf.FileServerEndpoint,
 		},
 	)
-	r.networkCtrl.SetNetworkStatusChangedCallback(func(newQuality domain.NetworkStatus) {
+	r.networkCtrl.OnNetworkStatusChange = func(newQuality domain.NetworkStatus) {
 		if r.mainDelegate != nil {
 			r.mainDelegate.OnNetworkStatusChanged(int(newQuality))
 		}
-	})
-	r.networkCtrl.SetErrorHandler(r.onGeneralError)
-	r.networkCtrl.SetMessageHandler(r.onReceivedMessage)
-	r.networkCtrl.SetUpdateHandler(r.onReceivedUpdate)
-	r.networkCtrl.SetOnConnectCallback(r.onNetworkConnect)
+	}
+	r.networkCtrl.OnWebsocketError = r.onGeneralError
+	r.networkCtrl.OnMessage = r.onReceivedMessage
+	r.networkCtrl.OnUpdate = r.onReceivedUpdate
+	r.networkCtrl.OnWebsocketConnect = r.onNetworkConnect
 
 	// Initialize FileController
 	fileCtrl.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory, conf.DocumentCacheDirectory)
@@ -350,7 +350,7 @@ func (r *River) onNetworkConnect() {
 							x := new(msg.AuthRecalled)
 							err := x.Unmarshal(m.Message)
 							if err != nil {
-								logs.Error("onAuthRecalled()", zap.Error(err))
+								logs.Error("Error On AuthRecall Response", zap.Error(err))
 								return
 							}
 						}
@@ -498,7 +498,7 @@ func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) {
 		}
 		reqBuff, _ := x.Marshal()
 		requestID := uint64(uploadRequest.FileID)
-		waitGroup :=sync.WaitGroup{}
+		waitGroup := sync.WaitGroup{}
 		waitGroup.Add(1)
 		r.queueCtrl.ExecuteCommand(requestID, msg.C_MessagesSendMedia, reqBuff, nil, func(m *msg.MessageEnvelope) {
 			waitGroup.Done()
@@ -642,16 +642,16 @@ func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 	ch := make(chan []byte)
 	// Assign Handlers
 	// OnConnect Handler
-	networkCtrl.SetOnConnectCallback(func() {
+	networkCtrl.OnWebsocketConnect = func() {
 		msgEnvelope := new(msg.MessageEnvelope)
 		msgEnvelope.RequestID = ronak.RandomUint64()
 		msgEnvelope.Constructor = msg.C_SystemGetInfo
 
 		msgEnvelope.Message, _ = (&msg.SystemGetInfo{}).Marshal()
 		_ = networkCtrl.SendWebsocket(msgEnvelope, true)
-	})
+	}
 	// Message Handler
-	networkCtrl.SetMessageHandler(func(messages []*msg.MessageEnvelope) {
+	networkCtrl.OnMessage = func(messages []*msg.MessageEnvelope) {
 		for _, message := range messages {
 			switch message.Constructor {
 			case msg.C_SystemInfo:
@@ -659,12 +659,12 @@ func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 				return
 			}
 		}
-	})
+	}
 	// Update Handler
-	networkCtrl.SetUpdateHandler(func(messages *msg.UpdateContainer) {
+	networkCtrl.OnUpdate = func(messages *msg.UpdateContainer) {
 		// We don't need to handle updates
 		return
-	})
+	}
 
 	// Start the Network Controller alone
 	networkCtrl.Start()

@@ -45,9 +45,6 @@ type Controller struct {
 	websocketEndpoint       string
 	wsKeepConnection        bool
 	wsConn                  *websocket.Conn
-	wsOnError               domain.ErrorHandler
-	wsOnConnect             domain.OnConnectCallback
-	wsOnNetworkStatusChange domain.NetworkStatusUpdateCallback
 
 	// Http Settings
 	httpEndpoint string
@@ -61,8 +58,12 @@ type Controller struct {
 	messageFlusher *ronak.Flusher
 	sendFlusher    *ronak.Flusher
 
-	OnMessage domain.ReceivedMessageHandler
-	OnUpdate  domain.ReceivedUpdateHandler
+	OnMessage             domain.ReceivedMessageHandler
+	OnUpdate              domain.ReceivedUpdateHandler
+	OnWebsocketError      domain.ErrorHandler
+	OnWebsocketConnect    domain.OnConnectCallback
+	OnNetworkStatusChange domain.NetworkStatusUpdateCallback
+
 
 	// requests that it should sent unencrypted
 	unauthorizedRequests map[int64]bool
@@ -83,7 +84,7 @@ func New(config Config) *Controller {
 	ctrl.wsKeepConnection = true
 	ctrl.wsDialer = &websocket.Dialer{
 		Proxy:            http.ProxyFromEnvironment,
-		HandshakeTimeout: 10 * time.Second,
+		HandshakeTimeout: 5 * time.Second,
 		WriteBufferSize:  64 * 1024, // 32kB
 		ReadBufferSize:   64 * 1024, // 32kB
 	}
@@ -299,8 +300,8 @@ func (ctrl *Controller) updateNetworkStatus(newStatus domain.NetworkStatus) {
 		return
 	}
 	ctrl.wsQuality = newStatus
-	if ctrl.wsOnNetworkStatusChange != nil {
-		ctrl.wsOnNetworkStatusChange(newStatus)
+	if ctrl.OnNetworkStatusChange != nil {
+		ctrl.OnNetworkStatusChange(newStatus)
 	}
 }
 
@@ -329,8 +330,8 @@ func (ctrl *Controller) extractMessages(m *msg.MessageEnvelope) ([]*msg.MessageE
 		e := new(msg.Error)
 		_ = e.Unmarshal(m.Message)
 		// its general error
-		if ctrl.wsOnError != nil && m.RequestID == 0 {
-			ctrl.wsOnError(e)
+		if ctrl.OnWebsocketError != nil && m.RequestID == 0 {
+			ctrl.OnWebsocketError(e)
 		} else {
 			// ui callback delegate will handle it
 			messages = append(messages, m)
@@ -377,13 +378,10 @@ func (ctrl *Controller) Stop() {
 func (ctrl *Controller) Connect() {
 	_, _, _ = domain.SingleFlight.Do("NetworkConnect", func() (i interface{}, e error) {
 		logs.Info("NetworkController is connecting")
-		defer func() {
-			if ctrl.recoverPanic("NetworkController:: Connect", ronak.M{
-				"AuthID": ctrl.authID,
-			}) {
-				ctrl.Connect()
-			}
-		}()
+		defer ctrl.recoverPanic("NetworkController:: Connect", ronak.M{
+			"AuthID": ctrl.authID,
+		})
+
 		ctrl.wsKeepConnection = true
 		ctrl.updateNetworkStatus(domain.NetworkConnecting)
 		keepGoing := true
@@ -407,8 +405,7 @@ func (ctrl *Controller) Connect() {
 			}
 
 			underlyingConn := wsConn.UnderlyingConn()
-			_ = tcpkeepalive.SetKeepAlive(underlyingConn, 30 * time.Second, 2, 5 * time.Second)
-
+			_ = tcpkeepalive.SetKeepAlive(underlyingConn, 30*time.Second, 2, 5*time.Second)
 			localIP := underlyingConn.LocalAddr()
 			switch x := localIP.(type) {
 			case *net.IPNet:
@@ -429,7 +426,7 @@ func (ctrl *Controller) Connect() {
 
 			// Call the OnConnect handler here b4 changing network status that trigger queue to start working
 			// basically we sendWebsocket priority requests b4 queue starts to work
-			ctrl.wsOnConnect()
+			ctrl.OnWebsocketConnect()
 
 			ctrl.updateNetworkStatus(domain.NetworkFast)
 		}
@@ -460,31 +457,6 @@ func (ctrl *Controller) SetAuthorization(authID int64, authKey []byte) {
 	ctrl.authKey = make([]byte, len(authKey))
 	ctrl.authID = authID
 	copy(ctrl.authKey, authKey)
-}
-
-// SetErrorHandler set delegate handler
-func (ctrl *Controller) SetErrorHandler(h domain.ErrorHandler) {
-	ctrl.wsOnError = h
-}
-
-// SetMessageHandler set delegate handler
-func (ctrl *Controller) SetMessageHandler(h domain.ReceivedMessageHandler) {
-	ctrl.OnMessage = h
-}
-
-// SetUpdateHandler set delegate handler
-func (ctrl *Controller) SetUpdateHandler(h domain.ReceivedUpdateHandler) {
-	ctrl.OnUpdate = h
-}
-
-// SetOnConnectCallback set delegate handler
-func (ctrl *Controller) SetOnConnectCallback(h domain.OnConnectCallback) {
-	ctrl.wsOnConnect = h
-}
-
-// SetNetworkStatusChangedCallback set delegate handler
-func (ctrl *Controller) SetNetworkStatusChangedCallback(h domain.NetworkStatusUpdateCallback) {
-	ctrl.wsOnNetworkStatusChange = h
 }
 
 // SendWebsocket direct sends immediately else it put it in flusher
@@ -648,15 +620,14 @@ func (ctrl *Controller) GetQuality() domain.NetworkStatus {
 	return ctrl.wsQuality
 }
 
-func (ctrl *Controller) recoverPanic(funcName string, extraInfo interface{}) bool {
+func (ctrl *Controller) recoverPanic(funcName string, extraInfo interface{}) {
 	if r := recover(); r != nil {
 		logs.Error("Panic Recovered",
 			zap.String("Func", funcName),
 			zap.Any("Info", extraInfo),
 			zap.Any("Recover", r),
 		)
+		ctrl.Disconnect()
 		go ctrl.Connect()
-		return true
 	}
-	return false
 }
