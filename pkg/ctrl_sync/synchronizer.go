@@ -12,6 +12,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
 	"sync"
 	"sync/atomic"
@@ -124,11 +125,18 @@ func (ctrl *Controller) Sync() {
 	}
 
 	// get updateID from server
-	serverUpdateID, err := getUpdateState(ctrl)
-	if err != nil {
-		logs.Warn("sync()-> getUpdateState()", zap.Error(err))
-		return
+	var serverUpdateID int64
+	var err error
+	for {
+		serverUpdateID, err = getUpdateState(ctrl)
+		if err != nil {
+			logs.Warn("Error On GetUpdateState", zap.Error(err))
+			time.Sleep(time.Duration(ronak.RandomInt64(1000)) * time.Millisecond)
+		} else {
+			break
+		}
 	}
+
 	if ctrl.updateID == serverUpdateID {
 		return
 	}
