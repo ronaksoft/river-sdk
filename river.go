@@ -187,7 +187,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Initialize queueController
 	if q, err := queueCtrl.New(r.networkCtrl, conf.QueuePath); err != nil {
-		logs.Fatal("River::SetConfig() faild to initialize MessageQueue",
+		logs.Fatal("We couldn't initialize MessageQueue",
 			zap.String("Error", err.Error()),
 		)
 	} else {
@@ -219,13 +219,13 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Initialize Server Keys
 	if err := _ServerKeys.UnmarshalJSON([]byte(conf.ServerKeys)); err != nil {
-		logs.Fatal("River::SetConfig() failed to unmarshal server keys",
+		logs.Fatal("We couldn't unmarshal ServerKeys",
 			zap.String("Error", err.Error()),
 		)
 	}
 
 	// Initialize River Connection
-	logs.Info("River::SetConfig() Load/Create New River Connection")
+	logs.Info("River SetConfig done!")
 }
 
 func (r *River) Version() string {
@@ -306,14 +306,14 @@ func (r *River) onNetworkConnect() {
 						x := new(msg.SystemServerTime)
 						err := x.Unmarshal(m.Message)
 						if err != nil {
-							logs.Error("onGetServerTime()", zap.Error(err))
+							logs.Error("We couldn't unmarshal SystemGetServerTime response", zap.Error(err))
 							return
 						}
 						clientTime := time.Now().Unix()
 						serverTime := x.Timestamp
 						domain.TimeDelta = time.Duration(serverTime-clientTime) * time.Second
 
-						logs.Debug("River::onGetServerTime()",
+						logs.Debug("SystemServerTime received",
 							zap.Int64("ServerTime", serverTime),
 							zap.Int64("ClientTime", clientTime),
 							zap.Duration("Difference", domain.TimeDelta),
@@ -350,7 +350,7 @@ func (r *River) onNetworkConnect() {
 							x := new(msg.AuthRecalled)
 							err := x.Unmarshal(m.Message)
 							if err != nil {
-								logs.Error("Error On AuthRecall Response", zap.Error(err))
+								logs.Error("We couldn't unmarshal AuthRecall (AuthRecalled) response", zap.Error(err))
 								return
 							}
 						}
@@ -365,7 +365,7 @@ func (r *River) onNetworkConnect() {
 			}
 		}
 		if r.DeviceToken == nil || r.DeviceToken.Token == "" {
-			logs.Warn("onNetworkConnect() Device Token is not set")
+			logs.Warn("Device Token is not set")
 		}
 
 	}()
@@ -384,7 +384,7 @@ func (r *River) onNetworkConnect() {
 }
 
 func (r *River) onGeneralError(requestID uint64, e *msg.Error) {
-	logs.Info("We received error",
+	logs.Info("We received error (General)",
 		zap.Uint64("RequestID", requestID),
 		zap.String("Code", e.Code),
 		zap.String("Item", e.Items),
@@ -417,9 +417,9 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 		mon.ServerResponseTime(msgs[idx].Constructor, time.Now().Sub(cb.RequestTime))
 		select {
 		case cb.ResponseChannel <- msgs[idx]:
-			logs.Debug("River::onReceivedMessage() passed to callback listener", zap.Uint64("RequestID", cb.RequestID))
+			logs.Debug("We received response", zap.Uint64("RequestID", cb.RequestID))
 		default:
-			logs.Error("River::onReceivedMessage() there is no callback listener", zap.Uint64("RequestID", cb.RequestID))
+			logs.Error("We received response but no callback, we drop response", zap.Uint64("RequestID", cb.RequestID))
 		}
 		domain.RemoveRequestCallback(msgs[idx].RequestID)
 	}
@@ -447,7 +447,7 @@ func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {
 }
 
 func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) {
-	logs.Info("UploadProcess",
+	logs.Info("Upload finished, we process the next action",
 		zap.Bool("IsProfile", uploadRequest.IsProfilePhoto),
 		zap.Int64("ur.MessageID", uploadRequest.MessageID),
 	)
@@ -516,30 +516,30 @@ func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) {
 		}
 		reqBuff, err := x.Marshal()
 		if err != nil {
-			logs.Error("SDK::postUploadProcess() marshal AccountUploadPhoto", zap.Error(err))
+			logs.Error("We couldn't marshal AccountUploadPhoto", zap.Error(err))
 			return
 		}
 		requestID := uint64(domain.SequentialUniqueID())
 		successCB := func(m *msg.MessageEnvelope) {
-			logs.Debug("AccountUploadPhoto success callback")
+			logs.Debug("AccountUploadPhoto success callback called")
 			switch m.Constructor {
 			case msg.C_Bool:
 				x := new(msg.Bool)
 				err := x.Unmarshal(m.Message)
 				if err != nil {
-					logs.Error("AccountUploadPhoto success callback", zap.Error(err))
+					logs.Error("We couldn't unmarshal AccountUploadPhoto (Bool) response", zap.Error(err))
 				}
 			case msg.C_Error:
 				x := new(msg.Error)
 				err := x.Unmarshal(m.Message)
 				if err != nil {
-					logs.Error("AccountUploadPhoto Error callback", zap.Error(err))
+					logs.Error("We couldn't unmarshal AccountUploadPhoto (Error) response", zap.Error(err))
 				}
-				logs.Error("AccountUploadPhoto Error callback", zap.String("Code", x.Code), zap.String("Item", x.Items))
+				logs.Error("We received error on AccountUploadPhoto response", zap.String("Code", x.Code), zap.String("Item", x.Items))
 			}
 		}
 		timeoutCB := func() {
-			logs.Debug("AccountUploadPhoto time out callback")
+			logs.Debug("Timeout! on AccountUploadPhoto response")
 		}
 		r.queueCtrl.ExecuteCommand(requestID, msg.C_AccountUploadPhoto, reqBuff, timeoutCB, successCB, false)
 	case uploadRequest.IsProfilePhoto && uploadRequest.GroupID != 0:
@@ -554,17 +554,17 @@ func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) {
 		}
 		reqBuff, err := x.Marshal()
 		if err != nil {
-			logs.Error("SDK::postUploadProcess() marshal GroupUploadPhoto", zap.Error(err))
+			logs.Error("We couldn't marshal GroupUploadPhoto", zap.Error(err))
 			return
 		}
 		requestID := uint64(domain.SequentialUniqueID())
 		successCB := func(m *msg.MessageEnvelope) {
-			logs.Debug("GroupUploadPhoto success callback")
+			logs.Debug("GroupUploadPhoto success callback called")
 			if m.Constructor == msg.C_Bool {
 				x := new(msg.Bool)
 				err := x.Unmarshal(m.Message)
 				if err != nil {
-					logs.Error("GroupUploadPhoto success callback", zap.Error(err))
+					logs.Error("We couldn't unmarshal GroupUploadPhoto (Bool) response", zap.Error(err))
 				}
 
 			}
@@ -572,13 +572,13 @@ func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) {
 				x := new(msg.Error)
 				err := x.Unmarshal(m.Message)
 				if err != nil {
-					logs.Error("GroupUploadPhoto timeout callback", zap.Error(err))
+					logs.Error("We couldn't unmarshal GroupUploadPhoto (Error) response", zap.Error(err))
 				}
-				logs.Error("GroupUploadPhoto timeout callback", zap.String("Code", x.Code), zap.String("Item", x.Items))
+				logs.Error("We received error on GroupUploadPhoto response", zap.String("Code", x.Code), zap.String("Item", x.Items))
 			}
 		}
 		timeoutCB := func() {
-			logs.Debug("GroupUploadPhoto timeoput callback")
+			logs.Debug("GTimeout! on GroupUploadPhoto response")
 		}
 		r.queueCtrl.ExecuteCommand(requestID, msg.C_GroupsUploadPhoto, reqBuff, timeoutCB, successCB, false)
 	}

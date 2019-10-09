@@ -199,14 +199,14 @@ func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
 		messageEnvelope.RequestID = 0
 		err := ctrl.sendWebsocket(messageEnvelope)
 		if err != nil {
-			logs.Warn("NetworkController::SendWebsocket Flush Error", zap.Error(err))
+			logs.Warn("NetworkController got error on flushing outgoing messages", zap.Error(err))
 			return
 		}
 		startIdx = endIdx
 		endIdx += chunkSize
 	}
 
-	logs.Debug("NetworkController::SendWebsocket Flushed",
+	logs.Debug("NetworkController flushed outgoing messages",
 		zap.Int("Count", itemsCount),
 	)
 }
@@ -226,7 +226,7 @@ func (ctrl *Controller) watchDog() {
 				go ctrl.Connect()
 			}
 		case <-ctrl.stopChannel:
-			logs.Info("Stop Called")
+			logs.Info("NetworkController's watchdog stopped!")
 			return
 		}
 	}
@@ -250,7 +250,7 @@ func (ctrl *Controller) receiver() {
 			// If it is a BINARY message
 			err := res.Unmarshal(message)
 			if err != nil {
-				logs.Error("NetworkController::receiver()", zap.Error(err), zap.String("Dump", string(message)))
+				logs.Error("NetworkController couldn't unmarshal received BinaryMessage", zap.Error(err), zap.String("Dump", string(message)))
 				continue
 			}
 
@@ -258,7 +258,7 @@ func (ctrl *Controller) receiver() {
 				receivedEnvelope := new(msg.MessageEnvelope)
 				err = receivedEnvelope.Unmarshal(res.Payload)
 				if err != nil {
-					logs.Error("NetworkController::receiver()-> Unmarshal()", zap.Error(err))
+					logs.Error("NetworkController couldn't unmarshal plain-text MessageEnvelope", zap.Error(err))
 					continue
 				}
 				ctrl.messageHandler(receivedEnvelope)
@@ -268,7 +268,7 @@ func (ctrl *Controller) receiver() {
 			// We received an encrypted message
 			decryptedBytes, err := domain.Decrypt(ctrl.authKey, res.MessageKey, res.Payload)
 			if err != nil {
-				logs.Error("NetworkController::receiver()->Decrypt()",
+				logs.Error("NetworkController couldn't decrypt the received message",
 					zap.String("Error", err.Error()),
 					zap.Int64("ctrl.authID", ctrl.authID),
 					zap.Int64("resp.AuthID", res.AuthID),
@@ -279,7 +279,7 @@ func (ctrl *Controller) receiver() {
 			receivedEncryptedPayload := new(msg.ProtoEncryptedPayload)
 			err = receivedEncryptedPayload.Unmarshal(decryptedBytes)
 			if err != nil {
-				logs.Error("NetworkController::receiver() Failed to unmarshal", zap.Error(err))
+				logs.Error("NetworkController couldn't unmarshal decrypted message", zap.Error(err))
 				continue
 			}
 			// TODO:: check message id and server salt before handling the message
@@ -397,7 +397,7 @@ func (ctrl *Controller) Connect() {
 			reqHdr.Set("X-Client-Type", fmt.Sprintf("SDK-%s", domain.SDKVersion))
 			wsConn, _, err := ctrl.wsDialer.Dial(ctrl.websocketEndpoint, reqHdr)
 			if err != nil {
-				logs.Warn("Connect()-> Dial()", zap.Error(err))
+				logs.Warn("NetworkController could not dial", zap.Error(err), zap.String("Url", ctrl.websocketEndpoint))
 				time.Sleep(1 * time.Second)
 				continue
 			}
@@ -449,7 +449,7 @@ func (ctrl *Controller) Disconnect() {
 // If authID and authKey are defined then sending messages will be encrypted before
 // writing on the wire.
 func (ctrl *Controller) SetAuthorization(authID int64, authKey []byte) {
-	logs.Info("NetworkController::SetAuthorization()",
+	logs.Info("NetworkController authorization set",
 		zap.Int64("AuthID", authID),
 	)
 	ctrl.authKey = make([]byte, len(authKey))
@@ -598,7 +598,7 @@ func (ctrl *Controller) Reconnect() {
 func (ctrl *Controller) WaitForNetwork() {
 	// Wait While Network is Disconnected or Connecting
 	for ctrl.wsQuality == domain.NetworkDisconnected || ctrl.wsQuality == domain.NetworkConnecting {
-		logs.Debug("NetworkController:: Wait for Network",
+		logs.Debug("NetworkController is waiting for Network",
 			zap.String("Quality", ctrl.wsQuality.ToString()),
 		)
 		time.Sleep(time.Second)

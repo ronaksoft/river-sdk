@@ -104,7 +104,7 @@ func (ctrl *Controller) watchDog() {
 			}
 			ctrl.Sync()
 		case <-ctrl.stopChannel:
-			logs.Info("SyncController:: watchDog Stopped")
+			logs.Info("SyncController's watchDog Stopped")
 			return
 		}
 	}
@@ -113,14 +113,14 @@ func (ctrl *Controller) watchDog() {
 func (ctrl *Controller) Sync() {
 	// Check if sync function is already running, then return otherwise lock it and continue
 	if !atomic.CompareAndSwapInt32(&ctrl.syncLock, 0, 1) {
-		logs.Debug("Already Syncing ...")
+		logs.Debug("SyncController is already syncing ...")
 		return
 	}
 	defer atomic.StoreInt32(&ctrl.syncLock, 0)
 
 	// There is no need to sync when no user has been authorized
 	if ctrl.userID == 0 {
-		logs.Debug("Sync UserID is zero ...")
+		logs.Debug("SyncController does not sync when no user is set")
 		return
 	}
 
@@ -130,7 +130,7 @@ func (ctrl *Controller) Sync() {
 	for {
 		serverUpdateID, err = getUpdateState(ctrl)
 		if err != nil {
-			logs.Warn("Error On GetUpdateState", zap.Error(err))
+			logs.Warn("SyncController got err on GetUpdateState", zap.Error(err))
 			time.Sleep(time.Duration(ronak.RandomInt64(1000)) * time.Millisecond)
 		} else {
 			break
@@ -146,7 +146,7 @@ func (ctrl *Controller) Sync() {
 	defer updateSyncStatus(ctrl, domain.Synced)
 
 	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSyncThreshold {
-		logs.Info("SyncController:: Snapshot sync")
+		logs.Info("SyncController goes for a Snapshot sync")
 
 		// Clear DB
 		repo.DropAll()
@@ -162,11 +162,11 @@ func (ctrl *Controller) Sync() {
 		ctrl.updateID = serverUpdateID
 		err = repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
 		if err != nil {
-			logs.Error("sync()-> SaveInt()", zap.Error(err))
+			logs.Error("SyncController couldn't save the current UpdateID", zap.Error(err))
 			return
 		}
 	} else if serverUpdateID > ctrl.updateID+1 {
-		logs.Info("SyncController:: Sequential sync")
+		logs.Info("SyncController goes for a Sequential sync")
 		getUpdateDifference(ctrl, serverUpdateID)
 	}
 }
@@ -174,7 +174,7 @@ func updateSyncStatus(ctrl *Controller, newStatus domain.SyncStatus) {
 	if ctrl.syncStatus == newStatus {
 		return
 	}
-	logs.Info("Sync Controller:: Status Updated",
+	logs.Info("Sync Controller status changed",
 		zap.String("Status", newStatus.ToString()),
 	)
 	ctrl.syncStatus = newStatus
@@ -184,7 +184,7 @@ func updateSyncStatus(ctrl *Controller, newStatus domain.SyncStatus) {
 	}
 }
 func getUpdateState(ctrl *Controller) (updateID int64, err error) {
-	logs.Debug("getUpdateState Called")
+	logs.Debug("SyncController calls getUpdateState")
 	updateID = 0
 	if !ctrl.networkCtrl.Connected() {
 		return -1, domain.ErrNoConnection
@@ -222,6 +222,7 @@ func getUpdateState(ctrl *Controller) (updateID int64, err error) {
 	return
 }
 func getContacts(waitGroup *sync.WaitGroup, ctrl *Controller) {
+	logs.Debug("SyncController calls getContacts")
 	req := new(msg.ContactsGet)
 	reqBytes, _ := req.Marshal()
 	ctrl.queueCtrl.ExecuteCommand(
@@ -246,7 +247,7 @@ func getContacts(waitGroup *sync.WaitGroup, ctrl *Controller) {
 	)
 }
 func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, limit int32) {
-	logs.Info("SyncController:: getAllDialogs",
+	logs.Info("SyncController calls getAllDialogs",
 		zap.Int32("Offset", offset),
 		zap.Int32("Limit", limit),
 	)
@@ -266,7 +267,7 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 		func(m *msg.MessageEnvelope) {
 			switch m.Constructor {
 			case msg.C_Error:
-				logs.Error("We got error response on MessagesGetDialogs",
+				logs.Error("SyncController got error response on MessagesGetDialogs",
 					zap.String("Error", domain.ParseServerError(m.Message).Error()),
 				)
 				getAllDialogs(waitGroup, ctrl, offset, limit)
@@ -274,7 +275,7 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 				x := new(msg.MessagesDialogs)
 				err := x.Unmarshal(m.Message)
 				if err != nil {
-					logs.Error("We cannot unmarshal server response on MessagesGetDialogs", zap.Error(err))
+					logs.Error("SyncController cannot unmarshal server response on MessagesGetDialogs", zap.Error(err))
 					return
 				}
 				mMessages := make(map[int64]*msg.UserMessage)
@@ -285,7 +286,7 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 				for _, dialog := range x.Dialogs {
 					topMessage, _ := mMessages[dialog.TopMessageID]
 					if topMessage == nil {
-						logs.Error("We received a dialog with no top message",
+						logs.Error("SyncController received a dialog with no top message",
 							zap.Int64("MessageID", dialog.TopMessageID),
 						)
 						continue
@@ -308,7 +309,7 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 	)
 }
 func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
-	logs.Info("SyncController::getUpdateDifference()",
+	logs.Info("SyncController calls getUpdateDifference",
 		zap.Int64("ServerUpdateID", serverUpdateID),
 		zap.Int64("ClientUpdateID", ctrl.updateID),
 	)
@@ -334,7 +335,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 			reqBytes,
 			func() {
 				waitGroup.Done()
-				logs.Warn("SyncController::getUpdateDifference() -> ExecuteRealtimeCommand() Timeout")
+				logs.Warn("SyncController got timeout on UpdateGetDifference")
 			},
 			func(m *msg.MessageEnvelope) {
 				defer waitGroup.Done()
@@ -343,7 +344,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 					x := new(msg.UpdateDifference)
 					err := x.Unmarshal(m.Message)
 					if err != nil {
-						logs.Error("onGetDifferenceSucceed()-> Unmarshal()", zap.Error(err))
+						logs.Error("SyncController couldn't unmarshal response (UpdateDifference)", zap.Error(err))
 						return
 					}
 					onGetDifferenceSucceed(ctrl, x)
@@ -356,15 +357,11 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 					// save UpdateID to DB
 					err = repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
 					if err != nil {
-						logs.Error("onGetDifferenceSucceed()-> SaveInt()", zap.Error(err))
+						logs.Error("SyncController couldn't save current UpdateID", zap.Error(err))
 					}
-					logs.Info("updateGetDifference",
-						zap.Int64("ClientUpdateID", ctrl.updateID),
-						zap.Bool("More", x.More),
-					)
 
 				case msg.C_Error:
-					logs.Debug("onGetDifferenceSucceed()-> C_Error",
+					logs.Debug("SyncController got error response",
 						zap.String("Error", domain.ParseServerError(m.Message).Error()),
 					)
 				}
@@ -429,7 +426,7 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 
 func (ctrl *Controller) SetUserID(userID int64) {
 	ctrl.userID = userID
-	logs.Debug("SyncController::SetUserID()",
+	logs.Debug("SyncController user is set",
 		zap.Int64("userID", userID),
 	)
 }
@@ -440,13 +437,13 @@ func (ctrl *Controller) GetUserID() int64 {
 
 // Start controller
 func (ctrl *Controller) Start() {
-	logs.Info("SyncController::  Start")
+	logs.Info("SyncController started")
 
 	// Load the latest UpdateID stored in DB
 	if v, err := repo.System.LoadInt(domain.SkUpdateID); err != nil {
 		err := repo.System.SaveInt(domain.SkUpdateID, 0)
 		if err != nil {
-			logs.Error("Start()-> SaveInt()", zap.Error(err))
+			logs.Error("SyncController couldn't save current UpdateID", zap.Error(err))
 		}
 		ctrl.updateID = 0
 	} else {
@@ -461,7 +458,7 @@ func (ctrl *Controller) Start() {
 
 // Stop controller
 func (ctrl *Controller) Stop() {
-	logs.Debug("StopServices-SyncController::Stop() -> Called")
+	logs.Debug("SyncController calls stop")
 	ctrl.stopChannel <- true // for watchDog()
 }
 
@@ -491,7 +488,7 @@ func (ctrl *Controller) MessageHandler(messages []*msg.MessageEnvelope) {
 
 // UpdateHandler receives update to cache them in client DB
 func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer, outOfSync bool) {
-	logs.Debug("SyncController::UpdateHandler() Called",
+	logs.Debug("SyncController calls UpdateHandler",
 		zap.Int64("ctrl.UpdateID", ctrl.updateID),
 		zap.Int64("MaxID", updateContainer.MaxUpdateID),
 		zap.Int64("MinID", updateContainer.MinUpdateID),

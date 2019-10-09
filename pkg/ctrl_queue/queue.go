@@ -83,7 +83,7 @@ func (ctrl *Controller) distributor() {
 		// Prepare
 		req := request{}
 		if err := req.UnmarshalJSON(item.Value); err != nil {
-			logs.Error("QueueController:: distributor()->UnmarshalJSON()", zap.Error(err))
+			logs.Error("QueueController could not unmarshal popped request", zap.Error(err))
 			continue
 		}
 
@@ -91,7 +91,7 @@ func (ctrl *Controller) distributor() {
 		if !ctrl.IsRequestCancelled(int64(req.ID)) {
 			go ctrl.executor(req)
 		} else {
-			logs.Info("QueueController:: Request cancelled",
+			logs.Info("QueueController discarded a canceled request",
 				zap.Uint64("RequestID", req.ID),
 				zap.String("RequestName", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
 			)
@@ -104,11 +104,11 @@ func (ctrl *Controller) addToWaitingList(req *request) {
 	req.InsertTime = time.Now()
 	jsonRequest, err := req.MarshalJSON()
 	if err != nil {
-		logs.Warn("addToWaitingList()->MarshalJSON()", zap.Error(err))
+		logs.Warn("QueueController couldn't marshal the request", zap.Error(err))
 		return
 	}
 	if _, err := ctrl.waitingList.Enqueue(jsonRequest); err != nil {
-		logs.Warn("addToWaitingList()->Enqueue()", zap.Error(err))
+		logs.Warn("QueueController couldn't enqueue the request", zap.Error(err))
 		return
 	}
 	ctrl.distributorLock.Lock()
@@ -139,7 +139,8 @@ func (ctrl *Controller) executor(req request) {
 
 	// Try to send it over wire, if error happened put it back into the queue
 	if err := ctrl.network.SendWebsocket(req.MessageEnvelope, false); err != nil {
-		logs.Error("executor() -> network.SendWebsocket()", zap.Error(err))
+		logs.Error("QueueController got error from NetworkController", zap.Error(err))
+		logs.Info("QueueController re-push the request into the queue")
 		ctrl.addToWaitingList(&req)
 		return
 	}
@@ -174,8 +175,7 @@ func (ctrl *Controller) executor(req request) {
 				if errMsg.Code == msg.ErrCodeAlreadyExists && errMsg.Items == msg.ErrItemRandomID {
 					pm, _ := repo.PendingMessages.GetByRandomID(int64(req.ID))
 					if pm != nil {
-						err := repo.PendingMessages.Delete(pm.ID)
-						logs.WarnOnErr("Error On DeletePendingMessage", err)
+						_ = repo.PendingMessages.Delete(pm.ID)
 					}
 				}
 			default:
@@ -188,8 +188,8 @@ func (ctrl *Controller) executor(req request) {
 				reqCallbacks.SuccessCallback(res)
 			}
 		} else {
-			logs.Warn("QueueController:: ResponseChannel received signal SuccessCallback is null",
-				zap.String("ConstructorName", msg.ConstructorNames[res.Constructor]),
+			logs.Warn("QueueController received response but no callback exists!!!",
+				zap.String("Constructor", msg.ConstructorNames[res.Constructor]),
 				zap.Uint64("RequestID", res.RequestID),
 			)
 		}
@@ -210,9 +210,9 @@ func (ctrl *Controller) ExecuteRealtimeCommand(requestID uint64, constructor int
 	execBlock := func(reqID uint64, req *msg.MessageEnvelope) error {
 		err := ctrl.network.SendWebsocket(req, blockingMode)
 		if err != nil {
-			logs.Warn("ExecuteRealtimeCommand()->network.SendWebsocket()",
+			logs.Warn("QueueController got error from NetworkController",
 				zap.String("Error", err.Error()),
-				zap.String("ConstructorName", msg.ConstructorNames[req.Constructor]),
+				zap.String("Constructor", msg.ConstructorNames[req.Constructor]),
 				zap.Uint64("RequestID", requestID),
 			)
 			return err
@@ -222,8 +222,8 @@ func (ctrl *Controller) ExecuteRealtimeCommand(requestID uint64, constructor int
 		if reqCB != nil {
 			select {
 			case <-time.After(domain.WebsocketDirectTime):
-				logs.Debug("QueueController::ExecuteRealtimeCommand()->execBlock() : Timeout",
-					zap.String("ConstructorName", msg.ConstructorNames[req.Constructor]),
+				logs.Debug("QueueController got timeout on realtime command",
+					zap.String("Constructor", msg.ConstructorNames[req.Constructor]),
 					zap.Uint64("RequestID", requestID),
 				)
 				domain.RemoveRequestCallback(reqID)
@@ -236,8 +236,8 @@ func (ctrl *Controller) ExecuteRealtimeCommand(requestID uint64, constructor int
 				}
 				return domain.ErrRequestTimeout
 			case res := <-reqCB.ResponseChannel:
-				logs.Debug("QueueController::ExecuteRealtimeCommand()->execBlock()  : Success",
-					zap.String("ConstructorName", msg.ConstructorNames[req.Constructor]),
+				logs.Debug("QueueController got response on realtime command",
+					zap.String("Constructor", msg.ConstructorNames[req.Constructor]),
 					zap.Uint64("RequestID", requestID),
 				)
 				if reqCB.SuccessCallback != nil {
@@ -249,7 +249,7 @@ func (ctrl *Controller) ExecuteRealtimeCommand(requestID uint64, constructor int
 				}
 			}
 		} else {
-			logs.Warn("QueueController::ExecuteRealtimeCommand() RequestCallback not found",
+			logs.Warn("QueueController got response on realtime command but no callback found!!!",
 				zap.String("Constructor", msg.ConstructorNames[req.Constructor]),
 				zap.Uint64("RequestID", requestID),
 			)
@@ -289,7 +289,7 @@ func (ctrl *Controller) ExecuteCommand(requestID uint64, constructor int64, requ
 func (ctrl *Controller) Start() {
 	logs.Info("QueueController started")
 	if q, err := goque.OpenQueue(ctrl.dataDir); err != nil {
-		logs.Fatal("Error On QueueStart", zap.Error(err))
+		logs.Fatal("We couldn't initialize the queue", zap.Error(err))
 	} else {
 		ctrl.waitingList = q
 	}
