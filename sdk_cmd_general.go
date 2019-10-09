@@ -150,16 +150,30 @@ func (r *River) CreateAuthKey() (err error) {
 	// Wait for network
 	r.networkCtrl.WaitForNetwork()
 
-	var clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64
-	// 1. SendWebsocket InitConnect to Server
+	err, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ := initConnect(r)
+	if err != nil {
+		logs.Warn("River::CreateAuthKey() InitConnect", zap.Error(err))
+		return
+	}
+	logs.Info("River::CreateAuthKey() 1st Step Finished")
+
+	err = initCompleteAuth(r, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ)
+	logs.Info("River::CreateAuthKey() 2nd Step Finished")
+
+	// double set AuthID
+	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+
+	r.ConnInfo.Save()
+
+	return
+}
+func initConnect(r *River) (err error, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64) {
+	logs.Info("River::CreateAuthKey() 1st Step Started :: InitConnect")
 	req1 := new(msg.InitConnect)
 	req1.ClientNonce = uint64(domain.SequentialUniqueID())
 	req1Bytes, _ := req1.Marshal()
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
-
-	logs.Info("River::CreateAuthKey() 1st Step Started :: InitConnect")
-
 	executeRemoteCommand(
 		r,
 		uint64(domain.SequentialUniqueID()),
@@ -197,26 +211,15 @@ func (r *River) CreateAuthKey() (err error) {
 			}
 		},
 	)
-
-	// Wait for 1st step to complete
 	waitGroup.Wait()
-	if err != nil {
-		logs.Warn("River::CreateAuthKey() InitConnect", zap.Error(err))
-		return
-	}
-	logs.Info("River::CreateAuthKey() 1st Step Finished")
-
-	// 2. SendWebsocket InitCompleteAuth
+	return
+}
+func initCompleteAuth(r *River, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64) (err error) {
+	logs.Info("River::CreateAuthKey() 2nd Step Started :: InitConnect")
 	req2 := new(msg.InitCompleteAuth)
 	req2.ServerNonce = serverNonce
 	req2.ClientNonce = clientNonce
-
-	// Generate DH Pub Key
-	logs.Info("River::CreateAuthKey()",
-		zap.Int64("ServerDHFP", int64(serverDHFP)))
-
 	dhGroup, err := _ServerKeys.GetDhGroup(int64(serverDHFP))
-
 	if err != nil {
 		return err
 	}
@@ -261,8 +264,8 @@ func (r *River) CreateAuthKey() (err error) {
 	req2.EncryptedPayload = encrypted
 	req2Bytes, _ := req2.Marshal()
 
+	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
-	logs.Info("River::CreateAuthKey() 2nd Step Started :: InitConnect")
 	executeRemoteCommand(
 		r,
 		// r.executeRealtimeCommand(
@@ -278,7 +281,7 @@ func (r *River) CreateAuthKey() (err error) {
 			switch res.Constructor {
 			case msg.C_InitAuthCompleted:
 				x := new(msg.InitAuthCompleted)
-				x.Unmarshal(res.Message)
+				_ = x.Unmarshal(res.Message)
 				switch x.Status {
 				case msg.InitAuthCompleted_OK:
 					serverDhKey, err := dh.ComputeKey(dhkx.NewPublicKey(x.ServerDHPubKey), clientDhKey)
@@ -318,15 +321,7 @@ func (r *River) CreateAuthKey() (err error) {
 			}
 		},
 	)
-
-	// Wait for 2nd step to complete
 	waitGroup.Wait()
-
-	// double set AuthID
-	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-
-	r.ConnInfo.Save()
-
 	return
 }
 
