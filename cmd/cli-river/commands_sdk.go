@@ -52,7 +52,7 @@ var SdkGetDifference = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_UpdateGetDifference, reqBytes, reqDelegate, false, false); err != nil {
-			_Log.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -67,7 +67,7 @@ var SdkGetServerTime = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_SystemGetServerTime, reqBytes, reqDelegate, false, false); err != nil {
-			_Log.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -82,7 +82,7 @@ var SdkUpdateGetState = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_UpdateGetState, reqBytes, reqDelegate, false, false); err != nil {
-			_Log.Error("ExecuteCommand failed", zap.Error(err))
+			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
 		}

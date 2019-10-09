@@ -296,7 +296,7 @@ func (r *River) onNetworkConnect() {
 		defer waitGroup.Done()
 		keepGoing := true
 		for keepGoing {
-			r.queueCtrl.ExecuteRealtimeCommand(
+			r.queueCtrl.RealtimeCommand(
 				uint64(domain.SequentialUniqueID()),
 				msg.C_SystemGetServerTime,
 				timeReqBytes,
@@ -344,7 +344,7 @@ func (r *River) onNetworkConnect() {
 			for keepGoing {
 				// this is priority command that should not passed to queue
 				// after auth recall answer got back the queue should send its requests in order to get related updates
-				r.queueCtrl.ExecuteRealtimeCommand(
+				r.queueCtrl.RealtimeCommand(
 					uint64(domain.SequentialUniqueID()),
 					msg.C_AuthRecall,
 					reqBytes,
@@ -504,7 +504,7 @@ func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) {
 		requestID := uint64(uploadRequest.FileID)
 		waitGroup := sync.WaitGroup{}
 		waitGroup.Add(1)
-		r.queueCtrl.ExecuteCommand(requestID, msg.C_MessagesSendMedia, reqBuff, nil, func(m *msg.MessageEnvelope) {
+		r.queueCtrl.EnqueueCommand(requestID, msg.C_MessagesSendMedia, reqBuff, nil, func(m *msg.MessageEnvelope) {
 			waitGroup.Done()
 		}, false)
 		waitGroup.Wait()
@@ -544,7 +544,7 @@ func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) {
 		timeoutCB := func() {
 			logs.Debug("Timeout! on AccountUploadPhoto response")
 		}
-		r.queueCtrl.ExecuteCommand(requestID, msg.C_AccountUploadPhoto, reqBuff, timeoutCB, successCB, false)
+		r.queueCtrl.EnqueueCommand(requestID, msg.C_AccountUploadPhoto, reqBuff, timeoutCB, successCB, false)
 	case uploadRequest.IsProfilePhoto && uploadRequest.GroupID != 0:
 		// This is a upload group profile picture
 		x := new(msg.GroupsUploadPhoto)
@@ -583,7 +583,7 @@ func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) {
 		timeoutCB := func() {
 			logs.Debug("GTimeout! on GroupUploadPhoto response")
 		}
-		r.queueCtrl.ExecuteCommand(requestID, msg.C_GroupsUploadPhoto, reqBuff, timeoutCB, successCB, false)
+		r.queueCtrl.EnqueueCommand(requestID, msg.C_GroupsUploadPhoto, reqBuff, timeoutCB, successCB, false)
 	}
 
 }

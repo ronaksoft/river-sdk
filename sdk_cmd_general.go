@@ -79,7 +79,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 
 	// If the constructor is a realtime command, then just send it to the server
 	if _, ok := r.realTimeCommands[constructor]; ok {
-		r.queueCtrl.ExecuteRealtimeCommand(
+		r.queueCtrl.RealtimeCommand(
 			uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback, blockingMode, true,
 		)
 		return
@@ -121,7 +121,7 @@ func executeRemoteCommand(r *River, requestID uint64, constructor int64, command
 	logs.Debug("River::executeRemoteCommand()",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
-	r.queueCtrl.ExecuteCommand(requestID, constructor, commandBytes, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(requestID, constructor, commandBytes, timeoutCB, successCB, true)
 }
 func deepCopy(commandBytes []byte) []byte {
 	// Takes a copy of commandBytes b4 IOS/Android GC/OS collect/alter them
@@ -388,7 +388,7 @@ func (r *River) RetryPendingMessage(id int64) bool {
 	req.ClearDraft = pmsg.ClearDraft
 	req.Entities = pmsg.Entities
 	buff, _ := req.Marshal()
-	r.queueCtrl.ExecuteCommand(uint64(req.RandomID), msg.C_MessagesSend, buff, nil, nil, true)
+	r.queueCtrl.EnqueueCommand(uint64(req.RandomID), msg.C_MessagesSend, buff, nil, nil, true)
 
 	logs.Debug("River::RetryPendingMessage() Request enqueued")
 	return true
@@ -416,7 +416,7 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 			req.Token = r.DeviceToken.Token
 			req.TokenType = int32(r.DeviceToken.TokenType)
 			reqBytes, _ := req.Marshal()
-			r.queueCtrl.ExecuteRealtimeCommand(
+			r.queueCtrl.RealtimeCommand(
 				uint64(domain.SequentialUniqueID()),
 				msg.C_AccountUnregisterDevice,
 				reqBytes, nil, nil, true, false,
@@ -436,7 +436,7 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 		}
 		req := new(msg.AuthLogout)
 		buff, _ := req.Marshal()
-		r.queueCtrl.ExecuteRealtimeCommand(uint64(requestID), msg.C_AuthLogout, buff, timeoutCallback, successCallback, true, false)
+		r.queueCtrl.RealtimeCommand(uint64(requestID), msg.C_AuthLogout, buff, timeoutCallback, successCallback, true, false)
 	}
 	if r.mainDelegate != nil {
 		r.mainDelegate.OnSessionClosed(reason)
@@ -566,7 +566,7 @@ func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, 
 			}
 		}
 		// SendWebsocket GroupsGetFull request to get user AccessHash
-		r.queueCtrl.ExecuteRealtimeCommand(uint64(requestID), msg.C_GroupsGetFull, reqBytes, timeoutCB, successCB, true, false)
+		r.queueCtrl.RealtimeCommand(uint64(requestID), msg.C_GroupsGetFull, reqBytes, timeoutCB, successCB, true, false)
 
 	} else {
 		user.AccessHash = accessHash

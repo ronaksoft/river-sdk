@@ -196,7 +196,7 @@ func getUpdateState(ctrl *Controller) (updateID int64, err error) {
 	// this waitGroup is required cuz our callbacks will be called in UIExecutor go routine
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
-	ctrl.queueCtrl.ExecuteRealtimeCommand(
+	ctrl.queueCtrl.RealtimeCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_UpdateGetState,
 		reqBytes,
@@ -225,7 +225,7 @@ func getContacts(waitGroup *sync.WaitGroup, ctrl *Controller) {
 	logs.Debug("SyncController calls getContacts")
 	req := new(msg.ContactsGet)
 	reqBytes, _ := req.Marshal()
-	ctrl.queueCtrl.ExecuteCommand(
+	ctrl.queueCtrl.EnqueueCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_ContactsGet,
 		reqBytes,
@@ -255,7 +255,7 @@ func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, li
 	req.Limit = limit
 	req.Offset = offset
 	reqBytes, _ := req.Marshal()
-	ctrl.queueCtrl.ExecuteCommand(
+	ctrl.queueCtrl.EnqueueCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_MessagesGetDialogs,
 		reqBytes,
@@ -329,7 +329,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 		req.From = ctrl.updateID + 1 // +1 cuz we already have ctrl.updateID itself
 		reqBytes, _ := req.Marshal()
 		waitGroup.Add(1)
-		ctrl.queueCtrl.ExecuteRealtimeCommand(
+		ctrl.queueCtrl.RealtimeCommand(
 			uint64(domain.SequentialUniqueID()),
 			msg.C_UpdateGetDifference,
 			reqBytes,
@@ -571,7 +571,7 @@ func (ctrl *Controller) ContactImportFromServer() {
 	contactGetReq := new(msg.ContactsGet)
 	contactGetReq.Crc32Hash = uint32(contactsGetHash)
 	contactGetBytes, _ := contactGetReq.Marshal()
-	ctrl.queueCtrl.ExecuteRealtimeCommand(
+	ctrl.queueCtrl.RealtimeCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_ContactsGet, contactGetBytes,
 		nil, nil, false, false,
@@ -594,7 +594,7 @@ func (ctrl *Controller) getServerSalt() {
 
 	keepGoing := true
 	for keepGoing {
-		ctrl.queueCtrl.ExecuteRealtimeCommand(
+		ctrl.queueCtrl.RealtimeCommand(
 			uint64(domain.SequentialUniqueID()),
 			msg.C_SystemGetSalts,
 			serverSaltReqBytes,
