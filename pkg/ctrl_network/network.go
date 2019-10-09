@@ -40,11 +40,11 @@ type Controller struct {
 	messageSeq int64
 
 	// Websocket Settings
-	wsWriteLock             sync.Mutex
-	wsDialer                *websocket.Dialer
-	websocketEndpoint       string
-	wsKeepConnection        bool
-	wsConn                  *websocket.Conn
+	wsWriteLock       sync.Mutex
+	wsDialer          *websocket.Dialer
+	websocketEndpoint string
+	wsKeepConnection  bool
+	wsConn            *websocket.Conn
 
 	// Http Settings
 	httpEndpoint string
@@ -58,12 +58,12 @@ type Controller struct {
 	messageFlusher *ronak.Flusher
 	sendFlusher    *ronak.Flusher
 
+	// External Handlers
 	OnMessage             domain.ReceivedMessageHandler
 	OnUpdate              domain.ReceivedUpdateHandler
-	OnWebsocketError      domain.ErrorHandler
+	OnGeneralError        domain.ErrorHandler
 	OnWebsocketConnect    domain.OnConnectCallback
 	OnNetworkStatusChange domain.NetworkStatusUpdateCallback
-
 
 	// requests that it should sent unencrypted
 	unauthorizedRequests map[int64]bool
@@ -329,14 +329,12 @@ func (ctrl *Controller) extractMessages(m *msg.MessageEnvelope) ([]*msg.MessageE
 	case msg.C_Error:
 		e := new(msg.Error)
 		_ = e.Unmarshal(m.Message)
-		// its general error
-		if ctrl.OnWebsocketError != nil && m.RequestID == 0 {
-			ctrl.OnWebsocketError(e)
-		} else {
-			// ui callback delegate will handle it
+		if ctrl.OnGeneralError != nil  {
+			ctrl.OnGeneralError(m.RequestID, e)
+		}
+		if m.RequestID != 0 {
 			messages = append(messages, m)
 		}
-
 	default:
 		messages = append(messages, m)
 	}

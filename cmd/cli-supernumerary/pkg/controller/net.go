@@ -338,10 +338,10 @@ func (ctrl *CtrlNetwork) extractMessages(m *msg.MessageEnvelope) ([]*msg.Message
 		}
 	case msg.C_Error:
 		e := new(msg.Error)
-		e.Unmarshal(m.Message)
+		_ = e.Unmarshal(m.Message)
 		// its general error
 		if ctrl.onError != nil && m.RequestID == 0 {
-			ctrl.onError(e)
+			ctrl.onError(m.RequestID, e)
 		} else {
 			// ui callback delegate will handle it
 			messages = append(messages, m)

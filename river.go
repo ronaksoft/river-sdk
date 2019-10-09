@@ -168,7 +168,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 			r.mainDelegate.OnNetworkStatusChanged(int(newQuality))
 		}
 	}
-	r.networkCtrl.OnWebsocketError = r.onGeneralError
+	r.networkCtrl.OnGeneralError = r.onGeneralError
 	r.networkCtrl.OnMessage = r.onReceivedMessage
 	r.networkCtrl.OnUpdate = r.onReceivedUpdate
 	r.networkCtrl.OnWebsocketConnect = r.onNetworkConnect
@@ -230,7 +230,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 func (r *River) Version() string {
 	// TODO:: automatic generation
-	return "0.8.1"
+	return "0.8.2"
 }
 
 func (r *River) Start() error {
@@ -383,15 +383,16 @@ func (r *River) onNetworkConnect() {
 	}()
 }
 
-func (r *River) onGeneralError(e *msg.Error) {
-	logs.Info("River::onGeneralError()",
+func (r *River) onGeneralError(requestID uint64, e *msg.Error) {
+	logs.Info("We received error",
+		zap.Uint64("RequestID", requestID),
 		zap.String("Code", e.Code),
 		zap.String("Item", e.Items),
 	)
 	if e.Code == msg.ErrCodeInvalid && e.Items == msg.ErrItemSalt {
 		r.syncCtrl.UpdateSalt()
 	}
-	if r.mainDelegate != nil {
+	if r.mainDelegate != nil && requestID == 0 {
 		buff, _ := e.Marshal()
 		r.mainDelegate.OnGeneralError(buff)
 	}

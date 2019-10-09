@@ -5,7 +5,7 @@ import (
 )
 
 // ErrorHandler error callback/delegate
-type ErrorHandler func(u *msg.Error)
+type ErrorHandler func(requestID uint64, u *msg.Error)
 
 // MessageHandler success callback/delegate
 type MessageHandler func(m *msg.MessageEnvelope)

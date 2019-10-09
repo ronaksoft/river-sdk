@@ -50,7 +50,7 @@ func dummyOnConnectHandler() {
 	logs.Info("Connected")
 }
 
-func dummyErrorHandler(e *msg.Error) {
+func dummyErrorHandler(requestID uint64, e *msg.Error) {
 	logs.Info("Error Handler",
 		zap.String("Code", e.Code),
 		zap.String("Items", e.Items),
@@ -89,11 +89,11 @@ func init() {
 	ctrl = networkCtrl.New(networkCtrl.Config{
 		WebsocketEndpoint: "ws://river.ronaksoftware.com",
 	})
-	ctrl.SetMessageHandler(dummyMessageHandler)
-	ctrl.SetErrorHandler(dummyErrorHandler)
-	ctrl.SetUpdateHandler(dummyUpdateHandler)
-	ctrl.SetNetworkStatusChangedCallback(dummyNetworkChangeHandler)
-	ctrl.SetOnConnectCallback(dummyOnConnectHandler)
+	ctrl.OnMessage = dummyMessageHandler
+	ctrl.OnGeneralError = dummyErrorHandler
+	ctrl.OnUpdate = dummyUpdateHandler
+	ctrl.OnNetworkStatusChange = dummyNetworkChangeHandler
+	ctrl.OnWebsocketConnect = dummyOnConnectHandler
 
 	ctrl.Start()
 	ctrl.Connect()

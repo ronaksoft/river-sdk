@@ -300,7 +300,7 @@ func (act *Actor) onUpdate(update *msg.UpdateContainer) {
 	}
 }
 
-func (act *Actor) onError(err *msg.Error) {
+func (act *Actor) onError(requestID uint64, err *msg.Error) {
 	// metric
 	shared.Metrics.Counter(shared.CntError).Add(1)
 
