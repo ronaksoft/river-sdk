@@ -607,7 +607,7 @@ func (ctrl *Controller) getServerSalt() {
 					s := new(msg.SystemSalts)
 					err := s.Unmarshal(m.Message)
 					if err != nil {
-						logs.Error("Salt:: Error On Unmarshal Server Message, C_SystemSalts", zap.Error(err))
+						logs.Error("SyncController couldn't unmarshal SystemSalts", zap.Error(err))
 						return
 					}
 
@@ -621,14 +621,14 @@ func (ctrl *Controller) getServerSalt() {
 					b, _ := json.Marshal(saltArray)
 					err = repo.System.SaveString(domain.SkSystemSalts, string(b))
 					if err != nil {
-						logs.Error("Salt:: save To DB", zap.Error(err))
+						logs.Error("SyncController couldn't save SystemSalts in the db", zap.Error(err))
 						return
 					}
 					keepGoing = false
 				case msg.C_Error:
 					e := new(msg.Error)
 					_ = m.Unmarshal(m.Message)
-					logs.Error("Salt:: Error Response from Server",
+					logs.Error("SyncController received error response for SystemGetSalts (Error)",
 						zap.String("Code", e.Code),
 						zap.String("Item", e.Items),
 					)

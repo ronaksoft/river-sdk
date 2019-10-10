@@ -139,7 +139,7 @@ func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 				offset := partIndex * ctx.req.ChunkSize
 				res, err := ctrl.network.SendHttp(ctx.req.httpContext, ctx.generateFileGet(offset, ctx.req.ChunkSize))
 				if err != nil {
-					logs.Warn("Error in SentHTTP", zap.Error(err))
+					logs.Warn("Downloader got error from NetworkController SendHTTP", zap.Error(err))
 					atomic.AddInt32(&ctx.req.MaxRetries, -1)
 					ctx.parts <- partIndex
 					return
@@ -149,7 +149,7 @@ func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 					file := new(msg.File)
 					err = file.Unmarshal(res.Message)
 					if err != nil {
-						logs.Warn("Error in Unmarshal",
+						logs.Warn("Downloader couldn't unmarshal server response FileGet (File)",
 							zap.Error(err),
 							zap.Int32("Offset", offset),
 							zap.Int("Byte", len(file.Bytes)),
@@ -160,7 +160,7 @@ func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 					}
 					_, err := ctx.file.WriteAt(file.Bytes, int64(offset))
 					if err != nil {
-						logs.Error("Error in WriteFile",
+						logs.Error("Downloader couldn't write to file, will retry...",
 							zap.Error(err),
 							zap.Int32("Offset", offset),
 							zap.Int("Byte", len(file.Bytes)),

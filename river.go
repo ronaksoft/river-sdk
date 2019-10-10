@@ -674,7 +674,6 @@ func getWorkGroup(ctx context.Context, url string) ([]byte, error) {
 	networkCtrl.Start()
 	go networkCtrl.Connect()
 	defer networkCtrl.Stop()       // 2nd Stop the controller
-	defer networkCtrl.Disconnect() // 1st Disconnect
 
 	for {
 		select {

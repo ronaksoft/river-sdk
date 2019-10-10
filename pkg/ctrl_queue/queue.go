@@ -199,6 +199,9 @@ func (ctrl *Controller) executor(req request) {
 
 // RealtimeCommand run request immediately and do not save it in queue
 func (ctrl *Controller) RealtimeCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, blockingMode, isUICallback bool) {
+	logs.Debug("QueueController fires realtime command",
+		zap.Uint64("ReqID", requestID), zap.String("Constructor", msg.ConstructorNames[constructor]),
+	)
 	messageEnvelope := new(msg.MessageEnvelope)
 	messageEnvelope.Constructor = constructor
 	messageEnvelope.RequestID = requestID
@@ -213,7 +216,7 @@ func (ctrl *Controller) RealtimeCommand(requestID uint64, constructor int64, com
 			logs.Warn("QueueController got error from NetworkController",
 				zap.String("Error", err.Error()),
 				zap.String("Constructor", msg.ConstructorNames[req.Constructor]),
-				zap.Uint64("RequestID", requestID),
+				zap.Uint64("ReqID", requestID),
 			)
 			if timeoutCB != nil {
 				timeoutCB()
@@ -225,7 +228,7 @@ func (ctrl *Controller) RealtimeCommand(requestID uint64, constructor int64, com
 		case <-time.After(domain.WebsocketDirectTime):
 			logs.Debug("QueueController got timeout on realtime command",
 				zap.String("Constructor", msg.ConstructorNames[req.Constructor]),
-				zap.Uint64("RequestID", requestID),
+				zap.Uint64("ReqID", requestID),
 			)
 			domain.RemoveRequestCallback(reqID)
 			if reqCB.TimeoutCallback != nil {
@@ -238,8 +241,10 @@ func (ctrl *Controller) RealtimeCommand(requestID uint64, constructor int64, com
 			return
 		case res := <-reqCB.ResponseChannel:
 			logs.Debug("QueueController got response on realtime command",
-				zap.String("Constructor", msg.ConstructorNames[req.Constructor]),
-				zap.Uint64("RequestID", requestID),
+				zap.Uint64("ReqID", requestID),
+				zap.String("Req", msg.ConstructorNames[req.Constructor]),
+				zap.String("Res", msg.ConstructorNames[res.Constructor]),
+
 			)
 			if reqCB.SuccessCallback != nil {
 				if reqCB.IsUICallback {
@@ -263,6 +268,9 @@ func (ctrl *Controller) RealtimeCommand(requestID uint64, constructor int64, com
 
 // EnqueueCommand put request in queue and distributor will execute it later
 func (ctrl *Controller) EnqueueCommand(requestID uint64, constructor int64, requestBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, isUICallback bool) {
+	logs.Debug("QueueController enqueues command",
+		zap.Uint64("ReqID", requestID), zap.String("Constructor", msg.ConstructorNames[constructor]),
+	)
 	messageEnvelope := new(msg.MessageEnvelope)
 	messageEnvelope.RequestID = requestID
 	messageEnvelope.Constructor = constructor

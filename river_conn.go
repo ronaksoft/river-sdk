@@ -121,6 +121,7 @@ func (r *River) loadDeviceToken() {
 
 // save RiverConfig interface func
 func (v *RiverConnection) Save() {
+	logs.Debug("ConnInfo saved.")
 	b, _ := v.MarshalJSON()
 	v.Delegate.SaveConnInfo(b)
 }

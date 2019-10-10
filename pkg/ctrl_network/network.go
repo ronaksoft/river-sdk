@@ -89,7 +89,7 @@ func New(config Config) *Controller {
 		ReadBufferSize:   64 * 1024, // 32kB
 	}
 
-	ctrl.stopChannel = make(chan bool)
+	ctrl.stopChannel = make(chan bool, 1)
 	ctrl.connectChannel = make(chan bool)
 
 	ctrl.updateFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.updateFlushFunc)
@@ -199,7 +199,10 @@ func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
 		messageEnvelope.RequestID = 0
 		err := ctrl.sendWebsocket(messageEnvelope)
 		if err != nil {
-			logs.Warn("NetworkController got error on flushing outgoing messages", zap.Error(err))
+			logs.Warn("NetworkController got error on flushing outgoing messages",
+				zap.Error(err),
+				zap.Int("Count", len(chunk)),
+			)
 			return
 		}
 		startIdx = endIdx
@@ -329,7 +332,7 @@ func (ctrl *Controller) extractMessages(m *msg.MessageEnvelope) ([]*msg.MessageE
 	case msg.C_Error:
 		e := new(msg.Error)
 		_ = e.Unmarshal(m.Message)
-		if ctrl.OnGeneralError != nil  {
+		if ctrl.OnGeneralError != nil {
 			ctrl.OnGeneralError(m.RequestID, e)
 		}
 		if m.RequestID != 0 {
@@ -365,6 +368,7 @@ func (ctrl *Controller) Start() {
 // Stop sends stop signal to keepAlive and watchDog routines.
 func (ctrl *Controller) Stop() {
 	logs.Info("NetworkController is stopping")
+	ctrl.Disconnect()
 	select {
 	case ctrl.stopChannel <- true: // receiver may or may not be listening
 	default:
@@ -449,7 +453,7 @@ func (ctrl *Controller) Disconnect() {
 // If authID and authKey are defined then sending messages will be encrypted before
 // writing on the wire.
 func (ctrl *Controller) SetAuthorization(authID int64, authKey []byte) {
-	logs.Info("NetworkController authorization set",
+	logs.Info("NetworkController set authorization info",
 		zap.Int64("AuthID", authID),
 	)
 	ctrl.authKey = make([]byte, len(authKey))
@@ -502,7 +506,6 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 	ctrl.wsWriteLock.Unlock()
 
 	if err != nil {
-		logs.Warn("Error On SendWebsocket", zap.Error(err))
 		_ = ctrl.wsConn.SetReadDeadline(time.Now())
 		return err
 	}
@@ -625,7 +628,6 @@ func (ctrl *Controller) recoverPanic(funcName string, extraInfo interface{}) {
 			zap.Any("Info", extraInfo),
 			zap.Any("Recover", r),
 		)
-		ctrl.Disconnect()
-		go ctrl.Connect()
+		go ctrl.Reconnect()
 	}
 }

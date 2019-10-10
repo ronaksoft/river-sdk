@@ -28,7 +28,6 @@ func (r *River) StopNetwork() {
 	defer func() {
 		mon.FunctionResponseTime("StopNetwork", time.Now().Sub(startTime))
 	}()
-	r.networkCtrl.Disconnect()
 	r.networkCtrl.Stop()
 }
 

@@ -152,13 +152,13 @@ func (r *River) CreateAuthKey() (err error) {
 
 	err, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ := initConnect(r)
 	if err != nil {
-		logs.Warn("River::CreateAuthKey() InitConnect", zap.Error(err))
+		logs.Warn("River got error on InitConnect", zap.Error(err))
 		return
 	}
-	logs.Info("River::CreateAuthKey() 1st Step Finished")
+	logs.Info("River passed the 1st step of CreateAuthKey")
 
 	err = initCompleteAuth(r, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ)
-	logs.Info("River::CreateAuthKey() 2nd Step Finished")
+	logs.Info("River passed the 2nd step of CreateAuthKey")
 
 	// double set AuthID
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
@@ -456,13 +456,11 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 func (r *River) stop() {
 	logs.Debug("StopServices-River::Stop() -> Called")
 
-	// Disconnect from Server
-	r.networkCtrl.Disconnect()
-
 	// Stop Controllers
+	r.networkCtrl.Stop()
 	r.syncCtrl.Stop()
 	r.queueCtrl.Stop()
-	r.networkCtrl.Stop()
+
 
 	// Close UI Executor
 	uiexec.Ctx().Stop()

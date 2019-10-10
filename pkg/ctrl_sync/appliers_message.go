@@ -16,10 +16,10 @@ import (
 func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
 	x := new(msg.AuthAuthorization)
 	if err := x.Unmarshal(e.Message); err != nil {
-		logs.Error("authAuthorization()-> Unmarshal()", zap.Error(err))
+		logs.Error("SyncController couldn't unmarshal AuthAuthorization", zap.Error(err))
 		return
 	}
-	logs.Info("SyncController::authAuthorization",
+	logs.Info("SyncController applies AuthAuthorization",
 		zap.String("FirstName", x.User.FirstName),
 		zap.String("LastName", x.User.LastName),
 		zap.Int64("UserID", x.User.ID),
@@ -42,10 +42,10 @@ func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
 func (ctrl *Controller) authSentCode(e *msg.MessageEnvelope) {
 	x := new(msg.AuthSentCode)
 	if err := x.Unmarshal(e.Message); err != nil {
-		logs.Error("authSentCode()-> Unmarshal()", zap.Error(err))
+		logs.Error("SyncController couldn't unmarshal AuthSentCode", zap.Error(err))
 		return
 	}
-	logs.Info("SyncController::authSentCode")
+	logs.Info("SyncController applies AuthSentCode")
 	ctrl.connInfo.ChangePhone(x.Phone)
 }
 
@@ -53,10 +53,10 @@ func (ctrl *Controller) authSentCode(e *msg.MessageEnvelope) {
 func (ctrl *Controller) contactsImported(e *msg.MessageEnvelope) {
 	x := new(msg.ContactsImported)
 	if err := x.Unmarshal(e.Message); err != nil {
-		logs.Error("contactsImported()-> Unmarshal()", zap.Error(err))
+		logs.Error("SyncController couldn't unmarshal ContactsImported", zap.Error(err))
 		return
 	}
-	logs.Info("SyncController::contactsImported")
+	logs.Info("SyncController applies contactsImported")
 	repo.Users.SaveContact(x.ContactUsers...)
 	repo.Users.Save(x.Users...)
 }
@@ -65,10 +65,10 @@ func (ctrl *Controller) contactsImported(e *msg.MessageEnvelope) {
 func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 	x := new(msg.ContactsMany)
 	if err := x.Unmarshal(e.Message); err != nil {
-		logs.Error("contactsMany()-> Unmarshal()", zap.Error(err))
+		logs.Error("SyncController couldn't unmarshal ContactsMany", zap.Error(err))
 		return
 	}
-	logs.Info("SyncController::contactsMany",
+	logs.Info("SyncController applies contactsMany",
 		zap.Int("Users", len(x.Users)),
 		zap.Int("Contacts", len(x.Contacts)),
 	)
@@ -91,7 +91,7 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 		crc32Hash := crc32.ChecksumIEEE(buff.Bytes())
 		err := repo.System.SaveInt(domain.SkContactsGetHash, uint64(crc32Hash))
 		if err != nil {
-			logs.Error("contactsMany() failed to save ContactsGetHash to DB", zap.Error(err))
+			logs.Error("SyncController couldn't save ContactsHash in to the db", zap.Error(err))
 		}
 	}
 }
@@ -100,10 +100,10 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 	x := new(msg.MessagesDialogs)
 	if err := x.Unmarshal(e.Message); err != nil {
-		logs.Error("messagesDialogs()-> Unmarshal()", zap.Error(err))
+		logs.Error("SyncController couldn't unmarshal MessagesDialogs", zap.Error(err))
 		return
 	}
-	logs.Info("SyncController::messagesDialogs",
+	logs.Info("SyncController applies MessagesDialogs",
 		zap.Int("Dialogs", len(x.Dialogs)),
 		zap.Int64("UpdateID", x.UpdateID),
 		zap.Int32("Count", x.Count),
@@ -137,10 +137,10 @@ func (ctrl *Controller) usersMany(e *msg.MessageEnvelope) {
 	u := new(msg.UsersMany)
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("usersMany()-> Unmarshal()", zap.Error(err))
+		logs.Error("SyncController couldn't unmarshal UsersMany", zap.Error(err))
 		return
 	}
-	logs.Info("SyncController::usersMany",
+	logs.Info("SyncController applies usersMany",
 		zap.Int("Users", len(u.Users)),
 	)
 	for _, v := range u.Users {
@@ -153,10 +153,11 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 	u := new(msg.MessagesMany)
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("messagesMany()-> Unmarshal()", zap.Error(err))
+		logs.Error("SyncController couldn't unmarshal MessagesMany", zap.Error(err))
 		return
 	}
 
+	logs.Info("SyncController applies MessagesMany", zap.Bool("Continues", u.Continuous))
 	// save Groups & Users & Messages
 	repo.Users.Save(u.Users...)
 	repo.Groups.Save(u.Groups...)
@@ -179,10 +180,10 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 	u := new(msg.GroupFull)
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("groupFull()-> Unmarshal()", zap.Error(err))
+		logs.Error("SyncController couldn't unmarshal GroupFull", zap.Error(err))
 		return
 	}
-	logs.Info("SyncController::groupFull",
+	logs.Info("SyncController applies GroupFull",
 		zap.Int64("GroupID", u.Group.ID),
 	)
 
