@@ -31,6 +31,7 @@ type Config struct {
 // Controller websocket network controller
 type Controller struct {
 	// Internal Controller Channels
+	mtx            sync.Mutex
 	connectChannel chan bool
 	stopChannel    chan bool
 
@@ -386,9 +387,10 @@ func (ctrl *Controller) Connect() {
 		defer ctrl.recoverPanic("NetworkController:: Connect", ronak.M{
 			"AuthID": ctrl.authID,
 		})
-
+		ctrl.mtx.Lock()
 		ctrl.wsKeepConnection = true
 		ctrl.updateNetworkStatus(domain.NetworkConnecting)
+		ctrl.mtx.Unlock()
 		keepGoing := true
 		for keepGoing {
 			// If there is a wsConn then close it before creating a new one
@@ -442,7 +444,9 @@ func (ctrl *Controller) Connect() {
 // Disconnect close websocket
 func (ctrl *Controller) Disconnect() {
 	_, _, _ = domain.SingleFlight.Do("NetworkDisconnect", func() (i interface{}, e error) {
+		ctrl.mtx.Lock()
 		ctrl.wsKeepConnection = false
+		ctrl.mtx.Unlock()
 		if ctrl.wsConn != nil {
 			_ = ctrl.wsConn.SetReadDeadline(time.Now())
 			_ = ctrl.wsConn.Close()
