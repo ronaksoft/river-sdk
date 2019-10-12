@@ -388,9 +388,9 @@ func (ctrl *Controller) Connect() {
 		})
 
 		ctrl.wsKeepConnection = true
-		ctrl.updateNetworkStatus(domain.NetworkConnecting)
 		keepGoing := true
 		for keepGoing {
+			ctrl.updateNetworkStatus(domain.NetworkConnecting)
 			// If there is a wsConn then close it before creating a new one
 			if ctrl.wsConn != nil {
 				_ = ctrl.wsConn.Close()
@@ -600,7 +600,6 @@ func (ctrl *Controller) Reconnect() {
 	_, _, _ = domain.SingleFlight.Do("NetworkReconnect", func() (i interface{}, e error) {
 		if ctrl.wsConn != nil {
 			_ = ctrl.wsConn.SetReadDeadline(time.Now())
-
 		}
 		ctrl.Connect()
 		return nil, nil
