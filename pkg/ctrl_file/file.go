@@ -185,7 +185,7 @@ func (ctrl *Controller) GetDownloadRequest(clusterID int32, fileID int64, access
 func (ctrl *Controller) CancelDownloadRequest(reqID string) {
 	req, ok := ctrl.getDownloadRequest(reqID)
 	ctrl.deleteDownloadRequest(reqID)
-	if ok {
+	if ok && req.cancelFunc != nil {
 		req.cancelFunc()
 	}
 }
@@ -195,7 +195,7 @@ func (ctrl *Controller) GetUploadRequest(fileID int64) (UploadRequest, bool) {
 func (ctrl *Controller) CancelUploadRequest(reqID string) {
 	req, ok := ctrl.getUploadRequest(reqID)
 	ctrl.deleteUploadRequest(reqID)
-	if ok {
+	if ok && req.cancelFunc != nil {
 		req.cancelFunc()
 	}
 }
