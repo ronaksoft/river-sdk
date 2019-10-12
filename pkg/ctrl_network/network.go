@@ -390,7 +390,6 @@ func (ctrl *Controller) Connect() {
 		ctrl.mtx.Lock()
 		ctrl.wsKeepConnection = true
 		ctrl.updateNetworkStatus(domain.NetworkConnecting)
-		ctrl.mtx.Unlock()
 		keepGoing := true
 		for keepGoing {
 			// If there is a wsConn then close it before creating a new one
@@ -400,8 +399,10 @@ func (ctrl *Controller) Connect() {
 
 			// Stop connecting if KeepConnection is FALSE
 			if !ctrl.wsKeepConnection {
+				ctrl.mtx.Unlock()
 				return
 			}
+			ctrl.mtx.Unlock()
 			reqHdr := http.Header{}
 			reqHdr.Set("X-Client-Type", fmt.Sprintf("SDK-%s", domain.SDKVersion))
 			wsConn, _, err := ctrl.wsDialer.Dial(ctrl.websocketEndpoint, reqHdr)
