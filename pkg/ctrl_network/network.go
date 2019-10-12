@@ -399,6 +399,7 @@ func (ctrl *Controller) Connect() {
 
 			// Stop connecting if KeepConnection is FALSE
 			if !ctrl.wsKeepConnection {
+				ctrl.updateNetworkStatus(domain.NetworkDisconnected)
 				ctrl.mtx.Unlock()
 				return
 			}
@@ -447,12 +448,12 @@ func (ctrl *Controller) Disconnect() {
 	_, _, _ = domain.SingleFlight.Do("NetworkDisconnect", func() (i interface{}, e error) {
 		ctrl.mtx.Lock()
 		ctrl.wsKeepConnection = false
-		ctrl.mtx.Unlock()
 		if ctrl.wsConn != nil {
 			_ = ctrl.wsConn.SetReadDeadline(time.Now())
 			_ = ctrl.wsConn.Close()
 			logs.Info("NetworkController disconnected")
 		}
+		ctrl.mtx.Unlock()
 		return nil, nil
 	})
 }

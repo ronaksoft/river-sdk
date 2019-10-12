@@ -7,6 +7,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -117,11 +118,22 @@ func TestNewController(t *testing.T) {
 
 func TestConnect(t *testing.T) {
 	ctrl.Start()
+	wg := sync.WaitGroup{}
 	for i := 0; i < 10; i++ {
-		time.Sleep(5 * time.Second)
-		ctrl.Reconnect()
-		time.Sleep(5 * time.Second)
+		wg.Add(1)
+		go func() {
+			for i := 0; i < 10; i++ {
+				switch ronak.RandomInt(100) % 3 {
+				case 0:
+					ctrl.Disconnect()
+				case 1, 2:
+					ctrl.Reconnect()
+				}
+			}
+			wg.Done()
+		}()
 	}
+	wg.Wait()
 
 	ctrl.Stop()
 }
