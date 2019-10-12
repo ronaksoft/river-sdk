@@ -403,7 +403,6 @@ func (ctrl *Controller) Connect() {
 				ctrl.mtx.Unlock()
 				return
 			}
-			ctrl.mtx.Unlock()
 			reqHdr := http.Header{}
 			reqHdr.Set("X-Client-Type", fmt.Sprintf("SDK-%s", domain.SDKVersion))
 			wsConn, _, err := ctrl.wsDialer.Dial(ctrl.websocketEndpoint, reqHdr)
@@ -412,7 +411,7 @@ func (ctrl *Controller) Connect() {
 				time.Sleep(1 * time.Second)
 				continue
 			}
-
+			ctrl.mtx.Unlock()
 			underlyingConn := wsConn.UnderlyingConn()
 			_ = tcpkeepalive.SetKeepAlive(underlyingConn, 30*time.Second, 2, 5*time.Second)
 			localIP := underlyingConn.LocalAddr()
