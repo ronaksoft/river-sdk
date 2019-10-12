@@ -296,6 +296,9 @@ func (r *River) onNetworkConnect() {
 		defer waitGroup.Done()
 		keepGoing := true
 		for keepGoing {
+			if r.networkCtrl.GetQuality() == domain.NetworkDisconnected {
+				return
+			}
 			r.queueCtrl.RealtimeCommand(
 				uint64(domain.SequentialUniqueID()),
 				msg.C_SystemGetServerTime,
@@ -342,6 +345,9 @@ func (r *River) onNetworkConnect() {
 			// send auth recall until it succeed
 			keepGoing := true
 			for keepGoing {
+				if r.networkCtrl.GetQuality() == domain.NetworkDisconnected {
+					return
+				}
 				// this is priority command that should not passed to queue
 				// after auth recall answer got back the queue should send its requests in order to get related updates
 				r.queueCtrl.RealtimeCommand(

@@ -594,6 +594,9 @@ func (ctrl *Controller) getServerSalt() {
 
 	keepGoing := true
 	for keepGoing {
+		if ctrl.networkCtrl.GetQuality() == domain.NetworkDisconnected {
+			return
+		}
 		ctrl.queueCtrl.RealtimeCommand(
 			uint64(domain.SequentialUniqueID()),
 			msg.C_SystemGetSalts,
