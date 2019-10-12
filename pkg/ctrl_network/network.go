@@ -604,6 +604,7 @@ func (ctrl *Controller) Reconnect() {
 	_, _, _ = domain.SingleFlight.Do("NetworkReconnect", func() (i interface{}, e error)  {
 		if ctrl.wsConn != nil {
 			_ = ctrl.wsConn.SetReadDeadline(time.Now())
+
 		}
 		ctrl.Connect()
 		return nil, nil

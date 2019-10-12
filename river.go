@@ -380,7 +380,9 @@ func (r *River) onNetworkConnect() {
 	}()
 
 	waitGroup.Wait()
-
+	if r.networkCtrl.GetQuality() == domain.NetworkDisconnected {
+		return
+	}
 	go func() {
 		if r.syncCtrl.GetUserID() != 0 {
 			// Sync with Server
