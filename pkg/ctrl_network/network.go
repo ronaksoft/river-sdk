@@ -428,7 +428,6 @@ func (ctrl *Controller) Connect() {
 			// SendWebsocket Signal to start the 'receiver' and 'keepAlive' routines
 			ctrl.connectChannel <- true
 			logs.Info("NetworkController connected")
-			ctrl.updateNetworkStatus(domain.NetworkFast)
 
 			// Call the OnConnect handler here b4 changing network status that trigger queue to start working
 			// basically we sendWebsocket priority requests b4 queue starts to work
@@ -439,6 +438,8 @@ func (ctrl *Controller) Connect() {
 				keepGoing = true
 				continue
 			}
+
+			ctrl.updateNetworkStatus(domain.NetworkFast)
 
 
 		}

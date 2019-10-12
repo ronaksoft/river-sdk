@@ -296,7 +296,7 @@ func (r *River) onNetworkConnect() {
 		defer waitGroup.Done()
 		keepGoing := true
 		for keepGoing {
-			if !r.networkCtrl.Connected(){
+			if r.networkCtrl.GetQuality() == domain.NetworkDisconnected {
 				return
 			}
 			r.queueCtrl.RealtimeCommand(
@@ -345,7 +345,7 @@ func (r *River) onNetworkConnect() {
 			// send auth recall until it succeed
 			keepGoing := true
 			for keepGoing {
-				if !r.networkCtrl.Connected() {
+				if r.networkCtrl.GetQuality() == domain.NetworkDisconnected {
 					return
 				}
 				// this is priority command that should not passed to queue
@@ -380,7 +380,7 @@ func (r *River) onNetworkConnect() {
 	}()
 
 	waitGroup.Wait()
-	if !r.networkCtrl.Connected() {
+	if r.networkCtrl.GetQuality() == domain.NetworkDisconnected {
 		return
 	}
 	go func() {
