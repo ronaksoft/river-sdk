@@ -436,6 +436,10 @@ func (ctrl *Controller) Connect() {
 			// basically we sendWebsocket priority requests b4 queue starts to work
 			ctrl.OnWebsocketConnect()
 
+			if ctrl.GetQuality() == domain.NetworkDisconnected {
+				continue
+			}
+
 			ctrl.updateNetworkStatus(domain.NetworkFast)
 		}
 		return nil, nil
@@ -599,7 +603,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 func (ctrl *Controller) Reconnect() {
 	_, _, _ = domain.SingleFlight.Do("NetworkReconnect", func() (i interface{}, e error)  {
 		if ctrl.wsConn != nil {
-			ctrl.Disconnect()
+			_ = ctrl.wsConn.SetReadDeadline(time.Now())
 		}
 		ctrl.Connect()
 		return nil, nil
