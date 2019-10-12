@@ -31,7 +31,6 @@ type Config struct {
 // Controller websocket network controller
 type Controller struct {
 	// Internal Controller Channels
-	mtx            sync.Mutex
 	connectChannel chan bool
 	stopChannel    chan bool
 
@@ -387,7 +386,7 @@ func (ctrl *Controller) Connect() {
 		defer ctrl.recoverPanic("NetworkController:: Connect", ronak.M{
 			"AuthID": ctrl.authID,
 		})
-		ctrl.mtx.Lock()
+
 		ctrl.wsKeepConnection = true
 		ctrl.updateNetworkStatus(domain.NetworkConnecting)
 		keepGoing := true
@@ -400,7 +399,6 @@ func (ctrl *Controller) Connect() {
 			// Stop connecting if KeepConnection is FALSE
 			if !ctrl.wsKeepConnection {
 				ctrl.updateNetworkStatus(domain.NetworkDisconnected)
-				ctrl.mtx.Unlock()
 				return
 			}
 			reqHdr := http.Header{}
@@ -411,7 +409,6 @@ func (ctrl *Controller) Connect() {
 				time.Sleep(1 * time.Second)
 				continue
 			}
-			ctrl.mtx.Unlock()
 			underlyingConn := wsConn.UnderlyingConn()
 			_ = tcpkeepalive.SetKeepAlive(underlyingConn, 30*time.Second, 2, 5*time.Second)
 			localIP := underlyingConn.LocalAddr()
@@ -436,7 +433,9 @@ func (ctrl *Controller) Connect() {
 			// basically we sendWebsocket priority requests b4 queue starts to work
 			ctrl.OnWebsocketConnect()
 
-			if ctrl.GetQuality() == domain.NetworkDisconnected {
+			if ctrl.GetQuality() != domain.NetworkConnecting {
+				ctrl.updateNetworkStatus(domain.NetworkConnecting)
+				keepGoing = true
 				continue
 			}
 
@@ -449,14 +448,12 @@ func (ctrl *Controller) Connect() {
 // Disconnect close websocket
 func (ctrl *Controller) Disconnect() {
 	_, _, _ = domain.SingleFlight.Do("NetworkDisconnect", func() (i interface{}, e error) {
-		ctrl.mtx.Lock()
 		ctrl.wsKeepConnection = false
 		if ctrl.wsConn != nil {
 			_ = ctrl.wsConn.SetReadDeadline(time.Now())
 			_ = ctrl.wsConn.Close()
 			logs.Info("NetworkController disconnected")
 		}
-		ctrl.mtx.Unlock()
 		return nil, nil
 	})
 }
@@ -560,7 +557,6 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 	// Set timeout
 	ctrl.httpClient.Timeout = domain.HttpRequestTime
 
-
 	// Send Data
 	httpReq, err := http.NewRequest(http.MethodPost, ctrl.httpEndpoint, reqBuff)
 	if err != nil {
@@ -601,7 +597,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 
 // Reconnect by wsKeepConnection = true the watchdog will connect itself again no need to call ctrl.Connect()
 func (ctrl *Controller) Reconnect() {
-	_, _, _ = domain.SingleFlight.Do("NetworkReconnect", func() (i interface{}, e error)  {
+	_, _, _ = domain.SingleFlight.Do("NetworkReconnect", func() (i interface{}, e error) {
 		if ctrl.wsConn != nil {
 			_ = ctrl.wsConn.SetReadDeadline(time.Now())
 
