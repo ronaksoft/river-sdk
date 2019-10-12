@@ -29,6 +29,7 @@ func init() {
 		ServerEndpoint:         "ws://new.river.im",
 		QueuePath:              fmt.Sprintf("%s/%s", "./_queue", "test"),
 		MainDelegate:           new(MainDelegateDummy),
+		FileDelegate:           new(FileDelegateDummy),
 		LogLevel:               int(zapcore.DebugLevel),
 		DocumentAudioDirectory: "./_files/audio",
 		DocumentVideoDirectory: "./_files/video",

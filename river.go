@@ -219,7 +219,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Initialize Server Keys
 	if err := _ServerKeys.UnmarshalJSON([]byte(conf.ServerKeys)); err != nil {
-		logs.Fatal("We couldn't unmarshal ServerKeys",
+		logs.Error("We couldn't unmarshal ServerKeys",
 			zap.String("Error", err.Error()),
 		)
 	}

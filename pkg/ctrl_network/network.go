@@ -556,6 +556,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 	// Set timeout
 	ctrl.httpClient.Timeout = domain.HttpRequestTime
 
+
 	// Send Data
 	httpReq, err := http.NewRequest(http.MethodPost, ctrl.httpEndpoint, reqBuff)
 	if err != nil {
@@ -596,7 +597,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 
 // Reconnect by wsKeepConnection = true the watchdog will connect itself again no need to call ctrl.Connect()
 func (ctrl *Controller) Reconnect() {
-	_, _, _ = domain.SingleFlight.Do("NetworkReconnect", func() (i interface{}, e error) {
+	_, _, _ = domain.SingleFlight.Do("NetworkReconnect", func() (i interface{}, e error)  {
 		if ctrl.wsConn != nil {
 			ctrl.Disconnect()
 		}

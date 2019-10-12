@@ -94,13 +94,11 @@ func init() {
 	ctrl.OnUpdate = dummyUpdateHandler
 	ctrl.OnNetworkStatusChange = dummyNetworkChangeHandler
 	ctrl.OnWebsocketConnect = dummyOnConnectHandler
-
-	ctrl.Start()
-	ctrl.Connect()
-
 }
 
 func TestNewController(t *testing.T) {
+	ctrl.Start()
+	ctrl.Connect()
 	go func() {
 		for {
 			err := ctrl.SendWebsocket(getServerTime(), true)
@@ -113,6 +111,17 @@ func TestNewController(t *testing.T) {
 	time.Sleep(5000 * time.Second)
 	ctrl.Disconnect()
 	time.Sleep(5 * time.Second)
+
+	ctrl.Stop()
+}
+
+func TestConnect(t *testing.T) {
+	ctrl.Start()
+	for i := 0; i < 10; i++ {
+		time.Sleep(5 * time.Second)
+		ctrl.Reconnect()
+		time.Sleep(5 * time.Second)
+	}
 
 	ctrl.Stop()
 }

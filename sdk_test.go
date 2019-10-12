@@ -240,45 +240,15 @@ func (RequestDelegateDummy) OnTimeout(err error) {
 
 type FileDelegateDummy struct{}
 
-func (d *FileDelegateDummy) OnDownloadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
-	logs.Info("Download progress changed", zap.Float64("Progress", percent))
+func (d *FileDelegateDummy) OnProgressChanged(reqID string, clusterID int32, fileID, accessHash, percent int64) {
+	logs.Info("Download progress changed", zap.Int64("Progress", percent))
 }
 
-func (d *FileDelegateDummy) OnUploadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
-	logs.Info("Upload progress changed", zap.Float64("Progress", percent))
-}
-
-func (d *FileDelegateDummy) OnDownloadCompleted(messageID int64, filePath string) {
-	logs.Info("Download completed", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
-}
-
-func (d *FileDelegateDummy) OnUploadCompleted(messageID int64, filePath string) {
-	logs.Info("Upload completed", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
-}
-
-func (d *FileDelegateDummy) OnUploadError(messageID, requestID int64, filePath string, err []byte) {
-	x := new(msg.Error)
-	x.Unmarshal(err)
-
-	logs.Error("OnUploadError",
-		zap.String("Code", x.Code),
-		zap.String("Item", x.Items),
-		zap.Int64("MsgID", messageID),
-		zap.Int64("ReqID", requestID),
-		zap.String("FilePath", filePath),
-	)
+func (d *FileDelegateDummy) OnCompleted(reqID string, clusterID int32, fileID, accessHash int64, filePath string) {
+	logs.Info("Download completed", zap.String("ReqID", reqID), zap.String("FilePath", filePath))
 
 }
 
-func (d *FileDelegateDummy) OnDownloadError(messageID, requestID int64, filePath string, err []byte) {
-	x := new(msg.Error)
-	x.Unmarshal(err)
-
-	logs.Error("OnDownloadError",
-		zap.String("Code", x.Code),
-		zap.String("Item", x.Items),
-		zap.Int64("MsgID", messageID),
-		zap.Int64("ReqID", requestID),
-		zap.String("FilePath", filePath),
-	)
+func (d *FileDelegateDummy) OnCancel(reqID string, clusterID int32, fileID, accessHash int64, hasError bool) {
+	logs.Error("OnCancel")
 }
