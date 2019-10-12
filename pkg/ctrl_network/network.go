@@ -409,6 +409,7 @@ func (ctrl *Controller) Connect() {
 				time.Sleep(1 * time.Second)
 				continue
 			}
+			_ = wsConn.SetReadDeadline(time.Time{})
 			underlyingConn := wsConn.UnderlyingConn()
 			_ = tcpkeepalive.SetKeepAlive(underlyingConn, 30*time.Second, 2, 5*time.Second)
 			localIP := underlyingConn.LocalAddr()
@@ -428,20 +429,17 @@ func (ctrl *Controller) Connect() {
 			// SendWebsocket Signal to start the 'receiver' and 'keepAlive' routines
 			ctrl.connectChannel <- true
 			logs.Info("NetworkController connected")
+			ctrl.updateNetworkStatus(domain.NetworkFast)
 
 			// Call the OnConnect handler here b4 changing network status that trigger queue to start working
 			// basically we sendWebsocket priority requests b4 queue starts to work
 			ctrl.OnWebsocketConnect()
 
-			if ctrl.GetQuality() != domain.NetworkConnecting {
+			if !ctrl.Connected() {
 				ctrl.updateNetworkStatus(domain.NetworkConnecting)
 				keepGoing = true
 				continue
 			}
-
-			ctrl.updateNetworkStatus(domain.NetworkFast)
-
-
 		}
 		return nil, nil
 	})
@@ -600,10 +598,11 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 // Reconnect by wsKeepConnection = true the watchdog will connect itself again no need to call ctrl.Connect()
 func (ctrl *Controller) Reconnect() {
 	_, _, _ = domain.SingleFlight.Do("NetworkReconnect", func() (i interface{}, e error) {
-		if ctrl.wsConn != nil {
+		if ctrl.GetQuality() == domain.NetworkDisconnected {
+			ctrl.Connect()
+		} else if ctrl.wsConn != nil {
 			_ = ctrl.wsConn.SetReadDeadline(time.Now())
 		}
-		ctrl.Connect()
 		return nil, nil
 	})
 }
