@@ -19,7 +19,6 @@ func (r *River) StartNetwork() {
 	defer func() {
 		mon.FunctionResponseTime("StartNetwork", time.Now().Sub(startTime))
 	}()
-	r.networkCtrl.Start()
 	r.networkCtrl.Connect()
 }
 
@@ -28,7 +27,7 @@ func (r *River) StopNetwork() {
 	defer func() {
 		mon.FunctionResponseTime("StopNetwork", time.Now().Sub(startTime))
 	}()
-	r.networkCtrl.Stop()
+	r.networkCtrl.Disconnect()
 }
 
 func (r *River) GetNetworkStatus() int32 {
