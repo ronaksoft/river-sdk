@@ -83,6 +83,9 @@ func New(config Config) *Controller {
 	}
 	ctrl.wsKeepConnection = true
 	ctrl.wsDialer = &websocket.Dialer{
+		NetDial: func(network, addr string) (conn net.Conn, e error) {
+			return net.DialTimeout(network, addr, 5*time.Second)
+		},
 		Proxy:            http.ProxyFromEnvironment,
 		HandshakeTimeout: 5 * time.Second,
 		WriteBufferSize:  64 * 1024, // 32kB
