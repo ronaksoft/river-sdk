@@ -114,3 +114,10 @@ func (r *River) SearchGlobal(searchPhrase string, peerID int64, delegate Request
 		delegate.OnComplete(outBytes)
 	}
 }
+
+
+func (r *River) SearchReIndex() {
+	repo.Users.ReIndex()
+	repo.Groups.ReIndex()
+	repo.Messages.ReIndex()
+}

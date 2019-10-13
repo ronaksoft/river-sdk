@@ -211,7 +211,7 @@ func (r *repoMessages) save(message *msg.UserMessage) {
 	_ = r.msgSearch.Index(ronak.ByteToStr(r.getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
 		Type:   "msg",
 		Body:   message.Body,
-		PeerID: message.PeerID,
+		PeerID: fmt.Sprintf("%d", message.PeerID),
 	})
 
 	return
@@ -485,6 +485,7 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.User
 		}
 		t2 := bleve.NewDisjunctionQuery(qs...)
 		t3 := bleve.NewTermQuery(fmt.Sprintf("%d", peerID))
+
 		t3.SetField("peer_id")
 		searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3))
 		searchResult, _ := r.msgSearch.Search(searchRequest)
@@ -545,7 +546,7 @@ func (r *repoMessages) ReIndex() {
 				_ = r.msgSearch.Index(ronak.ByteToStr(r.getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
 					Type:   "msg",
 					Body:   message.Body,
-					PeerID: message.PeerID,
+					PeerID: fmt.Sprintf("%d", message.PeerID),
 				})
 				return nil
 			})

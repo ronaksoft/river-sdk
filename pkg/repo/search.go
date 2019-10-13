@@ -12,7 +12,7 @@ package repo
 type MessageSearch struct {
 	Type   string `json:"type"`
 	Body   string `json:"body"`
-	PeerID int64  `json:"peer_id"`
+	PeerID string  `json:"peer_id"`
 }
 
 type UserSearch struct {

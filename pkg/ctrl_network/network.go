@@ -480,6 +480,10 @@ func (ctrl *Controller) SendWebsocket(msgEnvelope *msg.MessageEnvelope, direct b
 	return nil
 }
 func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
+	logs.Debug("NetworkController call sendWebsocket",
+		zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
+	)
+	startTime := time.Now()
 	protoMessage := new(msg.ProtoMessage)
 	protoMessage.MessageKey = make([]byte, 32)
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
@@ -513,11 +517,14 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 	_ = ctrl.wsConn.SetWriteDeadline(time.Now().Add(domain.WebsocketWriteTime))
 	err = ctrl.wsConn.WriteMessage(websocket.BinaryMessage, b)
 	ctrl.wsWriteLock.Unlock()
-
 	if err != nil {
 		_ = ctrl.wsConn.SetReadDeadline(time.Now())
 		return err
 	}
+	logs.Debug("NetworkController sent over websocket",
+		zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
+		zap.Duration("Duration", time.Now().Sub(startTime)),
+	)
 
 	return nil
 }
