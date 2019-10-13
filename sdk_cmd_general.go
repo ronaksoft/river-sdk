@@ -454,7 +454,7 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 	return err
 }
 func (r *River) stop() {
-	logs.Debug("StopServices-River::Stop() -> Called")
+	logs.Debug("River calls stop, to stop network, sync and queue controllers")
 
 	// Stop Controllers
 	r.networkCtrl.Stop()
