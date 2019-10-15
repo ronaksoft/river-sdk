@@ -139,7 +139,7 @@ func SetRemoteLog(url string) {
 }
 
 func SetSentry(userID, authID int64) {
-	sentry, err := NewSentryCore(zapcore.ErrorLevel, map[string]string{
+	sentry, err := NewSentryCore(zapcore.ErrorLevel, userID, map[string]string{
 		"AuthID": fmt.Sprintf("%d", authID),
 		"UserID": fmt.Sprintf("%d", userID),
 		"SDK":    domain.SDKVersion,
@@ -148,6 +148,7 @@ func SetSentry(userID, authID int64) {
 		return
 	}
 	_Log = _Log.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
+
 		return zapcore.NewTee(core, sentry)
 	}))
 

@@ -83,15 +83,6 @@ func TestSDK(t *testing.T) {
 			})
 		}
 	})
-	Convey("Check GetWorkGroup", t, func() {
-		b, err := GetWorkGroup("ws://alaki.river.im", 5)
-		So(err, ShouldBeNil)
-
-		si := new(msg.SystemInfo)
-		err = si.Unmarshal(b)
-		So(err, ShouldBeNil)
-		t.Log("WorkGroupName:", si.WorkGroupName)
-	})
 	Convey("Check Reconnect", t, func() {
 		logs.SetLogLevel(0)
 		fmt.Println("Creating New River SDK Instance")
