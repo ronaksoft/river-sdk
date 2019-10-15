@@ -427,9 +427,15 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 		mon.ServerResponseTime(msgs[idx].Constructor, time.Now().Sub(cb.RequestTime))
 		select {
 		case cb.ResponseChannel <- msgs[idx]:
-			logs.Debug("We received response", zap.Uint64("RequestID", cb.RequestID))
+			logs.Debug("We received response",
+				zap.Uint64("ReqID", cb.RequestID),
+				zap.String("Constructor", msg.ConstructorNames[msgs[idx].Constructor]),
+			)
 		default:
-			logs.Error("We received response but no callback, we drop response", zap.Uint64("RequestID", cb.RequestID))
+			logs.Error("We received response but no callback, we drop response",
+				zap.Uint64("ReqID", cb.RequestID),
+				zap.String("Constructor", msg.ConstructorNames[msgs[idx].Constructor]),
+			)
 		}
 		domain.RemoveRequestCallback(msgs[idx].RequestID)
 	}

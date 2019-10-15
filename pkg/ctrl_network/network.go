@@ -202,7 +202,7 @@ func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
 		messageEnvelope.RequestID = 0
 		err := ctrl.sendWebsocket(messageEnvelope)
 		if err != nil {
-			logs.Warn("NetworkController got error on flushing outgoing messages",
+			logs.Warn("NetCtrl got error on flushing outgoing messages",
 				zap.Error(err),
 				zap.Int("Count", len(chunk)),
 			)
@@ -212,7 +212,7 @@ func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
 		endIdx += chunkSize
 	}
 
-	logs.Debug("NetworkController flushed outgoing messages",
+	logs.Debug("NetCtrl flushed outgoing messages",
 		zap.Int("Count", itemsCount),
 	)
 }
@@ -256,7 +256,7 @@ func (ctrl *Controller) receiver() {
 			// If it is a BINARY message
 			err := res.Unmarshal(message)
 			if err != nil {
-				logs.Error("NetworkController couldn't unmarshal received BinaryMessage", zap.Error(err), zap.String("Dump", string(message)))
+				logs.Error("NetCtrl couldn't unmarshal received BinaryMessage", zap.Error(err), zap.String("Dump", string(message)))
 				continue
 			}
 
@@ -264,7 +264,7 @@ func (ctrl *Controller) receiver() {
 				receivedEnvelope := new(msg.MessageEnvelope)
 				err = receivedEnvelope.Unmarshal(res.Payload)
 				if err != nil {
-					logs.Error("NetworkController couldn't unmarshal plain-text MessageEnvelope", zap.Error(err))
+					logs.Error("NetCtrl couldn't unmarshal plain-text MessageEnvelope", zap.Error(err))
 					continue
 				}
 				ctrl.messageHandler(receivedEnvelope)
@@ -274,7 +274,7 @@ func (ctrl *Controller) receiver() {
 			// We received an encrypted message
 			decryptedBytes, err := domain.Decrypt(ctrl.authKey, res.MessageKey, res.Payload)
 			if err != nil {
-				logs.Error("NetworkController couldn't decrypt the received message",
+				logs.Error("NetCtrl couldn't decrypt the received message",
 					zap.String("Error", err.Error()),
 					zap.Int64("ctrl.authID", ctrl.authID),
 					zap.Int64("resp.AuthID", res.AuthID),
@@ -285,13 +285,13 @@ func (ctrl *Controller) receiver() {
 			receivedEncryptedPayload := new(msg.ProtoEncryptedPayload)
 			err = receivedEncryptedPayload.Unmarshal(decryptedBytes)
 			if err != nil {
-				logs.Error("NetworkController couldn't unmarshal decrypted message", zap.Error(err))
+				logs.Error("NetCtrl couldn't unmarshal decrypted message", zap.Error(err))
 				continue
 			}
 			// TODO:: check message id and server salt before handling the message
 			ctrl.messageHandler(receivedEncryptedPayload.Envelope)
 		default:
-			logs.Warn("NetworkController received unhandled message type",
+			logs.Warn("NetCtrl received unhandled message type",
 				zap.Int("MessageType", messageType),
 			)
 		}
@@ -370,19 +370,19 @@ func (ctrl *Controller) Start() {
 
 // Stop sends stop signal to keepAlive and watchDog routines.
 func (ctrl *Controller) Stop() {
-	logs.Info("NetworkController is stopping")
+	logs.Info("NetCtrl is stopping")
 	ctrl.Disconnect()
 	select {
 	case ctrl.stopChannel <- true: // receiver may or may not be listening
 	default:
 	}
-	logs.Info("NetworkController stopped")
+	logs.Info("NetCtrl stopped")
 }
 
 // Connect dial websocket
 func (ctrl *Controller) Connect() {
 	_, _, _ = domain.SingleFlight.Do("NetworkConnect", func() (i interface{}, e error) {
-		logs.Info("NetworkController is connecting")
+		logs.Info("NetCtrl is connecting")
 		defer ctrl.recoverPanic("NetworkController:: Connect", ronak.M{
 			"AuthID": ctrl.authID,
 		})
@@ -405,7 +405,7 @@ func (ctrl *Controller) Connect() {
 			reqHdr.Set("X-Client-Type", fmt.Sprintf("SDK-%s", domain.SDKVersion))
 			wsConn, _, err := ctrl.wsDialer.Dial(ctrl.websocketEndpoint, reqHdr)
 			if err != nil {
-				logs.Warn("NetworkController could not dial", zap.Error(err), zap.String("Url", ctrl.websocketEndpoint))
+				logs.Warn("NetCtrl could not dial", zap.Error(err), zap.String("Url", ctrl.websocketEndpoint))
 				time.Sleep(1 * time.Second)
 				continue
 			}
@@ -428,7 +428,7 @@ func (ctrl *Controller) Connect() {
 			// it should be started here cuz we need receiver to get AuthRecall answer
 			// SendWebsocket Signal to start the 'receiver' and 'keepAlive' routines
 			ctrl.connectChannel <- true
-			logs.Info("NetworkController connected")
+			logs.Info("NetCtrl connected")
 			ctrl.updateNetworkStatus(domain.NetworkFast)
 
 			// Call the OnConnect handler here b4 changing network status that trigger queue to start working
@@ -452,7 +452,7 @@ func (ctrl *Controller) Disconnect() {
 		if ctrl.wsConn != nil {
 			_ = ctrl.wsConn.SetReadDeadline(time.Now())
 			_ = ctrl.wsConn.Close()
-			logs.Info("NetworkController disconnected")
+			logs.Info("NetCtrl disconnected")
 		}
 		return nil, nil
 	})
@@ -462,7 +462,7 @@ func (ctrl *Controller) Disconnect() {
 // If authID and authKey are defined then sending messages will be encrypted before
 // writing on the wire.
 func (ctrl *Controller) SetAuthorization(authID int64, authKey []byte) {
-	logs.Info("NetworkController set authorization info",
+	logs.Info("NetCtrl set authorization info",
 		zap.Int64("AuthID", authID),
 	)
 	ctrl.authKey = make([]byte, len(authKey))
@@ -480,7 +480,7 @@ func (ctrl *Controller) SendWebsocket(msgEnvelope *msg.MessageEnvelope, direct b
 	return nil
 }
 func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
-	logs.Debug("NetworkController call sendWebsocket",
+	logs.Debug("NetCtrl call sendWebsocket",
 		zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
 	)
 	startTime := time.Now()
@@ -521,7 +521,7 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 		_ = ctrl.wsConn.SetReadDeadline(time.Now())
 		return err
 	}
-	logs.Debug("NetworkController sent over websocket",
+	logs.Debug("NetCtrl sent over websocket",
 		zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
 		zap.Duration("Duration", time.Now().Sub(startTime)),
 	)
@@ -618,7 +618,7 @@ func (ctrl *Controller) Reconnect() {
 func (ctrl *Controller) WaitForNetwork() {
 	// Wait While Network is Disconnected or Connecting
 	for ctrl.wsQuality == domain.NetworkDisconnected || ctrl.wsQuality == domain.NetworkConnecting {
-		logs.Debug("NetworkController is waiting for Network",
+		logs.Debug("NetCtrl is waiting for Network",
 			zap.String("Quality", ctrl.wsQuality.ToString()),
 		)
 		time.Sleep(time.Second)

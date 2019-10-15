@@ -23,7 +23,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 		return nil, err
 	}
 
-	logs.Info("SyncController applied UpdateNewMessage",
+	logs.Info("SyncCtrl applied UpdateNewMessage",
 		zap.Int64("MessageID", x.Message.ID),
 		zap.Int64("UpdateID", x.UpdateID),
 	)
@@ -206,7 +206,7 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) ([]*msg.Up
 		return nil, err
 	}
 
-	logs.Info("SyncController applied UpdateReadHistoryInbox",
+	logs.Info("SyncCtrl applied UpdateReadHistoryInbox",
 		zap.Int64("MaxID", x.MaxID),
 		zap.Int64("UpdateID", x.UpdateID),
 		zap.Int64("PeerID", x.Peer.ID),
@@ -225,7 +225,7 @@ func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) ([]*msg.U
 		return nil, err
 	}
 
-	logs.Info("SyncController applied UpdateReadHistoryOutbox",
+	logs.Info("SyncCtrl applied UpdateReadHistoryOutbox",
 		zap.Int64("MaxID", x.MaxID),
 		zap.Int64("UpdateID", x.UpdateID),
 		zap.Int64("PeerID", x.Peer.ID),
@@ -244,7 +244,7 @@ func (ctrl *Controller) updateMessageEdited(u *msg.UpdateEnvelope) ([]*msg.Updat
 		return nil, err
 	}
 
-	logs.Info("SyncController applied UpdateMessageEdited",
+	logs.Info("SyncCtrl applied UpdateMessageEdited",
 		zap.Int64("MessageID", x.Message.ID),
 	)
 
@@ -263,7 +263,7 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 		return nil, err
 	}
 
-	logs.Info("SyncController applied UpdateMessageID",
+	logs.Info("SyncCtrl applied UpdateMessageID",
 		zap.Int64("RandomID", x.RandomID),
 		zap.Int64("MessageID", x.MessageID),
 	)
@@ -282,7 +282,7 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 
 	userMessage := repo.Messages.Get(sent.MessageID)
 	if userMessage != nil {
-		logs.Info("SyncController received UpdateMessageID after UpdateNewMessage",
+		logs.Info("SyncCtrl received UpdateMessageID after UpdateNewMessage",
 			zap.Int64("MID", x.MessageID),
 			zap.Int64("RandomID", x.RandomID),
 			zap.String("Body", userMessage.Body),
@@ -323,7 +323,7 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 		if pm != nil {
 			pendinID = pm.ID
 		}
-		logs.Info("SyncController received UpdateMessageID before UpdateNewMessage",
+		logs.Info("SyncCtrl received UpdateMessageID before UpdateNewMessage",
 			zap.Int64("MID", x.MessageID),
 			zap.Int64("PendingID", pendinID),
 		)
@@ -345,7 +345,7 @@ func (ctrl *Controller) updateNotifySettings(u *msg.UpdateEnvelope) ([]*msg.Upda
 		return nil, err
 	}
 
-	logs.Info("SyncController applies UpdateNotifySettings")
+	logs.Info("SyncCtrl applies UpdateNotifySettings")
 
 	repo.Dialogs.UpdateNotifySetting(x.NotifyPeer.ID, x.NotifyPeer.Type, x.Settings)
 
@@ -361,7 +361,7 @@ func (ctrl *Controller) updateDialogPinned(u *msg.UpdateEnvelope) ([]*msg.Update
 		return nil, err
 	}
 
-	logs.Info("SyncController applies UpdateDialogPinned")
+	logs.Info("SyncCtrl applies UpdateDialogPinned")
 
 	repo.Dialogs.UpdatePinned(x)
 	res := []*msg.UpdateEnvelope{u}
@@ -376,7 +376,7 @@ func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) ([]*msg.UpdateEnve
 		return nil, err
 	}
 
-	logs.Info("SyncController applies UpdateUsername")
+	logs.Info("SyncCtrl applies UpdateUsername")
 
 	if x.UserID == ctrl.userID {
 		ctrl.connInfo.ChangeUserID(x.UserID)
@@ -401,7 +401,7 @@ func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) ([]*msg.Upd
 		return nil, err
 	}
 
-	logs.Info("SyncController applies UpdateMessagesDeleted")
+	logs.Info("SyncCtrl applies UpdateMessagesDeleted")
 
 	for _, msgID := range x.MessageIDs {
 		repo.Messages.Delete(ctrl.userID, x.Peer.ID, x.Peer.Type, msgID)
@@ -432,7 +432,7 @@ func (ctrl *Controller) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) ([]*m
 		return nil, err
 	}
 
-	logs.Info("SyncController applies UpdateGroupParticipantAdmin")
+	logs.Info("SyncCtrl applies UpdateGroupParticipantAdmin")
 
 	res := []*msg.UpdateEnvelope{u}
 	repo.Groups.UpdateMemberType(x.GroupID, x.UserID, x.IsAdmin)
@@ -447,7 +447,7 @@ func (ctrl *Controller) updateReadMessagesContents(u *msg.UpdateEnvelope) ([]*ms
 		return nil, err
 	}
 
-	logs.Info("SyncController applies UpdateReadMessagesContents",
+	logs.Info("SyncCtrl applies UpdateReadMessagesContents",
 		zap.Int64s("MessageIDs", x.MessageIDs),
 	)
 
@@ -465,7 +465,7 @@ func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 		return nil, err
 	}
 
-	logs.Info("SyncController applies UpdateUserPhoto")
+	logs.Info("SyncCtrl applies UpdateUserPhoto")
 
 	repo.Users.UpdatePhoto(x.UserID, x.Photo)
 
@@ -489,7 +489,7 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 		return nil, err
 	}
 
-	logs.Info("SyncController applies UpdateGroupPhoto",
+	logs.Info("SyncCtrl applies UpdateGroupPhoto",
 		zap.Int64("GroupID", x.GroupID),
 	)
 
@@ -510,7 +510,7 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 
 // updateTooLong indicate that client updates exceed from server cache size so we should re-sync client with server
 func (ctrl *Controller) updateTooLong(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
-	logs.Info("SyncController received UpdateTooLong")
+	logs.Info("SyncCtrl received UpdateTooLong")
 
 	go ctrl.Sync()
 
@@ -525,7 +525,7 @@ func (ctrl *Controller) updateAccountPrivacy(u *msg.UpdateEnvelope) ([]*msg.Upda
 		return nil, err
 	}
 
-	logs.Info("SyncController applies UpdateAccountPrivacy")
+	logs.Info("SyncCtrl applies UpdateAccountPrivacy")
 
 	_ = repo.Account.SetPrivacy(msg.PrivacyKeyChatInvite, x.ChatInvite)
 	_ = repo.Account.SetPrivacy(msg.PrivacyKeyLastSeen, x.LastSeen)
@@ -545,7 +545,7 @@ func (ctrl *Controller) updateDraftMessage(u *msg.UpdateEnvelope) ([]*msg.Update
 		return nil, err
 	}
 
-	logs.Info("SyncController applies UpdateDraftMessage")
+	logs.Info("SyncCtrl applies UpdateDraftMessage")
 
 	dialog := repo.Dialogs.Get(x.Message.PeerID, int32(x.Message.PeerType))
 
@@ -565,7 +565,7 @@ func (ctrl *Controller) updateDraftMessageCleared(u *msg.UpdateEnvelope) ([]*msg
 		return nil, err
 	}
 
-	logs.Info("SyncController applies UpdateDraftMessageCleared")
+	logs.Info("SyncCtrl applies UpdateDraftMessageCleared")
 
 	dialog := repo.Dialogs.Get(x.Peer.ID, int32(x.Peer.Type))
 

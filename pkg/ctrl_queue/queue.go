@@ -139,8 +139,8 @@ func (ctrl *Controller) executor(req request) {
 
 	// Try to send it over wire, if error happened put it back into the queue
 	if err := ctrl.network.SendWebsocket(req.MessageEnvelope, false); err != nil {
-		logs.Error("QueueController got error from NetworkController", zap.Error(err))
-		logs.Info("QueueController re-push the request into the queue")
+		logs.Error("QueueCtrl got error from NetCtrl", zap.Error(err))
+		logs.Info("QueueCtrl re-push the request into the queue")
 		ctrl.addToWaitingList(&req)
 		return
 	}
@@ -188,7 +188,7 @@ func (ctrl *Controller) executor(req request) {
 				reqCallbacks.SuccessCallback(res)
 			}
 		} else {
-			logs.Warn("QueueController received response but no callback exists!!!",
+			logs.Warn("QueueCtrl received response but no callback exists!!!",
 				zap.String("Constructor", msg.ConstructorNames[res.Constructor]),
 				zap.Uint64("RequestID", res.RequestID),
 			)
@@ -199,7 +199,7 @@ func (ctrl *Controller) executor(req request) {
 
 // RealtimeCommand run request immediately and do not save it in queue
 func (ctrl *Controller) RealtimeCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, blockingMode, isUICallback bool) {
-	logs.Debug("QueueController fires realtime command",
+	logs.Debug("QueueCtrl fires realtime command",
 		zap.Uint64("ReqID", requestID), zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
 	messageEnvelope := new(msg.MessageEnvelope)
@@ -213,7 +213,7 @@ func (ctrl *Controller) RealtimeCommand(requestID uint64, constructor int64, com
 	execBlock := func(reqID uint64, req *msg.MessageEnvelope) {
 		err := ctrl.network.SendWebsocket(req, blockingMode)
 		if err != nil {
-			logs.Warn("QueueController got error from NetworkController",
+			logs.Warn("QueueCtrl got error from NetCtrl",
 				zap.String("Error", err.Error()),
 				zap.String("Constructor", msg.ConstructorNames[req.Constructor]),
 				zap.Uint64("ReqID", requestID),
@@ -226,7 +226,7 @@ func (ctrl *Controller) RealtimeCommand(requestID uint64, constructor int64, com
 
 		select {
 		case <-time.After(domain.WebsocketDirectTime):
-			logs.Debug("QueueController got timeout on realtime command",
+			logs.Debug("QueueCtrl got timeout on realtime command",
 				zap.String("Constructor", msg.ConstructorNames[req.Constructor]),
 				zap.Uint64("ReqID", requestID),
 			)
@@ -240,7 +240,7 @@ func (ctrl *Controller) RealtimeCommand(requestID uint64, constructor int64, com
 			}
 			return
 		case res := <-reqCB.ResponseChannel:
-			logs.Debug("QueueController got response on realtime command",
+			logs.Debug("QueueCtrl got response on realtime command",
 				zap.Uint64("ReqID", requestID),
 				zap.String("Req", msg.ConstructorNames[req.Constructor]),
 				zap.String("Res", msg.ConstructorNames[res.Constructor]),
@@ -268,7 +268,7 @@ func (ctrl *Controller) RealtimeCommand(requestID uint64, constructor int64, com
 
 // EnqueueCommand put request in queue and distributor will execute it later
 func (ctrl *Controller) EnqueueCommand(requestID uint64, constructor int64, requestBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, isUICallback bool) {
-	logs.Debug("QueueController enqueues command",
+	logs.Debug("QueueCtrl enqueues command",
 		zap.Uint64("ReqID", requestID), zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
 	messageEnvelope := new(msg.MessageEnvelope)
@@ -291,7 +291,7 @@ func (ctrl *Controller) EnqueueCommand(requestID uint64, constructor int64, requ
 
 // Start queue
 func (ctrl *Controller) Start() {
-	logs.Info("QueueController started")
+	logs.Info("QueueCtrl started")
 	if q, err := goque.OpenQueue(ctrl.dataDir); err != nil {
 		logs.Fatal("We couldn't initialize the queue", zap.Error(err))
 	} else {
@@ -322,7 +322,7 @@ func (ctrl *Controller) Start() {
 
 // Stop queue
 func (ctrl *Controller) Stop() {
-	logs.Info("QueueController stopped")
+	logs.Info("QueueCtrl stopped")
 	ctrl.waitingList.Close()
 }
 
