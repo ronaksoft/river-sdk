@@ -244,6 +244,7 @@ func (r *River) Start() error {
 	// Update Authorizations
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 	r.syncCtrl.SetUserID(r.ConnInfo.UserID)
+	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID)
 	r.loadDeviceToken()
 
 	// init UI Executor

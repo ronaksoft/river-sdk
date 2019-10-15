@@ -3,6 +3,7 @@ package logs
 import (
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"net/http"
@@ -38,13 +39,7 @@ func init() {
 			_LogLevel,
 		),
 	)
-	_Sentry, err := NewSentryCore(zapcore.ErrorLevel, nil)
-	if err != nil {
-		return
-	}
-	_Log = _Log.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
-		return zapcore.NewTee(core, _Sentry)
-	}))
+
 }
 
 func SetLogLevel(l int) {
@@ -143,6 +138,20 @@ func SetRemoteLog(url string) {
 	)
 }
 
+func SetSentry(userID, authID int64) {
+	sentry, err := NewSentryCore(zapcore.ErrorLevel, map[string]string{
+		"AuthID": fmt.Sprintf("%d", authID),
+		"UserID": fmt.Sprintf("%d", userID),
+		"SDK":    domain.SDKVersion,
+	})
+	if err != nil {
+		return
+	}
+	_Log = _Log.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
+		return zapcore.NewTee(core, sentry)
+	}))
+
+}
 func Debug(msg string, fields ...zap.Field) {
 	_Log.Debug(msg, fields...)
 }
