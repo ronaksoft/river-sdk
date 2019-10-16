@@ -3,7 +3,6 @@ package logs
 import (
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"net/http"
@@ -141,8 +140,6 @@ func SetRemoteLog(url string) {
 func SetSentry(userID, authID int64) {
 	sentry, err := NewSentryCore(zapcore.ErrorLevel, userID, map[string]string{
 		"AuthID": fmt.Sprintf("%d", authID),
-		"UserID": fmt.Sprintf("%d", userID),
-		"SDK":    domain.SDKVersion,
 	})
 	if err != nil {
 		return
