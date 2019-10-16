@@ -531,8 +531,6 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 
 // Send encrypt and send request to server and receive and decrypt its response
 func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
-	ctrl.WaitForNetwork()
-
 	if ctx == nil {
 		ctx = context.Background()
 	}

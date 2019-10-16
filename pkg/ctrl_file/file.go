@@ -126,6 +126,7 @@ func (ctrl *Controller) Start() {
 	}
 }
 
+// download helper functions
 func (ctrl *Controller) saveDownloads(req DownloadRequest) {
 	ctrl.mtxDownloads.Lock()
 	ctrl.downloadRequests[req.GetID()] = req
@@ -150,6 +151,9 @@ func (ctrl *Controller) existDownloadRequest(reqID string) bool {
 	ctrl.mtxDownloads.Unlock()
 	return ok
 }
+
+
+// upload helper functions
 func (ctrl *Controller) saveUploads(req UploadRequest) {
 	ctrl.mtxUploads.Lock()
 	ctrl.uploadRequests[req.GetID()] = req
@@ -380,7 +384,7 @@ func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath
 	return
 }
 func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath string, err error) {
-	err = ronak.Try(10, 100*time.Millisecond, func() error {
+	err = ronak.Try(retryMaxAttempts, retryWaitTime, func() error {
 		req := new(msg.FileGet)
 		req.Location = &msg.InputFileLocation{
 			AccessHash: clientFile.AccessHash,
