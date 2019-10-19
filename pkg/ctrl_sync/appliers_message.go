@@ -124,12 +124,8 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 		}
 		repo.Dialogs.SaveNew(dialog, topMessage.CreatedOn)
 	}
-	for _, user := range x.Users {
-		repo.Users.Save(user)
-	}
-	for _, group := range x.Groups {
-		repo.Groups.Save(group)
-	}
+	repo.Users.Save(x.Users...)
+	repo.Groups.Save(x.Groups...)
 }
 
 // usersMany
@@ -143,9 +139,7 @@ func (ctrl *Controller) usersMany(e *msg.MessageEnvelope) {
 	logs.Info("SyncCtrl applies usersMany",
 		zap.Int("Users", len(u.Users)),
 	)
-	for _, v := range u.Users {
-		repo.Users.Save(v)
-	}
+	repo.Users.Save(u.Users...)
 }
 
 // messagesMany
@@ -196,9 +190,8 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 	}
 
 	// save Users
-	for _, v := range u.Users {
-		repo.Users.Save(v)
-	}
+	repo.Users.Save(u.Users...)
+
 
 	for _, photo := range u.PhotoGallery {
 		repo.Files.SaveGroupPhoto(u.Group.ID, photo)

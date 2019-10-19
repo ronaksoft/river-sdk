@@ -26,26 +26,143 @@ type repoFiles struct {
 	*repository
 }
 
-func (r *repoFiles) getKey(clusterID int32, fileID int64, accessHash uint64) []byte {
+func getFileKey(clusterID int32, fileID int64, accessHash uint64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%012d.%021d.%021d", prefixFiles, clusterID, fileID, accessHash))
 }
 
-func (r *repoFiles) Get(clusterID int32, fileID int64, accessHash uint64) (*msg.ClientFile, error) {
-	file := new(msg.ClientFile)
-	err := r.badger.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(r.getKey(clusterID, fileID, accessHash))
-		if err != nil {
-			return err
-		}
-		return item.Value(func(val []byte) error {
-			return file.Unmarshal(val)
-		})
+func getFile(txn *badger.Txn, clusterID int32, fileID int64, accessHash uint64) (*msg.ClientFile, error) {
+	file := &msg.ClientFile{}
+	item, err := txn.Get(getFileKey(clusterID, fileID, accessHash))
+	if err != nil {
+		return nil, err
+	}
+	err = item.Value(func(val []byte) error {
+		return file.Unmarshal(val)
 	})
 	if err != nil {
 		return nil, err
 	}
-
 	return file, nil
+}
+
+func saveFile(txn *badger.Txn, file *msg.ClientFile) error {
+	fileBytes, _ := file.Marshal()
+	return txn.SetEntry(badger.NewEntry(
+		getFileKey(file.ClusterID, file.FileID, file.AccessHash),
+		fileBytes,
+	))
+}
+
+func saveUserPhoto(txn *badger.Txn, u *msg.User) error {
+	photos := make([]*msg.UserPhoto, 1+len(u.PhotoGallery))
+	if u.Photo != nil {
+		photos = append(photos, u.Photo)
+	}
+	for _, photo := range u.PhotoGallery {
+		if photo != nil {
+			photos = append(photos, photo)
+		}
+	}
+
+	for _, photo := range photos {
+		if photo != nil {
+			if photo.PhotoBig != nil {
+				err := saveFile(txn, &msg.ClientFile{
+					ClusterID:  photo.PhotoBig.ClusterID,
+					FileID:     photo.PhotoBig.FileID,
+					AccessHash: photo.PhotoBig.AccessHash,
+					Type:       msg.ClientFileType_AccountProfilePhoto,
+					MimeType:   "",
+					UserID:     u.ID,
+					GroupID:    0,
+					FileSize:   0,
+					MessageID:  0,
+					PeerID:     u.ID,
+					PeerType:   int32(msg.PeerUser),
+					Version:    0,
+				})
+				if err != nil {
+					return err
+				}
+			}
+			if photo.PhotoSmall != nil {
+				err := saveFile(txn, &msg.ClientFile{
+					ClusterID:  photo.PhotoSmall.ClusterID,
+					FileID:     photo.PhotoSmall.FileID,
+					AccessHash: photo.PhotoSmall.AccessHash,
+					Type:       msg.ClientFileType_Thumbnail,
+					MimeType:   "",
+					UserID:     u.ID,
+					GroupID:    0,
+					FileSize:   0,
+					MessageID:  0,
+					PeerID:     u.ID,
+					PeerType:   int32(msg.PeerUser),
+					Version:    0,
+				})
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func saveMessageMedia(txn *badger.Txn, m *msg.UserMessage) error {
+	switch m.MediaType {
+	case msg.MediaTypeDocument:
+		md := new(msg.MediaDocument)
+		err := md.Unmarshal(m.Media)
+		if err != nil {
+			return err
+		}
+
+		err = saveFile(txn, &msg.ClientFile{
+			ClusterID:  md.Doc.ClusterID,
+			FileID:     md.Doc.ID,
+			AccessHash: md.Doc.AccessHash,
+			Type:       msg.ClientFileType_Message,
+			MimeType:   md.Doc.MimeType,
+			UserID:     0,
+			GroupID:    0,
+			FileSize:   int64(md.Doc.FileSize),
+			MessageID:  m.ID,
+			PeerID:     m.PeerID,
+			PeerType:   m.PeerType,
+			Version:    md.Doc.Version,
+		})
+		if err != nil {
+			return err
+		}
+
+		if md.Doc.Thumbnail != nil {
+			err = saveFile(txn, &msg.ClientFile{
+				ClusterID:  md.Doc.Thumbnail.ClusterID,
+				FileID:     md.Doc.Thumbnail.FileID,
+				AccessHash: md.Doc.Thumbnail.AccessHash,
+				Type:       msg.ClientFileType_Thumbnail,
+				MimeType:   "",
+				UserID:     0,
+				GroupID:    0,
+				FileSize:   0,
+				MessageID:  m.ID,
+				PeerID:     m.PeerID,
+				PeerType:   m.PeerType,
+				Version:    0,
+			})
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *repoFiles) Get(clusterID int32, fileID int64, accessHash uint64) (file *msg.ClientFile, err error) {
+	err = r.badger.View(func(txn *badger.Txn) error {
+		file, err = getFile(txn, clusterID, fileID, accessHash)
+		return err
+	})
+	return
 }
 
 func (r *repoFiles) GetMediaDocument(m *msg.UserMessage) (*msg.ClientFile, error) {
@@ -250,24 +367,14 @@ func (r *repoFiles) Save(file *msg.ClientFile) error {
 	if file == nil {
 		return nil
 	}
-
-	fileBytes, _ := file.Marshal()
-
 	return r.badger.Update(func(txn *badger.Txn) error {
-		err := txn.SetEntry(badger.NewEntry(
-			r.getKey(file.ClusterID, file.FileID, file.AccessHash),
-			fileBytes,
-		))
-		if err != nil {
-			return err
-		}
-		return nil
+		return saveFile(txn, file)
 	})
 }
 
 func (r *repoFiles) Delete(clusterID int32, fileID int64, accessHash uint64) error {
 	return r.badger.Update(func(txn *badger.Txn) error {
-		return txn.Delete(r.getKey(clusterID, fileID, accessHash))
+		return txn.Delete(getFileKey(clusterID, fileID, accessHash))
 	})
 }
 

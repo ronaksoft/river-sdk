@@ -24,38 +24,52 @@ type repoMessages struct {
 	*repository
 }
 
-func (r *repoMessages) getMessageKey(peerID int64, peerType int32, msgID int64) []byte {
+func getMessageKey(peerID int64, peerType int32, msgID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%d.%012d", prefixMessages, peerID, peerType, msgID))
 }
 
-func (r *repoMessages) getPrefix(peerID int64, peerType int32) []byte {
+func getMessagePrefix(peerID int64, peerType int32) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%d.", prefixMessages, peerID, peerType))
 }
 
-func (r *repoMessages) getUserMessageKey(msgID int64) []byte {
+func getUserMessageKey(msgID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%012d", prefixUserMessages, msgID))
 }
 
-func (r *repoMessages) getUserMessage(msgID int64) (*msg.UserMessage, error) {
+func getMessageByID(txn *badger.Txn, msgID int64) (*msg.UserMessage, error) {
 	message := new(msg.UserMessage)
-	err := r.badger.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(r.getUserMessageKey(msgID))
+	item, err := txn.Get(getUserMessageKey(msgID))
+	if err != nil {
+		return nil, err
+	}
+	err = item.Value(func(val []byte) error {
+		parts := strings.Split(ronak.ByteToStr(val), ".")
+		if len(parts) != 2 {
+			return domain.ErrInvalidUserMessageKey
+		}
+		itemMessage, err := txn.Get(getMessageKey(ronak.StrToInt64(parts[0]), ronak.StrToInt32(parts[1]), msgID))
 		if err != nil {
 			return err
 		}
-		return item.Value(func(val []byte) error {
-			parts := strings.Split(ronak.ByteToStr(val), ".")
-			if len(parts) != 2 {
-				return domain.ErrInvalidUserMessageKey
-			}
-			itemMessage, err := txn.Get(r.getMessageKey(ronak.StrToInt64(parts[0]), ronak.StrToInt32(parts[1]), msgID))
-			if err != nil {
-				return err
-			}
-			return itemMessage.Value(func(val []byte) error {
-				return message.Unmarshal(val)
-			})
+		return itemMessage.Value(func(val []byte) error {
+			return message.Unmarshal(val)
 		})
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	return message, nil
+}
+
+func getMessageByKey(txn *badger.Txn, msgKey []byte) (*msg.UserMessage, error) {
+	message := &msg.UserMessage{}
+	item, err := txn.Get(msgKey)
+	if err != nil {
+		return nil, err
+	}
+	err = item.Value(func(val []byte) error {
+		return message.Unmarshal(val)
 	})
 	if err != nil {
 		return nil, err
@@ -63,88 +77,7 @@ func (r *repoMessages) getUserMessage(msgID int64) (*msg.UserMessage, error) {
 	return message, nil
 }
 
-func (r *repoMessages) getByKey(msgKey []byte) *msg.UserMessage {
-	message := new(msg.UserMessage)
-	err := r.badger.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(msgKey)
-		if err != nil {
-			return err
-		}
-		return item.Value(func(val []byte) error {
-			return message.Unmarshal(val)
-		})
-	})
-	if err != nil {
-		return nil
-	}
-	return message
-}
-
-func (r *repoMessages) Get(messageID int64) *msg.UserMessage {
-	userMessage, err := r.getUserMessage(messageID)
-	if err != nil {
-		return nil
-	}
-	return userMessage
-}
-
-func (r *repoMessages) GetMany(messageIDs []int64) []*msg.UserMessage {
-
-	userMessages := make([]*msg.UserMessage, 0, len(messageIDs))
-	for _, messageID := range messageIDs {
-		userMessage, err := r.getUserMessage(messageID)
-		if err == nil {
-			userMessages = append(userMessages, userMessage)
-		}
-
-	}
-	return userMessages
-}
-
-func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, userID int64) {
-	if message == nil {
-		return
-	}
-
-	r.save(message)
-	_ = Files.SaveMessageMedia(message)
-
-	dialog = Dialogs.Get(message.PeerID, message.PeerType)
-	// Update Dialog if it is a new message
-	if message.ID > dialog.TopMessageID {
-		dialog.TopMessageID = message.ID
-		if !dialog.Pinned {
-			Dialogs.updateLastUpdate(message.PeerID, message.PeerType, message.CreatedOn)
-		}
-		// Update counters if necessary
-		if message.SenderID != userID {
-			dialog.UnreadCount += 1
-			for _, entity := range message.Entities {
-				if entity.Type == msg.MessageEntityTypeMention && entity.UserID == userID {
-					dialog.MentionedCount += 1
-				}
-			}
-		}
-	}
-	Dialogs.Save(dialog)
-
-	// This is just to make sure the data has been written
-	_ = r.badger.Sync()
-	return
-}
-func (r *repoMessages) Save(messages ...*msg.UserMessage) {
-	for _, message := range messages {
-		r.save(message)
-		_ = Files.SaveMessageMedia(message)
-	}
-	// This is just to make sure the data has been written
-	_ = r.badger.Sync()
-}
-func (r *repoMessages) save(message *msg.UserMessage) {
-	if message == nil {
-		return
-	}
-
+func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 	messageBytes, _ := message.Marshal()
 	docType := domain.SharedMediaTypeAll
 	switch message.MediaType {
@@ -152,11 +85,11 @@ func (r *repoMessages) save(message *msg.UserMessage) {
 		doc := new(msg.MediaDocument)
 		_ = doc.Unmarshal(message.Media)
 		if doc.Doc == nil {
-			logs.Error("Error On RepoMessages Save, Document is Nil",
+			logs.Error("RepoMessage got error on save message, Document is Nil",
 				zap.Int64("MessageID", message.ID),
 				zap.Int64("SenderID", message.SenderID),
 			)
-			return
+			return nil
 		}
 		for _, da := range doc.Doc.Attributes {
 			switch da.Type {
@@ -179,42 +112,121 @@ func (r *repoMessages) save(message *msg.UserMessage) {
 	default:
 		// Do nothing
 	}
-
-	err := ronak.Try(10, 100*time.Millisecond, func() error {
-		err := r.badger.Update(func(txn *badger.Txn) error {
-			// 1. Write Message
-			err := txn.SetEntry(
-				badger.NewEntry(
-					r.getMessageKey(message.PeerID, message.PeerType, message.ID),
-					messageBytes,
-				).WithMeta(byte(docType)),
-			)
-			if err != nil {
-				return err
-			}
-
-			// 2. WriteUserMessage
-			return txn.SetEntry(
-				badger.NewEntry(
-					r.getUserMessageKey(message.ID),
-					ronak.StrToByte(fmt.Sprintf("%d.%d", message.PeerID, message.PeerType)),
-				).WithMeta(byte(docType)),
-			)
-		})
-		logs.WarnOnErr("RepoMessage::save", err, zap.Int64("MsgID", message.ID))
-		return err
-	})
+	// 1. Write Message
+	err := txn.SetEntry(
+		badger.NewEntry(
+			getMessageKey(message.PeerID, message.PeerType, message.ID),
+			messageBytes,
+		).WithMeta(byte(docType)),
+	)
 	if err != nil {
-		logs.Error("Error In SaveMessage")
+		return err
 	}
 
-	_ = r.msgSearch.Index(ronak.ByteToStr(r.getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
+	// 2. Write UserMessage
+	err = txn.SetEntry(
+		badger.NewEntry(
+			getUserMessageKey(message.ID),
+			ronak.StrToByte(fmt.Sprintf("%d.%d", message.PeerID, message.PeerType)),
+		).WithMeta(byte(docType)),
+	)
+	if err != nil {
+		return err
+	}
+
+	err = r.msgSearch.Index(ronak.ByteToStr(getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
 		Type:   "msg",
 		Body:   message.Body,
 		PeerID: fmt.Sprintf("%d", message.PeerID),
 	})
+	logs.ErrorOnErr("RepoMessage got error on index new message", err)
+	return nil
+}
+
+func (r *repoMessages) Get(messageID int64) (um *msg.UserMessage, err error) {
+	err = r.badger.View(func(txn *badger.Txn) error {
+		um, err = getMessageByID(txn, messageID)
+		return err
+	})
+	return
+}
+
+func (r *repoMessages) GetMany(messageIDs []int64) []*msg.UserMessage {
+	userMessages := make([]*msg.UserMessage, 0, len(messageIDs))
+	err := r.badger.View(func(txn *badger.Txn) error {
+		for _, messageID := range messageIDs {
+			userMessage, err := getMessageByID(txn, messageID)
+			logs.WarnOnErr("RepoMessage got error on get many", err,
+				zap.Int64("MsgID", messageID),
+			)
+			if err == nil {
+				userMessages = append(userMessages, userMessage)
+			}
+		}
+		return nil
+	})
+	logs.ErrorOnErr("RepoMessage got error on get many", err,
+		zap.Int64s("MsgIDs", messageIDs),
+	)
+	return userMessages
+}
+
+func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, userID int64) {
+	if message == nil {
+		return
+	}
+	err := r.badger.Update(func(txn *badger.Txn) error {
+		err := saveMessage(txn, message)
+		if err != nil {
+			return err
+		}
+
+		err = saveMessageMedia(txn, message)
+		if err != nil {
+			return err
+		}
+
+		dialog, err := getDialog(txn, message.PeerID, message.PeerType)
+		if err != nil {
+			return err
+		}
+		if message.ID > dialog.TopMessageID {
+			dialog.TopMessageID = message.ID
+			if !dialog.Pinned {
+				Dialogs.updateLastUpdate(message.PeerID, message.PeerType, message.CreatedOn)
+			}
+			// Update counters if necessary
+			if message.SenderID != userID {
+				dialog.UnreadCount += 1
+				for _, entity := range message.Entities {
+					if entity.Type == msg.MessageEntityTypeMention && entity.UserID == userID {
+						dialog.MentionedCount += 1
+					}
+				}
+			}
+		}
+		return saveDialog(txn, dialog)
+	})
+	logs.ErrorOnErr("RepoMessage got error on save new message", err)
 
 	return
+}
+
+func (r *repoMessages) Save(messages ...*msg.UserMessage) {
+	err := r.badger.Update(func(txn *badger.Txn) error {
+		for _, message := range messages {
+			err := saveMessage(txn, message)
+			if err != nil {
+				return err
+			}
+			err = saveMessageMedia(txn, message)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	logs.ErrorOnErr("RepoMessage got error on save", err)
 }
 
 func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, maxID int64, limit int32) (userMessages []*msg.UserMessage, users []*msg.User) {
@@ -222,17 +234,25 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 	userIDs := domain.MInt64B{}
 	switch {
 	case maxID == 0 && minID == 0:
-		maxID = Dialogs.Get(peerID, peerType).TopMessageID
+		dialog, err := Dialogs.Get(peerID, peerType)
+		if err != nil {
+			logs.Error("RepoMessage got error on GetHistory",
+				zap.Error(err),
+				zap.Int64("PeerID", peerID),
+			)
+			return
+		}
+		maxID = dialog.TopMessageID
 		fallthrough
 	case maxID != 0 && minID == 0:
 		startTime := time.Now()
 		var stopWatch1, stopWatch2 time.Time
 		_ = r.badger.View(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
-			opts.Prefix = r.getPrefix(peerID, peerType)
+			opts.Prefix = getMessagePrefix(peerID, peerType)
 			opts.Reverse = true
 			it := txn.NewIterator(opts)
-			it.Seek(r.getMessageKey(peerID, peerType, maxID))
+			it.Seek(getMessageKey(peerID, peerType, maxID))
 			stopWatch1 = time.Now()
 			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
@@ -268,10 +288,10 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 		var stopWatch1, stopWatch2, stopWatch3 time.Time
 		_ = r.badger.View(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
-			opts.Prefix = r.getPrefix(peerID, peerType)
+			opts.Prefix = getMessagePrefix(peerID, peerType)
 			opts.Reverse = false
 			it := txn.NewIterator(opts)
-			it.Seek(r.getMessageKey(peerID, peerType, minID))
+			it.Seek(getMessageKey(peerID, peerType, minID))
 			stopWatch1 = time.Now()
 			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
@@ -312,10 +332,10 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 		var stopWatch1, stopWatch2 time.Time
 		_ = r.badger.View(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
-			opts.Prefix = r.getPrefix(peerID, peerType)
+			opts.Prefix = getMessagePrefix(peerID, peerType)
 			opts.Reverse = true
 			it := txn.NewIterator(opts)
-			it.Seek(r.getMessageKey(peerID, peerType, maxID))
+			it.Seek(getMessageKey(peerID, peerType, maxID))
 			stopWatch1 = time.Now()
 			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
@@ -357,76 +377,86 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 }
 
 func (r *repoMessages) Delete(userID int64, peerID int64, peerType int32, msgID int64) {
-	// 1. Delete the Message
 	err := r.badger.Update(func(txn *badger.Txn) error {
 		// delete from messages
-		err := txn.Delete(r.getMessageKey(peerID, peerType, msgID))
+		err := txn.Delete(getMessageKey(peerID, peerType, msgID))
 		if err != nil {
 			return err
 		}
 		// delete from user messages
-		return txn.Delete(r.getUserMessageKey(msgID))
+		err = txn.Delete(getUserMessageKey(msgID))
+		if err != nil {
+			return err
+		}
+
+		// 2. Update the Dialog if necessary
+		dialog, err := getDialog(txn, peerID, peerType)
+		if err != nil {
+			return err
+		}
+		if dialog.TopMessageID == msgID {
+			err = updateTopMessageID(txn, dialog)
+			if err != nil {
+				return err
+			}
+		}
+		dialog.UnreadCount, dialog.MentionedCount, err = countDialogUnread(txn, dialog.PeerID, dialog.PeerType, userID, dialog.ReadInboxMaxID+1)
+		if err != nil {
+			return err
+		}
+		err = saveDialog(txn, dialog)
+		if err != nil {
+			return err
+		}
+		_ = r.msgSearch.Delete(ronak.ByteToStr(getMessageKey(peerID, peerType, msgID)))
+		return nil
 	})
-	if err != nil {
-		return
-	}
-
-	// 2. Update the Dialog if necessary
-	dialog := Dialogs.Get(peerID, peerType)
-	if dialog == nil {
-		return
-	}
-
-	// 3. Update top message if necessary
-	if dialog.TopMessageID == msgID {
-		Dialogs.updateTopMessageID(dialog)
-
-	}
-
-	// 4. Update unread/mention counter
-	dialog.UnreadCount, dialog.MentionedCount = Dialogs.countUnread(dialog.PeerID, dialog.PeerType, userID, dialog.ReadInboxMaxID+1)
-	Dialogs.Save(dialog)
-
-	// 5. Delete the entry from the index
-	_ = r.msgSearch.Delete(ronak.ByteToStr(r.getMessageKey(peerID, peerType, msgID)))
-	return
+	logs.ErrorOnErr("RepoMessage got error on delete", err)
 }
 
 func (r *repoMessages) DeleteAll(userID int64, peerID int64, peerType int32, maxID int64) {
-	_ = r.badger.Update(func(txn *badger.Txn) error {
+	err := r.badger.Update(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = r.getPrefix(peerID, peerType)
+		opts.Prefix = getMessagePrefix(peerID, peerType)
 		opts.PrefetchValues = false
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
-		for it.Seek(r.getMessageKey(peerID, peerType, maxID)); it.ValidForPrefix(opts.Prefix); it.Next() {
-			err := ronak.Try(100, time.Millisecond, func() error {
-				return txn.Delete(it.Item().KeyCopy(nil))
-			})
-			logs.ErrorOnErr("Error On RepoMessage::DeleteAll", err, zap.Int64("UserID", userID))
+		for it.Seek(getMessageKey(peerID, peerType, maxID)); it.ValidForPrefix(opts.Prefix); it.Next() {
+			err := txn.Delete(it.Item().KeyCopy(nil))
+			if err != nil {
+				return err
+			}
 		}
 		it.Close()
-		return nil
+		dialog, err := getDialog(txn, peerID, peerType)
+		if err != nil {
+			return err
+		}
+		dialog.UnreadCount, dialog.MentionedCount, err = countDialogUnread(txn, peerID, peerType, userID, maxID)
+		if err != nil {
+			return err
+		}
+		return saveDialog(txn, dialog)
 	})
-
-	dialog := Dialogs.Get(peerID, peerType)
-	dialog.UnreadCount, dialog.MentionedCount = Dialogs.countUnread(peerID, peerType, userID, maxID)
-	Dialogs.Save(dialog)
+	logs.ErrorOnErr("RepoMessage got error on delete all", err)
 }
 
 func (r *repoMessages) SetContentRead(peerID int64, peerType int32, messageIDs []int64) {
-	for _, msgID := range messageIDs {
-		_ = r.badger.Update(func(txn *badger.Txn) error {
-			userMessage, err := r.getUserMessage(msgID)
+	err := r.badger.Update(func(txn *badger.Txn) error {
+		for _, msgID := range messageIDs {
+			userMessage, err := getMessageByID(txn, msgID)
 			if err != nil {
 				return err
 			}
 			userMessage.ContentRead = true
-			r.save(userMessage)
-			return nil
-		})
-
-	}
+			err = saveMessage(txn, userMessage)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	logs.ErrorOnErr("RepoMessage got error on set content read", err)
 	return
 }
 
@@ -434,10 +464,10 @@ func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, err
 	topMessageID := int64(0)
 	err := r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = r.getPrefix(peerID, peerType)
+		opts.Prefix = getMessagePrefix(peerID, peerType)
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
-		it.Seek(Messages.getMessageKey(peerID, peerType, 2<<31))
+		it.Seek(getMessageKey(peerID, peerType, 2<<31))
 		if it.ValidForPrefix(opts.Prefix) {
 			userMessage := new(msg.UserMessage)
 			_ = it.Item().Value(func(val []byte) error {
@@ -463,12 +493,15 @@ func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
 		t2 := bleve.NewDisjunctionQuery(qs...)
 		searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
 		searchResult, _ := r.msgSearch.Search(searchRequest)
-		for _, hit := range searchResult.Hits {
-			userMessage := r.getByKey(ronak.StrToByte(hit.ID))
-			if userMessage != nil {
-				userMessages = append(userMessages, userMessage)
+		_ = r.badger.View(func(txn *badger.Txn) error {
+			for _, hit := range searchResult.Hits {
+				userMessage, _ := getMessageByKey(txn, ronak.StrToByte(hit.ID))
+				if userMessage != nil {
+					userMessages = append(userMessages, userMessage)
+				}
 			}
-		}
+			return nil
+		})
 	}
 
 	return userMessages
@@ -489,13 +522,15 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.User
 		t3.SetField("peer_id")
 		searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3))
 		searchResult, _ := r.msgSearch.Search(searchRequest)
-
-		for _, hit := range searchResult.Hits {
-			userMessage := r.getByKey(ronak.StrToByte(hit.ID))
-			if userMessage != nil {
-				userMessages = append(userMessages, userMessage)
+		_ = r.badger.View(func(txn *badger.Txn) error {
+			for _, hit := range searchResult.Hits {
+				userMessage, _ := getMessageByKey(txn, ronak.StrToByte(hit.ID))
+				if userMessage != nil {
+					userMessages = append(userMessages, userMessage)
+				}
 			}
-		}
+			return nil
+		})
 	}
 
 	return userMessages
@@ -507,10 +542,10 @@ func (r *repoMessages) GetSharedMedia(peerID int64, peerType int32, documentType
 	_ = r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.PrefetchValues = false
-		opts.Prefix = r.getPrefix(peerID, peerType)
+		opts.Prefix = getMessagePrefix(peerID, peerType)
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
-		for it.Seek(Messages.getMessageKey(peerID, peerType, 1<<31)); it.ValidForPrefix(opts.Prefix); it.Next() {
+		for it.Seek(getMessageKey(peerID, peerType, 1<<31)); it.ValidForPrefix(opts.Prefix); it.Next() {
 			if limit--; limit < 0 {
 				break
 			}
@@ -543,7 +578,7 @@ func (r *repoMessages) ReIndex() {
 			_ = it.Item().Value(func(val []byte) error {
 				message := new(msg.UserMessage)
 				_ = message.Unmarshal(val)
-				_ = r.msgSearch.Index(ronak.ByteToStr(r.getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
+				_ = r.msgSearch.Index(ronak.ByteToStr(getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
 					Type:   "msg",
 					Body:   message.Body,
 					PeerID: fmt.Sprintf("%d", message.PeerID),

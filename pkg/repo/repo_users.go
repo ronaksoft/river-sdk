@@ -24,60 +24,113 @@ type repoUsers struct {
 	*repository
 }
 
-func (r *repoUsers) getUserKey(userID int64) []byte {
+func getUserKey(userID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixUsers, userID))
 }
 
-func (r *repoUsers) getUserByKey(userKey []byte) *msg.User {
+func getUserByKey(txn *badger.Txn, userKey []byte) (*msg.User, error) {
 	user := new(msg.User)
-	err := r.badger.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(userKey)
-		if err != nil {
-			return err
-		}
-		return item.Value(func(val []byte) error {
-			return user.Unmarshal(val)
-		})
+	item, err := txn.Get(userKey)
+	if err != nil {
+		return nil, err
+	}
+	err = item.Value(func(val []byte) error {
+		return user.Unmarshal(val)
 	})
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return user
+	return user, nil
 }
 
-func (r *repoUsers) getContactKey(userID int64) []byte {
+func getContactKey(userID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixContacts, userID))
 }
 
-func (r *repoUsers) getContactByKey(contactKey []byte) *msg.ContactUser {
+func getContactByKey(txn *badger.Txn, contactKey []byte) (*msg.ContactUser, error) {
 	contactUser := new(msg.ContactUser)
-	err := r.badger.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(contactKey)
-		if err != nil {
-			return err
-		}
-		return item.Value(func(val []byte) error {
-			return contactUser.Unmarshal(val)
-		})
+	item, err := txn.Get(contactKey)
+	if err != nil {
+		return nil, err
+	}
+	err = item.Value(func(val []byte) error {
+		return contactUser.Unmarshal(val)
 	})
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return contactUser
+	return contactUser, nil
 }
 
-func (r *repoUsers) getPhotoGalleryKey(userID, photoID int64) []byte {
+func getUserPhotoGalleryKey(userID, photoID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixUsersPhotoGallery, userID, photoID))
 }
 
-func (r *repoUsers) getPhotoGalleryPrefix(userID int64) []byte {
+func getUserPhotoGalleryPrefix(userID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d.", prefixUsersPhotoGallery, userID))
+}
+
+func saveUser(txn *badger.Txn, user *msg.User) error {
+	userKey := getUserKey(user.ID)
+	if len(user.PhotoGallery) == 0 {
+		currentUser, err := getUserByKey(txn, userKey)
+		if err != nil {
+			return err
+		}
+		if currentUser != nil && len(currentUser.PhotoGallery) > 0 {
+			if len(user.PhotoGallery) == 0 {
+				user.PhotoGallery = currentUser.PhotoGallery
+			}
+		}
+	}
+	userBytes, _ := user.Marshal()
+	err := txn.SetEntry(badger.NewEntry(
+		userKey, userBytes,
+	))
+	if err != nil {
+		return err
+	}
+
+	_ = r.peerSearch.Index(ronak.ByteToStr(userKey), UserSearch{
+		Type:      "user",
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		PeerID:    user.ID,
+		Username:  user.Username,
+	})
+
+	err = saveUserPhoto(txn, user)
+	if err != nil {
+		return err
+	}
+
+	if len(user.PhotoGallery) > 0 {
+		err = saveUserPhotoGallery(txn, user.ID, user.PhotoGallery...)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func saveUserPhotoGallery(txn *badger.Txn, userID int64, photos ...*msg.UserPhoto) error {
+	for _, photo := range photos {
+		if photo != nil {
+			key := getUserPhotoGalleryKey(userID, photo.PhotoID)
+			bytes, _ := photo.Marshal()
+			err := txn.SetEntry(badger.NewEntry(key, bytes))
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (r *repoUsers) readFromDb(userID int64) *msg.User {
 	user := new(msg.User)
 	err := r.badger.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(r.getUserKey(userID))
+		item, err := txn.Get(getUserKey(userID))
 		if err != nil {
 			return err
 		}
@@ -114,7 +167,7 @@ func (r *repoUsers) readFromCache(userID int64) *msg.User {
 	return user
 }
 
-func (r *repoUsers) readManyFromCache(userIDs []int64) []*msg.User {
+func (r *repoUsers) readManyFromCache(userIDs ...int64) []*msg.User {
 	users := make([]*msg.User, 0, len(userIDs))
 	for _, userID := range userIDs {
 		if user := r.readFromCache(userID); user != nil {
@@ -149,7 +202,7 @@ func (r *repoUsers) Get(userID int64) *msg.User {
 }
 
 func (r *repoUsers) GetMany(userIDs []int64) []*msg.User {
-	return r.readManyFromCache(userIDs)
+	return r.readManyFromCache(userIDs...)
 }
 
 func (r *repoUsers) Save(users ...*msg.User) {
@@ -162,53 +215,34 @@ func (r *repoUsers) Save(users ...*msg.User) {
 	}
 	defer r.deleteFromCache(userIDs.ToArray()...)
 
-	for idx := range users {
-		r.save(users[idx])
-	}
-
-	return
-}
-func (r *repoUsers) save(user *msg.User) {
-	currentUser := r.Get(user.ID)
-
-	if currentUser != nil && len(currentUser.PhotoGallery) > 0 {
-		if len(user.PhotoGallery) == 0 {
-			user.PhotoGallery = currentUser.PhotoGallery
+	err := r.badger.Update(func(txn *badger.Txn) error {
+		for idx := range users {
+			err := saveUser(txn, users[idx])
+			if err != nil {
+				return err
+			}
 		}
-	}
-
-	userKey := r.getUserKey(user.ID)
-	userBytes, _ := user.Marshal()
-	_ = r.badger.Update(func(txn *badger.Txn) error {
-		return txn.SetEntry(badger.NewEntry(
-			userKey, userBytes,
-		))
+		return nil
 	})
-	_ = r.peerSearch.Index(ronak.ByteToStr(userKey), UserSearch{
-		Type:      "user",
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		PeerID:    user.ID,
-		Username:  user.Username,
-	})
-
-	_ = Files.SaveUserPhotos(user)
-
-	if len(user.PhotoGallery) > 0 {
-		r.SavePhotoGallery(user.ID, user.PhotoGallery...)
-	}
-
+	logs.ErrorOnErr("RepoUser got error on save", err)
+	return
 }
 
 func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType int32) {
-	defer r.deleteFromCache(peerID)
-
-	user := r.Get(peerID)
-	if user == nil {
+	if msg.PeerType(peerType) != msg.PeerUser {
 		return
 	}
-	user.AccessHash = accessHash
-	Dialogs.updateAccessHash(accessHash, peerID, peerType)
+	defer r.deleteFromCache(peerID)
+
+	err := r.badger.Update(func(txn *badger.Txn) error {
+		user, err := getUserByKey(txn, getUserKey(peerID))
+		if err != nil {
+			return err
+		}
+		user.AccessHash = accessHash
+		return updateDialogAccessHash(txn, accessHash, peerID, peerType)
+	})
+	logs.ErrorOnErr("RepoUser got error on update access hash", err)
 	return
 }
 
