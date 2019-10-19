@@ -225,14 +225,19 @@ func (r *repoDialogs) UpdatePinned(in *msg.UpdateDialogPinned) {
 }
 
 func (r *repoDialogs) Delete(peerID int64, peerType int32) {
-	_ = r.badger.Update(func(txn *badger.Txn) error {
+	err := r.badger.Update(func(txn *badger.Txn) error {
 		return txn.Delete(r.getDialogKey(peerID, peerType))
 	})
+	logs.Error("RepoDialogs received error on deleting dialog",
+		zap.Error(err),
+		zap.Int64("PeerID", peerID),
+		zap.Int32("PeerType", peerType),
+	)
 }
 
 func (r *repoDialogs) List(offset, limit int32) []*msg.Dialog {
 	dialogs := make([]*msg.Dialog, 0, limit)
-	_ = r.bunt.View(func(tx *buntdb.Tx) error {
+	err := r.bunt.View(func(tx *buntdb.Tx) error {
 		return tx.Descend(indexDialogs, func(key, value string) bool {
 			if limit--; limit < 0 {
 				return false
@@ -245,20 +250,19 @@ func (r *repoDialogs) List(offset, limit int32) []*msg.Dialog {
 			return true
 		})
 	})
-
+	logs.Error("RepoDialogs received error on getting list", zap.Error(err))
 	return dialogs
 }
 
 func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
-
 	dialogs := make([]*msg.Dialog, 0, 7)
-	_ = r.badger.View(func(txn *badger.Txn) error {
+	err := r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = ronak.StrToByte(prefixDialogs)
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
-			dialog := new(msg.Dialog)
+			dialog := &msg.Dialog{}
 			_ = it.Item().Value(func(val []byte) error {
 				err := dialog.Unmarshal(val)
 				if err != nil {
@@ -273,6 +277,7 @@ func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
 		it.Close()
 		return nil
 	})
+	logs.Error("RepoDialogs received error on getting pinned dialogs", zap.Error(err))
 	return dialogs
 }
 

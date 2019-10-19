@@ -12,6 +12,7 @@ import (
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -233,6 +234,7 @@ func (r *River) Version() string {
 }
 
 func (r *River) Start() error {
+	runtime.GOMAXPROCS(runtime.NumCPU() * 10)
 	logs.Info("River Starting")
 
 	// Initialize MessageHole
