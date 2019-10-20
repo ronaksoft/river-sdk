@@ -2,6 +2,7 @@ package repo
 
 import (
 	"fmt"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
 	"math"
@@ -29,16 +30,46 @@ func abs(x int64) int64 {
 	return x
 }
 
-func (r *repoMessagesPending) getKey(msgID int64) []byte {
+func getPendingMessageKey(msgID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%012d", prefixPMessagesByID, int64(math.Abs(float64(msgID)))))
 }
 
-func (r *repoMessagesPending) getRandomKey(randomID int64) []byte {
+func getPendingMessageRandomKey(randomID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%012d", prefixPMessagesByRandomID, abs(randomID)))
 }
 
-func (r *repoMessagesPending) getRealKey(msgID int64) []byte {
+func getPendingMessageRealKey(msgID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%012d", prefixPMessagesByRealID, msgID))
+}
+
+func getPendingMessageByID(txn *badger.Txn, msgID int64) (*msg.ClientPendingMessage, error) {
+	pm := &msg.ClientPendingMessage{}
+	item, err := txn.Get(getPendingMessageKey(msgID))
+	if err != nil {
+		return nil, err
+	}
+
+	err = item.Value(func(val []byte) error {
+		return pm.Unmarshal(val)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return pm, nil
+}
+
+func deletePendingMessage(txn *badger.Txn, msgID int64) error {
+	pm, err := getPendingMessageByID(txn, msgID)
+	if err != nil {
+		return err
+	}
+	err = txn.Delete(getPendingMessageKey(pm.ID))
+	if err != nil {
+		return err
+	}
+	err = txn.Delete(getPendingMessageRandomKey(pm.RequestID))
+	return err
 }
 
 func (r *repoMessagesPending) Save(msgID int64, senderID int64, message *msg.MessagesSend) (*msg.ClientPendingMessage, error) {
@@ -63,13 +94,13 @@ func (r *repoMessagesPending) Save(msgID int64, senderID int64, message *msg.Mes
 	bytes, _ := pm.Marshal()
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		err := txn.SetEntry(badger.NewEntry(
-			r.getKey(pm.ID), bytes),
+			getPendingMessageKey(pm.ID), bytes),
 		)
 		if err != nil {
 			return err
 		}
 		return txn.SetEntry(badger.NewEntry(
-			r.getRandomKey(pm.RequestID), bytes),
+			getPendingMessageRandomKey(pm.RequestID), bytes),
 		)
 	})
 
@@ -120,7 +151,7 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, requestID,
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		// 1. Save PendingMessage by ID
 		err := txn.SetEntry(badger.NewEntry(
-			r.getKey(pm.ID), bytes),
+			getPendingMessageKey(pm.ID), bytes),
 		)
 		if err != nil {
 			return err
@@ -128,7 +159,7 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, requestID,
 
 		// 2. Save PendingMessage by RequestID/RandomID
 		return txn.SetEntry(badger.NewEntry(
-			r.getRandomKey(pm.RequestID), bytes),
+			getPendingMessageRandomKey(pm.RequestID), bytes),
 		)
 	})
 
@@ -151,16 +182,15 @@ func (r *repoMessagesPending) UpdateClientMessageMedia(pm *msg.ClientPendingMess
 	bytes, _ := pm.Marshal()
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		err := txn.SetEntry(badger.NewEntry(
-			r.getKey(pm.ID), bytes),
+			getPendingMessageKey(pm.ID), bytes),
 		)
 		if err != nil {
 			return err
 		}
 		return txn.SetEntry(badger.NewEntry(
-			r.getRandomKey(pm.RequestID), bytes),
+			getPendingMessageRandomKey(pm.RequestID), bytes),
 		)
 	})
-
 
 }
 
@@ -185,13 +215,13 @@ func (r *repoMessagesPending) SaveMessageMedia(msgID int64, senderID int64, msgM
 	bytes, _ := pm.Marshal()
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		err := txn.SetEntry(badger.NewEntry(
-			r.getKey(pm.ID), bytes),
+			getPendingMessageKey(pm.ID), bytes),
 		)
 		if err != nil {
 			return err
 		}
 		return txn.SetEntry(badger.NewEntry(
-			r.getRandomKey(pm.RequestID), bytes),
+			getPendingMessageRandomKey(pm.RequestID), bytes),
 		)
 	})
 
@@ -203,7 +233,7 @@ func (r *repoMessagesPending) SaveMessageMedia(msgID int64, senderID int64, msgM
 func (r *repoMessagesPending) GetByRealID(msgID int64) *msg.ClientPendingMessage {
 	pm := new(msg.ClientPendingMessage)
 	err := r.badger.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(r.getRealKey(msgID))
+		item, err := txn.Get(getPendingMessageRealKey(msgID))
 		if err != nil {
 			return err
 		}
@@ -220,7 +250,7 @@ func (r *repoMessagesPending) GetByRealID(msgID int64) *msg.ClientPendingMessage
 func (r *repoMessagesPending) GetByRandomID(randomID int64) (*msg.ClientPendingMessage, error) {
 	pm := new(msg.ClientPendingMessage)
 	err := r.badger.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(r.getRandomKey(randomID))
+		item, err := txn.Get(getPendingMessageRandomKey(randomID))
 		if err != nil {
 			return err
 		}
@@ -235,32 +265,27 @@ func (r *repoMessagesPending) GetByRandomID(randomID int64) (*msg.ClientPendingM
 	return pm, nil
 }
 
-func (r *repoMessagesPending) GetByID(id int64) *msg.ClientPendingMessage {
-	pm := new(msg.ClientPendingMessage)
+func (r *repoMessagesPending) GetByID(msgID int64) (pm *msg.ClientPendingMessage) {
 	err := r.badger.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(r.getKey(id))
-		if err != nil {
-			return err
-		}
-		return item.Value(func(val []byte) error {
-			return pm.Unmarshal(val)
-		})
+		var err error
+		pm, err = getPendingMessageByID(txn, msgID)
+		return err
 	})
-	if err != nil {
-		return nil
-	}
-
+	logs.ErrorOnErr("RepoPending got error on get by id", err)
 	return pm
 }
 
 func (r *repoMessagesPending) GetMany(messageIDs []int64) []*msg.UserMessage {
 	userMessages := make([]*msg.UserMessage, 0, len(messageIDs))
-	for _, msgID := range messageIDs {
-		pm := r.GetByID(msgID)
-		if pm != nil {
-			userMessages = append(userMessages, r.ToUserMessage(pm))
+	_ = r.badger.View(func(txn *badger.Txn) error {
+		for _, msgID := range messageIDs {
+			pm, _ := getPendingMessageByID(txn, msgID)
+			if pm != nil {
+				userMessages = append(userMessages, r.ToUserMessage(pm))
+			}
 		}
-	}
+		return nil
+	})
 	return userMessages
 }
 
@@ -327,35 +352,32 @@ func (r *repoMessagesPending) GetAll() []*msg.ClientPendingMessage {
 }
 
 func (r *repoMessagesPending) Delete(msgID int64) error {
-	pm := r.GetByID(msgID)
-	if pm == nil {
-		return nil
-	}
 	return r.badger.Update(func(txn *badger.Txn) error {
-		err := txn.Delete(r.getKey(pm.ID))
-		if err != nil {
-			return err
-		}
-		err = txn.Delete(r.getRandomKey(pm.RequestID))
-		return err
+		return deletePendingMessage(txn, msgID)
 	})
 }
 
 func (r *repoMessagesPending) DeleteByRealID(msgID int64) {
 	_ = r.badger.Update(func(txn *badger.Txn) error {
-		_ = txn.Delete(r.getRealKey(msgID))
+		_ = txn.Delete(getPendingMessageRealKey(msgID))
 		return nil
 	})
 }
 
 func (r *repoMessagesPending) DeleteMany(msgIDs []int64) {
-	for _, msgID := range msgIDs {
-		r.Delete(msgID)
-	}
+	err := r.badger.Update(func(txn *badger.Txn) error {
+		for _, msgID := range msgIDs {
+			err  :=  deletePendingMessage(txn, msgID)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	logs.ErrorOnErr("RepoPending got error on delete many", err)
 }
 
 func (r *repoMessagesPending) GetManyRequestIDs(msgIDs []int64) []int64 {
-
 	requestIDs := make([]int64, 0, len(msgIDs))
 	for _, msgID := range msgIDs {
 		pm := r.GetByID(msgID)
@@ -368,7 +390,6 @@ func (r *repoMessagesPending) GetManyRequestIDs(msgIDs []int64) []int64 {
 }
 
 func (r *repoMessagesPending) DeletePeerAllMessages(peerID int64, peerType int32) *msg.ClientUpdateMessagesDeleted {
-
 	res := new(msg.ClientUpdateMessagesDeleted)
 	res.PeerID = peerID
 	res.PeerType = peerType
@@ -404,7 +425,7 @@ func (r *repoMessagesPending) SaveByRealID(randomID, realMsgID int64) {
 	bytes, _ := pm.Marshal()
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		return txn.SetEntry(badger.NewEntry(
-			r.getRealKey(realMsgID), bytes),
+			getPendingMessageRealKey(realMsgID), bytes),
 		)
 	})
 }
@@ -496,7 +517,6 @@ func (r *repoMessagesPending) ToMessagesSendMedia(m *msg.ClientPendingMessage) *
 	default:
 		v.MediaData = m.Media
 	}
-
 
 	return v
 }
