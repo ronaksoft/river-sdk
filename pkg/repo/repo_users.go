@@ -73,10 +73,7 @@ func getUserPhotoGalleryPrefix(userID int64) []byte {
 func saveUser(txn *badger.Txn, user *msg.User) error {
 	userKey := getUserKey(user.ID)
 	if len(user.PhotoGallery) == 0 {
-		currentUser, err := getUserByKey(txn, userKey)
-		if err != nil {
-			return err
-		}
+		currentUser, _ := getUserByKey(txn, userKey)
 		if currentUser != nil && len(currentUser.PhotoGallery) > 0 {
 			if len(user.PhotoGallery) == 0 {
 				user.PhotoGallery = currentUser.PhotoGallery
@@ -105,23 +102,9 @@ func saveUser(txn *badger.Txn, user *msg.User) error {
 	}
 
 	if len(user.PhotoGallery) > 0 {
-		err = saveUserPhotoGallery(txn, user.ID, user.PhotoGallery...)
+		err = saveUserPhotos(txn, user.ID, user.PhotoGallery...)
 		if err != nil {
 			return err
-		}
-	}
-	return nil
-}
-
-func saveUserPhotoGallery(txn *badger.Txn, userID int64, photos ...*msg.UserPhoto) error {
-	for _, photo := range photos {
-		if photo != nil {
-			key := getUserPhotoGalleryKey(userID, photo.PhotoID)
-			bytes, _ := photo.Marshal()
-			err := txn.SetEntry(badger.NewEntry(key, bytes))
-			if err != nil {
-				return err
-			}
 		}
 	}
 	return nil

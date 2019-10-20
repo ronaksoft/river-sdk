@@ -286,7 +286,7 @@ func (r *repoDialogs) List(offset, limit int32) []*msg.Dialog {
 			return true
 		})
 	})
-	logs.Error("RepoDialogs got error on getting list", zap.Error(err))
+	logs.ErrorOnErr("RepoDialogs got error on getting list", err)
 	return dialogs
 }
 

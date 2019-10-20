@@ -11,7 +11,6 @@ import (
 	"github.com/dgraph-io/badger"
 	"go.uber.org/zap"
 	"strings"
-	"time"
 )
 
 const (
@@ -24,47 +23,68 @@ type repoGroups struct {
 	*repository
 }
 
-func (r *repoGroups) getGroupKey(groupID int64) []byte {
+func getGroupKey(groupID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixGroups, groupID))
 }
 
-func (r *repoGroups) getGroupParticipantKey(groupID, memberID int64) []byte {
+func getGroupByKey(txn *badger.Txn, groupKey []byte) (*msg.Group, error) {
+	group := &msg.Group{}
+	item, err := txn.Get(groupKey)
+	if err != nil {
+		return nil, err
+	}
+	err = item.Value(func(val []byte) error {
+		return group.Unmarshal(val)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return group, nil
+}
+
+func getGroupParticipantKey(groupID, memberID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixGroupsParticipants, groupID, memberID))
 }
 
-func (r *repoGroups) getPhotoGalleryKey(groupID, photoID int64) []byte {
+func getGroupPhotoGalleryKey(groupID, photoID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixGroupsPhotoGallery, groupID, photoID))
 }
 
-func (r *repoGroups) getPhotoGalleryPrefix(groupID int64) []byte {
+func getGroupPhotoGalleryPrefix(groupID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d.", prefixGroupsPhotoGallery, groupID))
 }
 
-func (r *repoGroups) getPrefix(groupID int64) []byte {
+func getGroupPrefix(groupID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d.", prefixGroupsParticipants, groupID))
 }
 
-func (r *repoGroups) getGroupByKey(groupKey []byte) *msg.Group {
-	group := new(msg.Group)
-	err := r.badger.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(groupKey)
-		if err != nil {
-			return err
-		}
-		return item.Value(func(val []byte) error {
-			return group.Unmarshal(val)
-		})
-	})
+func saveGroup(txn *badger.Txn, group *msg.Group) error {
+	groupKey := getGroupKey(group.ID)
+	groupBytes, _ := group.Marshal()
+	err := txn.SetEntry(badger.NewEntry(
+		groupKey, groupBytes,
+	))
 	if err != nil {
-		return nil
+		return err
 	}
-	return group
+
+	_ = r.peerSearch.Index(ronak.ByteToStr(groupKey), GroupSearch{
+		Type:   "group",
+		Title:  group.Title,
+		PeerID: group.ID,
+	})
+
+	err = saveGroupPhotos(txn, group.ID, group.Photo)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *repoGroups) readFromDb(groupID int64) *msg.Group {
 	group := new(msg.Group)
 	err := r.badger.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(r.getGroupKey(groupID))
+		item, err := txn.Get(getGroupKey(groupID))
 		if err != nil {
 			return err
 		}
@@ -116,10 +136,10 @@ func (r *repoGroups) updateParticipantsCount(groupID int64) {
 	count := int32(0)
 	_ = r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = r.getPrefix(groupID)
+		opts.Prefix = getGroupPrefix(groupID)
 		opts.PrefetchValues = false
 		it := txn.NewIterator(opts)
-		for it.Seek(r.getGroupParticipantKey(groupID, 0)); it.ValidForPrefix(opts.Prefix); it.Next() {
+		for it.Seek(getGroupParticipantKey(groupID, 0)); it.ValidForPrefix(opts.Prefix); it.Next() {
 			count++
 		}
 		it.Close()
@@ -148,52 +168,7 @@ func (r *repoGroups) Save(groups ...*msg.Group) {
 	return
 }
 func (r *repoGroups) save(group *msg.Group) {
-	groupKey := r.getGroupKey(group.ID)
-	groupBytes, _ := group.Marshal()
-	_ = r.badger.Update(func(txn *badger.Txn) error {
-		return txn.SetEntry(badger.NewEntry(
-			groupKey, groupBytes,
-		))
-	})
-	_ = r.peerSearch.Index(ronak.ByteToStr(groupKey), GroupSearch{
-		Type:   "group",
-		Title:  group.Title,
-		PeerID: group.ID,
-	})
-	if group.Photo != nil {
-		_ = ronak.Try(100, time.Millisecond, func() error {
-			return Files.Save(&msg.ClientFile{
-				ClusterID:  group.Photo.PhotoBig.ClusterID,
-				FileID:     group.Photo.PhotoBig.FileID,
-				AccessHash: group.Photo.PhotoBig.AccessHash,
-				Type:       msg.ClientFileType_GroupProfilePhoto,
-				MimeType:   "",
-				UserID:     0,
-				GroupID:    group.ID,
-				FileSize:   0,
-				MessageID:  0,
-				PeerID:     group.ID,
-				PeerType:   int32(msg.PeerGroup),
-				Version:    0,
-			})
-		})
-		_ = ronak.Try(100, time.Millisecond, func() error {
-			return Files.Save(&msg.ClientFile{
-				ClusterID:  group.Photo.PhotoSmall.ClusterID,
-				FileID:     group.Photo.PhotoSmall.FileID,
-				AccessHash: group.Photo.PhotoSmall.AccessHash,
-				Type:       msg.ClientFileType_Thumbnail,
-				MimeType:   "",
-				UserID:     0,
-				GroupID:    group.ID,
-				FileSize:   0,
-				MessageID:  0,
-				PeerID:     group.ID,
-				PeerType:   int32(msg.PeerGroup),
-				Version:    0,
-			})
-		})
-	}
+
 }
 
 func (r *repoGroups) GetMany(groupIDs []int64) []*msg.Group {
@@ -205,11 +180,10 @@ func (r *repoGroups) Get(groupID int64) *msg.Group {
 }
 
 func (r *repoGroups) Delete(groupID int64) {
-
 	defer r.deleteFromCache(groupID)
 
 	_ = r.badger.Update(func(txn *badger.Txn) error {
-		err := txn.Delete(r.getGroupKey(groupID))
+		err := txn.Delete(getGroupKey(groupID))
 		if err != nil {
 			return err
 		}
@@ -218,14 +192,13 @@ func (r *repoGroups) Delete(groupID int64) {
 	})
 }
 
-
 func (r *repoGroups) SaveParticipant(groupID int64, participant *msg.GroupParticipant) {
 	defer r.deleteFromCache(groupID)
 	if participant == nil {
 		return
 	}
 
-	groupParticipantKey := r.getGroupParticipantKey(groupID, participant.UserID)
+	groupParticipantKey := getGroupParticipantKey(groupID, participant.UserID)
 	participantBytes, _ := participant.Marshal()
 	_ = r.badger.Update(func(txn *badger.Txn) error {
 		return txn.SetEntry(badger.NewEntry(
@@ -235,10 +208,9 @@ func (r *repoGroups) SaveParticipant(groupID int64, participant *msg.GroupPartic
 }
 
 func (r *repoGroups) GetParticipant(groupID int64, memberID int64) *msg.GroupParticipant {
-
 	gp := new(msg.GroupParticipant)
 	_ = r.badger.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(r.getGroupParticipantKey(groupID, memberID))
+		item, err := txn.Get(getGroupParticipantKey(groupID, memberID))
 		if err != nil {
 			return err
 		}
@@ -253,9 +225,9 @@ func (r *repoGroups) GetParticipants(groupID int64) ([]*msg.GroupParticipant, er
 	participants := make([]*msg.GroupParticipant, 0, 100)
 	_ = r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = r.getPrefix(groupID)
+		opts.Prefix = getGroupPrefix(groupID)
 		it := txn.NewIterator(opts)
-		for it.Seek(r.getGroupParticipantKey(groupID, 0)); it.ValidForPrefix(opts.Prefix); it.Next() {
+		for it.Seek(getGroupParticipantKey(groupID, 0)); it.ValidForPrefix(opts.Prefix); it.Next() {
 			p := new(msg.GroupParticipant)
 			_ = it.Item().Value(func(val []byte) error {
 				return p.Unmarshal(val)
@@ -268,8 +240,6 @@ func (r *repoGroups) GetParticipants(groupID int64) ([]*msg.GroupParticipant, er
 
 	return participants, nil
 }
-
-
 
 func (r *repoGroups) UpdatePhoto(groupID int64, groupPhoto *msg.GroupPhoto) {
 	if alreadySaved(fmt.Sprintf("GPHOTO.%d", groupID), groupPhoto) {
@@ -300,28 +270,26 @@ func (r *repoGroups) RemovePhoto(groupID int64) {
 }
 
 func (r *repoGroups) SavePhotoGallery(groupID int64, photos ...*msg.GroupPhoto) {
-	for _, photo := range photos {
-		key := r.getPhotoGalleryKey(groupID, photo.PhotoID)
-		bytes, _ := photo.Marshal()
-		_ = r.badger.Update(func(txn *badger.Txn) error {
-			return txn.SetEntry(badger.NewEntry(key, bytes))
-		})
-	}
+	err := r.badger.Update(func(txn *badger.Txn) error {
+		return saveGroupPhotos(txn, groupID, photos...)
+	})
+	logs.ErrorOnErr("RepoGroups got error on save photo gallery", err)
 }
 
 func (r *repoGroups) RemovePhotoGallery(groupID int64, photoIDs ...int64) {
-	for _, photoID := range photoIDs {
-		_ = r.badger.Update(func(txn *badger.Txn) error {
-			return txn.Delete(r.getPhotoGalleryKey(groupID, photoID))
-		})
-	}
+	_ = r.badger.Update(func(txn *badger.Txn) error {
+		for _, photoID := range photoIDs {
+			_  =txn.Delete(getGroupPhotoGalleryKey(groupID, photoID))
+		}
+		return nil
+	})
 }
 
 func (r *repoGroups) GetPhotoGallery(groupID int64) []*msg.GroupPhoto {
 	photos := make([]*msg.GroupPhoto, 0, 5)
 	_ = r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = r.getPhotoGalleryPrefix(groupID)
+		opts.Prefix =getGroupPhotoGalleryPrefix(groupID)
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
@@ -340,41 +308,37 @@ func (r *repoGroups) GetPhotoGallery(groupID int64) []*msg.GroupPhoto {
 	return photos
 }
 
-
-
 func (r *repoGroups) DeleteMember(groupID, userID int64) {
-
 	group := r.Get(groupID)
 	if group == nil {
 		return
 	}
 
 	_ = r.badger.Update(func(txn *badger.Txn) error {
-		return txn.Delete(r.getGroupParticipantKey(groupID, userID))
+		return txn.Delete(getGroupParticipantKey(groupID, userID))
 	})
 
 	r.updateParticipantsCount(groupID)
 }
 
 func (r *repoGroups) DeleteAllMembers(groupID int64) {
-
-	_ = r.badger.View(func(txn *badger.Txn) error {
+	err := r.badger.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = r.getPrefix(groupID)
+		opts.Prefix = getGroupPrefix(groupID)
 		it := txn.NewIterator(opts)
-		for it.Seek(r.getGroupParticipantKey(groupID, 0)); it.ValidForPrefix(opts.Prefix); it.Next() {
+		for it.Seek(getGroupParticipantKey(groupID, 0)); it.ValidForPrefix(opts.Prefix); it.Next() {
 			_ = txn.Delete(it.Item().Key())
 		}
 		it.Close()
-		return nil
-	})
 
-	group := r.Get(groupID)
-	if group == nil {
-		return
-	}
-	group.Participants = 0
-	r.Save(group)
+		group, err := getGroupByKey(txn, getGroupKey(groupID))
+		if err != nil {
+			return err
+		}
+		group.Participants = 0
+		return saveGroup(txn, group)
+	})
+	logs.ErrorOnErr("RepoGroup got error on delete all members", err)
 	return
 }
 
@@ -431,12 +395,16 @@ func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
 	searchResult, _ := r.peerSearch.Search(searchRequest)
 	groups := make([]*msg.Group, 0, 100)
-	for _, hit := range searchResult.Hits {
-		group := r.getGroupByKey(ronak.StrToByte(hit.ID))
-		if group != nil {
-			groups = append(groups, group)
+	_ = r.badger.View(func(txn *badger.Txn) error {
+		for _, hit := range searchResult.Hits {
+			group, _ := getGroupByKey(txn, ronak.StrToByte(hit.ID))
+			if group != nil {
+				groups = append(groups, group)
+			}
 		}
-	}
+		return nil
+	})
+
 	return groups
 }
 
@@ -449,7 +417,7 @@ func (r *repoGroups) ReIndex() {
 			_ = it.Item().Value(func(val []byte) error {
 				group := new(msg.Group)
 				_ = group.Unmarshal(val)
-				groupKey := r.getGroupKey(group.ID)
+				groupKey := getGroupKey(group.ID)
 				_ = r.peerSearch.Index(ronak.ByteToStr(groupKey), GroupSearch{
 					Type:   "group",
 					Title:  group.Title,

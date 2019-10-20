@@ -94,6 +94,63 @@ func saveUserPhotos(txn *badger.Txn, userID int64, photos  ...*msg.UserPhoto) er
 					return err
 				}
 			}
+
+			bytes, _ := photo.Marshal()
+			err := txn.SetEntry(badger.NewEntry(getUserPhotoGalleryKey(userID, photo.PhotoID), bytes))
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func saveGroupPhotos(txn *badger.Txn, groupID int64, photos ...*msg.GroupPhoto) error {
+	for _, photo := range photos {
+		if photo != nil {
+			if photo.PhotoBig != nil {
+				err := saveFile(txn, &msg.ClientFile{
+					ClusterID:  photo.PhotoBig.ClusterID,
+					FileID:     photo.PhotoBig.FileID,
+					AccessHash: photo.PhotoBig.AccessHash,
+					Type:       msg.ClientFileType_GroupProfilePhoto,
+					MimeType:   "",
+					UserID:     0,
+					GroupID:    groupID,
+					FileSize:   0,
+					MessageID:  0,
+					PeerID:     groupID,
+					PeerType:   int32(msg.PeerGroup),
+					Version:    0,
+				})
+				if err != nil {
+					return err
+				}
+			}
+			if photo.PhotoSmall != nil {
+				err := saveFile(txn, &msg.ClientFile{
+					ClusterID:  photo.PhotoSmall.ClusterID,
+					FileID:     photo.PhotoSmall.FileID,
+					AccessHash: photo.PhotoSmall.AccessHash,
+					Type:       msg.ClientFileType_Thumbnail,
+					MimeType:   "",
+					UserID:     0,
+					GroupID:    groupID,
+					FileSize:   0,
+					MessageID:  0,
+					PeerID:     groupID,
+					PeerType:   int32(msg.PeerGroup),
+					Version:    0,
+				})
+				if err != nil {
+					return err
+				}
+			}
+			bytes, _ := photo.Marshal()
+			err := txn.SetEntry(badger.NewEntry(getGroupPhotoGalleryKey(groupID, photo.PhotoID), bytes))
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
