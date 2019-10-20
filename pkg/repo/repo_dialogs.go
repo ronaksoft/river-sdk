@@ -273,19 +273,22 @@ func (r *repoDialogs) Delete(peerID int64, peerType int32) {
 
 func (r *repoDialogs) List(offset, limit int32) []*msg.Dialog {
 	dialogs := make([]*msg.Dialog, 0, limit)
-	err := r.bunt.View(func(tx *buntdb.Tx) error {
-		return tx.Descend(indexDialogs, func(key, value string) bool {
-			if limit--; limit < 0 {
-				return false
-			}
-			peer := getPeerFromKey(key)
-			dialog, err := r.Get(peer.ID, peer.Type)
-			if err == nil && dialog != nil {
-				dialogs = append(dialogs, dialog)
-			}
-			return true
+	err := r.badger.View(func(txn *badger.Txn) error {
+		return r.bunt.View(func(tx *buntdb.Tx) error {
+			return tx.Descend(indexDialogs, func(key, value string) bool {
+				if limit--; limit < 0 {
+					return false
+				}
+				peer := getPeerFromKey(key)
+				dialog, err := getDialog(txn, peer.ID, peer.Type)
+				if err == nil && dialog != nil {
+					dialogs = append(dialogs, dialog)
+				}
+				return true
+			})
 		})
 	})
+
 	logs.ErrorOnErr("RepoDialogs got error on getting list", err)
 	return dialogs
 }
@@ -318,18 +321,19 @@ func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
 }
 
 func (r *repoDialogs) GetPeerIDs() []int64 {
-
 	peerIDs := make([]int64, 0, 100)
-	_ = r.bunt.View(func(tx *buntdb.Tx) error {
-		return tx.Descend(indexDialogs, func(key, value string) bool {
-			peer := getPeerFromKey(key)
-			dialog, err := r.Get(peer.ID, peer.Type)
-			if err == nil && dialog != nil {
-				peerIDs = append(peerIDs, peer.ID)
-			}
-			return true
+	err := r.badger.View(func(txn *badger.Txn) error {
+		return r.bunt.View(func(tx *buntdb.Tx) error {
+			return tx.Descend(indexDialogs, func(key, value string) bool {
+				peer := getPeerFromKey(key)
+				dialog, err := getDialog(txn, peer.ID, peer.Type)
+				if err == nil && dialog != nil {
+					peerIDs = append(peerIDs, peer.ID)
+				}
+				return true
+			})
 		})
 	})
-
+	logs.WarnOnErr("RepoDialogs got error on get peer ids", err)
 	return peerIDs
 }

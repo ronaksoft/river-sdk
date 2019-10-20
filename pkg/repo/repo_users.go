@@ -148,10 +148,10 @@ func (r *repoUsers) readFromDb(userID int64) *msg.User {
 		}
 		return nil
 	})
+	logs.WarnOnErr("RepoUsers got error on read from db", err)
 	if err != nil {
 		return nil
 	}
-
 	return user
 }
 
@@ -159,16 +159,16 @@ func (r *repoUsers) readFromCache(userID int64) *msg.User {
 	user := new(msg.User)
 	keyID := fmt.Sprintf("OBJ.USER.{%d}", userID)
 
-	if jsonGroup, err := lCache.Get(keyID); err != nil || len(jsonGroup) == 0 {
+	if userBytes, err := lCache.Get(keyID); err != nil || len(userBytes) == 0 {
 		user := r.readFromDb(userID)
 		if user == nil {
 			return nil
 		}
-		jsonGroup, _ = user.Marshal()
-		_ = lCache.Set(keyID, jsonGroup)
+		userBytes, _ = user.Marshal()
+		_ = lCache.Set(keyID, userBytes)
 		return user
 	} else {
-		_ = user.Unmarshal(jsonGroup)
+		_ = user.Unmarshal(userBytes)
 	}
 	return user
 }

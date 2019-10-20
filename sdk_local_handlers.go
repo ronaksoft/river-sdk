@@ -21,7 +21,8 @@ import (
 func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.MessagesGetDialogs)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::messagesGetDialogs()-> Unmarshal()", zap.Error(err))
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
 		return
 	}
 	res := new(msg.MessagesDialogs)
@@ -93,7 +94,8 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.MessagesGetDialog)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::messagesGetDialog()-> Unmarshal()", zap.Error(err))
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
 		return
 	}
 	res := new(msg.Dialog)
@@ -118,7 +120,8 @@ func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain
 func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.MessagesSend)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::messagesSend()-> Unmarshal()", zap.Error(err))
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
 		return
 	}
 
@@ -175,7 +178,9 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 func (r *River) messagesReadHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.MessagesReadHistory)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::messagesReadHistory()-> Unmarshal()", zap.Error(err))
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
 	}
 
 	dialog, _ := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
@@ -195,7 +200,8 @@ func (r *River) messagesReadHistory(in, out *msg.MessageEnvelope, timeoutCB doma
 func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.MessagesGetHistory)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::messagesGetHistory()-> Unmarshal()", zap.Error(err))
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
 		return
 	}
 
@@ -356,7 +362,6 @@ func genSuccessCallback(cb domain.MessageHandler, peerID int64, peerType int32, 
 func (r *River) messagesDelete(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.MessagesDelete)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::messagesDelete()-> Unmarshal()", zap.Error(err))
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
 		return
@@ -392,7 +397,8 @@ func (r *River) messagesDelete(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.MessagesGet)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::messagesGet()-> Unmarshal()", zap.Error(err))
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
 		return
 	}
 	msgIDs := domain.MInt64B{}
@@ -437,7 +443,6 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 func (r *River) messagesClearHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.MessagesClearHistory)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::messagesClearHistory()-> Unmarshal()", zap.Error(err))
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
 		return
@@ -456,7 +461,6 @@ func (r *River) messagesClearHistory(in, out *msg.MessageEnvelope, timeoutCB dom
 func (r *River) messagesReadContents(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.MessagesReadContents)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::messagesReadContents()-> Unmarshal()", zap.Error(err))
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
 		return
@@ -471,7 +475,8 @@ func (r *River) messagesReadContents(in, out *msg.MessageEnvelope, timeoutCB dom
 func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.MessagesSendMedia)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::messagesSendMedia()-> Unmarshal()", zap.Error(err))
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
 		return
 	}
 
@@ -518,7 +523,8 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	reqMedia := new(msg.ClientSendMessageMedia)
 	if err := reqMedia.Unmarshal(in.Message); err != nil {
-		logs.Error("River::clientSendMessageMedia()-> Unmarshal()", zap.Error(err))
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
 		return
 	}
 
@@ -572,7 +578,8 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.ContactsGet)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::contactsGet()-> Unmarshal()", zap.Error(err))
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
 		return
 	}
 
@@ -598,7 +605,6 @@ func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.ContactsImport)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::contactsImport()-> Unmarshal()", zap.Error(err))
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
 		return
@@ -703,7 +709,8 @@ func (r *River) sendChunkedImportContactRequest(replace bool, diffContacts []*ms
 func (r *River) accountUpdateUsername(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.AccountUpdateUsername)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::accountUpdateUsername()-> Unmarshal()", zap.Error(err))
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
 		return
 	}
 
@@ -717,7 +724,8 @@ func (r *River) accountUpdateUsername(in, out *msg.MessageEnvelope, timeoutCB do
 func (r *River) accountRegisterDevice(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.AccountRegisterDevice)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::accountRegisterDevice()-> Unmarshal()", zap.Error(err))
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
 		return
 	}
 	r.DeviceToken = req
@@ -739,7 +747,8 @@ func (r *River) accountRegisterDevice(in, out *msg.MessageEnvelope, timeoutCB do
 func (r *River) accountUnregisterDevice(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.AccountUnregisterDevice)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::accountUnregisterDevice()-> Unmarshal()", zap.Error(err))
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
 		return
 	}
 	r.DeviceToken = new(msg.AccountRegisterDevice)
@@ -761,7 +770,8 @@ func (r *River) accountUnregisterDevice(in, out *msg.MessageEnvelope, timeoutCB 
 func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.AccountSetNotifySettings)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::accountSetNotifySettings()-> Unmarshal()", zap.Error(err))
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
 		return
 	}
 
@@ -781,7 +791,8 @@ func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB
 func (r *River) dialogTogglePin(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.MessagesToggleDialogPin)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::dialogTogglePin()-> Unmarshal()", zap.Error(err))
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
 		return
 	}
 
@@ -828,7 +839,6 @@ func (r *River) accountRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domai
 func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.AccountUpdateProfile)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::accountUpdateProfile()-> Unmarshal()", zap.Error(err))
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
 		return
@@ -851,7 +861,6 @@ func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB dom
 func (r *River) groupsEditTitle(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.GroupsEditTitle)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::messagesEditGroupTitle()-> Unmarshal()", zap.Error(err))
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
 		return
@@ -867,7 +876,6 @@ func (r *River) groupsEditTitle(in, out *msg.MessageEnvelope, timeoutCB domain.T
 func (r *River) groupAddUser(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.GroupsAddUser)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::groupAddUser()-> Unmarshal()", zap.Error(err))
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
 		return
@@ -892,7 +900,6 @@ func (r *River) groupAddUser(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 func (r *River) groupDeleteUser(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.GroupsDeleteUser)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::groupDeleteUser()-> Unmarshal()", zap.Error(err))
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
 		return
@@ -907,7 +914,6 @@ func (r *River) groupDeleteUser(in, out *msg.MessageEnvelope, timeoutCB domain.T
 func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.GroupsGetFull)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::groupsGetFull()-> Unmarshal()", zap.Error(err))
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
 		return
@@ -925,7 +931,6 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	// Participants
 	participants, err := repo.Groups.GetParticipants(req.GroupID)
 	if err != nil {
-		logs.Error("River::groupsGetFull()-> GetParticipants() Sending Request To Server !!!", zap.Error(err))
 		r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
 	}
@@ -934,8 +939,6 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	// NotifySettings
 	dlg, _ := repo.Dialogs.Get(req.GroupID, int32(msg.PeerGroup))
 	if dlg == nil {
-		logs.Warn("River::groupsGetFull()-> GetDialog() Sending Request To Server !!!")
-
 		r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
 	}
@@ -951,12 +954,6 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	}
 	users := repo.Users.GetMany(userIDs.ToArray())
 	if users == nil || len(participants) != len(users) || len(users) <= 0 {
-		logs.Warn("River::groupsGetFull()-> GetMany() Sending Request To Server !!!",
-			zap.Bool("Is user nil ? ", users == nil),
-			zap.Int("Participants Count", len(participants)),
-			zap.Int("Users Count", len(users)),
-		)
-
 		r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
 	}
@@ -974,7 +971,6 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 func (r *River) groupUpdateAdmin(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.GroupsUpdateAdmin)
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::groupUpdateAdmin()-> Unmarshal()", zap.Error(err))
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
 		return
