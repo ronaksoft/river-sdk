@@ -31,7 +31,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	// used messageType to identify client & server messages on Media thingy
 	x.Message.MessageType = 1
 
-	dialog := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
+	dialog, _  := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
 	if dialog == nil {
 		// make sure to created the message hole b4 creating dialog
 		dialog = &msg.Dialog{
@@ -136,9 +136,9 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			repo.Groups.Delete(x.Message.PeerID)
 		} else {
 			// get dialog and create first hole
-			dtoDlg := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
-			if dtoDlg != nil {
-				messageHole.InsertFill(dtoDlg.PeerID, dtoDlg.PeerType, dtoDlg.TopMessageID, dtoDlg.TopMessageID)
+			dialog, _ := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
+			if dialog != nil {
+				messageHole.InsertFill(dialog.PeerID, dialog.PeerType, dialog.TopMessageID, dialog.TopMessageID)
 			}
 		}
 	}
@@ -201,7 +201,7 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) ([]*msg.Up
 		return nil, err
 	}
 
-	dialog := repo.Dialogs.Get(x.Peer.ID, x.Peer.Type)
+	dialog, err := repo.Dialogs.Get(x.Peer.ID, x.Peer.Type)
 	if dialog == nil {
 		return nil, err
 	}
@@ -280,7 +280,7 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 	// so we create a fake UpdateMessageDelete to remove the pending from the view
 	pm, _ := repo.PendingMessages.GetByRandomID(sent.RandomID)
 
-	userMessage := repo.Messages.Get(sent.MessageID)
+	userMessage, _ := repo.Messages.Get(sent.MessageID)
 	if userMessage != nil {
 		logs.Info("SyncCtrl received UpdateMessageID after UpdateNewMessage",
 			zap.Int64("MID", x.MessageID),
@@ -547,8 +547,7 @@ func (ctrl *Controller) updateDraftMessage(u *msg.UpdateEnvelope) ([]*msg.Update
 
 	logs.Info("SyncCtrl applies UpdateDraftMessage")
 
-	dialog := repo.Dialogs.Get(x.Message.PeerID, int32(x.Message.PeerType))
-
+	dialog, _ := repo.Dialogs.Get(x.Message.PeerID, int32(x.Message.PeerType))
 	if dialog != nil {
 		dialog.Draft = x.Message
 		repo.Dialogs.Save(dialog)
@@ -567,12 +566,10 @@ func (ctrl *Controller) updateDraftMessageCleared(u *msg.UpdateEnvelope) ([]*msg
 
 	logs.Info("SyncCtrl applies UpdateDraftMessageCleared")
 
-	dialog := repo.Dialogs.Get(x.Peer.ID, int32(x.Peer.Type))
+	dialog, _ := repo.Dialogs.Get(x.Peer.ID, int32(x.Peer.Type))
 
 	if dialog != nil {
-
 		dialog.Draft = nil
-
 		repo.Dialogs.Save(dialog)
 	}
 

@@ -38,7 +38,7 @@ func TestRepoDialogs(t *testing.T) {
 	// }
 	repo.Dialogs.SaveNew(dialog, time.Now().Unix())
 
-	d := repo.Dialogs.Get(100, 1)
+	d, _ := repo.Dialogs.Get(100, 1)
 	t.Log(dialog)
 	t.Log(d)
 }
@@ -77,7 +77,7 @@ func TestRepoDeleteMessage(t *testing.T) {
 	peerID := int64(10001)
 	peerType := int32(1)
 
-	d := repo.Dialogs.Get(peerID, peerType)
+	d, _ := repo.Dialogs.Get(peerID, peerType)
 	if d == nil {
 		d = new(msg.Dialog)
 		d.PeerID = peerID
@@ -95,11 +95,11 @@ func TestRepoDeleteMessage(t *testing.T) {
 		repo.Messages.SaveNew(m, d, 10002)
 	}
 
-	d = repo.Dialogs.Get(peerID, peerType)
+	d, _ = repo.Dialogs.Get(peerID, peerType)
 	fmt.Println(d)
 
 	repo.Messages.Delete(10002, peerID, peerType, 19)
-	d = repo.Dialogs.Get(peerID, peerType)
+	d, _ = repo.Dialogs.Get(peerID, peerType)
 	fmt.Println(d)
 
 	msgs, _ := repo.Messages.GetMessageHistory(peerID, peerType, 0, 0, 5)

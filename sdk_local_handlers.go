@@ -97,7 +97,7 @@ func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain
 		return
 	}
 	res := new(msg.Dialog)
-	res = repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
+	res, _ = repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
 
 	// if the localDB had no data send the request to server
 	if res == nil {
@@ -178,7 +178,7 @@ func (r *River) messagesReadHistory(in, out *msg.MessageEnvelope, timeoutCB doma
 		logs.Error("River::messagesReadHistory()-> Unmarshal()", zap.Error(err))
 	}
 
-	dialog := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
+	dialog, _ := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
 		return
 	}
@@ -200,8 +200,8 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 
 	// Load the dialog
-	dtoDialog := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
-	if dtoDialog == nil {
+	dialog, _ := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
+	if dialog == nil {
 		logs.Debug("asking for a nil dialog")
 		fillOutput(out, []*msg.UserMessage{}, []*msg.User{}, in.RequestID, successCB)
 		return
@@ -209,7 +209,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 
 	// Prepare the request and update its parameters if necessary
 	if req.MaxID < 0 {
-		req.MaxID = dtoDialog.TopMessageID
+		req.MaxID = dialog.TopMessageID
 	}
 
 	// Update the request before sending to server
@@ -231,7 +231,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:
-		req.MaxID = dtoDialog.TopMessageID
+		req.MaxID = dialog.TopMessageID
 		fallthrough
 	case req.MinID == 0 && req.MaxID != 0:
 		b, bar := messageHole.GetLowerFilled(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
@@ -240,7 +240,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("MinID", req.MinID),
-				zap.Int64("TopMsgID", dtoDialog.TopMessageID),
+				zap.Int64("TopMsgID", dialog.TopMessageID),
 				zap.String("Holes", messageHole.PrintHole(req.Peer.ID, int32(req.Peer.Type))),
 			)
 			r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
@@ -255,7 +255,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("MinID", req.MinID),
-				zap.Int64("TopMsgID", dtoDialog.TopMessageID),
+				zap.Int64("TopMsgID", dialog.TopMessageID),
 				zap.String("Holes", messageHole.PrintHole(req.Peer.ID, int32(req.Peer.Type))),
 			)
 			r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
@@ -271,7 +271,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("MinID", req.MinID),
-				zap.Int64("TopMsgID", dtoDialog.TopMessageID),
+				zap.Int64("TopMsgID", dialog.TopMessageID),
 			)
 			r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
 			return
@@ -765,7 +765,7 @@ func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB
 		return
 	}
 
-	dialog := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
+	dialog, _ := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
 		return
 	}
@@ -785,7 +785,7 @@ func (r *River) dialogTogglePin(in, out *msg.MessageEnvelope, timeoutCB domain.T
 		return
 	}
 
-	dialog := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
+	dialog, _ := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
 		logs.Debug("River::dialogTogglePin()-> GetDialog()",
 			zap.String("Error", "Dialog is null"),
@@ -932,7 +932,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	res.Participants = participants
 
 	// NotifySettings
-	dlg := repo.Dialogs.Get(req.GroupID, int32(msg.PeerGroup))
+	dlg, _ := repo.Dialogs.Get(req.GroupID, int32(msg.PeerGroup))
 	if dlg == nil {
 		logs.Warn("River::groupsGetFull()-> GetDialog() Sending Request To Server !!!")
 
@@ -1084,8 +1084,7 @@ func (r *River) messagesSaveDraft(in, out *msg.MessageEnvelope, timeoutCB domain
 		return
 	}
 
-	dialog := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
-
+	dialog, _ := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
 	if dialog != nil {
 		draftMessage := msg.DraftMessage{
 			Body:     req.Body,
@@ -1112,8 +1111,7 @@ func (r *River) messagesClearDraft(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 
-	dialog := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
-
+	dialog, _ := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
 	if dialog != nil {
 		dialog.Draft = nil
 		repo.Dialogs.Save(dialog)

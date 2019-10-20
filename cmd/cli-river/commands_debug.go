@@ -181,7 +181,7 @@ var PrintMessage = &ishell.Cmd{
 
 		msgID := fnGetMessageID(c)
 
-		m := repo.Messages.Get(msgID)
+		m, _ := repo.Messages.Get(msgID)
 
 		if m == nil {
 			_Log.Error("Message Is nil")
