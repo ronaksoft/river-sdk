@@ -175,7 +175,7 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, use
 	if message == nil {
 		return
 	}
-	err := r.badger.Update(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		err := saveMessage(txn, message)
 		if err != nil {
 			return err
@@ -213,7 +213,7 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, use
 }
 
 func (r *repoMessages) Save(messages ...*msg.UserMessage) {
-	err := r.badger.Update(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		for _, message := range messages {
 			err := saveMessage(txn, message)
 			if err != nil {
@@ -377,7 +377,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 }
 
 func (r *repoMessages) Delete(userID int64, peerID int64, peerType int32, msgID int64) {
-	err := r.badger.Update(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		// delete from messages
 		err := txn.Delete(getMessageKey(peerID, peerType, msgID))
 		if err != nil {
@@ -415,7 +415,7 @@ func (r *repoMessages) Delete(userID int64, peerID int64, peerType int32, msgID 
 }
 
 func (r *repoMessages) DeleteAll(userID int64, peerID int64, peerType int32, maxID int64) {
-	err := r.badger.Update(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = getMessagePrefix(peerID, peerType)
 		opts.PrefetchValues = false
@@ -442,7 +442,7 @@ func (r *repoMessages) DeleteAll(userID int64, peerID int64, peerType int32, max
 }
 
 func (r *repoMessages) SetContentRead(peerID int64, peerType int32, messageIDs []int64) {
-	err := r.badger.Update(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		for _, msgID := range messageIDs {
 			userMessage, err := getMessageByID(txn, msgID)
 			if err != nil {

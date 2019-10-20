@@ -36,7 +36,7 @@ func (r *repoMessagesExtra) get(peerID int64, peerType int32) *dto.MessagesExtra
 
 func (r *repoMessagesExtra) save(key []byte, m *dto.MessagesExtra) {
 	bytes, _ := json.Marshal(m)
-	_ = r.badger.Update(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		return txn.SetEntry(badger.NewEntry(key, bytes))
 	})
 }

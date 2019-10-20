@@ -182,7 +182,7 @@ func (r *repoGroups) Get(groupID int64) *msg.Group {
 func (r *repoGroups) Delete(groupID int64) {
 	defer r.deleteFromCache(groupID)
 
-	_ = r.badger.Update(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		err := txn.Delete(getGroupKey(groupID))
 		if err != nil {
 			return err
@@ -200,7 +200,7 @@ func (r *repoGroups) SaveParticipant(groupID int64, participant *msg.GroupPartic
 
 	groupParticipantKey := getGroupParticipantKey(groupID, participant.UserID)
 	participantBytes, _ := participant.Marshal()
-	_ = r.badger.Update(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		return txn.SetEntry(badger.NewEntry(
 			groupParticipantKey, participantBytes,
 		))
@@ -272,14 +272,14 @@ func (r *repoGroups) RemovePhoto(groupID int64) {
 }
 
 func (r *repoGroups) SavePhotoGallery(groupID int64, photos ...*msg.GroupPhoto) {
-	err := r.badger.Update(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		return saveGroupPhotos(txn, groupID, photos...)
 	})
 	logs.ErrorOnErr("RepoGroups got error on save photo gallery", err)
 }
 
 func (r *repoGroups) RemovePhotoGallery(groupID int64, photoIDs ...int64) {
-	_ = r.badger.Update(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		for _, photoID := range photoIDs {
 			_  =txn.Delete(getGroupPhotoGalleryKey(groupID, photoID))
 		}
@@ -316,7 +316,7 @@ func (r *repoGroups) DeleteMember(groupID, userID int64) {
 		return
 	}
 
-	_ = r.badger.Update(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		return txn.Delete(getGroupParticipantKey(groupID, userID))
 	})
 

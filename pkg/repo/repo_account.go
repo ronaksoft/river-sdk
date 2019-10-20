@@ -20,7 +20,7 @@ func (r *repoAccount) SetPrivacy(key msg.PrivacyKey, rules []*msg.PrivacyRule) e
 	accountPrivacyRules.Rules = rules
 
 	bytes, _ := accountPrivacyRules.Marshal()
-	err := r.badger.Update(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		return txn.SetEntry(badger.NewEntry(
 			ronak.StrToByte(fmt.Sprintf("%s.%s", prefixAccount, key)),
 			bytes,

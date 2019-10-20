@@ -148,7 +148,7 @@ func (r *repoDialogs) Get(peerID int64, peerType int32) (dialog *msg.Dialog, err
 }
 
 func (r *repoDialogs) SaveNew(dialog *msg.Dialog, lastUpdate int64) (err error) {
-	return r.badger.Update(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		err = saveDialog(txn, dialog)
 		if err != nil {
 			return err
@@ -163,7 +163,7 @@ func (r *repoDialogs) Save(dialog *msg.Dialog) error {
 		logs.Error("RepoDialog calls save for nil dialog")
 		return nil
 	}
-	err := r.badger.Update(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		return saveDialog(txn, dialog)
 	})
 	logs.ErrorOnErr("RepoDialog got error on save dialog", err)
@@ -171,7 +171,7 @@ func (r *repoDialogs) Save(dialog *msg.Dialog) error {
 }
 
 func (r *repoDialogs) UpdateUnreadCount(peerID int64, peerType, unreadCount int32) {
-	err := r.badger.Update(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		dialog, err := getDialog(txn, peerID, peerType)
 		if err != nil {
 			return err
@@ -186,7 +186,7 @@ func (r *repoDialogs) UpdateUnreadCount(peerID int64, peerType, unreadCount int3
 }
 
 func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32, maxID int64) {
-	err := r.badger.Update(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		dialog, err := getDialog(txn, peerID, peerType)
 		if err != nil {
 			return err
@@ -209,7 +209,7 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, peerID int64, peerType int32,
 }
 
 func (r *repoDialogs) UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID int64) {
-	err := r.badger.Update(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		dialog, err := getDialog(txn, peerID, peerType)
 		if err != nil {
 			return err
@@ -230,7 +230,7 @@ func (r *repoDialogs) UpdateReadOutboxMaxID(peerID int64, peerType int32, maxID 
 }
 
 func (r *repoDialogs) UpdateNotifySetting(peerID int64, peerType int32, notifySettings *msg.PeerNotifySettings) {
-	err := r.badger.Update(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		dialog, err := getDialog(txn, peerID, peerType)
 		if err != nil {
 			return err
@@ -246,7 +246,7 @@ func (r *repoDialogs) UpdateNotifySetting(peerID int64, peerType int32, notifySe
 }
 
 func (r *repoDialogs) UpdatePinned(in *msg.UpdateDialogPinned) {
-	err := r.badger.Update(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		dialog, err := getDialog(txn, in.Peer.ID, in.Peer.Type)
 		if err != nil {
 			return err
@@ -262,7 +262,7 @@ func (r *repoDialogs) UpdatePinned(in *msg.UpdateDialogPinned) {
 }
 
 func (r *repoDialogs) Delete(peerID int64, peerType int32) {
-	err := r.badger.Update(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		return txn.Delete(getDialogKey(peerID, peerType))
 	})
 	logs.Error("RepoDialogs got error on deleting dialog",

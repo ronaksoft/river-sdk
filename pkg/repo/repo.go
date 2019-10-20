@@ -2,6 +2,7 @@ package repo
 
 import (
 	"fmt"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/allegro/bigcache"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
@@ -256,4 +257,19 @@ func DbSize() (int64, int64) {
 func TableInfo() []badger.TableInfo {
 	r.badger.Size()
 	return r.badger.Tables(true)
+}
+
+func badgerUpdate(fn func(txn *badger.Txn) error) (err error) {
+	for retry := 100; retry > 0; retry-- {
+		err = r.badger.Update(fn)
+		switch err {
+		case nil:
+			return nil
+		case badger.ErrConflict:
+		default:
+			return
+		}
+		time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Microsecond)
+	}
+	return
 }

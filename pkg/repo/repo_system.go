@@ -85,7 +85,7 @@ func (r *repoSystem) LoadBytes(keyName string) ([]byte, error) {
 func (r *repoSystem) SaveInt(keyName string, keyValue uint64) error {
 	b := make([]byte, 8)
 	binary.BigEndian.PutUint64(b, keyValue)
-	return r.badger.Update(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		return txn.SetEntry(
 			badger.NewEntry(r.getKey(keyName), b),
 		)
@@ -94,7 +94,7 @@ func (r *repoSystem) SaveInt(keyName string, keyValue uint64) error {
 
 // SaveString
 func (r *repoSystem) SaveString(keyName string, keyValue string) error {
-	return r.badger.Update(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		return txn.SetEntry(
 			badger.NewEntry(r.getKey(keyName), ronak.StrToByte(keyValue)),
 		)
@@ -103,7 +103,7 @@ func (r *repoSystem) SaveString(keyName string, keyValue string) error {
 
 // SaveBytes
 func (r *repoSystem) SaveBytes(keyName string, keyValue []byte) error {
-	return r.badger.Update(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		return txn.SetEntry(
 			badger.NewEntry(r.getKey(keyName), keyValue),
 		)

@@ -219,7 +219,7 @@ func (r *repoUsers) Save(users ...*msg.User) {
 		}
 		userIDs[v.ID] = true
 	}
-	_ = r.badger.Update(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		for idx := range users {
 			err := saveUser(txn, users[idx])
 			logs.ErrorOnErr("RepoUser got error on save", err, zap.Int64("UserID", users[idx].ID))
@@ -236,7 +236,7 @@ func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType i
 	}
 	defer r.deleteFromCache(peerID)
 
-	err := r.badger.Update(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		user, err := getUserByKey(txn, getUserKey(peerID))
 		if err != nil {
 			return err
@@ -424,7 +424,7 @@ func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) 
 }
 
 func (r *repoUsers) SaveContact(contactUsers ...*msg.ContactUser) error {
-	return r.badger.Update(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		for _, contactUser := range contactUsers {
 			err := saveContact(txn, contactUser)
 			if err != nil {
@@ -452,7 +452,7 @@ func (r *repoUsers) UpdatePhoto(userID int64, userPhoto *msg.UserPhoto) {
 }
 
 func (r *repoUsers) SavePhotoGallery(userID int64, photos ...*msg.UserPhoto) {
-	err := r.badger.Update(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		for _, photo := range photos {
 			if photo != nil {
 				key := getUserPhotoGalleryKey(userID, photo.PhotoID)
@@ -466,7 +466,7 @@ func (r *repoUsers) SavePhotoGallery(userID int64, photos ...*msg.UserPhoto) {
 }
 
 func (r *repoUsers) RemovePhotoGallery(userID int64, photoIDs ...int64) {
-	_ = r.badger.Update(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		for _, photoID := range photoIDs {
 			_ = txn.Delete(getUserPhotoGalleryKey(userID, photoID))
 		}

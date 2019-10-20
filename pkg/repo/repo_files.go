@@ -266,19 +266,19 @@ func (r *repoFiles) Save(file *msg.ClientFile) error {
 	if file == nil {
 		return nil
 	}
-	return r.badger.Update(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		return saveFile(txn, file)
 	})
 }
 
 func (r *repoFiles) Delete(clusterID int32, fileID int64, accessHash uint64) error {
-	return r.badger.Update(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		return txn.Delete(getFileKey(clusterID, fileID, accessHash))
 	})
 }
 
 func (r *repoFiles) MarkAsUploaded(fileID int64) error {
-	return r.badger.Update(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		return txn.Set(
 			ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixUploaded, fileID)),
 			ronak.StrToByte("OK"),
@@ -287,7 +287,7 @@ func (r *repoFiles) MarkAsUploaded(fileID int64) error {
 }
 
 func (r *repoFiles) UnmarkAsUploaded(fileID int64) error {
-	return r.badger.Update(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		return txn.Delete(ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixUploaded, fileID)))
 	})
 }

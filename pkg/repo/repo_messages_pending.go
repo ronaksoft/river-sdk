@@ -92,7 +92,7 @@ func (r *repoMessagesPending) Save(msgID int64, senderID int64, message *msg.Mes
 	}
 
 	bytes, _ := pm.Marshal()
-	_ = r.badger.Update(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		err := txn.SetEntry(badger.NewEntry(
 			getPendingMessageKey(pm.ID), bytes),
 		)
@@ -148,7 +148,7 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, requestID,
 	}
 
 	bytes, _ := pm.Marshal()
-	_ = r.badger.Update(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		// 1. Save PendingMessage by ID
 		err := txn.SetEntry(badger.NewEntry(
 			getPendingMessageKey(pm.ID), bytes),
@@ -180,7 +180,7 @@ func (r *repoMessagesPending) UpdateClientMessageMedia(pm *msg.ClientPendingMess
 	pm.Media, _ = csmm.Marshal()
 
 	bytes, _ := pm.Marshal()
-	_ = r.badger.Update(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		err := txn.SetEntry(badger.NewEntry(
 			getPendingMessageKey(pm.ID), bytes),
 		)
@@ -213,7 +213,7 @@ func (r *repoMessagesPending) SaveMessageMedia(msgID int64, senderID int64, msgM
 	pm.RequestID = msgMedia.RandomID
 
 	bytes, _ := pm.Marshal()
-	_ = r.badger.Update(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		err := txn.SetEntry(badger.NewEntry(
 			getPendingMessageKey(pm.ID), bytes),
 		)
@@ -291,7 +291,7 @@ func (r *repoMessagesPending) GetMany(messageIDs []int64) []*msg.UserMessage {
 
 func (r *repoMessagesPending) GetByPeer(peerID int64, peerType int32) []*msg.UserMessage {
 	userMessages := make([]*msg.UserMessage, 0, 10)
-	_ = r.badger.Update(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		opt := badger.DefaultIteratorOptions
 		opt.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
 		it := txn.NewIterator(opt)
@@ -313,7 +313,7 @@ func (r *repoMessagesPending) GetByPeer(peerID int64, peerType int32) []*msg.Use
 
 func (r *repoMessagesPending) GetAndConvertAll() []*msg.UserMessage {
 	userMessages := make([]*msg.UserMessage, 0, 10)
-	_ = r.badger.Update(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		opt := badger.DefaultIteratorOptions
 		opt.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
 		it := txn.NewIterator(opt)
@@ -333,7 +333,7 @@ func (r *repoMessagesPending) GetAndConvertAll() []*msg.UserMessage {
 
 func (r *repoMessagesPending) GetAll() []*msg.ClientPendingMessage {
 	pendingMessages := make([]*msg.ClientPendingMessage, 0, 10)
-	_ = r.badger.Update(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		opt := badger.DefaultIteratorOptions
 		opt.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
 		it := txn.NewIterator(opt)
@@ -352,20 +352,20 @@ func (r *repoMessagesPending) GetAll() []*msg.ClientPendingMessage {
 }
 
 func (r *repoMessagesPending) Delete(msgID int64) error {
-	return r.badger.Update(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		return deletePendingMessage(txn, msgID)
 	})
 }
 
 func (r *repoMessagesPending) DeleteByRealID(msgID int64) {
-	_ = r.badger.Update(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		_ = txn.Delete(getPendingMessageRealKey(msgID))
 		return nil
 	})
 }
 
 func (r *repoMessagesPending) DeleteMany(msgIDs []int64) {
-	err := r.badger.Update(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		for _, msgID := range msgIDs {
 			err  :=  deletePendingMessage(txn, msgID)
 			if err != nil {
@@ -394,7 +394,7 @@ func (r *repoMessagesPending) DeletePeerAllMessages(peerID int64, peerType int32
 	res.PeerID = peerID
 	res.PeerType = peerType
 	res.MessageIDs = make([]int64, 0)
-	_ = r.badger.Update(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		opt := badger.DefaultIteratorOptions
 		opt.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
 		it := txn.NewIterator(opt)
@@ -423,7 +423,7 @@ func (r *repoMessagesPending) SaveByRealID(randomID, realMsgID int64) {
 		return
 	}
 	bytes, _ := pm.Marshal()
-	_ = r.badger.Update(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		return txn.SetEntry(badger.NewEntry(
 			getPendingMessageRealKey(realMsgID), bytes),
 		)
