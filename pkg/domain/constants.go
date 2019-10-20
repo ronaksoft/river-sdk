@@ -10,7 +10,7 @@ const (
 	FileMaxPhotoSize   = 1 * 1024 * 1024   // 1MB
 	FileMaxRetry       = 10
 	FilePipelineCount  = 8
-	SDKVersion         = "v0.9.0"
+	SDKVersion         = "v0.9.1"
 )
 
 // Global Parameters
