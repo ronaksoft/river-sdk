@@ -35,21 +35,27 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 
 	pendingMessages := repo.PendingMessages.GetAndConvertAll()
-
+	dialogPMs := make(map[string]*msg.UserMessage, len(pendingMessages))
+	for _, pm := range pendingMessages {
+		keyID := fmt.Sprintf("%d.%d", pm.PeerID, pm.PeerType)
+		v, ok := dialogPMs[keyID]
+		if !ok {
+			dialogPMs[keyID] = pm
+		} else if pm.ID < v.ID {
+			dialogPMs[keyID] = pm
+		}
+	}
 	mUsers := domain.MInt64B{}
 	mGroups := domain.MInt64B{}
 	mMessages := domain.MInt64B{}
-	for idx := range res.Dialogs {
-		if res.Dialogs[idx].PeerType == int32(msg.PeerUser) {
-			mUsers[res.Dialogs[idx].PeerID] = true
+	for _, dialog := range res.Dialogs {
+		if dialog.PeerType == int32(msg.PeerUser) {
+			mUsers[dialog.PeerID] = true
 		}
-		mMessages[res.Dialogs[idx].TopMessageID] = true
-		for idx2 := range pendingMessages {
-			if pendingMessages[idx2].PeerID == res.Dialogs[idx].PeerID && pendingMessages[idx2].PeerType == res.Dialogs[idx].PeerType {
-				if pendingMessages[idx2].ID < res.Dialogs[idx].TopMessageID {
-					res.Dialogs[idx].TopMessageID = pendingMessages[idx2].ID
-				}
-			}
+		mMessages[dialog.TopMessageID] = true
+		keyID := fmt.Sprintf("%d.%d", dialog.PeerID, dialog.PeerType)
+		if pm, ok := dialogPMs[keyID]; ok {
+			dialog.TopMessageID = pm.ID
 		}
 	}
 
@@ -78,6 +84,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 	res.Groups = repo.Groups.GetMany(mGroups.ToArray())
 	res.Users = repo.Users.GetMany(mUsers.ToArray())
+
 	out.Constructor = msg.C_MessagesDialogs
 	buff, err := res.Marshal()
 	if err != nil {

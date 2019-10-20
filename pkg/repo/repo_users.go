@@ -219,18 +219,14 @@ func (r *repoUsers) Save(users ...*msg.User) {
 		}
 		userIDs[v.ID] = true
 	}
-	defer r.deleteFromCache(userIDs.ToArray()...)
-
-	err := r.badger.Update(func(txn *badger.Txn) error {
+	_ = r.badger.Update(func(txn *badger.Txn) error {
 		for idx := range users {
 			err := saveUser(txn, users[idx])
-			if err != nil {
-				return err
-			}
+			logs.ErrorOnErr("RepoUser got error on save", err, zap.Int64("UserID", users[idx].ID))
 		}
 		return nil
 	})
-	logs.ErrorOnErr("RepoUser got error on save", err)
+	r.deleteFromCache(userIDs.ToArray()...)
 	return
 }
 

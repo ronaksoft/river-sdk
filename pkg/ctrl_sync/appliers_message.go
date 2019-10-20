@@ -117,12 +117,13 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 	for _, dialog := range x.Dialogs {
 		topMessage, _ := mMessages[dialog.TopMessageID]
 		if topMessage == nil {
-			logs.Error("Top Message Is Nil",
-				zap.Int64("MessageID", dialog.TopMessageID),
-			)
-			continue
+			logs.Error("Top Message Is Nil", zap.Int64("MessageID", dialog.TopMessageID))
+			err := repo.Dialogs.Save(dialog)
+			logs.WarnOnErr("SyncCtrl got error on save dialog", err)
+		} else {
+			err := repo.Dialogs.SaveNew(dialog, topMessage.CreatedOn)
+			logs.WarnOnErr("SyncCtrl got error on save new dialog", err)
 		}
-		repo.Dialogs.SaveNew(dialog, topMessage.CreatedOn)
 	}
 	repo.Users.Save(x.Users...)
 	repo.Groups.Save(x.Groups...)

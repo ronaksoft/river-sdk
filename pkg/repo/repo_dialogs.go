@@ -158,15 +158,16 @@ func (r *repoDialogs) SaveNew(dialog *msg.Dialog, lastUpdate int64) (err error) 
 	})
 }
 
-func (r *repoDialogs) Save(dialog *msg.Dialog) {
+func (r *repoDialogs) Save(dialog *msg.Dialog) error {
 	if dialog == nil {
 		logs.Error("RepoDialog calls save for nil dialog")
-		return
+		return nil
 	}
 	err := r.badger.Update(func(txn *badger.Txn) error {
 		return saveDialog(txn, dialog)
 	})
 	logs.ErrorOnErr("RepoDialog got error on save dialog", err)
+	return err
 }
 
 func (r *repoDialogs) UpdateUnreadCount(peerID int64, peerType, unreadCount int32) {
