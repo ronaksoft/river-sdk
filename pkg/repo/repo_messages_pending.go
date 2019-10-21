@@ -358,10 +358,11 @@ func (r *repoMessagesPending) Delete(msgID int64) error {
 }
 
 func (r *repoMessagesPending) DeleteByRealID(msgID int64) {
-	_ = badgerUpdate(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		_ = txn.Delete(getPendingMessageRealKey(msgID))
 		return nil
 	})
+	logs.ErrorOnErr("RepoPending got error on delete by real id", err)
 }
 
 func (r *repoMessagesPending) DeleteMany(msgIDs []int64) {
@@ -417,17 +418,22 @@ func (r *repoMessagesPending) DeletePeerAllMessages(peerID int64, peerType int32
 }
 
 func (r *repoMessagesPending) SaveByRealID(randomID, realMsgID int64) {
-	// TODO:: Remove old keys
-	pm, err := r.GetByRandomID(randomID)
-	if err != nil {
-		return
-	}
-	bytes, _ := pm.Marshal()
-	_ = badgerUpdate(func(txn *badger.Txn) error {
-		return txn.SetEntry(badger.NewEntry(
-			getPendingMessageRealKey(realMsgID), bytes),
-		)
+	err := badgerUpdate(func(txn *badger.Txn) error {
+		pm := new(msg.ClientPendingMessage)
+		item, err := txn.Get(getPendingMessageRandomKey(randomID))
+		if err != nil {
+			return err
+		}
+		bytes, _ := pm.Marshal()
+		err = item.Value(func(val []byte) error {
+			return pm.Unmarshal(val)
+		})
+		if err != nil {
+			return err
+		}
+		return txn.SetEntry(badger.NewEntry(getPendingMessageRealKey(realMsgID), bytes))
 	})
+	logs.ErrorOnErr("RepoPending got error on save by real id", err)
 }
 
 const (
