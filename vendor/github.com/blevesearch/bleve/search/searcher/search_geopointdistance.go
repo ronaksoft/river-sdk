@@ -34,7 +34,7 @@ func NewGeoPointDistanceSearcher(indexReader index.IndexReader, centerLon,
 	// build a searcher for the box
 	boxSearcher, err := boxSearcher(indexReader,
 		topLeftLon, topLeftLat, bottomRightLon, bottomRightLat,
-		field, boost, options, false)
+		field, boost, options)
 	if err != nil {
 		return nil, err
 	}
@@ -54,20 +54,19 @@ func NewGeoPointDistanceSearcher(indexReader index.IndexReader, centerLon,
 // two boxes joined through a disjunction searcher
 func boxSearcher(indexReader index.IndexReader,
 	topLeftLon, topLeftLat, bottomRightLon, bottomRightLat float64,
-	field string, boost float64, options search.SearcherOptions, checkBoundaries bool) (
+	field string, boost float64, options search.SearcherOptions) (
 	search.Searcher, error) {
 	if bottomRightLon < topLeftLon {
 		// cross date line, rewrite as two parts
 
 		leftSearcher, err := NewGeoBoundingBoxSearcher(indexReader,
 			-180, bottomRightLat, bottomRightLon, topLeftLat,
-			field, boost, options, checkBoundaries)
+			field, boost, options, false)
 		if err != nil {
 			return nil, err
 		}
 		rightSearcher, err := NewGeoBoundingBoxSearcher(indexReader,
-			topLeftLon, bottomRightLat, 180, topLeftLat, field, boost, options,
-			checkBoundaries)
+			topLeftLon, bottomRightLat, 180, topLeftLat, field, boost, options, false)
 		if err != nil {
 			_ = leftSearcher.Close()
 			return nil, err
@@ -86,7 +85,7 @@ func boxSearcher(indexReader index.IndexReader,
 	// build geoboundinggox searcher for that bounding box
 	boxSearcher, err := NewGeoBoundingBoxSearcher(indexReader,
 		topLeftLon, bottomRightLat, bottomRightLon, topLeftLat, field, boost,
-		options, checkBoundaries)
+		options, false)
 	if err != nil {
 		return nil, err
 	}

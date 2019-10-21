@@ -86,10 +86,6 @@ func (t *TextField) Analyze() (int, analysis.TokenFrequencies) {
 	return fieldLength, tokenFreqs
 }
 
-func (t *TextField) Analyzer() *analysis.Analyzer {
-	return t.analyzer
-}
-
 func (t *TextField) Value() []byte {
 	return t.value
 }

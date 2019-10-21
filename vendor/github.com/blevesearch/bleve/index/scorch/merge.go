@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 	"sync/atomic"
 	"time"
 
@@ -158,7 +157,6 @@ func (s *Scorch) planMergeAtSnapshot(ourSnapshot *IndexSnapshot,
 
 	// process tasks in serial for now
 	var notifications []chan *IndexSnapshot
-	var filenames []string
 	for _, task := range resultMergePlan.Tasks {
 		if len(task.Segments) == 0 {
 			atomic.AddUint64(&s.stats.TotFileMergePlanTasksSegmentsEmpty, 1)
@@ -183,12 +181,6 @@ func (s *Scorch) planMergeAtSnapshot(ourSnapshot *IndexSnapshot,
 						segmentsToMerge = append(segmentsToMerge, zapSeg)
 						docsToDrop = append(docsToDrop, segSnapshot.deleted)
 					}
-					// track the files getting merged for unsetting the
-					// removal ineligibility. This helps to unflip files
-					// even with fast merger, slow persister work flows.
-					path := zapSeg.Path()
-					filenames = append(filenames,
-						strings.TrimPrefix(path, s.path+string(os.PathSeparator)))
 				}
 			}
 		}
@@ -230,7 +222,6 @@ func (s *Scorch) planMergeAtSnapshot(ourSnapshot *IndexSnapshot,
 			}
 			err = zap.ValidateMerge(segmentsToMerge, nil, docsToDrop, seg.(*zap.Segment))
 			if err != nil {
-				s.unmarkIneligibleForRemoval(filename)
 				return fmt.Errorf("merge validation failed: %v", err)
 			}
 			oldNewDocNums = make(map[uint64][]uint64)
@@ -273,13 +264,6 @@ func (s *Scorch) planMergeAtSnapshot(ourSnapshot *IndexSnapshot,
 				_ = newSnapshot.DecRef()
 			}
 		}
-	}
-
-	// once all the newly merged segment introductions are done,
-	// its safe to unflip the removal ineligibility for the replaced
-	// older segments
-	for _, f := range filenames {
-		s.unmarkIneligibleForRemoval(f)
 	}
 
 	return nil

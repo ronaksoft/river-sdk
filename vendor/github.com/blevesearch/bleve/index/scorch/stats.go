@@ -107,9 +107,6 @@ type Stats struct {
 	TotFileMergeIntroductionsDone    uint64
 	TotFileMergeIntroductionsSkipped uint64
 
-	CurFilesIneligibleForRemoval     uint64
-	TotSnapshotsRemovedFromMetaStore uint64
-
 	TotMemMergeBeg          uint64
 	TotMemMergeErr          uint64
 	TotMemMergeDone         uint64
