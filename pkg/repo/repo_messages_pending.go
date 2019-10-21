@@ -424,13 +424,13 @@ func (r *repoMessagesPending) SaveByRealID(randomID, realMsgID int64) {
 		if err != nil {
 			return err
 		}
-		bytes, _ := pm.Marshal()
 		err = item.Value(func(val []byte) error {
 			return pm.Unmarshal(val)
 		})
 		if err != nil {
 			return err
 		}
+		bytes, _ := pm.Marshal()
 		return txn.SetEntry(badger.NewEntry(getPendingMessageRealKey(realMsgID), bytes))
 	})
 	logs.ErrorOnErr("RepoPending got error on save by real id", err)
