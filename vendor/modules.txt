@@ -14,7 +14,7 @@ github.com/allegro/bigcache/queue
 github.com/beeker1121/goque
 # github.com/beorn7/perks v1.0.0
 github.com/beorn7/perks/quantile
-# github.com/blevesearch/bleve v0.8.0
+# github.com/blevesearch/bleve v0.8.1
 github.com/blevesearch/bleve
 github.com/blevesearch/bleve/analysis/analyzer/keyword
 github.com/blevesearch/bleve/analysis/lang/en
@@ -61,7 +61,7 @@ github.com/blevesearch/segment
 github.com/certifi/gocertifi
 # github.com/couchbase/vellum v0.0.0-20190626091642-41f2deade2cf
 github.com/couchbase/vellum
-github.com/couchbase/vellum/levenshtein2
+github.com/couchbase/vellum/levenshtein
 github.com/couchbase/vellum/regexp
 github.com/couchbase/vellum/utf8
 # github.com/dgraph-io/badger v1.6.0
