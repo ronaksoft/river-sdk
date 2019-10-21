@@ -266,6 +266,7 @@ func badgerUpdate(fn func(txn *badger.Txn) error) (err error) {
 		case nil:
 			return nil
 		case badger.ErrConflict:
+			logs.Debug("Badger update conflict")
 		default:
 			return
 		}
