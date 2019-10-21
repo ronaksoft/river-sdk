@@ -516,9 +516,10 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer, outO
 		if ok {
 			externalHandlerUpdates, err := applier(update)
 			if err != nil {
-				logs.Error("UpdateHandler() -> UpdateAppliers", zap.Error(err))
+				logs.Error("SyncCtrl got error on update applier", zap.Error(err))
 				return
 			}
+			logs.Debug("SyncCtrl applied update", zap.String("Constructor", msg.ConstructorNames[update.Constructor]))
 			if update.UpdateID != 0 {
 				ctrl.updateID = update.UpdateID
 			}
