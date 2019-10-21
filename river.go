@@ -9,7 +9,6 @@ import (
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"runtime"
@@ -290,97 +289,10 @@ func (r *River) Migrate() int {
 
 func (r *River) onNetworkConnect() {
 	// Get Server Time and set server time difference
-	timeReq := new(msg.SystemGetServerTime)
-	timeReqBytes, _ := timeReq.Marshal()
+
 	waitGroup := sync.WaitGroup{}
-	waitGroup.Add(1)
-	go func() {
-		defer waitGroup.Done()
-		keepGoing := true
-		for keepGoing {
-			if r.networkCtrl.GetQuality() == domain.NetworkDisconnected {
-				return
-			}
-			r.queueCtrl.RealtimeCommand(
-				uint64(domain.SequentialUniqueID()),
-				msg.C_SystemGetServerTime,
-				timeReqBytes,
-				func() {
-					time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
-				},
-				func(m *msg.MessageEnvelope) {
-					switch m.Constructor {
-					case msg.C_SystemServerTime:
-						x := new(msg.SystemServerTime)
-						err := x.Unmarshal(m.Message)
-						if err != nil {
-							logs.Error("We couldn't unmarshal SystemGetServerTime response", zap.Error(err))
-							return
-						}
-						clientTime := time.Now().Unix()
-						serverTime := x.Timestamp
-						domain.TimeDelta = time.Duration(serverTime-clientTime) * time.Second
-
-						logs.Debug("SystemServerTime received",
-							zap.Int64("ServerTime", serverTime),
-							zap.Int64("ClientTime", clientTime),
-							zap.Duration("Difference", domain.TimeDelta),
-						)
-						keepGoing = false
-					case msg.C_Error:
-						logs.Warn("We received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
-						time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
-					}
-				},
-				true, false,
-			)
-		}
-	}()
-
-	waitGroup.Add(1)
-	go func() {
-		defer waitGroup.Done()
-		r.syncCtrl.UpdateSalt()
-		req := msg.AuthRecall{}
-		reqBytes, _ := req.Marshal()
-		if r.syncCtrl.GetUserID() != 0 {
-			// send auth recall until it succeed
-			keepGoing := true
-			for keepGoing {
-				if r.networkCtrl.GetQuality() == domain.NetworkDisconnected {
-					return
-				}
-				// this is priority command that should not passed to queue
-				// after auth recall answer got back the queue should send its requests in order to get related updates
-				r.queueCtrl.RealtimeCommand(
-					uint64(domain.SequentialUniqueID()),
-					msg.C_AuthRecall,
-					reqBytes,
-					func() {
-						time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
-					},
-					func(m *msg.MessageEnvelope) {
-						if m.Constructor == msg.C_AuthRecalled {
-							x := new(msg.AuthRecalled)
-							err := x.Unmarshal(m.Message)
-							if err != nil {
-								logs.Error("We couldn't unmarshal AuthRecall (AuthRecalled) response", zap.Error(err))
-								return
-							}
-							keepGoing = false
-						}
-					},
-					true,
-					false,
-				)
-			}
-		}
-		if r.DeviceToken == nil || r.DeviceToken.Token == "" {
-			logs.Warn("Device Token is not set")
-		}
-
-	}()
-
+	r.syncCtrl.SendGetServerTime(&waitGroup)
+	r.syncCtrl.SendAuthRecall(&waitGroup)
 	waitGroup.Wait()
 	if r.networkCtrl.GetQuality() == domain.NetworkDisconnected {
 		return
@@ -395,6 +307,9 @@ func (r *River) onNetworkConnect() {
 		}
 	}()
 }
+
+
+
 
 func (r *River) onGeneralError(requestID uint64, e *msg.Error) {
 	logs.Info("We received error (General)",

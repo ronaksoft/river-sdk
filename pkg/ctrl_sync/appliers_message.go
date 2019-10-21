@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 	"hash/crc32"
 	"sort"
+	"sync"
 )
 
 // authAuthorization
@@ -34,6 +35,10 @@ func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
 	ctrl.connInfo.Save()
 
 	ctrl.SetUserID(x.User.ID)
+
+	waitGroup := sync.WaitGroup{}
+	ctrl.SendAuthRecall(&waitGroup)
+	waitGroup.Wait()
 
 	go ctrl.Sync()
 }
@@ -192,7 +197,6 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 
 	// save Users
 	repo.Users.Save(u.Users...)
-
 
 	for _, photo := range u.PhotoGallery {
 		repo.Files.SaveGroupPhoto(u.Group.ID, photo)
