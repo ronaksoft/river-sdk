@@ -87,9 +87,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 
 	out.Constructor = msg.C_MessagesDialogs
 	buff, err := res.Marshal()
-	if err != nil {
-		logs.Error("River::messagesGetDialogs()-> res.Marshal()", zap.Error(err))
-	}
+	logs.ErrorOnErr("River got error on marshal MessagesDialogs", err)
 	out.Message = buff
 	uiexec.Ctx().Exec(func() {
 		if successCB != nil {
@@ -832,7 +830,7 @@ func (r *River) accountRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 
 	if user.Photo != nil && user.Photo.PhotoID == x.PhotoID {
-		repo.Users.UpdatePhoto(r.ConnInfo.UserID, &msg.UserPhoto{
+		_ = repo.Users.UpdatePhoto(r.ConnInfo.UserID, &msg.UserPhoto{
 			PhotoBig:   &msg.FileLocation{},
 			PhotoSmall: &msg.FileLocation{},
 			PhotoID:    0,
@@ -856,7 +854,7 @@ func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB dom
 	r.ConnInfo.Bio = req.Bio
 	r.ConnInfo.Save()
 
-	repo.Users.UpdateProfile(r.ConnInfo.UserID,
+	_ = repo.Users.UpdateProfile(r.ConnInfo.UserID,
 		req.FirstName, req.LastName, r.ConnInfo.Username, req.Bio,
 	)
 
