@@ -156,9 +156,17 @@ func (r *repoMessages) GetMany(messageIDs []int64) []*msg.UserMessage {
 	err := badgerView(func(txn *badger.Txn) error {
 		for _, messageID := range messageIDs {
 			userMessage, err := getMessageByID(txn, messageID)
-			logs.WarnOnErr("RepoMessage got error on get many", err,
-				zap.Int64("MsgID", messageID),
-			)
+			switch err {
+			case badger.ErrKeyNotFound:
+				logs.Warn("RepoMessage got error on get many (key not found)",
+					zap.Int64("MsgID", messageID),
+				)
+			default:
+				logs.Warn("RepoMessage got error on get many",
+					zap.Error(err),
+					zap.Int64("MsgID", messageID),
+				)
+			}
 			if err == nil {
 				userMessages = append(userMessages, userMessage)
 			}

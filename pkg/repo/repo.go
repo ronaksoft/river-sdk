@@ -97,7 +97,12 @@ func repoSetDB(dbPath string, lowMemory bool) {
 		badgerOpts = badgerOpts.
 			WithTableLoadingMode(options.FileIO).
 			WithValueLogLoadingMode(options.FileIO).
-			WithValueLogFileSize(1 << 24) // 16MB
+			WithNumMemtables(2).
+			WithNumLevelZeroTables(2).
+			WithNumLevelZeroTablesStall(4).
+			WithMaxTableSize(1 << 22). // 4MB
+			WithValueLogFileSize(1 << 22) // 4MB
+
 	} else {
 		badgerOpts = badgerOpts.
 			WithTableLoadingMode(options.LoadToRAM).

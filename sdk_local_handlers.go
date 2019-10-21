@@ -87,9 +87,10 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		case msg.PeerGroup:
 			mGroups[m.PeerID] = true
 		}
-
 		mUsers[m.SenderID] = true
-		mUsers[m.FwdSenderID] = true
+		if m.FwdSenderID != 0 {
+			mUsers[m.FwdSenderID] = true
+		}
 
 		// load MessageActionData users
 		actUserIDs := domain.ExtractActionUserIDs(m.MessageAction, m.MessageActionData)
