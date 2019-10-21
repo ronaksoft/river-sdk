@@ -49,6 +49,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	mGroups := domain.MInt64B{}
 	mMessages := domain.MInt64B{}
 	for _, dialog := range res.Dialogs {
+		logs.Debug("Dialog", zap.Int64("MsgID", dialog.TopMessageID), zap.Int64("PeerID", dialog.PeerID))
 		if dialog.PeerType == int32(msg.PeerUser) {
 			mUsers[dialog.PeerID] = true
 		}
@@ -61,7 +62,21 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 
 	// Load Messages
 	res.Messages = repo.Messages.GetMany(mMessages.ToArray())
-
+	if len(res.Messages) != len(mMessages) {
+		logs.Warn("Rive found unmatched dialog messages", zap.Int("Got", len(res.Messages)), zap.Int("Need", len(mMessages)))
+	}
+	for msgID := range mMessages {
+		found := false
+		for _, m := range res.Messages {
+			if m.ID == msgID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			logs.Warn("missed message", zap.Int64("MsgID", msgID))
+		}
+	}
 	// Load Pending messages
 	res.Messages = append(res.Messages, pendingMessages...)
 
@@ -83,7 +98,37 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		}
 	}
 	res.Groups = repo.Groups.GetMany(mGroups.ToArray())
+	if len(res.Groups) != len(mGroups) {
+		logs.Warn("Rive found unmatched dialog groups", zap.Int("Got", len(res.Messages)), zap.Int("Need", len(mMessages)))
+		for groupID := range mGroups {
+			found := false
+			for _, g := range res.Groups {
+				if g.ID == groupID {
+					found = true
+					break
+				}
+			}
+			if !found {
+				logs.Warn("missed group", zap.Int64("GroupID", groupID))
+			}
+		}
+	}
 	res.Users = repo.Users.GetMany(mUsers.ToArray())
+	if len(res.Users) != len(mUsers) {
+		logs.Warn("Rive found unmatched dialog groups", zap.Int("Got", len(res.Messages)), zap.Int("Need", len(mMessages)))
+		for userID := range mUsers {
+			found := false
+			for _, g := range res.Users {
+				if g.ID == userID {
+					found = true
+					break
+				}
+			}
+			if !found {
+				logs.Warn("missed user", zap.Int64("UserID", userID))
+			}
+		}
+	}
 
 	out.Constructor = msg.C_MessagesDialogs
 	buff, err := res.Marshal()
@@ -825,7 +870,7 @@ func (r *River) accountRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domai
 	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 
 	user, err := repo.Users.Get(r.ConnInfo.UserID)
-	if err != nil  {
+	if err != nil {
 		return
 	}
 
