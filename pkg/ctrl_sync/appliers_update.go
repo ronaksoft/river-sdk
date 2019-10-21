@@ -123,7 +123,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 		_ = act.Unmarshal(x.Message.MessageActionData)
 
 		// 1. Delete All Messages < x.MessageID
-		_ = repo.Messages.DeleteAll(ctrl.userID, x.Message.PeerID, x.Message.PeerType, act.MaxID)
+		_ = repo.Messages.ClearHistory(ctrl.userID, x.Message.PeerID, x.Message.PeerType, act.MaxID)
 
 		// Delete Scroll Position
 		repo.MessagesExtra.SaveScrollID(x.Message.PeerID, x.Message.PeerType, 0)

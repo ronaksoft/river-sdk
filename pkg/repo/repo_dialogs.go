@@ -41,26 +41,6 @@ func getPeerFromKey(key string) *msg.Peer {
 	}
 }
 
-func updateTopMessageID(txn *badger.Txn, dialog *msg.Dialog) error {
-	var topMessageID int64
-	opts := badger.DefaultIteratorOptions
-	opts.Prefix = getMessagePrefix(dialog.PeerID, dialog.PeerType)
-	opts.Reverse = true
-	it := txn.NewIterator(opts)
-	it.Seek(getMessageKey(dialog.PeerID, dialog.PeerType, dialog.TopMessageID))
-	if it.ValidForPrefix(opts.Prefix) {
-		userMessage := new(msg.UserMessage)
-		_ = it.Item().Value(func(val []byte) error {
-			return userMessage.Unmarshal(val)
-		})
-		topMessageID = userMessage.ID
-	}
-	it.Close()
-
-	dialog.TopMessageID = topMessageID
-	return saveDialog(txn, dialog)
-}
-
 func saveDialog(txn *badger.Txn, dialog *msg.Dialog) error {
 	dialogBytes, _ := dialog.Marshal()
 	err := txn.SetEntry(badger.NewEntry(

@@ -405,9 +405,23 @@ func (r *repoMessages) Delete(userID int64, peerID int64, peerType int32, msgID 
 			return err
 		}
 		if dialog.TopMessageID == msgID {
-			err = updateTopMessageID(txn, dialog)
-			if err != nil {
-				return err
+			opts := badger.DefaultIteratorOptions
+			opts.Prefix = getMessagePrefix(dialog.PeerID, dialog.PeerType)
+			opts.Reverse = true
+			it := txn.NewIterator(opts)
+			it.Seek(getMessageKey(dialog.PeerID, dialog.PeerType, dialog.TopMessageID))
+			if it.ValidForPrefix(opts.Prefix) {
+				userMessage := new(msg.UserMessage)
+				_ = it.Item().Value(func(val []byte) error {
+					return userMessage.Unmarshal(val)
+				})
+				dialog.TopMessageID = userMessage.ID
+			}
+			it.Close()
+			if dialog.TopMessageID == msgID {
+				_ = txn.Delete(getDialogKey(peerID, peerType))
+				_ = r.msgSearch.Delete(ronak.ByteToStr(getMessageKey(peerID, peerType, msgID)))
+				return nil
 			}
 		}
 		dialog.UnreadCount, dialog.MentionedCount, err = countDialogUnread(txn, dialog.PeerID, dialog.PeerType, userID, dialog.ReadInboxMaxID+1)
@@ -424,7 +438,7 @@ func (r *repoMessages) Delete(userID int64, peerID int64, peerType int32, msgID 
 	logs.ErrorOnErr("RepoMessage got error on delete", err)
 }
 
-func (r *repoMessages) DeleteAll(userID int64, peerID int64, peerType int32, maxID int64) error {
+func (r *repoMessages) ClearHistory(userID int64, peerID int64, peerType int32, maxID int64) error {
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = getMessagePrefix(peerID, peerType)
