@@ -332,7 +332,9 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 	if pm == nil {
 		return nil, nil
 	}
+	logs.Debug("SyncCtrl is going to save by realID")
 	repo.PendingMessages.SaveByRealID(sent.RandomID, sent.MessageID)
+	logs.Debug("SyncCtrl saved by realID")
 
 	return res, nil
 }
