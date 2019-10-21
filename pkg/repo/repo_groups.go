@@ -299,7 +299,7 @@ func (r *repoGroups) DeleteAllMembers(groupID int64) {
 		opts.Prefix = getGroupPrefix(groupID)
 		it := txn.NewIterator(opts)
 		for it.Seek(getGroupParticipantKey(groupID, 0)); it.ValidForPrefix(opts.Prefix); it.Next() {
-			_ = txn.Delete(it.Item().Key())
+			_ = txn.Delete(it.Item().KeyCopy(nil))
 		}
 		it.Close()
 
