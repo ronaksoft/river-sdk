@@ -133,82 +133,44 @@ func saveContact(txn *badger.Txn, contactUser *msg.ContactUser) error {
 	return nil
 }
 
-func (r *repoUsers) readFromDb(userID int64) *msg.User {
-	user := new(msg.User)
-	err := r.badger.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(getUserKey(userID))
+func (r *repoUsers) Get(userID int64) (user *msg.User, err error) {
+	err = badgerView(func(txn *badger.Txn) error {
+		user, err = getUserByKey(txn, getUserKey(userID))
 		if err != nil {
 			return err
 		}
-		err = item.Value(func(val []byte) error {
-			return user.Unmarshal(val)
-		})
-		if err != nil {
-			return err
+		delta := time.Now().Unix() - user.LastSeen
+		switch {
+		case delta < domain.Minute:
+			user.Status = msg.UserStatusOnline
+		case delta < domain.Week:
+			user.Status = msg.UserStatusRecently
+		case delta < domain.Month:
+			user.Status = msg.UserStatusLastWeek
+		case delta < domain.TwoMonth:
+			user.Status = msg.UserStatusLastMonth
+		default:
+			user.Status = msg.UserStatusOffline
 		}
 		return nil
 	})
-	logs.WarnOnErr("RepoUsers got error on read from db", err)
-	if err != nil {
-		return nil
-	}
-	return user
-}
-
-func (r *repoUsers) readFromCache(userID int64) *msg.User {
-	user := new(msg.User)
-	keyID := fmt.Sprintf("OBJ.USER.{%d}", userID)
-
-	if userBytes, err := lCache.Get(keyID); err != nil || len(userBytes) == 0 {
-		user := r.readFromDb(userID)
-		if user == nil {
-			return nil
-		}
-		userBytes, _ = user.Marshal()
-		_ = lCache.Set(keyID, userBytes)
-		return user
-	} else {
-		_ = user.Unmarshal(userBytes)
-	}
-	return user
-}
-
-func (r *repoUsers) readManyFromCache(userIDs ...int64) []*msg.User {
-	users := make([]*msg.User, 0, len(userIDs))
-	for _, userID := range userIDs {
-		if user := r.readFromCache(userID); user != nil {
-			delta := time.Now().Unix() - user.LastSeen
-			switch {
-			case delta < domain.Minute:
-				user.Status = msg.UserStatusOnline
-			case delta < domain.Week:
-				user.Status = msg.UserStatusRecently
-			case delta < domain.Month:
-				user.Status = msg.UserStatusLastWeek
-			case delta < domain.TwoMonth:
-				user.Status = msg.UserStatusLastMonth
-			default:
-				user.Status = msg.UserStatusOffline
-			}
-			users = append(users, user)
-		}
-	}
-	return users
-}
-
-func (r *repoUsers) deleteFromCache(userIDs ...int64) {
-	for _, userID := range userIDs {
-		_ = lCache.Delete(fmt.Sprintf("OBJ.USER.{%d}", userID))
-	}
-
-}
-
-func (r *repoUsers) Get(userID int64) *msg.User {
-	return r.readFromCache(userID)
+	logs.ErrorOnErr("RepoUser got error on get", err)
+	return
 }
 
 func (r *repoUsers) GetMany(userIDs []int64) []*msg.User {
-	return r.readManyFromCache(userIDs...)
+	users := make([]*msg.User, 0, len(userIDs))
+	_ = badgerView(func(txn *badger.Txn) error {
+		for _, userID := range userIDs {
+			user, err := getUserByKey(txn, getUserKey(userID))
+			logs.WarnOnErr("RepoUser got error on get many", err, zap.Int64("UserID", userID))
+			if user != nil {
+				users = append(users, user)
+			}
+		}
+		return nil
+	})
+	return users
 }
 
 func (r *repoUsers) Save(users ...*msg.User) {
@@ -226,7 +188,6 @@ func (r *repoUsers) Save(users ...*msg.User) {
 		}
 		return nil
 	})
-	r.deleteFromCache(userIDs.ToArray()...)
 	return
 }
 
@@ -234,7 +195,6 @@ func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType i
 	if msg.PeerType(peerType) != msg.PeerUser {
 		return
 	}
-	defer r.deleteFromCache(peerID)
 
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		user, err := getUserByKey(txn, getUserKey(peerID))
@@ -248,26 +208,34 @@ func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType i
 	return
 }
 
-func (r *repoUsers) GetAccessHash(userID int64) (uint64, error) {
-	user := r.Get(userID)
-	if user == nil {
-		return 0, domain.ErrDoesNotExists
-	}
-	return user.AccessHash, nil
+func (r *repoUsers) GetAccessHash(userID int64) (accessHash uint64, err error) {
+	err = badgerView(func(txn *badger.Txn) error {
+		user, err := getUserByKey(txn, getUserKey(userID))
+		if err != nil {
+			return err
+		}
+		if user != nil {
+			accessHash = user.AccessHash
+		}
+		return nil
+	})
+	return
 }
 
-func (r *repoUsers) UpdateProfile(userID int64, firstName, lastName, username, bio string) {
-	user := r.Get(userID)
-	if user == nil {
-		return
-	}
-	defer r.deleteFromCache(userID)
-	user.FirstName = firstName
-	user.LastName = lastName
-	user.Username = username
-	user.Bio = bio
-
-	r.Save(user)
+func (r *repoUsers) UpdateProfile(userID int64, firstName, lastName, username, bio string) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
+		user, err := getUserByKey(txn, getUserKey(userID))
+		if err != nil {
+			return err
+		}
+		user.FirstName = firstName
+		user.LastName = lastName
+		user.Username = username
+		user.Bio = bio
+		return saveUser(txn, user)
+	})
+	logs.ErrorOnErr("RepoUser got error on update profile", err)
+	return err
 }
 
 func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
@@ -413,14 +381,18 @@ func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
 	return contactUsers
 }
 
-func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) {
-
-	defer r.deleteFromCache(userID)
-
-	contact := r.GetContact(userID)
-	contact.FirstName = firstName
-	contact.LastName = lastName
-	r.SaveContact(contact)
+func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
+		contact, err := getContactByKey(txn, getContactKey(userID))
+		if err != nil {
+			return err
+		}
+		contact.FirstName = firstName
+		contact.LastName = lastName
+		return saveContact(txn, contact)
+	})
+	logs.ErrorOnErr("RepoUser got error on update contact info", err)
+	return err
 }
 
 func (r *repoUsers) SaveContact(contactUsers ...*msg.ContactUser) error {
@@ -435,20 +407,17 @@ func (r *repoUsers) SaveContact(contactUsers ...*msg.ContactUser) error {
 	})
 }
 
-func (r *repoUsers) GetPhoto(userID, photoID int64) *msg.UserPhoto {
-
-	user := r.Get(userID)
-	return user.Photo
-}
-
-func (r *repoUsers) UpdatePhoto(userID int64, userPhoto *msg.UserPhoto) {
-	defer r.deleteFromCache(userID)
-	user := r.Get(userID)
-	if user == nil {
-		return
-	}
-	user.Photo = userPhoto
-	r.Save(user)
+func (r *repoUsers) UpdatePhoto(userID int64, userPhoto *msg.UserPhoto) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
+		user, err := getUserByKey(txn, getUserKey(userID))
+		if err != nil {
+			return err
+		}
+		user.Photo = userPhoto
+		return saveUser(txn, user)
+	})
+	logs.ErrorOnErr("RepoUser got error on update photo", err)
+	return err
 }
 
 func (r *repoUsers) SavePhotoGallery(userID int64, photos ...*msg.UserPhoto) {

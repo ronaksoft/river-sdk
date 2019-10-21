@@ -826,9 +826,8 @@ func (r *River) accountRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domai
 	// send the request to server
 	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 
-	user := repo.Users.Get(r.ConnInfo.UserID)
-	if user == nil {
-		logs.Error("AccountRemovePhoto but user is nil")
+	user, err := repo.Users.Get(r.ConnInfo.UserID)
+	if err != nil  {
 		return
 	}
 
@@ -887,7 +886,7 @@ func (r *River) groupAddUser(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		successCB(out)
 		return
 	}
-	user := repo.Users.Get(req.User.UserID)
+	user, _ := repo.Users.Get(req.User.UserID)
 	if user != nil {
 		gp := &msg.GroupParticipant{
 			AccessHash: req.User.AccessHash,
@@ -927,8 +926,8 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	}
 
 	res := new(msg.GroupFull)
-	// GroupSearch
-	group := repo.Groups.Get(req.GroupID)
+
+	group, _ := repo.Groups.Get(req.GroupID)
 	if group == nil {
 		r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
@@ -999,9 +998,8 @@ func (r *River) groupRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domain.
 		logs.Error("groupRemovePhoto() failed to unmarshal", zap.Error(err))
 	}
 
-	group := repo.Groups.Get(req.GroupID)
+	group, _ := repo.Groups.Get(req.GroupID)
 	if group == nil {
-		logs.Error("AccountRemovePhoto but user is nil")
 		return
 	}
 

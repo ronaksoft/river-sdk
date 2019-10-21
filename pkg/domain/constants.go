@@ -8,16 +8,12 @@ const (
 	FilePayloadSize    = 1024 * 256        // 256KB
 	FileMaxAllowedSize = 750 * 1024 * 1024 // 750MB
 	FileMaxPhotoSize   = 1 * 1024 * 1024   // 1MB
-	FileMaxRetry       = 10
-	FilePipelineCount  = 8
 	SDKVersion         = "v0.9.1"
 )
 
 // Global Parameters
 const (
 	WebsocketEndpoint     = "ws://river.im"
-	WebsocketPingTime     = 60 * time.Second
-	WebsocketPongTime     = 10 * time.Second
 	WebsocketWriteTime    = 3 * time.Second
 	WebsocketDirectTime   = 3 * time.Second
 	WebsocketRequestTime  = 8 * time.Second

@@ -273,3 +273,18 @@ func badgerUpdate(fn func(txn *badger.Txn) error) (err error) {
 	}
 	return
 }
+
+func badgerView(fn func(txn *badger.Txn) error) (err error) {
+	for retry := 100; retry > 0; retry-- {
+		err = r.badger.View(fn)
+		switch err {
+		case nil:
+			return nil
+		case badger.ErrConflict:
+		default:
+			return
+		}
+		time.Sleep(time.Duration(ronak.RandomInt(10000)) * time.Microsecond)
+	}
+	return
+}
