@@ -36,11 +36,14 @@ func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
 
 	ctrl.SetUserID(x.User.ID)
 
-	waitGroup := sync.WaitGroup{}
-	ctrl.SendAuthRecall(&waitGroup)
-	waitGroup.Wait()
+	go func() {
+		waitGroup := sync.WaitGroup{}
+		ctrl.SendAuthRecall(&waitGroup)
+		waitGroup.Wait()
 
-	go ctrl.Sync()
+		ctrl.Sync()
+	}()
+
 }
 
 // authSentCode
