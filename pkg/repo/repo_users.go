@@ -163,7 +163,16 @@ func (r *repoUsers) GetMany(userIDs []int64) []*msg.User {
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, userID := range userIDs {
 			user, err := getUserByKey(txn, getUserKey(userID))
-			logs.WarnOnErr("RepoUser got error on get many", err, zap.Int64("UserID", userID))
+			if err != nil {
+				switch err {
+				case badger.ErrKeyNotFound:
+					logs.Warn("RepoUser got error on get many (key not found)", zap.Int64("UserID", userID))
+				default:
+					logs.Warn("RepoUser got error on get many", zap.Error(err), zap.Int64("UserID", userID))
+
+				}
+			}
+
 			if user != nil {
 				users = append(users, user)
 			}

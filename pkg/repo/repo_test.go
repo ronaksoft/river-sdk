@@ -143,3 +143,82 @@ func TestConcurrent(t *testing.T) {
 	waitGroup.Wait()
 
 }
+
+func TestClearHistory(t *testing.T) {
+	m := make([]*msg.UserMessage, 0, 10)
+	for i := 0; i < 10 ;i++ {
+		m = append(m, &msg.UserMessage{
+			ID:                  int64(i+1000),
+			PeerID:              10,
+			PeerType:            1,
+			CreatedOn:           time.Now().Unix(),
+			EditedOn:            0,
+			FwdSenderID:         0,
+			FwdChannelID:        0,
+			FwdChannelMessageID: 0,
+			Flags:               0,
+			MessageType:         0,
+			Body:                fmt.Sprintf("Hello %d", i),
+			SenderID:            100,
+			ContentRead:         false,
+			Inbox:               false,
+			ReplyTo:             0,
+			MessageAction:       0,
+			MessageActionData:   nil,
+			Entities:            nil,
+			MediaType:           0,
+			Media:               nil,
+		})
+	}
+	err := repo.Dialogs.Save(&msg.Dialog{
+		PeerID:          10,
+		PeerType:        1,
+		TopMessageID:    1009,
+		ReadInboxMaxID:  0,
+		ReadOutboxMaxID: 0,
+		UnreadCount:     0,
+		AccessHash:      0,
+		NotifySettings:  nil,
+		MentionedCount:  0,
+		Pinned:          false,
+		Draft:           nil,
+	})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	repo.Messages.Save(m...)
+	ums, us := repo.Messages.GetMessageHistory(10, 1, 0, 0, 100)
+	fmt.Println(len(ums), len(us))
+	var x []int64
+	for _, um := range ums {
+		x = append(x, um.ID)
+	}
+	fmt.Println(x)
+	err = repo.Messages.ClearHistory(101, 10, 1, 1008)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	d, err := repo.Dialogs.Get(10, 1)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	fmt.Println(d.TopMessageID)
+	ums, us = repo.Messages.GetMessageHistory(10, 1, 0, 0, 100)
+	fmt.Println(len(ums), len(us))
+	x = x[:0]
+	for _, um := range ums {
+		x = append(x, um.ID)
+	}
+	fmt.Println(x)
+
+	repo.Messages.Delete(101, 10, 1, 1009)
+	d, err = repo.Dialogs.Get(10, 1)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	fmt.Println(d.TopMessageID)
+}

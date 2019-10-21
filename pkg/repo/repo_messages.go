@@ -446,10 +446,11 @@ func (r *repoMessages) ClearHistory(userID int64, peerID int64, peerType int32, 
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
 		for it.Seek(getMessageKey(peerID, peerType, maxID)); it.ValidForPrefix(opts.Prefix); it.Next() {
-			key := it.Item().Key()
+			key := it.Item().KeyCopy(nil)
+			fmt.Println(ronak.ByteToStr(key))
 			err := txn.Delete(key)
 			if err != nil {
-				logs.WarnOnErr("RepoPending got error on delete all", err, zap.String("Key", ronak.ByteToStr(key)))
+				logs.Warn("RepoPending got error on delete all", zap.Error(err), zap.String("Key", ronak.ByteToStr(key)))
 			}
 		}
 		it.Close()
