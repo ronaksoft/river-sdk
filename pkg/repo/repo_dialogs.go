@@ -140,7 +140,7 @@ func (r *repoDialogs) updateLastUpdate(peerID int64, peerType int32, lastUpdate 
 }
 
 func (r *repoDialogs) Get(peerID int64, peerType int32) (dialog *msg.Dialog, err error) {
-	err = r.badger.View(func(txn *badger.Txn) error {
+	err = badgerView(func(txn *badger.Txn) error {
 		dialog, err = getDialog(txn, peerID, peerType)
 		return err
 	})
@@ -274,7 +274,7 @@ func (r *repoDialogs) Delete(peerID int64, peerType int32) {
 
 func (r *repoDialogs) List(offset, limit int32) []*msg.Dialog {
 	dialogs := make([]*msg.Dialog, 0, limit)
-	err := r.badger.View(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		return r.bunt.View(func(tx *buntdb.Tx) error {
 			return tx.Descend(indexDialogs, func(key, value string) bool {
 				if limit--; limit < 0 {
@@ -296,7 +296,7 @@ func (r *repoDialogs) List(offset, limit int32) []*msg.Dialog {
 
 func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
 	dialogs := make([]*msg.Dialog, 0, 7)
-	err := r.badger.View(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = ronak.StrToByte(prefixDialogs)
 		opts.Reverse = true
@@ -323,7 +323,7 @@ func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
 
 func (r *repoDialogs) GetPeerIDs() []int64 {
 	peerIDs := make([]int64, 0, 100)
-	err := r.badger.View(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		return r.bunt.View(func(tx *buntdb.Tx) error {
 			return tx.Descend(indexDialogs, func(key, value string) bool {
 				peer := getPeerFromKey(key)

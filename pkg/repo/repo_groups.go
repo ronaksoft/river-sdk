@@ -178,7 +178,7 @@ func (r *repoGroups) SaveParticipant(groupID int64, participant *msg.GroupPartic
 
 func (r *repoGroups) GetParticipant(groupID int64, memberID int64) *msg.GroupParticipant {
 	gp := new(msg.GroupParticipant)
-	_ = r.badger.View(func(txn *badger.Txn) error {
+	_ = badgerView(func(txn *badger.Txn) error {
 		item, err := txn.Get(getGroupParticipantKey(groupID, memberID))
 		if err != nil {
 			return err
@@ -192,7 +192,7 @@ func (r *repoGroups) GetParticipant(groupID int64, memberID int64) *msg.GroupPar
 
 func (r *repoGroups) GetParticipants(groupID int64) ([]*msg.GroupParticipant, error) {
 	participants := make([]*msg.GroupParticipant, 0, 100)
-	err := r.badger.View(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = getGroupPrefix(groupID)
 		it := txn.NewIterator(opts)
@@ -260,7 +260,7 @@ func (r *repoGroups) RemovePhotoGallery(groupID int64, photoIDs ...int64) {
 
 func (r *repoGroups) GetPhotoGallery(groupID int64) []*msg.GroupPhoto {
 	photos := make([]*msg.GroupPhoto, 0, 5)
-	_ = r.badger.View(func(txn *badger.Txn) error {
+	_ = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix =getGroupPhotoGalleryPrefix(groupID)
 		it := txn.NewIterator(opts)
@@ -294,7 +294,7 @@ func (r *repoGroups) DeleteMember(groupID, userID int64) {
 }
 
 func (r *repoGroups) DeleteAllMembers(groupID int64) {
-	err := r.badger.View(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = getGroupPrefix(groupID)
 		it := txn.NewIterator(opts)
@@ -387,7 +387,7 @@ func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
 	searchResult, _ := r.peerSearch.Search(searchRequest)
 	groups := make([]*msg.Group, 0, 100)
-	_ = r.badger.View(func(txn *badger.Txn) error {
+	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
 			group, _ := getGroupByKey(txn, ronak.StrToByte(hit.ID))
 			if group != nil {
@@ -401,7 +401,7 @@ func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
 }
 
 func (r *repoGroups) ReIndex() {
-	err := r.badger.View(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = ronak.StrToByte(prefixGroups)
 		it := txn.NewIterator(opts)

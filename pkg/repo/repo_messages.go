@@ -144,7 +144,7 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 }
 
 func (r *repoMessages) Get(messageID int64) (um *msg.UserMessage, err error) {
-	err = r.badger.View(func(txn *badger.Txn) error {
+	err = badgerView(func(txn *badger.Txn) error {
 		um, err = getMessageByID(txn, messageID)
 		return err
 	})
@@ -153,7 +153,7 @@ func (r *repoMessages) Get(messageID int64) (um *msg.UserMessage, err error) {
 
 func (r *repoMessages) GetMany(messageIDs []int64) []*msg.UserMessage {
 	userMessages := make([]*msg.UserMessage, 0, len(messageIDs))
-	err := r.badger.View(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		for _, messageID := range messageIDs {
 			userMessage, err := getMessageByID(txn, messageID)
 			logs.WarnOnErr("RepoMessage got error on get many", err,
@@ -247,7 +247,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 	case maxID != 0 && minID == 0:
 		startTime := time.Now()
 		var stopWatch1, stopWatch2 time.Time
-		_ = r.badger.View(func(txn *badger.Txn) error {
+		_ = badgerView(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
 			opts.Prefix = getMessagePrefix(peerID, peerType)
 			opts.Reverse = true
@@ -286,7 +286,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 	case maxID == 0 && minID != 0:
 		startTime := time.Now()
 		var stopWatch1, stopWatch2, stopWatch3 time.Time
-		_ = r.badger.View(func(txn *badger.Txn) error {
+		_ = badgerView(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
 			opts.Prefix = getMessagePrefix(peerID, peerType)
 			opts.Reverse = false
@@ -330,7 +330,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 	default:
 		startTime := time.Now()
 		var stopWatch1, stopWatch2 time.Time
-		_ = r.badger.View(func(txn *badger.Txn) error {
+		_ = badgerView(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
 			opts.Prefix = getMessagePrefix(peerID, peerType)
 			opts.Reverse = true
@@ -462,7 +462,7 @@ func (r *repoMessages) SetContentRead(peerID int64, peerType int32, messageIDs [
 
 func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, error) {
 	topMessageID := int64(0)
-	err := r.badger.View(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = getMessagePrefix(peerID, peerType)
 		opts.Reverse = true
@@ -493,7 +493,7 @@ func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
 		t2 := bleve.NewDisjunctionQuery(qs...)
 		searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
 		searchResult, _ := r.msgSearch.Search(searchRequest)
-		_ = r.badger.View(func(txn *badger.Txn) error {
+		_ = badgerView(func(txn *badger.Txn) error {
 			for _, hit := range searchResult.Hits {
 				userMessage, _ := getMessageByKey(txn, ronak.StrToByte(hit.ID))
 				if userMessage != nil {
@@ -522,7 +522,7 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.User
 		t3.SetField("peer_id")
 		searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3))
 		searchResult, _ := r.msgSearch.Search(searchRequest)
-		_ = r.badger.View(func(txn *badger.Txn) error {
+		_ = badgerView(func(txn *badger.Txn) error {
 			for _, hit := range searchResult.Hits {
 				userMessage, _ := getMessageByKey(txn, ronak.StrToByte(hit.ID))
 				if userMessage != nil {
@@ -539,7 +539,7 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.User
 func (r *repoMessages) GetSharedMedia(peerID int64, peerType int32, documentType domain.SharedMediaType) ([]*msg.UserMessage, error) {
 	limit := 500
 	userMessages := make([]*msg.UserMessage, 0, limit)
-	_ = r.badger.View(func(txn *badger.Txn) error {
+	_ = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.PrefetchValues = false
 		opts.Prefix = getMessagePrefix(peerID, peerType)
@@ -570,7 +570,7 @@ func (r *repoMessages) GetSharedMedia(peerID int64, peerType int32, documentType
 }
 
 func (r *repoMessages) ReIndex() {
-	err := r.badger.View(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = ronak.StrToByte(prefixMessages)
 		it := txn.NewIterator(opts)

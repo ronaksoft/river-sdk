@@ -22,7 +22,7 @@ func (r *repoMessagesExtra) getKey(peerID int64, peerType int32) []byte {
 
 func (r *repoMessagesExtra) get(peerID int64, peerType int32) *dto.MessagesExtra {
 	message := new(dto.MessagesExtra)
-	_ = r.badger.View(func(txn *badger.Txn) error {
+	_ = badgerView(func(txn *badger.Txn) error {
 		item, err := txn.Get(r.getKey(peerID, peerType))
 		if err != nil {
 			return err

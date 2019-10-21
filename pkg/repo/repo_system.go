@@ -22,7 +22,7 @@ func (r *repoSystem) getKey(keyName string) []byte {
 // LoadInt
 func (r *repoSystem) LoadInt(keyName string) (uint64, error) {
 	keyValue := uint64(0)
-	err := r.badger.View(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		item, err := txn.Get(r.getKey(keyName))
 		if err != nil {
 			return err
@@ -48,7 +48,7 @@ func (r *repoSystem) LoadInt(keyName string) (uint64, error) {
 func (r *repoSystem) LoadString(keyName string) (string, error) {
 
 	var v []byte
-	err := r.badger.View(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		item, err := txn.Get(r.getKey(keyName))
 		if err != nil {
 			return err
@@ -66,7 +66,7 @@ func (r *repoSystem) LoadString(keyName string) (string, error) {
 // LoadBytes
 func (r *repoSystem) LoadBytes(keyName string) ([]byte, error) {
 	var v []byte
-	err := r.badger.View(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		item, err := txn.Get(r.getKey(keyName))
 		if err != nil {
 			return err

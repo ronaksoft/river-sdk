@@ -205,7 +205,7 @@ func saveMessageMedia(txn *badger.Txn, m *msg.UserMessage) error {
 }
 
 func (r *repoFiles) Get(clusterID int32, fileID int64, accessHash uint64) (file *msg.ClientFile, err error) {
-	err = r.badger.View(func(txn *badger.Txn) error {
+	err = badgerView(func(txn *badger.Txn) error {
 		file, err = getFile(txn, clusterID, fileID, accessHash)
 		return err
 	})
@@ -294,7 +294,7 @@ func (r *repoFiles) UnmarkAsUploaded(fileID int64) error {
 
 func (r *repoFiles) IsMarkedAsUploaded(fileID int64) bool {
 	res := true
-	_ = r.badger.View(func(txn *badger.Txn) error {
+	_ = badgerView(func(txn *badger.Txn) error {
 		_, err := txn.Get(ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixUploaded, fileID)))
 		if err != nil {
 			res = false

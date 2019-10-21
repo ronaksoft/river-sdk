@@ -31,7 +31,7 @@ func (r *repoAccount) SetPrivacy(key msg.PrivacyKey, rules []*msg.PrivacyRule) e
 
 func (r *repoAccount) GetPrivacy(key msg.PrivacyKey) (*msg.AccountPrivacyRules, error) {
 	var rulesBytes []byte
-	err := r.badger.View(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		item, err := txn.Get(ronak.StrToByte(fmt.Sprintf("%s.%s", prefixAccount, key)))
 		if err != nil {
 			return err

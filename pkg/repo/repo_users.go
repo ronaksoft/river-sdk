@@ -249,7 +249,7 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
 	searchResult, _ := r.peerSearch.Search(searchRequest)
 	users := make([]*msg.User, 0, 100)
-	err := r.badger.View(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
 			user, err := getUserByKey(txn, ronak.StrToByte(hit.ID))
 			if err == nil && user != nil {
@@ -266,7 +266,7 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 
 func (r *repoUsers) GetContact(userID int64) *msg.ContactUser {
 	contactUser := new(msg.ContactUser)
-	err := r.badger.View(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		item, err := txn.Get(getContactKey(userID))
 		if err != nil {
 			return err
@@ -294,7 +294,7 @@ func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
 	contactUsers := make([]*msg.ContactUser, 0, 100)
 	phoneContacts := make([]*msg.PhoneContact, 0, 100)
 
-	_ = r.badger.View(func(txn *badger.Txn) error {
+	_ = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixContacts))
 		it := txn.NewIterator(opts)
@@ -335,7 +335,7 @@ func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*
 	searchResult, _ := r.peerSearch.Search(searchRequest)
 	contactUsers := make([]*msg.ContactUser, 0, 100)
 	phoneContacts := make([]*msg.PhoneContact, 0, 100)
-	_ = r.badger.View(func(txn *badger.Txn) error {
+	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
 			contactUser, err := getContactByKey(txn, ronak.StrToByte(hit.ID))
 			if err == nil && contactUser != nil {
@@ -364,7 +364,7 @@ func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
 	searchResult, _ := r.peerSearch.Search(searchRequest)
 	contactUsers := make([]*msg.ContactUser, 0, 100)
-	_ = r.badger.View(func(txn *badger.Txn) error {
+	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
 			user, _ := getUserByKey(txn, ronak.StrToByte(hit.ID))
 			if user != nil {
@@ -445,7 +445,7 @@ func (r *repoUsers) RemovePhotoGallery(userID int64, photoIDs ...int64) {
 
 func (r *repoUsers) GetPhotoGallery(userID int64) []*msg.UserPhoto {
 	photoGallery := make([]*msg.UserPhoto, 0, 4)
-	_ = r.badger.View(func(txn *badger.Txn) error {
+	_ = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = getUserPhotoGalleryPrefix(userID)
 		opts.Reverse = true
@@ -468,7 +468,7 @@ func (r *repoUsers) GetPhotoGallery(userID int64) []*msg.UserPhoto {
 }
 
 func (r *repoUsers) ReIndex() {
-	_ = r.badger.View(func(txn *badger.Txn) error {
+	_ = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = ronak.StrToByte(prefixUsers)
 		it := txn.NewIterator(opts)

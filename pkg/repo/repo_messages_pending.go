@@ -232,7 +232,7 @@ func (r *repoMessagesPending) SaveMessageMedia(msgID int64, senderID int64, msgM
 
 func (r *repoMessagesPending) GetByRealID(msgID int64) *msg.ClientPendingMessage {
 	pm := new(msg.ClientPendingMessage)
-	err := r.badger.View(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		item, err := txn.Get(getPendingMessageRealKey(msgID))
 		if err != nil {
 			return err
@@ -249,7 +249,7 @@ func (r *repoMessagesPending) GetByRealID(msgID int64) *msg.ClientPendingMessage
 
 func (r *repoMessagesPending) GetByRandomID(randomID int64) (*msg.ClientPendingMessage, error) {
 	pm := new(msg.ClientPendingMessage)
-	err := r.badger.View(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		item, err := txn.Get(getPendingMessageRandomKey(randomID))
 		if err != nil {
 			return err
@@ -266,7 +266,7 @@ func (r *repoMessagesPending) GetByRandomID(randomID int64) (*msg.ClientPendingM
 }
 
 func (r *repoMessagesPending) GetByID(msgID int64) (pm *msg.ClientPendingMessage) {
-	err := r.badger.View(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		var err error
 		pm, err = getPendingMessageByID(txn, msgID)
 		return err
@@ -277,7 +277,7 @@ func (r *repoMessagesPending) GetByID(msgID int64) (pm *msg.ClientPendingMessage
 
 func (r *repoMessagesPending) GetMany(messageIDs []int64) []*msg.UserMessage {
 	userMessages := make([]*msg.UserMessage, 0, len(messageIDs))
-	_ = r.badger.View(func(txn *badger.Txn) error {
+	_ = badgerView(func(txn *badger.Txn) error {
 		for _, msgID := range messageIDs {
 			pm, _ := getPendingMessageByID(txn, msgID)
 			if pm != nil {
