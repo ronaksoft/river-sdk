@@ -123,7 +123,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 		_ = act.Unmarshal(x.Message.MessageActionData)
 
 		// 1. Delete All Messages < x.MessageID
-		repo.Messages.DeleteAll(ctrl.userID, x.Message.PeerID, x.Message.PeerType, act.MaxID-1)
+		_ = repo.Messages.DeleteAll(ctrl.userID, x.Message.PeerID, x.Message.PeerType, act.MaxID)
 
 		// Delete Scroll Position
 		repo.MessagesExtra.SaveScrollID(x.Message.PeerID, x.Message.PeerType, 0)
@@ -131,9 +131,6 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 		if act.Delete {
 			// Delete Dialog
 			repo.Dialogs.Delete(x.Message.PeerID, x.Message.PeerType)
-
-			// Delete GroupSearch
-			repo.Groups.Delete(x.Message.PeerID)
 		} else {
 			// get dialog and create first hole
 			dialog, _ := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)

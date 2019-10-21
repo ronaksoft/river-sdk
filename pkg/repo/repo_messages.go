@@ -156,16 +156,18 @@ func (r *repoMessages) GetMany(messageIDs []int64) []*msg.UserMessage {
 	err := badgerView(func(txn *badger.Txn) error {
 		for _, messageID := range messageIDs {
 			userMessage, err := getMessageByID(txn, messageID)
-			switch err {
-			case badger.ErrKeyNotFound:
-				logs.Warn("RepoMessage got error on get many (key not found)",
-					zap.Int64("MsgID", messageID),
-				)
-			default:
-				logs.Warn("RepoMessage got error on get many",
-					zap.Error(err),
-					zap.Int64("MsgID", messageID),
-				)
+			if err != nil {
+				switch err {
+				case badger.ErrKeyNotFound:
+					logs.Warn("RepoMessage got error on get many (key not found)",
+						zap.Int64("MsgID", messageID),
+					)
+				default:
+					logs.Warn("RepoMessage got error on get many",
+						zap.Error(err),
+						zap.Int64("MsgID", messageID),
+					)
+				}
 			}
 			if err == nil {
 				userMessages = append(userMessages, userMessage)
@@ -422,7 +424,7 @@ func (r *repoMessages) Delete(userID int64, peerID int64, peerType int32, msgID 
 	logs.ErrorOnErr("RepoMessage got error on delete", err)
 }
 
-func (r *repoMessages) DeleteAll(userID int64, peerID int64, peerType int32, maxID int64) {
+func (r *repoMessages) DeleteAll(userID int64, peerID int64, peerType int32, maxID int64) error {
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = getMessagePrefix(peerID, peerType)
@@ -448,6 +450,7 @@ func (r *repoMessages) DeleteAll(userID int64, peerID int64, peerType int32, max
 		return saveDialog(txn, dialog)
 	})
 	logs.ErrorOnErr("RepoMessage got error on delete all", err)
+	return err
 }
 
 func (r *repoMessages) SetContentRead(peerID int64, peerType int32, messageIDs []int64) {

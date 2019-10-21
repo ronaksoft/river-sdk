@@ -64,19 +64,20 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	res.Messages = repo.Messages.GetMany(mMessages.ToArray())
 	if len(res.Messages) != len(mMessages) {
 		logs.Warn("Rive found unmatched dialog messages", zap.Int("Got", len(res.Messages)), zap.Int("Need", len(mMessages)))
-	}
-	for msgID := range mMessages {
-		found := false
-		for _, m := range res.Messages {
-			if m.ID == msgID {
-				found = true
-				break
+		for msgID := range mMessages {
+			found := false
+			for _, m := range res.Messages {
+				if m.ID == msgID {
+					found = true
+					break
+				}
+			}
+			if !found {
+				logs.Warn("missed message", zap.Int64("MsgID", msgID))
 			}
 		}
-		if !found {
-			logs.Warn("missed message", zap.Int64("MsgID", msgID))
-		}
 	}
+
 	// Load Pending messages
 	res.Messages = append(res.Messages, pendingMessages...)
 
@@ -498,11 +499,6 @@ func (r *River) messagesClearHistory(in, out *msg.MessageEnvelope, timeoutCB dom
 		successCB(out)
 		return
 	}
-
-	repo.Dialogs.UpdateUnreadCount(req.Peer.ID, int32(req.Peer.Type), 0)
-
-	// this will be handled on message update appliers too
-	repo.Messages.Delete(r.ConnInfo.UserID, req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 
 	// send the request to server
 	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
