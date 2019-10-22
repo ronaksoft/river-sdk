@@ -63,11 +63,13 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	// Load Messages
 	res.Messages = repo.Messages.GetMany(mMessages.ToArray())
 	if len(res.Messages) != len(mMessages) {
+		logs.Warn("River found unmatched dialog messages", zap.Int("Got", len(res.Messages)), zap.Int("Need", len(mMessages)))
 		waitGroup := &sync.WaitGroup{}
 		waitGroup.Add(1)
 		r.syncCtrl.GetAllDialogs(waitGroup, 0, 100)
 		waitGroup.Wait()
-		logs.Warn("Rive found unmatched dialog messages", zap.Int("Got", len(res.Messages)), zap.Int("Need", len(mMessages)))
+		logs.Error("River re-synced dialogs")
+
 		for msgID := range mMessages {
 			found := false
 			for _, m := range res.Messages {
