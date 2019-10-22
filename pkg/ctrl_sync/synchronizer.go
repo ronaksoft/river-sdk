@@ -189,7 +189,7 @@ func updateSyncStatus(ctrl *Controller, newStatus domain.SyncStatus) {
 	if ctrl.onSyncStatusChange != nil {
 		ctrl.onSyncStatusChange(newStatus)
 	}
-}s
+}
 func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 	logs.Info("SyncCtrl calls getUpdateDifference",
 		zap.Int64("ServerUpdateID", serverUpdateID),
