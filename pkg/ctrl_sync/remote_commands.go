@@ -288,7 +288,6 @@ func (ctrl *Controller) GetUpdateState(waitGroup *sync.WaitGroup) (updateID int6
 	return
 }
 
-
 func (ctrl *Controller) SendGetUsers(waitGroup *sync.WaitGroup) {
 	// TODO:: this is for not-stored users in the db
 }
