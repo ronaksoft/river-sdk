@@ -128,6 +128,9 @@ func (r *repoGroups) GetMany(groupIDs []int64) []*msg.Group {
 	groups := make([]*msg.Group, 0, len(groupIDs))
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, groupID := range groupIDs {
+			if groupID == 0 {
+				continue
+			}
 			group, err := getGroupByKey(txn, getGroupKey(groupID))
 			logs.WarnOnErr("RepoGroups got error on get many", err, zap.Int64("GroupID", groupID))
 			if group != nil {

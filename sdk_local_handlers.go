@@ -102,7 +102,9 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		// load MessageActionData users
 		actUserIDs := domain.ExtractActionUserIDs(m.MessageAction, m.MessageActionData)
 		for _, id := range actUserIDs {
-			mUsers[id] = true
+			if id != 0 {
+				mUsers[id] = true
+			}
 		}
 	}
 	res.Groups = repo.Groups.GetMany(mGroups.ToArray())

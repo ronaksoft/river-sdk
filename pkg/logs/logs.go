@@ -69,7 +69,7 @@ func SetLogFilePath(logDir string) error {
 					MessageKey:     "msg",
 					StacktraceKey:  "stacktrace",
 					LineEnding:     zapcore.DefaultLineEnding,
-					EncodeLevel:    zapcore.CapitalColorLevelEncoder,
+					EncodeLevel:    zapcore.CapitalLevelEncoder,
 					EncodeTime:     zapcore.ISO8601TimeEncoder,
 					EncodeDuration: zapcore.StringDurationEncoder,
 					EncodeCaller:   zapcore.ShortCallerEncoder,
