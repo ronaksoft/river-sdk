@@ -402,9 +402,7 @@ func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) ([]*msg.Upd
 
 	logs.Info("SyncCtrl applies UpdateMessagesDeleted")
 
-	for _, msgID := range x.MessageIDs {
-		repo.Messages.Delete(ctrl.userID, x.Peer.ID, x.Peer.Type, msgID)
-	}
+	repo.Messages.Delete(ctrl.userID, x.Peer.ID, x.Peer.Type, x.MessageIDs...)
 
 	update := new(msg.ClientUpdateMessagesDeleted)
 	update.PeerID = x.Peer.ID
