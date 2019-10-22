@@ -126,10 +126,21 @@ func (ctrl *Controller) Sync() {
 	var serverUpdateID int64
 	var err error
 	for {
-		serverUpdateID, err = getUpdateState(ctrl)
+		waitGroup := &sync.WaitGroup{}
+		waitGroup.Add(1)
+		serverUpdateID, err = ctrl.GetUpdateState(waitGroup)
+		waitGroup.Wait()
 		if err != nil {
-			logs.Warn("SyncCtrl got err on GetUpdateState", zap.Error(err))
-			time.Sleep(time.Duration(ronak.RandomInt64(1000)) * time.Millisecond)
+			switch err {
+			case domain.ErrRequestTimeout:
+				waitGroup.Add(1)
+				ctrl.AuthRecall(waitGroup)
+				waitGroup.Wait()
+			default:
+				logs.Warn("SyncCtrl got err on GetUpdateState", zap.Error(err))
+				time.Sleep(time.Duration(ronak.RandomInt64(1000)) * time.Millisecond)
+			}
+
 		} else {
 			break
 		}
@@ -178,46 +189,7 @@ func updateSyncStatus(ctrl *Controller, newStatus domain.SyncStatus) {
 	if ctrl.onSyncStatusChange != nil {
 		ctrl.onSyncStatusChange(newStatus)
 	}
-}
-func getUpdateState(ctrl *Controller) (updateID int64, err error) {
-	logs.Debug("SyncCtrl calls getUpdateState")
-	updateID = 0
-	if !ctrl.networkCtrl.Connected() {
-		return -1, domain.ErrNoConnection
-	}
-
-	req := new(msg.UpdateGetState)
-	reqBytes, _ := req.Marshal()
-
-	// this waitGroup is required cuz our callbacks will be called in UIExecutor go routine
-	waitGroup := new(sync.WaitGroup)
-	waitGroup.Add(1)
-	ctrl.queueCtrl.RealtimeCommand(
-		uint64(domain.SequentialUniqueID()),
-		msg.C_UpdateGetState,
-		reqBytes,
-		func() {
-			defer waitGroup.Done()
-			err = domain.ErrRequestTimeout
-		},
-		func(m *msg.MessageEnvelope) {
-			defer waitGroup.Done()
-			switch m.Constructor {
-			case msg.C_UpdateState:
-				x := new(msg.UpdateState)
-				_ = x.Unmarshal(m.Message)
-				updateID = x.UpdateID
-			case msg.C_Error:
-				err = domain.ParseServerError(m.Message)
-			}
-		},
-		true,
-		false,
-	)
-	waitGroup.Wait()
-	return
-}
-
+}s
 func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 	logs.Info("SyncCtrl calls getUpdateDifference",
 		zap.Int64("ServerUpdateID", serverUpdateID),
