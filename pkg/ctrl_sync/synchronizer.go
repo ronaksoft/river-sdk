@@ -7,7 +7,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_queue"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
@@ -152,11 +151,9 @@ func (ctrl *Controller) Sync() {
 
 		// Get Contacts from the server
 		waitGroup := &sync.WaitGroup{}
-		waitGroup.Add(1)
-		go getContacts(waitGroup, ctrl)
-
-		waitGroup.Add(1)
-		go getAllDialogs(waitGroup, ctrl, 0, 100)
+		waitGroup.Add(2)
+		go ctrl.GetContacts(waitGroup)
+		go ctrl.GetAllDialogs(waitGroup, 0, 100)
 		waitGroup.Wait()
 		ctrl.updateID = serverUpdateID
 		err = repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
@@ -220,93 +217,7 @@ func getUpdateState(ctrl *Controller) (updateID int64, err error) {
 	waitGroup.Wait()
 	return
 }
-func getContacts(waitGroup *sync.WaitGroup, ctrl *Controller) {
-	logs.Debug("SyncCtrl calls getContacts")
-	req := new(msg.ContactsGet)
-	reqBytes, _ := req.Marshal()
-	ctrl.queueCtrl.EnqueueCommand(
-		uint64(domain.SequentialUniqueID()),
-		msg.C_ContactsGet,
-		reqBytes,
-		func() {
-			getContacts(waitGroup, ctrl)
-		},
-		func(m *msg.MessageEnvelope) {
-			switch m.Constructor {
-			case msg.C_Error:
-				errMsg := new(msg.Error)
-				_ = errMsg.Unmarshal(m.Message)
-				getContacts(waitGroup, ctrl)
-			default:
-				waitGroup.Done()
-			}
-			// Controller applier will take care of this
-		},
-		false,
-	)
-}
-func getAllDialogs(waitGroup *sync.WaitGroup, ctrl *Controller, offset int32, limit int32) {
-	logs.Info("SyncCtrl calls getAllDialogs",
-		zap.Int32("Offset", offset),
-		zap.Int32("Limit", limit),
-	)
-	req := new(msg.MessagesGetDialogs)
-	req.Limit = limit
-	req.Offset = offset
-	reqBytes, _ := req.Marshal()
-	ctrl.queueCtrl.EnqueueCommand(
-		uint64(domain.SequentialUniqueID()),
-		msg.C_MessagesGetDialogs,
-		reqBytes,
-		func() {
-			// If timeout, then retry the request
-			logs.Warn("Timeout! on GetAllDialogs, retrying ...")
-			getAllDialogs(waitGroup, ctrl, offset, limit)
-		},
-		func(m *msg.MessageEnvelope) {
-			switch m.Constructor {
-			case msg.C_Error:
-				logs.Error("SyncCtrl got error response on MessagesGetDialogs",
-					zap.String("Error", domain.ParseServerError(m.Message).Error()),
-				)
-				getAllDialogs(waitGroup, ctrl, offset, limit)
-			case msg.C_MessagesDialogs:
-				x := new(msg.MessagesDialogs)
-				err := x.Unmarshal(m.Message)
-				if err != nil {
-					logs.Error("SyncCtrl cannot unmarshal server response on MessagesGetDialogs", zap.Error(err))
-					return
-				}
-				mMessages := make(map[int64]*msg.UserMessage)
-				for _, message := range x.Messages {
-					mMessages[message.ID] = message
-				}
 
-				for _, dialog := range x.Dialogs {
-					topMessage, _ := mMessages[dialog.TopMessageID]
-					if topMessage == nil {
-						logs.Error("SyncCtrl received a dialog with no top message",
-							zap.Int64("MessageID", dialog.TopMessageID),
-						)
-						continue
-					}
-					messageHole.InsertFill(dialog.PeerID, dialog.PeerType, dialog.TopMessageID, dialog.TopMessageID)
-				}
-
-				repo.Users.Save(x.Users...)
-				repo.Groups.Save(x.Groups...)
-				repo.Messages.Save(x.Messages...)
-
-				if x.Count > offset+limit {
-					getAllDialogs(waitGroup, ctrl, offset+limit, limit)
-				} else {
-					waitGroup.Done()
-				}
-			}
-		},
-		false,
-	)
-}
 func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 	logs.Info("SyncCtrl calls getUpdateDifference",
 		zap.Int64("ServerUpdateID", serverUpdateID),
@@ -585,6 +496,6 @@ func (ctrl *Controller) GetSyncStatus() domain.SyncStatus {
 
 func (ctrl *Controller) UpdateSalt() {
 	for !salt.UpdateSalt() {
-		ctrl.SendGetServerSalt()
+		ctrl.GetServerSalt()
 	}
 }

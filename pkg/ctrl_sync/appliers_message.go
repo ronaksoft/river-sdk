@@ -38,7 +38,8 @@ func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
 
 	go func() {
 		waitGroup := sync.WaitGroup{}
-		ctrl.SendAuthRecall(&waitGroup)
+		waitGroup.Add(1)
+		ctrl.AuthRecall(&waitGroup)
 		waitGroup.Wait()
 
 		ctrl.Sync()

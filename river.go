@@ -291,8 +291,9 @@ func (r *River) onNetworkConnect() {
 	// Get Server Time and set server time difference
 
 	waitGroup := sync.WaitGroup{}
-	r.syncCtrl.SendGetServerTime(&waitGroup)
-	r.syncCtrl.SendAuthRecall(&waitGroup)
+	waitGroup.Add(2)
+	go r.syncCtrl.GetServerTime(&waitGroup)
+	go r.syncCtrl.AuthRecall(&waitGroup)
 	waitGroup.Wait()
 	if r.networkCtrl.GetQuality() == domain.NetworkDisconnected {
 		return
