@@ -81,7 +81,6 @@ func (ctrl *Controller) GetServerSalt() {
 
 func (ctrl *Controller) AuthRecall(waitGroup *sync.WaitGroup) {
 	defer waitGroup.Done()
-	ctrl.UpdateSalt()
 	req := msg.AuthRecall{}
 	reqBytes, _ := req.Marshal()
 
