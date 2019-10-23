@@ -82,7 +82,6 @@ func NewSyncController(config Config) *Controller {
 		msg.C_MessagesMany:      ctrl.messagesMany,
 		msg.C_GroupFull:         ctrl.groupFull,
 	}
-
 	return ctrl
 }
 

@@ -36,7 +36,10 @@ func (ctrl *Controller) GetServerSalt() {
 			msg.C_SystemGetSalts,
 			serverSaltReqBytes,
 			func() {
-				time.Sleep(time.Second)
+				waitGroup := &sync.WaitGroup{}
+				waitGroup.Add(1)
+				ctrl.AuthRecall(waitGroup)
+				waitGroup.Wait()
 			},
 			func(m *msg.MessageEnvelope) {
 				switch m.Constructor {

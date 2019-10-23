@@ -49,7 +49,6 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	mGroups := domain.MInt64B{}
 	mMessages := domain.MInt64B{}
 	for _, dialog := range res.Dialogs {
-		logs.Debug("Dialog", zap.Int64("MsgID", dialog.TopMessageID), zap.Int64("PeerID", dialog.PeerID))
 		if dialog.PeerType == int32(msg.PeerUser) {
 			mUsers[dialog.PeerID] = true
 		}

@@ -154,7 +154,7 @@ func (ctrl *Controller) executor(req request) {
 			if err == nil && pmsg != nil {
 				ctrl.addToWaitingList(&req)
 			}
-		case msg.C_MessagesReadHistory, msg.C_MessagesGetHistory:
+		case msg.C_MessagesReadHistory, msg.C_MessagesGetHistory, msg.C_ContactsImport, msg.C_ContactsGet:
 			ctrl.addToWaitingList(&req)
 		default:
 			if reqCallbacks.TimeoutCallback != nil {
@@ -208,7 +208,7 @@ func (ctrl *Controller) RealtimeCommand(requestID uint64, constructor int64, com
 	messageEnvelope.Message = commandBytes
 
 	// Add the callback functions
-	reqCB := domain.AddRequestCallback(requestID, successCB, domain.WebsocketDirectTime, timeoutCB, isUICallback)
+	reqCB := domain.AddRequestCallback(requestID, successCB, domain.WebsocketRequestTime, timeoutCB, isUICallback)
 
 	execBlock := func(reqID uint64, req *msg.MessageEnvelope) {
 		err := ctrl.network.SendWebsocket(req, blockingMode)
@@ -225,7 +225,7 @@ func (ctrl *Controller) RealtimeCommand(requestID uint64, constructor int64, com
 		}
 
 		select {
-		case <-time.After(domain.WebsocketDirectTime):
+		case <-time.After(reqCB.Timeout):
 			logs.Debug("QueueCtrl got timeout on realtime command",
 				zap.String("Constructor", msg.ConstructorNames[req.Constructor]),
 				zap.Uint64("ReqID", requestID),
