@@ -267,6 +267,10 @@ func (ctrl *Controller) receiver() {
 					logs.Error("NetCtrl couldn't unmarshal plain-text MessageEnvelope", zap.Error(err))
 					continue
 				}
+				logs.Debug("NetCtrl received plain-text message",
+					zap.String("Constructor", msg.ConstructorNames[receivedEnvelope.Constructor]),
+					zap.Uint64("ReqID", receivedEnvelope.RequestID),
+				)
 				ctrl.messageHandler(receivedEnvelope)
 				continue
 			}
@@ -288,6 +292,10 @@ func (ctrl *Controller) receiver() {
 				logs.Error("NetCtrl couldn't unmarshal decrypted message", zap.Error(err))
 				continue
 			}
+			logs.Debug("NetCtrl received encrypted message",
+				zap.String("Constructor", msg.ConstructorNames[receivedEncryptedPayload.Envelope.Constructor]),
+				zap.Uint64("ReqID", receivedEncryptedPayload.Envelope.RequestID),
+			)
 			// TODO:: check message id and server salt before handling the message
 			ctrl.messageHandler(receivedEncryptedPayload.Envelope)
 		default:
