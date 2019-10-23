@@ -97,8 +97,7 @@ func (ctrl *Controller) AuthRecall(waitGroup *sync.WaitGroup) {
 			msg.C_AuthRecall,
 			reqBytes,
 			func() {
-				// TODO:: clean this TOF
-				ctrl.networkCtrl.Reconnect()
+				time.Sleep(time.Second)
 			},
 			func(m *msg.MessageEnvelope) {
 				if m.Constructor == msg.C_AuthRecalled {
