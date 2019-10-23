@@ -466,7 +466,7 @@ func (ctrl *Controller) GetSyncStatus() domain.SyncStatus {
 }
 
 func (ctrl *Controller) UpdateSalt() {
-	for !salt.UpdateSalt() {
-		ctrl.GetServerSalt()
+	if !salt.UpdateSalt() {
+		go ctrl.GetServerSalt()
 	}
 }
