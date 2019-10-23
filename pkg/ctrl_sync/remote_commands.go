@@ -36,7 +36,7 @@ func (ctrl *Controller) GetServerSalt() {
 			msg.C_SystemGetSalts,
 			serverSaltReqBytes,
 			func() {
-				time.Sleep(time.Second)
+				time.Sleep(time.Duration(ronak.RandomInt(2000)) * time.Millisecond)
 			},
 			func(m *msg.MessageEnvelope) {
 				switch m.Constructor {
@@ -97,7 +97,7 @@ func (ctrl *Controller) AuthRecall(waitGroup *sync.WaitGroup) {
 			msg.C_AuthRecall,
 			reqBytes,
 			func() {
-				time.Sleep(time.Second)
+				time.Sleep(time.Duration(ronak.RandomInt(2000)) * time.Millisecond)
 			},
 			func(m *msg.MessageEnvelope) {
 				if m.Constructor == msg.C_AuthRecalled {
