@@ -1,6 +1,8 @@
 package repo
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
@@ -9,6 +11,7 @@ import (
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
 	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/pb"
 	"go.uber.org/zap"
 	"sort"
 	"strings"
@@ -411,7 +414,7 @@ func (r *repoMessages) Delete(userID int64, peerID int64, peerType int32, msgIDs
 		}
 
 		msgID := msgIDs[len(msgIDs)-1]
-		if dialog.TopMessageID ==  msgID {
+		if dialog.TopMessageID == msgID {
 			opts := badger.DefaultIteratorOptions
 			opts.Prefix = getMessagePrefix(dialog.PeerID, dialog.PeerType)
 			opts.Reverse = true
@@ -448,20 +451,26 @@ func (r *repoMessages) Delete(userID int64, peerID int64, peerType int32, msgIDs
 
 func (r *repoMessages) ClearHistory(userID int64, peerID int64, peerType int32, maxID int64) error {
 	err := badgerUpdate(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.Prefix = getMessagePrefix(peerID, peerType)
-		opts.PrefetchValues = false
-		opts.Reverse = true
-		it := txn.NewIterator(opts)
-		for it.Seek(getMessageKey(peerID, peerType, maxID)); it.ValidForPrefix(opts.Prefix); it.Next() {
-			key := it.Item().KeyCopy(nil)
-			fmt.Println(ronak.ByteToStr(key))
-			err := txn.Delete(key)
-			if err != nil {
-				logs.Warn("RepoPending got error on delete all", zap.Error(err), zap.String("Key", ronak.ByteToStr(key)))
-			}
+		st := r.badger.NewStream()
+		st.Prefix = getMessagePrefix(peerID, peerType)
+		st.NumGo = 10
+		maxKey := getMessageKey(peerID, peerType, maxID)
+		st.ChooseKey = func(item *badger.Item) bool {
+			return bytes.Compare(item.Key(), maxKey) < 0
 		}
-		it.Close()
+		st.Send = func(kvList *pb.KVList) error {
+			for _, kv := range kvList.Kv {
+				err := txn.Delete(kv.Key)
+				if err != nil {
+					logs.Warn("RepoMessage got error on delete all", zap.Error(err), zap.String("Key", ronak.ByteToStr(kv.Key)))
+				}
+			}
+			return nil
+		}
+		err := st.Orchestrate(context.Background())
+		if err != nil {
+			return err
+		}
 		dialog, err := getDialog(txn, peerID, peerType)
 		if err != nil {
 			return err

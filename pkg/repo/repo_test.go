@@ -1,6 +1,7 @@
 package repo_test
 
 import (
+	"bytes"
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
@@ -146,9 +147,9 @@ func TestConcurrent(t *testing.T) {
 
 func TestClearHistory(t *testing.T) {
 	m := make([]*msg.UserMessage, 0, 10)
-	for i := 0; i < 10 ;i++ {
+	for i := 1; i < 1000 ;i++ {
 		m = append(m, &msg.UserMessage{
-			ID:                  int64(i+1000),
+			ID:                  int64(i),
 			PeerID:              10,
 			PeerType:            1,
 			CreatedOn:           time.Now().Unix(),
@@ -173,7 +174,7 @@ func TestClearHistory(t *testing.T) {
 	err := repo.Dialogs.Save(&msg.Dialog{
 		PeerID:          10,
 		PeerType:        1,
-		TopMessageID:    1009,
+		TopMessageID:    999,
 		ReadInboxMaxID:  0,
 		ReadOutboxMaxID: 0,
 		UnreadCount:     0,
@@ -188,14 +189,8 @@ func TestClearHistory(t *testing.T) {
 		return
 	}
 	repo.Messages.Save(m...)
-	ums, us := repo.Messages.GetMessageHistory(10, 1, 0, 0, 100)
-	fmt.Println(len(ums), len(us))
-	var x []int64
-	for _, um := range ums {
-		x = append(x, um.ID)
-	}
-	fmt.Println(x)
-	err = repo.Messages.ClearHistory(101, 10, 1, 1008)
+	fmt.Println("Saved")
+	err = repo.Messages.ClearHistory(101, 10, 1, 995)
 	if err != nil {
 		t.Error(err)
 		return
@@ -206,19 +201,30 @@ func TestClearHistory(t *testing.T) {
 		return
 	}
 	fmt.Println(d.TopMessageID)
-	ums, us = repo.Messages.GetMessageHistory(10, 1, 0, 0, 100)
+	ums, us := repo.Messages.GetMessageHistory(10, 1, 0, 0, 100)
 	fmt.Println(len(ums), len(us))
-	x = x[:0]
+
+	var x []int64
 	for _, um := range ums {
 		x = append(x, um.ID)
 	}
 	fmt.Println(x)
 
-	repo.Messages.Delete(101, 10, 1, 1009)
+	repo.Messages.Delete(101, 10, 1, 1950)
 	d, err = repo.Dialogs.Get(10, 1)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	fmt.Println(d.TopMessageID)
+}
+
+func TestCompare(t *testing.T) {
+	x := []byte("X.0001.000012")
+	y := []byte("X.0001.000013")
+	z := []byte("X.0001.000008")
+	zz := []byte("X.0001.001002")
+	fmt.Println(bytes.Compare(x,y))
+	fmt.Println(bytes.Compare(x,z))
+	fmt.Println(bytes.Compare(x,zz))
 }
