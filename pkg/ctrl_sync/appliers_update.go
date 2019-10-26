@@ -505,16 +505,6 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	return res, nil
 }
 
-// updateTooLong indicate that client updates exceed from server cache size so we should re-sync client with server
-func (ctrl *Controller) updateTooLong(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
-	logs.Info("SyncCtrl received UpdateTooLong")
-
-	go ctrl.Sync()
-
-	res := make([]*msg.UpdateEnvelope, 0)
-	return res, nil
-}
-
 func (ctrl *Controller) updateAccountPrivacy(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateAccountPrivacy)
 	err := x.Unmarshal(u.Update)

@@ -56,22 +56,26 @@ func sendToSavedMessage(r *River, body string) {
 }
 
 func sendMediaToSaveMessage(r *River, filePath string, filename string) {
+	attrFile := msg.DocumentAttributeFile{Filename: filename}
+	attBytes, _ := attrFile.Marshal()
 	req := &msg.ClientSendMessageMedia{
 		Peer: &msg.InputPeer{
 			ID:         r.ConnInfo.UserID,
 			Type:       msg.PeerUser,
 			AccessHash: 0,
 		},
-		MediaType:      msg.InputMediaTypeUploadedDocument,
-		Caption:        "",
-		FileName:       filename,
-		FilePath:       filePath,
-		ThumbFilePath:  "",
-		FileMIME:       "",
-		ThumbMIME:      "",
-		ReplyTo:        0,
-		ClearDraft:     false,
-		Attributes:     nil,
+		MediaType:     msg.InputMediaTypeUploadedDocument,
+		Caption:       "",
+		FileName:      filename,
+		FilePath:      filePath,
+		ThumbFilePath: "",
+		FileMIME:      "",
+		ThumbMIME:     "",
+		ReplyTo:       0,
+		ClearDraft:    false,
+		Attributes: []*msg.DocumentAttribute{
+			{Type: msg.AttributeTypeFile, Data: attBytes},
+		},
 		FileUploadID:   "",
 		ThumbUploadID:  "",
 		FileID:         0,

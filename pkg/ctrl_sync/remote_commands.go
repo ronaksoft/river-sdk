@@ -84,6 +84,8 @@ func (ctrl *Controller) AuthRecall() {
 						return
 					}
 					keepGoing = false
+				} else {
+					time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
 				}
 			},
 			true,

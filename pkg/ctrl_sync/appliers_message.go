@@ -36,7 +36,10 @@ func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
 
 	ctrl.SetUserID(x.User.ID)
 
-	go ctrl.Sync()
+	go func() {
+		ctrl.AuthRecall()
+		ctrl.Sync()
+	}()
 }
 
 // authSentCode

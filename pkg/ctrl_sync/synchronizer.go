@@ -65,7 +65,6 @@ func NewSyncController(config Config) *Controller {
 		msg.C_UpdateReadMessagesContents:  ctrl.updateReadMessagesContents,
 		msg.C_UpdateUserPhoto:             ctrl.updateUserPhoto,
 		msg.C_UpdateGroupPhoto:            ctrl.updateGroupPhoto,
-		msg.C_UpdateTooLong:               ctrl.updateTooLong,
 		msg.C_UpdateDialogPinned:          ctrl.updateDialogPinned,
 		msg.C_UpdateAccountPrivacy:        ctrl.updateAccountPrivacy,
 		msg.C_UpdateDraftMessage:          ctrl.updateDraftMessage,
