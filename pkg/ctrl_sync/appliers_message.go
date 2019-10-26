@@ -6,6 +6,7 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
 	"hash/crc32"
@@ -120,22 +121,23 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 
 	mMessages := make(map[int64]*msg.UserMessage)
 	for _, message := range x.Messages {
-		repo.Messages.Save(message)
 		mMessages[message.ID] = message
 	}
 	for _, dialog := range x.Dialogs {
 		topMessage, _ := mMessages[dialog.TopMessageID]
 		if topMessage == nil {
-			logs.Error("Top Message Is Nil", zap.Int64("MessageID", dialog.TopMessageID))
+			logs.Error("SyncCtrl got dialog with nil top message", zap.Int64("MessageID", dialog.TopMessageID))
 			err := repo.Dialogs.Save(dialog)
 			logs.WarnOnErr("SyncCtrl got error on save dialog", err)
 		} else {
 			err := repo.Dialogs.SaveNew(dialog, topMessage.CreatedOn)
 			logs.WarnOnErr("SyncCtrl got error on save new dialog", err)
+			messageHole.InsertFill(dialog.PeerID, dialog.PeerType, dialog.TopMessageID, dialog.TopMessageID)
 		}
 	}
 	repo.Users.Save(x.Users...)
 	repo.Groups.Save(x.Groups...)
+	repo.Messages.Save(x.Messages...)
 }
 
 // usersMany

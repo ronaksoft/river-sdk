@@ -245,11 +245,14 @@ func (r *repoDialogs) Delete(peerID int64, peerType int32) {
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		return txn.Delete(getDialogKey(peerID, peerType))
 	})
-	logs.Error("RepoDialogs got error on deleting dialog",
-		zap.Error(err),
-		zap.Int64("PeerID", peerID),
-		zap.Int32("PeerType", peerType),
-	)
+	if err != nil {
+		logs.Error("RepoDialogs got error on deleting dialog",
+			zap.Error(err),
+			zap.Int64("PeerID", peerID),
+			zap.Int32("PeerType", peerType),
+		)
+	}
+
 }
 
 func (r *repoDialogs) List(offset, limit int32) []*msg.Dialog {

@@ -5,7 +5,6 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
@@ -194,25 +193,6 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, l
 					logs.Error("SyncCtrl cannot unmarshal server response on MessagesGetDialogs", zap.Error(err))
 					return
 				}
-				mMessages := make(map[int64]*msg.UserMessage)
-				for _, message := range x.Messages {
-					mMessages[message.ID] = message
-				}
-
-				for _, dialog := range x.Dialogs {
-					topMessage, _ := mMessages[dialog.TopMessageID]
-					if topMessage == nil {
-						logs.Error("SyncCtrl received a dialog with no top message",
-							zap.Int64("MessageID", dialog.TopMessageID),
-						)
-						continue
-					}
-					messageHole.InsertFill(dialog.PeerID, dialog.PeerType, dialog.TopMessageID, dialog.TopMessageID)
-				}
-
-				repo.Users.Save(x.Users...)
-				repo.Groups.Save(x.Groups...)
-				repo.Messages.Save(x.Messages...)
 
 				if x.Count > offset+limit {
 					ctrl.GetAllDialogs(waitGroup, offset+limit, limit)
