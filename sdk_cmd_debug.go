@@ -16,6 +16,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
 	"runtime/pprof"
 	"strings"
@@ -104,6 +105,18 @@ func (r *River) handleDebugActions(txt string) {
 			sendToSavedMessage(r, "something wrong, check sdk logs")
 		}
 		sendMediaToSaveMessage(r, filePath)
+	case "//sdk_logs_clear":
+		_ = filepath.Walk(logs.LogDir, func(path string, info os.FileInfo, err error) error {
+			if strings.HasSuffix(info.Name(), ".log") {
+				_ = os.Remove(path)
+			}
+			return nil
+		})
+	case "//sdk_logs_update":
+		sendUpdateLogs(r)
+
+
+
 	}
 }
 
@@ -172,6 +185,15 @@ func heapProfile() (filePath string) {
 		return ""
 	}
 	return
+}
+
+func sendUpdateLogs(r *River) {
+	_ = filepath.Walk(logs.LogDir, func(path string, info os.FileInfo, err error) error {
+		if strings.HasPrefix(info.Name(), "UPDT") {
+			sendMediaToSaveMessage(r, path)
+		}
+		return nil
+	})
 }
 
 func (r *River) GetHole(peerID int64, peerType int32) []byte {

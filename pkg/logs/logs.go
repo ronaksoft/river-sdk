@@ -13,6 +13,7 @@ import (
 )
 
 var (
+	LogDir     string
 	_UpdateLog *zap.Logger
 	_Log       *zap.Logger
 	_LogLevel  zap.AtomicLevel
@@ -50,6 +51,7 @@ func SetLogFilePath(logDir string) error {
 	if strings.HasPrefix(logDir, "file://") {
 		logDir = logDir[7:]
 	}
+	LogDir = logDir
 
 	t := time.Now()
 	logFileName := fmt.Sprintf("LOG-%d-%02d-%02d.log", t.Year(), t.Month(), t.Day())
