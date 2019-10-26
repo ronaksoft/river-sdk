@@ -152,6 +152,7 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, l
 		func() {
 			// If timeout, then retry the request
 			logs.Warn("Timeout! on GetAllDialogs, retrying ...")
+			ctrl.AuthRecall()
 			ctrl.GetAllDialogs(waitGroup, offset, limit)
 		},
 		func(m *msg.MessageEnvelope) {
