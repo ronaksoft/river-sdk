@@ -20,6 +20,7 @@ import (
 */
 
 func (ctrl *Controller) GetServerSalt() {
+	logs.Info("SyncCtrl call GetServerSalt")
 	serverSaltReq := new(msg.SystemGetSalts)
 	serverSaltReqBytes, _ := serverSaltReq.Marshal()
 
@@ -57,6 +58,7 @@ func (ctrl *Controller) GetServerSalt() {
 }
 
 func (ctrl *Controller) AuthRecall() {
+	logs.Info("SyncCtrl call AuthRecall")
 	req := msg.AuthRecall{}
 	reqBytes, _ := req.Marshal()
 
@@ -95,6 +97,7 @@ func (ctrl *Controller) AuthRecall() {
 }
 
 func (ctrl *Controller) GetServerTime() {
+	logs.Info("SyncCtrl call GetServerTime")
 	timeReq := new(msg.SystemGetServerTime)
 	timeReqBytes, _ := timeReq.Marshal()
 	keepGoing := true
@@ -139,7 +142,7 @@ func (ctrl *Controller) GetServerTime() {
 }
 
 func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, limit int32) {
-	logs.Info("SyncCtrl calls getAllDialogs",
+	logs.Info("SyncCtrl calls GetAllDialogs",
 		zap.Int32("Offset", offset),
 		zap.Int32("Limit", limit),
 	)
@@ -184,7 +187,7 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, l
 }
 
 func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup) {
-	logs.Debug("SyncCtrl calls getContacts")
+	logs.Debug("SyncCtrl calls GetContacts")
 	req := new(msg.ContactsGet)
 	reqBytes, _ := req.Marshal()
 	ctrl.queueCtrl.EnqueueCommand(
@@ -210,7 +213,7 @@ func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup) {
 }
 
 func (ctrl *Controller) GetUpdateState() (updateID int64, err error) {
-	logs.Debug("SyncCtrl calls getUpdateState")
+	logs.Debug("SyncCtrl calls GetUpdateState")
 	updateID = 0
 	if !ctrl.networkCtrl.Connected() {
 		return -1, domain.ErrNoConnection
@@ -241,8 +244,4 @@ func (ctrl *Controller) GetUpdateState() (updateID int64, err error) {
 		false,
 	)
 	return
-}
-
-func (ctrl *Controller) SendGetUsers(waitGroup *sync.WaitGroup) {
-	// TODO:: this is for not-stored users in the db
 }
