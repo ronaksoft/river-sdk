@@ -19,24 +19,24 @@ import (
 */
 
 var (
-	dirAudio string
-	dirFile  string
-	dirPhoto string
-	dirVideo string
-	dirCache string
+	DirAudio string
+	DirFile  string
+	DirPhoto string
+	DirVideo string
+	DirCache string
 )
 
 // SetRootFolders directory paths to Download files
 func SetRootFolders(audioDir, fileDir, photoDir, videoDir, cacheDir string) {
-	dirAudio = audioDir
+	DirAudio = audioDir
 	_ = os.MkdirAll(audioDir, os.ModePerm)
-	dirFile = fileDir
+	DirFile = fileDir
 	_ = os.MkdirAll(fileDir, os.ModePerm)
-	dirPhoto = photoDir
+	DirPhoto = photoDir
 	_ = os.MkdirAll(photoDir, os.ModePerm)
-	dirVideo = videoDir
+	DirVideo = videoDir
 	_ = os.MkdirAll(videoDir, os.ModePerm)
-	dirCache = cacheDir
+	DirCache = cacheDir
 	_ = os.MkdirAll(cacheDir, os.ModePerm)
 }
 
@@ -70,28 +70,28 @@ func getMessageFilePath(mimeType string, docID int64) string {
 	switch {
 	case mimeType == "audio/ogg":
 		ext = ".ogg"
-		return path.Join(dirCache, fmt.Sprintf("%d%s", docID, ext))
+		return path.Join(DirCache, fmt.Sprintf("%d%s", docID, ext))
 	case strings.HasPrefix(mimeType, "video/"):
-		return path.Join(dirVideo, fmt.Sprintf("%d%s", docID, ext))
+		return path.Join(DirVideo, fmt.Sprintf("%d%s", docID, ext))
 	case strings.HasPrefix(mimeType, "audio/"):
-		return path.Join(dirAudio, fmt.Sprintf("%d%s", docID, ext))
+		return path.Join(DirAudio, fmt.Sprintf("%d%s", docID, ext))
 	case strings.HasPrefix(mimeType, "image/"):
-		return path.Join(dirPhoto, fmt.Sprintf("%d%s", docID, ext))
+		return path.Join(DirPhoto, fmt.Sprintf("%d%s", docID, ext))
 	default:
-		return path.Join(dirFile, fmt.Sprintf("%d%s", docID, ext))
+		return path.Join(DirFile, fmt.Sprintf("%d%s", docID, ext))
 	}
 }
 
 func getThumbnailPath(fileID int64, clusterID int32) string {
-	return path.Join(dirCache, fmt.Sprintf("%d%d%s", fileID, clusterID, ".jpg"))
+	return path.Join(DirCache, fmt.Sprintf("%d%d%s", fileID, clusterID, ".jpg"))
 }
 
 func getAccountProfilePath(userID int64, fileID int64) string {
-	return path.Join(dirCache, fmt.Sprintf("u%d_%d%s", userID, fileID, ".jpg"))
+	return path.Join(DirCache, fmt.Sprintf("u%d_%d%s", userID, fileID, ".jpg"))
 }
 
 func getGroupProfilePath(groupID int64, fileID int64) string {
-	return path.Join(dirCache, fmt.Sprintf("g%d_%d%s", groupID, fileID, ".jpg"))
+	return path.Join(DirCache, fmt.Sprintf("g%d_%d%s", groupID, fileID, ".jpg"))
 }
 
 func unique(intSlice []int32) []int32 {

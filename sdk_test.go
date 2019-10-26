@@ -152,8 +152,6 @@ func TestSDK(t *testing.T) {
 		fmt.Println("AuthID", r.ConnInfo.AuthID)
 		fmt.Println("AuthKey", r.ConnInfo.AuthKey)
 		time.Sleep(time.Second * 10)
-		b := r.GetMonitorStats()
-		fmt.Println(string(b))
 	})
 }
 

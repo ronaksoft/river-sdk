@@ -3,7 +3,9 @@ package riversdk
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
@@ -11,6 +13,9 @@ import (
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dustin/go-humanize"
 	"go.uber.org/zap"
+	"io/ioutil"
+	"os"
+	"path"
 	"runtime"
 	"runtime/pprof"
 	"strings"
@@ -26,13 +31,13 @@ import (
    Copyright Ronak Software Group 2018
 */
 
-type dummyDelegate struct {}
+type dummyDelegate struct{}
 
 func (d dummyDelegate) OnComplete(b []byte) {}
 
 func (d dummyDelegate) OnTimeout(err error) {}
 
-func sendMessage(r *River, body string) {
+func sendToSavedMessage(r *River, body string) {
 	req := &msg.MessagesSend{
 		RandomID: 0,
 		Peer: &msg.InputPeer{
@@ -49,6 +54,33 @@ func sendMessage(r *River, body string) {
 	_, _ = r.ExecuteCommand(msg.C_MessagesSend, reqBytes, &dummyDelegate{}, false, false)
 }
 
+func sendMediaToSaveMessage(r *River, filePath string) {
+	req := &msg.ClientSendMessageMedia{
+		Peer: &msg.InputPeer{
+			ID:         r.ConnInfo.UserID,
+			Type:       msg.PeerUser,
+			AccessHash: 0,
+		},
+		MediaType:      msg.InputMediaTypeUploadedDocument,
+		Caption:        "",
+		FileName:       "",
+		FilePath:       filePath,
+		ThumbFilePath:  "",
+		FileMIME:       "",
+		ThumbMIME:      "",
+		ReplyTo:        0,
+		ClearDraft:     false,
+		Attributes:     nil,
+		FileUploadID:   "",
+		ThumbUploadID:  "",
+		FileID:         0,
+		ThumbID:        0,
+		FileTotalParts: 0,
+	}
+	reqBytes, _ := req.Marshal()
+	_, _ = r.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBytes, &dummyDelegate{}, false, false)
+}
+
 func (r *River) handleDebugActions(txt string) {
 	parts := strings.Fields(strings.ToLower(txt))
 	if len(parts) == 0 {
@@ -56,17 +88,45 @@ func (r *River) handleDebugActions(txt string) {
 	}
 	switch parts[0] {
 	case "//sdk_clear_salt":
-		salt.Reset()
-		sendMessage(r, "SDK salt is cleared")
+		resetSalt(r)
 	case "//sdk_memory_stats":
+		getMemoryStats(r)
+	case "//sdk_monitor":
+		getMonitorStats(r)
+	case "//sdk_live_logger":
+		if len(parts) < 2 {
+			sendToSavedMessage(r, "//sdk_live_logger <url>")
+		}
+		liveLogger(r, parts[1])
+	case "//sdk_heap_profile":
+		filePath := heapProfile()
+		if filePath == "" {
+			sendToSavedMessage(r, "something wrong, check sdk logs")
+		}
+		sendMediaToSaveMessage(r, filePath)
 	}
 }
 
-func (r *River) GetHole(peerID int64, peerType int32) []byte {
-	return repo.MessagesExtra.GetHoles(peerID, peerType)
+func resetSalt(r *River) {
+	salt.Reset()
+	sendToSavedMessage(r, "SDK salt is cleared")
 }
 
-func (r *River) GetMonitorStats() []byte {
+func getMemoryStats(r *River) []byte {
+	ms := new(runtime.MemStats)
+	runtime.ReadMemStats(ms)
+	m := ronak.M{
+		"HeapAlloc":   humanize.Bytes(ms.HeapAlloc),
+		"HeapInuse":   humanize.Bytes(ms.HeapInuse),
+		"HeapIdle":    humanize.Bytes(ms.HeapIdle),
+		"HeapObjects": ms.HeapObjects,
+	}
+	b, _ := json.MarshalIndent(m, "", "    ")
+	sendToSavedMessage(r, ronak.ByteToStr(b))
+	return b
+}
+
+func getMonitorStats(r *River) []byte {
 	lsmSize, logSize := repo.DbSize()
 	s := mon.Stats
 	m := ronak.M{
@@ -93,31 +153,27 @@ func (r *River) GetMonitorStats() []byte {
 	return b
 }
 
-func (r *River) GetMemoryStats() []byte {
-	ms := new(runtime.MemStats)
-	runtime.ReadMemStats(ms)
-	m := ronak.M{
-		"HeapAlloc":   humanize.Bytes(ms.HeapAlloc),
-		"HeapInuse":   humanize.Bytes(ms.HeapInuse),
-		"HeapIdle":    humanize.Bytes(ms.HeapIdle),
-		"HeapObjects": ms.HeapObjects,
-	}
-
-	b, _ := json.MarshalIndent(m, "", "    ")
-	return b
+func liveLogger(r *River, url string) {
+	logs.SetRemoteLog(url)
+	sendToSavedMessage(r, "Live Logger is On")
 }
 
-func (r *River) GetHeapProfile() []byte {
+func heapProfile() (filePath string) {
 	buf := new(bytes.Buffer)
 	err := pprof.WriteHeapProfile(buf)
 	if err != nil {
 		logs.Error("Error On HeapProfile", zap.Error(err))
-		return nil
+		return ""
 	}
-
-	return buf.Bytes()
+	now := time.Now()
+	filePath = path.Join(fileCtrl.DirCache, fmt.Sprintf("MemHeap-%04d-%02d-%02d.out", now.Year(), now.Month(), now.Day()))
+	if err := ioutil.WriteFile(filePath, buf.Bytes(), os.ModePerm); err != nil {
+		logs.Warn("River got error on creating memory heap file", zap.Error(err))
+		return ""
+	}
+	return
 }
 
-func (r *River) TurnOnLiveLogger(url string) {
-	logs.SetRemoteLog(url)
+func (r *River) GetHole(peerID int64, peerType int32) []byte {
+	return repo.MessagesExtra.GetHoles(peerID, peerType)
 }
