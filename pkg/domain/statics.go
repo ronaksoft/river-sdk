@@ -26,6 +26,8 @@ func init() {
 }
 
 var (
+	WindowLog     func(txt string)
+	StartTime     time.Time
 	TimeDelta     time.Duration
 	uniqueCounter int64
 	_RegExPhone   *regexp.Regexp

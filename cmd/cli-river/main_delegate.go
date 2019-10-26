@@ -106,6 +106,10 @@ func (d *MainDelegate) OnSessionClosed(res int) {
 	_Log.Info("Session Closed", zap.Int("Res", res))
 }
 
+func (d *MainDelegate) ShowLoggerAlert() {}
+
+func (d *MainDelegate) AddLog(txt string) {}
+
 type PrintDelegate struct{}
 
 func (d *PrintDelegate) Log(logLevel int, msg string) {

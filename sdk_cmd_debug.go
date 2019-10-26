@@ -116,8 +116,12 @@ func (r *River) handleDebugActions(txt string) {
 			}
 			return nil
 		})
+	case "//sdk_logs":
+		sendLogs(r)
 	case "//sdk_logs_update":
 		sendUpdateLogs(r)
+	case "//sdk_logs_window":
+		r.mainDelegate.ShowLoggerAlert()
 	}
 }
 
@@ -191,6 +195,15 @@ func heapProfile() (filePath string) {
 func sendUpdateLogs(r *River) {
 	_ = filepath.Walk(logs.LogDir, func(path string, info os.FileInfo, err error) error {
 		if strings.HasPrefix(info.Name(), "UPDT") {
+			sendMediaToSaveMessage(r, path, info.Name())
+		}
+		return nil
+	})
+}
+
+func sendLogs(r *River) {
+	_ = filepath.Walk(logs.LogDir, func(path string, info os.FileInfo, err error) error {
+		if strings.HasPrefix(info.Name(), "LOG") {
 			sendMediaToSaveMessage(r, path, info.Name())
 		}
 		return nil

@@ -218,6 +218,10 @@ func (d *MainDelegateDummy) OnSessionClosed(res int) {
 	logs.Info("Session Closed", zap.Int("Res", res))
 }
 
+func (d *MainDelegateDummy) ShowLoggerAlert() {}
+
+func (d *MainDelegateDummy) AddLog(txt string) {}
+
 type RequestDelegateDummy struct{}
 
 func (RequestDelegateDummy) OnComplete(b []byte) {

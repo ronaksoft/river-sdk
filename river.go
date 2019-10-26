@@ -271,6 +271,11 @@ func (r *River) Start() error {
 		}()
 	}
 
+
+	domain.StartTime = time.Now()
+	domain.WindowLog = func(txt string) {
+		r.mainDelegate.AddLog(txt)
+	}
 	logs.Info("River Started")
 	return nil
 }
@@ -292,16 +297,18 @@ func (r *River) Migrate() int {
 }
 
 func (r *River) onNetworkConnect() {
-	// Get Server Time and set server time difference
+	domain.WindowLog(fmt.Sprintf("Connected: %s", domain.StartTime))
 
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(2)
 	go func() {
 		r.syncCtrl.GetServerTime()
+		domain.WindowLog(fmt.Sprintf("ServerTime (%s): %s", domain.TimeDelta, time.Now().Sub(domain.StartTime)))
 		waitGroup.Done()
 	}()
 	go func() {
 		r.syncCtrl.AuthRecall()
+		domain.WindowLog(fmt.Sprintf("AuthRecalled: %s", time.Now().Sub(domain.StartTime)))
 		waitGroup.Done()
 	}()
 
@@ -313,9 +320,11 @@ func (r *River) onNetworkConnect() {
 		if r.syncCtrl.GetUserID() != 0 {
 			// Sync with Server
 			r.syncCtrl.Sync()
+			domain.WindowLog(fmt.Sprintf("Synced: %s", time.Now().Sub(domain.StartTime)))
 
 			// import contact from server
 			r.syncCtrl.ContactImportFromServer()
+			domain.WindowLog(fmt.Sprintf("ContactsImported: %s", time.Now().Sub(domain.StartTime)))
 		}
 	}()
 }
@@ -328,7 +337,10 @@ func (r *River) onGeneralError(requestID uint64, e *msg.Error) {
 	)
 	if e.Code == msg.ErrCodeInvalid && e.Items == msg.ErrItemSalt {
 		if !salt.UpdateSalt() {
-			go r.syncCtrl.GetServerSalt()
+			go func() {
+				r.syncCtrl.GetServerSalt()
+				domain.WindowLog(fmt.Sprintf("SaltsReceived: %s", time.Now().Sub(domain.StartTime)))
+			}()
 		}
 	}
 	if r.mainDelegate != nil && requestID == 0 {

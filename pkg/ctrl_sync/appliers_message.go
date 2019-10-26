@@ -3,6 +3,7 @@ package syncCtrl
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
@@ -11,6 +12,7 @@ import (
 	"go.uber.org/zap"
 	"hash/crc32"
 	"sort"
+	"time"
 )
 
 // authAuthorization
@@ -36,9 +38,12 @@ func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
 
 	ctrl.SetUserID(x.User.ID)
 
+	domain.WindowLog(fmt.Sprintf("Authorized: %s", time.Now().Sub(domain.StartTime)))
 	go func() {
 		ctrl.AuthRecall()
+		domain.WindowLog(fmt.Sprintf("AuthRecalled: %s", time.Now().Sub(domain.StartTime)))
 		ctrl.Sync()
+		domain.WindowLog(fmt.Sprintf("Synced: %s", time.Now().Sub(domain.StartTime)))
 	}()
 }
 
