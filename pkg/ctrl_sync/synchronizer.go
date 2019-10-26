@@ -124,21 +124,15 @@ func (ctrl *Controller) Sync() {
 	var serverUpdateID int64
 	var err error
 	for {
-		waitGroup := &sync.WaitGroup{}
-		waitGroup.Add(1)
-		serverUpdateID, err = ctrl.GetUpdateState(waitGroup)
-		waitGroup.Wait()
+		serverUpdateID, err = ctrl.GetUpdateState()
 		if err != nil {
 			switch err {
 			case domain.ErrRequestTimeout:
-				waitGroup.Add(1)
-				ctrl.AuthRecall(waitGroup)
-				waitGroup.Wait()
+				ctrl.AuthRecall()
 			default:
 				logs.Warn("SyncCtrl got err on GetUpdateState", zap.Error(err))
-				time.Sleep(time.Duration(ronak.RandomInt64(1000)) * time.Millisecond)
+				time.Sleep(time.Duration(ronak.RandomInt64(2000)) * time.Millisecond)
 			}
-
 		} else {
 			break
 		}

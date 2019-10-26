@@ -296,8 +296,15 @@ func (r *River) onNetworkConnect() {
 
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(2)
-	go r.syncCtrl.GetServerTime(&waitGroup)
-	go r.syncCtrl.AuthRecall(&waitGroup)
+	go func() {
+		r.syncCtrl.GetServerTime()
+		waitGroup.Done()
+	}()
+	go func() {
+		r.syncCtrl.AuthRecall()
+		waitGroup.Done()
+	}()
+
 	waitGroup.Wait()
 	if r.networkCtrl.GetQuality() == domain.NetworkDisconnected {
 		return

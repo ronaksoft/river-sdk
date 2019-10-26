@@ -11,7 +11,6 @@ import (
 	"go.uber.org/zap"
 	"hash/crc32"
 	"sort"
-	"sync"
 )
 
 // authAuthorization
@@ -37,15 +36,7 @@ func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
 
 	ctrl.SetUserID(x.User.ID)
 
-	go func() {
-		waitGroup := sync.WaitGroup{}
-		waitGroup.Add(1)
-		ctrl.AuthRecall(&waitGroup)
-		waitGroup.Wait()
-
-		ctrl.Sync()
-	}()
-
+	go ctrl.Sync()
 }
 
 // authSentCode

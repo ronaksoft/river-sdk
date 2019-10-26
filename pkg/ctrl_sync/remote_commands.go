@@ -56,8 +56,7 @@ func (ctrl *Controller) GetServerSalt() {
 	}
 }
 
-func (ctrl *Controller) AuthRecall(waitGroup *sync.WaitGroup) {
-	defer waitGroup.Done()
+func (ctrl *Controller) AuthRecall() {
 	req := msg.AuthRecall{}
 	reqBytes, _ := req.Marshal()
 
@@ -93,10 +92,9 @@ func (ctrl *Controller) AuthRecall(waitGroup *sync.WaitGroup) {
 	}
 }
 
-func (ctrl *Controller) GetServerTime(waitGroup *sync.WaitGroup) {
+func (ctrl *Controller) GetServerTime() {
 	timeReq := new(msg.SystemGetServerTime)
 	timeReqBytes, _ := timeReq.Marshal()
-	defer waitGroup.Done()
 	keepGoing := true
 	for keepGoing {
 		if ctrl.networkCtrl.GetQuality() == domain.NetworkDisconnected {
@@ -208,7 +206,7 @@ func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup) {
 	)
 }
 
-func (ctrl *Controller) GetUpdateState(waitGroup *sync.WaitGroup) (updateID int64, err error) {
+func (ctrl *Controller) GetUpdateState() (updateID int64, err error) {
 	logs.Debug("SyncCtrl calls getUpdateState")
 	updateID = 0
 	if !ctrl.networkCtrl.Connected() {
@@ -224,11 +222,9 @@ func (ctrl *Controller) GetUpdateState(waitGroup *sync.WaitGroup) (updateID int6
 		msg.C_UpdateGetState,
 		reqBytes,
 		func() {
-			defer waitGroup.Done()
 			err = domain.ErrRequestTimeout
 		},
 		func(m *msg.MessageEnvelope) {
-			defer waitGroup.Done()
 			switch m.Constructor {
 			case msg.C_UpdateState:
 				x := new(msg.UpdateState)
