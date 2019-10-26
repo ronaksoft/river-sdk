@@ -292,7 +292,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 			stopWatch2 = time.Now()
 			return nil
 		})
-		logs.Info("GetMessageHistory", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID),
+		logs.Info("RepoMessage got history", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID),
 			zap.Duration("SP1", stopWatch1.Sub(startTime)),
 			zap.Duration("SP2", stopWatch2.Sub(startTime)),
 		)
@@ -335,7 +335,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 			stopWatch3 = time.Now()
 			return nil
 		})
-		logs.Info("GetMessageHistory", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID),
+		logs.Info("RepoMessage got history", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID),
 			zap.Duration("SP1", stopWatch1.Sub(startTime)),
 			zap.Duration("SP2", stopWatch2.Sub(startTime)),
 			zap.Duration("SP3", stopWatch3.Sub(startTime)),
@@ -376,7 +376,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 			}
 			it.Close()
 			stopWatch2 = time.Now()
-			logs.Info("GetMessageHistory", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID),
+			logs.Info("RepoMessage got history", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID),
 				zap.Duration("SP1", stopWatch1.Sub(startTime)),
 				zap.Duration("SP2", stopWatch2.Sub(startTime)),
 			)

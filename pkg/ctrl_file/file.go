@@ -10,6 +10,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"github.com/dgraph-io/badger"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
@@ -152,7 +153,6 @@ func (ctrl *Controller) existDownloadRequest(reqID string) bool {
 	return ok
 }
 
-
 // upload helper functions
 func (ctrl *Controller) saveUploads(req UploadRequest) {
 	ctrl.mtxUploads.Lock()
@@ -207,12 +207,22 @@ func (ctrl *Controller) CancelUploadRequest(reqID string) {
 func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash uint64, skipDelegates bool) (reqID string, err error) {
 	clientFile, err := repo.Files.Get(clusterID, fileID, accessHash)
 	if err != nil {
-		logs.Warn("Error On GetFile",
-			zap.Int32("ClusterID", clusterID),
-			zap.Int64("FileID", fileID),
-			zap.Int64("AccessHash", int64(accessHash)),
-			zap.Error(err),
-		)
+		switch err {
+		case badger.ErrKeyNotFound:
+			logs.Warn("Error On GetFile (Key not found)",
+				zap.Int32("ClusterID", clusterID),
+				zap.Int64("FileID", fileID),
+				zap.Int64("AccessHash", int64(accessHash)),
+			)
+		default:
+			logs.Warn("Error On GetFile",
+				zap.Int32("ClusterID", clusterID),
+				zap.Int64("FileID", fileID),
+				zap.Int64("AccessHash", int64(accessHash)),
+				zap.Error(err),
+			)
+		}
+
 		return "", err
 	}
 	go func() {
@@ -240,12 +250,22 @@ func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash 
 func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash uint64, skipDelegate bool) (filePath string, err error) {
 	clientFile, err := repo.Files.Get(clusterID, fileID, accessHash)
 	if err != nil {
-		logs.Warn("Error On GetFile",
-			zap.Int32("ClusterID", clusterID),
-			zap.Int64("FileID", fileID),
-			zap.Int64("AccessHash", int64(accessHash)),
-			zap.Error(err),
-		)
+		switch err {
+		case badger.ErrKeyNotFound:
+			logs.Warn("Error On GetFile (Key not found)",
+				zap.Int32("ClusterID", clusterID),
+				zap.Int64("FileID", fileID),
+				zap.Int64("AccessHash", int64(accessHash)),
+			)
+		default:
+			logs.Warn("Error On GetFile",
+				zap.Int32("ClusterID", clusterID),
+				zap.Int64("FileID", fileID),
+				zap.Int64("AccessHash", int64(accessHash)),
+				zap.Error(err),
+			)
+		}
+
 		return "", err
 	}
 	filePath = GetFilePath(clientFile)
@@ -583,10 +603,10 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 	go func() {
 		// Upload Thumbnail
 		err := ctrl.upload(reqThumb)
-		logs.WarnOnErr("Error On Upload Thumbnail", err,zap.Int64("FileID", reqThumb.ThumbID))
+		logs.WarnOnErr("Error On Upload Thumbnail", err, zap.Int64("FileID", reqThumb.ThumbID))
 
 		// Upload File
-		err =ctrl.upload(reqFile)
+		err = ctrl.upload(reqFile)
 		logs.WarnOnErr("Error On Upload Message Media", err, zap.Int64("FileID", reqFile.FileID))
 	}()
 

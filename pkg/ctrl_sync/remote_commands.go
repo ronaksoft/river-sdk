@@ -82,7 +82,7 @@ func (ctrl *Controller) AuthRecall() {
 					x := new(msg.AuthRecalled)
 					err := x.Unmarshal(m.Message)
 					if err != nil {
-						logs.Error("We couldn't unmarshal AuthRecall (AuthRecalled) response", zap.Error(err))
+						logs.Error("SyncCtrl couldn't unmarshal AuthRecall (AuthRecalled) response", zap.Error(err))
 						return
 					}
 					keepGoing = false
@@ -118,7 +118,7 @@ func (ctrl *Controller) GetServerTime() {
 					x := new(msg.SystemServerTime)
 					err := x.Unmarshal(m.Message)
 					if err != nil {
-						logs.Error("We couldn't unmarshal SystemGetServerTime response", zap.Error(err))
+						logs.Error("SyncCtrl couldn't unmarshal SystemGetServerTime response", zap.Error(err))
 						return
 					}
 					clientTime := time.Now().Unix()
