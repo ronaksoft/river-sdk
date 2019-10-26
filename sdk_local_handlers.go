@@ -30,7 +30,16 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 
 	// If the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {
-		r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+		res.UpdateID = r.syncCtrl.UpdateID()
+		out.Constructor = msg.C_MessagesDialogs
+		buff, err := res.Marshal()
+		logs.ErrorOnErr("River got error on marshal MessagesDialogs", err)
+		out.Message = buff
+		uiexec.Ctx().Exec(func() {
+			if successCB != nil {
+				successCB(out)
+			}
+		}) // successCB(out)
 		return
 	}
 

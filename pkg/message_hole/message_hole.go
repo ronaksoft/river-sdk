@@ -310,10 +310,6 @@ func saveManager(peerID int64, peerType int32, hm *HoleManager) {
 }
 
 func InsertFill(peerID int64, peerType int32, minID, maxID int64) {
-	logs.Info("Insert Fill",
-		zap.Int64("MinID", minID),
-		zap.Int64("MaxID", maxID),
-	)
 	if minID > maxID {
 		return
 	}

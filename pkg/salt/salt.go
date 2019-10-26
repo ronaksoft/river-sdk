@@ -7,6 +7,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"github.com/dgraph-io/badger"
 	"go.uber.org/zap"
 	"sort"
 	"time"
@@ -41,14 +42,20 @@ func UpdateSalt() bool {
 	// 1st try to load from already stored salts
 	saltString, err := repo.System.LoadString(domain.SkSystemSalts)
 	if err != nil {
-		logs.Warn("UpdateSalt got error on load salt from db", zap.Error(err))
+		switch err {
+		case badger.ErrKeyNotFound:
+			logs.Warn("UpdateSalt did not find salt key in the db")
+		default:
+			logs.Warn("UpdateSalt got error on load salt from db", zap.Error(err))
+
+		}
 		return false
 	}
 
 	var sysSalts []domain.Slt
 	err = json.Unmarshal([]byte(saltString), &sysSalts)
 	if err != nil {
-		logs.Warn("UpdateSalt got error on load salt from db", zap.Error(err))
+		logs.Warn("UpdateSalt got error on unmarshal salt from db", zap.Error(err))
 		return false
 	}
 

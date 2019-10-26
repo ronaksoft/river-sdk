@@ -324,7 +324,7 @@ func (ctrl *Controller) Start() {
 	}
 
 	// set default value to synced status
-	updateSyncStatus(ctrl, domain.Synced)
+	updateSyncStatus(ctrl, domain.OutOfSync)
 
 	go ctrl.watchDog()
 }
