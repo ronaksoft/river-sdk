@@ -86,7 +86,7 @@ func sendMediaToSaveMessage(r *River, filePath string, filename string) {
 	_, _ = r.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBytes, &dummyDelegate{}, false, false)
 }
 
-func (r *River) handleDebugActions(txt string) {
+func (r *River) HandleDebugActions(txt string) {
 	parts := strings.Fields(strings.ToLower(txt))
 	if len(parts) == 0 {
 		return

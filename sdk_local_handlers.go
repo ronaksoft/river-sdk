@@ -199,7 +199,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	}
 
 	if req.Peer.ID == r.ConnInfo.UserID {
-		r.handleDebugActions(req.Body)
+		r.HandleDebugActions(req.Body)
 	}
 
 
