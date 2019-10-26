@@ -10,7 +10,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"github.com/monnand/dhkx"
 	"go.uber.org/zap"
@@ -86,12 +85,12 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	}
 
 	// If the constructor is a local command then
-	_, ok := r.localCommands[constructor]
+	applier, ok := r.localCommands[constructor]
 	if ok {
 		if blockingMode {
-			executeLocalCommand(r, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
+			executeLocalCommand(applier, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
 		} else {
-			go executeLocalCommand(r, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
+			go executeLocalCommand(applier, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
 		}
 		return
 	}
@@ -101,7 +100,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 
 	return
 }
-func executeLocalCommand(r *River, requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func executeLocalCommand(applier domain.LocalMessageHandler, requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	logs.Debug("River executes local command",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
@@ -112,10 +111,7 @@ func executeLocalCommand(r *River, requestID uint64, constructor int64, commandB
 	in.Message = commandBytes
 	in.RequestID = requestID
 	out.RequestID = in.RequestID
-	// double check
-	if applier, ok := r.localCommands[constructor]; ok {
-		applier(in, out, timeoutCB, successCB)
-	}
+	applier(in, out, timeoutCB, successCB)
 }
 func executeRemoteCommand(r *River, requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	logs.Debug("River executes remote command",
@@ -587,10 +583,6 @@ func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
 	}()
 	repo.MessagesExtra.SaveScrollID(peerID, peerType, msgID)
 
-}
-
-func (r *River) GetSDKSalt() int64 {
-	return salt.Get()
 }
 
 func (r *River) GetServerTimeUnix() int64 {

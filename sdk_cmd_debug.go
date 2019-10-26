@@ -3,14 +3,17 @@ package riversdk
 import (
 	"bytes"
 	"encoding/json"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dustin/go-humanize"
 	"go.uber.org/zap"
 	"runtime"
 	"runtime/pprof"
+	"strings"
 	"time"
 )
 
@@ -22,6 +25,42 @@ import (
    Auditor: Ehsan N. Moosa (E2)
    Copyright Ronak Software Group 2018
 */
+
+type dummyDelegate struct {}
+
+func (d dummyDelegate) OnComplete(b []byte) {}
+
+func (d dummyDelegate) OnTimeout(err error) {}
+
+func sendMessage(r *River, body string) {
+	req := &msg.MessagesSend{
+		RandomID: 0,
+		Peer: &msg.InputPeer{
+			ID:         r.ConnInfo.UserID,
+			Type:       msg.PeerUser,
+			AccessHash: 0,
+		},
+		Body:       body,
+		ReplyTo:    0,
+		ClearDraft: true,
+		Entities:   nil,
+	}
+	reqBytes, _ := req.Marshal()
+	_, _ = r.ExecuteCommand(msg.C_MessagesSend, reqBytes, &dummyDelegate{}, false, false)
+}
+
+func (r *River) handleDebugActions(txt string) {
+	parts := strings.Fields(strings.ToLower(txt))
+	if len(parts) == 0 {
+		return
+	}
+	switch parts[0] {
+	case "//sdk_clear_salt":
+		salt.Reset()
+		sendMessage(r, "SDK salt is cleared")
+	case "//sdk_memory_stats":
+	}
+}
 
 func (r *River) GetHole(peerID int64, peerType int32) []byte {
 	return repo.MessagesExtra.GetHoles(peerID, peerType)
@@ -75,6 +114,7 @@ func (r *River) GetHeapProfile() []byte {
 		logs.Error("Error On HeapProfile", zap.Error(err))
 		return nil
 	}
+
 	return buf.Bytes()
 }
 

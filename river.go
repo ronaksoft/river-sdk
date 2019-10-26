@@ -252,6 +252,9 @@ func (r *River) Start() error {
 	// init UI Executor
 	uiexec.InitUIExec()
 
+	// Update the current salt
+	salt.UpdateSalt()
+
 	// Start Controllers
 	r.networkCtrl.Start()
 	r.queueCtrl.Start()
@@ -309,9 +312,6 @@ func (r *River) onNetworkConnect() {
 		}
 	}()
 }
-
-
-
 
 func (r *River) onGeneralError(requestID uint64, e *msg.Error) {
 	logs.Info("We received error (General)",

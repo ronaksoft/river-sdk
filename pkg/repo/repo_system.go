@@ -109,3 +109,9 @@ func (r *repoSystem) SaveBytes(keyName string, keyValue []byte) error {
 		)
 	})
 }
+
+func (r *repoSystem) Delete(keyName string)  error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		return txn.Delete(r.getKey(keyName))
+	})
+}

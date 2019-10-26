@@ -198,6 +198,11 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		return
 	}
 
+	if req.Peer.ID == r.ConnInfo.UserID {
+		r.handleDebugActions(req.Body)
+	}
+
+
 	// this will be used as next requestID
 	req.RandomID = domain.SequentialUniqueID()
 	msgID := -domain.SequentialUniqueID()

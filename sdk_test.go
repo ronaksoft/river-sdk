@@ -69,7 +69,7 @@ func TestSDK(t *testing.T) {
 				time.Sleep(time.Millisecond * 600)
 
 				salt.UpdateSalt()
-				s := _River.GetSDKSalt()
+				s := salt.Get()
 				if i == 0 {
 					if s != 5555 {
 						t.Error(fmt.Sprintf("expecting 5555, have %d", s))

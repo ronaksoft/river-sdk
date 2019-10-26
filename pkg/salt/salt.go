@@ -31,6 +31,12 @@ func Get() int64 {
 	return curSalt
 }
 
+func Reset() {
+	_ = repo.System.Delete(domain.SkSystemSalts)
+	curSalt = 0
+	UpdateSalt()
+}
+
 func UpdateSalt() bool {
 	// 1st try to load from already stored salts
 	saltString, err := repo.System.LoadString(domain.SkSystemSalts)
