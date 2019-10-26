@@ -121,7 +121,7 @@ func (r *River) handleDebugActions(txt string) {
 	case "//sdk_logs_update":
 		sendUpdateLogs(r)
 	case "//sdk_logs_window":
-		r.mainDelegate.ShowLoggerAlert()
+		r.mainDelegate.ShowLoggerWindow()
 	}
 }
 
