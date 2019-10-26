@@ -2,6 +2,7 @@ package salt
 
 import (
 	"encoding/json"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
@@ -78,4 +79,21 @@ func UpdateSalt() bool {
 		return false
 	}
 
+}
+
+func Set(s *msg.SystemSalts) {
+	var saltArray []domain.Slt
+	for idx, saltValue := range s.Salts {
+		slt := domain.Slt{}
+		slt.Timestamp = s.StartsFrom + (s.Duration/int64(time.Second))*int64(idx)
+		slt.Value = saltValue
+		saltArray = append(saltArray, slt)
+	}
+	b, _ := json.Marshal(saltArray)
+	err := repo.System.SaveString(domain.SkSystemSalts, string(b))
+	if err != nil {
+		logs.Error("River couldn't save SystemSalts in the db", zap.Error(err))
+		return
+	}
+	UpdateSalt()
 }

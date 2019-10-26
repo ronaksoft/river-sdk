@@ -8,7 +8,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
@@ -463,10 +462,4 @@ func (ctrl *Controller) ContactImportFromServer() {
 // GetSyncStatus
 func (ctrl *Controller) GetSyncStatus() domain.SyncStatus {
 	return ctrl.syncStatus
-}
-
-func (ctrl *Controller) UpdateSalt() {
-	if !salt.UpdateSalt() {
-		go ctrl.GetServerSalt()
-	}
 }

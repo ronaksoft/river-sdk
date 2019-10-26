@@ -1,11 +1,9 @@
 package syncCtrl
 
 import (
-	"encoding/json"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
 	"sync"
@@ -40,26 +38,6 @@ func (ctrl *Controller) GetServerSalt() {
 			func(m *msg.MessageEnvelope) {
 				switch m.Constructor {
 				case msg.C_SystemSalts:
-					s := new(msg.SystemSalts)
-					err := s.Unmarshal(m.Message)
-					if err != nil {
-						logs.Error("SyncCtrl couldn't unmarshal SystemSalts", zap.Error(err))
-						return
-					}
-
-					var saltArray []domain.Slt
-					for idx, saltValue := range s.Salts {
-						slt := domain.Slt{}
-						slt.Timestamp = s.StartsFrom + (s.Duration/int64(time.Second))*int64(idx)
-						slt.Value = saltValue
-						saltArray = append(saltArray, slt)
-					}
-					b, _ := json.Marshal(saltArray)
-					err = repo.System.SaveString(domain.SkSystemSalts, string(b))
-					if err != nil {
-						logs.Error("SyncCtrl couldn't save SystemSalts in the db", zap.Error(err))
-						return
-					}
 					keepGoing = false
 				case msg.C_Error:
 					e := new(msg.Error)
@@ -158,7 +136,6 @@ func (ctrl *Controller) GetServerTime(waitGroup *sync.WaitGroup) {
 			true, false,
 		)
 	}
-
 }
 
 func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, limit int32) {

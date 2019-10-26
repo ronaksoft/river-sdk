@@ -8,6 +8,7 @@ import (
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -319,7 +320,9 @@ func (r *River) onGeneralError(requestID uint64, e *msg.Error) {
 		zap.String("Item", e.Items),
 	)
 	if e.Code == msg.ErrCodeInvalid && e.Items == msg.ErrItemSalt {
-		r.syncCtrl.UpdateSalt()
+		if !salt.UpdateSalt() {
+			go r.syncCtrl.GetServerSalt()
+		}
 	}
 	if r.mainDelegate != nil && requestID == 0 {
 		buff, _ := e.Marshal()

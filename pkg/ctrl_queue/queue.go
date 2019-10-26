@@ -154,7 +154,8 @@ func (ctrl *Controller) executor(req request) {
 			if err == nil && pmsg != nil {
 				ctrl.addToWaitingList(&req)
 			}
-		case msg.C_MessagesReadHistory, msg.C_MessagesGetHistory, msg.C_ContactsImport, msg.C_ContactsGet:
+		case msg.C_MessagesReadHistory, msg.C_MessagesGetHistory, msg.C_ContactsImport, msg.C_ContactsGet, msg.C_AuthSendCode, msg.C_AuthLogin,
+			msg.C_AuthRegister:
 			ctrl.addToWaitingList(&req)
 		default:
 			if reqCallbacks.TimeoutCallback != nil {
@@ -280,7 +281,6 @@ func (ctrl *Controller) EnqueueCommand(requestID uint64, constructor int64, requ
 		Timeout:         domain.WebsocketRequestTime,
 		MessageEnvelope: messageEnvelope,
 	}
-
 
 	// Add the callback functions
 	domain.AddRequestCallback(requestID, successCB, req.Timeout, timeoutCB, isUICallback)

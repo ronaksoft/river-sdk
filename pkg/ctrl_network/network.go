@@ -349,6 +349,10 @@ func (ctrl *Controller) extractMessages(m *msg.MessageEnvelope) ([]*msg.MessageE
 		if m.RequestID != 0 {
 			messages = append(messages, m)
 		}
+	case msg.C_SystemSalts:
+		x := new(msg.SystemSalts)
+		_ = x.Unmarshal(m.Message)
+		salt.Set(x)
 	default:
 		messages = append(messages, m)
 	}
