@@ -55,7 +55,7 @@ func sendToSavedMessage(r *River, body string) {
 	_, _ = r.ExecuteCommand(msg.C_MessagesSend, reqBytes, &dummyDelegate{}, false, false)
 }
 
-func sendMediaToSaveMessage(r *River, filePath string) {
+func sendMediaToSaveMessage(r *River, filePath string, filename string) {
 	req := &msg.ClientSendMessageMedia{
 		Peer: &msg.InputPeer{
 			ID:         r.ConnInfo.UserID,
@@ -64,7 +64,7 @@ func sendMediaToSaveMessage(r *River, filePath string) {
 		},
 		MediaType:      msg.InputMediaTypeUploadedDocument,
 		Caption:        "",
-		FileName:       "",
+		FileName:       filename,
 		FilePath:       filePath,
 		ThumbFilePath:  "",
 		FileMIME:       "",
@@ -104,7 +104,7 @@ func (r *River) handleDebugActions(txt string) {
 		if filePath == "" {
 			sendToSavedMessage(r, "something wrong, check sdk logs")
 		}
-		sendMediaToSaveMessage(r, filePath)
+		sendMediaToSaveMessage(r, filePath, "SdkHeapProfile.out")
 	case "//sdk_logs_clear":
 		_ = filepath.Walk(logs.LogDir, func(path string, info os.FileInfo, err error) error {
 			if strings.HasSuffix(info.Name(), ".log") {
@@ -114,9 +114,6 @@ func (r *River) handleDebugActions(txt string) {
 		})
 	case "//sdk_logs_update":
 		sendUpdateLogs(r)
-
-
-
 	}
 }
 
@@ -190,7 +187,7 @@ func heapProfile() (filePath string) {
 func sendUpdateLogs(r *River) {
 	_ = filepath.Walk(logs.LogDir, func(path string, info os.FileInfo, err error) error {
 		if strings.HasPrefix(info.Name(), "UPDT") {
-			sendMediaToSaveMessage(r, path)
+			sendMediaToSaveMessage(r, path, info.Name())
 		}
 		return nil
 	})
