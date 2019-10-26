@@ -7,7 +7,7 @@ type MainDelegate interface {
 	OnUpdates(constructor int64, b []byte)
 	OnGeneralError(b []byte)
 	OnSessionClosed(res int)
-	ShowLoggerWindow()
+	ShowLoggerAlert()
 	AddLog(text string)
 }
 
