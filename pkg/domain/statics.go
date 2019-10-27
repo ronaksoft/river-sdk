@@ -42,8 +42,8 @@ func init() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+	WindowLog = func(txt string) {}
 	_RegExPhone = exp
-
 }
 
 // SplitPQ ...
