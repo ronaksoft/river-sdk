@@ -8,9 +8,11 @@ import (
 	"crypto/sha512"
 	"fmt"
 	"hash/crc32"
+	"io"
 	"log"
 	"math/big"
 	"math/rand"
+	"os"
 	"regexp"
 	"sort"
 	"strings"
@@ -359,4 +361,30 @@ func ExtractsContactsDifference(oldContacts, newContacts []*msg.PhoneContact) []
 
 func Now() time.Time {
 	return time.Now().Add(TimeDelta)
+}
+
+func CopyFile(inPath, outPath string) error {
+	buf := make([]byte, 1<<13)
+	src, err := os.Open(inPath)
+	if err != nil {
+		return err
+	}
+	dst, err := os.Create(outPath)
+	if err != nil {
+		return err
+	}
+	for {
+		n, err := src.Read(buf)
+		if err != nil && err != io.EOF {
+			return err
+		}
+		if n == 0 {
+			break
+		}
+
+		if _, err := dst.Write(buf[:n]); err != nil {
+			return err
+		}
+	}
+	return nil
 }

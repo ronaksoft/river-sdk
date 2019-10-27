@@ -6,6 +6,7 @@ import (
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
@@ -202,9 +203,14 @@ func sendUpdateLogs(r *River) {
 }
 
 func sendLogs(r *River) {
-	_ = filepath.Walk(logs.LogDir, func(path string, info os.FileInfo, err error) error {
+	_ = filepath.Walk(logs.LogDir, func(filePath string, info os.FileInfo, err error) error {
 		if strings.HasPrefix(info.Name(), "LOG") {
-			sendMediaToSaveMessage(r, path, info.Name())
+			outPath := path.Join(fileCtrl.DirCache, info.Name())
+			err = domain.CopyFile(filePath, outPath)
+			if err != nil {
+				return err
+			}
+			sendMediaToSaveMessage(r, outPath, info.Name())
 		}
 		return nil
 	})
