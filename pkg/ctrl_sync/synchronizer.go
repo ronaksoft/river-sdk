@@ -137,13 +137,13 @@ func (ctrl *Controller) Sync() {
 		}
 	}
 
-	if ctrl.updateID == serverUpdateID {
-		return
-	}
-
 	// Update the sync controller status
 	updateSyncStatus(ctrl, domain.Syncing)
 	defer updateSyncStatus(ctrl, domain.Synced)
+
+	if ctrl.updateID == serverUpdateID {
+		return
+	}
 
 	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSyncThreshold {
 		logs.Info("SyncCtrl goes for a Snapshot sync")

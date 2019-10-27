@@ -8,7 +8,7 @@ const (
 	FilePayloadSize    = 1024 * 256        // 256KB
 	FileMaxAllowedSize = 750 * 1024 * 1024 // 750MB
 	FileMaxPhotoSize   = 1 * 1024 * 1024   // 1MB
-	SDKVersion         = "v0.9.1"
+	SDKVersion         = "v0.9.2"
 )
 
 // Global Parameters
