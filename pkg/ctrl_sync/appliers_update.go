@@ -31,7 +31,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	// used messageType to identify client & server messages on Media thingy
 	x.Message.MessageType = 1
 
-	dialog, _  := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
+	dialog, _ := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
 	if dialog == nil {
 		// make sure to created the message hole b4 creating dialog
 		dialog = &msg.Dialog{
@@ -200,7 +200,10 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) ([]*msg.Up
 
 	dialog, err := repo.Dialogs.Get(x.Peer.ID, x.Peer.Type)
 	if dialog == nil {
-		return nil, err
+		logs.Warn("SyncCtrl got error on UpdateReadHistoryInbox",
+			zap.Int64("PeerID", x.Peer.ID),
+			zap.Int32("PeerType", x.Peer.Type),
+		)
 	}
 
 	logs.Info("SyncCtrl applied UpdateReadHistoryInbox",
@@ -220,6 +223,14 @@ func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) ([]*msg.U
 	err := x.Unmarshal(u.Update)
 	if err != nil {
 		return nil, err
+	}
+
+	dialog, err := repo.Dialogs.Get(x.Peer.ID, x.Peer.Type)
+	if dialog == nil {
+		logs.Warn("SyncCtrl got error on UpdateReadHistoryOutbox",
+			zap.Int64("PeerID", x.Peer.ID),
+			zap.Int32("PeerType", x.Peer.Type),
+		)
 	}
 
 	logs.Info("SyncCtrl applied UpdateReadHistoryOutbox",
@@ -499,7 +510,6 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 			repo.Groups.RemovePhotoGallery(x.GroupID, x.PhotoID)
 		}
 	}
-
 
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil
