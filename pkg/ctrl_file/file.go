@@ -584,9 +584,11 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 		logs.Warn("FileCtrl got error on upload message document (thumbnail)", zap.Error(err))
 		return
 	}
-	if _, err := os.Stat(thumbPath); err != nil {
-		logs.Warn("FileCtrl got error on upload message document (thumbnail)", zap.Error(err))
-		return
+	if thumbPath != "" {
+		if _, err := os.Stat(thumbPath); err != nil {
+			logs.Warn("FileCtrl got error on upload message document (thumbnail)", zap.Error(err))
+			return
+		}
 	}
 	// We prepare upload request for the actual file before uploading the thumbnail to save it
 	// in case of execution stopped, then we are assured that we will continue the upload process
@@ -598,6 +600,7 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 		ThumbPath:    thumbPath,
 		MaxInFlights: maxUploadInFlights,
 	}
+
 	reqThumb := UploadRequest{
 		MessageID:        0,
 		FileID:           thumbID,
@@ -605,16 +608,19 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 		FilePath:         thumbPath,
 		SkipDelegateCall: false,
 	}
-	ctrl.saveUploads(reqThumb)
+	if thumbID != 0 {
+		ctrl.saveUploads(reqThumb)
+	}
 	ctrl.saveUploads(reqFile)
 
 	go func() {
-		// Upload Thumbnail
-		err := ctrl.upload(reqThumb)
-		logs.WarnOnErr("Error On Upload Thumbnail", err, zap.Int64("FileID", reqThumb.ThumbID))
-
+		if thumbID != 0 {
+			// Upload Thumbnail
+			err := ctrl.upload(reqThumb)
+			logs.WarnOnErr("Error On Upload Thumbnail", err, zap.Int64("FileID", reqThumb.ThumbID))
+		}
 		// Upload File
-		err = ctrl.upload(reqFile)
+		err := ctrl.upload(reqFile)
 		logs.WarnOnErr("Error On Upload Message Media", err, zap.Int64("FileID", reqFile.FileID))
 	}()
 
