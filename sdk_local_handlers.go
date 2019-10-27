@@ -457,9 +457,6 @@ func (r *River) messagesDelete(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 		repo.PendingMessages.DeleteMany(pendingMessageIDs)
 	}
 
-	// remove message
-	repo.Messages.Delete(r.ConnInfo.UserID, req.Peer.ID, int32(req.Peer.Type), req.MessageIDs...)
-
 	// send the request to server
 	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 
