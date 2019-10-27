@@ -200,7 +200,7 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) ([]*msg.Up
 
 	dialog, err := repo.Dialogs.Get(x.Peer.ID, x.Peer.Type)
 	if dialog == nil {
-		logs.Warn("SyncCtrl got error on UpdateReadHistoryInbox",
+		logs.Error("SyncCtrl got error on UpdateReadHistoryInbox",
 			zap.Int64("PeerID", x.Peer.ID),
 			zap.Int32("PeerType", x.Peer.Type),
 		)
@@ -227,7 +227,7 @@ func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) ([]*msg.U
 
 	dialog, err := repo.Dialogs.Get(x.Peer.ID, x.Peer.Type)
 	if dialog == nil {
-		logs.Warn("SyncCtrl got error on UpdateReadHistoryOutbox",
+		logs.Error("SyncCtrl got error on UpdateReadHistoryOutbox",
 			zap.Int64("PeerID", x.Peer.ID),
 			zap.Int32("PeerType", x.Peer.Type),
 		)
