@@ -166,8 +166,6 @@ func (ctrl *Controller) messageFlushFunc(entries []ronak.FlusherEntry) {
 }
 
 func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
-	ctrl.WaitForNetwork()
-
 	itemsCount := len(entries)
 	messages := make([]*msg.MessageEnvelope, 0, itemsCount)
 	for idx := range entries {

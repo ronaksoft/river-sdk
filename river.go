@@ -311,7 +311,6 @@ func (r *River) onNetworkConnect() {
 		domain.WindowLog(fmt.Sprintf("AuthRecalled: %s", time.Now().Sub(domain.StartTime)))
 		waitGroup.Done()
 	}()
-
 	waitGroup.Wait()
 	if r.networkCtrl.GetQuality() == domain.NetworkDisconnected {
 		return

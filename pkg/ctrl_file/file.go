@@ -580,6 +580,14 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 		thumbPath = thumbPath[7:]
 	}
 
+	if _, err := os.Stat(filePath); err != nil {
+		logs.Warn("FileCtrl got error on upload message document (thumbnail)", zap.Error(err))
+		return
+	}
+	if _, err := os.Stat(thumbPath); err != nil {
+		logs.Warn("FileCtrl got error on upload message document (thumbnail)", zap.Error(err))
+		return
+	}
 	// We prepare upload request for the actual file before uploading the thumbnail to save it
 	// in case of execution stopped, then we are assured that we will continue the upload process
 	reqFile := UploadRequest{

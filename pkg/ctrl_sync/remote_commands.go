@@ -24,37 +24,31 @@ func (ctrl *Controller) GetServerSalt() {
 	serverSaltReq := new(msg.SystemGetSalts)
 	serverSaltReqBytes, _ := serverSaltReq.Marshal()
 
-	keepGoing := true
-	for keepGoing {
-		if ctrl.networkCtrl.GetQuality() == domain.NetworkDisconnected {
-			return
-		}
-		ctrl.queueCtrl.RealtimeCommand(
-			uint64(domain.SequentialUniqueID()),
-			msg.C_SystemGetSalts,
-			serverSaltReqBytes,
-			func() {
-				time.Sleep(time.Duration(ronak.RandomInt(2000)) * time.Millisecond)
-			},
-			func(m *msg.MessageEnvelope) {
-				switch m.Constructor {
-				case msg.C_SystemSalts:
-					keepGoing = false
-				case msg.C_Error:
-					e := new(msg.Error)
-					_ = m.Unmarshal(m.Message)
-					logs.Error("SyncCtrl received error response for SystemGetSalts (Error)",
-						zap.String("Code", e.Code),
-						zap.String("Item", e.Items),
-					)
-					time.Sleep(time.Second)
-				}
-			},
-			true,
-			false,
-		)
+	ctrl.queueCtrl.RealtimeCommand(
+		uint64(domain.SequentialUniqueID()),
+		msg.C_SystemGetSalts,
+		serverSaltReqBytes,
+		func() {
+			time.Sleep(time.Duration(ronak.RandomInt(2000)) * time.Millisecond)
+		},
+		func(m *msg.MessageEnvelope) {
+			switch m.Constructor {
+			case msg.C_SystemSalts:
 
-	}
+			case msg.C_Error:
+				e := new(msg.Error)
+				_ = m.Unmarshal(m.Message)
+				logs.Error("SyncCtrl received error response for SystemGetSalts (Error)",
+					zap.String("Code", e.Code),
+					zap.String("Item", e.Items),
+				)
+				time.Sleep(time.Second)
+			}
+		},
+		true,
+		false,
+	)
+
 }
 
 func (ctrl *Controller) AuthRecall() {
@@ -62,83 +56,73 @@ func (ctrl *Controller) AuthRecall() {
 	req := msg.AuthRecall{}
 	reqBytes, _ := req.Marshal()
 
-	// send auth recall until it succeed
-	keepGoing := true
-	for keepGoing {
-		if ctrl.networkCtrl.GetQuality() == domain.NetworkDisconnected {
-			return
-		}
-		// this is priority command that should not passed to queue
-		// after auth recall answer got back the queue should send its requests in order to get related updates
-		ctrl.queueCtrl.RealtimeCommand(
-			uint64(domain.SequentialUniqueID()),
-			msg.C_AuthRecall,
-			reqBytes,
-			func() {
-				time.Sleep(time.Duration(ronak.RandomInt(2000)) * time.Millisecond)
-			},
-			func(m *msg.MessageEnvelope) {
-				if m.Constructor == msg.C_AuthRecalled {
-					x := new(msg.AuthRecalled)
-					err := x.Unmarshal(m.Message)
-					if err != nil {
-						logs.Error("SyncCtrl couldn't unmarshal AuthRecall (AuthRecalled) response", zap.Error(err))
-						return
-					}
-					keepGoing = false
-				} else {
-					time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
+	// this is priority command that should not passed to queue
+	// after auth recall answer got back the queue should send its requests in order to get related updates
+	ctrl.queueCtrl.RealtimeCommand(
+		uint64(domain.SequentialUniqueID()),
+		msg.C_AuthRecall,
+		reqBytes,
+		func() {
+			time.Sleep(time.Duration(ronak.RandomInt(2000)) * time.Millisecond)
+		},
+		func(m *msg.MessageEnvelope) {
+			if m.Constructor == msg.C_AuthRecalled {
+				x := new(msg.AuthRecalled)
+				err := x.Unmarshal(m.Message)
+				if err != nil {
+					logs.Error("SyncCtrl couldn't unmarshal AuthRecall (AuthRecalled) response", zap.Error(err))
+					return
 				}
-			},
-			true,
-			false,
-		)
-	}
+				logs.Debug("SyncCtrl received AuthRecalled")
+
+			} else {
+				time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
+			}
+		},
+		true,
+		false,
+	)
+
 }
 
 func (ctrl *Controller) GetServerTime() {
 	logs.Info("SyncCtrl call GetServerTime")
 	timeReq := new(msg.SystemGetServerTime)
 	timeReqBytes, _ := timeReq.Marshal()
-	keepGoing := true
-	for keepGoing {
-		if ctrl.networkCtrl.GetQuality() == domain.NetworkDisconnected {
-			return
-		}
-		ctrl.queueCtrl.RealtimeCommand(
-			uint64(domain.SequentialUniqueID()),
-			msg.C_SystemGetServerTime,
-			timeReqBytes,
-			func() {
-				time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
-			},
-			func(m *msg.MessageEnvelope) {
-				switch m.Constructor {
-				case msg.C_SystemServerTime:
-					x := new(msg.SystemServerTime)
-					err := x.Unmarshal(m.Message)
-					if err != nil {
-						logs.Error("SyncCtrl couldn't unmarshal SystemGetServerTime response", zap.Error(err))
-						return
-					}
-					clientTime := time.Now().Unix()
-					serverTime := x.Timestamp
-					domain.TimeDelta = time.Duration(serverTime-clientTime) * time.Second
-
-					logs.Debug("SystemServerTime received",
-						zap.Int64("ServerTime", serverTime),
-						zap.Int64("ClientTime", clientTime),
-						zap.Duration("Difference", domain.TimeDelta),
-					)
-					keepGoing = false
-				case msg.C_Error:
-					logs.Warn("We received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
-					time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
+	ctrl.queueCtrl.RealtimeCommand(
+		uint64(domain.SequentialUniqueID()),
+		msg.C_SystemGetServerTime,
+		timeReqBytes,
+		func() {
+			time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
+		},
+		func(m *msg.MessageEnvelope) {
+			switch m.Constructor {
+			case msg.C_SystemServerTime:
+				x := new(msg.SystemServerTime)
+				err := x.Unmarshal(m.Message)
+				if err != nil {
+					logs.Error("SyncCtrl couldn't unmarshal SystemGetServerTime response", zap.Error(err))
+					return
 				}
-			},
-			true, false,
-		)
-	}
+				clientTime := time.Now().Unix()
+				serverTime := x.Timestamp
+				domain.TimeDelta = time.Duration(serverTime-clientTime) * time.Second
+
+				logs.Debug("SystemServerTime received",
+					zap.Int64("ServerTime", serverTime),
+					zap.Int64("ClientTime", clientTime),
+					zap.Duration("Difference", domain.TimeDelta),
+				)
+
+			case msg.C_Error:
+				logs.Warn("We received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
+				time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
+			}
+		},
+		true, false,
+	)
+
 }
 
 func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, limit int32) {
@@ -222,7 +206,6 @@ func (ctrl *Controller) GetUpdateState() (updateID int64, err error) {
 	req := new(msg.UpdateGetState)
 	reqBytes, _ := req.Marshal()
 
-
 	ctrl.queueCtrl.RealtimeCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_UpdateGetState,
@@ -236,6 +219,7 @@ func (ctrl *Controller) GetUpdateState() (updateID int64, err error) {
 				x := new(msg.UpdateState)
 				_ = x.Unmarshal(m.Message)
 				updateID = x.UpdateID
+				logs.Debug("SyncCtrl received UpdateState", zap.Int64("UpdateID", updateID))
 			case msg.C_Error:
 				err = domain.ParseServerError(m.Message)
 			}

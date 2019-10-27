@@ -4,8 +4,10 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"go.uber.org/zap"
 	"os"
 	"time"
 )
@@ -138,6 +140,7 @@ func (r *River) ResumeUpload(pendingMessageID int64) {
 	req := new(msg.ClientSendMessageMedia)
 	_ = req.Unmarshal(pendingMessage.Media)
 
+	logs.Info("River resumes upload", zap.Int64("MsgID", pendingMessageID))
 	if _, ok := r.fileCtrl.GetUploadRequest(pendingMessage.FileID); !ok {
 		r.fileCtrl.UploadMessageDocument(pendingMessageID, req.FilePath, req.ThumbFilePath, pendingMessage.FileID, pendingMessage.ThumbID)
 	}
