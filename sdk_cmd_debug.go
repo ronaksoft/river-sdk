@@ -101,6 +101,7 @@ func (r *River) HandleDebugActions(txt string) {
 	case "//sdk_live_logger":
 		if len(parts) < 2 {
 			sendToSavedMessage(r, "//sdk_live_logger <url>")
+			return
 		}
 		liveLogger(r, parts[1])
 	case "//sdk_heap_profile":
