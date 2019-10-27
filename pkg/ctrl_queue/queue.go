@@ -145,6 +145,7 @@ func (ctrl *Controller) executor(req request) {
 		return
 	}
 
+	DecisionSelect:
 	select {
 	case <-time.After(req.Timeout):
 		domain.RemoveRequestCallback(req.ID)
@@ -178,7 +179,6 @@ func (ctrl *Controller) executor(req request) {
 						_ = repo.PendingMessages.Delete(pm.ID)
 					}
 				}
-			default:
 			}
 		case msg.C_AuthSendCode, msg.C_AuthLogin, msg.C_AuthRegister:
 			switch res.Constructor {
@@ -187,6 +187,7 @@ func (ctrl *Controller) executor(req request) {
 				_ = errMsg.Unmarshal(res.Message)
 				if errMsg.Code == msg.ErrCodeInvalid && errMsg.Items == msg.ErrItemSalt {
 					ctrl.addToWaitingList(&req)
+					break DecisionSelect
 				}
 			}
 		}
