@@ -142,6 +142,7 @@ func (ctrl *Controller) Sync() {
 		updateSyncStatus(ctrl, domain.Synced)
 		return
 	}
+
 	// Update the sync controller status
 	updateSyncStatus(ctrl, domain.Syncing)
 	defer updateSyncStatus(ctrl, domain.Synced)
