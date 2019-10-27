@@ -145,7 +145,7 @@ func (ctrl *Controller) executor(req request) {
 		return
 	}
 
-	DecisionSelect:
+DecisionSelect:
 	select {
 	case <-time.After(req.Timeout):
 		domain.RemoveRequestCallback(req.ID)
@@ -155,7 +155,8 @@ func (ctrl *Controller) executor(req request) {
 			if err == nil && pmsg != nil {
 				ctrl.addToWaitingList(&req)
 			}
-		case msg.C_MessagesReadHistory, msg.C_MessagesGetHistory, msg.C_ContactsImport, msg.C_ContactsGet:
+		case msg.C_MessagesReadHistory, msg.C_MessagesGetHistory, msg.C_ContactsImport, msg.C_ContactsGet,
+			msg.C_AuthSendCode, msg.C_AuthRegister, msg.C_AuthLogin:
 			ctrl.addToWaitingList(&req)
 		default:
 			if reqCallbacks.TimeoutCallback != nil {
@@ -180,7 +181,7 @@ func (ctrl *Controller) executor(req request) {
 					}
 				}
 			}
-		case msg.C_AuthSendCode, msg.C_AuthLogin, msg.C_AuthRegister:
+		default:
 			switch res.Constructor {
 			case msg.C_Error:
 				errMsg := new(msg.Error)
