@@ -145,19 +145,19 @@ func (ctrl *Controller) executor(req request) {
 		return
 	}
 
-DecisionSelect:
 	select {
 	case <-time.After(req.Timeout):
-		domain.RemoveRequestCallback(req.ID)
 		switch req.MessageEnvelope.Constructor {
 		case msg.C_MessagesSend, msg.C_MessagesSendMedia:
 			pmsg, err := repo.PendingMessages.GetByRandomID(int64(req.ID))
 			if err == nil && pmsg != nil {
 				ctrl.addToWaitingList(&req)
+				return
 			}
 		case msg.C_MessagesReadHistory, msg.C_MessagesGetHistory, msg.C_ContactsImport, msg.C_ContactsGet,
 			msg.C_AuthSendCode, msg.C_AuthRegister, msg.C_AuthLogin:
 			ctrl.addToWaitingList(&req)
+			return
 		default:
 			if reqCallbacks.TimeoutCallback != nil {
 				if reqCallbacks.IsUICallback {
@@ -188,7 +188,7 @@ DecisionSelect:
 				_ = errMsg.Unmarshal(res.Message)
 				if errMsg.Code == msg.ErrCodeInvalid && errMsg.Items == msg.ErrItemSalt {
 					ctrl.addToWaitingList(&req)
-					break DecisionSelect
+					return
 				}
 			}
 		}
@@ -205,6 +205,7 @@ DecisionSelect:
 			)
 		}
 	}
+	domain.RemoveRequestCallback(req.ID)
 	return
 }
 
