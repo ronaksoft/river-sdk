@@ -312,7 +312,8 @@ func (r *River) onNetworkConnect() {
 			waitGroup.Add(1)
 			go func() {
 				r.syncCtrl.GetServerSalt()
-				domain.WindowLog(fmt.Sprintf("ServerSalt:", ))
+				domain.WindowLog(fmt.Sprintf("ServerSalt (%s): %s", domain.TimeDelta, time.Now().Sub(domain.StartTime)))
+				waitGroup.Done()
 			}()
 		}
 		waitGroup.Add(2)
