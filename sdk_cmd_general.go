@@ -424,16 +424,21 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 	}
 
 	// Stop Controllers
-	r.ResetAuthKey()
 	r.networkCtrl.Stop()
 	r.syncCtrl.Stop()
 	r.queueCtrl.Stop()
-	repo.DropAll()
 
 
 	// Close UI Executor
 	uiexec.Ctx().Stop()
 
+	repo.DropAll()
+	r.ResetAuthKey()
+
+	err := r.Start()
+	if err != nil {
+		return err
+	}
 
 	r.syncCtrl.ResetIDs()
 	r.ConnInfo.FirstName = ""
@@ -446,10 +451,7 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 	r.DeviceToken = new(msg.AccountRegisterDevice)
 	r.saveDeviceToken()
 
-	err := r.Start()
-	if err != nil {
-		return err
-	}
+	r.StartNetwork()
 
 
 	return err
