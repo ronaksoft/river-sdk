@@ -247,7 +247,13 @@ func Close() {
 
 func DropAll() {
 	_ = r.badger.DropAll()
-	_ = r.bunt.Shrink()
+	_ = r.bunt.Close()
+	_ = r.badger.Close()
+	_ = r.msgSearch.Close()
+	_ = r.peerSearch.Close()
+	for os.RemoveAll(ctx.DBPath) != nil {
+		time.Sleep(time.Millisecond * 100)
+	}
 }
 
 func GC() {

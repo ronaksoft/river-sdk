@@ -119,7 +119,6 @@ func TestSDK(t *testing.T) {
 
 		time.Sleep(10 * time.Second)
 		r.ResetAuthKey()
-		r.stop()
 
 		time.Sleep(10 * time.Second)
 

@@ -73,19 +73,6 @@ type RiverConnection struct {
 	Version   int
 }
 
-// clearSystemConfig reset config
-func (r *River) clearSystemConfig() {
-	r.syncCtrl.ResetIDs()
-	r.ConnInfo.FirstName = ""
-	r.ConnInfo.LastName = ""
-	r.ConnInfo.Phone = ""
-	r.ConnInfo.UserID = 0
-	r.ConnInfo.Username = ""
-	r.ConnInfo.Bio = ""
-	r.ConnInfo.Save()
-	r.DeviceToken = new(msg.AccountRegisterDevice)
-	r.saveDeviceToken()
-}
 
 // saveDeviceToken save DeviceToken to DB
 func (r *River) saveDeviceToken() {

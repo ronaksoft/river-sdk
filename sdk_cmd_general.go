@@ -14,7 +14,6 @@ import (
 	"github.com/monnand/dhkx"
 	"go.uber.org/zap"
 	"math/big"
-	"os"
 	"sync"
 	"time"
 )
@@ -415,54 +414,45 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 		}
 		// send logout request to server
 		requestID := domain.SequentialUniqueID()
-		timeoutCallback := func() {
-			r.releaseDelegate(requestID)
-			r.networkCtrl.Disconnect()
-			r.clearSystemConfig()
-		}
-		successCallback := func(envelope *msg.MessageEnvelope) {
-			r.releaseDelegate(requestID)
-			r.networkCtrl.Disconnect()
-			r.clearSystemConfig()
-		}
 		req := new(msg.AuthLogout)
 		buff, _ := req.Marshal()
-		r.queueCtrl.RealtimeCommand(uint64(requestID), msg.C_AuthLogout, buff, timeoutCallback, successCallback, true, false)
+		r.queueCtrl.RealtimeCommand(uint64(requestID), msg.C_AuthLogout, buff, nil, nil, true, false)
 	}
+
 	if r.mainDelegate != nil {
 		r.mainDelegate.OnSessionClosed(reason)
 	}
 
-	// Stop all the controllers and repo
-	r.stop()
+	// Stop Controllers
+	r.ResetAuthKey()
+	r.networkCtrl.Stop()
+	r.syncCtrl.Stop()
+	r.queueCtrl.Stop()
+	repo.DropAll()
 
-	for os.RemoveAll(r.dbPath) != nil {
-		time.Sleep(time.Millisecond * 100)
-	}
-	r.queueCtrl.DropQueue()
+
+	// Close UI Executor
+	uiexec.Ctx().Stop()
+
+
+	r.syncCtrl.ResetIDs()
+	r.ConnInfo.FirstName = ""
+	r.ConnInfo.LastName = ""
+	r.ConnInfo.Phone = ""
+	r.ConnInfo.UserID = 0
+	r.ConnInfo.Username = ""
+	r.ConnInfo.Bio = ""
+	r.ConnInfo.Save()
+	r.DeviceToken = new(msg.AccountRegisterDevice)
+	r.saveDeviceToken()
 
 	err := r.Start()
 	if err != nil {
 		return err
 	}
 
-	r.clearSystemConfig()
+
 	return err
-}
-func (r *River) stop() {
-	logs.Debug("River calls stop, to stop network, sync and queue controllers")
-
-	// Stop Controllers
-	r.networkCtrl.Stop()
-	r.syncCtrl.Stop()
-	r.queueCtrl.Stop()
-
-
-	// Close UI Executor
-	uiexec.Ctx().Stop()
-
-	// Close database connection
-	repo.Close()
 }
 
 // UpdateContactInfo update contact name

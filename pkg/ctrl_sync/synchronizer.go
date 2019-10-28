@@ -151,9 +151,6 @@ func (ctrl *Controller) Sync() {
 	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSyncThreshold {
 		logs.Info("SyncCtrl goes for a Snapshot sync")
 
-		// Clear DB
-		repo.DropAll()
-
 		// Get Contacts from the server
 		waitGroup := &sync.WaitGroup{}
 		waitGroup.Add(2)
