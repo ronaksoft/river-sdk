@@ -181,8 +181,8 @@ func indexMapForMessages() (mapping.IndexMapping, error) {
 
 	// Message
 	messageMapping := bleve.NewDocumentStaticMapping()
-	messageMapping.AddFieldMappingsAt("Body", textFieldMapping)
-	messageMapping.AddFieldMappingsAt("PeerID", keywordFieldMapping)
+	messageMapping.AddFieldMappingsAt("body", textFieldMapping)
+	messageMapping.AddFieldMappingsAt("peer_id", keywordFieldMapping)
 
 	indexMapping := bleve.NewIndexMapping()
 	indexMapping.AddDocumentMapping("msg", messageMapping)
@@ -204,21 +204,21 @@ func indexMapForPeers() (mapping.IndexMapping, error) {
 
 	// User
 	userMapping := bleve.NewDocumentStaticMapping()
-	userMapping.AddFieldMappingsAt("FirstName", textFieldMapping)
-	userMapping.AddFieldMappingsAt("LastName", textFieldMapping)
-	userMapping.AddFieldMappingsAt("Username", keywordFieldMapping)
-	userMapping.AddFieldMappingsAt("Phone", keywordFieldMapping)
+	userMapping.AddFieldMappingsAt("fn", textFieldMapping)
+	userMapping.AddFieldMappingsAt("ln", textFieldMapping)
+	userMapping.AddFieldMappingsAt("un", keywordFieldMapping)
+	userMapping.AddFieldMappingsAt("phone", keywordFieldMapping)
 
 	// GroupSearch
 	groupMapping := bleve.NewDocumentStaticMapping()
-	groupMapping.AddFieldMappingsAt("Title", textFieldMapping)
+	groupMapping.AddFieldMappingsAt("title", textFieldMapping)
 
 	// Contact
 	contactMapping := bleve.NewDocumentStaticMapping()
-	contactMapping.AddFieldMappingsAt("FirstName", textFieldMapping)
-	contactMapping.AddFieldMappingsAt("LastName", textFieldMapping)
-	contactMapping.AddFieldMappingsAt("Username", keywordFieldMapping)
-	contactMapping.AddFieldMappingsAt("Phone", keywordFieldMapping)
+	contactMapping.AddFieldMappingsAt("fn", textFieldMapping)
+	contactMapping.AddFieldMappingsAt("ln", textFieldMapping)
+	contactMapping.AddFieldMappingsAt("un", keywordFieldMapping)
+	contactMapping.AddFieldMappingsAt("phone", keywordFieldMapping)
 
 	indexMapping := bleve.NewIndexMapping()
 	indexMapping.AddDocumentMapping("user", userMapping)

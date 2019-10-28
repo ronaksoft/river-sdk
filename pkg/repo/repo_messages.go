@@ -563,7 +563,6 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.User
 		}
 		t2 := bleve.NewDisjunctionQuery(qs...)
 		t3 := bleve.NewTermQuery(fmt.Sprintf("%d", peerID))
-
 		t3.SetField("peer_id")
 		searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3))
 		searchResult, _ := r.msgSearch.Search(searchRequest)
@@ -623,11 +622,14 @@ func (r *repoMessages) ReIndex() {
 			_ = it.Item().Value(func(val []byte) error {
 				message := new(msg.UserMessage)
 				_ = message.Unmarshal(val)
-				_ = r.msgSearch.Index(ronak.ByteToStr(getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
+				err := r.msgSearch.Index(ronak.ByteToStr(getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
 					Type:   "msg",
 					Body:   message.Body,
 					PeerID: fmt.Sprintf("%d", message.PeerID),
 				})
+				if err != nil {
+					fmt.Println(err)
+				}
 				return nil
 			})
 		}

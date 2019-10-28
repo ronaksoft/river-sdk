@@ -1,7 +1,6 @@
 package repo_test
 
 import (
-	"bytes"
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
@@ -219,12 +218,39 @@ func TestClearHistory(t *testing.T) {
 	fmt.Println(d.TopMessageID)
 }
 
-func TestCompare(t *testing.T) {
-	x := []byte("X.0001.000012")
-	y := []byte("X.0001.000013")
-	z := []byte("X.0001.000008")
-	zz := []byte("X.0001.001002")
-	fmt.Println(bytes.Compare(x,y))
-	fmt.Println(bytes.Compare(x,z))
-	fmt.Println(bytes.Compare(x,zz))
+func TestSearch(t *testing.T) {
+	// m := make([]*msg.UserMessage, 0, 10)
+	// for i := 1; i < 1000 ;i++ {
+	// 	m = append(m, &msg.UserMessage{
+	// 		ID:                  int64(i),
+	// 		PeerID:              14,
+	// 		PeerType:            1,
+	// 		CreatedOn:           time.Now().Unix(),
+	// 		EditedOn:            0,
+	// 		FwdSenderID:         0,
+	// 		FwdChannelID:        0,
+	// 		FwdChannelMessageID: 0,
+	// 		Flags:               0,
+	// 		MessageType:         0,
+	// 		Body:                fmt.Sprintf("Hello %d", i),
+	// 		SenderID:            100,
+	// 		ContentRead:         false,
+	// 		Inbox:               false,
+	// 		ReplyTo:             0,
+	// 		MessageAction:       0,
+	// 		MessageActionData:   nil,
+	// 		Entities:            nil,
+	// 		MediaType:           0,
+	// 		Media:               nil,
+	// 	})
+	// }
+	// repo.Messages.Save(m...)
+	// fmt.Println("Saved")
+
+
+	// mm := repo.Messages.SearchText("Hello")
+	mm := repo.Messages.SearchTextByPeerID("H", 6)
+	for _, m := range mm {
+		fmt.Println(m.ID, m.Body, m.PeerID)
+	}
 }
