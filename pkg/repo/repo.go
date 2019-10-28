@@ -253,7 +253,6 @@ func DbSize() (int64, int64) {
 }
 
 func TableInfo() []badger.TableInfo {
-	r.badger.Size()
 	return r.badger.Tables(true)
 }
 

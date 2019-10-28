@@ -96,9 +96,9 @@ func (r *River) HandleDebugActions(txt string) {
 	case "//sdk_clear_salt":
 		resetSalt(r)
 	case "//sdk_memory_stats":
-		getMemoryStats(r)
+		sendToSavedMessage(r, ronak.ByteToStr(getMemoryStats(r)))
 	case "//sdk_monitor":
-		getMonitorStats(r)
+		sendToSavedMessage(r, ronak.ByteToStr(getMonitorStats(r)))
 	case "//sdk_live_logger":
 		if len(parts) < 2 {
 			sendToSavedMessage(r, "//sdk_live_logger <url>")
