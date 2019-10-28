@@ -31,7 +31,7 @@ func init() {
 				StacktraceKey:  "stack",
 				LineEnding:     zapcore.DefaultLineEnding,
 				EncodeLevel:    zapcore.CapitalColorLevelEncoder,
-				EncodeTime:     zapcore.ISO8601TimeEncoder,
+				EncodeTime:     TimeEncoder,
 				EncodeDuration: zapcore.StringDurationEncoder,
 				EncodeCaller:   zapcore.ShortCallerEncoder,
 			}),
@@ -72,7 +72,7 @@ func SetLogFilePath(logDir string) error {
 					StacktraceKey:  "stacktrace",
 					LineEnding:     zapcore.DefaultLineEnding,
 					EncodeLevel:    zapcore.CapitalLevelEncoder,
-					EncodeTime:     zapcore.ISO8601TimeEncoder,
+					EncodeTime:     TimeEncoder,
 					EncodeDuration: zapcore.StringDurationEncoder,
 					EncodeCaller:   zapcore.ShortCallerEncoder,
 				}),
@@ -93,7 +93,7 @@ func SetLogFilePath(logDir string) error {
 				TimeKey:        "ts",
 				LineEnding:     zapcore.DefaultLineEnding,
 				EncodeLevel:    zapcore.CapitalLevelEncoder,
-				EncodeTime:     zapcore.EpochTimeEncoder,
+				EncodeTime:     TimeEncoder,
 				EncodeDuration: zapcore.StringDurationEncoder,
 				EncodeCaller:   zapcore.ShortCallerEncoder,
 			}),
@@ -152,6 +152,7 @@ func SetSentry(userID, authID int64) {
 	}))
 
 }
+
 func Debug(msg string, fields ...zap.Field) {
 	_Log.Debug(msg, fields...)
 }
