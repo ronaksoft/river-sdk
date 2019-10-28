@@ -648,12 +648,6 @@ func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 	res := new(msg.ContactsMany)
 	res.ContactUsers, res.Contacts = repo.Users.GetContacts()
 
-	// if didn't find anything send request to server
-	if len(res.Users) == 0 || len(res.Contacts) == 0 {
-		r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
-		return
-	}
-
 	out.Constructor = msg.C_ContactsMany
 	out.Message, _ = res.Marshal()
 

@@ -473,9 +473,7 @@ func (ctrl *Controller) Disconnect() {
 // If authID and authKey are defined then sending messages will be encrypted before
 // writing on the wire.
 func (ctrl *Controller) SetAuthorization(authID int64, authKey []byte) {
-	logs.Info("NetCtrl set authorization info",
-		zap.Int64("AuthID", authID),
-	)
+	logs.Info("NetCtrl set authorization info", zap.Int64("AuthID", authID))
 	ctrl.authKey = make([]byte, len(authKey))
 	ctrl.authID = authID
 	copy(ctrl.authKey, authKey)

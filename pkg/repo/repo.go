@@ -237,10 +237,10 @@ func DropAll() {
 	_ = r.badger.Close()
 	_ = r.msgSearch.Close()
 	_ = r.peerSearch.Close()
-	ctx = nil
 	for os.RemoveAll(ctx.DBPath) != nil {
 		time.Sleep(time.Millisecond * 100)
 	}
+	ctx = nil
 }
 
 func GC() {

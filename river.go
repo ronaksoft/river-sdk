@@ -229,8 +229,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 }
 
 func (r *River) Version() string {
-	// TODO:: automatic generation
-	return "0.8.2"
+	return domain.SDKVersion
 }
 
 func (r *River) Start() error {
@@ -297,7 +296,7 @@ func (r *River) Migrate() int {
 }
 
 func (r *River) onNetworkConnect() {
-	domain.WindowLog(fmt.Sprintf("Connected: %s", domain.StartTime))
+	domain.WindowLog(fmt.Sprintf("Connected: %s", domain.StartTime.Format(time.Kitchen)))
 
 	waitGroup := sync.WaitGroup{}
 	// If we have no salt then we must call GetServerTime and GetServerSalt sequentially, otherwise
@@ -306,13 +305,13 @@ func (r *River) onNetworkConnect() {
 		r.syncCtrl.GetServerTime()
 		domain.WindowLog(fmt.Sprintf("ServerTime (%s): %s", domain.TimeDelta, time.Now().Sub(domain.StartTime)))
 		r.syncCtrl.GetServerSalt()
-		domain.WindowLog(fmt.Sprintf("ServerSalt (%s): %s", domain.TimeDelta, time.Now().Sub(domain.StartTime)))
+		domain.WindowLog(fmt.Sprintf("ServerSalt: %s", time.Now().Sub(domain.StartTime)))
 	} else {
 		if salt.Count() < 3 {
 			waitGroup.Add(1)
 			go func() {
 				r.syncCtrl.GetServerSalt()
-				domain.WindowLog(fmt.Sprintf("ServerSalt (%s): %s", domain.TimeDelta, time.Now().Sub(domain.StartTime)))
+				domain.WindowLog(fmt.Sprintf("ServerSalt: %s", time.Now().Sub(domain.StartTime)))
 				waitGroup.Done()
 			}()
 		}
