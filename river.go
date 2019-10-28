@@ -316,13 +316,14 @@ func (r *River) onNetworkConnect() {
 				waitGroup.Done()
 			}()
 		}
-		waitGroup.Add(2)
+		waitGroup.Add(1)
 		go func() {
 			r.syncCtrl.GetServerTime()
 			domain.WindowLog(fmt.Sprintf("ServerTime (%s): %s", domain.TimeDelta, time.Now().Sub(domain.StartTime)))
 			waitGroup.Done()
 		}()
 	}
+	waitGroup.Add(1)
 	go func() {
 		r.syncCtrl.AuthRecall()
 		domain.WindowLog(fmt.Sprintf("AuthRecalled: %s", time.Now().Sub(domain.StartTime)))
