@@ -433,6 +433,7 @@ func (ctrl *Controller) Connect() {
 			}
 
 			keepGoing = false
+			domain.StartTime = time.Now()
 			ctrl.wsConn = wsConn
 
 			// it should be started here cuz we need receiver to get AuthRecall answer
