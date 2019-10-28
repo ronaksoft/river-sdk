@@ -76,7 +76,7 @@ func UpdateSalt() bool {
 			b, _ := json.Marshal(sysSalts[idx:])
 			err = repo.System.SaveString(domain.SkSystemSalts, string(b))
 			if err != nil {
-				logs.Warn("UpdateSalt got error on save salt to db", zap.Error(err),zap.String("Salts", ronak.ByteToStr(b)))
+				logs.Warn("UpdateSalt got error on save salt to db", zap.Error(err), zap.String("Salts", ronak.ByteToStr(b)))
 			}
 			saltFound = true
 			lastUpdate = time.Now()
@@ -109,4 +109,8 @@ func Set(s *msg.SystemSalts) {
 		return
 	}
 	UpdateSalt()
+}
+
+func Count() int {
+	return len(salts)
 }

@@ -300,18 +300,36 @@ func (r *River) onNetworkConnect() {
 	domain.WindowLog(fmt.Sprintf("Connected: %s", domain.StartTime))
 
 	waitGroup := sync.WaitGroup{}
-	waitGroup.Add(2)
-	go func() {
+	// If we have no salt then we must call GetServerTime and GetServerSalt sequentially, otherwise
+	// We call them in parallel
+	if salt.Count() == 0 {
 		r.syncCtrl.GetServerTime()
 		domain.WindowLog(fmt.Sprintf("ServerTime (%s): %s", domain.TimeDelta, time.Now().Sub(domain.StartTime)))
-		waitGroup.Done()
-	}()
+		r.syncCtrl.GetServerSalt()
+		domain.WindowLog(fmt.Sprintf("ServerSalt (%s): %s", domain.TimeDelta, time.Now().Sub(domain.StartTime)))
+	} else {
+		if salt.Count() < 3 {
+			waitGroup.Add(1)
+			go func() {
+				r.syncCtrl.GetServerSalt()
+				domain.WindowLog(fmt.Sprintf("ServerSalt:", ))
+			}()
+		}
+		waitGroup.Add(2)
+		go func() {
+			r.syncCtrl.GetServerTime()
+			domain.WindowLog(fmt.Sprintf("ServerTime (%s): %s", domain.TimeDelta, time.Now().Sub(domain.StartTime)))
+			waitGroup.Done()
+		}()
+	}
 	go func() {
 		r.syncCtrl.AuthRecall()
 		domain.WindowLog(fmt.Sprintf("AuthRecalled: %s", time.Now().Sub(domain.StartTime)))
 		waitGroup.Done()
 	}()
 	waitGroup.Wait()
+
+
 	if r.networkCtrl.GetQuality() == domain.NetworkDisconnected {
 		return
 	}

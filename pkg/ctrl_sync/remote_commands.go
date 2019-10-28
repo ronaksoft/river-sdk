@@ -48,7 +48,6 @@ func (ctrl *Controller) GetServerSalt() {
 		true,
 		false,
 	)
-
 }
 
 func (ctrl *Controller) AuthRecall() {
