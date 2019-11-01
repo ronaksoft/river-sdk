@@ -3,6 +3,7 @@ package logs
 import (
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"net/http"
@@ -159,6 +160,15 @@ func Debug(msg string, fields ...zap.Field) {
 
 func Warn(msg string, fields ...zap.Field) {
 	_Log.Warn(msg, fields...)
+	domain.WindowLog(fmt.Sprintf("WARN: %s", msg))
+	for idx, f := range fields {
+		switch f.Type {
+		case zapcore.StringType:
+			domain.WindowLog(fmt.Sprintf(" %d.%s: %s", idx, f.Key, f.String))
+		case zapcore.Uint32Type, zapcore.Uint64Type, zapcore.Int64Type, zapcore.Int32Type:
+			domain.WindowLog(fmt.Sprintf(" %d.%s: %d", idx, f.Key, f.Integer))
+		}
+	}
 }
 
 func WarnOnErr(guideTxt string, err error, fields ...zap.Field) {
@@ -168,19 +178,28 @@ func WarnOnErr(guideTxt string, err error, fields ...zap.Field) {
 	}
 }
 
-func ErrorOnErr(guideTxt string, err error, fields ...zap.Field) {
-	if err != nil {
-		fields = append(fields, zap.Error(err))
-		Error(guideTxt, fields...)
-	}
-}
-
 func Info(msg string, fields ...zap.Field) {
 	_Log.Info(msg, fields...)
 }
 
 func Error(msg string, fields ...zap.Field) {
 	_Log.Error(msg, fields...)
+	domain.WindowLog(fmt.Sprintf("ERR: %s", msg))
+	for idx, f := range fields {
+		switch f.Type {
+		case zapcore.StringType:
+			domain.WindowLog(fmt.Sprintf(" %d.%s: %s", idx, f.Key, f.String))
+		case zapcore.Uint32Type, zapcore.Uint64Type, zapcore.Int64Type, zapcore.Int32Type:
+			domain.WindowLog(fmt.Sprintf(" %d.%s: %d", idx, f.Key, f.Integer))
+		}
+	}
+}
+
+func ErrorOnErr(guideTxt string, err error, fields ...zap.Field) {
+	if err != nil {
+		fields = append(fields, zap.Error(err))
+		Error(guideTxt, fields...)
+	}
 }
 
 func Fatal(msg string, fields ...zap.Field) {
