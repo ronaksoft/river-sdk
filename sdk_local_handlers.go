@@ -75,9 +75,6 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		waitGroup := &sync.WaitGroup{}
 		waitGroup.Add(1)
 		r.syncCtrl.GetAllDialogs(waitGroup, 0, 100)
-		waitGroup.Wait()
-		logs.Error("River re-synced dialogs")
-
 		for msgID := range mMessages {
 			found := false
 			for _, m := range res.Messages {
@@ -90,6 +87,8 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 				logs.Warn("missed message", zap.Int64("MsgID", msgID))
 			}
 		}
+		waitGroup.Wait()
+		logs.Error("River re-synced dialogs")
 	}
 
 	// Load Pending messages
@@ -117,7 +116,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 	res.Groups = repo.Groups.GetMany(mGroups.ToArray())
 	if len(res.Groups) != len(mGroups) {
-		logs.Warn("Rive found unmatched dialog groups", zap.Int("Got", len(res.Messages)), zap.Int("Need", len(mMessages)))
+		logs.Warn("River found unmatched dialog groups", zap.Int("Got", len(res.Groups)), zap.Int("Need", len(mGroups)))
 		for groupID := range mGroups {
 			found := false
 			for _, g := range res.Groups {
@@ -133,7 +132,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 	res.Users = repo.Users.GetMany(mUsers.ToArray())
 	if len(res.Users) != len(mUsers) {
-		logs.Warn("Rive found unmatched dialog groups", zap.Int("Got", len(res.Messages)), zap.Int("Need", len(mMessages)))
+		logs.Warn("River found unmatched dialog users", zap.Int("Got", len(res.Users)), zap.Int("Need", len(mUsers)))
 		for userID := range mUsers {
 			found := false
 			for _, g := range res.Users {
