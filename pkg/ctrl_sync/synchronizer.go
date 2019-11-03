@@ -157,6 +157,27 @@ func (ctrl *Controller) Sync() {
 		go ctrl.GetContacts(waitGroup)
 		go ctrl.GetAllDialogs(waitGroup, 0, 100)
 		waitGroup.Wait()
+
+		update := new(msg.ClientUpdateSynced)
+		update.Dialogs = true
+		update.Contacts = true
+		bytes, _ := update.Marshal()
+
+		updateEnvelope := new(msg.UpdateEnvelope)
+		updateEnvelope.Constructor = msg.C_ClientUpdateSynced
+		updateEnvelope.Update = bytes
+		updateEnvelope.UpdateID = 0
+		updateEnvelope.Timestamp = time.Now().Unix()
+		buff, _ := updateEnvelope.Marshal()
+
+		// call external handler
+		uiexec.Ctx().Exec(func() {
+			if ctrl.onUpdateMainDelegate != nil {
+				ctrl.onUpdateMainDelegate(msg.C_UpdateEnvelope, buff)
+			}
+		})
+
+
 		ctrl.updateID = serverUpdateID
 		err = repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
 		if err != nil {

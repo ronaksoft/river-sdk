@@ -232,7 +232,6 @@ func indexMapForPeers() (mapping.IndexMapping, error) {
 }
 
 func DropAll() {
-	_ = r.badger.DropAll()
 	_ = r.bunt.Close()
 	_ = r.badger.Close()
 	_ = r.msgSearch.Close()
