@@ -157,26 +157,7 @@ func (ctrl *Controller) Sync() {
 		go ctrl.GetContacts(waitGroup)
 		go ctrl.GetAllDialogs(waitGroup, 0, 100)
 		waitGroup.Wait()
-
-		update := new(msg.ClientUpdateSynced)
-		update.Dialogs = true
-		update.Contacts = true
-		bytes, _ := update.Marshal()
-
-		updateEnvelope := new(msg.UpdateEnvelope)
-		updateEnvelope.Constructor = msg.C_ClientUpdateSynced
-		updateEnvelope.Update = bytes
-		updateEnvelope.UpdateID = 0
-		updateEnvelope.Timestamp = time.Now().Unix()
-		buff, _ := updateEnvelope.Marshal()
-
-		// call external handler
-		uiexec.Ctx().Exec(func() {
-			if ctrl.onUpdateMainDelegate != nil {
-				ctrl.onUpdateMainDelegate(msg.C_UpdateEnvelope, buff)
-			}
-		})
-
+		updateUI(ctrl)
 
 		ctrl.updateID = serverUpdateID
 		err = repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
@@ -188,6 +169,26 @@ func (ctrl *Controller) Sync() {
 		logs.Info("SyncCtrl goes for a Sequential sync")
 		getUpdateDifference(ctrl, serverUpdateID)
 	}
+}
+func updateUI(ctrl *Controller) {
+	update := new(msg.ClientUpdateSynced)
+	update.Dialogs = false
+	update.Contacts = true
+	bytes, _ := update.Marshal()
+
+	updateEnvelope := new(msg.UpdateEnvelope)
+	updateEnvelope.Constructor = msg.C_ClientUpdateSynced
+	updateEnvelope.Update = bytes
+	updateEnvelope.UpdateID = 0
+	updateEnvelope.Timestamp = time.Now().Unix()
+	buff, _ := updateEnvelope.Marshal()
+
+	// call external handler
+	uiexec.Ctx().Exec(func() {
+		if ctrl.onUpdateMainDelegate != nil {
+			ctrl.onUpdateMainDelegate(msg.C_UpdateEnvelope, buff)
+		}
+	})
 }
 func updateSyncStatus(ctrl *Controller, newStatus domain.SyncStatus) {
 	if ctrl.syncStatus == newStatus {

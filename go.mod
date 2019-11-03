@@ -3,6 +3,7 @@ module git.ronaksoftware.com/ronak/riversdk
 require (
 	git.ronaksoftware.com/ronak/toolbox v1.1.6
 	github.com/RoaringBitmap/roaring v0.4.18 // indirect
+	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
 	github.com/allegro/bigcache v1.2.1
 	github.com/beeker1121/goque v2.0.1+incompatible
@@ -10,6 +11,8 @@ require (
 	github.com/blevesearch/blevex v0.0.0-20180227211930-4b158bb555a3 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.2 // indirect
 	github.com/blevesearch/segment v0.0.0-20160915185041-762005e7a34f // indirect
+	github.com/chzyer/logex v1.1.10 // indirect
+	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect
 	github.com/couchbase/vellum v0.0.0-20190626091642-41f2deade2cf // indirect
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
