@@ -110,6 +110,9 @@ func (r *River) SearchGlobal(searchPhrase string, peerID int64, delegate Request
 	searchResults.MatchedUsers = matchedUsers
 
 	outBytes, _ := searchResults.Marshal()
+
+	logs.Info("GlobalSearch",zap.Int("outBytes size",len(outBytes)))
+
 	if delegate != nil {
 		delegate.OnComplete(outBytes)
 	}

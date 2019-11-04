@@ -9,7 +9,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"go.uber.org/zap"
 	"hash/crc32"
 	"sort"
