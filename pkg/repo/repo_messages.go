@@ -456,7 +456,7 @@ func (r *repoMessages) ClearHistory(userID int64, peerID int64, peerType int32, 
 		st.NumGo = 10
 		maxKey := getMessageKey(peerID, peerType, maxID)
 		st.ChooseKey = func(item *badger.Item) bool {
-			return bytes.Compare(item.Key(), maxKey) < 0
+			return bytes.Compare(item.Key(), maxKey) <= 0
 		}
 		st.Send = func(kvList *pb.KVList) error {
 			for _, kv := range kvList.Kv {
