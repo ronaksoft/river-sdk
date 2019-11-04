@@ -33,12 +33,16 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 
 	dialog, _ := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
 	if dialog == nil {
+		unreadCount := int32(0)
+		if x.Sender.ID != ctrl.userID {
+			unreadCount = 1
+		}
 		// make sure to created the message hole b4 creating dialog
 		dialog = &msg.Dialog{
 			PeerID:         x.Message.PeerID,
 			PeerType:       x.Message.PeerType,
 			TopMessageID:   x.Message.ID,
-			UnreadCount:    0,
+			UnreadCount:    unreadCount,
 			MentionedCount: 0,
 			AccessHash:     x.AccessHash,
 		}
