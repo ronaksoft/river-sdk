@@ -479,7 +479,9 @@ func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 
 	logs.Info("SyncCtrl applies UpdateUserPhoto")
 
-	repo.Users.UpdatePhoto(x.UserID, x.Photo)
+	if x.Photo != nil {
+		_ = repo.Users.UpdatePhoto(x.UserID, x.Photo)
+	}
 
 	if x.PhotoID != 0 {
 		if x.Photo != nil && x.Photo.PhotoSmall.FileID != 0 {
@@ -505,7 +507,9 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 		zap.Int64("GroupID", x.GroupID),
 	)
 
-	repo.Groups.UpdatePhoto(x.GroupID, x.Photo)
+	if x.Photo != nil {
+		repo.Groups.UpdatePhoto(x.GroupID, x.Photo)
+	}
 
 	if x.PhotoID != 0 {
 		if x.Photo != nil && x.Photo.PhotoSmall.FileID != 0 {
