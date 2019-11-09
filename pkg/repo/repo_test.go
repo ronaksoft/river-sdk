@@ -316,3 +316,54 @@ func TestUserPhotoGallery(t *testing.T) {
 	_ = u1
 	_ = u2
 }
+
+func TestGroupPhotoGallery(t *testing.T) {
+	photo1 := &msg.GroupPhoto{
+		PhotoBig:   &msg.FileLocation{
+			ClusterID:  100,
+			FileID:     200,
+			AccessHash: 300,
+		},
+		PhotoSmall: &msg.FileLocation{
+			ClusterID:  10,
+			FileID:     20,
+			AccessHash: 30,
+		},
+		PhotoID:    1,
+	}
+	photo2 := &msg.GroupPhoto{
+		PhotoBig:   &msg.FileLocation{
+			ClusterID:  101,
+			FileID:     201,
+			AccessHash: 301,
+		},
+		PhotoSmall: &msg.FileLocation{
+			ClusterID:  11,
+			FileID:     21,
+			AccessHash: 31,
+		},
+		PhotoID:    2,
+	}
+	group := &msg.GroupFull{
+		Group:          &msg.Group{
+			ID:           1000,
+			Title:        "Test Group",
+			CreatedOn:    0,
+			Participants: 0,
+			EditedOn:     0,
+			Flags:        nil,
+			Photo:        photo1,
+		},
+		Users:          nil,
+		Participants:   nil,
+		NotifySettings: nil,
+		PhotoGallery:   []*msg.GroupPhoto{photo1, photo2},
+	}
+
+
+	repo.Groups.Save(group.Group)
+	repo.Groups.SavePhotoGallery(group.Group.ID, group.PhotoGallery...)
+
+	phGallery := repo.Groups.GetPhotoGallery(1000)
+	fmt.Println(phGallery)
+}
