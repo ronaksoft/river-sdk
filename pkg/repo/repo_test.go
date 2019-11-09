@@ -65,7 +65,7 @@ func TestPending(t *testing.T) {
 	fmt.Println(pm2)
 }
 
-func TestGetUserMessageKey(t *testing.T) {
+func TestGetMessageKey(t *testing.T) {
 	peerID := 10001
 	peerType := 1
 	msgID := 1 << 32
@@ -253,4 +253,66 @@ func TestSearch(t *testing.T) {
 	for _, m := range mm {
 		fmt.Println(m.ID, m.Body, m.PeerID)
 	}
+}
+
+func TestUserPhotoGallery(t *testing.T) {
+	photo1 := &msg.UserPhoto{
+		PhotoBig:   &msg.FileLocation{
+			ClusterID:  100,
+			FileID:     200,
+			AccessHash: 300,
+		},
+		PhotoSmall: &msg.FileLocation{
+			ClusterID:  10,
+			FileID:     20,
+			AccessHash: 30,
+		},
+		PhotoID:    1,
+	}
+	photo2 := &msg.UserPhoto{
+		PhotoBig:   &msg.FileLocation{
+			ClusterID:  101,
+			FileID:     201,
+			AccessHash: 301,
+		},
+		PhotoSmall: &msg.FileLocation{
+			ClusterID:  11,
+			FileID:     21,
+			AccessHash: 31,
+		},
+		PhotoID:    2,
+	}
+	user := &msg.User{
+		ID:           1000,
+		FirstName:    "Ehsan",
+		LastName:     "Noureddin Moosa",
+		Username:     "",
+		Status:       0,
+		Restricted:   false,
+		AccessHash:   0,
+		Photo:        photo1,
+		Bio:          "",
+		Phone:        "",
+		LastSeen:     0,
+		PhotoGallery: nil,
+		IsBot:        false,
+	}
+	repo.Users.Save(user)
+
+	u1, err := repo.Users.Get(1000)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	user.PhotoGallery = []*msg.UserPhoto{photo1, photo2}
+	repo.Users.Save(user)
+	u2, err := repo.Users.Get(1000)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	phGallery := repo.Users.GetPhotoGallery(1000)
+	fmt.Println(phGallery)
+	_ = u1
+	_ = u2
 }

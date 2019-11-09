@@ -203,9 +203,8 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 	// save Users
 	repo.Users.Save(u.Users...)
 
-	for _, photo := range u.PhotoGallery {
-		repo.Files.SaveGroupPhoto(u.Group.ID, photo)
-	}
+	repo.Groups.SavePhotoGallery(u.Group.ID, u.PhotoGallery...)
+
 	// Update NotifySettings
 	repo.Dialogs.UpdateNotifySetting(u.Group.ID, int32(msg.PeerGroup), u.NotifySettings)
 }

@@ -75,15 +75,11 @@ func saveUser(txn *badger.Txn, user *msg.User) error {
 	if len(user.PhotoGallery) == 0 {
 		currentUser, _ := getUserByKey(txn, userKey)
 		if currentUser != nil && len(currentUser.PhotoGallery) > 0 {
-			if len(user.PhotoGallery) == 0 {
-				user.PhotoGallery = currentUser.PhotoGallery
-			}
+			user.PhotoGallery = currentUser.PhotoGallery
 		}
 	}
 	userBytes, _ := user.Marshal()
-	err := txn.SetEntry(badger.NewEntry(
-		userKey, userBytes,
-	))
+	err := txn.SetEntry(badger.NewEntry(userKey, userBytes))
 	if err != nil {
 		return err
 	}
@@ -459,7 +455,6 @@ func (r *repoUsers) GetPhotoGallery(userID int64) []*msg.UserPhoto {
 	_ = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = getUserPhotoGalleryPrefix(userID)
-		opts.Reverse = true
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
