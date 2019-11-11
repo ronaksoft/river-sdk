@@ -137,3 +137,7 @@ func TestConnect(t *testing.T) {
 
 	ctrl.Stop()
 }
+
+func TestCountry(t *testing.T) {
+	t.Log(networkCtrl.GetCountryFromIP())
+}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
@@ -12,6 +13,7 @@ import (
 	"net"
 	"net/http"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -413,7 +415,12 @@ func (ctrl *Controller) Connect() {
 			}
 			reqHdr := http.Header{}
 			reqHdr.Set("X-Client-Type", fmt.Sprintf("SDK-%s", domain.SDKVersion))
-			wsConn, _, err := ctrl.wsDialer.Dial(ctrl.websocketEndpoint, reqHdr)
+
+			endpointParts := strings.Split(ctrl.websocketEndpoint, ".")
+			if strings.ToUpper(GetCountryFromIP()) != "IR" {
+				endpointParts[0] = fmt.Sprintf("%s-cf", endpointParts[0])
+			}
+			wsConn, _, err := ctrl.wsDialer.Dial(strings.Join(endpointParts, "."), reqHdr)
 			if err != nil {
 				logs.Warn("NetCtrl could not dial", zap.Error(err), zap.String("Url", ctrl.websocketEndpoint))
 				time.Sleep(1 * time.Second)
@@ -654,4 +661,50 @@ func (ctrl *Controller) recoverPanic(funcName string, extraInfo interface{}) {
 		)
 		go ctrl.Reconnect()
 	}
+}
+
+func GetCountryFromIP() string {
+	res1 := make(chan string, 1)
+	res2 := make(chan string, 1)
+	go func() {
+		c := http.Client{Timeout: domain.WebsocketRequestTime}
+		res, err := c.Get("https://ipinfo.io/country")
+		if err == nil {
+			b, _ := ioutil.ReadAll(res.Body)
+			_ = res.Body.Close()
+			res1 <- string(b)
+		}
+	}()
+
+	go func() {
+		c := http.Client{Timeout: domain.WebsocketRequestTime}
+		res, err := c.Get("https://ipapi.co/json")
+		if err == nil {
+			m := make(map[string]interface{})
+			b, _ := ioutil.ReadAll(res.Body)
+			_ = res.Body.Close()
+			_ = json.Unmarshal(b, &m)
+			if m["country"] == nil {
+				res2 <- ""
+				return
+			}
+			res2 <- m["country"].(string)
+		}
+	}()
+
+	select {
+	case x := <-res1:
+		if x == "" {
+			return "IR"
+		}
+		return x
+	case x := <-res2:
+		if x == "" {
+			return "IR"
+		}
+		return x
+	case <-time.After(time.Second * 30):
+		return "IR"
+	}
+
 }
