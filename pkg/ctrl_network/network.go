@@ -24,6 +24,11 @@ import (
 	"go.uber.org/zap"
 )
 
+var (
+	WebsocketEndpoint string
+	HttpEndpoint      string
+)
+
 // Config network controller config
 type Config struct {
 	WebsocketEndpoint string
@@ -416,11 +421,16 @@ func (ctrl *Controller) Connect() {
 			reqHdr := http.Header{}
 			reqHdr.Set("X-Client-Type", fmt.Sprintf("SDK-%s", domain.SDKVersion))
 
-			endpointParts := strings.Split(ctrl.websocketEndpoint, ".")
+			wsEndpointParts := strings.Split(ctrl.websocketEndpoint, ".")
+			httpEndpointParts := strings.Split(ctrl.httpEndpoint, ".")
 			if strings.ToUpper(GetCountryFromIP()) != "IR" {
-				endpointParts[0] = fmt.Sprintf("%s-cf", endpointParts[0])
+				wsEndpointParts[0] = fmt.Sprintf("%s-cf", wsEndpointParts[0])
+				httpEndpointParts[0] = fmt.Sprintf("%s-cf", httpEndpointParts[0])
 			}
-			wsConn, _, err := ctrl.wsDialer.Dial(strings.Join(endpointParts, "."), reqHdr)
+			WebsocketEndpoint = strings.Join(wsEndpointParts, ".")
+			HttpEndpoint = strings.Join(httpEndpointParts, ".")
+
+			wsConn, _, err := ctrl.wsDialer.Dial(WebsocketEndpoint, reqHdr)
 			if err != nil {
 				logs.Warn("NetCtrl could not dial", zap.Error(err), zap.String("Url", ctrl.websocketEndpoint))
 				time.Sleep(1 * time.Second)
@@ -579,7 +589,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 	ctrl.httpClient.Timeout = domain.HttpRequestTime
 
 	// Send Data
-	httpReq, err := http.NewRequest(http.MethodPost, ctrl.httpEndpoint, reqBuff)
+	httpReq, err := http.NewRequest(http.MethodPost, HttpEndpoint, reqBuff)
 	if err != nil {
 		return nil, err
 	}
