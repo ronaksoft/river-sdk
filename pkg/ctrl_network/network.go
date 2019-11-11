@@ -703,7 +703,7 @@ func GetCountryFromIP() string {
 			return "IR"
 		}
 		return x
-	case <-time.After(time.Second * 30):
+	case <-time.After(time.Second * 8):
 		return "IR"
 	}
 
