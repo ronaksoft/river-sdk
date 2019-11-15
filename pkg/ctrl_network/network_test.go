@@ -138,3 +138,11 @@ func TestConnect(t *testing.T) {
 
 	ctrl.Stop()
 }
+
+func TestReconnect(t *testing.T) {
+	ctrl.Start()
+	for i := 0 ; i < 10 ; i++ {
+		ctrl.Reconnect()
+		time.Sleep(time.Second * 5)
+	}
+}
