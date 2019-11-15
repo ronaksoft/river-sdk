@@ -709,10 +709,19 @@ func (ctrl *Controller) UpdateEndpoint() {
 	case <-time.After(timeout):
 	}
 
-	if country != "IR" {
-		wsEndpointParts[0] = fmt.Sprintf("%s-cf", wsEndpointParts[0])
-		httpEndpointParts[0] = fmt.Sprintf("%s-cf", httpEndpointParts[0])
+	switch country {
+	case "IR":
+		wsEndpointParts[0] = strings.TrimSuffix(wsEndpointParts[0], "-cf")
+		httpEndpointParts[0] = strings.TrimSuffix(httpEndpointParts[0], "-cf")
+	default:
+		if !strings.HasSuffix(wsEndpointParts[0], "-cf") {
+			wsEndpointParts[0] = fmt.Sprintf("%s-cf", wsEndpointParts[0])
+		}
+		if !strings.HasSuffix(httpEndpointParts[0], "-cf") {
+			httpEndpointParts[0] = fmt.Sprintf("%s-cf", httpEndpointParts[0])
+		}
 	}
+
 	ctrl.wsEndpoint = strings.Join(wsEndpointParts, ".")
 	ctrl.httpEndpoint = strings.Join(httpEndpointParts, ".")
 	logs.Info("NetCtrl endpoints updated",
