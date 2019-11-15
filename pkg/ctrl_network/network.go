@@ -715,7 +715,7 @@ func (ctrl *Controller) UpdateEndpoint() {
 	}
 	ctrl.wsEndpoint = strings.Join(wsEndpointParts, ".")
 	ctrl.httpEndpoint = strings.Join(httpEndpointParts, ".")
-	logs.Info("NetworkCtrl endpoints updated",
+	logs.Info("NetCtrl endpoints updated",
 		zap.String("WS", ctrl.wsEndpoint),
 		zap.String("Http", ctrl.httpEndpoint),
 		zap.String("Country", country),
