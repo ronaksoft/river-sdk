@@ -13,11 +13,12 @@ const (
 
 // Global Parameters
 const (
-	WebsocketEndpoint     = "ws://river.im"
-	WebsocketWriteTime    = 3 * time.Second
-	WebsocketDirectTime   = 3 * time.Second
-	WebsocketRequestTime  = 8 * time.Second
-	HttpRequestTime       = 30 * time.Second
+	WebsocketEndpoint    = "ws://cyrus.river.im"
+	WebsocketWriteTime   = 3 * time.Second
+	WebsocketRequestTime = 8 * time.Second
+	WebsocketDialTimeout = 3 * time.Second
+	HttpRequestTime      = 30 * time.Second
+
 	SnapshotSyncThreshold = 10000
 )
 

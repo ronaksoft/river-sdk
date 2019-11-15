@@ -24,11 +24,6 @@ import (
 	"go.uber.org/zap"
 )
 
-var (
-	WebsocketEndpoint string
-	HttpEndpoint      string
-)
-
 // Config network controller config
 type Config struct {
 	WebsocketEndpoint string
@@ -47,11 +42,11 @@ type Controller struct {
 	messageSeq int64
 
 	// Websocket Settings
-	wsWriteLock       sync.Mutex
-	wsDialer          *websocket.Dialer
-	websocketEndpoint string
-	wsKeepConnection  bool
-	wsConn            *websocket.Conn
+	wsWriteLock      sync.Mutex
+	wsDialer         *websocket.Dialer
+	wsEndpoint       string
+	wsKeepConnection bool
+	wsConn           *websocket.Conn
 
 	// Http Settings
 	httpEndpoint string
@@ -84,19 +79,19 @@ func New(config Config) *Controller {
 	ctrl := new(Controller)
 	ctrl.httpEndpoint = config.HttpEndpoint
 	if config.WebsocketEndpoint == "" {
-		ctrl.websocketEndpoint = domain.WebsocketEndpoint
+		ctrl.wsEndpoint = domain.WebsocketEndpoint
 	} else {
-		ctrl.websocketEndpoint = config.WebsocketEndpoint
+		ctrl.wsEndpoint = config.WebsocketEndpoint
 	}
 	ctrl.wsKeepConnection = true
 	ctrl.wsDialer = &websocket.Dialer{
 		NetDial: func(network, addr string) (conn net.Conn, e error) {
-			return net.DialTimeout(network, addr, 5*time.Second)
+			return net.DialTimeout(network, addr, domain.WebsocketDialTimeout)
 		},
 		Proxy:            http.ProxyFromEnvironment,
-		HandshakeTimeout: 5 * time.Second,
-		WriteBufferSize:  64 * 1024, // 32kB
-		ReadBufferSize:   64 * 1024, // 32kB
+		HandshakeTimeout: domain.WebsocketDialTimeout,
+		WriteBufferSize:  32 * 1024, // 32kB
+		ReadBufferSize:   32 * 1024, // 32kB
 	}
 
 	ctrl.stopChannel = make(chan bool, 1)
@@ -112,6 +107,9 @@ func New(config Config) *Controller {
 		msg.C_InitCompleteAuth:    true,
 		msg.C_SystemGetSalts:      true,
 	}
+
+	// Detect the country we are calling from to determine the server Cyrus address
+	ctrl.UpdateEndpoint()
 
 	return ctrl
 }
@@ -421,18 +419,9 @@ func (ctrl *Controller) Connect() {
 			reqHdr := http.Header{}
 			reqHdr.Set("X-Client-Type", fmt.Sprintf("SDK-%s", domain.SDKVersion))
 
-			wsEndpointParts := strings.Split(ctrl.websocketEndpoint, ".")
-			httpEndpointParts := strings.Split(ctrl.httpEndpoint, ".")
-			if strings.ToUpper(GetCountryFromIP()) != "IR" {
-				wsEndpointParts[0] = fmt.Sprintf("%s-cf", wsEndpointParts[0])
-				httpEndpointParts[0] = fmt.Sprintf("%s-cf", httpEndpointParts[0])
-			}
-			WebsocketEndpoint = strings.Join(wsEndpointParts, ".")
-			HttpEndpoint = strings.Join(httpEndpointParts, ".")
-
-			wsConn, _, err := ctrl.wsDialer.Dial(WebsocketEndpoint, reqHdr)
+			wsConn, _, err := ctrl.wsDialer.Dial(ctrl.wsEndpoint, reqHdr)
 			if err != nil {
-				logs.Warn("NetCtrl could not dial", zap.Error(err), zap.String("Url", ctrl.websocketEndpoint))
+				logs.Warn("NetCtrl could not dial", zap.Error(err), zap.String("Url", ctrl.wsEndpoint))
 				time.Sleep(1 * time.Second)
 				continue
 			}
@@ -589,7 +578,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 	ctrl.httpClient.Timeout = domain.HttpRequestTime
 
 	// Send Data
-	httpReq, err := http.NewRequest(http.MethodPost, HttpEndpoint, reqBuff)
+	httpReq, err := http.NewRequest(http.MethodPost, ctrl.httpEndpoint, reqBuff)
 	if err != nil {
 		return nil, err
 	}
@@ -673,21 +662,26 @@ func (ctrl *Controller) recoverPanic(funcName string, extraInfo interface{}) {
 	}
 }
 
-func GetCountryFromIP() string {
+func (ctrl *Controller) UpdateEndpoint() {
+	timeout := time.Second * 3
 	res1 := make(chan string, 1)
 	res2 := make(chan string, 1)
+	country := "IR"
+	wsEndpointParts := strings.Split(ctrl.wsEndpoint, ".")
+	httpEndpointParts := strings.Split(ctrl.httpEndpoint, ".")
+
 	go func() {
-		c := http.Client{Timeout: domain.WebsocketRequestTime}
+		c := http.Client{Timeout: timeout}
 		res, err := c.Get("https://ipinfo.io/country")
 		if err == nil {
 			b, _ := ioutil.ReadAll(res.Body)
 			_ = res.Body.Close()
-			res1 <- string(b)
+			res1 <- strings.TrimSpace(string(b))
 		}
 	}()
 
 	go func() {
-		c := http.Client{Timeout: domain.WebsocketRequestTime}
+		c := http.Client{Timeout: timeout}
 		res, err := c.Get("https://ipapi.co/json")
 		if err == nil {
 			m := make(map[string]interface{})
@@ -698,23 +692,31 @@ func GetCountryFromIP() string {
 				res2 <- ""
 				return
 			}
-			res2 <- m["country"].(string)
+			res2 <- strings.TrimSpace(m["country"].(string))
 		}
 	}()
 
 	select {
 	case x := <-res1:
-		if x == "" {
-			return "IR"
+		if x != "" {
+			country = strings.ToUpper(x)
 		}
-		return x
 	case x := <-res2:
-		if x == "" {
-			return "IR"
+		if x != "" {
+			country = strings.ToUpper(x)
 		}
-		return x
-	case <-time.After(time.Second * 8):
-		return "IR"
+	case <-time.After(timeout):
 	}
 
+	if country != "IR" {
+		wsEndpointParts[0] = fmt.Sprintf("%s-cf", wsEndpointParts[0])
+		httpEndpointParts[0] = fmt.Sprintf("%s-cf", httpEndpointParts[0])
+	}
+	ctrl.wsEndpoint = strings.Join(wsEndpointParts, ".")
+	ctrl.httpEndpoint = strings.Join(httpEndpointParts, ".")
+	logs.Info("NetworkCtrl endpoints updated",
+		zap.String("WS", ctrl.wsEndpoint),
+		zap.String("Http", ctrl.httpEndpoint),
+		zap.String("Country", country),
+	)
 }

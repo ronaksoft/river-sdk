@@ -89,6 +89,7 @@ func init() {
 	logs.SetLogLevel(-1)
 	ctrl = networkCtrl.New(networkCtrl.Config{
 		WebsocketEndpoint: "ws://river.ronaksoftware.com",
+		HttpEndpoint:      "http://river.ronaksoftware.com",
 	})
 	ctrl.OnMessage = dummyMessageHandler
 	ctrl.OnGeneralError = dummyErrorHandler
@@ -136,8 +137,4 @@ func TestConnect(t *testing.T) {
 	wg.Wait()
 
 	ctrl.Stop()
-}
-
-func TestCountry(t *testing.T) {
-	t.Log(networkCtrl.GetCountryFromIP())
 }
