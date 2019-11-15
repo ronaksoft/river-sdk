@@ -108,9 +108,6 @@ func New(config Config) *Controller {
 		msg.C_SystemGetSalts:      true,
 	}
 
-	// Detect the country we are calling from to determine the server Cyrus address
-	ctrl.UpdateEndpoint()
-
 	return ctrl
 }
 
@@ -418,6 +415,10 @@ func (ctrl *Controller) Connect() {
 			}
 			reqHdr := http.Header{}
 			reqHdr.Set("X-Client-Type", fmt.Sprintf("SDK-%s", domain.SDKVersion))
+
+
+			// Detect the country we are calling from to determine the server Cyrus address
+			ctrl.UpdateEndpoint()
 
 			wsConn, _, err := ctrl.wsDialer.Dial(ctrl.wsEndpoint, reqHdr)
 			if err != nil {
