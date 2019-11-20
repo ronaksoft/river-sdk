@@ -48,6 +48,10 @@ func SetLogLevel(l int) {
 }
 
 func SetLogFilePath(logDir string) error {
+	defer func() {
+		// Let's clean all the old log files
+		go CleanUP()
+	}()
 	// support IOS file path
 	if strings.HasPrefix(logDir, "file://") {
 		logDir = logDir[7:]

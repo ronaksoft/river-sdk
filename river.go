@@ -593,3 +593,4 @@ func (r *River) registerCommandHandlers() {
 		msg.C_MessagesClearDraft:       r.messagesClearDraft,
 	}
 }
+

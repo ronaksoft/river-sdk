@@ -2,6 +2,9 @@ package logs
 
 import (
 	"go.uber.org/zap/zapcore"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -17,4 +20,17 @@ import (
 
 func TimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 	enc.AppendString(t.Format("06-01-02T15:04:05"))
+}
+
+
+func CleanUP() {
+	lifeTime := 7 * 24 * time.Hour
+	_ = filepath.Walk(LogDir, func(path string, info os.FileInfo, err error) error {
+		if strings.HasSuffix(info.Name(), ".log") {
+			if time.Now().Sub(info.ModTime()).Truncate(lifeTime) > 0 {
+				_ = os.Remove(path)
+			}
+		}
+		return nil
+	})
 }
