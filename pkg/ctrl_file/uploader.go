@@ -158,7 +158,7 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 					ctx.parts <- partIndex
 					return
 				}
-				res, err := ctrl.network.SendHttp(nil, ctx.generateFileSavePart(ctx.req.FileID, partIndex+1, ctx.req.TotalParts, bytes[:n]))
+				res, err := ctrl.network.SendHttp(ctx.req.httpContext, ctx.generateFileSavePart(ctx.req.FileID, partIndex+1, ctx.req.TotalParts, bytes[:n]))
 				if err != nil {
 					logs.Warn("Error in SendHttp", zap.Error(err))
 					atomic.AddInt32(&ctx.req.MaxRetries, -1)
@@ -188,6 +188,9 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 				_ = repo.Files.MarkAsUploaded(ctx.req.FileID)
 				return domain.RequestStatusCompleted
 			default:
+				if !ctx.req.SkipDelegateCall {
+					ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, true)
+				}
 				return domain.RequestStatusError
 			}
 		}
