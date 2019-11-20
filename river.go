@@ -10,7 +10,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
-	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"runtime"
 	"sort"
@@ -116,8 +115,8 @@ type River struct {
 // SetConfig ...
 // This function must be called before any other function, otherwise it panics
 func (r *River) SetConfig(conf *RiverConfig) {
-	viper.Set(ConfClientPlatform, conf.ClientPlatform)
-	viper.Set(ConfClientVersion, conf.ClientVersion)
+	domain.ClientPlatform = conf.ClientPlatform
+	domain.ClientVersion = conf.ClientVersion
 
 	r.lastOutOfSyncTime = time.Now().Add(1 * time.Second)
 	r.chOutOfSyncUpdates = make(chan []*msg.UpdateContainer, 500)

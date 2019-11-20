@@ -414,7 +414,7 @@ func (ctrl *Controller) Connect() {
 				return
 			}
 			reqHdr := http.Header{}
-			reqHdr.Set("X-Client-Type", fmt.Sprintf("SDK-%s", domain.SDKVersion))
+			reqHdr.Set("X-Client-Type", fmt.Sprintf("SDK-%s-%s-%s", domain.SDKVersion, domain.ClientPlatform, domain.ClientVersion))
 
 
 			// Detect the country we are calling from to determine the server Cyrus address

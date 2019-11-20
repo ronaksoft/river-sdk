@@ -124,7 +124,6 @@ func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 				if !ctx.req.SkipDelegateCall {
 					ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), false)
 				}
-
 				return domain.RequestStatusCanceled
 			}
 			ctx.rateLimit <- struct{}{}

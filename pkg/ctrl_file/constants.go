@@ -17,6 +17,6 @@ const (
 	downloadChunkSize    = 256 * 1 << 10 // 256 KB
 	maxDownloadInFlights = 10
 	maxUploadInFlights   = 10
-	retryMaxAttempts     = 20
+	retryMaxAttempts     = 200
 	retryWaitTime        = 100 * time.Millisecond
 )
