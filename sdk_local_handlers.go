@@ -1064,6 +1064,8 @@ func (r *River) groupRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domain.
 
 func (r *River) usersGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.UsersGetFull)
+	logs.Info("users get full called")
+
 	if err := req.Unmarshal(in.Message); err != nil {
 		logs.Error("River::usersGetFull()-> Unmarshal()", zap.Error(err))
 		return
