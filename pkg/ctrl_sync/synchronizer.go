@@ -137,7 +137,6 @@ func (ctrl *Controller) Sync() {
 		}
 	}
 
-
 	if ctrl.updateID == serverUpdateID {
 		updateSyncStatus(ctrl, domain.Synced)
 		return
@@ -146,7 +145,6 @@ func (ctrl *Controller) Sync() {
 	// Update the sync controller status
 	updateSyncStatus(ctrl, domain.Syncing)
 	defer updateSyncStatus(ctrl, domain.Synced)
-
 
 	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSyncThreshold {
 		logs.Info("SyncCtrl goes for a Snapshot sync")
@@ -245,16 +243,22 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 					onGetDifferenceSucceed(ctrl, x)
 
 					// If there is no more update then set ClientUpdateID to the ServerUpdateID
-					if !x.More {
+					if !x.More && x.CurrentUpdateID != 0 {
 						ctrl.updateID = x.CurrentUpdateID
 					}
+
+					logs.Info("SyncCtrl received UpdateDifference",
+						zap.Bool("More", x.More),
+						zap.Int64("MinUpdateID", x.MinUpdateID),
+						zap.Int64("MaxUpdateID", x.MaxUpdateID),
+					)
+
 
 					// save UpdateID to DB
 					err = repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
 					if err != nil {
 						logs.Error("SyncCtrl couldn't save current UpdateID", zap.Error(err))
 					}
-
 				case msg.C_Error:
 					logs.Debug("SyncCtrl got error response",
 						zap.String("Error", domain.ParseServerError(m.Message).Error()),
