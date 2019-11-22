@@ -11,6 +11,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
+	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -240,6 +241,9 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 						logs.Error("SyncCtrl couldn't unmarshal response (UpdateDifference)", zap.Error(err))
 						return
 					}
+					sort.Slice(x.Updates, func(i, j int) bool {
+						return x.Updates[i].UpdateID < x.Updates[j].UpdateID
+					})
 					onGetDifferenceSucceed(ctrl, x)
 
 					// If there is no more update then set ClientUpdateID to the ServerUpdateID
