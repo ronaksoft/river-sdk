@@ -13,7 +13,6 @@ import (
 	"go.uber.org/zap"
 	"sort"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
@@ -40,9 +39,6 @@ type Controller struct {
 	messageAppliers      map[int64]domain.MessageApplier
 	stopChannel          chan bool
 	userID               int64
-
-	// internal locks
-	syncLock int32
 }
 
 // NewSyncController create new instance
@@ -107,67 +103,63 @@ func (ctrl *Controller) watchDog() {
 }
 
 func (ctrl *Controller) Sync() {
-	// Check if sync function is already running, then return otherwise lock it and continue
-	if !atomic.CompareAndSwapInt32(&ctrl.syncLock, 0, 1) {
-		logs.Debug("SyncCtrl is already syncing ...")
-		return
-	}
-	defer atomic.StoreInt32(&ctrl.syncLock, 0)
-
-	// There is no need to sync when no user has been authorized
-	if ctrl.userID == 0 {
-		logs.Debug("SyncCtrl does not sync when no user is set")
-		return
-	}
-
-	// get updateID from server
-	var serverUpdateID int64
-	var err error
-	for {
-		serverUpdateID, err = ctrl.GetUpdateState()
-		if err != nil {
-			switch err {
-			case domain.ErrRequestTimeout:
-				ctrl.AuthRecall()
-			default:
-				logs.Warn("SyncCtrl got err on GetUpdateState", zap.Error(err))
-				time.Sleep(time.Duration(ronak.RandomInt64(2000)) * time.Millisecond)
-			}
-		} else {
-			break
-		}
-	}
-
-	if ctrl.updateID == serverUpdateID {
-		updateSyncStatus(ctrl, domain.Synced)
-		return
-	}
-
-	// Update the sync controller status
-	updateSyncStatus(ctrl, domain.Syncing)
-	defer updateSyncStatus(ctrl, domain.Synced)
-
-	if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSyncThreshold {
-		logs.Info("SyncCtrl goes for a Snapshot sync")
-
-		// Get Contacts from the server
-		waitGroup := &sync.WaitGroup{}
-		waitGroup.Add(2)
-		go ctrl.GetContacts(waitGroup)
-		go ctrl.GetAllDialogs(waitGroup, 0, 100)
-		waitGroup.Wait()
-		updateUI(ctrl)
-
-		ctrl.updateID = serverUpdateID
-		err = repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
-		if err != nil {
-			logs.Error("SyncCtrl couldn't save the current UpdateID", zap.Error(err))
+	_, _, _ = domain.SingleFlight.Do("Sync", func() (i interface{}, e error) {
+		// There is no need to sync when no user has been authorized
+		if ctrl.userID == 0 {
+			logs.Debug("SyncCtrl does not sync when no user is set")
 			return
 		}
-	} else if serverUpdateID > ctrl.updateID+1 {
-		logs.Info("SyncCtrl goes for a Sequential sync")
-		getUpdateDifference(ctrl, serverUpdateID)
-	}
+
+		// get updateID from server
+		var serverUpdateID int64
+		var err error
+		for {
+			serverUpdateID, err = ctrl.GetUpdateState()
+			if err != nil {
+				switch err {
+				case domain.ErrRequestTimeout:
+					ctrl.AuthRecall()
+				default:
+					logs.Warn("SyncCtrl got err on GetUpdateState", zap.Error(err))
+					time.Sleep(time.Duration(ronak.RandomInt64(2000)) * time.Millisecond)
+				}
+			} else {
+				break
+			}
+		}
+
+		if ctrl.updateID == serverUpdateID {
+			updateSyncStatus(ctrl, domain.Synced)
+			return
+		}
+
+		// Update the sync controller status
+		updateSyncStatus(ctrl, domain.Syncing)
+		defer updateSyncStatus(ctrl, domain.Synced)
+
+		if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSyncThreshold {
+			logs.Info("SyncCtrl goes for a Snapshot sync")
+
+			// Get Contacts from the server
+			waitGroup := &sync.WaitGroup{}
+			waitGroup.Add(2)
+			go ctrl.GetContacts(waitGroup)
+			go ctrl.GetAllDialogs(waitGroup, 0, 100)
+			waitGroup.Wait()
+			updateUI(ctrl)
+
+			ctrl.updateID = serverUpdateID
+			err = repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
+			if err != nil {
+				logs.Error("SyncCtrl couldn't save the current UpdateID", zap.Error(err))
+				return
+			}
+		} else if serverUpdateID > ctrl.updateID+1 {
+			logs.Info("SyncCtrl goes for a Sequential sync")
+			getUpdateDifference(ctrl, serverUpdateID)
+		}
+		return nil, nil
+	})
 }
 func updateUI(ctrl *Controller) {
 	update := new(msg.ClientUpdateSynced)
@@ -249,6 +241,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 					// If there is no more update then set ClientUpdateID to the ServerUpdateID
 					if !x.More && x.CurrentUpdateID != 0 {
 						ctrl.updateID = x.CurrentUpdateID
+						serverUpdateID = x.CurrentUpdateID
 					}
 
 					logs.Info("SyncCtrl received UpdateDifference",
