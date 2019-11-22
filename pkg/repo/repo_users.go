@@ -186,6 +186,9 @@ func (r *repoUsers) Save(users ...*msg.User) {
 		if alreadySaved(fmt.Sprintf("U.%d", v.ID), v) {
 			continue
 		}
+		if strings.TrimSpace(v.FirstName) == "" && strings.TrimSpace(v.LastName) == "" {
+			continue
+		}
 		userIDs[v.ID] = true
 	}
 	_ = badgerUpdate(func(txn *badger.Txn) error {

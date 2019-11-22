@@ -604,7 +604,7 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 	reqThumb := UploadRequest{
 		MessageID:        0,
 		FileID:           thumbID,
-		MaxInFlights:     maxUploadInFlights,
+		MaxInFlights:     1,
 		FilePath:         thumbPath,
 		SkipDelegateCall: false,
 	}
