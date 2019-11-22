@@ -210,7 +210,6 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		r.HandleDebugActions(req.Body)
 	}
 
-
 	// this will be used as next requestID
 	req.RandomID = domain.SequentialUniqueID()
 	msgID := -domain.SequentialUniqueID()
@@ -379,6 +378,44 @@ func genSuccessCallback(cb domain.MessageHandler, peerID int64, peerType int32, 
 		case msg.C_MessagesMany:
 			x := new(msg.MessagesMany)
 			_ = x.Unmarshal(m.Message)
+			if len(x.Messages) == 0 {
+				switch peerType {
+				case int32(msg.PeerUser):
+					user, _ := repo.Users.Get(peerID)
+					if user != nil {
+						logs.Info("River received no message history",
+							zap.Int64("MinID", minID),
+							zap.Int64("MaxID", maxID),
+							zap.String("Peer", fmt.Sprintf("%s %s", user.FirstName, user.LastName)),
+							zap.String("PeerType", msg.PeerType(peerType).String()),
+						)
+					} else {
+						logs.Warn("River received no message history",
+							zap.Int64("MinID", minID),
+							zap.Int64("MaxID", maxID),
+							zap.Int64("PeerID", peerID),
+							zap.String("PeerType", msg.PeerType(peerType).String()),
+						)
+					}
+				case int32(msg.PeerGroup):
+					group, _ := repo.Groups.Get(peerID)
+					if group != nil {
+						logs.Info("River received no message history",
+							zap.Int64("MinID", minID),
+							zap.Int64("MaxID", maxID),
+							zap.String("Peer", fmt.Sprintf("%s", group.Title)),
+							zap.String("PeerType", msg.PeerType(peerType).String()),
+						)
+					} else {
+						logs.Warn("River received no message history",
+							zap.Int64("MinID", minID),
+							zap.Int64("MaxID", maxID),
+							zap.Int64("PeerID", peerID),
+							zap.String("PeerType", msg.PeerType(peerType).String()),
+						)
+					}
+				}
+			}
 			// 1st sort the received messages by id
 			sort.Slice(x.Messages, func(i, j int) bool {
 				return x.Messages[i].ID > x.Messages[j].ID
@@ -1007,7 +1044,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 		userIDs[v.UserID] = true
 	}
 	users := repo.Users.GetMany(userIDs.ToArray())
-	if users == nil || len(participants) != len(users) || len(users) <= 0 {
+	if len(participants) != len(users) {
 		r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 		return
 	}
