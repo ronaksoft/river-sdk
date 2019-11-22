@@ -366,16 +366,14 @@ func (r *repoMessagesPending) DeleteByRealID(msgID int64) {
 }
 
 func (r *repoMessagesPending) DeleteMany(msgIDs []int64) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		for _, msgID := range msgIDs {
 			err  :=  deletePendingMessage(txn, msgID)
-			if err != nil {
-				return err
-			}
+			logs.ErrorOnErr("RepoPending got error on delete many", err)
 		}
 		return nil
 	})
-	logs.ErrorOnErr("RepoPending got error on delete many", err)
+
 }
 
 func (r *repoMessagesPending) GetManyRequestIDs(msgIDs []int64) []int64 {

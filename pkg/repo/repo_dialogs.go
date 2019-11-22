@@ -300,7 +300,7 @@ func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
 		it.Close()
 		return nil
 	})
-	logs.Error("RepoDialogs got error on getting pinned dialogs", zap.Error(err))
+	logs.ErrorOnErr("RepoDialogs got error on getting pinned dialogs", err)
 	return dialogs
 }
 
