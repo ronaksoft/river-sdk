@@ -13,6 +13,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dustin/go-humanize"
+	"github.com/olekukonko/tablewriter"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
@@ -20,6 +21,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"runtime/pprof"
+	"sort"
 	"strings"
 	"time"
 )
@@ -92,7 +94,9 @@ func (r *River) HandleDebugActions(txt string) {
 	if len(parts) == 0 {
 		return
 	}
-	switch parts[0] {
+	cmd := parts[0]
+	args := parts[1:]
+	switch cmd {
 	case "//sdk_clear_salt":
 		resetSalt(r)
 	case "//sdk_memory_stats":
@@ -100,11 +104,12 @@ func (r *River) HandleDebugActions(txt string) {
 	case "//sdk_monitor":
 		sendToSavedMessage(r, ronak.ByteToStr(getMonitorStats(r)))
 	case "//sdk_live_logger":
-		if len(parts) < 2 {
+
+		if len(args) < 1 {
 			sendToSavedMessage(r, "//sdk_live_logger <url>")
 			return
 		}
-		liveLogger(r, parts[1])
+		liveLogger(r, args[0])
 	case "//sdk_heap_profile":
 		filePath := heapProfile()
 		if filePath == "" {
@@ -124,7 +129,58 @@ func (r *River) HandleDebugActions(txt string) {
 		sendUpdateLogs(r)
 	case "//sdk_logs_window":
 		r.mainDelegate.ShowLoggerAlert()
+	case "//sdk_export_messages":
+		if len(args) < 2 {
+			logs.Warn("invalid args: //sdk_export_messages [peerType] [peerID]")
+			peerType := ronak.StrToInt32(args[0])
+			peerID := ronak.StrToInt64(args[1])
+			sendMediaToSaveMessage(r, exportMessages(r, peerType, peerID), fmt.Sprintf("Messages-%s-%d.out", msg.PeerType(peerType).String(), peerID))
+			return
+		}
 	}
+}
+
+func exportMessages(r *River, peerType int32, peerID int64) (filePath string){
+	filePath = path.Join(fileCtrl.DirCache, fmt.Sprintf("Messages-%s-%d.out", msg.PeerType(peerType).String(), peerID))
+	file, err := os.Create(filePath)
+	logs.ErrorOnErr("Error On Create file", err)
+
+	t := tablewriter.NewWriter(file)
+	t.SetHeader([]string{"ID", "Date", "Sender", "Body", "Media"})
+	maxID, _ := repo.Messages.GetTopMessageID(peerID, peerType)
+	limit := int32(100)
+	cnt := 0
+	for {
+		ms, us := repo.Messages.GetMessageHistory(peerID, peerType, 0, maxID, limit)
+		if len(ms) == 0 {
+			break
+		}
+		sort.Slice(ms, func(i, j int) bool {
+			return ms[i].ID > ms[j].ID
+		})
+		usMap := make(map[int64]*msg.User)
+		for _, u := range us {
+			usMap[u.ID] = u
+		}
+		for _, m := range ms {
+			b := m.Body
+			if len(m.Body) > 100 {
+				b = m.Body[:100]
+			}
+			t.Append([]string{
+				fmt.Sprintf("%d", m.ID),
+				time.Unix(m.CreatedOn, 0).Format("02 Jan 06 3:04PM"),
+				fmt.Sprintf("%s %s", usMap[m.SenderID].FirstName, usMap[m.SenderID].LastName),
+				b,
+				m.MediaType.String(),
+			})
+			cnt++
+			maxID = m.ID
+		}
+	}
+	t.SetFooter([]string{"Total", fmt.Sprintf("%d", cnt)})
+	t.Render()
+	return
 }
 
 func resetSalt(r *River) {
