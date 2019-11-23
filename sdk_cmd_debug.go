@@ -136,12 +136,12 @@ func (r *River) HandleDebugActions(txt string) {
 		}
 		peerType := ronak.StrToInt32(args[0])
 		peerID := ronak.StrToInt64(args[1])
-		sendMediaToSaveMessage(r, exportMessages(r, peerType, peerID), fmt.Sprintf("Messages-%s-%d.out", msg.PeerType(peerType).String(), peerID))
+		sendMediaToSaveMessage(r, exportMessages(r, peerType, peerID), fmt.Sprintf("Messages-%s-%d.txt", msg.PeerType(peerType).String(), peerID))
 	}
 }
 
 func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
-	filePath = path.Join(fileCtrl.DirCache, fmt.Sprintf("Messages-%s-%d.out", msg.PeerType(peerType).String(), peerID))
+	filePath = path.Join(fileCtrl.DirCache, fmt.Sprintf("Messages-%s-%d.txt", msg.PeerType(peerType).String(), peerID))
 	file, err := os.Create(filePath)
 	logs.ErrorOnErr("Error On Create file", err)
 
@@ -161,7 +161,13 @@ func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
 		}
 		for _, m := range ms {
 			b := m.Body
-			if len(m.Body) > 100 {
+			if idx := strings.Index(m.Body, "\n"); idx < 0 {
+				if len(m.Body) > 100 {
+					b = m.Body[:100]
+				}
+			} else if idx < 100 {
+				b = m.Body[:idx]
+			} else {
 				b = m.Body[:100]
 			}
 			t.Append([]string{

@@ -313,10 +313,9 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	case req.MinID == 0 && req.MaxID != 0:
 		b, bar := messageHole.GetLowerFilled(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 		if !b {
-			logs.Info("River detected hole",
-				zap.Int64("PeerID", req.Peer.ID),
+			logs.Info("River detected hole (With MaxID Only)",
 				zap.Int64("MaxID", req.MaxID),
-				zap.Int64("MinID", req.MinID),
+				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
 				zap.String("Holes", messageHole.PrintHole(req.Peer.ID, int32(req.Peer.Type))),
 			)
@@ -328,10 +327,9 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	case req.MinID != 0 && req.MaxID == 0:
 		b, bar := messageHole.GetUpperFilled(req.Peer.ID, int32(req.Peer.Type), req.MinID);
 		if !b {
-			logs.Info("River detected hole",
-				zap.Int64("PeerID", req.Peer.ID),
-				zap.Int64("MaxID", req.MaxID),
+			logs.Info("River detected hole (With MinID Only)",
 				zap.Int64("MinID", req.MinID),
+				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
 				zap.String("Holes", messageHole.PrintHole(req.Peer.ID, int32(req.Peer.Type))),
 			)
@@ -341,13 +339,12 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, 0, req.Limit)
 		fillOutput(out, messages, users, in.RequestID, preSuccessCB)
 	default:
-		// Min != 0 && MaxID != 0
 		b := messageHole.IsHole(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID)
 		if b {
-			logs.Info("River detected hole",
-				zap.Int64("PeerID", req.Peer.ID),
-				zap.Int64("MaxID", req.MaxID),
+			logs.Info("River detected hole (With Min & Max)",
 				zap.Int64("MinID", req.MinID),
+				zap.Int64("MaxID", req.MaxID),
+				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
 			)
 			r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
@@ -377,43 +374,31 @@ func genSuccessCallback(cb domain.MessageHandler, peerID int64, peerType int32, 
 		switch m.Constructor {
 		case msg.C_MessagesMany:
 			x := new(msg.MessagesMany)
-			_ = x.Unmarshal(m.Message)
+			err := x.Unmarshal(m.Message)
+			logs.WarnOnErr("Error On Unmarshal MessagesMany", err)
+
 			if len(x.Messages) == 0 {
 				switch peerType {
 				case int32(msg.PeerUser):
 					user, _ := repo.Users.Get(peerID)
-					if user != nil {
-						logs.Info("River received no message history",
-							zap.Int64("MinID", minID),
-							zap.Int64("MaxID", maxID),
-							zap.String("Peer", fmt.Sprintf("%s %s", user.FirstName, user.LastName)),
-							zap.String("PeerType", msg.PeerType(peerType).String()),
-						)
-					} else {
-						logs.Warn("River received no message history",
-							zap.Int64("MinID", minID),
-							zap.Int64("MaxID", maxID),
-							zap.Int64("PeerID", peerID),
-							zap.String("PeerType", msg.PeerType(peerType).String()),
-						)
+					if user == nil {
+						user = &msg.User{}
 					}
+					logs.Info("River received EMPTY message history (User)",
+						zap.Int64("MinID", minID),
+						zap.Int64("MaxID", maxID),
+						zap.String("Peer", fmt.Sprintf("%s %s", user.FirstName, user.LastName)),
+					)
 				case int32(msg.PeerGroup):
 					group, _ := repo.Groups.Get(peerID)
-					if group != nil {
-						logs.Info("River received no message history",
-							zap.Int64("MinID", minID),
-							zap.Int64("MaxID", maxID),
-							zap.String("Peer", fmt.Sprintf("%s", group.Title)),
-							zap.String("PeerType", msg.PeerType(peerType).String()),
-						)
-					} else {
-						logs.Warn("River received no message history",
-							zap.Int64("MinID", minID),
-							zap.Int64("MaxID", maxID),
-							zap.Int64("PeerID", peerID),
-							zap.String("PeerType", msg.PeerType(peerType).String()),
-						)
+					if group == nil {
+						group = &msg.Group{}
 					}
+					logs.Info("River received no message history (Group)",
+						zap.Int64("MinID", minID),
+						zap.Int64("MaxID", maxID),
+						zap.String("Peer", fmt.Sprintf("%s", group.Title)),
+					)
 				}
 			}
 			// 1st sort the received messages by id
