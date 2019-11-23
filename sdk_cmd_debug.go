@@ -15,6 +15,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/olekukonko/tablewriter"
 	"go.uber.org/zap"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -180,6 +181,8 @@ func exportMessages(r *River, peerType int32, peerID int64) (filePath string){
 	}
 	t.SetFooter([]string{"Total", fmt.Sprintf("%d", cnt)})
 	t.Render()
+	_, _ = io.WriteString(file, "\n\n")
+	_, _ = io.WriteString(file, string(r.GetHole(peerID, peerType)))
 	return
 }
 
