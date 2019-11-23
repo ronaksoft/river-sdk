@@ -69,6 +69,7 @@ func (ctrl *Controller) AuthRecall() (updateID int64, err error) {
 		msg.C_AuthRecall,
 		reqBytes,
 		func() {
+			err= domain.ErrRequestTimeout
 			time.Sleep(time.Duration(ronak.RandomInt(2000)) * time.Millisecond)
 		},
 		func(m *msg.MessageEnvelope) {
@@ -99,7 +100,7 @@ func (ctrl *Controller) AuthRecall() (updateID int64, err error) {
 		true,
 		false,
 	)
-
+	return
 }
 
 func (ctrl *Controller) GetServerTime() {
