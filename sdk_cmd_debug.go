@@ -176,7 +176,9 @@ func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
 				m.MediaType.String(),
 			})
 			cnt++
-			maxID = m.ID
+			if m.ID < maxID {
+				maxID = m.ID
+			}
 		}
 	}
 	t.SetFooter([]string{"Total", fmt.Sprintf("%d", cnt)})
