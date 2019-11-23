@@ -157,7 +157,7 @@ func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
 			break
 		}
 		sort.Slice(ms, func(i, j int) bool {
-			return ms[i].ID > ms[j].ID
+			return ms[i].ID < ms[j].ID
 		})
 		usMap := make(map[int64]*msg.User)
 		for _, u := range us {
