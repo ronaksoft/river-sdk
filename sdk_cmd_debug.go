@@ -152,9 +152,6 @@ func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
 	cnt := 0
 	for {
 		ms, us := repo.Messages.GetMessageHistory(peerID, peerType, 0, maxID, limit)
-		if int32(len(ms)) < limit {
-			break
-		}
 		usMap := make(map[int64]*msg.User)
 		for _, u := range us {
 			usMap[u.ID] = u
@@ -183,6 +180,9 @@ func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
 			}
 		}
 
+		if int32(len(ms)) < limit {
+			break
+		}
 	}
 	t.SetFooter([]string{"Total", fmt.Sprintf("%d", cnt), "", "", ""})
 	t.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
