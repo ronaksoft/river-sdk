@@ -50,7 +50,7 @@ func (ctrl *Controller) GetServerSalt() {
 	)
 }
 
-func (ctrl *Controller) AuthRecall() {
+func (ctrl *Controller) AuthRecall() (updateID int64, err error) {
 	logs.Info("SyncCtrl call AuthRecall")
 	req := msg.AuthRecall{
 		ClientID:   0,
@@ -72,17 +72,28 @@ func (ctrl *Controller) AuthRecall() {
 			time.Sleep(time.Duration(ronak.RandomInt(2000)) * time.Millisecond)
 		},
 		func(m *msg.MessageEnvelope) {
-			if m.Constructor == msg.C_AuthRecalled {
-				x := new(msg.AuthRecalled)
-				err := x.Unmarshal(m.Message)
+			switch m.Constructor {
+			case msg.C_AuthRecalled:
+				x := &msg.AuthRecalled{}
+				err = x.Unmarshal(m.Message)
 				if err != nil {
-					logs.Error("SyncCtrl couldn't unmarshal AuthRecall (AuthRecalled) response", zap.Error(err))
 					return
 				}
 				logs.Debug("SyncCtrl received AuthRecalled")
+				updateID = x.UpdateID
 
-			} else {
-				time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
+				// Update the time difference between client & server
+				clientTime := time.Now().Unix()
+				serverTime := x.Timestamp
+				domain.TimeDelta = time.Duration(serverTime-clientTime) * time.Second
+
+			case msg.C_Error:
+				err = domain.ParseServerError(m.Message)
+			default:
+				logs.Error("SyncCtrl did not received expected response for AuthRecall",
+					zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
+				)
+				err = domain.ErrInvalidConstructor
 			}
 		},
 		true,

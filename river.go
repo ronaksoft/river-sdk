@@ -319,14 +319,17 @@ func (r *River) onNetworkConnect() {
 		}
 		waitGroup.Add(1)
 		go func() {
-			r.syncCtrl.GetServerTime()
-			domain.WindowLog(fmt.Sprintf("ServerTime (%s): %s", domain.TimeDelta, time.Now().Sub(domain.StartTime)))
+			if r.ConnInfo.AuthID == 0 {
+				r.syncCtrl.GetServerTime()
+				domain.WindowLog(fmt.Sprintf("ServerTime (%s): %s", domain.TimeDelta, time.Now().Sub(domain.StartTime)))
+			}
 			waitGroup.Done()
 		}()
 	}
 	waitGroup.Add(1)
 	go func() {
-		r.syncCtrl.AuthRecall()
+		// FIXME:: We have server update id here, it is better to call sync only if necessary
+		_, _ = r.syncCtrl.AuthRecall()
 		domain.WindowLog(fmt.Sprintf("AuthRecalled: %s", time.Now().Sub(domain.StartTime)))
 		waitGroup.Done()
 	}()

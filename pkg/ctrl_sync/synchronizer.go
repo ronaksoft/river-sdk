@@ -114,15 +114,10 @@ func (ctrl *Controller) Sync() {
 		var serverUpdateID int64
 		var err error
 		for {
-			serverUpdateID, err = ctrl.GetUpdateState()
+			serverUpdateID, err = ctrl.AuthRecall()
 			if err != nil {
-				switch err {
-				case domain.ErrRequestTimeout:
-					ctrl.AuthRecall()
-				default:
-					logs.Warn("SyncCtrl got err on GetUpdateState", zap.Error(err))
-					time.Sleep(time.Duration(ronak.RandomInt64(2000)) * time.Millisecond)
-				}
+				logs.Warn("SyncCtrl got err on AuthRecall", zap.Error(err))
+				time.Sleep(time.Duration(ronak.RandomInt64(2000)) * time.Millisecond)
 			} else {
 				break
 			}
@@ -249,7 +244,6 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 						zap.Int64("MinUpdateID", x.MinUpdateID),
 						zap.Int64("MaxUpdateID", x.MaxUpdateID),
 					)
-
 
 					// save UpdateID to DB
 					err = repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
