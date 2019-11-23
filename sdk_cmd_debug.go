@@ -133,15 +133,15 @@ func (r *River) HandleDebugActions(txt string) {
 	case "//sdk_export_messages":
 		if len(args) < 2 {
 			logs.Warn("invalid args: //sdk_export_messages [peerType] [peerID]")
-			peerType := ronak.StrToInt32(args[0])
-			peerID := ronak.StrToInt64(args[1])
-			sendMediaToSaveMessage(r, exportMessages(r, peerType, peerID), fmt.Sprintf("Messages-%s-%d.out", msg.PeerType(peerType).String(), peerID))
 			return
 		}
+		peerType := ronak.StrToInt32(args[0])
+		peerID := ronak.StrToInt64(args[1])
+		sendMediaToSaveMessage(r, exportMessages(r, peerType, peerID), fmt.Sprintf("Messages-%s-%d.out", msg.PeerType(peerType).String(), peerID))
 	}
 }
 
-func exportMessages(r *River, peerType int32, peerID int64) (filePath string){
+func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
 	filePath = path.Join(fileCtrl.DirCache, fmt.Sprintf("Messages-%s-%d.out", msg.PeerType(peerType).String(), peerID))
 	file, err := os.Create(filePath)
 	logs.ErrorOnErr("Error On Create file", err)
