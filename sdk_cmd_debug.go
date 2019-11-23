@@ -22,7 +22,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"runtime/pprof"
-	"sort"
 	"strings"
 	"time"
 )
@@ -156,10 +155,6 @@ func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
 		if int32(len(ms)) < limit {
 			break
 		}
-		sort.Slice(ms, func(i, j int) bool {
-			return ms[i].ID > ms[j].ID
-		})
-		maxID = ms[0].ID
 		usMap := make(map[int64]*msg.User)
 		for _, u := range us {
 			usMap[u.ID] = u
@@ -177,6 +172,9 @@ func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
 				m.MediaType.String(),
 			})
 			cnt++
+			if maxID > m.ID {
+				maxID = m.ID
+			}
 		}
 
 	}
