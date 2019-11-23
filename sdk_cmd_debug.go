@@ -153,7 +153,7 @@ func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
 	cnt := 0
 	for {
 		ms, us := repo.Messages.GetMessageHistory(peerID, peerType, 0, maxID, limit)
-		if len(ms) == 0 {
+		if int32(len(ms)) < limit {
 			break
 		}
 		sort.Slice(ms, func(i, j int) bool {
