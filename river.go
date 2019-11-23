@@ -67,6 +67,8 @@ type RiverConfig struct {
 	// ClientInfo
 	ClientPlatform string
 	ClientVersion  string
+	ClientOs       string
+	ClientVendor   string
 
 	// OptimizeForLowMemory if is set then SDK tries to use the lowest possible ram
 	OptimizeForLowMemory bool
@@ -117,6 +119,8 @@ type River struct {
 func (r *River) SetConfig(conf *RiverConfig) {
 	domain.ClientPlatform = conf.ClientPlatform
 	domain.ClientVersion = conf.ClientVersion
+	domain.ClientOS = conf.ClientOs
+	domain.ClientVendor = conf.ClientVendor
 
 	r.lastOutOfSyncTime = time.Now().Add(1 * time.Second)
 	r.chOutOfSyncUpdates = make(chan []*msg.UpdateContainer, 500)
@@ -269,7 +273,6 @@ func (r *River) Start() error {
 		}()
 	}
 
-
 	domain.StartTime = time.Now()
 	domain.WindowLog = func(txt string) {
 		r.mainDelegate.AddLog(txt)
@@ -328,7 +331,6 @@ func (r *River) onNetworkConnect() {
 		waitGroup.Done()
 	}()
 	waitGroup.Wait()
-
 
 	if r.networkCtrl.GetQuality() == domain.NetworkDisconnected {
 		return
@@ -593,4 +595,3 @@ func (r *River) registerCommandHandlers() {
 		msg.C_MessagesClearDraft:       r.messagesClearDraft,
 	}
 }
-

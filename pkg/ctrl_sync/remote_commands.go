@@ -52,7 +52,14 @@ func (ctrl *Controller) GetServerSalt() {
 
 func (ctrl *Controller) AuthRecall() {
 	logs.Info("SyncCtrl call AuthRecall")
-	req := msg.AuthRecall{}
+	req := msg.AuthRecall{
+		ClientID:   0,
+		Version:    0,
+		AppVersion: domain.ClientVersion,
+		Platform:   domain.ClientPlatform,
+		Vendor:     domain.ClientVendor,
+		OSVersion:  domain.ClientOS,
+	}
 	reqBytes, _ := req.Marshal()
 
 	// this is priority command that should not passed to queue

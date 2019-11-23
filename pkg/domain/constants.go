@@ -14,6 +14,8 @@ const (
 var (
 	ClientPlatform string
 	ClientVersion  string
+	ClientOS       string
+	ClientVendor   string
 )
 
 // Global Parameters
