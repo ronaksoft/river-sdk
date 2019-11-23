@@ -157,8 +157,9 @@ func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
 			break
 		}
 		sort.Slice(ms, func(i, j int) bool {
-			return ms[i].ID < ms[j].ID
+			return ms[i].ID > ms[j].ID
 		})
+		maxID = ms[0].ID
 		usMap := make(map[int64]*msg.User)
 		for _, u := range us {
 			usMap[u.ID] = u
@@ -176,10 +177,8 @@ func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
 				m.MediaType.String(),
 			})
 			cnt++
-			if m.ID < maxID {
-				maxID = m.ID
-			}
 		}
+
 	}
 	t.SetFooter([]string{"Total", fmt.Sprintf("%d", cnt), "", "", ""})
 	t.Render()
