@@ -65,9 +65,9 @@ func ServerResponseTime(constructor int64, t time.Duration) {
 }
 
 func QueueTime(constructor int64, t time.Duration) {
-	if t > queueLongThreshold {
-		logs.Warn("Too Long QueueTime", zap.Duration("T", t), zap.String("Constructor", msg.ConstructorNames[constructor]))
-	}
+	// if t > queueLongThreshold {
+	// 	logs.Warn("Too Long QueueTime", zap.Duration("T", t), zap.String("Constructor", msg.ConstructorNames[constructor]))
+	// }
 	total := atomic.AddInt32(&Stats.TotalQueueItems, 1)
 	Stats.mtx.Lock()
 	Stats.AvgQueueTime = (Stats.AvgQueueTime*time.Duration(total-1) + t) / time.Duration(total)
@@ -81,12 +81,12 @@ func QueueTime(constructor int64, t time.Duration) {
 }
 
 func FunctionResponseTime(funcName string, t time.Duration, v ...interface{}) {
-	if t > functionLongThreshold {
-		logs.Warn("Too Long FunctionResponse", zap.Duration("T", t),
-			zap.String("FN", funcName),
-			zap.Any("Extra", v),
-		)
-	}
+	// if t > functionLongThreshold {
+	// 	logs.Warn("Too Long FunctionResponse", zap.Duration("T", t),
+	// 		zap.String("FN", funcName),
+	// 		zap.Any("Extra", v),
+	// 	)
+	// }
 	total := atomic.AddInt32(&Stats.TotalFunctionCalls, 1)
 	Stats.mtx.Lock()
 	Stats.AvgFunctionResponseTime = (Stats.AvgFunctionResponseTime*time.Duration(total-1) + t) / time.Duration(total)

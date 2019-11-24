@@ -23,6 +23,9 @@ func TestSDK(t *testing.T) {
 		err := _River.Start()
 		c.So(err, ShouldBeNil)
 		_River.StartNetwork()
+		_ = _River.CreateAuthKey()
+		_River.StopNetwork()
+		_River.StartNetwork()
 	})
 	Convey("Check Reconnect", t, func() {})
 }

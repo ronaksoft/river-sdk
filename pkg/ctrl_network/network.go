@@ -185,7 +185,9 @@ func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
 	default:
 		messages := make([]*msg.MessageEnvelope, 0, itemsCount)
 		for idx := range entries {
-			messages = append(messages, entries[idx].Value.(*msg.MessageEnvelope))
+			m := entries[idx].Value.(*msg.MessageEnvelope)
+			logs.Debug("Message", zap.Int("Idx", idx), zap.String("Constructor", msg.ConstructorNames[m.Constructor]))
+			messages = append(messages, m)
 		}
 
 		// Make sure messages are sorted before sending to the wire
@@ -508,14 +510,17 @@ func (ctrl *Controller) SendWebsocket(msgEnvelope *msg.MessageEnvelope, direct b
 	return nil
 }
 func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
-	logs.Info("NetCtrl call sendWebsocket",
-		zap.Uint64("ReqID", msgEnvelope.RequestID),
-		zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
-	)
 	startTime := time.Now()
 	protoMessage := new(msg.ProtoMessage)
 	protoMessage.MessageKey = make([]byte, 32)
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
+
+	logs.Info("NetCtrl call sendWebsocket",
+		zap.Uint64("ReqID", msgEnvelope.RequestID),
+		zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
+		zap.Bool("Unauthorized", unauthorized),
+		zap.Bool("NoAuth", ctrl.authID == 0),
+	)
 	if ctrl.authID == 0 || unauthorized {
 		protoMessage.AuthID = 0
 		protoMessage.Payload, _ = msgEnvelope.Marshal()

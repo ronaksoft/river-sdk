@@ -131,7 +131,7 @@ func (ctrl *Controller) GetServerTime() {
 				serverTime := x.Timestamp
 				domain.TimeDelta = time.Duration(serverTime-clientTime) * time.Second
 
-				logs.Debug("SystemServerTime received",
+				logs.Debug("SyncCtrl received SystemServerTime",
 					zap.Int64("ServerTime", serverTime),
 					zap.Int64("ClientTime", clientTime),
 					zap.Duration("Difference", domain.TimeDelta),
