@@ -63,12 +63,18 @@ func (ctrl *Controller) AuthRecall() (updateID int64, err error) {
 
 	// this is priority command that should not passed to queue
 	// after auth recall answer got back the queue should send its requests in order to get related updates
+	reqID := uint64(domain.SequentialUniqueID())
 	ctrl.queueCtrl.RealtimeCommand(
-		uint64(domain.SequentialUniqueID()),
+		reqID,
 		msg.C_AuthRecall,
 		reqBytes,
 		func() {
-			err= domain.ErrRequestTimeout
+			logs.Warn("AuthRecall Timeout",
+				zap.Uint64("ReqID", reqID),
+				zap.Int64("AuthID", ctrl.connInfo.PickupAuthID()),
+				zap.Int64("UserID", ctrl.connInfo.PickupUserID()),
+			)
+			err = domain.ErrRequestTimeout
 			time.Sleep(time.Duration(ronak.RandomInt(2000)) * time.Millisecond)
 		},
 		func(m *msg.MessageEnvelope) {
