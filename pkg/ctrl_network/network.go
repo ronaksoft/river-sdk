@@ -169,47 +169,60 @@ func (ctrl *Controller) messageFlushFunc(entries []ronak.FlusherEntry) {
 
 func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
 	itemsCount := len(entries)
-	messages := make([]*msg.MessageEnvelope, 0, itemsCount)
-	for idx := range entries {
-		messages = append(messages, entries[idx].Value.(*msg.MessageEnvelope))
-	}
-
-	// Make sure messages are sorted before sending to the wire
-	sort.Slice(
-		messages,
-		func(i, j int) bool {
-			return messages[i].RequestID < messages[j].RequestID
-		},
-	)
-
-	chunkSize := 50
-	startIdx := 0
-	endIdx := chunkSize
-	keepGoing := true
-	for keepGoing {
-		if endIdx > len(messages) {
-			endIdx = len(messages)
-			keepGoing = false
-		}
-		chunk := messages[startIdx:endIdx]
-
-		msgContainer := new(msg.MessageContainer)
-		msgContainer.Envelopes = chunk
-		msgContainer.Length = int32(len(chunk))
-		messageEnvelope := new(msg.MessageEnvelope)
-		messageEnvelope.Constructor = msg.C_MessageContainer
-		messageEnvelope.Message, _ = msgContainer.Marshal()
-		messageEnvelope.RequestID = 0
-		err := ctrl.sendWebsocket(messageEnvelope)
+	switch itemsCount {
+	case 0:
+		return
+	case 1:
+		m := entries[0].Value.(*msg.MessageEnvelope)
+		err := ctrl.sendWebsocket(m)
 		if err != nil {
 			logs.Warn("NetCtrl got error on flushing outgoing messages",
+				zap.Uint64("ReqID", m.RequestID),
+				zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
 				zap.Error(err),
-				zap.Int("Count", len(chunk)),
 			)
-			return
 		}
-		startIdx = endIdx
-		endIdx += chunkSize
+	default:
+		messages := make([]*msg.MessageEnvelope, 0, itemsCount)
+		for idx := range entries {
+			messages = append(messages, entries[idx].Value.(*msg.MessageEnvelope))
+		}
+
+		// Make sure messages are sorted before sending to the wire
+		sort.Slice(messages, func(i, j int) bool {
+			return messages[i].RequestID < messages[j].RequestID
+		})
+
+		chunkSize := 50
+		startIdx := 0
+		endIdx := chunkSize
+		keepGoing := true
+		for keepGoing {
+			if endIdx > len(messages) {
+				endIdx = len(messages)
+				keepGoing = false
+			}
+			chunk := messages[startIdx:endIdx]
+
+			msgContainer := new(msg.MessageContainer)
+			msgContainer.Envelopes = chunk
+			msgContainer.Length = int32(len(chunk))
+			messageEnvelope := new(msg.MessageEnvelope)
+			messageEnvelope.Constructor = msg.C_MessageContainer
+			messageEnvelope.Message, _ = msgContainer.Marshal()
+			messageEnvelope.RequestID = 0
+			err := ctrl.sendWebsocket(messageEnvelope)
+			if err != nil {
+				logs.Warn("NetCtrl got error on flushing outgoing messages",
+					zap.Error(err),
+					zap.Int("Count", len(chunk)),
+				)
+				return
+			}
+			startIdx = endIdx
+			endIdx += chunkSize
+		}
+
 	}
 
 	logs.Debug("NetCtrl flushed outgoing messages",

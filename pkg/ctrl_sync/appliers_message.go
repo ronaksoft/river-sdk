@@ -162,22 +162,15 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 		return
 	}
 
-	logs.Info("SyncCtrl applies MessagesMany", zap.Bool("Continues", u.Continuous))
 	// save Groups & Users & Messages
 	repo.Users.Save(u.Users...)
 	repo.Groups.Save(u.Groups...)
 	repo.Messages.Save(u.Messages...)
 
-	minID := int64(0)
-	maxID := int64(0)
-	for _, v := range u.Messages {
-		if v.ID < minID || minID == 0 {
-			minID = v.ID
-		}
-		if v.ID > maxID {
-			maxID = v.ID
-		}
-	}
+	logs.Info("SyncCtrl applies MessagesMany",
+		zap.Bool("Continues", u.Continuous),
+		zap.Int("Messages", len(u.Messages)),
+	)
 }
 
 // groupFull
