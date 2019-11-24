@@ -345,6 +345,7 @@ func (r *River) onNetworkConnect() {
 				r.syncCtrl.Sync()
 				domain.WindowLog(fmt.Sprintf("Synced: %s", time.Now().Sub(domain.StartTime)))
 			} else {
+				r.syncCtrl.SetSynced()
 				domain.WindowLog(fmt.Sprintf("Already Synced: %s", time.Now().Sub(domain.StartTime)))
 			}
 

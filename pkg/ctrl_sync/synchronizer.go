@@ -102,6 +102,10 @@ func (ctrl *Controller) watchDog() {
 	}
 }
 
+func (ctrl *Controller) SetSynced() {
+	updateSyncStatus(ctrl, domain.Synced)
+}
+
 func (ctrl *Controller) Sync() {
 	_, _, _ = domain.SingleFlight.Do("Sync", func() (i interface{}, e error) {
 		// There is no need to sync when no user has been authorized
