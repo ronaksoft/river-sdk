@@ -416,7 +416,6 @@ func (ctrl *Controller) Connect() {
 			reqHdr := http.Header{}
 			reqHdr.Set("X-Client-Type", fmt.Sprintf("SDK-%s-%s-%s", domain.SDKVersion, domain.ClientPlatform, domain.ClientVersion))
 
-
 			// Detect the country we are calling from to determine the server Cyrus address
 			ctrl.UpdateEndpoint()
 
@@ -496,7 +495,8 @@ func (ctrl *Controller) SendWebsocket(msgEnvelope *msg.MessageEnvelope, direct b
 	return nil
 }
 func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
-	logs.Debug("NetCtrl call sendWebsocket",
+	logs.Info("NetCtrl call sendWebsocket",
+		zap.Uint64("ReqID", msgEnvelope.RequestID),
 		zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
 	)
 	startTime := time.Now()
