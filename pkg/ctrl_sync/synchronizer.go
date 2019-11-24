@@ -117,11 +117,15 @@ func (ctrl *Controller) Sync() {
 		// get updateID from server
 		var serverUpdateID int64
 		var err error
+		var maxTry = 3
 		for {
 			serverUpdateID, err = ctrl.AuthRecall()
 			if err != nil {
 				logs.Warn("SyncCtrl got err on AuthRecall", zap.Error(err))
-				time.Sleep(time.Duration(ronak.RandomInt64(2000)) * time.Millisecond)
+				time.Sleep(time.Duration(ronak.RandomInt64(1000)) * time.Millisecond)
+				if maxTry--; maxTry < 0 {
+					return
+				}
 			} else {
 				break
 			}

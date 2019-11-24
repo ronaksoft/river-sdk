@@ -1,22 +1,17 @@
 package riversdk
 
 import (
-	"encoding/json"
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
-	"git.ronaksoftware.com/ronak/toolbox"
+	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"io/ioutil"
 	"os"
 	"testing"
-	"time"
-
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 var (
@@ -24,134 +19,12 @@ var (
 )
 
 func TestSDK(t *testing.T) {
-	Convey("Check Salt", t, func() {
-		repo.InitRepo(fmt.Sprintf("%s/%s.db", "./_data", "test"), false)
-		var saltArrays [][]domain.Slt
-		var saltArray []domain.Slt
-		ti := time.Now()
-		for i := 0; i < 48; i++ {
-			slt := domain.Slt{}
-			next := ti.Add(time.Hour * time.Duration(i))
-			slt.Timestamp = time.Unix(next.Unix(), 0).Unix()
-			slt.Value = ronak.RandomInt64(0)
-			if i == 0 {
-				slt.Value = 5555
-			}
-			saltArray = append(saltArray, slt)
-		}
-		saltArrays = append(saltArrays, saltArray)
-
-		var saltArray2 []domain.Slt
-		for i := 0; i < 48; i++ {
-			slt := domain.Slt{}
-			next := ti.Add(time.Hour * time.Duration(i*48))
-			slt.Timestamp = time.Unix(next.Unix(), 0).Unix()
-			slt.Value = ronak.RandomInt64(0)
-			saltArray2 = append(saltArray2, slt)
-		}
-		saltArrays = append(saltArrays, saltArray2)
-		tests := []struct {
-			name  string
-			salts []domain.Slt
-		}{
-			{"test1", saltArrays[0]},
-			{"test2", saltArrays[1]},
-		}
-		for i, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				b, _ := json.Marshal(tt.salts)
-				err := repo.System.SaveString(domain.SkSystemSalts, string(b))
-				if err != nil {
-					logs.Debug("synchronizer::SystemGetSalts()",
-						zap.String("error", err.Error()),
-					)
-				}
-				time.Sleep(time.Millisecond * 600)
-
-				salt.UpdateSalt()
-				s := salt.Get()
-				if i == 0 {
-					if s != 5555 {
-						t.Error(fmt.Sprintf("expecting 5555, have %d", s))
-					}
-				}
-				if i == 1 {
-					logs.Debug("s::()",
-						zap.Int64("s", s),
-					)
-				}
-			})
-		}
+	Convey("Start", t, func(c C) {
+		err := _River.Start()
+		c.So(err, ShouldBeNil)
+		_River.StartNetwork()
 	})
-	Convey("Check Reconnect", t, func() {
-		logs.SetLogLevel(0)
-		fmt.Println("Creating New River SDK Instance")
-		conInfo := new(RiverConnection)
-
-		file, err := os.Open("./_connection/connInfo1")
-		if err == nil {
-			b, _ := ioutil.ReadAll(file)
-			err := json.Unmarshal(b, conInfo)
-			So(err, ShouldBeNil)
-		}
-
-		conInfo.Delegate = new(ConnInfoDelegates)
-
-		r := new(River)
-		fmt.Println("SetConfig called")
-		r.SetConfig(&RiverConfig{
-			DbPath:    "./_data/",
-			DbID:      "test",
-			QueuePath: "./_queue/",
-			// ServerKeysFilePath: "./keys.json",
-
-			ServerEndpoint: "ws://new.river.im",
-			LogLevel:       0,
-			ConnInfo:       conInfo,
-		})
-
-		fmt.Println("Start called")
-		_ = r.Start()
-		for r.ConnInfo.AuthID == 0 {
-			err := r.CreateAuthKey()
-			So(err, ShouldBeNil)
-		}
-
-		time.Sleep(10 * time.Second)
-		r.ResetAuthKey()
-
-		time.Sleep(10 * time.Second)
-
-		// Connect to 2nd Server
-		file, err = os.Open("./_connection/connInfo2")
-		if err == nil {
-			b, _ := ioutil.ReadAll(file)
-			err := json.Unmarshal(b, conInfo)
-			So(err, ShouldBeNil)
-		}
-
-		conInfo.Delegate = new(ConnInfoDelegates)
-
-		r.SetConfig(&RiverConfig{
-			DbPath:    "./_data/",
-			DbID:      "test",
-			QueuePath: "./_queue/",
-			// ServerKeysFilePath: "./keys.json",
-			ServerEndpoint: "ws://new.river.im",
-			ConnInfo:       conInfo,
-			LogLevel:       0,
-		})
-		_ = r.Start()
-		for r.ConnInfo.AuthID == 0 {
-			logs.Info("AuthKey has not been created yet.")
-			err := r.CreateAuthKey()
-			So(err, ShouldBeNil)
-			logs.Info("AuthKey Created.")
-		}
-		fmt.Println("AuthID", r.ConnInfo.AuthID)
-		fmt.Println("AuthKey", r.ConnInfo.AuthKey)
-		time.Sleep(time.Second * 10)
-	})
+	Convey("Check Reconnect", t, func() {})
 }
 
 func init() {
@@ -159,6 +32,7 @@ func init() {
 	r := new(River)
 	conInfo := new(RiverConnection)
 	conInfo.Delegate = new(dummyConInfoDelegate)
+	serverKeyBytes, _ := ioutil.ReadFile("./keys.json")
 	r.SetConfig(&RiverConfig{
 		DbPath:                 "./_data/",
 		DbID:                   "test",
@@ -173,8 +47,13 @@ func init() {
 		DocumentCacheDirectory: "./_files/cache",
 		DocumentLogDirectory:   "./_files/logs",
 		ConnInfo:               conInfo,
+		ServerKeys:             string(serverKeyBytes),
+		ServerEndpoint:         "ws://river.ronaksoftware.com",
+		FileServerEndpoint:     "http://river.ronaksoftware.com:8080",
 	})
 	_River = r
+
+	repo.InitRepo(fmt.Sprintf("%s/%s.db", "./_data", "test"), false)
 }
 
 type ConnInfoDelegates struct{}

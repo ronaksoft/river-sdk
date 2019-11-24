@@ -26,6 +26,9 @@ func TimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 func CleanUP() {
 	lifeTime := 7 * 24 * time.Hour
 	_ = filepath.Walk(LogDir, func(path string, info os.FileInfo, err error) error {
+		if info == nil {
+			return nil
+		}
 		if strings.HasSuffix(info.Name(), ".log") {
 			if time.Now().Sub(info.ModTime()).Truncate(lifeTime) > 0 {
 				_ = os.Remove(path)
