@@ -232,11 +232,13 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 						return x.Updates[i].UpdateID < x.Updates[j].UpdateID
 					})
 					onGetDifferenceSucceed(ctrl, x)
+					if x.CurrentUpdateID != 0 {
+						serverUpdateID = x.CurrentUpdateID
+					}
 
 					// If there is no more update then set ClientUpdateID to the ServerUpdateID
-					if !x.More && x.CurrentUpdateID != 0 {
+					if !x.More {
 						ctrl.updateID = x.CurrentUpdateID
-						serverUpdateID = x.CurrentUpdateID
 					}
 
 					logs.Info("SyncCtrl received UpdateDifference",

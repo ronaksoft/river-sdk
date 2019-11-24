@@ -34,7 +34,6 @@ func (ctrl *Controller) GetServerSalt() {
 		func(m *msg.MessageEnvelope) {
 			switch m.Constructor {
 			case msg.C_SystemSalts:
-
 			case msg.C_Error:
 				e := new(msg.Error)
 				_ = m.Unmarshal(m.Message)
@@ -87,7 +86,6 @@ func (ctrl *Controller) AuthRecall() (updateID int64, err error) {
 				clientTime := time.Now().Unix()
 				serverTime := x.Timestamp
 				domain.TimeDelta = time.Duration(serverTime-clientTime) * time.Second
-
 			case msg.C_Error:
 				err = domain.ParseServerError(m.Message)
 			default:

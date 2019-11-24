@@ -299,7 +299,7 @@ func (r *River) Migrate() int {
 
 func (r *River) onNetworkConnect() {
 	domain.WindowLog(fmt.Sprintf("Connected: %s", domain.StartTime.Format(time.Kitchen)))
-
+	var serverUpdateID int64
 	waitGroup := sync.WaitGroup{}
 	// If we have no salt then we must call GetServerTime and GetServerSalt sequentially, otherwise
 	// We call them in parallel
@@ -329,7 +329,7 @@ func (r *River) onNetworkConnect() {
 	waitGroup.Add(1)
 	go func() {
 		// FIXME:: We have server update id here, it is better to call sync only if necessary
-		_, _ = r.syncCtrl.AuthRecall()
+		serverUpdateID, _ = r.syncCtrl.AuthRecall()
 		domain.WindowLog(fmt.Sprintf("AuthRecalled: %s", time.Now().Sub(domain.StartTime)))
 		waitGroup.Done()
 	}()
@@ -340,9 +340,13 @@ func (r *River) onNetworkConnect() {
 	}
 	go func() {
 		if r.syncCtrl.GetUserID() != 0 {
-			// Sync with Server
-			r.syncCtrl.Sync()
-			domain.WindowLog(fmt.Sprintf("Synced: %s", time.Now().Sub(domain.StartTime)))
+			if r.syncCtrl.UpdateID() < serverUpdateID {
+				// Sync with Server
+				r.syncCtrl.Sync()
+				domain.WindowLog(fmt.Sprintf("Synced: %s", time.Now().Sub(domain.StartTime)))
+			} else {
+				domain.WindowLog(fmt.Sprintf("Already Synced: %s", time.Now().Sub(domain.StartTime)))
+			}
 
 			// import contact from server
 			r.syncCtrl.ContactImportFromServer()
