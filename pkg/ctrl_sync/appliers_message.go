@@ -40,7 +40,7 @@ func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
 
 	domain.WindowLog(fmt.Sprintf("Authorized: %s", time.Now().Sub(domain.StartTime)))
 	go func() {
-		ctrl.AuthRecall()
+		ctrl.AuthRecall("AuthAuthorization")
 		domain.WindowLog(fmt.Sprintf("AuthRecalled: %s", time.Now().Sub(domain.StartTime)))
 		ctrl.Sync()
 		domain.WindowLog(fmt.Sprintf("Synced: %s", time.Now().Sub(domain.StartTime)))

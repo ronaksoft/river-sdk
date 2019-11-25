@@ -34,6 +34,7 @@ func (ctrl *Controller) GetServerSalt() {
 		func(m *msg.MessageEnvelope) {
 			switch m.Constructor {
 			case msg.C_SystemSalts:
+				logs.Debug("SyncCtrl received SystemSalts")
 			case msg.C_Error:
 				e := new(msg.Error)
 				_ = m.Unmarshal(m.Message)
@@ -49,8 +50,8 @@ func (ctrl *Controller) GetServerSalt() {
 	)
 }
 
-func (ctrl *Controller) AuthRecall() (updateID int64, err error) {
-	logs.Info("SyncCtrl call AuthRecall")
+func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
+	logs.Info("SyncCtrl call AuthRecall", zap.String("Caller", caller))
 	req := msg.AuthRecall{
 		ClientID:   0,
 		Version:    0,
@@ -163,7 +164,7 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, l
 		func() {
 			// If timeout, then retry the request
 			logs.Warn("Timeout! on GetAllDialogs, retrying ...")
-			ctrl.AuthRecall()
+			ctrl.AuthRecall("GetAllDialogs")
 			ctrl.GetAllDialogs(waitGroup, offset, limit)
 		},
 		func(m *msg.MessageEnvelope) {

@@ -1,6 +1,7 @@
 package riversdk
 
 import (
+	"encoding/json"
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
@@ -12,6 +13,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 )
 
 var (
@@ -23,18 +25,24 @@ func TestSDK(t *testing.T) {
 		err := _River.Start()
 		c.So(err, ShouldBeNil)
 		_River.StartNetwork()
-		_ = _River.CreateAuthKey()
-		_River.StopNetwork()
-		_River.StartNetwork()
+		if _River.ConnInfo.AuthID == 0 {
+			_River.CreateAuthKey()
+		}
 	})
-	Convey("Check Reconnect", t, func() {})
+	Convey("Get Salt", t, func() {
+		// _River.syncCtrl.GetServerSalt()
+		time.Sleep(time.Second * 5)
+	})
 }
 
 func init() {
 	logs.Info("Creating New River SDK Instance")
 	r := new(River)
 	conInfo := new(RiverConnection)
-	conInfo.Delegate = new(dummyConInfoDelegate)
+	connDelegate := &ConnInfoDelegates{}
+	connDelegate.Load(conInfo)
+	conInfo.Delegate = new(ConnInfoDelegates)
+
 	serverKeyBytes, _ := ioutil.ReadFile("./keys.json")
 	r.SetConfig(&RiverConfig{
 		DbPath:                 "./_data/",
@@ -61,6 +69,11 @@ func init() {
 
 type ConnInfoDelegates struct{}
 
+func (c *ConnInfoDelegates) Load(connInfo *RiverConnection) {
+	b, _ := ioutil.ReadFile("./_connection/connInfo")
+	_ = json.Unmarshal(b, connInfo)
+	return
+}
 func (c *ConnInfoDelegates) SaveConnInfo(connInfo []byte) {
 	_ = os.MkdirAll("./_connection", os.ModePerm)
 	err := ioutil.WriteFile("./_connection/connInfo", connInfo, 0666)

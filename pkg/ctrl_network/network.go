@@ -368,6 +368,7 @@ func (ctrl *Controller) extractMessages(m *msg.MessageEnvelope) ([]*msg.MessageE
 		x := new(msg.SystemSalts)
 		_ = x.Unmarshal(m.Message)
 		salt.Set(x)
+		fallthrough
 	default:
 		messages = append(messages, m)
 	}

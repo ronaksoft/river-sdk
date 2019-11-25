@@ -303,9 +303,10 @@ func (r *River) onNetworkConnect() {
 	waitGroup := sync.WaitGroup{}
 	// If we have no salt then we must call GetServerTime and GetServerSalt sequentially, otherwise
 	// We call them in parallel
+	r.syncCtrl.GetServerTime()
+	domain.WindowLog(fmt.Sprintf("ServerTime (%s): %s", domain.TimeDelta, time.Now().Sub(domain.StartTime)))
+
 	if salt.Count() == 0 {
-		r.syncCtrl.GetServerTime()
-		domain.WindowLog(fmt.Sprintf("ServerTime (%s): %s", domain.TimeDelta, time.Now().Sub(domain.StartTime)))
 		r.syncCtrl.GetServerSalt()
 		domain.WindowLog(fmt.Sprintf("ServerSalt: %s", time.Now().Sub(domain.StartTime)))
 	} else {
@@ -317,19 +318,11 @@ func (r *River) onNetworkConnect() {
 				waitGroup.Done()
 			}()
 		}
-		waitGroup.Add(1)
-		go func() {
-			if r.ConnInfo.AuthID == 0 {
-				r.syncCtrl.GetServerTime()
-				domain.WindowLog(fmt.Sprintf("ServerTime (%s): %s", domain.TimeDelta, time.Now().Sub(domain.StartTime)))
-			}
-			waitGroup.Done()
-		}()
 	}
 	waitGroup.Add(1)
 	go func() {
 		// FIXME:: We have server update id here, it is better to call sync only if necessary
-		serverUpdateID, _ = r.syncCtrl.AuthRecall()
+		serverUpdateID, _ = r.syncCtrl.AuthRecall("NetworkConnect")
 		domain.WindowLog(fmt.Sprintf("AuthRecalled: %s", time.Now().Sub(domain.StartTime)))
 		waitGroup.Done()
 	}()
