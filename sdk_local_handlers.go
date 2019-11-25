@@ -445,6 +445,8 @@ func genSuccessCallback(cb domain.MessageHandler, peerID int64, peerType int32, 
 			}
 
 			m.Message, _ = x.Marshal()
+		case msg.C_Error:
+			logs.Warn("We received error on GetHistory", zap.Error(domain.ParseServerError(m.Message)))
 		default:
 		}
 
