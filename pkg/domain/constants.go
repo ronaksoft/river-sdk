@@ -16,6 +16,7 @@ var (
 	ClientVersion  string
 	ClientOS       string
 	ClientVendor   string
+	ClientPhone    string
 )
 
 // Global Parameters

@@ -134,7 +134,10 @@ func (v *RiverConnection) ChangeUserID(userID int64) { v.UserID = userID }
 func (v *RiverConnection) ChangeUsername(username string) { v.Username = username }
 
 // ChangePhone RiverConfig interface func
-func (v *RiverConnection) ChangePhone(phone string) { v.Phone = phone }
+func (v *RiverConnection) ChangePhone(phone string) {
+	v.Phone = phone
+	domain.ClientPhone = phone
+}
 
 // ChangeFirstName RiverConfig interface func
 func (v *RiverConnection) ChangeFirstName(firstName string) { v.FirstName = firstName }

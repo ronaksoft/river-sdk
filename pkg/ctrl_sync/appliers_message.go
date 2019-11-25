@@ -34,6 +34,10 @@ func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
 	ctrl.connInfo.ChangeUserID(x.User.ID)
 	ctrl.connInfo.ChangeBio(x.User.Bio)
 	ctrl.connInfo.ChangeUsername(x.User.Username)
+	if x.User.Phone != "" {
+		ctrl.connInfo.ChangePhone(x.User.Phone)
+		domain.ClientPhone = x.User.Phone
+	}
 	ctrl.connInfo.Save()
 
 	ctrl.SetUserID(x.User.ID)

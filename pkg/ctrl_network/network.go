@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
@@ -684,50 +683,59 @@ func (ctrl *Controller) recoverPanic(funcName string, extraInfo interface{}) {
 }
 
 func (ctrl *Controller) UpdateEndpoint() {
-	timeout := time.Second * 3
-	res1 := make(chan string, 1)
-	res2 := make(chan string, 1)
-	country := "IR"
+	var country string
 	wsEndpointParts := strings.Split(ctrl.wsEndpoint, ".")
 	httpEndpointParts := strings.Split(ctrl.httpEndpoint, ".")
-
-	go func() {
-		c := http.Client{Timeout: timeout}
-		res, err := c.Get("https://ipinfo.io/country")
-		if err == nil {
-			b, _ := ioutil.ReadAll(res.Body)
-			_ = res.Body.Close()
-			res1 <- strings.TrimSpace(string(b))
-		}
-	}()
-
-	go func() {
-		c := http.Client{Timeout: timeout}
-		res, err := c.Get("https://ipapi.co/json")
-		if err == nil {
-			m := make(map[string]interface{})
-			b, _ := ioutil.ReadAll(res.Body)
-			_ = res.Body.Close()
-			_ = json.Unmarshal(b, &m)
-			if m["country"] == nil {
-				res2 <- ""
-				return
-			}
-			res2 <- strings.TrimSpace(m["country"].(string))
-		}
-	}()
-
-	select {
-	case x := <-res1:
-		if x != "" {
-			country = strings.ToUpper(x)
-		}
-	case x := <-res2:
-		if x != "" {
-			country = strings.ToUpper(x)
-		}
-	case <-time.After(timeout):
+	if domain.ClientPhone != "" {
+		country = strings.ToUpper(domain.GetCountryCode(domain.ClientPhone))
 	}
+	if country == "" {
+		country = "IR"
+	}
+
+	// timeout := time.Second * 3
+	// res1 := make(chan string, 1)
+	// res2 := make(chan string, 1)
+	// country := "IR"
+
+	//
+	// go func() {
+	// 	c := http.Client{Timeout: timeout}
+	// 	res, err := c.Get("https://ipinfo.io/country")
+	// 	if err == nil {
+	// 		b, _ := ioutil.ReadAll(res.Body)
+	// 		_ = res.Body.Close()
+	// 		res1 <- strings.TrimSpace(string(b))
+	// 	}
+	// }()
+	//
+	// go func() {
+	// 	c := http.Client{Timeout: timeout}
+	// 	res, err := c.Get("https://ipapi.co/json")
+	// 	if err == nil {
+	// 		m := make(map[string]interface{})
+	// 		b, _ := ioutil.ReadAll(res.Body)
+	// 		_ = res.Body.Close()
+	// 		_ = json.Unmarshal(b, &m)
+	// 		if m["country"] == nil {
+	// 			res2 <- ""
+	// 			return
+	// 		}
+	// 		res2 <- strings.TrimSpace(m["country"].(string))
+	// 	}
+	// }()
+	//
+	// select {
+	// case x := <-res1:
+	// 	if x != "" {
+	// 		country = strings.ToUpper(x)
+	// 	}
+	// case x := <-res2:
+	// 	if x != "" {
+	// 		country = strings.ToUpper(x)
+	// 	}
+	// case <-time.After(timeout):
+	// }
 
 	switch country {
 	case "IR":

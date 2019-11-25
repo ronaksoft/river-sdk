@@ -331,6 +331,14 @@ func SanitizePhone(phoneNumber string) string {
 
 }
 
+func GetCountryCode(phone string) string {
+	ph, err := phonenumbers.Parse(phone, "")
+	if err != nil {
+		return ""
+	}
+	return phonenumbers.GetRegionCodeForNumber(ph)
+}
+
 // ExtractsContactsDifference remove items from newContacts that already exist in oldContacts
 func ExtractsContactsDifference(oldContacts, newContacts []*msg.PhoneContact) []*msg.PhoneContact {
 
