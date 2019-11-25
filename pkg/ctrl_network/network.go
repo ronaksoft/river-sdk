@@ -417,6 +417,7 @@ func (ctrl *Controller) Connect() {
 
 		ctrl.wsKeepConnection = true
 		keepGoing := true
+		attempts := 0
 		for keepGoing {
 			ctrl.updateNetworkStatus(domain.NetworkConnecting)
 			// If there is a wsConn then close it before creating a new one
@@ -438,7 +439,8 @@ func (ctrl *Controller) Connect() {
 			wsConn, _, err := ctrl.wsDialer.Dial(ctrl.wsEndpoint, reqHdr)
 			if err != nil {
 				logs.Warn("NetCtrl could not dial", zap.Error(err), zap.String("Url", ctrl.wsEndpoint))
-				time.Sleep(1 * time.Second)
+				time.Sleep(domain.GetExponentialTime(100 * time.Millisecond, 3 * time.Second, attempts))
+				attempts++
 				continue
 			}
 			_ = wsConn.SetReadDeadline(time.Time{})
@@ -466,9 +468,8 @@ func (ctrl *Controller) Connect() {
 
 			// Call the OnConnect handler here b4 changing network status that trigger queue to start working
 			// basically we sendWebsocket priority requests b4 queue starts to work
-			ctrl.OnWebsocketConnect()
-
-			if !ctrl.Connected() {
+			err = ctrl.OnWebsocketConnect()
+			if !ctrl.Connected() || err != nil {
 				ctrl.updateNetworkStatus(domain.NetworkConnecting)
 				keepGoing = true
 				continue

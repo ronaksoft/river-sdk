@@ -297,13 +297,16 @@ func (r *River) Migrate() int {
 	}
 }
 
-func (r *River) onNetworkConnect() {
+func (r *River) onNetworkConnect() (err error) {
 	domain.WindowLog(fmt.Sprintf("Connected: %s", domain.StartTime.Format(time.Kitchen)))
 	var serverUpdateID int64
 	waitGroup := sync.WaitGroup{}
 	// If we have no salt then we must call GetServerTime and GetServerSalt sequentially, otherwise
 	// We call them in parallel
-	r.syncCtrl.GetServerTime()
+	err = r.syncCtrl.GetServerTime()
+	if err != nil {
+		return err
+	}
 	domain.WindowLog(fmt.Sprintf("ServerTime (%s): %s", domain.TimeDelta, time.Now().Sub(domain.StartTime)))
 
 	if salt.Count() == 0 {
@@ -322,13 +325,13 @@ func (r *River) onNetworkConnect() {
 	waitGroup.Add(1)
 	go func() {
 		// FIXME:: We have server update id here, it is better to call sync only if necessary
-		serverUpdateID, _ = r.syncCtrl.AuthRecall("NetworkConnect")
+		serverUpdateID, err = r.syncCtrl.AuthRecall("NetworkConnect")
 		domain.WindowLog(fmt.Sprintf("AuthRecalled: %s", time.Now().Sub(domain.StartTime)))
 		waitGroup.Done()
 	}()
 	waitGroup.Wait()
 
-	if r.networkCtrl.GetQuality() == domain.NetworkDisconnected {
+	if r.networkCtrl.GetQuality() == domain.NetworkDisconnected || err != nil {
 		return
 	}
 	go func() {
@@ -349,6 +352,7 @@ func (r *River) onNetworkConnect() {
 			domain.WindowLog(fmt.Sprintf("ContactsImported: %s", time.Now().Sub(domain.StartTime)))
 		}
 	}()
+	return nil
 }
 
 func (r *River) onGeneralError(requestID uint64, e *msg.Error) {

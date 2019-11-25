@@ -47,8 +47,9 @@ func dummyUpdateHandler(updateContainer *msg.UpdateContainer) {
 
 }
 
-func dummyOnConnectHandler() {
+func dummyOnConnectHandler() error {
 	logs.Info("Connected")
+	return nil
 }
 
 func dummyErrorHandler(requestID uint64, e *msg.Error) {

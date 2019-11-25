@@ -108,7 +108,7 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 	return
 }
 
-func (ctrl *Controller) GetServerTime() {
+func (ctrl *Controller) GetServerTime() (err error) {
 	logs.Info("SyncCtrl call GetServerTime")
 	timeReq := new(msg.SystemGetServerTime)
 	timeReqBytes, _ := timeReq.Marshal()
@@ -117,13 +117,13 @@ func (ctrl *Controller) GetServerTime() {
 		msg.C_SystemGetServerTime,
 		timeReqBytes,
 		func() {
-			time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
+			err = domain.ErrRequestTimeout
 		},
 		func(m *msg.MessageEnvelope) {
 			switch m.Constructor {
 			case msg.C_SystemServerTime:
 				x := new(msg.SystemServerTime)
-				err := x.Unmarshal(m.Message)
+				err = x.Unmarshal(m.Message)
 				if err != nil {
 					logs.Error("SyncCtrl couldn't unmarshal SystemGetServerTime response", zap.Error(err))
 					return
@@ -140,12 +140,12 @@ func (ctrl *Controller) GetServerTime() {
 
 			case msg.C_Error:
 				logs.Warn("We received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
-				time.Sleep(time.Duration(ronak.RandomInt(1000)) * time.Millisecond)
+				err = domain.ParseServerError(m.Message)
 			}
 		},
 		true, false,
 	)
-
+	return
 }
 
 func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, limit int32) {

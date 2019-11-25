@@ -17,7 +17,7 @@ type DeferredRequestHandler func(constructor int64, msg []byte)
 type OnUpdateMainDelegateHandler func(constructor int64, msg []byte)
 
 // OnConnectCallback networkController callback/delegate on websocket dial success
-type OnConnectCallback func()
+type OnConnectCallback func() error
 
 // NetworkStatusUpdateCallback NetworkController status change callback/delegate
 type NetworkStatusUpdateCallback func(newStatus NetworkStatus)

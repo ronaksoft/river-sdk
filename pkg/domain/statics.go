@@ -10,6 +10,7 @@ import (
 	"hash/crc32"
 	"io"
 	"log"
+	"math"
 	"math/big"
 	"math/rand"
 	"os"
@@ -387,4 +388,21 @@ func CopyFile(inPath, outPath string) error {
 		}
 	}
 	return nil
+}
+
+func GetExponentialTime(min time.Duration, max time.Duration, attempts int) time.Duration {
+	if min <= 0 {
+		min = 100 * time.Millisecond
+	}
+	if max <= 0 {
+		max = 10 * time.Second
+	}
+	minFloat := float64(min)
+	napDuration := minFloat * math.Pow(2, float64(attempts-1))
+	// add some jitter
+	napDuration += rand.Float64()*minFloat - (minFloat / 2)
+	if napDuration > float64(max) {
+		return time.Duration(max)
+	}
+	return time.Duration(napDuration)
 }
