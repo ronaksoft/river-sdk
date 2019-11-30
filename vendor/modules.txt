@@ -99,10 +99,16 @@ github.com/globalsign/mgo/internal/sasl
 github.com/globalsign/mgo/internal/scram
 # github.com/glycerine/go-unsnap-stream v0.0.0-20181221182339-f9677308dec2
 github.com/glycerine/go-unsnap-stream
+# github.com/gobwas/httphead v0.0.0-20180130184737-2c6c146eadee
+github.com/gobwas/httphead
 # github.com/gobwas/pool v0.2.0
 github.com/gobwas/pool
 github.com/gobwas/pool/internal/pmath
+github.com/gobwas/pool/pbufio
 github.com/gobwas/pool/pbytes
+# github.com/gobwas/ws v1.0.2
+github.com/gobwas/ws
+github.com/gobwas/ws/wsutil
 # github.com/gocql/gocql v0.0.0-20190629212933-1335d3dd7fe2
 github.com/gocql/gocql
 github.com/gocql/gocql/internal/lru

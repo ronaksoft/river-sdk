@@ -8,6 +8,8 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/felixge/tcpkeepalive"
+	"github.com/gobwas/ws"
+	"github.com/gobwas/ws/wsutil"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -19,7 +21,6 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 )
 
@@ -42,10 +43,10 @@ type Controller struct {
 
 	// Websocket Settings
 	wsWriteLock      sync.Mutex
-	wsDialer         *websocket.Dialer
+	wsDialer         *ws.Dialer
 	wsEndpoint       string
 	wsKeepConnection bool
-	wsConn           *websocket.Conn
+	wsConn           net.Conn
 
 	// Http Settings
 	httpEndpoint string
@@ -83,14 +84,15 @@ func New(config Config) *Controller {
 		ctrl.wsEndpoint = config.WebsocketEndpoint
 	}
 	ctrl.wsKeepConnection = true
-	ctrl.wsDialer = &websocket.Dialer{
-		NetDial: func(network, addr string) (conn net.Conn, e error) {
-			return net.DialTimeout(network, addr, domain.WebsocketDialTimeout)
-		},
-		Proxy:            http.ProxyFromEnvironment,
-		HandshakeTimeout: domain.WebsocketDialTimeout,
-		WriteBufferSize:  32 * 1024, // 32kB
-		ReadBufferSize:   32 * 1024, // 32kB
+	ctrl.wsDialer = &ws.Dialer{
+		ReadBufferSize:  32 * 1024, // 32kB
+		WriteBufferSize: 32 * 1024, // 32kB
+		Timeout:         domain.WebsocketDialTimeout,
+		OnStatusError:   nil,
+		OnHeader:        nil,
+		TLSClient:       nil,
+		TLSConfig:       nil,
+		WrapConn:        nil,
 	}
 
 	ctrl.stopChannel = make(chan bool, 1)
@@ -261,12 +263,12 @@ func (ctrl *Controller) receiver() {
 	})
 	res := msg.ProtoMessage{}
 	for {
-		messageType, message, err := ctrl.wsConn.ReadMessage()
+		message, messageType, err := wsutil.ReadServerData(ctrl.wsConn)
 		if err != nil {
 			return
 		}
 		switch messageType {
-		case websocket.BinaryMessage:
+		case ws.OpBinary:
 			// If it is a BINARY message
 			err := res.Unmarshal(message)
 			if err != nil {
@@ -314,7 +316,7 @@ func (ctrl *Controller) receiver() {
 			ctrl.messageHandler(receivedEncryptedPayload.Envelope)
 		default:
 			logs.Warn("NetCtrl received unhandled message type",
-				zap.Int("MessageType", messageType),
+				zap.Any("MessageType", messageType),
 			)
 		}
 	}
@@ -435,18 +437,19 @@ func (ctrl *Controller) Connect() {
 			// Detect the country we are calling from to determine the server Cyrus address
 			ctrl.UpdateEndpoint()
 
-			wsConn, _, err := ctrl.wsDialer.Dial(ctrl.wsEndpoint, reqHdr)
+
+			ctrl.wsDialer.Header = ws.HandshakeHeaderHTTP(reqHdr)
+			wsConn, _, _, err := ctrl.wsDialer.Dial(context.Background(), ctrl.wsEndpoint)
 			if err != nil {
 				logs.Warn("NetCtrl could not dial", zap.Error(err), zap.String("Url", ctrl.wsEndpoint))
-				time.Sleep(domain.GetExponentialTime(100 * time.Millisecond, 3 * time.Second, attempts))
+				time.Sleep(domain.GetExponentialTime(100*time.Millisecond, 3*time.Second, attempts))
 				attempts++
 				continue
 			}
 			_ = wsConn.SetReadDeadline(time.Time{})
-			underlyingConn := wsConn.UnderlyingConn()
-			_ = tcpkeepalive.SetKeepAlive(underlyingConn, 30*time.Second, 2, 5*time.Second)
-			localIP := underlyingConn.LocalAddr()
-			switch x := localIP.(type) {
+
+			_ = tcpkeepalive.SetKeepAlive(wsConn, 30*time.Second, 2, 5*time.Second)
+			switch x := wsConn.LocalAddr().(type) {
 			case *net.IPNet:
 				ctrl.localIP = x.IP
 			case *net.TCPAddr:
@@ -550,7 +553,7 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 
 	ctrl.wsWriteLock.Lock()
 	_ = ctrl.wsConn.SetWriteDeadline(time.Now().Add(domain.WebsocketWriteTime))
-	err = ctrl.wsConn.WriteMessage(websocket.BinaryMessage, b)
+	err = wsutil.WriteClientMessage(ctrl.wsConn, ws.OpBinary, b)
 	ctrl.wsWriteLock.Unlock()
 	if err != nil {
 		_ = ctrl.wsConn.SetReadDeadline(time.Now())
