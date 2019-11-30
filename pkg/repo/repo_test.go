@@ -219,37 +219,49 @@ func TestClearHistory(t *testing.T) {
 }
 
 func TestSearch(t *testing.T) {
-	// m := make([]*msg.UserMessage, 0, 10)
-	// for i := 1; i < 1000 ;i++ {
-	// 	m = append(m, &msg.UserMessage{
-	// 		ID:                  int64(i),
-	// 		PeerID:              14,
-	// 		PeerType:            1,
-	// 		CreatedOn:           time.Now().Unix(),
-	// 		EditedOn:            0,
-	// 		FwdSenderID:         0,
-	// 		FwdChannelID:        0,
-	// 		FwdChannelMessageID: 0,
-	// 		Flags:               0,
-	// 		MessageType:         0,
-	// 		Body:                fmt.Sprintf("Hello %d", i),
-	// 		SenderID:            100,
-	// 		ContentRead:         false,
-	// 		Inbox:               false,
-	// 		ReplyTo:             0,
-	// 		MessageAction:       0,
-	// 		MessageActionData:   nil,
-	// 		Entities:            nil,
-	// 		MediaType:           0,
-	// 		Media:               nil,
-	// 	})
-	// }
-	// repo.Messages.Save(m...)
-	// fmt.Println("Saved")
+	m := make([]*msg.UserMessage, 0, 10)
+	for i := 1; i < 1000 ;i++ {
+		peerID := int64(i % 10 + 1)
+		peerType := int32(msg.PeerUser)
+		if i % 2 == 0 {
+			peerID = -peerID
+			peerType = int32(msg.PeerGroup)
+		}
+		m = append(m, &msg.UserMessage{
+			ID:                  int64(i),
+			PeerID:              peerID,
+			PeerType:            peerType,
+			CreatedOn:           time.Now().Unix(),
+			EditedOn:            0,
+			FwdSenderID:         0,
+			FwdChannelID:        0,
+			FwdChannelMessageID: 0,
+			Flags:               0,
+			MessageType:         0,
+			Body:                fmt.Sprintf("Hello %d %d", i, peerType),
+			SenderID:            100,
+			ContentRead:         false,
+			Inbox:               false,
+			ReplyTo:             0,
+			MessageAction:       0,
+			MessageActionData:   nil,
+			Entities:            nil,
+			MediaType:           0,
+			Media:               nil,
+		})
+	}
+	repo.Messages.Save(m...)
+	fmt.Println("Saved")
 
 
 	// mm := repo.Messages.SearchText("Hello")
+	fmt.Print("Search in UserPeer:")
 	mm := repo.Messages.SearchTextByPeerID("H", 6)
+	for _, m := range mm {
+		fmt.Println(m.ID, m.Body, m.PeerID)
+	}
+	fmt.Print("Search in GroupPeer:")
+	mm = repo.Messages.SearchTextByPeerID("H", 7)
 	for _, m := range mm {
 		fmt.Println(m.ID, m.Body, m.PeerID)
 	}
