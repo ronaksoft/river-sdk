@@ -84,10 +84,46 @@ func New(config Config) *Controller {
 		ctrl.wsEndpoint = config.WebsocketEndpoint
 	}
 	ctrl.wsKeepConnection = true
+
 	ctrl.wsDialer = &ws.Dialer{
 		ReadBufferSize:  32 * 1024, // 32kB
 		WriteBufferSize: 32 * 1024, // 32kB
 		Timeout:         domain.WebsocketDialTimeout,
+		NetDial: func(ctx context.Context, network, addr string) (conn net.Conn, err error) {
+			host, port, err := net.SplitHostPort(addr)
+			if err != nil {
+				return nil, err
+			}
+			ips, err := net.LookupIP(host)
+			if err != nil {
+				return nil, err
+			}
+			logs.Info("DNS LookIP", zap.Any("IPs", ips))
+
+			d := net.Dialer{Timeout: domain.WebsocketDialTimeout}
+			var fallbacks []net.IP
+			for _, ip := range ips {
+				if ip.To4() != nil {
+					conn, err = d.DialContext(ctx, "tcp4", addr)
+					if err != nil {
+						continue
+					}
+					return
+				}
+				if ip.To16() != nil && ip.To4() == nil {
+					fallbacks = append(fallbacks, ip)
+				}
+			}
+			for _, ip := range fallbacks {
+				d.LocalAddr = nil
+				conn, err = d.Dial("tcp6", net.JoinHostPort(ip.String(), port))
+				if err != nil {
+					continue
+				}
+				return
+			}
+			return nil, domain.ErrNoConnection
+		},
 		OnStatusError:   nil,
 		OnHeader:        nil,
 		TLSClient:       nil,
@@ -436,7 +472,6 @@ func (ctrl *Controller) Connect() {
 
 			// Detect the country we are calling from to determine the server Cyrus address
 			ctrl.UpdateEndpoint()
-
 
 			ctrl.wsDialer.Header = ws.HandshakeHeaderHTTP(reqHdr)
 			wsConn, _, _, err := ctrl.wsDialer.Dial(context.Background(), ctrl.wsEndpoint)

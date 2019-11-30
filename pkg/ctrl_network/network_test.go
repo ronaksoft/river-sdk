@@ -87,7 +87,7 @@ func getServerTime() *msg.MessageEnvelope {
 }
 
 func init() {
-	logs.SetLogLevel(-1)
+	logs.SetLogLevel(0)
 	ctrl = networkCtrl.New(networkCtrl.Config{
 		WebsocketEndpoint: "ws://river.ronaksoftware.com",
 		HttpEndpoint:      "http://river.ronaksoftware.com",
