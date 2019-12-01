@@ -739,7 +739,7 @@ func (ctrl *Controller) UpdateEndpoint() {
 	res1 := make(chan string, 1)
 	go func() {
 		c := http.Client{Timeout: timeout}
-		res, err := c.Get("https://ipinfo.river.im/country")
+		res, err := c.Get("https://ipinfo.io/country")
 		if err == nil {
 			b, _ := ioutil.ReadAll(res.Body)
 			_ = res.Body.Close()
