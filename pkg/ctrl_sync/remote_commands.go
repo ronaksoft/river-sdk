@@ -95,6 +95,7 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 				domain.TimeDelta = time.Duration(serverTime-clientTime) * time.Second
 			case msg.C_Error:
 				err = domain.ParseServerError(m.Message)
+
 			default:
 				logs.Error("SyncCtrl did not received expected response for AuthRecall",
 					zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
@@ -170,10 +171,14 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, l
 		func(m *msg.MessageEnvelope) {
 			switch m.Constructor {
 			case msg.C_Error:
-				logs.Error("SyncCtrl got error response on MessagesGetDialogs",
-					zap.String("Error", domain.ParseServerError(m.Message).Error()),
-				)
-				ctrl.GetAllDialogs(waitGroup, offset, limit)
+				logs.Error("SyncCtrl got error response on MessagesGetDialogs", zap.Error(domain.ParseServerError(m.Message)))
+				x := msg.Error{}
+				_ = x.Unmarshal(m.Message)
+				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
+					waitGroup.Done()
+				} else {
+					ctrl.GetAllDialogs(waitGroup, offset, limit)
+				}
 			case msg.C_MessagesDialogs:
 				x := new(msg.MessagesDialogs)
 				err := x.Unmarshal(m.Message)
@@ -207,9 +212,13 @@ func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup) {
 		func(m *msg.MessageEnvelope) {
 			switch m.Constructor {
 			case msg.C_Error:
-				errMsg := new(msg.Error)
-				_ = errMsg.Unmarshal(m.Message)
-				ctrl.GetContacts(waitGroup)
+				x := new(msg.Error)
+				_ = x.Unmarshal(m.Message)
+				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
+					waitGroup.Done()
+				} else {
+					ctrl.GetContacts(waitGroup)
+				}
 			default:
 				waitGroup.Done()
 			}
