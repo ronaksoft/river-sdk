@@ -725,6 +725,7 @@ func (ctrl *Controller) UpdateEndpoint() {
 	if ctrl.endpointUpdated {
 		return
 	}
+	ctrl.endpointUpdated = true
 	var country string
 	wsEndpointParts := strings.Split(ctrl.wsEndpoint, ".")
 	httpEndpointParts := strings.Split(ctrl.httpEndpoint, ".")
