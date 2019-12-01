@@ -33,8 +33,9 @@ type Config struct {
 // Controller websocket network controller
 type Controller struct {
 	// Internal Controller Channels
-	connectChannel chan bool
-	stopChannel    chan bool
+	connectChannel  chan bool
+	stopChannel     chan bool
+	endpointUpdated bool
 
 	// Authorization Keys
 	authID     int64
@@ -124,11 +125,11 @@ func New(config Config) *Controller {
 			}
 			return nil, domain.ErrNoConnection
 		},
-		OnStatusError:   nil,
-		OnHeader:        nil,
-		TLSClient:       nil,
-		TLSConfig:       nil,
-		WrapConn:        nil,
+		OnStatusError: nil,
+		OnHeader:      nil,
+		TLSClient:     nil,
+		TLSConfig:     nil,
+		WrapConn:      nil,
 	}
 
 	ctrl.stopChannel = make(chan bool, 1)
@@ -721,6 +722,9 @@ func (ctrl *Controller) recoverPanic(funcName string, extraInfo interface{}) {
 }
 
 func (ctrl *Controller) UpdateEndpoint() {
+	if ctrl.endpointUpdated {
+		return
+	}
 	var country string
 	wsEndpointParts := strings.Split(ctrl.wsEndpoint, ".")
 	httpEndpointParts := strings.Split(ctrl.httpEndpoint, ".")
@@ -731,49 +735,25 @@ func (ctrl *Controller) UpdateEndpoint() {
 		country = "IR"
 	}
 
-	// timeout := time.Second * 3
-	// res1 := make(chan string, 1)
-	// res2 := make(chan string, 1)
-	// country := "IR"
+	timeout := time.Second * 3
+	res1 := make(chan string, 1)
+	go func() {
+		c := http.Client{Timeout: timeout}
+		res, err := c.Get("https://ipinfo.river.im/country")
+		if err == nil {
+			b, _ := ioutil.ReadAll(res.Body)
+			_ = res.Body.Close()
+			res1 <- strings.TrimSpace(string(b))
+		}
+	}()
 
-	//
-	// go func() {
-	// 	c := http.Client{Timeout: timeout}
-	// 	res, err := c.Get("https://ipinfo.io/country")
-	// 	if err == nil {
-	// 		b, _ := ioutil.ReadAll(res.Body)
-	// 		_ = res.Body.Close()
-	// 		res1 <- strings.TrimSpace(string(b))
-	// 	}
-	// }()
-	//
-	// go func() {
-	// 	c := http.Client{Timeout: timeout}
-	// 	res, err := c.Get("https://ipapi.co/json")
-	// 	if err == nil {
-	// 		m := make(map[string]interface{})
-	// 		b, _ := ioutil.ReadAll(res.Body)
-	// 		_ = res.Body.Close()
-	// 		_ = json.Unmarshal(b, &m)
-	// 		if m["country"] == nil {
-	// 			res2 <- ""
-	// 			return
-	// 		}
-	// 		res2 <- strings.TrimSpace(m["country"].(string))
-	// 	}
-	// }()
-	//
-	// select {
-	// case x := <-res1:
-	// 	if x != "" {
-	// 		country = strings.ToUpper(x)
-	// 	}
-	// case x := <-res2:
-	// 	if x != "" {
-	// 		country = strings.ToUpper(x)
-	// 	}
-	// case <-time.After(timeout):
-	// }
+	select {
+	case x := <-res1:
+		if x != "" {
+			country = strings.ToUpper(x)
+		}
+	case <-time.After(timeout):
+	}
 
 	switch country {
 	case "IR":
