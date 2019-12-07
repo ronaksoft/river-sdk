@@ -285,6 +285,7 @@ func (r *repoUsers) GetContact(userID int64) *msg.ContactUser {
 			return contactUser.Unmarshal(val)
 		})
 	})
+
 	if err != nil {
 		return nil
 	}

@@ -220,7 +220,7 @@ func TestClearHistory(t *testing.T) {
 
 func TestSearch(t *testing.T) {
 	m := make([]*msg.UserMessage, 0, 10)
-	for i := 1; i < 1000 ;i++ {
+	for i := 1; i < 100 ;i++ {
 		peerID := int64(i % 10 + 1)
 		peerType := int32(msg.PeerUser)
 		if i % 2 == 0 {
@@ -261,7 +261,7 @@ func TestSearch(t *testing.T) {
 		fmt.Println(m.ID, m.Body, m.PeerID)
 	}
 	fmt.Print("Search in GroupPeer:")
-	mm = repo.Messages.SearchTextByPeerID("H", 7)
+	mm = repo.Messages.SearchTextByPeerID("H", -7)
 	for _, m := range mm {
 		fmt.Println(m.ID, m.Body, m.PeerID)
 	}

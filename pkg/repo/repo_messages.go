@@ -562,7 +562,7 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.User
 			qs = append(qs, bleve.NewMatchQuery(term), bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
 		}
 		t2 := bleve.NewDisjunctionQuery(qs...)
-		t3 := bleve.NewTermQuery(fmt.Sprintf("%d", peerID))
+		t3 := bleve.NewTermQuery(fmt.Sprintf("%d", abs(peerID)))
 		t3.SetField("peer_id")
 		searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3))
 		searchResult, _ := r.msgSearch.Search(searchRequest)
