@@ -207,5 +207,16 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 }
 
 func (ctrl *Controller) labelsMany(e *msg.MessageEnvelope) {
+	u := &msg.LabelsMany{}
+	err := u.Unmarshal(e.Message)
+	if err != nil {
+		logs.Error("SyncCtrl couldn't unmarshal LabelsMany", zap.Error(err))
+		return
+	}
+	logs.Info("SyncCtrl applies LabelsMany")
 
+	err = repo.Labels.Save(u.Labels...)
+	logs.WarnOnErr("SyncCtrl got error on applying LabelsMany", err)
+
+	return
 }
