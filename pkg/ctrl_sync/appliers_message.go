@@ -206,6 +206,7 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 	repo.Dialogs.UpdateNotifySetting(u.Group.ID, int32(msg.PeerGroup), u.NotifySettings)
 }
 
+// labelsMany
 func (ctrl *Controller) labelsMany(e *msg.MessageEnvelope) {
 	u := &msg.LabelsMany{}
 	err := u.Unmarshal(e.Message)
@@ -219,4 +220,19 @@ func (ctrl *Controller) labelsMany(e *msg.MessageEnvelope) {
 	logs.WarnOnErr("SyncCtrl got error on applying LabelsMany", err)
 
 	return
+}
+
+func (ctrl *Controller) labelItems(e *msg.MessageEnvelope) {
+	u := &msg.LabelItems{}
+	err := u.Unmarshal(e.Message)
+	if err != nil {
+		logs.Error("SyncCtrl couldn't unmarshal LabelsMany", zap.Error(err))
+		return
+	}
+	logs.Info("SyncCtrl applies LabelItems")
+
+	repo.Messages.Save(u.Messages...)
+	for _, dialog := range u.Dialogs {
+		_ = repo.Dialogs.Save(dialog)
+	}
 }
