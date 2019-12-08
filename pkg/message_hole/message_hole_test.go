@@ -66,5 +66,4 @@ func TestHole(t *testing.T) {
 	InsertFill(peerID, peerType, 600, 700)
 	InsertFill(peerID, peerType, 399, 699)
 	logs.Info(PrintHole(peerID, peerType))
-
 }

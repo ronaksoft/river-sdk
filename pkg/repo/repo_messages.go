@@ -236,6 +236,13 @@ func (r *repoMessages) Save(messages ...*msg.UserMessage) {
 			if err != nil {
 				return err
 			}
+
+			for _, labelID := range message.LabelIDs {
+				err = addLabelToMessage(txn, labelID, message.PeerType, message.PeerID, message.ID)
+				if err != nil {
+					return err
+				}
+			}
 		}
 		return nil
 	})

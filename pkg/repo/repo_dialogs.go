@@ -133,6 +133,12 @@ func (r *repoDialogs) SaveNew(dialog *msg.Dialog, lastUpdate int64) (err error) 
 		if err != nil {
 			return err
 		}
+		for _, labelID := range dialog.LabelIDs {
+			err = addLabelToDialog(txn, labelID, dialog.PeerType, dialog.PeerID)
+			if err != nil {
+				return err
+			}
+		}
 		r.updateLastUpdate(dialog.PeerID, dialog.PeerType, lastUpdate)
 		return nil
 	})
@@ -144,7 +150,17 @@ func (r *repoDialogs) Save(dialog *msg.Dialog) error {
 		return nil
 	}
 	err := badgerUpdate(func(txn *badger.Txn) error {
-		return saveDialog(txn, dialog)
+		err := saveDialog(txn, dialog)
+		if err != nil {
+			return err
+		}
+		for _, labelID := range dialog.LabelIDs {
+			err = addLabelToDialog(txn, labelID, dialog.PeerType, dialog.PeerID)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 	logs.ErrorOnErr("RepoDialog got error on save dialog", err)
 	return err
