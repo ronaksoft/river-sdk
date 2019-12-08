@@ -581,3 +581,65 @@ func (ctrl *Controller) updateDraftMessageCleared(u *msg.UpdateEnvelope) ([]*msg
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil
 }
+
+func (ctrl *Controller) updateLabelAdded(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := &msg.UpdateLabelAdded{}
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Info("SyncCtrl applies UpdateLabelAdded")
+
+	if len(x.MessageIDs) == 0 {
+		err := repo.Labels.AddLabelsToDialogs(x.LabelIDs, x.PeerType, x.PeerID)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err := repo.Labels.AddLabelsToMessages(x.LabelIDs, x.PeerType, x.PeerID, x.MessageIDs)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return []*msg.UpdateEnvelope{u}, nil
+}
+
+func (ctrl *Controller) updateLabelRemove(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := &msg.UpdateLabelRemoved{}
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Info("SyncCtrl applies UpdateLabelRemoved")
+
+	if len(x.MessageIDs) == 0 {
+		err := repo.Labels.RemoveLabelsFromDialogs(x.LabelIDs, x.PeerType, x.PeerID)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err := repo.Labels.RemoveLabelsFromMessages(x.LabelIDs, x.PeerType, x.PeerID, x.MessageIDs)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return []*msg.UpdateEnvelope{u}, nil
+}
+
+func (ctrl *Controller) updateLabel(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := &msg.UpdateLabel{}
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Info("SyncCtrl applies UpdateLabel")
+
+	err = repo.Labels.Save(x.Labels...)
+	if err != nil {
+		return nil, err
+	}
+	return []*msg.UpdateEnvelope{u}, nil
+}

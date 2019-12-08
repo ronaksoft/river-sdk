@@ -205,3 +205,7 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 	// Update NotifySettings
 	repo.Dialogs.UpdateNotifySetting(u.Group.ID, int32(msg.PeerGroup), u.NotifySettings)
 }
+
+func (ctrl *Controller) labelsMany(e *msg.MessageEnvelope) {
+
+}

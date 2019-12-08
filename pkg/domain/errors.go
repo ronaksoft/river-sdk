@@ -21,6 +21,7 @@ var (
 	ErrUnknownFileSize       = errors.New("unknown file size")
 	ErrAlreadyDownloading    = errors.New("already is downloading")
 	ErrNoFilePath            = errors.New("no file path")
+	ErrInvalidData           = errors.New("invalid data")
 )
 
 // ParseServerError ...

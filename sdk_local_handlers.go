@@ -406,7 +406,7 @@ func genSuccessCallback(cb domain.MessageHandler, peerID int64, peerType int32, 
 				return x.Messages[i].ID > x.Messages[j].ID
 			})
 
-			// Fill Messages Hole
+			// Add Messages Hole
 			if msgCount := len(x.Messages); msgCount > 0 {
 				switch {
 				case minID == 0 && maxID != 0:
