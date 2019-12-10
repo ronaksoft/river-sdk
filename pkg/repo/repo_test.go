@@ -3,6 +3,7 @@ package repo_test
 import (
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
@@ -25,6 +26,56 @@ func init() {
 	repo.InitRepo("./_data", false)
 }
 
+func createMessage(body string, filename string) *msg.UserMessage {
+	userID := ronak.RandomInt64(0)
+	attrFile, _ := (&msg.DocumentAttributeFile{Filename:filename}).Marshal()
+	media, _ := (&msg.MediaDocument{
+		Caption:      "This is caption",
+		TTLinSeconds: 0,
+		Doc:          &msg.Document{
+			ID:          ronak.RandomInt64(0),
+			AccessHash:  ronak.RandomUint64(),
+			Date:        time.Now().Unix(),
+			MimeType:    "",
+			FileSize:    1243,
+			Version:     0,
+			ClusterID:   1,
+			Attributes:  []*msg.DocumentAttribute{
+				{
+					Type: msg.AttributeTypeFile,
+					Data: attrFile,
+				},
+			},
+			Thumbnail:   nil,
+			MD5Checksum: "",
+		},
+	}).Marshal()
+	return &msg.UserMessage{
+		ID:                  userID,
+		PeerID:              ronak.RandomInt64(0),
+		PeerType:            1,
+		CreatedOn:           time.Now().Unix(),
+		EditedOn:            0,
+		FwdSenderID:         0,
+		FwdChannelID:        0,
+		FwdChannelMessageID: 0,
+		Flags:               0,
+		MessageType:         0,
+		Body:                body,
+		SenderID:            userID,
+		ContentRead:         false,
+		Inbox:               false,
+		ReplyTo:             0,
+		MessageAction:       0,
+		MessageActionData:   nil,
+		Entities:            nil,
+		MediaType:           msg.MediaTypeDocument,
+		Media:               media,
+		ReplyMarkup:         0,
+		ReplyMarkupData:     nil,
+		LabelIDs:            nil,
+	}
+}
 func TestRepoDialogs(t *testing.T) {
 	dialog := new(msg.Dialog)
 	dialog.PeerID = 100
@@ -378,4 +429,17 @@ func TestGroupPhotoGallery(t *testing.T) {
 
 	phGallery := repo.Groups.GetPhotoGallery(1000)
 	fmt.Println(phGallery)
+}
+
+func TestMessagesSave(t *testing.T) {
+	m := createMessage("Hello", "file.txt")
+	repo.Messages.Save(m)
+	media := &msg.MediaDocument{}
+	media.Unmarshal(m.Media)
+	clientFile, err := repo.Files.Get(media.Doc.ClusterID, media.Doc.ID, media.Doc.AccessHash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(clientFile.Extension)
+	t.Log(fileCtrl.GetFilePath(clientFile))
 }

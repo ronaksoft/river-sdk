@@ -150,7 +150,7 @@ func (r *repoLabels) GetAll() []*msg.Label {
 	return labels
 }
 
-func (r *repoLabels) GetMessagesByLabelID(labelID int32) []*msg.UserMessage {
+func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64) []*msg.UserMessage {
 	messages := make([]*msg.UserMessage, 0, 10)
 	badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
@@ -182,7 +182,7 @@ func (r *repoLabels) GetMessagesByLabelID(labelID int32) []*msg.UserMessage {
 	return messages
 }
 
-func (r *repoLabels) GetDialogsByLabelID(labelID int32) []*msg.Dialog {
+func (r *repoLabels) ListDialogs(labelID int32) []*msg.Dialog {
 	dialogs := make([]*msg.Dialog, 0, 10)
 	badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions

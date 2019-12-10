@@ -43,7 +43,7 @@ func SetRootFolders(audioDir, fileDir, photoDir, videoDir, cacheDir string) {
 func GetFilePath(clientFile *msg.ClientFile) string {
 	switch clientFile.Type {
 	case msg.ClientFileType_Message:
-		return getMessageFilePath(clientFile.MimeType, clientFile.FileID)
+		return getMessageFilePath(clientFile.MimeType, clientFile.FileID, clientFile.Extension)
 	case msg.ClientFileType_AccountProfilePhoto:
 		return getAccountProfilePath(clientFile.UserID, clientFile.FileID)
 	case msg.ClientFileType_GroupProfilePhoto:
@@ -54,9 +54,8 @@ func GetFilePath(clientFile *msg.ClientFile) string {
 	return ""
 }
 
-func getMessageFilePath(mimeType string, docID int64) string {
+func getMessageFilePath(mimeType string, docID int64, ext string) string {
 	mimeType = strings.ToLower(mimeType)
-	var ext string
 	if ext == "" {
 		exts, _ := mime.ExtensionsByType(mimeType)
 		if len(exts) > 0 {

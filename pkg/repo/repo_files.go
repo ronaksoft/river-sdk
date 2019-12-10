@@ -5,6 +5,7 @@ import (
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
+	"path/filepath"
 )
 
 /*
@@ -166,12 +167,22 @@ func saveMessageMedia(txn *badger.Txn, m *msg.UserMessage) error {
 			return err
 		}
 
+		fileExt := ""
+		for _, attr := range md.Doc.Attributes {
+			if attr.Type == msg.AttributeTypeFile {
+				x := &msg.DocumentAttributeFile{}
+				_ = x.Unmarshal(attr.Data)
+				fileExt = filepath.Ext(x.Filename)
+			}
+		}
+
 		err = saveFile(txn, &msg.ClientFile{
 			ClusterID:  md.Doc.ClusterID,
 			FileID:     md.Doc.ID,
 			AccessHash: md.Doc.AccessHash,
 			Type:       msg.ClientFileType_Message,
 			MimeType:   md.Doc.MimeType,
+			Extension:  fileExt,
 			UserID:     0,
 			GroupID:    0,
 			FileSize:   int64(md.Doc.FileSize),
