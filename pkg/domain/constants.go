@@ -4,11 +4,11 @@ import (
 	"time"
 )
 
+//go:generate go run update_version.go
 const (
 	FilePayloadSize    = 1024 * 256        // 256KB
 	FileMaxAllowedSize = 750 * 1024 * 1024 // 750MB
 	FileMaxPhotoSize   = 1 * 1024 * 1024   // 1MB
-	SDKVersion         = "v0.9.3"
 )
 
 var (
