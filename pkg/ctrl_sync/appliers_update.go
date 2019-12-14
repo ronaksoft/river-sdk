@@ -582,14 +582,14 @@ func (ctrl *Controller) updateDraftMessageCleared(u *msg.UpdateEnvelope) ([]*msg
 	return res, nil
 }
 
-func (ctrl *Controller) updateLabelAdded(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
-	x := &msg.UpdateLabelAdded{}
+func (ctrl *Controller) updateLabelItemsAdded(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := &msg.UpdateLabelItemsAdded{}
 	err := x.Unmarshal(u.Update)
 	if err != nil {
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateLabelAdded")
+	logs.Info("SyncCtrl applies UpdateLabelItemsAdded")
 
 	if len(x.MessageIDs) == 0 {
 		err := repo.Labels.AddLabelsToDialogs(x.LabelIDs, x.PeerType, x.PeerID)
@@ -605,14 +605,14 @@ func (ctrl *Controller) updateLabelAdded(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	return []*msg.UpdateEnvelope{u}, nil
 }
 
-func (ctrl *Controller) updateLabelRemove(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
-	x := &msg.UpdateLabelRemoved{}
+func (ctrl *Controller) updateLabelItemsRemoved(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := &msg.UpdateLabelItemsRemoved{}
 	err := x.Unmarshal(u.Update)
 	if err != nil {
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateLabelRemoved")
+	logs.Info("SyncCtrl applies UpdateLabelItemsRemoved")
 
 	if len(x.MessageIDs) == 0 {
 		err := repo.Labels.RemoveLabelsFromDialogs(x.LabelIDs, x.PeerType, x.PeerID)
@@ -628,16 +628,32 @@ func (ctrl *Controller) updateLabelRemove(u *msg.UpdateEnvelope) ([]*msg.UpdateE
 	return []*msg.UpdateEnvelope{u}, nil
 }
 
-func (ctrl *Controller) updateLabel(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
-	x := &msg.UpdateLabel{}
+func (ctrl *Controller) updateLabelSet(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := &msg.UpdateLabelSet{}
 	err := x.Unmarshal(u.Update)
 	if err != nil {
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateLabel")
+	logs.Info("SyncCtrl applies UpdateLabelSet")
 
 	err = repo.Labels.Save(x.Labels...)
+	if err != nil {
+		return nil, err
+	}
+	return []*msg.UpdateEnvelope{u}, nil
+}
+
+func (ctrl *Controller) updateLabelDeleted(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := &msg.UpdateLabelDeleted{}
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Info("SyncCtrl applies UpdateLabelDeleted")
+
+	err = repo.Labels.Delete(x.LabelIDs...)
 	if err != nil {
 		return nil, err
 	}
