@@ -61,6 +61,10 @@ func saveLabel(txn *badger.Txn, label *msg.Label) error {
 	return err
 }
 
+func deleteLabel(txn *badger.Txn, labelID int32) error {
+	return txn.Delete(getLabelKey(labelID))
+}
+
 func addLabelToMessage(txn *badger.Txn, labelID int32, peerType int32, peerID int64, msgID int64) error {
 	err := txn.SetEntry(badger.NewEntry(
 		ronak.StrToByte(fmt.Sprintf("%s.03%d.021%d", prefixLabelMessages, labelID, msgID)),
@@ -105,8 +109,23 @@ func (r *repoLabels) Save(labels ...*msg.Label) error {
 		}
 		return nil
 	})
-	logs.ErrorOnErr("RepoLabel got error on save", err)
+	logs.ErrorOnErr("RepoLabel got error on Save", err)
 	return err
+}
+
+func (r *repoLabels) Delete(labelIDs ...int32) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
+		for _, l := range labelIDs {
+			err := deleteLabel(txn, l)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	logs.ErrorOnErr("RepoLabel got error on Delete", err)
+	return err
+
 }
 
 func (r *repoLabels) GetMany(labelIDs ...int32) []*msg.Label {
