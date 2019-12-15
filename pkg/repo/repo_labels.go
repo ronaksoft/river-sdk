@@ -82,23 +82,6 @@ func removeLabelFromMessage(txn *badger.Txn, labelID int32, msgID int64) error {
 	return err
 }
 
-func addLabelToDialog(txn *badger.Txn, labelID int32, peerType int32, peerID int64) error {
-	err := txn.SetEntry(badger.NewEntry(
-		ronak.StrToByte(fmt.Sprintf("%s.03%d.%d.021%d", prefixLabelDialogs, labelID, peerType, peerID)),
-		ronak.StrToByte(fmt.Sprintf("%d.%d", peerType, peerID)),
-	))
-	return err
-}
-
-func removeLabelFromDialog(txn *badger.Txn, labelID int32, peerType int32, peerID int64) error {
-	err := txn.Delete(ronak.StrToByte(fmt.Sprintf("%s.03%d.%d.021%d", prefixLabelDialogs, labelID, peerType, peerID)))
-	switch err {
-	case badger.ErrKeyNotFound:
-		return nil
-	}
-	return err
-}
-
 func (r *repoLabels) Save(labels ...*msg.Label) error {
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		for _, l := range labels {
@@ -293,64 +276,6 @@ func (r *repoLabels) RemoveLabelsFromMessages(labelIDs []int32, peerType int32, 
 			if err != nil {
 				return err
 			}
-		}
-		return nil
-	})
-}
-
-func (r *repoLabels) AddLabelsToDialogs(labelIDs []int32, peerType int32, peerID int64) error {
-	return badgerUpdate(func(txn *badger.Txn) error {
-		for _, labelID := range labelIDs {
-			err := addLabelToDialog(txn, labelID, peerType, peerID)
-			if err != nil {
-				return err
-			}
-		}
-		d, err := getDialog(txn,  peerID, peerType)
-		if err != nil {
-			switch err {
-			case badger.ErrKeyNotFound:
-				return nil
-			default:
-				return err
-			}
-		}
-		m := domain.MInt32B{}
-		m.Add(d.LabelIDs...)
-		m.Add(labelIDs...)
-		d.LabelIDs = m.ToArray()
-		err = saveDialog(txn, d)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
-}
-
-func (r *repoLabels) RemoveLabelsFromDialogs(labelIDs []int32, peerType int32, peerID int64) error {
-	return badgerUpdate(func(txn *badger.Txn) error {
-		for _, labelID := range labelIDs {
-			err := removeLabelFromDialog(txn, labelID, peerType, peerID)
-			if err != nil {
-				return err
-			}
-		}
-		d, err := getDialog(txn,  peerID, peerType)
-		if err != nil {
-			switch err {
-			case badger.ErrKeyNotFound:
-				return nil
-			default:
-				return err
-			}
-		}
-		m := domain.MInt32B{}
-		m.Add(d.LabelIDs...)
-		m.Remove(labelIDs...)
-		d.LabelIDs = m.ToArray()
-		err = saveDialog(txn, d)
-		if err != nil {
-			return err
 		}
 		return nil
 	})
