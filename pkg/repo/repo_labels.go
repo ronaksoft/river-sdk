@@ -7,6 +7,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/pb"
 	"strings"
 )
 
@@ -97,10 +98,23 @@ func (r *repoLabels) Save(labels ...*msg.Label) error {
 
 func (r *repoLabels) Delete(labelIDs ...int32) error {
 	err := badgerUpdate(func(txn *badger.Txn) error {
-		for _, l := range labelIDs {
-			err := deleteLabel(txn, l)
+		for _, labelID := range labelIDs {
+			err := deleteLabel(txn, labelID)
 			if err != nil {
 				return err
+			}
+			stream := r.badger.NewStream()
+			stream.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
+			stream.Send = func(list *pb.KVList) error {
+				for _, kv := range list.Kv {
+					parts := strings.Split(ronak.ByteToStr(kv.Value), ".")
+					if len(parts) != 3 {
+						return domain.ErrInvalidData
+					}
+					msgID := ronak.StrToInt64(parts[2])
+					_ = removeLabelFromMessage(txn, labelID, msgID)
+				}
+				return nil
 			}
 		}
 		return nil
