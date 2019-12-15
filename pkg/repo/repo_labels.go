@@ -117,7 +117,10 @@ func (r *repoLabels) Delete(labelIDs ...int32) error {
 				}
 				return nil
 			}
-			_ = stream.Orchestrate(context.Background())
+			err = stream.Orchestrate(context.Background())
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	})
