@@ -592,12 +592,12 @@ func (ctrl *Controller) updateLabelItemsAdded(u *msg.UpdateEnvelope) ([]*msg.Upd
 	logs.Info("SyncCtrl applies UpdateLabelItemsAdded")
 
 	if len(x.MessageIDs) == 0 {
-		err := repo.Labels.AddLabelsToDialogs(x.LabelIDs, x.PeerType, x.PeerID)
+		err := repo.Labels.AddLabelsToDialogs(x.LabelIDs, x.Peer.Type, x.Peer.ID)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		err := repo.Labels.AddLabelsToMessages(x.LabelIDs, x.PeerType, x.PeerID, x.MessageIDs)
+		err := repo.Labels.AddLabelsToMessages(x.LabelIDs, x.Peer.Type, x.Peer.ID, x.MessageIDs)
 		if err != nil {
 			return nil, err
 		}
@@ -615,12 +615,12 @@ func (ctrl *Controller) updateLabelItemsRemoved(u *msg.UpdateEnvelope) ([]*msg.U
 	logs.Info("SyncCtrl applies UpdateLabelItemsRemoved")
 
 	if len(x.MessageIDs) == 0 {
-		err := repo.Labels.RemoveLabelsFromDialogs(x.LabelIDs, x.PeerType, x.PeerID)
+		err := repo.Labels.RemoveLabelsFromDialogs(x.LabelIDs, x.Peer.Type, x.Peer.ID)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		err := repo.Labels.RemoveLabelsFromMessages(x.LabelIDs, x.PeerType, x.PeerID, x.MessageIDs)
+		err := repo.Labels.RemoveLabelsFromMessages(x.LabelIDs, x.Peer.Type, x.Peer.ID, x.MessageIDs)
 		if err != nil {
 			return nil, err
 		}
