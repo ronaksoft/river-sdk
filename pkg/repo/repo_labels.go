@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"context"
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
@@ -116,6 +117,7 @@ func (r *repoLabels) Delete(labelIDs ...int32) error {
 				}
 				return nil
 			}
+			_ = stream.Orchestrate(context.Background())
 		}
 		return nil
 	})
