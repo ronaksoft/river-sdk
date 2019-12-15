@@ -22,7 +22,6 @@ import (
 const (
 	prefixLabel         = "LBL"
 	prefixLabelMessages = "LBLM"
-	prefixLabelDialogs  = "LBLD"
 )
 
 type repoLabels struct {
@@ -182,37 +181,6 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 		return nil
 	})
 	return messages
-}
-
-func (r *repoLabels) ListDialogs(labelID int32) []*msg.Dialog {
-	dialogs := make([]*msg.Dialog, 0, 10)
-	badgerView(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelDialogs, labelID))
-		it := txn.NewIterator(opts)
-		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
-			err := it.Item().Value(func(val []byte) error {
-				parts := strings.Split(ronak.ByteToStr(val), ".")
-				if len(parts) != 2 {
-					return domain.ErrInvalidData
-				}
-				peerType := ronak.StrToInt32(parts[0])
-				peerID := ronak.StrToInt64(parts[1])
-				d, err := getDialog(txn, peerID, peerType)
-				if err != nil {
-					return err
-				}
-				dialogs = append(dialogs, d)
-				return nil
-			})
-			if err != nil {
-				return err
-			}
-		}
-		it.Close()
-		return nil
-	})
-	return dialogs
 }
 
 func (r *repoLabels) AddLabelsToMessages(labelIDs []int32, peerType int32, peerID int64, msgIDs []int64) error {
