@@ -14,7 +14,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// updateNewMessage
 func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateNewMessage)
 	err := x.Unmarshal(u.Update)
@@ -194,7 +193,6 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 	})
 }
 
-// updateReadHistoryInbox
 func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateReadHistoryInbox)
 	err := x.Unmarshal(u.Update)
@@ -221,7 +219,6 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) ([]*msg.Up
 	return res, nil
 }
 
-// updateReadHistoryOutbox
 func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateReadHistoryOutbox)
 	err := x.Unmarshal(u.Update)
@@ -248,7 +245,6 @@ func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) ([]*msg.U
 	return res, nil
 }
 
-// updateMessageEdited
 func (ctrl *Controller) updateMessageEdited(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateMessageEdited)
 	err := x.Unmarshal(u.Update)
@@ -266,7 +262,6 @@ func (ctrl *Controller) updateMessageEdited(u *msg.UpdateEnvelope) ([]*msg.Updat
 	return res, nil
 }
 
-// updateMessageID
 func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	res := make([]*msg.UpdateEnvelope, 0)
 	x := new(msg.UpdateMessageID)
@@ -351,7 +346,6 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 	return res, nil
 }
 
-// updateNotifySettings
 func (ctrl *Controller) updateNotifySettings(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateNotifySettings)
 	err := x.Unmarshal(u.Update)
@@ -367,7 +361,6 @@ func (ctrl *Controller) updateNotifySettings(u *msg.UpdateEnvelope) ([]*msg.Upda
 	return res, nil
 }
 
-// updateDialogPinned
 func (ctrl *Controller) updateDialogPinned(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateDialogPinned)
 	err := x.Unmarshal(u.Update)
@@ -382,7 +375,6 @@ func (ctrl *Controller) updateDialogPinned(u *msg.UpdateEnvelope) ([]*msg.Update
 	return res, nil
 }
 
-// updateUsername
 func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateUsername)
 	err := x.Unmarshal(u.Update)
@@ -407,7 +399,6 @@ func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) ([]*msg.UpdateEnve
 	return res, nil
 }
 
-// updateMessagesDeleted
 func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateMessagesDeleted)
 	err := x.Unmarshal(u.Update)
@@ -436,7 +427,6 @@ func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) ([]*msg.Upd
 	return res, nil
 }
 
-// updateGroupParticipantAdmin
 func (ctrl *Controller) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateGroupParticipantAdmin)
 	err := x.Unmarshal(u.Update)
@@ -451,7 +441,6 @@ func (ctrl *Controller) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) ([]*m
 	return res, nil
 }
 
-// updateReadMessagesContents
 func (ctrl *Controller) updateReadMessagesContents(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateReadMessagesContents)
 	err := x.Unmarshal(u.Update)
@@ -469,7 +458,6 @@ func (ctrl *Controller) updateReadMessagesContents(u *msg.UpdateEnvelope) ([]*ms
 	return res, nil
 }
 
-// updateUserPhoto
 func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateUserPhoto)
 	err := x.Unmarshal(u.Update)
@@ -495,7 +483,6 @@ func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 	return res, nil
 }
 
-// updateGroupPhoto
 func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateGroupPhoto)
 	err := x.Unmarshal(u.Update)
