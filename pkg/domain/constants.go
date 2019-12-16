@@ -38,6 +38,8 @@ const (
 	SkContactsGetHash    = "CONTACTS_GET_HASH"
 	SkSystemSalts        = "SERVER_SALTS"
 	SkReIndexTime        = "RE_INDEX_TS"
+	SkLabelMinID         = "LABEL_MIN_ID"
+	SkLabelMaxID         = "LABEL_MAX_ID"
 )
 
 // NetworkStatus network controller status

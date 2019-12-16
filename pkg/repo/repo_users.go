@@ -155,6 +155,7 @@ func (r *repoUsers) Get(userID int64) (user *msg.User, err error) {
 }
 
 func (r *repoUsers) GetMany(userIDs []int64) []*msg.User {
+	timeNow := time.Now().Unix()
 	users := make([]*msg.User, 0, len(userIDs))
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, userID := range userIDs {
@@ -171,7 +172,7 @@ func (r *repoUsers) GetMany(userIDs []int64) []*msg.User {
 				}
 				continue
 			}
-			delta := time.Now().Unix() - user.LastSeen
+			delta := timeNow - user.LastSeen
 			switch {
 			case delta < domain.Minute:
 				user.Status = msg.UserStatusOnline
@@ -184,9 +185,7 @@ func (r *repoUsers) GetMany(userIDs []int64) []*msg.User {
 			default:
 				user.Status = msg.UserStatusOffline
 			}
-			if user != nil {
-				users = append(users, user)
-			}
+			users = append(users, user)
 		}
 		return nil
 	})

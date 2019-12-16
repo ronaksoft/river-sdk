@@ -601,5 +601,8 @@ func (r *River) registerCommandHandlers() {
 		msg.C_ClientSendMessageMedia:   r.clientSendMessageMedia,
 		msg.C_MessagesSaveDraft:        r.messagesSaveDraft,
 		msg.C_MessagesClearDraft:       r.messagesClearDraft,
+		msg.C_LabelsListItems:          r.labelsListItems,
+		msg.C_LabelsAddToMessage:       r.labelsAddToMessage,
+		msg.C_LabelsRemoveFromMessage:  r.labelsRemoveFromMessage,
 	}
 }

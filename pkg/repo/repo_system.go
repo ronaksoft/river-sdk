@@ -44,6 +44,14 @@ func (r *repoSystem) LoadInt(keyName string) (uint64, error) {
 	return keyValue, nil
 }
 
+func (r *repoSystem) LoadInt64(keyName string) (int64, error) {
+	x, err := r.LoadInt(keyName)
+	if err != nil {
+		return 0, err
+	}
+	return int64(x), nil
+}
+
 // LoadString
 func (r *repoSystem) LoadString(keyName string) (string, error) {
 
@@ -110,7 +118,7 @@ func (r *repoSystem) SaveBytes(keyName string, keyValue []byte) error {
 	})
 }
 
-func (r *repoSystem) Delete(keyName string)  error {
+func (r *repoSystem) Delete(keyName string) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		return txn.Delete(r.getKey(keyName))
 	})

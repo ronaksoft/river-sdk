@@ -170,8 +170,9 @@ func (r *repoLabels) GetAll() []*msg.Label {
 	return labels
 }
 
-func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64) []*msg.UserMessage {
+func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64) ([]*msg.UserMessage, []*msg.User) {
 	messages := make([]*msg.UserMessage, 0, 10)
+	userIDs := domain.MInt64B{}
 	badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
@@ -189,6 +190,10 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 				if err != nil {
 					return err
 				}
+				userIDs.Add(um.SenderID)
+				if um.FwdSenderID != 0 {
+					userIDs.Add(um.FwdSenderID)
+				}
 				messages = append(messages, um)
 				return nil
 			})
@@ -199,7 +204,8 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 		it.Close()
 		return nil
 	})
-	return messages
+	users := Users.GetMany(userIDs.ToArray())
+	return messages, users
 }
 
 func (r *repoLabels) AddLabelsToMessages(labelIDs []int32, peerType int32, peerID int64, msgIDs []int64) error {

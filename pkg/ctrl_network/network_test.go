@@ -142,7 +142,7 @@ func TestConnect(t *testing.T) {
 
 func TestReconnect(t *testing.T) {
 	ctrl.Start()
-	for i := 0 ; i < 10 ; i++ {
+	for i := 0; i < 10; i++ {
 		ctrl.Reconnect()
 		time.Sleep(time.Second * 5)
 	}

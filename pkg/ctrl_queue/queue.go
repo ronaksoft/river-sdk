@@ -154,8 +154,10 @@ func (ctrl *Controller) executor(req request) {
 				ctrl.addToWaitingList(&req)
 				return
 			}
-		case msg.C_MessagesReadHistory, msg.C_MessagesGetHistory, msg.C_ContactsImport, msg.C_ContactsGet,
-			msg.C_AuthSendCode, msg.C_AuthRegister, msg.C_AuthLogin:
+		case msg.C_MessagesReadHistory, msg.C_MessagesGetHistory,
+			msg.C_ContactsImport, msg.C_ContactsGet,
+			msg.C_AuthSendCode, msg.C_AuthRegister, msg.C_AuthLogin,
+			msg.C_LabelsAddToMessage, msg.C_LabelsRemoveFromMessage:
 			ctrl.addToWaitingList(&req)
 			return
 		default:
@@ -256,7 +258,6 @@ func (ctrl *Controller) RealtimeCommand(requestID uint64, constructor int64, com
 				zap.Uint64("ReqID", requestID),
 				zap.String("Req", msg.ConstructorNames[req.Constructor]),
 				zap.String("Res", msg.ConstructorNames[res.Constructor]),
-
 			)
 			if reqCB.SuccessCallback != nil {
 				if reqCB.IsUICallback {

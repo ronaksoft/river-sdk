@@ -19,8 +19,8 @@ import (
 
 type sentryCore struct {
 	zapcore.LevelEnabler
-	hub *sentry.Hub
-	tags   map[string]string
+	hub  *sentry.Hub
+	tags map[string]string
 }
 
 func NewSentryCore(level zapcore.Level, userID int64, tags map[string]string) (zapcore.Core, error) {

@@ -102,7 +102,7 @@ func repoSetDB(dbPath string, lowMemory bool) {
 			WithNumMemtables(2).
 			WithNumLevelZeroTables(2).
 			WithNumLevelZeroTablesStall(4).
-			WithMaxTableSize(1 << 22). // 4MB
+			WithMaxTableSize(1 << 22).    // 4MB
 			WithValueLogFileSize(1 << 22) // 4MB
 
 	} else {

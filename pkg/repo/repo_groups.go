@@ -265,7 +265,7 @@ func (r *repoGroups) GetPhotoGallery(groupID int64) []*msg.GroupPhoto {
 	photos := make([]*msg.GroupPhoto, 0, 5)
 	_ = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix =getGroupPhotoGalleryPrefix(groupID)
+		opts.Prefix = getGroupPhotoGalleryPrefix(groupID)
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {

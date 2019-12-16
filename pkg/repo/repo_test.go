@@ -28,19 +28,19 @@ func init() {
 
 func createMessage(body string, filename string) *msg.UserMessage {
 	userID := ronak.RandomInt64(0)
-	attrFile, _ := (&msg.DocumentAttributeFile{Filename:filename}).Marshal()
+	attrFile, _ := (&msg.DocumentAttributeFile{Filename: filename}).Marshal()
 	media, _ := (&msg.MediaDocument{
 		Caption:      "This is caption",
 		TTLinSeconds: 0,
-		Doc:          &msg.Document{
-			ID:          ronak.RandomInt64(0),
-			AccessHash:  ronak.RandomUint64(),
-			Date:        time.Now().Unix(),
-			MimeType:    "",
-			FileSize:    1243,
-			Version:     0,
-			ClusterID:   1,
-			Attributes:  []*msg.DocumentAttribute{
+		Doc: &msg.Document{
+			ID:         ronak.RandomInt64(0),
+			AccessHash: ronak.RandomUint64(),
+			Date:       time.Now().Unix(),
+			MimeType:   "",
+			FileSize:   1243,
+			Version:    0,
+			ClusterID:  1,
+			Attributes: []*msg.DocumentAttribute{
 				{
 					Type: msg.AttributeTypeFile,
 					Data: attrFile,
@@ -197,7 +197,7 @@ func TestConcurrent(t *testing.T) {
 
 func TestClearHistory(t *testing.T) {
 	m := make([]*msg.UserMessage, 0, 10)
-	for i := 1; i < 1000 ;i++ {
+	for i := 1; i < 1000; i++ {
 		m = append(m, &msg.UserMessage{
 			ID:                  int64(i),
 			PeerID:              10,
@@ -271,10 +271,10 @@ func TestClearHistory(t *testing.T) {
 
 func TestSearch(t *testing.T) {
 	m := make([]*msg.UserMessage, 0, 10)
-	for i := 1; i < 100 ;i++ {
-		peerID := int64(i % 10 + 1)
+	for i := 1; i < 100; i++ {
+		peerID := int64(i%10 + 1)
 		peerType := int32(msg.PeerUser)
-		if i % 2 == 0 {
+		if i%2 == 0 {
 			peerID = -peerID
 			peerType = int32(msg.PeerGroup)
 		}
@@ -304,7 +304,6 @@ func TestSearch(t *testing.T) {
 	repo.Messages.Save(m...)
 	fmt.Println("Saved")
 
-
 	// mm := repo.Messages.SearchText("Hello")
 	fmt.Print("Search in UserPeer:")
 	mm := repo.Messages.SearchTextByPeerID("H", 6)
@@ -320,7 +319,7 @@ func TestSearch(t *testing.T) {
 
 func TestUserPhotoGallery(t *testing.T) {
 	photo1 := &msg.UserPhoto{
-		PhotoBig:   &msg.FileLocation{
+		PhotoBig: &msg.FileLocation{
 			ClusterID:  100,
 			FileID:     200,
 			AccessHash: 300,
@@ -330,10 +329,10 @@ func TestUserPhotoGallery(t *testing.T) {
 			FileID:     20,
 			AccessHash: 30,
 		},
-		PhotoID:    1,
+		PhotoID: 1,
 	}
 	photo2 := &msg.UserPhoto{
-		PhotoBig:   &msg.FileLocation{
+		PhotoBig: &msg.FileLocation{
 			ClusterID:  101,
 			FileID:     201,
 			AccessHash: 301,
@@ -343,7 +342,7 @@ func TestUserPhotoGallery(t *testing.T) {
 			FileID:     21,
 			AccessHash: 31,
 		},
-		PhotoID:    2,
+		PhotoID: 2,
 	}
 	user := &msg.User{
 		ID:           1000,
@@ -382,7 +381,7 @@ func TestUserPhotoGallery(t *testing.T) {
 
 func TestGroupPhotoGallery(t *testing.T) {
 	photo1 := &msg.GroupPhoto{
-		PhotoBig:   &msg.FileLocation{
+		PhotoBig: &msg.FileLocation{
 			ClusterID:  100,
 			FileID:     200,
 			AccessHash: 300,
@@ -392,10 +391,10 @@ func TestGroupPhotoGallery(t *testing.T) {
 			FileID:     20,
 			AccessHash: 30,
 		},
-		PhotoID:    1,
+		PhotoID: 1,
 	}
 	photo2 := &msg.GroupPhoto{
-		PhotoBig:   &msg.FileLocation{
+		PhotoBig: &msg.FileLocation{
 			ClusterID:  101,
 			FileID:     201,
 			AccessHash: 301,
@@ -405,10 +404,10 @@ func TestGroupPhotoGallery(t *testing.T) {
 			FileID:     21,
 			AccessHash: 31,
 		},
-		PhotoID:    2,
+		PhotoID: 2,
 	}
 	group := &msg.GroupFull{
-		Group:          &msg.Group{
+		Group: &msg.Group{
 			ID:           1000,
 			Title:        "Test Group",
 			CreatedOn:    0,
@@ -422,7 +421,6 @@ func TestGroupPhotoGallery(t *testing.T) {
 		NotifySettings: nil,
 		PhotoGallery:   []*msg.GroupPhoto{photo1, photo2},
 	}
-
 
 	repo.Groups.Save(group.Group)
 	repo.Groups.SavePhotoGallery(group.Group.ID, group.PhotoGallery...)

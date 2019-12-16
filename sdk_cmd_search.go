@@ -111,13 +111,12 @@ func (r *River) SearchGlobal(searchPhrase string, peerID int64, delegate Request
 
 	outBytes, _ := searchResults.Marshal()
 
-	logs.Info("GlobalSearch",zap.Int("outBytes size",len(outBytes)))
+	logs.Info("GlobalSearch", zap.Int("outBytes size", len(outBytes)))
 
 	if delegate != nil {
 		delegate.OnComplete(outBytes)
 	}
 }
-
 
 func (r *River) SearchReIndex() {
 	repo.Users.ReIndex()

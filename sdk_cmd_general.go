@@ -428,7 +428,6 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 	r.syncCtrl.Stop()
 	r.queueCtrl.Stop()
 
-
 	// Close UI Executor
 	uiexec.Ctx().Stop()
 
@@ -450,9 +449,7 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 		return err
 	}
 
-
 	r.StartNetwork()
-
 
 	return err
 }

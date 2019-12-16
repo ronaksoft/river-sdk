@@ -73,7 +73,6 @@ type RiverConnection struct {
 	Version   int
 }
 
-
 // saveDeviceToken save DeviceToken to DB
 func (r *River) saveDeviceToken() {
 	val, err := json.Marshal(r.DeviceToken)

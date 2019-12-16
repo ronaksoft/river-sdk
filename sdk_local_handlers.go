@@ -3,6 +3,7 @@ package riversdk
 import (
 	"encoding/json"
 	"fmt"
+	labelHole "git.ronaksoftware.com/ronak/riversdk/pkg/label_hole"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
@@ -280,7 +281,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	dialog, _ := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
 		logs.Debug("asking for a nil dialog")
-		fillOutput(out, []*msg.UserMessage{}, []*msg.User{}, in.RequestID, successCB)
+		fillMessagesMany(out, []*msg.UserMessage{}, []*msg.User{}, in.RequestID, successCB)
 		return
 	}
 
@@ -299,7 +300,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		if len(pendingMessages) > 0 {
 			messages = append(messages, pendingMessages...)
 		}
-		fillOutput(out, messages, users, in.RequestID, successCB)
+		fillMessagesMany(out, messages, users, in.RequestID, successCB)
 		return
 	}
 
@@ -323,9 +324,9 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			return
 		}
 		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
-		fillOutput(out, messages, users, in.RequestID, preSuccessCB)
+		fillMessagesMany(out, messages, users, in.RequestID, preSuccessCB)
 	case req.MinID != 0 && req.MaxID == 0:
-		b, bar := messageHole.GetUpperFilled(req.Peer.ID, int32(req.Peer.Type), req.MinID);
+		b, bar := messageHole.GetUpperFilled(req.Peer.ID, int32(req.Peer.Type), req.MinID)
 		if !b {
 			logs.Info("River detected hole (With MinID Only)",
 				zap.Int64("MinID", req.MinID),
@@ -337,7 +338,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			return
 		}
 		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, 0, req.Limit)
-		fillOutput(out, messages, users, in.RequestID, preSuccessCB)
+		fillMessagesMany(out, messages, users, in.RequestID, preSuccessCB)
 	default:
 		b := messageHole.IsHole(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID)
 		if b {
@@ -351,10 +352,10 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			return
 		}
 		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
-		fillOutput(out, messages, users, in.RequestID, preSuccessCB)
+		fillMessagesMany(out, messages, users, in.RequestID, preSuccessCB)
 	}
 }
-func fillOutput(out *msg.MessageEnvelope, messages []*msg.UserMessage, users []*msg.User, requestID uint64, successCB domain.MessageHandler) {
+func fillMessagesMany(out *msg.MessageEnvelope, messages []*msg.UserMessage, users []*msg.User, requestID uint64, successCB domain.MessageHandler) {
 	res := new(msg.MessagesMany)
 	res.Messages = messages
 	res.Users = users
@@ -406,7 +407,7 @@ func genSuccessCallback(cb domain.MessageHandler, peerID int64, peerType int32, 
 				return x.Messages[i].ID > x.Messages[j].ID
 			})
 
-			// Add Messages Hole
+			// Fill Messages Hole
 			if msgCount := len(x.Messages); msgCount > 0 {
 				switch {
 				case minID == 0 && maxID != 0:
@@ -1193,5 +1194,118 @@ func (r *River) messagesClearDraft(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 
 	// send the request to server
+	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+}
+
+func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.LabelsListItems{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	// Offline mode
+	if !r.networkCtrl.Connected() {
+		messages, users := repo.Labels.ListMessages(req.LabelID, req.Limit, req.MinID, req.MaxID)
+		fillMessagesMany(out, messages, users, in.RequestID, successCB)
+		return
+	}
+
+	preSuccessCB := func(m *msg.MessageEnvelope) {
+		switch m.Constructor {
+		case msg.C_MessagesMany:
+			x := &msg.MessagesMany{}
+			err := x.Unmarshal(m.Message)
+			logs.WarnOnErr("Error On Unmarshal MessagesMany", err)
+
+			// 1st sort the received messages by id
+			sort.Slice(x.Messages, func(i, j int) bool {
+				return x.Messages[i].ID > x.Messages[j].ID
+			})
+
+			// Fill Messages Hole
+			if msgCount := len(x.Messages); msgCount > 0 {
+				switch {
+				case req.MinID == 0 && req.MaxID != 0:
+					labelHole.Fill(x.Messages[msgCount-1].ID, req.MaxID)
+				case req.MinID != 0 && req.MaxID == 0:
+					labelHole.Fill(req.MinID, x.Messages[0].ID)
+				case req.MinID == 0 && req.MaxID == 0:
+					labelHole.Fill(x.Messages[msgCount-1].ID, x.Messages[0].ID)
+				}
+			}
+		default:
+		}
+
+		successCB(m)
+	}
+
+	switch {
+	case req.MinID == 0 && req.MaxID == 0:
+		fallthrough
+	case req.MinID == 0 && req.MaxID != 0:
+		b, bar := labelHole.GetLowerFilled(req.MaxID)
+		if !b {
+			logs.Info("River detected hole (With MaxID Only)",
+				zap.Int64("MaxID", req.MaxID),
+			)
+			r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
+			return
+		}
+		messages, users := repo.Labels.ListMessages(req.LabelID, req.Limit, bar.MinID, bar.MaxID)
+		fillMessagesMany(out, messages, users, in.RequestID, preSuccessCB)
+	case req.MinID != 0 && req.MaxID == 0:
+		b, bar := labelHole.GetUpperFilled(req.MinID)
+		if !b {
+			logs.Info("River detected hole (With MinID Only)",
+				zap.Int64("MinID", req.MinID),
+			)
+			r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
+			return
+		}
+		messages, users := repo.Labels.ListMessages(req.LabelID, req.Limit, bar.MinID, bar.MaxID)
+		fillMessagesMany(out, messages, users, in.RequestID, preSuccessCB)
+	default:
+		r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
+		return
+	}
+}
+
+func (r *River) labelsAddToMessage(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.LabelsAddToMessage{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+	if len(req.MessageIDs) != 0 {
+		err := repo.Labels.AddLabelsToMessages(req.LabelIDs, int32(req.Peer.Type), req.Peer.ID, req.MessageIDs)
+		if err != nil {
+			msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+			successCB(out)
+			return
+		}
+	}
+
+	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+}
+
+func (r *River) labelsRemoveFromMessage(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.LabelsRemoveFromMessage{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+	if len(req.MessageIDs) != 0 {
+		err := repo.Labels.RemoveLabelsFromMessages(req.LabelIDs, int32(req.Peer.Type), req.Peer.ID, req.MessageIDs)
+		if err != nil {
+			msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+			successCB(out)
+			return
+		}
+	}
+
 	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 }

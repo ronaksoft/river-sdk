@@ -17,11 +17,9 @@ import (
    Copyright Ronak Software Group 2018
 */
 
-
 func TimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 	enc.AppendString(t.Format("06-01-02T15:04:05"))
 }
-
 
 func CleanUP() {
 	lifeTime := 7 * 24 * time.Hour
