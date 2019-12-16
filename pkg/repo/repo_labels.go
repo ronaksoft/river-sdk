@@ -180,6 +180,7 @@ func (r *repoLabels) GetAll() []*msg.Label {
 func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64) ([]*msg.UserMessage, []*msg.User, []*msg.Group) {
 	userMessages := make([]*msg.UserMessage, 0, limit)
 	userIDs := domain.MInt64B{}
+	groupIDs := domain.MInt64B{}
 	switch {
 	case maxID == 0 && minID == 0:
 		fallthrough
@@ -218,8 +219,15 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 					if um.FwdSenderID != 0 {
 						userIDs.Add(um.FwdSenderID)
 					}
+					switch msg.PeerType(um.PeerType) {
+					case msg.PeerUser:
+						userIDs.Add(um.PeerID)
+					case msg.PeerGroup:
+						groupIDs.Add(um.PeerID)
+					}
 
 					userIDs.Add(domain.ExtractActionUserIDs(um.MessageAction, um.MessageActionData)...)
+
 					userMessages = append(userMessages, um)
 					return nil
 				})
@@ -260,6 +268,12 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 						userIDs.Add(um.FwdSenderID)
 					}
 					userIDs.Add(domain.ExtractActionUserIDs(um.MessageAction, um.MessageActionData)...)
+					switch msg.PeerType(um.PeerType) {
+					case msg.PeerUser:
+						userIDs.Add(um.PeerID)
+					case msg.PeerGroup:
+						groupIDs.Add(um.PeerID)
+					}
 
 					userMessages = append(userMessages, um)
 					return nil
@@ -281,7 +295,8 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 	}
 
 	users := Users.GetMany(userIDs.ToArray())
-	return userMessages, users
+	groups := Groups.GetMany(groupIDs.ToArray())
+	return userMessages, users, groups
 }
 
 func (r *repoLabels) AddLabelsToMessages(labelIDs []int32, peerType int32, peerID int64, msgIDs []int64) error {
