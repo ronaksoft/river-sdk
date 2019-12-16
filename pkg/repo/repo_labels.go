@@ -177,7 +177,7 @@ func (r *repoLabels) GetAll() []*msg.Label {
 	return labels
 }
 
-func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64) ([]*msg.UserMessage, []*msg.User) {
+func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64) ([]*msg.UserMessage, []*msg.User, []*msg.Group) {
 	userMessages := make([]*msg.UserMessage, 0, limit)
 	userIDs := domain.MInt64B{}
 	switch {
@@ -218,6 +218,7 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 					if um.FwdSenderID != 0 {
 						userIDs.Add(um.FwdSenderID)
 					}
+
 					userIDs.Add(domain.ExtractActionUserIDs(um.MessageAction, um.MessageActionData)...)
 					userMessages = append(userMessages, um)
 					return nil
