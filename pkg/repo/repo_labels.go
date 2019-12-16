@@ -9,7 +9,10 @@ import (
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
 	"github.com/dgraph-io/badger/pb"
+	"go.uber.org/zap"
+	"sort"
 	"strings"
+	"time"
 )
 
 /*
@@ -32,6 +35,10 @@ type repoLabels struct {
 
 func getLabelKey(labelID int32) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%012d", prefixLabel, labelID))
+}
+
+func getLabelMessageKey(labelID int32, msgID int64) []byte {
+	return ronak.StrToByte(fmt.Sprintf("%s.03%d.021%d", prefixLabelMessages, labelID, msgID))
 }
 
 func getLabelByID(txn *badger.Txn, labelID int32) (*msg.Label, error) {
@@ -68,7 +75,7 @@ func deleteLabel(txn *badger.Txn, labelID int32) error {
 
 func addLabelToMessage(txn *badger.Txn, labelID int32, peerType int32, peerID int64, msgID int64) error {
 	err := txn.SetEntry(badger.NewEntry(
-		ronak.StrToByte(fmt.Sprintf("%s.03%d.021%d", prefixLabelMessages, labelID, msgID)),
+		getLabelMessageKey(labelID, msgID),
 		ronak.StrToByte(fmt.Sprintf("%d.%d.%d", peerType, peerID, msgID)),
 	))
 	return err
@@ -171,41 +178,113 @@ func (r *repoLabels) GetAll() []*msg.Label {
 }
 
 func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64) ([]*msg.UserMessage, []*msg.User) {
-	messages := make([]*msg.UserMessage, 0, 10)
+	userMessages := make([]*msg.UserMessage, 0, limit)
 	userIDs := domain.MInt64B{}
-	badgerView(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
-		it := txn.NewIterator(opts)
-		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
-			err := it.Item().Value(func(val []byte) error {
-				parts := strings.Split(ronak.ByteToStr(val), ".")
-				if len(parts) != 3 {
-					return domain.ErrInvalidData
+	switch {
+	case maxID == 0 && minID == 0:
+		fallthrough
+	case maxID != 0 && minID == 0:
+		startTime := time.Now()
+		var stopWatch1, stopWatch2 time.Time
+		_ = badgerView(func(txn *badger.Txn) error {
+			opts := badger.DefaultIteratorOptions
+			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
+			opts.Reverse = true
+			it := txn.NewIterator(opts)
+
+			it.Seek(getLabelMessageKey(labelID, maxID))
+			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
+				if limit--; limit < 0 {
+					break
 				}
-				peerType := ronak.StrToInt32(parts[0])
-				peerID := ronak.StrToInt64(parts[1])
-				msgID := ronak.StrToInt64(parts[2])
-				um, err := getMessageByKey(txn, getMessageKey(peerID, peerType, msgID))
+				err := it.Item().Value(func(val []byte) error {
+					parts := strings.Split(ronak.ByteToStr(val), ".")
+					if len(parts) != 3 {
+						return domain.ErrInvalidData
+					}
+					peerType := ronak.StrToInt32(parts[0])
+					peerID := ronak.StrToInt64(parts[1])
+					msgID := ronak.StrToInt64(parts[2])
+					um, err := getMessageByKey(txn, getMessageKey(peerID, peerType, msgID))
+					if err != nil {
+						return err
+					}
+					userIDs.Add(um.SenderID)
+					if um.FwdSenderID != 0 {
+						userIDs.Add(um.FwdSenderID)
+					}
+					userIDs.Add(domain.ExtractActionUserIDs(um.MessageAction, um.MessageActionData)...)
+					userMessages = append(userMessages, um)
+					return nil
+				})
 				if err != nil {
 					return err
 				}
-				userIDs.Add(um.SenderID)
-				if um.FwdSenderID != 0 {
-					userIDs.Add(um.FwdSenderID)
-				}
-				messages = append(messages, um)
-				return nil
-			})
-			if err != nil {
-				return err
 			}
-		}
-		it.Close()
-		return nil
-	})
+			it.Close()
+			return nil
+		})
+		logs.Info("RepoLabels got list", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID),
+			zap.Duration("SP1", stopWatch1.Sub(startTime)),
+			zap.Duration("SP2", stopWatch2.Sub(startTime)),
+		)
+	case maxID == 0 && minID != 0:
+		startTime := time.Now()
+		var stopWatch1, stopWatch2, stopWatch3 time.Time
+		_ = badgerView(func(txn *badger.Txn) error {
+			opts := badger.DefaultIteratorOptions
+			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
+			opts.Reverse = false
+			it := txn.NewIterator(opts)
+			it.Seek(getLabelMessageKey(labelID, minID))
+			stopWatch1 = time.Now()
+			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
+				if limit--; limit < 0 {
+					break
+				}
+				err := it.Item().Value(func(val []byte) error {
+					parts := strings.Split(ronak.ByteToStr(val), ".")
+					if len(parts) != 3 {
+						return domain.ErrInvalidData
+					}
+					peerType := ronak.StrToInt32(parts[0])
+					peerID := ronak.StrToInt64(parts[1])
+					msgID := ronak.StrToInt64(parts[2])
+					um, err := getMessageByKey(txn, getMessageKey(peerID, peerType, msgID))
+					if err != nil {
+						return err
+					}
+					userIDs.Add(um.SenderID)
+					if um.FwdSenderID != 0 {
+						userIDs.Add(um.FwdSenderID)
+					}
+					userIDs.Add(domain.ExtractActionUserIDs(um.MessageAction, um.MessageActionData)...)
+
+					userMessages = append(userMessages, um)
+					return nil
+				})
+				if err != nil {
+					return err
+				}
+			}
+			it.Close()
+			stopWatch2 = time.Now()
+			sort.Slice(userMessages, func(i, j int) bool {
+				return userMessages[i].ID > userMessages[j].ID
+			})
+			stopWatch3 = time.Now()
+			return nil
+		})
+		logs.Info("RepoLabels got history", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID),
+			zap.Duration("SP1", stopWatch1.Sub(startTime)),
+			zap.Duration("SP2", stopWatch2.Sub(startTime)),
+			zap.Duration("SP3", stopWatch3.Sub(startTime)),
+		)
+	default:
+	}
+
 	users := Users.GetMany(userIDs.ToArray())
-	return messages, users
+	return userMessages, users
 }
 
 func (r *repoLabels) AddLabelsToMessages(labelIDs []int32, peerType int32, peerID int64, msgIDs []int64) error {
