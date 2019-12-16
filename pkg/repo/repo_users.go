@@ -169,8 +169,21 @@ func (r *repoUsers) GetMany(userIDs []int64) []*msg.User {
 				default:
 					logs.Warn("RepoUser got error on get many", zap.Error(err), zap.Int64("UserID", userID))
 				}
+				continue
 			}
-
+			delta := time.Now().Unix() - user.LastSeen
+			switch {
+			case delta < domain.Minute:
+				user.Status = msg.UserStatusOnline
+			case delta < domain.Week:
+				user.Status = msg.UserStatusRecently
+			case delta < domain.Month:
+				user.Status = msg.UserStatusLastWeek
+			case delta < domain.TwoMonth:
+				user.Status = msg.UserStatusLastMonth
+			default:
+				user.Status = msg.UserStatusOffline
+			}
 			if user != nil {
 				users = append(users, user)
 			}
