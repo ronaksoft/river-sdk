@@ -1207,7 +1207,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 	// Offline mode
 	if !r.networkCtrl.Connected() {
 		messages, users := repo.Labels.ListMessages(req.LabelID, req.Limit, req.MinID, req.MaxID)
-		fillMessagesMany(out, messages, users, in.RequestID, successCB)
+		fillLabelItems(out, messages, users, in.RequestID, successCB)
 		return
 	}
 
@@ -1253,7 +1253,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 			return
 		}
 		messages, users := repo.Labels.ListMessages(req.LabelID, req.Limit, bar.MinID, bar.MaxID)
-		fillMessagesMany(out, messages, users, in.RequestID, preSuccessCB)
+		fillLabelItems(out, messages, users, in.RequestID, preSuccessCB)
 	case req.MinID != 0 && req.MaxID == 0:
 		b, bar := repo.Labels.GetUpperFilled(req.LabelID, req.MinID)
 		if !b {
@@ -1264,13 +1264,26 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 			return
 		}
 		messages, users := repo.Labels.ListMessages(req.LabelID, req.Limit, bar.MinID, bar.MaxID)
-		fillMessagesMany(out, messages, users, in.RequestID, preSuccessCB)
+		fillLabelItems(out, messages, users, in.RequestID, preSuccessCB)
 	default:
 		r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
 		return
 	}
 }
+func fillLabelItems(out *msg.MessageEnvelope, messages []*msg.UserMessage, users []*msg.User, requestID uint64, successCB domain.MessageHandler) {
+	res := new(msg.LabelItems)
+	res.Messages = messages
+	// res.Users = users
 
+	out.RequestID = requestID
+	out.Constructor = msg.C_LabelItems
+	out.Message, _ = res.Marshal()
+	if successCB != nil {
+		uiexec.Ctx().Exec(func() {
+			successCB(out)
+		})
+	}
+}
 func (r *River) labelsAddToMessage(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := &msg.LabelsAddToMessage{}
 	if err := req.Unmarshal(in.Message); err != nil {
