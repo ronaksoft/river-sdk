@@ -3,7 +3,6 @@ package riversdk
 import (
 	"encoding/json"
 	"fmt"
-	labelHole "git.ronaksoftware.com/ronak/riversdk/pkg/label_hole"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
@@ -1228,11 +1227,11 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 			if msgCount := len(x.Messages); msgCount > 0 {
 				switch {
 				case req.MinID == 0 && req.MaxID != 0:
-					labelHole.Fill(x.Messages[msgCount-1].ID, req.MaxID)
+					repo.Labels.Fill(req.LabelID, x.Messages[msgCount-1].ID, req.MaxID)
 				case req.MinID != 0 && req.MaxID == 0:
-					labelHole.Fill(req.MinID, x.Messages[0].ID)
+					repo.Labels.Fill(req.LabelID, req.MinID, x.Messages[0].ID)
 				case req.MinID == 0 && req.MaxID == 0:
-					labelHole.Fill(x.Messages[msgCount-1].ID, x.Messages[0].ID)
+					repo.Labels.Fill(req.LabelID, x.Messages[msgCount-1].ID, x.Messages[0].ID)
 				}
 			}
 		default:
@@ -1245,7 +1244,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 	case req.MinID == 0 && req.MaxID == 0:
 		fallthrough
 	case req.MinID == 0 && req.MaxID != 0:
-		b, bar := labelHole.GetLowerFilled(req.MaxID)
+		b, bar := repo.Labels.GetLowerFilled(req.LabelID, req.MaxID)
 		if !b {
 			logs.Info("River detected hole (With MaxID Only)",
 				zap.Int64("MaxID", req.MaxID),
@@ -1256,7 +1255,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 		messages, users := repo.Labels.ListMessages(req.LabelID, req.Limit, bar.MinID, bar.MaxID)
 		fillMessagesMany(out, messages, users, in.RequestID, preSuccessCB)
 	case req.MinID != 0 && req.MaxID == 0:
-		b, bar := labelHole.GetUpperFilled(req.MinID)
+		b, bar := repo.Labels.GetUpperFilled(req.LabelID, req.MinID)
 		if !b {
 			logs.Info("River detected hole (With MinID Only)",
 				zap.Int64("MinID", req.MinID),

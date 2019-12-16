@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
@@ -27,6 +28,7 @@ import (
 const (
 	prefixLabel         = "LBL"
 	prefixLabelMessages = "LBLM"
+	prefixLabelHoles    = "LBLH"
 )
 
 type repoLabels struct {
@@ -34,7 +36,7 @@ type repoLabels struct {
 }
 
 func getLabelKey(labelID int32) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%012d", prefixLabel, labelID))
+	return ronak.StrToByte(fmt.Sprintf("%s.%03d", prefixLabel, labelID))
 }
 
 func getLabelMessageKey(labelID int32, msgID int64) []byte {
@@ -351,4 +353,78 @@ func (r *repoLabels) RemoveLabelsFromMessages(labelIDs []int32, peerType int32, 
 		}
 		return nil
 	})
+}
+
+type Bar struct {
+	MinID int64
+	MaxID int64
+}
+
+func (r *repoLabels) Fill(labelID int32, minID, maxID int64) error {
+	minIDb := make([]byte, 8)
+	binary.BigEndian.PutUint64(minIDb, uint64(minID))
+	maxIDb := make([]byte, 8)
+	binary.BigEndian.PutUint64(maxIDb, uint64(maxID))
+	bar := r.GetFilled(labelID)
+	if maxID > bar.MaxID {
+		_ = badgerUpdate(func(txn *badger.Txn) error {
+			return txn.SetEntry(badger.NewEntry(
+				ronak.StrToByte(fmt.Sprintf("%s.03%d.MAXID", prefixLabelMessages, labelID)),
+				maxIDb,
+			))
+		})
+	}
+
+	if bar.MinID == 0 || minID < bar.MinID {
+		_ = badgerUpdate(func(txn *badger.Txn) error {
+			return txn.SetEntry(badger.NewEntry(
+				ronak.StrToByte(fmt.Sprintf("%s.03%d.MINID", prefixLabelMessages, labelID)),
+				minIDb,
+			))
+		})
+	}
+
+	return nil
+}
+
+func (r *repoLabels) GetFilled(labelID int32) Bar {
+	bar := Bar{}
+	_ = badgerView(func(txn *badger.Txn) error {
+		minIDItem, err := txn.Get(ronak.StrToByte(fmt.Sprintf("%s.03%d.MINID", prefixLabelMessages, labelID)))
+		if err != nil {
+			return err
+		}
+		_ = minIDItem.Value(func(val []byte) error {
+			bar.MinID = int64(binary.BigEndian.Uint64(val))
+			return nil
+		})
+		maxIDItem, err := txn.Get(ronak.StrToByte(fmt.Sprintf("%s.03%d.MAXID", prefixLabelMessages, labelID)))
+		if err != nil {
+			return err
+		}
+		_ = maxIDItem.Value(func(val []byte) error {
+			bar.MaxID = int64(binary.BigEndian.Uint64(val))
+			return nil
+		})
+		return nil
+	})
+	return bar
+}
+
+func (r *repoLabels) GetLowerFilled(labelID int32, maxID int64) (bool, Bar) {
+	b := r.GetFilled(labelID)
+	if maxID > b.MaxID || maxID < b.MinID {
+		return false, Bar{}
+	}
+	b.MaxID = maxID
+	return true, b
+}
+
+func (r *repoLabels) GetUpperFilled(labelID int32, minID int64) (bool, Bar) {
+	b := r.GetFilled(labelID)
+	if minID < b.MinID || minID > b.MaxID {
+		return false, Bar{}
+	}
+	b.MinID = minID
+	return true, b
 }
