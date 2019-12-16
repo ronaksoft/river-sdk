@@ -40,7 +40,7 @@ func getLabelKey(labelID int32) []byte {
 }
 
 func getLabelMessageKey(labelID int32, msgID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.03%d.021%d", prefixLabelMessages, labelID, msgID))
+	return ronak.StrToByte(fmt.Sprintf("%s.%03d.%021d", prefixLabelMessages, labelID, msgID))
 }
 
 func getLabelByID(txn *badger.Txn, labelID int32) (*msg.Label, error) {
@@ -158,8 +158,9 @@ func (r *repoLabels) GetAll() []*msg.Label {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = ronak.StrToByte(prefixLabel)
 		it := txn.NewIterator(opts)
+		defer it.Close()
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
-			err := it.Item().Value(func(val []byte) error {
+			_ = it.Item().Value(func(val []byte) error {
 				l := &msg.Label{}
 				err := l.Unmarshal(val)
 				if err != nil {
@@ -168,11 +169,8 @@ func (r *repoLabels) GetAll() []*msg.Label {
 				labels = append(labels, l)
 				return nil
 			})
-			if err != nil {
-				return err
-			}
 		}
-		it.Close()
+
 		return nil
 	})
 	logs.ErrorOnErr("RepoLabels got error on GetAll", err)
@@ -188,26 +186,31 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 	case maxID != 0 && minID == 0:
 		startTime := time.Now()
 		var stopWatch1, stopWatch2 time.Time
-		_ = badgerView(func(txn *badger.Txn) error {
+		err := badgerView(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
-			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
-			opts.Reverse = true
+			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%03d", prefixLabelMessages, labelID))
+			if maxID > 0 {
+				opts.Reverse = true
+			}
 			it := txn.NewIterator(opts)
-
-			it.Seek(getLabelMessageKey(labelID, maxID))
+			defer it.Close()
+			if maxID > 0 {
+				it.Seek(getLabelMessageKey(labelID, maxID))
+			} else {
+				it.Rewind()
+			}
 			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
 					break
 				}
-				err := it.Item().Value(func(val []byte) error {
+				_ = it.Item().Value(func(val []byte) error {
 					parts := strings.Split(ronak.ByteToStr(val), ".")
 					if len(parts) != 3 {
 						return domain.ErrInvalidData
 					}
-					peerType := ronak.StrToInt32(parts[0])
-					peerID := ronak.StrToInt64(parts[1])
 					msgID := ronak.StrToInt64(parts[2])
-					um, err := getMessageByKey(txn, getMessageKey(peerID, peerType, msgID))
+
+					um, err := getMessageByID(txn, msgID)
 					if err != nil {
 						return err
 					}
@@ -219,13 +222,10 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 					userMessages = append(userMessages, um)
 					return nil
 				})
-				if err != nil {
-					return err
-				}
 			}
-			it.Close()
 			return nil
 		})
+		logs.WarnOnErr("RepoLabels got error on ListMessages", err)
 		logs.Info("RepoLabels got list", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID),
 			zap.Duration("SP1", stopWatch1.Sub(startTime)),
 			zap.Duration("SP2", stopWatch2.Sub(startTime)),
@@ -235,24 +235,22 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 		var stopWatch1, stopWatch2, stopWatch3 time.Time
 		_ = badgerView(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
-			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
-			opts.Reverse = false
+			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%03d", prefixLabelMessages, labelID))
 			it := txn.NewIterator(opts)
+			defer it.Close()
 			it.Seek(getLabelMessageKey(labelID, minID))
 			stopWatch1 = time.Now()
 			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
 					break
 				}
-				err := it.Item().Value(func(val []byte) error {
+				_ = it.Item().Value(func(val []byte) error {
 					parts := strings.Split(ronak.ByteToStr(val), ".")
 					if len(parts) != 3 {
 						return domain.ErrInvalidData
 					}
-					peerType := ronak.StrToInt32(parts[0])
-					peerID := ronak.StrToInt64(parts[1])
 					msgID := ronak.StrToInt64(parts[2])
-					um, err := getMessageByKey(txn, getMessageKey(peerID, peerType, msgID))
+					um, err := getMessageByID(txn, msgID)
 					if err != nil {
 						return err
 					}
@@ -265,11 +263,7 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 					userMessages = append(userMessages, um)
 					return nil
 				})
-				if err != nil {
-					return err
-				}
 			}
-			it.Close()
 			stopWatch2 = time.Now()
 			sort.Slice(userMessages, func(i, j int) bool {
 				return userMessages[i].ID > userMessages[j].ID
@@ -277,7 +271,7 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 			stopWatch3 = time.Now()
 			return nil
 		})
-		logs.Info("RepoLabels got history", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID),
+		logs.Info("RepoLabels got list", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID),
 			zap.Duration("SP1", stopWatch1.Sub(startTime)),
 			zap.Duration("SP2", stopWatch2.Sub(startTime)),
 			zap.Duration("SP3", stopWatch3.Sub(startTime)),
