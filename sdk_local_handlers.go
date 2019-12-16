@@ -1213,10 +1213,10 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 
 	preSuccessCB := func(m *msg.MessageEnvelope) {
 		switch m.Constructor {
-		case msg.C_MessagesMany:
-			x := &msg.MessagesMany{}
+		case msg.C_LabelsListItems:
+			x := &msg.LabelItems{}
 			err := x.Unmarshal(m.Message)
-			logs.WarnOnErr("Error On Unmarshal MessagesMany", err)
+			logs.WarnOnErr("Error On Unmarshal LabelItems", err)
 
 			// 1st sort the received messages by id
 			sort.Slice(x.Messages, func(i, j int) bool {
