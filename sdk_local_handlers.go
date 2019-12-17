@@ -1206,6 +1206,11 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 
 	// Offline mode
 	if !r.networkCtrl.Connected() {
+		logs.Debug("We are offline then load from local db",
+			zap.Int32("LabelID", req.LabelID),
+			zap.Int64("MinID", req.MinID),
+			zap.Int64("MaxID", req.MaxID),
+		)
 		messages, users, groups := repo.Labels.ListMessages(req.LabelID, req.Limit, req.MinID, req.MaxID)
 		fillLabelItems(out, messages, users, groups, in.RequestID, successCB)
 		return

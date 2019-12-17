@@ -464,7 +464,7 @@ func TestLabel(t *testing.T) {
 		})
 		Convey("Add Label To Message", func(c C) {
 			peerID := int64(100)
-			for i := 1 ; i <= 10; i++ {
+			for i := 1; i <= 10; i++ {
 				repo.Messages.Save(&msg.UserMessage{
 					ID:                  int64(i),
 					PeerID:              peerID,
@@ -496,22 +496,46 @@ func TestLabel(t *testing.T) {
 			c.So(err, ShouldBeNil)
 		})
 		Convey("List Messages", func(c C) {
-			ums, _, _ := repo.Labels.ListMessages(1, 3, 0, 0 )
+			ums, _, _ := repo.Labels.ListMessages(1, 3, 0, 0)
 			c.So(ums, ShouldHaveLength, 3)
 			c.So(ums[0].ID, ShouldEqual, 1)
 			c.So(ums[1].ID, ShouldEqual, 2)
 			c.So(ums[2].ID, ShouldEqual, 3)
 
-			ums, _, _ = repo.Labels.ListMessages(1, 2, 6, 0 )
+			ums, _, _ = repo.Labels.ListMessages(1, 2, 6, 0)
 			c.So(ums, ShouldHaveLength, 2)
 			c.So(ums[0].ID, ShouldEqual, 8)
 			c.So(ums[1].ID, ShouldEqual, 6)
 
-			ums, _, _ = repo.Labels.ListMessages(1, 3, 0, 9 )
+			ums, _, _ = repo.Labels.ListMessages(1, 3, 0, 9)
 			c.So(ums, ShouldHaveLength, 3)
 			c.So(ums[0].ID, ShouldEqual, 9)
 			c.So(ums[1].ID, ShouldEqual, 8)
 			c.So(ums[2].ID, ShouldEqual, 6)
+		})
+
+		Convey("Label Hole", func(c C) {
+			b, _ := repo.Labels.GetLowerFilled(10, 100)
+			c.So(b, ShouldBeFalse)
+
+			err := repo.Labels.Fill(1, 10, 100)
+			c.So(err, ShouldBeNil)
+
+			bar := repo.Labels.GetFilled(1)
+			c.So(bar.MinID, ShouldEqual, 10)
+			c.So(bar.MaxID, ShouldEqual, 100)
+
+			b, bar = repo.Labels.GetUpperFilled(1, 90)
+			c.So(b, ShouldBeTrue)
+			c.So(bar.MinID, ShouldEqual, 90)
+			c.So(bar.MaxID, ShouldEqual, 100)
+
+			b, bar = repo.Labels.GetLowerFilled(1, 90)
+			c.So(b, ShouldBeTrue)
+			c.So(bar.MinID, ShouldEqual, 10)
+			c.So(bar.MaxID, ShouldEqual, 90)
+
+
 		})
 	})
 }

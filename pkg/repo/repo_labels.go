@@ -423,6 +423,9 @@ func (r *repoLabels) GetFilled(labelID int32) Bar {
 
 func (r *repoLabels) GetLowerFilled(labelID int32, maxID int64) (bool, Bar) {
 	b := r.GetFilled(labelID)
+	if b.MinID == 0 && b.MaxID == 0 {
+		return false, Bar{}
+	}
 	if maxID > b.MaxID || maxID < b.MinID {
 		return false, Bar{}
 	}
@@ -432,6 +435,9 @@ func (r *repoLabels) GetLowerFilled(labelID int32, maxID int64) (bool, Bar) {
 
 func (r *repoLabels) GetUpperFilled(labelID int32, minID int64) (bool, Bar) {
 	b := r.GetFilled(labelID)
+	if b.MinID == 0 && b.MaxID == 0 {
+		return false, Bar{}
+	}
 	if minID < b.MinID || minID > b.MaxID {
 		return false, Bar{}
 	}
