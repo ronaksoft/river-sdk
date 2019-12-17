@@ -45,11 +45,17 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 			MentionedCount: 0,
 			AccessHash:     x.AccessHash,
 		}
-		repo.Dialogs.SaveNew(dialog, x.Message.CreatedOn)
+		err := repo.Dialogs.SaveNew(dialog, x.Message.CreatedOn)
+		if err != nil {
+			return nil, err
+		}
 	}
 	// save user if does not exist
 	repo.Users.Save(x.Sender)
-	repo.Messages.SaveNew(x.Message, dialog, ctrl.userID)
+	err = repo.Messages.SaveNew(x.Message, ctrl.userID)
+	if err != nil {
+		return nil, err
+	}
 	messageHole.InsertFill(dialog.PeerID, dialog.PeerType, dialog.TopMessageID, x.Message.ID)
 
 	// bug : sometime server do not sends access hash
@@ -63,7 +69,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 		pm := repo.PendingMessages.GetByRealID(x.Message.ID)
 		if pm != nil {
 			ctrl.handlePendingMessage(x)
-			repo.PendingMessages.Delete(pm.ID)
+			_ = repo.PendingMessages.Delete(pm.ID)
 			repo.PendingMessages.DeleteByRealID(x.Message.ID)
 		}
 	}

@@ -184,9 +184,9 @@ func (r *repoMessages) GetMany(messageIDs []int64) []*msg.UserMessage {
 	return userMessages
 }
 
-func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, userID int64) {
+func (r *repoMessages) SaveNew(message *msg.UserMessage, userID int64) error {
 	if message == nil {
-		return
+		return nil
 	}
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		err := saveMessage(txn, message)
@@ -222,7 +222,7 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, dialog *msg.Dialog, use
 	})
 	logs.ErrorOnErr("RepoMessage got error on save new message", err)
 
-	return
+	return err
 }
 
 func (r *repoMessages) Save(messages ...*msg.UserMessage) {
