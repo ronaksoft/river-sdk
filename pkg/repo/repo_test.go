@@ -496,25 +496,22 @@ func TestLabel(t *testing.T) {
 			c.So(err, ShouldBeNil)
 		})
 		Convey("List Messages", func(c C) {
-			ums, _ := repo.Labels.ListMessages(1, 3, 0, 0 )
+			ums, _, _ := repo.Labels.ListMessages(1, 3, 0, 0 )
 			c.So(ums, ShouldHaveLength, 3)
 			c.So(ums[0].ID, ShouldEqual, 1)
 			c.So(ums[1].ID, ShouldEqual, 2)
 			c.So(ums[2].ID, ShouldEqual, 3)
 
-			ums, _ = repo.Labels.ListMessages(1, 2, 6, 0 )
+			ums, _, _ = repo.Labels.ListMessages(1, 2, 6, 0 )
 			c.So(ums, ShouldHaveLength, 2)
 			c.So(ums[0].ID, ShouldEqual, 8)
 			c.So(ums[1].ID, ShouldEqual, 6)
 
-			ums, _ = repo.Labels.ListMessages(1, 3, 0, 9 )
+			ums, _, _ = repo.Labels.ListMessages(1, 3, 0, 9 )
 			c.So(ums, ShouldHaveLength, 3)
 			c.So(ums[0].ID, ShouldEqual, 9)
 			c.So(ums[1].ID, ShouldEqual, 8)
 			c.So(ums[2].ID, ShouldEqual, 6)
 		})
 	})
-
-
-
 }

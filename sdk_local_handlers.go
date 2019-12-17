@@ -1225,13 +1225,18 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 
 			// Fill Messages Hole
 			if msgCount := len(x.Messages); msgCount > 0 {
+				logs.Debug("Update Label Range",
+					zap.Int32("LabelID", x.LabelID),
+					zap.Int64("MinID", x.Messages[msgCount-1].ID),
+					zap.Int64("MaxID", x.Messages[0].ID),
+				)
 				switch {
 				case req.MinID == 0 && req.MaxID != 0:
-					repo.Labels.Fill(req.LabelID, x.Messages[msgCount-1].ID, req.MaxID)
+					_ = repo.Labels.Fill(req.LabelID, x.Messages[msgCount-1].ID, req.MaxID)
 				case req.MinID != 0 && req.MaxID == 0:
-					repo.Labels.Fill(req.LabelID, req.MinID, x.Messages[0].ID)
+					_ = repo.Labels.Fill(req.LabelID, req.MinID, x.Messages[0].ID)
 				case req.MinID == 0 && req.MaxID == 0:
-					repo.Labels.Fill(req.LabelID, x.Messages[msgCount-1].ID, x.Messages[0].ID)
+					_ = repo.Labels.Fill(req.LabelID, x.Messages[msgCount-1].ID, x.Messages[0].ID)
 				}
 			}
 		default:
@@ -1266,7 +1271,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 			return
 		}
 		messages, users, groups := repo.Labels.ListMessages(req.LabelID, req.Limit, bar.MinID, bar.MaxID)
-		fillLabelItems(out, messages, users, groups,  in.RequestID, preSuccessCB)
+		fillLabelItems(out, messages, users, groups, in.RequestID, preSuccessCB)
 	default:
 		r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
 		return
@@ -1287,6 +1292,7 @@ func fillLabelItems(out *msg.MessageEnvelope, messages []*msg.UserMessage, users
 		})
 	}
 }
+
 func (r *River) labelsAddToMessage(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := &msg.LabelsAddToMessage{}
 	if err := req.Unmarshal(in.Message); err != nil {
