@@ -84,7 +84,7 @@ func addLabelToMessage(txn *badger.Txn, labelID int32, peerType int32, peerID in
 }
 
 func removeLabelFromMessage(txn *badger.Txn, labelID int32, msgID int64) error {
-	err := txn.Delete(ronak.StrToByte(fmt.Sprintf("%s.03%d.021%d", prefixLabelMessages, labelID, msgID)))
+	err := txn.Delete(getLabelMessageKey(labelID, msgID))
 	switch err {
 	case badger.ErrKeyNotFound:
 		return nil
