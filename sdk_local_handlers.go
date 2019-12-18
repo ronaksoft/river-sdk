@@ -1196,6 +1196,33 @@ func (r *River) messagesClearDraft(in, out *msg.MessageEnvelope, timeoutCB domai
 	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
 }
 
+func (r *River) labelsGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.LabelsGet{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	labels := repo.Labels.GetAll()
+	if len(labels) == 0 {
+		res := &msg.LabelsMany{}
+		res.Labels = labels
+
+		out.Constructor = msg.C_UsersMany
+		out.Message, _ = res.Marshal()
+		uiexec.Ctx().Exec(func() {
+			if successCB != nil {
+				successCB(out)
+			}
+		}) // successCB(out)
+		return
+	}
+
+	// send the request to server
+	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+}
+
 func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := &msg.LabelsListItems{}
 	if err := req.Unmarshal(in.Message); err != nil {

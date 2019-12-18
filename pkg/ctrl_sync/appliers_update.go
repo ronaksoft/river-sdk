@@ -590,6 +590,11 @@ func (ctrl *Controller) updateLabelItemsAdded(u *msg.UpdateEnvelope) ([]*msg.Upd
 			return nil, err
 		}
 	}
+
+	err = repo.Labels.Save(x.Labels...)
+	if err != nil {
+		return nil, err
+	}
 	return []*msg.UpdateEnvelope{u}, nil
 }
 
@@ -607,6 +612,11 @@ func (ctrl *Controller) updateLabelItemsRemoved(u *msg.UpdateEnvelope) ([]*msg.U
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	err = repo.Labels.Save(x.Labels...)
+	if err != nil {
+		return nil, err
 	}
 	return []*msg.UpdateEnvelope{u}, nil
 }
