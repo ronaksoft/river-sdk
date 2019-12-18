@@ -325,14 +325,14 @@ func IsHole(peerID int64, peerType int32, minID, maxID int64) bool {
 	return hm.IsRangeFilled(minID, maxID)
 }
 
-// GetUpperFilled It returns a Bar starts from minID to the highest possible index,
+// GetUpperFilled It returns a LabelBar starts from minID to the highest possible index,
 // which makes a continuous Filled section, otherwise it returns false.
 func GetUpperFilled(peerID int64, peerType int32, minID int64) (bool, Bar) {
 	hm := loadManager(peerID, peerType)
 	return hm.GetUpperFilled(minID)
 }
 
-// GetLowerFilled It returns a Bar starts from the lowest possible index to maxID,
+// GetLowerFilled It returns a LabelBar starts from the lowest possible index to maxID,
 // which makes a continuous Filled section, otherwise it returns false.
 func GetLowerFilled(peerID int64, peerType int32, maxID int64) (bool, Bar) {
 	hm := loadManager(peerID, peerType)

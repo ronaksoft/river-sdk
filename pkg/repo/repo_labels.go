@@ -365,7 +365,7 @@ func (r *repoLabels) RemoveLabelsFromMessages(labelIDs []int32, peerType int32, 
 	})
 }
 
-type Bar struct {
+type LabelBar struct {
 	MinID int64
 	MaxID int64
 }
@@ -397,8 +397,8 @@ func (r *repoLabels) Fill(labelID int32, minID, maxID int64) error {
 	return nil
 }
 
-func (r *repoLabels) GetFilled(labelID int32) Bar {
-	bar := Bar{}
+func (r *repoLabels) GetFilled(labelID int32) LabelBar {
+	bar := LabelBar{}
 	_ = badgerView(func(txn *badger.Txn) error {
 		minIDItem, err := txn.Get(ronak.StrToByte(fmt.Sprintf("%s.03%d.MINID", prefixLabelMessages, labelID)))
 		if err != nil {
@@ -421,25 +421,25 @@ func (r *repoLabels) GetFilled(labelID int32) Bar {
 	return bar
 }
 
-func (r *repoLabels) GetLowerFilled(labelID int32, maxID int64) (bool, Bar) {
+func (r *repoLabels) GetLowerFilled(labelID int32, maxID int64) (bool, LabelBar) {
 	b := r.GetFilled(labelID)
 	if b.MinID == 0 && b.MaxID == 0 {
-		return false, Bar{}
+		return false, LabelBar{}
 	}
 	if maxID > b.MaxID || maxID < b.MinID {
-		return false, Bar{}
+		return false, LabelBar{}
 	}
 	b.MaxID = maxID
 	return true, b
 }
 
-func (r *repoLabels) GetUpperFilled(labelID int32, minID int64) (bool, Bar) {
+func (r *repoLabels) GetUpperFilled(labelID int32, minID int64) (bool, LabelBar) {
 	b := r.GetFilled(labelID)
 	if b.MinID == 0 && b.MaxID == 0 {
-		return false, Bar{}
+		return false, LabelBar{}
 	}
 	if minID < b.MinID || minID > b.MaxID {
-		return false, Bar{}
+		return false, LabelBar{}
 	}
 	b.MinID = minID
 	return true, b

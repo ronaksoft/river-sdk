@@ -1279,6 +1279,8 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:
+		bar := repo.Labels.GetFilled(req.LabelID)
+		req.MaxID = bar.MaxID
 		fallthrough
 	case req.MinID == 0 && req.MaxID != 0:
 		b, bar := repo.Labels.GetLowerFilled(req.LabelID, req.MaxID)
@@ -1286,6 +1288,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 			logs.Info("River detected label hole (With MaxID Only)",
 				zap.Int32("LabelID", req.LabelID),
 				zap.Int64("MaxID", req.MaxID),
+				zap.Int64("MinID", req.MinID),
 			)
 			r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
 			return
@@ -1298,6 +1301,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 			logs.Info("River detected label hole (With MinID Only)",
 				zap.Int32("LabelID", req.LabelID),
 				zap.Int64("MinID", req.MinID),
+				zap.Int64("MaxID", req.MaxID),
 			)
 			r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
 			return
