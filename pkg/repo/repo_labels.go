@@ -184,7 +184,7 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 	switch {
 	case maxID == 0 && minID == 0:
 		fallthrough
-	case maxID != 0 && minID == 0:
+	case maxID != 0:
 		startTime := time.Now()
 		var stopWatch1, stopWatch2 time.Time
 		err := badgerView(func(txn *badger.Txn) error {
@@ -240,7 +240,7 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 			zap.Duration("SP1", stopWatch1.Sub(startTime)),
 			zap.Duration("SP2", stopWatch2.Sub(startTime)),
 		)
-	case maxID == 0 && minID != 0:
+	case minID != 0:
 		startTime := time.Now()
 		var stopWatch1, stopWatch2, stopWatch3 time.Time
 		_ = badgerView(func(txn *badger.Txn) error {
