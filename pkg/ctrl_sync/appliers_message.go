@@ -226,13 +226,12 @@ func (ctrl *Controller) labelItems(e *msg.MessageEnvelope) {
 	u := &msg.LabelItems{}
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("SyncCtrl couldn't unmarshal LabelsMany", zap.Error(err))
+		logs.Error("SyncCtrl couldn't unmarshal LabelItems", zap.Error(err))
 		return
 	}
 	logs.Info("SyncCtrl applies LabelItems")
 
 	repo.Messages.Save(u.Messages...)
-	for _, dialog := range u.Dialogs {
-		_ = repo.Dialogs.Save(dialog)
-	}
+	repo.Users.Save(u.Users...)
+	repo.Groups.Save(u.Groups...)
 }

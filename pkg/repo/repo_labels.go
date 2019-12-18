@@ -189,7 +189,7 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 		var stopWatch1, stopWatch2 time.Time
 		err := badgerView(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
-			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%03d", prefixLabelMessages, labelID))
+			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
 			if maxID > 0 {
 				opts.Reverse = true
 			}
@@ -204,7 +204,7 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 				if limit--; limit < 0 {
 					break
 				}
-				_ = it.Item().Value(func(val []byte) error {
+				err := it.Item().Value(func(val []byte) error {
 					parts := strings.Split(ronak.ByteToStr(val), ".")
 					if len(parts) != 3 {
 						return domain.ErrInvalidData
@@ -231,6 +231,7 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 					userMessages = append(userMessages, um)
 					return nil
 				})
+				logs.WarnOnErr("RepoLabels got error on ListMessage for getting message", err)
 			}
 			return nil
 		})
@@ -244,7 +245,7 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 		var stopWatch1, stopWatch2, stopWatch3 time.Time
 		_ = badgerView(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
-			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%03d", prefixLabelMessages, labelID))
+			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
 			it := txn.NewIterator(opts)
 			defer it.Close()
 			it.Seek(getLabelMessageKey(labelID, minID))

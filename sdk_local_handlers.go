@@ -1281,6 +1281,10 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:
 		bar := repo.Labels.GetFilled(req.LabelID)
+		logs.Debug("Label Filled", zap.Int32("LabelID", req.LabelID),
+			zap.Int64("MinID", bar.MinID),
+			zap.Int64("MaxID", bar.MaxID),
+		)
 		req.MaxID = bar.MaxID
 		fallthrough
 	case req.MinID == 0 && req.MaxID != 0:
@@ -1295,6 +1299,12 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 			return
 		}
 		messages, users, groups := repo.Labels.ListMessages(req.LabelID, req.Limit, bar.MinID, bar.MaxID)
+		logs.Debug("List Messages By Label",
+			zap.Int32("LabelID", req.LabelID),
+			zap.Int64("MinID", bar.MinID),
+			zap.Int64("MaxID", bar.MaxID),
+			zap.Int("Count", len(messages)),
+		)
 		fillLabelItems(out, messages, users, groups, in.RequestID, preSuccessCB)
 	case req.MinID != 0 && req.MaxID == 0:
 		b, bar := repo.Labels.GetUpperFilled(req.LabelID, req.MinID)
