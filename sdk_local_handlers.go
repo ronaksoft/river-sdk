@@ -1245,7 +1245,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 
 	preSuccessCB := func(m *msg.MessageEnvelope) {
 		switch m.Constructor {
-		case msg.C_LabelsListItems:
+		case msg.C_LabelItems:
 			x := &msg.LabelItems{}
 			err := x.Unmarshal(m.Message)
 			logs.WarnOnErr("Error On Unmarshal LabelItems", err)
@@ -1272,6 +1272,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 				}
 			}
 		default:
+			logs.Warn("River received unexpected response", zap.String("Constructor", msg.ConstructorNames[m.Constructor]))
 		}
 
 		successCB(m)
