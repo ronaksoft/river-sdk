@@ -2,7 +2,7 @@ package repo
 
 import (
 	"fmt"
-	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	"git.ronaksoftware.com/ronak/riversdk/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"

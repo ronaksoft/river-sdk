@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"

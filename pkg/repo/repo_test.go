@@ -2,7 +2,7 @@ package repo_test
 
 import (
 	"fmt"
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
@@ -307,12 +307,12 @@ func TestSearch(t *testing.T) {
 
 	// mm := repo.Messages.SearchText("Hello")
 	fmt.Print("Search in UserPeer:")
-	mm := repo.Messages.SearchTextByPeerID("H", 6)
+	mm := repo.Messages.SearchTextByPeerID("H", 6, 100)
 	for _, m := range mm {
 		fmt.Println(m.ID, m.Body, m.PeerID)
 	}
 	fmt.Print("Search in GroupPeer:")
-	mm = repo.Messages.SearchTextByPeerID("H", -7)
+	mm = repo.Messages.SearchTextByPeerID("H", -7, 100)
 	for _, m := range mm {
 		fmt.Println(m.ID, m.Body, m.PeerID)
 	}

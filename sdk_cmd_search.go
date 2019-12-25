@@ -13,7 +13,6 @@ import (
    Copyright Ronak Software Group 2018
 */
 
-
 func (r *River) SearchReIndex() {
 	repo.Users.ReIndex()
 	repo.Groups.ReIndex()

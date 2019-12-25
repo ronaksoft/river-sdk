@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"

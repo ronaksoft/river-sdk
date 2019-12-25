@@ -7,7 +7,7 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )
 

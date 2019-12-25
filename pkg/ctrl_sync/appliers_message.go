@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"

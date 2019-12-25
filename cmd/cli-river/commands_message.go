@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
@@ -302,31 +302,6 @@ var MessagesReadContents = &ishell.Cmd{
 	},
 }
 
-var MessagesSearchText = &ishell.Cmd{
-	Name: "SearchText",
-	Func: func(c *ishell.Context) {
-		text := fnGetBody(c)
-		peerId := fnGetPeerID(c)
-		reqDelegate := new(searchGlobalDelegateDummy)
-		_SDK.SearchGlobal(text, peerId, reqDelegate)
-	},
-}
-
-type searchGlobalDelegateDummy struct{}
-
-func (searchGlobalDelegateDummy) OnComplete(b []byte) {
-	searchResults := new(msg.ClientSearchResult)
-	err := searchResults.Unmarshal(b)
-	if err != nil {
-		_Log.Error("error Unmarshal", zap.String("", err.Error()))
-		return
-	}
-	fmt.Println("searchResults", searchResults)
-}
-
-func (searchGlobalDelegateDummy) OnTimeout(err error) {
-	_Log.Error("searchResults", zap.String("error", err.Error()))
-}
 
 var MessagesGetDBMediaStatus = &ishell.Cmd{
 	Name: "GetDBMediaStatus",
@@ -392,7 +367,6 @@ func init() {
 	Message.AddCmd(MessagesEdit)
 	Message.AddCmd(MessagesForward)
 	Message.AddCmd(MessagesReadContents)
-	Message.AddCmd(MessagesSearchText)
 	Message.AddCmd(MessagesGetDBMediaStatus)
 	Message.AddCmd(MessagesClearMedia)
 }

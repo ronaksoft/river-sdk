@@ -2,7 +2,7 @@ package fileCtrl
 
 import (
 	"fmt"
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
 	"mime"
 	"os"
 	"path"

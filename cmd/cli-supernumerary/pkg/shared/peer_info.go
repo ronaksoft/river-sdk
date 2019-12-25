@@ -1,6 +1,6 @@
 package shared
 
-import msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+import msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
 
 // PeerInfo actor contact info
 type PeerInfo struct {

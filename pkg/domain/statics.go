@@ -20,7 +20,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
 	"github.com/nyaruka/phonenumbers"
 )
 

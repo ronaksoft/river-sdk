@@ -2,7 +2,7 @@ package riversdk
 
 import (
 	"fmt"
-	"git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	"git.ronaksoftware.com/ronak/riversdk/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
@@ -48,7 +48,6 @@ func TestRiver_SearchGlobal(t *testing.T) {
 	var ContactUser = "contactUser"
 	var groupTitle = "groupTitle"
 	createDataForSearchGlobal(nonContactWithDialogUser, nonContactWhitoutDialogUser, ContactUser, groupTitle)
-	searchDelegate := new(searchGlobalDelegateDummy)
 	tests := []struct {
 		name       string
 		searchText string
@@ -64,7 +63,7 @@ func TestRiver_SearchGlobal(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			wg.Add(1)
 			testCase = i + 1
-			_River.SearchGlobal(tt.searchText, tt.peerID, searchDelegate)
+			// _River.SearchGlobal(tt.searchText, tt.peerID, searchDelegate)
 			wg.Wait()
 		})
 	}

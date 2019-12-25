@@ -12,7 +12,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"github.com/kr/pretty"
 
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/ext"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
 	"gopkg.in/abiosoft/ishell.v2"
 )
 
