@@ -144,7 +144,7 @@ func TestRepoDeleteMessage(t *testing.T) {
 		m.PeerType = peerType
 		m.SenderID = peerID
 		m.Body = fmt.Sprintf("Text %d", i)
-		repo.Messages.SaveNew(m, d, 10002)
+		repo.Messages.SaveNew(m, 10002)
 	}
 
 	d, _ = repo.Dialogs.Get(peerID, peerType)

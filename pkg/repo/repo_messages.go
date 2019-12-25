@@ -533,8 +533,8 @@ func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, err
 	return topMessageID, err
 }
 
-func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
-	userMessages := make([]*msg.UserMessage, 0, 100)
+func (r *repoMessages) SearchText(text string, limit int32) []*msg.UserMessage {
+	userMessages := make([]*msg.UserMessage, 0, limit)
 	if r.msgSearch != nil {
 		t1 := bleve.NewTermQuery("msg")
 		t1.SetField("type")
@@ -556,11 +556,14 @@ func (r *repoMessages) SearchText(text string) []*msg.UserMessage {
 		})
 	}
 
+	if len(userMessages) > int(limit) {
+		userMessages = userMessages[:limit]
+	}
 	return userMessages
 }
 
-func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.UserMessage {
-	userMessages := make([]*msg.UserMessage, 0, 100)
+func (r *repoMessages) SearchTextByPeerID(text string, peerID int64, limit int32) []*msg.UserMessage {
+	userMessages := make([]*msg.UserMessage, 0, limit)
 	if r.msgSearch != nil {
 		t1 := bleve.NewTermQuery("msg")
 		t1.SetField("type")
@@ -583,8 +586,56 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64) []*msg.User
 			return nil
 		})
 	}
-
+	if len(userMessages) > int(limit) {
+		userMessages = userMessages[:limit]
+	}
 	return userMessages
+}
+
+func (r *repoMessages) SearchByLabels(labelIDs []int32, limit int32) []*msg.UserMessage {
+	userMessages := make([]*msg.UserMessage, 0, limit)
+	_ = badgerView(func(txn *badger.Txn) error {
+		st := r.badger.NewStream()
+		st.Prefix = ronak.StrToByte(prefixUserMessages)
+		st.ChooseKey = func(item *badger.Item) bool {
+			m := &msg.UserMessage{}
+			err := item.Value(func(val []byte) error {
+				return m.Unmarshal(val)
+			})
+			if err != nil {
+				return false
+			}
+			if len(m.LabelIDs) < len(labelIDs) {
+				return false
+			}
+			var found bool
+			for _, li := range labelIDs {
+				found = false
+				for _, lj := range m.LabelIDs {
+					if li == lj {
+						found = true
+						break
+					}
+				}
+				if !found {
+					return false
+				}
+			}
+			return true
+		}
+		st.Send = func(list *pb.KVList) error {
+			for _, kv := range list.Kv {
+				m := &msg.UserMessage{}
+				if err := m.Unmarshal(kv.Value); err == nil {
+					userMessages = append(userMessages, m)
+				}
+			}
+			return nil
+		}
+		return st.Orchestrate(context.Background())
+	})
+	return userMessages
+
 }
 
 func (r *repoMessages) GetSharedMedia(peerID int64, peerType int32, documentType domain.SharedMediaType) ([]*msg.UserMessage, error) {

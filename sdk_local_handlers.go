@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
+	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"sort"
@@ -1338,4 +1339,122 @@ func fillLabelItems(out *msg.MessageEnvelope, messages []*msg.UserMessage, users
 			successCB(out)
 		})
 	}
+}
+
+func (r *River) clientGlobalSearch(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientGlobalSearch{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	searchPhrase := strings.ToLower(req.Text)
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("SearchGlobal", time.Now().Sub(startTime))
+	}()
+
+	searchResults := &msg.ClientSearchResult{}
+	var userContacts []*msg.ContactUser
+	var nonContacts []*msg.ContactUser
+	var msgs []*msg.UserMessage
+	if len(req.LabelIDs) > 0 {
+		msgs = repo.Messages.SearchByLabels(req.LabelIDs, req.Limit)
+	} else if req.Peer != nil {
+		msgs = repo.Messages.SearchTextByPeerID(searchPhrase, req.Peer.ID, req.Limit)
+	} else {
+		msgs = repo.Messages.SearchText(searchPhrase, req.Limit)
+	}
+
+	// get users && group IDs
+	userIDs := domain.MInt64B{}
+	matchedUserIDs := domain.MInt64B{}
+	groupIDs := domain.MInt64B{}
+	for _, m := range msgs {
+		if m.PeerType == int32(msg.PeerSelf) || m.PeerType == int32(msg.PeerUser) {
+			userIDs[m.PeerID] = true
+		}
+		if m.PeerType == int32(msg.PeerGroup) {
+			groupIDs[m.PeerID] = true
+		}
+		if m.SenderID > 0 {
+			userIDs[m.SenderID] = true
+		} else {
+			groupIDs[m.PeerID] = true
+		}
+		if m.FwdSenderID > 0 {
+			userIDs[m.FwdSenderID] = true
+		} else {
+			groupIDs[m.FwdSenderID] = true
+		}
+	}
+
+	// if peerID == 0 then look for group and contact names too
+	if req.Peer == nil {
+		userContacts, _ = repo.Users.SearchContacts(searchPhrase)
+		for _, userContact := range userContacts {
+			matchedUserIDs[userContact.ID] = true
+		}
+		nonContacts = repo.Users.SearchNonContacts(searchPhrase)
+		for _, userContact := range nonContacts {
+			matchedUserIDs[userContact.ID] = true
+		}
+		searchResults.MatchedGroups = repo.Groups.Search(searchPhrase)
+	}
+
+	users := repo.Users.GetMany(userIDs.ToArray())
+	groups := repo.Groups.GetMany(groupIDs.ToArray())
+	matchedUsers := repo.Users.GetMany(matchedUserIDs.ToArray())
+
+	searchResults.Messages = msgs
+	searchResults.Users = users
+	searchResults.Groups = groups
+	searchResults.MatchedUsers = matchedUsers
+
+
+	out.RequestID = in.RequestID
+	out.Constructor = msg.C_ClientSearchResult
+	out.Message, _ = searchResults.Marshal()
+	if successCB != nil {
+		uiexec.Ctx().Exec(func() {
+			successCB(out)
+		})
+	}
+}
+
+func (r *River) clientContactSearch(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientContactSearch{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	searchPhrase := strings.ToLower(req.Text)
+	startTime := time.Now()
+	defer func() {
+		mon.FunctionResponseTime("SearchContacts", time.Now().Sub(startTime))
+	}()
+	logs.Info("SearchContacts", zap.String("Phrase", searchPhrase))
+
+
+	users := &msg.UsersMany{}
+	contactUsers, _ := repo.Users.SearchContacts(searchPhrase)
+	userIDs := make([]int64, 0, len(contactUsers))
+	for _, contactUser := range contactUsers {
+		userIDs = append(userIDs, contactUser.ID)
+	}
+	users.Users = repo.Users.GetMany(userIDs)
+
+	out.Constructor = msg.C_UsersMany
+	out.RequestID = in.RequestID
+	out.Message, _ = users.Marshal()
+	if successCB != nil {
+		uiexec.Ctx().Exec(func() {
+			successCB(out)
+		})
+	}
+
+
 }
