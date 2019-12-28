@@ -387,21 +387,21 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 
 	// check requestCallbacks and call callbacks
 	for idx := range msgs {
-		cb := domain.GetRequestCallback(msgs[idx].RequestID)
-		if cb == nil {
+		reqCB := domain.GetRequestCallback(msgs[idx].RequestID)
+		if reqCB == nil {
 			continue
 		}
 
-		mon.ServerResponseTime(msgs[idx].Constructor, time.Now().Sub(cb.RequestTime))
+		mon.ServerResponseTime(reqCB.Constructor, msgs[idx].Constructor, time.Now().Sub(reqCB.FlightTime))
 		select {
-		case cb.ResponseChannel <- msgs[idx]:
+		case reqCB.ResponseChannel <- msgs[idx]:
 			logs.Debug("We received response",
-				zap.Uint64("ReqID", cb.RequestID),
+				zap.Uint64("ReqID", reqCB.RequestID),
 				zap.String("Constructor", msg.ConstructorNames[msgs[idx].Constructor]),
 			)
 		default:
 			logs.Error("We received response but no callback, we drop response",
-				zap.Uint64("ReqID", cb.RequestID),
+				zap.Uint64("ReqID", reqCB.RequestID),
 				zap.String("Constructor", msg.ConstructorNames[msgs[idx].Constructor]),
 			)
 		}

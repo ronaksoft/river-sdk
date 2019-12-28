@@ -25,20 +25,17 @@ const (
 )
 
 type stats struct {
-	mtx                     *sync.Mutex
-	AvgServerResponseTime   time.Duration
-	MaxServerResponseTime   time.Duration
-	MinServerResponseTime   time.Duration
-	TotalServerRequests     int32
-	AvgFunctionResponseTime time.Duration
-	MaxFunctionResponseTime time.Duration
-	MinFunctionResponseTime time.Duration
-	TotalFunctionCalls      int32
-	AvgQueueTime            time.Duration
-	MaxQueueTime            time.Duration
-	MinQueueTime            time.Duration
-	TotalQueueItems         int32
-	StartTime               time.Time
+	mtx                   *sync.Mutex
+	AvgServerResponseTime time.Duration
+	MaxServerResponseTime time.Duration
+	MinServerResponseTime time.Duration
+	TotalServerRequests   int32
+
+	AvgQueueTime    time.Duration
+	MaxQueueTime    time.Duration
+	MinQueueTime    time.Duration
+	TotalQueueItems int32
+	StartTime       time.Time
 }
 
 var Stats stats
@@ -48,9 +45,13 @@ func init() {
 	Stats.mtx = &sync.Mutex{}
 }
 
-func ServerResponseTime(constructor int64, t time.Duration) {
+func ServerResponseTime(reqConstructor, resConstructor int64, t time.Duration) {
 	if t > serverLongThreshold {
-		logs.Warn("Too Long ServerResponse", zap.Duration("T", t), zap.String("Constructor", msg.ConstructorNames[constructor]))
+		logs.Warn("Too Long ServerResponse",
+			zap.Duration("T", t),
+			zap.String("ResConstructor", msg.ConstructorNames[resConstructor]),
+			zap.String("ReqConstructor", msg.ConstructorNames[reqConstructor]),
+		)
 	}
 	total := atomic.AddInt32(&Stats.TotalServerRequests, 1)
 	Stats.mtx.Lock()
@@ -65,9 +66,6 @@ func ServerResponseTime(constructor int64, t time.Duration) {
 }
 
 func QueueTime(constructor int64, t time.Duration) {
-	// if t > queueLongThreshold {
-	// 	logs.Warn("Too Long QueueTime", zap.Duration("T", t), zap.String("Constructor", msg.ConstructorNames[constructor]))
-	// }
 	total := atomic.AddInt32(&Stats.TotalQueueItems, 1)
 	Stats.mtx.Lock()
 	Stats.AvgQueueTime = (Stats.AvgQueueTime*time.Duration(total-1) + t) / time.Duration(total)

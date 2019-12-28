@@ -123,16 +123,18 @@ func (ctrl *Controller) addToWaitingList(req *request) {
 // Sends the message to the networkController and waits for the response. If time is up then it call the
 // TimeoutCallback otherwise if response arrived in time, SuccessCallback will be called.
 func (ctrl *Controller) executor(req request) {
-	reqCallbacks := domain.GetRequestCallback(req.ID)
-	if reqCallbacks == nil {
-		reqCallbacks = domain.AddRequestCallback(
+	reqCallback := domain.GetRequestCallback(req.ID)
+	if reqCallback == nil {
+		reqCallback = domain.AddRequestCallback(
 			req.ID,
+			req.MessageEnvelope.Constructor,
 			nil,
 			req.Timeout,
 			nil,
 			true,
 		)
 	}
+	reqCallback.FlightTime = time.Now()
 	if req.Timeout == 0 {
 		req.Timeout = domain.WebsocketRequestTime
 	}
@@ -161,15 +163,15 @@ func (ctrl *Controller) executor(req request) {
 			ctrl.addToWaitingList(&req)
 			return
 		default:
-			if reqCallbacks.TimeoutCallback != nil {
-				if reqCallbacks.IsUICallback {
-					uiexec.Ctx().Exec(func() { reqCallbacks.TimeoutCallback() })
+			if reqCallback.TimeoutCallback != nil {
+				if reqCallback.IsUICallback {
+					uiexec.Ctx().Exec(func() { reqCallback.TimeoutCallback() })
 				} else {
-					reqCallbacks.TimeoutCallback()
+					reqCallback.TimeoutCallback()
 				}
 			}
 		}
-	case res := <-reqCallbacks.ResponseChannel:
+	case res := <-reqCallback.ResponseChannel:
 		switch req.MessageEnvelope.Constructor {
 		case msg.C_MessagesSend, msg.C_MessagesSendMedia:
 			switch res.Constructor {
@@ -194,11 +196,11 @@ func (ctrl *Controller) executor(req request) {
 				}
 			}
 		}
-		if reqCallbacks.SuccessCallback != nil {
-			if reqCallbacks.IsUICallback {
-				uiexec.Ctx().Exec(func() { reqCallbacks.SuccessCallback(res) })
+		if reqCallback.SuccessCallback != nil {
+			if reqCallback.IsUICallback {
+				uiexec.Ctx().Exec(func() { reqCallback.SuccessCallback(res) })
 			} else {
-				reqCallbacks.SuccessCallback(res)
+				reqCallback.SuccessCallback(res)
 			}
 		} else {
 			logs.Warn("QueueCtrl received response but no callback exists!!!",
@@ -222,7 +224,7 @@ func (ctrl *Controller) RealtimeCommand(requestID uint64, constructor int64, com
 	messageEnvelope.Message = commandBytes
 
 	// Add the callback functions
-	reqCB := domain.AddRequestCallback(requestID, successCB, domain.WebsocketRequestTime, timeoutCB, isUICallback)
+	reqCB := domain.AddRequestCallback(requestID, constructor, successCB, domain.WebsocketRequestTime, timeoutCB, isUICallback)
 
 	execBlock := func(reqID uint64, req *msg.MessageEnvelope) {
 		err := ctrl.network.SendWebsocket(req, blockingMode)
@@ -295,7 +297,7 @@ func (ctrl *Controller) EnqueueCommand(requestID uint64, constructor int64, requ
 	}
 
 	// Add the callback functions
-	domain.AddRequestCallback(requestID, successCB, req.Timeout, timeoutCB, isUICallback)
+	domain.AddRequestCallback(requestID, constructor, successCB, req.Timeout, timeoutCB, isUICallback)
 
 	// Add the request to the queue
 	ctrl.addToWaitingList(&req)

@@ -218,23 +218,18 @@ func getMonitorStats(r *River) []byte {
 	lsmSize, logSize := repo.DbSize()
 	s := mon.Stats
 	m := ronak.M{
-		"AvgServerTime":   s.AvgServerResponseTime.String(),
-		"MaxServerTime":   s.MaxServerResponseTime.String(),
-		"MinServerTime":   s.MinServerResponseTime.String(),
-		"ServerRequests":  s.TotalServerRequests,
-		"AvgFunctionTime": s.AvgFunctionResponseTime.String(),
-		"MaxFunctionTime": s.MaxFunctionResponseTime.String(),
-		"MinFunctionTime": s.MinFunctionResponseTime.String(),
-		"FunctionCalls":   s.TotalFunctionCalls,
-		"AvgQueueTime":    s.AvgQueueTime.String(),
-		"MaxQueueTime":    s.MaxQueueTime.String(),
-		"MinQueueTime":    s.MinQueueTime.String(),
-		"QueueItems":      s.TotalQueueItems,
-		"RecordTime":      time.Now().Sub(s.StartTime).String(),
-		"TableInfos":      repo.TableInfo(),
-		"LsmSize":         humanize.Bytes(uint64(lsmSize)),
-		"LogSize":         humanize.Bytes(uint64(logSize)),
-		"Version":         r.Version(),
+		"ServerAvgTime":  s.AvgServerResponseTime.String(),
+		"ServerMaxTime":  s.MaxServerResponseTime.String(),
+		"ServerMinTime":  s.MinServerResponseTime.String(),
+		"ServerRequests": s.TotalServerRequests,
+		"QueueAvgTime":   s.AvgQueueTime.String(),
+		"QueueMaxTime":   s.MaxQueueTime.String(),
+		"QueueMinTime":   s.MinQueueTime.String(),
+		"QueueItems":     s.TotalQueueItems,
+		"RecordTime":     time.Now().Sub(s.StartTime).String(),
+		"LsmSize":        humanize.Bytes(uint64(lsmSize)),
+		"LogSize":        humanize.Bytes(uint64(logSize)),
+		"Version":        r.Version(),
 	}
 
 	b, _ := json.MarshalIndent(m, "", "    ")
