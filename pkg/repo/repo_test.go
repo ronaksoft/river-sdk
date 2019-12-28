@@ -27,7 +27,7 @@ func init() {
 	repo.InitRepo("./_data", false)
 }
 
-func createMessage(body string, filename string) *msg.UserMessage {
+func createMediaMessage(body string, filename string, labelIDs []int32) *msg.UserMessage {
 	userID := ronak.RandomInt64(0)
 	attrFile, _ := (&msg.DocumentAttributeFile{Filename: filename}).Marshal()
 	media, _ := (&msg.MediaDocument{
@@ -74,7 +74,36 @@ func createMessage(body string, filename string) *msg.UserMessage {
 		Media:               media,
 		ReplyMarkup:         0,
 		ReplyMarkupData:     nil,
-		LabelIDs:            nil,
+		LabelIDs:            labelIDs,
+	}
+}
+func createMessage(id int64, body string, labelIDs []int32) *msg.UserMessage {
+	userID := ronak.RandomInt64(0)
+
+	return &msg.UserMessage{
+		ID:                  id,
+		PeerID:              ronak.RandomInt64(0),
+		PeerType:            1,
+		CreatedOn:           time.Now().Unix(),
+		EditedOn:            0,
+		FwdSenderID:         0,
+		FwdChannelID:        0,
+		FwdChannelMessageID: 0,
+		Flags:               0,
+		MessageType:         0,
+		Body:                body,
+		SenderID:            userID,
+		ContentRead:         false,
+		Inbox:               false,
+		ReplyTo:             0,
+		MessageAction:       0,
+		MessageActionData:   nil,
+		Entities:            nil,
+		MediaType:           msg.MediaTypeEmpty,
+		Media:               nil,
+		ReplyMarkup:         0,
+		ReplyMarkupData:     nil,
+		LabelIDs:            labelIDs,
 	}
 }
 func TestRepoDialogs(t *testing.T) {
@@ -431,7 +460,7 @@ func TestGroupPhotoGallery(t *testing.T) {
 }
 
 func TestMessagesSave(t *testing.T) {
-	m := createMessage("Hello", "file.txt")
+	m := createMediaMessage("Hello", "file.txt", nil)
 	repo.Messages.Save(m)
 	media := &msg.MediaDocument{}
 	media.Unmarshal(m.Media)
@@ -534,7 +563,9 @@ func TestLabel(t *testing.T) {
 			c.So(b, ShouldBeTrue)
 			c.So(bar.MinID, ShouldEqual, 10)
 			c.So(bar.MaxID, ShouldEqual, 90)
+		})
 
+		Convey("Search By Label", func(c C) {
 
 		})
 	})
