@@ -10,6 +10,7 @@ import (
 	"github.com/gobwas/pool/pbytes"
 	"go.uber.org/zap"
 	"io"
+	"net/url"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -33,8 +34,6 @@ type UploadRequest struct {
 	IsProfilePhoto bool `json:"is_profile_photo"`
 	// PeerID will be set if IsProfilePhoto has been set to TRUE and user is going to upload group photo
 	GroupID int64 `json:"group_id"`
-	// MaxRetries defines how many time each request could encounter error before giving up
-	MaxRetries int32 `json:"max_retries"`
 	// MessageID (Optional) if is set then (ClusterID, FileID, AccessHash, Version) will be read from the message
 	// document object, or if message has no document then return error
 	MessageID int64 `json:"message_id"`
@@ -74,6 +73,31 @@ type uploadContext struct {
 	file         *os.File
 	req          UploadRequest
 	lastProgress int64
+}
+
+func (ctx *uploadContext) prepare() {
+	dividend := int32(ctx.req.FileSize / int64(ctx.req.ChunkSize))
+	if ctx.req.FileSize%int64(ctx.req.ChunkSize) > 0 {
+		ctx.req.TotalParts = dividend + 1
+	} else {
+		ctx.req.TotalParts = dividend
+	}
+
+	ctx.parts = make(chan int32, ctx.req.TotalParts+ctx.req.MaxInFlights)
+	for partIndex := int32(0); partIndex < ctx.req.TotalParts-1; partIndex++ {
+		if ctx.isUploaded(partIndex) {
+			continue
+		}
+		ctx.parts <- partIndex
+	}
+
+}
+
+func (ctx *uploadContext) resetUploadedList(ctrl *Controller) {
+	ctx.mtx.Lock()
+	ctx.req.UploadedParts = ctx.req.UploadedParts[:0]
+	ctx.mtx.Unlock()
+	ctrl.saveUploads(ctx.req)
 }
 
 func (ctx *uploadContext) isUploaded(partIndex int32) bool {
@@ -129,88 +153,114 @@ func (ctx *uploadContext) generateFileSavePart(fileID int64, partID int32, total
 }
 
 func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
-	waitGroup := sync.WaitGroup{}
-	for ctx.req.MaxRetries > 0 {
-		select {
-		case partIndex := <-ctx.parts:
-			if !ctrl.existUploadRequest(ctx.req.GetID()) {
-				waitGroup.Wait()
-				_ = ctx.file.Close()
-				if !ctx.req.SkipDelegateCall {
-					logs.Warn("Upload Canceled (Request Not Exists)",
-						zap.Int64("FileID", ctx.req.FileID),
-						zap.Int64("Size", ctx.req.FileSize),
-						zap.String("Path", ctx.req.FilePath),
-					)
-					ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, false)
+	for {
+		ctx.prepare()
+		logs.Info("FileCtrl executes Upload",
+			zap.Int64("FileID", ctx.req.FileID),
+			zap.Int32("TotalParts", ctx.req.TotalParts),
+			zap.Int32("ChunkSize", ctx.req.ChunkSize),
+		)
+		waitGroup := sync.WaitGroup{}
+		maxRetries := 5 + ctx.req.TotalParts/100
+		for maxRetries > 0 {
+			select {
+			case partIndex := <-ctx.parts:
+				if !ctrl.existUploadRequest(ctx.req.GetID()) {
+					waitGroup.Wait()
+					_ = ctx.file.Close()
+					if !ctx.req.SkipDelegateCall {
+						logs.Warn("Upload Canceled (Request Not Exists)",
+							zap.Int64("FileID", ctx.req.FileID),
+							zap.Int64("Size", ctx.req.FileSize),
+							zap.String("Path", ctx.req.FilePath),
+						)
+						ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, false)
+					}
+					return domain.RequestStatusCanceled
 				}
-				return domain.RequestStatusCanceled
-			}
-			ctx.rateLimit <- struct{}{}
-			waitGroup.Add(1)
-			go func(partIndex int32) {
-				defer func() {
-					<-ctx.rateLimit
-				}()
-				defer waitGroup.Done()
+				ctx.rateLimit <- struct{}{}
+				waitGroup.Add(1)
+				go func(partIndex int32) {
+					defer func() {
+						<-ctx.rateLimit
+					}()
+					defer waitGroup.Done()
 
-				bytes := pbytes.GetLen(int(ctx.req.ChunkSize))
-				defer pbytes.Put(bytes)
-				offset := partIndex * ctx.req.ChunkSize
-				n, err := ctx.file.ReadAt(bytes, int64(offset))
-				if err != nil && err != io.EOF {
-					logs.Warn("Error in ReadFile", zap.Error(err))
-					atomic.AddInt32(&ctx.req.MaxRetries, -1)
-					ctx.parts <- partIndex
-					return
-				}
-				res, err := ctrl.network.SendHttp(
-					ctx.req.httpContext,
-					ctx.generateFileSavePart(ctx.req.FileID, partIndex+1, ctx.req.TotalParts, bytes[:n]),
-					domain.HttpRequestTime,
-				)
-				if err != nil {
-					logs.Warn("Error in SendHttp", zap.Error(err))
-					atomic.AddInt32(&ctx.req.MaxRetries, -1)
-					ctx.parts <- partIndex
-					return
-				}
-				switch res.Constructor {
-				case msg.C_Bool:
-					ctx.addToUploaded(ctrl, partIndex)
-				default:
-					atomic.AddInt32(&ctx.req.MaxRetries, -1)
-					ctx.parts <- partIndex
-				}
-			}(partIndex)
-		default:
-			waitGroup.Wait()
-			switch int32(len(ctx.req.UploadedParts)) {
-			case ctx.req.TotalParts - 1:
-				ctx.parts <- ctx.req.TotalParts - 1
-			case ctx.req.TotalParts:
-				ctrl.postUploadProcess(ctx.req)
-				// We have finished our uploads
-				_ = ctx.file.Close()
-				if !ctx.req.SkipDelegateCall {
-					ctrl.onCompleted(ctx.req.GetID(), 0, ctx.req.FileID, 0, ctx.req.FilePath)
-				}
-				_ = repo.Files.MarkAsUploaded(ctx.req.FileID)
-				return domain.RequestStatusCompleted
+					bytes := pbytes.GetLen(int(ctx.req.ChunkSize))
+					defer pbytes.Put(bytes)
+					offset := partIndex * ctx.req.ChunkSize
+					n, err := ctx.file.ReadAt(bytes, int64(offset))
+					if err != nil && err != io.EOF {
+						logs.Warn("Error in ReadFile", zap.Error(err))
+						atomic.AddInt32(&maxRetries, -1)
+						ctx.parts <- partIndex
+						return
+					}
+					res, err := ctrl.network.SendHttp(
+						ctx.req.httpContext,
+						ctx.generateFileSavePart(ctx.req.FileID, partIndex+1, ctx.req.TotalParts, bytes[:n]),
+						domain.HttpRequestTime,
+					)
+					if err != nil {
+						switch e := err.(type) {
+						case *url.Error:
+							if e.Timeout() {
+								atomic.AddInt32(&maxRetries, -1)
+							}
+						default:
+							logs.Debug("Error in SendHttp", zap.Error(err))
+						}
+						ctx.parts <- partIndex
+						return
+					}
+					switch res.Constructor {
+					case msg.C_Bool:
+						ctx.addToUploaded(ctrl, partIndex)
+					default:
+						atomic.AddInt32(&maxRetries, -1)
+						ctx.parts <- partIndex
+					}
+				}(partIndex)
 			default:
-				time.Sleep(time.Millisecond * 100)
+				waitGroup.Wait()
+				switch int32(len(ctx.req.UploadedParts)) {
+				case ctx.req.TotalParts - 1:
+					ctx.parts <- ctx.req.TotalParts - 1
+				case ctx.req.TotalParts:
+					ctrl.postUploadProcess(ctx.req)
+					// We have finished our uploads
+					_ = ctx.file.Close()
+					if !ctx.req.SkipDelegateCall {
+						ctrl.onCompleted(ctx.req.GetID(), 0, ctx.req.FileID, 0, ctx.req.FilePath)
+					}
+					_ = repo.Files.MarkAsUploaded(ctx.req.FileID)
+					return domain.RequestStatusCompleted
+				default:
+					time.Sleep(time.Millisecond * 100)
+				}
 			}
 		}
+
+		minChunkSize := minChunkSize(ctx.req.FileSize)
+		if ctx.req.ChunkSize > minChunkSize {
+			logs.Info("FileCtrl retries upload with smaller chunk size",
+				zap.Int32("Old", ctx.req.ChunkSize>>10),
+				zap.Int32("New", minChunkSize>>10),
+			)
+			ctx.req.ChunkSize = minChunkSize
+			ctx.resetUploadedList(ctrl)
+			continue
+		}
+		_ = ctx.file.Close()
+		if !ctx.req.SkipDelegateCall {
+			logs.Warn("Upload Canceled (Max Retries Exceeds)",
+				zap.Int64("FileID", ctx.req.FileID),
+				zap.Int64("Size", ctx.req.FileSize),
+				zap.String("Path", ctx.req.FilePath),
+			)
+			ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, true)
+		}
+		return domain.RequestStatusError
 	}
 
-	_ = ctx.file.Close()
-	if !ctx.req.SkipDelegateCall {
-		logs.Warn("Upload Canceled (Max Retries Exceeds)",
-			zap.Int64("FileID", ctx.req.FileID),
-			zap.Int64("Size", ctx.req.FileSize),
-			zap.String("Path", ctx.req.FilePath),
-		)
-		ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, true)
-	}
-	return domain.RequestStatusError
 }

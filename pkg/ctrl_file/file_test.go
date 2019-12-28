@@ -76,6 +76,7 @@ func init() {
 	})
 	_File.Start()
 
+
 	tcpConfig := new(tcplisten.Config)
 	s := httptest.NewUnstartedServer(server{
 		mtx:           &sync.Mutex{},
@@ -116,6 +117,7 @@ func init() {
 		logs.Fatal(err.Error())
 	}
 	s.Start()
+	time.Sleep(time.Second * 5)
 
 }
 
@@ -127,7 +129,7 @@ type server struct {
 
 func (t server) ServeHTTP(httpRes http.ResponseWriter, httpReq *http.Request) {
 	body, _ := ioutil.ReadAll(httpReq.Body)
-	time.Sleep(time.Duration(len(body) / speedBytesPerSec))
+	time.Sleep(time.Duration(len(body) / speedBytesPerSec) * time.Second)
 
 	if ronak.RandomInt(100) > (100 - errRatePercent) {
 		httpRes.WriteHeader(http.StatusForbidden)
@@ -256,13 +258,13 @@ func TestUpload(t *testing.T) {
 			startTime := time.Now()
 			Convey("Upload Big File (Bad Network)", func(c C) {
 				speedBytesPerSec = 1024
-				errRatePercent = 50
+				errRatePercent = 0
 				waitGroupUpload.Add(1)
 				_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0)
 			})
 			Convey("Upload Medium File (Bad Network)", func(c C) {
 				speedBytesPerSec = 1024
-				errRatePercent = 50
+				errRatePercent = 0
 				waitGroupUpload.Add(1)
 				_File.UploadMessageDocument(msgID, "./testdata/medium", "", fileID, 0)
 			})

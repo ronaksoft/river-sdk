@@ -122,9 +122,6 @@ func (ctrl *Controller) Start() {
 		_ = json.Unmarshal(dBytes, &uploadRequests)
 		for _, req := range uploadRequests {
 			go func(req UploadRequest) {
-				if req.ChunkSize <= 0 {
-					req.ChunkSize = uploadChunkSize
-				}
 				err := ctrl.upload(req)
 				logs.WarnOnErr("Error On Upload Start", err)
 			}(req)
@@ -222,7 +219,7 @@ func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash 
 			AccessHash:       clientFile.AccessHash,
 			Version:          clientFile.Version,
 			FileSize:         clientFile.FileSize,
-			ChunkSize:        downloadChunkSize,
+			ChunkSize:        defaultChunkSize,
 			MaxInFlights:     maxDownloadInFlights,
 			FilePath:         GetFilePath(clientFile),
 			SkipDelegateCall: skipDelegates,
@@ -273,7 +270,7 @@ func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash u
 			AccessHash:       clientFile.AccessHash,
 			Version:          clientFile.Version,
 			FileSize:         clientFile.FileSize,
-			ChunkSize:        downloadChunkSize,
+			ChunkSize:        defaultChunkSize,
 			MaxInFlights:     maxDownloadInFlights,
 			FilePath:         filePath,
 			SkipDelegateCall: skipDelegate,
@@ -533,7 +530,6 @@ func (ctrl *Controller) UploadUserPhoto(filePath string) (reqID string) {
 	err := ctrl.upload(UploadRequest{
 		IsProfilePhoto: true,
 		FileID:         fileID,
-		ChunkSize:      uploadChunkSize,
 		MaxInFlights:   maxUploadInFlights,
 		FilePath:       filePath,
 	})
@@ -552,7 +548,6 @@ func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) (reqID 
 		IsProfilePhoto: true,
 		GroupID:        groupID,
 		FileID:         fileID,
-		ChunkSize:      uploadChunkSize,
 		MaxInFlights:   maxUploadInFlights,
 		FilePath:       filePath,
 	})
@@ -589,7 +584,6 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 		FilePath:     filePath,
 		ThumbID:      thumbID,
 		ThumbPath:    thumbPath,
-		ChunkSize:    uploadChunkSize,
 		MaxInFlights: maxUploadInFlights,
 	}
 
@@ -597,7 +591,6 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 		MessageID:        0,
 		FileID:           thumbID,
 		FilePath:         thumbPath,
-		ChunkSize:        uploadChunkSize,
 		MaxInFlights:     maxUploadInFlights,
 		SkipDelegateCall: false,
 	}
@@ -633,7 +626,7 @@ func (ctrl *Controller) upload(req UploadRequest) error {
 		<-ctrl.uploadsRateLimit
 	}()
 
-	ds := &uploadContext{
+	uploadCtx := &uploadContext{
 		rateLimit: make(chan struct{}, req.MaxInFlights),
 	}
 
@@ -642,7 +635,7 @@ func (ctrl *Controller) upload(req UploadRequest) error {
 		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
 		return err
 	}
-	ds.file, err = os.OpenFile(req.FilePath, os.O_RDONLY, 0666)
+	uploadCtx.file, err = os.OpenFile(req.FilePath, os.O_RDONLY, 0666)
 	if err != nil {
 		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
 		return err
@@ -654,32 +647,18 @@ func (ctrl *Controller) upload(req UploadRequest) error {
 		return err
 	}
 
-	if req.FileSize > domain.FileMaxAllowedSize {
+	if req.FileSize > maxFileSizeAllowedSize {
 		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
 		return err
 	}
 
-	if req.MaxRetries <= 0 {
-		req.MaxRetries = retryMaxAttempts
+	if req.ChunkSize <= 0 {
+		req.ChunkSize = bestChunkSize(req.FileSize)
 	}
 
-	dividend := int32(req.FileSize / int64(req.ChunkSize))
-	if req.FileSize%int64(req.ChunkSize) > 0 {
-		req.TotalParts = dividend + 1
-	} else {
-		req.TotalParts = dividend
-	}
-
-	ds.parts = make(chan int32, req.TotalParts+req.MaxInFlights)
-	ds.req = req
-	for partIndex := int32(0); partIndex < req.TotalParts-1; partIndex++ {
-		if ds.isUploaded(partIndex) {
-			continue
-		}
-		ds.parts <- partIndex
-	}
+	uploadCtx.req = req
 
 	// This is blocking call, until all the parts are downloaded
-	ds.execute(ctrl)
+	uploadCtx.execute(ctrl)
 	return nil
 }

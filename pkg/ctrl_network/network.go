@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/felixge/tcpkeepalive"
@@ -605,6 +606,9 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 
 // Send encrypt and send request to server and receive and decrypt its response
 func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEnvelope, timeout time.Duration) (*msg.MessageEnvelope, error) {
+	var totalUploadBytes, totalDownloadBytes int
+	startTime := time.Now()
+
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -632,6 +636,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 	if err != nil {
 		return nil, err
 	}
+	totalUploadBytes += len(b)
 
 	// Set timeout
 	ctrl.httpClient.Timeout = timeout
@@ -651,6 +656,8 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 	if err != nil {
 		return nil, err
 	}
+	totalDownloadBytes += len(resBuff)
+	mon.DataTransfer(totalUploadBytes, totalDownloadBytes, time.Now().Sub(startTime))
 
 	// Decrypt response
 	res := &msg.ProtoMessage{}

@@ -25,24 +25,48 @@ const (
 )
 
 type stats struct {
-	mtx                   *sync.Mutex
+	mtx *sync.RWMutex
+
+	StartTime             time.Time
 	AvgServerResponseTime time.Duration
 	MaxServerResponseTime time.Duration
 	MinServerResponseTime time.Duration
 	TotalServerRequests   int32
+	AvgQueueTime          time.Duration
+	MaxQueueTime          time.Duration
+	MinQueueTime          time.Duration
+	TotalQueueItems       int32
 
-	AvgQueueTime    time.Duration
-	MaxQueueTime    time.Duration
-	MinQueueTime    time.Duration
-	TotalQueueItems int32
-	StartTime       time.Time
+	totalBytes         int
+	dataTransferPeriod time.Duration
+	lastDataTransfer   time.Time
 }
 
 var Stats stats
 
 func init() {
 	Stats.StartTime = time.Now()
-	Stats.mtx = &sync.Mutex{}
+	Stats.mtx = &sync.RWMutex{}
+}
+
+func DataTransfer(totalUploadBytes, totalDownloadBytes int, d time.Duration) {
+	Stats.mtx.Lock()
+	if time.Now().Sub(Stats.lastDataTransfer) > time.Second*30 {
+		Stats.totalBytes = totalDownloadBytes + totalUploadBytes
+		Stats.dataTransferPeriod = d
+	} else {
+		Stats.totalBytes += totalDownloadBytes + totalUploadBytes
+		Stats.dataTransferPeriod += d
+	}
+	Stats.lastDataTransfer = time.Now()
+	Stats.mtx.Unlock()
+}
+
+func GetDataTransferRate() int {
+	Stats.mtx.RLock()
+	rate := Stats.totalBytes / int(Stats.dataTransferPeriod/time.Millisecond+1)
+	Stats.mtx.RUnlock()
+	return rate
 }
 
 func ServerResponseTime(reqConstructor, resConstructor int64, t time.Duration) {

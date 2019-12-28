@@ -3,6 +3,8 @@ package fileCtrl
 import (
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
+	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
+	"math"
 	"mime"
 	"os"
 	"path"
@@ -103,4 +105,33 @@ func unique(intSlice []int32) []int32 {
 		}
 	}
 	return list
+}
+
+func bestChunkSize(fileSize int64) int32 {
+	if fileSize <= maxChunkSize {
+		return defaultChunkSize
+	}
+	minChunkSize := (fileSize / maxParts) >> 10
+	dataRate := mon.GetDataTransferRate()
+	max := int32(math.Max(float64(minChunkSize), float64(dataRate)))
+	for _, cs := range chunkSizesKB {
+		if max > cs {
+			continue
+		}
+		return cs << 10
+	}
+	return chunkSizesKB[len(chunkSizesKB)-1] << 10
+}
+
+func minChunkSize(fileSize int64) int32 {
+	minChunkSize := (fileSize / maxParts) >> 10
+	dataRate := mon.GetDataTransferRate()
+	min := int32(math.Min(float64(minChunkSize), float64(dataRate)))
+	for _, cs := range chunkSizesKB {
+		if min > cs {
+			continue
+		}
+		return cs << 10
+	}
+	return chunkSizesKB[len(chunkSizesKB)-1] << 10
 }
