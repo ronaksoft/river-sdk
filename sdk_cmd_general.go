@@ -8,24 +8,18 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"github.com/monnand/dhkx"
 	"go.uber.org/zap"
 	"math/big"
 	"sync"
-	"time"
 )
 
 // ExecuteCommand ...
 // This is a wrapper function to pass the request to the queueController, to be passed to networkController for final
 // delivery to the server.
 func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate, blockingMode, serverForce bool) (requestID int64, err error) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("ExecuteCommand", time.Now().Sub(startTime), blockingMode)
-	}()
 	if _, ok := msg.ConstructorNames[constructor]; !ok {
 		return 0, domain.ErrInvalidConstructor
 	}
@@ -329,10 +323,6 @@ func (r *River) ResetAuthKey() {
 
 // CancelRequest remove given requestID callbacks&delegates and if its not processed by queue we skip it on queue distributor
 func (r *River) CancelRequest(requestID int64) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("CancelRequest", time.Now().Sub(startTime))
-	}()
 	// Remove delegate
 	r.delegateMutex.Lock()
 	delete(r.delegates, int64(requestID))
@@ -348,10 +338,6 @@ func (r *River) CancelRequest(requestID int64) {
 
 // Delete removes pending message from DB
 func (r *River) DeletePendingMessage(id int64) (isSuccess bool) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("Delete", time.Now().Sub(startTime))
-	}()
 	err := repo.PendingMessages.Delete(id)
 	isSuccess = err == nil
 	return
@@ -359,10 +345,6 @@ func (r *River) DeletePendingMessage(id int64) (isSuccess bool) {
 
 // RetryPendingMessage puts pending message again in command queue to re send it
 func (r *River) RetryPendingMessage(id int64) bool {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("RetryPendingMessage", time.Now().Sub(startTime))
-	}()
 	pmsg := repo.PendingMessages.GetByID(id)
 	if pmsg == nil {
 		return false
@@ -386,19 +368,11 @@ func (r *River) RetryPendingMessage(id int64) bool {
 
 // GetSyncStatus returns SyncController status
 func (r *River) GetSyncStatus() int32 {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("GetSyncStatus", time.Now().Sub(startTime))
-	}()
 	return int32(r.syncCtrl.GetSyncStatus())
 }
 
 // Logout drop queue & database , etc ...
 func (r *River) Logout(notifyServer bool, reason int) error {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("Logout", time.Now().Sub(startTime))
-	}()
 	// unregister device if token exist
 	if notifyServer {
 		if r.DeviceToken != nil {
@@ -456,20 +430,12 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 
 // UpdateContactInfo update contact name
 func (r *River) UpdateContactInfo(userID int64, firstName, lastName string) error {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("UpdateContactInfo", time.Now().Sub(startTime))
-	}()
 	repo.Users.UpdateContactInfo(userID, firstName, lastName)
 	return nil
 }
 
 // GetGroupInputUser get group participant user
 func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, delegate RequestDelegate) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("GetGroupInputUser", time.Now().Sub(startTime))
-	}()
 	res := new(msg.MessageEnvelope)
 	res.Constructor = msg.C_InputUser
 	res.RequestID = uint64(requestID)
@@ -558,18 +524,10 @@ func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, 
 }
 
 func (r *River) GetScrollStatus(peerID int64, peerType int32) int64 {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("GetScrollStatus", time.Now().Sub(startTime))
-	}()
 	return repo.MessagesExtra.GetScrollID(peerID, peerType)
 }
 
 func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("SetScrollStatus", time.Now().Sub(startTime))
-	}()
 	repo.MessagesExtra.SaveScrollID(peerID, peerType, msgID)
 
 }

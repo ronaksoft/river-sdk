@@ -5,11 +5,9 @@ import (
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
 	"os"
-	"time"
 )
 
 func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash int64) []byte {
@@ -80,11 +78,6 @@ func (r *River) FileDownloadSync(clusterID int32, fileID int64, accessHash int64
 
 // CancelDownload cancel download
 func (r *River) CancelDownload(clusterID int32, fileID int64, accessHash int64) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("CancelDownload", time.Now().Sub(startTime))
-	}()
-
 	clientFile, err := repo.Files.Get(clusterID, fileID, uint64(accessHash))
 	if err != nil {
 		return
@@ -104,11 +97,6 @@ func (r *River) CancelDownload(clusterID int32, fileID int64, accessHash int64) 
 // This function MAY NOT stop the upload instantly but for sure it will be canceled in the first
 // possible time in future.
 func (r *River) CancelUpload(clusterID int32, fileID int64, accessHash int64) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("CancelUpload", time.Now().Sub(startTime))
-	}()
-
 	clientFile, err := repo.Files.Get(clusterID, fileID, uint64(accessHash))
 	if err != nil {
 		return
@@ -148,33 +136,18 @@ func (r *River) ResumeUpload(pendingMessageID int64) {
 
 // AccountUploadPhoto upload user profile photo
 func (r *River) AccountUploadPhoto(filePath string) (reqID string) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("AccountUploadPhoto", time.Now().Sub(startTime))
-	}()
-
 	reqID = r.fileCtrl.UploadUserPhoto(filePath)
 	return
 }
 
 // GroupUploadPhoto upload group profile photo
 func (r *River) GroupUploadPhoto(groupID int64, filePath string) (reqID string) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("GroupUploadPhoto", time.Now().Sub(startTime))
-	}()
-
 	reqID = r.fileCtrl.UploadGroupPhoto(groupID, filePath)
 	return
 }
 
 // GetSharedMedia search in given dialog files
 func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, delegate RequestDelegate) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("GetSharedMedia", time.Now().Sub(startTime))
-	}()
-
 	msgs, err := repo.Messages.GetSharedMedia(peerID, peerType, domain.SharedMediaType(mediaType))
 	if err != nil {
 		out := new(msg.MessageEnvelope)
@@ -226,10 +199,6 @@ func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, de
 
 // GetGetDBStatus returns message IDs and total size of each media stored in user's database
 func (r *River) GetDBStatus(delegate RequestDelegate) {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("GetDBStatus", time.Now().Sub(startTime))
-	}()
 	delegate.OnTimeout(domain.ErrDoesNotExists)
 	res := msg.DBMediaInfo{}
 

@@ -107,7 +107,7 @@ func (ctx *uploadContext) addToUploaded(ctrl *Controller, partIndex int32) {
 }
 
 func (ctx *uploadContext) generateFileSavePart(fileID int64, partID int32, totalParts int32, bytes []byte) *msg.MessageEnvelope {
-	req := new(msg.FileSavePart)
+	req := &msg.FileSavePart{}
 	req.TotalParts = totalParts
 	req.Bytes = bytes
 	req.FileID = fileID

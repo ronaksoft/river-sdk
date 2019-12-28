@@ -1,10 +1,5 @@
 package riversdk
 
-import (
-	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
-	"time"
-)
-
 /*
    Creation Time: 2019 - Jun - 25
    Created by:  (ehsan)
@@ -15,26 +10,14 @@ import (
 */
 
 func (r *River) StartNetwork() {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("StartNetwork", time.Now().Sub(startTime))
-	}()
 	r.networkCtrl.Connect()
 }
 
 func (r *River) StopNetwork() {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("StopNetwork", time.Now().Sub(startTime))
-	}()
 	r.networkCtrl.Disconnect()
 }
 
 func (r *River) GetNetworkStatus() int32 {
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("GetNetworkStatus", time.Now().Sub(startTime))
-	}()
 	return int32(r.networkCtrl.GetQuality())
 }
 

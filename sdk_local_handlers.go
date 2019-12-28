@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
-	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"sort"
@@ -1350,11 +1349,6 @@ func (r *River) clientGlobalSearch(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 
 	searchPhrase := strings.ToLower(req.Text)
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("SearchGlobal", time.Now().Sub(startTime))
-	}()
-
 	searchResults := &msg.ClientSearchResult{}
 	var userContacts []*msg.ContactUser
 	var nonContacts []*msg.ContactUser
@@ -1432,10 +1426,6 @@ func (r *River) clientContactSearch(in, out *msg.MessageEnvelope, timeoutCB doma
 	}
 
 	searchPhrase := strings.ToLower(req.Text)
-	startTime := time.Now()
-	defer func() {
-		mon.FunctionResponseTime("SearchContacts", time.Now().Sub(startTime))
-	}()
 	logs.Info("SearchContacts", zap.String("Phrase", searchPhrase))
 
 

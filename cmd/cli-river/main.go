@@ -50,7 +50,6 @@ func main() {
 	_Shell.AddCmd(User)
 	_Shell.AddCmd(Debug)
 	_Shell.AddCmd(Account)
-	_Shell.AddCmd(Tests)
 	_Shell.AddCmd(Group)
 	_Shell.AddCmd(File)
 

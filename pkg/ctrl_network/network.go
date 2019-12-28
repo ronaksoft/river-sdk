@@ -653,7 +653,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 	}
 
 	// Decrypt response
-	res := new(msg.ProtoMessage)
+	res := &msg.ProtoMessage{}
 	err = res.Unmarshal(resBuff)
 	if err != nil {
 		return nil, err

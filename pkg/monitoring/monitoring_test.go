@@ -2,6 +2,7 @@ package mon
 
 import (
 	"fmt"
+	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
 	"testing"
 	"time"
 )
@@ -17,7 +18,7 @@ import (
 
 func TestFunctionResponseTime(t *testing.T) {
 	for i := 0; i < 10; i++ {
-		FunctionResponseTime("F1", time.Second*time.Duration(i))
+		QueueTime(msg.C_TestRequest, time.Second*time.Duration(i))
 	}
 	fmt.Println(Stats.MaxFunctionResponseTime, Stats.MinFunctionResponseTime)
 	fmt.Println(Stats.AvgFunctionResponseTime)
