@@ -13,6 +13,7 @@ import (
 	"os"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 /*
@@ -136,6 +137,11 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 				waitGroup.Wait()
 				_ = ctx.file.Close()
 				if !ctx.req.SkipDelegateCall {
+					logs.Warn("Upload Canceled (Request Not Exists)",
+						zap.Int64("FileID", ctx.req.FileID),
+						zap.Int64("Size", ctx.req.FileSize),
+						zap.String("Path", ctx.req.FilePath),
+					)
 					ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, false)
 				}
 				return domain.RequestStatusCanceled
@@ -143,10 +149,10 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 			ctx.rateLimit <- struct{}{}
 			waitGroup.Add(1)
 			go func(partIndex int32) {
-				defer waitGroup.Done()
 				defer func() {
 					<-ctx.rateLimit
 				}()
+				defer waitGroup.Done()
 
 				bytes := pbytes.GetLen(int(ctx.req.ChunkSize))
 				defer pbytes.Put(bytes)
@@ -158,7 +164,11 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 					ctx.parts <- partIndex
 					return
 				}
-				res, err := ctrl.network.SendHttp(ctx.req.httpContext, ctx.generateFileSavePart(ctx.req.FileID, partIndex+1, ctx.req.TotalParts, bytes[:n]))
+				res, err := ctrl.network.SendHttp(
+					ctx.req.httpContext,
+					ctx.generateFileSavePart(ctx.req.FileID, partIndex+1, ctx.req.TotalParts, bytes[:n]),
+					domain.HttpRequestTime,
+				)
 				if err != nil {
 					logs.Warn("Error in SendHttp", zap.Error(err))
 					atomic.AddInt32(&ctx.req.MaxRetries, -1)
@@ -188,16 +198,18 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 				_ = repo.Files.MarkAsUploaded(ctx.req.FileID)
 				return domain.RequestStatusCompleted
 			default:
-				if !ctx.req.SkipDelegateCall {
-					ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, true)
-				}
-				return domain.RequestStatusError
+				time.Sleep(time.Millisecond * 100)
 			}
 		}
 	}
 
 	_ = ctx.file.Close()
 	if !ctx.req.SkipDelegateCall {
+		logs.Warn("Upload Canceled (Max Retries Exceeds)",
+			zap.Int64("FileID", ctx.req.FileID),
+			zap.Int64("Size", ctx.req.FileSize),
+			zap.String("Path", ctx.req.FilePath),
+		)
 		ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, true)
 	}
 	return domain.RequestStatusError

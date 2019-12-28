@@ -15,8 +15,9 @@ import (
 
 const (
 	downloadChunkSize    = 256 * 1 << 10 // 256 KB
+	uploadChunkSize      = 256 * 1 << 10 // 256KB
 	maxDownloadInFlights = 10
 	maxUploadInFlights   = 10
-	retryMaxAttempts     = 200
+	retryMaxAttempts     = 2000
 	retryWaitTime        = 100 * time.Millisecond
 )

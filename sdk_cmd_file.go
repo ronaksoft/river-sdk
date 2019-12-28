@@ -6,6 +6,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"github.com/dgraph-io/badger"
 	"go.uber.org/zap"
 	"os"
 )
@@ -67,7 +68,23 @@ func (r *River) GetFilePath(clusterID int32, fileID int64, accessHash int64) str
 }
 
 func (r *River) FileDownloadAsync(clusterID int32, fileID int64, accessHash int64, skipDelegate bool) (reqID string) {
-	reqID, _ = r.fileCtrl.DownloadAsync(clusterID, fileID, uint64(accessHash), skipDelegate)
+	var err error
+	reqID, err = r.fileCtrl.DownloadAsync(clusterID, fileID, uint64(accessHash), skipDelegate)
+	switch err {
+	case badger.ErrKeyNotFound:
+		logs.Warn("Error On GetFile (Key not found)",
+			zap.Int32("ClusterID", clusterID),
+			zap.Int64("FileID", fileID),
+			zap.Int64("AccessHash", int64(accessHash)),
+		)
+	default:
+		logs.Warn("Error On GetFile",
+			zap.Int32("ClusterID", clusterID),
+			zap.Int64("FileID", fileID),
+			zap.Int64("AccessHash", int64(accessHash)),
+			zap.Error(err),
+		)
+	}
 	return
 }
 

@@ -1,13 +1,15 @@
 package fileCtrl_test
 
 import (
-	"context"
 	"crypto/md5"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	networkCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
+	. "github.com/smartystreets/goconvey/convey"
 	"github.com/valyala/tcplisten"
 	"go.uber.org/zap"
 	"hash"
@@ -31,6 +33,11 @@ import (
 var (
 	_Network *networkCtrl.Controller
 	_File    *fileCtrl.Controller
+
+	uploadStart      = false
+	waitGroupUpload  sync.WaitGroup
+	speedBytesPerSec int = 1024 * 1024
+	errRatePercent   int
 )
 
 func init() {
@@ -49,12 +56,22 @@ func init() {
 		},
 		OnCancel: func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool) {
 			logs.Error("File Canceled", zap.String("ReqID", reqID), zap.Bool("HasError", hasError))
+			if clusterID == 0 && uploadStart {
+				// It is an Upload
+				waitGroupUpload.Done()
+			}
 		},
-		OnCompleted: func(reqID string, clusterID int32, fileID, accessHash int64, filePath string) {
-			logs.Info("File Completed", zap.String("ReqID", reqID))
-		},
+		OnCompleted: func(reqID string, clusterID int32, fileID, accessHash int64, filePath string) {},
 		PostUploadProcess: func(req fileCtrl.UploadRequest) {
-			logs.Info("PostProcess:", zap.Any("TotalParts", req.TotalParts))
+			logs.Info("PostProcess",
+				zap.Any("TotalParts", req.TotalParts),
+				zap.Any("FilePath", req.FilePath),
+				zap.Any("FileID", req.FileID),
+			)
+			if uploadStart {
+				waitGroupUpload.Done()
+			}
+
 		},
 	})
 	_File.Start()
@@ -68,7 +85,7 @@ func init() {
 
 	wg := sync.WaitGroup{}
 
-	for i := 0; i < 10; i++ {
+	for i := 1; i < 10; i++ {
 		wg.Add(1)
 		go func(i int) {
 			err := repo.Files.Save(&msg.ClientFile{
@@ -108,45 +125,44 @@ type server struct {
 	sha           map[int64]hash.Hash
 }
 
-func (t server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	time.Sleep(30 * time.Second)
-	// if ronak.RandomInt(30) > 5 {
-	// 	res.WriteHeader(http.StatusForbidden)
-	// 	return
-	// }
-	body, _ := ioutil.ReadAll(req.Body)
-	protoMessage := new(msg.ProtoMessage)
-	_ = protoMessage.Unmarshal(body)
-	eIn := new(msg.MessageEnvelope)
-	_ = eIn.Unmarshal(protoMessage.Payload)
-	switch eIn.Constructor {
+func (t server) ServeHTTP(httpRes http.ResponseWriter, httpReq *http.Request) {
+	body, _ := ioutil.ReadAll(httpReq.Body)
+	time.Sleep(time.Duration(len(body) / speedBytesPerSec))
+
+	if ronak.RandomInt(100) > (100 - errRatePercent) {
+		httpRes.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	protoIn := &msg.ProtoMessage{}
+	protoOut := &msg.ProtoMessage{}
+	in := &msg.MessageEnvelope{}
+	out := &msg.MessageEnvelope{}
+
+	_ = protoIn.Unmarshal(body)
+	_ = in.Unmarshal(protoIn.Payload)
+	switch in.Constructor {
 	case msg.C_FileGet:
-		req := new(msg.FileGet)
-		_ = req.Unmarshal(eIn.Message)
-		logs.Info("FileGet",
-			zap.Int32("Offset", req.Offset),
-			zap.Int32("Limit", req.Limit),
-		)
-		file := new(msg.File)
+		req := &msg.FileGet{}
+		_ = req.Unmarshal(in.Message)
+		// logs.Info("FileGet", zap.Int32("Offset", httpReq.Offset), zap.Int32("Limit", httpReq.Limit))
+		file := &msg.File{}
 		file.Bytes = make([]byte, req.Limit)
 		for i := int32(0); i < req.Limit-2; i++ {
 			file.Bytes[i] = 'X'
 		}
 		file.Bytes[req.Limit-2] = '\r'
 		file.Bytes[req.Limit-1] = '\n'
-		eIn.Constructor = msg.C_File
-		eIn.Message, _ = file.Marshal()
-		protoMessage.Payload, _ = eIn.Marshal()
-		b, _ := protoMessage.Marshal()
-		_, _ = res.Write(b)
+
+		out.Constructor = msg.C_File
+		out.Message, _ = file.Marshal()
+		protoOut.Payload, _ = out.Marshal()
+		b, _ := protoOut.Marshal()
+		_, _ = httpRes.Write(b)
 	case msg.C_FileSavePart:
-		req := new(msg.FileSavePart)
-		_ = req.Unmarshal(eIn.Message)
-		logs.Info("SavePart:",
-			zap.Int64("FileID", req.FileID),
-			zap.Int32("PartID", req.PartID),
-			zap.Int32("TotalParts", req.TotalParts),
-		)
+		req := &msg.FileSavePart{}
+		_ = req.Unmarshal(in.Message)
+		// logs.Info("SavePart:", zap.Int64("FileID", req.FileID), zap.Int32("PartID", req.PartID), zap.Int32("TotalParts", req.TotalParts))
 		t.mtx.Lock()
 		if _, ok := t.uploadTracker[req.FileID]; !ok {
 			t.uploadTracker[req.FileID] = make(map[int32]struct{})
@@ -154,8 +170,6 @@ func (t server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		}
 		t.uploadTracker[req.FileID][req.PartID] = struct{}{}
 		t.sha[req.FileID].Write(req.Bytes)
-		// println(hex.Dump(req.Bytes[:100]))
-		println(len(req.Bytes))
 		t.mtx.Unlock()
 		if req.PartID == req.TotalParts {
 			sum := int32(0)
@@ -164,80 +178,116 @@ func (t server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 				sum += partID
 			}
 			t.mtx.Unlock()
-			if sum == (req.TotalParts*(req.TotalParts+1))/2 {
-				logs.Info("CORRECT UPLOAD")
+			if sum != (req.TotalParts*(req.TotalParts+1))/2 {
+				out.Constructor = msg.C_Error
+				out.Message, _ = (&msg.Error{
+					Code:  msg.ErrCodeIncomplete,
+					Items: msg.ErrItemFileParts,
+				}).Marshal()
+				protoOut.Payload, _ = out.Marshal()
+				b, _ := protoOut.Marshal()
+				_, _ = httpRes.Write(b)
 			}
 		}
-		eIn.Constructor = msg.C_Bool
-		eIn.Message, _ = (&msg.Bool{}).Marshal()
-		protoMessage.Payload, _ = eIn.Marshal()
-		b, _ := protoMessage.Marshal()
-		_, _ = res.Write(b)
+		out.Constructor = msg.C_Bool
+		out.Message, _ = (&msg.Bool{}).Marshal()
+		protoOut.Payload, _ = out.Marshal()
+		b, _ := protoOut.Marshal()
+		_, _ = httpRes.Write(b)
 	}
 }
 
 func TestDownloadFileSync(t *testing.T) {
-	wg := sync.WaitGroup{}
+	Convey("DownloadFile (Synced)", t, func(c C) {
+		wg := sync.WaitGroup{}
 
-	for i := 0; i < 1; i++ {
-		wg.Add(1)
-		go func(i int) {
-			clientFile, err := repo.Files.Get(1, int64(i), 10)
-			if err != nil {
-				t.Fatal(err)
-			}
-			filePath, err := _File.DownloadSync(clientFile.ClusterID, clientFile.FileID, clientFile.AccessHash, false)
-			if err != nil {
-				t.Fatal(err)
-			}
-			t.Log(i, filePath)
-			wg.Done()
-		}(i)
-	}
-	wg.Wait()
+		for i := 1; i < 5; i++ {
+			wg.Add(1)
+			go func(i int) {
+				clientFile, err := repo.Files.Get(1, int64(i), 10)
+				c.So(err, ShouldBeNil)
+				filePath, err := _File.DownloadSync(clientFile.ClusterID, clientFile.FileID, clientFile.AccessHash, false)
+				if err != domain.ErrAlreadyDownloading {
+					c.So(err, ShouldBeNil)
+				}
+				c.So(filePath, ShouldEqual, fileCtrl.GetFilePath(clientFile))
+				wg.Done()
+			}(i)
+		}
+		wg.Wait()
+	})
+
 }
 
 func TestDownloadFileASync(t *testing.T) {
-	for i := 0; i < 1; i++ {
-		clientFile, err := repo.Files.Get(1, int64(i), 10)
-		if err != nil {
-			t.Fatal(err)
+	Convey("DownloadFile (Async)", t, func(c C) {
+		for i := 5; i < 10; i++ {
+			clientFile, err := repo.Files.Get(1, int64(i), 10)
+			c.So(err, ShouldBeNil)
+			_, err = _File.DownloadAsync(clientFile.ClusterID, clientFile.FileID, clientFile.AccessHash, false)
+			c.So(err, ShouldBeNil)
 		}
-		filePath, err := _File.DownloadAsync(clientFile.ClusterID, clientFile.FileID, clientFile.AccessHash, false)
-		if err != nil {
-			t.Fatal(err)
-		}
-		t.Log(i, filePath)
-	}
-	time.Sleep(10 * time.Second)
+	})
 
 }
 
 func TestUpload(t *testing.T) {
-	// _File.UploadUserPhoto("./testdata/big")
-	b, _ := ioutil.ReadFile("./testdata/medium")
-	// hash := md5.Sum(b)
-	// fmt.Println(hash)
-	// println(hex.Dump(b[:100]))
-	println("SENT", len(b))
-	_File.UploadMessageDocument(1000, "./testdata/medium", "", 323232, 10)
-}
+	uploadStart = true
+	Convey("Upload", t, func() {
+		fileID := ronak.RandomInt64(0)
+		msgID := ronak.RandomInt64(0)
+		Convey("Good Network", func(c C) {
+			startTime := time.Now()
+			Convey("Upload Big File (Good Network)", func(c C) {
+				waitGroupUpload.Add(1)
+				speedBytesPerSec = 1024 * 512
+				_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0)
+			})
+			Convey("Upload Medium File (Good Network)", func(c C) {
+				waitGroupUpload.Add(1)
+				speedBytesPerSec = 1024 * 512
+				_File.UploadMessageDocument(msgID, "./testdata/medium", "", fileID, 0)
+			})
 
-func TestContext(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	go func() {
-		_, err := _Network.SendHttp(ctx, &msg.MessageEnvelope{
-			Constructor: 0,
-			RequestID:   0,
-			Message:     nil,
+			waitGroupUpload.Wait()
+			_, _ = Println("Good Network:", time.Now().Sub(startTime))
 		})
-		if err != nil && err != context.Canceled {
-			t.Error(err)
-		}
-	}()
-	time.Sleep(time.Second * 3)
-	cancel()
-
-	time.Sleep(time.Second)
+		Convey("Bad Network", func(c C) {
+			startTime := time.Now()
+			Convey("Upload Big File (Bad Network)", func(c C) {
+				speedBytesPerSec = 1024
+				errRatePercent = 50
+				waitGroupUpload.Add(1)
+				_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0)
+			})
+			Convey("Upload Medium File (Bad Network)", func(c C) {
+				speedBytesPerSec = 1024
+				errRatePercent = 50
+				waitGroupUpload.Add(1)
+				_File.UploadMessageDocument(msgID, "./testdata/medium", "", fileID, 0)
+			})
+			waitGroupUpload.Wait()
+			_, _ = Println("Bad Network:", time.Now().Sub(startTime))
+		})
+	})
 
 }
+
+// func TestContext(t *testing.T) {
+// 	ctx, cancel := context.WithCancel(context.Background())
+// 	go func() {
+// 		_, err := _Network.SendHttp(ctx, &msg.MessageEnvelope{
+// 			Constructor: 0,
+// 			RequestID:   0,
+// 			Message:     nil,
+// 		})
+// 		if err != nil && err != context.Canceled {
+// 			t.Error(err)
+// 		}
+// 	}()
+// 	time.Sleep(time.Second * 3)
+// 	cancel()
+//
+// 	time.Sleep(time.Second)
+//
+// }

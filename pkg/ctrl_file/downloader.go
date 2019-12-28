@@ -136,7 +136,7 @@ func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 				}()
 
 				offset := partIndex * ctx.req.ChunkSize
-				res, err := ctrl.network.SendHttp(ctx.req.httpContext, ctx.generateFileGet(offset, ctx.req.ChunkSize))
+				res, err := ctrl.network.SendHttp(ctx.req.httpContext, ctx.generateFileGet(offset, ctx.req.ChunkSize), domain.HttpRequestTime)
 				if err != nil {
 					logs.Warn("Downloader got error from NetworkController SendHTTP", zap.Error(err))
 					atomic.AddInt32(&ctx.req.MaxRetries, -1)

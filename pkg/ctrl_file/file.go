@@ -105,8 +105,9 @@ func (ctrl *Controller) Start() {
 	// Resume downloads
 	dBytes, err := repo.System.LoadBytes("Downloads")
 	if err == nil {
-		_ = json.Unmarshal(dBytes, &ctrl.downloadRequests)
-		for _, req := range ctrl.downloadRequests {
+		downloadRequests := make(map[string]DownloadRequest)
+		_ = json.Unmarshal(dBytes, &downloadRequests)
+		for _, req := range downloadRequests {
 			go func(req DownloadRequest) {
 				err := ctrl.download(req)
 				logs.WarnOnErr("Error On Download Start", err)
@@ -117,9 +118,13 @@ func (ctrl *Controller) Start() {
 	// Resume uploads
 	dBytes, err = repo.System.LoadBytes("Uploads")
 	if err == nil {
-		_ = json.Unmarshal(dBytes, &ctrl.uploadRequests)
-		for _, req := range ctrl.uploadRequests {
+		uploadRequests := make(map[string]UploadRequest)
+		_ = json.Unmarshal(dBytes, &uploadRequests)
+		for _, req := range uploadRequests {
 			go func(req UploadRequest) {
+				if req.ChunkSize <= 0 {
+					req.ChunkSize = uploadChunkSize
+				}
 				err := ctrl.upload(req)
 				logs.WarnOnErr("Error On Upload Start", err)
 			}(req)
@@ -207,22 +212,6 @@ func (ctrl *Controller) CancelUploadRequest(reqID string) {
 func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash uint64, skipDelegates bool) (reqID string, err error) {
 	clientFile, err := repo.Files.Get(clusterID, fileID, accessHash)
 	if err != nil {
-		switch err {
-		case badger.ErrKeyNotFound:
-			logs.Warn("Error On GetFile (Key not found)",
-				zap.Int32("ClusterID", clusterID),
-				zap.Int64("FileID", fileID),
-				zap.Int64("AccessHash", int64(accessHash)),
-			)
-		default:
-			logs.Warn("Error On GetFile",
-				zap.Int32("ClusterID", clusterID),
-				zap.Int64("FileID", fileID),
-				zap.Int64("AccessHash", int64(accessHash)),
-				zap.Error(err),
-			)
-		}
-
 		return "", err
 	}
 	go func() {
@@ -312,7 +301,7 @@ func (ctrl *Controller) downloadAccountPhoto(clientFile *msg.ClientFile) (filePa
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
 		filePath = getAccountProfilePath(clientFile.UserID, req.Location.FileID)
-		res, err := ctrl.network.SendHttp(nil, envelop)
+		res, err := ctrl.network.SendHttp(nil, envelop, domain.HttpRequestTime)
 		if err != nil {
 			return err
 		}
@@ -367,7 +356,7 @@ func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
 		filePath = getGroupProfilePath(clientFile.GroupID, req.Location.FileID)
-		res, err := ctrl.network.SendHttp(nil, envelop)
+		res, err := ctrl.network.SendHttp(nil, envelop, domain.HttpRequestTime)
 		if err != nil {
 			return err
 		}
@@ -422,7 +411,7 @@ func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath 
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
 		filePath = getThumbnailPath(clientFile.FileID, clientFile.ClusterID)
-		res, err := ctrl.network.SendHttp(nil, envelop)
+		res, err := ctrl.network.SendHttp(nil, envelop, domain.HttpRequestTime)
 		if err != nil {
 			return err
 		}
@@ -544,6 +533,7 @@ func (ctrl *Controller) UploadUserPhoto(filePath string) (reqID string) {
 	err := ctrl.upload(UploadRequest{
 		IsProfilePhoto: true,
 		FileID:         fileID,
+		ChunkSize:      uploadChunkSize,
 		MaxInFlights:   maxUploadInFlights,
 		FilePath:       filePath,
 	})
@@ -562,6 +552,7 @@ func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) (reqID 
 		IsProfilePhoto: true,
 		GroupID:        groupID,
 		FileID:         fileID,
+		ChunkSize:      uploadChunkSize,
 		MaxInFlights:   maxUploadInFlights,
 		FilePath:       filePath,
 	})
@@ -598,14 +589,16 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 		FilePath:     filePath,
 		ThumbID:      thumbID,
 		ThumbPath:    thumbPath,
+		ChunkSize:    uploadChunkSize,
 		MaxInFlights: maxUploadInFlights,
 	}
 
 	reqThumb := UploadRequest{
 		MessageID:        0,
 		FileID:           thumbID,
-		MaxInFlights:     1,
 		FilePath:         thumbPath,
+		ChunkSize:        uploadChunkSize,
+		MaxInFlights:     maxUploadInFlights,
 		SkipDelegateCall: false,
 	}
 	if thumbID != 0 {
@@ -664,10 +657,6 @@ func (ctrl *Controller) upload(req UploadRequest) error {
 	if req.FileSize > domain.FileMaxAllowedSize {
 		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
 		return err
-	}
-
-	if req.ChunkSize == 0 {
-		req.ChunkSize = downloadChunkSize
 	}
 
 	if req.MaxRetries <= 0 {

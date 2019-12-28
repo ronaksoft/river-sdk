@@ -604,7 +604,7 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 }
 
 // Send encrypt and send request to server and receive and decrypt its response
-func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
+func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEnvelope, timeout time.Duration) (*msg.MessageEnvelope, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -634,7 +634,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 	}
 
 	// Set timeout
-	ctrl.httpClient.Timeout = domain.HttpRequestTime
+	ctrl.httpClient.Timeout = timeout
 
 	// Send Data
 	httpReq, err := http.NewRequest(http.MethodPost, ctrl.httpEndpoint, reqBuff)
