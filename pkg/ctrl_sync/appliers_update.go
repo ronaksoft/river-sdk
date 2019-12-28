@@ -475,14 +475,11 @@ func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 
 	if x.Photo != nil {
 		_ = repo.Users.UpdatePhoto(x.UserID, x.Photo)
+		repo.Users.SavePhotoGallery(x.UserID, x.Photo)
 	}
 
-	if x.PhotoID != 0 {
-		if x.Photo != nil && x.Photo.PhotoSmall.FileID != 0 {
-			repo.Users.SavePhotoGallery(x.UserID, x.Photo)
-		} else {
-			repo.Users.RemovePhotoGallery(x.UserID, x.PhotoID)
-		}
+	for _, photoID := range x.DeletedPhotoIDs {
+		repo.Users.RemovePhotoGallery(x.UserID, photoID)
 	}
 
 	res := []*msg.UpdateEnvelope{u}
