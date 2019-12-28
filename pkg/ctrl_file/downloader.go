@@ -10,6 +10,7 @@ import (
 	"os"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 /*
@@ -128,7 +129,6 @@ func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 			}
 			ctx.rateLimit <- struct{}{}
 			waitGroup.Add(1)
-
 			go func(partIndex int32) {
 				defer waitGroup.Done()
 				defer func() {
@@ -202,6 +202,7 @@ func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 
 				return domain.RequestStatusCompleted
 			default:
+				time.Sleep(time.Millisecond * 100)
 				// Keep downloading
 			}
 		}
