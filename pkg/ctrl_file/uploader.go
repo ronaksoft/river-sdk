@@ -161,7 +161,7 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 			zap.Int32("ChunkSize", ctx.req.ChunkSize),
 		)
 		waitGroup := sync.WaitGroup{}
-		maxRetries := 5 + ctx.req.TotalParts/100
+		maxRetries := 10 + ctx.req.TotalParts/100
 		for maxRetries > 0 {
 			select {
 			case partIndex := <-ctx.parts:
