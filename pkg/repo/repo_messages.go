@@ -592,7 +592,7 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64, limit int32
 	return userMessages
 }
 
-func (r *repoMessages) SearchByLabels(labelIDs []int32, limit int32) []*msg.UserMessage {
+func (r *repoMessages) SearchByLabels(labelIDs []int32, peerID int64, limit int32) []*msg.UserMessage {
 	userMessages := make([]*msg.UserMessage, 0, limit)
 	_ = badgerView(func(txn *badger.Txn) error {
 		st := r.badger.NewStream()
@@ -624,10 +624,17 @@ func (r *repoMessages) SearchByLabels(labelIDs []int32, limit int32) []*msg.User
 			return true
 		}
 		st.Send = func(list *pb.KVList) error {
+			if int32(len(userMessages)) > limit {
+				return nil
+			}
 			for _, kv := range list.Kv {
 				m := &msg.UserMessage{}
 				if err := m.Unmarshal(kv.Value); err == nil {
-					userMessages = append(userMessages, m)
+					if peerID == 0 {
+						userMessages = append(userMessages, m)
+					} else if m.PeerID == peerID {
+						userMessages = append(userMessages, m)
+					}
 				}
 			}
 			return nil

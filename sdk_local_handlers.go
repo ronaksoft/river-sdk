@@ -1354,7 +1354,12 @@ func (r *River) clientGlobalSearch(in, out *msg.MessageEnvelope, timeoutCB domai
 	var nonContacts []*msg.ContactUser
 	var msgs []*msg.UserMessage
 	if len(req.LabelIDs) > 0 {
-		msgs = repo.Messages.SearchByLabels(req.LabelIDs, req.Limit)
+		if req.Peer != nil {
+			msgs = repo.Messages.SearchByLabels(req.LabelIDs, req.Peer.ID, req.Limit)
+		} else {
+			msgs = repo.Messages.SearchByLabels(req.LabelIDs, 0, req.Limit)
+		}
+
 	} else if req.Peer != nil {
 		msgs = repo.Messages.SearchTextByPeerID(searchPhrase, req.Peer.ID, req.Limit)
 	} else {
@@ -1406,7 +1411,6 @@ func (r *River) clientGlobalSearch(in, out *msg.MessageEnvelope, timeoutCB domai
 	searchResults.Groups = groups
 	searchResults.MatchedUsers = matchedUsers
 
-
 	out.RequestID = in.RequestID
 	out.Constructor = msg.C_ClientSearchResult
 	out.Message, _ = searchResults.Marshal()
@@ -1428,7 +1432,6 @@ func (r *River) clientContactSearch(in, out *msg.MessageEnvelope, timeoutCB doma
 	searchPhrase := strings.ToLower(req.Text)
 	logs.Info("SearchContacts", zap.String("Phrase", searchPhrase))
 
-
 	users := &msg.UsersMany{}
 	contactUsers, _ := repo.Users.SearchContacts(searchPhrase)
 	userIDs := make([]int64, 0, len(contactUsers))
@@ -1445,6 +1448,5 @@ func (r *River) clientContactSearch(in, out *msg.MessageEnvelope, timeoutCB doma
 			successCB(out)
 		})
 	}
-
 
 }
