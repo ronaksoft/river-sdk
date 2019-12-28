@@ -161,8 +161,9 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 			zap.Int32("ChunkSize", ctx.req.ChunkSize),
 		)
 		waitGroup := sync.WaitGroup{}
-		maxRetries := 10 + ctx.req.TotalParts/100
+		maxRetries := ctx.req.MaxInFlights
 		for maxRetries > 0 {
+			// logs.Info("Loop", zap.Int64("FileID", ctx.req.FileID), zap.Int32("Retry", maxRetries))
 			select {
 			case partIndex := <-ctx.parts:
 				if !ctrl.existUploadRequest(ctx.req.GetID()) {
@@ -192,7 +193,7 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 					n, err := ctx.file.ReadAt(bytes, int64(offset))
 					if err != nil && err != io.EOF {
 						logs.Warn("Error in ReadFile", zap.Error(err))
-						atomic.AddInt32(&maxRetries, -1)
+						atomic.StoreInt32(&maxRetries, 0)
 						ctx.parts <- partIndex
 						return
 					}
@@ -208,7 +209,6 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 								atomic.AddInt32(&maxRetries, -1)
 							}
 						default:
-							logs.Debug("Error in SendHttp", zap.Error(err))
 						}
 						ctx.parts <- partIndex
 						return
@@ -217,7 +217,7 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 					case msg.C_Bool:
 						ctx.addToUploaded(ctrl, partIndex)
 					default:
-						atomic.AddInt32(&maxRetries, -1)
+						atomic.StoreInt32(&maxRetries, 0)
 						ctx.parts <- partIndex
 					}
 				}(partIndex)
@@ -236,7 +236,7 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 					_ = repo.Files.MarkAsUploaded(ctx.req.FileID)
 					return domain.RequestStatusCompleted
 				default:
-					time.Sleep(time.Millisecond * 100)
+					time.Sleep(time.Millisecond * 200)
 				}
 			}
 		}

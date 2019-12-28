@@ -113,6 +113,9 @@ func bestChunkSize(fileSize int64) int32 {
 	}
 	minChunkSize := (fileSize / maxParts) >> 10
 	dataRate := mon.GetDataTransferRate()
+	if dataRate == 0 {
+		dataRate = chunkSizesKB[len(chunkSizesKB)-1]
+	}
 	max := int32(math.Max(float64(minChunkSize), float64(dataRate)))
 	for _, cs := range chunkSizesKB {
 		if max > cs {
@@ -126,6 +129,9 @@ func bestChunkSize(fileSize int64) int32 {
 func minChunkSize(fileSize int64) int32 {
 	minChunkSize := (fileSize / maxParts) >> 10
 	dataRate := mon.GetDataTransferRate()
+	if dataRate == 0 {
+		dataRate = chunkSizesKB[len(chunkSizesKB)-1]
+	}
 	min := int32(math.Min(float64(minChunkSize), float64(dataRate)))
 	for _, cs := range chunkSizesKB {
 		if min > cs {

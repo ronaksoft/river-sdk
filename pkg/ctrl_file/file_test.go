@@ -257,7 +257,7 @@ func TestUpload(t *testing.T) {
 		Convey("Bad Network", func(c C) {
 			startTime := time.Now()
 			Convey("Upload Big File (Bad Network)", func(c C) {
-				speedBytesPerSec = 1024
+				speedBytesPerSec = 8192
 				errRatePercent = 0
 				waitGroupUpload.Add(1)
 				_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0)
@@ -274,22 +274,3 @@ func TestUpload(t *testing.T) {
 	})
 
 }
-
-// func TestContext(t *testing.T) {
-// 	ctx, cancel := context.WithCancel(context.Background())
-// 	go func() {
-// 		_, err := _Network.SendHttp(ctx, &msg.MessageEnvelope{
-// 			Constructor: 0,
-// 			RequestID:   0,
-// 			Message:     nil,
-// 		})
-// 		if err != nil && err != context.Canceled {
-// 			t.Error(err)
-// 		}
-// 	}()
-// 	time.Sleep(time.Second * 3)
-// 	cancel()
-//
-// 	time.Sleep(time.Second)
-//
-// }

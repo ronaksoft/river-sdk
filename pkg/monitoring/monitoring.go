@@ -62,9 +62,9 @@ func DataTransfer(totalUploadBytes, totalDownloadBytes int, d time.Duration) {
 	Stats.mtx.Unlock()
 }
 
-func GetDataTransferRate() int {
+func GetDataTransferRate() int32 {
 	Stats.mtx.RLock()
-	rate := Stats.totalBytes / int(Stats.dataTransferPeriod/time.Millisecond+1)
+	rate := int32(Stats.totalBytes / int(Stats.dataTransferPeriod/time.Millisecond+1))
 	Stats.mtx.RUnlock()
 	return rate
 }

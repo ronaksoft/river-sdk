@@ -225,7 +225,6 @@ func (ctrl *Controller) RealtimeCommand(requestID uint64, constructor int64, com
 
 	// Add the callback functions
 	reqCB := domain.AddRequestCallback(requestID, constructor, successCB, domain.WebsocketRequestTime, timeoutCB, isUICallback)
-
 	execBlock := func(reqID uint64, req *msg.MessageEnvelope) {
 		err := ctrl.network.SendWebsocket(req, blockingMode)
 		if err != nil {
