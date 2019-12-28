@@ -87,7 +87,7 @@ func (ctrl *Controller) distributor() {
 			continue
 		}
 
-		mon.QueueTime(req.MessageEnvelope.Constructor, time.Now().Sub(req.InsertTime))
+		mon.QueueTime(time.Now().Sub(req.InsertTime))
 		if !ctrl.IsRequestCancelled(int64(req.ID)) {
 			go ctrl.executor(req)
 		} else {

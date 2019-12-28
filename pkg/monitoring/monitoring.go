@@ -65,7 +65,7 @@ func ServerResponseTime(reqConstructor, resConstructor int64, t time.Duration) {
 	Stats.mtx.Unlock()
 }
 
-func QueueTime(constructor int64, t time.Duration) {
+func QueueTime(t time.Duration) {
 	total := atomic.AddInt32(&Stats.TotalQueueItems, 1)
 	Stats.mtx.Lock()
 	Stats.AvgQueueTime = (Stats.AvgQueueTime*time.Duration(total-1) + t) / time.Duration(total)
