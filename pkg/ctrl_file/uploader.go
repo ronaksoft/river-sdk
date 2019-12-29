@@ -163,7 +163,6 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 		waitGroup := sync.WaitGroup{}
 		maxRetries := ctx.req.MaxInFlights
 		for maxRetries > 0 {
-			// logs.Info("Loop", zap.Int64("FileID", ctx.req.FileID), zap.Int32("Retry", maxRetries))
 			select {
 			case partIndex := <-ctx.parts:
 				if !ctrl.existUploadRequest(ctx.req.GetID()) {
@@ -236,6 +235,7 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 					_ = repo.Files.MarkAsUploaded(ctx.req.FileID)
 					return domain.RequestStatusCompleted
 				default:
+					// Keep Uploading
 					time.Sleep(time.Millisecond * 200)
 				}
 			}
