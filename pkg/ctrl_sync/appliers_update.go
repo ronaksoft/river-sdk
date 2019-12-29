@@ -29,6 +29,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 
 	// used messageType to identify client & server messages on Media thingy
 	x.Message.MessageType = 1
+	repo.MessagesExtra.SaveScrollID(x.Message.PeerID, x.Message.PeerType, 0)
 
 	dialog, _ := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
 	if dialog == nil {
