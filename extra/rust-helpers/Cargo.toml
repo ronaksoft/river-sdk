@@ -1,0 +1,12 @@
+[package]
+name = "rust-helpers"
+version = "0.1.0"
+authors = ["Ehsan N. Moosa <ehsan.code@nested.me>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+num-bigint = {version = "0.2.3", features = ["rand"] }
+rand = "0.7.2"
+num-traits = "0.2.10"
