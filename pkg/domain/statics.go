@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"fmt"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"hash/crc32"
 	"io"
 	"log"
@@ -308,10 +309,41 @@ func CalculateContactsImportHash(req *msg.ContactsImport) uint64 {
 	count := len(phones)
 	bb := bytes.Buffer{}
 	for idx := 0; idx < count; idx++ {
-		bb.Write([]byte(phones[idx].Phone))
+		bb.Write(ronak.StrToByte(phones[idx].Phone))
+		bb.Write(ronak.StrToByte(phones[idx].FirstName))
+		bb.Write(ronak.StrToByte(phones[idx].LastName))
 	}
 	crc32Hash := crc32.ChecksumIEEE(bb.Bytes())
 	return uint64(crc32Hash)
+}
+
+// ExtractsContactsDifference remove items from newContacts that already exist in oldContacts
+func ExtractsContactsDifference(oldContacts, newContacts []*msg.PhoneContact) []*msg.PhoneContact {
+	mapOld := make(map[string]*msg.PhoneContact)
+	mapNew := make(map[string]*msg.PhoneContact)
+	for _, c := range oldContacts {
+		c.Phone = SanitizePhone(c.Phone)
+		mapOld[c.Phone] = c
+	}
+	for _, c := range newContacts {
+		c.Phone = SanitizePhone(c.Phone)
+		mapNew[c.Phone] = c
+	}
+
+	for key, oldContact := range mapOld {
+		newContact, ok := mapNew[key]
+		if ok {
+			if newContact.LastName == oldContact.LastName && newContact.FirstName == oldContact.FirstName {
+				delete(mapNew, key)
+			}
+		}
+	}
+
+	result := make([]*msg.PhoneContact, 0, len(mapNew))
+	for _, v := range mapNew {
+		result = append(result, v)
+	}
+	return result
 }
 
 // SanitizePhone copy of server side function
@@ -337,35 +369,6 @@ func GetCountryCode(phone string) string {
 		return ""
 	}
 	return phonenumbers.GetRegionCodeForNumber(ph)
-}
-
-// ExtractsContactsDifference remove items from newContacts that already exist in oldContacts
-func ExtractsContactsDifference(oldContacts, newContacts []*msg.PhoneContact) []*msg.PhoneContact {
-
-	mapOld := make(map[string]*msg.PhoneContact)
-	mapNew := make(map[string]*msg.PhoneContact)
-	for _, c := range oldContacts {
-		c.Phone = SanitizePhone(c.Phone)
-		mapOld[c.Phone] = c
-	}
-	for _, c := range newContacts {
-		c.Phone = SanitizePhone(c.Phone)
-		mapNew[c.Phone] = c
-	}
-
-	ok := false
-	for key := range mapOld {
-		_, ok = mapNew[key]
-		if ok {
-			delete(mapNew, key)
-		}
-	}
-
-	result := make([]*msg.PhoneContact, 0, len(mapNew))
-	for _, v := range mapNew {
-		result = append(result, v)
-	}
-	return result
 }
 
 func Now() time.Time {

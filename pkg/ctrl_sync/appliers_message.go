@@ -70,7 +70,7 @@ func (ctrl *Controller) contactsImported(e *msg.MessageEnvelope) {
 		return
 	}
 	logs.Info("SyncCtrl applies contactsImported")
-	repo.Users.SaveContact(x.ContactUsers...)
+	_ = repo.Users.SaveContact(x.ContactUsers...)
 	repo.Users.Save(x.Users...)
 }
 
