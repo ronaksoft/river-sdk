@@ -53,6 +53,7 @@ type Controller struct {
 	postUploadProcess  func(req UploadRequest)
 }
 
+
 func New(config Config) *Controller {
 	ctrl := new(Controller)
 	ctrl.network = config.Network

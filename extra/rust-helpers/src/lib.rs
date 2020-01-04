@@ -1,102 +1,78 @@
 #![allow(dead_code, unused)]
-extern crate num_bigint;
-extern crate num_traits;
-extern crate rand;
+extern crate primes;
+extern crate sha2;
 
-use std::cmp::Ordering::{Equal, Greater, Less};
-use std::ops::{Add, BitAnd, BitAndAssign, Div, Shr, Sub};
 
-use num_bigint::{BigInt, RandBigInt, Sign};
-use num_traits::{One, Zero, zero};
-use rand::{Rng, thread_rng};
+use std::vec;
+use sha2::{Digest, Sha512};
+use sha2::digest::Reset;
 
 #[cfg(test)]
 mod tests {
-    use crate::split_pq;
-
-    use std::cmp::Ordering::{Equal, Greater, Less};
-    use std::ops::{Add, BitAnd, BitAndAssign, Div, Shr, Sub};
-    use num_bigint::{BigInt, RandBigInt, Sign};
-    use num_traits::{One, Zero, zero};
-    use rand::{Rng, thread_rng};
-
+    use crate::{gen_message_key, split_pq};
 
     #[test]
     fn check_split_pq() {
-        let pq = BigInt::new(Sign::Plus, vec![2, 1]);
+        let pq: u64 = 273366826352239;
         println!("Result is: {:?}", split_pq(pq))
     }
-}
 
-fn split_pq(pq: BigInt) -> (BigInt, BigInt) {
-    let value0: BigInt = Zero::zero();
-    let value1: BigInt = One::one();
-    let value15 = BigInt::new(Sign::Plus, vec![1, 5]);
-    let value17 = BigInt::new(Sign::Plus, vec![1, 7]);
-    let rnd_max = BigInt::from(1i64 << 63);
+    #[test]
+    fn check_gen_message_key() {
+        let dh_key: [u8; 100] = [0; 100];
+        let mut dh_key: Vec<u8> = Vec::from(&dh_key[..]);
+        dh_key.extend_from_slice("1234567890123456789012345678901234567890".as_bytes());
+        println!("{}", dh_key.len());
 
-    let mut rng = rand::thread_rng();
-    let what = pq.clone();
-    let rnd = rng.gen::<i64>();
-    let mut g = BigInt::new(Sign::Plus, vec![0]);
-    let mut i = 0;
-
-    while !(g.cmp(&value1) == Greater && g.cmp(&what) == Less) {
-
-        let q: BigInt = rng.gen_range(value0, rnd_max);
-        q.bitand(&value15);
-        q.bitand(&value17);
-
-
-        let qm = q.mod_floor(&what);
-        break;
-//        let mut x = rng.gen_bigint_range(Zero::zero(), &rndMax);
-//        let what_next = what.clone().sub(&value1);
-//
-//        let mut y = BigInt::from(x.mod_floor(&what_next).add(&value1));
-//        x = BigInt::from(y);
-//        let lim = 1 << (i + 18);
-//        let mut j = 1;
-//        let mut flag = true;
-//        while j < lim && flag {
-//            let mut a = BigInt::from(&x);
-//            let mut b = BigInt::from(&x);
-//            let mut c = BigInt::from(&q);
-//            while b.cmp(&value0) == Greater {
-//                let mut b2: BigInt = zero();
-//                if b2.bitand_assign(&value1).cmp(&value0) == Greater {
-//                    c = c.add(&what);
-//                    if c.cmp(&what) == Greater || c.cmp(&what) == Equal {
-//                        c = c.sub(&what);
-//                    }
-//                    a = a.add(&a);
-//                    if a.cmp(&what) == Greater || c.cmp(&what) == Equal {
-//                        a = a.sub(&what);
-//                    }
-//                    b = b.shr(1);
-//                }
-//                x = c.clone();
-//                let mut z: BigInt = zero();
-//                if x.cmp(&y) == Less {
-//                    z = what.add(&x).sub(&y);
-//                } else {
-//                    z = x.sub(&y);
-//                }
-//                g = z.gcd(&what);
-//                if j.bitand(j - 1) == 0 {
-//                    y = x;
-//                }
-//                j = j + 1;
-//                if g.cmp(&value1) != 0 {
-//                    flag = false;
-//                }
-//            }
-//            i = i + 1;
-//        }
+        let body = "Hello It is Ehsan";
+        let res = gen_message_key(dh_key.split_off(100).as_slice(), Vec::from(body));
+        println!("{:?}", res.as_slice());
     }
-    let mut p1 = g;
-    let mut p2: BigInt = what.div(&g);
-
-    (p1, p2)
 }
 
+fn split_pq(pq: u64) -> (u64, u64) {
+    let f = primes::factors(pq);
+    (f[0], f[1])
+}
+
+fn gen_message_key(key: &[u8], plain: Vec<u8>) -> Vec<u8> {
+    let mut hasher: Sha512 = Sha512::new();
+    let mut v: Vec<u8> = Vec::from(key);
+    v.append(&mut plain.clone());
+    hasher.input(v.as_slice());
+    hasher.result().to_vec().split_off(32)
+}
+
+fn encrypt(dh_key: &[u8;256], plain: Vec<u8>) -> Result<Vec<u8>, E>{
+    // Message Key is: _Sha512(DHKey[100:140], InternalHeader, Payload)[32:64]
+    let mut msg_key :Vec<u8> = gen_message_key(&dh_key[100..140], plain);
+
+    // AES IV: _Sha512 (DHKey[180:220], MessageKey)[:32]
+    let mut iv: Vec<u8> = Vec::from(&dh_key[180..220]);
+    iv.extend_from_slice(msg_key.as_slice());
+    let mut hasher: Sha512 = Sha512::new();
+    hasher.input(iv.as_slice());
+    let aes_iv = hasher.result().to_vec();
+
+
+
+    // AES KEY: _Sha512 (MessageKey, DHKey[170:210])[:32]
+    let mut hasher: Sha512 = Sha512::new();
+    let mut key: Vec<u8> = Vec::from(msg_key.as_slice());
+    key.extend_from_slice(&dh_key[170..210]);
+    hasher.input(key.as_slice());
+    let aes_key = hasher.result();
+
+    let aead = Aes256Gcm::new(aes_key);
+
+
+//    return AES256GCMEncrypt(
+//        aesKey[:32],
+//    aesIV[:12],
+//    plain,
+//    )
+}
+
+fn decrypt(dh_key: &[u8], cipher: Vec<u8>) -> Result<Vec<u8>, E> {
+
+}

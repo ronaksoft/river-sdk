@@ -117,8 +117,7 @@ func init() {
 		logs.Fatal(err.Error())
 	}
 	s.Start()
-	time.Sleep(time.Second * 5)
-
+	time.Sleep(time.Second * 2)
 }
 
 type server struct {
@@ -235,17 +234,19 @@ func TestDownloadFileASync(t *testing.T) {
 
 func TestUpload(t *testing.T) {
 	uploadStart = true
-	Convey("Upload", t, func() {
+	Convey("Upload", t, func(c C) {
 		fileID := ronak.RandomInt64(0)
 		msgID := ronak.RandomInt64(0)
 		Convey("Good Network", func(c C) {
 			startTime := time.Now()
 			Convey("Upload Big File (Good Network)", func(c C) {
+				c.Println()
 				waitGroupUpload.Add(1)
 				speedBytesPerSec = 1024 * 512
 				_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0)
 			})
 			Convey("Upload Medium File (Good Network)", func(c C) {
+				c.Println()
 				waitGroupUpload.Add(1)
 				speedBytesPerSec = 1024 * 512
 				_File.UploadMessageDocument(msgID, "./testdata/medium", "", fileID, 0)
@@ -257,13 +258,15 @@ func TestUpload(t *testing.T) {
 		Convey("Bad Network", func(c C) {
 			startTime := time.Now()
 			Convey("Upload Big File (Bad Network)", func(c C) {
+				c.Println()
 				speedBytesPerSec = 8192
 				errRatePercent = 0
 				waitGroupUpload.Add(1)
 				_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0)
 			})
 			Convey("Upload Medium File (Bad Network)", func(c C) {
-				speedBytesPerSec = 1024
+				c.Println()
+				speedBytesPerSec = 8192
 				errRatePercent = 0
 				waitGroupUpload.Add(1)
 				_File.UploadMessageDocument(msgID, "./testdata/medium", "", fileID, 0)

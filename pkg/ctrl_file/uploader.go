@@ -10,6 +10,7 @@ import (
 	"github.com/gobwas/pool/pbytes"
 	"go.uber.org/zap"
 	"io"
+	"math"
 	"net/url"
 	"os"
 	"sync"
@@ -161,7 +162,7 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 			zap.Int32("ChunkSize", ctx.req.ChunkSize),
 		)
 		waitGroup := sync.WaitGroup{}
-		maxRetries := ctx.req.MaxInFlights
+		maxRetries := int32(math.Min(float64(ctx.req.MaxInFlights), float64(ctx.req.TotalParts)))
 		for maxRetries > 0 {
 			select {
 			case partIndex := <-ctx.parts:
