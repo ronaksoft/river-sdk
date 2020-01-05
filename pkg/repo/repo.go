@@ -9,6 +9,7 @@ import (
 	"github.com/blevesearch/bleve/analysis/lang/en"
 	"github.com/blevesearch/bleve/mapping"
 	"github.com/dgraph-io/badger/options"
+	"github.com/pkg/errors"
 	"github.com/tidwall/buntdb"
 	"os"
 	"strings"
@@ -114,7 +115,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 			WithValueLogLoadingMode(options.FileIO)
 	}
 	if badgerDB, err := badger.Open(badgerOpts); err != nil {
-		return err
+		return errors.Wrap(err, "Badger")
 	} else {
 		r.badger = badgerDB
 	}
@@ -139,11 +140,11 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 			// create a mapping
 			indexMapping, err := indexMapForMessages()
 			if err != nil {
-				return err
+				return errors.Wrap(err, "Search(Message)")
 			}
 			r.msgSearch, err = bleve.New(searchDbPath, indexMapping)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "Search(Message)")
 			}
 		default:
 			return err
@@ -160,11 +161,11 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 			// create a mapping
 			indexMapping, err := indexMapForPeers()
 			if err != nil {
-				return err
+				return errors.Wrap(err, "Search(Peers)")
 			}
 			r.peerSearch, err = bleve.New(peerDbSearch, indexMapping)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "Search(Peers)")
 			}
 		default:
 			return err
@@ -172,6 +173,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 	} else {
 		r.peerSearch = peerSearch
 	}
+	return nil
 }
 
 func indexMapForMessages() (mapping.IndexMapping, error) {
