@@ -730,6 +730,20 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	}
 }
 
+func (r *River) contactsDelete(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ContactsDelete{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	_ = repo.Users.DeleteContact(req.UserIDs...)
+
+	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	return
+}
+
 func (r *River) sendChunkedImportContactRequest(replace bool, diffContacts []*msg.PhoneContact, out *msg.MessageEnvelope, successCB domain.MessageHandler) {
 	result := new(msg.ContactsImported)
 	result.Users = make([]*msg.User, 0)

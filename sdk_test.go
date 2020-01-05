@@ -82,6 +82,10 @@ func (c *ConnInfoDelegates) SaveConnInfo(connInfo []byte) {
 	}
 }
 
+func (c *ConnInfoDelegates) Get(key string) string { return "" }
+
+func (c *ConnInfoDelegates) Set(key, value string) {}
+
 type MainDelegateDummy struct{}
 
 func (d *MainDelegateDummy) OnUpdates(constructor int64, b []byte) {}

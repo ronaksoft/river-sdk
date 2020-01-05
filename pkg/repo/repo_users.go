@@ -430,6 +430,28 @@ func (r *repoUsers) SaveContact(contactUsers ...*msg.ContactUser) error {
 	})
 }
 
+func (r *repoUsers) DeleteContact(contactIDs ...int64) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		for _, contactID := range contactIDs {
+			_ = txn.Delete(getContactKey(contactID))
+		}
+		return nil
+	})
+}
+
+func (r *repoUsers) DeleteAllContacts() error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixContacts))
+		it := txn.NewIterator(opts)
+		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
+			_ = txn.Delete(it.Item().Key())
+		}
+		it.Close()
+		return nil
+	})
+}
+
 func (r *repoUsers) UpdatePhoto(userID int64, userPhoto *msg.UserPhoto) error {
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		user, err := getUserByKey(txn, getUserKey(userID))

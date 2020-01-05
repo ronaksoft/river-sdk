@@ -129,6 +129,14 @@ func (searchGlobalDelegateDummy) OnTimeout(err error) {
 
 type dummyConInfoDelegate struct{}
 
+func (c *dummyConInfoDelegate) Get(key string) string {
+	return ""
+}
+
+func (c *dummyConInfoDelegate) Set(key, value string) {
+
+}
+
 func (c *dummyConInfoDelegate) SaveConnInfo(connInfo []byte) {}
 
 func createDataForSearchGlobal(nonContactWithDialogUser, nonContactWhitoutDialogUser, ContactUser, groupTitle string) {
