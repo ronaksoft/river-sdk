@@ -243,7 +243,10 @@ func (r *River) Start() error {
 	messageHole.Init()
 
 	// Initialize DB replaced with ORM
-	repo.InitRepo(r.dbPath, r.optimizeForLowMemory)
+	err := repo.InitRepo(r.dbPath, r.optimizeForLowMemory)
+	if err != nil {
+		return err
+	}
 
 	// Update Authorizations
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])

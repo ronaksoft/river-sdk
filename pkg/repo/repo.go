@@ -53,7 +53,7 @@ type repository struct {
 }
 
 // InitRepo initialize repo singleton
-func InitRepo(dbPath string, lowMemory bool) {
+func InitRepo(dbPath string, lowMemory bool) error {
 	if ctx == nil {
 		singleton.Lock()
 		lcConfig := bigcache.DefaultConfig(time.Second * 360)
@@ -67,7 +67,10 @@ func InitRepo(dbPath string, lowMemory bool) {
 		}
 
 		lCache, _ = bigcache.NewBigCache(lcConfig)
-		repoSetDB(dbPath, lowMemory)
+		err := repoSetDB(dbPath, lowMemory)
+		if err != nil {
+			return err
+		}
 
 		ctx = &Context{
 			DBPath: dbPath,
@@ -84,10 +87,10 @@ func InitRepo(dbPath string, lowMemory bool) {
 		Labels = &repoLabels{repository: r}
 		singleton.Unlock()
 	}
-	return
+	return nil
 }
 
-func repoSetDB(dbPath string, lowMemory bool) {
+func repoSetDB(dbPath string, lowMemory bool) error {
 	r = new(repository)
 
 	_ = os.MkdirAll(dbPath, os.ModePerm)
@@ -111,7 +114,7 @@ func repoSetDB(dbPath string, lowMemory bool) {
 			WithValueLogLoadingMode(options.FileIO)
 	}
 	if badgerDB, err := badger.Open(badgerOpts); err != nil {
-		logs.Fatal("Context::repoSetDB()->badger Open()", zap.Error(err))
+		return err
 	} else {
 		r.badger = badgerDB
 	}
@@ -136,14 +139,14 @@ func repoSetDB(dbPath string, lowMemory bool) {
 			// create a mapping
 			indexMapping, err := indexMapForMessages()
 			if err != nil {
-				logs.Fatal("BuildIndexMapping For Messages", zap.Error(err))
+				return err
 			}
 			r.msgSearch, err = bleve.New(searchDbPath, indexMapping)
 			if err != nil {
-				logs.Fatal("New SearchIndex for Messages", zap.Error(err))
+				return err
 			}
 		default:
-			logs.Fatal("Error Opening SearchIndex for Messages", zap.Error(err))
+			return err
 		}
 	} else {
 		r.msgSearch = msgSearch
@@ -157,14 +160,14 @@ func repoSetDB(dbPath string, lowMemory bool) {
 			// create a mapping
 			indexMapping, err := indexMapForPeers()
 			if err != nil {
-				logs.Fatal("BuildIndexMapping For Peers", zap.Error(err))
+				return err
 			}
 			r.peerSearch, err = bleve.New(peerDbSearch, indexMapping)
 			if err != nil {
-				logs.Fatal("New SearchIndex for Peers", zap.Error(err))
+				return err
 			}
 		default:
-			logs.Fatal("Error Opening SearchIndex for Peers", zap.Error(err))
+			return err
 		}
 	} else {
 		r.peerSearch = peerSearch

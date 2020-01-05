@@ -20,6 +20,8 @@ type FileDelegate interface {
 
 type ConnInfoDelegate interface {
 	SaveConnInfo(connInfo []byte)
+	Get(key string) string
+	Set(key, value string)
 }
 
 // RequestDelegate each request should have this callbacks

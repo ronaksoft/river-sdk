@@ -187,15 +187,18 @@ func Encrypt(dhKey, plain []byte) (encrypted []byte, err error) {
 // 2. AES KEY: _Sha512 (MessageKey, dhKey[170:210])[:32]
 func Decrypt(dhKey, msgKey, encrypted []byte) (plain []byte, err error) {
 	// AES IV: _Sha512 (DHKey[180:220], MessageKey)[:32]
-	iv := make([]byte, 40, 72)
+	iv := make([]byte, 72)
 	copy(iv, dhKey[180:220])
-	iv = append(iv, msgKey...)
-	aesIV, _ := Sha512(iv)
+	copy(iv[40:], msgKey)
+	aesIV, err := Sha512(iv)
+	if err != nil {
+		return nil, err
+	}
 
 	// AES KEY: _Sha512 (MessageKey, DHKey[170:210])[:32]
-	key := make([]byte, 32, 72)
+	key := make([]byte, 72)
 	copy(key, msgKey)
-	key = append(key, dhKey[170:210]...)
+	copy(key[32:], dhKey[170:210])
 	aesKey, err := Sha512(key)
 	if err != nil {
 		return nil, err

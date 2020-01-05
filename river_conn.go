@@ -170,3 +170,11 @@ func (v *RiverConnection) PickupLastName() string { return v.LastName }
 
 // PickupBio RiverConfig interface func
 func (v *RiverConnection) PickupBio() string { return v.Bio }
+
+func (v *RiverConnection) GetKey(key string) string {
+	return v.Delegate.Get(key)
+}
+
+func (v *RiverConnection) SetKey(key, value string) {
+	v.Delegate.Set(key, value)
+}
