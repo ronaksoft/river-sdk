@@ -74,7 +74,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		logs.Warn("River found unmatched dialog messages", zap.Int("Got", len(res.Messages)), zap.Int("Need", len(mMessages)))
 		waitGroup := &sync.WaitGroup{}
 		waitGroup.Add(1)
-		r.syncCtrl.GetAllDialogs(waitGroup, 0, 100)
+		r.syncCtrl.GetAllDialogs(waitGroup, 0, 50)
 		for msgID := range mMessages {
 			found := false
 			for _, m := range res.Messages {

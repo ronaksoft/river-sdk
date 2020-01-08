@@ -153,7 +153,7 @@ func (ctrl *Controller) Sync() {
 			waitGroup := &sync.WaitGroup{}
 			waitGroup.Add(2)
 			go ctrl.GetContacts(waitGroup)
-			go ctrl.GetAllDialogs(waitGroup, 0, 100)
+			go ctrl.GetAllDialogs(waitGroup, 0, 50)
 			waitGroup.Wait()
 			updateUI(ctrl)
 
