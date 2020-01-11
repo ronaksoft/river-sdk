@@ -535,3 +535,52 @@ func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
 func (r *River) GetServerTimeUnix() int64 {
 	return domain.Now().Unix()
 }
+
+// GenSrpHash generates a hash to be used in AuthCheckPassword and other related apis
+func (r *River) GenSrpHash(password, prime, generator, salt1, salt2 []byte) []byte {
+	g := big.NewInt(0).SetBytes(generator)
+	p := big.NewInt(0).SetBytes(prime)
+
+	x := big.NewInt(0).SetBytes(domain.PH2(password, salt1, salt2))
+	v := big.NewInt(0).Exp(g, x, p)
+	return v.Bytes()
+}
+
+// GenInputPassword  accepts AccountPassword marshaled as argument and return InputPassword marshaled
+func (r *River) GenInputPassword(password []byte, accountPasswordBytes []byte) []byte {
+	ap := &msg.AccountPassword{}
+	err := ap.Unmarshal(accountPasswordBytes)
+
+	algo := &msg.PasswordAlgorithmVer6A{}
+	err = algo.Unmarshal(ap.AlgorithmData)
+	if err != nil {
+		logs.Warn("Error On GenInputPassword", zap.Error(err))
+		return nil
+	}
+
+	p := big.NewInt(0).SetBytes(algo.P)
+	g := big.NewInt(0).SetInt64(int64(algo.G))
+	k := big.NewInt(0).SetBytes(domain.K(p, g))
+
+	x := big.NewInt(0).SetBytes(domain.PH2(password, algo.Salt1, algo.Salt2))
+	v := big.NewInt(0).Exp(g, x, p)
+	a := big.NewInt(0).SetBytes(ap.RandomData)
+	ga := big.NewInt(0).Exp(g, a, p)
+	gb := big.NewInt(0).SetBytes(ap.SrpB)
+	u := big.NewInt(0).SetBytes(domain.U(ga, gb))
+	kv := big.NewInt(0).Mod(big.NewInt(0).Mul(k, v), p)
+	t := big.NewInt(0).Mod(big.NewInt(0).Sub(gb, kv), p)
+	if t.Sign() < 0 {
+		t.Add(t, p)
+	}
+	sa := big.NewInt(0).Exp(t, big.NewInt(0).Add(a, big.NewInt(0).Mul(u, x)), p)
+	m1 := domain.M(p, g, algo.Salt1, algo.Salt2, ga, gb, sa)
+
+	inputPassword := &msg.InputPassword{
+		SrpID: r.ConnInfo.UserID,
+		A: domain.Pad(ga),
+		M1: m1,
+	}
+	res, _ := inputPassword.Marshal()
+	return res
+}
