@@ -62,7 +62,10 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	// bug : sometime server do not sends access hash
 	if x.AccessHash > 0 {
 		// update users access hash
-		repo.Users.UpdateAccessHash(x.AccessHash, x.Message.PeerID, x.Message.PeerType)
+		err = repo.Users.UpdateAccessHash(x.AccessHash, x.Message.PeerID, x.Message.PeerType)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// If sender is me, check for pending
@@ -645,6 +648,22 @@ func (ctrl *Controller) updateLabelDeleted(u *msg.UpdateEnvelope) ([]*msg.Update
 	logs.Info("SyncCtrl applies UpdateLabelDeleted")
 
 	err = repo.Labels.Delete(x.LabelIDs...)
+	if err != nil {
+		return nil, err
+	}
+	return []*msg.UpdateEnvelope{u}, nil
+}
+
+func (ctrl *Controller) updateUserBlocked(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := &msg.UpdateUserBlocked{}
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Info("SyncCtrl applies UpdateUserBlocked")
+
+	err = repo.Users.UpdateBlocked(x.UserID, x.Blocked)
 	if err != nil {
 		return nil, err
 	}

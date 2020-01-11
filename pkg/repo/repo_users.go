@@ -213,12 +213,12 @@ func (r *repoUsers) Save(users ...*msg.User) {
 	return
 }
 
-func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType int32) {
+func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType int32) error {
 	if msg.PeerType(peerType) != msg.PeerUser {
-		return
+		return nil
 	}
 
-	err := badgerUpdate(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		user, err := getUserByKey(txn, getUserKey(peerID))
 		if err != nil {
 			return err
@@ -226,8 +226,17 @@ func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType i
 		user.AccessHash = accessHash
 		return updateDialogAccessHash(txn, accessHash, peerID, peerType)
 	})
-	logs.ErrorOnErr("RepoUser got error on update access hash", err)
-	return
+}
+
+func (r *repoUsers) UpdateBlocked(peerID int64, blocked bool) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		user, err := getUserByKey(txn, getUserKey(peerID))
+		if err != nil {
+			return err
+		}
+		user.Blocked = blocked
+		return saveUser(txn, user)
+	})
 }
 
 func (r *repoUsers) GetAccessHash(userID int64) (accessHash uint64, err error) {
