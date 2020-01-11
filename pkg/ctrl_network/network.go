@@ -301,6 +301,7 @@ func (ctrl *Controller) receiver() {
 	})
 	res := msg.ProtoMessage{}
 	for {
+		_ = ctrl.wsConn.SetReadDeadline(time.Now().Add(time.Minute * 5))
 		message, messageType, err := wsutil.ReadServerData(ctrl.wsConn)
 		if err != nil {
 			return
@@ -483,8 +484,6 @@ func (ctrl *Controller) Connect() {
 				attempts++
 				continue
 			}
-			_ = wsConn.SetReadDeadline(time.Time{})
-
 			_ = tcpkeepalive.SetKeepAlive(wsConn, 30*time.Second, 2, 5*time.Second)
 			switch x := wsConn.LocalAddr().(type) {
 			case *net.IPNet:
@@ -523,7 +522,6 @@ func (ctrl *Controller) Disconnect() {
 	_, _, _ = domain.SingleFlight.Do("NetworkDisconnect", func() (i interface{}, e error) {
 		ctrl.wsKeepConnection = false
 		if ctrl.wsConn != nil {
-			_ = ctrl.wsConn.SetReadDeadline(time.Now())
 			_ = ctrl.wsConn.Close()
 			logs.Info("NetCtrl disconnected")
 		}
@@ -593,7 +591,7 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 	err = wsutil.WriteClientMessage(ctrl.wsConn, ws.OpBinary, b)
 	ctrl.wsWriteLock.Unlock()
 	if err != nil {
-		_ = ctrl.wsConn.SetReadDeadline(time.Now())
+		_ = ctrl.wsConn.Close()
 		return err
 	}
 	logs.Debug("NetCtrl sent over websocket",
@@ -687,7 +685,7 @@ func (ctrl *Controller) Reconnect() {
 		if ctrl.GetQuality() == domain.NetworkDisconnected {
 			ctrl.Connect()
 		} else if ctrl.wsConn != nil {
-			_ = ctrl.wsConn.SetReadDeadline(time.Now())
+			_ = ctrl.wsConn.Close()
 		}
 		return nil, nil
 	})
