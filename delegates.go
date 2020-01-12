@@ -28,4 +28,12 @@ type ConnInfoDelegate interface {
 type RequestDelegate interface {
 	OnComplete(b []byte)
 	OnTimeout(err error)
+	Flags() int32
 }
+
+// Request Flags
+const (
+	ServerForced = 1 << iota
+	Blocking
+	WaitForNetwork
+)
