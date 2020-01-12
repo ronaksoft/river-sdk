@@ -18,7 +18,7 @@ var Create = &ishell.Cmd{
 		req.Users = fnGetInputUser(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsCreate, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsCreate, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -37,7 +37,7 @@ var AddUser = &ishell.Cmd{
 		req.ForwardLimit = fnGetForwardLimit(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsAddUser, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsAddUser, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -55,7 +55,7 @@ var DeleteUser = &ishell.Cmd{
 		req.User.AccessHash = fnGetAccessHash(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsDeleteUser, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsDeleteUser, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -71,7 +71,7 @@ var EditTitle = &ishell.Cmd{
 		req.Title = fnGetTitle(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsEditTitle, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsEditTitle, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -86,7 +86,7 @@ var GetFull = &ishell.Cmd{
 		req.GroupID = fnGetGroupID(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsGetFull, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsGetFull, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -106,7 +106,7 @@ var UpdateAdmin = &ishell.Cmd{
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsUpdateAdmin, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsUpdateAdmin, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -122,7 +122,7 @@ var ToggleAdmins = &ishell.Cmd{
 		req.AdminEnabled = fnGetAdminEnabled(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsToggleAdmins, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsToggleAdmins, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -148,7 +148,7 @@ var GroupRemovePhoto = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 
-		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsRemovePhoto, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsRemovePhoto, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID

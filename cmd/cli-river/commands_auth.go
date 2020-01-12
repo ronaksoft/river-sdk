@@ -20,7 +20,7 @@ var AuthCheckPhone = &ishell.Cmd{
 		req.Phone = fnGetPhone(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthCheckPhone, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthCheckPhone, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -35,7 +35,7 @@ var AuthSendCode = &ishell.Cmd{
 		req.Phone = fnGetPhone(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthSendCode, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthSendCode, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -55,7 +55,7 @@ var AuthRegister = &ishell.Cmd{
 		req.LastName = fnGetLastName(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthRegister, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthRegister, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -93,7 +93,7 @@ var AuthLogin = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 		os.Remove("./_connection/phone")
 		os.Remove("./_connection/phoneCodeHash")
-		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthLogin, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthLogin, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -118,7 +118,7 @@ var AuthRecall = &ishell.Cmd{
 		req := msg.AuthRecall{}
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthRecall, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthRecall, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -134,7 +134,7 @@ var AuthLoginByToken = &ishell.Cmd{
 		req.Token = fnGetToken(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthLoginByToken, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthLoginByToken, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID

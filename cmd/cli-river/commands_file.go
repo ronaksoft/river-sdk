@@ -47,7 +47,7 @@ var Upload = &ishell.Cmd{
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -83,7 +83,7 @@ var ShareContact = &ishell.Cmd{
 		// send request to server
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSendMedia, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSendMedia, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -208,11 +208,11 @@ var TestUpload = &ishell.Cmd{
 		req4 := &RequestDelegate{}
 		req5 := &RequestDelegate{}
 
-		_SDK.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBuff1, req1, false, false)
-		_SDK.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBuff2, req2, false, false)
-		_SDK.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBuff3, req3, false, false)
-		_SDK.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBuff4, req4, false, false)
-		_SDK.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBuff5, req5, false, false)
+		_SDK.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBuff1, req1)
+		_SDK.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBuff2, req2)
+		_SDK.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBuff3, req3)
+		_SDK.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBuff4, req4)
+		_SDK.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBuff5, req5)
 
 	},
 }

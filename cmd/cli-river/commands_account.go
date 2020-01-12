@@ -25,7 +25,7 @@ var RegisterDevice = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 
-		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountRegisterDevice, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountRegisterDevice, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -42,7 +42,7 @@ var UpdateUsername = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 
-		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUpdateUsername, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUpdateUsername, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -59,7 +59,7 @@ var CheckUsername = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 
-		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountCheckUsername, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountCheckUsername, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -77,7 +77,7 @@ var UnregisterDevice = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 
-		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUnregisterDevice, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUnregisterDevice, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -95,7 +95,7 @@ var UpdateProfile = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 
-		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUpdateProfile, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUpdateProfile, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -120,7 +120,7 @@ var SetNotifySettings = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 
-		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountSetNotifySettings, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountSetNotifySettings, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -144,7 +144,7 @@ var RemovePhoto = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 
-		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountRemovePhoto, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountRemovePhoto, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID

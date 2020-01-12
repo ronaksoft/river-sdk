@@ -59,7 +59,7 @@ func sendToSavedMessage(r *River, body string) {
 		Entities:   nil,
 	}
 	reqBytes, _ := req.Marshal()
-	_, _ = r.ExecuteCommand(msg.C_MessagesSend, reqBytes, &dummyDelegate{}, false, false)
+	_, _ = r.ExecuteCommand(msg.C_MessagesSend, reqBytes, &dummyDelegate{})
 }
 
 func sendMediaToSaveMessage(r *River, filePath string, filename string) {
@@ -90,7 +90,7 @@ func sendMediaToSaveMessage(r *River, filePath string, filename string) {
 		FileTotalParts: 0,
 	}
 	reqBytes, _ := req.Marshal()
-	_, _ = r.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBytes, &dummyDelegate{}, false, false)
+	_, _ = r.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBytes, &dummyDelegate{})
 }
 
 func (r *River) HandleDebugActions(txt string) {

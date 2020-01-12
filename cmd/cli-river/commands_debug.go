@@ -42,7 +42,7 @@ var SendTyping = &ishell.Cmd{
 
 			reqBytes, _ := req.Marshal()
 			reqDelegate := new(RequestDelegate)
-			if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSetTyping, reqBytes, reqDelegate, false, false); err != nil {
+			if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSetTyping, reqBytes, reqDelegate); err != nil {
 				_Log.Error("EnqueueCommand failed", zap.Error(err))
 			} else {
 				reqDelegate.RequestID = reqID
@@ -68,7 +68,7 @@ var ContactImportMany = &ishell.Cmd{
 		}
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsImport, reqBytes, reqDelegate, false, false); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsImport, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
