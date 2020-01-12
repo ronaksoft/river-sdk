@@ -33,7 +33,7 @@ type RequestDelegate interface {
 
 // Request Flags
 const (
-	ServerForced = 1 << iota
-	Blocking
-	WaitForNetwork
+	RequestServerForced int32 = 1 << iota
+	RequestBlocking
+	RequestWaitForNetwork
 )

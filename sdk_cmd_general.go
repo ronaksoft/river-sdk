@@ -19,7 +19,7 @@ import (
 // ExecuteCommand ...
 // This is a wrapper function to pass the request to the queueController, to be passed to networkController for final
 // delivery to the server.
-func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate, blockingMode, serverForce bool) (requestID int64, err error) {
+func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate) (requestID int64, err error) {
 	if _, ok := msg.ConstructorNames[constructor]; !ok {
 		return 0, domain.ErrInvalidConstructor
 	}
@@ -31,6 +31,9 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	logs.Debug("River executes command",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
+
+	blockingMode := delegate.Flags() & RequestBlocking != 0
+	serverForce := delegate.Flags() & RequestServerForced != 0
 
 	// if function is in blocking mode set the waitGroup to block until the job is done, otherwise
 	// save 'delegate' into delegates list to be fetched later.

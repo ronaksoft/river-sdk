@@ -41,6 +41,10 @@ func (d dummyDelegate) OnComplete(b []byte) {}
 
 func (d dummyDelegate) OnTimeout(err error) {}
 
+func (d dummyDelegate) Flags() int32 {
+	return 0
+}
+
 func sendToSavedMessage(r *River, body string) {
 	req := &msg.MessagesSend{
 		RandomID: 0,
