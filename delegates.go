@@ -35,5 +35,5 @@ type RequestDelegate interface {
 const (
 	RequestServerForced int32 = 1 << iota
 	RequestBlocking
-	RequestWaitForNetwork
+	RequestDontWaitForNetwork
 )

@@ -103,7 +103,7 @@ type River struct {
 
 	// Delegates
 	delegateMutex sync.Mutex
-	delegates     map[int64]RequestDelegate
+	delegates     map[uint64]RequestDelegate
 	mainDelegate  MainDelegate
 	fileDelegate  FileDelegate
 
@@ -142,7 +142,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.dbPath = fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID)
 
 	r.registerCommandHandlers()
-	r.delegates = make(map[int64]RequestDelegate)
+	r.delegates = make(map[uint64]RequestDelegate)
 	r.mainDelegate = conf.MainDelegate
 	r.fileDelegate = conf.FileDelegate
 

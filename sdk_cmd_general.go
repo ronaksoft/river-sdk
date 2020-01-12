@@ -14,6 +14,7 @@ import (
 	"go.uber.org/zap"
 	"math/big"
 	"sync"
+	"time"
 )
 
 // ExecuteCommand ...
@@ -42,7 +43,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 		defer waitGroup.Wait()
 	} else {
 		r.delegateMutex.Lock()
-		r.delegates[requestID] = delegate
+		r.delegates[uint64(requestID)] = delegate
 		r.delegateMutex.Unlock()
 	}
 
@@ -50,7 +51,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	timeoutCallback := func() {
 		err = domain.ErrRequestTimeout
 		delegate.OnTimeout(err)
-		r.releaseDelegate(requestID)
+		r.releaseDelegate(uint64(requestID))
 		if blockingMode {
 			waitGroup.Done()
 		}
@@ -60,7 +61,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	successCallback := func(envelope *msg.MessageEnvelope) {
 		b, _ := envelope.Marshal()
 		delegate.OnComplete(b)
-		r.releaseDelegate(requestID)
+		r.releaseDelegate(uint64(requestID))
 		if blockingMode {
 			waitGroup.Done()
 		}
@@ -69,14 +70,6 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	// If this request must be sent to the server then executeRemoteCommand
 	if serverForce {
 		executeRemoteCommand(r, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
-		return
-	}
-
-	// If the constructor is a realtime command, then just send it to the server
-	if _, ok := r.realTimeCommands[constructor]; ok {
-		r.queueCtrl.RealtimeCommand(
-			uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback, blockingMode, true,
-		)
 		return
 	}
 
@@ -113,7 +106,43 @@ func executeRemoteCommand(r *River, requestID uint64, constructor int64, command
 	logs.Debug("River executes remote command",
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
-	r.queueCtrl.EnqueueCommand(requestID, constructor, commandBytes, timeoutCB, successCB, true)
+
+	d, ok := r.getDelegate(requestID)
+	if !ok {
+		// TODO:: return error to the caller
+		return
+	}
+	blocking := d.Flags() & RequestBlocking != 0
+	if d.Flags() & RequestDontWaitForNetwork != 0 {
+		go func() {
+			select {
+			case <-time.After(domain.WebsocketRequestTime):
+				reqCB := domain.GetRequestCallback(uint64(requestID))
+				if reqCB == nil {
+					break
+				}
+
+				if reqCB.TimeoutCallback != nil {
+					if reqCB.IsUICallback {
+						uiexec.Ctx().Exec(func() { reqCB.TimeoutCallback() })
+					} else {
+						reqCB.TimeoutCallback()
+					}
+				}
+
+				r.CancelRequest(int64(requestID))
+			}
+		}()
+	}
+
+	// If the constructor is a realtime command, then just send it to the server
+	if _, ok := r.realTimeCommands[constructor]; ok {
+		r.queueCtrl.RealtimeCommand(requestID, constructor, commandBytes, timeoutCB, successCB, blocking,true)
+	} else {
+		r.queueCtrl.EnqueueCommand(requestID, constructor, commandBytes, timeoutCB, successCB, true)
+	}
+
+
 }
 func deepCopy(commandBytes []byte) []byte {
 	// Takes a copy of commandBytes b4 IOS/Android GC/OS collect/alter them
@@ -123,15 +152,22 @@ func deepCopy(commandBytes []byte) []byte {
 	return buff
 }
 
-func (r *River) releaseDelegate(requestID int64) {
+func (r *River) releaseDelegate(requestID uint64) {
 	logs.Debug("River releases delegate",
-		zap.Int64("RequestID", requestID),
+		zap.Uint64("RequestID", requestID),
 	)
 	r.delegateMutex.Lock()
 	if _, ok := r.delegates[requestID]; ok {
 		delete(r.delegates, requestID)
 	}
 	r.delegateMutex.Unlock()
+}
+
+func (r *River) getDelegate(requestID uint64) (RequestDelegate, bool){
+	r.delegateMutex.Lock()
+	d, ok := r.delegates[requestID]
+	r.delegateMutex.Unlock()
+	return d, ok
 }
 
 // CreateAuthKey ...
@@ -328,7 +364,7 @@ func (r *River) ResetAuthKey() {
 func (r *River) CancelRequest(requestID int64) {
 	// Remove delegate
 	r.delegateMutex.Lock()
-	delete(r.delegates, int64(requestID))
+	delete(r.delegates, uint64(requestID))
 	r.delegateMutex.Unlock()
 
 	// Remove Callback
