@@ -331,8 +331,8 @@ func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
 		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixContacts))
 		it := txn.NewIterator(opts)
 		for it.Seek(getContactKey(0)); it.ValidForPrefix(opts.Prefix); it.Next() {
-			contactUser := new(msg.ContactUser)
-			phoneContact := new(msg.PhoneContact)
+			contactUser := &msg.ContactUser{}
+			phoneContact := &msg.PhoneContact{}
 			_ = it.Item().Value(func(val []byte) error {
 				err := contactUser.Unmarshal(val)
 				if err != nil {
@@ -340,6 +340,10 @@ func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
 				}
 				return nil
 			})
+			user, _ := getUserByKey(txn, getUserKey(contactUser.ID))
+			if user != nil {
+				contactUser.Photo = user.Photo
+			}
 			contactUsers = append(contactUsers, contactUser)
 			phoneContact.FirstName = contactUser.FirstName
 			phoneContact.LastName = contactUser.LastName
