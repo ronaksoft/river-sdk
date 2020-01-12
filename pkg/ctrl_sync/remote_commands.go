@@ -165,7 +165,7 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, l
 		func() {
 			// If timeout, then retry the request
 			logs.Warn("Timeout! on GetAllDialogs, retrying ...")
-			ctrl.AuthRecall("GetAllDialogs")
+			_, _ = ctrl.AuthRecall("GetAllDialogs")
 			ctrl.GetAllDialogs(waitGroup, offset, limit)
 		},
 		func(m *msg.MessageEnvelope) {
@@ -180,7 +180,7 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, l
 					ctrl.GetAllDialogs(waitGroup, offset, limit)
 				}
 			case msg.C_MessagesDialogs:
-				x := new(msg.MessagesDialogs)
+				x := msg.MessagesDialogs{}
 				err := x.Unmarshal(m.Message)
 				if err != nil {
 					logs.Error("SyncCtrl cannot unmarshal server response on MessagesGetDialogs", zap.Error(err))
