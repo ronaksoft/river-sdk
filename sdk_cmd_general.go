@@ -107,13 +107,15 @@ func executeRemoteCommand(r *River, requestID uint64, constructor int64, command
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
 
+	blocking := false
+	dontWaitForNetwork := false
 	d, ok := r.getDelegate(requestID)
-	if !ok {
-		// TODO:: return error to the caller
-		return
+	if ok {
+		blocking = d.Flags() & RequestBlocking != 0
+		dontWaitForNetwork = d.Flags() & RequestDontWaitForNetwork != 0
 	}
-	blocking := d.Flags() & RequestBlocking != 0
-	if d.Flags() & RequestDontWaitForNetwork != 0 {
+
+	if dontWaitForNetwork {
 		go func() {
 			select {
 			case <-time.After(domain.WebsocketRequestTime):
