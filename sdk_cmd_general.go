@@ -33,8 +33,8 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 		zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
 
-	blockingMode := delegate.Flags() & RequestBlocking != 0
-	serverForce := delegate.Flags() & RequestServerForced != 0
+	blockingMode := delegate.Flags()&RequestBlocking != 0
+	serverForce := delegate.Flags()&RequestServerForced != 0
 
 	// if function is in blocking mode set the waitGroup to block until the job is done, otherwise
 	// save 'delegate' into delegates list to be fetched later.
@@ -111,8 +111,8 @@ func executeRemoteCommand(r *River, requestID uint64, constructor int64, command
 	dontWaitForNetwork := false
 	d, ok := r.getDelegate(requestID)
 	if ok {
-		blocking = d.Flags() & RequestBlocking != 0
-		dontWaitForNetwork = d.Flags() & RequestDontWaitForNetwork != 0
+		blocking = d.Flags()&RequestBlocking != 0
+		dontWaitForNetwork = d.Flags()&RequestDontWaitForNetwork != 0
 	}
 
 	if dontWaitForNetwork {
@@ -139,11 +139,10 @@ func executeRemoteCommand(r *River, requestID uint64, constructor int64, command
 
 	// If the constructor is a realtime command, then just send it to the server
 	if _, ok := r.realTimeCommands[constructor]; ok {
-		r.queueCtrl.RealtimeCommand(requestID, constructor, commandBytes, timeoutCB, successCB, blocking,true)
+		r.queueCtrl.RealtimeCommand(requestID, constructor, commandBytes, timeoutCB, successCB, blocking, true)
 	} else {
 		r.queueCtrl.EnqueueCommand(requestID, constructor, commandBytes, timeoutCB, successCB, true)
 	}
-
 
 }
 func deepCopy(commandBytes []byte) []byte {
@@ -165,7 +164,7 @@ func (r *River) releaseDelegate(requestID uint64) {
 	r.delegateMutex.Unlock()
 }
 
-func (r *River) getDelegate(requestID uint64) (RequestDelegate, bool){
+func (r *River) getDelegate(requestID uint64) (RequestDelegate, bool) {
 	r.delegateMutex.Lock()
 	d, ok := r.delegates[requestID]
 	r.delegateMutex.Unlock()
@@ -578,12 +577,19 @@ func (r *River) GetServerTimeUnix() int64 {
 }
 
 // GenSrpHash generates a hash to be used in AuthCheckPassword and other related apis
-func (r *River) GenSrpHash(password, prime, generator, salt1, salt2 []byte) []byte {
-	g := big.NewInt(0).SetBytes(generator)
-	p := big.NewInt(0).SetBytes(prime)
+func (r *River) GenSrpHash(password, algorithmData []byte) []byte {
+	algo := &msg.PasswordAlgorithmVer6A{}
+	err := algo.Unmarshal(algorithmData)
 
-	x := big.NewInt(0).SetBytes(domain.PH2(password, salt1, salt2))
-	v := big.NewInt(0).Exp(g, x, p)
+	if err != nil {
+		logs.Warn("Error On Unmarshal Algorithm", zap.Error(err))
+		return nil
+	}
+
+	p := big.NewInt(0).SetBytes(algo.P)
+
+	x := big.NewInt(0).SetBytes(domain.PH2(password, algo.Salt1, algo.Salt2))
+	v := big.NewInt(0).Exp(big.NewInt(int64(algo.G)), x, p)
 	return v.Bytes()
 }
 
@@ -619,8 +625,8 @@ func (r *River) GenInputPassword(password []byte, accountPasswordBytes []byte) [
 
 	inputPassword := &msg.InputPassword{
 		SrpID: r.ConnInfo.UserID,
-		A: domain.Pad(ga),
-		M1: m1,
+		A:     domain.Pad(ga),
+		M1:    m1,
 	}
 	res, _ := inputPassword.Marshal()
 	return res
