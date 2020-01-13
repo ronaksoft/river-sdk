@@ -630,7 +630,7 @@ func (r *River) GenInputPassword(password []byte, accountPasswordBytes []byte) [
 	m1 := domain.M(p, g, algo.Salt1, algo.Salt2, ga, gb, sa)
 
 	inputPassword := &msg.InputPassword{
-		SrpID: r.ConnInfo.UserID,
+		SrpID: ap.SrpID,
 		A:     domain.Pad(ga),
 		M1:    m1,
 	}
