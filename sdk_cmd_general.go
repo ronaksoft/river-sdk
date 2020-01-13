@@ -577,20 +577,26 @@ func (r *River) GetServerTimeUnix() int64 {
 }
 
 // GenSrpHash generates a hash to be used in AuthCheckPassword and other related apis
-func (r *River) GenSrpHash(password, algorithmData []byte) []byte {
-	algo := &msg.PasswordAlgorithmVer6A{}
-	err := algo.Unmarshal(algorithmData)
+func (r *River) GenSrpHash(password []byte, algorithm int64, algorithmData []byte) []byte {
+	switch algorithm {
+	case msg.C_PasswordAlgorithmVer6A:
+		algo := &msg.PasswordAlgorithmVer6A{}
+		err := algo.Unmarshal(algorithmData)
 
-	if err != nil {
-		logs.Warn("Error On Unmarshal Algorithm", zap.Error(err))
+		if err != nil {
+			logs.Warn("Error On Unmarshal Algorithm", zap.Error(err))
+			return nil
+		}
+
+		p := big.NewInt(0).SetBytes(algo.P)
+
+		x := big.NewInt(0).SetBytes(domain.PH2(password, algo.Salt1, algo.Salt2))
+		v := big.NewInt(0).Exp(big.NewInt(int64(algo.G)), x, p)
+
+		return v.Bytes()
+	default:
 		return nil
 	}
-
-	p := big.NewInt(0).SetBytes(algo.P)
-
-	x := big.NewInt(0).SetBytes(domain.PH2(password, algo.Salt1, algo.Salt2))
-	v := big.NewInt(0).Exp(big.NewInt(int64(algo.G)), x, p)
-	return v.Bytes()
 }
 
 // GenInputPassword  accepts AccountPassword marshaled as argument and return InputPassword marshaled
