@@ -119,7 +119,7 @@ func executeRemoteCommand(r *River, requestID uint64, constructor int64, command
 		go func() {
 			select {
 			case <-time.After(domain.WebsocketRequestTime):
-				reqCB := domain.GetRequestCallback(uint64(requestID))
+				reqCB := domain.GetRequestCallback(requestID)
 				if reqCB == nil {
 					break
 				}
