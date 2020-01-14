@@ -589,7 +589,6 @@ func (r *River) GenSrpHash(password []byte, algorithm int64, algorithmData []byt
 		}
 
 		p := big.NewInt(0).SetBytes(algo.P)
-
 		x := big.NewInt(0).SetBytes(domain.PH2(password, algo.Salt1, algo.Salt2))
 		v := big.NewInt(0).Exp(big.NewInt(int64(algo.G)), x, p)
 
