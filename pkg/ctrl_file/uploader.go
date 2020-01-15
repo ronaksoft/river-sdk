@@ -185,7 +185,7 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 					defer func() {
 						<-ctx.rateLimit
 					}()
-					defer waitGroup.Done()
+
 
 					bytes := pbytes.GetLen(int(ctx.req.ChunkSize))
 					defer pbytes.Put(bytes)
@@ -219,7 +219,9 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 					default:
 						atomic.StoreInt32(&maxRetries, 0)
 						ctx.parts <- partIndex
+						return
 					}
+					waitGroup.Done()
 				}(partIndex)
 			default:
 				waitGroup.Wait()
