@@ -205,6 +205,7 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 				x := &msg.Error{}
 				_ = x.Unmarshal(res.Message)
 				logs.Debug("FileCtrl received Error response",
+					zap.Int32("PartID",partIndex),
 					zap.String("Code", x.Code),
 					zap.String("Item", x.Items),
 				)
