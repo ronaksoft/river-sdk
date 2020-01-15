@@ -161,8 +161,52 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 			zap.Int32("TotalParts", ctx.req.TotalParts),
 			zap.Int32("ChunkSize", ctx.req.ChunkSize),
 		)
-		waitGroup := sync.WaitGroup{}
+
 		maxRetries := int32(math.Min(float64(ctx.req.MaxInFlights), float64(ctx.req.TotalParts)))
+		uploadJob := func(waitGroup *sync.WaitGroup, partIndex int32) {
+			defer func() {
+				<-ctx.rateLimit
+			}()
+			defer waitGroup.Done()
+
+
+			bytes := pbytes.GetLen(int(ctx.req.ChunkSize))
+			defer pbytes.Put(bytes)
+			offset := partIndex * ctx.req.ChunkSize
+			n, err := ctx.file.ReadAt(bytes, int64(offset))
+			if err != nil && err != io.EOF {
+				logs.Warn("Error in ReadFile", zap.Error(err))
+				atomic.StoreInt32(&maxRetries, 0)
+				ctx.parts <- partIndex
+				return
+			}
+			res, err := ctrl.network.SendHttp(
+				ctx.req.httpContext,
+				ctx.generateFileSavePart(ctx.req.FileID, partIndex+1, ctx.req.TotalParts, bytes[:n]),
+				domain.HttpRequestTime,
+			)
+			if err != nil {
+				switch e := err.(type) {
+				case *url.Error:
+					if e.Timeout() {
+						atomic.AddInt32(&maxRetries, -1)
+					}
+				default:
+				}
+				ctx.parts <- partIndex
+				return
+			}
+			switch res.Constructor {
+			case msg.C_Bool:
+				ctx.addToUploaded(ctrl, partIndex)
+			default:
+				atomic.StoreInt32(&maxRetries, 0)
+				ctx.parts <- partIndex
+				return
+			}
+		}
+
+		waitGroup := sync.WaitGroup{}
 		for maxRetries > 0 {
 			select {
 			case partIndex := <-ctx.parts:
@@ -179,56 +223,16 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 					}
 					return domain.RequestStatusCanceled
 				}
-				ctx.rateLimit <- struct{}{}
 				waitGroup.Add(1)
-				go func(partIndex int32) {
-					defer func() {
-						<-ctx.rateLimit
-					}()
-
-
-					bytes := pbytes.GetLen(int(ctx.req.ChunkSize))
-					defer pbytes.Put(bytes)
-					offset := partIndex * ctx.req.ChunkSize
-					n, err := ctx.file.ReadAt(bytes, int64(offset))
-					if err != nil && err != io.EOF {
-						logs.Warn("Error in ReadFile", zap.Error(err))
-						atomic.StoreInt32(&maxRetries, 0)
-						ctx.parts <- partIndex
-						return
-					}
-					res, err := ctrl.network.SendHttp(
-						ctx.req.httpContext,
-						ctx.generateFileSavePart(ctx.req.FileID, partIndex+1, ctx.req.TotalParts, bytes[:n]),
-						domain.HttpRequestTime,
-					)
-					if err != nil {
-						switch e := err.(type) {
-						case *url.Error:
-							if e.Timeout() {
-								atomic.AddInt32(&maxRetries, -1)
-							}
-						default:
-						}
-						ctx.parts <- partIndex
-						return
-					}
-					switch res.Constructor {
-					case msg.C_Bool:
-						ctx.addToUploaded(ctrl, partIndex)
-					default:
-						atomic.StoreInt32(&maxRetries, 0)
-						ctx.parts <- partIndex
-						return
-					}
-					waitGroup.Done()
-				}(partIndex)
+				ctx.rateLimit <- struct{}{}
+				go uploadJob(&waitGroup, partIndex)
 			default:
-				waitGroup.Wait()
 				switch int32(len(ctx.req.UploadedParts)) {
 				case ctx.req.TotalParts - 1:
+					waitGroup.Wait()
 					ctx.parts <- ctx.req.TotalParts - 1
 				case ctx.req.TotalParts:
+					waitGroup.Wait()
 					ctrl.postUploadProcess(ctx.req)
 					// We have finished our uploads
 					_ = ctx.file.Close()
