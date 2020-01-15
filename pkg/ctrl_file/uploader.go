@@ -164,11 +164,10 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 
 		maxRetries := int32(math.Min(float64(ctx.req.MaxInFlights), float64(ctx.req.TotalParts)))
 		uploadJob := func(waitGroup *sync.WaitGroup, partIndex int32) {
+			defer waitGroup.Done()
 			defer func() {
 				<-ctx.rateLimit
 			}()
-			defer waitGroup.Done()
-
 
 			bytes := pbytes.GetLen(int(ctx.req.ChunkSize))
 			defer pbytes.Put(bytes)
@@ -178,6 +177,9 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 				logs.Warn("Error in ReadFile", zap.Error(err))
 				atomic.StoreInt32(&maxRetries, 0)
 				ctx.parts <- partIndex
+				return
+			}
+			if n == 0 {
 				return
 			}
 			res, err := ctrl.network.SendHttp(
@@ -199,9 +201,16 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 			switch res.Constructor {
 			case msg.C_Bool:
 				ctx.addToUploaded(ctrl, partIndex)
+			case msg.C_Error:
+				x := &msg.Error{}
+				_ = x.Unmarshal(res.Message)
+				logs.Debug("FileCtrl received Error response",
+					zap.String("Code", x.Code),
+					zap.String("Item", x.Items),
+				)
 			default:
+				logs.Debug("FileCtrl received unexpected response", zap.String("Constructor", msg.ConstructorNames[res.Constructor]))
 				atomic.StoreInt32(&maxRetries, 0)
-				ctx.parts <- partIndex
 				return
 			}
 		}
