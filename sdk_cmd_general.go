@@ -13,6 +13,7 @@ import (
 	"github.com/monnand/dhkx"
 	"go.uber.org/zap"
 	"math/big"
+	"strings"
 	"sync"
 	"time"
 )
@@ -578,7 +579,7 @@ func (r *River) GetServerTimeUnix() int64 {
 }
 
 // GenSrpHash generates a hash to be used in AuthCheckPassword and other related apis
-func (r *River) GenSrpHash(password []byte, algorithm int64, algorithmData []byte) []byte {
+func GenSrpHash(password []byte, algorithm int64, algorithmData []byte) []byte {
 	switch algorithm {
 	case msg.C_PasswordAlgorithmVer6A:
 		algo := &msg.PasswordAlgorithmVer6A{}
@@ -600,7 +601,7 @@ func (r *River) GenSrpHash(password []byte, algorithm int64, algorithmData []byt
 }
 
 // GenInputPassword  accepts AccountPassword marshaled as argument and return InputPassword marshaled
-func (r *River) GenInputPassword(password []byte, accountPasswordBytes []byte) []byte {
+func GenInputPassword(password []byte, accountPasswordBytes []byte) []byte {
 	ap := &msg.AccountPassword{}
 	err := ap.Unmarshal(accountPasswordBytes)
 
@@ -636,4 +637,8 @@ func (r *River) GenInputPassword(password []byte, accountPasswordBytes []byte) [
 	}
 	res, _ := inputPassword.Marshal()
 	return res
+}
+
+func SanitizeQuestionAnswer(answer string) string {
+	return strings.ToLower(strings.TrimSpace(answer))
 }
