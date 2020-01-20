@@ -196,6 +196,31 @@ func (ctrl *Controller) CancelDownloadRequest(reqID string) {
 		req.cancelFunc()
 	}
 }
+func (ctrl *Controller) Stop(){
+	ctrl.mtxDownloads.Lock()
+	for reqID := range ctrl.downloadRequests {
+		req , ok := ctrl.downloadRequests[reqID]
+		if ok && req.cancelFunc != nil {
+			req.cancelFunc()
+		}
+		delete(ctrl.downloadRequests, reqID)
+	}
+	ctrl.mtxDownloads.Unlock()
+	ctrl.downloadsSaver.EnterWithResult(nil, nil)
+
+	// delete and cancel all
+	ctrl.mtxUploads.Lock()
+	for reqID := range ctrl.uploadRequests {
+		req , ok := ctrl.uploadRequests[reqID]
+		if ok && req.cancelFunc != nil {
+			req.cancelFunc()
+		}
+		delete(ctrl.uploadRequests, reqID)
+	}
+	ctrl.mtxUploads.Unlock()
+	ctrl.uploadsSaver.EnterWithResult(nil, nil)
+
+}
 func (ctrl *Controller) GetUploadRequest(fileID int64) (UploadRequest, bool) {
 	return ctrl.getUploadRequest(GetRequestID(0, fileID, 0))
 }

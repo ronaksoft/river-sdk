@@ -441,6 +441,7 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 	r.networkCtrl.Stop()
 	r.syncCtrl.Stop()
 	r.queueCtrl.Stop()
+	r.fileCtrl.Stop()
 
 	// Close UI Executor
 	uiexec.Ctx().Stop()
