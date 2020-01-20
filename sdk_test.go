@@ -120,6 +120,8 @@ func (d *MainDelegateDummy) ShowLoggerAlert() {}
 
 func (d *MainDelegateDummy) AddLog(txt string) {}
 
+func (d *MainDelegateDummy) AppUpdate(version string, available, force bool) {}
+
 type RequestDelegateDummy struct{}
 
 func (RequestDelegateDummy) OnComplete(b []byte) {
@@ -142,5 +144,5 @@ func (d *FileDelegateDummy) OnCompleted(reqID string, clusterID int32, fileID, a
 }
 
 func (d *FileDelegateDummy) OnCancel(reqID string, clusterID int32, fileID, accessHash int64, hasError bool) {
-	logs.Error("OnCancel")
+	logs.Error("CancelCB")
 }

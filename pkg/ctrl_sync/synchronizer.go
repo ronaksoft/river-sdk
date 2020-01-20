@@ -18,27 +18,34 @@ import (
 
 // Config sync controller required configs
 type Config struct {
-	ConnInfo    domain.RiverConfigurator
-	NetworkCtrl *networkCtrl.Controller
-	QueueCtrl   *queueCtrl.Controller
-	FileCtrl    *fileCtrl.Controller
+	ConnInfo           domain.RiverConfigurator
+	NetworkCtrl        *networkCtrl.Controller
+	QueueCtrl          *queueCtrl.Controller
+	FileCtrl           *fileCtrl.Controller
+	SyncStatusChangeCB domain.SyncStatusChangeCallback
+	UpdateReceivedCB   domain.UpdateReceivedCallback
+	AppUpdateCB        domain.AppUpdateCallback
 }
 
 // Controller cache received data from server to client DB
 type Controller struct {
-	connInfo             domain.RiverConfigurator
-	networkCtrl          *networkCtrl.Controller
-	queueCtrl            *queueCtrl.Controller
-	fileCtrl             *fileCtrl.Controller
-	onSyncStatusChange   domain.SyncStatusUpdateCallback
-	onUpdateMainDelegate domain.OnUpdateMainDelegateHandler
-	syncStatus           domain.SyncStatus
-	lastUpdateReceived   time.Time
-	updateID             int64
-	updateAppliers       map[int64]domain.UpdateApplier
-	messageAppliers      map[int64]domain.MessageApplier
-	stopChannel          chan bool
-	userID               int64
+	connInfo    domain.RiverConfigurator
+	networkCtrl *networkCtrl.Controller
+	queueCtrl   *queueCtrl.Controller
+	fileCtrl    *fileCtrl.Controller
+
+	syncStatus         domain.SyncStatus
+	lastUpdateReceived time.Time
+	updateID           int64
+	updateAppliers     map[int64]domain.UpdateApplier
+	messageAppliers    map[int64]domain.MessageApplier
+	stopChannel        chan bool
+	userID             int64
+
+	// Callbacks
+	syncStatusChangeCallback domain.SyncStatusChangeCallback
+	updateReceivedCallback   domain.UpdateReceivedCallback
+	appUpdateCallback        domain.AppUpdateCallback
 }
 
 // NewSyncController create new instance
@@ -49,6 +56,22 @@ func NewSyncController(config Config) *Controller {
 	ctrl.queueCtrl = config.QueueCtrl
 	ctrl.networkCtrl = config.NetworkCtrl
 	ctrl.fileCtrl = config.FileCtrl
+
+	if config.UpdateReceivedCB == nil {
+		config.UpdateReceivedCB = func(constructor int64, msg []byte) {}
+	}
+	ctrl.updateReceivedCallback = config.UpdateReceivedCB
+
+	if config.SyncStatusChangeCB == nil {
+		config.SyncStatusChangeCB = func(newStatus domain.SyncStatus) {}
+	}
+	ctrl.syncStatusChangeCallback = config.SyncStatusChangeCB
+
+	if config.AppUpdateCB == nil {
+		config.AppUpdateCB = func(version string, updateAvailable, force bool) {}
+	}
+	ctrl.appUpdateCallback = config.AppUpdateCB
+
 	ctrl.updateAppliers = map[int64]domain.UpdateApplier{
 		msg.C_UpdateNewMessage:            ctrl.updateNewMessage,
 		msg.C_UpdateReadHistoryOutbox:     ctrl.updateReadHistoryOutbox,
@@ -186,9 +209,7 @@ func updateUI(ctrl *Controller) {
 
 	// call external handler
 	uiexec.Ctx().Exec(func() {
-		if ctrl.onUpdateMainDelegate != nil {
-			ctrl.onUpdateMainDelegate(msg.C_UpdateEnvelope, buff)
-		}
+		ctrl.updateReceivedCallback(msg.C_UpdateEnvelope, buff)
 	})
 }
 func updateSyncStatus(ctrl *Controller, newStatus domain.SyncStatus) {
@@ -199,10 +220,7 @@ func updateSyncStatus(ctrl *Controller, newStatus domain.SyncStatus) {
 		zap.String("Status", newStatus.ToString()),
 	)
 	ctrl.syncStatus = newStatus
-
-	if ctrl.onSyncStatusChange != nil {
-		ctrl.onSyncStatusChange(newStatus)
-	}
+	ctrl.syncStatusChangeCallback(newStatus)
 }
 func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 	logs.Info("SyncCtrl calls getUpdateDifference",
@@ -324,9 +342,7 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 	// wrapped to UpdateContainer
 	buff, _ := updContainer.Marshal()
 	uiexec.Ctx().Exec(func() {
-		if ctrl.onUpdateMainDelegate != nil {
-			ctrl.onUpdateMainDelegate(msg.C_UpdateContainer, buff)
-		}
+		ctrl.updateReceivedCallback(msg.C_UpdateContainer, buff)
 	})
 
 }
@@ -367,16 +383,6 @@ func (ctrl *Controller) Start() {
 func (ctrl *Controller) Stop() {
 	logs.Debug("SyncCtrl calls stop")
 	ctrl.stopChannel <- true // for watchDog()
-}
-
-// SetSyncStatusChangedCallback status change delegate/callback
-func (ctrl *Controller) SetSyncStatusChangedCallback(h domain.SyncStatusUpdateCallback) {
-	ctrl.onSyncStatusChange = h
-}
-
-// SetOnUpdateCallback set delegate to pass updates that received by getDifference to UI
-func (ctrl *Controller) SetOnUpdateCallback(h domain.OnUpdateMainDelegateHandler) {
-	ctrl.onUpdateMainDelegate = h
 }
 
 // MessageHandler call appliers-> repository and sync data
@@ -447,18 +453,12 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer, outO
 
 	udpContainer.Length = int32(len(udpContainer.Updates))
 
-	// call external handler
-	if ctrl.onUpdateMainDelegate != nil {
-		// wrapped to UpdateContainer
-		buff, _ := udpContainer.Marshal()
+	// wrapped to UpdateContainer
+	buff, _ := udpContainer.Marshal()
+	uiexec.Ctx().Exec(func() {
+		ctrl.updateReceivedCallback(msg.C_UpdateContainer, buff)
+	})
 
-		// pass all updates to UI
-		uiexec.Ctx().Exec(func() {
-			if ctrl.onUpdateMainDelegate != nil {
-				ctrl.onUpdateMainDelegate(msg.C_UpdateContainer, buff)
-			}
-		})
-	}
 	return
 }
 

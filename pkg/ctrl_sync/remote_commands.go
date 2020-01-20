@@ -93,6 +93,9 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 				clientTime := time.Now().Unix()
 				serverTime := x.Timestamp
 				domain.TimeDelta = time.Duration(serverTime-clientTime) * time.Second
+
+				ctrl.appUpdateCallback(x.CurrentVersion, x.Available, x.Force)
+
 			case msg.C_Error:
 				err = domain.ParseServerError(m.Message)
 

@@ -51,18 +51,18 @@ func init() {
 		Network:              _Network,
 		MaxInflightDownloads: 2,
 		MaxInflightUploads:   10,
-		OnProgressChanged: func(reqID string, clusterID int32, fileID, accessHash int64, percent int64) {
+		ProgressChangedCB: func(reqID string, clusterID int32, fileID, accessHash int64, percent int64) {
 			// logs.Info("Progress Changed", zap.String("ReqID", reqID), zap.Int64("Percent", percent))
 		},
-		OnCancel: func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool) {
+		CancelCB: func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool) {
 			logs.Error("File Canceled", zap.String("ReqID", reqID), zap.Bool("HasError", hasError))
 			if clusterID == 0 && uploadStart {
 				// It is an Upload
 				waitGroupUpload.Done()
 			}
 		},
-		OnCompleted: func(reqID string, clusterID int32, fileID, accessHash int64, filePath string) {},
-		PostUploadProcess: func(req fileCtrl.UploadRequest) {
+		CompletedCB: func(reqID string, clusterID int32, fileID, accessHash int64, filePath string) {},
+		PostUploadProcessCB: func(req fileCtrl.UploadRequest) {
 			logs.Info("PostProcess",
 				zap.Any("TotalParts", req.TotalParts),
 				zap.Any("FilePath", req.FilePath),

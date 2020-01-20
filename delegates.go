@@ -9,6 +9,7 @@ type MainDelegate interface {
 	OnSessionClosed(res int)
 	ShowLoggerAlert()
 	AddLog(text string)
+	AppUpdate(version string, updateAvailable, force bool)
 }
 
 // FileDelegate

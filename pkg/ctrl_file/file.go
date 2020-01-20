@@ -32,10 +32,10 @@ type Config struct {
 	Network              *networkCtrl.Controller
 	MaxInflightDownloads int32
 	MaxInflightUploads   int32
-	PostUploadProcess    func(req UploadRequest)
-	OnProgressChanged    func(reqID string, clusterID int32, fileID, accessHash int64, percent int64)
-	OnCompleted          func(reqID string, clusterID int32, fileID, accessHash int64, filePath string)
-	OnCancel             func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool)
+	PostUploadProcessCB  func(req UploadRequest)
+	ProgressChangedCB    func(reqID string, clusterID int32, fileID, accessHash int64, percent int64)
+	CompletedCB          func(reqID string, clusterID int32, fileID, accessHash int64, filePath string)
+	CancelCB             func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool)
 }
 type Controller struct {
 	network            *networkCtrl.Controller
@@ -47,12 +47,13 @@ type Controller struct {
 	uploadRequests     map[string]UploadRequest
 	uploadsSaver       *ronak.Flusher
 	uploadsRateLimit   chan struct{}
+
+	// Callbacks
 	onProgressChanged  func(reqID string, clusterID int32, fileID, accessHash int64, percent int64)
 	onCompleted        func(reqID string, clusterID int32, fileID, accessHash int64, filePath string)
 	onCancel           func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool)
 	postUploadProcess  func(req UploadRequest)
 }
-
 
 func New(config Config) *Controller {
 	ctrl := new(Controller)
@@ -61,21 +62,21 @@ func New(config Config) *Controller {
 	ctrl.uploadsRateLimit = make(chan struct{}, config.MaxInflightUploads)
 	ctrl.downloadRequests = make(map[string]DownloadRequest)
 	ctrl.uploadRequests = make(map[string]UploadRequest)
-	ctrl.postUploadProcess = config.PostUploadProcess
-	if config.OnCompleted == nil {
+	ctrl.postUploadProcess = config.PostUploadProcessCB
+	if config.CompletedCB == nil {
 		ctrl.onCompleted = func(reqID string, clusterID int32, fileID, accessHash int64, filePath string) {}
 	} else {
-		ctrl.onCompleted = config.OnCompleted
+		ctrl.onCompleted = config.CompletedCB
 	}
-	if config.OnProgressChanged == nil {
+	if config.ProgressChangedCB == nil {
 		ctrl.onProgressChanged = func(reqID string, clusterID int32, fileID, accessHash int64, percent int64) {}
 	} else {
-		ctrl.onProgressChanged = config.OnProgressChanged
+		ctrl.onProgressChanged = config.ProgressChangedCB
 	}
-	if config.OnCancel == nil {
+	if config.CancelCB == nil {
 		ctrl.onCancel = func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool) {}
 	} else {
-		ctrl.onCancel = config.OnCancel
+		ctrl.onCancel = config.CancelCB
 	}
 
 	ctrl.downloadsSaver = ronak.NewFlusher(100, 1, time.Millisecond*100, func(items []ronak.FlusherEntry) {
@@ -196,10 +197,10 @@ func (ctrl *Controller) CancelDownloadRequest(reqID string) {
 		req.cancelFunc()
 	}
 }
-func (ctrl *Controller) Stop(){
+func (ctrl *Controller) Stop() {
 	ctrl.mtxDownloads.Lock()
 	for reqID := range ctrl.downloadRequests {
-		req , ok := ctrl.downloadRequests[reqID]
+		req, ok := ctrl.downloadRequests[reqID]
 		if ok && req.cancelFunc != nil {
 			req.cancelFunc()
 		}
@@ -211,7 +212,7 @@ func (ctrl *Controller) Stop(){
 	// delete and cancel all
 	ctrl.mtxUploads.Lock()
 	for reqID := range ctrl.uploadRequests {
-		req , ok := ctrl.uploadRequests[reqID]
+		req, ok := ctrl.uploadRequests[reqID]
 		if ok && req.cancelFunc != nil {
 			req.cancelFunc()
 		}

@@ -118,6 +118,8 @@ func (d *MainDelegate) ShowLoggerAlert() {}
 
 func (d *MainDelegate) AddLog(txt string) {}
 
+func (d *MainDelegate) AppUpdate(version string, available, force bool) {}
+
 type PrintDelegate struct{}
 
 func (d *PrintDelegate) Log(logLevel int, msg string) {
@@ -148,7 +150,7 @@ func (d *FileDelegate) OnCompleted(reqID string, clusterID int32, fileID, access
 }
 
 func (d *FileDelegate) OnCancel(reqID string, clusterID int32, fileID, accessHash int64, hasError bool) {
-	_Log.Error("OnCancel",
+	_Log.Error("CancelCB",
 		zap.String("ReqID", reqID),
 	)
 

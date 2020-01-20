@@ -197,9 +197,7 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 
 	// call external handler
 	uiexec.Ctx().Exec(func() {
-		if ctrl.onUpdateMainDelegate != nil {
-			ctrl.onUpdateMainDelegate(msg.C_UpdateEnvelope, buff)
-		}
+		ctrl.updateReceivedCallback(msg.C_UpdateEnvelope, buff)
 	})
 }
 
@@ -328,9 +326,7 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 
 		// call external handler
 		uiexec.Ctx().Exec(func() {
-			if ctrl.onUpdateMainDelegate != nil {
-				ctrl.onUpdateMainDelegate(msg.C_UpdateEnvelope, buff)
-			}
+			ctrl.updateReceivedCallback(msg.C_UpdateEnvelope, buff)
 		})
 
 		_ = repo.PendingMessages.Delete(pm.ID)

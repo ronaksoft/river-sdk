@@ -67,7 +67,7 @@ type Controller struct {
 	OnUpdate              domain.ReceivedUpdateHandler
 	OnGeneralError        domain.ErrorHandler
 	OnWebsocketConnect    domain.OnConnectCallback
-	OnNetworkStatusChange domain.NetworkStatusUpdateCallback
+	OnNetworkStatusChange domain.NetworkStatusChangeCallback
 
 	// requests that it should sent unencrypted
 	unauthorizedRequests map[int64]bool

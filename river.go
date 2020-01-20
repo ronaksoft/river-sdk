@@ -182,10 +182,10 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		Network:              r.networkCtrl,
 		MaxInflightDownloads: conf.MaxInFlightDownloads,
 		MaxInflightUploads:   conf.MaxInFlightUploads,
-		OnCompleted:          r.fileDelegate.OnCompleted,
-		OnProgressChanged:    r.fileDelegate.OnProgressChanged,
-		OnCancel:             r.fileDelegate.OnCancel,
-		PostUploadProcess:    r.postUploadProcess,
+		CompletedCB:          r.fileDelegate.OnCompleted,
+		ProgressChangedCB:    r.fileDelegate.OnProgressChanged,
+		CancelCB:             r.fileDelegate.OnCancel,
+		PostUploadProcessCB:  r.postUploadProcess,
 	})
 
 	// Initialize queueController
@@ -204,21 +204,18 @@ func (r *River) SetConfig(conf *RiverConfig) {
 			NetworkCtrl: r.networkCtrl,
 			QueueCtrl:   r.queueCtrl,
 			FileCtrl:    r.fileCtrl,
+			SyncStatusChangeCB: func(newStatus domain.SyncStatus) {
+				if r.mainDelegate != nil {
+					r.mainDelegate.OnSyncStatusChanged(int(newStatus))
+				}
+			},
+			UpdateReceivedCB: func(constructorID int64, b []byte) {
+				if r.mainDelegate != nil {
+					r.mainDelegate.OnUpdates(constructorID, b)
+				}
+			},
 		},
 	)
-
-	// call external delegate on sync status changed
-	r.syncCtrl.SetSyncStatusChangedCallback(func(newStatus domain.SyncStatus) {
-		if r.mainDelegate != nil {
-			r.mainDelegate.OnSyncStatusChanged(int(newStatus))
-		}
-	})
-	// call external delegate on OnUpdate
-	r.syncCtrl.SetOnUpdateCallback(func(constructorID int64, b []byte) {
-		if r.mainDelegate != nil {
-			r.mainDelegate.OnUpdates(constructorID, b)
-		}
-	})
 
 	// Initialize Server Keys
 	if err := _ServerKeys.UnmarshalJSON([]byte(conf.ServerKeys)); err != nil {
