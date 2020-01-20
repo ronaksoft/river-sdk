@@ -1,11 +1,15 @@
 package repo
 
 import (
+	"context"
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/pb"
 	"path/filepath"
+	"sync"
 )
 
 /*
@@ -270,4 +274,87 @@ func (r *repoFiles) IsMarkedAsUploaded(fileID int64) bool {
 		return nil
 	})
 	return res
+}
+
+func (r *repoFiles) GetCachedMedia() *msg.CachedMediaInfo {
+	userMediaInfo := map[int64]map[domain.SharedMediaType]int32{}
+	groupMediaInfo := map[int64]map[domain.SharedMediaType]int32{}
+	userMtx := sync.Mutex{}
+	groupMtx := sync.Mutex{}
+
+	stream := r.badger.NewStream()
+	stream.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixMessages))
+	stream.ChooseKey = func(item *badger.Item) bool {
+		m := &msg.UserMessage{}
+		err := item.Value(func(val []byte) error {
+			return m.Unmarshal(val)
+		})
+		if err != nil {
+			return false
+		}
+		switch m.MediaType {
+		case msg.MediaTypeDocument:
+			d := msg.MediaDocument{}
+			err = d.Unmarshal(m.Media)
+			if err != nil {
+				return false
+			}
+
+			// _, err := r.Get(d.Doc.ClusterID, d.Doc.ID, d.Doc.AccessHash)
+			// if err != nil {
+			// 	return false
+			// }
+			// if _, err = os.Stat(fileCtrl.GetFilePath(f)); os.IsNotExist(err) {
+			// 	return false
+			// }
+
+			switch msg.PeerType(m.PeerType) {
+			case msg.PeerUser:
+				userMtx.Lock()
+				userMediaInfo[m.PeerID][domain.SharedMediaType(item.UserMeta())] += d.Doc.FileSize
+				userMtx.Unlock()
+			case msg.PeerGroup:
+				groupMtx.Lock()
+				groupMediaInfo[m.PeerID][domain.SharedMediaType(item.UserMeta())] += d.Doc.FileSize
+				groupMtx.Unlock()
+			}
+		default:
+			return false
+		}
+		return true
+	}
+	stream.Send = func(list *pb.KVList) error {
+		return nil
+	}
+
+	_ = stream.Orchestrate(context.Background())
+
+	cachedMediaInfo := &msg.CachedMediaInfo{}
+	for peerID, mi := range userMediaInfo {
+		peerInfo := &msg.PeerMediaInfo{
+			PeerID:   peerID,
+			PeerType: msg.PeerUser,
+		}
+		for mType, mSize := range mi {
+			peerInfo.Media = append(peerInfo.Media, &msg.MediaSize{
+				MediaType: int32(mType),
+				TotalSize: mSize,
+			})
+		}
+		cachedMediaInfo.MediaInfo = append(cachedMediaInfo.MediaInfo, peerInfo)
+	}
+	for peerID, mi := range groupMediaInfo {
+		peerInfo := &msg.PeerMediaInfo{
+			PeerID:   peerID,
+			PeerType: msg.PeerGroup,
+		}
+		for mType, mSize := range mi {
+			peerInfo.Media = append(peerInfo.Media, &msg.MediaSize{
+				MediaType: int32(mType),
+				TotalSize: mSize,
+			})
+		}
+		cachedMediaInfo.MediaInfo = append(cachedMediaInfo.MediaInfo, peerInfo)
+	}
+	return cachedMediaInfo
 }

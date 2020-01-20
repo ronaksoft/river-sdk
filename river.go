@@ -605,5 +605,7 @@ func (r *River) registerCommandHandlers() {
 		msg.C_LabelsListItems:          r.labelsListItems,
 		msg.C_ClientGlobalSearch:       r.clientGlobalSearch,
 		msg.C_ClientContactSearch:      r.clientContactSearch,
+		msg.C_ClientGetCachedMedia:     r.clientGetCachedMedia,
+		msg.C_ClientClearCachedMedia:   r.clientClearCachedMedia,
 	}
 }

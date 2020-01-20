@@ -215,12 +215,9 @@ func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, de
 }
 
 // GetGetDBStatus returns message IDs and total size of each media stored in user's database
-func (r *River) GetDBStatus(delegate RequestDelegate) {
+func (r *River) GetCachedMedia(delegate RequestDelegate) {
 	delegate.OnTimeout(domain.ErrDoesNotExists)
-	res := msg.DBMediaInfo{}
-
-	// TODO:: do stuff here
-
+	res := repo.Files.GetCachedMedia()
 	bytes, _ := res.Marshal()
 	if delegate != nil {
 		delegate.OnComplete(bytes)
@@ -230,6 +227,7 @@ func (r *River) GetDBStatus(delegate RequestDelegate) {
 
 // ClearCache removes files from client device, allMedia means clear all media types
 // peerID 0 means all peers
-func (r *River) ClearCache(peerID int64, mediaTypes string, allMedia bool) bool {
+func (r *River) ClearCache(peerType int32, peerID int64, mediaTypes string, allMedia bool) bool {
+
 	return false
 }

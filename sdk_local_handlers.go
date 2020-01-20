@@ -1464,3 +1464,44 @@ func (r *River) clientContactSearch(in, out *msg.MessageEnvelope, timeoutCB doma
 	}
 
 }
+
+func (r *River) clientGetCachedMedia(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientGetCachedMedia{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	res := repo.Files.GetCachedMedia()
+
+	out.Constructor = msg.C_CachedMediaInfo
+	out.RequestID = in.RequestID
+	out.Message, _ = res.Marshal()
+	if successCB != nil {
+		uiexec.Ctx().Exec(func() {
+			successCB(out)
+		})
+	}
+
+}
+
+func (r *River) clientClearCachedMedia(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientClearCachedMedia{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	res := msg.Bool{Result: true}
+	out.Constructor = msg.C_Bool
+	out.RequestID = in.RequestID
+	out.Message, _ = res.Marshal()
+	if successCB != nil {
+		uiexec.Ctx().Exec(func() {
+			successCB(out)
+		})
+	}
+
+}
