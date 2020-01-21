@@ -3,7 +3,7 @@ package repo
 import (
 	"fmt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
-	"github.com/allegro/bigcache"
+	"github.com/allegro/bigcache/v2"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/analysis/lang/en"

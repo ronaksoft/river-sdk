@@ -7,9 +7,9 @@ github.com/AndreasBriese/bbloom
 github.com/RoaringBitmap/roaring
 # github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db
 github.com/abiosoft/readline
-# github.com/allegro/bigcache v1.2.1
-github.com/allegro/bigcache
-github.com/allegro/bigcache/queue
+# github.com/allegro/bigcache/v2 v2.1.6
+github.com/allegro/bigcache/v2
+github.com/allegro/bigcache/v2/queue
 # github.com/beeker1121/goque v2.0.1+incompatible
 github.com/beeker1121/goque
 # github.com/beorn7/perks v1.0.0

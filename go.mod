@@ -5,7 +5,7 @@ require (
 	github.com/RoaringBitmap/roaring v0.4.18 // indirect
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
-	github.com/allegro/bigcache v1.2.1
+	github.com/allegro/bigcache/v2 v2.1.6
 	github.com/beeker1121/goque v2.0.1+incompatible
 	github.com/blevesearch/bleve v0.8.0
 	github.com/blevesearch/blevex v0.0.0-20180227211930-4b158bb555a3 // indirect
@@ -62,7 +62,6 @@ require (
 	github.com/valyala/fasthttp v1.3.0
 	github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a
 	go.uber.org/zap v1.10.0
-	golang.org/x/mobile v0.0.0-20191210151939-1a1fef82734d // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	golang.org/x/text v0.3.2 // indirect
 	google.golang.org/grpc v1.21.0
