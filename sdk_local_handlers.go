@@ -1499,6 +1499,13 @@ func (r *River) clientClearCachedMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		return
 	}
 
+	if req.Peer != nil {
+		repo.Files.DeleteCachedMedia(int32(req.Peer.Type), req.Peer.ID, req.MediaTypes)
+	} else {
+		repo.Files.ClearCache()
+	}
+
+
 	res := msg.Bool{Result: true}
 	out.Constructor = msg.C_Bool
 	out.RequestID = in.RequestID
