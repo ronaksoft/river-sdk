@@ -248,7 +248,7 @@ func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash 
 			FileSize:         clientFile.FileSize,
 			ChunkSize:        defaultChunkSize,
 			MaxInFlights:     maxDownloadInFlights,
-			FilePath:         GetFilePath(clientFile),
+			FilePath:         repo.Files.GetFilePath(clientFile),
 			SkipDelegateCall: skipDelegates,
 		})
 		logs.WarnOnErr("Error On DownloadAsync", err,
@@ -281,7 +281,7 @@ func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash u
 
 		return "", err
 	}
-	filePath = GetFilePath(clientFile)
+	filePath = repo.Files.GetFilePath(clientFile)
 	switch clientFile.Type {
 	case msg.ClientFileType_GroupProfilePhoto:
 		return ctrl.downloadGroupPhoto(clientFile)
@@ -324,7 +324,7 @@ func (ctrl *Controller) downloadAccountPhoto(clientFile *msg.ClientFile) (filePa
 		envelop.Message, _ = req.Marshal()
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
-		filePath = getAccountProfilePath(clientFile.UserID, req.Location.FileID)
+		filePath = repo.Files.GetFilePath(clientFile)
 		res, err := ctrl.network.SendHttp(nil, envelop, domain.HttpRequestTime)
 		if err != nil {
 			return err
@@ -379,7 +379,7 @@ func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath
 		envelop.Message, _ = req.Marshal()
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
-		filePath = getGroupProfilePath(clientFile.GroupID, req.Location.FileID)
+		filePath = repo.Files.GetFilePath(clientFile)
 		res, err := ctrl.network.SendHttp(nil, envelop, domain.HttpRequestTime)
 		if err != nil {
 			return err
@@ -434,7 +434,7 @@ func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath 
 		envelop.Message, _ = req.Marshal()
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
-		filePath = getThumbnailPath(clientFile.FileID, clientFile.ClusterID)
+		filePath = repo.Files.GetFilePath(clientFile)  // getThumbnailPath(clientFile.FileID, clientFile.ClusterID)
 		res, err := ctrl.network.SendHttp(nil, envelop, domain.HttpRequestTime)
 		if err != nil {
 			return err

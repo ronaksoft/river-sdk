@@ -2,7 +2,6 @@ package riversdk
 
 import (
 	"git.ronaksoftware.com/ronak/riversdk/msg/chat"
-	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
@@ -42,7 +41,7 @@ func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash int64) [
 		} else {
 			clientFile, err := repo.Files.Get(clusterID, fileID, uint64(accessHash))
 			if err == nil {
-				filePath := fileCtrl.GetFilePath(clientFile)
+				filePath := repo.Files.GetFilePath(clientFile)
 				if _, err = os.Stat(filePath); os.IsNotExist(err) {
 					fileStatus.FilePath = ""
 				} else {
@@ -61,7 +60,7 @@ func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash int64) [
 func (r *River) GetFilePath(clusterID int32, fileID int64, accessHash int64) string {
 	clientFile, err := repo.Files.Get(clusterID, fileID, uint64(accessHash))
 	if err == nil {
-		filePath := fileCtrl.GetFilePath(clientFile)
+		filePath := repo.Files.GetFilePath(clientFile)
 		return filePath
 	}
 	return ""

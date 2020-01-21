@@ -3,7 +3,6 @@ package repo_test
 import (
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
-	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
@@ -469,7 +468,7 @@ func TestMessagesSave(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(clientFile.Extension)
-	t.Log(fileCtrl.GetFilePath(clientFile))
+	t.Log(repo.Files.GetFilePath(clientFile))
 }
 
 func TestLabel(t *testing.T) {

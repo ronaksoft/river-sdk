@@ -1,7 +1,6 @@
 package syncCtrl
 
 import (
-	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"os"
@@ -173,7 +172,7 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 		clientFile, err := repo.Files.GetMediaDocument(x.Message)
 		logs.WarnOnErr("Error On GetMediaDocument", err)
 
-		err = os.Rename(clientSendMedia.FilePath, fileCtrl.GetFilePath(clientFile))
+		err = os.Rename(clientSendMedia.FilePath, repo.Files.GetFilePath(clientFile))
 		if err != nil {
 			logs.Error("Error On HandlePendingMessage (Rename)", zap.Error(err))
 			return

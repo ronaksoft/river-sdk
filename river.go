@@ -177,7 +177,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.networkCtrl.OnWebsocketConnect = r.onNetworkConnect
 
 	// Initialize FileController
-	fileCtrl.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory, conf.DocumentCacheDirectory)
+	repo.Files.SetRootFolders(conf.DocumentAudioDirectory, conf.DocumentFileDirectory, conf.DocumentPhotoDirectory, conf.DocumentVideoDirectory, conf.DocumentCacheDirectory)
 	r.fileCtrl = fileCtrl.New(fileCtrl.Config{
 		Network:              r.networkCtrl,
 		MaxInflightDownloads: conf.MaxInFlightDownloads,

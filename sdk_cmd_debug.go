@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
-	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
@@ -145,7 +144,7 @@ func (r *River) HandleDebugActions(txt string) {
 }
 
 func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
-	filePath = path.Join(fileCtrl.DirCache, fmt.Sprintf("Messages-%s-%d.txt", msg.PeerType(peerType).String(), peerID))
+	filePath = path.Join(repo.DirCache, fmt.Sprintf("Messages-%s-%d.txt", msg.PeerType(peerType).String(), peerID))
 	file, err := os.Create(filePath)
 	logs.ErrorOnErr("Error On Create file", err)
 
@@ -253,7 +252,7 @@ func heapProfile() (filePath string) {
 		return ""
 	}
 	now := time.Now()
-	filePath = path.Join(fileCtrl.DirCache, fmt.Sprintf("MemHeap-%04d-%02d-%02d.out", now.Year(), now.Month(), now.Day()))
+	filePath = path.Join(repo.DirCache, fmt.Sprintf("MemHeap-%04d-%02d-%02d.out", now.Year(), now.Month(), now.Day()))
 	if err := ioutil.WriteFile(filePath, buf.Bytes(), os.ModePerm); err != nil {
 		logs.Warn("River got error on creating memory heap file", zap.Error(err))
 		return ""
@@ -273,7 +272,7 @@ func sendUpdateLogs(r *River) {
 func sendLogs(r *River) {
 	_ = filepath.Walk(logs.LogDir, func(filePath string, info os.FileInfo, err error) error {
 		if strings.HasPrefix(info.Name(), "LOG") {
-			outPath := path.Join(fileCtrl.DirCache, info.Name())
+			outPath := path.Join(repo.DirCache, info.Name())
 			err = domain.CopyFile(filePath, outPath)
 			if err != nil {
 				return err

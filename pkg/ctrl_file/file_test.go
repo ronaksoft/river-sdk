@@ -42,7 +42,7 @@ var (
 
 func init() {
 	repo.InitRepo("./_db", true)
-	fileCtrl.SetRootFolders("_data/audio", "_data/file", "_data/photo", "_data/video", "_data/cache")
+	repo.Files.SetRootFolders("_data/audio", "_data/file", "_data/photo", "_data/video", "_data/cache")
 	_Network = networkCtrl.New(networkCtrl.Config{
 		WebsocketEndpoint: "",
 		HttpEndpoint:      "http://127.0.0.1:8080",
@@ -211,7 +211,7 @@ func TestDownloadFileSync(t *testing.T) {
 				if err != domain.ErrAlreadyDownloading {
 					c.So(err, ShouldBeNil)
 				}
-				c.So(filePath, ShouldEqual, fileCtrl.GetFilePath(clientFile))
+				c.So(filePath, ShouldEqual, repo.Files.GetFilePath(clientFile))
 				wg.Done()
 			}(i)
 		}
