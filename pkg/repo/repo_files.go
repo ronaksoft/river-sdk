@@ -312,13 +312,12 @@ func (r *repoFiles) GetCachedMedia() *msg.CachedMediaInfo {
 				return false
 			}
 
-			// _, err := r.Get(d.Doc.ClusterID, d.Doc.ID, d.Doc.AccessHash)
-			// if err != nil {
-			// 	return false
-			// }
-			// if _, err = os.Stat(fileCtrl.GetFilePath(f)); os.IsNotExist(err) {
-			// 	return false
-			// }
+			f, err := r.Get(d.Doc.ClusterID, d.Doc.ID, d.Doc.AccessHash)
+			if err != nil {
+				return false
+			} else if _, err = os.Stat(r.GetFilePath(f)); os.IsNotExist(err) {
+				return false
+			}
 
 			switch msg.PeerType(m.PeerType) {
 			case msg.PeerUser:
