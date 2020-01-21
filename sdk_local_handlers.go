@@ -671,6 +671,11 @@ func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 	res := new(msg.ContactsMany)
 	res.ContactUsers, res.Contacts = repo.Users.GetContacts()
 
+	userIDs := make([]int64, 0, len(res.ContactUsers))
+	for idx := range res.ContactUsers {
+		userIDs = append(userIDs, res.ContactUsers[idx].ID)
+	}
+	res.Users = repo.Users.GetMany(userIDs)
 	out.Constructor = msg.C_ContactsMany
 	out.Message, _ = res.Marshal()
 
