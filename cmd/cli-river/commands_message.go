@@ -314,7 +314,7 @@ var MessagesGetDBMediaStatus = &ishell.Cmd{
 type dbMediaDelegate struct{}
 
 func (d *dbMediaDelegate) OnComplete(b []byte) {
-	res := msg.CachedMediaInfo{}
+	res := msg.ClientCachedMediaInfo{}
 	err := res.Unmarshal(b)
 	if err != nil {
 		_Log.Warn(err.Error())
@@ -329,7 +329,7 @@ type ClearCacheResult struct {
 }
 
 func (d *ClearCacheResult) OnComplete(b []byte) {
-	res := new(msg.CachedMediaInfo)
+	res := new(msg.ClientCachedMediaInfo)
 	err := res.Unmarshal(b)
 	if err != nil {
 		_Log.Error(err.Error())

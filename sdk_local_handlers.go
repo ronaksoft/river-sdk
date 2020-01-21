@@ -1480,7 +1480,7 @@ func (r *River) clientGetCachedMedia(in, out *msg.MessageEnvelope, timeoutCB dom
 
 	res := repo.Files.GetCachedMedia()
 
-	out.Constructor = msg.C_CachedMediaInfo
+	out.Constructor = msg.C_ClientCachedMediaInfo
 	out.RequestID = in.RequestID
 	out.Message, _ = res.Marshal()
 	if successCB != nil {
