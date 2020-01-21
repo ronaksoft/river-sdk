@@ -82,7 +82,7 @@ func getMessageByKey(txn *badger.Txn, msgKey []byte) (*msg.UserMessage, error) {
 
 func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 	messageBytes, _ := message.Marshal()
-	docType := domain.SharedMediaTypeAll
+	docType := msg.ClientMediaNone
 	switch message.MediaType {
 	case msg.MediaTypeDocument:
 		doc := new(msg.MediaDocument)
@@ -100,15 +100,15 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 				a := new(msg.DocumentAttributeAudio)
 				_ = a.Unmarshal(da.Data)
 				if a.Voice {
-					docType = domain.SharedMediaTypeVoice
+					docType = msg.ClientMediaVoice
 				} else {
-					docType = domain.SharedMediaTypeAudio
+					docType = msg.ClientMediaAudio
 				}
 			case msg.AttributeTypeVideo, msg.AttributeTypePhoto:
-				docType = domain.SharedMediaTypeMedia
+				docType = msg.ClientMediaMedia
 			case msg.AttributeTypeFile:
-				if docType == domain.SharedMediaTypeAll {
-					docType = domain.SharedMediaTypeFile
+				if docType == msg.ClientMediaNone {
+					docType = msg.ClientMediaFile
 				}
 			}
 		}
@@ -645,7 +645,7 @@ func (r *repoMessages) SearchByLabels(labelIDs []int32, peerID int64, limit int3
 
 }
 
-func (r *repoMessages) GetSharedMedia(peerID int64, peerType int32, documentType domain.SharedMediaType) ([]*msg.UserMessage, error) {
+func (r *repoMessages) GetSharedMedia(peerID int64, peerType int32, documentType msg.ClientMediaType) ([]*msg.UserMessage, error) {
 	limit := 500
 	userMessages := make([]*msg.UserMessage, 0, limit)
 	_ = badgerView(func(txn *badger.Txn) error {

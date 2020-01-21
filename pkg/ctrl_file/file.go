@@ -283,11 +283,11 @@ func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash u
 	}
 	filePath = repo.Files.GetFilePath(clientFile)
 	switch clientFile.Type {
-	case msg.ClientFileType_GroupProfilePhoto:
+	case msg.GroupProfilePhoto:
 		return ctrl.downloadGroupPhoto(clientFile)
-	case msg.ClientFileType_AccountProfilePhoto:
+	case msg.AccountProfilePhoto:
 		return ctrl.downloadAccountPhoto(clientFile)
-	case msg.ClientFileType_Thumbnail:
+	case msg.Thumbnail:
 		return ctrl.downloadThumbnail(clientFile)
 	default:
 		err = ctrl.download(DownloadRequest{

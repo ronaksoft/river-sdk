@@ -93,7 +93,7 @@ func init() {
 				ClusterID:  1,
 				FileID:     int64(i),
 				AccessHash: 10,
-				Type:       msg.ClientFileType_Message,
+				Type:       msg.Message,
 				MimeType:   "video/mp4",
 				UserID:     0,
 				GroupID:    0,

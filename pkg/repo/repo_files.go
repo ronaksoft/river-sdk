@@ -78,7 +78,7 @@ func saveUserPhotos(txn *badger.Txn, userID int64, photos ...*msg.UserPhoto) err
 				ClusterID:  photo.PhotoBig.ClusterID,
 				FileID:     photo.PhotoBig.FileID,
 				AccessHash: photo.PhotoBig.AccessHash,
-				Type:       msg.ClientFileType_AccountProfilePhoto,
+				Type:       msg.AccountProfilePhoto,
 				MimeType:   "",
 				UserID:     userID,
 				GroupID:    0,
@@ -97,7 +97,7 @@ func saveUserPhotos(txn *badger.Txn, userID int64, photos ...*msg.UserPhoto) err
 				ClusterID:  photo.PhotoSmall.ClusterID,
 				FileID:     photo.PhotoSmall.FileID,
 				AccessHash: photo.PhotoSmall.AccessHash,
-				Type:       msg.ClientFileType_Thumbnail,
+				Type:       msg.Thumbnail,
 				MimeType:   "",
 				UserID:     userID,
 				GroupID:    0,
@@ -130,7 +130,7 @@ func saveGroupPhotos(txn *badger.Txn, groupID int64, photos ...*msg.GroupPhoto) 
 					ClusterID:  photo.PhotoBig.ClusterID,
 					FileID:     photo.PhotoBig.FileID,
 					AccessHash: photo.PhotoBig.AccessHash,
-					Type:       msg.ClientFileType_GroupProfilePhoto,
+					Type:       msg.GroupProfilePhoto,
 					MimeType:   "",
 					UserID:     0,
 					GroupID:    groupID,
@@ -149,7 +149,7 @@ func saveGroupPhotos(txn *badger.Txn, groupID int64, photos ...*msg.GroupPhoto) 
 					ClusterID:  photo.PhotoSmall.ClusterID,
 					FileID:     photo.PhotoSmall.FileID,
 					AccessHash: photo.PhotoSmall.AccessHash,
-					Type:       msg.ClientFileType_Thumbnail,
+					Type:       msg.Thumbnail,
 					MimeType:   "",
 					UserID:     0,
 					GroupID:    groupID,
@@ -195,7 +195,7 @@ func saveMessageMedia(txn *badger.Txn, m *msg.UserMessage) error {
 			ClusterID:  md.Doc.ClusterID,
 			FileID:     md.Doc.ID,
 			AccessHash: md.Doc.AccessHash,
-			Type:       msg.ClientFileType_Message,
+			Type:       msg.Message,
 			MimeType:   md.Doc.MimeType,
 			Extension:  fileExt,
 			UserID:     0,
@@ -215,7 +215,7 @@ func saveMessageMedia(txn *badger.Txn, m *msg.UserMessage) error {
 				ClusterID:  md.Doc.Thumbnail.ClusterID,
 				FileID:     md.Doc.Thumbnail.FileID,
 				AccessHash: md.Doc.Thumbnail.AccessHash,
-				Type:       msg.ClientFileType_Thumbnail,
+				Type:       msg.Thumbnail,
 				MimeType:   "",
 				UserID:     0,
 				GroupID:    0,
@@ -378,13 +378,13 @@ func (r *repoFiles) GetCachedMedia() *msg.ClientCachedMediaInfo {
 
 func (r *repoFiles) GetFilePath(clientFile *msg.ClientFile) string {
 	switch clientFile.Type {
-	case msg.ClientFileType_Message:
+	case msg.Message:
 		return getMessageFilePath(clientFile.MimeType, clientFile.FileID, clientFile.Extension)
-	case msg.ClientFileType_AccountProfilePhoto:
+	case msg.AccountProfilePhoto:
 		return getAccountProfilePath(clientFile.UserID, clientFile.FileID)
-	case msg.ClientFileType_GroupProfilePhoto:
+	case msg.GroupProfilePhoto:
 		return getGroupProfilePath(clientFile.GroupID, clientFile.FileID)
-	case msg.ClientFileType_Thumbnail:
+	case msg.Thumbnail:
 		return getThumbnailPath(clientFile.FileID, clientFile.ClusterID)
 	}
 	return ""

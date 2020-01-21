@@ -115,17 +115,17 @@ func (rs RequestStatus) ToString() string {
 	return ""
 }
 
-// SharedMediaType filter for displaying shared medias
-type SharedMediaType int
-
-const (
-	SharedMediaTypeAll   SharedMediaType = 0 // SharedMediaTypeAll all documents
-	SharedMediaTypeFile  SharedMediaType = 1 // SharedMediaTypeFile files
-	SharedMediaTypeMedia SharedMediaType = 2 // SharedMediaTypeMedia photo/video/animated
-	SharedMediaTypeVoice SharedMediaType = 3 // SharedMediaTypeVoice audio document that have IsVoice flag
-	SharedMediaTypeAudio SharedMediaType = 4 // SharedMediaTypeAudio audio document that its IsVoice flag is false
-	SharedMediaTypeLink  SharedMediaType = 5 // SharedMediaTypeLink displays all messages that have link entity
-)
+// // SharedMediaType filter for displaying shared medias
+// type SharedMediaType int
+//
+// const (
+// 	SharedMediaTypeAll   SharedMediaType = 0 // SharedMediaTypeAll all documents
+// 	SharedMediaTypeFile  SharedMediaType = 1 // SharedMediaTypeFile files
+// 	SharedMediaTypeMedia SharedMediaType = 2 // SharedMediaTypeMedia photo/video/animated
+// 	SharedMediaTypeVoice SharedMediaType = 3 // SharedMediaTypeVoice audio document that have IsVoice flag
+// 	SharedMediaTypeAudio SharedMediaType = 4 // SharedMediaTypeAudio audio document that its IsVoice flag is false
+// 	SharedMediaTypeLink  SharedMediaType = 5 // SharedMediaTypeLink displays all messages that have link entity
+// )
 
 // UserStatus Times
 const (
