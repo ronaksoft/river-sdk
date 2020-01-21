@@ -253,7 +253,7 @@ func (r *repoUsers) GetAccessHash(userID int64) (accessHash uint64, err error) {
 	return
 }
 
-func (r *repoUsers) UpdateProfile(userID int64, firstName, lastName, username, bio string) error {
+func (r *repoUsers) UpdateProfile(userID int64, firstName, lastName, username, bio, phone string) error {
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		user, err := getUserByKey(txn, getUserKey(userID))
 		if err != nil {
@@ -262,6 +262,7 @@ func (r *repoUsers) UpdateProfile(userID int64, firstName, lastName, username, b
 		user.FirstName = firstName
 		user.LastName = lastName
 		user.Username = username
+		user.Phone = phone
 		user.Bio = bio
 		return saveUser(txn, user)
 	})

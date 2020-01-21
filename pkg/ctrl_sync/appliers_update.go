@@ -395,11 +395,12 @@ func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) ([]*msg.UpdateEnve
 		ctrl.connInfo.ChangeUsername(x.Username)
 		ctrl.connInfo.ChangeFirstName(x.FirstName)
 		ctrl.connInfo.ChangeLastName(x.LastName)
+		ctrl.connInfo.ChangePhone(x.Phone)
 		ctrl.connInfo.ChangeBio(x.Bio)
 		ctrl.connInfo.Save()
 	}
 
-	repo.Users.UpdateProfile(x.UserID, x.FirstName, x.LastName, x.Username, x.Bio)
+	repo.Users.UpdateProfile(x.UserID, x.FirstName, x.LastName, x.Username, x.Bio, x.Phone)
 
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil

@@ -943,7 +943,7 @@ func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB dom
 	r.ConnInfo.Save()
 
 	_ = repo.Users.UpdateProfile(r.ConnInfo.UserID,
-		req.FirstName, req.LastName, r.ConnInfo.Username, req.Bio,
+		req.FirstName, req.LastName, r.ConnInfo.Username, req.Bio, r.ConnInfo.Phone,
 	)
 
 	// send the request to server
