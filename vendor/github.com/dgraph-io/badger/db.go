@@ -224,14 +224,14 @@ func Open(opt Options) (db *DB, err error) {
 		return nil, err
 	}
 	absValueDir, err := filepath.Abs(opt.ValueDir)
-	if err != nil {
-		return nil, err
-	}
+	// if err != nil {
+	// 	return nil, err
+	// }
 	var dirLockGuard, valueDirLockGuard *directoryLockGuard
 	dirLockGuard, err = acquireDirectoryLock(opt.Dir, lockFile, opt.ReadOnly)
-	if err != nil {
-		return nil, err
-	}
+	// if err != nil {
+	// 	return nil, err
+	// }
 	defer func() {
 		if dirLockGuard != nil {
 			_ = dirLockGuard.release()
