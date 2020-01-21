@@ -82,7 +82,7 @@ var AuthLogin = &ishell.Cmd{
 				if err != nil {
 					req.PhoneCodeHash = fnGetPhoneCode(c)
 				} else {
-					req.PhoneCode = req.Phone[len(req.Phone)-4:]
+					req.PhoneCode = req.Phone[len(req.Phone)-5:]
 					b, _ := ioutil.ReadAll(File)
 					req.PhoneCodeHash = string(b)
 				}
