@@ -29,6 +29,7 @@ import (
 type Config struct {
 	WebsocketEndpoint string
 	HttpEndpoint      string
+	CountryCode       string
 }
 
 // Controller websocket network controller
@@ -73,13 +74,15 @@ type Controller struct {
 	unauthorizedRequests map[int64]bool
 
 	// internal parameters to detect network switch
-	localIP net.IP
+	localIP     net.IP
+	countryCode string
 }
 
 // New
 func New(config Config) *Controller {
 	ctrl := new(Controller)
 	ctrl.httpEndpoint = config.HttpEndpoint
+	ctrl.countryCode = strings.ToUpper(config.CountryCode)
 	if config.WebsocketEndpoint == "" {
 		ctrl.wsEndpoint = domain.WebsocketEndpoint
 	} else {
@@ -731,47 +734,46 @@ func (ctrl *Controller) UpdateEndpoint() {
 		return
 	}
 	ctrl.endpointUpdated = true
-	var country string
+
 	wsEndpointParts := strings.Split(ctrl.wsEndpoint, ".")
 	httpEndpointParts := strings.Split(ctrl.httpEndpoint, ".")
-	if domain.ClientPhone != "" {
-		country = strings.ToUpper(domain.GetCountryCode(domain.ClientPhone))
-	}
-	if country == "" {
-		country = "IR"
-	}
 
-	timeout := time.Second * 3
-	res1 := make(chan string, 1)
-	go func() {
-		c := http.Client{Timeout: timeout}
-		res, err := c.Get("https://ipinfo.io/country")
-		if err == nil {
-			b, _ := ioutil.ReadAll(res.Body)
-			_ = res.Body.Close()
-			res1 <- strings.TrimSpace(string(b))
+	if ctrl.countryCode == "" {
+		timeout := time.Second * 3
+		res1 := make(chan string, 1)
+		go func() {
+			c := http.Client{Timeout: timeout}
+			res, err := c.Get("https://ipinfo.io/country")
+			if err == nil {
+				b, _ := ioutil.ReadAll(res.Body)
+				_ = res.Body.Close()
+				res1 <- strings.TrimSpace(string(b))
+			}
+		}()
+
+		select {
+		case x := <-res1:
+			if x != "" {
+				ctrl.countryCode = strings.ToUpper(x)
+			}
+		case <-time.After(timeout):
 		}
-	}()
 
-	select {
-	case x := <-res1:
-		if x != "" {
-			country = strings.ToUpper(x)
+		switch ctrl.countryCode {
+		case "IR":
+			wsEndpointParts[0] = strings.TrimSuffix(wsEndpointParts[0], "-cf")
+			httpEndpointParts[0] = strings.TrimSuffix(httpEndpointParts[0], "-cf")
+		default:
+			if !strings.HasSuffix(wsEndpointParts[0], "-cf") {
+				wsEndpointParts[0] = fmt.Sprintf("%s-cf", wsEndpointParts[0])
+			}
+			if !strings.HasSuffix(httpEndpointParts[0], "-cf") {
+				httpEndpointParts[0] = fmt.Sprintf("%s-cf", httpEndpointParts[0])
+			}
 		}
-	case <-time.After(timeout):
-	}
-
-	switch country {
-	case "IR":
+	} else {
 		wsEndpointParts[0] = strings.TrimSuffix(wsEndpointParts[0], "-cf")
 		httpEndpointParts[0] = strings.TrimSuffix(httpEndpointParts[0], "-cf")
-	default:
-		if !strings.HasSuffix(wsEndpointParts[0], "-cf") {
-			wsEndpointParts[0] = fmt.Sprintf("%s-cf", wsEndpointParts[0])
-		}
-		if !strings.HasSuffix(httpEndpointParts[0], "-cf") {
-			httpEndpointParts[0] = fmt.Sprintf("%s-cf", httpEndpointParts[0])
-		}
 	}
 
 	ctrl.wsEndpoint = strings.Join(wsEndpointParts, ".")
@@ -779,6 +781,6 @@ func (ctrl *Controller) UpdateEndpoint() {
 	logs.Info("NetCtrl endpoints updated",
 		zap.String("WS", ctrl.wsEndpoint),
 		zap.String("Http", ctrl.httpEndpoint),
-		zap.String("Country", country),
+		zap.String("Country", ctrl.countryCode),
 	)
 }

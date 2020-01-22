@@ -69,6 +69,7 @@ type RiverConfig struct {
 	ClientVersion  string
 	ClientOs       string
 	ClientVendor   string
+	CountryCode    string
 
 	// OptimizeForLowMemory if is set then SDK tries to use the lowest possible ram
 	OptimizeForLowMemory bool
@@ -164,6 +165,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		networkCtrl.Config{
 			WebsocketEndpoint: conf.ServerEndpoint,
 			HttpEndpoint:      conf.FileServerEndpoint,
+			CountryCode:       conf.CountryCode,
 		},
 	)
 	r.networkCtrl.OnNetworkStatusChange = func(newQuality domain.NetworkStatus) {
