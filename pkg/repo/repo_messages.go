@@ -409,15 +409,10 @@ func (r *repoMessages) Delete(userID int64, peerID int64, peerType int32, msgIDs
 
 		for _, msgID := range msgIDs {
 			// delete from messages
-			err := txn.Delete(getMessageKey(peerID, peerType, msgID))
-			if err != nil {
-				return err
-			}
+			_ = txn.Delete(getMessageKey(peerID, peerType, msgID))
+
 			// delete from user messages
-			err = txn.Delete(getUserMessageKey(msgID))
-			if err != nil {
-				return err
-			}
+			_ = txn.Delete(getUserMessageKey(msgID))
 		}
 
 		msgID := msgIDs[len(msgIDs)-1]
