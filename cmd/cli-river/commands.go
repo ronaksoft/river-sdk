@@ -60,6 +60,21 @@ func fnGetPeerID(c *ishell.Context) int64 {
 	return peerID
 }
 
+func fnGetBotID(c *ishell.Context) int64 {
+	var botID int64
+	for {
+		c.Print("Bot ID: ")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
+		if err == nil {
+			botID = id
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return botID
+}
+
 func fnGetPeerType(c *ishell.Context) msg.PeerType {
 	var peerType msg.PeerType
 

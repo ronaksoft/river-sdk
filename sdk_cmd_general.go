@@ -642,3 +642,7 @@ func GenInputPassword(password []byte, accountPasswordBytes []byte) []byte {
 func SanitizeQuestionAnswer(answer string) string {
 	return strings.ToLower(strings.TrimSpace(answer))
 }
+
+func GetCountryCode(phone string) string {
+	return domain.GetCountryCode(phone)
+}
