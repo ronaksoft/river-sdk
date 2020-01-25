@@ -19,13 +19,13 @@ import (
 )
 
 func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.MessagesGetDialogs)
+	req := &msg.MessagesGetDialogs{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
 		return
 	}
-	res := new(msg.MessagesDialogs)
+	res := &msg.MessagesDialogs{}
 	res.Dialogs = repo.Dialogs.List(req.Offset, req.Limit)
 
 	// If the localDB had no data send the request to server
@@ -159,13 +159,13 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 }
 
 func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.MessagesGetDialog)
+	req := &msg.MessagesGetDialog{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
 		return
 	}
-	res := new(msg.Dialog)
+	res := &msg.Dialog{}
 	res, _ = repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
 
 	// if the localDB had no data send the request to server
@@ -1106,8 +1106,7 @@ func (r *River) groupRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domain.
 }
 
 func (r *River) usersGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.UsersGetFull)
-	logs.Info("users get full called")
+	req := &msg.UsersGetFull{}
 
 	if err := req.Unmarshal(in.Message); err != nil {
 		logs.Error("River::usersGetFull()-> Unmarshal()", zap.Error(err))
@@ -1142,7 +1141,7 @@ func (r *River) usersGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 }
 
 func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.UsersGet)
+	req := &msg.UsersGet{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		logs.Error("River::usersGet()-> Unmarshal()", zap.Error(err))
 		return
@@ -1172,7 +1171,7 @@ func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 }
 
 func (r *River) messagesSaveDraft(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.MessagesSaveDraft)
+	req := &msg.MessagesSaveDraft{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		logs.Error("River::messagesSaveDraft()-> Unmarshal()", zap.Error(err))
 		return
@@ -1199,7 +1198,7 @@ func (r *River) messagesSaveDraft(in, out *msg.MessageEnvelope, timeoutCB domain
 }
 
 func (r *River) messagesClearDraft(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.MessagesClearDraft)
+	req := &msg.MessagesClearDraft{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		logs.Error("River::messagesClearDraft()-> Unmarshal()", zap.Error(err))
 		return
