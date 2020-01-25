@@ -327,7 +327,6 @@ func (r *River) onNetworkConnect() (err error) {
 	}
 	waitGroup.Add(1)
 	go func() {
-		// FIXME:: We have server update id here, it is better to call sync only if necessary
 		serverUpdateID, err = r.syncCtrl.AuthRecall("NetworkConnect")
 		domain.WindowLog(fmt.Sprintf("AuthRecalled: %s", time.Now().Sub(domain.StartTime)))
 		waitGroup.Done()

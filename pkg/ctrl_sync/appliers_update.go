@@ -434,7 +434,7 @@ func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) ([]*msg.Upd
 }
 
 func (ctrl *Controller) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
-	x := new(msg.UpdateGroupParticipantAdmin)
+	x := &msg.UpdateGroupParticipantAdmin{}
 	err := x.Unmarshal(u.Update)
 	if err != nil {
 		return nil, err
@@ -448,7 +448,7 @@ func (ctrl *Controller) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) ([]*m
 }
 
 func (ctrl *Controller) updateReadMessagesContents(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
-	x := new(msg.UpdateReadMessagesContents)
+	x := &msg.UpdateReadMessagesContents{}
 	err := x.Unmarshal(u.Update)
 	if err != nil {
 		return nil, err
@@ -508,6 +508,22 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 			repo.Groups.RemovePhotoGallery(x.GroupID, x.PhotoID)
 		}
 	}
+
+	res := []*msg.UpdateEnvelope{u}
+	return res, nil
+}
+
+func (ctrl *Controller) updateGroupAdmins(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := &msg.UpdateGroupAdmins{}
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Info("SyncCtrl applies UpdateGroupAdmins",
+		zap.Int64("GroupID", x.GroupID),
+	)
+
 
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil

@@ -85,6 +85,7 @@ func NewSyncController(config Config) *Controller {
 		msg.C_UpdateReadMessagesContents:  ctrl.updateReadMessagesContents,
 		msg.C_UpdateUserPhoto:             ctrl.updateUserPhoto,
 		msg.C_UpdateGroupPhoto:            ctrl.updateGroupPhoto,
+		msg.C_UpdateGroupAdmins:           ctrl.updateGroupAdmins,
 		msg.C_UpdateDialogPinned:          ctrl.updateDialogPinned,
 		msg.C_UpdateAccountPrivacy:        ctrl.updateAccountPrivacy,
 		msg.C_UpdateDraftMessage:          ctrl.updateDraftMessage,
@@ -331,10 +332,12 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 				)
 				return
 			}
-			if update.UpdateID != 0 {
-				ctrl.updateID = update.UpdateID
-			}
 			updContainer.Updates = append(updContainer.Updates, externalHandlerUpdates...)
+		} else {
+			updContainer.Updates = append(updContainer.Updates, update)
+		}
+		if update.UpdateID != 0 {
+			ctrl.updateID = update.UpdateID
 		}
 	}
 	updContainer.Length = int32(len(updContainer.Updates))
