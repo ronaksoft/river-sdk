@@ -661,14 +661,14 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 }
 
 func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.ContactsGet)
+	req := &msg.ContactsGet{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
 		return
 	}
 
-	res := new(msg.ContactsMany)
+	res := &msg.ContactsMany{}
 	res.ContactUsers, res.Contacts = repo.Users.GetContacts()
 
 	userIDs := make([]int64, 0, len(res.ContactUsers))

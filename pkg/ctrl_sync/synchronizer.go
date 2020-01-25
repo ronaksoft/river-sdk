@@ -479,14 +479,16 @@ func (ctrl *Controller) ResetIDs() {
 // ContactImportFromServer import contact from server
 func (ctrl *Controller) ContactImportFromServer() {
 	contactsGetHash, _ := repo.System.LoadInt(domain.SkContactsGetHash)
-	contactGetReq := new(msg.ContactsGet)
-	contactGetReq.Crc32Hash = uint32(contactsGetHash)
+	contactGetReq := &msg.ContactsGet{
+		Crc32Hash: uint32(contactsGetHash),
+	}
 	contactGetBytes, _ := contactGetReq.Marshal()
 	ctrl.queueCtrl.RealtimeCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_ContactsGet, contactGetBytes,
 		nil, nil, false, false,
 	)
+	logs.Debug("SyncCtrl call ContactsGet", zap.Uint32("Hash", contactGetReq.Crc32Hash))
 }
 
 // GetSyncStatus
