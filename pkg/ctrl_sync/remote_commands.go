@@ -194,6 +194,7 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, l
 					ctrl.GetAllDialogs(waitGroup, offset+limit, limit)
 				} else {
 					waitGroup.Done()
+					updateUI(ctrl, true, false)
 				}
 			}
 		},

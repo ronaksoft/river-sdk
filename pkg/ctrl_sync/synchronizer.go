@@ -180,7 +180,6 @@ func (ctrl *Controller) Sync() {
 			go ctrl.GetContacts(waitGroup)
 			go ctrl.GetAllDialogs(waitGroup, 0, 50)
 			waitGroup.Wait()
-			updateUI(ctrl)
 
 			ctrl.updateID = serverUpdateID
 			err = repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
@@ -195,10 +194,10 @@ func (ctrl *Controller) Sync() {
 		return nil, nil
 	})
 }
-func updateUI(ctrl *Controller) {
+func updateUI(ctrl *Controller, dialogs, contacts bool) {
 	update := new(msg.ClientUpdateSynced)
-	update.Dialogs = false
-	update.Contacts = true
+	update.Dialogs = dialogs
+	update.Contacts = contacts
 	bytes, _ := update.Marshal()
 
 	updateEnvelope := new(msg.UpdateEnvelope)

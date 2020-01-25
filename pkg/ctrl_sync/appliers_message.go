@@ -91,8 +91,6 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 	repo.Users.Save(x.Users...)
 	// server
 	if len(x.ContactUsers) > 0 {
-		// sort ASC
-
 		buff := bytes.Buffer{}
 		b := make([]byte, 8)
 		for _, contactUser := range x.ContactUsers {
@@ -104,6 +102,7 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 		if err != nil {
 			logs.Error("SyncCtrl couldn't save ContactsHash in to the db", zap.Error(err))
 		}
+		updateUI(ctrl, false, true)
 	}
 }
 
