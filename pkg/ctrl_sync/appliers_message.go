@@ -102,7 +102,7 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 		if err != nil {
 			logs.Error("SyncCtrl couldn't save ContactsHash in to the db", zap.Error(err))
 		}
-		updateUI(ctrl, false, true)
+		forceUpdateUI(ctrl, false, true)
 	}
 }
 

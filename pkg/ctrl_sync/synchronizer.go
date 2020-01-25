@@ -194,13 +194,13 @@ func (ctrl *Controller) Sync() {
 		return nil, nil
 	})
 }
-func updateUI(ctrl *Controller, dialogs, contacts bool) {
-	update := new(msg.ClientUpdateSynced)
+func forceUpdateUI(ctrl *Controller, dialogs, contacts bool) {
+	update := &msg.ClientUpdateSynced{}
 	update.Dialogs = dialogs
 	update.Contacts = contacts
 	bytes, _ := update.Marshal()
 
-	updateEnvelope := new(msg.UpdateEnvelope)
+	updateEnvelope := &msg.UpdateEnvelope{}
 	updateEnvelope.Constructor = msg.C_ClientUpdateSynced
 	updateEnvelope.Update = bytes
 	updateEnvelope.UpdateID = 0
