@@ -328,7 +328,7 @@ func (r *repoFiles) GetCachedMedia() *msg.ClientCachedMediaInfo {
 				userMtx.Unlock()
 			case msg.PeerGroup:
 				groupMtx.Lock()
-				if _, ok := groupMediaInfo[m.PeerID]; ok {
+				if _, ok := groupMediaInfo[m.PeerID]; !ok {
 					groupMediaInfo[m.PeerID] = make(map[msg.ClientMediaType]int32, 5)
 				}
 				groupMediaInfo[m.PeerID][msg.ClientMediaType(item.UserMeta())] += d.Doc.FileSize
