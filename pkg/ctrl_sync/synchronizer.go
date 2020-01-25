@@ -436,9 +436,6 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer, outO
 				return
 			}
 			logs.Debug("SyncCtrl applied update", zap.String("Constructor", msg.ConstructorNames[update.Constructor]))
-			if update.UpdateID != 0 {
-				ctrl.updateID = update.UpdateID
-			}
 			switch update.Constructor {
 			case msg.C_UpdateMessageID:
 			default:
@@ -446,6 +443,9 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer, outO
 			}
 		} else {
 			udpContainer.Updates = append(udpContainer.Updates, update)
+		}
+		if update.UpdateID != 0 {
+			ctrl.updateID = update.UpdateID
 		}
 	}
 
