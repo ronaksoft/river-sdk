@@ -170,7 +170,7 @@ func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain
 
 	// if the localDB had no data send the request to server
 	if res == nil {
-		r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 		return
 	}
 
@@ -230,7 +230,14 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	requestBytes, _ := req.Marshal()
 	// r.queueCtrl.addToWaitingList(req) // this needs to be wrapped by MessageEnvelope
 	// using req randomID as requestID later in queue processing and network controller messageHandler
-	r.queueCtrl.EnqueueCommand(uint64(req.RandomID), msg.C_MessagesSend, requestBytes, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(
+		&msg.MessageEnvelope{
+			Constructor: msg.C_MessagesSend,
+			RequestID:   uint64(req.RandomID),
+			Message:     requestBytes,
+		},
+		timeoutCB, successCB, true,
+	)
 
 	// 3. return to CallBack with pending message data : Done
 	out.Constructor = msg.C_ClientPendingMessage
@@ -265,7 +272,7 @@ func (r *River) messagesReadHistory(in, out *msg.MessageEnvelope, timeoutCB doma
 	repo.Dialogs.UpdateReadInboxMaxID(r.ConnInfo.UserID, req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -319,7 +326,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 				zap.Int64("TopMsgID", dialog.TopMessageID),
 				zap.String("Holes", messageHole.PrintHole(req.Peer.ID, int32(req.Peer.Type))),
 			)
-			r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
+			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
 		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
@@ -333,7 +340,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 				zap.Int64("TopMsgID", dialog.TopMessageID),
 				zap.String("Holes", messageHole.PrintHole(req.Peer.ID, int32(req.Peer.Type))),
 			)
-			r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
+			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
 		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, 0, req.Limit)
@@ -347,7 +354,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
 			)
-			r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
+			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
 		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
@@ -481,7 +488,7 @@ func (r *River) messagesDelete(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	}
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 
 }
 
@@ -528,7 +535,7 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 	}
 
 	// SendWebsocket the request to the server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) messagesClearHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -540,7 +547,7 @@ func (r *River) messagesClearHistory(in, out *msg.MessageEnvelope, timeoutCB dom
 	}
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) messagesReadContents(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -554,7 +561,7 @@ func (r *River) messagesReadContents(in, out *msg.MessageEnvelope, timeoutCB dom
 	repo.Messages.SetContentRead(req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -595,11 +602,25 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 		}) // successCB(out)
 
 		requestBytes, _ := req.Marshal()
-		r.queueCtrl.EnqueueCommand(uint64(req.RandomID), msg.C_MessagesSendMedia, requestBytes, timeoutCB, successCB, true)
+		r.queueCtrl.EnqueueCommand(
+			&msg.MessageEnvelope{
+				Constructor: msg.C_MessagesSendMedia,
+				RequestID:   uint64(req.RandomID),
+				Message:     requestBytes,
+			},
+			timeoutCB, successCB, true,
+		)
 	case msg.InputMediaTypeUploadedDocument:
 		// no need to insert pending message cuz we already insert one b4 start uploading
 		requestBytes, _ := req.Marshal()
-		r.queueCtrl.EnqueueCommand(uint64(req.RandomID), msg.C_MessagesSendMedia, requestBytes, timeoutCB, successCB, true)
+		r.queueCtrl.EnqueueCommand(
+			&msg.MessageEnvelope{
+				Constructor: msg.C_MessagesSendMedia,
+				RequestID:   uint64(req.RandomID),
+				Message:     requestBytes,
+			},
+			timeoutCB, successCB, true,
+		)
 
 	}
 
@@ -697,7 +718,7 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	// TOF
 	if len(req.Contacts) == 1 {
 		// send request to server
-		r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 		return
 	}
 
@@ -728,7 +749,7 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	diffContacts := domain.ExtractsContactsDifference(res.Contacts, req.Contacts)
 	if len(diffContacts) <= 50 {
 		// send the request to server
-		r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 	} else {
 		// chunk contacts by size of 50 and send them to server
 		go r.sendChunkedImportContactRequest(req.Replace, diffContacts, out, successCB)
@@ -745,7 +766,7 @@ func (r *River) contactsDelete(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 
 	_ = repo.Users.DeleteContact(req.UserIDs...)
 
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 	return
 }
 
@@ -796,7 +817,14 @@ func (r *River) sendChunkedImportContactRequest(replace bool, diffContacts []*ms
 		reqBytes, _ := req.Marshal()
 
 		wg.Add(1)
-		r.queueCtrl.EnqueueCommand(reqID, msg.C_ContactsImport, reqBytes, cbTimeout, cbSuccess, false)
+		r.queueCtrl.EnqueueCommand(
+			&msg.MessageEnvelope{
+				Constructor: msg.C_ContactsImport,
+				RequestID:   reqID,
+				Message:     reqBytes,
+			},
+			cbTimeout, cbSuccess, false,
+		)
 	}
 
 	wg.Wait()
@@ -816,7 +844,7 @@ func (r *River) accountUpdateUsername(in, out *msg.MessageEnvelope, timeoutCB do
 	r.ConnInfo.Save()
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) accountRegisterDevice(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -839,7 +867,7 @@ func (r *River) accountRegisterDevice(in, out *msg.MessageEnvelope, timeoutCB do
 		return
 	}
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) accountUnregisterDevice(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -862,7 +890,7 @@ func (r *River) accountUnregisterDevice(in, out *msg.MessageEnvelope, timeoutCB 
 		return
 	}
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -882,7 +910,7 @@ func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB
 	repo.Dialogs.Save(dialog)
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 
 }
 
@@ -906,7 +934,7 @@ func (r *River) dialogTogglePin(in, out *msg.MessageEnvelope, timeoutCB domain.T
 	repo.Dialogs.Save(dialog)
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 
 }
 
@@ -915,7 +943,7 @@ func (r *River) accountRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domai
 	_ = x.Unmarshal(in.Message)
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 
 	user, err := repo.Users.Get(r.ConnInfo.UserID)
 	if err != nil {
@@ -952,7 +980,7 @@ func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB dom
 	)
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) groupsEditTitle(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -966,7 +994,7 @@ func (r *River) groupsEditTitle(in, out *msg.MessageEnvelope, timeoutCB domain.T
 	repo.Groups.UpdateTitle(req.GroupID, req.Title)
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 
 }
 
@@ -990,7 +1018,7 @@ func (r *River) groupAddUser(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	}
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 
 }
 
@@ -1005,7 +1033,7 @@ func (r *River) groupDeleteUser(in, out *msg.MessageEnvelope, timeoutCB domain.T
 	repo.Groups.DeleteMember(req.GroupID, req.User.UserID)
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -1020,7 +1048,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 
 	group, _ := repo.Groups.Get(req.GroupID)
 	if group == nil {
-		r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 		return
 	}
 	res.Group = group
@@ -1028,7 +1056,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	// Participants
 	participants, err := repo.Groups.GetParticipants(req.GroupID)
 	if err != nil {
-		r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 		return
 	}
 	res.Participants = participants
@@ -1036,7 +1064,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	// NotifySettings
 	dlg, _ := repo.Dialogs.Get(req.GroupID, int32(msg.PeerGroup))
 	if dlg == nil {
-		r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 		return
 	}
 	res.NotifySettings = dlg.NotifySettings
@@ -1051,7 +1079,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	}
 	users := repo.Users.GetMany(userIDs.ToArray())
 	if len(participants) != len(users) {
-		r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 		return
 	}
 	res.Users = users
@@ -1061,7 +1089,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	successCB(out)
 
 	// send the request to server no need to pass server response to external handler (UI) just to re update catch DB
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, nil, nil, false)
+	r.queueCtrl.EnqueueCommand(in, nil, nil, false)
 
 }
 
@@ -1076,12 +1104,12 @@ func (r *River) groupUpdateAdmin(in, out *msg.MessageEnvelope, timeoutCB domain.
 	repo.Groups.UpdateMemberType(req.GroupID, req.User.UserID, req.Admin)
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) groupRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 
 	req := new(msg.GroupsRemovePhoto)
 	err := req.Unmarshal(in.Message)
@@ -1137,7 +1165,7 @@ func (r *River) usersGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	}
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -1167,7 +1195,7 @@ func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 	}
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) messagesSaveDraft(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -1194,7 +1222,7 @@ func (r *River) messagesSaveDraft(in, out *msg.MessageEnvelope, timeoutCB domain
 	}
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) messagesClearDraft(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -1211,7 +1239,7 @@ func (r *River) messagesClearDraft(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) labelsGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -1238,7 +1266,7 @@ func (r *River) labelsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeout
 	}
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -1313,7 +1341,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("MinID", req.MinID),
 			)
-			r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
+			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
 		messages, users, groups := repo.Labels.ListMessages(req.LabelID, req.Limit, bar.MinID, bar.MaxID)
@@ -1332,13 +1360,13 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 				zap.Int64("MinID", req.MinID),
 				zap.Int64("MaxID", req.MaxID),
 			)
-			r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
+			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
 		messages, users, groups := repo.Labels.ListMessages(req.LabelID, req.Limit, bar.MinID, bar.MaxID)
 		fillLabelItems(out, messages, users, groups, in.RequestID, preSuccessCB)
 	default:
-		r.queueCtrl.EnqueueCommand(in.RequestID, in.Constructor, in.Message, timeoutCB, preSuccessCB, true)
+		r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 		return
 	}
 }
@@ -1503,7 +1531,6 @@ func (r *River) clientClearCachedMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	} else {
 		repo.Files.ClearCache()
 	}
-
 
 	res := msg.Bool{Result: true}
 	out.Constructor = msg.C_Bool

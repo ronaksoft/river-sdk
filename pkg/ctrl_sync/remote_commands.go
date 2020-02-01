@@ -24,7 +24,6 @@ func (ctrl *Controller) GetServerSalt() {
 	serverSaltReq := &msg.SystemGetSalts{}
 	serverSaltReqBytes, _ := serverSaltReq.Marshal()
 
-
 	ctrl.queueCtrl.RealtimeCommand(
 		&msg.MessageEnvelope{
 			Constructor: msg.C_SystemGetSalts,
@@ -167,9 +166,11 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, l
 	req.Offset = offset
 	reqBytes, _ := req.Marshal()
 	ctrl.queueCtrl.EnqueueCommand(
-		uint64(domain.SequentialUniqueID()),
-		msg.C_MessagesGetDialogs,
-		reqBytes,
+		&msg.MessageEnvelope{
+			Constructor: msg.C_MessagesGetDialogs,
+			RequestID:   uint64(domain.SequentialUniqueID()),
+			Message:     reqBytes,
+		},
 		func() {
 			// If timeout, then retry the request
 			logs.Warn("Timeout! on GetAllDialogs, retrying ...")
@@ -209,12 +210,14 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, l
 
 func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup) {
 	logs.Debug("SyncCtrl calls GetContacts")
-	req := new(msg.ContactsGet)
+	req := &msg.ContactsGet{}
 	reqBytes, _ := req.Marshal()
 	ctrl.queueCtrl.EnqueueCommand(
-		uint64(domain.SequentialUniqueID()),
-		msg.C_ContactsGet,
-		reqBytes,
+		&msg.MessageEnvelope{
+			Constructor: msg.C_ContactsGet,
+			RequestID:   uint64(domain.SequentialUniqueID()),
+			Message:     reqBytes,
+		},
 		func() {
 			ctrl.GetContacts(waitGroup)
 		},

@@ -146,7 +146,14 @@ func executeRemoteCommand(r *River, requestID uint64, constructor int64, command
 			Message:     commandBytes,
 		}, timeoutCB, successCB, blocking, true)
 	} else {
-		r.queueCtrl.EnqueueCommand(requestID, constructor, commandBytes, timeoutCB, successCB, true)
+		r.queueCtrl.EnqueueCommand(
+			&msg.MessageEnvelope{
+				Constructor: constructor,
+				RequestID:   requestID,
+				Message:     commandBytes,
+			},
+			timeoutCB, successCB, true,
+		)
 	}
 
 }
@@ -394,18 +401,27 @@ func (r *River) RetryPendingMessage(id int64) bool {
 	if pmsg == nil {
 		return false
 	}
-	req := new(msg.MessagesSend)
-	req.Body = pmsg.Body
-	req.Peer = new(msg.InputPeer)
-	req.Peer.AccessHash = pmsg.AccessHash
-	req.Peer.ID = pmsg.PeerID
-	req.Peer.Type = msg.PeerType(pmsg.PeerType)
-	req.RandomID = pmsg.RequestID
-	req.ReplyTo = pmsg.ReplyTo
-	req.ClearDraft = pmsg.ClearDraft
-	req.Entities = pmsg.Entities
+	req := &msg.MessagesSend{
+		Body: pmsg.Body,
+		Peer: &msg.InputPeer{
+			ID:         pmsg.PeerID,
+			AccessHash: pmsg.AccessHash,
+			Type:       msg.PeerType(pmsg.PeerType),
+		},
+		RandomID:   pmsg.RequestID,
+		ReplyTo:    pmsg.ReplyTo,
+		ClearDraft: pmsg.ClearDraft,
+		Entities:   pmsg.Entities,
+	}
 	buff, _ := req.Marshal()
-	r.queueCtrl.EnqueueCommand(uint64(req.RandomID), msg.C_MessagesSend, buff, nil, nil, true)
+	r.queueCtrl.EnqueueCommand(
+		&msg.MessageEnvelope{
+			Constructor: msg.C_MessagesSend,
+			RequestID:   uint64(req.RandomID),
+			Message:     buff,
+		},
+		nil, nil, true,
+	)
 
 	logs.Debug("River::RetryPendingMessage() Request enqueued")
 	return true

@@ -446,7 +446,7 @@ func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) bool {
 	}
 	return false
 }
-func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) bool {
+func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success bool) {
 	// This is a upload for message send media
 	pendingMessage := repo.PendingMessages.GetByID(uploadRequest.MessageID)
 	if pendingMessage == nil {
@@ -459,25 +459,26 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) bool {
 	_ = req.Unmarshal(pendingMessage.Media)
 
 	// Create SendMessageMedia Request
-	x := &msg.MessagesSendMedia{}
-	x.Peer = req.Peer
-	x.ClearDraft = req.ClearDraft
-	x.MediaType = req.MediaType
-	x.RandomID = uploadRequest.FileID
-	x.ReplyTo = req.ReplyTo
+	x := &msg.MessagesSendMedia{
+		Peer:       req.Peer,
+		ClearDraft: req.ClearDraft,
+		MediaType:  req.MediaType,
+		RandomID:   uploadRequest.FileID,
+		ReplyTo:    req.ReplyTo,
+	}
 
 	switch x.MediaType {
 	case msg.InputMediaTypeUploadedDocument:
-		doc := &msg.InputMediaUploadedDocument{}
-		doc.MimeType = req.FileMIME
-		doc.Attributes = req.Attributes
-		doc.Caption = req.Caption
-		doc.File = &msg.InputFile{
-			FileID:      uploadRequest.FileID,
-			FileName:    req.FileName,
-			MD5Checksum: "",
+		doc := &msg.InputMediaUploadedDocument{
+			MimeType:   req.FileMIME,
+			Attributes: req.Attributes,
+			Caption:    req.Caption,
+			File: &msg.InputFile{
+				FileID:      uploadRequest.FileID,
+				FileName:    req.FileName,
+				MD5Checksum: "",
+			},
 		}
-
 		if uploadRequest.ThumbID != 0 {
 			doc.Thumbnail = &msg.InputFile{
 				FileID:      uploadRequest.ThumbID,
@@ -485,27 +486,43 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) bool {
 				MD5Checksum: "",
 			}
 		}
-
 		x.MediaData, _ = doc.Marshal()
 	default:
-
 	}
 	reqBuff, _ := x.Marshal()
-	requestID := uint64(uploadRequest.FileID)
+	success = true
+
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(1)
-	r.queueCtrl.EnqueueCommand(requestID, msg.C_MessagesSendMedia, reqBuff,
-		func() {
-			// Timeout Callback
+	successCB := func(m *msg.MessageEnvelope) {
+		logs.Debug("MessagesSendMedia success callback called")
+		switch m.Constructor {
+		case msg.C_Error:
+			success = false
+			x := &msg.Error{}
+			if err := x.Unmarshal(m.Message); err != nil {
+				logs.Error("We couldn't unmarshal MessagesSendMedia (Error) response", zap.Error(err))
+			}
+			logs.Error("We received error on MessagesSendMedia response", zap.String("Code", x.Code), zap.String("Item", x.Items))
+		}
+		waitGroup.Done()
+	}
+	timeoutCB := func() {
+		success = false
+		logs.Debug("We got Timeout! on MessagesSendMedia response")
+		waitGroup.Done()
+	}
+	r.queueCtrl.EnqueueCommand(
+		&msg.MessageEnvelope{
+			Constructor: msg.C_MessagesSendMedia,
+			RequestID:   uint64(uploadRequest.FileID),
+			Message:     reqBuff,
 		},
-		func(m *msg.MessageEnvelope) {
-			// Response Callback
-			waitGroup.Done()
-		}, false)
+		timeoutCB, successCB, false)
 	waitGroup.Wait()
-
+	return
 }
-func (r *River) uploadGroupPhoto(uploadRequest fileCtrl.UploadRequest) bool {
+func (r *River) uploadGroupPhoto(uploadRequest fileCtrl.UploadRequest) (success bool) {
 	// This is a upload group profile picture
 	x := &msg.GroupsUploadPhoto{
 		GroupID: uploadRequest.GroupID,
@@ -517,72 +534,82 @@ func (r *River) uploadGroupPhoto(uploadRequest fileCtrl.UploadRequest) bool {
 		},
 	}
 
-	reqBuff, err := x.Marshal()
-	if err != nil {
-		logs.Error("We couldn't marshal GroupUploadPhoto", zap.Error(err))
-		return false
-	}
-	requestID := uint64(domain.SequentialUniqueID())
+	reqBuff, _ := x.Marshal()
+
+	success = true
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(1)
 	successCB := func(m *msg.MessageEnvelope) {
 		logs.Debug("GroupUploadPhoto success callback called")
 		switch m.Constructor {
-		case msg.C_Bool:
-			x := &msg.Bool{}
-			err := x.Unmarshal(m.Message)
-			if err != nil {
-				logs.Error("We couldn't unmarshal GroupUploadPhoto (Bool) response", zap.Error(err))
-			}
 		case msg.C_Error:
+			success = false
 			x := &msg.Error{}
-			err := x.Unmarshal(m.Message)
-			if err != nil {
+			if err := x.Unmarshal(m.Message); err != nil {
 				logs.Error("We couldn't unmarshal GroupUploadPhoto (Error) response", zap.Error(err))
 			}
 			logs.Error("We received error on GroupUploadPhoto response", zap.String("Code", x.Code), zap.String("Item", x.Items))
 		}
+		waitGroup.Done()
 	}
 	timeoutCB := func() {
+		success = false
 		logs.Debug("We got Timeout! on GroupUploadPhoto response")
+		waitGroup.Done()
 	}
-	r.queueCtrl.EnqueueCommand(requestID, msg.C_GroupsUploadPhoto, reqBuff, timeoutCB, successCB, false)
+	r.queueCtrl.EnqueueCommand(
+		&msg.MessageEnvelope{
+			Constructor: msg.C_GroupsUploadPhoto,
+			RequestID:   uint64(domain.SequentialUniqueID()),
+			Message:     reqBuff,
+		},
+		timeoutCB, successCB, false,
+	)
+	waitGroup.Wait()
+	return
 }
-func (r *River) uploadAccountPhoto(uploadRequest fileCtrl.UploadRequest) bool {
+func (r *River) uploadAccountPhoto(uploadRequest fileCtrl.UploadRequest) (success bool) {
 	// This is a upload account profile picture
-	x := new(msg.AccountUploadPhoto)
-	x.File = &msg.InputFile{
-		FileID:      uploadRequest.FileID,
-		FileName:    strconv.FormatInt(uploadRequest.FileID, 10) + ".jpg",
-		TotalParts:  uploadRequest.TotalParts,
-		MD5Checksum: "",
+	x := &msg.AccountUploadPhoto{
+		File: &msg.InputFile{
+			FileID:      uploadRequest.FileID,
+			FileName:    strconv.FormatInt(uploadRequest.FileID, 10) + ".jpg",
+			TotalParts:  uploadRequest.TotalParts,
+			MD5Checksum: "",
+		},
 	}
-	reqBuff, err := x.Marshal()
-	if err != nil {
-		logs.Error("We couldn't marshal AccountUploadPhoto", zap.Error(err))
-		return false
-	}
-	requestID := uint64(domain.SequentialUniqueID())
+	reqBuff, _ := x.Marshal()
+	success = true
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(1)
 	successCB := func(m *msg.MessageEnvelope) {
 		logs.Debug("AccountUploadPhoto success callback called")
 		switch m.Constructor {
-		case msg.C_Bool:
-			x := new(msg.Bool)
-			err := x.Unmarshal(m.Message)
-			if err != nil {
-				logs.Error("We couldn't unmarshal AccountUploadPhoto (Bool) response", zap.Error(err))
-			}
 		case msg.C_Error:
-			x := new(msg.Error)
-			err := x.Unmarshal(m.Message)
-			if err != nil {
+			success = false
+			x := &msg.Error{}
+			if err := x.Unmarshal(m.Message); err != nil {
 				logs.Error("We couldn't unmarshal AccountUploadPhoto (Error) response", zap.Error(err))
 			}
 			logs.Error("We received error on AccountUploadPhoto response", zap.String("Code", x.Code), zap.String("Item", x.Items))
 		}
+		waitGroup.Done()
 	}
 	timeoutCB := func() {
+		success = false
 		logs.Debug("Timeout! on AccountUploadPhoto response")
+		waitGroup.Done()
 	}
-	r.queueCtrl.EnqueueCommand(requestID, msg.C_AccountUploadPhoto, reqBuff, timeoutCB, successCB, false)
+	r.queueCtrl.EnqueueCommand(
+		&msg.MessageEnvelope{
+			Constructor: msg.C_AccountUploadPhoto,
+			RequestID:   uint64(domain.SequentialUniqueID()),
+			Message:     reqBuff,
+		},
+		timeoutCB, successCB, false,
+	)
+	waitGroup.Wait()
+	return
 }
 
 func (r *River) registerCommandHandlers() {

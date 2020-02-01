@@ -279,28 +279,25 @@ func (ctrl *Controller) RealtimeCommand(
 
 // EnqueueCommand put request in queue and distributor will execute it later
 func (ctrl *Controller) EnqueueCommand(
-	requestID uint64, constructor int64, requestBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+	messageEnvelope *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
 	isUICallback bool,
 ) {
 	logs.Debug("QueueCtrl enqueues command",
-		zap.Uint64("ReqID", requestID), zap.String("Constructor", msg.ConstructorNames[constructor]),
+		zap.Uint64("ReqID", messageEnvelope.RequestID),
+		zap.String("Constructor", msg.ConstructorNames[messageEnvelope.Constructor]),
 	)
 
-	req := request{
-		ID:      requestID,
-		Timeout: domain.WebsocketRequestTime,
-		MessageEnvelope: &msg.MessageEnvelope{
-			RequestID:   requestID,
-			Constructor: constructor,
-			Message:     requestBytes,
-		},
-	}
-
 	// Add the callback functions
-	domain.AddRequestCallback(requestID, constructor, successCB, domain.WebsocketRequestTime, timeoutCB, isUICallback)
+	_ = domain.AddRequestCallback(
+		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, domain.WebsocketRequestTime, timeoutCB, isUICallback,
+	)
 
 	// Add the request to the queue
-	ctrl.addToWaitingList(&req)
+	ctrl.addToWaitingList(&request{
+		ID:              messageEnvelope.RequestID,
+		Timeout:         domain.WebsocketRequestTime,
+		MessageEnvelope: messageEnvelope,
+	})
 }
 
 // Start queue
@@ -319,7 +316,11 @@ func (ctrl *Controller) Start() {
 			// it will be MessagesSend
 			req := repo.PendingMessages.ToMessagesSend(pmsg)
 			reqBytes, _ := req.Marshal()
-			ctrl.EnqueueCommand(uint64(req.RandomID), msg.C_MessagesSend, reqBytes, nil, nil, false)
+			ctrl.EnqueueCommand(&msg.MessageEnvelope{
+				Constructor: msg.C_MessagesSend,
+				RequestID:   uint64(req.RandomID),
+				Message:     reqBytes,
+			}, nil, nil, false)
 		default:
 			// it will be MessagesSendMedia
 			req := repo.PendingMessages.ToMessagesSendMedia(pmsg)
@@ -327,7 +328,11 @@ func (ctrl *Controller) Start() {
 				continue
 			}
 			reqBytes, _ := req.Marshal()
-			ctrl.EnqueueCommand(uint64(req.RandomID), msg.C_MessagesSendMedia, reqBytes, nil, nil, false)
+			ctrl.EnqueueCommand(&msg.MessageEnvelope{
+				Constructor: msg.C_MessagesSendMedia,
+				RequestID:   uint64(req.RandomID),
+				Message:     reqBytes,
+			}, nil, nil, false)
 		}
 	}
 
