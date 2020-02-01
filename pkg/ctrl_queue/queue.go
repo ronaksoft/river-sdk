@@ -126,7 +126,7 @@ func (ctrl *Controller) executor(req request) {
 	reqCB := domain.GetRequestCallback(req.ID)
 	if reqCB == nil {
 		reqCB = domain.AddRequestCallback(
-			req.ID, req.MessageEnvelope.Constructor, nil, domain.WebsocketRequestTime, false, false,
+			req.ID, req.MessageEnvelope.Constructor, nil, domain.WebsocketRequestTime, nil, false,
 		)
 	}
 	reqCB.DepartureTime = time.Now()
