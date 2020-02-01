@@ -125,12 +125,9 @@ func (ctrl *Controller) addToWaitingList(req *request) {
 func (ctrl *Controller) executor(req request) {
 	reqCB := domain.GetRequestCallback(req.ID)
 	if reqCB == nil {
-		logs.Warn("QueueCtrl discards request with not callback",
-			zap.Uint64("RequestID", req.ID),
-			zap.String("Constructor", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
-			zap.Duration("SinceInsert", time.Now().Sub(req.InsertTime)),
+		reqCB = domain.AddRequestCallback(
+			req.ID, req.MessageEnvelope.Constructor, nil, domain.WebsocketRequestTime, false, false,
 		)
-		return
 	}
 	reqCB.DepartureTime = time.Now()
 

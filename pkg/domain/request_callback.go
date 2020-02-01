@@ -33,11 +33,11 @@ func init() {
 }
 
 // AddRequestCallback in memory cache to save requests
-func AddRequestCallback(reqID uint64, constructor int64, success MessageHandler, timeOut time.Duration, timeout TimeoutCallback, isUICallback bool) *RequestCallback {
+func AddRequestCallback(reqID uint64, constructor int64, successCB MessageHandler, timeOut time.Duration, timeoutCB TimeoutCallback, isUICallback bool) *RequestCallback {
 	cb := &RequestCallback{
 		RequestID:       reqID,
-		SuccessCallback: success,
-		TimeoutCallback: timeout,
+		SuccessCallback: successCB,
+		TimeoutCallback: timeoutCB,
 		ResponseChannel: make(chan *msg.MessageEnvelope),
 		CreatedOn:       time.Now(),
 		DepartureTime:   time.Now(),
