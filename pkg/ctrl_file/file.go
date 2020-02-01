@@ -32,6 +32,7 @@ type Config struct {
 	Network              *networkCtrl.Controller
 	MaxInflightDownloads int32
 	MaxInflightUploads   int32
+	HttpRequestTimeout   time.Duration
 	PostUploadProcessCB  func(req UploadRequest) bool
 	ProgressChangedCB    func(reqID string, clusterID int32, fileID, accessHash int64, percent int64)
 	CompletedCB          func(reqID string, clusterID int32, fileID, accessHash int64, filePath string)
@@ -47,6 +48,7 @@ type Controller struct {
 	uploadRequests     map[string]UploadRequest
 	uploadsSaver       *ronak.Flusher
 	uploadsRateLimit   chan struct{}
+	httpRequestTimeout time.Duration
 
 	// Callbacks
 	onProgressChanged func(reqID string, clusterID int32, fileID, accessHash int64, percent int64)
@@ -64,7 +66,10 @@ func New(config Config) *Controller {
 		uploadRequests:     make(map[string]UploadRequest),
 		postUploadProcess:  config.PostUploadProcessCB,
 	}
-
+	ctrl.httpRequestTimeout = domain.HttpRequestTime
+	if config.HttpRequestTimeout > 0 {
+		ctrl.httpRequestTimeout = config.HttpRequestTimeout
+	}
 	if config.CompletedCB == nil {
 		ctrl.onCompleted = func(reqID string, clusterID int32, fileID, accessHash int64, filePath string) {}
 	} else {
@@ -327,7 +332,7 @@ func (ctrl *Controller) downloadAccountPhoto(clientFile *msg.ClientFile) (filePa
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
 		filePath = repo.Files.GetFilePath(clientFile)
-		res, err := ctrl.network.SendHttp(nil, envelop, domain.HttpRequestTime)
+		res, err := ctrl.network.SendHttp(nil, envelop, ctrl.httpRequestTimeout)
 		if err != nil {
 			return err
 		}
@@ -382,7 +387,7 @@ func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
 		filePath = repo.Files.GetFilePath(clientFile)
-		res, err := ctrl.network.SendHttp(nil, envelop, domain.HttpRequestTime)
+		res, err := ctrl.network.SendHttp(nil, envelop, ctrl.httpRequestTimeout)
 		if err != nil {
 			return err
 		}
@@ -437,7 +442,7 @@ func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath 
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
 		filePath = repo.Files.GetFilePath(clientFile) // getThumbnailPath(clientFile.FileID, clientFile.ClusterID)
-		res, err := ctrl.network.SendHttp(nil, envelop, domain.HttpRequestTime)
+		res, err := ctrl.network.SendHttp(nil, envelop, ctrl.httpRequestTimeout)
 		if err != nil {
 			return err
 		}

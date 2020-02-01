@@ -41,7 +41,7 @@ var (
 )
 
 func init() {
-	repo.InitRepo("./_db", true)
+	_ = repo.InitRepo("./_db", true)
 	repo.Files.SetRootFolders("_data/audio", "_data/file", "_data/photo", "_data/video", "_data/cache")
 	_Network = networkCtrl.New(networkCtrl.Config{
 		WebsocketEndpoint: "",
@@ -50,7 +50,8 @@ func init() {
 	_File = fileCtrl.New(fileCtrl.Config{
 		Network:              _Network,
 		MaxInflightDownloads: 2,
-		MaxInflightUploads:   10,
+		MaxInflightUploads:   3,
+		HttpRequestTimeout:   10 * time.Second,
 		ProgressChangedCB: func(reqID string, clusterID int32, fileID, accessHash int64, percent int64) {
 			// logs.Info("Progress Changed", zap.String("ReqID", reqID), zap.Int64("Percent", percent))
 		},
@@ -76,6 +77,7 @@ func init() {
 		},
 	})
 	_File.Start()
+	logs.SetLogLevel(-1)
 
 	tcpConfig := new(tcplisten.Config)
 	s := httptest.NewUnstartedServer(server{
@@ -280,10 +282,23 @@ func TestUpload(t *testing.T) {
 
 func TestManyUpload(t *testing.T) {
 	uploadStart = true
-	Convey("Upload Many Files", t, func(c C) {
+	Convey("Upload Many Files (Good Network)", t, func(c C) {
 		c.Println()
 		startTime := time.Now()
 		speedBytesPerSec = 1024 * 128
+		for i := 0; i < 50; i++ {
+			waitGroupUpload.Add(1)
+			fileID := int64(i + 1)
+			msgID := int64(i + 1)
+			_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0)
+		}
+		waitGroupUpload.Wait()
+		_, _ = Println("Many Upload:", time.Now().Sub(startTime))
+	})
+	Convey("Upload Many Files (Bad Network)", t, func(c C) {
+		c.Println()
+		startTime := time.Now()
+		speedBytesPerSec = 1024 * 8
 		for i := 0; i < 50; i++ {
 			waitGroupUpload.Add(1)
 			fileID := int64(i + 1)
