@@ -97,6 +97,8 @@ func (ctx *uploadContext) prepare() {
 
 func (ctx *uploadContext) resetUploadedList(ctrl *Controller) {
 	ctx.mtx.Lock()
+	ctx.req.cancelFunc()
+	ctx.req.httpContext, ctx.req.cancelFunc = context.WithCancel(context.Background())
 	ctx.req.UploadedParts = ctx.req.UploadedParts[:0]
 	ctx.mtx.Unlock()
 	ctrl.saveUploads(ctx.req)

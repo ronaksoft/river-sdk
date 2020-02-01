@@ -6,7 +6,7 @@ import (
 
 //go:generate go run update_version.go
 const (
-	FilePayloadSize    = 1024 * 256        // 256KB
+	FilePayloadSize = 1024 * 256 // 256KB
 )
 
 var (
@@ -19,12 +19,11 @@ var (
 
 // Global Parameters
 const (
-	WebsocketEndpoint    = "ws://cyrus.river.im"
-	WebsocketWriteTime   = 3 * time.Second
-	WebsocketRequestTime = 8 * time.Second
-	WebsocketDialTimeout = 3 * time.Second
-	HttpRequestTime      = 30 * time.Second
-
+	WebsocketEndpoint     = "ws://cyrus.river.im"
+	WebsocketWriteTime    = 3 * time.Second
+	WebsocketRequestTime  = 8 * time.Second
+	WebsocketDialTimeout  = 3 * time.Second
+	HttpRequestTime       = 2 * time.Minute
 	SnapshotSyncThreshold = 10000
 )
 
@@ -114,7 +113,6 @@ func (rs RequestStatus) ToString() string {
 	}
 	return ""
 }
-
 
 // UserStatus Times
 const (

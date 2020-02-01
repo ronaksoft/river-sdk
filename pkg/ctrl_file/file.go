@@ -656,7 +656,6 @@ func (ctrl *Controller) upload(req UploadRequest) error {
 	defer func() {
 		// Remove the Download request from the list
 		ctrl.deleteUploadRequest(req.GetID())
-
 		<-ctrl.uploadsRateLimit
 	}()
 
