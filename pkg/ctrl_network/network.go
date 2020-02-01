@@ -477,7 +477,7 @@ func (ctrl *Controller) Connect() {
 			reqHdr.Set("X-Client-Type", fmt.Sprintf("SDK-%s-%s-%s", domain.SDKVersion, domain.ClientPlatform, domain.ClientVersion))
 
 			// Detect the country we are calling from to determine the server Cyrus address
-			ctrl.UpdateEndpoint()
+			ctrl.updateEndpoint()
 
 			ctrl.wsDialer.Header = ws.HandshakeHeaderHTTP(reqHdr)
 			wsConn, _, _, err := ctrl.wsDialer.Dial(context.Background(), ctrl.wsEndpoint)
@@ -519,6 +519,37 @@ func (ctrl *Controller) Connect() {
 		return nil, nil
 	})
 }
+func (ctrl *Controller) updateEndpoint() {
+	if ctrl.endpointUpdated {
+		return
+	}
+	ctrl.endpointUpdated = true
+
+	wsEndpointParts := strings.Split(ctrl.wsEndpoint, ".")
+	httpEndpointParts := strings.Split(ctrl.httpEndpoint, ".")
+
+	switch ctrl.countryCode {
+	case "IR", "":
+		wsEndpointParts[0] = strings.TrimSuffix(wsEndpointParts[0], "-cf")
+		httpEndpointParts[0] = strings.TrimSuffix(httpEndpointParts[0], "-cf")
+	default:
+		if !strings.HasSuffix(wsEndpointParts[0], "-cf") {
+			wsEndpointParts[0] = fmt.Sprintf("%s-cf", wsEndpointParts[0])
+		}
+		if !strings.HasSuffix(httpEndpointParts[0], "-cf") {
+			httpEndpointParts[0] = fmt.Sprintf("%s-cf", httpEndpointParts[0])
+		}
+	}
+
+	ctrl.wsEndpoint = strings.Join(wsEndpointParts, ".")
+	ctrl.httpEndpoint = strings.Join(httpEndpointParts, ".")
+	logs.Info("NetCtrl endpoints updated",
+		zap.String("WS", ctrl.wsEndpoint),
+		zap.String("Http", ctrl.httpEndpoint),
+		zap.String("Country", ctrl.countryCode),
+	)
+}
+
 
 // Disconnect close websocket
 func (ctrl *Controller) Disconnect() {
@@ -729,58 +760,3 @@ func (ctrl *Controller) recoverPanic(funcName string, extraInfo interface{}) {
 	}
 }
 
-func (ctrl *Controller) UpdateEndpoint() {
-	if ctrl.endpointUpdated {
-		return
-	}
-	ctrl.endpointUpdated = true
-
-	wsEndpointParts := strings.Split(ctrl.wsEndpoint, ".")
-	httpEndpointParts := strings.Split(ctrl.httpEndpoint, ".")
-
-	if ctrl.countryCode == "" {
-		timeout := time.Second * 3
-		res1 := make(chan string, 1)
-		go func() {
-			c := http.Client{Timeout: timeout}
-			res, err := c.Get("https://ipinfo.io/country")
-			if err == nil {
-				b, _ := ioutil.ReadAll(res.Body)
-				_ = res.Body.Close()
-				res1 <- strings.TrimSpace(string(b))
-			}
-		}()
-
-		select {
-		case x := <-res1:
-			if x != "" {
-				ctrl.countryCode = strings.ToUpper(x)
-			}
-		case <-time.After(timeout):
-		}
-
-		switch ctrl.countryCode {
-		case "IR":
-			wsEndpointParts[0] = strings.TrimSuffix(wsEndpointParts[0], "-cf")
-			httpEndpointParts[0] = strings.TrimSuffix(httpEndpointParts[0], "-cf")
-		default:
-			if !strings.HasSuffix(wsEndpointParts[0], "-cf") {
-				wsEndpointParts[0] = fmt.Sprintf("%s-cf", wsEndpointParts[0])
-			}
-			if !strings.HasSuffix(httpEndpointParts[0], "-cf") {
-				httpEndpointParts[0] = fmt.Sprintf("%s-cf", httpEndpointParts[0])
-			}
-		}
-	} else {
-		wsEndpointParts[0] = strings.TrimSuffix(wsEndpointParts[0], "-cf")
-		httpEndpointParts[0] = strings.TrimSuffix(httpEndpointParts[0], "-cf")
-	}
-
-	ctrl.wsEndpoint = strings.Join(wsEndpointParts, ".")
-	ctrl.httpEndpoint = strings.Join(httpEndpointParts, ".")
-	logs.Info("NetCtrl endpoints updated",
-		zap.String("WS", ctrl.wsEndpoint),
-		zap.String("Http", ctrl.httpEndpoint),
-		zap.String("Country", ctrl.countryCode),
-	)
-}
