@@ -243,7 +243,10 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 					ctx.parts <- ctx.req.TotalParts - 1
 				case ctx.req.TotalParts:
 					waitGroup.Wait()
-					ctrl.postUploadProcess(ctx.req)
+					if !ctrl.postUploadProcess(ctx.req) {
+						ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, true)
+						return domain.RequestStatusError
+					}
 					// We have finished our uploads
 					_ = ctx.file.Close()
 					if !ctx.req.SkipDelegateCall {

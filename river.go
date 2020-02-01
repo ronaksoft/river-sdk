@@ -504,6 +504,10 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 				logs.Error("We couldn't unmarshal MessagesSendMedia (Error) response", zap.Error(err))
 			}
 			logs.Error("We received error on MessagesSendMedia response", zap.String("Code", x.Code), zap.String("Item", x.Items))
+			if x.Code == msg.ErrCodeAlreadyExists && x.Items == msg.ErrItemRandomID {
+				success = true
+				_ = repo.PendingMessages.Delete(uploadRequest.MessageID)
+			}
 		}
 		waitGroup.Done()
 	}
