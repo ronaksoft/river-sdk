@@ -32,7 +32,7 @@ type Config struct {
 	Network              *networkCtrl.Controller
 	MaxInflightDownloads int32
 	MaxInflightUploads   int32
-	PostUploadProcessCB  func(req UploadRequest)
+	PostUploadProcessCB  func(req UploadRequest) bool
 	ProgressChangedCB    func(reqID string, clusterID int32, fileID, accessHash int64, percent int64)
 	CompletedCB          func(reqID string, clusterID int32, fileID, accessHash int64, filePath string)
 	CancelCB             func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool)
@@ -49,20 +49,22 @@ type Controller struct {
 	uploadsRateLimit   chan struct{}
 
 	// Callbacks
-	onProgressChanged  func(reqID string, clusterID int32, fileID, accessHash int64, percent int64)
-	onCompleted        func(reqID string, clusterID int32, fileID, accessHash int64, filePath string)
-	onCancel           func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool)
-	postUploadProcess  func(req UploadRequest)
+	onProgressChanged func(reqID string, clusterID int32, fileID, accessHash int64, percent int64)
+	onCompleted       func(reqID string, clusterID int32, fileID, accessHash int64, filePath string)
+	onCancel          func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool)
+	postUploadProcess func(req UploadRequest) bool
 }
 
 func New(config Config) *Controller {
-	ctrl := new(Controller)
-	ctrl.network = config.Network
-	ctrl.downloadsRateLimit = make(chan struct{}, config.MaxInflightDownloads)
-	ctrl.uploadsRateLimit = make(chan struct{}, config.MaxInflightUploads)
-	ctrl.downloadRequests = make(map[string]DownloadRequest)
-	ctrl.uploadRequests = make(map[string]UploadRequest)
-	ctrl.postUploadProcess = config.PostUploadProcessCB
+	ctrl := &Controller{
+		network:            config.Network,
+		downloadsRateLimit: make(chan struct{}, config.MaxInflightDownloads),
+		uploadsRateLimit:   make(chan struct{}, config.MaxInflightUploads),
+		downloadRequests:   make(map[string]DownloadRequest),
+		uploadRequests:     make(map[string]UploadRequest),
+		postUploadProcess:  config.PostUploadProcessCB,
+	}
+
 	if config.CompletedCB == nil {
 		ctrl.onCompleted = func(reqID string, clusterID int32, fileID, accessHash int64, filePath string) {}
 	} else {
@@ -434,7 +436,7 @@ func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath 
 		envelop.Message, _ = req.Marshal()
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
-		filePath = repo.Files.GetFilePath(clientFile)  // getThumbnailPath(clientFile.FileID, clientFile.ClusterID)
+		filePath = repo.Files.GetFilePath(clientFile) // getThumbnailPath(clientFile.FileID, clientFile.ClusterID)
 		res, err := ctrl.network.SendHttp(nil, envelop, domain.HttpRequestTime)
 		if err != nil {
 			return err

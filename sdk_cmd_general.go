@@ -140,7 +140,11 @@ func executeRemoteCommand(r *River, requestID uint64, constructor int64, command
 
 	// If the constructor is a realtime command, then just send it to the server
 	if _, ok := r.realTimeCommands[constructor]; ok {
-		r.queueCtrl.RealtimeCommand(requestID, constructor, commandBytes, timeoutCB, successCB, blocking, true)
+		r.queueCtrl.RealtimeCommand(&msg.MessageEnvelope{
+			Constructor: constructor,
+			RequestID:   requestID,
+			Message:     commandBytes,
+		}, timeoutCB, successCB, blocking, true)
 	} else {
 		r.queueCtrl.EnqueueCommand(requestID, constructor, commandBytes, timeoutCB, successCB, true)
 	}
@@ -422,16 +426,25 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 			req.TokenType = int32(r.DeviceToken.TokenType)
 			reqBytes, _ := req.Marshal()
 			r.queueCtrl.RealtimeCommand(
-				uint64(domain.SequentialUniqueID()),
-				msg.C_AccountUnregisterDevice,
-				reqBytes, nil, nil, true, false,
+				&msg.MessageEnvelope{
+					Constructor: msg.C_AccountUnregisterDevice,
+					RequestID:   uint64(domain.SequentialUniqueID()),
+					Message:     reqBytes,
+				},
+				nil, nil, true, false,
 			)
 		}
 		// send logout request to server
 		requestID := domain.SequentialUniqueID()
 		req := new(msg.AuthLogout)
 		buff, _ := req.Marshal()
-		r.queueCtrl.RealtimeCommand(uint64(requestID), msg.C_AuthLogout, buff, nil, nil, true, false)
+		r.queueCtrl.RealtimeCommand(
+			&msg.MessageEnvelope{
+				Constructor: msg.C_AuthLogout,
+				RequestID:   uint64(requestID),
+				Message:     buff,
+			},
+			nil, nil, true, false)
 	}
 
 	if r.mainDelegate != nil {
@@ -474,95 +487,6 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 func (r *River) UpdateContactInfo(userID int64, firstName, lastName string) error {
 	repo.Users.UpdateContactInfo(userID, firstName, lastName)
 	return nil
-}
-
-// GetGroupInputUser get group participant user
-func (r *River) GetGroupInputUser(requestID int64, groupID int64, userID int64, delegate RequestDelegate) {
-	res := new(msg.MessageEnvelope)
-	res.Constructor = msg.C_InputUser
-	res.RequestID = uint64(requestID)
-
-	user := new(msg.InputUser)
-	user.UserID = userID
-
-	accessHash, err := repo.Users.GetAccessHash(userID)
-	if err != nil || accessHash == 0 {
-		participant, err := repo.Groups.GetParticipants(groupID)
-		if err == nil {
-			for _, p := range participant {
-				if p.UserID == userID {
-					accessHash = p.AccessHash
-					break
-				}
-			}
-		} else {
-			logs.Error("GetGroupInputUser() -> GetParticipants()", zap.Error(err))
-		}
-	} else {
-		logs.Error("GetGroupInputUser() -> GetAccessHash()", zap.Error(err))
-	}
-
-	if accessHash == 0 {
-		// get group full and get its access hash from its participants
-		req := new(msg.GroupsGetFull)
-		req.GroupID = groupID
-		reqBytes, _ := req.Marshal()
-
-		out := new(msg.MessageEnvelope)
-		// Timeout Callback
-		timeoutCB := func() {
-			if delegate != nil {
-				delegate.OnTimeout(domain.ErrRequestTimeout)
-			}
-		}
-
-		// Success Callback
-		successCB := func(response *msg.MessageEnvelope) {
-			if response.Constructor != msg.C_GroupFull {
-				msg.ResultError(out, &msg.Error{Code: "00", Items: "response type is not GroupFull"})
-				if delegate != nil {
-					outBytes, _ := out.Marshal()
-					delegate.OnComplete(outBytes)
-				}
-				return
-			}
-
-			groupFull := new(msg.GroupFull)
-			err := groupFull.Unmarshal(response.Message)
-			if err != nil {
-				msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
-				if delegate != nil {
-					outBytes, _ := out.Marshal()
-					delegate.OnComplete(outBytes)
-				}
-				return
-			}
-
-			for _, p := range groupFull.Participants {
-				if p.UserID == userID {
-					user.AccessHash = p.AccessHash
-					break
-				}
-			}
-
-			res.Message, _ = user.Marshal()
-			resBytes, _ := res.Marshal()
-			if delegate != nil {
-				delegate.OnComplete(resBytes)
-			}
-		}
-		// SendWebsocket GroupsGetFull request to get user AccessHash
-		r.queueCtrl.RealtimeCommand(uint64(requestID), msg.C_GroupsGetFull, reqBytes, timeoutCB, successCB, true, false)
-
-	} else {
-		user.AccessHash = accessHash
-		res.Message, _ = user.Marshal()
-
-		buff, _ := res.Marshal()
-		if delegate != nil {
-			delegate.OnComplete(buff)
-		}
-	}
 }
 
 func (r *River) GetScrollStatus(peerID int64, peerType int32) int64 {

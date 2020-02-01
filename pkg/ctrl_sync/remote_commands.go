@@ -21,13 +21,16 @@ import (
 
 func (ctrl *Controller) GetServerSalt() {
 	logs.Info("SyncCtrl call GetServerSalt")
-	serverSaltReq := new(msg.SystemGetSalts)
+	serverSaltReq := &msg.SystemGetSalts{}
 	serverSaltReqBytes, _ := serverSaltReq.Marshal()
 
+
 	ctrl.queueCtrl.RealtimeCommand(
-		uint64(domain.SequentialUniqueID()),
-		msg.C_SystemGetSalts,
-		serverSaltReqBytes,
+		&msg.MessageEnvelope{
+			Constructor: msg.C_SystemGetSalts,
+			RequestID:   uint64(domain.SequentialUniqueID()),
+			Message:     serverSaltReqBytes,
+		},
 		func() {
 			time.Sleep(time.Duration(ronak.RandomInt(2000)) * time.Millisecond)
 		},
@@ -66,9 +69,11 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 	// after auth recall answer got back the queue should send its requests in order to get related updates
 	reqID := uint64(domain.SequentialUniqueID())
 	ctrl.queueCtrl.RealtimeCommand(
-		reqID,
-		msg.C_AuthRecall,
-		reqBytes,
+		&msg.MessageEnvelope{
+			Constructor: msg.C_AuthRecall,
+			RequestID:   reqID,
+			Message:     reqBytes,
+		},
 		func() {
 			logs.Warn("AuthRecall Timeout",
 				zap.Uint64("ReqID", reqID),
@@ -95,10 +100,8 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 				domain.TimeDelta = time.Duration(serverTime-clientTime) * time.Second
 
 				ctrl.appUpdateCallback(x.CurrentVersion, x.Available, x.Force)
-
 			case msg.C_Error:
 				err = domain.ParseServerError(m.Message)
-
 			default:
 				logs.Error("SyncCtrl did not received expected response for AuthRecall",
 					zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
@@ -114,12 +117,14 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 
 func (ctrl *Controller) GetServerTime() (err error) {
 	logs.Info("SyncCtrl call GetServerTime")
-	timeReq := new(msg.SystemGetServerTime)
+	timeReq := &msg.SystemGetServerTime{}
 	timeReqBytes, _ := timeReq.Marshal()
 	ctrl.queueCtrl.RealtimeCommand(
-		uint64(domain.SequentialUniqueID()),
-		msg.C_SystemGetServerTime,
-		timeReqBytes,
+		&msg.MessageEnvelope{
+			Constructor: msg.C_SystemGetServerTime,
+			RequestID:   uint64(domain.SequentialUniqueID()),
+			Message:     timeReqBytes,
+		},
 		func() {
 			err = domain.ErrRequestTimeout
 		},
@@ -239,13 +244,14 @@ func (ctrl *Controller) GetUpdateState() (updateID int64, err error) {
 		return -1, domain.ErrNoConnection
 	}
 
-	req := new(msg.UpdateGetState)
+	req := &msg.UpdateGetState{}
 	reqBytes, _ := req.Marshal()
-
 	ctrl.queueCtrl.RealtimeCommand(
-		uint64(domain.SequentialUniqueID()),
-		msg.C_UpdateGetState,
-		reqBytes,
+		&msg.MessageEnvelope{
+			Constructor: msg.C_UpdateGetState,
+			RequestID:   uint64(domain.SequentialUniqueID()),
+			Message:     reqBytes,
+		},
 		func() {
 			err = domain.ErrRequestTimeout
 		},

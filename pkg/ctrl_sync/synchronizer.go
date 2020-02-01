@@ -238,15 +238,18 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 			break
 		}
 
-		req := new(msg.UpdateGetDifference)
-		req.Limit = int32(limit)
-		req.From = ctrl.updateID + 1 // +1 cuz we already have ctrl.updateID itself
+		req := &msg.UpdateGetDifference{
+			Limit: int32(limit),
+			From:  ctrl.updateID + 1, // +1 cuz we already have ctrl.updateID itself,
+		}
 		reqBytes, _ := req.Marshal()
 		waitGroup.Add(1)
 		ctrl.queueCtrl.RealtimeCommand(
-			uint64(domain.SequentialUniqueID()),
-			msg.C_UpdateGetDifference,
-			reqBytes,
+			&msg.MessageEnvelope{
+				Constructor: msg.C_UpdateGetDifference,
+				RequestID:   uint64(domain.SequentialUniqueID()),
+				Message:     reqBytes,
+			},
 			func() {
 				waitGroup.Done()
 				logs.Warn("SyncCtrl got timeout on UpdateGetDifference")
@@ -483,8 +486,11 @@ func (ctrl *Controller) ContactImportFromServer() {
 	}
 	contactGetBytes, _ := contactGetReq.Marshal()
 	ctrl.queueCtrl.RealtimeCommand(
-		uint64(domain.SequentialUniqueID()),
-		msg.C_ContactsGet, contactGetBytes,
+		&msg.MessageEnvelope{
+			Constructor: msg.C_ContactsGet,
+			RequestID:   uint64(domain.SequentialUniqueID()),
+			Message:     contactGetBytes,
+		},
 		nil, nil, false, false,
 	)
 	logs.Debug("SyncCtrl call ContactsGet", zap.Uint32("Hash", contactGetReq.Crc32Hash))

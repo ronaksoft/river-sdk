@@ -62,7 +62,7 @@ func init() {
 			}
 		},
 		CompletedCB: func(reqID string, clusterID int32, fileID, accessHash int64, filePath string) {},
-		PostUploadProcessCB: func(req fileCtrl.UploadRequest) {
+		PostUploadProcessCB: func(req fileCtrl.UploadRequest) bool {
 			logs.Info("PostProcess",
 				zap.Any("TotalParts", req.TotalParts),
 				zap.Any("FilePath", req.FilePath),
@@ -71,11 +71,11 @@ func init() {
 			if uploadStart {
 				waitGroupUpload.Done()
 			}
+			return true
 
 		},
 	})
 	_File.Start()
-
 
 	tcpConfig := new(tcplisten.Config)
 	s := httptest.NewUnstartedServer(server{
@@ -128,7 +128,7 @@ type server struct {
 
 func (t server) ServeHTTP(httpRes http.ResponseWriter, httpReq *http.Request) {
 	body, _ := ioutil.ReadAll(httpReq.Body)
-	time.Sleep(time.Duration(len(body) / speedBytesPerSec) * time.Second)
+	time.Sleep(time.Duration(len(body)/speedBytesPerSec) * time.Second)
 
 	if ronak.RandomInt(100) > (100 - errRatePercent) {
 		httpRes.WriteHeader(http.StatusForbidden)
@@ -259,7 +259,7 @@ func TestUpload(t *testing.T) {
 			startTime := time.Now()
 			Convey("Upload Big File (Bad Network)", func(c C) {
 				c.Println()
-				speedBytesPerSec = 8192
+				speedBytesPerSec = 1024 * 8
 				errRatePercent = 0
 				waitGroupUpload.Add(1)
 				_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0)
@@ -276,4 +276,21 @@ func TestUpload(t *testing.T) {
 		})
 	})
 
+}
+
+func TestManyUpload(t *testing.T) {
+	uploadStart = true
+	Convey("Upload Many Files", t, func(c C) {
+		c.Println()
+		startTime := time.Now()
+		speedBytesPerSec = 1024 * 128
+		for i := 0; i < 50; i++ {
+			waitGroupUpload.Add(1)
+			fileID := int64(i + 1)
+			msgID := int64(i + 1)
+			_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0)
+		}
+		waitGroupUpload.Wait()
+		_, _ = Println("Many Upload:", time.Now().Sub(startTime))
+	})
 }

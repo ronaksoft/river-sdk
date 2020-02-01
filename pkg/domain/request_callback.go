@@ -24,7 +24,7 @@ type RequestCallback struct {
 	CreatedOn       time.Time
 	Timeout         time.Duration
 	IsUICallback    bool
-	FlightTime      time.Time
+	DepartureTime   time.Time
 	Constructor     int64
 }
 
@@ -40,7 +40,7 @@ func AddRequestCallback(reqID uint64, constructor int64, success MessageHandler,
 		TimeoutCallback: timeout,
 		ResponseChannel: make(chan *msg.MessageEnvelope),
 		CreatedOn:       time.Now(),
-		FlightTime:      time.Now(),
+		DepartureTime:   time.Now(),
 		Timeout:         timeOut,
 		IsUICallback:    isUICallback,
 		Constructor:     constructor,

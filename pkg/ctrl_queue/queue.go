@@ -123,21 +123,16 @@ func (ctrl *Controller) addToWaitingList(req *request) {
 // Sends the message to the networkController and waits for the response. If time is up then it call the
 // TimeoutCallback otherwise if response arrived in time, SuccessCallback will be called.
 func (ctrl *Controller) executor(req request) {
-	reqCallback := domain.GetRequestCallback(req.ID)
-	if reqCallback == nil {
-		reqCallback = domain.AddRequestCallback(
-			req.ID,
-			req.MessageEnvelope.Constructor,
-			nil,
-			req.Timeout,
-			nil,
-			true,
+	reqCB := domain.GetRequestCallback(req.ID)
+	if reqCB == nil {
+		logs.Warn("QueueCtrl discards request with not callback",
+			zap.Uint64("RequestID", req.ID),
+			zap.String("Constructor", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
+			zap.Duration("SinceInsert", time.Now().Sub(req.InsertTime)),
 		)
+		return
 	}
-	reqCallback.FlightTime = time.Now()
-	if req.Timeout == 0 {
-		req.Timeout = domain.WebsocketRequestTime
-	}
+	reqCB.DepartureTime = time.Now()
 
 	// Try to send it over wire, if error happened put it back into the queue
 	if err := ctrl.network.SendWebsocket(req.MessageEnvelope, false); err != nil {
@@ -163,15 +158,15 @@ func (ctrl *Controller) executor(req request) {
 			ctrl.addToWaitingList(&req)
 			return
 		default:
-			if reqCallback.TimeoutCallback != nil {
-				if reqCallback.IsUICallback {
-					uiexec.Ctx().Exec(func() { reqCallback.TimeoutCallback() })
+			if reqCB.TimeoutCallback != nil {
+				if reqCB.IsUICallback {
+					uiexec.Ctx().Exec(func() { reqCB.TimeoutCallback() })
 				} else {
-					reqCallback.TimeoutCallback()
+					reqCB.TimeoutCallback()
 				}
 			}
 		}
-	case res := <-reqCallback.ResponseChannel:
+	case res := <-reqCB.ResponseChannel:
 		switch req.MessageEnvelope.Constructor {
 		case msg.C_MessagesSend, msg.C_MessagesSendMedia:
 			switch res.Constructor {
@@ -196,11 +191,11 @@ func (ctrl *Controller) executor(req request) {
 				}
 			}
 		}
-		if reqCallback.SuccessCallback != nil {
-			if reqCallback.IsUICallback {
-				uiexec.Ctx().Exec(func() { reqCallback.SuccessCallback(res) })
+		if reqCB.SuccessCallback != nil {
+			if reqCB.IsUICallback {
+				uiexec.Ctx().Exec(func() { reqCB.SuccessCallback(res) })
 			} else {
-				reqCallback.SuccessCallback(res)
+				reqCB.SuccessCallback(res)
 			}
 		} else {
 			logs.Warn("QueueCtrl received response but no callback exists!!!",
@@ -214,24 +209,26 @@ func (ctrl *Controller) executor(req request) {
 }
 
 // RealtimeCommand run request immediately and do not save it in queue
-func (ctrl *Controller) RealtimeCommand(requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, blockingMode, isUICallback bool) {
+func (ctrl *Controller) RealtimeCommand(
+	messageEnvelope *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+	blockingMode, isUICallback bool,
+) {
 	logs.Debug("QueueCtrl fires realtime command",
-		zap.Uint64("ReqID", requestID), zap.String("Constructor", msg.ConstructorNames[constructor]),
+		zap.Uint64("ReqID", messageEnvelope.RequestID),
+		zap.String("Constructor", msg.ConstructorNames[messageEnvelope.Constructor]),
 	)
-	messageEnvelope := new(msg.MessageEnvelope)
-	messageEnvelope.Constructor = constructor
-	messageEnvelope.RequestID = requestID
-	messageEnvelope.Message = commandBytes
 
 	// Add the callback functions
-	reqCB := domain.AddRequestCallback(requestID, constructor, successCB, domain.WebsocketRequestTime, timeoutCB, isUICallback)
+	reqCB := domain.AddRequestCallback(
+		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, domain.WebsocketRequestTime, timeoutCB, isUICallback,
+	)
 	execBlock := func(reqID uint64, req *msg.MessageEnvelope) {
 		err := ctrl.network.SendWebsocket(req, blockingMode)
 		if err != nil {
 			logs.Warn("QueueCtrl got error from NetCtrl",
 				zap.String("Error", err.Error()),
 				zap.String("Constructor", msg.ConstructorNames[req.Constructor]),
-				zap.Uint64("ReqID", requestID),
+				zap.Uint64("ReqID", req.RequestID),
 			)
 			if timeoutCB != nil {
 				timeoutCB()
@@ -243,7 +240,7 @@ func (ctrl *Controller) RealtimeCommand(requestID uint64, constructor int64, com
 		case <-time.After(reqCB.Timeout):
 			logs.Debug("QueueCtrl got timeout on realtime command",
 				zap.String("Constructor", msg.ConstructorNames[req.Constructor]),
-				zap.Uint64("ReqID", requestID),
+				zap.Uint64("ReqID", req.RequestID),
 			)
 			domain.RemoveRequestCallback(reqID)
 			if reqCB.TimeoutCallback != nil {
@@ -256,7 +253,7 @@ func (ctrl *Controller) RealtimeCommand(requestID uint64, constructor int64, com
 			return
 		case res := <-reqCB.ResponseChannel:
 			logs.Debug("QueueCtrl got response on realtime command",
-				zap.Uint64("ReqID", requestID),
+				zap.Uint64("ReqID", req.RequestID),
 				zap.String("Req", msg.ConstructorNames[req.Constructor]),
 				zap.String("Res", msg.ConstructorNames[res.Constructor]),
 			)
@@ -272,31 +269,35 @@ func (ctrl *Controller) RealtimeCommand(requestID uint64, constructor int64, com
 	}
 
 	if blockingMode {
-		execBlock(requestID, messageEnvelope)
+		execBlock(messageEnvelope.RequestID, messageEnvelope)
 	} else {
-		go execBlock(requestID, messageEnvelope)
+		go execBlock(messageEnvelope.RequestID, messageEnvelope)
 	}
 
 	return
 }
 
 // EnqueueCommand put request in queue and distributor will execute it later
-func (ctrl *Controller) EnqueueCommand(requestID uint64, constructor int64, requestBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler, isUICallback bool) {
+func (ctrl *Controller) EnqueueCommand(
+	requestID uint64, constructor int64, requestBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+	isUICallback bool,
+) {
 	logs.Debug("QueueCtrl enqueues command",
 		zap.Uint64("ReqID", requestID), zap.String("Constructor", msg.ConstructorNames[constructor]),
 	)
-	messageEnvelope := new(msg.MessageEnvelope)
-	messageEnvelope.RequestID = requestID
-	messageEnvelope.Constructor = constructor
-	messageEnvelope.Message = requestBytes
+
 	req := request{
-		ID:              requestID,
-		Timeout:         domain.WebsocketRequestTime,
-		MessageEnvelope: messageEnvelope,
+		ID:      requestID,
+		Timeout: domain.WebsocketRequestTime,
+		MessageEnvelope: &msg.MessageEnvelope{
+			RequestID:   requestID,
+			Constructor: constructor,
+			Message:     requestBytes,
+		},
 	}
 
 	// Add the callback functions
-	domain.AddRequestCallback(requestID, constructor, successCB, req.Timeout, timeoutCB, isUICallback)
+	domain.AddRequestCallback(requestID, constructor, successCB, domain.WebsocketRequestTime, timeoutCB, isUICallback)
 
 	// Add the request to the queue
 	ctrl.addToWaitingList(&req)

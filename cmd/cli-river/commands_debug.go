@@ -79,15 +79,6 @@ var ContactImportMany = &ishell.Cmd{
 	},
 }
 
-var GetGroupInputPeer = &ishell.Cmd{
-	Name: "GetGroupInputPeer",
-	Func: func(c *ishell.Context) {
-		groupID := fnGetGroupID(c)
-		userID := fnGetPeerID(c)
-		reqDelegate := new(RequestDelegate)
-		_SDK.GetGroupInputUser(domain.SequentialUniqueID(), groupID, userID, reqDelegate)
-	},
-}
 
 var UpdateNewMessageHexString = &ishell.Cmd{
 	Name: "UpdateNewMessageHexString",
@@ -231,11 +222,7 @@ var PrintMessage = &ishell.Cmd{
 func init() {
 	Debug.AddCmd(SendTyping)
 	Debug.AddCmd(ContactImportMany)
-
-	Debug.AddCmd(GetGroupInputPeer)
-
 	Debug.AddCmd(UpdateNewMessageHexString)
-
 	Debug.AddCmd(MimeToExt)
 	Debug.AddCmd(PrintMessage)
 }
