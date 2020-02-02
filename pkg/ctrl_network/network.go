@@ -103,29 +103,19 @@ func New(config Config) *Controller {
 			if err != nil {
 				return nil, err
 			}
-			logs.Info("DNS LookIP", zap.Any("IPs", ips))
-
+			logs.Info("DNS LookIP",
+				zap.String("Addr", addr),
+				zap.Any("IPs", ips),
+			)
 			d := net.Dialer{Timeout: domain.WebsocketDialTimeout}
-			var fallbacks []net.IP
 			for _, ip := range ips {
 				if ip.To4() != nil {
-					conn, err = d.DialContext(ctx, "tcp4", addr)
+					conn, err = d.DialContext(ctx, "tcp4", net.JoinHostPort(ip.String(), port))
 					if err != nil {
 						continue
 					}
 					return
 				}
-				if ip.To16() != nil && ip.To4() == nil {
-					fallbacks = append(fallbacks, ip)
-				}
-			}
-			for _, ip := range fallbacks {
-				d.LocalAddr = nil
-				conn, err = d.Dial("tcp6", net.JoinHostPort(ip.String(), port))
-				if err != nil {
-					continue
-				}
-				return
 			}
 			return nil, domain.ErrNoConnection
 		},
@@ -135,7 +125,6 @@ func New(config Config) *Controller {
 		TLSConfig:     nil,
 		WrapConn:      nil,
 	}
-
 	ctrl.stopChannel = make(chan bool, 1)
 	ctrl.connectChannel = make(chan bool)
 
@@ -550,7 +539,6 @@ func (ctrl *Controller) updateEndpoint() {
 	)
 }
 
-
 // Disconnect close websocket
 func (ctrl *Controller) Disconnect() {
 	_, _, _ = domain.SingleFlight.Do("NetworkDisconnect", func() (i interface{}, e error) {
@@ -759,4 +747,3 @@ func (ctrl *Controller) recoverPanic(funcName string, extraInfo interface{}) {
 		go ctrl.Reconnect()
 	}
 }
-
