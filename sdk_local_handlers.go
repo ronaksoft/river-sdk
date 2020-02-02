@@ -311,7 +311,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 
 	// Prepare the the result before sending back to the client
-	preSuccessCB := genSuccessCallback(successCB, req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID)
+	preSuccessCB := genSuccessCallback(successCB, req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, dialog.TopMessageID)
 
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:
@@ -375,7 +375,7 @@ func fillMessagesMany(out *msg.MessageEnvelope, messages []*msg.UserMessage, use
 		})
 	}
 }
-func genSuccessCallback(cb domain.MessageHandler, peerID int64, peerType int32, minID, maxID int64) domain.MessageHandler {
+func genSuccessCallback(cb domain.MessageHandler, peerID int64, peerType int32, minID, maxID int64, topMessageID int64) domain.MessageHandler {
 	return func(m *msg.MessageEnvelope) {
 		pendingMessages := repo.PendingMessages.GetByPeer(peerID, peerType)
 		switch m.Constructor {
@@ -384,30 +384,7 @@ func genSuccessCallback(cb domain.MessageHandler, peerID int64, peerType int32, 
 			err := x.Unmarshal(m.Message)
 			logs.WarnOnErr("Error On Unmarshal MessagesMany", err)
 
-			if len(x.Messages) == 0 {
-				switch peerType {
-				case int32(msg.PeerUser):
-					user, _ := repo.Users.Get(peerID)
-					if user == nil {
-						user = &msg.User{}
-					}
-					logs.Info("River received EMPTY message history (User)",
-						zap.Int64("MinID", minID),
-						zap.Int64("MaxID", maxID),
-						zap.String("Peer", fmt.Sprintf("%s %s", user.FirstName, user.LastName)),
-					)
-				case int32(msg.PeerGroup):
-					group, _ := repo.Groups.Get(peerID)
-					if group == nil {
-						group = &msg.Group{}
-					}
-					logs.Info("River received no message history (Group)",
-						zap.Int64("MinID", minID),
-						zap.Int64("MaxID", maxID),
-						zap.String("Peer", fmt.Sprintf("%s", group.Title)),
-					)
-				}
-			}
+
 			// 1st sort the received messages by id
 			sort.Slice(x.Messages, func(i, j int) bool {
 				return x.Messages[i].ID > x.Messages[j].ID
@@ -426,29 +403,9 @@ func genSuccessCallback(cb domain.MessageHandler, peerID int64, peerType int32, 
 			}
 
 			if len(pendingMessages) > 0 {
-				// 2nd base on the reqMin values add the appropriate pending messages
-				switch {
-				case maxID == 0:
+				if maxID == 0 || x.Messages[len(x.Messages)-1].ID == topMessageID {
 					x.Messages = append(x.Messages, pendingMessages...)
-				default:
-					// Min != 0
-					for idx := range pendingMessages {
-						if len(x.Messages) == 0 {
-							x.Messages = append(x.Messages, pendingMessages[idx])
-						} else if pendingMessages[idx].CreatedOn > x.Messages[len(x.Messages)-1].CreatedOn {
-							x.Messages = append(x.Messages, pendingMessages[idx])
-						}
-					}
 				}
-
-				// 3rd sort again, to sort pending messages and actual messages
-				sort.Slice(x.Messages, func(i, j int) bool {
-					if x.Messages[i].ID < 0 || x.Messages[j].ID < 0 {
-						return x.Messages[i].CreatedOn > x.Messages[j].CreatedOn
-					} else {
-						return x.Messages[i].ID > x.Messages[j].ID
-					}
-				})
 			}
 
 			m.Message, _ = x.Marshal()
