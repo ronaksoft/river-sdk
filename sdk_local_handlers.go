@@ -1111,7 +1111,7 @@ func (r *River) usersGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		for _, user := range users {
 			user.PhotoGallery = repo.Users.GetPhotoGallery(user.ID)
 			sort.Slice(user.PhotoGallery, func(i, j int) bool {
-				return user.PhotoGallery[i].PhotoID < user.PhotoGallery[j].PhotoID
+				return user.PhotoGallery[i].PhotoID > user.PhotoGallery[j].PhotoID
 			})
 		}
 		res.Users = users
