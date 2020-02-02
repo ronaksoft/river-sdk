@@ -302,12 +302,14 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	// Offline mode
 	if !r.networkCtrl.Connected() {
 		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
-		pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
-		if len(pendingMessages) > 0 {
-			messages = append(messages, pendingMessages...)
+		if len(messages) > 0 {
+			pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
+			if len(pendingMessages) > 0 {
+				messages = append(messages, pendingMessages...)
+			}
+			fillMessagesMany(out, messages, users, in.RequestID, successCB)
+			return
 		}
-		fillMessagesMany(out, messages, users, in.RequestID, successCB)
-		return
 	}
 
 	// Prepare the the result before sending back to the client
