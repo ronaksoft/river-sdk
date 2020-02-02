@@ -90,10 +90,29 @@ func New(config Config) *Controller {
 	}
 	ctrl.wsKeepConnection = true
 
+	ctrl.createDialer(domain.WebsocketDialTimeout)
+
+	ctrl.stopChannel = make(chan bool, 1)
+	ctrl.connectChannel = make(chan bool)
+
+	ctrl.updateFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.updateFlushFunc)
+	ctrl.messageFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.messageFlushFunc)
+	ctrl.sendFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.sendFlushFunc)
+
+	ctrl.unauthorizedRequests = map[int64]bool{
+		msg.C_SystemGetServerTime: true,
+		msg.C_InitConnect:         true,
+		msg.C_InitCompleteAuth:    true,
+		msg.C_SystemGetSalts:      true,
+	}
+
+	return ctrl
+}
+func (ctrl *Controller) createDialer(timeout time.Duration) {
 	ctrl.wsDialer = &ws.Dialer{
 		ReadBufferSize:  32 * 1024, // 32kB
 		WriteBufferSize: 32 * 1024, // 32kB
-		Timeout:         domain.WebsocketDialTimeout,
+		Timeout:         timeout,
 		NetDial: func(ctx context.Context, network, addr string) (conn net.Conn, err error) {
 			host, port, err := net.SplitHostPort(addr)
 			if err != nil {
@@ -107,7 +126,7 @@ func New(config Config) *Controller {
 				zap.String("Addr", addr),
 				zap.Any("IPs", ips),
 			)
-			d := net.Dialer{Timeout: domain.WebsocketDialTimeout}
+			d := net.Dialer{Timeout: timeout}
 			for _, ip := range ips {
 				if ip.To4() != nil {
 					conn, err = d.DialContext(ctx, "tcp4", net.JoinHostPort(ip.String(), port))
@@ -125,23 +144,7 @@ func New(config Config) *Controller {
 		TLSConfig:     nil,
 		WrapConn:      nil,
 	}
-	ctrl.stopChannel = make(chan bool, 1)
-	ctrl.connectChannel = make(chan bool)
-
-	ctrl.updateFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.updateFlushFunc)
-	ctrl.messageFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.messageFlushFunc)
-	ctrl.sendFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.sendFlushFunc)
-
-	ctrl.unauthorizedRequests = map[int64]bool{
-		msg.C_SystemGetServerTime: true,
-		msg.C_InitConnect:         true,
-		msg.C_InitCompleteAuth:    true,
-		msg.C_SystemGetSalts:      true,
-	}
-
-	return ctrl
 }
-
 func (ctrl *Controller) updateFlushFunc(entries []ronak.FlusherEntry) {
 	if ctrl.OnUpdate != nil {
 		updateContainer := new(msg.UpdateContainer)
@@ -474,6 +477,10 @@ func (ctrl *Controller) Connect() {
 				logs.Warn("NetCtrl could not dial", zap.Error(err), zap.String("Url", ctrl.wsEndpoint))
 				time.Sleep(domain.GetExponentialTime(100*time.Millisecond, 3*time.Second, attempts))
 				attempts++
+				if attempts > 5 {
+					attempts = 0
+					ctrl.createDialer(domain.WebsocketDialTimeoutLong)
+				}
 				continue
 			}
 			_ = tcpkeepalive.SetKeepAlive(wsConn, 30*time.Second, 2, 5*time.Second)

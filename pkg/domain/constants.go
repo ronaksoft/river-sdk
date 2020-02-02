@@ -19,12 +19,13 @@ var (
 
 // Global Parameters
 const (
-	WebsocketEndpoint     = "ws://cyrus.river.im"
-	WebsocketWriteTime    = 3 * time.Second
-	WebsocketRequestTime  = 8 * time.Second
-	WebsocketDialTimeout  = 3 * time.Second
-	HttpRequestTime       = 2 * time.Minute
-	SnapshotSyncThreshold = 10000
+	WebsocketEndpoint        = "ws://cyrus.river.im"
+	WebsocketWriteTime       = 3 * time.Second
+	WebsocketRequestTime     = 8 * time.Second
+	WebsocketDialTimeout     = 3 * time.Second
+	WebsocketDialTimeoutLong = 10 * time.Second
+	HttpRequestTime          = 2 * time.Minute
+	SnapshotSyncThreshold    = 10000
 )
 
 // System Keys
