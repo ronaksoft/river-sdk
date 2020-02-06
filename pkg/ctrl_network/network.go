@@ -187,7 +187,6 @@ func (ctrl *Controller) updateFlushFunc(entries []ronak.FlusherEntry) {
 		ctrl.OnUpdate(updateContainer)
 	}
 }
-
 func (ctrl *Controller) messageFlushFunc(entries []ronak.FlusherEntry) {
 	if ctrl.OnMessage != nil {
 		itemsCount := len(entries)
@@ -200,7 +199,6 @@ func (ctrl *Controller) messageFlushFunc(entries []ronak.FlusherEntry) {
 		ctrl.OnMessage(messages)
 	}
 }
-
 func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
 	itemsCount := len(entries)
 	switch itemsCount {

@@ -106,7 +106,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 			WithNumMemtables(2).
 			WithNumLevelZeroTables(2).
 			WithNumLevelZeroTablesStall(4).
-			WithMaxTableSize(1 << 22).    // 4MB
+			WithMaxTableSize(1 << 22). // 4MB
 			WithValueLogFileSize(1 << 22) // 4MB
 
 	} else {
@@ -258,10 +258,6 @@ func DbSize() (int64, int64) {
 	return r.badger.Size()
 }
 
-func TableInfo() []badger.TableInfo {
-	return r.badger.Tables(true)
-}
-
 func badgerUpdate(fn func(txn *badger.Txn) error) (err error) {
 	for retry := 100; retry > 0; retry-- {
 		err = r.badger.Update(fn)
@@ -292,3 +288,25 @@ func badgerView(fn func(txn *badger.Txn) error) (err error) {
 	}
 	return
 }
+
+var msgIndexer = ronak.NewFlusher(1000, 1, time.Millisecond, func(items []ronak.FlusherEntry) {
+	b := r.msgSearch.NewBatch()
+	for _, item := range items {
+		_ = b.Index(item.Key.(string), item.Value)
+	}
+	err := r.msgSearch.Batch(b)
+	if err != nil {
+		logs.Warn("MessageIndexer got error", zap.Error(err))
+	}
+})
+
+var peerIndexer = ronak.NewFlusher(1000, 1, time.Millisecond, func(items []ronak.FlusherEntry) {
+	b := r.peerSearch.NewBatch()
+	for _, item := range items {
+		_ = b.Index(item.Key.(string), item.Value)
+	}
+	err := r.peerSearch.Batch(b)
+	if err != nil {
+		logs.Warn("PeerIndexer got error", zap.Error(err))
+	}
+})

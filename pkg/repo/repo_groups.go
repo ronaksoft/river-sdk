@@ -68,11 +68,14 @@ func saveGroup(txn *badger.Txn, group *msg.Group) error {
 		return err
 	}
 
-	_ = r.peerSearch.Index(ronak.ByteToStr(groupKey), GroupSearch{
-		Type:   "group",
-		Title:  group.Title,
-		PeerID: group.ID,
-	})
+	peerIndexer.Enter(
+		ronak.ByteToStr(groupKey),
+		GroupSearch{
+			Type:   "group",
+			Title:  group.Title,
+			PeerID: group.ID,
+		},
+	)
 
 	err = saveGroupPhotos(txn, group.ID, group.Photo)
 	if err != nil {
@@ -413,11 +416,14 @@ func (r *repoGroups) ReIndex() {
 				group := new(msg.Group)
 				_ = group.Unmarshal(val)
 				groupKey := getGroupKey(group.ID)
-				_ = r.peerSearch.Index(ronak.ByteToStr(groupKey), GroupSearch{
-					Type:   "group",
-					Title:  group.Title,
-					PeerID: group.ID,
-				})
+				peerIndexer.Enter(
+					ronak.ByteToStr(groupKey),
+					GroupSearch{
+						Type:   "group",
+						Title:  group.Title,
+						PeerID: group.ID,
+					},
+				)
 				return nil
 			})
 		}

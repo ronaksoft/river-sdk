@@ -137,12 +137,14 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 		return err
 	}
 
-	err = r.msgSearch.Index(ronak.ByteToStr(getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
-		Type:   "msg",
-		Body:   message.Body,
-		PeerID: fmt.Sprintf("%d", message.PeerID),
-	})
-	logs.ErrorOnErr("RepoMessage got error on index new message", err)
+	msgIndexer.Enter(
+		ronak.ByteToStr(getMessageKey(message.PeerID, message.PeerType, message.ID)),
+		MessageSearch{
+			Type:   "msg",
+			Body:   message.Body,
+			PeerID: fmt.Sprintf("%d", message.PeerID),
+		},
+	)
 	return nil
 }
 
@@ -530,27 +532,27 @@ func (r *repoMessages) GetTopMessageID(peerID int64, peerType int32) (int64, err
 
 func (r *repoMessages) SearchText(text string, limit int32) []*msg.UserMessage {
 	userMessages := make([]*msg.UserMessage, 0, limit)
-	if r.msgSearch != nil {
-		t1 := bleve.NewTermQuery("msg")
-		t1.SetField("type")
-		qs := make([]query.Query, 0)
-		for _, term := range strings.Fields(text) {
-			qs = append(qs, bleve.NewMatchQuery(term), bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
-		}
-		t2 := bleve.NewDisjunctionQuery(qs...)
-		searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
-		searchResult, _ := r.msgSearch.Search(searchRequest)
-		_ = badgerView(func(txn *badger.Txn) error {
-			for _, hit := range searchResult.Hits {
-				userMessage, _ := getMessageByKey(txn, ronak.StrToByte(hit.ID))
-				if userMessage != nil {
-					userMessages = append(userMessages, userMessage)
-				}
-			}
-			return nil
-		})
+	if r.msgSearch == nil {
+		return userMessages
 	}
-
+	t1 := bleve.NewTermQuery("msg")
+	t1.SetField("type")
+	qs := make([]query.Query, 0)
+	for _, term := range strings.Fields(text) {
+		qs = append(qs, bleve.NewMatchQuery(term), bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
+	}
+	t2 := bleve.NewDisjunctionQuery(qs...)
+	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
+	searchResult, _ := r.msgSearch.Search(searchRequest)
+	_ = badgerView(func(txn *badger.Txn) error {
+		for _, hit := range searchResult.Hits {
+			userMessage, _ := getMessageByKey(txn, ronak.StrToByte(hit.ID))
+			if userMessage != nil {
+				userMessages = append(userMessages, userMessage)
+			}
+		}
+		return nil
+	})
 	if len(userMessages) > int(limit) {
 		userMessages = userMessages[:limit]
 	}
@@ -559,28 +561,31 @@ func (r *repoMessages) SearchText(text string, limit int32) []*msg.UserMessage {
 
 func (r *repoMessages) SearchTextByPeerID(text string, peerID int64, limit int32) []*msg.UserMessage {
 	userMessages := make([]*msg.UserMessage, 0, limit)
-	if r.msgSearch != nil {
-		t1 := bleve.NewTermQuery("msg")
-		t1.SetField("type")
-		qs := make([]query.Query, 0)
-		for _, term := range strings.Fields(text) {
-			qs = append(qs, bleve.NewMatchQuery(term), bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
-		}
-		t2 := bleve.NewDisjunctionQuery(qs...)
-		t3 := bleve.NewTermQuery(fmt.Sprintf("%d", abs(peerID)))
-		t3.SetField("peer_id")
-		searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3))
-		searchResult, _ := r.msgSearch.Search(searchRequest)
-		_ = badgerView(func(txn *badger.Txn) error {
-			for _, hit := range searchResult.Hits {
-				userMessage, _ := getMessageByKey(txn, ronak.StrToByte(hit.ID))
-				if userMessage != nil {
-					userMessages = append(userMessages, userMessage)
-				}
-			}
-			return nil
-		})
+	if r.msgSearch == nil {
+		return userMessages
 	}
+
+	t1 := bleve.NewTermQuery("msg")
+	t1.SetField("type")
+	qs := make([]query.Query, 0)
+	for _, term := range strings.Fields(text) {
+		qs = append(qs, bleve.NewMatchQuery(term), bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
+	}
+	t2 := bleve.NewDisjunctionQuery(qs...)
+	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", abs(peerID)))
+	t3.SetField("peer_id")
+	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3))
+	searchResult, _ := r.msgSearch.Search(searchRequest)
+	_ = badgerView(func(txn *badger.Txn) error {
+		for _, hit := range searchResult.Hits {
+			userMessage, _ := getMessageByKey(txn, ronak.StrToByte(hit.ID))
+			if userMessage != nil {
+				userMessages = append(userMessages, userMessage)
+			}
+		}
+		return nil
+	})
+
 	if len(userMessages) > int(limit) {
 		userMessages = userMessages[:limit]
 	}
@@ -682,14 +687,14 @@ func (r *repoMessages) ReIndex() {
 			_ = it.Item().Value(func(val []byte) error {
 				message := new(msg.UserMessage)
 				_ = message.Unmarshal(val)
-				err := r.msgSearch.Index(ronak.ByteToStr(getMessageKey(message.PeerID, message.PeerType, message.ID)), MessageSearch{
-					Type:   "msg",
-					Body:   message.Body,
-					PeerID: fmt.Sprintf("%d", message.PeerID),
-				})
-				if err != nil {
-					fmt.Println(err)
-				}
+				msgIndexer.Enter(
+					ronak.ByteToStr(getMessageKey(message.PeerID, message.PeerType, message.ID)),
+					MessageSearch{
+						Type:   "msg",
+						Body:   message.Body,
+						PeerID: fmt.Sprintf("%d", message.PeerID),
+					},
+				)
 				return nil
 			})
 		}

@@ -84,13 +84,16 @@ func saveUser(txn *badger.Txn, user *msg.User) error {
 		return err
 	}
 
-	_ = r.peerSearch.Index(ronak.ByteToStr(userKey), UserSearch{
-		Type:      "user",
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		PeerID:    user.ID,
-		Username:  user.Username,
-	})
+	peerIndexer.Enter(
+		ronak.ByteToStr(userKey),
+		UserSearch{
+			Type:      "user",
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
+			PeerID:    user.ID,
+			Username:  user.Username,
+		},
+	)
 
 	err = saveUserPhotos(txn, user.ID, user.Photo)
 	if err != nil {
@@ -115,13 +118,16 @@ func saveContact(txn *badger.Txn, contactUser *msg.ContactUser) error {
 	if err != nil {
 		return err
 	}
-	_ = r.peerSearch.Index(ronak.ByteToStr(contactKey), ContactSearch{
-		Type:      "contact",
-		FirstName: contactUser.FirstName,
-		LastName:  contactUser.LastName,
-		Username:  contactUser.Username,
-		Phone:     contactUser.Phone,
-	})
+	peerIndexer.Enter(
+		ronak.ByteToStr(contactKey),
+		ContactSearch{
+			Type:      "contact",
+			FirstName: contactUser.FirstName,
+			LastName:  contactUser.LastName,
+			Username:  contactUser.Username,
+			Phone:     contactUser.Phone,
+		},
+	)
 	err = saveUserPhotos(txn, contactUser.ID, contactUser.Photo)
 	if err != nil {
 		return err
@@ -534,13 +540,16 @@ func (r *repoUsers) ReIndex() {
 			_ = it.Item().Value(func(val []byte) error {
 				user := new(msg.User)
 				_ = user.Unmarshal(val)
-				_ = r.peerSearch.Index(ronak.ByteToStr(getUserKey(user.ID)), UserSearch{
-					Type:      "user",
-					FirstName: user.FirstName,
-					LastName:  user.LastName,
-					PeerID:    user.ID,
-					Username:  user.Username,
-				})
+				peerIndexer.Enter(
+					ronak.ByteToStr(getUserKey(user.ID)),
+					UserSearch{
+						Type:      "user",
+						FirstName: user.FirstName,
+						LastName:  user.LastName,
+						PeerID:    user.ID,
+						Username:  user.Username,
+					},
+				)
 				return nil
 			})
 		}
@@ -553,12 +562,15 @@ func (r *repoUsers) ReIndex() {
 			_ = it.Item().Value(func(val []byte) error {
 				contactUser := new(msg.ContactUser)
 				_ = contactUser.Unmarshal(val)
-				_ = r.peerSearch.Index(ronak.ByteToStr(getContactKey(contactUser.ID)), ContactSearch{
-					Type:      "contact",
-					FirstName: contactUser.FirstName,
-					LastName:  contactUser.LastName,
-					Username:  contactUser.Username,
-				})
+				peerIndexer.Enter(
+					ronak.ByteToStr(getContactKey(contactUser.ID)),
+					ContactSearch{
+						Type:      "contact",
+						FirstName: contactUser.FirstName,
+						LastName:  contactUser.LastName,
+						Username:  contactUser.Username,
+					},
+				)
 				return nil
 			})
 		}
