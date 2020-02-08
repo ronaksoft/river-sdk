@@ -9,16 +9,15 @@ package riversdk
    Copyright Ronak Software Group 2018
 */
 
-func (r *River) StartNetwork() {
+func (r *River) StartNetwork(country string) {
+	if country != "" {
+		r.networkCtrl.UpdateEndpoint(country)
+	}
 	r.networkCtrl.Connect()
 }
 
 func (r *River) StopNetwork() {
 	r.networkCtrl.Disconnect()
-}
-
-func (r *River) UpdateCountry(country string) {
-	r.networkCtrl.UpdateEndpoint(country)
 }
 
 func (r *River) GetNetworkStatus() int32 {

@@ -282,19 +282,19 @@ func TestUpload(t *testing.T) {
 
 func TestManyUpload(t *testing.T) {
 	uploadStart = true
-	Convey("Upload Many Files (Good Network)", t, func(c C) {
-		c.Println()
-		startTime := time.Now()
-		speedBytesPerSec = 1024 * 128
-		for i := 0; i < 50; i++ {
-			waitGroupUpload.Add(1)
-			fileID := int64(i + 1)
-			msgID := int64(i + 1)
-			_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0)
-		}
-		waitGroupUpload.Wait()
-		_, _ = Println("Many Upload:", time.Now().Sub(startTime))
-	})
+	// Convey("Upload Many Files (Good Network)", t, func(c C) {
+	// 	c.Println()
+	// 	startTime := time.Now()
+	// 	speedBytesPerSec = 1024 * 128
+	// 	for i := 0; i < 50; i++ {
+	// 		waitGroupUpload.Add(1)
+	// 		fileID := int64(i + 1)
+	// 		msgID := int64(i + 1)
+	// 		_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0)
+	// 	}
+	// 	waitGroupUpload.Wait()
+	// 	_, _ = Println("Many Upload:", time.Now().Sub(startTime))
+	// })
 	Convey("Upload Many Files (Bad Network)", t, func(c C) {
 		c.Println()
 		startTime := time.Now()
