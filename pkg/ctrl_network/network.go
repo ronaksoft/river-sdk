@@ -632,19 +632,19 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	protoMessage := &msg.ProtoMessage{}
+	protoMessage := msg.ProtoMessage{}
 	protoMessage.AuthID = ctrl.authID
 	protoMessage.MessageKey = make([]byte, 32)
 	if ctrl.authID == 0 {
-		protoMessage.Payload, _ = msgEnvelope.Marshal()
+		protoMessage.Payload = pbytes.GetLen(msgEnvelope.Size())
+		_, _ = msgEnvelope.MarshalTo(protoMessage.Payload)
 	} else {
 		ctrl.messageSeq++
 		encryptedPayload := msg.ProtoEncryptedPayload{
 			ServerSalt: salt.Get(),
 			Envelope:   msgEnvelope,
+			MessageID:  uint64(domain.Now().Unix()<<32 | ctrl.messageSeq),
 		}
-		encryptedPayload.MessageID = uint64(domain.Now().Unix()<<32 | ctrl.messageSeq)
-
 		unencryptedBytes := pbytes.GetLen(encryptedPayload.Size())
 		defer pbytes.Put(unencryptedBytes)
 		_, _ = encryptedPayload.MarshalTo(unencryptedBytes)

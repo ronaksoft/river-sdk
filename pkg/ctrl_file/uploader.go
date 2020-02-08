@@ -136,18 +136,19 @@ func (ctx *uploadContext) addToUploaded(ctrl *Controller, partIndex int32) {
 }
 
 func (ctx *uploadContext) generateFileSavePart(fileID int64, partID int32, totalParts int32, bytes []byte) *msg.MessageEnvelope {
-	req := &msg.FileSavePart{}
-	req.TotalParts = totalParts
-	req.Bytes = bytes
-	req.FileID = fileID
-	req.PartID = partID
-
-	envelop := &msg.MessageEnvelope{}
-	envelop.Constructor = msg.C_FileSavePart
-
+	envelop := msg.MessageEnvelope{
+		RequestID: uint64(domain.SequentialUniqueID()),
+		Constructor: msg.C_FileSavePart,
+	}
+	req := msg.FileSavePart{
+		TotalParts: totalParts,
+		Bytes: bytes,
+		FileID: fileID,
+		PartID: partID,
+	}
 	envelop.Message = pbytes.GetLen(req.Size())
 	_, _ = req.MarshalTo(envelop.Message)
-	envelop.RequestID = uint64(domain.SequentialUniqueID())
+
 	logs.Debug("FileCtrl generates FileSavePart",
 		zap.Int64("MsgID", ctx.req.MessageID),
 		zap.Int64("FileID", req.FileID),
@@ -155,7 +156,7 @@ func (ctx *uploadContext) generateFileSavePart(fileID int64, partID int32, total
 		zap.Int32("TotalParts", req.TotalParts),
 		zap.Int("Bytes", len(req.Bytes)),
 	)
-	return envelop
+	return &envelop
 }
 
 func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
@@ -280,7 +281,7 @@ func uploadJob(ctx *uploadContext, ctrl *Controller, maxRetries *int32, waitGrou
 		x := &msg.Error{}
 		_ = x.Unmarshal(res.Message)
 		logs.Debug("FileCtrl received Error response",
-			zap.Int32("PartID", partIndex),
+			zap.Int32("PartID", partIndex+1),
 			zap.String("Code", x.Code),
 			zap.String("Item", x.Items),
 		)
