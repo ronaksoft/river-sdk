@@ -16,7 +16,6 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
@@ -506,29 +505,6 @@ func (ctrl *Controller) Connect() {
 
 // IgnoreSIGPIPE prevents SIGPIPE from being raised on TCP sockets when remote hangs up
 // See: https://github.com/golang/go/issues/17393
-func (ctrl *Controller) ignoreSIGPIPE(c net.Conn) {
-	if c == nil {
-		return
-	}
-	s, ok := c.(syscall.Conn)
-	if !ok {
-		return
-	}
-	r, e := s.SyscallConn()
-	if e != nil {
-		logs.Error("Failed to get SyscallConn", zap.Error(e))
-		return
-	}
-	e = r.Control(func(fd uintptr) {
-		intfd := int(fd)
-		if e := syscall.SetsockoptInt(intfd, syscall.SOL_SOCKET, syscall.SO_NOSIGPIPE, 1); e != nil {
-			logs.Error("Failed to set SO_NOSIGPIPE", zap.Error(e))
-		}
-	})
-	if e != nil {
-		logs.Error("Failed to set SO_NOSIGPIPE", zap.Error(e))
-	}
-}
 func (ctrl *Controller) updateEndpoint() {
 	if ctrl.endpointUpdated {
 		return
