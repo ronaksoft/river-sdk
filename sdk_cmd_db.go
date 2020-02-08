@@ -4,6 +4,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
+	"runtime"
 )
 
 func (r *River) IsMessageExist(messageID int64) bool {
@@ -35,4 +36,5 @@ func (r *River) GetPinnedDialogsCount() int32 {
 // this function when app is not busy
 func (r *River) GC() {
 	repo.GC()
+	runtime.GC()
 }
