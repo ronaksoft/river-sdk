@@ -238,6 +238,7 @@ func (r *River) Version() string {
 func (r *River) Start() error {
 	runtime.GOMAXPROCS(runtime.NumCPU() * 10)
 	logs.Info("River Starting")
+	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID)
 
 	// Initialize MessageHole
 	messageHole.Init()
@@ -252,7 +253,7 @@ func (r *River) Start() error {
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 	r.syncCtrl.SetUserID(r.ConnInfo.UserID)
 	domain.ClientPhone = r.ConnInfo.Phone
-	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID)
+
 	r.loadDeviceToken()
 
 	// init UI Executor
@@ -284,6 +285,7 @@ func (r *River) Start() error {
 	logs.Info("River Started")
 	return nil
 }
+
 
 func (r *River) Migrate() int {
 	ver := r.ConnInfo.Version

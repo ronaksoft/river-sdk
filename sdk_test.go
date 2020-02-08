@@ -24,6 +24,7 @@ func TestSDK(t *testing.T) {
 	Convey("Start", t, func(c C) {
 		err := _River.Start()
 		c.So(err, ShouldBeNil)
+
 		_River.StartNetwork()
 		if _River.ConnInfo.AuthID == 0 {
 			_River.CreateAuthKey()

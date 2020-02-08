@@ -8,7 +8,6 @@ import (
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
-	"github.com/felixge/tcpkeepalive"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"io/ioutil"
@@ -17,6 +16,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
@@ -74,7 +74,6 @@ type Controller struct {
 	unauthorizedRequests map[int64]bool
 
 	// internal parameters to detect network switch
-	localIP     net.IP
 	countryCode string
 }
 
@@ -481,16 +480,7 @@ func (ctrl *Controller) Connect() {
 				}
 				continue
 			}
-			_ = tcpkeepalive.SetKeepAlive(wsConn, 30*time.Second, 2, 5*time.Second)
-			switch x := wsConn.LocalAddr().(type) {
-			case *net.IPNet:
-				ctrl.localIP = x.IP
-			case *net.TCPAddr:
-				ctrl.localIP = x.IP
-			default:
-				ctrl.localIP = nil
-			}
-
+			ctrl.ignoreSIGPIPE(wsConn)
 			keepGoing = false
 			domain.StartTime = time.Now()
 			ctrl.wsConn = wsConn
@@ -512,6 +502,32 @@ func (ctrl *Controller) Connect() {
 		}
 		return nil, nil
 	})
+}
+
+// IgnoreSIGPIPE prevents SIGPIPE from being raised on TCP sockets when remote hangs up
+// See: https://github.com/golang/go/issues/17393
+func (ctrl *Controller) ignoreSIGPIPE(c net.Conn) {
+	if c == nil {
+		return
+	}
+	s, ok := c.(syscall.Conn)
+	if !ok {
+		return
+	}
+	r, e := s.SyscallConn()
+	if e != nil {
+		logs.Error("Failed to get SyscallConn", zap.Error(e))
+		return
+	}
+	e = r.Control(func(fd uintptr) {
+		intfd := int(fd)
+		if e := syscall.SetsockoptInt(intfd, syscall.SOL_SOCKET, syscall.SO_NOSIGPIPE, 1); e != nil {
+			logs.Error("Failed to set SO_NOSIGPIPE", zap.Error(e))
+		}
+	})
+	if e != nil {
+		logs.Error("Failed to set SO_NOSIGPIPE", zap.Error(e))
+	}
 }
 func (ctrl *Controller) updateEndpoint() {
 	if ctrl.endpointUpdated {
