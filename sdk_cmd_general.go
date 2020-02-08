@@ -494,7 +494,7 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 		return err
 	}
 
-	r.StartNetwork()
+	r.StartNetwork("")
 
 	return err
 }

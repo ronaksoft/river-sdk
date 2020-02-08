@@ -102,7 +102,7 @@ func main() {
 	if err != nil {
 		_Log.Fatal(err.Error())
 	}
-	_SDK.StartNetwork()
+	_SDK.StartNetwork("")
 	if _SDK.ConnInfo.AuthID == 0 {
 		if err := _SDK.CreateAuthKey(); err != nil {
 			_Shell.Println("CreateAuthKey::", err.Error())

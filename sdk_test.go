@@ -25,7 +25,7 @@ func TestSDK(t *testing.T) {
 		err := _River.Start()
 		c.So(err, ShouldBeNil)
 
-		_River.StartNetwork()
+		_River.StartNetwork("")
 		if _River.ConnInfo.AuthID == 0 {
 			_River.CreateAuthKey()
 		}
