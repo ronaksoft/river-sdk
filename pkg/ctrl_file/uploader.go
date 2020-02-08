@@ -142,7 +142,7 @@ func (ctx *uploadContext) generateFileSavePart(fileID int64, partID int32, total
 	req.FileID = fileID
 	req.PartID = partID
 
-	envelop := new(msg.MessageEnvelope)
+	envelop := &msg.MessageEnvelope{}
 	envelop.Constructor = msg.C_FileSavePart
 	envelop.Message, _ = req.Marshal()
 	envelop.RequestID = uint64(domain.SequentialUniqueID())

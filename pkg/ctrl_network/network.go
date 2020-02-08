@@ -8,6 +8,7 @@ import (
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"github.com/gobwas/pool/pbytes"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"io/ioutil"
@@ -629,7 +630,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	protoMessage := new(msg.ProtoMessage)
+	protoMessage := &msg.ProtoMessage{}
 	protoMessage.AuthID = ctrl.authID
 	protoMessage.MessageKey = make([]byte, 32)
 	if ctrl.authID == 0 {
@@ -641,19 +642,24 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 			Envelope:   msgEnvelope,
 		}
 		encryptedPayload.MessageID = uint64(domain.Now().Unix()<<32 | ctrl.messageSeq)
-		unencryptedBytes, _ := encryptedPayload.Marshal()
+		unencryptedBytes := pbytes.GetLen(encryptedPayload.Size())
+		defer pbytes.Put(unencryptedBytes)
+
+		_, _ = encryptedPayload.MarshalTo(unencryptedBytes)
 		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes)
 		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes)
 		copy(protoMessage.MessageKey, messageKey)
 		protoMessage.Payload = encryptedPayloadBytes
 	}
 
-	b, err := protoMessage.Marshal()
-	reqBuff := bytes.NewBuffer(b)
+	protoMessageBytes := pbytes.GetLen(protoMessage.Size())
+	defer pbytes.Put(protoMessageBytes)
+	_, err := protoMessage.MarshalTo(protoMessageBytes)
+	reqBuff := bytes.NewBuffer(protoMessageBytes)
 	if err != nil {
 		return nil, err
 	}
-	totalUploadBytes += len(b)
+	totalUploadBytes += len(protoMessageBytes)
 
 	// Set timeout
 	ctrl.httpClient.Timeout = timeout
@@ -669,6 +675,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 		return nil, err
 	}
 	// Read response
+
 	resBuff, err := ioutil.ReadAll(httpResp.Body)
 	if err != nil {
 		return nil, err
@@ -683,13 +690,13 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 		return nil, err
 	}
 	if res.AuthID == 0 {
-		receivedEnvelope := new(msg.MessageEnvelope)
+		receivedEnvelope := &msg.MessageEnvelope{}
 		err = receivedEnvelope.Unmarshal(res.Payload)
 		return receivedEnvelope, err
 	}
 	decryptedBytes, err := domain.Decrypt(ctrl.authKey, res.MessageKey, res.Payload)
 
-	receivedEncryptedPayload := new(msg.ProtoEncryptedPayload)
+	receivedEncryptedPayload := &msg.ProtoEncryptedPayload{}
 	err = receivedEncryptedPayload.Unmarshal(decryptedBytes)
 	if err != nil {
 		return nil, err

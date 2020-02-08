@@ -107,7 +107,6 @@ func (r *River) HandleDebugActions(txt string) {
 	case "//sdk_monitor":
 		sendToSavedMessage(r, ronak.ByteToStr(getMonitorStats(r)))
 	case "//sdk_live_logger":
-
 		if len(args) < 1 {
 			sendToSavedMessage(r, "//sdk_live_logger <url>")
 			return
