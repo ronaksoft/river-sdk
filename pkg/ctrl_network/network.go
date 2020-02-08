@@ -624,6 +624,8 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 
 // Send encrypt and send request to server and receive and decrypt its response
 func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEnvelope, timeout time.Duration) (*msg.MessageEnvelope, error) {
+	defer pbytes.Put(msgEnvelope.Message)
+
 	var totalUploadBytes, totalDownloadBytes int
 	startTime := time.Now()
 
@@ -642,10 +644,11 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 			Envelope:   msgEnvelope,
 		}
 		encryptedPayload.MessageID = uint64(domain.Now().Unix()<<32 | ctrl.messageSeq)
+
 		unencryptedBytes := pbytes.GetLen(encryptedPayload.Size())
 		defer pbytes.Put(unencryptedBytes)
-
 		_, _ = encryptedPayload.MarshalTo(unencryptedBytes)
+
 		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes)
 		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes)
 		copy(protoMessage.MessageKey, messageKey)
