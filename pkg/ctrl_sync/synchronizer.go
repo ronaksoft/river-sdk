@@ -496,6 +496,30 @@ func (ctrl *Controller) ContactImportFromServer() {
 	logs.Debug("SyncCtrl call ContactsGet", zap.Uint32("Hash", contactGetReq.Crc32Hash))
 }
 
+func (ctrl *Controller) DeletePendingMessage(pm *msg.ClientPendingMessage) {
+	// It means we have received the NewMessage
+	update := &msg.UpdateMessagesDeleted{
+		Peer: &msg.Peer{ID: pm.PeerID, Type: pm.PeerType},
+		MessageIDs: []int64{pm.ID},
+	}
+	bytes, _ := update.Marshal()
+
+	updateEnvelope := &msg.UpdateEnvelope{
+		Constructor: msg.C_UpdateMessagesDeleted,
+		Update: bytes,
+		UpdateID: 0,
+		Timestamp: time.Now().Unix(),
+	}
+
+	buff, _ := updateEnvelope.Marshal()
+
+	// call external handler
+	uiexec.Ctx().Exec(func() {
+		ctrl.updateReceivedCallback(msg.C_UpdateEnvelope, buff)
+	})
+
+	_ = repo.PendingMessages.Delete(pm.ID)
+}
 // GetSyncStatus
 func (ctrl *Controller) GetSyncStatus() domain.SyncStatus {
 	return ctrl.syncStatus

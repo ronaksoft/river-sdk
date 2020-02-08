@@ -309,41 +309,17 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 			)
 			return res, nil
 		}
-		// It means we have received the NewMessage
-		update := new(msg.UpdateMessagesDeleted)
-		update.Peer = &msg.Peer{ID: pm.PeerID, Type: pm.PeerType}
-		update.MessageIDs = []int64{pm.ID}
-		bytes, _ := update.Marshal()
-
-		updateEnvelope := new(msg.UpdateEnvelope)
-		updateEnvelope.Constructor = msg.C_UpdateMessagesDeleted
-		updateEnvelope.Update = bytes
-		updateEnvelope.UpdateID = 0
-		updateEnvelope.Timestamp = time.Now().Unix()
-
-		buff, _ := updateEnvelope.Marshal()
-
-		// call external handler
-		uiexec.Ctx().Exec(func() {
-			ctrl.updateReceivedCallback(msg.C_UpdateEnvelope, buff)
-		})
-
-		_ = repo.PendingMessages.Delete(pm.ID)
+		ctrl.DeletePendingMessage(pm)
 		return res, nil
-	} else {
-		pendinID := int64(0)
-		if pm != nil {
-			pendinID = pm.ID
-		}
-		logs.Info("SyncCtrl received UpdateMessageID before UpdateNewMessage",
-			zap.Int64("MID", x.MessageID),
-			zap.Int64("PendingID", pendinID),
-		)
 	}
 
 	if pm == nil {
 		return nil, nil
 	}
+	logs.Info("SyncCtrl received UpdateMessageID before UpdateNewMessage",
+		zap.Int64("MID", x.MessageID),
+		zap.Int64("PendingID", pm.ID),
+	)
 	logs.Debug("SyncCtrl is going to save by realID")
 	repo.PendingMessages.SaveByRealID(sent.RandomID, sent.MessageID)
 	logs.Debug("SyncCtrl saved by realID")

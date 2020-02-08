@@ -524,7 +524,7 @@ func (r *River) messagesReadContents(in, out *msg.MessageEnvelope, timeoutCB dom
 }
 
 func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.MessagesSendMedia)
+	req := &msg.MessagesSendMedia{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
@@ -1046,10 +1046,6 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	out.Constructor = msg.C_GroupFull
 	out.Message, _ = res.Marshal()
 	successCB(out)
-
-	// send the request to server no need to pass server response to external handler (UI) just to re update catch DB
-	r.queueCtrl.EnqueueCommand(in, nil, nil, false)
-
 }
 
 func (r *River) groupUpdateAdmin(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
