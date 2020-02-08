@@ -211,7 +211,7 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 					return domain.RequestStatusCompleted
 				default:
 					// Keep Uploading
-					time.Sleep(time.Millisecond * 200)
+					time.Sleep(time.Millisecond * 2000)
 				}
 			}
 		}
@@ -264,6 +264,7 @@ func uploadJob(ctx *uploadContext, ctrl *Controller, maxRetries *int32, waitGrou
 		ctrl.httpRequestTimeout,
 	)
 	if err != nil {
+		logs.Warn("Error On Http Response", zap.Error(err))
 		switch e := err.(type) {
 		case *url.Error:
 			if e.Timeout() {
