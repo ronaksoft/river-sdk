@@ -466,7 +466,10 @@ func (ctrl *Controller) Connect() {
 			reqHdr.Set("X-Client-Type", fmt.Sprintf("SDK-%s-%s-%s", domain.SDKVersion, domain.ClientPlatform, domain.ClientVersion))
 
 			// Detect the country we are calling from to determine the server Cyrus address
-			ctrl.updateEndpoint()
+			if !ctrl.endpointUpdated {
+				ctrl.UpdateEndpoint("")
+				ctrl.endpointUpdated = true
+			}
 
 			ctrl.wsDialer.Header = ws.HandshakeHeaderHTTP(reqHdr)
 			wsConn, _, _, err := ctrl.wsDialer.Dial(context.Background(), ctrl.wsEndpoint)
@@ -506,12 +509,10 @@ func (ctrl *Controller) Connect() {
 
 // IgnoreSIGPIPE prevents SIGPIPE from being raised on TCP sockets when remote hangs up
 // See: https://github.com/golang/go/issues/17393
-func (ctrl *Controller) updateEndpoint() {
-	if ctrl.endpointUpdated {
-		return
+func (ctrl *Controller) UpdateEndpoint(country string) {
+	if country != "" {
+		ctrl.countryCode = country
 	}
-	ctrl.endpointUpdated = true
-
 	wsEndpointParts := strings.Split(ctrl.wsEndpoint, ".")
 	httpEndpointParts := strings.Split(ctrl.httpEndpoint, ".")
 
@@ -624,8 +625,6 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 
 // Send encrypt and send request to server and receive and decrypt its response
 func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEnvelope, timeout time.Duration) (*msg.MessageEnvelope, error) {
-	defer pbytes.Put(msgEnvelope.Message)
-
 	var totalUploadBytes, totalDownloadBytes int
 	startTime := time.Now()
 
@@ -646,9 +645,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 			MessageID:  uint64(domain.Now().Unix()<<32 | ctrl.messageSeq),
 		}
 		unencryptedBytes := pbytes.GetLen(encryptedPayload.Size())
-		defer pbytes.Put(unencryptedBytes)
 		_, _ = encryptedPayload.MarshalTo(unencryptedBytes)
-
 		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes)
 		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes)
 		copy(protoMessage.MessageKey, messageKey)
@@ -657,6 +654,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 
 	protoMessageBytes := pbytes.GetLen(protoMessage.Size())
 	defer pbytes.Put(protoMessageBytes)
+	defer pbytes.Put(protoMessage.Payload)
 	_, err := protoMessage.MarshalTo(protoMessageBytes)
 	reqBuff := bytes.NewBuffer(protoMessageBytes)
 	if err != nil {
@@ -678,7 +676,6 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 		return nil, err
 	}
 	// Read response
-
 	resBuff, err := ioutil.ReadAll(httpResp.Body)
 	if err != nil {
 		return nil, err

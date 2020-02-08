@@ -17,6 +17,10 @@ func (r *River) StopNetwork() {
 	r.networkCtrl.Disconnect()
 }
 
+func (r *River) UpdateCountry(country string) {
+	r.networkCtrl.UpdateEndpoint(country)
+}
+
 func (r *River) GetNetworkStatus() int32 {
 	return int32(r.networkCtrl.GetQuality())
 }
