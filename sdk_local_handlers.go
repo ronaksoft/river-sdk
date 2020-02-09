@@ -533,13 +533,13 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 
 	switch req.MediaType {
 	case msg.InputMediaTypeContact, msg.InputMediaTypeDocument, msg.InputMediaTypeGeoLocation:
-		// this will be used as next requestID
+		// This will be used as next requestID
 		req.RandomID = domain.SequentialUniqueID()
-		// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
+		// Insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 		dbID := -domain.SequentialUniqueID()
 		res, err := repo.PendingMessages.SaveMessageMedia(dbID, r.ConnInfo.UserID, req)
 		if err != nil {
-			e := new(msg.Error)
+			e := &msg.Error{}
 			e.Code = "n/a"
 			e.Items = "Failed to save to pendingMessages : " + err.Error()
 			msg.ResultError(out, e)
@@ -550,7 +550,7 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 			})
 			return
 		}
-		// 3. return to CallBack with pending message data : Done
+		// Return to CallBack with pending message data : Done
 		out.Constructor = msg.C_ClientPendingMessage
 		out.Message, _ = res.Marshal()
 
@@ -560,28 +560,20 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 			}
 		}) // successCB(out)
 
-		requestBytes, _ := req.Marshal()
-		r.queueCtrl.EnqueueCommand(
-			&msg.MessageEnvelope{
-				Constructor: msg.C_MessagesSendMedia,
-				RequestID:   uint64(req.RandomID),
-				Message:     requestBytes,
-			},
-			timeoutCB, successCB, true,
-		)
+
 	case msg.InputMediaTypeUploadedDocument:
 		// no need to insert pending message cuz we already insert one b4 start uploading
-		requestBytes, _ := req.Marshal()
-		r.queueCtrl.EnqueueCommand(
-			&msg.MessageEnvelope{
-				Constructor: msg.C_MessagesSendMedia,
-				RequestID:   uint64(req.RandomID),
-				Message:     requestBytes,
-			},
-			timeoutCB, successCB, true,
-		)
-
 	}
+
+	requestBytes, _ := req.Marshal()
+	r.queueCtrl.EnqueueCommand(
+		&msg.MessageEnvelope{
+			Constructor: msg.C_MessagesSendMedia,
+			RequestID:   uint64(req.RandomID),
+			Message:     requestBytes,
+		},
+		timeoutCB, successCB, true,
+	)
 
 }
 

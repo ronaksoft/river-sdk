@@ -146,8 +146,7 @@ func (ctx *uploadContext) generateFileSavePart(fileID int64, partID int32, total
 		FileID: fileID,
 		PartID: partID,
 	}
-	envelop.Message = pbytes.GetLen(req.Size())
-	_, _ = req.MarshalTo(envelop.Message)
+	envelop.Message, _ = req.Marshal()
 
 	logs.Debug("FileCtrl generates FileSavePart",
 		zap.Int64("MsgID", ctx.req.MessageID),

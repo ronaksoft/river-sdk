@@ -631,9 +631,10 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	protoMessage := msg.ProtoMessage{}
-	protoMessage.AuthID = ctrl.authID
-	protoMessage.MessageKey = make([]byte, 32)
+	protoMessage := msg.ProtoMessage{
+		AuthID: ctrl.authID,
+		MessageKey: make([]byte, 32),
+	}
 	if ctrl.authID == 0 {
 		protoMessage.Payload = pbytes.GetLen(msgEnvelope.Size())
 		_, _ = msgEnvelope.MarshalTo(protoMessage.Payload)
@@ -645,9 +646,9 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 			MessageID:  uint64(domain.Now().Unix()<<32 | ctrl.messageSeq),
 		}
 		unencryptedBytes := pbytes.GetLen(encryptedPayload.Size())
-		_, _ = encryptedPayload.MarshalTo(unencryptedBytes)
-		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes)
-		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes)
+		n, _ := encryptedPayload.MarshalTo(unencryptedBytes)
+		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes[:n])
+		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes[:n])
 		copy(protoMessage.MessageKey, messageKey)
 		protoMessage.Payload = encryptedPayloadBytes
 	}
@@ -655,12 +656,12 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 	protoMessageBytes := pbytes.GetLen(protoMessage.Size())
 	defer pbytes.Put(protoMessageBytes)
 	defer pbytes.Put(protoMessage.Payload)
-	_, err := protoMessage.MarshalTo(protoMessageBytes)
-	reqBuff := bytes.NewBuffer(protoMessageBytes)
+	n, err := protoMessage.MarshalTo(protoMessageBytes)
+	reqBuff := bytes.NewBuffer(protoMessageBytes[:n])
 	if err != nil {
 		return nil, err
 	}
-	totalUploadBytes += len(protoMessageBytes)
+	totalUploadBytes += len(protoMessageBytes[:n])
 
 	// Set timeout
 	ctrl.httpClient.Timeout = timeout
