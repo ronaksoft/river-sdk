@@ -8,7 +8,6 @@ import (
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
-	"github.com/gobwas/pool/pbytes"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"io/ioutil"
@@ -636,8 +635,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 		MessageKey: make([]byte, 32),
 	}
 	if ctrl.authID == 0 {
-		protoMessage.Payload = pbytes.GetLen(msgEnvelope.Size())
-		_, _ = msgEnvelope.MarshalTo(protoMessage.Payload)
+		protoMessage.Payload, _ = msgEnvelope.Marshal()
 	} else {
 		ctrl.messageSeq++
 		encryptedPayload := msg.ProtoEncryptedPayload{
@@ -645,23 +643,19 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 			Envelope:   msgEnvelope,
 			MessageID:  uint64(domain.Now().Unix()<<32 | ctrl.messageSeq),
 		}
-		unencryptedBytes := pbytes.GetLen(encryptedPayload.Size())
-		n, _ := encryptedPayload.MarshalTo(unencryptedBytes)
-		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes[:n])
-		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes[:n])
+		unencryptedBytes, _ := encryptedPayload.Marshal()
+		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes)
+		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes)
 		copy(protoMessage.MessageKey, messageKey)
 		protoMessage.Payload = encryptedPayloadBytes
 	}
 
-	protoMessageBytes := pbytes.GetLen(protoMessage.Size())
-	defer pbytes.Put(protoMessageBytes)
-	defer pbytes.Put(protoMessage.Payload)
-	n, err := protoMessage.MarshalTo(protoMessageBytes)
-	reqBuff := bytes.NewBuffer(protoMessageBytes[:n])
+	protoMessageBytes, err := protoMessage.Marshal()
+	reqBuff := bytes.NewBuffer(protoMessageBytes)
 	if err != nil {
 		return nil, err
 	}
-	totalUploadBytes += len(protoMessageBytes[:n])
+	totalUploadBytes += len(protoMessageBytes)
 
 	// Set timeout
 	ctrl.httpClient.Timeout = timeout
