@@ -217,6 +217,11 @@ func (r *River) SetConfig(conf *RiverConfig) {
 					r.mainDelegate.OnUpdates(constructorID, b)
 				}
 			},
+			AppUpdateCB: func(version string, updateAvailable bool, force bool) {
+				if r.mainDelegate != nil {
+					r.mainDelegate.AppUpdate(version,updateAvailable,force)
+				}
+			},
 		},
 	)
 
