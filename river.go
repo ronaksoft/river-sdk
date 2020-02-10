@@ -283,9 +283,15 @@ func (r *River) Start() error {
 		r.mainDelegate.AddLog(txt)
 	}
 	logs.Info("River Started")
+
+	// Run Garbage Collection In Background
+	go func() {
+		time.Sleep(20 * time.Second)
+		r.GC()
+	}()
+
 	return nil
 }
-
 
 func (r *River) Migrate() int {
 	ver := r.ConnInfo.Version

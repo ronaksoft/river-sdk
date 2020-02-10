@@ -252,7 +252,7 @@ func DropAll() {
 
 func GC() {
 	_ = r.bunt.Shrink()
-	_ = r.badger.RunValueLogGC(0.5)
+	for r.badger.RunValueLogGC(0.7) == nil {}
 }
 
 func DbSize() (int64, int64) {
