@@ -552,16 +552,20 @@ func (r *repoUsers) ReIndex() {
 			_ = it.Item().Value(func(val []byte) error {
 				user := new(msg.User)
 				_ = user.Unmarshal(val)
-				indexPeer(
-					ronak.ByteToStr(getUserKey(user.ID)),
-					UserSearch{
-						Type:      "user",
-						FirstName: user.FirstName,
-						LastName:  user.LastName,
-						PeerID:    user.ID,
-						Username:  user.Username,
-					},
-				)
+				key := ronak.ByteToStr(getUserKey(user.ID))
+				if d, _ := r.peerSearch.Document(key); d == nil {
+					indexPeer(
+						key,
+						UserSearch{
+							Type:      "user",
+							FirstName: user.FirstName,
+							LastName:  user.LastName,
+							PeerID:    user.ID,
+							Username:  user.Username,
+						},
+					)
+				}
+
 				return nil
 			})
 		}

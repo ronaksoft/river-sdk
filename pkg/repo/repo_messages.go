@@ -688,14 +688,17 @@ func (r *repoMessages) ReIndex() {
 			_ = it.Item().Value(func(val []byte) error {
 				message := &msg.UserMessage{}
 				_ = message.Unmarshal(val)
-				indexMessage(
-					ronak.ByteToStr(getMessageKey(message.PeerID, message.PeerType, message.ID)),
-					MessageSearch{
-						Type:   "msg",
-						Body:   message.Body,
-						PeerID: fmt.Sprintf("%d", message.PeerID),
-					},
-				)
+				msgKey := ronak.ByteToStr(getMessageKey(message.PeerID, message.PeerType, message.ID))
+				if d, _ := r.msgSearch.Document(msgKey); d == nil {
+					indexMessage(
+						msgKey,
+						MessageSearch{
+							Type:   "msg",
+							Body:   message.Body,
+							PeerID: fmt.Sprintf("%d", message.PeerID),
+						},
+					)
+				}
 				return nil
 			})
 		}

@@ -2,6 +2,7 @@ package riversdk
 
 import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"sync"
 )
 
 /*
@@ -14,7 +15,16 @@ import (
 */
 
 func (r *River) SearchReIndex() {
-	repo.Users.ReIndex()
-	repo.Groups.ReIndex()
-	repo.Messages.ReIndex()
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(2)
+	go func() {
+		repo.Users.ReIndex()
+		repo.Groups.ReIndex()
+		waitGroup.Done()
+	}()
+	go func() {
+		repo.Messages.ReIndex()
+		waitGroup.Done()
+	}()
+	waitGroup.Wait()
 }

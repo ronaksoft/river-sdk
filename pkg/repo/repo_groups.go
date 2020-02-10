@@ -418,15 +418,17 @@ func (r *repoGroups) ReIndex() {
 			_ = it.Item().Value(func(val []byte) error {
 				group := new(msg.Group)
 				_ = group.Unmarshal(val)
-				groupKey := getGroupKey(group.ID)
-				indexPeer(
-					ronak.ByteToStr(groupKey),
-					GroupSearch{
-						Type:   "group",
-						Title:  group.Title,
-						PeerID: group.ID,
-					},
-				)
+				groupKey := ronak.ByteToStr(getGroupKey(group.ID))
+				if d, _ := r.peerSearch.Document(groupKey); d == nil {
+					indexPeer(
+						groupKey,
+						GroupSearch{
+							Type:   "group",
+							Title:  group.Title,
+							PeerID: group.ID,
+						},
+					)
+				}
 				return nil
 			})
 		}
