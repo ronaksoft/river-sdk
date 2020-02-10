@@ -84,7 +84,7 @@ func saveUser(txn *badger.Txn, user *msg.User) error {
 		return err
 	}
 
-	peerIndexer.Enter(
+	indexPeer(
 		ronak.ByteToStr(userKey),
 		UserSearch{
 			Type:      "user",
@@ -118,7 +118,7 @@ func saveContact(txn *badger.Txn, contactUser *msg.ContactUser) error {
 	if err != nil {
 		return err
 	}
-	peerIndexer.Enter(
+	indexPeer(
 		ronak.ByteToStr(contactKey),
 		ContactSearch{
 			Type:      "contact",
@@ -277,6 +277,10 @@ func (r *repoUsers) UpdateProfile(userID int64, firstName, lastName, username, b
 }
 
 func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
+	users := make([]*msg.User, 0, 100)
+	if r.peerSearch == nil {
+		return users
+	}
 	t1 := bleve.NewTermQuery("user")
 	t1.SetField("type")
 	qs := make([]query.Query, 0)
@@ -286,7 +290,7 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
 	searchResult, _ := r.peerSearch.Search(searchRequest)
-	users := make([]*msg.User, 0, 100)
+
 	err := badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
 			user, err := getUserByKey(txn, ronak.StrToByte(hit.ID))
@@ -367,6 +371,11 @@ func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
 }
 
 func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*msg.PhoneContact) {
+	contactUsers := make([]*msg.ContactUser, 0, 100)
+	phoneContacts := make([]*msg.PhoneContact, 0, 100)
+	if r.peerSearch == nil {
+		return contactUsers, phoneContacts
+	}
 	t1 := bleve.NewTermQuery("contact")
 	t1.SetField("type")
 	qs := make([]query.Query, 0, 2)
@@ -376,8 +385,7 @@ func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
 	searchResult, _ := r.peerSearch.Search(searchRequest)
-	contactUsers := make([]*msg.ContactUser, 0, 100)
-	phoneContacts := make([]*msg.PhoneContact, 0, 100)
+
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
 			contactUser, err := getContactByKey(txn, ronak.StrToByte(hit.ID))
@@ -397,6 +405,10 @@ func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*
 }
 
 func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
+	contactUsers := make([]*msg.ContactUser, 0, 100)
+	if r.peerSearch == nil {
+		return contactUsers
+	}
 	t1 := bleve.NewTermQuery("user")
 	t1.SetField("type")
 	qs := make([]query.Query, 0)
@@ -406,7 +418,7 @@ func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
 	searchResult, _ := r.peerSearch.Search(searchRequest)
-	contactUsers := make([]*msg.ContactUser, 0, 100)
+
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
 			user, _ := getUserByKey(txn, ronak.StrToByte(hit.ID))
@@ -540,7 +552,7 @@ func (r *repoUsers) ReIndex() {
 			_ = it.Item().Value(func(val []byte) error {
 				user := new(msg.User)
 				_ = user.Unmarshal(val)
-				peerIndexer.Enter(
+				indexPeer(
 					ronak.ByteToStr(getUserKey(user.ID)),
 					UserSearch{
 						Type:      "user",
@@ -562,7 +574,7 @@ func (r *repoUsers) ReIndex() {
 			_ = it.Item().Value(func(val []byte) error {
 				contactUser := new(msg.ContactUser)
 				_ = contactUser.Unmarshal(val)
-				peerIndexer.Enter(
+				indexPeer(
 					ronak.ByteToStr(getContactKey(contactUser.ID)),
 					ContactSearch{
 						Type:      "contact",

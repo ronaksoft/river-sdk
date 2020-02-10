@@ -68,7 +68,7 @@ func saveGroup(txn *badger.Txn, group *msg.Group) error {
 		return err
 	}
 
-	peerIndexer.Enter(
+	indexPeer(
 		ronak.ByteToStr(groupKey),
 		GroupSearch{
 			Type:   "group",
@@ -382,6 +382,10 @@ func (r *repoGroups) UpdateMemberType(groupID, userID int64, isAdmin bool) {
 }
 
 func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
+	groups := make([]*msg.Group, 0, 100)
+	if r.peerSearch == nil {
+		return groups
+	}
 	t1 := bleve.NewTermQuery("group")
 	t1.SetField("type")
 	terms := strings.Fields(searchPhrase)
@@ -392,7 +396,6 @@ func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
 	searchResult, _ := r.peerSearch.Search(searchRequest)
-	groups := make([]*msg.Group, 0, 100)
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
 			group, _ := getGroupByKey(txn, ronak.StrToByte(hit.ID))
@@ -416,7 +419,7 @@ func (r *repoGroups) ReIndex() {
 				group := new(msg.Group)
 				_ = group.Unmarshal(val)
 				groupKey := getGroupKey(group.ID)
-				peerIndexer.Enter(
+				indexPeer(
 					ronak.ByteToStr(groupKey),
 					GroupSearch{
 						Type:   "group",

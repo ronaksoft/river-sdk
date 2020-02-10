@@ -137,7 +137,7 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 		return err
 	}
 
-	msgIndexer.Enter(
+	indexMessage(
 		ronak.ByteToStr(getMessageKey(message.PeerID, message.PeerType, message.ID)),
 		MessageSearch{
 			Type:   "msg",
@@ -145,6 +145,7 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 			PeerID: fmt.Sprintf("%d", message.PeerID),
 		},
 	)
+
 	return nil
 }
 
@@ -434,7 +435,7 @@ func (r *repoMessages) Delete(userID int64, peerID int64, peerType int32, msgIDs
 			it.Close()
 			if dialog.TopMessageID == msgID {
 				_ = txn.Delete(getDialogKey(peerID, peerType))
-				_ = r.msgSearch.Delete(ronak.ByteToStr(getMessageKey(peerID, peerType, msgID)))
+				indexMessageRemove(ronak.ByteToStr(getMessageKey(peerID, peerType, msgID)))
 				return nil
 			}
 		}
@@ -447,7 +448,7 @@ func (r *repoMessages) Delete(userID int64, peerID int64, peerType int32, msgIDs
 		if err != nil {
 			return err
 		}
-		_ = r.msgSearch.Delete(ronak.ByteToStr(getMessageKey(peerID, peerType, msgID)))
+		indexMessageRemove(ronak.ByteToStr(getMessageKey(peerID, peerType, msgID)))
 		return nil
 	})
 	logs.ErrorOnErr("RepoMessage got error on delete", err)
@@ -687,7 +688,7 @@ func (r *repoMessages) ReIndex() {
 			_ = it.Item().Value(func(val []byte) error {
 				message := new(msg.UserMessage)
 				_ = message.Unmarshal(val)
-				msgIndexer.Enter(
+				indexMessage(
 					ronak.ByteToStr(getMessageKey(message.PeerID, message.PeerType, message.ID)),
 					MessageSearch{
 						Type:   "msg",

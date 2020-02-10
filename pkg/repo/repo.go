@@ -133,47 +133,57 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 	})
 
 	// Initialize Search
-	// 1. Messages Search
-	searchDbPath := fmt.Sprintf("%s/searchdb/msg", strings.TrimRight(dbPath, "/"))
-	if msgSearch, err := bleve.Open(searchDbPath); err != nil {
-		switch err {
-		case bleve.ErrorIndexPathDoesNotExist:
-			// create a mapping
-			indexMapping, err := indexMapForMessages()
-			if err != nil {
-				return errors.Wrap(err, "Search(Message)")
+	go func() {
+		// 1. Messages Search
+		searchDbPath := fmt.Sprintf("%s/searchdb/msg", strings.TrimRight(dbPath, "/"))
+		if msgSearch, err := bleve.Open(searchDbPath); err != nil {
+			switch err {
+			case bleve.ErrorIndexPathDoesNotExist:
+				// create a mapping
+				indexMapping, err := indexMapForMessages()
+				if err != nil {
+					logs.Warn("Error On Open Search(Message)", zap.Error(err))
+					return
+				}
+				r.msgSearch, err = bleve.New(searchDbPath, indexMapping)
+				if err != nil {
+					logs.Warn("Error On Open Search(Message)", zap.Error(err))
+					return
+				}
+			default:
+				logs.Warn("Error On Open Search(Message)", zap.Error(err))
+				return
 			}
-			r.msgSearch, err = bleve.New(searchDbPath, indexMapping)
-			if err != nil {
-				return errors.Wrap(err, "Search(Message)")
-			}
-		default:
-			return err
+		} else {
+			r.msgSearch = msgSearch
 		}
-	} else {
-		r.msgSearch = msgSearch
-	}
+	}()
+	go func() {
+		// 2. Peer Search
+		peerDbPath := fmt.Sprintf("%s/searchdb/peer", strings.TrimRight(dbPath, "/"))
+		if peerSearch, err := bleve.Open(peerDbPath); err != nil {
+			switch err {
+			case bleve.ErrorIndexPathDoesNotExist:
+				// create a mapping
+				indexMapping, err := indexMapForPeers()
+				if err != nil {
+					logs.Warn("Error On Open Search(Peers)", zap.Error(err))
+					return
+				}
+				r.peerSearch, err = bleve.New(peerDbPath, indexMapping)
+				if err != nil {
+					logs.Warn("Error On Open Search(Peers)", zap.Error(err))
+					return
+				}
+			default:
+				logs.Warn("Error On Open Search(Peers)", zap.Error(err))
+				return
+			}
+		} else {
+			r.peerSearch = peerSearch
+		}
+	}()
 
-	// 2. Peer Search
-	peerDbSearch := fmt.Sprintf("%s/searchdb/peer", strings.TrimRight(dbPath, "/"))
-	if peerSearch, err := bleve.Open(peerDbSearch); err != nil {
-		switch err {
-		case bleve.ErrorIndexPathDoesNotExist:
-			// create a mapping
-			indexMapping, err := indexMapForPeers()
-			if err != nil {
-				return errors.Wrap(err, "Search(Peers)")
-			}
-			r.peerSearch, err = bleve.New(peerDbSearch, indexMapping)
-			if err != nil {
-				return errors.Wrap(err, "Search(Peers)")
-			}
-		default:
-			return err
-		}
-	} else {
-		r.peerSearch = peerSearch
-	}
 	return nil
 }
 
@@ -252,7 +262,8 @@ func DropAll() {
 
 func GC() {
 	_ = r.bunt.Shrink()
-	for r.badger.RunValueLogGC(0.7) == nil {}
+	for r.badger.RunValueLogGC(0.7) == nil {
+	}
 }
 
 func DbSize() (int64, int64) {
@@ -290,7 +301,14 @@ func badgerView(fn func(txn *badger.Txn) error) (err error) {
 	return
 }
 
+func indexMessage(key, value interface{}) {
+	msgIndexer.Enter(key, value)
+}
+
 var msgIndexer = ronak.NewFlusher(1000, 1, time.Millisecond, func(items []ronak.FlusherEntry) {
+	for r.msgSearch == nil {
+		time.Sleep(time.Second)
+	}
 	b := r.msgSearch.NewBatch()
 	for _, item := range items {
 		_ = b.Index(item.Key.(string), item.Value)
@@ -301,6 +319,24 @@ var msgIndexer = ronak.NewFlusher(1000, 1, time.Millisecond, func(items []ronak.
 	}
 })
 
+func indexMessageRemove(key string) {
+	msgIndexRemover.Enter(key, nil)
+}
+
+var msgIndexRemover = ronak.NewFlusher(1000, 1, time.Millisecond, func(items []ronak.FlusherEntry) {
+	for r.msgSearch == nil {
+		time.Sleep(time.Second)
+	}
+	for _, item := range items {
+		_ = r.msgSearch.Delete(item.Key.(string))
+
+	}
+})
+
+func indexPeer(key, value interface{}) {
+	peerIndexer.Enter(key, value)
+}
+
 var peerIndexer = ronak.NewFlusher(1000, 1, time.Millisecond, func(items []ronak.FlusherEntry) {
 	b := r.peerSearch.NewBatch()
 	for _, item := range items {
@@ -309,5 +345,19 @@ var peerIndexer = ronak.NewFlusher(1000, 1, time.Millisecond, func(items []ronak
 	err := r.peerSearch.Batch(b)
 	if err != nil {
 		logs.Warn("PeerIndexer got error", zap.Error(err))
+	}
+})
+
+func indexPeerRemove(key string) {
+	peerIndexRemover.Enter(key, nil)
+}
+
+var peerIndexRemover = ronak.NewFlusher(1000, 1, time.Millisecond, func(items []ronak.FlusherEntry) {
+	for r.peerSearch == nil {
+		time.Sleep(time.Second)
+	}
+	for _, item := range items {
+		_ = r.peerSearch.Delete(item.Key.(string))
+
 	}
 })
