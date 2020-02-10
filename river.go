@@ -287,7 +287,8 @@ func (r *River) Start() error {
 	// Run Garbage Collection In Background
 	go func() {
 		time.Sleep(20 * time.Second)
-		r.GC()
+		repo.GC()
+		runtime.GC()
 	}()
 
 	return nil

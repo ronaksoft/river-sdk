@@ -686,7 +686,7 @@ func (r *repoMessages) ReIndex() {
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.Valid(); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
-				message := new(msg.UserMessage)
+				message := &msg.UserMessage{}
 				_ = message.Unmarshal(val)
 				indexMessage(
 					ronak.ByteToStr(getMessageKey(message.PeerID, message.PeerType, message.ID)),
