@@ -3,6 +3,7 @@ package goque
 import (
 	"bytes"
 	"encoding/gob"
+	"encoding/json"
 	"os"
 	"sync"
 
@@ -90,13 +91,33 @@ func (q *Queue) EnqueueString(value string) (*Item, error) {
 // EnqueueObject is a helper function for Enqueue that accepts any
 // value type, which is then encoded into a byte slice using
 // encoding/gob.
+//
+// Objects containing pointers with zero values will decode to nil
+// when using this function. This is due to how the encoding/gob
+// package works. Because of this, you should only use this function
+// to encode simple types.
 func (q *Queue) EnqueueObject(value interface{}) (*Item, error) {
 	var buffer bytes.Buffer
 	enc := gob.NewEncoder(&buffer)
 	if err := enc.Encode(value); err != nil {
 		return nil, err
 	}
+
 	return q.Enqueue(buffer.Bytes())
+}
+
+// EnqueueObjectAsJSON is a helper function for Enqueue that accepts
+// any value type, which is then encoded into a JSON byte slice using
+// encoding/json.
+//
+// Use this function to handle encoding of complex types.
+func (q *Queue) EnqueueObjectAsJSON(value interface{}) (*Item, error) {
+	jsonBytes, err := json.Marshal(value)
+	if err != nil {
+		return nil, err
+	}
+
+	return q.Enqueue(jsonBytes)
 }
 
 // Dequeue removes the next item in the queue and returns it.
@@ -205,6 +226,11 @@ func (q *Queue) UpdateString(id uint64, newValue string) (*Item, error) {
 // UpdateObject is a helper function for Update that accepts any
 // value type, which is then encoded into a byte slice using
 // encoding/gob.
+//
+// Objects containing pointers with zero values will decode to nil
+// when using this function. This is due to how the encoding/gob
+// package works. Because of this, you should only use this function
+// to encode simple types.
 func (q *Queue) UpdateObject(id uint64, newValue interface{}) (*Item, error) {
 	var buffer bytes.Buffer
 	enc := gob.NewEncoder(&buffer)
@@ -214,33 +240,56 @@ func (q *Queue) UpdateObject(id uint64, newValue interface{}) (*Item, error) {
 	return q.Update(id, buffer.Bytes())
 }
 
+// UpdateObjectAsJSON is a helper function for Update that accepts
+// any value type, which is then encoded into a JSON byte slice using
+// encoding/json.
+//
+// Use this function to handle encoding of complex types.
+func (q *Queue) UpdateObjectAsJSON(id uint64, newValue interface{}) (*Item, error) {
+	jsonBytes, err := json.Marshal(newValue)
+	if err != nil {
+		return nil, err
+	}
+
+	return q.Update(id, jsonBytes)
+}
+
 // Length returns the total number of items in the queue.
 func (q *Queue) Length() uint64 {
 	return q.tail - q.head
 }
 
 // Close closes the LevelDB database of the queue.
-func (q *Queue) Close() {
+func (q *Queue) Close() error {
 	q.Lock()
 	defer q.Unlock()
 
 	// Check if queue is already closed.
 	if !q.isOpen {
-		return
+		return nil
 	}
 
-	// Reset queue head and tail.
+	// Close the LevelDB database.
+	if err := q.db.Close(); err != nil {
+		return err
+	}
+
+	// Reset queue head and tail and set
+	// isOpen to false.
 	q.head = 0
 	q.tail = 0
-
-	q.db.Close()
 	q.isOpen = false
+
+	return nil
 }
 
 // Drop closes and deletes the LevelDB database of the queue.
-func (q *Queue) Drop() {
-	q.Close()
-	os.RemoveAll(q.DataDir)
+func (q *Queue) Drop() error {
+	if err := q.Close(); err != nil {
+		return err
+	}
+
+	return os.RemoveAll(q.DataDir)
 }
 
 // getItemByID returns an item, if found, for the given ID.

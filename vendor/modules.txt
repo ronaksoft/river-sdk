@@ -10,7 +10,7 @@ github.com/abiosoft/readline
 # github.com/allegro/bigcache/v2 v2.1.6
 github.com/allegro/bigcache/v2
 github.com/allegro/bigcache/v2/queue
-# github.com/beeker1121/goque v2.0.1+incompatible
+# github.com/beeker1121/goque v2.1.0+incompatible
 github.com/beeker1121/goque
 # github.com/beorn7/perks v1.0.0
 github.com/beorn7/perks/quantile
@@ -81,8 +81,6 @@ github.com/edsrzf/mmap-go
 github.com/etcd-io/bbolt
 # github.com/fatih/color v1.7.0
 github.com/fatih/color
-# github.com/felixge/tcpkeepalive v0.0.0-20160804073959-5bb0b2dea91e
-github.com/felixge/tcpkeepalive
 # github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568
 github.com/flynn-archive/go-shlex
 # github.com/fsnotify/fsnotify v1.4.7
