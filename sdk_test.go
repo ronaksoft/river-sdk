@@ -48,7 +48,6 @@ func init() {
 	r.SetConfig(&RiverConfig{
 		DbPath:                 "./_data/",
 		DbID:                   "test",
-		QueuePath:              fmt.Sprintf("%s/%s", "./_queue", "test"),
 		MainDelegate:           new(MainDelegateDummy),
 		FileDelegate:           new(FileDelegateDummy),
 		LogLevel:               int(zapcore.DebugLevel),

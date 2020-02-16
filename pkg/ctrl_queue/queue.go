@@ -2,6 +2,9 @@ package queueCtrl
 
 import (
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -47,7 +50,7 @@ type Controller struct {
 // New
 func New(network *networkCtrl.Controller, dataDir string) (*Controller, error) {
 	ctrl := new(Controller)
-	ctrl.dataDir = dataDir
+	ctrl.dataDir = filepath.Join(dataDir, "queue")
 	ctrl.rateLimiter = ratelimit.NewBucket(time.Second, 20)
 	if dataDir == "" {
 		return nil, domain.ErrQueuePathIsNotSet
@@ -300,10 +303,17 @@ func (ctrl *Controller) EnqueueCommand(
 // Start queue
 func (ctrl *Controller) Start() {
 	logs.Info("QueueCtrl started")
-	if q, err := goque.OpenQueue(ctrl.dataDir); err != nil {
+	err := ronak.Try(10, 100 * time.Millisecond, func() error {
+		if q, err := goque.OpenQueue(ctrl.dataDir); err != nil {
+			_ = os.RemoveAll(ctrl.dataDir)
+			return err
+		} else {
+			ctrl.waitingList = q
+		}
+		return nil
+	})
+	if err != nil {
 		logs.Fatal("We couldn't initialize the queue", zap.Error(err))
-	} else {
-		ctrl.waitingList = q
 	}
 
 	// Try to resend unsent messages

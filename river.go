@@ -36,9 +36,6 @@ func SetLogLevel(l int) {
 type RiverConfig struct {
 	ServerEndpoint     string
 	FileServerEndpoint string
-	// QueuePath is the path of a folder that pending requests will be saved there until sending
-	// to the server.
-	QueuePath string
 	// DbPath is the path of the folder holding the sqlite database.
 	DbPath string
 	// DbID is used to save data for different accounts in separate databases.
@@ -192,7 +189,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	})
 
 	// Initialize queueController
-	if q, err := queueCtrl.New(r.networkCtrl, conf.QueuePath); err != nil {
+	if q, err := queueCtrl.New(r.networkCtrl, r.dbPath); err != nil {
 		logs.Fatal("We couldn't initialize MessageQueue",
 			zap.String("Error", err.Error()),
 		)
