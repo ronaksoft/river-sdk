@@ -114,7 +114,7 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, requestID,
 		return nil, domain.ErrNotFound
 	}
 	switch msgMedia.MediaType {
-	case msg.InputMediaTypeUploadedDocument, msg.InputMediaTypeUploadedPhoto:
+	case msg.InputMediaTypeUploadedDocument:
 	default:
 		panic("Invalid MediaInputType")
 	}

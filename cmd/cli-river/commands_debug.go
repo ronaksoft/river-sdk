@@ -134,12 +134,6 @@ var UpdateNewMessageHexString = &ishell.Cmd{
 					}
 				}
 			}
-		case msg.MediaTypePhoto:
-			x := new(msg.MediaPhoto)
-			err = x.Unmarshal(udp.Message.Media)
-			if err == nil {
-
-			}
 		}
 	},
 }

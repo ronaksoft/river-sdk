@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/fatih/color"
@@ -77,13 +76,11 @@ func main() {
 	conInfo.Delegate = new(ConnInfoDelegates)
 	skBytes, _ := ioutil.ReadFile("./keys.json")
 
-	qPath := "./_queue"
 	_SDK = new(riversdk.River)
 	_SDK.SetConfig(&riversdk.RiverConfig{
 		ServerEndpoint:         "ws://river.ronaksoftware.com", // "ws://test.river.im", // "ws://192.168.1.110/",
 		DbPath:                 dbPath,
 		DbID:                   dbID,
-		QueuePath:              fmt.Sprintf("%s/%s", qPath, dbID),
 		ServerKeys:             ronak.ByteToStr(skBytes),
 		MainDelegate:           new(MainDelegate),
 		FileDelegate:           new(FileDelegate),

@@ -38,7 +38,7 @@ var MessageSend = &ishell.Cmd{
 var BotStart = &ishell.Cmd{
 	Name: "BotStart",
 	Func: func(c *ishell.Context) {
-		req := msg.StartBot{}
+		req := msg.BotStart{}
 		req.Bot = &msg.InputPeer{}
 		req.Bot.Type = fnGetPeerType(c)
 		req.Bot.ID = fnGetBotID(c)
@@ -46,7 +46,7 @@ var BotStart = &ishell.Cmd{
 		req.StartParam = "startparam"
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_StartBot, reqBytes, reqDelegate); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_BotStart, reqBytes, reqDelegate); err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
 		} else {
 			reqDelegate.RequestID = reqID
@@ -55,24 +55,6 @@ var BotStart = &ishell.Cmd{
 	},
 }
 
-var BotIsStarted = &ishell.Cmd{
-	Name: "BotIsStarted",
-	Func: func(c *ishell.Context) {
-		req := msg.StartBot{}
-		req.Bot = &msg.InputPeer{}
-		req.Bot.Type = fnGetPeerType(c)
-		req.Bot.ID = fnGetBotID(c)
-		req.RandomID = ronak.RandomInt64(0)
-		reqBytes, _ := req.Marshal()
-		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_BotIsStarted, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
-		} else {
-			reqDelegate.RequestID = reqID
-		}
-
-	},
-}
 
 var MessageSendToSelf = &ishell.Cmd{
 	Name: "SendToMe",
@@ -408,5 +390,4 @@ func init() {
 	Message.AddCmd(MessagesGetDBMediaStatus)
 	Message.AddCmd(MessagesClearMedia)
 	Message.AddCmd(BotStart)
-	Message.AddCmd(BotIsStarted)
 }
