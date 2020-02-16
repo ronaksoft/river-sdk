@@ -38,6 +38,10 @@ func init() {
 		DocumentLogDirectory:   "./_files/logs",
 		ConnInfo:               conInfo,
 	})
+	err := r.Start()
+	if err != nil {
+		panic(err)
+	}
 	_River = r
 }
 

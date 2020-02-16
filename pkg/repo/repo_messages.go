@@ -680,7 +680,16 @@ func (r *repoMessages) GetSharedMedia(peerID int64, peerType int32, documentType
 }
 
 func (r *repoMessages) ReIndex() {
-	err := badgerView(func(txn *badger.Txn) error {
+	err := ronak.Try(10, time.Second, func() error {
+		if r.msgSearch == nil {
+			return domain.ErrDoesNotExists
+		}
+		return nil
+	})
+	if err != nil {
+		return
+	}
+	err = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = ronak.StrToByte(prefixMessages)
 		it := txn.NewIterator(opts)

@@ -126,22 +126,23 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, requestID,
 
 	msgMedia.FileTotalParts = 0
 
-	pm := new(msg.ClientPendingMessage)
-	pm.PeerID = msgMedia.Peer.ID
-	pm.PeerType = int32(msgMedia.Peer.Type)
-	pm.AccessHash = msgMedia.Peer.AccessHash
-	pm.Body = msgMedia.Caption
-	pm.ReplyTo = msgMedia.ReplyTo
-	pm.ClearDraft = msgMedia.ClearDraft
-	pm.MediaType = msgMedia.MediaType
+	pm := &msg.ClientPendingMessage{
+		PeerID : msgMedia.Peer.ID,
+		PeerType : int32(msgMedia.Peer.Type),
+		AccessHash : msgMedia.Peer.AccessHash,
+		Body : msgMedia.Caption,
+		ReplyTo : msgMedia.ReplyTo,
+		ClearDraft : msgMedia.ClearDraft,
+		MediaType : msgMedia.MediaType,
+		ID : msgID,
+		SenderID : senderID,
+		CreatedOn : domain.Now().Unix(),
+		RequestID : requestID,
+		FileUploadID : fmt.Sprintf("%d", fileID),
+		FileID : fileID,
+	}
 	pm.Media, _ = msgMedia.Marshal()
-	pm.ID = msgID
-	pm.SenderID = senderID
-	pm.CreatedOn = domain.Now().Unix()
-	pm.RequestID = requestID
 
-	pm.FileUploadID = fmt.Sprintf("%d", fileID)
-	pm.FileID = fileID
 	if thumbID > 0 {
 		pm.ThumbID = thumbID
 		pm.ThumbUploadID = fmt.Sprintf("%d", thumbID)

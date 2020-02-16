@@ -276,6 +276,7 @@ func (r *River) Start() error {
 			logs.Info("ReIndexing Users & Groups")
 			repo.Users.ReIndex()
 			repo.Groups.ReIndex()
+			repo.Messages.ReIndex()
 			_ = repo.System.SaveInt(domain.SkReIndexTime, uint64(time.Now().Unix()))
 		}()
 	}

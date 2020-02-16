@@ -11,6 +11,7 @@ import (
 	"github.com/dgraph-io/badger"
 	"go.uber.org/zap"
 	"strings"
+	"time"
 )
 
 const (
@@ -410,7 +411,16 @@ func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
 }
 
 func (r *repoGroups) ReIndex() {
-	err := badgerView(func(txn *badger.Txn) error {
+	err := ronak.Try(10, time.Second, func() error {
+		if r.peerSearch == nil {
+			return domain.ErrDoesNotExists
+		}
+		return nil
+	})
+	if err != nil {
+		return
+	}
+	err = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = ronak.StrToByte(prefixGroups)
 		it := txn.NewIterator(opts)

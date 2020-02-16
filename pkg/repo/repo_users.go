@@ -544,6 +544,15 @@ func (r *repoUsers) GetPhotoGallery(userID int64) []*msg.UserPhoto {
 }
 
 func (r *repoUsers) ReIndex() {
+	err := ronak.Try(10, time.Second, func() error {
+		if r.peerSearch == nil {
+			return domain.ErrDoesNotExists
+		}
+		return nil
+	})
+	if err != nil {
+		return
+	}
 	_ = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = ronak.StrToByte(prefixUsers)

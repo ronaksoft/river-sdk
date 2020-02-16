@@ -2,6 +2,7 @@ package repo
 
 import (
 	"fmt"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/allegro/bigcache/v2"
 	"github.com/blevesearch/bleve"
@@ -135,59 +136,61 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 	// Initialize Search
 	go func() {
 		// 1. Messages Search
-		searchDbPath := fmt.Sprintf("%s/searchdb/msg", strings.TrimRight(dbPath, "/"))
-		if msgSearch, err := bleve.Open(searchDbPath); err != nil {
-			switch err {
-			case bleve.ErrorIndexPathDoesNotExist:
-				// create a mapping
-				indexMapping, err := indexMapForMessages()
-				if err != nil {
-					logs.Warn("Error On Open Search(Message)", zap.Error(err))
-					return
+		_ = ronak.Try(10, time.Millisecond*100, func() error {
+			searchDbPath := fmt.Sprintf("%s/searchdb/msg", strings.TrimRight(dbPath, "/"))
+			if msgSearch, err := bleve.Open(searchDbPath); err != nil {
+				switch err {
+				case bleve.ErrorIndexPathDoesNotExist:
+					// create a mapping
+					r.msgSearch, err = bleve.New(searchDbPath, indexMapForMessages())
+					if err != nil {
+						logs.Warn("Error On Open Search(Message)[New]", zap.Error(err))
+						_ = os.RemoveAll(searchDbPath)
+						return err
+					}
+				default:
+					logs.Warn("Error On Open Search(Message)[Default]", zap.Error(err))
+					_ = os.RemoveAll(searchDbPath)
+					return err
 				}
-				r.msgSearch, err = bleve.New(searchDbPath, indexMapping)
-				if err != nil {
-					logs.Warn("Error On Open Search(Message)", zap.Error(err))
-					return
-				}
-			default:
-				logs.Warn("Error On Open Search(Message)", zap.Error(err))
-				return
+			} else {
+				r.msgSearch = msgSearch
+				logs.Info("Message Index Initialized Successfully.")
 			}
-		} else {
-			r.msgSearch = msgSearch
-		}
+			return nil
+		})
 	}()
 	go func() {
 		// 2. Peer Search
-		peerDbPath := fmt.Sprintf("%s/searchdb/peer", strings.TrimRight(dbPath, "/"))
-		if peerSearch, err := bleve.Open(peerDbPath); err != nil {
-			switch err {
-			case bleve.ErrorIndexPathDoesNotExist:
-				// create a mapping
-				indexMapping, err := indexMapForPeers()
-				if err != nil {
+		_ = ronak.Try(10, 100*time.Millisecond, func() error {
+			peerDbPath := fmt.Sprintf("%s/searchdb/peer", strings.TrimRight(dbPath, "/"))
+			if peerSearch, err := bleve.Open(peerDbPath); err != nil {
+				switch err {
+				case bleve.ErrorIndexPathDoesNotExist:
+					// create a mapping
+					r.peerSearch, err = bleve.New(peerDbPath, indexMapForPeers())
+					if err != nil {
+						logs.Warn("Error On Open Search(Peers)", zap.Error(err))
+						_ = os.RemoveAll(peerDbPath)
+						return err
+					}
+				default:
 					logs.Warn("Error On Open Search(Peers)", zap.Error(err))
-					return
+					_ = os.RemoveAll(peerDbPath)
+					return err
 				}
-				r.peerSearch, err = bleve.New(peerDbPath, indexMapping)
-				if err != nil {
-					logs.Warn("Error On Open Search(Peers)", zap.Error(err))
-					return
-				}
-			default:
-				logs.Warn("Error On Open Search(Peers)", zap.Error(err))
-				return
+			} else {
+				r.peerSearch = peerSearch
+				logs.Info("Peer Index Initialized Successfully.")
 			}
-		} else {
-			r.peerSearch = peerSearch
-		}
+			return nil
+		})
 	}()
 
 	return nil
 }
 
-func indexMapForMessages() (mapping.IndexMapping, error) {
+func indexMapForMessages() mapping.IndexMapping {
 	// a generic reusable mapping for english text
 	textFieldMapping := bleve.NewTextFieldMapping()
 	textFieldMapping.Analyzer = en.AnalyzerName
@@ -208,10 +211,10 @@ func indexMapForMessages() (mapping.IndexMapping, error) {
 	indexMapping.TypeField = "type"
 	indexMapping.DefaultAnalyzer = en.AnalyzerName
 
-	return indexMapping, nil
+	return indexMapping
 }
 
-func indexMapForPeers() (mapping.IndexMapping, error) {
+func indexMapForPeers() mapping.IndexMapping {
 	// a generic reusable mapping for english text
 	textFieldMapping := bleve.NewTextFieldMapping()
 	textFieldMapping.Store = false
@@ -246,7 +249,7 @@ func indexMapForPeers() (mapping.IndexMapping, error) {
 	indexMapping.TypeField = "type"
 	indexMapping.DefaultAnalyzer = en.AnalyzerName
 
-	return indexMapping, nil
+	return indexMapping
 }
 
 func DropAll() {
@@ -306,9 +309,12 @@ func indexMessage(key, value interface{}) {
 }
 
 var msgIndexer = ronak.NewFlusher(1000, 1, time.Millisecond, func(items []ronak.FlusherEntry) {
-	for r.msgSearch == nil {
-		time.Sleep(time.Second)
-	}
+	_ = ronak.Try(100, time.Second, func() error {
+		if r.msgSearch == nil {
+			return domain.ErrDoesNotExists
+		}
+		return nil
+	})
 	b := r.msgSearch.NewBatch()
 	for _, item := range items {
 		_ = b.Index(item.Key.(string), item.Value)
@@ -324,9 +330,12 @@ func indexMessageRemove(key string) {
 }
 
 var msgIndexRemover = ronak.NewFlusher(1000, 1, time.Millisecond, func(items []ronak.FlusherEntry) {
-	for r.msgSearch == nil {
-		time.Sleep(time.Second)
-	}
+	_ = ronak.Try(100, time.Second, func() error {
+		if r.msgSearch == nil {
+			return domain.ErrDoesNotExists
+		}
+		return nil
+	})
 	for _, item := range items {
 		_ = r.msgSearch.Delete(item.Key.(string))
 
@@ -338,6 +347,12 @@ func indexPeer(key, value interface{}) {
 }
 
 var peerIndexer = ronak.NewFlusher(1000, 1, time.Millisecond, func(items []ronak.FlusherEntry) {
+	ronak.Try(100, time.Second, func() error {
+		if r.peerSearch == nil {
+			return domain.ErrDoesNotExists
+		}
+		return nil
+	})
 	b := r.peerSearch.NewBatch()
 	for _, item := range items {
 		_ = b.Index(item.Key.(string), item.Value)
@@ -353,9 +368,12 @@ func indexPeerRemove(key string) {
 }
 
 var peerIndexRemover = ronak.NewFlusher(1000, 1, time.Millisecond, func(items []ronak.FlusherEntry) {
-	for r.peerSearch == nil {
-		time.Sleep(time.Second)
-	}
+	ronak.Try(100, time.Second, func() error {
+		if r.peerSearch == nil {
+			return domain.ErrDoesNotExists
+		}
+		return nil
+	})
 	for _, item := range items {
 		_ = r.peerSearch.Delete(item.Key.(string))
 
