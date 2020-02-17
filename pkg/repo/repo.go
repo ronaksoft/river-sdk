@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
-	"github.com/allegro/bigcache/v2"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/analysis/lang/en"
@@ -28,7 +27,6 @@ var (
 	ctx       *Context
 	r         *repository
 	singleton sync.Mutex
-	lCache    *bigcache.BigCache
 
 	Account         *repoAccount
 	Dialogs         *repoDialogs
@@ -58,18 +56,6 @@ type repository struct {
 func InitRepo(dbPath string, lowMemory bool) error {
 	if ctx == nil {
 		singleton.Lock()
-		lcConfig := bigcache.DefaultConfig(time.Second * 360)
-		lcConfig.CleanWindow = time.Second * 30
-		lcConfig.MaxEntrySize = 1024
-		if lowMemory {
-			lcConfig.MaxEntriesInWindow = 100
-			lcConfig.HardMaxCacheSize = 4
-		} else {
-			lcConfig.MaxEntriesInWindow = 10000
-			lcConfig.HardMaxCacheSize = 64
-		}
-
-		lCache, _ = bigcache.NewBigCache(lcConfig)
 		err := repoSetDB(dbPath, lowMemory)
 		if err != nil {
 			return err

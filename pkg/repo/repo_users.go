@@ -201,9 +201,6 @@ func (r *repoUsers) GetMany(userIDs []int64) []*msg.User {
 func (r *repoUsers) Save(users ...*msg.User) {
 	userIDs := domain.MInt64B{}
 	for _, v := range users {
-		if alreadySaved(fmt.Sprintf("U.%d", v.ID), v) {
-			continue
-		}
 		if strings.TrimSpace(v.FirstName) == "" && strings.TrimSpace(v.LastName) == "" {
 			continue
 		}

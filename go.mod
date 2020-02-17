@@ -3,9 +3,10 @@ module git.ronaksoftware.com/ronak/riversdk
 require (
 	git.ronaksoftware.com/ronak/toolbox v1.1.6
 	github.com/RoaringBitmap/roaring v0.4.18 // indirect
+	github.com/VictoriaMetrics/fastcache v1.5.7 // indirect
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
-	github.com/allegro/bigcache/v2 v2.1.6
+	github.com/allegro/bigcache/v2 v2.1.6 // indirect
 	github.com/beeker1121/goque v2.1.0+incompatible
 	github.com/blevesearch/bleve v0.8.0
 	github.com/blevesearch/blevex v0.0.0-20180227211930-4b158bb555a3 // indirect

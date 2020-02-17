@@ -112,9 +112,6 @@ func updateGroupParticipantsCount(txn *badger.Txn, group *msg.Group) error {
 func (r *repoGroups) Save(groups ...*msg.Group) {
 	groupIDs := domain.MInt64B{}
 	for _, v := range groups {
-		if alreadySaved(fmt.Sprintf("G.%d", v.ID), v) {
-			continue
-		}
 		groupIDs[v.ID] = true
 	}
 
@@ -220,9 +217,6 @@ func (r *repoGroups) GetParticipants(groupID int64) ([]*msg.GroupParticipant, er
 }
 
 func (r *repoGroups) UpdatePhoto(groupID int64, groupPhoto *msg.GroupPhoto) {
-	if alreadySaved(fmt.Sprintf("GPHOTO.%d", groupID), groupPhoto) {
-		return
-	}
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		group, err := getGroupByKey(txn, getGroupKey(groupID))
 		if err != nil {
