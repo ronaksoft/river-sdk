@@ -15,6 +15,7 @@ import (
 	"go.uber.org/zap"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -680,34 +681,35 @@ func (r *repoMessages) GetSharedMedia(peerID int64, peerType int32, documentType
 
 func (r *repoMessages) GetMediaHistory(documentType msg.ClientMediaType) ([]*msg.UserMessage, error) {
 	limit := 500
-
+	msgMtx := sync.Mutex{}
 	userMessages := make([]*msg.UserMessage, 0, limit)
-	_ = badgerView(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.PrefetchValues = false
-		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixMessages))
-		opts.Reverse = true
-		it := txn.NewIterator(opts)
-		for it.Seek(ronak.StrToByte(fmt.Sprintf("%s.", prefixMessages))); it.ValidForPrefix(opts.Prefix); it.Next() {
-			if limit < 0 {
-				break
+
+	stream := r.badger.NewStream()
+	stream.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixMessages))
+	stream.ChooseKey = func(item *badger.Item) bool {
+		if item.UserMeta() == byte(documentType) {
+			m := &msg.UserMessage{}
+			err := item.Value(func(val []byte) error {
+				return m.Unmarshal(val)
+			})
+			if err != nil {
+				return false
 			}
-			if it.Item().UserMeta() == byte(documentType) {
-				_ = it.Item().Value(func(val []byte) error {
-					userMessage := new(msg.UserMessage)
-					err := userMessage.Unmarshal(val)
-					if err != nil {
-						return err
-					}
-					userMessages = append(userMessages, userMessage)
-					limit--
-					return nil
-				})
-			}
+
+			msgMtx.Lock()
+			userMessages = append(userMessages,m)
+			msgMtx.Unlock()
+			return true
 		}
-		it.Close()
+
+		return false
+	}
+
+	stream.Send = func(list *pb.KVList) error {
 		return nil
-	})
+	}
+
+	_ = stream.Orchestrate(context.Background())
 
 	return userMessages, nil
 }
