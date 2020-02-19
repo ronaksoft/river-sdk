@@ -75,6 +75,47 @@ func fnGetBotID(c *ishell.Context) int64 {
 	return botID
 }
 
+func FnGetDescription(c *ishell.Context) string {
+	c.Print("Description: ")
+	description := c.ReadLine()
+
+	return description
+}
+
+func FnGetCommands(c *ishell.Context) []*msg.BotCommands {
+	var commands = []*msg.BotCommands{}
+	for {
+		var cmd = &msg.BotCommands{}
+		c.Println("Please enter empty command to break...")
+		c.Print("Command:")
+		cmd.Command = c.ReadLine()
+		if cmd.Command == "" {
+			break
+		}
+		c.Print("Description:")
+		cmd.Description = c.ReadLine()
+		commands = append(commands, cmd)
+	}
+
+	return commands
+}
+
+func FnGetLimit(c *ishell.Context) int32 {
+	var limit int32
+	for {
+		c.Print("Limit: ")
+		l, err := strconv.ParseInt(c.ReadLine(), 1, 32)
+		if err == nil {
+			limit = int32(l)
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+
+	return limit
+}
+
 func fnGetPeerType(c *ishell.Context) msg.PeerType {
 	var peerType msg.PeerType
 

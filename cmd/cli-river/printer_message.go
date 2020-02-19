@@ -346,6 +346,23 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		x := new(msg.UpdateState)
 		x.Unmarshal(envelope.Message)
 		_Shell.Println("\r\n" + x.String())
+
+	case msg.C_BotsMany:
+		x := new(msg.BotsMany)
+		x.Unmarshal(envelope.Message)
+		_Shell.Println("River bots info for user(", _SDK.ConnInfo.UserID, "): ")
+		for _, bot := range x.Bots {
+			_Shell.Println("Bot {", bot.Bot.Username, "} info:")
+			_Shell.Println("ID:", bot.Bot.ID)
+			_Shell.Println("Name:", bot.Bot.Name)
+			_Shell.Println("OwnerID:", bot.UserID)
+			_Shell.Println("Description:", bot.Description)
+			_Shell.Println("Commands:")
+			for _, cmd := range bot.BotCommands {
+				_Shell.Println(cmd.Command, "-", cmd.Description)
+			}
+		}
+
 	default:
 		constructorName, _ := msg.ConstructorNames[envelope.Constructor]
 		_Shell.Println("DEFAULT",

@@ -35,27 +35,6 @@ var MessageSend = &ishell.Cmd{
 	},
 }
 
-var BotStart = &ishell.Cmd{
-	Name: "BotStart",
-	Func: func(c *ishell.Context) {
-		req := msg.BotStart{}
-		req.Bot = &msg.InputPeer{}
-		req.Bot.Type = fnGetPeerType(c)
-		req.Bot.ID = fnGetBotID(c)
-		req.RandomID = ronak.RandomInt64(0)
-		req.StartParam = "startparam"
-		reqBytes, _ := req.Marshal()
-		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_BotStart, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
-		} else {
-			reqDelegate.RequestID = reqID
-		}
-
-	},
-}
-
-
 var MessageSendToSelf = &ishell.Cmd{
 	Name: "SendToMe",
 	Func: func(c *ishell.Context) {
@@ -389,5 +368,4 @@ func init() {
 	Message.AddCmd(MessagesReadContents)
 	Message.AddCmd(MessagesGetDBMediaStatus)
 	Message.AddCmd(MessagesClearMedia)
-	Message.AddCmd(BotStart)
 }
