@@ -386,7 +386,6 @@ func genSuccessCallback(cb domain.MessageHandler, peerID int64, peerType int32, 
 			err := x.Unmarshal(m.Message)
 			logs.WarnOnErr("Error On Unmarshal MessagesMany", err)
 
-
 			// 1st sort the received messages by id
 			sort.Slice(x.Messages, func(i, j int) bool {
 				return x.Messages[i].ID > x.Messages[j].ID
@@ -559,7 +558,6 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 				successCB(out)
 			}
 		}) // successCB(out)
-
 
 	case msg.InputMediaTypeUploadedDocument:
 		// no need to insert pending message cuz we already insert one b4 start uploading
@@ -1484,6 +1482,55 @@ func (r *River) clientClearCachedMedia(in, out *msg.MessageEnvelope, timeoutCB d
 
 	res := msg.Bool{Result: true}
 	out.Constructor = msg.C_Bool
+	out.RequestID = in.RequestID
+	out.Message, _ = res.Marshal()
+	if successCB != nil {
+		uiexec.Ctx().Exec(func() {
+			successCB(out)
+		})
+	}
+
+}
+
+func (r *River) clientGetMediaHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientGetMediaHistory{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	msgs, _ := repo.Messages.GetMediaHistory(req.MediaType)
+
+	// get users && group IDs
+	userIDs := domain.MInt64B{}
+	groupIDs := domain.MInt64B{}
+	for _, m := range msgs {
+		if m.PeerType == int32(msg.PeerSelf) || m.PeerType == int32(msg.PeerUser) {
+			userIDs[m.PeerID] = true
+		}
+		if m.PeerType == int32(msg.PeerGroup) {
+			groupIDs[m.PeerID] = true
+		}
+		if m.SenderID > 0 {
+			userIDs[m.SenderID] = true
+		}
+		if m.FwdSenderID > 0 {
+			userIDs[m.FwdSenderID] = true
+		}
+	}
+
+	users := repo.Users.GetMany(userIDs.ToArray())
+	groups := repo.Groups.GetMany(groupIDs.ToArray())
+
+	res := msg.MessagesMany{
+		Messages:   msgs,
+		Users:      users,
+		Groups:     groups,
+		Continuous: false,
+	}
+
+	out.Constructor = msg.C_MessagesMany
 	out.RequestID = in.RequestID
 	out.Message, _ = res.Marshal()
 	if successCB != nil {

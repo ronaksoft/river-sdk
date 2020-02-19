@@ -667,5 +667,6 @@ func (r *River) registerCommandHandlers() {
 		msg.C_ClientContactSearch:      r.clientContactSearch,
 		msg.C_ClientGetCachedMedia:     r.clientGetCachedMedia,
 		msg.C_ClientClearCachedMedia:   r.clientClearCachedMedia,
+		msg.C_ClientGetMediaHistory:    r.clientGetMediaHistory,
 	}
 }

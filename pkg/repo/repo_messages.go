@@ -676,7 +676,40 @@ func (r *repoMessages) GetSharedMedia(peerID int64, peerType int32, documentType
 	})
 
 	return userMessages, nil
+}
 
+func (r *repoMessages) GetMediaHistory(documentType msg.ClientMediaType) ([]*msg.UserMessage, error) {
+	limit := 500
+
+	userMessages := make([]*msg.UserMessage, 0, limit)
+	_ = badgerView(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixMessages))
+		opts.Reverse = true
+		it := txn.NewIterator(opts)
+		for it.Seek(ronak.StrToByte(fmt.Sprintf("%s.", prefixMessages))); it.ValidForPrefix(opts.Prefix); it.Next() {
+			if limit < 0 {
+				break
+			}
+			if it.Item().UserMeta() == byte(documentType) {
+				_ = it.Item().Value(func(val []byte) error {
+					userMessage := new(msg.UserMessage)
+					err := userMessage.Unmarshal(val)
+					if err != nil {
+						return err
+					}
+					userMessages = append(userMessages, userMessage)
+					limit--
+					return nil
+				})
+			}
+		}
+		it.Close()
+		return nil
+	})
+
+	return userMessages, nil
 }
 
 func (r *repoMessages) ReIndex() {
