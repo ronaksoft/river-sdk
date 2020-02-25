@@ -11,6 +11,23 @@ var Botfather = &ishell.Cmd{
 	Name: "Botfather",
 }
 
+var BotGetCommands = &ishell.Cmd{
+	Name: "BotGetCommands",
+	Func: func(c *ishell.Context) {
+		req := msg.BotGetCommands{}
+		req.Peer = &msg.InputPeer{}
+		req.Peer.Type = fnGetPeerType(c)
+		req.Peer.ID = fnGetBotID(c)
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_BotGetCommands, reqBytes, reqDelegate); err != nil {
+			_Log.Error("EnqueueCommand failed", zap.Error(err))
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
 var BotStart = &ishell.Cmd{
 	Name: "BotStart",
 	Func: func(c *ishell.Context) {
@@ -31,42 +48,7 @@ var BotStart = &ishell.Cmd{
 	},
 }
 
-var BotSetInfo = &ishell.Cmd{
-	Name: "BotSetInfo",
-	Func: func(c *ishell.Context) {
-		req := msg.BotSetInfo{}
-		req.BotID = fnGetBotID(c)
-		req.Owner = _SDK.ConnInfo.UserID
-		req.RandomID = ronak.RandomInt64(0)
-		req.BotCommands = FnGetCommands(c)
-		req.Description = FnGetDescription(c)
-		reqBytes, _ := req.Marshal()
-		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_BotSetInfo, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
-		} else {
-			reqDelegate.RequestID = reqID
-		}
-	},
-}
-
-var BotsGetInfo = &ishell.Cmd{
-	Name: "BotsGetInfo",
-	Func: func(c *ishell.Context) {
-		req := msg.BotGet{}
-		req.Limit = fnGetLimit(c)
-		reqBytes, _ := req.Marshal()
-		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_BotGet, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
-		} else {
-			reqDelegate.RequestID = reqID
-		}
-	},
-}
-
 func init() {
 	Botfather.AddCmd(BotStart)
-	Botfather.AddCmd(BotSetInfo)
-	Botfather.AddCmd(BotsGetInfo)
+	Botfather.AddCmd(BotGetCommands)
 }
