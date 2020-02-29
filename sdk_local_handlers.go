@@ -1548,39 +1548,17 @@ func (r *River) clientGetLastBotKeyboard(in, out *msg.MessageEnvelope, timeoutCB
 		return
 	}
 
-	msgs, _ := repo.Messages.GetMediaHistory(req.MediaType)
+	lastKeyboardMsg, _ := repo.Messages.GetLastBotKeyboard(req.Peer.ID, int32(req.Peer.Type))
 
-	// get users && group IDs
-	userIDs := domain.MInt64B{}
-	groupIDs := domain.MInt64B{}
-	for _, m := range msgs {
-		if m.PeerType == int32(msg.PeerSelf) || m.PeerType == int32(msg.PeerUser) {
-			userIDs[m.PeerID] = true
-		}
-		if m.PeerType == int32(msg.PeerGroup) {
-			groupIDs[m.PeerID] = true
-		}
-		if m.SenderID > 0 {
-			userIDs[m.SenderID] = true
-		}
-		if m.FwdSenderID > 0 {
-			userIDs[m.FwdSenderID] = true
-		}
+	if lastKeyboardMsg == nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: "message not found"})
+		successCB(out)
+		return
 	}
 
-	users := repo.Users.GetMany(userIDs.ToArray())
-	groups := repo.Groups.GetMany(groupIDs.ToArray())
-
-	res := msg.MessagesMany{
-		Messages:   msgs,
-		Users:      users,
-		Groups:     groups,
-		Continuous: false,
-	}
-
-	out.Constructor = msg.C_MessagesMany
+	out.Constructor = msg.C_UserMessage
 	out.RequestID = in.RequestID
-	out.Message, _ = res.Marshal()
+	out.Message, _ = lastKeyboardMsg.Marshal()
 	if successCB != nil {
 		uiexec.Ctx().Exec(func() {
 			successCB(out)
