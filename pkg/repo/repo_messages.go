@@ -697,7 +697,7 @@ func (r *repoMessages) GetMediaHistory(documentType msg.ClientMediaType) ([]*msg
 			}
 
 			msgMtx.Lock()
-			userMessages = append(userMessages,m)
+			userMessages = append(userMessages, m)
 			msgMtx.Unlock()
 			return true
 		}
@@ -712,6 +712,42 @@ func (r *repoMessages) GetMediaHistory(documentType msg.ClientMediaType) ([]*msg
 	_ = stream.Orchestrate(context.Background())
 
 	return userMessages, nil
+}
+
+func (r *repoMessages) GetLastBotKeyboard(peerID int64, peerType int32) (*msg.UserMessage, error) {
+	limit := 1000
+
+	var keyboardMessage *msg.UserMessage
+	_ = badgerView(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		opts.Prefix = getMessagePrefix(peerID, peerType)
+		opts.Reverse = true
+		it := txn.NewIterator(opts)
+		for it.Seek(getMessageKey(peerID, peerType, 1<<31)); it.ValidForPrefix(opts.Prefix); it.Next() {
+			if limit--; limit < 0 {
+				break
+			}
+
+			_ = it.Item().Value(func(val []byte) error {
+				userMessage := new(msg.UserMessage)
+				err := userMessage.Unmarshal(val)
+				if err != nil {
+					return err
+				}
+
+				if userMessage.ReplyMarkup == msg.C_ReplyKeyboardMarkup {
+					keyboardMessage = userMessage
+					it.Close()
+				}
+				return nil
+			})
+		}
+		it.Close()
+		return nil
+	})
+
+	return keyboardMessage, nil
 }
 
 func (r *repoMessages) ReIndex() {

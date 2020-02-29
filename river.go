@@ -216,7 +216,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 			},
 			AppUpdateCB: func(version string, updateAvailable bool, force bool) {
 				if r.mainDelegate != nil {
-					r.mainDelegate.AppUpdate(version,updateAvailable,force)
+					r.mainDelegate.AppUpdate(version, updateAvailable, force)
 				}
 			},
 		},
@@ -668,5 +668,6 @@ func (r *River) registerCommandHandlers() {
 		msg.C_ClientGetCachedMedia:     r.clientGetCachedMedia,
 		msg.C_ClientClearCachedMedia:   r.clientClearCachedMedia,
 		msg.C_ClientGetMediaHistory:    r.clientGetMediaHistory,
+		msg.C_ClientGetLastBotKeyboard: r.clientGetLastBotKeyboard,
 	}
 }
