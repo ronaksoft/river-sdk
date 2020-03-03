@@ -736,8 +736,10 @@ func (r *repoMessages) GetLastBotKeyboard(peerID int64, peerType int32) (*msg.Us
 					return err
 				}
 
-				if userMessage.ReplyMarkup == msg.C_ReplyKeyboardMarkup {
-					keyboardMessage = userMessage
+				if userMessage.SenderID == userMessage.PeerID {
+					if userMessage.ReplyMarkup == msg.C_ReplyKeyboardMarkup {
+						keyboardMessage = userMessage
+					}
 					it.Close()
 				}
 				return nil
