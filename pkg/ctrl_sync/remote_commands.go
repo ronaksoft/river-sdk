@@ -1,7 +1,7 @@
 package syncCtrl
 
 import (
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
+	msg "git.ronaksoftware.com/river/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ronak "git.ronaksoftware.com/ronak/toolbox"

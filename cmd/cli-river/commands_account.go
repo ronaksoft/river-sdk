@@ -1,7 +1,7 @@
 package main
 
 import (
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
+	msg "git.ronaksoftware.com/river/msg/chat"
 	"go.uber.org/zap"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )

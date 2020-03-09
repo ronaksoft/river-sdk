@@ -8,7 +8,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/shared"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
+	msg "git.ronaksoftware.com/river/msg/chat"
 )
 
 // getAccessHash

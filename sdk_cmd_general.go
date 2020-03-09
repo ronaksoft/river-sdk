@@ -5,7 +5,7 @@ import (
 	"crypto/rsa"
 	"encoding/binary"
 	"fmt"
-	"git.ronaksoftware.com/ronak/riversdk/msg/chat"
+	"git.ronaksoftware.com/river/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"

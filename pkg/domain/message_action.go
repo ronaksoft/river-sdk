@@ -1,7 +1,7 @@
 package domain
 
 import (
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
+	msg "git.ronaksoftware.com/river/msg/chat"
 )
 
 const (

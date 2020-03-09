@@ -1,3 +1,5 @@
+# git.ronaksoftware.com/river/msg v0.0.0-20200309102445-b9446a82924f
+git.ronaksoftware.com/river/msg/chat
 # git.ronaksoftware.com/ronak/toolbox v1.1.6
 git.ronaksoftware.com/ronak/toolbox
 git.ronaksoftware.com/ronak/toolbox/logger
@@ -111,31 +113,9 @@ github.com/gocql/gocql/internal/murmur
 github.com/gocql/gocql/internal/streams
 # github.com/gogo/protobuf v1.3.1
 github.com/gogo/protobuf/gogoproto
-github.com/gogo/protobuf/plugin/compare
-github.com/gogo/protobuf/plugin/defaultcheck
-github.com/gogo/protobuf/plugin/description
-github.com/gogo/protobuf/plugin/embedcheck
-github.com/gogo/protobuf/plugin/enumstringer
-github.com/gogo/protobuf/plugin/equal
-github.com/gogo/protobuf/plugin/face
-github.com/gogo/protobuf/plugin/gostring
-github.com/gogo/protobuf/plugin/marshalto
-github.com/gogo/protobuf/plugin/oneofcheck
-github.com/gogo/protobuf/plugin/populate
-github.com/gogo/protobuf/plugin/size
-github.com/gogo/protobuf/plugin/stringer
-github.com/gogo/protobuf/plugin/testgen
-github.com/gogo/protobuf/plugin/union
-github.com/gogo/protobuf/plugin/unmarshal
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/protoc-gen-gogo/descriptor
-github.com/gogo/protobuf/protoc-gen-gogo/generator
-github.com/gogo/protobuf/protoc-gen-gogo/generator/internal/remap
-github.com/gogo/protobuf/protoc-gen-gogo/grpc
-github.com/gogo/protobuf/protoc-gen-gogo/plugin
-github.com/gogo/protobuf/vanity
-github.com/gogo/protobuf/vanity/command
-# github.com/golang/protobuf v1.3.1
+# github.com/golang/protobuf v1.3.2
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
@@ -227,7 +207,7 @@ github.com/pkg/errors
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/internal
 github.com/prometheus/client_golang/prometheus/promhttp
-# github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90
+# github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4
 github.com/prometheus/client_model/go
 # github.com/prometheus/common v0.4.1
 github.com/prometheus/common/expfmt
@@ -336,10 +316,12 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# google.golang.org/genproto v0.0.0-20180817151627-c66870c02cf8
+# google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.21.0
+# google.golang.org/grpc v1.27.1
 google.golang.org/grpc
+google.golang.org/grpc/attributes
+google.golang.org/grpc/backoff
 google.golang.org/grpc/balancer
 google.golang.org/grpc/balancer/base
 google.golang.org/grpc/balancer/roundrobin
@@ -355,10 +337,13 @@ google.golang.org/grpc/internal
 google.golang.org/grpc/internal/backoff
 google.golang.org/grpc/internal/balancerload
 google.golang.org/grpc/internal/binarylog
+google.golang.org/grpc/internal/buffer
 google.golang.org/grpc/internal/channelz
 google.golang.org/grpc/internal/envconfig
 google.golang.org/grpc/internal/grpcrand
 google.golang.org/grpc/internal/grpcsync
+google.golang.org/grpc/internal/resolver/dns
+google.golang.org/grpc/internal/resolver/passthrough
 google.golang.org/grpc/internal/syscall
 google.golang.org/grpc/internal/transport
 google.golang.org/grpc/keepalive
@@ -366,8 +351,7 @@ google.golang.org/grpc/metadata
 google.golang.org/grpc/naming
 google.golang.org/grpc/peer
 google.golang.org/grpc/resolver
-google.golang.org/grpc/resolver/dns
-google.golang.org/grpc/resolver/passthrough
+google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap

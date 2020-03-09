@@ -1,6 +1,7 @@
 module git.ronaksoftware.com/ronak/riversdk
 
 require (
+	git.ronaksoftware.com/river/msg v0.0.0-20200309102445-b9446a82924f
 	git.ronaksoftware.com/ronak/toolbox v1.1.6
 	github.com/RoaringBitmap/roaring v0.4.18 // indirect
 	github.com/VictoriaMetrics/fastcache v1.5.7 // indirect
@@ -31,7 +32,6 @@ require (
 	github.com/getsentry/sentry-go v0.1.3
 	github.com/gobwas/pool v0.2.0
 	github.com/gobwas/ws v1.0.2
-	github.com/gogo/protobuf v1.3.1
 	github.com/gorilla/websocket v1.4.0
 	github.com/iRezaaa/mobile v0.0.0-20191126111539-45e4d750f768 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
@@ -66,7 +66,6 @@ require (
 	go.uber.org/zap v1.10.0
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	golang.org/x/text v0.3.2 // indirect
-	google.golang.org/grpc v1.21.0
 	gopkg.in/abiosoft/ishell.v2 v2.0.0
 )
 

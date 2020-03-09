@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
+	msg "git.ronaksoftware.com/river/msg/chat"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )
 

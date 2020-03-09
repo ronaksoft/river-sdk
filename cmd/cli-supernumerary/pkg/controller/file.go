@@ -10,7 +10,7 @@ import (
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/shared"
 
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
+	msg "git.ronaksoftware.com/river/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 )
 

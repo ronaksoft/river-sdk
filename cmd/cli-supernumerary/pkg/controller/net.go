@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/shared"
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
+	msg "git.ronaksoftware.com/river/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"github.com/gorilla/websocket"
 )

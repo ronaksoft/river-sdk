@@ -2,7 +2,7 @@ package fileCtrl_test
 
 import (
 	"crypto/md5"
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
+	msg "git.ronaksoftware.com/river/msg/chat"
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	networkCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"

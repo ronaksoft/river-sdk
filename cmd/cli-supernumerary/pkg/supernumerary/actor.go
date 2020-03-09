@@ -11,7 +11,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/controller"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/executer"
 	"git.ronaksoftware.com/ronak/riversdk/cmd/cli-supernumerary/pkg/shared"
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
+	msg "git.ronaksoftware.com/river/msg/chat"
 )
 
 // Actor indicator as user

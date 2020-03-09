@@ -2,7 +2,7 @@ package riversdk
 
 import (
 	"fmt"
-	msg "git.ronaksoftware.com/ronak/riversdk/msg/chat"
+	msg "git.ronaksoftware.com/river/msg/chat"
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"

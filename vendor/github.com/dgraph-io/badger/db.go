@@ -229,9 +229,9 @@ func Open(opt Options) (db *DB, err error) {
 	}
 	var dirLockGuard, valueDirLockGuard *directoryLockGuard
 	dirLockGuard, err = acquireDirectoryLock(opt.Dir, lockFile, opt.ReadOnly)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	if err != nil {
+		return nil, err
+	}
 	defer func() {
 		if dirLockGuard != nil {
 			_ = dirLockGuard.release()
@@ -239,9 +239,9 @@ func Open(opt Options) (db *DB, err error) {
 	}()
 	if absValueDir != absDir {
 		valueDirLockGuard, err = acquireDirectoryLock(opt.ValueDir, lockFile, opt.ReadOnly)
-		// if err != nil {
-		// 	return nil, err
-		// }
+		if err != nil {
+			return nil, err
+		}
 		defer func() {
 			if valueDirLockGuard != nil {
 				_ = valueDirLockGuard.release()
