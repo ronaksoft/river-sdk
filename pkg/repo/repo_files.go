@@ -3,8 +3,8 @@ package repo
 import (
 	"context"
 	"fmt"
-	msg "git.ronaksoftware.com/river/msg/chat"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"git.ronaksoftware.com/river/msg/chat"
+	"git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
 	"github.com/dgraph-io/badger/pb"
 	"mime"
@@ -192,19 +192,20 @@ func saveMessageMedia(txn *badger.Txn, m *msg.UserMessage) error {
 		}
 
 		err = saveFile(txn, &msg.ClientFile{
-			ClusterID:  md.Doc.ClusterID,
-			FileID:     md.Doc.ID,
-			AccessHash: md.Doc.AccessHash,
-			Type:       msg.Message,
-			MimeType:   md.Doc.MimeType,
-			Extension:  fileExt,
-			UserID:     0,
-			GroupID:    0,
-			FileSize:   int64(md.Doc.FileSize),
-			MessageID:  m.ID,
-			PeerID:     m.PeerID,
-			PeerType:   m.PeerType,
-			Version:    md.Doc.Version,
+			ClusterID:   md.Doc.ClusterID,
+			FileID:      md.Doc.ID,
+			AccessHash:  md.Doc.AccessHash,
+			Type:        msg.Message,
+			MimeType:    md.Doc.MimeType,
+			Extension:   fileExt,
+			UserID:      0,
+			GroupID:     0,
+			FileSize:    int64(md.Doc.FileSize),
+			MessageID:   m.ID,
+			PeerID:      m.PeerID,
+			PeerType:    m.PeerType,
+			Version:     md.Doc.Version,
+			MD5Checksum: md.Doc.MD5Checksum,
 		})
 		if err != nil {
 			return err
