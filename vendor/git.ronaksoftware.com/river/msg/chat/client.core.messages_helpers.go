@@ -257,6 +257,7 @@ func (p *poolClientFile) Get() *ClientFile {
 	x.PeerType = 0
 	x.Version = 0
 	x.Extension = ""
+	x.MD5Checksum = ""
 	return x
 }
 

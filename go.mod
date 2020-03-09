@@ -1,7 +1,7 @@
 module git.ronaksoftware.com/ronak/riversdk
 
 require (
-	git.ronaksoftware.com/river/msg v0.0.0-20200309102445-b9446a82924f
+	git.ronaksoftware.com/river/msg v0.0.0-20200309105733-ead2eaf7f0ac
 	git.ronaksoftware.com/ronak/toolbox v1.1.6
 	github.com/RoaringBitmap/roaring v0.4.18 // indirect
 	github.com/VictoriaMetrics/fastcache v1.5.7 // indirect
