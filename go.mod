@@ -1,13 +1,11 @@
 module git.ronaksoftware.com/ronak/riversdk
 
 require (
-	git.ronaksoftware.com/river/msg v0.0.0-20200309105733-ead2eaf7f0ac
+	git.ronaksoftware.com/river/msg v0.0.0-20200309164919-24e98126c19e
 	git.ronaksoftware.com/ronak/toolbox v1.1.6
 	github.com/RoaringBitmap/roaring v0.4.18 // indirect
-	github.com/VictoriaMetrics/fastcache v1.5.7 // indirect
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
-	github.com/allegro/bigcache/v2 v2.1.6 // indirect
 	github.com/beeker1121/goque v2.1.0+incompatible
 	github.com/blevesearch/bleve v0.8.0
 	github.com/blevesearch/blevex v0.0.0-20180227211930-4b158bb555a3 // indirect
@@ -27,13 +25,11 @@ require (
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
 	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
 	github.com/fatih/color v1.7.0
-	github.com/felixge/tcpkeepalive v0.0.0-20160804073959-5bb0b2dea91e // indirect
 	github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/getsentry/sentry-go v0.1.3
 	github.com/gobwas/pool v0.2.0
 	github.com/gobwas/ws v1.0.2
 	github.com/gorilla/websocket v1.4.0
-	github.com/iRezaaa/mobile v0.0.0-20191126111539-45e4d750f768 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/juju/ratelimit v1.0.1
 	github.com/kr/pretty v0.1.0

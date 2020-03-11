@@ -508,6 +508,7 @@ func (p *poolUser) Get() *User {
 	x.Deleted = false
 	x.Blocked = false
 	x.BotInfo = nil
+	x.Official = false
 	return x
 }
 
