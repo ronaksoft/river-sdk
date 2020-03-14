@@ -215,7 +215,7 @@ func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, de
 
 // GetDocumentHash
 func (r *River) GetDocumentHash(clusterID int32, fileID int64, accessHash int64) string {
-	file , err := repo.Files.Get(clusterID,fileID,uint64(accessHash))
+	file, err := repo.Files.Get(clusterID, fileID, uint64(accessHash))
 
 	if err != nil {
 		logs.Warn("Error On GetDocumentHash (Files.Get)",

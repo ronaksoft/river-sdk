@@ -725,7 +725,7 @@ func (r *repoMessages) GetLastBotKeyboard(peerID int64, peerType int32) (*msg.Us
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
 		for it.Seek(getMessageKey(peerID, peerType, 1<<31)); it.ValidForPrefix(opts.Prefix); it.Next() {
-			if limit--; limit < 0 {
+			if limit--; limit < 0 || keyboardMessage != nil {
 				break
 			}
 
@@ -737,7 +737,7 @@ func (r *repoMessages) GetLastBotKeyboard(peerID int64, peerType int32) (*msg.Us
 				}
 
 				if userMessage.SenderID == userMessage.PeerID {
-					if userMessage.ReplyMarkup == msg.C_ReplyKeyboardMarkup {
+					if userMessage.ReplyMarkup == msg.C_ReplyKeyboardMarkup || userMessage.ReplyMarkup == msg.C_ReplyKeyboardForceReply {
 						keyboardMessage = userMessage
 					}
 					it.Close()
