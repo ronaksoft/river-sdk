@@ -301,8 +301,11 @@ func (ctrl *Controller) EnqueueCommand(
 }
 
 // Start queue
-func (ctrl *Controller) Start() {
+func (ctrl *Controller) Start(resetQueue bool) {
 	logs.Info("QueueCtrl started")
+	if resetQueue {
+		_ = os.RemoveAll(ctrl.dataDir)
+	}
 	err := ronak.Try(10, 100 * time.Millisecond, func() error {
 		if q, err := goque.OpenQueue(ctrl.dataDir); err != nil {
 			_ = os.RemoveAll(ctrl.dataDir)
@@ -315,6 +318,7 @@ func (ctrl *Controller) Start() {
 	if err != nil {
 		logs.Fatal("We couldn't initialize the queue", zap.Error(err))
 	}
+
 
 	// Try to resend unsent messages
 	for _, pmsg := range repo.PendingMessages.GetAll() {

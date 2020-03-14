@@ -72,6 +72,9 @@ type RiverConfig struct {
 	OptimizeForLowMemory bool
 	MaxInFlightDownloads int32
 	MaxInFlightUploads   int32
+
+	// Misc
+	ResetQueueOnStartup bool
 }
 
 // River
@@ -110,6 +113,7 @@ type River struct {
 	chOutOfSyncUpdates   chan []*msg.UpdateContainer
 	dbPath               string
 	optimizeForLowMemory bool
+	resetQueueOnStartup  bool
 }
 
 // SetConfig ...
@@ -123,6 +127,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.lastOutOfSyncTime = time.Now().Add(1 * time.Second)
 	r.chOutOfSyncUpdates = make(chan []*msg.UpdateContainer, 500)
 	r.optimizeForLowMemory = conf.OptimizeForLowMemory
+	r.resetQueueOnStartup = conf.ResetQueueOnStartup
 	r.ConnInfo = conf.ConnInfo
 
 	if conf.MaxInFlightDownloads <= 0 {
@@ -266,7 +271,7 @@ func (r *River) Start() error {
 
 	// Start Controllers
 	r.networkCtrl.Start()
-	r.queueCtrl.Start()
+	r.queueCtrl.Start(r.resetQueueOnStartup)
 	r.syncCtrl.Start()
 	r.fileCtrl.Start()
 
