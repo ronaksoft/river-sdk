@@ -159,6 +159,91 @@ func ResultBotSendMessage(out *MessageEnvelope, res *BotSendMessage) {
 	res.MarshalTo(out.Message)
 }
 
+const C_BotEditMessage int64 = 1007063252
+
+type poolBotEditMessage struct {
+	pool sync.Pool
+}
+
+func (p *poolBotEditMessage) Get() *BotEditMessage {
+	x, ok := p.pool.Get().(*BotEditMessage)
+	if !ok {
+		return &BotEditMessage{}
+	}
+	x.Entities = x.Entities[:0]
+	x.ReplyMarkup = 0
+	x.ReplyMarkupData = nil
+	return x
+}
+
+func (p *poolBotEditMessage) Put(x *BotEditMessage) {
+	p.pool.Put(x)
+}
+
+var PoolBotEditMessage = poolBotEditMessage{}
+
+func ResultBotEditMessage(out *MessageEnvelope, res *BotEditMessage) {
+	out.Constructor = C_BotEditMessage
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
+const C_BotSendMedia int64 = 1844738193
+
+type poolBotSendMedia struct {
+	pool sync.Pool
+}
+
+func (p *poolBotSendMedia) Get() *BotSendMedia {
+	x, ok := p.pool.Get().(*BotSendMedia)
+	if !ok {
+		return &BotSendMedia{}
+	}
+	x.ReplyTo = 0
+	return x
+}
+
+func (p *poolBotSendMedia) Put(x *BotSendMedia) {
+	p.pool.Put(x)
+}
+
+var PoolBotSendMedia = poolBotSendMedia{}
+
+func ResultBotSendMedia(out *MessageEnvelope, res *BotSendMedia) {
+	out.Constructor = C_BotSendMedia
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
+const C_BotSaveFilePart int64 = 905437522
+
+type poolBotSaveFilePart struct {
+	pool sync.Pool
+}
+
+func (p *poolBotSaveFilePart) Get() *BotSaveFilePart {
+	x, ok := p.pool.Get().(*BotSaveFilePart)
+	if !ok {
+		return &BotSaveFilePart{}
+	}
+	return x
+}
+
+func (p *poolBotSaveFilePart) Put(x *BotSaveFilePart) {
+	p.pool.Put(x)
+}
+
+var PoolBotSaveFilePart = poolBotSaveFilePart{}
+
+func ResultBotSaveFilePart(out *MessageEnvelope, res *BotSaveFilePart) {
+	out.Constructor = C_BotSaveFilePart
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
 const C_BotUpdateProfile int64 = 2820005221
 
 type poolBotUpdateProfile struct {
@@ -389,6 +474,9 @@ func init() {
 	ConstructorNames[3735815245] = "BotSetInfo"
 	ConstructorNames[911895569] = "BotGet"
 	ConstructorNames[2371725696] = "BotSendMessage"
+	ConstructorNames[1007063252] = "BotEditMessage"
+	ConstructorNames[1844738193] = "BotSendMedia"
+	ConstructorNames[905437522] = "BotSaveFilePart"
 	ConstructorNames[2820005221] = "BotUpdateProfile"
 	ConstructorNames[1891806754] = "BotSetCallbackAnswer"
 	ConstructorNames[345706640] = "BotGetCallbackAnswer"
