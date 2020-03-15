@@ -718,6 +718,7 @@ func (r *repoMessages) GetLastBotKeyboard(peerID int64, peerType int32) (*msg.Us
 	limit := 1000
 
 	var keyboardMessage *msg.UserMessage
+	stop := false
 	_ = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.PrefetchValues = false
@@ -725,7 +726,7 @@ func (r *repoMessages) GetLastBotKeyboard(peerID int64, peerType int32) (*msg.Us
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
 		for it.Seek(getMessageKey(peerID, peerType, 1<<31)); it.ValidForPrefix(opts.Prefix); it.Next() {
-			if limit--; limit < 0 || keyboardMessage != nil {
+			if limit--; limit < 0 || stop {
 				break
 			}
 
@@ -740,7 +741,7 @@ func (r *repoMessages) GetLastBotKeyboard(peerID int64, peerType int32) (*msg.Us
 					if userMessage.ReplyMarkup == msg.C_ReplyKeyboardMarkup || userMessage.ReplyMarkup == msg.C_ReplyKeyboardForceReply {
 						keyboardMessage = userMessage
 					}
-					it.Close()
+					stop = true
 				}
 				return nil
 			})
