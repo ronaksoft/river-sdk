@@ -128,6 +128,33 @@ func ResultContactsDelete(out *MessageEnvelope, res *ContactsDelete) {
 	res.MarshalTo(out.Message)
 }
 
+const C_ContactsDeleteAll int64 = 14552524
+
+type poolContactsDeleteAll struct {
+	pool sync.Pool
+}
+
+func (p *poolContactsDeleteAll) Get() *ContactsDeleteAll {
+	x, ok := p.pool.Get().(*ContactsDeleteAll)
+	if !ok {
+		return &ContactsDeleteAll{}
+	}
+	return x
+}
+
+func (p *poolContactsDeleteAll) Put(x *ContactsDeleteAll) {
+	p.pool.Put(x)
+}
+
+var PoolContactsDeleteAll = poolContactsDeleteAll{}
+
+func ResultContactsDeleteAll(out *MessageEnvelope, res *ContactsDeleteAll) {
+	out.Constructor = C_ContactsDeleteAll
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
 const C_ContactsBlock int64 = 2900371089
 
 type poolContactsBlock struct {
@@ -357,6 +384,7 @@ func init() {
 	ConstructorNames[1410714478] = "ContactsAdd"
 	ConstructorNames[1412732665] = "ContactsGet"
 	ConstructorNames[1750426880] = "ContactsDelete"
+	ConstructorNames[14552524] = "ContactsDeleteAll"
 	ConstructorNames[2900371089] = "ContactsBlock"
 	ConstructorNames[662011773] = "ContactsUnblock"
 	ConstructorNames[1073733371] = "ContactsGetBlocked"
