@@ -92,7 +92,6 @@ func (ctx *uploadContext) prepare() {
 		}
 		ctx.parts <- partIndex
 	}
-
 }
 
 func (ctx *uploadContext) resetUploadedList(ctrl *Controller) {

@@ -3,6 +3,8 @@ git.ronaksoftware.com/river/msg v0.0.0-20200309164919-24e98126c19e h1:PGnFQ5m0Ms
 git.ronaksoftware.com/river/msg v0.0.0-20200309164919-24e98126c19e/go.mod h1:XPaEbtsQbbfokpsw5+DHKFqpDcRBeB9/Nvgni7n/Qj8=
 git.ronaksoftware.com/river/msg v0.0.0-20200313194609-37b6834b4f69 h1:ut2U+2xRXNJ/iFFMTamRhfFioqk9pAyeY5xtIG8eO5I=
 git.ronaksoftware.com/river/msg v0.0.0-20200313194609-37b6834b4f69/go.mod h1:XPaEbtsQbbfokpsw5+DHKFqpDcRBeB9/Nvgni7n/Qj8=
+git.ronaksoftware.com/river/msg v0.0.0-20200315153733-d41c51d320fa h1:OGMi056nEIt2GiDn3BOzEYVN+ASIRF2M8UH4Oed3jxc=
+git.ronaksoftware.com/river/msg v0.0.0-20200315153733-d41c51d320fa/go.mod h1:XPaEbtsQbbfokpsw5+DHKFqpDcRBeB9/Nvgni7n/Qj8=
 git.ronaksoftware.com/ronak/toolbox v1.1.6 h1:t778crNCYcCfDWUZClWP+Nht4L7A6ZsoBitQvSrtvBU=
 git.ronaksoftware.com/ronak/toolbox v1.1.6/go.mod h1:dVcHnmWljSIhyC/Zswc8vLGgb6mEmDfnkHisSMJC6+8=
 github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9 h1:HD8gA2tkByhMAwYaFAX9w2l7vxvBQ5NMoxDrkhqhtn4=
