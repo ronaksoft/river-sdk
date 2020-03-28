@@ -272,6 +272,61 @@ func ResultBotUpdateProfile(out *MessageEnvelope, res *BotUpdateProfile) {
 	res.MarshalTo(out.Message)
 }
 
+const C_BotUpdatePhoto int64 = 3464973784
+
+type poolBotUpdatePhoto struct {
+	pool sync.Pool
+}
+
+func (p *poolBotUpdatePhoto) Get() *BotUpdatePhoto {
+	x, ok := p.pool.Get().(*BotUpdatePhoto)
+	if !ok {
+		return &BotUpdatePhoto{}
+	}
+	x.File = nil
+	return x
+}
+
+func (p *poolBotUpdatePhoto) Put(x *BotUpdatePhoto) {
+	p.pool.Put(x)
+}
+
+var PoolBotUpdatePhoto = poolBotUpdatePhoto{}
+
+func ResultBotUpdatePhoto(out *MessageEnvelope, res *BotUpdatePhoto) {
+	out.Constructor = C_BotUpdatePhoto
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
+const C_BotRevokeToken int64 = 1804706614
+
+type poolBotRevokeToken struct {
+	pool sync.Pool
+}
+
+func (p *poolBotRevokeToken) Get() *BotRevokeToken {
+	x, ok := p.pool.Get().(*BotRevokeToken)
+	if !ok {
+		return &BotRevokeToken{}
+	}
+	return x
+}
+
+func (p *poolBotRevokeToken) Put(x *BotRevokeToken) {
+	p.pool.Put(x)
+}
+
+var PoolBotRevokeToken = poolBotRevokeToken{}
+
+func ResultBotRevokeToken(out *MessageEnvelope, res *BotRevokeToken) {
+	out.Constructor = C_BotRevokeToken
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
 const C_BotSetCallbackAnswer int64 = 1891806754
 
 type poolBotSetCallbackAnswer struct {
@@ -324,6 +379,33 @@ var PoolBotGetCallbackAnswer = poolBotGetCallbackAnswer{}
 
 func ResultBotGetCallbackAnswer(out *MessageEnvelope, res *BotGetCallbackAnswer) {
 	out.Constructor = C_BotGetCallbackAnswer
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
+const C_BotToken int64 = 3137540096
+
+type poolBotToken struct {
+	pool sync.Pool
+}
+
+func (p *poolBotToken) Get() *BotToken {
+	x, ok := p.pool.Get().(*BotToken)
+	if !ok {
+		return &BotToken{}
+	}
+	return x
+}
+
+func (p *poolBotToken) Put(x *BotToken) {
+	p.pool.Put(x)
+}
+
+var PoolBotToken = poolBotToken{}
+
+func ResultBotToken(out *MessageEnvelope, res *BotToken) {
+	out.Constructor = C_BotToken
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -478,8 +560,11 @@ func init() {
 	ConstructorNames[1844738193] = "BotSendMedia"
 	ConstructorNames[905437522] = "BotSaveFilePart"
 	ConstructorNames[2820005221] = "BotUpdateProfile"
+	ConstructorNames[3464973784] = "BotUpdatePhoto"
+	ConstructorNames[1804706614] = "BotRevokeToken"
 	ConstructorNames[1891806754] = "BotSetCallbackAnswer"
 	ConstructorNames[345706640] = "BotGetCallbackAnswer"
+	ConstructorNames[3137540096] = "BotToken"
 	ConstructorNames[4007077962] = "BotRecalled"
 	ConstructorNames[3344545062] = "BotCallbackAnswer"
 	ConstructorNames[2942918011] = "BotsMany"

@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	msg "git.ronaksoftware.com/river/msg/chat"
+	"git.ronaksoftware.com/river/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"git.ronaksoftware.com/ronak/toolbox"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
 	"github.com/dgraph-io/badger"
@@ -712,6 +712,43 @@ func (r *repoMessages) GetMediaHistory(documentType msg.ClientMediaType) ([]*msg
 	_ = stream.Orchestrate(context.Background())
 
 	return userMessages, nil
+}
+
+func (r *repoMessages) SearchBySender(senderID int64, peerID int64, limit int32) []*msg.UserMessage {
+	userMessages := make([]*msg.UserMessage, 0, limit)
+	_ = badgerView(func(txn *badger.Txn) error {
+		st := r.badger.NewStream()
+		st.Prefix = ronak.StrToByte(prefixMessages)
+		st.ChooseKey = func(item *badger.Item) bool {
+			m := &msg.UserMessage{}
+			err := item.Value(func(val []byte) error {
+				return m.Unmarshal(val)
+			})
+			if err != nil {
+				return false
+			}
+
+			if m.SenderID == senderID {
+				return true
+			}
+			return true
+		}
+		st.Send = func(list *pb.KVList) error {
+			if int32(len(userMessages)) > limit {
+				return nil
+			}
+			for _, kv := range list.Kv {
+				m := &msg.UserMessage{}
+				if err := m.Unmarshal(kv.Value); err == nil {
+					userMessages = append(userMessages, m)
+				}
+			}
+			return nil
+		}
+		return st.Orchestrate(context.Background())
+	})
+	return userMessages
+
 }
 
 func (r *repoMessages) GetLastBotKeyboard(peerID int64, peerType int32) (*msg.UserMessage, error) {

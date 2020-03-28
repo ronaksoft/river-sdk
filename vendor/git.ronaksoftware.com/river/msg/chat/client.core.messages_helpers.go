@@ -72,6 +72,7 @@ func (p *poolClientGlobalSearch) Get() *ClientGlobalSearch {
 	x.Text = ""
 	x.LabelIDs = x.LabelIDs[:0]
 	x.Peer = nil
+	x.SenderID = 0
 	return x
 }
 
