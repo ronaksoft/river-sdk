@@ -1,6 +1,7 @@
 package queueCtrl
 
 import (
+	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"os"
@@ -36,7 +37,8 @@ type Controller struct {
 	dataDir     string
 	rateLimiter *ratelimit.Bucket
 	waitingList *goque.Queue
-	network     *networkCtrl.Controller
+	networkCtrl *networkCtrl.Controller
+	fileCtrl    *fileCtrl.Controller
 
 	// Internal Flags
 	distributorLock    sync.Mutex
@@ -48,7 +50,7 @@ type Controller struct {
 }
 
 // New
-func New(network *networkCtrl.Controller, dataDir string) (*Controller, error) {
+func New(fileCtrl *fileCtrl.Controller, network *networkCtrl.Controller, dataDir string) (*Controller, error) {
 	ctrl := new(Controller)
 	ctrl.dataDir = filepath.Join(dataDir, "queue")
 	ctrl.rateLimiter = ratelimit.NewBucket(time.Second, 20)
@@ -57,7 +59,8 @@ func New(network *networkCtrl.Controller, dataDir string) (*Controller, error) {
 	}
 
 	ctrl.cancelledRequest = make(map[int64]bool)
-	ctrl.network = network
+	ctrl.networkCtrl = network
+	ctrl.fileCtrl = fileCtrl
 	return ctrl, nil
 }
 
@@ -67,7 +70,7 @@ func New(network *networkCtrl.Controller, dataDir string) (*Controller, error) {
 func (ctrl *Controller) distributor() {
 	for {
 		// Wait until network is available
-		ctrl.network.WaitForNetwork()
+		ctrl.networkCtrl.WaitForNetwork()
 
 		ctrl.distributorLock.Lock()
 		if ctrl.waitingList.Length() == 0 {
@@ -135,7 +138,7 @@ func (ctrl *Controller) executor(req request) {
 	reqCB.DepartureTime = time.Now()
 
 	// Try to send it over wire, if error happened put it back into the queue
-	if err := ctrl.network.SendWebsocket(req.MessageEnvelope, false); err != nil {
+	if err := ctrl.networkCtrl.SendWebsocket(req.MessageEnvelope, false); err != nil {
 		logs.Error("QueueCtrl got error from NetCtrl", zap.Error(err))
 		logs.Info("QueueCtrl re-push the request into the queue")
 		ctrl.addToWaitingList(&req)
@@ -223,7 +226,7 @@ func (ctrl *Controller) RealtimeCommand(
 		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, domain.WebsocketRequestTime, timeoutCB, isUICallback,
 	)
 	execBlock := func(reqID uint64, req *msg.MessageEnvelope) {
-		err := ctrl.network.SendWebsocket(req, blockingMode)
+		err := ctrl.networkCtrl.SendWebsocket(req, blockingMode)
 		if err != nil {
 			logs.Warn("QueueCtrl got error from NetCtrl",
 				zap.String("Error", err.Error()),
@@ -306,7 +309,7 @@ func (ctrl *Controller) Start(resetQueue bool) {
 	if resetQueue {
 		_ = os.RemoveAll(ctrl.dataDir)
 	}
-	err := ronak.Try(10, 100 * time.Millisecond, func() error {
+	err := ronak.Try(10, 100*time.Millisecond, func() error {
 		if q, err := goque.OpenQueue(ctrl.dataDir); err != nil {
 			_ = os.RemoveAll(ctrl.dataDir)
 			return err
@@ -319,31 +322,45 @@ func (ctrl *Controller) Start(resetQueue bool) {
 		logs.Fatal("We couldn't initialize the queue", zap.Error(err))
 	}
 
-
 	// Try to resend unsent messages
 	for _, pmsg := range repo.PendingMessages.GetAll() {
 		switch pmsg.MediaType {
 		case msg.InputMediaTypeEmpty:
-			// it will be MessagesSend
-			req := repo.PendingMessages.ToMessagesSend(pmsg)
-			reqBytes, _ := req.Marshal()
-			ctrl.EnqueueCommand(&msg.MessageEnvelope{
-				Constructor: msg.C_MessagesSend,
-				RequestID:   uint64(req.RandomID),
-				Message:     reqBytes,
-			}, nil, nil, false)
-		default:
-			// it will be MessagesSendMedia
-			req := repo.PendingMessages.ToMessagesSendMedia(pmsg)
-			if req == nil {
-				continue
+			if resetQueue {
+				repo.PendingMessages.Delete(pmsg.ID)
+			} else {
+				// it will be MessagesSend
+				req := repo.PendingMessages.ToMessagesSend(pmsg)
+				reqBytes, _ := req.Marshal()
+				ctrl.EnqueueCommand(&msg.MessageEnvelope{
+					Constructor: msg.C_MessagesSend,
+					RequestID:   uint64(req.RandomID),
+					Message:     reqBytes,
+				}, nil, nil, false)
 			}
-			reqBytes, _ := req.Marshal()
-			ctrl.EnqueueCommand(&msg.MessageEnvelope{
-				Constructor: msg.C_MessagesSendMedia,
-				RequestID:   uint64(req.RandomID),
-				Message:     reqBytes,
-			}, nil, nil, false)
+
+		default:
+			if resetQueue {
+				_ = repo.PendingMessages.Delete(pmsg.ID)
+				uploadRequest, ok := ctrl.fileCtrl.GetUploadRequest(pmsg.FileID)
+				if !ok {
+					continue
+				}
+				ctrl.fileCtrl.CancelUploadRequest(uploadRequest.GetID())
+			} else {
+				// it will be MessagesSendMedia
+				req := repo.PendingMessages.ToMessagesSendMedia(pmsg)
+				if req == nil {
+					continue
+				}
+				reqBytes, _ := req.Marshal()
+				ctrl.EnqueueCommand(&msg.MessageEnvelope{
+					Constructor: msg.C_MessagesSendMedia,
+					RequestID:   uint64(req.RandomID),
+					Message:     reqBytes,
+				}, nil, nil, false)
+			}
+
 		}
 	}
 
