@@ -194,7 +194,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	})
 
 	// Initialize queueController
-	if q, err := queueCtrl.New(r.networkCtrl, r.dbPath); err != nil {
+	if q, err := queueCtrl.New(r.fileCtrl, r.networkCtrl, r.dbPath); err != nil {
 		logs.Fatal("We couldn't initialize MessageQueue",
 			zap.String("Error", err.Error()),
 		)
