@@ -219,6 +219,7 @@ func (ctrl *Controller) labelsMany(e *msg.MessageEnvelope) {
 	return
 }
 
+// labelItems
 func (ctrl *Controller) labelItems(e *msg.MessageEnvelope) {
 	u := &msg.LabelItems{}
 	err := u.Unmarshal(e.Message)

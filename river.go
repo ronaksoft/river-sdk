@@ -302,22 +302,6 @@ func (r *River) Start() error {
 	return nil
 }
 
-func (r *River) Migrate() int {
-	ver := r.ConnInfo.Version
-	for {
-		if f, ok := funcHolders[ver]; ok {
-			f(r)
-			ver++
-		} else {
-			if r.ConnInfo.Version != ver {
-				r.ConnInfo.Version = ver
-				r.ConnInfo.Save()
-			}
-			return ver
-		}
-	}
-}
-
 func (r *River) onNetworkConnect() (err error) {
 	domain.WindowLog(fmt.Sprintf("Connected: %s", domain.StartTime.Format(time.Kitchen)))
 	var serverUpdateID int64
