@@ -1355,7 +1355,7 @@ func (r *River) clientGlobalSearch(in, out *msg.MessageEnvelope, timeoutCB domai
 		}
 
 	}else if req.SenderID != 0 {
-		msgs = repo.Messages.SearchBySenderID()
+		msgs = repo.Messages.SearchBySender(req.SenderID,req.Peer.ID,req.Limit)
 	} else if req.Peer != nil {
 		msgs = repo.Messages.SearchTextByPeerID(searchPhrase, req.Peer.ID, req.Limit)
 	} else {
