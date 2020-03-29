@@ -10,9 +10,10 @@ package repo
 */
 
 type MessageSearch struct {
-	Type   string `json:"type"`
-	Body   string `json:"body"`
-	PeerID string `json:"peer_id"`
+	Type     string `json:"type"`
+	Body     string `json:"body"`
+	PeerID   string `json:"peer_id"`
+	SenderID string `json:"sender_id"`
 }
 
 type UserSearch struct {
