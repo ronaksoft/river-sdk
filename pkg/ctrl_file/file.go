@@ -600,10 +600,13 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 		thumbPath = thumbPath[7:]
 	}
 
+
 	if _, err := os.Stat(filePath); err != nil {
 		logs.Warn("FileCtrl got error on upload message document (thumbnail)", zap.Error(err))
 		return
 	}
+
+
 	if thumbPath != "" {
 		if _, err := os.Stat(thumbPath); err != nil {
 			logs.Warn("FileCtrl got error on upload message document (thumbnail)", zap.Error(err))

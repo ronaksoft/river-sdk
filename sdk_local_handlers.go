@@ -534,8 +534,10 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 	case msg.InputMediaTypeContact, msg.InputMediaTypeDocument, msg.InputMediaTypeGeoLocation:
 		// This will be used as next requestID
 		req.RandomID = domain.SequentialUniqueID()
+
 		// Insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 		dbID := -domain.SequentialUniqueID()
+
 		res, err := repo.PendingMessages.SaveMessageMedia(dbID, r.ConnInfo.UserID, req)
 		if err != nil {
 			e := &msg.Error{}
