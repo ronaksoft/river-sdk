@@ -70,6 +70,33 @@ func ResultFileGet(out *MessageEnvelope, res *FileGet) {
 	res.MarshalTo(out.Message)
 }
 
+const C_FileGetBySha256 int64 = 2768049463
+
+type poolFileGetBySha256 struct {
+	pool sync.Pool
+}
+
+func (p *poolFileGetBySha256) Get() *FileGetBySha256 {
+	x, ok := p.pool.Get().(*FileGetBySha256)
+	if !ok {
+		return &FileGetBySha256{}
+	}
+	return x
+}
+
+func (p *poolFileGetBySha256) Put(x *FileGetBySha256) {
+	p.pool.Put(x)
+}
+
+var PoolFileGetBySha256 = poolFileGetBySha256{}
+
+func ResultFileGetBySha256(out *MessageEnvelope, res *FileGetBySha256) {
+	out.Constructor = C_FileGetBySha256
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
 const C_File int64 = 749574446
 
 type poolFile struct {
@@ -101,5 +128,6 @@ func ResultFile(out *MessageEnvelope, res *File) {
 func init() {
 	ConstructorNames[3766876582] = "FileSavePart"
 	ConstructorNames[4282510672] = "FileGet"
+	ConstructorNames[2768049463] = "FileGetBySha256"
 	ConstructorNames[749574446] = "File"
 }
