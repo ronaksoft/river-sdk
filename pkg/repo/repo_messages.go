@@ -718,7 +718,7 @@ func (r *repoMessages) SearchBySender(senderID int64, peerID int64, limit int32)
 	userMessages := make([]*msg.UserMessage, 0, limit)
 	_ = badgerView(func(txn *badger.Txn) error {
 		st := r.badger.NewStream()
-		st.Prefix = ronak.StrToByte(prefixMessages)
+		st.Prefix = getMessagePrefix(peerID, int32(msg.PeerGroup))
 		st.ChooseKey = func(item *badger.Item) bool {
 			m := &msg.UserMessage{}
 			err := item.Value(func(val []byte) error {
@@ -731,7 +731,7 @@ func (r *repoMessages) SearchBySender(senderID int64, peerID int64, limit int32)
 			if m.SenderID == senderID {
 				return true
 			}
-			return true
+			return false
 		}
 		st.Send = func(list *pb.KVList) error {
 			if int32(len(userMessages)) > limit {
