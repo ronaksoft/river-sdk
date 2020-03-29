@@ -242,6 +242,7 @@ func (r *River) GetDocumentHash(clusterID int32, fileID int64, accessHash int64)
 	return file.MD5Checksum
 }
 
+// CalculateSha256
 func (r *River) CalculateSha256(filePath string) (string, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
