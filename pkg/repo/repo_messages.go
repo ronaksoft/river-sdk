@@ -547,6 +547,7 @@ func (r *repoMessages) SearchText(text string, limit int32) []*msg.UserMessage {
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
 	searchResult, _ := r.msgSearch.Search(searchRequest)
+	searchRequest.Size = int(limit)
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
 			userMessage, _ := getMessageByKey(txn, ronak.StrToByte(hit.ID))
@@ -747,7 +748,8 @@ func (r *repoMessages) SearchBySender(text string, senderID int64, peerID int64,
 		searchRequest = bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t3, t4))
 	}
 
-	searchRequest.SortBy([]string{"-_id"})
+	searchRequest.Size = int(limit)
+	searchRequest.SortBy([]string{"_id"})
 	searchResult, _ := r.msgSearch.Search(searchRequest)
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
