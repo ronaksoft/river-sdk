@@ -747,6 +747,7 @@ func (r *repoMessages) SearchBySender(text string, senderID int64, peerID int64,
 		searchRequest = bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t3, t4))
 	}
 
+	searchRequest.SortBy([]string{"-_id"})
 	searchResult, _ := r.msgSearch.Search(searchRequest)
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
