@@ -253,6 +253,7 @@ func (p *poolInputMediaUploadedDocument) Get() *InputMediaUploadedDocument {
 	x.Thumbnail = nil
 	x.Stickers = x.Stickers[:0]
 	x.Attributes = x.Attributes[:0]
+	x.Entities = x.Entities[:0]
 	return x
 }
 
@@ -280,6 +281,7 @@ func (p *poolInputMediaDocument) Get() *InputMediaDocument {
 	if !ok {
 		return &InputMediaDocument{}
 	}
+	x.Entities = x.Entities[:0]
 	return x
 }
 
@@ -475,6 +477,7 @@ func (p *poolMediaDocument) Get() *MediaDocument {
 	if !ok {
 		return &MediaDocument{}
 	}
+	x.Entities = x.Entities[:0]
 	return x
 }
 
