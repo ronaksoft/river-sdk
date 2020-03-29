@@ -1,7 +1,7 @@
 module git.ronaksoftware.com/ronak/riversdk
 
 require (
-	git.ronaksoftware.com/river/msg v0.0.0-20200329112446-910091624ce6
+	git.ronaksoftware.com/river/msg v0.0.0-20200329144328-79b2d5d6e449
 	git.ronaksoftware.com/ronak/toolbox v1.1.6
 	github.com/RoaringBitmap/roaring v0.4.18 // indirect
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect

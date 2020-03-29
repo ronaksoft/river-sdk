@@ -282,6 +282,8 @@ func (p *poolInputMediaDocument) Get() *InputMediaDocument {
 		return &InputMediaDocument{}
 	}
 	x.Entities = x.Entities[:0]
+	x.Thumbnail = nil
+	x.Attributes = x.Attributes[:0]
 	return x
 }
 
