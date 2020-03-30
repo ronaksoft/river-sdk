@@ -82,7 +82,7 @@ func New(config Config) *Controller {
 	ctrl.httpEndpoint = config.HttpEndpoint
 	ctrl.countryCode = strings.ToUpper(config.CountryCode)
 	if config.WebsocketEndpoint == "" {
-		ctrl.wsEndpoint = domain.WebsocketEndpoint
+		ctrl.wsEndpoint = domain.DefaultWebsocketEndpoint
 	} else {
 		ctrl.wsEndpoint = config.WebsocketEndpoint
 	}
@@ -623,7 +623,9 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 }
 
 // Send encrypt and send request to server and receive and decrypt its response
-func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEnvelope, timeout time.Duration) (*msg.MessageEnvelope, error) {
+func (ctrl *Controller) SendHttp(
+	ctx context.Context, msgEnvelope *msg.MessageEnvelope, timeout time.Duration,
+) (*msg.MessageEnvelope, error) {
 	var totalUploadBytes, totalDownloadBytes int
 	startTime := time.Now()
 
@@ -631,7 +633,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 		ctx = context.Background()
 	}
 	protoMessage := msg.ProtoMessage{
-		AuthID: ctrl.authID,
+		AuthID:     ctrl.authID,
 		MessageKey: make([]byte, 32),
 	}
 	if ctrl.authID == 0 {

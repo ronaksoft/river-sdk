@@ -7,7 +7,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
-	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -91,6 +90,7 @@ func init() {
 	ctrl = networkCtrl.New(networkCtrl.Config{
 		WebsocketEndpoint: "ws://river.ronaksoftware.com",
 		HttpEndpoint:      "http://river.ronaksoftware.com",
+		CountryCode:       "IR",
 	})
 	ctrl.OnMessage = dummyMessageHandler
 	ctrl.OnGeneralError = dummyErrorHandler
@@ -111,31 +111,35 @@ func TestNewController(t *testing.T) {
 			time.Sleep(time.Second)
 		}
 	}()
-	time.Sleep(5000 * time.Second)
-	ctrl.Disconnect()
+	for j := 0; j < 10; j++ {
+		time.Sleep(5 * time.Second)
+		ctrl.Reconnect()
+		ctrl.Reconnect()
+		ctrl.Reconnect()
+	}
+
 	time.Sleep(5 * time.Second)
 
 	ctrl.Stop()
 }
 
-func TestConnect(t *testing.T) {
+func TestStartStop(t *testing.T) {
 	ctrl.Start()
-	wg := sync.WaitGroup{}
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
-		go func() {
-			for i := 0; i < 10; i++ {
-				switch ronak.RandomInt(100) % 3 {
-				case 0:
-					ctrl.Disconnect()
-				case 1, 2:
-					ctrl.Reconnect()
-				}
+	go func() {
+		for {
+			err := ctrl.SendWebsocket(getServerTime(), true)
+			if err != nil {
+				t.Error(err)
 			}
-			wg.Done()
-		}()
+			time.Sleep(time.Second)
+		}
+	}()
+	for j := 0; j < 20; j++ {
+		time.Sleep(5 * time.Second)
+		ctrl.Stop()
+		ctrl.Start()
+		ctrl.Connect()
 	}
-	wg.Wait()
 
 	ctrl.Stop()
 }

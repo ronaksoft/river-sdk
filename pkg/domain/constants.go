@@ -19,7 +19,7 @@ var (
 
 // Global Parameters
 const (
-	WebsocketEndpoint        = "ws://cyrus.river.im"
+	DefaultWebsocketEndpoint = "ws://cyrus.river.im"
 	WebsocketWriteTime       = 3 * time.Second
 	WebsocketRequestTime     = 8 * time.Second
 	WebsocketDialTimeout     = 3 * time.Second
@@ -36,8 +36,6 @@ const (
 	SkContactsGetHash    = "CONTACTS_GET_HASH"
 	SkSystemSalts        = "SERVER_SALTS"
 	SkReIndexTime        = "RE_INDEX_TS"
-	SkLabelMinID         = "LABEL_MIN_ID"
-	SkLabelMaxID         = "LABEL_MAX_ID"
 )
 
 // NetworkStatus network controller status

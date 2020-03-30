@@ -108,9 +108,7 @@ type River struct {
 	mainDelegate  MainDelegate
 	fileDelegate  FileDelegate
 
-	// implements wait 500 ms on out of sync to receive possible missed updates
-	lastOutOfSyncTime    time.Time
-	chOutOfSyncUpdates   chan []*msg.UpdateContainer
+
 	dbPath               string
 	optimizeForLowMemory bool
 	resetQueueOnStartup  bool
@@ -124,8 +122,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	domain.ClientOS = conf.ClientOs
 	domain.ClientVendor = conf.ClientVendor
 
-	r.lastOutOfSyncTime = time.Now().Add(1 * time.Second)
-	r.chOutOfSyncUpdates = make(chan []*msg.UpdateContainer, 500)
 	r.optimizeForLowMemory = conf.OptimizeForLowMemory
 	r.resetQueueOnStartup = conf.ResetQueueOnStartup
 	r.ConnInfo = conf.ConnInfo
