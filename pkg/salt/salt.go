@@ -23,9 +23,8 @@ import (
 */
 
 var (
-	salts      []domain.Slt
-	curSalt    int64
-	lastUpdate time.Time
+	salts   []domain.Slt
+	curSalt int64
 )
 
 func Get() int64 {
@@ -76,10 +75,12 @@ func UpdateSalt() bool {
 			b, _ := json.Marshal(sysSalts[idx:])
 			err = repo.System.SaveString(domain.SkSystemSalts, string(b))
 			if err != nil {
-				logs.Warn("UpdateSalt got error on save salt to db", zap.Error(err), zap.String("Salts", ronak.ByteToStr(b)))
+				logs.Warn("UpdateSalt got error on save salt to db",
+					zap.Error(err),
+					zap.String("Salts", ronak.ByteToStr(b)),
+				)
 			}
 			saltFound = true
-			lastUpdate = time.Now()
 			break
 		}
 		if !saltFound {

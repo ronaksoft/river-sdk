@@ -127,7 +127,7 @@ func executeRemoteCommand(r *River, requestID uint64, constructor int64, command
 
 				if reqCB.TimeoutCallback != nil {
 					if reqCB.IsUICallback {
-						uiexec.Ctx().Exec(func() { reqCB.TimeoutCallback() })
+						uiexec.Exec(func() { reqCB.TimeoutCallback() })
 					} else {
 						reqCB.TimeoutCallback()
 					}
@@ -472,9 +472,6 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 	r.syncCtrl.Stop()
 	r.queueCtrl.Stop()
 	r.fileCtrl.Stop()
-
-	// Close UI Executor
-	uiexec.Ctx().Stop()
 
 	repo.DropAll()
 	r.ResetAuthKey()

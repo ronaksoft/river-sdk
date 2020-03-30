@@ -1,85 +1,20 @@
 package uiexec
 
-import (
-	"sync"
-	"time"
-
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-)
-
 var (
-	mx             sync.Mutex
-	exec           *UIExecutor
-	uiExecInterval = 100 * time.Millisecond
+	funcChan = make(chan func(), 100)
 )
-
-// UIExecutor layer
-type UIExecutor struct {
-	chUIExecutor chan func()
-	chStop       chan bool
-}
 
 func init() {
-	Ctx()
-}
-
-// InitUIExec added for clarify cuz init will initialize this
-func InitUIExec() {
-	Ctx()
-}
-
-// ctx singleton
-func Ctx() *UIExecutor {
-	if exec == nil {
-		mx.Lock()
-		defer mx.Unlock()
-		if exec == nil {
-			exec = &UIExecutor{
-				chUIExecutor: make(chan func(), 100),
-				chStop:       make(chan bool),
-			}
-			exec.Start()
+	go func() {
+		for fn := range funcChan {
+			fn()
 		}
-	}
-	return exec
-}
+	}()
 
-// Start starts UIExecutor listener
-func (c *UIExecutor) Start() {
-	go c.UIExecutor()
-}
-
-// Stop sent stop signal
-func (c *UIExecutor) Stop() {
-	logs.Debug("UIExecutor Stopping")
-
-	select {
-	case c.chStop <- true:
-		logs.Debug("CMD::Stop() sent stop signal")
-	case <-time.After(uiExecInterval):
-		logs.Debug("CMD::Stop() cmd is not started")
-	}
-	exec = nil
-	logs.Debug("UIExecutor Stopped")
 }
 
 // Exec pass given function to UIExecutor buffered channel
-func (c *UIExecutor) Exec(fn func()) {
-	select {
-	case c.chUIExecutor <- fn:
-	case <-time.After(uiExecInterval):
-		logs.Warn("CMD::Exec() cmd is not started")
-	}
+func Exec(fn func()) {
+	funcChan <- fn
 }
 
-// UIExecutor Pass responses to external handler (UI) one by one
-func (c *UIExecutor) UIExecutor() {
-	for {
-		select {
-		case fn := <-c.chUIExecutor:
-			fn()
-		case <-c.chStop:
-			return
-		}
-	}
-}

@@ -208,7 +208,7 @@ func forceUpdateUI(ctrl *Controller, dialogs, contacts bool) {
 	buff, _ := updateEnvelope.Marshal()
 
 	// call external handler
-	uiexec.Ctx().Exec(func() {
+	uiexec.Exec(func() {
 		ctrl.updateReceivedCallback(msg.C_UpdateEnvelope, buff)
 	})
 }
@@ -346,7 +346,7 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 
 	// wrapped to UpdateContainer
 	buff, _ := updContainer.Marshal()
-	uiexec.Ctx().Exec(func() {
+	uiexec.Exec(func() {
 		ctrl.updateReceivedCallback(msg.C_UpdateContainer, buff)
 	})
 
@@ -460,7 +460,7 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer, outO
 
 	// wrapped to UpdateContainer
 	buff, _ := udpContainer.Marshal()
-	uiexec.Ctx().Exec(func() {
+	uiexec.Exec(func() {
 		ctrl.updateReceivedCallback(msg.C_UpdateContainer, buff)
 	})
 
@@ -514,7 +514,7 @@ func (ctrl *Controller) DeletePendingMessage(pm *msg.ClientPendingMessage) {
 	buff, _ := updateEnvelope.Marshal()
 
 	// call external handler
-	uiexec.Ctx().Exec(func() {
+	uiexec.Exec(func() {
 		ctrl.updateReceivedCallback(msg.C_UpdateEnvelope, buff)
 	})
 

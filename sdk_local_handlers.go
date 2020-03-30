@@ -35,7 +35,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		buff, err := res.Marshal()
 		logs.ErrorOnErr("River got error on marshal MessagesDialogs", err)
 		out.Message = buff
-		uiexec.Ctx().Exec(func() {
+		uiexec.Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
@@ -151,7 +151,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	buff, err := res.Marshal()
 	logs.ErrorOnErr("River got error on marshal MessagesDialogs", err)
 	out.Message = buff
-	uiexec.Ctx().Exec(func() {
+	uiexec.Exec(func() {
 		if successCB != nil {
 			successCB(out)
 		}
@@ -177,7 +177,7 @@ func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain
 	out.Constructor = msg.C_Dialog
 	out.Message, _ = res.Marshal()
 
-	uiexec.Ctx().Exec(func() {
+	uiexec.Exec(func() {
 		if successCB != nil {
 			successCB(out)
 		}
@@ -198,7 +198,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		e.Code = "n/a"
 		e.Items = "empty message is not allowed"
 		msg.ResultError(out, e)
-		uiexec.Ctx().Exec(func() {
+		uiexec.Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
@@ -219,7 +219,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		e.Code = "n/a"
 		e.Items = "Failed to save to pendingMessages : " + err.Error()
 		msg.ResultError(out, e)
-		uiexec.Ctx().Exec(func() {
+		uiexec.Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
@@ -246,7 +246,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	// 4. later when queue got processed and server returned response we should check if the requestID
 	//   exist in pendingTable we remove it and insert new message with new id to message table
 	//   invoke new OnUpdate with new proto buffer to inform ui that pending message got delivered
-	uiexec.Ctx().Exec(func() {
+	uiexec.Exec(func() {
 		if successCB != nil {
 			successCB(out)
 		}
@@ -372,7 +372,7 @@ func fillMessagesMany(out *msg.MessageEnvelope, messages []*msg.UserMessage, use
 	out.Constructor = msg.C_MessagesMany
 	out.Message, _ = res.Marshal()
 	if successCB != nil {
-		uiexec.Ctx().Exec(func() {
+		uiexec.Exec(func() {
 			successCB(out)
 		})
 	}
@@ -484,7 +484,7 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 
 		out.Constructor = msg.C_MessagesMany
 		out.Message, _ = res.Marshal()
-		uiexec.Ctx().Exec(func() {
+		uiexec.Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
@@ -544,7 +544,7 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 			e.Code = "n/a"
 			e.Items = "Failed to save to pendingMessages : " + err.Error()
 			msg.ResultError(out, e)
-			uiexec.Ctx().Exec(func() {
+			uiexec.Exec(func() {
 				if successCB != nil {
 					successCB(out)
 				}
@@ -555,7 +555,7 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 		out.Constructor = msg.C_ClientPendingMessage
 		out.Message, _ = res.Marshal()
 
-		uiexec.Ctx().Exec(func() {
+		uiexec.Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
@@ -607,7 +607,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		e.Code = "n/a"
 		e.Items = "Failed to save to pendingMessages : " + err.Error()
 		msg.ResultError(out, e)
-		uiexec.Ctx().Exec(func() {
+		uiexec.Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
@@ -624,7 +624,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	// 4. later when queue got processed and server returned response we should check if the requestID
 	//   exist in pendingTable we remove it and insert new message with new id to message table
 	//   invoke new OnUpdate with new protobuff to inform ui that pending message got delivered
-	uiexec.Ctx().Exec(func() {
+	uiexec.Exec(func() {
 		if successCB != nil {
 			successCB(out)
 		}
@@ -651,7 +651,7 @@ func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 	out.Constructor = msg.C_ContactsMany
 	out.Message, _ = res.Marshal()
 
-	uiexec.Ctx().Exec(func() {
+	uiexec.Exec(func() {
 		if successCB != nil {
 			successCB(out)
 		}
@@ -1106,7 +1106,7 @@ func (r *River) usersGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 
 		out.Constructor = msg.C_UsersMany
 		out.Message, _ = res.Marshal()
-		uiexec.Ctx().Exec(func() {
+		uiexec.Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
@@ -1136,7 +1136,7 @@ func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 
 		out.Constructor = msg.C_UsersMany
 		out.Message, _ = res.Marshal()
-		uiexec.Ctx().Exec(func() {
+		uiexec.Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
@@ -1207,7 +1207,7 @@ func (r *River) labelsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeout
 
 		out.Constructor = msg.C_UsersMany
 		out.Message, _ = res.Marshal()
-		uiexec.Ctx().Exec(func() {
+		uiexec.Exec(func() {
 			if successCB != nil {
 				successCB(out)
 			}
@@ -1330,7 +1330,7 @@ func fillLabelItems(out *msg.MessageEnvelope, messages []*msg.UserMessage, users
 	out.Constructor = msg.C_LabelItems
 	out.Message, _ = res.Marshal()
 	if successCB != nil {
-		uiexec.Ctx().Exec(func() {
+		uiexec.Exec(func() {
 			successCB(out)
 		})
 	}
@@ -1413,7 +1413,7 @@ func (r *River) clientGlobalSearch(in, out *msg.MessageEnvelope, timeoutCB domai
 	out.Constructor = msg.C_ClientSearchResult
 	out.Message, _ = searchResults.Marshal()
 	if successCB != nil {
-		uiexec.Ctx().Exec(func() {
+		uiexec.Exec(func() {
 			successCB(out)
 		})
 	}
@@ -1442,7 +1442,7 @@ func (r *River) clientContactSearch(in, out *msg.MessageEnvelope, timeoutCB doma
 	out.RequestID = in.RequestID
 	out.Message, _ = users.Marshal()
 	if successCB != nil {
-		uiexec.Ctx().Exec(func() {
+		uiexec.Exec(func() {
 			successCB(out)
 		})
 	}
@@ -1463,7 +1463,7 @@ func (r *River) clientGetCachedMedia(in, out *msg.MessageEnvelope, timeoutCB dom
 	out.RequestID = in.RequestID
 	out.Message, _ = res.Marshal()
 	if successCB != nil {
-		uiexec.Ctx().Exec(func() {
+		uiexec.Exec(func() {
 			successCB(out)
 		})
 	}
@@ -1489,7 +1489,7 @@ func (r *River) clientClearCachedMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	out.RequestID = in.RequestID
 	out.Message, _ = res.Marshal()
 	if successCB != nil {
-		uiexec.Ctx().Exec(func() {
+		uiexec.Exec(func() {
 			successCB(out)
 		})
 	}
@@ -1538,7 +1538,7 @@ func (r *River) clientGetMediaHistory(in, out *msg.MessageEnvelope, timeoutCB do
 	out.RequestID = in.RequestID
 	out.Message, _ = res.Marshal()
 	if successCB != nil {
-		uiexec.Ctx().Exec(func() {
+		uiexec.Exec(func() {
 			successCB(out)
 		})
 	}
@@ -1564,7 +1564,7 @@ func (r *River) clientGetLastBotKeyboard(in, out *msg.MessageEnvelope, timeoutCB
 	out.RequestID = in.RequestID
 	out.Message, _ = lastKeyboardMsg.Marshal()
 	if successCB != nil {
-		uiexec.Ctx().Exec(func() {
+		uiexec.Exec(func() {
 			successCB(out)
 		})
 	}

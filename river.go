@@ -9,7 +9,6 @@ import (
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"go.uber.org/zap"
 	"runtime"
 	"sort"
@@ -258,9 +257,6 @@ func (r *River) Start() error {
 	domain.ClientPhone = r.ConnInfo.Phone
 
 	r.loadDeviceToken()
-
-	// init UI Executor
-	uiexec.InitUIExec()
 
 	// Update the current salt
 	salt.UpdateSalt()

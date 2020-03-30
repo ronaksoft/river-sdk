@@ -195,7 +195,7 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 	buff, _ := udpMsg.Marshal()
 
 	// call external handler
-	uiexec.Ctx().Exec(func() {
+	uiexec.Exec(func() {
 		ctrl.updateReceivedCallback(msg.C_UpdateEnvelope, buff)
 	})
 }
