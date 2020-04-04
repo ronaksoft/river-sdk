@@ -170,12 +170,13 @@ func (r *repoMessagesPending) SaveClientMessageMedia(
 	return pm, nil
 }
 
-func (r *repoMessagesPending) UpdateClientMessageMedia(pm *msg.ClientPendingMessage, totalParts int32, fileID int64) error {
+func (r *repoMessagesPending) UpdateClientMessageMedia(pm *msg.ClientPendingMessage, totalParts int32, mediaType msg.InputMediaType, fileLocation *msg.FileLocation) error {
 	csmm := new(msg.ClientSendMessageMedia)
 	_ = csmm.Unmarshal(pm.Media)
 	csmm.FileTotalParts = totalParts
-	csmm.FileID = fileID
 	pm.Media, _ = csmm.Marshal()
+	pm.ServerFile = fileLocation
+	pm.MediaType = mediaType
 
 	bytes, _ := pm.Marshal()
 	return badgerUpdate(func(txn *badger.Txn) error {
@@ -516,6 +517,27 @@ func (r *repoMessagesPending) ToMessagesSendMedia(m *msg.ClientPendingMessage) *
 		uploadedDocument.Attributes = csmm.Attributes
 		uploadedDocument.Caption = csmm.Caption
 		v.MediaData, _ = uploadedDocument.Marshal()
+	case msg.InputMediaTypeDocument:
+		csmm := new(msg.ClientSendMessageMedia)
+		_ = csmm.Unmarshal(m.Media)
+		doc := &msg.InputMediaDocument{
+			Caption:    csmm.Caption,
+			Attributes: csmm.Attributes,
+			Document: &msg.InputDocument{
+				ID:         m.ServerFile.FileID,
+				AccessHash: m.ServerFile.AccessHash,
+				ClusterID:  m.ServerFile.ClusterID,
+			},
+		}
+		if csmm.ThumbID != 0 {
+			doc.Thumbnail = &msg.InputFile{
+				FileID:      csmm.ThumbID,
+				TotalParts:  0,
+				FileName:    "",
+				MD5Checksum: "",
+			}
+		}
+		v.MediaData, _ = doc.Marshal()
 	default:
 		v.MediaData = m.Media
 	}

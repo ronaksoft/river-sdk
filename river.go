@@ -453,18 +453,25 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 		return true
 	}
 
-	err := ronak.Try(3, time.Millisecond*500, func() error {
-		return repo.PendingMessages.UpdateClientMessageMedia(pendingMessage, uploadRequest.TotalParts, uploadRequest.FileID)
-	})
-	if err != nil {
-		logs.Error("Error On UpdateClientMessageMedia", zap.Error(err))
-	}
-
 	req := &msg.ClientSendMessageMedia{}
 	_ = req.Unmarshal(pendingMessage.Media)
 
-	if uploadRequest.AccessHash != 0 && uploadRequest.ClusterID != 0 {
-		req.MediaType = msg.InputMediaTypeDocument
+
+
+	err := ronak.Try(3, time.Millisecond*500, func() error {
+		var fileLoc *msg.FileLocation
+		if uploadRequest.AccessHash != 0 && uploadRequest.ClusterID != 0 {
+			req.MediaType = msg.InputMediaTypeDocument
+			fileLoc = &msg.FileLocation{
+				ClusterID:  uploadRequest.ClusterID,
+				FileID:     uploadRequest.FileID,
+				AccessHash: uploadRequest.AccessHash,
+			}
+		}
+		return repo.PendingMessages.UpdateClientMessageMedia(pendingMessage, uploadRequest.TotalParts, req.MediaType, fileLoc)
+	})
+	if err != nil {
+		logs.Error("Error On UpdateClientMessageMedia", zap.Error(err))
 	}
 
 	// Create SendMessageMedia Request
