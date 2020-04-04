@@ -34,9 +34,9 @@ type Config struct {
 	MaxInflightUploads   int32
 	HttpRequestTimeout   time.Duration
 	PostUploadProcessCB  func(req UploadRequest) bool
-	ProgressChangedCB    func(reqID string, clusterID int32, fileID, accessHash int64, percent int64)
-	CompletedCB          func(reqID string, clusterID int32, fileID, accessHash int64, filePath string)
-	CancelCB             func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool)
+	ProgressChangedCB    func(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64)
+	CompletedCB          func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64)
+	CancelCB             func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool, peerID int64)
 }
 type Controller struct {
 	network            *networkCtrl.Controller
@@ -51,9 +51,9 @@ type Controller struct {
 	httpRequestTimeout time.Duration
 
 	// Callbacks
-	onProgressChanged func(reqID string, clusterID int32, fileID, accessHash int64, percent int64)
-	onCompleted       func(reqID string, clusterID int32, fileID, accessHash int64, filePath string)
-	onCancel          func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool)
+	onProgressChanged func(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64)
+	onCompleted       func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64)
+	onCancel          func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool, peerID int64)
 	postUploadProcess func(req UploadRequest) bool
 }
 
@@ -71,17 +71,17 @@ func New(config Config) *Controller {
 		ctrl.httpRequestTimeout = config.HttpRequestTimeout
 	}
 	if config.CompletedCB == nil {
-		ctrl.onCompleted = func(reqID string, clusterID int32, fileID, accessHash int64, filePath string) {}
+		ctrl.onCompleted = func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64) {}
 	} else {
 		ctrl.onCompleted = config.CompletedCB
 	}
 	if config.ProgressChangedCB == nil {
-		ctrl.onProgressChanged = func(reqID string, clusterID int32, fileID, accessHash int64, percent int64) {}
+		ctrl.onProgressChanged = func(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64) {}
 	} else {
 		ctrl.onProgressChanged = config.ProgressChangedCB
 	}
 	if config.CancelCB == nil {
-		ctrl.onCancel = func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool) {}
+		ctrl.onCancel = func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool, peerID int64) {}
 	} else {
 		ctrl.onCancel = config.CancelCB
 	}
@@ -246,6 +246,7 @@ func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash 
 		return "", err
 	}
 	go func() {
+
 		err = ctrl.download(DownloadRequest{
 			MessageID:        clientFile.MessageID,
 			ClusterID:        clientFile.ClusterID,
@@ -257,6 +258,7 @@ func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash 
 			MaxInFlights:     maxDownloadInFlights,
 			FilePath:         repo.Files.GetFilePath(clientFile),
 			SkipDelegateCall: skipDelegates,
+			PeerID:           clientFile.PeerID,
 		})
 		logs.WarnOnErr("Error On DownloadAsync", err,
 			zap.Int32("ClusterID", clusterID),
@@ -308,6 +310,7 @@ func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash u
 			MaxInFlights:     maxDownloadInFlights,
 			FilePath:         filePath,
 			SkipDelegateCall: skipDelegate,
+			PeerID:           clientFile.PeerID,
 		})
 	}
 
@@ -503,17 +506,17 @@ func (ctrl *Controller) download(req DownloadRequest) error {
 		if os.IsNotExist(err) {
 			ds.file, err = os.Create(req.TempFilePath)
 			if err != nil {
-				ctrl.onCancel(req.GetID(), req.ClusterID, req.FileID, int64(req.AccessHash), true)
+				ctrl.onCancel(req.GetID(), req.ClusterID, req.FileID, int64(req.AccessHash), true, req.PeerID)
 				return err
 			}
 		} else {
-			ctrl.onCancel(req.GetID(), req.ClusterID, req.FileID, int64(req.AccessHash), true)
+			ctrl.onCancel(req.GetID(), req.ClusterID, req.FileID, int64(req.AccessHash), true, req.PeerID)
 			return err
 		}
 	} else {
 		ds.file, err = os.OpenFile(req.TempFilePath, os.O_RDWR, 0666)
 		if err != nil {
-			ctrl.onCancel(req.GetID(), req.ClusterID, req.FileID, int64(req.AccessHash), true)
+			ctrl.onCancel(req.GetID(), req.ClusterID, req.FileID, int64(req.AccessHash), true, req.PeerID)
 			return err
 		}
 	}
@@ -521,7 +524,7 @@ func (ctrl *Controller) download(req DownloadRequest) error {
 	if req.FileSize > 0 {
 		err := os.Truncate(req.TempFilePath, req.FileSize)
 		if err != nil {
-			ctrl.onCancel(req.GetID(), req.ClusterID, req.FileID, int64(req.AccessHash), true)
+			ctrl.onCancel(req.GetID(), req.ClusterID, req.FileID, int64(req.AccessHash), true, req.PeerID)
 			return err
 		}
 		dividend := int32(req.FileSize / int64(req.ChunkSize))
@@ -566,6 +569,7 @@ func (ctrl *Controller) UploadUserPhoto(filePath string) (reqID string) {
 		FileID:         fileID,
 		MaxInFlights:   maxUploadInFlights,
 		FilePath:       filePath,
+		PeerID:         0,
 	})
 	logs.WarnOnErr("Error On UploadUserPhoto", err)
 	reqID = GetRequestID(0, fileID, 0)
@@ -584,12 +588,13 @@ func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) (reqID 
 		FileID:         fileID,
 		MaxInFlights:   maxUploadInFlights,
 		FilePath:       filePath,
+		PeerID:         groupID,
 	})
 	logs.WarnOnErr("Error On UploadGroupPhoto", err)
 	reqID = GetRequestID(0, fileID, 0)
 	return
 }
-func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPath string, fileID, thumbID int64, fileSha256 string) {
+func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPath string, fileID, thumbID int64, fileSha256 string, peerID int64) {
 	if _, err := os.Stat(filePath); err != nil {
 		logs.Warn("FileCtrl got error on upload message document (thumbnail)", zap.Error(err))
 		return
@@ -611,6 +616,7 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 		ThumbPath:    thumbPath,
 		MaxInFlights: maxUploadInFlights,
 		FileSha256:   fileSha256,
+		PeerID:       peerID,
 	}
 
 	reqThumb := UploadRequest{
@@ -659,23 +665,22 @@ func (ctrl *Controller) upload(req UploadRequest) error {
 
 	fileInfo, err := os.Stat(req.FilePath)
 	if err != nil {
-		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
+		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true, req.PeerID)
 		return err
 	} else {
 		req.FileSize = fileInfo.Size()
 		if req.FileSize <= 0 {
-			ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
+			ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true, req.PeerID)
 			return err
 		} else if req.FileSize > maxFileSizeAllowedSize {
-			ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
+			ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true, req.PeerID)
 			return err
 		}
 	}
 
-
 	uploadCtx.file, err = os.OpenFile(req.FilePath, os.O_RDONLY, 0666)
 	if err != nil {
-		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
+		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true, req.PeerID)
 		return err
 	}
 
@@ -685,7 +690,7 @@ func (ctrl *Controller) upload(req UploadRequest) error {
 		err = ctrl.checkSha256(&req)
 		if err == nil {
 			if !ctrl.postUploadProcess(req) {
-				ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
+				ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true, req.PeerID)
 				return nil
 			}
 		}
@@ -724,7 +729,7 @@ func (ctrl *Controller) checkSha256(uploadRequest *UploadRequest) error {
 			uploadRequest.ClusterID = x.ClusterID
 			uploadRequest.AccessHash = x.AccessHash
 			uploadRequest.FileID = x.FileID
-			uploadRequest.TotalParts = -1		// dirty hack, which queue.Start() knows that is upload request is completed
+			uploadRequest.TotalParts = -1 // dirty hack, which queue.Start() knows that is upload request is completed
 			return nil
 		case msg.C_Error:
 			x := &msg.Error{}

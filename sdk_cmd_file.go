@@ -146,7 +146,10 @@ func (r *River) ResumeUpload(pendingMessageID int64) {
 
 	logs.Info("River resumes upload", zap.Int64("MsgID", pendingMessageID))
 	if _, ok := r.fileCtrl.GetUploadRequest(pendingMessage.FileID); !ok {
-		r.fileCtrl.UploadMessageDocument(pendingMessageID, req.FilePath, req.ThumbFilePath, pendingMessage.FileID, pendingMessage.ThumbID, pendingMessage.Sha256)
+		r.fileCtrl.UploadMessageDocument(
+			pendingMessageID, req.FilePath, req.ThumbFilePath, pendingMessage.FileID,
+			pendingMessage.ThumbID, pendingMessage.Sha256, pendingMessage.PeerID,
+		)
 	}
 }
 

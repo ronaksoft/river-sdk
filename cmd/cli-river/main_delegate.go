@@ -141,17 +141,25 @@ func (d *PrintDelegate) Log(logLevel int, msg string) {
 
 type FileDelegate struct{}
 
-func (d *FileDelegate) OnProgressChanged(reqID string, clusterID int32, fileID, accessHash int64, percent int64) {
-	_Log.Info("upload progress changed", zap.Int64("Progress", percent))
+func (d *FileDelegate) OnProgressChanged(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64) {
+	_Log.Info("upload progress changed",
+		zap.Int64("Progress", percent),
+		zap.Int64("PeerID", peerID),
+	)
 }
 
-func (d *FileDelegate) OnCompleted(reqID string, clusterID int32, fileID, accessHash int64, filePath string) {
-	_Log.Info("On upload Completed", zap.String("ReqID", reqID), zap.String("FilePath", filePath))
+func (d *FileDelegate) OnCompleted(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64) {
+	_Log.Info("On upload Completed",
+		zap.String("ReqID", reqID),
+		zap.String("FilePath", filePath),
+		zap.Int64("PeerID", peerID),
+	)
 }
 
-func (d *FileDelegate) OnCancel(reqID string, clusterID int32, fileID, accessHash int64, hasError bool) {
+func (d *FileDelegate) OnCancel(reqID string, clusterID int32, fileID, accessHash int64, hasError bool, peerID int64) {
 	_Log.Error("CancelCB",
 		zap.String("ReqID", reqID),
+		zap.Int64("PeerID", peerID),
 	)
 
 }

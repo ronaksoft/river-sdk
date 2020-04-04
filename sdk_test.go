@@ -134,15 +134,22 @@ func (RequestDelegateDummy) OnTimeout(err error) {
 
 type FileDelegateDummy struct{}
 
-func (d *FileDelegateDummy) OnProgressChanged(reqID string, clusterID int32, fileID, accessHash, percent int64) {
-	logs.Info("Download progress changed", zap.Int64("Progress", percent))
+func (d *FileDelegateDummy) OnProgressChanged(reqID string, clusterID int32, fileID, accessHash, percent int64, peerID int64) {
+	logs.Info("Download progress changed",
+		zap.Int64("Progress", percent),
+		zap.Int64("PeerID", peerID),
+	)
 }
 
-func (d *FileDelegateDummy) OnCompleted(reqID string, clusterID int32, fileID, accessHash int64, filePath string) {
-	logs.Info("Download completed", zap.String("ReqID", reqID), zap.String("FilePath", filePath))
+func (d *FileDelegateDummy) OnCompleted(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64) {
+	logs.Info("Download completed",
+		zap.String("ReqID", reqID),
+		zap.String("FilePath", filePath),
+		zap.Int64("PeerID", peerID),
+	)
 
 }
 
-func (d *FileDelegateDummy) OnCancel(reqID string, clusterID int32, fileID, accessHash int64, hasError bool) {
+func (d *FileDelegateDummy) OnCancel(reqID string, clusterID int32, fileID, accessHash int64, hasError bool, peerID int64) {
 	logs.Error("CancelCB")
 }

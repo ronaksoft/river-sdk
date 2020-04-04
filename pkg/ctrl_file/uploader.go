@@ -60,11 +60,11 @@ type UploadRequest struct {
 	TotalParts    int32   `json:"total_parts"`
 	Canceled      bool    `json:"canceled"`
 	// SkipDelegateCall identifies to call delegate function on specified states
-	SkipDelegateCall bool `json:"skip_delegate_call"`
-
+	SkipDelegateCall bool  `json:"skip_delegate_call"`
+	PeerID           int64 `json:"peer_id"`
 	// These parts are used to check if the file has been already uploaded
 	FileSha256 string `json:"file_sha256"`
-	AccessHash uint64  `json:"access_hash"`
+	AccessHash uint64 `json:"access_hash"`
 	ClusterID  int32  `json:"cluster_id"`
 }
 
@@ -135,7 +135,7 @@ func (ctx *uploadContext) addToUploaded(ctrl *Controller, partIndex int32) {
 	ctx.mtx.Unlock()
 	ctrl.saveUploads(ctx.req)
 	if !ctx.req.SkipDelegateCall && !skipOnProgress {
-		ctrl.onProgressChanged(ctx.req.GetID(), 0, ctx.req.FileID, 0, progress)
+		ctrl.onProgressChanged(ctx.req.GetID(), 0, ctx.req.FileID, 0, progress, ctx.req.PeerID)
 	}
 }
 
@@ -185,7 +185,7 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 						zap.String("Path", ctx.req.FilePath),
 					)
 					if !ctx.req.SkipDelegateCall {
-						ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, false)
+						ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, false, ctx.req.PeerID)
 					}
 					return domain.RequestStatusCanceled
 				}
@@ -202,13 +202,13 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 					logs.Debug("FileCtrl waits for last part to upload")
 					waitGroup.Wait()
 					if !ctrl.postUploadProcess(ctx.req) {
-						ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, true)
+						ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, true, ctx.req.PeerID)
 						return domain.RequestStatusError
 					}
 					// We have finished our uploads
 					_ = ctx.file.Close()
 					if !ctx.req.SkipDelegateCall {
-						ctrl.onCompleted(ctx.req.GetID(), 0, ctx.req.FileID, 0, ctx.req.FilePath)
+						ctrl.onCompleted(ctx.req.GetID(), 0, ctx.req.FileID, 0, ctx.req.FilePath, ctx.req.PeerID)
 					}
 					_ = repo.Files.MarkAsUploaded(ctx.req.FileID)
 					return domain.RequestStatusCompleted
@@ -236,7 +236,7 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 			zap.String("Path", ctx.req.FilePath),
 		)
 		if !ctx.req.SkipDelegateCall {
-			ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, true)
+			ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, true, ctx.req.PeerID)
 		}
 		return domain.RequestStatusError
 	}

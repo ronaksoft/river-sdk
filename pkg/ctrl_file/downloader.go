@@ -49,7 +49,8 @@ type DownloadRequest struct {
 	TotalParts      int32   `json:"total_parts"`
 	Canceled        bool    `json:"canceled"`
 	// SkipDelegateCall identifies to call delegate function on specified states
-	SkipDelegateCall bool `json:"skip_delegate_call"`
+	SkipDelegateCall bool  `json:"skip_delegate_call"`
+	PeerID           int64 `json:"peer_id"`
 }
 
 func (r DownloadRequest) GetID() string {
@@ -90,7 +91,7 @@ func (ctx *downloadContext) addToDownloaded(ctrl *Controller, partIndex int32) {
 	ctrl.saveDownloads(ctx.req)
 
 	if !ctx.req.SkipDelegateCall && !skipOnProgress {
-		ctrl.onProgressChanged(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), progress)
+		ctrl.onProgressChanged(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), progress, ctx.req.PeerID)
 	}
 }
 
@@ -123,7 +124,7 @@ func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 				_ = ctx.file.Close()
 				_ = os.Remove(ctx.req.TempFilePath)
 				if !ctx.req.SkipDelegateCall {
-					ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), false)
+					ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), false, ctx.req.PeerID)
 				}
 				return domain.RequestStatusCanceled
 			}
@@ -192,12 +193,12 @@ func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 				if err != nil {
 					_ = os.Remove(ctx.req.TempFilePath)
 					if !ctx.req.SkipDelegateCall {
-						ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), true)
+						ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), true, ctx.req.PeerID)
 					}
 					return domain.RequestStatusError
 				}
 				if !ctx.req.SkipDelegateCall {
-					ctrl.onCompleted(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), ctx.req.FilePath)
+					ctrl.onCompleted(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), ctx.req.FilePath, ctx.req.PeerID)
 				}
 
 				return domain.RequestStatusCompleted
@@ -210,7 +211,7 @@ func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 	_ = ctx.file.Close()
 	_ = os.Remove(ctx.req.TempFilePath)
 	if !ctx.req.SkipDelegateCall {
-		ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), true)
+		ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), true, ctx.req.PeerID)
 	}
 
 	return domain.RequestStatusError

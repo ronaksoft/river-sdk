@@ -52,17 +52,17 @@ func init() {
 		MaxInflightDownloads: 2,
 		MaxInflightUploads:   3,
 		HttpRequestTimeout:   10 * time.Second,
-		ProgressChangedCB: func(reqID string, clusterID int32, fileID, accessHash int64, percent int64) {
+		ProgressChangedCB: func(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64) {
 			// logs.Info("Progress Changed", zap.String("ReqID", reqID), zap.Int64("Percent", percent))
 		},
-		CancelCB: func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool) {
+		CancelCB: func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool, peerID int64) {
 			logs.Error("File Canceled", zap.String("ReqID", reqID), zap.Bool("HasError", hasError))
 			if clusterID == 0 && uploadStart {
 				// It is an Upload
 				waitGroupUpload.Done()
 			}
 		},
-		CompletedCB: func(reqID string, clusterID int32, fileID, accessHash int64, filePath string) {},
+		CompletedCB: func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64) {},
 		PostUploadProcessCB: func(req fileCtrl.UploadRequest) bool {
 			logs.Info("PostProcess",
 				zap.Any("TotalParts", req.TotalParts),
@@ -239,19 +239,20 @@ func TestUpload(t *testing.T) {
 	Convey("Upload", t, func(c C) {
 		fileID := ronak.RandomInt64(0)
 		msgID := ronak.RandomInt64(0)
+		peerID := ronak.RandomInt64(0)
 		Convey("Good Network", func(c C) {
 			startTime := time.Now()
 			Convey("Upload Big File (Good Network)", func(c C) {
 				c.Println()
 				waitGroupUpload.Add(1)
 				speedBytesPerSec = 1024 * 512
-				_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0, "")
+				_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0, "", peerID)
 			})
 			Convey("Upload Medium File (Good Network)", func(c C) {
 				c.Println()
 				waitGroupUpload.Add(1)
 				speedBytesPerSec = 1024 * 512
-				_File.UploadMessageDocument(msgID, "./testdata/medium", "", fileID, 0, "")
+				_File.UploadMessageDocument(msgID, "./testdata/medium", "", fileID, 0, "", peerID)
 			})
 
 			waitGroupUpload.Wait()
@@ -264,14 +265,14 @@ func TestUpload(t *testing.T) {
 				speedBytesPerSec = 1024 * 8
 				errRatePercent = 0
 				waitGroupUpload.Add(1)
-				_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0, "")
+				_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0, "", peerID)
 			})
 			Convey("Upload Medium File (Bad Network)", func(c C) {
 				c.Println()
 				speedBytesPerSec = 8192
 				errRatePercent = 0
 				waitGroupUpload.Add(1)
-				_File.UploadMessageDocument(msgID, "./testdata/medium", "", fileID, 0, "")
+				_File.UploadMessageDocument(msgID, "./testdata/medium", "", fileID, 0, "", peerID)
 			})
 			waitGroupUpload.Wait()
 			_, _ = Println("Bad Network:", time.Now().Sub(startTime))
@@ -303,7 +304,8 @@ func TestManyUpload(t *testing.T) {
 			waitGroupUpload.Add(1)
 			fileID := int64(i + 1)
 			msgID := int64(i + 1)
-			_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0, "")
+			peerID := int64(i + 1)
+			_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0, "", peerID)
 		}
 		waitGroupUpload.Wait()
 		_, _ = Println("Many Upload:", time.Now().Sub(startTime))
