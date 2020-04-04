@@ -683,10 +683,14 @@ func (ctrl *Controller) upload(req UploadRequest) error {
 	if req.FileSha256 != "" {
 		err = ctrl.checkSha256(&req)
 		if err == nil {
+			logs.Info("File already exists in the server",
+				zap.Int64("DocumentID", req.DocumentID),
+				zap.Int32("ClusterID", req.ClusterID),
+			)
 			if !ctrl.postUploadProcess(req) {
 				ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true, req.PeerID)
-				return nil
 			}
+			return nil
 		}
 	}
 
@@ -729,14 +733,11 @@ func (ctrl *Controller) checkSha256(uploadRequest *UploadRequest) error {
 			uploadRequest.ClusterID = x.ClusterID
 			uploadRequest.AccessHash = x.AccessHash
 			uploadRequest.DocumentID = x.FileID
-			uploadRequest.TotalParts = -1 // dirty hack, which queue.Start() knows that is upload request is completed
+			uploadRequest.TotalParts = -1 // dirty hack, which queue.Start() knows the upload request is completed
 			return nil
 		case msg.C_Error:
 			x := &msg.Error{}
 			_ = x.Unmarshal(res.Message)
-			if x.Code == msg.ErrCodeInternal && x.Items == msg.ErrItemServer {
-				return nil
-			}
 		}
 		return domain.ErrServer
 	})

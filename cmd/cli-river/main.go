@@ -80,6 +80,7 @@ func main() {
 	_SDK = new(riversdk.River)
 	_SDK.SetConfig(&riversdk.RiverConfig{
 		ServerEndpoint:         "ws://river.ronaksoftware.com", // "ws://test.river.im", // "ws://192.168.1.110/",
+		FileServerEndpoint:     "http://river.ronaksoftware.com:8080",
 		DbPath:                 dbPath,
 		DbID:                   dbID,
 		ServerKeys:             ronak.ByteToStr(skBytes),

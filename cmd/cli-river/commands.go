@@ -698,7 +698,6 @@ func fnGetAttributes(c *ishell.Context) []*msg.DocumentAttribute {
 			break
 		}
 		switch attrType {
-
 		case msg.AttributeTypeAudio:
 			result = append(result, getAudioAttribute(c))
 		case msg.AttributeTypeVideo:
@@ -715,13 +714,13 @@ func fnGetAttributes(c *ishell.Context) []*msg.DocumentAttribute {
 func getAttributeType(c *ishell.Context) msg.DocumentAttributeType {
 	attribType := msg.AttributeTypeNone
 	for {
-		//AttributeTypeNone  DocumentAttributeType = 0
-		//AttributeTypeAudio DocumentAttributeType = 1
-		//AttributeTypeVideo DocumentAttributeType = 2
-		//AttributeTypePhoto DocumentAttributeType = 3
-		//AttributeTypeFile  DocumentAttributeType = 4
-		//AttributeAnimated  DocumentAttributeType = 5
-		c.Print("AttributeType : (Audio=1, Video=2 ,Photo=3, File=4 )")
+		// AttributeTypeNone  DocumentAttributeType = 0
+		// AttributeTypeAudio DocumentAttributeType = 1
+		// AttributeTypeVideo DocumentAttributeType = 2
+		// AttributeTypePhoto DocumentAttributeType = 3
+		// AttributeTypeFile  DocumentAttributeType = 4
+		// AttributeAnimated  DocumentAttributeType = 5
+		c.Print("AttributeType : (Exit=0, Audio=1, Video=2 ,Photo=3, File=4)")
 		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
 		if err == nil && id >= 0 && id < 5 {
 			attribType = msg.DocumentAttributeType(id)
