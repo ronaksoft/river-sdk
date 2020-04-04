@@ -678,12 +678,6 @@ func (ctrl *Controller) upload(req UploadRequest) error {
 		}
 	}
 
-	uploadCtx.file, err = os.OpenFile(req.FilePath, os.O_RDONLY, 0666)
-	if err != nil {
-		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true, req.PeerID)
-		return err
-	}
-
 	// If Sha256 exists in the request then we check server if this file has been already uploaded, if true, then
 	// we do not upload it again and we call postUploadProcess with the updated details
 	if req.FileSha256 != "" {
@@ -694,6 +688,12 @@ func (ctrl *Controller) upload(req UploadRequest) error {
 				return nil
 			}
 		}
+	}
+
+	uploadCtx.file, err = os.OpenFile(req.FilePath, os.O_RDONLY, 0666)
+	if err != nil {
+		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true, req.PeerID)
+		return err
 	}
 
 	if req.ChunkSize <= 0 {
@@ -735,10 +735,10 @@ func (ctrl *Controller) checkSha256(uploadRequest *UploadRequest) error {
 			x := &msg.Error{}
 			_ = x.Unmarshal(res.Message)
 			if x.Code == msg.ErrCodeInternal && x.Items == msg.ErrItemServer {
-				return domain.ErrServer
+				return nil
 			}
 		}
-		return nil
+		return domain.ErrServer
 	})
 	return err
 }
