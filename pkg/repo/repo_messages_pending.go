@@ -6,7 +6,6 @@ import (
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
 	"math"
-	"strings"
 	"time"
 
 	msg "git.ronaksoftware.com/river/msg/chat"
@@ -109,7 +108,9 @@ func (r *repoMessagesPending) Save(msgID int64, senderID int64, message *msg.Mes
 	return pm, nil
 }
 
-func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, requestID, fileID, thumbID int64, msgMedia *msg.ClientSendMessageMedia) (*msg.ClientPendingMessage, error) {
+func (r *repoMessagesPending) SaveClientMessageMedia(
+	msgID, senderID, requestID, fileID, thumbID int64, msgMedia *msg.ClientSendMessageMedia, fileSha256 string,
+) (*msg.ClientPendingMessage, error) {
 	if msgMedia == nil {
 		return nil, domain.ErrNotFound
 	}
@@ -119,27 +120,23 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, requestID,
 		panic("Invalid MediaInputType")
 	}
 
-	// support IOS file path
-	if strings.HasPrefix(msgMedia.FilePath, "file://") {
-		msgMedia.FilePath = msgMedia.FilePath[7:]
-	}
-
 	msgMedia.FileTotalParts = 0
 
 	pm := &msg.ClientPendingMessage{
-		PeerID : msgMedia.Peer.ID,
-		PeerType : int32(msgMedia.Peer.Type),
-		AccessHash : msgMedia.Peer.AccessHash,
-		Body : msgMedia.Caption,
-		ReplyTo : msgMedia.ReplyTo,
-		ClearDraft : msgMedia.ClearDraft,
-		MediaType : msgMedia.MediaType,
-		ID : msgID,
-		SenderID : senderID,
-		CreatedOn : domain.Now().Unix(),
-		RequestID : requestID,
-		FileUploadID : fmt.Sprintf("%d", fileID),
-		FileID : fileID,
+		PeerID:       msgMedia.Peer.ID,
+		PeerType:     int32(msgMedia.Peer.Type),
+		AccessHash:   msgMedia.Peer.AccessHash,
+		Body:         msgMedia.Caption,
+		ReplyTo:      msgMedia.ReplyTo,
+		ClearDraft:   msgMedia.ClearDraft,
+		MediaType:    msgMedia.MediaType,
+		ID:           msgID,
+		SenderID:     senderID,
+		CreatedOn:    domain.Now().Unix(),
+		RequestID:    requestID,
+		FileUploadID: fmt.Sprintf("%d", fileID),
+		FileID:       fileID,
+		Sha256:       fileSha256,
 	}
 	pm.Media, _ = msgMedia.Marshal()
 
@@ -149,7 +146,7 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, requestID,
 	}
 
 	bytes, _ := pm.Marshal()
-	_ = badgerUpdate(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		// 1. Save PendingMessage by ID
 		err := txn.SetEntry(badger.NewEntry(
 			getPendingMessageKey(pm.ID), bytes),
@@ -164,24 +161,24 @@ func (r *repoMessagesPending) SaveClientMessageMedia(msgID, senderID, requestID,
 		)
 	})
 
+	if err != nil {
+		return nil, err
+	}
+
 	Dialogs.updateLastUpdate(pm.PeerID, pm.PeerType, pm.CreatedOn)
 
 	return pm, nil
 }
 
-func (r *repoMessagesPending) UpdateClientMessageMedia(pm *msg.ClientPendingMessage, totalParts int32) {
-	switch pm.MediaType {
-	case msg.InputMediaTypeUploadedDocument:
-	default:
-		panic("invalid input MediaType in pending message for ClientMessageMedia")
-	}
+func (r *repoMessagesPending) UpdateClientMessageMedia(pm *msg.ClientPendingMessage, totalParts int32, fileID int64) error {
 	csmm := new(msg.ClientSendMessageMedia)
 	_ = csmm.Unmarshal(pm.Media)
 	csmm.FileTotalParts = totalParts
+	csmm.FileID = fileID
 	pm.Media, _ = csmm.Marshal()
 
 	bytes, _ := pm.Marshal()
-	_ = badgerUpdate(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		err := txn.SetEntry(badger.NewEntry(
 			getPendingMessageKey(pm.ID), bytes),
 		)

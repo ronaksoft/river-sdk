@@ -589,23 +589,11 @@ func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) (reqID 
 	reqID = GetRequestID(0, fileID, 0)
 	return
 }
-func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPath string, fileID, thumbID int64) {
-	// support IOS file path
-	if strings.HasPrefix(filePath, "file://") {
-		filePath = filePath[7:]
-
-	}
-	// support IOS file path
-	if strings.HasPrefix(thumbPath, "file://") {
-		thumbPath = thumbPath[7:]
-	}
-
-
+func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPath string, fileID, thumbID int64, fileSha256 string) {
 	if _, err := os.Stat(filePath); err != nil {
 		logs.Warn("FileCtrl got error on upload message document (thumbnail)", zap.Error(err))
 		return
 	}
-
 
 	if thumbPath != "" {
 		if _, err := os.Stat(thumbPath); err != nil {
@@ -622,6 +610,7 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 		ThumbID:      thumbID,
 		ThumbPath:    thumbPath,
 		MaxInFlights: maxUploadInFlights,
+		FileSha256:   fileSha256,
 	}
 
 	reqThumb := UploadRequest{
@@ -631,6 +620,7 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 		MaxInFlights:     maxUploadInFlights,
 		SkipDelegateCall: false,
 	}
+
 	if thumbID != 0 {
 		ctrl.saveUploads(reqThumb)
 	}
@@ -655,6 +645,7 @@ func (ctrl *Controller) upload(req UploadRequest) error {
 	}
 	req.httpContext, req.cancelFunc = context.WithCancel(context.Background())
 	ctrl.saveUploads(req)
+
 	ctrl.uploadsRateLimit <- struct{}{}
 	defer func() {
 		// Remove the Download request from the list
@@ -670,22 +661,34 @@ func (ctrl *Controller) upload(req UploadRequest) error {
 	if err != nil {
 		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
 		return err
+	} else {
+		req.FileSize = fileInfo.Size()
+		if req.FileSize <= 0 {
+			ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
+			return err
+		} else if req.FileSize > maxFileSizeAllowedSize {
+			ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
+			return err
+		}
 	}
+
+
 	uploadCtx.file, err = os.OpenFile(req.FilePath, os.O_RDONLY, 0666)
 	if err != nil {
 		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
 		return err
 	}
 
-	req.FileSize = fileInfo.Size()
-	if req.FileSize <= 0 {
-		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
-		return err
-	}
-
-	if req.FileSize > maxFileSizeAllowedSize {
-		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
-		return err
+	// If Sha256 exists in the request then we check server if this file has been already uploaded, if true, then
+	// we do not upload it again and we call postUploadProcess with the updated details
+	if req.FileSha256 != "" {
+		err = ctrl.checkSha256(&req)
+		if err == nil {
+			if !ctrl.postUploadProcess(req) {
+				ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true)
+				return nil
+			}
+		}
 	}
 
 	if req.ChunkSize <= 0 {
@@ -697,4 +700,40 @@ func (ctrl *Controller) upload(req UploadRequest) error {
 	// This is blocking call, until all the parts are downloaded
 	uploadCtx.execute(ctrl)
 	return nil
+}
+func (ctrl *Controller) checkSha256(uploadRequest *UploadRequest) error {
+	envelop := &msg.MessageEnvelope{
+		RequestID:   uint64(domain.SequentialUniqueID()),
+		Constructor: msg.C_FileGetBySha256,
+	}
+	req := &msg.FileGetBySha256{
+		Sha256:   ronak.StrToByte(uploadRequest.FileSha256),
+		FileSize: int32(uploadRequest.FileSize),
+	}
+	envelop.Message, _ = req.Marshal()
+
+	err := ronak.Try(3, time.Millisecond*500, func() error {
+		res, err := ctrl.network.SendHttp(uploadRequest.httpContext, envelop, time.Second*10)
+		if err != nil {
+			return err
+		}
+		switch res.Constructor {
+		case msg.C_FileLocation:
+			x := &msg.FileLocation{}
+			_ = x.Unmarshal(res.Message)
+			uploadRequest.ClusterID = x.ClusterID
+			uploadRequest.AccessHash = x.AccessHash
+			uploadRequest.FileID = x.FileID
+			uploadRequest.TotalParts = -1		// dirty hack, which queue.Start() knows that is upload request is completed
+			return nil
+		case msg.C_Error:
+			x := &msg.Error{}
+			_ = x.Unmarshal(res.Message)
+			if x.Code == msg.ErrCodeInternal && x.Items == msg.ErrItemServer {
+				return domain.ErrServer
+			}
+		}
+		return nil
+	})
+	return err
 }

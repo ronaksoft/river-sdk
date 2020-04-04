@@ -1,15 +1,12 @@
 package riversdk
 
 import (
-	"bufio"
-	"crypto/sha256"
 	"git.ronaksoftware.com/river/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"github.com/dgraph-io/badger"
 	"go.uber.org/zap"
-	"io"
 	"os"
 )
 
@@ -149,7 +146,7 @@ func (r *River) ResumeUpload(pendingMessageID int64) {
 
 	logs.Info("River resumes upload", zap.Int64("MsgID", pendingMessageID))
 	if _, ok := r.fileCtrl.GetUploadRequest(pendingMessage.FileID); !ok {
-		r.fileCtrl.UploadMessageDocument(pendingMessageID, req.FilePath, req.ThumbFilePath, pendingMessage.FileID, pendingMessage.ThumbID)
+		r.fileCtrl.UploadMessageDocument(pendingMessageID, req.FilePath, req.ThumbFilePath, pendingMessage.FileID, pendingMessage.ThumbID, pendingMessage.Sha256)
 	}
 }
 
@@ -240,26 +237,4 @@ func (r *River) GetDocumentHash(clusterID int32, fileID int64, accessHash int64)
 	}
 
 	return file.MD5Checksum
-}
-
-// CalculateSha256
-func (r *River) CalculateSha256(filePath string) (string, error) {
-	f, err := os.Open(filePath)
-	if err != nil {
-		return "", err
-	}
-	h := sha256.New()
-	buf := make([]byte, 1 << 20)
-	rd := bufio.NewReader(f)
-	for {
-		n, err := rd.Read(buf)
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return "", err
-		}
-		h.Write(buf[:n])
-	}
-	return string(h.Sum(nil)), nil
 }

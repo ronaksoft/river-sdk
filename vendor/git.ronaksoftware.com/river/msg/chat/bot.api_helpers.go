@@ -384,6 +384,34 @@ func ResultBotGetCallbackAnswer(out *MessageEnvelope, res *BotGetCallbackAnswer)
 	res.MarshalTo(out.Message)
 }
 
+const C_BotDeleteMessage int64 = 3523077017
+
+type poolBotDeleteMessage struct {
+	pool sync.Pool
+}
+
+func (p *poolBotDeleteMessage) Get() *BotDeleteMessage {
+	x, ok := p.pool.Get().(*BotDeleteMessage)
+	if !ok {
+		return &BotDeleteMessage{}
+	}
+	x.MessageIDs = x.MessageIDs[:0]
+	return x
+}
+
+func (p *poolBotDeleteMessage) Put(x *BotDeleteMessage) {
+	p.pool.Put(x)
+}
+
+var PoolBotDeleteMessage = poolBotDeleteMessage{}
+
+func ResultBotDeleteMessage(out *MessageEnvelope, res *BotDeleteMessage) {
+	out.Constructor = C_BotDeleteMessage
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
 const C_BotToken int64 = 3137540096
 
 type poolBotToken struct {
@@ -564,6 +592,7 @@ func init() {
 	ConstructorNames[1804706614] = "BotRevokeToken"
 	ConstructorNames[1891806754] = "BotSetCallbackAnswer"
 	ConstructorNames[345706640] = "BotGetCallbackAnswer"
+	ConstructorNames[3523077017] = "BotDeleteMessage"
 	ConstructorNames[3137540096] = "BotToken"
 	ConstructorNames[4007077962] = "BotRecalled"
 	ConstructorNames[3344545062] = "BotCallbackAnswer"

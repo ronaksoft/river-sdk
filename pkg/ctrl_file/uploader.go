@@ -61,6 +61,11 @@ type UploadRequest struct {
 	Canceled      bool    `json:"canceled"`
 	// SkipDelegateCall identifies to call delegate function on specified states
 	SkipDelegateCall bool `json:"skip_delegate_call"`
+
+	// These parts are used to check if the file has been already uploaded
+	FileSha256 string `json:"file_sha256"`
+	AccessHash uint64  `json:"access_hash"`
+	ClusterID  int32  `json:"cluster_id"`
 }
 
 func (r UploadRequest) GetID() string {
@@ -136,14 +141,14 @@ func (ctx *uploadContext) addToUploaded(ctrl *Controller, partIndex int32) {
 
 func (ctx *uploadContext) generateFileSavePart(fileID int64, partID int32, totalParts int32, bytes []byte) *msg.MessageEnvelope {
 	envelop := msg.MessageEnvelope{
-		RequestID: uint64(domain.SequentialUniqueID()),
+		RequestID:   uint64(domain.SequentialUniqueID()),
 		Constructor: msg.C_FileSavePart,
 	}
 	req := msg.FileSavePart{
 		TotalParts: totalParts,
-		Bytes: bytes,
-		FileID: fileID,
-		PartID: partID,
+		Bytes:      bytes,
+		FileID:     fileID,
+		PartID:     partID,
 	}
 	envelop.Message, _ = req.Marshal()
 

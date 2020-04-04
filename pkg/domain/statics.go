@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
@@ -419,4 +420,25 @@ func GetExponentialTime(min time.Duration, max time.Duration, attempts int) time
 		return time.Duration(max)
 	}
 	return time.Duration(napDuration)
+}
+
+func CalculateSha256(filePath string) (string, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	h := sha256.New()
+	buf := make([]byte, 1 << 20)
+	rd := bufio.NewReader(f)
+	for {
+		n, err := rd.Read(buf)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return "", err
+		}
+		h.Write(buf[:n])
+	}
+	return string(h.Sum(nil)), nil
 }

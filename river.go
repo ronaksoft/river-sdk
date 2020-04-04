@@ -9,6 +9,7 @@ import (
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
 	"runtime"
 	"sort"
@@ -452,10 +453,19 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 		return true
 	}
 
-	repo.PendingMessages.UpdateClientMessageMedia(pendingMessage, uploadRequest.TotalParts)
+	err := ronak.Try(3, time.Millisecond*500, func() error {
+		return repo.PendingMessages.UpdateClientMessageMedia(pendingMessage, uploadRequest.TotalParts, uploadRequest.FileID)
+	})
+	if err != nil {
+		logs.Error("Error On UpdateClientMessageMedia", zap.Error(err))
+	}
 
 	req := &msg.ClientSendMessageMedia{}
 	_ = req.Unmarshal(pendingMessage.Media)
+
+	if uploadRequest.AccessHash != 0 && uploadRequest.ClusterID != 0 {
+		req.MediaType = msg.InputMediaTypeDocument
+	}
 
 	// Create SendMessageMedia Request
 	x := &msg.MessagesSendMedia{
@@ -486,6 +496,25 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 			}
 		}
 		x.MediaData, _ = doc.Marshal()
+	case msg.InputMediaTypeDocument:
+		doc := &msg.InputMediaDocument{
+			Caption:    req.Caption,
+			Attributes: req.Attributes,
+			Document: &msg.InputDocument{
+				ID:         uploadRequest.FileID,
+				AccessHash: uploadRequest.AccessHash,
+				ClusterID:  uploadRequest.ClusterID,
+			},
+		}
+		if uploadRequest.ThumbID != 0 {
+			doc.Thumbnail = &msg.InputFile{
+				FileID:      uploadRequest.ThumbID,
+				FileName:    "thumb_" + req.FileName,
+				MD5Checksum: "",
+			}
+		}
+		x.MediaData, _ = doc.Marshal()
+
 	default:
 	}
 	reqBuff, _ := x.Marshal()
@@ -506,6 +535,7 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 			if x.Code == msg.ErrCodeAlreadyExists && x.Items == msg.ErrItemRandomID {
 				success = true
 				_ = repo.PendingMessages.Delete(uploadRequest.MessageID)
+
 			}
 		}
 		waitGroup.Done()

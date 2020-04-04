@@ -245,13 +245,13 @@ func TestUpload(t *testing.T) {
 				c.Println()
 				waitGroupUpload.Add(1)
 				speedBytesPerSec = 1024 * 512
-				_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0)
+				_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0, "")
 			})
 			Convey("Upload Medium File (Good Network)", func(c C) {
 				c.Println()
 				waitGroupUpload.Add(1)
 				speedBytesPerSec = 1024 * 512
-				_File.UploadMessageDocument(msgID, "./testdata/medium", "", fileID, 0)
+				_File.UploadMessageDocument(msgID, "./testdata/medium", "", fileID, 0, "")
 			})
 
 			waitGroupUpload.Wait()
@@ -264,14 +264,14 @@ func TestUpload(t *testing.T) {
 				speedBytesPerSec = 1024 * 8
 				errRatePercent = 0
 				waitGroupUpload.Add(1)
-				_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0)
+				_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0, "")
 			})
 			Convey("Upload Medium File (Bad Network)", func(c C) {
 				c.Println()
 				speedBytesPerSec = 8192
 				errRatePercent = 0
 				waitGroupUpload.Add(1)
-				_File.UploadMessageDocument(msgID, "./testdata/medium", "", fileID, 0)
+				_File.UploadMessageDocument(msgID, "./testdata/medium", "", fileID, 0, "")
 			})
 			waitGroupUpload.Wait()
 			_, _ = Println("Bad Network:", time.Now().Sub(startTime))
@@ -303,7 +303,7 @@ func TestManyUpload(t *testing.T) {
 			waitGroupUpload.Add(1)
 			fileID := int64(i + 1)
 			msgID := int64(i + 1)
-			_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0)
+			_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0, "")
 		}
 		waitGroupUpload.Wait()
 		_, _ = Println("Many Upload:", time.Now().Sub(startTime))

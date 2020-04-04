@@ -585,6 +585,15 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		return
 	}
 
+	// support IOS file path
+	if strings.HasPrefix(reqMedia.FilePath, "file://") {
+		reqMedia.FilePath = reqMedia.FilePath[7:]
+	}
+	if strings.HasPrefix(reqMedia.ThumbFilePath, "file://") {
+		reqMedia.ThumbFilePath = reqMedia.ThumbFilePath[7:]
+	}
+
+
 	in.Message, _ = reqMedia.Marshal()
 	// TODO : check if file has been uploaded b4
 
@@ -601,7 +610,8 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		reqMedia.ThumbID = thumbID
 		reqMedia.ThumbUploadID = fmt.Sprintf("%d", thumbID)
 	}
-	pendingMessage, err := repo.PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, fileID, fileID, thumbID, reqMedia)
+	h, _ := domain.CalculateSha256(reqMedia.FilePath)
+	pendingMessage, err := repo.PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, fileID, fileID, thumbID, reqMedia, h)
 	if err != nil {
 		e := new(msg.Error)
 		e.Code = "n/a"
@@ -619,7 +629,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	out.Constructor = msg.C_ClientPendingMessage
 	out.Message, _ = pendingMessage.Marshal()
 
-	r.fileCtrl.UploadMessageDocument(pendingMessage.ID, reqMedia.FilePath, reqMedia.ThumbFilePath, fileID, thumbID)
+	r.fileCtrl.UploadMessageDocument(pendingMessage.ID, reqMedia.FilePath, reqMedia.ThumbFilePath, fileID, thumbID, h)
 
 	// 4. later when queue got processed and server returned response we should check if the requestID
 	//   exist in pendingTable we remove it and insert new message with new id to message table
