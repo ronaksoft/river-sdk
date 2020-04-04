@@ -456,15 +456,13 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 	req := &msg.ClientSendMessageMedia{}
 	_ = req.Unmarshal(pendingMessage.Media)
 
-
-
 	err := ronak.Try(3, time.Millisecond*500, func() error {
 		var fileLoc *msg.FileLocation
-		if uploadRequest.AccessHash != 0 && uploadRequest.ClusterID != 0 {
+		if uploadRequest.DocumentID != 0 && uploadRequest.AccessHash != 0 && uploadRequest.ClusterID != 0 {
 			req.MediaType = msg.InputMediaTypeDocument
 			fileLoc = &msg.FileLocation{
 				ClusterID:  uploadRequest.ClusterID,
-				FileID:     uploadRequest.FileID,
+				FileID:     uploadRequest.DocumentID,
 				AccessHash: uploadRequest.AccessHash,
 			}
 		}
@@ -508,7 +506,7 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 			Caption:    req.Caption,
 			Attributes: req.Attributes,
 			Document: &msg.InputDocument{
-				ID:         uploadRequest.FileID,
+				ID:         uploadRequest.DocumentID,
 				AccessHash: uploadRequest.AccessHash,
 				ClusterID:  uploadRequest.ClusterID,
 			},
@@ -555,7 +553,7 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 	r.queueCtrl.EnqueueCommand(
 		&msg.MessageEnvelope{
 			Constructor: msg.C_MessagesSendMedia,
-			RequestID:   uint64(uploadRequest.FileID),
+			RequestID:   uint64(x.RandomID),
 			Message:     reqBuff,
 		},
 		timeoutCB, successCB, false)

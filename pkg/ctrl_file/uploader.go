@@ -66,6 +66,7 @@ type UploadRequest struct {
 	FileSha256 string `json:"file_sha256"`
 	AccessHash uint64 `json:"access_hash"`
 	ClusterID  int32  `json:"cluster_id"`
+	DocumentID int64  `json:"document_id"`
 }
 
 func (r UploadRequest) GetID() string {

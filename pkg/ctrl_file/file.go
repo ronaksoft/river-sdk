@@ -728,7 +728,7 @@ func (ctrl *Controller) checkSha256(uploadRequest *UploadRequest) error {
 			_ = x.Unmarshal(res.Message)
 			uploadRequest.ClusterID = x.ClusterID
 			uploadRequest.AccessHash = x.AccessHash
-			uploadRequest.FileID = x.FileID
+			uploadRequest.DocumentID = x.FileID
 			uploadRequest.TotalParts = -1 // dirty hack, which queue.Start() knows that is upload request is completed
 			return nil
 		case msg.C_Error:

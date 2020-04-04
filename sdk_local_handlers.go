@@ -593,10 +593,6 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		reqMedia.ThumbFilePath = reqMedia.ThumbFilePath[7:]
 	}
 
-
-	in.Message, _ = reqMedia.Marshal()
-	// TODO : check if file has been uploaded b4
-
 	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 	msgID := -domain.SequentialUniqueID()
 	fileID := ronak.RandomInt64(0)
@@ -633,7 +629,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 
 	// 4. later when queue got processed and server returned response we should check if the requestID
 	//   exist in pendingTable we remove it and insert new message with new id to message table
-	//   invoke new OnUpdate with new protobuff to inform ui that pending message got delivered
+	//   invoke new OnUpdate with new proto buffer to inform ui that pending message got delivered
 	uiexec.Exec(func() {
 		if successCB != nil {
 			successCB(out)

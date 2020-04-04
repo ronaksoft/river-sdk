@@ -478,33 +478,43 @@ func (r *repoMessagesPending) ToMessagesSend(m *msg.ClientPendingMessage) *msg.M
 }
 
 func (r *repoMessagesPending) ToMessagesSendMedia(m *msg.ClientPendingMessage) *msg.MessagesSendMedia {
-	v := new(msg.MessagesSendMedia)
-	v.RandomID = m.RequestID
-	v.Peer = &msg.InputPeer{
-		ID:         m.PeerID,
-		Type:       msg.PeerType(m.PeerType),
-		AccessHash: m.AccessHash,
+	v := &msg.MessagesSendMedia{
+		RandomID: m.RequestID,
+		Peer: &msg.InputPeer{
+			ID:         m.PeerID,
+			Type:       msg.PeerType(m.PeerType),
+			AccessHash: m.AccessHash,
+		},
+		ClearDraft: m.ClearDraft,
+		ReplyTo:    m.ReplyTo,
+		MediaType:  m.MediaType,
 	}
-	v.ClearDraft = m.ClearDraft
-	v.ReplyTo = m.ReplyTo
-	v.MediaType = m.MediaType
 
 	switch m.MediaType {
 	case msg.InputMediaTypeUploadedDocument:
 		csmm := new(msg.ClientSendMessageMedia)
 		_ = csmm.Unmarshal(m.Media)
-		uploadedDocument := new(msg.InputMediaUploadedDocument)
 
 		if csmm.FileTotalParts == 0 {
 			// If FileTotalParts is still zero it means we have not upload the document yet
 			return nil
 		}
-		uploadedDocument.File = &msg.InputFile{
-			FileID:      csmm.FileID,
-			TotalParts:  csmm.FileTotalParts,
-			FileName:    csmm.FileName,
-			MD5Checksum: "",
+
+		uploadedDocument := &msg.InputMediaUploadedDocument{
+			File: &msg.InputFile{
+				FileID:      csmm.FileID,
+				TotalParts:  csmm.FileTotalParts,
+				FileName:    csmm.FileName,
+				MD5Checksum: "",
+			},
+			Thumbnail:  nil,
+			MimeType:   csmm.FileMIME,
+			Caption:    csmm.Caption,
+			Stickers:   nil,
+			Attributes: csmm.Attributes,
+			Entities:   nil,
 		}
+
 		if csmm.ThumbID != 0 {
 			uploadedDocument.Thumbnail = &msg.InputFile{
 				FileID:      csmm.ThumbID,
@@ -513,9 +523,6 @@ func (r *repoMessagesPending) ToMessagesSendMedia(m *msg.ClientPendingMessage) *
 				MD5Checksum: "",
 			}
 		}
-		uploadedDocument.MimeType = csmm.FileMIME
-		uploadedDocument.Attributes = csmm.Attributes
-		uploadedDocument.Caption = csmm.Caption
 		v.MediaData, _ = uploadedDocument.Marshal()
 	case msg.InputMediaTypeDocument:
 		csmm := new(msg.ClientSendMessageMedia)
