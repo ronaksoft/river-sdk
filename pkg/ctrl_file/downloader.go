@@ -203,7 +203,7 @@ func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 
 				return domain.RequestStatusCompleted
 			default:
-				time.Sleep(time.Millisecond * 100)
+				time.Sleep(time.Millisecond * 250)
 				// Keep downloading
 			}
 		}
