@@ -47,6 +47,10 @@ func getGroupParticipantKey(groupID, memberID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixGroupsParticipants, groupID, memberID))
 }
 
+func getGroupParticipantPrefix(groupID int64) []byte {
+	return ronak.StrToByte(fmt.Sprintf("%s.%021d.", prefixGroupsParticipants, groupID))
+}
+
 func getGroupPhotoGalleryKey(groupID, photoID int64) []byte {
 	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixGroupsPhotoGallery, groupID, photoID))
 }
@@ -198,9 +202,9 @@ func (r *repoGroups) GetParticipants(groupID int64) ([]*msg.GroupParticipant, er
 	participants := make([]*msg.GroupParticipant, 0, 100)
 	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = getGroupPrefix(groupID)
+		opts.Prefix = getGroupParticipantPrefix(groupID)
 		it := txn.NewIterator(opts)
-		for it.Seek(getGroupParticipantKey(groupID, 0)); it.ValidForPrefix(opts.Prefix); it.Next() {
+		for it.Rewind(); it.Valid(); it.Next() {
 			p := new(msg.GroupParticipant)
 			_ = it.Item().Value(func(val []byte) error {
 				return p.Unmarshal(val)

@@ -13,11 +13,6 @@ import (
 )
 
 var (
-	_DbgPeerID     int64  = 1602004544771208
-	_DbgAccessHash uint64 = 4503548912377862
-)
-
-var (
 	_Shell                   *ishell.Shell
 	_SDK                     *riversdk.River
 	_Log                     *zap.Logger
@@ -77,10 +72,19 @@ func main() {
 	conInfo.Delegate = new(ConnInfoDelegates)
 	skBytes, _ := ioutil.ReadFile("./keys.json")
 
+	serverEndPoint := "ws://river.ronaksoftware.com"
+	fileEndPoint := "http://river.ronaksoftware.com:8080"
+	switch len(os.Args) {
+	case 3:
+		fileEndPoint = os.Args[2]
+		fallthrough
+	case 2:
+		serverEndPoint = os.Args[1]
+	}
 	_SDK = new(riversdk.River)
 	_SDK.SetConfig(&riversdk.RiverConfig{
-		ServerEndpoint:         "ws://river.ronaksoftware.com", // "ws://test.river.im", // "ws://192.168.1.110/",
-		FileServerEndpoint:     "http://river.ronaksoftware.com:8080",
+		ServerEndpoint:         serverEndPoint,
+		FileServerEndpoint:     fileEndPoint,
 		DbPath:                 dbPath,
 		DbID:                   dbID,
 		ServerKeys:             ronak.ByteToStr(skBytes),
