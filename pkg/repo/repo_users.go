@@ -72,12 +72,25 @@ func getUserPhotoGalleryPrefix(userID int64) []byte {
 
 func saveUser(txn *badger.Txn, user *msg.User) error {
 	userKey := getUserKey(user.ID)
-	if len(user.PhotoGallery) == 0 {
+	if user.Photo == nil {
+		_ = deleteAllUserPhotos(txn, user.ID)
+	} else if user.Photo != nil && len(user.PhotoGallery) == 0 {
+		// then it not full object
 		currentUser, _ := getUserByKey(txn, userKey)
 		if currentUser != nil && len(currentUser.PhotoGallery) > 0 {
 			user.PhotoGallery = currentUser.PhotoGallery
 		}
+		err := saveUserPhotos(txn, user.ID, user.Photo)
+		if err != nil {
+			return err
+		}
+	} else if len(user.PhotoGallery) > 0  {
+		err := saveUserPhotos(txn, user.ID, user.PhotoGallery...)
+		if err != nil {
+			return err
+		}
 	}
+
 	userBytes, _ := user.Marshal()
 	err := txn.SetEntry(badger.NewEntry(userKey, userBytes))
 	if err != nil {
@@ -95,17 +108,6 @@ func saveUser(txn *badger.Txn, user *msg.User) error {
 		},
 	)
 
-	err = saveUserPhotos(txn, user.ID, user.Photo)
-	if err != nil {
-		return err
-	}
-
-	if len(user.PhotoGallery) > 0 {
-		err = saveUserPhotos(txn, user.ID, user.PhotoGallery...)
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
 

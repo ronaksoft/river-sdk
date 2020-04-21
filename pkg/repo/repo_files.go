@@ -122,6 +122,18 @@ func saveUserPhotos(txn *badger.Txn, userID int64, photos ...*msg.UserPhoto) err
 	return nil
 }
 
+func deleteAllUserPhotos(txn *badger.Txn, userID int64) error {
+	opts := badger.DefaultIteratorOptions
+	opts.Prefix = getUserPhotoGalleryPrefix(userID)
+	it := txn.NewIterator(opts)
+	for it.Rewind(); it.Valid(); it.Next() {
+		_ = txn.Delete(it.Item().Key())
+	}
+	it.Close()
+	return nil
+}
+
+
 func saveGroupPhotos(txn *badger.Txn, groupID int64, photos ...*msg.GroupPhoto) error {
 	for _, photo := range photos {
 		if photo != nil {
