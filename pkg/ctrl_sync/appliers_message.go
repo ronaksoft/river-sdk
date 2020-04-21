@@ -190,6 +190,7 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 	repo.Groups.Save(u.Group)
 
 	// save GroupSearch Members
+	repo.Groups.DeleteAllMembers(u.Group.ID)
 	for _, v := range u.Participants {
 		repo.Groups.SaveParticipant(u.Group.ID, v)
 	}
