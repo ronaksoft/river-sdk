@@ -301,9 +301,9 @@ func (r *repoGroups) DeleteMember(groupID, userID int64) {
 func (r *repoGroups) DeleteAllMembers(groupID int64) {
 	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = getGroupPrefix(groupID)
+		opts.Prefix = getGroupParticipantPrefix(groupID)
 		it := txn.NewIterator(opts)
-		for it.Seek(getGroupParticipantKey(groupID, 0)); it.ValidForPrefix(opts.Prefix); it.Next() {
+		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
 			_ = txn.Delete(it.Item().KeyCopy(nil))
 		}
 		it.Close()
