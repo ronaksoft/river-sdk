@@ -619,6 +619,10 @@ func (ctrl *Controller) SetAuthorization(authID int64, authKey []byte) {
 
 // SendWebsocket direct sends immediately else it put it in flusher
 func (ctrl *Controller) SendWebsocket(msgEnvelope *msg.MessageEnvelope, direct bool) error {
+	defer ctrl.recoverPanic("NetworkController:: SendWebsocket", ronak.M{
+		"C": msgEnvelope.Constructor,
+	})
+
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
 	if direct || unauthorized {
 		return ctrl.sendWebsocket(msgEnvelope)
@@ -627,6 +631,10 @@ func (ctrl *Controller) SendWebsocket(msgEnvelope *msg.MessageEnvelope, direct b
 	return nil
 }
 func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
+	defer ctrl.recoverPanic("NetworkController:: sendWebsocket", ronak.M{
+		"C": msgEnvelope.Constructor,
+	})
+
 	startTime := time.Now()
 	protoMessage := new(msg.ProtoMessage)
 	protoMessage.MessageKey = make([]byte, 32)
