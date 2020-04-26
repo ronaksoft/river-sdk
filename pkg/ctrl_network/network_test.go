@@ -149,3 +149,18 @@ func TestReconnect(t *testing.T) {
 		time.Sleep(time.Second * 5)
 	}
 }
+
+func TestPing(t *testing.T) {
+	ctrl.Start()
+	ctrl.Connect()
+	for i := 0; i < 10; i++ {
+		startTime := time.Now()
+		err := ctrl.Ping(ronak.RandomUint64(), domain.WebsocketWriteTime)
+		if err != nil {
+			t.Fatal(err)
+		}
+		logs.Info("Pinged", zap.Duration("D", time.Now().Sub(startTime)))
+	}
+	time.Sleep(5 * time.Second)
+	ctrl.Stop()
+}

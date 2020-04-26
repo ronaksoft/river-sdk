@@ -518,8 +518,12 @@ func (r *River) GetServerTimeUnix() int64 {
 }
 
 func (r *River) AppForeground() {
-	err := r.networkCtrl.Ping(ronak.RandomUint64(), domain.WebsocketWriteTime)
-	if err != nil {
+	if r.networkCtrl.GetQuality() == domain.NetworkConnected {
+		err := r.networkCtrl.Ping(ronak.RandomUint64(), domain.WebsocketPingTimeout)
+		if err != nil {
+			r.networkCtrl.Reconnect()
+		}
+	} else {
 		r.networkCtrl.Reconnect()
 	}
 }

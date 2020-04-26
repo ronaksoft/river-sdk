@@ -21,6 +21,7 @@ var (
 const (
 	DefaultWebsocketEndpoint = "ws://cyrus.river.im"
 	WebsocketIdleTimeout     = 5 * time.Minute
+	WebsocketPingTimeout     = 2 * time.Second
 	WebsocketWriteTime       = 3 * time.Second
 	WebsocketRequestTime     = 8 * time.Second
 	WebsocketDialTimeout     = 3 * time.Second
@@ -43,11 +44,9 @@ const (
 type NetworkStatus int
 
 const (
-	NetworkDisconnected NetworkStatus = iota
-	NetworkConnecting
-	NetworkWeak
-	NetworkSlow
-	NetworkFast
+	NetworkDisconnected NetworkStatus = 0
+	NetworkConnecting   NetworkStatus = 1
+	NetworkConnected    NetworkStatus = 4
 )
 
 func (ns NetworkStatus) ToString() string {
@@ -56,12 +55,8 @@ func (ns NetworkStatus) ToString() string {
 		return "Disconnected"
 	case NetworkConnecting:
 		return "Connecting"
-	case NetworkWeak:
-		return "Weak"
-	case NetworkSlow:
-		return "Slow"
-	case NetworkFast:
-		return "Fast"
+	case NetworkConnected:
+		return "Connected"
 	}
 	return "Unknown"
 }
@@ -126,7 +121,7 @@ const (
 
 // Network Connection
 const (
-	ConnectionNone     = iota
+	ConnectionNone = iota
 	ConnectionWifi
 	ConnectionCellular
 )
