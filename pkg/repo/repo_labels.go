@@ -28,7 +28,6 @@ import (
 const (
 	prefixLabel         = "LBL"
 	prefixLabelMessages = "LBLM"
-	prefixLabelHoles    = "LBLH"
 )
 
 type repoLabels struct {

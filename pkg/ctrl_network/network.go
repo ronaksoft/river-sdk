@@ -776,7 +776,7 @@ func (ctrl *Controller) Reconnect() {
 // WaitForNetwork
 func (ctrl *Controller) WaitForNetwork() {
 	// Wait While Network is Disconnected or Connecting
-	for ctrl.wsQuality == domain.NetworkDisconnected || ctrl.wsQuality == domain.NetworkConnecting {
+	for ctrl.wsQuality != domain.NetworkConnected {
 		logs.Debug("NetCtrl is waiting for Network",
 			zap.String("Quality", ctrl.wsQuality.ToString()),
 		)
@@ -786,10 +786,7 @@ func (ctrl *Controller) WaitForNetwork() {
 
 // Connected
 func (ctrl *Controller) Connected() bool {
-	if ctrl.wsQuality == domain.NetworkDisconnected || ctrl.wsQuality == domain.NetworkConnecting {
-		return false
-	}
-	return true
+	return ctrl.wsQuality == domain.NetworkConnected
 }
 
 // GetQuality
