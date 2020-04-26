@@ -331,6 +331,10 @@ func (r *River) onNetworkConnect() (err error) {
 		if err != nil {
 			logs.Warn("Error On AuthRecall", zap.Error(err))
 		}
+		logs.Debug("Local UpdateID (AuthRecall):",
+			zap.Int64("UpdateID", r.syncCtrl.UpdateID()),
+			zap.Int64("ServerID", serverUpdateID),
+		)
 		domain.WindowLog(fmt.Sprintf("AuthRecalled: %s", time.Now().Sub(domain.StartTime)))
 		waitGroup.Done()
 	}()
