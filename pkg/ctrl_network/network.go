@@ -305,6 +305,9 @@ func (ctrl *Controller) Ping(id uint64, timeout time.Duration) error {
 	err := wsutil.WriteClientMessage(ctrl.wsConn, ws.OpBinary, b)
 	ctrl.wsWriteLock.Unlock()
 	if err != nil {
+		ctrl.wsPingsMtx.Lock()
+		delete(ctrl.wsPings, id)
+		ctrl.wsPingsMtx.Unlock()
 		return err
 	}
 
@@ -346,6 +349,7 @@ func (ctrl *Controller) receiver() {
 					pingID := binary.BigEndian.Uint64(message.Payload)
 					ctrl.wsPingsMtx.Lock()
 					ch := ctrl.wsPings[pingID]
+					delete(ctrl.wsPings, pingID)
 					ctrl.wsPingsMtx.Unlock()
 					if ch != nil {
 						ch <- struct{}{}
