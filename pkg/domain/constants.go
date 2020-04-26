@@ -126,7 +126,7 @@ const (
 
 // Network Connection
 const (
-	ConnectionCellular = "cellular"
-	ConnectionWifi     = "wifi"
-	ConnectionNone     = "none"
+	ConnectionNone     = iota
+	ConnectionWifi
+	ConnectionCellular
 )

@@ -529,10 +529,10 @@ func (r *River) AppBackground() {
 }
 
 // NetworkChange
-// Possible Values: cellular, wifi, none
-func (r *River) NetworkChange(connection string) {
-	switch strings.ToLower(connection) {
-	case "none":
+// Possible Values: cellular (2), wifi (1), none (0)
+func (r *River) NetworkChange(connection int) {
+	switch connection {
+	case domain.ConnectionNone:
 		r.networkCtrl.Disconnect()
 	default:
 		r.networkCtrl.Reconnect()
