@@ -10,6 +10,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/monnand/dhkx"
 	"go.uber.org/zap"
 	"math/big"
@@ -366,6 +367,7 @@ func initCompleteAuth(r *River, clientNonce, serverNonce, serverPubFP, serverDHF
 	return
 }
 
+// ResetAuthKey
 func (r *River) ResetAuthKey() {
 	r.networkCtrl.SetAuthorization(0, nil)
 	r.ConnInfo.AuthID = 0
@@ -515,6 +517,21 @@ func (r *River) GetServerTimeUnix() int64 {
 	return domain.Now().Unix()
 }
 
+func (r *River) AppForeground() {
+	err := r.networkCtrl.Ping(ronak.RandomUint64(), domain.WebsocketWriteTime)
+	if err != nil {
+		r.networkCtrl.Reconnect()
+	}
+}
+
+func (r *River) AppBackground() {
+
+}
+
+func (r *River) NetworkChange() {
+	r.networkCtrl.Reconnect()
+}
+
 // GenSrpHash generates a hash to be used in AuthCheckPassword and other related apis
 func GenSrpHash(password []byte, algorithm int64, algorithmData []byte) []byte {
 	switch algorithm {
@@ -583,3 +600,4 @@ func SanitizeQuestionAnswer(answer string) string {
 func GetCountryCode(phone string) string {
 	return domain.GetCountryCode(phone)
 }
+

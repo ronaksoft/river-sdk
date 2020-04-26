@@ -20,6 +20,7 @@ var (
 // Global Parameters
 const (
 	DefaultWebsocketEndpoint = "ws://cyrus.river.im"
+	WebsocketIdleTimeout     = 5 * time.Minute
 	WebsocketWriteTime       = 3 * time.Second
 	WebsocketRequestTime     = 8 * time.Second
 	WebsocketDialTimeout     = 3 * time.Second

@@ -3,6 +3,7 @@ package networkCtrl
 import (
 	"bytes"
 	"context"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
@@ -49,6 +50,9 @@ type Controller struct {
 	wsEndpoint       string
 	wsKeepConnection bool
 	wsConn           net.Conn
+	wsPingsMtx       sync.Mutex
+	wsPings          map[uint64]chan struct{}
+	wsLastActivity   time.Time
 
 	// Http Settings
 	httpEndpoint string
@@ -283,6 +287,37 @@ func (ctrl *Controller) watchDog() {
 	}
 }
 
+// Ping the server to check connectivity
+func (ctrl *Controller) Ping(id uint64, timeout time.Duration) error {
+	// Create a channel for pong
+	ch := make(chan struct{}, 1)
+	ctrl.wsPingsMtx.Lock()
+	ctrl.wsPings[id] = ch
+	ctrl.wsPingsMtx.Unlock()
+
+	// Create a byte slice for ping payload
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, id)
+
+	// Send the Ping to the wire
+	ctrl.wsWriteLock.Lock()
+	_ = ctrl.wsConn.SetWriteDeadline(time.Now().Add(domain.WebsocketWriteTime))
+	err := wsutil.WriteClientMessage(ctrl.wsConn, ws.OpBinary, b)
+	ctrl.wsWriteLock.Unlock()
+	if err != nil {
+		return err
+	}
+
+	select {
+	case <-time.After(timeout):
+	case <-ch:
+		// Pong Received
+		return nil
+	}
+
+	return domain.ErrRequestTimeout
+}
+
 // receiver
 // This is the background routine listen for incoming websocket packets and _Decrypt
 // the received message, if necessary, and  pass the extracted envelopes to messageHandler.
@@ -291,63 +326,81 @@ func (ctrl *Controller) receiver() {
 		"AuthID": ctrl.authID,
 	})
 	res := msg.ProtoMessage{}
+	var (
+		messages []wsutil.Message
+		err      error
+	)
 	for {
-		_ = ctrl.wsConn.SetReadDeadline(time.Now().Add(time.Minute * 5))
-		message, messageType, err := wsutil.ReadServerData(ctrl.wsConn)
+		messages = messages[:0]
+		_ = ctrl.wsConn.SetReadDeadline(time.Now().Add(domain.WebsocketIdleTimeout))
+		messages, err = wsutil.ReadServerMessage(ctrl.wsConn, messages)
 		if err != nil {
+			// If we return then watchdog will re-connect
 			return
 		}
-		switch messageType {
-		case ws.OpBinary:
-			// If it is a BINARY message
-			err := res.Unmarshal(message)
-			if err != nil {
-				logs.Error("NetCtrl couldn't unmarshal received BinaryMessage", zap.Error(err), zap.String("Dump", string(message)))
-				continue
-			}
-
-			if res.AuthID == 0 {
-				receivedEnvelope := new(msg.MessageEnvelope)
-				err = receivedEnvelope.Unmarshal(res.Payload)
+		ctrl.wsLastActivity = time.Now()
+		for _, message := range messages {
+			switch message.OpCode {
+			case ws.OpPong:
+				if len(message.Payload) == 8 {
+					pingID := binary.BigEndian.Uint64(message.Payload)
+					ctrl.wsPingsMtx.Lock()
+					ch := ctrl.wsPings[pingID]
+					ctrl.wsPingsMtx.Unlock()
+					if ch != nil {
+						ch <- struct{}{}
+					}
+				}
+			case ws.OpBinary:
+				// If it is a BINARY message
+				err := res.Unmarshal(message.Payload)
 				if err != nil {
-					logs.Error("NetCtrl couldn't unmarshal plain-text MessageEnvelope", zap.Error(err))
+					logs.Error("NetCtrl couldn't unmarshal received BinaryMessage",
+						zap.Error(err),
+						zap.String("Dump", string(message.Payload)),
+					)
 					continue
 				}
-				logs.Debug("NetCtrl received plain-text message",
-					zap.String("Constructor", msg.ConstructorNames[receivedEnvelope.Constructor]),
-					zap.Uint64("ReqID", receivedEnvelope.RequestID),
-				)
-				ctrl.messageHandler(receivedEnvelope)
-				continue
-			}
 
-			// We received an encrypted message
-			decryptedBytes, err := domain.Decrypt(ctrl.authKey, res.MessageKey, res.Payload)
-			if err != nil {
-				logs.Error("NetCtrl couldn't decrypt the received message",
-					zap.String("Error", err.Error()),
-					zap.Int64("ctrl.authID", ctrl.authID),
-					zap.Int64("resp.AuthID", res.AuthID),
-					zap.String("resp.MessageKey", hex.Dump(res.MessageKey)),
+				if res.AuthID == 0 {
+					receivedEnvelope := new(msg.MessageEnvelope)
+					err = receivedEnvelope.Unmarshal(res.Payload)
+					if err != nil {
+						logs.Error("NetCtrl couldn't unmarshal plain-text MessageEnvelope", zap.Error(err))
+						continue
+					}
+					logs.Debug("NetCtrl received plain-text message",
+						zap.String("Constructor", msg.ConstructorNames[receivedEnvelope.Constructor]),
+						zap.Uint64("ReqID", receivedEnvelope.RequestID),
+					)
+					ctrl.messageHandler(receivedEnvelope)
+					continue
+				}
+
+				// We received an encrypted message
+				decryptedBytes, err := domain.Decrypt(ctrl.authKey, res.MessageKey, res.Payload)
+				if err != nil {
+					logs.Error("NetCtrl couldn't decrypt the received message",
+						zap.String("Error", err.Error()),
+						zap.Int64("ctrl.authID", ctrl.authID),
+						zap.Int64("resp.AuthID", res.AuthID),
+						zap.String("resp.MessageKey", hex.Dump(res.MessageKey)),
+					)
+					continue
+				}
+				receivedEncryptedPayload := new(msg.ProtoEncryptedPayload)
+				err = receivedEncryptedPayload.Unmarshal(decryptedBytes)
+				if err != nil {
+					logs.Error("NetCtrl couldn't unmarshal decrypted message", zap.Error(err))
+					continue
+				}
+				logs.Debug("NetCtrl received encrypted message",
+					zap.String("Constructor", msg.ConstructorNames[receivedEncryptedPayload.Envelope.Constructor]),
+					zap.Uint64("ReqID", receivedEncryptedPayload.Envelope.RequestID),
 				)
-				continue
+				// TODO:: check message id and server salt before handling the message
+				ctrl.messageHandler(receivedEncryptedPayload.Envelope)
 			}
-			receivedEncryptedPayload := new(msg.ProtoEncryptedPayload)
-			err = receivedEncryptedPayload.Unmarshal(decryptedBytes)
-			if err != nil {
-				logs.Error("NetCtrl couldn't unmarshal decrypted message", zap.Error(err))
-				continue
-			}
-			logs.Debug("NetCtrl received encrypted message",
-				zap.String("Constructor", msg.ConstructorNames[receivedEncryptedPayload.Envelope.Constructor]),
-				zap.Uint64("ReqID", receivedEncryptedPayload.Envelope.RequestID),
-			)
-			// TODO:: check message id and server salt before handling the message
-			ctrl.messageHandler(receivedEncryptedPayload.Envelope)
-		default:
-			logs.Warn("NetCtrl received unhandled message type",
-				zap.Any("MessageType", messageType),
-			)
 		}
 	}
 }
@@ -476,7 +529,7 @@ func (ctrl *Controller) Connect() {
 				logs.Warn("NetCtrl could not dial", zap.Error(err), zap.String("Url", ctrl.wsEndpoint))
 				time.Sleep(domain.GetExponentialTime(100*time.Millisecond, 3*time.Second, attempts))
 				attempts++
-				if attempts > 5 {
+				if attempts > 2 {
 					attempts = 0
 					ctrl.createDialer(domain.WebsocketDialTimeoutLong)
 				}
@@ -614,6 +667,7 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 		_ = ctrl.wsConn.Close()
 		return err
 	}
+	ctrl.wsLastActivity = time.Now()
 	logs.Debug("NetCtrl sent over websocket",
 		zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
 		zap.Duration("Duration", time.Now().Sub(startTime)),
