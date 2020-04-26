@@ -187,13 +187,12 @@ func (ctrl *Controller) Sync() {
 				logs.Error("SyncCtrl couldn't save the current UpdateID", zap.Error(err))
 				return
 			}
-		} else if serverUpdateID > ctrl.updateID+1 {
+		} else if serverUpdateID >= ctrl.updateID+1 {
 			logs.Info("SyncCtrl goes for a Sequential sync")
 			getUpdateDifference(ctrl, serverUpdateID)
 		}
 		return nil, nil
 	})
-	logs.Debug("Local UpdateID:", zap.Int64("UpdateID", ctrl.UpdateID()))
 }
 func forceUpdateUI(ctrl *Controller, dialogs, contacts bool) {
 	update := &msg.ClientUpdateSynced{}

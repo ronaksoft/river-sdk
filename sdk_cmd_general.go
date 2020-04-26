@@ -522,7 +522,6 @@ func (r *River) AppForeground() {
 	if err != nil {
 		r.networkCtrl.Reconnect()
 	}
-	logs.Debug("Local UpdateID:", zap.Int64("UpdateID", r.syncCtrl.UpdateID()))
 }
 
 func (r *River) AppBackground() {
