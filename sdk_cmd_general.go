@@ -528,16 +528,6 @@ func (r *River) AppBackground() {
 
 }
 
-// NetworkChange
-// Possible Values: cellular (2), wifi (1), none (0)
-func (r *River) NetworkChange(connection int) {
-	switch connection {
-	case domain.ConnectionNone:
-		r.networkCtrl.Disconnect()
-	default:
-		r.networkCtrl.Reconnect()
-	}
-}
 
 // GenSrpHash generates a hash to be used in AuthCheckPassword and other related apis
 func GenSrpHash(password []byte, algorithm int64, algorithmData []byte) []byte {

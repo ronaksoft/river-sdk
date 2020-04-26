@@ -1,5 +1,7 @@
 package riversdk
 
+import "git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+
 /*
    Creation Time: 2019 - Jun - 25
    Created by:  (ehsan)
@@ -9,6 +11,7 @@ package riversdk
    Copyright Ronak Software Group 2018
 */
 
+// StartNetwork
 func (r *River) StartNetwork(country string) {
 	if country != "" {
 		r.networkCtrl.UpdateEndpoint(country)
@@ -16,24 +19,23 @@ func (r *River) StartNetwork(country string) {
 	r.networkCtrl.Connect()
 }
 
+// StopNetwork
 func (r *River) StopNetwork() {
 	r.networkCtrl.Disconnect()
 }
 
-func (r *River) GetNetworkStatus() int32 {
-	return int32(r.networkCtrl.GetQuality())
-}
-
-// UnderlyingNetworkChange
-func (r *River) UnderlyingNetworkChange(connected bool) {
-	if connected {
-		r.networkCtrl.Reconnect()
-	} else {
+// NetworkChange
+// Possible Values: cellular (2), wifi (1), none (0)
+func (r *River) NetworkChange(connection int) {
+	switch connection {
+	case domain.ConnectionNone:
 		r.networkCtrl.Disconnect()
+	default:
+		r.networkCtrl.Reconnect()
 	}
 }
 
-// UnderlyingNetworkSpeedChange
-func (r *River) UnderlyingNetworkSpeedChange(fast bool) {
-	// TODO:: update timeout values
+// GetNetworkStatus
+func (r *River) GetNetworkStatus() int32 {
+	return int32(r.networkCtrl.GetQuality())
 }
