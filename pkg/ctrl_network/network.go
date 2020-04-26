@@ -83,6 +83,7 @@ type Controller struct {
 // New
 func New(config Config) *Controller {
 	ctrl := new(Controller)
+	ctrl.wsPings = make(map[uint64]chan struct{})
 	ctrl.httpEndpoint = config.HttpEndpoint
 	ctrl.countryCode = strings.ToUpper(config.CountryCode)
 	if config.WebsocketEndpoint == "" {
