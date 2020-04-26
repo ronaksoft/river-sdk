@@ -123,3 +123,10 @@ const (
 	Month    = Week * 4
 	TwoMonth = Month * 2
 )
+
+// Network Connection
+const (
+	ConnectionCellular = "cellular"
+	ConnectionWifi     = "wifi"
+	ConnectionNone     = "none"
+)
