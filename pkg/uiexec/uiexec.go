@@ -1,7 +1,7 @@
 package uiexec
 
 import (
-	"github.com/prometheus/common/log"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"go.uber.org/zap"
 	"time"
 )
@@ -20,7 +20,7 @@ func init() {
 			startTime := time.Now()
 			fn()
 			if d := time.Now().Sub(startTime); d > maxDelay {
-				log.Error("Too Long UIExec", zap.Duration("D", d))
+				logs.Error("Too Long UIExec", zap.Duration("D", d))
 			}
 		}
 	}()
@@ -32,7 +32,7 @@ func Exec(fn func()) {
 	select {
 	case funcChan <- fn:
 	default:
-		log.Error("Error On Pushing To UIExec", len(funcChan))
+		logs.Error("Error On Pushing To UIExec")
 	}
 
 }

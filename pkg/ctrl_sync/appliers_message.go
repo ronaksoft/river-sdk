@@ -196,10 +196,10 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 
 	for _, v := range u.Participants {
 		waitGroup.Add(1)
-		go func() {
+		go func(v *msg.GroupParticipant) {
 			repo.Groups.SaveParticipant(u.Group.ID, v)
 			waitGroup.Done()
-		}()
+		}(v)
 	}
 	waitGroup.Wait()
 

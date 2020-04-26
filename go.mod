@@ -44,6 +44,7 @@ require (
 	github.com/nyaruka/phonenumbers v1.0.36
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/pkg/errors v0.8.1
+	github.com/prometheus/common v0.4.1
 	github.com/remyoudompheng/bigfft v0.0.0-20190512091148-babf20351dd7 // indirect
 	github.com/smartystreets/goconvey v0.0.0-20190306220146-200a235640ff
 	github.com/spf13/cobra v0.0.5
