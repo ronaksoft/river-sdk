@@ -169,6 +169,9 @@ func (ctrl *Controller) updateFlushFunc(entries []ronak.FlusherEntry) {
 				updateContainer.MaxUpdateID = uc.MaxUpdateID
 			}
 			for _, u := range uc.Updates {
+				logs.Debug("Local UpdateID (Receive):",
+					zap.Int64("UpdateID", u.UpdateID),
+				)
 				updateContainer.Updates = append(updateContainer.Updates, u)
 			}
 			for _, u := range uc.Users {
