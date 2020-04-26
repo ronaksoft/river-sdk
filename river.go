@@ -328,6 +328,9 @@ func (r *River) onNetworkConnect() (err error) {
 	waitGroup.Add(1)
 	go func() {
 		serverUpdateID, err = r.syncCtrl.AuthRecall("NetworkConnect")
+		if err != nil {
+			logs.Warn("Error On AuthRecall", zap.Error(err))
+		}
 		domain.WindowLog(fmt.Sprintf("AuthRecalled: %s", time.Now().Sub(domain.StartTime)))
 		waitGroup.Done()
 	}()
@@ -342,8 +345,6 @@ func (r *River) onNetworkConnect() (err error) {
 				// Sync with Server
 				r.syncCtrl.Sync()
 				domain.WindowLog(fmt.Sprintf("Synced: %s", time.Now().Sub(domain.StartTime)))
-			} else if serverUpdateID == 0 {
-				r.networkCtrl.Reconnect()
 			} else {
 				r.syncCtrl.SetSynced()
 				domain.WindowLog(fmt.Sprintf("Already Synced: %s", time.Now().Sub(domain.StartTime)))

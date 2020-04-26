@@ -193,6 +193,7 @@ func (ctrl *Controller) Sync() {
 		}
 		return nil, nil
 	})
+	logs.Debug("Local UpdateID:", zap.Int64("UpdateID", ctrl.UpdateID()))
 }
 func forceUpdateUI(ctrl *Controller, dialogs, contacts bool) {
 	update := &msg.ClientUpdateSynced{}

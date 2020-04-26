@@ -240,37 +240,3 @@ func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup) {
 	)
 }
 
-func (ctrl *Controller) GetUpdateState() (updateID int64, err error) {
-	logs.Debug("SyncCtrl calls GetUpdateState")
-	updateID = 0
-	if !ctrl.networkCtrl.Connected() {
-		return -1, domain.ErrNoConnection
-	}
-
-	req := &msg.UpdateGetState{}
-	reqBytes, _ := req.Marshal()
-	ctrl.queueCtrl.RealtimeCommand(
-		&msg.MessageEnvelope{
-			Constructor: msg.C_UpdateGetState,
-			RequestID:   uint64(domain.SequentialUniqueID()),
-			Message:     reqBytes,
-		},
-		func() {
-			err = domain.ErrRequestTimeout
-		},
-		func(m *msg.MessageEnvelope) {
-			switch m.Constructor {
-			case msg.C_UpdateState:
-				x := new(msg.UpdateState)
-				_ = x.Unmarshal(m.Message)
-				updateID = x.UpdateID
-				logs.Debug("SyncCtrl received UpdateState", zap.Int64("UpdateID", updateID))
-			case msg.C_Error:
-				err = domain.ParseServerError(m.Message)
-			}
-		},
-		true,
-		false,
-	)
-	return
-}

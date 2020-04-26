@@ -522,12 +522,12 @@ func (r *River) AppForeground() {
 	if err != nil {
 		r.networkCtrl.Reconnect()
 	}
+	logs.Debug("Local UpdateID:", zap.Int64("UpdateID", r.syncCtrl.UpdateID()))
 }
 
 func (r *River) AppBackground() {
 
 }
-
 
 // GenSrpHash generates a hash to be used in AuthCheckPassword and other related apis
 func GenSrpHash(password []byte, algorithm int64, algorithmData []byte) []byte {
@@ -597,4 +597,3 @@ func SanitizeQuestionAnswer(answer string) string {
 func GetCountryCode(phone string) string {
 	return domain.GetCountryCode(phone)
 }
-
