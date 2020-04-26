@@ -303,7 +303,7 @@ func (ctrl *Controller) Ping(id uint64, timeout time.Duration) error {
 	// Send the Ping to the wire
 	ctrl.wsWriteLock.Lock()
 	_ = ctrl.wsConn.SetWriteDeadline(time.Now().Add(domain.WebsocketWriteTime))
-	err := wsutil.WriteClientMessage(ctrl.wsConn, ws.OpBinary, b)
+	err := wsutil.WriteClientMessage(ctrl.wsConn, ws.OpPing, b)
 	ctrl.wsWriteLock.Unlock()
 	if err != nil {
 		ctrl.wsPingsMtx.Lock()

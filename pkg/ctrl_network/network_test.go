@@ -111,13 +111,11 @@ func TestNewController(t *testing.T) {
 			time.Sleep(time.Second)
 		}
 	}()
-	for j := 0; j < 10; j++ {
-		time.Sleep(5 * time.Second)
-		ctrl.Reconnect()
-		ctrl.Reconnect()
-		ctrl.Reconnect()
+	time.Sleep(time.Second * 5)
+	err := ctrl.Ping(ronak.RandomUint64(), domain.WebsocketWriteTime)
+	if err != nil {
+		t.Fatal(err)
 	}
-
 	time.Sleep(5 * time.Second)
 
 	ctrl.Stop()
