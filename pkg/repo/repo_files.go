@@ -118,7 +118,6 @@ func saveUserPhotos(txn *badger.Txn, userID int64, photos ...*msg.UserPhoto) err
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -433,7 +432,7 @@ func (r *repoFiles) DeleteCachedMedia(peerType int32, peerID int64, mediaTypes [
 
 func (r *repoFiles) ClearCache() {
 	dirs := []string{
-		DirAudio, DirFile, DirPhoto, DirVideo,
+		DirAudio, DirFile, DirPhoto, DirVideo, DirCache,
 	}
 	for _, dir := range dirs {
 		_ = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
