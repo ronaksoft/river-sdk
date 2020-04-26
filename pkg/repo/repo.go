@@ -95,12 +95,14 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 			WithNumLevelZeroTables(2).
 			WithNumLevelZeroTablesStall(4).
 			WithMaxTableSize(1 << 22). // 4MB
-			WithValueLogFileSize(1 << 22) // 4MB
-
+			WithValueLogFileSize(1 << 22). // 4MB
+			WithBypassLockGuard(true)
 	} else {
 		badgerOpts = badgerOpts.
 			WithTableLoadingMode(options.LoadToRAM).
-			WithValueLogLoadingMode(options.FileIO)
+			WithValueLogLoadingMode(options.FileIO).
+			WithBypassLockGuard(true)
+
 	}
 	if badgerDB, err := badger.Open(badgerOpts); err != nil {
 		return errors.Wrap(err, "Badger")

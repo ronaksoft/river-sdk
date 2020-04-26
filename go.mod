@@ -17,7 +17,7 @@ require (
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
 	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
-	github.com/dgraph-io/badger v1.6.0
+	github.com/dgraph-io/badger v1.6.1
 	github.com/dustin/go-humanize v1.0.0
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/etcd-io/bbolt v1.3.3 // indirect
@@ -29,10 +29,10 @@ require (
 	github.com/getsentry/sentry-go v0.1.3
 	github.com/gobwas/pool v0.2.0
 	github.com/gobwas/ws v1.0.2
-	github.com/gorilla/websocket v1.4.0
+	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/juju/ratelimit v1.0.1
-	github.com/kr/pretty v0.1.0
+	github.com/kr/pretty v0.2.0
 	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
@@ -40,11 +40,11 @@ require (
 	github.com/mattn/go-sqlite3 v1.10.0
 	github.com/monnand/dhkx v0.0.0-20180522003156-9e5b033f1ac4
 	github.com/nats-io/gnatsd v1.4.1 // indirect
-	github.com/nats-io/go-nats v1.7.2
+	github.com/nats-io/go-nats v1.7.2 // indirect
 	github.com/nyaruka/phonenumbers v1.0.36
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/pkg/errors v0.8.1
-	github.com/prometheus/common v0.4.1
+	github.com/prometheus/common v0.4.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20190512091148-babf20351dd7 // indirect
 	github.com/smartystreets/goconvey v0.0.0-20190306220146-200a235640ff
 	github.com/spf13/cobra v0.0.5

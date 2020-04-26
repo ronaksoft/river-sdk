@@ -23,5 +23,5 @@ func Try(attempts int, waitTime time.Duration, f RetryableFunc) (err error) {
 		attempts--
 		time.Sleep(waitTime)
 	}
-	return 
+	return
 }
