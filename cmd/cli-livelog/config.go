@@ -13,9 +13,21 @@ import "github.com/spf13/viper"
 
 const (
 	ConfListenPort = "LISTEN_PORT"
+	ConfReportPort = "REPORT_PORT"
+	ConfClient     = "CLIENT"
+	ConfServerUrl  = "SERVER_URL"
+	ConfPid        = "PID"
 )
 
 func readConfig() {
-	RootCmd.Flags().Int("port", 2374, "listen port")
+	RootCmd.Flags().Int("port", 2374, "listening port")
+	RootCmd.Flags().Int("report_port", 2375, "reporting port")
+	RootCmd.Flags().Bool("client", false, "run in client mode")
+	RootCmd.Flags().String("server_url", "ws://127.0.0.1:2375", "server address")
+	RootCmd.Flags().String("pid", "", "")
 	_ = viper.BindPFlag(ConfListenPort, RootCmd.Flags().Lookup("port"))
+	_ = viper.BindPFlag(ConfReportPort, RootCmd.Flags().Lookup("report_port"))
+	_ = viper.BindPFlag(ConfClient, RootCmd.Flags().Lookup("client"))
+	_ = viper.BindPFlag(ConfServerUrl, RootCmd.Flags().Lookup("server_url"))
+	_ = viper.BindPFlag(ConfPid, RootCmd.Flags().Lookup("pid"))
 }
