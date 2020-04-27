@@ -8,7 +8,6 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"fmt"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"hash/crc32"
 	"io"
 	"log"
@@ -16,11 +15,13 @@ import (
 	"math/big"
 	"math/rand"
 	"os"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
 	"sync/atomic"
 	"time"
+	"unsafe"
 
 	msg "git.ronaksoftware.com/river/msg/chat"
 	"github.com/nyaruka/phonenumbers"
@@ -49,6 +50,7 @@ func init() {
 	}
 	WindowLog = func(txt string) {}
 	_RegExPhone = exp
+	rand.Seed(time.Now().UnixNano())
 }
 
 // SplitPQ ...
@@ -272,6 +274,18 @@ func RandomUint64() uint64 {
 	return rand.Uint64()
 }
 
+func RandomInt64(n int64) (x int64) {
+	if n <= 0 {
+		return rand.Int63()
+	} else {
+		return rand.Int63n(n)
+	}
+}
+
+func RandomInt(n int) (x int) {
+	return rand.Intn(n)
+}
+
 // RandomInt63 produces a pseudo-random signed number
 func RandomInt63() int64 {
 	return rand.Int63()
@@ -313,9 +327,9 @@ func CalculateContactsImportHash(req *msg.ContactsImport) uint64 {
 	count := len(phones)
 	bb := bytes.Buffer{}
 	for idx := 0; idx < count; idx++ {
-		bb.Write(ronak.StrToByte(phones[idx].Phone))
-		bb.Write(ronak.StrToByte(phones[idx].FirstName))
-		bb.Write(ronak.StrToByte(phones[idx].LastName))
+		bb.Write(StrToByte(phones[idx].Phone))
+		bb.Write(StrToByte(phones[idx].FirstName))
+		bb.Write(StrToByte(phones[idx].LastName))
 	}
 	crc32Hash := crc32.ChecksumIEEE(bb.Bytes())
 	return uint64(crc32Hash)
@@ -441,4 +455,24 @@ func CalculateSha256(filePath string) (string, error) {
 		h.Write(buf[:n])
 	}
 	return string(h.Sum(nil)), nil
+}
+
+// ByteToStr converts byte slice to a string without memory allocation.
+// Note it may break if string and/or slice header will change
+// in the future go versions.
+func ByteToStr(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
+}
+
+// StrToByte converts string to a byte slice without memory allocation.
+// Note it may break if string and/or slice header will change
+// in the future go versions.
+func StrToByte(s string) []byte {
+	sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
+	bh := reflect.SliceHeader{
+		Data: sh.Data,
+		Len:  sh.Len,
+		Cap:  sh.Len,
+	}
+	return *(*[]byte)(unsafe.Pointer(&bh))
 }

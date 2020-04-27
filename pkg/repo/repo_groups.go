@@ -25,7 +25,7 @@ type repoGroups struct {
 }
 
 func getGroupKey(groupID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixGroups, groupID))
+	return domain.StrToByte(fmt.Sprintf("%s.%021d", prefixGroups, groupID))
 }
 
 func getGroupByKey(txn *badger.Txn, groupKey []byte) (*msg.Group, error) {
@@ -44,23 +44,23 @@ func getGroupByKey(txn *badger.Txn, groupKey []byte) (*msg.Group, error) {
 }
 
 func getGroupParticipantKey(groupID, memberID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixGroupsParticipants, groupID, memberID))
+	return domain.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixGroupsParticipants, groupID, memberID))
 }
 
 func getGroupParticipantPrefix(groupID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%021d.", prefixGroupsParticipants, groupID))
+	return domain.StrToByte(fmt.Sprintf("%s.%021d.", prefixGroupsParticipants, groupID))
 }
 
 func getGroupPhotoGalleryKey(groupID, photoID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixGroupsPhotoGallery, groupID, photoID))
+	return domain.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixGroupsPhotoGallery, groupID, photoID))
 }
 
 func getGroupPhotoGalleryPrefix(groupID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%021d.", prefixGroupsPhotoGallery, groupID))
+	return domain.StrToByte(fmt.Sprintf("%s.%021d.", prefixGroupsPhotoGallery, groupID))
 }
 
 func getGroupPrefix(groupID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%021d.", prefixGroupsParticipants, groupID))
+	return domain.StrToByte(fmt.Sprintf("%s.%021d.", prefixGroupsParticipants, groupID))
 }
 
 func saveGroup(txn *badger.Txn, group *msg.Group) error {
@@ -74,7 +74,7 @@ func saveGroup(txn *badger.Txn, group *msg.Group) error {
 	}
 
 	indexPeer(
-		ronak.ByteToStr(groupKey),
+		domain.ByteToStr(groupKey),
 		GroupSearch{
 			Type:   "group",
 			Title:  group.Title,
@@ -397,7 +397,7 @@ func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
 	searchResult, _ := r.peerSearch.Search(searchRequest)
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
-			group, _ := getGroupByKey(txn, ronak.StrToByte(hit.ID))
+			group, _ := getGroupByKey(txn, domain.StrToByte(hit.ID))
 			if group != nil {
 				groups = append(groups, group)
 			}
@@ -420,13 +420,13 @@ func (r *repoGroups) ReIndex() {
 	}
 	err = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = ronak.StrToByte(prefixGroups)
+		opts.Prefix = domain.StrToByte(prefixGroups)
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.Valid(); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
 				group := new(msg.Group)
 				_ = group.Unmarshal(val)
-				groupKey := ronak.ByteToStr(getGroupKey(group.ID))
+				groupKey := domain.ByteToStr(getGroupKey(group.ID))
 				if d, _ := r.peerSearch.Document(groupKey); d == nil {
 					indexPeer(
 						groupKey,

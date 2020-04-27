@@ -3,8 +3,8 @@ package repo
 import (
 	"encoding/json"
 	"fmt"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
 )
 
@@ -17,7 +17,7 @@ type repoMessagesExtra struct {
 }
 
 func (r *repoMessagesExtra) getKey(peerID int64, peerType int32) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%d", prefixMessageExtra, peerID, peerType))
+	return domain.StrToByte(fmt.Sprintf("%s.%021d.%d", prefixMessageExtra, peerID, peerType))
 }
 
 func (r *repoMessagesExtra) get(peerID int64, peerType int32) *dto.MessagesExtra {

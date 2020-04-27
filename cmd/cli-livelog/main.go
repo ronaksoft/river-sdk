@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/valyala/fasthttp"
@@ -19,12 +19,12 @@ var RootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Server is running on: ", viper.GetInt(ConfListenPort))
 		_ = fasthttp.ListenAndServe(fmt.Sprintf(":%d", viper.GetInt(ConfListenPort)), func(ctx *fasthttp.RequestCtx) {
-			fmt.Print(ronak.ByteToStr(ctx.Request.Body()))
-			// if strings.Contains(ronak.ByteToStr(ctx.Request.Body()), "Pending Message") ||
-			// 	strings.Contains(ronak.ByteToStr(ctx.Request.Body()), "updateMessageID") ||
-			// 	strings.Contains(ronak.ByteToStr(ctx.Request.Body()), "UpdateHandler() -> UpdateAppliers") ||
-			// 	strings.Contains(ronak.ByteToStr(ctx.Request.Body()), "SyncController::updateNewMessage") {
-			// 	// fmt.Print(ronak.ByteToStr(ctx.Request.Body()))
+			fmt.Print(domain.ByteToStr(ctx.Request.Body()))
+			// if strings.Contains(domain.ByteToStr(ctx.Request.Body()), "Pending Message") ||
+			// 	strings.Contains(domain.ByteToStr(ctx.Request.Body()), "updateMessageID") ||
+			// 	strings.Contains(domain.ByteToStr(ctx.Request.Body()), "UpdateHandler() -> UpdateAppliers") ||
+			// 	strings.Contains(domain.ByteToStr(ctx.Request.Body()), "SyncController::updateNewMessage") {
+			// 	// fmt.Print(domain.ByteToStr(ctx.Request.Body()))
 			// }
 		})
 	},

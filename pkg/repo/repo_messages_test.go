@@ -1,8 +1,8 @@
 package repo_test
 
 import (
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
@@ -18,7 +18,7 @@ import (
 
 func TestMessagesSearch(t *testing.T) {
 	for i := 1; i < 100; i++ {
-		repo.Messages.Save(createMessage(int64(i), ronak.RandomID(32), []int32{int32(i % 5)}))
+		repo.Messages.Save(createMessage(int64(i), domain.RandomID(32), []int32{int32(i % 5)}))
 	}
 	Convey("Messages Search", t, func() {
 		Convey("Search By Label", func(c C) {

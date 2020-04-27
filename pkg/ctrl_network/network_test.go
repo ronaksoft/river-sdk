@@ -5,7 +5,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
 	"sync/atomic"
 	"testing"
@@ -70,7 +69,7 @@ func authRecall() *msg.MessageEnvelope {
 	b, _ := m.Marshal()
 	return &msg.MessageEnvelope{
 		Constructor: msg.C_AuthRecall,
-		RequestID:   ronak.RandomUint64(),
+		RequestID:   domain.RandomUint64(),
 		Message:     b,
 	}
 }
@@ -112,7 +111,7 @@ func TestNewController(t *testing.T) {
 		}
 	}()
 	time.Sleep(time.Second * 5)
-	err := ctrl.Ping(ronak.RandomUint64(), domain.WebsocketWriteTime)
+	err := ctrl.Ping(domain.RandomUint64(), domain.WebsocketWriteTime)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -155,7 +154,7 @@ func TestPing(t *testing.T) {
 	ctrl.Connect()
 	for i := 0; i < 10; i++ {
 		startTime := time.Now()
-		err := ctrl.Ping(ronak.RandomUint64(), domain.WebsocketWriteTime)
+		err := ctrl.Ping(domain.RandomUint64(), domain.WebsocketWriteTime)
 		if err != nil {
 			t.Fatal(err)
 		}

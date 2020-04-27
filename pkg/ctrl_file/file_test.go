@@ -8,7 +8,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/valyala/tcplisten"
 	"go.uber.org/zap"
@@ -132,7 +131,7 @@ func (t server) ServeHTTP(httpRes http.ResponseWriter, httpReq *http.Request) {
 	body, _ := ioutil.ReadAll(httpReq.Body)
 	time.Sleep(time.Duration(len(body)/speedBytesPerSec) * time.Second)
 
-	if ronak.RandomInt(100) > (100 - errRatePercent) {
+	if domain.RandomInt(100) > (100 - errRatePercent) {
 		httpRes.WriteHeader(http.StatusForbidden)
 		return
 	}
@@ -237,9 +236,9 @@ func TestDownloadFileASync(t *testing.T) {
 func TestUpload(t *testing.T) {
 	uploadStart = true
 	Convey("Upload", t, func(c C) {
-		fileID := ronak.RandomInt64(0)
-		msgID := ronak.RandomInt64(0)
-		peerID := ronak.RandomInt64(0)
+		fileID := domain.RandomInt63()
+		msgID := domain.RandomInt63()
+		peerID := domain.RandomInt63()
 		Convey("Good Network", func(c C) {
 			startTime := time.Now()
 			Convey("Upload Big File (Good Network)", func(c C) {

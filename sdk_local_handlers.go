@@ -5,7 +5,6 @@ import (
 	"fmt"
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"sort"
 	"strings"
 	"sync"
@@ -554,10 +553,10 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 
 	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 	msgID := -domain.SequentialUniqueID()
-	fileID := ronak.RandomInt64(0)
+	fileID := domain.RandomInt63()
 	thumbID := int64(0)
 	if reqMedia.ThumbFilePath != "" {
-		thumbID = ronak.RandomInt64(0)
+		thumbID = domain.RandomInt63()
 	}
 	reqMedia.FileUploadID = fmt.Sprintf("%d", fileID)
 	reqMedia.FileID = fileID

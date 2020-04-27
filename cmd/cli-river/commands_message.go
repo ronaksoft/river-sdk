@@ -4,7 +4,6 @@ import (
 	"fmt"
 	msg "git.ronaksoftware.com/river/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"
 )
@@ -17,7 +16,7 @@ var MessageSend = &ishell.Cmd{
 	Name: "SendMessage",
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesSend{}
-		req.RandomID = ronak.RandomInt64(0)
+		req.RandomID = domain.RandomInt63()
 		req.Peer = &msg.InputPeer{}
 		req.Peer.Type = fnGetPeerType(c)
 		req.Peer.ID = fnGetPeerID(c)
@@ -39,7 +38,7 @@ var MessageSendToSelf = &ishell.Cmd{
 	Name: "SendToMe",
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesSend{}
-		req.RandomID = ronak.RandomInt64(0)
+		req.RandomID = domain.RandomInt63()
 		req.Peer = &msg.InputPeer{}
 		req.Peer.Type = msg.PeerUser
 		req.Peer.ID = _SDK.ConnInfo.UserID

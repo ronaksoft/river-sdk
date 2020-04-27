@@ -1,6 +1,9 @@
 package domain
 
-import "golang.org/x/sync/singleflight"
+import (
+	"github.com/gogo/protobuf/proto"
+	"golang.org/x/sync/singleflight"
+)
 
 // MInt64B simple type to get distinct IDs
 type MInt64B map[int64]bool
@@ -50,9 +53,16 @@ func (m MInt32B) ToArray() []int32 {
 	return a
 }
 
+// Salt
 type Slt struct {
 	Value     int64 `json:"value"`
 	Timestamp int64 `json:"timestamp"`
 }
 
 var SingleFlight singleflight.Group
+
+type Proto interface {
+	proto.Sizer
+	proto.Marshaler
+	MarshalToSizedBuffer(data []byte) (int, error)
+}

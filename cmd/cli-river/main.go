@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"git.ronaksoftware.com/ronak/riversdk"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"github.com/fatih/color"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -87,7 +87,7 @@ func main() {
 		FileServerEndpoint:     fileEndPoint,
 		DbPath:                 dbPath,
 		DbID:                   dbID,
-		ServerKeys:             ronak.ByteToStr(skBytes),
+		ServerKeys:             domain.ByteToStr(skBytes),
 		MainDelegate:           new(MainDelegate),
 		FileDelegate:           new(FileDelegate),
 		LogLevel:               int(zapcore.DebugLevel),

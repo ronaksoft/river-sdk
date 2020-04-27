@@ -3,9 +3,9 @@ package repo_test
 import (
 	"fmt"
 	msg "git.ronaksoftware.com/river/msg/chat"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/zap"
 	"sync"
@@ -27,14 +27,14 @@ func init() {
 }
 
 func createMediaMessage(body string, filename string, labelIDs []int32) *msg.UserMessage {
-	userID := ronak.RandomInt64(0)
+	userID := domain.RandomInt63()
 	attrFile, _ := (&msg.DocumentAttributeFile{Filename: filename}).Marshal()
 	media, _ := (&msg.MediaDocument{
 		Caption:      "This is caption",
 		TTLinSeconds: 0,
 		Doc: &msg.Document{
-			ID:         ronak.RandomInt64(0),
-			AccessHash: ronak.RandomUint64(),
+			ID:         domain.RandomInt63(),
+			AccessHash: domain.RandomUint64(),
 			Date:       time.Now().Unix(),
 			MimeType:   "",
 			FileSize:   1243,
@@ -52,7 +52,7 @@ func createMediaMessage(body string, filename string, labelIDs []int32) *msg.Use
 	}).Marshal()
 	return &msg.UserMessage{
 		ID:                  userID,
-		PeerID:              ronak.RandomInt64(0),
+		PeerID:              domain.RandomInt63(),
 		PeerType:            1,
 		CreatedOn:           time.Now().Unix(),
 		EditedOn:            0,
@@ -77,11 +77,11 @@ func createMediaMessage(body string, filename string, labelIDs []int32) *msg.Use
 	}
 }
 func createMessage(id int64, body string, labelIDs []int32) *msg.UserMessage {
-	userID := ronak.RandomInt64(0)
+	userID := domain.RandomInt63()
 
 	return &msg.UserMessage{
 		ID:                  id,
-		PeerID:              ronak.RandomInt64(0),
+		PeerID:              domain.RandomInt63(),
 		PeerType:            1,
 		CreatedOn:           time.Now().Unix(),
 		EditedOn:            0,
@@ -149,7 +149,7 @@ func TestGetMessageKey(t *testing.T) {
 	peerID := 10001
 	peerType := 1
 	msgID := 1 << 32
-	ronak.StrToByte(fmt.Sprintf("%s.%021d.%d.%012d", "MSG", peerID, peerType, msgID))
+	domain.StrToByte(fmt.Sprintf("%s.%021d.%d.%012d", "MSG", peerID, peerType, msgID))
 	fmt.Println(fmt.Sprintf("%s.%021d.%d.%012d", "MSG", peerID, peerType, msgID))
 }
 
@@ -195,7 +195,7 @@ func TestConcurrent(t *testing.T) {
 		waitGroup.Add(1)
 		go func(i int64) {
 			_, err := repo.PendingMessages.SaveMessageMedia(i, 1001, &msg.MessagesSendMedia{
-				RandomID: ronak.RandomInt64(0),
+				RandomID: domain.RandomInt63(),
 				Peer: &msg.InputPeer{
 					ID:         i,
 					Type:       msg.PeerUser,

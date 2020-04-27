@@ -3,7 +3,7 @@ package repo
 import (
 	"encoding/binary"
 	"fmt"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"github.com/dgraph-io/badger"
 )
 
@@ -16,7 +16,7 @@ type repoSystem struct {
 }
 
 func (r *repoSystem) getKey(keyName string) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%s", systemPrefix, keyName))
+	return domain.StrToByte(fmt.Sprintf("%s.%s", systemPrefix, keyName))
 }
 
 // LoadInt
@@ -104,7 +104,7 @@ func (r *repoSystem) SaveInt(keyName string, keyValue uint64) error {
 func (r *repoSystem) SaveString(keyName string, keyValue string) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		return txn.SetEntry(
-			badger.NewEntry(r.getKey(keyName), ronak.StrToByte(keyValue)),
+			badger.NewEntry(r.getKey(keyName), domain.StrToByte(keyValue)),
 		)
 	})
 }

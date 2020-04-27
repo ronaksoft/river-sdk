@@ -3,6 +3,7 @@ package repo
 import (
 	"fmt"
 	"git.ronaksoftware.com/river/msg/chat"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
@@ -23,11 +24,11 @@ type repoDialogs struct {
 }
 
 func getDialogKey(peerID int64, peerType int32) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%d", prefixDialogs, peerID, peerType))
+	return domain.StrToByte(fmt.Sprintf("%s.%021d.%d", prefixDialogs, peerID, peerType))
 }
 
 func getPinnedDialogKey(peerID int64, peerType int32) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%d", prefixPinnedDialogs, peerID, peerType))
+	return domain.StrToByte(fmt.Sprintf("%s.%021d.%d", prefixPinnedDialogs, peerID, peerType))
 }
 
 func getPeerFromKey(key string) *msg.Peer {
@@ -111,7 +112,7 @@ func countDialogUnread(txn *badger.Txn, peerID int64, peerType int32, userID, ma
 func (r *repoDialogs) updateLastUpdate(peerID int64, peerType int32, lastUpdate int64) {
 	_ = r.bunt.Update(func(tx *buntdb.Tx) error {
 		_, _, err := tx.Set(
-			ronak.ByteToStr(getDialogKey(peerID, peerType)),
+			domain.ByteToStr(getDialogKey(peerID, peerType)),
 			fmt.Sprintf("%021d", lastUpdate),
 			nil,
 		)
@@ -285,7 +286,7 @@ func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
 	dialogs := make([]*msg.Dialog, 0, 7)
 	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = ronak.StrToByte(prefixDialogs)
+		opts.Prefix = domain.StrToByte(prefixDialogs)
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {

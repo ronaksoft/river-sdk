@@ -2,7 +2,7 @@ package main
 
 import (
 	msg "git.ronaksoftware.com/river/msg/chat"
-	"git.ronaksoftware.com/ronak/toolbox"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"
 )
@@ -20,7 +20,7 @@ var ContactImport = &ishell.Cmd{
 		contact.FirstName = fnGetFirstName(c)
 		contact.LastName = fnGetLastName(c)
 		contact.Phone = fnGetPhone(c)
-		contact.ClientID = ronak.RandomInt64(0)
+		contact.ClientID = domain.RandomInt63()
 		req.Contacts = append(req.Contacts, &contact)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)

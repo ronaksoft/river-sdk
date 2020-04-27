@@ -5,7 +5,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"github.com/gobwas/pool/pbytes"
-	"github.com/gogo/protobuf/proto"
 	"go.uber.org/zap"
 	"time"
 )
@@ -47,7 +46,7 @@ func ExecTimeoutCB(h domain.TimeoutCallback) {
 	}
 }
 
-func ExecUpdate(cb domain.UpdateReceivedCallback, constructor int64, proto Proto) {
+func ExecUpdate(cb domain.UpdateReceivedCallback, constructor int64, proto domain.Proto) {
 	b := pbytes.GetLen(proto.Size())
 	n, err := proto.MarshalToSizedBuffer(b)
 	if err == nil {
@@ -56,12 +55,6 @@ func ExecUpdate(cb domain.UpdateReceivedCallback, constructor int64, proto Proto
 			pbytes.Put(b)
 		})
 	}
-}
-
-type Proto interface {
-	proto.Sizer
-	proto.Marshaler
-	MarshalToSizedBuffer(data []byte) (int, error)
 }
 
 // Exec pass given function to UIExecutor buffered channel

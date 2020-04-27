@@ -9,7 +9,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
 	"sort"
 	"sync"
@@ -153,7 +152,7 @@ func (ctrl *Controller) Sync() {
 			serverUpdateID, err = ctrl.AuthRecall("Sync")
 			if err != nil {
 				logs.Warn("SyncCtrl got err on AuthRecall", zap.Error(err))
-				time.Sleep(time.Duration(ronak.RandomInt64(1000)) * time.Millisecond)
+				time.Sleep(time.Duration(domain.RandomInt(1000)) * time.Millisecond)
 				if maxTry--; maxTry < 0 {
 					return
 				}

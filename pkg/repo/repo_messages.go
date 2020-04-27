@@ -29,15 +29,15 @@ type repoMessages struct {
 }
 
 func getMessageKey(peerID int64, peerType int32, msgID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%d.%012d", prefixMessages, peerID, peerType, msgID))
+	return domain.StrToByte(fmt.Sprintf("%s.%021d.%d.%012d", prefixMessages, peerID, peerType, msgID))
 }
 
 func getMessagePrefix(peerID int64, peerType int32) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%d.", prefixMessages, peerID, peerType))
+	return domain.StrToByte(fmt.Sprintf("%s.%021d.%d.", prefixMessages, peerID, peerType))
 }
 
 func getUserMessageKey(msgID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%012d", prefixUserMessages, msgID))
+	return domain.StrToByte(fmt.Sprintf("%s.%012d", prefixUserMessages, msgID))
 }
 
 func getMessageByID(txn *badger.Txn, msgID int64) (*msg.UserMessage, error) {
@@ -47,7 +47,7 @@ func getMessageByID(txn *badger.Txn, msgID int64) (*msg.UserMessage, error) {
 		return nil, err
 	}
 	err = item.Value(func(val []byte) error {
-		parts := strings.Split(ronak.ByteToStr(val), ".")
+		parts := strings.Split(domain.ByteToStr(val), ".")
 		if len(parts) != 2 {
 			return domain.ErrInvalidUserMessageKey
 		}
@@ -131,7 +131,7 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 	err = txn.SetEntry(
 		badger.NewEntry(
 			getUserMessageKey(message.ID),
-			ronak.StrToByte(fmt.Sprintf("%d.%d", message.PeerID, message.PeerType)),
+			domain.StrToByte(fmt.Sprintf("%d.%d", message.PeerID, message.PeerType)),
 		).WithMeta(byte(docType)),
 	)
 	if err != nil {
@@ -139,7 +139,7 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 	}
 
 	indexMessage(
-		ronak.ByteToStr(getMessageKey(message.PeerID, message.PeerType, message.ID)),
+		domain.ByteToStr(getMessageKey(message.PeerID, message.PeerType, message.ID)),
 		MessageSearch{
 			Type:     "msg",
 			Body:     message.Body,
@@ -437,7 +437,7 @@ func (r *repoMessages) Delete(userID int64, peerID int64, peerType int32, msgIDs
 			it.Close()
 			if dialog.TopMessageID == msgID {
 				_ = txn.Delete(getDialogKey(peerID, peerType))
-				indexMessageRemove(ronak.ByteToStr(getMessageKey(peerID, peerType, msgID)))
+				indexMessageRemove(domain.ByteToStr(getMessageKey(peerID, peerType, msgID)))
 				return nil
 			}
 		}
@@ -450,7 +450,7 @@ func (r *repoMessages) Delete(userID int64, peerID int64, peerType int32, msgIDs
 		if err != nil {
 			return err
 		}
-		indexMessageRemove(ronak.ByteToStr(getMessageKey(peerID, peerType, msgID)))
+		indexMessageRemove(domain.ByteToStr(getMessageKey(peerID, peerType, msgID)))
 		return nil
 	})
 	logs.ErrorOnErr("RepoMessage got error on delete", err)
@@ -469,7 +469,7 @@ func (r *repoMessages) ClearHistory(userID int64, peerID int64, peerType int32, 
 			for _, kv := range kvList.Kv {
 				err := txn.Delete(kv.Key)
 				if err != nil {
-					logs.Warn("RepoMessage got error on delete all", zap.Error(err), zap.String("Key", ronak.ByteToStr(kv.Key)))
+					logs.Warn("RepoMessage got error on delete all", zap.Error(err), zap.String("Key", domain.ByteToStr(kv.Key)))
 				}
 			}
 			return nil
@@ -550,7 +550,7 @@ func (r *repoMessages) SearchText(text string, limit int32) []*msg.UserMessage {
 	searchRequest.Size = int(limit)
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
-			userMessage, _ := getMessageByKey(txn, ronak.StrToByte(hit.ID))
+			userMessage, _ := getMessageByKey(txn, domain.StrToByte(hit.ID))
 			if userMessage != nil {
 				userMessages = append(userMessages, userMessage)
 			}
@@ -582,7 +582,7 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64, limit int32
 	searchResult, _ := r.msgSearch.Search(searchRequest)
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
-			userMessage, _ := getMessageByKey(txn, ronak.StrToByte(hit.ID))
+			userMessage, _ := getMessageByKey(txn, domain.StrToByte(hit.ID))
 			if userMessage != nil {
 				userMessages = append(userMessages, userMessage)
 			}
@@ -600,7 +600,7 @@ func (r *repoMessages) SearchByLabels(labelIDs []int32, peerID int64, limit int3
 	userMessages := make([]*msg.UserMessage, 0, limit)
 	_ = badgerView(func(txn *badger.Txn) error {
 		st := r.badger.NewStream()
-		st.Prefix = ronak.StrToByte(prefixMessages)
+		st.Prefix = domain.StrToByte(prefixMessages)
 		st.ChooseKey = func(item *badger.Item) bool {
 			m := &msg.UserMessage{}
 			err := item.Value(func(val []byte) error {
@@ -687,7 +687,7 @@ func (r *repoMessages) GetMediaHistory(documentType msg.ClientMediaType) ([]*msg
 	userMessages := make([]*msg.UserMessage, 0, limit)
 
 	stream := r.badger.NewStream()
-	stream.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixMessages))
+	stream.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixMessages))
 	stream.ChooseKey = func(item *badger.Item) bool {
 		if item.UserMeta() == byte(documentType) {
 			m := &msg.UserMessage{}
@@ -753,7 +753,7 @@ func (r *repoMessages) SearchBySender(text string, senderID int64, peerID int64,
 	searchResult, _ := r.msgSearch.Search(searchRequest)
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
-			userMessage, _ := getMessageByKey(txn, ronak.StrToByte(hit.ID))
+			userMessage, _ := getMessageByKey(txn, domain.StrToByte(hit.ID))
 			if userMessage != nil {
 				userMessages = append(userMessages, userMessage)
 			}
@@ -819,13 +819,13 @@ func (r *repoMessages) ReIndex() {
 	}
 	err = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = ronak.StrToByte(prefixMessages)
+		opts.Prefix = domain.StrToByte(prefixMessages)
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.Valid(); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
 				message := &msg.UserMessage{}
 				_ = message.Unmarshal(val)
-				msgKey := ronak.ByteToStr(getMessageKey(message.PeerID, message.PeerType, message.ID))
+				msgKey := domain.ByteToStr(getMessageKey(message.PeerID, message.PeerType, message.ID))
 				if d, _ := r.msgSearch.Document(msgKey); d == nil {
 					indexMessage(
 						msgKey,

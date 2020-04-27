@@ -35,11 +35,11 @@ type repoLabels struct {
 }
 
 func getLabelKey(labelID int32) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%03d", prefixLabel, labelID))
+	return domain.StrToByte(fmt.Sprintf("%s.%03d", prefixLabel, labelID))
 }
 
 func getLabelMessageKey(labelID int32, msgID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%03d.%021d", prefixLabelMessages, labelID, msgID))
+	return domain.StrToByte(fmt.Sprintf("%s.%03d.%021d", prefixLabelMessages, labelID, msgID))
 }
 
 func getLabelByID(txn *badger.Txn, labelID int32) (*msg.Label, error) {
@@ -77,7 +77,7 @@ func deleteLabel(txn *badger.Txn, labelID int32) error {
 func addLabelToMessage(txn *badger.Txn, labelID int32, peerType int32, peerID int64, msgID int64) error {
 	err := txn.SetEntry(badger.NewEntry(
 		getLabelMessageKey(labelID, msgID),
-		ronak.StrToByte(fmt.Sprintf("%d.%d.%d", peerType, peerID, msgID)),
+		domain.StrToByte(fmt.Sprintf("%d.%d.%d", peerType, peerID, msgID)),
 	))
 	return err
 }
@@ -113,10 +113,10 @@ func (r *repoLabels) Delete(labelIDs ...int32) error {
 				return err
 			}
 			stream := r.badger.NewStream()
-			stream.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
+			stream.Prefix = domain.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
 			stream.Send = func(list *pb.KVList) error {
 				for _, kv := range list.Kv {
-					parts := strings.Split(ronak.ByteToStr(kv.Value), ".")
+					parts := strings.Split(domain.ByteToStr(kv.Value), ".")
 					if len(parts) != 3 {
 						return domain.ErrInvalidData
 					}
@@ -155,7 +155,7 @@ func (r *repoLabels) GetAll() []*msg.Label {
 	labels := make([]*msg.Label, 0, 20)
 	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = ronak.StrToByte(prefixLabel)
+		opts.Prefix = domain.StrToByte(prefixLabel)
 		it := txn.NewIterator(opts)
 		defer it.Close()
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
@@ -188,7 +188,7 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 		var stopWatch1, stopWatch2 time.Time
 		err := badgerView(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
-			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
+			opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
 			if maxID > 0 {
 				opts.Reverse = true
 			}
@@ -204,7 +204,7 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 					break
 				}
 				err := it.Item().Value(func(val []byte) error {
-					parts := strings.Split(ronak.ByteToStr(val), ".")
+					parts := strings.Split(domain.ByteToStr(val), ".")
 					if len(parts) != 3 {
 						return domain.ErrInvalidData
 					}
@@ -244,7 +244,7 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 		var stopWatch1, stopWatch2, stopWatch3 time.Time
 		_ = badgerView(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
-			opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
+			opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
 			it := txn.NewIterator(opts)
 			defer it.Close()
 			it.Seek(getLabelMessageKey(labelID, minID))
@@ -254,7 +254,7 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 					break
 				}
 				_ = it.Item().Value(func(val []byte) error {
-					parts := strings.Split(ronak.ByteToStr(val), ".")
+					parts := strings.Split(domain.ByteToStr(val), ".")
 					if len(parts) != 3 {
 						return domain.ErrInvalidData
 					}
@@ -379,7 +379,7 @@ func (r *repoLabels) Fill(labelID int32, minID, maxID int64) error {
 	if maxID > bar.MaxID {
 		_ = badgerUpdate(func(txn *badger.Txn) error {
 			return txn.SetEntry(badger.NewEntry(
-				ronak.StrToByte(fmt.Sprintf("%s.03%d.MAXID", prefixLabelMessages, labelID)),
+				domain.StrToByte(fmt.Sprintf("%s.03%d.MAXID", prefixLabelMessages, labelID)),
 				maxIDb,
 			))
 		})
@@ -388,7 +388,7 @@ func (r *repoLabels) Fill(labelID int32, minID, maxID int64) error {
 	if bar.MinID == 0 || minID < bar.MinID {
 		_ = badgerUpdate(func(txn *badger.Txn) error {
 			return txn.SetEntry(badger.NewEntry(
-				ronak.StrToByte(fmt.Sprintf("%s.03%d.MINID", prefixLabelMessages, labelID)),
+				domain.StrToByte(fmt.Sprintf("%s.03%d.MINID", prefixLabelMessages, labelID)),
 				minIDb,
 			))
 		})
@@ -400,7 +400,7 @@ func (r *repoLabels) Fill(labelID int32, minID, maxID int64) error {
 func (r *repoLabels) GetFilled(labelID int32) LabelBar {
 	bar := LabelBar{}
 	_ = badgerView(func(txn *badger.Txn) error {
-		minIDItem, err := txn.Get(ronak.StrToByte(fmt.Sprintf("%s.03%d.MINID", prefixLabelMessages, labelID)))
+		minIDItem, err := txn.Get(domain.StrToByte(fmt.Sprintf("%s.03%d.MINID", prefixLabelMessages, labelID)))
 		if err != nil {
 			return err
 		}
@@ -408,7 +408,7 @@ func (r *repoLabels) GetFilled(labelID int32) LabelBar {
 			bar.MinID = int64(binary.BigEndian.Uint64(val))
 			return nil
 		})
-		maxIDItem, err := txn.Get(ronak.StrToByte(fmt.Sprintf("%s.03%d.MAXID", prefixLabelMessages, labelID)))
+		maxIDItem, err := txn.Get(domain.StrToByte(fmt.Sprintf("%s.03%d.MAXID", prefixLabelMessages, labelID)))
 		if err != nil {
 			return err
 		}

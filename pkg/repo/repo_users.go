@@ -25,7 +25,7 @@ type repoUsers struct {
 }
 
 func getUserKey(userID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixUsers, userID))
+	return domain.StrToByte(fmt.Sprintf("%s.%021d", prefixUsers, userID))
 }
 
 func getUserByKey(txn *badger.Txn, userKey []byte) (*msg.User, error) {
@@ -44,7 +44,7 @@ func getUserByKey(txn *badger.Txn, userKey []byte) (*msg.User, error) {
 }
 
 func getContactKey(userID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixContacts, userID))
+	return domain.StrToByte(fmt.Sprintf("%s.%021d", prefixContacts, userID))
 }
 
 func getContactByKey(txn *badger.Txn, contactKey []byte) (*msg.ContactUser, error) {
@@ -63,11 +63,11 @@ func getContactByKey(txn *badger.Txn, contactKey []byte) (*msg.ContactUser, erro
 }
 
 func getUserPhotoGalleryKey(userID, photoID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixUsersPhotoGallery, userID, photoID))
+	return domain.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixUsersPhotoGallery, userID, photoID))
 }
 
 func getUserPhotoGalleryPrefix(userID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%021d.", prefixUsersPhotoGallery, userID))
+	return domain.StrToByte(fmt.Sprintf("%s.%021d.", prefixUsersPhotoGallery, userID))
 }
 
 func saveUser(txn *badger.Txn, user *msg.User) error {
@@ -98,7 +98,7 @@ func saveUser(txn *badger.Txn, user *msg.User) error {
 	}
 
 	indexPeer(
-		ronak.ByteToStr(userKey),
+		domain.ByteToStr(userKey),
 		UserSearch{
 			Type:      "user",
 			FirstName: user.FirstName,
@@ -121,7 +121,7 @@ func saveContact(txn *badger.Txn, contactUser *msg.ContactUser) error {
 		return err
 	}
 	indexPeer(
-		ronak.ByteToStr(contactKey),
+		domain.ByteToStr(contactKey),
 		ContactSearch{
 			Type:      "contact",
 			FirstName: contactUser.FirstName,
@@ -292,7 +292,7 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 
 	err := badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
-			user, err := getUserByKey(txn, ronak.StrToByte(hit.ID))
+			user, err := getUserByKey(txn, domain.StrToByte(hit.ID))
 			if err == nil && user != nil {
 				users = append(users, user)
 			}
@@ -338,7 +338,7 @@ func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
 
 	_ = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixContacts))
+		opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixContacts))
 		it := txn.NewIterator(opts)
 		for it.Seek(getContactKey(0)); it.ValidForPrefix(opts.Prefix); it.Next() {
 			contactUser := &msg.ContactUser{}
@@ -387,7 +387,7 @@ func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*
 
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
-			contactUser, err := getContactByKey(txn, ronak.StrToByte(hit.ID))
+			contactUser, err := getContactByKey(txn, domain.StrToByte(hit.ID))
 			if err == nil && contactUser != nil {
 				phoneContacts = append(phoneContacts, &msg.PhoneContact{
 					ClientID:  contactUser.ClientID,
@@ -420,7 +420,7 @@ func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
 
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
-			user, _ := getUserByKey(txn, ronak.StrToByte(hit.ID))
+			user, _ := getUserByKey(txn, domain.StrToByte(hit.ID))
 			if user != nil {
 				contactUsers = append(contactUsers, &msg.ContactUser{
 					ID:        user.ID,
@@ -473,7 +473,7 @@ func (r *repoUsers) DeleteContact(contactIDs ...int64) error {
 func (r *repoUsers) DeleteAllContacts() error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixContacts))
+		opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixContacts))
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
 			_ = txn.Delete(it.Item().Key())
@@ -554,13 +554,13 @@ func (r *repoUsers) ReIndex() {
 	}
 	_ = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = ronak.StrToByte(prefixUsers)
+		opts.Prefix = domain.StrToByte(prefixUsers)
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.Valid(); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
 				user := new(msg.User)
 				_ = user.Unmarshal(val)
-				key := ronak.ByteToStr(getUserKey(user.ID))
+				key := domain.ByteToStr(getUserKey(user.ID))
 				if d, _ := r.peerSearch.Document(key); d == nil {
 					indexPeer(
 						key,
@@ -580,14 +580,14 @@ func (r *repoUsers) ReIndex() {
 		it.Close()
 
 		opts = badger.DefaultIteratorOptions
-		opts.Prefix = ronak.StrToByte(prefixContacts)
+		opts.Prefix = domain.StrToByte(prefixContacts)
 		it = txn.NewIterator(opts)
 		for it.Rewind(); it.Valid(); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
 				contactUser := new(msg.ContactUser)
 				_ = contactUser.Unmarshal(val)
 				indexPeer(
-					ronak.ByteToStr(getContactKey(contactUser.ID)),
+					domain.ByteToStr(getContactKey(contactUser.ID)),
 					ContactSearch{
 						Type:      "contact",
 						FirstName: contactUser.FirstName,

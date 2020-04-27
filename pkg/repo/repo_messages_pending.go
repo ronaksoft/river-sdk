@@ -2,14 +2,12 @@ package repo
 
 import (
 	"fmt"
+	msg "git.ronaksoftware.com/river/msg/chat"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
 	"math"
 	"time"
-
-	msg "git.ronaksoftware.com/river/msg/chat"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 )
 
 const (
@@ -30,15 +28,15 @@ func abs(x int64) int64 {
 }
 
 func getPendingMessageKey(msgID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%012d", prefixPMessagesByID, int64(math.Abs(float64(msgID)))))
+	return domain.StrToByte(fmt.Sprintf("%s.%012d", prefixPMessagesByID, int64(math.Abs(float64(msgID)))))
 }
 
 func getPendingMessageRandomKey(randomID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%012d", prefixPMessagesByRandomID, abs(randomID)))
+	return domain.StrToByte(fmt.Sprintf("%s.%012d", prefixPMessagesByRandomID, abs(randomID)))
 }
 
 func getPendingMessageRealKey(msgID int64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%012d", prefixPMessagesByRealID, msgID))
+	return domain.StrToByte(fmt.Sprintf("%s.%012d", prefixPMessagesByRealID, msgID))
 }
 
 func getPendingMessageByID(txn *badger.Txn, msgID int64) (*msg.ClientPendingMessage, error) {
@@ -292,7 +290,7 @@ func (r *repoMessagesPending) GetByPeer(peerID int64, peerType int32) []*msg.Use
 	userMessages := make([]*msg.UserMessage, 0, 10)
 	_ = badgerUpdate(func(txn *badger.Txn) error {
 		opt := badger.DefaultIteratorOptions
-		opt.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
+		opt.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
 		it := txn.NewIterator(opt)
 		for it.Rewind(); it.Valid(); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
@@ -314,7 +312,7 @@ func (r *repoMessagesPending) GetAndConvertAll() []*msg.UserMessage {
 	userMessages := make([]*msg.UserMessage, 0, 10)
 	_ = badgerUpdate(func(txn *badger.Txn) error {
 		opt := badger.DefaultIteratorOptions
-		opt.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
+		opt.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
 		it := txn.NewIterator(opt)
 		for it.Rewind(); it.Valid(); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
@@ -334,7 +332,7 @@ func (r *repoMessagesPending) GetAll() []*msg.ClientPendingMessage {
 	pendingMessages := make([]*msg.ClientPendingMessage, 0, 10)
 	_ = badgerUpdate(func(txn *badger.Txn) error {
 		opt := badger.DefaultIteratorOptions
-		opt.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
+		opt.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
 		it := txn.NewIterator(opt)
 		for it.Rewind(); it.Valid(); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
@@ -394,7 +392,7 @@ func (r *repoMessagesPending) DeletePeerAllMessages(peerID int64, peerType int32
 	res.MessageIDs = make([]int64, 0)
 	_ = badgerUpdate(func(txn *badger.Txn) error {
 		opt := badger.DefaultIteratorOptions
-		opt.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
+		opt.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
 		it := txn.NewIterator(opt)
 		for it.Rewind(); it.Valid(); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {

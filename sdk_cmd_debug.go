@@ -103,9 +103,9 @@ func (r *River) HandleDebugActions(txt string) {
 	case "//sdk_clear_salt":
 		resetSalt(r)
 	case "//sdk_memory_stats":
-		sendToSavedMessage(r, ronak.ByteToStr(getMemoryStats(r)))
+		sendToSavedMessage(r, domain.ByteToStr(getMemoryStats(r)))
 	case "//sdk_monitor":
-		sendToSavedMessage(r, ronak.ByteToStr(getMonitorStats(r)))
+		sendToSavedMessage(r, domain.ByteToStr(getMonitorStats(r)))
 	case "//sdk_live_logger":
 		if len(args) < 1 {
 			sendToSavedMessage(r, "//sdk_live_logger <url>")
@@ -212,7 +212,7 @@ func getMemoryStats(r *River) []byte {
 		"HeapObjects": ms.HeapObjects,
 	}
 	b, _ := json.MarshalIndent(m, "", "    ")
-	sendToSavedMessage(r, ronak.ByteToStr(b))
+	sendToSavedMessage(r, domain.ByteToStr(b))
 	return b
 }
 

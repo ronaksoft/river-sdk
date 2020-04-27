@@ -6,7 +6,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
 	"go.uber.org/zap"
 	"sort"
@@ -77,7 +76,7 @@ func UpdateSalt() bool {
 			if err != nil {
 				logs.Warn("UpdateSalt got error on save salt to db",
 					zap.Error(err),
-					zap.String("Salts", ronak.ByteToStr(b)),
+					zap.String("Salts", domain.ByteToStr(b)),
 				)
 			}
 			saltFound = true

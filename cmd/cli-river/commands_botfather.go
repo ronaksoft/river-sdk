@@ -2,7 +2,7 @@ package main
 
 import (
 	msg "git.ronaksoftware.com/river/msg/chat"
-	"git.ronaksoftware.com/ronak/toolbox"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"
 )
@@ -35,7 +35,7 @@ var BotStart = &ishell.Cmd{
 		req.Bot = &msg.InputPeer{}
 		req.Bot.Type = fnGetPeerType(c)
 		req.Bot.ID = fnGetBotID(c)
-		req.RandomID = ronak.RandomInt64(0)
+		req.RandomID = domain.RandomInt63()
 		req.StartParam = "startparam"
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)

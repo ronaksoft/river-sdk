@@ -10,7 +10,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/monnand/dhkx"
 	"go.uber.org/zap"
 	"math/big"
@@ -519,7 +518,7 @@ func (r *River) GetServerTimeUnix() int64 {
 
 func (r *River) AppForeground() {
 	if r.networkCtrl.GetQuality() == domain.NetworkConnected {
-		err := r.networkCtrl.Ping(ronak.RandomUint64(), domain.WebsocketPingTimeout)
+		err := r.networkCtrl.Ping(domain.RandomUint64(), domain.WebsocketPingTimeout)
 		if err != nil {
 			logs.Debug("Ping failed try to reconnect")
 			r.networkCtrl.Reconnect()

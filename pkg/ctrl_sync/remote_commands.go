@@ -4,7 +4,6 @@ import (
 	msg "git.ronaksoftware.com/river/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
 	"sync"
 	"time"
@@ -31,7 +30,7 @@ func (ctrl *Controller) GetServerSalt() {
 			Message:     serverSaltReqBytes,
 		},
 		func() {
-			time.Sleep(time.Duration(ronak.RandomInt(2000)) * time.Millisecond)
+			time.Sleep(time.Duration(domain.RandomInt(2000)) * time.Millisecond)
 		},
 		func(m *msg.MessageEnvelope) {
 			switch m.Constructor {
@@ -80,7 +79,7 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 				zap.Int64("UserID", ctrl.connInfo.PickupUserID()),
 			)
 			err = domain.ErrRequestTimeout
-			time.Sleep(time.Duration(ronak.RandomInt(2000)) * time.Millisecond)
+			time.Sleep(time.Duration(domain.RandomInt(2000)) * time.Millisecond)
 		},
 		func(m *msg.MessageEnvelope) {
 			switch m.Constructor {

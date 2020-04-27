@@ -563,7 +563,7 @@ func (ctrl *Controller) UploadUserPhoto(filePath string) (reqID string) {
 		filePath = filePath[7:]
 	}
 
-	fileID := ronak.RandomInt64(0)
+	fileID := domain.RandomInt63()
 	err := ctrl.upload(UploadRequest{
 		IsProfilePhoto: true,
 		FileID:         fileID,
@@ -581,7 +581,7 @@ func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) (reqID 
 		filePath = filePath[7:]
 	}
 
-	fileID := ronak.RandomInt64(0)
+	fileID := domain.RandomInt63()
 	err := ctrl.upload(UploadRequest{
 		IsProfilePhoto: true,
 		GroupID:        groupID,
@@ -716,7 +716,7 @@ func (ctrl *Controller) checkSha256(uploadRequest *UploadRequest) error {
 		Constructor: msg.C_FileGetBySha256,
 	}
 	req := &msg.FileGetBySha256{
-		Sha256:   ronak.StrToByte(uploadRequest.FileSha256),
+		Sha256:   domain.StrToByte(uploadRequest.FileSha256),
 		FileSize: int32(uploadRequest.FileSize),
 	}
 	envelop.Message, _ = req.Marshal()

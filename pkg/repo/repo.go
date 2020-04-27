@@ -272,7 +272,7 @@ func badgerUpdate(fn func(txn *badger.Txn) error) (err error) {
 		default:
 			return
 		}
-		time.Sleep(time.Duration(ronak.RandomInt(10000)) * time.Microsecond)
+		time.Sleep(time.Duration(domain.RandomInt(10000)) * time.Microsecond)
 	}
 	return
 }
@@ -287,7 +287,7 @@ func badgerView(fn func(txn *badger.Txn) error) (err error) {
 		default:
 			return
 		}
-		time.Sleep(time.Duration(ronak.RandomInt(10000)) * time.Microsecond)
+		time.Sleep(time.Duration(domain.RandomInt(10000)) * time.Microsecond)
 	}
 	return
 }

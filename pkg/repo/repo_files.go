@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"git.ronaksoftware.com/river/msg/chat"
-	"git.ronaksoftware.com/ronak/toolbox"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"github.com/dgraph-io/badger"
 	"github.com/dgraph-io/badger/pb"
 	"mime"
@@ -42,7 +42,7 @@ type repoFiles struct {
 }
 
 func getFileKey(clusterID int32, fileID int64, accessHash uint64) []byte {
-	return ronak.StrToByte(fmt.Sprintf("%s.%012d.%021d.%021d", prefixFiles, clusterID, fileID, accessHash))
+	return domain.StrToByte(fmt.Sprintf("%s.%012d.%021d.%021d", prefixFiles, clusterID, fileID, accessHash))
 }
 
 func getFile(txn *badger.Txn, clusterID int32, fileID int64, accessHash uint64) (*msg.ClientFile, error) {
@@ -275,22 +275,22 @@ func (r *repoFiles) Delete(clusterID int32, fileID int64, accessHash uint64) err
 func (r *repoFiles) MarkAsUploaded(fileID int64) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		return txn.Set(
-			ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixUploaded, fileID)),
-			ronak.StrToByte("OK"),
+			domain.StrToByte(fmt.Sprintf("%s.%021d", prefixUploaded, fileID)),
+			domain.StrToByte("OK"),
 		)
 	})
 }
 
 func (r *repoFiles) UnmarkAsUploaded(fileID int64) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
-		return txn.Delete(ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixUploaded, fileID)))
+		return txn.Delete(domain.StrToByte(fmt.Sprintf("%s.%021d", prefixUploaded, fileID)))
 	})
 }
 
 func (r *repoFiles) IsMarkedAsUploaded(fileID int64) bool {
 	res := true
 	_ = badgerView(func(txn *badger.Txn) error {
-		_, err := txn.Get(ronak.StrToByte(fmt.Sprintf("%s.%021d", prefixUploaded, fileID)))
+		_, err := txn.Get(domain.StrToByte(fmt.Sprintf("%s.%021d", prefixUploaded, fileID)))
 		if err != nil {
 			res = false
 		}
@@ -306,7 +306,7 @@ func (r *repoFiles) GetCachedMedia() *msg.ClientCachedMediaInfo {
 	groupMtx := sync.Mutex{}
 
 	stream := r.badger.NewStream()
-	stream.Prefix = ronak.StrToByte(fmt.Sprintf("%s.", prefixMessages))
+	stream.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixMessages))
 	stream.ChooseKey = func(item *badger.Item) bool {
 		m := &msg.UserMessage{}
 		err := item.Value(func(val []byte) error {

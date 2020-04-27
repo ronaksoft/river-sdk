@@ -3,7 +3,7 @@ package repo
 import (
 	"fmt"
 	msg "git.ronaksoftware.com/river/msg/chat"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"github.com/dgraph-io/badger"
 )
 
@@ -22,7 +22,7 @@ func (r *repoAccount) SetPrivacy(key msg.PrivacyKey, rules []*msg.PrivacyRule) e
 	bytes, _ := accountPrivacyRules.Marshal()
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		return txn.SetEntry(badger.NewEntry(
-			ronak.StrToByte(fmt.Sprintf("%s.%s", prefixAccount, key)),
+			domain.StrToByte(fmt.Sprintf("%s.%s", prefixAccount, key)),
 			bytes,
 		))
 	})
@@ -32,7 +32,7 @@ func (r *repoAccount) SetPrivacy(key msg.PrivacyKey, rules []*msg.PrivacyRule) e
 func (r *repoAccount) GetPrivacy(key msg.PrivacyKey) (*msg.AccountPrivacyRules, error) {
 	var rulesBytes []byte
 	err := badgerView(func(txn *badger.Txn) error {
-		item, err := txn.Get(ronak.StrToByte(fmt.Sprintf("%s.%s", prefixAccount, key)))
+		item, err := txn.Get(domain.StrToByte(fmt.Sprintf("%s.%s", prefixAccount, key)))
 		if err != nil {
 			return err
 		}
