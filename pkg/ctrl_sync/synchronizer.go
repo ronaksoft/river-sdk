@@ -205,12 +205,10 @@ func forceUpdateUI(ctrl *Controller, dialogs, contacts bool) {
 	updateEnvelope.Update = bytes
 	updateEnvelope.UpdateID = 0
 	updateEnvelope.Timestamp = time.Now().Unix()
-	buff, _ := updateEnvelope.Marshal()
+
 
 	// call external handler
-	uiexec.Exec(func() {
-		ctrl.updateReceivedCallback(msg.C_UpdateEnvelope, buff)
-	})
+	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateEnvelope, updateEnvelope)
 }
 func updateSyncStatus(ctrl *Controller, newStatus domain.SyncStatus) {
 	if ctrl.syncStatus == newStatus {
@@ -344,12 +342,8 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 	}
 	updContainer.Length = int32(len(updContainer.Updates))
 
-	// wrapped to UpdateContainer
-	buff, _ := updContainer.Marshal()
-	uiexec.Exec(func() {
-		ctrl.updateReceivedCallback(msg.C_UpdateContainer, buff)
-	})
 
+	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateContainer, updContainer)
 }
 
 func (ctrl *Controller) SetUserID(userID int64) {
@@ -457,13 +451,7 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer, outO
 	}
 
 	udpContainer.Length = int32(len(udpContainer.Updates))
-
-	// wrapped to UpdateContainer
-	buff, _ := udpContainer.Marshal()
-	uiexec.Exec(func() {
-		ctrl.updateReceivedCallback(msg.C_UpdateContainer, buff)
-	})
-
+	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateContainer, updateContainer)
 	return
 }
 
@@ -511,12 +499,7 @@ func (ctrl *Controller) DeletePendingMessage(pm *msg.ClientPendingMessage) {
 		Timestamp: time.Now().Unix(),
 	}
 
-	buff, _ := updateEnvelope.Marshal()
-
-	// call external handler
-	uiexec.Exec(func() {
-		ctrl.updateReceivedCallback(msg.C_UpdateEnvelope, buff)
-	})
+	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateEnvelope, updateEnvelope)
 
 	_ = repo.PendingMessages.Delete(pm.ID)
 }

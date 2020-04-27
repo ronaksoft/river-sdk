@@ -128,7 +128,7 @@ func executeRemoteCommand(r *River, requestID uint64, constructor int64, command
 
 				if reqCB.TimeoutCallback != nil {
 					if reqCB.IsUICallback {
-						uiexec.Exec(func() { reqCB.TimeoutCallback() })
+						uiexec.ExecTimeoutCB(reqCB.TimeoutCallback)
 					} else {
 						reqCB.TimeoutCallback()
 					}

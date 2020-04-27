@@ -163,7 +163,7 @@ func (ctrl *Controller) executor(req request) {
 		default:
 			if reqCB.TimeoutCallback != nil {
 				if reqCB.IsUICallback {
-					uiexec.Exec(func() { reqCB.TimeoutCallback() })
+					uiexec.ExecTimeoutCB(reqCB.TimeoutCallback)
 				} else {
 					reqCB.TimeoutCallback()
 				}
@@ -196,7 +196,7 @@ func (ctrl *Controller) executor(req request) {
 		}
 		if reqCB.SuccessCallback != nil {
 			if reqCB.IsUICallback {
-				uiexec.Exec(func() { reqCB.SuccessCallback(res) })
+				uiexec.ExecSuccessCB(reqCB.SuccessCallback, res)
 			} else {
 				reqCB.SuccessCallback(res)
 			}
@@ -248,7 +248,7 @@ func (ctrl *Controller) RealtimeCommand(
 			domain.RemoveRequestCallback(reqID)
 			if reqCB.TimeoutCallback != nil {
 				if reqCB.IsUICallback {
-					uiexec.Exec(func() { reqCB.TimeoutCallback() })
+					uiexec.ExecTimeoutCB(reqCB.TimeoutCallback)
 				} else {
 					reqCB.TimeoutCallback()
 				}
@@ -262,7 +262,7 @@ func (ctrl *Controller) RealtimeCommand(
 			)
 			if reqCB.SuccessCallback != nil {
 				if reqCB.IsUICallback {
-					uiexec.Exec(func() { reqCB.SuccessCallback(res) })
+					uiexec.ExecSuccessCB(reqCB.SuccessCallback, res)
 				} else {
 					reqCB.SuccessCallback(res)
 				}

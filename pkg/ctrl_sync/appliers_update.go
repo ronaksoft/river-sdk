@@ -192,12 +192,7 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 	udpMsg.UpdateID = 0
 	udpMsg.Timestamp = time.Now().Unix()
 
-	buff, _ := udpMsg.Marshal()
-
-	// call external handler
-	uiexec.Exec(func() {
-		ctrl.updateReceivedCallback(msg.C_UpdateEnvelope, buff)
-	})
+	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateEnvelope, udpMsg)
 }
 
 func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
