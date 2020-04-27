@@ -6,11 +6,15 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	msg "git.ronaksoftware.com/river/msg/chat"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
+	"go.uber.org/zap"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -18,11 +22,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	msg "git.ronaksoftware.com/river/msg/chat"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"go.uber.org/zap"
 )
 
 // Config network controller config
