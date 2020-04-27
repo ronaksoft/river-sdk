@@ -17,6 +17,7 @@ const (
 	ConfClient      = "CLIENT"
 	ConfServerUrl   = "SERVER_URL"
 	ConfPid         = "PID"
+	ConfRegEx		= "REGEX"
 )
 
 func readConfig() {
@@ -25,6 +26,7 @@ func readConfig() {
 	RootCmd.Flags().Bool("client", false, "run in client mode")
 	RootCmd.Flags().String("server_url", "ws://livelog.ronaksoftware.com:7676", "server address")
 	RootCmd.Flags().String("pid", "", "")
+	RootCmd.Flags().String("regex", "", "")
 	_ = viper.BindPFlag(ConfListenPort, RootCmd.Flags().Lookup("port"))
 	_ = viper.BindPFlag(ConfMonitorPort, RootCmd.Flags().Lookup("monitor_port"))
 	_ = viper.BindPFlag(ConfClient, RootCmd.Flags().Lookup("client"))

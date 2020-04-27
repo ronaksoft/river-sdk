@@ -520,7 +520,7 @@ func (r *River) AppForeground() {
 	if r.networkCtrl.GetQuality() == domain.NetworkConnected {
 		err := r.networkCtrl.Ping(domain.RandomUint64(), domain.WebsocketPingTimeout)
 		if err != nil {
-			logs.Debug("Ping failed try to reconnect")
+			logs.Debug("Ping failed try to reconnect", zap.Error(err))
 			r.networkCtrl.Reconnect()
 		}
 	} else {
