@@ -7,7 +7,7 @@ variables:
 
 build:supernumerary-node:
   stage: build
-  image: registry.ronaksoftware.com/base/golang:1.11
+  image: registry.ronaksoftware.com/base/docker/golang:1.14.1
   script:
     - cd cmd/cli-supernumerary/node
     - mkdir -p $CI_PROJECT_DIR/cmd/cli-supernumerary/node/_build
@@ -35,7 +35,7 @@ deploy:supernumerary-node:
     
 build:live-logger:
   stage: build
-  image: registry.ronaksoftware.com/base/golang:1.11
+  image: registry.ronaksoftware.com/base/docker/golang:1.14.1
   script:
     - cd cmd/cli-livelog/
     - env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build --mod=vendor -ldflags "-s -w" -o $CI_PROJECT_DIR/cmd/cli-livelog/cli-livelog
