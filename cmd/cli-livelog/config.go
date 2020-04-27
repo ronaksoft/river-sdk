@@ -23,7 +23,7 @@ func readConfig() {
 	RootCmd.Flags().Int("port", 2374, "listening port")
 	RootCmd.Flags().Int("monitor_port", 2375, "monitoring port")
 	RootCmd.Flags().Bool("client", false, "run in client mode")
-	RootCmd.Flags().String("server_url", "https://livemon.ronaksoftware.com", "server address")
+	RootCmd.Flags().String("server_url", "ws://livelog.ronaksoftware.com", "server address")
 	RootCmd.Flags().String("pid", "", "")
 	_ = viper.BindPFlag(ConfListenPort, RootCmd.Flags().Lookup("port"))
 	_ = viper.BindPFlag(ConfReportPort, RootCmd.Flags().Lookup("report_port"))
