@@ -299,7 +299,7 @@ func (r *repoGroups) DeleteMember(groupID, userID int64) {
 }
 
 func (r *repoGroups) DeleteAllMembers(groupID int64) {
-	err := badgerView(func(txn *badger.Txn) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = getGroupParticipantPrefix(groupID)
 		it := txn.NewIterator(opts)
