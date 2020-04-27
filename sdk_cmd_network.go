@@ -1,6 +1,10 @@
 package riversdk
 
-import "git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+import (
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	"go.uber.org/zap"
+)
 
 /*
    Creation Time: 2019 - Jun - 25
@@ -27,6 +31,7 @@ func (r *River) StopNetwork() {
 // NetworkChange
 // Possible Values: cellular (2), wifi (1), none (0)
 func (r *River) NetworkChange(connection int) {
+	logs.Debug("NetworkChange called", zap.Int("C", connection))
 	switch connection {
 	case domain.ConnectionNone:
 		r.networkCtrl.Disconnect()
