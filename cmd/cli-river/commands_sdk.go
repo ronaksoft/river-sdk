@@ -90,6 +90,18 @@ var SdkUpdateGetState = &ishell.Cmd{
 	},
 }
 
+var SdkAppForeground = &ishell.Cmd{
+	Name: "AppForeground",
+	Func: func(c *ishell.Context) {
+		_SDK.AppForeground()
+	},
+}
+var SdkAppBackground = &ishell.Cmd{
+	Name: "AppBackground",
+	Func: func(c *ishell.Context) {
+		_SDK.AppBackground()
+	},
+}
 func init() {
 	SDK.AddCmd(SdkConnInfo)
 	SDK.AddCmd(SdkSetLogLevel)
@@ -97,4 +109,6 @@ func init() {
 	SDK.AddCmd(SdkGetServerTime)
 	SDK.AddCmd(SdkUpdateGetState)
 	SDK.AddCmd(GetAuthKey)
+	SDK.AddCmd(SdkAppForeground)
+	SDK.AddCmd(SdkAppBackground)
 }
