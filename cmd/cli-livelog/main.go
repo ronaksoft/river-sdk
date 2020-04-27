@@ -77,7 +77,7 @@ func runClient() {
 		if err != nil {
 			break
 		}
-		fmt.Println(string(data))
+		fmt.Print(string(data))
 	}
 }
 
