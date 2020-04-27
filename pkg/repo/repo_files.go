@@ -436,6 +436,9 @@ func (r *repoFiles) ClearCache() {
 	}
 	for _, dir := range dirs {
 		_ = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() {
+				return nil
+			}
 			_ = os.Remove(path)
 			return nil
 		})
