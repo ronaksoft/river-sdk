@@ -108,7 +108,7 @@ func runServer() {
 	// 2. Run Websocket Log Printer
 	go func() {
 		err := http.ListenAndServe(
-			fmt.Sprintf(":%d", viper.GetInt(ConfReportPort)),
+			fmt.Sprintf(":%d", viper.GetInt(ConfMonitorPort)),
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				conn, _, _, err := ws.UpgradeHTTP(r, w)
 				if err != nil {

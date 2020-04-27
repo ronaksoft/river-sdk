@@ -12,11 +12,11 @@ import "github.com/spf13/viper"
 */
 
 const (
-	ConfListenPort = "LISTEN_PORT"
-	ConfReportPort = "REPORT_PORT"
-	ConfClient     = "CLIENT"
-	ConfServerUrl  = "SERVER_URL"
-	ConfPid        = "PID"
+	ConfListenPort  = "LISTEN_PORT"
+	ConfMonitorPort = "MONITOR_PORT"
+	ConfClient      = "CLIENT"
+	ConfServerUrl   = "SERVER_URL"
+	ConfPid         = "PID"
 )
 
 func readConfig() {
@@ -26,7 +26,7 @@ func readConfig() {
 	RootCmd.Flags().String("server_url", "ws://livelog.ronaksoftware.com", "server address")
 	RootCmd.Flags().String("pid", "", "")
 	_ = viper.BindPFlag(ConfListenPort, RootCmd.Flags().Lookup("port"))
-	_ = viper.BindPFlag(ConfReportPort, RootCmd.Flags().Lookup("report_port"))
+	_ = viper.BindPFlag(ConfMonitorPort, RootCmd.Flags().Lookup("monitor_port"))
 	_ = viper.BindPFlag(ConfClient, RootCmd.Flags().Lookup("client"))
 	_ = viper.BindPFlag(ConfServerUrl, RootCmd.Flags().Lookup("server_url"))
 	_ = viper.BindPFlag(ConfPid, RootCmd.Flags().Lookup("pid"))
