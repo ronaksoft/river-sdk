@@ -289,6 +289,7 @@ func (ctrl *Controller) watchDog() {
 
 // Ping the server to check connectivity
 func (ctrl *Controller) Ping(id uint64, timeout time.Duration) error {
+	logs.Debug("NetCtrl pings server", zap.Uint64("ID", id))
 	// Create a channel for pong
 	ch := make(chan struct{}, 1)
 	ctrl.wsPingsMtx.Lock()
@@ -338,6 +339,7 @@ func (ctrl *Controller) receiver() {
 		_ = ctrl.wsConn.SetReadDeadline(time.Now().Add(domain.WebsocketIdleTimeout))
 		messages, err = wsutil.ReadServerMessage(ctrl.wsConn, messages)
 		if err != nil {
+			logs.Warn("NetCtrl got error on reading server message", zap.Error(err))
 			// If we return then watchdog will re-connect
 			return
 		}
@@ -345,6 +347,7 @@ func (ctrl *Controller) receiver() {
 		for _, message := range messages {
 			switch message.OpCode {
 			case ws.OpPong:
+				logs.Info("Pong Received", zap.Int("L", len(message.Payload)))
 				if len(message.Payload) == 8 {
 					pingID := binary.BigEndian.Uint64(message.Payload)
 					ctrl.wsPingsMtx.Lock()
