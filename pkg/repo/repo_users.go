@@ -158,7 +158,6 @@ func (r *repoUsers) Get(userID int64) (user *msg.User, err error) {
 		}
 		return nil
 	})
-	logs.ErrorOnErr("RepoUser got error on get", err)
 	return
 }
 
@@ -171,15 +170,14 @@ func (r *repoUsers) GetMany(userIDs []int64) []*msg.User {
 				continue
 			}
 			user, err := getUserByKey(txn, getUserKey(userID))
-			if err != nil {
-				switch err {
-				case badger.ErrKeyNotFound:
-					logs.Warn("RepoUser got error on get many (key not found)", zap.Int64("UserID", userID))
-				default:
-					logs.Warn("RepoUser got error on get many", zap.Error(err), zap.Int64("UserID", userID))
-				}
+			switch err {
+			case nil:
+			case badger.ErrKeyNotFound:
 				continue
+			default:
+				return err
 			}
+
 			delta := timeNow - user.LastSeen
 			switch {
 			case delta < domain.Minute:
@@ -200,7 +198,7 @@ func (r *repoUsers) GetMany(userIDs []int64) []*msg.User {
 	return users
 }
 
-func (r *repoUsers) Save(users ...*msg.User) {
+func (r *repoUsers) Save(users ...*msg.User) error {
 	userIDs := domain.MInt64B{}
 	for _, v := range users {
 		if strings.TrimSpace(v.FirstName) == "" && strings.TrimSpace(v.LastName) == "" {
@@ -208,14 +206,15 @@ func (r *repoUsers) Save(users ...*msg.User) {
 		}
 		userIDs[v.ID] = true
 	}
-	_ = badgerUpdate(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		for idx := range users {
 			err := saveUser(txn, users[idx])
-			logs.ErrorOnErr("RepoUser got error on save", err, zap.Int64("UserID", users[idx].ID))
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	})
-	return
 }
 
 func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType int32) error {

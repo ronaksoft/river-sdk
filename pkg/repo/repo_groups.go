@@ -4,12 +4,10 @@ import (
 	"fmt"
 	msg "git.ronaksoftware.com/river/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
 	"github.com/dgraph-io/badger"
-	"go.uber.org/zap"
 	"strings"
 	"time"
 )
@@ -183,22 +181,26 @@ func (r *repoGroups) SaveFull(group *msg.GroupFull) error {
 	})
 }
 
-func (r *repoGroups) GetMany(groupIDs []int64) []*msg.Group {
+func (r *repoGroups) GetMany(groupIDs []int64) ([]*msg.Group, error) {
 	groups := make([]*msg.Group, 0, len(groupIDs))
-	_ = badgerView(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		for _, groupID := range groupIDs {
 			if groupID == 0 {
 				continue
 			}
 			group, err := getGroupByKey(txn, getGroupKey(groupID))
-			logs.WarnOnErr("RepoGroups got error on get many", err, zap.Int64("GroupID", groupID))
+			switch err {
+			case nil, badger.ErrKeyNotFound:
+			default:
+				return err
+			}
 			if group != nil {
 				groups = append(groups, group)
 			}
 		}
 		return nil
 	})
-	return groups
+	return groups, err
 }
 
 func (r *repoGroups) Get(groupID int64) (group *msg.Group, err error) {
