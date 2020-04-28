@@ -109,7 +109,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 			}
 		}
 	}
-	res.Groups = repo.Groups.GetMany(mGroups.ToArray())
+	res.Groups, _ = repo.Groups.GetMany(mGroups.ToArray())
 	if len(res.Groups) != len(mGroups) {
 		logs.Warn("River found unmatched dialog groups", zap.Int("Got", len(res.Groups)), zap.Int("Need", len(mGroups)))
 		for groupID := range mGroups {
@@ -125,7 +125,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 			}
 		}
 	}
-	res.Users = repo.Users.GetMany(mUsers.ToArray())
+	res.Users, _ = repo.Users.GetMany(mUsers.ToArray())
 	if len(res.Users) != len(mUsers) {
 		logs.Warn("River found unmatched dialog users", zap.Int("Got", len(res.Users)), zap.Int("Need", len(mUsers)))
 		for userID := range mUsers {
@@ -444,7 +444,7 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 			mUsers[id] = true
 		}
 	}
-	users := repo.Users.GetMany(mUsers.ToArray())
+	users, _ := repo.Users.GetMany(mUsers.ToArray())
 
 	// if db already had all users
 	if len(messages) == len(msgIDs) && len(users) > 0 {
@@ -603,7 +603,7 @@ func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 	for idx := range res.ContactUsers {
 		userIDs = append(userIDs, res.ContactUsers[idx].ID)
 	}
-	res.Users = repo.Users.GetMany(userIDs)
+	res.Users, _ = repo.Users.GetMany(userIDs)
 	out.Constructor = msg.C_ContactsMany
 	out.Message, _ = res.Marshal()
 
@@ -953,7 +953,6 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 		return
 	}
 
-
 	res, err := repo.Groups.GetFull(req.GroupID)
 	if err != nil {
 		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
@@ -988,7 +987,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	for _, v := range participants {
 		userIDs[v.UserID] = true
 	}
-	users := repo.Users.GetMany(userIDs.ToArray())
+	users, _ := repo.Users.GetMany(userIDs.ToArray())
 	if len(participants) != len(users) {
 		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 		return
@@ -1052,7 +1051,7 @@ func (r *River) usersGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 		userIDs[v.UserID] = true
 	}
 
-	users := repo.Users.GetMany(userIDs.ToArray())
+	users, _ := repo.Users.GetMany(userIDs.ToArray())
 
 	if len(users) == len(userIDs) {
 		res := new(msg.UsersMany)
@@ -1085,7 +1084,7 @@ func (r *River) usersGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 		userIDs[v.UserID] = true
 	}
 
-	users := repo.Users.GetMany(userIDs.ToArray())
+	users, _ := repo.Users.GetMany(userIDs.ToArray())
 	if len(users) == len(userIDs) {
 		res := new(msg.UsersMany)
 		res.Users = users
@@ -1344,9 +1343,9 @@ func (r *River) clientGlobalSearch(in, out *msg.MessageEnvelope, timeoutCB domai
 		searchResults.MatchedGroups = repo.Groups.Search(searchPhrase)
 	}
 
-	users := repo.Users.GetMany(userIDs.ToArray())
-	groups := repo.Groups.GetMany(groupIDs.ToArray())
-	matchedUsers := repo.Users.GetMany(matchedUserIDs.ToArray())
+	users, _ := repo.Users.GetMany(userIDs.ToArray())
+	groups, _ := repo.Groups.GetMany(groupIDs.ToArray())
+	matchedUsers, _ := repo.Users.GetMany(matchedUserIDs.ToArray())
 
 	searchResults.Messages = msgs
 	searchResults.Users = users
@@ -1376,7 +1375,7 @@ func (r *River) clientContactSearch(in, out *msg.MessageEnvelope, timeoutCB doma
 	for _, contactUser := range contactUsers {
 		userIDs = append(userIDs, contactUser.ID)
 	}
-	users.Users = repo.Users.GetMany(userIDs)
+	users.Users, _ = repo.Users.GetMany(userIDs)
 
 	out.Constructor = msg.C_UsersMany
 	out.RequestID = in.RequestID
@@ -1449,8 +1448,8 @@ func (r *River) clientGetMediaHistory(in, out *msg.MessageEnvelope, timeoutCB do
 		}
 	}
 
-	users := repo.Users.GetMany(userIDs.ToArray())
-	groups := repo.Groups.GetMany(groupIDs.ToArray())
+	users, _ := repo.Users.GetMany(userIDs.ToArray())
+	groups, _ := repo.Groups.GetMany(groupIDs.ToArray())
 
 	res := msg.MessagesMany{
 		Messages:   msgs,

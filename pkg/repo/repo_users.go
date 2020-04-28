@@ -84,7 +84,7 @@ func saveUser(txn *badger.Txn, user *msg.User) error {
 		if err != nil {
 			return err
 		}
-	} else if len(user.PhotoGallery) > 0  {
+	} else if len(user.PhotoGallery) > 0 {
 		err := saveUserPhotos(txn, user.ID, user.PhotoGallery...)
 		if err != nil {
 			return err
@@ -161,10 +161,10 @@ func (r *repoUsers) Get(userID int64) (user *msg.User, err error) {
 	return
 }
 
-func (r *repoUsers) GetMany(userIDs []int64) []*msg.User {
+func (r *repoUsers) GetMany(userIDs []int64) ([]*msg.User, error) {
 	timeNow := time.Now().Unix()
 	users := make([]*msg.User, 0, len(userIDs))
-	_ = badgerView(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		for _, userID := range userIDs {
 			if userID == 0 {
 				continue
@@ -195,7 +195,7 @@ func (r *repoUsers) GetMany(userIDs []int64) []*msg.User {
 		}
 		return nil
 	})
-	return users
+	return users, err
 }
 
 func (r *repoUsers) Save(users ...*msg.User) error {
@@ -235,7 +235,11 @@ func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType i
 func (r *repoUsers) UpdateBlocked(peerID int64, blocked bool) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		user, err := getUserByKey(txn, getUserKey(peerID))
-		if err != nil {
+		switch err {
+		case nil:
+		case badger.ErrKeyNotFound:
+			return nil
+		default:
 			return err
 		}
 		user.Blocked = blocked
@@ -258,9 +262,13 @@ func (r *repoUsers) GetAccessHash(userID int64) (accessHash uint64, err error) {
 }
 
 func (r *repoUsers) UpdateProfile(userID int64, firstName, lastName, username, bio, phone string) error {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		user, err := getUserByKey(txn, getUserKey(userID))
-		if err != nil {
+		switch err {
+		case nil:
+		case badger.ErrKeyNotFound:
+			return nil
+		default:
 			return err
 		}
 		user.FirstName = firstName
@@ -270,8 +278,6 @@ func (r *repoUsers) UpdateProfile(userID int64, firstName, lastName, username, b
 		user.Bio = bio
 		return saveUser(txn, user)
 	})
-	logs.ErrorOnErr("RepoUser got error on update profile", err)
-	return err
 }
 
 func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
@@ -304,7 +310,7 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 	return users
 }
 
-func (r *repoUsers) GetContact(userID int64) *msg.ContactUser {
+func (r *repoUsers) GetContact(userID int64) (*msg.ContactUser, error) {
 	contactUser := new(msg.ContactUser)
 	err := badgerView(func(txn *badger.Txn) error {
 		item, err := txn.Get(getContactKey(userID))
@@ -316,19 +322,7 @@ func (r *repoUsers) GetContact(userID int64) *msg.ContactUser {
 		})
 	})
 
-	if err != nil {
-		return nil
-	}
-	return contactUser
-}
-
-func (r *repoUsers) GetManyContactUsers(userIDs []int64) []*msg.ContactUser {
-	contactUsers := make([]*msg.ContactUser, 0, len(userIDs))
-	for _, userID := range userIDs {
-		contactUsers = append(contactUsers, r.GetContact(userID))
-	}
-
-	return contactUsers
+	return contactUser, err
 }
 
 func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
@@ -495,8 +489,8 @@ func (r *repoUsers) UpdatePhoto(userID int64, userPhoto *msg.UserPhoto) error {
 	return err
 }
 
-func (r *repoUsers) SavePhotoGallery(userID int64, photos ...*msg.UserPhoto) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+func (r *repoUsers) SavePhotoGallery(userID int64, photos ...*msg.UserPhoto) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		for _, photo := range photos {
 			if photo != nil {
 				key := getUserPhotoGalleryKey(userID, photo.PhotoID)
@@ -506,11 +500,10 @@ func (r *repoUsers) SavePhotoGallery(userID int64, photos ...*msg.UserPhoto) {
 		}
 		return nil
 	})
-	logs.ErrorOnErr("RepoUser got error on save photo gallery", err)
 }
 
-func (r *repoUsers) RemovePhotoGallery(userID int64, photoIDs ...int64) {
-	_ = badgerUpdate(func(txn *badger.Txn) error {
+func (r *repoUsers) RemovePhotoGallery(userID int64, photoIDs ...int64) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		for _, photoID := range photoIDs {
 			_ = txn.Delete(getUserPhotoGalleryKey(userID, photoID))
 		}

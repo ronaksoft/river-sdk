@@ -199,8 +199,8 @@ func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, de
 		}
 	}
 
-	users := repo.Users.GetMany(userIDs.ToArray())
-	groups := repo.Groups.GetMany(groupIDs.ToArray())
+	users, _ := repo.Users.GetMany(userIDs.ToArray())
+	groups, _ := repo.Groups.GetMany(groupIDs.ToArray())
 
 	msgMany := new(msg.MessagesMany)
 	msgMany.Messages = msgs

@@ -371,7 +371,10 @@ func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) ([]*msg.UpdateEnve
 		ctrl.connInfo.Save()
 	}
 
-	repo.Users.UpdateProfile(x.UserID, x.FirstName, x.LastName, x.Username, x.Bio, x.Phone)
+	err = repo.Users.UpdateProfile(x.UserID, x.FirstName, x.LastName, x.Username, x.Bio, x.Phone)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil

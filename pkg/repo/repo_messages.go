@@ -397,7 +397,7 @@ func (r *repoMessages) GetMessageHistory(peerID int64, peerType int32, minID, ma
 
 	}
 
-	users = Users.GetMany(userIDs.ToArray())
+	users, _ = Users.GetMany(userIDs.ToArray())
 	return
 }
 

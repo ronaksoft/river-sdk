@@ -294,8 +294,8 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 	default:
 	}
 
-	users := Users.GetMany(userIDs.ToArray())
-	groups := Groups.GetMany(groupIDs.ToArray())
+	users, _ := Users.GetMany(userIDs.ToArray())
+	groups, _ := Groups.GetMany(groupIDs.ToArray())
 	return userMessages, users, groups
 }
 
