@@ -327,7 +327,7 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 				logs.Warn("Error On UpdateDiff",
 					zap.Error(err),
 					zap.Int64("UpdateID", update.UpdateID),
-					zap.String("Constructor", msg.ConstructorNames[update.Constructor]),
+					zap.String("C", msg.ConstructorNames[update.Constructor]),
 				)
 				return
 			}
@@ -429,7 +429,7 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer, outO
 				logs.Error("SyncCtrl got error on update applier", zap.Error(err))
 				return
 			}
-			logs.Debug("SyncCtrl applied update", zap.String("Constructor", msg.ConstructorNames[update.Constructor]))
+			logs.Debug("SyncCtrl applied update", zap.String("C", msg.ConstructorNames[update.Constructor]))
 			switch update.Constructor {
 			case msg.C_UpdateMessageID:
 			default:

@@ -25,7 +25,7 @@ func (d *RequestDelegate) OnComplete(b []byte) {
 		_Log.Error("Failed to unmarshal", zap.Error(err))
 		return
 	}
-	_Log.Info("Callback OnComplete()", zap.Int64("ReqID", d.RequestID), zap.String("Constructor", msg.ConstructorNames[d.Envelope.Constructor]))
+	_Log.Info("Callback OnComplete()", zap.Int64("ReqID", d.RequestID), zap.String("C", msg.ConstructorNames[d.Envelope.Constructor]))
 
 	MessagePrinter(&d.Envelope)
 	return

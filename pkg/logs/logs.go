@@ -216,8 +216,7 @@ func UpdateLog(updateID int64, constructor int64) {
 		constructorName, _ := msg.ConstructorNames[constructor]
 		_UpdateLog.Info("Update",
 			zap.Int64("ID", updateID),
-			zap.String("Constructor", constructorName),
-			zap.Int64("ConstructorID", constructor),
+			zap.String("C", constructorName),
 		)
 	}
 }

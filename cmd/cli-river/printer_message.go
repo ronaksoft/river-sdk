@@ -358,8 +358,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 	default:
 		constructorName, _ := msg.ConstructorNames[envelope.Constructor]
 		_Shell.Println("DEFAULT",
-			zap.String("ConstructorName", constructorName),
-			zap.Int64("Constructor", envelope.Constructor),
+			zap.String("C", constructorName),
 		)
 	}
 }

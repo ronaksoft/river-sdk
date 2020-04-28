@@ -360,7 +360,7 @@ func (r *River) onNetworkConnect() (err error) {
 
 func (r *River) onGeneralError(requestID uint64, e *msg.Error) {
 	logs.Info("We received error (General)",
-		zap.Uint64("RequestID", requestID),
+		zap.Uint64("ReqID", requestID),
 		zap.String("Code", e.Code),
 		zap.String("Item", e.Items),
 	)
@@ -399,12 +399,12 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 		case reqCB.ResponseChannel <- msgs[idx]:
 			logs.Debug("We received response",
 				zap.Uint64("ReqID", reqCB.RequestID),
-				zap.String("Constructor", msg.ConstructorNames[msgs[idx].Constructor]),
+				zap.String("C", msg.ConstructorNames[msgs[idx].Constructor]),
 			)
 		default:
 			logs.Error("We received response but no callback, we drop response",
 				zap.Uint64("ReqID", reqCB.RequestID),
-				zap.String("Constructor", msg.ConstructorNames[msgs[idx].Constructor]),
+				zap.String("C", msg.ConstructorNames[msgs[idx].Constructor]),
 			)
 		}
 		domain.RemoveRequestCallback(msgs[idx].RequestID)

@@ -700,7 +700,9 @@ func (r *River) sendChunkedImportContactRequest(replace bool, diffContacts []*ms
 			result.Users = append(result.Users, x.Users...)
 			result.ContactUsers = append(result.ContactUsers, x.ContactUsers...)
 		} else {
-			logs.Error("sendChunkedImportContactRequest() -> cbSuccess() received unexpected response", zap.String("Constructor", msg.ConstructorNames[env.Constructor]))
+			logs.Error("We expected ContactsImported but we got something else!!!",
+				zap.String("C", msg.ConstructorNames[env.Constructor]),
+			)
 		}
 	}
 
@@ -963,6 +965,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 		return
 	}
 	res.Participants = participants
+	res.Group.Participants = int32(len(res.Participants))
 
 	// NotifySettings
 	dlg, _ := repo.Dialogs.Get(req.GroupID, int32(msg.PeerGroup))
@@ -1208,7 +1211,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 				}
 			}
 		default:
-			logs.Warn("River received unexpected response", zap.String("Constructor", msg.ConstructorNames[m.Constructor]))
+			logs.Warn("We received unexpected response", zap.String("C", msg.ConstructorNames[m.Constructor]))
 		}
 
 		successCB(m)
@@ -1292,8 +1295,8 @@ func (r *River) clientGlobalSearch(in, out *msg.MessageEnvelope, timeoutCB domai
 			msgs = repo.Messages.SearchByLabels(req.LabelIDs, 0, req.Limit)
 		}
 
-	}else if req.SenderID != 0 {
-		msgs = repo.Messages.SearchBySender(searchPhrase,req.SenderID,req.Peer.ID,req.Limit)
+	} else if req.SenderID != 0 {
+		msgs = repo.Messages.SearchBySender(searchPhrase, req.SenderID, req.Peer.ID, req.Limit)
 	} else if req.Peer != nil {
 		msgs = repo.Messages.SearchTextByPeerID(searchPhrase, req.Peer.ID, req.Limit)
 	} else {

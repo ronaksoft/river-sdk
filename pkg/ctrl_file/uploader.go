@@ -292,7 +292,7 @@ func uploadJob(ctx *uploadContext, ctrl *Controller, maxRetries *int32, waitGrou
 		)
 		ctx.parts <- partIndex
 	default:
-		logs.Debug("FileCtrl received unexpected response", zap.String("Constructor", msg.ConstructorNames[res.Constructor]))
+		logs.Debug("FileCtrl received unexpected response", zap.String("C", msg.ConstructorNames[res.Constructor]))
 		atomic.StoreInt32(maxRetries, 0)
 		return
 	}

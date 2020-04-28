@@ -212,7 +212,7 @@ func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
 		if err != nil {
 			logs.Warn("NetCtrl got error on flushing outgoing messages",
 				zap.Uint64("ReqID", m.RequestID),
-				zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
+				zap.String("C", msg.ConstructorNames[m.Constructor]),
 				zap.Error(err),
 			)
 		}
@@ -220,7 +220,10 @@ func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
 		messages := make([]*msg.MessageEnvelope, 0, itemsCount)
 		for idx := range entries {
 			m := entries[idx].Value.(*msg.MessageEnvelope)
-			logs.Debug("Message", zap.Int("Idx", idx), zap.String("Constructor", msg.ConstructorNames[m.Constructor]))
+			logs.Debug("Message",
+				zap.Int("Idx", idx),
+				zap.String("C", msg.ConstructorNames[m.Constructor]),
+			)
 			messages = append(messages, m)
 		}
 
@@ -377,7 +380,7 @@ func (ctrl *Controller) receiver() {
 						continue
 					}
 					logs.Debug("NetCtrl received plain-text message",
-						zap.String("Constructor", msg.ConstructorNames[receivedEnvelope.Constructor]),
+						zap.String("C", msg.ConstructorNames[receivedEnvelope.Constructor]),
 						zap.Uint64("ReqID", receivedEnvelope.RequestID),
 					)
 					ctrl.messageHandler(receivedEnvelope)
@@ -402,7 +405,7 @@ func (ctrl *Controller) receiver() {
 					continue
 				}
 				logs.Debug("NetCtrl received encrypted message",
-					zap.String("Constructor", msg.ConstructorNames[receivedEncryptedPayload.Envelope.Constructor]),
+					zap.String("C", msg.ConstructorNames[receivedEncryptedPayload.Envelope.Constructor]),
 					zap.Uint64("ReqID", receivedEncryptedPayload.Envelope.RequestID),
 				)
 				// TODO:: check message id and server salt before handling the message
@@ -644,8 +647,8 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 
 	logs.Info("NetCtrl call sendWebsocket",
 		zap.Uint64("ReqID", msgEnvelope.RequestID),
-		zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
-		zap.Bool("Unauthorized", unauthorized),
+		zap.String("C", msg.ConstructorNames[msgEnvelope.Constructor]),
+		zap.Bool("Plain", unauthorized),
 		zap.Bool("NoAuth", ctrl.authID == 0),
 	)
 	if ctrl.authID == 0 || unauthorized {
@@ -684,7 +687,7 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 	}
 	ctrl.wsLastActivity = time.Now()
 	logs.Debug("NetCtrl sent over websocket",
-		zap.String("Constructor", msg.ConstructorNames[msgEnvelope.Constructor]),
+		zap.String("C", msg.ConstructorNames[msgEnvelope.Constructor]),
 		zap.Duration("Duration", time.Now().Sub(startTime)),
 	)
 

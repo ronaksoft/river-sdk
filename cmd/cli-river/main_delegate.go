@@ -46,9 +46,7 @@ func (d *MainDelegate) OnSearchComplete(b []byte) {
 }
 
 func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
-
-	_Log.Info("Update received", zap.String("Constructor", msg.ConstructorNames[constructor]))
-
+	_Log.Info("Update received", zap.String("C", msg.ConstructorNames[constructor]))
 	switch constructor {
 	case msg.C_UpdateContainer:
 		updateContainer := new(msg.UpdateContainer)
@@ -59,7 +57,7 @@ func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 		}
 		_Log.Info("Processing UpdateContainer", zap.Int64("MinID", updateContainer.MinUpdateID), zap.Int64("MaxID", updateContainer.MaxUpdateID))
 		for _, update := range updateContainer.Updates {
-			_Log.Info("Processing Update", zap.Int64("UpdateID", update.UpdateID), zap.String("Constructor", msg.ConstructorNames[update.Constructor]))
+			_Log.Info("Processing Update", zap.Int64("UpdateID", update.UpdateID), zap.String("C", msg.ConstructorNames[update.Constructor]))
 			UpdatePrinter(update)
 		}
 	case msg.C_ClientUpdatePendingMessageDelivery:
@@ -76,7 +74,7 @@ func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 			_Log.Error("Failed to unmarshal", zap.Error(err))
 			return
 		} else {
-			_Log.Info("Processing UpdateEnvelop", zap.Int64("UpdateID", update.UpdateID), zap.String("Constructor", msg.ConstructorNames[update.Constructor]))
+			_Log.Info("Processing UpdateEnvelop", zap.Int64("UpdateID", update.UpdateID), zap.String("C", msg.ConstructorNames[update.Constructor]))
 			UpdatePrinter(update)
 		}
 	}
@@ -86,7 +84,10 @@ func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 func (d *MainDelegate) OnDeferredRequests(requestID int64, b []byte) {
 	envelope := new(msg.MessageEnvelope)
 	envelope.Unmarshal(b)
-	_Log.Info("Deferred Request received", zap.Uint64("RequestID", envelope.RequestID), zap.String("Constructor", msg.ConstructorNames[envelope.Constructor]))
+	_Log.Info("Deferred Request received",
+		zap.Uint64("ReqID", envelope.RequestID),
+		zap.String("C", msg.ConstructorNames[envelope.Constructor]),
+	)
 	MessagePrinter(envelope)
 }
 

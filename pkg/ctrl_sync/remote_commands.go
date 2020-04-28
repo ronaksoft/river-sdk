@@ -102,7 +102,7 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 				err = domain.ParseServerError(m.Message)
 			default:
 				logs.Error("SyncCtrl did not received expected response for AuthRecall",
-					zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
+					zap.String("C", msg.ConstructorNames[m.Constructor]),
 				)
 				err = domain.ErrInvalidConstructor
 			}

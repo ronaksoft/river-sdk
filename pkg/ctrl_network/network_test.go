@@ -28,8 +28,8 @@ var (
 func dummyMessageHandler(messages []*msg.MessageEnvelope) {
 	for _, m := range messages {
 		logs.Info("Message",
-			zap.String("Constructor", msg.ConstructorNames[m.Constructor]),
-			zap.Uint64("RequestID", m.RequestID),
+			zap.String("C", msg.ConstructorNames[m.Constructor]),
+			zap.Uint64("ReqID", m.RequestID),
 		)
 	}
 }
@@ -38,7 +38,7 @@ func dummyUpdateHandler(updateContainer *msg.UpdateContainer) {
 	logs.Info("Update Handler")
 	for _, u := range updateContainer.Updates {
 		logs.Info("Update",
-			zap.String("Constructor", msg.ConstructorNames[u.Constructor]),
+			zap.String("C", msg.ConstructorNames[u.Constructor]),
 			zap.Int64("UpdateID", u.UpdateID),
 		)
 	}

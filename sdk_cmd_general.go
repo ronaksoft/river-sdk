@@ -31,7 +31,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 	waitGroup := new(sync.WaitGroup)
 	requestID = domain.SequentialUniqueID()
 	logs.Debug("River executes command",
-		zap.String("Constructor", msg.ConstructorNames[constructor]),
+		zap.String("C", msg.ConstructorNames[constructor]),
 	)
 
 	blockingMode := delegate.Flags()&RequestBlocking != 0
@@ -92,7 +92,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 }
 func executeLocalCommand(applier domain.LocalMessageHandler, requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	logs.Debug("River executes local command",
-		zap.String("Constructor", msg.ConstructorNames[constructor]),
+		zap.String("C", msg.ConstructorNames[constructor]),
 	)
 
 	in := new(msg.MessageEnvelope)
@@ -105,7 +105,7 @@ func executeLocalCommand(applier domain.LocalMessageHandler, requestID uint64, c
 }
 func executeRemoteCommand(r *River, requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	logs.Debug("River executes remote command",
-		zap.String("Constructor", msg.ConstructorNames[constructor]),
+		zap.String("C", msg.ConstructorNames[constructor]),
 	)
 
 	blocking := false
@@ -167,7 +167,7 @@ func deepCopy(commandBytes []byte) []byte {
 
 func (r *River) releaseDelegate(requestID uint64) {
 	logs.Debug("River releases delegate",
-		zap.Uint64("RequestID", requestID),
+		zap.Uint64("ReqID", requestID),
 	)
 	r.delegateMutex.Lock()
 	if _, ok := r.delegates[requestID]; ok {
