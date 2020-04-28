@@ -91,10 +91,13 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 		act := new(msg.MessageActionGroupAddUser)
 		err := act.Unmarshal(x.Message.MessageActionData)
 		if err != nil {
-			logs.Error("UpdateApplier couldn't unmarshal MessageActionGroupDeleteUser", zap.Error(err))
+			logs.Error("SyncCtrl couldn't unmarshal MessageActionGroupDeleteUser", zap.Error(err))
 		}
 
-		repo.Groups.DeleteMemberMany(x.Message.PeerID, act.UserIDs)
+		err = repo.Groups.DeleteParticipants(x.Message.PeerID, act.UserIDs...)
+		if err != nil {
+			logs.Error("SyncCtrl got error on DeleteParticipants", zap.Error(err))
+		}
 
 		// Check if user left (deleted him/her self from group) remove its GroupSearch, Dialog and its MessagesPending
 		selfUserID := ctrl.connInfo.PickupUserID()
@@ -111,8 +114,6 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			break
 		}
 
-		// Delete GroupSearch		NOT REQUIRED
-		// Delete Dialog			NOT REQUIRED
 		// Delete PendingMessage
 		deletedMsgs := repo.PendingMessages.DeletePeerAllMessages(x.Message.PeerID, x.Message.PeerType)
 		if deletedMsgs != nil {
@@ -137,14 +138,14 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 		// 1. Delete All Messages < x.MessageID
 		_ = repo.Messages.ClearHistory(ctrl.userID, x.Message.PeerID, x.Message.PeerType, act.MaxID)
 
-		// Delete Scroll Position
+		// 2. Delete Scroll Position
 		repo.MessagesExtra.SaveScrollID(x.Message.PeerID, x.Message.PeerType, 0)
 
 		if act.Delete {
-			// Delete Dialog
+			// 3. Delete Dialog
 			repo.Dialogs.Delete(x.Message.PeerID, x.Message.PeerType)
 		} else {
-			// get dialog and create first hole
+			// 3. Get dialog and create first hole
 			dialog, _ := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
 			if dialog != nil {
 				messageHole.InsertFill(dialog.PeerID, dialog.PeerType, dialog.TopMessageID, dialog.TopMessageID)
@@ -494,7 +495,6 @@ func (ctrl *Controller) updateGroupAdmins(u *msg.UpdateEnvelope) ([]*msg.UpdateE
 	logs.Info("SyncCtrl applies UpdateGroupAdmins",
 		zap.Int64("GroupID", x.GroupID),
 	)
-
 
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil

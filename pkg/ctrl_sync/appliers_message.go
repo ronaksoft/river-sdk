@@ -188,10 +188,17 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 	)
 
 	// save GroupSearch
-	repo.Groups.Save(u.Group)
+	err = repo.Groups.SaveFull(u)
+	if err != nil {
+		logs.Error("SyncCtrl couldn't save GroupFull", zap.Error(err))
+	}
+	err = repo.Groups.Save(u.Group)
+	if err != nil {
+		logs.Error("SyncCtrl couldn't save GroupFull's Group", zap.Error(err))
+	}
 
 	// save GroupSearch Members
-	repo.Groups.DeleteAllMembers(u.Group.ID)
+	repo.Groups.DeleteAllParticipants(u.Group.ID)
 	waitGroup := sync.WaitGroup{}
 
 	for _, v := range u.Participants {

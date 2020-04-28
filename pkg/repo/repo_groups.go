@@ -16,6 +16,7 @@ import (
 
 const (
 	prefixGroups             = "GRP"
+	prefixGroupsFull         = "GRP_F"
 	prefixGroupsParticipants = "GRP_P"
 	prefixGroupsPhotoGallery = "GRP_PHG"
 )
@@ -26,6 +27,10 @@ type repoGroups struct {
 
 func getGroupKey(groupID int64) []byte {
 	return domain.StrToByte(fmt.Sprintf("%s.%021d", prefixGroups, groupID))
+}
+
+func getGroupFullKey(groupID int64) []byte {
+	return domain.StrToByte(fmt.Sprintf("%s.%021d", prefixGroupsFull, groupID))
 }
 
 func getGroupByKey(txn *badger.Txn, groupKey []byte) (*msg.Group, error) {
@@ -41,6 +46,21 @@ func getGroupByKey(txn *badger.Txn, groupKey []byte) (*msg.Group, error) {
 		return nil, err
 	}
 	return group, nil
+}
+
+func getGroupFullByKey(txn *badger.Txn, groupFullKey []byte) (*msg.GroupFull, error) {
+	groupFull := &msg.GroupFull{}
+	item, err := txn.Get(groupFullKey)
+	if err != nil {
+		return nil, err
+	}
+	err = item.Value(func(val []byte) error {
+		return groupFull.Unmarshal(val)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return groupFull, nil
 }
 
 func getGroupParticipantKey(groupID, memberID int64) []byte {
@@ -89,6 +109,32 @@ func saveGroup(txn *badger.Txn, group *msg.Group) error {
 	return nil
 }
 
+func saveGroupFull(txn *badger.Txn, groupFull *msg.GroupFull) error {
+	groupKey := getGroupFullKey(groupFull.Group.ID)
+	groupBytes, _ := groupFull.Marshal()
+	err := txn.SetEntry(badger.NewEntry(
+		groupKey, groupBytes,
+	))
+	if err != nil {
+		return err
+	}
+
+	indexPeer(
+		domain.ByteToStr(groupKey),
+		GroupSearch{
+			Type:   "group",
+			Title:  groupFull.Group.Title,
+			PeerID: groupFull.Group.ID,
+		},
+	)
+
+	err = saveGroupPhotos(txn, groupFull.Group.ID, groupFull.Group.Photo)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func removeGroupPhotoGallery(txn *badger.Txn, groupID int64, photoIDs ...int64) error {
 	for _, photoID := range photoIDs {
 		err := txn.Delete(getGroupPhotoGalleryKey(groupID, photoID))
@@ -113,20 +159,28 @@ func updateGroupParticipantsCount(txn *badger.Txn, group *msg.Group) error {
 	return saveGroup(txn, group)
 }
 
-func (r *repoGroups) Save(groups ...*msg.Group) {
+func (r *repoGroups) Save(groups ...*msg.Group) error {
 	groupIDs := domain.MInt64B{}
 	for _, v := range groups {
 		groupIDs[v.ID] = true
 	}
 
-	_ = badgerUpdate(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		for _, group := range groups {
 			err := saveGroup(txn, group)
-			logs.WarnOnErr("RepoGroups got error on save", err, zap.Int64("GroupID", group.ID))
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	})
-	return
+
+}
+
+func (r *repoGroups) SaveFull(group *msg.GroupFull) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		return saveGroupFull(txn, group)
+	})
 }
 
 func (r *repoGroups) GetMany(groupIDs []int64) []*msg.Group {
@@ -155,38 +209,46 @@ func (r *repoGroups) Get(groupID int64) (group *msg.Group, err error) {
 		}
 		return nil
 	})
-	logs.WarnOnErr("RepoGroups got error on get", err)
 	return
 }
 
-func (r *repoGroups) Delete(groupID int64) {
-	_ = badgerUpdate(func(txn *badger.Txn) error {
+func (r *repoGroups) GetFull(groupID int64) (groupFull *msg.GroupFull, err error) {
+	err = badgerView(func(txn *badger.Txn) error {
+		groupFull, err = getGroupFullByKey(txn, getGroupFullKey(groupID))
+		return err
+	})
+	return
+}
+
+func (r *repoGroups) Delete(groupID int64) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		err := txn.Delete(getGroupKey(groupID))
-		if err != nil {
+		switch err {
+		case nil, badger.ErrKeyNotFound:
+		default:
 			return err
 		}
-		r.DeleteAllMembers(groupID)
-		return nil
+		return r.DeleteAllParticipants(groupID)
 	})
 }
 
-func (r *repoGroups) SaveParticipant(groupID int64, participant *msg.GroupParticipant) {
+func (r *repoGroups) SaveParticipant(groupID int64, participant *msg.GroupParticipant) error {
 	if participant == nil {
-		return
+		return nil
 	}
 
 	groupParticipantKey := getGroupParticipantKey(groupID, participant.UserID)
 	participantBytes, _ := participant.Marshal()
-	_ = badgerUpdate(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		return txn.SetEntry(badger.NewEntry(
 			groupParticipantKey, participantBytes,
 		))
 	})
 }
 
-func (r *repoGroups) GetParticipant(groupID int64, memberID int64) *msg.GroupParticipant {
+func (r *repoGroups) GetParticipant(groupID int64, memberID int64) (*msg.GroupParticipant, error) {
 	gp := new(msg.GroupParticipant)
-	_ = badgerView(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		item, err := txn.Get(getGroupParticipantKey(groupID, memberID))
 		if err != nil {
 			return err
@@ -195,7 +257,7 @@ func (r *repoGroups) GetParticipant(groupID int64, memberID int64) *msg.GroupPar
 			return gp.Unmarshal(val)
 		})
 	})
-	return gp
+	return gp, err
 }
 
 func (r *repoGroups) GetParticipants(groupID int64) ([]*msg.GroupParticipant, error) {
@@ -220,8 +282,55 @@ func (r *repoGroups) GetParticipants(groupID int64) ([]*msg.GroupParticipant, er
 	return participants, nil
 }
 
-func (r *repoGroups) UpdatePhoto(groupID int64, groupPhoto *msg.GroupPhoto) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+func (r *repoGroups) DeleteParticipants(groupID int64, memberIDs ...int64) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		group, err := getGroupByKey(txn, getGroupKey(groupID))
+		switch err {
+		case nil:
+		case badger.ErrKeyNotFound:
+			return nil
+		default:
+			return err
+		}
+
+		for _, memberID := range memberIDs {
+			err := txn.Delete(getGroupParticipantKey(groupID, memberID))
+			switch err {
+			case nil, badger.ErrKeyNotFound:
+			default:
+				return err
+			}
+		}
+		return updateGroupParticipantsCount(txn, group)
+	})
+}
+
+func (r *repoGroups) DeleteAllParticipants(groupID int64) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = getGroupParticipantPrefix(groupID)
+		it := txn.NewIterator(opts)
+		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
+			_ = txn.Delete(it.Item().KeyCopy(nil))
+		}
+		it.Close()
+
+		group, err := getGroupByKey(txn, getGroupKey(groupID))
+		switch err {
+		case nil:
+		case badger.ErrKeyNotFound:
+			return nil
+		default:
+			return err
+
+		}
+		group.Participants = 0
+		return saveGroup(txn, group)
+	})
+}
+
+func (r *repoGroups) UpdatePhoto(groupID int64, groupPhoto *msg.GroupPhoto) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		group, err := getGroupByKey(txn, getGroupKey(groupID))
 		if err != nil {
 			return err
@@ -229,11 +338,10 @@ func (r *repoGroups) UpdatePhoto(groupID int64, groupPhoto *msg.GroupPhoto) {
 		group.Photo = groupPhoto
 		return saveGroup(txn, group)
 	})
-	logs.WarnOnErr("RepoGroups got error on update photo", err)
 }
 
-func (r *repoGroups) RemovePhoto(groupID int64) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+func (r *repoGroups) RemovePhoto(groupID int64) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		group, err := getGroupByKey(txn, getGroupKey(groupID))
 		if err != nil {
 			return err
@@ -246,26 +354,23 @@ func (r *repoGroups) RemovePhoto(groupID int64) {
 		}
 		return saveGroup(txn, group)
 	})
-	logs.WarnOnErr("RepoGroups got error on update photo", err)
 }
 
-func (r *repoGroups) SavePhotoGallery(groupID int64, photos ...*msg.GroupPhoto) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+func (r *repoGroups) SavePhotoGallery(groupID int64, photos ...*msg.GroupPhoto) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		return saveGroupPhotos(txn, groupID, photos...)
 	})
-	logs.ErrorOnErr("RepoGroups got error on save photo gallery", err)
 }
 
-func (r *repoGroups) RemovePhotoGallery(groupID int64, photoIDs ...int64) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+func (r *repoGroups) RemovePhotoGallery(groupID int64, photoIDs ...int64) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		return removeGroupPhotoGallery(txn, groupID, photoIDs...)
 	})
-	logs.WarnOnErr("RepoGroups got error on remove photo gallery", err)
 }
 
-func (r *repoGroups) GetPhotoGallery(groupID int64) []*msg.GroupPhoto {
+func (r *repoGroups) GetPhotoGallery(groupID int64) ([]*msg.GroupPhoto, error) {
 	photos := make([]*msg.GroupPhoto, 0, 5)
-	_ = badgerView(func(txn *badger.Txn) error {
+	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = getGroupPhotoGalleryPrefix(groupID)
 		it := txn.NewIterator(opts)
@@ -283,44 +388,11 @@ func (r *repoGroups) GetPhotoGallery(groupID int64) []*msg.GroupPhoto {
 		it.Close()
 		return nil
 	})
-	return photos
+	return photos, err
 }
 
-func (r *repoGroups) DeleteMember(groupID, userID int64) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
-		group, err := getGroupByKey(txn, getGroupKey(groupID))
-		if err != nil {
-			return err
-		}
-		return updateGroupParticipantsCount(txn, group)
-
-	})
-	logs.ErrorOnErr("RepoGroups got error on delete member", err)
-}
-
-func (r *repoGroups) DeleteAllMembers(groupID int64) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.Prefix = getGroupParticipantPrefix(groupID)
-		it := txn.NewIterator(opts)
-		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
-			_ = txn.Delete(it.Item().KeyCopy(nil))
-		}
-		it.Close()
-
-		group, err := getGroupByKey(txn, getGroupKey(groupID))
-		if err != nil {
-			return err
-		}
-		group.Participants = 0
-		return saveGroup(txn, group)
-	})
-	logs.ErrorOnErr("RepoGroup got error on delete all members", err)
-	return
-}
-
-func (r *repoGroups) UpdateTitle(groupID int64, title string) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+func (r *repoGroups) UpdateTitle(groupID int64, title string) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		group, err := getGroupByKey(txn, getGroupKey(groupID))
 		if err != nil {
 			return err
@@ -328,17 +400,10 @@ func (r *repoGroups) UpdateTitle(groupID int64, title string) {
 		group.Title = title
 		return saveGroup(txn, group)
 	})
-	logs.ErrorOnErr("RepoGroups got error on update photo", err)
 }
 
-func (r *repoGroups) DeleteMemberMany(groupID int64, memberIDs []int64) {
-	for _, memberID := range memberIDs {
-		r.DeleteMember(groupID, memberID)
-	}
-}
-
-func (r *repoGroups) UpdateMemberType(groupID, userID int64, isAdmin bool) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+func (r *repoGroups) UpdateMemberType(groupID, userID int64, isAdmin bool) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		group, err := getGroupByKey(txn, getGroupKey(groupID))
 		if err != nil {
 			return err
@@ -377,7 +442,6 @@ func (r *repoGroups) UpdateMemberType(groupID, userID int64, isAdmin bool) {
 		}
 		return saveGroup(txn, group)
 	})
-	logs.WarnOnErr("RepoGroups got error on update member type", err)
 }
 
 func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
@@ -408,7 +472,7 @@ func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
 	return groups
 }
 
-func (r *repoGroups) ReIndex() {
+func (r *repoGroups) ReIndex() error {
 	err := ronak.Try(10, time.Second, func() error {
 		if r.peerSearch == nil {
 			return domain.ErrDoesNotExists
@@ -416,9 +480,9 @@ func (r *repoGroups) ReIndex() {
 		return nil
 	})
 	if err != nil {
-		return
+		return err
 	}
-	err = badgerView(func(txn *badger.Txn) error {
+	return badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = domain.StrToByte(prefixGroups)
 		it := txn.NewIterator(opts)
@@ -443,7 +507,4 @@ func (r *repoGroups) ReIndex() {
 		it.Close()
 		return nil
 	})
-	if err != nil {
-		logs.Warn("Error On ReIndex Users", zap.Error(err))
-	}
 }

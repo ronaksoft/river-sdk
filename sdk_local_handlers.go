@@ -929,13 +929,17 @@ func (r *River) groupAddUser(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 
 func (r *River) groupDeleteUser(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.GroupsDeleteUser)
-	if err := req.Unmarshal(in.Message); err != nil {
+	err := req.Unmarshal(in.Message)
+	if err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
 		return
 	}
 
-	repo.Groups.DeleteMember(req.GroupID, req.User.UserID)
+	err = repo.Groups.DeleteParticipants(req.GroupID, req.User.UserID)
+	if err != nil {
+		logs.Error("We got error on GroupDeleteUser local handler", zap.Error(err))
+	}
 
 	// send the request to server
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
@@ -949,14 +953,12 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 		return
 	}
 
-	res := new(msg.GroupFull)
 
-	group, _ := repo.Groups.Get(req.GroupID)
-	if group == nil {
+	res, err := repo.Groups.GetFull(req.GroupID)
+	if err != nil {
 		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 		return
 	}
-	res.Group = group
 
 	// Participants
 	participants, err := repo.Groups.GetParticipants(req.GroupID)
@@ -976,7 +978,10 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	res.NotifySettings = dlg.NotifySettings
 
 	// Get Group PhotoGallery
-	res.PhotoGallery = repo.Groups.GetPhotoGallery(req.GroupID)
+	res.PhotoGallery, err = repo.Groups.GetPhotoGallery(req.GroupID)
+	if err != nil {
+		logs.Error("We got error on GetPhotoGallery in local handler", zap.Error(err))
+	}
 
 	// Users
 	userIDs := domain.MInt64B{}

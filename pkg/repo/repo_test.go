@@ -454,7 +454,10 @@ func TestGroupPhotoGallery(t *testing.T) {
 	repo.Groups.Save(group.Group)
 	repo.Groups.SavePhotoGallery(group.Group.ID, group.PhotoGallery...)
 
-	phGallery := repo.Groups.GetPhotoGallery(1000)
+	phGallery, err := repo.Groups.GetPhotoGallery(1000)
+	if err != nil {
+		t.Fatal(err)
+	}
 	fmt.Println(phGallery)
 }
 
