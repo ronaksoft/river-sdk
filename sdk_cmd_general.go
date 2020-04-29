@@ -522,6 +522,8 @@ func (r *River) AppForeground() {
 		if err != nil {
 			logs.Debug("AppForeground:: Ping failed, we reconnect", zap.Error(err))
 			r.networkCtrl.Reconnect()
+		} else {
+			r.syncCtrl.Sync()
 		}
 	} else {
 		logs.Debug("AppForeground:: Network was disconnected we reconnect")
