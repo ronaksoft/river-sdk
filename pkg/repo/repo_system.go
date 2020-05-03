@@ -9,6 +9,7 @@ import (
 
 const (
 	systemPrefix = "SYS"
+	usagePrefix  = "USAGE"
 )
 
 type repoSystem struct {
@@ -118,8 +119,10 @@ func (r *repoSystem) SaveBytes(keyName string, keyValue []byte) error {
 	})
 }
 
+// Delete
 func (r *repoSystem) Delete(keyName string) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		return txn.Delete(r.getKey(keyName))
 	})
 }
+

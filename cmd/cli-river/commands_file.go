@@ -217,10 +217,23 @@ var TestUpload = &ishell.Cmd{
 	},
 }
 
+var Download = &ishell.Cmd{
+	Name: "Download",
+	Func: func(c *ishell.Context) {
+		clusterID := fnGetClusterID(c)
+		docID := fnGetFileID(c)
+		accessHash := fnGetAccessHash(c)
+		err := _SDK.FileDownloadSync(clusterID, docID, int64(accessHash), true)
+		if err != nil {
+			c.Println(err)
+			return
+		}
+	},
+}
 func init() {
 	File.AddCmd(Upload)
+	File.AddCmd(Download)
 	File.AddCmd(ShareContact)
 	File.AddCmd(GetSharedMedia)
 	File.AddCmd(TestUpload)
-
 }

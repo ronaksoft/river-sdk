@@ -239,3 +239,20 @@ func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup) {
 	)
 }
 
+func (ctrl *Controller) UploadUsage() error {
+	logs.Debug("SyncCtrl calls SystemUploadUsage")
+	req := &msg.SystemUploadUsage{}
+	req.Usage= append(req.Usage, )
+	reqBytes, _ := req.Marshal()
+	ctrl.queueCtrl.EnqueueCommand(
+		&msg.MessageEnvelope{
+			Constructor: msg.C_SystemUploadUsage,
+			RequestID:   uint64(domain.SequentialUniqueID()),
+			Message:     reqBytes,
+		},
+		func() {},
+		func(m *msg.MessageEnvelope) {},
+		false,
+	)
+	return nil
+}

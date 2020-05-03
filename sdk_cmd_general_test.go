@@ -33,7 +33,7 @@ func init() {
 		DocumentLogDirectory:   "./_files/logs",
 		ConnInfo:               conInfo,
 	})
-	err := r.Start()
+	err := r.AppStart()
 	if err != nil {
 		panic(err)
 	}

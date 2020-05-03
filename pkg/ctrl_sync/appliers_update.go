@@ -2,6 +2,7 @@ package syncCtrl
 
 import (
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
+	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"os"
 	"time"
@@ -80,6 +81,21 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	// handle Message's Action
 	res := []*msg.UpdateEnvelope{u}
 	ctrl.handleMessageAction(x, u, res)
+
+	// update monitoring
+	if x.Message.SenderID == ctrl.userID {
+		if x.Message.MediaType != msg.MediaTypeEmpty {
+			mon.IncMediaSent()
+		} else {
+			mon.IncMessageSent()
+		}
+	} else {
+		if x.Message.MediaType != msg.MediaTypeEmpty {
+			mon.IncMediaReceived()
+		} else {
+			mon.IncMessageReceived()
+		}
+	}
 
 	return res, nil
 }

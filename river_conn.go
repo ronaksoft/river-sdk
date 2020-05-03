@@ -35,7 +35,7 @@ type ServerKeys struct {
 
 // GetPublicKey ...
 func (v *ServerKeys) GetPublicKey(keyFP int64) (PublicKey, error) {
-	logs.Info("River::CreateAuthKey() Check GetPublicKeys",
+	logs.Info("Public Keys loaded",
 		zap.Any("Public Keys", v.PublicKeys),
 		zap.Int64("keyFP", keyFP),
 	)
@@ -77,12 +77,12 @@ type RiverConnection struct {
 func (r *River) saveDeviceToken() {
 	val, err := json.Marshal(r.DeviceToken)
 	if err != nil {
-		logs.Error("River::saveDeviceToken()-> Json Marshal()", zap.Error(err))
+		logs.Error("We got error on marshalling device token", zap.Error(err))
 		return
 	}
 	err = repo.System.SaveString(domain.SkDeviceToken, string(val))
 	if err != nil {
-		logs.Error("River::saveDeviceToken()-> SaveString()", zap.Error(err))
+		logs.Error("We got error on saving device token in db", zap.Error(err))
 		return
 	}
 }
@@ -92,16 +92,12 @@ func (r *River) loadDeviceToken() {
 	r.DeviceToken = new(msg.AccountRegisterDevice)
 	str, err := repo.System.LoadString(domain.SkDeviceToken)
 	if err != nil {
-		logs.Warn("River::loadDeviceToken() failed to fetch DeviceToken",
-			zap.String("Error", err.Error()),
-		)
+		logs.Info("We did not find device token", zap.Error(err))
 		return
 	}
 	err = json.Unmarshal([]byte(str), r.DeviceToken)
 	if err != nil {
-		logs.Warn("River::loadDeviceToken() failed to unmarshal DeviceToken",
-			zap.String("Error", err.Error()),
-		)
+		logs.Warn("We couldn't unmarshal device token", zap.Error(err))
 	}
 }
 

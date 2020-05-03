@@ -8,11 +8,15 @@ import (
 	"git.ronaksoftware.com/river/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
+	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"github.com/monnand/dhkx"
 	"go.uber.org/zap"
 	"math/big"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -487,7 +491,7 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 	r.DeviceToken = new(msg.AccountRegisterDevice)
 	r.saveDeviceToken()
 
-	err := r.Start()
+	err := r.AppStart()
 	if err != nil {
 		return err
 	}
@@ -503,20 +507,27 @@ func (r *River) UpdateContactInfo(userID int64, firstName, lastName string) erro
 	return nil
 }
 
+// GetScrollStatus
 func (r *River) GetScrollStatus(peerID int64, peerType int32) int64 {
 	return repo.MessagesExtra.GetScrollID(peerID, peerType)
 }
 
+// SetScrollStatus
 func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
 	repo.MessagesExtra.SaveScrollID(peerID, peerType, msgID)
 
 }
 
+// GetServerTimeUnix
 func (r *River) GetServerTimeUnix() int64 {
 	return domain.Now().Unix()
 }
 
+// AppForeground
 func (r *River) AppForeground() {
+	// Set the time we come to foreground
+	mon.SetForegroundTime()
+
 	if r.networkCtrl.GetQuality() == domain.NetworkConnected {
 		err := r.networkCtrl.Ping(domain.RandomUint64(), domain.WebsocketPingTimeout)
 		if err != nil {
@@ -529,12 +540,84 @@ func (r *River) AppForeground() {
 		logs.Debug("AppForeground:: Network was disconnected we reconnect")
 		r.networkCtrl.Reconnect()
 	}
+
 }
 
+// AppBackground
 func (r *River) AppBackground() {
+	// Compute the time we have been foreground
+	mon.IncForegroundTime()
 
+	// Save the usage
+	mon.SaveUsage()
 }
 
+// AppKill
+func (r *River) AppKill() {
+	r.AppBackground()
+}
+
+func (r *River) AppStart() error {
+	runtime.GOMAXPROCS(runtime.NumCPU() * 10)
+
+	logs.Info("River Starting")
+	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID)
+
+	// Initialize MessageHole
+	messageHole.Init()
+
+	// Initialize DB replaced with ORM
+	err := repo.InitRepo(r.dbPath, r.optimizeForLowMemory)
+	if err != nil {
+		return err
+	}
+
+	// Load the usage stats
+	mon.LoadUsage()
+
+	// Update Authorizations
+	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+	r.syncCtrl.SetUserID(r.ConnInfo.UserID)
+	domain.ClientPhone = r.ConnInfo.Phone
+
+
+	// Load device token
+	r.loadDeviceToken()
+
+	// Update the current salt
+	salt.UpdateSalt()
+
+	// Start Controllers
+	r.networkCtrl.Start()
+	r.queueCtrl.Start(r.resetQueueOnStartup)
+	r.syncCtrl.Start()
+	r.fileCtrl.Start()
+
+	lastReIndexTime, err := repo.System.LoadInt(domain.SkReIndexTime)
+	if err != nil || time.Now().Unix()-int64(lastReIndexTime) > domain.Day {
+		go func() {
+			logs.Info("ReIndexing Users & Groups")
+			repo.Users.ReIndex()
+			repo.Groups.ReIndex()
+			repo.Messages.ReIndex()
+			_ = repo.System.SaveInt(domain.SkReIndexTime, uint64(time.Now().Unix()))
+		}()
+	}
+
+	domain.StartTime = time.Now()
+	domain.WindowLog = func(txt string) {
+		r.mainDelegate.AddLog(txt)
+	}
+	logs.Info("River Started")
+
+	// Run Garbage Collection In Background
+	go func() {
+		time.Sleep(20 * time.Second)
+		repo.GC()
+	}()
+
+	return nil
+}
 // GenSrpHash generates a hash to be used in AuthCheckPassword and other related apis
 func GenSrpHash(password []byte, algorithm int64, algorithmData []byte) []byte {
 	switch algorithm {

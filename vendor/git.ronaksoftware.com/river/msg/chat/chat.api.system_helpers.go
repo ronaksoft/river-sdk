@@ -97,33 +97,6 @@ func ResultSystemGetServerTime(out *MessageEnvelope, res *SystemGetServerTime) {
 	res.MarshalTo(out.Message)
 }
 
-const C_SystemGetAppUpdate int64 = 450761036
-
-type poolSystemGetAppUpdate struct {
-	pool sync.Pool
-}
-
-func (p *poolSystemGetAppUpdate) Get() *SystemGetAppUpdate {
-	x, ok := p.pool.Get().(*SystemGetAppUpdate)
-	if !ok {
-		return &SystemGetAppUpdate{}
-	}
-	return x
-}
-
-func (p *poolSystemGetAppUpdate) Put(x *SystemGetAppUpdate) {
-	p.pool.Put(x)
-}
-
-var PoolSystemGetAppUpdate = poolSystemGetAppUpdate{}
-
-func ResultSystemGetAppUpdate(out *MessageEnvelope, res *SystemGetAppUpdate) {
-	out.Constructor = C_SystemGetAppUpdate
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
-}
-
 const C_SystemGetInfo int64 = 1486296237
 
 type poolSystemGetInfo struct {
@@ -200,6 +173,67 @@ var PoolSystemGetConfig = poolSystemGetConfig{}
 
 func ResultSystemGetConfig(out *MessageEnvelope, res *SystemGetConfig) {
 	out.Constructor = C_SystemGetConfig
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
+const C_SystemUploadUsage int64 = 3056393082
+
+type poolSystemUploadUsage struct {
+	pool sync.Pool
+}
+
+func (p *poolSystemUploadUsage) Get() *SystemUploadUsage {
+	x, ok := p.pool.Get().(*SystemUploadUsage)
+	if !ok {
+		return &SystemUploadUsage{}
+	}
+	x.Usage = x.Usage[:0]
+	return x
+}
+
+func (p *poolSystemUploadUsage) Put(x *SystemUploadUsage) {
+	p.pool.Put(x)
+}
+
+var PoolSystemUploadUsage = poolSystemUploadUsage{}
+
+func ResultSystemUploadUsage(out *MessageEnvelope, res *SystemUploadUsage) {
+	out.Constructor = C_SystemUploadUsage
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
+const C_ClientUsage int64 = 453987802
+
+type poolClientUsage struct {
+	pool sync.Pool
+}
+
+func (p *poolClientUsage) Get() *ClientUsage {
+	x, ok := p.pool.Get().(*ClientUsage)
+	if !ok {
+		return &ClientUsage{}
+	}
+	x.ReceivedMessages = 0
+	x.SentMessages = 0
+	x.ReceivedMedia = 0
+	x.SentMedia = 0
+	x.UploadBytes = 0
+	x.DownloadBytes = 0
+	return x
+}
+
+func (p *poolClientUsage) Put(x *ClientUsage) {
+	p.pool.Put(x)
+}
+
+var PoolClientUsage = poolClientUsage{}
+
+func ResultClientUsage(out *MessageEnvelope, res *ClientUsage) {
+	out.Constructor = C_ClientUsage
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -430,10 +464,11 @@ func init() {
 	ConstructorNames[1191522796] = "SystemGetPublicKeys"
 	ConstructorNames[1786665018] = "SystemGetDHGroups"
 	ConstructorNames[1321179349] = "SystemGetServerTime"
-	ConstructorNames[450761036] = "SystemGetAppUpdate"
 	ConstructorNames[1486296237] = "SystemGetInfo"
 	ConstructorNames[1705203315] = "SystemGetSalts"
 	ConstructorNames[1910333714] = "SystemGetConfig"
+	ConstructorNames[3056393082] = "SystemUploadUsage"
+	ConstructorNames[453987802] = "ClientUsage"
 	ConstructorNames[367036084] = "SystemConfig"
 	ConstructorNames[3431386561] = "DataCenter"
 	ConstructorNames[871116906] = "SystemSalts"

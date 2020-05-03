@@ -5,13 +5,11 @@ import (
 	msg "git.ronaksoftware.com/river/msg/chat"
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
-	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -241,63 +239,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 func (r *River) Version() string {
 	return domain.SDKVersion
-}
-
-func (r *River) Start() error {
-	runtime.GOMAXPROCS(runtime.NumCPU() * 10)
-
-	logs.Info("River Starting")
-	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID)
-
-	// Initialize MessageHole
-	messageHole.Init()
-
-	// Initialize DB replaced with ORM
-	err := repo.InitRepo(r.dbPath, r.optimizeForLowMemory)
-	if err != nil {
-		return err
-	}
-
-	// Update Authorizations
-	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-	r.syncCtrl.SetUserID(r.ConnInfo.UserID)
-	domain.ClientPhone = r.ConnInfo.Phone
-
-	r.loadDeviceToken()
-
-	// Update the current salt
-	salt.UpdateSalt()
-
-	// Start Controllers
-	r.networkCtrl.Start()
-	r.queueCtrl.Start(r.resetQueueOnStartup)
-	r.syncCtrl.Start()
-	r.fileCtrl.Start()
-
-	lastReIndexTime, err := repo.System.LoadInt(domain.SkReIndexTime)
-	if err != nil || time.Now().Unix()-int64(lastReIndexTime) > domain.Day {
-		go func() {
-			logs.Info("ReIndexing Users & Groups")
-			repo.Users.ReIndex()
-			repo.Groups.ReIndex()
-			repo.Messages.ReIndex()
-			_ = repo.System.SaveInt(domain.SkReIndexTime, uint64(time.Now().Unix()))
-		}()
-	}
-
-	domain.StartTime = time.Now()
-	domain.WindowLog = func(txt string) {
-		r.mainDelegate.AddLog(txt)
-	}
-	logs.Info("River Started")
-
-	// Run Garbage Collection In Background
-	go func() {
-		time.Sleep(20 * time.Second)
-		repo.GC()
-	}()
-
-	return nil
 }
 
 func (r *River) onNetworkConnect() (err error) {

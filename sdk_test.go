@@ -22,7 +22,7 @@ var (
 
 func TestSDK(t *testing.T) {
 	Convey("Start", t, func(c C) {
-		err := _River.Start()
+		err := _River.AppStart()
 		c.So(err, ShouldBeNil)
 
 		_River.StartNetwork("")

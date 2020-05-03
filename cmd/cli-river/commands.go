@@ -821,3 +821,33 @@ func fnClearAll(c *ishell.Context) bool {
 	}
 	return del
 }
+
+func fnGetClusterID(c *ishell.Context) int32 {
+	var res int32
+	for {
+		c.Print("ClusterID : ")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		if err == nil {
+			res = int32(id)
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return res
+}
+
+func fnGetFileID(c *ishell.Context) int64 {
+	var res int64
+	for {
+		c.Print("FileID : ")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
+		if err == nil {
+			res = int64(id)
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return res
+}

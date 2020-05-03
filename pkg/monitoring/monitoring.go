@@ -3,9 +3,9 @@ package mon
 import (
 	msg "git.ronaksoftware.com/river/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
@@ -25,18 +25,21 @@ const (
 )
 
 type stats struct {
-	mtx *sync.RWMutex
+	mtx                *sync.RWMutex
+	StartTime          time.Time
+	LastForegroundTime time.Time
 
-	StartTime             time.Time
-	AvgServerResponseTime time.Duration
-	MaxServerResponseTime time.Duration
-	MinServerResponseTime time.Duration
-	TotalServerRequests   int32
-	AvgQueueTime          time.Duration
-	MaxQueueTime          time.Duration
-	MinQueueTime          time.Duration
-	TotalQueueItems       int32
+	TotalServerRequests int64
+	AvgResponseTime     int64
+	TotalUploadBytes    int64
+	TotalDownloadBytes  int64
+	SentMessages        int64
+	ReceivedMessages    int64
+	SentMedia           int64
+	ReceivedMedia       int64
+	ForegroundTime      int64
 
+	// File DataTransferRate
 	totalBytes         int
 	dataTransferPeriod time.Duration
 	lastDataTransfer   time.Time
@@ -51,6 +54,8 @@ func init() {
 
 func DataTransfer(totalUploadBytes, totalDownloadBytes int, d time.Duration) {
 	Stats.mtx.Lock()
+	Stats.TotalDownloadBytes += int64(totalDownloadBytes)
+	Stats.TotalUploadBytes += int64(totalUploadBytes)
 	if time.Now().Sub(Stats.lastDataTransfer) > time.Second*30 {
 		Stats.totalBytes = totalDownloadBytes + totalUploadBytes
 		Stats.dataTransferPeriod = d
@@ -77,27 +82,109 @@ func ServerResponseTime(reqConstructor, resConstructor int64, t time.Duration) {
 			zap.String("ReqConstructor", msg.ConstructorNames[reqConstructor]),
 		)
 	}
-	total := atomic.AddInt32(&Stats.TotalServerRequests, 1)
+	ts := t.Milliseconds()
 	Stats.mtx.Lock()
-	Stats.AvgServerResponseTime = (Stats.AvgServerResponseTime*time.Duration(total-1) + t) / time.Duration(total)
-	if t > Stats.MaxServerResponseTime {
-		Stats.MaxServerResponseTime = t
-	}
-	if t < Stats.MinServerResponseTime || Stats.MinServerResponseTime == 0 {
-		Stats.MinServerResponseTime = t
-	}
+	Stats.TotalServerRequests += 1
+	Stats.AvgResponseTime = (Stats.AvgResponseTime*(Stats.TotalServerRequests-1) + ts) / (Stats.TotalServerRequests)
 	Stats.mtx.Unlock()
 }
 
-func QueueTime(t time.Duration) {
-	total := atomic.AddInt32(&Stats.TotalQueueItems, 1)
+func IncMessageSent() {
 	Stats.mtx.Lock()
-	Stats.AvgQueueTime = (Stats.AvgQueueTime*time.Duration(total-1) + t) / time.Duration(total)
-	if t > Stats.MaxQueueTime {
-		Stats.MaxQueueTime = t
-	}
-	if t < Stats.MinQueueTime || Stats.MinQueueTime == 0 {
-		Stats.MinQueueTime = t
-	}
+	Stats.SentMessages += 1
 	Stats.mtx.Unlock()
+}
+
+func IncMediaSent() {
+	Stats.mtx.Lock()
+	Stats.SentMedia += 1
+	Stats.mtx.Unlock()
+}
+
+func IncMessageReceived() {
+	Stats.mtx.Lock()
+	Stats.ReceivedMessages += 1
+	Stats.mtx.Unlock()
+}
+
+func IncMediaReceived() {
+	Stats.mtx.Lock()
+	Stats.ReceivedMedia += 1
+	Stats.mtx.Unlock()
+}
+
+func SetForegroundTime() {
+	Stats.mtx.Lock()
+	Stats.LastForegroundTime = time.Now()
+	Stats.mtx.Unlock()
+}
+
+func IncForegroundTime() {
+	Stats.mtx.Lock()
+	Stats.ForegroundTime += int64(time.Now().Sub(Stats.LastForegroundTime).Seconds())
+	Stats.mtx.Unlock()
+}
+
+func LoadUsage() {
+	now := time.Now()
+	cu := &msg.ClientUsage{}
+	b, err := repo.System.LoadBytes("ClientUsage")
+	if err == nil {
+		err = cu.Unmarshal(b)
+	}
+	if err != nil {
+		cu.Year = int32(now.Year())
+		cu.Month = int32(now.Month())
+		cu.Day = int32(now.Day())
+	}
+	Stats.mtx.Lock()
+	Stats.ForegroundTime = cu.ForegroundTime
+	Stats.ReceivedMessages = cu.ReceivedMessages
+	Stats.ReceivedMedia = cu.ReceivedMedia
+	Stats.SentMedia = cu.SentMedia
+	Stats.SentMessages = cu.SentMessages
+	Stats.AvgResponseTime = cu.AvgResponseTime
+	Stats.TotalServerRequests = cu.TotalRequests
+	Stats.mtx.Unlock()
+}
+
+func SaveUsage() {
+	cu := &msg.ClientUsage{}
+	Stats.mtx.Lock()
+	cu.ForegroundTime = Stats.ForegroundTime
+	cu.ReceivedMedia = Stats.ReceivedMedia
+	cu.ReceivedMessages = Stats.ReceivedMessages
+	cu.SentMedia = Stats.SentMedia
+	cu.SentMessages = Stats.SentMessages
+	cu.AvgResponseTime = Stats.AvgResponseTime
+	cu.TotalRequests = Stats.TotalServerRequests
+	Stats.mtx.Unlock()
+	b, err := cu.Marshal()
+	if err == nil {
+		err = repo.System.SaveBytes("ClientUsage", b)
+		if err != nil {
+			logs.Warn("We got error on saving ClientUsage into the db", zap.Error(err))
+		}
+	}
+}
+
+func GetUploadUsageTime() (int64, error) {
+	return repo.System.LoadInt64("UsageUploadTS")
+}
+
+func SaveUploadUsageTime(ts int64) error {
+	return repo.System.SaveInt("UsageUploadTS", uint64(ts))
+}
+
+func ResetUsage() {
+	_ = repo.System.Delete("ClientUsage")
+	Stats.mtx.Lock()
+	Stats.ReceivedMessages = 0
+	Stats.ReceivedMedia = 0
+	Stats.SentMedia = 0
+	Stats.SentMessages = 0
+	Stats.AvgResponseTime = 0
+	Stats.TotalServerRequests = 0
+	Stats.mtx.Unlock()
+	SaveUsage()
 }

@@ -44,7 +44,7 @@ func (d dummyDelegate) Flags() int32 {
 	return 0
 }
 
-func sendToSavedMessage(r *River, body string) {
+func sendToSavedMessage(r *River, body string, entities ...*msg.MessageEntity) {
 	req := &msg.MessagesSend{
 		RandomID: 0,
 		Peer: &msg.InputPeer{
@@ -55,7 +55,7 @@ func sendToSavedMessage(r *River, body string) {
 		Body:       body,
 		ReplyTo:    0,
 		ClearDraft: true,
-		Entities:   nil,
+		Entities:   entities,
 	}
 	reqBytes, _ := req.Marshal()
 	_, _ = r.ExecuteCommand(msg.C_MessagesSend, reqBytes, &dummyDelegate{})
@@ -105,7 +105,15 @@ func (r *River) HandleDebugActions(txt string) {
 	case "//sdk_memory_stats":
 		sendToSavedMessage(r, domain.ByteToStr(getMemoryStats(r)))
 	case "//sdk_monitor":
-		sendToSavedMessage(r, domain.ByteToStr(getMonitorStats(r)))
+		txt := domain.ByteToStr(getMonitorStats(r))
+		sendToSavedMessage(r, txt,
+			&msg.MessageEntity{
+				Type:   msg.MessageEntityTypeCode,
+				Offset: 0,
+				Length: int32(len(txt)),
+				UserID: 0,
+			},
+		)
 	case "//sdk_live_logger":
 		if len(args) < 1 {
 			sendToSavedMessage(r, "//sdk_live_logger <url>")
@@ -220,21 +228,22 @@ func getMonitorStats(r *River) []byte {
 	lsmSize, logSize := repo.DbSize()
 	s := mon.Stats
 	m := ronak.M{
-		"ServerAvgTime":  s.AvgServerResponseTime.String(),
-		"ServerMaxTime":  s.MaxServerResponseTime.String(),
-		"ServerMinTime":  s.MinServerResponseTime.String(),
-		"ServerRequests": s.TotalServerRequests,
-		"QueueAvgTime":   s.AvgQueueTime.String(),
-		"QueueMaxTime":   s.MaxQueueTime.String(),
-		"QueueMinTime":   s.MinQueueTime.String(),
-		"QueueItems":     s.TotalQueueItems,
-		"RecordTime":     time.Now().Sub(s.StartTime).String(),
-		"LsmSize":        humanize.Bytes(uint64(lsmSize)),
-		"LogSize":        humanize.Bytes(uint64(logSize)),
-		"Version":        r.Version(),
+		"ServerAvgTime":    (time.Duration(s.AvgResponseTime) * time.Millisecond).String(),
+		"ServerRequests":   s.TotalServerRequests,
+		"RecordTime":       time.Now().Sub(s.StartTime).String(),
+		"ForegroundTime":   (time.Duration(s.ForegroundTime) * time.Second).String(),
+		"SentMessages":     s.SentMessages,
+		"SentMedia":        s.SentMedia,
+		"ReceivedMessages": s.ReceivedMessages,
+		"ReceivedMedia":    s.ReceivedMedia,
+		"Upload":           humanize.Bytes(uint64(s.TotalUploadBytes)),
+		"Download":         humanize.Bytes(uint64(s.TotalDownloadBytes)),
+		"LsmSize":          humanize.Bytes(uint64(lsmSize)),
+		"LogSize":          humanize.Bytes(uint64(logSize)),
+		"Version":          r.Version(),
 	}
 
-	b, _ := json.MarshalIndent(m, "", "    ")
+	b, _ := json.MarshalIndent(m, "", "  ")
 	return b
 }
 
@@ -247,13 +256,13 @@ func heapProfile() (filePath string) {
 	buf := new(bytes.Buffer)
 	err := pprof.WriteHeapProfile(buf)
 	if err != nil {
-		logs.Error("Error On HeapProfile", zap.Error(err))
+		logs.Error("We got error on getting heap profile", zap.Error(err))
 		return ""
 	}
 	now := time.Now()
 	filePath = path.Join(repo.DirCache, fmt.Sprintf("MemHeap-%04d-%02d-%02d.out", now.Year(), now.Month(), now.Day()))
 	if err := ioutil.WriteFile(filePath, buf.Bytes(), os.ModePerm); err != nil {
-		logs.Warn("River got error on creating memory heap file", zap.Error(err))
+		logs.Warn("We got error on creating memory heap file", zap.Error(err))
 		return ""
 	}
 	return

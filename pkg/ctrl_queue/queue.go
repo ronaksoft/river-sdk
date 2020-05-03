@@ -2,7 +2,6 @@ package queueCtrl
 
 import (
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
-	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"os"
 	"path/filepath"
@@ -93,7 +92,6 @@ func (ctrl *Controller) distributor() {
 			continue
 		}
 
-		mon.QueueTime(time.Now().Sub(req.InsertTime))
 		if !ctrl.IsRequestCancelled(int64(req.ID)) {
 			go ctrl.executor(req)
 		} else {

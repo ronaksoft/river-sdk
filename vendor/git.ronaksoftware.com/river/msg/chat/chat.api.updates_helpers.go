@@ -194,6 +194,7 @@ func (p *poolUpdateNewMessage) Get() *UpdateNewMessage {
 		return &UpdateNewMessage{}
 	}
 	x.AccessHash = 0
+	x.SenderRefID = 0
 	return x
 }
 

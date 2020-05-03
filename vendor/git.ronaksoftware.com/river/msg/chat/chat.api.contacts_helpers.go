@@ -263,6 +263,152 @@ func ResultContactsSearch(out *MessageEnvelope, res *ContactsSearch) {
 	res.MarshalTo(out.Message)
 }
 
+const C_ContactsGetTopPeers int64 = 1378126220
+
+type poolContactsGetTopPeers struct {
+	pool sync.Pool
+}
+
+func (p *poolContactsGetTopPeers) Get() *ContactsGetTopPeers {
+	x, ok := p.pool.Get().(*ContactsGetTopPeers)
+	if !ok {
+		return &ContactsGetTopPeers{}
+	}
+	x.Hash = 0
+	x.Users = false
+	x.BotsMessage = false
+	x.BotsInline = false
+	x.Groups = false
+	x.Forwards = false
+	return x
+}
+
+func (p *poolContactsGetTopPeers) Put(x *ContactsGetTopPeers) {
+	p.pool.Put(x)
+}
+
+var PoolContactsGetTopPeers = poolContactsGetTopPeers{}
+
+func ResultContactsGetTopPeers(out *MessageEnvelope, res *ContactsGetTopPeers) {
+	out.Constructor = C_ContactsGetTopPeers
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
+const C_ContactsResetTopPeer int64 = 1114887378
+
+type poolContactsResetTopPeer struct {
+	pool sync.Pool
+}
+
+func (p *poolContactsResetTopPeer) Get() *ContactsResetTopPeer {
+	x, ok := p.pool.Get().(*ContactsResetTopPeer)
+	if !ok {
+		return &ContactsResetTopPeer{}
+	}
+	return x
+}
+
+func (p *poolContactsResetTopPeer) Put(x *ContactsResetTopPeer) {
+	p.pool.Put(x)
+}
+
+var PoolContactsResetTopPeer = poolContactsResetTopPeer{}
+
+func ResultContactsResetTopPeer(out *MessageEnvelope, res *ContactsResetTopPeer) {
+	out.Constructor = C_ContactsResetTopPeer
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
+const C_ContactsTopPeers int64 = 2243919622
+
+type poolContactsTopPeers struct {
+	pool sync.Pool
+}
+
+func (p *poolContactsTopPeers) Get() *ContactsTopPeers {
+	x, ok := p.pool.Get().(*ContactsTopPeers)
+	if !ok {
+		return &ContactsTopPeers{}
+	}
+	x.Categories = x.Categories[:0]
+	x.Users = x.Users[:0]
+	x.Groups = x.Groups[:0]
+	return x
+}
+
+func (p *poolContactsTopPeers) Put(x *ContactsTopPeers) {
+	p.pool.Put(x)
+}
+
+var PoolContactsTopPeers = poolContactsTopPeers{}
+
+func ResultContactsTopPeers(out *MessageEnvelope, res *ContactsTopPeers) {
+	out.Constructor = C_ContactsTopPeers
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
+const C_TopPeerCategoryPeers int64 = 78563632
+
+type poolTopPeerCategoryPeers struct {
+	pool sync.Pool
+}
+
+func (p *poolTopPeerCategoryPeers) Get() *TopPeerCategoryPeers {
+	x, ok := p.pool.Get().(*TopPeerCategoryPeers)
+	if !ok {
+		return &TopPeerCategoryPeers{}
+	}
+	x.Peers = x.Peers[:0]
+	return x
+}
+
+func (p *poolTopPeerCategoryPeers) Put(x *TopPeerCategoryPeers) {
+	p.pool.Put(x)
+}
+
+var PoolTopPeerCategoryPeers = poolTopPeerCategoryPeers{}
+
+func ResultTopPeerCategoryPeers(out *MessageEnvelope, res *TopPeerCategoryPeers) {
+	out.Constructor = C_TopPeerCategoryPeers
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
+const C_TopPeer int64 = 1763100161
+
+type poolTopPeer struct {
+	pool sync.Pool
+}
+
+func (p *poolTopPeer) Get() *TopPeer {
+	x, ok := p.pool.Get().(*TopPeer)
+	if !ok {
+		return &TopPeer{}
+	}
+	x.LastUpdate = 0
+	return x
+}
+
+func (p *poolTopPeer) Put(x *TopPeer) {
+	p.pool.Put(x)
+}
+
+var PoolTopPeer = poolTopPeer{}
+
+func ResultTopPeer(out *MessageEnvelope, res *TopPeer) {
+	out.Constructor = C_TopPeer
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
 const C_BlockedContactsMany int64 = 2067026404
 
 type poolBlockedContactsMany struct {
@@ -389,6 +535,11 @@ func init() {
 	ConstructorNames[662011773] = "ContactsUnblock"
 	ConstructorNames[1073733371] = "ContactsGetBlocked"
 	ConstructorNames[3870802464] = "ContactsSearch"
+	ConstructorNames[1378126220] = "ContactsGetTopPeers"
+	ConstructorNames[1114887378] = "ContactsResetTopPeer"
+	ConstructorNames[2243919622] = "ContactsTopPeers"
+	ConstructorNames[78563632] = "TopPeerCategoryPeers"
+	ConstructorNames[1763100161] = "TopPeer"
 	ConstructorNames[2067026404] = "BlockedContactsMany"
 	ConstructorNames[53788553] = "BlockedContact"
 	ConstructorNames[2157298354] = "ContactsImported"

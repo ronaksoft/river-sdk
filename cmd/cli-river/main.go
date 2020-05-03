@@ -10,6 +10,7 @@ import (
 	"gopkg.in/abiosoft/ishell.v2"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 var (
@@ -70,17 +71,27 @@ func main() {
 	}
 
 	conInfo.Delegate = new(ConnInfoDelegates)
-	skBytes, _ := ioutil.ReadFile("./keys.json")
+
 
 	serverEndPoint := "ws://river.ronaksoftware.com"
 	fileEndPoint := "http://river.ronaksoftware.com:8080"
+	keysFile := "./keys-staging.json"
+
 	switch len(os.Args) {
 	case 3:
-		fileEndPoint = os.Args[2]
-		fallthrough
-	case 2:
 		serverEndPoint = os.Args[1]
+		fileEndPoint = os.Args[2]
+	case 2:
+		switch strings.ToLower(os.Args[1]) {
+		case "production":
+			serverEndPoint = "ws://cyrus.river.im"
+			fileEndPoint = "http://file.river.im"
+			keysFile = "./keys-production.json"
+		}
 	}
+
+	skBytes, _ := ioutil.ReadFile(keysFile)
+
 	_SDK = new(riversdk.River)
 	_SDK.SetConfig(&riversdk.RiverConfig{
 		ServerEndpoint:         serverEndPoint,
@@ -101,7 +112,7 @@ func main() {
 	})
 
 	// _SDK.TurnOnLiveLogger("http://localhost:2374")
-	err = _SDK.Start()
+	err = _SDK.AppStart()
 	if err != nil {
 		_Log.Fatal(err.Error())
 	}

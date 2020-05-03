@@ -327,6 +327,34 @@ func ResultBotRevokeToken(out *MessageEnvelope, res *BotRevokeToken) {
 	res.MarshalTo(out.Message)
 }
 
+const C_BotDeleteMessage int64 = 3523077017
+
+type poolBotDeleteMessage struct {
+	pool sync.Pool
+}
+
+func (p *poolBotDeleteMessage) Get() *BotDeleteMessage {
+	x, ok := p.pool.Get().(*BotDeleteMessage)
+	if !ok {
+		return &BotDeleteMessage{}
+	}
+	x.MessageIDs = x.MessageIDs[:0]
+	return x
+}
+
+func (p *poolBotDeleteMessage) Put(x *BotDeleteMessage) {
+	p.pool.Put(x)
+}
+
+var PoolBotDeleteMessage = poolBotDeleteMessage{}
+
+func ResultBotDeleteMessage(out *MessageEnvelope, res *BotDeleteMessage) {
+	out.Constructor = C_BotDeleteMessage
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
 const C_BotSetCallbackAnswer int64 = 1891806754
 
 type poolBotSetCallbackAnswer struct {
@@ -384,29 +412,172 @@ func ResultBotGetCallbackAnswer(out *MessageEnvelope, res *BotGetCallbackAnswer)
 	res.MarshalTo(out.Message)
 }
 
-const C_BotDeleteMessage int64 = 3523077017
+const C_BotGetInlineResults int64 = 4192114308
 
-type poolBotDeleteMessage struct {
+type poolBotGetInlineResults struct {
 	pool sync.Pool
 }
 
-func (p *poolBotDeleteMessage) Get() *BotDeleteMessage {
-	x, ok := p.pool.Get().(*BotDeleteMessage)
+func (p *poolBotGetInlineResults) Get() *BotGetInlineResults {
+	x, ok := p.pool.Get().(*BotGetInlineResults)
 	if !ok {
-		return &BotDeleteMessage{}
+		return &BotGetInlineResults{}
 	}
-	x.MessageIDs = x.MessageIDs[:0]
 	return x
 }
 
-func (p *poolBotDeleteMessage) Put(x *BotDeleteMessage) {
+func (p *poolBotGetInlineResults) Put(x *BotGetInlineResults) {
 	p.pool.Put(x)
 }
 
-var PoolBotDeleteMessage = poolBotDeleteMessage{}
+var PoolBotGetInlineResults = poolBotGetInlineResults{}
 
-func ResultBotDeleteMessage(out *MessageEnvelope, res *BotDeleteMessage) {
-	out.Constructor = C_BotDeleteMessage
+func ResultBotGetInlineResults(out *MessageEnvelope, res *BotGetInlineResults) {
+	out.Constructor = C_BotGetInlineResults
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
+const C_BotSetInlineResults int64 = 3418940573
+
+type poolBotSetInlineResults struct {
+	pool sync.Pool
+}
+
+func (p *poolBotSetInlineResults) Get() *BotSetInlineResults {
+	x, ok := p.pool.Get().(*BotSetInlineResults)
+	if !ok {
+		return &BotSetInlineResults{}
+	}
+	x.NextOffset = ""
+	return x
+}
+
+func (p *poolBotSetInlineResults) Put(x *BotSetInlineResults) {
+	p.pool.Put(x)
+}
+
+var PoolBotSetInlineResults = poolBotSetInlineResults{}
+
+func ResultBotSetInlineResults(out *MessageEnvelope, res *BotSetInlineResults) {
+	out.Constructor = C_BotSetInlineResults
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
+const C_BotSendInlineResults int64 = 923160988
+
+type poolBotSendInlineResults struct {
+	pool sync.Pool
+}
+
+func (p *poolBotSendInlineResults) Get() *BotSendInlineResults {
+	x, ok := p.pool.Get().(*BotSendInlineResults)
+	if !ok {
+		return &BotSendInlineResults{}
+	}
+	x.Silent = false
+	return x
+}
+
+func (p *poolBotSendInlineResults) Put(x *BotSendInlineResults) {
+	p.pool.Put(x)
+}
+
+var PoolBotSendInlineResults = poolBotSendInlineResults{}
+
+func ResultBotSendInlineResults(out *MessageEnvelope, res *BotSendInlineResults) {
+	out.Constructor = C_BotSendInlineResults
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
+const C_BotResults int64 = 527920130
+
+type poolBotResults struct {
+	pool sync.Pool
+}
+
+func (p *poolBotResults) Get() *BotResults {
+	x, ok := p.pool.Get().(*BotResults)
+	if !ok {
+		return &BotResults{}
+	}
+	x.NextOffset = ""
+	x.SwitchPM = nil
+	x.Results = x.Results[:0]
+	return x
+}
+
+func (p *poolBotResults) Put(x *BotResults) {
+	p.pool.Put(x)
+}
+
+var PoolBotResults = poolBotResults{}
+
+func ResultBotResults(out *MessageEnvelope, res *BotResults) {
+	out.Constructor = C_BotResults
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
+const C_BotInlineSwitchPM int64 = 3014743726
+
+type poolBotInlineSwitchPM struct {
+	pool sync.Pool
+}
+
+func (p *poolBotInlineSwitchPM) Get() *BotInlineSwitchPM {
+	x, ok := p.pool.Get().(*BotInlineSwitchPM)
+	if !ok {
+		return &BotInlineSwitchPM{}
+	}
+	return x
+}
+
+func (p *poolBotInlineSwitchPM) Put(x *BotInlineSwitchPM) {
+	p.pool.Put(x)
+}
+
+var PoolBotInlineSwitchPM = poolBotInlineSwitchPM{}
+
+func ResultBotInlineSwitchPM(out *MessageEnvelope, res *BotInlineSwitchPM) {
+	out.Constructor = C_BotInlineSwitchPM
+	pbytes.Put(out.Message)
+	out.Message = pbytes.GetLen(res.Size())
+	res.MarshalTo(out.Message)
+}
+
+const C_BotInlineResult int64 = 942846933
+
+type poolBotInlineResult struct {
+	pool sync.Pool
+}
+
+func (p *poolBotInlineResult) Get() *BotInlineResult {
+	x, ok := p.pool.Get().(*BotInlineResult)
+	if !ok {
+		return &BotInlineResult{}
+	}
+	x.Title = ""
+	x.Description = ""
+	x.Url = ""
+	x.Doc = nil
+	return x
+}
+
+func (p *poolBotInlineResult) Put(x *BotInlineResult) {
+	p.pool.Put(x)
+}
+
+var PoolBotInlineResult = poolBotInlineResult{}
+
+func ResultBotInlineResult(out *MessageEnvelope, res *BotInlineResult) {
+	out.Constructor = C_BotInlineResult
 	pbytes.Put(out.Message)
 	out.Message = pbytes.GetLen(res.Size())
 	res.MarshalTo(out.Message)
@@ -590,9 +761,15 @@ func init() {
 	ConstructorNames[2820005221] = "BotUpdateProfile"
 	ConstructorNames[3464973784] = "BotUpdatePhoto"
 	ConstructorNames[1804706614] = "BotRevokeToken"
+	ConstructorNames[3523077017] = "BotDeleteMessage"
 	ConstructorNames[1891806754] = "BotSetCallbackAnswer"
 	ConstructorNames[345706640] = "BotGetCallbackAnswer"
-	ConstructorNames[3523077017] = "BotDeleteMessage"
+	ConstructorNames[4192114308] = "BotGetInlineResults"
+	ConstructorNames[3418940573] = "BotSetInlineResults"
+	ConstructorNames[923160988] = "BotSendInlineResults"
+	ConstructorNames[527920130] = "BotResults"
+	ConstructorNames[3014743726] = "BotInlineSwitchPM"
+	ConstructorNames[942846933] = "BotInlineResult"
 	ConstructorNames[3137540096] = "BotToken"
 	ConstructorNames[4007077962] = "BotRecalled"
 	ConstructorNames[3344545062] = "BotCallbackAnswer"

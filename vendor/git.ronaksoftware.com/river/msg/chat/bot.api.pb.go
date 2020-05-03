@@ -793,6 +793,61 @@ func (m *BotRevokeToken) GetGetNew() bool {
 	return false
 }
 
+// BotDeleteMessage
+// @Function (BotOnly)
+// @Returns: Bool
+type BotDeleteMessage struct {
+	Peer       *InputPeer `protobuf:"bytes,1,req,name=Peer" json:"Peer,omitempty"`
+	MessageIDs []int64    `protobuf:"varint,2,rep,name=MessageIDs" json:"MessageIDs,omitempty"`
+}
+
+func (m *BotDeleteMessage) Reset()         { *m = BotDeleteMessage{} }
+func (m *BotDeleteMessage) String() string { return proto.CompactTextString(m) }
+func (*BotDeleteMessage) ProtoMessage()    {}
+func (*BotDeleteMessage) Descriptor() ([]byte, []int) {
+	return fileDescriptor_802c818ed586bbc7, []int{11}
+}
+func (m *BotDeleteMessage) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BotDeleteMessage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BotDeleteMessage.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BotDeleteMessage) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BotDeleteMessage.Merge(m, src)
+}
+func (m *BotDeleteMessage) XXX_Size() int {
+	return m.Size()
+}
+func (m *BotDeleteMessage) XXX_DiscardUnknown() {
+	xxx_messageInfo_BotDeleteMessage.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BotDeleteMessage proto.InternalMessageInfo
+
+func (m *BotDeleteMessage) GetPeer() *InputPeer {
+	if m != nil {
+		return m.Peer
+	}
+	return nil
+}
+
+func (m *BotDeleteMessage) GetMessageIDs() []int64 {
+	if m != nil {
+		return m.MessageIDs
+	}
+	return nil
+}
+
 // BotSetCallbackAnswer
 // @Function (BotOnly)
 // @Returns: Bool
@@ -807,7 +862,7 @@ func (m *BotSetCallbackAnswer) Reset()         { *m = BotSetCallbackAnswer{} }
 func (m *BotSetCallbackAnswer) String() string { return proto.CompactTextString(m) }
 func (*BotSetCallbackAnswer) ProtoMessage()    {}
 func (*BotSetCallbackAnswer) Descriptor() ([]byte, []int) {
-	return fileDescriptor_802c818ed586bbc7, []int{11}
+	return fileDescriptor_802c818ed586bbc7, []int{12}
 }
 func (m *BotSetCallbackAnswer) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -877,7 +932,7 @@ func (m *BotGetCallbackAnswer) Reset()         { *m = BotGetCallbackAnswer{} }
 func (m *BotGetCallbackAnswer) String() string { return proto.CompactTextString(m) }
 func (*BotGetCallbackAnswer) ProtoMessage()    {}
 func (*BotGetCallbackAnswer) Descriptor() ([]byte, []int) {
-	return fileDescriptor_802c818ed586bbc7, []int{12}
+	return fileDescriptor_802c818ed586bbc7, []int{13}
 }
 func (m *BotGetCallbackAnswer) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -927,26 +982,28 @@ func (m *BotGetCallbackAnswer) GetData() []byte {
 	return nil
 }
 
-// BotDeleteMessage
-// @Function (BotOnly)
-// @Returns: Bool
-type BotDeleteMessage struct {
-	Peer       *InputPeer `protobuf:"bytes,1,req,name=Peer" json:"Peer,omitempty"`
-	MessageIDs []int64    `protobuf:"varint,2,rep,name=MessageIDs" json:"MessageIDs,omitempty"`
+// BotGetInlineResults
+// @Function (Client)
+// @Returns: BotResults
+type BotGetInlineResults struct {
+	Bot    *InputUser `protobuf:"bytes,1,req,name=Bot" json:"Bot,omitempty"`
+	Peer   *InputPeer `protobuf:"bytes,2,req,name=Peer" json:"Peer,omitempty"`
+	Query  string     `protobuf:"bytes,3,req,name=Query" json:"Query"`
+	Offset string     `protobuf:"bytes,4,req,name=Offset" json:"Offset"`
 }
 
-func (m *BotDeleteMessage) Reset()         { *m = BotDeleteMessage{} }
-func (m *BotDeleteMessage) String() string { return proto.CompactTextString(m) }
-func (*BotDeleteMessage) ProtoMessage()    {}
-func (*BotDeleteMessage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_802c818ed586bbc7, []int{13}
+func (m *BotGetInlineResults) Reset()         { *m = BotGetInlineResults{} }
+func (m *BotGetInlineResults) String() string { return proto.CompactTextString(m) }
+func (*BotGetInlineResults) ProtoMessage()    {}
+func (*BotGetInlineResults) Descriptor() ([]byte, []int) {
+	return fileDescriptor_802c818ed586bbc7, []int{14}
 }
-func (m *BotDeleteMessage) XXX_Unmarshal(b []byte) error {
+func (m *BotGetInlineResults) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *BotDeleteMessage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *BotGetInlineResults) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_BotDeleteMessage.Marshal(b, m, deterministic)
+		return xxx_messageInfo_BotGetInlineResults.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -956,28 +1013,431 @@ func (m *BotDeleteMessage) XXX_Marshal(b []byte, deterministic bool) ([]byte, er
 		return b[:n], nil
 	}
 }
-func (m *BotDeleteMessage) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BotDeleteMessage.Merge(m, src)
+func (m *BotGetInlineResults) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BotGetInlineResults.Merge(m, src)
 }
-func (m *BotDeleteMessage) XXX_Size() int {
+func (m *BotGetInlineResults) XXX_Size() int {
 	return m.Size()
 }
-func (m *BotDeleteMessage) XXX_DiscardUnknown() {
-	xxx_messageInfo_BotDeleteMessage.DiscardUnknown(m)
+func (m *BotGetInlineResults) XXX_DiscardUnknown() {
+	xxx_messageInfo_BotGetInlineResults.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_BotDeleteMessage proto.InternalMessageInfo
+var xxx_messageInfo_BotGetInlineResults proto.InternalMessageInfo
 
-func (m *BotDeleteMessage) GetPeer() *InputPeer {
+func (m *BotGetInlineResults) GetBot() *InputUser {
+	if m != nil {
+		return m.Bot
+	}
+	return nil
+}
+
+func (m *BotGetInlineResults) GetPeer() *InputPeer {
 	if m != nil {
 		return m.Peer
 	}
 	return nil
 }
 
-func (m *BotDeleteMessage) GetMessageIDs() []int64 {
+func (m *BotGetInlineResults) GetQuery() string {
 	if m != nil {
-		return m.MessageIDs
+		return m.Query
+	}
+	return ""
+}
+
+func (m *BotGetInlineResults) GetOffset() string {
+	if m != nil {
+		return m.Offset
+	}
+	return ""
+}
+
+// BotSetInlineResults
+// @Function (BotOnly)
+// @Returns:
+type BotSetInlineResults struct {
+	Gallery bool `protobuf:"varint,1,req,name=Gallery" json:"Gallery"`
+	// Set this flag if results may be cached on the server side only for the user that sent the query.
+	// By default, results may be returned to any user who sends the same query
+	Private   bool  `protobuf:"varint,2,req,name=Private" json:"Private"`
+	CacheTime int64 `protobuf:"varint,3,req,name=CacheTime" json:"CacheTime"`
+	// Pass the offset that a client should send in the next query with the same text to receive more results.
+	// Pass an empty string if there are no more results or if you don‘t
+	// support pagination. Offset length can’t exceed 64 bytes.
+	NextOffset string `protobuf:"bytes,4,opt,name=NextOffset" json:"NextOffset"`
+}
+
+func (m *BotSetInlineResults) Reset()         { *m = BotSetInlineResults{} }
+func (m *BotSetInlineResults) String() string { return proto.CompactTextString(m) }
+func (*BotSetInlineResults) ProtoMessage()    {}
+func (*BotSetInlineResults) Descriptor() ([]byte, []int) {
+	return fileDescriptor_802c818ed586bbc7, []int{15}
+}
+func (m *BotSetInlineResults) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BotSetInlineResults) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BotSetInlineResults.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BotSetInlineResults) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BotSetInlineResults.Merge(m, src)
+}
+func (m *BotSetInlineResults) XXX_Size() int {
+	return m.Size()
+}
+func (m *BotSetInlineResults) XXX_DiscardUnknown() {
+	xxx_messageInfo_BotSetInlineResults.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BotSetInlineResults proto.InternalMessageInfo
+
+func (m *BotSetInlineResults) GetGallery() bool {
+	if m != nil {
+		return m.Gallery
+	}
+	return false
+}
+
+func (m *BotSetInlineResults) GetPrivate() bool {
+	if m != nil {
+		return m.Private
+	}
+	return false
+}
+
+func (m *BotSetInlineResults) GetCacheTime() int64 {
+	if m != nil {
+		return m.CacheTime
+	}
+	return 0
+}
+
+func (m *BotSetInlineResults) GetNextOffset() string {
+	if m != nil {
+		return m.NextOffset
+	}
+	return ""
+}
+
+// BotSendInlineResults
+// @Function (Client)
+// @Returns:
+type BotSendInlineResults struct {
+	RandomID   int64      `protobuf:"varint,1,req,name=RandomID" json:"RandomID"`
+	QueryID    int64      `protobuf:"varint,2,req,name=QueryID" json:"QueryID"`
+	ResultID   string     `protobuf:"bytes,3,req,name=ResultID" json:"ResultID"`
+	ClearDraft bool       `protobuf:"varint,4,req,name=ClearDraft" json:"ClearDraft"`
+	Peer       *InputPeer `protobuf:"bytes,5,req,name=Peer" json:"Peer,omitempty"`
+	ReplyTo    int64      `protobuf:"varint,6,req,name=ReplyTo" json:"ReplyTo"`
+	Silent     bool       `protobuf:"varint,7,opt,name=Silent" json:"Silent"`
+}
+
+func (m *BotSendInlineResults) Reset()         { *m = BotSendInlineResults{} }
+func (m *BotSendInlineResults) String() string { return proto.CompactTextString(m) }
+func (*BotSendInlineResults) ProtoMessage()    {}
+func (*BotSendInlineResults) Descriptor() ([]byte, []int) {
+	return fileDescriptor_802c818ed586bbc7, []int{16}
+}
+func (m *BotSendInlineResults) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BotSendInlineResults) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BotSendInlineResults.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BotSendInlineResults) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BotSendInlineResults.Merge(m, src)
+}
+func (m *BotSendInlineResults) XXX_Size() int {
+	return m.Size()
+}
+func (m *BotSendInlineResults) XXX_DiscardUnknown() {
+	xxx_messageInfo_BotSendInlineResults.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BotSendInlineResults proto.InternalMessageInfo
+
+func (m *BotSendInlineResults) GetRandomID() int64 {
+	if m != nil {
+		return m.RandomID
+	}
+	return 0
+}
+
+func (m *BotSendInlineResults) GetQueryID() int64 {
+	if m != nil {
+		return m.QueryID
+	}
+	return 0
+}
+
+func (m *BotSendInlineResults) GetResultID() string {
+	if m != nil {
+		return m.ResultID
+	}
+	return ""
+}
+
+func (m *BotSendInlineResults) GetClearDraft() bool {
+	if m != nil {
+		return m.ClearDraft
+	}
+	return false
+}
+
+func (m *BotSendInlineResults) GetPeer() *InputPeer {
+	if m != nil {
+		return m.Peer
+	}
+	return nil
+}
+
+func (m *BotSendInlineResults) GetReplyTo() int64 {
+	if m != nil {
+		return m.ReplyTo
+	}
+	return 0
+}
+
+func (m *BotSendInlineResults) GetSilent() bool {
+	if m != nil {
+		return m.Silent
+	}
+	return false
+}
+
+// BotResults
+type BotResults struct {
+	Gallery    bool               `protobuf:"varint,1,req,name=Gallery" json:"Gallery"`
+	QueryID    int64              `protobuf:"varint,2,req,name=QueryID" json:"QueryID"`
+	NextOffset string             `protobuf:"bytes,3,opt,name=NextOffset" json:"NextOffset"`
+	SwitchPM   *BotInlineSwitchPM `protobuf:"bytes,4,opt,name=SwitchPM" json:"SwitchPM,omitempty"`
+	Results    []*BotInlineResult `protobuf:"bytes,5,rep,name=Results" json:"Results,omitempty"`
+}
+
+func (m *BotResults) Reset()         { *m = BotResults{} }
+func (m *BotResults) String() string { return proto.CompactTextString(m) }
+func (*BotResults) ProtoMessage()    {}
+func (*BotResults) Descriptor() ([]byte, []int) {
+	return fileDescriptor_802c818ed586bbc7, []int{17}
+}
+func (m *BotResults) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BotResults) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BotResults.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BotResults) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BotResults.Merge(m, src)
+}
+func (m *BotResults) XXX_Size() int {
+	return m.Size()
+}
+func (m *BotResults) XXX_DiscardUnknown() {
+	xxx_messageInfo_BotResults.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BotResults proto.InternalMessageInfo
+
+func (m *BotResults) GetGallery() bool {
+	if m != nil {
+		return m.Gallery
+	}
+	return false
+}
+
+func (m *BotResults) GetQueryID() int64 {
+	if m != nil {
+		return m.QueryID
+	}
+	return 0
+}
+
+func (m *BotResults) GetNextOffset() string {
+	if m != nil {
+		return m.NextOffset
+	}
+	return ""
+}
+
+func (m *BotResults) GetSwitchPM() *BotInlineSwitchPM {
+	if m != nil {
+		return m.SwitchPM
+	}
+	return nil
+}
+
+func (m *BotResults) GetResults() []*BotInlineResult {
+	if m != nil {
+		return m.Results
+	}
+	return nil
+}
+
+// BotInlineSwitchPM
+type BotInlineSwitchPM struct {
+	// Text for the button that switches the user to a private chat with the bot
+	// and sends the bot a start message with the parameter start_parameter (can be empty)
+	Text string `protobuf:"bytes,1,req,name=Text" json:"Text"`
+	// The parameter for the /start parameter
+	StartParam string `protobuf:"bytes,2,req,name=StartParam" json:"StartParam"`
+}
+
+func (m *BotInlineSwitchPM) Reset()         { *m = BotInlineSwitchPM{} }
+func (m *BotInlineSwitchPM) String() string { return proto.CompactTextString(m) }
+func (*BotInlineSwitchPM) ProtoMessage()    {}
+func (*BotInlineSwitchPM) Descriptor() ([]byte, []int) {
+	return fileDescriptor_802c818ed586bbc7, []int{18}
+}
+func (m *BotInlineSwitchPM) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BotInlineSwitchPM) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BotInlineSwitchPM.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BotInlineSwitchPM) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BotInlineSwitchPM.Merge(m, src)
+}
+func (m *BotInlineSwitchPM) XXX_Size() int {
+	return m.Size()
+}
+func (m *BotInlineSwitchPM) XXX_DiscardUnknown() {
+	xxx_messageInfo_BotInlineSwitchPM.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BotInlineSwitchPM proto.InternalMessageInfo
+
+func (m *BotInlineSwitchPM) GetText() string {
+	if m != nil {
+		return m.Text
+	}
+	return ""
+}
+
+func (m *BotInlineSwitchPM) GetStartParam() string {
+	if m != nil {
+		return m.StartParam
+	}
+	return ""
+}
+
+// BotInlineResult
+type BotInlineResult struct {
+	ID          string         `protobuf:"bytes,1,req,name=ID" json:"ID"`
+	Type        string         `protobuf:"bytes,2,req,name=Type" json:"Type"`
+	Title       string         `protobuf:"bytes,3,opt,name=Title" json:"Title"`
+	Description string         `protobuf:"bytes,4,opt,name=Description" json:"Description"`
+	Url         string         `protobuf:"bytes,5,opt,name=Url" json:"Url"`
+	Doc         *MediaDocument `protobuf:"bytes,6,opt,name=Doc" json:"Doc,omitempty"`
+}
+
+func (m *BotInlineResult) Reset()         { *m = BotInlineResult{} }
+func (m *BotInlineResult) String() string { return proto.CompactTextString(m) }
+func (*BotInlineResult) ProtoMessage()    {}
+func (*BotInlineResult) Descriptor() ([]byte, []int) {
+	return fileDescriptor_802c818ed586bbc7, []int{19}
+}
+func (m *BotInlineResult) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BotInlineResult) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BotInlineResult.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BotInlineResult) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BotInlineResult.Merge(m, src)
+}
+func (m *BotInlineResult) XXX_Size() int {
+	return m.Size()
+}
+func (m *BotInlineResult) XXX_DiscardUnknown() {
+	xxx_messageInfo_BotInlineResult.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BotInlineResult proto.InternalMessageInfo
+
+func (m *BotInlineResult) GetID() string {
+	if m != nil {
+		return m.ID
+	}
+	return ""
+}
+
+func (m *BotInlineResult) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *BotInlineResult) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+func (m *BotInlineResult) GetDescription() string {
+	if m != nil {
+		return m.Description
+	}
+	return ""
+}
+
+func (m *BotInlineResult) GetUrl() string {
+	if m != nil {
+		return m.Url
+	}
+	return ""
+}
+
+func (m *BotInlineResult) GetDoc() *MediaDocument {
+	if m != nil {
+		return m.Doc
 	}
 	return nil
 }
@@ -991,7 +1451,7 @@ func (m *BotToken) Reset()         { *m = BotToken{} }
 func (m *BotToken) String() string { return proto.CompactTextString(m) }
 func (*BotToken) ProtoMessage()    {}
 func (*BotToken) Descriptor() ([]byte, []int) {
-	return fileDescriptor_802c818ed586bbc7, []int{14}
+	return fileDescriptor_802c818ed586bbc7, []int{20}
 }
 func (m *BotToken) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1037,7 +1497,7 @@ func (m *BotRecalled) Reset()         { *m = BotRecalled{} }
 func (m *BotRecalled) String() string { return proto.CompactTextString(m) }
 func (*BotRecalled) ProtoMessage()    {}
 func (*BotRecalled) Descriptor() ([]byte, []int) {
-	return fileDescriptor_802c818ed586bbc7, []int{15}
+	return fileDescriptor_802c818ed586bbc7, []int{21}
 }
 func (m *BotRecalled) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1091,7 +1551,7 @@ func (m *BotCallbackAnswer) Reset()         { *m = BotCallbackAnswer{} }
 func (m *BotCallbackAnswer) String() string { return proto.CompactTextString(m) }
 func (*BotCallbackAnswer) ProtoMessage()    {}
 func (*BotCallbackAnswer) Descriptor() ([]byte, []int) {
-	return fileDescriptor_802c818ed586bbc7, []int{16}
+	return fileDescriptor_802c818ed586bbc7, []int{22}
 }
 func (m *BotCallbackAnswer) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1150,7 +1610,7 @@ func (m *BotsMany) Reset()         { *m = BotsMany{} }
 func (m *BotsMany) String() string { return proto.CompactTextString(m) }
 func (*BotsMany) ProtoMessage()    {}
 func (*BotsMany) Descriptor() ([]byte, []int) {
-	return fileDescriptor_802c818ed586bbc7, []int{17}
+	return fileDescriptor_802c818ed586bbc7, []int{23}
 }
 func (m *BotsMany) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1197,7 +1657,7 @@ func (m *BotGetCommands) Reset()         { *m = BotGetCommands{} }
 func (m *BotGetCommands) String() string { return proto.CompactTextString(m) }
 func (*BotGetCommands) ProtoMessage()    {}
 func (*BotGetCommands) Descriptor() ([]byte, []int) {
-	return fileDescriptor_802c818ed586bbc7, []int{18}
+	return fileDescriptor_802c818ed586bbc7, []int{24}
 }
 func (m *BotGetCommands) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1242,7 +1702,7 @@ func (m *BotCommandsMany) Reset()         { *m = BotCommandsMany{} }
 func (m *BotCommandsMany) String() string { return proto.CompactTextString(m) }
 func (*BotCommandsMany) ProtoMessage()    {}
 func (*BotCommandsMany) Descriptor() ([]byte, []int) {
-	return fileDescriptor_802c818ed586bbc7, []int{19}
+	return fileDescriptor_802c818ed586bbc7, []int{25}
 }
 func (m *BotCommandsMany) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1290,9 +1750,15 @@ func init() {
 	proto.RegisterType((*BotUpdateProfile)(nil), "msg.BotUpdateProfile")
 	proto.RegisterType((*BotUpdatePhoto)(nil), "msg.BotUpdatePhoto")
 	proto.RegisterType((*BotRevokeToken)(nil), "msg.BotRevokeToken")
+	proto.RegisterType((*BotDeleteMessage)(nil), "msg.BotDeleteMessage")
 	proto.RegisterType((*BotSetCallbackAnswer)(nil), "msg.BotSetCallbackAnswer")
 	proto.RegisterType((*BotGetCallbackAnswer)(nil), "msg.BotGetCallbackAnswer")
-	proto.RegisterType((*BotDeleteMessage)(nil), "msg.BotDeleteMessage")
+	proto.RegisterType((*BotGetInlineResults)(nil), "msg.BotGetInlineResults")
+	proto.RegisterType((*BotSetInlineResults)(nil), "msg.BotSetInlineResults")
+	proto.RegisterType((*BotSendInlineResults)(nil), "msg.BotSendInlineResults")
+	proto.RegisterType((*BotResults)(nil), "msg.BotResults")
+	proto.RegisterType((*BotInlineSwitchPM)(nil), "msg.BotInlineSwitchPM")
+	proto.RegisterType((*BotInlineResult)(nil), "msg.BotInlineResult")
 	proto.RegisterType((*BotToken)(nil), "msg.BotToken")
 	proto.RegisterType((*BotRecalled)(nil), "msg.BotRecalled")
 	proto.RegisterType((*BotCallbackAnswer)(nil), "msg.BotCallbackAnswer")
@@ -1304,72 +1770,91 @@ func init() {
 func init() { proto.RegisterFile("bot.api.proto", fileDescriptor_802c818ed586bbc7) }
 
 var fileDescriptor_802c818ed586bbc7 = []byte{
-	// 1027 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0x4f, 0x6f, 0xdc, 0x54,
-	0x10, 0xcf, 0xb3, 0x77, 0xb7, 0x9b, 0x49, 0x48, 0x8a, 0x09, 0xe5, 0x29, 0xaa, 0x16, 0xeb, 0x09,
-	0x55, 0x2b, 0x28, 0xdb, 0x6a, 0x85, 0xc4, 0x11, 0xe1, 0x6c, 0x88, 0x82, 0x9a, 0x36, 0xb8, 0x49,
-	0xc5, 0x91, 0x97, 0xf5, 0x64, 0x63, 0xc5, 0xf6, 0x33, 0xf6, 0xdb, 0xa4, 0xfb, 0x2d, 0x80, 0x33,
-	0x9f, 0x85, 0x03, 0xa7, 0x1e, 0xcb, 0x8d, 0x13, 0x42, 0xc9, 0x17, 0x41, 0x6f, 0xfc, 0x67, 0xbd,
-	0x49, 0x48, 0x5b, 0x09, 0x6e, 0xf6, 0x6f, 0xc6, 0x6f, 0x7e, 0xf3, 0x9b, 0x79, 0x33, 0x86, 0xf7,
-	0x8e, 0x94, 0x1e, 0xc8, 0x34, 0x1c, 0xa4, 0x99, 0xd2, 0xca, 0xb1, 0xe3, 0x7c, 0xb2, 0xf9, 0xf9,
-	0x24, 0xd4, 0x27, 0xd3, 0xa3, 0xc1, 0x58, 0xc5, 0x8f, 0x26, 0x6a, 0xa2, 0x1e, 0x91, 0xed, 0x68,
-	0x7a, 0x4c, 0x6f, 0xf4, 0x42, 0x4f, 0xc5, 0x37, 0x9b, 0x1f, 0x8e, 0x4f, 0xa4, 0x1e, 0x8c, 0x55,
-	0x86, 0x03, 0x3d, 0x4b, 0x31, 0x2f, 0xe1, 0x8f, 0x08, 0x36, 0x47, 0xc7, 0x98, 0xe7, 0x72, 0x52,
-	0x19, 0x84, 0x86, 0xae, 0xa7, 0xf4, 0x73, 0x2d, 0x33, 0xed, 0xb8, 0x60, 0x7b, 0x4a, 0x73, 0xe6,
-	0x5a, 0xfd, 0x95, 0xe1, 0xda, 0x20, 0xce, 0x27, 0x83, 0xdd, 0x24, 0x9d, 0xea, 0x7d, 0xc4, 0xcc,
-	0x37, 0x26, 0xc7, 0x85, 0xae, 0x2f, 0x93, 0x40, 0xc5, 0xbb, 0x23, 0x6e, 0xb9, 0x56, 0xdf, 0xf6,
-	0x5a, 0xaf, 0xfe, 0xfa, 0x78, 0xc9, 0xaf, 0x51, 0xe7, 0x13, 0x00, 0x3a, 0x6c, 0x5f, 0x66, 0x32,
-	0xe6, 0xb6, 0x6b, 0xf5, 0x97, 0x4b, 0x9f, 0x06, 0x2e, 0x3e, 0x83, 0x65, 0x4f, 0x69, 0x1f, 0xc7,
-	0x32, 0x8a, 0x9c, 0x1e, 0xdc, 0x79, 0x81, 0x59, 0x1e, 0xaa, 0x84, 0x42, 0xb7, 0x4b, 0xff, 0x0a,
-	0x14, 0xbf, 0x33, 0x00, 0xc3, 0x11, 0xf5, 0x6e, 0x72, 0xac, 0x9c, 0x4d, 0x68, 0x7b, 0x4a, 0xef,
-	0x8e, 0xc8, 0xb9, 0x22, 0x50, 0x40, 0x6f, 0xc1, 0x6f, 0x13, 0xda, 0xcf, 0xce, 0x13, 0xcc, 0x88,
-	0x5a, 0xfd, 0x35, 0x41, 0xce, 0x10, 0x56, 0x3c, 0xa5, 0xb7, 0x54, 0x1c, 0xcb, 0x24, 0xc8, 0x79,
-	0xcb, 0xb5, 0xfb, 0x2b, 0xc3, 0xbb, 0xa4, 0x43, 0x03, 0xf7, 0x9b, 0x4e, 0xce, 0x03, 0x58, 0x19,
-	0x61, 0x3e, 0xce, 0xc2, 0x54, 0x9b, 0x04, 0xda, 0x8d, 0x84, 0x9b, 0x06, 0x31, 0x82, 0x8e, 0xa7,
-	0xf4, 0x0e, 0x6a, 0xa7, 0x07, 0x9d, 0xc3, 0x1c, 0xb3, 0x3a, 0x81, 0x8e, 0x71, 0x7e, 0xcc, 0xfc,
-	0x12, 0x35, 0x0c, 0x9f, 0x84, 0x71, 0xa8, 0xb9, 0xe5, 0xb2, 0x5a, 0x8c, 0x02, 0x12, 0xbf, 0x59,
-	0xb0, 0x46, 0x52, 0x24, 0xc1, 0x5e, 0x51, 0xc7, 0x85, 0x94, 0xd9, 0x8d, 0x29, 0x0b, 0x68, 0x99,
-	0x0a, 0x92, 0x20, 0xd7, 0xeb, 0x4a, 0x36, 0x87, 0x43, 0xcb, 0x53, 0xc1, 0x6c, 0x81, 0x3f, 0x21,
-	0xa6, 0x3a, 0x3e, 0xa6, 0xd1, 0xec, 0x40, 0xf1, 0x8e, 0xcb, 0xea, 0xe3, 0x2b, 0xd0, 0x14, 0x7c,
-	0x2b, 0x42, 0x99, 0x8d, 0x32, 0x79, 0xac, 0xf9, 0x1d, 0x97, 0xf5, 0xbb, 0x55, 0xc1, 0xe7, 0xb8,
-	0x33, 0x80, 0xee, 0x76, 0xa2, 0x43, 0x1d, 0x62, 0xce, 0xbb, 0xa4, 0xab, 0x43, 0x3c, 0xca, 0x2c,
-	0xc8, 0x36, 0xf3, 0x6b, 0x1f, 0x23, 0x2b, 0x05, 0xd8, 0x93, 0xd9, 0xe9, 0x34, 0xe5, 0xcb, 0x8d,
-	0xc8, 0x4d, 0x83, 0x33, 0x80, 0xf5, 0xc6, 0xeb, 0x48, 0x6a, 0xc9, 0xc1, 0x65, 0xfd, 0xd5, 0xd2,
-	0xf7, 0xaa, 0x51, 0xfc, 0x5a, 0x08, 0xb8, 0x1d, 0x84, 0xfa, 0xff, 0x11, 0xd0, 0xbe, 0x26, 0xa0,
-	0x80, 0xe5, 0x32, 0xd4, 0xee, 0x88, 0xb7, 0x1a, 0x01, 0xe6, 0xf0, 0x82, 0x3c, 0xed, 0x77, 0x97,
-	0xa7, 0xf3, 0x0e, 0xf2, 0xdc, 0xb9, 0x4d, 0x9e, 0x3f, 0x18, 0xac, 0xd6, 0xfd, 0x15, 0x84, 0xf2,
-	0x3f, 0x12, 0xe7, 0x4b, 0x23, 0x41, 0x10, 0xca, 0x83, 0x59, 0x8a, 0xa4, 0xd0, 0xda, 0xf0, 0x83,
-	0xb9, 0x63, 0x6d, 0x9a, 0xeb, 0x52, 0x02, 0x85, 0x76, 0x41, 0x28, 0x89, 0xb9, 0xd1, 0x6e, 0x75,
-	0xc1, 0xc7, 0xc0, 0xcd, 0x06, 0x6d, 0xdf, 0xd0, 0xa0, 0xe2, 0x67, 0x06, 0xeb, 0x26, 0x27, 0x79,
-	0x86, 0xdf, 0x84, 0x11, 0xee, 0x9b, 0x49, 0xd7, 0x83, 0x8e, 0x79, 0xbe, 0x7e, 0x07, 0x0b, 0xd4,
-	0xb9, 0x0f, 0x1d, 0xe3, 0x57, 0x4e, 0x91, 0xea, 0x12, 0x96, 0x98, 0x69, 0xf9, 0x03, 0xa5, 0x65,
-	0x64, 0x5e, 0x73, 0xca, 0xa7, 0xf2, 0x68, 0xe0, 0x34, 0xa7, 0x66, 0x1a, 0xf3, 0x05, 0xde, 0x05,
-	0x24, 0x7e, 0x80, 0xbb, 0x9e, 0xd2, 0x87, 0x69, 0x20, 0x35, 0xee, 0x67, 0xea, 0x38, 0x8c, 0xf0,
-	0xd6, 0xb9, 0xc6, 0xa1, 0xf5, 0x54, 0xc6, 0x48, 0x6c, 0xea, 0xee, 0x32, 0x88, 0x73, 0x0f, 0x6c,
-	0x2f, 0x54, 0xbc, 0xe5, 0xb2, 0xda, 0x60, 0x00, 0xf1, 0x3d, 0xf5, 0x79, 0x19, 0xe1, 0xc4, 0x6c,
-	0x93, 0x4f, 0xa1, 0x65, 0xb2, 0xe3, 0xcc, 0x65, 0xfd, 0x95, 0xe1, 0xbd, 0xb9, 0xfe, 0x06, 0x7d,
-	0xa2, 0xc6, 0xd2, 0xcc, 0x29, 0x9f, 0x7c, 0xe6, 0x5c, 0xac, 0x6b, 0x5c, 0xc4, 0xb7, 0x74, 0xb2,
-	0x8f, 0x67, 0xea, 0x14, 0x0f, 0xd4, 0x29, 0x26, 0xb7, 0x32, 0xbf, 0x0f, 0x9d, 0x1d, 0xd4, 0x4f,
-	0xf1, 0x9c, 0x8e, 0xaa, 0x46, 0x43, 0x89, 0x89, 0x5f, 0x18, 0x6c, 0x14, 0xa3, 0x7d, 0x4b, 0x46,
-	0xd1, 0x91, 0x1c, 0x9f, 0x7e, 0x9d, 0xe4, 0xe7, 0x98, 0x99, 0xa2, 0x7e, 0x37, 0xc5, 0x6c, 0x76,
-	0xe5, 0xd0, 0x0a, 0x34, 0x69, 0x1f, 0x66, 0x11, 0x8d, 0xc8, 0x3a, 0xed, 0xc3, 0x8c, 0x76, 0x49,
-	0x79, 0x67, 0xb8, 0xdd, 0xb0, 0x55, 0xa0, 0x69, 0xa8, 0x2d, 0x39, 0x3e, 0xc1, 0x83, 0x30, 0x46,
-	0x2a, 0x4c, 0x55, 0xb9, 0x39, 0x2c, 0x5e, 0x12, 0xa7, 0x9d, 0x6b, 0x9c, 0xaa, 0x4e, 0x67, 0xb7,
-	0x74, 0xfa, 0xc2, 0x65, 0xb7, 0x1a, 0xed, 0xd8, 0xb8, 0xec, 0x1c, 0x5a, 0xd4, 0xcf, 0x76, 0xa3,
-	0x2f, 0x08, 0x11, 0x2f, 0xa8, 0x2d, 0x46, 0x18, 0xa1, 0xc6, 0x39, 0xe3, 0x37, 0x47, 0xed, 0x01,
-	0xd4, 0xc7, 0xe7, 0xdc, 0x72, 0xed, 0xbe, 0xed, 0x37, 0x10, 0xf1, 0x80, 0x96, 0x7c, 0x5d, 0x2c,
-	0x7a, 0xa0, 0x03, 0xeb, 0xb6, 0x24, 0x48, 0x6c, 0xd3, 0x02, 0x2c, 0xd6, 0x32, 0x06, 0xce, 0x06,
-	0x58, 0x57, 0xf4, 0xb7, 0x8a, 0x1d, 0x6b, 0x36, 0x55, 0x72, 0xb5, 0x1f, 0x6b, 0x54, 0x28, 0x78,
-	0xdf, 0xac, 0xc8, 0x45, 0xf5, 0xca, 0x8a, 0xb1, 0x5b, 0x2a, 0x66, 0xbd, 0xb1, 0x62, 0xf6, 0xcd,
-	0x15, 0x7b, 0x48, 0xf9, 0xe5, 0x7b, 0x32, 0x99, 0x39, 0xae, 0x19, 0xc4, 0x3a, 0xe7, 0x8c, 0xc6,
-	0xe8, 0x6a, 0xb5, 0xbd, 0xcd, 0xaf, 0x83, 0x4f, 0x16, 0xf1, 0x05, 0x35, 0xb0, 0xa9, 0x6f, 0xb5,
-	0xc4, 0xdf, 0x42, 0x63, 0xf1, 0x15, 0x4d, 0x91, 0xea, 0x13, 0x0a, 0xf5, 0x10, 0xba, 0xf5, 0xcf,
-	0x02, 0xfb, 0x97, 0x9f, 0x85, 0xda, 0x63, 0xf8, 0x8c, 0x48, 0xee, 0x67, 0xea, 0xe5, 0xcc, 0xd9,
-	0x82, 0xf5, 0xe7, 0x98, 0x9d, 0x21, 0xa9, 0xfd, 0xe3, 0x14, 0x73, 0xed, 0x6c, 0x2c, 0x0e, 0xfc,
-	0x33, 0x8c, 0x54, 0x8a, 0x9b, 0x37, 0xa2, 0x62, 0xa9, 0xcf, 0x1e, 0x33, 0x8f, 0xbf, 0xba, 0xe8,
-	0xb1, 0xd7, 0x17, 0x3d, 0xf6, 0xf7, 0x45, 0x8f, 0xfd, 0x74, 0xd9, 0x5b, 0x7a, 0x7d, 0xd9, 0x5b,
-	0xfa, 0xf3, 0xb2, 0xb7, 0xf4, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xac, 0x85, 0x66, 0xe4, 0x48,
-	0x0a, 0x00, 0x00,
+	// 1332 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x57, 0x4f, 0x6f, 0x1b, 0x45,
+	0x14, 0xcf, 0xec, 0xda, 0x8e, 0x33, 0x09, 0x6d, 0xd9, 0x86, 0xb2, 0xb2, 0x2a, 0xb3, 0x1a, 0x55,
+	0x95, 0x05, 0xc5, 0xad, 0x2c, 0x24, 0x8e, 0x08, 0xc7, 0x25, 0x32, 0x6a, 0x5a, 0xb3, 0x71, 0x2a,
+	0x8e, 0x4c, 0xec, 0xe7, 0x64, 0x95, 0xdd, 0x1d, 0xb3, 0x3b, 0x4e, 0xe2, 0x2b, 0x9f, 0x00, 0x90,
+	0xb8, 0x21, 0xf1, 0x4d, 0x38, 0xc0, 0xa5, 0xc7, 0x72, 0x41, 0x9c, 0x10, 0x6a, 0xbf, 0x08, 0x9a,
+	0xb7, 0xff, 0x66, 0x6d, 0xd7, 0x4d, 0x24, 0xb8, 0x79, 0x7f, 0xef, 0xcd, 0xcc, 0x7b, 0xbf, 0xf7,
+	0xe6, 0xf7, 0xc6, 0xf4, 0x9d, 0x63, 0x21, 0xdb, 0x7c, 0xea, 0xb5, 0xa7, 0x91, 0x90, 0xc2, 0x32,
+	0x83, 0xf8, 0xa4, 0xf1, 0xf1, 0x89, 0x27, 0x4f, 0x67, 0xc7, 0xed, 0x91, 0x08, 0x1e, 0x9e, 0x88,
+	0x13, 0xf1, 0x10, 0x6d, 0xc7, 0xb3, 0x09, 0x7e, 0xe1, 0x07, 0xfe, 0x4a, 0xd6, 0x34, 0xde, 0x1b,
+	0x9d, 0x72, 0xd9, 0x1e, 0x89, 0x08, 0xda, 0x72, 0x3e, 0x85, 0x38, 0x85, 0xdf, 0x47, 0x58, 0x6d,
+	0x1d, 0x40, 0x1c, 0xf3, 0x93, 0xdc, 0xd0, 0x2c, 0xfc, 0x53, 0x4b, 0x3b, 0x80, 0xb1, 0xc7, 0x53,
+	0x3b, 0x93, 0xb4, 0xde, 0x15, 0xf2, 0x50, 0xf2, 0x48, 0x5a, 0x0e, 0x35, 0xbb, 0x42, 0xda, 0xc4,
+	0x31, 0x5a, 0xdb, 0x9d, 0x1b, 0xed, 0x20, 0x3e, 0x69, 0xf7, 0xc3, 0xe9, 0x4c, 0x0e, 0x00, 0x22,
+	0x57, 0x99, 0x2c, 0x87, 0xd6, 0x5d, 0x1e, 0x8e, 0x45, 0xd0, 0xef, 0xd9, 0x86, 0x63, 0xb4, 0xcc,
+	0x6e, 0xe5, 0xc5, 0xdf, 0x1f, 0x6c, 0xb8, 0x39, 0x6a, 0xdd, 0xa3, 0x14, 0x37, 0x1b, 0xf0, 0x88,
+	0x07, 0xb6, 0xe9, 0x18, 0xad, 0xad, 0xd4, 0x47, 0xc3, 0xd9, 0x47, 0x74, 0xab, 0x2b, 0xa4, 0x0b,
+	0x23, 0xee, 0xfb, 0x56, 0x93, 0x6e, 0x3e, 0x87, 0x28, 0xf6, 0x44, 0x88, 0x47, 0x57, 0x53, 0xff,
+	0x0c, 0x64, 0xbf, 0x11, 0x4a, 0x55, 0x8c, 0x20, 0xfb, 0xe1, 0x44, 0x58, 0x0d, 0x5a, 0xed, 0x0a,
+	0xd9, 0xef, 0xa1, 0x73, 0x16, 0x40, 0x02, 0x5d, 0x21, 0xbe, 0x06, 0xad, 0x3e, 0xbb, 0x08, 0x21,
+	0xc2, 0xd0, 0xf2, 0xd5, 0x08, 0x59, 0x1d, 0xba, 0xdd, 0x15, 0x72, 0x4f, 0x04, 0x01, 0x0f, 0xc7,
+	0xb1, 0x5d, 0x71, 0xcc, 0xd6, 0x76, 0xe7, 0x16, 0xf2, 0xa0, 0xe1, 0xae, 0xee, 0x64, 0xdd, 0xa7,
+	0xdb, 0x3d, 0x88, 0x47, 0x91, 0x37, 0x95, 0x2a, 0x81, 0xaa, 0x96, 0xb0, 0x6e, 0x60, 0x3d, 0x5a,
+	0xeb, 0x0a, 0xb9, 0x0f, 0xd2, 0x6a, 0xd2, 0xda, 0x51, 0x0c, 0x51, 0x9e, 0x40, 0x4d, 0x39, 0x3f,
+	0x22, 0x6e, 0x8a, 0xaa, 0x08, 0x9f, 0x78, 0x81, 0x27, 0x6d, 0xc3, 0x21, 0x39, 0x19, 0x09, 0xc4,
+	0x7e, 0x35, 0xe8, 0x0d, 0xa4, 0x22, 0x1c, 0x1f, 0x24, 0xd5, 0x2c, 0xa5, 0x4c, 0x56, 0xa6, 0xcc,
+	0x68, 0x45, 0x55, 0x10, 0x09, 0x59, 0xae, 0x2b, 0xda, 0x2c, 0x9b, 0x56, 0xba, 0x62, 0x3c, 0x2f,
+	0xc5, 0x8f, 0x88, 0xaa, 0x8e, 0x0b, 0x53, 0x7f, 0x3e, 0x14, 0x76, 0xcd, 0x21, 0xf9, 0xf6, 0x19,
+	0xa8, 0x0a, 0xbe, 0xe7, 0x03, 0x8f, 0x7a, 0x11, 0x9f, 0x48, 0x7b, 0xd3, 0x21, 0xad, 0x7a, 0x56,
+	0xf0, 0x02, 0xb7, 0xda, 0xb4, 0xfe, 0x38, 0x94, 0x9e, 0xf4, 0x20, 0xb6, 0xeb, 0xc8, 0xab, 0x85,
+	0x71, 0xa4, 0x59, 0xa0, 0x6d, 0xee, 0xe6, 0x3e, 0x8a, 0x56, 0x3c, 0xe0, 0x80, 0x47, 0x67, 0xb3,
+	0xa9, 0xbd, 0xa5, 0x9d, 0xac, 0x1b, 0xac, 0x36, 0xbd, 0xa9, 0x7d, 0xf6, 0xb8, 0xe4, 0x36, 0x75,
+	0x48, 0x6b, 0x27, 0xf5, 0x5d, 0x34, 0xb2, 0x9f, 0x13, 0x02, 0x1f, 0x8f, 0x3d, 0xf9, 0xff, 0x10,
+	0x68, 0x2e, 0x11, 0xc8, 0xe8, 0x56, 0x7a, 0x54, 0xbf, 0x67, 0x57, 0xb4, 0x03, 0x0a, 0xb8, 0x44,
+	0x4f, 0xf5, 0xfa, 0xf4, 0xd4, 0xae, 0x41, 0xcf, 0xe6, 0x3a, 0x7a, 0xfe, 0x20, 0x74, 0x27, 0xef,
+	0xaf, 0xb1, 0xc7, 0xff, 0x23, 0x72, 0x3e, 0x55, 0x14, 0x8c, 0x3d, 0x3e, 0x9c, 0x4f, 0x01, 0x19,
+	0xba, 0xd1, 0xb9, 0x5d, 0x38, 0xe6, 0xa6, 0x82, 0x97, 0x14, 0x48, 0xb8, 0x1b, 0x7b, 0x1c, 0x23,
+	0x57, 0xdc, 0xed, 0x94, 0x7c, 0x14, 0xac, 0x37, 0x68, 0x75, 0x45, 0x83, 0xb2, 0x1f, 0x08, 0xbd,
+	0xa9, 0x72, 0xe2, 0xe7, 0xf0, 0x85, 0xe7, 0xc3, 0x40, 0x29, 0x5d, 0x93, 0xd6, 0xd4, 0xef, 0xe5,
+	0x3b, 0x98, 0xa0, 0xd6, 0x5d, 0x5a, 0x53, 0x7e, 0xa9, 0x8a, 0x64, 0x97, 0x30, 0xc5, 0x54, 0xcb,
+	0x0f, 0x85, 0xe4, 0xbe, 0xfa, 0x8c, 0x31, 0x9f, 0xcc, 0x43, 0xc3, 0x51, 0xa7, 0xe6, 0x12, 0xe2,
+	0x52, 0xdc, 0x09, 0xc4, 0xbe, 0xa1, 0xb7, 0xba, 0x42, 0x1e, 0x4d, 0xc7, 0x5c, 0xc2, 0x20, 0x12,
+	0x13, 0xcf, 0x87, 0xb5, 0xba, 0x66, 0xd3, 0xca, 0x53, 0x1e, 0x00, 0x46, 0x93, 0x77, 0x97, 0x42,
+	0xac, 0x3b, 0xd4, 0xec, 0x7a, 0xc2, 0xae, 0x38, 0x24, 0x37, 0x28, 0x80, 0x7d, 0x8d, 0x7d, 0x9e,
+	0x9e, 0x70, 0xaa, 0xa6, 0xcd, 0x87, 0xb4, 0xa2, 0xb2, 0xb3, 0x89, 0x43, 0x5a, 0xdb, 0x9d, 0x3b,
+	0x05, 0xff, 0x0a, 0x7d, 0x22, 0x46, 0x5c, 0xe9, 0x94, 0x8b, 0x3e, 0x45, 0x2c, 0xc6, 0x52, 0x2c,
+	0xec, 0x4b, 0xdc, 0xd9, 0x85, 0x73, 0x71, 0x06, 0x43, 0x71, 0x06, 0xe1, 0xda, 0xc8, 0xef, 0xd2,
+	0xda, 0x3e, 0xc8, 0xa7, 0x70, 0x81, 0x5b, 0x65, 0xd2, 0x90, 0x62, 0xec, 0x39, 0xf2, 0xd0, 0x03,
+	0x1f, 0x24, 0x64, 0xf7, 0x31, 0x6b, 0x28, 0xb2, 0xa6, 0xa1, 0x9a, 0x94, 0xe6, 0x97, 0x27, 0xb6,
+	0x0d, 0xc7, 0x6c, 0x99, 0xae, 0x86, 0xb0, 0x1f, 0x09, 0xdd, 0x4d, 0x46, 0xc6, 0x1e, 0xf7, 0xfd,
+	0x63, 0x3e, 0x3a, 0xfb, 0x3c, 0x8c, 0x2f, 0x70, 0xe1, 0xe6, 0x57, 0x33, 0x88, 0xe6, 0x0b, 0xc1,
+	0x66, 0xa0, 0xa2, 0xf3, 0x28, 0xf2, 0x51, 0x7a, 0x73, 0x3a, 0x8f, 0x22, 0x9c, 0x51, 0xe9, 0xf6,
+	0xb6, 0xa9, 0xd9, 0x36, 0x8b, 0xa0, 0xb7, 0xf6, 0xf8, 0xe8, 0x14, 0x86, 0x5e, 0x00, 0x58, 0xf0,
+	0xac, 0x23, 0x0a, 0x98, 0x5d, 0x62, 0x4c, 0xfb, 0x4b, 0x31, 0x5d, 0x25, 0xe1, 0x92, 0x88, 0x18,
+	0x5a, 0x9b, 0x6b, 0x22, 0x62, 0xd3, 0x0a, 0xde, 0x13, 0x53, 0xeb, 0x37, 0x44, 0xd8, 0x4f, 0x84,
+	0xde, 0x4e, 0x8e, 0xee, 0x87, 0xbe, 0x17, 0x82, 0x0b, 0xf1, 0xcc, 0x97, 0xf1, 0x1b, 0x07, 0xbe,
+	0x9a, 0x44, 0xc9, 0xc0, 0xbf, 0xca, 0xed, 0x6e, 0xd0, 0x2a, 0xd2, 0x57, 0xd2, 0xbe, 0x04, 0x52,
+	0xe5, 0x7f, 0x36, 0x99, 0xc4, 0x20, 0x91, 0x94, 0xcc, 0x98, 0x62, 0xec, 0x97, 0x24, 0xae, 0xc3,
+	0xc5, 0xb8, 0x9a, 0x74, 0x73, 0x9f, 0xfb, 0xbe, 0xda, 0x93, 0x68, 0x5d, 0x93, 0x81, 0xca, 0x3e,
+	0x88, 0xbc, 0x73, 0x2e, 0xa1, 0xd4, 0x55, 0x19, 0x58, 0xae, 0x86, 0x3e, 0xe8, 0x0b, 0x58, 0x5d,
+	0xe2, 0xa7, 0x70, 0x29, 0xf3, 0xe8, 0x8a, 0xa2, 0x6a, 0x38, 0xfb, 0xce, 0x48, 0x1b, 0x29, 0x1c,
+	0x2f, 0x52, 0xf7, 0x36, 0x61, 0xd4, 0x5a, 0xcd, 0x58, 0xd5, 0x6a, 0x6a, 0x07, 0xdc, 0xac, 0xdf,
+	0x2b, 0x31, 0x97, 0xa3, 0x0b, 0xa3, 0xb5, 0xa2, 0x65, 0xaa, 0x8f, 0xd6, 0xac, 0x44, 0xd5, 0xb5,
+	0xf7, 0x45, 0x1b, 0xe2, 0xc6, 0xf2, 0x10, 0xbf, 0x4b, 0x6b, 0x87, 0x9e, 0x0f, 0x61, 0x79, 0x80,
+	0xa7, 0x18, 0xfb, 0x33, 0x79, 0x80, 0x5d, 0xa3, 0x3a, 0x6b, 0x13, 0x2f, 0x33, 0x6f, 0xae, 0x66,
+	0xde, 0xea, 0xd0, 0xfa, 0xe1, 0x85, 0x27, 0x47, 0xa7, 0x83, 0x03, 0xac, 0x4e, 0x26, 0x59, 0x4a,
+	0x56, 0xb0, 0x12, 0x99, 0xd5, 0xcd, 0xfd, 0xac, 0xb6, 0x4a, 0x13, 0x83, 0x4c, 0xa7, 0xe8, 0x6e,
+	0x79, 0x49, 0x62, 0x74, 0x33, 0x27, 0x76, 0x48, 0xdf, 0x5d, 0xda, 0x4e, 0x5d, 0xa3, 0x21, 0x5c,
+	0x26, 0xb7, 0x22, 0xd7, 0x5a, 0x85, 0x2c, 0xbc, 0x6d, 0x8d, 0x37, 0xbc, 0x6d, 0x7f, 0x4f, 0xe6,
+	0x8d, 0x7e, 0xa2, 0xb5, 0x4b, 0x8d, 0xb4, 0x4f, 0xb2, 0x15, 0x46, 0x72, 0x61, 0x71, 0x22, 0x96,
+	0x54, 0x1d, 0xe7, 0x5e, 0x83, 0x56, 0x87, 0x9e, 0xf4, 0xcb, 0x62, 0x93, 0x40, 0x8b, 0x2f, 0x4e,
+	0xbd, 0x73, 0x75, 0x43, 0x26, 0x65, 0xd5, 0x45, 0x29, 0xbb, 0x47, 0xcd, 0x9e, 0x18, 0xe1, 0x9b,
+	0xa1, 0x78, 0x66, 0xa8, 0x61, 0x2a, 0x46, 0xb3, 0x00, 0x42, 0xe9, 0x2a, 0x33, 0xbb, 0x8f, 0xff,
+	0x0b, 0x72, 0x7d, 0xc7, 0x1f, 0x98, 0x40, 0x3e, 0xc9, 0x10, 0x62, 0x8f, 0xf1, 0xcd, 0x9c, 0xbc,
+	0xe4, 0x61, 0xac, 0x25, 0x6a, 0x6a, 0x89, 0x3a, 0xb4, 0xae, 0x24, 0x25, 0x5c, 0x1c, 0x61, 0x39,
+	0xca, 0x04, 0x56, 0x62, 0x41, 0x18, 0xd3, 0x0c, 0xc8, 0x1a, 0x31, 0x36, 0xde, 0x2a, 0xc6, 0xe6,
+	0x6a, 0x31, 0x7e, 0x80, 0xf9, 0xc5, 0x07, 0x3c, 0x9c, 0x5b, 0x8e, 0x7a, 0xbb, 0xc9, 0xd8, 0x26,
+	0xd8, 0x33, 0x3b, 0x45, 0xcf, 0x4c, 0x84, 0x8b, 0x16, 0xf6, 0x09, 0xce, 0x3c, 0x25, 0xdd, 0xd9,
+	0xbb, 0xff, 0x0a, 0xa2, 0xcd, 0x3e, 0xc3, 0x46, 0xc8, 0x96, 0xe0, 0x51, 0x0f, 0x68, 0x3d, 0xff,
+	0x7f, 0x41, 0xde, 0xf0, 0xff, 0x22, 0xf7, 0xe8, 0x3c, 0xc3, 0x20, 0x07, 0x91, 0xb8, 0x9c, 0x5b,
+	0x7b, 0xf4, 0xe6, 0x21, 0x44, 0xe7, 0x80, 0x6c, 0x7f, 0x3b, 0x83, 0x58, 0x5a, 0xbb, 0xe5, 0x37,
+	0xe2, 0x39, 0xf8, 0x62, 0x0a, 0x8d, 0x95, 0x28, 0xdb, 0x68, 0x91, 0x47, 0xa4, 0x6b, 0xbf, 0x78,
+	0xd5, 0x24, 0x2f, 0x5f, 0x35, 0xc9, 0x3f, 0xaf, 0x9a, 0xe4, 0xfb, 0xd7, 0xcd, 0x8d, 0x97, 0xaf,
+	0x9b, 0x1b, 0x7f, 0xbd, 0x6e, 0x6e, 0xfc, 0x1b, 0x00, 0x00, 0xff, 0xff, 0x0e, 0x84, 0xa4, 0xce,
+	0x9b, 0x0e, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1987,6 +2472,50 @@ func (m *BotRevokeToken) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *BotDeleteMessage) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BotDeleteMessage) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BotDeleteMessage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.MessageIDs) > 0 {
+		for iNdEx := len(m.MessageIDs) - 1; iNdEx >= 0; iNdEx-- {
+			i = encodeVarintBotApi(dAtA, i, uint64(m.MessageIDs[iNdEx]))
+			i--
+			dAtA[i] = 0x10
+		}
+	}
+	if m.Peer == nil {
+		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
+	} else {
+		{
+			size, err := m.Peer.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintBotApi(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *BotSetCallbackAnswer) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2073,7 +2602,7 @@ func (m *BotGetCallbackAnswer) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *BotDeleteMessage) Marshal() (dAtA []byte, err error) {
+func (m *BotGetInlineResults) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2083,23 +2612,26 @@ func (m *BotDeleteMessage) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *BotDeleteMessage) MarshalTo(dAtA []byte) (int, error) {
+func (m *BotGetInlineResults) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *BotDeleteMessage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *BotGetInlineResults) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.MessageIDs) > 0 {
-		for iNdEx := len(m.MessageIDs) - 1; iNdEx >= 0; iNdEx-- {
-			i = encodeVarintBotApi(dAtA, i, uint64(m.MessageIDs[iNdEx]))
-			i--
-			dAtA[i] = 0x10
-		}
-	}
+	i -= len(m.Offset)
+	copy(dAtA[i:], m.Offset)
+	i = encodeVarintBotApi(dAtA, i, uint64(len(m.Offset)))
+	i--
+	dAtA[i] = 0x22
+	i -= len(m.Query)
+	copy(dAtA[i:], m.Query)
+	i = encodeVarintBotApi(dAtA, i, uint64(len(m.Query)))
+	i--
+	dAtA[i] = 0x1a
 	if m.Peer == nil {
 		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
 	} else {
@@ -2112,8 +2644,294 @@ func (m *BotDeleteMessage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i = encodeVarintBotApi(dAtA, i, uint64(size))
 		}
 		i--
+		dAtA[i] = 0x12
+	}
+	if m.Bot == nil {
+		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("Bot")
+	} else {
+		{
+			size, err := m.Bot.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintBotApi(dAtA, i, uint64(size))
+		}
+		i--
 		dAtA[i] = 0xa
 	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BotSetInlineResults) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BotSetInlineResults) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BotSetInlineResults) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	i -= len(m.NextOffset)
+	copy(dAtA[i:], m.NextOffset)
+	i = encodeVarintBotApi(dAtA, i, uint64(len(m.NextOffset)))
+	i--
+	dAtA[i] = 0x22
+	i = encodeVarintBotApi(dAtA, i, uint64(m.CacheTime))
+	i--
+	dAtA[i] = 0x18
+	i--
+	if m.Private {
+		dAtA[i] = 1
+	} else {
+		dAtA[i] = 0
+	}
+	i--
+	dAtA[i] = 0x10
+	i--
+	if m.Gallery {
+		dAtA[i] = 1
+	} else {
+		dAtA[i] = 0
+	}
+	i--
+	dAtA[i] = 0x8
+	return len(dAtA) - i, nil
+}
+
+func (m *BotSendInlineResults) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BotSendInlineResults) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BotSendInlineResults) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	i--
+	if m.Silent {
+		dAtA[i] = 1
+	} else {
+		dAtA[i] = 0
+	}
+	i--
+	dAtA[i] = 0x38
+	i = encodeVarintBotApi(dAtA, i, uint64(m.ReplyTo))
+	i--
+	dAtA[i] = 0x30
+	if m.Peer == nil {
+		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
+	} else {
+		{
+			size, err := m.Peer.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintBotApi(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x2a
+	}
+	i--
+	if m.ClearDraft {
+		dAtA[i] = 1
+	} else {
+		dAtA[i] = 0
+	}
+	i--
+	dAtA[i] = 0x20
+	i -= len(m.ResultID)
+	copy(dAtA[i:], m.ResultID)
+	i = encodeVarintBotApi(dAtA, i, uint64(len(m.ResultID)))
+	i--
+	dAtA[i] = 0x1a
+	i = encodeVarintBotApi(dAtA, i, uint64(m.QueryID))
+	i--
+	dAtA[i] = 0x10
+	i = encodeVarintBotApi(dAtA, i, uint64(m.RandomID))
+	i--
+	dAtA[i] = 0x8
+	return len(dAtA) - i, nil
+}
+
+func (m *BotResults) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BotResults) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BotResults) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Results) > 0 {
+		for iNdEx := len(m.Results) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Results[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintBotApi(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if m.SwitchPM != nil {
+		{
+			size, err := m.SwitchPM.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintBotApi(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x22
+	}
+	i -= len(m.NextOffset)
+	copy(dAtA[i:], m.NextOffset)
+	i = encodeVarintBotApi(dAtA, i, uint64(len(m.NextOffset)))
+	i--
+	dAtA[i] = 0x1a
+	i = encodeVarintBotApi(dAtA, i, uint64(m.QueryID))
+	i--
+	dAtA[i] = 0x10
+	i--
+	if m.Gallery {
+		dAtA[i] = 1
+	} else {
+		dAtA[i] = 0
+	}
+	i--
+	dAtA[i] = 0x8
+	return len(dAtA) - i, nil
+}
+
+func (m *BotInlineSwitchPM) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BotInlineSwitchPM) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BotInlineSwitchPM) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	i -= len(m.StartParam)
+	copy(dAtA[i:], m.StartParam)
+	i = encodeVarintBotApi(dAtA, i, uint64(len(m.StartParam)))
+	i--
+	dAtA[i] = 0x12
+	i -= len(m.Text)
+	copy(dAtA[i:], m.Text)
+	i = encodeVarintBotApi(dAtA, i, uint64(len(m.Text)))
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *BotInlineResult) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BotInlineResult) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BotInlineResult) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Doc != nil {
+		{
+			size, err := m.Doc.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintBotApi(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x32
+	}
+	i -= len(m.Url)
+	copy(dAtA[i:], m.Url)
+	i = encodeVarintBotApi(dAtA, i, uint64(len(m.Url)))
+	i--
+	dAtA[i] = 0x2a
+	i -= len(m.Description)
+	copy(dAtA[i:], m.Description)
+	i = encodeVarintBotApi(dAtA, i, uint64(len(m.Description)))
+	i--
+	dAtA[i] = 0x22
+	i -= len(m.Title)
+	copy(dAtA[i:], m.Title)
+	i = encodeVarintBotApi(dAtA, i, uint64(len(m.Title)))
+	i--
+	dAtA[i] = 0x1a
+	i -= len(m.Type)
+	copy(dAtA[i:], m.Type)
+	i = encodeVarintBotApi(dAtA, i, uint64(len(m.Type)))
+	i--
+	dAtA[i] = 0x12
+	i -= len(m.ID)
+	copy(dAtA[i:], m.ID)
+	i = encodeVarintBotApi(dAtA, i, uint64(len(m.ID)))
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -2525,6 +3343,24 @@ func (m *BotRevokeToken) Size() (n int) {
 	return n
 }
 
+func (m *BotDeleteMessage) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Peer != nil {
+		l = m.Peer.Size()
+		n += 1 + l + sovBotApi(uint64(l))
+	}
+	if len(m.MessageIDs) > 0 {
+		for _, e := range m.MessageIDs {
+			n += 1 + sovBotApi(uint64(e))
+		}
+	}
+	return n
+}
+
 func (m *BotSetCallbackAnswer) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2558,20 +3394,116 @@ func (m *BotGetCallbackAnswer) Size() (n int) {
 	return n
 }
 
-func (m *BotDeleteMessage) Size() (n int) {
+func (m *BotGetInlineResults) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
+	if m.Bot != nil {
+		l = m.Bot.Size()
+		n += 1 + l + sovBotApi(uint64(l))
+	}
 	if m.Peer != nil {
 		l = m.Peer.Size()
 		n += 1 + l + sovBotApi(uint64(l))
 	}
-	if len(m.MessageIDs) > 0 {
-		for _, e := range m.MessageIDs {
-			n += 1 + sovBotApi(uint64(e))
+	l = len(m.Query)
+	n += 1 + l + sovBotApi(uint64(l))
+	l = len(m.Offset)
+	n += 1 + l + sovBotApi(uint64(l))
+	return n
+}
+
+func (m *BotSetInlineResults) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 2
+	n += 2
+	n += 1 + sovBotApi(uint64(m.CacheTime))
+	l = len(m.NextOffset)
+	n += 1 + l + sovBotApi(uint64(l))
+	return n
+}
+
+func (m *BotSendInlineResults) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovBotApi(uint64(m.RandomID))
+	n += 1 + sovBotApi(uint64(m.QueryID))
+	l = len(m.ResultID)
+	n += 1 + l + sovBotApi(uint64(l))
+	n += 2
+	if m.Peer != nil {
+		l = m.Peer.Size()
+		n += 1 + l + sovBotApi(uint64(l))
+	}
+	n += 1 + sovBotApi(uint64(m.ReplyTo))
+	n += 2
+	return n
+}
+
+func (m *BotResults) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 2
+	n += 1 + sovBotApi(uint64(m.QueryID))
+	l = len(m.NextOffset)
+	n += 1 + l + sovBotApi(uint64(l))
+	if m.SwitchPM != nil {
+		l = m.SwitchPM.Size()
+		n += 1 + l + sovBotApi(uint64(l))
+	}
+	if len(m.Results) > 0 {
+		for _, e := range m.Results {
+			l = e.Size()
+			n += 1 + l + sovBotApi(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *BotInlineSwitchPM) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Text)
+	n += 1 + l + sovBotApi(uint64(l))
+	l = len(m.StartParam)
+	n += 1 + l + sovBotApi(uint64(l))
+	return n
+}
+
+func (m *BotInlineResult) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ID)
+	n += 1 + l + sovBotApi(uint64(l))
+	l = len(m.Type)
+	n += 1 + l + sovBotApi(uint64(l))
+	l = len(m.Title)
+	n += 1 + l + sovBotApi(uint64(l))
+	l = len(m.Description)
+	n += 1 + l + sovBotApi(uint64(l))
+	l = len(m.Url)
+	n += 1 + l + sovBotApi(uint64(l))
+	if m.Doc != nil {
+		l = m.Doc.Size()
+		n += 1 + l + sovBotApi(uint64(l))
 	}
 	return n
 }
@@ -4442,6 +5374,176 @@ func (m *BotRevokeToken) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *BotDeleteMessage) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBotApi
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BotDeleteMessage: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BotDeleteMessage: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Peer", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Peer == nil {
+				m.Peer = &InputPeer{}
+			}
+			if err := m.Peer.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType == 0 {
+				var v int64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowBotApi
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.MessageIDs = append(m.MessageIDs, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowBotApi
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthBotApi
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthBotApi
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.MessageIDs) == 0 {
+					m.MessageIDs = make([]int64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v int64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowBotApi
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= int64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.MessageIDs = append(m.MessageIDs, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field MessageIDs", wireType)
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBotApi(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *BotSetCallbackAnswer) Unmarshal(dAtA []byte) error {
 	var hasFields [1]uint64
 	l := len(dAtA)
@@ -4757,7 +5859,7 @@ func (m *BotGetCallbackAnswer) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *BotDeleteMessage) Unmarshal(dAtA []byte) error {
+func (m *BotGetInlineResults) Unmarshal(dAtA []byte) error {
 	var hasFields [1]uint64
 	l := len(dAtA)
 	iNdEx := 0
@@ -4781,13 +5883,50 @@ func (m *BotDeleteMessage) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: BotDeleteMessage: wiretype end group for non-group")
+			return fmt.Errorf("proto: BotGetInlineResults: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BotDeleteMessage: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: BotGetInlineResults: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Bot", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Bot == nil {
+				m.Bot = &InputUser{}
+			}
+			if err := m.Bot.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Peer", wireType)
 			}
@@ -4823,83 +5962,73 @@ func (m *BotDeleteMessage) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-			hasFields[0] |= uint64(0x00000001)
-		case 2:
-			if wireType == 0 {
-				var v int64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowBotApi
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= int64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
+			hasFields[0] |= uint64(0x00000002)
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Query", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
 				}
-				m.MessageIDs = append(m.MessageIDs, v)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowBotApi
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthBotApi
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex < 0 {
-					return ErrInvalidLengthBotApi
-				}
-				if postIndex > l {
+				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				var elementCount int
-				var count int
-				for _, integer := range dAtA[iNdEx:postIndex] {
-					if integer < 128 {
-						count++
-					}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
 				}
-				elementCount = count
-				if elementCount != 0 && len(m.MessageIDs) == 0 {
-					m.MessageIDs = make([]int64, 0, elementCount)
-				}
-				for iNdEx < postIndex {
-					var v int64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowBotApi
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						v |= int64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					m.MessageIDs = append(m.MessageIDs, v)
-				}
-			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field MessageIDs", wireType)
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Query = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000004)
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Offset", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Offset = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000008)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipBotApi(dAtA[iNdEx:])
@@ -4919,7 +6048,1003 @@ func (m *BotDeleteMessage) Unmarshal(dAtA []byte) error {
 		}
 	}
 	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Bot")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
+	}
+	if hasFields[0]&uint64(0x00000004) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Query")
+	}
+	if hasFields[0]&uint64(0x00000008) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Offset")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BotSetInlineResults) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBotApi
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BotSetInlineResults: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BotSetInlineResults: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Gallery", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Gallery = bool(v != 0)
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Private", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Private = bool(v != 0)
+			hasFields[0] |= uint64(0x00000002)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CacheTime", wireType)
+			}
+			m.CacheTime = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CacheTime |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000004)
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NextOffset", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NextOffset = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBotApi(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Gallery")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Private")
+	}
+	if hasFields[0]&uint64(0x00000004) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("CacheTime")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BotSendInlineResults) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBotApi
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BotSendInlineResults: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BotSendInlineResults: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RandomID", wireType)
+			}
+			m.RandomID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RandomID |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QueryID", wireType)
+			}
+			m.QueryID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.QueryID |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000002)
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ResultID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ResultID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000004)
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClearDraft", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.ClearDraft = bool(v != 0)
+			hasFields[0] |= uint64(0x00000008)
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Peer", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Peer == nil {
+				m.Peer = &InputPeer{}
+			}
+			if err := m.Peer.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000010)
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReplyTo", wireType)
+			}
+			m.ReplyTo = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ReplyTo |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000020)
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Silent", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Silent = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBotApi(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("RandomID")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("QueryID")
+	}
+	if hasFields[0]&uint64(0x00000004) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("ResultID")
+	}
+	if hasFields[0]&uint64(0x00000008) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("ClearDraft")
+	}
+	if hasFields[0]&uint64(0x00000010) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
+	}
+	if hasFields[0]&uint64(0x00000020) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("ReplyTo")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BotResults) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBotApi
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BotResults: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BotResults: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Gallery", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Gallery = bool(v != 0)
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QueryID", wireType)
+			}
+			m.QueryID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.QueryID |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000002)
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NextOffset", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NextOffset = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SwitchPM", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.SwitchPM == nil {
+				m.SwitchPM = &BotInlineSwitchPM{}
+			}
+			if err := m.SwitchPM.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Results", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Results = append(m.Results, &BotInlineResult{})
+			if err := m.Results[len(m.Results)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBotApi(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Gallery")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("QueryID")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BotInlineSwitchPM) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBotApi
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BotInlineSwitchPM: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BotInlineSwitchPM: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Text", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Text = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartParam", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.StartParam = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000002)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBotApi(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Text")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("StartParam")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BotInlineResult) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBotApi
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BotInlineResult: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BotInlineResult: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000002)
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Url", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Url = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Doc", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBotApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Doc == nil {
+				m.Doc = &MediaDocument{}
+			}
+			if err := m.Doc.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBotApi(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthBotApi
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("ID")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Type")
 	}
 
 	if iNdEx > l {

@@ -7,6 +7,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_queue"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"go.uber.org/zap"
@@ -114,17 +115,33 @@ func NewSyncController(config Config) *Controller {
 // Checks if we have not received any updates since last watch tries to re-sync with server.
 func (ctrl *Controller) watchDog() {
 	syncTime := 3 * time.Minute
+	t := time.NewTimer(syncTime)
 	for {
+		if !t.Stop() {
+			<-t.C
+		}
+		t.Reset(syncTime)
 		select {
-		case <-time.After(syncTime):
+		case <-t.C:
 			// Wait for network
 			ctrl.networkCtrl.WaitForNetwork()
 
-			// Check if we were not syncing in the last 60 seconds
-			if time.Now().Sub(ctrl.lastUpdateReceived) < syncTime {
-				break
+			now := time.Now()
+			// Check if we were not syncing in the last 3 minutes
+			if now.Sub(ctrl.lastUpdateReceived) > syncTime {
+				ctrl.Sync()
 			}
-			ctrl.Sync()
+
+			// TODO:: complete this
+			ts, _ := mon.GetUploadUsageTime()
+			if ts == 0 {
+				ts = time.Now().Unix()
+				_ = mon.SaveUploadUsageTime(ts)
+			}
+			if time.Now().Sub(time.Unix(ts, 0)) > 24 * time.Hour {
+				mon.ResetUsage()
+			}
+
 		case <-ctrl.stopChannel:
 			logs.Info("SyncCtrl's watchDog Stopped")
 			return
@@ -204,7 +221,6 @@ func forceUpdateUI(ctrl *Controller, dialogs, contacts bool) {
 	updateEnvelope.Update = bytes
 	updateEnvelope.UpdateID = 0
 	updateEnvelope.Timestamp = time.Now().Unix()
-
 
 	// call external handler
 	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateEnvelope, updateEnvelope)
@@ -485,22 +501,23 @@ func (ctrl *Controller) ContactImportFromServer() {
 func (ctrl *Controller) DeletePendingMessage(pm *msg.ClientPendingMessage) {
 	// It means we have received the NewMessage
 	update := &msg.UpdateMessagesDeleted{
-		Peer: &msg.Peer{ID: pm.PeerID, Type: pm.PeerType},
+		Peer:       &msg.Peer{ID: pm.PeerID, Type: pm.PeerType},
 		MessageIDs: []int64{pm.ID},
 	}
 	bytes, _ := update.Marshal()
 
 	updateEnvelope := &msg.UpdateEnvelope{
 		Constructor: msg.C_UpdateMessagesDeleted,
-		Update: bytes,
-		UpdateID: 0,
-		Timestamp: time.Now().Unix(),
+		Update:      bytes,
+		UpdateID:    0,
+		Timestamp:   time.Now().Unix(),
 	}
 
 	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateEnvelope, updateEnvelope)
 
 	_ = repo.PendingMessages.Delete(pm.ID)
 }
+
 // GetSyncStatus
 func (ctrl *Controller) GetSyncStatus() domain.SyncStatus {
 	return ctrl.syncStatus

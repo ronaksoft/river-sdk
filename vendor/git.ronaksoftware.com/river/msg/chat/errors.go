@@ -24,6 +24,7 @@ const (
 	ErrCodeOutOfRange       = "E10"
 	ErrCodePartiallyApplied = "E11"
 	ErrCodeExpired          = "E12"
+	ErrCodeRateLimit        = "E13"
 )
 
 // Error Items

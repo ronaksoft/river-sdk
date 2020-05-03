@@ -4,6 +4,7 @@
 package msg
 
 import (
+	encoding_binary "encoding/binary"
 	fmt "fmt"
 	github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 	proto "github.com/gogo/protobuf/proto"
@@ -22,6 +23,56 @@ var _ = math.Inf
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
+
+// TopPeerCategory
+type TopPeerCategory int32
+
+const (
+	TopPeerCategory_Users       TopPeerCategory = 0
+	TopPeerCategory_Groups      TopPeerCategory = 1
+	TopPeerCategory_Forwards    TopPeerCategory = 2
+	TopPeerCategory_BotsMessage TopPeerCategory = 3
+	TopPeerCategory_BotsInline  TopPeerCategory = 4
+)
+
+var TopPeerCategory_name = map[int32]string{
+	0: "Users",
+	1: "Groups",
+	2: "Forwards",
+	3: "BotsMessage",
+	4: "BotsInline",
+}
+
+var TopPeerCategory_value = map[string]int32{
+	"Users":       0,
+	"Groups":      1,
+	"Forwards":    2,
+	"BotsMessage": 3,
+	"BotsInline":  4,
+}
+
+func (x TopPeerCategory) Enum() *TopPeerCategory {
+	p := new(TopPeerCategory)
+	*p = x
+	return p
+}
+
+func (x TopPeerCategory) String() string {
+	return proto.EnumName(TopPeerCategory_name, int32(x))
+}
+
+func (x *TopPeerCategory) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(TopPeerCategory_value, data, "TopPeerCategory")
+	if err != nil {
+		return err
+	}
+	*x = TopPeerCategory(value)
+	return nil
+}
+
+func (TopPeerCategory) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_133508c6c9c8f6f5, []int{0}
+}
 
 // ContactsImport
 // @Function
@@ -479,6 +530,347 @@ func (m *ContactsSearch) GetQ() string {
 	return ""
 }
 
+// ContactsGetTopPeers
+// @Function
+// @Returns: ContactsTopPeers
+type ContactsGetTopPeers struct {
+	Hash        int32 `protobuf:"varint,1,opt,name=Hash" json:"Hash"`
+	Limit       int32 `protobuf:"varint,2,req,name=Limit" json:"Limit"`
+	Offset      int32 `protobuf:"varint,3,req,name=Offset" json:"Offset"`
+	Users       bool  `protobuf:"varint,4,opt,name=Users" json:"Users"`
+	BotsMessage bool  `protobuf:"varint,5,opt,name=BotsMessage" json:"BotsMessage"`
+	BotsInline  bool  `protobuf:"varint,6,opt,name=BotsInline" json:"BotsInline"`
+	Groups      bool  `protobuf:"varint,7,opt,name=Groups" json:"Groups"`
+	Forwards    bool  `protobuf:"varint,8,opt,name=Forwards" json:"Forwards"`
+}
+
+func (m *ContactsGetTopPeers) Reset()         { *m = ContactsGetTopPeers{} }
+func (m *ContactsGetTopPeers) String() string { return proto.CompactTextString(m) }
+func (*ContactsGetTopPeers) ProtoMessage()    {}
+func (*ContactsGetTopPeers) Descriptor() ([]byte, []int) {
+	return fileDescriptor_133508c6c9c8f6f5, []int{9}
+}
+func (m *ContactsGetTopPeers) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ContactsGetTopPeers) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ContactsGetTopPeers.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ContactsGetTopPeers) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ContactsGetTopPeers.Merge(m, src)
+}
+func (m *ContactsGetTopPeers) XXX_Size() int {
+	return m.Size()
+}
+func (m *ContactsGetTopPeers) XXX_DiscardUnknown() {
+	xxx_messageInfo_ContactsGetTopPeers.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ContactsGetTopPeers proto.InternalMessageInfo
+
+func (m *ContactsGetTopPeers) GetHash() int32 {
+	if m != nil {
+		return m.Hash
+	}
+	return 0
+}
+
+func (m *ContactsGetTopPeers) GetLimit() int32 {
+	if m != nil {
+		return m.Limit
+	}
+	return 0
+}
+
+func (m *ContactsGetTopPeers) GetOffset() int32 {
+	if m != nil {
+		return m.Offset
+	}
+	return 0
+}
+
+func (m *ContactsGetTopPeers) GetUsers() bool {
+	if m != nil {
+		return m.Users
+	}
+	return false
+}
+
+func (m *ContactsGetTopPeers) GetBotsMessage() bool {
+	if m != nil {
+		return m.BotsMessage
+	}
+	return false
+}
+
+func (m *ContactsGetTopPeers) GetBotsInline() bool {
+	if m != nil {
+		return m.BotsInline
+	}
+	return false
+}
+
+func (m *ContactsGetTopPeers) GetGroups() bool {
+	if m != nil {
+		return m.Groups
+	}
+	return false
+}
+
+func (m *ContactsGetTopPeers) GetForwards() bool {
+	if m != nil {
+		return m.Forwards
+	}
+	return false
+}
+
+// ContactsResetTopPeer
+// @Function
+// @Returns: Bool
+type ContactsResetTopPeer struct {
+	Category TopPeerCategory `protobuf:"varint,1,req,name=Category,enum=msg.TopPeerCategory" json:"Category"`
+	Peer     *InputPeer      `protobuf:"bytes,2,req,name=Peer" json:"Peer,omitempty"`
+}
+
+func (m *ContactsResetTopPeer) Reset()         { *m = ContactsResetTopPeer{} }
+func (m *ContactsResetTopPeer) String() string { return proto.CompactTextString(m) }
+func (*ContactsResetTopPeer) ProtoMessage()    {}
+func (*ContactsResetTopPeer) Descriptor() ([]byte, []int) {
+	return fileDescriptor_133508c6c9c8f6f5, []int{10}
+}
+func (m *ContactsResetTopPeer) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ContactsResetTopPeer) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ContactsResetTopPeer.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ContactsResetTopPeer) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ContactsResetTopPeer.Merge(m, src)
+}
+func (m *ContactsResetTopPeer) XXX_Size() int {
+	return m.Size()
+}
+func (m *ContactsResetTopPeer) XXX_DiscardUnknown() {
+	xxx_messageInfo_ContactsResetTopPeer.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ContactsResetTopPeer proto.InternalMessageInfo
+
+func (m *ContactsResetTopPeer) GetCategory() TopPeerCategory {
+	if m != nil {
+		return m.Category
+	}
+	return TopPeerCategory_Users
+}
+
+func (m *ContactsResetTopPeer) GetPeer() *InputPeer {
+	if m != nil {
+		return m.Peer
+	}
+	return nil
+}
+
+// ContactsTopPeer
+type ContactsTopPeers struct {
+	Categories []*TopPeerCategoryPeers `protobuf:"bytes,1,rep,name=Categories" json:"Categories,omitempty"`
+	Users      []*User                 `protobuf:"bytes,2,rep,name=Users" json:"Users,omitempty"`
+	Groups     []*Group                `protobuf:"bytes,3,rep,name=Groups" json:"Groups,omitempty"`
+}
+
+func (m *ContactsTopPeers) Reset()         { *m = ContactsTopPeers{} }
+func (m *ContactsTopPeers) String() string { return proto.CompactTextString(m) }
+func (*ContactsTopPeers) ProtoMessage()    {}
+func (*ContactsTopPeers) Descriptor() ([]byte, []int) {
+	return fileDescriptor_133508c6c9c8f6f5, []int{11}
+}
+func (m *ContactsTopPeers) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ContactsTopPeers) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ContactsTopPeers.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ContactsTopPeers) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ContactsTopPeers.Merge(m, src)
+}
+func (m *ContactsTopPeers) XXX_Size() int {
+	return m.Size()
+}
+func (m *ContactsTopPeers) XXX_DiscardUnknown() {
+	xxx_messageInfo_ContactsTopPeers.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ContactsTopPeers proto.InternalMessageInfo
+
+func (m *ContactsTopPeers) GetCategories() []*TopPeerCategoryPeers {
+	if m != nil {
+		return m.Categories
+	}
+	return nil
+}
+
+func (m *ContactsTopPeers) GetUsers() []*User {
+	if m != nil {
+		return m.Users
+	}
+	return nil
+}
+
+func (m *ContactsTopPeers) GetGroups() []*Group {
+	if m != nil {
+		return m.Groups
+	}
+	return nil
+}
+
+// TopPeerCategory
+type TopPeerCategoryPeers struct {
+	Category TopPeerCategory `protobuf:"varint,1,req,name=Category,enum=msg.TopPeerCategory" json:"Category"`
+	Count    int32           `protobuf:"varint,2,req,name=Count" json:"Count"`
+	Peers    []*TopPeer      `protobuf:"bytes,3,rep,name=Peers" json:"Peers,omitempty"`
+}
+
+func (m *TopPeerCategoryPeers) Reset()         { *m = TopPeerCategoryPeers{} }
+func (m *TopPeerCategoryPeers) String() string { return proto.CompactTextString(m) }
+func (*TopPeerCategoryPeers) ProtoMessage()    {}
+func (*TopPeerCategoryPeers) Descriptor() ([]byte, []int) {
+	return fileDescriptor_133508c6c9c8f6f5, []int{12}
+}
+func (m *TopPeerCategoryPeers) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TopPeerCategoryPeers) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TopPeerCategoryPeers.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TopPeerCategoryPeers) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TopPeerCategoryPeers.Merge(m, src)
+}
+func (m *TopPeerCategoryPeers) XXX_Size() int {
+	return m.Size()
+}
+func (m *TopPeerCategoryPeers) XXX_DiscardUnknown() {
+	xxx_messageInfo_TopPeerCategoryPeers.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TopPeerCategoryPeers proto.InternalMessageInfo
+
+func (m *TopPeerCategoryPeers) GetCategory() TopPeerCategory {
+	if m != nil {
+		return m.Category
+	}
+	return TopPeerCategory_Users
+}
+
+func (m *TopPeerCategoryPeers) GetCount() int32 {
+	if m != nil {
+		return m.Count
+	}
+	return 0
+}
+
+func (m *TopPeerCategoryPeers) GetPeers() []*TopPeer {
+	if m != nil {
+		return m.Peers
+	}
+	return nil
+}
+
+// TopPeer
+type TopPeer struct {
+	Peer       *Peer   `protobuf:"bytes,1,req,name=Peer" json:"Peer,omitempty"`
+	Rate       float32 `protobuf:"fixed32,2,req,name=Rate" json:"Rate"`
+	LastUpdate int64   `protobuf:"varint,3,opt,name=LastUpdate" json:"LastUpdate"`
+}
+
+func (m *TopPeer) Reset()         { *m = TopPeer{} }
+func (m *TopPeer) String() string { return proto.CompactTextString(m) }
+func (*TopPeer) ProtoMessage()    {}
+func (*TopPeer) Descriptor() ([]byte, []int) {
+	return fileDescriptor_133508c6c9c8f6f5, []int{13}
+}
+func (m *TopPeer) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TopPeer) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TopPeer.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TopPeer) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TopPeer.Merge(m, src)
+}
+func (m *TopPeer) XXX_Size() int {
+	return m.Size()
+}
+func (m *TopPeer) XXX_DiscardUnknown() {
+	xxx_messageInfo_TopPeer.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TopPeer proto.InternalMessageInfo
+
+func (m *TopPeer) GetPeer() *Peer {
+	if m != nil {
+		return m.Peer
+	}
+	return nil
+}
+
+func (m *TopPeer) GetRate() float32 {
+	if m != nil {
+		return m.Rate
+	}
+	return 0
+}
+
+func (m *TopPeer) GetLastUpdate() int64 {
+	if m != nil {
+		return m.LastUpdate
+	}
+	return 0
+}
+
 // BlockedContactsMany
 type BlockedContactsMany struct {
 	Contacts []*BlockedContact `protobuf:"bytes,1,rep,name=Contacts" json:"Contacts,omitempty"`
@@ -490,7 +882,7 @@ func (m *BlockedContactsMany) Reset()         { *m = BlockedContactsMany{} }
 func (m *BlockedContactsMany) String() string { return proto.CompactTextString(m) }
 func (*BlockedContactsMany) ProtoMessage()    {}
 func (*BlockedContactsMany) Descriptor() ([]byte, []int) {
-	return fileDescriptor_133508c6c9c8f6f5, []int{9}
+	return fileDescriptor_133508c6c9c8f6f5, []int{14}
 }
 func (m *BlockedContactsMany) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -550,7 +942,7 @@ func (m *BlockedContact) Reset()         { *m = BlockedContact{} }
 func (m *BlockedContact) String() string { return proto.CompactTextString(m) }
 func (*BlockedContact) ProtoMessage()    {}
 func (*BlockedContact) Descriptor() ([]byte, []int) {
-	return fileDescriptor_133508c6c9c8f6f5, []int{10}
+	return fileDescriptor_133508c6c9c8f6f5, []int{15}
 }
 func (m *BlockedContact) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -603,7 +995,7 @@ func (m *ContactsImported) Reset()         { *m = ContactsImported{} }
 func (m *ContactsImported) String() string { return proto.CompactTextString(m) }
 func (*ContactsImported) ProtoMessage()    {}
 func (*ContactsImported) Descriptor() ([]byte, []int) {
-	return fileDescriptor_133508c6c9c8f6f5, []int{11}
+	return fileDescriptor_133508c6c9c8f6f5, []int{16}
 }
 func (m *ContactsImported) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -658,7 +1050,7 @@ func (m *ContactsMany) Reset()         { *m = ContactsMany{} }
 func (m *ContactsMany) String() string { return proto.CompactTextString(m) }
 func (*ContactsMany) ProtoMessage()    {}
 func (*ContactsMany) Descriptor() ([]byte, []int) {
-	return fileDescriptor_133508c6c9c8f6f5, []int{12}
+	return fileDescriptor_133508c6c9c8f6f5, []int{17}
 }
 func (m *ContactsMany) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -716,6 +1108,7 @@ func (m *ContactsMany) GetUsers() []*User {
 }
 
 func init() {
+	proto.RegisterEnum("msg.TopPeerCategory", TopPeerCategory_name, TopPeerCategory_value)
 	proto.RegisterType((*ContactsImport)(nil), "msg.ContactsImport")
 	proto.RegisterType((*ContactsAdd)(nil), "msg.ContactsAdd")
 	proto.RegisterType((*ContactsGet)(nil), "msg.ContactsGet")
@@ -725,6 +1118,11 @@ func init() {
 	proto.RegisterType((*ContactsUnblock)(nil), "msg.ContactsUnblock")
 	proto.RegisterType((*ContactsGetBlocked)(nil), "msg.ContactsGetBlocked")
 	proto.RegisterType((*ContactsSearch)(nil), "msg.ContactsSearch")
+	proto.RegisterType((*ContactsGetTopPeers)(nil), "msg.ContactsGetTopPeers")
+	proto.RegisterType((*ContactsResetTopPeer)(nil), "msg.ContactsResetTopPeer")
+	proto.RegisterType((*ContactsTopPeers)(nil), "msg.ContactsTopPeers")
+	proto.RegisterType((*TopPeerCategoryPeers)(nil), "msg.TopPeerCategoryPeers")
+	proto.RegisterType((*TopPeer)(nil), "msg.TopPeer")
 	proto.RegisterType((*BlockedContactsMany)(nil), "msg.BlockedContactsMany")
 	proto.RegisterType((*BlockedContact)(nil), "msg.BlockedContact")
 	proto.RegisterType((*ContactsImported)(nil), "msg.ContactsImported")
@@ -734,40 +1132,58 @@ func init() {
 func init() { proto.RegisterFile("chat.api.contacts.proto", fileDescriptor_133508c6c9c8f6f5) }
 
 var fileDescriptor_133508c6c9c8f6f5 = []byte{
-	// 526 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x93, 0xcd, 0x6e, 0xd3, 0x40,
-	0x14, 0x85, 0x33, 0xb6, 0x43, 0x93, 0x1b, 0x1a, 0xda, 0x89, 0x10, 0x56, 0x55, 0xb9, 0xd6, 0x88,
-	0x45, 0x36, 0x18, 0x48, 0xe1, 0x01, 0x9a, 0x46, 0xd0, 0x48, 0x6d, 0xa1, 0x86, 0xae, 0xd1, 0x60,
-	0x4f, 0x1a, 0x0b, 0xff, 0xc9, 0x1e, 0x16, 0x5d, 0xf3, 0x02, 0x48, 0xbc, 0x0b, 0xcf, 0xd0, 0x65,
-	0x97, 0xac, 0x10, 0x4a, 0x5e, 0x04, 0x79, 0xc6, 0xe3, 0x1f, 0x40, 0x10, 0xb6, 0xdf, 0x3d, 0x73,
-	0xef, 0x39, 0x77, 0x66, 0xe0, 0x81, 0xb7, 0xa4, 0xdc, 0xa1, 0x69, 0xe0, 0x78, 0x49, 0xcc, 0xa9,
-	0xc7, 0x73, 0x27, 0xcd, 0x12, 0x9e, 0x60, 0x3d, 0xca, 0xaf, 0xf6, 0xee, 0x8b, 0xaa, 0x97, 0x64,
-	0xcc, 0xe1, 0xd7, 0x29, 0x2b, 0x6b, 0xe4, 0x1d, 0x0c, 0x8f, 0x4b, 0xf5, 0x3c, 0x4a, 0x93, 0x8c,
-	0xe3, 0x47, 0xd0, 0x53, 0xc4, 0x44, 0xb6, 0x3e, 0x1e, 0x4c, 0x76, 0x9d, 0x28, 0xbf, 0x72, 0x5e,
-	0x2f, 0x93, 0x98, 0x95, 0x15, 0xb7, 0x92, 0x60, 0x0b, 0xb6, 0x5c, 0x96, 0x86, 0xd4, 0x63, 0xa6,
-	0x66, 0x6b, 0xe3, 0xde, 0xd4, 0xb8, 0xf9, 0x7e, 0xd0, 0x71, 0x15, 0x24, 0x5f, 0x10, 0x0c, 0x94,
-	0xf8, 0xc8, 0xf7, 0x31, 0x01, 0xe3, 0x32, 0x67, 0x99, 0x89, 0x6c, 0x6d, 0x3c, 0x98, 0x0c, 0x45,
-	0xeb, 0x79, 0x9c, 0x7e, 0xe4, 0x05, 0x75, 0x45, 0x0d, 0x13, 0xe8, 0xbf, 0x08, 0xb2, 0x9c, 0x9f,
-	0xd3, 0x48, 0x76, 0xed, 0x97, 0x5d, 0x6b, 0x8c, 0x6d, 0xe8, 0x9d, 0xd2, 0x52, 0xa2, 0xdb, 0xa8,
-	0x92, 0x54, 0x14, 0xef, 0x41, 0x57, 0x78, 0x36, 0x8d, 0x46, 0x59, 0x22, 0xf2, 0xb4, 0x36, 0xf5,
-	0x92, 0xf1, 0x62, 0xe0, 0x71, 0xe6, 0x1d, 0x4e, 0x4e, 0x68, 0xbe, 0x14, 0x03, 0xb7, 0xd5, 0xc0,
-	0x0a, 0x13, 0xa7, 0xde, 0xd4, 0x8c, 0x85, 0x8c, 0x33, 0xbc, 0x0f, 0x5b, 0x85, 0xdd, 0xf9, 0x4c,
-	0x2e, 0x4a, 0x9f, 0x6a, 0x4f, 0x90, 0xab, 0x10, 0x19, 0xc1, 0x6e, 0x5b, 0x7f, 0x14, 0x86, 0xe4,
-	0x10, 0xb6, 0x15, 0x9c, 0x86, 0x89, 0xf7, 0x61, 0x93, 0x75, 0x90, 0xe7, 0x70, 0x4f, 0x1d, 0xba,
-	0x8c, 0xdf, 0xb7, 0x8e, 0x69, 0x7f, 0x39, 0x76, 0x0e, 0xb8, 0x91, 0x51, 0x8c, 0x63, 0x3e, 0xde,
-	0x87, 0x3b, 0xaf, 0x16, 0x8b, 0x9c, 0x71, 0x31, 0xb2, 0x5b, 0xe6, 0x2c, 0x59, 0xb1, 0xb3, 0xd3,
-	0x20, 0x0a, 0xb8, 0x68, 0xac, 0x8a, 0x12, 0x91, 0x87, 0xf5, 0x02, 0xde, 0x30, 0x9a, 0x79, 0x4b,
-	0x8c, 0x01, 0x5d, 0x88, 0x36, 0x6a, 0xbb, 0xe8, 0x82, 0x7c, 0x42, 0x30, 0x2a, 0x67, 0x29, 0xf5,
-	0x19, 0x8d, 0xaf, 0xf1, 0xe3, 0xdf, 0x9e, 0xd5, 0x48, 0xb8, 0x6e, 0x6b, 0x1b, 0x0f, 0xeb, 0x00,
-	0xba, 0x45, 0x8c, 0xdc, 0xd4, 0x84, 0xba, 0x2f, 0xd4, 0x22, 0x9e, 0xe4, 0x85, 0xd7, 0xb7, 0x09,
-	0xa7, 0xa1, 0xb8, 0xfe, 0xca, 0xab, 0x40, 0xe4, 0x04, 0x86, 0xed, 0xc6, 0x45, 0x6e, 0x79, 0x33,
-	0xc2, 0xb0, 0xae, 0x72, 0x4b, 0x86, 0x4d, 0x30, 0x66, 0x94, 0xcb, 0xc7, 0xa6, 0x6a, 0x82, 0x90,
-	0x00, 0x76, 0xda, 0x1f, 0x84, 0xf9, 0xf8, 0x19, 0xdc, 0x2d, 0x99, 0x74, 0x28, 0xf3, 0xec, 0x08,
-	0x87, 0x8d, 0x82, 0xdb, 0x52, 0xfd, 0x33, 0x10, 0xf9, 0x8a, 0xaa, 0xbe, 0x72, 0x67, 0xff, 0xf9,
-	0x15, 0x7f, 0xb5, 0xa5, 0x6d, 0x64, 0xcb, 0x86, 0xde, 0x59, 0xe2, 0x07, 0x8b, 0x80, 0xf9, 0xa6,
-	0xde, 0xf8, 0xc1, 0x15, 0xad, 0x8d, 0x1b, 0x7f, 0x36, 0x3e, 0x35, 0x6f, 0x56, 0x16, 0xba, 0x5d,
-	0x59, 0xe8, 0xc7, 0xca, 0x42, 0x9f, 0xd7, 0x56, 0xe7, 0x76, 0x6d, 0x75, 0xbe, 0xad, 0xad, 0xce,
-	0xcf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x6a, 0x4e, 0x93, 0x31, 0x94, 0x04, 0x00, 0x00,
+	// 809 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x55, 0xc1, 0x4e, 0xdb, 0x40,
+	0x10, 0xcd, 0xda, 0x09, 0x49, 0x26, 0x10, 0xc2, 0x86, 0xaa, 0x6e, 0x44, 0x43, 0xb4, 0x42, 0x15,
+	0xaa, 0xd4, 0xb4, 0x0d, 0x6d, 0xa5, 0x1e, 0x49, 0x10, 0x10, 0x09, 0x28, 0xb8, 0xa0, 0x1e, 0x2b,
+	0xd7, 0x5e, 0x12, 0xab, 0x89, 0x6d, 0xd9, 0x8b, 0x2a, 0xce, 0xbd, 0x57, 0x55, 0xf9, 0x97, 0x7e,
+	0x03, 0x47, 0x8e, 0x3d, 0x55, 0x15, 0xfc, 0x48, 0xb5, 0xeb, 0x5d, 0xdb, 0x81, 0x08, 0x68, 0x8f,
+	0x7e, 0x6f, 0x76, 0xe6, 0xcd, 0xdb, 0xd9, 0x31, 0x3c, 0xb4, 0x87, 0x16, 0x6b, 0x5b, 0x81, 0xdb,
+	0xb6, 0x7d, 0x8f, 0x59, 0x36, 0x8b, 0xda, 0x41, 0xe8, 0x33, 0x1f, 0xeb, 0xe3, 0x68, 0xd0, 0x78,
+	0x20, 0x58, 0xdb, 0x0f, 0x69, 0x9b, 0x9d, 0x06, 0x54, 0x72, 0xe4, 0x23, 0x54, 0x7b, 0x32, 0xba,
+	0x3f, 0x0e, 0xfc, 0x90, 0xe1, 0x67, 0x50, 0x52, 0x88, 0x81, 0x5a, 0xfa, 0x6a, 0xa5, 0xb3, 0xd0,
+	0x1e, 0x47, 0x83, 0xf6, 0xfe, 0xd0, 0xf7, 0xa8, 0x64, 0xcc, 0x24, 0x04, 0x37, 0xa1, 0x68, 0xd2,
+	0x60, 0x64, 0xd9, 0xd4, 0xd0, 0x5a, 0xda, 0x6a, 0xa9, 0x9b, 0x3f, 0xff, 0xbd, 0x9c, 0x33, 0x15,
+	0x48, 0xce, 0x10, 0x54, 0x54, 0xf0, 0xba, 0xe3, 0x60, 0x02, 0xf9, 0xa3, 0x88, 0x86, 0x06, 0x6a,
+	0x69, 0xab, 0x95, 0x4e, 0x55, 0xa4, 0xee, 0x7b, 0xc1, 0x09, 0xe3, 0xa8, 0x29, 0x38, 0x4c, 0xa0,
+	0xbc, 0xe9, 0x86, 0x11, 0xdb, 0xb3, 0xc6, 0x71, 0xd6, 0xb2, 0xcc, 0x9a, 0xc2, 0xb8, 0x05, 0xa5,
+	0x1d, 0x4b, 0x86, 0xe8, 0x2d, 0x94, 0x84, 0x24, 0x28, 0x6e, 0x40, 0x41, 0x68, 0x36, 0xf2, 0x19,
+	0x3a, 0x86, 0xc8, 0xcb, 0x54, 0xd4, 0x16, 0x65, 0xbc, 0x60, 0x2f, 0xb4, 0xd7, 0x3a, 0xdb, 0x56,
+	0x34, 0x14, 0x05, 0xe7, 0x54, 0xc1, 0x04, 0x26, 0xed, 0xd4, 0xa9, 0x0d, 0x3a, 0xa2, 0x8c, 0xe2,
+	0x25, 0x28, 0x72, 0xb9, 0xfd, 0x8d, 0xd8, 0x28, 0xbd, 0xab, 0xbd, 0x40, 0xa6, 0x82, 0x48, 0x1d,
+	0x16, 0x26, 0xe3, 0xd7, 0x47, 0x23, 0xb2, 0x06, 0x73, 0x0a, 0xec, 0x8e, 0x7c, 0xfb, 0xf3, 0x7d,
+	0xec, 0x20, 0xaf, 0x61, 0x5e, 0x1d, 0x3a, 0xf2, 0x3e, 0x4d, 0x1c, 0xd3, 0x6e, 0x39, 0xb6, 0x07,
+	0x38, 0xd3, 0xa3, 0x28, 0x47, 0x1d, 0xbc, 0x04, 0x33, 0xef, 0x8e, 0x8f, 0x23, 0xca, 0x44, 0xc9,
+	0x82, 0xec, 0x53, 0x62, 0xdc, 0xb3, 0x1d, 0x77, 0xec, 0x32, 0x91, 0x58, 0x91, 0x31, 0x44, 0x56,
+	0x52, 0x03, 0xde, 0x53, 0x2b, 0xb4, 0x87, 0x18, 0x03, 0x3a, 0x10, 0x69, 0x94, 0xbb, 0xe8, 0x80,
+	0x9c, 0x69, 0x50, 0xcf, 0x94, 0x3d, 0xf4, 0x83, 0x7d, 0x4a, 0xc3, 0x08, 0x1b, 0x90, 0x17, 0xee,
+	0xa2, 0x16, 0x4a, 0x12, 0x0b, 0xe4, 0xb6, 0x9a, 0x19, 0xb5, 0xfa, 0x74, 0xb5, 0xbc, 0xd3, 0x48,
+	0xdc, 0xb0, 0x9a, 0xbc, 0x18, 0xc2, 0x4f, 0xa0, 0xd2, 0xf5, 0x59, 0xb4, 0x4b, 0xa3, 0xc8, 0x1a,
+	0x50, 0xa3, 0x90, 0x89, 0xc8, 0x12, 0x78, 0x05, 0x80, 0x7f, 0xf6, 0xbd, 0x91, 0xeb, 0x51, 0x63,
+	0x26, 0x13, 0x96, 0xc1, 0xb9, 0x8e, 0xad, 0xd0, 0x3f, 0x09, 0x22, 0xa3, 0x98, 0x89, 0x90, 0x18,
+	0x9f, 0xc5, 0x4d, 0x3f, 0xfc, 0x62, 0x85, 0x4e, 0x64, 0x94, 0x32, 0x7c, 0x82, 0x92, 0x10, 0x16,
+	0x95, 0x29, 0x26, 0x8d, 0x12, 0x5b, 0xf0, 0x1b, 0x28, 0xf5, 0x2c, 0x46, 0x07, 0x7e, 0x78, 0x2a,
+	0x8c, 0xac, 0x76, 0x16, 0xc5, 0x5d, 0x4a, 0x5e, 0x71, 0x2a, 0x9f, 0xfa, 0xe6, 0xf7, 0xcf, 0xf9,
+	0x9b, 0xf7, 0xcf, 0x51, 0x53, 0x70, 0xe4, 0x07, 0x82, 0x9a, 0x2a, 0x9a, 0x5c, 0xc3, 0x5b, 0x00,
+	0x99, 0xc4, 0xa5, 0xea, 0x7d, 0x3f, 0x9a, 0x56, 0x52, 0x84, 0x9b, 0x99, 0x60, 0xbc, 0xac, 0xdc,
+	0xd6, 0xc4, 0xa9, 0xb2, 0x38, 0x25, 0xe6, 0x4d, 0x5a, 0x4e, 0x12, 0x93, 0x74, 0x11, 0x01, 0x22,
+	0x42, 0x40, 0xca, 0x2a, 0xf2, 0x0d, 0xc1, 0xe2, 0xb4, 0x4a, 0xff, 0xed, 0x44, 0x03, 0x0a, 0x3d,
+	0xff, 0xc4, 0xbb, 0x36, 0x3d, 0x02, 0xc2, 0x04, 0x0a, 0x22, 0xb9, 0xd4, 0x33, 0x9b, 0x4d, 0x68,
+	0xc6, 0x14, 0x19, 0x42, 0x51, 0x5d, 0xc6, 0x63, 0x69, 0x6a, 0xfc, 0x16, 0xe3, 0xfe, 0x52, 0x3f,
+	0xf9, 0x04, 0x9b, 0x16, 0x8b, 0x17, 0x92, 0xa6, 0x26, 0x98, 0x23, 0x7c, 0x86, 0xf8, 0xd6, 0x39,
+	0x0a, 0x1c, 0xce, 0xf3, 0x6d, 0xa4, 0xab, 0x19, 0x4a, 0x71, 0xf2, 0x15, 0x41, 0x5d, 0xbe, 0x42,
+	0x75, 0x2d, 0xbb, 0x96, 0x77, 0x8a, 0x9f, 0xdf, 0x58, 0xb8, 0x75, 0x51, 0x7a, 0x32, 0x36, 0xb3,
+	0x72, 0xef, 0xbc, 0x88, 0x06, 0x14, 0x0e, 0x7d, 0x66, 0x8d, 0x84, 0x94, 0xc4, 0x13, 0x01, 0x91,
+	0x6d, 0xa8, 0x4e, 0x26, 0xe6, 0xb3, 0x1d, 0xef, 0x2c, 0xd1, 0xb8, 0x52, 0x2e, 0x31, 0xde, 0xf5,
+	0x86, 0xea, 0x5a, 0x71, 0x02, 0x21, 0x6e, 0x3a, 0x5e, 0xf1, 0xaf, 0x83, 0x3a, 0xf8, 0x15, 0xcc,
+	0x4a, 0x2c, 0x56, 0x18, 0xf7, 0x53, 0x13, 0x0a, 0x33, 0x84, 0x39, 0x11, 0x75, 0x67, 0x43, 0xe4,
+	0x27, 0x4a, 0xf2, 0xc6, 0x9e, 0xfd, 0xe3, 0x4f, 0xea, 0xba, 0x2c, 0xed, 0x5e, 0xb2, 0x5a, 0x50,
+	0xda, 0xf5, 0x1d, 0xf7, 0xd8, 0xa5, 0x8e, 0x58, 0x3f, 0xc9, 0xb3, 0x56, 0x68, 0x2a, 0x3c, 0x3f,
+	0x5d, 0xf8, 0xd3, 0x0f, 0x30, 0x7f, 0x6d, 0x80, 0x71, 0x59, 0x9e, 0xa9, 0xe5, 0x30, 0xa8, 0x07,
+	0x53, 0x43, 0x78, 0x36, 0xdd, 0x21, 0x35, 0x0d, 0xcf, 0x4f, 0x6c, 0xaf, 0x9a, 0x8e, 0xab, 0xd9,
+	0x35, 0x55, 0xcb, 0x77, 0x8d, 0xf3, 0xcb, 0x26, 0xba, 0xb8, 0x6c, 0xa2, 0x3f, 0x97, 0x4d, 0xf4,
+	0xfd, 0xaa, 0x99, 0xbb, 0xb8, 0x6a, 0xe6, 0x7e, 0x5d, 0x35, 0x73, 0x7f, 0x03, 0x00, 0x00, 0xff,
+	0xff, 0xf1, 0x33, 0xd6, 0xb6, 0x07, 0x08, 0x00, 0x00,
 }
 
 func (m *ContactsImport) Marshal() (dAtA []byte, err error) {
@@ -1074,6 +1490,270 @@ func (m *ContactsSearch) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i = encodeVarintChatApiContacts(dAtA, i, uint64(len(m.Q)))
 	i--
 	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *ContactsGetTopPeers) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ContactsGetTopPeers) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ContactsGetTopPeers) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	i--
+	if m.Forwards {
+		dAtA[i] = 1
+	} else {
+		dAtA[i] = 0
+	}
+	i--
+	dAtA[i] = 0x40
+	i--
+	if m.Groups {
+		dAtA[i] = 1
+	} else {
+		dAtA[i] = 0
+	}
+	i--
+	dAtA[i] = 0x38
+	i--
+	if m.BotsInline {
+		dAtA[i] = 1
+	} else {
+		dAtA[i] = 0
+	}
+	i--
+	dAtA[i] = 0x30
+	i--
+	if m.BotsMessage {
+		dAtA[i] = 1
+	} else {
+		dAtA[i] = 0
+	}
+	i--
+	dAtA[i] = 0x28
+	i--
+	if m.Users {
+		dAtA[i] = 1
+	} else {
+		dAtA[i] = 0
+	}
+	i--
+	dAtA[i] = 0x20
+	i = encodeVarintChatApiContacts(dAtA, i, uint64(m.Offset))
+	i--
+	dAtA[i] = 0x18
+	i = encodeVarintChatApiContacts(dAtA, i, uint64(m.Limit))
+	i--
+	dAtA[i] = 0x10
+	i = encodeVarintChatApiContacts(dAtA, i, uint64(m.Hash))
+	i--
+	dAtA[i] = 0x8
+	return len(dAtA) - i, nil
+}
+
+func (m *ContactsResetTopPeer) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ContactsResetTopPeer) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ContactsResetTopPeer) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Peer == nil {
+		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
+	} else {
+		{
+			size, err := m.Peer.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintChatApiContacts(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	i = encodeVarintChatApiContacts(dAtA, i, uint64(m.Category))
+	i--
+	dAtA[i] = 0x8
+	return len(dAtA) - i, nil
+}
+
+func (m *ContactsTopPeers) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ContactsTopPeers) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ContactsTopPeers) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Groups) > 0 {
+		for iNdEx := len(m.Groups) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Groups[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintChatApiContacts(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.Users) > 0 {
+		for iNdEx := len(m.Users) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Users[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintChatApiContacts(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Categories) > 0 {
+		for iNdEx := len(m.Categories) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Categories[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintChatApiContacts(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TopPeerCategoryPeers) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TopPeerCategoryPeers) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TopPeerCategoryPeers) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Peers) > 0 {
+		for iNdEx := len(m.Peers) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Peers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintChatApiContacts(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	i = encodeVarintChatApiContacts(dAtA, i, uint64(m.Count))
+	i--
+	dAtA[i] = 0x10
+	i = encodeVarintChatApiContacts(dAtA, i, uint64(m.Category))
+	i--
+	dAtA[i] = 0x8
+	return len(dAtA) - i, nil
+}
+
+func (m *TopPeer) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TopPeer) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TopPeer) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	i = encodeVarintChatApiContacts(dAtA, i, uint64(m.LastUpdate))
+	i--
+	dAtA[i] = 0x18
+	i -= 4
+	encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Rate))))
+	i--
+	dAtA[i] = 0x15
+	if m.Peer == nil {
+		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
+	} else {
+		{
+			size, err := m.Peer.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintChatApiContacts(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -1408,6 +2088,96 @@ func (m *ContactsSearch) Size() (n int) {
 	_ = l
 	l = len(m.Q)
 	n += 1 + l + sovChatApiContacts(uint64(l))
+	return n
+}
+
+func (m *ContactsGetTopPeers) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovChatApiContacts(uint64(m.Hash))
+	n += 1 + sovChatApiContacts(uint64(m.Limit))
+	n += 1 + sovChatApiContacts(uint64(m.Offset))
+	n += 2
+	n += 2
+	n += 2
+	n += 2
+	n += 2
+	return n
+}
+
+func (m *ContactsResetTopPeer) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovChatApiContacts(uint64(m.Category))
+	if m.Peer != nil {
+		l = m.Peer.Size()
+		n += 1 + l + sovChatApiContacts(uint64(l))
+	}
+	return n
+}
+
+func (m *ContactsTopPeers) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Categories) > 0 {
+		for _, e := range m.Categories {
+			l = e.Size()
+			n += 1 + l + sovChatApiContacts(uint64(l))
+		}
+	}
+	if len(m.Users) > 0 {
+		for _, e := range m.Users {
+			l = e.Size()
+			n += 1 + l + sovChatApiContacts(uint64(l))
+		}
+	}
+	if len(m.Groups) > 0 {
+		for _, e := range m.Groups {
+			l = e.Size()
+			n += 1 + l + sovChatApiContacts(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TopPeerCategoryPeers) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovChatApiContacts(uint64(m.Category))
+	n += 1 + sovChatApiContacts(uint64(m.Count))
+	if len(m.Peers) > 0 {
+		for _, e := range m.Peers {
+			l = e.Size()
+			n += 1 + l + sovChatApiContacts(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TopPeer) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Peer != nil {
+		l = m.Peer.Size()
+		n += 1 + l + sovChatApiContacts(uint64(l))
+	}
+	n += 5
+	n += 1 + sovChatApiContacts(uint64(m.LastUpdate))
 	return n
 }
 
@@ -2435,6 +3205,759 @@ func (m *ContactsSearch) Unmarshal(dAtA []byte) error {
 	}
 	if hasFields[0]&uint64(0x00000001) == 0 {
 		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Q")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ContactsGetTopPeers) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowChatApiContacts
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ContactsGetTopPeers: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ContactsGetTopPeers: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Hash", wireType)
+			}
+			m.Hash = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Hash |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Limit", wireType)
+			}
+			m.Limit = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Limit |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Offset", wireType)
+			}
+			m.Offset = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Offset |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000002)
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Users", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Users = bool(v != 0)
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BotsMessage", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.BotsMessage = bool(v != 0)
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BotsInline", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.BotsInline = bool(v != 0)
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Groups", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Groups = bool(v != 0)
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Forwards", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Forwards = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipChatApiContacts(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Limit")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Offset")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ContactsResetTopPeer) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowChatApiContacts
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ContactsResetTopPeer: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ContactsResetTopPeer: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Category", wireType)
+			}
+			m.Category = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Category |= TopPeerCategory(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Peer", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Peer == nil {
+				m.Peer = &InputPeer{}
+			}
+			if err := m.Peer.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000002)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipChatApiContacts(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Category")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ContactsTopPeers) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowChatApiContacts
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ContactsTopPeers: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ContactsTopPeers: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Categories", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Categories = append(m.Categories, &TopPeerCategoryPeers{})
+			if err := m.Categories[len(m.Categories)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Users", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Users = append(m.Users, &User{})
+			if err := m.Users[len(m.Users)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Groups", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Groups = append(m.Groups, &Group{})
+			if err := m.Groups[len(m.Groups)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipChatApiContacts(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TopPeerCategoryPeers) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowChatApiContacts
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TopPeerCategoryPeers: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TopPeerCategoryPeers: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Category", wireType)
+			}
+			m.Category = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Category |= TopPeerCategory(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Count", wireType)
+			}
+			m.Count = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Count |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000002)
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Peers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Peers = append(m.Peers, &TopPeer{})
+			if err := m.Peers[len(m.Peers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipChatApiContacts(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Category")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Count")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TopPeer) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowChatApiContacts
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TopPeer: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TopPeer: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Peer", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Peer == nil {
+				m.Peer = &Peer{}
+			}
+			if err := m.Peer.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Rate", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.Rate = float32(math.Float32frombits(v))
+			hasFields[0] |= uint64(0x00000002)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastUpdate", wireType)
+			}
+			m.LastUpdate = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LastUpdate |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipChatApiContacts(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Peer")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Rate")
 	}
 
 	if iNdEx > l {

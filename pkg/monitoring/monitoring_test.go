@@ -2,7 +2,6 @@ package mon
 
 import (
 	"testing"
-	"time"
 )
 
 /*
@@ -16,6 +15,6 @@ import (
 
 func TestFunctionResponseTime(t *testing.T) {
 	for i := 0; i < 10; i++ {
-		QueueTime(time.Second*time.Duration(i))
+		// QueueTime(time.Second*time.Duration(i))
 	}
 }
