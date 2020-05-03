@@ -138,7 +138,11 @@ func LoadUsage() {
 		cu.Day = int32(now.Day())
 	}
 	Stats.mtx.Lock()
-	Stats.ForegroundTime = cu.ForegroundTime
+	if cu.ForegroundTime == 0 {
+		Stats.ForegroundTime = time.Now().Unix()
+	} else {
+		Stats.ForegroundTime = cu.ForegroundTime
+	}
 	Stats.ReceivedMessages = cu.ReceivedMessages
 	Stats.ReceivedMedia = cu.ReceivedMedia
 	Stats.SentMedia = cu.SentMedia
