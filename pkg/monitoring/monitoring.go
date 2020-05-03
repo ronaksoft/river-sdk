@@ -121,7 +121,9 @@ func SetForegroundTime() {
 
 func IncForegroundTime() {
 	Stats.mtx.Lock()
-	Stats.ForegroundTime += int64(time.Now().Sub(Stats.LastForegroundTime).Seconds())
+	if Stats.LastForegroundTime.Unix() != 0 {
+		Stats.ForegroundTime += int64(time.Now().Sub(Stats.LastForegroundTime).Seconds())
+	}
 	Stats.mtx.Unlock()
 }
 
@@ -138,11 +140,7 @@ func LoadUsage() {
 		cu.Day = int32(now.Day())
 	}
 	Stats.mtx.Lock()
-	if cu.ForegroundTime == 0 {
-		Stats.ForegroundTime = time.Now().Unix()
-	} else {
-		Stats.ForegroundTime = cu.ForegroundTime
-	}
+	Stats.ForegroundTime = cu.ForegroundTime
 	Stats.ReceivedMessages = cu.ReceivedMessages
 	Stats.ReceivedMedia = cu.ReceivedMedia
 	Stats.SentMedia = cu.SentMedia

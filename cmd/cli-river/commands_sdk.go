@@ -102,6 +102,7 @@ var SdkAppBackground = &ishell.Cmd{
 		_SDK.AppBackground()
 	},
 }
+
 func init() {
 	SDK.AddCmd(SdkConnInfo)
 	SDK.AddCmd(SdkSetLogLevel)

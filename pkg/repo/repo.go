@@ -254,6 +254,7 @@ func DropAll() {
 func GC() {
 	_ = r.bunt.Shrink()
 	for r.badger.RunValueLogGC(0.7) == nil {
+		logs.Info("Badger ValueLog GC executed")
 	}
 }
 

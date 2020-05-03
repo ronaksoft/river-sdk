@@ -612,7 +612,7 @@ func (r *River) AppStart() error {
 
 	// Run Garbage Collection In Background
 	go func() {
-		time.Sleep(20 * time.Second)
+		time.Sleep(10 * time.Second)
 		repo.GC()
 	}()
 

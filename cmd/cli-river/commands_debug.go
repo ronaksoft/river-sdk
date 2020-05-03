@@ -79,7 +79,6 @@ var ContactImportMany = &ishell.Cmd{
 	},
 }
 
-
 var UpdateNewMessageHexString = &ishell.Cmd{
 	Name: "UpdateNewMessageHexString",
 	Func: func(c *ishell.Context) {
@@ -153,6 +152,7 @@ var MimeToExt = &ishell.Cmd{
 		}
 	},
 }
+
 var PrintMessage = &ishell.Cmd{
 	Name: "PrintMessageMedia",
 	Func: func(c *ishell.Context) {
