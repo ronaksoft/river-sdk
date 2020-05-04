@@ -114,6 +114,8 @@ func (r *River) HandleDebugActions(txt string) {
 				UserID: 0,
 			},
 		)
+	case "//sdk_monitor_reset":
+		mon.ResetUsage()
 	case "//sdk_live_logger":
 		if len(args) < 1 {
 			sendToSavedMessage(r, "//sdk_live_logger <url>")

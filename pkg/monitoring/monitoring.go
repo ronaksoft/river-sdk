@@ -181,6 +181,7 @@ func SaveUploadUsageTime(ts int64) error {
 func ResetUsage() {
 	_ = repo.System.Delete("ClientUsage")
 	Stats.mtx.Lock()
+	Stats.ForegroundTime = 0
 	Stats.ReceivedMessages = 0
 	Stats.ReceivedMedia = 0
 	Stats.SentMedia = 0
