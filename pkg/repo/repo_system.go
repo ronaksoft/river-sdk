@@ -45,6 +45,7 @@ func (r *repoSystem) LoadInt(keyName string) (uint64, error) {
 	return keyValue, nil
 }
 
+// LoadInt64
 func (r *repoSystem) LoadInt64(keyName string) (int64, error) {
 	x, err := r.LoadInt(keyName)
 	if err != nil {

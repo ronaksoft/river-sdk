@@ -274,21 +274,16 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	// Update the request before sending to server
 	in.Message, _ = req.Marshal()
 
+	// Prepare the the result before sending back to the client
+	preSuccessCB := genSuccessCallback(successCB, req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, dialog.TopMessageID)
+
 	// Offline mode
 	if !r.networkCtrl.Connected() {
 		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
-		if len(messages) > 0 {
-			pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
-			if len(pendingMessages) > 0 {
-				messages = append(messages, pendingMessages...)
-			}
-			fillMessagesMany(out, messages, users, in.RequestID, successCB)
-			return
-		}
+		fillMessagesMany(out, messages, users, in.RequestID, successCB)
 	}
 
-	// Prepare the the result before sending back to the client
-	preSuccessCB := genSuccessCallback(successCB, req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, dialog.TopMessageID)
+
 
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:
