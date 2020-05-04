@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"github.com/fatih/color"
@@ -10,6 +11,7 @@ import (
 	"gopkg.in/abiosoft/ishell.v2"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -59,18 +61,18 @@ func main() {
 		dbPath = "./_db"
 	}
 
-	conInfo := new(riversdk.RiverConnection)
+	connInfo := new(riversdk.RiverConnection)
 
-	file, err := os.Open("./_connection/connInfo")
+	file, err := os.Open(filepath.Join(dbPath, fmt.Sprintf("connInfo.%s", dbID)))
 	if err == nil {
 		b, _ := ioutil.ReadAll(file)
-		err := json.Unmarshal(b, conInfo)
+		err := json.Unmarshal(b, connInfo)
 		if err != nil {
 			_Shell.Print(err.Error())
 		}
 	}
 
-	conInfo.Delegate = new(ConnInfoDelegates)
+	connInfo.Delegate = new(ConnInfoDelegates)
 
 
 	serverEndPoint := "ws://river.ronaksoftware.com"
@@ -108,7 +110,7 @@ func main() {
 		DocumentFileDirectory:  "./_files/file",
 		DocumentCacheDirectory: "./_files/cache",
 		DocumentLogDirectory:   "./_files/logs",
-		ConnInfo:               conInfo,
+		ConnInfo:               connInfo,
 	})
 
 	// _SDK.TurnOnLiveLogger("http://localhost:2374")

@@ -8,9 +8,11 @@ import (
 	"os"
 )
 
-var ConnInfo []byte
 
-type ConnInfoDelegates struct{}
+
+type ConnInfoDelegates struct{
+	filePath 	string
+}
 
 func (c *ConnInfoDelegates) Get(key string) string {
 	panic("implement me")
@@ -22,8 +24,7 @@ func (c *ConnInfoDelegates) Set(key, value string) {
 
 func (c *ConnInfoDelegates) SaveConnInfo(connInfo []byte) {
 	_ = os.MkdirAll("./_connection", os.ModePerm)
-	ConnInfo = connInfo
-	err := ioutil.WriteFile("./_connection/connInfo", connInfo, 0666)
+	err := ioutil.WriteFile(c.filePath, connInfo, 0666)
 	if err != nil {
 		_Log.Error(err.Error())
 	}
