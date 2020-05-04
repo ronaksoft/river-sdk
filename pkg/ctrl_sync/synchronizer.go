@@ -498,6 +498,7 @@ func (ctrl *Controller) ContactImportFromServer() {
 	logs.Debug("SyncCtrl call ContactsGet", zap.Uint32("Hash", contactGetReq.Crc32Hash))
 }
 
+// DeletePendingMessage
 func (ctrl *Controller) DeletePendingMessage(pm *msg.ClientPendingMessage) {
 	// It means we have received the NewMessage
 	update := &msg.UpdateMessagesDeleted{

@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"git.ronaksoftware.com/ronak/riversdk"
 	msg "git.ronaksoftware.com/river/msg/chat"
+	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"
+	"time"
 )
 
 var SDK = &ishell.Cmd{
@@ -103,6 +105,22 @@ var SdkAppBackground = &ishell.Cmd{
 	},
 }
 
+var SdkPrintMonitor = &ishell.Cmd{
+	Name: "Monitor",
+	Func: func(c *ishell.Context) {
+		c.Println("ForegroundTime:", mon.Stats.ForegroundTime)
+		c.Println((time.Duration(mon.Stats.ForegroundTime) * time.Second).String())
+	},
+}
+
+var SdkResetUsage = &ishell.Cmd{
+	Name: "ResetUsage",
+	Func: func(c *ishell.Context) {
+		mon.ResetUsage()
+	},
+}
+
+
 func init() {
 	SDK.AddCmd(SdkConnInfo)
 	SDK.AddCmd(SdkSetLogLevel)
@@ -112,4 +130,6 @@ func init() {
 	SDK.AddCmd(GetAuthKey)
 	SDK.AddCmd(SdkAppForeground)
 	SDK.AddCmd(SdkAppBackground)
+	SDK.AddCmd(SdkPrintMonitor)
+	SDK.AddCmd(SdkResetUsage)
 }

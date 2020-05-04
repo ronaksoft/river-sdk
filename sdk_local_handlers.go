@@ -376,7 +376,7 @@ func genSuccessCallback(cb domain.MessageHandler, peerID int64, peerType int32, 
 
 			if len(pendingMessages) > 0 {
 				if maxID == 0 || (len(x.Messages) > 0 && x.Messages[len(x.Messages)-1].ID == topMessageID) {
-					x.Messages = append(x.Messages, pendingMessages...)
+					x.Messages = append(pendingMessages, x.Messages...)
 				}
 			}
 
