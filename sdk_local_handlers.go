@@ -961,14 +961,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 		return
 	}
 
-	// Participants
-	participants, err := repo.Groups.GetParticipants(req.GroupID)
-	if err != nil {
-		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
-		return
-	}
-	res.Participants = participants
-	res.Group.Participants = int32(len(res.Participants))
+
 
 	// NotifySettings
 	dlg, _ := repo.Dialogs.Get(req.GroupID, int32(msg.PeerGroup))
@@ -986,11 +979,11 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 
 	// Users
 	userIDs := domain.MInt64B{}
-	for _, v := range participants {
+	for _, v := range res.Participants {
 		userIDs[v.UserID] = true
 	}
 	users, _ := repo.Users.GetMany(userIDs.ToArray())
-	if len(participants) != len(users) {
+	if len(res.Participants) != len(users) {
 		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 		return
 	}
