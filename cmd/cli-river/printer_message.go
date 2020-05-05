@@ -135,12 +135,13 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		bufGroup := new(bytes.Buffer)
 		tableGroup := tablewriter.NewWriter(bufGroup)
 		tableGroup.SetHeader([]string{
-			"GroupID", "Title",
+			"GroupID", "Title", "Participants",
 		})
 		for _, x := range x.Groups {
 			tableGroup.Append([]string{
 				fmt.Sprintf("%d", x.ID),
 				fmt.Sprintf("%s", x.Title),
+				fmt.Sprintf("%d", x.Participants),
 			})
 		}
 		tableGroup.Render()

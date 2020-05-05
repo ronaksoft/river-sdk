@@ -38,3 +38,30 @@ func (d *RequestDelegate) OnTimeout(err error) {
 func (d *RequestDelegate) Flags() int32 {
 	return 0
 }
+
+type CustomRequestDelegate struct {
+	OnCompleteFunc func(b []byte)
+	OnTimeoutFunc  func(err error)
+	FlagsFunc      func() int32
+}
+
+func (c CustomRequestDelegate) OnComplete(b []byte) {
+	c.OnCompleteFunc(b)
+}
+
+func (c CustomRequestDelegate) OnTimeout(err error) {
+	c.OnTimeoutFunc(err)
+}
+
+func (c CustomRequestDelegate) Flags() int32 {
+	return c.FlagsFunc()
+}
+
+func NewCustomDelegate() *CustomRequestDelegate {
+	c := &CustomRequestDelegate{}
+	d := &RequestDelegate{}
+	c.OnCompleteFunc = d.OnComplete
+	c.OnTimeoutFunc = d.OnTimeout
+	c.FlagsFunc = d.Flags
+	return c
+}

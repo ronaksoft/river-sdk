@@ -104,15 +104,10 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 	case domain.MessageActionContactRegistered:
 		go ctrl.ContactImportFromServer()
 	case domain.MessageActionGroupDeleteUser:
-		act := new(msg.MessageActionGroupAddUser)
+		act := new(msg.MessageActionGroupDeleteUser)
 		err := act.Unmarshal(x.Message.MessageActionData)
 		if err != nil {
 			logs.Error("SyncCtrl couldn't unmarshal MessageActionGroupDeleteUser", zap.Error(err))
-		}
-
-		err = repo.Groups.DeleteParticipants(x.Message.PeerID, act.UserIDs...)
-		if err != nil {
-			logs.Error("SyncCtrl got error on DeleteParticipants", zap.Error(err))
 		}
 
 		// Check if user left (deleted him/her self from group) remove its GroupSearch, Dialog and its MessagesPending

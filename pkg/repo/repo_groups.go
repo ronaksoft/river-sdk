@@ -222,6 +222,52 @@ func (r *repoGroups) GetFull(groupID int64) (groupFull *msg.GroupFull, err error
 	return
 }
 
+func (r *repoGroups) AddParticipant(groupID int64, p *msg.GroupParticipant) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		groupFull, err := getGroupFullByKey(txn, getGroupFullKey(groupID))
+		if err != nil {
+			return err
+		}
+		groupFull.Participants = append(groupFull.Participants, p)
+		groupFull.Group.Participants = int32(len(groupFull.Participants))
+
+		err = saveGroupFull(txn, groupFull)
+		if err != nil {
+			return err
+		}
+
+		return saveGroup(txn, groupFull.Group)
+	})
+}
+
+func (r *repoGroups) RemoveParticipant(groupID int64, UserIDs ...int64) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		groupFull, err := getGroupFullByKey(txn, getGroupFullKey(groupID))
+		if err != nil {
+			return err
+		}
+		pm := make(map[int64]*msg.GroupParticipant, len(groupFull.Participants))
+		for _, p := range groupFull.Participants {
+			pm[p.UserID] = p
+		}
+		for _, userID := range UserIDs {
+			delete(pm, userID)
+		}
+
+		groupFull.Participants = groupFull.Participants[:0]
+		for _, p := range pm {
+			groupFull.Participants = append(groupFull.Participants, p)
+		}
+		groupFull.Group.Participants = int32(len(groupFull.Participants))
+		err = saveGroupFull(txn, groupFull)
+		if err != nil {
+			return err
+		}
+
+		return saveGroup(txn, groupFull.Group)
+	})
+}
+
 func (r *repoGroups) Delete(groupID int64) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		err := txn.Delete(getGroupKey(groupID))
@@ -230,104 +276,13 @@ func (r *repoGroups) Delete(groupID int64) error {
 		default:
 			return err
 		}
-		return r.DeleteAllParticipants(groupID)
-	})
-}
-
-func (r *repoGroups) SaveParticipant(groupID int64, participant *msg.GroupParticipant) error {
-	if participant == nil {
-		return nil
-	}
-
-	groupParticipantKey := getGroupParticipantKey(groupID, participant.UserID)
-	participantBytes, _ := participant.Marshal()
-	return badgerUpdate(func(txn *badger.Txn) error {
-		return txn.SetEntry(badger.NewEntry(
-			groupParticipantKey, participantBytes,
-		))
-	})
-}
-
-func (r *repoGroups) GetParticipant(groupID int64, memberID int64) (*msg.GroupParticipant, error) {
-	gp := new(msg.GroupParticipant)
-	err := badgerView(func(txn *badger.Txn) error {
-		item, err := txn.Get(getGroupParticipantKey(groupID, memberID))
-		if err != nil {
-			return err
-		}
-		return item.Value(func(val []byte) error {
-			return gp.Unmarshal(val)
-		})
-	})
-	return gp, err
-}
-
-func (r *repoGroups) GetParticipants(groupID int64) ([]*msg.GroupParticipant, error) {
-	participants := make([]*msg.GroupParticipant, 0, 100)
-	err := badgerView(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.Prefix = getGroupParticipantPrefix(groupID)
-		it := txn.NewIterator(opts)
-		for it.Rewind(); it.Valid(); it.Next() {
-			p := new(msg.GroupParticipant)
-			_ = it.Item().Value(func(val []byte) error {
-				return p.Unmarshal(val)
-			})
-			participants = append(participants, p)
-		}
-		it.Close()
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	return participants, nil
-}
-
-func (r *repoGroups) DeleteParticipants(groupID int64, memberIDs ...int64) error {
-	return badgerUpdate(func(txn *badger.Txn) error {
-		group, err := getGroupByKey(txn, getGroupKey(groupID))
+		err = txn.Delete(getGroupFullKey(groupID))
 		switch err {
-		case nil:
-		case badger.ErrKeyNotFound:
-			return nil
+		case nil, badger.ErrKeyNotFound:
 		default:
 			return err
 		}
-
-		for _, memberID := range memberIDs {
-			err := txn.Delete(getGroupParticipantKey(groupID, memberID))
-			switch err {
-			case nil, badger.ErrKeyNotFound:
-			default:
-				return err
-			}
-		}
-		return updateGroupParticipantsCount(txn, group)
-	})
-}
-
-func (r *repoGroups) DeleteAllParticipants(groupID int64) error {
-	return badgerUpdate(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.Prefix = getGroupParticipantPrefix(groupID)
-		it := txn.NewIterator(opts)
-		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
-			_ = txn.Delete(it.Item().KeyCopy(nil))
-		}
-		it.Close()
-
-		group, err := getGroupByKey(txn, getGroupKey(groupID))
-		switch err {
-		case nil:
-		case badger.ErrKeyNotFound:
-			return nil
-		default:
-			return err
-
-		}
-		group.Participants = 0
-		return saveGroup(txn, group)
+		return nil
 	})
 }
 

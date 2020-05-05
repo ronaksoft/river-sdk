@@ -12,7 +12,6 @@ import (
 	"go.uber.org/zap"
 	"hash/crc32"
 	"sort"
-	"sync"
 	"time"
 )
 
@@ -196,19 +195,6 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 	if err != nil {
 		logs.Error("SyncCtrl couldn't save GroupFull's Group", zap.Error(err))
 	}
-
-	// save GroupSearch Members
-	repo.Groups.DeleteAllParticipants(u.Group.ID)
-	waitGroup := sync.WaitGroup{}
-
-	for _, v := range u.Participants {
-		waitGroup.Add(1)
-		go func(v *msg.GroupParticipant) {
-			repo.Groups.SaveParticipant(u.Group.ID, v)
-			waitGroup.Done()
-		}(v)
-	}
-	waitGroup.Wait()
 
 	// save Users
 	repo.Users.Save(u.Users...)

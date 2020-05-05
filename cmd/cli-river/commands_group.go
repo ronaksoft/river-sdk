@@ -85,11 +85,25 @@ var GetFull = &ishell.Cmd{
 		req := msg.GroupsGetFull{}
 		req.GroupID = fnGetGroupID(c)
 		reqBytes, _ := req.Marshal()
-		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsGetFull, reqBytes, reqDelegate); err != nil {
+		reqDelegate := NewCustomDelegate()
+		reqDelegate.OnCompleteFunc = func(b []byte) {
+			x := msg.MessageEnvelope{}
+			x.Unmarshal(b)
+			switch x.Constructor {
+			case msg.C_Error:
+			case msg.C_GroupFull:
+				xx := &msg.GroupFull{}
+				xx.Unmarshal(x.Message)
+				c.Println("Participants", xx.Group.Participants)
+				c.Println("Len(Participants)", len(xx.Participants))
+				for _, p := range xx.Participants {
+					c.Println(p.UserID, p.FirstName, p.LastName)
+				}
+			}
+		}
+		_, err := _SDK.ExecuteCommand(msg.C_GroupsGetFull, reqBytes, reqDelegate)
+		if err != nil {
 			_Log.Error("EnqueueCommand failed", zap.Error(err))
-		} else {
-			reqDelegate.RequestID = reqID
 		}
 	},
 }

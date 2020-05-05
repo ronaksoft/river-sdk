@@ -921,7 +921,7 @@ func (r *River) groupAddUser(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 			UserID:     req.User.UserID,
 			Type:       msg.ParticipantTypeMember,
 		}
-		repo.Groups.SaveParticipant(req.GroupID, gp)
+		_ = repo.Groups.AddParticipant(req.GroupID, gp)
 	}
 
 	// send the request to server
@@ -938,7 +938,7 @@ func (r *River) groupDeleteUser(in, out *msg.MessageEnvelope, timeoutCB domain.T
 		return
 	}
 
-	err = repo.Groups.DeleteParticipants(req.GroupID, req.User.UserID)
+	err = repo.Groups.RemoveParticipant(req.GroupID, req.User.UserID)
 	if err != nil {
 		logs.Error("We got error on GroupDeleteUser local handler", zap.Error(err))
 	}
@@ -960,8 +960,6 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 		return
 	}
-
-
 
 	// NotifySettings
 	dlg, _ := repo.Dialogs.Get(req.GroupID, int32(msg.PeerGroup))
