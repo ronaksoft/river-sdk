@@ -98,6 +98,7 @@ var SdkAppForeground = &ishell.Cmd{
 		_SDK.AppForeground()
 	},
 }
+
 var SdkAppBackground = &ishell.Cmd{
 	Name: "AppBackground",
 	Func: func(c *ishell.Context) {
@@ -119,7 +120,6 @@ var SdkResetUsage = &ishell.Cmd{
 		mon.ResetUsage()
 	},
 }
-
 
 func init() {
 	SDK.AddCmd(SdkConnInfo)
