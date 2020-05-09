@@ -276,6 +276,7 @@ func uploadJob(ctx *uploadContext, ctrl *Controller, maxRetries *int32, waitGrou
 			}
 		default:
 		}
+		time.Sleep(100 * time.Millisecond)
 		ctx.parts <- partIndex
 		return
 	}
