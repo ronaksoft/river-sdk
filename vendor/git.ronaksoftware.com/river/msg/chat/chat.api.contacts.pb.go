@@ -204,7 +204,6 @@ func (m *ContactsAdd) GetPhone() string {
 // @Function
 // @Return: ContactsMany
 type ContactsGet struct {
-	//    required string MD5Hash = 1;
 	Crc32Hash uint32 `protobuf:"varint,2,req,name=Crc32Hash" json:"Crc32Hash"`
 }
 

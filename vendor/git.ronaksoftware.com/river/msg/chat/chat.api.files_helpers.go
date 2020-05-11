@@ -38,9 +38,14 @@ var PoolFileSavePart = poolFileSavePart{}
 
 func ResultFileSavePart(out *MessageEnvelope, res *FileSavePart) {
 	out.Constructor = C_FileSavePart
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_FileGet int64 = 4282510672
@@ -65,9 +70,14 @@ var PoolFileGet = poolFileGet{}
 
 func ResultFileGet(out *MessageEnvelope, res *FileGet) {
 	out.Constructor = C_FileGet
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_FileGetBySha256 int64 = 2768049463
@@ -92,9 +102,14 @@ var PoolFileGetBySha256 = poolFileGetBySha256{}
 
 func ResultFileGetBySha256(out *MessageEnvelope, res *FileGetBySha256) {
 	out.Constructor = C_FileGetBySha256
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_File int64 = 749574446
@@ -120,9 +135,14 @@ var PoolFile = poolFile{}
 
 func ResultFile(out *MessageEnvelope, res *File) {
 	out.Constructor = C_File
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 func init() {

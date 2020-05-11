@@ -39,9 +39,14 @@ var PoolGroupsCreate = poolGroupsCreate{}
 
 func ResultGroupsCreate(out *MessageEnvelope, res *GroupsCreate) {
 	out.Constructor = C_GroupsCreate
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_GroupsAddUser int64 = 394654713
@@ -66,9 +71,14 @@ var PoolGroupsAddUser = poolGroupsAddUser{}
 
 func ResultGroupsAddUser(out *MessageEnvelope, res *GroupsAddUser) {
 	out.Constructor = C_GroupsAddUser
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_GroupsEditTitle int64 = 2582813461
@@ -93,9 +103,14 @@ var PoolGroupsEditTitle = poolGroupsEditTitle{}
 
 func ResultGroupsEditTitle(out *MessageEnvelope, res *GroupsEditTitle) {
 	out.Constructor = C_GroupsEditTitle
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_GroupsDeleteUser int64 = 3172322223
@@ -120,9 +135,14 @@ var PoolGroupsDeleteUser = poolGroupsDeleteUser{}
 
 func ResultGroupsDeleteUser(out *MessageEnvelope, res *GroupsDeleteUser) {
 	out.Constructor = C_GroupsDeleteUser
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_GroupsGetFull int64 = 2986704909
@@ -147,9 +167,14 @@ var PoolGroupsGetFull = poolGroupsGetFull{}
 
 func ResultGroupsGetFull(out *MessageEnvelope, res *GroupsGetFull) {
 	out.Constructor = C_GroupsGetFull
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_GroupsToggleAdmins int64 = 1581076909
@@ -174,9 +199,14 @@ var PoolGroupsToggleAdmins = poolGroupsToggleAdmins{}
 
 func ResultGroupsToggleAdmins(out *MessageEnvelope, res *GroupsToggleAdmins) {
 	out.Constructor = C_GroupsToggleAdmins
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_GroupsUpdateAdmin int64 = 1345991011
@@ -201,9 +231,14 @@ var PoolGroupsUpdateAdmin = poolGroupsUpdateAdmin{}
 
 func ResultGroupsUpdateAdmin(out *MessageEnvelope, res *GroupsUpdateAdmin) {
 	out.Constructor = C_GroupsUpdateAdmin
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_GroupsUploadPhoto int64 = 2624284907
@@ -229,9 +264,14 @@ var PoolGroupsUploadPhoto = poolGroupsUploadPhoto{}
 
 func ResultGroupsUploadPhoto(out *MessageEnvelope, res *GroupsUploadPhoto) {
 	out.Constructor = C_GroupsUploadPhoto
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_GroupsRemovePhoto int64 = 176771682
@@ -257,9 +297,14 @@ var PoolGroupsRemovePhoto = poolGroupsRemovePhoto{}
 
 func ResultGroupsRemovePhoto(out *MessageEnvelope, res *GroupsRemovePhoto) {
 	out.Constructor = C_GroupsRemovePhoto
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_GroupsUpdatePhoto int64 = 3431184397
@@ -284,9 +329,14 @@ var PoolGroupsUpdatePhoto = poolGroupsUpdatePhoto{}
 
 func ResultGroupsUpdatePhoto(out *MessageEnvelope, res *GroupsUpdatePhoto) {
 	out.Constructor = C_GroupsUpdatePhoto
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 func init() {

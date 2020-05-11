@@ -38,9 +38,14 @@ var PoolClientUpdatePendingMessageDelivery = poolClientUpdatePendingMessageDeliv
 
 func ResultClientUpdatePendingMessageDelivery(out *MessageEnvelope, res *ClientUpdatePendingMessageDelivery) {
 	out.Constructor = C_ClientUpdatePendingMessageDelivery
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ClientUpdateMessagesDeleted int64 = 3060926862
@@ -66,9 +71,14 @@ var PoolClientUpdateMessagesDeleted = poolClientUpdateMessagesDeleted{}
 
 func ResultClientUpdateMessagesDeleted(out *MessageEnvelope, res *ClientUpdateMessagesDeleted) {
 	out.Constructor = C_ClientUpdateMessagesDeleted
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ClientUpdateSynced int64 = 4244270269
@@ -93,9 +103,14 @@ var PoolClientUpdateSynced = poolClientUpdateSynced{}
 
 func ResultClientUpdateSynced(out *MessageEnvelope, res *ClientUpdateSynced) {
 	out.Constructor = C_ClientUpdateSynced
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 func init() {

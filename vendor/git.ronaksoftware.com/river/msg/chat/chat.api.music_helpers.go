@@ -44,9 +44,14 @@ var PoolMusicsGet = poolMusicsGet{}
 
 func ResultMusicsGet(out *MessageEnvelope, res *MusicsGet) {
 	out.Constructor = C_MusicsGet
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MusicsAdd int64 = 1108415956
@@ -74,9 +79,14 @@ var PoolMusicsAdd = poolMusicsAdd{}
 
 func ResultMusicsAdd(out *MessageEnvelope, res *MusicsAdd) {
 	out.Constructor = C_MusicsAdd
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MusicsRemove int64 = 3940045807
@@ -101,9 +111,14 @@ var PoolMusicsRemove = poolMusicsRemove{}
 
 func ResultMusicsRemove(out *MessageEnvelope, res *MusicsRemove) {
 	out.Constructor = C_MusicsRemove
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MusicsSetStatus int64 = 4026186002
@@ -128,9 +143,14 @@ var PoolMusicsSetStatus = poolMusicsSetStatus{}
 
 func ResultMusicsSetStatus(out *MessageEnvelope, res *MusicsSetStatus) {
 	out.Constructor = C_MusicsSetStatus
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MusicsFollow int64 = 3932949167
@@ -155,9 +175,14 @@ var PoolMusicsFollow = poolMusicsFollow{}
 
 func ResultMusicsFollow(out *MessageEnvelope, res *MusicsFollow) {
 	out.Constructor = C_MusicsFollow
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MusicsUnFollow int64 = 327524575
@@ -182,9 +207,14 @@ var PoolMusicsUnFollow = poolMusicsUnFollow{}
 
 func ResultMusicsUnFollow(out *MessageEnvelope, res *MusicsUnFollow) {
 	out.Constructor = C_MusicsUnFollow
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 func init() {

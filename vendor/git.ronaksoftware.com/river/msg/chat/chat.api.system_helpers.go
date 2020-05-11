@@ -38,9 +38,14 @@ var PoolSystemGetPublicKeys = poolSystemGetPublicKeys{}
 
 func ResultSystemGetPublicKeys(out *MessageEnvelope, res *SystemGetPublicKeys) {
 	out.Constructor = C_SystemGetPublicKeys
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_SystemGetDHGroups int64 = 1786665018
@@ -65,9 +70,14 @@ var PoolSystemGetDHGroups = poolSystemGetDHGroups{}
 
 func ResultSystemGetDHGroups(out *MessageEnvelope, res *SystemGetDHGroups) {
 	out.Constructor = C_SystemGetDHGroups
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_SystemGetServerTime int64 = 1321179349
@@ -92,9 +102,14 @@ var PoolSystemGetServerTime = poolSystemGetServerTime{}
 
 func ResultSystemGetServerTime(out *MessageEnvelope, res *SystemGetServerTime) {
 	out.Constructor = C_SystemGetServerTime
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_SystemGetInfo int64 = 1486296237
@@ -119,9 +134,14 @@ var PoolSystemGetInfo = poolSystemGetInfo{}
 
 func ResultSystemGetInfo(out *MessageEnvelope, res *SystemGetInfo) {
 	out.Constructor = C_SystemGetInfo
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_SystemGetSalts int64 = 1705203315
@@ -146,9 +166,14 @@ var PoolSystemGetSalts = poolSystemGetSalts{}
 
 func ResultSystemGetSalts(out *MessageEnvelope, res *SystemGetSalts) {
 	out.Constructor = C_SystemGetSalts
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_SystemGetConfig int64 = 1910333714
@@ -173,9 +198,14 @@ var PoolSystemGetConfig = poolSystemGetConfig{}
 
 func ResultSystemGetConfig(out *MessageEnvelope, res *SystemGetConfig) {
 	out.Constructor = C_SystemGetConfig
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_SystemUploadUsage int64 = 3056393082
@@ -201,9 +231,14 @@ var PoolSystemUploadUsage = poolSystemUploadUsage{}
 
 func ResultSystemUploadUsage(out *MessageEnvelope, res *SystemUploadUsage) {
 	out.Constructor = C_SystemUploadUsage
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ClientUsage int64 = 453987802
@@ -234,9 +269,14 @@ var PoolClientUsage = poolClientUsage{}
 
 func ResultClientUsage(out *MessageEnvelope, res *ClientUsage) {
 	out.Constructor = C_ClientUsage
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_SystemConfig int64 = 367036084
@@ -251,6 +291,8 @@ func (p *poolSystemConfig) Get() *SystemConfig {
 		return &SystemConfig{}
 	}
 	x.DCs = x.DCs[:0]
+	x.GifBot = ""
+	x.WikiBot = ""
 	return x
 }
 
@@ -262,9 +304,14 @@ var PoolSystemConfig = poolSystemConfig{}
 
 func ResultSystemConfig(out *MessageEnvelope, res *SystemConfig) {
 	out.Constructor = C_SystemConfig
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_DataCenter int64 = 3431386561
@@ -289,9 +336,14 @@ var PoolDataCenter = poolDataCenter{}
 
 func ResultDataCenter(out *MessageEnvelope, res *DataCenter) {
 	out.Constructor = C_DataCenter
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_SystemSalts int64 = 871116906
@@ -317,9 +369,14 @@ var PoolSystemSalts = poolSystemSalts{}
 
 func ResultSystemSalts(out *MessageEnvelope, res *SystemSalts) {
 	out.Constructor = C_SystemSalts
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_AppUpdate int64 = 1100207036
@@ -344,9 +401,14 @@ var PoolAppUpdate = poolAppUpdate{}
 
 func ResultAppUpdate(out *MessageEnvelope, res *AppUpdate) {
 	out.Constructor = C_AppUpdate
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_SystemInfo int64 = 2754948760
@@ -372,9 +434,14 @@ var PoolSystemInfo = poolSystemInfo{}
 
 func ResultSystemInfo(out *MessageEnvelope, res *SystemInfo) {
 	out.Constructor = C_SystemInfo
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_SystemServerTime int64 = 2854614486
@@ -399,9 +466,14 @@ var PoolSystemServerTime = poolSystemServerTime{}
 
 func ResultSystemServerTime(out *MessageEnvelope, res *SystemServerTime) {
 	out.Constructor = C_SystemServerTime
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_SystemPublicKeys int64 = 2745130223
@@ -427,9 +499,14 @@ var PoolSystemPublicKeys = poolSystemPublicKeys{}
 
 func ResultSystemPublicKeys(out *MessageEnvelope, res *SystemPublicKeys) {
 	out.Constructor = C_SystemPublicKeys
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_SystemDHGroups int64 = 2890748083
@@ -455,9 +532,14 @@ var PoolSystemDHGroups = poolSystemDHGroups{}
 
 func ResultSystemDHGroups(out *MessageEnvelope, res *SystemDHGroups) {
 	out.Constructor = C_SystemDHGroups
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 func init() {

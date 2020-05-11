@@ -38,9 +38,14 @@ var PoolPasswordAlgorithmVer6A = poolPasswordAlgorithmVer6A{}
 
 func ResultPasswordAlgorithmVer6A(out *MessageEnvelope, res *PasswordAlgorithmVer6A) {
 	out.Constructor = C_PasswordAlgorithmVer6A
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 func init() {

@@ -38,9 +38,14 @@ var PoolInitConnect = poolInitConnect{}
 
 func ResultInitConnect(out *MessageEnvelope, res *InitConnect) {
 	out.Constructor = C_InitConnect
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_InitCompleteAuth int64 = 1583178320
@@ -65,9 +70,14 @@ var PoolInitCompleteAuth = poolInitCompleteAuth{}
 
 func ResultInitCompleteAuth(out *MessageEnvelope, res *InitCompleteAuth) {
 	out.Constructor = C_InitCompleteAuth
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_InitConnectTest int64 = 3188015450
@@ -92,9 +102,14 @@ var PoolInitConnectTest = poolInitConnectTest{}
 
 func ResultInitConnectTest(out *MessageEnvelope, res *InitConnectTest) {
 	out.Constructor = C_InitConnectTest
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_InitTestAuth int64 = 2762878006
@@ -119,9 +134,14 @@ var PoolInitTestAuth = poolInitTestAuth{}
 
 func ResultInitTestAuth(out *MessageEnvelope, res *InitTestAuth) {
 	out.Constructor = C_InitTestAuth
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_InitResponse int64 = 4130340247
@@ -146,9 +166,14 @@ var PoolInitResponse = poolInitResponse{}
 
 func ResultInitResponse(out *MessageEnvelope, res *InitResponse) {
 	out.Constructor = C_InitResponse
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_InitCompleteAuthInternal int64 = 2360982492
@@ -173,9 +198,14 @@ var PoolInitCompleteAuthInternal = poolInitCompleteAuthInternal{}
 
 func ResultInitCompleteAuthInternal(out *MessageEnvelope, res *InitCompleteAuthInternal) {
 	out.Constructor = C_InitCompleteAuthInternal
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_InitAuthCompleted int64 = 627708982
@@ -200,9 +230,14 @@ var PoolInitAuthCompleted = poolInitAuthCompleted{}
 
 func ResultInitAuthCompleted(out *MessageEnvelope, res *InitAuthCompleted) {
 	out.Constructor = C_InitAuthCompleted
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_InitBindUser int64 = 1933549113
@@ -227,9 +262,14 @@ var PoolInitBindUser = poolInitBindUser{}
 
 func ResultInitBindUser(out *MessageEnvelope, res *InitBindUser) {
 	out.Constructor = C_InitBindUser
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_InitUserBound int64 = 128391141
@@ -254,9 +294,14 @@ var PoolInitUserBound = poolInitUserBound{}
 
 func ResultInitUserBound(out *MessageEnvelope, res *InitUserBound) {
 	out.Constructor = C_InitUserBound
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 func init() {

@@ -38,9 +38,14 @@ var PoolEchoWithDelay = poolEchoWithDelay{}
 
 func ResultEchoWithDelay(out *MessageEnvelope, res *EchoWithDelay) {
 	out.Constructor = C_EchoWithDelay
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_TestRequest int64 = 475847033
@@ -65,9 +70,14 @@ var PoolTestRequest = poolTestRequest{}
 
 func ResultTestRequest(out *MessageEnvelope, res *TestRequest) {
 	out.Constructor = C_TestRequest
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_TestResponse int64 = 1999996896
@@ -92,9 +102,14 @@ var PoolTestResponse = poolTestResponse{}
 
 func ResultTestResponse(out *MessageEnvelope, res *TestResponse) {
 	out.Constructor = C_TestResponse
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_TestRequestWithString int64 = 3760062575
@@ -119,9 +134,14 @@ var PoolTestRequestWithString = poolTestRequestWithString{}
 
 func ResultTestRequestWithString(out *MessageEnvelope, res *TestRequestWithString) {
 	out.Constructor = C_TestRequestWithString
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_TestResponseWithString int64 = 556112423
@@ -146,9 +166,14 @@ var PoolTestResponseWithString = poolTestResponseWithString{}
 
 func ResultTestResponseWithString(out *MessageEnvelope, res *TestResponseWithString) {
 	out.Constructor = C_TestResponseWithString
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 func init() {

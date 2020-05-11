@@ -39,9 +39,14 @@ var PoolPhoneAcceptCall = poolPhoneAcceptCall{}
 
 func ResultPhoneAcceptCall(out *MessageEnvelope, res *PhoneAcceptCall) {
 	out.Constructor = C_PhoneAcceptCall
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_PhoneRequestCall int64 = 907942641
@@ -66,9 +71,14 @@ var PoolPhoneRequestCall = poolPhoneRequestCall{}
 
 func ResultPhoneRequestCall(out *MessageEnvelope, res *PhoneRequestCall) {
 	out.Constructor = C_PhoneRequestCall
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_PhoneDiscardCall int64 = 2712700137
@@ -93,9 +103,14 @@ var PoolPhoneDiscardCall = poolPhoneDiscardCall{}
 
 func ResultPhoneDiscardCall(out *MessageEnvelope, res *PhoneDiscardCall) {
 	out.Constructor = C_PhoneDiscardCall
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_PhoneReceivedCall int64 = 1863246318
@@ -120,9 +135,14 @@ var PoolPhoneReceivedCall = poolPhoneReceivedCall{}
 
 func ResultPhoneReceivedCall(out *MessageEnvelope, res *PhoneReceivedCall) {
 	out.Constructor = C_PhoneReceivedCall
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_PhoneSetCallRating int64 = 2805134474
@@ -148,9 +168,14 @@ var PoolPhoneSetCallRating = poolPhoneSetCallRating{}
 
 func ResultPhoneSetCallRating(out *MessageEnvelope, res *PhoneSetCallRating) {
 	out.Constructor = C_PhoneSetCallRating
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_PhoneCall int64 = 3296664529
@@ -176,9 +201,14 @@ var PoolPhoneCall = poolPhoneCall{}
 
 func ResultPhoneCall(out *MessageEnvelope, res *PhoneCall) {
 	out.Constructor = C_PhoneCall
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 func init() {

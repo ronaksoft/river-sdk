@@ -39,9 +39,14 @@ var PoolBotStart = poolBotStart{}
 
 func ResultBotStart(out *MessageEnvelope, res *BotStart) {
 	out.Constructor = C_BotStart
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotRecall int64 = 4208974051
@@ -66,9 +71,14 @@ var PoolBotRecall = poolBotRecall{}
 
 func ResultBotRecall(out *MessageEnvelope, res *BotRecall) {
 	out.Constructor = C_BotRecall
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotSetInfo int64 = 3735815245
@@ -94,9 +104,14 @@ var PoolBotSetInfo = poolBotSetInfo{}
 
 func ResultBotSetInfo(out *MessageEnvelope, res *BotSetInfo) {
 	out.Constructor = C_BotSetInfo
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotGet int64 = 911895569
@@ -122,9 +137,14 @@ var PoolBotGet = poolBotGet{}
 
 func ResultBotGet(out *MessageEnvelope, res *BotGet) {
 	out.Constructor = C_BotGet
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotSendMessage int64 = 2371725696
@@ -154,9 +174,14 @@ var PoolBotSendMessage = poolBotSendMessage{}
 
 func ResultBotSendMessage(out *MessageEnvelope, res *BotSendMessage) {
 	out.Constructor = C_BotSendMessage
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotEditMessage int64 = 1007063252
@@ -184,9 +209,14 @@ var PoolBotEditMessage = poolBotEditMessage{}
 
 func ResultBotEditMessage(out *MessageEnvelope, res *BotEditMessage) {
 	out.Constructor = C_BotEditMessage
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotSendMedia int64 = 1844738193
@@ -212,9 +242,14 @@ var PoolBotSendMedia = poolBotSendMedia{}
 
 func ResultBotSendMedia(out *MessageEnvelope, res *BotSendMedia) {
 	out.Constructor = C_BotSendMedia
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotSaveFilePart int64 = 905437522
@@ -239,9 +274,14 @@ var PoolBotSaveFilePart = poolBotSaveFilePart{}
 
 func ResultBotSaveFilePart(out *MessageEnvelope, res *BotSaveFilePart) {
 	out.Constructor = C_BotSaveFilePart
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotUpdateProfile int64 = 2820005221
@@ -267,9 +307,14 @@ var PoolBotUpdateProfile = poolBotUpdateProfile{}
 
 func ResultBotUpdateProfile(out *MessageEnvelope, res *BotUpdateProfile) {
 	out.Constructor = C_BotUpdateProfile
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotUpdatePhoto int64 = 3464973784
@@ -295,9 +340,14 @@ var PoolBotUpdatePhoto = poolBotUpdatePhoto{}
 
 func ResultBotUpdatePhoto(out *MessageEnvelope, res *BotUpdatePhoto) {
 	out.Constructor = C_BotUpdatePhoto
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotRevokeToken int64 = 1804706614
@@ -322,9 +372,14 @@ var PoolBotRevokeToken = poolBotRevokeToken{}
 
 func ResultBotRevokeToken(out *MessageEnvelope, res *BotRevokeToken) {
 	out.Constructor = C_BotRevokeToken
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotDeleteMessage int64 = 3523077017
@@ -350,9 +405,14 @@ var PoolBotDeleteMessage = poolBotDeleteMessage{}
 
 func ResultBotDeleteMessage(out *MessageEnvelope, res *BotDeleteMessage) {
 	out.Constructor = C_BotDeleteMessage
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotSetCallbackAnswer int64 = 1891806754
@@ -379,9 +439,14 @@ var PoolBotSetCallbackAnswer = poolBotSetCallbackAnswer{}
 
 func ResultBotSetCallbackAnswer(out *MessageEnvelope, res *BotSetCallbackAnswer) {
 	out.Constructor = C_BotSetCallbackAnswer
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotGetCallbackAnswer int64 = 345706640
@@ -407,9 +472,14 @@ var PoolBotGetCallbackAnswer = poolBotGetCallbackAnswer{}
 
 func ResultBotGetCallbackAnswer(out *MessageEnvelope, res *BotGetCallbackAnswer) {
 	out.Constructor = C_BotGetCallbackAnswer
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotGetInlineResults int64 = 4192114308
@@ -423,6 +493,7 @@ func (p *poolBotGetInlineResults) Get() *BotGetInlineResults {
 	if !ok {
 		return &BotGetInlineResults{}
 	}
+	x.Location = nil
 	return x
 }
 
@@ -434,9 +505,14 @@ var PoolBotGetInlineResults = poolBotGetInlineResults{}
 
 func ResultBotGetInlineResults(out *MessageEnvelope, res *BotGetInlineResults) {
 	out.Constructor = C_BotGetInlineResults
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotSetInlineResults int64 = 3418940573
@@ -451,6 +527,8 @@ func (p *poolBotSetInlineResults) Get() *BotSetInlineResults {
 		return &BotSetInlineResults{}
 	}
 	x.NextOffset = ""
+	x.Results = x.Results[:0]
+	x.SwitchPM = nil
 	return x
 }
 
@@ -462,9 +540,14 @@ var PoolBotSetInlineResults = poolBotSetInlineResults{}
 
 func ResultBotSetInlineResults(out *MessageEnvelope, res *BotSetInlineResults) {
 	out.Constructor = C_BotSetInlineResults
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotSendInlineResults int64 = 923160988
@@ -479,6 +562,7 @@ func (p *poolBotSendInlineResults) Get() *BotSendInlineResults {
 		return &BotSendInlineResults{}
 	}
 	x.Silent = false
+	x.HideVia = false
 	return x
 }
 
@@ -490,9 +574,14 @@ var PoolBotSendInlineResults = poolBotSendInlineResults{}
 
 func ResultBotSendInlineResults(out *MessageEnvelope, res *BotSendInlineResults) {
 	out.Constructor = C_BotSendInlineResults
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotResults int64 = 527920130
@@ -520,9 +609,14 @@ var PoolBotResults = poolBotResults{}
 
 func ResultBotResults(out *MessageEnvelope, res *BotResults) {
 	out.Constructor = C_BotResults
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotInlineSwitchPM int64 = 3014743726
@@ -547,9 +641,14 @@ var PoolBotInlineSwitchPM = poolBotInlineSwitchPM{}
 
 func ResultBotInlineSwitchPM(out *MessageEnvelope, res *BotInlineSwitchPM) {
 	out.Constructor = C_BotInlineSwitchPM
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotInlineResult int64 = 942846933
@@ -566,7 +665,7 @@ func (p *poolBotInlineResult) Get() *BotInlineResult {
 	x.Title = ""
 	x.Description = ""
 	x.Url = ""
-	x.Doc = nil
+	x.Thumb = nil
 	return x
 }
 
@@ -578,9 +677,127 @@ var PoolBotInlineResult = poolBotInlineResult{}
 
 func ResultBotInlineResult(out *MessageEnvelope, res *BotInlineResult) {
 	out.Constructor = C_BotInlineResult
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_InputBotInlineResult int64 = 2158273502
+
+type poolInputBotInlineResult struct {
+	pool sync.Pool
+}
+
+func (p *poolInputBotInlineResult) Get() *InputBotInlineResult {
+	x, ok := p.pool.Get().(*InputBotInlineResult)
+	if !ok {
+		return &InputBotInlineResult{}
+	}
+	x.Title = ""
+	x.Description = ""
+	x.Url = ""
+	x.Thumb = nil
+	return x
+}
+
+func (p *poolInputBotInlineResult) Put(x *InputBotInlineResult) {
+	p.pool.Put(x)
+}
+
+var PoolInputBotInlineResult = poolInputBotInlineResult{}
+
+func ResultInputBotInlineResult(out *MessageEnvelope, res *InputBotInlineResult) {
+	out.Constructor = C_InputBotInlineResult
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_BotInlineMessage int64 = 3297841032
+
+type poolBotInlineMessage struct {
+	pool sync.Pool
+}
+
+func (p *poolBotInlineMessage) Get() *BotInlineMessage {
+	x, ok := p.pool.Get().(*BotInlineMessage)
+	if !ok {
+		return &BotInlineMessage{}
+	}
+	x.MediaData = nil
+	x.Body = ""
+	x.Entities = x.Entities[:0]
+	x.ReplyTo = 0
+	x.ReplyMarkup = 0
+	x.ReplyMarkupData = nil
+	return x
+}
+
+func (p *poolBotInlineMessage) Put(x *BotInlineMessage) {
+	p.pool.Put(x)
+}
+
+var PoolBotInlineMessage = poolBotInlineMessage{}
+
+func ResultBotInlineMessage(out *MessageEnvelope, res *BotInlineMessage) {
+	out.Constructor = C_BotInlineMessage
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_InputBotInlineMessage int64 = 1408974864
+
+type poolInputBotInlineMessage struct {
+	pool sync.Pool
+}
+
+func (p *poolInputBotInlineMessage) Get() *InputBotInlineMessage {
+	x, ok := p.pool.Get().(*InputBotInlineMessage)
+	if !ok {
+		return &InputBotInlineMessage{}
+	}
+	x.InputMediaData = nil
+	x.NoWebPage = false
+	x.Body = ""
+	x.Entities = x.Entities[:0]
+	x.ReplyTo = 0
+	x.ReplyMarkup = 0
+	x.ReplyMarkupData = nil
+	return x
+}
+
+func (p *poolInputBotInlineMessage) Put(x *InputBotInlineMessage) {
+	p.pool.Put(x)
+}
+
+var PoolInputBotInlineMessage = poolInputBotInlineMessage{}
+
+func ResultInputBotInlineMessage(out *MessageEnvelope, res *InputBotInlineMessage) {
+	out.Constructor = C_InputBotInlineMessage
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotToken int64 = 3137540096
@@ -605,9 +822,14 @@ var PoolBotToken = poolBotToken{}
 
 func ResultBotToken(out *MessageEnvelope, res *BotToken) {
 	out.Constructor = C_BotToken
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotRecalled int64 = 4007077962
@@ -632,9 +854,14 @@ var PoolBotRecalled = poolBotRecalled{}
 
 func ResultBotRecalled(out *MessageEnvelope, res *BotRecalled) {
 	out.Constructor = C_BotRecalled
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotCallbackAnswer int64 = 3344545062
@@ -661,9 +888,14 @@ var PoolBotCallbackAnswer = poolBotCallbackAnswer{}
 
 func ResultBotCallbackAnswer(out *MessageEnvelope, res *BotCallbackAnswer) {
 	out.Constructor = C_BotCallbackAnswer
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotsMany int64 = 2942918011
@@ -689,9 +921,14 @@ var PoolBotsMany = poolBotsMany{}
 
 func ResultBotsMany(out *MessageEnvelope, res *BotsMany) {
 	out.Constructor = C_BotsMany
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotGetCommands int64 = 473628905
@@ -716,9 +953,14 @@ var PoolBotGetCommands = poolBotGetCommands{}
 
 func ResultBotGetCommands(out *MessageEnvelope, res *BotGetCommands) {
 	out.Constructor = C_BotGetCommands
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BotCommandsMany int64 = 6153347
@@ -744,9 +986,14 @@ var PoolBotCommandsMany = poolBotCommandsMany{}
 
 func ResultBotCommandsMany(out *MessageEnvelope, res *BotCommandsMany) {
 	out.Constructor = C_BotCommandsMany
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 func init() {
@@ -770,6 +1017,9 @@ func init() {
 	ConstructorNames[527920130] = "BotResults"
 	ConstructorNames[3014743726] = "BotInlineSwitchPM"
 	ConstructorNames[942846933] = "BotInlineResult"
+	ConstructorNames[2158273502] = "InputBotInlineResult"
+	ConstructorNames[3297841032] = "BotInlineMessage"
+	ConstructorNames[1408974864] = "InputBotInlineMessage"
 	ConstructorNames[3137540096] = "BotToken"
 	ConstructorNames[4007077962] = "BotRecalled"
 	ConstructorNames[3344545062] = "BotCallbackAnswer"

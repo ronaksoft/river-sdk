@@ -38,9 +38,14 @@ var PoolLabelsCreate = poolLabelsCreate{}
 
 func ResultLabelsCreate(out *MessageEnvelope, res *LabelsCreate) {
 	out.Constructor = C_LabelsCreate
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_LabelsEdit int64 = 2790466877
@@ -65,9 +70,14 @@ var PoolLabelsEdit = poolLabelsEdit{}
 
 func ResultLabelsEdit(out *MessageEnvelope, res *LabelsEdit) {
 	out.Constructor = C_LabelsEdit
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_LabelsDelete int64 = 3401105936
@@ -93,9 +103,14 @@ var PoolLabelsDelete = poolLabelsDelete{}
 
 func ResultLabelsDelete(out *MessageEnvelope, res *LabelsDelete) {
 	out.Constructor = C_LabelsDelete
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_LabelsGet int64 = 2575409921
@@ -120,9 +135,14 @@ var PoolLabelsGet = poolLabelsGet{}
 
 func ResultLabelsGet(out *MessageEnvelope, res *LabelsGet) {
 	out.Constructor = C_LabelsGet
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_LabelsAddToMessage int64 = 180144503
@@ -149,9 +169,14 @@ var PoolLabelsAddToMessage = poolLabelsAddToMessage{}
 
 func ResultLabelsAddToMessage(out *MessageEnvelope, res *LabelsAddToMessage) {
 	out.Constructor = C_LabelsAddToMessage
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_LabelsRemoveFromMessage int64 = 4195197703
@@ -178,9 +203,14 @@ var PoolLabelsRemoveFromMessage = poolLabelsRemoveFromMessage{}
 
 func ResultLabelsRemoveFromMessage(out *MessageEnvelope, res *LabelsRemoveFromMessage) {
 	out.Constructor = C_LabelsRemoveFromMessage
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_LabelsListItems int64 = 2351763198
@@ -208,9 +238,14 @@ var PoolLabelsListItems = poolLabelsListItems{}
 
 func ResultLabelsListItems(out *MessageEnvelope, res *LabelsListItems) {
 	out.Constructor = C_LabelsListItems
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_LabelItems int64 = 4271841358
@@ -239,9 +274,14 @@ var PoolLabelItems = poolLabelItems{}
 
 func ResultLabelItems(out *MessageEnvelope, res *LabelItems) {
 	out.Constructor = C_LabelItems
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 func init() {

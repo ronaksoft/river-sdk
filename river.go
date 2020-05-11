@@ -429,6 +429,7 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 			MimeType:   req.FileMIME,
 			Attributes: req.Attributes,
 			Caption:    req.Caption,
+			Entities: req.Entities,
 			File: &msg.InputFile{
 				FileID:      uploadRequest.FileID,
 				FileName:    req.FileName,
@@ -447,6 +448,7 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 		doc := &msg.InputMediaDocument{
 			Caption:    req.Caption,
 			Attributes: req.Attributes,
+			Entities: req.Entities,
 			Document: &msg.InputDocument{
 				ID:         uploadRequest.DocumentID,
 				AccessHash: uploadRequest.AccessHash,

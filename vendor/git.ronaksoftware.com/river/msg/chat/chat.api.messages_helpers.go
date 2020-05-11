@@ -42,9 +42,14 @@ var PoolMessagesSend = poolMessagesSend{}
 
 func ResultMessagesSend(out *MessageEnvelope, res *MessagesSend) {
 	out.Constructor = C_MessagesSend
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesBroadcast int64 = 142289348
@@ -71,9 +76,14 @@ var PoolMessagesBroadcast = poolMessagesBroadcast{}
 
 func ResultMessagesBroadcast(out *MessageEnvelope, res *MessagesBroadcast) {
 	out.Constructor = C_MessagesBroadcast
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesSendMedia int64 = 25498545
@@ -100,9 +110,14 @@ var PoolMessagesSendMedia = poolMessagesSendMedia{}
 
 func ResultMessagesSendMedia(out *MessageEnvelope, res *MessagesSendMedia) {
 	out.Constructor = C_MessagesSendMedia
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesEdit int64 = 2492658432
@@ -128,9 +143,14 @@ var PoolMessagesEdit = poolMessagesEdit{}
 
 func ResultMessagesEdit(out *MessageEnvelope, res *MessagesEdit) {
 	out.Constructor = C_MessagesEdit
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesReadHistory int64 = 1300826534
@@ -155,9 +175,14 @@ var PoolMessagesReadHistory = poolMessagesReadHistory{}
 
 func ResultMessagesReadHistory(out *MessageEnvelope, res *MessagesReadHistory) {
 	out.Constructor = C_MessagesReadHistory
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesGet int64 = 2151382317
@@ -183,9 +208,14 @@ var PoolMessagesGet = poolMessagesGet{}
 
 func ResultMessagesGet(out *MessageEnvelope, res *MessagesGet) {
 	out.Constructor = C_MessagesGet
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesGetHistory int64 = 3396939832
@@ -210,9 +240,14 @@ var PoolMessagesGetHistory = poolMessagesGetHistory{}
 
 func ResultMessagesGetHistory(out *MessageEnvelope, res *MessagesGetHistory) {
 	out.Constructor = C_MessagesGetHistory
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesGetDialogs int64 = 1429532372
@@ -238,9 +273,14 @@ var PoolMessagesGetDialogs = poolMessagesGetDialogs{}
 
 func ResultMessagesGetDialogs(out *MessageEnvelope, res *MessagesGetDialogs) {
 	out.Constructor = C_MessagesGetDialogs
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesGetPinnedDialogs int64 = 1963188912
@@ -265,9 +305,14 @@ var PoolMessagesGetPinnedDialogs = poolMessagesGetPinnedDialogs{}
 
 func ResultMessagesGetPinnedDialogs(out *MessageEnvelope, res *MessagesGetPinnedDialogs) {
 	out.Constructor = C_MessagesGetPinnedDialogs
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesGetDialog int64 = 1050840034
@@ -292,9 +337,14 @@ var PoolMessagesGetDialog = poolMessagesGetDialog{}
 
 func ResultMessagesGetDialog(out *MessageEnvelope, res *MessagesGetDialog) {
 	out.Constructor = C_MessagesGetDialog
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesSetTyping int64 = 1540214486
@@ -319,9 +369,14 @@ var PoolMessagesSetTyping = poolMessagesSetTyping{}
 
 func ResultMessagesSetTyping(out *MessageEnvelope, res *MessagesSetTyping) {
 	out.Constructor = C_MessagesSetTyping
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesClearHistory int64 = 1981246180
@@ -346,9 +401,14 @@ var PoolMessagesClearHistory = poolMessagesClearHistory{}
 
 func ResultMessagesClearHistory(out *MessageEnvelope, res *MessagesClearHistory) {
 	out.Constructor = C_MessagesClearHistory
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesDelete int64 = 3487616910
@@ -374,9 +434,14 @@ var PoolMessagesDelete = poolMessagesDelete{}
 
 func ResultMessagesDelete(out *MessageEnvelope, res *MessagesDelete) {
 	out.Constructor = C_MessagesDelete
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesForward int64 = 2662884753
@@ -402,9 +467,14 @@ var PoolMessagesForward = poolMessagesForward{}
 
 func ResultMessagesForward(out *MessageEnvelope, res *MessagesForward) {
 	out.Constructor = C_MessagesForward
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesReadContents int64 = 1781251275
@@ -430,9 +500,14 @@ var PoolMessagesReadContents = poolMessagesReadContents{}
 
 func ResultMessagesReadContents(out *MessageEnvelope, res *MessagesReadContents) {
 	out.Constructor = C_MessagesReadContents
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesSaveDraft int64 = 921840607
@@ -459,9 +534,14 @@ var PoolMessagesSaveDraft = poolMessagesSaveDraft{}
 
 func ResultMessagesSaveDraft(out *MessageEnvelope, res *MessagesSaveDraft) {
 	out.Constructor = C_MessagesSaveDraft
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesClearDraft int64 = 2164204563
@@ -486,9 +566,14 @@ var PoolMessagesClearDraft = poolMessagesClearDraft{}
 
 func ResultMessagesClearDraft(out *MessageEnvelope, res *MessagesClearDraft) {
 	out.Constructor = C_MessagesClearDraft
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesToggleDialogPin int64 = 1352871220
@@ -513,9 +598,14 @@ var PoolMessagesToggleDialogPin = poolMessagesToggleDialogPin{}
 
 func ResultMessagesToggleDialogPin(out *MessageEnvelope, res *MessagesToggleDialogPin) {
 	out.Constructor = C_MessagesToggleDialogPin
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesReorderPinnedDialogs int64 = 1409872986
@@ -541,9 +631,14 @@ var PoolMessagesReorderPinnedDialogs = poolMessagesReorderPinnedDialogs{}
 
 func ResultMessagesReorderPinnedDialogs(out *MessageEnvelope, res *MessagesReorderPinnedDialogs) {
 	out.Constructor = C_MessagesReorderPinnedDialogs
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesSendScreenShotNotification int64 = 3682116055
@@ -571,9 +666,14 @@ var PoolMessagesSendScreenShotNotification = poolMessagesSendScreenShotNotificat
 
 func ResultMessagesSendScreenShotNotification(out *MessageEnvelope, res *MessagesSendScreenShotNotification) {
 	out.Constructor = C_MessagesSendScreenShotNotification
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesSendVote int64 = 2566114356
@@ -599,9 +699,14 @@ var PoolMessagesSendVote = poolMessagesSendVote{}
 
 func ResultMessagesSendVote(out *MessageEnvelope, res *MessagesSendVote) {
 	out.Constructor = C_MessagesSendVote
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesGetPollResults int64 = 1918165418
@@ -626,9 +731,14 @@ var PoolMessagesGetPollResults = poolMessagesGetPollResults{}
 
 func ResultMessagesGetPollResults(out *MessageEnvelope, res *MessagesGetPollResults) {
 	out.Constructor = C_MessagesGetPollResults
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesDialogs int64 = 3252610224
@@ -657,9 +767,14 @@ var PoolMessagesDialogs = poolMessagesDialogs{}
 
 func ResultMessagesDialogs(out *MessageEnvelope, res *MessagesDialogs) {
 	out.Constructor = C_MessagesDialogs
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesSent int64 = 2942502835
@@ -684,9 +799,14 @@ var PoolMessagesSent = poolMessagesSent{}
 
 func ResultMessagesSent(out *MessageEnvelope, res *MessagesSent) {
 	out.Constructor = C_MessagesSent
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_MessagesMany int64 = 1713238910
@@ -715,9 +835,14 @@ var PoolMessagesMany = poolMessagesMany{}
 
 func ResultMessagesMany(out *MessageEnvelope, res *MessagesMany) {
 	out.Constructor = C_MessagesMany
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 func init() {

@@ -9,6 +9,8 @@ git.ronaksoftware.com/river/msg v0.0.0-20200503091148-a5e643f9938c h1:rFTf4no5kA
 git.ronaksoftware.com/river/msg v0.0.0-20200503091148-a5e643f9938c/go.mod h1:yGIfGlsx4F1pIhM40NjLp9dg3fEZ/JzVuD3K06iMXeM=
 git.ronaksoftware.com/river/msg v0.0.0-20200503091552-132cd5a32a3c h1:rw5AZl10BtNIv8HV3kiMbcoK6wIUmvubp2AsE8chI1M=
 git.ronaksoftware.com/river/msg v0.0.0-20200503091552-132cd5a32a3c/go.mod h1:yGIfGlsx4F1pIhM40NjLp9dg3fEZ/JzVuD3K06iMXeM=
+git.ronaksoftware.com/river/msg v0.0.0-20200511101338-e21bfa85cdaa h1:BEHhj2Q9oAD0hGI9EWwVVXKaYE+usOYnb9IiC7xemlQ=
+git.ronaksoftware.com/river/msg v0.0.0-20200511101338-e21bfa85cdaa/go.mod h1:yGIfGlsx4F1pIhM40NjLp9dg3fEZ/JzVuD3K06iMXeM=
 git.ronaksoftware.com/ronak/toolbox v1.1.6 h1:t778crNCYcCfDWUZClWP+Nht4L7A6ZsoBitQvSrtvBU=
 git.ronaksoftware.com/ronak/toolbox v1.1.6/go.mod h1:dVcHnmWljSIhyC/Zswc8vLGgb6mEmDfnkHisSMJC6+8=
 github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9 h1:HD8gA2tkByhMAwYaFAX9w2l7vxvBQ5NMoxDrkhqhtn4=

@@ -43,9 +43,14 @@ var PoolReplyKeyboardMarkup = poolReplyKeyboardMarkup{}
 
 func ResultReplyKeyboardMarkup(out *MessageEnvelope, res *ReplyKeyboardMarkup) {
 	out.Constructor = C_ReplyKeyboardMarkup
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ReplyInlineMarkup int64 = 2436413989
@@ -71,9 +76,14 @@ var PoolReplyInlineMarkup = poolReplyInlineMarkup{}
 
 func ResultReplyInlineMarkup(out *MessageEnvelope, res *ReplyInlineMarkup) {
 	out.Constructor = C_ReplyInlineMarkup
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ReplyKeyboardHide int64 = 3134153306
@@ -98,9 +108,14 @@ var PoolReplyKeyboardHide = poolReplyKeyboardHide{}
 
 func ResultReplyKeyboardHide(out *MessageEnvelope, res *ReplyKeyboardHide) {
 	out.Constructor = C_ReplyKeyboardHide
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ReplyKeyboardForceReply int64 = 258469686
@@ -127,9 +142,14 @@ var PoolReplyKeyboardForceReply = poolReplyKeyboardForceReply{}
 
 func ResultReplyKeyboardForceReply(out *MessageEnvelope, res *ReplyKeyboardForceReply) {
 	out.Constructor = C_ReplyKeyboardForceReply
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_KeyboardButtonRow int64 = 2222403758
@@ -155,9 +175,14 @@ var PoolKeyboardButtonRow = poolKeyboardButtonRow{}
 
 func ResultKeyboardButtonRow(out *MessageEnvelope, res *KeyboardButtonRow) {
 	out.Constructor = C_KeyboardButtonRow
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_KeyboardButtonEnvelope int64 = 2639543624
@@ -183,9 +208,14 @@ var PoolKeyboardButtonEnvelope = poolKeyboardButtonEnvelope{}
 
 func ResultKeyboardButtonEnvelope(out *MessageEnvelope, res *KeyboardButtonEnvelope) {
 	out.Constructor = C_KeyboardButtonEnvelope
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_Button int64 = 1034594571
@@ -210,9 +240,14 @@ var PoolButton = poolButton{}
 
 func ResultButton(out *MessageEnvelope, res *Button) {
 	out.Constructor = C_Button
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ButtonUrl int64 = 2309530052
@@ -237,9 +272,14 @@ var PoolButtonUrl = poolButtonUrl{}
 
 func ResultButtonUrl(out *MessageEnvelope, res *ButtonUrl) {
 	out.Constructor = C_ButtonUrl
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ButtonCallback int64 = 4007711268
@@ -265,9 +305,14 @@ var PoolButtonCallback = poolButtonCallback{}
 
 func ResultButtonCallback(out *MessageEnvelope, res *ButtonCallback) {
 	out.Constructor = C_ButtonCallback
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ButtonRequestPhone int64 = 630958494
@@ -292,9 +337,14 @@ var PoolButtonRequestPhone = poolButtonRequestPhone{}
 
 func ResultButtonRequestPhone(out *MessageEnvelope, res *ButtonRequestPhone) {
 	out.Constructor = C_ButtonRequestPhone
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ButtonRequestGeoLocation int64 = 323515934
@@ -319,9 +369,14 @@ var PoolButtonRequestGeoLocation = poolButtonRequestGeoLocation{}
 
 func ResultButtonRequestGeoLocation(out *MessageEnvelope, res *ButtonRequestGeoLocation) {
 	out.Constructor = C_ButtonRequestGeoLocation
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ButtonSwitchInline int64 = 3842667878
@@ -347,9 +402,14 @@ var PoolButtonSwitchInline = poolButtonSwitchInline{}
 
 func ResultButtonSwitchInline(out *MessageEnvelope, res *ButtonSwitchInline) {
 	out.Constructor = C_ButtonSwitchInline
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ButtonBuy int64 = 2992465437
@@ -374,9 +434,14 @@ var PoolButtonBuy = poolButtonBuy{}
 
 func ResultButtonBuy(out *MessageEnvelope, res *ButtonBuy) {
 	out.Constructor = C_ButtonBuy
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 func init() {

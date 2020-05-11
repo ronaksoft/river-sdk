@@ -38,9 +38,14 @@ var PoolUpdateGetState = poolUpdateGetState{}
 
 func ResultUpdateGetState(out *MessageEnvelope, res *UpdateGetState) {
 	out.Constructor = C_UpdateGetState
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateGetDifference int64 = 556775761
@@ -65,9 +70,14 @@ var PoolUpdateGetDifference = poolUpdateGetDifference{}
 
 func ResultUpdateGetDifference(out *MessageEnvelope, res *UpdateGetDifference) {
 	out.Constructor = C_UpdateGetDifference
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateDifference int64 = 1742546619
@@ -96,9 +106,14 @@ var PoolUpdateDifference = poolUpdateDifference{}
 
 func ResultUpdateDifference(out *MessageEnvelope, res *UpdateDifference) {
 	out.Constructor = C_UpdateDifference
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateTooLong int64 = 1531755547
@@ -123,9 +138,14 @@ var PoolUpdateTooLong = poolUpdateTooLong{}
 
 func ResultUpdateTooLong(out *MessageEnvelope, res *UpdateTooLong) {
 	out.Constructor = C_UpdateTooLong
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateState int64 = 1837585836
@@ -150,9 +170,14 @@ var PoolUpdateState = poolUpdateState{}
 
 func ResultUpdateState(out *MessageEnvelope, res *UpdateState) {
 	out.Constructor = C_UpdateState
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateMessageID int64 = 2139063022
@@ -177,9 +202,14 @@ var PoolUpdateMessageID = poolUpdateMessageID{}
 
 func ResultUpdateMessageID(out *MessageEnvelope, res *UpdateMessageID) {
 	out.Constructor = C_UpdateMessageID
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateNewMessage int64 = 3426925183
@@ -206,9 +236,14 @@ var PoolUpdateNewMessage = poolUpdateNewMessage{}
 
 func ResultUpdateNewMessage(out *MessageEnvelope, res *UpdateNewMessage) {
 	out.Constructor = C_UpdateNewMessage
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateMessageEdited int64 = 1825079988
@@ -233,9 +268,14 @@ var PoolUpdateMessageEdited = poolUpdateMessageEdited{}
 
 func ResultUpdateMessageEdited(out *MessageEnvelope, res *UpdateMessageEdited) {
 	out.Constructor = C_UpdateMessageEdited
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateMessagesDeleted int64 = 670568714
@@ -262,9 +302,14 @@ var PoolUpdateMessagesDeleted = poolUpdateMessagesDeleted{}
 
 func ResultUpdateMessagesDeleted(out *MessageEnvelope, res *UpdateMessagesDeleted) {
 	out.Constructor = C_UpdateMessagesDeleted
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateReadHistoryInbox int64 = 1529128378
@@ -289,9 +334,14 @@ var PoolUpdateReadHistoryInbox = poolUpdateReadHistoryInbox{}
 
 func ResultUpdateReadHistoryInbox(out *MessageEnvelope, res *UpdateReadHistoryInbox) {
 	out.Constructor = C_UpdateReadHistoryInbox
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateReadHistoryOutbox int64 = 510866108
@@ -316,9 +366,14 @@ var PoolUpdateReadHistoryOutbox = poolUpdateReadHistoryOutbox{}
 
 func ResultUpdateReadHistoryOutbox(out *MessageEnvelope, res *UpdateReadHistoryOutbox) {
 	out.Constructor = C_UpdateReadHistoryOutbox
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateUserTyping int64 = 178254060
@@ -343,9 +398,14 @@ var PoolUpdateUserTyping = poolUpdateUserTyping{}
 
 func ResultUpdateUserTyping(out *MessageEnvelope, res *UpdateUserTyping) {
 	out.Constructor = C_UpdateUserTyping
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateUserStatus int64 = 2696747995
@@ -370,9 +430,14 @@ var PoolUpdateUserStatus = poolUpdateUserStatus{}
 
 func ResultUpdateUserStatus(out *MessageEnvelope, res *UpdateUserStatus) {
 	out.Constructor = C_UpdateUserStatus
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateUsername int64 = 4290110589
@@ -398,9 +463,14 @@ var PoolUpdateUsername = poolUpdateUsername{}
 
 func ResultUpdateUsername(out *MessageEnvelope, res *UpdateUsername) {
 	out.Constructor = C_UpdateUsername
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateUserPhoto int64 = 302028082
@@ -428,9 +498,14 @@ var PoolUpdateUserPhoto = poolUpdateUserPhoto{}
 
 func ResultUpdateUserPhoto(out *MessageEnvelope, res *UpdateUserPhoto) {
 	out.Constructor = C_UpdateUserPhoto
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateNotifySettings int64 = 3187524885
@@ -455,9 +530,14 @@ var PoolUpdateNotifySettings = poolUpdateNotifySettings{}
 
 func ResultUpdateNotifySettings(out *MessageEnvelope, res *UpdateNotifySettings) {
 	out.Constructor = C_UpdateNotifySettings
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateGroupParticipantAdd int64 = 1623827837
@@ -482,9 +562,14 @@ var PoolUpdateGroupParticipantAdd = poolUpdateGroupParticipantAdd{}
 
 func ResultUpdateGroupParticipantAdd(out *MessageEnvelope, res *UpdateGroupParticipantAdd) {
 	out.Constructor = C_UpdateGroupParticipantAdd
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateGroupParticipantDeleted int64 = 2489941844
@@ -509,9 +594,14 @@ var PoolUpdateGroupParticipantDeleted = poolUpdateGroupParticipantDeleted{}
 
 func ResultUpdateGroupParticipantDeleted(out *MessageEnvelope, res *UpdateGroupParticipantDeleted) {
 	out.Constructor = C_UpdateGroupParticipantDeleted
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateGroupParticipantAdmin int64 = 1813022164
@@ -536,9 +626,14 @@ var PoolUpdateGroupParticipantAdmin = poolUpdateGroupParticipantAdmin{}
 
 func ResultUpdateGroupParticipantAdmin(out *MessageEnvelope, res *UpdateGroupParticipantAdmin) {
 	out.Constructor = C_UpdateGroupParticipantAdmin
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateGroupAdmins int64 = 694155405
@@ -563,9 +658,14 @@ var PoolUpdateGroupAdmins = poolUpdateGroupAdmins{}
 
 func ResultUpdateGroupAdmins(out *MessageEnvelope, res *UpdateGroupAdmins) {
 	out.Constructor = C_UpdateGroupAdmins
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateGroupPhoto int64 = 367193154
@@ -592,9 +692,14 @@ var PoolUpdateGroupPhoto = poolUpdateGroupPhoto{}
 
 func ResultUpdateGroupPhoto(out *MessageEnvelope, res *UpdateGroupPhoto) {
 	out.Constructor = C_UpdateGroupPhoto
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateReadMessagesContents int64 = 2991403048
@@ -620,9 +725,14 @@ var PoolUpdateReadMessagesContents = poolUpdateReadMessagesContents{}
 
 func ResultUpdateReadMessagesContents(out *MessageEnvelope, res *UpdateReadMessagesContents) {
 	out.Constructor = C_UpdateReadMessagesContents
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateAuthorizationReset int64 = 2359297647
@@ -647,9 +757,14 @@ var PoolUpdateAuthorizationReset = poolUpdateAuthorizationReset{}
 
 func ResultUpdateAuthorizationReset(out *MessageEnvelope, res *UpdateAuthorizationReset) {
 	out.Constructor = C_UpdateAuthorizationReset
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateDraftMessage int64 = 3453026195
@@ -675,9 +790,14 @@ var PoolUpdateDraftMessage = poolUpdateDraftMessage{}
 
 func ResultUpdateDraftMessage(out *MessageEnvelope, res *UpdateDraftMessage) {
 	out.Constructor = C_UpdateDraftMessage
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateDraftMessageCleared int64 = 2011635602
@@ -703,9 +823,14 @@ var PoolUpdateDraftMessageCleared = poolUpdateDraftMessageCleared{}
 
 func ResultUpdateDraftMessageCleared(out *MessageEnvelope, res *UpdateDraftMessageCleared) {
 	out.Constructor = C_UpdateDraftMessageCleared
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateDialogPinned int64 = 231538299
@@ -730,9 +855,14 @@ var PoolUpdateDialogPinned = poolUpdateDialogPinned{}
 
 func ResultUpdateDialogPinned(out *MessageEnvelope, res *UpdateDialogPinned) {
 	out.Constructor = C_UpdateDialogPinned
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateDialogPinnedReorder int64 = 1567423539
@@ -758,9 +888,14 @@ var PoolUpdateDialogPinnedReorder = poolUpdateDialogPinnedReorder{}
 
 func ResultUpdateDialogPinnedReorder(out *MessageEnvelope, res *UpdateDialogPinnedReorder) {
 	out.Constructor = C_UpdateDialogPinnedReorder
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateAccountPrivacy int64 = 629173761
@@ -791,9 +926,14 @@ var PoolUpdateAccountPrivacy = poolUpdateAccountPrivacy{}
 
 func ResultUpdateAccountPrivacy(out *MessageEnvelope, res *UpdateAccountPrivacy) {
 	out.Constructor = C_UpdateAccountPrivacy
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateLabelItemsAdded int64 = 2216022057
@@ -821,9 +961,14 @@ var PoolUpdateLabelItemsAdded = poolUpdateLabelItemsAdded{}
 
 func ResultUpdateLabelItemsAdded(out *MessageEnvelope, res *UpdateLabelItemsAdded) {
 	out.Constructor = C_UpdateLabelItemsAdded
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateLabelItemsRemoved int64 = 830226827
@@ -851,9 +996,14 @@ var PoolUpdateLabelItemsRemoved = poolUpdateLabelItemsRemoved{}
 
 func ResultUpdateLabelItemsRemoved(out *MessageEnvelope, res *UpdateLabelItemsRemoved) {
 	out.Constructor = C_UpdateLabelItemsRemoved
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateLabelSet int64 = 2353687359
@@ -879,9 +1029,14 @@ var PoolUpdateLabelSet = poolUpdateLabelSet{}
 
 func ResultUpdateLabelSet(out *MessageEnvelope, res *UpdateLabelSet) {
 	out.Constructor = C_UpdateLabelSet
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateLabelDeleted int64 = 3702192307
@@ -907,9 +1062,14 @@ var PoolUpdateLabelDeleted = poolUpdateLabelDeleted{}
 
 func ResultUpdateLabelDeleted(out *MessageEnvelope, res *UpdateLabelDeleted) {
 	out.Constructor = C_UpdateLabelDeleted
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateUserBlocked int64 = 3750625773
@@ -934,9 +1094,14 @@ var PoolUpdateUserBlocked = poolUpdateUserBlocked{}
 
 func ResultUpdateUserBlocked(out *MessageEnvelope, res *UpdateUserBlocked) {
 	out.Constructor = C_UpdateUserBlocked
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateMessagePoll int64 = 383248674
@@ -962,9 +1127,14 @@ var PoolUpdateMessagePoll = poolUpdateMessagePoll{}
 
 func ResultUpdateMessagePoll(out *MessageEnvelope, res *UpdateMessagePoll) {
 	out.Constructor = C_UpdateMessagePoll
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UpdateBotCallbackQuery int64 = 3408999713
@@ -991,38 +1161,81 @@ var PoolUpdateBotCallbackQuery = poolUpdateBotCallbackQuery{}
 
 func ResultUpdateBotCallbackQuery(out *MessageEnvelope, res *UpdateBotCallbackQuery) {
 	out.Constructor = C_UpdateBotCallbackQuery
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
-const C_UpdateBotInlineCallbackQuery int64 = 426698513
+const C_UpdateBotInlineQuery int64 = 4065328876
 
-type poolUpdateBotInlineCallbackQuery struct {
+type poolUpdateBotInlineQuery struct {
 	pool sync.Pool
 }
 
-func (p *poolUpdateBotInlineCallbackQuery) Get() *UpdateBotInlineCallbackQuery {
-	x, ok := p.pool.Get().(*UpdateBotInlineCallbackQuery)
+func (p *poolUpdateBotInlineQuery) Get() *UpdateBotInlineQuery {
+	x, ok := p.pool.Get().(*UpdateBotInlineQuery)
 	if !ok {
-		return &UpdateBotInlineCallbackQuery{}
+		return &UpdateBotInlineQuery{}
 	}
-	x.MessageID = 0
-	x.Data = nil
+	x.Offset = ""
+	x.Geo = nil
 	return x
 }
 
-func (p *poolUpdateBotInlineCallbackQuery) Put(x *UpdateBotInlineCallbackQuery) {
+func (p *poolUpdateBotInlineQuery) Put(x *UpdateBotInlineQuery) {
 	p.pool.Put(x)
 }
 
-var PoolUpdateBotInlineCallbackQuery = poolUpdateBotInlineCallbackQuery{}
+var PoolUpdateBotInlineQuery = poolUpdateBotInlineQuery{}
 
-func ResultUpdateBotInlineCallbackQuery(out *MessageEnvelope, res *UpdateBotInlineCallbackQuery) {
-	out.Constructor = C_UpdateBotInlineCallbackQuery
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+func ResultUpdateBotInlineQuery(out *MessageEnvelope, res *UpdateBotInlineQuery) {
+	out.Constructor = C_UpdateBotInlineQuery
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_UpdateBotInlineSend int64 = 2208028013
+
+type poolUpdateBotInlineSend struct {
+	pool sync.Pool
+}
+
+func (p *poolUpdateBotInlineSend) Get() *UpdateBotInlineSend {
+	x, ok := p.pool.Get().(*UpdateBotInlineSend)
+	if !ok {
+		return &UpdateBotInlineSend{}
+	}
+	x.Geo = nil
+	return x
+}
+
+func (p *poolUpdateBotInlineSend) Put(x *UpdateBotInlineSend) {
+	p.pool.Put(x)
+}
+
+var PoolUpdateBotInlineSend = poolUpdateBotInlineSend{}
+
+func ResultUpdateBotInlineSend(out *MessageEnvelope, res *UpdateBotInlineSend) {
+	out.Constructor = C_UpdateBotInlineSend
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 func init() {
@@ -1061,5 +1274,6 @@ func init() {
 	ConstructorNames[3750625773] = "UpdateUserBlocked"
 	ConstructorNames[383248674] = "UpdateMessagePoll"
 	ConstructorNames[3408999713] = "UpdateBotCallbackQuery"
-	ConstructorNames[426698513] = "UpdateBotInlineCallbackQuery"
+	ConstructorNames[4065328876] = "UpdateBotInlineQuery"
+	ConstructorNames[2208028013] = "UpdateBotInlineSend"
 }

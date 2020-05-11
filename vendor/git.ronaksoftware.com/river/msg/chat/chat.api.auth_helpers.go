@@ -39,9 +39,14 @@ var PoolAuthRegister = poolAuthRegister{}
 
 func ResultAuthRegister(out *MessageEnvelope, res *AuthRegister) {
 	out.Constructor = C_AuthRegister
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_AuthBotRegister int64 = 1579606687
@@ -66,9 +71,14 @@ var PoolAuthBotRegister = poolAuthBotRegister{}
 
 func ResultAuthBotRegister(out *MessageEnvelope, res *AuthBotRegister) {
 	out.Constructor = C_AuthBotRegister
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_AuthLogin int64 = 2587620888
@@ -93,9 +103,14 @@ var PoolAuthLogin = poolAuthLogin{}
 
 func ResultAuthLogin(out *MessageEnvelope, res *AuthLogin) {
 	out.Constructor = C_AuthLogin
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_AuthCheckPassword int64 = 3346962908
@@ -120,9 +135,14 @@ var PoolAuthCheckPassword = poolAuthCheckPassword{}
 
 func ResultAuthCheckPassword(out *MessageEnvelope, res *AuthCheckPassword) {
 	out.Constructor = C_AuthCheckPassword
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_AuthRecoverPassword int64 = 2711231991
@@ -147,9 +167,14 @@ var PoolAuthRecoverPassword = poolAuthRecoverPassword{}
 
 func ResultAuthRecoverPassword(out *MessageEnvelope, res *AuthRecoverPassword) {
 	out.Constructor = C_AuthRecoverPassword
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_AuthLogout int64 = 992431648
@@ -175,9 +200,14 @@ var PoolAuthLogout = poolAuthLogout{}
 
 func ResultAuthLogout(out *MessageEnvelope, res *AuthLogout) {
 	out.Constructor = C_AuthLogout
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_AuthLoginByToken int64 = 2851553023
@@ -202,9 +232,14 @@ var PoolAuthLoginByToken = poolAuthLoginByToken{}
 
 func ResultAuthLoginByToken(out *MessageEnvelope, res *AuthLoginByToken) {
 	out.Constructor = C_AuthLoginByToken
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_AuthCheckPhone int64 = 4134648516
@@ -229,9 +264,14 @@ var PoolAuthCheckPhone = poolAuthCheckPhone{}
 
 func ResultAuthCheckPhone(out *MessageEnvelope, res *AuthCheckPhone) {
 	out.Constructor = C_AuthCheckPhone
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_AuthSendCode int64 = 3984043365
@@ -257,9 +297,14 @@ var PoolAuthSendCode = poolAuthSendCode{}
 
 func ResultAuthSendCode(out *MessageEnvelope, res *AuthSendCode) {
 	out.Constructor = C_AuthSendCode
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_AuthResendCode int64 = 2682713491
@@ -285,9 +330,14 @@ var PoolAuthResendCode = poolAuthResendCode{}
 
 func ResultAuthResendCode(out *MessageEnvelope, res *AuthResendCode) {
 	out.Constructor = C_AuthResendCode
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_AuthRecall int64 = 1172029049
@@ -317,9 +367,14 @@ var PoolAuthRecall = poolAuthRecall{}
 
 func ResultAuthRecall(out *MessageEnvelope, res *AuthRecall) {
 	out.Constructor = C_AuthRecall
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_AuthDestroyKey int64 = 3673422656
@@ -344,9 +399,14 @@ var PoolAuthDestroyKey = poolAuthDestroyKey{}
 
 func ResultAuthDestroyKey(out *MessageEnvelope, res *AuthDestroyKey) {
 	out.Constructor = C_AuthDestroyKey
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_AuthPasswordRecovery int64 = 3813475914
@@ -371,9 +431,14 @@ var PoolAuthPasswordRecovery = poolAuthPasswordRecovery{}
 
 func ResultAuthPasswordRecovery(out *MessageEnvelope, res *AuthPasswordRecovery) {
 	out.Constructor = C_AuthPasswordRecovery
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_AuthRecalled int64 = 3249025459
@@ -402,9 +467,14 @@ var PoolAuthRecalled = poolAuthRecalled{}
 
 func ResultAuthRecalled(out *MessageEnvelope, res *AuthRecalled) {
 	out.Constructor = C_AuthRecalled
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_AuthAuthorization int64 = 1140037965
@@ -429,9 +499,14 @@ var PoolAuthAuthorization = poolAuthAuthorization{}
 
 func ResultAuthAuthorization(out *MessageEnvelope, res *AuthAuthorization) {
 	out.Constructor = C_AuthAuthorization
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_AuthBotAuthorization int64 = 3304560814
@@ -456,9 +531,14 @@ var PoolAuthBotAuthorization = poolAuthBotAuthorization{}
 
 func ResultAuthBotAuthorization(out *MessageEnvelope, res *AuthBotAuthorization) {
 	out.Constructor = C_AuthBotAuthorization
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_AuthCheckedPhone int64 = 2236203131
@@ -483,9 +563,14 @@ var PoolAuthCheckedPhone = poolAuthCheckedPhone{}
 
 func ResultAuthCheckedPhone(out *MessageEnvelope, res *AuthCheckedPhone) {
 	out.Constructor = C_AuthCheckedPhone
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_AuthSentCode int64 = 2375498471
@@ -511,9 +596,14 @@ var PoolAuthSentCode = poolAuthSentCode{}
 
 func ResultAuthSentCode(out *MessageEnvelope, res *AuthSentCode) {
 	out.Constructor = C_AuthSentCode
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 func init() {

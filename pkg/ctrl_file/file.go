@@ -594,7 +594,7 @@ func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) (reqID 
 	reqID = GetRequestID(0, fileID, 0)
 	return
 }
-func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPath string, fileID, thumbID int64, fileSha256 string, peerID int64) {
+func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPath string, fileID, thumbID int64, fileSha256 string, peerID int64, entities []msg.MessageEntity) {
 	if _, err := os.Stat(filePath); err != nil {
 		logs.Warn("FileCtrl got error on upload message document (thumbnail)", zap.Error(err))
 		return
@@ -617,6 +617,7 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 		MaxInFlights: maxUploadInFlights,
 		FileSha256:   fileSha256,
 		PeerID:       peerID,
+		Entities:     entities,
 	}
 
 	reqThumb := UploadRequest{

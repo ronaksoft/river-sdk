@@ -39,9 +39,14 @@ var PoolContactsImport = poolContactsImport{}
 
 func ResultContactsImport(out *MessageEnvelope, res *ContactsImport) {
 	out.Constructor = C_ContactsImport
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ContactsAdd int64 = 1410714478
@@ -68,9 +73,14 @@ var PoolContactsAdd = poolContactsAdd{}
 
 func ResultContactsAdd(out *MessageEnvelope, res *ContactsAdd) {
 	out.Constructor = C_ContactsAdd
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ContactsGet int64 = 1412732665
@@ -95,9 +105,14 @@ var PoolContactsGet = poolContactsGet{}
 
 func ResultContactsGet(out *MessageEnvelope, res *ContactsGet) {
 	out.Constructor = C_ContactsGet
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ContactsDelete int64 = 1750426880
@@ -123,9 +138,14 @@ var PoolContactsDelete = poolContactsDelete{}
 
 func ResultContactsDelete(out *MessageEnvelope, res *ContactsDelete) {
 	out.Constructor = C_ContactsDelete
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ContactsDeleteAll int64 = 14552524
@@ -150,9 +170,14 @@ var PoolContactsDeleteAll = poolContactsDeleteAll{}
 
 func ResultContactsDeleteAll(out *MessageEnvelope, res *ContactsDeleteAll) {
 	out.Constructor = C_ContactsDeleteAll
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ContactsBlock int64 = 2900371089
@@ -177,9 +202,14 @@ var PoolContactsBlock = poolContactsBlock{}
 
 func ResultContactsBlock(out *MessageEnvelope, res *ContactsBlock) {
 	out.Constructor = C_ContactsBlock
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ContactsUnblock int64 = 662011773
@@ -204,9 +234,14 @@ var PoolContactsUnblock = poolContactsUnblock{}
 
 func ResultContactsUnblock(out *MessageEnvelope, res *ContactsUnblock) {
 	out.Constructor = C_ContactsUnblock
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ContactsGetBlocked int64 = 1073733371
@@ -231,9 +266,14 @@ var PoolContactsGetBlocked = poolContactsGetBlocked{}
 
 func ResultContactsGetBlocked(out *MessageEnvelope, res *ContactsGetBlocked) {
 	out.Constructor = C_ContactsGetBlocked
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ContactsSearch int64 = 3870802464
@@ -258,9 +298,14 @@ var PoolContactsSearch = poolContactsSearch{}
 
 func ResultContactsSearch(out *MessageEnvelope, res *ContactsSearch) {
 	out.Constructor = C_ContactsSearch
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ContactsGetTopPeers int64 = 1378126220
@@ -291,9 +336,14 @@ var PoolContactsGetTopPeers = poolContactsGetTopPeers{}
 
 func ResultContactsGetTopPeers(out *MessageEnvelope, res *ContactsGetTopPeers) {
 	out.Constructor = C_ContactsGetTopPeers
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ContactsResetTopPeer int64 = 1114887378
@@ -318,9 +368,14 @@ var PoolContactsResetTopPeer = poolContactsResetTopPeer{}
 
 func ResultContactsResetTopPeer(out *MessageEnvelope, res *ContactsResetTopPeer) {
 	out.Constructor = C_ContactsResetTopPeer
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ContactsTopPeers int64 = 2243919622
@@ -348,9 +403,14 @@ var PoolContactsTopPeers = poolContactsTopPeers{}
 
 func ResultContactsTopPeers(out *MessageEnvelope, res *ContactsTopPeers) {
 	out.Constructor = C_ContactsTopPeers
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_TopPeerCategoryPeers int64 = 78563632
@@ -376,9 +436,14 @@ var PoolTopPeerCategoryPeers = poolTopPeerCategoryPeers{}
 
 func ResultTopPeerCategoryPeers(out *MessageEnvelope, res *TopPeerCategoryPeers) {
 	out.Constructor = C_TopPeerCategoryPeers
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_TopPeer int64 = 1763100161
@@ -404,9 +469,14 @@ var PoolTopPeer = poolTopPeer{}
 
 func ResultTopPeer(out *MessageEnvelope, res *TopPeer) {
 	out.Constructor = C_TopPeer
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BlockedContactsMany int64 = 2067026404
@@ -434,9 +504,14 @@ var PoolBlockedContactsMany = poolBlockedContactsMany{}
 
 func ResultBlockedContactsMany(out *MessageEnvelope, res *BlockedContactsMany) {
 	out.Constructor = C_BlockedContactsMany
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_BlockedContact int64 = 53788553
@@ -461,9 +536,14 @@ var PoolBlockedContact = poolBlockedContact{}
 
 func ResultBlockedContact(out *MessageEnvelope, res *BlockedContact) {
 	out.Constructor = C_BlockedContact
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ContactsImported int64 = 2157298354
@@ -490,9 +570,14 @@ var PoolContactsImported = poolContactsImported{}
 
 func ResultContactsImported(out *MessageEnvelope, res *ContactsImported) {
 	out.Constructor = C_ContactsImported
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_ContactsMany int64 = 3883395672
@@ -520,9 +605,14 @@ var PoolContactsMany = poolContactsMany{}
 
 func ResultContactsMany(out *MessageEnvelope, res *ContactsMany) {
 	out.Constructor = C_ContactsMany
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 func init() {

@@ -69,6 +69,7 @@ const (
 	ErrItemDeviceToken      = "DEVICE_TOKEN"
 	ErrItemDeviceModel      = "DEVICE_MODEL"
 	ErrItemDocument         = "DOCUMENT"
+	ErrItemDocumentType     = "DOCUMENT_TYPE"
 	ErrItemToken            = "TOKEN"
 	ErrItemMedia            = "MEDIA"
 	ErrItemPinnedDialogs    = "PINNED_DIALOGS"
@@ -104,4 +105,5 @@ const (
 	ErrItemQuery            = "QUERY"
 	ErrItemBotFather        = "BOT_FATHER"
 	ErrItemAdminBot         = "ADMIN_BOT"
+	ErrItemBotResult        = "BOT_RESULT"
 )

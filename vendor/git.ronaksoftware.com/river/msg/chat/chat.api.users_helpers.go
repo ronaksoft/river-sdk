@@ -39,9 +39,14 @@ var PoolUsersGet = poolUsersGet{}
 
 func ResultUsersGet(out *MessageEnvelope, res *UsersGet) {
 	out.Constructor = C_UsersGet
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UsersGetFull int64 = 3343342086
@@ -67,9 +72,14 @@ var PoolUsersGetFull = poolUsersGetFull{}
 
 func ResultUsersGetFull(out *MessageEnvelope, res *UsersGetFull) {
 	out.Constructor = C_UsersGetFull
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 const C_UsersMany int64 = 801733941
@@ -95,9 +105,14 @@ var PoolUsersMany = poolUsersMany{}
 
 func ResultUsersMany(out *MessageEnvelope, res *UsersMany) {
 	out.Constructor = C_UsersMany
-	pbytes.Put(out.Message)
-	out.Message = pbytes.GetLen(res.Size())
-	res.MarshalTo(out.Message)
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
 }
 
 func init() {
