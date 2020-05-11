@@ -581,7 +581,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	out.Constructor = msg.C_ClientPendingMessage
 	out.Message, _ = pendingMessage.Marshal()
 
-	r.fileCtrl.UploadMessageDocument(pendingMessage.ID, reqMedia.FilePath, reqMedia.ThumbFilePath, fileID, thumbID, h, pendingMessage.PeerID)
+	r.fileCtrl.UploadMessageDocument(pendingMessage.ID, reqMedia.FilePath, reqMedia.ThumbFilePath, fileID, thumbID, h, pendingMessage.PeerID,reqMedia.Entities)
 
 	// 4. later when queue got processed and server returned response we should check if the requestID
 	//   exist in pendingTable we remove it and insert new message with new id to message table
