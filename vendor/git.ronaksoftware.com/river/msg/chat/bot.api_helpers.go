@@ -93,6 +93,8 @@ func (p *poolBotSetInfo) Get() *BotSetInfo {
 		return &BotSetInfo{}
 	}
 	x.BotCommands = x.BotCommands[:0]
+	x.InlinePlaceholder = ""
+	x.InlineGeo = false
 	return x
 }
 
