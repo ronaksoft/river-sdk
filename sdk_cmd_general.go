@@ -557,6 +557,7 @@ func (r *River) AppKill() {
 	r.AppBackground()
 }
 
+// AppStart
 func (r *River) AppStart() error {
 	runtime.GOMAXPROCS(runtime.NumCPU() * 10)
 
@@ -618,6 +619,7 @@ func (r *River) AppStart() error {
 
 	return nil
 }
+
 // GenSrpHash generates a hash to be used in AuthCheckPassword and other related apis
 func GenSrpHash(password []byte, algorithm int64, algorithmData []byte) []byte {
 	switch algorithm {
@@ -679,10 +681,12 @@ func GenInputPassword(password []byte, accountPasswordBytes []byte) []byte {
 	return res
 }
 
+// SanitizeQuestionAnswer
 func SanitizeQuestionAnswer(answer string) string {
 	return strings.ToLower(strings.TrimSpace(answer))
 }
 
+// GetCountryCode
 func GetCountryCode(phone string) string {
 	return domain.GetCountryCode(phone)
 }
