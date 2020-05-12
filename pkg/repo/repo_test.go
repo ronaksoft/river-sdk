@@ -132,7 +132,7 @@ func TestRepoMessagesExtra(t *testing.T) {
 func TestPending(t *testing.T) {
 	pm := new(msg.ClientSendMessageMedia)
 	pm.Peer = new(msg.InputPeer)
-	_, err := repo.PendingMessages.SaveClientMessageMedia(10, 1, 11, 20, 21, pm, "")
+	_, err := repo.PendingMessages.SaveClientMessageMedia(10, 1, 11, 20, 21, pm, nil)
 	if err != nil {
 		t.Error(err)
 	}

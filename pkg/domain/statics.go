@@ -436,10 +436,10 @@ func GetExponentialTime(min time.Duration, max time.Duration, attempts int) time
 	return time.Duration(napDuration)
 }
 
-func CalculateSha256(filePath string) (string, error) {
+func CalculateSha256(filePath string) ([]byte, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	h := sha256.New()
 	buf := make([]byte, 1 << 20)
@@ -450,11 +450,11 @@ func CalculateSha256(filePath string) (string, error) {
 			if err == io.EOF {
 				break
 			}
-			return "", err
+			return nil, err
 		}
 		h.Write(buf[:n])
 	}
-	return string(h.Sum(nil)), nil
+	return h.Sum(nil), nil
 }
 
 // ByteToStr converts byte slice to a string without memory allocation.

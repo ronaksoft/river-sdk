@@ -63,10 +63,10 @@ type UploadRequest struct {
 	SkipDelegateCall bool  `json:"skip_delegate_call"`
 	PeerID           int64 `json:"peer_id"`
 	// These parts are used to check if the file has been already uploaded
-	FileSha256 string              `json:"file_sha256"`
-	AccessHash uint64              `json:"access_hash"`
-	ClusterID  int32               `json:"cluster_id"`
-	DocumentID int64               `json:"document_id"`
+	FileSha256 string `json:"file_sha256"`
+	AccessHash uint64 `json:"access_hash"`
+	ClusterID  int32  `json:"cluster_id"`
+	DocumentID int64  `json:"document_id"`
 }
 
 func (r UploadRequest) GetID() string {

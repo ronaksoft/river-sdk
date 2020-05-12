@@ -217,7 +217,7 @@ func (p *poolClientPendingMessage) Get() *ClientPendingMessage {
 	x.ThumbUploadID = ""
 	x.FileID = 0
 	x.ThumbID = 0
-	x.Sha256 = ""
+	x.Sha256 = nil
 	x.ServerFile = nil
 	return x
 }

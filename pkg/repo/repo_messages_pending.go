@@ -107,7 +107,7 @@ func (r *repoMessagesPending) Save(msgID int64, senderID int64, message *msg.Mes
 }
 
 func (r *repoMessagesPending) SaveClientMessageMedia(
-	msgID, senderID, requestID, fileID, thumbID int64, msgMedia *msg.ClientSendMessageMedia, fileSha256 string,
+	msgID, senderID, requestID, fileID, thumbID int64, msgMedia *msg.ClientSendMessageMedia, fileSha256 []byte,
 ) (*msg.ClientPendingMessage, error) {
 	if msgMedia == nil {
 		return nil, domain.ErrNotFound
