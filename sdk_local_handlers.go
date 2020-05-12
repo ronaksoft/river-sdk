@@ -541,7 +541,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	reqMedia := new(msg.ClientSendMessageMedia)
 	if err := reqMedia.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		uiexec.ExecSuccessCB(successCB, out)
 		return
 	}
 
@@ -578,10 +578,9 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	}
 
 	// 3. return to CallBack with pending message data : Done
-	out.Constructor = msg.C_ClientPendingMessage
-	out.Message, _ = pendingMessage.Marshal()
+	msg.ResultClientPendingMessage(out, pendingMessage)
 
-	r.fileCtrl.UploadMessageDocument(pendingMessage.ID, reqMedia.FilePath, reqMedia.ThumbFilePath, fileID, thumbID, h, pendingMessage.PeerID,reqMedia.Entities)
+	r.fileCtrl.UploadMessageDocument(pendingMessage.ID, reqMedia.FilePath, reqMedia.ThumbFilePath, fileID, thumbID, h, pendingMessage.PeerID)
 
 	// 4. later when queue got processed and server returned response we should check if the requestID
 	//   exist in pendingTable we remove it and insert new message with new id to message table

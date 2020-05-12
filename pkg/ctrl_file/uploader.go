@@ -67,7 +67,6 @@ type UploadRequest struct {
 	AccessHash uint64              `json:"access_hash"`
 	ClusterID  int32               `json:"cluster_id"`
 	DocumentID int64               `json:"document_id"`
-	Entities   []*msg.MessageEntity `json:"entities"`
 }
 
 func (r UploadRequest) GetID() string {

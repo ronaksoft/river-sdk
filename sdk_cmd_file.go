@@ -148,7 +148,7 @@ func (r *River) ResumeUpload(pendingMessageID int64) {
 	if _, ok := r.fileCtrl.GetUploadRequest(pendingMessage.FileID); !ok {
 		r.fileCtrl.UploadMessageDocument(
 			pendingMessageID, req.FilePath, req.ThumbFilePath, pendingMessage.FileID,
-			pendingMessage.ThumbID, pendingMessage.Sha256, pendingMessage.PeerID,pendingMessage.Entities,
+			pendingMessage.ThumbID, pendingMessage.Sha256, pendingMessage.PeerID,
 		)
 	}
 }
