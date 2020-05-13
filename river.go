@@ -292,7 +292,7 @@ func (r *River) onNetworkConnect() (err error) {
 			}
 
 			// import contact from server
-			r.syncCtrl.ContactImportFromServer()
+			r.syncCtrl.ContactsGet()
 			domain.WindowLog(fmt.Sprintf("ContactsImported: %s", time.Now().Sub(domain.StartTime)))
 		}
 	}()

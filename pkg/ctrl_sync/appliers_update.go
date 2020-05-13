@@ -102,7 +102,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.UpdateEnvelope, res []*msg.UpdateEnvelope) {
 	switch x.Message.MessageAction {
 	case domain.MessageActionContactRegistered:
-		go ctrl.ContactImportFromServer()
+		go ctrl.ContactsGet()
 	case domain.MessageActionGroupDeleteUser:
 		act := new(msg.MessageActionGroupDeleteUser)
 		err := act.Unmarshal(x.Message.MessageActionData)
@@ -316,7 +316,7 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 			)
 			return res, nil
 		}
-		ctrl.DeletePendingMessage(pm)
+		ctrl.deletePendingMessage(pm)
 		return res, nil
 	}
 
@@ -332,6 +332,25 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 	logs.Debug("SyncCtrl saved by realID")
 
 	return res, nil
+}
+func (ctrl *Controller) deletePendingMessage(pm *msg.ClientPendingMessage) {
+	// It means we have received the NewMessage
+	update := &msg.UpdateMessagesDeleted{
+		Peer:       &msg.Peer{ID: pm.PeerID, Type: pm.PeerType},
+		MessageIDs: []int64{pm.ID},
+	}
+	bytes, _ := update.Marshal()
+
+	updateEnvelope := &msg.UpdateEnvelope{
+		Constructor: msg.C_UpdateMessagesDeleted,
+		Update:      bytes,
+		UpdateID:    0,
+		Timestamp:   time.Now().Unix(),
+	}
+
+	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateEnvelope, updateEnvelope)
+
+	_ = repo.PendingMessages.Delete(pm.ID)
 }
 
 func (ctrl *Controller) updateNotifySettings(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {

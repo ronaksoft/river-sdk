@@ -480,8 +480,8 @@ func (ctrl *Controller) ResetIDs() {
 	ctrl.userID = 0
 }
 
-// ContactImportFromServer import contact from server
-func (ctrl *Controller) ContactImportFromServer() {
+// ContactsGet import contact from server
+func (ctrl *Controller) ContactsGet() {
 	contactsGetHash, _ := repo.System.LoadInt(domain.SkContactsGetHash)
 	contactGetReq := &msg.ContactsGet{
 		Crc32Hash: uint32(contactsGetHash),
@@ -496,27 +496,6 @@ func (ctrl *Controller) ContactImportFromServer() {
 		nil, nil, false, false,
 	)
 	logs.Debug("SyncCtrl call ContactsGet", zap.Uint32("Hash", contactGetReq.Crc32Hash))
-}
-
-// DeletePendingMessage
-func (ctrl *Controller) DeletePendingMessage(pm *msg.ClientPendingMessage) {
-	// It means we have received the NewMessage
-	update := &msg.UpdateMessagesDeleted{
-		Peer:       &msg.Peer{ID: pm.PeerID, Type: pm.PeerType},
-		MessageIDs: []int64{pm.ID},
-	}
-	bytes, _ := update.Marshal()
-
-	updateEnvelope := &msg.UpdateEnvelope{
-		Constructor: msg.C_UpdateMessagesDeleted,
-		Update:      bytes,
-		UpdateID:    0,
-		Timestamp:   time.Now().Unix(),
-	}
-
-	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateEnvelope, updateEnvelope)
-
-	_ = repo.PendingMessages.Delete(pm.ID)
 }
 
 // GetSyncStatus

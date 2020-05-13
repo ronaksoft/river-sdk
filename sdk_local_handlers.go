@@ -290,8 +290,6 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		}
 	}
 
-
-
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:
 		req.MaxID = dialog.TopMessageID
@@ -679,8 +677,14 @@ func (r *River) sendChunkedImportContactRequest(replace bool, diffContacts []*ms
 	result.Users = make([]*msg.User, 0)
 	result.ContactUsers = make([]*msg.ContactUser, 0)
 
-	mx := sync.Mutex{}
-	wg := sync.WaitGroup{}
+	var (
+		count     = len(diffContacts)
+		idx       = 0
+		batchSize = 50
+		mx        = sync.Mutex{}
+		wg        = sync.WaitGroup{}
+	)
+
 	cbTimeout := func() {
 		wg.Done()
 		logs.Error("sendChunkedImportContactRequest() -> cbTimeout() ")
@@ -691,7 +695,8 @@ func (r *River) sendChunkedImportContactRequest(replace bool, diffContacts []*ms
 		defer mx.Unlock()
 		defer wg.Done()
 
-		if env.Constructor == msg.C_ContactsImported {
+		switch env.Constructor {
+		case msg.C_ContactsImported:
 			x := new(msg.ContactsImported)
 			err := x.Unmarshal(env.Message)
 			if err != nil {
@@ -700,28 +705,26 @@ func (r *River) sendChunkedImportContactRequest(replace bool, diffContacts []*ms
 			}
 			result.Users = append(result.Users, x.Users...)
 			result.ContactUsers = append(result.ContactUsers, x.ContactUsers...)
-		} else {
+		case msg.C_Error:
+		default:
 			logs.Error("We expected ContactsImported but we got something else!!!",
 				zap.String("C", msg.ConstructorNames[env.Constructor]),
 			)
 		}
 	}
 
-	count := len(diffContacts)
-	idx := 0
 	for idx < count {
-		req := new(msg.ContactsImport)
-		req.Replace = replace
-		req.Contacts = make([]*msg.PhoneContact, 0)
-
-		for i := 0; i < 50 && idx < count; i++ {
+		req := &msg.ContactsImport{
+			Replace:  replace,
+			Contacts: make([]*msg.PhoneContact, 0, batchSize),
+		}
+		for i := 0; i < batchSize && idx < count; i++ {
 			req.Contacts = append(req.Contacts, diffContacts[idx])
 			idx++
 		}
 
 		reqID := uint64(domain.SequentialUniqueID())
 		reqBytes, _ := req.Marshal()
-
 		wg.Add(1)
 		r.queueCtrl.EnqueueCommand(
 			&msg.MessageEnvelope{
