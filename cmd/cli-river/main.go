@@ -24,8 +24,8 @@ var (
 )
 
 func main() {
-	_LogLevel = zap.NewAtomicLevelAt(zap.WarnLevel)
-	cfg := zap.NewProductionConfig()
+	_LogLevel = zap.NewAtomicLevelAt(zap.DebugLevel)
+	cfg := zap.NewDevelopmentConfig()
 	cfg.Level = _LogLevel
 	_Log, _ = cfg.Build()
 
@@ -62,8 +62,8 @@ func main() {
 	}
 
 	connInfo := new(riversdk.RiverConnection)
-
-	file, err := os.Open(filepath.Join(dbPath, fmt.Sprintf("connInfo.%s", dbID)))
+	connInfoPath := filepath.Join(dbPath, fmt.Sprintf("connInfo.%s", dbID))
+	file, err := os.Open(connInfoPath)
 	if err == nil {
 		b, _ := ioutil.ReadAll(file)
 		err := json.Unmarshal(b, connInfo)
@@ -72,7 +72,11 @@ func main() {
 		}
 	}
 
-	connInfo.Delegate = new(ConnInfoDelegates)
+	connInfo.Delegate = &ConnInfoDelegates{
+		dbPath: dbPath,
+		filePath: connInfoPath,
+	}
+
 
 
 	serverEndPoint := "ws://river.ronaksoftware.com"
@@ -107,7 +111,7 @@ func main() {
 		ServerKeys:             domain.ByteToStr(skBytes),
 		MainDelegate:           new(MainDelegate),
 		FileDelegate:           new(FileDelegate),
-		LogLevel:               int(zapcore.DebugLevel),
+		LogLevel:               int(zapcore.InfoLevel),
 		DocumentAudioDirectory: "./_files/audio",
 		DocumentVideoDirectory: "./_files/video",
 		DocumentPhotoDirectory: "./_files/photo",
@@ -117,7 +121,6 @@ func main() {
 		ConnInfo:               connInfo,
 	})
 
-	// _SDK.TurnOnLiveLogger("http://localhost:2374")
 	err = _SDK.AppStart()
 	if err != nil {
 		_Log.Fatal(err.Error())

@@ -614,7 +614,7 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 		return
 	}
 
-	// TOF
+	// If only importing one contact then we don't need to calculate contacts hash
 	if len(req.Contacts) == 1 {
 		// send request to server
 		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)

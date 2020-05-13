@@ -347,7 +347,6 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		x := new(msg.UpdateState)
 		x.Unmarshal(envelope.Message)
 		_Shell.Println("\r\n" + x.String())
-
 	case msg.C_BotCommandsMany:
 		x := new(msg.BotCommandsMany)
 		x.Unmarshal(envelope.Message)
@@ -355,7 +354,6 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		for _, cmd := range x.Commands {
 			_Shell.Println(cmd.Command, "-", cmd.Description)
 		}
-
 	default:
 		constructorName, _ := msg.ConstructorNames[envelope.Constructor]
 		_Shell.Println("DEFAULT",

@@ -11,6 +11,7 @@ import (
 
 
 type ConnInfoDelegates struct{
+	dbPath string
 	filePath 	string
 }
 
@@ -23,7 +24,7 @@ func (c *ConnInfoDelegates) Set(key, value string) {
 }
 
 func (c *ConnInfoDelegates) SaveConnInfo(connInfo []byte) {
-	_ = os.MkdirAll("./_connection", os.ModePerm)
+	_ = os.MkdirAll(c.dbPath, os.ModePerm)
 	err := ioutil.WriteFile(c.filePath, connInfo, 0666)
 	if err != nil {
 		_Log.Error(err.Error())
@@ -89,7 +90,7 @@ func (d *MainDelegate) OnDeferredRequests(requestID int64, b []byte) {
 		zap.Uint64("ReqID", envelope.RequestID),
 		zap.String("C", msg.ConstructorNames[envelope.Constructor]),
 	)
-	MessagePrinter(envelope)
+	// MessagePrinter(envelope)
 }
 
 func (d *MainDelegate) OnNetworkStatusChanged(quality int) {

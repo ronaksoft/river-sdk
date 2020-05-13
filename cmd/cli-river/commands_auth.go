@@ -88,7 +88,6 @@ var AuthLogin = &ishell.Cmd{
 				}
 			}
 		}
-		c.Print("req: ", req)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		os.Remove("./_connection/phone")
