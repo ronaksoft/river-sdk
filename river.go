@@ -295,7 +295,7 @@ func (r *River) onNetworkConnect() (err error) {
 			r.syncCtrl.ContactsGet()
 			domain.WindowLog(fmt.Sprintf("ContactsImported: %s", time.Now().Sub(domain.StartTime)))
 
-			r.syncCtrl.ContactsImport(true, true)
+			r.syncCtrl.ContactsImport(true, nil, nil)
 		}
 	}()
 	return nil

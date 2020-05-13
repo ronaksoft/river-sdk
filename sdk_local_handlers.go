@@ -651,15 +651,14 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 		logs.Error("We got error on saving phone contacts in to the db", zap.Error(err))
 	}
 
-	if len(diffContacts) <= 50 {
+	if len(diffContacts) <= 250 {
 		// send the request to server
 		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 		return
 	}
 	// chunk contacts by size of 50 and send them to server
 	go func() {
-		msg.ResultContactsImported(out, r.syncCtrl.ContactsImport(req.Replace, false))
-		successCB(out)
+		r.syncCtrl.ContactsImport(req.Replace, successCB, out)
 	}()
 }
 

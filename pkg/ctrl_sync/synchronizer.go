@@ -501,7 +501,7 @@ func (ctrl *Controller) ContactsGet() {
 }
 
 // ContactsImport
-func (ctrl *Controller) ContactsImport(replace bool, updateClient bool) *msg.ContactsImported {
+func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHandler, out *msg.MessageEnvelope) {
 	result := new(msg.ContactsImported)
 	result.Users = make([]*msg.User, 0, 32)
 	result.ContactUsers = make([]*msg.ContactUser, 0, 32)
@@ -509,6 +509,7 @@ func (ctrl *Controller) ContactsImport(replace bool, updateClient bool) *msg.Con
 	var (
 		wg        = sync.WaitGroup{}
 		limit     = 250
+		maxTry    = 10
 		keepGoing = true
 		success   = false
 	)
@@ -561,8 +562,11 @@ func (ctrl *Controller) ContactsImport(replace bool, updateClient bool) *msg.Con
 					_ = x.Unmarshal(m.Message)
 					switch x.Code {
 					case msg.ErrCodeRateLimit:
-						st, _ := strconv.Atoi(x.Items)
-						if st > 0 {
+						if successCB != nil && out != nil {
+							msg.ResultError(out, x)
+							successCB(out)
+						}
+						if st, _ := strconv.Atoi(x.Items); st > 0 {
 							time.Sleep(time.Duration(st) * time.Second)
 						} else {
 							time.Sleep(10 * time.Second)
@@ -571,12 +575,26 @@ func (ctrl *Controller) ContactsImport(replace bool, updateClient bool) *msg.Con
 						logs.Warn("SyncCtrl got error response from server, will retry",
 							zap.String("Code", x.Code), zap.String("Item", x.Items),
 						)
+						time.Sleep(time.Second)
+					}
+
+					if maxTry--; maxTry < 0 {
+						if successCB != nil && out != nil {
+							msg.ResultError(out, x)
+							successCB(out)
+						}
+						keepGoing = false
 					}
 				default:
 					logs.Error("SyncCtrl expected ContactsImported but we got something else!!!",
 						zap.String("C", msg.ConstructorNames[m.Constructor]),
 					)
+					time.Sleep(time.Second)
+					if maxTry--; maxTry < 0 {
+						keepGoing = false
+					}
 				}
+
 			},
 			false,
 		)
@@ -589,11 +607,13 @@ func (ctrl *Controller) ContactsImport(replace bool, updateClient bool) *msg.Con
 			}
 		}
 	}
-	if updateClient {
+	if successCB != nil && out != nil {
+		msg.ResultContactsImported(out, result)
+		successCB(out)
+	} else {
 		forceUpdateUI(ctrl, false, true)
 	}
-	return result
-
+	return
 }
 
 // GetSyncStatus
