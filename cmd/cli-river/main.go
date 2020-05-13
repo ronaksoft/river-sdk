@@ -89,6 +89,10 @@ func main() {
 			serverEndPoint = "ws://cyrus.river.im"
 			fileEndPoint = "http://file.river.im"
 			keysFile = "./keys-production.json"
+		case "staging":
+			serverEndPoint = "ws://river.ronaksoftware.com"
+			fileEndPoint = "http://river.ronaksoftware.com:8080"
+			keysFile = "./keys-staging.json"
 		}
 	}
 

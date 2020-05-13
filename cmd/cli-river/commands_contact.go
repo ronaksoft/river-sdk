@@ -29,7 +29,6 @@ var ContactImport = &ishell.Cmd{
 		} else {
 			reqDelegate.RequestID = reqID
 		}
-
 	},
 }
 

@@ -503,7 +503,7 @@ func (ctrl *Controller) ContactsGet() {
 func (ctrl *Controller) ContactsImport(replace bool, updateClient bool) *msg.ContactsImported {
 	result := new(msg.ContactsImported)
 	result.Users = make([]*msg.User, 0, 32)
-	result.ContactUsers = make([]*msg.ContactUser, 32)
+	result.ContactUsers = make([]*msg.ContactUser, 0, 32)
 
 	var (
 		wg        = sync.WaitGroup{}
@@ -565,6 +565,7 @@ func (ctrl *Controller) ContactsImport(replace bool, updateClient bool) *msg.Con
 			false,
 		)
 		wg.Wait()
+		pbytes.Put(reqBytes)
 		if success {
 			err := repo.Users.DeletePhoneContact(phoneContacts...)
 			if err != nil {
