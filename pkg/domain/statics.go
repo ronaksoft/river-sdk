@@ -337,8 +337,8 @@ func CalculateContactsImportHash(req *msg.ContactsImport) uint64 {
 
 // ExtractsContactsDifference remove items from newContacts that already exist in oldContacts
 func ExtractsContactsDifference(oldContacts, newContacts []*msg.PhoneContact) []*msg.PhoneContact {
-	mapOld := make(map[string]*msg.PhoneContact)
-	mapNew := make(map[string]*msg.PhoneContact)
+	mapOld := make(map[string]*msg.PhoneContact, len(oldContacts))
+	mapNew := make(map[string]*msg.PhoneContact, len(newContacts))
 	for _, c := range oldContacts {
 		c.Phone = SanitizePhone(c.Phone)
 		mapOld[c.Phone] = c

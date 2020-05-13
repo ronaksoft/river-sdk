@@ -578,13 +578,10 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	// 3. return to CallBack with pending message data : Done
 	msg.ResultClientPendingMessage(out, pendingMessage)
 
+	// 4. Start the upload process
 	r.fileCtrl.UploadMessageDocument(pendingMessage.ID, reqMedia.FilePath, reqMedia.ThumbFilePath, fileID, thumbID, h, pendingMessage.PeerID)
 
-	// 4. later when queue got processed and server returned response we should check if the requestID
-	//   exist in pendingTable we remove it and insert new message with new id to message table
-	//   invoke new OnUpdate with new proto buffer to inform ui that pending message got delivered
 	uiexec.ExecSuccessCB(successCB, out)
-
 }
 
 func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -629,7 +626,7 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 
 	oldHash, err := repo.System.LoadInt(domain.SkContactsImportHash)
 	if err != nil {
-		logs.Warn("River::contactsImport()-> failed to get contactsImportHash ", zap.Error(err))
+		logs.Warn("We got error on loading ContactsImportHash", zap.Error(err))
 	}
 	// calculate ContactsImportHash and compare with oldHash
 	newHash := domain.CalculateContactsImportHash(req)
@@ -644,18 +641,26 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	// not equal save it to DB
 	err = repo.System.SaveInt(domain.SkContactsImportHash, newHash)
 	if err != nil {
-		logs.Error("River::contactsImport() failed to save ContactsImportHash to DB", zap.Error(err))
+		logs.Error("We got error on saving ContactsImportHash", zap.Error(err))
 	}
 
 	// extract differences between existing contacts and new contacts
 	diffContacts := domain.ExtractsContactsDifference(res.Contacts, req.Contacts)
+	err = repo.Users.SavePhoneContact(diffContacts...)
+	if err != nil {
+		logs.Error("We got error on saving phone contacts in to the db", zap.Error(err))
+	}
+
 	if len(diffContacts) <= 50 {
 		// send the request to server
 		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
-	} else {
-		// chunk contacts by size of 50 and send them to server
-		go r.sendChunkedImportContactRequest(req.Replace, diffContacts, out, successCB)
+		return
 	}
+	// chunk contacts by size of 50 and send them to server
+	go func() {
+		msg.ResultContactsImported(out, r.syncCtrl.ContactsImport(req.Replace, false))
+		successCB(out)
+	}()
 }
 
 func (r *River) contactsDelete(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -670,75 +675,6 @@ func (r *River) contactsDelete(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 	return
-}
-
-func (r *River) sendChunkedImportContactRequest(replace bool, diffContacts []*msg.PhoneContact, out *msg.MessageEnvelope, successCB domain.MessageHandler) {
-	result := new(msg.ContactsImported)
-	result.Users = make([]*msg.User, 0)
-	result.ContactUsers = make([]*msg.ContactUser, 0)
-
-	var (
-		count     = len(diffContacts)
-		idx       = 0
-		batchSize = 50
-		mx        = sync.Mutex{}
-		wg        = sync.WaitGroup{}
-	)
-
-	cbTimeout := func() {
-		wg.Done()
-		logs.Error("sendChunkedImportContactRequest() -> cbTimeout() ")
-	}
-
-	cbSuccess := func(env *msg.MessageEnvelope) {
-		mx.Lock()
-		defer mx.Unlock()
-		defer wg.Done()
-
-		switch env.Constructor {
-		case msg.C_ContactsImported:
-			x := new(msg.ContactsImported)
-			err := x.Unmarshal(env.Message)
-			if err != nil {
-				logs.Error("sendChunkedImportContactRequest() -> cbSuccess() failed to unmarshal", zap.Error(err))
-				return
-			}
-			result.Users = append(result.Users, x.Users...)
-			result.ContactUsers = append(result.ContactUsers, x.ContactUsers...)
-		case msg.C_Error:
-		default:
-			logs.Error("We expected ContactsImported but we got something else!!!",
-				zap.String("C", msg.ConstructorNames[env.Constructor]),
-			)
-		}
-	}
-
-	for idx < count {
-		req := &msg.ContactsImport{
-			Replace:  replace,
-			Contacts: make([]*msg.PhoneContact, 0, batchSize),
-		}
-		for i := 0; i < batchSize && idx < count; i++ {
-			req.Contacts = append(req.Contacts, diffContacts[idx])
-			idx++
-		}
-
-		reqID := uint64(domain.SequentialUniqueID())
-		reqBytes, _ := req.Marshal()
-		wg.Add(1)
-		r.queueCtrl.EnqueueCommand(
-			&msg.MessageEnvelope{
-				Constructor: msg.C_ContactsImport,
-				RequestID:   reqID,
-				Message:     reqBytes,
-			},
-			cbTimeout, cbSuccess, false,
-		)
-	}
-
-	wg.Wait()
-	msg.ResultContactsImported(out, result)
-	successCB(out)
 }
 
 func (r *River) accountUpdateUsername(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {

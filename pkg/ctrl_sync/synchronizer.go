@@ -10,6 +10,7 @@ import (
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
+	"github.com/gobwas/pool/pbytes"
 	"go.uber.org/zap"
 	"sort"
 	"sync"
@@ -138,7 +139,7 @@ func (ctrl *Controller) watchDog() {
 				ts = time.Now().Unix()
 				_ = mon.SaveUploadUsageTime(ts)
 			}
-			if time.Now().Sub(time.Unix(ts, 0)) > 24 * time.Hour {
+			if time.Now().Sub(time.Unix(ts, 0)) > 24*time.Hour {
 				mon.ResetUsage()
 			}
 
@@ -496,6 +497,86 @@ func (ctrl *Controller) ContactsGet() {
 		nil, nil, false, false,
 	)
 	logs.Debug("SyncCtrl call ContactsGet", zap.Uint32("Hash", contactGetReq.Crc32Hash))
+}
+
+// ContactsImport
+func (ctrl *Controller) ContactsImport(replace bool, updateClient bool) *msg.ContactsImported {
+	result := new(msg.ContactsImported)
+	result.Users = make([]*msg.User, 0, 32)
+	result.ContactUsers = make([]*msg.ContactUser, 32)
+
+	var (
+		wg        = sync.WaitGroup{}
+		limit     = 250
+		keepGoing = true
+		success   = false
+	)
+
+	for keepGoing {
+		phoneContacts, _ := repo.Users.GetPhoneContacts(limit)
+		if len(phoneContacts) < limit {
+			keepGoing = false
+		}
+
+		// We have not more phone contacts left
+		if len(phoneContacts) == 0 {
+			break
+		}
+
+		success = false
+		req := &msg.ContactsImport{
+			Replace:  replace,
+			Contacts: phoneContacts,
+		}
+		reqBytes := pbytes.GetLen(req.Size())
+		req.MarshalToSizedBuffer(reqBytes)
+
+		wg.Add(1)
+		ctrl.queueCtrl.EnqueueCommand(
+			&msg.MessageEnvelope{
+				Constructor: msg.C_ContactsImport,
+				RequestID:   uint64(domain.SequentialUniqueID()),
+				Message:     reqBytes,
+			},
+			func() {
+				wg.Done()
+				logs.Error("syncContacts() -> cbTimeout() ")
+			},
+			func(m *msg.MessageEnvelope) {
+				defer wg.Done()
+				switch m.Constructor {
+				case msg.C_ContactsImported:
+					x := &msg.ContactsImported{}
+					err := x.Unmarshal(m.Message)
+					if err != nil {
+						logs.Error("SyncCtrl got error on ContactsImport when unmarshal", zap.Error(err))
+						return
+					}
+					result.Users = append(result.Users, x.Users...)
+					result.ContactUsers = append(result.ContactUsers, x.ContactUsers...)
+					success = true
+				case msg.C_Error:
+				default:
+					logs.Error("SyncCtrl expected ContactsImported but we got something else!!!",
+						zap.String("C", msg.ConstructorNames[m.Constructor]),
+					)
+				}
+			},
+			false,
+		)
+		wg.Wait()
+		if success {
+			err := repo.Users.DeletePhoneContact(phoneContacts...)
+			if err != nil {
+				logs.Warn("SyncCtrl got error on deleting phone contacts", zap.Error(err))
+			}
+		}
+	}
+	if updateClient {
+		forceUpdateUI(ctrl, false, true)
+	}
+	return result
+
 }
 
 // GetSyncStatus

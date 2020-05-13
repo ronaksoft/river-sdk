@@ -17,6 +17,7 @@ import (
 const (
 	prefixUsers             = "USERS"
 	prefixContacts          = "CONTACTS"
+	prefixPhoneContacts     = "PH_CONTACTS"
 	prefixUsersPhotoGallery = "USERS_PHG"
 )
 
@@ -60,6 +61,10 @@ func getContactByKey(txn *badger.Txn, contactKey []byte) (*msg.ContactUser, erro
 		return nil, err
 	}
 	return contactUser, nil
+}
+
+func getPhoneContactKey(phone string) []byte {
+	return domain.StrToByte(fmt.Sprintf("%s.%s", prefixPhoneContacts, phone))
 }
 
 func getUserPhotoGalleryKey(userID, photoID int64) []byte {
@@ -131,6 +136,18 @@ func saveContact(txn *badger.Txn, contactUser *msg.ContactUser) error {
 		},
 	)
 	err = saveUserPhotos(txn, contactUser.ID, contactUser.Photo)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func savePhoneContact(txn *badger.Txn, phoneContact *msg.PhoneContact) error {
+	bytes, _ := phoneContact.Marshal()
+	dbKey := getPhoneContactKey(phoneContact.Phone)
+	err := txn.SetEntry(badger.NewEntry(
+		dbKey, bytes,
+	))
 	if err != nil {
 		return err
 	}
@@ -452,6 +469,53 @@ func (r *repoUsers) SaveContact(contactUsers ...*msg.ContactUser) error {
 		}
 		return nil
 	})
+}
+
+func (r *repoUsers) SavePhoneContact(phoneContacts ...*msg.PhoneContact) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		for _, phoneContact := range phoneContacts {
+			err := savePhoneContact(txn, phoneContact)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (r *repoUsers) DeletePhoneContact(phoneContacts ...*msg.PhoneContact) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		for _, phoneContact := range phoneContacts {
+			_ = txn.Delete(getPhoneContactKey(phoneContact.Phone))
+		}
+		return nil
+	})
+}
+func (r *repoUsers) GetPhoneContacts(limit int) ([]*msg.PhoneContact, error) {
+	phoneContacts := make([]*msg.PhoneContact, 0, limit)
+	err := badgerView(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixPhoneContacts))
+		it := txn.NewIterator(opts)
+		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
+			if limit <= 0 {
+				break
+			}
+			limit--
+			phoneContact := &msg.PhoneContact{}
+			_ = it.Item().Value(func(val []byte) error {
+				err := phoneContact.Unmarshal(val)
+				if err != nil {
+					return err
+				}
+				return nil
+			})
+			phoneContacts = append(phoneContacts, phoneContact)
+		}
+		it.Close()
+		return nil
+	})
+	return phoneContacts, err
 }
 
 func (r *repoUsers) DeleteContact(contactIDs ...int64) error {

@@ -38,11 +38,12 @@ func (r *repoSystem) LoadInt(keyName string) (uint64, error) {
 			return nil
 		})
 	})
-	if err != nil {
+	switch err {
+	case nil, badger.ErrKeyNotFound:
+		return keyValue, nil
+	default:
 		return 0, err
 	}
-
-	return keyValue, nil
 }
 
 // LoadInt64
