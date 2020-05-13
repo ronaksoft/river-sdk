@@ -13,6 +13,7 @@ import (
 	"github.com/gobwas/pool/pbytes"
 	"go.uber.org/zap"
 	"sort"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -556,6 +557,21 @@ func (ctrl *Controller) ContactsImport(replace bool, updateClient bool) *msg.Con
 					result.ContactUsers = append(result.ContactUsers, x.ContactUsers...)
 					success = true
 				case msg.C_Error:
+					x := &msg.Error{}
+					_ = x.Unmarshal(m.Message)
+					switch x.Code {
+					case msg.ErrCodeRateLimit:
+						st, _ := strconv.Atoi(x.Items)
+						if st > 0 {
+							time.Sleep(time.Duration(st) * time.Second)
+						} else {
+							time.Sleep(10 * time.Second)
+						}
+					default:
+						logs.Warn("SyncCtrl got error response from server, will retry",
+							zap.String("Code", x.Code), zap.String("Item", x.Items),
+						)
+					}
 				default:
 					logs.Error("SyncCtrl expected ContactsImported but we got something else!!!",
 						zap.String("C", msg.ConstructorNames[m.Constructor]),
