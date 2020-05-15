@@ -44,6 +44,7 @@ func main() {
 	_Shell.AddCmd(Message)
 	_Shell.AddCmd(Contact)
 	_Shell.AddCmd(SDK)
+	_Shell.AddCmd(Bot)
 	_Shell.AddCmd(User)
 	_Shell.AddCmd(Debug)
 	_Shell.AddCmd(Account)
@@ -96,6 +97,10 @@ func main() {
 		case "staging":
 			serverEndPoint = "ws://river.ronaksoftware.com"
 			fileEndPoint = "http://river.ronaksoftware.com:8080"
+			keysFile = "./keys-staging.json"
+		case "local":
+			serverEndPoint = "ws://localhost"
+			fileEndPoint = "http://localhost:8881"
 			keysFile = "./keys-staging.json"
 		}
 	}

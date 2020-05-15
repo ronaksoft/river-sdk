@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/rand"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -532,16 +533,19 @@ func fnGetTokenType(c *ishell.Context) msg.PushTokenProvider {
 	}
 	return tokenType
 }
+
 func fnGetToken(c *ishell.Context) string {
 	c.Print("Token: ")
 	token := c.ReadLine()
 	return token
 }
+
 func fnGetProvider(c *ishell.Context) string {
 	c.Print("Provider (ap, nested, google, apple): ")
 	token := c.ReadLine()
 	return token
 }
+
 func fnGetDeviceModel(c *ishell.Context) string {
 	c.Print("Model(ios | android) : ")
 	model := c.ReadLine()
@@ -577,16 +581,19 @@ func fnGetFileName(c *ishell.Context) string {
 	name := c.ReadLine()
 	return name
 }
+
 func fnGetFilePath(c *ishell.Context) string {
 	c.Print("File Path: ")
 	name := c.ReadLine()
 	return name
 }
+
 func fnGetThumbFilePath(c *ishell.Context) string {
 	c.Print("Thumbnail File Path: ")
 	name := c.ReadLine()
 	return name
 }
+
 func fnGetReplyTo(c *ishell.Context) int64 {
 	var replyTo int64
 	for {
@@ -616,6 +623,7 @@ func fnGetWidth(c *ishell.Context) uint32 {
 	}
 	return res
 }
+
 func fnGetHeight(c *ishell.Context) uint32 {
 	var res uint32
 	for {
@@ -709,6 +717,42 @@ func fnGetAttributes(c *ishell.Context) []*msg.DocumentAttribute {
 		}
 	}
 	return result
+}
+
+func fnGetPeer(c *ishell.Context) *msg.InputPeer {
+	options := make([]string, 0, len(MyDialogs))
+	for _, d := range MyDialogs {
+		switch d.PeerType {
+		case 1:
+			options = append(options, fmt.Sprintf("%s %s", MyUsers[d.PeerID].FirstName, MyUsers[d.PeerID].LastName))
+		case 2:
+			options = append(options, fmt.Sprintf("%s", MyGroups[d.PeerID].Title))
+		}
+
+	}
+	idx := c.MultiChoice(options, "Please Select Your Dialog:")
+	return &msg.InputPeer{
+		ID:         MyDialogs[idx].PeerID,
+		Type:       msg.PeerType(MyDialogs[idx].PeerType),
+		AccessHash: MyDialogs[idx].AccessHash,
+	}
+}
+
+func fnGetUser(c *ishell.Context) *msg.InputUser {
+	options := make([]string, 0, len(MyUsers))
+	for _, d := range MyDialogs {
+		switch d.PeerType {
+		case 1:
+			options = append(options, fmt.Sprintf("%s %s", MyUsers[d.PeerID].FirstName, MyUsers[d.PeerID].LastName))
+		case 2:
+			options = append(options, fmt.Sprintf("%s (Cannot Select)", MyGroups[d.PeerID].Title))
+		}
+	}
+	idx := c.MultiChoice(options, "Please Select Your User:")
+	return &msg.InputUser{
+		UserID:     MyDialogs[idx].PeerID,
+		AccessHash: MyDialogs[idx].AccessHash,
+	}
 }
 
 func getAttributeType(c *ishell.Context) msg.DocumentAttributeType {

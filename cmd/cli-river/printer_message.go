@@ -13,6 +13,12 @@ import (
 	"go.uber.org/zap"
 )
 
+var (
+	MyDialogs []*msg.Dialog
+	MyUsers  = map[int64]*msg.User{}
+	MyGroups = map[int64]*msg.Group{}
+)
+
 func MessagePrinter(envelope *msg.MessageEnvelope) {
 	switch envelope.Constructor {
 	case msg.C_AuthAuthorization:
@@ -105,7 +111,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		tableDialogs.SetHeader([]string{
 			"PeerID", "PeerType", "Top Message ID", "Unread", "AccessHash", "MentionedCount",
 		})
-
+		MyDialogs = append(MyDialogs[:0], x.Dialogs...)
 		for _, d := range x.Dialogs {
 			tableDialogs.Append([]string{
 				fmt.Sprintf("%d", d.PeerID),
@@ -123,6 +129,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			"userID", "FirstName", "LastName", "Photo",
 		})
 		for _, x := range x.Users {
+			MyUsers[x.ID] = x
 			tableUsers.Append([]string{
 				fmt.Sprintf("%d", x.ID),
 				fmt.Sprintf("%s", x.FirstName),
@@ -138,6 +145,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			"GroupID", "Title", "Participants",
 		})
 		for _, x := range x.Groups {
+			MyGroups[x.ID] = x
 			tableGroup.Append([]string{
 				fmt.Sprintf("%d", x.ID),
 				fmt.Sprintf("%s", x.Title),
