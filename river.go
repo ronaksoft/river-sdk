@@ -291,11 +291,16 @@ func (r *River) onNetworkConnect() (err error) {
 				domain.WindowLog(fmt.Sprintf("Already Synced: %s", time.Now().Sub(domain.StartTime)))
 			}
 
-			// import contact from server
-			r.syncCtrl.ContactsGet()
-			domain.WindowLog(fmt.Sprintf("ContactsImported: %s", time.Now().Sub(domain.StartTime)))
+			_, err := repo.System.LoadBytes("SysConfig")
+			if err != nil {
+				r.syncCtrl.GetSystemConfig()
+			}
 
+			// Get contacts and imports remaining contacts
+			r.syncCtrl.ContactsGet()
+			domain.WindowLog(fmt.Sprintf("ContactsGet: %s", time.Now().Sub(domain.StartTime)))
 			r.syncCtrl.ContactsImport(true, nil, nil)
+			domain.WindowLog(fmt.Sprintf("ContactsImported: %s", time.Now().Sub(domain.StartTime)))
 		}
 	}()
 	return nil
@@ -431,7 +436,7 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 			MimeType:   req.FileMIME,
 			Attributes: req.Attributes,
 			Caption:    req.Caption,
-			Entities: req.Entities,
+			Entities:   req.Entities,
 			File: &msg.InputFile{
 				FileID:      uploadRequest.FileID,
 				FileName:    req.FileName,
@@ -450,7 +455,7 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 		doc := &msg.InputMediaDocument{
 			Caption:    req.Caption,
 			Attributes: req.Attributes,
-			Entities: req.Entities,
+			Entities:   req.Entities,
 			Document: &msg.InputDocument{
 				ID:         uploadRequest.DocumentID,
 				AccessHash: uploadRequest.AccessHash,

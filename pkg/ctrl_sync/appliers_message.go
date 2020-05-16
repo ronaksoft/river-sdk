@@ -36,7 +36,6 @@ func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
 	ctrl.connInfo.ChangeUsername(x.User.Username)
 	if x.User.Phone != "" {
 		ctrl.connInfo.ChangePhone(x.User.Phone)
-		domain.ClientPhone = x.User.Phone
 	}
 	ctrl.connInfo.Save()
 
@@ -234,4 +233,34 @@ func (ctrl *Controller) labelItems(e *msg.MessageEnvelope) {
 	repo.Messages.Save(u.Messages...)
 	repo.Users.Save(u.Users...)
 	repo.Groups.Save(u.Groups...)
+}
+
+// systemConfig
+func (ctrl *Controller) systemConfig(e *msg.MessageEnvelope) {
+	u := &msg.SystemConfig{}
+	err := u.Unmarshal(e.Message)
+	if err != nil {
+		logs.Error("SyncCtrl couldn't unmarshal SystemConfig", zap.Error(err))
+		return
+	}
+	logs.Info("SyncCtrl applies SystemConfig")
+
+	sysConfBytes, _ := u.Marshal()
+	repo.System.SaveBytes("SysConfig", sysConfBytes)
+}
+
+func (ctrl *Controller) contactsTopPeers(e *msg.MessageEnvelope) {
+	u := &msg.ContactsTopPeers{}
+	err := u.Unmarshal(e.Message)
+	if err != nil {
+		logs.Error("SyncCtrl couldn't unmarshal ContactsTopPeers", zap.Error(err))
+		return
+	}
+	logs.Info("SyncCtrl applies ContactsTopPeers")
+
+	for _, tpc := range u.Categories {
+		repo.TopPeers.Save(tpc.Category, tpc.Peers...)
+	}
+
+
 }

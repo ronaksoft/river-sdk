@@ -1,6 +1,7 @@
 package domain
 
 import (
+	msg "git.ronaksoftware.com/river/msg/chat"
 	"time"
 )
 
@@ -14,7 +15,7 @@ var (
 	ClientVersion  string
 	ClientOS       string
 	ClientVendor   string
-	ClientPhone    string
+	SysConfig      *msg.SystemConfig
 )
 
 // Global Parameters

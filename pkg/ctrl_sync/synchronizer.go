@@ -109,6 +109,8 @@ func NewSyncController(config Config) *Controller {
 		msg.C_GroupFull:         ctrl.groupFull,
 		msg.C_LabelsMany:        ctrl.labelsMany,
 		msg.C_LabelItems:        ctrl.labelItems,
+		msg.C_SystemConfig:      ctrl.systemConfig,
+		msg.C_ContactsTopPeers:  ctrl.contactsTopPeers,
 	}
 	return ctrl
 }
@@ -563,7 +565,7 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 				case msg.C_Error:
 					x := &msg.Error{}
 					_ = x.Unmarshal(m.Message)
-					switch  {
+					switch {
 					case x.Code == msg.ErrCodeRateLimit:
 						if successCB != nil && out != nil {
 							msg.ResultError(out, x)

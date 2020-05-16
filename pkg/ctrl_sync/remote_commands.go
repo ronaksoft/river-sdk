@@ -51,6 +51,39 @@ func (ctrl *Controller) GetServerSalt() {
 	)
 }
 
+func (ctrl *Controller) GetSystemConfig() {
+	logs.Info("SyncCtrl call SystemGetConfig")
+	req := &msg.SystemGetConfig{}
+	reqBytes, _ := req.Marshal()
+
+	ctrl.queueCtrl.RealtimeCommand(
+		&msg.MessageEnvelope{
+			Constructor: msg.C_SystemGetConfig,
+			RequestID:   uint64(domain.SequentialUniqueID()),
+			Message:     reqBytes,
+		},
+		func() {
+			time.Sleep(time.Duration(domain.RandomInt(2000)) * time.Millisecond)
+		},
+		func(m *msg.MessageEnvelope) {
+			switch m.Constructor {
+			case msg.C_SystemConfig:
+				logs.Debug("SyncCtrl received SystemConfig")
+			case msg.C_Error:
+				e := new(msg.Error)
+				_ = m.Unmarshal(m.Message)
+				logs.Error("SyncCtrl received error response for SystemGetSalts (Error)",
+					zap.String("Code", e.Code),
+					zap.String("Item", e.Items),
+				)
+				time.Sleep(time.Second)
+			}
+		},
+		true,
+		false,
+	)
+}
+
 func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 	logs.Info("SyncCtrl call AuthRecall", zap.String("Caller", caller))
 	req := msg.AuthRecall{
