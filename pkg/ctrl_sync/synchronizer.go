@@ -13,7 +13,6 @@ import (
 	"github.com/gobwas/pool/pbytes"
 	"go.uber.org/zap"
 	"sort"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -509,17 +508,16 @@ func (ctrl *Controller) ContactsGet() {
 
 // ContactsImport
 func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHandler, out *msg.MessageEnvelope) {
-	result := new(msg.ContactsImported)
-	result.Users = make([]*msg.User, 0, 32)
-	result.ContactUsers = make([]*msg.ContactUser, 0, 32)
-
 	var (
 		wg        = sync.WaitGroup{}
 		limit     = 250
 		maxTry    = 10
 		keepGoing = true
-		success   = false
+		contactsImported = &msg.ContactsImported{}
 	)
+	if out == nil {
+		out = &msg.MessageEnvelope{}
+	}
 
 	for keepGoing {
 		phoneContacts, _ := repo.Users.GetPhoneContacts(limit)
@@ -532,13 +530,12 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 			break
 		}
 
-		success = false
 		req := &msg.ContactsImport{
 			Replace:  replace,
 			Contacts: phoneContacts,
 		}
 		reqBytes := pbytes.GetLen(req.Size())
-		req.MarshalToSizedBuffer(reqBytes)
+		_, _ = req.MarshalToSizedBuffer(reqBytes)
 
 		wg.Add(1)
 		ctrl.queueCtrl.EnqueueCommand(
@@ -561,26 +558,19 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 						logs.Error("SyncCtrl got error on ContactsImport when unmarshal", zap.Error(err))
 						return
 					}
-					result.Users = append(result.Users, x.Users...)
-					result.ContactUsers = append(result.ContactUsers, x.ContactUsers...)
-					success = true
+					_ = repo.Users.DeletePhoneContact(phoneContacts...)
+					contactsImported.Users = append(contactsImported.Users, x.Users...)
+					contactsImported.ContactUsers = append(contactsImported.ContactUsers, x.ContactUsers...)
+					msg.ResultContactsImported(out, contactsImported)
 				case msg.C_Error:
 					x := &msg.Error{}
 					_ = x.Unmarshal(m.Message)
+					msg.ResultError(out, x)
 					switch {
 					case x.Code == msg.ErrCodeRateLimit:
-						if successCB != nil && out != nil {
-							msg.ResultError(out, x)
-							successCB(out)
-						}
-						if st, _ := strconv.Atoi(x.Items); st > 0 {
-							time.Sleep(time.Duration(st) * time.Second)
-						} else {
-							time.Sleep(10 * time.Second)
-						}
+						maxTry = 0
 					case x.Code == msg.ErrCodeTooFew:
 						_ = repo.Users.DeletePhoneContact(phoneContacts...)
-						success = true
 						maxTry = 0
 					default:
 						logs.Warn("SyncCtrl got error response from server, will retry",
@@ -588,12 +578,7 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 						)
 						time.Sleep(time.Second)
 					}
-
 					if maxTry--; maxTry < 0 {
-						if successCB != nil && out != nil {
-							msg.ResultError(out, x)
-							successCB(out)
-						}
 						keepGoing = false
 					}
 				default:
@@ -611,15 +596,8 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 		)
 		wg.Wait()
 		pbytes.Put(reqBytes)
-		if success {
-			err := repo.Users.DeletePhoneContact(phoneContacts...)
-			if err != nil {
-				logs.Warn("SyncCtrl got error on deleting phone contacts", zap.Error(err))
-			}
-		}
 	}
 	if successCB != nil && out != nil {
-		msg.ResultContactsImported(out, result)
 		successCB(out)
 	} else {
 		forceUpdateUI(ctrl, false, true)
