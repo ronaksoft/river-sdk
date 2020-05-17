@@ -246,7 +246,10 @@ func (ctrl *Controller) systemConfig(e *msg.MessageEnvelope) {
 	logs.Info("SyncCtrl applies SystemConfig")
 
 	sysConfBytes, _ := u.Marshal()
-	repo.System.SaveBytes("SysConfig", sysConfBytes)
+	err = repo.System.SaveBytes("SysConfig", sysConfBytes)
+	if err != nil {
+		logs.Error("SyncCtrl got error on saving SystemConfig", zap.Error(err))
+	}
 }
 
 func (ctrl *Controller) contactsTopPeers(e *msg.MessageEnvelope) {
@@ -258,9 +261,8 @@ func (ctrl *Controller) contactsTopPeers(e *msg.MessageEnvelope) {
 	}
 	logs.Info("SyncCtrl applies ContactsTopPeers")
 
-	for _, tpc := range u.Categories {
-		repo.TopPeers.Save(tpc.Category, tpc.Peers...)
+	err = repo.TopPeers.Save(u.Category, u.Peers...)
+	if err != nil {
+		logs.Error("SyncCtrl got error on saving ContactsTopPeers", zap.Error(err))
 	}
-
-
 }

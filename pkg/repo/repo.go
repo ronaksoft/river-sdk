@@ -2,6 +2,7 @@ package repo
 
 import (
 	"fmt"
+	msg "git.ronaksoftware.com/river/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/blevesearch/bleve"
@@ -38,7 +39,7 @@ var (
 	Groups          *repoGroups
 	Files           *repoFiles
 	Labels          *repoLabels
-	TopPeers 		*repoTopPeers
+	TopPeers        *repoTopPeers
 )
 
 // Context container of repo
@@ -120,7 +121,14 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 		r.bunt = buntIndex
 	}
 	_ = r.bunt.Update(func(tx *buntdb.Tx) error {
-		return tx.CreateIndex(indexDialogs, fmt.Sprintf("%s.*", prefixDialogs), buntdb.IndexBinary)
+		_ = tx.CreateIndex(indexDialogs, fmt.Sprintf("%s.*", prefixDialogs), buntdb.IndexBinary)
+		_ = tx.CreateIndex(indexTopPeersUser, fmt.Sprintf("%s.%02d.*", prefixTopPeers, msg.TopPeerCategory_Users), buntdb.IndexFloat)
+		_ = tx.CreateIndex(indexTopPeersGroup, fmt.Sprintf("%s.%02d.*", prefixTopPeers, msg.TopPeerCategory_Groups), buntdb.IndexFloat)
+		_ = tx.CreateIndex(indexTopPeersForward, fmt.Sprintf("%s.%02d.*", prefixTopPeers, msg.TopPeerCategory_Forwards), buntdb.IndexFloat)
+		_ = tx.CreateIndex(indexTopPeersBotMessage, fmt.Sprintf("%s.%02d.*", prefixTopPeers, msg.TopPeerCategory_BotsMessage), buntdb.IndexFloat)
+		_ = tx.CreateIndex(indexTopPeersBotInline, fmt.Sprintf("%s.%02d.*", prefixTopPeers, msg.TopPeerCategory_BotsInline), buntdb.IndexFloat)
+
+		return nil
 	})
 
 	// Initialize Search

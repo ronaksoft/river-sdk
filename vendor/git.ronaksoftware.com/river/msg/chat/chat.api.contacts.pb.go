@@ -533,14 +533,9 @@ func (m *ContactsSearch) GetQ() string {
 // @Function
 // @Returns: ContactsTopPeers
 type ContactsGetTopPeers struct {
-	Hash        int32 `protobuf:"varint,1,opt,name=Hash" json:"Hash"`
-	Limit       int32 `protobuf:"varint,2,req,name=Limit" json:"Limit"`
-	Offset      int32 `protobuf:"varint,3,req,name=Offset" json:"Offset"`
-	Users       bool  `protobuf:"varint,4,opt,name=Users" json:"Users"`
-	BotsMessage bool  `protobuf:"varint,5,opt,name=BotsMessage" json:"BotsMessage"`
-	BotsInline  bool  `protobuf:"varint,6,opt,name=BotsInline" json:"BotsInline"`
-	Groups      bool  `protobuf:"varint,7,opt,name=Groups" json:"Groups"`
-	Forwards    bool  `protobuf:"varint,8,opt,name=Forwards" json:"Forwards"`
+	Offset   int32           `protobuf:"varint,1,req,name=Offset" json:"Offset"`
+	Limit    int32           `protobuf:"varint,2,req,name=Limit" json:"Limit"`
+	Category TopPeerCategory `protobuf:"varint,3,req,name=Category,enum=msg.TopPeerCategory" json:"Category"`
 }
 
 func (m *ContactsGetTopPeers) Reset()         { *m = ContactsGetTopPeers{} }
@@ -576,9 +571,9 @@ func (m *ContactsGetTopPeers) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ContactsGetTopPeers proto.InternalMessageInfo
 
-func (m *ContactsGetTopPeers) GetHash() int32 {
+func (m *ContactsGetTopPeers) GetOffset() int32 {
 	if m != nil {
-		return m.Hash
+		return m.Offset
 	}
 	return 0
 }
@@ -590,46 +585,11 @@ func (m *ContactsGetTopPeers) GetLimit() int32 {
 	return 0
 }
 
-func (m *ContactsGetTopPeers) GetOffset() int32 {
+func (m *ContactsGetTopPeers) GetCategory() TopPeerCategory {
 	if m != nil {
-		return m.Offset
+		return m.Category
 	}
-	return 0
-}
-
-func (m *ContactsGetTopPeers) GetUsers() bool {
-	if m != nil {
-		return m.Users
-	}
-	return false
-}
-
-func (m *ContactsGetTopPeers) GetBotsMessage() bool {
-	if m != nil {
-		return m.BotsMessage
-	}
-	return false
-}
-
-func (m *ContactsGetTopPeers) GetBotsInline() bool {
-	if m != nil {
-		return m.BotsInline
-	}
-	return false
-}
-
-func (m *ContactsGetTopPeers) GetGroups() bool {
-	if m != nil {
-		return m.Groups
-	}
-	return false
-}
-
-func (m *ContactsGetTopPeers) GetForwards() bool {
-	if m != nil {
-		return m.Forwards
-	}
-	return false
+	return TopPeerCategory_Users
 }
 
 // ContactsResetTopPeer
@@ -689,9 +649,11 @@ func (m *ContactsResetTopPeer) GetPeer() *InputPeer {
 
 // ContactsTopPeer
 type ContactsTopPeers struct {
-	Categories []*TopPeerCategoryPeers `protobuf:"bytes,1,rep,name=Categories" json:"Categories,omitempty"`
-	Users      []*User                 `protobuf:"bytes,2,rep,name=Users" json:"Users,omitempty"`
-	Groups     []*Group                `protobuf:"bytes,3,rep,name=Groups" json:"Groups,omitempty"`
+	Category TopPeerCategory `protobuf:"varint,1,req,name=Category,enum=msg.TopPeerCategory" json:"Category"`
+	Count    int32           `protobuf:"varint,2,req,name=Count" json:"Count"`
+	Peers    []*TopPeer      `protobuf:"bytes,3,rep,name=Peers" json:"Peers,omitempty"`
+	Users    []*User         `protobuf:"bytes,4,rep,name=Users" json:"Users,omitempty"`
+	Groups   []*Group        `protobuf:"bytes,5,rep,name=Groups" json:"Groups,omitempty"`
 }
 
 func (m *ContactsTopPeers) Reset()         { *m = ContactsTopPeers{} }
@@ -727,9 +689,23 @@ func (m *ContactsTopPeers) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ContactsTopPeers proto.InternalMessageInfo
 
-func (m *ContactsTopPeers) GetCategories() []*TopPeerCategoryPeers {
+func (m *ContactsTopPeers) GetCategory() TopPeerCategory {
 	if m != nil {
-		return m.Categories
+		return m.Category
+	}
+	return TopPeerCategory_Users
+}
+
+func (m *ContactsTopPeers) GetCount() int32 {
+	if m != nil {
+		return m.Count
+	}
+	return 0
+}
+
+func (m *ContactsTopPeers) GetPeers() []*TopPeer {
+	if m != nil {
+		return m.Peers
 	}
 	return nil
 }
@@ -748,67 +724,6 @@ func (m *ContactsTopPeers) GetGroups() []*Group {
 	return nil
 }
 
-// TopPeerCategory
-type TopPeerCategoryPeers struct {
-	Category TopPeerCategory `protobuf:"varint,1,req,name=Category,enum=msg.TopPeerCategory" json:"Category"`
-	Count    int32           `protobuf:"varint,2,req,name=Count" json:"Count"`
-	Peers    []*TopPeer      `protobuf:"bytes,3,rep,name=Peers" json:"Peers,omitempty"`
-}
-
-func (m *TopPeerCategoryPeers) Reset()         { *m = TopPeerCategoryPeers{} }
-func (m *TopPeerCategoryPeers) String() string { return proto.CompactTextString(m) }
-func (*TopPeerCategoryPeers) ProtoMessage()    {}
-func (*TopPeerCategoryPeers) Descriptor() ([]byte, []int) {
-	return fileDescriptor_133508c6c9c8f6f5, []int{12}
-}
-func (m *TopPeerCategoryPeers) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *TopPeerCategoryPeers) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_TopPeerCategoryPeers.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *TopPeerCategoryPeers) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_TopPeerCategoryPeers.Merge(m, src)
-}
-func (m *TopPeerCategoryPeers) XXX_Size() int {
-	return m.Size()
-}
-func (m *TopPeerCategoryPeers) XXX_DiscardUnknown() {
-	xxx_messageInfo_TopPeerCategoryPeers.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_TopPeerCategoryPeers proto.InternalMessageInfo
-
-func (m *TopPeerCategoryPeers) GetCategory() TopPeerCategory {
-	if m != nil {
-		return m.Category
-	}
-	return TopPeerCategory_Users
-}
-
-func (m *TopPeerCategoryPeers) GetCount() int32 {
-	if m != nil {
-		return m.Count
-	}
-	return 0
-}
-
-func (m *TopPeerCategoryPeers) GetPeers() []*TopPeer {
-	if m != nil {
-		return m.Peers
-	}
-	return nil
-}
-
 // TopPeer
 type TopPeer struct {
 	Peer       *Peer   `protobuf:"bytes,1,req,name=Peer" json:"Peer,omitempty"`
@@ -820,7 +735,7 @@ func (m *TopPeer) Reset()         { *m = TopPeer{} }
 func (m *TopPeer) String() string { return proto.CompactTextString(m) }
 func (*TopPeer) ProtoMessage()    {}
 func (*TopPeer) Descriptor() ([]byte, []int) {
-	return fileDescriptor_133508c6c9c8f6f5, []int{13}
+	return fileDescriptor_133508c6c9c8f6f5, []int{12}
 }
 func (m *TopPeer) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -881,7 +796,7 @@ func (m *BlockedContactsMany) Reset()         { *m = BlockedContactsMany{} }
 func (m *BlockedContactsMany) String() string { return proto.CompactTextString(m) }
 func (*BlockedContactsMany) ProtoMessage()    {}
 func (*BlockedContactsMany) Descriptor() ([]byte, []int) {
-	return fileDescriptor_133508c6c9c8f6f5, []int{14}
+	return fileDescriptor_133508c6c9c8f6f5, []int{13}
 }
 func (m *BlockedContactsMany) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -941,7 +856,7 @@ func (m *BlockedContact) Reset()         { *m = BlockedContact{} }
 func (m *BlockedContact) String() string { return proto.CompactTextString(m) }
 func (*BlockedContact) ProtoMessage()    {}
 func (*BlockedContact) Descriptor() ([]byte, []int) {
-	return fileDescriptor_133508c6c9c8f6f5, []int{15}
+	return fileDescriptor_133508c6c9c8f6f5, []int{14}
 }
 func (m *BlockedContact) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -994,7 +909,7 @@ func (m *ContactsImported) Reset()         { *m = ContactsImported{} }
 func (m *ContactsImported) String() string { return proto.CompactTextString(m) }
 func (*ContactsImported) ProtoMessage()    {}
 func (*ContactsImported) Descriptor() ([]byte, []int) {
-	return fileDescriptor_133508c6c9c8f6f5, []int{16}
+	return fileDescriptor_133508c6c9c8f6f5, []int{15}
 }
 func (m *ContactsImported) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1049,7 +964,7 @@ func (m *ContactsMany) Reset()         { *m = ContactsMany{} }
 func (m *ContactsMany) String() string { return proto.CompactTextString(m) }
 func (*ContactsMany) ProtoMessage()    {}
 func (*ContactsMany) Descriptor() ([]byte, []int) {
-	return fileDescriptor_133508c6c9c8f6f5, []int{17}
+	return fileDescriptor_133508c6c9c8f6f5, []int{16}
 }
 func (m *ContactsMany) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1120,7 +1035,6 @@ func init() {
 	proto.RegisterType((*ContactsGetTopPeers)(nil), "msg.ContactsGetTopPeers")
 	proto.RegisterType((*ContactsResetTopPeer)(nil), "msg.ContactsResetTopPeer")
 	proto.RegisterType((*ContactsTopPeers)(nil), "msg.ContactsTopPeers")
-	proto.RegisterType((*TopPeerCategoryPeers)(nil), "msg.TopPeerCategoryPeers")
 	proto.RegisterType((*TopPeer)(nil), "msg.TopPeer")
 	proto.RegisterType((*BlockedContactsMany)(nil), "msg.BlockedContactsMany")
 	proto.RegisterType((*BlockedContact)(nil), "msg.BlockedContact")
@@ -1131,58 +1045,54 @@ func init() {
 func init() { proto.RegisterFile("chat.api.contacts.proto", fileDescriptor_133508c6c9c8f6f5) }
 
 var fileDescriptor_133508c6c9c8f6f5 = []byte{
-	// 809 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x55, 0xc1, 0x4e, 0xdb, 0x40,
-	0x10, 0xcd, 0xda, 0x09, 0x49, 0x26, 0x10, 0xc2, 0x86, 0xaa, 0x6e, 0x44, 0x43, 0xb4, 0x42, 0x15,
-	0xaa, 0xd4, 0xb4, 0x0d, 0x6d, 0xa5, 0x1e, 0x49, 0x10, 0x10, 0x09, 0x28, 0xb8, 0xa0, 0x1e, 0x2b,
-	0xd7, 0x5e, 0x12, 0xab, 0x89, 0x6d, 0xd9, 0x8b, 0x2a, 0xce, 0xbd, 0x57, 0x55, 0xf9, 0x97, 0x7e,
-	0x03, 0x47, 0x8e, 0x3d, 0x55, 0x15, 0xfc, 0x48, 0xb5, 0xeb, 0x5d, 0xdb, 0x81, 0x08, 0x68, 0x8f,
-	0x7e, 0x6f, 0x76, 0xe6, 0xcd, 0xdb, 0xd9, 0x31, 0x3c, 0xb4, 0x87, 0x16, 0x6b, 0x5b, 0x81, 0xdb,
-	0xb6, 0x7d, 0x8f, 0x59, 0x36, 0x8b, 0xda, 0x41, 0xe8, 0x33, 0x1f, 0xeb, 0xe3, 0x68, 0xd0, 0x78,
-	0x20, 0x58, 0xdb, 0x0f, 0x69, 0x9b, 0x9d, 0x06, 0x54, 0x72, 0xe4, 0x23, 0x54, 0x7b, 0x32, 0xba,
-	0x3f, 0x0e, 0xfc, 0x90, 0xe1, 0x67, 0x50, 0x52, 0x88, 0x81, 0x5a, 0xfa, 0x6a, 0xa5, 0xb3, 0xd0,
-	0x1e, 0x47, 0x83, 0xf6, 0xfe, 0xd0, 0xf7, 0xa8, 0x64, 0xcc, 0x24, 0x04, 0x37, 0xa1, 0x68, 0xd2,
-	0x60, 0x64, 0xd9, 0xd4, 0xd0, 0x5a, 0xda, 0x6a, 0xa9, 0x9b, 0x3f, 0xff, 0xbd, 0x9c, 0x33, 0x15,
-	0x48, 0xce, 0x10, 0x54, 0x54, 0xf0, 0xba, 0xe3, 0x60, 0x02, 0xf9, 0xa3, 0x88, 0x86, 0x06, 0x6a,
-	0x69, 0xab, 0x95, 0x4e, 0x55, 0xa4, 0xee, 0x7b, 0xc1, 0x09, 0xe3, 0xa8, 0x29, 0x38, 0x4c, 0xa0,
-	0xbc, 0xe9, 0x86, 0x11, 0xdb, 0xb3, 0xc6, 0x71, 0xd6, 0xb2, 0xcc, 0x9a, 0xc2, 0xb8, 0x05, 0xa5,
-	0x1d, 0x4b, 0x86, 0xe8, 0x2d, 0x94, 0x84, 0x24, 0x28, 0x6e, 0x40, 0x41, 0x68, 0x36, 0xf2, 0x19,
-	0x3a, 0x86, 0xc8, 0xcb, 0x54, 0xd4, 0x16, 0x65, 0xbc, 0x60, 0x2f, 0xb4, 0xd7, 0x3a, 0xdb, 0x56,
-	0x34, 0x14, 0x05, 0xe7, 0x54, 0xc1, 0x04, 0x26, 0xed, 0xd4, 0xa9, 0x0d, 0x3a, 0xa2, 0x8c, 0xe2,
-	0x25, 0x28, 0x72, 0xb9, 0xfd, 0x8d, 0xd8, 0x28, 0xbd, 0xab, 0xbd, 0x40, 0xa6, 0x82, 0x48, 0x1d,
-	0x16, 0x26, 0xe3, 0xd7, 0x47, 0x23, 0xb2, 0x06, 0x73, 0x0a, 0xec, 0x8e, 0x7c, 0xfb, 0xf3, 0x7d,
-	0xec, 0x20, 0xaf, 0x61, 0x5e, 0x1d, 0x3a, 0xf2, 0x3e, 0x4d, 0x1c, 0xd3, 0x6e, 0x39, 0xb6, 0x07,
-	0x38, 0xd3, 0xa3, 0x28, 0x47, 0x1d, 0xbc, 0x04, 0x33, 0xef, 0x8e, 0x8f, 0x23, 0xca, 0x44, 0xc9,
-	0x82, 0xec, 0x53, 0x62, 0xdc, 0xb3, 0x1d, 0x77, 0xec, 0x32, 0x91, 0x58, 0x91, 0x31, 0x44, 0x56,
-	0x52, 0x03, 0xde, 0x53, 0x2b, 0xb4, 0x87, 0x18, 0x03, 0x3a, 0x10, 0x69, 0x94, 0xbb, 0xe8, 0x80,
-	0x9c, 0x69, 0x50, 0xcf, 0x94, 0x3d, 0xf4, 0x83, 0x7d, 0x4a, 0xc3, 0x08, 0x1b, 0x90, 0x17, 0xee,
-	0xa2, 0x16, 0x4a, 0x12, 0x0b, 0xe4, 0xb6, 0x9a, 0x19, 0xb5, 0xfa, 0x74, 0xb5, 0xbc, 0xd3, 0x48,
-	0xdc, 0xb0, 0x9a, 0xbc, 0x18, 0xc2, 0x4f, 0xa0, 0xd2, 0xf5, 0x59, 0xb4, 0x4b, 0xa3, 0xc8, 0x1a,
-	0x50, 0xa3, 0x90, 0x89, 0xc8, 0x12, 0x78, 0x05, 0x80, 0x7f, 0xf6, 0xbd, 0x91, 0xeb, 0x51, 0x63,
-	0x26, 0x13, 0x96, 0xc1, 0xb9, 0x8e, 0xad, 0xd0, 0x3f, 0x09, 0x22, 0xa3, 0x98, 0x89, 0x90, 0x18,
-	0x9f, 0xc5, 0x4d, 0x3f, 0xfc, 0x62, 0x85, 0x4e, 0x64, 0x94, 0x32, 0x7c, 0x82, 0x92, 0x10, 0x16,
-	0x95, 0x29, 0x26, 0x8d, 0x12, 0x5b, 0xf0, 0x1b, 0x28, 0xf5, 0x2c, 0x46, 0x07, 0x7e, 0x78, 0x2a,
-	0x8c, 0xac, 0x76, 0x16, 0xc5, 0x5d, 0x4a, 0x5e, 0x71, 0x2a, 0x9f, 0xfa, 0xe6, 0xf7, 0xcf, 0xf9,
-	0x9b, 0xf7, 0xcf, 0x51, 0x53, 0x70, 0xe4, 0x07, 0x82, 0x9a, 0x2a, 0x9a, 0x5c, 0xc3, 0x5b, 0x00,
-	0x99, 0xc4, 0xa5, 0xea, 0x7d, 0x3f, 0x9a, 0x56, 0x52, 0x84, 0x9b, 0x99, 0x60, 0xbc, 0xac, 0xdc,
-	0xd6, 0xc4, 0xa9, 0xb2, 0x38, 0x25, 0xe6, 0x4d, 0x5a, 0x4e, 0x12, 0x93, 0x74, 0x11, 0x01, 0x22,
-	0x42, 0x40, 0xca, 0x2a, 0xf2, 0x0d, 0xc1, 0xe2, 0xb4, 0x4a, 0xff, 0xed, 0x44, 0x03, 0x0a, 0x3d,
-	0xff, 0xc4, 0xbb, 0x36, 0x3d, 0x02, 0xc2, 0x04, 0x0a, 0x22, 0xb9, 0xd4, 0x33, 0x9b, 0x4d, 0x68,
-	0xc6, 0x14, 0x19, 0x42, 0x51, 0x5d, 0xc6, 0x63, 0x69, 0x6a, 0xfc, 0x16, 0xe3, 0xfe, 0x52, 0x3f,
-	0xf9, 0x04, 0x9b, 0x16, 0x8b, 0x17, 0x92, 0xa6, 0x26, 0x98, 0x23, 0x7c, 0x86, 0xf8, 0xd6, 0x39,
-	0x0a, 0x1c, 0xce, 0xf3, 0x6d, 0xa4, 0xab, 0x19, 0x4a, 0x71, 0xf2, 0x15, 0x41, 0x5d, 0xbe, 0x42,
-	0x75, 0x2d, 0xbb, 0x96, 0x77, 0x8a, 0x9f, 0xdf, 0x58, 0xb8, 0x75, 0x51, 0x7a, 0x32, 0x36, 0xb3,
-	0x72, 0xef, 0xbc, 0x88, 0x06, 0x14, 0x0e, 0x7d, 0x66, 0x8d, 0x84, 0x94, 0xc4, 0x13, 0x01, 0x91,
-	0x6d, 0xa8, 0x4e, 0x26, 0xe6, 0xb3, 0x1d, 0xef, 0x2c, 0xd1, 0xb8, 0x52, 0x2e, 0x31, 0xde, 0xf5,
-	0x86, 0xea, 0x5a, 0x71, 0x02, 0x21, 0x6e, 0x3a, 0x5e, 0xf1, 0xaf, 0x83, 0x3a, 0xf8, 0x15, 0xcc,
-	0x4a, 0x2c, 0x56, 0x18, 0xf7, 0x53, 0x13, 0x0a, 0x33, 0x84, 0x39, 0x11, 0x75, 0x67, 0x43, 0xe4,
-	0x27, 0x4a, 0xf2, 0xc6, 0x9e, 0xfd, 0xe3, 0x4f, 0xea, 0xba, 0x2c, 0xed, 0x5e, 0xb2, 0x5a, 0x50,
-	0xda, 0xf5, 0x1d, 0xf7, 0xd8, 0xa5, 0x8e, 0x58, 0x3f, 0xc9, 0xb3, 0x56, 0x68, 0x2a, 0x3c, 0x3f,
-	0x5d, 0xf8, 0xd3, 0x0f, 0x30, 0x7f, 0x6d, 0x80, 0x71, 0x59, 0x9e, 0xa9, 0xe5, 0x30, 0xa8, 0x07,
-	0x53, 0x43, 0x78, 0x36, 0xdd, 0x21, 0x35, 0x0d, 0xcf, 0x4f, 0x6c, 0xaf, 0x9a, 0x8e, 0xab, 0xd9,
-	0x35, 0x55, 0xcb, 0x77, 0x8d, 0xf3, 0xcb, 0x26, 0xba, 0xb8, 0x6c, 0xa2, 0x3f, 0x97, 0x4d, 0xf4,
-	0xfd, 0xaa, 0x99, 0xbb, 0xb8, 0x6a, 0xe6, 0x7e, 0x5d, 0x35, 0x73, 0x7f, 0x03, 0x00, 0x00, 0xff,
-	0xff, 0xf1, 0x33, 0xd6, 0xb6, 0x07, 0x08, 0x00, 0x00,
+	// 740 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x54, 0x4f, 0x4f, 0x13, 0x5f,
+	0x14, 0xed, 0x9b, 0x69, 0xa1, 0xbd, 0x85, 0x52, 0x5e, 0xf9, 0xe5, 0x37, 0x69, 0xb0, 0x34, 0x2f,
+	0x2c, 0x1a, 0x13, 0xab, 0x16, 0x75, 0x4f, 0x4b, 0x80, 0x26, 0x80, 0x30, 0x42, 0x5c, 0x9a, 0x71,
+	0xe6, 0xd1, 0x4e, 0x6c, 0xe7, 0x4d, 0xe6, 0x3d, 0x62, 0x58, 0xbb, 0x70, 0x6b, 0xe2, 0x77, 0xf1,
+	0x33, 0xb0, 0x93, 0xa5, 0x2b, 0x63, 0xe0, 0x8b, 0x98, 0x79, 0x7f, 0xa6, 0x2d, 0x44, 0x41, 0x96,
+	0x3d, 0xe7, 0xce, 0xb9, 0xf7, 0x9c, 0xde, 0xfb, 0xe0, 0x7f, 0x7f, 0xe8, 0x89, 0xb6, 0x17, 0x87,
+	0x6d, 0x9f, 0x45, 0xc2, 0xf3, 0x05, 0x6f, 0xc7, 0x09, 0x13, 0x0c, 0xdb, 0x63, 0x3e, 0xa8, 0xff,
+	0x27, 0x59, 0x9f, 0x25, 0xb4, 0x2d, 0xce, 0x63, 0xaa, 0x39, 0xf2, 0x0e, 0x2a, 0x3d, 0x5d, 0xdd,
+	0x1f, 0xc7, 0x2c, 0x11, 0xf8, 0x09, 0x14, 0x0d, 0xe2, 0xa0, 0xa6, 0xdd, 0x2a, 0x77, 0x96, 0xdb,
+	0x63, 0x3e, 0x68, 0x1f, 0x0e, 0x59, 0x44, 0x35, 0xe3, 0x66, 0x25, 0xb8, 0x01, 0xf3, 0x2e, 0x8d,
+	0x47, 0x9e, 0x4f, 0x1d, 0xab, 0x69, 0xb5, 0x8a, 0xdd, 0xfc, 0xc5, 0xcf, 0xb5, 0x9c, 0x6b, 0x40,
+	0xf2, 0x15, 0x41, 0xd9, 0x14, 0x6f, 0x06, 0x01, 0x26, 0x90, 0x3f, 0xe1, 0x34, 0x71, 0x50, 0xd3,
+	0x6a, 0x95, 0x3b, 0x15, 0x29, 0xdd, 0x8f, 0xe2, 0x33, 0x91, 0xa2, 0xae, 0xe4, 0x30, 0x81, 0xd2,
+	0x76, 0x98, 0x70, 0x71, 0xe0, 0x8d, 0x95, 0x6a, 0x49, 0xab, 0x4e, 0x60, 0xdc, 0x84, 0xe2, 0x9e,
+	0xa7, 0x4b, 0xec, 0x26, 0xca, 0x4a, 0x32, 0x14, 0xd7, 0xa1, 0x20, 0x67, 0x76, 0xf2, 0x53, 0xb4,
+	0x82, 0xc8, 0xf3, 0xc9, 0x50, 0x3b, 0x54, 0xa4, 0x0d, 0x7b, 0x89, 0xbf, 0xd1, 0xd9, 0xf5, 0xf8,
+	0x50, 0x36, 0x5c, 0x34, 0x0d, 0x33, 0x98, 0xb4, 0x27, 0x49, 0x6d, 0xd1, 0x11, 0x15, 0x14, 0xaf,
+	0xc2, 0x7c, 0x3a, 0x6e, 0x7f, 0x4b, 0x05, 0x65, 0x77, 0xad, 0x67, 0xc8, 0x35, 0x10, 0xa9, 0xc1,
+	0xf2, 0x6c, 0xfd, 0xe6, 0x68, 0x44, 0x36, 0x60, 0xd1, 0x80, 0xdd, 0x11, 0xf3, 0x3f, 0xdc, 0x27,
+	0x0e, 0xf2, 0x12, 0x96, 0xcc, 0x47, 0x27, 0xd1, 0xfb, 0x99, 0xcf, 0xac, 0xbf, 0x7c, 0x76, 0x00,
+	0x78, 0xca, 0xa3, 0x6c, 0x47, 0x03, 0xbc, 0x0a, 0x73, 0xaf, 0x4f, 0x4f, 0x39, 0x15, 0xb2, 0x65,
+	0x41, 0xfb, 0xd4, 0x58, 0x9a, 0xd9, 0x5e, 0x38, 0x0e, 0x85, 0x14, 0x36, 0xa4, 0x82, 0xc8, 0xfa,
+	0x24, 0x80, 0x37, 0xd4, 0x4b, 0xfc, 0x21, 0xc6, 0x80, 0x8e, 0xa4, 0x8c, 0x49, 0x17, 0x1d, 0x91,
+	0xcf, 0x08, 0x6a, 0x53, 0x6d, 0x8f, 0x59, 0x7c, 0x48, 0x69, 0xc2, 0x1f, 0xde, 0x17, 0xbf, 0x82,
+	0x62, 0xcf, 0x13, 0x74, 0xc0, 0x92, 0x73, 0xc7, 0x6e, 0x5a, 0xad, 0x4a, 0x67, 0x45, 0xfa, 0xd5,
+	0xd2, 0x86, 0x33, 0xff, 0xbf, 0xf9, 0x4d, 0x12, 0x58, 0x31, 0x83, 0xb8, 0x94, 0x67, 0xa3, 0xcc,
+	0xe8, 0xa1, 0xfb, 0xeb, 0xa5, 0x99, 0xa7, 0xfc, 0xed, 0xcc, 0x53, 0xd4, 0x95, 0x1c, 0xf9, 0x8e,
+	0xa0, 0x6a, 0x9a, 0x66, 0xd6, 0x1f, 0xda, 0xb0, 0x0e, 0x85, 0x1e, 0x3b, 0x8b, 0x6e, 0x84, 0x22,
+	0x21, 0x4c, 0xa0, 0x20, 0xc5, 0x1d, 0x5b, 0x9e, 0xe8, 0xc2, 0xb4, 0xa0, 0xab, 0x28, 0xbc, 0x06,
+	0x85, 0x74, 0x11, 0xb8, 0x93, 0x97, 0x35, 0x25, 0x59, 0x23, 0x17, 0x44, 0xe1, 0x98, 0xc0, 0xdc,
+	0x4e, 0xc2, 0xce, 0x62, 0xee, 0x14, 0x64, 0x05, 0xc8, 0x0a, 0x09, 0xb9, 0x9a, 0x21, 0x43, 0x98,
+	0x37, 0xc1, 0x3d, 0xd2, 0x01, 0xa8, 0x5d, 0x55, 0x72, 0x13, 0xef, 0xd8, 0x81, 0xbc, 0xeb, 0x09,
+	0x75, 0xb0, 0x96, 0x9e, 0x56, 0x22, 0x78, 0x1d, 0x20, 0xbd, 0xca, 0x93, 0x38, 0x48, 0xf9, 0xf4,
+	0x5a, 0x6d, 0xcd, 0x4f, 0xe1, 0xe4, 0x13, 0x82, 0x9a, 0xde, 0x52, 0x13, 0xe1, 0xbe, 0x17, 0x9d,
+	0xe3, 0xa7, 0xb7, 0x1e, 0xa4, 0x9a, 0x6c, 0x3d, 0x5b, 0x3b, 0xf5, 0x24, 0x65, 0xbe, 0xad, 0x3f,
+	0xf8, 0xae, 0x43, 0xe1, 0x98, 0x09, 0x6f, 0x24, 0x47, 0xc9, 0x82, 0x95, 0x10, 0xd9, 0x85, 0xca,
+	0xac, 0x70, 0xba, 0xb9, 0xea, 0xa6, 0xa5, 0x71, 0x33, 0xb9, 0xc6, 0x52, 0xd7, 0x5b, 0xc6, 0xb5,
+	0xe1, 0x24, 0x42, 0xc2, 0xc9, 0x2a, 0xa8, 0xa7, 0x95, 0x06, 0xf8, 0x05, 0x2c, 0x68, 0x4c, 0x4d,
+	0xa8, 0xfc, 0x54, 0xe5, 0x84, 0x53, 0x84, 0x3b, 0x53, 0x75, 0xa7, 0x21, 0xf2, 0x0d, 0x65, 0xba,
+	0x2a, 0xb3, 0x7f, 0x7c, 0xc4, 0x6f, 0x8e, 0x65, 0xdd, 0x6b, 0xac, 0x26, 0x14, 0xf7, 0x59, 0x10,
+	0x9e, 0x86, 0x34, 0x90, 0x87, 0x69, 0xde, 0xfe, 0x0c, 0xbd, 0x73, 0x03, 0x1f, 0xbf, 0x85, 0xa5,
+	0x1b, 0x57, 0x80, 0x4b, 0xfa, 0x9b, 0x6a, 0x0e, 0x83, 0xd9, 0xcf, 0x2a, 0xc2, 0x0b, 0x50, 0xdc,
+	0x66, 0xc9, 0x47, 0x2f, 0x09, 0x78, 0xd5, 0xc2, 0x4b, 0x50, 0xee, 0x32, 0xc1, 0xf7, 0x29, 0xe7,
+	0xde, 0x80, 0x56, 0x6d, 0x5c, 0x01, 0x48, 0x81, 0x7e, 0x34, 0x0a, 0x23, 0x5a, 0xcd, 0x77, 0x9d,
+	0x8b, 0xab, 0x06, 0xba, 0xbc, 0x6a, 0xa0, 0x5f, 0x57, 0x0d, 0xf4, 0xe5, 0xba, 0x91, 0xbb, 0xbc,
+	0x6e, 0xe4, 0x7e, 0x5c, 0x37, 0x72, 0xbf, 0x03, 0x00, 0x00, 0xff, 0xff, 0xc2, 0x50, 0x31, 0xf9,
+	0x27, 0x07, 0x00, 0x00,
 }
 
 func (m *ContactsImport) Marshal() (dAtA []byte, err error) {
@@ -1512,53 +1422,13 @@ func (m *ContactsGetTopPeers) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	i--
-	if m.Forwards {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
-	}
-	i--
-	dAtA[i] = 0x40
-	i--
-	if m.Groups {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
-	}
-	i--
-	dAtA[i] = 0x38
-	i--
-	if m.BotsInline {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
-	}
-	i--
-	dAtA[i] = 0x30
-	i--
-	if m.BotsMessage {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
-	}
-	i--
-	dAtA[i] = 0x28
-	i--
-	if m.Users {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
-	}
-	i--
-	dAtA[i] = 0x20
-	i = encodeVarintChatApiContacts(dAtA, i, uint64(m.Offset))
+	i = encodeVarintChatApiContacts(dAtA, i, uint64(m.Category))
 	i--
 	dAtA[i] = 0x18
 	i = encodeVarintChatApiContacts(dAtA, i, uint64(m.Limit))
 	i--
 	dAtA[i] = 0x10
-	i = encodeVarintChatApiContacts(dAtA, i, uint64(m.Hash))
+	i = encodeVarintChatApiContacts(dAtA, i, uint64(m.Offset))
 	i--
 	dAtA[i] = 0x8
 	return len(dAtA) - i, nil
@@ -1635,7 +1505,7 @@ func (m *ContactsTopPeers) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 				i = encodeVarintChatApiContacts(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x1a
+			dAtA[i] = 0x2a
 		}
 	}
 	if len(m.Users) > 0 {
@@ -1649,46 +1519,9 @@ func (m *ContactsTopPeers) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 				i = encodeVarintChatApiContacts(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x12
+			dAtA[i] = 0x22
 		}
 	}
-	if len(m.Categories) > 0 {
-		for iNdEx := len(m.Categories) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Categories[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintChatApiContacts(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0xa
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *TopPeerCategoryPeers) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *TopPeerCategoryPeers) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *TopPeerCategoryPeers) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
 	if len(m.Peers) > 0 {
 		for iNdEx := len(m.Peers) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -2096,14 +1929,9 @@ func (m *ContactsGetTopPeers) Size() (n int) {
 	}
 	var l int
 	_ = l
-	n += 1 + sovChatApiContacts(uint64(m.Hash))
-	n += 1 + sovChatApiContacts(uint64(m.Limit))
 	n += 1 + sovChatApiContacts(uint64(m.Offset))
-	n += 2
-	n += 2
-	n += 2
-	n += 2
-	n += 2
+	n += 1 + sovChatApiContacts(uint64(m.Limit))
+	n += 1 + sovChatApiContacts(uint64(m.Category))
 	return n
 }
 
@@ -2127,8 +1955,10 @@ func (m *ContactsTopPeers) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if len(m.Categories) > 0 {
-		for _, e := range m.Categories {
+	n += 1 + sovChatApiContacts(uint64(m.Category))
+	n += 1 + sovChatApiContacts(uint64(m.Count))
+	if len(m.Peers) > 0 {
+		for _, e := range m.Peers {
 			l = e.Size()
 			n += 1 + l + sovChatApiContacts(uint64(l))
 		}
@@ -2141,23 +1971,6 @@ func (m *ContactsTopPeers) Size() (n int) {
 	}
 	if len(m.Groups) > 0 {
 		for _, e := range m.Groups {
-			l = e.Size()
-			n += 1 + l + sovChatApiContacts(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *TopPeerCategoryPeers) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovChatApiContacts(uint64(m.Category))
-	n += 1 + sovChatApiContacts(uint64(m.Count))
-	if len(m.Peers) > 0 {
-		for _, e := range m.Peers {
 			l = e.Size()
 			n += 1 + l + sovChatApiContacts(uint64(l))
 		}
@@ -3243,9 +3056,9 @@ func (m *ContactsGetTopPeers) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Hash", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Offset", wireType)
 			}
-			m.Hash = 0
+			m.Offset = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowChatApiContacts
@@ -3255,11 +3068,12 @@ func (m *ContactsGetTopPeers) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Hash |= int32(b&0x7F) << shift
+				m.Offset |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			hasFields[0] |= uint64(0x00000001)
 		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Limit", wireType)
@@ -3279,12 +3093,12 @@ func (m *ContactsGetTopPeers) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			hasFields[0] |= uint64(0x00000001)
+			hasFields[0] |= uint64(0x00000002)
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Offset", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Category", wireType)
 			}
-			m.Offset = 0
+			m.Category = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowChatApiContacts
@@ -3294,112 +3108,12 @@ func (m *ContactsGetTopPeers) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Offset |= int32(b&0x7F) << shift
+				m.Category |= TopPeerCategory(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			hasFields[0] |= uint64(0x00000002)
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Users", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChatApiContacts
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.Users = bool(v != 0)
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BotsMessage", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChatApiContacts
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.BotsMessage = bool(v != 0)
-		case 6:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BotsInline", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChatApiContacts
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.BotsInline = bool(v != 0)
-		case 7:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Groups", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChatApiContacts
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.Groups = bool(v != 0)
-		case 8:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Forwards", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChatApiContacts
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.Forwards = bool(v != 0)
+			hasFields[0] |= uint64(0x00000004)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipChatApiContacts(dAtA[iNdEx:])
@@ -3419,10 +3133,13 @@ func (m *ContactsGetTopPeers) Unmarshal(dAtA []byte) error {
 		}
 	}
 	if hasFields[0]&uint64(0x00000001) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Limit")
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Offset")
 	}
 	if hasFields[0]&uint64(0x00000002) == 0 {
-		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Offset")
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Limit")
+	}
+	if hasFields[0]&uint64(0x00000004) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Category")
 	}
 
 	if iNdEx > l {
@@ -3548,6 +3265,7 @@ func (m *ContactsResetTopPeer) Unmarshal(dAtA []byte) error {
 	return nil
 }
 func (m *ContactsTopPeers) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3574,162 +3292,6 @@ func (m *ContactsTopPeers) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: ContactsTopPeers: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Categories", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChatApiContacts
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthChatApiContacts
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthChatApiContacts
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Categories = append(m.Categories, &TopPeerCategoryPeers{})
-			if err := m.Categories[len(m.Categories)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Users", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChatApiContacts
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthChatApiContacts
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthChatApiContacts
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Users = append(m.Users, &User{})
-			if err := m.Users[len(m.Users)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Groups", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChatApiContacts
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthChatApiContacts
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthChatApiContacts
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Groups = append(m.Groups, &Group{})
-			if err := m.Groups[len(m.Groups)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipChatApiContacts(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthChatApiContacts
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthChatApiContacts
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *TopPeerCategoryPeers) Unmarshal(dAtA []byte) error {
-	var hasFields [1]uint64
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowChatApiContacts
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: TopPeerCategoryPeers: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: TopPeerCategoryPeers: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3803,6 +3365,74 @@ func (m *TopPeerCategoryPeers) Unmarshal(dAtA []byte) error {
 			}
 			m.Peers = append(m.Peers, &TopPeer{})
 			if err := m.Peers[len(m.Peers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Users", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Users = append(m.Users, &User{})
+			if err := m.Users[len(m.Users)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Groups", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChatApiContacts
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthChatApiContacts
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Groups = append(m.Groups, &Group{})
+			if err := m.Groups[len(m.Groups)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

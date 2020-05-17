@@ -319,12 +319,6 @@ func (p *poolContactsGetTopPeers) Get() *ContactsGetTopPeers {
 	if !ok {
 		return &ContactsGetTopPeers{}
 	}
-	x.Hash = 0
-	x.Users = false
-	x.BotsMessage = false
-	x.BotsInline = false
-	x.Groups = false
-	x.Forwards = false
 	return x
 }
 
@@ -389,7 +383,7 @@ func (p *poolContactsTopPeers) Get() *ContactsTopPeers {
 	if !ok {
 		return &ContactsTopPeers{}
 	}
-	x.Categories = x.Categories[:0]
+	x.Peers = x.Peers[:0]
 	x.Users = x.Users[:0]
 	x.Groups = x.Groups[:0]
 	return x
@@ -403,39 +397,6 @@ var PoolContactsTopPeers = poolContactsTopPeers{}
 
 func ResultContactsTopPeers(out *MessageEnvelope, res *ContactsTopPeers) {
 	out.Constructor = C_ContactsTopPeers
-	protoSize := res.Size()
-	if protoSize > cap(out.Message) {
-		pbytes.Put(out.Message)
-		out.Message = pbytes.GetLen(protoSize)
-	} else {
-		out.Message = out.Message[:protoSize]
-	}
-	res.MarshalToSizedBuffer(out.Message)
-}
-
-const C_TopPeerCategoryPeers int64 = 78563632
-
-type poolTopPeerCategoryPeers struct {
-	pool sync.Pool
-}
-
-func (p *poolTopPeerCategoryPeers) Get() *TopPeerCategoryPeers {
-	x, ok := p.pool.Get().(*TopPeerCategoryPeers)
-	if !ok {
-		return &TopPeerCategoryPeers{}
-	}
-	x.Peers = x.Peers[:0]
-	return x
-}
-
-func (p *poolTopPeerCategoryPeers) Put(x *TopPeerCategoryPeers) {
-	p.pool.Put(x)
-}
-
-var PoolTopPeerCategoryPeers = poolTopPeerCategoryPeers{}
-
-func ResultTopPeerCategoryPeers(out *MessageEnvelope, res *TopPeerCategoryPeers) {
-	out.Constructor = C_TopPeerCategoryPeers
 	protoSize := res.Size()
 	if protoSize > cap(out.Message) {
 		pbytes.Put(out.Message)
@@ -628,7 +589,6 @@ func init() {
 	ConstructorNames[1378126220] = "ContactsGetTopPeers"
 	ConstructorNames[1114887378] = "ContactsResetTopPeer"
 	ConstructorNames[2243919622] = "ContactsTopPeers"
-	ConstructorNames[78563632] = "TopPeerCategoryPeers"
 	ConstructorNames[1763100161] = "TopPeer"
 	ConstructorNames[2067026404] = "BlockedContactsMany"
 	ConstructorNames[53788553] = "BlockedContact"

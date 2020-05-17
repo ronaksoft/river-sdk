@@ -15,8 +15,7 @@ import (
 const (
 	prefixDialogs       = "DLG"
 	prefixPinnedDialogs = "PDLG"
-
-	indexDialogs = prefixDialogs
+	indexDialogs        = prefixDialogs
 )
 
 type repoDialogs struct {
@@ -109,8 +108,8 @@ func countDialogUnread(txn *badger.Txn, peerID int64, peerType int32, userID, ma
 	return
 }
 
-func (r *repoDialogs) updateLastUpdate(peerID int64, peerType int32, lastUpdate int64) {
-	_ = r.bunt.Update(func(tx *buntdb.Tx) error {
+func (r *repoDialogs) updateLastUpdate(peerID int64, peerType int32, lastUpdate int64) error {
+	return r.bunt.Update(func(tx *buntdb.Tx) error {
 		_, _, err := tx.Set(
 			domain.ByteToStr(getDialogKey(peerID, peerType)),
 			fmt.Sprintf("%021d", lastUpdate),
@@ -265,6 +264,9 @@ func (r *repoDialogs) List(offset, limit int32) []*msg.Dialog {
 	err := badgerView(func(txn *badger.Txn) error {
 		return r.bunt.View(func(tx *buntdb.Tx) error {
 			return tx.Descend(indexDialogs, func(key, value string) bool {
+				if offset--; offset >= 0 {
+					return true
+				}
 				if limit--; limit < 0 {
 					return false
 				}

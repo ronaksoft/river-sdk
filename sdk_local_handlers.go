@@ -69,7 +69,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		logs.Warn("River found unmatched dialog messages", zap.Int("Got", len(res.Messages)), zap.Int("Need", len(mMessages)))
 		waitGroup := &sync.WaitGroup{}
 		waitGroup.Add(1)
-		r.syncCtrl.GetAllDialogs(waitGroup, 0, 50)
+		r.syncCtrl.GetAllDialogs(waitGroup, 0, 100)
 		for msgID := range mMessages {
 			found := false
 			for _, m := range res.Messages {
@@ -676,6 +676,16 @@ func (r *River) contactsDelete(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	return
 }
 
+func (r *River) contactsGetTopPeers(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ContactsGetTopPeers{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	// TODO:: implement it
+}
 func (r *River) accountUpdateUsername(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.AccountUpdateUsername)
 	if err := req.Unmarshal(in.Message); err != nil {
@@ -1415,3 +1425,4 @@ func (r *River) clientGetLastBotKeyboard(in, out *msg.MessageEnvelope, timeoutCB
 	out.Message, _ = lastKeyboardMsg.Marshal()
 	uiexec.ExecSuccessCB(successCB, out)
 }
+

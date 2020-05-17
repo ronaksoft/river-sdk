@@ -196,9 +196,14 @@ func (ctrl *Controller) Sync() {
 
 			// Get Contacts from the server
 			waitGroup := &sync.WaitGroup{}
-			waitGroup.Add(2)
+			waitGroup.Add(7)
 			go ctrl.GetContacts(waitGroup)
-			go ctrl.GetAllDialogs(waitGroup, 0, 50)
+			go ctrl.GetAllDialogs(waitGroup, 0, 100)
+			go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_Users, 0, 100)
+			go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_Groups, 0, 100)
+			go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_Forwards, 0, 100)
+			go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_BotsMessage, 0, 100)
+			go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_BotsInline, 0, 100)
 			waitGroup.Wait()
 
 			ctrl.updateID = serverUpdateID

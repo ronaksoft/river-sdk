@@ -59,15 +59,6 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	}
 	messageHole.InsertFill(dialog.PeerID, dialog.PeerType, dialog.TopMessageID, x.Message.ID)
 
-	// bug : sometime server do not sends access hash
-	if x.AccessHash > 0 {
-		// update users access hash
-		err = repo.Users.UpdateAccessHash(x.AccessHash, x.Message.PeerID, x.Message.PeerType)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	// If sender is me, check for pending
 	if x.Message.SenderID == ctrl.userID {
 		pm := repo.PendingMessages.GetByRealID(x.Message.ID)
@@ -84,18 +75,37 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 
 	// update monitoring
 	if x.Message.SenderID == ctrl.userID {
-		if x.Message.MediaType != msg.MediaTypeEmpty {
-			mon.IncMediaSent()
+		if x.Message.FwdSenderID != 0 {
+			repo.TopPeers.Update(msg.TopPeerCategory_Forwards, x.Message.PeerID, x.Message.PeerType)
 		} else {
+			switch msg.PeerType(x.Message.PeerType) {
+			case msg.PeerUser:
+				p, _ := repo.Users.Get(x.Message.PeerID)
+				if p == nil || !p.IsBot {
+					repo.TopPeers.Update(msg.TopPeerCategory_Users, x.Message.PeerID, x.Message.PeerType)
+				} else {
+					repo.TopPeers.Update(msg.TopPeerCategory_BotsMessage, x.Message.PeerID, x.Message.PeerType)
+				}
+			case msg.PeerGroup:
+				repo.TopPeers.Update(msg.TopPeerCategory_Groups, x.Message.PeerID, x.Message.PeerType)
+			}
+		}
+		switch x.Message.MediaType {
+		case msg.MediaTypeEmpty:
 			mon.IncMessageSent()
+		default:
+			mon.IncMediaSent()
 		}
 	} else {
-		if x.Message.MediaType != msg.MediaTypeEmpty {
-			mon.IncMediaReceived()
-		} else {
+		switch x.Message.MediaType {
+		case msg.MediaTypeEmpty:
 			mon.IncMessageReceived()
+		default:
+			mon.IncMediaReceived()
 		}
 	}
+
+	// update top peer
 
 	return res, nil
 }

@@ -240,6 +240,60 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, l
 	)
 }
 
+func (ctrl *Controller) GetAllTopPeers(waitGroup *sync.WaitGroup, cat msg.TopPeerCategory, offset int32, limit int32) {
+	logs.Info("SyncCtrl calls GetAllTopPeers",
+		zap.Int32("Offset", offset),
+		zap.Int32("Limit", limit),
+	)
+	req := &msg.ContactsGetTopPeers{
+		Limit: limit,
+		Offset: offset,
+		Category: cat,
+	}
+	reqBytes, _ := req.Marshal()
+	ctrl.queueCtrl.EnqueueCommand(
+		&msg.MessageEnvelope{
+			Constructor: msg.C_ContactsGetTopPeers,
+			RequestID:   uint64(domain.SequentialUniqueID()),
+			Message:     reqBytes,
+		},
+		func() {
+			// If timeout, then retry the request
+			logs.Warn("Timeout! on GetAllTopPeers, retrying ...", zap.String("Cat", cat.String()))
+			_, _ = ctrl.AuthRecall("GetAllTopPeers")
+			ctrl.GetAllTopPeers(waitGroup, cat, offset, limit)
+		},
+		func(m *msg.MessageEnvelope) {
+			switch m.Constructor {
+			case msg.C_Error:
+				logs.Error("SyncCtrl got error response on ContactsGetTopPeers", zap.Error(domain.ParseServerError(m.Message)))
+				x := msg.Error{}
+				_ = x.Unmarshal(m.Message)
+				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
+					waitGroup.Done()
+				} else {
+					ctrl.GetAllTopPeers(waitGroup, cat, offset, limit)
+				}
+			case msg.C_ContactsTopPeers:
+				x := msg.ContactsTopPeers{}
+				err := x.Unmarshal(m.Message)
+				if err != nil {
+					logs.Error("SyncCtrl cannot unmarshal server response on MessagesGetDialogs", zap.Error(err))
+					return
+				}
+
+				if len(x.Peers) >= int(limit) {
+					ctrl.GetAllTopPeers(waitGroup, cat, offset+limit, limit)
+				} else {
+					waitGroup.Done()
+					forceUpdateUI(ctrl, true, false)
+				}
+			}
+		},
+		false,
+	)
+}
+
 func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup) {
 	logs.Debug("SyncCtrl calls GetContacts")
 	req := &msg.ContactsGet{}

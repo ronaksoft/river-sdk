@@ -479,7 +479,6 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 	r.fileCtrl.Stop()
 
 	repo.DropAll()
-	r.ResetAuthKey()
 	r.syncCtrl.ResetIDs()
 	r.ConnInfo.FirstName = ""
 	r.ConnInfo.LastName = ""

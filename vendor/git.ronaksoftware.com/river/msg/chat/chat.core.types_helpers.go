@@ -17,6 +17,70 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+const C_Ping int64 = 2246546115
+
+type poolPing struct {
+	pool sync.Pool
+}
+
+func (p *poolPing) Get() *Ping {
+	x, ok := p.pool.Get().(*Ping)
+	if !ok {
+		return &Ping{}
+	}
+	return x
+}
+
+func (p *poolPing) Put(x *Ping) {
+	p.pool.Put(x)
+}
+
+var PoolPing = poolPing{}
+
+func ResultPing(out *MessageEnvelope, res *Ping) {
+	out.Constructor = C_Ping
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_Pong int64 = 2171268721
+
+type poolPong struct {
+	pool sync.Pool
+}
+
+func (p *poolPong) Get() *Pong {
+	x, ok := p.pool.Get().(*Pong)
+	if !ok {
+		return &Pong{}
+	}
+	return x
+}
+
+func (p *poolPong) Put(x *Pong) {
+	p.pool.Put(x)
+}
+
+var PoolPong = poolPong{}
+
+func ResultPong(out *MessageEnvelope, res *Pong) {
+	out.Constructor = C_Pong
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 const C_MessageEnvelope int64 = 535232465
 
 type poolMessageEnvelope struct {
@@ -1353,6 +1417,8 @@ func ResultInputGeoLocation(out *MessageEnvelope, res *InputGeoLocation) {
 }
 
 func init() {
+	ConstructorNames[2246546115] = "Ping"
+	ConstructorNames[2171268721] = "Pong"
 	ConstructorNames[535232465] = "MessageEnvelope"
 	ConstructorNames[1972016308] = "MessageContainer"
 	ConstructorNames[2373884514] = "UpdateEnvelope"
