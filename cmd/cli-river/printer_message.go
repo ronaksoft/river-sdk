@@ -362,6 +362,12 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		for _, cmd := range x.Commands {
 			_Shell.Println(cmd.Command, "-", cmd.Description)
 		}
+	case msg.C_ContactsTopPeers:
+		x := &msg.ContactsTopPeers{}
+		x.Unmarshal(envelope.Message)
+		for _, tp := range x.Peers {
+			_Shell.Println(tp.Peer.ID, tp.Peer.Type, tp.Rate)
+		}
 	default:
 		constructorName, _ := msg.ConstructorNames[envelope.Constructor]
 		_Shell.Println("DEFAULT", constructorName, len(envelope.Message))

@@ -540,7 +540,6 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 		reqBytes := pbytes.GetLen(req.Size())
 		req.MarshalToSizedBuffer(reqBytes)
 
-		logs.Info("HERE Send", zap.Int("L", len(phoneContacts)))
 		wg.Add(1)
 		ctrl.queueCtrl.EnqueueCommand(
 			&msg.MessageEnvelope{
@@ -553,11 +552,9 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 				logs.Error("SyncCtrl got timeout on ContactsImport")
 			},
 			func(m *msg.MessageEnvelope) {
-				logs.Info("HERE Received")
 				defer wg.Done()
 				switch m.Constructor {
 				case msg.C_ContactsImported:
-					logs.Info("HERE ContactsImported")
 					x := &msg.ContactsImported{}
 					err := x.Unmarshal(m.Message)
 					if err != nil {
@@ -583,6 +580,7 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 						}
 					case x.Code == msg.ErrCodeTooFew:
 						_ = repo.Users.DeletePhoneContact(phoneContacts...)
+						success = true
 						maxTry = 0
 					default:
 						logs.Warn("SyncCtrl got error response from server, will retry",
