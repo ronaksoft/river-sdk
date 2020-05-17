@@ -3,24 +3,17 @@ module git.ronaksoftware.com/ronak/riversdk
 require (
 	git.ronaksoftware.com/river/msg v0.0.0-20200516134217-16f6b31acbcc
 	git.ronaksoftware.com/ronak/toolbox v1.1.6
-	github.com/RoaringBitmap/roaring v0.4.18 // indirect
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
 	github.com/beeker1121/goque v2.1.0+incompatible
-	github.com/blevesearch/bleve v0.8.0
-	github.com/blevesearch/blevex v0.0.0-20180227211930-4b158bb555a3 // indirect
-	github.com/blevesearch/go-porterstemmer v1.0.2 // indirect
-	github.com/blevesearch/segment v0.0.0-20160915185041-762005e7a34f // indirect
+	github.com/blevesearch/bleve v1.0.7
 	github.com/chzyer/logex v1.1.10 // indirect
 	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect
-	github.com/couchbase/vellum v0.0.0-20190626091642-41f2deade2cf // indirect
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
 	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
 	github.com/dgraph-io/badger v1.6.1
 	github.com/dustin/go-humanize v1.0.0
-	github.com/edsrzf/mmap-go v1.0.0 // indirect
-	github.com/etcd-io/bbolt v1.3.3 // indirect
 	github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51 // indirect
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
 	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
@@ -46,8 +39,6 @@ require (
 	github.com/smartystreets/goconvey v0.0.0-20190306220146-200a235640ff
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.4.0
-	github.com/steveyen/gtreap v0.0.0-20150807155958-0abe01ef9be2 // indirect
-	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20190705090504-162552197222 // indirect
 	github.com/tidwall/btree v0.0.0-20170113224114-9876f1454cf0 // indirect
 	github.com/tidwall/buntdb v1.1.0

@@ -5,7 +5,7 @@ git.ronaksoftware.com/ronak/toolbox
 git.ronaksoftware.com/ronak/toolbox/logger
 # github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9
 github.com/AndreasBriese/bbloom
-# github.com/RoaringBitmap/roaring v0.4.18
+# github.com/RoaringBitmap/roaring v0.4.21
 github.com/RoaringBitmap/roaring
 # github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db
 github.com/abiosoft/readline
@@ -13,7 +13,7 @@ github.com/abiosoft/readline
 github.com/beeker1121/goque
 # github.com/beorn7/perks v1.0.0
 github.com/beorn7/perks/quantile
-# github.com/blevesearch/bleve v0.8.0
+# github.com/blevesearch/bleve v1.0.7
 github.com/blevesearch/bleve
 github.com/blevesearch/bleve/analysis
 github.com/blevesearch/bleve/analysis/analyzer/keyword
@@ -32,7 +32,6 @@ github.com/blevesearch/bleve/index
 github.com/blevesearch/bleve/index/scorch
 github.com/blevesearch/bleve/index/scorch/mergeplan
 github.com/blevesearch/bleve/index/scorch/segment
-github.com/blevesearch/bleve/index/scorch/segment/zap
 github.com/blevesearch/bleve/index/store
 github.com/blevesearch/bleve/index/store/boltdb
 github.com/blevesearch/bleve/index/store/gtreap
@@ -52,17 +51,26 @@ github.com/blevesearch/bleve/search/query
 github.com/blevesearch/bleve/search/scorer
 github.com/blevesearch/bleve/search/searcher
 github.com/blevesearch/bleve/size
-# github.com/blevesearch/go-porterstemmer v1.0.2
+# github.com/blevesearch/go-porterstemmer v1.0.3
 github.com/blevesearch/go-porterstemmer
-# github.com/blevesearch/segment v0.0.0-20160915185041-762005e7a34f
+# github.com/blevesearch/mmap-go v1.0.2
+github.com/blevesearch/mmap-go
+# github.com/blevesearch/segment v0.9.0
 github.com/blevesearch/segment
+# github.com/blevesearch/snowballstem v0.9.0
+github.com/blevesearch/snowballstem
+github.com/blevesearch/snowballstem/english
+# github.com/blevesearch/zap/v11 v11.0.7
+github.com/blevesearch/zap/v11
+# github.com/blevesearch/zap/v12 v12.0.7
+github.com/blevesearch/zap/v12
 # github.com/certifi/gocertifi v0.0.0-20190506164543-d2eda7129713
 github.com/certifi/gocertifi
 # github.com/cespare/xxhash v1.1.0
 github.com/cespare/xxhash
-# github.com/couchbase/vellum v0.0.0-20190626091642-41f2deade2cf
+# github.com/couchbase/vellum v1.0.1
 github.com/couchbase/vellum
-github.com/couchbase/vellum/levenshtein2
+github.com/couchbase/vellum/levenshtein
 github.com/couchbase/vellum/regexp
 github.com/couchbase/vellum/utf8
 # github.com/dgraph-io/badger v1.6.1
@@ -77,10 +85,6 @@ github.com/dgraph-io/badger/y
 github.com/dgraph-io/ristretto/z
 # github.com/dustin/go-humanize v1.0.0
 github.com/dustin/go-humanize
-# github.com/edsrzf/mmap-go v1.0.0
-github.com/edsrzf/mmap-go
-# github.com/etcd-io/bbolt v1.3.3
-github.com/etcd-io/bbolt
 # github.com/fatih/color v1.7.0
 github.com/fatih/color
 # github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568
@@ -126,7 +130,7 @@ github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
 # github.com/golang/snappy v0.0.1
 github.com/golang/snappy
-# github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1
+# github.com/gopherjs/gopherjs v0.0.0-20190910122728-9d188e94fb99
 github.com/gopherjs/gopherjs/js
 # github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed
 github.com/hailocab/go-hostpool
@@ -184,7 +188,7 @@ github.com/mediocregopher/radix/v3/trace
 github.com/mitchellh/mapstructure
 # github.com/monnand/dhkx v0.0.0-20180522003156-9e5b033f1ac4
 github.com/monnand/dhkx
-# github.com/mschoch/smat v0.0.0-20160514031455-90eadee771ae
+# github.com/mschoch/smat v0.2.0
 github.com/mschoch/smat
 # github.com/nyaruka/phonenumbers v1.0.36
 github.com/nyaruka/phonenumbers
@@ -234,7 +238,7 @@ github.com/spf13/jwalterweatherman
 github.com/spf13/pflag
 # github.com/spf13/viper v1.4.0
 github.com/spf13/viper
-# github.com/steveyen/gtreap v0.0.0-20150807155958-0abe01ef9be2
+# github.com/steveyen/gtreap v0.1.0
 github.com/steveyen/gtreap
 # github.com/syndtr/goleveldb v1.0.0
 github.com/syndtr/goleveldb/leveldb
@@ -278,6 +282,8 @@ github.com/valyala/fasthttp/stackless
 github.com/valyala/tcplisten
 # github.com/willf/bitset v1.1.10
 github.com/willf/bitset
+# go.etcd.io/bbolt v1.3.4
+go.etcd.io/bbolt
 # go.uber.org/atomic v1.4.0
 go.uber.org/atomic
 # go.uber.org/multierr v1.1.0
@@ -298,7 +304,7 @@ golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
 # golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 golang.org/x/sync/singleflight
-# golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb
+# golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 # golang.org/x/text v0.3.2
