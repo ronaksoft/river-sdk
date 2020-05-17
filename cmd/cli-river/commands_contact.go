@@ -86,6 +86,13 @@ var ContactAdd = &ishell.Cmd{
 		}
 	},
 }
+
+var ContactGetTopPeers = &ishell.Cmd{
+	Name: "GetTopPeers",
+	Func: func(c *ishell.Context) {
+
+	},
+}
 func init() {
 	Contact.AddCmd(ContactImport)
 	Contact.AddCmd(ContactGet)

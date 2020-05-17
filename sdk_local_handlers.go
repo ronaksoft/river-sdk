@@ -683,9 +683,67 @@ func (r *River) contactsGetTopPeers(in, out *msg.MessageEnvelope, timeoutCB doma
 		successCB(out)
 		return
 	}
+	res := &msg.ContactsTopPeers{}
+	topPeers, _ := repo.TopPeers.List(req.Category, req.Offset, req.Limit)
+	if len(topPeers) == 0 {
+		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+		return
+	}
 
-	// TODO:: implement it
+	res.Category = req.Category
+	res.Peers = topPeers
+	res.Count = int32(len(topPeers))
+
+	mUsers := domain.MInt64B{}
+	mGroups := domain.MInt64B{}
+	for _, topPeer := range res.Peers {
+		switch msg.PeerType(topPeer.Peer.Type){
+		case msg.PeerUser:
+			mUsers[topPeer.Peer.ID] = true
+		case msg.PeerGroup:
+			mGroups[topPeer.Peer.ID] = true
+		}
+	}
+	res.Groups, _ = repo.Groups.GetMany(mGroups.ToArray())
+	if len(res.Groups) != len(mGroups) {
+		logs.Warn("River found unmatched top peers groups", zap.Int("Got", len(res.Groups)), zap.Int("Need", len(mGroups)))
+		for groupID := range mGroups {
+			found := false
+			for _, g := range res.Groups {
+				if g.ID == groupID {
+					found = true
+					break
+				}
+			}
+			if !found {
+				logs.Warn("missed group", zap.Int64("GroupID", groupID))
+			}
+		}
+	}
+	res.Users, _ = repo.Users.GetMany(mUsers.ToArray())
+	if len(res.Users) != len(mUsers) {
+		logs.Warn("River found unmatched top peers users", zap.Int("Got", len(res.Users)), zap.Int("Need", len(mUsers)))
+		for userID := range mUsers {
+			found := false
+			for _, g := range res.Users {
+				if g.ID == userID {
+					found = true
+					break
+				}
+			}
+			if !found {
+				logs.Warn("missed user", zap.Int64("UserID", userID))
+			}
+		}
+	}
+
+	out.Constructor = msg.C_ContactsTopPeers
+	buff, err := res.Marshal()
+	logs.ErrorOnErr("River got error on marshal ContactsTopPeers", err)
+	out.Message = buff
+	uiexec.ExecSuccessCB(successCB, out)
 }
+
 func (r *River) accountUpdateUsername(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.AccountUpdateUsername)
 	if err := req.Unmarshal(in.Message); err != nil {
