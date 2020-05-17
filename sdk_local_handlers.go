@@ -621,19 +621,15 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 		return
 	}
 
-	res := new(msg.ContactsMany)
-	res.ContactUsers, res.Contacts = repo.Users.GetContacts()
-
 	oldHash, err := repo.System.LoadInt(domain.SkContactsImportHash)
 	if err != nil {
 		logs.Warn("We got error on loading ContactsImportHash", zap.Error(err))
 	}
 	// calculate ContactsImportHash and compare with oldHash
 	newHash := domain.CalculateContactsImportHash(req)
-
-	// compare two hashes if equal return existing contacts
 	if newHash == oldHash {
-		msg.ResultContactsMany(out, res)
+		res := &msg.ContactsImported{}
+		msg.ResultContactsImported(out, res)
 		successCB(out)
 		return
 	}
@@ -645,7 +641,8 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	}
 
 	// extract differences between existing contacts and new contacts
-	diffContacts := domain.ExtractsContactsDifference(res.Contacts, req.Contacts)
+	_, contacts := repo.Users.GetContacts()
+	diffContacts := domain.ExtractsContactsDifference(contacts, req.Contacts)
 	err = repo.Users.SavePhoneContact(diffContacts...)
 	if err != nil {
 		logs.Error("We got error on saving phone contacts in to the db", zap.Error(err))
