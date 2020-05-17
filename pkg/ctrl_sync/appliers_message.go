@@ -259,7 +259,10 @@ func (ctrl *Controller) contactsTopPeers(e *msg.MessageEnvelope) {
 		logs.Error("SyncCtrl couldn't unmarshal ContactsTopPeers", zap.Error(err))
 		return
 	}
-	logs.Info("SyncCtrl applies ContactsTopPeers", zap.Int("L", len(u.Peers)))
+	logs.Info("SyncCtrl applies ContactsTopPeers",
+		zap.Int("L", len(u.Peers)),
+		zap.String("Cat", u.Category.String()),
+	)
 
 	err = repo.TopPeers.Save(u.Category, u.Peers...)
 	if err != nil {

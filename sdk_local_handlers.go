@@ -657,9 +657,7 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 		return
 	}
 	// chunk contacts by size of 50 and send them to server
-	go func() {
-		r.syncCtrl.ContactsImport(req.Replace, successCB, out)
-	}()
+	r.syncCtrl.ContactsImport(req.Replace, successCB, out)
 }
 
 func (r *River) contactsDelete(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -697,7 +695,7 @@ func (r *River) contactsGetTopPeers(in, out *msg.MessageEnvelope, timeoutCB doma
 	mUsers := domain.MInt64B{}
 	mGroups := domain.MInt64B{}
 	for _, topPeer := range res.Peers {
-		switch msg.PeerType(topPeer.Peer.Type){
+		switch msg.PeerType(topPeer.Peer.Type) {
 		case msg.PeerUser:
 			mUsers[topPeer.Peer.ID] = true
 		case msg.PeerGroup:
@@ -1483,4 +1481,3 @@ func (r *River) clientGetLastBotKeyboard(in, out *msg.MessageEnvelope, timeoutCB
 	out.Message, _ = lastKeyboardMsg.Marshal()
 	uiexec.ExecSuccessCB(successCB, out)
 }
-
