@@ -296,3 +296,7 @@ func sendLogs(r *River) {
 func (r *River) GetHole(peerID int64, peerType int32) []byte {
 	return repo.MessagesExtra.GetHoles(peerID, peerType)
 }
+
+func (r *River) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact){
+	return repo.Users.GetContacts()
+}

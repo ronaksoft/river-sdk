@@ -627,9 +627,16 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	}
 	// calculate ContactsImportHash and compare with oldHash
 	newHash := domain.CalculateContactsImportHash(req)
+	logs.Info("ContactsImport",
+		zap.Uint64("Old", oldHash),
+		zap.Uint64("New", newHash),
+	)
 	if newHash == oldHash {
-		res := &msg.ContactsImported{}
-		msg.ResultContactsImported(out, res)
+		res := &msg.Error{
+			Code:  msg.ErrCodeTooFew,
+			Items: msg.ErrItemUsers,
+		}
+		msg.ResultError(out, res)
 		successCB(out)
 		return
 	}

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	msg "git.ronaksoftware.com/river/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"go.uber.org/zap"
@@ -52,14 +51,16 @@ var ContactTestImport = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		req := msg.ContactsImport{}
 		req.Replace = true
-		for i := 0 ; i < 1000; i++ {
-			contact := msg.PhoneContact{}
-			contact.FirstName = domain.RandomID(10)
-			contact.LastName = domain.RandomID(10)
-			contact.Phone = fmt.Sprintf("237400%04d", i)
-			contact.ClientID = domain.RandomInt63()
-			req.Contacts = append(req.Contacts, &contact)
-		}
+		_, phoneContacts := _SDK.GetContacts()
+		req.Contacts = phoneContacts
+		// for i := 0 ; i < 1000; i++ {
+		// 	contact := msg.PhoneContact{}
+		// 	contact.FirstName = domain.RandomID(10)
+		// 	contact.LastName = domain.RandomID(10)
+		// 	contact.Phone = fmt.Sprintf("237400%04d", i)
+		// 	contact.ClientID = domain.RandomInt63()
+		// 	req.Contacts = append(req.Contacts, &contact)
+		// }
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsImport, reqBytes, reqDelegate); err != nil {
