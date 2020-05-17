@@ -755,6 +755,18 @@ func fnGetUser(c *ishell.Context) *msg.InputUser {
 	}
 }
 
+func fnGetTopPeerCat(c *ishell.Context) msg.TopPeerCategory {
+	options  := []string{
+		msg.TopPeerCategory_Users.String(),
+		msg.TopPeerCategory_Groups.String(),
+		msg.TopPeerCategory_Forwards.String(),
+		msg.TopPeerCategory_BotsMessage.String(),
+		msg.TopPeerCategory_BotsInline.String(),
+	}
+	idx := c.MultiChoice(options, "Select the category:")
+	return msg.TopPeerCategory(idx)
+
+}
 func getAttributeType(c *ishell.Context) msg.DocumentAttributeType {
 	attribType := msg.AttributeTypeNone
 	for {

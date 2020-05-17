@@ -122,11 +122,11 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 	}
 	_ = r.bunt.Update(func(tx *buntdb.Tx) error {
 		_ = tx.CreateIndex(indexDialogs, fmt.Sprintf("%s.*", prefixDialogs), buntdb.IndexBinary)
-		_ = tx.CreateIndex(indexTopPeersUser, fmt.Sprintf("%s.%02d.*", prefixTopPeers, msg.TopPeerCategory_Users), buntdb.IndexFloat)
-		_ = tx.CreateIndex(indexTopPeersGroup, fmt.Sprintf("%s.%02d.*", prefixTopPeers, msg.TopPeerCategory_Groups), buntdb.IndexFloat)
-		_ = tx.CreateIndex(indexTopPeersForward, fmt.Sprintf("%s.%02d.*", prefixTopPeers, msg.TopPeerCategory_Forwards), buntdb.IndexFloat)
-		_ = tx.CreateIndex(indexTopPeersBotMessage, fmt.Sprintf("%s.%02d.*", prefixTopPeers, msg.TopPeerCategory_BotsMessage), buntdb.IndexFloat)
-		_ = tx.CreateIndex(indexTopPeersBotInline, fmt.Sprintf("%s.%02d.*", prefixTopPeers, msg.TopPeerCategory_BotsInline), buntdb.IndexFloat)
+		_ = tx.CreateIndex(indexTopPeersUser, fmt.Sprintf("%s_%02d.*", prefixTopPeers, msg.TopPeerCategory_Users), buntdb.IndexFloat)
+		_ = tx.CreateIndex(indexTopPeersGroup, fmt.Sprintf("%s_%02d.*", prefixTopPeers, msg.TopPeerCategory_Groups), buntdb.IndexFloat)
+		_ = tx.CreateIndex(indexTopPeersForward, fmt.Sprintf("%s_%02d.*", prefixTopPeers, msg.TopPeerCategory_Forwards), buntdb.IndexFloat)
+		_ = tx.CreateIndex(indexTopPeersBotMessage, fmt.Sprintf("%s_%02d.*", prefixTopPeers, msg.TopPeerCategory_BotsMessage), buntdb.IndexFloat)
+		_ = tx.CreateIndex(indexTopPeersBotInline, fmt.Sprintf("%s_%02d.*", prefixTopPeers, msg.TopPeerCategory_BotsInline), buntdb.IndexFloat)
 
 		return nil
 	})

@@ -15,8 +15,8 @@ import (
 
 var (
 	MyDialogs []*msg.Dialog
-	MyUsers  = map[int64]*msg.User{}
-	MyGroups = map[int64]*msg.Group{}
+	MyUsers   = map[int64]*msg.User{}
+	MyGroups  = map[int64]*msg.Group{}
 )
 
 func MessagePrinter(envelope *msg.MessageEnvelope) {
@@ -364,8 +364,6 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		}
 	default:
 		constructorName, _ := msg.ConstructorNames[envelope.Constructor]
-		_Shell.Println("DEFAULT",
-			zap.String("C", constructorName),
-		)
+		_Shell.Println("DEFAULT", constructorName, len(envelope.Message))
 	}
 }

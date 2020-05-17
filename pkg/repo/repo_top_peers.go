@@ -1,12 +1,13 @@
 package repo
 
 import (
-	"encoding/binary"
 	"fmt"
 	msg "git.ronaksoftware.com/river/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"github.com/dgraph-io/badger"
 	"github.com/tidwall/buntdb"
+	"go.uber.org/zap"
 	"math"
 )
 
@@ -37,8 +38,11 @@ func getTopPeerKey(cat msg.TopPeerCategory, peerID int64, peerType int32) []byte
 }
 
 func saveTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, tp *msg.TopPeer) error {
+	if tp.Peer == nil {
+		logs.Warn("Could not save top peer, peer is nit", zap.Any("TP", tp))
+		return domain.ErrDoesNotExists
+	}
 	b, _ := tp.Marshal()
-	binary.BigEndian.PutUint32(b, math.Float32bits(tp.Rate))
 	return txn.SetEntry(badger.NewEntry(
 		getTopPeerKey(cat, tp.Peer.ID, tp.Peer.Type),
 		b,
@@ -93,6 +97,35 @@ func (r *repoTopPeers) Update(cat msg.TopPeerCategory, peerID int64, peerType in
 	return badgerUpdate(func(txn *badger.Txn) error {
 		accessTime := domain.Now().Unix()
 		tp, _ := getTopPeer(txn, cat, peerID, peerType)
+		if tp == nil {
+			switch msg.PeerType(peerType) {
+			case msg.PeerUser:
+				p, err := getUserByKey(txn, getUserKey(peerID))
+				if err != nil {
+					return err
+				}
+				tp = &msg.TopPeer{
+					Peer: &msg.Peer{
+						ID:         p.ID,
+						Type:       peerType,
+						AccessHash: p.AccessHash,
+					},
+				}
+			case msg.PeerGroup:
+				p, err := getGroupByKey(txn, getGroupKey(peerID))
+				if err != nil {
+					return err
+				}
+				tp = &msg.TopPeer{
+					Peer: &msg.Peer{
+						ID:   p.ID,
+						Type: peerType,
+					},
+				}
+			default:
+				return domain.ErrNotFound
+			}
+		}
 		tp.Rate += float32(math.Min(math.Exp(float64(float32(accessTime-tp.LastUpdate)/domain.SysConfig.TopPeerDecayRate)), float64(domain.SysConfig.TopPeerMaxStep)))
 		tp.LastUpdate = accessTime
 		err := saveTopPeer(txn, cat, tp)
@@ -106,7 +139,7 @@ func (r *repoTopPeers) Update(cat msg.TopPeerCategory, peerID int64, peerType in
 
 func (r *repoTopPeers) List(cat msg.TopPeerCategory, offset, limit int32) ([]*msg.TopPeer, error) {
 	var (
-		topPeers = make([]*msg.TopPeer, 0, limit)
+		topPeers  = make([]*msg.TopPeer, 0, limit)
 		indexName = ""
 	)
 	switch cat {

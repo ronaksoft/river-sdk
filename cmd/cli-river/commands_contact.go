@@ -90,7 +90,17 @@ var ContactAdd = &ishell.Cmd{
 var ContactGetTopPeers = &ishell.Cmd{
 	Name: "GetTopPeers",
 	Func: func(c *ishell.Context) {
-
+		req := msg.ContactsGetTopPeers{
+			Limit: 10,
+		}
+		req.Category = fnGetTopPeerCat(c)
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsGetTopPeers, reqBytes, reqDelegate); err != nil {
+			_Log.Error("EnqueueCommand failed", zap.Error(err))
+		} else {
+			reqDelegate.RequestID = reqID
+		}
 	},
 }
 func init() {
@@ -98,4 +108,5 @@ func init() {
 	Contact.AddCmd(ContactGet)
 	Contact.AddCmd(ContactTestImport)
 	Contact.AddCmd(ContactAdd)
+	Contact.AddCmd(ContactGetTopPeers)
 }
