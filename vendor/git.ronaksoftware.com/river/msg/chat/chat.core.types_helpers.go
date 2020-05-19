@@ -411,38 +411,6 @@ func ResultDialog(out *MessageEnvelope, res *Dialog) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
-const C_Peer int64 = 47470215
-
-type poolPeer struct {
-	pool sync.Pool
-}
-
-func (p *poolPeer) Get() *Peer {
-	x, ok := p.pool.Get().(*Peer)
-	if !ok {
-		return &Peer{}
-	}
-	return x
-}
-
-func (p *poolPeer) Put(x *Peer) {
-	p.pool.Put(x)
-}
-
-var PoolPeer = poolPeer{}
-
-func ResultPeer(out *MessageEnvelope, res *Peer) {
-	out.Constructor = C_Peer
-	protoSize := res.Size()
-	if protoSize > cap(out.Message) {
-		pbytes.Put(out.Message)
-		out.Message = pbytes.GetLen(protoSize)
-	} else {
-		out.Message = out.Message[:protoSize]
-	}
-	res.MarshalToSizedBuffer(out.Message)
-}
-
 const C_InputPeer int64 = 3374092470
 
 type poolInputPeer struct {
@@ -465,6 +433,38 @@ var PoolInputPeer = poolInputPeer{}
 
 func ResultInputPeer(out *MessageEnvelope, res *InputPeer) {
 	out.Constructor = C_InputPeer
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_Peer int64 = 47470215
+
+type poolPeer struct {
+	pool sync.Pool
+}
+
+func (p *poolPeer) Get() *Peer {
+	x, ok := p.pool.Get().(*Peer)
+	if !ok {
+		return &Peer{}
+	}
+	return x
+}
+
+func (p *poolPeer) Put(x *Peer) {
+	p.pool.Put(x)
+}
+
+var PoolPeer = poolPeer{}
+
+func ResultPeer(out *MessageEnvelope, res *Peer) {
+	out.Constructor = C_Peer
 	protoSize := res.Size()
 	if protoSize > cap(out.Message) {
 		pbytes.Put(out.Message)
@@ -1085,6 +1085,38 @@ func ResultInputFile(out *MessageEnvelope, res *InputFile) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_InputDocument int64 = 4081048424
+
+type poolInputDocument struct {
+	pool sync.Pool
+}
+
+func (p *poolInputDocument) Get() *InputDocument {
+	x, ok := p.pool.Get().(*InputDocument)
+	if !ok {
+		return &InputDocument{}
+	}
+	return x
+}
+
+func (p *poolInputDocument) Put(x *InputDocument) {
+	p.pool.Put(x)
+}
+
+var PoolInputDocument = poolInputDocument{}
+
+func ResultInputDocument(out *MessageEnvelope, res *InputDocument) {
+	out.Constructor = C_InputDocument
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 const C_GroupPhoto int64 = 3998516135
 
 type poolGroupPhoto struct {
@@ -1221,38 +1253,6 @@ func ResultGroupParticipant(out *MessageEnvelope, res *GroupParticipant) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
-const C_InputDocument int64 = 4081048424
-
-type poolInputDocument struct {
-	pool sync.Pool
-}
-
-func (p *poolInputDocument) Get() *InputDocument {
-	x, ok := p.pool.Get().(*InputDocument)
-	if !ok {
-		return &InputDocument{}
-	}
-	return x
-}
-
-func (p *poolInputDocument) Put(x *InputDocument) {
-	p.pool.Put(x)
-}
-
-var PoolInputDocument = poolInputDocument{}
-
-func ResultInputDocument(out *MessageEnvelope, res *InputDocument) {
-	out.Constructor = C_InputDocument
-	protoSize := res.Size()
-	if protoSize > cap(out.Message) {
-		pbytes.Put(out.Message)
-		out.Message = pbytes.GetLen(protoSize)
-	} else {
-		out.Message = out.Message[:protoSize]
-	}
-	res.MarshalToSizedBuffer(out.Message)
-}
-
 const C_PrivacyRule int64 = 3954700912
 
 type poolPrivacyRule struct {
@@ -1352,38 +1352,6 @@ func ResultLabelsMany(out *MessageEnvelope, res *LabelsMany) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
-const C_GeoLocation int64 = 3794405429
-
-type poolGeoLocation struct {
-	pool sync.Pool
-}
-
-func (p *poolGeoLocation) Get() *GeoLocation {
-	x, ok := p.pool.Get().(*GeoLocation)
-	if !ok {
-		return &GeoLocation{}
-	}
-	return x
-}
-
-func (p *poolGeoLocation) Put(x *GeoLocation) {
-	p.pool.Put(x)
-}
-
-var PoolGeoLocation = poolGeoLocation{}
-
-func ResultGeoLocation(out *MessageEnvelope, res *GeoLocation) {
-	out.Constructor = C_GeoLocation
-	protoSize := res.Size()
-	if protoSize > cap(out.Message) {
-		pbytes.Put(out.Message)
-		out.Message = pbytes.GetLen(protoSize)
-	} else {
-		out.Message = out.Message[:protoSize]
-	}
-	res.MarshalToSizedBuffer(out.Message)
-}
-
 const C_InputGeoLocation int64 = 1403425127
 
 type poolInputGeoLocation struct {
@@ -1416,6 +1384,38 @@ func ResultInputGeoLocation(out *MessageEnvelope, res *InputGeoLocation) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_GeoLocation int64 = 3794405429
+
+type poolGeoLocation struct {
+	pool sync.Pool
+}
+
+func (p *poolGeoLocation) Get() *GeoLocation {
+	x, ok := p.pool.Get().(*GeoLocation)
+	if !ok {
+		return &GeoLocation{}
+	}
+	return x
+}
+
+func (p *poolGeoLocation) Put(x *GeoLocation) {
+	p.pool.Put(x)
+}
+
+var PoolGeoLocation = poolGeoLocation{}
+
+func ResultGeoLocation(out *MessageEnvelope, res *GeoLocation) {
+	out.Constructor = C_GeoLocation
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 func init() {
 	ConstructorNames[2246546115] = "Ping"
 	ConstructorNames[2171268721] = "Pong"
@@ -1429,8 +1429,8 @@ func init() {
 	ConstructorNames[447331921] = "Ack"
 	ConstructorNames[4122188204] = "Bool"
 	ConstructorNames[1120787796] = "Dialog"
-	ConstructorNames[47470215] = "Peer"
 	ConstructorNames[3374092470] = "InputPeer"
+	ConstructorNames[47470215] = "Peer"
 	ConstructorNames[3865689926] = "InputUser"
 	ConstructorNames[513021899] = "InputPassword"
 	ConstructorNames[354669666] = "InputFileLocation"
@@ -1449,14 +1449,14 @@ func init() {
 	ConstructorNames[2672574672] = "PhoneContact"
 	ConstructorNames[3475030132] = "PeerNotifySettings"
 	ConstructorNames[3882180383] = "InputFile"
+	ConstructorNames[4081048424] = "InputDocument"
 	ConstructorNames[3998516135] = "GroupPhoto"
 	ConstructorNames[2885774273] = "Group"
 	ConstructorNames[205850814] = "GroupFull"
 	ConstructorNames[4072279665] = "GroupParticipant"
-	ConstructorNames[4081048424] = "InputDocument"
 	ConstructorNames[3954700912] = "PrivacyRule"
 	ConstructorNames[3479601132] = "Label"
 	ConstructorNames[1423713603] = "LabelsMany"
-	ConstructorNames[3794405429] = "GeoLocation"
 	ConstructorNames[1403425127] = "InputGeoLocation"
+	ConstructorNames[3794405429] = "GeoLocation"
 }

@@ -1159,7 +1159,8 @@ func (m *ClientMediaSize) GetTotalSize() int32 {
 }
 
 // ClientGetMediaHistory
-// return @MessagesMany
+// @Function
+// @Return: @MessagesMany
 type ClientGetMediaHistory struct {
 	MediaType ClientMediaType `protobuf:"varint,1,req,name=MediaType,enum=msg.ClientMediaType" json:"MediaType"`
 }

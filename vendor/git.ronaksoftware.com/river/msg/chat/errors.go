@@ -106,4 +106,5 @@ const (
 	ErrItemBotFather        = "BOT_FATHER"
 	ErrItemAdminBot         = "ADMIN_BOT"
 	ErrItemBotResult        = "BOT_RESULT"
+	ErrItemWallPaper        = "WALLPAPER"
 )

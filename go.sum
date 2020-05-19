@@ -1,6 +1,14 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 git.ronaksoftware.com/river/msg v0.0.0-20200516134217-16f6b31acbcc h1:mBcP/5+WyOFrzY8Tz9+DlnjqypGg2A6b4RAeX0cxjPc=
 git.ronaksoftware.com/river/msg v0.0.0-20200516134217-16f6b31acbcc/go.mod h1:yGIfGlsx4F1pIhM40NjLp9dg3fEZ/JzVuD3K06iMXeM=
+git.ronaksoftware.com/river/msg v0.0.0-20200518164200-d7865ab72f77 h1:tHnP7xEJ/kC1PKyLbYOB2YP1qYQfoKIEPu/w4k7xHQM=
+git.ronaksoftware.com/river/msg v0.0.0-20200518164200-d7865ab72f77/go.mod h1:yGIfGlsx4F1pIhM40NjLp9dg3fEZ/JzVuD3K06iMXeM=
+git.ronaksoftware.com/river/msg v0.0.0-20200518191042-6a6905a8a910 h1:+02GmwVulS9bK5AOjr5BFaqNbOSH7JAvomxxDbHA0dw=
+git.ronaksoftware.com/river/msg v0.0.0-20200518191042-6a6905a8a910/go.mod h1:yGIfGlsx4F1pIhM40NjLp9dg3fEZ/JzVuD3K06iMXeM=
+git.ronaksoftware.com/river/msg v0.0.0-20200519064111-61251faf274e h1:6x4hvqqo4JVeHyRLOE2ueL5fol6bVIufHTYNRa5c450=
+git.ronaksoftware.com/river/msg v0.0.0-20200519064111-61251faf274e/go.mod h1:yGIfGlsx4F1pIhM40NjLp9dg3fEZ/JzVuD3K06iMXeM=
+git.ronaksoftware.com/river/msg v0.0.0-20200519070257-46861e3c40a3 h1:BFsa1jgZr3GNs4RiU6y75Msim90DrYLpwibsDSsM3X4=
+git.ronaksoftware.com/river/msg v0.0.0-20200519070257-46861e3c40a3/go.mod h1:yGIfGlsx4F1pIhM40NjLp9dg3fEZ/JzVuD3K06iMXeM=
 git.ronaksoftware.com/ronak/toolbox v1.1.6 h1:t778crNCYcCfDWUZClWP+Nht4L7A6ZsoBitQvSrtvBU=
 git.ronaksoftware.com/ronak/toolbox v1.1.6/go.mod h1:dVcHnmWljSIhyC/Zswc8vLGgb6mEmDfnkHisSMJC6+8=
 github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9 h1:HD8gA2tkByhMAwYaFAX9w2l7vxvBQ5NMoxDrkhqhtn4=

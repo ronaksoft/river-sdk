@@ -545,6 +545,39 @@ func ResultInputMediaDocument(out *MessageEnvelope, res *InputMediaDocument) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_InputMediaMessageDocument int64 = 3638653559
+
+type poolInputMediaMessageDocument struct {
+	pool sync.Pool
+}
+
+func (p *poolInputMediaMessageDocument) Get() *InputMediaMessageDocument {
+	x, ok := p.pool.Get().(*InputMediaMessageDocument)
+	if !ok {
+		return &InputMediaMessageDocument{}
+	}
+	x.Entities = x.Entities[:0]
+	return x
+}
+
+func (p *poolInputMediaMessageDocument) Put(x *InputMediaMessageDocument) {
+	p.pool.Put(x)
+}
+
+var PoolInputMediaMessageDocument = poolInputMediaMessageDocument{}
+
+func ResultInputMediaMessageDocument(out *MessageEnvelope, res *InputMediaMessageDocument) {
+	out.Constructor = C_InputMediaMessageDocument
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 const C_MediaDocument int64 = 2281620705
 
 type poolMediaDocument struct {
@@ -589,6 +622,8 @@ func (p *poolInputMediaGeoLocation) Get() *InputMediaGeoLocation {
 	if !ok {
 		return &InputMediaGeoLocation{}
 	}
+	x.Caption = ""
+	x.Entities = x.Entities[:0]
 	return x
 }
 
@@ -621,6 +656,8 @@ func (p *poolMediaGeoLocation) Get() *MediaGeoLocation {
 	if !ok {
 		return &MediaGeoLocation{}
 	}
+	x.Caption = ""
+	x.Entities = x.Entities[:0]
 	return x
 }
 
@@ -808,6 +845,76 @@ func ResultPollAnswerVoters(out *MessageEnvelope, res *PollAnswerVoters) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_InputMediaSealed int64 = 1480164846
+
+type poolInputMediaSealed struct {
+	pool sync.Pool
+}
+
+func (p *poolInputMediaSealed) Get() *InputMediaSealed {
+	x, ok := p.pool.Get().(*InputMediaSealed)
+	if !ok {
+		return &InputMediaSealed{}
+	}
+	x.Media = nil
+	x.Body = ""
+	x.Entities = x.Entities[:0]
+	return x
+}
+
+func (p *poolInputMediaSealed) Put(x *InputMediaSealed) {
+	p.pool.Put(x)
+}
+
+var PoolInputMediaSealed = poolInputMediaSealed{}
+
+func ResultInputMediaSealed(out *MessageEnvelope, res *InputMediaSealed) {
+	out.Constructor = C_InputMediaSealed
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_MediaSealed int64 = 3920960700
+
+type poolMediaSealed struct {
+	pool sync.Pool
+}
+
+func (p *poolMediaSealed) Get() *MediaSealed {
+	x, ok := p.pool.Get().(*MediaSealed)
+	if !ok {
+		return &MediaSealed{}
+	}
+	x.Media = nil
+	x.Body = ""
+	x.Entities = x.Entities[:0]
+	return x
+}
+
+func (p *poolMediaSealed) Put(x *MediaSealed) {
+	p.pool.Put(x)
+}
+
+var PoolMediaSealed = poolMediaSealed{}
+
+func ResultMediaSealed(out *MessageEnvelope, res *MediaSealed) {
+	out.Constructor = C_MediaSealed
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 func init() {
 	ConstructorNames[309707708] = "DocumentAttributeAudio"
 	ConstructorNames[1993289477] = "DocumentAttributeVideo"
@@ -825,6 +932,7 @@ func init() {
 	ConstructorNames[3735320833] = "MediaContact"
 	ConstructorNames[870692909] = "InputMediaUploadedDocument"
 	ConstructorNames[2258657627] = "InputMediaDocument"
+	ConstructorNames[3638653559] = "InputMediaMessageDocument"
 	ConstructorNames[2281620705] = "MediaDocument"
 	ConstructorNames[185664060] = "InputMediaGeoLocation"
 	ConstructorNames[2625326500] = "MediaGeoLocation"
@@ -833,4 +941,6 @@ func init() {
 	ConstructorNames[2124799390] = "PollAnswer"
 	ConstructorNames[3283416711] = "PollResults"
 	ConstructorNames[2095107985] = "PollAnswerVoters"
+	ConstructorNames[1480164846] = "InputMediaSealed"
+	ConstructorNames[3920960700] = "MediaSealed"
 }
