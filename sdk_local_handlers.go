@@ -498,7 +498,8 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 	}
 
 	switch req.MediaType {
-	case msg.InputMediaTypeContact, msg.InputMediaTypeDocument, msg.InputMediaTypeGeoLocation:
+	case msg.InputMediaTypeContact, msg.InputMediaTypeGeoLocation,
+		msg.InputMediaTypeDocument , msg.InputMediaTypeMessageDocument:
 		// This will be used as next requestID
 		req.RandomID = domain.SequentialUniqueID()
 
