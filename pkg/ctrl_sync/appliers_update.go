@@ -62,6 +62,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	// If sender is me, check for pending
 	if x.Message.SenderID == ctrl.userID {
 		pm := repo.PendingMessages.GetByRealID(x.Message.ID)
+
 		if pm != nil {
 			ctrl.handlePendingMessage(x)
 			_ = repo.PendingMessages.Delete(pm.ID)
@@ -181,25 +182,27 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 	}
 
 	// if it was file upload request
-	switch x.Message.MediaType {
-	case msg.MediaTypeDocument:
-		// save to local files and delete file status
-		clientSendMedia := new(msg.ClientSendMessageMedia)
-		err := clientSendMedia.Unmarshal(pmsg.Media)
-		if err != nil {
-			logs.Error("Error On HandlePendingMessage", zap.Error(err))
-			return
-		}
+	if pmsg.MediaType != msg.InputMediaTypeMessageDocument {
+		switch x.Message.MediaType {
+		case msg.MediaTypeDocument:
+			// save to local files and delete file status
+			clientSendMedia := new(msg.ClientSendMessageMedia)
+			err := clientSendMedia.Unmarshal(pmsg.Media)
+			if err != nil {
+				logs.Error("Error On HandlePendingMessage", zap.Error(err))
+				return
+			}
 
-		clientFile, err := repo.Files.GetMediaDocument(x.Message)
-		logs.WarnOnErr("Error On GetMediaDocument", err)
+			clientFile, err := repo.Files.GetMediaDocument(x.Message)
+			logs.WarnOnErr("Error On GetMediaDocument", err)
 
-		err = os.Rename(clientSendMedia.FilePath, repo.Files.GetFilePath(clientFile))
-		if err != nil {
-			logs.Error("Error On HandlePendingMessage (Rename)", zap.Error(err))
-			return
+			err = os.Rename(clientSendMedia.FilePath, repo.Files.GetFilePath(clientFile))
+			if err != nil {
+				logs.Error("Error On HandlePendingMessage (Rename)", zap.Error(err))
+				return
+			}
+			_ = repo.Files.UnmarkAsUploaded(clientSendMedia.FileID)
 		}
-		_ = repo.Files.UnmarkAsUploaded(clientSendMedia.FileID)
 	}
 
 	clientUpdate := new(msg.ClientUpdatePendingMessageDelivery)

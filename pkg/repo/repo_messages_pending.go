@@ -435,6 +435,7 @@ const (
 	_ClientSendMessageMediaType       = -1
 	_ClientSendMessageContactType     = -2
 	_ClientSendMessageGeoLocationType = -3
+	_ClientSendMessageInputMessageType = -4
 )
 
 func (r *repoMessagesPending) ToUserMessage(m *msg.ClientPendingMessage) *msg.UserMessage {
@@ -454,6 +455,8 @@ func (r *repoMessagesPending) ToUserMessage(m *msg.ClientPendingMessage) *msg.Us
 		v.MessageType = _ClientSendMessageContactType
 	case msg.InputMediaTypeGeoLocation:
 		v.MessageType = _ClientSendMessageGeoLocationType
+	case msg.InputMediaTypeMessageDocument:
+		v.MessageType = _ClientSendMessageInputMessageType
 	}
 	v.MediaType = msg.MediaType(m.MediaType)
 	v.Media = m.Media
