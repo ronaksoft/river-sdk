@@ -297,6 +297,7 @@ func (p *poolClientFile) Get() *ClientFile {
 	x.Version = 0
 	x.Extension = ""
 	x.MD5Checksum = ""
+	x.WallpaperID = 0
 	return x
 }
 

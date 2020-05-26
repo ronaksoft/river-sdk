@@ -110,6 +110,7 @@ func NewSyncController(config Config) *Controller {
 		msg.C_LabelItems:        ctrl.labelItems,
 		msg.C_SystemConfig:      ctrl.systemConfig,
 		msg.C_ContactsTopPeers:  ctrl.contactsTopPeers,
+		msg.C_WallPapersMany:    ctrl.wallpapersMany,
 	}
 	return ctrl
 }

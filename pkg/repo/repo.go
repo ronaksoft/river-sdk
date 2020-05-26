@@ -40,6 +40,7 @@ var (
 	Files           *repoFiles
 	Labels          *repoLabels
 	TopPeers        *repoTopPeers
+	Wallpapers      *repoWallpapers
 )
 
 // Context container of repo
@@ -77,6 +78,7 @@ func InitRepo(dbPath string, lowMemory bool) error {
 		Files = &repoFiles{repository: r}
 		Labels = &repoLabels{repository: r}
 		TopPeers = &repoTopPeers{repository: r}
+		Wallpapers = &repoWallpapers{repository: r}
 		singleton.Unlock()
 	}
 	return nil

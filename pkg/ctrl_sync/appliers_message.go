@@ -269,3 +269,16 @@ func (ctrl *Controller) contactsTopPeers(e *msg.MessageEnvelope) {
 		logs.Error("SyncCtrl got error on saving ContactsTopPeers", zap.Error(err))
 	}
 }
+
+func (ctrl *Controller) wallpapersMany(e *msg.MessageEnvelope) {
+	u := &msg.WallPapersMany{}
+	err := u.Unmarshal(e.Message)
+	if err != nil {
+		logs.Error("SyncCtrl couldn't unmarshal wallpapersMany", zap.Error(err))
+		return
+	}
+	err = repo.Wallpapers.SaveWallpapers(u)
+	if err != nil {
+		logs.Error("SyncCtrl got error on saving wallpapersMany", zap.Error(err))
+	}
+}

@@ -298,6 +298,8 @@ func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash u
 		return ctrl.downloadAccountPhoto(clientFile)
 	case msg.Thumbnail:
 		return ctrl.downloadThumbnail(clientFile)
+	case msg.Wallpaper:
+		return ctrl.downloadWallpaper(clientFile)
 	default:
 		err = ctrl.download(DownloadRequest{
 			MessageID:        clientFile.MessageID,
@@ -426,6 +428,64 @@ func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath
 	})
 	return
 }
+func (ctrl *Controller) downloadWallpaper(clientFile *msg.ClientFile) (filePath string, err error) {
+	err = ronak.Try(retryMaxAttempts, retryWaitTime, func() error {
+		req := new(msg.FileGet)
+		req.Location = &msg.InputFileLocation{
+			AccessHash: clientFile.AccessHash,
+			ClusterID:  clientFile.ClusterID,
+			FileID:     clientFile.FileID,
+			Version:    clientFile.Version,
+		}
+		// get all bytes
+		req.Offset = 0
+		req.Limit = 0
+
+		envelop := new(msg.MessageEnvelope)
+		envelop.Constructor = msg.C_FileGet
+		envelop.Message, _ = req.Marshal()
+		envelop.RequestID = uint64(domain.SequentialUniqueID())
+
+		filePath = repo.Files.GetFilePath(clientFile)
+		res, err := ctrl.network.SendHttp(nil, envelop, ctrl.httpRequestTimeout)
+		if err != nil {
+			return err
+		}
+
+		switch res.Constructor {
+		case msg.C_Error:
+			strErr := ""
+			x := new(msg.Error)
+			if err := x.Unmarshal(res.Message); err == nil {
+				strErr = "Code :" + x.Code + ", Items :" + x.Items
+			}
+			return fmt.Errorf("received error response {%s}", strErr)
+		case msg.C_File:
+			x := new(msg.File)
+			err := x.Unmarshal(res.Message)
+			if err != nil {
+				return err
+			}
+
+			// write to file path
+			err = ioutil.WriteFile(filePath, x.Bytes, 0666)
+			if err != nil {
+				return err
+			}
+
+			// save to DB
+			_ = repo.Files.Save(clientFile)
+
+			return nil
+
+		default:
+			return nil
+		}
+
+	})
+	return
+}
+
 func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath string, err error) {
 	err = ronak.Try(retryMaxAttempts, retryWaitTime, func() error {
 		req := new(msg.FileGet)

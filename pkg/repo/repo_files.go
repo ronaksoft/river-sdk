@@ -132,7 +132,6 @@ func deleteAllUserPhotos(txn *badger.Txn, userID int64) error {
 	return nil
 }
 
-
 func saveGroupPhotos(txn *badger.Txn, groupID int64, photos ...*msg.GroupPhoto) error {
 	for _, photo := range photos {
 		if photo != nil {
@@ -228,7 +227,7 @@ func saveMessageMedia(txn *badger.Txn, m *msg.UserMessage) error {
 				FileID:     md.Doc.Thumbnail.FileID,
 				AccessHash: md.Doc.Thumbnail.AccessHash,
 				Type:       msg.Thumbnail,
-				MimeType:   "",
+				MimeType:   "jpeg",
 				UserID:     0,
 				GroupID:    0,
 				FileSize:   0,
@@ -240,6 +239,58 @@ func saveMessageMedia(txn *badger.Txn, m *msg.UserMessage) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func SaveWallpaper(txn *badger.Txn, wallpaper *msg.WallPaper) error {
+	if wallpaper.Document == nil {
+		return nil
+	}
+
+	fileExt := ""
+	for _, attr := range wallpaper.Document.Attributes {
+		if attr.Type == msg.AttributeTypeFile {
+			x := &msg.DocumentAttributeFile{}
+			_ = x.Unmarshal(attr.Data)
+			fileExt = filepath.Ext(x.Filename)
+		}
+	}
+
+	err := saveFile(txn, &msg.ClientFile{
+		ClusterID:   wallpaper.Document.ClusterID,
+		FileID:      wallpaper.Document.ID,
+		AccessHash:  wallpaper.Document.AccessHash,
+		Type:        msg.Wallpaper,
+		MimeType:    wallpaper.Document.MimeType,
+		Extension:   fileExt,
+		UserID:      0,
+		GroupID:     0,
+		FileSize:    int64(wallpaper.Document.FileSize),
+		WallpaperID: wallpaper.ID,
+		Version:     wallpaper.Document.Version,
+		MD5Checksum: wallpaper.Document.MD5Checksum,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if wallpaper.Document.Thumbnail != nil {
+		err = saveFile(txn, &msg.ClientFile{
+			ClusterID:   wallpaper.Document.Thumbnail.ClusterID,
+			FileID:      wallpaper.Document.Thumbnail.FileID,
+			AccessHash:  wallpaper.Document.Thumbnail.AccessHash,
+			Type:        msg.Thumbnail,
+			MimeType:    "jpeg",
+			UserID:      0,
+			GroupID:     0,
+			FileSize:    0,
+			WallpaperID: wallpaper.ID,
+			Version:     0,
+		})
+		return err
+	}
+
 	return nil
 }
 
@@ -454,6 +505,8 @@ func (r *repoFiles) GetFilePath(clientFile *msg.ClientFile) string {
 		return getGroupProfilePath(clientFile.GroupID, clientFile.FileID)
 	case msg.Thumbnail:
 		return getThumbnailPath(clientFile.FileID, clientFile.ClusterID)
+	case msg.Wallpaper:
+		return getWallpaperPath(clientFile.FileID,clientFile.ClusterID)
 	}
 	return ""
 }
@@ -501,6 +554,10 @@ func getMessageFilePath(mimeType string, docID int64, ext string) string {
 
 func getThumbnailPath(fileID int64, clusterID int32) string {
 	return path.Join(DirCache, fmt.Sprintf("%d%d%s", fileID, clusterID, ".jpg"))
+}
+
+func getWallpaperPath(fileID int64, clusterID int32) string {
+	return path.Join(DirPhoto, fmt.Sprintf("%s_%d%d%s", "Wallpaper",fileID, clusterID, ".jpg"))
 }
 
 func getAccountProfilePath(userID int64, fileID int64) string {

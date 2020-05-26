@@ -586,6 +586,38 @@ func ResultBotSendInlineResults(out *MessageEnvelope, res *BotSendInlineResults)
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_BotUploadWallPaper int64 = 3329295900
+
+type poolBotUploadWallPaper struct {
+	pool sync.Pool
+}
+
+func (p *poolBotUploadWallPaper) Get() *BotUploadWallPaper {
+	x, ok := p.pool.Get().(*BotUploadWallPaper)
+	if !ok {
+		return &BotUploadWallPaper{}
+	}
+	return x
+}
+
+func (p *poolBotUploadWallPaper) Put(x *BotUploadWallPaper) {
+	p.pool.Put(x)
+}
+
+var PoolBotUploadWallPaper = poolBotUploadWallPaper{}
+
+func ResultBotUploadWallPaper(out *MessageEnvelope, res *BotUploadWallPaper) {
+	out.Constructor = C_BotUploadWallPaper
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 const C_BotResults int64 = 527920130
 
 type poolBotResults struct {
@@ -1016,6 +1048,7 @@ func init() {
 	ConstructorNames[4192114308] = "BotGetInlineResults"
 	ConstructorNames[3418940573] = "BotSetInlineResults"
 	ConstructorNames[923160988] = "BotSendInlineResults"
+	ConstructorNames[3329295900] = "BotUploadWallPaper"
 	ConstructorNames[527920130] = "BotResults"
 	ConstructorNames[3014743726] = "BotInlineSwitchPM"
 	ConstructorNames[942846933] = "BotInlineResult"

@@ -123,6 +123,8 @@ func (p *poolWallPaperUpload) Get() *WallPaperUpload {
 	if !ok {
 		return &WallPaperUpload{}
 	}
+	x.UploadedFile = nil
+	x.File = nil
 	return x
 }
 
