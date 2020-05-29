@@ -92,12 +92,12 @@ func (d *MainDelegate) OnDeferredRequests(requestID int64, b []byte) {
 
 func (d *MainDelegate) OnNetworkStatusChanged(quality int) {
 	state := domain.NetworkStatus(quality)
-	_Shell.Println("Network status changed", zap.String("Status", state.ToString()))
+	_Shell.Println("Network status changed:", state.ToString())
 }
 
 func (d *MainDelegate) OnSyncStatusChanged(newStatus int) {
 	state := domain.SyncStatus(newStatus)
-	_Shell.Println("Sync status changed", zap.String("Status", state.ToString()))
+	_Shell.Println("Sync status changed:", state.ToString())
 }
 
 func (d *MainDelegate) OnAuthKeyCreated(authID int64) {
@@ -111,7 +111,7 @@ func (d *MainDelegate) OnGeneralError(b []byte) {
 }
 
 func (d *MainDelegate) OnSessionClosed(res int) {
-	_Shell.Println("Session Closed", zap.Int("Res", res))
+	_Shell.Println("Session Closed:", res)
 }
 
 func (d *MainDelegate) ShowLoggerAlert() {}
@@ -142,50 +142,16 @@ func (d *PrintDelegate) Log(logLevel int, msg string) {
 type FileDelegate struct{}
 
 func (d *FileDelegate) OnProgressChanged(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64) {
-	_Shell.Println("upload progress changed",
-		zap.Int64("Progress", percent),
-		zap.Int64("PeerID", peerID),
-	)
+	_Shell.Println("file progress Changed", reqID, fileID, percent)
 }
 
 func (d *FileDelegate) OnCompleted(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64) {
-	_Shell.Println("On upload Completed",
-		zap.String("ReqID", reqID),
-		zap.String("FilePath", filePath),
-		zap.Int64("PeerID", peerID),
-	)
+	_Shell.Println("file progress Completed", reqID, filePath)
 }
 
 func (d *FileDelegate) OnCancel(reqID string, clusterID int32, fileID, accessHash int64, hasError bool, peerID int64) {
-	_Shell.Println("CancelCB",
-		zap.String("ReqID", reqID),
-		zap.Int64("PeerID", peerID),
-	)
-
+	_Shell.Println("file progress Canceled", reqID, hasError)
 }
-
-func (d *FileDelegate) OnDownloadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
-	_Shell.Println("upload progress changed", zap.Float64("Progress", percent))
-}
-
-func (d *FileDelegate) OnDownloadCompleted(messageID int64, filePath string) {
-	_Shell.Println("On upload Completed", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
-}
-
-func (d *FileDelegate) OnDownloadError(messageID, requestID int64, filePath string, err []byte) {
-	x := new(msg.Error)
-	x.Unmarshal(err)
-
-	_Shell.Println("OnError",
-		zap.String("Code", x.Code),
-		zap.String("Item", x.Items),
-		zap.Int64("MsgID", messageID),
-		zap.Int64("ReqID", requestID),
-		zap.String("FilePath", filePath),
-	)
-
-}
-
 
 type RequestDelegate struct {
 	RequestID int64

@@ -92,7 +92,7 @@ func (r *River) loadDeviceToken() {
 	r.DeviceToken = new(msg.AccountRegisterDevice)
 	str, err := repo.System.LoadString(domain.SkDeviceToken)
 	if err != nil {
-		logs.Info("We did not find device token", zap.Error(err))
+		logs.Info("We did not find device token")
 		return
 	}
 	err = json.Unmarshal([]byte(str), r.DeviceToken)
