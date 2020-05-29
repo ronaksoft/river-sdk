@@ -2,7 +2,6 @@ package main
 
 import (
 	msg "git.ronaksoftware.com/river/msg/chat"
-	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"
 )
 
@@ -35,7 +34,7 @@ var BotGetInlineQueryResults = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_BotGetInlineResults, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}

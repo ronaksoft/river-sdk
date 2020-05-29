@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
 	msg "git.ronaksoftware.com/river/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"
 )
 
@@ -26,7 +24,7 @@ var MessageSend = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSend, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -48,7 +46,7 @@ var MessageSendToSelf = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSend, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -66,7 +64,7 @@ var MessageGetDialogs = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesGetDialogs, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -85,7 +83,7 @@ var MessageGetDialog = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesGetDialog, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -108,7 +106,7 @@ var MessageGetHistory = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesGetHistory, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -129,7 +127,7 @@ var MessageReadHistory = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesReadHistory, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -150,7 +148,7 @@ var MessageSetTyping = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSetTyping, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -172,7 +170,7 @@ var MessagesGet = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesGet, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -194,7 +192,7 @@ var MessagesClearHistory = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesClearHistory, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -216,7 +214,7 @@ var MessagesDelete = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesDelete, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -238,7 +236,7 @@ var MessagesEdit = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesEdit, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -271,7 +269,7 @@ var MessagesForward = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesForward, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -293,7 +291,7 @@ var MessagesReadContents = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesReadContents, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -307,37 +305,6 @@ var MessagesGetDBMediaStatus = &ishell.Cmd{
 		// reqDelegate := new(dbMediaDelegate)
 		// _SDK.GetDBStatus(reqDelegate)
 	},
-}
-
-type dbMediaDelegate struct{}
-
-func (d *dbMediaDelegate) OnComplete(b []byte) {
-	res := msg.ClientCachedMediaInfo{}
-	err := res.Unmarshal(b)
-	if err != nil {
-		_Log.Warn(err.Error())
-	}
-	_Log.Debug("GetDBMediaStatus::OnComplete", zap.Any("DBMediaInfo", fmt.Sprintf("%+v", res)))
-}
-
-func (d *dbMediaDelegate) OnTimeout(err error) {}
-
-type ClearCacheResult struct {
-	SuccessConst int64
-}
-
-func (d *ClearCacheResult) OnComplete(b []byte) {
-	res := new(msg.ClientCachedMediaInfo)
-	err := res.Unmarshal(b)
-	if err != nil {
-		_Log.Error(err.Error())
-	}
-	_Log.Debug(fmt.Sprintf("%+v", res))
-	return
-}
-
-func (d *ClearCacheResult) OnTimeout(err error) {
-	_Log.Debug(err.Error())
 }
 
 var MessagesClearMedia = &ishell.Cmd{

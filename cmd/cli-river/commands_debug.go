@@ -6,10 +6,8 @@ import (
 	"mime"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	"go.uber.org/zap"
-
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"github.com/kr/pretty"
 
 	msg "git.ronaksoftware.com/river/msg/chat"
@@ -43,7 +41,7 @@ var SendTyping = &ishell.Cmd{
 			reqBytes, _ := req.Marshal()
 			reqDelegate := new(RequestDelegate)
 			if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSetTyping, reqBytes, reqDelegate); err != nil {
-				_Log.Error("EnqueueCommand failed", zap.Error(err))
+				c.Println("Command Failed:", err)
 			} else {
 				reqDelegate.RequestID = reqID
 			}
@@ -69,7 +67,7 @@ var ContactImportMany = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsImport, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -156,13 +154,10 @@ var MimeToExt = &ishell.Cmd{
 var PrintMessage = &ishell.Cmd{
 	Name: "PrintMessageMedia",
 	Func: func(c *ishell.Context) {
-
 		msgID := fnGetMessageID(c)
-
 		m, _ := repo.Messages.Get(msgID)
-
 		if m == nil {
-			_Log.Error("Message Is nil")
+			c.Println("Message is nil")
 			return
 		}
 

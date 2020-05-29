@@ -287,7 +287,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		x := new(msg.GroupFull)
 		err := x.Unmarshal(envelope.Message)
 		if err != nil {
-			_Log.Error("Failed to unmarshal", zap.Error(err))
+			_Shell.Println("Failed to unmarshal", zap.Error(err))
 			return
 		}
 		if x.Group != nil {
@@ -299,12 +299,12 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			}
 
 		} else {
-			_Log.Error("x.Group is null")
+			_Shell.Println("x.Group is null")
 		}
 		if x.NotifySettings != nil {
 			_Shell.Println(fmt.Sprintf("NotifySettings Sound: %s \t Mute : %d \t Flag : %d", x.NotifySettings.Sound, x.NotifySettings.MuteUntil, x.NotifySettings.Flags))
 		} else {
-			_Log.Error("x.NotifySettings is null")
+			_Shell.Println("x.NotifySettings is null")
 		}
 		if x.Participants != nil {
 			_Shell.Println(fmt.Sprintf("Participants Count : %d ", len(x.Participants)))
@@ -328,7 +328,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			_Shell.Println("\r\n" + bufUsers.String())
 
 		} else {
-			_Log.Error("x.Participants is null")
+			_Shell.Println("x.Participants is null")
 		}
 	case msg.C_InputUser:
 		x := new(msg.InputUser)

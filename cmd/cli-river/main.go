@@ -6,7 +6,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"github.com/fatih/color"
-	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/abiosoft/ishell.v2"
 	"io/ioutil"
@@ -18,17 +17,10 @@ import (
 var (
 	_Shell                   *ishell.Shell
 	_SDK                     *riversdk.River
-	_Log                     *zap.Logger
-	_LogLevel                zap.AtomicLevel
 	green, red, yellow, blue func(format string, a ...interface{}) string
 )
 
 func main() {
-	_LogLevel = zap.NewAtomicLevelAt(zap.DebugLevel)
-	cfg := zap.NewDevelopmentConfig()
-	cfg.Level = _LogLevel
-	_Log, _ = cfg.Build()
-
 	green = color.New(color.FgHiGreen).SprintfFunc()
 	red = color.New(color.FgHiRed).SprintfFunc()
 	yellow = color.New(color.FgHiYellow).SprintfFunc()
@@ -129,7 +121,7 @@ func main() {
 
 	err = _SDK.AppStart()
 	if err != nil {
-		_Log.Fatal(err.Error())
+		panic(err)
 	}
 	_SDK.StartNetwork("")
 	if _SDK.ConnInfo.AuthID == 0 {

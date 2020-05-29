@@ -2,7 +2,6 @@ package main
 
 import (
 	msg "git.ronaksoftware.com/river/msg/chat"
-	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"
 	"io/ioutil"
 	"os"
@@ -21,7 +20,7 @@ var AuthCheckPhone = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthCheckPhone, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -36,7 +35,7 @@ var AuthSendCode = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthSendCode, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -56,7 +55,7 @@ var AuthRegister = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthRegister, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -93,7 +92,7 @@ var AuthLogin = &ishell.Cmd{
 		os.Remove("./_connection/phone")
 		os.Remove("./_connection/phoneCodeHash")
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthLogin, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -105,7 +104,7 @@ var AuthLogout = &ishell.Cmd{
 	Name: "Logout",
 	Func: func(c *ishell.Context) {
 		if err := _SDK.Logout(true, 0); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		}
 		os.Remove("./_connection/connInfo")
 	},
@@ -118,7 +117,7 @@ var AuthRecall = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthRecall, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -134,7 +133,7 @@ var AuthLoginByToken = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthLoginByToken, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}

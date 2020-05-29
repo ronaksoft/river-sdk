@@ -24,14 +24,14 @@ func UpdatePrinter(envelope *msg.UpdateEnvelope) {
 		x := new(msg.ClientUpdatePendingMessageDelivery)
 		err := x.Unmarshal(envelope.Update)
 		if err != nil {
-			_Log.Error("Failed to unmarshal", zap.Error(err))
+			_Shell.Println("Failed to unmarshal", zap.Error(err))
 			return
 		}
 	case msg.C_UpdateContainer:
 		x := new(msg.UpdateContainer)
 		err := x.Unmarshal(envelope.Update)
 		if err != nil {
-			_Log.Error("Failed to unmarshal", zap.Error(err))
+			_Shell.Println("Failed to unmarshal", zap.Error(err))
 			return
 		}
 		for _, u := range x.Updates {

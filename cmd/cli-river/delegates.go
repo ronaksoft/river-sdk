@@ -9,7 +9,6 @@ import (
 )
 
 
-
 type ConnInfoDelegates struct{
 	dbPath string
 	filePath 	string
@@ -27,18 +26,17 @@ func (c *ConnInfoDelegates) SaveConnInfo(connInfo []byte) {
 	_ = os.MkdirAll(c.dbPath, os.ModePerm)
 	err := ioutil.WriteFile(c.filePath, connInfo, 0666)
 	if err != nil {
-		_Log.Error(err.Error())
+		_Shell.Println(err)
 	}
 }
 
 type MainDelegate struct{}
 
 func (d *MainDelegate) OnSearchComplete(b []byte) {
-	_Log.Info("OnSearchComplete")
 	result := new(msg.ClientSearchResult)
 	err := result.Unmarshal(b)
 	if err != nil {
-		_Log.Warn("error Unmarshal", zap.String("", err.Error()))
+		_Shell.Println("Error On OnSearchComplete:", err.Error())
 		return
 	}
 	_Shell.Println("OnSearchComplete::Messages", result.Messages)
@@ -48,18 +46,17 @@ func (d *MainDelegate) OnSearchComplete(b []byte) {
 }
 
 func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
-	_Log.Info("Update received", zap.String("C", msg.ConstructorNames[constructor]))
 	switch constructor {
 	case msg.C_UpdateContainer:
 		updateContainer := new(msg.UpdateContainer)
 		err := updateContainer.Unmarshal(b)
 		if err != nil {
-			_Log.Error("Failed to unmarshal", zap.Error(err))
+			_Shell.Println("Failed To Unmarshal UpdateContainer:", err)
 			return
 		}
-		_Log.Info("Processing UpdateContainer", zap.Int64("MinID", updateContainer.MinUpdateID), zap.Int64("MaxID", updateContainer.MaxUpdateID))
+		_Shell.Println("Processing UpdateContainer:", updateContainer.MinUpdateID, updateContainer.MaxUpdateID)
 		for _, update := range updateContainer.Updates {
-			_Log.Info("Processing Update", zap.Int64("UpdateID", update.UpdateID), zap.String("C", msg.ConstructorNames[update.Constructor]))
+			_Shell.Println("Processing Update", update.UpdateID, msg.ConstructorNames[update.Constructor])
 			UpdatePrinter(update)
 		}
 	case msg.C_ClientUpdatePendingMessageDelivery:
@@ -67,16 +64,16 @@ func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 		udp := new(msg.UpdateEnvelope)
 		udp.Constructor = constructor
 		udp.Update = b
-		_Log.Info("Processing ClientUpdatePendingMessageDelivery")
+		_Shell.Println("Processing ClientUpdatePendingMessageDelivery")
 		UpdatePrinter(udp)
 	case msg.C_UpdateEnvelope:
 		update := new(msg.UpdateEnvelope)
 		err := update.Unmarshal(b)
 		if err != nil {
-			_Log.Error("Failed to unmarshal", zap.Error(err))
+			_Shell.Println("Error On Unmarshal UpdateEnvelope:", err)
 			return
 		} else {
-			_Log.Info("Processing UpdateEnvelop", zap.Int64("UpdateID", update.UpdateID), zap.String("C", msg.ConstructorNames[update.Constructor]))
+			_Shell.Println("Processing UpdateEnvelop", update.UpdateID, msg.ConstructorNames[update.Constructor])
 			UpdatePrinter(update)
 		}
 	}
@@ -86,7 +83,7 @@ func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 func (d *MainDelegate) OnDeferredRequests(requestID int64, b []byte) {
 	envelope := new(msg.MessageEnvelope)
 	envelope.Unmarshal(b)
-	_Log.Info("Deferred Request received",
+	_Shell.Println("Deferred Request received",
 		zap.Uint64("ReqID", envelope.RequestID),
 		zap.String("C", msg.ConstructorNames[envelope.Constructor]),
 	)
@@ -95,26 +92,26 @@ func (d *MainDelegate) OnDeferredRequests(requestID int64, b []byte) {
 
 func (d *MainDelegate) OnNetworkStatusChanged(quality int) {
 	state := domain.NetworkStatus(quality)
-	_Log.Info("Network status changed", zap.String("Status", state.ToString()))
+	_Shell.Println("Network status changed", zap.String("Status", state.ToString()))
 }
 
 func (d *MainDelegate) OnSyncStatusChanged(newStatus int) {
 	state := domain.SyncStatus(newStatus)
-	_Log.Info("Sync status changed", zap.String("Status", state.ToString()))
+	_Shell.Println("Sync status changed", zap.String("Status", state.ToString()))
 }
 
 func (d *MainDelegate) OnAuthKeyCreated(authID int64) {
-	_Log.Info("Auth Key Created", zap.Int64("AuthID", authID))
+	_Shell.Println("Auth Key Created", zap.Int64("AuthID", authID))
 }
 
 func (d *MainDelegate) OnGeneralError(b []byte) {
 	e := new(msg.Error)
 	e.Unmarshal(b)
-	_Log.Error("Received general error", zap.String("Code", e.Code), zap.String("Items", e.Items))
+	_Shell.Println("Received general error", zap.String("Code", e.Code), zap.String("Items", e.Items))
 }
 
 func (d *MainDelegate) OnSessionClosed(res int) {
-	_Log.Info("Session Closed", zap.Int("Res", res))
+	_Shell.Println("Session Closed", zap.Int("Res", res))
 }
 
 func (d *MainDelegate) ShowLoggerAlert() {}
@@ -145,14 +142,14 @@ func (d *PrintDelegate) Log(logLevel int, msg string) {
 type FileDelegate struct{}
 
 func (d *FileDelegate) OnProgressChanged(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64) {
-	_Log.Info("upload progress changed",
+	_Shell.Println("upload progress changed",
 		zap.Int64("Progress", percent),
 		zap.Int64("PeerID", peerID),
 	)
 }
 
 func (d *FileDelegate) OnCompleted(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64) {
-	_Log.Info("On upload Completed",
+	_Shell.Println("On upload Completed",
 		zap.String("ReqID", reqID),
 		zap.String("FilePath", filePath),
 		zap.Int64("PeerID", peerID),
@@ -160,7 +157,7 @@ func (d *FileDelegate) OnCompleted(reqID string, clusterID int32, fileID, access
 }
 
 func (d *FileDelegate) OnCancel(reqID string, clusterID int32, fileID, accessHash int64, hasError bool, peerID int64) {
-	_Log.Error("CancelCB",
+	_Shell.Println("CancelCB",
 		zap.String("ReqID", reqID),
 		zap.Int64("PeerID", peerID),
 	)
@@ -168,18 +165,18 @@ func (d *FileDelegate) OnCancel(reqID string, clusterID int32, fileID, accessHas
 }
 
 func (d *FileDelegate) OnDownloadProgressChanged(messageID, processedParts, totalParts int64, percent float64) {
-	_Log.Info("upload progress changed", zap.Float64("Progress", percent))
+	_Shell.Println("upload progress changed", zap.Float64("Progress", percent))
 }
 
 func (d *FileDelegate) OnDownloadCompleted(messageID int64, filePath string) {
-	_Log.Info("On upload Completed", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
+	_Shell.Println("On upload Completed", zap.Int64("MsgID", messageID), zap.String("FilePath", filePath))
 }
 
 func (d *FileDelegate) OnDownloadError(messageID, requestID int64, filePath string, err []byte) {
 	x := new(msg.Error)
 	x.Unmarshal(err)
 
-	_Log.Error("OnError",
+	_Shell.Println("OnError",
 		zap.String("Code", x.Code),
 		zap.String("Item", x.Items),
 		zap.Int64("MsgID", messageID),
@@ -187,4 +184,56 @@ func (d *FileDelegate) OnDownloadError(messageID, requestID int64, filePath stri
 		zap.String("FilePath", filePath),
 	)
 
+}
+
+
+type RequestDelegate struct {
+	RequestID int64
+	Envelope  msg.MessageEnvelope
+}
+
+func (d *RequestDelegate) OnComplete(b []byte) {
+	err := d.Envelope.Unmarshal(b)
+	if err != nil {
+		_Shell.Println("Error On OnComplete:", err)
+		return
+	}
+	_Shell.Println("Request Completed:", d.RequestID, msg.ConstructorNames[d.Envelope.Constructor])
+	MessagePrinter(&d.Envelope)
+	return
+}
+
+func (d *RequestDelegate) OnTimeout(err error) {
+	_Shell.Println("Request TimedOut:", d.RequestID, err)
+}
+
+func (d *RequestDelegate) Flags() int32 {
+	return 0
+}
+
+type CustomRequestDelegate struct {
+	OnCompleteFunc func(b []byte)
+	OnTimeoutFunc  func(err error)
+	FlagsFunc      func() int32
+}
+
+func (c CustomRequestDelegate) OnComplete(b []byte) {
+	c.OnCompleteFunc(b)
+}
+
+func (c CustomRequestDelegate) OnTimeout(err error) {
+	c.OnTimeoutFunc(err)
+}
+
+func (c CustomRequestDelegate) Flags() int32 {
+	return c.FlagsFunc()
+}
+
+func NewCustomDelegate() *CustomRequestDelegate {
+	c := &CustomRequestDelegate{}
+	d := &RequestDelegate{}
+	c.OnCompleteFunc = d.OnComplete
+	c.OnTimeoutFunc = d.OnTimeout
+	c.FlagsFunc = d.Flags
+	return c
 }

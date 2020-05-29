@@ -3,7 +3,6 @@ package main
 import (
 	msg "git.ronaksoftware.com/river/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"
 )
 
@@ -25,7 +24,7 @@ var ContactImport = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsImport, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -39,7 +38,7 @@ var ContactGet = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsGet, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -64,7 +63,7 @@ var ContactTestImport = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsImport, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -81,7 +80,7 @@ var ContactAdd = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsAdd, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -98,7 +97,7 @@ var ContactGetTopPeers = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsGetTopPeers, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}

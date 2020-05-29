@@ -2,7 +2,6 @@ package main
 
 import (
 	msg "git.ronaksoftware.com/river/msg/chat"
-	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"
 )
 
@@ -20,7 +19,7 @@ var UsersGet = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_UsersGet, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -38,7 +37,7 @@ var UsersGetFull = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_UsersGetFull, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -55,16 +54,16 @@ var SetLangCode = &ishell.Cmd{
 		code := fnGetLangCode(c)
 
 		if code != "en" && code != "fa" {
-			_Log.Info("Invalid lang code. Using en as default", zap.String("LangCode", code))
+			c.Println("Invalid lang code. Using en as default:", code)
 			code = "en"
 		}
-		_Log.Debug("input", zap.String("LangCode", code))
+		c.Println("LangCode:", code)
 		req.LangCode = code
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountSetLang, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}

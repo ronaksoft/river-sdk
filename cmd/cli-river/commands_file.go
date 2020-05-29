@@ -1,14 +1,12 @@
 package main
 
 import (
-	"go.uber.org/zap"
-	"mime"
-	"os"
-	"path"
-
 	msg "git.ronaksoftware.com/river/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"gopkg.in/abiosoft/ishell.v2"
+	"mime"
+	"os"
+	"path"
 )
 
 var File = &ishell.Cmd{
@@ -48,7 +46,7 @@ var Upload = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -84,7 +82,7 @@ var ShareContact = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSendMedia, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -230,6 +228,7 @@ var Download = &ishell.Cmd{
 		}
 	},
 }
+
 func init() {
 	File.AddCmd(Upload)
 	File.AddCmd(Download)

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"go.uber.org/zap"
 	"gopkg.in/abiosoft/ishell.v2"
 )
 
@@ -14,9 +13,9 @@ var InitAuth = &ishell.Cmd{
 	Name: "Auth",
 	Func: func(c *ishell.Context) {
 		if err := _SDK.CreateAuthKey(); err != nil {
-			_Log.Error("CreateAuthKey failed", zap.Error(err))
+			c.Println("Create AuthKey Failed:", err)
 		} else {
-			_Log.Info("CreateAuthKey == OK ==")
+			c.Println("CreateAuthKey -- OK --")
 		}
 	},
 }

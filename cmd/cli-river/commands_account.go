@@ -2,7 +2,6 @@ package main
 
 import (
 	msg "git.ronaksoftware.com/river/msg/chat"
-	"go.uber.org/zap"
 	ishell "gopkg.in/abiosoft/ishell.v2"
 )
 
@@ -26,7 +25,7 @@ var RegisterDevice = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountRegisterDevice, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -43,7 +42,7 @@ var UpdateUsername = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUpdateUsername, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -60,7 +59,7 @@ var CheckUsername = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountCheckUsername, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -78,7 +77,7 @@ var UnregisterDevice = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUnregisterDevice, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -96,7 +95,7 @@ var UpdateProfile = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUpdateProfile, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -121,7 +120,7 @@ var SetNotifySettings = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountSetNotifySettings, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
@@ -145,7 +144,7 @@ var RemovePhoto = &ishell.Cmd{
 		reqDelegate := new(RequestDelegate)
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountRemovePhoto, reqBytes, reqDelegate); err != nil {
-			_Log.Error("EnqueueCommand failed", zap.Error(err))
+			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
 		}
