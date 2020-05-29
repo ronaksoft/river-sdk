@@ -8,10 +8,9 @@ import (
 	"os"
 )
 
-
-type ConnInfoDelegates struct{
-	dbPath string
-	filePath 	string
+type ConnInfoDelegates struct {
+	dbPath   string
+	filePath string
 }
 
 func (c *ConnInfoDelegates) Get(key string) string {
@@ -178,6 +177,7 @@ func (d *RequestDelegate) Flags() int32 {
 }
 
 type CustomRequestDelegate struct {
+	RequestID      int64
 	OnCompleteFunc func(b []byte)
 	OnTimeoutFunc  func(err error)
 	FlagsFunc      func() int32

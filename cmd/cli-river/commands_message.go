@@ -4,6 +4,7 @@ import (
 	msg "git.ronaksoftware.com/river/msg/chat"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"gopkg.in/abiosoft/ishell.v2"
+	"time"
 )
 
 var Message = &ishell.Cmd{
@@ -42,9 +43,19 @@ var MessageSendToSelf = &ishell.Cmd{
 		req.Peer.ID = _SDK.ConnInfo.UserID
 		req.Peer.AccessHash = 0
 		req.Body = fnGetBody(c)
+		if len(req.Body) == 0 {
+			req.Body = domain.RandomID(32)
+		}
 		req.Entities = nil
 		reqBytes, _ := req.Marshal()
-		reqDelegate := new(RequestDelegate)
+		reqDelegate := NewCustomDelegate()
+		startTime := time.Now()
+		reqDelegate.OnCompleteFunc = func(b []byte) {
+			x := &msg.MessageEnvelope{}
+			_ = x.Unmarshal(b)
+			MessagePrinter(x)
+			_Shell.Println("Execute Time:", time.Now().Sub(startTime))
+		}
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSend, reqBytes, reqDelegate); err != nil {
 			c.Println("Command Failed:", err)
 		} else {
