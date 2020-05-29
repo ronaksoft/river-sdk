@@ -16,7 +16,7 @@ func (r *repoWallpapers) SaveWallpapers(wallpapers *msg.WallPapersMany) error {
 
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		for _, o := range wallpapers.WallPapers {
-			err := SaveWallpaper(txn, o)
+			err := Files.SaveWallpaper(txn, o)
 			if err != nil {
 				return err
 			}

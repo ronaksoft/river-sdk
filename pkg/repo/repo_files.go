@@ -242,7 +242,7 @@ func saveMessageMedia(txn *badger.Txn, m *msg.UserMessage) error {
 	return nil
 }
 
-func SaveWallpaper(txn *badger.Txn, wallpaper *msg.WallPaper) error {
+func (r *repoFiles) SaveWallpaper(txn *badger.Txn, wallpaper *msg.WallPaper) error {
 	if wallpaper.Document == nil {
 		return nil
 	}

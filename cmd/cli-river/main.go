@@ -51,6 +51,7 @@ func main() {
 	_Shell.AddCmd(Group)
 	_Shell.AddCmd(File)
 	_Shell.AddCmd(Botfather)
+	_Shell.AddCmd(WallPaper)
 
 	_Shell.Print("River Host (default: river.im):")
 	_Shell.Print("DB Path (./_db): ")
