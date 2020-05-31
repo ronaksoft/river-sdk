@@ -439,6 +439,7 @@ func (r *River) GetSyncStatus() int32 {
 
 // Logout drop queue & database , etc ...
 func (r *River) Logout(notifyServer bool, reason int) error {
+	logs.Info("Logout Called")
 	// unregister device if token exist
 	if notifyServer {
 		if r.DeviceToken != nil {
@@ -466,10 +467,13 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 				Message:     buff,
 			},
 			nil, nil, true, false)
+		logs.Info("We sent a AuthLogout request to server")
 	}
+
 
 	if r.mainDelegate != nil {
 		r.mainDelegate.OnSessionClosed(reason)
+		logs.Info("We called SessionClosed delegate")
 	}
 
 	// Stop Controllers
@@ -477,8 +481,11 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 	r.syncCtrl.Stop()
 	r.queueCtrl.Stop()
 	r.fileCtrl.Stop()
+	logs.Info("We stopped all the controllers")
 
 	repo.DropAll()
+	logs.Info("We reset our database")
+
 	r.syncCtrl.ResetIDs()
 	r.ConnInfo.FirstName = ""
 	r.ConnInfo.LastName = ""
@@ -489,13 +496,16 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 	r.ConnInfo.Save()
 	r.DeviceToken = new(msg.AccountRegisterDevice)
 	r.saveDeviceToken()
+	logs.Info("We reset our connection info")
 
 	err := r.AppStart()
 	if err != nil {
 		return err
 	}
+	logs.Info("We started the app again")
 
 	r.networkCtrl.Connect()
+	logs.Info("We start connecting to server")
 	return err
 }
 
