@@ -51,7 +51,7 @@ var LabelListItems = &ishell.Cmd{
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_LabelsGet, reqBytes, reqDelegate); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_LabelsListItems, reqBytes, reqDelegate); err != nil {
 			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
