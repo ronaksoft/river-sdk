@@ -241,6 +241,21 @@ func fnGetMinID(c *ishell.Context) int64 {
 	return minID
 }
 
+func fnGetLabelID(c *ishell.Context) int32 {
+	var labelID int32
+	for {
+		c.Print("LabelID: ")
+		tmp, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		if err == nil {
+			labelID = int32(tmp)
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return labelID
+}
+
 func fnGetLimit(c *ishell.Context) int32 {
 	var limit int32
 	for {

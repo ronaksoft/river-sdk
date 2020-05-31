@@ -369,10 +369,16 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			_Shell.Println(tp.Peer.ID, tp.Peer.Type, tp.Rate)
 		}
 	case msg.C_WallPapersMany:
-		x:= &msg.WallPapersMany{}
+		x := &msg.WallPapersMany{}
 		x.Unmarshal(envelope.Message)
 		for _, wp := range x.WallPapers {
 			_Shell.Println(wp.ID, wp.AccessHash, wp.Creator, wp.Document.ID, wp.Document.AccessHash)
+		}
+	case msg.C_LabelsMany:
+		x := &msg.LabelsMany{}
+		x.Unmarshal(envelope.Message)
+		for _, l := range x.Labels {
+			_Shell.Println(l.ID, l.Count, l.Name)
 		}
 	default:
 		constructorName, _ := msg.ConstructorNames[envelope.Constructor]
