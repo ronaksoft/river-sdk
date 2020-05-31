@@ -33,6 +33,10 @@ var MessageSend = &ishell.Cmd{
 	},
 }
 
+var (
+	sendMessageTimer time.Time
+)
+
 var MessageSendToSelf = &ishell.Cmd{
 	Name: "SendToMe",
 	Func: func(c *ishell.Context) {
@@ -49,12 +53,12 @@ var MessageSendToSelf = &ishell.Cmd{
 		req.Entities = nil
 		reqBytes, _ := req.Marshal()
 		reqDelegate := NewCustomDelegate()
-		startTime := time.Now()
+		sendMessageTimer = time.Now()
 		reqDelegate.OnCompleteFunc = func(b []byte) {
 			x := &msg.MessageEnvelope{}
 			_ = x.Unmarshal(b)
 			MessagePrinter(x)
-			_Shell.Println("Execute Time:", time.Now().Sub(startTime))
+			// _Shell.Println("Execute Time:", time.Now().Sub(startTime))
 		}
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSend, reqBytes, reqDelegate); err != nil {
 			c.Println("Command Failed:", err)

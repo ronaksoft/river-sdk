@@ -34,7 +34,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	dialog, _ := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
 	if dialog == nil {
 		unreadCount := int32(0)
-		if x.Sender.ID != ctrl.userID {
+		if x.Sender.ID != ctrl.GetUserID() {
 			unreadCount = 1
 		}
 		// make sure to created the message hole b4 creating dialog
@@ -53,14 +53,14 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	}
 	// save user if does not exist
 	repo.Users.Save(x.Sender)
-	err = repo.Messages.SaveNew(x.Message, ctrl.userID)
+	err = repo.Messages.SaveNew(x.Message, ctrl.GetUserID())
 	if err != nil {
 		return nil, err
 	}
 	messageHole.InsertFill(dialog.PeerID, dialog.PeerType, dialog.TopMessageID, x.Message.ID)
 
 	// If sender is me, check for pending
-	if x.Message.SenderID == ctrl.userID {
+	if x.Message.SenderID == ctrl.GetUserID() {
 		pm := repo.PendingMessages.GetByRealID(x.Message.ID)
 
 		if pm != nil {
@@ -75,7 +75,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	ctrl.handleMessageAction(x, u, res)
 
 	// update monitoring
-	if x.Message.SenderID == ctrl.userID {
+	if x.Message.SenderID == ctrl.GetUserID() {
 		if x.Message.FwdSenderID != 0 {
 			repo.TopPeers.Update(msg.TopPeerCategory_Forwards, x.Message.PeerID, x.Message.PeerType)
 		} else {
@@ -158,7 +158,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 		_ = act.Unmarshal(x.Message.MessageActionData)
 
 		// 1. Delete All Messages < x.MessageID
-		_ = repo.Messages.ClearHistory(ctrl.userID, x.Message.PeerID, x.Message.PeerType, act.MaxID)
+		_ = repo.Messages.ClearHistory(ctrl.GetUserID(), x.Message.PeerID, x.Message.PeerType, act.MaxID)
 
 		// 2. Delete Scroll Position
 		repo.MessagesExtra.SaveScrollID(x.Message.PeerID, x.Message.PeerType, 0)
@@ -241,7 +241,7 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) ([]*msg.Up
 		zap.Int64("PeerID", x.Peer.ID),
 	)
 
-	repo.Dialogs.UpdateReadInboxMaxID(ctrl.userID, x.Peer.ID, x.Peer.Type, x.MaxID)
+	repo.Dialogs.UpdateReadInboxMaxID(ctrl.GetUserID(), x.Peer.ID, x.Peer.Type, x.MaxID)
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil
 }
@@ -404,7 +404,7 @@ func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) ([]*msg.UpdateEnve
 
 	logs.Info("SyncCtrl applies UpdateUsername")
 
-	if x.UserID == ctrl.userID {
+	if x.UserID == ctrl.GetUserID() {
 		ctrl.connInfo.ChangeUserID(x.UserID)
 		ctrl.connInfo.ChangeUsername(x.Username)
 		ctrl.connInfo.ChangeFirstName(x.FirstName)
@@ -432,7 +432,7 @@ func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) ([]*msg.Upd
 
 	logs.Info("SyncCtrl applies UpdateMessagesDeleted")
 
-	repo.Messages.Delete(ctrl.userID, x.Peer.ID, x.Peer.Type, x.MessageIDs...)
+	repo.Messages.Delete(ctrl.GetUserID(), x.Peer.ID, x.Peer.Type, x.MessageIDs...)
 
 	update := new(msg.ClientUpdateMessagesDeleted)
 	update.PeerID = x.Peer.ID

@@ -2,6 +2,7 @@ package main
 
 import (
 	"go.uber.org/zap"
+	"time"
 
 	msg "git.ronaksoftware.com/river/msg/chat"
 )
@@ -27,6 +28,9 @@ func UpdatePrinter(envelope *msg.UpdateEnvelope) {
 			_Shell.Println("Failed to unmarshal", zap.Error(err))
 			return
 		}
+		_Shell.Println("Execute Time (ClientPending):", time.Now().Sub(sendMessageTimer))
+	case msg.C_UpdateMessageID:
+		_Shell.Println("Execute Time (MessageID):", time.Now().Sub(sendMessageTimer))
 	case msg.C_UpdateContainer:
 		x := new(msg.UpdateContainer)
 		err := x.Unmarshal(envelope.Update)

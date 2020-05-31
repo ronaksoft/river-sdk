@@ -160,7 +160,7 @@ func (ctrl *Controller) SetSynced() {
 func (ctrl *Controller) Sync() {
 	_, _, _ = domain.SingleFlight.Do("Sync", func() (i interface{}, e error) {
 		// There is no need to sync when no user has been authorized
-		if ctrl.userID == 0 {
+		if ctrl.GetUserID() == 0 {
 			logs.Debug("SyncCtrl does not sync when no user is set")
 			return
 		}
@@ -260,6 +260,10 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 			break
 		}
 
+		// Break the loop if userID is set to zero
+		if ctrl.GetUserID() == 0 {
+			break
+		}
 		req := &msg.UpdateGetDifference{
 			Limit: int32(limit),
 			From:  ctrl.updateID + 1, // +1 cuz we already have ctrl.updateID itself,
@@ -314,6 +318,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 					logs.Debug("SyncCtrl got error response",
 						zap.String("Error", domain.ParseServerError(m.Message).Error()),
 					)
+
 				}
 
 			},
@@ -486,7 +491,7 @@ func (ctrl *Controller) UpdateID() int64 {
 // ClearUpdateID reset updateID
 func (ctrl *Controller) ResetIDs() {
 	ctrl.updateID = 0
-	ctrl.userID = 0
+	ctrl.SetUserID(0)
 }
 
 // ContactsGet import contact from server
