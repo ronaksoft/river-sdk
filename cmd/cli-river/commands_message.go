@@ -110,10 +110,7 @@ var MessageGetHistory = &ishell.Cmd{
 	Name: "GetHistory",
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesGetHistory{}
-		req.Peer = &msg.InputPeer{}
-		req.Peer.Type = fnGetPeerType(c)
-		req.Peer.ID = fnGetPeerID(c)
-		req.Peer.AccessHash = fnGetAccessHash(c)
+		req.Peer = fnGetPeer(c)
 		req.MaxID = fnGetMaxID(c)
 		req.MinID = fnGetMinID(c)
 		req.Limit = fnGetLimit(c)
@@ -133,10 +130,7 @@ var MessageReadHistory = &ishell.Cmd{
 	Name: "ReadHistory",
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesReadHistory{}
-		req.Peer = &msg.InputPeer{}
-		req.Peer.Type = fnGetPeerType(c)
-		req.Peer.ID = fnGetPeerID(c)
-		req.Peer.AccessHash = fnGetAccessHash(c)
+		req.Peer = fnGetPeer(c)
 		req.MaxID = fnGetMaxID(c)
 
 		reqBytes, _ := req.Marshal()
@@ -154,10 +148,7 @@ var MessageSetTyping = &ishell.Cmd{
 	Name: "SetTyping",
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesSetTyping{}
-		req.Peer = &msg.InputPeer{}
-		req.Peer.Type = fnGetPeerType(c)
-		req.Peer.ID = fnGetPeerID(c)
-		req.Peer.AccessHash = fnGetAccessHash(c)
+		req.Peer = fnGetPeer(c)
 		req.Action = fnGetTypingAction(c)
 
 		reqBytes, _ := req.Marshal()
@@ -197,10 +188,7 @@ var MessagesClearHistory = &ishell.Cmd{
 	Name: "ClearHistory",
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesClearHistory{}
-		req.Peer = &msg.InputPeer{}
-		req.Peer.Type = fnGetPeerType(c)
-		req.Peer.ID = fnGetPeerID(c)
-		req.Peer.AccessHash = fnGetAccessHash(c)
+		req.Peer = fnGetPeer(c)
 		req.MaxID = fnGetMaxID(c)
 		req.Delete = fnGetDelete(c)
 
