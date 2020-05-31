@@ -824,6 +824,7 @@ func (p *poolMessagesMany) Get() *MessagesMany {
 	x.Users = x.Users[:0]
 	x.Groups = x.Groups[:0]
 	x.Continuous = false
+	x.Empty = false
 	return x
 }
 

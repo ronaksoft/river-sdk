@@ -1331,6 +1331,7 @@ func (p *poolLabelsMany) Get() *LabelsMany {
 		return &LabelsMany{}
 	}
 	x.Labels = x.Labels[:0]
+	x.Empty = false
 	return x
 }
 

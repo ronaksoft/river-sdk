@@ -94,6 +94,7 @@ func (p *poolUsersMany) Get() *UsersMany {
 		return &UsersMany{}
 	}
 	x.Users = x.Users[:0]
+	x.Empty = false
 	return x
 }
 

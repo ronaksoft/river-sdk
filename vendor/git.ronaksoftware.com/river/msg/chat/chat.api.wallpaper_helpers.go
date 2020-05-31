@@ -298,6 +298,7 @@ func (p *poolWallPapersMany) Get() *WallPapersMany {
 		return &WallPapersMany{}
 	}
 	x.WallPapers = x.WallPapers[:0]
+	x.Empty = false
 	return x
 }
 
