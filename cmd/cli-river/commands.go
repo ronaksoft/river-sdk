@@ -603,6 +603,11 @@ func fnGetLabelName(c *ishell.Context) string {
 	return name
 }
 
+func fnGetLabelColour(c *ishell.Context) string {
+	c.Print("Label Colour: ")
+	name := c.ReadLine()
+	return name
+}
 
 func fnGetFilePath(c *ishell.Context) string {
 	c.Print("File Path: ")
