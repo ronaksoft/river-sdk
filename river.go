@@ -312,14 +312,19 @@ func (r *River) onGeneralError(requestID uint64, e *msg.Error) {
 		zap.String("Code", e.Code),
 		zap.String("Item", e.Items),
 	)
-	if e.Code == msg.ErrCodeInvalid && e.Items == msg.ErrItemSalt {
+	switch  {
+	case e.Code == msg.ErrCodeInvalid && e.Items == msg.ErrItemSalt:
 		if !salt.UpdateSalt() {
 			go func() {
 				r.syncCtrl.GetServerSalt()
 				domain.WindowLog(fmt.Sprintf("SaltsReceived: %s", time.Now().Sub(domain.StartTime)))
 			}()
 		}
+	case e.Code == msg.ErrCodeUnavailable && e.Items == msg.ErrItemUserID:
+		r.syncCtrl.SetUserID(0)
 	}
+
+
 	if r.mainDelegate != nil && requestID == 0 {
 		buff, _ := e.Marshal()
 		r.mainDelegate.OnGeneralError(buff)
