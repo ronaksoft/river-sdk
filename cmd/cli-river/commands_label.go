@@ -24,6 +24,21 @@ var LabelGet = &ishell.Cmd{
 	},
 }
 
+var LabelCreate = &ishell.Cmd{
+	Name: "Create",
+	Func: func(c *ishell.Context) {
+		req := msg.LabelsCreate{}
+		req.Name = fnGetLabelName(c)
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_LabelsCreate, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
 var LabelListItems = &ishell.Cmd{
 	Name: "ListItems",
 	Func: func(c *ishell.Context) {
@@ -47,4 +62,5 @@ var LabelListItems = &ishell.Cmd{
 func init() {
 	Label.AddCmd(LabelGet)
 	Label.AddCmd(LabelListItems)
+	Label.AddCmd(LabelCreate)
 }

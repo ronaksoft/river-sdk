@@ -597,6 +597,13 @@ func fnGetFileName(c *ishell.Context) string {
 	return name
 }
 
+func fnGetLabelName(c *ishell.Context) string {
+	c.Print("Label Name: ")
+	name := c.ReadLine()
+	return name
+}
+
+
 func fnGetFilePath(c *ishell.Context) string {
 	c.Print("File Path: ")
 	name := c.ReadLine()
