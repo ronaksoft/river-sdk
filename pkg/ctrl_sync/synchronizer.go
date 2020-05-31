@@ -127,8 +127,10 @@ func (ctrl *Controller) watchDog() {
 		t.Reset(syncTime)
 		select {
 		case <-t.C:
-			// Wait for network
-			ctrl.networkCtrl.WaitForNetwork()
+			// Skip if we are not connected to server
+			if ctrl.networkCtrl.GetQuality() != domain.NetworkConnected {
+				break
+			}
 
 			now := time.Now()
 			// Check if we were not syncing in the last 3 minutes

@@ -284,7 +284,7 @@ func (ctrl *Controller) watchDog() {
 				go ctrl.Connect()
 			}
 		case <-ctrl.stopChannel:
-			logs.Info("NetworkController's watchdog stopped!")
+			logs.Info("NetCtrl's watchdog stopped!")
 			return
 		}
 	}

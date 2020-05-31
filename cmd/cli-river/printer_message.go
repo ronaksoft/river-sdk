@@ -380,6 +380,46 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		for _, l := range x.Labels {
 			_Shell.Println(l.ID, l.Count, l.Name)
 		}
+	case msg.C_LabelItems:
+		x := &msg.LabelItems{}
+		x.Unmarshal(envelope.Message)
+		bufMessages := new(bytes.Buffer)
+		tableMessages := tablewriter.NewWriter(bufMessages)
+		tableMessages.SetHeader([]string{
+			"MsgID", "PeerID", "PeerType", "CreatedOn", "Flags", "Body", "Entities", "MeidaType",
+		})
+
+		for _, d := range x.Messages {
+			tableMessages.Append([]string{
+				fmt.Sprintf("%d", d.ID),
+				fmt.Sprintf("%d", d.PeerID),
+				fmt.Sprintf("%d", d.PeerType),
+				fmt.Sprintf("%d", d.CreatedOn),
+				fmt.Sprintf("%d", d.Flags),
+				fmt.Sprintf("%v", string(d.Body)),
+				fmt.Sprintf("%v", d.Entities),
+				fmt.Sprintf("%s", d.MediaType.String()),
+			})
+		}
+		tableMessages.Render()
+		bufUsers := new(bytes.Buffer)
+		tableUsers := tablewriter.NewWriter(bufUsers)
+		tableUsers.SetHeader([]string{
+			"userID", "FirstName", "LastName", "Photo",
+		})
+		for _, x := range x.Users {
+			tableUsers.Append([]string{
+				fmt.Sprintf("%d", x.ID),
+				fmt.Sprintf("%s", x.FirstName),
+				fmt.Sprintf("%s", x.LastName),
+				fmt.Sprintf("%d", len(x.Photo.String())),
+			})
+		}
+		tableUsers.Render()
+
+		_Shell.Println(fmt.Sprintf("Total Message Count: %d", len(x.Messages)))
+		_Shell.Println("\r\n" + bufMessages.String())
+		_Shell.Println("\r\n" + bufUsers.String())
 	default:
 		constructorName, _ := msg.ConstructorNames[envelope.Constructor]
 		_Shell.Println("DEFAULT", constructorName, len(envelope.Message))

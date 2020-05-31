@@ -370,6 +370,7 @@ func (ctrl *Controller) Stop() {
 	logs.Info("QueueCtrl stopped")
 	ctrl.waitingList.Close()
 	ctrl.DropQueue()
+
 }
 
 // IsRequestCancelled handle canceled request to do not process its response
