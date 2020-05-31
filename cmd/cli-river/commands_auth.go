@@ -108,7 +108,6 @@ var AuthLogout = &ishell.Cmd{
 		if err := _SDK.Logout(true, 0); err != nil {
 			c.Println("Command Failed:", err)
 		}
-
 		os.Remove(filepath.Join(_DbPath, fmt.Sprintf("connInfo.%s", _DbID)))
 	},
 }

@@ -470,7 +470,6 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 		logs.Info("We sent a AuthLogout request to server")
 	}
 
-
 	if r.mainDelegate != nil {
 		r.mainDelegate.OnSessionClosed(reason)
 		logs.Info("We called SessionClosed delegate")

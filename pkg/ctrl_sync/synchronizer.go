@@ -410,8 +410,10 @@ func (ctrl *Controller) Start() {
 
 // Stop controller
 func (ctrl *Controller) Stop() {
-	logs.Debug("SyncCtrl calls stop")
+	logs.Info("SyncCtrl calls stop")
+	ctrl.ResetIDs()
 	ctrl.stopChannel <- true // for watchDog()
+	logs.Info("SyncCtrl Stopped")
 }
 
 // MessageHandler call appliers-> repository and sync data
