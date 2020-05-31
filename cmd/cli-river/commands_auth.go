@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	msg "git.ronaksoftware.com/river/msg/chat"
 	"gopkg.in/abiosoft/ishell.v2"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -67,7 +69,7 @@ var AuthLogin = &ishell.Cmd{
 	Name: "Login",
 	Func: func(c *ishell.Context) {
 		req := msg.AuthLogin{}
-		phoneFile, err := os.Open("./_connection/phone")
+		phoneFile, err := os.Open("./_phone")
 		if err != nil {
 			req.Phone = fnGetPhone(c)
 			req.PhoneCode = fnGetPhoneCode(c)
@@ -77,7 +79,7 @@ var AuthLogin = &ishell.Cmd{
 			b, _ := ioutil.ReadAll(phoneFile)
 			req.Phone = string(b)
 			if strings.HasPrefix(req.Phone, "2374") {
-				File, err := os.Open("./_connection/phoneCodeHash")
+				File, err := os.Open("./_phoneCodeHash")
 				if err != nil {
 					req.PhoneCodeHash = fnGetPhoneCode(c)
 				} else {
@@ -89,8 +91,8 @@ var AuthLogin = &ishell.Cmd{
 		}
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		os.Remove("./_connection/phone")
-		os.Remove("./_connection/phoneCodeHash")
+		os.Remove("./_phone")
+		os.Remove("./_phoneCodeHash")
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthLogin, reqBytes, reqDelegate); err != nil {
 			c.Println("Command Failed:", err)
 		} else {
@@ -106,7 +108,8 @@ var AuthLogout = &ishell.Cmd{
 		if err := _SDK.Logout(true, 0); err != nil {
 			c.Println("Command Failed:", err)
 		}
-		os.Remove("./_connection/connInfo")
+
+		os.Remove(filepath.Join(_DbPath, fmt.Sprintf("connInfo.%s", _DbID)))
 	},
 }
 

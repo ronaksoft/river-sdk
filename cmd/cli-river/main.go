@@ -17,6 +17,8 @@ import (
 var (
 	_Shell                   *ishell.Shell
 	_SDK                     *riversdk.River
+	_DbID                    string
+	_DbPath                  string
 	green, red, yellow, blue func(format string, a ...interface{}) string
 )
 
@@ -48,15 +50,15 @@ func main() {
 	_Shell.Print("River Host (default: river.im):")
 	_Shell.Print("DB Path (./_db): ")
 
-	dbPath := _Shell.ReadLine()
+	_DbPath = _Shell.ReadLine()
 	_Shell.Print("DB ID: ")
-	dbID := _Shell.ReadLine()
-	if dbPath == "" {
-		dbPath = "./_db"
+	_DbID = _Shell.ReadLine()
+	if _DbPath == "" {
+		_DbPath = "./_db"
 	}
 
 	connInfo := new(riversdk.RiverConnection)
-	connInfoPath := filepath.Join(dbPath, fmt.Sprintf("connInfo.%s", dbID))
+	connInfoPath := filepath.Join(_DbPath, fmt.Sprintf("connInfo.%s", _DbID))
 	file, err := os.Open(connInfoPath)
 	if err == nil {
 		b, _ := ioutil.ReadAll(file)
@@ -67,11 +69,9 @@ func main() {
 	}
 
 	connInfo.Delegate = &ConnInfoDelegates{
-		dbPath: dbPath,
+		dbPath:   _DbPath,
 		filePath: connInfoPath,
 	}
-
-
 
 	serverEndPoint := "ws://river.ronaksoftware.com"
 	fileEndPoint := "http://river.ronaksoftware.com:8080"
@@ -104,8 +104,8 @@ func main() {
 	_SDK.SetConfig(&riversdk.RiverConfig{
 		ServerEndpoint:         serverEndPoint,
 		FileServerEndpoint:     fileEndPoint,
-		DbPath:                 dbPath,
-		DbID:                   dbID,
+		DbPath:                 _DbPath,
+		DbID:                   _DbID,
 		ServerKeys:             domain.ByteToStr(skBytes),
 		MainDelegate:           new(MainDelegate),
 		FileDelegate:           new(FileDelegate),

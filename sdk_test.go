@@ -74,6 +74,7 @@ func (c *ConnInfoDelegates) Load(connInfo *RiverConnection) {
 	_ = json.Unmarshal(b, connInfo)
 	return
 }
+
 func (c *ConnInfoDelegates) SaveConnInfo(connInfo []byte) {
 	_ = os.MkdirAll("./_connection", os.ModePerm)
 	err := ioutil.WriteFile("./_connection/connInfo", connInfo, 0666)
