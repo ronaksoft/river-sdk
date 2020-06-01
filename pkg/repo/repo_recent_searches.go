@@ -68,10 +68,11 @@ func (r *repoRecentSearches) Put(recentSearch *msg.RecentSearch) error {
 func (r *repoRecentSearches) Clear() error {
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = domain.StrToByte(prefixRecentSearch)
+		opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixRecentSearch))
+		opts.PrefetchValues = false
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
-			err := txn.Delete(it.Item().Key())
+			err := txn.Delete(it.Item().KeyCopy(nil))
 			if err != nil {
 				return err
 			}

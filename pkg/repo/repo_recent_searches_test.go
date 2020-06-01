@@ -15,9 +15,11 @@ import (
  */
 
 func TestRepoRecentSearches(t *testing.T) {
-	Convey("Messages Search", t, func() {
-		Convey("Search By Label", func(c C) {
-			err := repo.RecentSearches.Put(&msg.RecentSearch{
+	Convey("RecentSearch Repo", t, func() {
+		Convey("Put, List and Clear", func(c C) {
+			err := repo.RecentSearches.Clear()
+			c.So(err, ShouldBeNil)
+			err = repo.RecentSearches.Put(&msg.RecentSearch{
 				Peer: &msg.Peer{
 					ID:         101,
 					Type:       1,
@@ -39,6 +41,10 @@ func TestRepoRecentSearches(t *testing.T) {
 			c.So(err, ShouldBeNil)
 			searches = repo.RecentSearches.List(2)
 			c.So(searches, ShouldHaveLength, 2)
+			err = repo.RecentSearches.Clear()
+			c.So(err, ShouldBeNil)
+			searches = repo.RecentSearches.List(2)
+			c.So(searches, ShouldHaveLength, 0)
 		})
 	})
 }
