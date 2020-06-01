@@ -28,6 +28,17 @@ func TestRepoRecentSearches(t *testing.T) {
 			c.So(err, ShouldBeNil)
 			searches := repo.RecentSearches.List(1)
 			c.So(searches, ShouldHaveLength, 1)
+			err = repo.RecentSearches.Put(&msg.RecentSearch{
+				Peer: &msg.Peer{
+					ID:         102,
+					Type:       1,
+					AccessHash: 1020,
+				},
+				Date: int32(time.Now().Unix()),
+			})
+			c.So(err, ShouldBeNil)
+			searches = repo.RecentSearches.List(2)
+			c.So(searches, ShouldHaveLength, 2)
 		})
 	})
 }
