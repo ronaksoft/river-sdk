@@ -321,7 +321,7 @@ func (r *River) onGeneralError(requestID uint64, e *msg.Error) {
 			}()
 		}
 	case e.Code == msg.ErrCodeUnavailable && e.Items == msg.ErrItemUserID:
-		r.syncCtrl.ResetIDs()
+		go r.Logout(false, 1)
 	}
 
 	if r.mainDelegate != nil && requestID == 0 {

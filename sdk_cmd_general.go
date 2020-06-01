@@ -439,72 +439,75 @@ func (r *River) GetSyncStatus() int32 {
 
 // Logout drop queue & database , etc ...
 func (r *River) Logout(notifyServer bool, reason int) error {
-	logs.Info("Logout Called")
-	// unregister device if token exist
-	if notifyServer {
-		if r.DeviceToken != nil {
-			req := new(msg.AccountUnregisterDevice)
-			req.Token = r.DeviceToken.Token
-			req.TokenType = int32(r.DeviceToken.TokenType)
-			reqBytes, _ := req.Marshal()
+	_, err, _ := domain.SingleFlight.Do("Logout", func() (interface{}, error) {
+		logs.Info("Logout Called")
+		// unregister device if token exist
+		if notifyServer {
+			if r.DeviceToken != nil {
+				req := new(msg.AccountUnregisterDevice)
+				req.Token = r.DeviceToken.Token
+				req.TokenType = int32(r.DeviceToken.TokenType)
+				reqBytes, _ := req.Marshal()
+				r.queueCtrl.RealtimeCommand(
+					&msg.MessageEnvelope{
+						Constructor: msg.C_AccountUnregisterDevice,
+						RequestID:   uint64(domain.SequentialUniqueID()),
+						Message:     reqBytes,
+					},
+					nil, nil, true, false,
+				)
+			}
+			// send logout request to server
+			requestID := domain.SequentialUniqueID()
+			req := new(msg.AuthLogout)
+			buff, _ := req.Marshal()
 			r.queueCtrl.RealtimeCommand(
 				&msg.MessageEnvelope{
-					Constructor: msg.C_AccountUnregisterDevice,
-					RequestID:   uint64(domain.SequentialUniqueID()),
-					Message:     reqBytes,
+					Constructor: msg.C_AuthLogout,
+					RequestID:   uint64(requestID),
+					Message:     buff,
 				},
-				nil, nil, true, false,
-			)
+				nil, nil, true, false)
+			logs.Info("We sent a AuthLogout request to server")
 		}
-		// send logout request to server
-		requestID := domain.SequentialUniqueID()
-		req := new(msg.AuthLogout)
-		buff, _ := req.Marshal()
-		r.queueCtrl.RealtimeCommand(
-			&msg.MessageEnvelope{
-				Constructor: msg.C_AuthLogout,
-				RequestID:   uint64(requestID),
-				Message:     buff,
-			},
-			nil, nil, true, false)
-		logs.Info("We sent a AuthLogout request to server")
-	}
 
-	if r.mainDelegate != nil {
-		r.mainDelegate.OnSessionClosed(reason)
-		logs.Info("We called SessionClosed delegate")
-	}
+		if r.mainDelegate != nil {
+			r.mainDelegate.OnSessionClosed(reason)
+			logs.Info("We called SessionClosed delegate")
+		}
 
-	// Stop Controllers
-	r.networkCtrl.Stop()
-	r.syncCtrl.Stop()
-	r.queueCtrl.Stop()
-	r.fileCtrl.Stop()
-	logs.Info("We stopped all the controllers")
+		// Stop Controllers
+		r.networkCtrl.Stop()
+		r.syncCtrl.Stop()
+		r.queueCtrl.Stop()
+		r.fileCtrl.Stop()
+		logs.Info("We stopped all the controllers")
 
-	repo.DropAll()
-	logs.Info("We reset our database")
+		repo.DropAll()
+		logs.Info("We reset our database")
 
-	r.syncCtrl.ResetIDs()
-	r.ConnInfo.FirstName = ""
-	r.ConnInfo.LastName = ""
-	r.ConnInfo.Phone = ""
-	r.ConnInfo.UserID = 0
-	r.ConnInfo.Username = ""
-	r.ConnInfo.Bio = ""
-	r.ConnInfo.Save()
-	r.DeviceToken = new(msg.AccountRegisterDevice)
-	r.saveDeviceToken()
-	logs.Info("We reset our connection info")
+		r.syncCtrl.ResetIDs()
+		r.ConnInfo.FirstName = ""
+		r.ConnInfo.LastName = ""
+		r.ConnInfo.Phone = ""
+		r.ConnInfo.UserID = 0
+		r.ConnInfo.Username = ""
+		r.ConnInfo.Bio = ""
+		r.ConnInfo.Save()
+		r.DeviceToken = new(msg.AccountRegisterDevice)
+		r.saveDeviceToken()
+		logs.Info("We reset our connection info")
 
-	err := r.AppStart()
-	if err != nil {
-		return err
-	}
-	logs.Info("We started the app again")
+		err := r.AppStart()
+		if err != nil {
+			return nil, err
+		}
+		logs.Info("We started the app again")
 
-	r.networkCtrl.Connect()
-	logs.Info("We start connecting to server")
+		r.networkCtrl.Connect()
+		logs.Info("We start connecting to server")
+		return nil, err
+	})
 	return err
 }
 
