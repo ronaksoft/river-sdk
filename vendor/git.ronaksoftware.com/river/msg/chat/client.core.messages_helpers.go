@@ -513,6 +513,201 @@ func ResultClientGetLastBotKeyboard(out *MessageEnvelope, res *ClientGetLastBotK
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_ClientGetRecentSearch int64 = 2622949116
+
+type poolClientGetRecentSearch struct {
+	pool sync.Pool
+}
+
+func (p *poolClientGetRecentSearch) Get() *ClientGetRecentSearch {
+	x, ok := p.pool.Get().(*ClientGetRecentSearch)
+	if !ok {
+		return &ClientGetRecentSearch{}
+	}
+	return x
+}
+
+func (p *poolClientGetRecentSearch) Put(x *ClientGetRecentSearch) {
+	p.pool.Put(x)
+}
+
+var PoolClientGetRecentSearch = poolClientGetRecentSearch{}
+
+func ResultClientGetRecentSearch(out *MessageEnvelope, res *ClientGetRecentSearch) {
+	out.Constructor = C_ClientGetRecentSearch
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_ClientPutRecentSearch int64 = 629582533
+
+type poolClientPutRecentSearch struct {
+	pool sync.Pool
+}
+
+func (p *poolClientPutRecentSearch) Get() *ClientPutRecentSearch {
+	x, ok := p.pool.Get().(*ClientPutRecentSearch)
+	if !ok {
+		return &ClientPutRecentSearch{}
+	}
+	return x
+}
+
+func (p *poolClientPutRecentSearch) Put(x *ClientPutRecentSearch) {
+	p.pool.Put(x)
+}
+
+var PoolClientPutRecentSearch = poolClientPutRecentSearch{}
+
+func ResultClientPutRecentSearch(out *MessageEnvelope, res *ClientPutRecentSearch) {
+	out.Constructor = C_ClientPutRecentSearch
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_ClientRemoveRecentSearch int64 = 1281490259
+
+type poolClientRemoveRecentSearch struct {
+	pool sync.Pool
+}
+
+func (p *poolClientRemoveRecentSearch) Get() *ClientRemoveRecentSearch {
+	x, ok := p.pool.Get().(*ClientRemoveRecentSearch)
+	if !ok {
+		return &ClientRemoveRecentSearch{}
+	}
+	return x
+}
+
+func (p *poolClientRemoveRecentSearch) Put(x *ClientRemoveRecentSearch) {
+	p.pool.Put(x)
+}
+
+var PoolClientRemoveRecentSearch = poolClientRemoveRecentSearch{}
+
+func ResultClientRemoveRecentSearch(out *MessageEnvelope, res *ClientRemoveRecentSearch) {
+	out.Constructor = C_ClientRemoveRecentSearch
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_ClientRemoveAllRecentSearches int64 = 3599155822
+
+type poolClientRemoveAllRecentSearches struct {
+	pool sync.Pool
+}
+
+func (p *poolClientRemoveAllRecentSearches) Get() *ClientRemoveAllRecentSearches {
+	x, ok := p.pool.Get().(*ClientRemoveAllRecentSearches)
+	if !ok {
+		return &ClientRemoveAllRecentSearches{}
+	}
+	return x
+}
+
+func (p *poolClientRemoveAllRecentSearches) Put(x *ClientRemoveAllRecentSearches) {
+	p.pool.Put(x)
+}
+
+var PoolClientRemoveAllRecentSearches = poolClientRemoveAllRecentSearches{}
+
+func ResultClientRemoveAllRecentSearches(out *MessageEnvelope, res *ClientRemoveAllRecentSearches) {
+	out.Constructor = C_ClientRemoveAllRecentSearches
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_RecentSearch int64 = 2045409949
+
+type poolRecentSearch struct {
+	pool sync.Pool
+}
+
+func (p *poolRecentSearch) Get() *RecentSearch {
+	x, ok := p.pool.Get().(*RecentSearch)
+	if !ok {
+		return &RecentSearch{}
+	}
+	return x
+}
+
+func (p *poolRecentSearch) Put(x *RecentSearch) {
+	p.pool.Put(x)
+}
+
+var PoolRecentSearch = poolRecentSearch{}
+
+func ResultRecentSearch(out *MessageEnvelope, res *RecentSearch) {
+	out.Constructor = C_RecentSearch
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_RecentSearchMany int64 = 1217165147
+
+type poolRecentSearchMany struct {
+	pool sync.Pool
+}
+
+func (p *poolRecentSearchMany) Get() *RecentSearchMany {
+	x, ok := p.pool.Get().(*RecentSearchMany)
+	if !ok {
+		return &RecentSearchMany{}
+	}
+	x.RecentSearches = x.RecentSearches[:0]
+	x.Users = x.Users[:0]
+	x.Groups = x.Groups[:0]
+	return x
+}
+
+func (p *poolRecentSearchMany) Put(x *RecentSearchMany) {
+	p.pool.Put(x)
+}
+
+var PoolRecentSearchMany = poolRecentSearchMany{}
+
+func ResultRecentSearchMany(out *MessageEnvelope, res *RecentSearchMany) {
+	out.Constructor = C_RecentSearchMany
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 func init() {
 	ConstructorNames[1095038539] = "ClientSendMessageMedia"
 	ConstructorNames[1742781507] = "ClientGlobalSearch"
@@ -528,4 +723,10 @@ func init() {
 	ConstructorNames[1541024203] = "ClientMediaSize"
 	ConstructorNames[1354863379] = "ClientGetMediaHistory"
 	ConstructorNames[177544569] = "ClientGetLastBotKeyboard"
+	ConstructorNames[2622949116] = "ClientGetRecentSearch"
+	ConstructorNames[629582533] = "ClientPutRecentSearch"
+	ConstructorNames[1281490259] = "ClientRemoveRecentSearch"
+	ConstructorNames[3599155822] = "ClientRemoveAllRecentSearches"
+	ConstructorNames[2045409949] = "RecentSearch"
+	ConstructorNames[1217165147] = "RecentSearchMany"
 }

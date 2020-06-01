@@ -499,7 +499,7 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 
 	switch req.MediaType {
 	case msg.InputMediaTypeContact, msg.InputMediaTypeGeoLocation,
-		msg.InputMediaTypeDocument , msg.InputMediaTypeMessageDocument:
+		msg.InputMediaTypeDocument, msg.InputMediaTypeMessageDocument:
 		// This will be used as next requestID
 		req.RandomID = domain.SequentialUniqueID()
 
@@ -1484,5 +1484,107 @@ func (r *River) clientGetLastBotKeyboard(in, out *msg.MessageEnvelope, timeoutCB
 	out.Constructor = msg.C_UserMessage
 	out.RequestID = in.RequestID
 	out.Message, _ = lastKeyboardMsg.Marshal()
+	uiexec.ExecSuccessCB(successCB, out)
+}
+
+func (r *River) clientGetRecentSearch(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientGetRecentSearch{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	recentSearches := repo.RecentSearches.List(req.Limit)
+
+	// get users && group IDs
+	userIDs := domain.MInt64B{}
+	groupIDs := domain.MInt64B{}
+	for _, r := range recentSearches {
+		if r.Peer.Type == int32(msg.PeerSelf) || r.Peer.Type == int32(msg.PeerUser) {
+			userIDs[r.Peer.ID] = true
+		}
+		if r.Peer.Type == int32(msg.PeerGroup) {
+			groupIDs[r.Peer.ID] = true
+		}
+	}
+
+	users, _ := repo.Users.GetMany(userIDs.ToArray())
+	groups, _ := repo.Groups.GetMany(groupIDs.ToArray())
+
+	res := msg.RecentSearchMany{
+		RecentSearches: recentSearches,
+		Users:          users,
+		Groups:         groups,
+	}
+
+	out.Constructor = msg.C_RecentSearchMany
+	out.RequestID = in.RequestID
+	out.Message, _ = res.Marshal()
+	uiexec.ExecSuccessCB(successCB, out)
+}
+
+func (r *River) clientPutRecentSearch(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientPutRecentSearch{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	peer := &msg.Peer{
+		ID:         req.Peer.ID,
+		Type:       int32(req.Peer.Type),
+		AccessHash: req.Peer.AccessHash,
+	}
+
+	recentSearch := &msg.RecentSearch{
+		Peer: peer,
+		Date: int32(time.Now().Unix()),
+	}
+
+	err := repo.RecentSearches.Put(recentSearch)
+
+	if err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	res := msg.Bool{
+		Result: true,
+	}
+
+	out.Constructor = msg.C_Bool
+	out.RequestID = in.RequestID
+	out.Message, _ = res.Marshal()
+	uiexec.ExecSuccessCB(successCB, out)
+}
+
+func (r *River) clientRemoveAllRecentSearches(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientRemoveAllRecentSearches{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	logs.Warn("clientRemoveAllRecentSearches")
+
+	err := repo.RecentSearches.Clear()
+
+	if err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	res := msg.Bool{
+		Result: true,
+	}
+
+	out.Constructor = msg.C_Bool
+	out.RequestID = in.RequestID
+	out.Message, _ = res.Marshal()
 	uiexec.ExecSuccessCB(successCB, out)
 }

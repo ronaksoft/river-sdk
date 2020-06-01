@@ -312,7 +312,7 @@ func (r *River) onGeneralError(requestID uint64, e *msg.Error) {
 		zap.String("Code", e.Code),
 		zap.String("Item", e.Items),
 	)
-	switch  {
+	switch {
 	case e.Code == msg.ErrCodeInvalid && e.Items == msg.ErrItemSalt:
 		if !salt.UpdateSalt() {
 			go func() {
@@ -326,7 +326,6 @@ func (r *River) onGeneralError(requestID uint64, e *msg.Error) {
 			logs.Warn("We got error on Logout", zap.Error(err))
 		}
 	}
-
 
 	if r.mainDelegate != nil && requestID == 0 {
 		buff, _ := e.Marshal()
@@ -614,44 +613,47 @@ func (r *River) uploadAccountPhoto(uploadRequest fileCtrl.UploadRequest) (succes
 
 func (r *River) registerCommandHandlers() {
 	r.localCommands = map[int64]domain.LocalMessageHandler{
-		msg.C_MessagesGetDialogs:       r.messagesGetDialogs,
-		msg.C_MessagesGetDialog:        r.messagesGetDialog,
-		msg.C_MessagesGetHistory:       r.messagesGetHistory,
-		msg.C_MessagesSend:             r.messagesSend,
-		msg.C_ContactsGet:              r.contactsGet,
-		msg.C_MessagesReadHistory:      r.messagesReadHistory,
-		msg.C_UsersGet:                 r.usersGet,
-		msg.C_MessagesGet:              r.messagesGet,
-		msg.C_AccountUpdateUsername:    r.accountUpdateUsername,
-		msg.C_AccountUpdateProfile:     r.accountUpdateProfile,
-		msg.C_AccountRegisterDevice:    r.accountRegisterDevice,
-		msg.C_AccountUnregisterDevice:  r.accountUnregisterDevice,
-		msg.C_AccountSetNotifySettings: r.accountSetNotifySettings,
-		msg.C_MessagesToggleDialogPin:  r.dialogTogglePin,
-		msg.C_GroupsEditTitle:          r.groupsEditTitle,
-		msg.C_MessagesClearHistory:     r.messagesClearHistory,
-		msg.C_MessagesDelete:           r.messagesDelete,
-		msg.C_GroupsAddUser:            r.groupAddUser,
-		msg.C_GroupsDeleteUser:         r.groupDeleteUser,
-		msg.C_GroupsGetFull:            r.groupsGetFull,
-		msg.C_GroupsUpdateAdmin:        r.groupUpdateAdmin,
-		msg.C_ContactsImport:           r.contactsImport,
-		msg.C_ContactsDelete:           r.contactsDelete,
-		msg.C_ContactsGetTopPeers:      r.contactsGetTopPeers,
-		msg.C_MessagesReadContents:     r.messagesReadContents,
-		msg.C_UsersGetFull:             r.usersGetFull,
-		msg.C_AccountRemovePhoto:       r.accountRemovePhoto,
-		msg.C_GroupsRemovePhoto:        r.groupRemovePhoto,
-		msg.C_MessagesSendMedia:        r.messagesSendMedia,
-		msg.C_ClientSendMessageMedia:   r.clientSendMessageMedia,
-		msg.C_MessagesSaveDraft:        r.messagesSaveDraft,
-		msg.C_MessagesClearDraft:       r.messagesClearDraft,
-		msg.C_LabelsListItems:          r.labelsListItems,
-		msg.C_ClientGlobalSearch:       r.clientGlobalSearch,
-		msg.C_ClientContactSearch:      r.clientContactSearch,
-		msg.C_ClientGetCachedMedia:     r.clientGetCachedMedia,
-		msg.C_ClientClearCachedMedia:   r.clientClearCachedMedia,
-		msg.C_ClientGetMediaHistory:    r.clientGetMediaHistory,
-		msg.C_ClientGetLastBotKeyboard: r.clientGetLastBotKeyboard,
+		msg.C_MessagesGetDialogs:            r.messagesGetDialogs,
+		msg.C_MessagesGetDialog:             r.messagesGetDialog,
+		msg.C_MessagesGetHistory:            r.messagesGetHistory,
+		msg.C_MessagesSend:                  r.messagesSend,
+		msg.C_ContactsGet:                   r.contactsGet,
+		msg.C_MessagesReadHistory:           r.messagesReadHistory,
+		msg.C_UsersGet:                      r.usersGet,
+		msg.C_MessagesGet:                   r.messagesGet,
+		msg.C_AccountUpdateUsername:         r.accountUpdateUsername,
+		msg.C_AccountUpdateProfile:          r.accountUpdateProfile,
+		msg.C_AccountRegisterDevice:         r.accountRegisterDevice,
+		msg.C_AccountUnregisterDevice:       r.accountUnregisterDevice,
+		msg.C_AccountSetNotifySettings:      r.accountSetNotifySettings,
+		msg.C_MessagesToggleDialogPin:       r.dialogTogglePin,
+		msg.C_GroupsEditTitle:               r.groupsEditTitle,
+		msg.C_MessagesClearHistory:          r.messagesClearHistory,
+		msg.C_MessagesDelete:                r.messagesDelete,
+		msg.C_GroupsAddUser:                 r.groupAddUser,
+		msg.C_GroupsDeleteUser:              r.groupDeleteUser,
+		msg.C_GroupsGetFull:                 r.groupsGetFull,
+		msg.C_GroupsUpdateAdmin:             r.groupUpdateAdmin,
+		msg.C_ContactsImport:                r.contactsImport,
+		msg.C_ContactsDelete:                r.contactsDelete,
+		msg.C_ContactsGetTopPeers:           r.contactsGetTopPeers,
+		msg.C_MessagesReadContents:          r.messagesReadContents,
+		msg.C_UsersGetFull:                  r.usersGetFull,
+		msg.C_AccountRemovePhoto:            r.accountRemovePhoto,
+		msg.C_GroupsRemovePhoto:             r.groupRemovePhoto,
+		msg.C_MessagesSendMedia:             r.messagesSendMedia,
+		msg.C_ClientSendMessageMedia:        r.clientSendMessageMedia,
+		msg.C_MessagesSaveDraft:             r.messagesSaveDraft,
+		msg.C_MessagesClearDraft:            r.messagesClearDraft,
+		msg.C_LabelsListItems:               r.labelsListItems,
+		msg.C_ClientGlobalSearch:            r.clientGlobalSearch,
+		msg.C_ClientContactSearch:           r.clientContactSearch,
+		msg.C_ClientGetCachedMedia:          r.clientGetCachedMedia,
+		msg.C_ClientClearCachedMedia:        r.clientClearCachedMedia,
+		msg.C_ClientGetMediaHistory:         r.clientGetMediaHistory,
+		msg.C_ClientGetLastBotKeyboard:      r.clientGetLastBotKeyboard,
+		msg.C_ClientGetRecentSearch:         r.clientGetRecentSearch,
+		msg.C_ClientPutRecentSearch:         r.clientPutRecentSearch,
+		msg.C_ClientRemoveAllRecentSearches: r.clientRemoveAllRecentSearches,
 	}
 }
