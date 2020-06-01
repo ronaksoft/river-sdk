@@ -126,7 +126,7 @@ func deleteAllUserPhotos(txn *badger.Txn, userID int64) error {
 	opts.Prefix = getUserPhotoGalleryPrefix(userID)
 	it := txn.NewIterator(opts)
 	for it.Rewind(); it.Valid(); it.Next() {
-		_ = txn.Delete(it.Item().Key())
+		_ = txn.Delete(it.Item().KeyCopy(nil))
 	}
 	it.Close()
 	return nil

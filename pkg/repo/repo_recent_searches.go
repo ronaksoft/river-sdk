@@ -72,6 +72,7 @@ func (r *repoRecentSearches) Clear() error {
 		opts.PrefetchValues = false
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
+			it.Item().Key()
 			err := txn.Delete(it.Item().KeyCopy(nil))
 			if err != nil {
 				return err
