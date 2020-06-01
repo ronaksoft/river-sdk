@@ -533,7 +533,7 @@ func (r *repoUsers) DeleteAllContacts() error {
 		opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixContacts))
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
-			_ = txn.Delete(it.Item().Key())
+			_ = txn.Delete(it.Item().KeyCopy(nil))
 		}
 		it.Close()
 		return nil
