@@ -75,7 +75,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	ctrl.handleMessageAction(x, u, res)
 
 	// update monitoring
-	if x.Message.SenderID == ctrl.GetUserID() {
+	if x.Message.SenderID == ctrl.GetUserID() && x.Message.PeerID != x.Message.SenderID {
 		if x.Message.FwdSenderID != 0 {
 			repo.TopPeers.Update(msg.TopPeerCategory_Forwards, x.Message.PeerID, x.Message.PeerType)
 		} else {
