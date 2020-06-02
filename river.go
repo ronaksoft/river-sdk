@@ -652,5 +652,6 @@ func (r *River) registerCommandHandlers() {
 		msg.C_ClientGetRecentSearch:         r.clientGetRecentSearch,
 		msg.C_ClientPutRecentSearch:         r.clientPutRecentSearch,
 		msg.C_ClientRemoveAllRecentSearches: r.clientRemoveAllRecentSearches,
+		msg.C_ClientRemoveRecentSearch:      r.clientRemoveRecentSearch,
 	}
 }

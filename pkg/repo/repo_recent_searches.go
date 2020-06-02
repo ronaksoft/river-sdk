@@ -65,6 +65,15 @@ func (r *repoRecentSearches) Put(recentSearch *msg.RecentSearch) error {
 	return err
 }
 
+func (r *repoRecentSearches) Delete(peer *msg.InputPeer) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
+		recentSearchKey := GetRecentSearchKey(peer.ID, int32(peer.Type))
+		err := txn.Delete(recentSearchKey)
+		return err
+	})
+	return err
+}
+
 func (r *repoRecentSearches) Clear() error {
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions

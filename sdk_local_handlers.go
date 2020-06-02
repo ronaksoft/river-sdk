@@ -1569,9 +1569,33 @@ func (r *River) clientRemoveAllRecentSearches(in, out *msg.MessageEnvelope, time
 		return
 	}
 
-	logs.Warn("clientRemoveAllRecentSearches")
-
 	err := repo.RecentSearches.Clear()
+
+	if err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	res := msg.Bool{
+		Result: true,
+	}
+
+	out.Constructor = msg.C_Bool
+	out.RequestID = in.RequestID
+	out.Message, _ = res.Marshal()
+	uiexec.ExecSuccessCB(successCB, out)
+}
+
+func (r *River) clientRemoveRecentSearch(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientRemoveRecentSearch{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	err := repo.RecentSearches.Delete(req.Peer)
 
 	if err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
