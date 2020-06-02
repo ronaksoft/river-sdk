@@ -88,7 +88,6 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 
 	// Load Pending messages
 	res.Messages = append(res.Messages, pendingMessages...)
-
 	for _, m := range res.Messages {
 		switch msg.PeerType(m.PeerType) {
 		case msg.PeerUser:
@@ -604,6 +603,10 @@ func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 	out.Constructor = msg.C_ContactsMany
 	out.Message, _ = res.Marshal()
 
+	logs.Info("We returned data locally, ContactsGet",
+		zap.Int("Users", len(res.Users)),
+		zap.Int("Contacts", len(res.Contacts)),
+	)
 	uiexec.ExecSuccessCB(successCB, out)
 }
 
@@ -628,7 +631,7 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	}
 	// calculate ContactsImportHash and compare with oldHash
 	newHash := domain.CalculateContactsImportHash(req)
-	logs.Info("ContactsImport",
+	logs.Info("We returned data locally, ContactsImport",
 		zap.Uint64("Old", oldHash),
 		zap.Uint64("New", newHash),
 	)
@@ -745,6 +748,25 @@ func (r *River) contactsGetTopPeers(in, out *msg.MessageEnvelope, timeoutCB doma
 	logs.ErrorOnErr("River got error on marshal ContactsTopPeers", err)
 	out.Message = buff
 	uiexec.ExecSuccessCB(successCB, out)
+}
+
+func (r *River) contactsResetTopPeer(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ContactsResetTopPeer{}
+	err := req.Unmarshal(in.Message)
+	if err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	err = repo.TopPeers.Delete(req.Category, req.Peer.ID, int32(req.Peer.Type))
+	if err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) accountUpdateUsername(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {

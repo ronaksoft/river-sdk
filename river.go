@@ -321,7 +321,7 @@ func (r *River) onGeneralError(requestID uint64, e *msg.Error) {
 			}()
 		}
 	case e.Code == msg.ErrCodeUnavailable && e.Items == msg.ErrItemUserID:
-		go r.Logout(false, 1)
+		// We don't do anything just log, but client must call logout
 	}
 
 	if r.mainDelegate != nil && requestID == 0 {
@@ -634,6 +634,7 @@ func (r *River) registerCommandHandlers() {
 		msg.C_ContactsImport:                r.contactsImport,
 		msg.C_ContactsDelete:                r.contactsDelete,
 		msg.C_ContactsGetTopPeers:           r.contactsGetTopPeers,
+		msg.C_ContactsResetTopPeer:          r.contactsResetTopPeer,
 		msg.C_MessagesReadContents:          r.messagesReadContents,
 		msg.C_UsersGetFull:                  r.usersGetFull,
 		msg.C_AccountRemovePhoto:            r.accountRemovePhoto,

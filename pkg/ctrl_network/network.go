@@ -97,9 +97,9 @@ func New(config Config) *Controller {
 	ctrl.stopChannel = make(chan bool, 1)
 	ctrl.connectChannel = make(chan bool)
 
-	ctrl.updateFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.updateFlushFunc)
-	ctrl.messageFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.messageFlushFunc)
-	ctrl.sendFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.sendFlushFunc)
+	ctrl.updateFlusher = ronak.NewFlusher(1000, 1, time.Millisecond, ctrl.updateFlushFunc)
+	ctrl.messageFlusher = ronak.NewFlusher(1000, 1, time.Millisecond, ctrl.messageFlushFunc)
+	ctrl.sendFlusher = ronak.NewFlusher(1000, 1, time.Millisecond, ctrl.sendFlushFunc)
 
 	ctrl.unauthorizedRequests = map[int64]bool{
 		msg.C_SystemGetServerTime: true,
@@ -148,58 +148,62 @@ func (ctrl *Controller) createDialer(timeout time.Duration) {
 	}
 }
 func (ctrl *Controller) updateFlushFunc(entries []ronak.FlusherEntry) {
-	if ctrl.OnUpdate != nil {
-		updateContainer := new(msg.UpdateContainer)
-		sort.Slice(entries, func(i, j int) bool {
-			return entries[i].Value.(*msg.UpdateContainer).MinUpdateID < entries[j].Value.(*msg.UpdateContainer).MinUpdateID
+	if ctrl.OnUpdate == nil {
+		return
+	}
+
+	updateContainer := new(msg.UpdateContainer)
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Value.(*msg.UpdateContainer).MinUpdateID < entries[j].Value.(*msg.UpdateContainer).MinUpdateID
+	})
+	users := make(map[int64]*msg.User)
+	groups := make(map[int64]*msg.Group)
+	for idx := range entries {
+		uc := entries[idx].Value.(*msg.UpdateContainer)
+		sort.Slice(uc.Updates, func(i, j int) bool {
+			return uc.Updates[i].UpdateID < uc.Updates[j].UpdateID
 		})
-		users := make(map[int64]*msg.User)
-		groups := make(map[int64]*msg.Group)
-		for idx := range entries {
-			uc := entries[idx].Value.(*msg.UpdateContainer)
-			sort.Slice(uc.Updates, func(i, j int) bool {
-				return uc.Updates[i].UpdateID < uc.Updates[j].UpdateID
-			})
 
-			if uc.MinUpdateID != 0 && (updateContainer.MinUpdateID == 0 || uc.MinUpdateID < updateContainer.MinUpdateID) {
-				updateContainer.MinUpdateID = uc.MinUpdateID
-			}
-			if uc.MaxUpdateID > updateContainer.MaxUpdateID {
-				updateContainer.MaxUpdateID = uc.MaxUpdateID
-			}
-			for _, u := range uc.Updates {
-				updateContainer.Updates = append(updateContainer.Updates, u)
-			}
-			for _, u := range uc.Users {
-				users[u.ID] = u
-			}
-			for _, g := range uc.Groups {
-				groups[g.ID] = g
-			}
-
-			for _, g := range groups {
-				updateContainer.Groups = append(updateContainer.Groups, g)
-			}
-			for _, u := range users {
-				updateContainer.Users = append(updateContainer.Users, u)
-			}
+		if uc.MinUpdateID != 0 && (updateContainer.MinUpdateID == 0 || uc.MinUpdateID < updateContainer.MinUpdateID) {
+			updateContainer.MinUpdateID = uc.MinUpdateID
+		}
+		if uc.MaxUpdateID > updateContainer.MaxUpdateID {
+			updateContainer.MaxUpdateID = uc.MaxUpdateID
+		}
+		for _, u := range uc.Updates {
+			updateContainer.Updates = append(updateContainer.Updates, u)
+		}
+		for _, u := range uc.Users {
+			users[u.ID] = u
+		}
+		for _, g := range uc.Groups {
+			groups[g.ID] = g
 		}
 
-		// Call the update handler in blocking mode
-		ctrl.OnUpdate(updateContainer)
+		for _, g := range groups {
+			updateContainer.Groups = append(updateContainer.Groups, g)
+		}
+		for _, u := range users {
+			updateContainer.Users = append(updateContainer.Users, u)
+		}
 	}
+
+	// Call the update handler in blocking mode
+	ctrl.OnUpdate(updateContainer)
 }
 func (ctrl *Controller) messageFlushFunc(entries []ronak.FlusherEntry) {
-	if ctrl.OnMessage != nil {
-		itemsCount := len(entries)
-		messages := make([]*msg.MessageEnvelope, 0, itemsCount)
-		for idx := range entries {
-			messages = append(messages, entries[idx].Value.(*msg.MessageEnvelope))
-		}
-
-		// Call the message handler in blocking mode
-		ctrl.OnMessage(messages)
+	if ctrl.OnMessage == nil {
+		return
 	}
+
+	itemsCount := len(entries)
+	messages := make([]*msg.MessageEnvelope, 0, itemsCount)
+	for idx := range entries {
+		messages = append(messages, entries[idx].Value.(*msg.MessageEnvelope))
+	}
+
+	// Call the message handler in blocking mode
+	ctrl.OnMessage(messages)
 }
 func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
 	itemsCount := len(entries)
@@ -383,7 +387,7 @@ func (ctrl *Controller) receiver() {
 						zap.String("C", msg.ConstructorNames[receivedEnvelope.Constructor]),
 						zap.Uint64("ReqID", receivedEnvelope.RequestID),
 					)
-					ctrl.messageHandler(receivedEnvelope)
+					messageHandler(ctrl, receivedEnvelope)
 					continue
 				}
 
@@ -409,27 +413,22 @@ func (ctrl *Controller) receiver() {
 					zap.Uint64("ReqID", receivedEncryptedPayload.Envelope.RequestID),
 				)
 				// TODO:: check message id and server salt before handling the message
-				ctrl.messageHandler(receivedEncryptedPayload.Envelope)
+				messageHandler(ctrl, receivedEncryptedPayload.Envelope)
 			}
 		}
 	}
 }
-
-// updateNetworkStatus
-// The average ping times will be calculated and this function will be called if
-// quality of service changed.
-func (ctrl *Controller) updateNetworkStatus(newStatus domain.NetworkStatus) {
-	if ctrl.wsQuality == newStatus {
-		return
+func messageHandler(ctrl *Controller, message *msg.MessageEnvelope) {
+	// extract all updates/ messages
+	messages, updates := extractMessages(ctrl, message)
+	for idx := range messages {
+		ctrl.messageFlusher.Enter(nil, messages[idx])
 	}
-	ctrl.wsQuality = newStatus
-	if ctrl.OnNetworkStatusChange != nil {
-		ctrl.OnNetworkStatusChange(newStatus)
+	for idx := range updates {
+		ctrl.updateFlusher.Enter(nil, updates[idx])
 	}
 }
-
-// extractMessages recursively extract update and messages
-func (ctrl *Controller) extractMessages(m *msg.MessageEnvelope) ([]*msg.MessageEnvelope, []*msg.UpdateContainer) {
+func extractMessages(ctrl *Controller, m *msg.MessageEnvelope) ([]*msg.MessageEnvelope, []*msg.UpdateContainer) {
 	messages := make([]*msg.MessageEnvelope, 0)
 	updates := make([]*msg.UpdateContainer, 0)
 	switch m.Constructor {
@@ -438,7 +437,7 @@ func (ctrl *Controller) extractMessages(m *msg.MessageEnvelope) ([]*msg.MessageE
 		err := x.Unmarshal(m.Message)
 		if err == nil {
 			for _, env := range x.Envelopes {
-				msgs, upds := ctrl.extractMessages(env)
+				msgs, upds := extractMessages(ctrl, env)
 				messages = append(messages, msgs...)
 				updates = append(updates, upds...)
 			}
@@ -469,16 +468,16 @@ func (ctrl *Controller) extractMessages(m *msg.MessageEnvelope) ([]*msg.MessageE
 	return messages, updates
 }
 
-// messageHandler
-// MessageEnvelopes will be extracted and separates updates and messages.
-func (ctrl *Controller) messageHandler(message *msg.MessageEnvelope) {
-	// extract all updates/ messages
-	messages, updates := ctrl.extractMessages(message)
-	for idx := range messages {
-		ctrl.messageFlusher.Enter(nil, messages[idx])
+// updateNetworkStatus
+// The average ping times will be calculated and this function will be called if
+// quality of service changed.
+func (ctrl *Controller) updateNetworkStatus(newStatus domain.NetworkStatus) {
+	if ctrl.wsQuality == newStatus {
+		return
 	}
-	for idx := range updates {
-		ctrl.updateFlusher.Enter(nil, updates[idx])
+	ctrl.wsQuality = newStatus
+	if ctrl.OnNetworkStatusChange != nil {
+		ctrl.OnNetworkStatusChange(newStatus)
 	}
 }
 

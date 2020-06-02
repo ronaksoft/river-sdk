@@ -66,6 +66,16 @@ func getTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, peerID int64, peerType
 	return tp, err
 }
 
+func deleteTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, peerID int64, peerType int32) error {
+	err := txn.Delete(getTopPeerKey(cat, peerID, peerType))
+	switch err {
+	case nil, badger.ErrKeyNotFound:
+		return nil
+	default:
+		return err
+	}
+}
+
 func (r *repoTopPeers) updateIndex(cat msg.TopPeerCategory, peerID int64, peerType int32, rate float32) error {
 	return r.bunt.Update(func(tx *buntdb.Tx) error {
 		_, _, err := tx.Set(
@@ -90,6 +100,12 @@ func (r *repoTopPeers) Save(cat msg.TopPeerCategory, tps ...*msg.TopPeer) error 
 			}
 		}
 		return nil
+	})
+}
+
+func (r *repoTopPeers) Delete(cat msg.TopPeerCategory, peerID int64, peerType int32) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		return deleteTopPeer(txn, cat, peerID, peerType)
 	})
 }
 

@@ -441,6 +441,7 @@ func (r *River) GetSyncStatus() int32 {
 func (r *River) Logout(notifyServer bool, reason int) error {
 	_, err, _ := domain.SingleFlight.Do("Logout", func() (interface{}, error) {
 		logs.Info("Logout Called")
+
 		// unregister device if token exist
 		if notifyServer {
 			if r.DeviceToken != nil {
