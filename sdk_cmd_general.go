@@ -477,9 +477,10 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 			logs.Info("We called SessionClosed delegate")
 		}
 
+
 		// Stop Controllers
-		r.networkCtrl.Stop()
 		r.syncCtrl.Stop()
+		r.networkCtrl.Stop()
 		r.queueCtrl.Stop()
 		r.fileCtrl.Stop()
 		logs.Info("We stopped all the controllers")
@@ -487,7 +488,7 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 		repo.DropAll()
 		logs.Info("We reset our database")
 
-		r.syncCtrl.ResetIDs()
+
 		r.ConnInfo.FirstName = ""
 		r.ConnInfo.LastName = ""
 		r.ConnInfo.Phone = ""
