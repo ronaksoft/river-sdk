@@ -496,8 +496,6 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 		r.ConnInfo.Username = ""
 		r.ConnInfo.Bio = ""
 		r.ConnInfo.Save()
-		r.DeviceToken = new(msg.AccountRegisterDevice)
-		r.saveDeviceToken()
 		logs.Info("We reset our connection info")
 
 		err := r.AppStart()
