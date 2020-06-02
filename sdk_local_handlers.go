@@ -54,7 +54,9 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	mMessages := domain.MInt64B{}
 	for _, dialog := range res.Dialogs {
 		if dialog.PeerType == int32(msg.PeerUser) {
-			mUsers[dialog.PeerID] = true
+			if dialog.PeerID != 0 {
+				mUsers[dialog.PeerID] = true
+			}
 		}
 		mMessages[dialog.TopMessageID] = true
 		keyID := fmt.Sprintf("%d.%d", dialog.PeerID, dialog.PeerType)
@@ -95,7 +97,9 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		case msg.PeerGroup:
 			mGroups[m.PeerID] = true
 		}
-		mUsers[m.SenderID] = true
+		if m.SenderID != 0 {
+			mUsers[m.SenderID] = true
+		}
 		if m.FwdSenderID != 0 {
 			mUsers[m.FwdSenderID] = true
 		}
