@@ -3,7 +3,10 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
+	"io/ioutil"
 	"mime"
+	"os"
+	"strings"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
@@ -208,10 +211,72 @@ var PrintMessage = &ishell.Cmd{
 	},
 }
 
+var LogoutLoop = &ishell.Cmd{
+	Name: "LogoutLoop",
+	Func: func(c *ishell.Context) {
+		phone := fnGetPhone(c)
+		for {
+			sendCode(c, phone)
+			login(c, phone)
+			time.Sleep(time.Second * 3)
+			logout()
+			time.Sleep(time.Second * 3)
+		}
+	},
+}
+
+func sendCode(c *ishell.Context, phone string) {
+	req := msg.AuthSendCode{
+		Phone: phone,
+	}
+	reqBytes, _ := req.Marshal()
+	reqDelegate := new(RequestDelegate)
+	if reqID, err := _SDK.ExecuteCommand(msg.C_AuthSendCode, reqBytes, reqDelegate); err != nil {
+		c.Println("Command Failed:", err)
+	} else {
+		reqDelegate.RequestID = reqID
+	}
+}
+
+func login(c *ishell.Context, phone string) {
+	req := msg.AuthLogin{}
+	phoneFile, err := os.Open("./_phone")
+	if err != nil {
+		return
+	} else {
+		b, _ := ioutil.ReadAll(phoneFile)
+		req.Phone = string(b)
+		if strings.HasPrefix(req.Phone, "2374") {
+			File, err := os.Open("./_phoneCodeHash")
+			if err != nil {
+				return
+			} else {
+				req.PhoneCode = req.Phone[len(req.Phone)-5:]
+				b, _ := ioutil.ReadAll(File)
+				req.PhoneCodeHash = string(b)
+			}
+		}
+	}
+	reqBytes, _ := req.Marshal()
+	reqDelegate := new(RequestDelegate)
+	os.Remove("./_phone")
+	os.Remove("./_phoneCodeHash")
+	if reqID, err := _SDK.ExecuteCommand(msg.C_AuthLogin, reqBytes, reqDelegate); err != nil {
+		c.Println("Command Failed:", err)
+	} else {
+		reqDelegate.RequestID = reqID
+	}
+}
+
+func logout() {
+	_SDK.Logout(true, 0)
+}
+
 func init() {
 	Debug.AddCmd(SendTyping)
 	Debug.AddCmd(ContactImportMany)
 	Debug.AddCmd(UpdateNewMessageHexString)
 	Debug.AddCmd(MimeToExt)
 	Debug.AddCmd(PrintMessage)
+	Debug.AddCmd(LogoutLoop)
 }
