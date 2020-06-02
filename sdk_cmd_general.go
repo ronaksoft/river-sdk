@@ -480,9 +480,9 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 
 		// Stop Controllers
 		r.syncCtrl.Stop()
-		r.networkCtrl.Stop()
 		r.queueCtrl.Stop()
 		r.fileCtrl.Stop()
+		r.networkCtrl.Stop()
 		logs.Info("We stopped all the controllers")
 
 		repo.DropAll()
