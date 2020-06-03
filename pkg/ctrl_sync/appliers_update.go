@@ -619,6 +619,17 @@ func (ctrl *Controller) updateLabelItemsAdded(u *msg.UpdateEnvelope) ([]*msg.Upd
 		if err != nil {
 			return nil, err
 		}
+		for _, labelID := range x.LabelIDs {
+			bar := repo.Labels.GetFilled(labelID)
+			for _, msgID := range x.MessageIDs {
+				if msgID > bar.MaxID {
+					repo.Labels.Fill(labelID, bar.MaxID, msgID)
+				} else if msgID < bar.MinID {
+					repo.Labels.Fill(labelID, msgID, bar.MinID)
+				}
+			}
+		}
+
 	}
 
 	err = repo.Labels.Save(x.Labels...)

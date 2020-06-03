@@ -184,8 +184,6 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 	case maxID == 0 && minID == 0:
 		fallthrough
 	case maxID != 0:
-		startTime := time.Now()
-		var stopWatch1, stopWatch2 time.Time
 		err := badgerView(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
 			opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
@@ -235,13 +233,12 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 			return nil
 		})
 		logs.WarnOnErr("RepoLabels got error on ListMessages", err)
-		logs.Info("RepoLabels got list", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID),
-			zap.Duration("SP1", stopWatch1.Sub(startTime)),
-			zap.Duration("SP2", stopWatch2.Sub(startTime)),
-		)
+		logs.Info("RepoLabels got list", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID))
 	case minID != 0:
-		startTime := time.Now()
-		var stopWatch1, stopWatch2, stopWatch3 time.Time
+		var (
+			startTime                          = time.Now()
+			stopWatch1, stopWatch2, stopWatch3 time.Time
+		)
 		_ = badgerView(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
 			opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
@@ -424,10 +421,10 @@ func (r *repoLabels) GetFilled(labelID int32) LabelBar {
 func (r *repoLabels) GetLowerFilled(labelID int32, maxID int64) (bool, LabelBar) {
 	b := r.GetFilled(labelID)
 	if b.MinID == 0 && b.MaxID == 0 {
-		return false, LabelBar{}
+		return false, b
 	}
 	if maxID > b.MaxID || maxID < b.MinID {
-		return false, LabelBar{}
+		return false, b
 	}
 	b.MaxID = maxID
 	return true, b
@@ -436,10 +433,10 @@ func (r *repoLabels) GetLowerFilled(labelID int32, maxID int64) (bool, LabelBar)
 func (r *repoLabels) GetUpperFilled(labelID int32, minID int64) (bool, LabelBar) {
 	b := r.GetFilled(labelID)
 	if b.MinID == 0 && b.MaxID == 0 {
-		return false, LabelBar{}
+		return false, b
 	}
 	if minID < b.MinID || minID > b.MaxID {
-		return false, LabelBar{}
+		return false, b
 	}
 	b.MinID = minID
 	return true, b
