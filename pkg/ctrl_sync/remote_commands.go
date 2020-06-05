@@ -1,7 +1,7 @@
 package syncCtrl
 
 import (
-	msg "git.ronaksoftware.com/river/msg/chat"
+	"git.ronaksoftware.com/river/msg/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"go.uber.org/zap"

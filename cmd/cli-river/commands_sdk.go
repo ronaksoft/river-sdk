@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	msg "git.ronaksoftware.com/river/msg/chat"
+	"git.ronaksoftware.com/river/msg/msg"
 	"git.ronaksoftware.com/ronak/riversdk"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"gopkg.in/abiosoft/ishell.v2"

@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	msg "git.ronaksoftware.com/river/msg/chat"
+	"git.ronaksoftware.com/river/msg/msg"
 )
 
 var (

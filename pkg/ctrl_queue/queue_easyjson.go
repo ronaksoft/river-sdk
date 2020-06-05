@@ -4,7 +4,7 @@ package queueCtrl
 
 import (
 	json "encoding/json"
-	ext "git.ronaksoftware.com/river/msg/chat"
+	msg "git.ronaksoftware.com/river/msg/msg"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
@@ -48,9 +48,9 @@ func easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(in *jlex
 				out.MessageEnvelope = nil
 			} else {
 				if out.MessageEnvelope == nil {
-					out.MessageEnvelope = new(ext.MessageEnvelope)
+					out.MessageEnvelope = new(msg.MessageEnvelope)
 				}
-				easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkMsgExt(in, out.MessageEnvelope)
+				easyjson5e1ce037DecodeGitRonaksoftwareComRiverMsgMsg(in, out.MessageEnvelope)
 			}
 		case "insert_time":
 			if data := in.Raw(); in.Ok() {
@@ -101,7 +101,7 @@ func easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(out *jwr
 		if in.MessageEnvelope == nil {
 			out.RawString("null")
 		} else {
-			easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkMsgExt(out, *in.MessageEnvelope)
+			easyjson5e1ce037EncodeGitRonaksoftwareComRiverMsgMsg(out, *in.MessageEnvelope)
 		}
 	}
 	{
@@ -140,7 +140,7 @@ func (v *request) UnmarshalJSON(data []byte) error {
 func (v *request) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(l, v)
 }
-func easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkMsgExt(in *jlexer.Lexer, out *ext.MessageEnvelope) {
+func easyjson5e1ce037DecodeGitRonaksoftwareComRiverMsgMsg(in *jlexer.Lexer, out *msg.MessageEnvelope) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -180,7 +180,7 @@ func easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkMsgExt(in *jlexer.Lex
 		in.Consumed()
 	}
 }
-func easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkMsgExt(out *jwriter.Writer, in ext.MessageEnvelope) {
+func easyjson5e1ce037EncodeGitRonaksoftwareComRiverMsgMsg(out *jwriter.Writer, in msg.MessageEnvelope) {
 	out.RawByte('{')
 	first := true
 	_ = first

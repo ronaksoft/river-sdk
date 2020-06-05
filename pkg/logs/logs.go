@@ -2,7 +2,7 @@ package logs
 
 import (
 	"fmt"
-	"git.ronaksoftware.com/river/msg/chat"
+	"git.ronaksoftware.com/river/msg/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

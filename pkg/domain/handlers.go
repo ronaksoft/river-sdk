@@ -1,7 +1,7 @@
 package domain
 
 import (
-	msg "git.ronaksoftware.com/river/msg/chat"
+	"git.ronaksoftware.com/river/msg/msg"
 )
 
 // DeferredRequestHandler late responses that they requestID has been terminated callback/delegate
