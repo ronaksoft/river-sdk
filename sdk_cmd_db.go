@@ -1,6 +1,7 @@
 package riversdk
 
 import (
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
@@ -29,4 +30,9 @@ func (r *River) GetPinnedDialogsCount() int32 {
 	}
 
 	return 0
+}
+
+func (r *River) ResetCalculatedImportHash() {
+	err := repo.System.SaveInt(domain.SkContactsImportHash, 0)
+	logs.ErrorOnErr("ResetCalculatedImportHash", err)
 }
