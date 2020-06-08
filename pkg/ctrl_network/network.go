@@ -366,6 +366,9 @@ func messageHandler(ctrl *Controller, message *msg.MessageEnvelope) {
 			return updates[i].MinUpdateID < updates[j].MinUpdateID
 		})
 		for _, updateContainer := range updates {
+			sort.Slice(updateContainer.Updates, func(i, j int) bool {
+				return updateContainer.Updates[i].UpdateID < updateContainer.Updates[j].UpdateID
+			})
 			ctrl.OnUpdate(updateContainer)
 		}
 	}
