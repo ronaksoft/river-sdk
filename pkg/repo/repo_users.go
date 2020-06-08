@@ -521,7 +521,8 @@ func (r *repoUsers) GetPhoneContacts(limit int) ([]*msg.PhoneContact, error) {
 func (r *repoUsers) DeleteContact(contactIDs ...int64) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		for _, contactID := range contactIDs {
-			_ = txn.Delete(getContactKey(contactID))
+			err := txn.Delete(getContactKey(contactID))
+			logs.ErrorOnErr("DeleteContact : error on delete contact",err,zap.Int64("ContactID",contactID))
 		}
 		return nil
 	})

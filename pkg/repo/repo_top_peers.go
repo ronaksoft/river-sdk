@@ -37,7 +37,7 @@ func getTopPeerKey(cat msg.TopPeerCategory, peerID int64, peerType int32) []byte
 	return domain.StrToByte(fmt.Sprintf("%s_%02d.%021d.%d", prefixTopPeers, cat, peerID, peerType))
 }
 
-func saveTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, tp *msg.TopPeer) error {
+func saveTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, tp *msg.TopPeer , userID int64) error {
 	if tp.Peer == nil {
 		logs.Warn("Could not save top peer, peer is nit", zap.Any("TP", tp))
 		return domain.ErrDoesNotExists
@@ -87,10 +87,13 @@ func (r *repoTopPeers) updateIndex(cat msg.TopPeerCategory, peerID int64, peerTy
 	})
 }
 
-func (r *repoTopPeers) Save(cat msg.TopPeerCategory, tps ...*msg.TopPeer) error {
+func (r *repoTopPeers) Save(cat msg.TopPeerCategory, userID int64 , tps ...*msg.TopPeer) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		for _, tp := range tps {
-			err := saveTopPeer(txn, cat, tp)
+			if tp.Peer != nil && tp.Peer.ID == userID {
+				 continue
+			}
+			err := saveTopPeer(txn, cat, tp, userID)
 			if err != nil {
 				return err
 			}
@@ -109,7 +112,10 @@ func (r *repoTopPeers) Delete(cat msg.TopPeerCategory, peerID int64, peerType in
 	})
 }
 
-func (r *repoTopPeers) Update(cat msg.TopPeerCategory, peerID int64, peerType int32) error {
+func (r *repoTopPeers) Update(cat msg.TopPeerCategory, peerID int64, peerType int32 , userID int64) error {
+	if peerID == userID {
+		return nil
+	}
 	return badgerUpdate(func(txn *badger.Txn) error {
 		accessTime := domain.Now().Unix()
 		tp, _ := getTopPeer(txn, cat, peerID, peerType)
@@ -144,7 +150,7 @@ func (r *repoTopPeers) Update(cat msg.TopPeerCategory, peerID int64, peerType in
 		}
 		tp.Rate += float32(math.Min(math.Exp(float64(float32(accessTime-tp.LastUpdate)/domain.SysConfig.TopPeerDecayRate)), float64(domain.SysConfig.TopPeerMaxStep)))
 		tp.LastUpdate = accessTime
-		err := saveTopPeer(txn, cat, tp)
+		err := saveTopPeer(txn, cat, tp,userID)
 		if err != nil {
 			return err
 		}
