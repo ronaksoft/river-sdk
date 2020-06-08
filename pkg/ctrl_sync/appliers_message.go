@@ -252,6 +252,7 @@ func (ctrl *Controller) systemConfig(e *msg.MessageEnvelope) {
 	}
 }
 
+// contactsTopPeers
 func (ctrl *Controller) contactsTopPeers(e *msg.MessageEnvelope) {
 	u := &msg.ContactsTopPeers{}
 	err := u.Unmarshal(e.Message)
@@ -270,6 +271,7 @@ func (ctrl *Controller) contactsTopPeers(e *msg.MessageEnvelope) {
 	}
 }
 
+// wallpapersMany
 func (ctrl *Controller) wallpapersMany(e *msg.MessageEnvelope) {
 	u := &msg.WallPapersMany{}
 	err := u.Unmarshal(e.Message)

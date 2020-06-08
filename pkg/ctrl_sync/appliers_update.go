@@ -22,7 +22,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applied UpdateNewMessage",
+	logs.Info("SyncCtrl applies UpdateNewMessage",
 		zap.Int64("MessageID", x.Message.ID),
 		zap.Int64("UpdateID", x.UpdateID),
 	)
@@ -77,18 +77,18 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	// update monitoring
 	if x.Message.SenderID == ctrl.GetUserID() && x.Message.PeerID != x.Message.SenderID {
 		if x.Message.FwdSenderID != 0 {
-			repo.TopPeers.Update(msg.TopPeerCategory_Forwards, x.Message.PeerID, x.Message.PeerType,ctrl.GetUserID())
+			repo.TopPeers.Update(msg.TopPeerCategory_Forwards, x.Message.PeerID, x.Message.PeerType, ctrl.GetUserID())
 		} else {
 			switch msg.PeerType(x.Message.PeerType) {
 			case msg.PeerUser:
 				p, _ := repo.Users.Get(x.Message.PeerID)
 				if p == nil || !p.IsBot {
-					repo.TopPeers.Update(msg.TopPeerCategory_Users, x.Message.PeerID, x.Message.PeerType , ctrl.GetUserID())
+					repo.TopPeers.Update(msg.TopPeerCategory_Users, x.Message.PeerID, x.Message.PeerType, ctrl.GetUserID())
 				} else {
-					repo.TopPeers.Update(msg.TopPeerCategory_BotsMessage, x.Message.PeerID, x.Message.PeerType , ctrl.GetUserID())
+					repo.TopPeers.Update(msg.TopPeerCategory_BotsMessage, x.Message.PeerID, x.Message.PeerType, ctrl.GetUserID())
 				}
 			case msg.PeerGroup:
-				repo.TopPeers.Update(msg.TopPeerCategory_Groups, x.Message.PeerID, x.Message.PeerType,ctrl.GetUserID())
+				repo.TopPeers.Update(msg.TopPeerCategory_Groups, x.Message.PeerID, x.Message.PeerType, ctrl.GetUserID())
 			}
 		}
 		switch x.Message.MediaType {
@@ -235,7 +235,7 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) ([]*msg.Up
 		)
 	}
 
-	logs.Info("SyncCtrl applied UpdateReadHistoryInbox",
+	logs.Info("SyncCtrl applies UpdateReadHistoryInbox",
 		zap.Int64("MaxID", x.MaxID),
 		zap.Int64("UpdateID", x.UpdateID),
 		zap.Int64("PeerID", x.Peer.ID),
@@ -261,7 +261,7 @@ func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) ([]*msg.U
 		)
 	}
 
-	logs.Info("SyncCtrl applied UpdateReadHistoryOutbox",
+	logs.Info("SyncCtrl applies UpdateReadHistoryOutbox",
 		zap.Int64("MaxID", x.MaxID),
 		zap.Int64("UpdateID", x.UpdateID),
 		zap.Int64("PeerID", x.Peer.ID),
@@ -279,8 +279,9 @@ func (ctrl *Controller) updateMessageEdited(u *msg.UpdateEnvelope) ([]*msg.Updat
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applied UpdateMessageEdited",
+	logs.Info("SyncCtrl applies UpdateMessageEdited",
 		zap.Int64("MessageID", x.Message.ID),
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	repo.Messages.Save(x.Message)
@@ -373,7 +374,9 @@ func (ctrl *Controller) updateNotifySettings(u *msg.UpdateEnvelope) ([]*msg.Upda
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateNotifySettings")
+	logs.Info("SyncCtrl applies UpdateNotifySettings",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
 
 	repo.Dialogs.UpdateNotifySetting(x.NotifyPeer.ID, x.NotifyPeer.Type, x.Settings)
 
@@ -388,7 +391,9 @@ func (ctrl *Controller) updateDialogPinned(u *msg.UpdateEnvelope) ([]*msg.Update
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateDialogPinned")
+	logs.Info("SyncCtrl applies UpdateDialogPinned",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
 
 	repo.Dialogs.UpdatePinned(x)
 	res := []*msg.UpdateEnvelope{u}
@@ -402,7 +407,9 @@ func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) ([]*msg.UpdateEnve
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateUsername")
+	logs.Info("SyncCtrl applies UpdateUsername",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
 
 	if x.UserID == ctrl.GetUserID() {
 		ctrl.connInfo.ChangeUserID(x.UserID)
@@ -430,7 +437,9 @@ func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) ([]*msg.Upd
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateMessagesDeleted")
+	logs.Info("SyncCtrl applies UpdateMessagesDeleted",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
 
 	repo.Messages.Delete(ctrl.GetUserID(), x.Peer.ID, x.Peer.Type, x.MessageIDs...)
 
@@ -458,7 +467,9 @@ func (ctrl *Controller) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) ([]*m
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateGroupParticipantAdmin")
+	logs.Info("SyncCtrl applies UpdateGroupParticipantAdmin",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
 
 	res := []*msg.UpdateEnvelope{u}
 	repo.Groups.UpdateMemberType(x.GroupID, x.UserID, x.IsAdmin)
@@ -474,6 +485,7 @@ func (ctrl *Controller) updateReadMessagesContents(u *msg.UpdateEnvelope) ([]*ms
 
 	logs.Info("SyncCtrl applies UpdateReadMessagesContents",
 		zap.Int64s("MessageIDs", x.MessageIDs),
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	repo.Messages.SetContentRead(x.Peer.ID, int32(x.Peer.Type), x.MessageIDs)
@@ -489,7 +501,9 @@ func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateUserPhoto")
+	logs.Info("SyncCtrl applies UpdateUserPhoto",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
 
 	if x.Photo != nil {
 		_ = repo.Users.UpdatePhoto(x.UserID, x.Photo)
@@ -513,6 +527,7 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 
 	logs.Info("SyncCtrl applies UpdateGroupPhoto",
 		zap.Int64("GroupID", x.GroupID),
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	if x.Photo != nil {
@@ -540,6 +555,7 @@ func (ctrl *Controller) updateGroupAdmins(u *msg.UpdateEnvelope) ([]*msg.UpdateE
 
 	logs.Info("SyncCtrl applies UpdateGroupAdmins",
 		zap.Int64("GroupID", x.GroupID),
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	res := []*msg.UpdateEnvelope{u}
@@ -553,7 +569,9 @@ func (ctrl *Controller) updateAccountPrivacy(u *msg.UpdateEnvelope) ([]*msg.Upda
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateAccountPrivacy")
+	logs.Info("SyncCtrl applies UpdateAccountPrivacy",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
 
 	_ = repo.Account.SetPrivacy(msg.PrivacyKeyChatInvite, x.ChatInvite)
 	_ = repo.Account.SetPrivacy(msg.PrivacyKeyLastSeen, x.LastSeen)
@@ -573,7 +591,9 @@ func (ctrl *Controller) updateDraftMessage(u *msg.UpdateEnvelope) ([]*msg.Update
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateDraftMessage")
+	logs.Info("SyncCtrl applies UpdateDraftMessage",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
 
 	dialog, _ := repo.Dialogs.Get(x.Message.PeerID, int32(x.Message.PeerType))
 	if dialog != nil {
@@ -592,7 +612,9 @@ func (ctrl *Controller) updateDraftMessageCleared(u *msg.UpdateEnvelope) ([]*msg
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateDraftMessageCleared")
+	logs.Info("SyncCtrl applies UpdateDraftMessageCleared",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
 
 	dialog, _ := repo.Dialogs.Get(x.Peer.ID, x.Peer.Type)
 
@@ -612,7 +634,9 @@ func (ctrl *Controller) updateLabelItemsAdded(u *msg.UpdateEnvelope) ([]*msg.Upd
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateLabelItemsAdded")
+	logs.Info("SyncCtrl applies UpdateLabelItemsAdded",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
 
 	if len(x.MessageIDs) != 0 {
 		err := repo.Labels.AddLabelsToMessages(x.LabelIDs, x.Peer.Type, x.Peer.ID, x.MessageIDs)
@@ -646,7 +670,9 @@ func (ctrl *Controller) updateLabelItemsRemoved(u *msg.UpdateEnvelope) ([]*msg.U
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateLabelItemsRemoved")
+	logs.Info("SyncCtrl applies UpdateLabelItemsRemoved",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
 
 	if len(x.MessageIDs) != 0 {
 		err := repo.Labels.RemoveLabelsFromMessages(x.LabelIDs, x.Peer.Type, x.Peer.ID, x.MessageIDs)
@@ -669,7 +695,9 @@ func (ctrl *Controller) updateLabelSet(u *msg.UpdateEnvelope) ([]*msg.UpdateEnve
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateLabelSet")
+	logs.Info("SyncCtrl applies UpdateLabelSet",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
 
 	err = repo.Labels.Save(x.Labels...)
 	if err != nil {
@@ -685,7 +713,9 @@ func (ctrl *Controller) updateLabelDeleted(u *msg.UpdateEnvelope) ([]*msg.Update
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateLabelDeleted")
+	logs.Info("SyncCtrl applies UpdateLabelDeleted",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
 
 	err = repo.Labels.Delete(x.LabelIDs...)
 	if err != nil {
@@ -701,7 +731,9 @@ func (ctrl *Controller) updateUserBlocked(u *msg.UpdateEnvelope) ([]*msg.UpdateE
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateUserBlocked")
+	logs.Info("SyncCtrl applies UpdateUserBlocked",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
 
 	err = repo.Users.UpdateBlocked(x.UserID, x.Blocked)
 	if err != nil {

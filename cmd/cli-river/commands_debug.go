@@ -240,7 +240,6 @@ var LogoutLoop = &ishell.Cmd{
 		}
 	},
 }
-
 func sendCode(c *ishell.Context, phone string) {
 	req := msg.AuthSendCode{
 		Phone: phone,
@@ -253,7 +252,6 @@ func sendCode(c *ishell.Context, phone string) {
 		reqDelegate.RequestID = reqID
 	}
 }
-
 func login(c *ishell.Context, phone string) {
 	req := msg.AuthLogin{}
 	phoneFile, err := os.Open("./_phone")
@@ -283,11 +281,9 @@ func login(c *ishell.Context, phone string) {
 		reqDelegate.RequestID = reqID
 	}
 }
-
 func logout() {
 	_SDK.Logout(true, 0)
 }
-
 func recall() {
 	req := msg.AuthRecall{}
 	reqBytes, _ := req.Marshal()
@@ -297,6 +293,30 @@ func recall() {
 	}
 }
 
+var SendMessage = &ishell.Cmd{
+	Name: "SendMessage",
+	Func: func(c *ishell.Context) {
+		for i := 0; i < 10; i++ {
+			req := msg.MessagesSend{}
+			req.ClearDraft = true
+			req.RandomID = domain.RandomInt63()
+			req.Peer = &msg.InputPeer{}
+			req.Peer.Type = msg.PeerUser
+			req.Peer.ID = _SDK.ConnInfo.UserID
+			req.Peer.AccessHash = 0
+			req.Body = fmt.Sprintf("Text: %s", domain.RandomID(32))
+			req.Entities = nil
+			reqBytes, _ := req.Marshal()
+			reqDelegate := NewCustomDelegate()
+			if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSend, reqBytes, reqDelegate); err != nil {
+				c.Println("Command Failed:", err)
+			} else {
+				reqDelegate.RequestID = reqID
+			}
+			time.Sleep(time.Second)
+		}
+	},
+}
 func init() {
 	Debug.AddCmd(SendTyping)
 	Debug.AddCmd(ContactImportMany)
@@ -304,4 +324,5 @@ func init() {
 	Debug.AddCmd(MimeToExt)
 	Debug.AddCmd(PrintMessage)
 	Debug.AddCmd(LogoutLoop)
+	Debug.AddCmd(SendMessage)
 }
