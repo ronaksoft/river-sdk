@@ -68,7 +68,7 @@ func ExecSuccessCB(handler domain.MessageHandler, out *msg.MessageEnvelope) {
 
 func ExecTimeoutCB(h domain.TimeoutCallback) {
 	if h != nil {
-		logs.Info("ExecTime")
+		logs.Info("ExecTimeout")
 		exec("timeoutCB", 0, func() {
 			h()
 		})

@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	"go.uber.org/zap/zapcore"
 	"io/ioutil"
 	"mime"
 	"os"
@@ -217,11 +219,16 @@ var LogoutLoop = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		phone := fnGetPhone(c)
 		for {
+			logs.SetLogLevel(int(zapcore.WarnLevel))
+			c.Println("Sending Code")
 			sendCode(c, phone)
+			c.Println("Sending Login")
 			login(c, phone)
 			time.Sleep(time.Second * 3)
+			c.Println("Sending Logout")
+			go recall()
 			wg := sync.WaitGroup{}
-			for i := 0 ; i < 3; i++ {
+			for i := 0; i < 3; i++ {
 				wg.Add(1)
 				go func() {
 					logout()
@@ -279,6 +286,15 @@ func login(c *ishell.Context, phone string) {
 
 func logout() {
 	_SDK.Logout(true, 0)
+}
+
+func recall() {
+	req := msg.AuthRecall{}
+	reqBytes, _ := req.Marshal()
+	reqDelegate := new(RequestDelegate)
+	if reqID, err := _SDK.ExecuteCommand(msg.C_AuthRecall, reqBytes, reqDelegate); err == nil {
+		reqDelegate.RequestID = reqID
+	}
 }
 
 func init() {

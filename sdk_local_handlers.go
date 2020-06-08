@@ -814,12 +814,11 @@ func (r *River) accountRegisterDevice(in, out *msg.MessageEnvelope, timeoutCB do
 func (r *River) accountUnregisterDevice(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.AccountUnregisterDevice)
 	if err := req.Unmarshal(in.Message); err != nil {
-		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		msg.ResultError(out, &msg.Error{Code: "E00", Items: err.Error()})
 		successCB(out)
 		return
 	}
 	r.DeviceToken = new(msg.AccountRegisterDevice)
-
 	val, err := json.Marshal(r.DeviceToken)
 	if err != nil {
 		logs.Error("River::accountUnregisterDevice()-> Json Marshal()", zap.Error(err))
@@ -830,6 +829,7 @@ func (r *River) accountUnregisterDevice(in, out *msg.MessageEnvelope, timeoutCB 
 		logs.Error("River::accountUnregisterDevice()-> SaveString()", zap.Error(err))
 		return
 	}
+
 	// send the request to server
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
