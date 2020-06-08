@@ -217,14 +217,16 @@ var PrintMessage = &ishell.Cmd{
 var LogoutLoop = &ishell.Cmd{
 	Name: "LogoutLoop",
 	Func: func(c *ishell.Context) {
+		logs.SetLogLevel(int(zapcore.WarnLevel))
 		phone := fnGetPhone(c)
 		for {
-			logs.SetLogLevel(int(zapcore.WarnLevel))
-			c.Println("Sending Code")
-			sendCode(c, phone)
-			c.Println("Sending Login")
-			login(c, phone)
-			time.Sleep(time.Second * 3)
+			if _SDK.ConnInfo.UserID == 0 {
+				c.Println("Sending Code")
+				sendCode(c, phone)
+				c.Println("Sending Login")
+				login(c, phone)
+				time.Sleep(time.Second * 3)
+			}
 			c.Println("Sending Logout")
 			go recall()
 			wg := sync.WaitGroup{}
@@ -236,6 +238,9 @@ var LogoutLoop = &ishell.Cmd{
 				}()
 			}
 			wg.Wait()
+			if _SDK.ConnInfo.UserID != 0 {
+				c.Println("WRONG!!!!!!!!!! We are not logout correctly")
+			}
 			time.Sleep(time.Second * 3)
 		}
 	},

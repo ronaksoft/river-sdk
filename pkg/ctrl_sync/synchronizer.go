@@ -135,7 +135,7 @@ func (ctrl *Controller) watchDog() {
 			now := time.Now()
 			// Check if we were not syncing in the last 3 minutes
 			if now.Sub(ctrl.lastUpdateReceived) > syncTime {
-				ctrl.Sync()
+				go ctrl.Sync()
 			}
 
 			// TODO:: complete this

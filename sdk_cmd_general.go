@@ -513,8 +513,7 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 
 // UpdateContactInfo update contact name
 func (r *River) UpdateContactInfo(userID int64, firstName, lastName string) error {
-	repo.Users.UpdateContactInfo(userID, firstName, lastName)
-	return nil
+	return repo.Users.UpdateContactInfo(userID, firstName, lastName)
 }
 
 // GetScrollStatus
