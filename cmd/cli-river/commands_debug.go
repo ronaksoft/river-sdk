@@ -7,6 +7,7 @@ import (
 	"mime"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
@@ -219,7 +220,15 @@ var LogoutLoop = &ishell.Cmd{
 			sendCode(c, phone)
 			login(c, phone)
 			time.Sleep(time.Second * 3)
-			logout()
+			wg := sync.WaitGroup{}
+			for i := 0 ; i < 3; i++ {
+				wg.Add(1)
+				go func() {
+					logout()
+					wg.Done()
+				}()
+			}
+			wg.Wait()
 			time.Sleep(time.Second * 3)
 		}
 	},

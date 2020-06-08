@@ -1,23 +1,21 @@
 package queueCtrl
 
 import (
-	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
-	"os"
-	"path/filepath"
-	"sync"
-	"time"
-
-	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
-
 	"git.ronaksoftware.com/river/msg/msg"
+	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
+	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/beeker1121/goque"
 	"github.com/juju/ratelimit"
 	"go.uber.org/zap"
+	"os"
+	"path/filepath"
+	"sync"
+	"time"
 )
 
 // easyjson:json
@@ -307,15 +305,7 @@ func (ctrl *Controller) Start(resetQueue bool) {
 	if resetQueue {
 		_ = os.RemoveAll(ctrl.dataDir)
 	}
-	err := ronak.Try(10, 100*time.Millisecond, func() error {
-		if q, err := goque.OpenQueue(ctrl.dataDir); err != nil {
-			_ = os.RemoveAll(ctrl.dataDir)
-			return err
-		} else {
-			ctrl.waitingList = q
-		}
-		return nil
-	})
+	err := ctrl.OpenQueue()
 	if err != nil {
 		logs.Fatal("We couldn't initialize the queue", zap.Error(err))
 	}
@@ -368,7 +358,6 @@ func (ctrl *Controller) Start(resetQueue bool) {
 // Stop queue
 func (ctrl *Controller) Stop() {
 	logs.Info("QueueCtrl stopped")
-	ctrl.waitingList.Close()
 	ctrl.DropQueue()
 
 }
@@ -393,11 +382,27 @@ func (ctrl *Controller) CancelRequest(reqID int64) {
 
 // DropQueue remove queue from storage
 func (ctrl *Controller) DropQueue() {
-	ctrl.waitingList.Drop()
+	err := ronak.Try(10, time.Millisecond * 100, func() error {
+		return ctrl.waitingList.Drop()
+	})
+	if err != nil {
+		logs.Warn("QueueCtrl got error on dropping queue")
+	}
 }
 
 // OpenQueue init queue files in storage
-func (ctrl *Controller) OpenQueue(dataDir string) (err error) {
-	ctrl.waitingList, err = goque.OpenQueue(dataDir)
+func (ctrl *Controller) OpenQueue() (err error) {
+	err = ronak.Try(10, 100*time.Millisecond, func() error {
+		if q, err := goque.OpenQueue(ctrl.dataDir); err != nil {
+			err = os.RemoveAll(ctrl.dataDir)
+			if err != nil {
+				logs.Warn("QueueCtrl we got error on removing queue directory", zap.Error(err))
+			}
+			return err
+		} else {
+			ctrl.waitingList = q
+		}
+		return nil
+	})
 	return
 }

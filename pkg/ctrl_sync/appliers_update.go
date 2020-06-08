@@ -594,7 +594,7 @@ func (ctrl *Controller) updateDraftMessageCleared(u *msg.UpdateEnvelope) ([]*msg
 
 	logs.Info("SyncCtrl applies UpdateDraftMessageCleared")
 
-	dialog, _ := repo.Dialogs.Get(x.Peer.ID, int32(x.Peer.Type))
+	dialog, _ := repo.Dialogs.Get(x.Peer.ID, x.Peer.Type)
 
 	if dialog != nil {
 		dialog.Draft = nil
