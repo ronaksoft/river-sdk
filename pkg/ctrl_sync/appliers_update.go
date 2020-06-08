@@ -77,18 +77,18 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	// update monitoring
 	if x.Message.SenderID == ctrl.GetUserID() && x.Message.PeerID != x.Message.SenderID {
 		if x.Message.FwdSenderID != 0 {
-			repo.TopPeers.Update(msg.TopPeerCategory_Forwards, x.Message.PeerID, x.Message.PeerType)
+			repo.TopPeers.Update(msg.TopPeerCategory_Forwards, x.Message.PeerID, x.Message.PeerType,ctrl.GetUserID())
 		} else {
 			switch msg.PeerType(x.Message.PeerType) {
 			case msg.PeerUser:
 				p, _ := repo.Users.Get(x.Message.PeerID)
 				if p == nil || !p.IsBot {
-					repo.TopPeers.Update(msg.TopPeerCategory_Users, x.Message.PeerID, x.Message.PeerType)
+					repo.TopPeers.Update(msg.TopPeerCategory_Users, x.Message.PeerID, x.Message.PeerType , ctrl.GetUserID())
 				} else {
-					repo.TopPeers.Update(msg.TopPeerCategory_BotsMessage, x.Message.PeerID, x.Message.PeerType)
+					repo.TopPeers.Update(msg.TopPeerCategory_BotsMessage, x.Message.PeerID, x.Message.PeerType , ctrl.GetUserID())
 				}
 			case msg.PeerGroup:
-				repo.TopPeers.Update(msg.TopPeerCategory_Groups, x.Message.PeerID, x.Message.PeerType)
+				repo.TopPeers.Update(msg.TopPeerCategory_Groups, x.Message.PeerID, x.Message.PeerType,ctrl.GetUserID())
 			}
 		}
 		switch x.Message.MediaType {
