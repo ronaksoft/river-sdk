@@ -640,11 +640,12 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 		zap.Uint64("New", newHash),
 	)
 	if newHash == oldHash {
-		res := &msg.Error{
-			Code:  msg.ErrCodeTooFew,
-			Items: msg.ErrItemUsers,
+		res := &msg.ContactsImported{
+			ContactUsers: nil,
+			Users:        nil,
+			Empty:        true,
 		}
-		msg.ResultError(out, res)
+		msg.ResultContactsImported(out, res)
 		successCB(out)
 		return
 	}
