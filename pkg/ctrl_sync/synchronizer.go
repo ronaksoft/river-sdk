@@ -579,9 +579,6 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 					switch {
 					case x.Code == msg.ErrCodeRateLimit:
 						maxTry = 0
-					case x.Code == msg.ErrCodeTooFew:
-						_ = repo.Users.DeletePhoneContact(phoneContacts...)
-						maxTry = 0
 					default:
 						logs.Warn("SyncCtrl got error response from server, will retry",
 							zap.String("Code", x.Code), zap.String("Item", x.Items),
