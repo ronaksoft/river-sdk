@@ -697,7 +697,7 @@ func (r *River) contactsDeleteAll(in, out *msg.MessageEnvelope, timeoutCB domain
 
 	_ = repo.Users.DeleteAllContacts()
 	_ = repo.System.SaveInt(domain.SkContactsGetHash, 0)
-	_ := repo.System.SaveInt(domain.SkContactsImportHash, 0)
+	_ = repo.System.SaveInt(domain.SkContactsImportHash, 0)
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 	return
 }
