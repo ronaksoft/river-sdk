@@ -83,6 +83,11 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 		zap.Int("Contacts", len(x.Contacts)),
 	)
 
+	// If contacts are modified in server, then first clear all the contacts and rewrite the new ones
+	if x.Modified == true {
+		_ = repo.Users.DeleteAllContacts()
+	}
+
 	// Sort the contact users by their ids
 	sort.Slice(x.ContactUsers, func(i, j int) bool { return x.ContactUsers[i].ID < x.ContactUsers[j].ID })
 
