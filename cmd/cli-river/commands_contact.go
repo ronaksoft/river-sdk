@@ -103,10 +103,26 @@ var ContactGetTopPeers = &ishell.Cmd{
 		}
 	},
 }
+
+var ContactDeleteAll = &ishell.Cmd{
+	Name: "DeleteAll",
+	Func: func(c *ishell.Context) {
+		req := msg.ContactsDeleteAll{}
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsDeleteAll, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
 func init() {
 	Contact.AddCmd(ContactImport)
 	Contact.AddCmd(ContactGet)
 	Contact.AddCmd(ContactTestImport)
 	Contact.AddCmd(ContactAdd)
 	Contact.AddCmd(ContactGetTopPeers)
+	Contact.AddCmd(ContactDeleteAll)
 }

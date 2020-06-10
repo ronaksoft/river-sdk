@@ -244,7 +244,7 @@ func (r *River) Version() string {
 func (r *River) onNetworkConnect() (err error) {
 	domain.WindowLog(fmt.Sprintf("Connected: %s", domain.StartTime.Format(time.Kitchen)))
 	var serverUpdateID int64
-	waitGroup := sync.WaitGroup{}
+	waitGroup := &sync.WaitGroup{}
 	// If we have no salt then we must call GetServerTime and GetServerSalt sequentially, otherwise
 	// We call them in parallel
 	err = r.syncCtrl.GetServerTime()
@@ -297,7 +297,9 @@ func (r *River) onNetworkConnect() (err error) {
 			}
 
 			// Get contacts and imports remaining contacts
-			r.syncCtrl.ContactsGet()
+			waitGroup.Add(1)
+			r.syncCtrl.GetContacts(waitGroup)
+			waitGroup.Wait()
 			domain.WindowLog(fmt.Sprintf("ContactsGet: %s", time.Now().Sub(domain.StartTime)))
 			r.syncCtrl.ContactsImport(true, nil, nil)
 			domain.WindowLog(fmt.Sprintf("ContactsImported: %s", time.Now().Sub(domain.StartTime)))
@@ -633,6 +635,7 @@ func (r *River) registerCommandHandlers() {
 		msg.C_GroupsUpdateAdmin:             r.groupUpdateAdmin,
 		msg.C_ContactsImport:                r.contactsImport,
 		msg.C_ContactsDelete:                r.contactsDelete,
+		msg.C_ContactsDeleteAll:             r.contactsDeleteAll,
 		msg.C_ContactsGetTopPeers:           r.contactsGetTopPeers,
 		msg.C_ContactsResetTopPeer:          r.contactsResetTopPeer,
 		msg.C_MessagesReadContents:          r.messagesReadContents,

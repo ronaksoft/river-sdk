@@ -498,24 +498,6 @@ func (ctrl *Controller) ResetIDs() {
 	ctrl.SetUserID(0)
 }
 
-// ContactsGet import contact from server
-func (ctrl *Controller) ContactsGet() {
-	contactsGetHash, _ := repo.System.LoadInt(domain.SkContactsGetHash)
-	contactGetReq := &msg.ContactsGet{
-		Crc32Hash: uint32(contactsGetHash),
-	}
-	contactGetBytes, _ := contactGetReq.Marshal()
-	ctrl.queueCtrl.RealtimeCommand(
-		&msg.MessageEnvelope{
-			Constructor: msg.C_ContactsGet,
-			RequestID:   uint64(domain.SequentialUniqueID()),
-			Message:     contactGetBytes,
-		},
-		nil, nil, false, false,
-	)
-	logs.Debug("SyncCtrl call ContactsGet", zap.Uint32("Hash", contactGetReq.Crc32Hash))
-}
-
 // ContactsImport
 func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHandler, out *msg.MessageEnvelope) {
 	var (

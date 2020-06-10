@@ -4,6 +4,7 @@ import (
 	"git.ronaksoftware.com/river/msg/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
 	"sync"
 	"time"
@@ -296,7 +297,10 @@ func (ctrl *Controller) GetAllTopPeers(waitGroup *sync.WaitGroup, cat msg.TopPee
 
 func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup) {
 	logs.Debug("SyncCtrl calls GetContacts")
-	req := &msg.ContactsGet{}
+	contactsGetHash, _ := repo.System.LoadInt(domain.SkContactsGetHash)
+	req := &msg.ContactsGet{
+		Crc32Hash: uint32(contactsGetHash),
+	}
 	reqBytes, _ := req.Marshal()
 	ctrl.queueCtrl.EnqueueCommand(
 		&msg.MessageEnvelope{

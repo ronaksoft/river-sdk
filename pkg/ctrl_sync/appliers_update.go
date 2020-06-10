@@ -5,6 +5,7 @@ import (
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"os"
+	"sync"
 	"time"
 
 	"git.ronaksoftware.com/river/msg/msg"
@@ -113,7 +114,12 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.UpdateEnvelope, res []*msg.UpdateEnvelope) {
 	switch x.Message.MessageAction {
 	case domain.MessageActionContactRegistered:
-		go ctrl.ContactsGet()
+		go func() {
+			waitGroup := &sync.WaitGroup{}
+			waitGroup.Add(1)
+			ctrl.GetContacts(waitGroup)
+			waitGroup.Wait()
+		}()
 	case domain.MessageActionGroupDeleteUser:
 		act := new(msg.MessageActionGroupDeleteUser)
 		err := act.Unmarshal(x.Message.MessageActionData)

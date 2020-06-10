@@ -687,6 +687,20 @@ func (r *River) contactsDelete(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	return
 }
 
+func (r *River) contactsDeleteAll(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ContactsDeleteAll{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	_ = repo.Users.DeleteAllContacts()
+	_ = repo.System.SaveInt(domain.SkContactsGetHash, 0)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	return
+}
+
 func (r *River) contactsGetTopPeers(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := &msg.ContactsGetTopPeers{}
 	if err := req.Unmarshal(in.Message); err != nil {
