@@ -23,22 +23,10 @@ func TestGif(t *testing.T) {
 			for i := 0; i < 10; i++ {
 				clusterID := int32(domain.RandomInt64(100))
 				docID := domain.RandomInt64(0)
-				md := &msg.MediaDocument{
-					Caption:      "Some Caption",
-					TTLinSeconds: 0,
-					Doc:          &msg.Document{
-						ID:          docID,
-						AccessHash:  domain.RandomUint64(),
-						Date:        0,
-						MimeType:    "",
-						FileSize:    0,
-						Version:     0,
-						ClusterID:   clusterID,
-						Attributes:  nil,
-						Thumbnail:   nil,
-						MD5Checksum: "",
-					},
-					Entities:     nil,
+				md := &msg.ClientFile{
+					FileID:  docID,
+					ClusterID: clusterID,
+					AccessHash: domain.RandomUint64(),
 				}
 				err := repo.Gifs.Save(md)
 				c.So(err, ShouldBeNil)
@@ -50,7 +38,7 @@ func TestGif(t *testing.T) {
 
 			savedGifs, err := repo.Gifs.GetSaved()
 			c.So(err, ShouldBeNil)
-			c.So(len(savedGifs.Docs), ShouldBeGreaterThan, 0)
+			c.So(len(savedGifs.Gifs), ShouldBeGreaterThan, 0)
 		})
 
 	})

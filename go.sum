@@ -5,6 +5,8 @@ git.ronaksoftware.com/river/msg v0.0.0-20200614175100-96d884b5c149 h1:XVGQZtCJif
 git.ronaksoftware.com/river/msg v0.0.0-20200614175100-96d884b5c149/go.mod h1:yGIfGlsx4F1pIhM40NjLp9dg3fEZ/JzVuD3K06iMXeM=
 git.ronaksoftware.com/river/msg v0.0.0-20200615061503-1f42bf5eccc7 h1:TagDu/9YLkbwzQjTZkiyL5/cHDUugQ+PKQkLfjJ9QKI=
 git.ronaksoftware.com/river/msg v0.0.0-20200615061503-1f42bf5eccc7/go.mod h1:yGIfGlsx4F1pIhM40NjLp9dg3fEZ/JzVuD3K06iMXeM=
+git.ronaksoftware.com/river/msg v0.0.0-20200615181234-df086a653717 h1:7h9lC2mmxXeTZk18GNdtLSzIG6qSXC2agU9Xrz4NYgE=
+git.ronaksoftware.com/river/msg v0.0.0-20200615181234-df086a653717/go.mod h1:yGIfGlsx4F1pIhM40NjLp9dg3fEZ/JzVuD3K06iMXeM=
 git.ronaksoftware.com/ronak/toolbox v1.1.6 h1:t778crNCYcCfDWUZClWP+Nht4L7A6ZsoBitQvSrtvBU=
 git.ronaksoftware.com/ronak/toolbox v1.1.6/go.mod h1:dVcHnmWljSIhyC/Zswc8vLGgb6mEmDfnkHisSMJC6+8=
 github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9 h1:HD8gA2tkByhMAwYaFAX9w2l7vxvBQ5NMoxDrkhqhtn4=

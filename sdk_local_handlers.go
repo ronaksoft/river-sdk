@@ -872,21 +872,44 @@ func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB
 }
 
 func (r *River) gifSave(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.GifSave)
+	req := &msg.GifSave{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
 		return
 	}
 
+	cf, err := repo.Files.Get(req.Doc.ClusterID, req.Doc.ID, req.Doc.AccessHash)
+	if err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	err = repo.Gifs.Save(cf)
+	if err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
 
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
-func (r *River) gitGetSaved(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 
-}
 func (r *River) gifDelete(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.GifDelete{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
 
+	err := repo.Gifs.Delete(req.Doc.ClusterID, req.Doc.ID)
+	if err != nil {
+		logs.Warn("We got error on deleting GIF document", zap.Error(err))
+	}
+
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) dialogTogglePin(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -1671,4 +1694,39 @@ func (r *River) clientRemoveRecentSearch(in, out *msg.MessageEnvelope, timeoutCB
 	out.RequestID = in.RequestID
 	out.Message, _ = res.Marshal()
 	uiexec.ExecSuccessCB(successCB, out)
+}
+
+func (r *River) clientGetSavedGifs(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	var uiCallback bool
+	req := &msg.ClientGetSavedGifs{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	gifHash, _ := repo.System.LoadInt(domain.SkGifHash)
+	if gifHash != 0 {
+		res, err := repo.Gifs.GetSaved()
+		if err != nil {
+			msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+			successCB(out)
+			return
+		}
+		msg.ResultClientFilesMany(out, res)
+		successCB(out)
+		// We make callbacks to nil to prevent double calling it
+		successCB = nil
+		timeoutCB = nil
+		uiCallback = true
+	}
+
+	me := &msg.MessageEnvelope{}
+	me.RequestID = in.RequestID
+	me.Constructor = msg.C_GifGetSaved
+	sreq := &msg.GifGetSaved{
+		Hash: uint32(gifHash),
+	}
+	me.Message, _ = sreq.Marshal()
+	r.queueCtrl.EnqueueCommand(me, timeoutCB, successCB, uiCallback)
 }

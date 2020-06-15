@@ -69,29 +69,47 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 			_ = repo.PendingMessages.Delete(pm.ID)
 			repo.PendingMessages.DeleteByRealID(x.Message.ID)
 		}
+
 	}
 
 	// handle Message's Action
 	res := []*msg.UpdateEnvelope{u}
 	ctrl.handleMessageAction(x, u, res)
 
-	// update monitoring
-	if x.Message.SenderID == ctrl.GetUserID() && x.Message.PeerID != x.Message.SenderID {
-		if x.Message.FwdSenderID != 0 {
-			repo.TopPeers.Update(msg.TopPeerCategory_Forwards, x.Message.PeerID, x.Message.PeerType, ctrl.GetUserID())
-		} else {
-			switch msg.PeerType(x.Message.PeerType) {
-			case msg.PeerUser:
-				p, _ := repo.Users.Get(x.Message.PeerID)
-				if p == nil || !p.IsBot {
-					repo.TopPeers.Update(msg.TopPeerCategory_Users, x.Message.PeerID, x.Message.PeerType, ctrl.GetUserID())
-				} else {
-					repo.TopPeers.Update(msg.TopPeerCategory_BotsMessage, x.Message.PeerID, x.Message.PeerType, ctrl.GetUserID())
+	// update monitoring && top peer && gif
+	if x.Message.SenderID == ctrl.GetUserID() {
+		if x.Message.PeerID != x.Message.SenderID {
+			if x.Message.FwdSenderID != 0 {
+				repo.TopPeers.Update(msg.TopPeerCategory_Forwards, x.Message.PeerID, x.Message.PeerType, ctrl.GetUserID())
+			} else {
+				switch msg.PeerType(x.Message.PeerType) {
+				case msg.PeerUser:
+					p, _ := repo.Users.Get(x.Message.PeerID)
+					if p == nil || !p.IsBot {
+						repo.TopPeers.Update(msg.TopPeerCategory_Users, x.Message.PeerID, x.Message.PeerType, ctrl.GetUserID())
+					} else {
+						repo.TopPeers.Update(msg.TopPeerCategory_BotsMessage, x.Message.PeerID, x.Message.PeerType, ctrl.GetUserID())
+					}
+				case msg.PeerGroup:
+					repo.TopPeers.Update(msg.TopPeerCategory_Groups, x.Message.PeerID, x.Message.PeerType, ctrl.GetUserID())
 				}
-			case msg.PeerGroup:
-				repo.TopPeers.Update(msg.TopPeerCategory_Groups, x.Message.PeerID, x.Message.PeerType, ctrl.GetUserID())
 			}
 		}
+
+		// We check if the file is GIF then check if it is a saved gif, if true, then update last access
+		switch x.Message.MediaType {
+		case msg.MediaTypeDocument:
+			xx := &msg.MediaDocument{}
+			_ = xx.Unmarshal(x.Message.Media)
+			for _, attr := range xx.Doc.Attributes {
+				if attr.Type == msg.AttributeTypeAnimated {
+					if repo.Gifs.IsSaved(xx.Doc.ClusterID, xx.Doc.ID) {
+						_ = repo.Gifs.UpdateLastAccess(xx.Doc.ClusterID, xx.Doc.ID, x.Message.CreatedOn)
+					}
+				}
+			}
+		}
+
 		switch x.Message.MediaType {
 		case msg.MediaTypeEmpty:
 			mon.IncMessageSent()
@@ -106,8 +124,6 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 			mon.IncMediaReceived()
 		}
 	}
-
-	// update top peer
 
 	return res, nil
 }

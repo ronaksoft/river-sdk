@@ -390,6 +390,38 @@ func ResultClientRemoveAllRecentSearches(out *MessageEnvelope, res *ClientRemove
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_ClientGetSavedGifs int64 = 3028067090
+
+type poolClientGetSavedGifs struct {
+	pool sync.Pool
+}
+
+func (p *poolClientGetSavedGifs) Get() *ClientGetSavedGifs {
+	x, ok := p.pool.Get().(*ClientGetSavedGifs)
+	if !ok {
+		return &ClientGetSavedGifs{}
+	}
+	return x
+}
+
+func (p *poolClientGetSavedGifs) Put(x *ClientGetSavedGifs) {
+	p.pool.Put(x)
+}
+
+var PoolClientGetSavedGifs = poolClientGetSavedGifs{}
+
+func ResultClientGetSavedGifs(out *MessageEnvelope, res *ClientGetSavedGifs) {
+	out.Constructor = C_ClientGetSavedGifs
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 const C_ClientPendingMessage int64 = 2164891929
 
 type poolClientPendingMessage struct {
@@ -461,6 +493,39 @@ var PoolClientSearchResult = poolClientSearchResult{}
 
 func ResultClientSearchResult(out *MessageEnvelope, res *ClientSearchResult) {
 	out.Constructor = C_ClientSearchResult
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_ClientFilesMany int64 = 1414992553
+
+type poolClientFilesMany struct {
+	pool sync.Pool
+}
+
+func (p *poolClientFilesMany) Get() *ClientFilesMany {
+	x, ok := p.pool.Get().(*ClientFilesMany)
+	if !ok {
+		return &ClientFilesMany{}
+	}
+	x.Gifs = x.Gifs[:0]
+	return x
+}
+
+func (p *poolClientFilesMany) Put(x *ClientFilesMany) {
+	p.pool.Put(x)
+}
+
+var PoolClientFilesMany = poolClientFilesMany{}
+
+func ResultClientFilesMany(out *MessageEnvelope, res *ClientFilesMany) {
+	out.Constructor = C_ClientFilesMany
 	protoSize := res.Size()
 	if protoSize > cap(out.Message) {
 		pbytes.Put(out.Message)
@@ -722,8 +787,10 @@ func init() {
 	ConstructorNames[629582533] = "ClientPutRecentSearch"
 	ConstructorNames[1281490259] = "ClientRemoveRecentSearch"
 	ConstructorNames[3599155822] = "ClientRemoveAllRecentSearches"
+	ConstructorNames[3028067090] = "ClientGetSavedGifs"
 	ConstructorNames[2164891929] = "ClientPendingMessage"
 	ConstructorNames[2957647709] = "ClientSearchResult"
+	ConstructorNames[1414992553] = "ClientFilesMany"
 	ConstructorNames[155127968] = "ClientFile"
 	ConstructorNames[2731095358] = "ClientFileStatus"
 	ConstructorNames[442767121] = "ClientCachedMediaInfo"

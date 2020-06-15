@@ -111,6 +111,7 @@ func NewSyncController(config Config) *Controller {
 		msg.C_SystemConfig:      ctrl.systemConfig,
 		msg.C_ContactsTopPeers:  ctrl.contactsTopPeers,
 		msg.C_WallPapersMany:    ctrl.wallpapersMany,
+		msg.C_SavedGifs:         ctrl.savedGifs,
 	}
 	return ctrl
 }
@@ -501,10 +502,10 @@ func (ctrl *Controller) ResetIDs() {
 // ContactsImport
 func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHandler, out *msg.MessageEnvelope) {
 	var (
-		wg        = sync.WaitGroup{}
-		limit     = 250
-		maxTry    = 10
-		keepGoing = true
+		wg               = sync.WaitGroup{}
+		limit            = 250
+		maxTry           = 10
+		keepGoing        = true
 		contactsImported = &msg.ContactsImported{}
 	)
 	if out == nil {

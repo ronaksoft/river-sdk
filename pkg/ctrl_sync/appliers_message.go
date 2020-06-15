@@ -270,7 +270,7 @@ func (ctrl *Controller) contactsTopPeers(e *msg.MessageEnvelope) {
 		zap.String("Cat", u.Category.String()),
 	)
 
-	err = repo.TopPeers.Save(u.Category, ctrl.userID,u.Peers...)
+	err = repo.TopPeers.Save(u.Category, ctrl.userID, u.Peers...)
 	if err != nil {
 		logs.Error("SyncCtrl got error on saving ContactsTopPeers", zap.Error(err))
 	}
@@ -287,5 +287,53 @@ func (ctrl *Controller) wallpapersMany(e *msg.MessageEnvelope) {
 	err = repo.Wallpapers.SaveWallpapers(u)
 	if err != nil {
 		logs.Error("SyncCtrl got error on saving wallpapersMany", zap.Error(err))
+	}
+}
+
+// savedGifs
+func (ctrl *Controller) savedGifs(e *msg.MessageEnvelope) {
+	u := &msg.SavedGifs{}
+	err := u.Unmarshal(e.Message)
+	if err != nil {
+		logs.Error("SyncCtrl couldn't unmarshal wallpapersMany", zap.Error(err))
+		return
+	}
+	accessTime := domain.Now().Unix()
+	for _, d := range u.Docs {
+		cf := &msg.ClientFile{
+			ClusterID:   d.Doc.ClusterID,
+			FileID:      d.Doc.ID,
+			AccessHash:  d.Doc.AccessHash,
+			Type:        msg.Gif,
+			MimeType:    d.Doc.MimeType,
+			UserID:      0,
+			GroupID:     0,
+			FileSize:    int64(d.Doc.FileSize),
+			MessageID:   0,
+			PeerID:      0,
+			PeerType:    0,
+			Version:     0,
+			Extension:   "",
+			MD5Checksum: d.Doc.MD5Checksum,
+			WallpaperID: 0,
+		}
+		err = repo.Files.Save(cf)
+		if err != nil {
+			logs.Warn("SyncCtrl got error on applying SavedGifs (Save File)", zap.Error(err))
+		}
+		if !repo.Gifs.IsSaved(cf.ClusterID, cf.FileID) {
+			err = repo.Gifs.Save(cf)
+			if err != nil {
+				logs.Warn("SyncCtrl got error on applying SavedGifs (Save Gif)", zap.Error(err))
+			}
+			err = repo.Gifs.UpdateLastAccess(cf.ClusterID, cf.FileID, accessTime)
+			if err != nil {
+				logs.Warn("SyncCtrl got error on applying SavedGifs (Update Access Time)", zap.Error(err))
+			}
+		}
+	}
+	err = repo.System.SaveInt(domain.SkGifHash, uint64(u.Hash))
+	if err != nil {
+		logs.Warn("SyncCtrl got error on saving GifHash", zap.Error(err))
 	}
 }

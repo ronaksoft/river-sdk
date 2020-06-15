@@ -30,12 +30,12 @@ func getGifKey(clusterID int32, docID int64) []byte {
 	return domain.StrToByte(fmt.Sprintf("%s.%012d.%021d", prefixGif, clusterID, docID))
 }
 
-func getGifByID(txn *badger.Txn, clusterID int32, docID int64) (*msg.MediaDocument, error) {
+func getGifByID(txn *badger.Txn, clusterID int32, docID int64) (*msg.ClientFile, error) {
 	return getGifByKey(txn, getGifKey(clusterID, docID))
 }
 
-func getGifByKey(txn *badger.Txn, key []byte) (*msg.MediaDocument, error) {
-	md := &msg.MediaDocument{}
+func getGifByKey(txn *badger.Txn, key []byte) (*msg.ClientFile, error) {
+	md := &msg.ClientFile{}
 	item, err := txn.Get(key)
 	if err != nil {
 		return nil, err
@@ -49,10 +49,10 @@ func getGifByKey(txn *badger.Txn, key []byte) (*msg.MediaDocument, error) {
 	return md, nil
 }
 
-func saveGif(txn *badger.Txn, md *msg.MediaDocument) error {
+func saveGif(txn *badger.Txn, md *msg.ClientFile) error {
 	mdBytes, _ := md.Marshal()
 	err := txn.SetEntry(badger.NewEntry(
-		getGifKey(md.Doc.ClusterID, md.Doc.ID),
+		getGifKey(md.ClusterID, md.FileID),
 		mdBytes,
 	))
 	return err
@@ -92,14 +92,14 @@ func (r *repoGifs) IsSaved(clusterID int32, docID int64) (found bool) {
 	return
 }
 
-func (r *repoGifs) Save(md *msg.MediaDocument) error {
+func (r *repoGifs) Save(cf *msg.ClientFile) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
-		return saveGif(txn, md)
+		return saveGif(txn, cf)
 	})
 }
 
-func (r *repoGifs) GetSaved() (*msg.SavedGifs, error) {
-	mediaDocuments := make([]*msg.MediaDocument, 0, 20)
+func (r *repoGifs) GetSaved() (*msg.ClientFilesMany, error) {
+	clientFiles := make([]*msg.ClientFile, 0, 20)
 	err := badgerView(func(txn *badger.Txn) error {
 		return r.bunt.View(func(tx *buntdb.Tx) error {
 			return tx.Descend(indexGif, func(key, value string) bool {
@@ -107,18 +107,18 @@ func (r *repoGifs) GetSaved() (*msg.SavedGifs, error) {
 				if err != nil {
 					return false
 				}
-				mediaDocuments = append(mediaDocuments, md)
+				clientFiles = append(clientFiles, md)
 				return true
 			})
 		})
 	})
+
 	if err != nil {
 		return nil, err
 	}
-	return &msg.SavedGifs{
-		Hash:        0,
-		Docs:        mediaDocuments,
-		NotModified: false,
+	return &msg.ClientFilesMany{
+		Gifs:  clientFiles,
+		Total: int32(len(clientFiles)),
 	}, nil
 }
 
