@@ -36,6 +36,7 @@ var (
 	MessagesExtra   *repoMessagesExtra
 	System          *repoSystem
 	Users           *repoUsers
+	Gifs 			*repoGifs
 	Groups          *repoGroups
 	Files           *repoFiles
 	Labels          *repoLabels
@@ -76,6 +77,7 @@ func InitRepo(dbPath string, lowMemory bool) error {
 		System = &repoSystem{repository: r}
 		Users = &repoUsers{repository: r}
 		Groups = &repoGroups{repository: r}
+		Gifs = &repoGifs{repository: r}
 		Files = &repoFiles{repository: r}
 		Labels = &repoLabels{repository: r}
 		TopPeers = &repoTopPeers{repository: r}
@@ -131,6 +133,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 		_ = tx.CreateIndex(indexTopPeersForward, fmt.Sprintf("%s_%02d.*", prefixTopPeers, msg.TopPeerCategory_Forwards), buntdb.IndexFloat)
 		_ = tx.CreateIndex(indexTopPeersBotMessage, fmt.Sprintf("%s_%02d.*", prefixTopPeers, msg.TopPeerCategory_BotsMessage), buntdb.IndexFloat)
 		_ = tx.CreateIndex(indexTopPeersBotInline, fmt.Sprintf("%s_%02d.*", prefixTopPeers, msg.TopPeerCategory_BotsInline), buntdb.IndexFloat)
+		_ = tx.CreateIndex(indexGif, fmt.Sprintf("%s.*", prefixGif), buntdb.IndexBinary)
 
 		return nil
 	})
