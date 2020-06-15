@@ -45,31 +45,6 @@ var ContactGet = &ishell.Cmd{
 	},
 }
 
-var ContactTestImport = &ishell.Cmd{
-	Name: "TestImport",
-	Func: func(c *ishell.Context) {
-		req := msg.ContactsImport{}
-		req.Replace = true
-		_, phoneContacts := _SDK.GetContacts()
-		req.Contacts = phoneContacts
-		// for i := 0 ; i < 1000; i++ {
-		// 	contact := msg.PhoneContact{}
-		// 	contact.FirstName = domain.RandomID(10)
-		// 	contact.LastName = domain.RandomID(10)
-		// 	contact.Phone = fmt.Sprintf("237400%04d", i)
-		// 	contact.ClientID = domain.RandomInt63()
-		// 	req.Contacts = append(req.Contacts, &contact)
-		// }
-		reqBytes, _ := req.Marshal()
-		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsImport, reqBytes, reqDelegate); err != nil {
-			c.Println("Command Failed:", err)
-		} else {
-			reqDelegate.RequestID = reqID
-		}
-	},
-}
-
 var ContactAdd = &ishell.Cmd{
 	Name: "Add",
 	Func: func(c *ishell.Context) {
@@ -121,7 +96,6 @@ var ContactDeleteAll = &ishell.Cmd{
 func init() {
 	Contact.AddCmd(ContactImport)
 	Contact.AddCmd(ContactGet)
-	Contact.AddCmd(ContactTestImport)
 	Contact.AddCmd(ContactAdd)
 	Contact.AddCmd(ContactGetTopPeers)
 	Contact.AddCmd(ContactDeleteAll)
