@@ -31,7 +31,6 @@ func (p *poolMessagesSend) Get() *MessagesSend {
 	x.ReplyTo = 0
 	x.ClearDraft = false
 	x.Entities = x.Entities[:0]
-	x.Team = nil
 	return x
 }
 
@@ -101,7 +100,6 @@ func (p *poolMessagesSendMedia) Get() *MessagesSendMedia {
 	x.MediaData = x.MediaData[:0]
 	x.ReplyTo = 0
 	x.ClearDraft = false
-	x.Team = nil
 	return x
 }
 
@@ -135,7 +133,6 @@ func (p *poolMessagesEdit) Get() *MessagesEdit {
 		return &MessagesEdit{}
 	}
 	x.Entities = x.Entities[:0]
-	x.Team = nil
 	return x
 }
 
@@ -168,7 +165,6 @@ func (p *poolMessagesReadHistory) Get() *MessagesReadHistory {
 	if !ok {
 		return &MessagesReadHistory{}
 	}
-	x.Team = nil
 	return x
 }
 
@@ -202,7 +198,6 @@ func (p *poolMessagesGet) Get() *MessagesGet {
 		return &MessagesGet{}
 	}
 	x.MessagesIDs = x.MessagesIDs[:0]
-	x.Team = nil
 	return x
 }
 
@@ -235,7 +230,6 @@ func (p *poolMessagesGetHistory) Get() *MessagesGetHistory {
 	if !ok {
 		return &MessagesGetHistory{}
 	}
-	x.Team = nil
 	return x
 }
 
@@ -269,7 +263,6 @@ func (p *poolMessagesGetDialogs) Get() *MessagesGetDialogs {
 		return &MessagesGetDialogs{}
 	}
 	x.ExcludePinned = false
-	x.Team = nil
 	return x
 }
 
@@ -302,7 +295,6 @@ func (p *poolMessagesGetPinnedDialogs) Get() *MessagesGetPinnedDialogs {
 	if !ok {
 		return &MessagesGetPinnedDialogs{}
 	}
-	x.Team = nil
 	return x
 }
 
@@ -335,7 +327,6 @@ func (p *poolMessagesGetDialog) Get() *MessagesGetDialog {
 	if !ok {
 		return &MessagesGetDialog{}
 	}
-	x.Team = nil
 	return x
 }
 
@@ -368,7 +359,6 @@ func (p *poolMessagesSetTyping) Get() *MessagesSetTyping {
 	if !ok {
 		return &MessagesSetTyping{}
 	}
-	x.Team = nil
 	return x
 }
 
@@ -401,7 +391,6 @@ func (p *poolMessagesClearHistory) Get() *MessagesClearHistory {
 	if !ok {
 		return &MessagesClearHistory{}
 	}
-	x.Team = nil
 	return x
 }
 
@@ -435,7 +424,6 @@ func (p *poolMessagesDelete) Get() *MessagesDelete {
 		return &MessagesDelete{}
 	}
 	x.MessageIDs = x.MessageIDs[:0]
-	x.Team = nil
 	return x
 }
 
@@ -469,7 +457,6 @@ func (p *poolMessagesForward) Get() *MessagesForward {
 		return &MessagesForward{}
 	}
 	x.MessageIDs = x.MessageIDs[:0]
-	x.Team = nil
 	return x
 }
 
@@ -503,7 +490,6 @@ func (p *poolMessagesReadContents) Get() *MessagesReadContents {
 		return &MessagesReadContents{}
 	}
 	x.MessageIDs = x.MessageIDs[:0]
-	x.Team = nil
 	return x
 }
 
@@ -538,7 +524,6 @@ func (p *poolMessagesSaveDraft) Get() *MessagesSaveDraft {
 	}
 	x.Entities = x.Entities[:0]
 	x.EditedID = 0
-	x.Team = nil
 	return x
 }
 
@@ -571,7 +556,6 @@ func (p *poolMessagesClearDraft) Get() *MessagesClearDraft {
 	if !ok {
 		return &MessagesClearDraft{}
 	}
-	x.Team = nil
 	return x
 }
 
@@ -604,7 +588,6 @@ func (p *poolMessagesToggleDialogPin) Get() *MessagesToggleDialogPin {
 	if !ok {
 		return &MessagesToggleDialogPin{}
 	}
-	x.Team = nil
 	return x
 }
 
@@ -638,7 +621,6 @@ func (p *poolMessagesReorderPinnedDialogs) Get() *MessagesReorderPinnedDialogs {
 		return &MessagesReorderPinnedDialogs{}
 	}
 	x.Peers = x.Peers[:0]
-	x.Team = nil
 	return x
 }
 
@@ -674,7 +656,6 @@ func (p *poolMessagesSendScreenShotNotification) Get() *MessagesSendScreenShotNo
 	x.ReplyTo = 0
 	x.MinID = 0
 	x.MaxID = 0
-	x.Team = nil
 	return x
 }
 

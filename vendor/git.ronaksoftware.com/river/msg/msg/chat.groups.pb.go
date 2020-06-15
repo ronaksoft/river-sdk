@@ -29,7 +29,6 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type GroupsCreate struct {
 	Users []*InputUser `protobuf:"bytes,1,rep,name=Users" json:"Users,omitempty"`
 	Title string       `protobuf:"bytes,2,req,name=Title" json:"Title"`
-	Team  *InputTeam   `protobuf:"bytes,9,opt,name=Team" json:"Team,omitempty"`
 }
 
 func (m *GroupsCreate) Reset()         { *m = GroupsCreate{} }
@@ -79,13 +78,6 @@ func (m *GroupsCreate) GetTitle() string {
 	return ""
 }
 
-func (m *GroupsCreate) GetTeam() *InputTeam {
-	if m != nil {
-		return m.Team
-	}
-	return nil
-}
-
 // GroupsAddUser
 // @Function
 // @Return: Bool
@@ -93,7 +85,6 @@ type GroupsAddUser struct {
 	GroupID      int64      `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
 	User         *InputUser `protobuf:"bytes,2,req,name=User" json:"User,omitempty"`
 	ForwardLimit int32      `protobuf:"varint,3,req,name=ForwardLimit" json:"ForwardLimit"`
-	Team         *InputTeam `protobuf:"bytes,9,opt,name=Team" json:"Team,omitempty"`
 }
 
 func (m *GroupsAddUser) Reset()         { *m = GroupsAddUser{} }
@@ -150,20 +141,12 @@ func (m *GroupsAddUser) GetForwardLimit() int32 {
 	return 0
 }
 
-func (m *GroupsAddUser) GetTeam() *InputTeam {
-	if m != nil {
-		return m.Team
-	}
-	return nil
-}
-
 // GroupsEditTitle
 // @Function
 // @Return: Bool
 type GroupsEditTitle struct {
-	GroupID int64      `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
-	Title   string     `protobuf:"bytes,2,req,name=Title" json:"Title"`
-	Team    *InputTeam `protobuf:"bytes,9,opt,name=Team" json:"Team,omitempty"`
+	GroupID int64  `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
+	Title   string `protobuf:"bytes,2,req,name=Title" json:"Title"`
 }
 
 func (m *GroupsEditTitle) Reset()         { *m = GroupsEditTitle{} }
@@ -213,20 +196,12 @@ func (m *GroupsEditTitle) GetTitle() string {
 	return ""
 }
 
-func (m *GroupsEditTitle) GetTeam() *InputTeam {
-	if m != nil {
-		return m.Team
-	}
-	return nil
-}
-
 // GroupsDeleteUser
 // @Function
 // @Return: Bool
 type GroupsDeleteUser struct {
 	GroupID int64      `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
 	User    *InputUser `protobuf:"bytes,2,req,name=User" json:"User,omitempty"`
-	Team    *InputTeam `protobuf:"bytes,9,opt,name=Team" json:"Team,omitempty"`
 }
 
 func (m *GroupsDeleteUser) Reset()         { *m = GroupsDeleteUser{} }
@@ -276,19 +251,11 @@ func (m *GroupsDeleteUser) GetUser() *InputUser {
 	return nil
 }
 
-func (m *GroupsDeleteUser) GetTeam() *InputTeam {
-	if m != nil {
-		return m.Team
-	}
-	return nil
-}
-
 // GroupsGetFull
 // @Function
 // @Return: GroupFull
 type GroupsGetFull struct {
-	GroupID int64      `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
-	Team    *InputTeam `protobuf:"bytes,9,opt,name=Team" json:"Team,omitempty"`
+	GroupID int64 `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
 }
 
 func (m *GroupsGetFull) Reset()         { *m = GroupsGetFull{} }
@@ -331,20 +298,12 @@ func (m *GroupsGetFull) GetGroupID() int64 {
 	return 0
 }
 
-func (m *GroupsGetFull) GetTeam() *InputTeam {
-	if m != nil {
-		return m.Team
-	}
-	return nil
-}
-
 // GroupsToggleAdmins
 // @Function
 // @Return: Bool
 type GroupsToggleAdmins struct {
-	GroupID      int64      `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
-	AdminEnabled bool       `protobuf:"varint,2,req,name=AdminEnabled" json:"AdminEnabled"`
-	Team         *InputTeam `protobuf:"bytes,9,opt,name=Team" json:"Team,omitempty"`
+	GroupID      int64 `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
+	AdminEnabled bool  `protobuf:"varint,2,req,name=AdminEnabled" json:"AdminEnabled"`
 }
 
 func (m *GroupsToggleAdmins) Reset()         { *m = GroupsToggleAdmins{} }
@@ -394,13 +353,6 @@ func (m *GroupsToggleAdmins) GetAdminEnabled() bool {
 	return false
 }
 
-func (m *GroupsToggleAdmins) GetTeam() *InputTeam {
-	if m != nil {
-		return m.Team
-	}
-	return nil
-}
-
 // GroupsUpdateAdmin
 // @Function
 // @Return: Bool
@@ -408,7 +360,6 @@ type GroupsUpdateAdmin struct {
 	GroupID int64      `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
 	User    *InputUser `protobuf:"bytes,2,req,name=User" json:"User,omitempty"`
 	Admin   bool       `protobuf:"varint,3,req,name=Admin" json:"Admin"`
-	Team    *InputTeam `protobuf:"bytes,9,opt,name=Team" json:"Team,omitempty"`
 }
 
 func (m *GroupsUpdateAdmin) Reset()         { *m = GroupsUpdateAdmin{} }
@@ -465,13 +416,6 @@ func (m *GroupsUpdateAdmin) GetAdmin() bool {
 	return false
 }
 
-func (m *GroupsUpdateAdmin) GetTeam() *InputTeam {
-	if m != nil {
-		return m.Team
-	}
-	return nil
-}
-
 // GroupsUploadPhoto
 // @Function
 // @Return: Bool
@@ -479,7 +423,6 @@ type GroupsUploadPhoto struct {
 	GroupID      int64      `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
 	File         *InputFile `protobuf:"bytes,2,req,name=File" json:"File,omitempty"`
 	ReturnObject bool       `protobuf:"varint,3,opt,name=ReturnObject" json:"ReturnObject"`
-	Team         *InputTeam `protobuf:"bytes,9,opt,name=Team" json:"Team,omitempty"`
 }
 
 func (m *GroupsUploadPhoto) Reset()         { *m = GroupsUploadPhoto{} }
@@ -536,20 +479,12 @@ func (m *GroupsUploadPhoto) GetReturnObject() bool {
 	return false
 }
 
-func (m *GroupsUploadPhoto) GetTeam() *InputTeam {
-	if m != nil {
-		return m.Team
-	}
-	return nil
-}
-
 // GroupsRemovePhoto
 // @Function
 // @Return: Bool
 type GroupsRemovePhoto struct {
-	GroupID int64      `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
-	PhotoID int64      `protobuf:"varint,2,opt,name=PhotoID" json:"PhotoID"`
-	Team    *InputTeam `protobuf:"bytes,9,opt,name=Team" json:"Team,omitempty"`
+	GroupID int64 `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
+	PhotoID int64 `protobuf:"varint,2,opt,name=PhotoID" json:"PhotoID"`
 }
 
 func (m *GroupsRemovePhoto) Reset()         { *m = GroupsRemovePhoto{} }
@@ -599,20 +534,12 @@ func (m *GroupsRemovePhoto) GetPhotoID() int64 {
 	return 0
 }
 
-func (m *GroupsRemovePhoto) GetTeam() *InputTeam {
-	if m != nil {
-		return m.Team
-	}
-	return nil
-}
-
 // GroupsUpdatePhoto
 // @Function
 // @Return: Bool
 type GroupsUpdatePhoto struct {
-	PhotoID int64      `protobuf:"varint,1,req,name=PhotoID" json:"PhotoID"`
-	GroupID int64      `protobuf:"varint,2,req,name=GroupID" json:"GroupID"`
-	Team    *InputTeam `protobuf:"bytes,9,opt,name=Team" json:"Team,omitempty"`
+	PhotoID int64 `protobuf:"varint,1,req,name=PhotoID" json:"PhotoID"`
+	GroupID int64 `protobuf:"varint,2,req,name=GroupID" json:"GroupID"`
 }
 
 func (m *GroupsUpdatePhoto) Reset()         { *m = GroupsUpdatePhoto{} }
@@ -662,13 +589,6 @@ func (m *GroupsUpdatePhoto) GetGroupID() int64 {
 	return 0
 }
 
-func (m *GroupsUpdatePhoto) GetTeam() *InputTeam {
-	if m != nil {
-		return m.Team
-	}
-	return nil
-}
-
 func init() {
 	proto.RegisterType((*GroupsCreate)(nil), "msg.GroupsCreate")
 	proto.RegisterType((*GroupsAddUser)(nil), "msg.GroupsAddUser")
@@ -685,36 +605,34 @@ func init() {
 func init() { proto.RegisterFile("chat.groups.proto", fileDescriptor_3c424a93c3dc008e) }
 
 var fileDescriptor_3c424a93c3dc008e = []byte{
-	// 451 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x93, 0xb1, 0x8e, 0xd3, 0x30,
-	0x1c, 0xc6, 0xe3, 0xe4, 0xc2, 0x71, 0xa6, 0xc0, 0x5d, 0xa6, 0xa8, 0x43, 0xb0, 0x2a, 0x86, 0x4c,
-	0x11, 0xe2, 0x0d, 0xae, 0xf4, 0x7a, 0xaa, 0x84, 0x04, 0x8a, 0xda, 0x07, 0x48, 0xeb, 0xbf, 0xd2,
-	0xa0, 0x24, 0x8e, 0x1c, 0x07, 0x84, 0x60, 0xe4, 0x01, 0x58, 0x99, 0x19, 0x78, 0x95, 0x8e, 0x1d,
-	0x99, 0x10, 0x6a, 0x5f, 0x04, 0xd9, 0x4e, 0x20, 0x85, 0xa1, 0x06, 0xba, 0x7e, 0xdf, 0x5f, 0xdf,
-	0xf7, 0xf3, 0xdf, 0x36, 0xbe, 0x5a, 0xad, 0x13, 0x11, 0xa5, 0x9c, 0x35, 0x55, 0x1d, 0x55, 0x9c,
-	0x09, 0xe6, 0x39, 0x45, 0x9d, 0x0e, 0x2f, 0x57, 0x8c, 0x43, 0x24, 0xde, 0x56, 0xd0, 0xca, 0x23,
-	0x81, 0x07, 0xb7, 0x6a, 0xec, 0x19, 0x87, 0x44, 0x80, 0xf7, 0x18, 0xbb, 0x8b, 0x1a, 0x78, 0xed,
-	0x23, 0xe2, 0x84, 0xf7, 0x9e, 0x3e, 0x88, 0x8a, 0x3a, 0x8d, 0x66, 0x65, 0xd5, 0x08, 0x29, 0xc7,
-	0xda, 0xf4, 0x86, 0xd8, 0x9d, 0x67, 0x22, 0x07, 0xdf, 0x26, 0x76, 0x78, 0x31, 0x3e, 0xdb, 0x7c,
-	0x7b, 0x64, 0xc5, 0x5a, 0xf2, 0x46, 0xf8, 0x6c, 0x0e, 0x49, 0xe1, 0x5f, 0x10, 0x74, 0x18, 0x20,
-	0xd5, 0x58, 0x79, 0xa3, 0xcf, 0x08, 0xdf, 0xd7, 0xb5, 0xd7, 0x94, 0xca, 0x48, 0x8f, 0xe0, 0x73,
-	0x25, 0xcc, 0x26, 0x3e, 0x22, 0x76, 0xe8, 0x8c, 0xef, 0xc8, 0xcc, 0x27, 0x28, 0xee, 0x64, 0x99,
-	0x2b, 0x27, 0x55, 0xe5, 0x9f, 0x60, 0xca, 0xf3, 0x42, 0x3c, 0x98, 0x32, 0xfe, 0x26, 0xe1, 0xf4,
-	0x79, 0x56, 0x64, 0xc2, 0x77, 0x88, 0x1d, 0xba, 0x2d, 0xde, 0x81, 0x63, 0x44, 0x59, 0xe3, 0x87,
-	0x1a, 0xf2, 0x86, 0x66, 0x42, 0x1f, 0xee, 0x38, 0xe6, 0xff, 0xae, 0xe6, 0x3d, 0xbe, 0xd4, 0xa5,
-	0x13, 0xc8, 0x41, 0xc0, 0x09, 0x97, 0x63, 0xd2, 0xbe, 0xe8, 0xee, 0xe5, 0x16, 0xc4, 0xb4, 0xc9,
-	0x73, 0xb3, 0xea, 0xa3, 0xb1, 0x1f, 0x10, 0xf6, 0x74, 0xee, 0x9c, 0xa5, 0x69, 0x0e, 0xd7, 0xb4,
-	0xc8, 0xca, 0xda, 0x20, 0x3c, 0xc4, 0x03, 0x35, 0x7b, 0x53, 0x26, 0xcb, 0x1c, 0xa8, 0x3a, 0xdf,
-	0xdd, 0xee, 0x42, 0xfb, 0x8e, 0x11, 0xc6, 0x27, 0x84, 0xaf, 0x34, 0xc6, 0xa2, 0xa2, 0x89, 0xd0,
-	0x18, 0x27, 0xda, 0xee, 0x10, 0xbb, 0x2a, 0x4e, 0xbd, 0xb9, 0x0e, 0x51, 0x4b, 0x46, 0x6c, 0x5f,
-	0x7a, 0x6c, 0x39, 0x4b, 0xe8, 0xcb, 0xb5, 0xfc, 0xb5, 0x46, 0x6c, 0xd3, 0xac, 0x7d, 0x6e, 0x07,
-	0xd9, 0x52, 0x8d, 0x95, 0x27, 0xb7, 0x18, 0x83, 0x68, 0x78, 0xf9, 0x62, 0xf9, 0x0a, 0x56, 0xf2,
-	0x5b, 0xa0, 0x5f, 0x5b, 0xec, 0x3b, 0x46, 0xa4, 0xef, 0x3a, 0xd0, 0x18, 0x0a, 0xf6, 0x1a, 0x4c,
-	0x41, 0x09, 0x3e, 0x57, 0xa3, 0xb3, 0x89, 0x6f, 0x13, 0xd4, 0x9f, 0x68, 0xe5, 0xbf, 0x2b, 0xd7,
-	0x37, 0xf8, 0xb3, 0xbc, 0x8b, 0xfe, 0xad, 0xbc, 0x8b, 0xee, 0xe1, 0xd9, 0xff, 0xfc, 0x8c, 0xc7,
-	0xfe, 0x66, 0x17, 0xa0, 0xed, 0x2e, 0x40, 0xdf, 0x77, 0x01, 0xfa, 0xb8, 0x0f, 0xac, 0xed, 0x3e,
-	0xb0, 0xbe, 0xee, 0x03, 0xeb, 0x47, 0x00, 0x00, 0x00, 0xff, 0xff, 0x3d, 0xb8, 0xae, 0x7e, 0x71,
-	0x05, 0x00, 0x00,
+	// 421 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x52, 0xb1, 0x8e, 0xd3, 0x40,
+	0x14, 0xf4, 0xda, 0x67, 0x0e, 0x96, 0x00, 0x77, 0xae, 0xac, 0x14, 0xc6, 0x5a, 0x51, 0xb8, 0xb2,
+	0x80, 0x3f, 0xb8, 0x90, 0xcb, 0x29, 0x12, 0x52, 0x22, 0x2b, 0x11, 0x94, 0x38, 0xd9, 0x27, 0xc7,
+	0xc8, 0xf6, 0x5a, 0xeb, 0x35, 0x88, 0x8a, 0x82, 0x1f, 0xe0, 0xb3, 0x52, 0xa6, 0xa4, 0x42, 0x28,
+	0xf9, 0x11, 0xb4, 0xbb, 0x36, 0x71, 0x00, 0x81, 0x8b, 0xb4, 0x33, 0xb3, 0x33, 0xf3, 0xde, 0x5b,
+	0x7c, 0xbd, 0xde, 0xc4, 0x22, 0x4c, 0x38, 0xab, 0xcb, 0x2a, 0x2c, 0x39, 0x13, 0xcc, 0xb1, 0xf2,
+	0x2a, 0x19, 0x5e, 0xad, 0x19, 0x87, 0x50, 0x7c, 0x2a, 0xa1, 0x81, 0xc9, 0x1c, 0x0f, 0xee, 0x94,
+	0xec, 0x15, 0x87, 0x58, 0x80, 0xf3, 0x0c, 0xdb, 0xcb, 0x0a, 0x78, 0xe5, 0x22, 0xdf, 0x0a, 0x1e,
+	0xbe, 0x7c, 0x1c, 0xe6, 0x55, 0x12, 0x4e, 0x8b, 0xb2, 0x16, 0x12, 0x8e, 0x34, 0xe9, 0x0c, 0xb1,
+	0xbd, 0x48, 0x45, 0x06, 0xae, 0xe9, 0x9b, 0xc1, 0x83, 0xd1, 0xc5, 0xf6, 0xfb, 0x53, 0x23, 0xd2,
+	0x10, 0xf9, 0x8c, 0x1f, 0x69, 0xc7, 0x1b, 0x4a, 0xa5, 0xda, 0xf1, 0xf1, 0xa5, 0x02, 0xa6, 0x63,
+	0x17, 0xf9, 0x66, 0x60, 0x8d, 0xee, 0x49, 0xf9, 0x73, 0x14, 0xb5, 0xb0, 0x43, 0xf0, 0x85, 0x54,
+	0x2a, 0xb7, 0x3f, 0x33, 0x15, 0xe7, 0x04, 0x78, 0x30, 0x61, 0xfc, 0x63, 0xcc, 0xe9, 0xeb, 0x34,
+	0x4f, 0x85, 0x6b, 0xf9, 0x66, 0x60, 0x37, 0xc9, 0x27, 0x0c, 0x99, 0xe1, 0x27, 0xba, 0xc0, 0x2d,
+	0x4d, 0x85, 0xea, 0xd4, 0xa3, 0xc2, 0xbf, 0x26, 0x7a, 0x8b, 0xaf, 0xb4, 0xe1, 0x18, 0x32, 0x10,
+	0x70, 0xbe, 0xa1, 0xc8, 0x8b, 0x76, 0x57, 0x77, 0x20, 0x26, 0x75, 0x96, 0xfd, 0xdf, 0x96, 0xbc,
+	0xc3, 0x8e, 0x7e, 0xb2, 0x60, 0x49, 0x92, 0xc1, 0x0d, 0xcd, 0xd3, 0xa2, 0xea, 0x51, 0x27, 0xc0,
+	0x03, 0xa5, 0xbd, 0x2d, 0xe2, 0x55, 0x06, 0x54, 0xd5, 0xba, 0xdf, 0xee, 0xaf, 0xcb, 0x90, 0x1a,
+	0x5f, 0xeb, 0x84, 0x65, 0x49, 0x63, 0xa1, 0x13, 0xce, 0x74, 0xc4, 0x21, 0xb6, 0x95, 0x9d, 0xba,
+	0x5e, 0x9b, 0xae, 0x21, 0xf2, 0x05, 0x1d, 0x73, 0x33, 0x16, 0xd3, 0xf9, 0x46, 0x7e, 0xdb, 0x5e,
+	0xb9, 0x93, 0xb4, 0x39, 0xdc, 0x49, 0xae, 0x44, 0x23, 0xc5, 0xc9, 0xe1, 0x23, 0x10, 0x35, 0x2f,
+	0x66, 0xab, 0xf7, 0xb0, 0x96, 0x9f, 0x07, 0x1d, 0x87, 0xef, 0x32, 0xe4, 0x4d, 0x5b, 0x22, 0x82,
+	0x9c, 0x7d, 0x80, 0xbe, 0x25, 0x7c, 0x7c, 0xa9, 0xa4, 0xd3, 0xb1, 0x6b, 0xfa, 0xa8, 0xab, 0x68,
+	0xe0, 0xa3, 0xb1, 0xde, 0xea, 0x2f, 0xe3, 0xf6, 0xd9, 0x6f, 0xc6, 0x0d, 0xdc, 0x8d, 0x36, 0xff,
+	0x1a, 0x3d, 0x72, 0xb7, 0x7b, 0x0f, 0xed, 0xf6, 0x1e, 0xfa, 0xb1, 0xf7, 0xd0, 0xd7, 0x83, 0x67,
+	0xec, 0x0e, 0x9e, 0xf1, 0xed, 0xe0, 0x19, 0x3f, 0x03, 0x00, 0x00, 0xff, 0xff, 0x92, 0xa1, 0x23,
+	0x40, 0x06, 0x04, 0x00, 0x00,
 }
 
 func (m *GroupsCreate) Marshal() (dAtA []byte, err error) {
@@ -737,18 +655,6 @@ func (m *GroupsCreate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Team != nil {
-		{
-			size, err := m.Team.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintChatGroups(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x4a
-	}
 	i -= len(m.Title)
 	copy(dAtA[i:], m.Title)
 	i = encodeVarintChatGroups(dAtA, i, uint64(len(m.Title)))
@@ -791,18 +697,6 @@ func (m *GroupsAddUser) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Team != nil {
-		{
-			size, err := m.Team.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintChatGroups(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x4a
-	}
 	i = encodeVarintChatGroups(dAtA, i, uint64(m.ForwardLimit))
 	i--
 	dAtA[i] = 0x18
@@ -846,18 +740,6 @@ func (m *GroupsEditTitle) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Team != nil {
-		{
-			size, err := m.Team.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintChatGroups(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x4a
-	}
 	i -= len(m.Title)
 	copy(dAtA[i:], m.Title)
 	i = encodeVarintChatGroups(dAtA, i, uint64(len(m.Title)))
@@ -889,18 +771,6 @@ func (m *GroupsDeleteUser) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Team != nil {
-		{
-			size, err := m.Team.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintChatGroups(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x4a
-	}
 	if m.User == nil {
 		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("User")
 	} else {
@@ -941,18 +811,6 @@ func (m *GroupsGetFull) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Team != nil {
-		{
-			size, err := m.Team.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintChatGroups(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x4a
-	}
 	i = encodeVarintChatGroups(dAtA, i, uint64(m.GroupID))
 	i--
 	dAtA[i] = 0x8
@@ -979,18 +837,6 @@ func (m *GroupsToggleAdmins) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Team != nil {
-		{
-			size, err := m.Team.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintChatGroups(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x4a
-	}
 	i--
 	if m.AdminEnabled {
 		dAtA[i] = 1
@@ -1025,18 +871,6 @@ func (m *GroupsUpdateAdmin) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Team != nil {
-		{
-			size, err := m.Team.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintChatGroups(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x4a
-	}
 	i--
 	if m.Admin {
 		dAtA[i] = 1
@@ -1085,18 +919,6 @@ func (m *GroupsUploadPhoto) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Team != nil {
-		{
-			size, err := m.Team.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintChatGroups(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x4a
-	}
 	i--
 	if m.ReturnObject {
 		dAtA[i] = 1
@@ -1145,18 +967,6 @@ func (m *GroupsRemovePhoto) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Team != nil {
-		{
-			size, err := m.Team.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintChatGroups(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x4a
-	}
 	i = encodeVarintChatGroups(dAtA, i, uint64(m.PhotoID))
 	i--
 	dAtA[i] = 0x10
@@ -1186,18 +996,6 @@ func (m *GroupsUpdatePhoto) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Team != nil {
-		{
-			size, err := m.Team.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintChatGroups(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x4a
-	}
 	i = encodeVarintChatGroups(dAtA, i, uint64(m.GroupID))
 	i--
 	dAtA[i] = 0x10
@@ -1232,10 +1030,6 @@ func (m *GroupsCreate) Size() (n int) {
 	}
 	l = len(m.Title)
 	n += 1 + l + sovChatGroups(uint64(l))
-	if m.Team != nil {
-		l = m.Team.Size()
-		n += 1 + l + sovChatGroups(uint64(l))
-	}
 	return n
 }
 
@@ -1251,10 +1045,6 @@ func (m *GroupsAddUser) Size() (n int) {
 		n += 1 + l + sovChatGroups(uint64(l))
 	}
 	n += 1 + sovChatGroups(uint64(m.ForwardLimit))
-	if m.Team != nil {
-		l = m.Team.Size()
-		n += 1 + l + sovChatGroups(uint64(l))
-	}
 	return n
 }
 
@@ -1267,10 +1057,6 @@ func (m *GroupsEditTitle) Size() (n int) {
 	n += 1 + sovChatGroups(uint64(m.GroupID))
 	l = len(m.Title)
 	n += 1 + l + sovChatGroups(uint64(l))
-	if m.Team != nil {
-		l = m.Team.Size()
-		n += 1 + l + sovChatGroups(uint64(l))
-	}
 	return n
 }
 
@@ -1285,10 +1071,6 @@ func (m *GroupsDeleteUser) Size() (n int) {
 		l = m.User.Size()
 		n += 1 + l + sovChatGroups(uint64(l))
 	}
-	if m.Team != nil {
-		l = m.Team.Size()
-		n += 1 + l + sovChatGroups(uint64(l))
-	}
 	return n
 }
 
@@ -1299,10 +1081,6 @@ func (m *GroupsGetFull) Size() (n int) {
 	var l int
 	_ = l
 	n += 1 + sovChatGroups(uint64(m.GroupID))
-	if m.Team != nil {
-		l = m.Team.Size()
-		n += 1 + l + sovChatGroups(uint64(l))
-	}
 	return n
 }
 
@@ -1314,10 +1092,6 @@ func (m *GroupsToggleAdmins) Size() (n int) {
 	_ = l
 	n += 1 + sovChatGroups(uint64(m.GroupID))
 	n += 2
-	if m.Team != nil {
-		l = m.Team.Size()
-		n += 1 + l + sovChatGroups(uint64(l))
-	}
 	return n
 }
 
@@ -1333,10 +1107,6 @@ func (m *GroupsUpdateAdmin) Size() (n int) {
 		n += 1 + l + sovChatGroups(uint64(l))
 	}
 	n += 2
-	if m.Team != nil {
-		l = m.Team.Size()
-		n += 1 + l + sovChatGroups(uint64(l))
-	}
 	return n
 }
 
@@ -1352,10 +1122,6 @@ func (m *GroupsUploadPhoto) Size() (n int) {
 		n += 1 + l + sovChatGroups(uint64(l))
 	}
 	n += 2
-	if m.Team != nil {
-		l = m.Team.Size()
-		n += 1 + l + sovChatGroups(uint64(l))
-	}
 	return n
 }
 
@@ -1367,10 +1133,6 @@ func (m *GroupsRemovePhoto) Size() (n int) {
 	_ = l
 	n += 1 + sovChatGroups(uint64(m.GroupID))
 	n += 1 + sovChatGroups(uint64(m.PhotoID))
-	if m.Team != nil {
-		l = m.Team.Size()
-		n += 1 + l + sovChatGroups(uint64(l))
-	}
 	return n
 }
 
@@ -1382,10 +1144,6 @@ func (m *GroupsUpdatePhoto) Size() (n int) {
 	_ = l
 	n += 1 + sovChatGroups(uint64(m.PhotoID))
 	n += 1 + sovChatGroups(uint64(m.GroupID))
-	if m.Team != nil {
-		l = m.Team.Size()
-		n += 1 + l + sovChatGroups(uint64(l))
-	}
 	return n
 }
 
@@ -1492,42 +1250,6 @@ func (m *GroupsCreate) Unmarshal(dAtA []byte) error {
 			m.Title = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 			hasFields[0] |= uint64(0x00000001)
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Team", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChatGroups
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Team == nil {
-				m.Team = &InputTeam{}
-			}
-			if err := m.Team.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipChatGroups(dAtA[iNdEx:])
@@ -1662,42 +1384,6 @@ func (m *GroupsAddUser) Unmarshal(dAtA []byte) error {
 				}
 			}
 			hasFields[0] |= uint64(0x00000004)
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Team", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChatGroups
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Team == nil {
-				m.Team = &InputTeam{}
-			}
-			if err := m.Team.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipChatGroups(dAtA[iNdEx:])
@@ -1814,42 +1500,6 @@ func (m *GroupsEditTitle) Unmarshal(dAtA []byte) error {
 			m.Title = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 			hasFields[0] |= uint64(0x00000002)
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Team", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChatGroups
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Team == nil {
-				m.Team = &InputTeam{}
-			}
-			if err := m.Team.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipChatGroups(dAtA[iNdEx:])
@@ -1967,42 +1617,6 @@ func (m *GroupsDeleteUser) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 			hasFields[0] |= uint64(0x00000002)
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Team", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChatGroups
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Team == nil {
-				m.Team = &InputTeam{}
-			}
-			if err := m.Team.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipChatGroups(dAtA[iNdEx:])
@@ -2083,42 +1697,6 @@ func (m *GroupsGetFull) Unmarshal(dAtA []byte) error {
 				}
 			}
 			hasFields[0] |= uint64(0x00000001)
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Team", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChatGroups
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Team == nil {
-				m.Team = &InputTeam{}
-			}
-			if err := m.Team.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipChatGroups(dAtA[iNdEx:])
@@ -2217,42 +1795,6 @@ func (m *GroupsToggleAdmins) Unmarshal(dAtA []byte) error {
 			}
 			m.AdminEnabled = bool(v != 0)
 			hasFields[0] |= uint64(0x00000002)
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Team", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChatGroups
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Team == nil {
-				m.Team = &InputTeam{}
-			}
-			if err := m.Team.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipChatGroups(dAtA[iNdEx:])
@@ -2391,42 +1933,6 @@ func (m *GroupsUpdateAdmin) Unmarshal(dAtA []byte) error {
 			}
 			m.Admin = bool(v != 0)
 			hasFields[0] |= uint64(0x00000004)
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Team", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChatGroups
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Team == nil {
-				m.Team = &InputTeam{}
-			}
-			if err := m.Team.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipChatGroups(dAtA[iNdEx:])
@@ -2567,42 +2073,6 @@ func (m *GroupsUploadPhoto) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.ReturnObject = bool(v != 0)
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Team", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChatGroups
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Team == nil {
-				m.Team = &InputTeam{}
-			}
-			if err := m.Team.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipChatGroups(dAtA[iNdEx:])
@@ -2702,42 +2172,6 @@ func (m *GroupsRemovePhoto) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Team", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChatGroups
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Team == nil {
-				m.Team = &InputTeam{}
-			}
-			if err := m.Team.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipChatGroups(dAtA[iNdEx:])
@@ -2835,42 +2269,6 @@ func (m *GroupsUpdatePhoto) Unmarshal(dAtA []byte) error {
 				}
 			}
 			hasFields[0] |= uint64(0x00000002)
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Team", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChatGroups
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthChatGroups
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Team == nil {
-				m.Team = &InputTeam{}
-			}
-			if err := m.Team.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipChatGroups(dAtA[iNdEx:])

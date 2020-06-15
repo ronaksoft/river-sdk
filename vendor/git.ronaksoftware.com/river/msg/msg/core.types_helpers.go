@@ -93,6 +93,7 @@ func (p *poolMessageEnvelope) Get() *MessageEnvelope {
 		return &MessageEnvelope{}
 	}
 	x.Message = x.Message[:0]
+	x.Team = nil
 	return x
 }
 

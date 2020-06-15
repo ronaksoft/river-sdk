@@ -28,7 +28,6 @@ func (p *poolGroupsCreate) Get() *GroupsCreate {
 		return &GroupsCreate{}
 	}
 	x.Users = x.Users[:0]
-	x.Team = nil
 	return x
 }
 
@@ -61,7 +60,6 @@ func (p *poolGroupsAddUser) Get() *GroupsAddUser {
 	if !ok {
 		return &GroupsAddUser{}
 	}
-	x.Team = nil
 	return x
 }
 
@@ -94,7 +92,6 @@ func (p *poolGroupsEditTitle) Get() *GroupsEditTitle {
 	if !ok {
 		return &GroupsEditTitle{}
 	}
-	x.Team = nil
 	return x
 }
 
@@ -127,7 +124,6 @@ func (p *poolGroupsDeleteUser) Get() *GroupsDeleteUser {
 	if !ok {
 		return &GroupsDeleteUser{}
 	}
-	x.Team = nil
 	return x
 }
 
@@ -160,7 +156,6 @@ func (p *poolGroupsGetFull) Get() *GroupsGetFull {
 	if !ok {
 		return &GroupsGetFull{}
 	}
-	x.Team = nil
 	return x
 }
 
@@ -193,7 +188,6 @@ func (p *poolGroupsToggleAdmins) Get() *GroupsToggleAdmins {
 	if !ok {
 		return &GroupsToggleAdmins{}
 	}
-	x.Team = nil
 	return x
 }
 
@@ -226,7 +220,6 @@ func (p *poolGroupsUpdateAdmin) Get() *GroupsUpdateAdmin {
 	if !ok {
 		return &GroupsUpdateAdmin{}
 	}
-	x.Team = nil
 	return x
 }
 
@@ -260,7 +253,6 @@ func (p *poolGroupsUploadPhoto) Get() *GroupsUploadPhoto {
 		return &GroupsUploadPhoto{}
 	}
 	x.ReturnObject = false
-	x.Team = nil
 	return x
 }
 
@@ -294,7 +286,6 @@ func (p *poolGroupsRemovePhoto) Get() *GroupsRemovePhoto {
 		return &GroupsRemovePhoto{}
 	}
 	x.PhotoID = 0
-	x.Team = nil
 	return x
 }
 
@@ -327,7 +318,6 @@ func (p *poolGroupsUpdatePhoto) Get() *GroupsUpdatePhoto {
 	if !ok {
 		return &GroupsUpdatePhoto{}
 	}
-	x.Team = nil
 	return x
 }
 

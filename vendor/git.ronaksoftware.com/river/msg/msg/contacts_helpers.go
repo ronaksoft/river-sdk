@@ -28,7 +28,6 @@ func (p *poolContactsImport) Get() *ContactsImport {
 		return &ContactsImport{}
 	}
 	x.Contacts = x.Contacts[:0]
-	x.Team = nil
 	return x
 }
 
@@ -63,7 +62,6 @@ func (p *poolContactsAdd) Get() *ContactsAdd {
 	}
 	x.LastName = ""
 	x.Phone = ""
-	x.Team = nil
 	return x
 }
 
@@ -96,7 +94,6 @@ func (p *poolContactsGet) Get() *ContactsGet {
 	if !ok {
 		return &ContactsGet{}
 	}
-	x.Team = nil
 	return x
 }
 
@@ -130,7 +127,6 @@ func (p *poolContactsDelete) Get() *ContactsDelete {
 		return &ContactsDelete{}
 	}
 	x.UserIDs = x.UserIDs[:0]
-	x.Team = nil
 	return x
 }
 
@@ -163,7 +159,6 @@ func (p *poolContactsDeleteAll) Get() *ContactsDeleteAll {
 	if !ok {
 		return &ContactsDeleteAll{}
 	}
-	x.Team = nil
 	return x
 }
 
@@ -292,7 +287,6 @@ func (p *poolContactsSearch) Get() *ContactsSearch {
 	if !ok {
 		return &ContactsSearch{}
 	}
-	x.Team = nil
 	return x
 }
 
@@ -325,7 +319,6 @@ func (p *poolContactsGetTopPeers) Get() *ContactsGetTopPeers {
 	if !ok {
 		return &ContactsGetTopPeers{}
 	}
-	x.Team = nil
 	return x
 }
 
@@ -358,7 +351,6 @@ func (p *poolContactsResetTopPeer) Get() *ContactsResetTopPeer {
 	if !ok {
 		return &ContactsResetTopPeer{}
 	}
-	x.Team = nil
 	return x
 }
 

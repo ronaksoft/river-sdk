@@ -1,4 +1,4 @@
-# git.ronaksoftware.com/river/msg v0.0.0-20200614175100-96d884b5c149
+# git.ronaksoftware.com/river/msg v0.0.0-20200615061503-1f42bf5eccc7
 git.ronaksoftware.com/river/msg/msg
 # git.ronaksoftware.com/ronak/toolbox v1.1.6
 git.ronaksoftware.com/ronak/toolbox
