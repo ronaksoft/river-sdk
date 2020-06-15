@@ -160,6 +160,7 @@ func (p *poolBotSendMessage) Get() *BotSendMessage {
 	if !ok {
 		return &BotSendMessage{}
 	}
+	x.Team = nil
 	x.ReplyTo = 0
 	x.ClearDraft = false
 	x.Entities = x.Entities[:0]
@@ -202,6 +203,7 @@ func (p *poolBotEditMessage) Get() *BotEditMessage {
 	x.ReplyMarkup = 0
 	x.ReplyMarkupData = nil
 	x.ReplyMarkupData = x.ReplyMarkupData[:0]
+	x.Team = nil
 	return x
 }
 
@@ -236,6 +238,7 @@ func (p *poolBotSendMedia) Get() *BotSendMedia {
 	}
 	x.MediaData = x.MediaData[:0]
 	x.ReplyTo = 0
+	x.Team = nil
 	return x
 }
 
@@ -400,6 +403,7 @@ func (p *poolBotDeleteMessage) Get() *BotDeleteMessage {
 		return &BotDeleteMessage{}
 	}
 	x.MessageIDs = x.MessageIDs[:0]
+	x.Team = nil
 	return x
 }
 
@@ -468,6 +472,7 @@ func (p *poolBotGetCallbackAnswer) Get() *BotGetCallbackAnswer {
 	}
 	x.MessageID = 0
 	x.Data = x.Data[:0]
+	x.Team = nil
 	return x
 }
 
@@ -501,6 +506,7 @@ func (p *poolBotGetInlineResults) Get() *BotGetInlineResults {
 		return &BotGetInlineResults{}
 	}
 	x.Location = nil
+	x.Team = nil
 	return x
 }
 
@@ -570,6 +576,7 @@ func (p *poolBotSendInlineResults) Get() *BotSendInlineResults {
 	}
 	x.Silent = false
 	x.HideVia = false
+	x.Team = nil
 	return x
 }
 

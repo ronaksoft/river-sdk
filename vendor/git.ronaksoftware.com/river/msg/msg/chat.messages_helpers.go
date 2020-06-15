@@ -31,6 +31,7 @@ func (p *poolMessagesSend) Get() *MessagesSend {
 	x.ReplyTo = 0
 	x.ClearDraft = false
 	x.Entities = x.Entities[:0]
+	x.Team = nil
 	return x
 }
 
@@ -100,6 +101,7 @@ func (p *poolMessagesSendMedia) Get() *MessagesSendMedia {
 	x.MediaData = x.MediaData[:0]
 	x.ReplyTo = 0
 	x.ClearDraft = false
+	x.Team = nil
 	return x
 }
 
@@ -133,6 +135,7 @@ func (p *poolMessagesEdit) Get() *MessagesEdit {
 		return &MessagesEdit{}
 	}
 	x.Entities = x.Entities[:0]
+	x.Team = nil
 	return x
 }
 
@@ -165,6 +168,7 @@ func (p *poolMessagesReadHistory) Get() *MessagesReadHistory {
 	if !ok {
 		return &MessagesReadHistory{}
 	}
+	x.Team = nil
 	return x
 }
 
@@ -198,6 +202,7 @@ func (p *poolMessagesGet) Get() *MessagesGet {
 		return &MessagesGet{}
 	}
 	x.MessagesIDs = x.MessagesIDs[:0]
+	x.Team = nil
 	return x
 }
 
@@ -230,6 +235,7 @@ func (p *poolMessagesGetHistory) Get() *MessagesGetHistory {
 	if !ok {
 		return &MessagesGetHistory{}
 	}
+	x.Team = nil
 	return x
 }
 
@@ -263,6 +269,7 @@ func (p *poolMessagesGetDialogs) Get() *MessagesGetDialogs {
 		return &MessagesGetDialogs{}
 	}
 	x.ExcludePinned = false
+	x.Team = nil
 	return x
 }
 
@@ -295,6 +302,7 @@ func (p *poolMessagesGetPinnedDialogs) Get() *MessagesGetPinnedDialogs {
 	if !ok {
 		return &MessagesGetPinnedDialogs{}
 	}
+	x.Team = nil
 	return x
 }
 
@@ -327,6 +335,7 @@ func (p *poolMessagesGetDialog) Get() *MessagesGetDialog {
 	if !ok {
 		return &MessagesGetDialog{}
 	}
+	x.Team = nil
 	return x
 }
 
@@ -359,6 +368,7 @@ func (p *poolMessagesSetTyping) Get() *MessagesSetTyping {
 	if !ok {
 		return &MessagesSetTyping{}
 	}
+	x.Team = nil
 	return x
 }
 
@@ -391,6 +401,7 @@ func (p *poolMessagesClearHistory) Get() *MessagesClearHistory {
 	if !ok {
 		return &MessagesClearHistory{}
 	}
+	x.Team = nil
 	return x
 }
 
@@ -424,6 +435,7 @@ func (p *poolMessagesDelete) Get() *MessagesDelete {
 		return &MessagesDelete{}
 	}
 	x.MessageIDs = x.MessageIDs[:0]
+	x.Team = nil
 	return x
 }
 
@@ -457,6 +469,7 @@ func (p *poolMessagesForward) Get() *MessagesForward {
 		return &MessagesForward{}
 	}
 	x.MessageIDs = x.MessageIDs[:0]
+	x.Team = nil
 	return x
 }
 
@@ -490,6 +503,7 @@ func (p *poolMessagesReadContents) Get() *MessagesReadContents {
 		return &MessagesReadContents{}
 	}
 	x.MessageIDs = x.MessageIDs[:0]
+	x.Team = nil
 	return x
 }
 
@@ -524,6 +538,7 @@ func (p *poolMessagesSaveDraft) Get() *MessagesSaveDraft {
 	}
 	x.Entities = x.Entities[:0]
 	x.EditedID = 0
+	x.Team = nil
 	return x
 }
 
@@ -556,6 +571,7 @@ func (p *poolMessagesClearDraft) Get() *MessagesClearDraft {
 	if !ok {
 		return &MessagesClearDraft{}
 	}
+	x.Team = nil
 	return x
 }
 
@@ -588,6 +604,7 @@ func (p *poolMessagesToggleDialogPin) Get() *MessagesToggleDialogPin {
 	if !ok {
 		return &MessagesToggleDialogPin{}
 	}
+	x.Team = nil
 	return x
 }
 
@@ -621,6 +638,7 @@ func (p *poolMessagesReorderPinnedDialogs) Get() *MessagesReorderPinnedDialogs {
 		return &MessagesReorderPinnedDialogs{}
 	}
 	x.Peers = x.Peers[:0]
+	x.Team = nil
 	return x
 }
 
@@ -656,6 +674,7 @@ func (p *poolMessagesSendScreenShotNotification) Get() *MessagesSendScreenShotNo
 	x.ReplyTo = 0
 	x.MinID = 0
 	x.MaxID = 0
+	x.Team = nil
 	return x
 }
 
@@ -667,71 +686,6 @@ var PoolMessagesSendScreenShotNotification = poolMessagesSendScreenShotNotificat
 
 func ResultMessagesSendScreenShotNotification(out *MessageEnvelope, res *MessagesSendScreenShotNotification) {
 	out.Constructor = C_MessagesSendScreenShotNotification
-	protoSize := res.Size()
-	if protoSize > cap(out.Message) {
-		pbytes.Put(out.Message)
-		out.Message = pbytes.GetLen(protoSize)
-	} else {
-		out.Message = out.Message[:protoSize]
-	}
-	res.MarshalToSizedBuffer(out.Message)
-}
-
-const C_MessagesSendVote int64 = 2566114356
-
-type poolMessagesSendVote struct {
-	pool sync.Pool
-}
-
-func (p *poolMessagesSendVote) Get() *MessagesSendVote {
-	x, ok := p.pool.Get().(*MessagesSendVote)
-	if !ok {
-		return &MessagesSendVote{}
-	}
-	x.Options = x.Options[:0]
-	return x
-}
-
-func (p *poolMessagesSendVote) Put(x *MessagesSendVote) {
-	p.pool.Put(x)
-}
-
-var PoolMessagesSendVote = poolMessagesSendVote{}
-
-func ResultMessagesSendVote(out *MessageEnvelope, res *MessagesSendVote) {
-	out.Constructor = C_MessagesSendVote
-	protoSize := res.Size()
-	if protoSize > cap(out.Message) {
-		pbytes.Put(out.Message)
-		out.Message = pbytes.GetLen(protoSize)
-	} else {
-		out.Message = out.Message[:protoSize]
-	}
-	res.MarshalToSizedBuffer(out.Message)
-}
-
-const C_MessagesGetPollResults int64 = 1918165418
-
-type poolMessagesGetPollResults struct {
-	pool sync.Pool
-}
-
-func (p *poolMessagesGetPollResults) Get() *MessagesGetPollResults {
-	x, ok := p.pool.Get().(*MessagesGetPollResults)
-	if !ok {
-		return &MessagesGetPollResults{}
-	}
-	return x
-}
-
-func (p *poolMessagesGetPollResults) Put(x *MessagesGetPollResults) {
-	p.pool.Put(x)
-}
-
-var PoolMessagesGetPollResults = poolMessagesGetPollResults{}
-
-func ResultMessagesGetPollResults(out *MessageEnvelope, res *MessagesGetPollResults) {
-	out.Constructor = C_MessagesGetPollResults
 	protoSize := res.Size()
 	if protoSize > cap(out.Message) {
 		pbytes.Put(out.Message)
@@ -868,8 +822,6 @@ func init() {
 	ConstructorNames[1352871220] = "MessagesToggleDialogPin"
 	ConstructorNames[1409872986] = "MessagesReorderPinnedDialogs"
 	ConstructorNames[3682116055] = "MessagesSendScreenShotNotification"
-	ConstructorNames[2566114356] = "MessagesSendVote"
-	ConstructorNames[1918165418] = "MessagesGetPollResults"
 	ConstructorNames[3252610224] = "MessagesDialogs"
 	ConstructorNames[2942502835] = "MessagesSent"
 	ConstructorNames[1713238910] = "MessagesMany"

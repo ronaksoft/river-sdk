@@ -402,6 +402,38 @@ func ResultAdminGetReservedUsernames(out *MessageEnvelope, res *AdminGetReserved
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_AdminTeamCreate int64 = 2797066608
+
+type poolAdminTeamCreate struct {
+	pool sync.Pool
+}
+
+func (p *poolAdminTeamCreate) Get() *AdminTeamCreate {
+	x, ok := p.pool.Get().(*AdminTeamCreate)
+	if !ok {
+		return &AdminTeamCreate{}
+	}
+	return x
+}
+
+func (p *poolAdminTeamCreate) Put(x *AdminTeamCreate) {
+	p.pool.Put(x)
+}
+
+var PoolAdminTeamCreate = poolAdminTeamCreate{}
+
+func ResultAdminTeamCreate(out *MessageEnvelope, res *AdminTeamCreate) {
+	out.Constructor = C_AdminTeamCreate
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 const C_AdminToken int64 = 2895609620
 
 type poolAdminToken struct {
@@ -681,6 +713,7 @@ func init() {
 	ConstructorNames[3154441897] = "AdminDeleteToken"
 	ConstructorNames[1947723452] = "AdminReserveUsername"
 	ConstructorNames[1588181579] = "AdminGetReservedUsernames"
+	ConstructorNames[2797066608] = "AdminTeamCreate"
 	ConstructorNames[2895609620] = "AdminToken"
 	ConstructorNames[414982091] = "WelcomeMessagesMany"
 	ConstructorNames[2123920547] = "VersionsMany"

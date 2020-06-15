@@ -27,6 +27,7 @@ func (p *poolAccountSetNotifySettings) Get() *AccountSetNotifySettings {
 	if !ok {
 		return &AccountSetNotifySettings{}
 	}
+	x.Team = nil
 	return x
 }
 
@@ -59,6 +60,7 @@ func (p *poolAccountGetNotifySettings) Get() *AccountGetNotifySettings {
 	if !ok {
 		return &AccountGetNotifySettings{}
 	}
+	x.Team = nil
 	return x
 }
 

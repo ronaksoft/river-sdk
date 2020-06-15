@@ -49,38 +49,6 @@ func ResultTeamGet(out *MessageEnvelope, res *TeamGet) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
-const C_TeamCreate int64 = 2316911553
-
-type poolTeamCreate struct {
-	pool sync.Pool
-}
-
-func (p *poolTeamCreate) Get() *TeamCreate {
-	x, ok := p.pool.Get().(*TeamCreate)
-	if !ok {
-		return &TeamCreate{}
-	}
-	return x
-}
-
-func (p *poolTeamCreate) Put(x *TeamCreate) {
-	p.pool.Put(x)
-}
-
-var PoolTeamCreate = poolTeamCreate{}
-
-func ResultTeamCreate(out *MessageEnvelope, res *TeamCreate) {
-	out.Constructor = C_TeamCreate
-	protoSize := res.Size()
-	if protoSize > cap(out.Message) {
-		pbytes.Put(out.Message)
-		out.Message = pbytes.GetLen(protoSize)
-	} else {
-		out.Message = out.Message[:protoSize]
-	}
-	res.MarshalToSizedBuffer(out.Message)
-}
-
 const C_TeamAddMember int64 = 3889056091
 
 type poolTeamAddMember struct {
@@ -135,6 +103,70 @@ var PoolTeamRemoveMember = poolTeamRemoveMember{}
 
 func ResultTeamRemoveMember(out *MessageEnvelope, res *TeamRemoveMember) {
 	out.Constructor = C_TeamRemoveMember
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_TeamPromote int64 = 382328820
+
+type poolTeamPromote struct {
+	pool sync.Pool
+}
+
+func (p *poolTeamPromote) Get() *TeamPromote {
+	x, ok := p.pool.Get().(*TeamPromote)
+	if !ok {
+		return &TeamPromote{}
+	}
+	return x
+}
+
+func (p *poolTeamPromote) Put(x *TeamPromote) {
+	p.pool.Put(x)
+}
+
+var PoolTeamPromote = poolTeamPromote{}
+
+func ResultTeamPromote(out *MessageEnvelope, res *TeamPromote) {
+	out.Constructor = C_TeamPromote
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_TeamDemote int64 = 2331393294
+
+type poolTeamDemote struct {
+	pool sync.Pool
+}
+
+func (p *poolTeamDemote) Get() *TeamDemote {
+	x, ok := p.pool.Get().(*TeamDemote)
+	if !ok {
+		return &TeamDemote{}
+	}
+	return x
+}
+
+func (p *poolTeamDemote) Put(x *TeamDemote) {
+	p.pool.Put(x)
+}
+
+var PoolTeamDemote = poolTeamDemote{}
+
+func ResultTeamDemote(out *MessageEnvelope, res *TeamDemote) {
+	out.Constructor = C_TeamDemote
 	protoSize := res.Size()
 	if protoSize > cap(out.Message) {
 		pbytes.Put(out.Message)
@@ -242,12 +274,80 @@ func ResultTeamListMembers(out *MessageEnvelope, res *TeamListMembers) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_TeamMembers int64 = 2208941294
+
+type poolTeamMembers struct {
+	pool sync.Pool
+}
+
+func (p *poolTeamMembers) Get() *TeamMembers {
+	x, ok := p.pool.Get().(*TeamMembers)
+	if !ok {
+		return &TeamMembers{}
+	}
+	x.Members = x.Members[:0]
+	return x
+}
+
+func (p *poolTeamMembers) Put(x *TeamMembers) {
+	p.pool.Put(x)
+}
+
+var PoolTeamMembers = poolTeamMembers{}
+
+func ResultTeamMembers(out *MessageEnvelope, res *TeamMembers) {
+	out.Constructor = C_TeamMembers
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_TeamMember int64 = 1965775170
+
+type poolTeamMember struct {
+	pool sync.Pool
+}
+
+func (p *poolTeamMember) Get() *TeamMember {
+	x, ok := p.pool.Get().(*TeamMember)
+	if !ok {
+		return &TeamMember{}
+	}
+	return x
+}
+
+func (p *poolTeamMember) Put(x *TeamMember) {
+	p.pool.Put(x)
+}
+
+var PoolTeamMember = poolTeamMember{}
+
+func ResultTeamMember(out *MessageEnvelope, res *TeamMember) {
+	out.Constructor = C_TeamMember
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 func init() {
 	ConstructorNames[1172720786] = "TeamGet"
-	ConstructorNames[2316911553] = "TeamCreate"
 	ConstructorNames[3889056091] = "TeamAddMember"
 	ConstructorNames[4200364613] = "TeamRemoveMember"
+	ConstructorNames[382328820] = "TeamPromote"
+	ConstructorNames[2331393294] = "TeamDemote"
 	ConstructorNames[1413785879] = "TeamLeave"
 	ConstructorNames[1725794017] = "TeamJoin"
 	ConstructorNames[3107323194] = "TeamListMembers"
+	ConstructorNames[2208941294] = "TeamMembers"
+	ConstructorNames[1965775170] = "TeamMember"
 }

@@ -158,6 +158,7 @@ func (p *poolLabelsAddToMessage) Get() *LabelsAddToMessage {
 	}
 	x.LabelIDs = x.LabelIDs[:0]
 	x.MessageIDs = x.MessageIDs[:0]
+	x.Team = nil
 	return x
 }
 
@@ -192,6 +193,7 @@ func (p *poolLabelsRemoveFromMessage) Get() *LabelsRemoveFromMessage {
 	}
 	x.LabelIDs = x.LabelIDs[:0]
 	x.MessageIDs = x.MessageIDs[:0]
+	x.Team = nil
 	return x
 }
 
@@ -227,6 +229,7 @@ func (p *poolLabelsListItems) Get() *LabelsListItems {
 	x.MinID = 0
 	x.MaxID = 0
 	x.Limit = 0
+	x.Team = nil
 	return x
 }
 

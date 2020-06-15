@@ -107,4 +107,8 @@ const (
 	ErrItemAdminBot         = "ADMIN_BOT"
 	ErrItemBotResult        = "BOT_RESULT"
 	ErrItemWallPaper        = "WALLPAPER"
+	ErrItemTeamID           = "TEAM_ID"
+	ErrItemTeamAccess       = "TEAM_ACCESS"
+	ErrItemTeamMember       = "TEAM_MEMBER"
+	ErrItemTeamManager      = "TEAM_MANAGER"
 )

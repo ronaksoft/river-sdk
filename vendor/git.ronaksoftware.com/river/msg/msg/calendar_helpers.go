@@ -186,10 +186,44 @@ func ResultCalendarEvent(out *MessageEnvelope, res *CalendarEvent) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_CalendarEventInstance int64 = 3586847608
+
+type poolCalendarEventInstance struct {
+	pool sync.Pool
+}
+
+func (p *poolCalendarEventInstance) Get() *CalendarEventInstance {
+	x, ok := p.pool.Get().(*CalendarEventInstance)
+	if !ok {
+		return &CalendarEventInstance{}
+	}
+	x.Colour = ""
+	return x
+}
+
+func (p *poolCalendarEventInstance) Put(x *CalendarEventInstance) {
+	p.pool.Put(x)
+}
+
+var PoolCalendarEventInstance = poolCalendarEventInstance{}
+
+func ResultCalendarEventInstance(out *MessageEnvelope, res *CalendarEventInstance) {
+	out.Constructor = C_CalendarEventInstance
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 func init() {
 	ConstructorNames[1010730154] = "CalendarGetEvents"
 	ConstructorNames[3405460640] = "CalendarSetEvent"
 	ConstructorNames[2440838922] = "CalendarEditEvent"
 	ConstructorNames[3761579510] = "CalendarRemoveEvent"
 	ConstructorNames[1185062169] = "CalendarEvent"
+	ConstructorNames[3586847608] = "CalendarEventInstance"
 }
