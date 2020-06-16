@@ -304,7 +304,7 @@ func (ctrl *Controller) savedGifs(e *msg.MessageEnvelope) {
 			ClusterID:   d.Doc.ClusterID,
 			FileID:      d.Doc.ID,
 			AccessHash:  d.Doc.AccessHash,
-			Type:        msg.Gif,
+			Type:        msg.Message,
 			MimeType:    d.Doc.MimeType,
 			UserID:      0,
 			GroupID:     0,
@@ -316,6 +316,7 @@ func (ctrl *Controller) savedGifs(e *msg.MessageEnvelope) {
 			Extension:   "",
 			MD5Checksum: d.Doc.MD5Checksum,
 			WallpaperID: 0,
+			Attributes:  d.Doc.Attributes,
 		}
 		err = repo.Files.Save(cf)
 		if err != nil {

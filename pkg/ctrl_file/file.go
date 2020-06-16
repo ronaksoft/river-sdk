@@ -267,7 +267,6 @@ func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash 
 		)
 	}()
 	return GetRequestID(clusterID, fileID, accessHash), nil
-
 }
 func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash uint64, skipDelegate bool) (filePath string, err error) {
 	clientFile, err := repo.Files.Get(clusterID, fileID, accessHash)

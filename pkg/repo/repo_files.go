@@ -216,6 +216,7 @@ func saveMessageMedia(txn *badger.Txn, m *msg.UserMessage) error {
 			PeerType:    m.PeerType,
 			Version:     md.Doc.Version,
 			MD5Checksum: md.Doc.MD5Checksum,
+			Attributes:  md.Doc.Attributes,
 		})
 		if err != nil {
 			return err
@@ -506,7 +507,7 @@ func (r *repoFiles) GetFilePath(clientFile *msg.ClientFile) string {
 	case msg.Thumbnail:
 		return getThumbnailPath(clientFile.FileID, clientFile.ClusterID)
 	case msg.Wallpaper:
-		return getWallpaperPath(clientFile.FileID,clientFile.ClusterID)
+		return getWallpaperPath(clientFile.FileID, clientFile.ClusterID)
 	}
 	return ""
 }
@@ -557,7 +558,7 @@ func getThumbnailPath(fileID int64, clusterID int32) string {
 }
 
 func getWallpaperPath(fileID int64, clusterID int32) string {
-	return path.Join(DirPhoto, fmt.Sprintf("%s_%d%d%s", "Wallpaper",fileID, clusterID, ".jpg"))
+	return path.Join(DirPhoto, fmt.Sprintf("%s_%d%d%s", "Wallpaper", fileID, clusterID, ".jpg"))
 }
 
 func getAccountProfilePath(userID int64, fileID int64) string {

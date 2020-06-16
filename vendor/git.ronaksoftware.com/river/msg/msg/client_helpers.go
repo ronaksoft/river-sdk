@@ -557,6 +557,7 @@ func (p *poolClientFile) Get() *ClientFile {
 	x.Extension = ""
 	x.MD5Checksum = ""
 	x.WallpaperID = 0
+	x.Attributes = x.Attributes[:0]
 	return x
 }
 
