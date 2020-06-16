@@ -886,12 +886,20 @@ func (r *River) gifSave(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCa
 		return
 	}
 
-	err = repo.Gifs.Save(cf)
-	if err != nil {
-		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
-		successCB(out)
-		return
+	logs.Info("We are saving GIF",
+		zap.Int64("FileID", cf.FileID),
+		zap.Uint64("AccessHash", cf.AccessHash),
+		zap.Int32("ClusterID", cf.ClusterID),
+	)
+	if !repo.Gifs.IsSaved(cf.ClusterID, cf.FileID) {
+		err = repo.Gifs.Save(cf)
+		if err != nil {
+			msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+			successCB(out)
+			return
+		}
 	}
+	_ = repo.Gifs.UpdateLastAccess(cf.ClusterID, cf.FileID, domain.Now().Unix())
 
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }

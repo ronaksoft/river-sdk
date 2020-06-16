@@ -12,7 +12,9 @@ var Gif = &ishell.Cmd{
 var GifSave = &ishell.Cmd{
 	Name: "Save",
 	Func: func(c *ishell.Context) {
-		req := msg.GifSave{}
+		req := msg.GifSave{
+			Doc: &msg.InputDocument{},
+		}
 		req.Doc.ClusterID = 1
 		req.Doc.ID = fnGetFileID(c)
 		req.Doc.AccessHash = fnGetAccessHash(c)
@@ -39,7 +41,6 @@ var GifGetSaved = &ishell.Cmd{
 		}
 	},
 }
-
 
 func init() {
 	Gif.AddCmd(GifSave)

@@ -194,10 +194,21 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		bufMessages := new(bytes.Buffer)
 		tableMessages := tablewriter.NewWriter(bufMessages)
 		tableMessages.SetHeader([]string{
-			"MsgID", "PeerID", "PeerType", "CreatedOn", "Flags", "Body", "Entities", "MeidaType",
+			"MsgID", "PeerID", "PeerType", "CreatedOn", "Flags", "Body", "Entities", "MeidaType", "FileID", "AccessHash",
 		})
 
 		for _, d := range x.Messages {
+			var docID int64
+			var accessHash uint64
+			if d.MediaType == msg.MediaTypeDocument {
+				xx := &msg.MediaDocument{}
+				xx.Unmarshal(d.Media)
+				docID = xx.Doc.ID
+				accessHash = xx.Doc.AccessHash
+			} else {
+				docID = 0
+				accessHash = 0
+			}
 			tableMessages.Append([]string{
 				fmt.Sprintf("%d", d.ID),
 				fmt.Sprintf("%d", d.PeerID),
@@ -207,6 +218,8 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 				fmt.Sprintf("%v", string(d.Body)),
 				fmt.Sprintf("%v", d.Entities),
 				fmt.Sprintf("%s", d.MediaType.String()),
+				fmt.Sprintf("%d", docID),
+				fmt.Sprintf("%d", accessHash),
 			})
 		}
 		tableMessages.Render()
