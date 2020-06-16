@@ -420,6 +420,14 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		_Shell.Println(fmt.Sprintf("Total Message Count: %d", len(x.Messages)))
 		_Shell.Println("\r\n" + bufMessages.String())
 		_Shell.Println("\r\n" + bufUsers.String())
+	case msg.C_ClientFilesMany:
+		x := &msg.ClientFilesMany{}
+		x.Unmarshal(envelope.Message)
+		_Shell.Println(x.Total, len(x.Gifs))
+	case msg.C_SavedGifs:
+		x := &msg.SavedGifs{}
+		x.Unmarshal(envelope.Message)
+		_Shell.Println(x.Hash, x.NotModified, len(x.Docs))
 	default:
 		constructorName, _ := msg.ConstructorNames[envelope.Constructor]
 		_Shell.Println("DEFAULT", constructorName, len(envelope.Message))

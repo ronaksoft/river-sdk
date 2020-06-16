@@ -222,10 +222,11 @@ func (ctrl *Controller) Sync() {
 		return nil, nil
 	})
 }
-func forceUpdateUI(ctrl *Controller, dialogs, contacts bool) {
+func forceUpdateUI(ctrl *Controller, dialogs, contacts, gifs bool) {
 	update := &msg.ClientUpdateSynced{}
 	update.Dialogs = dialogs
 	update.Contacts = contacts
+	update.Gifs = gifs
 	bytes, _ := update.Marshal()
 
 	updateEnvelope := &msg.UpdateEnvelope{}
@@ -590,7 +591,7 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 	if successCB != nil && out != nil {
 		successCB(out)
 	} else {
-		forceUpdateUI(ctrl, false, true)
+		forceUpdateUI(ctrl, false, true, false)
 	}
 	return
 }

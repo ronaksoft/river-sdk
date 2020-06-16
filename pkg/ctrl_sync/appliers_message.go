@@ -106,7 +106,7 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 		if err != nil {
 			logs.Error("SyncCtrl couldn't save ContactsHash in to the db", zap.Error(err))
 		}
-		forceUpdateUI(ctrl, false, true)
+		forceUpdateUI(ctrl, false, true, false)
 	}
 }
 
@@ -333,8 +333,12 @@ func (ctrl *Controller) savedGifs(e *msg.MessageEnvelope) {
 			}
 		}
 	}
+	oldHash, _ := repo.System.LoadInt(domain.SkGifHash)
 	err = repo.System.SaveInt(domain.SkGifHash, uint64(u.Hash))
 	if err != nil {
 		logs.Warn("SyncCtrl got error on saving GifHash", zap.Error(err))
+	}
+	if oldHash != uint64(u.Hash) {
+		forceUpdateUI(ctrl, false, false, true)
 	}
 }

@@ -1697,7 +1697,11 @@ func (r *River) clientRemoveRecentSearch(in, out *msg.MessageEnvelope, timeoutCB
 }
 
 func (r *River) clientGetSavedGifs(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	var uiCallback bool
+	var (
+		preSuccessCB domain.MessageHandler
+		preTimeoutCB domain.TimeoutCallback
+		uiCallback   bool
+	)
 	req := &msg.ClientGetSavedGifs{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
@@ -1715,10 +1719,30 @@ func (r *River) clientGetSavedGifs(in, out *msg.MessageEnvelope, timeoutCB domai
 		}
 		msg.ResultClientFilesMany(out, res)
 		successCB(out)
-		// We make callbacks to nil to prevent double calling it
-		successCB = nil
-		timeoutCB = nil
-		uiCallback = true
+		uiCallback = false
+	} else {
+		preSuccessCB = func(m *msg.MessageEnvelope) {
+			switch m.Constructor {
+			case msg.C_SavedGifs:
+				x := &msg.SavedGifs{}
+				_ = x.Unmarshal(m.Message)
+				res, err := repo.Gifs.GetSaved()
+				if err != nil {
+					msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+					successCB(out)
+					return
+				}
+				msg.ResultClientFilesMany(out, res)
+				successCB(out)
+			case msg.C_Error:
+				x := &msg.Error{}
+				_ = x.Unmarshal(m.Message)
+				logs.Warn("We received error from server", zap.String("Code", x.Code), zap.String("Item", x.Items))
+			default:
+				panic("we received unknown response from server!")
+			}
+		}
+		preTimeoutCB = timeoutCB
 	}
 
 	me := &msg.MessageEnvelope{}
@@ -1728,5 +1752,5 @@ func (r *River) clientGetSavedGifs(in, out *msg.MessageEnvelope, timeoutCB domai
 		Hash: uint32(gifHash),
 	}
 	me.Message, _ = sreq.Marshal()
-	r.queueCtrl.EnqueueCommand(me, timeoutCB, successCB, uiCallback)
+	r.queueCtrl.EnqueueCommand(me, preTimeoutCB, preSuccessCB, uiCallback)
 }

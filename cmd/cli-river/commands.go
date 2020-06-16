@@ -934,3 +934,33 @@ func fnGetFileID(c *ishell.Context) int64 {
 	}
 	return res
 }
+
+func fnGetTeamID(c *ishell.Context) int64 {
+	var res int64
+	for {
+		c.Print("TeamID : ")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
+		if err == nil {
+			res = int64(id)
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return res
+}
+
+func fnGetUserID(c *ishell.Context) int64 {
+	var res int64
+	for {
+		c.Print("UserID : ")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
+		if err == nil {
+			res = int64(id)
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return res
+}

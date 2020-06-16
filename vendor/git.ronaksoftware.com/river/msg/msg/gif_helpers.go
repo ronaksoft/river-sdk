@@ -59,6 +59,7 @@ func (p *poolGifSave) Get() *GifSave {
 	if !ok {
 		return &GifSave{}
 	}
+	x.Attributes = x.Attributes[:0]
 	return x
 }
 

@@ -233,7 +233,7 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, l
 					ctrl.GetAllDialogs(waitGroup, offset+limit, limit)
 				} else {
 					waitGroup.Done()
-					forceUpdateUI(ctrl, true, false)
+					forceUpdateUI(ctrl, true, false, false)
 				}
 			}
 		},
@@ -287,7 +287,7 @@ func (ctrl *Controller) GetAllTopPeers(waitGroup *sync.WaitGroup, cat msg.TopPee
 					ctrl.GetAllTopPeers(waitGroup, cat, offset+limit, limit)
 				} else {
 					waitGroup.Done()
-					forceUpdateUI(ctrl, true, false)
+					forceUpdateUI(ctrl, true, false, false)
 				}
 			}
 		},
