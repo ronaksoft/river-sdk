@@ -42,7 +42,27 @@ var GifGetSaved = &ishell.Cmd{
 	},
 }
 
+var GifDelete = &ishell.Cmd{
+	Name: "Delete",
+	Func: func(c *ishell.Context) {
+		req := msg.GifDelete{
+			Doc: &msg.InputDocument{},
+		}
+		req.Doc.ID = fnGetFileID(c)
+		req.Doc.AccessHash = fnGetAccessHash(c)
+		req.Doc.ClusterID = 1
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_GifDelete, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
 func init() {
 	Gif.AddCmd(GifSave)
 	Gif.AddCmd(GifGetSaved)
+	Gif.AddCmd(GifDelete)
 }

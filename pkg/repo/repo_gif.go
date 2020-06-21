@@ -124,6 +124,15 @@ func (r *repoGifs) GetSaved() (*msg.ClientFilesMany, error) {
 
 func (r *repoGifs) Delete(clusterID int32, docID int64) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
-		return deleteGif(txn, clusterID, docID)
+		err := deleteGif(txn, clusterID, docID)
+		switch err {
+		case nil, badger.ErrKeyNotFound:
+		default:
+			return err
+		}
+		return r.bunt.Update(func(tx *buntdb.Tx) error {
+			_, err := tx.Delete(domain.ByteToStr(getGifKey(clusterID, docID)))
+			return err
+		})
 	})
 }

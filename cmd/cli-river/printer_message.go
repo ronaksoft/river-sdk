@@ -437,6 +437,9 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		x := &msg.ClientFilesMany{}
 		x.Unmarshal(envelope.Message)
 		_Shell.Println(x.Total, len(x.Gifs))
+		for _, g := range x.Gifs {
+			_Shell.Println(g.FileID, g.AccessHash)
+		}
 	case msg.C_SavedGifs:
 		x := &msg.SavedGifs{}
 		x.Unmarshal(envelope.Message)
