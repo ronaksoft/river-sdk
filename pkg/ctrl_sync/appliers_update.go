@@ -105,6 +105,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 				if attr.Type == msg.AttributeTypeAnimated {
 					if repo.Gifs.IsSaved(xx.Doc.ClusterID, xx.Doc.ID) {
 						_ = repo.Gifs.UpdateLastAccess(xx.Doc.ClusterID, xx.Doc.ID, x.Message.CreatedOn)
+						forceUpdateUI(ctrl, false, false, true)
 					}
 				}
 			}
