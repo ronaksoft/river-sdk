@@ -622,6 +622,20 @@ func (r *River) contactsAdd(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 		return
 	}
 
+	user, _ := repo.Users.Get(req.User.UserID)
+	if user != nil {
+		_ = repo.Users.SaveContact(&msg.ContactUser{
+			ID:         req.User.UserID,
+			FirstName:  req.FirstName,
+			LastName:   req.LastName,
+			AccessHash: user.AccessHash,
+			Phone:      req.Phone,
+			Username:   user.Username,
+			ClientID:   0,
+			Photo:      user.Photo,
+		})
+	}
+
 	// reset contacts hash to update the contacts
 	_ = repo.System.SaveInt(domain.SkContactsGetHash, 0)
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
