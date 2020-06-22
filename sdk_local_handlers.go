@@ -614,6 +614,19 @@ func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 	uiexec.ExecSuccessCB(successCB, out)
 }
 
+func (r *River) contactsAdd(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ContactsAdd{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	// reset contacts hash to update the contacts
+	_ = repo.System.SaveInt(domain.SkContactsGetHash, 0)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+}
+
 func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := new(msg.ContactsImport)
 	if err := req.Unmarshal(in.Message); err != nil {
