@@ -892,7 +892,20 @@ func (r *River) gifSave(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCa
 		zap.Int32("ClusterID", cf.ClusterID),
 	)
 	if !repo.Gifs.IsSaved(cf.ClusterID, cf.FileID) {
-		err = repo.Gifs.Save(cf)
+		md := &msg.MediaDocument{
+			Doc: &msg.Document{
+				ID:          cf.FileID,
+				AccessHash:  cf.AccessHash,
+				Date:        0,
+				MimeType:    cf.MimeType,
+				FileSize:    int32(cf.FileSize),
+				Version:     cf.Version,
+				ClusterID:   cf.ClusterID,
+				Attributes:  req.Attributes,
+				MD5Checksum: cf.MD5Checksum,
+			},
+		}
+		err = repo.Gifs.Save(md)
 		if err != nil {
 			msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 			successCB(out)
@@ -1359,6 +1372,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 		return
 	}
 }
+
 func fillLabelItems(out *msg.MessageEnvelope, messages []*msg.UserMessage, users []*msg.User, groups []*msg.Group, requestID uint64, successCB domain.MessageHandler) {
 	res := new(msg.LabelItems)
 	res.Messages = messages
@@ -1704,20 +1718,15 @@ func (r *River) clientRemoveRecentSearch(in, out *msg.MessageEnvelope, timeoutCB
 	uiexec.ExecSuccessCB(successCB, out)
 }
 
-func (r *River) clientGetSavedGifs(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	var (
-		preSuccessCB domain.MessageHandler
-		preTimeoutCB domain.TimeoutCallback
-		uiCallback   bool
-	)
-	req := &msg.ClientGetSavedGifs{}
+func (r *River) gifGetSaved(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.GifGetSaved{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
 		return
 	}
-
 	gifHash, _ := repo.System.LoadInt(domain.SkGifHash)
+
 	if gifHash != 0 {
 		res, err := repo.Gifs.GetSaved()
 		if err != nil {
@@ -1725,40 +1734,10 @@ func (r *River) clientGetSavedGifs(in, out *msg.MessageEnvelope, timeoutCB domai
 			successCB(out)
 			return
 		}
-		msg.ResultClientFilesMany(out, res)
+		msg.ResultSavedGifs(out, res)
 		successCB(out)
-		uiCallback = false
-	} else {
-		preSuccessCB = func(m *msg.MessageEnvelope) {
-			switch m.Constructor {
-			case msg.C_SavedGifs:
-				x := &msg.SavedGifs{}
-				_ = x.Unmarshal(m.Message)
-				res, err := repo.Gifs.GetSaved()
-				if err != nil {
-					msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
-					successCB(out)
-					return
-				}
-				msg.ResultClientFilesMany(out, res)
-				successCB(out)
-			case msg.C_Error:
-				x := &msg.Error{}
-				_ = x.Unmarshal(m.Message)
-				logs.Warn("We received error from server", zap.String("Code", x.Code), zap.String("Item", x.Items))
-			default:
-				panic("we received unknown response from server!")
-			}
-		}
-		preTimeoutCB = timeoutCB
+		return
 	}
 
-	me := &msg.MessageEnvelope{}
-	me.RequestID = in.RequestID
-	me.Constructor = msg.C_GifGetSaved
-	sreq := &msg.GifGetSaved{
-		Hash: uint32(gifHash),
-	}
-	me.Message, _ = sreq.Marshal()
-	r.queueCtrl.EnqueueCommand(me, preTimeoutCB, preSuccessCB, uiCallback)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }

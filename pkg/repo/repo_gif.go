@@ -30,12 +30,12 @@ func getGifKey(clusterID int32, docID int64) []byte {
 	return domain.StrToByte(fmt.Sprintf("%s.%012d.%021d", prefixGif, clusterID, docID))
 }
 
-func getGifByID(txn *badger.Txn, clusterID int32, docID int64) (*msg.ClientFile, error) {
+func getGifByID(txn *badger.Txn, clusterID int32, docID int64) (*msg.MediaDocument, error) {
 	return getGifByKey(txn, getGifKey(clusterID, docID))
 }
 
-func getGifByKey(txn *badger.Txn, key []byte) (*msg.ClientFile, error) {
-	md := &msg.ClientFile{}
+func getGifByKey(txn *badger.Txn, key []byte) (*msg.MediaDocument, error) {
+	md := &msg.MediaDocument{}
 	item, err := txn.Get(key)
 	if err != nil {
 		return nil, err
@@ -49,10 +49,10 @@ func getGifByKey(txn *badger.Txn, key []byte) (*msg.ClientFile, error) {
 	return md, nil
 }
 
-func saveGif(txn *badger.Txn, md *msg.ClientFile) error {
+func saveGif(txn *badger.Txn, md *msg.MediaDocument) error {
 	mdBytes, _ := md.Marshal()
 	err := txn.SetEntry(badger.NewEntry(
-		getGifKey(md.ClusterID, md.FileID),
+		getGifKey(md.Doc.ClusterID, md.Doc.ID),
 		mdBytes,
 	))
 	return err
@@ -76,6 +76,14 @@ func (r *repoGifs) UpdateLastAccess(clusterID int32, docID int64, accessTime int
 	})
 }
 
+func (r *repoGifs) Get(clusterID int32, docID int64) (gif *msg.MediaDocument,err error) {
+	err = badgerView(func(txn *badger.Txn) error {
+		gif, err = getGifByID(txn, clusterID, docID)
+		return err
+	})
+	return
+}
+
 func (r *repoGifs) IsSaved(clusterID int32, docID int64) (found bool) {
 	_ = badgerView(func(txn *badger.Txn) error {
 		_, err := getGifByID(txn, clusterID, docID)
@@ -92,14 +100,14 @@ func (r *repoGifs) IsSaved(clusterID int32, docID int64) (found bool) {
 	return
 }
 
-func (r *repoGifs) Save(cf *msg.ClientFile) error {
+func (r *repoGifs) Save(cf *msg.MediaDocument) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		return saveGif(txn, cf)
 	})
 }
 
-func (r *repoGifs) GetSaved() (*msg.ClientFilesMany, error) {
-	clientFiles := make([]*msg.ClientFile, 0, 20)
+func (r *repoGifs) GetSaved() (*msg.SavedGifs, error) {
+	savedGifs := make([]*msg.MediaDocument, 0, 20)
 	err := badgerView(func(txn *badger.Txn) error {
 		return r.bunt.View(func(tx *buntdb.Tx) error {
 			return tx.Descend(indexGif, func(key, value string) bool {
@@ -107,7 +115,7 @@ func (r *repoGifs) GetSaved() (*msg.ClientFilesMany, error) {
 				if err != nil {
 					return false
 				}
-				clientFiles = append(clientFiles, md)
+				savedGifs = append(savedGifs, md)
 				return true
 			})
 		})
@@ -116,9 +124,9 @@ func (r *repoGifs) GetSaved() (*msg.ClientFilesMany, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &msg.ClientFilesMany{
-		Gifs:  clientFiles,
-		Total: int32(len(clientFiles)),
+	return &msg.SavedGifs{
+		Docs: savedGifs,
+		NotModified: false,
 	}, nil
 }
 

@@ -295,6 +295,62 @@ func (r *repoFiles) SaveWallpaper(txn *badger.Txn, wallpaper *msg.WallPaper) err
 	return nil
 }
 
+func (r *repoFiles) SaveGif(mediaDocument *msg.MediaDocument) error {
+	if mediaDocument == nil || mediaDocument.Doc == nil {
+		return nil
+	}
+
+	fileExt := ""
+	for _, attr := range mediaDocument.Doc.Attributes {
+		if attr.Type == msg.AttributeTypeFile {
+			x := &msg.DocumentAttributeFile{}
+			_ = x.Unmarshal(attr.Data)
+			fileExt = filepath.Ext(x.Filename)
+		}
+	}
+
+	err := badgerUpdate(func(txn *badger.Txn) error {
+		err := saveFile(txn, &msg.ClientFile{
+			ClusterID:   mediaDocument.Doc.ClusterID,
+			FileID:      mediaDocument.Doc.ID,
+			AccessHash:  mediaDocument.Doc.AccessHash,
+			Type:        msg.Gif,
+			MimeType:    mediaDocument.Doc.MimeType,
+			Extension:   fileExt,
+			UserID:      0,
+			GroupID:     0,
+			FileSize:    int64(mediaDocument.Doc.FileSize),
+			WallpaperID: 0,
+			Version:     mediaDocument.Doc.Version,
+			MD5Checksum: mediaDocument.Doc.MD5Checksum,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if mediaDocument.Doc.Thumbnail != nil {
+			err = saveFile(txn, &msg.ClientFile{
+				ClusterID:   mediaDocument.Doc.Thumbnail.ClusterID,
+				FileID:      mediaDocument.Doc.Thumbnail.FileID,
+				AccessHash:  mediaDocument.Doc.Thumbnail.AccessHash,
+				Type:        msg.Thumbnail,
+				MimeType:    "jpeg",
+				UserID:      0,
+				GroupID:     0,
+				FileSize:    0,
+				WallpaperID: 0,
+				Version:     0,
+			})
+			return err
+		}
+
+		return nil
+	})
+
+	return err
+}
+
 func (r *repoFiles) Get(clusterID int32, fileID int64, accessHash uint64) (file *msg.ClientFile, err error) {
 	err = badgerView(func(txn *badger.Txn) error {
 		file, err = getFile(txn, clusterID, fileID, accessHash)
@@ -498,6 +554,8 @@ func (r *repoFiles) ClearCache() {
 }
 func (r *repoFiles) GetFilePath(clientFile *msg.ClientFile) string {
 	switch clientFile.Type {
+	case msg.Gif:
+		fallthrough
 	case msg.Message:
 		return getMessageFilePath(clientFile.MimeType, clientFile.FileID, clientFile.Extension)
 	case msg.AccountProfilePhoto:
