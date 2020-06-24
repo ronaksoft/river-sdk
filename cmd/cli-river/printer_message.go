@@ -444,6 +444,18 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		x := &msg.SavedGifs{}
 		x.Unmarshal(envelope.Message)
 		_Shell.Println(x.Hash, x.NotModified, len(x.Docs))
+	case msg.C_TeamsMany:
+		x := &msg.TeamsMany{}
+		x.Unmarshal(envelope.Message)
+		for _, t := range x.Teams {
+			_Shell.Println(t.ID,  t.AccessHash, t.Name, t.CreatorID)
+		}
+	case msg.C_TeamMembers:
+		x := &msg.TeamMembers{}
+		x.Unmarshal(envelope.Message)
+		for _, m := range x.Members {
+			_Shell.Println(m.Admin, m.UserID, m.User.Username, m.User.FirstName, m.User.LastName)
+		}
 	default:
 		constructorName, _ := msg.ConstructorNames[envelope.Constructor]
 		_Shell.Println("DEFAULT", constructorName, len(envelope.Message))
