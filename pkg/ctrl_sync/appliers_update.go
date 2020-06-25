@@ -204,27 +204,26 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 		return
 	}
 
-	// if it was file upload request
 	if pmsg.MediaType != msg.InputMediaTypeMessageDocument {
+		// if it was file upload request
 		switch x.Message.MediaType {
 		case msg.MediaTypeDocument:
 			// save to local files and delete file status
 			clientSendMedia := new(msg.ClientSendMessageMedia)
-			err := clientSendMedia.Unmarshal(pmsg.Media)
-			if err != nil {
-				logs.Error("Error On HandlePendingMessage", zap.Error(err))
-				return
-			}
+			unmarshalErr := clientSendMedia.Unmarshal(pmsg.Media)
+			if unmarshalErr == nil { // TODO!!! fix this with some flag in pending message
+				clientFile, err := repo.Files.GetMediaDocument(x.Message)
+				logs.WarnOnErr("Error On GetMediaDocument", err)
 
-			clientFile, err := repo.Files.GetMediaDocument(x.Message)
-			logs.WarnOnErr("Error On GetMediaDocument", err)
-
-			err = os.Rename(clientSendMedia.FilePath, repo.Files.GetFilePath(clientFile))
-			if err != nil {
-				logs.Error("Error On HandlePendingMessage (Rename)", zap.Error(err))
-				return
+				err = os.Rename(clientSendMedia.FilePath, repo.Files.GetFilePath(clientFile))
+				if err != nil {
+					logs.Error("Error On HandlePendingMessage (Rename)", zap.Error(err))
+					return
+				}
+				_ = repo.Files.UnmarkAsUploaded(clientSendMedia.FileID)
+			} else {
+				logs.Error("Error On HandlePendingMessage", zap.Error(unmarshalErr))
 			}
-			_ = repo.Files.UnmarkAsUploaded(clientSendMedia.FileID)
 		}
 	}
 
