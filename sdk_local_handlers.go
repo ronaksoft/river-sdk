@@ -1727,6 +1727,8 @@ func (r *River) gifGetSaved(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 	}
 	gifHash, _ := repo.System.LoadInt(domain.SkGifHash)
 
+	var enqueSuccessCB domain.MessageHandler
+
 	if gifHash != 0 {
 		res, err := repo.Gifs.GetSaved()
 		if err != nil {
@@ -1736,8 +1738,14 @@ func (r *River) gifGetSaved(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 		}
 		msg.ResultSavedGifs(out, res)
 		successCB(out)
-		return
+
+		// ignore success cb because we notify views on message hanlder
+		enqueSuccessCB = func(m *msg.MessageEnvelope) {
+
+		}
+	}else {
+		enqueSuccessCB = successCB
 	}
 
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, enqueSuccessCB, true)
 }
