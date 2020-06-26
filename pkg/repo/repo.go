@@ -52,6 +52,7 @@ type Context struct {
 
 type repository struct {
 	badger     *badger.DB
+	selfUserID int64
 	bunt       *buntdb.DB
 	msgSearch  bleve.Index
 	peerSearch bleve.Index
@@ -257,7 +258,12 @@ func indexMapForPeers() mapping.IndexMapping {
 	return indexMapping
 }
 
+func SetSelfUserID(value int64) {
+	r.selfUserID = value
+}
+
 func DropAll() {
+	SetSelfUserID(0)
 	_ = r.bunt.Close()
 	_ = r.badger.Close()
 	_ = r.msgSearch.Close()

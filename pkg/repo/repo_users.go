@@ -102,16 +102,30 @@ func saveUser(txn *badger.Txn, user *msg.User) error {
 		return err
 	}
 
-	indexPeer(
-		domain.ByteToStr(userKey),
-		UserSearch{
-			Type:      "user",
-			FirstName: user.FirstName,
-			LastName:  user.LastName,
-			PeerID:    user.ID,
-			Username:  user.Username,
-		},
-	)
+	if user.ID == r.selfUserID {
+		indexPeer(
+			domain.ByteToStr(userKey),
+			UserSearch{
+				Type:      "user",
+				FirstName: "Saved",
+				LastName:  "Messages",
+				PeerID:    user.ID,
+				Username:  "savedmessages",
+			},
+		)
+	}else {
+		indexPeer(
+			domain.ByteToStr(userKey),
+			UserSearch{
+				Type:      "user",
+				FirstName: user.FirstName,
+				LastName:  user.LastName,
+				PeerID:    user.ID,
+				Username:  user.Username,
+			},
+		)
+	}
+
 
 	return nil
 }
@@ -609,6 +623,7 @@ func (r *repoUsers) ReIndex() {
 	if err != nil {
 		return
 	}
+
 	_ = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = domain.StrToByte(prefixUsers)
@@ -619,16 +634,29 @@ func (r *repoUsers) ReIndex() {
 				_ = user.Unmarshal(val)
 				key := domain.ByteToStr(getUserKey(user.ID))
 				if d, _ := r.peerSearch.Document(key); d == nil {
-					indexPeer(
-						key,
-						UserSearch{
-							Type:      "user",
-							FirstName: user.FirstName,
-							LastName:  user.LastName,
-							PeerID:    user.ID,
-							Username:  user.Username,
-						},
-					)
+					if user.ID == r.repository.selfUserID {
+						indexPeer(
+							key,
+							UserSearch{
+								Type:      "user",
+								FirstName: "Saved",
+								LastName:  "Messages",
+								PeerID:    user.ID,
+								Username:  "savedmessages",
+							},
+						)
+					}else {
+						indexPeer(
+							key,
+							UserSearch{
+								Type:      "user",
+								FirstName: user.FirstName,
+								LastName:  user.LastName,
+								PeerID:    user.ID,
+								Username:  user.Username,
+							},
+						)
+					}
 				}
 
 				return nil

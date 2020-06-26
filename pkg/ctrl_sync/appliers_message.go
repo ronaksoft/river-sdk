@@ -41,6 +41,8 @@ func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
 
 	ctrl.SetUserID(x.User.ID)
 
+	repo.SetSelfUserID(x.User.ID)
+
 	domain.WindowLog(fmt.Sprintf("Authorized: %s", time.Now().Sub(domain.StartTime)))
 	go func() {
 		ctrl.Sync()

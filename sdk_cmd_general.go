@@ -477,7 +477,6 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 			logs.Info("We called SessionClosed delegate")
 		}
 
-
 		// Stop Controllers
 		r.syncCtrl.Stop()
 		r.queueCtrl.Stop()
@@ -487,7 +486,6 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 
 		repo.DropAll()
 		logs.Info("We reset our database")
-
 
 		r.ConnInfo.FirstName = ""
 		r.ConnInfo.LastName = ""
@@ -580,6 +578,8 @@ func (r *River) AppStart() error {
 	if err != nil {
 		return err
 	}
+
+	repo.SetSelfUserID(r.ConnInfo.UserID)
 
 	// Load the usage stats
 	mon.LoadUsage()
