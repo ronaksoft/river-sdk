@@ -151,6 +151,21 @@ var RemovePhoto = &ishell.Cmd{
 	},
 }
 
+var GetTeams = &ishell.Cmd{
+	Name: "GetTeams",
+	Func: func(c *ishell.Context) {
+		req := msg.AccountGetTeams{}
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountGetTeams, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
 func init() {
 	Account.AddCmd(RegisterDevice)
 	Account.AddCmd(UpdateUsername)
@@ -160,4 +175,5 @@ func init() {
 	Account.AddCmd(SetNotifySettings)
 	Account.AddCmd(UploadPhoto)
 	Account.AddCmd(RemovePhoto)
+	Account.AddCmd(GetTeams)
 }

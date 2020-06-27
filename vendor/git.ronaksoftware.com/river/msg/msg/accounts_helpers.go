@@ -772,6 +772,38 @@ func ResultAccountRecoverPassword(out *MessageEnvelope, res *AccountRecoverPassw
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_AccountGetTeams int64 = 2881489378
+
+type poolAccountGetTeams struct {
+	pool sync.Pool
+}
+
+func (p *poolAccountGetTeams) Get() *AccountGetTeams {
+	x, ok := p.pool.Get().(*AccountGetTeams)
+	if !ok {
+		return &AccountGetTeams{}
+	}
+	return x
+}
+
+func (p *poolAccountGetTeams) Put(x *AccountGetTeams) {
+	p.pool.Put(x)
+}
+
+var PoolAccountGetTeams = poolAccountGetTeams{}
+
+func ResultAccountGetTeams(out *MessageEnvelope, res *AccountGetTeams) {
+	out.Constructor = C_AccountGetTeams
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 const C_AccountPasswordSettings int64 = 3362978866
 
 type poolAccountPasswordSettings struct {
@@ -1096,6 +1128,7 @@ func init() {
 	ConstructorNames[2052309739] = "AccountGetPasswordSettings"
 	ConstructorNames[3193945896] = "AccountUpdatePasswordSettings"
 	ConstructorNames[1086766738] = "AccountRecoverPassword"
+	ConstructorNames[2881489378] = "AccountGetTeams"
 	ConstructorNames[3362978866] = "AccountPasswordSettings"
 	ConstructorNames[1797596734] = "SecurityQuestions"
 	ConstructorNames[1697591959] = "RecoveryQuestion"

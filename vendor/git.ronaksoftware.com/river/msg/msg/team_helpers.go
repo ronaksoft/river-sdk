@@ -339,6 +339,40 @@ func ResultTeamMember(out *MessageEnvelope, res *TeamMember) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_TeamsMany int64 = 2225718663
+
+type poolTeamsMany struct {
+	pool sync.Pool
+}
+
+func (p *poolTeamsMany) Get() *TeamsMany {
+	x, ok := p.pool.Get().(*TeamsMany)
+	if !ok {
+		return &TeamsMany{}
+	}
+	x.Teams = x.Teams[:0]
+	x.Users = x.Users[:0]
+	return x
+}
+
+func (p *poolTeamsMany) Put(x *TeamsMany) {
+	p.pool.Put(x)
+}
+
+var PoolTeamsMany = poolTeamsMany{}
+
+func ResultTeamsMany(out *MessageEnvelope, res *TeamsMany) {
+	out.Constructor = C_TeamsMany
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 func init() {
 	ConstructorNames[1172720786] = "TeamGet"
 	ConstructorNames[3889056091] = "TeamAddMember"
@@ -350,4 +384,5 @@ func init() {
 	ConstructorNames[3107323194] = "TeamListMembers"
 	ConstructorNames[2208941294] = "TeamMembers"
 	ConstructorNames[1965775170] = "TeamMember"
+	ConstructorNames[2225718663] = "TeamsMany"
 }
