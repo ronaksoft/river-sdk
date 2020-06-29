@@ -13,6 +13,10 @@ func (r *River) IsMessageExist(messageID int64) bool {
 	return message != nil
 }
 
+func (r *River) IsGifSaved(fileID int64 , clusterID int32) bool {
+	return repo.Gifs.IsSaved(clusterID, fileID)
+}
+
 func (r *River) GetRealTopMessageID(peerID int64, peerType int32) int64 {
 	topMsgID, err := repo.Messages.GetTopMessageID(peerID, peerType)
 	if err != nil {
