@@ -198,7 +198,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 
 	// this will be used as next requestID
 	req.RandomID = domain.SequentialUniqueID()
-	msgID := -domain.SequentialUniqueID()
+	msgID := -req.RandomID
 	res, err := repo.PendingMessages.Save(msgID, r.ConnInfo.UserID, req)
 	if err != nil {
 		e := new(msg.Error)
@@ -507,7 +507,7 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 		req.RandomID = domain.SequentialUniqueID()
 
 		// Insert into pending messages, id is negative nano timestamp and save RandomID too : Done
-		dbID := -domain.SequentialUniqueID()
+		dbID := -req.RandomID
 
 		res, err := repo.PendingMessages.SaveMessageMedia(dbID, r.ConnInfo.UserID, req)
 		if err != nil {
@@ -556,8 +556,8 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	}
 
 	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
-	msgID := -domain.SequentialUniqueID()
-	fileID := domain.RandomInt63()
+	fileID := domain.SequentialUniqueID()
+	msgID := -fileID
 	thumbID := int64(0)
 	if reqMedia.ThumbFilePath != "" {
 		thumbID = domain.RandomInt63()
