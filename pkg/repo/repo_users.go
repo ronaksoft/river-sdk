@@ -5,7 +5,6 @@ import (
 	"git.ronaksoftware.com/river/msg/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
 	"github.com/dgraph-io/badger"
@@ -614,7 +613,7 @@ func (r *repoUsers) GetPhotoGallery(userID int64) []*msg.UserPhoto {
 }
 
 func (r *repoUsers) ReIndex() {
-	err := ronak.Try(10, time.Second, func() error {
+	err := domain.Try(10, time.Second, func() error {
 		if r.peerSearch == nil {
 			return domain.ErrDoesNotExists
 		}

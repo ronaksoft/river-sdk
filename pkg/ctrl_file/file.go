@@ -9,7 +9,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
 	"go.uber.org/zap"
 	"io/ioutil"
@@ -42,11 +41,11 @@ type Controller struct {
 	network            *networkCtrl.Controller
 	mtxDownloads       sync.Mutex
 	downloadRequests   map[string]DownloadRequest
-	downloadsSaver     *ronak.Flusher
+	downloadsSaver     *domain.Flusher
 	downloadsRateLimit chan struct{}
 	mtxUploads         sync.Mutex
 	uploadRequests     map[string]UploadRequest
-	uploadsSaver       *ronak.Flusher
+	uploadsSaver       *domain.Flusher
 	uploadsRateLimit   chan struct{}
 	httpRequestTimeout time.Duration
 
@@ -86,7 +85,7 @@ func New(config Config) *Controller {
 		ctrl.onCancel = config.CancelCB
 	}
 
-	ctrl.downloadsSaver = ronak.NewFlusher(100, 1, time.Millisecond*100, func(items []ronak.FlusherEntry) {
+	ctrl.downloadsSaver = domain.NewFlusher(100, 1, time.Millisecond*100, func(items []domain.FlusherEntry) {
 		ctrl.mtxDownloads.Lock()
 		if dBytes, err := json.Marshal(ctrl.downloadRequests); err == nil {
 			_ = repo.System.SaveBytes("Downloads", dBytes)
@@ -96,7 +95,7 @@ func New(config Config) *Controller {
 			items[idx].Callback(nil)
 		}
 	})
-	ctrl.uploadsSaver = ronak.NewFlusher(100, 1, time.Millisecond*100, func(items []ronak.FlusherEntry) {
+	ctrl.uploadsSaver = domain.NewFlusher(100, 1, time.Millisecond*100, func(items []domain.FlusherEntry) {
 		ctrl.mtxUploads.Lock()
 		if dBytes, err := json.Marshal(ctrl.uploadRequests); err == nil {
 			_ = repo.System.SaveBytes("Uploads", dBytes)
@@ -318,7 +317,7 @@ func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash u
 	return
 }
 func (ctrl *Controller) downloadAccountPhoto(clientFile *msg.ClientFile) (filePath string, err error) {
-	err = ronak.Try(retryMaxAttempts, retryWaitTime, func() error {
+	err = domain.Try(retryMaxAttempts, retryWaitTime, func() error {
 		req := new(msg.FileGet)
 		req.Location = new(msg.InputFileLocation)
 		req.Location.ClusterID = clientFile.ClusterID
@@ -373,7 +372,7 @@ func (ctrl *Controller) downloadAccountPhoto(clientFile *msg.ClientFile) (filePa
 	return
 }
 func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath string, err error) {
-	err = ronak.Try(retryMaxAttempts, retryWaitTime, func() error {
+	err = domain.Try(retryMaxAttempts, retryWaitTime, func() error {
 		req := new(msg.FileGet)
 		req.Location = new(msg.InputFileLocation)
 		req.Location.ClusterID = clientFile.ClusterID
@@ -428,7 +427,7 @@ func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath
 	return
 }
 func (ctrl *Controller) downloadWallpaper(clientFile *msg.ClientFile) (filePath string, err error) {
-	err = ronak.Try(retryMaxAttempts, retryWaitTime, func() error {
+	err = domain.Try(retryMaxAttempts, retryWaitTime, func() error {
 		req := new(msg.FileGet)
 		req.Location = &msg.InputFileLocation{
 			AccessHash: clientFile.AccessHash,
@@ -486,7 +485,7 @@ func (ctrl *Controller) downloadWallpaper(clientFile *msg.ClientFile) (filePath 
 }
 
 func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath string, err error) {
-	err = ronak.Try(retryMaxAttempts, retryWaitTime, func() error {
+	err = domain.Try(retryMaxAttempts, retryWaitTime, func() error {
 		req := new(msg.FileGet)
 		req.Location = &msg.InputFileLocation{
 			AccessHash: clientFile.AccessHash,
@@ -780,7 +779,7 @@ func (ctrl *Controller) checkSha256(uploadRequest *UploadRequest) error {
 	}
 	envelop.Message, _ = req.Marshal()
 
-	err := ronak.Try(3, time.Millisecond*500, func() error {
+	err := domain.Try(3, time.Millisecond*500, func() error {
 		res, err := ctrl.network.SendHttp(uploadRequest.httpContext, envelop, time.Second*10)
 		if err != nil {
 			return err

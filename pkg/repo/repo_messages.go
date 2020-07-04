@@ -7,7 +7,6 @@ import (
 	"git.ronaksoftware.com/river/msg/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"git.ronaksoftware.com/ronak/toolbox"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
 	"github.com/dgraph-io/badger"
@@ -51,7 +50,7 @@ func getMessageByID(txn *badger.Txn, msgID int64) (*msg.UserMessage, error) {
 		if len(parts) != 2 {
 			return domain.ErrInvalidUserMessageKey
 		}
-		itemMessage, err := txn.Get(getMessageKey(ronak.StrToInt64(parts[0]), ronak.StrToInt32(parts[1]), msgID))
+		itemMessage, err := txn.Get(getMessageKey(domain.StrToInt64(parts[0]), domain.StrToInt32(parts[1]), msgID))
 		if err != nil {
 			return err
 		}
@@ -808,7 +807,7 @@ func (r *repoMessages) GetLastBotKeyboard(peerID int64, peerType int32) (*msg.Us
 }
 
 func (r *repoMessages) ReIndex() {
-	err := ronak.Try(10, time.Second, func() error {
+	err := domain.Try(10, time.Second, func() error {
 		if r.msgSearch == nil {
 			return domain.ErrDoesNotExists
 		}

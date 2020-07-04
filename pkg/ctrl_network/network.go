@@ -11,7 +11,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"go.uber.org/zap"
@@ -61,7 +60,7 @@ type Controller struct {
 	wsQuality domain.NetworkStatus
 
 	// flusher
-	sendFlusher *ronak.Flusher
+	sendFlusher *domain.Flusher
 
 	// External Handlers
 	OnMessage             domain.ReceivedMessageHandler
@@ -94,7 +93,7 @@ func New(config Config) *Controller {
 
 	ctrl.stopChannel = make(chan bool, 1)
 	ctrl.connectChannel = make(chan bool)
-	ctrl.sendFlusher = ronak.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.sendFlushFunc)
+	ctrl.sendFlusher = domain.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.sendFlushFunc)
 
 	ctrl.unauthorizedRequests = map[int64]bool{
 		msg.C_SystemGetServerTime: true,
@@ -142,7 +141,7 @@ func (ctrl *Controller) createDialer(timeout time.Duration) {
 		WrapConn:      nil,
 	}
 }
-func (ctrl *Controller) sendFlushFunc(entries []ronak.FlusherEntry) {
+func (ctrl *Controller) sendFlushFunc(entries []domain.FlusherEntry) {
 	itemsCount := len(entries)
 	switch itemsCount {
 	case 0:
@@ -270,7 +269,7 @@ func (ctrl *Controller) Ping(id uint64, timeout time.Duration) error {
 // This is the background routine listen for incoming websocket packets and _Decrypt
 // the received message, if necessary, and  pass the extracted envelopes to messageHandler.
 func (ctrl *Controller) receiver() {
-	defer ctrl.recoverPanic("NetworkController:: receiver", ronak.M{
+	defer ctrl.recoverPanic("NetworkController:: receiver", domain.M{
 		"AuthID": ctrl.authID,
 	})
 	res := msg.ProtoMessage{}
@@ -449,7 +448,7 @@ func (ctrl *Controller) Stop() {
 func (ctrl *Controller) Connect() {
 	_, _, _ = domain.SingleFlight.Do("NetworkConnect", func() (i interface{}, e error) {
 		logs.Info("NetCtrl is connecting")
-		defer ctrl.recoverPanic("NetworkController:: Connect", ronak.M{
+		defer ctrl.recoverPanic("NetworkController:: Connect", domain.M{
 			"AuthID": ctrl.authID,
 		})
 
@@ -568,7 +567,7 @@ func (ctrl *Controller) SetAuthorization(authID int64, authKey []byte) {
 
 // SendWebsocket direct sends immediately else it put it in flusher
 func (ctrl *Controller) SendWebsocket(msgEnvelope *msg.MessageEnvelope, direct bool) error {
-	defer ctrl.recoverPanic("NetworkController:: SendWebsocket", ronak.M{
+	defer ctrl.recoverPanic("NetworkController:: SendWebsocket", domain.M{
 		"C": msgEnvelope.Constructor,
 	})
 
@@ -580,7 +579,7 @@ func (ctrl *Controller) SendWebsocket(msgEnvelope *msg.MessageEnvelope, direct b
 	return nil
 }
 func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
-	defer ctrl.recoverPanic("NetworkController:: sendWebsocket", ronak.M{
+	defer ctrl.recoverPanic("NetworkController:: sendWebsocket", domain.M{
 		"C": msgEnvelope.Constructor,
 	})
 

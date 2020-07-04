@@ -8,7 +8,6 @@ import (
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"go.uber.org/zap"
 	"sort"
 	"strconv"
@@ -411,7 +410,7 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 	req := &msg.ClientSendMessageMedia{}
 	_ = req.Unmarshal(pendingMessage.Media)
 
-	err := ronak.Try(3, time.Millisecond*500, func() error {
+	err := domain.Try(3, time.Millisecond*500, func() error {
 		var fileLoc *msg.FileLocation
 		if uploadRequest.DocumentID != 0 && uploadRequest.AccessHash != 0 && uploadRequest.ClusterID != 0 {
 			req.MediaType = msg.InputMediaTypeDocument

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/analysis/lang/en"
@@ -142,7 +141,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 	// Initialize Search
 	go func() {
 		// 1. Messages Search
-		_ = ronak.Try(10, time.Millisecond*100, func() error {
+		_ = domain.Try(10, time.Millisecond*100, func() error {
 			searchDbPath := fmt.Sprintf("%s/searchdb/msg", strings.TrimRight(dbPath, "/"))
 			if msgSearch, err := bleve.Open(searchDbPath); err != nil {
 				switch err {
@@ -168,7 +167,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 	}()
 	go func() {
 		// 2. Peer Search
-		_ = ronak.Try(10, 100*time.Millisecond, func() error {
+		_ = domain.Try(10, 100*time.Millisecond, func() error {
 			peerDbPath := fmt.Sprintf("%s/searchdb/peer", strings.TrimRight(dbPath, "/"))
 			if peerSearch, err := bleve.Open(peerDbPath); err != nil {
 				switch err {
@@ -320,8 +319,8 @@ func indexMessage(key, value interface{}) {
 	msgIndexer.Enter(key, value)
 }
 
-var msgIndexer = ronak.NewFlusher(1000, 1, time.Millisecond, func(items []ronak.FlusherEntry) {
-	_ = ronak.Try(100, time.Second, func() error {
+var msgIndexer = domain.NewFlusher(1000, 1, time.Millisecond, func(items []domain.FlusherEntry) {
+	_ = domain.Try(100, time.Second, func() error {
 		if r.msgSearch == nil {
 			return domain.ErrDoesNotExists
 		}
@@ -341,8 +340,8 @@ func indexMessageRemove(key string) {
 	msgIndexRemover.Enter(key, nil)
 }
 
-var msgIndexRemover = ronak.NewFlusher(1000, 1, time.Millisecond, func(items []ronak.FlusherEntry) {
-	_ = ronak.Try(100, time.Second, func() error {
+var msgIndexRemover = domain.NewFlusher(1000, 1, time.Millisecond, func(items []domain.FlusherEntry) {
+	_ = domain.Try(100, time.Second, func() error {
 		if r.msgSearch == nil {
 			return domain.ErrDoesNotExists
 		}
@@ -358,8 +357,8 @@ func indexPeer(key, value interface{}) {
 	peerIndexer.Enter(key, value)
 }
 
-var peerIndexer = ronak.NewFlusher(1000, 1, time.Millisecond, func(items []ronak.FlusherEntry) {
-	ronak.Try(100, time.Second, func() error {
+var peerIndexer = domain.NewFlusher(1000, 1, time.Millisecond, func(items []domain.FlusherEntry) {
+	domain.Try(100, time.Second, func() error {
 		if r.peerSearch == nil {
 			return domain.ErrDoesNotExists
 		}
@@ -379,8 +378,8 @@ func indexPeerRemove(key string) {
 	peerIndexRemover.Enter(key, nil)
 }
 
-var peerIndexRemover = ronak.NewFlusher(1000, 1, time.Millisecond, func(items []ronak.FlusherEntry) {
-	ronak.Try(100, time.Second, func() error {
+var peerIndexRemover = domain.NewFlusher(1000, 1, time.Millisecond, func(items []domain.FlusherEntry) {
+	domain.Try(100, time.Second, func() error {
 		if r.peerSearch == nil {
 			return domain.ErrDoesNotExists
 		}

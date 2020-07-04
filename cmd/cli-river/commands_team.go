@@ -17,7 +17,7 @@ var TeamAddMember = &ishell.Cmd{
 		req.UserID = fnGetUserID(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_WallPaperGet, reqBytes, reqDelegate); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_TeamAddMember, reqBytes, reqDelegate); err != nil {
 			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID
@@ -33,7 +33,7 @@ var TeamListMembers = &ishell.Cmd{
 		req.TeamID = fnGetTeamID(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_WallPaperGet, reqBytes, reqDelegate); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_TeamListMembers, reqBytes, reqDelegate); err != nil {
 			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID

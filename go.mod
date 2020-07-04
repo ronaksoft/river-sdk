@@ -2,11 +2,10 @@ module git.ronaksoftware.com/ronak/riversdk
 
 require (
 	git.ronaksoftware.com/river/msg v0.0.0-20200624112200-3b143e008557
-	git.ronaksoftware.com/ronak/toolbox v1.1.6
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
-	github.com/beeker1121/goque v2.1.0+incompatible
-	github.com/blevesearch/bleve v1.0.7
+	github.com/beeker1121/goque v2.1.1+incompatible
+	github.com/blevesearch/bleve v1.0.9
 	github.com/chzyer/logex v1.1.10 // indirect
 	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
@@ -19,7 +18,7 @@ require (
 	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
 	github.com/fatih/color v1.7.0
 	github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
-	github.com/getsentry/sentry-go v0.1.3
+	github.com/getsentry/sentry-go v0.6.1
 	github.com/gobwas/pool v0.2.0
 	github.com/gobwas/ws v1.0.2
 	github.com/gogo/protobuf v1.3.1
@@ -42,7 +41,7 @@ require (
 	github.com/spf13/viper v1.4.0
 	github.com/tecbot/gorocksdb v0.0.0-20190705090504-162552197222 // indirect
 	github.com/tidwall/btree v0.0.0-20170113224114-9876f1454cf0 // indirect
-	github.com/tidwall/buntdb v1.1.0
+	github.com/tidwall/buntdb v1.1.2
 	github.com/tidwall/gjson v1.3.2 // indirect
 	github.com/tidwall/grect v0.0.0-20161006141115-ba9a043346eb // indirect
 	github.com/tidwall/rtree v0.0.0-20180113144539-6cd427091e0e // indirect

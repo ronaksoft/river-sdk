@@ -8,7 +8,6 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/beeker1121/goque"
 	"github.com/juju/ratelimit"
 	"go.uber.org/zap"
@@ -382,7 +381,7 @@ func (ctrl *Controller) CancelRequest(reqID int64) {
 
 // DropQueue remove queue from storage
 func (ctrl *Controller) DropQueue() {
-	err := ronak.Try(10, time.Millisecond * 100, func() error {
+	err := domain.Try(10, time.Millisecond * 100, func() error {
 		return ctrl.waitingList.Drop()
 	})
 	if err != nil {
@@ -392,7 +391,7 @@ func (ctrl *Controller) DropQueue() {
 
 // OpenQueue init queue files in storage
 func (ctrl *Controller) OpenQueue() (err error) {
-	err = ronak.Try(10, 100*time.Millisecond, func() error {
+	err = domain.Try(10, 100*time.Millisecond, func() error {
 		if q, err := goque.OpenQueue(ctrl.dataDir); err != nil {
 			err = os.RemoveAll(ctrl.dataDir)
 			if err != nil {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
 	"github.com/dgraph-io/badger"
@@ -430,7 +429,7 @@ func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
 }
 
 func (r *repoGroups) ReIndex() error {
-	err := ronak.Try(10, time.Second, func() error {
+	err := domain.Try(10, time.Second, func() error {
 		if r.peerSearch == nil {
 			return domain.ErrDoesNotExists
 		}

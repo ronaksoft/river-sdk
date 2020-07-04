@@ -5,7 +5,6 @@ import (
 	"git.ronaksoftware.com/river/msg/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
 	"github.com/tidwall/buntdb"
 	"go.uber.org/zap"
@@ -36,8 +35,8 @@ func getPeerFromKey(key string) *msg.Peer {
 		return nil
 	}
 	return &msg.Peer{
-		ID:   ronak.StrToInt64(parts[1]),
-		Type: ronak.StrToInt32(parts[2]),
+		ID:   domain.StrToInt64(parts[1]),
+		Type: domain.StrToInt32(parts[2]),
 	}
 }
 

@@ -7,7 +7,6 @@ import (
 	"git.ronaksoftware.com/river/msg/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dgraph-io/badger"
 	"github.com/dgraph-io/badger/pb"
 	"go.uber.org/zap"
@@ -120,7 +119,7 @@ func (r *repoLabels) Delete(labelIDs ...int32) error {
 					if len(parts) != 3 {
 						return domain.ErrInvalidData
 					}
-					msgID := ronak.StrToInt64(parts[2])
+					msgID := domain.StrToInt64(parts[2])
 					_ = removeLabelFromMessage(txn, labelID, msgID)
 				}
 				return nil
@@ -206,7 +205,7 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 					if len(parts) != 3 {
 						return domain.ErrInvalidData
 					}
-					msgID := ronak.StrToInt64(parts[2])
+					msgID := domain.StrToInt64(parts[2])
 
 					um, err := getMessageByID(txn, msgID)
 					if err != nil {
@@ -255,7 +254,7 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 					if len(parts) != 3 {
 						return domain.ErrInvalidData
 					}
-					msgID := ronak.StrToInt64(parts[2])
+					msgID := domain.StrToInt64(parts[2])
 					um, err := getMessageByID(txn, msgID)
 					if err != nil {
 						return err

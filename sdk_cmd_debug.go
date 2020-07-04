@@ -10,7 +10,6 @@ import (
 	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
-	ronak "git.ronaksoftware.com/ronak/toolbox"
 	"github.com/dustin/go-humanize"
 	"github.com/olekukonko/tablewriter"
 	"go.uber.org/zap"
@@ -146,8 +145,8 @@ func (r *River) HandleDebugActions(txt string) {
 			logs.Warn("invalid args: //sdk_export_messages [peerType] [peerID]")
 			return
 		}
-		peerType := ronak.StrToInt32(args[0])
-		peerID := ronak.StrToInt64(args[1])
+		peerType := domain.StrToInt32(args[0])
+		peerID := domain.StrToInt64(args[1])
 		sendMediaToSaveMessage(r, exportMessages(r, peerType, peerID), fmt.Sprintf("Messages-%s-%d.txt", msg.PeerType(peerType).String(), peerID))
 	}
 }
@@ -215,7 +214,7 @@ func resetSalt(r *River) {
 func getMemoryStats(r *River) []byte {
 	ms := new(runtime.MemStats)
 	runtime.ReadMemStats(ms)
-	m := ronak.M{
+	m := domain.M{
 		"HeapAlloc":   humanize.Bytes(ms.HeapAlloc),
 		"HeapInuse":   humanize.Bytes(ms.HeapInuse),
 		"HeapIdle":    humanize.Bytes(ms.HeapIdle),
@@ -229,7 +228,7 @@ func getMemoryStats(r *River) []byte {
 func getMonitorStats(r *River) []byte {
 	lsmSize, logSize := repo.DbSize()
 	s := mon.Stats
-	m := ronak.M{
+	m := domain.M{
 		"ServerAvgTime":    (time.Duration(s.AvgResponseTime) * time.Millisecond).String(),
 		"ServerRequests":   s.TotalServerRequests,
 		"RecordTime":       time.Now().Sub(s.StartTime).String(),
