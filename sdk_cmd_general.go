@@ -704,7 +704,7 @@ func GenInputPassword(password []byte, accountPasswordBytes []byte) []byte {
 		t.Add(t, p)
 	}
 	sa := big.NewInt(0).Exp(t, big.NewInt(0).Add(a, big.NewInt(0).Mul(u, x)), p)
-	m1 := domain.M(p, g, algo.Salt1, algo.Salt2, ga, gb, sa)
+	m1 := domain.MM(p, g, algo.Salt1, algo.Salt2, ga, gb, sa)
 
 	inputPassword := &msg.InputPassword{
 		SrpID: ap.SrpID,

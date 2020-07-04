@@ -2,6 +2,7 @@ package sentry
 
 import (
 	"context"
+	"sync"
 	"time"
 )
 
@@ -21,9 +22,9 @@ const defaultMaxBreadcrumbs = 30
 const maxBreadcrumbs = 100
 
 // Initial instance of the Hub that has no `Client` bound and an empty `Scope`
-var currentHub = NewHub(nil, NewScope()) // nolint: gochecknoglobals
+var currentHub = NewHub(nil, NewScope()) //nolint: gochecknoglobals
 
-// Hub is the central object that can manages scopes and clients.
+// Hub is the central object that manages scopes and clients.
 //
 // This can be used to capture events and manage the scope.
 // The default hub that is available automatically.
@@ -34,13 +35,31 @@ var currentHub = NewHub(nil, NewScope()) // nolint: gochecknoglobals
 // possible in which case it might become necessary to manually work with the
 // hub. This is for instance the case when working with async code.
 type Hub struct {
+	mu          sync.RWMutex
 	stack       *stack
 	lastEventID EventID
 }
 
 type layer struct {
+	// mu protects concurrent reads and writes to client.
+	mu     sync.RWMutex
 	client *Client
-	scope  *Scope
+	// scope is read-only, not protected by mu.
+	scope *Scope
+}
+
+// Client returns the layer's client. Safe for concurrent use.
+func (l *layer) Client() *Client {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	return l.client
+}
+
+// SetClient sets the layer's client. Safe for concurrent use.
+func (l *layer) SetClient(c *Client) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.client = c
 }
 
 type stack []*layer
@@ -67,16 +86,34 @@ func (hub *Hub) LastEventID() EventID {
 }
 
 func (hub *Hub) stackTop() *layer {
+	hub.mu.RLock()
+	defer hub.mu.RUnlock()
+
 	stack := hub.stack
-	if stack == nil || len(*stack) == 0 {
+	if stack == nil {
 		return nil
 	}
-	return (*stack)[len(*stack)-1]
+
+	stackLen := len(*stack)
+	if stackLen == 0 {
+		return nil
+	}
+	top := (*stack)[stackLen-1]
+
+	return top
 }
 
 // Clone returns a copy of the current Hub with top-most scope and client copied over.
 func (hub *Hub) Clone() *Hub {
-	return NewHub(hub.Client(), hub.Scope().Clone())
+	top := hub.stackTop()
+	if top == nil {
+		return nil
+	}
+	scope := top.scope
+	if scope != nil {
+		scope = scope.Clone()
+	}
+	return NewHub(top.Client(), scope)
 }
 
 // Scope returns top-level `Scope` of the current `Hub` or `nil` if no `Scope` is bound.
@@ -94,15 +131,30 @@ func (hub *Hub) Client() *Client {
 	if top == nil {
 		return nil
 	}
-	return top.client
+	return top.Client()
 }
 
 // PushScope pushes a new scope for the current `Hub` and reuses previously bound `Client`.
 func (hub *Hub) PushScope() *Scope {
-	scope := hub.Scope().Clone()
+	top := hub.stackTop()
+
+	var client *Client
+	if top != nil {
+		client = top.Client()
+	}
+
+	var scope *Scope
+	if top != nil && top.scope != nil {
+		scope = top.scope.Clone()
+	} else {
+		scope = NewScope()
+	}
+
+	hub.mu.Lock()
+	defer hub.mu.Unlock()
 
 	*hub.stack = append(*hub.stack, &layer{
-		client: hub.Client(),
+		client: client,
 		scope:  scope,
 	})
 
@@ -111,16 +163,22 @@ func (hub *Hub) PushScope() *Scope {
 
 // PushScope pops the most recent scope for the current `Hub`.
 func (hub *Hub) PopScope() {
+	hub.mu.Lock()
+	defer hub.mu.Unlock()
+
 	stack := *hub.stack
-	if len(stack) == 0 {
-		return
+	stackLen := len(stack)
+	if stackLen > 0 {
+		*hub.stack = stack[0 : stackLen-1]
 	}
-	*hub.stack = stack[0 : len(stack)-1]
 }
 
 // BindClient binds a new `Client` for the current `Hub`.
 func (hub *Hub) BindClient(client *Client) {
-	hub.stackTop().client = client
+	top := hub.stackTop()
+	if top != nil {
+		top.SetClient(client)
+	}
 }
 
 // WithScope temporarily pushes a scope for a single call.
@@ -140,7 +198,8 @@ func (hub *Hub) WithScope(f func(scope *Scope)) {
 // The function is passed a mutable reference to the `Scope` so that modifications
 // can be performed.
 func (hub *Hub) ConfigureScope(f func(scope *Scope)) {
-	f(hub.Scope())
+	scope := hub.Scope()
+	f(scope)
 }
 
 // CaptureEvent calls the method of a same name on currently bound `Client` instance
@@ -151,7 +210,13 @@ func (hub *Hub) CaptureEvent(event *Event) *EventID {
 	if client == nil || scope == nil {
 		return nil
 	}
-	return client.CaptureEvent(event, nil, scope)
+	eventID := client.CaptureEvent(event, nil, scope)
+	if eventID != nil {
+		hub.lastEventID = *eventID
+	} else {
+		hub.lastEventID = ""
+	}
+	return eventID
 }
 
 // CaptureMessage calls the method of a same name on currently bound `Client` instance
@@ -162,7 +227,13 @@ func (hub *Hub) CaptureMessage(message string) *EventID {
 	if client == nil || scope == nil {
 		return nil
 	}
-	return client.CaptureMessage(message, nil, scope)
+	eventID := client.CaptureMessage(message, nil, scope)
+	if eventID != nil {
+		hub.lastEventID = *eventID
+	} else {
+		hub.lastEventID = ""
+	}
+	return eventID
 }
 
 // CaptureException calls the method of a same name on currently bound `Client` instance
@@ -173,7 +244,13 @@ func (hub *Hub) CaptureException(exception error) *EventID {
 	if client == nil || scope == nil {
 		return nil
 	}
-	return client.CaptureException(exception, &EventHint{OriginalException: exception}, scope)
+	eventID := client.CaptureException(exception, &EventHint{OriginalException: exception}, scope)
+	if eventID != nil {
+		hub.lastEventID = *eventID
+	} else {
+		hub.lastEventID = ""
+	}
+	return eventID
 }
 
 // AddBreadcrumb records a new breadcrumb.
@@ -245,7 +322,17 @@ func (hub *Hub) RecoverWithContext(ctx context.Context, err interface{}) *EventI
 	return client.RecoverWithContext(ctx, err, &EventHint{RecoveredException: err}, scope)
 }
 
-// Flush calls the method of a same name on currently bound `Client` instance.
+// Flush waits until the underlying Transport sends any buffered events to the
+// Sentry server, blocking for at most the given timeout. It returns false if
+// the timeout was reached. In that case, some events may not have been sent.
+//
+// Flush should be called before terminating the program to avoid
+// unintentionally dropping events.
+//
+// Do not call Flush indiscriminately after every call to CaptureEvent,
+// CaptureException or CaptureMessage. Instead, to have the SDK send events over
+// the network synchronously, configure it to use the HTTPSyncTransport in the
+// call to Init.
 func (hub *Hub) Flush(timeout time.Duration) bool {
 	client := hub.Client()
 

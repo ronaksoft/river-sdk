@@ -2,11 +2,12 @@ package sentry
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // Protocol Docs (kinda)
@@ -23,7 +24,7 @@ const (
 	LevelFatal   Level = "fatal"
 )
 
-// https://docs.sentry.io/development/sdk-dev/interfaces/sdk/
+// https://docs.sentry.io/development/sdk-dev/event-payloads/sdk/
 type SdkInfo struct {
 	Name         string       `json:"name,omitempty"`
 	Version      string       `json:"version,omitempty"`
@@ -41,17 +42,39 @@ type SdkPackage struct {
 // plus it could just be `map[string]interface{}` then
 type BreadcrumbHint map[string]interface{}
 
-// https://docs.sentry.io/development/sdk-dev/interfaces/breadcrumbs/
+// https://docs.sentry.io/development/sdk-dev/event-payloads/breadcrumbs/
 type Breadcrumb struct {
 	Category  string                 `json:"category,omitempty"`
 	Data      map[string]interface{} `json:"data,omitempty"`
 	Level     Level                  `json:"level,omitempty"`
 	Message   string                 `json:"message,omitempty"`
-	Timestamp int64                  `json:"timestamp,omitempty"`
+	Timestamp time.Time              `json:"timestamp"`
 	Type      string                 `json:"type,omitempty"`
 }
 
-// https://docs.sentry.io/development/sdk-dev/interfaces/user/
+func (b *Breadcrumb) MarshalJSON() ([]byte, error) {
+	type alias Breadcrumb
+	// encoding/json doesn't support the "omitempty" option for struct types.
+	// See https://golang.org/issues/11939.
+	// This implementation of MarshalJSON shadows the original Timestamp field
+	// forcing it to be omitted when the Timestamp is the zero value of
+	// time.Time.
+	if b.Timestamp.IsZero() {
+		return json.Marshal(&struct {
+			*alias
+			Timestamp json.RawMessage `json:"timestamp,omitempty"`
+		}{
+			alias: (*alias)(b),
+		})
+	}
+	return json.Marshal(&struct {
+		*alias
+	}{
+		alias: (*alias)(b),
+	})
+}
+
+// https://docs.sentry.io/development/sdk-dev/event-payloads/user/
 type User struct {
 	Email     string `json:"email,omitempty"`
 	ID        string `json:"id,omitempty"`
@@ -59,7 +82,7 @@ type User struct {
 	Username  string `json:"username,omitempty"`
 }
 
-// https://docs.sentry.io/development/sdk-dev/interfaces/http/
+// https://docs.sentry.io/development/sdk-dev/event-payloads/request/
 type Request struct {
 	URL         string            `json:"url,omitempty"`
 	Method      string            `json:"method,omitempty"`
@@ -70,61 +93,57 @@ type Request struct {
 	Env         map[string]string `json:"env,omitempty"`
 }
 
-func (r Request) FromHTTPRequest(request *http.Request) Request {
-	// Method
-	r.Method = request.Method
-
-	// URL
+// NewRequest returns a new Sentry Request from the given http.Request.
+//
+// NewRequest avoids operations that depend on network access. In particular, it
+// does not read r.Body.
+func NewRequest(r *http.Request) *Request {
 	protocol := schemeHTTP
-	if request.TLS != nil || request.Header.Get("X-Forwarded-Proto") == "https" {
+	if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
 		protocol = schemeHTTPS
 	}
-	r.URL = fmt.Sprintf("%s://%s%s", protocol, request.Host, request.URL.Path)
+	url := fmt.Sprintf("%s://%s%s", protocol, r.Host, r.URL.Path)
 
-	// Headers
-	headers := make(map[string]string, len(request.Header))
-	for k, v := range request.Header {
+	// We read only the first Cookie header because of the specification:
+	// https://tools.ietf.org/html/rfc6265#section-5.4
+	// When the user agent generates an HTTP request, the user agent MUST NOT
+	// attach more than one Cookie header field.
+	cookies := r.Header.Get("Cookie")
+
+	headers := make(map[string]string, len(r.Header))
+	for k, v := range r.Header {
 		headers[k] = strings.Join(v, ",")
 	}
-	headers["Host"] = request.Host
-	r.Headers = headers
+	headers["Host"] = r.Host
 
-	// Cookies
-	r.Cookies = request.Header.Get("Cookie")
-
-	// Env
-	if addr, port, err := net.SplitHostPort(request.RemoteAddr); err == nil {
-		r.Env = map[string]string{"REMOTE_ADDR": addr, "REMOTE_PORT": port}
+	var env map[string]string
+	if addr, port, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+		env = map[string]string{"REMOTE_ADDR": addr, "REMOTE_PORT": port}
 	}
 
-	// QueryString
-	r.QueryString = request.URL.RawQuery
-
-	// Body
-	if request.GetBody != nil {
-		if bodyCopy, err := request.GetBody(); err == nil && bodyCopy != nil {
-			body, err := ioutil.ReadAll(bodyCopy)
-			if err == nil {
-				r.Data = string(body)
-			}
-		}
+	return &Request{
+		URL:         url,
+		Method:      r.Method,
+		QueryString: r.URL.RawQuery,
+		Cookies:     cookies,
+		Headers:     headers,
+		Env:         env,
 	}
-
-	return r
 }
 
-// https://docs.sentry.io/development/sdk-dev/interfaces/exception/
+// https://docs.sentry.io/development/sdk-dev/event-payloads/exception/
 type Exception struct {
 	Type          string      `json:"type,omitempty"`
 	Value         string      `json:"value,omitempty"`
 	Module        string      `json:"module,omitempty"`
+	ThreadID      string      `json:"thread_id,omitempty"`
 	Stacktrace    *Stacktrace `json:"stacktrace,omitempty"`
 	RawStacktrace *Stacktrace `json:"raw_stacktrace,omitempty"`
 }
 
 type EventID string
 
-// https://docs.sentry.io/development/sdk-dev/attributes/
+// https://docs.sentry.io/development/sdk-dev/event-payloads/
 type Event struct {
 	Breadcrumbs []*Breadcrumb          `json:"breadcrumbs,omitempty"`
 	Contexts    map[string]interface{} `json:"contexts,omitempty"`
@@ -141,13 +160,35 @@ type Event struct {
 	ServerName  string                 `json:"server_name,omitempty"`
 	Threads     []Thread               `json:"threads,omitempty"`
 	Tags        map[string]string      `json:"tags,omitempty"`
-	Timestamp   int64                  `json:"timestamp,omitempty"`
+	Timestamp   time.Time              `json:"timestamp"`
 	Transaction string                 `json:"transaction,omitempty"`
 	User        User                   `json:"user,omitempty"`
 	Logger      string                 `json:"logger,omitempty"`
 	Modules     map[string]string      `json:"modules,omitempty"`
-	Request     Request                `json:"request,omitempty"`
+	Request     *Request               `json:"request,omitempty"`
 	Exception   []Exception            `json:"exception,omitempty"`
+}
+
+func (e *Event) MarshalJSON() ([]byte, error) {
+	type alias Event
+	// encoding/json doesn't support the "omitempty" option for struct types.
+	// See https://golang.org/issues/11939.
+	// This implementation of MarshalJSON shadows the original Timestamp field
+	// forcing it to be omitted when the Timestamp is the zero value of
+	// time.Time.
+	if e.Timestamp.IsZero() {
+		return json.Marshal(&struct {
+			*alias
+			Timestamp json.RawMessage `json:"timestamp,omitempty"`
+		}{
+			alias: (*alias)(e),
+		})
+	}
+	return json.Marshal(&struct {
+		*alias
+	}{
+		alias: (*alias)(e),
+	})
 }
 
 func NewEvent() *Event {

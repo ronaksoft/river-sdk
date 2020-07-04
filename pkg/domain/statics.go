@@ -18,6 +18,7 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -476,3 +477,24 @@ func StrToByte(s string) []byte {
 	}
 	return *(*[]byte)(unsafe.Pointer(&bh))
 }
+
+func StrToInt64(s string) int64 {
+	v, _ := strconv.ParseInt(s, 10, 64)
+	return v
+}
+
+func StrToInt32(s string) int32 {
+	v, _ := strconv.ParseInt(s, 10, 32)
+	return int32(v)
+}
+
+func StrToUInt64(s string) uint64 {
+	v, _ := strconv.ParseInt(s, 10, 64)
+	return uint64(v)
+}
+
+func StrToUInt32(s string) uint32 {
+	v, _ := strconv.ParseInt(s, 10, 32)
+	return uint32(v)
+}
+

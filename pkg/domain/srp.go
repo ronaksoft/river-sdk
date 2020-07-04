@@ -52,7 +52,7 @@ func U(ga, gb *big.Int) []byte {
 	return H(append(Pad(ga), Pad(gb)...))
 }
 
-func M(p, g *big.Int, s1, s2 []byte, ga, gb, sb *big.Int) []byte {
+func MM(p, g *big.Int, s1, s2 []byte, ga, gb, sb *big.Int) []byte {
 	return H(H(Pad(p)), H(Pad(g)), H(s1), H(s2), H(Pad(ga)), H(Pad(gb)), H(Pad(sb)))
 }
 
