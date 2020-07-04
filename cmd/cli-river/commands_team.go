@@ -25,7 +25,21 @@ var TeamAddMember = &ishell.Cmd{
 	},
 }
 
-
+var TeamRemoveMember = &ishell.Cmd{
+	Name: "RemoveMember",
+	Func: func(c *ishell.Context) {
+		req := msg.TeamRemoveMember{}
+		req.TeamID = fnGetTeamID(c)
+		req.UserID = fnGetUserID(c)
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_TeamRemoveMember, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
 var TeamListMembers = &ishell.Cmd{
 	Name: "ListMembers",
 	Func: func(c *ishell.Context) {
@@ -44,5 +58,6 @@ var TeamListMembers = &ishell.Cmd{
 
 func init() {
 	Team.AddCmd(TeamAddMember)
+	Team.AddCmd(TeamRemoveMember)
 	Team.AddCmd(TeamListMembers)
 }
