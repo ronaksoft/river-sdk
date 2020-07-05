@@ -496,10 +496,52 @@ func (r *repoFiles) GetCachedMedia() *msg.ClientCachedMediaInfo {
 	return cachedMediaInfo
 }
 
-func (r *repoFiles) DeleteCachedMedia(peerType int32, peerID int64, mediaTypes []msg.ClientMediaType) {
+func (r *repoFiles) DeleteCachedMediaByPeer(peerType int32, peerID int64, mediaTypes []msg.ClientMediaType) {
 	stream := r.badger.NewStream()
 
 	stream.Prefix = getMessagePrefix(peerID, peerType)
+	stream.ChooseKey = func(item *badger.Item) bool {
+		m := &msg.UserMessage{}
+		err := item.Value(func(val []byte) error {
+			return m.Unmarshal(val)
+		})
+		if err != nil {
+			return false
+		}
+		switch m.MediaType {
+		case msg.MediaTypeDocument:
+			d := msg.MediaDocument{}
+			err = d.Unmarshal(m.Media)
+			if err != nil {
+				return false
+			}
+			for _, mt := range mediaTypes {
+				if msg.ClientMediaType(item.UserMeta()) == mt {
+					f, err := r.Get(d.Doc.ClusterID, d.Doc.ID, d.Doc.AccessHash)
+					if err != nil {
+						return false
+					}
+					_ = os.Remove(r.GetFilePath(f))
+					return true
+				}
+			}
+
+		default:
+			return false
+		}
+		return true
+	}
+	stream.Send = func(list *pb.KVList) error {
+		return nil
+	}
+
+	_ = stream.Orchestrate(context.Background())
+}
+
+func (r *repoFiles) DeleteCachedMediaByMediaType(mediaTypes []msg.ClientMediaType) {
+	stream := r.badger.NewStream()
+
+	stream.Prefix = []byte(fmt.Sprintf("%s.", prefixMessages))
 	stream.ChooseKey = func(item *badger.Item) bool {
 		m := &msg.UserMessage{}
 		err := item.Value(func(val []byte) error {
