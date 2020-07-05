@@ -392,6 +392,7 @@ func (p *poolDialog) Get() *Dialog {
 	if !ok {
 		return &Dialog{}
 	}
+	x.TeamID = 0
 	x.NotifySettings = nil
 	x.MentionedCount = 0
 	x.Draft = nil
@@ -866,6 +867,7 @@ func (p *poolGroup) Get() *Group {
 	if !ok {
 		return &Group{}
 	}
+	x.TeamID = 0
 	x.EditedOn = 0
 	x.Flags = x.Flags[:0]
 	x.Photo = nil
@@ -969,6 +971,7 @@ func (p *poolUserMessage) Get() *UserMessage {
 	if !ok {
 		return &UserMessage{}
 	}
+	x.TeamID = 0
 	x.MessageAction = 0
 	x.MessageActionData = nil
 	x.MessageActionData = x.MessageActionData[:0]
@@ -1013,6 +1016,7 @@ func (p *poolDraftMessage) Get() *DraftMessage {
 	if !ok {
 		return &DraftMessage{}
 	}
+	x.TeamID = 0
 	x.Entities = x.Entities[:0]
 	x.EditedID = 0
 	return x
@@ -1470,8 +1474,6 @@ func (p *poolTeam) Get() *Team {
 	if !ok {
 		return &Team{}
 	}
-	x.Managers = x.Managers[:0]
-	x.Members = x.Members[:0]
 	return x
 }
 

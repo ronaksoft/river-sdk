@@ -52,40 +52,6 @@ func ResultMessagesSend(out *MessageEnvelope, res *MessagesSend) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
-const C_MessagesBroadcast int64 = 142289348
-
-type poolMessagesBroadcast struct {
-	pool sync.Pool
-}
-
-func (p *poolMessagesBroadcast) Get() *MessagesBroadcast {
-	x, ok := p.pool.Get().(*MessagesBroadcast)
-	if !ok {
-		return &MessagesBroadcast{}
-	}
-	x.ReceiverIDs = x.ReceiverIDs[:0]
-	x.Entities = x.Entities[:0]
-	return x
-}
-
-func (p *poolMessagesBroadcast) Put(x *MessagesBroadcast) {
-	p.pool.Put(x)
-}
-
-var PoolMessagesBroadcast = poolMessagesBroadcast{}
-
-func ResultMessagesBroadcast(out *MessageEnvelope, res *MessagesBroadcast) {
-	out.Constructor = C_MessagesBroadcast
-	protoSize := res.Size()
-	if protoSize > cap(out.Message) {
-		pbytes.Put(out.Message)
-		out.Message = pbytes.GetLen(protoSize)
-	} else {
-		out.Message = out.Message[:protoSize]
-	}
-	res.MarshalToSizedBuffer(out.Message)
-}
-
 const C_MessagesSendMedia int64 = 25498545
 
 type poolMessagesSendMedia struct {
@@ -784,7 +750,6 @@ func ResultMessagesMany(out *MessageEnvelope, res *MessagesMany) {
 
 func init() {
 	ConstructorNames[3000244183] = "MessagesSend"
-	ConstructorNames[142289348] = "MessagesBroadcast"
 	ConstructorNames[25498545] = "MessagesSendMedia"
 	ConstructorNames[2492658432] = "MessagesEdit"
 	ConstructorNames[1300826534] = "MessagesReadHistory"

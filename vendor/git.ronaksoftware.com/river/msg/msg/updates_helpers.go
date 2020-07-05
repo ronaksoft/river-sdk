@@ -289,6 +289,7 @@ func (p *poolUpdateMessagesDeleted) Get() *UpdateMessagesDeleted {
 	if !ok {
 		return &UpdateMessagesDeleted{}
 	}
+	x.TeamID = 0
 	x.MessageIDs = x.MessageIDs[:0]
 	x.Peer = nil
 	return x
@@ -323,6 +324,7 @@ func (p *poolUpdateReadHistoryInbox) Get() *UpdateReadHistoryInbox {
 	if !ok {
 		return &UpdateReadHistoryInbox{}
 	}
+	x.TeamID = 0
 	return x
 }
 
@@ -355,6 +357,7 @@ func (p *poolUpdateReadHistoryOutbox) Get() *UpdateReadHistoryOutbox {
 	if !ok {
 		return &UpdateReadHistoryOutbox{}
 	}
+	x.TeamID = 0
 	return x
 }
 
@@ -387,6 +390,7 @@ func (p *poolUpdateUserTyping) Get() *UpdateUserTyping {
 	if !ok {
 		return &UpdateUserTyping{}
 	}
+	x.TeamID = 0
 	return x
 }
 
@@ -713,6 +717,7 @@ func (p *poolUpdateReadMessagesContents) Get() *UpdateReadMessagesContents {
 	if !ok {
 		return &UpdateReadMessagesContents{}
 	}
+	x.TeamID = 0
 	x.MessageIDs = x.MessageIDs[:0]
 	return x
 }
@@ -812,6 +817,7 @@ func (p *poolUpdateDraftMessageCleared) Get() *UpdateDraftMessageCleared {
 		return &UpdateDraftMessageCleared{}
 	}
 	x.UpdateID = 0
+	x.TeamID = 0
 	return x
 }
 
@@ -844,6 +850,7 @@ func (p *poolUpdateDialogPinned) Get() *UpdateDialogPinned {
 	if !ok {
 		return &UpdateDialogPinned{}
 	}
+	x.TeamID = 0
 	return x
 }
 
@@ -947,6 +954,7 @@ func (p *poolUpdateLabelItemsAdded) Get() *UpdateLabelItemsAdded {
 	if !ok {
 		return &UpdateLabelItemsAdded{}
 	}
+	x.TeamID = 0
 	x.MessageIDs = x.MessageIDs[:0]
 	x.LabelIDs = x.LabelIDs[:0]
 	x.Labels = x.Labels[:0]
@@ -982,6 +990,7 @@ func (p *poolUpdateLabelItemsRemoved) Get() *UpdateLabelItemsRemoved {
 	if !ok {
 		return &UpdateLabelItemsRemoved{}
 	}
+	x.TeamID = 0
 	x.MessageIDs = x.MessageIDs[:0]
 	x.LabelIDs = x.LabelIDs[:0]
 	x.Labels = x.Labels[:0]

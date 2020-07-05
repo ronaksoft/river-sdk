@@ -557,6 +557,7 @@ func (p *poolContactsMany) Get() *ContactsMany {
 	x.ContactUsers = x.ContactUsers[:0]
 	x.Users = x.Users[:0]
 	x.Empty = false
+	x.Hash = 0
 	return x
 }
 

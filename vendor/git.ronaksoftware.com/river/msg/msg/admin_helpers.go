@@ -17,6 +17,43 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+const C_AdminBroadcastMessage int64 = 3981417409
+
+type poolAdminBroadcastMessage struct {
+	pool sync.Pool
+}
+
+func (p *poolAdminBroadcastMessage) Get() *AdminBroadcastMessage {
+	x, ok := p.pool.Get().(*AdminBroadcastMessage)
+	if !ok {
+		return &AdminBroadcastMessage{}
+	}
+	x.ReceiverIDs = x.ReceiverIDs[:0]
+	x.Entities = x.Entities[:0]
+	x.MediaType = 0
+	x.MediaData = nil
+	x.MediaData = x.MediaData[:0]
+	return x
+}
+
+func (p *poolAdminBroadcastMessage) Put(x *AdminBroadcastMessage) {
+	p.pool.Put(x)
+}
+
+var PoolAdminBroadcastMessage = poolAdminBroadcastMessage{}
+
+func ResultAdminBroadcastMessage(out *MessageEnvelope, res *AdminBroadcastMessage) {
+	out.Constructor = C_AdminBroadcastMessage
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 const C_AdminSetWelcomeMessage int64 = 1149591874
 
 type poolAdminSetWelcomeMessage struct {
@@ -701,6 +738,7 @@ func ResultReservedUsernames(out *MessageEnvelope, res *ReservedUsernames) {
 }
 
 func init() {
+	ConstructorNames[3981417409] = "AdminBroadcastMessage"
 	ConstructorNames[1149591874] = "AdminSetWelcomeMessage"
 	ConstructorNames[2794709448] = "AdminGetWelcomeMessages"
 	ConstructorNames[3940015991] = "AdminDeleteWelcomeMessage"

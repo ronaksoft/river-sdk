@@ -408,8 +408,8 @@ func (r *repoFiles) IsMarkedAsUploaded(fileID int64) bool {
 }
 
 func (r *repoFiles) GetCachedMedia() *msg.ClientCachedMediaInfo {
-	userMediaInfo := make(map[int64]map[msg.ClientMediaType]int32, 100)
-	groupMediaInfo := make(map[int64]map[msg.ClientMediaType]int32, 100)
+	userMediaInfo := make(map[int64]map[msg.ClientMediaType]int64, 100)
+	groupMediaInfo := make(map[int64]map[msg.ClientMediaType]int64, 100)
 	userMtx := sync.Mutex{}
 	groupMtx := sync.Mutex{}
 
@@ -442,16 +442,16 @@ func (r *repoFiles) GetCachedMedia() *msg.ClientCachedMediaInfo {
 			case msg.PeerUser:
 				userMtx.Lock()
 				if _, ok := userMediaInfo[m.PeerID]; !ok {
-					userMediaInfo[m.PeerID] = make(map[msg.ClientMediaType]int32, 5)
+					userMediaInfo[m.PeerID] = make(map[msg.ClientMediaType]int64, 5)
 				}
-				userMediaInfo[m.PeerID][msg.ClientMediaType(item.UserMeta())] += d.Doc.FileSize
+				userMediaInfo[m.PeerID][msg.ClientMediaType(item.UserMeta())] += int64(d.Doc.FileSize)
 				userMtx.Unlock()
 			case msg.PeerGroup:
 				groupMtx.Lock()
 				if _, ok := groupMediaInfo[m.PeerID]; !ok {
-					groupMediaInfo[m.PeerID] = make(map[msg.ClientMediaType]int32, 5)
+					groupMediaInfo[m.PeerID] = make(map[msg.ClientMediaType]int64, 5)
 				}
-				groupMediaInfo[m.PeerID][msg.ClientMediaType(item.UserMeta())] += d.Doc.FileSize
+				groupMediaInfo[m.PeerID][msg.ClientMediaType(item.UserMeta())] += int64(d.Doc.FileSize)
 
 				groupMtx.Unlock()
 			}
