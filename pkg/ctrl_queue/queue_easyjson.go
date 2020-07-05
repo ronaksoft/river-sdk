@@ -170,6 +170,16 @@ func easyjson5e1ce037DecodeGitRonaksoftwareComRiverMsgMsg(in *jlexer.Lexer, out 
 			} else {
 				out.Message = in.Bytes()
 			}
+		case "Team":
+			if in.IsNull() {
+				in.Skip()
+				out.Team = nil
+			} else {
+				if out.Team == nil {
+					out.Team = new(msg.InputTeam)
+				}
+				easyjson5e1ce037DecodeGitRonaksoftwareComRiverMsgMsg1(in, out.Team)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -213,6 +223,75 @@ func easyjson5e1ce037EncodeGitRonaksoftwareComRiverMsgMsg(out *jwriter.Writer, i
 			out.RawString(prefix)
 		}
 		out.Base64Bytes(in.Message)
+	}
+	if in.Team != nil {
+		const prefix string = ",\"Team\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		easyjson5e1ce037EncodeGitRonaksoftwareComRiverMsgMsg1(out, *in.Team)
+	}
+	out.RawByte('}')
+}
+func easyjson5e1ce037DecodeGitRonaksoftwareComRiverMsgMsg1(in *jlexer.Lexer, out *msg.InputTeam) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "ID":
+			out.ID = int64(in.Int64())
+		case "AccessHash":
+			out.AccessHash = uint64(in.Uint64())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson5e1ce037EncodeGitRonaksoftwareComRiverMsgMsg1(out *jwriter.Writer, in msg.InputTeam) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"ID\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int64(int64(in.ID))
+	}
+	{
+		const prefix string = ",\"AccessHash\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Uint64(uint64(in.AccessHash))
 	}
 	out.RawByte('}')
 }

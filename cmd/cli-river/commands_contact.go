@@ -2,6 +2,7 @@ package main
 
 import (
 	"git.ronaksoftware.com/river/msg/msg"
+	"git.ronaksoftware.com/ronak/riversdk"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"gopkg.in/abiosoft/ishell.v2"
 )
@@ -45,13 +46,34 @@ var ContactGet = &ishell.Cmd{
 	},
 }
 
+var ContactGetTeam = &ishell.Cmd{
+	Name: "GetTeam",
+	Func: func(c *ishell.Context) {
+		req := msg.ContactsGet{}
+		teamID := fnGetTeamID(c)
+		accessHash := fnGetAccessHash(c)
+		_SDK.SetTeam(teamID, accessHash)
+		reqBytes, _ := req.Marshal()
+
+		reqDelegate := NewCustomDelegate()
+		reqDelegate.FlagsFunc = func() int32 {
+			return riversdk.RequestServerForced
+		}
+		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsGet, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
 var ContactAdd = &ishell.Cmd{
 	Name: "Add",
 	Func: func(c *ishell.Context) {
 		req := msg.ContactsAdd{}
-		req.FirstName =  fnGetFirstName(c)
+		req.FirstName = fnGetFirstName(c)
 		req.LastName = fnGetLastName(c)
-		req.Phone= fnGetPhone(c)
+		req.Phone = fnGetPhone(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsAdd, reqBytes, reqDelegate); err != nil {
@@ -111,6 +133,7 @@ var ContactDeleteAll = &ishell.Cmd{
 func init() {
 	Contact.AddCmd(ContactImport)
 	Contact.AddCmd(ContactGet)
+	Contact.AddCmd(ContactGetTeam)
 	Contact.AddCmd(ContactAdd)
 	Contact.AddCmd(ContactGetTopPeers)
 	Contact.AddCmd(ContactDeleteAll)

@@ -162,6 +162,7 @@ func (ctrl *Controller) sendFlushFunc(entries []domain.FlusherEntry) {
 			m := entries[idx].Value.(*msg.MessageEnvelope)
 			logs.Debug("Message",
 				zap.Int("Idx", idx),
+				zap.Any("Team", m.Team),
 				zap.String("C", msg.ConstructorNames[m.Constructor]),
 			)
 			messages = append(messages, m)
@@ -591,6 +592,7 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 	logs.Info("NetCtrl call sendWebsocket",
 		zap.Uint64("ReqID", msgEnvelope.RequestID),
 		zap.String("C", msg.ConstructorNames[msgEnvelope.Constructor]),
+		zap.Any("Team", msgEnvelope.Team),
 		zap.Bool("Plain", unauthorized),
 		zap.Bool("NoAuth", ctrl.authID == 0),
 	)

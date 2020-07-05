@@ -145,6 +145,7 @@ func executeRemoteCommand(r *River, requestID uint64, constructor int64, command
 	// If the constructor is a realtime command, then just send it to the server
 	if _, ok := r.realTimeCommands[constructor]; ok {
 		r.queueCtrl.RealtimeCommand(&msg.MessageEnvelope{
+			Team: r.GetTeam(),
 			Constructor: constructor,
 			RequestID:   requestID,
 			Message:     commandBytes,
@@ -152,6 +153,7 @@ func executeRemoteCommand(r *River, requestID uint64, constructor int64, command
 	} else {
 		r.queueCtrl.EnqueueCommand(
 			&msg.MessageEnvelope{
+				Team: r.GetTeam(),
 				Constructor: constructor,
 				RequestID:   requestID,
 				Message:     commandBytes,

@@ -93,6 +93,10 @@ type River struct {
 	// realTimeCommands should not passed to queue to send they should directly pass to networkController
 	realTimeCommands map[int64]bool
 
+	// Team
+	teamID         int64
+	teamAccessHash uint64
+
 	// Internal Controllers
 	networkCtrl *networkCtrl.Controller
 	queueCtrl   *queueCtrl.Controller
@@ -234,6 +238,22 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Initialize River Connection
 	logs.Info("River SetConfig done!")
+}
+
+func (r *River) SetTeam(teamID int64, teamAccessHash uint64) {
+	r.teamID = teamID
+	r.teamAccessHash = teamAccessHash
+}
+
+func (r *River) GetTeam() *msg.InputTeam {
+	if r.teamID == 0 {
+		return nil
+	}
+	logs.Info("GetTeam", zap.Any("TeamID", r.teamID))
+	return &msg.InputTeam{
+		ID:         r.teamID,
+		AccessHash: r.teamAccessHash,
+	}
 }
 
 func (r *River) Version() string {
