@@ -400,6 +400,33 @@ func (r *repoGroups) UpdateMemberType(groupID, userID int64, isAdmin bool) error
 	})
 }
 
+func (r *repoGroups) ToggleAdmins(groupID int64, adminEnable bool) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		group, err := getGroupByKey(txn, getGroupKey(groupID))
+		if err != nil {
+			return err
+		}
+
+		if adminEnable {
+			for _, f := range group.Flags {
+				if f == msg.GroupFlagsAdminsEnabled {
+					return nil
+				}
+			}
+			group.Flags = append(group.Flags, msg.GroupFlagsAdminsEnabled)
+		} else {
+			for idx, f := range group.Flags {
+				if f == msg.GroupFlagsAdminsEnabled {
+					group.Flags[idx] = group.Flags[len(group.Flags)-1]
+					group.Flags = group.Flags[:len(group.Flags)-1]
+				}
+			}
+		}
+
+		return saveGroup(txn, group)
+	})
+}
+
 func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
 	groups := make([]*msg.Group, 0, 100)
 	if r.peerSearch == nil {

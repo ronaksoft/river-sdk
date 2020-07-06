@@ -1145,6 +1145,19 @@ func (r *River) groupUpdateAdmin(in, out *msg.MessageEnvelope, timeoutCB domain.
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
+func (r *River) groupToggleAdmin(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := new(msg.GroupsToggleAdmins)
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	repo.Groups.ToggleAdmins(req.GroupID, req.AdminEnabled)
+
+	// send the request to server
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+}
 func (r *River) groupRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	// send the request to server
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)

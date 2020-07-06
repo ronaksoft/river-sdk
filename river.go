@@ -652,6 +652,7 @@ func (r *River) registerCommandHandlers() {
 		msg.C_GroupsDeleteUser:              r.groupDeleteUser,
 		msg.C_GroupsGetFull:                 r.groupsGetFull,
 		msg.C_GroupsUpdateAdmin:             r.groupUpdateAdmin,
+		msg.C_GroupsToggleAdmins:            r.groupToggleAdmin,
 		msg.C_ContactsImport:                r.contactsImport,
 		msg.C_ContactsAdd:                   r.contactsAdd,
 		msg.C_ContactsDelete:                r.contactsDelete,
