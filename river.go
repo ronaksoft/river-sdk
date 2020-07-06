@@ -680,5 +680,6 @@ func (r *River) registerCommandHandlers() {
 		msg.C_GifGetSaved:                   r.gifGetSaved,
 		msg.C_GifSave:                       r.gifSave,
 		msg.C_GifDelete:                     r.gifDelete,
+		msg.C_SystemGetConfig:               r.systemGetConfig,
 	}
 }

@@ -245,7 +245,6 @@ func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash 
 		return "", err
 	}
 	go func() {
-
 		err = ctrl.download(DownloadRequest{
 			MessageID:        clientFile.MessageID,
 			ClusterID:        clientFile.ClusterID,

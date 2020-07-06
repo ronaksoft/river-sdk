@@ -1778,3 +1778,8 @@ func (r *River) gifGetSaved(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, enqueSuccessCB, true)
 }
+
+func (r *River) systemGetConfig(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	msg.ResultSystemConfig(out, domain.SysConfig)
+	successCB(out)
+}

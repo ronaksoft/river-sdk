@@ -74,13 +74,13 @@ func (r *River) FileDownloadAsync(clusterID int32, fileID int64, accessHash int6
 		logs.Warn("Error On GetFile (Key not found)",
 			zap.Int32("ClusterID", clusterID),
 			zap.Int64("FileID", fileID),
-			zap.Int64("AccessHash", int64(accessHash)),
+			zap.Int64("AccessHash", accessHash),
 		)
 	default:
 		logs.Warn("Error On GetFile",
 			zap.Int32("ClusterID", clusterID),
 			zap.Int64("FileID", fileID),
-			zap.Int64("AccessHash", int64(accessHash)),
+			zap.Int64("AccessHash", accessHash),
 			zap.Error(err),
 		)
 	}
