@@ -446,20 +446,6 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 
 		// unregister device if token exist
 		if notifyServer {
-			if r.DeviceToken != nil {
-				req := new(msg.AccountUnregisterDevice)
-				req.Token = r.DeviceToken.Token
-				req.TokenType = int32(r.DeviceToken.TokenType)
-				reqBytes, _ := req.Marshal()
-				r.queueCtrl.RealtimeCommand(
-					&msg.MessageEnvelope{
-						Constructor: msg.C_AccountUnregisterDevice,
-						RequestID:   uint64(domain.SequentialUniqueID()),
-						Message:     reqBytes,
-					},
-					nil, nil, true, false,
-				)
-			}
 			// send logout request to server
 			requestID := domain.SequentialUniqueID()
 			req := new(msg.AuthLogout)
