@@ -58,6 +58,7 @@ type Controller struct {
 
 	// Internals
 	wsQuality domain.NetworkStatus
+	authRecalled  bool
 
 	// flusher
 	sendFlusher *domain.Flusher
@@ -457,6 +458,7 @@ func (ctrl *Controller) Connect() {
 		keepGoing := true
 		attempts := 0
 		for keepGoing {
+			ctrl.SetAuthRecalled(false)
 			ctrl.updateNetworkStatus(domain.NetworkConnecting)
 			// If there is a wsConn then close it before creating a new one
 			if ctrl.wsConn != nil {
@@ -732,13 +734,19 @@ func (ctrl *Controller) Reconnect() {
 }
 
 // WaitForNetwork
-func (ctrl *Controller) WaitForNetwork() {
+func (ctrl *Controller) WaitForNetwork(waitForRecall bool) {
 	// Wait While Network is Disconnected or Connecting
 	for ctrl.wsQuality != domain.NetworkConnected {
 		logs.Debug("NetCtrl is waiting for Network",
 			zap.String("Quality", ctrl.wsQuality.ToString()),
 		)
 		time.Sleep(time.Second)
+	}
+	if waitForRecall {
+		for !ctrl.authRecalled {
+			logs.Debug("NetCtrl is waiting for AuthRecall")
+			time.Sleep(time.Second)
+		}
 	}
 }
 
@@ -750,6 +758,11 @@ func (ctrl *Controller) Connected() bool {
 // GetQuality
 func (ctrl *Controller) GetQuality() domain.NetworkStatus {
 	return ctrl.wsQuality
+}
+
+// SetAuthRecalled update the internal flag to identify AuthRecall api has been successfully called
+func (ctrl *Controller) SetAuthRecalled(b bool) {
+	ctrl.authRecalled = b
 }
 
 func (ctrl *Controller) recoverPanic(funcName string, extraInfo interface{}) {

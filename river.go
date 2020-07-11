@@ -155,7 +155,14 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Initialize realtime requests
 	r.realTimeCommands = map[int64]bool{
-		msg.C_MessagesSetTyping: true,
+		msg.C_MessagesSetTyping:   true,
+		msg.C_InitConnect:         true,
+		msg.C_InitConnectTest:     true,
+		msg.C_InitAuthCompleted:   true,
+		msg.C_SystemGetConfig:     true,
+		msg.C_SystemGetSalts:      true,
+		msg.C_SystemGetServerTime: true,
+		msg.C_SystemGetPublicKeys: true,
 	}
 
 	// Initialize Network Controller
@@ -291,6 +298,7 @@ func (r *River) onNetworkConnect() (err error) {
 		if err != nil {
 			logs.Warn("Error On AuthRecall", zap.Error(err))
 		}
+		r.networkCtrl.SetAuthRecalled(true)
 		domain.WindowLog(fmt.Sprintf("AuthRecalled: %s", time.Now().Sub(domain.StartTime)))
 		waitGroup.Done()
 	}()

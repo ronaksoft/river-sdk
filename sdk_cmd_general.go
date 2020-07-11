@@ -195,7 +195,7 @@ func (r *River) CreateAuthKey() (err error) {
 	logs.Info("River::CreateAuthKey()")
 
 	// Wait for network
-	r.networkCtrl.WaitForNetwork()
+	r.networkCtrl.WaitForNetwork(false)
 
 	err, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ := initConnect(r)
 	if err != nil {

@@ -66,7 +66,7 @@ func New(fileCtrl *fileCtrl.Controller, network *networkCtrl.Controller, dataDir
 func (ctrl *Controller) distributor() {
 	for {
 		// Wait until network is available
-		ctrl.networkCtrl.WaitForNetwork()
+		ctrl.networkCtrl.WaitForNetwork(true)
 
 		ctrl.distributorLock.Lock()
 		if ctrl.waitingList.Length() == 0 {

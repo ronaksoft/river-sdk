@@ -1297,7 +1297,7 @@ func (r *River) labelsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeout
 	}
 
 	labels := repo.Labels.GetAll()
-	if len(labels) == 0 {
+	if len(labels) != 0 {
 		res := &msg.LabelsMany{}
 		res.Labels = labels
 
