@@ -28,8 +28,7 @@ var BotGetInlineQueryResults = &ishell.Cmd{
 
 		c.Println("Enter Peer:")
 		req.Peer = fnGetPeer(c)
-
-		req.Query = "Some Query"
+		req.Query = fnGetQuery(c)
 		req.Offset = ""
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
