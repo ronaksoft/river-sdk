@@ -103,6 +103,16 @@ func saveGroup(txn *badger.Txn, group *msg.Group) error {
 	if err != nil {
 		return err
 	}
+
+	groupFull, _ := getGroupFullByKey(txn, getGroupFullKey(group.ID))
+	if groupFull != nil {
+		groupFull.Group = group
+		err = saveGroupFull(txn, groupFull)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -396,6 +406,7 @@ func (r *repoGroups) UpdateMemberType(groupID, userID int64, isAdmin bool) error
 		if err != nil {
 			return err
 		}
+
 		return saveGroup(txn, group)
 	})
 }

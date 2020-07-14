@@ -303,6 +303,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			_Shell.Println("Failed to unmarshal", zap.Error(err))
 			return
 		}
+
 		if x.Group != nil {
 			_Shell.Println(fmt.Sprintf("GroupID : %d \t Title : %s \t Flags :%v", x.Group.ID, x.Group.Title, x.Group.Flags))
 			if x.Group.Photo == nil {
@@ -448,7 +449,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		x := &msg.TeamsMany{}
 		x.Unmarshal(envelope.Message)
 		for _, t := range x.Teams {
-			_Shell.Println(t.ID,  t.AccessHash, t.Name, t.CreatorID)
+			_Shell.Println(t.ID, t.AccessHash, t.Name, t.CreatorID)
 		}
 	case msg.C_TeamMembers:
 		x := &msg.TeamMembers{}
