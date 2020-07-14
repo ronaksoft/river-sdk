@@ -482,7 +482,7 @@ func (ctrl *Controller) Connect() {
 			ctrl.wsDialer.Header = ws.HandshakeHeaderHTTP(reqHdr)
 			wsConn, _, _, err := ctrl.wsDialer.Dial(context.Background(), ctrl.wsEndpoint)
 			if err != nil {
-				logs.Warn("NetCtrl could not dial", zap.Error(err), zap.String("Url", ctrl.wsEndpoint))
+				// logs.Warn("NetCtrl could not dial", zap.Error(err), zap.String("Url", ctrl.wsEndpoint))
 				time.Sleep(domain.GetExponentialTime(100*time.Millisecond, 3*time.Second, attempts))
 				attempts++
 				if attempts > 2 {

@@ -1298,10 +1298,11 @@ func (r *River) labelsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeout
 
 	labels := repo.Labels.GetAll()
 	if len(labels) != 0 {
+		logs.Debug("We found labels locally", zap.Int("L", len(labels)))
 		res := &msg.LabelsMany{}
 		res.Labels = labels
 
-		out.Constructor = msg.C_UsersMany
+		out.Constructor = msg.C_LabelsMany
 		out.Message, _ = res.Marshal()
 		uiexec.ExecSuccessCB(successCB, out)
 		return
@@ -1785,7 +1786,7 @@ func (r *River) gifGetSaved(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 		enqueSuccessCB = func(m *msg.MessageEnvelope) {
 
 		}
-	}else {
+	} else {
 		enqueSuccessCB = successCB
 	}
 

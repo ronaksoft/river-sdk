@@ -675,6 +675,7 @@ func (r *River) registerCommandHandlers() {
 		msg.C_ClientSendMessageMedia:        r.clientSendMessageMedia,
 		msg.C_MessagesSaveDraft:             r.messagesSaveDraft,
 		msg.C_MessagesClearDraft:            r.messagesClearDraft,
+		msg.C_LabelsGet:                     r.labelsGet,
 		msg.C_LabelsListItems:               r.labelsListItems,
 		msg.C_ClientGlobalSearch:            r.clientGlobalSearch,
 		msg.C_ClientContactSearch:           r.clientContactSearch,
