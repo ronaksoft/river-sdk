@@ -50,7 +50,6 @@ var BotSendInlineQueryResults = &ishell.Cmd{
 		req.ResultID = fnGetResultID(c)
 		req.Peer = fnGetPeer(c)
 		req.RandomID = domain.RandomInt64(0)
-		req.
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_BotSendInlineResults, reqBytes, reqDelegate); err != nil {
