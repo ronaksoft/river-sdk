@@ -74,7 +74,8 @@ var MessageGetDialogs = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		req := msg.MessagesGetDialogs{}
 		req.Limit = int32(100)
-		req.Offset = int32(0)
+		req.Offset = fnGetOffset(c)
+
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)

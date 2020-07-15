@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"git.ronaksoftware.com/river/msg/msg"
-	ishell "gopkg.in/abiosoft/ishell.v2"
+	"gopkg.in/abiosoft/ishell.v2"
 )
 
 func fnGetPhone(c *ishell.Context) string {
@@ -367,6 +367,27 @@ func fnGetQuery(c *ishell.Context) string {
 	c.Print("Query: ")
 	uname := c.ReadLine()
 	return uname
+}
+
+func fnGetResultID(c *ishell.Context) string {
+	c.Print("ResultID: ")
+	uname := c.ReadLine()
+	return uname
+}
+
+func fnGetQueryID(c *ishell.Context) int64 {
+	var queryID int64
+	for {
+		c.Print("QueryID: ")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
+		if err == nil {
+			queryID = id
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return queryID
 }
 
 func fnGetTitle(c *ishell.Context) string {
@@ -773,23 +794,36 @@ func fnGetPeer(c *ishell.Context) *msg.InputPeer {
 
 func fnGetUser(c *ishell.Context) *msg.InputUser {
 	options := make([]string, 0, len(MyUsers))
-	for _, d := range MyDialogs {
-		switch d.PeerType {
-		case 1:
-			options = append(options, fmt.Sprintf("%s %s", MyUsers[d.PeerID].FirstName, MyUsers[d.PeerID].LastName))
-		case 2:
-			options = append(options, fmt.Sprintf("%s (Cannot Select)", MyGroups[d.PeerID].Title))
-		}
+	optionsUser := make([]*msg.User, 0, len(MyUsers))
+	for _, u := range MyUsers {
+		options = append(options, fmt.Sprintf("%s %s", MyUsers[u.ID].FirstName, MyUsers[u.ID].LastName))
+		optionsUser = append(optionsUser, MyUsers[u.ID])
 	}
 	idx := c.MultiChoice(options, "Please Select Your User:")
 	return &msg.InputUser{
-		UserID:     MyDialogs[idx].PeerID,
-		AccessHash: MyDialogs[idx].AccessHash,
+		UserID:     optionsUser[idx].ID,
+		AccessHash: optionsUser[idx].AccessHash,
+	}
+}
+
+func fnGetBot(c *ishell.Context) *msg.InputUser {
+	options := make([]string, 0, len(MyUsers))
+	optionsUser := make([]*msg.User, 0, len(MyUsers))
+	for _, u := range MyUsers {
+		if u.IsBot {
+			options = append(options, fmt.Sprintf("%s %s", MyUsers[u.ID].FirstName, MyUsers[u.ID].LastName))
+			optionsUser = append(optionsUser, MyUsers[u.ID])
+		}
+	}
+	idx := c.MultiChoice(options, "Please Select Your Bot:")
+	return &msg.InputUser{
+		UserID:     optionsUser[idx].ID,
+		AccessHash: optionsUser[idx].AccessHash,
 	}
 }
 
 func fnGetTopPeerCat(c *ishell.Context) msg.TopPeerCategory {
-	options  := []string{
+	options := []string{
 		msg.TopPeerCategory_Users.String(),
 		msg.TopPeerCategory_Groups.String(),
 		msg.TopPeerCategory_Forwards.String(),
@@ -933,6 +967,21 @@ func fnGetFileID(c *ishell.Context) int64 {
 		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
 		if err == nil {
 			res = int64(id)
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return res
+}
+
+func fnGetOffset(c *ishell.Context) int32 {
+	var res int32
+	for {
+		c.Print("Offset : ")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		if err == nil {
+			res = int32(id)
 			break
 		} else {
 			c.Println(err.Error())

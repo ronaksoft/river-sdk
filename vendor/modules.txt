@@ -1,4 +1,4 @@
-# git.ronaksoftware.com/river/msg v0.0.0-20200705063337-69f8730cac34
+# git.ronaksoftware.com/river/msg v0.0.0-20200715103600-8c5e5971ce98
 git.ronaksoftware.com/river/msg/msg
 # github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9
 github.com/AndreasBriese/bbloom

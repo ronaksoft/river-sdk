@@ -2,6 +2,7 @@ package main
 
 import (
 	"git.ronaksoftware.com/river/msg/msg"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"gopkg.in/abiosoft/ishell.v2"
 )
 
@@ -24,8 +25,7 @@ var BotGetInlineQueryResults = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		req := msg.BotGetInlineResults{}
 		c.Println("Enter Bot:")
-		req.Bot = fnGetUser(c)
-
+		req.Bot = fnGetBot(c)
 		c.Println("Enter Peer:")
 		req.Peer = fnGetPeer(c)
 		req.Query = fnGetQuery(c)
@@ -41,7 +41,29 @@ var BotGetInlineQueryResults = &ishell.Cmd{
 	},
 }
 
+var BotSendInlineQueryResults = &ishell.Cmd{
+	Name: "SendInlineQueryResults",
+	Func: func(c *ishell.Context) {
+		req := msg.BotSendInlineResults{}
+		c.Println("Enter Bot:")
+		req.QueryID = fnGetQueryID(c)
+		req.ResultID = fnGetResultID(c)
+		req.Peer = fnGetPeer(c)
+		req.RandomID = domain.RandomInt64(0)
+		req.
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_BotSendInlineResults, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+
+	},
+}
+
 
 func init() {
 	Bot.AddCmd(BotGetInlineQueryResults)
+	Bot.AddCmd(BotSendInlineQueryResults)
 }

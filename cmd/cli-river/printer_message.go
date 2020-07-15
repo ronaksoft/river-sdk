@@ -457,6 +457,27 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		for _, m := range x.Members {
 			_Shell.Println(m.Admin, m.UserID, m.User.Username, m.User.FirstName, m.User.LastName)
 		}
+	case msg.C_BotResults:
+		x := &msg.BotResults{}
+		_ = x.Unmarshal(envelope.Message)
+
+		buf := new(bytes.Buffer)
+		table := tablewriter.NewWriter(buf)
+		table.SetHeader([]string{
+			"ID", "Type", "Title", "Message (Size)",
+		})
+		for _, r := range x.Results {
+			table.Append([]string{
+				r.ID,
+				r.Type.String(),
+				r.Title,
+				fmt.Sprintf("%d", r.Message.Size()),
+			})
+		}
+		_Shell.Println("QueryID:", x.QueryID)
+		_Shell.Println("NextOffset:", x.NextOffset)
+		table.Render()
+		_Shell.Println(buf)
 	default:
 		constructorName, _ := msg.ConstructorNames[envelope.Constructor]
 		_Shell.Println("DEFAULT", constructorName, len(envelope.Message))
