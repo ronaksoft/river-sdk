@@ -297,7 +297,7 @@ func (ctrl *Controller) savedGifs(e *msg.MessageEnvelope) {
 	u := &msg.SavedGifs{}
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("SyncCtrl couldn't unmarshal wallpapersMany", zap.Error(err))
+		logs.Error("SyncCtrl couldn't unmarshal savedGifs", zap.Error(err))
 		return
 	}
 	accessTime := domain.Now().Unix()
@@ -324,5 +324,35 @@ func (ctrl *Controller) savedGifs(e *msg.MessageEnvelope) {
 	}
 	if oldHash != uint64(u.Hash) {
 		forceUpdateUI(ctrl, false, false, true)
+	}
+}
+
+func (ctrl *Controller) botInlineResult(e *msg.MessageEnvelope) {
+	br := &msg.BotResults{}
+	err := br.Unmarshal(e.Message)
+	if err != nil {
+		logs.Error("SyncCtrl couldn't unmarshal BotResults", zap.Error(err))
+		return
+	}
+
+	for _, m := range br.Results {
+
+		if m == nil || m.Message == nil || m.Type != msg.MediaTypeDocument || m.Message.MediaData == nil {
+			logs.Info("SyncCtrl botInlineResult message or media is nil or not mediaDocument", zap.Error(err))
+			continue
+		}
+
+		md := &msg.MediaDocument{}
+		err := md.Unmarshal(m.Message.MediaData)
+		if err != nil {
+			logs.Error("SyncCtrl couldn't unmarshal BotResults MediaDocument", zap.Error(err))
+			continue
+		}
+
+		err = repo.Files.SaveMessageMediaDocument(md)
+
+		if err != nil {
+			logs.Error("SyncCtrl couldn't save botInlineResult media document", zap.Error(err))
+		}
 	}
 }

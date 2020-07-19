@@ -243,6 +243,57 @@ func saveMessageMedia(txn *badger.Txn, m *msg.UserMessage) error {
 	return nil
 }
 
+func (r *repoFiles) SaveMessageMediaDocument(md *msg.MediaDocument) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		return r.saveMessageMediaDocument(txn,md)
+	})
+}
+
+func (r *repoFiles) saveMessageMediaDocument(txn *badger.Txn, md *msg.MediaDocument) error {
+	fileExt := ""
+	for _, attr := range md.Doc.Attributes {
+		if attr.Type == msg.AttributeTypeFile {
+			x := &msg.DocumentAttributeFile{}
+			_ = x.Unmarshal(attr.Data)
+			fileExt = filepath.Ext(x.Filename)
+		}
+	}
+
+	err := saveFile(txn, &msg.ClientFile{
+		ClusterID:   md.Doc.ClusterID,
+		FileID:      md.Doc.ID,
+		AccessHash:  md.Doc.AccessHash,
+		Type:        msg.Message,
+		MimeType:    md.Doc.MimeType,
+		Extension:   fileExt,
+		UserID:      0,
+		GroupID:     0,
+		FileSize:    int64(md.Doc.FileSize),
+		Version:     md.Doc.Version,
+		MD5Checksum: md.Doc.MD5Checksum,
+		Attributes:  md.Doc.Attributes,
+	})
+	if err != nil {
+		return err
+	}
+
+	if md.Doc.Thumbnail != nil {
+		err = saveFile(txn, &msg.ClientFile{
+			ClusterID:  md.Doc.Thumbnail.ClusterID,
+			FileID:     md.Doc.Thumbnail.FileID,
+			AccessHash: md.Doc.Thumbnail.AccessHash,
+			Type:       msg.Thumbnail,
+			MimeType:   "jpeg",
+			UserID:     0,
+			GroupID:    0,
+			FileSize:   0,
+			Version:    0,
+		})
+		return err
+	}
+	return nil
+}
+
 func (r *repoFiles) SaveWallpaper(txn *badger.Txn, wallpaper *msg.WallPaper) error {
 	if wallpaper.Document == nil {
 		return nil
