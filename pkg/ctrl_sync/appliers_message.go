@@ -327,7 +327,7 @@ func (ctrl *Controller) savedGifs(e *msg.MessageEnvelope) {
 	}
 }
 
-func (ctrl *Controller) botInlineResult(e *msg.MessageEnvelope) {
+func (ctrl *Controller) botResults(e *msg.MessageEnvelope) {
 	br := &msg.BotResults{}
 	err := br.Unmarshal(e.Message)
 	if err != nil {
@@ -338,7 +338,7 @@ func (ctrl *Controller) botInlineResult(e *msg.MessageEnvelope) {
 	for _, m := range br.Results {
 
 		if m == nil || m.Message == nil || m.Type != msg.MediaTypeDocument || m.Message.MediaData == nil {
-			logs.Info("SyncCtrl botInlineResult message or media is nil or not mediaDocument", zap.Error(err))
+			logs.Info("SyncCtrl botResults message or media is nil or not mediaDocument", zap.Error(err))
 			continue
 		}
 
@@ -352,7 +352,7 @@ func (ctrl *Controller) botInlineResult(e *msg.MessageEnvelope) {
 		err = repo.Files.SaveMessageMediaDocument(md)
 
 		if err != nil {
-			logs.Error("SyncCtrl couldn't save botInlineResult media document", zap.Error(err))
+			logs.Error("SyncCtrl couldn't save botResults media document", zap.Error(err))
 		}
 	}
 }
