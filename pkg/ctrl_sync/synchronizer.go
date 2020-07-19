@@ -112,6 +112,7 @@ func NewSyncController(config Config) *Controller {
 		msg.C_ContactsTopPeers:  ctrl.contactsTopPeers,
 		msg.C_WallPapersMany:    ctrl.wallpapersMany,
 		msg.C_SavedGifs:         ctrl.savedGifs,
+		msg.C_BotInlineResult: 	 ctrl.botInlineResult,
 	}
 	return ctrl
 }
