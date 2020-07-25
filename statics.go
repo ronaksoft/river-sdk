@@ -89,7 +89,6 @@ func GetCountryCode(phone string) string {
 	return domain.GetCountryCode(phone)
 }
 
-
 func Version() string {
 	return domain.SDKVersion
 }

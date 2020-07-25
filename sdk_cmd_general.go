@@ -640,4 +640,3 @@ func (r *River) AppStart() error {
 
 	return nil
 }
-
