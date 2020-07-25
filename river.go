@@ -256,7 +256,6 @@ func (r *River) GetTeam() *msg.InputTeam {
 	if r.teamID == 0 {
 		return nil
 	}
-	logs.Info("GetTeam", zap.Any("TeamID", r.teamID))
 	return &msg.InputTeam{
 		ID:         r.teamID,
 		AccessHash: r.teamAccessHash,
