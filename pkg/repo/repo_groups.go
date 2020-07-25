@@ -1,8 +1,9 @@
 package repo
 
 import (
-	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
+	"git.ronaksoftware.com/ronak/riversdk/internal/pools"
+	"git.ronaksoftware.com/ronak/riversdk/internal/tools"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
@@ -23,11 +24,23 @@ type repoGroups struct {
 }
 
 func getGroupKey(groupID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d", prefixGroups, groupID))
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixGroups)
+	sb.WriteRune('.')
+	tools.AppendStrInt64(sb, groupID)
+	id := tools.StrToByte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
 }
 
 func getGroupFullKey(groupID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d", prefixGroupsFull, groupID))
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixGroupsFull)
+	sb.WriteRune('.')
+	tools.AppendStrInt64(sb, groupID)
+	id := tools.StrToByte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
 }
 
 func getGroupByKey(txn *badger.Txn, groupKey []byte) (*msg.Group, error) {
@@ -61,23 +74,35 @@ func getGroupFullByKey(txn *badger.Txn, groupFullKey []byte) (*msg.GroupFull, er
 }
 
 func getGroupParticipantKey(groupID, memberID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixGroupsParticipants, groupID, memberID))
-}
-
-func getGroupParticipantPrefix(groupID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d.", prefixGroupsParticipants, groupID))
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixGroupsParticipants)
+	sb.WriteRune('.')
+	tools.AppendStrInt64(sb, groupID)
+	tools.AppendStrInt64(sb, memberID)
+	id := tools.StrToByte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
 }
 
 func getGroupPhotoGalleryKey(groupID, photoID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixGroupsPhotoGallery, groupID, photoID))
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixGroupsPhotoGallery)
+	sb.WriteRune('.')
+	tools.AppendStrInt64(sb, groupID)
+	tools.AppendStrInt64(sb, photoID)
+	id := tools.StrToByte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
 }
 
 func getGroupPhotoGalleryPrefix(groupID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d.", prefixGroupsPhotoGallery, groupID))
-}
-
-func getGroupPrefix(groupID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d.", prefixGroupsParticipants, groupID))
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixGroupsPhotoGallery)
+	sb.WriteRune('.')
+	tools.AppendStrInt64(sb, groupID)
+	id := tools.StrToByte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
 }
 
 func saveGroup(txn *badger.Txn, group *msg.Group) error {
@@ -150,20 +175,6 @@ func removeGroupPhotoGallery(txn *badger.Txn, groupID int64, photoIDs ...int64) 
 		}
 	}
 	return nil
-}
-
-func updateGroupParticipantsCount(txn *badger.Txn, group *msg.Group) error {
-	count := int32(0)
-	opts := badger.DefaultIteratorOptions
-	opts.Prefix = getGroupPrefix(group.ID)
-	opts.PrefetchValues = false
-	it := txn.NewIterator(opts)
-	for it.Seek(getGroupParticipantKey(group.ID, 0)); it.ValidForPrefix(opts.Prefix); it.Next() {
-		count++
-	}
-	it.Close()
-	group.Participants = count
-	return saveGroup(txn, group)
 }
 
 func (r *repoGroups) Save(groups ...*msg.Group) error {

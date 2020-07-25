@@ -17,9 +17,9 @@ import (
 func TestRepoRecentSearches(t *testing.T) {
 	Convey("RecentSearch Repo", t, func() {
 		Convey("Put, List and Clear", func(c C) {
-			err := repo.RecentSearches.Clear()
+			err := repo.RecentSearches.Clear(0)
 			c.So(err, ShouldBeNil)
-			err = repo.RecentSearches.Put(&msg.RecentSearch{
+			err = repo.RecentSearches.Put( 0, &msg.RecentSearch{
 				Peer: &msg.Peer{
 					ID:         101,
 					Type:       1,
@@ -28,9 +28,9 @@ func TestRepoRecentSearches(t *testing.T) {
 				Date: int32(time.Now().Unix()),
 			})
 			c.So(err, ShouldBeNil)
-			searches := repo.RecentSearches.List(1)
+			searches := repo.RecentSearches.List(0, 1)
 			c.So(searches, ShouldHaveLength, 1)
-			err = repo.RecentSearches.Put(&msg.RecentSearch{
+			err = repo.RecentSearches.Put( 0, &msg.RecentSearch{
 				Peer: &msg.Peer{
 					ID:         102,
 					Type:       1,
@@ -39,11 +39,11 @@ func TestRepoRecentSearches(t *testing.T) {
 				Date: int32(time.Now().Unix()),
 			})
 			c.So(err, ShouldBeNil)
-			searches = repo.RecentSearches.List(2)
+			searches = repo.RecentSearches.List(0,2)
 			c.So(searches, ShouldHaveLength, 2)
-			err = repo.RecentSearches.Clear()
+			err = repo.RecentSearches.Clear(0)
 			c.So(err, ShouldBeNil)
-			searches = repo.RecentSearches.List(2)
+			searches = repo.RecentSearches.List(0,2)
 			c.So(searches, ShouldHaveLength, 0)
 		})
 	})

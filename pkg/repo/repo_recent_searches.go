@@ -1,10 +1,10 @@
 package repo
 
 import (
-	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
+	"git.ronaksoftware.com/ronak/riversdk/internal/pools"
+	"git.ronaksoftware.com/ronak/riversdk/internal/tools"
 	"github.com/dgraph-io/badger/v2"
 )
 
@@ -22,15 +22,33 @@ const (
 	prefixRecentSearch = "RECENT_SEARCH"
 )
 
-func GetRecentSearchKey(peerID int64, peerType int32) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d.%d", prefixRecentSearch, peerID, peerType))
+func getRecentSearchKey(teamID, peerID int64, peerType int32) []byte {
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixRecentSearch)
+	sb.WriteRune('.')
+	tools.AppendStrInt64(sb, teamID)
+	tools.AppendStrInt64(sb, peerID)
+	tools.AppendStrInt32(sb, peerType)
+	id := tools.StrToByte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
 }
 
-func (r *repoRecentSearches) List(limit int32) []*msg.RecentSearch {
+func getRecentSearchPrefix(teamID int64) []byte {
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixRecentSearch)
+	sb.WriteRune('.')
+	tools.AppendStrInt64(sb, teamID)
+	id := tools.StrToByte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
+}
+
+func (r *repoRecentSearches) List(teamID int64, limit int32) []*msg.RecentSearch {
 	recentSearches := make([]*msg.RecentSearch, 0, limit)
 	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = domain.StrToByte(prefixRecentSearch)
+		opts.Prefix = getRecentSearchPrefix(teamID)
 		it := txn.NewIterator(opts)
 
 		defer it.Close()
@@ -52,10 +70,10 @@ func (r *repoRecentSearches) List(limit int32) []*msg.RecentSearch {
 	return recentSearches
 }
 
-func (r *repoRecentSearches) Put(recentSearch *msg.RecentSearch) error {
+func (r *repoRecentSearches) Put(teamID int64, recentSearch *msg.RecentSearch) error {
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		recentSearchBytes, _ := recentSearch.Marshal()
-		recentSearchKey := GetRecentSearchKey(recentSearch.Peer.ID, recentSearch.Peer.Type)
+		recentSearchKey := getRecentSearchKey(teamID, recentSearch.Peer.ID, recentSearch.Peer.Type)
 		err := txn.SetEntry(badger.NewEntry(
 			recentSearchKey, recentSearchBytes,
 		))
@@ -65,19 +83,19 @@ func (r *repoRecentSearches) Put(recentSearch *msg.RecentSearch) error {
 	return err
 }
 
-func (r *repoRecentSearches) Delete(peer *msg.InputPeer) error {
+func (r *repoRecentSearches) Delete(teamID int64, peer *msg.InputPeer) error {
 	err := badgerUpdate(func(txn *badger.Txn) error {
-		recentSearchKey := GetRecentSearchKey(peer.ID, int32(peer.Type))
+		recentSearchKey := getRecentSearchKey(teamID, peer.ID, int32(peer.Type))
 		err := txn.Delete(recentSearchKey)
 		return err
 	})
 	return err
 }
 
-func (r *repoRecentSearches) Clear() error {
+func (r *repoRecentSearches) Clear(teamID int64) error {
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixRecentSearch))
+		opts.Prefix = getRecentSearchPrefix(teamID)
 		opts.PrefetchValues = false
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {

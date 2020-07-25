@@ -1648,7 +1648,7 @@ func (r *River) clientGetRecentSearch(in, out *msg.MessageEnvelope, timeoutCB do
 		return
 	}
 
-	recentSearches := repo.RecentSearches.List(req.Limit)
+	recentSearches := repo.RecentSearches.List(r.GetTeamID(), req.Limit)
 
 	// get users && group IDs
 	userIDs := domain.MInt64B{}
@@ -1696,7 +1696,7 @@ func (r *River) clientPutRecentSearch(in, out *msg.MessageEnvelope, timeoutCB do
 		Date: int32(time.Now().Unix()),
 	}
 
-	err := repo.RecentSearches.Put(recentSearch)
+	err := repo.RecentSearches.Put(r.GetTeamID(), recentSearch)
 
 	if err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
@@ -1722,7 +1722,7 @@ func (r *River) clientRemoveAllRecentSearches(in, out *msg.MessageEnvelope, time
 		return
 	}
 
-	err := repo.RecentSearches.Clear()
+	err := repo.RecentSearches.Clear(r.GetTeamID())
 
 	if err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
@@ -1748,7 +1748,7 @@ func (r *River) clientRemoveRecentSearch(in, out *msg.MessageEnvelope, timeoutCB
 		return
 	}
 
-	err := repo.RecentSearches.Delete(req.Peer)
+	err := repo.RecentSearches.Delete(r.GetTeamID(), req.Peer)
 
 	if err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
