@@ -92,3 +92,7 @@ func GetCountryCode(phone string) string {
 func Version() string {
 	return domain.SDKVersion
 }
+
+func BadgerVersion() string {
+	return ""
+}
