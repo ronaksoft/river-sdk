@@ -3,9 +3,11 @@ package repo
 import (
 	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
+	"git.ronaksoftware.com/ronak/riversdk/internal/tools"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"github.com/dgraph-io/badger/v2"
 	"github.com/tidwall/buntdb"
+	"strings"
 )
 
 /*
@@ -49,6 +51,14 @@ func getGifByKey(txn *badger.Txn, key []byte) (*msg.MediaDocument, error) {
 	return md, nil
 }
 
+func getGifFromIndexKey(key string) (clusterID int32, docID int64) {
+	parts := strings.Split(key, ".")
+	if len(parts) != 3 {
+		return 0, 0
+	}
+	return tools.StrToInt32(parts[1]), tools.StrToInt64(parts[2])
+}
+
 func saveGif(txn *badger.Txn, md *msg.MediaDocument) error {
 	mdBytes, _ := md.Marshal()
 	err := txn.SetEntry(badger.NewEntry(
@@ -68,7 +78,7 @@ func (r *repoGifs) UpdateLastAccess(clusterID int32, docID int64, accessTime int
 	}
 	return r.bunt.Update(func(tx *buntdb.Tx) error {
 		_, _, err := tx.Set(
-			domain.ByteToStr(getGifKey(clusterID, docID)),
+			fmt.Sprintf("%s.%d.%d", indexGif, clusterID, docID),
 			fmt.Sprintf("%021d", accessTime),
 			nil,
 		)
@@ -76,7 +86,7 @@ func (r *repoGifs) UpdateLastAccess(clusterID int32, docID int64, accessTime int
 	})
 }
 
-func (r *repoGifs) Get(clusterID int32, docID int64) (gif *msg.MediaDocument,err error) {
+func (r *repoGifs) Get(clusterID int32, docID int64) (gif *msg.MediaDocument, err error) {
 	err = badgerView(func(txn *badger.Txn) error {
 		gif, err = getGifByID(txn, clusterID, docID)
 		return err
@@ -111,7 +121,11 @@ func (r *repoGifs) GetSaved() (*msg.SavedGifs, error) {
 	err := badgerView(func(txn *badger.Txn) error {
 		return r.bunt.View(func(tx *buntdb.Tx) error {
 			return tx.Descend(indexGif, func(key, value string) bool {
-				md, err := getGifByKey(txn, domain.StrToByte(key))
+				clusterID, docID := getGifFromIndexKey(key)
+				if clusterID == 0 || docID == 0 {
+					return true
+				}
+				md, err := getGifByID(txn, clusterID, docID)
 				if err != nil {
 					return false
 				}
@@ -125,7 +139,7 @@ func (r *repoGifs) GetSaved() (*msg.SavedGifs, error) {
 		return nil, err
 	}
 	return &msg.SavedGifs{
-		Docs: savedGifs,
+		Docs:        savedGifs,
 		NotModified: false,
 	}, nil
 }
@@ -139,7 +153,7 @@ func (r *repoGifs) Delete(clusterID int32, docID int64) error {
 			return err
 		}
 		return r.bunt.Update(func(tx *buntdb.Tx) error {
-			_, err := tx.Delete(domain.ByteToStr(getGifKey(clusterID, docID)))
+			_, err := tx.Delete(fmt.Sprintf("%s.%d.%d", indexGif, clusterID, docID))
 			return err
 		})
 	})

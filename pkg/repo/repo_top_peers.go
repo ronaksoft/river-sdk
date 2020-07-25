@@ -3,8 +3,10 @@ package repo
 import (
 	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
+	"git.ronaksoftware.com/ronak/riversdk/internal/pools"
+	"git.ronaksoftware.com/ronak/riversdk/internal/tools"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"github.com/dgraph-io/badger/v2"
 	"github.com/tidwall/buntdb"
 	"go.uber.org/zap"
@@ -33,24 +35,33 @@ const (
 	indexTopPeersBotInline  = "T_PEER_BI"
 )
 
-func getTopPeerKey(cat msg.TopPeerCategory, peerID int64, peerType int32) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s_%02d.%021d.%d", prefixTopPeers, cat, peerID, peerType))
+func getTopPeerKey(cat msg.TopPeerCategory, teamID, peerID int64, peerType int32) []byte {
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixTopPeers)
+	sb.WriteRune('.')
+	tools.AppendStrInt64(sb, teamID)
+	tools.AppendStrInt32(sb, int32(cat))
+	tools.AppendStrInt64(sb, peerID)
+	tools.AppendStrInt32(sb, peerType)
+	id := tools.StrToByte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
 }
 
-func saveTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, tp *msg.TopPeer , userID int64) error {
+func saveTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, teamID int64, tp *msg.TopPeer) error {
 	if tp.Peer == nil {
 		logs.Warn("Could not save top peer, peer is nit", zap.Any("TP", tp))
 		return domain.ErrDoesNotExists
 	}
 	b, _ := tp.Marshal()
 	return txn.SetEntry(badger.NewEntry(
-		getTopPeerKey(cat, tp.Peer.ID, tp.Peer.Type),
+		getTopPeerKey(cat, teamID, tp.Peer.ID, tp.Peer.Type),
 		b,
 	))
 }
 
-func getTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, peerID int64, peerType int32) (*msg.TopPeer, error) {
-	item, err := txn.Get(getTopPeerKey(cat, peerID, peerType))
+func getTopPeer(txn *badger.Txn,  cat msg.TopPeerCategory, teamID, peerID int64, peerType int32) (*msg.TopPeer, error) {
+	item, err := txn.Get(getTopPeerKey(cat, teamID, peerID, peerType))
 	switch err {
 	case nil:
 	case badger.ErrKeyNotFound:
@@ -66,8 +77,8 @@ func getTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, peerID int64, peerType
 	return tp, err
 }
 
-func deleteTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, peerID int64, peerType int32) error {
-	err := txn.Delete(getTopPeerKey(cat, peerID, peerType))
+func deleteTopPeer(txn *badger.Txn,  cat msg.TopPeerCategory, teamID, peerID int64, peerType int32) error {
+	err := txn.Delete(getTopPeerKey(cat, teamID, peerID, peerType))
 	switch err {
 	case nil, badger.ErrKeyNotFound:
 		return nil
@@ -76,10 +87,25 @@ func deleteTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, peerID int64, peerT
 	}
 }
 
-func (r *repoTopPeers) updateIndex(cat msg.TopPeerCategory, peerID int64, peerType int32, rate float32) error {
+func (r *repoTopPeers) updateIndex(cat msg.TopPeerCategory, teamID, peerID int64, peerType int32, rate float32) error {
+	var indexName string
+	switch cat {
+	case msg.TopPeerCategory_Users:
+		indexName = indexTopPeersUser
+	case msg.TopPeerCategory_Groups:
+		indexName = indexTopPeersGroup
+	case msg.TopPeerCategory_Forwards:
+		indexName = indexTopPeersForward
+	case msg.TopPeerCategory_BotsMessage:
+		indexName = indexTopPeersBotMessage
+	case msg.TopPeerCategory_BotsInline:
+		indexName = indexTopPeersBotInline
+	default:
+		panic("BUG! we dont support the top peer category")
+	}
 	return r.bunt.Update(func(tx *buntdb.Tx) error {
 		_, _, err := tx.Set(
-			domain.ByteToStr(getTopPeerKey(cat, peerID, peerType)),
+			fmt.Sprintf("%s.%d.%d.%d", indexName, teamID, peerID, peerType),
 			fmt.Sprintf("%f", rate),
 			nil,
 		)
@@ -87,17 +113,17 @@ func (r *repoTopPeers) updateIndex(cat msg.TopPeerCategory, peerID int64, peerTy
 	})
 }
 
-func (r *repoTopPeers) Save(cat msg.TopPeerCategory, userID int64 , tps ...*msg.TopPeer) error {
+func (r *repoTopPeers) Save(cat msg.TopPeerCategory, userID, teamID int64, tps ...*msg.TopPeer) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		for _, tp := range tps {
 			if tp.Peer != nil && tp.Peer.ID == userID {
-				 continue
+				continue
 			}
-			err := saveTopPeer(txn, cat, tp, userID)
+			err := saveTopPeer(txn, cat, teamID, tp)
 			if err != nil {
 				return err
 			}
-			err = r.updateIndex(cat, tp.Peer.ID, tp.Peer.Type, tp.Rate)
+			err = r.updateIndex(cat, teamID, tp.Peer.ID, tp.Peer.Type, tp.Rate)
 			if err != nil {
 				return err
 			}
@@ -106,19 +132,19 @@ func (r *repoTopPeers) Save(cat msg.TopPeerCategory, userID int64 , tps ...*msg.
 	})
 }
 
-func (r *repoTopPeers) Delete(cat msg.TopPeerCategory, peerID int64, peerType int32) error {
+func (r *repoTopPeers) Delete(cat msg.TopPeerCategory, teamID, peerID int64, peerType int32) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
-		return deleteTopPeer(txn, cat, peerID, peerType)
+		return deleteTopPeer(txn, cat, teamID, peerID, peerType)
 	})
 }
 
-func (r *repoTopPeers) Update(cat msg.TopPeerCategory, peerID int64, peerType int32 , userID int64) error {
+func (r *repoTopPeers) Update(cat msg.TopPeerCategory, teamID, peerID int64, peerType int32, userID int64) error {
 	if peerID == userID {
 		return nil
 	}
 	return badgerUpdate(func(txn *badger.Txn) error {
 		accessTime := domain.Now().Unix()
-		tp, _ := getTopPeer(txn, cat, peerID, peerType)
+		tp, _ := getTopPeer(txn, cat,teamID, peerID, peerType)
 		if tp == nil {
 			switch msg.PeerType(peerType) {
 			case msg.PeerUser:
@@ -150,16 +176,16 @@ func (r *repoTopPeers) Update(cat msg.TopPeerCategory, peerID int64, peerType in
 		}
 		tp.Rate += float32(math.Min(math.Exp(float64(float32(accessTime-tp.LastUpdate)/domain.SysConfig.TopPeerDecayRate)), float64(domain.SysConfig.TopPeerMaxStep)))
 		tp.LastUpdate = accessTime
-		err := saveTopPeer(txn, cat, tp,userID)
+		err := saveTopPeer(txn, cat, teamID, tp)
 		if err != nil {
 			return err
 		}
 
-		return r.updateIndex(cat, peerID, peerType, tp.Rate)
+		return r.updateIndex(cat, teamID, peerID, peerType, tp.Rate)
 	})
 }
 
-func (r *repoTopPeers) List(cat msg.TopPeerCategory, offset, limit int32) ([]*msg.TopPeer, error) {
+func (r *repoTopPeers) List(teamID int64, cat msg.TopPeerCategory, offset, limit int32) ([]*msg.TopPeer, error) {
 	var (
 		topPeers  = make([]*msg.TopPeer, 0, limit)
 		indexName = ""
@@ -188,8 +214,11 @@ func (r *repoTopPeers) List(cat msg.TopPeerCategory, offset, limit int32) ([]*ms
 				if limit--; limit < 0 {
 					return false
 				}
-				peer := getPeerFromKey(key)
-				topPeer, err := getTopPeer(txn, cat, peer.ID, peer.Type)
+				peerTeamID, peer := getPeerFromIndexKey(key)
+				if peerTeamID != teamID {
+					return true
+				}
+				topPeer, err := getTopPeer(txn, cat, peerTeamID, peer.ID, peer.Type)
 				if err == nil && topPeer != nil {
 					topPeers = append(topPeers, topPeer)
 				}

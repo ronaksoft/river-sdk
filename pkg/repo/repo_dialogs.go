@@ -47,14 +47,14 @@ func getPinnedDialogKey(teamID int64, peerID int64, peerType int32) []byte {
 	return id
 }
 
-func getPeerFromKey(key string) *msg.Peer {
+func getPeerFromIndexKey(key string) (int64, *msg.Peer) {
 	parts := strings.Split(key, ".")
-	if len(parts) != 3 {
-		return nil
+	if len(parts) != 4 {
+		return 0, nil
 	}
-	return &msg.Peer{
-		ID:   domain.StrToInt64(parts[1]),
-		Type: domain.StrToInt32(parts[2]),
+	return tools.StrToInt64(parts[1]), &msg.Peer{
+		ID:   domain.StrToInt64(parts[2]),
+		Type: domain.StrToInt32(parts[3]),
 	}
 }
 
@@ -128,7 +128,7 @@ func countDialogUnread(txn *badger.Txn, teamID, peerID int64, peerType int32, us
 func (r *repoDialogs) updateLastUpdate(teamID int64, peerID int64, peerType int32, lastUpdate int64) error {
 	return r.bunt.Update(func(tx *buntdb.Tx) error {
 		_, _, err := tx.Set(
-			domain.ByteToStr(getDialogKey(teamID, peerID, peerType)),
+			fmt.Sprintf("%s.%d.%d.%d", indexDialogs, teamID, peerID, peerType),
 			fmt.Sprintf("%021d", lastUpdate),
 			nil,
 		)
@@ -293,7 +293,10 @@ func (r *repoDialogs) List(teamID int64, offset, limit int32) []*msg.Dialog {
 				if limit--; limit < 0 {
 					return false
 				}
-				peer := getPeerFromKey(key)
+				tID, peer := getPeerFromIndexKey(key)
+				if tID != teamID {
+					return true
+				}
 				dialog, err := getDialog(txn, teamID, peer.ID, peer.Type)
 				if err == nil && dialog != nil {
 					dialogs = append(dialogs, dialog)

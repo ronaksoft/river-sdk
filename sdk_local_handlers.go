@@ -737,7 +737,7 @@ func (r *River) contactsGetTopPeers(in, out *msg.MessageEnvelope, timeoutCB doma
 		return
 	}
 	res := &msg.ContactsTopPeers{}
-	topPeers, _ := repo.TopPeers.List(req.Category, req.Offset, req.Limit)
+	topPeers, _ := repo.TopPeers.List(r.GetTeamID(), req.Category, req.Offset, req.Limit)
 	if len(topPeers) == 0 {
 		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 		return
@@ -806,7 +806,7 @@ func (r *River) contactsResetTopPeer(in, out *msg.MessageEnvelope, timeoutCB dom
 		return
 	}
 
-	err = repo.TopPeers.Delete(req.Category, req.Peer.ID, int32(req.Peer.Type))
+	err = repo.TopPeers.Delete(req.Category, r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
 	if err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)

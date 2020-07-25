@@ -271,8 +271,11 @@ func (ctrl *Controller) contactsTopPeers(e *msg.MessageEnvelope) {
 		zap.Int("L", len(u.Peers)),
 		zap.String("Cat", u.Category.String()),
 	)
-
-	err = repo.TopPeers.Save(u.Category, ctrl.userID, u.Peers...)
+	var teamID int64
+	if e.Team != nil {
+		teamID = e.Team.ID
+	}
+	err = repo.TopPeers.Save(u.Category, ctrl.userID, teamID, u.Peers...)
 	if err != nil {
 		logs.Error("SyncCtrl got error on saving ContactsTopPeers", zap.Error(err))
 	}
