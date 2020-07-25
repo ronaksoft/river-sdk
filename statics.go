@@ -4,8 +4,11 @@ import (
 	"git.ronaksoftware.com/river/msg/msg"
 	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	"github.com/dgraph-io/badger/v2"
 	"go.uber.org/zap"
 	"math/big"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -93,6 +96,14 @@ func Version() string {
 	return domain.SDKVersion
 }
 
-func BadgerVersion() string {
-	panic("implement it")
+func BadgerSupport(dbDir string) bool {
+	f, err := os.Open(filepath.Join(dbDir, "MANIFEST"))
+	if err != nil {
+		return false
+	}
+	_, _, err = badger.ReplayManifestFile(f)
+	if err != nil {
+		return false
+	}
+	return true
 }
