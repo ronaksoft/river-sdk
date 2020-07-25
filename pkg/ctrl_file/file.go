@@ -37,6 +37,7 @@ type Config struct {
 	CompletedCB          func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64)
 	CancelCB             func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool, peerID int64)
 }
+
 type Controller struct {
 	network            *networkCtrl.Controller
 	mtxDownloads       sync.Mutex
@@ -189,12 +190,8 @@ func (ctrl *Controller) existUploadRequest(reqID string) bool {
 	return ok
 }
 
-func GetRequestID(clusterID int32, fileID int64, accessHash uint64) string {
-	return fmt.Sprintf("%d.%d.%d", clusterID, fileID, accessHash)
-}
-
 func (ctrl *Controller) GetDownloadRequest(clusterID int32, fileID int64, accessHash uint64) (DownloadRequest, bool) {
-	return ctrl.getDownloadRequest(GetRequestID(clusterID, fileID, accessHash))
+	return ctrl.getDownloadRequest(getRequestID(clusterID, fileID, accessHash))
 }
 func (ctrl *Controller) CancelDownloadRequest(reqID string) {
 	req, ok := ctrl.getDownloadRequest(reqID)
@@ -229,7 +226,7 @@ func (ctrl *Controller) Stop() {
 
 }
 func (ctrl *Controller) GetUploadRequest(fileID int64) (UploadRequest, bool) {
-	return ctrl.getUploadRequest(GetRequestID(0, fileID, 0))
+	return ctrl.getUploadRequest(getRequestID(0, fileID, 0))
 }
 func (ctrl *Controller) CancelUploadRequest(reqID string) {
 	req, ok := ctrl.getUploadRequest(reqID)
@@ -264,7 +261,7 @@ func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash 
 			zap.Uint64("AccessHash", accessHash),
 		)
 	}()
-	return GetRequestID(clusterID, fileID, accessHash), nil
+	return getRequestID(clusterID, fileID, accessHash), nil
 }
 func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash uint64, skipDelegate bool) (filePath string, err error) {
 	clientFile, err := repo.Files.Get(clusterID, fileID, accessHash)
@@ -482,7 +479,6 @@ func (ctrl *Controller) downloadWallpaper(clientFile *msg.ClientFile) (filePath 
 	})
 	return
 }
-
 func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath string, err error) {
 	err = domain.Try(retryMaxAttempts, retryWaitTime, func() error {
 		req := new(msg.FileGet)
@@ -629,7 +625,7 @@ func (ctrl *Controller) UploadUserPhoto(filePath string) (reqID string) {
 		PeerID:         0,
 	})
 	logs.WarnOnErr("Error On UploadUserPhoto", err)
-	reqID = GetRequestID(0, fileID, 0)
+	reqID = getRequestID(0, fileID, 0)
 	return
 }
 func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) (reqID string) {
@@ -648,10 +644,12 @@ func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) (reqID 
 		PeerID:         groupID,
 	})
 	logs.WarnOnErr("Error On UploadGroupPhoto", err)
-	reqID = GetRequestID(0, fileID, 0)
+	reqID = getRequestID(0, fileID, 0)
 	return
 }
-func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPath string, fileID, thumbID int64, fileSha256 []byte, peerID int64) {
+func (ctrl *Controller) UploadMessageDocument(
+	messageID int64, filePath, thumbPath string, fileID, thumbID int64, fileSha256 []byte, peerID int64, checkSha256 bool,
+) {
 	if _, err := os.Stat(filePath); err != nil {
 		logs.Warn("FileCtrl got error on upload message document (thumbnail)", zap.Error(err))
 		return
@@ -674,6 +672,7 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 		MaxInFlights: maxUploadInFlights,
 		FileSha256:   string(fileSha256),
 		PeerID:       peerID,
+		CheckSha256:  checkSha256,
 	}
 
 	reqThumb := UploadRequest{
@@ -682,6 +681,7 @@ func (ctrl *Controller) UploadMessageDocument(messageID int64, filePath, thumbPa
 		FilePath:         thumbPath,
 		MaxInFlights:     maxUploadInFlights,
 		SkipDelegateCall: false,
+		CheckSha256:      checkSha256,
 	}
 
 	if thumbID != 0 {
@@ -737,7 +737,7 @@ func (ctrl *Controller) upload(req UploadRequest) error {
 
 	// If Sha256 exists in the request then we check server if this file has been already uploaded, if true, then
 	// we do not upload it again and we call postUploadProcess with the updated details
-	if req.FileSha256 != "" {
+	if req.CheckSha256 && req.FileSha256 != "" {
 		err = ctrl.checkSha256(&req)
 		if err == nil {
 			logs.Info("File already exists in the server",

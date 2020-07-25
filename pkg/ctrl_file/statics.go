@@ -1,6 +1,7 @@
 package fileCtrl
 
 import (
+	"fmt"
 	mon "git.ronaksoftware.com/ronak/riversdk/internal/monitoring"
 	"math"
 )
@@ -59,4 +60,8 @@ func minChunkSize(fileSize int64) int32 {
 		return cs << 10
 	}
 	return chunkSizesKB[len(chunkSizesKB)-1] << 10
+}
+
+func getRequestID(clusterID int32, fileID int64, accessHash uint64) string {
+	return fmt.Sprintf("%d.%d.%d", clusterID, fileID, accessHash)
 }

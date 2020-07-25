@@ -568,6 +568,23 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 		reqMedia.ThumbID = thumbID
 		reqMedia.ThumbUploadID = fmt.Sprintf("%d", thumbID)
 	}
+
+	checkSha256 := true
+	switch reqMedia.MediaType {
+	case msg.InputMediaTypeUploadedDocument:
+		for _, attr := range reqMedia.Attributes {
+			if attr.Type == msg.AttributeTypeAudio {
+				x := &msg.DocumentAttributeAudio{}
+				_ = x.Unmarshal(attr.Data)
+				if x.Voice {
+					checkSha256 = false
+				}
+			}
+		}
+	default:
+		panic("Invalid MediaInputType")
+	}
+
 	h, _ := domain.CalculateSha256(reqMedia.FilePath)
 	pendingMessage, err := repo.PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, fileID, fileID, thumbID, reqMedia, h)
 	if err != nil {
@@ -583,7 +600,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	msg.ResultClientPendingMessage(out, pendingMessage)
 
 	// 4. Start the upload process
-	r.fileCtrl.UploadMessageDocument(pendingMessage.ID, reqMedia.FilePath, reqMedia.ThumbFilePath, fileID, thumbID, h, pendingMessage.PeerID)
+	r.fileCtrl.UploadMessageDocument(pendingMessage.ID, reqMedia.FilePath, reqMedia.ThumbFilePath, fileID, thumbID, h, pendingMessage.PeerID, checkSha256)
 
 	uiexec.ExecSuccessCB(successCB, out)
 }
