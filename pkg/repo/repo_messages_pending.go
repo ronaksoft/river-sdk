@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
 	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
+	"git.ronaksoftware.com/ronak/riversdk/internal/pools"
+	"git.ronaksoftware.com/ronak/riversdk/internal/tools"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"github.com/dgraph-io/badger/v2"
-	"math"
 	"time"
 )
 
@@ -28,15 +29,33 @@ func abs(x int64) int64 {
 }
 
 func getPendingMessageKey(msgID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%012d", prefixPMessagesByID, int64(math.Abs(float64(msgID)))))
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixPMessagesByID)
+	sb.WriteRune('.')
+	tools.AppendStrInt64(sb, abs(msgID))
+	id := tools.StrToByte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
 }
 
 func getPendingMessageRandomKey(randomID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%012d", prefixPMessagesByRandomID, abs(randomID)))
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixPMessagesByRandomID)
+	sb.WriteRune('.')
+	tools.AppendStrInt64(sb, abs(randomID))
+	id := tools.StrToByte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
 }
 
 func getPendingMessageRealKey(msgID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%012d", prefixPMessagesByRealID, msgID))
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixPMessagesByRealID)
+	sb.WriteRune('.')
+	tools.AppendStrInt64(sb, msgID)
+	id := tools.StrToByte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
 }
 
 func getPendingMessageByID(txn *badger.Txn, msgID int64) (*msg.ClientPendingMessage, error) {
