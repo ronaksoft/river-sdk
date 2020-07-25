@@ -293,5 +293,5 @@ func sendLogs(r *River) {
 }
 
 func (r *River) GetHole(peerID int64, peerType int32) []byte {
-	return repo.MessagesExtra.GetHoles(peerID, peerType)
+	return repo.MessagesExtra.GetHoles(r.GetTeamID(), peerID, peerType)
 }

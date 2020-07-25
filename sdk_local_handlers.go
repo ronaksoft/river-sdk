@@ -278,7 +278,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	in.Message, _ = req.Marshal()
 
 	// Prepare the the result before sending back to the client
-	preSuccessCB := genSuccessCallback(successCB, req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, dialog.TopMessageID)
+	preSuccessCB := genSuccessCallback(successCB, r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, dialog.TopMessageID)
 
 	// Offline mode
 	if !r.networkCtrl.Connected() {
@@ -298,13 +298,13 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		req.MaxID = dialog.TopMessageID
 		fallthrough
 	case req.MinID == 0 && req.MaxID != 0:
-		b, bar := messageHole.GetLowerFilled(req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+		b, bar := messageHole.GetLowerFilled(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 		if !b {
 			logs.Info("River detected hole (With MaxID Only)",
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
-				zap.String("Holes", messageHole.PrintHole(req.Peer.ID, int32(req.Peer.Type))),
+				zap.String("Holes", messageHole.PrintHole(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))),
 			)
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
@@ -312,13 +312,13 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		messages, users := repo.Messages.GetMessageHistory(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
 		fillMessagesMany(out, messages, users, in.RequestID, preSuccessCB)
 	case req.MinID != 0 && req.MaxID == 0:
-		b, bar := messageHole.GetUpperFilled(req.Peer.ID, int32(req.Peer.Type), req.MinID)
+		b, bar := messageHole.GetUpperFilled(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID)
 		if !b {
 			logs.Info("River detected hole (With MinID Only)",
 				zap.Int64("MinID", req.MinID),
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
-				zap.String("Holes", messageHole.PrintHole(req.Peer.ID, int32(req.Peer.Type))),
+				zap.String("Holes", messageHole.PrintHole(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))),
 			)
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
@@ -326,7 +326,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		messages, users := repo.Messages.GetMessageHistory(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), bar.Min, 0, req.Limit)
 		fillMessagesMany(out, messages, users, in.RequestID, preSuccessCB)
 	default:
-		b := messageHole.IsHole(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID)
+		b := messageHole.IsHole(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID)
 		if b {
 			logs.Info("River detected hole (With Min & Max)",
 				zap.Int64("MinID", req.MinID),
@@ -351,7 +351,7 @@ func fillMessagesMany(out *msg.MessageEnvelope, messages []*msg.UserMessage, use
 	out.Message, _ = res.Marshal()
 	uiexec.ExecSuccessCB(successCB, out)
 }
-func genSuccessCallback(cb domain.MessageHandler, peerID int64, peerType int32, minID, maxID int64, topMessageID int64) domain.MessageHandler {
+func genSuccessCallback(cb domain.MessageHandler, teamID, peerID int64, peerType int32, minID, maxID int64, topMessageID int64) domain.MessageHandler {
 	return func(m *msg.MessageEnvelope) {
 		pendingMessages := repo.PendingMessages.GetByPeer(peerID, peerType)
 		switch m.Constructor {
@@ -369,11 +369,11 @@ func genSuccessCallback(cb domain.MessageHandler, peerID int64, peerType int32, 
 			if msgCount := len(x.Messages); msgCount > 0 {
 				switch {
 				case minID == 0 && maxID != 0:
-					messageHole.InsertFill(peerID, peerType, x.Messages[msgCount-1].ID, maxID)
+					messageHole.InsertFill(teamID, peerID, peerType, x.Messages[msgCount-1].ID, maxID)
 				case minID != 0 && maxID == 0:
-					messageHole.InsertFill(peerID, peerType, minID, x.Messages[0].ID)
+					messageHole.InsertFill(teamID, peerID, peerType, minID, x.Messages[0].ID)
 				case minID == 0 && maxID == 0:
-					messageHole.InsertFill(peerID, peerType, x.Messages[msgCount-1].ID, x.Messages[0].ID)
+					messageHole.InsertFill(teamID, peerID, peerType, x.Messages[msgCount-1].ID, x.Messages[0].ID)
 				}
 			}
 

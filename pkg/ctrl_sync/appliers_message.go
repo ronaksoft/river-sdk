@@ -138,7 +138,7 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 		} else {
 			err := repo.Dialogs.SaveNew(dialog, topMessage.CreatedOn)
 			logs.WarnOnErr("SyncCtrl got error on save new dialog", err)
-			messageHole.InsertFill(dialog.PeerID, dialog.PeerType, dialog.TopMessageID, dialog.TopMessageID)
+			messageHole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, dialog.TopMessageID, dialog.TopMessageID)
 		}
 	}
 	repo.Users.Save(x.Users...)

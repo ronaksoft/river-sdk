@@ -504,12 +504,12 @@ func (r *River) UpdateContactInfo(userID int64, firstName, lastName string) erro
 
 // GetScrollStatus
 func (r *River) GetScrollStatus(peerID int64, peerType int32) int64 {
-	return repo.MessagesExtra.GetScrollID(peerID, peerType)
+	return repo.MessagesExtra.GetScrollID(r.GetTeamID(), peerID, peerType)
 }
 
 // SetScrollStatus
 func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
-	repo.MessagesExtra.SaveScrollID(peerID, peerType, msgID)
+	repo.MessagesExtra.SaveScrollID(r.GetTeamID(), peerID, peerType, msgID)
 
 }
 

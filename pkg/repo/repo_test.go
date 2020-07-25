@@ -123,8 +123,8 @@ func TestRepoDialogs(t *testing.T) {
 }
 
 func TestRepoMessagesExtra(t *testing.T) {
-	repo.MessagesExtra.SaveScrollID(11, 1, 101)
-	x := repo.MessagesExtra.GetScrollID(11, 1)
+	repo.MessagesExtra.SaveScrollID(0,11, 1, 101)
+	x := repo.MessagesExtra.GetScrollID(0,11, 1)
 	fmt.Println(x)
 }
 

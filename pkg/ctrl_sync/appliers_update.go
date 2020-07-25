@@ -30,7 +30,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 
 	// used messageType to identify client & server messages on Media thingy
 	x.Message.MessageType = 1
-	repo.MessagesExtra.SaveScrollID(x.Message.PeerID, x.Message.PeerType, 0)
+	repo.MessagesExtra.SaveScrollID(x.Message.TeamID, x.Message.PeerID, x.Message.PeerType, 0)
 
 	dialog, _ := repo.Dialogs.Get(x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 	if dialog == nil {
@@ -58,7 +58,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	if err != nil {
 		return nil, err
 	}
-	messageHole.InsertFill(dialog.PeerID, dialog.PeerType, dialog.TopMessageID, x.Message.ID)
+	messageHole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, dialog.TopMessageID, x.Message.ID)
 
 	// If sender is me, check for pending
 	if x.Message.SenderID == ctrl.GetUserID() {
@@ -184,7 +184,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 		_ = repo.Messages.ClearHistory(ctrl.GetUserID(), x.Message.TeamID, x.Message.PeerID, x.Message.PeerType, act.MaxID)
 
 		// 2. Delete Scroll Position
-		repo.MessagesExtra.SaveScrollID(x.Message.PeerID, x.Message.PeerType, 0)
+		repo.MessagesExtra.SaveScrollID(x.Message.TeamID, x.Message.PeerID, x.Message.PeerType, 0)
 
 		if act.Delete {
 			// 3. Delete Dialog
@@ -193,7 +193,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			// 3. Get dialog and create first hole
 			dialog, _ := repo.Dialogs.Get(x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 			if dialog != nil {
-				messageHole.InsertFill(dialog.PeerID, dialog.PeerType, dialog.TopMessageID, dialog.TopMessageID)
+				messageHole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, dialog.TopMessageID, dialog.TopMessageID)
 			}
 		}
 	}

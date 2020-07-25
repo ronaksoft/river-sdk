@@ -2,8 +2,8 @@ package repo
 
 import (
 	"encoding/json"
-	"fmt"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoftware.com/ronak/riversdk/internal/pools"
+	"git.ronaksoftware.com/ronak/riversdk/internal/tools"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo/dto"
 	"github.com/dgraph-io/badger/v2"
 )
@@ -16,14 +16,22 @@ type repoMessagesExtra struct {
 	*repository
 }
 
-func (r *repoMessagesExtra) getKey(peerID int64, peerType int32) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d.%d", prefixMessageExtra, peerID, peerType))
+func (r *repoMessagesExtra) getKey(teamID, peerID int64, peerType int32) []byte {
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixMessageExtra)
+	sb.WriteRune('.')
+	tools.AppendStrInt64(sb, teamID)
+	tools.AppendStrInt64(sb, peerID)
+	tools.AppendStrInt32(sb, peerType)
+	id := tools.StrToByte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
 }
 
-func (r *repoMessagesExtra) get(peerID int64, peerType int32) *dto.MessagesExtra {
+func (r *repoMessagesExtra) get(teamID, peerID int64, peerType int32) *dto.MessagesExtra {
 	message := new(dto.MessagesExtra)
 	_ = badgerView(func(txn *badger.Txn) error {
-		item, err := txn.Get(r.getKey(peerID, peerType))
+		item, err := txn.Get(r.getKey(teamID, peerID, peerType))
 		if err != nil {
 			return err
 		}
@@ -41,9 +49,9 @@ func (r *repoMessagesExtra) save(key []byte, m *dto.MessagesExtra) {
 	})
 }
 
-func (r *repoMessagesExtra) SaveScrollID(peerID int64, peerType int32, msgID int64) {
-	key := r.getKey(peerID, peerType)
-	m := r.get(peerID, peerType)
+func (r *repoMessagesExtra) SaveScrollID(teamID, peerID int64, peerType int32, msgID int64) {
+	key := r.getKey(teamID, peerID, peerType)
+	m := r.get(teamID, peerID, peerType)
 	if m == nil {
 		return
 	}
@@ -51,17 +59,17 @@ func (r *repoMessagesExtra) SaveScrollID(peerID int64, peerType int32, msgID int
 	r.save(key, m)
 }
 
-func (r *repoMessagesExtra) GetScrollID(peerID int64, peerType int32) int64 {
-	m := r.get(peerID, peerType)
+func (r *repoMessagesExtra) GetScrollID(teamID, peerID int64, peerType int32) int64 {
+	m := r.get(teamID, peerID, peerType)
 	if m == nil {
 		return 0
 	}
 	return m.ScrollID
 }
 
-func (r *repoMessagesExtra) SaveHoles(peerID int64, peerType int32, data []byte) {
-	key := r.getKey(peerID, peerType)
-	m := r.get(peerID, peerType)
+func (r *repoMessagesExtra) SaveHoles(teamID, peerID int64, peerType int32, data []byte) {
+	key := r.getKey(teamID, peerID, peerType)
+	m := r.get(teamID, peerID, peerType)
 	if m == nil {
 		return
 	}
@@ -69,8 +77,8 @@ func (r *repoMessagesExtra) SaveHoles(peerID int64, peerType int32, data []byte)
 	r.save(key, m)
 }
 
-func (r *repoMessagesExtra) GetHoles(peerID int64, peerType int32) []byte {
-	m := r.get(peerID, peerType)
+func (r *repoMessagesExtra) GetHoles(teamID, peerID int64, peerType int32) []byte {
+	m := r.get(teamID,peerID, peerType)
 	if m == nil {
 		return nil
 	}
