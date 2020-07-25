@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"github.com/dgraph-io/badger"
+	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
+	"github.com/dgraph-io/badger/v2"
 	"math"
 	"time"
 )
@@ -101,7 +101,7 @@ func (r *repoMessagesPending) Save(msgID int64, senderID int64, message *msg.Mes
 		)
 	})
 
-	Dialogs.updateLastUpdate(pm.PeerID, pm.PeerType, pm.CreatedOn)
+	Dialogs.updateLastUpdate(pm.TeamID, pm.PeerID, pm.PeerType, pm.CreatedOn)
 
 	return pm, nil
 }
@@ -163,7 +163,7 @@ func (r *repoMessagesPending) SaveClientMessageMedia(
 		return nil, err
 	}
 
-	Dialogs.updateLastUpdate(pm.PeerID, pm.PeerType, pm.CreatedOn)
+	Dialogs.updateLastUpdate(pm.TeamID, pm.PeerID, pm.PeerType, pm.CreatedOn)
 
 	return pm, nil
 }
@@ -222,7 +222,7 @@ func (r *repoMessagesPending) SaveMessageMedia(msgID int64, senderID int64, msgM
 		)
 	})
 
-	Dialogs.updateLastUpdate(pm.PeerID, pm.PeerType, pm.CreatedOn)
+	Dialogs.updateLastUpdate(pm.TeamID, pm.PeerID, pm.PeerType, pm.CreatedOn)
 
 	return pm, nil
 }

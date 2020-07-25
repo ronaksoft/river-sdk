@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"github.com/dgraph-io/badger"
-	"github.com/dgraph-io/badger/pb"
+	"github.com/dgraph-io/badger/v2"
+	"github.com/dgraph-io/badger/v2/pb"
 	"mime"
 	"os"
 	"path"
@@ -547,10 +547,10 @@ func (r *repoFiles) GetCachedMedia() *msg.ClientCachedMediaInfo {
 	return cachedMediaInfo
 }
 
-func (r *repoFiles) DeleteCachedMediaByPeer(peerType int32, peerID int64, mediaTypes []msg.ClientMediaType) {
+func (r *repoFiles) DeleteCachedMediaByPeer(teamID, peerID int64, peerType int32, mediaTypes []msg.ClientMediaType) {
 	stream := r.badger.NewStream()
 
-	stream.Prefix = getMessagePrefix(peerID, peerType)
+	stream.Prefix = getMessagePrefix(teamID, peerID, peerType)
 	stream.ChooseKey = func(item *badger.Item) bool {
 		m := &msg.UserMessage{}
 		err := item.Value(func(val []byte) error {

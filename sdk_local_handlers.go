@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"git.ronaksoftware.com/river/msg/msg"
+	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
 )
@@ -25,7 +25,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 	res := &msg.MessagesDialogs{}
-	res.Dialogs = repo.Dialogs.List(req.Offset, req.Limit)
+	res.Dialogs = repo.Dialogs.List(r.GetTeamID(), req.Offset, req.Limit)
 
 	// If the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {
@@ -160,7 +160,7 @@ func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain
 		return
 	}
 	res := &msg.Dialog{}
-	res, _ = repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
+	res, _ = repo.Dialogs.Get(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
 
 	// if the localDB had no data send the request to server
 	if res == nil {
@@ -239,7 +239,7 @@ func (r *River) messagesReadHistory(in, out *msg.MessageEnvelope, timeoutCB doma
 		return
 	}
 
-	dialog, _ := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
+	dialog, _ := repo.Dialogs.Get(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
 		return
 	}
@@ -247,7 +247,7 @@ func (r *River) messagesReadHistory(in, out *msg.MessageEnvelope, timeoutCB doma
 		return
 	}
 
-	repo.Dialogs.UpdateReadInboxMaxID(r.ConnInfo.UserID, req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+	repo.Dialogs.UpdateReadInboxMaxID(r.ConnInfo.UserID, r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 
 	// send the request to server
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
@@ -262,7 +262,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 
 	// Load the dialog
-	dialog, _ := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
+	dialog, _ := repo.Dialogs.Get(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
 		logs.Debug("asking for a nil dialog")
 		fillMessagesMany(out, []*msg.UserMessage{}, []*msg.User{}, in.RequestID, successCB)
@@ -282,7 +282,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 
 	// Offline mode
 	if !r.networkCtrl.Connected() {
-		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
+		messages, users := repo.Messages.GetMessageHistory(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 		if len(messages) > 0 {
 			pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
 			if len(pendingMessages) > 0 {
@@ -309,7 +309,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
-		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
+		messages, users := repo.Messages.GetMessageHistory(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
 		fillMessagesMany(out, messages, users, in.RequestID, preSuccessCB)
 	case req.MinID != 0 && req.MaxID == 0:
 		b, bar := messageHole.GetUpperFilled(req.Peer.ID, int32(req.Peer.Type), req.MinID)
@@ -323,7 +323,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
-		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), bar.Min, 0, req.Limit)
+		messages, users := repo.Messages.GetMessageHistory(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), bar.Min, 0, req.Limit)
 		fillMessagesMany(out, messages, users, in.RequestID, preSuccessCB)
 	default:
 		b := messageHole.IsHole(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID)
@@ -337,7 +337,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
-		messages, users := repo.Messages.GetMessageHistory(req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
+		messages, users := repo.Messages.GetMessageHistory(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 		fillMessagesMany(out, messages, users, in.RequestID, preSuccessCB)
 	}
 }
@@ -885,7 +885,7 @@ func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB
 		return
 	}
 
-	dialog, _ := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
+	dialog, _ := repo.Dialogs.Get(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
 		return
 	}
@@ -968,7 +968,7 @@ func (r *River) dialogTogglePin(in, out *msg.MessageEnvelope, timeoutCB domain.T
 		return
 	}
 
-	dialog, _ := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
+	dialog, _ := repo.Dialogs.Get(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
 		logs.Debug("River::dialogTogglePin()-> GetDialog()",
 			zap.String("Error", "Dialog is null"),
@@ -1101,7 +1101,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	}
 
 	// NotifySettings
-	dlg, _ := repo.Dialogs.Get(req.GroupID, int32(msg.PeerGroup))
+	dlg, _ := repo.Dialogs.Get(r.GetTeamID(), req.GroupID, int32(msg.PeerGroup))
 	if dlg == nil {
 		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 		return
@@ -1256,7 +1256,7 @@ func (r *River) messagesSaveDraft(in, out *msg.MessageEnvelope, timeoutCB domain
 		return
 	}
 
-	dialog, _ := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
+	dialog, _ := repo.Dialogs.Get(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
 	if dialog != nil {
 		draftMessage := msg.DraftMessage{
 			Body:     req.Body,
@@ -1283,7 +1283,7 @@ func (r *River) messagesClearDraft(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 
-	dialog, _ := repo.Dialogs.Get(req.Peer.ID, int32(req.Peer.Type))
+	dialog, _ := repo.Dialogs.Get(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
 	if dialog != nil {
 		dialog.Draft = nil
 		repo.Dialogs.Save(dialog)
@@ -1332,7 +1332,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 			zap.Int64("MinID", req.MinID),
 			zap.Int64("MaxID", req.MaxID),
 		)
-		messages, users, groups := repo.Labels.ListMessages(req.LabelID, req.Limit, req.MinID, req.MaxID)
+		messages, users, groups := repo.Labels.ListMessages(req.LabelID, r.GetTeamID(), req.Limit, req.MinID, req.MaxID)
 		fillLabelItems(out, messages, users, groups, in.RequestID, successCB)
 		return
 	}
@@ -1392,7 +1392,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
-		messages, users, groups := repo.Labels.ListMessages(req.LabelID, req.Limit, bar.MinID, bar.MaxID)
+		messages, users, groups := repo.Labels.ListMessages(req.LabelID, r.GetTeamID(), req.Limit, bar.MinID, bar.MaxID)
 		logs.Debug("List Messages By Label",
 			zap.Int32("LabelID", req.LabelID),
 			zap.Int64("MinID", bar.MinID),
@@ -1411,7 +1411,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
-		messages, users, groups := repo.Labels.ListMessages(req.LabelID, req.Limit, bar.MinID, bar.MaxID)
+		messages, users, groups := repo.Labels.ListMessages(req.LabelID, r.GetTeamID(), req.Limit, bar.MinID, bar.MaxID)
 		fillLabelItems(out, messages, users, groups, in.RequestID, preSuccessCB)
 	default:
 		r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
@@ -1560,7 +1560,7 @@ func (r *River) clientClearCachedMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	}
 
 	if req.Peer != nil {
-		repo.Files.DeleteCachedMediaByPeer(int32(req.Peer.Type), req.Peer.ID, req.MediaTypes)
+		repo.Files.DeleteCachedMediaByPeer(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MediaTypes)
 	} else if len(req.MediaTypes) > 0 {
 		repo.Files.DeleteCachedMediaByMediaType(req.MediaTypes)
 	} else {
@@ -1626,7 +1626,7 @@ func (r *River) clientGetLastBotKeyboard(in, out *msg.MessageEnvelope, timeoutCB
 		return
 	}
 
-	lastKeyboardMsg, _ := repo.Messages.GetLastBotKeyboard(req.Peer.ID, int32(req.Peer.Type))
+	lastKeyboardMsg, _ := repo.Messages.GetLastBotKeyboard(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
 
 	if lastKeyboardMsg == nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: "message not found"})

@@ -27,11 +27,11 @@ func (p *poolSealSetPubKey) Get() *SealSetPubKey {
 	if !ok {
 		return &SealSetPubKey{}
 	}
-	x.Key = x.Key[:0]
 	return x
 }
 
 func (p *poolSealSetPubKey) Put(x *SealSetPubKey) {
+	x.Key = x.Key[:0]
 	p.pool.Put(x)
 }
 

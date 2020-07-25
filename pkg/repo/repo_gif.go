@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/v2"
 	"github.com/tidwall/buntdb"
 )
 

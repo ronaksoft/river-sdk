@@ -6,7 +6,7 @@ import (
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	networkCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/valyala/tcplisten"

@@ -27,13 +27,13 @@ func (p *poolServiceSendMessage) Get() *ServiceSendMessage {
 	if !ok {
 		return &ServiceSendMessage{}
 	}
-	x.ReplyTo = 0
-	x.ClearDraft = false
-	x.Entities = x.Entities[:0]
 	return x
 }
 
 func (p *poolServiceSendMessage) Put(x *ServiceSendMessage) {
+	x.ReplyTo = 0
+	x.ClearDraft = false
+	x.Entities = x.Entities[:0]
 	p.pool.Put(x)
 }
 

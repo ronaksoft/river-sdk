@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
+	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
+	mon "git.ronaksoftware.com/ronak/riversdk/internal/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"go.uber.org/zap"
@@ -261,6 +261,10 @@ func (r *River) GetTeam() *msg.InputTeam {
 		ID:         r.teamID,
 		AccessHash: r.teamAccessHash,
 	}
+}
+
+func (r *River) GetTeamID() int64 {
+	return r.teamID
 }
 
 func (r *River) Version() string {

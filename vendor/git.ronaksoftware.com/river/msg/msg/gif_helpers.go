@@ -59,11 +59,11 @@ func (p *poolGifSave) Get() *GifSave {
 	if !ok {
 		return &GifSave{}
 	}
-	x.Attributes = x.Attributes[:0]
 	return x
 }
 
 func (p *poolGifSave) Put(x *GifSave) {
+	x.Attributes = x.Attributes[:0]
 	p.pool.Put(x)
 }
 
@@ -156,11 +156,11 @@ func (p *poolFoundGifs) Get() *FoundGifs {
 	if !ok {
 		return &FoundGifs{}
 	}
-	x.Gifs = x.Gifs[:0]
 	return x
 }
 
 func (p *poolFoundGifs) Put(x *FoundGifs) {
+	x.Gifs = x.Gifs[:0]
 	p.pool.Put(x)
 }
 
@@ -221,11 +221,11 @@ func (p *poolSavedGifs) Get() *SavedGifs {
 	if !ok {
 		return &SavedGifs{}
 	}
-	x.Docs = x.Docs[:0]
 	return x
 }
 
 func (p *poolSavedGifs) Put(x *SavedGifs) {
+	x.Docs = x.Docs[:0]
 	p.pool.Put(x)
 }
 

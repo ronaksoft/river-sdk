@@ -27,11 +27,11 @@ func (p *poolFileSavePart) Get() *FileSavePart {
 	if !ok {
 		return &FileSavePart{}
 	}
-	x.Bytes = x.Bytes[:0]
 	return x
 }
 
 func (p *poolFileSavePart) Put(x *FileSavePart) {
+	x.Bytes = x.Bytes[:0]
 	p.pool.Put(x)
 }
 
@@ -92,11 +92,11 @@ func (p *poolFileGetBySha256) Get() *FileGetBySha256 {
 	if !ok {
 		return &FileGetBySha256{}
 	}
-	x.Sha256 = x.Sha256[:0]
 	return x
 }
 
 func (p *poolFileGetBySha256) Put(x *FileGetBySha256) {
+	x.Sha256 = x.Sha256[:0]
 	p.pool.Put(x)
 }
 
@@ -125,12 +125,12 @@ func (p *poolFile) Get() *File {
 	if !ok {
 		return &File{}
 	}
-	x.Bytes = x.Bytes[:0]
-	x.MD5Hash = ""
 	return x
 }
 
 func (p *poolFile) Put(x *File) {
+	x.Bytes = x.Bytes[:0]
+	x.MD5Hash = ""
 	p.pool.Put(x)
 }
 

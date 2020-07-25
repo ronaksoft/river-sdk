@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
-	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/v2"
 	"go.uber.org/zap"
 	"strings"
 	"time"
@@ -244,21 +244,6 @@ func (r *repoUsers) Save(users ...*msg.User) error {
 			}
 		}
 		return nil
-	})
-}
-
-func (r *repoUsers) UpdateAccessHash(accessHash uint64, peerID int64, peerType int32) error {
-	if msg.PeerType(peerType) != msg.PeerUser {
-		return nil
-	}
-
-	return badgerUpdate(func(txn *badger.Txn) error {
-		user, err := getUserByKey(txn, getUserKey(peerID))
-		if err != nil {
-			return err
-		}
-		user.AccessHash = accessHash
-		return updateDialogAccessHash(txn, accessHash, peerID, peerType)
 	})
 }
 

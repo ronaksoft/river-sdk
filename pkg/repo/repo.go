@@ -8,7 +8,7 @@ import (
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/analysis/lang/en"
 	"github.com/blevesearch/bleve/mapping"
-	"github.com/dgraph-io/badger/options"
+	"github.com/dgraph-io/badger/v2/options"
 	"github.com/pkg/errors"
 	"github.com/tidwall/buntdb"
 	"os"
@@ -16,8 +16,8 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"github.com/dgraph-io/badger"
+	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
+	"github.com/dgraph-io/badger/v2"
 	"go.uber.org/zap"
 
 	_ "github.com/mattn/go-sqlite3"

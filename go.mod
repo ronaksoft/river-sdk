@@ -1,7 +1,7 @@
 module git.ronaksoftware.com/ronak/riversdk
 
 require (
-	git.ronaksoftware.com/river/msg v0.0.0-20200715103600-8c5e5971ce98
+	git.ronaksoftware.com/river/msg v0.0.0-20200725092110-2d9b6103a8b0
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
 	github.com/beeker1121/goque v2.1.0+incompatible
@@ -11,7 +11,7 @@ require (
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
 	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
-	github.com/dgraph-io/badger v1.6.1
+	github.com/dgraph-io/badger/v2 v2.0.3
 	github.com/dustin/go-humanize v1.0.0
 	github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51 // indirect
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
@@ -22,7 +22,6 @@ require (
 	github.com/gobwas/pool v0.2.0
 	github.com/gobwas/ws v1.0.2
 	github.com/gogo/protobuf v1.3.1
-	github.com/iRezaaa/mobile v0.0.0-20191126111539-45e4d750f768 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/juju/ratelimit v1.0.1
 	github.com/kr/pretty v0.2.0
@@ -35,13 +34,14 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/remyoudompheng/bigfft v0.0.0-20190512091148-babf20351dd7 // indirect
 	github.com/smartystreets/goconvey v1.6.4
-	github.com/spf13/cobra v0.0.5
+	github.com/spf13/cobra v1.0.0
+	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.4.0
 	github.com/tecbot/gorocksdb v0.0.0-20190705090504-162552197222 // indirect
 	github.com/tidwall/buntdb v1.1.2
-	github.com/valyala/fasthttp v1.14.0
+	github.com/valyala/fasthttp v1.15.1
 	github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a
-	go.uber.org/zap v1.10.0
+	go.uber.org/zap v1.15.0
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	golang.org/x/text v0.3.2 // indirect
 	gopkg.in/abiosoft/ishell.v2 v2.0.0

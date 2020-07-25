@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
 	"sync"
@@ -117,7 +117,7 @@ func TestRepoDialogs(t *testing.T) {
 	// }
 	repo.Dialogs.SaveNew(dialog, time.Now().Unix())
 
-	d, _ := repo.Dialogs.Get(100, 1)
+	d, _ := repo.Dialogs.Get(0,100, 1)
 	t.Log(dialog)
 	t.Log(d)
 }
@@ -156,7 +156,7 @@ func TestRepoDeleteMessage(t *testing.T) {
 	peerID := int64(10001)
 	peerType := int32(1)
 
-	d, _ := repo.Dialogs.Get(peerID, peerType)
+	d, _ := repo.Dialogs.Get(0, peerID, peerType)
 	if d == nil {
 		d = new(msg.Dialog)
 		d.PeerID = peerID
@@ -174,14 +174,14 @@ func TestRepoDeleteMessage(t *testing.T) {
 		repo.Messages.SaveNew(m, 10002)
 	}
 
-	d, _ = repo.Dialogs.Get(peerID, peerType)
+	d, _ = repo.Dialogs.Get(0,peerID, peerType)
 	fmt.Println(d)
 
-	repo.Messages.Delete(10002, peerID, peerType, 19)
-	d, _ = repo.Dialogs.Get(peerID, peerType)
+	repo.Messages.Delete(10002, 0, peerID, peerType, 19)
+	d, _ = repo.Dialogs.Get(0,peerID, peerType)
 	fmt.Println(d)
 
-	msgs, _ := repo.Messages.GetMessageHistory(peerID, peerType, 0, 0, 5)
+	msgs, _ := repo.Messages.GetMessageHistory(0,peerID, peerType, 0, 0, 5)
 	for idx := range msgs {
 		fmt.Println(msgs[idx].ID)
 	}
@@ -268,18 +268,18 @@ func TestClearHistory(t *testing.T) {
 	}
 	repo.Messages.Save(m...)
 	fmt.Println("Saved")
-	err = repo.Messages.ClearHistory(101, 10, 1, 995)
+	err = repo.Messages.ClearHistory(101, 0,10, 1, 995)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	d, err := repo.Dialogs.Get(10, 1)
+	d, err := repo.Dialogs.Get(0,10, 1)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	fmt.Println(d.TopMessageID)
-	ums, us := repo.Messages.GetMessageHistory(10, 1, 0, 0, 100)
+	ums, us := repo.Messages.GetMessageHistory(0,10, 1, 0, 0, 100)
 	fmt.Println(len(ums), len(us))
 
 	var x []int64
@@ -289,7 +289,7 @@ func TestClearHistory(t *testing.T) {
 	fmt.Println(x)
 
 	repo.Messages.Delete(101, 10, 1, 1950)
-	d, err = repo.Dialogs.Get(10, 1)
+	d, err = repo.Dialogs.Get(0,10, 1)
 	if err != nil {
 		t.Error(err)
 		return

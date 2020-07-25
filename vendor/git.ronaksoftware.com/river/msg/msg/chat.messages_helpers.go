@@ -28,13 +28,13 @@ func (p *poolMessagesSend) Get() *MessagesSend {
 	if !ok {
 		return &MessagesSend{}
 	}
-	x.ReplyTo = 0
-	x.ClearDraft = false
-	x.Entities = x.Entities[:0]
 	return x
 }
 
 func (p *poolMessagesSend) Put(x *MessagesSend) {
+	x.ReplyTo = 0
+	x.ClearDraft = false
+	x.Entities = x.Entities[:0]
 	p.pool.Put(x)
 }
 
@@ -63,13 +63,13 @@ func (p *poolMessagesSendMedia) Get() *MessagesSendMedia {
 	if !ok {
 		return &MessagesSendMedia{}
 	}
-	x.MediaData = x.MediaData[:0]
-	x.ReplyTo = 0
-	x.ClearDraft = false
 	return x
 }
 
 func (p *poolMessagesSendMedia) Put(x *MessagesSendMedia) {
+	x.MediaData = x.MediaData[:0]
+	x.ReplyTo = 0
+	x.ClearDraft = false
 	p.pool.Put(x)
 }
 
@@ -98,11 +98,11 @@ func (p *poolMessagesEdit) Get() *MessagesEdit {
 	if !ok {
 		return &MessagesEdit{}
 	}
-	x.Entities = x.Entities[:0]
 	return x
 }
 
 func (p *poolMessagesEdit) Put(x *MessagesEdit) {
+	x.Entities = x.Entities[:0]
 	p.pool.Put(x)
 }
 
@@ -163,11 +163,11 @@ func (p *poolMessagesGet) Get() *MessagesGet {
 	if !ok {
 		return &MessagesGet{}
 	}
-	x.MessagesIDs = x.MessagesIDs[:0]
 	return x
 }
 
 func (p *poolMessagesGet) Put(x *MessagesGet) {
+	x.MessagesIDs = x.MessagesIDs[:0]
 	p.pool.Put(x)
 }
 
@@ -228,11 +228,11 @@ func (p *poolMessagesGetDialogs) Get() *MessagesGetDialogs {
 	if !ok {
 		return &MessagesGetDialogs{}
 	}
-	x.ExcludePinned = false
 	return x
 }
 
 func (p *poolMessagesGetDialogs) Put(x *MessagesGetDialogs) {
+	x.ExcludePinned = false
 	p.pool.Put(x)
 }
 
@@ -389,11 +389,11 @@ func (p *poolMessagesDelete) Get() *MessagesDelete {
 	if !ok {
 		return &MessagesDelete{}
 	}
-	x.MessageIDs = x.MessageIDs[:0]
 	return x
 }
 
 func (p *poolMessagesDelete) Put(x *MessagesDelete) {
+	x.MessageIDs = x.MessageIDs[:0]
 	p.pool.Put(x)
 }
 
@@ -422,11 +422,11 @@ func (p *poolMessagesForward) Get() *MessagesForward {
 	if !ok {
 		return &MessagesForward{}
 	}
-	x.MessageIDs = x.MessageIDs[:0]
 	return x
 }
 
 func (p *poolMessagesForward) Put(x *MessagesForward) {
+	x.MessageIDs = x.MessageIDs[:0]
 	p.pool.Put(x)
 }
 
@@ -455,11 +455,11 @@ func (p *poolMessagesReadContents) Get() *MessagesReadContents {
 	if !ok {
 		return &MessagesReadContents{}
 	}
-	x.MessageIDs = x.MessageIDs[:0]
 	return x
 }
 
 func (p *poolMessagesReadContents) Put(x *MessagesReadContents) {
+	x.MessageIDs = x.MessageIDs[:0]
 	p.pool.Put(x)
 }
 
@@ -488,12 +488,12 @@ func (p *poolMessagesSaveDraft) Get() *MessagesSaveDraft {
 	if !ok {
 		return &MessagesSaveDraft{}
 	}
-	x.Entities = x.Entities[:0]
-	x.EditedID = 0
 	return x
 }
 
 func (p *poolMessagesSaveDraft) Put(x *MessagesSaveDraft) {
+	x.Entities = x.Entities[:0]
+	x.EditedID = 0
 	p.pool.Put(x)
 }
 
@@ -586,11 +586,11 @@ func (p *poolMessagesReorderPinnedDialogs) Get() *MessagesReorderPinnedDialogs {
 	if !ok {
 		return &MessagesReorderPinnedDialogs{}
 	}
-	x.Peers = x.Peers[:0]
 	return x
 }
 
 func (p *poolMessagesReorderPinnedDialogs) Put(x *MessagesReorderPinnedDialogs) {
+	x.Peers = x.Peers[:0]
 	p.pool.Put(x)
 }
 
@@ -619,13 +619,13 @@ func (p *poolMessagesSendScreenShotNotification) Get() *MessagesSendScreenShotNo
 	if !ok {
 		return &MessagesSendScreenShotNotification{}
 	}
-	x.ReplyTo = 0
-	x.MinID = 0
-	x.MaxID = 0
 	return x
 }
 
 func (p *poolMessagesSendScreenShotNotification) Put(x *MessagesSendScreenShotNotification) {
+	x.ReplyTo = 0
+	x.MinID = 0
+	x.MaxID = 0
 	p.pool.Put(x)
 }
 
@@ -654,14 +654,14 @@ func (p *poolMessagesDialogs) Get() *MessagesDialogs {
 	if !ok {
 		return &MessagesDialogs{}
 	}
-	x.Dialogs = x.Dialogs[:0]
-	x.Users = x.Users[:0]
-	x.Messages = x.Messages[:0]
-	x.Groups = x.Groups[:0]
 	return x
 }
 
 func (p *poolMessagesDialogs) Put(x *MessagesDialogs) {
+	x.Dialogs = x.Dialogs[:0]
+	x.Users = x.Users[:0]
+	x.Messages = x.Messages[:0]
+	x.Groups = x.Groups[:0]
 	p.pool.Put(x)
 }
 
@@ -722,15 +722,15 @@ func (p *poolMessagesMany) Get() *MessagesMany {
 	if !ok {
 		return &MessagesMany{}
 	}
+	return x
+}
+
+func (p *poolMessagesMany) Put(x *MessagesMany) {
 	x.Messages = x.Messages[:0]
 	x.Users = x.Users[:0]
 	x.Groups = x.Groups[:0]
 	x.Continuous = false
 	x.Empty = false
-	return x
-}
-
-func (p *poolMessagesMany) Put(x *MessagesMany) {
 	p.pool.Put(x)
 }
 

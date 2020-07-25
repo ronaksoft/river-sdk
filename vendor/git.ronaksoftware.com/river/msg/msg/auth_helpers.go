@@ -59,12 +59,12 @@ func (p *poolInitCompleteAuth) Get() *InitCompleteAuth {
 	if !ok {
 		return &InitCompleteAuth{}
 	}
-	x.ClientDHPubKey = x.ClientDHPubKey[:0]
-	x.EncryptedPayload = x.EncryptedPayload[:0]
 	return x
 }
 
 func (p *poolInitCompleteAuth) Put(x *InitCompleteAuth) {
+	x.ClientDHPubKey = x.ClientDHPubKey[:0]
+	x.EncryptedPayload = x.EncryptedPayload[:0]
 	p.pool.Put(x)
 }
 
@@ -157,11 +157,11 @@ func (p *poolAuthRegister) Get() *AuthRegister {
 	if !ok {
 		return &AuthRegister{}
 	}
-	x.LangCode = ""
 	return x
 }
 
 func (p *poolAuthRegister) Put(x *AuthRegister) {
+	x.LangCode = ""
 	p.pool.Put(x)
 }
 
@@ -318,11 +318,11 @@ func (p *poolAuthLogout) Get() *AuthLogout {
 	if !ok {
 		return &AuthLogout{}
 	}
-	x.AuthIDs = x.AuthIDs[:0]
 	return x
 }
 
 func (p *poolAuthLogout) Put(x *AuthLogout) {
+	x.AuthIDs = x.AuthIDs[:0]
 	p.pool.Put(x)
 }
 
@@ -415,11 +415,11 @@ func (p *poolAuthSendCode) Get() *AuthSendCode {
 	if !ok {
 		return &AuthSendCode{}
 	}
-	x.AppHash = ""
 	return x
 }
 
 func (p *poolAuthSendCode) Put(x *AuthSendCode) {
+	x.AppHash = ""
 	p.pool.Put(x)
 }
 
@@ -448,11 +448,11 @@ func (p *poolAuthResendCode) Get() *AuthResendCode {
 	if !ok {
 		return &AuthResendCode{}
 	}
-	x.AppHash = ""
 	return x
 }
 
 func (p *poolAuthResendCode) Put(x *AuthResendCode) {
+	x.AppHash = ""
 	p.pool.Put(x)
 }
 
@@ -481,15 +481,15 @@ func (p *poolAuthRecall) Get() *AuthRecall {
 	if !ok {
 		return &AuthRecall{}
 	}
+	return x
+}
+
+func (p *poolAuthRecall) Put(x *AuthRecall) {
 	x.Version = 0
 	x.AppVersion = ""
 	x.Platform = ""
 	x.Vendor = ""
 	x.OSVersion = ""
-	return x
-}
-
-func (p *poolAuthRecall) Put(x *AuthRecall) {
 	p.pool.Put(x)
 }
 
@@ -550,11 +550,11 @@ func (p *poolInitTestAuth) Get() *InitTestAuth {
 	if !ok {
 		return &InitTestAuth{}
 	}
-	x.AuthKey = x.AuthKey[:0]
 	return x
 }
 
 func (p *poolInitTestAuth) Put(x *InitTestAuth) {
+	x.AuthKey = x.AuthKey[:0]
 	p.pool.Put(x)
 }
 
@@ -615,11 +615,11 @@ func (p *poolInitCompleteAuthInternal) Get() *InitCompleteAuthInternal {
 	if !ok {
 		return &InitCompleteAuthInternal{}
 	}
-	x.SecretNonce = x.SecretNonce[:0]
 	return x
 }
 
 func (p *poolInitCompleteAuthInternal) Put(x *InitCompleteAuthInternal) {
+	x.SecretNonce = x.SecretNonce[:0]
 	p.pool.Put(x)
 }
 
@@ -648,11 +648,11 @@ func (p *poolInitAuthCompleted) Get() *InitAuthCompleted {
 	if !ok {
 		return &InitAuthCompleted{}
 	}
-	x.ServerDHPubKey = x.ServerDHPubKey[:0]
 	return x
 }
 
 func (p *poolInitAuthCompleted) Put(x *InitAuthCompleted) {
+	x.ServerDHPubKey = x.ServerDHPubKey[:0]
 	p.pool.Put(x)
 }
 
@@ -745,14 +745,14 @@ func (p *poolAuthRecalled) Get() *AuthRecalled {
 	if !ok {
 		return &AuthRecalled{}
 	}
-	x.UpdateID = 0
-	x.Available = false
-	x.Force = false
-	x.CurrentVersion = ""
 	return x
 }
 
 func (p *poolAuthRecalled) Put(x *AuthRecalled) {
+	x.UpdateID = 0
+	x.Available = false
+	x.Force = false
+	x.CurrentVersion = ""
 	p.pool.Put(x)
 }
 
@@ -813,11 +813,11 @@ func (p *poolAuthBotAuthorization) Get() *AuthBotAuthorization {
 	if !ok {
 		return &AuthBotAuthorization{}
 	}
-	x.AuthKey = x.AuthKey[:0]
 	return x
 }
 
 func (p *poolAuthBotAuthorization) Put(x *AuthBotAuthorization) {
+	x.AuthKey = x.AuthKey[:0]
 	p.pool.Put(x)
 }
 
@@ -878,11 +878,11 @@ func (p *poolAuthSentCode) Get() *AuthSentCode {
 	if !ok {
 		return &AuthSentCode{}
 	}
-	x.SendToPhone = false
 	return x
 }
 
 func (p *poolAuthSentCode) Put(x *AuthSentCode) {
+	x.SendToPhone = false
 	p.pool.Put(x)
 }
 

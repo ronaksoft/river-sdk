@@ -2,7 +2,7 @@ package syncCtrl
 
 import (
 	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
-	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
+	mon "git.ronaksoftware.com/ronak/riversdk/internal/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"os"
 	"sync"
@@ -10,7 +10,7 @@ import (
 
 	"git.ronaksoftware.com/river/msg/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
 )
@@ -32,7 +32,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	x.Message.MessageType = 1
 	repo.MessagesExtra.SaveScrollID(x.Message.PeerID, x.Message.PeerType, 0)
 
-	dialog, _ := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
+	dialog, _ := repo.Dialogs.Get(x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 	if dialog == nil {
 		unreadCount := int32(0)
 		if x.Sender.ID != ctrl.GetUserID() {
@@ -181,17 +181,17 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 		_ = act.Unmarshal(x.Message.MessageActionData)
 
 		// 1. Delete All Messages < x.MessageID
-		_ = repo.Messages.ClearHistory(ctrl.GetUserID(), x.Message.PeerID, x.Message.PeerType, act.MaxID)
+		_ = repo.Messages.ClearHistory(ctrl.GetUserID(), x.Message.TeamID, x.Message.PeerID, x.Message.PeerType, act.MaxID)
 
 		// 2. Delete Scroll Position
 		repo.MessagesExtra.SaveScrollID(x.Message.PeerID, x.Message.PeerType, 0)
 
 		if act.Delete {
 			// 3. Delete Dialog
-			repo.Dialogs.Delete(x.Message.PeerID, x.Message.PeerType)
+			repo.Dialogs.Delete(x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 		} else {
 			// 3. Get dialog and create first hole
-			dialog, _ := repo.Dialogs.Get(x.Message.PeerID, x.Message.PeerType)
+			dialog, _ := repo.Dialogs.Get(x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 			if dialog != nil {
 				messageHole.InsertFill(dialog.PeerID, dialog.PeerType, dialog.TopMessageID, dialog.TopMessageID)
 			}
@@ -249,7 +249,7 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) ([]*msg.Up
 		return nil, err
 	}
 
-	dialog, err := repo.Dialogs.Get(x.Peer.ID, x.Peer.Type)
+	dialog, err := repo.Dialogs.Get(x.TeamID, x.Peer.ID, x.Peer.Type)
 	if dialog == nil {
 		logs.Error("SyncCtrl got error on UpdateReadHistoryInbox",
 			zap.Int64("PeerID", x.Peer.ID),
@@ -263,7 +263,7 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) ([]*msg.Up
 		zap.Int64("PeerID", x.Peer.ID),
 	)
 
-	repo.Dialogs.UpdateReadInboxMaxID(ctrl.GetUserID(), x.Peer.ID, x.Peer.Type, x.MaxID)
+	repo.Dialogs.UpdateReadInboxMaxID(ctrl.GetUserID(), x.TeamID, x.Peer.ID, x.Peer.Type, x.MaxID)
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil
 }
@@ -275,7 +275,7 @@ func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) ([]*msg.U
 		return nil, err
 	}
 
-	dialog, err := repo.Dialogs.Get(x.Peer.ID, x.Peer.Type)
+	dialog, err := repo.Dialogs.Get(x.TeamID, x.Peer.ID, x.Peer.Type)
 	if dialog == nil {
 		logs.Error("SyncCtrl got error on UpdateReadHistoryOutbox",
 			zap.Int64("PeerID", x.Peer.ID),
@@ -289,7 +289,7 @@ func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) ([]*msg.U
 		zap.Int64("PeerID", x.Peer.ID),
 	)
 
-	repo.Dialogs.UpdateReadOutboxMaxID(x.Peer.ID, x.Peer.Type, x.MaxID)
+	repo.Dialogs.UpdateReadOutboxMaxID(x.TeamID, x.Peer.ID, x.Peer.Type, x.MaxID)
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil
 }
@@ -400,7 +400,7 @@ func (ctrl *Controller) updateNotifySettings(u *msg.UpdateEnvelope) ([]*msg.Upda
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
-	repo.Dialogs.UpdateNotifySetting(x.NotifyPeer.ID, x.NotifyPeer.Type, x.Settings)
+	repo.Dialogs.UpdateNotifySetting(x.TeamID, x.NotifyPeer.ID, x.NotifyPeer.Type, x.Settings)
 
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil
@@ -463,7 +463,7 @@ func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) ([]*msg.Upd
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
-	repo.Messages.Delete(ctrl.GetUserID(), x.Peer.ID, x.Peer.Type, x.MessageIDs...)
+	repo.Messages.Delete(ctrl.GetUserID(), x.TeamID, x.Peer.ID, x.Peer.Type, x.MessageIDs...)
 
 	update := new(msg.ClientUpdateMessagesDeleted)
 	update.PeerID = x.Peer.ID
@@ -617,7 +617,7 @@ func (ctrl *Controller) updateDraftMessage(u *msg.UpdateEnvelope) ([]*msg.Update
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
-	dialog, _ := repo.Dialogs.Get(x.Message.PeerID, int32(x.Message.PeerType))
+	dialog, _ := repo.Dialogs.Get(x.Message.TeamID, x.Message.PeerID, int32(x.Message.PeerType))
 	if dialog != nil {
 		dialog.Draft = x.Message
 		repo.Dialogs.Save(dialog)
@@ -638,7 +638,7 @@ func (ctrl *Controller) updateDraftMessageCleared(u *msg.UpdateEnvelope) ([]*msg
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
-	dialog, _ := repo.Dialogs.Get(x.Peer.ID, x.Peer.Type)
+	dialog, _ := repo.Dialogs.Get(x.TeamID, x.Peer.ID, x.Peer.Type)
 
 	if dialog != nil {
 		dialog.Draft = nil
@@ -661,7 +661,7 @@ func (ctrl *Controller) updateLabelItemsAdded(u *msg.UpdateEnvelope) ([]*msg.Upd
 	)
 
 	if len(x.MessageIDs) != 0 {
-		err := repo.Labels.AddLabelsToMessages(x.LabelIDs, x.Peer.Type, x.Peer.ID, x.MessageIDs)
+		err := repo.Labels.AddLabelsToMessages(x.LabelIDs, x.TeamID, x.Peer.ID, x.Peer.Type, x.MessageIDs)
 		if err != nil {
 			return nil, err
 		}
@@ -697,7 +697,7 @@ func (ctrl *Controller) updateLabelItemsRemoved(u *msg.UpdateEnvelope) ([]*msg.U
 	)
 
 	if len(x.MessageIDs) != 0 {
-		err := repo.Labels.RemoveLabelsFromMessages(x.LabelIDs, x.Peer.Type, x.Peer.ID, x.MessageIDs)
+		err := repo.Labels.RemoveLabelsFromMessages(x.LabelIDs, x.TeamID, x.Peer.ID, x.Peer.Type, x.MessageIDs)
 		if err != nil {
 			return nil, err
 		}

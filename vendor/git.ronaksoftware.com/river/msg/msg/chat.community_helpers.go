@@ -28,14 +28,13 @@ func (p *poolCommunitySendMessage) Get() *CommunitySendMessage {
 	if !ok {
 		return &CommunitySendMessage{}
 	}
-	x.Entities = x.Entities[:0]
-	x.ReplyMarkup = 0
-	x.ReplyMarkupData = nil
-	x.ReplyMarkupData = x.ReplyMarkupData[:0]
 	return x
 }
 
 func (p *poolCommunitySendMessage) Put(x *CommunitySendMessage) {
+	x.Entities = x.Entities[:0]
+	x.ReplyMarkup = 0
+	x.ReplyMarkupData = x.ReplyMarkupData[:0]
 	p.pool.Put(x)
 }
 
@@ -64,13 +63,13 @@ func (p *poolCommunitySendMedia) Get() *CommunitySendMedia {
 	if !ok {
 		return &CommunitySendMedia{}
 	}
-	x.MediaData = x.MediaData[:0]
-	x.ReplyTo = 0
-	x.ClearDraft = false
 	return x
 }
 
 func (p *poolCommunitySendMedia) Put(x *CommunitySendMedia) {
+	x.MediaData = x.MediaData[:0]
+	x.ReplyTo = 0
+	x.ClearDraft = false
 	p.pool.Put(x)
 }
 
@@ -131,11 +130,11 @@ func (p *poolCommunityGetUpdates) Get() *CommunityGetUpdates {
 	if !ok {
 		return &CommunityGetUpdates{}
 	}
-	x.OffsetID = 0
 	return x
 }
 
 func (p *poolCommunityGetUpdates) Put(x *CommunityGetUpdates) {
+	x.OffsetID = 0
 	p.pool.Put(x)
 }
 
@@ -164,12 +163,12 @@ func (p *poolCommunityGetMembers) Get() *CommunityGetMembers {
 	if !ok {
 		return &CommunityGetMembers{}
 	}
-	x.Offset = 0
-	x.Limit = 0
 	return x
 }
 
 func (p *poolCommunityGetMembers) Put(x *CommunityGetMembers) {
+	x.Offset = 0
+	x.Limit = 0
 	p.pool.Put(x)
 }
 
@@ -198,11 +197,11 @@ func (p *poolCommunityRecall) Get() *CommunityRecall {
 	if !ok {
 		return &CommunityRecall{}
 	}
-	x.AccessKey = x.AccessKey[:0]
 	return x
 }
 
 func (p *poolCommunityRecall) Put(x *CommunityRecall) {
+	x.AccessKey = x.AccessKey[:0]
 	p.pool.Put(x)
 }
 
@@ -210,6 +209,72 @@ var PoolCommunityRecall = poolCommunityRecall{}
 
 func ResultCommunityRecall(out *MessageEnvelope, res *CommunityRecall) {
 	out.Constructor = C_CommunityRecall
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_CommunityAuthorizeUser int64 = 1452766231
+
+type poolCommunityAuthorizeUser struct {
+	pool sync.Pool
+}
+
+func (p *poolCommunityAuthorizeUser) Get() *CommunityAuthorizeUser {
+	x, ok := p.pool.Get().(*CommunityAuthorizeUser)
+	if !ok {
+		return &CommunityAuthorizeUser{}
+	}
+	return x
+}
+
+func (p *poolCommunityAuthorizeUser) Put(x *CommunityAuthorizeUser) {
+	x.LastName = ""
+	x.Provider = ""
+	p.pool.Put(x)
+}
+
+var PoolCommunityAuthorizeUser = poolCommunityAuthorizeUser{}
+
+func ResultCommunityAuthorizeUser(out *MessageEnvelope, res *CommunityAuthorizeUser) {
+	out.Constructor = C_CommunityAuthorizeUser
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_CommunityUser int64 = 3812837958
+
+type poolCommunityUser struct {
+	pool sync.Pool
+}
+
+func (p *poolCommunityUser) Get() *CommunityUser {
+	x, ok := p.pool.Get().(*CommunityUser)
+	if !ok {
+		return &CommunityUser{}
+	}
+	return x
+}
+
+func (p *poolCommunityUser) Put(x *CommunityUser) {
+	p.pool.Put(x)
+}
+
+var PoolCommunityUser = poolCommunityUser{}
+
+func ResultCommunityUser(out *MessageEnvelope, res *CommunityUser) {
+	out.Constructor = C_CommunityUser
 	protoSize := res.Size()
 	if protoSize > cap(out.Message) {
 		pbytes.Put(out.Message)
@@ -231,12 +296,11 @@ func (p *poolCommunityUpdateEnvelope) Get() *CommunityUpdateEnvelope {
 	if !ok {
 		return &CommunityUpdateEnvelope{}
 	}
-	x.Update = nil
-	x.Update = x.Update[:0]
 	return x
 }
 
 func (p *poolCommunityUpdateEnvelope) Put(x *CommunityUpdateEnvelope) {
+	x.Update = x.Update[:0]
 	p.pool.Put(x)
 }
 
@@ -265,12 +329,12 @@ func (p *poolCommunityUpdateContainer) Get() *CommunityUpdateContainer {
 	if !ok {
 		return &CommunityUpdateContainer{}
 	}
-	x.Updates = x.Updates[:0]
-	x.Empty = false
 	return x
 }
 
 func (p *poolCommunityUpdateContainer) Put(x *CommunityUpdateContainer) {
+	x.Updates = x.Updates[:0]
+	x.Empty = false
 	p.pool.Put(x)
 }
 
@@ -295,6 +359,8 @@ func init() {
 	ConstructorNames[2021391963] = "CommunityGetUpdates"
 	ConstructorNames[2022915988] = "CommunityGetMembers"
 	ConstructorNames[890349574] = "CommunityRecall"
+	ConstructorNames[1452766231] = "CommunityAuthorizeUser"
+	ConstructorNames[3812837958] = "CommunityUser"
 	ConstructorNames[1076119993] = "CommunityUpdateEnvelope"
 	ConstructorNames[918339432] = "CommunityUpdateContainer"
 }

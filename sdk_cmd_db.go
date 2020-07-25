@@ -2,7 +2,7 @@ package riversdk
 
 import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
+	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
 )
@@ -18,7 +18,7 @@ func (r *River) IsGifSaved(fileID int64 , clusterID int32) bool {
 }
 
 func (r *River) GetRealTopMessageID(peerID int64, peerType int32) int64 {
-	topMsgID, err := repo.Messages.GetTopMessageID(peerID, peerType)
+	topMsgID, err := repo.Messages.GetTopMessageID(r.GetTeamID(), peerID, peerType)
 	if err != nil {
 		logs.Error("SDK::GetRealTopMessageID() => Messages.GetTopMessageID()", zap.Error(err))
 		return -1

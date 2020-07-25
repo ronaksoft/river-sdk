@@ -6,7 +6,7 @@ import (
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
-	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/v2"
 	"strings"
 	"time"
 )

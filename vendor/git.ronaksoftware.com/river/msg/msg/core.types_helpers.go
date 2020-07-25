@@ -92,12 +92,15 @@ func (p *poolMessageEnvelope) Get() *MessageEnvelope {
 	if !ok {
 		return &MessageEnvelope{}
 	}
-	x.Message = x.Message[:0]
-	x.Team = nil
 	return x
 }
 
 func (p *poolMessageEnvelope) Put(x *MessageEnvelope) {
+	x.Message = x.Message[:0]
+	if x.Team != nil {
+		*x.Team = InputTeam{}
+	}
+
 	p.pool.Put(x)
 }
 
@@ -126,11 +129,11 @@ func (p *poolMessageContainer) Get() *MessageContainer {
 	if !ok {
 		return &MessageContainer{}
 	}
-	x.Envelopes = x.Envelopes[:0]
 	return x
 }
 
 func (p *poolMessageContainer) Put(x *MessageContainer) {
+	x.Envelopes = x.Envelopes[:0]
 	p.pool.Put(x)
 }
 
@@ -159,11 +162,11 @@ func (p *poolUpdateEnvelope) Get() *UpdateEnvelope {
 	if !ok {
 		return &UpdateEnvelope{}
 	}
-	x.Update = x.Update[:0]
 	return x
 }
 
 func (p *poolUpdateEnvelope) Put(x *UpdateEnvelope) {
+	x.Update = x.Update[:0]
 	p.pool.Put(x)
 }
 
@@ -192,13 +195,13 @@ func (p *poolUpdateContainer) Get() *UpdateContainer {
 	if !ok {
 		return &UpdateContainer{}
 	}
-	x.Updates = x.Updates[:0]
-	x.Users = x.Users[:0]
-	x.Groups = x.Groups[:0]
 	return x
 }
 
 func (p *poolUpdateContainer) Put(x *UpdateContainer) {
+	x.Updates = x.Updates[:0]
+	x.Users = x.Users[:0]
+	x.Groups = x.Groups[:0]
 	p.pool.Put(x)
 }
 
@@ -227,14 +230,13 @@ func (p *poolProtoMessage) Get() *ProtoMessage {
 	if !ok {
 		return &ProtoMessage{}
 	}
-	x.AuthID = 0
-	x.MessageKey = nil
-	x.MessageKey = x.MessageKey[:0]
-	x.Payload = x.Payload[:0]
 	return x
 }
 
 func (p *poolProtoMessage) Put(x *ProtoMessage) {
+	x.AuthID = 0
+	x.MessageKey = x.MessageKey[:0]
+	x.Payload = x.Payload[:0]
 	p.pool.Put(x)
 }
 
@@ -327,11 +329,11 @@ func (p *poolAck) Get() *Ack {
 	if !ok {
 		return &Ack{}
 	}
-	x.MessageIDs = x.MessageIDs[:0]
 	return x
 }
 
 func (p *poolAck) Put(x *Ack) {
+	x.MessageIDs = x.MessageIDs[:0]
 	p.pool.Put(x)
 }
 
@@ -392,14 +394,20 @@ func (p *poolDialog) Get() *Dialog {
 	if !ok {
 		return &Dialog{}
 	}
-	x.TeamID = 0
-	x.NotifySettings = nil
-	x.MentionedCount = 0
-	x.Draft = nil
 	return x
 }
 
 func (p *poolDialog) Put(x *Dialog) {
+	x.TeamID = 0
+	if x.NotifySettings != nil {
+		*x.NotifySettings = PeerNotifySettings{}
+	}
+
+	x.MentionedCount = 0
+	if x.Draft != nil {
+		*x.Draft = DraftMessage{}
+	}
+
 	p.pool.Put(x)
 }
 
@@ -492,12 +500,12 @@ func (p *poolInputPassword) Get() *InputPassword {
 	if !ok {
 		return &InputPassword{}
 	}
-	x.A = x.A[:0]
-	x.M1 = x.M1[:0]
 	return x
 }
 
 func (p *poolInputPassword) Put(x *InputPassword) {
+	x.A = x.A[:0]
+	x.M1 = x.M1[:0]
 	p.pool.Put(x)
 }
 
@@ -526,11 +534,11 @@ func (p *poolInputFileLocation) Get() *InputFileLocation {
 	if !ok {
 		return &InputFileLocation{}
 	}
-	x.Version = 0
 	return x
 }
 
 func (p *poolInputFileLocation) Put(x *InputFileLocation) {
+	x.Version = 0
 	p.pool.Put(x)
 }
 
@@ -655,8 +663,15 @@ func (p *poolUser) Get() *User {
 	if !ok {
 		return &User{}
 	}
+	return x
+}
+
+func (p *poolUser) Put(x *User) {
 	x.Username = ""
-	x.Photo = nil
+	if x.Photo != nil {
+		*x.Photo = UserPhoto{}
+	}
+
 	x.Bio = ""
 	x.Phone = ""
 	x.LastSeen = 0
@@ -664,12 +679,11 @@ func (p *poolUser) Get() *User {
 	x.IsBot = false
 	x.Deleted = false
 	x.Blocked = false
-	x.BotInfo = nil
-	x.Official = false
-	return x
-}
+	if x.BotInfo != nil {
+		*x.BotInfo = BotInfo{}
+	}
 
-func (p *poolUser) Put(x *User) {
+	x.Official = false
 	p.pool.Put(x)
 }
 
@@ -698,11 +712,14 @@ func (p *poolContactUser) Get() *ContactUser {
 	if !ok {
 		return &ContactUser{}
 	}
-	x.Photo = nil
 	return x
 }
 
 func (p *poolContactUser) Put(x *ContactUser) {
+	if x.Photo != nil {
+		*x.Photo = UserPhoto{}
+	}
+
 	p.pool.Put(x)
 }
 
@@ -731,11 +748,11 @@ func (p *poolBot) Get() *Bot {
 	if !ok {
 		return &Bot{}
 	}
-	x.Bio = ""
 	return x
 }
 
 func (p *poolBot) Put(x *Bot) {
+	x.Bio = ""
 	p.pool.Put(x)
 }
 
@@ -764,11 +781,11 @@ func (p *poolBotCommands) Get() *BotCommands {
 	if !ok {
 		return &BotCommands{}
 	}
-	x.Description = ""
 	return x
 }
 
 func (p *poolBotCommands) Put(x *BotCommands) {
+	x.Description = ""
 	p.pool.Put(x)
 }
 
@@ -797,15 +814,15 @@ func (p *poolBotInfo) Get() *BotInfo {
 	if !ok {
 		return &BotInfo{}
 	}
+	return x
+}
+
+func (p *poolBotInfo) Put(x *BotInfo) {
 	x.Description = ""
 	x.BotCommands = x.BotCommands[:0]
 	x.InlineGeo = false
 	x.InlinePlaceHolder = ""
 	x.InlineQuery = false
-	return x
-}
-
-func (p *poolBotInfo) Put(x *BotInfo) {
 	p.pool.Put(x)
 }
 
@@ -834,11 +851,11 @@ func (p *poolGroupPhoto) Get() *GroupPhoto {
 	if !ok {
 		return &GroupPhoto{}
 	}
-	x.PhotoID = 0
 	return x
 }
 
 func (p *poolGroupPhoto) Put(x *GroupPhoto) {
+	x.PhotoID = 0
 	p.pool.Put(x)
 }
 
@@ -867,14 +884,17 @@ func (p *poolGroup) Get() *Group {
 	if !ok {
 		return &Group{}
 	}
-	x.TeamID = 0
-	x.EditedOn = 0
-	x.Flags = x.Flags[:0]
-	x.Photo = nil
 	return x
 }
 
 func (p *poolGroup) Put(x *Group) {
+	x.TeamID = 0
+	x.EditedOn = 0
+	x.Flags = x.Flags[:0]
+	if x.Photo != nil {
+		*x.Photo = GroupPhoto{}
+	}
+
 	p.pool.Put(x)
 }
 
@@ -903,13 +923,13 @@ func (p *poolGroupFull) Get() *GroupFull {
 	if !ok {
 		return &GroupFull{}
 	}
-	x.Users = x.Users[:0]
-	x.Participants = x.Participants[:0]
-	x.PhotoGallery = x.PhotoGallery[:0]
 	return x
 }
 
 func (p *poolGroupFull) Put(x *GroupFull) {
+	x.Users = x.Users[:0]
+	x.Participants = x.Participants[:0]
+	x.PhotoGallery = x.PhotoGallery[:0]
 	p.pool.Put(x)
 }
 
@@ -938,11 +958,14 @@ func (p *poolGroupParticipant) Get() *GroupParticipant {
 	if !ok {
 		return &GroupParticipant{}
 	}
-	x.Photo = nil
 	return x
 }
 
 func (p *poolGroupParticipant) Put(x *GroupParticipant) {
+	if x.Photo != nil {
+		*x.Photo = UserPhoto{}
+	}
+
 	p.pool.Put(x)
 }
 
@@ -971,23 +994,20 @@ func (p *poolUserMessage) Get() *UserMessage {
 	if !ok {
 		return &UserMessage{}
 	}
-	x.TeamID = 0
-	x.MessageAction = 0
-	x.MessageActionData = nil
-	x.MessageActionData = x.MessageActionData[:0]
-	x.Entities = x.Entities[:0]
-	x.MediaType = 0
-	x.Media = nil
-	x.Media = x.Media[:0]
-	x.ReplyMarkup = 0
-	x.ReplyMarkupData = nil
-	x.ReplyMarkupData = x.ReplyMarkupData[:0]
-	x.LabelIDs = x.LabelIDs[:0]
-	x.ViaBotID = 0
 	return x
 }
 
 func (p *poolUserMessage) Put(x *UserMessage) {
+	x.TeamID = 0
+	x.MessageAction = 0
+	x.MessageActionData = x.MessageActionData[:0]
+	x.Entities = x.Entities[:0]
+	x.MediaType = 0
+	x.Media = x.Media[:0]
+	x.ReplyMarkup = 0
+	x.ReplyMarkupData = x.ReplyMarkupData[:0]
+	x.LabelIDs = x.LabelIDs[:0]
+	x.ViaBotID = 0
 	p.pool.Put(x)
 }
 
@@ -1016,13 +1036,13 @@ func (p *poolDraftMessage) Get() *DraftMessage {
 	if !ok {
 		return &DraftMessage{}
 	}
-	x.TeamID = 0
-	x.Entities = x.Entities[:0]
-	x.EditedID = 0
 	return x
 }
 
 func (p *poolDraftMessage) Put(x *DraftMessage) {
+	x.TeamID = 0
+	x.Entities = x.Entities[:0]
+	x.EditedID = 0
 	p.pool.Put(x)
 }
 
@@ -1051,11 +1071,11 @@ func (p *poolMessageEntity) Get() *MessageEntity {
 	if !ok {
 		return &MessageEntity{}
 	}
-	x.UserID = 0
 	return x
 }
 
 func (p *poolMessageEntity) Put(x *MessageEntity) {
+	x.UserID = 0
 	p.pool.Put(x)
 }
 
@@ -1180,12 +1200,12 @@ func (p *poolPeerNotifySettings) Get() *PeerNotifySettings {
 	if !ok {
 		return &PeerNotifySettings{}
 	}
-	x.MuteUntil = 0
-	x.Sound = ""
 	return x
 }
 
 func (p *poolPeerNotifySettings) Put(x *PeerNotifySettings) {
+	x.MuteUntil = 0
+	x.Sound = ""
 	p.pool.Put(x)
 }
 
@@ -1278,11 +1298,11 @@ func (p *poolPrivacyRule) Get() *PrivacyRule {
 	if !ok {
 		return &PrivacyRule{}
 	}
-	x.UserIDs = x.UserIDs[:0]
 	return x
 }
 
 func (p *poolPrivacyRule) Put(x *PrivacyRule) {
+	x.UserIDs = x.UserIDs[:0]
 	p.pool.Put(x)
 }
 
@@ -1311,11 +1331,11 @@ func (p *poolLabel) Get() *Label {
 	if !ok {
 		return &Label{}
 	}
-	x.Count = 0
 	return x
 }
 
 func (p *poolLabel) Put(x *Label) {
+	x.Count = 0
 	p.pool.Put(x)
 }
 
@@ -1344,12 +1364,12 @@ func (p *poolLabelsMany) Get() *LabelsMany {
 	if !ok {
 		return &LabelsMany{}
 	}
-	x.Labels = x.Labels[:0]
-	x.Empty = false
 	return x
 }
 
 func (p *poolLabelsMany) Put(x *LabelsMany) {
+	x.Labels = x.Labels[:0]
+	x.Empty = false
 	p.pool.Put(x)
 }
 

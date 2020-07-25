@@ -5,10 +5,10 @@ import (
 	"encoding/binary"
 	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
+	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	"github.com/dgraph-io/badger"
-	"github.com/dgraph-io/badger/pb"
+	"github.com/dgraph-io/badger/v2"
+	"github.com/dgraph-io/badger/v2/pb"
 	"go.uber.org/zap"
 	"sort"
 	"strings"
@@ -175,7 +175,7 @@ func (r *repoLabels) GetAll() []*msg.Label {
 	return labels
 }
 
-func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64) ([]*msg.UserMessage, []*msg.User, []*msg.Group) {
+func (r *repoLabels) ListMessages(labelID int32, teamID int64, limit int32, minID, maxID int64) ([]*msg.UserMessage, []*msg.User, []*msg.Group) {
 	userMessages := make([]*msg.UserMessage, 0, limit)
 	userIDs := domain.MInt64B{}
 	groupIDs := domain.MInt64B{}
@@ -210,6 +210,9 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 					um, err := getMessageByID(txn, msgID)
 					if err != nil {
 						return err
+					}
+					if um.TeamID != teamID {
+						return nil
 					}
 					userIDs.Add(um.SenderID)
 					if um.FwdSenderID != 0 {
@@ -259,6 +262,9 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 					if err != nil {
 						return err
 					}
+					if um.TeamID != teamID {
+						return nil
+					}
 					userIDs.Add(um.SenderID)
 					if um.FwdSenderID != 0 {
 						userIDs.Add(um.FwdSenderID)
@@ -295,7 +301,7 @@ func (r *repoLabels) ListMessages(labelID int32, limit int32, minID, maxID int64
 	return userMessages, users, groups
 }
 
-func (r *repoLabels) AddLabelsToMessages(labelIDs []int32, peerType int32, peerID int64, msgIDs []int64) error {
+func (r *repoLabels) AddLabelsToMessages(labelIDs []int32, teamID, peerID int64, peerType int32, msgIDs []int64) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		for _, labelID := range labelIDs {
 			for _, msgID := range msgIDs {
@@ -306,7 +312,7 @@ func (r *repoLabels) AddLabelsToMessages(labelIDs []int32, peerType int32, peerI
 			}
 		}
 		for _, msgID := range msgIDs {
-			um, err := getMessageByKey(txn, getMessageKey(peerID, peerType, msgID))
+			um, err := getMessageByKey(txn, getMessageKey(teamID, peerID, peerType, msgID))
 			if err != nil {
 				switch err {
 				case badger.ErrKeyNotFound:
@@ -328,7 +334,7 @@ func (r *repoLabels) AddLabelsToMessages(labelIDs []int32, peerType int32, peerI
 	})
 }
 
-func (r *repoLabels) RemoveLabelsFromMessages(labelIDs []int32, peerType int32, peerID int64, msgIDs []int64) error {
+func (r *repoLabels) RemoveLabelsFromMessages(labelIDs []int32, teamID, peerID int64, peerType int32, msgIDs []int64) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		for _, labelID := range labelIDs {
 			for _, msgID := range msgIDs {
@@ -339,7 +345,7 @@ func (r *repoLabels) RemoveLabelsFromMessages(labelIDs []int32, peerType int32, 
 			}
 		}
 		for _, msgID := range msgIDs {
-			um, err := getMessageByKey(txn, getMessageKey(peerID, peerType, msgID))
+			um, err := getMessageByKey(txn, getMessageKey(teamID, peerID, peerType, msgID))
 			if err != nil {
 				switch err {
 				case badger.ErrKeyNotFound:

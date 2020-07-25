@@ -2,7 +2,7 @@ package repo
 
 import (
 	"git.ronaksoftware.com/river/msg/msg"
-	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/v2"
 )
 
 type repoWallpapers struct {

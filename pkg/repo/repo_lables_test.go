@@ -67,28 +67,28 @@ func TestLabel(t *testing.T) {
 				})
 			}
 
-			ums, _, _ := repo.Labels.ListMessages(1, 100, 0, 0)
+			ums, _, _ := repo.Labels.ListMessages(1, 0, 100, 0, 0)
 			for _, um := range ums {
-				err := repo.Labels.RemoveLabelsFromMessages([]int32{1}, um.PeerType, um.PeerID, []int64{um.ID})
+				err := repo.Labels.RemoveLabelsFromMessages([]int32{1}, 0, um.PeerID, um.PeerType, []int64{um.ID})
 				c.So(err, ShouldBeNil)
 			}
 
-			err := repo.Labels.AddLabelsToMessages([]int32{1}, 1, peerID, []int64{1, 2, 3, 6, 8, 9, 10})
+			err := repo.Labels.AddLabelsToMessages([]int32{1}, 0, peerID, 1, []int64{1, 2, 3, 6, 8, 9, 10})
 			c.So(err, ShouldBeNil)
 		})
 		Convey("List Messages", func(c C) {
-			ums, _, _ := repo.Labels.ListMessages(1, 3, 0, 0)
+			ums, _, _ := repo.Labels.ListMessages(1, 0, 3, 0, 0)
 			c.So(ums, ShouldHaveLength, 3)
 			c.So(ums[0].ID, ShouldEqual, 1)
 			c.So(ums[1].ID, ShouldEqual, 2)
 			c.So(ums[2].ID, ShouldEqual, 3)
 
-			ums, _, _ = repo.Labels.ListMessages(1, 2, 6, 0)
+			ums, _, _ = repo.Labels.ListMessages(1, 0, 2, 6, 0)
 			c.So(ums, ShouldHaveLength, 2)
 			c.So(ums[0].ID, ShouldEqual, 8)
 			c.So(ums[1].ID, ShouldEqual, 6)
 
-			ums, _, _ = repo.Labels.ListMessages(1, 3, 0, 9)
+			ums, _, _ = repo.Labels.ListMessages(1, 0, 3, 0, 9)
 			c.So(ums, ShouldHaveLength, 3)
 			c.So(ums[0].ID, ShouldEqual, 9)
 			c.So(ums[1].ID, ShouldEqual, 8)
@@ -147,22 +147,22 @@ func TestLabel(t *testing.T) {
 					LabelIDs:            nil,
 				})
 			}
-			ums, _, _ := repo.Labels.ListMessages(1, 100, 0, 0)
+			ums, _, _ := repo.Labels.ListMessages(1, 0, 100, 0, 0)
 			for _, um := range ums {
-				err := repo.Labels.RemoveLabelsFromMessages([]int32{1}, um.PeerType, um.PeerID, []int64{um.ID})
+				err := repo.Labels.RemoveLabelsFromMessages([]int32{1}, 0, um.PeerID, um.PeerType, []int64{um.ID})
 				c.So(err, ShouldBeNil)
 			}
-			err := repo.Labels.AddLabelsToMessages([]int32{1}, int32(msg.PeerUser), peerID, []int64{1,2,3})
+			err := repo.Labels.AddLabelsToMessages([]int32{1}, 0, peerID, int32(msg.PeerUser), []int64{1, 2, 3})
 			c.So(err, ShouldBeNil)
-			ums, _, _ = repo.Labels.ListMessages(1, 100, 0, 0)
+			ums, _, _ = repo.Labels.ListMessages(1, 0, 100, 0, 0)
 			c.So(ums, ShouldHaveLength, 3)
-			err = repo.Labels.AddLabelsToMessages([]int32{1}, int32(msg.PeerUser), peerID, []int64{8})
+			err = repo.Labels.AddLabelsToMessages([]int32{1}, 0, peerID, int32(msg.PeerUser), []int64{8})
 			c.So(err, ShouldBeNil)
-			ums, _, _ = repo.Labels.ListMessages(1, 100, 0, 0)
+			ums, _, _ = repo.Labels.ListMessages(1, 0, 100, 0, 0)
 			c.So(ums, ShouldHaveLength, 4)
-			err = repo.Labels.AddLabelsToMessages([]int32{1}, int32(msg.PeerUser), peerID, []int64{7})
+			err = repo.Labels.AddLabelsToMessages([]int32{1}, 0, peerID, int32(msg.PeerUser), []int64{7})
 			c.So(err, ShouldBeNil)
-			ums, _, _ = repo.Labels.ListMessages(1, 100, 0, 0)
+			ums, _, _ = repo.Labels.ListMessages(1, 0, 100, 0, 0)
 			c.So(ums, ShouldHaveLength, 5)
 		})
 	})

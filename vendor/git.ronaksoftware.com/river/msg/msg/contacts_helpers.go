@@ -27,11 +27,11 @@ func (p *poolContactsImport) Get() *ContactsImport {
 	if !ok {
 		return &ContactsImport{}
 	}
-	x.Contacts = x.Contacts[:0]
 	return x
 }
 
 func (p *poolContactsImport) Put(x *ContactsImport) {
+	x.Contacts = x.Contacts[:0]
 	p.pool.Put(x)
 }
 
@@ -60,12 +60,12 @@ func (p *poolContactsAdd) Get() *ContactsAdd {
 	if !ok {
 		return &ContactsAdd{}
 	}
-	x.LastName = ""
-	x.Phone = ""
 	return x
 }
 
 func (p *poolContactsAdd) Put(x *ContactsAdd) {
+	x.LastName = ""
+	x.Phone = ""
 	p.pool.Put(x)
 }
 
@@ -126,11 +126,11 @@ func (p *poolContactsDelete) Get() *ContactsDelete {
 	if !ok {
 		return &ContactsDelete{}
 	}
-	x.UserIDs = x.UserIDs[:0]
 	return x
 }
 
 func (p *poolContactsDelete) Put(x *ContactsDelete) {
+	x.UserIDs = x.UserIDs[:0]
 	p.pool.Put(x)
 }
 
@@ -383,13 +383,13 @@ func (p *poolContactsTopPeers) Get() *ContactsTopPeers {
 	if !ok {
 		return &ContactsTopPeers{}
 	}
-	x.Peers = x.Peers[:0]
-	x.Users = x.Users[:0]
-	x.Groups = x.Groups[:0]
 	return x
 }
 
 func (p *poolContactsTopPeers) Put(x *ContactsTopPeers) {
+	x.Peers = x.Peers[:0]
+	x.Users = x.Users[:0]
+	x.Groups = x.Groups[:0]
 	p.pool.Put(x)
 }
 
@@ -418,12 +418,12 @@ func (p *poolTopPeer) Get() *TopPeer {
 	if !ok {
 		return &TopPeer{}
 	}
-	x.TeamID = 0
-	x.LastUpdate = 0
 	return x
 }
 
 func (p *poolTopPeer) Put(x *TopPeer) {
+	x.TeamID = 0
+	x.LastUpdate = 0
 	p.pool.Put(x)
 }
 
@@ -452,13 +452,13 @@ func (p *poolBlockedContactsMany) Get() *BlockedContactsMany {
 	if !ok {
 		return &BlockedContactsMany{}
 	}
-	x.Contacts = x.Contacts[:0]
-	x.Users = x.Users[:0]
-	x.Total = 0
 	return x
 }
 
 func (p *poolBlockedContactsMany) Put(x *BlockedContactsMany) {
+	x.Contacts = x.Contacts[:0]
+	x.Users = x.Users[:0]
+	x.Total = 0
 	p.pool.Put(x)
 }
 
@@ -519,13 +519,13 @@ func (p *poolContactsImported) Get() *ContactsImported {
 	if !ok {
 		return &ContactsImported{}
 	}
-	x.ContactUsers = x.ContactUsers[:0]
-	x.Users = x.Users[:0]
-	x.Empty = false
 	return x
 }
 
 func (p *poolContactsImported) Put(x *ContactsImported) {
+	x.ContactUsers = x.ContactUsers[:0]
+	x.Users = x.Users[:0]
+	x.Empty = false
 	p.pool.Put(x)
 }
 
@@ -554,15 +554,15 @@ func (p *poolContactsMany) Get() *ContactsMany {
 	if !ok {
 		return &ContactsMany{}
 	}
+	return x
+}
+
+func (p *poolContactsMany) Put(x *ContactsMany) {
 	x.Contacts = x.Contacts[:0]
 	x.ContactUsers = x.ContactUsers[:0]
 	x.Users = x.Users[:0]
 	x.Empty = false
 	x.Hash = 0
-	return x
-}
-
-func (p *poolContactsMany) Put(x *ContactsMany) {
 	p.pool.Put(x)
 }
 

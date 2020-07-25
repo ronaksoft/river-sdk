@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/logs"
-	mon "git.ronaksoftware.com/ronak/riversdk/pkg/monitoring"
+	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
+	mon "git.ronaksoftware.com/ronak/riversdk/internal/monitoring"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"github.com/dustin/go-humanize"
@@ -158,11 +158,11 @@ func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
 
 	t := tablewriter.NewWriter(file)
 	t.SetHeader([]string{"ID", "Date", "Sender", "Body", "Media"})
-	maxID, _ := repo.Messages.GetTopMessageID(peerID, peerType)
+	maxID, _ := repo.Messages.GetTopMessageID(r.GetTeamID(), peerID, peerType)
 	limit := int32(100)
 	cnt := 0
 	for {
-		ms, us := repo.Messages.GetMessageHistory(peerID, peerType, 0, maxID, limit)
+		ms, us := repo.Messages.GetMessageHistory(r.GetTeamID(), peerID, peerType, 0, maxID, limit)
 		usMap := make(map[int64]*msg.User)
 		for _, u := range us {
 			usMap[u.ID] = u

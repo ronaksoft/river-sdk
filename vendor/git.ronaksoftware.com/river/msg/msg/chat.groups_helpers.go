@@ -27,11 +27,11 @@ func (p *poolGroupsCreate) Get() *GroupsCreate {
 	if !ok {
 		return &GroupsCreate{}
 	}
-	x.Users = x.Users[:0]
 	return x
 }
 
 func (p *poolGroupsCreate) Put(x *GroupsCreate) {
+	x.Users = x.Users[:0]
 	p.pool.Put(x)
 }
 
@@ -252,11 +252,11 @@ func (p *poolGroupsUploadPhoto) Get() *GroupsUploadPhoto {
 	if !ok {
 		return &GroupsUploadPhoto{}
 	}
-	x.ReturnObject = false
 	return x
 }
 
 func (p *poolGroupsUploadPhoto) Put(x *GroupsUploadPhoto) {
+	x.ReturnObject = false
 	p.pool.Put(x)
 }
 
@@ -285,11 +285,11 @@ func (p *poolGroupsRemovePhoto) Get() *GroupsRemovePhoto {
 	if !ok {
 		return &GroupsRemovePhoto{}
 	}
-	x.PhotoID = 0
 	return x
 }
 
 func (p *poolGroupsRemovePhoto) Put(x *GroupsRemovePhoto) {
+	x.PhotoID = 0
 	p.pool.Put(x)
 }
 
