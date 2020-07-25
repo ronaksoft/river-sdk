@@ -94,5 +94,5 @@ func Version() string {
 }
 
 func BadgerVersion() string {
-	return ""
+	panic("implement it")
 }
