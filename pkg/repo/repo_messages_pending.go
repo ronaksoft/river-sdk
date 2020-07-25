@@ -3,8 +3,8 @@ package repo
 import (
 	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"github.com/dgraph-io/badger/v2"
 	"math"
 	"time"
@@ -432,9 +432,9 @@ func (r *repoMessagesPending) SaveByRealID(randomID, realMsgID int64) {
 }
 
 const (
-	_ClientSendMessageMediaType       = -1
-	_ClientSendMessageContactType     = -2
-	_ClientSendMessageGeoLocationType = -3
+	_ClientSendMessageMediaType        = -1
+	_ClientSendMessageContactType      = -2
+	_ClientSendMessageGeoLocationType  = -3
 	_ClientSendMessageInputMessageType = -4
 )
 

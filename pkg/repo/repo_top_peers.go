@@ -60,7 +60,7 @@ func saveTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, teamID int64, tp *msg
 	))
 }
 
-func getTopPeer(txn *badger.Txn,  cat msg.TopPeerCategory, teamID, peerID int64, peerType int32) (*msg.TopPeer, error) {
+func getTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, teamID, peerID int64, peerType int32) (*msg.TopPeer, error) {
 	item, err := txn.Get(getTopPeerKey(cat, teamID, peerID, peerType))
 	switch err {
 	case nil:
@@ -77,7 +77,7 @@ func getTopPeer(txn *badger.Txn,  cat msg.TopPeerCategory, teamID, peerID int64,
 	return tp, err
 }
 
-func deleteTopPeer(txn *badger.Txn,  cat msg.TopPeerCategory, teamID, peerID int64, peerType int32) error {
+func deleteTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, teamID, peerID int64, peerType int32) error {
 	err := txn.Delete(getTopPeerKey(cat, teamID, peerID, peerType))
 	switch err {
 	case nil, badger.ErrKeyNotFound:
@@ -144,7 +144,7 @@ func (r *repoTopPeers) Update(cat msg.TopPeerCategory, teamID, peerID int64, pee
 	}
 	return badgerUpdate(func(txn *badger.Txn) error {
 		accessTime := domain.Now().Unix()
-		tp, _ := getTopPeer(txn, cat,teamID, peerID, peerType)
+		tp, _ := getTopPeer(txn, cat, teamID, peerID, peerType)
 		if tp == nil {
 			switch msg.PeerType(peerType) {
 			case msg.PeerUser:

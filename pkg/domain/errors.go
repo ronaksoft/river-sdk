@@ -22,7 +22,7 @@ var (
 	ErrAlreadyDownloading    = errors.New("already is downloading")
 	ErrNoFilePath            = errors.New("no file path")
 	ErrInvalidData           = errors.New("invalid data")
-	ErrServer				 = errors.New("server error")
+	ErrServer                = errors.New("server error")
 )
 
 // ParseServerError ...

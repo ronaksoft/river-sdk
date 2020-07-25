@@ -23,7 +23,6 @@ var WallPaperGet = &ishell.Cmd{
 	},
 }
 
-
 func init() {
 	WallPaper.AddCmd(WallPaperGet)
 }

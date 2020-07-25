@@ -14,8 +14,6 @@ import (
    Copyright Ronak Software Group 2018
 */
 
-
-
 func unique(intSlice []int32) []int32 {
 	keys := make(map[int32]bool)
 	list := make([]int32, 0)

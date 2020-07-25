@@ -2,10 +2,10 @@ package queueCtrl
 
 import (
 	"git.ronaksoftware.com/river/msg/msg"
+	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
 	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
 	"github.com/beeker1121/goque"
@@ -381,7 +381,7 @@ func (ctrl *Controller) CancelRequest(reqID int64) {
 
 // DropQueue remove queue from storage
 func (ctrl *Controller) DropQueue() {
-	err := domain.Try(10, time.Millisecond * 100, func() error {
+	err := domain.Try(10, time.Millisecond*100, func() error {
 		return ctrl.waitingList.Drop()
 	})
 	if err != nil {

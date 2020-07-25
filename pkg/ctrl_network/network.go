@@ -7,9 +7,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
 	mon "git.ronaksoftware.com/ronak/riversdk/internal/monitoring"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
@@ -57,8 +57,8 @@ type Controller struct {
 	httpClient   http.Client
 
 	// Internals
-	wsQuality domain.NetworkStatus
-	authRecalled  bool
+	wsQuality    domain.NetworkStatus
+	authRecalled bool
 
 	// flusher
 	sendFlusher *domain.Flusher

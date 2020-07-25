@@ -3,8 +3,8 @@ package repo
 import (
 	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
 	"github.com/dgraph-io/badger/v2"
@@ -112,7 +112,7 @@ func saveUser(txn *badger.Txn, user *msg.User) error {
 				Username:  "savedmessages",
 			},
 		)
-	}else {
+	} else {
 		indexPeer(
 			domain.ByteToStr(userKey),
 			UserSearch{
@@ -124,7 +124,6 @@ func saveUser(txn *badger.Txn, user *msg.User) error {
 			},
 		)
 	}
-
 
 	return nil
 }
@@ -520,7 +519,7 @@ func (r *repoUsers) DeleteContact(contactIDs ...int64) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		for _, contactID := range contactIDs {
 			err := txn.Delete(getContactKey(contactID))
-			logs.ErrorOnErr("DeleteContact : error on delete contact",err,zap.Int64("ContactID",contactID))
+			logs.ErrorOnErr("DeleteContact : error on delete contact", err, zap.Int64("ContactID", contactID))
 		}
 		return nil
 	})
@@ -629,7 +628,7 @@ func (r *repoUsers) ReIndex() {
 								Username:  "savedmessages",
 							},
 						)
-					}else {
+					} else {
 						indexPeer(
 							key,
 							UserSearch{

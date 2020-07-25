@@ -3,10 +3,10 @@ package repo
 import (
 	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
+	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
 	"git.ronaksoftware.com/ronak/riversdk/internal/pools"
 	"git.ronaksoftware.com/ronak/riversdk/internal/tools"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
 	"github.com/dgraph-io/badger/v2"
 	"github.com/tidwall/buntdb"
 	"go.uber.org/zap"
@@ -336,4 +336,3 @@ func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
 	logs.ErrorOnErr("RepoDialogs got error on getting pinned dialogs", err)
 	return dialogs
 }
-

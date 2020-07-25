@@ -19,7 +19,6 @@ var Bot = &ishell.Cmd{
 	Name: "Bot",
 }
 
-
 var BotGetInlineQueryResults = &ishell.Cmd{
 	Name: "GetInlineQueryResults",
 	Func: func(c *ishell.Context) {
@@ -61,7 +60,6 @@ var BotSendInlineQueryResults = &ishell.Cmd{
 
 	},
 }
-
 
 func init() {
 	Bot.AddCmd(BotGetInlineQueryResults)

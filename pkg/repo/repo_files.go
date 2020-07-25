@@ -245,7 +245,7 @@ func saveMessageMedia(txn *badger.Txn, m *msg.UserMessage) error {
 
 func (r *repoFiles) SaveMessageMediaDocument(md *msg.MediaDocument) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
-		return r.saveMessageMediaDocument(txn,md)
+		return r.saveMessageMediaDocument(txn, md)
 	})
 }
 

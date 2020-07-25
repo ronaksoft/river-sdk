@@ -76,7 +76,6 @@ var MessageGetDialogs = &ishell.Cmd{
 		req.Limit = int32(100)
 		req.Offset = fnGetOffset(c)
 
-
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesGetDialogs, reqBytes, reqDelegate); err != nil {

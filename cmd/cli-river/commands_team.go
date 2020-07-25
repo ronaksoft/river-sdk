@@ -55,7 +55,6 @@ var TeamListMembers = &ishell.Cmd{
 	},
 }
 
-
 func init() {
 	Team.AddCmd(TeamAddMember)
 	Team.AddCmd(TeamRemoveMember)

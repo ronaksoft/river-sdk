@@ -78,7 +78,7 @@ func (r *repoMessagesExtra) SaveHoles(teamID, peerID int64, peerType int32, data
 }
 
 func (r *repoMessagesExtra) GetHoles(teamID, peerID int64, peerType int32) []byte {
-	m := r.get(teamID,peerID, peerType)
+	m := r.get(teamID, peerID, peerType)
 	if m == nil {
 		return nil
 	}

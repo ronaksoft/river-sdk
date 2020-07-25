@@ -2,8 +2,8 @@ package syncCtrl
 
 import (
 	"git.ronaksoftware.com/river/msg/msg"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
 	"sync"
@@ -247,8 +247,8 @@ func (ctrl *Controller) GetAllTopPeers(waitGroup *sync.WaitGroup, cat msg.TopPee
 		zap.Int32("Limit", limit),
 	)
 	req := &msg.ContactsGetTopPeers{
-		Limit: limit,
-		Offset: offset,
+		Limit:    limit,
+		Offset:   offset,
 		Category: cat,
 	}
 	reqBytes, _ := req.Marshal()
@@ -333,7 +333,7 @@ func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup) {
 func (ctrl *Controller) UploadUsage() error {
 	logs.Debug("SyncCtrl calls SystemUploadUsage")
 	req := &msg.SystemUploadUsage{}
-	req.Usage= append(req.Usage, )
+	req.Usage = append(req.Usage)
 	reqBytes, _ := req.Marshal()
 	ctrl.queueCtrl.EnqueueCommand(
 		&msg.MessageEnvelope{

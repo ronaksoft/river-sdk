@@ -35,7 +35,7 @@ var (
 	MessagesExtra   *repoMessagesExtra
 	System          *repoSystem
 	Users           *repoUsers
-	Gifs 			*repoGifs
+	Gifs            *repoGifs
 	Groups          *repoGroups
 	Files           *repoFiles
 	Labels          *repoLabels
@@ -103,7 +103,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 			WithNumMemtables(2).
 			WithNumLevelZeroTables(2).
 			WithNumLevelZeroTablesStall(4).
-			WithMaxTableSize(1 << 22). // 4MB
+			WithMaxTableSize(1 << 22).     // 4MB
 			WithValueLogFileSize(1 << 22). // 4MB
 			WithBypassLockGuard(true)
 	} else {

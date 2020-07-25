@@ -6,10 +6,10 @@ import (
 	"encoding/binary"
 	"fmt"
 	"git.ronaksoftware.com/river/msg/msg"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
-	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	mon "git.ronaksoftware.com/ronak/riversdk/internal/monitoring"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
@@ -145,7 +145,7 @@ func executeRemoteCommand(r *River, requestID uint64, constructor int64, command
 	// If the constructor is a realtime command, then just send it to the server
 	if _, ok := r.realTimeCommands[constructor]; ok {
 		r.queueCtrl.RealtimeCommand(&msg.MessageEnvelope{
-			Team: r.GetTeam(),
+			Team:        r.GetTeam(),
 			Constructor: constructor,
 			RequestID:   requestID,
 			Message:     commandBytes,
@@ -153,7 +153,7 @@ func executeRemoteCommand(r *River, requestID uint64, constructor int64, command
 	} else {
 		r.queueCtrl.EnqueueCommand(
 			&msg.MessageEnvelope{
-				Team: r.GetTeam(),
+				Team:        r.GetTeam(),
 				Constructor: constructor,
 				RequestID:   requestID,
 				Message:     commandBytes,
@@ -712,4 +712,3 @@ func SanitizeQuestionAnswer(answer string) string {
 func GetCountryCode(phone string) string {
 	return domain.GetCountryCode(phone)
 }
-

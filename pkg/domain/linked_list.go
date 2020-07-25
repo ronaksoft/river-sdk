@@ -134,7 +134,7 @@ func (ll *LinkedList) PickTailData() interface{} {
 	} else {
 		ll.head, ll.tail = nil, nil
 	}
-	ll.size-=1
+	ll.size -= 1
 	ll.lock.Unlock()
 	data := n.data
 	_NodePool.Put(n)

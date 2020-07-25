@@ -1,8 +1,8 @@
 package messageHole
 
 import (
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"testing"
 )
@@ -22,7 +22,7 @@ func TestHole(t *testing.T) {
 	InsertFill(0, peerID, peerType, 11, 13)
 	InsertFill(0, peerID, peerType, 15, 16)
 	InsertFill(0, peerID, peerType, 17, 19)
-	logs.Info(PrintHole(0,peerID, peerType))
+	logs.Info(PrintHole(0, peerID, peerType))
 
 	// Test 2
 	logs.Info("Test 2")
@@ -38,12 +38,12 @@ func TestHole(t *testing.T) {
 	// Test 3
 	logs.Info("Test 3")
 	peerID = domain.RandomInt63()
-	InsertFill(0,peerID, peerType, 12, 12)
-	InsertFill(0,peerID, peerType, 101, 120)
-	InsertFill(0,peerID, peerType, 110, 120)
-	InsertFill(0,peerID, peerType, 140, 141)
-	InsertFill(0,peerID, peerType, 141, 142)
-	InsertFill(0,peerID, peerType, 143, 143)
+	InsertFill(0, peerID, peerType, 12, 12)
+	InsertFill(0, peerID, peerType, 101, 120)
+	InsertFill(0, peerID, peerType, 110, 120)
+	InsertFill(0, peerID, peerType, 140, 141)
+	InsertFill(0, peerID, peerType, 141, 142)
+	InsertFill(0, peerID, peerType, 143, 143)
 	logs.Info(PrintHole(0, peerID, peerType))
 
 	// Test 4

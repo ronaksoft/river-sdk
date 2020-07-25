@@ -443,7 +443,7 @@ func CalculateSha256(filePath string) ([]byte, error) {
 		return nil, err
 	}
 	h := sha256.New()
-	buf := make([]byte, 1 << 20)
+	buf := make([]byte, 1<<20)
 	rd := bufio.NewReader(f)
 	for {
 		n, err := rd.Read(buf)
@@ -497,4 +497,3 @@ func StrToUInt32(s string) uint32 {
 	v, _ := strconv.ParseInt(s, 10, 32)
 	return uint32(v)
 }
-

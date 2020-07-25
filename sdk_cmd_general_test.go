@@ -39,4 +39,3 @@ func init() {
 	}
 	_River = r
 }
-

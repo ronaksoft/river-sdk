@@ -1,8 +1,8 @@
 package riversdk
 
 import (
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
+	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
 	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
 )
@@ -13,7 +13,7 @@ func (r *River) IsMessageExist(messageID int64) bool {
 	return message != nil
 }
 
-func (r *River) IsGifSaved(fileID int64 , clusterID int32) bool {
+func (r *River) IsGifSaved(fileID int64, clusterID int32) bool {
 	return repo.Gifs.IsSaved(clusterID, fileID)
 }
 

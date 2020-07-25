@@ -14,7 +14,6 @@ import (
    Copyright Ronak Software Group 2018
 */
 
-
 var timerPool sync.Pool
 
 func AcquireTimer(timeout time.Duration) *time.Timer {
@@ -51,4 +50,3 @@ func ResetTimer(t *time.Timer, period time.Duration) {
 		}
 	}
 }
-

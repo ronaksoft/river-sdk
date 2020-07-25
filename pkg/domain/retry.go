@@ -11,7 +11,6 @@ import "time"
    Copyright Ronak Software Group 2018
 */
 
-
 type RetryableFunc func() error
 
 func Try(attempts int, waitTime time.Duration, f RetryableFunc) (err error) {

@@ -18,21 +18,19 @@ import (
    Copyright Ronak Software Group 2018
 */
 
-
 func TestSplitPQ(t *testing.T) {
 	key, err := rsa.GenerateKey(rand.Reader, 48)
 	if err != nil {
 		panic(err)
 	}
-	x :=  key.N.Uint64()
+	x := key.N.Uint64()
 
 	fmt.Println(x)
 	startTime := time.Now()
 	p, q := SplitPQ(big.NewInt(int64(x)))
 	fmt.Println(time.Now().Sub(startTime))
-	fmt.Println(p,q)
+	fmt.Println(p, q)
 }
-
 
 func TestGenerateMessageKey(t *testing.T) {
 	dhKey := StrToByte(RandomID(100))

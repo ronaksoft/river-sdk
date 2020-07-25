@@ -25,7 +25,6 @@ type SyncStatusChangeCallback func(newStatus SyncStatus)
 // TimeoutCallback timeout callback/delegate
 type TimeoutCallback func()
 
-
 // ErrorHandler error callback/delegate
 type ErrorHandler func(requestID uint64, u *msg.Error)
 

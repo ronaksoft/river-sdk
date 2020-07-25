@@ -24,14 +24,14 @@ func TestGif(t *testing.T) {
 				clusterID := int32(domain.RandomInt64(100))
 				docID := domain.RandomInt64(0)
 				doc := &msg.Document{
-					ID : docID,
-					ClusterID: clusterID,
+					ID:         docID,
+					ClusterID:  clusterID,
 					AccessHash: 100,
-					FileSize: 0,
+					FileSize:   0,
 				}
 				md := &msg.MediaDocument{
-					Doc : doc,
-					Caption: "",
+					Doc:          doc,
+					Caption:      "",
 					TTLinSeconds: 0,
 				}
 				err := repo.Gifs.Save(md)

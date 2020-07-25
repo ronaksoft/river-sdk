@@ -69,9 +69,9 @@ type Proto interface {
 }
 
 type (
-	M map[string]interface{}
-	MS map[string]string
-	MI map[string]int64
+	M           map[string]interface{}
+	MS          map[string]string
+	MI          map[string]int64
 	UniqueArray map[interface{}]struct{}
 )
 

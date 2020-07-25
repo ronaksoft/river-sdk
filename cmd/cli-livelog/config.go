@@ -17,7 +17,7 @@ const (
 	ConfClient      = "CLIENT"
 	ConfServerUrl   = "SERVER_URL"
 	ConfPid         = "PID"
-	ConfRegEx		= "REGEX"
+	ConfRegEx       = "REGEX"
 )
 
 func readConfig() {

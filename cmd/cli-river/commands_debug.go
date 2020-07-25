@@ -245,6 +245,7 @@ var LogoutLoop = &ishell.Cmd{
 		}
 	},
 }
+
 func sendCode(c *ishell.Context, phone string) {
 	req := msg.AuthSendCode{
 		Phone: phone,
@@ -322,6 +323,7 @@ var SendMessage = &ishell.Cmd{
 		}
 	},
 }
+
 func init() {
 	Debug.AddCmd(SendTyping)
 	Debug.AddCmd(ContactImportMany)
