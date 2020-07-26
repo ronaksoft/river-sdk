@@ -254,8 +254,12 @@ func (r *River) SetTeam(teamID int64, teamAccessHash uint64) {
 
 func (r *River) GetTeam() *msg.InputTeam {
 	if r.teamID == 0 {
-		return nil
+		return &msg.InputTeam{
+			ID:         0,
+			AccessHash: 0,
+		}
 	}
+	logs.Info("GetTeam", zap.Int64("TeamID", r.teamID))
 	return &msg.InputTeam{
 		ID:         r.teamID,
 		AccessHash: r.teamAccessHash,

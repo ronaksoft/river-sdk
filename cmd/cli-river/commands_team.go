@@ -40,6 +40,39 @@ var TeamRemoveMember = &ishell.Cmd{
 		}
 	},
 }
+
+var TeamPromote = &ishell.Cmd{
+	Name: "Promote",
+	Func: func(c *ishell.Context) {
+		req := msg.TeamPromote{}
+		req.TeamID = fnGetTeamID(c)
+		req.UserID = fnGetUserID(c)
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_TeamPromote, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
+var TeamDemote = &ishell.Cmd{
+	Name: "Demote",
+	Func: func(c *ishell.Context) {
+		req := msg.TeamDemote{}
+		req.TeamID = fnGetTeamID(c)
+		req.UserID = fnGetUserID(c)
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_TeamPromote, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
 var TeamListMembers = &ishell.Cmd{
 	Name: "ListMembers",
 	Func: func(c *ishell.Context) {
@@ -59,4 +92,6 @@ func init() {
 	Team.AddCmd(TeamAddMember)
 	Team.AddCmd(TeamRemoveMember)
 	Team.AddCmd(TeamListMembers)
+	Team.AddCmd(TeamPromote)
+	Team.AddCmd(TeamDemote)
 }
