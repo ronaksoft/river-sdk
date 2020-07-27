@@ -31,6 +31,7 @@ func (p *poolLabelsCreate) Get() *LabelsCreate {
 }
 
 func (p *poolLabelsCreate) Put(x *LabelsCreate) {
+	x.RandomID = 0
 	p.pool.Put(x)
 }
 

@@ -438,6 +438,12 @@ func (r *repoMessages) Delete(userID int64, teamID, peerID int64, peerType int32
 		}
 
 		for _, msgID := range msgIDs {
+			if m, _ := getMessageByID(txn, msgID); m != nil {
+				for _, labelID := range m.LabelIDs {
+					_ = removeLabelFromMessage(txn, labelID, msgID)
+				}
+			}
+
 			// delete from messages
 			_ = txn.Delete(getMessageKey(teamID, peerID, peerType, msgID))
 
@@ -475,6 +481,7 @@ func (r *repoMessages) Delete(userID int64, teamID, peerID int64, peerType int32
 		if err != nil {
 			return err
 		}
+
 		indexMessageRemove(domain.ByteToStr(getMessageKey(teamID, peerID, peerType, msgID)))
 		return nil
 	})
