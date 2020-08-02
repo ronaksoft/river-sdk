@@ -327,9 +327,10 @@ func (p *poolSystemConfig) Get() *SystemConfig {
 }
 
 func (p *poolSystemConfig) Put(x *SystemConfig) {
-	x.DCs = x.DCs[:0]
 	x.GifBot = ""
 	x.WikiBot = ""
+	x.DCs = x.DCs[:0]
+	x.MaxActiveSessions = 0
 	p.pool.Put(x)
 }
 
