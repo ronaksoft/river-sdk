@@ -159,6 +159,12 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 			break
 		}
 
+		// remove from top peers
+		err = repo.TopPeers.Delete(msg.TopPeerCategory_Groups, x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
+		if err != nil {
+			logs.Error("UpdateApplier couldn't delete group from top peers", zap.Error(err))
+		}
+
 		// Delete PendingMessage
 		deletedMsgs := repo.PendingMessages.DeletePeerAllMessages(x.Message.PeerID, x.Message.PeerType)
 		if deletedMsgs != nil {
