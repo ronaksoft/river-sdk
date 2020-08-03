@@ -27,11 +27,11 @@ func (p *poolUsersGet) Get() *UsersGet {
 	if !ok {
 		return &UsersGet{}
 	}
+	x.Users = x.Users[:0]
 	return x
 }
 
 func (p *poolUsersGet) Put(x *UsersGet) {
-	x.Users = x.Users[:0]
 	p.pool.Put(x)
 }
 
@@ -60,11 +60,11 @@ func (p *poolUsersGetFull) Get() *UsersGetFull {
 	if !ok {
 		return &UsersGetFull{}
 	}
+	x.Users = x.Users[:0]
 	return x
 }
 
 func (p *poolUsersGetFull) Put(x *UsersGetFull) {
-	x.Users = x.Users[:0]
 	p.pool.Put(x)
 }
 
@@ -93,12 +93,12 @@ func (p *poolUsersMany) Get() *UsersMany {
 	if !ok {
 		return &UsersMany{}
 	}
+	x.Users = x.Users[:0]
+	x.Empty = false
 	return x
 }
 
 func (p *poolUsersMany) Put(x *UsersMany) {
-	x.Users = x.Users[:0]
-	x.Empty = false
 	p.pool.Put(x)
 }
 

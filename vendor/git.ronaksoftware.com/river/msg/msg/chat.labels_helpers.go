@@ -27,11 +27,11 @@ func (p *poolLabelsCreate) Get() *LabelsCreate {
 	if !ok {
 		return &LabelsCreate{}
 	}
+	x.RandomID = 0
 	return x
 }
 
 func (p *poolLabelsCreate) Put(x *LabelsCreate) {
-	x.RandomID = 0
 	p.pool.Put(x)
 }
 
@@ -92,11 +92,11 @@ func (p *poolLabelsDelete) Get() *LabelsDelete {
 	if !ok {
 		return &LabelsDelete{}
 	}
+	x.LabelIDs = x.LabelIDs[:0]
 	return x
 }
 
 func (p *poolLabelsDelete) Put(x *LabelsDelete) {
-	x.LabelIDs = x.LabelIDs[:0]
 	p.pool.Put(x)
 }
 
@@ -157,12 +157,12 @@ func (p *poolLabelsAddToMessage) Get() *LabelsAddToMessage {
 	if !ok {
 		return &LabelsAddToMessage{}
 	}
+	x.LabelIDs = x.LabelIDs[:0]
+	x.MessageIDs = x.MessageIDs[:0]
 	return x
 }
 
 func (p *poolLabelsAddToMessage) Put(x *LabelsAddToMessage) {
-	x.LabelIDs = x.LabelIDs[:0]
-	x.MessageIDs = x.MessageIDs[:0]
 	p.pool.Put(x)
 }
 
@@ -191,12 +191,12 @@ func (p *poolLabelsRemoveFromMessage) Get() *LabelsRemoveFromMessage {
 	if !ok {
 		return &LabelsRemoveFromMessage{}
 	}
+	x.LabelIDs = x.LabelIDs[:0]
+	x.MessageIDs = x.MessageIDs[:0]
 	return x
 }
 
 func (p *poolLabelsRemoveFromMessage) Put(x *LabelsRemoveFromMessage) {
-	x.LabelIDs = x.LabelIDs[:0]
-	x.MessageIDs = x.MessageIDs[:0]
 	p.pool.Put(x)
 }
 
@@ -225,13 +225,13 @@ func (p *poolLabelsListItems) Get() *LabelsListItems {
 	if !ok {
 		return &LabelsListItems{}
 	}
+	x.MinID = 0
+	x.MaxID = 0
+	x.Limit = 0
 	return x
 }
 
 func (p *poolLabelsListItems) Put(x *LabelsListItems) {
-	x.MinID = 0
-	x.MaxID = 0
-	x.Limit = 0
 	p.pool.Put(x)
 }
 
@@ -260,14 +260,14 @@ func (p *poolLabelItems) Get() *LabelItems {
 	if !ok {
 		return &LabelItems{}
 	}
-	return x
-}
-
-func (p *poolLabelItems) Put(x *LabelItems) {
 	x.Messages = x.Messages[:0]
 	x.Dialogs = x.Dialogs[:0]
 	x.Users = x.Users[:0]
 	x.Groups = x.Groups[:0]
+	return x
+}
+
+func (p *poolLabelItems) Put(x *LabelItems) {
 	p.pool.Put(x)
 }
 

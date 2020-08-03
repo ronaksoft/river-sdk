@@ -28,14 +28,14 @@ func (p *poolAdminBroadcastMessage) Get() *AdminBroadcastMessage {
 	if !ok {
 		return &AdminBroadcastMessage{}
 	}
+	x.ReceiverIDs = x.ReceiverIDs[:0]
+	x.Entities = x.Entities[:0]
+	x.MediaType = 0
+	x.MediaData = nil
 	return x
 }
 
 func (p *poolAdminBroadcastMessage) Put(x *AdminBroadcastMessage) {
-	x.ReceiverIDs = x.ReceiverIDs[:0]
-	x.Entities = x.Entities[:0]
-	x.MediaType = 0
-	x.MediaData = x.MediaData[:0]
 	p.pool.Put(x)
 }
 
@@ -384,11 +384,11 @@ func (p *poolAdminReserveUsername) Get() *AdminReserveUsername {
 	if !ok {
 		return &AdminReserveUsername{}
 	}
+	x.Usernames = x.Usernames[:0]
 	return x
 }
 
 func (p *poolAdminReserveUsername) Put(x *AdminReserveUsername) {
-	x.Usernames = x.Usernames[:0]
 	p.pool.Put(x)
 }
 
@@ -513,11 +513,11 @@ func (p *poolWelcomeMessagesMany) Get() *WelcomeMessagesMany {
 	if !ok {
 		return &WelcomeMessagesMany{}
 	}
+	x.Messages = x.Messages[:0]
 	return x
 }
 
 func (p *poolWelcomeMessagesMany) Put(x *WelcomeMessagesMany) {
-	x.Messages = x.Messages[:0]
 	p.pool.Put(x)
 }
 
@@ -546,11 +546,11 @@ func (p *poolVersionsMany) Get() *VersionsMany {
 	if !ok {
 		return &VersionsMany{}
 	}
+	x.Versions = x.Versions[:0]
 	return x
 }
 
 func (p *poolVersionsMany) Put(x *VersionsMany) {
-	x.Versions = x.Versions[:0]
 	p.pool.Put(x)
 }
 
@@ -579,11 +579,11 @@ func (p *poolPushProvidersMany) Get() *PushProvidersMany {
 	if !ok {
 		return &PushProvidersMany{}
 	}
+	x.Providers = x.Providers[:0]
 	return x
 }
 
 func (p *poolPushProvidersMany) Put(x *PushProvidersMany) {
-	x.Providers = x.Providers[:0]
 	p.pool.Put(x)
 }
 
@@ -644,14 +644,14 @@ func (p *poolPushProvider) Get() *PushProvider {
 	if !ok {
 		return &PushProvider{}
 	}
+	x.Credentials = nil
+	x.KeyID = ""
+	x.TeamID = ""
+	x.Topic = ""
 	return x
 }
 
 func (p *poolPushProvider) Put(x *PushProvider) {
-	x.Credentials = x.Credentials[:0]
-	x.KeyID = ""
-	x.TeamID = ""
-	x.Topic = ""
 	p.pool.Put(x)
 }
 
@@ -680,11 +680,11 @@ func (p *poolVersion) Get() *Version {
 	if !ok {
 		return &Version{}
 	}
+	x.ForcedVersions = x.ForcedVersions[:0]
 	return x
 }
 
 func (p *poolVersion) Put(x *Version) {
-	x.ForcedVersions = x.ForcedVersions[:0]
 	p.pool.Put(x)
 }
 
@@ -713,11 +713,11 @@ func (p *poolReservedUsernames) Get() *ReservedUsernames {
 	if !ok {
 		return &ReservedUsernames{}
 	}
+	x.Usernames = x.Usernames[:0]
 	return x
 }
 
 func (p *poolReservedUsernames) Put(x *ReservedUsernames) {
-	x.Usernames = x.Usernames[:0]
 	p.pool.Put(x)
 }
 

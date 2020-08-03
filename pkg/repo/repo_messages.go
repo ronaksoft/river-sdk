@@ -108,6 +108,8 @@ func getMessageByKey(txn *badger.Txn, msgKey []byte) (*msg.UserMessage, error) {
 func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 	messageBytes, _ := message.Marshal()
 	docType := msg.ClientMediaNone
+
+	animated := false
 	switch message.MediaType {
 	case msg.MediaTypeDocument:
 		doc := new(msg.MediaDocument)
@@ -131,6 +133,8 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 				}
 			case msg.AttributeTypeVideo, msg.AttributeTypePhoto:
 				docType = msg.ClientMediaMedia
+			case msg.AttributeTypeAnimated:
+				animated = true
 			case msg.AttributeTypeFile:
 				if docType == msg.ClientMediaNone {
 					docType = msg.ClientMediaFile
@@ -151,6 +155,8 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 				}
 			case msg.AttributeTypeVideo, msg.AttributeTypePhoto:
 				docType = msg.ClientMediaMedia
+			case msg.AttributeTypeAnimated:
+				animated = true
 			case msg.AttributeTypeFile:
 				if docType == msg.ClientMediaNone {
 					docType = msg.ClientMediaFile
@@ -160,6 +166,11 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 	default:
 		// Do nothing
 	}
+
+	if animated {
+		docType = msg.ClientMediaGif
+	}
+
 	// 1. Write Message
 	err := txn.SetEntry(
 		badger.NewEntry(

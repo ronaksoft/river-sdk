@@ -31,9 +31,6 @@ func (p *poolPasswordAlgorithmVer6A) Get() *PasswordAlgorithmVer6A {
 }
 
 func (p *poolPasswordAlgorithmVer6A) Put(x *PasswordAlgorithmVer6A) {
-	x.Salt1 = x.Salt1[:0]
-	x.Salt2 = x.Salt2[:0]
-	x.P = x.P[:0]
 	p.pool.Put(x)
 }
 

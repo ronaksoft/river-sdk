@@ -27,11 +27,11 @@ func (p *poolMessageActionGroupAddUser) Get() *MessageActionGroupAddUser {
 	if !ok {
 		return &MessageActionGroupAddUser{}
 	}
+	x.UserIDs = x.UserIDs[:0]
 	return x
 }
 
 func (p *poolMessageActionGroupAddUser) Put(x *MessageActionGroupAddUser) {
-	x.UserIDs = x.UserIDs[:0]
 	p.pool.Put(x)
 }
 
@@ -60,11 +60,11 @@ func (p *poolMessageActionGroupDeleteUser) Get() *MessageActionGroupDeleteUser {
 	if !ok {
 		return &MessageActionGroupDeleteUser{}
 	}
+	x.UserIDs = x.UserIDs[:0]
 	return x
 }
 
 func (p *poolMessageActionGroupDeleteUser) Put(x *MessageActionGroupDeleteUser) {
-	x.UserIDs = x.UserIDs[:0]
 	p.pool.Put(x)
 }
 
@@ -93,11 +93,11 @@ func (p *poolMessageActionGroupCreated) Get() *MessageActionGroupCreated {
 	if !ok {
 		return &MessageActionGroupCreated{}
 	}
+	x.UserIDs = x.UserIDs[:0]
 	return x
 }
 
 func (p *poolMessageActionGroupCreated) Put(x *MessageActionGroupCreated) {
-	x.UserIDs = x.UserIDs[:0]
 	p.pool.Put(x)
 }
 
@@ -158,14 +158,11 @@ func (p *poolMessageActionGroupPhotoChanged) Get() *MessageActionGroupPhotoChang
 	if !ok {
 		return &MessageActionGroupPhotoChanged{}
 	}
+	x.Photo = nil
 	return x
 }
 
 func (p *poolMessageActionGroupPhotoChanged) Put(x *MessageActionGroupPhotoChanged) {
-	if x.Photo != nil {
-		*x.Photo = GroupPhoto{}
-	}
-
 	p.pool.Put(x)
 }
 
@@ -258,12 +255,12 @@ func (p *poolMessageActionScreenShotTaken) Get() *MessageActionScreenShotTaken {
 	if !ok {
 		return &MessageActionScreenShotTaken{}
 	}
+	x.MinID = 0
+	x.MaxID = 0
 	return x
 }
 
 func (p *poolMessageActionScreenShotTaken) Put(x *MessageActionScreenShotTaken) {
-	x.MinID = 0
-	x.MaxID = 0
 	p.pool.Put(x)
 }
 

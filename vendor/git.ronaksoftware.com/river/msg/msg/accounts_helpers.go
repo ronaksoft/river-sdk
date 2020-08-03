@@ -155,11 +155,11 @@ func (p *poolAccountUpdateProfile) Get() *AccountUpdateProfile {
 	if !ok {
 		return &AccountUpdateProfile{}
 	}
+	x.Bio = ""
 	return x
 }
 
 func (p *poolAccountUpdateProfile) Put(x *AccountUpdateProfile) {
-	x.Bio = ""
 	p.pool.Put(x)
 }
 
@@ -252,11 +252,11 @@ func (p *poolAccountUploadPhoto) Get() *AccountUploadPhoto {
 	if !ok {
 		return &AccountUploadPhoto{}
 	}
+	x.ReturnObject = false
 	return x
 }
 
 func (p *poolAccountUploadPhoto) Put(x *AccountUploadPhoto) {
-	x.ReturnObject = false
 	p.pool.Put(x)
 }
 
@@ -317,11 +317,11 @@ func (p *poolAccountRemovePhoto) Get() *AccountRemovePhoto {
 	if !ok {
 		return &AccountRemovePhoto{}
 	}
+	x.PhotoID = 0
 	return x
 }
 
 func (p *poolAccountRemovePhoto) Put(x *AccountRemovePhoto) {
-	x.PhotoID = 0
 	p.pool.Put(x)
 }
 
@@ -350,11 +350,11 @@ func (p *poolAccountSendChangePhoneCode) Get() *AccountSendChangePhoneCode {
 	if !ok {
 		return &AccountSendChangePhoneCode{}
 	}
+	x.AppHash = ""
 	return x
 }
 
 func (p *poolAccountSendChangePhoneCode) Put(x *AccountSendChangePhoneCode) {
-	x.AppHash = ""
 	p.pool.Put(x)
 }
 
@@ -415,14 +415,11 @@ func (p *poolAccountChangePhone) Get() *AccountChangePhone {
 	if !ok {
 		return &AccountChangePhone{}
 	}
+	x.Password = nil
 	return x
 }
 
 func (p *poolAccountChangePhone) Put(x *AccountChangePhone) {
-	if x.Password != nil {
-		*x.Password = InputPassword{}
-	}
-
 	p.pool.Put(x)
 }
 
@@ -451,16 +448,16 @@ func (p *poolAccountSetPrivacy) Get() *AccountSetPrivacy {
 	if !ok {
 		return &AccountSetPrivacy{}
 	}
-	return x
-}
-
-func (p *poolAccountSetPrivacy) Put(x *AccountSetPrivacy) {
 	x.ChatInvite = x.ChatInvite[:0]
 	x.LastSeen = x.LastSeen[:0]
 	x.PhoneNumber = x.PhoneNumber[:0]
 	x.ProfilePhoto = x.ProfilePhoto[:0]
 	x.ForwardedMessage = x.ForwardedMessage[:0]
 	x.Call = x.Call[:0]
+	return x
+}
+
+func (p *poolAccountSetPrivacy) Put(x *AccountSetPrivacy) {
 	p.pool.Put(x)
 }
 
@@ -681,14 +678,11 @@ func (p *poolAccountGetPasswordSettings) Get() *AccountGetPasswordSettings {
 	if !ok {
 		return &AccountGetPasswordSettings{}
 	}
+	x.Password = nil
 	return x
 }
 
 func (p *poolAccountGetPasswordSettings) Put(x *AccountGetPasswordSettings) {
-	if x.Password != nil {
-		*x.Password = InputPassword{}
-	}
-
 	p.pool.Put(x)
 }
 
@@ -717,18 +711,14 @@ func (p *poolAccountUpdatePasswordSettings) Get() *AccountUpdatePasswordSettings
 	if !ok {
 		return &AccountUpdatePasswordSettings{}
 	}
+	x.Password = nil
+	x.PasswordHash = nil
+	x.Hint = ""
+	x.Questions = x.Questions[:0]
 	return x
 }
 
 func (p *poolAccountUpdatePasswordSettings) Put(x *AccountUpdatePasswordSettings) {
-	if x.Password != nil {
-		*x.Password = InputPassword{}
-	}
-
-	x.PasswordHash = x.PasswordHash[:0]
-	x.AlgorithmData = x.AlgorithmData[:0]
-	x.Hint = ""
-	x.Questions = x.Questions[:0]
 	p.pool.Put(x)
 }
 
@@ -757,12 +747,11 @@ func (p *poolAccountRecoverPassword) Get() *AccountRecoverPassword {
 	if !ok {
 		return &AccountRecoverPassword{}
 	}
+	x.Answers = x.Answers[:0]
 	return x
 }
 
 func (p *poolAccountRecoverPassword) Put(x *AccountRecoverPassword) {
-	x.Answers = x.Answers[:0]
-	x.AlgorithmData = x.AlgorithmData[:0]
 	p.pool.Put(x)
 }
 
@@ -823,11 +812,11 @@ func (p *poolAccountPasswordSettings) Get() *AccountPasswordSettings {
 	if !ok {
 		return &AccountPasswordSettings{}
 	}
+	x.Questions = x.Questions[:0]
 	return x
 }
 
 func (p *poolAccountPasswordSettings) Put(x *AccountPasswordSettings) {
-	x.Questions = x.Questions[:0]
 	p.pool.Put(x)
 }
 
@@ -856,11 +845,11 @@ func (p *poolSecurityQuestions) Get() *SecurityQuestions {
 	if !ok {
 		return &SecurityQuestions{}
 	}
+	x.Questions = x.Questions[:0]
 	return x
 }
 
 func (p *poolSecurityQuestions) Put(x *SecurityQuestions) {
-	x.Questions = x.Questions[:0]
 	p.pool.Put(x)
 }
 
@@ -985,16 +974,15 @@ func (p *poolAccountPassword) Get() *AccountPassword {
 	if !ok {
 		return &AccountPassword{}
 	}
+	x.Hint = ""
+	x.SrpB = nil
+	x.RandomData = nil
+	x.SrpID = 0
+	x.Questions = x.Questions[:0]
 	return x
 }
 
 func (p *poolAccountPassword) Put(x *AccountPassword) {
-	x.Hint = ""
-	x.AlgorithmData = x.AlgorithmData[:0]
-	x.SrpB = x.SrpB[:0]
-	x.RandomData = x.RandomData[:0]
-	x.SrpID = 0
-	x.Questions = x.Questions[:0]
 	p.pool.Put(x)
 }
 
@@ -1023,11 +1011,11 @@ func (p *poolAccountAuthorizations) Get() *AccountAuthorizations {
 	if !ok {
 		return &AccountAuthorizations{}
 	}
+	x.Authorizations = x.Authorizations[:0]
 	return x
 }
 
 func (p *poolAccountAuthorizations) Put(x *AccountAuthorizations) {
-	x.Authorizations = x.Authorizations[:0]
 	p.pool.Put(x)
 }
 
@@ -1088,11 +1076,11 @@ func (p *poolAccountPrivacyRules) Get() *AccountPrivacyRules {
 	if !ok {
 		return &AccountPrivacyRules{}
 	}
+	x.Rules = x.Rules[:0]
 	return x
 }
 
 func (p *poolAccountPrivacyRules) Put(x *AccountPrivacyRules) {
-	x.Rules = x.Rules[:0]
 	p.pool.Put(x)
 }
 

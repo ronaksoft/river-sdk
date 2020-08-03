@@ -219,11 +219,11 @@ func (p *poolSystemUploadUsage) Get() *SystemUploadUsage {
 	if !ok {
 		return &SystemUploadUsage{}
 	}
+	x.Usage = x.Usage[:0]
 	return x
 }
 
 func (p *poolSystemUploadUsage) Put(x *SystemUploadUsage) {
-	x.Usage = x.Usage[:0]
 	p.pool.Put(x)
 }
 
@@ -252,11 +252,11 @@ func (p *poolSystemGetResponse) Get() *SystemGetResponse {
 	if !ok {
 		return &SystemGetResponse{}
 	}
+	x.RequestIDs = x.RequestIDs[:0]
 	return x
 }
 
 func (p *poolSystemGetResponse) Put(x *SystemGetResponse) {
-	x.RequestIDs = x.RequestIDs[:0]
 	p.pool.Put(x)
 }
 
@@ -285,16 +285,16 @@ func (p *poolClientUsage) Get() *ClientUsage {
 	if !ok {
 		return &ClientUsage{}
 	}
-	return x
-}
-
-func (p *poolClientUsage) Put(x *ClientUsage) {
 	x.ReceivedMessages = 0
 	x.SentMessages = 0
 	x.ReceivedMedia = 0
 	x.SentMedia = 0
 	x.UploadBytes = 0
 	x.DownloadBytes = 0
+	return x
+}
+
+func (p *poolClientUsage) Put(x *ClientUsage) {
 	p.pool.Put(x)
 }
 
@@ -323,14 +323,14 @@ func (p *poolSystemConfig) Get() *SystemConfig {
 	if !ok {
 		return &SystemConfig{}
 	}
-	return x
-}
-
-func (p *poolSystemConfig) Put(x *SystemConfig) {
 	x.GifBot = ""
 	x.WikiBot = ""
 	x.DCs = x.DCs[:0]
 	x.MaxActiveSessions = 0
+	return x
+}
+
+func (p *poolSystemConfig) Put(x *SystemConfig) {
 	p.pool.Put(x)
 }
 
@@ -391,11 +391,11 @@ func (p *poolSystemSalts) Get() *SystemSalts {
 	if !ok {
 		return &SystemSalts{}
 	}
+	x.Salts = x.Salts[:0]
 	return x
 }
 
 func (p *poolSystemSalts) Put(x *SystemSalts) {
-	x.Salts = x.Salts[:0]
 	p.pool.Put(x)
 }
 
@@ -456,11 +456,11 @@ func (p *poolSystemInfo) Get() *SystemInfo {
 	if !ok {
 		return &SystemInfo{}
 	}
+	x.StorageUrl = ""
 	return x
 }
 
 func (p *poolSystemInfo) Put(x *SystemInfo) {
-	x.StorageUrl = ""
 	p.pool.Put(x)
 }
 
@@ -521,11 +521,11 @@ func (p *poolSystemPublicKeys) Get() *SystemPublicKeys {
 	if !ok {
 		return &SystemPublicKeys{}
 	}
+	x.RSAPublicKeys = x.RSAPublicKeys[:0]
 	return x
 }
 
 func (p *poolSystemPublicKeys) Put(x *SystemPublicKeys) {
-	x.RSAPublicKeys = x.RSAPublicKeys[:0]
 	p.pool.Put(x)
 }
 
@@ -554,11 +554,11 @@ func (p *poolSystemDHGroups) Get() *SystemDHGroups {
 	if !ok {
 		return &SystemDHGroups{}
 	}
+	x.DHGroups = x.DHGroups[:0]
 	return x
 }
 
 func (p *poolSystemDHGroups) Put(x *SystemDHGroups) {
-	x.DHGroups = x.DHGroups[:0]
 	p.pool.Put(x)
 }
 

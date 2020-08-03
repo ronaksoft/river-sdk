@@ -28,11 +28,11 @@ func (p *poolCalendarGetEvents) Get() *CalendarGetEvents {
 	if !ok {
 		return &CalendarGetEvents{}
 	}
+	x.Filter = 0
 	return x
 }
 
 func (p *poolCalendarGetEvents) Put(x *CalendarGetEvents) {
-	x.Filter = 0
 	p.pool.Put(x)
 }
 
@@ -61,14 +61,14 @@ func (p *poolCalendarSetEvent) Get() *CalendarSetEvent {
 	if !ok {
 		return &CalendarSetEvent{}
 	}
-	return x
-}
-
-func (p *poolCalendarSetEvent) Put(x *CalendarSetEvent) {
 	x.Period = 0
 	x.AllDay = false
 	x.Team = false
 	x.Global = false
+	return x
+}
+
+func (p *poolCalendarSetEvent) Put(x *CalendarSetEvent) {
 	p.pool.Put(x)
 }
 
@@ -97,12 +97,12 @@ func (p *poolCalendarEditEvent) Get() *CalendarEditEvent {
 	if !ok {
 		return &CalendarEditEvent{}
 	}
+	x.Period = 0
+	x.AllDay = false
 	return x
 }
 
 func (p *poolCalendarEditEvent) Put(x *CalendarEditEvent) {
-	x.Period = 0
-	x.AllDay = false
 	p.pool.Put(x)
 }
 
@@ -163,12 +163,12 @@ func (p *poolCalendarEvent) Get() *CalendarEvent {
 	if !ok {
 		return &CalendarEvent{}
 	}
+	x.Period = 0
+	x.AllDay = false
 	return x
 }
 
 func (p *poolCalendarEvent) Put(x *CalendarEvent) {
-	x.Period = 0
-	x.AllDay = false
 	p.pool.Put(x)
 }
 
@@ -197,11 +197,11 @@ func (p *poolCalendarEventInstance) Get() *CalendarEventInstance {
 	if !ok {
 		return &CalendarEventInstance{}
 	}
+	x.Colour = ""
 	return x
 }
 
 func (p *poolCalendarEventInstance) Put(x *CalendarEventInstance) {
-	x.Colour = ""
 	p.pool.Put(x)
 }
 
