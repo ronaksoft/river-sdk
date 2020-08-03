@@ -35,7 +35,7 @@ type RiverConfig struct {
 	FileServerEndpoint string
 	// DbPath is the path of the folder holding the sqlite database.
 	DbPath string
-	// DbID is used to save data for different accounts in separate databases.
+	// DbID is used to save data for different accounts in separate databases. Could be used for multi-account cases.
 	DbID string
 	// ServerKeysFilePath is a json file holding finger print and public keys.
 	ServerKeys string
@@ -81,8 +81,7 @@ type RiverConfig struct {
 // we think is the best possible.
 // Only the functions which are exposed will be used by the user of the SDK. All the low-level tasks
 // to smooth the connection between client and server are done by this SDK. The underlying storage used
-// by this SDK is Sqlite3, however with the least effort you can use other SQL databases. 'model' is the
-// package name selected to handle repository functions.
+// by this SDK is Badger V2. 'repo' is the package name selected to handle repository functions.
 type River struct {
 	// Connection Info
 	ConnInfo *RiverConnection

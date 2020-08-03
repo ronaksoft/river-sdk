@@ -138,8 +138,6 @@ func (r *River) HandleDebugActions(txt string) {
 		sendLogs(r)
 	case "//sdk_logs_update":
 		sendUpdateLogs(r)
-	case "//sdk_logs_window":
-		r.mainDelegate.ShowLoggerAlert()
 	case "//sdk_export_messages":
 		if len(args) < 2 {
 			logs.Warn("invalid args: //sdk_export_messages [peerType] [peerID]")
