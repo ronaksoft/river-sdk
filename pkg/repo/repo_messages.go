@@ -109,10 +109,9 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 	messageBytes, _ := message.Marshal()
 	docType := msg.ClientMediaNone
 
-	animated := false
 	switch message.MediaType {
 	case msg.MediaTypeDocument:
-		doc := new(msg.MediaDocument)
+		doc := &msg.MediaDocument{}
 		_ = doc.Unmarshal(message.Media)
 		if doc.Doc == nil {
 			logs.Error("RepoMessage got error on save message, Document is Nil",
@@ -122,9 +121,12 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 			return nil
 		}
 		for _, da := range doc.Doc.Attributes {
+			if docType == msg.ClientMediaGif {
+				break
+			}
 			switch da.Type {
 			case msg.AttributeTypeAudio:
-				a := new(msg.DocumentAttributeAudio)
+				a := &msg.DocumentAttributeAudio{}
 				_ = a.Unmarshal(da.Data)
 				if a.Voice {
 					docType = msg.ClientMediaVoice
@@ -134,7 +136,7 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 			case msg.AttributeTypeVideo, msg.AttributeTypePhoto:
 				docType = msg.ClientMediaMedia
 			case msg.AttributeTypeAnimated:
-				animated = true
+				docType = msg.ClientMediaGif
 			case msg.AttributeTypeFile:
 				if docType == msg.ClientMediaNone {
 					docType = msg.ClientMediaFile
@@ -142,8 +144,11 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 			}
 		}
 	case msg.MediaTypeWebDocument:
-		webDoc := new(msg.MediaWebDocument)
+		webDoc := &msg.MediaWebDocument{}
 		for _, da := range webDoc.Attributes {
+			if docType == msg.ClientMediaGif {
+				break
+			}
 			switch da.Type {
 			case msg.AttributeTypeAudio:
 				a := new(msg.DocumentAttributeAudio)
@@ -156,7 +161,7 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 			case msg.AttributeTypeVideo, msg.AttributeTypePhoto:
 				docType = msg.ClientMediaMedia
 			case msg.AttributeTypeAnimated:
-				animated = true
+				docType = msg.ClientMediaGif
 			case msg.AttributeTypeFile:
 				if docType == msg.ClientMediaNone {
 					docType = msg.ClientMediaFile
@@ -165,10 +170,6 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 		}
 	default:
 		// Do nothing
-	}
-
-	if animated {
-		docType = msg.ClientMediaGif
 	}
 
 	// 1. Write Message

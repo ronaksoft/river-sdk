@@ -539,72 +539,6 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 
 }
 
-func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	reqMedia := new(msg.ClientSendMessageMedia)
-	if err := reqMedia.Unmarshal(in.Message); err != nil {
-		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
-		uiexec.ExecSuccessCB(successCB, out)
-		return
-	}
-
-	// support IOS file path
-	if strings.HasPrefix(reqMedia.FilePath, "file://") {
-		reqMedia.FilePath = reqMedia.FilePath[7:]
-	}
-	if strings.HasPrefix(reqMedia.ThumbFilePath, "file://") {
-		reqMedia.ThumbFilePath = reqMedia.ThumbFilePath[7:]
-	}
-
-	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
-	fileID := domain.SequentialUniqueID()
-	msgID := -fileID
-	thumbID := int64(0)
-	if reqMedia.ThumbFilePath != "" {
-		thumbID = domain.RandomInt63()
-	}
-	reqMedia.FileUploadID = fmt.Sprintf("%d", fileID)
-	reqMedia.FileID = fileID
-	if thumbID > 0 {
-		reqMedia.ThumbID = thumbID
-		reqMedia.ThumbUploadID = fmt.Sprintf("%d", thumbID)
-	}
-
-	checkSha256 := true
-	switch reqMedia.MediaType {
-	case msg.InputMediaTypeUploadedDocument:
-		for _, attr := range reqMedia.Attributes {
-			if attr.Type == msg.AttributeTypeAudio {
-				x := &msg.DocumentAttributeAudio{}
-				_ = x.Unmarshal(attr.Data)
-				if x.Voice {
-					checkSha256 = false
-				}
-			}
-		}
-	default:
-		panic("Invalid MediaInputType")
-	}
-
-	h, _ := domain.CalculateSha256(reqMedia.FilePath)
-	pendingMessage, err := repo.PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, fileID, fileID, thumbID, reqMedia, h)
-	if err != nil {
-		e := new(msg.Error)
-		e.Code = "n/a"
-		e.Items = "Failed to save to pendingMessages : " + err.Error()
-		msg.ResultError(out, e)
-		uiexec.ExecSuccessCB(successCB, out)
-		return
-	}
-
-	// 3. return to CallBack with pending message data : Done
-	msg.ResultClientPendingMessage(out, pendingMessage)
-
-	// 4. Start the upload process
-	r.fileCtrl.UploadMessageDocument(pendingMessage.ID, reqMedia.FilePath, reqMedia.ThumbFilePath, fileID, thumbID, h, pendingMessage.PeerID, checkSha256)
-
-	uiexec.ExecSuccessCB(successCB, out)
-}
-
 func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := &msg.ContactsGet{}
 	if err := req.Unmarshal(in.Message); err != nil {
@@ -1445,6 +1379,72 @@ func fillLabelItems(out *msg.MessageEnvelope, messages []*msg.UserMessage, users
 	out.RequestID = requestID
 	out.Constructor = msg.C_LabelItems
 	out.Message, _ = res.Marshal()
+	uiexec.ExecSuccessCB(successCB, out)
+}
+
+func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	reqMedia := new(msg.ClientSendMessageMedia)
+	if err := reqMedia.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		uiexec.ExecSuccessCB(successCB, out)
+		return
+	}
+
+	// support IOS file path
+	if strings.HasPrefix(reqMedia.FilePath, "file://") {
+		reqMedia.FilePath = reqMedia.FilePath[7:]
+	}
+	if strings.HasPrefix(reqMedia.ThumbFilePath, "file://") {
+		reqMedia.ThumbFilePath = reqMedia.ThumbFilePath[7:]
+	}
+
+	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
+	fileID := domain.SequentialUniqueID()
+	msgID := -fileID
+	thumbID := int64(0)
+	if reqMedia.ThumbFilePath != "" {
+		thumbID = domain.RandomInt63()
+	}
+	reqMedia.FileUploadID = fmt.Sprintf("%d", fileID)
+	reqMedia.FileID = fileID
+	if thumbID > 0 {
+		reqMedia.ThumbID = thumbID
+		reqMedia.ThumbUploadID = fmt.Sprintf("%d", thumbID)
+	}
+
+	checkSha256 := true
+	switch reqMedia.MediaType {
+	case msg.InputMediaTypeUploadedDocument:
+		for _, attr := range reqMedia.Attributes {
+			if attr.Type == msg.AttributeTypeAudio {
+				x := &msg.DocumentAttributeAudio{}
+				_ = x.Unmarshal(attr.Data)
+				if x.Voice {
+					checkSha256 = false
+				}
+			}
+		}
+	default:
+		panic("Invalid MediaInputType")
+	}
+
+	h, _ := domain.CalculateSha256(reqMedia.FilePath)
+	pendingMessage, err := repo.PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, fileID, fileID, thumbID, reqMedia, h)
+	if err != nil {
+		e := new(msg.Error)
+		e.Code = "n/a"
+		e.Items = "Failed to save to pendingMessages : " + err.Error()
+		msg.ResultError(out, e)
+		uiexec.ExecSuccessCB(successCB, out)
+		return
+	}
+
+	// 3. return to CallBack with pending message data : Done
+	msg.ResultClientPendingMessage(out, pendingMessage)
+
+	// 4. Start the upload process
+	r.fileCtrl.UploadMessageDocument(pendingMessage.ID, reqMedia.FilePath, reqMedia.ThumbFilePath, fileID, thumbID, h, pendingMessage.PeerID, checkSha256)
+
 	uiexec.ExecSuccessCB(successCB, out)
 }
 
