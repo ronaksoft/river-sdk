@@ -149,6 +149,7 @@ func (r *River) ResumeUpload(pendingMessageID int64) {
 		r.fileCtrl.UploadMessageDocument(
 			pendingMessageID, req.FilePath, req.ThumbFilePath, pendingMessage.FileID,
 			pendingMessage.ThumbID, pendingMessage.Sha256, pendingMessage.PeerID,
+			true,
 		)
 	}
 }

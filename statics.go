@@ -97,6 +97,9 @@ func Version() string {
 }
 
 func BadgerSupport(dbDir string) bool {
+	if strings.HasPrefix(dbDir, "file://") {
+		dbDir = dbDir[7:]
+	}
 	f, err := os.Open(filepath.Join(dbDir, "MANIFEST"))
 	if err != nil {
 		return false

@@ -32,6 +32,7 @@ func (p *poolGroupsCreate) Get() *GroupsCreate {
 
 func (p *poolGroupsCreate) Put(x *GroupsCreate) {
 	x.Users = x.Users[:0]
+	x.RandomID = 0
 	p.pool.Put(x)
 }
 

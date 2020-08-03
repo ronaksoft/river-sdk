@@ -108,7 +108,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 			WithBypassLockGuard(true)
 	} else {
 		badgerOpts = badgerOpts.
-			WithTableLoadingMode(options.LoadToRAM).
+			WithTableLoadingMode(options.FileIO).
 			WithValueLogLoadingMode(options.FileIO).
 			WithBypassLockGuard(true)
 

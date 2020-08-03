@@ -62,11 +62,13 @@ type UploadRequest struct {
 	// SkipDelegateCall identifies to call delegate function on specified states
 	SkipDelegateCall bool  `json:"skip_delegate_call"`
 	PeerID           int64 `json:"peer_id"`
+
 	// These parts are used to check if the file has been already uploaded
-	FileSha256 string `json:"file_sha256"`
-	AccessHash uint64 `json:"access_hash"`
-	ClusterID  int32  `json:"cluster_id"`
-	DocumentID int64  `json:"document_id"`
+	CheckSha256 bool   `json:"check_sha_256"`
+	FileSha256  string `json:"file_sha256"`
+	AccessHash  uint64 `json:"access_hash"`
+	ClusterID   int32  `json:"cluster_id"`
+	DocumentID  int64  `json:"document_id"`
 }
 
 func (r UploadRequest) GetID() string {
@@ -192,7 +194,7 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 				}
 				waitGroup.Add(1)
 				ctx.rateLimit <- struct{}{}
-				go uploadJob(ctx, ctrl, &maxRetries, &waitGroup, partIndex)
+				go ctx.uploadJob(ctrl, &maxRetries, &waitGroup, partIndex)
 			default:
 				switch int32(len(ctx.req.UploadedParts)) {
 				case ctx.req.TotalParts - 1:
@@ -243,7 +245,7 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 	}
 
 }
-func uploadJob(ctx *uploadContext, ctrl *Controller, maxRetries *int32, waitGroup *sync.WaitGroup, partIndex int32) {
+func (ctx *uploadContext) uploadJob(ctrl *Controller, maxRetries *int32, waitGroup *sync.WaitGroup, partIndex int32) {
 	defer waitGroup.Done()
 	defer func() {
 		<-ctx.rateLimit

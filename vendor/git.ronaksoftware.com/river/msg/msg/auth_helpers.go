@@ -785,6 +785,7 @@ func (p *poolAuthAuthorization) Get() *AuthAuthorization {
 }
 
 func (p *poolAuthAuthorization) Put(x *AuthAuthorization) {
+	x.ActiveSessions = 0
 	p.pool.Put(x)
 }
 
