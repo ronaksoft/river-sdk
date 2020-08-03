@@ -54,7 +54,8 @@ type RiverConfig struct {
 	DocumentFileDirectory  string
 	DocumentAudioDirectory string
 	DocumentCacheDirectory string
-	DocumentLogDirectory   string
+	LogDirectory           string
+
 	// Connection Info
 	ConnInfo *RiverConnection
 
@@ -149,8 +150,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	logs.SetLogLevel(conf.LogLevel)
 
 	// set log file path
-	if conf.DocumentLogDirectory != "" {
-		_ = logs.SetLogFilePath(conf.DocumentLogDirectory)
+	if conf.LogDirectory != "" {
+		_ = logs.SetLogFilePath(conf.LogDirectory)
 	}
 
 	// Initialize realtime requests

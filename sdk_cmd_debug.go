@@ -128,7 +128,7 @@ func (r *River) HandleDebugActions(txt string) {
 		}
 		sendMediaToSaveMessage(r, filePath, "SdkHeapProfile.out")
 	case "//sdk_logs_clear":
-		_ = filepath.Walk(logs.LogDir, func(path string, info os.FileInfo, err error) error {
+		_ = filepath.Walk(logs.Directory(), func(path string, info os.FileInfo, err error) error {
 			if strings.HasSuffix(info.Name(), ".log") {
 				_ = os.Remove(path)
 			}
@@ -270,7 +270,7 @@ func heapProfile() (filePath string) {
 }
 
 func sendUpdateLogs(r *River) {
-	_ = filepath.Walk(logs.LogDir, func(path string, info os.FileInfo, err error) error {
+	_ = filepath.Walk(logs.Directory(), func(path string, info os.FileInfo, err error) error {
 		if strings.HasPrefix(info.Name(), "UPDT") {
 			sendMediaToSaveMessage(r, path, info.Name())
 		}
@@ -279,7 +279,7 @@ func sendUpdateLogs(r *River) {
 }
 
 func sendLogs(r *River) {
-	_ = filepath.Walk(logs.LogDir, func(filePath string, info os.FileInfo, err error) error {
+	_ = filepath.Walk(logs.Directory(), func(filePath string, info os.FileInfo, err error) error {
 		if strings.HasPrefix(info.Name(), "LOG") {
 			outPath := path.Join(repo.DirCache, info.Name())
 			err = domain.CopyFile(filePath, outPath)
