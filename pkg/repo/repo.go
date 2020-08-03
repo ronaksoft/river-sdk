@@ -293,6 +293,7 @@ func badgerUpdate(fn func(txn *badger.Txn) error) (err error) {
 		case badger.ErrConflict:
 			logs.Debug("Badger update conflict")
 		default:
+			logs.Debug("Badger update error", zap.Error(err))
 			return
 		}
 		time.Sleep(time.Duration(domain.RandomInt(10000)) * time.Microsecond)

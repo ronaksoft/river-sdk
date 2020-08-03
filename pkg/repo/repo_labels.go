@@ -467,7 +467,6 @@ func (r *repoLabels) decreaseLabelItemCount(txn *badger.Txn, labelID int32) erro
 
 	label.Count--
 
-
 	logs.Info("Labels : decreaseLabelItemCount", zap.Int32("Label ID", label.ID), zap.Int32("Item Count", label.Count))
 
 	return r.Save(label)

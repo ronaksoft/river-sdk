@@ -517,7 +517,15 @@ func (r *repoMessages) Delete(userID int64, teamID, peerID int64, peerType int32
 		indexMessageRemove(domain.ByteToStr(getMessageKey(teamID, peerID, peerType, msgID)))
 		return nil
 	})
-	logs.ErrorOnErr("RepoMessage got error on delete", err)
+	if err != nil {
+		logs.Warn("RepoMessage got error on delete",
+			zap.Error(err),
+			zap.Int64("UserID", userID),
+			zap.Int64("TeamID", teamID),
+			zap.Int64("PeerID", peerID),
+			zap.Int64s("MsgIDs", msgIDs),
+		)
+	}
 }
 
 func (r *repoMessages) ClearHistory(userID int64, teamID, peerID int64, peerType int32, maxID int64) error {
