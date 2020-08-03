@@ -28,6 +28,8 @@ type Config struct {
 	WebsocketEndpoint string
 	HttpEndpoint      string
 	CountryCode       string
+	DumpData          bool
+	DumpPath          string
 }
 
 // Controller websocket network controller

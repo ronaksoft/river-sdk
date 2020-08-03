@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	LogDir     string
+	_LogDir    string
 	_UpdateLog *zap.Logger
 	_Log       *zap.Logger
 	_LogLevel  zap.AtomicLevel
@@ -43,6 +43,10 @@ func init() {
 
 }
 
+func Directory() string {
+	return _LogDir
+}
+
 func SetLogLevel(l int) {
 	_LogLevel.SetLevel(zapcore.Level(l))
 }
@@ -56,7 +60,7 @@ func SetLogFilePath(logDir string) error {
 	if strings.HasPrefix(logDir, "file://") {
 		logDir = logDir[7:]
 	}
-	LogDir = logDir
+	_LogDir = logDir
 
 	t := time.Now()
 	logFileName := fmt.Sprintf("LOG-%d-%02d-%02d.log", t.Year(), t.Month(), t.Day())

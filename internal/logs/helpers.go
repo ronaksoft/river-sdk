@@ -23,7 +23,7 @@ func TimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 
 func CleanUP() {
 	lifeTime := 7 * 24 * time.Hour
-	_ = filepath.Walk(LogDir, func(path string, info os.FileInfo, err error) error {
+	_ = filepath.Walk(_LogDir, func(path string, info os.FileInfo, err error) error {
 		if info == nil {
 			return nil
 		}

@@ -30,7 +30,7 @@ func init() {
 		DocumentPhotoDirectory: "./_files/photo",
 		DocumentFileDirectory:  "./_files/file",
 		DocumentCacheDirectory: "./_files/cache",
-		DocumentLogDirectory:   "./_files/logs",
+		LogDirectory:           "./_files/logs",
 		ConnInfo:               conInfo,
 	})
 	err := r.AppStart()
