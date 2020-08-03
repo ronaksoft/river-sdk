@@ -137,6 +137,26 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 				}
 			}
 		}
+	case msg.MediaTypeWebDocument:
+		webDoc := new(msg.MediaWebDocument)
+		for _, da := range webDoc.Attributes {
+			switch da.Type {
+			case msg.AttributeTypeAudio:
+				a := new(msg.DocumentAttributeAudio)
+				_ = a.Unmarshal(da.Data)
+				if a.Voice {
+					docType = msg.ClientMediaVoice
+				} else {
+					docType = msg.ClientMediaAudio
+				}
+			case msg.AttributeTypeVideo, msg.AttributeTypePhoto:
+				docType = msg.ClientMediaMedia
+			case msg.AttributeTypeFile:
+				if docType == msg.ClientMediaNone {
+					docType = msg.ClientMediaFile
+				}
+			}
+		}
 	default:
 		// Do nothing
 	}
