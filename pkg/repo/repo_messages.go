@@ -462,7 +462,7 @@ func (r *repoMessages) Delete(userID int64, teamID, peerID int64, peerType int32
 		return msgIDs[i] < msgIDs[j]
 	})
 	err := badgerUpdate(func(txn *badger.Txn) error {
-		// 2. Update the Dialog if necessary
+		// Update the Dialog if necessary
 		dialog, err := getDialog(txn, teamID, peerID, peerType)
 		if err != nil {
 			return err
@@ -472,7 +472,7 @@ func (r *repoMessages) Delete(userID int64, teamID, peerID int64, peerType int32
 			if m, _ := getMessageByID(txn, msgID); m != nil {
 				for _, labelID := range m.LabelIDs {
 					_ = removeLabelFromMessage(txn, labelID, msgID)
-					_ = Labels.decreaseLabelItemCount(txn, labelID)
+					_ = decreaseLabelItemCount(txn, labelID)
 				}
 			}
 

@@ -87,12 +87,42 @@ func removeLabelFromMessage(txn *badger.Txn, labelID int32, msgID int64) error {
 	case badger.ErrKeyNotFound:
 		return nil
 	}
-
-	switch err {
-	case badger.ErrKeyNotFound:
-		return nil
-	}
 	return err
+}
+
+func decreaseLabelItemCount(txn *badger.Txn, labelID int32) error {
+	label := &msg.Label{}
+	item, err := txn.Get(getLabelKey(labelID))
+	if err != nil {
+		return err
+	}
+	err = item.Value(func(val []byte) error {
+		return label.Unmarshal(val)
+	})
+	if err != nil {
+		return err
+	}
+
+	label.Count--
+
+	return saveLabel(txn, label)
+}
+
+func increaseLabelItemCount(txn *badger.Txn, labelID int32) error {
+	label := &msg.Label{}
+	item, err := txn.Get(getLabelKey(labelID))
+	if err != nil {
+		return err
+	}
+	err = item.Value(func(val []byte) error {
+		return label.Unmarshal(val)
+	})
+	if err != nil {
+		return err
+	}
+
+	label.Count++
+	return saveLabel(txn, label)
 }
 
 func (r *repoLabels) Save(labels ...*msg.Label) error {
@@ -450,44 +480,4 @@ func (r *repoLabels) GetUpperFilled(labelID int32, minID int64) (bool, LabelBar)
 	}
 	b.MinID = minID
 	return true, b
-}
-
-func (r *repoLabels) decreaseLabelItemCount(txn *badger.Txn, labelID int32) error {
-	label := &msg.Label{}
-	item, err := txn.Get(getLabelKey(labelID))
-	if err != nil {
-		return err
-	}
-	err = item.Value(func(val []byte) error {
-		return label.Unmarshal(val)
-	})
-	if err != nil {
-		return err
-	}
-
-	label.Count--
-
-	logs.Info("Labels : decreaseLabelItemCount", zap.Int32("Label ID", label.ID), zap.Int32("Item Count", label.Count))
-
-	return r.Save(label)
-}
-
-func (r *repoLabels) increaseLabelItemCount(txn *badger.Txn, labelID int32) error {
-	label := &msg.Label{}
-	item, err := txn.Get(getLabelKey(labelID))
-	if err != nil {
-		return err
-	}
-	err = item.Value(func(val []byte) error {
-		return label.Unmarshal(val)
-	})
-	if err != nil {
-		return err
-	}
-
-	label.Count++
-
-	logs.Info("Labels : increaseLabelItemCount", zap.Int32("Label ID", label.ID), zap.Int32("Item Count", label.Count))
-
-	return r.Save(label)
 }
