@@ -63,8 +63,6 @@ func (p *poolTestRequest) Get() *TestRequest {
 }
 
 func (p *poolTestRequest) Put(x *TestRequest) {
-	x.Payload = x.Payload[:0]
-	x.Hash = x.Hash[:0]
 	p.pool.Put(x)
 }
 
@@ -97,7 +95,6 @@ func (p *poolTestResponse) Get() *TestResponse {
 }
 
 func (p *poolTestResponse) Put(x *TestResponse) {
-	x.Hash = x.Hash[:0]
 	p.pool.Put(x)
 }
 
@@ -162,7 +159,6 @@ func (p *poolTestResponseWithString) Get() *TestResponseWithString {
 }
 
 func (p *poolTestResponseWithString) Put(x *TestResponseWithString) {
-	x.Hash = x.Hash[:0]
 	p.pool.Put(x)
 }
 

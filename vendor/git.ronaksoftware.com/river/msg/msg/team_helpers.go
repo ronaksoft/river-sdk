@@ -224,7 +224,6 @@ func (p *poolTeamJoin) Get() *TeamJoin {
 }
 
 func (p *poolTeamJoin) Put(x *TeamJoin) {
-	x.Token = x.Token[:0]
 	p.pool.Put(x)
 }
 
@@ -285,11 +284,11 @@ func (p *poolTeamMembers) Get() *TeamMembers {
 	if !ok {
 		return &TeamMembers{}
 	}
+	x.Members = x.Members[:0]
 	return x
 }
 
 func (p *poolTeamMembers) Put(x *TeamMembers) {
-	x.Members = x.Members[:0]
 	p.pool.Put(x)
 }
 
@@ -350,12 +349,12 @@ func (p *poolTeamsMany) Get() *TeamsMany {
 	if !ok {
 		return &TeamsMany{}
 	}
+	x.Teams = x.Teams[:0]
+	x.Users = x.Users[:0]
 	return x
 }
 
 func (p *poolTeamsMany) Put(x *TeamsMany) {
-	x.Teams = x.Teams[:0]
-	x.Users = x.Users[:0]
 	p.pool.Put(x)
 }
 

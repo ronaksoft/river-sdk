@@ -91,14 +91,14 @@ func (p *poolUpdateDifference) Get() *UpdateDifference {
 	if !ok {
 		return &UpdateDifference{}
 	}
-	return x
-}
-
-func (p *poolUpdateDifference) Put(x *UpdateDifference) {
 	x.Updates = x.Updates[:0]
 	x.Users = x.Users[:0]
 	x.Groups = x.Groups[:0]
 	x.CurrentUpdateID = 0
+	return x
+}
+
+func (p *poolUpdateDifference) Put(x *UpdateDifference) {
 	p.pool.Put(x)
 }
 
@@ -223,12 +223,12 @@ func (p *poolUpdateNewMessage) Get() *UpdateNewMessage {
 	if !ok {
 		return &UpdateNewMessage{}
 	}
+	x.AccessHash = 0
+	x.SenderRefID = 0
 	return x
 }
 
 func (p *poolUpdateNewMessage) Put(x *UpdateNewMessage) {
-	x.AccessHash = 0
-	x.SenderRefID = 0
 	p.pool.Put(x)
 }
 
@@ -289,16 +289,13 @@ func (p *poolUpdateMessagesDeleted) Get() *UpdateMessagesDeleted {
 	if !ok {
 		return &UpdateMessagesDeleted{}
 	}
+	x.TeamID = 0
+	x.MessageIDs = x.MessageIDs[:0]
+	x.Peer = nil
 	return x
 }
 
 func (p *poolUpdateMessagesDeleted) Put(x *UpdateMessagesDeleted) {
-	x.TeamID = 0
-	x.MessageIDs = x.MessageIDs[:0]
-	if x.Peer != nil {
-		*x.Peer = Peer{}
-	}
-
 	p.pool.Put(x)
 }
 
@@ -327,11 +324,11 @@ func (p *poolUpdateReadHistoryInbox) Get() *UpdateReadHistoryInbox {
 	if !ok {
 		return &UpdateReadHistoryInbox{}
 	}
+	x.TeamID = 0
 	return x
 }
 
 func (p *poolUpdateReadHistoryInbox) Put(x *UpdateReadHistoryInbox) {
-	x.TeamID = 0
 	p.pool.Put(x)
 }
 
@@ -360,11 +357,11 @@ func (p *poolUpdateReadHistoryOutbox) Get() *UpdateReadHistoryOutbox {
 	if !ok {
 		return &UpdateReadHistoryOutbox{}
 	}
+	x.TeamID = 0
 	return x
 }
 
 func (p *poolUpdateReadHistoryOutbox) Put(x *UpdateReadHistoryOutbox) {
-	x.TeamID = 0
 	p.pool.Put(x)
 }
 
@@ -393,12 +390,12 @@ func (p *poolUpdateUserTyping) Get() *UpdateUserTyping {
 	if !ok {
 		return &UpdateUserTyping{}
 	}
+	x.TeamID = 0
+	x.PeerType = 0
 	return x
 }
 
 func (p *poolUpdateUserTyping) Put(x *UpdateUserTyping) {
-	x.TeamID = 0
-	x.PeerType = 0
 	p.pool.Put(x)
 }
 
@@ -459,11 +456,11 @@ func (p *poolUpdateUsername) Get() *UpdateUsername {
 	if !ok {
 		return &UpdateUsername{}
 	}
+	x.Phone = ""
 	return x
 }
 
 func (p *poolUpdateUsername) Put(x *UpdateUsername) {
-	x.Phone = ""
 	p.pool.Put(x)
 }
 
@@ -492,16 +489,13 @@ func (p *poolUpdateUserPhoto) Get() *UpdateUserPhoto {
 	if !ok {
 		return &UpdateUserPhoto{}
 	}
+	x.Photo = nil
+	x.PhotoID = 0
+	x.DeletedPhotoIDs = x.DeletedPhotoIDs[:0]
 	return x
 }
 
 func (p *poolUpdateUserPhoto) Put(x *UpdateUserPhoto) {
-	if x.Photo != nil {
-		*x.Photo = UserPhoto{}
-	}
-
-	x.PhotoID = 0
-	x.DeletedPhotoIDs = x.DeletedPhotoIDs[:0]
 	p.pool.Put(x)
 }
 
@@ -530,11 +524,11 @@ func (p *poolUpdateNotifySettings) Get() *UpdateNotifySettings {
 	if !ok {
 		return &UpdateNotifySettings{}
 	}
+	x.TeamID = 0
 	return x
 }
 
 func (p *poolUpdateNotifySettings) Put(x *UpdateNotifySettings) {
-	x.TeamID = 0
 	p.pool.Put(x)
 }
 
@@ -691,15 +685,12 @@ func (p *poolUpdateGroupPhoto) Get() *UpdateGroupPhoto {
 	if !ok {
 		return &UpdateGroupPhoto{}
 	}
+	x.Photo = nil
+	x.PhotoID = 0
 	return x
 }
 
 func (p *poolUpdateGroupPhoto) Put(x *UpdateGroupPhoto) {
-	if x.Photo != nil {
-		*x.Photo = GroupPhoto{}
-	}
-
-	x.PhotoID = 0
 	p.pool.Put(x)
 }
 
@@ -728,12 +719,12 @@ func (p *poolUpdateReadMessagesContents) Get() *UpdateReadMessagesContents {
 	if !ok {
 		return &UpdateReadMessagesContents{}
 	}
+	x.TeamID = 0
+	x.MessageIDs = x.MessageIDs[:0]
 	return x
 }
 
 func (p *poolUpdateReadMessagesContents) Put(x *UpdateReadMessagesContents) {
-	x.TeamID = 0
-	x.MessageIDs = x.MessageIDs[:0]
 	p.pool.Put(x)
 }
 
@@ -794,11 +785,11 @@ func (p *poolUpdateDraftMessage) Get() *UpdateDraftMessage {
 	if !ok {
 		return &UpdateDraftMessage{}
 	}
+	x.UpdateID = 0
 	return x
 }
 
 func (p *poolUpdateDraftMessage) Put(x *UpdateDraftMessage) {
-	x.UpdateID = 0
 	p.pool.Put(x)
 }
 
@@ -827,12 +818,12 @@ func (p *poolUpdateDraftMessageCleared) Get() *UpdateDraftMessageCleared {
 	if !ok {
 		return &UpdateDraftMessageCleared{}
 	}
+	x.UpdateID = 0
+	x.TeamID = 0
 	return x
 }
 
 func (p *poolUpdateDraftMessageCleared) Put(x *UpdateDraftMessageCleared) {
-	x.UpdateID = 0
-	x.TeamID = 0
 	p.pool.Put(x)
 }
 
@@ -861,11 +852,11 @@ func (p *poolUpdateDialogPinned) Get() *UpdateDialogPinned {
 	if !ok {
 		return &UpdateDialogPinned{}
 	}
+	x.TeamID = 0
 	return x
 }
 
 func (p *poolUpdateDialogPinned) Put(x *UpdateDialogPinned) {
-	x.TeamID = 0
 	p.pool.Put(x)
 }
 
@@ -894,11 +885,11 @@ func (p *poolUpdateDialogPinnedReorder) Get() *UpdateDialogPinnedReorder {
 	if !ok {
 		return &UpdateDialogPinnedReorder{}
 	}
+	x.Peer = x.Peer[:0]
 	return x
 }
 
 func (p *poolUpdateDialogPinnedReorder) Put(x *UpdateDialogPinnedReorder) {
-	x.Peer = x.Peer[:0]
 	p.pool.Put(x)
 }
 
@@ -927,16 +918,16 @@ func (p *poolUpdateAccountPrivacy) Get() *UpdateAccountPrivacy {
 	if !ok {
 		return &UpdateAccountPrivacy{}
 	}
-	return x
-}
-
-func (p *poolUpdateAccountPrivacy) Put(x *UpdateAccountPrivacy) {
 	x.ChatInvite = x.ChatInvite[:0]
 	x.LastSeen = x.LastSeen[:0]
 	x.PhoneNumber = x.PhoneNumber[:0]
 	x.ProfilePhoto = x.ProfilePhoto[:0]
 	x.ForwardedMessage = x.ForwardedMessage[:0]
 	x.Call = x.Call[:0]
+	return x
+}
+
+func (p *poolUpdateAccountPrivacy) Put(x *UpdateAccountPrivacy) {
 	p.pool.Put(x)
 }
 
@@ -965,14 +956,14 @@ func (p *poolUpdateLabelItemsAdded) Get() *UpdateLabelItemsAdded {
 	if !ok {
 		return &UpdateLabelItemsAdded{}
 	}
-	return x
-}
-
-func (p *poolUpdateLabelItemsAdded) Put(x *UpdateLabelItemsAdded) {
 	x.TeamID = 0
 	x.MessageIDs = x.MessageIDs[:0]
 	x.LabelIDs = x.LabelIDs[:0]
 	x.Labels = x.Labels[:0]
+	return x
+}
+
+func (p *poolUpdateLabelItemsAdded) Put(x *UpdateLabelItemsAdded) {
 	p.pool.Put(x)
 }
 
@@ -1001,14 +992,14 @@ func (p *poolUpdateLabelItemsRemoved) Get() *UpdateLabelItemsRemoved {
 	if !ok {
 		return &UpdateLabelItemsRemoved{}
 	}
-	return x
-}
-
-func (p *poolUpdateLabelItemsRemoved) Put(x *UpdateLabelItemsRemoved) {
 	x.TeamID = 0
 	x.MessageIDs = x.MessageIDs[:0]
 	x.LabelIDs = x.LabelIDs[:0]
 	x.Labels = x.Labels[:0]
+	return x
+}
+
+func (p *poolUpdateLabelItemsRemoved) Put(x *UpdateLabelItemsRemoved) {
 	p.pool.Put(x)
 }
 
@@ -1037,11 +1028,11 @@ func (p *poolUpdateLabelSet) Get() *UpdateLabelSet {
 	if !ok {
 		return &UpdateLabelSet{}
 	}
+	x.Labels = x.Labels[:0]
 	return x
 }
 
 func (p *poolUpdateLabelSet) Put(x *UpdateLabelSet) {
-	x.Labels = x.Labels[:0]
 	p.pool.Put(x)
 }
 
@@ -1070,11 +1061,11 @@ func (p *poolUpdateLabelDeleted) Get() *UpdateLabelDeleted {
 	if !ok {
 		return &UpdateLabelDeleted{}
 	}
+	x.LabelIDs = x.LabelIDs[:0]
 	return x
 }
 
 func (p *poolUpdateLabelDeleted) Put(x *UpdateLabelDeleted) {
-	x.LabelIDs = x.LabelIDs[:0]
 	p.pool.Put(x)
 }
 
@@ -1135,14 +1126,11 @@ func (p *poolUpdateMessagePoll) Get() *UpdateMessagePoll {
 	if !ok {
 		return &UpdateMessagePoll{}
 	}
+	x.Poll = nil
 	return x
 }
 
 func (p *poolUpdateMessagePoll) Put(x *UpdateMessagePoll) {
-	if x.Poll != nil {
-		*x.Poll = MediaPoll{}
-	}
-
 	p.pool.Put(x)
 }
 
@@ -1171,12 +1159,12 @@ func (p *poolUpdateBotCallbackQuery) Get() *UpdateBotCallbackQuery {
 	if !ok {
 		return &UpdateBotCallbackQuery{}
 	}
+	x.MessageID = 0
+	x.Data = nil
 	return x
 }
 
 func (p *poolUpdateBotCallbackQuery) Put(x *UpdateBotCallbackQuery) {
-	x.MessageID = 0
-	x.Data = x.Data[:0]
 	p.pool.Put(x)
 }
 
@@ -1205,15 +1193,12 @@ func (p *poolUpdateBotInlineQuery) Get() *UpdateBotInlineQuery {
 	if !ok {
 		return &UpdateBotInlineQuery{}
 	}
+	x.Offset = ""
+	x.Geo = nil
 	return x
 }
 
 func (p *poolUpdateBotInlineQuery) Put(x *UpdateBotInlineQuery) {
-	x.Offset = ""
-	if x.Geo != nil {
-		*x.Geo = GeoLocation{}
-	}
-
 	p.pool.Put(x)
 }
 
@@ -1242,14 +1227,11 @@ func (p *poolUpdateBotInlineSend) Get() *UpdateBotInlineSend {
 	if !ok {
 		return &UpdateBotInlineSend{}
 	}
+	x.Geo = nil
 	return x
 }
 
 func (p *poolUpdateBotInlineSend) Put(x *UpdateBotInlineSend) {
-	if x.Geo != nil {
-		*x.Geo = GeoLocation{}
-	}
-
 	p.pool.Put(x)
 }
 
@@ -1406,11 +1388,11 @@ func (p *poolUpdateCommunityMessage) Get() *UpdateCommunityMessage {
 	if !ok {
 		return &UpdateCommunityMessage{}
 	}
+	x.Entities = x.Entities[:0]
 	return x
 }
 
 func (p *poolUpdateCommunityMessage) Put(x *UpdateCommunityMessage) {
-	x.Entities = x.Entities[:0]
 	p.pool.Put(x)
 }
 

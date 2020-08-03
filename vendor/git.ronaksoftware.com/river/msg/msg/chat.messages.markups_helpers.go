@@ -28,14 +28,14 @@ func (p *poolReplyKeyboardMarkup) Get() *ReplyKeyboardMarkup {
 	if !ok {
 		return &ReplyKeyboardMarkup{}
 	}
-	return x
-}
-
-func (p *poolReplyKeyboardMarkup) Put(x *ReplyKeyboardMarkup) {
 	x.SingleUse = false
 	x.Selective = false
 	x.Resize = false
 	x.Rows = x.Rows[:0]
+	return x
+}
+
+func (p *poolReplyKeyboardMarkup) Put(x *ReplyKeyboardMarkup) {
 	p.pool.Put(x)
 }
 
@@ -64,11 +64,11 @@ func (p *poolReplyInlineMarkup) Get() *ReplyInlineMarkup {
 	if !ok {
 		return &ReplyInlineMarkup{}
 	}
+	x.Rows = x.Rows[:0]
 	return x
 }
 
 func (p *poolReplyInlineMarkup) Put(x *ReplyInlineMarkup) {
-	x.Rows = x.Rows[:0]
 	p.pool.Put(x)
 }
 
@@ -129,12 +129,12 @@ func (p *poolReplyKeyboardForceReply) Get() *ReplyKeyboardForceReply {
 	if !ok {
 		return &ReplyKeyboardForceReply{}
 	}
+	x.SingleUse = false
+	x.Selective = false
 	return x
 }
 
 func (p *poolReplyKeyboardForceReply) Put(x *ReplyKeyboardForceReply) {
-	x.SingleUse = false
-	x.Selective = false
 	p.pool.Put(x)
 }
 
@@ -163,11 +163,11 @@ func (p *poolKeyboardButtonRow) Get() *KeyboardButtonRow {
 	if !ok {
 		return &KeyboardButtonRow{}
 	}
+	x.Buttons = x.Buttons[:0]
 	return x
 }
 
 func (p *poolKeyboardButtonRow) Put(x *KeyboardButtonRow) {
-	x.Buttons = x.Buttons[:0]
 	p.pool.Put(x)
 }
 
@@ -196,11 +196,11 @@ func (p *poolKeyboardButtonEnvelope) Get() *KeyboardButtonEnvelope {
 	if !ok {
 		return &KeyboardButtonEnvelope{}
 	}
+	x.Data = nil
 	return x
 }
 
 func (p *poolKeyboardButtonEnvelope) Put(x *KeyboardButtonEnvelope) {
-	x.Data = x.Data[:0]
 	p.pool.Put(x)
 }
 
@@ -293,11 +293,11 @@ func (p *poolButtonCallback) Get() *ButtonCallback {
 	if !ok {
 		return &ButtonCallback{}
 	}
+	x.Data = nil
 	return x
 }
 
 func (p *poolButtonCallback) Put(x *ButtonCallback) {
-	x.Data = x.Data[:0]
 	p.pool.Put(x)
 }
 
@@ -390,11 +390,11 @@ func (p *poolButtonSwitchInline) Get() *ButtonSwitchInline {
 	if !ok {
 		return &ButtonSwitchInline{}
 	}
+	x.SamePeer = false
 	return x
 }
 
 func (p *poolButtonSwitchInline) Put(x *ButtonSwitchInline) {
-	x.SamePeer = false
 	p.pool.Put(x)
 }
 

@@ -28,10 +28,6 @@ func (p *poolClientSendMessageMedia) Get() *ClientSendMessageMedia {
 	if !ok {
 		return &ClientSendMessageMedia{}
 	}
-	return x
-}
-
-func (p *poolClientSendMessageMedia) Put(x *ClientSendMessageMedia) {
 	x.Caption = ""
 	x.FileName = ""
 	x.FilePath = ""
@@ -47,6 +43,10 @@ func (p *poolClientSendMessageMedia) Put(x *ClientSendMessageMedia) {
 	x.ThumbID = 0
 	x.FileTotalParts = 0
 	x.Entities = x.Entities[:0]
+	return x
+}
+
+func (p *poolClientSendMessageMedia) Put(x *ClientSendMessageMedia) {
 	p.pool.Put(x)
 }
 
@@ -75,17 +75,14 @@ func (p *poolClientGlobalSearch) Get() *ClientGlobalSearch {
 	if !ok {
 		return &ClientGlobalSearch{}
 	}
+	x.Text = ""
+	x.LabelIDs = x.LabelIDs[:0]
+	x.Peer = nil
+	x.SenderID = 0
 	return x
 }
 
 func (p *poolClientGlobalSearch) Put(x *ClientGlobalSearch) {
-	x.Text = ""
-	x.LabelIDs = x.LabelIDs[:0]
-	if x.Peer != nil {
-		*x.Peer = InputPeer{}
-	}
-
-	x.SenderID = 0
 	p.pool.Put(x)
 }
 
@@ -178,15 +175,12 @@ func (p *poolClientClearCachedMedia) Get() *ClientClearCachedMedia {
 	if !ok {
 		return &ClientClearCachedMedia{}
 	}
+	x.Peer = nil
+	x.MediaTypes = x.MediaTypes[:0]
 	return x
 }
 
 func (p *poolClientClearCachedMedia) Put(x *ClientClearCachedMedia) {
-	if x.Peer != nil {
-		*x.Peer = InputPeer{}
-	}
-
-	x.MediaTypes = x.MediaTypes[:0]
 	p.pool.Put(x)
 }
 
@@ -439,24 +433,21 @@ func (p *poolClientPendingMessage) Get() *ClientPendingMessage {
 	if !ok {
 		return &ClientPendingMessage{}
 	}
-	return x
-}
-
-func (p *poolClientPendingMessage) Put(x *ClientPendingMessage) {
 	x.TeamID = 0
 	x.Entities = x.Entities[:0]
 	x.MediaType = 0
-	x.Media = x.Media[:0]
+	x.Media = nil
 	x.ClearDraft = false
 	x.FileUploadID = ""
 	x.ThumbUploadID = ""
 	x.FileID = 0
 	x.ThumbID = 0
-	x.Sha256 = x.Sha256[:0]
-	if x.ServerFile != nil {
-		*x.ServerFile = FileLocation{}
-	}
+	x.Sha256 = nil
+	x.ServerFile = nil
+	return x
+}
 
+func (p *poolClientPendingMessage) Put(x *ClientPendingMessage) {
 	p.pool.Put(x)
 }
 
@@ -485,15 +476,15 @@ func (p *poolClientSearchResult) Get() *ClientSearchResult {
 	if !ok {
 		return &ClientSearchResult{}
 	}
-	return x
-}
-
-func (p *poolClientSearchResult) Put(x *ClientSearchResult) {
 	x.Messages = x.Messages[:0]
 	x.Users = x.Users[:0]
 	x.Groups = x.Groups[:0]
 	x.MatchedUsers = x.MatchedUsers[:0]
 	x.MatchedGroups = x.MatchedGroups[:0]
+	return x
+}
+
+func (p *poolClientSearchResult) Put(x *ClientSearchResult) {
 	p.pool.Put(x)
 }
 
@@ -522,11 +513,11 @@ func (p *poolClientFilesMany) Get() *ClientFilesMany {
 	if !ok {
 		return &ClientFilesMany{}
 	}
+	x.Gifs = x.Gifs[:0]
 	return x
 }
 
 func (p *poolClientFilesMany) Put(x *ClientFilesMany) {
-	x.Gifs = x.Gifs[:0]
 	p.pool.Put(x)
 }
 
@@ -555,10 +546,6 @@ func (p *poolClientFile) Get() *ClientFile {
 	if !ok {
 		return &ClientFile{}
 	}
-	return x
-}
-
-func (p *poolClientFile) Put(x *ClientFile) {
 	x.MimeType = ""
 	x.UserID = 0
 	x.GroupID = 0
@@ -570,6 +557,10 @@ func (p *poolClientFile) Put(x *ClientFile) {
 	x.MD5Checksum = ""
 	x.WallpaperID = 0
 	x.Attributes = x.Attributes[:0]
+	return x
+}
+
+func (p *poolClientFile) Put(x *ClientFile) {
 	p.pool.Put(x)
 }
 
@@ -630,11 +621,11 @@ func (p *poolClientCachedMediaInfo) Get() *ClientCachedMediaInfo {
 	if !ok {
 		return &ClientCachedMediaInfo{}
 	}
+	x.MediaInfo = x.MediaInfo[:0]
 	return x
 }
 
 func (p *poolClientCachedMediaInfo) Put(x *ClientCachedMediaInfo) {
-	x.MediaInfo = x.MediaInfo[:0]
 	p.pool.Put(x)
 }
 
@@ -663,11 +654,11 @@ func (p *poolClientPeerMediaInfo) Get() *ClientPeerMediaInfo {
 	if !ok {
 		return &ClientPeerMediaInfo{}
 	}
+	x.Media = x.Media[:0]
 	return x
 }
 
 func (p *poolClientPeerMediaInfo) Put(x *ClientPeerMediaInfo) {
-	x.Media = x.Media[:0]
 	p.pool.Put(x)
 }
 
@@ -760,13 +751,13 @@ func (p *poolRecentSearchMany) Get() *RecentSearchMany {
 	if !ok {
 		return &RecentSearchMany{}
 	}
+	x.RecentSearches = x.RecentSearches[:0]
+	x.Users = x.Users[:0]
+	x.Groups = x.Groups[:0]
 	return x
 }
 
 func (p *poolRecentSearchMany) Put(x *RecentSearchMany) {
-	x.RecentSearches = x.RecentSearches[:0]
-	x.Users = x.Users[:0]
-	x.Groups = x.Groups[:0]
 	p.pool.Put(x)
 }
 

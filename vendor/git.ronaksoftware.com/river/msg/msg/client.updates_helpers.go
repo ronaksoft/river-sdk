@@ -59,11 +59,11 @@ func (p *poolClientUpdateMessagesDeleted) Get() *ClientUpdateMessagesDeleted {
 	if !ok {
 		return &ClientUpdateMessagesDeleted{}
 	}
+	x.MessageIDs = x.MessageIDs[:0]
 	return x
 }
 
 func (p *poolClientUpdateMessagesDeleted) Put(x *ClientUpdateMessagesDeleted) {
-	x.MessageIDs = x.MessageIDs[:0]
 	p.pool.Put(x)
 }
 

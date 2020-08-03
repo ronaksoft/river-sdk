@@ -123,18 +123,12 @@ func (p *poolWallPaperUpload) Get() *WallPaperUpload {
 	if !ok {
 		return &WallPaperUpload{}
 	}
+	x.UploadedFile = nil
+	x.File = nil
 	return x
 }
 
 func (p *poolWallPaperUpload) Put(x *WallPaperUpload) {
-	if x.UploadedFile != nil {
-		*x.UploadedFile = InputFile{}
-	}
-
-	if x.File != nil {
-		*x.File = InputDocument{}
-	}
-
 	p.pool.Put(x)
 }
 
@@ -227,16 +221,16 @@ func (p *poolWallPaperSettings) Get() *WallPaperSettings {
 	if !ok {
 		return &WallPaperSettings{}
 	}
-	return x
-}
-
-func (p *poolWallPaperSettings) Put(x *WallPaperSettings) {
 	x.Blur = false
 	x.Motion = false
 	x.BackgroundColour = 0
 	x.BackgroundSecondColour = 0
 	x.Opacity = 0
 	x.Rotation = 0
+	return x
+}
+
+func (p *poolWallPaperSettings) Put(x *WallPaperSettings) {
 	p.pool.Put(x)
 }
 
@@ -265,22 +259,16 @@ func (p *poolWallPaper) Get() *WallPaper {
 	if !ok {
 		return &WallPaper{}
 	}
-	return x
-}
-
-func (p *poolWallPaper) Put(x *WallPaper) {
 	x.Creator = false
 	x.Default = false
 	x.Pattern = false
 	x.Dark = false
-	if x.Document != nil {
-		*x.Document = Document{}
-	}
+	x.Document = nil
+	x.Settings = nil
+	return x
+}
 
-	if x.Settings != nil {
-		*x.Settings = WallPaperSettings{}
-	}
-
+func (p *poolWallPaper) Put(x *WallPaper) {
 	p.pool.Put(x)
 }
 
@@ -309,12 +297,12 @@ func (p *poolWallPapersMany) Get() *WallPapersMany {
 	if !ok {
 		return &WallPapersMany{}
 	}
+	x.WallPapers = x.WallPapers[:0]
+	x.Empty = false
 	return x
 }
 
 func (p *poolWallPapersMany) Put(x *WallPapersMany) {
-	x.WallPapers = x.WallPapers[:0]
-	x.Empty = false
 	p.pool.Put(x)
 }
 
