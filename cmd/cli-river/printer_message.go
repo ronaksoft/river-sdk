@@ -71,16 +71,17 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		tableUsers := tablewriter.NewWriter(bufUsers)
 		tableUsers.SetCaption(true, "Users")
 		tableUsers.SetHeader([]string{
-			"FirstName", "LastName", "Username", "User ID", "AccessHash",
+			"FirstName", "LastName", "Username", "User ID", "AccessHash", "Phone",
 		})
 
-		for _, u := range x.Users {
+		for _, u := range x.ContactUsers {
 			tableUsers.Append([]string{
 				u.FirstName,
 				u.LastName,
 				u.Username,
 				fmt.Sprintf("%d", u.ID),
 				fmt.Sprintf("%d", u.AccessHash),
+				u.Phone,
 			})
 		}
 		tableUsers.Render()

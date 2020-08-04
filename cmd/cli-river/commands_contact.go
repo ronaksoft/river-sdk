@@ -74,6 +74,7 @@ var ContactAdd = &ishell.Cmd{
 		req.FirstName = fnGetFirstName(c)
 		req.LastName = fnGetLastName(c)
 		req.Phone = fnGetPhone(c)
+		req.User = fnGetUser(c)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsAdd, reqBytes, reqDelegate); err != nil {
