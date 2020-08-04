@@ -84,24 +84,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			})
 		}
 		tableUsers.Render()
-		bufContacts := new(bytes.Buffer)
-		tableContacts := tablewriter.NewWriter(bufContacts)
-		tableContacts.SetCaption(true, "Contacts")
-		tableContacts.SetHeader([]string{
-			"Client ID", "FirstName", "LastName", "Phone", "ClientID",
-		})
-
-		for _, u := range x.Contacts {
-			tableContacts.Append([]string{
-				fmt.Sprintf("%d", u.ClientID),
-				u.FirstName,
-				u.LastName,
-				u.Phone,
-			})
-		}
-		tableContacts.Render()
 		_Shell.Println("\r\n" + bufUsers.String())
-		_Shell.Println("\r\n" + bufContacts.String())
 	case msg.C_MessagesDialogs:
 		x := new(msg.MessagesDialogs)
 		x.Unmarshal(envelope.Message)

@@ -125,7 +125,7 @@ func countDialogUnread(txn *badger.Txn, teamID, peerID int64, peerType int32, us
 	return
 }
 
-func (r *repoDialogs) updateLastUpdate(teamID int64, peerID int64, peerType int32, lastUpdate int64) error {
+func updateDialogLastUpdate(teamID int64, peerID int64, peerType int32, lastUpdate int64) error {
 	return r.bunt.Update(func(tx *buntdb.Tx) error {
 		_, _, err := tx.Set(
 			fmt.Sprintf("%s.%d.%d.%d", indexDialogs, teamID, peerID, peerType),
@@ -150,7 +150,7 @@ func (r *repoDialogs) SaveNew(dialog *msg.Dialog, lastUpdate int64) (err error) 
 		if err != nil {
 			return err
 		}
-		r.updateLastUpdate(dialog.TeamID, dialog.PeerID, dialog.PeerType, lastUpdate)
+		updateDialogLastUpdate(dialog.TeamID, dialog.PeerID, dialog.PeerType, lastUpdate)
 		return nil
 	})
 }

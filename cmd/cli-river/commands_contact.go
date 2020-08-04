@@ -84,6 +84,21 @@ var ContactAdd = &ishell.Cmd{
 	},
 }
 
+var ContactDelete = &ishell.Cmd{
+	Name: "Delete",
+	Func: func(c *ishell.Context) {
+		req := msg.ContactsDelete{}
+		req.UserIDs = append(req.UserIDs, fnGetUserID(c))
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsDelete, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
 var ContactSearch = &ishell.Cmd{
 	Name: "Search",
 	Func: func(c *ishell.Context) {
@@ -135,6 +150,7 @@ func init() {
 	Contact.AddCmd(ContactGet)
 	Contact.AddCmd(ContactGetTeam)
 	Contact.AddCmd(ContactAdd)
+	Contact.AddCmd(ContactDelete)
 	Contact.AddCmd(ContactGetTopPeers)
 	Contact.AddCmd(ContactDeleteAll)
 	Contact.AddCmd(ContactSearch)

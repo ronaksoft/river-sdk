@@ -133,7 +133,7 @@ func (r *River) CancelUpload(clusterID int32, fileID int64, accessHash int64) {
 	r.fileCtrl.CancelUploadRequest(uploadRequest.GetID())
 }
 
-// ResumeDownload must be called if for any reason the upload of a ClientSendMediaMessage failed,
+// ResumeUpload must be called if for any reason the upload of a ClientSendMediaMessage failed,
 // then client should call this function by providing the pending message id, or if delete the pending
 // message.
 func (r *River) ResumeUpload(pendingMessageID int64) {

@@ -261,13 +261,29 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, userID int64) error {
 		}
 
 		dialog, err := getDialog(txn, message.TeamID, message.PeerID, message.PeerType)
-		if err != nil {
+		switch err {
+		case nil:
+		case badger.ErrKeyNotFound:
+			logs.Info("We got new message but we don't have the dialog",
+				zap.Int64("TeamID", message.TeamID),
+				zap.Int64("MsgID", message.ID),
+			)
+			return nil
+		default:
 			return err
+
 		}
 		if message.ID > dialog.TopMessageID {
 			dialog.TopMessageID = message.ID
 			if !dialog.Pinned {
-				Dialogs.updateLastUpdate(message.TeamID, message.PeerID, message.PeerType, message.CreatedOn)
+				err = updateDialogLastUpdate(message.TeamID, message.PeerID, message.PeerType, message.CreatedOn)
+				if err != nil {
+					logs.Info("We got error on update dialog last update",
+						zap.Int64("TeamID", message.TeamID),
+						zap.Int64("PeerID", message.PeerID),
+						zap.Int64("MsgID", message.ID),
+					)
+				}
 			}
 			// Update counters if necessary
 			if message.SenderID != userID {

@@ -660,6 +660,7 @@ func (r *River) contactsDelete(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	}
 
 	_ = repo.Users.DeleteContact(req.UserIDs...)
+	_ = repo.System.SaveInt(domain.SkContactsGetHash, 0)
 
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 	return
@@ -724,6 +725,7 @@ func (r *River) contactsGetTopPeers(in, out *msg.MessageEnvelope, timeoutCB doma
 			}
 		}
 	}
+
 	res.Users, _ = repo.Users.GetMany(mUsers.ToArray())
 	if len(res.Users) != len(mUsers) {
 		logs.Warn("River found unmatched top peers users", zap.Int("Got", len(res.Users)), zap.Int("Need", len(mUsers)))

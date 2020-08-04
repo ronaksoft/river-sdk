@@ -541,7 +541,14 @@ func (r *repoUsers) DeleteAllContacts() error {
 func (r *repoUsers) UpdatePhoto(userID int64, userPhoto *msg.UserPhoto) error {
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		user, err := getUserByKey(txn, getUserKey(userID))
-		if err != nil {
+		switch err {
+		case nil:
+		case badger.ErrKeyNotFound:
+			logs.Warn("We got error on update user's photo, but user does not exists",
+				zap.Int64("UserID", userID),
+			)
+			return nil
+		default:
 			return err
 		}
 		user.Photo = userPhoto
