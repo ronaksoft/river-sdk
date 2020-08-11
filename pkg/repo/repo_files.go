@@ -645,6 +645,7 @@ func (r *repoFiles) ClearCache() {
 		})
 	}
 }
+
 func (r *repoFiles) GetFilePath(clientFile *msg.ClientFile) string {
 	switch clientFile.Type {
 	case msg.Gif:

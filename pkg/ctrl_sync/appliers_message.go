@@ -326,6 +326,7 @@ func (ctrl *Controller) savedGifs(e *msg.MessageEnvelope) {
 	}
 }
 
+// botResults
 func (ctrl *Controller) botResults(e *msg.MessageEnvelope) {
 	br := &msg.BotResults{}
 	err := br.Unmarshal(e.Message)
