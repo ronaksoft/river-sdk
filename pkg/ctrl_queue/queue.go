@@ -142,8 +142,13 @@ func (ctrl *Controller) executor(req request) {
 
 	select {
 	case <-time.After(req.Timeout):
+		reqCB := domain.GetRequestCallback(req.ID)
+		if reqCB == nil {
+			return
+		}
 		switch req.MessageEnvelope.Constructor {
 		case msg.C_MessagesSend, msg.C_MessagesSendMedia:
+
 			pmsg, err := repo.PendingMessages.GetByRandomID(int64(req.ID))
 			if err == nil && pmsg != nil {
 				ctrl.addToWaitingList(&req)
