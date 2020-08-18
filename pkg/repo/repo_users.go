@@ -488,6 +488,7 @@ func (r *repoUsers) DeletePhoneContact(phoneContacts ...*msg.PhoneContact) error
 		return nil
 	})
 }
+
 func (r *repoUsers) GetPhoneContacts(limit int) ([]*msg.PhoneContact, error) {
 	phoneContacts := make([]*msg.PhoneContact, 0, limit)
 	err := badgerView(func(txn *badger.Txn) error {

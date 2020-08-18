@@ -575,16 +575,20 @@ func (r *River) contactsAdd(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 
 	user, _ := repo.Users.Get(req.User.UserID)
 	if user != nil {
+		user.FirstName = req.FirstName
+		user.LastName = req.LastName
+		user.Phone = req.Phone
 		_ = repo.Users.SaveContact(&msg.ContactUser{
-			ID:         req.User.UserID,
-			FirstName:  req.FirstName,
-			LastName:   req.LastName,
+			ID:         user.ID,
+			FirstName:  user.FirstName,
+			LastName:   user.LastName,
 			AccessHash: user.AccessHash,
-			Phone:      req.Phone,
+			Phone:      user.Phone,
 			Username:   user.Username,
 			ClientID:   0,
 			Photo:      user.Photo,
 		})
+		_ = repo.Users.Save(user)
 	}
 
 	// reset contacts hash to update the contacts
@@ -637,6 +641,7 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	// extract differences between existing contacts and new contacts
 	_, contacts := repo.Users.GetContacts()
 	diffContacts := domain.ExtractsContactsDifference(contacts, req.Contacts)
+
 	err = repo.Users.SavePhoneContact(diffContacts...)
 	if err != nil {
 		logs.Error("We got error on saving phone contacts in to the db", zap.Error(err))
@@ -647,6 +652,7 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 		return
 	}
+
 	// chunk contacts by size of 50 and send them to server
 	r.syncCtrl.ContactsImport(req.Replace, successCB, out)
 }

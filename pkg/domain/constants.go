@@ -39,7 +39,7 @@ const (
 	SkContactsGetHash    = "CONTACTS_GET_HASH"
 	SkSystemSalts        = "SERVER_SALTS"
 	SkReIndexTime        = "RE_INDEX_TS"
-	SkGifHash            = " GIF_HASH"
+	SkGifHash            = "GIF_HASH"
 )
 
 // NetworkStatus network controller status
