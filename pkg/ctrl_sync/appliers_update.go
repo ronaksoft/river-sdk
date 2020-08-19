@@ -699,6 +699,8 @@ func (ctrl *Controller) updateLabelItemsRemoved(u *msg.UpdateEnvelope) ([]*msg.U
 
 	logs.Info("SyncCtrl applies UpdateLabelItemsRemoved",
 		zap.Int64("UpdateID", x.UpdateID),
+		zap.Int64s("MsgIDs", x.MessageIDs),
+		zap.Int32s("LabelIDs", x.LabelIDs),
 	)
 
 	if len(x.MessageIDs) != 0 {
