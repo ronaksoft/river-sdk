@@ -663,6 +663,8 @@ func (ctrl *Controller) updateLabelItemsAdded(u *msg.UpdateEnvelope) ([]*msg.Upd
 
 	logs.Info("SyncCtrl applies UpdateLabelItemsAdded",
 		zap.Int64("UpdateID", x.UpdateID),
+		zap.Int64s("MsgIDs", x.MessageIDs),
+		zap.Int32s("LabelIDs", x.LabelIDs),
 	)
 
 	if len(x.MessageIDs) != 0 {

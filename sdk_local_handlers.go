@@ -1386,6 +1386,10 @@ func (r *River) labelAddToMessage(in, out *msg.MessageEnvelope, timeoutCB domain
 		return
 	}
 
+	logs.Debug("LabelsAddToMessage local handler called",
+		zap.Int64s("MsgIDs", req.MessageIDs),
+		zap.Int32s("LabelIDs", req.LabelIDs),
+	)
 	if len(req.MessageIDs) != 0 {
 		_ = repo.Labels.AddLabelsToMessages(req.LabelIDs, r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
 		for _, labelID := range req.LabelIDs {
@@ -1412,6 +1416,11 @@ func (r *River) labelRemoveFromMessage(in, out *msg.MessageEnvelope, timeoutCB d
 		successCB(out)
 		return
 	}
+
+	logs.Debug("LabelsRemoveFromMessage local handler called",
+		zap.Int64s("MsgIDs", req.MessageIDs),
+		zap.Int32s("LabelIDs", req.LabelIDs),
+	)
 
 	if len(req.MessageIDs) != 0 {
 		_ = repo.Labels.RemoveLabelsFromMessages(req.LabelIDs, r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
