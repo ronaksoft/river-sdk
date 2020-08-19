@@ -336,7 +336,6 @@ func (ctrl *Controller) botResults(e *msg.MessageEnvelope) {
 	}
 
 	for _, m := range br.Results {
-
 		if m == nil || m.Message == nil || m.Type != msg.MediaTypeDocument || m.Message.MediaData == nil {
 			logs.Info("SyncCtrl botResults message or media is nil or not mediaDocument", zap.Error(err))
 			continue

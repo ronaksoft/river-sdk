@@ -1378,6 +1378,50 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 	}
 }
 
+func (r *River) labelAddToMessage(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.LabelsAddToMessage{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	if len(req.MessageIDs) != 0 {
+		_ = repo.Labels.AddLabelsToMessages(req.LabelIDs, r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
+		for _, labelID := range req.LabelIDs {
+			bar := repo.Labels.GetFilled(labelID)
+			for _, msgID := range req.MessageIDs {
+				if msgID > bar.MaxID {
+					_ = repo.Labels.Fill(labelID, bar.MaxID, msgID)
+				} else if msgID < bar.MinID {
+					_ = repo.Labels.Fill(labelID, msgID, bar.MinID)
+				}
+			}
+		}
+	}
+
+	// send the request to server
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+
+}
+
+func (r *River) labelRemoveFromMessage(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.LabelsRemoveFromMessage{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	if len(req.MessageIDs) != 0 {
+		_ = repo.Labels.RemoveLabelsFromMessages(req.LabelIDs, r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
+	}
+
+	// send the request to server
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+
+}
+
 func fillLabelItems(out *msg.MessageEnvelope, messages []*msg.UserMessage, users []*msg.User, groups []*msg.Group, requestID uint64, successCB domain.MessageHandler) {
 	res := new(msg.LabelItems)
 	res.Messages = messages

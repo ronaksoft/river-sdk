@@ -148,7 +148,6 @@ func (ctrl *Controller) executor(req request) {
 		}
 		switch req.MessageEnvelope.Constructor {
 		case msg.C_MessagesSend, msg.C_MessagesSendMedia:
-
 			pmsg, err := repo.PendingMessages.GetByRandomID(int64(req.ID))
 			if err == nil && pmsg != nil {
 				ctrl.addToWaitingList(&req)

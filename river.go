@@ -684,6 +684,8 @@ func (r *River) registerCommandHandlers() {
 		msg.C_MessagesClearDraft:            r.messagesClearDraft,
 		msg.C_LabelsGet:                     r.labelsGet,
 		msg.C_LabelsListItems:               r.labelsListItems,
+		msg.C_LabelsAddToMessage:            r.labelAddToMessage,
+		msg.C_LabelsRemoveFromMessage:       r.labelRemoveFromMessage,
 		msg.C_ClientGlobalSearch:            r.clientGlobalSearch,
 		msg.C_ClientContactSearch:           r.clientContactSearch,
 		msg.C_ClientGetCachedMedia:          r.clientGetCachedMedia,
