@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <cherrytree>
-	<node custom_icon_id="0" foreground="" is_bold="False" name="git.ronaksoftware.com" prog_lang="custom-colors" readonly="False" tags="" ts_creation="1550993020.84" ts_lastsave="1550993031.63" unique_id="1">
+	<node custom_icon_id="0" foreground="" is_bold="False" name="git.ronaksoft.com" prog_lang="custom-colors" readonly="False" tags="" ts_creation="1550993020.84" ts_lastsave="1550993031.63" unique_id="1">
 		<rich_text></rich_text>
 		<node custom_icon_id="0" foreground="" is_bold="False" name="ronak" prog_lang="custom-colors" readonly="False" tags="" ts_creation="1550993031.63" ts_lastsave="1550993062.46" unique_id="2">
 			<rich_text></rich_text>
@@ -159,7 +159,7 @@ for more information check cli </rich_text>
 </rich_text>
 					<rich_text weight="heavy">msg</rich_text>
 					<rich_text> this package is duplication of </rich_text>
-					<rich_text link="webs http://git.ronaksoftware.com/river/server/messages/ext" weight="heavy">git.ronaksoftware.com/river/server/messages/ext</rich_text>
+					<rich_text link="webs http://git.ronaksoft.com/river/server/messages/ext" weight="heavy">git.ronaksoft.com/river/server/messages/ext</rich_text>
 					<rich_text> 
     seperated this package in order to prevent govendor update everytime that proto messages change</rich_text>
 				</node>

@@ -1,8 +1,8 @@
 package repo_test
 
 import (
-	"git.ronaksoftware.com/river/msg/msg"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/ronak/riversdk/pkg/repo"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 	"time"

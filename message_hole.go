@@ -1,6 +1,6 @@
 package riversdk
 
-import messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
+import messageHole "git.ronaksoft.com/ronak/riversdk/pkg/message_hole"
 
 /*
    Creation Time: 2019 - Jul - 09

@@ -1,10 +1,10 @@
 package repo
 
 import (
-	"git.ronaksoftware.com/river/msg/msg"
-	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
-	"git.ronaksoftware.com/ronak/riversdk/internal/pools"
-	"git.ronaksoftware.com/ronak/riversdk/internal/tools"
+	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/ronak/riversdk/internal/logs"
+	"git.ronaksoft.com/ronak/riversdk/internal/pools"
+	"git.ronaksoft.com/ronak/riversdk/internal/tools"
 	"github.com/dgraph-io/badger/v2"
 )
 

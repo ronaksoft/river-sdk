@@ -2,7 +2,7 @@ package logs
 
 import (
 	"fmt"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
 	"github.com/getsentry/sentry-go"
 	"go.uber.org/zap/zapcore"
 	"time"

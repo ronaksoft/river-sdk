@@ -2,12 +2,12 @@ package riversdk
 
 import (
 	"fmt"
-	"git.ronaksoftware.com/river/msg/msg"
-	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
-	mon "git.ronaksoftware.com/ronak/riversdk/internal/monitoring"
-	fileCtrl "git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_file"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/salt"
+	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/ronak/riversdk/internal/logs"
+	mon "git.ronaksoft.com/ronak/riversdk/internal/monitoring"
+	fileCtrl "git.ronaksoft.com/ronak/riversdk/pkg/ctrl_file"
+	"git.ronaksoft.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoft.com/ronak/riversdk/pkg/salt"
 	"go.uber.org/zap"
 	"sort"
 	"strconv"
@@ -15,10 +15,10 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_queue"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_sync"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoft.com/ronak/riversdk/pkg/ctrl_network"
+	"git.ronaksoft.com/ronak/riversdk/pkg/ctrl_queue"
+	"git.ronaksoft.com/ronak/riversdk/pkg/ctrl_sync"
+	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
 )
 
 var (

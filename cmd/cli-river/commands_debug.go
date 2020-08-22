@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
-	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
+	"git.ronaksoft.com/ronak/riversdk/internal/logs"
 	"go.uber.org/zap/zapcore"
 	"io/ioutil"
 	"mime"
@@ -12,11 +12,11 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoft.com/ronak/riversdk/pkg/repo"
 	"github.com/kr/pretty"
 
-	"git.ronaksoftware.com/river/msg/msg"
+	"git.ronaksoft.com/river/msg/msg"
 	"gopkg.in/abiosoft/ishell.v2"
 )
 

@@ -1,7 +1,7 @@
-module git.ronaksoftware.com/ronak/riversdk
+module git.ronaksoft.com/ronak/riversdk
 
 require (
-	git.ronaksoftware.com/river/msg v0.0.0-20200803070731-ddc9f6f3ed93
+	git.ronaksoft.com/river/msg v0.0.0-20200822130838-0ae80e805d50
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
 	github.com/beeker1121/goque v2.1.0+incompatible
@@ -22,7 +22,6 @@ require (
 	github.com/gobwas/pool v0.2.0
 	github.com/gobwas/ws v1.0.2
 	github.com/gogo/protobuf v1.3.1
-	github.com/iRezaaa/mobile v0.0.0-20191126111539-45e4d750f768 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/juju/ratelimit v1.0.1
 	github.com/kr/pretty v0.2.0

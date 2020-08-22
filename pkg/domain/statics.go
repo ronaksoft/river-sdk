@@ -24,7 +24,7 @@ import (
 	"time"
 	"unsafe"
 
-	"git.ronaksoftware.com/river/msg/msg"
+	"git.ronaksoft.com/river/msg/msg"
 	"github.com/nyaruka/phonenumbers"
 )
 

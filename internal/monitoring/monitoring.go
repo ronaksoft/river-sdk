@@ -1,9 +1,9 @@
 package mon
 
 import (
-	"git.ronaksoftware.com/river/msg/msg"
-	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/ronak/riversdk/internal/logs"
+	"git.ronaksoft.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
 	"sync"
 	"time"

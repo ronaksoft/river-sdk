@@ -2,7 +2,7 @@ package logs
 
 import (
 	"fmt"
-	"git.ronaksoftware.com/river/msg/msg"
+	"git.ronaksoft.com/river/msg/msg"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"net/http"

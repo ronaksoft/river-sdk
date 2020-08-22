@@ -1,7 +1,7 @@
 package riversdk
 
 import (
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoft.com/ronak/riversdk/pkg/repo"
 	"sync"
 )
 

@@ -3,17 +3,17 @@ package riversdk
 import (
 	"encoding/json"
 	"fmt"
-	messageHole "git.ronaksoftware.com/ronak/riversdk/pkg/message_hole"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/uiexec"
+	messageHole "git.ronaksoft.com/ronak/riversdk/pkg/message_hole"
+	"git.ronaksoft.com/ronak/riversdk/pkg/uiexec"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/river/msg/msg"
-	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/ronak/riversdk/internal/logs"
+	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoft.com/ronak/riversdk/pkg/repo"
 	"go.uber.org/zap"
 )
 

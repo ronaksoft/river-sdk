@@ -2,7 +2,7 @@ package tools
 
 import (
 	"encoding/binary"
-	"git.ronaksoftware.com/ronak/riversdk/internal/pools"
+	"git.ronaksoft.com/ronak/riversdk/internal/pools"
 	"reflect"
 	"strconv"
 	"strings"

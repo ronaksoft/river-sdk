@@ -1,5 +1,5 @@
-# git.ronaksoftware.com/river/msg v0.0.0-20200803070731-ddc9f6f3ed93
-git.ronaksoftware.com/river/msg/msg
+# git.ronaksoft.com/river/msg v0.0.0-20200822130838-0ae80e805d50
+git.ronaksoft.com/river/msg/msg
 # github.com/DataDog/zstd v1.4.1
 github.com/DataDog/zstd
 # github.com/RoaringBitmap/roaring v0.4.21

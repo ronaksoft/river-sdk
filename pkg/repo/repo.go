@@ -2,8 +2,8 @@ package repo
 
 import (
 	"fmt"
-	"git.ronaksoftware.com/river/msg/msg"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/analysis/lang/en"
@@ -16,7 +16,7 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
+	"git.ronaksoft.com/ronak/riversdk/internal/logs"
 	"github.com/dgraph-io/badger/v2"
 	"go.uber.org/zap"
 

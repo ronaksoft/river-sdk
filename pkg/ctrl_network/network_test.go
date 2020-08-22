@@ -1,10 +1,10 @@
 package networkCtrl_test
 
 import (
-	"git.ronaksoftware.com/river/msg/msg"
-	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/ctrl_network"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/ronak/riversdk/internal/logs"
+	"git.ronaksoft.com/ronak/riversdk/pkg/ctrl_network"
+	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
 	"go.uber.org/zap"
 	"sync/atomic"
 	"testing"

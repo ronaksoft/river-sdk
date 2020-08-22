@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"git.ronaksoftware.com/ronak/riversdk"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoft.com/ronak/riversdk"
+	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
 	"github.com/fatih/color"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/abiosoft/ishell.v2"

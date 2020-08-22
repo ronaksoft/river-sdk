@@ -2,7 +2,7 @@ package tools_test
 
 import (
 	"fmt"
-	"git.ronaksoftware.com/ronak/riversdk/internal/tools"
+	"git.ronaksoft.com/ronak/riversdk/internal/tools"
 	"sync"
 	"testing"
 )

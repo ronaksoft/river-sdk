@@ -1,8 +1,8 @@
 package riversdk
 
 import (
-	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
-	"git.ronaksoftware.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoft.com/ronak/riversdk/internal/logs"
+	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
 	"go.uber.org/zap"
 )
 

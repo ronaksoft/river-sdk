@@ -3,7 +3,7 @@
 package networkCtrl
 
 import (
-	"git.ronaksoftware.com/ronak/riversdk/internal/logs"
+	"git.ronaksoft.com/ronak/riversdk/internal/logs"
 	"go.uber.org/zap"
 	"net"
 	"syscall"

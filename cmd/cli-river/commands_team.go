@@ -1,8 +1,8 @@
 package main
 
 import (
-	"git.ronaksoftware.com/river/msg/msg"
-	"git.ronaksoftware.com/ronak/riversdk"
+	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/ronak/riversdk"
 	"gopkg.in/abiosoft/ishell.v2"
 )
 

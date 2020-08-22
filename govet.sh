@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#go get -u git.ronaksoftware.com/river/msg
+#go get -u git.ronaksoft.com/river/msg
 go mod vendor
 go generate ./...
 go vet ./...
