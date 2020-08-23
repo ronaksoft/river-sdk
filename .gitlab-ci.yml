@@ -36,7 +36,7 @@ variables:
     
 build:live-logger:
   stage: build
-  image: registry.ronaksoftware.com/base/docker/golang:1.14.1
+  image: registry.ronaksoft.com/base/docker/golang:1.14.7
   script:
     - cd cmd/cli-livelog/
     - env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build --mod=vendor -ldflags "-s -w" -o $CI_PROJECT_DIR/cmd/cli-livelog/cli-livelog
