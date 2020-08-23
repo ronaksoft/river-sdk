@@ -247,9 +247,9 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	logs.Info("River SetConfig done!")
 }
 
-func (r *River) SetTeam(teamID int64, teamAccessHash uint64) {
+func (r *River) SetTeam(teamID int64, teamAccessHash int64) {
 	r.teamID = teamID
-	r.teamAccessHash = teamAccessHash
+	r.teamAccessHash = uint64(teamAccessHash)
 }
 
 func (r *River) GetTeam() *msg.InputTeam {
