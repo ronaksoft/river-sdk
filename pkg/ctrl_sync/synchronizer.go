@@ -404,7 +404,6 @@ func (ctrl *Controller) TeamSync(teamID int64) {
 	// if this is the first time we switch to this team, then lets sync with server
 	err := repo.System.SaveInt(teamKey, uint64(tools.TimeUnix()))
 	logs.WarnOnErr("Team Sync", err)
-
 }
 
 func (ctrl *Controller) SetUserID(userID int64) {
