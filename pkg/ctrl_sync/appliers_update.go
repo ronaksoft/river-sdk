@@ -139,7 +139,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 		go func() {
 			waitGroup := &sync.WaitGroup{}
 			waitGroup.Add(1)
-			ctrl.GetContacts(waitGroup)
+			ctrl.GetContacts(waitGroup, nil)
 			waitGroup.Wait()
 		}()
 	case domain.MessageActionGroupDeleteUser:

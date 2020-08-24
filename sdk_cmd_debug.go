@@ -156,11 +156,11 @@ func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
 
 	t := tablewriter.NewWriter(file)
 	t.SetHeader([]string{"ID", "Date", "Sender", "Body", "Media"})
-	maxID, _ := repo.Messages.GetTopMessageID(r.GetTeamID(), peerID, peerType)
+	maxID, _ := repo.Messages.GetTopMessageID(GetCurrTeamID(), peerID, peerType)
 	limit := int32(100)
 	cnt := 0
 	for {
-		ms, us := repo.Messages.GetMessageHistory(r.GetTeamID(), peerID, peerType, 0, maxID, limit)
+		ms, us := repo.Messages.GetMessageHistory(GetCurrTeamID(), peerID, peerType, 0, maxID, limit)
 		usMap := make(map[int64]*msg.User)
 		for _, u := range us {
 			usMap[u.ID] = u
@@ -291,5 +291,5 @@ func sendLogs(r *River) {
 }
 
 func (r *River) GetHole(peerID int64, peerType int32) []byte {
-	return repo.MessagesExtra.GetHoles(r.GetTeamID(), peerID, peerType)
+	return repo.MessagesExtra.GetHoles(GetCurrTeamID(), peerID, peerType)
 }

@@ -189,7 +189,7 @@ func (ctrl *Controller) GetServerTime() (err error) {
 	return
 }
 
-func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, limit int32) {
+func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, team *msg.InputTeam, offset int32, limit int32) {
 	logs.Info("SyncCtrl calls GetAllDialogs",
 		zap.Int32("Offset", offset),
 		zap.Int32("Limit", limit),
@@ -201,6 +201,7 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, l
 	reqBytes, _ := req.Marshal()
 	ctrl.queueCtrl.EnqueueCommand(
 		&msg.MessageEnvelope{
+			Team:        team,
 			Constructor: msg.C_MessagesGetDialogs,
 			RequestID:   uint64(domain.SequentialUniqueID()),
 			Message:     reqBytes,
@@ -209,7 +210,7 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, l
 			// If timeout, then retry the request
 			logs.Warn("Timeout! on GetAllDialogs, retrying ...")
 			_, _ = ctrl.AuthRecall("GetAllDialogs")
-			ctrl.GetAllDialogs(waitGroup, offset, limit)
+			ctrl.GetAllDialogs(waitGroup, team, offset, limit)
 		},
 		func(m *msg.MessageEnvelope) {
 			switch m.Constructor {
@@ -220,7 +221,7 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, l
 				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
 					waitGroup.Done()
 				} else {
-					ctrl.GetAllDialogs(waitGroup, offset, limit)
+					ctrl.GetAllDialogs(waitGroup, team, offset, limit)
 				}
 			case msg.C_MessagesDialogs:
 				x := msg.MessagesDialogs{}
@@ -231,7 +232,7 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, l
 				}
 
 				if x.Count > offset+limit {
-					ctrl.GetAllDialogs(waitGroup, offset+limit, limit)
+					ctrl.GetAllDialogs(waitGroup, team, offset+limit, limit)
 				} else {
 					waitGroup.Done()
 					forceUpdateUI(ctrl, true, false, false)
@@ -242,7 +243,7 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, l
 	)
 }
 
-func (ctrl *Controller) GetAllTopPeers(waitGroup *sync.WaitGroup, cat msg.TopPeerCategory, offset int32, limit int32) {
+func (ctrl *Controller) GetAllTopPeers(waitGroup *sync.WaitGroup, team *msg.InputTeam, cat msg.TopPeerCategory, offset int32, limit int32) {
 	logs.Info("SyncCtrl calls GetAllTopPeers",
 		zap.Int32("Offset", offset),
 		zap.Int32("Limit", limit),
@@ -255,6 +256,7 @@ func (ctrl *Controller) GetAllTopPeers(waitGroup *sync.WaitGroup, cat msg.TopPee
 	reqBytes, _ := req.Marshal()
 	ctrl.queueCtrl.EnqueueCommand(
 		&msg.MessageEnvelope{
+			Team:        team,
 			Constructor: msg.C_ContactsGetTopPeers,
 			RequestID:   uint64(domain.SequentialUniqueID()),
 			Message:     reqBytes,
@@ -263,7 +265,7 @@ func (ctrl *Controller) GetAllTopPeers(waitGroup *sync.WaitGroup, cat msg.TopPee
 			// If timeout, then retry the request
 			logs.Warn("Timeout! on GetAllTopPeers, retrying ...", zap.String("Cat", cat.String()))
 			_, _ = ctrl.AuthRecall("GetAllTopPeers")
-			ctrl.GetAllTopPeers(waitGroup, cat, offset, limit)
+			ctrl.GetAllTopPeers(waitGroup, team, cat, offset, limit)
 		},
 		func(m *msg.MessageEnvelope) {
 			switch m.Constructor {
@@ -274,7 +276,7 @@ func (ctrl *Controller) GetAllTopPeers(waitGroup *sync.WaitGroup, cat msg.TopPee
 				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
 					waitGroup.Done()
 				} else {
-					ctrl.GetAllTopPeers(waitGroup, cat, offset, limit)
+					ctrl.GetAllTopPeers(waitGroup, team, cat, offset, limit)
 				}
 			case msg.C_ContactsTopPeers:
 				x := msg.ContactsTopPeers{}
@@ -285,7 +287,7 @@ func (ctrl *Controller) GetAllTopPeers(waitGroup *sync.WaitGroup, cat msg.TopPee
 				}
 
 				if len(x.Peers) >= int(limit) {
-					ctrl.GetAllTopPeers(waitGroup, cat, offset+limit, limit)
+					ctrl.GetAllTopPeers(waitGroup, team, cat, offset+limit, limit)
 				} else {
 					waitGroup.Done()
 					forceUpdateUI(ctrl, true, false, false)
@@ -296,7 +298,7 @@ func (ctrl *Controller) GetAllTopPeers(waitGroup *sync.WaitGroup, cat msg.TopPee
 	)
 }
 
-func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup) {
+func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup, team *msg.InputTeam) {
 	logs.Debug("SyncCtrl calls GetContacts")
 	contactsGetHash, _ := repo.System.LoadInt(domain.SkContactsGetHash)
 	req := &msg.ContactsGet{
@@ -305,12 +307,13 @@ func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup) {
 	reqBytes, _ := req.Marshal()
 	ctrl.queueCtrl.EnqueueCommand(
 		&msg.MessageEnvelope{
+			Team:        team,
 			Constructor: msg.C_ContactsGet,
 			RequestID:   uint64(domain.SequentialUniqueID()),
 			Message:     reqBytes,
 		},
 		func() {
-			ctrl.GetContacts(waitGroup)
+			ctrl.GetContacts(waitGroup, team)
 		},
 		func(m *msg.MessageEnvelope) {
 			switch m.Constructor {
@@ -320,7 +323,7 @@ func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup) {
 				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
 					waitGroup.Done()
 				} else {
-					ctrl.GetContacts(waitGroup)
+					ctrl.GetContacts(waitGroup, team)
 				}
 			default:
 				waitGroup.Done()

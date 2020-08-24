@@ -149,7 +149,7 @@ func executeRemoteCommand(r *River, requestID uint64, constructor int64, command
 	// If the constructor is a realtime command, then just send it to the server
 	if _, ok := r.realTimeCommands[constructor]; ok {
 		r.queueCtrl.RealtimeCommand(&msg.MessageEnvelope{
-			Team:        r.GetTeam(),
+			Team:        GetCurrTeam(),
 			Constructor: constructor,
 			RequestID:   requestID,
 			Message:     commandBytes,
@@ -157,7 +157,7 @@ func executeRemoteCommand(r *River, requestID uint64, constructor int64, command
 	} else {
 		r.queueCtrl.EnqueueCommand(
 			&msg.MessageEnvelope{
-				Team:        r.GetTeam(),
+				Team:        GetCurrTeam(),
 				Constructor: constructor,
 				RequestID:   requestID,
 				Message:     commandBytes,
@@ -506,12 +506,12 @@ func (r *River) UpdateContactInfo(userID int64, firstName, lastName string) erro
 
 // GetScrollStatus
 func (r *River) GetScrollStatus(peerID int64, peerType int32) int64 {
-	return repo.MessagesExtra.GetScrollID(r.GetTeamID(), peerID, peerType)
+	return repo.MessagesExtra.GetScrollID(GetCurrTeamID(), peerID, peerType)
 }
 
 // SetScrollStatus
 func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
-	repo.MessagesExtra.SaveScrollID(r.GetTeamID(), peerID, peerType, msgID)
+	repo.MessagesExtra.SaveScrollID(GetCurrTeamID(), peerID, peerType, msgID)
 
 }
 
@@ -777,28 +777,12 @@ func (r *River) SetConfig(conf *RiverConfig) {
 }
 
 func (r *River) SetTeam(teamID int64, teamAccessHash int64) {
-	r.teamID = teamID
-	r.teamAccessHash = uint64(teamAccessHash)
+	_CurrTeamID = teamID
+	_CurrTeamAccessHash = uint64(teamAccessHash)
 
-	r.syncCtrl.TeamSync(teamID)
-}
-
-func (r *River) GetTeam() *msg.InputTeam {
-	if r.teamID == 0 {
-		return &msg.InputTeam{
-			ID:         0,
-			AccessHash: 0,
-		}
+	if teamID != 0 {
+		r.syncCtrl.TeamSync(teamID, uint64(teamAccessHash))
 	}
-	logs.Info("GetTeam", zap.Int64("TeamID", r.teamID))
-	return &msg.InputTeam{
-		ID:         r.teamID,
-		AccessHash: r.teamAccessHash,
-	}
-}
-
-func (r *River) GetTeamID() int64 {
-	return r.teamID
 }
 
 func (r *River) Version() string {

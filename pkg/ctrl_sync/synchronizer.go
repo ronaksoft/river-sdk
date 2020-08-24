@@ -203,13 +203,13 @@ func (ctrl *Controller) Sync() {
 			// Get Contacts from the server
 			waitGroup := &sync.WaitGroup{}
 			waitGroup.Add(7)
-			go ctrl.GetContacts(waitGroup)
-			go ctrl.GetAllDialogs(waitGroup, 0, 100)
-			go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_Users, 0, 100)
-			go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_Groups, 0, 100)
-			go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_Forwards, 0, 100)
-			go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_BotsMessage, 0, 100)
-			go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_BotsInline, 0, 100)
+			go ctrl.GetContacts(waitGroup, nil)
+			go ctrl.GetAllDialogs(waitGroup, nil, 0, 100)
+			go ctrl.GetAllTopPeers(waitGroup, nil, msg.TopPeerCategory_Users, 0, 100)
+			go ctrl.GetAllTopPeers(waitGroup, nil, msg.TopPeerCategory_Groups, 0, 100)
+			go ctrl.GetAllTopPeers(waitGroup, nil, msg.TopPeerCategory_Forwards, 0, 100)
+			go ctrl.GetAllTopPeers(waitGroup, nil, msg.TopPeerCategory_BotsMessage, 0, 100)
+			go ctrl.GetAllTopPeers(waitGroup, nil, msg.TopPeerCategory_BotsInline, 0, 100)
 			waitGroup.Wait()
 
 			ctrl.updateID = serverUpdateID
@@ -381,7 +381,11 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateContainer, updContainer)
 }
 
-func (ctrl *Controller) TeamSync(teamID int64) {
+func (ctrl *Controller) TeamSync(teamID int64, accessHash uint64) {
+	team := &msg.InputTeam{
+		ID:         teamID,
+		AccessHash: accessHash,
+	}
 	teamKey := fmt.Sprintf("%s.%d", domain.SkTeam, teamID)
 	lastSync, _ := repo.System.LoadInt64(teamKey)
 	if lastSync > 0 {
@@ -392,13 +396,13 @@ func (ctrl *Controller) TeamSync(teamID int64) {
 	// Get Contacts from the server
 	waitGroup := &sync.WaitGroup{}
 	waitGroup.Add(7)
-	go ctrl.GetContacts(waitGroup)
-	go ctrl.GetAllDialogs(waitGroup, 0, 100)
-	go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_Users, 0, 100)
-	go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_Groups, 0, 100)
-	go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_Forwards, 0, 100)
-	go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_BotsMessage, 0, 100)
-	go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_BotsInline, 0, 100)
+	go ctrl.GetContacts(waitGroup, team)
+	go ctrl.GetAllDialogs(waitGroup, team, 0, 100)
+	go ctrl.GetAllTopPeers(waitGroup, team, msg.TopPeerCategory_Users, 0, 100)
+	go ctrl.GetAllTopPeers(waitGroup, team, msg.TopPeerCategory_Groups, 0, 100)
+	go ctrl.GetAllTopPeers(waitGroup, team, msg.TopPeerCategory_Forwards, 0, 100)
+	go ctrl.GetAllTopPeers(waitGroup, team, msg.TopPeerCategory_BotsMessage, 0, 100)
+	go ctrl.GetAllTopPeers(waitGroup, team, msg.TopPeerCategory_BotsInline, 0, 100)
 	waitGroup.Wait()
 
 	// if this is the first time we switch to this team, then lets sync with server

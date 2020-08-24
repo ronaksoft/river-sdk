@@ -120,6 +120,22 @@ var SdkResetUsage = &ishell.Cmd{
 	},
 }
 
+var SdkSetTeam = &ishell.Cmd{
+	Name: "SetTeam",
+	Func: func(c *ishell.Context) {
+		teamID := fnGetTeamID(c)
+		accessHash := fnGetAccessHash(c)
+		_SDK.SetTeam(teamID, int64(accessHash))
+	},
+}
+
+var SdkGetTeam = &ishell.Cmd{
+	Name: "GetTeam",
+	Func: func(c *ishell.Context) {
+		c.Println(riversdk.GetCurrTeam())
+	},
+}
+
 func init() {
 	SDK.AddCmd(SdkConnInfo)
 	SDK.AddCmd(SdkSetLogLevel)
@@ -131,4 +147,6 @@ func init() {
 	SDK.AddCmd(SdkAppBackground)
 	SDK.AddCmd(SdkPrintMonitor)
 	SDK.AddCmd(SdkResetUsage)
+	SDK.AddCmd(SdkSetTeam)
+	SDK.AddCmd(SdkGetTeam)
 }

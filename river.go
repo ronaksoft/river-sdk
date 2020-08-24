@@ -22,8 +22,35 @@ import (
 )
 
 var (
-	_ServerKeys ServerKeys
+	_ServerKeys         ServerKeys
+	_CurrTeamID         int64
+	_CurrTeamAccessHash uint64
 )
+
+func GetCurrTeamID() int64 {
+	return _CurrTeamID
+}
+
+func GetCurrTeam() *msg.InputTeam {
+	if _CurrTeamID == 0 {
+		return &msg.InputTeam{
+			ID:         0,
+			AccessHash: 0,
+		}
+	}
+	logs.Info("GetTeam", zap.Int64("TeamID", _CurrTeamID))
+	return &msg.InputTeam{
+		ID:         _CurrTeamID,
+		AccessHash: _CurrTeamAccessHash,
+	}
+}
+
+func GetTeam(teamID int64, teamAccessHash uint64) *msg.InputTeam {
+	return &msg.InputTeam{
+		ID:         teamID,
+		AccessHash: teamAccessHash,
+	}
+}
 
 func SetLogLevel(l int) {
 	logs.SetLogLevel(l)
@@ -92,10 +119,6 @@ type River struct {
 	localCommands map[int64]domain.LocalMessageHandler
 	// realTimeCommands should not passed to queue to send they should directly pass to networkController
 	realTimeCommands map[int64]bool
-
-	// Team
-	teamID         int64
-	teamAccessHash uint64
 
 	// Internal Controllers
 	networkCtrl *networkCtrl.Controller
@@ -198,7 +221,7 @@ func (r *River) onNetworkConnect() (err error) {
 
 			// Get contacts and imports remaining contacts
 			waitGroup.Add(1)
-			r.syncCtrl.GetContacts(waitGroup)
+			r.syncCtrl.GetContacts(waitGroup, nil)
 			waitGroup.Wait()
 			domain.WindowLog(fmt.Sprintf("ContactsGet: %s", time.Now().Sub(domain.StartTime)))
 			r.syncCtrl.ContactsImport(true, nil, nil)

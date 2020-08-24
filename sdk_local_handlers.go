@@ -25,7 +25,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 	res := &msg.MessagesDialogs{}
-	res.Dialogs = repo.Dialogs.List(r.GetTeamID(), req.Offset, req.Limit)
+	res.Dialogs = repo.Dialogs.List(GetCurrTeamID(), req.Offset, req.Limit)
 
 	// If the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {
@@ -71,7 +71,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 		logs.Warn("River found unmatched dialog messages", zap.Int("Got", len(res.Messages)), zap.Int("Need", len(mMessages)))
 		waitGroup := &sync.WaitGroup{}
 		waitGroup.Add(1)
-		r.syncCtrl.GetAllDialogs(waitGroup, 0, 100)
+		r.syncCtrl.GetAllDialogs(waitGroup, GetCurrTeam(), 0, 100)
 		for msgID := range mMessages {
 			found := false
 			for _, m := range res.Messages {
@@ -161,7 +161,7 @@ func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain
 		return
 	}
 	res := &msg.Dialog{}
-	res, err = repo.Dialogs.Get(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
+	res, err = repo.Dialogs.Get(GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type))
 
 	// if the localDB had no data send the request to server
 	if err != nil {
@@ -241,7 +241,7 @@ func (r *River) messagesReadHistory(in, out *msg.MessageEnvelope, timeoutCB doma
 		return
 	}
 
-	dialog, _ := repo.Dialogs.Get(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
+	dialog, _ := repo.Dialogs.Get(GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
 		return
 	}
@@ -249,7 +249,7 @@ func (r *River) messagesReadHistory(in, out *msg.MessageEnvelope, timeoutCB doma
 		return
 	}
 
-	repo.Dialogs.UpdateReadInboxMaxID(r.ConnInfo.UserID, r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+	repo.Dialogs.UpdateReadInboxMaxID(r.ConnInfo.UserID, GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 
 	// send the request to server
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
@@ -264,7 +264,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 
 	// Load the dialog
-	dialog, _ := repo.Dialogs.Get(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
+	dialog, _ := repo.Dialogs.Get(GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
 		logs.Debug("asking for a nil dialog")
 		fillMessagesMany(out, []*msg.UserMessage{}, []*msg.User{}, in.RequestID, successCB)
@@ -280,11 +280,11 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	in.Message, _ = req.Marshal()
 
 	// Prepare the the result before sending back to the client
-	preSuccessCB := genSuccessCallback(successCB, r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, dialog.TopMessageID)
+	preSuccessCB := genSuccessCallback(successCB, GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, dialog.TopMessageID)
 
 	// Offline mode
 	if !r.networkCtrl.Connected() {
-		messages, users := repo.Messages.GetMessageHistory(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
+		messages, users := repo.Messages.GetMessageHistory(GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 		if len(messages) > 0 {
 			pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
 			if len(pendingMessages) > 0 {
@@ -300,35 +300,35 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		req.MaxID = dialog.TopMessageID
 		fallthrough
 	case req.MinID == 0 && req.MaxID != 0:
-		b, bar := messageHole.GetLowerFilled(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+		b, bar := messageHole.GetLowerFilled(GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 		if !b {
 			logs.Info("River detected hole (With MaxID Only)",
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
-				zap.String("Holes", messageHole.PrintHole(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))),
+				zap.String("Holes", messageHole.PrintHole(GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type))),
 			)
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
-		messages, users := repo.Messages.GetMessageHistory(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
+		messages, users := repo.Messages.GetMessageHistory(GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
 		fillMessagesMany(out, messages, users, in.RequestID, preSuccessCB)
 	case req.MinID != 0 && req.MaxID == 0:
-		b, bar := messageHole.GetUpperFilled(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID)
+		b, bar := messageHole.GetUpperFilled(GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID)
 		if !b {
 			logs.Info("River detected hole (With MinID Only)",
 				zap.Int64("MinID", req.MinID),
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
-				zap.String("Holes", messageHole.PrintHole(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))),
+				zap.String("Holes", messageHole.PrintHole(GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type))),
 			)
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
-		messages, users := repo.Messages.GetMessageHistory(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), bar.Min, 0, req.Limit)
+		messages, users := repo.Messages.GetMessageHistory(GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type), bar.Min, 0, req.Limit)
 		fillMessagesMany(out, messages, users, in.RequestID, preSuccessCB)
 	default:
-		b := messageHole.IsHole(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID)
+		b := messageHole.IsHole(GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID)
 		if b {
 			logs.Info("River detected hole (With Min & Max)",
 				zap.Int64("MinID", req.MinID),
@@ -339,7 +339,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
-		messages, users := repo.Messages.GetMessageHistory(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
+		messages, users := repo.Messages.GetMessageHistory(GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 		fillMessagesMany(out, messages, users, in.RequestID, preSuccessCB)
 	}
 }
@@ -697,7 +697,7 @@ func (r *River) contactsGetTopPeers(in, out *msg.MessageEnvelope, timeoutCB doma
 		return
 	}
 	res := &msg.ContactsTopPeers{}
-	topPeers, _ := repo.TopPeers.List(r.GetTeamID(), req.Category, req.Offset, req.Limit)
+	topPeers, _ := repo.TopPeers.List(GetCurrTeamID(), req.Category, req.Offset, req.Limit)
 	if len(topPeers) == 0 {
 		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 		return
@@ -767,7 +767,7 @@ func (r *River) contactsResetTopPeer(in, out *msg.MessageEnvelope, timeoutCB dom
 		return
 	}
 
-	err = repo.TopPeers.Delete(req.Category, r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
+	err = repo.TopPeers.Delete(req.Category, GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type))
 	if err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
@@ -846,7 +846,7 @@ func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB
 		return
 	}
 
-	dialog, _ := repo.Dialogs.Get(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
+	dialog, _ := repo.Dialogs.Get(GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
 		return
 	}
@@ -929,7 +929,7 @@ func (r *River) dialogTogglePin(in, out *msg.MessageEnvelope, timeoutCB domain.T
 		return
 	}
 
-	dialog, _ := repo.Dialogs.Get(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
+	dialog, _ := repo.Dialogs.Get(GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
 		logs.Debug("River::dialogTogglePin()-> GetDialog()",
 			zap.String("Error", "Dialog is null"),
@@ -1062,7 +1062,7 @@ func (r *River) groupsGetFull(in, out *msg.MessageEnvelope, timeoutCB domain.Tim
 	}
 
 	// NotifySettings
-	dlg, _ := repo.Dialogs.Get(r.GetTeamID(), req.GroupID, int32(msg.PeerGroup))
+	dlg, _ := repo.Dialogs.Get(GetCurrTeamID(), req.GroupID, int32(msg.PeerGroup))
 	if dlg == nil {
 		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 		return
@@ -1217,7 +1217,7 @@ func (r *River) messagesSaveDraft(in, out *msg.MessageEnvelope, timeoutCB domain
 		return
 	}
 
-	dialog, _ := repo.Dialogs.Get(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
+	dialog, _ := repo.Dialogs.Get(GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type))
 	if dialog != nil {
 		draftMessage := msg.DraftMessage{
 			Body:     req.Body,
@@ -1244,7 +1244,7 @@ func (r *River) messagesClearDraft(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 
-	dialog, _ := repo.Dialogs.Get(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
+	dialog, _ := repo.Dialogs.Get(GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type))
 	if dialog != nil {
 		dialog.Draft = nil
 		repo.Dialogs.Save(dialog)
@@ -1293,7 +1293,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 			zap.Int64("MinID", req.MinID),
 			zap.Int64("MaxID", req.MaxID),
 		)
-		messages, users, groups := repo.Labels.ListMessages(req.LabelID, r.GetTeamID(), req.Limit, req.MinID, req.MaxID)
+		messages, users, groups := repo.Labels.ListMessages(req.LabelID, GetCurrTeamID(), req.Limit, req.MinID, req.MaxID)
 		fillLabelItems(out, messages, users, groups, in.RequestID, successCB)
 		return
 	}
@@ -1353,7 +1353,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
-		messages, users, groups := repo.Labels.ListMessages(req.LabelID, r.GetTeamID(), req.Limit, bar.MinID, bar.MaxID)
+		messages, users, groups := repo.Labels.ListMessages(req.LabelID, GetCurrTeamID(), req.Limit, bar.MinID, bar.MaxID)
 		logs.Debug("List Messages By Label",
 			zap.Int32("LabelID", req.LabelID),
 			zap.Int64("MinID", bar.MinID),
@@ -1372,7 +1372,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
-		messages, users, groups := repo.Labels.ListMessages(req.LabelID, r.GetTeamID(), req.Limit, bar.MinID, bar.MaxID)
+		messages, users, groups := repo.Labels.ListMessages(req.LabelID, GetCurrTeamID(), req.Limit, bar.MinID, bar.MaxID)
 		fillLabelItems(out, messages, users, groups, in.RequestID, preSuccessCB)
 	default:
 		r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
@@ -1393,7 +1393,7 @@ func (r *River) labelAddToMessage(in, out *msg.MessageEnvelope, timeoutCB domain
 		zap.Int32s("LabelIDs", req.LabelIDs),
 	)
 	if len(req.MessageIDs) != 0 {
-		_ = repo.Labels.AddLabelsToMessages(req.LabelIDs, r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
+		_ = repo.Labels.AddLabelsToMessages(req.LabelIDs, GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
 		for _, labelID := range req.LabelIDs {
 			bar := repo.Labels.GetFilled(labelID)
 			for _, msgID := range req.MessageIDs {
@@ -1425,7 +1425,7 @@ func (r *River) labelRemoveFromMessage(in, out *msg.MessageEnvelope, timeoutCB d
 	)
 
 	if len(req.MessageIDs) != 0 {
-		_ = repo.Labels.RemoveLabelsFromMessages(req.LabelIDs, r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
+		_ = repo.Labels.RemoveLabelsFromMessages(req.LabelIDs, GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
 	}
 
 	// send the request to server
@@ -1640,7 +1640,7 @@ func (r *River) clientClearCachedMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	}
 
 	if req.Peer != nil {
-		repo.Files.DeleteCachedMediaByPeer(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MediaTypes)
+		repo.Files.DeleteCachedMediaByPeer(GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type), req.MediaTypes)
 	} else if len(req.MediaTypes) > 0 {
 		repo.Files.DeleteCachedMediaByMediaType(req.MediaTypes)
 	} else {
@@ -1706,7 +1706,7 @@ func (r *River) clientGetLastBotKeyboard(in, out *msg.MessageEnvelope, timeoutCB
 		return
 	}
 
-	lastKeyboardMsg, _ := repo.Messages.GetLastBotKeyboard(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
+	lastKeyboardMsg, _ := repo.Messages.GetLastBotKeyboard(GetCurrTeamID(), req.Peer.ID, int32(req.Peer.Type))
 
 	if lastKeyboardMsg == nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: "message not found"})
@@ -1728,7 +1728,7 @@ func (r *River) clientGetRecentSearch(in, out *msg.MessageEnvelope, timeoutCB do
 		return
 	}
 
-	recentSearches := repo.RecentSearches.List(r.GetTeamID(), req.Limit)
+	recentSearches := repo.RecentSearches.List(GetCurrTeamID(), req.Limit)
 
 	// get users && group IDs
 	userIDs := domain.MInt64B{}
@@ -1776,7 +1776,7 @@ func (r *River) clientPutRecentSearch(in, out *msg.MessageEnvelope, timeoutCB do
 		Date: int32(time.Now().Unix()),
 	}
 
-	err := repo.RecentSearches.Put(r.GetTeamID(), recentSearch)
+	err := repo.RecentSearches.Put(GetCurrTeamID(), recentSearch)
 
 	if err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
@@ -1802,7 +1802,7 @@ func (r *River) clientRemoveAllRecentSearches(in, out *msg.MessageEnvelope, time
 		return
 	}
 
-	err := repo.RecentSearches.Clear(r.GetTeamID())
+	err := repo.RecentSearches.Clear(GetCurrTeamID())
 
 	if err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
@@ -1828,7 +1828,7 @@ func (r *River) clientRemoveRecentSearch(in, out *msg.MessageEnvelope, timeoutCB
 		return
 	}
 
-	err := repo.RecentSearches.Delete(r.GetTeamID(), req.Peer)
+	err := repo.RecentSearches.Delete(GetCurrTeamID(), req.Peer)
 
 	if err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
