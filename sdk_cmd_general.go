@@ -644,8 +644,7 @@ func (r *River) AppStart() error {
 	return nil
 }
 
-// SetConfig ...
-// This function must be called before any other function, otherwise it panics
+// SetConfig must be called before any other function, otherwise it panics
 func (r *River) SetConfig(conf *RiverConfig) {
 	domain.ClientPlatform = conf.ClientPlatform
 	domain.ClientVersion = conf.ClientVersion
@@ -780,6 +779,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 func (r *River) SetTeam(teamID int64, teamAccessHash int64) {
 	r.teamID = teamID
 	r.teamAccessHash = uint64(teamAccessHash)
+
+	r.syncCtrl.TeamSync(teamID)
 }
 
 func (r *River) GetTeam() *msg.InputTeam {

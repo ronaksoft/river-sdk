@@ -389,6 +389,18 @@ func (ctrl *Controller) TeamSync(teamID int64) {
 		return
 	}
 
+	// Get Contacts from the server
+	waitGroup := &sync.WaitGroup{}
+	waitGroup.Add(7)
+	go ctrl.GetContacts(waitGroup)
+	go ctrl.GetAllDialogs(waitGroup, 0, 100)
+	go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_Users, 0, 100)
+	go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_Groups, 0, 100)
+	go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_Forwards, 0, 100)
+	go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_BotsMessage, 0, 100)
+	go ctrl.GetAllTopPeers(waitGroup, msg.TopPeerCategory_BotsInline, 0, 100)
+	waitGroup.Wait()
+
 	// if this is the first time we switch to this team, then lets sync with server
 	err := repo.System.SaveInt(teamKey, uint64(tools.TimeUnix()))
 	logs.WarnOnErr("Team Sync", err)
