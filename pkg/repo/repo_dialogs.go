@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"context"
 	"fmt"
 	"git.ronaksoft.com/river/msg/msg"
 	"git.ronaksoft.com/ronak/riversdk/internal/logs"
@@ -10,6 +11,7 @@ import (
 	"github.com/dgraph-io/badger/v2"
 	"github.com/tidwall/buntdb"
 	"strings"
+	"sync"
 )
 
 const (
@@ -20,6 +22,15 @@ const (
 
 type repoDialogs struct {
 	*repository
+	mtx           sync.Mutex
+	teamsCounters map[int64]*dialogsCounter
+}
+
+type dialogsCounter struct {
+	unread      int32
+	unreadMutes int32
+	mentioned   int32
+	updateAt    int64
 }
 
 func getDialogKey(teamID int64, peerID int64, peerType int32) []byte {
@@ -29,7 +40,17 @@ func getDialogKey(teamID int64, peerID int64, peerType int32) []byte {
 	tools.AppendStrInt64(sb, teamID)
 	tools.AppendStrInt64(sb, peerID)
 	tools.AppendStrInt32(sb, peerType)
-	id := tools.StrToByte(sb.String())
+	id := []byte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
+}
+
+func getDialogPrefix(teamID int64) []byte {
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixDialogs)
+	sb.WriteRune('.')
+	tools.AppendStrInt64(sb, teamID)
+	id := []byte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id
 }
@@ -77,8 +98,12 @@ func saveDialog(txn *badger.Txn, dialog *msg.Dialog) error {
 }
 
 func getDialog(txn *badger.Txn, teamID, peerID int64, peerType int32) (*msg.Dialog, error) {
+	return getDialogByKey(txn, getDialogKey(teamID, peerID, peerType))
+}
+
+func getDialogByKey(txn *badger.Txn, key []byte) (*msg.Dialog, error) {
 	dialog := &msg.Dialog{}
-	item, err := txn.Get(getDialogKey(teamID, peerID, peerType))
+	item, err := txn.Get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +123,7 @@ func countDialogUnread(txn *badger.Txn, teamID, peerID int64, peerType int32, us
 	it := txn.NewIterator(opts)
 	for it.Seek(getMessageKey(teamID, peerID, peerType, maxID)); it.ValidForPrefix(opts.Prefix); it.Next() {
 		_ = it.Item().Value(func(val []byte) error {
-			userMessage := new(msg.UserMessage)
+			userMessage := &msg.UserMessage{}
 			_ = userMessage.Unmarshal(val)
 			if userMessage.SenderID != userID {
 				unread++
@@ -155,17 +180,6 @@ func (r *repoDialogs) Save(dialog *msg.Dialog) error {
 			return err
 		}
 		return nil
-	})
-}
-
-func (r *repoDialogs) UpdateUnreadCount(teamID, peerID int64, peerType, unreadCount int32) error {
-	return badgerUpdate(func(txn *badger.Txn) error {
-		dialog, err := getDialog(txn, teamID, peerID, peerType)
-		if err != nil {
-			return err
-		}
-		dialog.UnreadCount = unreadCount
-		return saveDialog(txn, dialog)
 	})
 }
 
@@ -281,4 +295,61 @@ func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
 	})
 	logs.ErrorOnErr("RepoDialogs got error on getting pinned dialogs", err)
 	return dialogs
+}
+
+func (r *repoDialogs) CountAllUnread(userID, teamID int64, mutes bool) (unread, mentioned int32, err error) {
+	// TODO:: handle caching properly, this is a quick not impressive solution
+	r.mtx.Lock()
+	c := r.teamsCounters[teamID]
+	r.mtx.Unlock()
+	if c != nil && c.updateAt+1 > tools.TimeUnix() {
+		mentioned = c.mentioned
+		unread = c.unread
+		if mutes {
+			unread += c.unreadMutes
+		}
+		return
+	}
+	if c == nil {
+		c = &dialogsCounter{
+			unread:      0,
+			unreadMutes: 0,
+			mentioned:   0,
+			updateAt:    tools.TimeUnix(),
+		}
+	} else {
+		c.unread = 0
+		c.unreadMutes = 0
+		c.mentioned = 0
+		c.updateAt = tools.TimeUnix()
+	}
+
+	err = badgerView(func(txn *badger.Txn) error {
+		st := r.badger.NewStream()
+		st.Prefix = getDialogPrefix(teamID)
+		st.ChooseKey = func(item *badger.Item) bool {
+			d, err := getDialogByKey(txn, item.Key())
+			if err != nil {
+				return false
+			}
+			u, m, err := countDialogUnread(txn, d.TeamID, d.PeerID, d.PeerType, userID, d.ReadInboxMaxID)
+			if err != nil {
+				return false
+			}
+			if mutes || d.NotifySettings.MuteUntil < domain.Now().Unix() {
+				c.unread += u
+			}
+			c.mentioned += m
+			return false
+		}
+		st.Send = func(list *badger.KVList) error {
+			return nil
+		}
+		return st.Orchestrate(context.Background())
+	})
+	r.mtx.Lock()
+	r.teamsCounters[teamID] = c
+	r.mtx.Unlock()
+
+	return
 }

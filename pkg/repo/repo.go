@@ -70,7 +70,7 @@ func InitRepo(dbPath string, lowMemory bool) error {
 			DBPath: dbPath,
 		}
 		Account = &repoAccount{repository: r}
-		Dialogs = &repoDialogs{repository: r}
+		Dialogs = &repoDialogs{repository: r, teamsCounters: make(map[int64]*dialogsCounter)}
 		Messages = &repoMessages{repository: r}
 		PendingMessages = &repoMessagesPending{repository: r}
 		MessagesExtra = &repoMessagesExtra{repository: r}
