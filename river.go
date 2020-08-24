@@ -1,6 +1,7 @@
 package riversdk
 
 import (
+	"encoding/json"
 	"fmt"
 	"git.ronaksoft.com/river/msg/msg"
 	"git.ronaksoft.com/ronak/riversdk/internal/logs"
@@ -11,7 +12,6 @@ import (
 	"go.uber.org/zap"
 	"sort"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -114,164 +114,30 @@ type River struct {
 	resetQueueOnStartup  bool
 }
 
-// SetConfig ...
-// This function must be called before any other function, otherwise it panics
-func (r *River) SetConfig(conf *RiverConfig) {
-	domain.ClientPlatform = conf.ClientPlatform
-	domain.ClientVersion = conf.ClientVersion
-	domain.ClientOS = conf.ClientOs
-	domain.ClientVendor = conf.ClientVendor
-
-	r.optimizeForLowMemory = conf.OptimizeForLowMemory
-	r.resetQueueOnStartup = conf.ResetQueueOnStartup
-	r.ConnInfo = conf.ConnInfo
-
-	if conf.MaxInFlightDownloads <= 0 {
-		conf.MaxInFlightDownloads = 10
+func (r *River) saveDeviceToken() {
+	val, err := json.Marshal(r.DeviceToken)
+	if err != nil {
+		logs.Error("We got error on marshalling device token", zap.Error(err))
+		return
 	}
-	if conf.MaxInFlightUploads <= 0 {
-		conf.MaxInFlightUploads = 10
-	}
-
-	// Initialize DB Path
-	if strings.HasPrefix(conf.DbPath, "file://") {
-		conf.DbPath = conf.DbPath[7:]
-	}
-	conf.DbPath = strings.TrimRight(conf.DbPath, "/ ")
-	r.dbPath = fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID)
-
-	r.registerCommandHandlers()
-	r.delegates = make(map[uint64]RequestDelegate)
-	r.mainDelegate = conf.MainDelegate
-	r.fileDelegate = conf.FileDelegate
-
-	// set loglevel
-	logs.SetLogLevel(conf.LogLevel)
-
-	// set log file path
-	if conf.LogDirectory != "" {
-		_ = logs.SetLogFilePath(conf.LogDirectory)
-	}
-
-	// Initialize realtime requests
-	r.realTimeCommands = map[int64]bool{
-		msg.C_MessagesSetTyping:   true,
-		msg.C_InitConnect:         true,
-		msg.C_InitConnectTest:     true,
-		msg.C_InitAuthCompleted:   true,
-		msg.C_SystemGetConfig:     true,
-		msg.C_SystemGetSalts:      true,
-		msg.C_SystemGetServerTime: true,
-		msg.C_SystemGetPublicKeys: true,
-	}
-
-	// Initialize Network Controller
-	r.networkCtrl = networkCtrl.New(
-		networkCtrl.Config{
-			WebsocketEndpoint: conf.ServerEndpoint,
-			HttpEndpoint:      conf.FileServerEndpoint,
-			CountryCode:       conf.CountryCode,
-		},
-	)
-	r.networkCtrl.OnNetworkStatusChange = func(newQuality domain.NetworkStatus) {
-		if r.mainDelegate != nil {
-			r.mainDelegate.OnNetworkStatusChanged(int(newQuality))
-		}
-	}
-	r.networkCtrl.OnGeneralError = r.onGeneralError
-	r.networkCtrl.OnMessage = r.onReceivedMessage
-	r.networkCtrl.OnUpdate = r.onReceivedUpdate
-	r.networkCtrl.OnWebsocketConnect = r.onNetworkConnect
-
-	// Initialize FileController
-	repo.Files.SetRootFolders(
-		conf.DocumentAudioDirectory,
-		conf.DocumentFileDirectory,
-		conf.DocumentPhotoDirectory,
-		conf.DocumentVideoDirectory,
-		conf.DocumentCacheDirectory,
-	)
-	r.fileCtrl = fileCtrl.New(fileCtrl.Config{
-		Network:              r.networkCtrl,
-		MaxInflightDownloads: conf.MaxInFlightDownloads,
-		MaxInflightUploads:   conf.MaxInFlightUploads,
-		HttpRequestTimeout:   domain.HttpRequestTime,
-		CompletedCB:          r.fileDelegate.OnCompleted,
-		ProgressChangedCB:    r.fileDelegate.OnProgressChanged,
-		CancelCB:             r.fileDelegate.OnCancel,
-		PostUploadProcessCB:  r.postUploadProcess,
-	})
-
-	// Initialize queueController
-	if q, err := queueCtrl.New(r.fileCtrl, r.networkCtrl, r.dbPath); err != nil {
-		logs.Fatal("We couldn't initialize MessageQueue",
-			zap.String("Error", err.Error()),
-		)
-	} else {
-		r.queueCtrl = q
-	}
-
-	// Initialize Sync Controller
-	r.syncCtrl = syncCtrl.NewSyncController(
-		syncCtrl.Config{
-			ConnInfo:    r.ConnInfo,
-			NetworkCtrl: r.networkCtrl,
-			QueueCtrl:   r.queueCtrl,
-			FileCtrl:    r.fileCtrl,
-			SyncStatusChangeCB: func(newStatus domain.SyncStatus) {
-				if r.mainDelegate != nil {
-					r.mainDelegate.OnSyncStatusChanged(int(newStatus))
-				}
-			},
-			UpdateReceivedCB: func(constructorID int64, b []byte) {
-				if r.mainDelegate != nil {
-					r.mainDelegate.OnUpdates(constructorID, b)
-				}
-			},
-			AppUpdateCB: func(version string, updateAvailable bool, force bool) {
-				if r.mainDelegate != nil {
-					r.mainDelegate.AppUpdate(version, updateAvailable, force)
-				}
-			},
-		},
-	)
-
-	// Initialize Server Keys
-	if err := _ServerKeys.UnmarshalJSON([]byte(conf.ServerKeys)); err != nil {
-		logs.Error("We couldn't unmarshal ServerKeys",
-			zap.String("Error", err.Error()),
-		)
-	}
-
-	// Initialize River Connection
-	logs.Info("River SetConfig done!")
-}
-
-func (r *River) SetTeam(teamID int64, teamAccessHash int64) {
-	r.teamID = teamID
-	r.teamAccessHash = uint64(teamAccessHash)
-}
-
-func (r *River) GetTeam() *msg.InputTeam {
-	if r.teamID == 0 {
-		return &msg.InputTeam{
-			ID:         0,
-			AccessHash: 0,
-		}
-	}
-	logs.Info("GetTeam", zap.Int64("TeamID", r.teamID))
-	return &msg.InputTeam{
-		ID:         r.teamID,
-		AccessHash: r.teamAccessHash,
+	err = repo.System.SaveString(domain.SkDeviceToken, string(val))
+	if err != nil {
+		logs.Error("We got error on saving device token in db", zap.Error(err))
+		return
 	}
 }
 
-func (r *River) GetTeamID() int64 {
-	return r.teamID
-}
-
-func (r *River) Version() string {
-	return domain.SDKVersion
+func (r *River) loadDeviceToken() {
+	r.DeviceToken = new(msg.AccountRegisterDevice)
+	str, err := repo.System.LoadString(domain.SkDeviceToken)
+	if err != nil {
+		logs.Info("We did not find device token")
+		return
+	}
+	err = json.Unmarshal([]byte(str), r.DeviceToken)
+	if err != nil {
+		logs.Warn("We couldn't unmarshal device token", zap.Error(err))
+	}
 }
 
 func (r *River) onNetworkConnect() (err error) {
@@ -701,4 +567,124 @@ func (r *River) registerCommandHandlers() {
 		msg.C_GifDelete:                     r.gifDelete,
 		msg.C_SystemGetConfig:               r.systemGetConfig,
 	}
+}
+
+// PublicKey ...
+// easyjson:json
+type PublicKey struct {
+	N           string
+	FingerPrint int64
+	E           uint32
+}
+
+// DHGroup ...
+// easyjson:json
+type DHGroup struct {
+	Prime       string
+	Gen         int32
+	FingerPrint int64
+}
+
+// ServerKeys ...
+// easyjson:json
+type ServerKeys struct {
+	PublicKeys []PublicKey
+	DHGroups   []DHGroup
+}
+
+// GetPublicKey ...
+func (v *ServerKeys) GetPublicKey(keyFP int64) (PublicKey, error) {
+	logs.Info("Public Keys loaded",
+		zap.Any("Public Keys", v.PublicKeys),
+		zap.Int64("keyFP", keyFP),
+	)
+
+	for _, pk := range v.PublicKeys {
+		if pk.FingerPrint == keyFP {
+			return pk, nil
+		}
+	}
+	return PublicKey{}, domain.ErrNotFound
+}
+
+// GetDhGroup ...
+func (v *ServerKeys) GetDhGroup(keyFP int64) (DHGroup, error) {
+	for _, dh := range v.DHGroups {
+		if dh.FingerPrint == keyFP {
+			return dh, nil
+		}
+	}
+	return DHGroup{}, domain.ErrNotFound
+}
+
+// RiverConnection connection info
+// easyjson:json
+type RiverConnection struct {
+	AuthID    int64
+	AuthKey   [256]byte
+	UserID    int64
+	Username  string
+	Phone     string
+	FirstName string
+	LastName  string
+	Bio       string
+	Delegate  ConnInfoDelegate `json:"-"`
+	Version   int
+}
+
+// save RiverConfig interface func
+func (v *RiverConnection) Save() {
+	logs.Debug("ConnInfo saved.")
+	b, _ := v.MarshalJSON()
+	v.Delegate.SaveConnInfo(b)
+}
+
+func (v *RiverConnection) ChangeAuthID(authID int64) { v.AuthID = authID }
+
+func (v *RiverConnection) ChangeAuthKey(authKey []byte) {
+	copy(v.AuthKey[:], authKey[:256])
+}
+
+func (v *RiverConnection) GetAuthKey() []byte {
+	var bytes = make([]byte, 256)
+	copy(bytes, v.AuthKey[0:256])
+	return bytes
+}
+
+func (v *RiverConnection) ChangeUserID(userID int64) { v.UserID = userID }
+
+func (v *RiverConnection) ChangeUsername(username string) { v.Username = username }
+
+func (v *RiverConnection) ChangePhone(phone string) {
+	v.Phone = phone
+}
+
+func (v *RiverConnection) ChangeFirstName(firstName string) { v.FirstName = firstName }
+
+func (v *RiverConnection) ChangeLastName(lastName string) { v.LastName = lastName }
+
+func (v *RiverConnection) ChangeBio(bio string) { v.Bio = bio }
+
+func (v *RiverConnection) PickupAuthID() int64 { return v.AuthID }
+
+func (v *RiverConnection) PickupAuthKey() [256]byte { return v.AuthKey }
+
+func (v *RiverConnection) PickupUserID() int64 { return v.UserID }
+
+func (v *RiverConnection) PickupUsername() string { return v.Username }
+
+func (v *RiverConnection) PickupPhone() string { return v.Phone }
+
+func (v *RiverConnection) PickupFirstName() string { return v.FirstName }
+
+func (v *RiverConnection) PickupLastName() string { return v.LastName }
+
+func (v *RiverConnection) PickupBio() string { return v.Bio }
+
+func (v *RiverConnection) GetKey(key string) string {
+	return v.Delegate.Get(key)
+}
+
+func (v *RiverConnection) SetKey(key, value string) {
+	v.Delegate.Set(key, value)
 }

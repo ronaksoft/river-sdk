@@ -394,6 +394,7 @@ func (ctrl *Controller) TeamSync(teamID int64) {
 	logs.WarnOnErr("Team Sync", err)
 
 }
+
 func (ctrl *Controller) SetUserID(userID int64) {
 	ctrl.userID = userID
 	logs.Debug("SyncCtrl user is set",
