@@ -776,14 +776,12 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	logs.Info("River SetConfig done!")
 }
 
-func (r *River) SetTeam(teamID int64, teamAccessHash int64) {
+func (r *River) SetTeam(teamID int64, teamAccessHash int64, forceSync bool) {
 	_CurrTeamID = teamID
 	_CurrTeamAccessHash = uint64(teamAccessHash)
-}
 
-func (r *River) UpdateTeamResources(force bool) {
 	if _CurrTeamID != 0 {
-		r.syncCtrl.TeamSync(_CurrTeamID, _CurrTeamAccessHash,force)
+		r.syncCtrl.TeamSync(_CurrTeamID, _CurrTeamAccessHash, forceSync)
 	}
 }
 

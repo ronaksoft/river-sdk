@@ -381,7 +381,7 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateContainer, updContainer)
 }
 
-func (ctrl *Controller) TeamSync(teamID int64, accessHash uint64 , forceUpdate bool) {
+func (ctrl *Controller) TeamSync(teamID int64, accessHash uint64, forceUpdate bool) {
 	team := &msg.InputTeam{
 		ID:         teamID,
 		AccessHash: accessHash,

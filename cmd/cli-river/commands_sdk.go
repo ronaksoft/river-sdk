@@ -125,8 +125,7 @@ var SdkSetTeam = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		teamID := fnGetTeamID(c)
 		accessHash := fnGetAccessHash(c)
-		_SDK.SetTeam(teamID, int64(accessHash))
-		_SDK.UpdateTeamResources(false)
+		_SDK.SetTeam(teamID, int64(accessHash), false)
 	},
 }
 
