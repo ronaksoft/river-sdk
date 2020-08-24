@@ -411,7 +411,7 @@ func (r *repoFiles) Get(clusterID int32, fileID int64, accessHash uint64) (file 
 }
 
 func (r *repoFiles) GetMediaDocument(m *msg.UserMessage) (*msg.ClientFile, error) {
-	md := new(msg.MediaDocument)
+	md := &msg.MediaDocument{}
 	_ = md.Unmarshal(m.Media)
 	return r.Get(md.Doc.ClusterID, md.Doc.ID, md.Doc.AccessHash)
 }
@@ -459,8 +459,8 @@ func (r *repoFiles) IsMarkedAsUploaded(fileID int64) bool {
 }
 
 func (r *repoFiles) GetCachedMedia() *msg.ClientCachedMediaInfo {
-	userMediaInfo := make(map[int64]map[msg.ClientMediaType]int64, 100)
-	groupMediaInfo := make(map[int64]map[msg.ClientMediaType]int64, 100)
+	userMediaInfo := make(map[int64]map[msg.ClientMediaType]int64, 128)
+	groupMediaInfo := make(map[int64]map[msg.ClientMediaType]int64, 128)
 	userMtx := sync.Mutex{}
 	groupMtx := sync.Mutex{}
 

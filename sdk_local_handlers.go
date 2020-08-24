@@ -154,16 +154,18 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 
 func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := &msg.MessagesGetDialog{}
-	if err := req.Unmarshal(in.Message); err != nil {
+	err := req.Unmarshal(in.Message)
+	if err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
 		return
 	}
 	res := &msg.Dialog{}
-	res, _ = repo.Dialogs.Get(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
+	res, err = repo.Dialogs.Get(r.GetTeamID(), req.Peer.ID, int32(req.Peer.Type))
 
 	// if the localDB had no data send the request to server
-	if res == nil {
+	if err != nil {
+		logs.Warn("We got error on repo GetDialog", zap.Error(err), zap.Int64("PeerID", req.Peer.ID))
 		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 		return
 	}

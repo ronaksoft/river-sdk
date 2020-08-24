@@ -16,7 +16,7 @@ type repoAccount struct {
 }
 
 func (r *repoAccount) SetPrivacy(key msg.PrivacyKey, rules []*msg.PrivacyRule) error {
-	accountPrivacyRules := new(msg.AccountPrivacyRules)
+	accountPrivacyRules := &msg.AccountPrivacyRules{}
 	accountPrivacyRules.Rules = rules
 
 	bytes, _ := accountPrivacyRules.Marshal()
@@ -46,7 +46,10 @@ func (r *repoAccount) GetPrivacy(key msg.PrivacyKey) (*msg.AccountPrivacyRules, 
 		return nil, err
 	}
 
-	accountPrivacyRules := new(msg.AccountPrivacyRules)
-	_ = accountPrivacyRules.Unmarshal(rulesBytes)
+	accountPrivacyRules := &msg.AccountPrivacyRules{}
+	err = accountPrivacyRules.Unmarshal(rulesBytes)
+	if err != nil {
+		return nil, err
+	}
 	return accountPrivacyRules, nil
 }

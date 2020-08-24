@@ -9,7 +9,6 @@ import (
 	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
 	"github.com/dgraph-io/badger/v2"
 	"github.com/tidwall/buntdb"
-	"go.uber.org/zap"
 	"strings"
 )
 
@@ -92,15 +91,6 @@ func getDialog(txn *badger.Txn, teamID, peerID int64, peerType int32) (*msg.Dial
 	return dialog, nil
 }
 
-func updateDialogAccessHash(txn *badger.Txn, accessHash uint64, teamID, peerID int64, peerType int32) error {
-	dialog, err := getDialog(txn, teamID, peerID, peerType)
-	if err != nil {
-		return err
-	}
-	dialog.AccessHash = accessHash
-	return saveDialog(txn, dialog)
-}
-
 func countDialogUnread(txn *badger.Txn, teamID, peerID int64, peerType int32, userID, maxID int64) (unread, mentioned int32, err error) {
 	opts := badger.DefaultIteratorOptions
 	opts.Prefix = getMessagePrefix(teamID, peerID, peerType)
@@ -144,14 +134,13 @@ func (r *repoDialogs) Get(teamID, peerID int64, peerType int32) (dialog *msg.Dia
 	return
 }
 
-func (r *repoDialogs) SaveNew(dialog *msg.Dialog, lastUpdate int64) (err error) {
+func (r *repoDialogs) SaveNew(dialog *msg.Dialog, lastUpdate int64) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
-		err = saveDialog(txn, dialog)
+		err := saveDialog(txn, dialog)
 		if err != nil {
 			return err
 		}
-		updateDialogLastUpdate(dialog.TeamID, dialog.PeerID, dialog.PeerType, lastUpdate)
-		return nil
+		return updateDialogLastUpdate(dialog.TeamID, dialog.PeerID, dialog.PeerType, lastUpdate)
 	})
 }
 
@@ -160,19 +149,17 @@ func (r *repoDialogs) Save(dialog *msg.Dialog) error {
 		logs.Error("RepoDialog calls save for nil dialog")
 		return nil
 	}
-	err := badgerUpdate(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		err := saveDialog(txn, dialog)
 		if err != nil {
 			return err
 		}
 		return nil
 	})
-	logs.ErrorOnErr("RepoDialog got error on save dialog", err)
-	return err
 }
 
-func (r *repoDialogs) UpdateUnreadCount(teamID, peerID int64, peerType, unreadCount int32) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+func (r *repoDialogs) UpdateUnreadCount(teamID, peerID int64, peerType, unreadCount int32) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		dialog, err := getDialog(txn, teamID, peerID, peerType)
 		if err != nil {
 			return err
@@ -180,15 +167,10 @@ func (r *repoDialogs) UpdateUnreadCount(teamID, peerID int64, peerType, unreadCo
 		dialog.UnreadCount = unreadCount
 		return saveDialog(txn, dialog)
 	})
-	logs.ErrorOnErr("RepoDialog got error on update unread counter", err,
-		zap.Int64("TeamID", teamID),
-		zap.Int64("PeerID", peerID),
-		zap.Int32("PeerType", peerType),
-	)
 }
 
-func (r *repoDialogs) UpdateReadInboxMaxID(userID, teamID, peerID int64, peerType int32, maxID int64) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+func (r *repoDialogs) UpdateReadInboxMaxID(userID, teamID, peerID int64, peerType int32, maxID int64) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		dialog, err := getDialog(txn, teamID, peerID, peerType)
 		if err != nil {
 			return err
@@ -201,18 +183,10 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, teamID, peerID int64, peerTyp
 		dialog.UnreadCount, dialog.MentionedCount, err = countDialogUnread(txn, teamID, peerID, peerType, userID, maxID+1)
 		return saveDialog(txn, dialog)
 	})
-	logs.ErrorOnErr("RepoDialog got error on update read inbox maxID", err,
-		zap.Int64("UserID", userID),
-		zap.Int64("TeamID", teamID),
-		zap.Int64("PeerID", peerID),
-		zap.Int32("PeerType", peerType),
-		zap.Int64("MaxID", maxID),
-	)
-	return
 }
 
-func (r *repoDialogs) UpdateReadOutboxMaxID(teamID, peerID int64, peerType int32, maxID int64) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+func (r *repoDialogs) UpdateReadOutboxMaxID(teamID, peerID int64, peerType int32, maxID int64) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		dialog, err := getDialog(txn, teamID, peerID, peerType)
 		if err != nil {
 			return err
@@ -224,17 +198,10 @@ func (r *repoDialogs) UpdateReadOutboxMaxID(teamID, peerID int64, peerType int32
 		dialog.ReadOutboxMaxID = maxID
 		return saveDialog(txn, dialog)
 	})
-	logs.ErrorOnErr("RepoDialog got error on update read outbox maxID", err,
-		zap.Int64("MaxID", maxID),
-		zap.Int64("TeamID", teamID),
-		zap.Int64("PeerID", peerID),
-		zap.Int32("PeerType", peerType),
-	)
-	return
 }
 
-func (r *repoDialogs) UpdateNotifySetting(teamID, peerID int64, peerType int32, notifySettings *msg.PeerNotifySettings) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+func (r *repoDialogs) UpdateNotifySetting(teamID, peerID int64, peerType int32, notifySettings *msg.PeerNotifySettings) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		dialog, err := getDialog(txn, teamID, peerID, peerType)
 		if err != nil {
 			return err
@@ -242,16 +209,10 @@ func (r *repoDialogs) UpdateNotifySetting(teamID, peerID int64, peerType int32, 
 		dialog.NotifySettings = notifySettings
 		return saveDialog(txn, dialog)
 	})
-	logs.ErrorOnErr("RepoDialog got error on update notify setting", err,
-		zap.Int64("TeamID", teamID),
-		zap.Int64("PeerID", peerID),
-		zap.Int32("PeerType", peerType),
-	)
-	return
 }
 
-func (r *repoDialogs) UpdatePinned(in *msg.UpdateDialogPinned) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+func (r *repoDialogs) UpdatePinned(in *msg.UpdateDialogPinned) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		dialog, err := getDialog(txn, in.TeamID, in.Peer.ID, in.Peer.Type)
 		if err != nil {
 			return err
@@ -259,27 +220,12 @@ func (r *repoDialogs) UpdatePinned(in *msg.UpdateDialogPinned) {
 		dialog.Pinned = in.Pinned
 		return saveDialog(txn, dialog)
 	})
-	logs.ErrorOnErr("RepoDialog got error on update pin", err,
-		zap.Int64("TeamID", in.TeamID),
-		zap.Int64("PeerID", in.Peer.ID),
-		zap.Int32("PeerType", in.Peer.Type),
-	)
-	return
 }
 
-func (r *repoDialogs) Delete(teamID, peerID int64, peerType int32) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+func (r *repoDialogs) Delete(teamID, peerID int64, peerType int32) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		return txn.Delete(getDialogKey(teamID, peerID, peerType))
 	})
-	if err != nil {
-		logs.Error("RepoDialogs got error on deleting dialog",
-			zap.Error(err),
-			zap.Int64("TeamID", teamID),
-			zap.Int64("PeerID", peerID),
-			zap.Int32("PeerType", peerType),
-		)
-	}
-
 }
 
 func (r *repoDialogs) List(teamID int64, offset, limit int32) []*msg.Dialog {

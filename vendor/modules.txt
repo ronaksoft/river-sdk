@@ -234,7 +234,7 @@ github.com/tidwall/tinyqueue
 github.com/tinylib/msgp/msgp
 # github.com/valyala/bytebufferpool v1.0.0
 github.com/valyala/bytebufferpool
-# github.com/valyala/fasthttp v1.15.1
+# github.com/valyala/fasthttp v1.16.0
 github.com/valyala/fasthttp
 github.com/valyala/fasthttp/fasthttputil
 github.com/valyala/fasthttp/stackless

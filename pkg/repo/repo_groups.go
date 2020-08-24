@@ -512,4 +512,5 @@ func (r *repoGroups) ReIndex() error {
 		it.Close()
 		return nil
 	})
+
 }

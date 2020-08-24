@@ -40,6 +40,7 @@ const (
 	SkSystemSalts        = "SERVER_SALTS"
 	SkReIndexTime        = "RE_INDEX_TS"
 	SkGifHash            = "GIF_HASH"
+	SkTeam               = "TEAM"
 )
 
 // NetworkStatus network controller status

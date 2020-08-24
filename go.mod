@@ -39,7 +39,7 @@ require (
 	github.com/spf13/viper v1.4.0
 	github.com/tecbot/gorocksdb v0.0.0-20190705090504-162552197222 // indirect
 	github.com/tidwall/buntdb v1.1.2
-	github.com/valyala/fasthttp v1.15.1
+	github.com/valyala/fasthttp v1.16.0
 	github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a
 	go.uber.org/zap v1.15.0
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e

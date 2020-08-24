@@ -16,7 +16,7 @@ import (
 )
 
 func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
-	x := new(msg.UpdateNewMessage)
+	x := &msg.UpdateNewMessage{}
 	err := x.Unmarshal(u.Update)
 	if err != nil {
 		logs.Error("UpdateApplier couldn't unmarshal UpdateNewMessage", zap.Error(err))
@@ -53,8 +53,14 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 		}
 	}
 	// save user if does not exist
-	repo.Users.Save(x.Sender)
+	err = repo.Users.Save(x.Sender)
+	logs.WarnOnErr("SyncCtrl got error on saving user while applying new message", err, zap.Int64("SenderID", x.Sender.ID))
+	if err != nil {
+		return nil, err
+	}
+
 	err = repo.Messages.SaveNew(x.Message, ctrl.GetUserID())
+	logs.WarnOnErr("SyncCtrl got error on saving new message while applying new message", err, zap.Int64("SenderID", x.Sender.ID))
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +75,6 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 			_ = repo.PendingMessages.Delete(pm.ID)
 			repo.PendingMessages.DeleteByRealID(x.Message.ID)
 		}
-
 	}
 
 	// handle Message's Action
@@ -600,13 +605,18 @@ func (ctrl *Controller) updateAccountPrivacy(u *msg.UpdateEnvelope) ([]*msg.Upda
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
-	_ = repo.Account.SetPrivacy(msg.PrivacyKeyChatInvite, x.ChatInvite)
-	_ = repo.Account.SetPrivacy(msg.PrivacyKeyLastSeen, x.LastSeen)
-	_ = repo.Account.SetPrivacy(msg.PrivacyKeyPhoneNumber, x.PhoneNumber)
-	_ = repo.Account.SetPrivacy(msg.PrivacyKeyProfilePhoto, x.ProfilePhoto)
-	_ = repo.Account.SetPrivacy(msg.PrivacyKeyForwardedMessage, x.ForwardedMessage)
-	_ = repo.Account.SetPrivacy(msg.PrivacyKeyCall, x.Call)
-
+	err = repo.Account.SetPrivacy(msg.PrivacyKeyChatInvite, x.ChatInvite)
+	logs.WarnOnErr("SyncCtrl got error on set privacy (ChatInvite)", err)
+	err = repo.Account.SetPrivacy(msg.PrivacyKeyLastSeen, x.LastSeen)
+	logs.WarnOnErr("SyncCtrl got error on set privacy (LastSeen)", err)
+	err = repo.Account.SetPrivacy(msg.PrivacyKeyPhoneNumber, x.PhoneNumber)
+	logs.WarnOnErr("SyncCtrl got error on set privacy (PhoneNumber)", err)
+	err = repo.Account.SetPrivacy(msg.PrivacyKeyProfilePhoto, x.ProfilePhoto)
+	logs.WarnOnErr("SyncCtrl got error on set privacy (ProfilePhoto)", err)
+	err = repo.Account.SetPrivacy(msg.PrivacyKeyForwardedMessage, x.ForwardedMessage)
+	logs.WarnOnErr("SyncCtrl got error on set privacy (ForwardedMessage)", err)
+	err = repo.Account.SetPrivacy(msg.PrivacyKeyCall, x.Call)
+	logs.WarnOnErr("SyncCtrl got error on set privacy (Call)", err)
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil
 }

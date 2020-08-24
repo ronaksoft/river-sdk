@@ -1,9 +1,11 @@
 package syncCtrl
 
 import (
+	"fmt"
 	"git.ronaksoft.com/river/msg/msg"
 	"git.ronaksoft.com/ronak/riversdk/internal/logs"
 	mon "git.ronaksoft.com/ronak/riversdk/internal/monitoring"
+	"git.ronaksoft.com/ronak/riversdk/internal/tools"
 	"git.ronaksoft.com/ronak/riversdk/pkg/ctrl_file"
 	"git.ronaksoft.com/ronak/riversdk/pkg/ctrl_network"
 	"git.ronaksoft.com/ronak/riversdk/pkg/ctrl_queue"
@@ -379,6 +381,19 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateContainer, updContainer)
 }
 
+func (ctrl *Controller) TeamSync(teamID int64) {
+	teamKey := fmt.Sprintf("%s.%d", domain.SkTeam, teamID)
+	lastSync, _ := repo.System.LoadInt64(teamKey)
+	if lastSync > 0 {
+		// we have been already synced
+		return
+	}
+
+	// if this is the first time we switch to this team, then lets sync with server
+	err := repo.System.SaveInt(teamKey, uint64(tools.TimeUnix()))
+	logs.WarnOnErr("Team Sync", err)
+
+}
 func (ctrl *Controller) SetUserID(userID int64) {
 	ctrl.userID = userID
 	logs.Debug("SyncCtrl user is set",

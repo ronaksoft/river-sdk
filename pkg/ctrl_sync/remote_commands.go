@@ -194,9 +194,10 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, offset int32, l
 		zap.Int32("Offset", offset),
 		zap.Int32("Limit", limit),
 	)
-	req := new(msg.MessagesGetDialogs)
-	req.Limit = limit
-	req.Offset = offset
+	req := &msg.MessagesGetDialogs{
+		Limit:  limit,
+		Offset: offset,
+	}
 	reqBytes, _ := req.Marshal()
 	ctrl.queueCtrl.EnqueueCommand(
 		&msg.MessageEnvelope{

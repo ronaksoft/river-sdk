@@ -52,7 +52,7 @@ var ContactGetTeam = &ishell.Cmd{
 		req := msg.ContactsGet{}
 		teamID := fnGetTeamID(c)
 		accessHash := fnGetAccessHash(c)
-		_SDK.SetTeam(teamID, accessHash)
+		_SDK.SetTeam(teamID, int64(accessHash))
 		reqBytes, _ := req.Marshal()
 
 		reqDelegate := NewCustomDelegate()
