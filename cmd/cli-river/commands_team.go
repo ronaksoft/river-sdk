@@ -98,6 +98,7 @@ var TeamGetDialogs = &ishell.Cmd{
 		teamID := fnGetTeamID(c)
 		accesshHash := fnGetAccessHash(c)
 		_SDK.SetTeam(teamID, int64(accesshHash))
+		_SDK.UpdateTeamResources(false)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := NewCustomDelegate()
 		reqDelegate.FlagsFunc = func() int32 {

@@ -381,16 +381,19 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateContainer, updContainer)
 }
 
-func (ctrl *Controller) TeamSync(teamID int64, accessHash uint64) {
+func (ctrl *Controller) TeamSync(teamID int64, accessHash uint64 , forceUpdate bool) {
 	team := &msg.InputTeam{
 		ID:         teamID,
 		AccessHash: accessHash,
 	}
 	teamKey := fmt.Sprintf("%s.%d", domain.SkTeam, teamID)
-	lastSync, _ := repo.System.LoadInt64(teamKey)
-	if lastSync > 0 {
-		// we have been already synced
-		return
+
+	if !forceUpdate {
+		lastSync, _ := repo.System.LoadInt64(teamKey)
+		if lastSync > 0 {
+			// we have been already synced
+			return
+		}
 	}
 
 	// Get Contacts from the server

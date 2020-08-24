@@ -126,6 +126,7 @@ var SdkSetTeam = &ishell.Cmd{
 		teamID := fnGetTeamID(c)
 		accessHash := fnGetAccessHash(c)
 		_SDK.SetTeam(teamID, int64(accessHash))
+		_SDK.UpdateTeamResources(false)
 	},
 }
 

@@ -779,9 +779,11 @@ func (r *River) SetConfig(conf *RiverConfig) {
 func (r *River) SetTeam(teamID int64, teamAccessHash int64) {
 	_CurrTeamID = teamID
 	_CurrTeamAccessHash = uint64(teamAccessHash)
+}
 
-	if teamID != 0 {
-		r.syncCtrl.TeamSync(teamID, uint64(teamAccessHash))
+func (r *River) UpdateTeamResources(force bool) {
+	if _CurrTeamID != 0 {
+		r.syncCtrl.TeamSync(_CurrTeamID, _CurrTeamAccessHash,force)
 	}
 }
 
