@@ -26,10 +26,20 @@ import (
 	"time"
 )
 
-// ExecuteCommand ...
-// This is a wrapper function to pass the request to the queueController, to be passed to networkController for final
-// delivery to the server.
+// ExecuteCommand is a wrapper function to pass the request to the queueController, to be passed to networkController for final
+// delivery to the server. SDK uses GetCurrentTeam() to detect the targeted team of the request
 func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate) (requestID int64, err error) {
+	return r.executeCommand(GetCurrTeam(), constructor, commandBytes, delegate)
+}
+
+// ExecuteCommandWithTeam is similar to ExecuteTeam but explicitly defines the target team
+func (r *River) ExecuteCommandWithTeam(teamID, accessHash, constructor int64, commandBytes []byte, delegate RequestDelegate) (requestID int64, err error) {
+	return r.executeCommand(GetTeam(teamID, uint64(accessHash)), constructor, commandBytes, delegate)
+}
+
+func (r *River) executeCommand(
+	team *msg.InputTeam, constructor int64, commandBytes []byte, delegate RequestDelegate,
+) (requestID int64, err error) {
 	if _, ok := msg.ConstructorNames[constructor]; !ok {
 		return 0, domain.ErrInvalidConstructor
 	}
@@ -78,41 +88,55 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 
 	// If this request must be sent to the server then executeRemoteCommand
 	if serverForce {
-		executeRemoteCommand(r, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
+		executeRemoteCommand(team, r, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
 		return
 	}
 
 	// If the constructor is a local command then
-	applier, ok := r.localCommands[constructor]
+	handler, ok := r.localCommands[constructor]
 	if ok {
 		if blockingMode {
-			executeLocalCommand(applier, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
+			executeLocalCommand(team, handler, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
 		} else {
-			go executeLocalCommand(applier, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
+			go executeLocalCommand(team, handler, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
 		}
 		return
 	}
 
 	// If we reached here, then execute the remote commands
-	executeRemoteCommand(r, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
+	executeRemoteCommand(team, r, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
 
 	return
 }
-func executeLocalCommand(applier domain.LocalMessageHandler, requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	logs.Debug("River executes local command",
+func executeLocalCommand(
+	team *msg.InputTeam,
+	handler domain.LocalMessageHandler,
+	requestID uint64, constructor int64, commandBytes []byte,
+	timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+) {
+	logs.Debug("We execute local command",
 		zap.String("C", msg.ConstructorNames[constructor]),
 	)
 
-	in := new(msg.MessageEnvelope)
-	out := new(msg.MessageEnvelope)
-	in.Constructor = constructor
-	in.Message = commandBytes
-	in.RequestID = requestID
-	out.RequestID = in.RequestID
-	applier(in, out, timeoutCB, successCB)
+	in := &msg.MessageEnvelope{
+		Team:        team,
+		Constructor: constructor,
+		Message:     commandBytes,
+		RequestID:   requestID,
+	}
+	out := &msg.MessageEnvelope{
+		Team:      team,
+		RequestID: requestID,
+	}
+	handler(in, out, timeoutCB, successCB)
 }
-func executeRemoteCommand(r *River, requestID uint64, constructor int64, commandBytes []byte, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	logs.Debug("River executes remote command",
+func executeRemoteCommand(
+	team *msg.InputTeam,
+	r *River,
+	requestID uint64, constructor int64, commandBytes []byte,
+	timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+) {
+	logs.Debug("We execute remote command",
 		zap.String("C", msg.ConstructorNames[constructor]),
 	)
 
@@ -149,7 +173,7 @@ func executeRemoteCommand(r *River, requestID uint64, constructor int64, command
 	// If the constructor is a realtime command, then just send it to the server
 	if _, ok := r.realTimeCommands[constructor]; ok {
 		r.queueCtrl.RealtimeCommand(&msg.MessageEnvelope{
-			Team:        GetCurrTeam(),
+			Team:        team,
 			Constructor: constructor,
 			RequestID:   requestID,
 			Message:     commandBytes,
@@ -157,7 +181,7 @@ func executeRemoteCommand(r *River, requestID uint64, constructor int64, command
 	} else {
 		r.queueCtrl.EnqueueCommand(
 			&msg.MessageEnvelope{
-				Team:        GetCurrTeam(),
+				Team:        team,
 				Constructor: constructor,
 				RequestID:   requestID,
 				Message:     commandBytes,
@@ -165,7 +189,6 @@ func executeRemoteCommand(r *River, requestID uint64, constructor int64, command
 			timeoutCB, successCB, true,
 		)
 	}
-
 }
 func deepCopy(commandBytes []byte) []byte {
 	// Takes a copy of commandBytes b4 IOS/Android GC/OS collect/alter them
@@ -224,6 +247,7 @@ func initConnect(r *River) (err error, clientNonce, serverNonce, serverPubFP, se
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
 	executeRemoteCommand(
+		&msg.InputTeam{},
 		r,
 		uint64(domain.SequentialUniqueID()),
 		msg.C_InitConnect,
@@ -316,8 +340,8 @@ func initCompleteAuth(r *River, clientNonce, serverNonce, serverPubFP, serverDHF
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
 	executeRemoteCommand(
+		&msg.InputTeam{},
 		r,
-		// r.executeRealtimeCommand(
 		uint64(domain.SequentialUniqueID()),
 		msg.C_InitCompleteAuth,
 		req2Bytes,

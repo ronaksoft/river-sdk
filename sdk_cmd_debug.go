@@ -148,7 +148,6 @@ func (r *River) HandleDebugActions(txt string) {
 		sendMediaToSaveMessage(r, exportMessages(r, peerType, peerID), fmt.Sprintf("Messages-%s-%d.txt", msg.PeerType(peerType).String(), peerID))
 	}
 }
-
 func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
 	filePath = path.Join(repo.DirCache, fmt.Sprintf("Messages-%s-%d.txt", msg.PeerType(peerType).String(), peerID))
 	file, err := os.Create(filePath)
@@ -203,12 +202,10 @@ func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
 	_, _ = io.WriteString(file, string(r.GetHole(peerID, peerType)))
 	return
 }
-
 func resetSalt(r *River) {
 	salt.Reset()
 	sendToSavedMessage(r, "SDK salt is cleared")
 }
-
 func getMemoryStats(r *River) []byte {
 	ms := new(runtime.MemStats)
 	runtime.ReadMemStats(ms)
@@ -222,7 +219,6 @@ func getMemoryStats(r *River) []byte {
 	sendToSavedMessage(r, domain.ByteToStr(b))
 	return b
 }
-
 func getMonitorStats(r *River) []byte {
 	lsmSize, logSize := repo.DbSize()
 	s := mon.Stats
@@ -245,12 +241,10 @@ func getMonitorStats(r *River) []byte {
 	b, _ := json.MarshalIndent(m, "", "  ")
 	return b
 }
-
 func liveLogger(r *River, url string) {
 	logs.SetRemoteLog(url)
 	sendToSavedMessage(r, "Live Logger is On")
 }
-
 func heapProfile() (filePath string) {
 	buf := new(bytes.Buffer)
 	err := pprof.WriteHeapProfile(buf)
@@ -266,7 +260,6 @@ func heapProfile() (filePath string) {
 	}
 	return
 }
-
 func sendUpdateLogs(r *River) {
 	_ = filepath.Walk(logs.Directory(), func(path string, info os.FileInfo, err error) error {
 		if strings.HasPrefix(info.Name(), "UPDT") {
@@ -275,7 +268,6 @@ func sendUpdateLogs(r *River) {
 		return nil
 	})
 }
-
 func sendLogs(r *River) {
 	_ = filepath.Walk(logs.Directory(), func(filePath string, info os.FileInfo, err error) error {
 		if strings.HasPrefix(info.Name(), "LOG") {

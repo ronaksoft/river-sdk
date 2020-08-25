@@ -37,4 +37,5 @@ const (
 	RequestServerForced int32 = 1 << iota
 	RequestBlocking
 	RequestDontWaitForNetwork
+	RequestTeamForce
 )
