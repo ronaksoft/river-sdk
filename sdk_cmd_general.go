@@ -812,15 +812,3 @@ func (r *River) SetTeam(teamID int64, teamAccessHash int64, forceSync bool) {
 func (r *River) Version() string {
 	return domain.SDKVersion
 }
-
-func (r *River) CountAllUnreadMessages(teamID int64, withMutes bool) int32 {
-	u, _, err := repo.Dialogs.CountAllUnread(r.ConnInfo.UserID, teamID, withMutes)
-	logs.WarnOnErr("We got error on counting all unread messages", err)
-	return u
-}
-
-func (r *River) CountAllMentioned(teamID int64) int32 {
-	_, m, err := repo.Dialogs.CountAllUnread(r.ConnInfo.UserID, teamID, true)
-	logs.WarnOnErr("We got error on counting all mentioned", err)
-	return m
-}

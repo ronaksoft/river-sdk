@@ -784,6 +784,102 @@ func ResultRecentSearchMany(out *MessageEnvelope, res *RecentSearchMany) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_GetUnreadCount int64 = 2102944127
+
+type poolGetUnreadCount struct {
+	pool sync.Pool
+}
+
+func (p *poolGetUnreadCount) Get() *GetUnreadCount {
+	x, ok := p.pool.Get().(*GetUnreadCount)
+	if !ok {
+		return &GetUnreadCount{}
+	}
+	return x
+}
+
+func (p *poolGetUnreadCount) Put(x *GetUnreadCount) {
+	p.pool.Put(x)
+}
+
+var PoolGetUnreadCount = poolGetUnreadCount{}
+
+func ResultGetUnreadCount(out *MessageEnvelope, res *GetUnreadCount) {
+	out.Constructor = C_GetUnreadCount
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_GetMentionCount int64 = 464183141
+
+type poolGetMentionCount struct {
+	pool sync.Pool
+}
+
+func (p *poolGetMentionCount) Get() *GetMentionCount {
+	x, ok := p.pool.Get().(*GetMentionCount)
+	if !ok {
+		return &GetMentionCount{}
+	}
+	return x
+}
+
+func (p *poolGetMentionCount) Put(x *GetMentionCount) {
+	p.pool.Put(x)
+}
+
+var PoolGetMentionCount = poolGetMentionCount{}
+
+func ResultGetMentionCount(out *MessageEnvelope, res *GetMentionCount) {
+	out.Constructor = C_GetMentionCount
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_Int64Res int64 = 4150008234
+
+type poolInt64Res struct {
+	pool sync.Pool
+}
+
+func (p *poolInt64Res) Get() *Int64Res {
+	x, ok := p.pool.Get().(*Int64Res)
+	if !ok {
+		return &Int64Res{}
+	}
+	return x
+}
+
+func (p *poolInt64Res) Put(x *Int64Res) {
+	p.pool.Put(x)
+}
+
+var PoolInt64Res = poolInt64Res{}
+
+func ResultInt64Res(out *MessageEnvelope, res *Int64Res) {
+	out.Constructor = C_Int64Res
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 func init() {
 	ConstructorNames[1095038539] = "ClientSendMessageMedia"
 	ConstructorNames[1742781507] = "ClientGlobalSearch"
@@ -807,4 +903,7 @@ func init() {
 	ConstructorNames[1541024203] = "ClientMediaSize"
 	ConstructorNames[2045409949] = "RecentSearch"
 	ConstructorNames[1217165147] = "RecentSearchMany"
+	ConstructorNames[2102944127] = "GetUnreadCount"
+	ConstructorNames[464183141] = "GetMentionCount"
+	ConstructorNames[4150008234] = "Int64Res"
 }

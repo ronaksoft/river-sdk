@@ -1882,3 +1882,55 @@ func (r *River) systemGetConfig(in, out *msg.MessageEnvelope, timeoutCB domain.T
 	msg.ResultSystemConfig(out, domain.SysConfig)
 	successCB(out)
 }
+
+func (r *River) getUnreadCount(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.GetUnreadCount{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	u, _, err := repo.Dialogs.CountAllUnread(r.ConnInfo.UserID, req.Team.ID, req.WithMutes)
+
+	if err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	res := msg.Int64Res{
+		Num: int64(u),
+	}
+
+	out.Constructor = msg.C_Int64Res
+	out.RequestID = in.RequestID
+	out.Message, _ = res.Marshal()
+	uiexec.ExecSuccessCB(successCB, out)
+}
+
+func (r *River) getMentionCount(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.GetMentionCount{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	_, m, err := repo.Dialogs.CountAllUnread(r.ConnInfo.UserID, req.Team.ID, req.WithMutes)
+
+	if err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	res := msg.Int64Res{
+		Num: int64(m),
+	}
+
+	out.Constructor = msg.C_Int64Res
+	out.RequestID = in.RequestID
+	out.Message, _ = res.Marshal()
+	uiexec.ExecSuccessCB(successCB, out)
+}
