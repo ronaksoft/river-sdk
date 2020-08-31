@@ -213,7 +213,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	}
 	// 2. add to queue [ looks like there is general queue to send messages ] : Done
 	requestBytes, _ := req.Marshal()
-	// r.queueCtrl.addToWaitingList(req) // this needs to be wrapped by MessageEnvelope
+
 	// using req randomID as requestID later in queue processing and network controller messageHandler
 	r.queueCtrl.EnqueueCommand(
 		&msg.MessageEnvelope{
