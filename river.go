@@ -438,6 +438,10 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 			Constructor: msg.C_MessagesSendMedia,
 			RequestID:   uint64(x.RandomID),
 			Message:     reqBuff,
+			Team: &msg.InputTeam{
+				AccessHash: pendingMessage.TeamAccessHash,
+				ID: pendingMessage.ID,
+			},
 		},
 		timeoutCB, successCB, false)
 	waitGroup.Wait()

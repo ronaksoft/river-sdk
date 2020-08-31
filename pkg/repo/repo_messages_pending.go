@@ -88,20 +88,21 @@ func deletePendingMessage(txn *badger.Txn, msgID int64) error {
 	return err
 }
 
-func (r *repoMessagesPending) Save(teamId int64, msgID int64, senderID int64, message *msg.MessagesSend) (*msg.ClientPendingMessage, error) {
+func (r *repoMessagesPending) Save(team *msg.InputTeam, msgID int64, senderID int64, message *msg.MessagesSend) (*msg.ClientPendingMessage, error) {
 	if message == nil {
 		return nil, domain.ErrNotFound
 	}
 	pm := &msg.ClientPendingMessage{
-		TeamID:     teamId,
-		AccessHash: message.Peer.AccessHash,
-		Body:       message.Body,
-		PeerID:     message.Peer.ID,
-		PeerType:   int32(message.Peer.Type),
-		ReplyTo:    message.ReplyTo,
-		RequestID:  message.RandomID,
-		Entities:   message.Entities,
-		ClearDraft: message.ClearDraft,
+		TeamID:         team.ID,
+		TeamAccessHash: team.AccessHash,
+		AccessHash:     message.Peer.AccessHash,
+		Body:           message.Body,
+		PeerID:         message.Peer.ID,
+		PeerType:       int32(message.Peer.Type),
+		ReplyTo:        message.ReplyTo,
+		RequestID:      message.RandomID,
+		Entities:       message.Entities,
+		ClearDraft:     message.ClearDraft,
 		// Filled by SDK
 		CreatedOn: domain.Now().Unix(),
 		SenderID:  senderID,
@@ -126,7 +127,7 @@ func (r *repoMessagesPending) Save(teamId int64, msgID int64, senderID int64, me
 	return pm, nil
 }
 
-func (r *repoMessagesPending) SaveClientMessageMedia(
+func (r *repoMessagesPending) SaveClientMessageMedia(team *msg.InputTeam,
 	msgID, senderID, requestID, fileID, thumbID int64, msgMedia *msg.ClientSendMessageMedia, fileSha256 []byte,
 ) (*msg.ClientPendingMessage, error) {
 	if msgMedia == nil {
@@ -136,20 +137,22 @@ func (r *repoMessagesPending) SaveClientMessageMedia(
 	msgMedia.FileTotalParts = 0
 
 	pm := &msg.ClientPendingMessage{
-		PeerID:       msgMedia.Peer.ID,
-		PeerType:     int32(msgMedia.Peer.Type),
-		AccessHash:   msgMedia.Peer.AccessHash,
-		Body:         msgMedia.Caption,
-		ReplyTo:      msgMedia.ReplyTo,
-		ClearDraft:   msgMedia.ClearDraft,
-		MediaType:    msgMedia.MediaType,
-		ID:           msgID,
-		SenderID:     senderID,
-		CreatedOn:    domain.Now().Unix(),
-		RequestID:    requestID,
-		FileUploadID: fmt.Sprintf("%d", fileID),
-		FileID:       fileID,
-		Sha256:       fileSha256,
+		TeamID:         team.ID,
+		TeamAccessHash: team.AccessHash,
+		PeerID:         msgMedia.Peer.ID,
+		PeerType:       int32(msgMedia.Peer.Type),
+		AccessHash:     msgMedia.Peer.AccessHash,
+		Body:           msgMedia.Caption,
+		ReplyTo:        msgMedia.ReplyTo,
+		ClearDraft:     msgMedia.ClearDraft,
+		MediaType:      msgMedia.MediaType,
+		ID:             msgID,
+		SenderID:       senderID,
+		CreatedOn:      domain.Now().Unix(),
+		RequestID:      requestID,
+		FileUploadID:   fmt.Sprintf("%d", fileID),
+		FileID:         fileID,
+		Sha256:         fileSha256,
 	}
 	pm.Media, _ = msgMedia.Marshal()
 
@@ -206,7 +209,7 @@ func (r *repoMessagesPending) UpdateClientMessageMedia(pm *msg.ClientPendingMess
 
 }
 
-func (r *repoMessagesPending) SaveMessageMedia(msgID int64, senderID int64, msgMedia *msg.MessagesSendMedia) (*msg.ClientPendingMessage, error) {
+func (r *repoMessagesPending) SaveMessageMedia(inputTeam *msg.InputTeam, msgID int64, senderID int64, msgMedia *msg.MessagesSendMedia) (*msg.ClientPendingMessage, error) {
 	if msgMedia == nil {
 		return nil, domain.ErrNotFound
 	}
@@ -220,6 +223,8 @@ func (r *repoMessagesPending) SaveMessageMedia(msgID int64, senderID int64, msgM
 	pm.MediaType = msgMedia.MediaType
 	pm.Media = msgMedia.MediaData
 	pm.ID = msgID
+	pm.TeamID = inputTeam.GetID()
+	pm.TeamAccessHash = inputTeam.GetAccessHash()
 	pm.SenderID = senderID
 	pm.CreatedOn = time.Now().Unix()
 	pm.RequestID = msgMedia.RandomID

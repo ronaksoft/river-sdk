@@ -201,7 +201,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	// this will be used as next requestID
 	req.RandomID = domain.SequentialUniqueID()
 	msgID := -req.RandomID
-	res, err := repo.PendingMessages.Save(GetCurrTeamID(), msgID, r.ConnInfo.UserID, req)
+	res, err := repo.PendingMessages.Save(GetCurrTeam(), msgID, r.ConnInfo.UserID, req)
 	if err != nil {
 		e := new(msg.Error)
 		e.Code = "n/a"
@@ -512,7 +512,7 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 		// Insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 		dbID := -req.RandomID
 
-		res, err := repo.PendingMessages.SaveMessageMedia(dbID, r.ConnInfo.UserID, req)
+		res, err := repo.PendingMessages.SaveMessageMedia(GetCurrTeam(),dbID, r.ConnInfo.UserID, req)
 		if err != nil {
 			e := &msg.Error{}
 			e.Code = "n/a"
@@ -536,10 +536,10 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 			Constructor: msg.C_MessagesSendMedia,
 			RequestID:   uint64(req.RandomID),
 			Message:     requestBytes,
+			Team:        GetCurrTeam(),
 		},
 		timeoutCB, successCB, true,
 	)
-
 }
 
 func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -1493,7 +1493,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	}
 
 	h, _ := domain.CalculateSha256(reqMedia.FilePath)
-	pendingMessage, err := repo.PendingMessages.SaveClientMessageMedia(msgID, r.ConnInfo.UserID, fileID, fileID, thumbID, reqMedia, h)
+	pendingMessage, err := repo.PendingMessages.SaveClientMessageMedia(GetCurrTeam(),msgID, r.ConnInfo.UserID, fileID, fileID, thumbID, reqMedia, h)
 	if err != nil {
 		e := new(msg.Error)
 		e.Code = "n/a"

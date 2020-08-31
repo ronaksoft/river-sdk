@@ -443,7 +443,6 @@ func (p *poolClientPendingMessage) Get() *ClientPendingMessage {
 }
 
 func (p *poolClientPendingMessage) Put(x *ClientPendingMessage) {
-	x.TeamID = 0
 	x.Entities = x.Entities[:0]
 	x.MediaType = 0
 	x.Media = x.Media[:0]
@@ -457,6 +456,8 @@ func (p *poolClientPendingMessage) Put(x *ClientPendingMessage) {
 		*x.ServerFile = FileLocation{}
 	}
 
+	x.TeamID = 0
+	x.TeamAccessHash = 0
 	p.pool.Put(x)
 }
 
