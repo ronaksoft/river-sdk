@@ -223,8 +223,8 @@ func (r *repoMessagesPending) SaveMessageMedia(inputTeam *msg.InputTeam, msgID i
 	pm.MediaType = msgMedia.MediaType
 	pm.Media = msgMedia.MediaData
 	pm.ID = msgID
-	pm.TeamID = inputTeam.GetID()
-	pm.TeamAccessHash = inputTeam.GetAccessHash()
+	pm.TeamID = inputTeam.ID
+	pm.TeamAccessHash = inputTeam.AccessHash
 	pm.SenderID = senderID
 	pm.CreatedOn = time.Now().Unix()
 	pm.RequestID = msgMedia.RandomID

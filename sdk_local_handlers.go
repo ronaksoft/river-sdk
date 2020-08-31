@@ -177,7 +177,7 @@ func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain
 }
 
 func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.MessagesSend)
+	req := &msg.MessagesSend{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
@@ -219,7 +219,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 			Constructor: msg.C_MessagesSend,
 			RequestID:   uint64(req.RandomID),
 			Message:     requestBytes,
-			Team:        GetCurrTeam(),
+			Team:        in.Team,
 		},
 		timeoutCB, successCB, true,
 	)
@@ -512,7 +512,7 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 		// Insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 		dbID := -req.RandomID
 
-		res, err := repo.PendingMessages.SaveMessageMedia(GetCurrTeam(),dbID, r.ConnInfo.UserID, req)
+		res, err := repo.PendingMessages.SaveMessageMedia(GetCurrTeam(), dbID, r.ConnInfo.UserID, req)
 		if err != nil {
 			e := &msg.Error{}
 			e.Code = "n/a"
@@ -1493,7 +1493,7 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	}
 
 	h, _ := domain.CalculateSha256(reqMedia.FilePath)
-	pendingMessage, err := repo.PendingMessages.SaveClientMessageMedia(GetCurrTeam(),msgID, r.ConnInfo.UserID, fileID, fileID, thumbID, reqMedia, h)
+	pendingMessage, err := repo.PendingMessages.SaveClientMessageMedia(GetCurrTeam(), msgID, r.ConnInfo.UserID, fileID, fileID, thumbID, reqMedia, h)
 	if err != nil {
 		e := new(msg.Error)
 		e.Code = "n/a"
