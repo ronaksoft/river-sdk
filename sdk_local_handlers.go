@@ -201,7 +201,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	// this will be used as next requestID
 	req.RandomID = domain.SequentialUniqueID()
 	msgID := -req.RandomID
-	res, err := repo.PendingMessages.Save(msgID, r.ConnInfo.UserID, req)
+	res, err := repo.PendingMessages.Save(GetCurrTeamID(), msgID, r.ConnInfo.UserID, req)
 	if err != nil {
 		e := new(msg.Error)
 		e.Code = "n/a"
@@ -219,6 +219,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 			Constructor: msg.C_MessagesSend,
 			RequestID:   uint64(req.RandomID),
 			Message:     requestBytes,
+			Team:        GetCurrTeam(),
 		},
 		timeoutCB, successCB, true,
 	)
@@ -1900,7 +1901,7 @@ func (r *River) getTeamCounters(in, out *msg.MessageEnvelope, timeoutCB domain.T
 	}
 
 	res := msg.TeamCounters{
-		UnreadCount: int64(unreadCount),
+		UnreadCount:  int64(unreadCount),
 		MentionCount: int64(mentionCount),
 	}
 

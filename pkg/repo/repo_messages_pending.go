@@ -88,11 +88,12 @@ func deletePendingMessage(txn *badger.Txn, msgID int64) error {
 	return err
 }
 
-func (r *repoMessagesPending) Save(msgID int64, senderID int64, message *msg.MessagesSend) (*msg.ClientPendingMessage, error) {
+func (r *repoMessagesPending) Save(teamId int64, msgID int64, senderID int64, message *msg.MessagesSend) (*msg.ClientPendingMessage, error) {
 	if message == nil {
 		return nil, domain.ErrNotFound
 	}
 	pm := &msg.ClientPendingMessage{
+		TeamID:     teamId,
 		AccessHash: message.Peer.AccessHash,
 		Body:       message.Body,
 		PeerID:     message.Peer.ID,
