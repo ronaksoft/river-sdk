@@ -1883,15 +1883,15 @@ func (r *River) systemGetConfig(in, out *msg.MessageEnvelope, timeoutCB domain.T
 	successCB(out)
 }
 
-func (r *River) getUnreadCount(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := &msg.GetUnreadCount{}
+func (r *River) getTeamCounters(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.GetTeamCounters{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
 		return
 	}
 
-	u, _, err := repo.Dialogs.CountAllUnread(r.ConnInfo.UserID, req.Team.ID, req.WithMutes)
+	unreadCount, mentionCount, err := repo.Dialogs.CountAllUnread(r.ConnInfo.UserID, req.Team.ID, req.WithMutes)
 
 	if err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
@@ -1899,37 +1899,12 @@ func (r *River) getUnreadCount(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 		return
 	}
 
-	res := msg.Int64Res{
-		Num: int64(u),
+	res := msg.TeamCounters{
+		UnreadCount: int64(unreadCount),
+		MentionCount: int64(mentionCount),
 	}
 
-	out.Constructor = msg.C_Int64Res
-	out.RequestID = in.RequestID
-	out.Message, _ = res.Marshal()
-	uiexec.ExecSuccessCB(successCB, out)
-}
-
-func (r *River) getMentionCount(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := &msg.GetMentionCount{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
-		successCB(out)
-		return
-	}
-
-	_, m, err := repo.Dialogs.CountAllUnread(r.ConnInfo.UserID, req.Team.ID, req.WithMutes)
-
-	if err != nil {
-		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
-		successCB(out)
-		return
-	}
-
-	res := msg.Int64Res{
-		Num: int64(m),
-	}
-
-	out.Constructor = msg.C_Int64Res
+	out.Constructor = msg.C_TeamCounters
 	out.RequestID = in.RequestID
 	out.Message, _ = res.Marshal()
 	uiexec.ExecSuccessCB(successCB, out)

@@ -11,7 +11,6 @@ import (
 	"github.com/dgraph-io/badger/v2"
 	"github.com/tidwall/buntdb"
 	"strings"
-	"sync"
 )
 
 const (
@@ -22,15 +21,11 @@ const (
 
 type repoDialogs struct {
 	*repository
-	mtx           sync.Mutex
-	teamsCounters map[int64]*dialogsCounter
 }
 
 type dialogsCounter struct {
 	unread      int32
-	unreadMutes int32
 	mentioned   int32
-	updateAt    int64
 }
 
 func getDialogKey(teamID int64, peerID int64, peerType int32) []byte {
@@ -298,32 +293,6 @@ func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
 }
 
 func (r *repoDialogs) CountAllUnread(userID, teamID int64, mutes bool) (unread, mentioned int32, err error) {
-	// TODO:: handle caching properly, this is a quick not impressive solution
-	r.mtx.Lock()
-	c := r.teamsCounters[teamID]
-	r.mtx.Unlock()
-	if c != nil && c.updateAt+1 > tools.TimeUnix() {
-		mentioned = c.mentioned
-		unread = c.unread
-		if mutes {
-			unread += c.unreadMutes
-		}
-		return
-	}
-	if c == nil {
-		c = &dialogsCounter{
-			unread:      0,
-			unreadMutes: 0,
-			mentioned:   0,
-			updateAt:    tools.TimeUnix(),
-		}
-	} else {
-		c.unread = 0
-		c.unreadMutes = 0
-		c.mentioned = 0
-		c.updateAt = tools.TimeUnix()
-	}
-
 	err = badgerView(func(txn *badger.Txn) error {
 		st := r.badger.NewStream()
 		st.Prefix = getDialogPrefix(teamID)
@@ -337,9 +306,9 @@ func (r *repoDialogs) CountAllUnread(userID, teamID int64, mutes bool) (unread, 
 				return false
 			}
 			if mutes || d.NotifySettings.MuteUntil < domain.Now().Unix() {
-				c.unread += u
+				unread += u
 			}
-			c.mentioned += m
+			mentioned += m
 			return false
 		}
 		st.Send = func(list *badger.KVList) error {
@@ -347,9 +316,6 @@ func (r *repoDialogs) CountAllUnread(userID, teamID int64, mutes bool) (unread, 
 		}
 		return st.Orchestrate(context.Background())
 	})
-	r.mtx.Lock()
-	r.teamsCounters[teamID] = c
-	r.mtx.Unlock()
 
 	return
 }

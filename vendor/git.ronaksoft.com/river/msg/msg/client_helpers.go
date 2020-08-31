@@ -784,28 +784,28 @@ func ResultRecentSearchMany(out *MessageEnvelope, res *RecentSearchMany) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
-const C_GetUnreadCount int64 = 2102944127
+const C_GetTeamCounters int64 = 2695396300
 
-type poolGetUnreadCount struct {
+type poolGetTeamCounters struct {
 	pool sync.Pool
 }
 
-func (p *poolGetUnreadCount) Get() *GetUnreadCount {
-	x, ok := p.pool.Get().(*GetUnreadCount)
+func (p *poolGetTeamCounters) Get() *GetTeamCounters {
+	x, ok := p.pool.Get().(*GetTeamCounters)
 	if !ok {
-		return &GetUnreadCount{}
+		return &GetTeamCounters{}
 	}
 	return x
 }
 
-func (p *poolGetUnreadCount) Put(x *GetUnreadCount) {
+func (p *poolGetTeamCounters) Put(x *GetTeamCounters) {
 	p.pool.Put(x)
 }
 
-var PoolGetUnreadCount = poolGetUnreadCount{}
+var PoolGetTeamCounters = poolGetTeamCounters{}
 
-func ResultGetUnreadCount(out *MessageEnvelope, res *GetUnreadCount) {
-	out.Constructor = C_GetUnreadCount
+func ResultGetTeamCounters(out *MessageEnvelope, res *GetTeamCounters) {
+	out.Constructor = C_GetTeamCounters
 	protoSize := res.Size()
 	if protoSize > cap(out.Message) {
 		pbytes.Put(out.Message)
@@ -816,60 +816,28 @@ func ResultGetUnreadCount(out *MessageEnvelope, res *GetUnreadCount) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
-const C_GetMentionCount int64 = 464183141
+const C_TeamCounters int64 = 795295093
 
-type poolGetMentionCount struct {
+type poolTeamCounters struct {
 	pool sync.Pool
 }
 
-func (p *poolGetMentionCount) Get() *GetMentionCount {
-	x, ok := p.pool.Get().(*GetMentionCount)
+func (p *poolTeamCounters) Get() *TeamCounters {
+	x, ok := p.pool.Get().(*TeamCounters)
 	if !ok {
-		return &GetMentionCount{}
+		return &TeamCounters{}
 	}
 	return x
 }
 
-func (p *poolGetMentionCount) Put(x *GetMentionCount) {
+func (p *poolTeamCounters) Put(x *TeamCounters) {
 	p.pool.Put(x)
 }
 
-var PoolGetMentionCount = poolGetMentionCount{}
+var PoolTeamCounters = poolTeamCounters{}
 
-func ResultGetMentionCount(out *MessageEnvelope, res *GetMentionCount) {
-	out.Constructor = C_GetMentionCount
-	protoSize := res.Size()
-	if protoSize > cap(out.Message) {
-		pbytes.Put(out.Message)
-		out.Message = pbytes.GetLen(protoSize)
-	} else {
-		out.Message = out.Message[:protoSize]
-	}
-	res.MarshalToSizedBuffer(out.Message)
-}
-
-const C_Int64Res int64 = 4150008234
-
-type poolInt64Res struct {
-	pool sync.Pool
-}
-
-func (p *poolInt64Res) Get() *Int64Res {
-	x, ok := p.pool.Get().(*Int64Res)
-	if !ok {
-		return &Int64Res{}
-	}
-	return x
-}
-
-func (p *poolInt64Res) Put(x *Int64Res) {
-	p.pool.Put(x)
-}
-
-var PoolInt64Res = poolInt64Res{}
-
-func ResultInt64Res(out *MessageEnvelope, res *Int64Res) {
-	out.Constructor = C_Int64Res
+func ResultTeamCounters(out *MessageEnvelope, res *TeamCounters) {
+	out.Constructor = C_TeamCounters
 	protoSize := res.Size()
 	if protoSize > cap(out.Message) {
 		pbytes.Put(out.Message)
@@ -903,7 +871,6 @@ func init() {
 	ConstructorNames[1541024203] = "ClientMediaSize"
 	ConstructorNames[2045409949] = "RecentSearch"
 	ConstructorNames[1217165147] = "RecentSearchMany"
-	ConstructorNames[2102944127] = "GetUnreadCount"
-	ConstructorNames[464183141] = "GetMentionCount"
-	ConstructorNames[4150008234] = "Int64Res"
+	ConstructorNames[2695396300] = "GetTeamCounters"
+	ConstructorNames[795295093] = "TeamCounters"
 }
