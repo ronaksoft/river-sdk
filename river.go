@@ -440,7 +440,7 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 			Message:     reqBuff,
 			Team: &msg.InputTeam{
 				AccessHash: pendingMessage.TeamAccessHash,
-				ID: pendingMessage.ID,
+				ID:         pendingMessage.ID,
 			},
 		},
 		timeoutCB, successCB, false)
@@ -593,7 +593,7 @@ func (r *River) registerCommandHandlers() {
 		msg.C_GifSave:                       r.gifSave,
 		msg.C_GifDelete:                     r.gifDelete,
 		msg.C_SystemGetConfig:               r.systemGetConfig,
-		msg.C_GetTeamCounters: 			     r.getTeamCounters,
+		msg.C_GetTeamCounters:               r.getTeamCounters,
 	}
 }
 

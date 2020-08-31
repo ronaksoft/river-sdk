@@ -24,8 +24,8 @@ type repoDialogs struct {
 }
 
 type dialogsCounter struct {
-	unread      int32
-	mentioned   int32
+	unread    int32
+	mentioned int32
 }
 
 func getDialogKey(teamID int64, peerID int64, peerType int32) []byte {
