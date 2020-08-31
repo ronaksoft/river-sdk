@@ -177,7 +177,7 @@ func (r *River) messagesGetDialog(in, out *msg.MessageEnvelope, timeoutCB domain
 }
 
 func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.MessagesSend)
+	req := &msg.MessagesSend{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
@@ -201,7 +201,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	// this will be used as next requestID
 	req.RandomID = domain.SequentialUniqueID()
 	msgID := -req.RandomID
-	res, err := repo.PendingMessages.Save(GetCurrTeamID(), msgID, r.ConnInfo.UserID, req)
+	res, err := repo.PendingMessages.Save(in.Team.ID, msgID, r.ConnInfo.UserID, req)
 	if err != nil {
 		e := new(msg.Error)
 		e.Code = "n/a"
@@ -219,7 +219,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 			Constructor: msg.C_MessagesSend,
 			RequestID:   uint64(req.RandomID),
 			Message:     requestBytes,
-			Team:        GetCurrTeam(),
+			Team:        in.Team,
 		},
 		timeoutCB, successCB, true,
 	)
