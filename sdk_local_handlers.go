@@ -203,9 +203,10 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	msgID := -req.RandomID
 	res, err := repo.PendingMessages.Save(in.Team, msgID, r.ConnInfo.UserID, req)
 	if err != nil {
-		e := new(msg.Error)
-		e.Code = "n/a"
-		e.Items = "Failed to save to pendingMessages : " + err.Error()
+		e := &msg.Error{
+			Code:  "n/a",
+			Items: "Failed to save to pendingMessages : " + err.Error(),
+		}
 		msg.ResultError(out, e)
 		uiexec.ExecSuccessCB(successCB, out)
 		return
@@ -216,10 +217,10 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 	// using req randomID as requestID later in queue processing and network controller messageHandler
 	r.queueCtrl.EnqueueCommand(
 		&msg.MessageEnvelope{
+			Team:        in.Team,
 			Constructor: msg.C_MessagesSend,
 			RequestID:   uint64(req.RandomID),
 			Message:     requestBytes,
-			Team:        in.Team,
 		},
 		timeoutCB, successCB, true,
 	)
@@ -514,9 +515,10 @@ func (r *River) messagesSendMedia(in, out *msg.MessageEnvelope, timeoutCB domain
 
 		res, err := repo.PendingMessages.SaveMessageMedia(in.Team, dbID, r.ConnInfo.UserID, req)
 		if err != nil {
-			e := &msg.Error{}
-			e.Code = "n/a"
-			e.Items = "Failed to save to pendingMessages : " + err.Error()
+			e := &msg.Error{
+				Code:  "n/a",
+				Items: "Failed to save to pendingMessages : " + err.Error(),
+			}
 			msg.ResultError(out, e)
 			uiexec.ExecSuccessCB(successCB, out)
 			return
