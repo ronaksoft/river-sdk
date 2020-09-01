@@ -589,7 +589,7 @@ func (r *River) contactsAdd(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 		user.FirstName = req.FirstName
 		user.LastName = req.LastName
 		user.Phone = req.Phone
-		_ = repo.Users.SaveContact(in.Team.ID,&msg.ContactUser{
+		_ = repo.Users.SaveContact(in.Team.ID, &msg.ContactUser{
 			ID:         user.ID,
 			FirstName:  user.FirstName,
 			LastName:   user.LastName,
@@ -688,7 +688,7 @@ func (r *River) contactsDelete(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 		return
 	}
 
-	_ = repo.Users.DeleteContact(in.Team.ID,req.UserIDs...)
+	_ = repo.Users.DeleteContact(in.Team.ID, req.UserIDs...)
 	_ = repo.System.SaveInt(domain.GetContactsGetHashKey(in.Team.ID), 0)
 
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)

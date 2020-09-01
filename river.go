@@ -52,6 +52,13 @@ func GetTeam(teamID int64, teamAccessHash uint64) *msg.InputTeam {
 	}
 }
 
+func GetTeamID(team *msg.InputTeam) int64 {
+	if team == nil {
+		return 0
+	}
+	return team.ID
+}
+
 func SetLogLevel(l int) {
 	logs.SetLogLevel(l)
 }
@@ -102,7 +109,7 @@ type RiverConfig struct {
 	ResetQueueOnStartup bool
 
 	// Team
-	TeamID int64
+	TeamID         int64
 	TeamAccessHash int64
 }
 

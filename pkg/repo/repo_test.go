@@ -131,7 +131,7 @@ func TestRepoMessagesExtra(t *testing.T) {
 func TestPending(t *testing.T) {
 	pm := new(msg.ClientSendMessageMedia)
 	pm.Peer = new(msg.InputPeer)
-	_, err := repo.PendingMessages.SaveClientMessageMedia(10, 1, 11, 20, 21, pm, nil)
+	_, err := repo.PendingMessages.SaveClientMessageMedia(nil, 10, 1, 11, 20, 21, pm, nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -193,7 +193,7 @@ func TestConcurrent(t *testing.T) {
 	for i := int64(1); i < 10000; i++ {
 		waitGroup.Add(1)
 		go func(i int64) {
-			_, err := repo.PendingMessages.SaveMessageMedia(i, 1001, &msg.MessagesSendMedia{
+			_, err := repo.PendingMessages.SaveMessageMedia(nil, i, 1001, &msg.MessagesSendMedia{
 				RandomID: domain.RandomInt63(),
 				Peer: &msg.InputPeer{
 					ID:         i,

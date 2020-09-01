@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/ronak/riversdk"
 	"git.ronaksoft.com/ronak/riversdk/internal/logs"
 	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
 	messageHole "git.ronaksoft.com/ronak/riversdk/pkg/message_hole"
@@ -65,7 +66,7 @@ func (ctrl *Controller) contactsImported(e *msg.MessageEnvelope) {
 		return
 	}
 	logs.Info("SyncCtrl applies contactsImported")
-	_ = repo.Users.SaveContact(e.Team.ID,x.ContactUsers...)
+	_ = repo.Users.SaveContact(riversdk.GetTeamID(e.Team), x.ContactUsers...)
 	repo.Users.Save(x.Users...)
 }
 
@@ -83,13 +84,13 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 
 	// If contacts are modified in server, then first clear all the contacts and rewrite the new ones
 	if x.Modified == true {
-		_ = repo.Users.DeleteAllContacts(e.Team.ID)
+		_ = repo.Users.DeleteAllContacts(riversdk.GetTeamID(e.Team))
 	}
 
 	// Sort the contact users by their ids
 	sort.Slice(x.ContactUsers, func(i, j int) bool { return x.ContactUsers[i].ID < x.ContactUsers[j].ID })
 
-	repo.Users.SaveContact(e.Team.ID,x.ContactUsers...)
+	repo.Users.SaveContact(riversdk.GetTeamID(e.Team), x.ContactUsers...)
 	repo.Users.Save(x.Users...)
 	// server
 	if len(x.ContactUsers) > 0 {
@@ -100,7 +101,7 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 			buff.Write(b)
 		}
 		crc32Hash := crc32.ChecksumIEEE(buff.Bytes())
-		err := repo.System.SaveInt(domain.GetContactsGetHashKey(e.Team.ID), uint64(crc32Hash))
+		err := repo.System.SaveInt(domain.GetContactsGetHashKey(riversdk.GetTeamID(e.Team)), uint64(crc32Hash))
 		if err != nil {
 			logs.Error("SyncCtrl couldn't save ContactsHash in to the db", zap.Error(err))
 		}
@@ -267,11 +268,7 @@ func (ctrl *Controller) contactsTopPeers(e *msg.MessageEnvelope) {
 		zap.Int("L", len(u.Peers)),
 		zap.String("Cat", u.Category.String()),
 	)
-	var teamID int64
-	if e.Team != nil {
-		teamID = e.Team.ID
-	}
-	err = repo.TopPeers.Save(u.Category, ctrl.userID, teamID, u.Peers...)
+	err = repo.TopPeers.Save(u.Category, ctrl.userID, riversdk.GetTeamID(e.Team), u.Peers...)
 	if err != nil {
 		logs.Error("SyncCtrl got error on saving ContactsTopPeers", zap.Error(err))
 	}

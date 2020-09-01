@@ -303,7 +303,7 @@ func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup, team *msg.InputTe
 	var teamID int64
 	if team == nil {
 		teamID = 0
-	}else {
+	} else {
 		teamID = team.ID
 	}
 	contactsGetHash, _ := repo.System.LoadInt(domain.GetContactsGetHashKey(teamID))

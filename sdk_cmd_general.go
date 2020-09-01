@@ -524,8 +524,8 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 }
 
 // UpdateContactInfo update contact name
-func (r *River) UpdateContactInfo(teamID int64,userID int64, firstName, lastName string) error {
-	return repo.Users.UpdateContactInfo(teamID,userID, firstName, lastName)
+func (r *River) UpdateContactInfo(teamID int64, userID int64, firstName, lastName string) error {
+	return repo.Users.UpdateContactInfo(teamID, userID, firstName, lastName)
 }
 
 // GetScrollStatus
@@ -798,7 +798,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Initialize River Connection
 	logs.Info("River SetConfig done!")
-
 
 	// Set current team
 	_CurrTeamID = conf.TeamID
