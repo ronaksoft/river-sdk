@@ -1766,13 +1766,13 @@ func (r *River) clientGetRecentSearch(in, out *msg.MessageEnvelope, timeoutCB do
 	users, _ := repo.Users.GetMany(userIDs.ToArray())
 	groups, _ := repo.Groups.GetMany(groupIDs.ToArray())
 
-	res := msg.RecentSearchMany{
+	res := msg.ClientRecentSearchMany{
 		RecentSearches: recentSearches,
 		Users:          users,
 		Groups:         groups,
 	}
 
-	out.Constructor = msg.C_RecentSearchMany
+	out.Constructor = msg.C_ClientRecentSearchMany
 	out.RequestID = in.RequestID
 	out.Message, _ = res.Marshal()
 	uiexec.ExecSuccessCB(successCB, out)
@@ -1792,7 +1792,7 @@ func (r *River) clientPutRecentSearch(in, out *msg.MessageEnvelope, timeoutCB do
 		AccessHash: req.Peer.AccessHash,
 	}
 
-	recentSearch := &msg.RecentSearch{
+	recentSearch := &msg.ClientRecentSearch{
 		Peer: peer,
 		Date: int32(time.Now().Unix()),
 	}
@@ -1867,6 +1867,33 @@ func (r *River) clientRemoveRecentSearch(in, out *msg.MessageEnvelope, timeoutCB
 	uiexec.ExecSuccessCB(successCB, out)
 }
 
+func (r *River) clientGetTeamCounters(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientGetTeamCounters{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	unreadCount, mentionCount, err := repo.Dialogs.CountAllUnread(r.ConnInfo.UserID, req.Team.ID, req.WithMutes)
+
+	if err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	res := msg.ClientTeamCounters{
+		UnreadCount:  int64(unreadCount),
+		MentionCount: int64(mentionCount),
+	}
+
+	out.Constructor = msg.C_ClientTeamCounters
+	out.RequestID = in.RequestID
+	out.Message, _ = res.Marshal()
+	uiexec.ExecSuccessCB(successCB, out)
+}
+
 func (r *River) gifGetSaved(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := &msg.GifGetSaved{}
 	if err := req.Unmarshal(in.Message); err != nil {
@@ -1902,31 +1929,4 @@ func (r *River) gifGetSaved(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 func (r *River) systemGetConfig(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	msg.ResultSystemConfig(out, domain.SysConfig)
 	successCB(out)
-}
-
-func (r *River) getTeamCounters(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := &msg.GetTeamCounters{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
-		successCB(out)
-		return
-	}
-
-	unreadCount, mentionCount, err := repo.Dialogs.CountAllUnread(r.ConnInfo.UserID, req.Team.ID, req.WithMutes)
-
-	if err != nil {
-		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
-		successCB(out)
-		return
-	}
-
-	res := msg.TeamCounters{
-		UnreadCount:  int64(unreadCount),
-		MentionCount: int64(mentionCount),
-	}
-
-	out.Constructor = msg.C_TeamCounters
-	out.RequestID = in.RequestID
-	out.Message, _ = res.Marshal()
-	uiexec.ExecSuccessCB(successCB, out)
 }

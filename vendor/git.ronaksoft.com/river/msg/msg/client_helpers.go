@@ -428,6 +428,38 @@ func ResultClientGetSavedGifs(out *MessageEnvelope, res *ClientGetSavedGifs) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_ClientGetTeamCounters int64 = 3403301140
+
+type poolClientGetTeamCounters struct {
+	pool sync.Pool
+}
+
+func (p *poolClientGetTeamCounters) Get() *ClientGetTeamCounters {
+	x, ok := p.pool.Get().(*ClientGetTeamCounters)
+	if !ok {
+		return &ClientGetTeamCounters{}
+	}
+	return x
+}
+
+func (p *poolClientGetTeamCounters) Put(x *ClientGetTeamCounters) {
+	p.pool.Put(x)
+}
+
+var PoolClientGetTeamCounters = poolClientGetTeamCounters{}
+
+func ResultClientGetTeamCounters(out *MessageEnvelope, res *ClientGetTeamCounters) {
+	out.Constructor = C_ClientGetTeamCounters
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 const C_ClientPendingMessage int64 = 2164891929
 
 type poolClientPendingMessage struct {
@@ -718,28 +750,28 @@ func ResultClientMediaSize(out *MessageEnvelope, res *ClientMediaSize) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
-const C_RecentSearch int64 = 2045409949
+const C_ClientRecentSearch int64 = 2069517672
 
-type poolRecentSearch struct {
+type poolClientRecentSearch struct {
 	pool sync.Pool
 }
 
-func (p *poolRecentSearch) Get() *RecentSearch {
-	x, ok := p.pool.Get().(*RecentSearch)
+func (p *poolClientRecentSearch) Get() *ClientRecentSearch {
+	x, ok := p.pool.Get().(*ClientRecentSearch)
 	if !ok {
-		return &RecentSearch{}
+		return &ClientRecentSearch{}
 	}
 	return x
 }
 
-func (p *poolRecentSearch) Put(x *RecentSearch) {
+func (p *poolClientRecentSearch) Put(x *ClientRecentSearch) {
 	p.pool.Put(x)
 }
 
-var PoolRecentSearch = poolRecentSearch{}
+var PoolClientRecentSearch = poolClientRecentSearch{}
 
-func ResultRecentSearch(out *MessageEnvelope, res *RecentSearch) {
-	out.Constructor = C_RecentSearch
+func ResultClientRecentSearch(out *MessageEnvelope, res *ClientRecentSearch) {
+	out.Constructor = C_ClientRecentSearch
 	protoSize := res.Size()
 	if protoSize > cap(out.Message) {
 		pbytes.Put(out.Message)
@@ -750,31 +782,31 @@ func ResultRecentSearch(out *MessageEnvelope, res *RecentSearch) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
-const C_RecentSearchMany int64 = 1217165147
+const C_ClientRecentSearchMany int64 = 3236847495
 
-type poolRecentSearchMany struct {
+type poolClientRecentSearchMany struct {
 	pool sync.Pool
 }
 
-func (p *poolRecentSearchMany) Get() *RecentSearchMany {
-	x, ok := p.pool.Get().(*RecentSearchMany)
+func (p *poolClientRecentSearchMany) Get() *ClientRecentSearchMany {
+	x, ok := p.pool.Get().(*ClientRecentSearchMany)
 	if !ok {
-		return &RecentSearchMany{}
+		return &ClientRecentSearchMany{}
 	}
 	return x
 }
 
-func (p *poolRecentSearchMany) Put(x *RecentSearchMany) {
+func (p *poolClientRecentSearchMany) Put(x *ClientRecentSearchMany) {
 	x.RecentSearches = x.RecentSearches[:0]
 	x.Users = x.Users[:0]
 	x.Groups = x.Groups[:0]
 	p.pool.Put(x)
 }
 
-var PoolRecentSearchMany = poolRecentSearchMany{}
+var PoolClientRecentSearchMany = poolClientRecentSearchMany{}
 
-func ResultRecentSearchMany(out *MessageEnvelope, res *RecentSearchMany) {
-	out.Constructor = C_RecentSearchMany
+func ResultClientRecentSearchMany(out *MessageEnvelope, res *ClientRecentSearchMany) {
+	out.Constructor = C_ClientRecentSearchMany
 	protoSize := res.Size()
 	if protoSize > cap(out.Message) {
 		pbytes.Put(out.Message)
@@ -785,60 +817,28 @@ func ResultRecentSearchMany(out *MessageEnvelope, res *RecentSearchMany) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
-const C_GetTeamCounters int64 = 2695396300
+const C_ClientTeamCounters int64 = 769069696
 
-type poolGetTeamCounters struct {
+type poolClientTeamCounters struct {
 	pool sync.Pool
 }
 
-func (p *poolGetTeamCounters) Get() *GetTeamCounters {
-	x, ok := p.pool.Get().(*GetTeamCounters)
+func (p *poolClientTeamCounters) Get() *ClientTeamCounters {
+	x, ok := p.pool.Get().(*ClientTeamCounters)
 	if !ok {
-		return &GetTeamCounters{}
+		return &ClientTeamCounters{}
 	}
 	return x
 }
 
-func (p *poolGetTeamCounters) Put(x *GetTeamCounters) {
+func (p *poolClientTeamCounters) Put(x *ClientTeamCounters) {
 	p.pool.Put(x)
 }
 
-var PoolGetTeamCounters = poolGetTeamCounters{}
+var PoolClientTeamCounters = poolClientTeamCounters{}
 
-func ResultGetTeamCounters(out *MessageEnvelope, res *GetTeamCounters) {
-	out.Constructor = C_GetTeamCounters
-	protoSize := res.Size()
-	if protoSize > cap(out.Message) {
-		pbytes.Put(out.Message)
-		out.Message = pbytes.GetLen(protoSize)
-	} else {
-		out.Message = out.Message[:protoSize]
-	}
-	res.MarshalToSizedBuffer(out.Message)
-}
-
-const C_TeamCounters int64 = 795295093
-
-type poolTeamCounters struct {
-	pool sync.Pool
-}
-
-func (p *poolTeamCounters) Get() *TeamCounters {
-	x, ok := p.pool.Get().(*TeamCounters)
-	if !ok {
-		return &TeamCounters{}
-	}
-	return x
-}
-
-func (p *poolTeamCounters) Put(x *TeamCounters) {
-	p.pool.Put(x)
-}
-
-var PoolTeamCounters = poolTeamCounters{}
-
-func ResultTeamCounters(out *MessageEnvelope, res *TeamCounters) {
-	out.Constructor = C_TeamCounters
+func ResultClientTeamCounters(out *MessageEnvelope, res *ClientTeamCounters) {
+	out.Constructor = C_ClientTeamCounters
 	protoSize := res.Size()
 	if protoSize > cap(out.Message) {
 		pbytes.Put(out.Message)
@@ -862,6 +862,7 @@ func init() {
 	ConstructorNames[1281490259] = "ClientRemoveRecentSearch"
 	ConstructorNames[3599155822] = "ClientRemoveAllRecentSearches"
 	ConstructorNames[3028067090] = "ClientGetSavedGifs"
+	ConstructorNames[3403301140] = "ClientGetTeamCounters"
 	ConstructorNames[2164891929] = "ClientPendingMessage"
 	ConstructorNames[2957647709] = "ClientSearchResult"
 	ConstructorNames[1414992553] = "ClientFilesMany"
@@ -870,8 +871,7 @@ func init() {
 	ConstructorNames[442767121] = "ClientCachedMediaInfo"
 	ConstructorNames[2711408875] = "ClientPeerMediaInfo"
 	ConstructorNames[1541024203] = "ClientMediaSize"
-	ConstructorNames[2045409949] = "RecentSearch"
-	ConstructorNames[1217165147] = "RecentSearchMany"
-	ConstructorNames[2695396300] = "GetTeamCounters"
-	ConstructorNames[795295093] = "TeamCounters"
+	ConstructorNames[2069517672] = "ClientRecentSearch"
+	ConstructorNames[3236847495] = "ClientRecentSearchMany"
+	ConstructorNames[769069696] = "ClientTeamCounters"
 }

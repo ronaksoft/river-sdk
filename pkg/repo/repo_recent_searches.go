@@ -44,8 +44,8 @@ func getRecentSearchPrefix(teamID int64) []byte {
 	return id
 }
 
-func (r *repoRecentSearches) List(teamID int64, limit int32) []*msg.RecentSearch {
-	recentSearches := make([]*msg.RecentSearch, 0, limit)
+func (r *repoRecentSearches) List(teamID int64, limit int32) []*msg.ClientRecentSearch {
+	recentSearches := make([]*msg.ClientRecentSearch, 0, limit)
 	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = getRecentSearchPrefix(teamID)
@@ -54,7 +54,7 @@ func (r *repoRecentSearches) List(teamID int64, limit int32) []*msg.RecentSearch
 		defer it.Close()
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
-				r := &msg.RecentSearch{}
+				r := &msg.ClientRecentSearch{}
 				err := r.Unmarshal(val)
 				if err != nil {
 					return err
@@ -70,7 +70,7 @@ func (r *repoRecentSearches) List(teamID int64, limit int32) []*msg.RecentSearch
 	return recentSearches
 }
 
-func (r *repoRecentSearches) Put(teamID int64, recentSearch *msg.RecentSearch) error {
+func (r *repoRecentSearches) Put(teamID int64, recentSearch *msg.ClientRecentSearch) error {
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		recentSearchBytes, _ := recentSearch.Marshal()
 		recentSearchKey := getRecentSearchKey(teamID, recentSearch.Peer.ID, recentSearch.Peer.Type)

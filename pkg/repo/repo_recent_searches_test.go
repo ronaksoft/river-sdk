@@ -19,7 +19,7 @@ func TestRepoRecentSearches(t *testing.T) {
 		Convey("Put, List and Clear", func(c C) {
 			err := repo.RecentSearches.Clear(0)
 			c.So(err, ShouldBeNil)
-			err = repo.RecentSearches.Put(0, &msg.RecentSearch{
+			err = repo.RecentSearches.Put(0, &msg.ClientRecentSearch{
 				Peer: &msg.Peer{
 					ID:         101,
 					Type:       1,
@@ -30,7 +30,7 @@ func TestRepoRecentSearches(t *testing.T) {
 			c.So(err, ShouldBeNil)
 			searches := repo.RecentSearches.List(0, 1)
 			c.So(searches, ShouldHaveLength, 1)
-			err = repo.RecentSearches.Put(0, &msg.RecentSearch{
+			err = repo.RecentSearches.Put(0, &msg.ClientRecentSearch{
 				Peer: &msg.Peer{
 					ID:         102,
 					Type:       1,

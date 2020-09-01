@@ -1,6 +1,8 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 git.ronaksoft.com/river/msg v0.0.0-20200831130729-d933acd9dca2 h1:GHnuVIRbMT7Khf/iMC+GJZsrhmxtvlYjyyYtD7tXp1Q=
 git.ronaksoft.com/river/msg v0.0.0-20200831130729-d933acd9dca2/go.mod h1:ez3SSVytaE/rAXnu2Loxo1cHjXZJo0WdHLQwc6N4Z5Y=
+git.ronaksoft.com/river/msg v0.0.0-20200901122717-2485cbb2d6a4 h1:vF39Ek+73msrBHFlHWPP8pHlJoyhxA+1h2Kx7eE2AsE=
+git.ronaksoft.com/river/msg v0.0.0-20200901122717-2485cbb2d6a4/go.mod h1:ez3SSVytaE/rAXnu2Loxo1cHjXZJo0WdHLQwc6N4Z5Y=
 github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9 h1:HD8gA2tkByhMAwYaFAX9w2l7vxvBQ5NMoxDrkhqhtn4=
 github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9/go.mod h1:bOvUY6CB00SOBii9/FifXqc0awNKxLFCL/+pkDPuyl8=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
