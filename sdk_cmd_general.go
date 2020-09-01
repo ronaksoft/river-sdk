@@ -524,8 +524,8 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 }
 
 // UpdateContactInfo update contact name
-func (r *River) UpdateContactInfo(userID int64, firstName, lastName string) error {
-	return repo.Users.UpdateContactInfo(userID, firstName, lastName)
+func (r *River) UpdateContactInfo(teamID int64,userID int64, firstName, lastName string) error {
+	return repo.Users.UpdateContactInfo(teamID,userID, firstName, lastName)
 }
 
 // GetScrollStatus
@@ -618,7 +618,7 @@ func (r *River) AppStart() error {
 	if err != nil || time.Now().Unix()-int64(lastReIndexTime) > domain.Day {
 		go func() {
 			logs.Info("ReIndexing Users & Groups")
-			repo.Users.ReIndex()
+			repo.Users.ReIndex(GetCurrTeamID())
 			repo.Groups.ReIndex()
 			repo.Messages.ReIndex()
 			_ = repo.System.SaveInt(domain.SkReIndexTime, uint64(time.Now().Unix()))

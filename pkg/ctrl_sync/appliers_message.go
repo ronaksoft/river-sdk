@@ -65,7 +65,7 @@ func (ctrl *Controller) contactsImported(e *msg.MessageEnvelope) {
 		return
 	}
 	logs.Info("SyncCtrl applies contactsImported")
-	_ = repo.Users.SaveContact(x.ContactUsers...)
+	_ = repo.Users.SaveContact(e.Team.ID,x.ContactUsers...)
 	repo.Users.Save(x.Users...)
 }
 
@@ -83,13 +83,13 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 
 	// If contacts are modified in server, then first clear all the contacts and rewrite the new ones
 	if x.Modified == true {
-		_ = repo.Users.DeleteAllContacts()
+		_ = repo.Users.DeleteAllContacts(e.Team.ID)
 	}
 
 	// Sort the contact users by their ids
 	sort.Slice(x.ContactUsers, func(i, j int) bool { return x.ContactUsers[i].ID < x.ContactUsers[j].ID })
 
-	repo.Users.SaveContact(x.ContactUsers...)
+	repo.Users.SaveContact(e.Team.ID,x.ContactUsers...)
 	repo.Users.Save(x.Users...)
 	// server
 	if len(x.ContactUsers) > 0 {
@@ -100,7 +100,7 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 			buff.Write(b)
 		}
 		crc32Hash := crc32.ChecksumIEEE(buff.Bytes())
-		err := repo.System.SaveInt(domain.SkContactsGetHash, uint64(crc32Hash))
+		err := repo.System.SaveInt(domain.GetContactsGetHashKey(e.Team.ID), uint64(crc32Hash))
 		if err != nil {
 			logs.Error("SyncCtrl couldn't save ContactsHash in to the db", zap.Error(err))
 		}

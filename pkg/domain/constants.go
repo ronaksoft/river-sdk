@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"git.ronaksoft.com/river/msg/msg"
 	"time"
 )
@@ -42,6 +43,10 @@ const (
 	SkGifHash            = "GIF_HASH"
 	SkTeam               = "TEAM"
 )
+
+func GetContactsGetHashKey(teamID int64) string {
+	return fmt.Sprintf("%s.%021d", SkContactsGetHash, teamID)
+}
 
 // NetworkStatus network controller status
 type NetworkStatus int
