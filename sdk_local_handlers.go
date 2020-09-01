@@ -553,7 +553,7 @@ func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 	}
 
 	res := &msg.ContactsMany{}
-	res.ContactUsers, res.Contacts = repo.Users.GetContacts()
+	res.ContactUsers, res.Contacts = repo.Users.GetContacts(in.Team.ID)
 
 	userIDs := make([]int64, 0, len(res.ContactUsers))
 	for idx := range res.ContactUsers {
@@ -571,6 +571,12 @@ func (r *River) contactsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 }
 
 func (r *River) contactsAdd(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	if in.Team.ID != 0 {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: "teams cannot add contact"})
+		successCB(out)
+		return
+	}
+
 	req := &msg.ContactsAdd{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
@@ -583,7 +589,7 @@ func (r *River) contactsAdd(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 		user.FirstName = req.FirstName
 		user.LastName = req.LastName
 		user.Phone = req.Phone
-		_ = repo.Users.SaveContact(&msg.ContactUser{
+		_ = repo.Users.SaveContact(in.Team.ID,&msg.ContactUser{
 			ID:         user.ID,
 			FirstName:  user.FirstName,
 			LastName:   user.LastName,
@@ -597,11 +603,17 @@ func (r *River) contactsAdd(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 	}
 
 	// reset contacts hash to update the contacts
-	_ = repo.System.SaveInt(domain.SkContactsGetHash, 0)
+	_ = repo.System.SaveInt(domain.GetContactsGetHashKey(in.Team.ID), 0)
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	if in.Team.ID != 0 {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: "teams cannot import contact"})
+		successCB(out)
+		return
+	}
+
 	req := new(msg.ContactsImport)
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
@@ -644,7 +656,7 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	}
 
 	// extract differences between existing contacts and new contacts
-	_, contacts := repo.Users.GetContacts()
+	_, contacts := repo.Users.GetContacts(in.Team.ID)
 	diffContacts := domain.ExtractsContactsDifference(contacts, req.Contacts)
 
 	err = repo.Users.SavePhoneContact(diffContacts...)
@@ -663,6 +675,12 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 }
 
 func (r *River) contactsDelete(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	if in.Team.ID != 0 {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: "teams cannot delete contact"})
+		successCB(out)
+		return
+	}
+
 	req := &msg.ContactsDelete{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
@@ -670,8 +688,8 @@ func (r *River) contactsDelete(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 		return
 	}
 
-	_ = repo.Users.DeleteContact(req.UserIDs...)
-	_ = repo.System.SaveInt(domain.SkContactsGetHash, 0)
+	_ = repo.Users.DeleteContact(in.Team.ID,req.UserIDs...)
+	_ = repo.System.SaveInt(domain.GetContactsGetHashKey(in.Team.ID), 0)
 
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 	return
@@ -685,8 +703,8 @@ func (r *River) contactsDeleteAll(in, out *msg.MessageEnvelope, timeoutCB domain
 		return
 	}
 
-	_ = repo.Users.DeleteAllContacts()
-	_ = repo.System.SaveInt(domain.SkContactsGetHash, 0)
+	_ = repo.Users.DeleteAllContacts(in.Team.ID)
+	_ = repo.System.SaveInt(domain.GetContactsGetHashKey(in.Team.ID), 0)
 	_ = repo.System.SaveInt(domain.SkContactsImportHash, 0)
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 	return
