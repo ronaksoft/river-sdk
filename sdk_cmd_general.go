@@ -798,6 +798,11 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Initialize River Connection
 	logs.Info("River SetConfig done!")
+
+
+	// Set current team
+	_CurrTeamID = conf.TeamID
+	_CurrTeamAccessHash = uint64(conf.TeamAccessHash)
 }
 
 func (r *River) SetTeam(teamID int64, teamAccessHash int64, forceSync bool) {

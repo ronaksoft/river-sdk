@@ -100,6 +100,10 @@ type RiverConfig struct {
 
 	// Misc
 	ResetQueueOnStartup bool
+
+	// Team
+	TeamID int64
+	TeamAccessHash int64
 }
 
 // River
