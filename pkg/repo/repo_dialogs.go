@@ -11,6 +11,7 @@ import (
 	"github.com/dgraph-io/badger/v2"
 	"github.com/tidwall/buntdb"
 	"strings"
+	"sync/atomic"
 )
 
 const (
@@ -301,14 +302,14 @@ func (r *repoDialogs) CountAllUnread(userID, teamID int64, mutes bool) (unread, 
 			if err != nil {
 				return false
 			}
-			u, m, err := countDialogUnread(txn, d.TeamID, d.PeerID, d.PeerType, userID, d.ReadInboxMaxID)
+			u, m, err := countDialogUnread(txn, d.TeamID, d.PeerID, d.PeerType, userID, d.ReadInboxMaxID+1)
 			if err != nil {
 				return false
 			}
 			if mutes || d.NotifySettings.MuteUntil < domain.Now().Unix() {
-				unread += u
+				atomic.AddInt32(&unread, u)
 			}
-			mentioned += m
+			atomic.AddInt32(&mentioned, m)
 			return false
 		}
 		st.Send = func(list *badger.KVList) error {
