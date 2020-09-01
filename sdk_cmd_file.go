@@ -167,8 +167,8 @@ func (r *River) GroupUploadPhoto(groupID int64, filePath string) (reqID string) 
 }
 
 // GetSharedMedia search in given dialog files
-func (r *River) GetSharedMedia(peerID int64, peerType int32, mediaType int32, delegate RequestDelegate) {
-	msgs, err := repo.Messages.GetSharedMedia(GetCurrTeamID(), peerID, peerType, msg.ClientMediaType(mediaType))
+func (r *River) GetSharedMedia(teamID int64, peerID int64, peerType int32, mediaType int32, delegate RequestDelegate) {
+	msgs, err := repo.Messages.GetSharedMedia(teamID, peerID, peerType, msg.ClientMediaType(mediaType))
 	if err != nil {
 		out := new(msg.MessageEnvelope)
 		res := new(msg.Error)

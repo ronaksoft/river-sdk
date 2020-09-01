@@ -22,28 +22,8 @@ import (
 )
 
 var (
-	_ServerKeys         ServerKeys
-	_CurrTeamID         int64
-	_CurrTeamAccessHash uint64
+	_ServerKeys ServerKeys
 )
-
-func GetCurrTeamID() int64 {
-	return _CurrTeamID
-}
-
-func GetCurrTeam() *msg.InputTeam {
-	if _CurrTeamID == 0 {
-		return &msg.InputTeam{
-			ID:         0,
-			AccessHash: 0,
-		}
-	}
-	logs.Info("GetTeam", zap.Int64("TeamID", _CurrTeamID))
-	return &msg.InputTeam{
-		ID:         _CurrTeamID,
-		AccessHash: _CurrTeamAccessHash,
-	}
-}
 
 func SetLogLevel(l int) {
 	logs.SetLogLevel(l)

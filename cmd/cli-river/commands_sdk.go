@@ -5,6 +5,7 @@ import (
 	"git.ronaksoft.com/river/msg/msg"
 	"git.ronaksoft.com/ronak/riversdk"
 	mon "git.ronaksoft.com/ronak/riversdk/internal/monitoring"
+	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
 	"gopkg.in/abiosoft/ishell.v2"
 	"time"
 )
@@ -132,7 +133,7 @@ var SdkSetTeam = &ishell.Cmd{
 var SdkGetTeam = &ishell.Cmd{
 	Name: "GetTeam",
 	Func: func(c *ishell.Context) {
-		c.Println(riversdk.GetCurrTeam())
+		c.Println(domain.GetCurrTeam())
 	},
 }
 

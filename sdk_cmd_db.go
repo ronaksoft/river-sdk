@@ -18,7 +18,7 @@ func (r *River) IsGifSaved(fileID int64, clusterID int32) bool {
 }
 
 func (r *River) GetRealTopMessageID(peerID int64, peerType int32) int64 {
-	topMsgID, err := repo.Messages.GetTopMessageID(GetCurrTeamID(), peerID, peerType)
+	topMsgID, err := repo.Messages.GetTopMessageID(domain.GetCurrTeamID(), peerID, peerType)
 	if err != nil {
 		logs.Error("SDK::GetRealTopMessageID() => Messages.GetTopMessageID()", zap.Error(err))
 		return -1

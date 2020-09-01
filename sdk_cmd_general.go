@@ -29,7 +29,7 @@ import (
 // ExecuteCommand is a wrapper function to pass the request to the queueController, to be passed to networkController for final
 // delivery to the server. SDK uses GetCurrentTeam() to detect the targeted team of the request
 func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate) (requestID int64, err error) {
-	return r.executeCommand(GetCurrTeam(), constructor, commandBytes, delegate)
+	return r.executeCommand(domain.GetCurrTeam(), constructor, commandBytes, delegate)
 }
 
 // ExecuteCommandWithTeam is similar to ExecuteTeam but explicitly defines the target team
@@ -530,12 +530,12 @@ func (r *River) UpdateContactInfo(teamID int64, userID int64, firstName, lastNam
 
 // GetScrollStatus
 func (r *River) GetScrollStatus(peerID int64, peerType int32) int64 {
-	return repo.MessagesExtra.GetScrollID(GetCurrTeamID(), peerID, peerType)
+	return repo.MessagesExtra.GetScrollID(domain.GetCurrTeamID(), peerID, peerType)
 }
 
 // SetScrollStatus
 func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
-	repo.MessagesExtra.SaveScrollID(GetCurrTeamID(), peerID, peerType, msgID)
+	repo.MessagesExtra.SaveScrollID(domain.GetCurrTeamID(), peerID, peerType, msgID)
 
 }
 
@@ -618,7 +618,7 @@ func (r *River) AppStart() error {
 	if err != nil || time.Now().Unix()-int64(lastReIndexTime) > domain.Day {
 		go func() {
 			logs.Info("ReIndexing Users & Groups")
-			repo.Users.ReIndex(GetCurrTeamID())
+			repo.Users.ReIndex(domain.GetCurrTeamID())
 			repo.Groups.ReIndex()
 			repo.Messages.ReIndex()
 			_ = repo.System.SaveInt(domain.SkReIndexTime, uint64(time.Now().Unix()))
@@ -800,16 +800,20 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	logs.Info("River SetConfig done!")
 
 	// Set current team
-	_CurrTeamID = conf.TeamID
-	_CurrTeamAccessHash = uint64(conf.TeamAccessHash)
+	domain.SetCurrentTeam(&msg.InputTeam{
+		ID:         conf.TeamID,
+		AccessHash: uint64(conf.TeamAccessHash),
+	})
 }
 
 func (r *River) SetTeam(teamID int64, teamAccessHash int64, forceSync bool) {
-	_CurrTeamID = teamID
-	_CurrTeamAccessHash = uint64(teamAccessHash)
+	domain.SetCurrentTeam(&msg.InputTeam{
+		ID:         teamID,
+		AccessHash: uint64(teamAccessHash),
+	})
 
-	if _CurrTeamID != 0 {
-		r.syncCtrl.TeamSync(_CurrTeamID, _CurrTeamAccessHash, forceSync)
+	if teamID != 0 {
+		r.syncCtrl.TeamSync(teamID, uint64(teamAccessHash), forceSync)
 	}
 }
 

@@ -97,7 +97,7 @@ var GetSharedMedia = &ishell.Cmd{
 		peerID := fnGetPeerID(c)
 		mediaType := fnGetMediaType(c)
 		reqDelegate := &RequestDelegate{}
-		_SDK.GetSharedMedia(peerID, int32(peerType), int32(mediaType), reqDelegate)
+		_SDK.GetSharedMedia(domain.GetCurrTeamID(), peerID, int32(peerType), int32(mediaType), reqDelegate)
 	},
 }
 
