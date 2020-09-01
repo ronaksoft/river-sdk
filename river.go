@@ -45,20 +45,6 @@ func GetCurrTeam() *msg.InputTeam {
 	}
 }
 
-func GetTeam(teamID int64, teamAccessHash uint64) *msg.InputTeam {
-	return &msg.InputTeam{
-		ID:         teamID,
-		AccessHash: teamAccessHash,
-	}
-}
-
-func GetTeamID(team *msg.InputTeam) int64 {
-	if team == nil {
-		return 0
-	}
-	return team.ID
-}
-
 func SetLogLevel(l int) {
 	logs.SetLogLevel(l)
 }

@@ -34,7 +34,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 
 // ExecuteCommandWithTeam is similar to ExecuteTeam but explicitly defines the target team
 func (r *River) ExecuteCommandWithTeam(teamID, accessHash, constructor int64, commandBytes []byte, delegate RequestDelegate) (requestID int64, err error) {
-	return r.executeCommand(GetTeam(teamID, uint64(accessHash)), constructor, commandBytes, delegate)
+	return r.executeCommand(domain.GetTeam(teamID, uint64(accessHash)), constructor, commandBytes, delegate)
 }
 
 func (r *River) executeCommand(
