@@ -14,11 +14,11 @@ import (
    Copyright Ronak Software Group 2018
 */
 
-func (r *River) SearchReIndex() {
+func (r *River) SearchReIndex(teamID int64) {
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(2)
 	go func() {
-		repo.Users.ReIndex()
+		repo.Users.ReIndex(teamID)
 		repo.Groups.ReIndex()
 		waitGroup.Done()
 	}()
