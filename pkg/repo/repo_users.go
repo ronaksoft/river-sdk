@@ -43,8 +43,12 @@ func getUserByKey(txn *badger.Txn, userKey []byte) (*msg.User, error) {
 	return user, nil
 }
 
-func getContactKey(userID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d", prefixContacts, userID))
+func getContactKey(teamID, userID int64) []byte {
+	return domain.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixContacts, teamID, userID))
+}
+
+func getContactTeamKey(teamID int64) []byte {
+	return domain.StrToByte(fmt.Sprintf("%s.%021d", prefixContacts, teamID))
 }
 
 func getContactByKey(txn *badger.Txn, contactKey []byte) (*msg.ContactUser, error) {
@@ -128,9 +132,9 @@ func saveUser(txn *badger.Txn, user *msg.User) error {
 	return nil
 }
 
-func saveContact(txn *badger.Txn, contactUser *msg.ContactUser) error {
+func saveContact(txn *badger.Txn, teamID int64, contactUser *msg.ContactUser) error {
 	userBytes, _ := contactUser.Marshal()
-	contactKey := getContactKey(contactUser.ID)
+	contactKey := getContactKey(teamID, contactUser.ID)
 	err := txn.SetEntry(badger.NewEntry(
 		contactKey, userBytes,
 	))
@@ -324,10 +328,10 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 	return users
 }
 
-func (r *repoUsers) GetContact(userID int64) (*msg.ContactUser, error) {
+func (r *repoUsers) GetContact(teamID, userID int64) (*msg.ContactUser, error) {
 	contactUser := new(msg.ContactUser)
 	err := badgerView(func(txn *badger.Txn) error {
-		item, err := txn.Get(getContactKey(userID))
+		item, err := txn.Get(getContactKey(teamID, userID))
 		if err != nil {
 			return err
 		}
@@ -339,15 +343,15 @@ func (r *repoUsers) GetContact(userID int64) (*msg.ContactUser, error) {
 	return contactUser, err
 }
 
-func (r *repoUsers) GetContacts() ([]*msg.ContactUser, []*msg.PhoneContact) {
+func (r *repoUsers) GetContacts(teamID int64) ([]*msg.ContactUser, []*msg.PhoneContact) {
 	contactUsers := make([]*msg.ContactUser, 0, 100)
 	phoneContacts := make([]*msg.PhoneContact, 0, 100)
 
 	_ = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixContacts))
+		opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.%021d.", prefixContacts, teamID))
 		it := txn.NewIterator(opts)
-		for it.Seek(getContactKey(0)); it.ValidForPrefix(opts.Prefix); it.Next() {
+		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
 			contactUser := &msg.ContactUser{}
 			phoneContact := &msg.PhoneContact{}
 			_ = it.Item().Value(func(val []byte) error {
@@ -442,24 +446,24 @@ func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
 	return contactUsers
 }
 
-func (r *repoUsers) UpdateContactInfo(userID int64, firstName, lastName string) error {
+func (r *repoUsers) UpdateContactInfo(teamID int64, userID int64, firstName, lastName string) error {
 	err := badgerUpdate(func(txn *badger.Txn) error {
-		contact, err := getContactByKey(txn, getContactKey(userID))
+		contact, err := getContactByKey(txn, getContactKey(teamID, userID))
 		if err != nil {
 			return err
 		}
 		contact.FirstName = firstName
 		contact.LastName = lastName
-		return saveContact(txn, contact)
+		return saveContact(txn, teamID, contact)
 	})
 	logs.ErrorOnErr("RepoUser got error on update contact info", err)
 	return err
 }
 
-func (r *repoUsers) SaveContact(contactUsers ...*msg.ContactUser) error {
+func (r *repoUsers) SaveContact(teamID int64, contactUsers ...*msg.ContactUser) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		for _, contactUser := range contactUsers {
-			err := saveContact(txn, contactUser)
+			err := saveContact(txn, teamID, contactUser)
 			if err != nil {
 				return err
 			}
@@ -516,20 +520,20 @@ func (r *repoUsers) GetPhoneContacts(limit int) ([]*msg.PhoneContact, error) {
 	return phoneContacts, err
 }
 
-func (r *repoUsers) DeleteContact(contactIDs ...int64) error {
+func (r *repoUsers) DeleteContact(teamID int64, contactIDs ...int64) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		for _, contactID := range contactIDs {
-			err := txn.Delete(getContactKey(contactID))
+			err := txn.Delete(getContactKey(teamID, contactID))
 			logs.ErrorOnErr("DeleteContact : error on delete contact", err, zap.Int64("ContactID", contactID))
 		}
 		return nil
 	})
 }
 
-func (r *repoUsers) DeleteAllContacts() error {
+func (r *repoUsers) DeleteAllContacts(teamID int64) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixContacts))
+		opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.%021d.", prefixContacts, teamID))
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
 			_ = txn.Delete(it.Item().KeyCopy(nil))
@@ -604,7 +608,7 @@ func (r *repoUsers) GetPhotoGallery(userID int64) []*msg.UserPhoto {
 	return photoGallery
 }
 
-func (r *repoUsers) ReIndex() {
+func (r *repoUsers) ReIndex(teamID int64) {
 	err := domain.Try(10, time.Second, func() error {
 		if r.peerSearch == nil {
 			return domain.ErrDoesNotExists
@@ -663,7 +667,7 @@ func (r *repoUsers) ReIndex() {
 				contactUser := new(msg.ContactUser)
 				_ = contactUser.Unmarshal(val)
 				indexPeer(
-					domain.ByteToStr(getContactKey(contactUser.ID)),
+					domain.ByteToStr(getContactKey(teamID, contactUser.ID)),
 					ContactSearch{
 						Type:      "contact",
 						FirstName: contactUser.FirstName,

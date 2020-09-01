@@ -300,7 +300,13 @@ func (ctrl *Controller) GetAllTopPeers(waitGroup *sync.WaitGroup, team *msg.Inpu
 
 func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup, team *msg.InputTeam) {
 	logs.Debug("SyncCtrl calls GetContacts")
-	contactsGetHash, _ := repo.System.LoadInt(domain.SkContactsGetHash)
+	var teamID int64
+	if team == nil {
+		teamID = 0
+	}else {
+		teamID = team.ID
+	}
+	contactsGetHash, _ := repo.System.LoadInt(domain.GetContactsGetHashKey(teamID))
 	req := &msg.ContactsGet{
 		Crc32Hash: uint32(contactsGetHash),
 	}
