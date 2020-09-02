@@ -306,7 +306,7 @@ func (r *repoDialogs) CountAllUnread(userID, teamID int64, mutes bool) (unread, 
 			if err != nil {
 				return false
 			}
-			if mutes || d.NotifySettings.MuteUntil < domain.Now().Unix() {
+			if mutes || (d.NotifySettings != nil && d.NotifySettings.MuteUntil < domain.Now().Unix()) {
 				atomic.AddInt32(&unread, u)
 			}
 			atomic.AddInt32(&mentioned, m)
