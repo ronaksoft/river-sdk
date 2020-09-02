@@ -1930,3 +1930,26 @@ func (r *River) systemGetConfig(in, out *msg.MessageEnvelope, timeoutCB domain.T
 	msg.ResultSystemConfig(out, domain.SysConfig)
 	successCB(out)
 }
+
+func (r *River) accountsGetTeams(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.AccountGetTeams{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	teams := repo.Teams.List()
+
+	if len(teams) > 0 {
+		teamsMany := &msg.TeamsMany{
+			Teams: teams,
+		}
+
+		msg.ResultTeamsMany(out, teamsMany)
+		successCB(out)
+		return
+	}
+
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+}
