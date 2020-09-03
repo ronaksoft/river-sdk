@@ -571,6 +571,7 @@ func (r *River) registerCommandHandlers() {
 		msg.C_GifDelete:                     r.gifDelete,
 		msg.C_SystemGetConfig:               r.systemGetConfig,
 		msg.C_ClientGetTeamCounters:         r.clientGetTeamCounters,
+		msg.C_AccountGetTeams:               r.accountsGetTeams,
 	}
 }
 

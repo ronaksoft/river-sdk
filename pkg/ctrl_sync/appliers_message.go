@@ -351,3 +351,29 @@ func (ctrl *Controller) botResults(e *msg.MessageEnvelope) {
 		}
 	}
 }
+
+// teamsMany
+func (ctrl *Controller) teamsMany(e *msg.MessageEnvelope) {
+	tm := &msg.TeamsMany{}
+	err := tm.Unmarshal(e.Message)
+	if err != nil {
+		logs.Error("SyncCtrl couldn't unmarshal TeamsMany", zap.Error(err))
+		return
+	}
+
+	for _, u := range tm.Users {
+		err := repo.Users.Save(u)
+
+		logs.ErrorOnErr("SyncCtrl couldn't save teamsMany users", err)
+	}
+
+	err = repo.Teams.Clear()
+
+	logs.ErrorOnErr("SyncCtrl couldn't clear saved teams", err)
+
+	for _, t := range tm.Teams {
+		err := repo.Teams.Put(t)
+
+		logs.ErrorOnErr("SyncCtrl couldn't save teamsMany teams", err)
+	}
+}

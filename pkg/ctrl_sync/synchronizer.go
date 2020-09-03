@@ -115,6 +115,7 @@ func NewSyncController(config Config) *Controller {
 		msg.C_WallPapersMany:    ctrl.wallpapersMany,
 		msg.C_SavedGifs:         ctrl.savedGifs,
 		msg.C_BotResults:        ctrl.botResults,
+		msg.C_TeamsMany:         ctrl.teamsMany,
 	}
 	return ctrl
 }
