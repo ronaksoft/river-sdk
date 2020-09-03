@@ -40,6 +40,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 		}
 		// make sure to created the message hole b4 creating dialog
 		dialog = &msg.Dialog{
+			TeamID:         x.Message.TeamID,
 			PeerID:         x.Message.PeerID,
 			PeerType:       x.Message.PeerType,
 			TopMessageID:   x.Message.ID,
@@ -52,6 +53,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 			return nil, err
 		}
 	}
+
 	// save user if does not exist
 	err = repo.Users.Save(x.Sender)
 	logs.WarnOnErr("SyncCtrl got error on saving user while applying new message", err, zap.Int64("SenderID", x.Sender.ID))
