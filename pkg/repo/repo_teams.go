@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/msg"
 	"git.ronaksoft.com/ronak/riversdk/internal/logs"
+	"git.ronaksoft.com/ronak/riversdk/internal/pools"
+	"git.ronaksoft.com/ronak/riversdk/internal/tools"
 	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
 	"github.com/dgraph-io/badger/v2"
 )
@@ -23,12 +25,17 @@ const (
 )
 
 func getTeamKey(teamID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d", prefixTeams, teamID))
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixTeams)
+	sb.WriteRune('.')
+	tools.AppendStrInt64(sb, teamID)
+	id := tools.StrToByte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
 }
 
 func (r *repoTeams) List() []*msg.Team {
-	teamList := make([]*msg.Team, 0, 100)
-
+	teamList := make([]*msg.Team, 0, 10)
 	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixTeams))
@@ -53,35 +60,20 @@ func (r *repoTeams) List() []*msg.Team {
 	return teamList
 }
 
-func (r *repoTeams) Put(team *msg.Team) error {
-	err := badgerUpdate(func(txn *badger.Txn) error {
-		return r.PutWithTransaction(txn, team)
-	})
-	return err
-}
-
-func (r *repoTeams) PutMany(teams ...*msg.Team) error {
+func (r *repoTeams) Save(teams ...*msg.Team) error {
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		for _, team := range teams {
-			err := r.PutWithTransaction(txn, team)
-
+			teamBytes, _ := team.Marshal()
+			recentSearchKey := getTeamKey(team.ID)
+			err := txn.SetEntry(badger.NewEntry(
+				recentSearchKey, teamBytes,
+			))
 			if err != nil {
 				return err
 			}
 		}
-
 		return nil
 	})
-	return err
-}
-
-func (r *repoTeams) PutWithTransaction(txn *badger.Txn, team *msg.Team) error {
-	teamBytes, _ := team.Marshal()
-	recentSearchKey := getTeamKey(team.ID)
-	err := txn.SetEntry(badger.NewEntry(
-		recentSearchKey, teamBytes,
-	))
-
 	return err
 }
 
