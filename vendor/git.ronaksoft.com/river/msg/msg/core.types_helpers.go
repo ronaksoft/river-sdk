@@ -1498,6 +1498,7 @@ func (p *poolTeam) Get() *Team {
 }
 
 func (p *poolTeam) Put(x *Team) {
+	x.Flags = x.Flags[:0]
 	p.pool.Put(x)
 }
 

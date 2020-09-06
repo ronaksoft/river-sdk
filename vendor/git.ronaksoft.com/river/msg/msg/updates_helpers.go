@@ -1363,6 +1363,38 @@ func ResultUpdateTeamMemberRemoved(out *MessageEnvelope, res *UpdateTeamMemberRe
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_UpdateTeamMemberStatus int64 = 4065657769
+
+type poolUpdateTeamMemberStatus struct {
+	pool sync.Pool
+}
+
+func (p *poolUpdateTeamMemberStatus) Get() *UpdateTeamMemberStatus {
+	x, ok := p.pool.Get().(*UpdateTeamMemberStatus)
+	if !ok {
+		return &UpdateTeamMemberStatus{}
+	}
+	return x
+}
+
+func (p *poolUpdateTeamMemberStatus) Put(x *UpdateTeamMemberStatus) {
+	p.pool.Put(x)
+}
+
+var PoolUpdateTeamMemberStatus = poolUpdateTeamMemberStatus{}
+
+func ResultUpdateTeamMemberStatus(out *MessageEnvelope, res *UpdateTeamMemberStatus) {
+	out.Constructor = C_UpdateTeamMemberStatus
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 const C_UpdateTeamPhotoChanged int64 = 2787282465
 
 type poolUpdateTeamPhotoChanged struct {
@@ -1629,6 +1661,7 @@ func init() {
 	ConstructorNames[2762932529] = "UpdateTeamCreated"
 	ConstructorNames[1307755890] = "UpdateTeamMemberAdded"
 	ConstructorNames[99543064] = "UpdateTeamMemberRemoved"
+	ConstructorNames[4065657769] = "UpdateTeamMemberStatus"
 	ConstructorNames[2787282465] = "UpdateTeamPhotoChanged"
 	ConstructorNames[983926580] = "UpdateCommunityMessage"
 	ConstructorNames[2094301834] = "UpdateCommunityReadOutbox"

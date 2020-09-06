@@ -233,6 +233,7 @@ func (p *poolDocument) Put(x *Document) {
 	}
 
 	x.MD5Checksum = ""
+	x.TinyThumbnail = x.TinyThumbnail[:0]
 	p.pool.Put(x)
 }
 
@@ -436,6 +437,7 @@ func (p *poolInputMediaUploadedDocument) Put(x *InputMediaUploadedDocument) {
 	x.Stickers = x.Stickers[:0]
 	x.Attributes = x.Attributes[:0]
 	x.Entities = x.Entities[:0]
+	x.TinyThumbnail = x.TinyThumbnail[:0]
 	p.pool.Put(x)
 }
 
@@ -481,44 +483,6 @@ var PoolInputMediaDocument = poolInputMediaDocument{}
 
 func ResultInputMediaDocument(out *MessageEnvelope, res *InputMediaDocument) {
 	out.Constructor = C_InputMediaDocument
-	protoSize := res.Size()
-	if protoSize > cap(out.Message) {
-		pbytes.Put(out.Message)
-		out.Message = pbytes.GetLen(protoSize)
-	} else {
-		out.Message = out.Message[:protoSize]
-	}
-	res.MarshalToSizedBuffer(out.Message)
-}
-
-const C_InputMediaUploadedSealedDocument int64 = 1891413833
-
-type poolInputMediaUploadedSealedDocument struct {
-	pool sync.Pool
-}
-
-func (p *poolInputMediaUploadedSealedDocument) Get() *InputMediaUploadedSealedDocument {
-	x, ok := p.pool.Get().(*InputMediaUploadedSealedDocument)
-	if !ok {
-		return &InputMediaUploadedSealedDocument{}
-	}
-	return x
-}
-
-func (p *poolInputMediaUploadedSealedDocument) Put(x *InputMediaUploadedSealedDocument) {
-	if x.SealedThumbnail != nil {
-		*x.SealedThumbnail = InputFile{}
-	}
-
-	x.Attributes = x.Attributes[:0]
-	x.Entities = x.Entities[:0]
-	p.pool.Put(x)
-}
-
-var PoolInputMediaUploadedSealedDocument = poolInputMediaUploadedSealedDocument{}
-
-func ResultInputMediaUploadedSealedDocument(out *MessageEnvelope, res *InputMediaUploadedSealedDocument) {
-	out.Constructor = C_InputMediaUploadedSealedDocument
 	protoSize := res.Size()
 	if protoSize > cap(out.Message) {
 		pbytes.Put(out.Message)
@@ -848,7 +812,6 @@ func init() {
 	ConstructorNames[3735320833] = "MediaContact"
 	ConstructorNames[870692909] = "InputMediaUploadedDocument"
 	ConstructorNames[2258657627] = "InputMediaDocument"
-	ConstructorNames[1891413833] = "InputMediaUploadedSealedDocument"
 	ConstructorNames[3638653559] = "InputMediaMessageDocument"
 	ConstructorNames[2281620705] = "MediaDocument"
 	ConstructorNames[185664060] = "InputMediaGeoLocation"

@@ -1,8 +1,8 @@
-# git.ronaksoft.com/river/msg v0.0.0-20200901122717-2485cbb2d6a4
+# git.ronaksoft.com/river/msg v0.0.0-20200906064004-6c4cef6f73a0
 git.ronaksoft.com/river/msg/msg
 # github.com/DataDog/zstd v1.4.1
 github.com/DataDog/zstd
-# github.com/RoaringBitmap/roaring v0.4.21
+# github.com/RoaringBitmap/roaring v0.4.23
 github.com/RoaringBitmap/roaring
 # github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db
 github.com/abiosoft/readline
@@ -10,7 +10,7 @@ github.com/abiosoft/readline
 github.com/andybalholm/brotli
 # github.com/beeker1121/goque v2.1.0+incompatible
 github.com/beeker1121/goque
-# github.com/blevesearch/bleve v1.0.9
+# github.com/blevesearch/bleve v1.0.10
 github.com/blevesearch/bleve
 github.com/blevesearch/bleve/analysis
 github.com/blevesearch/bleve/analysis/analyzer/keyword
@@ -57,22 +57,22 @@ github.com/blevesearch/segment
 # github.com/blevesearch/snowballstem v0.9.0
 github.com/blevesearch/snowballstem
 github.com/blevesearch/snowballstem/english
-# github.com/blevesearch/zap/v11 v11.0.9
+# github.com/blevesearch/zap/v11 v11.0.10
 github.com/blevesearch/zap/v11
-# github.com/blevesearch/zap/v12 v12.0.9
+# github.com/blevesearch/zap/v12 v12.0.10
 github.com/blevesearch/zap/v12
-# github.com/blevesearch/zap/v13 v13.0.1
+# github.com/blevesearch/zap/v13 v13.0.2
 github.com/blevesearch/zap/v13
-# github.com/blevesearch/zap/v14 v14.0.0
+# github.com/blevesearch/zap/v14 v14.0.1
 github.com/blevesearch/zap/v14
 # github.com/cespare/xxhash v1.1.0
 github.com/cespare/xxhash
-# github.com/couchbase/vellum v1.0.1
+# github.com/couchbase/vellum v1.0.2
 github.com/couchbase/vellum
 github.com/couchbase/vellum/levenshtein
 github.com/couchbase/vellum/regexp
 github.com/couchbase/vellum/utf8
-# github.com/dgraph-io/badger/v2 v2.0.3
+# github.com/dgraph-io/badger/v2 v2.2007.2
 github.com/dgraph-io/badger/v2
 github.com/dgraph-io/badger/v2/options
 github.com/dgraph-io/badger/v2/pb
@@ -80,7 +80,7 @@ github.com/dgraph-io/badger/v2/skl
 github.com/dgraph-io/badger/v2/table
 github.com/dgraph-io/badger/v2/trie
 github.com/dgraph-io/badger/v2/y
-# github.com/dgraph-io/ristretto v0.0.2-0.20200115201040-8f368f2f2ab3
+# github.com/dgraph-io/ristretto v0.0.3-0.20200630154024-f66de99634de
 github.com/dgraph-io/ristretto
 github.com/dgraph-io/ristretto/z
 # github.com/dgryski/go-farm v0.0.0-20190423205320-6a90982ecee2
@@ -242,7 +242,7 @@ github.com/valyala/fasthttp/stackless
 github.com/valyala/tcplisten
 # github.com/willf/bitset v1.1.10
 github.com/willf/bitset
-# go.etcd.io/bbolt v1.3.4
+# go.etcd.io/bbolt v1.3.5
 go.etcd.io/bbolt
 # go.uber.org/atomic v1.6.0
 go.uber.org/atomic
