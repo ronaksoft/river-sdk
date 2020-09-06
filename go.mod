@@ -1,7 +1,7 @@
 module git.ronaksoft.com/ronak/riversdk
 
 require (
-	git.ronaksoft.com/river/msg v0.0.0-20200906064004-6c4cef6f73a0
+	git.ronaksoft.com/river/msg v0.0.0-20200906082143-496f6e4643c6
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
 	github.com/beeker1121/goque v2.1.0+incompatible

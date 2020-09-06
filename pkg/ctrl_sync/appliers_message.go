@@ -89,9 +89,9 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 	// Sort the contact users by their ids
 	sort.Slice(x.ContactUsers, func(i, j int) bool { return x.ContactUsers[i].ID < x.ContactUsers[j].ID })
 
-	repo.Users.SaveContact(domain.GetTeamID(e.Team), x.ContactUsers...)
-	repo.Users.Save(x.Users...)
-	// server
+	_ = repo.Users.SaveContact(domain.GetTeamID(e.Team), x.ContactUsers...)
+	_ = repo.Users.Save(x.Users...)
+
 	if len(x.ContactUsers) > 0 {
 		buff := bytes.Buffer{}
 		b := make([]byte, 8)

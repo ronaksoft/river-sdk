@@ -98,6 +98,9 @@ func NewSyncController(config Config) *Controller {
 		msg.C_UpdateLabelItemsAdded:       ctrl.updateLabelItemsAdded,
 		msg.C_UpdateLabelItemsRemoved:     ctrl.updateLabelItemsRemoved,
 		msg.C_UpdateUserBlocked:           ctrl.updateUserBlocked,
+		msg.C_UpdateTeamMemberStatus:      ctrl.updateTeamMemberStatus,
+		msg.C_UpdateTeamMemberAdded:       ctrl.updateTeamMemberAdded,
+		msg.C_UpdateTeamMemberRemoved:     ctrl.updateTeamMemberRemoved,
 	}
 	ctrl.messageAppliers = map[int64]domain.MessageApplier{
 		msg.C_AuthAuthorization: ctrl.authAuthorization,

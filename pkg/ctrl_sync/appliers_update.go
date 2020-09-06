@@ -784,3 +784,57 @@ func (ctrl *Controller) updateUserBlocked(u *msg.UpdateEnvelope) ([]*msg.UpdateE
 	}
 	return []*msg.UpdateEnvelope{u}, nil
 }
+
+func (ctrl *Controller) updateTeamMemberAdded(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := &msg.UpdateTeamMemberAdded{}
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Info("SyncCtrl applies UpdateTeamMemberAdded",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
+
+	_ = repo.Users.Save(x.User)
+	_ = repo.Users.SaveContact(x.TeamID, x.Contact)
+	err = repo.System.SaveInt(domain.GetContactsGetHashKey(x.TeamID), uint64(x.Hash))
+	if err != nil {
+		return nil, err
+	}
+	return []*msg.UpdateEnvelope{u}, nil
+}
+
+func (ctrl *Controller) updateTeamMemberRemoved(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := &msg.UpdateTeamMemberRemoved{}
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Info("SyncCtrl applies UpdateTeamMemberRemoved",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
+
+	_ = repo.Users.DeleteContact(x.TeamID, x.UserID)
+	err = repo.System.SaveInt(domain.GetContactsGetHashKey(x.TeamID), uint64(x.Hash))
+	if err != nil {
+		return nil, err
+	}
+	return []*msg.UpdateEnvelope{u}, nil
+}
+
+// TODO:: improve applier to update data locally
+func (ctrl *Controller) updateTeamMemberStatus(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := &msg.UpdateTeamMemberStatus{}
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Info("SyncCtrl applies UpdateTeamMemberStatus",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
+
+	return []*msg.UpdateEnvelope{u}, nil
+}
