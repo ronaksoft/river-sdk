@@ -476,6 +476,7 @@ func (p *poolInputMediaDocument) Put(x *InputMediaDocument) {
 	}
 
 	x.Attributes = x.Attributes[:0]
+	x.TinyThumbnail = x.TinyThumbnail[:0]
 	p.pool.Put(x)
 }
 

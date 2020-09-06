@@ -999,6 +999,7 @@ func (p *poolUserMessage) Get() *UserMessage {
 
 func (p *poolUserMessage) Put(x *UserMessage) {
 	x.TeamID = 0
+	x.Fwd = false
 	x.MessageAction = 0
 	x.MessageActionData = x.MessageActionData[:0]
 	x.Entities = x.Entities[:0]
