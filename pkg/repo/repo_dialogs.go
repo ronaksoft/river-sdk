@@ -125,7 +125,10 @@ func countDialogUnread(txn *badger.Txn, teamID, peerID int64, peerType int32, us
 				unread++
 			}
 			for _, entity := range userMessage.Entities {
-				if entity.Type == msg.MessageEntityTypeMention && entity.UserID == userID || entity.Type == msg.MessageEntityTypeMentionAll {
+				switch {
+				case entity.Type == msg.MessageEntityTypeMention && entity.UserID == userID:
+					fallthrough
+				case entity.Type == msg.MessageEntityTypeMentionAll && userMessage.SenderID != userID:
 					mentioned++
 				}
 			}
