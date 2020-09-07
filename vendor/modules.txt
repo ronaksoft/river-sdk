@@ -1,4 +1,4 @@
-# git.ronaksoft.com/river/msg v0.0.0-20200906205411-eca61784900c
+# git.ronaksoft.com/river/msg v0.0.0-20200907085110-94b536a5e68d
 git.ronaksoft.com/river/msg/msg
 # github.com/DataDog/zstd v1.4.1
 github.com/DataDog/zstd

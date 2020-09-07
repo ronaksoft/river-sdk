@@ -386,6 +386,7 @@ func (p *poolTeamMembers) Get() *TeamMembers {
 
 func (p *poolTeamMembers) Put(x *TeamMembers) {
 	x.Members = x.Members[:0]
+	x.Users = x.Users[:0]
 	p.pool.Put(x)
 }
 
