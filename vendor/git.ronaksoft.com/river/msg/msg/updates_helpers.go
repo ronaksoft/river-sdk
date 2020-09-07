@@ -1395,28 +1395,60 @@ func ResultUpdateTeamMemberStatus(out *MessageEnvelope, res *UpdateTeamMemberSta
 	res.MarshalToSizedBuffer(out.Message)
 }
 
-const C_UpdateTeamPhotoChanged int64 = 2787282465
+const C_UpdateTeamPhoto int64 = 3110088064
 
-type poolUpdateTeamPhotoChanged struct {
+type poolUpdateTeamPhoto struct {
 	pool sync.Pool
 }
 
-func (p *poolUpdateTeamPhotoChanged) Get() *UpdateTeamPhotoChanged {
-	x, ok := p.pool.Get().(*UpdateTeamPhotoChanged)
+func (p *poolUpdateTeamPhoto) Get() *UpdateTeamPhoto {
+	x, ok := p.pool.Get().(*UpdateTeamPhoto)
 	if !ok {
-		return &UpdateTeamPhotoChanged{}
+		return &UpdateTeamPhoto{}
 	}
 	return x
 }
 
-func (p *poolUpdateTeamPhotoChanged) Put(x *UpdateTeamPhotoChanged) {
+func (p *poolUpdateTeamPhoto) Put(x *UpdateTeamPhoto) {
 	p.pool.Put(x)
 }
 
-var PoolUpdateTeamPhotoChanged = poolUpdateTeamPhotoChanged{}
+var PoolUpdateTeamPhoto = poolUpdateTeamPhoto{}
 
-func ResultUpdateTeamPhotoChanged(out *MessageEnvelope, res *UpdateTeamPhotoChanged) {
-	out.Constructor = C_UpdateTeamPhotoChanged
+func ResultUpdateTeamPhoto(out *MessageEnvelope, res *UpdateTeamPhoto) {
+	out.Constructor = C_UpdateTeamPhoto
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_UpdateTeam int64 = 2978180712
+
+type poolUpdateTeam struct {
+	pool sync.Pool
+}
+
+func (p *poolUpdateTeam) Get() *UpdateTeam {
+	x, ok := p.pool.Get().(*UpdateTeam)
+	if !ok {
+		return &UpdateTeam{}
+	}
+	return x
+}
+
+func (p *poolUpdateTeam) Put(x *UpdateTeam) {
+	p.pool.Put(x)
+}
+
+var PoolUpdateTeam = poolUpdateTeam{}
+
+func ResultUpdateTeam(out *MessageEnvelope, res *UpdateTeam) {
+	out.Constructor = C_UpdateTeam
 	protoSize := res.Size()
 	if protoSize > cap(out.Message) {
 		pbytes.Put(out.Message)
@@ -1662,7 +1694,8 @@ func init() {
 	ConstructorNames[1307755890] = "UpdateTeamMemberAdded"
 	ConstructorNames[99543064] = "UpdateTeamMemberRemoved"
 	ConstructorNames[4065657769] = "UpdateTeamMemberStatus"
-	ConstructorNames[2787282465] = "UpdateTeamPhotoChanged"
+	ConstructorNames[3110088064] = "UpdateTeamPhoto"
+	ConstructorNames[2978180712] = "UpdateTeam"
 	ConstructorNames[983926580] = "UpdateCommunityMessage"
 	ConstructorNames[2094301834] = "UpdateCommunityReadOutbox"
 	ConstructorNames[451491445] = "UpdateCommunityTyping"

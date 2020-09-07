@@ -426,7 +426,7 @@ func (m *GroupsUpdateAdmin) GetAdmin() bool {
 
 // GroupsUploadPhoto
 // @Function
-// @Return: Bool
+// @Return: Bool / GroupPhoto
 type GroupsUploadPhoto struct {
 	GroupID      int64      `protobuf:"varint,1,req,name=GroupID" json:"GroupID"`
 	File         *InputFile `protobuf:"bytes,2,req,name=File" json:"File,omitempty"`

@@ -1484,6 +1484,38 @@ func ResultInputTeam(out *MessageEnvelope, res *InputTeam) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_TeamPhoto int64 = 3678645727
+
+type poolTeamPhoto struct {
+	pool sync.Pool
+}
+
+func (p *poolTeamPhoto) Get() *TeamPhoto {
+	x, ok := p.pool.Get().(*TeamPhoto)
+	if !ok {
+		return &TeamPhoto{}
+	}
+	return x
+}
+
+func (p *poolTeamPhoto) Put(x *TeamPhoto) {
+	p.pool.Put(x)
+}
+
+var PoolTeamPhoto = poolTeamPhoto{}
+
+func ResultTeamPhoto(out *MessageEnvelope, res *TeamPhoto) {
+	out.Constructor = C_TeamPhoto
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 const C_Team int64 = 1691486497
 
 type poolTeam struct {
@@ -1500,6 +1532,12 @@ func (p *poolTeam) Get() *Team {
 
 func (p *poolTeam) Put(x *Team) {
 	x.Flags = x.Flags[:0]
+	x.Capacity = 0
+	x.Community = false
+	if x.Photo != nil {
+		*x.Photo = TeamPhoto{}
+	}
+
 	p.pool.Put(x)
 }
 
@@ -1561,5 +1599,6 @@ func init() {
 	ConstructorNames[1403425127] = "InputGeoLocation"
 	ConstructorNames[3794405429] = "GeoLocation"
 	ConstructorNames[2937769744] = "InputTeam"
+	ConstructorNames[3678645727] = "TeamPhoto"
 	ConstructorNames[1691486497] = "Team"
 }

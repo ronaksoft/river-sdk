@@ -274,6 +274,102 @@ func ResultTeamListMembers(out *MessageEnvelope, res *TeamListMembers) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_TeamEdit int64 = 3481894956
+
+type poolTeamEdit struct {
+	pool sync.Pool
+}
+
+func (p *poolTeamEdit) Get() *TeamEdit {
+	x, ok := p.pool.Get().(*TeamEdit)
+	if !ok {
+		return &TeamEdit{}
+	}
+	return x
+}
+
+func (p *poolTeamEdit) Put(x *TeamEdit) {
+	p.pool.Put(x)
+}
+
+var PoolTeamEdit = poolTeamEdit{}
+
+func ResultTeamEdit(out *MessageEnvelope, res *TeamEdit) {
+	out.Constructor = C_TeamEdit
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_TeamUploadPhoto int64 = 1595699082
+
+type poolTeamUploadPhoto struct {
+	pool sync.Pool
+}
+
+func (p *poolTeamUploadPhoto) Get() *TeamUploadPhoto {
+	x, ok := p.pool.Get().(*TeamUploadPhoto)
+	if !ok {
+		return &TeamUploadPhoto{}
+	}
+	return x
+}
+
+func (p *poolTeamUploadPhoto) Put(x *TeamUploadPhoto) {
+	p.pool.Put(x)
+}
+
+var PoolTeamUploadPhoto = poolTeamUploadPhoto{}
+
+func ResultTeamUploadPhoto(out *MessageEnvelope, res *TeamUploadPhoto) {
+	out.Constructor = C_TeamUploadPhoto
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_TeamRemovePhoto int64 = 3388888323
+
+type poolTeamRemovePhoto struct {
+	pool sync.Pool
+}
+
+func (p *poolTeamRemovePhoto) Get() *TeamRemovePhoto {
+	x, ok := p.pool.Get().(*TeamRemovePhoto)
+	if !ok {
+		return &TeamRemovePhoto{}
+	}
+	return x
+}
+
+func (p *poolTeamRemovePhoto) Put(x *TeamRemovePhoto) {
+	p.pool.Put(x)
+}
+
+var PoolTeamRemovePhoto = poolTeamRemovePhoto{}
+
+func ResultTeamRemovePhoto(out *MessageEnvelope, res *TeamRemovePhoto) {
+	out.Constructor = C_TeamRemovePhoto
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 const C_TeamMembers int64 = 2208941294
 
 type poolTeamMembers struct {
@@ -382,6 +478,9 @@ func init() {
 	ConstructorNames[1413785879] = "TeamLeave"
 	ConstructorNames[1725794017] = "TeamJoin"
 	ConstructorNames[3107323194] = "TeamListMembers"
+	ConstructorNames[3481894956] = "TeamEdit"
+	ConstructorNames[1595699082] = "TeamUploadPhoto"
+	ConstructorNames[3388888323] = "TeamRemovePhoto"
 	ConstructorNames[2208941294] = "TeamMembers"
 	ConstructorNames[1965775170] = "TeamMember"
 	ConstructorNames[2225718663] = "TeamsMany"

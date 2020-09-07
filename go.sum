@@ -11,6 +11,8 @@ git.ronaksoft.com/river/msg v0.0.0-20200906102100-5879cf175d4e h1:XWbRyuVIwOJUTn
 git.ronaksoft.com/river/msg v0.0.0-20200906102100-5879cf175d4e/go.mod h1:ez3SSVytaE/rAXnu2Loxo1cHjXZJo0WdHLQwc6N4Z5Y=
 git.ronaksoft.com/river/msg v0.0.0-20200906104555-a3f0354308d9 h1:6JqJ+dvL6+6r5E8fxdVsBJ08a1QDsVPU2juf8yipXeQ=
 git.ronaksoft.com/river/msg v0.0.0-20200906104555-a3f0354308d9/go.mod h1:ez3SSVytaE/rAXnu2Loxo1cHjXZJo0WdHLQwc6N4Z5Y=
+git.ronaksoft.com/river/msg v0.0.0-20200906205411-eca61784900c h1:3dZ1Y1HeLeevnh5CsQuAyv17bXqIDeRW8QHbNp74Nq8=
+git.ronaksoft.com/river/msg v0.0.0-20200906205411-eca61784900c/go.mod h1:ez3SSVytaE/rAXnu2Loxo1cHjXZJo0WdHLQwc6N4Z5Y=
 github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9 h1:HD8gA2tkByhMAwYaFAX9w2l7vxvBQ5NMoxDrkhqhtn4=
 github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9/go.mod h1:bOvUY6CB00SOBii9/FifXqc0awNKxLFCL/+pkDPuyl8=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=

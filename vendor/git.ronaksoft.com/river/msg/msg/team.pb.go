@@ -448,6 +448,155 @@ func (m *TeamListMembers) GetTeamID() int64 {
 	return 0
 }
 
+// TeamEdit
+// @Function
+// @Returns: Team
+type TeamEdit struct {
+	Name string `protobuf:"bytes,1,req,name=Name" json:"Name"`
+}
+
+func (m *TeamEdit) Reset()         { *m = TeamEdit{} }
+func (m *TeamEdit) String() string { return proto.CompactTextString(m) }
+func (*TeamEdit) ProtoMessage()    {}
+func (*TeamEdit) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8b4e9e93d7b2c6bb, []int{8}
+}
+func (m *TeamEdit) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TeamEdit) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TeamEdit.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TeamEdit) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TeamEdit.Merge(m, src)
+}
+func (m *TeamEdit) XXX_Size() int {
+	return m.Size()
+}
+func (m *TeamEdit) XXX_DiscardUnknown() {
+	xxx_messageInfo_TeamEdit.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TeamEdit proto.InternalMessageInfo
+
+func (m *TeamEdit) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+// TeamUploadPhoto
+// @Function
+// @Returns: TeamPhoto
+type TeamUploadPhoto struct {
+	TeamID int64      `protobuf:"varint,1,req,name=TeamID" json:"TeamID"`
+	File   *InputFile `protobuf:"bytes,2,req,name=File" json:"File,omitempty"`
+}
+
+func (m *TeamUploadPhoto) Reset()         { *m = TeamUploadPhoto{} }
+func (m *TeamUploadPhoto) String() string { return proto.CompactTextString(m) }
+func (*TeamUploadPhoto) ProtoMessage()    {}
+func (*TeamUploadPhoto) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8b4e9e93d7b2c6bb, []int{9}
+}
+func (m *TeamUploadPhoto) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TeamUploadPhoto) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TeamUploadPhoto.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TeamUploadPhoto) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TeamUploadPhoto.Merge(m, src)
+}
+func (m *TeamUploadPhoto) XXX_Size() int {
+	return m.Size()
+}
+func (m *TeamUploadPhoto) XXX_DiscardUnknown() {
+	xxx_messageInfo_TeamUploadPhoto.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TeamUploadPhoto proto.InternalMessageInfo
+
+func (m *TeamUploadPhoto) GetTeamID() int64 {
+	if m != nil {
+		return m.TeamID
+	}
+	return 0
+}
+
+func (m *TeamUploadPhoto) GetFile() *InputFile {
+	if m != nil {
+		return m.File
+	}
+	return nil
+}
+
+// TeamRemovePhoto
+// @Function
+// @Returns: Bool
+type TeamRemovePhoto struct {
+	TeamID int64 `protobuf:"varint,1,req,name=TeamID" json:"TeamID"`
+}
+
+func (m *TeamRemovePhoto) Reset()         { *m = TeamRemovePhoto{} }
+func (m *TeamRemovePhoto) String() string { return proto.CompactTextString(m) }
+func (*TeamRemovePhoto) ProtoMessage()    {}
+func (*TeamRemovePhoto) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8b4e9e93d7b2c6bb, []int{10}
+}
+func (m *TeamRemovePhoto) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TeamRemovePhoto) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TeamRemovePhoto.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TeamRemovePhoto) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TeamRemovePhoto.Merge(m, src)
+}
+func (m *TeamRemovePhoto) XXX_Size() int {
+	return m.Size()
+}
+func (m *TeamRemovePhoto) XXX_DiscardUnknown() {
+	xxx_messageInfo_TeamRemovePhoto.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TeamRemovePhoto proto.InternalMessageInfo
+
+func (m *TeamRemovePhoto) GetTeamID() int64 {
+	if m != nil {
+		return m.TeamID
+	}
+	return 0
+}
+
 // TeamMembers
 type TeamMembers struct {
 	Members []*TeamMember `protobuf:"bytes,1,rep,name=Members" json:"Members,omitempty"`
@@ -457,7 +606,7 @@ func (m *TeamMembers) Reset()         { *m = TeamMembers{} }
 func (m *TeamMembers) String() string { return proto.CompactTextString(m) }
 func (*TeamMembers) ProtoMessage()    {}
 func (*TeamMembers) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8b4e9e93d7b2c6bb, []int{8}
+	return fileDescriptor_8b4e9e93d7b2c6bb, []int{11}
 }
 func (m *TeamMembers) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -504,7 +653,7 @@ func (m *TeamMember) Reset()         { *m = TeamMember{} }
 func (m *TeamMember) String() string { return proto.CompactTextString(m) }
 func (*TeamMember) ProtoMessage()    {}
 func (*TeamMember) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8b4e9e93d7b2c6bb, []int{9}
+	return fileDescriptor_8b4e9e93d7b2c6bb, []int{12}
 }
 func (m *TeamMember) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -565,7 +714,7 @@ func (m *TeamsMany) Reset()         { *m = TeamsMany{} }
 func (m *TeamsMany) String() string { return proto.CompactTextString(m) }
 func (*TeamsMany) ProtoMessage()    {}
 func (*TeamsMany) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8b4e9e93d7b2c6bb, []int{10}
+	return fileDescriptor_8b4e9e93d7b2c6bb, []int{13}
 }
 func (m *TeamsMany) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -624,6 +773,9 @@ func init() {
 	proto.RegisterType((*TeamLeave)(nil), "msg.TeamLeave")
 	proto.RegisterType((*TeamJoin)(nil), "msg.TeamJoin")
 	proto.RegisterType((*TeamListMembers)(nil), "msg.TeamListMembers")
+	proto.RegisterType((*TeamEdit)(nil), "msg.TeamEdit")
+	proto.RegisterType((*TeamUploadPhoto)(nil), "msg.TeamUploadPhoto")
+	proto.RegisterType((*TeamRemovePhoto)(nil), "msg.TeamRemovePhoto")
 	proto.RegisterType((*TeamMembers)(nil), "msg.TeamMembers")
 	proto.RegisterType((*TeamMember)(nil), "msg.TeamMember")
 	proto.RegisterType((*TeamsMany)(nil), "msg.TeamsMany")
@@ -632,33 +784,37 @@ func init() {
 func init() { proto.RegisterFile("team.proto", fileDescriptor_8b4e9e93d7b2c6bb) }
 
 var fileDescriptor_8b4e9e93d7b2c6bb = []byte{
-	// 412 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x92, 0xcd, 0xce, 0xd2, 0x40,
-	0x14, 0x86, 0xfb, 0xc3, 0xef, 0x41, 0x03, 0xe9, 0xc2, 0x34, 0x8d, 0x0e, 0x38, 0x2b, 0x8c, 0xb1,
-	0x28, 0x2b, 0xb7, 0x90, 0xaa, 0xc1, 0xd0, 0xc4, 0x34, 0x78, 0x01, 0x05, 0xc6, 0xda, 0x98, 0xe9,
-	0x90, 0xce, 0x40, 0xc2, 0x5d, 0x78, 0x59, 0x2c, 0x59, 0xba, 0x32, 0x0a, 0x37, 0x62, 0x66, 0xa6,
-	0x15, 0xc8, 0x47, 0xc2, 0xe2, 0x63, 0x37, 0xf3, 0xcc, 0xd3, 0xf7, 0x9c, 0x9c, 0x1e, 0x00, 0x41,
-	0x62, 0xea, 0xaf, 0x72, 0x26, 0x98, 0x63, 0x53, 0x9e, 0x78, 0x9d, 0x05, 0xcb, 0x89, 0x2f, 0xb6,
-	0x2b, 0xc2, 0x35, 0xf6, 0xde, 0x24, 0xa9, 0xf8, 0xbe, 0x9e, 0xfb, 0x0b, 0x46, 0x07, 0x09, 0x4b,
-	0xd8, 0x40, 0xe1, 0xf9, 0xfa, 0x9b, 0xba, 0xa9, 0x8b, 0x3a, 0x69, 0x1d, 0xbf, 0x84, 0xfa, 0x8c,
-	0xc4, 0xf4, 0x13, 0x11, 0xce, 0x33, 0xb0, 0x26, 0x81, 0x6b, 0xf6, 0xac, 0xbe, 0x3d, 0xae, 0xed,
-	0x7e, 0x77, 0x8d, 0xb7, 0x66, 0x64, 0x4d, 0x02, 0xcc, 0xe0, 0xa9, 0x54, 0x46, 0xcb, 0x65, 0x48,
-	0xe8, 0x9c, 0xe4, 0x0e, 0x82, 0x9a, 0x04, 0x0f, 0xe4, 0x82, 0xca, 0xf7, 0xaf, 0x9c, 0xe4, 0x93,
-	0xc0, 0xb5, 0x2e, 0xdf, 0x35, 0x75, 0x10, 0xd4, 0xc3, 0x38, 0x8b, 0x13, 0x92, 0xbb, 0x76, 0xcf,
-	0xea, 0x37, 0xc6, 0x15, 0x29, 0x44, 0x25, 0xc4, 0x11, 0x74, 0x64, 0x52, 0x44, 0x28, 0xdb, 0x90,
-	0xfb, 0xd4, 0xc4, 0x21, 0xb4, 0xa4, 0xf9, 0x25, 0x67, 0x94, 0x09, 0xf2, 0xe8, 0xb8, 0x29, 0x80,
-	0x34, 0x03, 0x72, 0x97, 0xb4, 0xd7, 0xd0, 0x94, 0xe6, 0x94, 0xc4, 0x9b, 0xf3, 0x30, 0xeb, 0x5a,
-	0x18, 0xfe, 0x08, 0x0d, 0x79, 0xfa, 0xcc, 0xd2, 0xec, 0x66, 0x61, 0x0f, 0xaa, 0x33, 0xf6, 0x83,
-	0x64, 0x2a, 0xea, 0x49, 0x31, 0x67, 0x8d, 0xf0, 0x3b, 0x68, 0xab, 0xa2, 0x29, 0x17, 0x7a, 0xc6,
-	0xfc, 0x56, 0x1c, 0x7e, 0xaf, 0x87, 0x58, 0xea, 0xaf, 0xa0, 0x5e, 0x1c, 0x5d, 0xb3, 0x67, 0xf7,
-	0x5b, 0xc3, 0xb6, 0x4f, 0x79, 0xe2, 0x9f, 0x94, 0xa8, 0x7c, 0xc7, 0x89, 0x9e, 0xd7, 0xe9, 0x67,
-	0x16, 0xf3, 0x30, 0xaf, 0x2e, 0x88, 0x07, 0xd5, 0xd1, 0x92, 0xa6, 0xba, 0xed, 0x72, 0x3d, 0x34,
-	0x72, 0x5e, 0x40, 0x45, 0x5a, 0x6a, 0x73, 0x5a, 0xc3, 0xa6, 0xaa, 0x28, 0x41, 0xa4, 0x30, 0x4e,
-	0xf5, 0x28, 0x79, 0x18, 0x67, 0x5b, 0xa7, 0x0b, 0x55, 0x75, 0x29, 0xda, 0x6b, 0xfe, 0x6f, 0x2f,
-	0xd2, 0x5c, 0x0a, 0xf2, 0x2b, 0xee, 0x5a, 0x67, 0x82, 0x4a, 0xd3, 0x5c, 0x76, 0xf2, 0x81, 0xae,
-	0xc4, 0xf6, 0x62, 0x51, 0x35, 0x1a, 0x3f, 0xdf, 0xff, 0x45, 0xc6, 0xee, 0x80, 0xcc, 0xfd, 0x01,
-	0x99, 0x7f, 0x0e, 0xc8, 0xfc, 0x79, 0x44, 0xc6, 0xfe, 0x88, 0x8c, 0x5f, 0x47, 0x64, 0xfc, 0x0b,
-	0x00, 0x00, 0xff, 0xff, 0xbf, 0x01, 0x3c, 0x48, 0xab, 0x03, 0x00, 0x00,
+	// 478 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x93, 0xc1, 0x6e, 0xd3, 0x40,
+	0x10, 0x86, 0x6d, 0x27, 0x69, 0x9a, 0x09, 0xd0, 0xca, 0x07, 0x64, 0x45, 0xb0, 0x0d, 0x2b, 0x0e,
+	0x41, 0x08, 0x17, 0x72, 0xe2, 0xda, 0x28, 0x2d, 0x0a, 0xaa, 0x51, 0x65, 0x35, 0x0f, 0xe0, 0xd4,
+	0x83, 0x6b, 0xd1, 0xf5, 0x5a, 0xf6, 0xa6, 0x52, 0xde, 0x82, 0xc7, 0xea, 0x31, 0x47, 0x4e, 0x08,
+	0x92, 0x17, 0x41, 0xbb, 0x63, 0xd3, 0x56, 0x54, 0x0a, 0x52, 0x73, 0xdb, 0xfd, 0xe6, 0xcf, 0x3f,
+	0x93, 0x9d, 0xdf, 0x00, 0x0a, 0x23, 0xe1, 0xe7, 0x85, 0x54, 0xd2, 0x6d, 0x88, 0x32, 0xe9, 0xed,
+	0x5f, 0xc8, 0x02, 0x7d, 0xb5, 0xc8, 0xb1, 0x24, 0xdc, 0x7b, 0x97, 0xa4, 0xea, 0x72, 0x3e, 0xf3,
+	0x2f, 0xa4, 0x38, 0x4c, 0x64, 0x22, 0x0f, 0x0d, 0x9e, 0xcd, 0xbf, 0x9a, 0x9b, 0xb9, 0x98, 0x13,
+	0xc9, 0xf9, 0x2b, 0x68, 0x9f, 0x63, 0x24, 0x3e, 0xa1, 0x72, 0x9f, 0x83, 0x33, 0x19, 0x7b, 0x76,
+	0xdf, 0x19, 0x34, 0x46, 0x3b, 0x37, 0x3f, 0x0f, 0xac, 0xf7, 0x76, 0xe8, 0x4c, 0xc6, 0x5c, 0xc2,
+	0x53, 0x2d, 0x39, 0x8a, 0xe3, 0x00, 0xc5, 0x0c, 0x0b, 0x97, 0xc1, 0x8e, 0x06, 0xff, 0x88, 0x2b,
+	0xaa, 0xeb, 0xd3, 0x12, 0x8b, 0xc9, 0xd8, 0x73, 0xee, 0xd7, 0x89, 0xba, 0x0c, 0xda, 0x41, 0x94,
+	0x45, 0x09, 0x16, 0x5e, 0xa3, 0xef, 0x0c, 0x76, 0x47, 0x4d, 0x2d, 0x08, 0x6b, 0xc8, 0x43, 0xd8,
+	0xd7, 0x4e, 0x21, 0x0a, 0x79, 0x8d, 0xdb, 0xe9, 0xc9, 0x03, 0xe8, 0x6a, 0xe5, 0x59, 0x21, 0x85,
+	0x54, 0xf8, 0x68, 0xbb, 0x53, 0x00, 0xad, 0x1c, 0xe3, 0x56, 0xdc, 0xde, 0x42, 0x47, 0x2b, 0x4f,
+	0x31, 0xba, 0xbe, 0x6b, 0xe6, 0x3c, 0x64, 0xc6, 0x4f, 0x60, 0x57, 0x9f, 0x3e, 0xcb, 0x34, 0xdb,
+	0xd8, 0xb8, 0x07, 0xad, 0x73, 0xf9, 0x0d, 0x33, 0x63, 0xf5, 0xa4, 0x7a, 0x67, 0x42, 0xfc, 0x03,
+	0xec, 0x99, 0xa6, 0x69, 0xa9, 0xe8, 0x8d, 0xcb, 0x4d, 0x76, 0xfc, 0x35, 0xb5, 0x3e, 0x8e, 0x53,
+	0xe5, 0x7a, 0xd0, 0xfc, 0x12, 0x09, 0x34, 0xca, 0x4e, 0xe5, 0x6c, 0x08, 0x9f, 0x92, 0xf1, 0x34,
+	0xbf, 0x92, 0x51, 0x7c, 0x76, 0xa9, 0xb3, 0xba, 0x69, 0x4e, 0x0e, 0xcd, 0x93, 0xf4, 0x0a, 0xcd,
+	0x98, 0xdd, 0xe1, 0x33, 0x5f, 0x94, 0x89, 0x3f, 0xc9, 0xf2, 0xb9, 0xd2, 0x34, 0x34, 0xb5, 0x7a,
+	0x5e, 0x4a, 0xc5, 0x7f, 0xd9, 0xf2, 0x8f, 0xb4, 0xf4, 0xfa, 0xef, 0xbd, 0x81, 0x76, 0x75, 0xf4,
+	0xec, 0x7e, 0x63, 0xd0, 0x1d, 0xee, 0x99, 0x46, 0xb7, 0x92, 0xb0, 0xae, 0xf3, 0x84, 0xf6, 0x7b,
+	0x1b, 0xbe, 0x6a, 0x7f, 0xf6, 0x83, 0x81, 0xee, 0x41, 0xeb, 0x28, 0x16, 0x29, 0x3d, 0x73, 0x1d,
+	0x67, 0x42, 0xee, 0x4b, 0x68, 0x6a, 0x95, 0x49, 0x7a, 0x77, 0xd8, 0x31, 0x1d, 0x35, 0x08, 0x0d,
+	0xe6, 0x29, 0xad, 0xbe, 0x0c, 0xa2, 0x6c, 0xe1, 0x1e, 0x40, 0xcb, 0x5c, 0xaa, 0xf1, 0x3a, 0x7f,
+	0xc7, 0x0b, 0x89, 0x6b, 0x81, 0xfe, 0x55, 0xe9, 0x39, 0x77, 0x04, 0xc6, 0x8d, 0xb8, 0x9e, 0xe4,
+	0x58, 0xe4, 0x6a, 0x71, 0xef, 0xc3, 0x22, 0x34, 0x7a, 0xb1, 0xfc, 0xcd, 0xac, 0x9b, 0x15, 0xb3,
+	0x97, 0x2b, 0x66, 0xff, 0x5a, 0x31, 0xfb, 0xfb, 0x9a, 0x59, 0xcb, 0x35, 0xb3, 0x7e, 0xac, 0x99,
+	0xf5, 0x27, 0x00, 0x00, 0xff, 0xff, 0x96, 0x21, 0xdf, 0x97, 0x5b, 0x04, 0x00, 0x00,
 }
 
 func (m *TeamGet) Marshal() (dAtA []byte, err error) {
@@ -886,6 +1042,100 @@ func (m *TeamListMembers) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *TeamListMembers) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	i = encodeVarintTeam(dAtA, i, uint64(m.TeamID))
+	i--
+	dAtA[i] = 0x8
+	return len(dAtA) - i, nil
+}
+
+func (m *TeamEdit) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TeamEdit) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TeamEdit) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	i -= len(m.Name)
+	copy(dAtA[i:], m.Name)
+	i = encodeVarintTeam(dAtA, i, uint64(len(m.Name)))
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *TeamUploadPhoto) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TeamUploadPhoto) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TeamUploadPhoto) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.File == nil {
+		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("File")
+	} else {
+		{
+			size, err := m.File.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTeam(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	i = encodeVarintTeam(dAtA, i, uint64(m.TeamID))
+	i--
+	dAtA[i] = 0x8
+	return len(dAtA) - i, nil
+}
+
+func (m *TeamRemovePhoto) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TeamRemovePhoto) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TeamRemovePhoto) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1131,6 +1381,41 @@ func (m *TeamJoin) Size() (n int) {
 }
 
 func (m *TeamListMembers) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovTeam(uint64(m.TeamID))
+	return n
+}
+
+func (m *TeamEdit) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Name)
+	n += 1 + l + sovTeam(uint64(l))
+	return n
+}
+
+func (m *TeamUploadPhoto) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovTeam(uint64(m.TeamID))
+	if m.File != nil {
+		l = m.File.Size()
+		n += 1 + l + sovTeam(uint64(l))
+	}
+	return n
+}
+
+func (m *TeamRemovePhoto) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1919,6 +2204,290 @@ func (m *TeamListMembers) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: TeamListMembers: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TeamID", wireType)
+			}
+			m.TeamID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TeamID |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTeam(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTeam
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTeam
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("TeamID")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TeamEdit) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTeam
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TeamEdit: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TeamEdit: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000001)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTeam(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTeam
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTeam
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("Name")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TeamUploadPhoto) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTeam
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TeamUploadPhoto: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TeamUploadPhoto: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TeamID", wireType)
+			}
+			m.TeamID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TeamID |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			hasFields[0] |= uint64(0x00000001)
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field File", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTeam
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.File == nil {
+				m.File = &InputFile{}
+			}
+			if err := m.File.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+			hasFields[0] |= uint64(0x00000002)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTeam(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTeam
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTeam
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+	if hasFields[0]&uint64(0x00000001) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("TeamID")
+	}
+	if hasFields[0]&uint64(0x00000002) == 0 {
+		return github_com_gogo_protobuf_proto.NewRequiredNotSetError("File")
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TeamRemovePhoto) Unmarshal(dAtA []byte) error {
+	var hasFields [1]uint64
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTeam
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TeamRemovePhoto: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TeamRemovePhoto: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

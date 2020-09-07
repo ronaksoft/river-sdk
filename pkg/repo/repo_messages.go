@@ -289,7 +289,7 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, userID int64) error {
 			if message.SenderID != userID {
 				dialog.UnreadCount += 1
 				for _, entity := range message.Entities {
-					if (entity.Type == msg.MessageEntityTypeMention && entity.UserID == userID) || (entity.Type == msg.MessageEntityTypeMentionAll){
+					if (entity.Type == msg.MessageEntityTypeMention && entity.UserID == userID) || (entity.Type == msg.MessageEntityTypeMentionAll) {
 						dialog.MentionedCount += 1
 					}
 				}
