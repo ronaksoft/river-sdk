@@ -1953,3 +1953,22 @@ func (r *River) accountsGetTeams(in, out *msg.MessageEnvelope, timeoutCB domain.
 
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
+
+func (r *River) teamEdit(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.TeamEdit{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	team ,_ := repo.Teams.Get(req.TeamID)
+
+	if team != nil{
+		team.Name = req.Name
+
+		_ = repo.Teams.Save(team)
+	}
+
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+}
