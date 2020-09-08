@@ -643,6 +643,70 @@ func ResultMessagesSendScreenShotNotification(out *MessageEnvelope, res *Message
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_MessagesSendReaction int64 = 279494057
+
+type poolMessagesSendReaction struct {
+	pool sync.Pool
+}
+
+func (p *poolMessagesSendReaction) Get() *MessagesSendReaction {
+	x, ok := p.pool.Get().(*MessagesSendReaction)
+	if !ok {
+		return &MessagesSendReaction{}
+	}
+	return x
+}
+
+func (p *poolMessagesSendReaction) Put(x *MessagesSendReaction) {
+	p.pool.Put(x)
+}
+
+var PoolMessagesSendReaction = poolMessagesSendReaction{}
+
+func ResultMessagesSendReaction(out *MessageEnvelope, res *MessagesSendReaction) {
+	out.Constructor = C_MessagesSendReaction
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_MessagesGetReactionList int64 = 3097050126
+
+type poolMessagesGetReactionList struct {
+	pool sync.Pool
+}
+
+func (p *poolMessagesGetReactionList) Get() *MessagesGetReactionList {
+	x, ok := p.pool.Get().(*MessagesGetReactionList)
+	if !ok {
+		return &MessagesGetReactionList{}
+	}
+	return x
+}
+
+func (p *poolMessagesGetReactionList) Put(x *MessagesGetReactionList) {
+	p.pool.Put(x)
+}
+
+var PoolMessagesGetReactionList = poolMessagesGetReactionList{}
+
+func ResultMessagesGetReactionList(out *MessageEnvelope, res *MessagesGetReactionList) {
+	out.Constructor = C_MessagesGetReactionList
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 const C_MessagesDialogs int64 = 3252610224
 
 type poolMessagesDialogs struct {
@@ -748,6 +812,38 @@ func ResultMessagesMany(out *MessageEnvelope, res *MessagesMany) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_MessagesReactionList int64 = 181278607
+
+type poolMessagesReactionList struct {
+	pool sync.Pool
+}
+
+func (p *poolMessagesReactionList) Get() *MessagesReactionList {
+	x, ok := p.pool.Get().(*MessagesReactionList)
+	if !ok {
+		return &MessagesReactionList{}
+	}
+	return x
+}
+
+func (p *poolMessagesReactionList) Put(x *MessagesReactionList) {
+	p.pool.Put(x)
+}
+
+var PoolMessagesReactionList = poolMessagesReactionList{}
+
+func ResultMessagesReactionList(out *MessageEnvelope, res *MessagesReactionList) {
+	out.Constructor = C_MessagesReactionList
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 func init() {
 	ConstructorNames[3000244183] = "MessagesSend"
 	ConstructorNames[25498545] = "MessagesSendMedia"
@@ -768,7 +864,10 @@ func init() {
 	ConstructorNames[1352871220] = "MessagesToggleDialogPin"
 	ConstructorNames[1409872986] = "MessagesReorderPinnedDialogs"
 	ConstructorNames[3682116055] = "MessagesSendScreenShotNotification"
+	ConstructorNames[279494057] = "MessagesSendReaction"
+	ConstructorNames[3097050126] = "MessagesGetReactionList"
 	ConstructorNames[3252610224] = "MessagesDialogs"
 	ConstructorNames[2942502835] = "MessagesSent"
 	ConstructorNames[1713238910] = "MessagesMany"
+	ConstructorNames[181278607] = "MessagesReactionList"
 }

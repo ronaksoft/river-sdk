@@ -1009,6 +1009,7 @@ func (p *poolUserMessage) Put(x *UserMessage) {
 	x.ReplyMarkupData = x.ReplyMarkupData[:0]
 	x.LabelIDs = x.LabelIDs[:0]
 	x.ViaBotID = 0
+	x.Reactions = x.Reactions[:0]
 	p.pool.Put(x)
 }
 
@@ -1016,6 +1017,38 @@ var PoolUserMessage = poolUserMessage{}
 
 func ResultUserMessage(out *MessageEnvelope, res *UserMessage) {
 	out.Constructor = C_UserMessage
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_ReactionCounter int64 = 3277490830
+
+type poolReactionCounter struct {
+	pool sync.Pool
+}
+
+func (p *poolReactionCounter) Get() *ReactionCounter {
+	x, ok := p.pool.Get().(*ReactionCounter)
+	if !ok {
+		return &ReactionCounter{}
+	}
+	return x
+}
+
+func (p *poolReactionCounter) Put(x *ReactionCounter) {
+	p.pool.Put(x)
+}
+
+var PoolReactionCounter = poolReactionCounter{}
+
+func ResultReactionCounter(out *MessageEnvelope, res *ReactionCounter) {
+	out.Constructor = C_ReactionCounter
 	protoSize := res.Size()
 	if protoSize > cap(out.Message) {
 		pbytes.Put(out.Message)
@@ -1585,6 +1618,7 @@ func init() {
 	ConstructorNames[205850814] = "GroupFull"
 	ConstructorNames[4072279665] = "GroupParticipant"
 	ConstructorNames[1677556362] = "UserMessage"
+	ConstructorNames[3277490830] = "ReactionCounter"
 	ConstructorNames[869564229] = "DraftMessage"
 	ConstructorNames[3479443932] = "MessageEntity"
 	ConstructorNames[1046601890] = "RSAPublicKey"
