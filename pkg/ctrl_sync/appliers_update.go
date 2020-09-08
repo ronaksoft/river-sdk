@@ -853,3 +853,27 @@ func (ctrl *Controller) updateTeamCreated(u *msg.UpdateEnvelope) ([]*msg.UpdateE
 
 	return []*msg.UpdateEnvelope{u}, nil
 }
+
+func (ctrl *Controller) updateTeam(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := &msg.UpdateTeam{}
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	team ,err := repo.Teams.Get(x.TeamID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	team.Name = x.Name
+
+	err = repo.Teams.Save(team)
+	if err != nil {
+		return nil, err
+	}
+
+	return []*msg.UpdateEnvelope{u}, nil
+}
+
