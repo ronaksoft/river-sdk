@@ -214,20 +214,21 @@ func (r *repoMessagesPending) SaveMessageMedia(inputTeam *msg.InputTeam, msgID i
 		return nil, domain.ErrNotFound
 	}
 
-	pm := new(msg.ClientPendingMessage)
-	pm.PeerID = msgMedia.Peer.ID
-	pm.PeerType = int32(msgMedia.Peer.Type)
-	pm.AccessHash = msgMedia.Peer.AccessHash
-	pm.ReplyTo = msgMedia.ReplyTo
-	pm.ClearDraft = msgMedia.ClearDraft
-	pm.MediaType = msgMedia.MediaType
-	pm.Media = msgMedia.MediaData
-	pm.ID = msgID
-	pm.TeamID = inputTeam.ID
-	pm.TeamAccessHash = inputTeam.AccessHash
-	pm.SenderID = senderID
-	pm.CreatedOn = time.Now().Unix()
-	pm.RequestID = msgMedia.RandomID
+	pm := &msg.ClientPendingMessage{
+		PeerID:         msgMedia.Peer.ID,
+		PeerType:       int32(msgMedia.Peer.Type),
+		AccessHash:     msgMedia.Peer.AccessHash,
+		ReplyTo:        msgMedia.ReplyTo,
+		ClearDraft:     msgMedia.ClearDraft,
+		MediaType:      msgMedia.MediaType,
+		Media:          msgMedia.MediaData,
+		ID:             msgID,
+		TeamID:         inputTeam.ID,
+		TeamAccessHash: inputTeam.AccessHash,
+		SenderID:       senderID,
+		CreatedOn:      time.Now().Unix(),
+		RequestID:      msgMedia.RandomID,
+	}
 
 	bytes, _ := pm.Marshal()
 	_ = badgerUpdate(func(txn *badger.Txn) error {
@@ -242,7 +243,7 @@ func (r *repoMessagesPending) SaveMessageMedia(inputTeam *msg.InputTeam, msgID i
 		)
 	})
 
-	updateDialogLastUpdate(pm.TeamID, pm.PeerID, pm.PeerType, pm.CreatedOn)
+	_ = updateDialogLastUpdate(pm.TeamID, pm.PeerID, pm.PeerType, pm.CreatedOn)
 
 	return pm, nil
 }

@@ -295,7 +295,7 @@ func (r *repoLabels) ListMessages(labelID int32, teamID int64, limit int32, minI
 	case maxID != 0:
 		err := badgerView(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
-			opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
+			opts.Prefix = getLabelMessagePrefix(labelID)
 			if maxID > 0 {
 				opts.Reverse = true
 			}
@@ -353,7 +353,7 @@ func (r *repoLabels) ListMessages(labelID int32, teamID int64, limit int32, minI
 		)
 		_ = badgerView(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
-			opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
+			opts.Prefix = getLabelMessagePrefix(labelID)
 			it := txn.NewIterator(opts)
 			defer it.Close()
 			it.Seek(getLabelMessageKey(labelID, minID))

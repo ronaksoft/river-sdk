@@ -131,15 +131,14 @@ func TestRepoMessagesExtra(t *testing.T) {
 func TestPending(t *testing.T) {
 	pm := new(msg.ClientSendMessageMedia)
 	pm.Peer = new(msg.InputPeer)
-	_, err := repo.PendingMessages.SaveClientMessageMedia(nil, 10, 1, 11, 20, 21, pm, nil)
+	_, err := repo.PendingMessages.SaveClientMessageMedia(&msg.InputTeam{}, 10, 1, 11, 20, 21, pm, nil)
 	if err != nil {
 		t.Error(err)
 	}
 	pm1 := repo.PendingMessages.GetByID(10)
 	fmt.Println(pm1)
 
-	repo.PendingMessages.Delete(10)
-
+	_ = repo.PendingMessages.Delete(10)
 	pm2 := repo.PendingMessages.GetByID(10)
 	fmt.Println(pm2)
 }
@@ -193,7 +192,7 @@ func TestConcurrent(t *testing.T) {
 	for i := int64(1); i < 10000; i++ {
 		waitGroup.Add(1)
 		go func(i int64) {
-			_, err := repo.PendingMessages.SaveMessageMedia(nil, i, 1001, &msg.MessagesSendMedia{
+			_, err := repo.PendingMessages.SaveMessageMedia(&msg.InputTeam{}, i, 1001, &msg.MessagesSendMedia{
 				RandomID: domain.RandomInt63(),
 				Peer: &msg.InputPeer{
 					ID:         i,
@@ -212,11 +211,8 @@ func TestConcurrent(t *testing.T) {
 		}(i)
 		waitGroup.Add(1)
 		go func(i int64) {
-			err := repo.PendingMessages.Delete(i)
+			_ = repo.PendingMessages.Delete(i)
 			waitGroup.Done()
-			if err != nil {
-				logs.Fatal("Error On Save Pending", zap.Error(err))
-			}
 		}(i)
 	}
 	waitGroup.Wait()
