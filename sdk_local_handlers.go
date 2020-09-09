@@ -1547,17 +1547,17 @@ func (r *River) clientGlobalSearch(in, out *msg.MessageEnvelope, timeoutCB domai
 	var msgs []*msg.UserMessage
 	if len(req.LabelIDs) > 0 {
 		if req.Peer != nil {
-			msgs = repo.Messages.SearchByLabels(req.LabelIDs, req.Peer.ID, req.Limit)
+			msgs = repo.Messages.SearchByLabels(in.Team.ID, req.LabelIDs, req.Peer.ID, req.Limit)
 		} else {
-			msgs = repo.Messages.SearchByLabels(req.LabelIDs, 0, req.Limit)
+			msgs = repo.Messages.SearchByLabels(in.Team.ID, req.LabelIDs, 0, req.Limit)
 		}
 
 	} else if req.SenderID != 0 {
-		msgs = repo.Messages.SearchBySender(searchPhrase, req.SenderID, req.Peer.ID, req.Limit)
+		msgs = repo.Messages.SearchBySender(in.Team.ID, searchPhrase, req.SenderID, req.Peer.ID, req.Limit)
 	} else if req.Peer != nil {
-		msgs = repo.Messages.SearchTextByPeerID(searchPhrase, req.Peer.ID, req.Limit)
+		msgs = repo.Messages.SearchTextByPeerID(in.Team.ID, searchPhrase, req.Peer.ID, req.Limit)
 	} else {
-		msgs = repo.Messages.SearchText(searchPhrase, req.Limit)
+		msgs = repo.Messages.SearchText(in.Team.ID, searchPhrase, req.Limit)
 	}
 
 	// get users && group IDs
@@ -1585,7 +1585,7 @@ func (r *River) clientGlobalSearch(in, out *msg.MessageEnvelope, timeoutCB domai
 
 	// if peerID == 0 then look for group and contact names too
 	if req.Peer == nil {
-		userContacts, _ = repo.Users.SearchContacts(searchPhrase)
+		userContacts, _ = repo.Users.SearchContacts(in.Team.ID, searchPhrase)
 		for _, userContact := range userContacts {
 			matchedUserIDs[userContact.ID] = true
 		}
@@ -1593,7 +1593,7 @@ func (r *River) clientGlobalSearch(in, out *msg.MessageEnvelope, timeoutCB domai
 		for _, userContact := range nonContacts {
 			matchedUserIDs[userContact.ID] = true
 		}
-		searchResults.MatchedGroups = repo.Groups.Search(searchPhrase)
+		searchResults.MatchedGroups = repo.Groups.Search(in.Team.ID, searchPhrase)
 	}
 
 	users, _ := repo.Users.GetMany(userIDs.ToArray())
@@ -1623,7 +1623,7 @@ func (r *River) clientContactSearch(in, out *msg.MessageEnvelope, timeoutCB doma
 	logs.Info("SearchContacts", zap.String("Phrase", searchPhrase))
 
 	users := &msg.UsersMany{}
-	contactUsers, _ := repo.Users.SearchContacts(searchPhrase)
+	contactUsers, _ := repo.Users.SearchContacts(in.Team.ID, searchPhrase)
 	userIDs := make([]int64, 0, len(contactUsers))
 	for _, contactUser := range contactUsers {
 		userIDs = append(userIDs, contactUser.ID)

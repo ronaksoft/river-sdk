@@ -22,7 +22,7 @@ func TestMessagesSearch(t *testing.T) {
 	}
 	Convey("Messages Search", t, func() {
 		Convey("Search By Label", func(c C) {
-			msgs := repo.Messages.SearchByLabels([]int32{1}, 0, 100)
+			msgs := repo.Messages.SearchByLabels(0, []int32{1}, 0, 100)
 			for _, m := range msgs {
 				_, _ = c.Println(m.ID, m.Body, m.LabelIDs)
 			}

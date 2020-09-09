@@ -149,6 +149,7 @@ func saveContact(txn *badger.Txn, teamID int64, contactUser *msg.ContactUser) er
 			LastName:  contactUser.LastName,
 			Username:  contactUser.Username,
 			Phone:     contactUser.Phone,
+			TeamID:    fmt.Sprintf("%d", teamID),
 		},
 	)
 	err = saveUserPhotos(txn, contactUser.ID, contactUser.Photo)
@@ -380,7 +381,7 @@ func (r *repoUsers) GetContacts(teamID int64) ([]*msg.ContactUser, []*msg.PhoneC
 
 }
 
-func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*msg.PhoneContact) {
+func (r *repoUsers) SearchContacts(teamID int64, searchPhrase string) ([]*msg.ContactUser, []*msg.PhoneContact) {
 	contactUsers := make([]*msg.ContactUser, 0, 100)
 	phoneContacts := make([]*msg.PhoneContact, 0, 100)
 	if r.peerSearch == nil {
@@ -393,7 +394,9 @@ func (r *repoUsers) SearchContacts(searchPhrase string) ([]*msg.ContactUser, []*
 		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewMatchQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
-	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
+	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", abs(teamID)))
+	t3.SetField("team_id")
+	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3))
 	searchResult, _ := r.peerSearch.Search(searchRequest)
 
 	_ = badgerView(func(txn *badger.Txn) error {
@@ -673,6 +676,7 @@ func (r *repoUsers) ReIndex(teamID int64) {
 						FirstName: contactUser.FirstName,
 						LastName:  contactUser.LastName,
 						Username:  contactUser.Username,
+						TeamID:    fmt.Sprintf("%d", teamID),
 					},
 				)
 				return nil

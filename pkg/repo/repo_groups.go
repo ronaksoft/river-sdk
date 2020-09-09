@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"fmt"
 	"git.ronaksoft.com/river/msg/msg"
 	"git.ronaksoft.com/ronak/riversdk/internal/pools"
 	"git.ronaksoft.com/ronak/riversdk/internal/tools"
@@ -121,6 +122,7 @@ func saveGroup(txn *badger.Txn, group *msg.Group) error {
 			Type:   "group",
 			Title:  group.Title,
 			PeerID: group.ID,
+			TeamID: fmt.Sprintf("%d", group.TeamID),
 		},
 	)
 
@@ -157,6 +159,7 @@ func saveGroupFull(txn *badger.Txn, groupFull *msg.GroupFull) error {
 			Type:   "group",
 			Title:  groupFull.Group.Title,
 			PeerID: groupFull.Group.ID,
+			TeamID: fmt.Sprintf("%d", groupFull.Group.TeamID),
 		},
 	)
 
@@ -449,7 +452,7 @@ func (r *repoGroups) ToggleAdmins(groupID int64, adminEnable bool) error {
 	})
 }
 
-func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
+func (r *repoGroups) Search(teamID int64, searchPhrase string) []*msg.Group {
 	groups := make([]*msg.Group, 0, 100)
 	if r.peerSearch == nil {
 		return groups
@@ -462,7 +465,9 @@ func (r *repoGroups) Search(searchPhrase string) []*msg.Group {
 		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewMatchQuery(term), bleve.NewFuzzyQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
-	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
+	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", abs(teamID)))
+	t3.SetField("team_id")
+	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3))
 	searchResult, _ := r.peerSearch.Search(searchRequest)
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
@@ -503,6 +508,7 @@ func (r *repoGroups) ReIndex() error {
 							Type:   "group",
 							Title:  group.Title,
 							PeerID: group.ID,
+							TeamID: fmt.Sprintf("%d", group.TeamID),
 						},
 					)
 				}

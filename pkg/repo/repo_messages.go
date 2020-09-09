@@ -201,6 +201,7 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 			Body:     message.Body,
 			PeerID:   fmt.Sprintf("%d", message.PeerID),
 			SenderID: fmt.Sprintf("%d", message.SenderID),
+			TeamID:   fmt.Sprintf("%d", message.TeamID),
 		},
 	)
 
@@ -622,7 +623,7 @@ func (r *repoMessages) GetTopMessageID(teamID, peerID int64, peerType int32) (in
 	return topMessageID, err
 }
 
-func (r *repoMessages) SearchText(text string, limit int32) []*msg.UserMessage {
+func (r *repoMessages) SearchText(teamID int64, text string, limit int32) []*msg.UserMessage {
 	userMessages := make([]*msg.UserMessage, 0, limit)
 	if r.msgSearch == nil {
 		return userMessages
@@ -634,7 +635,9 @@ func (r *repoMessages) SearchText(text string, limit int32) []*msg.UserMessage {
 		qs = append(qs, bleve.NewMatchQuery(term), bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
-	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
+	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", abs(teamID)))
+	t3.SetField("team_id")
+	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3))
 	searchResult, _ := r.msgSearch.Search(searchRequest)
 	searchRequest.Size = int(limit)
 	_ = badgerView(func(txn *badger.Txn) error {
@@ -652,7 +655,7 @@ func (r *repoMessages) SearchText(text string, limit int32) []*msg.UserMessage {
 	return userMessages
 }
 
-func (r *repoMessages) SearchTextByPeerID(text string, peerID int64, limit int32) []*msg.UserMessage {
+func (r *repoMessages) SearchTextByPeerID(teamID int64, text string, peerID int64, limit int32) []*msg.UserMessage {
 	userMessages := make([]*msg.UserMessage, 0, limit)
 	if r.msgSearch == nil {
 		return userMessages
@@ -667,7 +670,9 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64, limit int32
 	t2 := bleve.NewDisjunctionQuery(qs...)
 	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", abs(peerID)))
 	t3.SetField("peer_id")
-	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3))
+	t4 := bleve.NewTermQuery(fmt.Sprintf("%d", abs(teamID)))
+	t4.SetField("team_id")
+	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3, t4))
 	searchResult, _ := r.msgSearch.Search(searchRequest)
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
@@ -685,7 +690,7 @@ func (r *repoMessages) SearchTextByPeerID(text string, peerID int64, limit int32
 	return userMessages
 }
 
-func (r *repoMessages) SearchByLabels(labelIDs []int32, peerID int64, limit int32) []*msg.UserMessage {
+func (r *repoMessages) SearchByLabels(teamID int64, labelIDs []int32, peerID int64, limit int32) []*msg.UserMessage {
 	userMessages := make([]*msg.UserMessage, 0, limit)
 	_ = badgerView(func(txn *badger.Txn) error {
 		st := r.badger.NewStream()
@@ -696,6 +701,9 @@ func (r *repoMessages) SearchByLabels(labelIDs []int32, peerID int64, limit int3
 				return m.Unmarshal(val)
 			})
 			if err != nil {
+				return false
+			}
+			if m.TeamID != teamID {
 				return false
 			}
 			if len(m.LabelIDs) < len(labelIDs) {
@@ -805,7 +813,7 @@ func (r *repoMessages) GetMediaHistory(documentType msg.ClientMediaType) ([]*msg
 	return userMessages, nil
 }
 
-func (r *repoMessages) SearchBySender(text string, senderID int64, peerID int64, limit int32) []*msg.UserMessage {
+func (r *repoMessages) SearchBySender(teamID int64, text string, senderID int64, peerID int64, limit int32) []*msg.UserMessage {
 	userMessages := make([]*msg.UserMessage, 0, limit)
 
 	if r.msgSearch == nil {
@@ -830,11 +838,14 @@ func (r *repoMessages) SearchBySender(text string, senderID int64, peerID int64,
 	t4 := bleve.NewTermQuery(fmt.Sprintf("%d", abs(senderID)))
 	t4.SetField("sender_id")
 
+	t5 := bleve.NewTermQuery(fmt.Sprintf("%d", abs(teamID)))
+	t5.SetField("team_id")
+
 	var searchRequest *bleve.SearchRequest
 	if t2 != nil {
-		searchRequest = bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3, t4))
+		searchRequest = bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3, t4, t5))
 	} else {
-		searchRequest = bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t3, t4))
+		searchRequest = bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t3, t4, t5))
 	}
 
 	searchRequest.Size = int(limit)
@@ -923,6 +934,7 @@ func (r *repoMessages) ReIndex() {
 							Body:     message.Body,
 							PeerID:   fmt.Sprintf("%d", message.PeerID),
 							SenderID: fmt.Sprintf("%d", message.SenderID),
+							TeamID:   fmt.Sprintf("%d", message.TeamID),
 						},
 					)
 				}

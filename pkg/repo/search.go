@@ -14,6 +14,7 @@ type MessageSearch struct {
 	Body     string `json:"body"`
 	PeerID   string `json:"peer_id"`
 	SenderID string `json:"sender_id"`
+	TeamID   string `json:"team_id"`
 }
 
 type UserSearch struct {
@@ -30,10 +31,12 @@ type ContactSearch struct {
 	LastName  string `json:"ln"`
 	Username  string `json:"un"`
 	Phone     string `json:"phone"`
+	TeamID    string `json:"team_id"`
 }
 
 type GroupSearch struct {
 	Type   string `json:"type"`
 	Title  string `json:"title"`
 	PeerID int64  `json:"peer_id"`
+	TeamID string `json:"team_id"`
 }

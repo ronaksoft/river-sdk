@@ -330,12 +330,12 @@ func TestSearch(t *testing.T) {
 
 	// mm := repo.Messages.SearchText("Hello")
 	fmt.Print("Search in UserPeer:")
-	mm := repo.Messages.SearchTextByPeerID("H", 6, 100)
+	mm := repo.Messages.SearchTextByPeerID(0, "H", 6, 100)
 	for _, m := range mm {
 		fmt.Println(m.ID, m.Body, m.PeerID)
 	}
 	fmt.Print("Search in GroupPeer:")
-	mm = repo.Messages.SearchTextByPeerID("H", -7, 100)
+	mm = repo.Messages.SearchTextByPeerID(0, "H", -7, 100)
 	for _, m := range mm {
 		fmt.Println(m.ID, m.Body, m.PeerID)
 	}
