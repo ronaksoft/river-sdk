@@ -217,7 +217,7 @@ func (ctrl *Controller) labelsMany(e *msg.MessageEnvelope) {
 	}
 	logs.Info("SyncCtrl applies LabelsMany")
 
-	err = repo.Labels.Save(u.Labels...)
+	err = repo.Labels.Save(domain.GetTeamID(e.Team), u.Labels...)
 	logs.WarnOnErr("SyncCtrl got error on applying LabelsMany", err)
 
 	return
@@ -371,6 +371,7 @@ func (ctrl *Controller) teamsMany(e *msg.MessageEnvelope) {
 	logs.ErrorOnErr("SyncCtrl couldn't save teamsMany teams", err)
 }
 
+// teamMembers
 func (ctrl *Controller) teamMembers(e *msg.MessageEnvelope) {
 	tm := &msg.TeamMembers{}
 	err := tm.Unmarshal(e.Message)

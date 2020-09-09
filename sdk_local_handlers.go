@@ -1283,7 +1283,7 @@ func (r *River) labelsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeout
 		return
 	}
 
-	labels := repo.Labels.GetAll()
+	labels := repo.Labels.GetAll(in.Team.ID)
 	if len(labels) != 0 {
 		logs.Debug("We found labels locally", zap.Int("L", len(labels)))
 		res := &msg.LabelsMany{}
@@ -1340,11 +1340,11 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 				)
 				switch {
 				case req.MinID == 0 && req.MaxID != 0:
-					_ = repo.Labels.Fill(req.LabelID, x.Messages[msgCount-1].ID, req.MaxID)
+					_ = repo.Labels.Fill(in.Team.ID, req.LabelID, x.Messages[msgCount-1].ID, req.MaxID)
 				case req.MinID != 0 && req.MaxID == 0:
-					_ = repo.Labels.Fill(req.LabelID, req.MinID, x.Messages[0].ID)
+					_ = repo.Labels.Fill(in.Team.ID, req.LabelID, req.MinID, x.Messages[0].ID)
 				case req.MinID == 0 && req.MaxID == 0:
-					_ = repo.Labels.Fill(req.LabelID, x.Messages[msgCount-1].ID, x.Messages[0].ID)
+					_ = repo.Labels.Fill(in.Team.ID, req.LabelID, x.Messages[msgCount-1].ID, x.Messages[0].ID)
 				}
 			}
 		default:
@@ -1356,7 +1356,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:
-		bar := repo.Labels.GetFilled(req.LabelID)
+		bar := repo.Labels.GetFilled(in.Team.ID, req.LabelID)
 		logs.Debug("Label Filled", zap.Int32("LabelID", req.LabelID),
 			zap.Int64("MinID", bar.MinID),
 			zap.Int64("MaxID", bar.MaxID),
@@ -1364,7 +1364,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 		req.MaxID = bar.MaxID
 		fallthrough
 	case req.MinID == 0 && req.MaxID != 0:
-		b, bar := repo.Labels.GetLowerFilled(req.LabelID, req.MaxID)
+		b, bar := repo.Labels.GetLowerFilled(in.Team.ID, req.LabelID, req.MaxID)
 		if !b {
 			logs.Info("River detected label hole (With MaxID Only)",
 				zap.Int32("LabelID", req.LabelID),
@@ -1383,7 +1383,7 @@ func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.T
 		)
 		fillLabelItems(out, messages, users, groups, in.RequestID, preSuccessCB)
 	case req.MinID != 0 && req.MaxID == 0:
-		b, bar := repo.Labels.GetUpperFilled(req.LabelID, req.MinID)
+		b, bar := repo.Labels.GetUpperFilled(in.Team.ID, req.LabelID, req.MinID)
 		if !b {
 			logs.Info("River detected label hole (With MinID Only)",
 				zap.Int32("LabelID", req.LabelID),
@@ -1416,12 +1416,12 @@ func (r *River) labelAddToMessage(in, out *msg.MessageEnvelope, timeoutCB domain
 	if len(req.MessageIDs) != 0 {
 		_ = repo.Labels.AddLabelsToMessages(req.LabelIDs, in.Team.ID, req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
 		for _, labelID := range req.LabelIDs {
-			bar := repo.Labels.GetFilled(labelID)
+			bar := repo.Labels.GetFilled(in.Team.ID, labelID)
 			for _, msgID := range req.MessageIDs {
 				if msgID > bar.MaxID {
-					_ = repo.Labels.Fill(labelID, bar.MaxID, msgID)
+					_ = repo.Labels.Fill(in.Team.ID, labelID, bar.MaxID, msgID)
 				} else if msgID < bar.MinID {
-					_ = repo.Labels.Fill(labelID, msgID, bar.MinID)
+					_ = repo.Labels.Fill(in.Team.ID, labelID, msgID, bar.MinID)
 				}
 			}
 		}
@@ -1962,9 +1962,9 @@ func (r *River) teamEdit(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 		return
 	}
 
-	team ,_ := repo.Teams.Get(req.TeamID)
+	team, _ := repo.Teams.Get(req.TeamID)
 
-	if team != nil{
+	if team != nil {
 		team.Name = req.Name
 
 		_ = repo.Teams.Save(team)

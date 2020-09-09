@@ -18,10 +18,14 @@ import (
    Copyright Ronak Software Group 2020
 */
 
+func init() {
+	repo.InitRepo("./_data", false)
+}
 func TestLabel(t *testing.T) {
 	Convey("Testing Labels", t, func(c C) {
 		Convey("Save Labels", func(c C) {
 			err := repo.Labels.Save(
+				0,
 				&msg.Label{
 					ID:     1,
 					Name:   "Label1",
@@ -34,7 +38,7 @@ func TestLabel(t *testing.T) {
 				},
 			)
 			c.So(err, ShouldBeNil)
-			labels := repo.Labels.GetAll()
+			labels := repo.Labels.GetAll(0)
 			c.So(labels, ShouldHaveLength, 2)
 		})
 		Convey("Add Label To Message", func(c C) {
@@ -95,22 +99,22 @@ func TestLabel(t *testing.T) {
 			c.So(ums[2].ID, ShouldEqual, 6)
 		})
 		Convey("Label Hole", func(c C) {
-			b, _ := repo.Labels.GetLowerFilled(10, 100)
+			b, _ := repo.Labels.GetLowerFilled(0, 10, 100)
 			c.So(b, ShouldBeFalse)
 
-			err := repo.Labels.Fill(1, 10, 100)
+			err := repo.Labels.Fill(0, 1, 10, 100)
 			c.So(err, ShouldBeNil)
 
-			bar := repo.Labels.GetFilled(1)
+			bar := repo.Labels.GetFilled(0, 1)
 			c.So(bar.MinID, ShouldEqual, 10)
 			c.So(bar.MaxID, ShouldEqual, 100)
 
-			b, bar = repo.Labels.GetUpperFilled(1, 90)
+			b, bar = repo.Labels.GetUpperFilled(0, 1, 90)
 			c.So(b, ShouldBeTrue)
 			c.So(bar.MinID, ShouldEqual, 90)
 			c.So(bar.MaxID, ShouldEqual, 100)
 
-			b, bar = repo.Labels.GetLowerFilled(1, 90)
+			b, bar = repo.Labels.GetLowerFilled(0, 1, 90)
 			c.So(b, ShouldBeTrue)
 			c.So(bar.MinID, ShouldEqual, 10)
 			c.So(bar.MaxID, ShouldEqual, 90)

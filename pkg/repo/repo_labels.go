@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/msg"
 	"git.ronaksoft.com/ronak/riversdk/internal/logs"
+	"git.ronaksoft.com/ronak/riversdk/internal/pools"
+	"git.ronaksoft.com/ronak/riversdk/internal/tools"
 	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
 	"github.com/dgraph-io/badger/v2"
 	"github.com/dgraph-io/badger/v2/pb"
@@ -27,6 +29,8 @@ import (
 const (
 	prefixLabel         = "LBL"
 	prefixLabelMessages = "LBLM"
+	prefixLabelFill     = "LBLF"
+	prefixLabelCount    = "LBLC"
 )
 
 type repoLabels struct {
@@ -34,15 +38,64 @@ type repoLabels struct {
 }
 
 func getLabelKey(labelID int32) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%03d", prefixLabel, labelID))
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixLabel)
+	sb.WriteRune('.')
+	tools.AppendStrInt32(sb, labelID)
+	id := tools.StrToByte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
+}
+
+func getLabelCountKey(teamID int64, labelID int32) []byte {
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixLabelCount)
+	sb.WriteRune('.')
+	tools.AppendStrInt32(sb, labelID)
+	tools.AppendStrInt64(sb, teamID)
+	id := tools.StrToByte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
+}
+
+func getLabelCountPrefix(labelID int32) []byte {
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixLabelCount)
+	sb.WriteRune('.')
+	tools.AppendStrInt32(sb, labelID)
+	id := tools.StrToByte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
 }
 
 func getLabelMessageKey(labelID int32, msgID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%03d.%021d", prefixLabelMessages, labelID, msgID))
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixLabelMessages)
+	sb.WriteRune('.')
+	tools.AppendStrInt32(sb, labelID)
+	tools.AppendStrInt64(sb, msgID)
+	id := tools.StrToByte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
 }
 
-func getLabelByID(txn *badger.Txn, labelID int32) (*msg.Label, error) {
-	return getLabelByKey(txn, getLabelKey(labelID))
+func getLabelMessagePrefix(labelID int32) []byte {
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixLabelMessages)
+	sb.WriteRune('.')
+	tools.AppendStrInt32(sb, labelID)
+	id := tools.StrToByte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
+}
+
+func getLabelByID(txn *badger.Txn, teamID int64, labelID int32) (*msg.Label, error) {
+	l, err := getLabelByKey(txn, getLabelKey(labelID))
+	if err != nil {
+		return nil, err
+	}
+	l.Count, _ = getLabelCount(txn, teamID, labelID)
+	return l, nil
 }
 
 func getLabelByKey(txn *badger.Txn, key []byte) (*msg.Label, error) {
@@ -69,8 +122,35 @@ func saveLabel(txn *badger.Txn, label *msg.Label) error {
 	return err
 }
 
+func saveLabelCount(txn *badger.Txn, teamID int64, labelID int32, cnt int32) error {
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, uint32(cnt))
+	return txn.Set(getLabelCountKey(teamID, labelID), b)
+}
+
+func getLabelCount(txn *badger.Txn, teamID int64, labelID int32) (int32, error) {
+	var cnt int32
+	item, err := txn.Get(getLabelCountKey(teamID, labelID))
+	if err != nil {
+		return 0, err
+	}
+	_ = item.Value(func(val []byte) error {
+		cnt = int32(binary.BigEndian.Uint32(val))
+		return nil
+	})
+	return cnt, nil
+}
+
 func deleteLabel(txn *badger.Txn, labelID int32) error {
-	return txn.Delete(getLabelKey(labelID))
+	opts := badger.DefaultIteratorOptions
+	opts.Prefix = getLabelCountPrefix(labelID)
+	it := txn.NewIterator(opts)
+	for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
+		_ = txn.Delete(it.Item().KeyCopy(nil))
+	}
+	it.Close()
+	_ = txn.Delete(getLabelKey(labelID))
+	return nil
 }
 
 func addLabelToMessage(txn *badger.Txn, labelID int32, peerType int32, peerID int64, msgID int64) error {
@@ -90,45 +170,37 @@ func removeLabelFromMessage(txn *badger.Txn, labelID int32, msgID int64) error {
 	return err
 }
 
-func decreaseLabelItemCount(txn *badger.Txn, labelID int32) error {
-	label := &msg.Label{}
-	item, err := txn.Get(getLabelKey(labelID))
+func decreaseLabelItemCount(txn *badger.Txn, teamID int64, labelID int32) error {
+	cnt, err := getLabelCount(txn, teamID, labelID)
 	if err != nil {
 		return err
 	}
-	err = item.Value(func(val []byte) error {
-		return label.Unmarshal(val)
-	})
-	if err != nil {
-		return err
-	}
-
-	label.Count--
-
-	return saveLabel(txn, label)
+	cnt--
+	return saveLabelCount(txn, teamID, labelID, cnt)
 }
 
-func increaseLabelItemCount(txn *badger.Txn, labelID int32) error {
-	label := &msg.Label{}
-	item, err := txn.Get(getLabelKey(labelID))
-	if err != nil {
-		return err
-	}
-	err = item.Value(func(val []byte) error {
-		return label.Unmarshal(val)
-	})
-	if err != nil {
-		return err
-	}
-
-	label.Count++
-	return saveLabel(txn, label)
-}
-
-func (r *repoLabels) Save(labels ...*msg.Label) error {
+func (r *repoLabels) Set(labels ...*msg.Label) error {
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		for _, l := range labels {
 			err := saveLabel(txn, l)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	logs.ErrorOnErr("RepoLabel got error on Set", err)
+	return err
+}
+
+func (r *repoLabels) Save(teamID int64, labels ...*msg.Label) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
+		for _, l := range labels {
+			err := saveLabel(txn, l)
+			if err != nil {
+				return err
+			}
+			err = saveLabelCount(txn, teamID, l.ID, l.Count)
 			if err != nil {
 				return err
 			}
@@ -147,7 +219,7 @@ func (r *repoLabels) Delete(labelIDs ...int32) error {
 				return err
 			}
 			stream := r.badger.NewStream()
-			stream.Prefix = domain.StrToByte(fmt.Sprintf("%s.%03d.", prefixLabelMessages, labelID))
+			stream.Prefix = getLabelMessagePrefix(labelID)
 			stream.Send = func(list *pb.KVList) error {
 				for _, kv := range list.Kv {
 					parts := strings.Split(domain.ByteToStr(kv.Value), ".")
@@ -171,11 +243,11 @@ func (r *repoLabels) Delete(labelIDs ...int32) error {
 
 }
 
-func (r *repoLabels) GetMany(labelIDs ...int32) []*msg.Label {
+func (r *repoLabels) GetMany(teamID int64, labelIDs ...int32) []*msg.Label {
 	labels := make([]*msg.Label, 0, len(labelIDs))
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, labelID := range labelIDs {
-			l, err := getLabelByID(txn, labelID)
+			l, err := getLabelByID(txn, teamID, labelID)
 			if err == nil {
 				labels = append(labels, l)
 			}
@@ -185,7 +257,7 @@ func (r *repoLabels) GetMany(labelIDs ...int32) []*msg.Label {
 	return labels
 }
 
-func (r *repoLabels) GetAll() []*msg.Label {
+func (r *repoLabels) GetAll(teamID int64) []*msg.Label {
 	labels := make([]*msg.Label, 0, 20)
 	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
@@ -196,6 +268,11 @@ func (r *repoLabels) GetAll() []*msg.Label {
 			_ = it.Item().Value(func(val []byte) error {
 				l := &msg.Label{}
 				err := l.Unmarshal(val)
+				if err != nil {
+					return err
+				}
+
+				l.Count, err = getLabelCount(txn, teamID, l.ID)
 				if err != nil {
 					return err
 				}
@@ -407,16 +484,24 @@ type LabelBar struct {
 	MaxID int64
 }
 
-func (r *repoLabels) Fill(labelID int32, minID, maxID int64) error {
+func getLabelBarMaxKey(teamID int64, labelID int32) []byte {
+	return domain.StrToByte(fmt.Sprintf("%s.%021d.03%d.MAXID", prefixLabelFill, teamID, labelID))
+}
+
+func getLabelBarMinKey(teamID int64, labelID int32) []byte {
+	return domain.StrToByte(fmt.Sprintf("%s.%021d.03%d.MINID", prefixLabelFill, teamID, labelID))
+}
+
+func (r *repoLabels) Fill(teamID int64, labelID int32, minID, maxID int64) error {
 	minIDb := make([]byte, 8)
 	binary.BigEndian.PutUint64(minIDb, uint64(minID))
 	maxIDb := make([]byte, 8)
 	binary.BigEndian.PutUint64(maxIDb, uint64(maxID))
-	bar := r.GetFilled(labelID)
+	bar := r.GetFilled(teamID, labelID)
 	if maxID > bar.MaxID {
 		_ = badgerUpdate(func(txn *badger.Txn) error {
 			return txn.SetEntry(badger.NewEntry(
-				domain.StrToByte(fmt.Sprintf("%s.03%d.MAXID", prefixLabelMessages, labelID)),
+				getLabelBarMaxKey(teamID, labelID),
 				maxIDb,
 			))
 		})
@@ -425,7 +510,7 @@ func (r *repoLabels) Fill(labelID int32, minID, maxID int64) error {
 	if bar.MinID == 0 || minID < bar.MinID {
 		_ = badgerUpdate(func(txn *badger.Txn) error {
 			return txn.SetEntry(badger.NewEntry(
-				domain.StrToByte(fmt.Sprintf("%s.03%d.MINID", prefixLabelMessages, labelID)),
+				getLabelBarMinKey(teamID, labelID),
 				minIDb,
 			))
 		})
@@ -434,10 +519,10 @@ func (r *repoLabels) Fill(labelID int32, minID, maxID int64) error {
 	return nil
 }
 
-func (r *repoLabels) GetFilled(labelID int32) LabelBar {
+func (r *repoLabels) GetFilled(teamID int64, labelID int32) LabelBar {
 	bar := LabelBar{}
 	_ = badgerView(func(txn *badger.Txn) error {
-		minIDItem, err := txn.Get(domain.StrToByte(fmt.Sprintf("%s.03%d.MINID", prefixLabelMessages, labelID)))
+		minIDItem, err := txn.Get(getLabelBarMinKey(teamID, labelID))
 		if err != nil {
 			return err
 		}
@@ -445,7 +530,7 @@ func (r *repoLabels) GetFilled(labelID int32) LabelBar {
 			bar.MinID = int64(binary.BigEndian.Uint64(val))
 			return nil
 		})
-		maxIDItem, err := txn.Get(domain.StrToByte(fmt.Sprintf("%s.03%d.MAXID", prefixLabelMessages, labelID)))
+		maxIDItem, err := txn.Get(getLabelBarMaxKey(teamID, labelID))
 		if err != nil {
 			return err
 		}
@@ -458,8 +543,8 @@ func (r *repoLabels) GetFilled(labelID int32) LabelBar {
 	return bar
 }
 
-func (r *repoLabels) GetLowerFilled(labelID int32, maxID int64) (bool, LabelBar) {
-	b := r.GetFilled(labelID)
+func (r *repoLabels) GetLowerFilled(teamID int64, labelID int32, maxID int64) (bool, LabelBar) {
+	b := r.GetFilled(teamID, labelID)
 	if b.MinID == 0 && b.MaxID == 0 {
 		return false, b
 	}
@@ -470,8 +555,8 @@ func (r *repoLabels) GetLowerFilled(labelID int32, maxID int64) (bool, LabelBar)
 	return true, b
 }
 
-func (r *repoLabels) GetUpperFilled(labelID int32, minID int64) (bool, LabelBar) {
-	b := r.GetFilled(labelID)
+func (r *repoLabels) GetUpperFilled(teamID int64, labelID int32, minID int64) (bool, LabelBar) {
+	b := r.GetFilled(teamID, labelID)
 	if b.MinID == 0 && b.MaxID == 0 {
 		return false, b
 	}

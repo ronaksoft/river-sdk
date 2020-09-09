@@ -685,19 +685,19 @@ func (ctrl *Controller) updateLabelItemsAdded(u *msg.UpdateEnvelope) ([]*msg.Upd
 			return nil, err
 		}
 		for _, labelID := range x.LabelIDs {
-			bar := repo.Labels.GetFilled(labelID)
+			bar := repo.Labels.GetFilled(x.TeamID, labelID)
 			for _, msgID := range x.MessageIDs {
 				if msgID > bar.MaxID {
-					repo.Labels.Fill(labelID, bar.MaxID, msgID)
+					repo.Labels.Fill(x.TeamID, labelID, bar.MaxID, msgID)
 				} else if msgID < bar.MinID {
-					repo.Labels.Fill(labelID, msgID, bar.MinID)
+					repo.Labels.Fill(x.TeamID, labelID, msgID, bar.MinID)
 				}
 			}
 		}
 
 	}
 
-	err = repo.Labels.Save(x.Labels...)
+	err = repo.Labels.Save(x.TeamID, x.Labels...)
 	if err != nil {
 		return nil, err
 	}
@@ -724,7 +724,7 @@ func (ctrl *Controller) updateLabelItemsRemoved(u *msg.UpdateEnvelope) ([]*msg.U
 		}
 	}
 
-	err = repo.Labels.Save(x.Labels...)
+	err = repo.Labels.Save(x.TeamID, x.Labels...)
 	if err != nil {
 		return nil, err
 	}
@@ -742,7 +742,7 @@ func (ctrl *Controller) updateLabelSet(u *msg.UpdateEnvelope) ([]*msg.UpdateEnve
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
-	err = repo.Labels.Save(x.Labels...)
+	err = repo.Labels.Set(x.Labels...)
 	if err != nil {
 		return nil, err
 	}
@@ -861,7 +861,7 @@ func (ctrl *Controller) updateTeam(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope
 		return nil, err
 	}
 
-	team ,err := repo.Teams.Get(x.TeamID)
+	team, err := repo.Teams.Get(x.TeamID)
 
 	if err != nil {
 		return nil, err
@@ -876,4 +876,3 @@ func (ctrl *Controller) updateTeam(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope
 
 	return []*msg.UpdateEnvelope{u}, nil
 }
-

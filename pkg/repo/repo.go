@@ -58,6 +58,13 @@ type repository struct {
 	peerSearch bleve.Index
 }
 
+func MustInitRepo(dbPath string, lowMemory bool) {
+	err := InitRepo(dbPath, lowMemory)
+	if err != nil {
+		panic(err)
+	}
+}
+
 // InitRepo initialize repo singleton
 func InitRepo(dbPath string, lowMemory bool) error {
 	if ctx == nil {

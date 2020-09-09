@@ -572,7 +572,7 @@ func (r *River) registerCommandHandlers() {
 		msg.C_SystemGetConfig:               r.systemGetConfig,
 		msg.C_ClientGetTeamCounters:         r.clientGetTeamCounters,
 		msg.C_AccountGetTeams:               r.accountsGetTeams,
-		msg.C_TeamEdit:     				 r.teamEdit,
+		msg.C_TeamEdit:                      r.teamEdit,
 	}
 }
 

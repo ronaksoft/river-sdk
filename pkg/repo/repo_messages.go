@@ -489,7 +489,7 @@ func (r *repoMessages) Delete(userID int64, teamID, peerID int64, peerType int32
 			if m, _ := getMessageByID(txn, msgID); m != nil {
 				for _, labelID := range m.LabelIDs {
 					_ = removeLabelFromMessage(txn, labelID, msgID)
-					_ = decreaseLabelItemCount(txn, labelID)
+					_ = decreaseLabelItemCount(txn, teamID, labelID)
 				}
 			}
 
