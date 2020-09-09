@@ -94,7 +94,7 @@ func getLabelByID(txn *badger.Txn, teamID int64, labelID int32) (*msg.Label, err
 	if err != nil {
 		return nil, err
 	}
-	l.Count, _ = getLabelCount(txn, teamID, labelID)
+	l.Count = getLabelCount(txn, teamID, labelID)
 	return l, nil
 }
 
@@ -128,17 +128,17 @@ func saveLabelCount(txn *badger.Txn, teamID int64, labelID int32, cnt int32) err
 	return txn.Set(getLabelCountKey(teamID, labelID), b)
 }
 
-func getLabelCount(txn *badger.Txn, teamID int64, labelID int32) (int32, error) {
+func getLabelCount(txn *badger.Txn, teamID int64, labelID int32) int32 {
 	var cnt int32
 	item, err := txn.Get(getLabelCountKey(teamID, labelID))
 	if err != nil {
-		return 0, err
+		return 0
 	}
 	_ = item.Value(func(val []byte) error {
 		cnt = int32(binary.BigEndian.Uint32(val))
 		return nil
 	})
-	return cnt, nil
+	return cnt
 }
 
 func deleteLabel(txn *badger.Txn, labelID int32) error {
@@ -171,9 +171,10 @@ func removeLabelFromMessage(txn *badger.Txn, labelID int32, msgID int64) error {
 }
 
 func decreaseLabelItemCount(txn *badger.Txn, teamID int64, labelID int32) error {
-	cnt, err := getLabelCount(txn, teamID, labelID)
-	if err != nil {
-		return err
+	cnt := getLabelCount(txn, teamID, labelID)
+	if cnt == 0 {
+		logs.Warn("RepoLabel tried to decrement counter but it is zero")
+		return nil
 	}
 	cnt--
 	return saveLabelCount(txn, teamID, labelID, cnt)
@@ -272,10 +273,7 @@ func (r *repoLabels) GetAll(teamID int64) []*msg.Label {
 					return err
 				}
 
-				l.Count, err = getLabelCount(txn, teamID, l.ID)
-				if err != nil {
-					return err
-				}
+				l.Count = getLabelCount(txn, teamID, l.ID)
 				labels = append(labels, l)
 				return nil
 			})

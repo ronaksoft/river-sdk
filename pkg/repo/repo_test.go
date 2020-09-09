@@ -22,7 +22,7 @@ import (
 */
 
 func init() {
-	repo.InitRepo("./_data", false)
+	repo.MustInitRepo("./_data", false)
 }
 
 func createMediaMessage(body string, filename string, labelIDs []int32) *msg.UserMessage {

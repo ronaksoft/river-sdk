@@ -209,9 +209,10 @@ func (ctrl *Controller) Sync() {
 
 			// Get Contacts from the server
 			waitGroup := &sync.WaitGroup{}
-			waitGroup.Add(7)
+			waitGroup.Add(8)
 			go ctrl.GetContacts(waitGroup, nil)
 			go ctrl.GetAllDialogs(waitGroup, nil, 0, 100)
+			go ctrl.GetLabels(waitGroup, nil)
 			go ctrl.GetAllTopPeers(waitGroup, nil, msg.TopPeerCategory_Users, 0, 100)
 			go ctrl.GetAllTopPeers(waitGroup, nil, msg.TopPeerCategory_Groups, 0, 100)
 			go ctrl.GetAllTopPeers(waitGroup, nil, msg.TopPeerCategory_Forwards, 0, 100)
@@ -405,9 +406,10 @@ func (ctrl *Controller) TeamSync(teamID int64, accessHash uint64, forceUpdate bo
 
 	// Get Contacts from the server
 	waitGroup := &sync.WaitGroup{}
-	waitGroup.Add(7)
+	waitGroup.Add(8)
 	go ctrl.GetContacts(waitGroup, team)
 	go ctrl.GetAllDialogs(waitGroup, team, 0, 100)
+	go ctrl.GetLabels(waitGroup, team)
 	go ctrl.GetAllTopPeers(waitGroup, team, msg.TopPeerCategory_Users, 0, 100)
 	go ctrl.GetAllTopPeers(waitGroup, team, msg.TopPeerCategory_Groups, 0, 100)
 	go ctrl.GetAllTopPeers(waitGroup, team, msg.TopPeerCategory_Forwards, 0, 100)

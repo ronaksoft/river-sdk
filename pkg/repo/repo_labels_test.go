@@ -18,9 +18,6 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func init() {
-	repo.InitRepo("./_data", false)
-}
 func TestLabel(t *testing.T) {
 	Convey("Testing Labels", t, func(c C) {
 		Convey("Save Labels", func(c C) {

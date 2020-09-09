@@ -298,6 +298,42 @@ func (ctrl *Controller) GetAllTopPeers(waitGroup *sync.WaitGroup, team *msg.Inpu
 	)
 }
 
+func (ctrl *Controller) GetLabels(waitGroup *sync.WaitGroup, team *msg.InputTeam) {
+	logs.Info("SyncCtrl calls GetLabels")
+	req := &msg.LabelsGet{}
+	reqBytes, _ := req.Marshal()
+	ctrl.queueCtrl.EnqueueCommand(
+		&msg.MessageEnvelope{
+			Team:        team,
+			Constructor: msg.C_LabelsGet,
+			RequestID:   uint64(domain.SequentialUniqueID()),
+			Message:     reqBytes,
+		},
+		func() {
+			// If timeout, then retry the request
+			logs.Warn("Timeout! on LabelsGet, retrying ...")
+			_, _ = ctrl.AuthRecall("LabelsGet")
+			ctrl.GetLabels(waitGroup, team)
+		},
+		func(m *msg.MessageEnvelope) {
+			switch m.Constructor {
+			case msg.C_Error:
+				logs.Error("SyncCtrl got error response on LabelsGet", zap.Error(domain.ParseServerError(m.Message)))
+				x := msg.Error{}
+				_ = x.Unmarshal(m.Message)
+				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
+					waitGroup.Done()
+				} else {
+					ctrl.GetLabels(waitGroup, team)
+				}
+			case msg.C_LabelsMany:
+				waitGroup.Done()
+			}
+		},
+		false,
+	)
+}
+
 func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup, team *msg.InputTeam) {
 	logs.Debug("SyncCtrl calls GetContacts")
 	var teamID int64
