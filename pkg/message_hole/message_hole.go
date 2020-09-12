@@ -3,8 +3,8 @@ package messageHole
 import (
 	"encoding/json"
 	"fmt"
-	"git.ronaksoft.com/ronak/riversdk/internal/logs"
-	"git.ronaksoft.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoft.com/river/sdk/internal/logs"
+	"git.ronaksoft.com/river/sdk/pkg/repo"
 	"go.uber.org/zap"
 	"sort"
 	"strings"

@@ -3,8 +3,8 @@ package repo
 import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/msg"
-	"git.ronaksoft.com/ronak/riversdk/internal/logs"
-	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoft.com/river/sdk/internal/logs"
+	"git.ronaksoft.com/river/sdk/pkg/domain"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
 	"github.com/dgraph-io/badger/v2"

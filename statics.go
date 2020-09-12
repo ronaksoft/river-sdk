@@ -2,8 +2,8 @@ package riversdk
 
 import (
 	"git.ronaksoft.com/river/msg/msg"
-	"git.ronaksoft.com/ronak/riversdk/internal/logs"
-	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoft.com/river/sdk/internal/logs"
+	"git.ronaksoft.com/river/sdk/pkg/domain"
 	"github.com/dgraph-io/badger/v2"
 	"go.uber.org/zap"
 	"math/big"

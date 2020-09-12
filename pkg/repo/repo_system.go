@@ -3,7 +3,7 @@ package repo
 import (
 	"encoding/binary"
 	"fmt"
-	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoft.com/river/sdk/pkg/domain"
 	"github.com/dgraph-io/badger/v2"
 )
 

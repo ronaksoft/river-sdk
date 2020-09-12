@@ -1,17 +1,17 @@
 package syncCtrl
 
 import (
-	mon "git.ronaksoft.com/ronak/riversdk/internal/monitoring"
-	messageHole "git.ronaksoft.com/ronak/riversdk/pkg/message_hole"
-	"git.ronaksoft.com/ronak/riversdk/pkg/uiexec"
+	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
+	messageHole "git.ronaksoft.com/river/sdk/pkg/message_hole"
+	"git.ronaksoft.com/river/sdk/pkg/uiexec"
 	"os"
 	"sync"
 	"time"
 
 	"git.ronaksoft.com/river/msg/msg"
-	"git.ronaksoft.com/ronak/riversdk/internal/logs"
-	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoft.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoft.com/river/sdk/internal/logs"
+	"git.ronaksoft.com/river/sdk/pkg/domain"
+	"git.ronaksoft.com/river/sdk/pkg/repo"
 	"go.uber.org/zap"
 )
 

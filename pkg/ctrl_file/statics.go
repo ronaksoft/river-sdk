@@ -2,7 +2,7 @@ package fileCtrl
 
 import (
 	"fmt"
-	mon "git.ronaksoft.com/ronak/riversdk/internal/monitoring"
+	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	"math"
 )
 

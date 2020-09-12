@@ -3,10 +3,10 @@ package repo
 import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/msg"
-	"git.ronaksoft.com/ronak/riversdk/internal/logs"
-	"git.ronaksoft.com/ronak/riversdk/internal/pools"
-	"git.ronaksoft.com/ronak/riversdk/internal/tools"
-	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoft.com/river/sdk/internal/logs"
+	"git.ronaksoft.com/river/sdk/internal/pools"
+	"git.ronaksoft.com/river/sdk/internal/tools"
+	"git.ronaksoft.com/river/sdk/pkg/domain"
 	"github.com/dgraph-io/badger/v2"
 	"time"
 )

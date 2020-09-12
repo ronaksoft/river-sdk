@@ -2,9 +2,9 @@ package repo
 
 import (
 	"encoding/json"
-	"git.ronaksoft.com/ronak/riversdk/internal/pools"
-	"git.ronaksoft.com/ronak/riversdk/internal/tools"
-	"git.ronaksoft.com/ronak/riversdk/pkg/repo/dto"
+	"git.ronaksoft.com/river/sdk/internal/pools"
+	"git.ronaksoft.com/river/sdk/internal/tools"
+	"git.ronaksoft.com/river/sdk/pkg/repo/dto"
 	"github.com/dgraph-io/badger/v2"
 )
 

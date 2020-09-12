@@ -2,7 +2,7 @@ package main
 
 import (
 	"git.ronaksoft.com/river/msg/msg"
-	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoft.com/river/sdk/pkg/domain"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
