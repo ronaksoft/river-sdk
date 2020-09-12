@@ -2,12 +2,12 @@ package queueCtrl
 
 import (
 	"git.ronaksoft.com/river/msg/msg"
-	"git.ronaksoft.com/ronak/riversdk/internal/logs"
-	fileCtrl "git.ronaksoft.com/ronak/riversdk/pkg/ctrl_file"
-	"git.ronaksoft.com/ronak/riversdk/pkg/ctrl_network"
-	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoft.com/ronak/riversdk/pkg/repo"
-	"git.ronaksoft.com/ronak/riversdk/pkg/uiexec"
+	"git.ronaksoft.com/river/sdk/internal/logs"
+	fileCtrl "git.ronaksoft.com/river/sdk/pkg/ctrl_file"
+	"git.ronaksoft.com/river/sdk/pkg/ctrl_network"
+	"git.ronaksoft.com/river/sdk/pkg/domain"
+	"git.ronaksoft.com/river/sdk/pkg/repo"
+	"git.ronaksoft.com/river/sdk/pkg/uiexec"
 	"github.com/beeker1121/goque"
 	"github.com/juju/ratelimit"
 	"go.uber.org/zap"

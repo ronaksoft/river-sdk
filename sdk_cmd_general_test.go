@@ -1,7 +1,7 @@
 package riversdk
 
 import (
-	"git.ronaksoft.com/ronak/riversdk/internal/logs"
+	"git.ronaksoft.com/river/sdk/internal/logs"
 	"go.uber.org/zap/zapcore"
 	"sync"
 	"testing"

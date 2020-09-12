@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/msg"
-	"git.ronaksoft.com/ronak/riversdk"
-	mon "git.ronaksoft.com/ronak/riversdk/internal/monitoring"
-	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
+	"git.ronaksoft.com/river/sdk"
+	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
+	"git.ronaksoft.com/river/sdk/pkg/domain"
 	"gopkg.in/abiosoft/ishell.v2"
 	"time"
 )

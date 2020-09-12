@@ -1,9 +1,9 @@
 package messageHole
 
 import (
-	"git.ronaksoft.com/ronak/riversdk/internal/logs"
-	"git.ronaksoft.com/ronak/riversdk/pkg/domain"
-	"git.ronaksoft.com/ronak/riversdk/pkg/repo"
+	"git.ronaksoft.com/river/sdk/internal/logs"
+	"git.ronaksoft.com/river/sdk/pkg/domain"
+	"git.ronaksoft.com/river/sdk/pkg/repo"
 	"testing"
 )
 
