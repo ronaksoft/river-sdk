@@ -113,7 +113,7 @@ type River struct {
 	dbPath               string
 	optimizeForLowMemory bool
 	resetQueueOnStartup  bool
-	sentryDSN string
+	sentryDSN            string
 }
 
 func (r *River) saveDeviceToken() {
