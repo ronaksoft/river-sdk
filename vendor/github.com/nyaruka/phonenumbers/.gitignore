@@ -1,6 +1,7 @@
 *.cov
 .vscode
 *~
+fabric
 fabfile.py
 fabfile.pyc
 fabconfig.py
@@ -9,3 +10,4 @@ carrier
 geocoding
 buildmetadata
 functions/*
+dist/

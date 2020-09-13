@@ -1,3 +1,100 @@
+v1.0.57
+----------
+ * fix panic in IsNumberMatch() 
+
+v1.0.56
+----------
+ * Update to metadata v8.12.5
+ * Update test for Sydney tz (validated against source data)
+
+v1.0.55
+----------
+ * Update metadata to v8.12.1 for upstream project
+
+v1.0.54
+----------
+ * update metadata for v8.11.0
+
+v1.0.53
+----------
+ * Metadata update for upstream v8.10.23
+
+v1.0.52
+----------
+ * Reset italian leading zero when false, fixed bug when phonenumber struct is reused
+
+v1.0.51
+----------
+ * Update metadata to upstream 8.10.21
+
+v1.0.50
+----------
+ * Fix formatting of country code in out-of-country format (thanks @janh)
+ * Fix FormatInOriginalFormat for numbers with national prefix (thanks @janh)
+ * Fix panic due to calling proto.Merge on nil destination (thanks @janh)
+
+v1.0.49
+----------
+ * fix Makefile for phoneserver
+
+v1.0.48
+----------
+ * another test travis rev, ignore
+
+v1.0.47
+----------
+ * test tag for travis deploy
+
+v1.0.46
+----------
+ * update metadata for v8.10.19
+ * remove aws-lambda-go as dependency (thanks @shaxbee)
+
+v1.0.45
+----------
+ * Update metadata to fix Mexican formatting (thanks @bvisness)
+ * Add tests specifically for Mexico (thanks @bvisness)
+
+v1.0.44
+----------
+ * update metadata for v8.10.16
+ * upgrade to the latest release of protobuf
+
+v1.0.43
+----------
+ * Update metadata for v8.10.14
+
+v1.0.42
+----------
+ * Update for metadata changes in v8.10.13
+ * fix yoda expressions
+ * fix slice operations
+ * fix regex escaping
+ * fix make calls
+ * fix error strings
+
+v1.0.41
+----------
+ * update metadata for v8.10.12
+
+v1.0.40
+----------
+ * add unit test for valid/possible US/CA number, include commit in netlify version, lastest metadata
+ * update readme to add svn dependency
+
+v1.0.39
+----------
+ * add dist to gitignore
+ * tweak goreleaser
+
+v1.0.38
+----------
+ * update travis env to always enable modules
+
+v1.0.37
+----------
+ * plug in goreleaser and add it to travis
+
 v1.0.36
 ----------
  * Update for upstream metadata v8.10.7

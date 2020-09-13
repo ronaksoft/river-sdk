@@ -23,9 +23,9 @@ type sentryCore struct {
 	tags map[string]string
 }
 
-func NewSentryCore(level zapcore.Level, userID int64, tags map[string]string) (zapcore.Core, error) {
+func NewSentryCore(level zapcore.Level, dsn string, userID int64, tags map[string]string) (zapcore.Core, error) {
 	client, err := sentry.NewClient(sentry.ClientOptions{
-		Dsn:     "***REMOVED***",
+		Dsn:     dsn,
 		Release: domain.SDKVersion,
 	})
 	if err != nil {

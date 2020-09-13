@@ -582,7 +582,7 @@ func (r *River) AppStart() error {
 	runtime.GOMAXPROCS(runtime.NumCPU() * 10)
 
 	logs.Info("River Starting")
-	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID)
+	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
 
 	// Initialize MessageHole
 	messageHole.Init()
@@ -675,6 +675,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	domain.ClientOS = conf.ClientOs
 	domain.ClientVendor = conf.ClientVendor
 
+	r.sentryDSN = conf.SentryDSN
 	r.optimizeForLowMemory = conf.OptimizeForLowMemory
 	r.resetQueueOnStartup = conf.ResetQueueOnStartup
 	r.ConnInfo = conf.ConnInfo

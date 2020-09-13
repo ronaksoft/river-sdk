@@ -46,7 +46,8 @@ type RiverConfig struct {
 	FileDelegate FileDelegate
 
 	// LogLevel
-	LogLevel int
+	LogLevel  int
+	SentryDSN string
 
 	// Folder path to save files
 	DocumentPhotoDirectory string
@@ -112,6 +113,7 @@ type River struct {
 	dbPath               string
 	optimizeForLowMemory bool
 	resetQueueOnStartup  bool
+	sentryDSN string
 }
 
 func (r *River) saveDeviceToken() {

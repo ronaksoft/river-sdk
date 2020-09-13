@@ -375,24 +375,24 @@ var (
 	VALID_PHONE_NUMBER_PATTERN = regexp.MustCompile(
 		"^(" + VALID_PHONE_NUMBER + "(?:" + EXTN_PATTERNS_FOR_PARSING + ")?)$")
 
-	NON_DIGITS_PATTERN = regexp.MustCompile("(\\D+)")
-	DIGITS_PATTERN     = regexp.MustCompile("(\\d+)")
+	NON_DIGITS_PATTERN = regexp.MustCompile(`(\D+)`)
+	DIGITS_PATTERN     = regexp.MustCompile(`(\d+)`)
 
 	// The FIRST_GROUP_PATTERN was originally set to $1 but there are some
 	// countries for which the first group is not used in the national
 	// pattern (e.g. Argentina) so the $1 group does not match correctly.
 	// Therefore, we use \d, so that the first group actually used in the
 	// pattern will be matched.
-	FIRST_GROUP_PATTERN = regexp.MustCompile("(\\$\\d)")
-	NP_PATTERN          = regexp.MustCompile("\\$NP")
-	FG_PATTERN          = regexp.MustCompile("\\$FG")
-	CC_PATTERN          = regexp.MustCompile("\\$CC")
+	FIRST_GROUP_PATTERN = regexp.MustCompile(`(\$\d)`)
+	NP_PATTERN          = regexp.MustCompile(`\$NP`)
+	FG_PATTERN          = regexp.MustCompile(`\$FG`)
+	CC_PATTERN          = regexp.MustCompile(`\$CC`)
 
 	// A pattern that is used to determine if the national prefix
 	// formatting rule has the first group only, i.e., does not start
 	// with the national prefix. Note that the pattern explicitly allows
 	// for unbalanced parentheses.
-	FIRST_GROUP_ONLY_PREFIX_PATTERN = regexp.MustCompile("\\(?\\$1\\)?")
+	FIRST_GROUP_ONLY_PREFIX_PATTERN = regexp.MustCompile(`\(?\$1\)?`)
 
 	REGION_CODE_FOR_NON_GEO_ENTITY = "001"
 )
@@ -1415,20 +1415,8 @@ func FormatOutOfCountryCallingNumber(
 	maybeAppendFormattedExtension(number, metadataForRegion, INTERNATIONAL,
 		formattedNumber)
 	if len(internationalPrefixForFormatting) > 0 {
-		formattedBytes := formattedNumber.Bytes()
-		formattedBytes = append([]byte(" "), formattedBytes...)
-		// we know countryCallingCode is really an int32
-		intBuf := []byte{
-			byte(countryCallingCode >> 24),
-			byte(countryCallingCode >> 16),
-			byte(countryCallingCode >> 8),
-			byte(countryCallingCode),
-		}
-		formattedBytes = append(intBuf, formattedBytes...)
-		formattedBytes = append([]byte(" "), formattedBytes...)
-		formattedBytes = append(
-			[]byte(internationalPrefixForFormatting), formattedBytes...)
-		return string(formattedBytes)
+		formattedNumber.InsertString(0, internationalPrefixForFormatting+" "+
+			strconv.Itoa(countryCallingCode)+" ")
 	} else {
 		prefixNumberWithCountryCallingCode(
 			countryCallingCode, INTERNATIONAL, formattedNumber)
@@ -1486,6 +1474,7 @@ func FormatInOriginalFormat(number *PhoneNumber, regionCallingFrom string) strin
 		if rawInputContainsNationalPrefix(rawInput, nationalPrefix, regionCode) {
 			// If so, we can safely return the national format.
 			formattedNumber = nationalFormat
+			break
 		}
 		// Metadata cannot be null here because GetNddPrefixForRegion()
 		// (above) returns null if there is no metadata for the region.
@@ -1523,12 +1512,11 @@ func FormatInOriginalFormat(number *PhoneNumber, regionCallingFrom string) strin
 			break
 		}
 		// Otherwise, we need to remove the national prefix from our output.
-		var numFormatCopy *NumberFormat
+		numFormatCopy := &NumberFormat{}
 		proto.Merge(numFormatCopy, formatRule)
 		numFormatCopy.NationalPrefixFormattingRule = nil
 		var numberFormats = []*NumberFormat{numFormatCopy}
 		formattedNumber = FormatByPattern(number, NATIONAL, numberFormats)
-		break
 	}
 	rawInput = number.GetRawInput()
 	// If no digit is inserted/removed/modified as a result of our
@@ -1646,7 +1634,7 @@ func FormatOutOfCountryKeepingAlphaChars(
 			// If no pattern above is matched, we format the original input.
 			return rawInput
 		}
-		var newFormat *NumberFormat
+		newFormat := &NumberFormat{}
 		proto.Merge(newFormat, formattingPattern)
 		// The first group is the first group of digits that the user
 		// wrote together.
@@ -1682,20 +1670,8 @@ func FormatOutOfCountryKeepingAlphaChars(
 	maybeAppendFormattedExtension(number, metadataForRegion,
 		INTERNATIONAL, formattedNumber)
 	if len(internationalPrefixForFormatting) > 0 {
-		formattedBytes := append([]byte(" "), formattedNumber.Bytes()...)
-		// we know countryCode is really an int32
-		intBuf := []byte{
-			byte(countryCode >> 24),
-			byte(countryCode >> 16),
-			byte(countryCode >> 8),
-			byte(countryCode),
-		}
-		formattedBytes = append(intBuf, formattedBytes...)
-		formattedBytes = append([]byte(" "), formattedBytes...)
-		formattedBytes = append(
-			[]byte(internationalPrefixForFormatting), formattedBytes...)
-
-		formattedNumber = NewBuilder(formattedBytes)
+		formattedNumber.InsertString(0, internationalPrefixForFormatting+" "+
+			strconv.Itoa(countryCode)+" ")
 	} else {
 		// Invalid region entered as country-calling-from (so no metadata
 		// was found for it) or the region chosen has multiple international
@@ -2391,7 +2367,7 @@ func testNumberLength(number string, metadata *PhoneMetadata, numberType PhoneNu
 	}
 
 	// We skip the first element; we've already checked it.
-	for _, l := range possibleLengths[1:len(possibleLengths)] {
+	for _, l := range possibleLengths[1:] {
 		if l == actualLength {
 			return IS_POSSIBLE
 		}
@@ -2470,7 +2446,7 @@ func TruncateTooLongNumber(number *PhoneNumber) bool {
 	if IsValidNumber(number) {
 		return true
 	}
-	var numberCopy *PhoneNumber
+	numberCopy := &PhoneNumber{}
 	proto.Merge(numberCopy, number)
 	nationalNumber := number.GetNationalNumber()
 	nationalNumber /= 10
@@ -2522,8 +2498,8 @@ func extractCountryCode(fullNumber, nationalNumber *Builder) int {
 	return 0
 }
 
-var ErrTooShortAfterIDD = errors.New("Phone number had an IDD, but " +
-	"after this was not long enough to be a viable phone number.")
+var ErrTooShortAfterIDD = errors.New("phone number had an IDD, but " +
+	"after this was not long enough to be a viable phone number")
 
 // Tries to extract a country calling code from a number. This method will
 // return zero if no country calling code is considered to be present.
@@ -2843,6 +2819,7 @@ func ParseAndKeepRawInputToNumber(
 func setItalianLeadingZerosForPhoneNumber(
 	nationalNum string, phoneNumber *PhoneNumber) {
 	if len(nationalNum) < 2 || nationalNum[0] != '0' {
+		phoneNumber.ItalianLeadingZero = nil
 		return
 	}
 
@@ -2860,8 +2837,8 @@ func setItalianLeadingZerosForPhoneNumber(
 
 var (
 	ErrInvalidCountryCode = errors.New("invalid country code")
-	ErrNotANumber         = errors.New("The phone number supplied is not a number.")
-	ErrTooShortNSN        = errors.New("The string supplied is too short to be a phone number.")
+	ErrNotANumber         = errors.New("the phone number supplied is not a number")
+	ErrTooShortNSN        = errors.New("the string supplied is too short to be a phone number")
 )
 
 // Parses a string and fills up the phoneNumber. This method is the same
@@ -2988,7 +2965,7 @@ func parseHelper(
 	return nil
 }
 
-var ErrNumTooLong = errors.New("The string supplied is too long to be a phone number.")
+var ErrNumTooLong = errors.New("the string supplied is too long to be a phone number")
 
 // Converts numberToParse to a form that we can parse and write it to
 // nationalNumber if it is written in RFC3966; otherwise extract a possible
@@ -3161,16 +3138,16 @@ func IsNumberMatch(firstNumber, secondNumber string) MatchType {
 		return NOT_A_NUMBER
 	}
 
-	var firstNumberProto, secondNumberProto *PhoneNumber
-	err = parseHelper(firstNumber, "", false, false, firstNumberProto)
+	var firstNumberProto, secondNumberProto PhoneNumber
+	err = parseHelper(firstNumber, "", false, false, &firstNumberProto)
 	if err != nil {
 		return NOT_A_NUMBER
 	}
-	err = parseHelper(secondNumber, "", false, false, secondNumberProto)
+	err = parseHelper(secondNumber, "", false, false, &secondNumberProto)
 	if err != nil {
 		return NOT_A_NUMBER
 	}
-	return isNumberMatchWithNumbers(firstNumberProto, secondNumberProto)
+	return isNumberMatchWithNumbers(&firstNumberProto, &secondNumberProto)
 }
 
 // Takes two phone numbers and compares them for equality. This is a
@@ -3290,10 +3267,10 @@ func init() {
 	}
 
 	// Create our sync.Onces for each of our languages for carriers
-	for lang, _ := range carrierMapData {
+	for lang := range carrierMapData {
 		carrierOnces[lang] = &sync.Once{}
 	}
-	for lang, _ := range geocodingMapData {
+	for lang := range geocodingMapData {
 		geocodingOnces[lang] = &sync.Once{}
 	}
 }

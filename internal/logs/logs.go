@@ -147,8 +147,11 @@ func SetRemoteLog(url string) {
 	)
 }
 
-func SetSentry(userID, authID int64) {
-	sentry, err := NewSentryCore(zapcore.ErrorLevel, userID, map[string]string{
+func SetSentry(userID, authID int64, dsn string) {
+	if dsn == "" {
+		return
+	}
+	sentry, err := NewSentryCore(zapcore.ErrorLevel, dsn, userID, map[string]string{
 		"AuthID": fmt.Sprintf("%d", authID),
 	})
 	if err != nil {
