@@ -269,6 +269,17 @@ func (r *repoDialogs) List(teamID int64, offset, limit int32) []*msg.Dialog {
 	return dialogs
 }
 
+func (r *repoDialogs) CountDialogs(teamID int64) int32 {
+	var cnt int32
+	st := r.badger.NewStream()
+	st.Prefix = getDialogPrefix(teamID)
+	st.ChooseKey = func(item *badger.Item) bool {
+		atomic.AddInt32(&cnt, 1)
+		return false
+	}
+	_ = st.Orchestrate(context.Background())
+	return cnt
+}
 func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
 	dialogs := make([]*msg.Dialog, 0, 7)
 	err := badgerView(func(txn *badger.Txn) error {

@@ -26,6 +26,7 @@ func (r *River) messagesGetDialogs(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 	res := &msg.MessagesDialogs{}
 	res.Dialogs = repo.Dialogs.List(in.Team.ID, req.Offset, req.Limit)
+	res.Count = repo.Dialogs.CountDialogs(in.Team.ID)
 
 	// If the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {
