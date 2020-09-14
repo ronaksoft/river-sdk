@@ -215,7 +215,7 @@ func (ctrl *Controller) labelsMany(e *msg.MessageEnvelope) {
 		logs.Error("SyncCtrl couldn't unmarshal LabelsMany", zap.Error(err))
 		return
 	}
-	logs.Info("SyncCtrl applies LabelsMany")
+	logs.Info("SyncCtrl applies LabelsMany", zap.Any("Team", e.Team))
 
 	err = repo.Labels.Save(domain.GetTeamID(e.Team), u.Labels...)
 	logs.WarnOnErr("SyncCtrl got error on applying LabelsMany", err)

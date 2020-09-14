@@ -16,6 +16,7 @@ var LabelGet = &ishell.Cmd{
 		req := msg.LabelsGet{}
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
+		// reqDelegate.FlagsVal = riversdk.RequestServerForced
 		if reqID, err := _SDK.ExecuteCommand(msg.C_LabelsGet, reqBytes, reqDelegate); err != nil {
 			c.Println("Command Failed:", err)
 		} else {

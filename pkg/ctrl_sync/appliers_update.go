@@ -715,6 +715,7 @@ func (ctrl *Controller) updateLabelItemsRemoved(u *msg.UpdateEnvelope) ([]*msg.U
 		zap.Int64("UpdateID", x.UpdateID),
 		zap.Int64s("MsgIDs", x.MessageIDs),
 		zap.Int32s("LabelIDs", x.LabelIDs),
+		zap.Int64("TeamID", x.TeamID),
 	)
 
 	if len(x.MessageIDs) != 0 {

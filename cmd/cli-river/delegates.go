@@ -155,6 +155,7 @@ func (d *FileDelegate) OnCancel(reqID string, clusterID int32, fileID, accessHas
 type RequestDelegate struct {
 	RequestID int64
 	Envelope  msg.MessageEnvelope
+	FlagsVal  int32
 }
 
 func (d *RequestDelegate) OnComplete(b []byte) {
@@ -173,7 +174,7 @@ func (d *RequestDelegate) OnTimeout(err error) {
 }
 
 func (d *RequestDelegate) Flags() int32 {
-	return 0
+	return d.FlagsVal
 }
 
 type CustomRequestDelegate struct {
