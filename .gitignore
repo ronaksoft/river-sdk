@@ -2,3 +2,4 @@ _*
 .idea
 keys*.json
 extra/rust-helpers/target*
+*.log

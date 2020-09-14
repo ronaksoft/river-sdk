@@ -7,6 +7,7 @@ import (
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	"git.ronaksoft.com/river/sdk/pkg/domain"
 	"gopkg.in/abiosoft/ishell.v2"
+	"os"
 	"time"
 )
 
@@ -137,6 +138,76 @@ var SdkGetTeam = &ishell.Cmd{
 	},
 }
 
+var SdkGetPublicKeys = &ishell.Cmd{
+	Name: "GetKeys",
+	Func: func(c *ishell.Context) {
+		sk := riversdk.ServerKeys{}
+		req := msg.SystemGetPublicKeys{}
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(CustomRequestDelegate)
+		reqDelegate.FlagsFunc = func() int32 {
+			return riversdk.RequestBlocking
+		}
+		reqDelegate.OnCompleteFunc = func(b []byte) {
+			e := &msg.MessageEnvelope{}
+			_ = e.Unmarshal(b)
+			switch e.Constructor {
+			case msg.C_Error:
+				c.Println(e)
+			case msg.C_SystemPublicKeys:
+				x := &msg.SystemPublicKeys{}
+				_ = x.Unmarshal(e.Message)
+				for _, k := range x.RSAPublicKeys {
+					sk.PublicKeys = append(sk.PublicKeys, riversdk.PublicKey{
+						N:           k.N,
+						FingerPrint: k.FingerPrint,
+						E:           k.E,
+					})
+				}
+			}
+		}
+		if reqID, err := _SDK.ExecuteCommand(msg.C_SystemGetPublicKeys, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+		req2 := msg.SystemGetPublicKeys{}
+		reqBytes2, _ := req2.Marshal()
+		reqDelegate2 := new(CustomRequestDelegate)
+		reqDelegate2.FlagsFunc = func() int32 {
+			return riversdk.RequestBlocking
+		}
+		reqDelegate2.OnCompleteFunc = func(b []byte) {
+			e := &msg.MessageEnvelope{}
+			_ = e.Unmarshal(b)
+			switch e.Constructor {
+			case msg.C_Error:
+				c.Println(e)
+			case msg.C_SystemDHGroups:
+				x := &msg.SystemDHGroups{}
+				_ = x.Unmarshal(e.Message)
+				for _, k := range x.DHGroups {
+					sk.DHGroups = append(sk.DHGroups, riversdk.DHGroup{
+						Prime:       k.Prime,
+						Gen:         k.Gen,
+						FingerPrint: k.FingerPrint,
+					})
+				}
+			}
+		}
+		if reqID, err := _SDK.ExecuteCommand(msg.C_SystemGetDHGroups, reqBytes2, reqDelegate2); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+
+		f, _ := os.Create("./keys.json")
+		b, _ := sk.MarshalJSON()
+		f.Write(b)
+		f.Close()
+	},
+}
+
 func init() {
 	SDK.AddCmd(SdkConnInfo)
 	SDK.AddCmd(SdkSetLogLevel)
@@ -150,4 +221,5 @@ func init() {
 	SDK.AddCmd(SdkResetUsage)
 	SDK.AddCmd(SdkSetTeam)
 	SDK.AddCmd(SdkGetTeam)
+	SDK.AddCmd(SdkGetPublicKeys)
 }
