@@ -130,6 +130,7 @@ const (
 // UserStatus
 const (
 	LastSeenUnknown = iota
+	LastSeenFewSeconds
 	LastSeenRecently
 	LastSeenToday
 	LastSeenYesterday

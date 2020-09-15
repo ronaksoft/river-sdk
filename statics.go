@@ -128,7 +128,10 @@ func LastSeenEstimate(ts int64) int {
 	}
 
 	// We do Waterfall check
-	// 1. Recently
+	// 1. FewSeconds / Recently
+	if now.Sub(seen) < time.Minute {
+		return domain.LastSeenFewSeconds
+	}
 	if now.Sub(seen) < time.Hour {
 		return domain.LastSeenRecently
 	}

@@ -177,26 +177,13 @@ func (r *repoUsers) Get(userID int64) (user *msg.User, err error) {
 		if err != nil {
 			return err
 		}
-		delta := time.Now().Unix() - user.LastSeen
-		switch {
-		case delta < domain.Minute:
-			user.Status = msg.UserStatusOnline
-		case delta < domain.Week:
-			user.Status = msg.UserStatusRecently
-		case delta < domain.Month:
-			user.Status = msg.UserStatusLastWeek
-		case delta < domain.TwoMonth:
-			user.Status = msg.UserStatusLastMonth
-		default:
-			user.Status = msg.UserStatusOffline
-		}
+		updateStatus(user)
 		return nil
 	})
 	return
 }
 
 func (r *repoUsers) GetMany(userIDs []int64) ([]*msg.User, error) {
-	timeNow := time.Now().Unix()
 	users := make([]*msg.User, 0, len(userIDs))
 	err := badgerView(func(txn *badger.Txn) error {
 		for _, userID := range userIDs {
@@ -211,25 +198,29 @@ func (r *repoUsers) GetMany(userIDs []int64) ([]*msg.User, error) {
 			default:
 				return err
 			}
-
-			delta := timeNow - user.LastSeen
-			switch {
-			case delta < domain.Minute:
-				user.Status = msg.UserStatusOnline
-			case delta < domain.Week:
-				user.Status = msg.UserStatusRecently
-			case delta < domain.Month:
-				user.Status = msg.UserStatusLastWeek
-			case delta < domain.TwoMonth:
-				user.Status = msg.UserStatusLastMonth
-			default:
-				user.Status = msg.UserStatusOffline
-			}
+			updateStatus(user)
 			users = append(users, user)
 		}
 		return nil
 	})
 	return users, err
+}
+
+func updateStatus(u *msg.User) {
+	delta := time.Now().Unix() - u.LastSeen
+	if u.Status == msg.UserStatusOnline && delta < domain.Minute {
+		return
+	}
+	switch {
+	case delta < domain.Hour:
+		u.Status = msg.UserStatusRecently
+	case delta < domain.Week:
+		u.Status = msg.UserStatusLastWeek
+	case delta < domain.Month:
+		u.Status = msg.UserStatusLastMonth
+	default:
+		u.Status = msg.UserStatusOffline
+	}
 }
 
 func (r *repoUsers) Save(users ...*msg.User) error {
