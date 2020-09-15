@@ -598,6 +598,36 @@ func (r *River) AppStart() error {
 	logs.Info("River Starting")
 	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
 
+	// Set Default SysConfig
+	domain.SysConfig = &msg.SystemConfig{
+		GifBot:                  "gif",
+		WikiBot:                 "wiki",
+		TestMode:                false,
+		PhoneCallEnabled:        false,
+		ExpireOn:                0,
+		GroupMaxSize:            250,
+		ForwardedMaxCount:       50,
+		OnlineUpdatePeriodInSec: 90,
+		EditTimeLimitInSec:      86400,
+		RevokeTimeLimitInSec:    86400,
+		PinnedDialogsMaxCount:   7,
+		UrlPrefix:               0,
+		MessageMaxLength:        4096,
+		CaptionMaxLength:        4096,
+		DCs:                     nil,
+		MaxLabels:               20,
+		TopPeerDecayRate:        3500000,
+		TopPeerMaxStep:          365,
+		MaxActiveSessions:       10,
+	}
+	confBytes, _ := repo.System.LoadBytes("SysConfig")
+	if confBytes != nil {
+		err := domain.SysConfig.Unmarshal(confBytes)
+		if err != nil {
+			logs.Warn("We could not unmarshal SysConfig", zap.Error(err))
+		}
+	}
+
 	// Initialize MessageHole
 	messageHole.Init()
 
@@ -650,34 +680,6 @@ func (r *River) AppStart() error {
 		time.Sleep(10 * time.Second)
 		repo.GC()
 	}()
-
-	domain.SysConfig = &msg.SystemConfig{
-		TestMode:                false,
-		PhoneCallEnabled:        false,
-		ExpireOn:                0,
-		GroupMaxSize:            250,
-		ForwardedMaxCount:       50,
-		OnlineUpdatePeriodInSec: 90,
-		EditTimeLimitInSec:      86400,
-		RevokeTimeLimitInSec:    86400,
-		PinnedDialogsMaxCount:   7,
-		UrlPrefix:               0,
-		MessageMaxLength:        4096,
-		CaptionMaxLength:        4096,
-		DCs:                     nil,
-		MaxLabels:               20,
-		TopPeerDecayRate:        3500000,
-		TopPeerMaxStep:          365,
-		GifBot:                  "",
-		WikiBot:                 "",
-	}
-	confBytes, _ := repo.System.LoadBytes("SysConfig")
-	if confBytes != nil {
-		err := domain.SysConfig.Unmarshal(confBytes)
-		if err != nil {
-			logs.Warn("We could not unmarshal SysConfig", zap.Error(err))
-		}
-	}
 
 	return nil
 }

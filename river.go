@@ -193,6 +193,7 @@ func (r *River) onNetworkConnect() (err error) {
 				domain.WindowLog(fmt.Sprintf("Already Synced: %s", time.Now().Sub(domain.StartTime)))
 			}
 
+			// TODO:: must GetSystemConfig Periodically
 			_, err := repo.System.LoadBytes("SysConfig")
 			if err != nil {
 				r.syncCtrl.GetSystemConfig()
