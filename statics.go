@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 /*
@@ -92,10 +93,12 @@ func GetCountryCode(phone string) string {
 	return domain.GetCountryCode(phone)
 }
 
+// Version returns the version of the current SDK
 func Version() string {
 	return domain.SDKVersion
 }
 
+// BadgerSupport identifies the version of the badger
 func BadgerSupport(dbDir string) bool {
 	if strings.HasPrefix(dbDir, "file://") {
 		dbDir = dbDir[7:]
@@ -109,4 +112,48 @@ func BadgerSupport(dbDir string) bool {
 		return false
 	}
 	return true
+}
+
+// LastSeenEstimate
+func LastSeenEstimate(ts int64) int {
+	if ts == 0 {
+		return domain.LastSeenUnknown
+	}
+
+	now := domain.Now()
+	seen := time.Unix(ts, 0)
+
+	if now.Unix() < seen.Unix() {
+		return domain.LastSeenUnknown
+	}
+
+	// We do Waterfall check
+	// 1. Recently
+	if now.Sub(seen) < time.Hour {
+		return domain.LastSeenRecently
+	}
+
+	ny, nw := now.ISOWeek()
+	sy, sw := seen.ISOWeek()
+	// 2. Same Week/Year
+	if ny == sy && nw == sw {
+		if now.YearDay() == seen.YearDay() {
+			return domain.LastSeenToday
+		} else if now.YearDay() == seen.YearDay()+1 {
+			return domain.LastSeenYesterday
+		}
+		return domain.LastSeenThisWeek
+	}
+
+	// 3. Same Year
+	if ny == sy {
+		if nw == sw+1 {
+			return domain.LastSeenLastWeek
+		}
+		if now.Month() == seen.Month() {
+			return domain.LastSeenThisMonth
+		}
+	}
+
+	return domain.LastSeenLongTimeAgo
 }

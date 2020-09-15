@@ -127,6 +127,18 @@ const (
 	TwoMonth = Month * 2
 )
 
+// UserStatus
+const (
+	LastSeenUnknown = iota
+	LastSeenRecently
+	LastSeenToday
+	LastSeenYesterday
+	LastSeenThisWeek
+	LastSeenLastWeek
+	LastSeenThisMonth
+	LastSeenLongTimeAgo
+)
+
 // Network Connection
 const (
 	ConnectionNone = iota
