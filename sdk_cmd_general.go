@@ -473,17 +473,11 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 		// unregister device if token exist
 		if notifyServer {
 			// send logout request to server
-			requestID := domain.SequentialUniqueID()
-			req := new(msg.AuthLogout)
-			buff, _ := req.Marshal()
-			r.queueCtrl.RealtimeCommand(
-				&msg.MessageEnvelope{
-					Constructor: msg.C_AuthLogout,
-					RequestID:   uint64(requestID),
-					Message:     buff,
-				},
-				nil, nil, true, false)
-			logs.Info("We sent a AuthLogout request to server")
+			waitGroup := &sync.WaitGroup{}
+			waitGroup.Add(1)
+			r.syncCtrl.Logout(waitGroup)
+			waitGroup.Wait()
+			logs.Info("We sent a AuthLogout request to server, received response")
 		}
 
 		if r.mainDelegate != nil {

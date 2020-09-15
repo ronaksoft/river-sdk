@@ -376,6 +376,35 @@ func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup, team *msg.InputTe
 	)
 }
 
+func (ctrl *Controller) Logout(waitGroup *sync.WaitGroup) {
+	requestID := domain.SequentialUniqueID()
+	req := &msg.AuthLogout{}
+	reqBytes, _ := req.Marshal()
+	ctrl.queueCtrl.RealtimeCommand(
+		&msg.MessageEnvelope{
+			Constructor: msg.C_AuthLogout,
+			RequestID:   uint64(requestID),
+			Message:     reqBytes,
+		},
+		func() {
+			logs.Info("Logout Request was timeout, will retry")
+			time.Sleep(time.Millisecond * 500)
+			ctrl.Logout(waitGroup)
+		},
+		func(m *msg.MessageEnvelope) {
+			switch m.Constructor {
+			case msg.C_Error:
+				x := &msg.Error{}
+				_ = x.Unmarshal(m.Message)
+				logs.Warn("SyncCtrl got error on AuthLogout", zap.String("Code", x.Code), zap.String("Item", x.Items))
+				ctrl.Logout(waitGroup)
+			default:
+				waitGroup.Done()
+			}
+			// Controller applier will take care of this
+		}, false, false)
+}
+
 func (ctrl *Controller) UpdateStatus(online bool) {
 	req := &msg.AccountUpdateStatus{
 		Online: online,
@@ -410,6 +439,7 @@ func (ctrl *Controller) UpdateStatus(online bool) {
 		false,
 	)
 }
+
 func (ctrl *Controller) UploadUsage() error {
 	logs.Debug("SyncCtrl calls SystemUploadUsage")
 	req := &msg.SystemUploadUsage{}
