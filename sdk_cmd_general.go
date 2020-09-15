@@ -561,10 +561,30 @@ func (r *River) AppForeground() {
 		logs.Debug("AppForeground:: Network was disconnected we reconnect")
 		r.networkCtrl.Reconnect()
 	}
+
+	// Try to keep the user's status online
+	go r.updateStatusJob()
+}
+
+var updateStatusChan = make(chan struct{})
+
+func (r *River) updateStatusJob() {
+	t := time.NewTicker(time.Duration(domain.SysConfig.OnlineUpdatePeriodInSec-5) * time.Second)
+	for {
+		select {
+		case <-t.C:
+			r.syncCtrl.UpdateStatus(true)
+		case <-updateStatusChan:
+			return
+		}
+	}
 }
 
 // AppBackground
 func (r *River) AppBackground() {
+	updateStatusChan <- struct{}{}
+	r.syncCtrl.UpdateStatus(false)
+
 	// Compute the time we have been foreground
 	mon.IncForegroundTime()
 

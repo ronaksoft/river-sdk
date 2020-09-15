@@ -376,6 +376,40 @@ func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup, team *msg.InputTe
 	)
 }
 
+func (ctrl *Controller) UpdateStatus(online bool) {
+	req := &msg.AccountUpdateStatus{
+		Online: online,
+	}
+	reqBytes, _ := req.Marshal()
+	ctrl.queueCtrl.RealtimeCommand(
+		&msg.MessageEnvelope{
+			Team:        nil,
+			Constructor: msg.C_AccountUpdateStatus,
+			RequestID:   uint64(domain.SequentialUniqueID()),
+			Message:     reqBytes,
+		},
+		func() {
+			ctrl.UpdateStatus(online)
+		},
+		func(m *msg.MessageEnvelope) {
+			switch m.Constructor {
+			case msg.C_Error:
+				x := new(msg.Error)
+				_ = x.Unmarshal(m.Message)
+				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
+					return
+				} else {
+					ctrl.UpdateStatus(online)
+				}
+			default:
+				return
+			}
+			// Controller applier will take care of this
+		},
+		false,
+		false,
+	)
+}
 func (ctrl *Controller) UploadUsage() error {
 	logs.Debug("SyncCtrl calls SystemUploadUsage")
 	req := &msg.SystemUploadUsage{}
