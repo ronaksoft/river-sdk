@@ -42,7 +42,6 @@ type Controller struct {
 	updateID           int64
 	updateAppliers     map[int64]domain.UpdateApplier
 	messageAppliers    map[int64]domain.MessageApplier
-	stopChannel        chan bool
 	userID             int64
 
 	// Callbacks
@@ -54,7 +53,6 @@ type Controller struct {
 // NewSyncController create new instance
 func NewSyncController(config Config) *Controller {
 	ctrl := new(Controller)
-	ctrl.stopChannel = make(chan bool)
 	ctrl.connInfo = config.ConnInfo
 	ctrl.queueCtrl = config.QueueCtrl
 	ctrl.networkCtrl = config.NetworkCtrl
@@ -158,10 +156,6 @@ func (ctrl *Controller) watchDog() {
 			if time.Now().Sub(time.Unix(ts, 0)) > 24*time.Hour {
 				mon.ResetUsage()
 			}
-
-		case <-ctrl.stopChannel:
-			logs.Info("SyncCtrl's watchDog Stopped")
-			return
 		}
 	}
 }
@@ -458,7 +452,6 @@ func (ctrl *Controller) Start() {
 func (ctrl *Controller) Stop() {
 	logs.Info("SyncCtrl calls stop")
 	ctrl.ResetIDs()
-	ctrl.stopChannel <- true // for watchDog()
 	logs.Info("SyncCtrl Stopped")
 }
 
