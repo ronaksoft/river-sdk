@@ -376,7 +376,11 @@ func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup, team *msg.InputTe
 	)
 }
 
-func (ctrl *Controller) Logout(waitGroup *sync.WaitGroup) {
+func (ctrl *Controller) Logout(waitGroup *sync.WaitGroup, retry int) {
+	if retry <= 0 {
+		waitGroup.Done()
+		return
+	}
 	requestID := domain.SequentialUniqueID()
 	req := &msg.AuthLogout{}
 	reqBytes, _ := req.Marshal()
@@ -388,8 +392,8 @@ func (ctrl *Controller) Logout(waitGroup *sync.WaitGroup) {
 		},
 		func() {
 			logs.Info("Logout Request was timeout, will retry")
-			time.Sleep(time.Millisecond * 500)
-			ctrl.Logout(waitGroup)
+			ctrl.networkCtrl.Reconnect()
+			ctrl.Logout(waitGroup, retry-1)
 		},
 		func(m *msg.MessageEnvelope) {
 			switch m.Constructor {
@@ -397,7 +401,7 @@ func (ctrl *Controller) Logout(waitGroup *sync.WaitGroup) {
 				x := &msg.Error{}
 				_ = x.Unmarshal(m.Message)
 				logs.Warn("SyncCtrl got error on AuthLogout", zap.String("Code", x.Code), zap.String("Item", x.Items))
-				ctrl.Logout(waitGroup)
+				ctrl.Logout(waitGroup, retry-1)
 			default:
 				waitGroup.Done()
 			}

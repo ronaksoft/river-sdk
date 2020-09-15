@@ -475,7 +475,7 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 			// send logout request to server
 			waitGroup := &sync.WaitGroup{}
 			waitGroup.Add(1)
-			r.syncCtrl.Logout(waitGroup)
+			r.syncCtrl.Logout(waitGroup, 3)
 			waitGroup.Wait()
 			logs.Info("We sent a AuthLogout request to server, received response")
 		}
