@@ -131,7 +131,7 @@ const (
 const (
 	LastSeenUnknown = iota
 	LastSeenFewSeconds
-	LastSeenRecently
+	LastSeenFewMinutes
 	LastSeenToday
 	LastSeenYesterday
 	LastSeenThisWeek

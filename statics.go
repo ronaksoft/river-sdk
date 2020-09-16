@@ -133,7 +133,7 @@ func LastSeenEstimate(ts int64) int {
 		return domain.LastSeenFewSeconds
 	}
 	if now.Sub(seen) < time.Hour {
-		return domain.LastSeenRecently
+		return domain.LastSeenFewMinutes
 	}
 
 	ny, nw := now.ISOWeek()

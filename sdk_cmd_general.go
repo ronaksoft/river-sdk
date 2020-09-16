@@ -598,6 +598,17 @@ func (r *River) AppStart() error {
 	logs.Info("River Starting")
 	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
 
+	// Initialize MessageHole
+	messageHole.Init()
+
+	// Initialize DB replaced with ORM
+	err := repo.InitRepo(r.dbPath, r.optimizeForLowMemory)
+	if err != nil {
+		return err
+	}
+
+	repo.SetSelfUserID(r.ConnInfo.UserID)
+
 	// Set Default SysConfig
 	domain.SysConfig = &msg.SystemConfig{
 		GifBot:                  "gif",
@@ -627,17 +638,6 @@ func (r *River) AppStart() error {
 			logs.Warn("We could not unmarshal SysConfig", zap.Error(err))
 		}
 	}
-
-	// Initialize MessageHole
-	messageHole.Init()
-
-	// Initialize DB replaced with ORM
-	err := repo.InitRepo(r.dbPath, r.optimizeForLowMemory)
-	if err != nil {
-		return err
-	}
-
-	repo.SetSelfUserID(r.ConnInfo.UserID)
 
 	// Load the usage stats
 	mon.LoadUsage()
