@@ -274,18 +274,10 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		return
 	}
 
-	// Prepare the request and update its parameters if necessary
-	if req.MaxID < 0 {
-		req.MaxID = dialog.TopMessageID
-	}
-
-	// Update the request before sending to server
-	in.Message, _ = req.Marshal()
-
 	// Prepare the the result before sending back to the client
 	preSuccessCB := genSuccessCallback(successCB, in.Team.ID, req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, dialog.TopMessageID)
 
-	// Offline mode
+	// We are Offline/Disconnected
 	if !r.networkCtrl.Connected() {
 		messages, users := repo.Messages.GetMessageHistory(in.Team.ID, req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 		if len(messages) > 0 {
@@ -298,6 +290,7 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 		}
 	}
 
+	// We are Online
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:
 		req.MaxID = dialog.TopMessageID
