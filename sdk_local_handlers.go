@@ -237,7 +237,7 @@ func (r *River) messagesSend(in, out *msg.MessageEnvelope, timeoutCB domain.Time
 }
 
 func (r *River) messagesReadHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.MessagesReadHistory)
+	req := &msg.MessagesReadHistory{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
@@ -252,14 +252,14 @@ func (r *River) messagesReadHistory(in, out *msg.MessageEnvelope, timeoutCB doma
 		return
 	}
 
-	repo.Dialogs.UpdateReadInboxMaxID(r.ConnInfo.UserID, in.Team.ID, req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+	_ = repo.Dialogs.UpdateReadInboxMaxID(r.ConnInfo.UserID, in.Team.ID, req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 
 	// send the request to server
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.MessagesGetHistory)
+	req := &msg.MessagesGetHistory{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
@@ -347,9 +347,10 @@ func (r *River) messagesGetHistory(in, out *msg.MessageEnvelope, timeoutCB domai
 	}
 }
 func fillMessagesMany(out *msg.MessageEnvelope, messages []*msg.UserMessage, users []*msg.User, requestID uint64, successCB domain.MessageHandler) {
-	res := new(msg.MessagesMany)
-	res.Messages = messages
-	res.Users = users
+	res := &msg.MessagesMany{
+		Messages: messages,
+		Users:    users,
+	}
 
 	out.RequestID = requestID
 	out.Constructor = msg.C_MessagesMany
@@ -361,7 +362,7 @@ func genSuccessCallback(cb domain.MessageHandler, teamID, peerID int64, peerType
 		pendingMessages := repo.PendingMessages.GetByPeer(peerID, peerType)
 		switch m.Constructor {
 		case msg.C_MessagesMany:
-			x := new(msg.MessagesMany)
+			x := &msg.MessagesMany{}
 			err := x.Unmarshal(m.Message)
 			logs.WarnOnErr("Error On Unmarshal MessagesMany", err)
 
@@ -400,7 +401,7 @@ func genSuccessCallback(cb domain.MessageHandler, teamID, peerID int64, peerType
 }
 
 func (r *River) messagesDelete(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.MessagesDelete)
+	req := &msg.MessagesDelete{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
@@ -408,7 +409,7 @@ func (r *River) messagesDelete(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 	}
 
 	// Get PendingMessage and cancel its requests
-	pendingMessageIDs := make([]int64, 0)
+	pendingMessageIDs := make([]int64, 0, 4)
 	for _, id := range req.MessageIDs {
 		if id < 0 {
 			pendingMessageIDs = append(pendingMessageIDs, id)
@@ -430,7 +431,7 @@ func (r *River) messagesDelete(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 }
 
 func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.MessagesGet)
+	req := &msg.MessagesGet{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
@@ -456,10 +457,10 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 
 	// if db already had all users
 	if len(messages) == len(msgIDs) && len(users) > 0 {
-		res := new(msg.MessagesMany)
-		res.Users = make([]*msg.User, 0)
-		res.Messages = messages
-		res.Users = append(res.Users, users...)
+		res := &msg.MessagesMany{
+			Messages: messages,
+			Users:    users,
+		}
 
 		out.Constructor = msg.C_MessagesMany
 		out.Message, _ = res.Marshal()
@@ -484,7 +485,7 @@ func (r *River) messagesClearHistory(in, out *msg.MessageEnvelope, timeoutCB dom
 }
 
 func (r *River) messagesReadContents(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.MessagesReadContents)
+	req := &msg.MessagesReadContents{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
@@ -615,7 +616,7 @@ func (r *River) contactsImport(in, out *msg.MessageEnvelope, timeoutCB domain.Ti
 		return
 	}
 
-	req := new(msg.ContactsImport)
+	req := &msg.ContactsImport{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
@@ -800,7 +801,7 @@ func (r *River) contactsResetTopPeer(in, out *msg.MessageEnvelope, timeoutCB dom
 }
 
 func (r *River) accountUpdateUsername(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.AccountUpdateUsername)
+	req := &msg.AccountUpdateUsername{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
@@ -815,7 +816,7 @@ func (r *River) accountUpdateUsername(in, out *msg.MessageEnvelope, timeoutCB do
 }
 
 func (r *River) accountRegisterDevice(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.AccountRegisterDevice)
+	req := &msg.AccountRegisterDevice{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
@@ -838,13 +839,13 @@ func (r *River) accountRegisterDevice(in, out *msg.MessageEnvelope, timeoutCB do
 }
 
 func (r *River) accountUnregisterDevice(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.AccountUnregisterDevice)
+	req := &msg.AccountUnregisterDevice{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "E00", Items: err.Error()})
 		successCB(out)
 		return
 	}
-	r.DeviceToken = new(msg.AccountRegisterDevice)
+	r.DeviceToken = &msg.AccountRegisterDevice{}
 	val, err := json.Marshal(r.DeviceToken)
 	if err != nil {
 		logs.Error("River::accountUnregisterDevice()-> Json Marshal()", zap.Error(err))
@@ -861,7 +862,7 @@ func (r *River) accountUnregisterDevice(in, out *msg.MessageEnvelope, timeoutCB 
 }
 
 func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.AccountSetNotifySettings)
+	req := &msg.AccountSetNotifySettings{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
@@ -874,7 +875,7 @@ func (r *River) accountSetNotifySettings(in, out *msg.MessageEnvelope, timeoutCB
 	}
 
 	dialog.NotifySettings = req.Settings
-	repo.Dialogs.Save(dialog)
+	_ = repo.Dialogs.Save(dialog)
 
 	// send the request to server
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
@@ -944,7 +945,7 @@ func (r *River) gifDelete(in, out *msg.MessageEnvelope, timeoutCB domain.Timeout
 }
 
 func (r *River) dialogTogglePin(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.MessagesToggleDialogPin)
+	req := &msg.MessagesToggleDialogPin{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
@@ -968,7 +969,7 @@ func (r *River) dialogTogglePin(in, out *msg.MessageEnvelope, timeoutCB domain.T
 }
 
 func (r *River) accountRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	x := new(msg.AccountRemovePhoto)
+	x := &msg.AccountRemovePhoto{}
 	_ = x.Unmarshal(in.Message)
 
 	// send the request to server
@@ -991,7 +992,7 @@ func (r *River) accountRemovePhoto(in, out *msg.MessageEnvelope, timeoutCB domai
 }
 
 func (r *River) accountUpdateProfile(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.AccountUpdateProfile)
+	req := &msg.AccountUpdateProfile{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		successCB(out)
