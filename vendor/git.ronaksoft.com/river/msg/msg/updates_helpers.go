@@ -1556,6 +1556,40 @@ func ResultUpdateCommunityTyping(out *MessageEnvelope, res *UpdateCommunityTypin
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_UpdateReaction int64 = 2738677245
+
+type poolUpdateReaction struct {
+	pool sync.Pool
+}
+
+func (p *poolUpdateReaction) Get() *UpdateReaction {
+	x, ok := p.pool.Get().(*UpdateReaction)
+	if !ok {
+		return &UpdateReaction{}
+	}
+	return x
+}
+
+func (p *poolUpdateReaction) Put(x *UpdateReaction) {
+	x.Counter = x.Counter[:0]
+	x.TeamID = 0
+	p.pool.Put(x)
+}
+
+var PoolUpdateReaction = poolUpdateReaction{}
+
+func ResultUpdateReaction(out *MessageEnvelope, res *UpdateReaction) {
+	out.Constructor = C_UpdateReaction
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 const C_UpdateCalendarEventAdded int64 = 297964741
 
 type poolUpdateCalendarEventAdded struct {
@@ -1699,6 +1733,7 @@ func init() {
 	ConstructorNames[983926580] = "UpdateCommunityMessage"
 	ConstructorNames[2094301834] = "UpdateCommunityReadOutbox"
 	ConstructorNames[451491445] = "UpdateCommunityTyping"
+	ConstructorNames[2738677245] = "UpdateReaction"
 	ConstructorNames[297964741] = "UpdateCalendarEventAdded"
 	ConstructorNames[2986798389] = "UpdateCalendarEventRemoved"
 	ConstructorNames[516349098] = "UpdateCalendarEventEdited"

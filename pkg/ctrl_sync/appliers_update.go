@@ -877,3 +877,18 @@ func (ctrl *Controller) updateTeam(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope
 
 	return []*msg.UpdateEnvelope{u}, nil
 }
+
+func (ctrl *Controller) updateReaction(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := &msg.UpdateReaction{}
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	err = repo.Messages.UpdateReactionCounter(x.MessageID, x.Counter)
+	if err != nil {
+		return nil, err
+	}
+
+	return []*msg.UpdateEnvelope{u}, nil
+}

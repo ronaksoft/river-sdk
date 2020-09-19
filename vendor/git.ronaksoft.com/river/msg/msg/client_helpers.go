@@ -47,6 +47,7 @@ func (p *poolClientSendMessageMedia) Put(x *ClientSendMessageMedia) {
 	x.ThumbID = 0
 	x.FileTotalParts = 0
 	x.Entities = x.Entities[:0]
+	x.TinyThumb = x.TinyThumb[:0]
 	p.pool.Put(x)
 }
 

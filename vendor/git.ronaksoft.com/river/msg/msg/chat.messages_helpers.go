@@ -827,6 +827,7 @@ func (p *poolMessagesReactionList) Get() *MessagesReactionList {
 }
 
 func (p *poolMessagesReactionList) Put(x *MessagesReactionList) {
+	x.Users = x.Users[:0]
 	p.pool.Put(x)
 }
 

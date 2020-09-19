@@ -327,6 +327,17 @@ func (r *repoMessages) Save(messages ...*msg.UserMessage) {
 	logs.ErrorOnErr("RepoMessage got error on save", err)
 }
 
+func (r *repoMessages) UpdateReactionCounter(messageID int64, reactions []*msg.ReactionCounter) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		um, err := getMessageByID(txn, messageID)
+		if err != nil {
+			return err
+		}
+		um.Reactions = reactions
+		return saveMessage(txn, um)
+	})
+}
+
 func (r *repoMessages) GetMessageHistory(teamID, peerID int64, peerType int32, minID, maxID int64, limit int32) (userMessages []*msg.UserMessage, users []*msg.User) {
 	userMessages = make([]*msg.UserMessage, 0, limit)
 	userIDs := domain.MInt64B{}
