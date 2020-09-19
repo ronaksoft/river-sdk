@@ -89,14 +89,16 @@ func (ctrl *Controller) distributor() {
 			continue
 		}
 
-		if !ctrl.IsRequestCancelled(int64(req.ID)) {
-			go ctrl.executor(req)
-		} else {
+		// If request is already canceled ignore it
+		if ctrl.IsRequestCancelled(int64(req.ID)) {
 			logs.Info("QueueController discarded a canceled request",
 				zap.Uint64("ReqID", req.ID),
 				zap.String("C", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
 			)
+			continue
 		}
+
+		go ctrl.executor(req)
 	}
 }
 
