@@ -31,7 +31,6 @@ type Config struct {
 	Network              *networkCtrl.Controller
 	MaxInflightDownloads int32
 	MaxInflightUploads   int32
-	HttpRequestTimeout   time.Duration
 	PostUploadProcessCB  func(req UploadRequest) bool
 	ProgressChangedCB    func(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64)
 	CompletedCB          func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64)
@@ -48,7 +47,6 @@ type Controller struct {
 	uploadRequests     map[string]UploadRequest
 	uploadsSaver       *domain.Flusher
 	uploadsRateLimit   chan struct{}
-	httpRequestTimeout time.Duration
 
 	// Callbacks
 	onProgressChanged func(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64)
@@ -66,10 +64,7 @@ func New(config Config) *Controller {
 		uploadRequests:     make(map[string]UploadRequest),
 		postUploadProcess:  config.PostUploadProcessCB,
 	}
-	ctrl.httpRequestTimeout = domain.HttpRequestTime
-	if config.HttpRequestTimeout > 0 {
-		ctrl.httpRequestTimeout = config.HttpRequestTimeout
-	}
+
 	if config.CompletedCB == nil {
 		ctrl.onCompleted = func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64) {}
 	} else {
@@ -331,7 +326,7 @@ func (ctrl *Controller) downloadAccountPhoto(clientFile *msg.ClientFile) (filePa
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
 		filePath = repo.Files.GetFilePath(clientFile)
-		res, err := ctrl.network.SendHttp(nil, envelop, ctrl.httpRequestTimeout)
+		res, err := ctrl.network.SendHttp(nil, envelop)
 		if err != nil {
 			return err
 		}
@@ -386,7 +381,7 @@ func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
 		filePath = repo.Files.GetFilePath(clientFile)
-		res, err := ctrl.network.SendHttp(nil, envelop, ctrl.httpRequestTimeout)
+		res, err := ctrl.network.SendHttp(nil, envelop)
 		if err != nil {
 			return err
 		}
@@ -441,7 +436,7 @@ func (ctrl *Controller) downloadWallpaper(clientFile *msg.ClientFile) (filePath 
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
 		filePath = repo.Files.GetFilePath(clientFile)
-		res, err := ctrl.network.SendHttp(nil, envelop, ctrl.httpRequestTimeout)
+		res, err := ctrl.network.SendHttp(nil, envelop)
 		if err != nil {
 			return err
 		}
@@ -498,7 +493,7 @@ func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath 
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
 
 		filePath = repo.Files.GetFilePath(clientFile) // getThumbnailPath(clientFile.FileID, clientFile.ClusterID)
-		res, err := ctrl.network.SendHttp(nil, envelop, ctrl.httpRequestTimeout)
+		res, err := ctrl.network.SendHttp(nil, envelop)
 		if err != nil {
 			return err
 		}
@@ -779,7 +774,7 @@ func (ctrl *Controller) checkSha256(uploadRequest *UploadRequest) error {
 	envelop.Message, _ = req.Marshal()
 
 	err := domain.Try(3, time.Millisecond*500, func() error {
-		res, err := ctrl.network.SendHttp(uploadRequest.httpContext, envelop, time.Second*10)
+		res, err := ctrl.network.SendHttp(uploadRequest.httpContext, envelop)
 		if err != nil {
 			return err
 		}

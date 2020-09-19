@@ -267,7 +267,6 @@ func (ctx *uploadContext) uploadJob(ctrl *Controller, maxRetries *int32, waitGro
 	res, err := ctrl.network.SendHttp(
 		ctx.req.httpContext,
 		ctx.generateFileSavePart(ctx.req.FileID, partIndex+1, ctx.req.TotalParts, bytes[:n]),
-		ctrl.httpRequestTimeout,
 	)
 	if err != nil {
 		logs.Warn("Error On Http Response", zap.Error(err))

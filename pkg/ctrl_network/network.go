@@ -56,7 +56,7 @@ type Controller struct {
 
 	// Http Settings
 	httpEndpoint string
-	httpClient   http.Client
+	httpClient   *http.Client
 
 	// Internals
 	wsQuality    domain.NetworkStatus
@@ -93,6 +93,7 @@ func New(config Config) *Controller {
 	ctrl.wsKeepConnection = true
 
 	ctrl.createDialer(domain.WebsocketDialTimeout)
+	ctrl.createHttpClient(domain.HttpRequestTimeout)
 
 	ctrl.stopChannel = make(chan bool, 1)
 	ctrl.connectChannel = make(chan bool)
@@ -211,6 +212,23 @@ func (ctrl *Controller) sendFlushFunc(entries []domain.FlusherEntry) {
 	logs.Debug("NetCtrl flushed outgoing messages",
 		zap.Int("Count", itemsCount),
 	)
+}
+func (ctrl *Controller) createHttpClient(timeout time.Duration) {
+	ctrl.httpClient = http.DefaultClient
+	ctrl.httpClient.Timeout = timeout
+	ctrl.httpClient.Transport = &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   3 * time.Second,
+			KeepAlive: 10 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   3 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
 }
 
 // watchDog
@@ -484,7 +502,6 @@ func (ctrl *Controller) Connect() {
 			ctrl.wsDialer.Header = ws.HandshakeHeaderHTTP(reqHdr)
 			wsConn, _, _, err := ctrl.wsDialer.Dial(context.Background(), ctrl.wsEndpoint)
 			if err != nil {
-				// logs.Warn("NetCtrl could not dial", zap.Error(err), zap.String("Url", ctrl.wsEndpoint))
 				time.Sleep(domain.GetExponentialTime(100*time.Millisecond, 3*time.Second, attempts))
 				attempts++
 				if attempts > 2 {
@@ -589,8 +606,9 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 	})
 
 	startTime := time.Now()
-	protoMessage := new(msg.ProtoMessage)
-	protoMessage.MessageKey = make([]byte, 32)
+	protoMessage := &msg.ProtoMessage{
+		MessageKey: make([]byte, 32),
+	}
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
 
 	logs.Info("NetCtrl call sendWebsocket",
@@ -644,9 +662,7 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 }
 
 // Send encrypt and send request to server and receive and decrypt its response
-func (ctrl *Controller) SendHttp(
-	ctx context.Context, msgEnvelope *msg.MessageEnvelope, timeout time.Duration,
-) (*msg.MessageEnvelope, error) {
+func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
 	var totalUploadBytes, totalDownloadBytes int
 	startTime := time.Now()
 
@@ -679,9 +695,6 @@ func (ctrl *Controller) SendHttp(
 		return nil, err
 	}
 	totalUploadBytes += len(protoMessageBytes)
-
-	// Set timeout
-	ctrl.httpClient.Timeout = timeout
 
 	// Send Data
 	httpReq, err := http.NewRequest(http.MethodPost, ctrl.httpEndpoint, reqBuff)

@@ -765,7 +765,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		Network:              r.networkCtrl,
 		MaxInflightDownloads: conf.MaxInFlightDownloads,
 		MaxInflightUploads:   conf.MaxInFlightUploads,
-		HttpRequestTimeout:   domain.HttpRequestTime,
 		CompletedCB:          r.fileDelegate.OnCompleted,
 		ProgressChangedCB:    r.fileDelegate.OnProgressChanged,
 		CancelCB:             r.fileDelegate.OnCancel,

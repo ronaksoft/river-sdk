@@ -25,10 +25,10 @@ const (
 	WebsocketIdleTimeout     = 5 * time.Minute
 	WebsocketPingTimeout     = 2 * time.Second
 	WebsocketWriteTime       = 3 * time.Second
-	WebsocketRequestTime     = 8 * time.Second
+	WebsocketRequestTime     = 3 * time.Second
 	WebsocketDialTimeout     = 3 * time.Second
 	WebsocketDialTimeoutLong = 10 * time.Second
-	HttpRequestTime          = 2 * time.Minute
+	HttpRequestTimeout       = 2 * time.Minute
 	SnapshotSyncThreshold    = 10000
 )
 

@@ -50,7 +50,6 @@ func init() {
 		Network:              _Network,
 		MaxInflightDownloads: 2,
 		MaxInflightUploads:   3,
-		HttpRequestTimeout:   10 * time.Second,
 		ProgressChangedCB: func(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64) {
 			// logs.Info("Progress Changed", zap.String("ReqID", reqID), zap.Int64("Percent", percent))
 		},

@@ -383,3 +383,14 @@ func (ctrl *Controller) teamMembers(e *msg.MessageEnvelope) {
 	err = repo.Users.Save(tm.Users...)
 	logs.ErrorOnErr("SyncCtrl couldn't save teamMembers users", err)
 }
+
+// reactionList
+func (ctrl *Controller) reactionList(e *msg.MessageEnvelope) {
+	tm := &msg.MessagesReactionList{}
+	err := tm.Unmarshal(e.Message)
+	if err != nil {
+		logs.Error("SyncCtrl couldn't unmarshal MessagesReactionList", zap.Error(err))
+		return
+	}
+
+}
