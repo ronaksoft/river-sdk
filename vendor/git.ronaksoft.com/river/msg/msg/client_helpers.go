@@ -491,6 +491,7 @@ func (p *poolClientPendingMessage) Put(x *ClientPendingMessage) {
 
 	x.TeamID = 0
 	x.TeamAccessHash = 0
+	x.TinyThumb = x.TinyThumb[:0]
 	p.pool.Put(x)
 }
 

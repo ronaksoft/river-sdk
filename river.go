@@ -351,6 +351,7 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 				FileName:    req.FileName,
 				MD5Checksum: "",
 			},
+			TinyThumbnail: req.TinyThumb,
 		}
 		if uploadRequest.ThumbID != 0 {
 			doc.Thumbnail = &msg.InputFile{
@@ -370,6 +371,7 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 				AccessHash: uploadRequest.AccessHash,
 				ClusterID:  uploadRequest.ClusterID,
 			},
+			TinyThumbnail: req.TinyThumb,
 		}
 		if uploadRequest.ThumbID != 0 {
 			doc.Thumbnail = &msg.InputFile{

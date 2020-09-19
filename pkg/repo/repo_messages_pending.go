@@ -153,6 +153,7 @@ func (r *repoMessagesPending) SaveClientMessageMedia(team *msg.InputTeam,
 		FileUploadID:   fmt.Sprintf("%d", fileID),
 		FileID:         fileID,
 		Sha256:         fileSha256,
+		TinyThumb:      msgMedia.TinyThumb,
 	}
 	pm.Media, _ = msgMedia.Marshal()
 
