@@ -17,8 +17,6 @@ var (
 	ErrDoesNotExists         = errors.New("does not exists")
 	ErrQueuePathIsNotSet     = errors.New("queue path is not set")
 	ErrInvalidUserMessageKey = errors.New("invalid user message key")
-	ErrMaxFileSize           = errors.New("max file size limit")
-	ErrUnknownFileSize       = errors.New("unknown file size")
 	ErrAlreadyDownloading    = errors.New("already is downloading")
 	ErrAlreadyUploading      = errors.New("already is uploading")
 	ErrAlreadyUploaded       = errors.New("already uploaded")
