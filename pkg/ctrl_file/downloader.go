@@ -85,6 +85,7 @@ func (d *DownloadRequest) GetID() string {
 }
 
 func (d *DownloadRequest) Prepare() error {
+	// Check temp file stat and if it does not exists, we create it
 	_, err := os.Stat(d.TempPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -105,6 +106,7 @@ func (d *DownloadRequest) Prepare() error {
 		}
 	}
 
+	// If the size is known, we truncate the temp file
 	if d.FileSize > 0 {
 		err := os.Truncate(d.TempPath, d.FileSize)
 		if err != nil {
@@ -146,6 +148,7 @@ func (d *DownloadRequest) Prepare() error {
 }
 
 func (d *DownloadRequest) NextAction() executor.Action {
+	// Wait for next part, or return nil if we finished
 	select {
 	case partID := <-d.parts:
 		return &DownloadAction{
@@ -187,6 +190,7 @@ func (d *DownloadRequest) Serialize() []byte {
 }
 
 func (d *DownloadRequest) Next() executor.Request {
+	// We don't support chained downloads, no need so far
 	return nil
 }
 

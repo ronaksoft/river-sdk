@@ -69,6 +69,7 @@ func init() {
 		PostUploadProcessCB: func(req msg.ClientFileRequest) bool {
 			logs.Info("PostProcess",
 				zap.Any("TotalParts", req.TotalParts),
+				zap.Int32("ChunkSize", req.ChunkSize),
 				zap.Any("FilePath", req.FilePath),
 				zap.Any("FileID", req.FileID),
 			)
@@ -80,7 +81,7 @@ func init() {
 		},
 	})
 	_File.Start()
-	logs.SetLogLevel(-1)
+	logs.SetLogLevel(0)
 
 	tcpConfig := new(tcplisten.Config)
 	s := httptest.NewUnstartedServer(server{
@@ -286,24 +287,25 @@ func TestUpload(t *testing.T) {
 
 func TestManyUpload(t *testing.T) {
 	uploadStart = true
-	// Convey("Upload Many Files (Good Network)", t, func(c C) {
-	// 	c.Println()
-	// 	startTime := time.Now()
-	// 	speedBytesPerSec = 1024 * 128
-	// 	for i := 0; i < 50; i++ {
-	// 		waitGroupUpload.Add(1)
-	// 		fileID := int64(i + 1)
-	// 		msgID := int64(i + 1)
-	// 		_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0)
-	// 	}
-	// 	waitGroupUpload.Wait()
-	// 	_, _ = Println("Many Upload:", time.Now().Sub(startTime))
-	// })
+	Convey("Upload Many Files (Good Network)", t, func(c C) {
+		c.Println()
+		startTime := time.Now()
+		speedBytesPerSec = 1024 * 1024
+		for i := 0; i < 50; i++ {
+			waitGroupUpload.Add(1)
+			fileID := int64(i + 1)
+			msgID := int64(i + 1)
+			peerID := int64(i + 1)
+			_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0, nil, peerID, false)
+		}
+		waitGroupUpload.Wait()
+		_, _ = Println("Many Upload:", time.Now().Sub(startTime))
+	})
 	Convey("Upload Many Files (Bad Network)", t, func(c C) {
 		c.Println()
 		startTime := time.Now()
 		speedBytesPerSec = 1024 * 8
-		for i := 0; i < 50; i++ {
+		for i := 0; i < 10; i++ {
 			waitGroupUpload.Add(1)
 			fileID := int64(i + 1)
 			msgID := int64(i + 1)

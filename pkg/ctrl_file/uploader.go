@@ -313,6 +313,7 @@ func (u *UploadRequest) Serialize() []byte {
 }
 
 func (u *UploadRequest) Next() executor.Request {
+	// If the request has a chained request then we swap them and reset the progress
 	if u.ClientFileRequest.Next == nil {
 		return nil
 	}
