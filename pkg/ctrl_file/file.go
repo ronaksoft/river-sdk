@@ -227,18 +227,18 @@ func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash u
 }
 func (ctrl *Controller) downloadAccountPhoto(clientFile *msg.ClientFile) (filePath string, err error) {
 	err = domain.Try(retryMaxAttempts, retryWaitTime, func() error {
-		req := new(msg.FileGet)
-		req.Location = new(msg.InputFileLocation)
-		req.Location.ClusterID = clientFile.ClusterID
-		req.Location.FileID = clientFile.FileID
-		req.Location.AccessHash = clientFile.AccessHash
-		req.Location.Version = clientFile.Version
+		req := &msg.FileGet{
+			Location: &msg.InputFileLocation{
+				ClusterID:  clientFile.ClusterID,
+				FileID:     clientFile.FileID,
+				AccessHash: clientFile.AccessHash,
+				Version:    clientFile.Version,
+			},
+			Offset: 0,
+			Limit:  0,
+		}
 
-		// get all bytes
-		req.Offset = 0
-		req.Limit = 0
-
-		envelop := new(msg.MessageEnvelope)
+		envelop := &msg.MessageEnvelope{}
 		envelop.Constructor = msg.C_FileGet
 		envelop.Message, _ = req.Marshal()
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
@@ -282,18 +282,18 @@ func (ctrl *Controller) downloadAccountPhoto(clientFile *msg.ClientFile) (filePa
 }
 func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath string, err error) {
 	err = domain.Try(retryMaxAttempts, retryWaitTime, func() error {
-		req := new(msg.FileGet)
-		req.Location = new(msg.InputFileLocation)
-		req.Location.ClusterID = clientFile.ClusterID
-		req.Location.FileID = clientFile.FileID
-		req.Location.AccessHash = clientFile.AccessHash
-		req.Location.Version = clientFile.Version
+		req := &msg.FileGet{
+			Location: &msg.InputFileLocation{
+				ClusterID:  clientFile.ClusterID,
+				FileID:     clientFile.FileID,
+				AccessHash: clientFile.AccessHash,
+				Version:    clientFile.Version,
+			},
+			Offset: 0,
+			Limit:  0,
+		}
 
-		// get all bytes
-		req.Offset = 0
-		req.Limit = 0
-
-		envelop := new(msg.MessageEnvelope)
+		envelop := &msg.MessageEnvelope{}
 		envelop.Constructor = msg.C_FileGet
 		envelop.Message, _ = req.Marshal()
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
@@ -337,18 +337,18 @@ func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath
 }
 func (ctrl *Controller) downloadWallpaper(clientFile *msg.ClientFile) (filePath string, err error) {
 	err = domain.Try(retryMaxAttempts, retryWaitTime, func() error {
-		req := new(msg.FileGet)
-		req.Location = &msg.InputFileLocation{
-			AccessHash: clientFile.AccessHash,
-			ClusterID:  clientFile.ClusterID,
-			FileID:     clientFile.FileID,
-			Version:    clientFile.Version,
+		req := &msg.FileGet{
+			Location: &msg.InputFileLocation{
+				ClusterID:  clientFile.ClusterID,
+				FileID:     clientFile.FileID,
+				AccessHash: clientFile.AccessHash,
+				Version:    clientFile.Version,
+			},
+			Offset: 0,
+			Limit:  0,
 		}
-		// get all bytes
-		req.Offset = 0
-		req.Limit = 0
 
-		envelop := new(msg.MessageEnvelope)
+		envelop := &msg.MessageEnvelope{}
 		envelop.Constructor = msg.C_FileGet
 		envelop.Message, _ = req.Marshal()
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
@@ -394,18 +394,18 @@ func (ctrl *Controller) downloadWallpaper(clientFile *msg.ClientFile) (filePath 
 }
 func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath string, err error) {
 	err = domain.Try(retryMaxAttempts, retryWaitTime, func() error {
-		req := new(msg.FileGet)
-		req.Location = &msg.InputFileLocation{
-			AccessHash: clientFile.AccessHash,
-			ClusterID:  clientFile.ClusterID,
-			FileID:     clientFile.FileID,
-			Version:    clientFile.Version,
+		req := &msg.FileGet{
+			Location: &msg.InputFileLocation{
+				ClusterID:  clientFile.ClusterID,
+				FileID:     clientFile.FileID,
+				AccessHash: clientFile.AccessHash,
+				Version:    clientFile.Version,
+			},
+			Offset: 0,
+			Limit:  0,
 		}
-		// get all bytes
-		req.Offset = 0
-		req.Limit = 0
 
-		envelop := new(msg.MessageEnvelope)
+		envelop := &msg.MessageEnvelope{}
 		envelop.Constructor = msg.C_FileGet
 		envelop.Message, _ = req.Marshal()
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
@@ -445,7 +445,6 @@ func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath 
 		default:
 			return nil
 		}
-
 	})
 	return
 }

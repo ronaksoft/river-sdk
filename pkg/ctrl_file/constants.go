@@ -18,7 +18,7 @@ const (
 	maxChunkSize           = 512 * 1 << 10 // 512KB
 	maxFileSizeAllowedSize = 750 * 1 << 20 // 750 MB
 	maxParts               = 3000
-	retryMaxAttempts       = 5
+	retryMaxAttempts       = 25
 	retryWaitTime          = 100 * time.Millisecond
 )
 
