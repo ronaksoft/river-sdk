@@ -20,14 +20,99 @@ import (
 
 type DownloadRequest struct {
 	msg.ClientFileRequest
+	lastProgress int64
+	mtx sync.Mutex
+	file  *os.File
+	ctrl  *Controller
+	parts chan int32
+}
+
+func (d *DownloadRequest) isDownloaded(partIndex int32) bool {
+	d.mtx.Lock()
+	defer d.mtx.Unlock()
+	for _, index := range d.FinishedParts {
+		if partIndex == index {
+			return true
+		}
+	}
+	return false
+}
+
+func (d *DownloadRequest) addToDownloaded(ctrl *Controller, partIndex int32) {
+	d.mtx.Lock()
+	d.FinishedParts = append(d.FinishedParts, partIndex)
+	progress := int64(float64(len(d.FinishedParts)) / float64(d.TotalParts) * 100)
+	skipOnProgress := false
+	if d.lastProgress > progress {
+		skipOnProgress = true
+	} else {
+		d.lastProgress = progress
+	}
+	d.mtx.Unlock()
+	// ctrl.saveDownloads(ctx.req)
+
+	if !d.SkipDelegateCall && !skipOnProgress {
+		ctrl.onProgressChanged(d.GetID(),d.ClusterID, d.FileID, int64(d.AccessHash), progress, d.PeerID)
+	}
+}
+
+func NewDownloadRequest(ctrl *Controller, fr msg.ClientFileRequest) DownloadRequest {
+	return DownloadRequest{
+		ClientFileRequest: fr,
+		ctrl:              ctrl,
+		file:              nil,
+	}
 }
 
 func (d *DownloadRequest) GetID() string {
 	return getRequestID(d.ClusterID, d.FileID, d.AccessHash)
 }
 
-func (d *DownloadRequest) Prepare() {
+func (d *DownloadRequest) Prepare() error {
+	_, err := os.Stat(d.TempPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			d.file, err = os.Create(d.TempPath)
+			if err != nil {
+				d.ctrl.onCancel(d.GetID(), d.ClusterID, d.FileID, int64(d.AccessHash), true, d.PeerID)
+				return err
+			}
+		} else {
+			d.ctrl.onCancel(d.GetID(), d.ClusterID, d.FileID, int64(d.AccessHash), true, d.PeerID)
+			return err
+		}
+	} else {
+		d.file, err = os.OpenFile(d.TempPath, os.O_RDWR, 0666)
+		if err != nil {
+			d.ctrl.onCancel(d.GetID(), d.ClusterID, d.FileID, int64(d.AccessHash), true, d.PeerID)
+			return err
+		}
+	}
 
+	if d.FileSize > 0 {
+		err := os.Truncate(d.TempPath, d.FileSize)
+		if err != nil {
+			d.ctrl.onCancel(d.GetID(), d.ClusterID, d.FileID, int64(d.AccessHash), true, d.PeerID)
+			return err
+		}
+		dividend := int32(d.FileSize / int64(d.ChunkSize))
+		if d.FileSize%int64(d.ChunkSize) > 0 {
+			d.TotalParts = dividend + 1
+		} else {
+			d.TotalParts = dividend
+		}
+	} else {
+		d.TotalParts = 1
+		d.ChunkSize = 0
+	}
+
+	for partIndex := int32(0); partIndex < d.TotalParts; partIndex++ {
+		if d.isDownloaded(partIndex) {
+			continue
+		}
+		d.parts <- partIndex
+	}
+	return nil
 }
 
 func (d *DownloadRequest) NextAction() executor.Action {
@@ -91,34 +176,8 @@ type downloadContext struct {
 	lastProgress int64
 }
 
-func (ctx *downloadContext) isDownloaded(partIndex int32) bool {
-	ctx.mtx.Lock()
-	defer ctx.mtx.Unlock()
-	for _, index := range ctx.req.FinishedParts {
-		if partIndex == index {
-			return true
-		}
-	}
-	return false
-}
 
-func (ctx *downloadContext) addToDownloaded(ctrl *Controller, partIndex int32) {
-	ctx.mtx.Lock()
-	ctx.req.FinishedParts = append(ctx.req.FinishedParts, partIndex)
-	progress := int64(float64(len(ctx.req.FinishedParts)) / float64(ctx.req.TotalParts) * 100)
-	skipOnProgress := false
-	if ctx.lastProgress > progress {
-		skipOnProgress = true
-	} else {
-		ctx.lastProgress = progress
-	}
-	ctx.mtx.Unlock()
-	// ctrl.saveDownloads(ctx.req)
 
-	if !ctx.req.SkipDelegateCall && !skipOnProgress {
-		ctrl.onProgressChanged(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), progress, ctx.req.PeerID)
-	}
-}
 
 func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
 	// waitGroup := sync.WaitGroup{}

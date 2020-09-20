@@ -18,11 +18,13 @@ type UploadRequest struct {
 	msg.ClientFileRequest
 }
 
-func (d *UploadRequest) GetID() string {
-	return getRequestID(d.ClusterID, d.FileID, d.AccessHash)
+func (u *UploadRequest) GetID() string {
+	return getRequestID(u.ClusterID, u.FileID, u.AccessHash)
 }
 
-func (u *UploadRequest) Prepare() {}
+func (u *UploadRequest) Prepare() error {
+	return nil
+}
 
 func (u *UploadRequest) NextAction() executor.Action {
 	panic("implement me")

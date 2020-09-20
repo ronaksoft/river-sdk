@@ -37,7 +37,9 @@ type dummyRequest struct {
 	done   []int32
 }
 
-func (d *dummyRequest) Prepare() {}
+func (d *dummyRequest) Prepare() error {
+	return nil
+}
 
 func (d *dummyRequest) NextAction() Action {
 	logs.Debug("NextAction")

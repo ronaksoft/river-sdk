@@ -82,7 +82,10 @@ func (e *Executor) execute() {
 
 			req := e.factory()
 			req.Deserialize(stackItem.Value)
-			req.Prepare()
+			err := req.Prepare()
+			if err != nil {
+				return
+			}
 			for {
 				act := req.NextAction()
 				if act == nil {

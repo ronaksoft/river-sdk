@@ -19,7 +19,7 @@ type Action interface {
 }
 
 type Request interface {
-	Prepare()
+	Prepare() error
 	NextAction() Action
 	ActionDone(id int32)
 	Serialize() []byte
