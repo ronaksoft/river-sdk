@@ -72,6 +72,7 @@ func init() {
 				zap.Int32("ChunkSize", req.ChunkSize),
 				zap.Any("FilePath", req.FilePath),
 				zap.Any("FileID", req.FileID),
+				zap.Int64("ThumbID", req.ThumbID),
 			)
 			if uploadStart {
 				waitGroupUpload.Done()
@@ -315,4 +316,18 @@ func TestManyUpload(t *testing.T) {
 		waitGroupUpload.Wait()
 		_, _ = Println("Many Upload:", time.Now().Sub(startTime))
 	})
+}
+
+func TestUploadWithThumbnail(t *testing.T) {
+	fileID := domain.RandomInt63()
+	thumbID := domain.RandomInt63()
+	msgID := domain.RandomInt63()
+	peerID := domain.RandomInt63()
+	Convey("Upload File With Thumbnail", t, func(c C) {
+		c.Println()
+		speedBytesPerSec = 1024 * 1024
+		_File.UploadMessageDocument(msgID, "./testdata/big", "./testdata/big", fileID, thumbID, nil, peerID, true)
+	})
+	time.Sleep(time.Second * 5)
+
 }

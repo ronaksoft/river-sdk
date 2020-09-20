@@ -453,7 +453,7 @@ func (ctrl *Controller) download(req msg.ClientFileRequest) error {
 		return domain.ErrInvalidData
 	}
 	_, err := repo.Files.GetFileRequest(getRequestID(req.ClusterID, req.FileID, req.AccessHash))
-	if err != nil {
+	if err == nil {
 		return domain.ErrAlreadyDownloading
 	}
 
@@ -532,19 +532,23 @@ func (ctrl *Controller) UploadMessageDocument(
 	// If there is a thumbnail then set the reqFile as the next
 	if thumbID != 0 {
 		reqFile = msg.ClientFileRequest{
-			Next:             &reqFile,
+			Next: &msg.ClientFileRequest{
+				MessageID:   messageID,
+				FileID:      fileID,
+				FilePath:    filePath,
+				ThumbID:     thumbID,
+				ThumbPath:   thumbPath,
+				FileSha256:  fileSha256,
+				PeerID:      peerID,
+				CheckSha256: checkSha256,
+			},
 			MessageID:        0,
 			FileID:           thumbID,
 			FilePath:         thumbPath,
-			SkipDelegateCall: false,
+			SkipDelegateCall: true,
 			CheckSha256:      checkSha256,
 		}
 	}
-
-	_ = repo.Files.SaveFileRequest(
-		getRequestID(0, fileID, 0),
-		&reqFile,
-	)
 
 	err := ctrl.upload(reqFile)
 	if err != nil {
@@ -560,9 +564,14 @@ func (ctrl *Controller) upload(req msg.ClientFileRequest) error {
 		return domain.ErrNoFilePath
 	}
 	_, err := repo.Files.GetFileRequest(getRequestID(req.ClusterID, req.FileID, req.AccessHash))
-	if err != nil {
+	if err == nil {
 		return domain.ErrAlreadyUploading
 	}
+
+	_ = repo.Files.SaveFileRequest(
+		getRequestID(0, req.FileID, 0),
+		&req,
+	)
 
 	err = ctrl.uploader.Execute(&UploadRequest{
 		ClientFileRequest: req,

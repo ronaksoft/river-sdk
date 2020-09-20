@@ -148,9 +148,6 @@ func (u *UploadRequest) Reset() {
 	// Reset failed counter
 	atomic.StoreInt32(&u.failedActions, 0)
 
-	// Set the chunk size to minimum
-	u.ChunkSize = minChunkSize(u.FileSize)
-
 	// Reset the uploaded list
 	u.resetUploadedList()
 
@@ -259,7 +256,10 @@ func (u *UploadRequest) NextAction() executor.Action {
 func (u *UploadRequest) ActionDone(id int32) {
 	// If we have failed too many times, and we can decrease the chunk size the we do it again.
 	if atomic.LoadInt32(&u.failedActions) > retryMaxAttempts {
-		if minChunkSize(u.FileSize) < u.ChunkSize {
+		minChunk := minChunkSize(u.FileSize)
+		if minChunk < u.ChunkSize {
+			// Set the chunk size to minimum
+			u.ChunkSize = minChunk
 			u.Reset()
 			return
 		} else {
