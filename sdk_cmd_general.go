@@ -560,7 +560,7 @@ func (r *River) AppForeground() {
 	go r.updateStatusJob()
 }
 
-var updateStatusChan = make(chan struct{})
+var updateStatusChan = make(chan struct{}, 1)
 
 func (r *River) updateStatusJob() {
 	r.syncCtrl.UpdateStatus(true)
