@@ -48,6 +48,7 @@ func init() {
 	_Network = networkCtrl.New(networkCtrl.Config{
 		WebsocketEndpoint: "",
 		HttpEndpoint:      "http://127.0.0.1:8080",
+		HttpTimeout:       10 * time.Second,
 	})
 	_File = fileCtrl.New(fileCtrl.Config{
 		Network:              _Network,

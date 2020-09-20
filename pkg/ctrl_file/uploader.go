@@ -12,6 +12,7 @@ import (
 	"io"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -26,12 +27,14 @@ import (
 
 type UploadRequest struct {
 	msg.ClientFileRequest
-	ctrl         *Controller
-	mtx          sync.Mutex
-	file         *os.File
-	parts        chan int32
-	done         chan struct{}
-	lastProgress int64
+	ctrl           *Controller
+	mtx            sync.Mutex
+	file           *os.File
+	parts          chan int32
+	done           chan struct{}
+	lastProgress   int64
+	uploadingThumb bool
+	failedActions  int32
 }
 
 func (u *UploadRequest) checkSha256() error {
@@ -93,6 +96,17 @@ func (u *UploadRequest) generateFileSavePart(fileID int64, partID int32, totalPa
 	return &envelop
 }
 
+func (u *UploadRequest) resetUploadedList() {
+	u.mtx.Lock()
+	u.FinishedParts = u.FinishedParts[:0]
+	u.mtx.Unlock()
+
+	_ = repo.Files.SaveFileRequest(u.GetID(), &u.ClientFileRequest)
+	if !u.SkipDelegateCall {
+		u.ctrl.onProgressChanged(u.GetID(), 0, u.FileID, 0, 0, u.PeerID)
+	}
+}
+
 func (u *UploadRequest) isUploaded(partIndex int32) bool {
 	u.mtx.Lock()
 	defer u.mtx.Unlock()
@@ -128,6 +142,25 @@ func (u *UploadRequest) addToUploaded(partIndex int32) {
 
 func (u *UploadRequest) GetID() string {
 	return getRequestID(u.ClusterID, u.FileID, u.AccessHash)
+}
+
+func (u *UploadRequest) Reset() {
+	// Reset failed counter
+	atomic.StoreInt32(&u.failedActions, 0)
+
+	// Set the chunk size to minimum
+	u.ChunkSize = minChunkSize(u.FileSize)
+
+	// Reset the uploaded list
+	u.resetUploadedList()
+
+	// Close the file
+	_ = u.file.Close()
+
+	// Prepare the request with new parameters
+	_ = u.Prepare()
+
+	logs.Debug("FileCtrl resets the upload request", zap.Int32("ChunkSize", u.ChunkSize))
 }
 
 func (u *UploadRequest) Prepare() error {
@@ -175,6 +208,7 @@ func (u *UploadRequest) Prepare() error {
 		u.ChunkSize = bestChunkSize(u.FileSize)
 	}
 
+	// Calculate number of parts based on our chunk size
 	dividend := int32(u.FileSize / int64(u.ChunkSize))
 	if u.FileSize%int64(u.ChunkSize) > 0 {
 		u.TotalParts = dividend + 1
@@ -210,6 +244,7 @@ func (u *UploadRequest) Prepare() error {
 }
 
 func (u *UploadRequest) NextAction() executor.Action {
+	// Wait for next part, or return nil if we finished
 	select {
 	case partID := <-u.parts:
 		return &UploadAction{
@@ -222,10 +257,23 @@ func (u *UploadRequest) NextAction() executor.Action {
 }
 
 func (u *UploadRequest) ActionDone(id int32) {
+	// If we have failed too many times, and we can decrease the chunk size the we do it again.
+	if atomic.LoadInt32(&u.failedActions) > retryMaxAttempts {
+		if minChunkSize(u.FileSize) < u.ChunkSize {
+			u.Reset()
+			return
+		} else {
+			atomic.StoreInt32(&u.failedActions, 0)
+			logs.Debug("Max Attempts", zap.Int32("ChunkSize", u.ChunkSize), zap.Int32("MinChunkSize", minChunkSize(u.FileSize)))
+		}
+	}
+
+	// For single part uploads we are done
+	// For n-part uploads if we have done n-1 part then we add the last part
 	switch u.TotalParts {
 	case 1:
 		if int32(len(u.FinishedParts)) != u.TotalParts {
-			panic("BUG!! total parts != finished parts")
+			logs.Fatal("FileCtrl got serious error total parts != finished parts")
 		}
 	default:
 		finishedParts := int32(len(u.FinishedParts))
@@ -238,13 +286,16 @@ func (u *UploadRequest) ActionDone(id int32) {
 		}
 	}
 
-	// This is last part
+	// This is last part so we make the executor free to run the next job if exist
 	u.done <- struct{}{}
+
+	// Run the post process
 	if !u.ctrl.postUploadProcess(u.ClientFileRequest) {
 		u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
 		return
 	}
-	// We have finished our uploads
+
+	// Clean up
 	_ = u.file.Close()
 	if !u.SkipDelegateCall {
 		u.ctrl.onCompleted(u.GetID(), 0, u.FileID, 0, u.FilePath, u.PeerID)
@@ -273,23 +324,35 @@ func (a *UploadAction) ID() int32 {
 func (a *UploadAction) Do(ctx context.Context) {
 	bytes := pbytes.GetLen(int(a.req.ChunkSize))
 	defer pbytes.Put(bytes)
+
+	// Calculate offset based on chunk id and the chunk size
 	offset := a.id * a.req.ChunkSize
+
+	// We try to read the chunk, if it failed we try one more time
 	n, err := a.req.file.ReadAt(bytes, int64(offset))
 	if err != nil && err != io.EOF {
-		logs.Warn("Error in ReadFile", zap.Error(err))
+		logs.Warn("FileCtrl got error in ReadFile (Upload)", zap.Error(err))
 		a.req.parts <- a.id
 		return
 	}
+
+	// If we read 0 bytes then something is wrong
 	if n == 0 {
-		return
+		logs.Fatal("FileCtrl read zero bytes from file",
+			zap.String("FilePath", a.req.FilePath),
+			zap.Int32("TotalParts", a.req.TotalParts),
+			zap.Int32("ChunkSize", a.req.ChunkSize),
+		)
 	}
+
+	// Send the http request to server
 	res, err := a.req.ctrl.network.SendHttp(
 		ctx,
 		a.req.generateFileSavePart(a.req.FileID, a.id+1, a.req.TotalParts, bytes[:n]),
 	)
 	if err != nil {
-		logs.Warn("Error On Http Response", zap.Error(err))
-		time.Sleep(100 * time.Millisecond)
+		logs.Warn("FileCtrl got error On SendHttp (Upload)", zap.Error(err))
+		atomic.AddInt32(&a.req.failedActions, 1)
 		a.req.parts <- a.id
 		return
 	}
@@ -299,50 +362,15 @@ func (a *UploadAction) Do(ctx context.Context) {
 	case msg.C_Error:
 		x := &msg.Error{}
 		_ = x.Unmarshal(res.Message)
-		logs.Debug("FileCtrl received Error response",
+		logs.Warn("FileCtrl received Error response (Upload)",
 			zap.Int32("PartID", a.id+1),
 			zap.String("Code", x.Code),
 			zap.String("Item", x.Items),
 		)
+		atomic.AddInt32(&a.req.failedActions, 1)
 		a.req.parts <- a.id
 	default:
-		logs.Debug("FileCtrl received unexpected response", zap.String("C", msg.ConstructorNames[res.Constructor]))
+		logs.Fatal("FileCtrl received unexpected response (Upload)", zap.String("C", msg.ConstructorNames[res.Constructor]))
 		return
 	}
 }
-
-//
-// func (ctx *uploadContext) resetUploadedList(ctrl *Controller) {
-// 	ctx.mtx.Lock()
-// 	ctx.req.cancelFunc()
-// 	ctx.req.httpContext, ctx.req.cancelFunc = context.WithCancel(context.Background())
-// 	ctx.req.UploadedParts = ctx.req.UploadedParts[:0]
-// 	ctx.mtx.Unlock()
-// 	ctrl.saveUploads(ctx.req)
-// }
-//
-//
-// 		minChunkSize := minChunkSize(ctx.req.FileSize)
-// 		if ctx.req.ChunkSize > minChunkSize {
-// 			logs.Info("FileCtrl retries upload with smaller chunk size",
-// 				zap.Int32("Old", ctx.req.ChunkSize>>10),
-// 				zap.Int32("New", minChunkSize>>10),
-// 			)
-// 			ctx.req.ChunkSize = minChunkSize
-// 			ctx.resetUploadedList(ctrl)
-// 			continue
-// 		}
-// 		_ = ctx.file.Close()
-// 		logs.Warn("Upload Canceled (Max Retries Exceeds)",
-// 			zap.Int64("FileID", ctx.req.FileID),
-// 			zap.Int64("Size", ctx.req.FileSize),
-// 			zap.String("Path", ctx.req.FilePath),
-// 		)
-// 		if !ctx.req.SkipDelegateCall {
-// 			ctrl.onCancel(ctx.req.GetID(), 0, ctx.req.FileID, 0, true, ctx.req.PeerID)
-// 		}
-// 		return domain.RequestStatusError
-// 	}
-//
-// }
-//

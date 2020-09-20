@@ -15,18 +15,6 @@ import (
    Copyright Ronak Software Group 2018
 */
 
-func unique(intSlice []int32) []int32 {
-	keys := make(map[int32]bool)
-	list := make([]int32, 0)
-	for _, entry := range intSlice {
-		if _, value := keys[entry]; !value {
-			keys[entry] = true
-			list = append(list, entry)
-		}
-	}
-	return list
-}
-
 func bestChunkSize(fileSize int64) int32 {
 	if fileSize <= maxChunkSize {
 		return defaultChunkSize
