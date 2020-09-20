@@ -2,7 +2,9 @@ package executor
 
 import (
 	"context"
+	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/beeker1121/goque"
+	"go.uber.org/zap"
 	"path/filepath"
 	"sync"
 )
@@ -83,6 +85,7 @@ func (e *Executor) execute() {
 			req := e.factory(stackItem.Value)
 			err := req.Prepare()
 			if err != nil {
+				logs.Warn("Executor got error on Prepare", zap.Error(err))
 				return
 			}
 			for {

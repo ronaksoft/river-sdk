@@ -122,14 +122,26 @@ func (d *DownloadRequest) Prepare() error {
 		d.ChunkSize = 0
 	}
 
+	// Reset FinishedParts if all parts are finished. Probably something went wrong, it is better to retry
+	if int32(len(d.FinishedParts)) == d.TotalParts {
+		d.FinishedParts = d.FinishedParts[:0]
+	}
+
+	// Prepare Channels to active the system dynamics
 	d.parts = make(chan int32, d.TotalParts)
-	d.done = make(chan struct{})
+	d.done = make(chan struct{}, 1)
 	for partIndex := int32(0); partIndex < d.TotalParts; partIndex++ {
 		if d.isDownloaded(partIndex) {
 			continue
 		}
 		d.parts <- partIndex
 	}
+
+	logs.Debug("Download Prepared",
+		zap.String("ID", d.GetID()),
+		zap.Int32("TotalParts", d.TotalParts),
+		zap.Int32s("Finished", d.FinishedParts),
+	)
 	return nil
 }
 

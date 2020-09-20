@@ -158,7 +158,6 @@ func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash 
 		return "", err
 	}
 	go func() {
-
 		err = ctrl.download(msg.ClientFileRequest{
 			MessageID:        clientFile.MessageID,
 			ClusterID:        clientFile.ClusterID,
@@ -550,8 +549,12 @@ func (ctrl *Controller) upload(req msg.ClientFileRequest) error {
 		_ = repo.Files.DeleteFileRequest(getRequestID(req.ClusterID, req.FileID, req.AccessHash))
 		return domain.ErrNoFilePath
 	}
+	_, err := repo.Files.GetFileRequest(getRequestID(req.ClusterID, req.FileID, req.AccessHash))
+	if err != nil {
+		return domain.ErrAlreadyUploading
+	}
 
-	err := ctrl.uploader.Execute(&UploadRequest{
+	err = ctrl.uploader.Execute(&UploadRequest{
 		ClientFileRequest: req,
 	})
 	if err != nil {

@@ -40,8 +40,11 @@ var (
 )
 
 func init() {
-	_ = repo.InitRepo("./_db", true)
-	repo.Files.SetRootFolders("_data/audio", "_data/file", "_data/photo", "_data/video", "_data/cache")
+	_ = repo.InitRepo("./_hdd/_db", true)
+	repo.Files.SetRootFolders(
+		"_hdd/_data/audio", "_hdd/_data/file", "_hdd/_data/photo",
+		"_hdd/_data/video", "_hdd/_data/cache",
+	)
 	_Network = networkCtrl.New(networkCtrl.Config{
 		WebsocketEndpoint: "",
 		HttpEndpoint:      "http://127.0.0.1:8080",
@@ -50,6 +53,7 @@ func init() {
 		Network:              _Network,
 		MaxInflightDownloads: 2,
 		MaxInflightUploads:   3,
+		DbPath:               "./_hdd",
 		ProgressChangedCB: func(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64) {
 			// logs.Info("Progress Changed", zap.String("ReqID", reqID), zap.Int64("Percent", percent))
 		},

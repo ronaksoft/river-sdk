@@ -182,8 +182,14 @@ func (u *UploadRequest) Prepare() error {
 		u.TotalParts = dividend
 	}
 
+	// Reset FinishedParts if all parts are finished. Probably something went wrong, it is better to retry
+	if int32(len(u.FinishedParts)) == u.TotalParts {
+		u.FinishedParts = u.FinishedParts[:0]
+	}
+
+	// Prepare Channels to active the system dynamics
 	u.parts = make(chan int32, u.TotalParts)
-	u.done = make(chan struct{})
+	u.done = make(chan struct{}, 1)
 	maxPartIndex := u.TotalParts - 1
 	if u.TotalParts == 1 {
 		maxPartIndex = u.TotalParts
@@ -195,6 +201,11 @@ func (u *UploadRequest) Prepare() error {
 		u.parts <- partIndex
 	}
 
+	logs.Debug("Upload Prepared",
+		zap.String("ID", u.GetID()),
+		zap.Int32("TotalParts", u.TotalParts),
+		zap.Int32s("Finished", u.FinishedParts),
+	)
 	return nil
 }
 
@@ -226,6 +237,7 @@ func (u *UploadRequest) ActionDone(id int32) {
 			return
 		}
 	}
+
 	// This is last part
 	u.done <- struct{}{}
 	if !u.ctrl.postUploadProcess(u.ClientFileRequest) {
