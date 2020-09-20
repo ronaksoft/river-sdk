@@ -285,7 +285,7 @@ func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {
 	}
 }
 
-func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) bool {
+func (r *River) postUploadProcess(uploadRequest msg.ClientFileRequest) bool {
 	logs.Info("Upload finished, we process the next action",
 		zap.Bool("IsProfile", uploadRequest.IsProfilePhoto),
 		zap.Int64("ur.MessageID", uploadRequest.MessageID),
@@ -300,7 +300,7 @@ func (r *River) postUploadProcess(uploadRequest fileCtrl.UploadRequest) bool {
 	}
 	return false
 }
-func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success bool) {
+func (r *River) sendMessageMedia(uploadRequest msg.ClientFileRequest) (success bool) {
 	// This is a upload for message send media
 	pendingMessage := repo.PendingMessages.GetByID(uploadRequest.MessageID)
 	if pendingMessage == nil {
@@ -312,11 +312,11 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 
 	err := domain.Try(3, time.Millisecond*500, func() error {
 		var fileLoc *msg.FileLocation
-		if uploadRequest.DocumentID != 0 && uploadRequest.AccessHash != 0 && uploadRequest.ClusterID != 0 {
+		if uploadRequest.FileID != 0 && uploadRequest.AccessHash != 0 && uploadRequest.ClusterID != 0 {
 			req.MediaType = msg.InputMediaTypeDocument
 			fileLoc = &msg.FileLocation{
 				ClusterID:  uploadRequest.ClusterID,
-				FileID:     uploadRequest.DocumentID,
+				FileID:     uploadRequest.FileID,
 				AccessHash: uploadRequest.AccessHash,
 			}
 		}
@@ -363,7 +363,7 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 			Attributes: req.Attributes,
 			Entities:   req.Entities,
 			Document: &msg.InputDocument{
-				ID:         uploadRequest.DocumentID,
+				ID:         uploadRequest.FileID,
 				AccessHash: uploadRequest.AccessHash,
 				ClusterID:  uploadRequest.ClusterID,
 			},
@@ -425,7 +425,7 @@ func (r *River) sendMessageMedia(uploadRequest fileCtrl.UploadRequest) (success 
 	waitGroup.Wait()
 	return
 }
-func (r *River) uploadGroupPhoto(uploadRequest fileCtrl.UploadRequest) (success bool) {
+func (r *River) uploadGroupPhoto(uploadRequest msg.ClientFileRequest) (success bool) {
 	// This is a upload group profile picture
 	x := &msg.GroupsUploadPhoto{
 		GroupID: uploadRequest.GroupID,
@@ -471,7 +471,7 @@ func (r *River) uploadGroupPhoto(uploadRequest fileCtrl.UploadRequest) (success 
 	waitGroup.Wait()
 	return
 }
-func (r *River) uploadAccountPhoto(uploadRequest fileCtrl.UploadRequest) (success bool) {
+func (r *River) uploadAccountPhoto(uploadRequest msg.ClientFileRequest) (success bool) {
 	// This is a upload account profile picture
 	x := &msg.AccountUploadPhoto{
 		File: &msg.InputFile{

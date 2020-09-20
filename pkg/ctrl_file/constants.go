@@ -14,13 +14,11 @@ import (
 */
 
 const (
-	defaultChunkSize       = 256 * 1 << 10 // 256 KB
+	defaultChunkSize       = 512 * 1 << 10 // 256KB
 	maxChunkSize           = 512 * 1 << 10 // 512KB
 	maxFileSizeAllowedSize = 750 * 1 << 20 // 750 MB
-	maxDownloadInFlights   = 10
-	maxUploadInFlights     = 10
 	maxParts               = 3000
-	retryMaxAttempts       = 200
+	retryMaxAttempts       = 25
 	retryWaitTime          = 100 * time.Millisecond
 )
 

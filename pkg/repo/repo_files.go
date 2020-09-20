@@ -33,8 +33,8 @@ var (
 )
 
 const (
-	prefixFiles    = "FILES"
-	prefixUploaded = "UPLOADED"
+	prefixFiles         = "FILES"
+	prefixFilesRequests = "FILES_REQ"
 )
 
 type repoFiles struct {
@@ -431,33 +431,6 @@ func (r *repoFiles) Delete(clusterID int32, fileID int64, accessHash uint64) err
 	})
 }
 
-func (r *repoFiles) MarkAsUploaded(fileID int64) error {
-	return badgerUpdate(func(txn *badger.Txn) error {
-		return txn.Set(
-			domain.StrToByte(fmt.Sprintf("%s.%021d", prefixUploaded, fileID)),
-			domain.StrToByte("OK"),
-		)
-	})
-}
-
-func (r *repoFiles) UnmarkAsUploaded(fileID int64) error {
-	return badgerUpdate(func(txn *badger.Txn) error {
-		return txn.Delete(domain.StrToByte(fmt.Sprintf("%s.%021d", prefixUploaded, fileID)))
-	})
-}
-
-func (r *repoFiles) IsMarkedAsUploaded(fileID int64) bool {
-	res := true
-	_ = badgerView(func(txn *badger.Txn) error {
-		_, err := txn.Get(domain.StrToByte(fmt.Sprintf("%s.%021d", prefixUploaded, fileID)))
-		if err != nil {
-			res = false
-		}
-		return nil
-	})
-	return res
-}
-
 func (r *repoFiles) GetCachedMedia() *msg.ClientCachedMediaInfo {
 	userMediaInfo := make(map[int64]map[msg.ClientMediaType]int64, 128)
 	groupMediaInfo := make(map[int64]map[msg.ClientMediaType]int64, 128)
@@ -719,4 +692,60 @@ func getAccountProfilePath(userID int64, fileID int64) string {
 
 func getGroupProfilePath(groupID int64, fileID int64) string {
 	return path.Join(DirCache, fmt.Sprintf("g%d_%d%s", groupID, fileID, ".jpg"))
+}
+
+func (r *repoFiles) SaveFileRequest(reqID string, req *msg.ClientFileRequest) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		reqBytes, _ := req.Marshal()
+		return txn.Set(
+			domain.StrToByte(fmt.Sprintf("%s.%s", prefixFilesRequests, reqID)),
+			reqBytes,
+		)
+	})
+}
+
+func (r *repoFiles) DeleteFileRequest(reqID string) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		return txn.Delete(
+			domain.StrToByte(fmt.Sprintf("%s.%s", prefixFilesRequests, reqID)),
+		)
+	})
+}
+
+func (r *repoFiles) GetFileRequest(reqID string) (*msg.ClientFileRequest, error) {
+	req := &msg.ClientFileRequest{}
+	err := badgerView(func(txn *badger.Txn) error {
+		item, err := txn.Get(
+			domain.StrToByte(fmt.Sprintf("%s.%s", prefixFilesRequests, reqID)),
+		)
+		if err != nil {
+			return err
+		}
+		return item.Value(func(val []byte) error {
+			return req.Unmarshal(val)
+		})
+	})
+	return req, err
+}
+
+func (r *repoFiles) GetAllFileRequests() ([]*msg.ClientFileRequest, error) {
+	reqs := make([]*msg.ClientFileRequest, 0, 8)
+	st := r.badger.NewStream()
+	st.Prefix = domain.StrToByte(prefixFilesRequests)
+	st.Send = func(list *badger.KVList) error {
+		for _, kv := range list.Kv {
+			req := &msg.ClientFileRequest{}
+			err := req.Unmarshal(kv.Value)
+			if err != nil {
+				return err
+			}
+			reqs = append(reqs, req)
+		}
+		return nil
+	}
+	err := st.Orchestrate(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return reqs, nil
 }

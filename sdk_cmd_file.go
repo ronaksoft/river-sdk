@@ -14,29 +14,24 @@ func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash int64) [
 	fileStatus := new(msg.ClientFileStatus)
 	if clusterID == 0 && accessHash == 0 {
 		// It it Upload
-		uploadRequest, ok := r.fileCtrl.GetUploadRequest(fileID)
-		if ok {
+		uploadRequest := r.fileCtrl.GetUploadRequest(fileID)
+		if uploadRequest != nil {
 			fileStatus.FilePath = uploadRequest.FilePath
 			if uploadRequest.TotalParts > 0 {
-				fileStatus.Progress = int64(float64(len(uploadRequest.UploadedParts)) / float64(uploadRequest.TotalParts) * 100)
+				fileStatus.Progress = int64(float64(len(uploadRequest.FinishedParts)) / float64(uploadRequest.TotalParts) * 100)
 			}
-			if repo.Files.IsMarkedAsUploaded(fileID) {
-				fileStatus.Status = int32(domain.RequestStatusCompleted)
-			} else {
-				fileStatus.Status = int32(domain.RequestStatusInProgress)
-			}
+			fileStatus.Status = int32(domain.RequestStatusInProgress)
 		} else {
-			fileStatus.FilePath = uploadRequest.FilePath
 			fileStatus.Status = int32(domain.RequestStatusNone)
 			fileStatus.Progress = 0
 		}
 	} else {
-		downloadRequest, ok := r.fileCtrl.GetDownloadRequest(clusterID, fileID, uint64(accessHash))
-		if ok {
+		downloadRequest := r.fileCtrl.GetDownloadRequest(clusterID, fileID, uint64(accessHash))
+		if downloadRequest != nil {
 			fileStatus.FilePath = downloadRequest.FilePath
 			fileStatus.Status = int32(domain.RequestStatusInProgress)
 			if downloadRequest.TotalParts > 0 {
-				fileStatus.Progress = int64(float64(len(downloadRequest.DownloadedParts)) / float64(downloadRequest.TotalParts) * 100)
+				fileStatus.Progress = int64(float64(len(downloadRequest.FinishedParts)) / float64(downloadRequest.TotalParts) * 100)
 			}
 		} else {
 			clientFile, err := repo.Files.Get(clusterID, fileID, uint64(accessHash))
@@ -101,12 +96,7 @@ func (r *River) CancelDownload(clusterID int32, fileID int64, accessHash int64) 
 	if clientFile.MessageID == 0 {
 		return
 	}
-
-	downloadRequest, ok := r.fileCtrl.GetDownloadRequest(clusterID, fileID, uint64(accessHash))
-	if !ok {
-		return
-	}
-	r.fileCtrl.CancelDownloadRequest(downloadRequest.GetID())
+	r.fileCtrl.CancelDownloadRequest(clusterID, fileID, uint64(accessHash))
 }
 
 // CancelUpload cancels the upload and deletes the pending message associated with that media.
@@ -125,12 +115,7 @@ func (r *River) CancelUpload(clusterID int32, fileID int64, accessHash int64) {
 		return
 	}
 	_ = repo.PendingMessages.Delete(pendingMessage.ID)
-
-	uploadRequest, ok := r.fileCtrl.GetUploadRequest(fileID)
-	if !ok {
-		return
-	}
-	r.fileCtrl.CancelUploadRequest(uploadRequest.GetID())
+	r.fileCtrl.CancelUploadRequest(fileID)
 }
 
 // ResumeUpload must be called if for any reason the upload of a ClientSendMediaMessage failed,
@@ -145,7 +130,7 @@ func (r *River) ResumeUpload(pendingMessageID int64) {
 	_ = req.Unmarshal(pendingMessage.Media)
 
 	logs.Info("River resumes upload", zap.Int64("MsgID", pendingMessageID))
-	if _, ok := r.fileCtrl.GetUploadRequest(pendingMessage.FileID); !ok {
+	if uploadReq := r.fileCtrl.GetUploadRequest(pendingMessage.FileID); uploadReq == nil {
 		r.fileCtrl.UploadMessageDocument(
 			pendingMessageID, req.FilePath, req.ThumbFilePath, pendingMessage.FileID,
 			pendingMessage.ThumbID, pendingMessage.Sha256, pendingMessage.PeerID,

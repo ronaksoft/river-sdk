@@ -764,6 +764,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	)
 	r.fileCtrl = fileCtrl.New(fileCtrl.Config{
 		Network:              r.networkCtrl,
+		DbPath:               r.dbPath,
 		MaxInflightDownloads: conf.MaxInFlightDownloads,
 		MaxInflightUploads:   conf.MaxInFlightUploads,
 		CompletedCB:          r.fileDelegate.OnCompleted,

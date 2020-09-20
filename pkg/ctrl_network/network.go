@@ -27,6 +27,7 @@ import (
 type Config struct {
 	WebsocketEndpoint string
 	HttpEndpoint      string
+	HttpTimeout       time.Duration
 	CountryCode       string
 	DumpData          bool
 	DumpPath          string
@@ -93,7 +94,10 @@ func New(config Config) *Controller {
 	ctrl.wsKeepConnection = true
 
 	ctrl.createDialer(domain.WebsocketDialTimeout)
-	ctrl.createHttpClient(domain.HttpRequestTimeout)
+	if config.HttpTimeout == 0 {
+		config.HttpTimeout = domain.HttpRequestTimeout
+	}
+	ctrl.createHttpClient(config.HttpTimeout)
 
 	ctrl.stopChannel = make(chan bool, 1)
 	ctrl.connectChannel = make(chan bool)
