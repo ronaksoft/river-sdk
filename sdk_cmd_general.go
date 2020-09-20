@@ -563,6 +563,7 @@ func (r *River) AppForeground() {
 var updateStatusChan = make(chan struct{})
 
 func (r *River) updateStatusJob() {
+	r.syncCtrl.UpdateStatus(true)
 	t := time.NewTicker(time.Duration(domain.SysConfig.OnlineUpdatePeriodInSec-5) * time.Second)
 	for {
 		select {

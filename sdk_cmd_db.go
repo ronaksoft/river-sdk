@@ -9,7 +9,6 @@ import (
 
 func (r *River) IsMessageExist(messageID int64) bool {
 	message, _ := repo.Messages.Get(messageID)
-
 	return message != nil
 }
 
@@ -28,12 +27,7 @@ func (r *River) GetRealTopMessageID(peerID int64, peerType int32) int64 {
 
 func (r *River) GetPinnedDialogsCount() int32 {
 	dialogs := repo.Dialogs.GetPinnedDialogs()
-
-	if dialogs != nil {
-		return int32(len(dialogs))
-	}
-
-	return 0
+	return int32(len(dialogs))
 }
 
 func (r *River) ResetCalculatedImportHash() {

@@ -44,11 +44,9 @@ type RiverConfig struct {
 	MainDelegate MainDelegate
 	// FileDelegate holds all the callbacks required by file related functions
 	FileDelegate FileDelegate
-
 	// LogLevel
 	LogLevel  int
 	SentryDSN string
-
 	// Folder path to save files
 	DocumentPhotoDirectory string
 	DocumentVideoDirectory string
@@ -56,10 +54,8 @@ type RiverConfig struct {
 	DocumentAudioDirectory string
 	DocumentCacheDirectory string
 	LogDirectory           string
-
-	// Connection Info
+	// ConnInfo stores the Connection Info
 	ConnInfo *RiverConnection
-
 	// ClientInfo
 	ClientPlatform string
 	ClientVersion  string
@@ -75,7 +71,7 @@ type RiverConfig struct {
 	// Misc
 	ResetQueueOnStartup bool
 
-	// Team
+	// Team related parameters
 	TeamID         int64
 	TeamAccessHash int64
 }
