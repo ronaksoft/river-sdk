@@ -20,7 +20,7 @@ const (
 	defaultConcurrency = 10
 )
 
-type RequestFactoryFunc func() Request
+type RequestFactoryFunc func(data []byte) Request
 
 // Executor
 type Executor struct {
@@ -80,8 +80,7 @@ func (e *Executor) execute() {
 				<-e.rt
 			}()
 
-			req := e.factory()
-			req.Deserialize(stackItem.Value)
+			req := e.factory(stackItem.Value)
 			err := req.Prepare()
 			if err != nil {
 				return
@@ -110,4 +109,13 @@ func (e *Executor) Execute(req Request) error {
 	}
 	e.mtx.Unlock()
 	return nil
+}
+
+// Option to config Executor
+type Option func(e *Executor)
+
+func WithConcurrency(c int32) Option {
+	return func(e *Executor) {
+		e.rt = make(chan struct{}, c)
+	}
 }

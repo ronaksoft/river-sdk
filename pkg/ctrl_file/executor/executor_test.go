@@ -73,18 +73,6 @@ func (d *dummyRequest) Serialize() []byte {
 	return b
 }
 
-func (d *dummyRequest) Deserialize(b []byte) {
-	logs.Debug("Unmarshal Called")
-	d.chunks = make(chan int32, 10)
-	for i := int32(0); i < 10; i++ {
-		d.chunks <- i
-	}
-	err := json.Unmarshal(b, d)
-	if err != nil {
-		panic(err)
-	}
-}
-
 var stopChan = make(chan struct{})
 
 func init() {
@@ -94,8 +82,18 @@ func init() {
 func TestNewExecutor(t *testing.T) {
 	Convey("Executor", t, func(c C) {
 		_ = os.MkdirAll("./_hdd", os.ModePerm)
-		e, err := NewExecutor("./_hdd", "dummy", func() Request {
-			return &dummyRequest{}
+		e, err := NewExecutor("./_hdd", "dummy", func(data []byte) Request {
+			r := &dummyRequest{}
+			logs.Debug("Factory Called")
+			r.chunks = make(chan int32, 10)
+			for i := int32(0); i < 10; i++ {
+				r.chunks <- i
+			}
+			err := json.Unmarshal(data, r)
+			if err != nil {
+				panic(err)
+			}
+			return r
 		})
 		c.So(err, ShouldBeNil)
 

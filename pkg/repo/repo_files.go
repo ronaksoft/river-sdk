@@ -35,7 +35,6 @@ var (
 const (
 	prefixFiles         = "FILES"
 	prefixFilesRequests = "FILES_REQ"
-	prefixUploaded      = "UPLOADED"
 )
 
 type repoFiles struct {
@@ -430,33 +429,6 @@ func (r *repoFiles) Delete(clusterID int32, fileID int64, accessHash uint64) err
 	return badgerUpdate(func(txn *badger.Txn) error {
 		return txn.Delete(getFileKey(clusterID, fileID, accessHash))
 	})
-}
-
-func (r *repoFiles) MarkAsUploaded(fileID int64) error {
-	return badgerUpdate(func(txn *badger.Txn) error {
-		return txn.Set(
-			domain.StrToByte(fmt.Sprintf("%s.%021d", prefixUploaded, fileID)),
-			domain.StrToByte("OK"),
-		)
-	})
-}
-
-func (r *repoFiles) UnmarkAsUploaded(fileID int64) error {
-	return badgerUpdate(func(txn *badger.Txn) error {
-		return txn.Delete(domain.StrToByte(fmt.Sprintf("%s.%021d", prefixUploaded, fileID)))
-	})
-}
-
-func (r *repoFiles) IsMarkedAsUploaded(fileID int64) bool {
-	res := true
-	_ = badgerView(func(txn *badger.Txn) error {
-		_, err := txn.Get(domain.StrToByte(fmt.Sprintf("%s.%021d", prefixUploaded, fileID)))
-		if err != nil {
-			res = false
-		}
-		return nil
-	})
-	return res
 }
 
 func (r *repoFiles) GetCachedMedia() *msg.ClientCachedMediaInfo {

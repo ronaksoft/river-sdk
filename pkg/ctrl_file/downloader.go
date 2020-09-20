@@ -3,8 +3,11 @@ package fileCtrl
 import (
 	"context"
 	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/pkg/ctrl_file/executor"
 	"git.ronaksoft.com/river/sdk/pkg/domain"
+	"git.ronaksoft.com/river/sdk/pkg/repo"
+	"go.uber.org/zap"
 	"os"
 	"sync"
 )
@@ -20,11 +23,31 @@ import (
 
 type DownloadRequest struct {
 	msg.ClientFileRequest
+	ctrl         *Controller
+	mtx          sync.Mutex
+	file         *os.File
+	parts        chan int32
+	done         chan struct{}
 	lastProgress int64
-	mtx sync.Mutex
-	file  *os.File
-	ctrl  *Controller
-	parts chan int32
+}
+
+func (d *DownloadRequest) generateFileGet(offset, limit int32) *msg.MessageEnvelope {
+	req := new(msg.FileGet)
+	req.Location = &msg.InputFileLocation{
+		ClusterID:  d.ClusterID,
+		FileID:     d.FileID,
+		AccessHash: d.AccessHash,
+		Version:    d.Version,
+	}
+	req.Offset = offset
+	req.Limit = limit
+
+	envelop := new(msg.MessageEnvelope)
+	envelop.Constructor = msg.C_FileGet
+	envelop.Message, _ = req.Marshal()
+	envelop.RequestID = uint64(domain.SequentialUniqueID())
+
+	return envelop
 }
 
 func (d *DownloadRequest) isDownloaded(partIndex int32) bool {
@@ -38,7 +61,7 @@ func (d *DownloadRequest) isDownloaded(partIndex int32) bool {
 	return false
 }
 
-func (d *DownloadRequest) addToDownloaded(ctrl *Controller, partIndex int32) {
+func (d *DownloadRequest) addToDownloaded(partIndex int32) {
 	d.mtx.Lock()
 	d.FinishedParts = append(d.FinishedParts, partIndex)
 	progress := int64(float64(len(d.FinishedParts)) / float64(d.TotalParts) * 100)
@@ -49,19 +72,12 @@ func (d *DownloadRequest) addToDownloaded(ctrl *Controller, partIndex int32) {
 		d.lastProgress = progress
 	}
 	d.mtx.Unlock()
-	// ctrl.saveDownloads(ctx.req)
+	_ = repo.Files.SaveFileRequest(d.GetID(), &d.ClientFileRequest)
 
 	if !d.SkipDelegateCall && !skipOnProgress {
-		ctrl.onProgressChanged(d.GetID(),d.ClusterID, d.FileID, int64(d.AccessHash), progress, d.PeerID)
+		d.ctrl.onProgressChanged(d.GetID(), d.ClusterID, d.FileID, int64(d.AccessHash), progress, d.PeerID)
 	}
-}
 
-func NewDownloadRequest(ctrl *Controller, fr msg.ClientFileRequest) DownloadRequest {
-	return DownloadRequest{
-		ClientFileRequest: fr,
-		ctrl:              ctrl,
-		file:              nil,
-	}
 }
 
 func (d *DownloadRequest) GetID() string {
@@ -106,6 +122,8 @@ func (d *DownloadRequest) Prepare() error {
 		d.ChunkSize = 0
 	}
 
+	d.parts = make(chan int32, d.TotalParts)
+	d.done = make(chan struct{})
 	for partIndex := int32(0); partIndex < d.TotalParts; partIndex++ {
 		if d.isDownloaded(partIndex) {
 			continue
@@ -116,11 +134,36 @@ func (d *DownloadRequest) Prepare() error {
 }
 
 func (d *DownloadRequest) NextAction() executor.Action {
-	panic("implement me")
+	select {
+	case partID := <-d.parts:
+		return &DownloadAction{
+			id:  partID,
+			req: d,
+		}
+	case <-d.done:
+		return nil
+	}
 }
 
 func (d *DownloadRequest) ActionDone(id int32) {
-	panic("implement me")
+	finished := int32(len(d.FinishedParts)) == d.TotalParts
+	if finished {
+		d.done <- struct{}{}
+		_ = d.file.Close()
+		err := os.Rename(d.TempPath, d.FilePath)
+		if err != nil {
+			_ = os.Remove(d.TempPath)
+			if !d.SkipDelegateCall {
+				d.ctrl.onCancel(d.GetID(), d.ClusterID, d.FileID, int64(d.AccessHash), true, d.PeerID)
+			}
+			return
+		}
+		if !d.SkipDelegateCall {
+			d.ctrl.onCompleted(d.GetID(), d.ClusterID, d.FileID, int64(d.AccessHash), d.FilePath, d.PeerID)
+		}
+		_ = repo.Files.DeleteFileRequest(d.GetID())
+	}
+
 }
 
 func (d *DownloadRequest) Serialize() []byte {
@@ -129,10 +172,6 @@ func (d *DownloadRequest) Serialize() []byte {
 		panic(err)
 	}
 	return b
-}
-
-func (d *DownloadRequest) Deserialize(b []byte) {
-	_ = d.Unmarshal(b)
 }
 
 type DownloadAction struct {
@@ -145,139 +184,38 @@ func (a *DownloadAction) ID() int32 {
 }
 
 func (a *DownloadAction) Do(ctx context.Context) {
-
-}
-
-func (a *DownloadAction) generateFileGet(offset, limit int32) *msg.MessageEnvelope {
-	req := new(msg.FileGet)
-	req.Location = &msg.InputFileLocation{
-		ClusterID:  a.req.ClusterID,
-		FileID:     a.req.FileID,
-		AccessHash: a.req.AccessHash,
-		Version:    a.req.Version,
+	offset := a.id * a.req.ChunkSize
+	res, err := a.req.ctrl.network.SendHttp(ctx, a.req.generateFileGet(offset, a.req.ChunkSize))
+	if err != nil {
+		a.req.parts <- a.id
+		return
 	}
-	req.Offset = offset
-	req.Limit = limit
-
-	envelop := new(msg.MessageEnvelope)
-	envelop.Constructor = msg.C_FileGet
-	envelop.Message, _ = req.Marshal()
-	envelop.RequestID = uint64(domain.SequentialUniqueID())
-
-	return envelop
-}
-
-type downloadContext struct {
-	mtx          sync.Mutex
-	rateLimit    chan struct{}
-	parts        chan int32
-	file         *os.File
-	req          DownloadRequest
-	lastProgress int64
-}
-
-
-
-
-func (ctx *downloadContext) execute(ctrl *Controller) domain.RequestStatus {
-	// waitGroup := sync.WaitGroup{}
-	// for ctx.req.MaxRetries > 0 {
-	// 	select {
-	// 	case partIndex := <-ctx.parts:
-	// 		if !ctrl.existDownloadRequest(ctx.req.GetID()) {
-	// 			waitGroup.Wait()
-	// 			_ = ctx.file.Close()
-	// 			_ = os.Remove(ctx.req.TempFilePath)
-	// 			if !ctx.req.SkipDelegateCall {
-	// 				ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), false, ctx.req.PeerID)
-	// 			}
-	// 			return domain.RequestStatusCanceled
-	// 		}
-	// 		ctx.rateLimit <- struct{}{}
-	// 		waitGroup.Add(1)
-	// 		go func(partIndex int32) {
-	// 			defer waitGroup.Done()
-	// 			defer func() {
-	// 				<-ctx.rateLimit
-	// 			}()
-	//
-	// 			offset := partIndex * ctx.req.ChunkSize
-	// 			res, err := ctrl.network.SendHttp(ctx.req.httpContext, ctx.generateFileGet(offset, ctx.req.ChunkSize))
-	// 			if err != nil {
-	// 				logs.Warn("Downloader got error from NetworkController SendHTTP", zap.Error(err))
-	// 				atomic.AddInt32(&ctx.req.MaxRetries, -1)
-	// 				ctx.parts <- partIndex
-	// 				return
-	// 			}
-	// 			switch res.Constructor {
-	// 			case msg.C_File:
-	// 				file := new(msg.File)
-	// 				err = file.Unmarshal(res.Message)
-	// 				if err != nil {
-	// 					logs.Warn("Downloader couldn't unmarshal server response FileGet (File)",
-	// 						zap.Error(err),
-	// 						zap.Int32("Offset", offset),
-	// 						zap.Int("Byte", len(file.Bytes)),
-	// 					)
-	// 					atomic.AddInt32(&ctx.req.MaxRetries, -1)
-	// 					ctx.parts <- partIndex
-	// 					return
-	// 				}
-	// 				_, err := ctx.file.WriteAt(file.Bytes, int64(offset))
-	// 				if err != nil {
-	// 					logs.Error("Downloader couldn't write to file, will retry...",
-	// 						zap.Error(err),
-	// 						zap.Int32("Offset", offset),
-	// 						zap.Int("Byte", len(file.Bytes)),
-	// 					)
-	// 					atomic.AddInt32(&ctx.req.MaxRetries, -1)
-	// 					ctx.parts <- partIndex
-	// 					return
-	// 				}
-	// 				ctx.addToDownloaded(ctrl, partIndex)
-	// 			default:
-	// 				atomic.AddInt32(&ctx.req.MaxRetries, -1)
-	// 				ctx.parts <- partIndex
-	// 				return
-	// 			}
-	// 		}(partIndex)
-	// 	default:
-	// 		waitGroup.Wait()
-	// 		totalDownloadedParts := int32(len(ctx.req.DownloadedParts))
-	// 		switch {
-	// 		case totalDownloadedParts > ctx.req.TotalParts:
-	// 			ctx.req.DownloadedParts = unique(ctx.req.DownloadedParts)
-	// 			totalDownloadedParts = int32(len(ctx.req.DownloadedParts))
-	// 			if totalDownloadedParts < ctx.req.TotalParts {
-	// 				break
-	// 			}
-	// 			fallthrough
-	// 		case totalDownloadedParts == ctx.req.TotalParts:
-	// 			_ = ctx.file.Close()
-	// 			err := os.Rename(ctx.req.TempFilePath, ctx.req.FilePath)
-	// 			if err != nil {
-	// 				_ = os.Remove(ctx.req.TempFilePath)
-	// 				if !ctx.req.SkipDelegateCall {
-	// 					ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), true, ctx.req.PeerID)
-	// 				}
-	// 				return domain.RequestStatusError
-	// 			}
-	// 			if !ctx.req.SkipDelegateCall {
-	// 				ctrl.onCompleted(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), ctx.req.FilePath, ctx.req.PeerID)
-	// 			}
-	//
-	// 			return domain.RequestStatusCompleted
-	// 		default:
-	// 			time.Sleep(time.Millisecond * 250)
-	// 			// Keep downloading
-	// 		}
-	// 	}
-	// }
-	// _ = ctx.file.Close()
-	// _ = os.Remove(ctx.req.TempPath)
-	// if !ctx.req.SkipDelegateCall {
-	// 	ctrl.onCancel(ctx.req.GetID(), ctx.req.ClusterID, ctx.req.FileID, int64(ctx.req.AccessHash), true, ctx.req.PeerID)
-	// }
-	//
-	return domain.RequestStatusError
+	switch res.Constructor {
+	case msg.C_File:
+		file := new(msg.File)
+		err = file.Unmarshal(res.Message)
+		if err != nil {
+			logs.Warn("Downloader couldn't unmarshal server response FileGet (File)",
+				zap.Error(err),
+				zap.Int32("Offset", offset),
+				zap.Int("Byte", len(file.Bytes)),
+			)
+			a.req.parts <- a.id
+			return
+		}
+		_, err := a.req.file.WriteAt(file.Bytes, int64(offset))
+		if err != nil {
+			logs.Error("Downloader couldn't write to file, will retry...",
+				zap.Error(err),
+				zap.Int32("Offset", offset),
+				zap.Int("Byte", len(file.Bytes)),
+			)
+			a.req.parts <- a.id
+			return
+		}
+		a.req.addToDownloaded(a.id)
+	default:
+		a.req.parts <- a.id
+		return
+	}
 }

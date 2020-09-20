@@ -74,19 +74,27 @@ func New(config Config) *Controller {
 		ctrl.onCancel = config.CancelCB
 	}
 
-	ctrl.downloader, err = executor.NewExecutor(config.DbPath, "downloader", func() executor.Request {
-		return &DownloadRequest{}
+	ctrl.downloader, err = executor.NewExecutor(config.DbPath, "downloader", func(data []byte) executor.Request {
+		r := &DownloadRequest{
+			ctrl: ctrl,
+		}
+		_ = r.Unmarshal(data)
+		return r
 	}, executor.WithConcurrency(config.MaxInflightDownloads))
 	if err != nil {
-		logs.Fatal("FileCtrl got error on initializing downloader", zap.Error(err))
+		logs.Fatal("FileCtrl got error on initializing uploader", zap.Error(err))
 	}
 
-	// ctrl.uploader, err = executor.NewExecutor(config.DbPath, "uploader", func() executor.Request {
-	// 	return &download.Request{}
-	// }, executor.WithConcurrency(config.MaxInflightDownloads))
-	// if err != nil {
-	// 	logs.Fatal("FileCtrl got error on initializing downloader", zap.Error(err))
-	// }
+	ctrl.uploader, err = executor.NewExecutor(config.DbPath, "uploader", func(data []byte) executor.Request {
+		r := &UploadRequest{
+			ctrl: ctrl,
+		}
+		_ = r.Unmarshal(data)
+		return r
+	}, executor.WithConcurrency(config.MaxInflightUploads))
+	if err != nil {
+		logs.Fatal("FileCtrl got error on initializing uploader", zap.Error(err))
+	}
 
 	return ctrl
 }
@@ -459,71 +467,6 @@ func (ctrl *Controller) download(req msg.ClientFileRequest) error {
 		return err
 	}
 
-	// ctrl.saveDownloads(req)
-	// ctrl.downloadsRateLimit <- struct{}{}
-	// defer func() {
-	// 	// Remove the Download request from the list
-	// 	ctrl.deleteDownloadRequest(req.GetID())
-	//
-	// 	<-ctrl.downloadsRateLimit
-	// }()
-	//
-	// ds := &downloadContext{
-	// 	rateLimit: make(chan struct{}, req.MaxInFlights),
-	// }
-	// _, err := os.Stat(req.TempFilePath)
-	// if err != nil {
-	// 	if os.IsNotExist(err) {
-	// 		ds.file, err = os.Create(req.TempFilePath)
-	// 		if err != nil {
-	// 			ctrl.onCancel(req.GetID(), req.ClusterID, req.FileID, int64(req.AccessHash), true, req.PeerID)
-	// 			return err
-	// 		}
-	// 	} else {
-	// 		ctrl.onCancel(req.GetID(), req.ClusterID, req.FileID, int64(req.AccessHash), true, req.PeerID)
-	// 		return err
-	// 	}
-	// } else {
-	// 	ds.file, err = os.OpenFile(req.TempFilePath, os.O_RDWR, 0666)
-	// 	if err != nil {
-	// 		ctrl.onCancel(req.GetID(), req.ClusterID, req.FileID, int64(req.AccessHash), true, req.PeerID)
-	// 		return err
-	// 	}
-	// }
-	//
-	// if req.FileSize > 0 {
-	// 	err := os.Truncate(req.TempFilePath, req.FileSize)
-	// 	if err != nil {
-	// 		ctrl.onCancel(req.GetID(), req.ClusterID, req.FileID, int64(req.AccessHash), true, req.PeerID)
-	// 		return err
-	// 	}
-	// 	dividend := int32(req.FileSize / int64(req.ChunkSize))
-	// 	if req.FileSize%int64(req.ChunkSize) > 0 {
-	// 		req.TotalParts = dividend + 1
-	// 	} else {
-	// 		req.TotalParts = dividend
-	// 	}
-	// } else {
-	// 	req.TotalParts = 1
-	// 	req.ChunkSize = 0
-	// }
-	//
-	// if req.MaxRetries <= 0 {
-	// 	req.MaxRetries = retryMaxAttempts
-	// }
-	//
-	// ds.req = req
-	// ds.parts = make(chan int32, ds.req.TotalParts)
-	// for partIndex := int32(0); partIndex < ds.req.TotalParts; partIndex++ {
-	// 	if ds.isDownloaded(partIndex) {
-	// 		continue
-	// 	}
-	// 	ds.parts <- partIndex
-	// }
-	//
-	// // This is blocking call, until all the parts are downloaded
-	// ds.execute(ctrl)
-
 	return nil
 }
 
@@ -615,86 +558,5 @@ func (ctrl *Controller) upload(req msg.ClientFileRequest) error {
 		return err
 	}
 
-	// fileInfo, err := os.Stat(req.FilePath)
-	// if err != nil {
-	// 	ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true, req.PeerID)
-	// 	return err
-	// } else {
-	// 	req.FileSize = fileInfo.Size()
-	// 	if req.FileSize <= 0 {
-	// 		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true, req.PeerID)
-	// 		return err
-	// 	} else if req.FileSize > maxFileSizeAllowedSize {
-	// 		ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true, req.PeerID)
-	// 		return err
-	// 	}
-	// }
-	//
-	// // If Sha256 exists in the request then we check server if this file has been already uploaded, if true, then
-	// // we do not upload it again and we call postUploadProcess with the updated details
-	// if req.CheckSha256 && req.FileSha256 != "" {
-	// 	err = ctrl.checkSha256(&req)
-	// 	if err == nil {
-	// 		logs.Info("File already exists in the server",
-	// 			zap.Int64("DocumentID", req.DocumentID),
-	// 			zap.Int32("ClusterID", req.ClusterID),
-	// 		)
-	// 		if !ctrl.postUploadProcess(req) {
-	// 			ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true, req.PeerID)
-	// 		}
-	// 		return nil
-	// 	}
-	// }
-	//
-	// uploadCtx.file, err = os.OpenFile(req.FilePath, os.O_RDONLY, 0666)
-	// if err != nil {
-	// 	ctrl.onCancel(req.GetID(), 0, req.FileID, 0, true, req.PeerID)
-	// 	return err
-	// }
-	//
-	// if req.ChunkSize <= 0 {
-	// 	req.ChunkSize = bestChunkSize(req.FileSize)
-	// }
-	//
-	// uploadCtx.req = req
-	//
-	// // This is blocking call, until all the parts are downloaded
-	// uploadCtx.execute(ctrl)
 	return nil
 }
-
-// func (ctrl *Controller) checkSha256(uploadRequest *upload.Request) error {
-// 	envelop := &msg.MessageEnvelope{
-// 		RequestID:   uint64(domain.SequentialUniqueID()),
-// 		Constructor: msg.C_FileGetBySha256,
-// 	}
-// 	req := &msg.FileGetBySha256{
-// 		Sha256:   uploadRequest.FileSha256,
-// 		FileSize: int32(uploadRequest.FileSize),
-// 	}
-// 	envelop.Message, _ = req.Marshal()
-//
-// 	err := domain.Try(3, time.Millisecond*500, func() error {
-// 		ctx, cancelFunc := context.WithTimeout(context.Background(), domain.HttpRequestTimeout)
-// 		defer cancelFunc()
-// 		res, err := ctrl.network.SendHttp(ctx, envelop)
-// 		if err != nil {
-// 			return err
-// 		}
-// 		switch res.Constructor {
-// 		case msg.C_FileLocation:
-// 			x := &msg.FileLocation{}
-// 			_ = x.Unmarshal(res.Message)
-// 			uploadRequest.ClusterID = x.ClusterID
-// 			uploadRequest.AccessHash = x.AccessHash
-// 			uploadRequest.FileID = x.FileID
-// 			uploadRequest.TotalParts = -1 // dirty hack, which queue.Start() knows the upload request is completed
-// 			return nil
-// 		case msg.C_Error:
-// 			x := &msg.Error{}
-// 			_ = x.Unmarshal(res.Message)
-// 		}
-// 		return domain.ErrServer
-// 	})
-// 	return err
-// }

@@ -20,6 +20,7 @@ var (
 	ErrMaxFileSize           = errors.New("max file size limit")
 	ErrUnknownFileSize       = errors.New("unknown file size")
 	ErrAlreadyDownloading    = errors.New("already is downloading")
+	ErrAlreadyUploaded       = errors.New("already uploaded")
 	ErrNoFilePath            = errors.New("no file path")
 	ErrInvalidData           = errors.New("invalid data")
 	ErrServer                = errors.New("server error")
