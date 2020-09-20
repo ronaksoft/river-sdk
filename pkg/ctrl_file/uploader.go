@@ -217,7 +217,7 @@ func (ctx *uploadContext) execute(ctrl *Controller) domain.RequestStatus {
 					return domain.RequestStatusCompleted
 				default:
 					// Keep Uploading
-					time.Sleep(time.Millisecond * 250)
+					time.Sleep(time.Millisecond * 500)
 				}
 			}
 		}
