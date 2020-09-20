@@ -186,6 +186,10 @@ func (d *DownloadRequest) Serialize() []byte {
 	return b
 }
 
+func (d *DownloadRequest) Next() executor.Request {
+	return nil
+}
+
 type DownloadAction struct {
 	id  int32
 	req *DownloadRequest

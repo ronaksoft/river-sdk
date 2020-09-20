@@ -637,6 +637,10 @@ func (p *poolClientFileRequest) Get() *ClientFileRequest {
 }
 
 func (p *poolClientFileRequest) Put(x *ClientFileRequest) {
+	if x.Next != nil {
+		*x.Next = ClientFileRequest{}
+	}
+
 	x.PeerID = 0
 	x.PeerType = 0
 	x.MessageID = 0

@@ -23,4 +23,5 @@ type Request interface {
 	NextAction() Action
 	ActionDone(id int32)
 	Serialize() []byte
+	Next() Request
 }

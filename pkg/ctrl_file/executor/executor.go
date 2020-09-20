@@ -91,6 +91,10 @@ func (e *Executor) execute() {
 			for {
 				act := req.NextAction()
 				if act == nil {
+					req = req.Next()
+					if req != nil {
+						continue
+					}
 					break
 				}
 				act.Do(e.ctx)

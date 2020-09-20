@@ -517,8 +517,7 @@ func (ctrl *Controller) UploadMessageDocument(
 			return
 		}
 	}
-	// We prepare upload request for the actual file before uploading the thumbnail to save it
-	// in case of execution stopped, then we are assured that we will continue the upload process
+
 	reqFile := msg.ClientFileRequest{
 		MessageID:   messageID,
 		FileID:      fileID,
@@ -528,6 +527,18 @@ func (ctrl *Controller) UploadMessageDocument(
 		FileSha256:  fileSha256,
 		PeerID:      peerID,
 		CheckSha256: checkSha256,
+	}
+
+	// If there is a thumbnail then set the reqFile as the next
+	if thumbID != 0 {
+		reqFile = msg.ClientFileRequest{
+			Next:             &reqFile,
+			MessageID:        0,
+			FileID:           thumbID,
+			FilePath:         thumbPath,
+			SkipDelegateCall: false,
+			CheckSha256:      checkSha256,
+		}
 	}
 
 	_ = repo.Files.SaveFileRequest(

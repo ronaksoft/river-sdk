@@ -312,6 +312,15 @@ func (u *UploadRequest) Serialize() []byte {
 	return b
 }
 
+func (u *UploadRequest) Next() executor.Request {
+	if u.ClientFileRequest.Next == nil {
+		return nil
+	}
+	u.ClientFileRequest = *u.ClientFileRequest.Next
+	u.Reset()
+	return u
+}
+
 type UploadAction struct {
 	id  int32
 	req *UploadRequest

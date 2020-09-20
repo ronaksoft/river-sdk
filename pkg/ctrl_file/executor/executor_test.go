@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"testing"
+	"time"
 )
 
 /*
@@ -33,11 +34,17 @@ func (d *dummyAction) Do(ctx context.Context) {
 }
 
 type dummyRequest struct {
-	chunks chan int32
-	done   []int32
+	chunks  chan int32
+	done    []int32
+	hasNext bool
 }
 
 func (d *dummyRequest) Prepare() error {
+	d.chunks = make(chan int32, 10)
+	d.done = d.done[:0]
+	for i := int32(0); i < 10; i++ {
+		d.chunks <- i
+	}
 	return nil
 }
 
@@ -59,6 +66,7 @@ func (d *dummyRequest) NextAction() Action {
 func (d *dummyRequest) ActionDone(id int32) {
 	d.done = append(d.done, id)
 	logs.Info("Action is done", zap.Int32("ID", id))
+
 	if len(d.chunks) == 0 {
 		stopChan <- struct{}{}
 	}
@@ -73,6 +81,16 @@ func (d *dummyRequest) Serialize() []byte {
 	return b
 }
 
+func (d *dummyRequest) Next() Request {
+	time.Sleep(time.Second)
+	if d.hasNext {
+		d.hasNext = false
+		_ = d.Prepare()
+		return d
+	}
+	return nil
+}
+
 var stopChan = make(chan struct{})
 
 func init() {
@@ -84,7 +102,6 @@ func TestNewExecutor(t *testing.T) {
 		_ = os.MkdirAll("./_hdd", os.ModePerm)
 		e, err := NewExecutor("./_hdd", "dummy", func(data []byte) Request {
 			r := &dummyRequest{}
-			logs.Debug("Factory Called")
 			r.chunks = make(chan int32, 10)
 			for i := int32(0); i < 10; i++ {
 				r.chunks <- i
@@ -93,20 +110,17 @@ func TestNewExecutor(t *testing.T) {
 			if err != nil {
 				panic(err)
 			}
+			r.hasNext = true
 			return r
 		})
 		c.So(err, ShouldBeNil)
 
-		r := &dummyRequest{
-			chunks: make(chan int32, 10),
-			done:   nil,
-		}
-		for i := int32(0); i < 10; i++ {
-			r.chunks <- i
-		}
+		r := &dummyRequest{}
+
 		err = e.Execute(r)
 		c.So(err, ShouldBeNil)
 
 		<-stopChan
+		time.Sleep(time.Second * 3)
 	})
 }
