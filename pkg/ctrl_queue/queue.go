@@ -335,11 +335,11 @@ func (ctrl *Controller) Start(resetQueue bool) {
 		default:
 			if resetQueue {
 				_ = repo.PendingMessages.Delete(pmsg.ID)
-				uploadRequest, ok := ctrl.fileCtrl.GetUploadRequest(pmsg.FileID)
-				if !ok {
+				uploadRequest := ctrl.fileCtrl.GetUploadRequest(pmsg.FileID)
+				if uploadRequest == nil {
 					continue
 				}
-				ctrl.fileCtrl.CancelUploadRequest(uploadRequest.GetID())
+				ctrl.fileCtrl.CancelUploadRequest(pmsg.FileID)
 			} else {
 				// it will be MessagesSendMedia
 				req := repo.PendingMessages.ToMessagesSendMedia(pmsg)

@@ -61,7 +61,7 @@ func init() {
 			}
 		},
 		CompletedCB: func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64) {},
-		PostUploadProcessCB: func(req fileCtrl.UploadRequest) bool {
+		PostUploadProcessCB: func(req msg.ClientFileRequest) bool {
 			logs.Info("PostProcess",
 				zap.Any("TotalParts", req.TotalParts),
 				zap.Any("FilePath", req.FilePath),

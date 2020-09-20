@@ -622,6 +622,58 @@ func ResultClientFile(out *MessageEnvelope, res *ClientFile) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_ClientFileRequest int64 = 3995993899
+
+type poolClientFileRequest struct {
+	pool sync.Pool
+}
+
+func (p *poolClientFileRequest) Get() *ClientFileRequest {
+	x, ok := p.pool.Get().(*ClientFileRequest)
+	if !ok {
+		return &ClientFileRequest{}
+	}
+	return x
+}
+
+func (p *poolClientFileRequest) Put(x *ClientFileRequest) {
+	x.PeerID = 0
+	x.PeerType = 0
+	x.MessageID = 0
+	x.ClusterID = 0
+	x.FileID = 0
+	x.AccessHash = 0
+	x.Version = 0
+	x.FileSize = 0
+	x.ChunkSize = 0
+	x.FinishedParts = x.FinishedParts[:0]
+	x.TotalParts = 0
+	x.SkipDelegateCall = false
+	x.FilePath = ""
+	x.TempPath = ""
+	x.CheckSha256 = false
+	x.FileSha256 = x.FileSha256[:0]
+	x.IsProfilePhoto = false
+	x.GroupID = 0
+	x.ThumbID = 0
+	x.ThumbPath = ""
+	p.pool.Put(x)
+}
+
+var PoolClientFileRequest = poolClientFileRequest{}
+
+func ResultClientFileRequest(out *MessageEnvelope, res *ClientFileRequest) {
+	out.Constructor = C_ClientFileRequest
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 const C_ClientFileStatus int64 = 2731095358
 
 type poolClientFileStatus struct {
@@ -869,6 +921,7 @@ func init() {
 	ConstructorNames[2957647709] = "ClientSearchResult"
 	ConstructorNames[1414992553] = "ClientFilesMany"
 	ConstructorNames[155127968] = "ClientFile"
+	ConstructorNames[3995993899] = "ClientFileRequest"
 	ConstructorNames[2731095358] = "ClientFileStatus"
 	ConstructorNames[442767121] = "ClientCachedMediaInfo"
 	ConstructorNames[2711408875] = "ClientPeerMediaInfo"
