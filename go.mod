@@ -42,7 +42,7 @@ require (
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.4.0
+	github.com/spf13/viper v1.7.1
 	github.com/tecbot/gorocksdb v0.0.0-20190705090504-162552197222 // indirect
 	github.com/tidwall/buntdb v1.1.2
 	github.com/tidwall/gjson v1.6.1 // indirect

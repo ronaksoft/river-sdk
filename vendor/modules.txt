@@ -148,7 +148,7 @@ github.com/klauspost/compress/zlib
 github.com/kr/pretty
 # github.com/kr/text v0.1.0
 github.com/kr/text
-# github.com/magiconair/properties v1.8.0
+# github.com/magiconair/properties v1.8.1
 github.com/magiconair/properties
 # github.com/mailru/easyjson v0.7.6
 github.com/mailru/easyjson
@@ -198,10 +198,12 @@ github.com/spf13/cobra
 github.com/spf13/jwalterweatherman
 # github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
-# github.com/spf13/viper v1.4.0
+# github.com/spf13/viper v1.7.1
 github.com/spf13/viper
 # github.com/steveyen/gtreap v0.1.0
 github.com/steveyen/gtreap
+# github.com/subosito/gotenv v1.2.0
+github.com/subosito/gotenv
 # github.com/syndtr/goleveldb v1.0.0
 github.com/syndtr/goleveldb/leveldb
 github.com/syndtr/goleveldb/leveldb/cache
@@ -350,5 +352,7 @@ google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/timestamppb
 # gopkg.in/abiosoft/ishell.v2 v2.0.0
 gopkg.in/abiosoft/ishell.v2
+# gopkg.in/ini.v1 v1.51.0
+gopkg.in/ini.v1
 # gopkg.in/yaml.v2 v2.2.4
 gopkg.in/yaml.v2
