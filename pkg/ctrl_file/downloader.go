@@ -95,7 +95,6 @@ func (d *DownloadRequest) complete() {
 	_ = repo.Files.DeleteFileRequest(d.GetID())
 }
 
-
 func (d *DownloadRequest) GetID() string {
 	return getRequestID(d.ClusterID, d.FileID, d.AccessHash)
 }

@@ -93,36 +93,35 @@ func (e *Executor) execute() {
 			}
 			e.waitGroupsLock.Unlock()
 
-			err := req.Prepare()
-			if err != nil {
-				for {
+			// External loop over requests
+			for req != nil {
+				err := req.Prepare()
+				if err != nil {
+					logs.Warn("Executor got error on Prepare",
+						zap.String("ReqID", req.GetID()),
+						zap.Error(err),
+					)
 					req = req.Next()
-					if req == nil {
-						logs.Warn("Executor got error on Prepare", zap.Error(err))
-						return
-					}
-					err = req.Prepare()
-					if err == nil {
+					continue
+				}
+
+				// Run actions in a loop
+				for {
+					act := req.NextAction()
+					if act == nil {
+						req = req.Next()
 						break
 					}
+					act.Do(e.ctx)
+					req.ActionDone(act.ID())
 				}
 			}
 
-			for {
-				act := req.NextAction()
-				if act == nil {
-					req = req.Next()
-					if req != nil {
-						continue
-					}
-					if waitGroup != nil {
-						waitGroup.Done()
-					}
-					break
-				}
-				act.Do(e.ctx)
-				req.ActionDone(act.ID())
+			// If there is a waiter for this request, then mark it done.
+			if waitGroup != nil {
+				waitGroup.Done()
 			}
+
 		}()
 	}
 }

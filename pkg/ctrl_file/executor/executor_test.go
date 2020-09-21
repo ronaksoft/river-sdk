@@ -32,14 +32,17 @@ func (d *dummyAction) ID() int32 {
 }
 
 func (d *dummyAction) Do(ctx context.Context) {
-	logs.Info("Do", zap.Int32("ID", d.id))
+	logs.Info("Do",
+		zap.String("ReqID", d.req.GetID()),
+		zap.Int32("ActionID", d.id),
+	)
 }
 
 type dummyRequest struct {
 	ID      string
 	chunks  chan int32
 	Done    []int32
-	HasNext bool
+	NextReq *dummyRequest
 }
 
 func (d *dummyRequest) GetID() string {
@@ -56,31 +59,25 @@ func (d *dummyRequest) Prepare() error {
 }
 
 func (d *dummyRequest) NextAction() Action {
-	logs.Debug("NextAction")
 	select {
 	case id := <-d.chunks:
-		logs.Debug("NextAction returns", zap.Int32("ID", id))
 		return &dummyAction{
 			id:  id,
 			req: d,
 		}
 	default:
-		logs.Debug("NextAction returns nil")
 		return nil
 	}
 }
 
 func (d *dummyRequest) ActionDone(id int32) {
 	d.Done = append(d.Done, id)
-	logs.Info("Action is done", zap.Int32("ActionID", id))
-
 	if len(d.chunks) == 0 {
 		logs.Info("Request Done", zap.String("ID", d.ID))
 	}
 }
 
 func (d *dummyRequest) Serialize() []byte {
-	logs.Debug("Marshal Called")
 	b, err := json.Marshal(d)
 	if err != nil {
 		panic(err)
@@ -89,10 +86,9 @@ func (d *dummyRequest) Serialize() []byte {
 }
 
 func (d *dummyRequest) Next() Request {
-	time.Sleep(time.Second)
-	if d.HasNext {
-		d.HasNext = false
-		_ = d.Prepare()
+	logs.Debug("Next", zap.Bool("Exists", d.NextReq != nil))
+	if d.NextReq != nil {
+		*d = *d.NextReq
 		return d
 	}
 	return nil
@@ -104,25 +100,24 @@ func init() {
 
 func TestNewExecutor(t *testing.T) {
 	_ = os.MkdirAll("./_hdd", os.ModePerm)
-	e, err := NewExecutor("./_hdd", "dummy", func(data []byte) Request {
-		r := &dummyRequest{}
-		r.chunks = make(chan int32, 10)
-		for i := int32(0); i < 10; i++ {
-			r.chunks <- i
-		}
-		err := json.Unmarshal(data, r)
-		if err != nil {
-			panic(err)
-		}
-		r.HasNext = true
-		return r
-	})
+	e, err := NewExecutor("./_hdd", "dummy",
+		func(data []byte) Request {
+			r := &dummyRequest{}
+			err := json.Unmarshal(data, r)
+			if err != nil {
+				panic(err)
+			}
+			return r
+		},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
 	Convey("Executor", t, func(c C) {
 		Convey("Execute", func(c C) {
-			r := &dummyRequest{}
+			r := &dummyRequest{
+				NextReq: &dummyRequest{},
+			}
 			err = e.Execute(r)
 			c.So(err, ShouldBeNil)
 
@@ -130,7 +125,8 @@ func TestNewExecutor(t *testing.T) {
 		})
 		Convey("ExecuteAndWait", func(c C) {
 			r := &dummyRequest{
-				ID: tools.RandomID(32),
+				ID:      tools.RandomID(32),
+				NextReq: &dummyRequest{},
 			}
 			waitGroup := &sync.WaitGroup{}
 			waitGroup.Add(1)

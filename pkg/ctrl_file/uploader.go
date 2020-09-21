@@ -140,6 +140,19 @@ func (u *UploadRequest) addToUploaded(partIndex int32) {
 	}
 }
 
+func (u *UploadRequest) reset() {
+	// Reset failed counter
+	atomic.StoreInt32(&u.failedActions, 0)
+
+	// Reset the uploaded list
+	u.resetUploadedList()
+	u.lastProgress = 0
+
+	if u.file != nil {
+		_ = u.file.Close()
+	}
+}
+
 func (u *UploadRequest) cancel(err error) {
 	logs.Debug("FileCtrl canceled UploadRequest", zap.Error(err))
 	if !u.SkipDelegateCall {
@@ -159,24 +172,9 @@ func (u *UploadRequest) GetID() string {
 	return getRequestID(u.ClusterID, u.FileID, u.AccessHash)
 }
 
-func (u *UploadRequest) Reset() {
-	// Reset failed counter
-	atomic.StoreInt32(&u.failedActions, 0)
-
-	// Reset the uploaded list
-	u.resetUploadedList()
-	u.lastProgress = 0
-
-	// Close the file
-	_ = u.file.Close()
-
-	// Prepare the request with new parameters
-	_ = u.Prepare()
-
-	logs.Debug("FileCtrl resets the upload request", zap.Int32("ChunkSize", u.ChunkSize))
-}
-
 func (u *UploadRequest) Prepare() error {
+	u.reset()
+
 	// Check File stats and return error if any problem exists
 	fileInfo, err := os.Stat(u.FilePath)
 	if err != nil {
@@ -283,7 +281,7 @@ func (u *UploadRequest) ActionDone(id int32) {
 		if minChunk < u.ChunkSize {
 			// Set the chunk size to minimum
 			u.ChunkSize = minChunk
-			u.Reset()
+			u.reset()
 			return
 		} else {
 			atomic.StoreInt32(&u.failedActions, 0)
@@ -339,10 +337,9 @@ func (u *UploadRequest) Next() executor.Request {
 		return nil
 	}
 
+	// swap the child content
 	u.ClientFileRequest = *u.ClientFileRequest.Next
 
-	// Reset the request
-	u.Reset()
 	return u
 }
 
