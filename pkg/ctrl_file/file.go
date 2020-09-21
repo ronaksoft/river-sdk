@@ -559,7 +559,6 @@ func (ctrl *Controller) UploadMessageDocument(
 			FileID:           thumbID,
 			FilePath:         thumbPath,
 			SkipDelegateCall: true,
-			CheckSha256:      checkSha256,
 		}
 	}
 
