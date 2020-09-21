@@ -140,6 +140,21 @@ func (u *UploadRequest) addToUploaded(partIndex int32) {
 	}
 }
 
+func (u *UploadRequest) cancel(err error) {
+	logs.Debug("FileCtrl canceled UploadRequest", zap.Error(err))
+	if !u.SkipDelegateCall {
+		u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, err != nil, u.PeerID)
+	}
+	_ = repo.Files.DeleteFileRequest(u.GetID())
+}
+
+func (u *UploadRequest) complete() {
+	if !u.SkipDelegateCall {
+		u.ctrl.onCompleted(u.GetID(), 0, u.FileID, 0, u.FilePath, u.PeerID)
+	}
+	_ = repo.Files.DeleteFileRequest(u.GetID())
+}
+
 func (u *UploadRequest) GetID() string {
 	return getRequestID(u.ClusterID, u.FileID, u.AccessHash)
 }
@@ -165,24 +180,17 @@ func (u *UploadRequest) Prepare() error {
 	// Check File stats and return error if any problem exists
 	fileInfo, err := os.Stat(u.FilePath)
 	if err != nil {
-		if !u.SkipDelegateCall {
-			u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
-		}
-		_ = repo.Files.DeleteFileRequest(u.GetID())
+		u.cancel(err)
 		return err
 	} else {
 		u.FileSize = fileInfo.Size()
 		if u.FileSize <= 0 {
-			if !u.SkipDelegateCall {
-				u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
-			}
-			_ = repo.Files.DeleteFileRequest(u.GetID())
+			err = domain.ErrInvalidData
+			u.cancel(err)
 			return err
 		} else if u.FileSize > maxFileSizeAllowedSize {
-			if !u.SkipDelegateCall {
-				u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
-			}
-			_ = repo.Files.DeleteFileRequest(u.GetID())
+			err = domain.ErrFileTooLarge
+			u.cancel(err)
 			return err
 		}
 	}
@@ -197,9 +205,7 @@ func (u *UploadRequest) Prepare() error {
 				zap.Int32("ClusterID", u.ClusterID),
 			)
 			if !u.ctrl.postUploadProcess(u.ClientFileRequest) {
-				if !u.SkipDelegateCall {
-					u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
-				}
+				u.cancel(domain.ErrNoPostProcess)
 			}
 			return domain.ErrAlreadyUploaded
 		}
@@ -208,9 +214,7 @@ func (u *UploadRequest) Prepare() error {
 	// Open the file for read
 	u.file, err = os.OpenFile(u.FilePath, os.O_RDONLY, 0666)
 	if err != nil {
-		if !u.SkipDelegateCall {
-			u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
-		}
+		u.cancel(err)
 		return err
 	}
 
@@ -310,18 +314,14 @@ func (u *UploadRequest) ActionDone(id int32) {
 
 	// Run the post process
 	if !u.ctrl.postUploadProcess(u.ClientFileRequest) {
-		if !u.SkipDelegateCall {
-			u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
-		}
+		u.cancel(domain.ErrNoPostProcess)
 		return
 	}
 
 	// Clean up
 	_ = u.file.Close()
-	if !u.SkipDelegateCall {
-		u.ctrl.onCompleted(u.GetID(), 0, u.FileID, 0, u.FilePath, u.PeerID)
-	}
-	_ = repo.Files.DeleteFileRequest(u.GetID())
+	u.complete()
+
 	return
 }
 
@@ -339,10 +339,7 @@ func (u *UploadRequest) Next() executor.Request {
 		return nil
 	}
 
-	// We swap the file request with new one
-	_ = repo.Files.DeleteFileRequest(u.GetID())
 	u.ClientFileRequest = *u.ClientFileRequest.Next
-	_ = repo.Files.SaveFileRequest(u.GetID(), &u.ClientFileRequest)
 
 	// Reset the request
 	u.Reset()

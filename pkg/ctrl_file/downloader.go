@@ -80,6 +80,22 @@ func (d *DownloadRequest) addToDownloaded(partIndex int32) {
 
 }
 
+func (d *DownloadRequest) cancel(err error) {
+	logs.Debug("FileCtrl canceled UploadRequest", zap.Error(err))
+	if !d.SkipDelegateCall {
+		d.ctrl.onCancel(d.GetID(), d.ClusterID, d.FileID, int64(d.AccessHash), err != nil, d.PeerID)
+	}
+	_ = repo.Files.DeleteFileRequest(d.GetID())
+}
+
+func (d *DownloadRequest) complete() {
+	if !d.SkipDelegateCall {
+		d.ctrl.onCompleted(d.GetID(), d.ClusterID, d.FileID, int64(d.AccessHash), d.FilePath, d.PeerID)
+	}
+	_ = repo.Files.DeleteFileRequest(d.GetID())
+}
+
+
 func (d *DownloadRequest) GetID() string {
 	return getRequestID(d.ClusterID, d.FileID, d.AccessHash)
 }
@@ -91,17 +107,17 @@ func (d *DownloadRequest) Prepare() error {
 		if os.IsNotExist(err) {
 			d.file, err = os.Create(d.TempPath)
 			if err != nil {
-				d.ctrl.onCancel(d.GetID(), d.ClusterID, d.FileID, int64(d.AccessHash), true, d.PeerID)
+				d.cancel(err)
 				return err
 			}
 		} else {
-			d.ctrl.onCancel(d.GetID(), d.ClusterID, d.FileID, int64(d.AccessHash), true, d.PeerID)
+			d.cancel(err)
 			return err
 		}
 	} else {
 		d.file, err = os.OpenFile(d.TempPath, os.O_RDWR, 0666)
 		if err != nil {
-			d.ctrl.onCancel(d.GetID(), d.ClusterID, d.FileID, int64(d.AccessHash), true, d.PeerID)
+			d.cancel(err)
 			return err
 		}
 	}
@@ -110,7 +126,7 @@ func (d *DownloadRequest) Prepare() error {
 	if d.FileSize > 0 {
 		err := os.Truncate(d.TempPath, d.FileSize)
 		if err != nil {
-			d.ctrl.onCancel(d.GetID(), d.ClusterID, d.FileID, int64(d.AccessHash), true, d.PeerID)
+			d.cancel(err)
 			return err
 		}
 		dividend := int32(d.FileSize / int64(d.ChunkSize))
@@ -173,15 +189,10 @@ func (d *DownloadRequest) ActionDone(id int32) {
 		err := os.Rename(d.TempPath, d.FilePath)
 		if err != nil {
 			_ = os.Remove(d.TempPath)
-			if !d.SkipDelegateCall {
-				d.ctrl.onCancel(d.GetID(), d.ClusterID, d.FileID, int64(d.AccessHash), true, d.PeerID)
-			}
+			d.cancel(err)
 			return
 		}
-		if !d.SkipDelegateCall {
-			d.ctrl.onCompleted(d.GetID(), d.ClusterID, d.FileID, int64(d.AccessHash), d.FilePath, d.PeerID)
-		}
-		_ = repo.Files.DeleteFileRequest(d.GetID())
+		d.complete()
 	}
 
 }

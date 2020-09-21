@@ -23,6 +23,8 @@ var (
 	ErrNoFilePath            = errors.New("no file path")
 	ErrInvalidData           = errors.New("invalid data")
 	ErrServer                = errors.New("server error")
+	ErrFileTooLarge          = errors.New("file is too large")
+	ErrNoPostProcess         = errors.New("no post process")
 )
 
 // ParseServerError ...
