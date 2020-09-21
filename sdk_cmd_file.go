@@ -93,10 +93,10 @@ func (r *River) CancelDownload(clusterID int32, fileID int64, accessHash int64) 
 	if err != nil {
 		return
 	}
+	r.fileCtrl.CancelDownloadRequest(clusterID, fileID, uint64(accessHash))
 	if clientFile.MessageID == 0 {
 		return
 	}
-	r.fileCtrl.CancelDownloadRequest(clusterID, fileID, uint64(accessHash))
 }
 
 // CancelUpload cancels the upload and deletes the pending message associated with that media.
@@ -110,12 +110,13 @@ func (r *River) CancelUpload(clusterID int32, fileID int64, accessHash int64) {
 	if clientFile.MessageID == 0 {
 		return
 	}
+	r.fileCtrl.CancelUploadRequest(fileID)
 	pendingMessage := repo.PendingMessages.GetByID(clientFile.MessageID)
 	if pendingMessage == nil {
 		return
 	}
 	_ = repo.PendingMessages.Delete(pendingMessage.ID)
-	r.fileCtrl.CancelUploadRequest(fileID)
+
 }
 
 // ResumeUpload must be called if for any reason the upload of a ClientSendMediaMessage failed,
