@@ -19,6 +19,7 @@ type Action interface {
 }
 
 type Request interface {
+	GetID() string
 	Prepare() error
 	NextAction() Action
 	ActionDone(id int32)

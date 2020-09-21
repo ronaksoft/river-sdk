@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"git.ronaksoft.com/river/sdk/internal/logs"
+	"git.ronaksoft.com/river/sdk/internal/tools"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/zap"
 	"os"
+	"sync"
 	"testing"
 	"time"
 )
@@ -34,14 +36,19 @@ func (d *dummyAction) Do(ctx context.Context) {
 }
 
 type dummyRequest struct {
+	ID      string
 	chunks  chan int32
-	done    []int32
-	hasNext bool
+	Done    []int32
+	HasNext bool
+}
+
+func (d *dummyRequest) GetID() string {
+	return d.ID
 }
 
 func (d *dummyRequest) Prepare() error {
 	d.chunks = make(chan int32, 10)
-	d.done = d.done[:0]
+	d.Done = d.Done[:0]
 	for i := int32(0); i < 10; i++ {
 		d.chunks <- i
 	}
@@ -64,11 +71,11 @@ func (d *dummyRequest) NextAction() Action {
 }
 
 func (d *dummyRequest) ActionDone(id int32) {
-	d.done = append(d.done, id)
-	logs.Info("Action is done", zap.Int32("ID", id))
+	d.Done = append(d.Done, id)
+	logs.Info("Action is done", zap.Int32("ActionID", id))
 
 	if len(d.chunks) == 0 {
-		stopChan <- struct{}{}
+		logs.Info("Request Done", zap.String("ID", d.ID))
 	}
 }
 
@@ -83,44 +90,55 @@ func (d *dummyRequest) Serialize() []byte {
 
 func (d *dummyRequest) Next() Request {
 	time.Sleep(time.Second)
-	if d.hasNext {
-		d.hasNext = false
+	if d.HasNext {
+		d.HasNext = false
 		_ = d.Prepare()
 		return d
 	}
 	return nil
 }
 
-var stopChan = make(chan struct{})
-
 func init() {
 	logs.SetLogLevel(-1)
 }
 
 func TestNewExecutor(t *testing.T) {
-	Convey("Executor", t, func(c C) {
-		_ = os.MkdirAll("./_hdd", os.ModePerm)
-		e, err := NewExecutor("./_hdd", "dummy", func(data []byte) Request {
-			r := &dummyRequest{}
-			r.chunks = make(chan int32, 10)
-			for i := int32(0); i < 10; i++ {
-				r.chunks <- i
-			}
-			err := json.Unmarshal(data, r)
-			if err != nil {
-				panic(err)
-			}
-			r.hasNext = true
-			return r
-		})
-		c.So(err, ShouldBeNil)
-
+	_ = os.MkdirAll("./_hdd", os.ModePerm)
+	e, err := NewExecutor("./_hdd", "dummy", func(data []byte) Request {
 		r := &dummyRequest{}
+		r.chunks = make(chan int32, 10)
+		for i := int32(0); i < 10; i++ {
+			r.chunks <- i
+		}
+		err := json.Unmarshal(data, r)
+		if err != nil {
+			panic(err)
+		}
+		r.HasNext = true
+		return r
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	Convey("Executor", t, func(c C) {
+		Convey("Execute", func(c C) {
+			r := &dummyRequest{}
+			err = e.Execute(r)
+			c.So(err, ShouldBeNil)
 
-		err = e.Execute(r)
-		c.So(err, ShouldBeNil)
+			time.Sleep(time.Second * 3)
+		})
+		Convey("ExecuteAndWait", func(c C) {
+			r := &dummyRequest{
+				ID: tools.RandomID(32),
+			}
+			waitGroup := &sync.WaitGroup{}
+			waitGroup.Add(1)
+			err = e.ExecuteAndWait(waitGroup, r)
+			c.So(err, ShouldBeNil)
+			waitGroup.Wait()
 
-		<-stopChan
-		time.Sleep(time.Second * 3)
+		})
+
 	})
 }

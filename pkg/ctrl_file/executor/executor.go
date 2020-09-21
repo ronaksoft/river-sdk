@@ -31,11 +31,13 @@ type Executor struct {
 	factory RequestFactoryFunc
 
 	// internals
-	ctx     context.Context
-	cf      context.CancelFunc
-	rt      chan struct{}
-	mtx     sync.Mutex
-	running bool
+	waitGroupsLock sync.Mutex
+	waitGroups     map[string]*sync.WaitGroup
+	ctx            context.Context
+	cf             context.CancelFunc
+	rt             chan struct{}
+	mtx            sync.Mutex
+	running        bool
 }
 
 func NewExecutor(dbPath string, name string, factory RequestFactoryFunc, opts ...Option) (*Executor, error) {
@@ -44,10 +46,11 @@ func NewExecutor(dbPath string, name string, factory RequestFactoryFunc, opts ..
 		return nil, err
 	}
 	e := &Executor{
-		stack:   s,
-		name:    name,
-		factory: factory,
-		rt:      make(chan struct{}, defaultConcurrency),
+		stack:      s,
+		name:       name,
+		factory:    factory,
+		rt:         make(chan struct{}, defaultConcurrency),
+		waitGroups: make(map[string]*sync.WaitGroup),
 	}
 	e.ctx, e.cf = context.WithCancel(context.Background())
 
@@ -83,6 +86,12 @@ func (e *Executor) execute() {
 			}()
 
 			req := e.factory(stackItem.Value)
+			e.waitGroupsLock.Lock()
+			waitGroup := e.waitGroups[req.GetID()]
+			if waitGroup != nil {
+				delete(e.waitGroups, req.GetID())
+			}
+			e.waitGroupsLock.Unlock()
 			err := req.Prepare()
 			if err != nil {
 				logs.Warn("Executor got error on Prepare", zap.Error(err))
@@ -95,6 +104,9 @@ func (e *Executor) execute() {
 					if req != nil {
 						continue
 					}
+					if waitGroup != nil {
+						waitGroup.Done()
+					}
 					break
 				}
 				act.Do(e.ctx)
@@ -104,6 +116,8 @@ func (e *Executor) execute() {
 	}
 }
 
+// Execute pushes the request into the stack. This function is non-blocking. If you need a blocking call
+// you should use ExecuteAndWait function
 func (e *Executor) Execute(req Request) error {
 	_, err := e.stack.Push(req.Serialize())
 	if err != nil {
@@ -116,6 +130,14 @@ func (e *Executor) Execute(req Request) error {
 	}
 	e.mtx.Unlock()
 	return nil
+}
+
+// ExecuteAndWait accepts a waitGroup which its Done() function will be called  when process is done
+func (e *Executor) ExecuteAndWait(waitGroup *sync.WaitGroup, req Request) error {
+	e.waitGroupsLock.Lock()
+	e.waitGroups[req.GetID()] = waitGroup
+	e.waitGroupsLock.Unlock()
+	return e.Execute(req)
 }
 
 // Option to config Executor

@@ -2,6 +2,7 @@ package fileCtrl_test
 
 import (
 	"crypto/md5"
+	"fmt"
 	"git.ronaksoft.com/river/msg/msg"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	fileCtrl "git.ronaksoft.com/river/sdk/pkg/ctrl_file"
@@ -33,8 +34,8 @@ var (
 	_Network *networkCtrl.Controller
 	_File    *fileCtrl.Controller
 
-	uploadStart      = false
-	waitGroupUpload  sync.WaitGroup
+	waitMapLock          = sync.Mutex{}
+	waitMap              = make(map[string]struct{})
 	speedBytesPerSec int = 1024 * 1024
 	errRatePercent   int
 )
@@ -60,12 +61,16 @@ func init() {
 		},
 		CancelCB: func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool, peerID int64) {
 			logs.Error("File Canceled", zap.String("ReqID", reqID), zap.Bool("HasError", hasError))
-			if clusterID == 0 && uploadStart {
-				// It is an Upload
-				waitGroupUpload.Done()
-			}
+			waitMapLock.Lock()
+			delete(waitMap, fmt.Sprintf("%d.%d.%d", clusterID, fileID, accessHash))
+			waitMapLock.Unlock()
 		},
-		CompletedCB: func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64) {},
+		CompletedCB: func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64) {
+			logs.Info("OnComplete", zap.Int64("FileID", fileID))
+			waitMapLock.Lock()
+			delete(waitMap, fmt.Sprintf("%d.%d.%d", clusterID, fileID, accessHash))
+			waitMapLock.Unlock()
+		},
 		PostUploadProcessCB: func(req msg.ClientFileRequest) bool {
 			logs.Info("PostProcess",
 				zap.Any("TotalParts", req.TotalParts),
@@ -74,9 +79,9 @@ func init() {
 				zap.Any("FileID", req.FileID),
 				zap.Int64("ThumbID", req.ThumbID),
 			)
-			if uploadStart {
-				waitGroupUpload.Done()
-			}
+			waitMapLock.Lock()
+			delete(waitMap, fmt.Sprintf("%d.%d.%d", req.ClusterID, req.FileID, req.AccessHash))
+			waitMapLock.Unlock()
 			return true
 
 		},
@@ -240,82 +245,108 @@ func TestDownloadFileASync(t *testing.T) {
 }
 
 func TestUpload(t *testing.T) {
-	uploadStart = true
+
 	Convey("Upload", t, func(c C) {
 		fileID := domain.RandomInt63()
 		msgID := domain.RandomInt63()
 		peerID := domain.RandomInt63()
 		Convey("Good Network", func(c C) {
-			startTime := time.Now()
 			Convey("Upload Big File (Good Network)", func(c C) {
 				c.Println()
-				waitGroupUpload.Add(1)
+				waitMapLock.Lock()
+				waitMap[fmt.Sprintf("%d.%d.%d", 0, fileID, 0)] = struct{}{}
+				waitMapLock.Unlock()
 				speedBytesPerSec = 1024 * 512
 				_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0, nil, peerID, true)
 			})
 			Convey("Upload Medium File (Good Network)", func(c C) {
 				c.Println()
-				waitGroupUpload.Add(1)
+				waitMapLock.Lock()
+				waitMap[fmt.Sprintf("%d.%d.%d", 0, fileID, 0)] = struct{}{}
+				waitMapLock.Unlock()
 				speedBytesPerSec = 1024 * 512
 				_File.UploadMessageDocument(msgID, "./testdata/medium", "", fileID, 0, nil, peerID, true)
 			})
-
-			waitGroupUpload.Wait()
-			_, _ = Println("Good Network:", time.Now().Sub(startTime))
+			for {
+				if len(waitMap) == 0 {
+					break
+				}
+				time.Sleep(time.Second)
+			}
 		})
 		Convey("Bad Network", func(c C) {
-			startTime := time.Now()
 			Convey("Upload Big File (Bad Network)", func(c C) {
 				c.Println()
 				speedBytesPerSec = 1024 * 8
 				errRatePercent = 0
-				waitGroupUpload.Add(1)
+				waitMapLock.Lock()
+				waitMap[fmt.Sprintf("%d.%d.%d", 0, fileID, 0)] = struct{}{}
+				waitMapLock.Unlock()
 				_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0, nil, peerID, true)
 			})
 			Convey("Upload Medium File (Bad Network)", func(c C) {
 				c.Println()
 				speedBytesPerSec = 8192
 				errRatePercent = 0
-				waitGroupUpload.Add(1)
+				waitMapLock.Lock()
+				waitMap[fmt.Sprintf("%d.%d.%d", 0, fileID, 0)] = struct{}{}
+				waitMapLock.Unlock()
 				_File.UploadMessageDocument(msgID, "./testdata/medium", "", fileID, 0, nil, peerID, true)
 			})
-			waitGroupUpload.Wait()
-			_, _ = Println("Bad Network:", time.Now().Sub(startTime))
+			for {
+				if len(waitMap) == 0 {
+					break
+				}
+				time.Sleep(time.Second)
+			}
 		})
 	})
 
 }
 
 func TestManyUpload(t *testing.T) {
-	uploadStart = true
 	Convey("Upload Many Files (Good Network)", t, func(c C) {
 		c.Println()
-		startTime := time.Now()
 		speedBytesPerSec = 1024 * 1024
-		for i := 0; i < 50; i++ {
-			waitGroupUpload.Add(1)
+		for i := 0; i < 20; i++ {
 			fileID := int64(i + 1)
+			thumbID := domain.RandomInt63()
 			msgID := int64(i + 1)
 			peerID := int64(i + 1)
-			_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0, nil, peerID, false)
+			waitMapLock.Lock()
+			waitMap[fmt.Sprintf("%d.%d.%d", 0, fileID, 0)] = struct{}{}
+			waitMapLock.Unlock()
+			_File.UploadMessageDocument(msgID, "./testdata/big", "./testdata/small", fileID, thumbID, nil, peerID, false)
 		}
-		waitGroupUpload.Wait()
-		_, _ = Println("Many Upload:", time.Now().Sub(startTime))
+		for {
+			logs.Info("WaitMap", zap.Int("Size", len(waitMap)))
+			if len(waitMap) == 0 {
+				break
+			}
+			time.Sleep(time.Second)
+		}
 	})
 	Convey("Upload Many Files (Bad Network)", t, func(c C) {
 		c.Println()
-		startTime := time.Now()
-		speedBytesPerSec = 1024 * 8
+		speedBytesPerSec = 1024 * 128
 		for i := 0; i < 10; i++ {
-			waitGroupUpload.Add(1)
 			fileID := int64(i + 1)
 			msgID := int64(i + 1)
 			peerID := int64(i + 1)
+			waitMapLock.Lock()
+			waitMap[fmt.Sprintf("%d.%d.%d", 0, fileID, 0)] = struct{}{}
+			waitMapLock.Unlock()
 			_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0, nil, peerID, true)
 		}
-		waitGroupUpload.Wait()
-		_, _ = Println("Many Upload:", time.Now().Sub(startTime))
+		for {
+			logs.Info("WaitMap", zap.Int("Size", len(waitMap)))
+			if len(waitMap) == 0 {
+				break
+			}
+			time.Sleep(time.Second)
+		}
 	})
+
 }
 
 func TestUploadWithThumbnail(t *testing.T) {
@@ -326,8 +357,16 @@ func TestUploadWithThumbnail(t *testing.T) {
 	Convey("Upload File With Thumbnail", t, func(c C) {
 		c.Println()
 		speedBytesPerSec = 1024 * 1024
+		waitMapLock.Lock()
+		waitMap[fmt.Sprintf("%d.%d.%d", 0, fileID, 0)] = struct{}{}
+		waitMapLock.Unlock()
 		_File.UploadMessageDocument(msgID, "./testdata/big", "./testdata/big", fileID, thumbID, nil, peerID, true)
 	})
-	time.Sleep(time.Second * 5)
+	for {
+		if len(waitMap) == 0 {
+			break
+		}
+		time.Sleep(time.Second)
+	}
 
 }

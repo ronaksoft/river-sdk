@@ -158,18 +158,20 @@ func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash 
 		return "", err
 	}
 	go func() {
-		err = ctrl.download(msg.ClientFileRequest{
-			MessageID:        clientFile.MessageID,
-			ClusterID:        clientFile.ClusterID,
-			FileID:           clientFile.FileID,
-			AccessHash:       clientFile.AccessHash,
-			Version:          clientFile.Version,
-			FileSize:         clientFile.FileSize,
-			ChunkSize:        defaultChunkSize,
-			FilePath:         repo.Files.GetFilePath(clientFile),
-			SkipDelegateCall: skipDelegates,
-			PeerID:           clientFile.PeerID,
-		})
+		err = ctrl.download(&DownloadRequest{
+			ClientFileRequest: msg.ClientFileRequest{
+				MessageID:        clientFile.MessageID,
+				ClusterID:        clientFile.ClusterID,
+				FileID:           clientFile.FileID,
+				AccessHash:       clientFile.AccessHash,
+				Version:          clientFile.Version,
+				FileSize:         clientFile.FileSize,
+				ChunkSize:        defaultChunkSize,
+				FilePath:         repo.Files.GetFilePath(clientFile),
+				SkipDelegateCall: skipDelegates,
+				PeerID:           clientFile.PeerID,
+			},
+		}, false)
 		logs.WarnOnErr("Error On DownloadAsync", err,
 			zap.Int32("ClusterID", clusterID),
 			zap.Int64("FileID", fileID),
@@ -209,18 +211,20 @@ func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash u
 	case msg.Wallpaper:
 		return ctrl.downloadWallpaper(clientFile)
 	default:
-		err = ctrl.download(msg.ClientFileRequest{
-			MessageID:        clientFile.MessageID,
-			ClusterID:        clientFile.ClusterID,
-			FileID:           clientFile.FileID,
-			AccessHash:       clientFile.AccessHash,
-			Version:          clientFile.Version,
-			FileSize:         clientFile.FileSize,
-			ChunkSize:        defaultChunkSize,
-			FilePath:         filePath,
-			SkipDelegateCall: skipDelegate,
-			PeerID:           clientFile.PeerID,
-		})
+		err = ctrl.download(&DownloadRequest{
+			ClientFileRequest: msg.ClientFileRequest{
+				MessageID:        clientFile.MessageID,
+				ClusterID:        clientFile.ClusterID,
+				FileID:           clientFile.FileID,
+				AccessHash:       clientFile.AccessHash,
+				Version:          clientFile.Version,
+				FileSize:         clientFile.FileSize,
+				ChunkSize:        defaultChunkSize,
+				FilePath:         filePath,
+				SkipDelegateCall: skipDelegate,
+				PeerID:           clientFile.PeerID,
+			},
+		}, true)
 	}
 
 	return
@@ -448,7 +452,7 @@ func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath 
 	})
 	return
 }
-func (ctrl *Controller) download(req msg.ClientFileRequest) error {
+func (ctrl *Controller) download(req *DownloadRequest, blocking bool) error {
 	if req.ClusterID == 0 {
 		return domain.ErrInvalidData
 	}
@@ -458,11 +462,20 @@ func (ctrl *Controller) download(req msg.ClientFileRequest) error {
 	}
 
 	req.TempPath = fmt.Sprintf("%s.tmp", req.FilePath)
-	err = ctrl.downloader.Execute(&DownloadRequest{
-		ClientFileRequest: req,
-	})
-	if err != nil {
-		return err
+	if blocking {
+		waitGroup := &sync.WaitGroup{}
+		waitGroup.Add(1)
+		err = ctrl.downloader.ExecuteAndWait(waitGroup, req)
+		if err != nil {
+			return err
+		}
+		waitGroup.Wait()
+	} else {
+		err = ctrl.downloader.Execute(req)
+		if err != nil {
+			return err
+		}
+
 	}
 
 	return nil
