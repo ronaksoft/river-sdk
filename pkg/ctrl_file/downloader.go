@@ -148,6 +148,11 @@ func (d *DownloadRequest) Prepare() error {
 }
 
 func (d *DownloadRequest) NextAction() executor.Action {
+	// If request is canceled then return nil
+	if _, err := repo.Files.GetFileRequest(d.GetID()); err != nil {
+		return nil
+	}
+
 	// Wait for next part, or return nil if we finished
 	select {
 	case partID := <-d.parts:

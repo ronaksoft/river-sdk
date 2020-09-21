@@ -165,15 +165,21 @@ func (u *UploadRequest) Prepare() error {
 	// Check File stats and return error if any problem exists
 	fileInfo, err := os.Stat(u.FilePath)
 	if err != nil {
-		u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
+		if !u.SkipDelegateCall {
+			u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
+		}
 		return err
 	} else {
 		u.FileSize = fileInfo.Size()
 		if u.FileSize <= 0 {
-			u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
+			if !u.SkipDelegateCall {
+				u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
+			}
 			return err
 		} else if u.FileSize > maxFileSizeAllowedSize {
-			u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
+			if !u.SkipDelegateCall {
+				u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
+			}
 			return err
 		}
 	}
@@ -188,7 +194,9 @@ func (u *UploadRequest) Prepare() error {
 				zap.Int32("ClusterID", u.ClusterID),
 			)
 			if !u.ctrl.postUploadProcess(u.ClientFileRequest) {
-				u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
+				if !u.SkipDelegateCall {
+					u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
+				}
 			}
 			return domain.ErrAlreadyUploaded
 		}
@@ -197,7 +205,9 @@ func (u *UploadRequest) Prepare() error {
 	// Open the file for read
 	u.file, err = os.OpenFile(u.FilePath, os.O_RDONLY, 0666)
 	if err != nil {
-		u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
+		if !u.SkipDelegateCall {
+			u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
+		}
 		return err
 	}
 
@@ -242,6 +252,10 @@ func (u *UploadRequest) Prepare() error {
 }
 
 func (u *UploadRequest) NextAction() executor.Action {
+	// If request is canceled then return nil
+	if _, err := repo.Files.GetFileRequest(u.GetID()); err != nil {
+		return nil
+	}
 	// Wait for next part, or return nil if we finished
 	select {
 	case partID := <-u.parts:
