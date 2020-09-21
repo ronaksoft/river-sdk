@@ -141,15 +141,15 @@ func (d *PrintDelegate) Log(logLevel int, msg string) {
 type FileDelegate struct{}
 
 func (d *FileDelegate) OnProgressChanged(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64) {
-	_Shell.Println("file progress Changed", reqID, fileID, percent)
+	_Shell.Println("File Progress Changed", reqID, fileID, percent)
 }
 
 func (d *FileDelegate) OnCompleted(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64) {
-	_Shell.Println("file progress Completed", reqID, filePath)
+	_Shell.Println("File Progress Completed", reqID, filePath)
 }
 
 func (d *FileDelegate) OnCancel(reqID string, clusterID int32, fileID, accessHash int64, hasError bool, peerID int64) {
-	_Shell.Println("file progress Canceled", reqID, hasError)
+	_Shell.Println("File Progress Canceled", reqID, hasError)
 }
 
 type RequestDelegate struct {

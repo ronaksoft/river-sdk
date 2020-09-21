@@ -1463,7 +1463,7 @@ func fillLabelItems(out *msg.MessageEnvelope, messages []*msg.UserMessage, users
 }
 
 func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	reqMedia := new(msg.ClientSendMessageMedia)
+	reqMedia := &msg.ClientSendMessageMedia{}
 	if err := reqMedia.Unmarshal(in.Message); err != nil {
 		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
 		uiexec.ExecSuccessCB(successCB, out)
@@ -1482,12 +1482,10 @@ func (r *River) clientSendMessageMedia(in, out *msg.MessageEnvelope, timeoutCB d
 	fileID := domain.SequentialUniqueID()
 	msgID := -fileID
 	thumbID := int64(0)
-	if reqMedia.ThumbFilePath != "" {
-		thumbID = domain.RandomInt63()
-	}
 	reqMedia.FileUploadID = fmt.Sprintf("%d", fileID)
 	reqMedia.FileID = fileID
-	if thumbID > 0 {
+	if reqMedia.ThumbFilePath != "" {
+		thumbID = domain.RandomInt63()
 		reqMedia.ThumbID = thumbID
 		reqMedia.ThumbUploadID = fmt.Sprintf("%d", thumbID)
 	}

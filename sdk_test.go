@@ -34,6 +34,7 @@ func TestSDK(t *testing.T) {
 	})
 }
 
+
 func init() {
 	logs.Info("Creating New River SDK Instance")
 	r := new(River)

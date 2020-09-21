@@ -69,6 +69,63 @@ var MessageSendToSelf = &ishell.Cmd{
 	},
 }
 
+var MessageSendMediaToSelf = &ishell.Cmd{
+	Name: "SendMediaToMe",
+	Func: func(c *ishell.Context) {
+		attrFile := &msg.DocumentAttributeFile{
+			Filename: "File.jpg",
+		}
+		attrFileBytes, _ := attrFile.Marshal()
+		attrPhoto := &msg.DocumentAttributePhoto{
+			Width:  720,
+			Height: 720,
+		}
+		attrPhotoBytes, _ := attrPhoto.Marshal()
+		req := msg.ClientSendMessageMedia{
+			Peer: &msg.InputPeer{
+				ID:         _SDK.ConnInfo.UserID,
+				Type:       msg.PeerUser,
+				AccessHash: 0,
+			},
+			MediaType:  msg.InputMediaTypeUploadedDocument,
+			Caption:    "Some Random Caption",
+			FileName:   "Uploaded File",
+			FileMIME:   "image/jpeg",
+			ThumbMIME:  "",
+			ReplyTo:    0,
+			ClearDraft: false,
+			Attributes: []*msg.DocumentAttribute{
+				{
+					Type: msg.AttributeTypePhoto,
+					Data: attrPhotoBytes,
+				},
+				{
+					Type: msg.AttributeTypeFile,
+					Data: attrFileBytes,
+				},
+			},
+		}
+
+		req.FilePath = fnGetFilePath(c)
+		req.ThumbFilePath = fnGetThumbFilePath(c)
+		req.Entities = nil
+		reqBytes, _ := req.Marshal()
+		reqDelegate := NewCustomDelegate()
+		sendMessageTimer = time.Now()
+		reqDelegate.OnCompleteFunc = func(b []byte) {
+			x := &msg.MessageEnvelope{}
+			_ = x.Unmarshal(b)
+			MessagePrinter(x)
+		}
+		if reqID, err := _SDK.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+
+	},
+}
+
 var MessageGetDialogs = &ishell.Cmd{
 	Name: "GetDialogs",
 	Func: func(c *ishell.Context) {
@@ -326,6 +383,7 @@ func init() {
 	Message.AddCmd(MessageGetDialog)
 	Message.AddCmd(MessageSend)
 	Message.AddCmd(MessageSendToSelf)
+	Message.AddCmd(MessageSendMediaToSelf)
 	Message.AddCmd(MessageGetHistory)
 	Message.AddCmd(MessageReadHistory)
 	Message.AddCmd(MessageSetTyping)
