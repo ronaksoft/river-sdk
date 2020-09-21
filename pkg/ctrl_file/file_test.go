@@ -360,7 +360,7 @@ func TestUploadWithThumbnail(t *testing.T) {
 		waitMapLock.Lock()
 		waitMap[fmt.Sprintf("%d.%d.%d", 0, fileID, 0)] = struct{}{}
 		waitMapLock.Unlock()
-		_File.UploadMessageDocument(msgID, "./testdata/big", "./testdata/big", fileID, thumbID, nil, peerID, true)
+		_File.UploadMessageDocument(msgID, "./testdata/small", "./testdata/small", fileID, thumbID, nil, peerID, true)
 	})
 	for {
 		if len(waitMap) == 0 {

@@ -224,10 +224,10 @@ func (ctrl *Controller) createHttpClient(timeout time.Duration) {
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
 			Timeout:   3 * time.Second,
-			KeepAlive: 10 * time.Second,
+			KeepAlive: 30 * time.Second,
 			DualStack: true,
 		}).DialContext,
-		ForceAttemptHTTP2:     true,
+		ForceAttemptHTTP2:     false,
 		MaxIdleConns:          100,
 		IdleConnTimeout:       90 * time.Second,
 		TLSHandshakeTimeout:   3 * time.Second,

@@ -105,7 +105,9 @@ var MessageSendMediaToSelf = &ishell.Cmd{
 				},
 			},
 		}
-
+		// _ = exec.Command("cp", "./_testdata/T.jpg", "./_testdata/F.jpg").Run()
+		// req.FilePath = "./_testdata/F.jpg"
+		// req.ThumbFilePath = "./_testdata/T.jpg"
 		req.FilePath = fnGetFilePath(c)
 		req.ThumbFilePath = fnGetThumbFilePath(c)
 		req.Entities = nil

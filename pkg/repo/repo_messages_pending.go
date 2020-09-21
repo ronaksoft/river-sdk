@@ -69,7 +69,7 @@ func getPendingMessageByID(txn *badger.Txn, msgID int64) (*msg.ClientPendingMess
 		return nil, err
 
 	}
-	
+
 	err = item.Value(func(val []byte) error {
 		return pm.Unmarshal(val)
 	})
@@ -127,7 +127,7 @@ func (r *repoMessagesPending) Save(team *msg.InputTeam, msgID int64, senderID in
 		)
 	})
 
-	updateDialogLastUpdate(pm.TeamID, pm.PeerID, pm.PeerType, pm.CreatedOn)
+	_ = updateDialogLastUpdate(pm.TeamID, pm.PeerID, pm.PeerType, pm.CreatedOn)
 
 	return pm, nil
 }
@@ -187,7 +187,7 @@ func (r *repoMessagesPending) SaveClientMessageMedia(team *msg.InputTeam,
 		return nil, err
 	}
 
-	updateDialogLastUpdate(pm.TeamID, pm.PeerID, pm.PeerType, pm.CreatedOn)
+	_ = updateDialogLastUpdate(pm.TeamID, pm.PeerID, pm.PeerType, pm.CreatedOn)
 
 	return pm, nil
 }
@@ -427,7 +427,7 @@ func (r *repoMessagesPending) DeletePeerAllMessages(peerID int64, peerType int32
 				_ = pm.Unmarshal(val)
 				if pm.PeerID == peerID && pm.PeerType == peerType {
 					res.MessageIDs = append(res.MessageIDs, pm.ID)
-					r.Delete(pm.ID)
+					_ = r.Delete(pm.ID)
 				}
 				return nil
 			})

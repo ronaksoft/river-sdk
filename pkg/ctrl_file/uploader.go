@@ -193,7 +193,6 @@ func (u *UploadRequest) Prepare() error {
 		}
 	}
 
-	logs.Warn("Prepare", zap.Int64("FileID", u.FileID))
 	// If Sha256 exists in the request then we check server if this file has been already uploaded, if true, then
 	// we do not upload it again and we call postUploadProcess with the updated details
 	if u.CheckSha256 && len(u.FileSha256) != 0 {
