@@ -168,6 +168,7 @@ func (u *UploadRequest) Prepare() error {
 		if !u.SkipDelegateCall {
 			u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
 		}
+		_ = repo.Files.DeleteFileRequest(u.GetID())
 		return err
 	} else {
 		u.FileSize = fileInfo.Size()
@@ -175,11 +176,13 @@ func (u *UploadRequest) Prepare() error {
 			if !u.SkipDelegateCall {
 				u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
 			}
+			_ = repo.Files.DeleteFileRequest(u.GetID())
 			return err
 		} else if u.FileSize > maxFileSizeAllowedSize {
 			if !u.SkipDelegateCall {
 				u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
 			}
+			_ = repo.Files.DeleteFileRequest(u.GetID())
 			return err
 		}
 	}
@@ -256,6 +259,7 @@ func (u *UploadRequest) NextAction() executor.Action {
 	if _, err := repo.Files.GetFileRequest(u.GetID()); err != nil {
 		return nil
 	}
+
 	// Wait for next part, or return nil if we finished
 	select {
 	case partID := <-u.parts:
@@ -334,7 +338,13 @@ func (u *UploadRequest) Next() executor.Request {
 	if u.ClientFileRequest.Next == nil {
 		return nil
 	}
+
+	// We swap the file request with new one
+	_ = repo.Files.DeleteFileRequest(u.GetID())
 	u.ClientFileRequest = *u.ClientFileRequest.Next
+	_ = repo.Files.SaveFileRequest(u.GetID(), &u.ClientFileRequest)
+
+	// Reset the request
 	u.Reset()
 	return u
 }
