@@ -1010,6 +1010,7 @@ func (p *poolUserMessage) Put(x *UserMessage) {
 	x.LabelIDs = x.LabelIDs[:0]
 	x.ViaBotID = 0
 	x.Reactions = x.Reactions[:0]
+	x.YourReactions = x.YourReactions[:0]
 	p.pool.Put(x)
 }
 

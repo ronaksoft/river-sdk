@@ -675,6 +675,39 @@ func ResultMessagesSendReaction(out *MessageEnvelope, res *MessagesSendReaction)
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_MessagesDeleteReaction int64 = 1547991459
+
+type poolMessagesDeleteReaction struct {
+	pool sync.Pool
+}
+
+func (p *poolMessagesDeleteReaction) Get() *MessagesDeleteReaction {
+	x, ok := p.pool.Get().(*MessagesDeleteReaction)
+	if !ok {
+		return &MessagesDeleteReaction{}
+	}
+	return x
+}
+
+func (p *poolMessagesDeleteReaction) Put(x *MessagesDeleteReaction) {
+	x.Reactions = x.Reactions[:0]
+	p.pool.Put(x)
+}
+
+var PoolMessagesDeleteReaction = poolMessagesDeleteReaction{}
+
+func ResultMessagesDeleteReaction(out *MessageEnvelope, res *MessagesDeleteReaction) {
+	out.Constructor = C_MessagesDeleteReaction
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 const C_MessagesGetReactionList int64 = 3097050126
 
 type poolMessagesGetReactionList struct {
@@ -827,6 +860,7 @@ func (p *poolMessagesReactionList) Get() *MessagesReactionList {
 }
 
 func (p *poolMessagesReactionList) Put(x *MessagesReactionList) {
+	x.List = x.List[:0]
 	x.Users = x.Users[:0]
 	p.pool.Put(x)
 }
@@ -835,6 +869,39 @@ var PoolMessagesReactionList = poolMessagesReactionList{}
 
 func ResultMessagesReactionList(out *MessageEnvelope, res *MessagesReactionList) {
 	out.Constructor = C_MessagesReactionList
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_ReactionList int64 = 4260855916
+
+type poolReactionList struct {
+	pool sync.Pool
+}
+
+func (p *poolReactionList) Get() *ReactionList {
+	x, ok := p.pool.Get().(*ReactionList)
+	if !ok {
+		return &ReactionList{}
+	}
+	return x
+}
+
+func (p *poolReactionList) Put(x *ReactionList) {
+	x.UserIDs = x.UserIDs[:0]
+	p.pool.Put(x)
+}
+
+var PoolReactionList = poolReactionList{}
+
+func ResultReactionList(out *MessageEnvelope, res *ReactionList) {
+	out.Constructor = C_ReactionList
 	protoSize := res.Size()
 	if protoSize > cap(out.Message) {
 		pbytes.Put(out.Message)
@@ -866,9 +933,11 @@ func init() {
 	ConstructorNames[1409872986] = "MessagesReorderPinnedDialogs"
 	ConstructorNames[3682116055] = "MessagesSendScreenShotNotification"
 	ConstructorNames[279494057] = "MessagesSendReaction"
+	ConstructorNames[1547991459] = "MessagesDeleteReaction"
 	ConstructorNames[3097050126] = "MessagesGetReactionList"
 	ConstructorNames[3252610224] = "MessagesDialogs"
 	ConstructorNames[2942502835] = "MessagesSent"
 	ConstructorNames[1713238910] = "MessagesMany"
 	ConstructorNames[181278607] = "MessagesReactionList"
+	ConstructorNames[4260855916] = "ReactionList"
 }
