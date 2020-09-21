@@ -13,7 +13,6 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
-	"time"
 )
 
 var (
@@ -31,8 +30,7 @@ func TestSDK(t *testing.T) {
 		}
 	})
 	Convey("Get Salt", t, func() {
-		// _River.syncCtrl.GetServerSalt()
-		time.Sleep(time.Second * 5)
+
 	})
 }
 

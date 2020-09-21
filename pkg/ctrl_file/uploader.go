@@ -291,7 +291,9 @@ func (u *UploadRequest) ActionDone(id int32) {
 
 	// Run the post process
 	if !u.ctrl.postUploadProcess(u.ClientFileRequest) {
-		u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
+		if !u.SkipDelegateCall {
+			u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, true, u.PeerID)
+		}
 		return
 	}
 
