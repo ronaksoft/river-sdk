@@ -92,11 +92,22 @@ func (e *Executor) execute() {
 				delete(e.waitGroups, req.GetID())
 			}
 			e.waitGroupsLock.Unlock()
+
 			err := req.Prepare()
 			if err != nil {
-				logs.Warn("Executor got error on Prepare", zap.Error(err))
-				return
+				for {
+					req = req.Next()
+					if req == nil {
+						logs.Warn("Executor got error on Prepare", zap.Error(err))
+						return
+					}
+					err = req.Prepare()
+					if err == nil {
+						break
+					}
+				}
 			}
+
 			for {
 				act := req.NextAction()
 				if act == nil {

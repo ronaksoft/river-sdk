@@ -369,4 +369,6 @@ func TestUploadWithThumbnail(t *testing.T) {
 		time.Sleep(time.Second)
 	}
 
+	time.Sleep(time.Second * 10)
+
 }
