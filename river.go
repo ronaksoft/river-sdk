@@ -286,9 +286,10 @@ func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {
 }
 
 func (r *River) postUploadProcess(uploadRequest msg.ClientFileRequest) bool {
-	logs.Info("Upload finished, we process the next action",
+	logs.Info("River Post Upload Process",
 		zap.Bool("IsProfile", uploadRequest.IsProfilePhoto),
-		zap.Int64("ur.MessageID", uploadRequest.MessageID),
+		zap.Int64("MessageID", uploadRequest.MessageID),
+		zap.Int64("FileID", uploadRequest.FileID),
 	)
 	switch {
 	case uploadRequest.IsProfilePhoto == false && uploadRequest.MessageID != 0:
@@ -386,7 +387,7 @@ func (r *River) sendMessageMedia(uploadRequest msg.ClientFileRequest) (success b
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(1)
 	successCB := func(m *msg.MessageEnvelope) {
-		logs.Debug("MessagesSendMedia success callback called")
+		logs.Info("MessagesSendMedia success callback called", zap.String("C", msg.ConstructorNames[m.Constructor]))
 		switch m.Constructor {
 		case msg.C_Error:
 			success = false

@@ -249,7 +249,7 @@ func updateSyncStatus(ctrl *Controller, newStatus domain.SyncStatus) {
 	if ctrl.syncStatus == newStatus {
 		return
 	}
-	logs.Info("Sync Controller status changed",
+	logs.Info("SyncCtrl status changed",
 		zap.String("Status", newStatus.ToString()),
 	)
 	ctrl.syncStatus = newStatus

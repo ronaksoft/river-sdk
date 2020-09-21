@@ -2,7 +2,6 @@ package main
 
 import (
 	"git.ronaksoft.com/river/msg/msg"
-	"git.ronaksoft.com/river/sdk/pkg/domain"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
@@ -90,13 +89,13 @@ func (d *MainDelegate) OnDeferredRequests(requestID int64, b []byte) {
 }
 
 func (d *MainDelegate) OnNetworkStatusChanged(quality int) {
-	state := domain.NetworkStatus(quality)
-	_Shell.Println("Network status changed:", state.ToString())
+	// state := domain.NetworkStatus(quality)
+	// _Shell.Println("Network status changed:", state.ToString())
 }
 
 func (d *MainDelegate) OnSyncStatusChanged(newStatus int) {
-	state := domain.SyncStatus(newStatus)
-	_Shell.Println("Sync status changed:", state.ToString())
+	// state := domain.SyncStatus(newStatus)
+	// _Shell.Println("Sync status changed:", state.ToString())
 }
 
 func (d *MainDelegate) OnAuthKeyCreated(authID int64) {
@@ -141,15 +140,15 @@ func (d *PrintDelegate) Log(logLevel int, msg string) {
 type FileDelegate struct{}
 
 func (d *FileDelegate) OnProgressChanged(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64) {
-	_Shell.Println("File Progress Changed", reqID, fileID, percent)
+	// _Shell.Println("File Progress Changed", reqID, fileID, percent)
 }
 
 func (d *FileDelegate) OnCompleted(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64) {
-	_Shell.Println("File Progress Completed", reqID, filePath)
+	// _Shell.Println("File Progress Completed", reqID, filePath)
 }
 
 func (d *FileDelegate) OnCancel(reqID string, clusterID int32, fileID, accessHash int64, hasError bool, peerID int64) {
-	_Shell.Println("File Progress Canceled", reqID, hasError)
+	// _Shell.Println("File Progress Canceled", reqID, hasError)
 }
 
 type RequestDelegate struct {

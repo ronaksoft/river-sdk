@@ -105,6 +105,10 @@ func (ctrl *Controller) Start() {
 		logs.Fatal("FileCtrl got error on Start", zap.Error(err))
 	}
 	for _, req := range reqs {
+		logs.Info("Loading File Request",
+			zap.String("ID", getRequestID(req.ClusterID, req.FileID, req.AccessHash)),
+			zap.Bool("HasChild", req.Next != nil),
+		)
 		if req.ClusterID == 0 {
 			// Upload Request
 			err = ctrl.uploader.Execute(&UploadRequest{
@@ -126,7 +130,10 @@ func (ctrl *Controller) Start() {
 }
 
 func (ctrl *Controller) Stop() {
-	panic("implement me")
+	reqs, _ := repo.Files.GetAllFileRequests()
+	for _, req := range reqs {
+		_ = repo.Files.DeleteFileRequest(getRequestID(req.ClusterID, req.FileID, req.AccessHash))
+	}
 }
 
 func (ctrl *Controller) GetUploadRequest(fileID int64) *msg.ClientFileRequest {

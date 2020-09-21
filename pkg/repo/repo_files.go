@@ -732,6 +732,9 @@ func (r *repoFiles) GetAllFileRequests() ([]*msg.ClientFileRequest, error) {
 	reqs := make([]*msg.ClientFileRequest, 0, 8)
 	st := r.badger.NewStream()
 	st.Prefix = domain.StrToByte(prefixFilesRequests)
+	st.ChooseKey = func(item *badger.Item) bool {
+		return true
+	}
 	st.Send = func(list *badger.KVList) error {
 		for _, kv := range list.Kv {
 			req := &msg.ClientFileRequest{}

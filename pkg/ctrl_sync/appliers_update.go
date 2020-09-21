@@ -352,8 +352,8 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 	userMessage, _ := repo.Messages.Get(sent.MessageID)
 	if userMessage != nil {
 		logs.Info("SyncCtrl received UpdateMessageID after UpdateNewMessage",
-			zap.Int64("MID", x.MessageID),
 			zap.Int64("RandomID", x.RandomID),
+			zap.Int64("MID", x.MessageID),
 			zap.String("Body", userMessage.Body),
 		)
 
@@ -372,13 +372,12 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 		return nil, nil
 	}
 	logs.Info("SyncCtrl received UpdateMessageID before UpdateNewMessage",
+		zap.Int64("RandomID", x.RandomID),
 		zap.Int64("MID", x.MessageID),
 		zap.Int64("PendingID", pm.ID),
 	)
-	logs.Debug("SyncCtrl is going to save by realID")
-	repo.PendingMessages.SaveByRealID(sent.RandomID, sent.MessageID)
-	logs.Debug("SyncCtrl saved by realID")
 
+	repo.PendingMessages.SaveByRealID(sent.RandomID, sent.MessageID)
 	return res, nil
 }
 func (ctrl *Controller) deletePendingMessage(pm *msg.ClientPendingMessage) {

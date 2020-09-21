@@ -322,6 +322,10 @@ func (ctrl *Controller) Start(resetQueue bool) {
 			if resetQueue {
 				repo.PendingMessages.Delete(pmsg.ID)
 			} else {
+				logs.Info("QueueCtrl loads pending messages",
+					zap.Int64("ID", pmsg.ID),
+					zap.Int64("FileID", pmsg.FileID),
+				)
 				// it will be MessagesSend
 				req := repo.PendingMessages.ToMessagesSend(pmsg)
 				reqBytes, _ := req.Marshal()
