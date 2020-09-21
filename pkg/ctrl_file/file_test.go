@@ -57,7 +57,7 @@ func init() {
 		MaxInflightUploads:   3,
 		DbPath:               "./_hdd",
 		ProgressChangedCB: func(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64) {
-			// logs.Info("Progress Changed", zap.String("ReqID", reqID), zap.Int64("Percent", percent))
+			logs.Info("Progress Changed", zap.String("ReqID", reqID), zap.Int64("Percent", percent))
 		},
 		CancelCB: func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool, peerID int64) {
 			logs.Error("File Canceled", zap.String("ReqID", reqID), zap.Bool("HasError", hasError))
@@ -356,7 +356,7 @@ func TestUploadWithThumbnail(t *testing.T) {
 	peerID := domain.RandomInt63()
 	Convey("Upload File With Thumbnail", t, func(c C) {
 		c.Println()
-		speedBytesPerSec = 1024 * 1024
+		speedBytesPerSec = 1024 * 256
 		waitMapLock.Lock()
 		waitMap[fmt.Sprintf("%d.%d.%d", 0, fileID, 0)] = struct{}{}
 		waitMapLock.Unlock()

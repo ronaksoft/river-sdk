@@ -150,6 +150,7 @@ func (u *UploadRequest) Reset() {
 
 	// Reset the uploaded list
 	u.resetUploadedList()
+	u.lastProgress = 0
 
 	// Close the file
 	_ = u.file.Close()
