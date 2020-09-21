@@ -197,18 +197,19 @@ func (u *UploadRequest) Prepare() error {
 	// If Sha256 exists in the request then we check server if this file has been already uploaded, if true, then
 	// we do not upload it again and we call postUploadProcess with the updated details
 	if u.CheckSha256 && len(u.FileSha256) != 0 {
+		oldReqID := u.GetID()
 		err = u.checkSha256()
 		if err == nil {
 			logs.Info("FileCtrl detects the file already exists in the server",
 				zap.Int64("FileID", u.FileID),
 				zap.Int32("ClusterID", u.ClusterID),
 			)
+			_ = repo.Files.DeleteFileRequest(oldReqID)
 			err = domain.ErrAlreadyUploaded
 			if !u.ctrl.postUploadProcess(u.ClientFileRequest) {
 				err = domain.ErrInvalidData
 				u.cancel(err)
 			}
-			_ = repo.Files.DeleteFileRequest(u.GetID())
 			return err
 		}
 	}

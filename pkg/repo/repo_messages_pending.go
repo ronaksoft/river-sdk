@@ -61,10 +61,15 @@ func getPendingMessageRealKey(msgID int64) []byte {
 func getPendingMessageByID(txn *badger.Txn, msgID int64) (*msg.ClientPendingMessage, error) {
 	pm := &msg.ClientPendingMessage{}
 	item, err := txn.Get(getPendingMessageKey(msgID))
-	if err != nil {
+	switch err {
+	case nil:
+	case badger.ErrKeyNotFound:
+		return nil, domain.ErrNotFound
+	default:
 		return nil, err
-	}
 
+	}
+	
 	err = item.Value(func(val []byte) error {
 		return pm.Unmarshal(val)
 	})

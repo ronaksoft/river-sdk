@@ -332,7 +332,7 @@ func (r *River) sendMessageMedia(uploadRequest msg.ClientFileRequest) (success b
 		Peer:       req.Peer,
 		ClearDraft: req.ClearDraft,
 		MediaType:  req.MediaType,
-		RandomID:   uploadRequest.FileID,
+		RandomID:   pendingMessage.FileID,
 		ReplyTo:    req.ReplyTo,
 	}
 
