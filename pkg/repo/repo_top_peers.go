@@ -11,6 +11,7 @@ import (
 	"github.com/tidwall/buntdb"
 	"go.uber.org/zap"
 	"math"
+	"strings"
 )
 
 /*
@@ -35,13 +36,27 @@ const (
 	indexTopPeersBotInline  = "T_PEER_BI"
 )
 
+func getTopPeerFromIndexKey(key string) (int64, *msg.Peer) {
+	parts := strings.Split(key, ".")
+	if len(parts) != 4 {
+		return 0, nil
+	}
+	return tools.StrToInt64(parts[1]), &msg.Peer{
+		ID:   domain.StrToInt64(parts[2]),
+		Type: domain.StrToInt32(parts[3]),
+	}
+}
+
 func getTopPeerKey(cat msg.TopPeerCategory, teamID, peerID int64, peerType int32) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixTopPeers)
+	sb.WriteRune('_')
+	sb.WriteString(fmt.Sprintf("%02d", cat))
 	sb.WriteRune('.')
 	tools.AppendStrInt64(sb, teamID)
-	tools.AppendStrInt32(sb, int32(cat))
+	sb.WriteRune('.')
 	tools.AppendStrInt64(sb, peerID)
+	sb.WriteRune('.')
 	tools.AppendStrInt32(sb, peerType)
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
@@ -88,24 +103,9 @@ func deleteTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, teamID, peerID int6
 }
 
 func (r *repoTopPeers) updateIndex(cat msg.TopPeerCategory, teamID, peerID int64, peerType int32, rate float32) error {
-	var indexName string
-	switch cat {
-	case msg.TopPeerCategory_Users:
-		indexName = indexTopPeersUser
-	case msg.TopPeerCategory_Groups:
-		indexName = indexTopPeersGroup
-	case msg.TopPeerCategory_Forwards:
-		indexName = indexTopPeersForward
-	case msg.TopPeerCategory_BotsMessage:
-		indexName = indexTopPeersBotMessage
-	case msg.TopPeerCategory_BotsInline:
-		indexName = indexTopPeersBotInline
-	default:
-		panic("BUG! we dont support the top peer category")
-	}
 	return r.bunt.Update(func(tx *buntdb.Tx) error {
 		_, _, err := tx.Set(
-			fmt.Sprintf("%s.%d.%d.%d", indexName, teamID, peerID, peerType),
+			tools.ByteToStr(getTopPeerKey(cat, teamID, peerID, peerType)),
 			fmt.Sprintf("%f", rate),
 			nil,
 		)
@@ -214,7 +214,7 @@ func (r *repoTopPeers) List(teamID int64, cat msg.TopPeerCategory, offset, limit
 				if limit--; limit < 0 {
 					return false
 				}
-				peerTeamID, peer := getPeerFromIndexKey(key)
+				peerTeamID, peer := getTopPeerFromIndexKey(key)
 				if peerTeamID != teamID {
 					return true
 				}

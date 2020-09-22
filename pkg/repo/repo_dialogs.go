@@ -63,7 +63,7 @@ func getPinnedDialogKey(teamID int64, peerID int64, peerType int32) []byte {
 	return id
 }
 
-func getPeerFromIndexKey(key string) (int64, *msg.Peer) {
+func getDialogPeerFromIndexKey(key string) (int64, *msg.Peer) {
 	parts := strings.Split(key, ".")
 	if len(parts) != 4 {
 		return 0, nil
@@ -252,7 +252,7 @@ func (r *repoDialogs) List(teamID int64, offset, limit int32) []*msg.Dialog {
 				if limit--; limit < 0 {
 					return false
 				}
-				tID, peer := getPeerFromIndexKey(key)
+				tID, peer := getDialogPeerFromIndexKey(key)
 				if tID != teamID {
 					return true
 				}
