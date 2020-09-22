@@ -2,7 +2,6 @@ package repo
 
 import (
 	"fmt"
-	"git.ronaksoft.com/river/msg/msg"
 	"git.ronaksoft.com/river/sdk/pkg/domain"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
@@ -137,11 +136,11 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 	}
 	_ = r.bunt.Update(func(tx *buntdb.Tx) error {
 		_ = tx.CreateIndex(indexDialogs, fmt.Sprintf("%s.*", prefixDialogs), buntdb.IndexBinary)
-		_ = tx.CreateIndex(indexTopPeersUser, fmt.Sprintf("%s_%02d.*", prefixTopPeers, msg.TopPeerCategory_Users), buntdb.IndexFloat)
-		_ = tx.CreateIndex(indexTopPeersGroup, fmt.Sprintf("%s_%02d.*", prefixTopPeers, msg.TopPeerCategory_Groups), buntdb.IndexFloat)
-		_ = tx.CreateIndex(indexTopPeersForward, fmt.Sprintf("%s_%02d.*", prefixTopPeers, msg.TopPeerCategory_Forwards), buntdb.IndexFloat)
-		_ = tx.CreateIndex(indexTopPeersBotMessage, fmt.Sprintf("%s_%02d.*", prefixTopPeers, msg.TopPeerCategory_BotsMessage), buntdb.IndexFloat)
-		_ = tx.CreateIndex(indexTopPeersBotInline, fmt.Sprintf("%s_%02d.*", prefixTopPeers, msg.TopPeerCategory_BotsInline), buntdb.IndexFloat)
+		_ = tx.CreateIndex(indexTopPeersUser, fmt.Sprintf("%s.*", indexTopPeersUser), buntdb.IndexFloat)
+		_ = tx.CreateIndex(indexTopPeersGroup, fmt.Sprintf("%s.*", indexTopPeersGroup), buntdb.IndexFloat)
+		_ = tx.CreateIndex(indexTopPeersForward, fmt.Sprintf("%s.*", indexTopPeersForward), buntdb.IndexFloat)
+		_ = tx.CreateIndex(indexTopPeersBotMessage, fmt.Sprintf("%s.*", indexTopPeersBotMessage), buntdb.IndexFloat)
+		_ = tx.CreateIndex(indexTopPeersBotInline, fmt.Sprintf("%s.*", indexTopPeersBotInline), buntdb.IndexFloat)
 		_ = tx.CreateIndex(indexGif, fmt.Sprintf("%s.*", prefixGif), buntdb.IndexBinary)
 
 		return nil

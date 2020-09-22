@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/msg"
 	"git.ronaksoft.com/river/sdk/internal/logs"
-	"git.ronaksoft.com/river/sdk/internal/pools"
 	"git.ronaksoft.com/river/sdk/internal/tools"
 	"git.ronaksoft.com/river/sdk/pkg/domain"
 	"github.com/dgraph-io/badger/v2"
@@ -48,19 +47,23 @@ func getTopPeerFromIndexKey(key string) (int64, *msg.Peer) {
 }
 
 func getTopPeerKey(cat msg.TopPeerCategory, teamID, peerID int64, peerType int32) []byte {
-	sb := pools.AcquireStringsBuilder()
-	sb.WriteString(prefixTopPeers)
-	sb.WriteRune('_')
-	sb.WriteString(fmt.Sprintf("%02d", cat))
-	sb.WriteRune('.')
-	tools.AppendStrInt64(sb, teamID)
-	sb.WriteRune('.')
-	tools.AppendStrInt64(sb, peerID)
-	sb.WriteRune('.')
-	tools.AppendStrInt32(sb, peerType)
-	id := tools.StrToByte(sb.String())
-	pools.ReleaseStringsBuilder(sb)
-	return id
+	var indexName string
+	switch cat {
+	case msg.TopPeerCategory_Users:
+		indexName = indexTopPeersUser
+	case msg.TopPeerCategory_Groups:
+		indexName = indexTopPeersGroup
+	case msg.TopPeerCategory_Forwards:
+		indexName = indexTopPeersForward
+	case msg.TopPeerCategory_BotsMessage:
+		indexName = indexTopPeersBotMessage
+	case msg.TopPeerCategory_BotsInline:
+		indexName = indexTopPeersBotInline
+	default:
+		panic("BUG! we dont support the top peer category")
+	}
+
+	return domain.StrToByte(fmt.Sprintf("%s.%021d.%021d.%04d", indexName, teamID, peerID, peerType))
 }
 
 func saveTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, teamID int64, tp *msg.TopPeer) error {
@@ -69,6 +72,12 @@ func saveTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, teamID int64, tp *msg
 		return domain.ErrDoesNotExists
 	}
 	b, _ := tp.Marshal()
+	logs.Info("SaveTopPeer",
+		zap.Int64("TeamID", teamID),
+		zap.Int64("PeerID", tp.Peer.ID),
+		zap.Int32("PeerType", tp.Peer.Type),
+		zap.ByteString("Key", getTopPeerKey(cat, teamID, tp.Peer.ID, tp.Peer.Type)),
+	)
 	return txn.SetEntry(badger.NewEntry(
 		getTopPeerKey(cat, teamID, tp.Peer.ID, tp.Peer.Type),
 		b,
