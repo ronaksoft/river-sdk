@@ -1581,6 +1581,7 @@ func (p *poolUpdateReaction) Put(x *UpdateReaction) {
 		*x.Sender = User{}
 	}
 
+	x.YourReactions = x.YourReactions[:0]
 	p.pool.Put(x)
 }
 

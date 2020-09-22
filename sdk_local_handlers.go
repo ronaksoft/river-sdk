@@ -727,7 +727,7 @@ func (r *River) contactsGetTopPeers(in, out *msg.MessageEnvelope, timeoutCB doma
 	mGroups := domain.MInt64B{}
 	for _, topPeer := range res.Peers {
 		switch msg.PeerType(topPeer.Peer.Type) {
-		case msg.PeerUser:
+		case msg.PeerUser, msg.PeerExternalUser:
 			mUsers[topPeer.Peer.ID] = true
 		case msg.PeerGroup:
 			mGroups[topPeer.Peer.ID] = true
