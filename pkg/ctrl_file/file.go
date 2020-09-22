@@ -461,7 +461,7 @@ func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath 
 }
 func (ctrl *Controller) download(req *DownloadRequest, blocking bool) error {
 	logs.Info("FileCtrl received download request",
-		zap.Bool("Blocking", true),
+		zap.Bool("Blocking", blocking),
 		zap.Int64("FileID", req.FileID),
 		zap.Uint64("AccessHash", req.AccessHash),
 		zap.Int64("Size", req.FileSize),
