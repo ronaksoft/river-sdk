@@ -107,42 +107,14 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 			})
 		}
 		tableDialogs.Render()
-		// // users
-		// bufUsers := new(bytes.Buffer)
-		// tableUsers := tablewriter.NewWriter(bufUsers)
-		// tableUsers.SetHeader([]string{
-		// 	"userID", "FirstName", "LastName", "Photo",
-		// })
-		// for _, x := range x.Users {
-		// 	MyUsers[x.ID] = x
-		// 	tableUsers.Append([]string{
-		// 		fmt.Sprintf("%d", x.ID),
-		// 		fmt.Sprintf("%s", x.FirstName),
-		// 		fmt.Sprintf("%s", x.LastName),
-		// 		fmt.Sprintf("%d", len(x.Photo.String())),
-		// 	})
-		// }
-		// tableUsers.Render()
-		// // group
-		// bufGroup := new(bytes.Buffer)
-		// tableGroup := tablewriter.NewWriter(bufGroup)
-		// tableGroup.SetHeader([]string{
-		// 	"GroupID", "Title", "Participants",
-		// })
-		// for _, x := range x.Groups {
-		// 	MyGroups[x.ID] = x
-		// 	tableGroup.Append([]string{
-		// 		fmt.Sprintf("%d", x.ID),
-		// 		fmt.Sprintf("%s", x.Title),
-		// 		fmt.Sprintf("%d", x.Participants),
-		// 	})
-		// }
-		// tableGroup.Render()
-
+		for _, x := range x.Users {
+			MyUsers[x.ID] = x
+		}
+		for _, x := range x.Groups {
+			MyGroups[x.ID] = x
+		}
 		_Shell.Println("\r\n" + fmt.Sprintf("Total: %d", x.Count))
 		_Shell.Println("\r\n" + bufDialogs.String())
-		// _Shell.Println("\r\n" + bufUsers.String())
-		// _Shell.Println("\r\n" + bufGroup.String())
 	case msg.C_Dialog:
 		x := new(msg.Dialog)
 		x.Unmarshal(envelope.Message)

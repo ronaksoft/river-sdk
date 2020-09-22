@@ -218,9 +218,12 @@ var TestUpload = &ishell.Cmd{
 var Download = &ishell.Cmd{
 	Name: "Download",
 	Func: func(c *ishell.Context) {
-		clusterID := fnGetClusterID(c)
-		docID := fnGetFileID(c)
-		accessHash := fnGetAccessHash(c)
+		clusterID := int32(1)
+		docID := int64(687843935677241931)
+		accessHash := uint64(4502154781611237)
+		// clusterID := fnGetClusterID(c)
+		// docID := fnGetFileID(c)
+		// accessHash := fnGetAccessHash(c)
 		err := _SDK.FileDownloadSync(clusterID, docID, int64(accessHash), true)
 		if err != nil {
 			c.Println(err)

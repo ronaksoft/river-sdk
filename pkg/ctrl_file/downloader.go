@@ -81,7 +81,6 @@ func (d *DownloadRequest) addToDownloaded(partIndex int32) {
 }
 
 func (d *DownloadRequest) cancel(err error) {
-	logs.Debug("FileCtrl canceled UploadRequest", zap.Error(err))
 	if !d.SkipDelegateCall {
 		d.ctrl.onCancel(d.GetID(), d.ClusterID, d.FileID, int64(d.AccessHash), err != nil, d.PeerID)
 	}
@@ -100,6 +99,7 @@ func (d *DownloadRequest) GetID() string {
 }
 
 func (d *DownloadRequest) Prepare() error {
+	logs.Warn("Prepare", zap.String("ID", d.GetID()))
 	// Check temp file stat and if it does not exists, we create it
 	_, err := os.Stat(d.TempPath)
 	if err != nil {

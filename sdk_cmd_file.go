@@ -65,6 +65,7 @@ func (r *River) FileDownloadAsync(clusterID int32, fileID int64, accessHash int6
 	var err error
 	reqID, err = r.fileCtrl.DownloadAsync(clusterID, fileID, uint64(accessHash), skipDelegate)
 	switch err {
+	case nil:
 	case badger.ErrKeyNotFound:
 		logs.Warn("Error On GetFile (Key not found)",
 			zap.Int32("ClusterID", clusterID),

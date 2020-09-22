@@ -164,28 +164,28 @@ func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash 
 	if err != nil {
 		return "", err
 	}
-	go func() {
-		err = ctrl.download(&DownloadRequest{
-			ClientFileRequest: msg.ClientFileRequest{
-				MessageID:        clientFile.MessageID,
-				ClusterID:        clientFile.ClusterID,
-				FileID:           clientFile.FileID,
-				AccessHash:       clientFile.AccessHash,
-				Version:          clientFile.Version,
-				FileSize:         clientFile.FileSize,
-				ChunkSize:        defaultChunkSize,
-				FilePath:         repo.Files.GetFilePath(clientFile),
-				SkipDelegateCall: skipDelegates,
-				PeerID:           clientFile.PeerID,
-			},
-		}, false)
-		logs.WarnOnErr("Error On DownloadAsync", err,
-			zap.Int32("ClusterID", clusterID),
-			zap.Int64("FileID", fileID),
-			zap.Uint64("AccessHash", accessHash),
-		)
-	}()
-	return getRequestID(clusterID, fileID, accessHash), nil
+
+	err = ctrl.download(&DownloadRequest{
+		ClientFileRequest: msg.ClientFileRequest{
+			MessageID:        clientFile.MessageID,
+			ClusterID:        clientFile.ClusterID,
+			FileID:           clientFile.FileID,
+			AccessHash:       clientFile.AccessHash,
+			Version:          clientFile.Version,
+			FileSize:         clientFile.FileSize,
+			ChunkSize:        defaultChunkSize,
+			FilePath:         repo.Files.GetFilePath(clientFile),
+			SkipDelegateCall: skipDelegates,
+			PeerID:           clientFile.PeerID,
+		},
+	}, false)
+	logs.WarnOnErr("Error On DownloadAsync", err,
+		zap.Int32("ClusterID", clusterID),
+		zap.Int64("FileID", fileID),
+		zap.Uint64("AccessHash", accessHash),
+	)
+
+	return getRequestID(clusterID, fileID, accessHash), err
 }
 func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash uint64, skipDelegate bool) (filePath string, err error) {
 	clientFile, err := repo.Files.Get(clusterID, fileID, accessHash)
@@ -460,6 +460,13 @@ func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath 
 	return
 }
 func (ctrl *Controller) download(req *DownloadRequest, blocking bool) error {
+	logs.Info("FileCtrl received download request",
+		zap.Bool("Blocking", true),
+		zap.Int64("FileID", req.FileID),
+		zap.Uint64("AccessHash", req.AccessHash),
+		zap.Int64("Size", req.FileSize),
+	)
+
 	if req.ClusterID == 0 {
 		return domain.ErrInvalidData
 	}
@@ -467,6 +474,12 @@ func (ctrl *Controller) download(req *DownloadRequest, blocking bool) error {
 	if err == nil {
 		return domain.ErrAlreadyDownloading
 	}
+
+	_ = repo.Files.SaveFileRequest(
+		getRequestID(req.ClusterID, req.FileID, req.AccessHash),
+		&req.ClientFileRequest,
+	)
+
 
 	req.TempPath = fmt.Sprintf("%s.tmp", req.FilePath)
 	if blocking {
