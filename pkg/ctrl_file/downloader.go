@@ -99,7 +99,6 @@ func (d *DownloadRequest) GetID() string {
 }
 
 func (d *DownloadRequest) Prepare() error {
-	logs.Warn("Prepare", zap.String("ID", d.GetID()))
 	// Check temp file stat and if it does not exists, we create it
 	_, err := os.Stat(d.TempPath)
 	if err != nil {

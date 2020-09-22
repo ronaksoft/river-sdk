@@ -480,7 +480,6 @@ func (ctrl *Controller) download(req *DownloadRequest, blocking bool) error {
 		&req.ClientFileRequest,
 	)
 
-
 	req.TempPath = fmt.Sprintf("%s.tmp", req.FilePath)
 	if blocking {
 		waitGroup := &sync.WaitGroup{}
