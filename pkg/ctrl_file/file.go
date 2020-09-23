@@ -591,9 +591,9 @@ func (ctrl *Controller) upload(req msg.ClientFileRequest) error {
 		return domain.ErrInvalidData
 	}
 	if req.FilePath == "" {
-		_ = repo.Files.DeleteFileRequest(getRequestID(req.ClusterID, req.FileID, req.AccessHash))
 		return domain.ErrNoFilePath
 	}
+
 	_, err := repo.Files.GetFileRequest(getRequestID(req.ClusterID, req.FileID, req.AccessHash))
 	if err == nil {
 		return domain.ErrAlreadyUploading
