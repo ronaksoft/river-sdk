@@ -99,6 +99,7 @@ func (d *DownloadRequest) GetID() string {
 }
 
 func (d *DownloadRequest) Prepare() error {
+	logs.Info("FileCtrl prepare DownloadRequest", zap.String("ReqID", d.GetID()))
 	// Check temp file stat and if it does not exists, we create it
 	_, err := os.Stat(d.TempPath)
 	if err != nil {
@@ -164,6 +165,7 @@ func (d *DownloadRequest) Prepare() error {
 func (d *DownloadRequest) NextAction() executor.Action {
 	// If request is canceled then return nil
 	if _, err := repo.Files.GetFileRequest(d.GetID()); err != nil {
+		logs.Warn("FileCtrl did not find DownloadRequest, we cancel it", zap.Error(err))
 		return nil
 	}
 
@@ -180,6 +182,12 @@ func (d *DownloadRequest) NextAction() executor.Action {
 }
 
 func (d *DownloadRequest) ActionDone(id int32) {
+	logs.Info("FileCtrl finished download part",
+		zap.String("ReqID", d.GetID()),
+		zap.Int32("PartID", id),
+		zap.Int("FinishedParts", len(d.FinishedParts)),
+		zap.Int32("TotalParts", d.TotalParts),
+	)
 	finished := int32(len(d.FinishedParts)) == d.TotalParts
 	if finished {
 		d.done <- struct{}{}

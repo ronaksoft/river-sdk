@@ -103,7 +103,7 @@ func main() {
 
 	skBytes, _ := ioutil.ReadFile(keysFile)
 
-	_SDK = new(riversdk.River)
+	_SDK = &riversdk.River{}
 	_SDK.SetConfig(&riversdk.RiverConfig{
 		ServerEndpoint:         serverEndPoint,
 		FileServerEndpoint:     fileEndPoint,

@@ -21,6 +21,10 @@ var (
 
 func MessagePrinter(envelope *msg.MessageEnvelope) {
 	switch envelope.Constructor {
+	case msg.C_ClientPendingMessage:
+		x := &msg.ClientPendingMessage{}
+		x.Unmarshal(envelope.Message)
+		_Shell.Println(fmt.Sprintf("ClientPendingMessage ID:%d, FileID:%d, FileUploadID:%s", x.ID, x.FileID, x.FileUploadID))
 	case msg.C_AuthAuthorization:
 		x := new(msg.AuthAuthorization)
 		x.Unmarshal(envelope.Message)

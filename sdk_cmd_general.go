@@ -423,6 +423,14 @@ func (r *River) CancelRequest(requestID int64) {
 
 // Delete removes pending message from DB
 func (r *River) DeletePendingMessage(id int64) (isSuccess bool) {
+	pmsg := repo.PendingMessages.GetByID(id)
+	if pmsg == nil {
+		return
+	}
+	if pmsg.FileID != 0 {
+		r.fileCtrl.CancelUploadRequest(pmsg.FileID)
+	}
+
 	err := repo.PendingMessages.Delete(id)
 	isSuccess = err == nil
 	return

@@ -142,6 +142,7 @@ func (r *repoMessagesPending) SaveClientMessageMedia(team *msg.InputTeam,
 	msgMedia.FileTotalParts = 0
 
 	pm := &msg.ClientPendingMessage{
+		ID:             msgID,
 		TeamID:         team.ID,
 		TeamAccessHash: team.AccessHash,
 		PeerID:         msgMedia.Peer.ID,
@@ -151,7 +152,6 @@ func (r *repoMessagesPending) SaveClientMessageMedia(team *msg.InputTeam,
 		ReplyTo:        msgMedia.ReplyTo,
 		ClearDraft:     msgMedia.ClearDraft,
 		MediaType:      msgMedia.MediaType,
-		ID:             msgID,
 		SenderID:       senderID,
 		CreatedOn:      domain.Now().Unix(),
 		RequestID:      requestID,

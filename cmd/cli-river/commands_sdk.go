@@ -208,7 +208,16 @@ var SdkGetPublicKeys = &ishell.Cmd{
 	},
 }
 
+var SdkCancelPending = &ishell.Cmd{
+	Name: "CancelPending",
+	Func: func(c *ishell.Context) {
+		_SDK.DeletePendingMessage(fnGetMessageID(c))
+
+	},
+}
+
 func init() {
+	SDK.AddCmd(SdkCancelPending)
 	SDK.AddCmd(SdkConnInfo)
 	SDK.AddCmd(SdkSetLogLevel)
 	SDK.AddCmd(SdkGetDifference)

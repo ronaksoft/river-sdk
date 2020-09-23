@@ -105,7 +105,7 @@ func (ctrl *Controller) Start() {
 		logs.Fatal("FileCtrl got error on Start", zap.Error(err))
 	}
 	for _, req := range reqs {
-		logs.Info("Loading File Request",
+		logs.Info("FileCtrl loads File Request",
 			zap.String("ID", getRequestID(req.ClusterID, req.FileID, req.AccessHash)),
 			zap.Bool("HasChild", req.Next != nil),
 		)
@@ -150,9 +150,14 @@ func (ctrl *Controller) GetRequest(clusterID int32, fileID int64, accessHash uin
 	return req
 }
 func (ctrl *Controller) CancelUploadRequest(fileID int64) {
+	logs.Info("FileCtrl cancels UploadRequest", zap.Int64("FileID", fileID))
 	ctrl.CancelRequest(getRequestID(0, fileID, 0))
 }
 func (ctrl *Controller) CancelDownloadRequest(clusterID int32, fileID int64, accessHash uint64) {
+	logs.Info("FileCtrl cancels DownloadRequest",
+		zap.Int32("ClusterID", clusterID),
+		zap.Int64("FileID", fileID),
+	)
 	ctrl.CancelRequest(getRequestID(clusterID, fileID, accessHash))
 }
 func (ctrl *Controller) CancelRequest(reqID string) {

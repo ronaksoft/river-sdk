@@ -331,7 +331,7 @@ func (r *repoMessages) UpdateReactionCounter(messageID int64, reactions []*msg.R
 	return badgerUpdate(func(txn *badger.Txn) error {
 		um, err := getMessageByID(txn, messageID)
 		if err != nil {
-			return err
+			return nil
 		}
 		um.Reactions = reactions
 		return saveMessage(txn, um)

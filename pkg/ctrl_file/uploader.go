@@ -173,6 +173,7 @@ func (u *UploadRequest) GetID() string {
 }
 
 func (u *UploadRequest) Prepare() error {
+	logs.Info("FileCtrl prepare UploadRequest", zap.String("ReqID", u.GetID()))
 	u.reset()
 
 	// Check File stats and return error if any problem exists
@@ -263,6 +264,7 @@ func (u *UploadRequest) Prepare() error {
 func (u *UploadRequest) NextAction() executor.Action {
 	// If request is canceled then return nil
 	if _, err := repo.Files.GetFileRequest(u.GetID()); err != nil {
+		logs.Warn("FileCtrl did not find UploadRequest, we cancel it", zap.Error(err))
 		return nil
 	}
 
@@ -279,6 +281,12 @@ func (u *UploadRequest) NextAction() executor.Action {
 }
 
 func (u *UploadRequest) ActionDone(id int32) {
+	logs.Info("FileCtrl finished upload part",
+		zap.String("ReqID", u.GetID()),
+		zap.Int32("PartID", id),
+		zap.Int("FinishedParts", len(u.FinishedParts)),
+		zap.Int32("TotalParts", u.TotalParts),
+	)
 	// If we have failed too many times, and we can decrease the chunk size the we do it again.
 	if atomic.LoadInt32(&u.failedActions) > retryMaxAttempts {
 		atomic.StoreInt32(&u.failedActions, 0)

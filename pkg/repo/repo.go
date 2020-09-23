@@ -168,7 +168,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 				}
 			} else {
 				r.msgSearch = msgSearch
-				logs.Info("Message Index Initialized Successfully.")
+				logs.Info("Repo initialized Message Index successfully.")
 			}
 			return nil
 		})
@@ -194,7 +194,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 				}
 			} else {
 				r.peerSearch = peerSearch
-				logs.Info("Peer Index Initialized Successfully.")
+				logs.Info("Repo initialized Peer index successfully.")
 			}
 			return nil
 		})

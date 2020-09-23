@@ -718,8 +718,13 @@ func (r *repoFiles) GetFileRequest(reqID string) (*msg.ClientFileRequest, error)
 		item, err := txn.Get(
 			domain.StrToByte(fmt.Sprintf("%s.%s", prefixFilesRequests, reqID)),
 		)
-		if err != nil {
+		switch err {
+		case nil:
+		case badger.ErrKeyNotFound:
+			return domain.ErrNotFound
+		default:
 			return err
+
 		}
 		return item.Value(func(val []byte) error {
 			return req.Unmarshal(val)

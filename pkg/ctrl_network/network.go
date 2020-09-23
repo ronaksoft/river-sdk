@@ -126,7 +126,7 @@ func (ctrl *Controller) createDialer(timeout time.Duration) {
 			if err != nil {
 				return nil, err
 			}
-			logs.Info("DNS LookIP",
+			logs.Info("NetCtrl look up for DNS",
 				zap.String("Addr", addr),
 				zap.Any("IPs", ips),
 			)
