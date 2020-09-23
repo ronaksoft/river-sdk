@@ -663,9 +663,9 @@ func (r *River) AppStart() error {
 
 	// Start Controllers
 	r.networkCtrl.Start()
+	r.fileCtrl.Start()
 	r.queueCtrl.Start(r.resetQueueOnStartup)
 	r.syncCtrl.Start()
-	r.fileCtrl.Start()
 
 	lastReIndexTime, err := repo.System.LoadInt(domain.SkReIndexTime)
 	if err != nil || time.Now().Unix()-int64(lastReIndexTime) > domain.Day {
