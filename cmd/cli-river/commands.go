@@ -10,6 +10,12 @@ import (
 	"gopkg.in/abiosoft/ishell.v2"
 )
 
+func fnGetString(c *ishell.Context, prompt string) string {
+	c.Print(prompt, ": ")
+	x := c.ReadLine()
+	return x
+}
+
 func fnGetPhone(c *ishell.Context) string {
 	c.Print("Phone: ")
 	phone := c.ReadLine()

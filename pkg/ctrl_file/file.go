@@ -483,6 +483,7 @@ func (ctrl *Controller) download(req *DownloadRequest, blocking bool) error {
 	_ = repo.Files.SaveFileRequest(
 		getRequestID(req.ClusterID, req.FileID, req.AccessHash),
 		&req.ClientFileRequest,
+		false,
 	)
 
 	req.TempPath = fmt.Sprintf("%s.tmp", req.FilePath)
@@ -607,6 +608,7 @@ func (ctrl *Controller) upload(req msg.ClientFileRequest) error {
 	_ = repo.Files.SaveFileRequest(
 		getRequestID(0, req.FileID, 0),
 		&req,
+		false,
 	)
 
 	err = ctrl.uploader.Execute(&UploadRequest{

@@ -101,7 +101,7 @@ func (u *UploadRequest) resetUploadedList() {
 	u.FinishedParts = u.FinishedParts[:0]
 	u.mtx.Unlock()
 
-	_ = repo.Files.SaveFileRequest(u.GetID(), &u.ClientFileRequest)
+	_ = repo.Files.SaveFileRequest(u.GetID(), &u.ClientFileRequest, false)
 	if !u.SkipDelegateCall {
 		u.ctrl.onProgressChanged(u.GetID(), 0, u.FileID, 0, 0, u.PeerID)
 	}
@@ -133,7 +133,7 @@ func (u *UploadRequest) addToUploaded(partIndex int32) {
 	}
 	u.mtx.Unlock()
 
-	_ = repo.Files.SaveFileRequest(u.GetID(), &u.ClientFileRequest)
+	_ = repo.Files.SaveFileRequest(u.GetID(), &u.ClientFileRequest, true)
 
 	if !u.SkipDelegateCall && !skipOnProgress {
 		u.ctrl.onProgressChanged(u.GetID(), 0, u.FileID, 0, progress, u.PeerID)

@@ -285,3 +285,10 @@ func sendLogs(r *River) {
 func (r *River) GetHole(peerID int64, peerType int32) []byte {
 	return repo.MessagesExtra.GetHoles(domain.GetCurrTeamID(), peerID, peerType)
 }
+
+func (r *River) CancelFileRequest(reqID string) {
+	err := repo.Files.DeleteFileRequest(reqID)
+	if err != nil {
+		logs.Warn("River got error on delete file request", zap.Error(err))
+	}
+}
