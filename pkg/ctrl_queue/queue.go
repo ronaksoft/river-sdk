@@ -317,34 +317,42 @@ func (ctrl *Controller) Start(resetQueue bool) {
 
 	// Try to resend unsent messages
 	for _, pmsg := range repo.PendingMessages.GetAll() {
+		if resetQueue {
+			_ = repo.PendingMessages.Delete(pmsg.ID)
+			continue
+		}
 		switch pmsg.MediaType {
 		case msg.InputMediaTypeEmpty:
-			if resetQueue {
-				repo.PendingMessages.Delete(pmsg.ID)
-			} else {
-				logs.Info("QueueCtrl loads pending messages",
-					zap.Int64("ID", pmsg.ID),
-					zap.Int64("FileID", pmsg.FileID),
-				)
-				// it will be MessagesSend
-				req := repo.PendingMessages.ToMessagesSend(pmsg)
-				reqBytes, _ := req.Marshal()
-				ctrl.EnqueueCommand(&msg.MessageEnvelope{
-					Constructor: msg.C_MessagesSend,
-					RequestID:   uint64(req.RandomID),
-					Message:     reqBytes,
-				}, nil, nil, false)
-			}
+			logs.Info("QueueCtrl loads pending messages",
+				zap.Int64("ID", pmsg.ID),
+				zap.Int64("FileID", pmsg.FileID),
+			)
+			// it will be MessagesSend
+			req := repo.PendingMessages.ToMessagesSend(pmsg)
+			reqBytes, _ := req.Marshal()
+			ctrl.EnqueueCommand(&msg.MessageEnvelope{
+				Constructor: msg.C_MessagesSend,
+				RequestID:   uint64(req.RandomID),
+				Message:     reqBytes,
+			}, nil, nil, false)
 
 		default:
-			if resetQueue {
-				_ = repo.PendingMessages.Delete(pmsg.ID)
-				uploadRequest := ctrl.fileCtrl.GetUploadRequest(pmsg.FileID)
-				if uploadRequest == nil {
-					continue
+			req := &msg.ClientSendMessageMedia{}
+			_ = req.Unmarshal(pmsg.Media)
+			switch req.MediaType {
+			case msg.InputMediaTypeUploadedDocument:
+				checkSha256 := true
+				for _, attr := range req.Attributes {
+					if attr.Type == msg.AttributeTypeAudio {
+						x := &msg.DocumentAttributeAudio{}
+						_ = x.Unmarshal(attr.Data)
+						if x.Voice {
+							checkSha256 = false
+						}
+					}
 				}
-				ctrl.fileCtrl.CancelUploadRequest(pmsg.FileID)
-			} else {
+				ctrl.fileCtrl.UploadMessageDocument(pmsg.ID, req.FilePath, req.ThumbFilePath, req.FileID, req.ThumbID, pmsg.Sha256, pmsg.PeerID, checkSha256)
+			default:
 				// it will be MessagesSendMedia
 				req := repo.PendingMessages.ToMessagesSendMedia(pmsg)
 				if req == nil {
@@ -357,7 +365,6 @@ func (ctrl *Controller) Start(resetQueue bool) {
 					Message:     reqBytes,
 				}, nil, nil, false)
 			}
-
 		}
 	}
 

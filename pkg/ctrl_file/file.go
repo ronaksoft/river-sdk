@@ -100,40 +100,14 @@ func New(config Config) *Controller {
 }
 
 func (ctrl *Controller) Start() {
-	reqs, err := repo.Files.GetAllFileRequests()
-	if err != nil {
-		logs.Fatal("FileCtrl got error on Start", zap.Error(err))
-	}
-	for _, req := range reqs {
-		logs.Info("FileCtrl loads File Request",
-			zap.String("ID", getRequestID(req.ClusterID, req.FileID, req.AccessHash)),
-			zap.Bool("HasChild", req.Next != nil),
-		)
-		if req.ClusterID == 0 {
-			// Upload Request
-			err = ctrl.uploader.Execute(&UploadRequest{
-				ClientFileRequest: *req,
-			})
-			if err != nil {
-				logs.Fatal("FileCtrl got error on Execute (Upload)", zap.Error(err))
-			}
-		} else {
-			// Download Request
-			err = ctrl.downloader.Execute(&DownloadRequest{
-				ClientFileRequest: *req,
-			})
-			if err != nil {
-				logs.Fatal("FileCtrl got error on Execute (Download)", zap.Error(err))
-			}
-		}
-	}
-}
-
-func (ctrl *Controller) Stop() {
 	reqs, _ := repo.Files.GetAllFileRequests()
 	for _, req := range reqs {
 		_ = repo.Files.DeleteFileRequest(getRequestID(req.ClusterID, req.FileID, req.AccessHash))
 	}
+}
+
+func (ctrl *Controller) Stop() {
+
 }
 
 func (ctrl *Controller) GetUploadRequest(fileID int64) *msg.ClientFileRequest {
