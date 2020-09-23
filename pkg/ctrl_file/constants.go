@@ -22,4 +22,4 @@ const (
 	retryWaitTime          = 100 * time.Millisecond
 )
 
-var chunkSizesKB = []int32{8, 16, 32, 64, 128, 256, 512}
+var chunkSizesKB = []int32{128, 256, 512}

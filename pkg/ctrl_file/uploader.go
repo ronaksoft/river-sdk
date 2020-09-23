@@ -281,16 +281,10 @@ func (u *UploadRequest) NextAction() executor.Action {
 func (u *UploadRequest) ActionDone(id int32) {
 	// If we have failed too many times, and we can decrease the chunk size the we do it again.
 	if atomic.LoadInt32(&u.failedActions) > retryMaxAttempts {
-		minChunk := minChunkSize(u.FileSize)
-		if minChunk < u.ChunkSize {
-			// Set the chunk size to minimum
-			u.ChunkSize = minChunk
-			u.reset()
-			return
-		} else {
-			atomic.StoreInt32(&u.failedActions, 0)
-			logs.Debug("Max Attempts", zap.Int32("ChunkSize", u.ChunkSize), zap.Int32("MinChunkSize", minChunkSize(u.FileSize)))
-		}
+		atomic.StoreInt32(&u.failedActions, 0)
+		logs.Debug("Max Attempts",
+			zap.Int32("ChunkSize", u.ChunkSize),
+		)
 	}
 
 	// For single part uploads we are done

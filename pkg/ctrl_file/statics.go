@@ -34,22 +34,6 @@ func bestChunkSize(fileSize int64) int32 {
 	return chunkSizesKB[len(chunkSizesKB)-1] << 10
 }
 
-func minChunkSize(fileSize int64) int32 {
-	minChunkSize := (fileSize / maxParts) >> 10
-	dataRate := mon.GetDataTransferRate()
-	if dataRate == 0 {
-		dataRate = chunkSizesKB[len(chunkSizesKB)-1]
-	}
-	min := int32(math.Min(float64(minChunkSize), float64(dataRate)))
-	for _, cs := range chunkSizesKB {
-		if min > cs {
-			continue
-		}
-		return cs << 10
-	}
-	return chunkSizesKB[len(chunkSizesKB)-1] << 10
-}
-
 func getRequestID(clusterID int32, fileID int64, accessHash uint64) string {
 	return fmt.Sprintf("%d.%d.%d", clusterID, fileID, accessHash)
 }
