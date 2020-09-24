@@ -23,12 +23,13 @@ import (
 
 type DownloadRequest struct {
 	msg.ClientFileRequest
-	ctrl         *Controller
-	mtx          sync.Mutex
-	file         *os.File
-	parts        chan int32
-	done         chan struct{}
-	lastProgress int64
+	ctrl     *Controller
+	mtx      sync.Mutex
+	file     *os.File
+	parts    chan int32
+	done     chan struct{}
+	progress int64
+	finished bool
 }
 
 func (d *DownloadRequest) generateFileGet(offset, limit int32) *msg.MessageEnvelope {
@@ -66,10 +67,10 @@ func (d *DownloadRequest) addToDownloaded(partIndex int32) {
 	d.FinishedParts = append(d.FinishedParts, partIndex)
 	progress := int64(float64(len(d.FinishedParts)) / float64(d.TotalParts) * 100)
 	skipOnProgress := false
-	if d.lastProgress > progress {
+	if d.progress > progress {
 		skipOnProgress = true
 	} else {
-		d.lastProgress = progress
+		d.progress = progress
 	}
 	d.mtx.Unlock()
 	_ = repo.Files.SaveFileRequest(d.GetID(), &d.ClientFileRequest, true)
@@ -188,8 +189,12 @@ func (d *DownloadRequest) ActionDone(id int32) {
 		zap.Int("FinishedParts", len(d.FinishedParts)),
 		zap.Int32("TotalParts", d.TotalParts),
 	)
-	finished := int32(len(d.FinishedParts)) == d.TotalParts
-	if finished {
+
+	if int32(len(d.FinishedParts)) == d.TotalParts {
+		if d.finished {
+			return
+		}
+		d.finished = true
 		d.done <- struct{}{}
 		_ = d.file.Close()
 		err := os.Rename(d.TempPath, d.FilePath)

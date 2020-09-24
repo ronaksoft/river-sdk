@@ -19,7 +19,8 @@ import (
 */
 
 const (
-	defaultConcurrency = 10
+	defaultConcurrentRequests = 5
+	defaultConcurrentAction = 5
 )
 
 type RequestFactoryFunc func(data []byte) Request
@@ -49,7 +50,7 @@ func NewExecutor(dbPath string, name string, factory RequestFactoryFunc, opts ..
 		stack:      s,
 		name:       name,
 		factory:    factory,
-		rt:         make(chan struct{}, defaultConcurrency),
+		rt:         make(chan struct{}, defaultConcurrentRequests),
 		waitGroups: make(map[string]*sync.WaitGroup),
 	}
 	e.ctx, e.cf = context.WithCancel(context.Background())
@@ -105,15 +106,28 @@ func (e *Executor) execute() {
 					continue
 				}
 
+				iMutex := sync.Mutex{}
+				iRateLimit := make(chan struct{}, defaultConcurrentAction)
+				iWaitGroup := sync.WaitGroup{}
 				// Run actions in a loop
 				for {
 					act := req.NextAction()
 					if act == nil {
+						// Wait for all actions to be done before going to next request
+						iWaitGroup.Wait()
 						req = req.Next()
 						break
 					}
-					act.Do(e.ctx)
-					req.ActionDone(act.ID())
+					iRateLimit <- struct{}{}
+					iWaitGroup.Add(1)
+					go func() {
+						act.Do(e.ctx)
+						iMutex.Lock()
+						req.ActionDone(act.ID())
+						iMutex.Unlock()
+						iWaitGroup.Done()
+						<-iRateLimit
+					}()
 				}
 			}
 

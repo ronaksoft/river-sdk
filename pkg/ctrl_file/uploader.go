@@ -27,14 +27,14 @@ import (
 
 type UploadRequest struct {
 	msg.ClientFileRequest
-	ctrl           *Controller
-	mtx            sync.Mutex
-	file           *os.File
-	parts          chan int32
-	done           chan struct{}
-	lastProgress   int64
-	uploadingThumb bool
-	failedActions  int32
+	ctrl          *Controller
+	mtx           sync.Mutex
+	file          *os.File
+	parts         chan int32
+	done          chan struct{}
+	lastPartSent  bool
+	progress      int64
+	failedActions int32
 }
 
 func (u *UploadRequest) checkSha256() error {
@@ -126,10 +126,10 @@ func (u *UploadRequest) addToUploaded(partIndex int32) {
 	u.FinishedParts = append(u.FinishedParts, partIndex)
 	progress := int64(float64(len(u.FinishedParts)) / float64(u.TotalParts) * 100)
 	skipOnProgress := false
-	if u.lastProgress > progress {
+	if u.progress > progress {
 		skipOnProgress = true
 	} else {
-		u.lastProgress = progress
+		u.progress = progress
 	}
 	u.mtx.Unlock()
 
@@ -146,7 +146,7 @@ func (u *UploadRequest) reset() {
 
 	// Reset the uploaded list
 	u.resetUploadedList()
-	u.lastProgress = 0
+	u.progress = 0
 
 	if u.file != nil {
 		_ = u.file.Close()
@@ -308,6 +308,10 @@ func (u *UploadRequest) ActionDone(id int32) {
 		case finishedParts < u.TotalParts-1:
 			return
 		case finishedParts == u.TotalParts-1:
+			if u.lastPartSent {
+				return
+			}
+			u.lastPartSent = true
 			u.parts <- u.TotalParts - 1
 			return
 		}
@@ -315,6 +319,7 @@ func (u *UploadRequest) ActionDone(id int32) {
 
 	// This is last part so we make the executor free to run the next job if exist
 	u.done <- struct{}{}
+	_ = u.file.Close()
 
 	// Run the post process
 	if !u.ctrl.postUploadProcess(u.ClientFileRequest) {
@@ -323,7 +328,6 @@ func (u *UploadRequest) ActionDone(id int32) {
 	}
 
 	// Clean up
-	_ = u.file.Close()
 	u.complete()
 
 	return
