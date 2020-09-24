@@ -292,3 +292,9 @@ func (r *River) CancelFileRequest(reqID string) {
 		logs.Warn("River got error on delete file request", zap.Error(err))
 	}
 }
+
+func (r *River) DeleteAllPendingMessages() {
+	for _, p := range repo.PendingMessages.GetAll() {
+		_ = repo.PendingMessages.Delete(p.ID)
+	}
+}

@@ -223,7 +223,15 @@ var SdkCancelFileRequest = &ishell.Cmd{
 	},
 }
 
+var SdkDeleteAllPendingMessages = &ishell.Cmd{
+	Name: "DeleteAllPendingMessages",
+	Func: func(c *ishell.Context) {
+		_SDK.DeleteAllPendingMessages()
+	},
+}
+
 func init() {
+	SDK.AddCmd(SdkDeleteAllPendingMessages)
 	SDK.AddCmd(SdkCancelFileRequest)
 	SDK.AddCmd(SdkDeletePending)
 	SDK.AddCmd(SdkConnInfo)
