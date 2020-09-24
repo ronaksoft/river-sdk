@@ -20,6 +20,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -53,15 +54,15 @@ type Controller struct {
 	wsConn           net.Conn
 	wsPingsMtx       sync.Mutex
 	wsPings          map[uint64]chan struct{}
-	wsLastActivity   time.Time
+
 
 	// Http Settings
 	httpEndpoint string
 	httpClient   *http.Client
 
 	// Internals
-	wsQuality    domain.NetworkStatus
-	authRecalled bool
+	wsQuality    int32
+	authRecalled int32
 
 	// flusher
 	sendFlusher *domain.Flusher
@@ -312,7 +313,6 @@ func (ctrl *Controller) receiver() {
 			// If we return then watchdog will re-connect
 			return
 		}
-		ctrl.wsLastActivity = time.Now()
 		for _, message := range messages {
 			switch message.OpCode {
 			case ws.OpPong:
@@ -442,10 +442,10 @@ func extractMessages(ctrl *Controller, m *msg.MessageEnvelope) ([]*msg.MessageEn
 // The average ping times will be calculated and this function will be called if
 // quality of service changed.
 func (ctrl *Controller) updateNetworkStatus(newStatus domain.NetworkStatus) {
-	if ctrl.wsQuality == newStatus {
+	if ctrl.GetQuality() == newStatus {
 		return
 	}
-	ctrl.wsQuality = newStatus
+	ctrl.SetQuality(newStatus)
 	if ctrl.OnNetworkStatusChange != nil {
 		ctrl.OnNetworkStatusChange(newStatus)
 	}
@@ -591,6 +591,11 @@ func (ctrl *Controller) SetAuthorization(authID int64, authKey []byte) {
 	copy(ctrl.authKey, authKey)
 }
 
+func (ctrl *Controller) incMessageSeq() int64{
+	return atomic.AddInt64(&ctrl.messageSeq, 1)
+}
+
+
 // SendWebsocket direct sends immediately else it put it in flusher
 func (ctrl *Controller) SendWebsocket(msgEnvelope *msg.MessageEnvelope, direct bool) error {
 	defer ctrl.recoverPanic("NetworkController:: SendWebsocket", domain.M{
@@ -627,12 +632,11 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 		protoMessage.Payload, _ = msgEnvelope.Marshal()
 	} else {
 		protoMessage.AuthID = ctrl.authID
-		ctrl.messageSeq++
 		encryptedPayload := msg.ProtoEncryptedPayload{
 			ServerSalt: salt.Get(),
 			Envelope:   msgEnvelope,
 		}
-		encryptedPayload.MessageID = uint64(domain.Now().Unix()<<32 | ctrl.messageSeq)
+		encryptedPayload.MessageID = uint64(domain.Now().Unix()<<32 | ctrl.incMessageSeq())
 		unencryptedBytes, _ := encryptedPayload.Marshal()
 		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes)
 		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes)
@@ -656,7 +660,6 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 		_ = ctrl.wsConn.Close()
 		return err
 	}
-	ctrl.wsLastActivity = time.Now()
 	logs.Debug("NetCtrl sent over websocket",
 		zap.String("C", msg.ConstructorNames[msgEnvelope.Constructor]),
 		zap.Duration("Duration", time.Now().Sub(startTime)),
@@ -680,11 +683,10 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 	if ctrl.authID == 0 {
 		protoMessage.Payload, _ = msgEnvelope.Marshal()
 	} else {
-		ctrl.messageSeq++
 		encryptedPayload := msg.ProtoEncryptedPayload{
 			ServerSalt: salt.Get(),
 			Envelope:   msgEnvelope,
-			MessageID:  uint64(domain.Now().Unix()<<32 | ctrl.messageSeq),
+			MessageID:  uint64(domain.Now().Unix()<<32 | ctrl.incMessageSeq()),
 		}
 		unencryptedBytes, _ := encryptedPayload.Marshal()
 		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes)
@@ -755,14 +757,14 @@ func (ctrl *Controller) Reconnect() {
 // WaitForNetwork
 func (ctrl *Controller) WaitForNetwork(waitForRecall bool) {
 	// Wait While Network is Disconnected or Connecting
-	for ctrl.wsQuality != domain.NetworkConnected {
+	for ctrl.GetQuality() != domain.NetworkConnected {
 		logs.Debug("NetCtrl is waiting for Network",
-			zap.String("Quality", ctrl.wsQuality.ToString()),
+			zap.String("Quality", ctrl.GetQuality().ToString()),
 		)
 		time.Sleep(time.Second)
 	}
 	if waitForRecall {
-		for !ctrl.authRecalled {
+		for !ctrl.GetAuthRecalled() {
 			logs.Debug("NetCtrl is waiting for AuthRecall")
 			time.Sleep(time.Second)
 		}
@@ -771,17 +773,29 @@ func (ctrl *Controller) WaitForNetwork(waitForRecall bool) {
 
 // Connected
 func (ctrl *Controller) Connected() bool {
-	return ctrl.wsQuality == domain.NetworkConnected
+	return ctrl.GetQuality() == domain.NetworkConnected
 }
 
 // GetQuality
 func (ctrl *Controller) GetQuality() domain.NetworkStatus {
-	return ctrl.wsQuality
+	return domain.NetworkStatus(atomic.LoadInt32(&ctrl.wsQuality))
+}
+
+func (ctrl *Controller) SetQuality(s domain.NetworkStatus) {
+	atomic.StoreInt32(&ctrl.wsQuality, int32(s))
 }
 
 // SetAuthRecalled update the internal flag to identify AuthRecall api has been successfully called
 func (ctrl *Controller) SetAuthRecalled(b bool) {
-	ctrl.authRecalled = b
+	if b {
+		atomic.StoreInt32(&ctrl.authRecalled, 1)
+	} else {
+		atomic.StoreInt32(&ctrl.authRecalled, 0)
+	}
+}
+
+func (ctrl *Controller) GetAuthRecalled() bool {
+	return atomic.LoadInt32(&ctrl.authRecalled) > 0
 }
 
 func (ctrl *Controller) recoverPanic(funcName string, extraInfo interface{}) {
