@@ -87,18 +87,18 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	if x.Message.SenderID == ctrl.GetUserID() {
 		if x.Message.PeerID != x.Message.SenderID {
 			if x.Message.FwdSenderID != 0 {
-				repo.TopPeers.Update(msg.TopPeerCategory_Forwards, x.Message.TeamID, x.Message.PeerID, x.Message.PeerType, ctrl.GetUserID())
+				_ = repo.TopPeers.Update(msg.TopPeerCategory_Forwards, ctrl.GetUserID(), x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 			} else {
 				switch msg.PeerType(x.Message.PeerType) {
 				case msg.PeerUser:
 					p, _ := repo.Users.Get(x.Message.PeerID)
 					if p == nil || !p.IsBot {
-						repo.TopPeers.Update(msg.TopPeerCategory_Users, x.Message.TeamID, x.Message.PeerID, x.Message.PeerType, ctrl.GetUserID())
+						_ = repo.TopPeers.Update(msg.TopPeerCategory_Users, ctrl.GetUserID(), x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 					} else {
-						repo.TopPeers.Update(msg.TopPeerCategory_BotsMessage, x.Message.TeamID, x.Message.PeerID, x.Message.PeerType, ctrl.GetUserID())
+						_ = repo.TopPeers.Update(msg.TopPeerCategory_BotsMessage, ctrl.GetUserID(), x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 					}
 				case msg.PeerGroup:
-					repo.TopPeers.Update(msg.TopPeerCategory_Groups, x.Message.TeamID, x.Message.PeerID, x.Message.PeerType, ctrl.GetUserID())
+					_ = repo.TopPeers.Update(msg.TopPeerCategory_Groups, ctrl.GetUserID(), x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 				}
 			}
 		}

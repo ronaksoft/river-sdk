@@ -19,6 +19,33 @@ var (
 	SysConfig      *msg.SystemConfig
 )
 
+
+func init() {
+	// Set Default SysConfig
+	SysConfig = &msg.SystemConfig{
+		GifBot:                  "gif",
+		WikiBot:                 "wiki",
+		TestMode:                false,
+		PhoneCallEnabled:        false,
+		ExpireOn:                0,
+		GroupMaxSize:            250,
+		ForwardedMaxCount:       50,
+		OnlineUpdatePeriodInSec: 90,
+		EditTimeLimitInSec:      86400,
+		RevokeTimeLimitInSec:    86400,
+		PinnedDialogsMaxCount:   7,
+		UrlPrefix:               0,
+		MessageMaxLength:        4096,
+		CaptionMaxLength:        4096,
+		DCs:                     nil,
+		MaxLabels:               20,
+		TopPeerDecayRate:        3500000,
+		TopPeerMaxStep:          365,
+		MaxActiveSessions:       10,
+	}
+}
+
+
 // Global Parameters
 const (
 	DefaultWebsocketEndpoint = "ws://cyrus.river.im"
@@ -146,3 +173,4 @@ const (
 	ConnectionWifi
 	ConnectionCellular
 )
+

@@ -618,28 +618,7 @@ func (r *River) AppStart() error {
 
 	repo.SetSelfUserID(r.ConnInfo.UserID)
 
-	// Set Default SysConfig
-	domain.SysConfig = &msg.SystemConfig{
-		GifBot:                  "gif",
-		WikiBot:                 "wiki",
-		TestMode:                false,
-		PhoneCallEnabled:        false,
-		ExpireOn:                0,
-		GroupMaxSize:            250,
-		ForwardedMaxCount:       50,
-		OnlineUpdatePeriodInSec: 90,
-		EditTimeLimitInSec:      86400,
-		RevokeTimeLimitInSec:    86400,
-		PinnedDialogsMaxCount:   7,
-		UrlPrefix:               0,
-		MessageMaxLength:        4096,
-		CaptionMaxLength:        4096,
-		DCs:                     nil,
-		MaxLabels:               20,
-		TopPeerDecayRate:        3500000,
-		TopPeerMaxStep:          365,
-		MaxActiveSessions:       10,
-	}
+
 	confBytes, _ := repo.System.LoadBytes("SysConfig")
 	if confBytes != nil {
 		err := domain.SysConfig.Unmarshal(confBytes)

@@ -73,10 +73,8 @@ func saveTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, teamID int64, tp *msg
 	}
 	b, _ := tp.Marshal()
 	logs.Info("SaveTopPeer",
-		zap.Int64("TeamID", teamID),
-		zap.Int64("PeerID", tp.Peer.ID),
-		zap.Int32("PeerType", tp.Peer.Type),
 		zap.ByteString("Key", getTopPeerKey(cat, teamID, tp.Peer.ID, tp.Peer.Type)),
+		zap.Float32("Rate", tp.Rate),
 	)
 	return txn.SetEntry(badger.NewEntry(
 		getTopPeerKey(cat, teamID, tp.Peer.ID, tp.Peer.Type),
@@ -147,7 +145,7 @@ func (r *repoTopPeers) Delete(cat msg.TopPeerCategory, teamID, peerID int64, pee
 	})
 }
 
-func (r *repoTopPeers) Update(cat msg.TopPeerCategory, teamID, peerID int64, peerType int32, userID int64) error {
+func (r *repoTopPeers) Update(cat msg.TopPeerCategory, userID, teamID, peerID int64, peerType int32) error {
 	if peerID == userID {
 		return nil
 	}
