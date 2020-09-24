@@ -618,7 +618,6 @@ func (r *River) AppStart() error {
 
 	repo.SetSelfUserID(r.ConnInfo.UserID)
 
-
 	confBytes, _ := repo.System.LoadBytes("SysConfig")
 	if confBytes != nil {
 		err := domain.SysConfig.Unmarshal(confBytes)

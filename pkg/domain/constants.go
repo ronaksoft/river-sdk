@@ -19,7 +19,6 @@ var (
 	SysConfig      *msg.SystemConfig
 )
 
-
 func init() {
 	// Set Default SysConfig
 	SysConfig = &msg.SystemConfig{
@@ -44,7 +43,6 @@ func init() {
 		MaxActiveSessions:       10,
 	}
 }
-
 
 // Global Parameters
 const (
@@ -173,4 +171,3 @@ const (
 	ConnectionWifi
 	ConnectionCellular
 )
-

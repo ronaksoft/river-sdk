@@ -20,7 +20,7 @@ import (
 
 const (
 	defaultConcurrentRequests = 5
-	defaultConcurrentAction = 5
+	defaultConcurrentAction   = 5
 )
 
 type RequestFactoryFunc func(data []byte) Request
