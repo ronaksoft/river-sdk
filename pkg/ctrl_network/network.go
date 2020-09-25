@@ -55,7 +55,6 @@ type Controller struct {
 	wsPingsMtx       sync.Mutex
 	wsPings          map[uint64]chan struct{}
 
-
 	// Http Settings
 	httpEndpoint string
 	httpClient   *http.Client
@@ -313,6 +312,7 @@ func (ctrl *Controller) receiver() {
 			// If we return then watchdog will re-connect
 			return
 		}
+		logs.Debug("NetCtrl received message", zap.Int("L", len(messages)))
 		for _, message := range messages {
 			switch message.OpCode {
 			case ws.OpPong:
@@ -591,10 +591,9 @@ func (ctrl *Controller) SetAuthorization(authID int64, authKey []byte) {
 	copy(ctrl.authKey, authKey)
 }
 
-func (ctrl *Controller) incMessageSeq() int64{
+func (ctrl *Controller) incMessageSeq() int64 {
 	return atomic.AddInt64(&ctrl.messageSeq, 1)
 }
-
 
 // SendWebsocket direct sends immediately else it put it in flusher
 func (ctrl *Controller) SendWebsocket(msgEnvelope *msg.MessageEnvelope, direct bool) error {
