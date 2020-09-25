@@ -883,7 +883,7 @@ func (ctrl *Controller) updateReaction(u *msg.UpdateEnvelope) ([]*msg.UpdateEnve
 		return nil, err
 	}
 
-	err = repo.Messages.UpdateReactionCounter(x.MessageID, x.Counter)
+	err = repo.Messages.UpdateReactionCounter(x.MessageID, x.Counter, x.YourReactions)
 	if err != nil {
 		return nil, err
 	}

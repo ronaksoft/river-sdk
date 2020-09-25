@@ -327,13 +327,15 @@ func (r *repoMessages) Save(messages ...*msg.UserMessage) {
 	logs.ErrorOnErr("RepoMessage got error on save", err)
 }
 
-func (r *repoMessages) UpdateReactionCounter(messageID int64, reactions []*msg.ReactionCounter) error {
+func (r *repoMessages) UpdateReactionCounter(messageID int64, reactions []*msg.ReactionCounter, yourReactions []string) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		um, err := getMessageByID(txn, messageID)
 		if err != nil {
 			return nil
 		}
 		um.Reactions = reactions
+		um.YourReactions = yourReactions
+
 		return saveMessage(txn, um)
 	})
 }
