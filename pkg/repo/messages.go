@@ -613,7 +613,6 @@ func (r *repoMessages) SetContentRead(peerID int64, peerType int32, messageIDs [
 }
 
 func (r *repoMessages) GetTopMessageID(teamID, peerID int64, peerType int32) (int64, error) {
-
 	topMessageID := int64(0)
 	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions

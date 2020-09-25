@@ -17,6 +17,11 @@ var (
 	ClientOS       string
 	ClientVendor   string
 	SysConfig      *msg.SystemConfig
+
+	// Parameters which prevent sending duplicate requests
+	ContactsSynced int32
+	TimeSynced     int32
+	ConfigSynced   int32
 )
 
 func init() {

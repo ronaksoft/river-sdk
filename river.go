@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"git.ronaksoft.com/river/sdk/pkg/ctrl_network"
@@ -144,57 +145,62 @@ func (r *River) onNetworkConnect() (err error) {
 	waitGroup := &sync.WaitGroup{}
 	// If we have no salt then we must call GetServerTime and GetServerSalt sequentially, otherwise
 	// We call them in parallel
-	err = r.syncCtrl.GetServerTime()
-	if err != nil {
-		return err
+	if atomic.LoadInt32(&domain.TimeSynced) > 0 {
+		err = r.syncCtrl.GetServerTime()
+		if err != nil {
+			return err
+		}
+		domain.WindowLog(fmt.Sprintf("ServerTime (%s): %s", domain.TimeDelta, time.Now().Sub(domain.StartTime)))
 	}
-	domain.WindowLog(fmt.Sprintf("ServerTime (%s): %s", domain.TimeDelta, time.Now().Sub(domain.StartTime)))
+	atomic.CompareAndSwapInt32(&domain.TimeSynced, 0, 1)
 
-	if salt.Count() == 0 {
+	switch salt.Count() {
+	case 0:
 		r.syncCtrl.GetServerSalt()
 		domain.WindowLog(fmt.Sprintf("ServerSalt: %s", time.Now().Sub(domain.StartTime)))
-	} else {
-		if salt.Count() < 3 {
-			waitGroup.Add(1)
-			go func() {
-				r.syncCtrl.GetServerSalt()
-				domain.WindowLog(fmt.Sprintf("ServerSalt: %s", time.Now().Sub(domain.StartTime)))
-				waitGroup.Done()
-			}()
-		}
+	case 1, 2, 3:
+		waitGroup.Add(1)
+		go func() {
+			r.syncCtrl.GetServerSalt()
+			domain.WindowLog(fmt.Sprintf("ServerSalt: %s", time.Now().Sub(domain.StartTime)))
+			waitGroup.Done()
+		}()
+	default:
+		// We have enough salts
 	}
-	waitGroup.Add(1)
-	go func() {
-		serverUpdateID, err = r.syncCtrl.AuthRecall("NetworkConnect")
-		if err != nil {
-			logs.Warn("Error On AuthRecall", zap.Error(err))
-		}
-		r.networkCtrl.SetAuthRecalled(true)
-		domain.WindowLog(fmt.Sprintf("AuthRecalled: %s", time.Now().Sub(domain.StartTime)))
-		waitGroup.Done()
-	}()
+
+	serverUpdateID, err = r.syncCtrl.AuthRecall("NetworkConnect")
+	if err != nil {
+		logs.Warn("Error On AuthRecall", zap.Error(err))
+	}
+	domain.WindowLog(fmt.Sprintf("AuthRecalled: %s", time.Now().Sub(domain.StartTime)))
 	waitGroup.Wait()
 
-	if r.networkCtrl.GetQuality() == domain.NetworkDisconnected || err != nil {
+	// If we are disconnected or not logged in or error happened then we return
+	if err != nil || r.syncCtrl.GetUserID() == 0 ||  r.networkCtrl.GetQuality() == domain.NetworkDisconnected {
 		return
 	}
+
+
 	go func() {
-		if r.syncCtrl.GetUserID() != 0 {
-			if r.syncCtrl.UpdateID() < serverUpdateID {
-				// Sync with Server
-				r.syncCtrl.Sync()
-				domain.WindowLog(fmt.Sprintf("Synced: %s", time.Now().Sub(domain.StartTime)))
-			} else {
-				r.syncCtrl.SetSynced()
-				domain.WindowLog(fmt.Sprintf("Already Synced: %s", time.Now().Sub(domain.StartTime)))
-			}
+		// Check if client is synced with servers
+		if r.syncCtrl.UpdateID() < serverUpdateID {
+			// Sync with Server
+			r.syncCtrl.Sync()
+			domain.WindowLog(fmt.Sprintf("Synced: %s", time.Now().Sub(domain.StartTime)))
+		} else {
+			r.syncCtrl.SetSynced()
+			domain.WindowLog(fmt.Sprintf("Already Synced: %s", time.Now().Sub(domain.StartTime)))
+		}
 
-			// TODO:: must GetSystemConfig Periodically
-			_, err := repo.System.LoadBytes("SysConfig")
-			if err != nil {
-				r.syncCtrl.GetSystemConfig()
-			}
+		// Load SystemConfigs
+		_, _ = repo.System.LoadBytes("SysConfig")
+		if atomic.LoadInt32(&domain.ConfigSynced) > 0 {
+			r.syncCtrl.GetSystemConfig()
+		}
+		atomic.CompareAndSwapInt32(&domain.ConfigSynced, 0, 1)
 
+		if atomic.LoadInt32(&domain.ContactsSynced) > 0 {
 			// Get contacts and imports remaining contacts
 			waitGroup.Add(1)
 			r.syncCtrl.GetContacts(waitGroup, nil)
@@ -203,6 +209,8 @@ func (r *River) onNetworkConnect() (err error) {
 			r.syncCtrl.ContactsImport(true, nil, nil)
 			domain.WindowLog(fmt.Sprintf("ContactsImported: %s", time.Now().Sub(domain.StartTime)))
 		}
+		atomic.CompareAndSwapInt32(&domain.ContactsSynced, 0, 1)
+
 	}()
 	return nil
 }

@@ -86,6 +86,7 @@ func (ctrl *Controller) GetSystemConfig() {
 }
 
 func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
+
 	logs.Info("SyncCtrl call AuthRecall", zap.String("Caller", caller))
 	req := msg.AuthRecall{
 		ClientID:   0,
@@ -144,6 +145,9 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 		true,
 		false,
 	)
+
+	// Set the flag for network controller
+	ctrl.networkCtrl.SetAuthRecalled(true)
 	return
 }
 
