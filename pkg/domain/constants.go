@@ -154,7 +154,6 @@ const (
 	Day      = Hour * 24
 	Week     = Day * 7
 	Month    = Week * 4
-	TwoMonth = Month * 2
 )
 
 // UserStatus

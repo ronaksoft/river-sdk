@@ -145,7 +145,7 @@ func (r *River) onNetworkConnect() (err error) {
 	waitGroup := &sync.WaitGroup{}
 	// If we have no salt then we must call GetServerTime and GetServerSalt sequentially, otherwise
 	// We call them in parallel
-	if atomic.LoadInt32(&domain.TimeSynced) > 0 {
+	if atomic.LoadInt32(&domain.TimeSynced) == 0 {
 		err = r.syncCtrl.GetServerTime()
 		if err != nil {
 			return err
@@ -195,12 +195,12 @@ func (r *River) onNetworkConnect() (err error) {
 
 		// Load SystemConfigs
 		_, _ = repo.System.LoadBytes("SysConfig")
-		if atomic.LoadInt32(&domain.ConfigSynced) > 0 {
+		if atomic.LoadInt32(&domain.ConfigSynced) == 0 {
 			r.syncCtrl.GetSystemConfig()
 		}
 		atomic.CompareAndSwapInt32(&domain.ConfigSynced, 0, 1)
 
-		if atomic.LoadInt32(&domain.ContactsSynced) > 0 {
+		if atomic.LoadInt32(&domain.ContactsSynced) == 0 {
 			// Get contacts and imports remaining contacts
 			waitGroup.Add(1)
 			r.syncCtrl.GetContacts(waitGroup, nil)

@@ -521,7 +521,7 @@ func (ctrl *Controller) updateReadMessagesContents(u *msg.UpdateEnvelope) ([]*ms
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
-	repo.Messages.SetContentRead(x.Peer.ID, int32(x.Peer.Type), x.MessageIDs)
+	repo.Messages.SetContentRead(x.Peer.ID, x.Peer.Type, x.MessageIDs)
 
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil
