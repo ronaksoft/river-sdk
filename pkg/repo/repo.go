@@ -18,8 +18,6 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/dgraph-io/badger/v2"
 	"go.uber.org/zap"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 var (

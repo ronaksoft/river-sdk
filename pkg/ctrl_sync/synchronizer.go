@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/msg"
 	"git.ronaksoft.com/river/sdk/internal/logs"
-	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	"git.ronaksoft.com/river/sdk/internal/tools"
 	"git.ronaksoft.com/river/sdk/pkg/ctrl_file"
 	"git.ronaksoft.com/river/sdk/pkg/ctrl_network"
@@ -149,15 +148,6 @@ func (ctrl *Controller) watchDog() {
 				go ctrl.Sync()
 			}
 
-			// TODO:: complete this
-			ts, _ := mon.GetUploadUsageTime()
-			if ts == 0 {
-				ts = time.Now().Unix()
-				_ = mon.SaveUploadUsageTime(ts)
-			}
-			if time.Now().Sub(time.Unix(ts, 0)) > 24*time.Hour {
-				mon.ResetUsage()
-			}
 		}
 	}
 }

@@ -19,9 +19,7 @@ import (
 */
 
 const (
-	serverLongThreshold   = 2 * time.Second
-	queueLongThreshold    = 100 * time.Millisecond
-	functionLongThreshold = 50 * time.Millisecond
+	serverLongThreshold = 2 * time.Second
 )
 
 type stats struct {
@@ -168,14 +166,6 @@ func SaveUsage() {
 			logs.Warn("We got error on saving ClientUsage into the db", zap.Error(err))
 		}
 	}
-}
-
-func GetUploadUsageTime() (int64, error) {
-	return repo.System.LoadInt64("UsageUploadTS")
-}
-
-func SaveUploadUsageTime(ts int64) error {
-	return repo.System.SaveInt("UsageUploadTS", uint64(ts))
 }
 
 func ResetUsage() {

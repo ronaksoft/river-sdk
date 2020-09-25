@@ -177,10 +177,9 @@ func (r *River) onNetworkConnect() (err error) {
 	waitGroup.Wait()
 
 	// If we are disconnected or not logged in or error happened then we return
-	if err != nil || r.syncCtrl.GetUserID() == 0 ||  r.networkCtrl.GetQuality() == domain.NetworkDisconnected {
+	if err != nil || r.syncCtrl.GetUserID() == 0 || r.networkCtrl.GetQuality() == domain.NetworkDisconnected {
 		return
 	}
-
 
 	go func() {
 		// Check if client is synced with servers

@@ -149,11 +149,11 @@ func (rs RequestStatus) ToString() string {
 
 // UserStatus Times
 const (
-	Minute   = 60
-	Hour     = Minute * 60
-	Day      = Hour * 24
-	Week     = Day * 7
-	Month    = Week * 4
+	Minute = 60
+	Hour   = Minute * 60
+	Day    = Hour * 24
+	Week   = Day * 7
+	Month  = Week * 4
 )
 
 // UserStatus

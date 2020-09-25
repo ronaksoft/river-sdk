@@ -28,13 +28,11 @@ require (
 	github.com/gobwas/ws v1.0.4
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.4.2 // indirect
-	github.com/iRezaaa/mobile v0.0.0-20191126111539-45e4d750f768 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/juju/ratelimit v1.0.1
 	github.com/kr/pretty v0.2.0
 	github.com/mailru/easyjson v0.7.6
 	github.com/mattn/go-runewidth v0.0.9 // indirect
-	github.com/mattn/go-sqlite3 v1.14.3
 	github.com/monnand/dhkx v0.0.0-20180522003156-9e5b033f1ac4
 	github.com/nyaruka/phonenumbers v1.0.57
 	github.com/olekukonko/tablewriter v0.0.4

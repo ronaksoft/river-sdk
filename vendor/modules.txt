@@ -161,8 +161,6 @@ github.com/mattn/go-colorable
 github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.9
 github.com/mattn/go-runewidth
-# github.com/mattn/go-sqlite3 v1.14.3
-github.com/mattn/go-sqlite3
 # github.com/mitchellh/mapstructure v1.1.2
 github.com/mitchellh/mapstructure
 # github.com/monnand/dhkx v0.0.0-20180522003156-9e5b033f1ac4
