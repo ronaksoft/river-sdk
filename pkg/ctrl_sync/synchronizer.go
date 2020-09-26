@@ -254,8 +254,8 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 	waitGroup := sync.WaitGroup{}
 	for serverUpdateID > ctrl.updateID {
 		limit := serverUpdateID - ctrl.updateID
-		if limit > 100 {
-			limit = 100
+		if limit > 250 {
+			limit = 250
 		}
 		if limit <= 0 {
 			break
