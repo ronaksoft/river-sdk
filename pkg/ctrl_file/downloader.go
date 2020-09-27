@@ -232,6 +232,8 @@ func (a *DownloadAction) ID() int32 {
 
 func (a *DownloadAction) Do(ctx context.Context) {
 	offset := a.id * a.req.ChunkSize
+	ctx, cf := context.WithTimeout(ctx, domain.HttpRequestTimeout)
+	defer cf()
 	res, err := a.req.ctrl.network.SendHttp(ctx, a.req.generateFileGet(offset, a.req.ChunkSize))
 	if err != nil {
 		a.req.parts <- a.id

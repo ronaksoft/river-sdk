@@ -387,6 +387,8 @@ func (a *UploadAction) Do(ctx context.Context) {
 	}
 
 	// Send the http request to server
+	ctx, cf := context.WithTimeout(ctx, domain.HttpRequestTimeout)
+	defer cf()
 	res, err := a.req.ctrl.network.SendHttp(
 		ctx,
 		a.req.generateFileSavePart(a.req.FileID, a.id+1, a.req.TotalParts, bytes[:n]),
