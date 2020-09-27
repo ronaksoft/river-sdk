@@ -295,7 +295,7 @@ func (ctrl *Controller) Ping(id uint64, timeout time.Duration) error {
 // This is the background routine listen for incoming websocket packets and _Decrypt
 // the received message, if necessary, and  pass the extracted envelopes to messageHandler.
 func (ctrl *Controller) receiver() {
-	defer domain.RecoverPanic(
+	defer logs.RecoverPanic(
 		"NetworkController:: receiver",
 		domain.M{
 			"AuthID": ctrl.authID,
@@ -481,7 +481,7 @@ func (ctrl *Controller) Stop() {
 func (ctrl *Controller) Connect() {
 	_, _, _ = domain.SingleFlight.Do("NetworkConnect", func() (i interface{}, e error) {
 		logs.Info("NetCtrl is connecting")
-		defer domain.RecoverPanic(
+		defer logs.RecoverPanic(
 			"NetworkController::Connect",
 			domain.M{
 				"AuthID": ctrl.authID,
@@ -612,7 +612,7 @@ func (ctrl *Controller) incMessageSeq() int64 {
 
 // SendWebsocket direct sends immediately else it put it in flusher
 func (ctrl *Controller) SendWebsocket(msgEnvelope *msg.MessageEnvelope, direct bool) error {
-	defer domain.RecoverPanic(
+	defer logs.RecoverPanic(
 		"NetworkController::SendWebsocket",
 		domain.M{
 			"AuthID": ctrl.authID,
@@ -633,7 +633,7 @@ func (ctrl *Controller) SendWebsocket(msgEnvelope *msg.MessageEnvelope, direct b
 	return nil
 }
 func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
-	defer domain.RecoverPanic(
+	defer logs.RecoverPanic(
 		"NetworkController::sendWebsocket",
 		domain.M{
 			"AuthID": ctrl.authID,

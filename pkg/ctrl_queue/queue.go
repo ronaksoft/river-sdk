@@ -126,7 +126,7 @@ func (ctrl *Controller) addToWaitingList(req *request) {
 // Sends the message to the networkController and waits for the response. If time is up then it call the
 // TimeoutCallback otherwise if response arrived in time, SuccessCallback will be called.
 func (ctrl *Controller) executor(req request) {
-	defer domain.RecoverPanic(
+	defer logs.RecoverPanic(
 		"SyncCtrl::executor",
 		domain.M{
 			"OS":  domain.ClientOS,
@@ -227,7 +227,7 @@ func (ctrl *Controller) RealtimeCommand(
 	messageEnvelope *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
 	blockingMode, isUICallback bool,
 ) {
-	defer domain.RecoverPanic(
+	defer logs.RecoverPanic(
 		"SyncCtrl::RealtimeCommand",
 		domain.M{
 			"OS":  domain.ClientOS,
@@ -306,7 +306,7 @@ func (ctrl *Controller) EnqueueCommand(
 	messageEnvelope *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
 	isUICallback bool,
 ) {
-	defer domain.RecoverPanic(
+	defer logs.RecoverPanic(
 		"SyncCtrl::EnqueueCommand",
 		domain.M{
 			"OS":  domain.ClientOS,

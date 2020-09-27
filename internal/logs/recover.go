@@ -1,8 +1,8 @@
-package domain
+package logs
 
 import (
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"go.uber.org/zap"
+	"runtime/debug"
 )
 
 /*
@@ -14,15 +14,13 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-
-
-
 func RecoverPanic(funcName string, extraInfo interface{}, compensationFunc func()) {
 	if r := recover(); r != nil {
-		logs.Error("Panic Recovered",
+		Error("Panic Recovered",
 			zap.String("Func", funcName),
 			zap.Any("Info", extraInfo),
 			zap.Any("Recover", r),
+			zap.ByteString("StackTrace", debug.Stack()),
 		)
 		if compensationFunc != nil {
 			go compensationFunc()

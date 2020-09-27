@@ -139,6 +139,17 @@ func (ctrl *Controller) CancelRequest(reqID string) {
 }
 
 func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash uint64, skipDelegates bool) (reqID string, err error) {
+	defer logs.RecoverPanic(
+		"FileCtrl::DownloadASync",
+		domain.M{
+			"OS":        domain.ClientOS,
+			"Ver":       domain.ClientVersion,
+			"FileID":    fileID,
+			"ClusterID": clusterID,
+		},
+		nil,
+	)
+
 	clientFile, err := repo.Files.Get(clusterID, fileID, accessHash)
 	if err != nil {
 		return "", err
@@ -167,6 +178,17 @@ func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash 
 	return getRequestID(clusterID, fileID, accessHash), err
 }
 func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash uint64, skipDelegate bool) (filePath string, err error) {
+	defer logs.RecoverPanic(
+		"FileCtrl::DownloadSync",
+		domain.M{
+			"OS":        domain.ClientOS,
+			"Ver":       domain.ClientVersion,
+			"FileID":    fileID,
+			"ClusterID": clusterID,
+		},
+		nil,
+	)
+
 	clientFile, err := repo.Files.Get(clusterID, fileID, accessHash)
 	if err != nil {
 		switch err {
@@ -518,6 +540,16 @@ func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) (reqID 
 func (ctrl *Controller) UploadMessageDocument(
 	messageID int64, filePath, thumbPath string, fileID, thumbID int64, fileSha256 []byte, peerID int64, checkSha256 bool,
 ) {
+	defer logs.RecoverPanic(
+		"FileCtrl::UploadMessageDocument",
+		domain.M{
+			"OS":       domain.ClientOS,
+			"Ver":      domain.ClientVersion,
+			"FilePath": filePath,
+		},
+		nil,
+	)
+
 	if _, err := os.Stat(filePath); err != nil {
 		logs.Warn("FileCtrl got error on upload message document (thumbnail)", zap.Error(err))
 		return
