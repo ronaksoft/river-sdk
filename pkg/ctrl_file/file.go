@@ -107,7 +107,7 @@ func (ctrl *Controller) Start() {
 }
 
 func (ctrl *Controller) Stop() {
-
+	// Nothing
 }
 
 func (ctrl *Controller) GetUploadRequest(fileID int64) *msg.ClientFileRequest {

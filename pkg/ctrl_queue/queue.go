@@ -126,6 +126,16 @@ func (ctrl *Controller) addToWaitingList(req *request) {
 // Sends the message to the networkController and waits for the response. If time is up then it call the
 // TimeoutCallback otherwise if response arrived in time, SuccessCallback will be called.
 func (ctrl *Controller) executor(req request) {
+	defer domain.RecoverPanic(
+		"SyncCtrl::executor",
+		domain.M{
+			"OS":  domain.ClientOS,
+			"Ver": domain.ClientVersion,
+			"C":   req.MessageEnvelope.Constructor,
+		},
+		nil,
+	)
+
 	reqCB := domain.GetRequestCallback(req.ID)
 	if reqCB == nil {
 		reqCB = domain.AddRequestCallback(
@@ -217,6 +227,16 @@ func (ctrl *Controller) RealtimeCommand(
 	messageEnvelope *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
 	blockingMode, isUICallback bool,
 ) {
+	defer domain.RecoverPanic(
+		"SyncCtrl::RealtimeCommand",
+		domain.M{
+			"OS":  domain.ClientOS,
+			"Ver": domain.ClientVersion,
+			"C":   messageEnvelope.Constructor,
+		},
+		nil,
+	)
+
 	logs.Debug("QueueCtrl fires realtime command",
 		zap.Uint64("ReqID", messageEnvelope.RequestID),
 		zap.String("C", msg.ConstructorNames[messageEnvelope.Constructor]),
@@ -286,6 +306,16 @@ func (ctrl *Controller) EnqueueCommand(
 	messageEnvelope *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
 	isUICallback bool,
 ) {
+	defer domain.RecoverPanic(
+		"SyncCtrl::EnqueueCommand",
+		domain.M{
+			"OS":  domain.ClientOS,
+			"Ver": domain.ClientVersion,
+			"C":   messageEnvelope.Constructor,
+		},
+		nil,
+	)
+
 	logs.Debug("QueueCtrl enqueues command",
 		zap.Uint64("ReqID", messageEnvelope.RequestID),
 		zap.String("C", msg.ConstructorNames[messageEnvelope.Constructor]),

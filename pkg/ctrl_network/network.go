@@ -295,9 +295,16 @@ func (ctrl *Controller) Ping(id uint64, timeout time.Duration) error {
 // This is the background routine listen for incoming websocket packets and _Decrypt
 // the received message, if necessary, and  pass the extracted envelopes to messageHandler.
 func (ctrl *Controller) receiver() {
-	defer ctrl.recoverPanic("NetworkController:: receiver", domain.M{
-		"AuthID": ctrl.authID,
-	})
+	defer domain.RecoverPanic(
+		"NetworkController:: receiver",
+		domain.M{
+			"AuthID": ctrl.authID,
+			"OS":     domain.ClientOS,
+			"Ver":    domain.ClientVersion,
+		},
+		nil,
+	)
+
 	res := msg.ProtoMessage{}
 	var (
 		messages []wsutil.Message
@@ -474,9 +481,17 @@ func (ctrl *Controller) Stop() {
 func (ctrl *Controller) Connect() {
 	_, _, _ = domain.SingleFlight.Do("NetworkConnect", func() (i interface{}, e error) {
 		logs.Info("NetCtrl is connecting")
-		defer ctrl.recoverPanic("NetworkController:: Connect", domain.M{
-			"AuthID": ctrl.authID,
-		})
+		defer domain.RecoverPanic(
+			"NetworkController::Connect",
+			domain.M{
+				"AuthID": ctrl.authID,
+				"OS":     domain.ClientOS,
+				"Ver":    domain.ClientVersion,
+			},
+			func() {
+				ctrl.Reconnect()
+			},
+		)
 
 		ctrl.wsKeepConnection = true
 		keepGoing := true
@@ -597,9 +612,18 @@ func (ctrl *Controller) incMessageSeq() int64 {
 
 // SendWebsocket direct sends immediately else it put it in flusher
 func (ctrl *Controller) SendWebsocket(msgEnvelope *msg.MessageEnvelope, direct bool) error {
-	defer ctrl.recoverPanic("NetworkController:: SendWebsocket", domain.M{
-		"C": msgEnvelope.Constructor,
-	})
+	defer domain.RecoverPanic(
+		"NetworkController::SendWebsocket",
+		domain.M{
+			"AuthID": ctrl.authID,
+			"OS":     domain.ClientOS,
+			"Ver":    domain.ClientVersion,
+			"C":      msgEnvelope.Constructor,
+		},
+		func() {
+			ctrl.Reconnect()
+		},
+	)
 
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
 	if direct || unauthorized {
@@ -609,9 +633,18 @@ func (ctrl *Controller) SendWebsocket(msgEnvelope *msg.MessageEnvelope, direct b
 	return nil
 }
 func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
-	defer ctrl.recoverPanic("NetworkController:: sendWebsocket", domain.M{
-		"C": msgEnvelope.Constructor,
-	})
+	defer domain.RecoverPanic(
+		"NetworkController::sendWebsocket",
+		domain.M{
+			"AuthID": ctrl.authID,
+			"OS":     domain.ClientOS,
+			"Ver":    domain.ClientVersion,
+			"C":      msgEnvelope.Constructor,
+		},
+		func() {
+			ctrl.Reconnect()
+		},
+	)
 
 	startTime := time.Now()
 	protoMessage := &msg.ProtoMessage{
@@ -795,15 +828,4 @@ func (ctrl *Controller) SetAuthRecalled(b bool) {
 
 func (ctrl *Controller) GetAuthRecalled() bool {
 	return atomic.LoadInt32(&ctrl.authRecalled) > 0
-}
-
-func (ctrl *Controller) recoverPanic(funcName string, extraInfo interface{}) {
-	if r := recover(); r != nil {
-		logs.Error("Panic Recovered",
-			zap.String("Func", funcName),
-			zap.Any("Info", extraInfo),
-			zap.Any("Recover", r),
-		)
-		go ctrl.Reconnect()
-	}
 }
