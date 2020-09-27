@@ -140,6 +140,15 @@ func (r *River) loadDeviceToken() {
 }
 
 func (r *River) onNetworkConnect() (err error) {
+	defer logs.RecoverPanic(
+		"River::onNetworkConnect",
+		domain.M{
+			"OS":  domain.ClientOS,
+			"Ver": domain.ClientVersion,
+		},
+		nil,
+	)
+
 	domain.WindowLog(fmt.Sprintf("Connected: %s", domain.StartTime.Format(time.Kitchen)))
 	var serverUpdateID int64
 	waitGroup := &sync.WaitGroup{}
@@ -239,6 +248,15 @@ func (r *River) onGeneralError(requestID uint64, e *msg.Error) {
 }
 
 func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
+	defer logs.RecoverPanic(
+		"River::onReceivedMessage",
+		domain.M{
+			"OS":  domain.ClientOS,
+			"Ver": domain.ClientVersion,
+		},
+		nil,
+	)
+
 	// sort messages by requestID
 	sort.Slice(msgs, func(i, j int) bool {
 		return msgs[i].RequestID < msgs[j].RequestID
@@ -272,6 +290,16 @@ func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
 }
 
 func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {
+	defer logs.RecoverPanic(
+		"River::onReceivedUpdate",
+		domain.M{
+			"OS":              domain.ClientOS,
+			"Ver":             domain.ClientVersion,
+			"UpdateContainer": updateContainer,
+		},
+		nil,
+	)
+
 	for _, update := range updateContainer.Updates {
 		logs.UpdateLog(update.UpdateID, update.Constructor)
 	}
@@ -293,6 +321,16 @@ func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {
 }
 
 func (r *River) postUploadProcess(uploadRequest msg.ClientFileRequest) bool {
+	defer logs.RecoverPanic(
+		"River::postUploadProcess",
+		domain.M{
+			"OS":       domain.ClientOS,
+			"Ver":      domain.ClientVersion,
+			"FilePath": uploadRequest.FilePath,
+		},
+		nil,
+	)
+
 	logs.Info("River Post Upload Process",
 		zap.Bool("IsProfile", uploadRequest.IsProfilePhoto),
 		zap.Int64("MessageID", uploadRequest.MessageID),
