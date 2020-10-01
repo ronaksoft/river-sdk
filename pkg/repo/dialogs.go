@@ -235,6 +235,17 @@ func (r *repoDialogs) UpdatePinned(in *msg.UpdateDialogPinned) error {
 	})
 }
 
+func (r *repoDialogs) UpdatePinMessageID(in *msg.UpdateMessagePinned) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		dialog, err := getDialog(txn, in.TeamID, in.Peer.ID, in.Peer.Type)
+		if err != nil {
+			return err
+		}
+		dialog.PinnedMessageID = in.MsgID
+		return saveDialog(txn, dialog)
+	})
+}
+
 func (r *repoDialogs) Delete(teamID, peerID int64, peerType int32) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		return txn.Delete(getDialogKey(teamID, peerID, peerType))
