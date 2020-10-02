@@ -235,7 +235,7 @@ func (r *repoDialogs) UpdatePinned(in *msg.UpdateDialogPinned) error {
 	})
 }
 
-func (r *repoDialogs) UpdatePinMessageID(teamID int64 , peerID int64 , peerType int32 , messageID int64) error {
+func (r *repoDialogs) UpdatePinMessageID(teamID int64, peerID int64, peerType int32, messageID int64) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		dialog, err := getDialog(txn, teamID, peerID, peerType)
 		if err != nil {

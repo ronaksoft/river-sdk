@@ -900,7 +900,7 @@ func (ctrl *Controller) updateMessagePinned(u *msg.UpdateEnvelope) ([]*msg.Updat
 		return nil, err
 	}
 
-	err = repo.Dialogs.UpdatePinMessageID(x.TeamID,x.Peer.ID,x.Peer.Type,x.MsgID)
+	err = repo.Dialogs.UpdatePinMessageID(x.TeamID, x.Peer.ID, x.Peer.Type, x.MsgID)
 	if err != nil {
 		return nil, err
 	}
