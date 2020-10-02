@@ -340,6 +340,104 @@ func ResultGroupsUpdatePhoto(out *MessageEnvelope, res *GroupsUpdatePhoto) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_GroupsGetReadHistoryStats int64 = 719309439
+
+type poolGroupsGetReadHistoryStats struct {
+	pool sync.Pool
+}
+
+func (p *poolGroupsGetReadHistoryStats) Get() *GroupsGetReadHistoryStats {
+	x, ok := p.pool.Get().(*GroupsGetReadHistoryStats)
+	if !ok {
+		return &GroupsGetReadHistoryStats{}
+	}
+	return x
+}
+
+func (p *poolGroupsGetReadHistoryStats) Put(x *GroupsGetReadHistoryStats) {
+	p.pool.Put(x)
+}
+
+var PoolGroupsGetReadHistoryStats = poolGroupsGetReadHistoryStats{}
+
+func ResultGroupsGetReadHistoryStats(out *MessageEnvelope, res *GroupsGetReadHistoryStats) {
+	out.Constructor = C_GroupsGetReadHistoryStats
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_GroupsHistoryStats int64 = 1080267574
+
+type poolGroupsHistoryStats struct {
+	pool sync.Pool
+}
+
+func (p *poolGroupsHistoryStats) Get() *GroupsHistoryStats {
+	x, ok := p.pool.Get().(*GroupsHistoryStats)
+	if !ok {
+		return &GroupsHistoryStats{}
+	}
+	return x
+}
+
+func (p *poolGroupsHistoryStats) Put(x *GroupsHistoryStats) {
+	x.Stats = x.Stats[:0]
+	x.Users = x.Users[:0]
+	p.pool.Put(x)
+}
+
+var PoolGroupsHistoryStats = poolGroupsHistoryStats{}
+
+func ResultGroupsHistoryStats(out *MessageEnvelope, res *GroupsHistoryStats) {
+	out.Constructor = C_GroupsHistoryStats
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_ReadHistoryStat int64 = 3486960061
+
+type poolReadHistoryStat struct {
+	pool sync.Pool
+}
+
+func (p *poolReadHistoryStat) Get() *ReadHistoryStat {
+	x, ok := p.pool.Get().(*ReadHistoryStat)
+	if !ok {
+		return &ReadHistoryStat{}
+	}
+	return x
+}
+
+func (p *poolReadHistoryStat) Put(x *ReadHistoryStat) {
+	p.pool.Put(x)
+}
+
+var PoolReadHistoryStat = poolReadHistoryStat{}
+
+func ResultReadHistoryStat(out *MessageEnvelope, res *ReadHistoryStat) {
+	out.Constructor = C_ReadHistoryStat
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 func init() {
 	ConstructorNames[1271969037] = "GroupsCreate"
 	ConstructorNames[394654713] = "GroupsAddUser"
@@ -351,4 +449,7 @@ func init() {
 	ConstructorNames[2624284907] = "GroupsUploadPhoto"
 	ConstructorNames[176771682] = "GroupsRemovePhoto"
 	ConstructorNames[3431184397] = "GroupsUpdatePhoto"
+	ConstructorNames[719309439] = "GroupsGetReadHistoryStats"
+	ConstructorNames[1080267574] = "GroupsHistoryStats"
+	ConstructorNames[3486960061] = "ReadHistoryStat"
 }

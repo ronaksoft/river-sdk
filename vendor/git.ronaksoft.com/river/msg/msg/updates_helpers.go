@@ -365,6 +365,7 @@ func (p *poolUpdateReadHistoryOutbox) Get() *UpdateReadHistoryOutbox {
 
 func (p *poolUpdateReadHistoryOutbox) Put(x *UpdateReadHistoryOutbox) {
 	x.TeamID = 0
+	x.UserID = 0
 	p.pool.Put(x)
 }
 
@@ -372,6 +373,39 @@ var PoolUpdateReadHistoryOutbox = poolUpdateReadHistoryOutbox{}
 
 func ResultUpdateReadHistoryOutbox(out *MessageEnvelope, res *UpdateReadHistoryOutbox) {
 	out.Constructor = C_UpdateReadHistoryOutbox
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_UpdateMessagePinned int64 = 1260768050
+
+type poolUpdateMessagePinned struct {
+	pool sync.Pool
+}
+
+func (p *poolUpdateMessagePinned) Get() *UpdateMessagePinned {
+	x, ok := p.pool.Get().(*UpdateMessagePinned)
+	if !ok {
+		return &UpdateMessagePinned{}
+	}
+	return x
+}
+
+func (p *poolUpdateMessagePinned) Put(x *UpdateMessagePinned) {
+	x.TeamID = 0
+	p.pool.Put(x)
+}
+
+var PoolUpdateMessagePinned = poolUpdateMessagePinned{}
+
+func ResultUpdateMessagePinned(out *MessageEnvelope, res *UpdateMessagePinned) {
+	out.Constructor = C_UpdateMessagePinned
 	protoSize := res.Size()
 	if protoSize > cap(out.Message) {
 		pbytes.Put(out.Message)
@@ -1707,6 +1741,7 @@ func init() {
 	ConstructorNames[670568714] = "UpdateMessagesDeleted"
 	ConstructorNames[1529128378] = "UpdateReadHistoryInbox"
 	ConstructorNames[510866108] = "UpdateReadHistoryOutbox"
+	ConstructorNames[1260768050] = "UpdateMessagePinned"
 	ConstructorNames[178254060] = "UpdateUserTyping"
 	ConstructorNames[2696747995] = "UpdateUserStatus"
 	ConstructorNames[4290110589] = "UpdateUsername"

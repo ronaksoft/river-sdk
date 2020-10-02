@@ -892,3 +892,18 @@ func (ctrl *Controller) updateReaction(u *msg.UpdateEnvelope) ([]*msg.UpdateEnve
 
 	return []*msg.UpdateEnvelope{u}, nil
 }
+
+func (ctrl *Controller) updateMessagePinned(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := &msg.UpdateMessagePinned{}
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	err = repo.Dialogs.UpdatePinMessageID(x.TeamID,x.Peer.ID,x.Peer.Type,x.MsgID)
+	if err != nil {
+		return nil, err
+	}
+
+	return []*msg.UpdateEnvelope{u}, nil
+}

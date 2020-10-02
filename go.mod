@@ -1,7 +1,7 @@
 module git.ronaksoft.com/river/sdk
 
 require (
-	git.ronaksoft.com/river/msg v0.0.0-20200922095124-089a731ac88b
+	git.ronaksoft.com/river/msg v0.0.0-20200929123632-77522892c2f7
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/RoaringBitmap/roaring v0.5.1 // indirect
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
@@ -28,6 +28,7 @@ require (
 	github.com/gobwas/ws v1.0.4
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.4.2 // indirect
+	github.com/iRezaaa/mobile v0.0.0-20191126111539-45e4d750f768 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/juju/ratelimit v1.0.1
 	github.com/kr/pretty v0.2.0

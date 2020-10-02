@@ -408,6 +408,7 @@ func (p *poolDialog) Put(x *Dialog) {
 		*x.Draft = DraftMessage{}
 	}
 
+	x.PinnedMessageID = 0
 	p.pool.Put(x)
 }
 
