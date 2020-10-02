@@ -202,7 +202,6 @@ func (r *River) onNetworkConnect() (err error) {
 		}
 
 		// Load SystemConfigs
-		_, _ = repo.System.LoadBytes("SysConfig")
 		if atomic.LoadInt32(&domain.ConfigSynced) == 0 {
 			r.syncCtrl.GetSystemConfig()
 		}

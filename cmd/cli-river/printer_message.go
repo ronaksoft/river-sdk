@@ -21,6 +21,10 @@ var (
 
 func MessagePrinter(envelope *msg.MessageEnvelope) {
 	switch envelope.Constructor {
+	case msg.C_SystemConfig:
+		x := &msg.SystemConfig{}
+		x.Unmarshal(envelope.Message)
+		_Shell.Println("Reactions", x.Reactions)
 	case msg.C_ClientPendingMessage:
 		x := &msg.ClientPendingMessage{}
 		x.Unmarshal(envelope.Message)
