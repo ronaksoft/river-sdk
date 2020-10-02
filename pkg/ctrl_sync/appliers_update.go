@@ -266,6 +266,7 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) ([]*msg.Up
 		logs.Error("SyncCtrl got error on UpdateReadHistoryInbox",
 			zap.Int64("PeerID", x.Peer.ID),
 			zap.Int32("PeerType", x.Peer.Type),
+			zap.Error(err),
 		)
 	}
 
@@ -275,7 +276,7 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) ([]*msg.Up
 		zap.Int64("PeerID", x.Peer.ID),
 	)
 
-	repo.Dialogs.UpdateReadInboxMaxID(ctrl.GetUserID(), x.TeamID, x.Peer.ID, x.Peer.Type, x.MaxID)
+	_ = repo.Dialogs.UpdateReadInboxMaxID(ctrl.GetUserID(), x.TeamID, x.Peer.ID, x.Peer.Type, x.MaxID)
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil
 }
@@ -292,6 +293,7 @@ func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) ([]*msg.U
 		logs.Error("SyncCtrl got error on UpdateReadHistoryOutbox",
 			zap.Int64("PeerID", x.Peer.ID),
 			zap.Int32("PeerType", x.Peer.Type),
+			zap.Error(err),
 		)
 	}
 
@@ -301,7 +303,7 @@ func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) ([]*msg.U
 		zap.Int64("PeerID", x.Peer.ID),
 	)
 
-	repo.Dialogs.UpdateReadOutboxMaxID(x.TeamID, x.Peer.ID, x.Peer.Type, x.MaxID)
+	_ = repo.Dialogs.UpdateReadOutboxMaxID(x.TeamID, x.Peer.ID, x.Peer.Type, x.MaxID)
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil
 }
