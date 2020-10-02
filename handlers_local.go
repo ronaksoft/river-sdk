@@ -1966,3 +1966,17 @@ func (r *River) teamEdit(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutC
 
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
+
+func (r *River) messagesTogglePin(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.MessagesTogglePin{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	err := repo.Dialogs.UpdatePinMessageID(in.Team.ID, req.Peer.ID, int32(req.Peer.Type), req.MessageID)
+	logs.ErrorOnErr("MessagesTogglePin", err)
+
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+}
