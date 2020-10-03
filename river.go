@@ -620,6 +620,9 @@ func (r *River) registerCommandHandlers() {
 		msg.C_AccountGetTeams:               r.accountsGetTeams,
 		msg.C_TeamEdit:                      r.teamEdit,
 		msg.C_MessagesTogglePin:             r.messagesTogglePin,
+		msg.C_MessagesSendReaction:          r.messagesSendReaction,
+		msg.C_MessagesDeleteReaction:        r.messagesDeleteReaction,
+		msg.C_ClientGetFrequentlyReactions:  r.clientGetFrequentlyReactions,
 	}
 }
 

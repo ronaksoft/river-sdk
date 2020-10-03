@@ -40,6 +40,7 @@ var (
 	Wallpapers      *repoWallpapers
 	RecentSearches  *repoRecentSearches
 	Teams           *repoTeams
+	Reactions       *repoReactions
 )
 
 // Context container of repo
@@ -89,6 +90,7 @@ func InitRepo(dbPath string, lowMemory bool) error {
 		Wallpapers = &repoWallpapers{repository: r}
 		RecentSearches = &repoRecentSearches{repository: r}
 		Teams = &repoTeams{repository: r}
+		Reactions = &repoReactions{repository: r}
 		singleton.Unlock()
 	}
 	return nil
@@ -109,7 +111,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 			WithNumMemtables(2).
 			WithNumLevelZeroTables(2).
 			WithNumLevelZeroTablesStall(4).
-			WithMaxTableSize(1 << 22).     // 4MB
+			WithMaxTableSize(1 << 22). // 4MB
 			WithValueLogFileSize(1 << 22). // 4MB
 			WithBypassLockGuard(true)
 	} else {

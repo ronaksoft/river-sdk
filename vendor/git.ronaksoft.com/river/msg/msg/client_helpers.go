@@ -907,6 +907,71 @@ func ResultClientTeamCounters(out *MessageEnvelope, res *ClientTeamCounters) {
 	res.MarshalToSizedBuffer(out.Message)
 }
 
+const C_ClientGetFrequentlyReactions int64 = 2316768708
+
+type poolClientGetFrequentlyReactions struct {
+	pool sync.Pool
+}
+
+func (p *poolClientGetFrequentlyReactions) Get() *ClientGetFrequentlyReactions {
+	x, ok := p.pool.Get().(*ClientGetFrequentlyReactions)
+	if !ok {
+		return &ClientGetFrequentlyReactions{}
+	}
+	return x
+}
+
+func (p *poolClientGetFrequentlyReactions) Put(x *ClientGetFrequentlyReactions) {
+	p.pool.Put(x)
+}
+
+var PoolClientGetFrequentlyReactions = poolClientGetFrequentlyReactions{}
+
+func ResultClientGetFrequentlyReactions(out *MessageEnvelope, res *ClientGetFrequentlyReactions) {
+	out.Constructor = C_ClientGetFrequentlyReactions
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
+const C_ClientFrequentlyReactions int64 = 2830270594
+
+type poolClientFrequentlyReactions struct {
+	pool sync.Pool
+}
+
+func (p *poolClientFrequentlyReactions) Get() *ClientFrequentlyReactions {
+	x, ok := p.pool.Get().(*ClientFrequentlyReactions)
+	if !ok {
+		return &ClientFrequentlyReactions{}
+	}
+	return x
+}
+
+func (p *poolClientFrequentlyReactions) Put(x *ClientFrequentlyReactions) {
+	x.Reactions = x.Reactions[:0]
+	p.pool.Put(x)
+}
+
+var PoolClientFrequentlyReactions = poolClientFrequentlyReactions{}
+
+func ResultClientFrequentlyReactions(out *MessageEnvelope, res *ClientFrequentlyReactions) {
+	out.Constructor = C_ClientFrequentlyReactions
+	protoSize := res.Size()
+	if protoSize > cap(out.Message) {
+		pbytes.Put(out.Message)
+		out.Message = pbytes.GetLen(protoSize)
+	} else {
+		out.Message = out.Message[:protoSize]
+	}
+	res.MarshalToSizedBuffer(out.Message)
+}
+
 func init() {
 	ConstructorNames[1095038539] = "ClientSendMessageMedia"
 	ConstructorNames[1742781507] = "ClientGlobalSearch"
@@ -933,4 +998,6 @@ func init() {
 	ConstructorNames[2069517672] = "ClientRecentSearch"
 	ConstructorNames[3236847495] = "ClientRecentSearchMany"
 	ConstructorNames[769069696] = "ClientTeamCounters"
+	ConstructorNames[2316768708] = "ClientGetFrequentlyReactions"
+	ConstructorNames[2830270594] = "ClientFrequentlyReactions"
 }

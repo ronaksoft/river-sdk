@@ -249,6 +249,7 @@ func (ctrl *Controller) systemConfig(e *msg.MessageEnvelope) {
 	logs.Info("SyncCtrl applies SystemConfig")
 
 	sysConfBytes, _ := u.Marshal()
+	domain.SysConfig.Reactions = domain.SysConfig.Reactions[:0]
 	err = domain.SysConfig.Unmarshal(sysConfBytes)
 	if err != nil {
 		logs.Error("SyncCtrl got error on unmarshalling SystemConfig", zap.Error(err))

@@ -1980,3 +1980,58 @@ func (r *River) messagesTogglePin(in, out *msg.MessageEnvelope, timeoutCB domain
 
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
+
+func (r *River) messagesSendReaction(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.MessagesSendReaction{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	err := repo.Reactions.IncreaseReactionUseCount(req.Reaction)
+
+	logs.ErrorOnErr("messagesSendReaction", err)
+
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+}
+
+func (r *River) messagesDeleteReaction(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.MessagesDeleteReaction{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	for _, r := range req.Reactions {
+		err := repo.Reactions.DecreaseReactionUseCount(r)
+		logs.ErrorOnErr("messagesDeleteReaction", err)
+	}
+
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+}
+
+func (r *River) clientGetFrequentlyReactions(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	reactions := domain.SysConfig.Reactions
+	logs.Info("Reactions",zap.Int("ReactionsCount",len(reactions)))
+
+	useCountsMap := make(map[string]uint32, len(reactions))
+
+	for _, r := range reactions {
+		_, useCount := repo.Reactions.GetReactionUseCount(r)
+
+		useCountsMap[r] = useCount
+	}
+
+	sort.Slice(reactions, func(i, j int) bool {
+		return useCountsMap[reactions[i]] > useCountsMap[reactions[j]]
+	})
+
+	res := &msg.ClientFrequentlyReactions{
+		Reactions: reactions,
+	}
+
+	msg.ResultClientFrequentlyReactions(out, res)
+	successCB(out)
+}

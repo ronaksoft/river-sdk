@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"bytes"
 	"encoding/binary"
 	"git.ronaksoft.com/river/sdk/internal/pools"
 	"reflect"
@@ -100,6 +101,13 @@ func ByteToStr(bts []byte) string {
 	return *(*string)(unsafe.Pointer(s))
 }
 
+func ByteToInt(bts []byte) uint32 {
+	buff := bytes.NewReader(bts)
+	var nowVar uint32
+	binary.Read(buff, binary.BigEndian, &nowVar)
+	return nowVar
+}
+
 // StrToByte converts string to a byte slice without memory allocation.
 // Note it may break if string and/or slice header will change
 // in the future go versions.
@@ -107,4 +115,10 @@ func StrToByte(str string) []byte {
 	s := *(*reflect.StringHeader)(unsafe.Pointer(&str))
 	b := &reflect.SliceHeader{Data: s.Data, Len: s.Len, Cap: s.Len}
 	return *(*[]byte)(unsafe.Pointer(b))
+}
+
+func IntToByte(i uint32) []byte {
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, i)
+	return b
 }

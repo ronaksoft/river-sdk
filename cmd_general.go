@@ -620,6 +620,7 @@ func (r *River) AppStart() error {
 
 	confBytes, _ := repo.System.LoadBytes("SysConfig")
 	if confBytes != nil {
+		domain.SysConfig.Reactions = domain.SysConfig.Reactions[:0]
 		err := domain.SysConfig.Unmarshal(confBytes)
 		if err != nil {
 			logs.Warn("We could not unmarshal SysConfig", zap.Error(err))
