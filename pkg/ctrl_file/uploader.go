@@ -297,13 +297,13 @@ func (u *UploadRequest) ActionDone(id int32) {
 
 	// For single part uploads we are done
 	// For n-part uploads if we have done n-1 part then we add the last part
+	finishedParts := int32(len(u.FinishedParts))
 	switch u.TotalParts {
 	case 1:
-		if int32(len(u.FinishedParts)) != u.TotalParts {
-			logs.Fatal("FileCtrl got serious error total parts != finished parts")
+		if finishedParts != u.TotalParts {
+			return
 		}
 	default:
-		finishedParts := int32(len(u.FinishedParts))
 		switch {
 		case finishedParts < u.TotalParts-1:
 			return
