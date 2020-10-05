@@ -1989,8 +1989,7 @@ func (r *River) messagesSendReaction(in, out *msg.MessageEnvelope, timeoutCB dom
 		return
 	}
 
-	err := repo.Reactions.IncreaseReactionUseCount(req.Reaction)
-
+	err := repo.Reactions.IncrementReactionUseCount(req.Reaction, 1)
 	logs.ErrorOnErr("messagesSendReaction", err)
 
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
@@ -2005,7 +2004,7 @@ func (r *River) messagesDeleteReaction(in, out *msg.MessageEnvelope, timeoutCB d
 	}
 
 	for _, r := range req.Reactions {
-		err := repo.Reactions.DecreaseReactionUseCount(r)
+		err := repo.Reactions.IncrementReactionUseCount(r, -1)
 		logs.ErrorOnErr("messagesDeleteReaction", err)
 	}
 
@@ -2014,13 +2013,12 @@ func (r *River) messagesDeleteReaction(in, out *msg.MessageEnvelope, timeoutCB d
 
 func (r *River) clientGetFrequentlyReactions(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	reactions := domain.SysConfig.Reactions
-	logs.Info("Reactions",zap.Int("ReactionsCount",len(reactions)))
+	logs.Info("Reactions", zap.Int("ReactionsCount", len(reactions)))
 
 	useCountsMap := make(map[string]uint32, len(reactions))
 
 	for _, r := range reactions {
-		_, useCount := repo.Reactions.GetReactionUseCount(r)
-
+		useCount, _ := repo.Reactions.GetReactionUseCount(r)
 		useCountsMap[r] = useCount
 	}
 

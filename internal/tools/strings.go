@@ -101,7 +101,7 @@ func ByteToStr(bts []byte) string {
 	return *(*string)(unsafe.Pointer(s))
 }
 
-func ByteToInt(bts []byte) uint32 {
+func ByteToUInt32(bts []byte) uint32 {
 	buff := bytes.NewReader(bts)
 	var nowVar uint32
 	binary.Read(buff, binary.BigEndian, &nowVar)
@@ -117,7 +117,7 @@ func StrToByte(str string) []byte {
 	return *(*[]byte)(unsafe.Pointer(b))
 }
 
-func IntToByte(i uint32) []byte {
+func UInt32ToByte(i uint32) []byte {
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, i)
 	return b

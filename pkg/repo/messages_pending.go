@@ -21,18 +21,11 @@ type repoMessagesPending struct {
 	*repository
 }
 
-func abs(x int64) int64 {
-	if x < 0 {
-		return -x
-	}
-	return x
-}
-
 func getPendingMessageKey(msgID int64) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixPMessagesByID)
 	sb.WriteRune('.')
-	tools.AppendStrInt64(sb, abs(msgID))
+	tools.AppendStrInt64(sb, tools.AbsInt64(msgID))
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id
@@ -42,7 +35,7 @@ func getPendingMessageRandomKey(randomID int64) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixPMessagesByRandomID)
 	sb.WriteRune('.')
-	tools.AppendStrInt64(sb, abs(randomID))
+	tools.AppendStrInt64(sb, tools.AbsInt64(randomID))
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id

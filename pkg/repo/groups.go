@@ -465,7 +465,7 @@ func (r *repoGroups) Search(teamID int64, searchPhrase string) []*msg.Group {
 		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewMatchQuery(term), bleve.NewFuzzyQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
-	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", abs(teamID)))
+	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", tools.AbsInt64(teamID)))
 	t3.SetField("team_id")
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3))
 	searchResult, _ := r.peerSearch.Search(searchRequest)

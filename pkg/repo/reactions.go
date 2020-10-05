@@ -1,7 +1,7 @@
 package repo
 
 import (
-	"fmt"
+	"git.ronaksoft.com/river/sdk/internal/pools"
 	"git.ronaksoft.com/river/sdk/internal/tools"
 	"github.com/dgraph-io/badger/v2"
 )
@@ -17,72 +17,64 @@ type repoReactions struct {
 }
 
 const (
-	prefixReactions = "REACTIONS"
+	prefixReactionsUseCount = "REACTIONS_USE_CNT"
 )
 
-func getReactionUseCountKey(reaction string) string {
-	return fmt.Sprintf("%s.%s.useCount.", prefixReactions, reaction)
+func getReactionUseCountKey(reaction string) []byte {
+	sb := pools.AcquireStringsBuilder()
+	sb.WriteString(prefixReactionsUseCount)
+	sb.WriteRune('.')
+	sb.WriteString(reaction)
+	id := tools.StrToByte(sb.String())
+	pools.ReleaseStringsBuilder(sb)
+	return id
 }
 
-func (r *repoReactions) GetReactionUseCount(reaction string) (error, uint32) {
-	var useCount uint32 = 0
+func getReactionUseCount(txn *badger.Txn, reaction string) (uint32, error) {
+	var useCount uint32
+	item, err := txn.Get(getReactionUseCountKey(reaction))
+	switch err {
+	case nil:
+	case badger.ErrKeyNotFound:
+		return 0, nil
+	default:
+		return 0, err
+	}
 
-	err := badgerView(func(txn *badger.Txn) error {
-		item, err := txn.Get(tools.StrToByte(getReactionUseCountKey(reaction)))
-		switch err {
-		case nil:
-		case badger.ErrKeyNotFound:
-			useCount = 0
-			return nil
-		default:
-			return err
-		}
-
-		err = item.Value(func(val []byte) error {
-			useCount = tools.ByteToInt(val)
-			return nil
-		})
-
+	err = item.Value(func(val []byte) error {
+		useCount = tools.ByteToUInt32(val)
 		return nil
 	})
-
-	return err, useCount
+	return useCount, err
 }
 
-func (r *repoReactions) IncreaseReactionUseCount(reaction string) error {
-	err, useCount := r.GetReactionUseCount(reaction)
-
-	if err != nil {
-		return err
-	}
-
-	useCount++
-
-	err = badgerUpdate(func(txn *badger.Txn) error {
-		return txn.SetEntry(badger.NewEntry(
-			tools.StrToByte(getReactionUseCountKey(reaction)),
-			tools.IntToByte(useCount),
-		))
-	})
-
-	return err
+func saveReactionUseCount(txn *badger.Txn, reaction string, useCount uint32) error {
+	return txn.SetEntry(badger.NewEntry(
+		getReactionUseCountKey(reaction),
+		tools.UInt32ToByte(useCount),
+	))
 }
 
-func (r *repoReactions) DecreaseReactionUseCount(reaction string) error {
-	err, useCount := r.GetReactionUseCount(reaction)
-
-	if err != nil {
+func (r *repoReactions) GetReactionUseCount(reaction string) (useCount uint32, err error) {
+	err = badgerView(func(txn *badger.Txn) error {
+		useCount, err = getReactionUseCount(txn, reaction)
 		return err
-	}
-
-	useCount--
-
-	err = badgerUpdate(func(txn *badger.Txn) error {
-		return txn.SetEntry(badger.NewEntry(
-			tools.StrToByte(getReactionUseCountKey(reaction)),
-			tools.IntToByte(useCount),
-		))
 	})
+	return
+}
 
+func (r *repoReactions) IncrementReactionUseCount(reaction string, cnt int32) error {
+	err := badgerUpdate(func(txn *badger.Txn) error {
+		useCount, err := getReactionUseCount(txn, reaction)
+		if err != nil {
+			return err
+		}
+		if cnt < 0 {
+			useCount -= uint32(tools.AbsInt32(cnt))
+		} else {
+			useCount += uint32(tools.AbsInt32(cnt))
+		}
+		return saveReactionUseCount(txn, reaction, useCount)
+	})
 	return err
 }

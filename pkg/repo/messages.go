@@ -647,7 +647,7 @@ func (r *repoMessages) SearchText(teamID int64, text string, limit int32) []*msg
 		qs = append(qs, bleve.NewMatchQuery(term), bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
-	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", abs(teamID)))
+	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", tools.AbsInt64(teamID)))
 	t3.SetField("team_id")
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3))
 	searchResult, _ := r.msgSearch.Search(searchRequest)
@@ -680,9 +680,9 @@ func (r *repoMessages) SearchTextByPeerID(teamID int64, text string, peerID int6
 		qs = append(qs, bleve.NewMatchQuery(term), bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
-	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", abs(peerID)))
+	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", tools.AbsInt64(peerID)))
 	t3.SetField("peer_id")
-	t4 := bleve.NewTermQuery(fmt.Sprintf("%d", abs(teamID)))
+	t4 := bleve.NewTermQuery(fmt.Sprintf("%d", tools.AbsInt64(teamID)))
 	t4.SetField("team_id")
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3, t4))
 	searchResult, _ := r.msgSearch.Search(searchRequest)
@@ -844,13 +844,13 @@ func (r *repoMessages) SearchBySender(teamID int64, text string, senderID int64,
 		t2 = bleve.NewDisjunctionQuery(qs...)
 	}
 
-	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", abs(peerID)))
+	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", tools.AbsInt64(peerID)))
 	t3.SetField("peer_id")
 
-	t4 := bleve.NewTermQuery(fmt.Sprintf("%d", abs(senderID)))
+	t4 := bleve.NewTermQuery(fmt.Sprintf("%d", tools.AbsInt64(senderID)))
 	t4.SetField("sender_id")
 
-	t5 := bleve.NewTermQuery(fmt.Sprintf("%d", abs(teamID)))
+	t5 := bleve.NewTermQuery(fmt.Sprintf("%d", tools.AbsInt64(teamID)))
 	t5.SetField("team_id")
 
 	var searchRequest *bleve.SearchRequest
