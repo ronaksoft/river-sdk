@@ -22,6 +22,7 @@ import (
 	"git.ronaksoft.com/river/sdk/pkg/domain"
 )
 
+//go:generate easyjson river.go
 var (
 	_ServerKeys ServerKeys
 )
