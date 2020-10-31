@@ -431,11 +431,19 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 		return
 	}
 	msgIDs := domain.MInt64B{}
+	pMsgIDs := domain.MInt64B{}
+
 	for _, v := range req.MessagesIDs {
-		msgIDs[v] = true
+		if v > 0 {
+			msgIDs[v] = true
+		} else {
+			pMsgIDs[v] = true
+		}
 	}
 
 	messages := repo.Messages.GetMany(msgIDs.ToArray())
+	messages = append(messages, repo.PendingMessages.GetMany(pMsgIDs.ToArray())...)
+
 	mUsers := domain.MInt64B{}
 	mUsers[req.Peer.ID] = true
 	for _, m := range messages {
@@ -449,7 +457,7 @@ func (r *River) messagesGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeo
 	users, _ := repo.Users.GetMany(mUsers.ToArray())
 
 	// if db already had all users
-	if len(messages) == len(msgIDs) && len(users) > 0 {
+	if len(messages) == (len(msgIDs)+len(pMsgIDs)) && len(users) > 0 {
 		res := &msg.MessagesMany{
 			Messages: messages,
 			Users:    users,
