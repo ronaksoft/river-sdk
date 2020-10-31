@@ -2,7 +2,7 @@ package main
 
 import (
 	"git.ronaksoft.com/river/msg/msg"
-	"git.ronaksoft.com/river/sdk"
+	riversdk "git.ronaksoft.com/river/sdk/sdk/main"
 	"gopkg.in/abiosoft/ishell.v2"
 )
 
