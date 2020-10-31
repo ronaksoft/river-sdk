@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"git.ronaksoft.com/river/sdk/pkg/domain"
-	"git.ronaksoft.com/river/sdk/pkg/repo"
+	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/kr/pretty"
 
 	"git.ronaksoft.com/river/msg/msg"

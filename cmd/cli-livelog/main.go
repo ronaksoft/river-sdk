@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"git.ronaksoft.com/river/sdk/pkg/domain"
+	"git.ronaksoft.com/river/sdk/internal/domain"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/spf13/cobra"
