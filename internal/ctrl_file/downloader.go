@@ -73,9 +73,8 @@ func (d *DownloadRequest) addToDownloaded(partIndex int32) {
 		d.progress = progress
 	}
 	d.mtx.Unlock()
-	_ = repo.Files.SaveFileRequest(d.GetID(), &d.ClientFileRequest, true)
-
-	if !d.SkipDelegateCall && !skipOnProgress {
+	saved, _ := repo.Files.SaveFileRequest(d.GetID(), &d.ClientFileRequest, true)
+	if saved && !d.SkipDelegateCall && !skipOnProgress {
 		d.ctrl.onProgressChanged(d.GetID(), d.ClusterID, d.FileID, int64(d.AccessHash), progress, d.PeerID)
 	}
 

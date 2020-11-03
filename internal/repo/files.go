@@ -694,18 +694,25 @@ func getGroupProfilePath(groupID int64, fileID int64) string {
 	return path.Join(DirCache, fmt.Sprintf("g%d_%d%s", groupID, fileID, ".jpg"))
 }
 
-func (r *repoFiles) SaveFileRequest(reqID string, req *msg.ClientFileRequest, overwriteOnly bool) error {
-	return badgerUpdate(func(txn *badger.Txn) error {
+func (r *repoFiles) SaveFileRequest(reqID string, req *msg.ClientFileRequest, overwriteOnly bool) (bool, error) {
+	var saved bool
+	err := badgerUpdate(func(txn *badger.Txn) error {
 		key := domain.StrToByte(fmt.Sprintf("%s.%s", prefixFilesRequests, reqID))
 		if overwriteOnly {
 			_, err := txn.Get(key)
 			if err != nil {
-				return err
+				return nil
 			}
 		}
 		reqBytes, _ := req.Marshal()
-		return txn.Set(key, reqBytes)
+		err := txn.Set(key, reqBytes)
+		if err != nil {
+			return err
+		}
+		saved = true
+		return nil
 	})
+	return saved, err
 }
 
 func (r *repoFiles) DeleteFileRequest(reqID string) error {

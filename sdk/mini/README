@@ -1,0 +1,3 @@
+# Mini SDK
+This is a minimized version of the 'prime' sdk. It is useful for extensions and when the full functionality of the sdk
+is not required.

@@ -476,7 +476,7 @@ func (ctrl *Controller) download(req *DownloadRequest, blocking bool) error {
 		return domain.ErrAlreadyDownloading
 	}
 
-	_ = repo.Files.SaveFileRequest(
+	_, _ = repo.Files.SaveFileRequest(
 		getRequestID(req.ClusterID, req.FileID, req.AccessHash),
 		&req.ClientFileRequest,
 		false,
@@ -611,7 +611,7 @@ func (ctrl *Controller) upload(req msg.ClientFileRequest) error {
 		return domain.ErrAlreadyUploading
 	}
 
-	_ = repo.Files.SaveFileRequest(
+	_, _ = repo.Files.SaveFileRequest(
 		getRequestID(0, req.FileID, 0),
 		&req,
 		false,
