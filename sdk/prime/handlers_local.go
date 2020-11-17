@@ -1303,6 +1303,23 @@ func (r *River) labelsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeout
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
+func (r *River) labelsDelete(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.LabelsDelete{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		msg.ResultError(out, &msg.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	logs.Info("LabelsDelete", zap.Int64("TeamID", in.Team.ID))
+	err := repo.Labels.Delete(req.LabelIDs...)
+
+	logs.ErrorOnErr("LabelsDelete", err)
+
+	// send the request to server
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+}
+
 func (r *River) labelsListItems(in, out *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := &msg.LabelsListItems{}
 	if err := req.Unmarshal(in.Message); err != nil {
@@ -1592,5 +1609,3 @@ func (r *River) messagesDeleteReaction(in, out *msg.MessageEnvelope, timeoutCB d
 
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
-
-
