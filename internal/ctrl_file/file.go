@@ -87,7 +87,8 @@ func New(config Config) *Controller {
 
 	ctrl.uploader, err = executor.NewExecutor(config.DbPath, "uploader", func(data []byte) executor.Request {
 		r := &UploadRequest{
-			ctrl: ctrl,
+			ctrl:      ctrl,
+			startTime: domain.Now(),
 		}
 		_ = r.Unmarshal(data)
 		return r
@@ -619,6 +620,7 @@ func (ctrl *Controller) upload(req msg.ClientFileRequest) error {
 
 	err = ctrl.uploader.Execute(&UploadRequest{
 		ClientFileRequest: req,
+		startTime:         domain.Now(),
 	})
 	if err != nil {
 		return err

@@ -295,6 +295,9 @@ func (r *River) CancelFileRequest(reqID string) {
 
 func (r *River) DeleteAllPendingMessages() {
 	for _, p := range repo.PendingMessages.GetAll() {
+		if p.FileID != 0 {
+			r.fileCtrl.CancelUploadRequest(p.FileID)
+		}
 		_ = repo.PendingMessages.Delete(p.ID)
 	}
 }

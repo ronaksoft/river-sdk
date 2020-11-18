@@ -37,9 +37,6 @@ var Upload = &ishell.Cmd{
 		req.FileMIME = mime.TypeByExtension(path.Ext(filename))
 		req.FileName = filename
 
-		req.ThumbFilePath = ""
-		req.ThumbMIME = ""
-
 		req.MediaType = fnGetInputMediaType(c)
 		req.Attributes = fnGetAttributes(c)
 

@@ -2,6 +2,7 @@ package fileCtrl
 
 import (
 	"context"
+	"fmt"
 	"git.ronaksoft.com/river/msg/msg"
 	"git.ronaksoft.com/river/sdk/internal/ctrl_file/executor"
 	"git.ronaksoft.com/river/sdk/internal/domain"
@@ -35,6 +36,7 @@ type UploadRequest struct {
 	lastPartSent  bool
 	progress      int64
 	failedActions int32
+	startTime     time.Time
 }
 
 func (u *UploadRequest) checkSha256() error {
@@ -172,7 +174,10 @@ func (u *UploadRequest) GetID() string {
 }
 
 func (u *UploadRequest) Prepare() error {
-	logs.Info("FileCtrl prepare UploadRequest", zap.String("ReqID", u.GetID()))
+	logs.Info("FileCtrl prepares UploadRequest",
+		zap.String("ReqID", u.GetID()),
+		zap.Duration("D", domain.Now().Sub(u.startTime)),
+	)
 	u.reset()
 
 	// Check File stats and return error if any problem exists
@@ -252,10 +257,10 @@ func (u *UploadRequest) Prepare() error {
 		u.parts <- partIndex
 	}
 
-	logs.Debug("Upload Prepared",
-		zap.String("ID", u.GetID()),
-		zap.Int32("TotalParts", u.TotalParts),
-		zap.Int32s("Finished", u.FinishedParts),
+	logs.Debug("FileCtrl prepared UploadRequest",
+		zap.String("ReqID", u.GetID()),
+		zap.Duration("D", domain.Now().Sub(u.startTime)),
+		zap.String("Progress", fmt.Sprintf("%d / %d", len(u.FinishedParts), u.TotalParts)),
 	)
 	return nil
 }
@@ -270,6 +275,11 @@ func (u *UploadRequest) NextAction() executor.Action {
 	// Wait for next part, or return nil if we finished
 	select {
 	case partID := <-u.parts:
+		logs.Debug("FileCtrl got next upload part",
+			zap.String("ReqID", u.GetID()),
+			zap.Int32("PartID", partID),
+			zap.Duration("D", domain.Now().Sub(u.startTime)),
+		)
 		return &UploadAction{
 			id:  partID,
 			req: u,
@@ -281,10 +291,10 @@ func (u *UploadRequest) NextAction() executor.Action {
 
 func (u *UploadRequest) ActionDone(id int32) {
 	logs.Info("FileCtrl finished upload part",
-		zap.String("ReqID", u.GetID()),
+		zap.String("ID", u.GetID()),
 		zap.Int32("PartID", id),
-		zap.Int("FinishedParts", len(u.FinishedParts)),
-		zap.Int32("TotalParts", u.TotalParts),
+		zap.Duration("D", domain.Now().Sub(u.startTime)),
+		zap.String("Progress", fmt.Sprintf("%d / %d", len(u.FinishedParts), u.TotalParts)),
 	)
 	// If we have failed too many times, and we can decrease the chunk size the we do it again.
 	if atomic.LoadInt32(&u.failedActions) > retryMaxAttempts {
@@ -362,6 +372,7 @@ func (a *UploadAction) ID() int32 {
 }
 
 func (a *UploadAction) Do(ctx context.Context) {
+	startTime := domain.Now()
 	bytes := pbytes.GetLen(int(a.req.ChunkSize))
 	defer pbytes.Put(bytes)
 
@@ -401,6 +412,11 @@ func (a *UploadAction) Do(ctx context.Context) {
 	switch res.Constructor {
 	case msg.C_Bool:
 		a.req.addToUploaded(a.id)
+		logs.Debug("FileCtrl upload action done",
+			zap.String("ID", a.req.GetID()),
+			zap.Int32("PartID", a.ID()),
+			zap.Duration("D", domain.Now().Sub(startTime)),
+		)
 	case msg.C_Error:
 		x := &msg.Error{}
 		_ = x.Unmarshal(res.Message)
