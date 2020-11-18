@@ -50,29 +50,26 @@ func (u *UploadRequest) checkSha256() error {
 	}
 	envelop.Message, _ = req.Marshal()
 
-	err := domain.Try(3, time.Millisecond*500, func() error {
-		ctx, cancelFunc := context.WithTimeout(context.Background(), domain.HttpRequestTimeout)
-		defer cancelFunc()
-		res, err := u.ctrl.network.SendHttp(ctx, envelop)
-		if err != nil {
-			return err
-		}
-		switch res.Constructor {
-		case msg.C_FileLocation:
-			x := &msg.FileLocation{}
-			_ = x.Unmarshal(res.Message)
-			u.ClusterID = x.ClusterID
-			u.AccessHash = x.AccessHash
-			u.FileID = x.FileID
-			u.TotalParts = -1 // dirty hack, which queue.Start() knows the upload request is completed
-			return nil
-		case msg.C_Error:
-			x := &msg.Error{}
-			_ = x.Unmarshal(res.Message)
-		}
-		return domain.ErrServer
-	})
-	return err
+	ctx, cancelFunc := context.WithTimeout(context.Background(), domain.HttpRequestTimeout)
+	defer cancelFunc()
+	res, err := u.ctrl.network.SendHttp(ctx, envelop)
+	if err != nil {
+		return err
+	}
+	switch res.Constructor {
+	case msg.C_FileLocation:
+		x := &msg.FileLocation{}
+		_ = x.Unmarshal(res.Message)
+		u.ClusterID = x.ClusterID
+		u.AccessHash = x.AccessHash
+		u.FileID = x.FileID
+		u.TotalParts = -1 // dirty hack, which queue.Start() knows the upload request is completed
+		return nil
+	case msg.C_Error:
+		x := &msg.Error{}
+		_ = x.Unmarshal(res.Message)
+	}
+	return domain.ErrServer
 }
 
 func (u *UploadRequest) generateFileSavePart(fileID int64, partID int32, totalParts int32, bytes []byte) *msg.MessageEnvelope {
