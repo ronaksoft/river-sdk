@@ -602,7 +602,7 @@ func (r *River) AppKill() {
 
 // AppStart
 func (r *River) AppStart() error {
-	runtime.GOMAXPROCS(runtime.NumCPU() * 10)
+	runtime.GOMAXPROCS(runtime.NumCPU() * 2)
 
 	logs.Info("River Starting")
 	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)

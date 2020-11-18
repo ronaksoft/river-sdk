@@ -21,12 +21,16 @@ var Upload = &ishell.Cmd{
 		req.Attributes = make([]*msg.DocumentAttribute, 0)
 
 		req.Peer = new(msg.InputPeer)
-		req.Peer.Type = fnGetPeerType(c)
-		req.Peer.ID = fnGetPeerID(c)
-		req.Peer.AccessHash = fnGetAccessHash(c)
-		req.FilePath = fnGetFilePath(c)
-		req.ThumbFilePath = fnGetThumbFilePath(c)
-		req.ReplyTo = fnGetReplyTo(c)
+		req.Peer.Type = msg.PeerUser
+		req.Peer.ID = _SDK.ConnInfo.UserID
+		// req.Peer.Type = fnGetPeerType(c)
+		// req.Peer.ID = fnGetPeerID(c)
+		// req.Peer.AccessHash = fnGetAccessHash(c)
+		req.FilePath = "./_testdata/TEST1.png"
+		req.ThumbFilePath = "./_testdata/FileThumb.png"
+		// req.FilePath = fnGetFilePath(c)
+		// req.ThumbFilePath = fnGetThumbFilePath(c)
+		// req.ReplyTo = fnGetReplyTo(c)
 
 		f, _ := os.Open(req.FilePath)
 		filename := f.Name()
@@ -37,8 +41,10 @@ var Upload = &ishell.Cmd{
 		req.FileMIME = mime.TypeByExtension(path.Ext(filename))
 		req.FileName = filename
 
-		req.MediaType = fnGetInputMediaType(c)
-		req.Attributes = fnGetAttributes(c)
+		req.MediaType = msg.InputMediaTypeUploadedDocument
+
+		// req.MediaType = fnGetInputMediaType(c)
+		// req.Attributes = fnGetAttributes(c)
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)

@@ -223,7 +223,7 @@ func (ctrl *Controller) createHttpClient(timeout time.Duration) {
 	ctrl.httpClient.Transport = &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
-			Timeout:   3 * time.Second,
+			Timeout:   time.Second,
 			KeepAlive: 30 * time.Second,
 			DualStack: true,
 		}).DialContext,
@@ -702,6 +702,14 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 
 // Send encrypt and send request to server and receive and decrypt its response
 func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
+	st := domain.Now()
+	defer func() {
+		logs.Info("SendHttp",
+			zap.String("C", msg.ConstructorNames[msgEnvelope.Constructor]),
+			zap.Duration("D", domain.Now().Sub(st)),
+		)
+	}()
+
 	var totalUploadBytes, totalDownloadBytes int
 	startTime := time.Now()
 

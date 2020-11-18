@@ -69,13 +69,14 @@ func (e *Executor) execute() {
 		if e.stack.Length() == 0 {
 			e.running = false
 			e.mtx.Unlock()
-			break
+			return
 		}
 		e.mtx.Unlock()
 
 		// Pop the next request from the stack
 		stackItem, err := e.stack.Pop()
 		if err != nil {
+			logs.Fatal("FileCtrl Executor got Serious Error", zap.Error(err))
 			return
 		}
 
@@ -94,6 +95,8 @@ func (e *Executor) execute() {
 			}
 			e.waitGroupsLock.Unlock()
 
+			oWaitGroup := &sync.WaitGroup{}
+
 			// External loop over requests
 			for req != nil {
 				err := req.Prepare()
@@ -106,30 +109,39 @@ func (e *Executor) execute() {
 					continue
 				}
 
-				iMutex := sync.Mutex{}
-				iRateLimit := make(chan struct{}, defaultConcurrentAction)
-				iWaitGroup := sync.WaitGroup{}
-				// Run actions in a loop
-				for {
-					act := req.NextAction()
-					if act == nil {
-						// Wait for all actions to be done before going to next request
-						iWaitGroup.Wait()
-						req = req.Next()
-						break
+				oWaitGroup.Add(1)
+				go func(req Request) {
+					defer oWaitGroup.Done()
+					iMutex := sync.Mutex{}
+					iRateLimit := make(chan struct{}, defaultConcurrentAction)
+					iWaitGroup := sync.WaitGroup{}
+					// Run actions in a loop
+					for {
+						act := req.NextAction()
+						if act == nil {
+							// Wait for all actions to be done before going to next request
+							iWaitGroup.Wait()
+							break
+						}
+						iRateLimit <- struct{}{}
+						iWaitGroup.Add(1)
+						go func() {
+							act.Do(e.ctx)
+							iMutex.Lock()
+							req.ActionDone(act.ID())
+							iMutex.Unlock()
+							iWaitGroup.Done()
+							<-iRateLimit
+						}()
 					}
-					iRateLimit <- struct{}{}
-					iWaitGroup.Add(1)
-					go func() {
-						act.Do(e.ctx)
-						iMutex.Lock()
-						req.ActionDone(act.ID())
-						iMutex.Unlock()
-						iWaitGroup.Done()
-						<-iRateLimit
-					}()
-				}
+				}(req)
+
+				// Goto next chained request
+				req = req.Next()
 			}
+
+			// Wait for all chained requests to finish
+			oWaitGroup.Wait()
 
 			// If there is a waiter for this request, then mark it done.
 			if waitGroup != nil {

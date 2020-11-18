@@ -178,6 +178,7 @@ func (u *UploadRequest) Prepare() error {
 		zap.String("ReqID", u.GetID()),
 		zap.Duration("D", domain.Now().Sub(u.startTime)),
 	)
+	st0 := domain.Now()
 	u.reset()
 
 	// Check File stats and return error if any problem exists
@@ -200,6 +201,7 @@ func (u *UploadRequest) Prepare() error {
 
 	// If Sha256 exists in the request then we check server if this file has been already uploaded, if true, then
 	// we do not upload it again and we call postUploadProcess with the updated details
+	st1 := domain.Now()
 	if u.CheckSha256 && len(u.FileSha256) != 0 {
 		oldReqID := u.GetID()
 		err = u.checkSha256()
@@ -217,6 +219,7 @@ func (u *UploadRequest) Prepare() error {
 			return err
 		}
 	}
+	st2 := domain.Now()
 
 	// Open the file for read
 	u.file, err = os.OpenFile(u.FilePath, os.O_RDONLY, 0666)
@@ -257,9 +260,12 @@ func (u *UploadRequest) Prepare() error {
 		u.parts <- partIndex
 	}
 
+	st3 := domain.Now()
 	logs.Debug("FileCtrl prepared UploadRequest",
 		zap.String("ReqID", u.GetID()),
 		zap.Duration("D", domain.Now().Sub(u.startTime)),
+		zap.Duration("CheckShaD", st2.Sub(st1)),
+		zap.Duration("PrepareD", st3.Sub(st0)),
 		zap.String("Progress", fmt.Sprintf("%d / %d", len(u.FinishedParts), u.TotalParts)),
 	)
 	return nil
@@ -356,10 +362,13 @@ func (u *UploadRequest) Next() executor.Request {
 		return nil
 	}
 
-	// swap the child content
-	u.ClientFileRequest = *u.ClientFileRequest.Next
+	u2 := &UploadRequest{
+		ClientFileRequest: *u.ClientFileRequest.Next,
+		ctrl:              u.ctrl,
+		startTime:         u.startTime,
+	}
 
-	return u
+	return u2
 }
 
 type UploadAction struct {
