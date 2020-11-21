@@ -179,6 +179,8 @@ github.com/pelletier/go-toml
 github.com/philhofer/fwd
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
+# github.com/siongui/instago v0.0.0-20201031235546-62dab0684622
+github.com/siongui/instago
 # github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d
 github.com/smartystreets/assertions
 github.com/smartystreets/assertions/internal/go-render/render

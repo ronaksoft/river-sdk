@@ -39,6 +39,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pkg/errors v0.9.1
 	github.com/remyoudompheng/bigfft v0.0.0-20190512091148-babf20351dd7 // indirect
+	github.com/siongui/instago v0.0.0-20201031235546-62dab0684622
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
