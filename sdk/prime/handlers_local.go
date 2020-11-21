@@ -1288,6 +1288,9 @@ func (r *River) labelsGet(in, out *msg.MessageEnvelope, timeoutCB domain.Timeout
 
 	logs.Info("LabelGet", zap.Int64("TeamID", in.Team.ID))
 	labels := repo.Labels.GetAll(in.Team.ID)
+	sort.Slice(labels, func(i, j int) bool {
+		return labels[i].Count > labels[j].Count
+	})
 	if len(labels) != 0 {
 		logs.Debug("We found labels locally", zap.Int("L", len(labels)))
 		res := &msg.LabelsMany{}
