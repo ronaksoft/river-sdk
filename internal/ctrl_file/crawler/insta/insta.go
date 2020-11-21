@@ -3,6 +3,7 @@ package insta
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/siongui/instago"
 	"io/ioutil"
 	"net/http"
@@ -47,6 +48,8 @@ func GetPostInfo(url string) (em instago.IGMedia, err error) {
 		return
 	}
 
+	fmt.Println(postUrl, err)
+
 	pi := postInfo{}
 	err = json.Unmarshal(b, &pi)
 	if err != nil {
@@ -59,7 +62,7 @@ func GetPostInfo(url string) (em instago.IGMedia, err error) {
 // Send HTTP request and get http response without login.
 func getHTTPResponseNoLogin(postUrl string) (b []byte, err error) {
 	httpClient := http.Client{
-		Timeout: time.Minute,
+		Timeout: time.Second * 10,
 	}
 
 	resp, err := httpClient.Get(postUrl)

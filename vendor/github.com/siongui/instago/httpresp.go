@@ -9,6 +9,15 @@ import (
 	"strconv"
 )
 
+// Google Search: useragent ios instagram 134.00
+// https://developers.whatismybrowser.com/useragents/parse/31984417-instagram-ios-iphone-11-pro-max-webkit
+var userAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 13_3_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 134.0.0.25.116 (iPhone12,5; iOS 13_3_1; en_US; en-US; scale=3.00; 1242x2688; 204771128)"
+
+// SetUserAgent let you set User-Agent header in HTTP requests.
+func SetUserAgent(s string) {
+	userAgent = s
+}
+
 // Send HTTP request and get http response without login and with gis info. Used
 // in get all post codes without login.
 func getHTTPResponseNoLoginWithGis(url, gis string) (b []byte, err error) {
@@ -37,7 +46,7 @@ func getHTTPResponseNoLoginWithGis(url, gis string) (b []byte, err error) {
 }
 
 // Send HTTP request and get http response without login.
-func GetHTTPResponseNoLogin(url string) (b []byte, err error) {
+func getHTTPResponseNoLogin(url string) (b []byte, err error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return
@@ -73,9 +82,7 @@ func (m *IGApiManager) getHTTPResponse(url, method string) (b []byte, err error)
 		req.AddCookie(&http.Cookie{Name: name, Value: value})
 	}
 
-	for name, value := range m.headers {
-		req.Header.Set(name, value)
-	}
+	req.Header.Set("User-Agent", userAgent)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

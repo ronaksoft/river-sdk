@@ -74,8 +74,3 @@ func (u IGUser) GetUsername() string {
 func (u IGUser) IsPublic() bool {
 	return !u.IsPrivate
 }
-
-type IGTaggedUser struct {
-	Username string
-	Id       string
-}

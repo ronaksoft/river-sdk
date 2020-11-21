@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func FormatTimestamp(timestamp int64) string {
+func formatTimestamp(timestamp int64) string {
 	t := time.Unix(timestamp, 0)
 	return t.Format(time.RFC3339)
 }

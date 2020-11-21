@@ -116,9 +116,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 					}
 				}
 			}
-		}
-
-		switch x.Message.MediaType {
+			mon.IncMediaSent()
 		case msg.MediaTypeEmpty:
 			mon.IncMessageSent()
 		default:
