@@ -19,7 +19,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	x := &msg.UpdateNewMessage{}
 	err := x.Unmarshal(u.Update)
 	if err != nil {
-		logs.Error("UpdateApplier couldn't unmarshal UpdateNewMessage", zap.Error(err))
+		logs.Error("SyncCtrl couldn't unmarshal UpdateNewMessage", zap.Error(err))
 		return nil, err
 	}
 
@@ -167,7 +167,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 		// remove from top peers
 		err = repo.TopPeers.Delete(msg.TopPeerCategory_Groups, x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 		if err != nil {
-			logs.Error("UpdateApplier couldn't delete group from top peers", zap.Error(err))
+			logs.Error("SyncCtrl couldn't delete group from top peers", zap.Error(err))
 		}
 
 		// Delete PendingMessage
@@ -175,15 +175,18 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 		if deletedMsgs != nil {
 			buff, err := deletedMsgs.Marshal()
 			if err != nil {
-				logs.Error("UpdateApplier couldn't marshal ClientUpdateMessagesDeleted", zap.Error(err))
+				logs.Error("SyncCtrl couldn't marshal ClientUpdateMessagesDeleted", zap.Error(err))
 				break
 			}
-			udp := new(msg.UpdateEnvelope)
-			udp.Constructor = msg.C_ClientUpdateMessagesDeleted
-			udp.Update = buff
-			udp.UCount = 1
-			udp.Timestamp = u.Timestamp
-			udp.UpdateID = u.UpdateID
+
+			udp := &msg.UpdateEnvelope{
+				Constructor: msg.C_ClientUpdateMessagesDeleted,
+				Update:      buff,
+				UCount:      1,
+				Timestamp:   u.Timestamp,
+				UpdateID:    u.UpdateID,
+			}
+
 			res = append(res, udp)
 
 		}
@@ -199,7 +202,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 
 		if act.Delete {
 			// 3. Delete Dialog
-			repo.Dialogs.Delete(x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
+			_ = repo.Dialogs.Delete(x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 		} else {
 			// 3. Get dialog and create first hole
 			dialog, _ := repo.Dialogs.Get(x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)

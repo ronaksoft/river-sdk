@@ -570,9 +570,16 @@ func (r *repoMessages) ClearHistory(userID int64, teamID, peerID int64, peerType
 		}
 		st.Send = func(kvList *pb.KVList) error {
 			for _, kv := range kvList.Kv {
+				um, _ := getMessageByKey(txn, kv.Key)
+				if um != nil {
+					for _, labelID := range um.LabelIDs {
+						_ = removeLabelFromMessage(txn, labelID, um.ID)
+						_ = decreaseLabelItemCount(txn, teamID, labelID)
+					}
+				}
 				err := txn.Delete(kv.Key)
 				if err != nil {
-					logs.Warn("RepoMessage got error on delete all", zap.Error(err), zap.String("Key", domain.ByteToStr(kv.Key)))
+					logs.Warn("RepoMessage got error on ClearHistory", zap.Error(err), zap.String("Key", domain.ByteToStr(kv.Key)))
 				}
 			}
 			return nil

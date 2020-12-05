@@ -481,6 +481,20 @@ func (r *River) messagesClearHistory(in, out *msg.MessageEnvelope, timeoutCB dom
 		return
 	}
 
+	err := repo.Messages.ClearHistory(r.ConnInfo.UserID, in.Team.ID, req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+	logs.WarnOnErr("We got error on clear history", err,
+		zap.Int64("PeerID", req.Peer.ID),
+		zap.Int64("TeamID", in.Team.ID),
+	)
+
+	if req.Delete {
+		err = repo.Dialogs.Delete(in.Team.ID, req.Peer.ID, int32(req.Peer.Type))
+		logs.WarnOnErr("We got error on deleting dialogs", err,
+			zap.Int64("PeerID", req.Peer.ID),
+			zap.Int64("TeamID", in.Team.ID),
+		)
+	}
+
 	// send the request to server
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
