@@ -3,7 +3,7 @@ package riversdk
 import (
 	"encoding/json"
 	"fmt"
-	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/river/msg/go/msg"
 	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"

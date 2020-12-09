@@ -2,7 +2,7 @@ package uiexec
 
 import (
 	"context"
-	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/gobwas/pool/pbytes"

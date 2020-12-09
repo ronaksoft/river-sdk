@@ -1,7 +1,7 @@
 package repo_test
 
 import (
-	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	. "github.com/smartystreets/goconvey/convey"

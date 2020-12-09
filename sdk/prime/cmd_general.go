@@ -5,7 +5,7 @@ import (
 	"crypto/rsa"
 	"encoding/binary"
 	"fmt"
-	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/river/msg/go/msg"
 	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
 	networkCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_network"
 	queueCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_queue"

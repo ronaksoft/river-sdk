@@ -1,7 +1,7 @@
 package main
 
 import (
-	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/river/msg/go/msg"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"os"

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/river/msg/go/msg"
 )
 
 var (

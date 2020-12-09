@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/river/msg/go/msg"
 	"github.com/olekukonko/tablewriter"
 	"go.uber.org/zap"
 )

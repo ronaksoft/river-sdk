@@ -1,7 +1,7 @@
 package repo
 
 import (
-	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/river/msg/go/msg"
 	"github.com/dgraph-io/badger/v2"
 )
 

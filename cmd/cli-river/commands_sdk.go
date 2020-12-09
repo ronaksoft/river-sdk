@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"

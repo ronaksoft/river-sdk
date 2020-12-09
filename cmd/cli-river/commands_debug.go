@@ -16,7 +16,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/kr/pretty"
 
-	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/river/msg/go/msg"
 	"gopkg.in/abiosoft/ishell.v2"
 )
 

@@ -3,7 +3,7 @@ package syncCtrl
 import (
 	"bytes"
 	"encoding/binary"
-	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	messageHole "git.ronaksoft.com/river/sdk/internal/message_hole"

@@ -1,7 +1,7 @@
 package repo
 
 import (
-	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/pools"
 	"git.ronaksoft.com/river/sdk/internal/tools"

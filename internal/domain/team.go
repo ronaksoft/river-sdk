@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/river/msg/go/msg"
 )
 
 /**

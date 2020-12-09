@@ -4,7 +4,7 @@ package queueCtrl
 
 import (
 	json "encoding/json"
-	msg "git.ronaksoft.com/river/msg/msg"
+	msg "git.ronaksoft.com/river/msg/go/msg"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"

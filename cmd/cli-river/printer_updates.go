@@ -4,7 +4,7 @@ import (
 	"go.uber.org/zap"
 	"time"
 
-	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/river/msg/go/msg"
 )
 
 func UpdatePrinter(envelope *msg.UpdateEnvelope) {

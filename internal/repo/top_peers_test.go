@@ -2,7 +2,7 @@ package repo_test
 
 import (
 	"fmt"
-	"git.ronaksoft.com/river/msg/msg"
+	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/tools"
 	. "github.com/smartystreets/goconvey/convey"
