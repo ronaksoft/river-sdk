@@ -435,7 +435,7 @@ func (r *River) sendMessageMedia(uploadRequest msg.ClientFileRequest) (success b
 	successCB := func(m *rony.MessageEnvelope) {
 		logs.Info("MessagesSendMedia success callback called", zap.String("C", msg.ConstructorNames[m.Constructor]))
 		switch m.Constructor {
-		case msg.C_Error:
+		case rony.C_Error:
 			success = false
 			x := &rony.Error{}
 			if err := x.Unmarshal(m.Message); err != nil {
@@ -463,10 +463,7 @@ func (r *River) sendMessageMedia(uploadRequest msg.ClientFileRequest) (success b
 			Constructor: msg.C_MessagesSendMedia,
 			RequestID:   uint64(x.RandomID),
 			Message:     reqBuff,
-			Header: domain.InputTeamToHeader(&msg.InputTeam{
-				AccessHash: pendingMessage.TeamAccessHash,
-				ID:         pendingMessage.TeamID,
-			}),
+			Header:      domain.TeamHeader(pendingMessage.TeamID, pendingMessage.TeamAccessHash),
 		},
 		timeoutCB, successCB, false)
 	waitGroup.Wait()
@@ -492,7 +489,7 @@ func (r *River) uploadGroupPhoto(uploadRequest msg.ClientFileRequest) (success b
 	successCB := func(m *rony.MessageEnvelope) {
 		logs.Debug("GroupUploadPhoto success callback called")
 		switch m.Constructor {
-		case msg.C_Error:
+		case rony.C_Error:
 			success = false
 			x := &rony.Error{}
 			if err := x.Unmarshal(m.Message); err != nil {
@@ -535,7 +532,7 @@ func (r *River) uploadAccountPhoto(uploadRequest msg.ClientFileRequest) (success
 	successCB := func(m *rony.MessageEnvelope) {
 		logs.Debug("AccountUploadPhoto success callback called")
 		switch m.Constructor {
-		case msg.C_Error:
+		case rony.C_Error:
 			success = false
 			x := &rony.Error{}
 			if err := x.Unmarshal(m.Message); err != nil {

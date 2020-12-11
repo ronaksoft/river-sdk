@@ -135,7 +135,7 @@ var SdkSetTeam = &ishell.Cmd{
 var SdkGetTeam = &ishell.Cmd{
 	Name: "GetTeam",
 	Func: func(c *ishell.Context) {
-		c.Println(domain.GetCurrTeam())
+		c.Println(domain.GetCurrTeamID(), domain.GetCurrTeamAccess())
 	},
 }
 
