@@ -35,7 +35,7 @@ var ContactImport = &ishell.Cmd{
 var ContactGet = &ishell.Cmd{
 	Name: "Get",
 	Func: func(c *ishell.Context) {
-		req := msg.ContactsGet{}
+		req := &msg.ContactsGet{}
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsGet, reqBytes, reqDelegate); err != nil {

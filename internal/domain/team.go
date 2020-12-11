@@ -54,4 +54,3 @@ func GetCurrTeamID() int64 {
 func GetCurrTeamAccess() uint64 {
 	return _CurrTeamAccessHash
 }
-

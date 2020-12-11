@@ -19,6 +19,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/monnand/dhkx"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
 	"math/big"
 	"runtime"
@@ -41,7 +42,7 @@ func (r *River) ExecuteCommandWithTeam(teamID, accessHash, constructor int64, co
 func (r *River) executeCommand(
 	teamID int64, teamAccess uint64, constructor int64, commandBytes []byte, delegate RequestDelegate,
 ) (requestID int64, err error) {
-	if _, ok := msg.ConstructorNames[constructor]; !ok {
+	if  registry.ConstructorName(constructor) == "" {
 		return 0, domain.ErrInvalidConstructor
 	}
 
@@ -50,7 +51,7 @@ func (r *River) executeCommand(
 	waitGroup := new(sync.WaitGroup)
 	requestID = domain.SequentialUniqueID()
 	logs.Debug("River executes command",
-		zap.String("C", msg.ConstructorNames[constructor]),
+		zap.String("C", registry.ConstructorName(constructor)),
 	)
 
 	blockingMode := delegate.Flags()&RequestBlocking != 0
@@ -116,7 +117,7 @@ func executeLocalCommand(
 	timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
 ) {
 	logs.Debug("We execute local command",
-		zap.String("C", msg.ConstructorNames[constructor]),
+		zap.String("C", registry.ConstructorName(constructor)),
 	)
 
 	in := &rony.MessageEnvelope{
@@ -138,7 +139,7 @@ func executeRemoteCommand(
 	timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
 ) {
 	logs.Debug("We execute remote command",
-		zap.String("C", msg.ConstructorNames[constructor]),
+		zap.String("C", registry.ConstructorName(constructor)),
 	)
 
 	blocking := false
@@ -228,7 +229,11 @@ func (r *River) CreateAuthKey() (err error) {
 		logs.Warn("River got error on InitConnect", zap.Error(err))
 		return
 	}
-	logs.Info("River passed the 1st step of CreateAuthKey")
+	logs.Info("River passed the 1st step of CreateAuthKey",
+		zap.Uint64("ServerNonce", serverNonce),
+		zap.Uint64("ServerPubFP", serverPubFP),
+		zap.Uint64("ServerPQ", serverPQ),
+	)
 
 	err = initCompleteAuth(r, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ)
 	logs.Info("River passed the 2nd step of CreateAuthKey")
@@ -289,7 +294,7 @@ func initConnect(r *River) (err error, clientNonce, serverNonce, serverPubFP, se
 	return
 }
 func initCompleteAuth(r *River, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64) (err error) {
-	logs.Info("River::CreateAuthKey() 2nd Step Started :: InitConnect")
+	logs.Info("River::CreateAuthKey() 2nd Step Started :: InitCompleteAuth")
 	req2 := new(msg.InitCompleteAuth)
 	req2.ServerNonce = serverNonce
 	req2.ClientNonce = clientNonce

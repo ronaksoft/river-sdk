@@ -220,7 +220,7 @@ func (r *River) messagesSend(in, out *rony.MessageEnvelope, timeoutCB domain.Tim
 	// using req randomID as requestID later in queue processing and network controller messageHandler
 	r.queueCtrl.EnqueueCommand(
 		&rony.MessageEnvelope{
-			Header: in.Header,
+			Header:      in.Header,
 			Constructor: msg.C_MessagesSend,
 			RequestID:   uint64(req.RandomID),
 			Message:     requestBytes,
@@ -532,7 +532,7 @@ func (r *River) messagesSendMedia(in, out *rony.MessageEnvelope, timeoutCB domai
 		// Insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 		dbID := -req.RandomID
 
-		res, err := repo.PendingMessages.SaveMessageMedia(domain.GetTeamID(in), domain.GetTeamAccess(in) , dbID, r.ConnInfo.UserID, req)
+		res, err := repo.PendingMessages.SaveMessageMedia(domain.GetTeamID(in), domain.GetTeamAccess(in), dbID, r.ConnInfo.UserID, req)
 		if err != nil {
 			e := &rony.Error{
 				Code:  "n/a",
