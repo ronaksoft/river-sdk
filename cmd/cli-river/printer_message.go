@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/registry"
 	"google.golang.org/protobuf/proto"
 	"io/ioutil"
 	"os"
@@ -446,7 +447,7 @@ func MessagePrinter(envelope *rony.MessageEnvelope) {
 		table.Render()
 		_Shell.Println(buf)
 	default:
-		constructorName, _ := msg.ConstructorNames[envelope.Constructor]
+		constructorName := registry.ConstructorName(envelope.Constructor)
 		_Shell.Println("DEFAULT", constructorName, len(envelope.Message))
 	}
 }

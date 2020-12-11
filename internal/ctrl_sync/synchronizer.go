@@ -13,6 +13,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/gobwas/pool/pbytes"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 	"sort"
@@ -361,7 +362,7 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 				logs.Warn("Error On UpdateDiff",
 					zap.Error(err),
 					zap.Int64("UpdateID", update.UpdateID),
-					zap.String("C", msg.ConstructorNames[update.Constructor]),
+					zap.String("C", registry.ConstructorName(update.Constructor)),
 				)
 				return
 			}
@@ -493,7 +494,7 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer, outO
 				logs.Error("SyncCtrl got error on update applier", zap.Error(err))
 				return
 			}
-			logs.Debug("SyncCtrl applied update", zap.String("C", msg.ConstructorNames[update.Constructor]))
+			logs.Debug("SyncCtrl applied update", zap.String("C", registry.ConstructorName(update.Constructor)))
 			switch update.Constructor {
 			case msg.C_UpdateMessageID:
 			default:
@@ -603,7 +604,7 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 					}
 				default:
 					logs.Error("SyncCtrl expected ContactsImported but we got something else!!!",
-						zap.String("C", msg.ConstructorNames[m.Constructor]),
+						zap.String("C", registry.ConstructorName(m.Constructor)),
 					)
 					time.Sleep(time.Second)
 					if maxTry--; maxTry < 0 {

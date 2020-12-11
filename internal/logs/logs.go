@@ -2,7 +2,7 @@ package logs
 
 import (
 	"fmt"
-	"git.ronaksoft.com/river/msg/go/msg"
+	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"net/http"
@@ -201,7 +201,7 @@ func Fatal(msg string, fields ...zap.Field) {
 
 func UpdateLog(updateID int64, constructor int64) {
 	if _UpdateLog != nil {
-		constructorName, _ := msg.ConstructorNames[constructor]
+		constructorName := registry.ConstructorName(constructor)
 		_UpdateLog.Info("Update",
 			zap.Int64("ID", updateID),
 			zap.String("C", constructorName),

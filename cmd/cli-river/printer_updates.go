@@ -43,6 +43,6 @@ func UpdatePrinter(envelope *msg.UpdateEnvelope) {
 		}
 
 	default:
-		// _Shell.Println("Received Update", zap.String("C", msg.ConstructorNames[envelope.Constructor]))
+		// _Shell.Println("Received Update", zap.String("C", registry.ConstructorName(envelope.Constructor)))
 	}
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/beeker1121/goque"
 	"github.com/juju/ratelimit"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
 	"os"
 	"path/filepath"
@@ -94,7 +95,7 @@ func (ctrl *Controller) distributor() {
 		if ctrl.IsRequestCancelled(int64(req.ID)) {
 			logs.Info("QueueController discarded a canceled request",
 				zap.Uint64("ReqID", req.ID),
-				zap.String("C", msg.ConstructorNames[req.MessageEnvelope.Constructor]),
+				zap.String("C", registry.ConstructorName(req.MessageEnvelope.Constructor)),
 			)
 			continue
 		}
@@ -214,7 +215,7 @@ func (ctrl *Controller) executor(req request) {
 			}
 		} else {
 			logs.Warn("QueueCtrl received response but no callback exists!!!",
-				zap.String("C", msg.ConstructorNames[res.Constructor]),
+				zap.String("C", registry.ConstructorName(res.Constructor)),
 				zap.Uint64("ReqID", res.RequestID),
 			)
 		}
@@ -240,7 +241,7 @@ func (ctrl *Controller) RealtimeCommand(
 
 	logs.Debug("QueueCtrl fires realtime command",
 		zap.Uint64("ReqID", messageEnvelope.RequestID),
-		zap.String("C", msg.ConstructorNames[messageEnvelope.Constructor]),
+		zap.String("C", registry.ConstructorName(messageEnvelope.Constructor)),
 	)
 
 	// Add the callback functions
@@ -252,7 +253,7 @@ func (ctrl *Controller) RealtimeCommand(
 		if err != nil {
 			logs.Warn("QueueCtrl got error from NetCtrl",
 				zap.String("Error", err.Error()),
-				zap.String("C", msg.ConstructorNames[req.Constructor]),
+				zap.String("C", registry.ConstructorName(req.Constructor)),
 				zap.Uint64("ReqID", req.RequestID),
 			)
 			if timeoutCB != nil {
@@ -264,7 +265,7 @@ func (ctrl *Controller) RealtimeCommand(
 		select {
 		case <-time.After(reqCB.Timeout):
 			logs.Debug("QueueCtrl got timeout on realtime command",
-				zap.String("C", msg.ConstructorNames[req.Constructor]),
+				zap.String("C", registry.ConstructorName(req.Constructor)),
 				zap.Uint64("ReqID", req.RequestID),
 			)
 			domain.RemoveRequestCallback(reqID)
@@ -279,8 +280,8 @@ func (ctrl *Controller) RealtimeCommand(
 		case res := <-reqCB.ResponseChannel:
 			logs.Debug("QueueCtrl got response on realtime command",
 				zap.Uint64("ReqID", req.RequestID),
-				zap.String("ReqC", msg.ConstructorNames[req.Constructor]),
-				zap.String("ResC", msg.ConstructorNames[res.Constructor]),
+				zap.String("ReqC", registry.ConstructorName(req.Constructor)),
+				zap.String("ResC", registry.ConstructorName(res.Constructor)),
 			)
 			if reqCB.SuccessCallback != nil {
 				if reqCB.IsUICallback {
@@ -319,7 +320,7 @@ func (ctrl *Controller) EnqueueCommand(
 
 	logs.Debug("QueueCtrl enqueues command",
 		zap.Uint64("ReqID", messageEnvelope.RequestID),
-		zap.String("C", msg.ConstructorNames[messageEnvelope.Constructor]),
+		zap.String("C", registry.ConstructorName(messageEnvelope.Constructor)),
 	)
 
 	// Add the callback functions

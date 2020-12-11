@@ -10,6 +10,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/gobwas/pool/pbytes"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
 	"io"
 	"os"
@@ -435,7 +436,7 @@ func (a *UploadAction) Do(ctx context.Context) {
 		atomic.AddInt32(&a.req.failedActions, 1)
 		a.req.parts <- a.id
 	default:
-		logs.Fatal("FileCtrl received unexpected response (Upload)", zap.String("C", msg.ConstructorNames[res.Constructor]))
+		logs.Fatal("FileCtrl received unexpected response (Upload)", zap.String("C", registry.ConstructorName(res.Constructor)))
 		return
 	}
 }

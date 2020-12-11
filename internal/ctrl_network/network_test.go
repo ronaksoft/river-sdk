@@ -29,7 +29,7 @@ var (
 func dummyMessageHandler(messages []*rony.MessageEnvelope) {
 	for _, m := range messages {
 		logs.Info("Message",
-			zap.String("C", msg.ConstructorNames[m.Constructor]),
+			zap.String("C", registry.ConstructorName(m.Constructor)),
 			zap.Uint64("ReqID", m.RequestID),
 		)
 	}
@@ -39,7 +39,7 @@ func dummyUpdateHandler(updateContainer *msg.UpdateContainer) {
 	logs.Info("Update Handler")
 	for _, u := range updateContainer.Updates {
 		logs.Info("Update",
-			zap.String("C", msg.ConstructorNames[u.Constructor]),
+			zap.String("C", registry.ConstructorName(u.Constructor)),
 			zap.Int64("UpdateID", u.UpdateID),
 		)
 	}

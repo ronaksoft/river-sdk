@@ -3,6 +3,7 @@ package main
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
@@ -55,7 +56,7 @@ func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 		}
 		// _Shell.Println("Processing UpdateContainer:", updateContainer.MinUpdateID, updateContainer.MaxUpdateID)
 		for _, update := range updateContainer.Updates {
-			// _Shell.Println("Processing Update", update.UpdateID, msg.ConstructorNames[update.Constructor])
+			// _Shell.Println("Processing Update", update.UpdateID, registry.ConstructorName(update.Constructor))
 			UpdatePrinter(update)
 		}
 	case msg.C_ClientUpdatePendingMessageDelivery:
@@ -72,7 +73,7 @@ func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 			_Shell.Println("Error On Unmarshal UpdateEnvelope:", err)
 			return
 		} else {
-			// _Shell.Println("Processing UpdateEnvelop", update.UpdateID, msg.ConstructorNames[update.Constructor])
+			// _Shell.Println("Processing UpdateEnvelop", update.UpdateID, registry.ConstructorName(update.Constructor))
 			UpdatePrinter(update)
 		}
 	}
@@ -84,7 +85,7 @@ func (d *MainDelegate) OnDeferredRequests(requestID int64, b []byte) {
 	envelope.Unmarshal(b)
 	_Shell.Println("Deferred Request received",
 		zap.Uint64("ReqID", envelope.RequestID),
-		zap.String("C", msg.ConstructorNames[envelope.Constructor]),
+		zap.String("C", registry.ConstructorName(envelope.Constructor)),
 	)
 	// MessagePrinter(envelope)
 }
@@ -164,7 +165,7 @@ func (d *RequestDelegate) OnComplete(b []byte) {
 		_Shell.Println("Error On OnComplete:", err)
 		return
 	}
-	_Shell.Println("Request Completed:", d.RequestID, msg.ConstructorNames[d.Envelope.Constructor])
+	_Shell.Println("Request Completed:", d.RequestID, registry.ConstructorName(d.Envelope.Constructor))
 	MessagePrinter(&d.Envelope)
 	return
 }

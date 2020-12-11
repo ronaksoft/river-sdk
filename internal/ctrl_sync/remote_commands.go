@@ -6,6 +6,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
 	"sync"
 	"time"
@@ -138,7 +139,7 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 				err = domain.ParseServerError(m.Message)
 			default:
 				logs.Error("SyncCtrl did not received expected response for AuthRecall",
-					zap.String("C", msg.ConstructorNames[m.Constructor]),
+					zap.String("C", registry.ConstructorName(m.Constructor)),
 				)
 				err = domain.ErrInvalidConstructor
 			}

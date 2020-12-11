@@ -14,6 +14,7 @@ import (
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"net"
@@ -161,7 +162,7 @@ func (ctrl *Controller) sendFlushFunc(entries []domain.FlusherEntry) {
 		if err != nil {
 			logs.Warn("NetCtrl got error on flushing outgoing messages",
 				zap.Uint64("ReqID", m.RequestID),
-				zap.String("C", msg.ConstructorNames[m.Constructor]),
+				zap.String("C", registry.ConstructorName(m.Constructor)),
 				zap.Error(err),
 			)
 		}
@@ -173,7 +174,7 @@ func (ctrl *Controller) sendFlushFunc(entries []domain.FlusherEntry) {
 				zap.Int("Idx", idx),
 				zap.String("TeamID", m.Get("TeamID", "0")),
 				zap.String("TeamAccess", m.Get("TeamAccess", "0")),
-				zap.String("C", msg.ConstructorNames[m.Constructor]),
+				zap.String("C", registry.ConstructorName(m.Constructor)),
 			)
 			messages = append(messages, m)
 		}
@@ -355,7 +356,7 @@ func (ctrl *Controller) receiver() {
 						continue
 					}
 					logs.Debug("NetCtrl received plain-text message",
-						zap.String("C", msg.ConstructorNames[receivedEnvelope.Constructor]),
+						zap.String("C", registry.ConstructorName(receivedEnvelope.Constructor)),
 						zap.Uint64("ReqID", receivedEnvelope.RequestID),
 					)
 					messageHandler(ctrl, receivedEnvelope)
@@ -380,7 +381,7 @@ func (ctrl *Controller) receiver() {
 					continue
 				}
 				logs.Debug("NetCtrl received encrypted message",
-					zap.String("C", msg.ConstructorNames[receivedEncryptedPayload.Envelope.Constructor]),
+					zap.String("C", registry.ConstructorName(receivedEncryptedPayload.Envelope.Constructor)),
 					zap.Uint64("ReqID", receivedEncryptedPayload.Envelope.RequestID),
 				)
 				// TODO:: check message id and server salt before handling the message
@@ -656,7 +657,7 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *rony.MessageEnvelope) error {
 
 	logs.Info("NetCtrl call sendWebsocket",
 		zap.Uint64("ReqID", msgEnvelope.RequestID),
-		zap.String("C", msg.ConstructorNames[msgEnvelope.Constructor]),
+		zap.String("C", registry.ConstructorName(msgEnvelope.Constructor)),
 		zap.String("TeamID", msgEnvelope.Get("TeamID", "0")),
 		zap.String("TeamAccess", msgEnvelope.Get("TeamAccess", "0")),
 		zap.Bool("Plain", unauthorized),
@@ -696,7 +697,7 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *rony.MessageEnvelope) error {
 		return err
 	}
 	logs.Debug("NetCtrl sent over websocket",
-		zap.String("C", msg.ConstructorNames[msgEnvelope.Constructor]),
+		zap.String("C", registry.ConstructorName(msgEnvelope.Constructor)),
 		zap.Duration("Duration", time.Now().Sub(startTime)),
 	)
 
@@ -708,7 +709,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 	st := domain.Now()
 	defer func() {
 		logs.Info("SendHttp",
-			zap.String("C", msg.ConstructorNames[msgEnvelope.Constructor]),
+			zap.String("C", registry.ConstructorName(msgEnvelope.Constructor)),
 			zap.Duration("D", domain.Now().Sub(st)),
 		)
 	}()

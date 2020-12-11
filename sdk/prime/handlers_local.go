@@ -6,6 +6,7 @@ import (
 	messageHole "git.ronaksoft.com/river/sdk/internal/message_hole"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/registry"
 	"sort"
 	"strings"
 	"sync"
@@ -1387,7 +1388,7 @@ func (r *River) labelsListItems(in, out *rony.MessageEnvelope, timeoutCB domain.
 				}
 			}
 		default:
-			logs.Warn("We received unexpected response", zap.String("C", msg.ConstructorNames[m.Constructor]))
+			logs.Warn("We received unexpected response", zap.String("C", registry.ConstructorName(m.Constructor)))
 		}
 
 		successCB(m)

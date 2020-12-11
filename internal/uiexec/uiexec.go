@@ -2,11 +2,11 @@ package uiexec
 
 import (
 	"context"
-	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/gobwas/pool/pbytes"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 	"time"
@@ -41,7 +41,7 @@ func init() {
 			case <-doneChan:
 			case <-ctx.Done():
 				logs.Error("We timeout waiting for UI-Exec to return",
-					zap.String("C", msg.ConstructorNames[it.constructor]),
+					zap.String("C", registry.ConstructorName(it.constructor)),
 					zap.String("Kind", it.kind),
 				)
 			}
@@ -49,7 +49,7 @@ func init() {
 			endTime := time.Now()
 			if d := endTime.Sub(it.insertTime); d > maxDelay {
 				logs.Error("Too Long UIExec",
-					zap.String("C", msg.ConstructorNames[it.constructor]),
+					zap.String("C", registry.ConstructorName(it.constructor)),
 					zap.String("Kind", it.kind),
 					zap.Duration("ExecT", endTime.Sub(startTime)),
 					zap.Duration("WaitT", endTime.Sub(it.insertTime)),

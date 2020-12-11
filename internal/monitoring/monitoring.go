@@ -4,6 +4,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
 	"sync"
 	"time"
@@ -76,8 +77,8 @@ func ServerResponseTime(reqConstructor, resConstructor int64, t time.Duration) {
 	if t > serverLongThreshold {
 		logs.Warn("Too Long ServerResponse",
 			zap.Duration("T", t),
-			zap.String("ResConstructor", msg.ConstructorNames[resConstructor]),
-			zap.String("ReqConstructor", msg.ConstructorNames[reqConstructor]),
+			zap.String("ResConstructor", registry.ConstructorName(resConstructor)),
+			zap.String("ReqConstructor", registry.ConstructorName(reqConstructor)),
 		)
 	}
 	ts := t.Milliseconds()
