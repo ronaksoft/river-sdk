@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"github.com/gogo/protobuf/proto"
 	"golang.org/x/sync/singleflight"
 	"reflect"
 )
@@ -61,12 +60,6 @@ type Slt struct {
 }
 
 var SingleFlight singleflight.Group
-
-type Proto interface {
-	proto.Sizer
-	proto.Marshaler
-	MarshalToSizedBuffer(data []byte) (int, error)
-}
 
 type (
 	M           map[string]interface{}

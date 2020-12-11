@@ -209,18 +209,18 @@ func (r *repoUsers) GetMany(userIDs []int64) ([]*msg.User, error) {
 
 func updateStatus(u *msg.User) {
 	delta := time.Now().Unix() - u.LastSeen
-	if u.Status == msg.UserStatusOnline && delta < domain.Minute {
+	if u.Status == msg.UserStatus_UserStatusOnline && delta < domain.Minute {
 		return
 	}
 	switch {
 	case delta < domain.Hour:
-		u.Status = msg.UserStatusRecently
+		u.Status = msg.UserStatus_UserStatusRecently
 	case delta < domain.Week:
-		u.Status = msg.UserStatusLastWeek
+		u.Status = msg.UserStatus_UserStatusLastWeek
 	case delta < domain.Month:
-		u.Status = msg.UserStatusLastMonth
+		u.Status = msg.UserStatus_UserStatusLastMonth
 	default:
-		u.Status = msg.UserStatusOffline
+		u.Status = msg.UserStatus_UserStatusOffline
 	}
 }
 

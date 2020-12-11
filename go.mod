@@ -1,7 +1,7 @@
 module git.ronaksoft.com/river/sdk
 
 require (
-	git.ronaksoft.com/river/msg v0.0.0-20201209075547-24700c5a015e
+	git.ronaksoft.com/river/msg v0.0.0-20201211181314-3e38f72c632b
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/RoaringBitmap/roaring v0.5.1 // indirect
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
@@ -22,21 +22,21 @@ require (
 	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
 	github.com/fatih/color v1.7.0
 	github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
-	github.com/getsentry/sentry-go v0.7.0
+	github.com/getsentry/sentry-go v0.9.0
 	github.com/glycerine/go-unsnap-stream v0.0.0-20190901134440-81cf024a9e0a // indirect
 	github.com/gobwas/pool v0.2.1
 	github.com/gobwas/ws v1.0.4
 	github.com/gogo/protobuf v1.3.1
-	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/juju/ratelimit v1.0.1
 	github.com/kr/pretty v0.2.0
 	github.com/mailru/easyjson v0.7.6
 	github.com/monnand/dhkx v0.0.0-20180522003156-9e5b033f1ac4
-	github.com/nyaruka/phonenumbers v1.0.57
+	github.com/nyaruka/phonenumbers v1.0.60
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pkg/errors v0.9.1
 	github.com/remyoudompheng/bigfft v0.0.0-20190512091148-babf20351dd7 // indirect
+	github.com/ronaksoft/rony v0.0.18
 	github.com/siongui/instago v0.0.0-20200627103523-54424cb565ea
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/spf13/cobra v1.1.1
@@ -55,6 +55,7 @@ require (
 	golang.org/x/text v0.3.3 // indirect
 	google.golang.org/genproto v0.0.0-20200911024640-645f7a48b24f // indirect
 	google.golang.org/grpc v1.32.0 // indirect
+	google.golang.org/protobuf v1.25.0
 	gopkg.in/abiosoft/ishell.v2 v2.0.0
 )
 

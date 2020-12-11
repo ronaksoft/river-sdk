@@ -7,6 +7,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"github.com/dgraph-io/badger/v2"
 	"github.com/dgraph-io/badger/v2/pb"
+	"github.com/gogo/protobuf/proto"
 	"mime"
 	"os"
 	"path"
@@ -61,7 +62,7 @@ func getFile(txn *badger.Txn, clusterID int32, fileID int64, accessHash uint64) 
 }
 
 func saveFile(txn *badger.Txn, file *msg.ClientFile) error {
-	fileBytes, _ := file.Marshal()
+	fileBytes, _ := proto.Marshal(file)
 	return txn.SetEntry(badger.NewEntry(
 		getFileKey(file.ClusterID, file.FileID, file.AccessHash),
 		fileBytes,
@@ -78,14 +79,14 @@ func saveUserPhotos(txn *badger.Txn, userID int64, photos ...*msg.UserPhoto) err
 				ClusterID:  photo.PhotoBig.ClusterID,
 				FileID:     photo.PhotoBig.FileID,
 				AccessHash: photo.PhotoBig.AccessHash,
-				Type:       msg.AccountProfilePhoto,
+				Type:       msg.ClientFileType_AccountProfilePhoto,
 				MimeType:   "",
 				UserID:     userID,
 				GroupID:    0,
 				FileSize:   0,
 				MessageID:  0,
 				PeerID:     userID,
-				PeerType:   int32(msg.PeerUser),
+				PeerType:   int32(msg.PeerType_PeerUser),
 				Version:    0,
 			})
 			if err != nil {
@@ -97,14 +98,14 @@ func saveUserPhotos(txn *badger.Txn, userID int64, photos ...*msg.UserPhoto) err
 				ClusterID:  photo.PhotoSmall.ClusterID,
 				FileID:     photo.PhotoSmall.FileID,
 				AccessHash: photo.PhotoSmall.AccessHash,
-				Type:       msg.Thumbnail,
+				Type:       msg.ClientFileType_Thumbnail,
 				MimeType:   "",
 				UserID:     userID,
 				GroupID:    0,
 				FileSize:   0,
 				MessageID:  0,
 				PeerID:     userID,
-				PeerType:   int32(msg.PeerUser),
+				PeerType:   int32(msg.PeerType_PeerUser),
 				Version:    0,
 			})
 			if err != nil {
@@ -140,14 +141,14 @@ func saveGroupPhotos(txn *badger.Txn, groupID int64, photos ...*msg.GroupPhoto) 
 					ClusterID:  photo.PhotoBig.ClusterID,
 					FileID:     photo.PhotoBig.FileID,
 					AccessHash: photo.PhotoBig.AccessHash,
-					Type:       msg.GroupProfilePhoto,
+					Type:       msg.ClientFileType_GroupProfilePhoto,
 					MimeType:   "",
 					UserID:     0,
 					GroupID:    groupID,
 					FileSize:   0,
 					MessageID:  0,
 					PeerID:     groupID,
-					PeerType:   int32(msg.PeerGroup),
+					PeerType:   int32(msg.PeerType_PeerGroup),
 					Version:    0,
 				})
 				if err != nil {
@@ -159,14 +160,14 @@ func saveGroupPhotos(txn *badger.Txn, groupID int64, photos ...*msg.GroupPhoto) 
 					ClusterID:  photo.PhotoSmall.ClusterID,
 					FileID:     photo.PhotoSmall.FileID,
 					AccessHash: photo.PhotoSmall.AccessHash,
-					Type:       msg.Thumbnail,
+					Type:       msg.ClientFileType_Thumbnail,
 					MimeType:   "",
 					UserID:     0,
 					GroupID:    groupID,
 					FileSize:   0,
 					MessageID:  0,
 					PeerID:     groupID,
-					PeerType:   int32(msg.PeerGroup),
+					PeerType:   int32(msg.PeerType_PeerGroup),
 					Version:    0,
 				})
 				if err != nil {
@@ -185,7 +186,7 @@ func saveGroupPhotos(txn *badger.Txn, groupID int64, photos ...*msg.GroupPhoto) 
 
 func saveMessageMedia(txn *badger.Txn, m *msg.UserMessage) error {
 	switch m.MediaType {
-	case msg.MediaTypeDocument:
+	case msg.MediaType_MediaTypeDocument:
 		md := new(msg.MediaDocument)
 		err := md.Unmarshal(m.Media)
 		if err != nil {
@@ -194,7 +195,7 @@ func saveMessageMedia(txn *badger.Txn, m *msg.UserMessage) error {
 
 		fileExt := ""
 		for _, attr := range md.Doc.Attributes {
-			if attr.Type == msg.AttributeTypeFile {
+			if attr.Type == msg.DocumentAttributeType_AttributeTypeFile {
 				x := &msg.DocumentAttributeFile{}
 				_ = x.Unmarshal(attr.Data)
 				fileExt = filepath.Ext(x.Filename)
@@ -205,7 +206,7 @@ func saveMessageMedia(txn *badger.Txn, m *msg.UserMessage) error {
 			ClusterID:   md.Doc.ClusterID,
 			FileID:      md.Doc.ID,
 			AccessHash:  md.Doc.AccessHash,
-			Type:        msg.Message,
+			Type:        msg.ClientFileType_Message,
 			MimeType:    md.Doc.MimeType,
 			Extension:   fileExt,
 			UserID:      0,
@@ -227,7 +228,7 @@ func saveMessageMedia(txn *badger.Txn, m *msg.UserMessage) error {
 				ClusterID:  md.Doc.Thumbnail.ClusterID,
 				FileID:     md.Doc.Thumbnail.FileID,
 				AccessHash: md.Doc.Thumbnail.AccessHash,
-				Type:       msg.Thumbnail,
+				Type:       msg.ClientFileType_Thumbnail,
 				MimeType:   "jpeg",
 				UserID:     0,
 				GroupID:    0,
@@ -252,7 +253,7 @@ func (r *repoFiles) SaveMessageMediaDocument(md *msg.MediaDocument) error {
 func (r *repoFiles) saveMessageMediaDocument(txn *badger.Txn, md *msg.MediaDocument) error {
 	fileExt := ""
 	for _, attr := range md.Doc.Attributes {
-		if attr.Type == msg.AttributeTypeFile {
+		if attr.Type == msg.DocumentAttributeType_AttributeTypeFile {
 			x := &msg.DocumentAttributeFile{}
 			_ = x.Unmarshal(attr.Data)
 			fileExt = filepath.Ext(x.Filename)
@@ -263,7 +264,7 @@ func (r *repoFiles) saveMessageMediaDocument(txn *badger.Txn, md *msg.MediaDocum
 		ClusterID:   md.Doc.ClusterID,
 		FileID:      md.Doc.ID,
 		AccessHash:  md.Doc.AccessHash,
-		Type:        msg.Message,
+		Type:        msg.ClientFileType_Message,
 		MimeType:    md.Doc.MimeType,
 		Extension:   fileExt,
 		UserID:      0,
@@ -282,7 +283,7 @@ func (r *repoFiles) saveMessageMediaDocument(txn *badger.Txn, md *msg.MediaDocum
 			ClusterID:  md.Doc.Thumbnail.ClusterID,
 			FileID:     md.Doc.Thumbnail.FileID,
 			AccessHash: md.Doc.Thumbnail.AccessHash,
-			Type:       msg.Thumbnail,
+			Type:       msg.ClientFileType_Thumbnail,
 			MimeType:   "jpeg",
 			UserID:     0,
 			GroupID:    0,
@@ -301,7 +302,7 @@ func (r *repoFiles) SaveWallpaper(txn *badger.Txn, wallpaper *msg.WallPaper) err
 
 	fileExt := ""
 	for _, attr := range wallpaper.Document.Attributes {
-		if attr.Type == msg.AttributeTypeFile {
+		if attr.Type == msg.DocumentAttributeType_AttributeTypeFile {
 			x := &msg.DocumentAttributeFile{}
 			_ = x.Unmarshal(attr.Data)
 			fileExt = filepath.Ext(x.Filename)
@@ -312,7 +313,7 @@ func (r *repoFiles) SaveWallpaper(txn *badger.Txn, wallpaper *msg.WallPaper) err
 		ClusterID:   wallpaper.Document.ClusterID,
 		FileID:      wallpaper.Document.ID,
 		AccessHash:  wallpaper.Document.AccessHash,
-		Type:        msg.Wallpaper,
+		Type:        msg.ClientFileType_Wallpaper,
 		MimeType:    wallpaper.Document.MimeType,
 		Extension:   fileExt,
 		UserID:      0,
@@ -332,7 +333,7 @@ func (r *repoFiles) SaveWallpaper(txn *badger.Txn, wallpaper *msg.WallPaper) err
 			ClusterID:   wallpaper.Document.Thumbnail.ClusterID,
 			FileID:      wallpaper.Document.Thumbnail.FileID,
 			AccessHash:  wallpaper.Document.Thumbnail.AccessHash,
-			Type:        msg.Thumbnail,
+			Type:        msg.ClientFileType_Thumbnail,
 			MimeType:    "jpeg",
 			UserID:      0,
 			GroupID:     0,
@@ -353,7 +354,7 @@ func (r *repoFiles) SaveGif(mediaDocument *msg.MediaDocument) error {
 
 	fileExt := ""
 	for _, attr := range mediaDocument.Doc.Attributes {
-		if attr.Type == msg.AttributeTypeFile {
+		if attr.Type == msg.DocumentAttributeType_AttributeTypeFile {
 			x := &msg.DocumentAttributeFile{}
 			_ = x.Unmarshal(attr.Data)
 			fileExt = filepath.Ext(x.Filename)
@@ -365,7 +366,7 @@ func (r *repoFiles) SaveGif(mediaDocument *msg.MediaDocument) error {
 			ClusterID:   mediaDocument.Doc.ClusterID,
 			FileID:      mediaDocument.Doc.ID,
 			AccessHash:  mediaDocument.Doc.AccessHash,
-			Type:        msg.Gif,
+			Type:        msg.ClientFileType_Gif,
 			MimeType:    mediaDocument.Doc.MimeType,
 			Extension:   fileExt,
 			UserID:      0,
@@ -385,7 +386,7 @@ func (r *repoFiles) SaveGif(mediaDocument *msg.MediaDocument) error {
 				ClusterID:   mediaDocument.Doc.Thumbnail.ClusterID,
 				FileID:      mediaDocument.Doc.Thumbnail.FileID,
 				AccessHash:  mediaDocument.Doc.Thumbnail.AccessHash,
-				Type:        msg.Thumbnail,
+				Type:        msg.ClientFileType_Thumbnail,
 				MimeType:    "jpeg",
 				UserID:      0,
 				GroupID:     0,
@@ -448,7 +449,7 @@ func (r *repoFiles) GetCachedMedia() *msg.ClientCachedMediaInfo {
 			return false
 		}
 		switch m.MediaType {
-		case msg.MediaTypeDocument:
+		case msg.MediaType_MediaTypeDocument:
 			d := msg.MediaDocument{}
 			err = d.Unmarshal(m.Media)
 			if err != nil {
@@ -463,14 +464,14 @@ func (r *repoFiles) GetCachedMedia() *msg.ClientCachedMediaInfo {
 			}
 
 			switch msg.PeerType(m.PeerType) {
-			case msg.PeerUser:
+			case msg.PeerType_PeerUser:
 				userMtx.Lock()
 				if _, ok := userMediaInfo[m.PeerID]; !ok {
 					userMediaInfo[m.PeerID] = make(map[msg.ClientMediaType]int64, 5)
 				}
 				userMediaInfo[m.PeerID][msg.ClientMediaType(item.UserMeta())] += int64(d.Doc.FileSize)
 				userMtx.Unlock()
-			case msg.PeerGroup:
+			case msg.PeerType_PeerGroup:
 				groupMtx.Lock()
 				if _, ok := groupMediaInfo[m.PeerID]; !ok {
 					groupMediaInfo[m.PeerID] = make(map[msg.ClientMediaType]int64, 5)
@@ -494,7 +495,7 @@ func (r *repoFiles) GetCachedMedia() *msg.ClientCachedMediaInfo {
 	for peerID, mi := range userMediaInfo {
 		peerInfo := &msg.ClientPeerMediaInfo{
 			PeerID:   peerID,
-			PeerType: msg.PeerUser,
+			PeerType: msg.PeerType_PeerUser,
 		}
 		for mType, mSize := range mi {
 			peerInfo.Media = append(peerInfo.Media, &msg.ClientMediaSize{
@@ -507,7 +508,7 @@ func (r *repoFiles) GetCachedMedia() *msg.ClientCachedMediaInfo {
 	for peerID, mi := range groupMediaInfo {
 		peerInfo := &msg.ClientPeerMediaInfo{
 			PeerID:   peerID,
-			PeerType: msg.PeerGroup,
+			PeerType: msg.PeerType_PeerGroup,
 		}
 		for mType, mSize := range mi {
 			peerInfo.Media = append(peerInfo.Media, &msg.ClientMediaSize{
@@ -533,7 +534,7 @@ func (r *repoFiles) DeleteCachedMediaByPeer(teamID, peerID int64, peerType int32
 			return false
 		}
 		switch m.MediaType {
-		case msg.MediaTypeDocument:
+		case msg.MediaType_MediaTypeDocument:
 			d := msg.MediaDocument{}
 			err = d.Unmarshal(m.Media)
 			if err != nil {
@@ -575,7 +576,7 @@ func (r *repoFiles) DeleteCachedMediaByMediaType(mediaTypes []msg.ClientMediaTyp
 			return false
 		}
 		switch m.MediaType {
-		case msg.MediaTypeDocument:
+		case msg.MediaType_MediaTypeDocument:
 			d := msg.MediaDocument{}
 			err = d.Unmarshal(m.Media)
 			if err != nil {
@@ -621,17 +622,17 @@ func (r *repoFiles) ClearCache() {
 
 func (r *repoFiles) GetFilePath(clientFile *msg.ClientFile) string {
 	switch clientFile.Type {
-	case msg.Gif:
+	case msg.ClientFileType_Gif:
 		fallthrough
-	case msg.Message:
+	case msg.ClientFileType_Message:
 		return getMessageFilePath(clientFile.MimeType, clientFile.FileID, clientFile.Extension)
-	case msg.AccountProfilePhoto:
+	case msg.ClientFileType_AccountProfilePhoto:
 		return getAccountProfilePath(clientFile.UserID, clientFile.FileID)
-	case msg.GroupProfilePhoto:
+	case msg.ClientFileType_GroupProfilePhoto:
 		return getGroupProfilePath(clientFile.GroupID, clientFile.FileID)
-	case msg.Thumbnail:
+	case msg.ClientFileType_Thumbnail:
 		return getThumbnailPath(clientFile.FileID, clientFile.ClusterID)
-	case msg.Wallpaper:
+	case msg.ClientFileType_Wallpaper:
 		return getWallpaperPath(clientFile.FileID, clientFile.ClusterID)
 	}
 	return ""

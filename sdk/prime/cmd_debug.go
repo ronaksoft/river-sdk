@@ -48,7 +48,7 @@ func sendToSavedMessage(r *River, body string, entities ...*msg.MessageEntity) {
 		RandomID: 0,
 		Peer: &msg.InputPeer{
 			ID:         r.ConnInfo.UserID,
-			Type:       msg.PeerUser,
+			Type:       msg.PeerType_PeerUser,
 			AccessHash: 0,
 		},
 		Body:       body,
@@ -66,10 +66,10 @@ func sendMediaToSaveMessage(r *River, filePath string, filename string) {
 	req := &msg.ClientSendMessageMedia{
 		Peer: &msg.InputPeer{
 			ID:         r.ConnInfo.UserID,
-			Type:       msg.PeerUser,
+			Type:       msg.PeerType_PeerUser,
 			AccessHash: 0,
 		},
-		MediaType:     msg.InputMediaTypeUploadedDocument,
+		MediaType:     msg.InputMediaType_InputMediaTypeUploadedDocument,
 		Caption:       "",
 		FileName:      filename,
 		FilePath:      filePath,
@@ -79,7 +79,7 @@ func sendMediaToSaveMessage(r *River, filePath string, filename string) {
 		ReplyTo:       0,
 		ClearDraft:    false,
 		Attributes: []*msg.DocumentAttribute{
-			{Type: msg.AttributeTypeFile, Data: attBytes},
+			{Type: msg.DocumentAttributeType_AttributeTypeFile, Data: attBytes},
 		},
 		FileUploadID:   "",
 		ThumbUploadID:  "",
@@ -107,7 +107,7 @@ func (r *River) HandleDebugActions(txt string) {
 		txt := domain.ByteToStr(getMonitorStats(r))
 		sendToSavedMessage(r, txt,
 			&msg.MessageEntity{
-				Type:   msg.MessageEntityTypeCode,
+				Type:   msg.MessageEntityType_MessageEntityTypeCode,
 				Offset: 0,
 				Length: int32(len(txt)),
 				UserID: 0,

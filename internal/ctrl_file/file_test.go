@@ -9,6 +9,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"github.com/ronaksoft/rony"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/valyala/tcplisten"
 	"go.uber.org/zap"
@@ -105,7 +106,7 @@ func init() {
 				ClusterID:  1,
 				FileID:     int64(i),
 				AccessHash: 10,
-				Type:       msg.Message,
+				Type:       msg.ClientFileType_Message,
 				MimeType:   "video/mp4",
 				UserID:     0,
 				GroupID:    0,
@@ -149,8 +150,8 @@ func (t server) ServeHTTP(httpRes http.ResponseWriter, httpReq *http.Request) {
 
 	protoIn := &msg.ProtoMessage{}
 	protoOut := &msg.ProtoMessage{}
-	in := &msg.MessageEnvelope{}
-	out := &msg.MessageEnvelope{}
+	in := &rony.MessageEnvelope{}
+	out := &rony.MessageEnvelope{}
 
 	_ = protoIn.Unmarshal(body)
 	_ = in.Unmarshal(protoIn.Payload)
@@ -193,7 +194,7 @@ func (t server) ServeHTTP(httpRes http.ResponseWriter, httpReq *http.Request) {
 			t.mtx.Unlock()
 			if sum != (req.TotalParts*(req.TotalParts+1))/2 {
 				out.Constructor = msg.C_Error
-				out.Message, _ = (&msg.Error{
+				out.Message, _ = (&rony.Error{
 					Code:  msg.ErrCodeIncomplete,
 					Items: msg.ErrItemFileParts,
 				}).Marshal()

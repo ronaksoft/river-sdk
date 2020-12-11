@@ -7,6 +7,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 	"os"
 	"sync"
@@ -32,7 +33,7 @@ type DownloadRequest struct {
 	finished bool
 }
 
-func (d *DownloadRequest) generateFileGet(offset, limit int32) *msg.MessageEnvelope {
+func (d *DownloadRequest) generateFileGet(offset, limit int32) *rony.MessageEnvelope {
 	req := new(msg.FileGet)
 	req.Location = &msg.InputFileLocation{
 		ClusterID:  d.ClusterID,
@@ -43,7 +44,7 @@ func (d *DownloadRequest) generateFileGet(offset, limit int32) *msg.MessageEnvel
 	req.Offset = offset
 	req.Limit = limit
 
-	envelop := new(msg.MessageEnvelope)
+	envelop := new(rony.MessageEnvelope)
 	envelop.Constructor = msg.C_FileGet
 	envelop.Message, _ = req.Marshal()
 	envelop.RequestID = uint64(domain.SequentialUniqueID())

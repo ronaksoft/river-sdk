@@ -3,8 +3,7 @@ package domain
 import (
 	"errors"
 	"fmt"
-
-	"git.ronaksoft.com/river/msg/go/msg"
+	"github.com/ronaksoft/rony"
 )
 
 var (
@@ -29,7 +28,7 @@ var (
 
 // ParseServerError ...
 func ParseServerError(b []byte) error {
-	x := new(msg.Error)
+	x := new(rony.Error)
 	_ = x.Unmarshal(b)
 	return fmt.Errorf("%s:%s", x.Code, x.Items)
 }

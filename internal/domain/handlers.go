@@ -2,6 +2,7 @@ package domain
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
+	"github.com/ronaksoft/rony"
 )
 
 // DeferredRequestHandler late responses that they requestID has been terminated callback/delegate
@@ -26,22 +27,22 @@ type SyncStatusChangeCallback func(newStatus SyncStatus)
 type TimeoutCallback func()
 
 // ErrorHandler error callback/delegate
-type ErrorHandler func(requestID uint64, u *msg.Error)
+type ErrorHandler func(requestID uint64, u *rony.Error)
 
 // MessageHandler success callback/delegate
-type MessageHandler func(m *msg.MessageEnvelope)
+type MessageHandler func(m *rony.MessageEnvelope)
 
 // UpdateApplier on receive update in SyncController, cache client data, there are some applier function for each proto message
 type UpdateApplier func(envelope *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error)
 
 // MessageApplier on receive response in SyncController, cache client data, there are some applier function for each proto message
-type MessageApplier func(envelope *msg.MessageEnvelope)
+type MessageApplier func(envelope *rony.MessageEnvelope)
 
 // LocalMessageHandler SDK commands that handle user request from client cache
-type LocalMessageHandler func(in, out *msg.MessageEnvelope, timeoutCB TimeoutCallback, successCB MessageHandler)
+type LocalMessageHandler func(in, out *rony.MessageEnvelope, timeoutCB TimeoutCallback, successCB MessageHandler)
 
 // ReceivedMessageHandler NetworkController pass all received response messages to this callback/delegate
-type ReceivedMessageHandler func(messages []*msg.MessageEnvelope)
+type ReceivedMessageHandler func(messages []*rony.MessageEnvelope)
 
 // ReceivedUpdateHandler NetworkController pass all received update messages to this callback/delegate
 type ReceivedUpdateHandler func(container *msg.UpdateContainer)

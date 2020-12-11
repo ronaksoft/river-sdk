@@ -3,10 +3,10 @@ package riversdk
 import (
 	"encoding/json"
 	"fmt"
-	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"github.com/ronaksoft/rony"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -106,7 +106,7 @@ func (d *MainDelegateDummy) OnAuthKeyCreated(authID int64) {
 }
 
 func (d *MainDelegateDummy) OnGeneralError(b []byte) {
-	e := new(msg.Error)
+	e := new(rony.Error)
 	e.Unmarshal(b)
 	logs.Error("Received general error", zap.String("Code", e.Code), zap.String("Items", e.Items))
 }

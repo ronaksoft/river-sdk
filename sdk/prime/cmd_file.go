@@ -6,6 +6,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/dgraph-io/badger/v2"
+	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 	"os"
 )
@@ -137,11 +138,11 @@ func (r *River) GroupUploadPhoto(groupID int64, filePath string) (reqID string) 
 func (r *River) GetSharedMedia(teamID int64, peerID int64, peerType int32, mediaType int32, delegate RequestDelegate) {
 	msgs, err := repo.Messages.GetSharedMedia(teamID, peerID, peerType, msg.ClientMediaType(mediaType))
 	if err != nil {
-		out := new(msg.MessageEnvelope)
-		res := new(msg.Error)
+		out := new(rony.MessageEnvelope)
+		res := new(rony.Error)
 		res.Code = "00"
 		res.Items = err.Error()
-		msg.ResultError(out, res)
+		out.Fill(out.RequestID, rony.C_Error, res)
 		outBytes, _ := out.Marshal()
 		if delegate != nil {
 			delegate.OnComplete(outBytes)
@@ -153,10 +154,10 @@ func (r *River) GetSharedMedia(teamID int64, peerID int64, peerType int32, media
 	userIDs := domain.MInt64B{}
 	groupIDs := domain.MInt64B{}
 	for _, m := range msgs {
-		if m.PeerType == int32(msg.PeerSelf) || m.PeerType == int32(msg.PeerUser) {
+		if m.PeerType == int32(msg.PeerType_PeerSelf) || m.PeerType == int32(msg.PeerType_PeerUser) {
 			userIDs[m.PeerID] = true
 		}
-		if m.PeerType == int32(msg.PeerGroup) {
+		if m.PeerType == int32(msg.PeerType_PeerGroup) {
 			groupIDs[m.PeerID] = true
 		}
 		if m.SenderID > 0 {
@@ -175,7 +176,7 @@ func (r *River) GetSharedMedia(teamID int64, peerID int64, peerType int32, media
 	msgMany.Users = users
 	msgMany.Groups = groups
 
-	out := new(msg.MessageEnvelope)
+	out := new(rony.MessageEnvelope)
 	out.Constructor = msg.C_MessagesMany
 	out.Message, _ = msgMany.Marshal()
 	outBytes, _ := out.Marshal()

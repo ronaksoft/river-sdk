@@ -154,7 +154,7 @@ func (r *repoTopPeers) Update(cat msg.TopPeerCategory, userID, teamID, peerID in
 		tp, _ := getTopPeer(txn, cat, teamID, peerID, peerType)
 		if tp == nil {
 			switch msg.PeerType(peerType) {
-			case msg.PeerUser:
+			case msg.PeerType_PeerUser:
 				p, err := getUserByKey(txn, getUserKey(peerID))
 				if err != nil {
 					return err
@@ -166,7 +166,7 @@ func (r *repoTopPeers) Update(cat msg.TopPeerCategory, userID, teamID, peerID in
 						AccessHash: p.AccessHash,
 					},
 				}
-			case msg.PeerGroup:
+			case msg.PeerType_PeerGroup:
 				p, err := getGroupByKey(txn, getGroupKey(peerID))
 				if err != nil {
 					return err

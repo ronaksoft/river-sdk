@@ -21,7 +21,7 @@ var Upload = &ishell.Cmd{
 		req.Attributes = make([]*msg.DocumentAttribute, 0)
 
 		req.Peer = new(msg.InputPeer)
-		req.Peer.Type = msg.PeerUser
+		req.Peer.Type = msg.PeerType_PeerUser
 		req.Peer.ID = _SDK.ConnInfo.UserID
 		// req.Peer.Type = fnGetPeerType(c)
 		// req.Peer.ID = fnGetPeerID(c)
@@ -41,7 +41,7 @@ var Upload = &ishell.Cmd{
 		req.FileMIME = mime.TypeByExtension(path.Ext(filename))
 		req.FileName = filename
 
-		req.MediaType = msg.InputMediaTypeUploadedDocument
+		req.MediaType = msg.InputMediaType_InputMediaTypeUploadedDocument
 
 		// req.MediaType = fnGetInputMediaType(c)
 		// req.Attributes = fnGetAttributes(c)
@@ -70,7 +70,7 @@ var ShareContact = &ishell.Cmd{
 		req.ReplyTo = fnGetReplyTo(c)
 
 		// get Media Contact
-		req.MediaType = msg.InputMediaTypeContact
+		req.MediaType = msg.InputMediaType_InputMediaTypeContact
 		contact := new(msg.InputMediaContact)
 		contact.FirstName = fnGetFirstName(c)
 		contact.LastName = fnGetLastName(c)
@@ -111,7 +111,7 @@ var TestUpload = &ishell.Cmd{
 		peer := &msg.InputPeer{
 			AccessHash: 0,
 			ID:         -65984812425083,
-			Type:       msg.PeerGroup,
+			Type:       msg.PeerType_PeerGroup,
 		}
 		f1 := new(msg.ClientSendMessageMedia)
 		f2 := new(msg.ClientSendMessageMedia)
@@ -125,11 +125,11 @@ var TestUpload = &ishell.Cmd{
 		f4.Peer = peer
 		f5.Peer = peer
 
-		f1.MediaType = msg.InputMediaTypeUploadedDocument
-		f2.MediaType = msg.InputMediaTypeUploadedDocument
-		f3.MediaType = msg.InputMediaTypeUploadedDocument
-		f4.MediaType = msg.InputMediaTypeUploadedDocument
-		f5.MediaType = msg.InputMediaTypeUploadedDocument
+		f1.MediaType = msg.InputMediaType_InputMediaTypeUploadedDocument
+		f2.MediaType = msg.InputMediaType_InputMediaTypeUploadedDocument
+		f3.MediaType = msg.InputMediaType_InputMediaTypeUploadedDocument
+		f4.MediaType = msg.InputMediaType_InputMediaTypeUploadedDocument
+		f5.MediaType = msg.InputMediaType_InputMediaTypeUploadedDocument
 
 		f1.Caption = "AAAA-1"
 		f2.Caption = "AAAA-2"
@@ -191,11 +191,11 @@ var TestUpload = &ishell.Cmd{
 		attrBuff4, _ := attr4.Marshal()
 		attrBuff5, _ := attr5.Marshal()
 
-		f1.Attributes = []*msg.DocumentAttribute{&msg.DocumentAttribute{Type: msg.AttributeTypeFile, Data: attrBuff1}}
-		f2.Attributes = []*msg.DocumentAttribute{&msg.DocumentAttribute{Type: msg.AttributeTypeFile, Data: attrBuff2}}
-		f3.Attributes = []*msg.DocumentAttribute{&msg.DocumentAttribute{Type: msg.AttributeTypeFile, Data: attrBuff3}}
-		f4.Attributes = []*msg.DocumentAttribute{&msg.DocumentAttribute{Type: msg.AttributeTypeFile, Data: attrBuff4}}
-		f5.Attributes = []*msg.DocumentAttribute{&msg.DocumentAttribute{Type: msg.AttributeTypeFile, Data: attrBuff5}}
+		f1.Attributes = []*msg.DocumentAttribute{&msg.DocumentAttribute{Type: msg.DocumentAttributeType_AttributeTypeFile, Data: attrBuff1}}
+		f2.Attributes = []*msg.DocumentAttribute{&msg.DocumentAttribute{Type: msg.DocumentAttributeType_AttributeTypeFile, Data: attrBuff2}}
+		f3.Attributes = []*msg.DocumentAttribute{&msg.DocumentAttribute{Type: msg.DocumentAttributeType_AttributeTypeFile, Data: attrBuff3}}
+		f4.Attributes = []*msg.DocumentAttribute{&msg.DocumentAttribute{Type: msg.DocumentAttributeType_AttributeTypeFile, Data: attrBuff4}}
+		f5.Attributes = []*msg.DocumentAttribute{&msg.DocumentAttribute{Type: msg.DocumentAttributeType_AttributeTypeFile, Data: attrBuff5}}
 
 		reqBuff1, _ := f1.Marshal()
 		reqBuff2, _ := f2.Marshal()

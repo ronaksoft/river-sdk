@@ -1,10 +1,9 @@
 package domain
 
 import (
+	"github.com/ronaksoft/rony"
 	"sync"
 	"time"
-
-	"git.ronaksoft.com/river/msg/go/msg"
 )
 
 var (
@@ -20,7 +19,7 @@ type RequestCallback struct {
 	RequestID       uint64
 	SuccessCallback MessageHandler
 	TimeoutCallback TimeoutCallback
-	ResponseChannel chan *msg.MessageEnvelope
+	ResponseChannel chan *rony.MessageEnvelope
 	CreatedOn       time.Time
 	Timeout         time.Duration
 	IsUICallback    bool
@@ -38,7 +37,7 @@ func AddRequestCallback(reqID uint64, constructor int64, successCB MessageHandle
 		RequestID:       reqID,
 		SuccessCallback: successCB,
 		TimeoutCallback: timeoutCB,
-		ResponseChannel: make(chan *msg.MessageEnvelope),
+		ResponseChannel: make(chan *rony.MessageEnvelope),
 		CreatedOn:       time.Now(),
 		DepartureTime:   time.Now(),
 		Timeout:         timeOut,

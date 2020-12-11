@@ -9,6 +9,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/dgraph-io/badger/v2"
+	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
@@ -211,13 +212,13 @@ func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash u
 	}
 	filePath = repo.Files.GetFilePath(clientFile)
 	switch clientFile.Type {
-	case msg.GroupProfilePhoto:
+	case msg.ClientFileType_GroupProfilePhoto:
 		return ctrl.downloadGroupPhoto(clientFile)
-	case msg.AccountProfilePhoto:
+	case msg.ClientFileType_AccountProfilePhoto:
 		return ctrl.downloadAccountPhoto(clientFile)
-	case msg.Thumbnail:
+	case msg.ClientFileType_Thumbnail:
 		return ctrl.downloadThumbnail(clientFile)
-	case msg.Wallpaper:
+	case msg.ClientFileType_Wallpaper:
 		return ctrl.downloadWallpaper(clientFile)
 	default:
 		err = ctrl.download(&DownloadRequest{
@@ -251,7 +252,7 @@ func (ctrl *Controller) downloadAccountPhoto(clientFile *msg.ClientFile) (filePa
 			Limit:  0,
 		}
 
-		envelop := &msg.MessageEnvelope{}
+		envelop := &rony.MessageEnvelope{}
 		envelop.Constructor = msg.C_FileGet
 		envelop.Message, _ = req.Marshal()
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
@@ -265,7 +266,7 @@ func (ctrl *Controller) downloadAccountPhoto(clientFile *msg.ClientFile) (filePa
 		switch res.Constructor {
 		case msg.C_Error:
 			strErr := ""
-			x := new(msg.Error)
+			x := new(rony.Error)
 			if err := x.Unmarshal(res.Message); err == nil {
 				strErr = "Code :" + x.Code + ", Items :" + x.Items
 			}
@@ -306,7 +307,7 @@ func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath
 			Limit:  0,
 		}
 
-		envelop := &msg.MessageEnvelope{}
+		envelop := &rony.MessageEnvelope{}
 		envelop.Constructor = msg.C_FileGet
 		envelop.Message, _ = req.Marshal()
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
@@ -319,7 +320,7 @@ func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath
 		switch res.Constructor {
 		case msg.C_Error:
 			strErr := ""
-			x := new(msg.Error)
+			x := new(rony.Error)
 			if err := x.Unmarshal(res.Message); err == nil {
 				strErr = "Code :" + x.Code + ", Items :" + x.Items
 			}
@@ -361,7 +362,7 @@ func (ctrl *Controller) downloadWallpaper(clientFile *msg.ClientFile) (filePath 
 			Limit:  0,
 		}
 
-		envelop := &msg.MessageEnvelope{}
+		envelop := &rony.MessageEnvelope{}
 		envelop.Constructor = msg.C_FileGet
 		envelop.Message, _ = req.Marshal()
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
@@ -375,7 +376,7 @@ func (ctrl *Controller) downloadWallpaper(clientFile *msg.ClientFile) (filePath 
 		switch res.Constructor {
 		case msg.C_Error:
 			strErr := ""
-			x := new(msg.Error)
+			x := new(rony.Error)
 			if err := x.Unmarshal(res.Message); err == nil {
 				strErr = "Code :" + x.Code + ", Items :" + x.Items
 			}
@@ -418,7 +419,7 @@ func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath 
 			Limit:  0,
 		}
 
-		envelop := &msg.MessageEnvelope{}
+		envelop := &rony.MessageEnvelope{}
 		envelop.Constructor = msg.C_FileGet
 		envelop.Message, _ = req.Marshal()
 		envelop.RequestID = uint64(domain.SequentialUniqueID())
@@ -432,7 +433,7 @@ func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath 
 		switch res.Constructor {
 		case msg.C_Error:
 			strErr := ""
-			x := new(msg.Error)
+			x := new(rony.Error)
 			if err := x.Unmarshal(res.Message); err == nil {
 				strErr = "Code :" + x.Code + ", Items :" + x.Items
 			}

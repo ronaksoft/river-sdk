@@ -107,10 +107,10 @@ func getMessageByKey(txn *badger.Txn, msgKey []byte) (*msg.UserMessage, error) {
 
 func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 	messageBytes, _ := message.Marshal()
-	docType := msg.ClientMediaNone
+	docType := msg.ClientMediaType_ClientMediaNone
 
 	switch message.MediaType {
-	case msg.MediaTypeDocument:
+	case msg.MediaType_MediaTypeDocument:
 		doc := &msg.MediaDocument{}
 		_ = doc.Unmarshal(message.Media)
 		if doc.Doc == nil {
@@ -121,50 +121,50 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 			return nil
 		}
 		for _, da := range doc.Doc.Attributes {
-			if docType == msg.ClientMediaGif {
+			if docType == msg.ClientMediaType_ClientMediaGif {
 				break
 			}
 			switch da.Type {
-			case msg.AttributeTypeAudio:
+			case msg.DocumentAttributeType_AttributeTypeAudio:
 				a := &msg.DocumentAttributeAudio{}
 				_ = a.Unmarshal(da.Data)
 				if a.Voice {
-					docType = msg.ClientMediaVoice
+					docType = msg.ClientMediaType_ClientMediaVoice
 				} else {
-					docType = msg.ClientMediaAudio
+					docType = msg.ClientMediaType_ClientMediaAudio
 				}
-			case msg.AttributeTypeVideo, msg.AttributeTypePhoto:
-				docType = msg.ClientMediaMedia
-			case msg.AttributeTypeAnimated:
-				docType = msg.ClientMediaGif
-			case msg.AttributeTypeFile:
-				if docType == msg.ClientMediaNone {
-					docType = msg.ClientMediaFile
+			case msg.DocumentAttributeType_AttributeTypeVideo, msg.DocumentAttributeType_AttributeTypePhoto:
+				docType = msg.ClientMediaType_ClientMediaMedia
+			case msg.DocumentAttributeType_AttributeTypeAnimated:
+				docType = msg.ClientMediaType_ClientMediaGif
+			case msg.DocumentAttributeType_AttributeTypeFile:
+				if docType == msg.ClientMediaType_ClientMediaNone {
+					docType = msg.ClientMediaType_ClientMediaFile
 				}
 			}
 		}
-	case msg.MediaTypeWebDocument:
+	case msg.MediaType_MediaTypeWebDocument:
 		webDoc := &msg.MediaWebDocument{}
 		for _, da := range webDoc.Attributes {
-			if docType == msg.ClientMediaGif {
+			if docType == msg.ClientMediaType_ClientMediaGif {
 				break
 			}
 			switch da.Type {
-			case msg.AttributeTypeAudio:
+			case msg.DocumentAttributeType_AttributeTypeAudio:
 				a := new(msg.DocumentAttributeAudio)
 				_ = a.Unmarshal(da.Data)
 				if a.Voice {
-					docType = msg.ClientMediaVoice
+					docType = msg.ClientMediaType_ClientMediaVoice
 				} else {
-					docType = msg.ClientMediaAudio
+					docType = msg.ClientMediaType_ClientMediaAudio
 				}
-			case msg.AttributeTypeVideo, msg.AttributeTypePhoto:
-				docType = msg.ClientMediaMedia
-			case msg.AttributeTypeAnimated:
-				docType = msg.ClientMediaGif
-			case msg.AttributeTypeFile:
-				if docType == msg.ClientMediaNone {
-					docType = msg.ClientMediaFile
+			case msg.DocumentAttributeType_AttributeTypeVideo, msg.DocumentAttributeType_AttributeTypePhoto:
+				docType = msg.ClientMediaType_ClientMediaMedia
+			case msg.DocumentAttributeType_AttributeTypeAnimated:
+				docType = msg.ClientMediaType_ClientMediaGif
+			case msg.DocumentAttributeType_AttributeTypeFile:
+				if docType == msg.ClientMediaType_ClientMediaNone {
+					docType = msg.ClientMediaType_ClientMediaFile
 				}
 			}
 		}
@@ -290,7 +290,8 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, userID int64) error {
 			if message.SenderID != userID {
 				dialog.UnreadCount += 1
 				for _, entity := range message.Entities {
-					if (entity.Type == msg.MessageEntityTypeMention && entity.UserID == userID) || (entity.Type == msg.MessageEntityTypeMentionAll) {
+					if (entity.Type == msg.MessageEntityType_MessageEntityTypeMention && entity.UserID == userID) ||
+						(entity.Type == msg.MessageEntityType_MessageEntityTypeMentionAll) {
 						dialog.MentionedCount += 1
 					}
 				}

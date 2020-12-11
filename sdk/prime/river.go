@@ -9,6 +9,7 @@ import (
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/salt"
+	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 	"sort"
 	"strconv"
@@ -211,7 +212,7 @@ func (r *River) onNetworkConnect() (err error) {
 		if atomic.LoadInt32(&domain.ContactsSynced) == 0 {
 			// Get contacts and imports remaining contacts
 			waitGroup.Add(1)
-			r.syncCtrl.GetContacts(waitGroup, nil)
+			r.syncCtrl.GetContacts(waitGroup, 0, 0)
 			waitGroup.Wait()
 			domain.WindowLog(fmt.Sprintf("ContactsGet: %s", time.Now().Sub(domain.StartTime)))
 			r.syncCtrl.ContactsImport(true, nil, nil)
@@ -223,7 +224,7 @@ func (r *River) onNetworkConnect() (err error) {
 	return nil
 }
 
-func (r *River) onGeneralError(requestID uint64, e *msg.Error) {
+func (r *River) onGeneralError(requestID uint64, e *rony.Error) {
 	logs.Info("We received error (General)",
 		zap.Uint64("ReqID", requestID),
 		zap.String("Code", e.Code),
@@ -247,7 +248,7 @@ func (r *River) onGeneralError(requestID uint64, e *msg.Error) {
 	}
 }
 
-func (r *River) onReceivedMessage(msgs []*msg.MessageEnvelope) {
+func (r *River) onReceivedMessage(msgs []*rony.MessageEnvelope) {
 	defer logs.RecoverPanic(
 		"River::onReceivedMessage",
 		domain.M{
@@ -359,7 +360,7 @@ func (r *River) sendMessageMedia(uploadRequest msg.ClientFileRequest) (success b
 	err := domain.Try(3, time.Millisecond*500, func() error {
 		var fileLoc *msg.FileLocation
 		if uploadRequest.FileID != 0 && uploadRequest.AccessHash != 0 && uploadRequest.ClusterID != 0 {
-			req.MediaType = msg.InputMediaTypeDocument
+			req.MediaType = msg.InputMediaType_InputMediaTypeDocument
 			fileLoc = &msg.FileLocation{
 				ClusterID:  uploadRequest.ClusterID,
 				FileID:     uploadRequest.FileID,
@@ -382,7 +383,7 @@ func (r *River) sendMessageMedia(uploadRequest msg.ClientFileRequest) (success b
 	}
 
 	switch x.MediaType {
-	case msg.InputMediaTypeUploadedDocument:
+	case msg.InputMediaType_InputMediaTypeUploadedDocument:
 		doc := &msg.InputMediaUploadedDocument{
 			MimeType:   req.FileMIME,
 			Attributes: req.Attributes,
@@ -403,7 +404,7 @@ func (r *River) sendMessageMedia(uploadRequest msg.ClientFileRequest) (success b
 			}
 		}
 		x.MediaData, _ = doc.Marshal()
-	case msg.InputMediaTypeDocument:
+	case msg.InputMediaType_InputMediaTypeDocument:
 		doc := &msg.InputMediaDocument{
 			Caption:    req.Caption,
 			Attributes: req.Attributes,
@@ -431,12 +432,12 @@ func (r *River) sendMessageMedia(uploadRequest msg.ClientFileRequest) (success b
 
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(1)
-	successCB := func(m *msg.MessageEnvelope) {
+	successCB := func(m *rony.MessageEnvelope) {
 		logs.Info("MessagesSendMedia success callback called", zap.String("C", msg.ConstructorNames[m.Constructor]))
 		switch m.Constructor {
 		case msg.C_Error:
 			success = false
-			x := &msg.Error{}
+			x := &rony.Error{}
 			if err := x.Unmarshal(m.Message); err != nil {
 				logs.Error("We couldn't unmarshal MessagesSendMedia (Error) response", zap.Error(err))
 			}
@@ -458,14 +459,14 @@ func (r *River) sendMessageMedia(uploadRequest msg.ClientFileRequest) (success b
 		waitGroup.Done()
 	}
 	r.queueCtrl.EnqueueCommand(
-		&msg.MessageEnvelope{
+		&rony.MessageEnvelope{
 			Constructor: msg.C_MessagesSendMedia,
 			RequestID:   uint64(x.RandomID),
 			Message:     reqBuff,
-			Team: &msg.InputTeam{
+			Header: domain.InputTeamToHeader(&msg.InputTeam{
 				AccessHash: pendingMessage.TeamAccessHash,
 				ID:         pendingMessage.TeamID,
-			},
+			}),
 		},
 		timeoutCB, successCB, false)
 	waitGroup.Wait()
@@ -488,12 +489,12 @@ func (r *River) uploadGroupPhoto(uploadRequest msg.ClientFileRequest) (success b
 	success = true
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(1)
-	successCB := func(m *msg.MessageEnvelope) {
+	successCB := func(m *rony.MessageEnvelope) {
 		logs.Debug("GroupUploadPhoto success callback called")
 		switch m.Constructor {
 		case msg.C_Error:
 			success = false
-			x := &msg.Error{}
+			x := &rony.Error{}
 			if err := x.Unmarshal(m.Message); err != nil {
 				logs.Error("We couldn't unmarshal GroupUploadPhoto (Error) response", zap.Error(err))
 			}
@@ -507,7 +508,7 @@ func (r *River) uploadGroupPhoto(uploadRequest msg.ClientFileRequest) (success b
 		waitGroup.Done()
 	}
 	r.queueCtrl.EnqueueCommand(
-		&msg.MessageEnvelope{
+		&rony.MessageEnvelope{
 			Constructor: msg.C_GroupsUploadPhoto,
 			RequestID:   uint64(domain.SequentialUniqueID()),
 			Message:     reqBuff,
@@ -531,12 +532,12 @@ func (r *River) uploadAccountPhoto(uploadRequest msg.ClientFileRequest) (success
 	success = true
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(1)
-	successCB := func(m *msg.MessageEnvelope) {
+	successCB := func(m *rony.MessageEnvelope) {
 		logs.Debug("AccountUploadPhoto success callback called")
 		switch m.Constructor {
 		case msg.C_Error:
 			success = false
-			x := &msg.Error{}
+			x := &rony.Error{}
 			if err := x.Unmarshal(m.Message); err != nil {
 				logs.Error("We couldn't unmarshal AccountUploadPhoto (Error) response", zap.Error(err))
 			}
@@ -550,7 +551,7 @@ func (r *River) uploadAccountPhoto(uploadRequest msg.ClientFileRequest) (success
 		waitGroup.Done()
 	}
 	r.queueCtrl.EnqueueCommand(
-		&msg.MessageEnvelope{
+		&rony.MessageEnvelope{
 			Constructor: msg.C_AccountUploadPhoto,
 			RequestID:   uint64(domain.SequentialUniqueID()),
 			Message:     reqBuff,

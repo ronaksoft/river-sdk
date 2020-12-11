@@ -18,6 +18,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/salt"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/monnand/dhkx"
+	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 	"math/big"
 	"runtime"
@@ -77,7 +78,7 @@ func (r *River) executeCommand(
 	}
 
 	// Success Callback
-	successCallback := func(envelope *msg.MessageEnvelope) {
+	successCallback := func(envelope *rony.MessageEnvelope) {
 		b, _ := envelope.Marshal()
 		delegate.OnComplete(b)
 		releaseDelegate(r, uint64(requestID))
@@ -118,14 +119,14 @@ func executeLocalCommand(
 		zap.String("C", msg.ConstructorNames[constructor]),
 	)
 
-	in := &msg.MessageEnvelope{
-		Team:        team,
+	in := &rony.MessageEnvelope{
+		Header: domain.InputTeamToHeader(team),
 		Constructor: constructor,
 		Message:     commandBytes,
 		RequestID:   requestID,
 	}
-	out := &msg.MessageEnvelope{
-		Team:      team,
+	out := &rony.MessageEnvelope{
+		Header: domain.InputTeamToHeader(team),
 		RequestID: requestID,
 	}
 	handler(in, out, timeoutCB, successCB)
@@ -172,16 +173,16 @@ func executeRemoteCommand(
 
 	// If the constructor is a realtime command, then just send it to the server
 	if _, ok := r.realTimeCommands[constructor]; ok {
-		r.queueCtrl.RealtimeCommand(&msg.MessageEnvelope{
-			Team:        team,
+		r.queueCtrl.RealtimeCommand(&rony.MessageEnvelope{
+			Header: domain.InputTeamToHeader(team),
 			Constructor: constructor,
 			RequestID:   requestID,
 			Message:     commandBytes,
 		}, timeoutCB, successCB, blocking, true)
 	} else {
 		r.queueCtrl.EnqueueCommand(
-			&msg.MessageEnvelope{
-				Team:        team,
+			&rony.MessageEnvelope{
+				Header: domain.InputTeamToHeader(team),
 				Constructor: constructor,
 				RequestID:   requestID,
 				Message:     commandBytes,
@@ -256,7 +257,7 @@ func initConnect(r *River) (err error, clientNonce, serverNonce, serverPubFP, se
 			defer waitGroup.Done()
 			err = domain.ErrRequestTimeout
 		},
-		func(res *msg.MessageEnvelope) {
+		func(res *rony.MessageEnvelope) {
 			defer waitGroup.Done()
 			logs.Debug("River::CreateAuthKey() Success Callback Called")
 			switch res.Constructor {
@@ -349,7 +350,7 @@ func initCompleteAuth(r *River, clientNonce, serverNonce, serverPubFP, serverDHF
 			defer waitGroup.Done()
 			err = domain.ErrRequestTimeout
 		},
-		func(res *msg.MessageEnvelope) {
+		func(res *rony.MessageEnvelope) {
 			defer waitGroup.Done()
 			switch res.Constructor {
 			case msg.C_InitAuthCompleted:
@@ -456,7 +457,7 @@ func (r *River) RetryPendingMessage(id int64) bool {
 	}
 	buff, _ := req.Marshal()
 	r.queueCtrl.EnqueueCommand(
-		&msg.MessageEnvelope{
+		&rony.MessageEnvelope{
 			Constructor: msg.C_MessagesSend,
 			RequestID:   uint64(req.RandomID),
 			Message:     buff,
@@ -805,17 +806,11 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	logs.Info("River SetConfig done!")
 
 	// Set current team
-	domain.SetCurrentTeam(&msg.InputTeam{
-		ID:         conf.TeamID,
-		AccessHash: uint64(conf.TeamAccessHash),
-	})
+	domain.SetCurrentTeam(conf.TeamID, uint64(conf.TeamAccessHash))
 }
 
 func (r *River) SetTeam(teamID int64, teamAccessHash int64, forceSync bool) {
-	domain.SetCurrentTeam(&msg.InputTeam{
-		ID:         teamID,
-		AccessHash: uint64(teamAccessHash),
-	})
+	domain.SetCurrentTeam(teamID, uint64(teamAccessHash))
 
 	if teamID != 0 {
 		r.syncCtrl.TeamSync(teamID, uint64(teamAccessHash), forceSync)

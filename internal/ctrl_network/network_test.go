@@ -5,6 +5,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/ctrl_network"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
+	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 	"sync/atomic"
 	"testing"
@@ -25,7 +26,7 @@ var (
 	ctrl      *networkCtrl.Controller
 )
 
-func dummyMessageHandler(messages []*msg.MessageEnvelope) {
+func dummyMessageHandler(messages []*rony.MessageEnvelope) {
 	for _, m := range messages {
 		logs.Info("Message",
 			zap.String("C", msg.ConstructorNames[m.Constructor]),
@@ -50,7 +51,7 @@ func dummyOnConnectHandler() error {
 	return nil
 }
 
-func dummyErrorHandler(requestID uint64, e *msg.Error) {
+func dummyErrorHandler(requestID uint64, e *rony.Error) {
 	logs.Info("Error Handler",
 		zap.String("Code", e.Code),
 		zap.String("Items", e.Items),
@@ -63,21 +64,21 @@ func dummyNetworkChangeHandler(newStatus domain.NetworkStatus) {
 	)
 }
 
-func authRecall() *msg.MessageEnvelope {
+func authRecall() *rony.MessageEnvelope {
 	m := new(msg.AuthRecall)
 	m.ClientID = 2374
 	b, _ := m.Marshal()
-	return &msg.MessageEnvelope{
+	return &rony.MessageEnvelope{
 		Constructor: msg.C_AuthRecall,
 		RequestID:   domain.RandomUint64(),
 		Message:     b,
 	}
 }
 
-func getServerTime() *msg.MessageEnvelope {
+func getServerTime() *rony.MessageEnvelope {
 	m := new(msg.SystemGetServerTime)
 	b, _ := m.Marshal()
-	return &msg.MessageEnvelope{
+	return &rony.MessageEnvelope{
 		Constructor: msg.C_SystemGetServerTime,
 		RequestID:   atomic.AddUint64(&requestID, 1),
 		Message:     b,

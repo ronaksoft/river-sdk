@@ -41,7 +41,7 @@ func createMediaMessage(body string, filename string, labelIDs []int32) *msg.Use
 			ClusterID:  1,
 			Attributes: []*msg.DocumentAttribute{
 				{
-					Type: msg.AttributeTypeFile,
+					Type: msg.DocumentAttributeType_AttributeTypeFile,
 					Data: attrFile,
 				},
 			},
@@ -68,7 +68,7 @@ func createMediaMessage(body string, filename string, labelIDs []int32) *msg.Use
 		MessageAction:       0,
 		MessageActionData:   nil,
 		Entities:            nil,
-		MediaType:           msg.MediaTypeDocument,
+		MediaType:           msg.MediaType_MediaTypeDocument,
 		Media:               media,
 		ReplyMarkup:         0,
 		ReplyMarkupData:     nil,
@@ -97,7 +97,7 @@ func createMessage(id int64, body string, labelIDs []int32) *msg.UserMessage {
 		MessageAction:       0,
 		MessageActionData:   nil,
 		Entities:            nil,
-		MediaType:           msg.MediaTypeEmpty,
+		MediaType:           msg.MediaType_MediaTypeEmpty,
 		Media:               nil,
 		ReplyMarkup:         0,
 		ReplyMarkupData:     nil,
@@ -131,7 +131,7 @@ func TestRepoMessagesExtra(t *testing.T) {
 func TestPending(t *testing.T) {
 	pm := new(msg.ClientSendMessageMedia)
 	pm.Peer = new(msg.InputPeer)
-	_, err := repo.PendingMessages.SaveClientMessageMedia(&msg.InputTeam{}, 10, 1, 11, 20, 21, pm, nil)
+	_, err := repo.PendingMessages.SaveClientMessageMedia(0, 0, 10, 1, 11, 20, 21, pm, nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -192,11 +192,11 @@ func TestConcurrent(t *testing.T) {
 	for i := int64(1); i < 10000; i++ {
 		waitGroup.Add(1)
 		go func(i int64) {
-			_, err := repo.PendingMessages.SaveMessageMedia(&msg.InputTeam{}, i, 1001, &msg.MessagesSendMedia{
+			_, err := repo.PendingMessages.SaveMessageMedia(0, 0, i, 1001, &msg.MessagesSendMedia{
 				RandomID: domain.RandomInt63(),
 				Peer: &msg.InputPeer{
 					ID:         i,
-					Type:       msg.PeerUser,
+					Type:       msg.PeerType_PeerUser,
 					AccessHash: 0,
 				},
 				MediaType:  0,
@@ -297,10 +297,10 @@ func TestSearch(t *testing.T) {
 	m := make([]*msg.UserMessage, 0, 10)
 	for i := 1; i < 100; i++ {
 		peerID := int64(i%10 + 1)
-		peerType := int32(msg.PeerUser)
+		peerType := int32(msg.PeerType_PeerUser)
 		if i%2 == 0 {
 			peerID = -peerID
-			peerType = int32(msg.PeerGroup)
+			peerType = int32(msg.PeerType_PeerGroup)
 		}
 		m = append(m, &msg.UserMessage{
 			ID:                  int64(i),

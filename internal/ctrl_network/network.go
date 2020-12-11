@@ -13,6 +13,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/salt"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
+	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"net"
@@ -155,7 +156,7 @@ func (ctrl *Controller) sendFlushFunc(entries []domain.FlusherEntry) {
 	case 0:
 		return
 	case 1:
-		m := entries[0].Value.(*msg.MessageEnvelope)
+		m := entries[0].Value.(*rony.MessageEnvelope)
 		err := ctrl.sendWebsocket(m)
 		if err != nil {
 			logs.Warn("NetCtrl got error on flushing outgoing messages",
@@ -165,12 +166,13 @@ func (ctrl *Controller) sendFlushFunc(entries []domain.FlusherEntry) {
 			)
 		}
 	default:
-		messages := make([]*msg.MessageEnvelope, 0, itemsCount)
+		messages := make([]*rony.MessageEnvelope, 0, itemsCount)
 		for idx := range entries {
-			m := entries[idx].Value.(*msg.MessageEnvelope)
+			m := entries[idx].Value.(*rony.MessageEnvelope)
 			logs.Debug("Message",
 				zap.Int("Idx", idx),
-				zap.Any("Team", m.Team),
+				zap.String("TeamID", m.Get("TeamID", "0")),
+				zap.String("TeamAccess", m.Get("TeamAccess", "0")),
 				zap.String("C", msg.ConstructorNames[m.Constructor]),
 			)
 			messages = append(messages, m)
@@ -192,11 +194,11 @@ func (ctrl *Controller) sendFlushFunc(entries []domain.FlusherEntry) {
 			}
 			chunk := messages[startIdx:endIdx]
 
-			msgContainer := new(msg.MessageContainer)
+			msgContainer := new(rony.MessageContainer)
 			msgContainer.Envelopes = chunk
 			msgContainer.Length = int32(len(chunk))
-			messageEnvelope := new(msg.MessageEnvelope)
-			messageEnvelope.Constructor = msg.C_MessageContainer
+			messageEnvelope := new(rony.MessageEnvelope)
+			messageEnvelope.Constructor = rony.C_MessageContainer
 			messageEnvelope.Message, _ = msgContainer.Marshal()
 			messageEnvelope.RequestID = 0
 			err := ctrl.sendWebsocket(messageEnvelope)
@@ -346,7 +348,7 @@ func (ctrl *Controller) receiver() {
 				}
 
 				if res.AuthID == 0 {
-					receivedEnvelope := new(msg.MessageEnvelope)
+					receivedEnvelope := new(rony.MessageEnvelope)
 					err = receivedEnvelope.Unmarshal(res.Payload)
 					if err != nil {
 						logs.Error("NetCtrl couldn't unmarshal plain-text MessageEnvelope", zap.Error(err))
@@ -387,7 +389,7 @@ func (ctrl *Controller) receiver() {
 		}
 	}
 }
-func messageHandler(ctrl *Controller, message *msg.MessageEnvelope) {
+func messageHandler(ctrl *Controller, message *rony.MessageEnvelope) {
 	// extract all updates/ messages
 	messages, updates := extractMessages(ctrl, message)
 	if ctrl.OnMessage != nil {
@@ -405,12 +407,12 @@ func messageHandler(ctrl *Controller, message *msg.MessageEnvelope) {
 		}
 	}
 }
-func extractMessages(ctrl *Controller, m *msg.MessageEnvelope) ([]*msg.MessageEnvelope, []*msg.UpdateContainer) {
-	messages := make([]*msg.MessageEnvelope, 0)
+func extractMessages(ctrl *Controller, m *rony.MessageEnvelope) ([]*rony.MessageEnvelope, []*msg.UpdateContainer) {
+	messages := make([]*rony.MessageEnvelope, 0)
 	updates := make([]*msg.UpdateContainer, 0)
 	switch m.Constructor {
-	case msg.C_MessageContainer:
-		x := new(msg.MessageContainer)
+	case rony.C_MessageContainer:
+		x := new(rony.MessageContainer)
 		err := x.Unmarshal(m.Message)
 		if err == nil {
 			for _, env := range x.Envelopes {
@@ -426,7 +428,7 @@ func extractMessages(ctrl *Controller, m *msg.MessageEnvelope) ([]*msg.MessageEn
 			updates = append(updates, x)
 		}
 	case msg.C_Error:
-		e := new(msg.Error)
+		e := new(rony.Error)
 		_ = e.Unmarshal(m.Message)
 		if ctrl.OnGeneralError != nil {
 			ctrl.OnGeneralError(m.RequestID, e)
@@ -611,7 +613,7 @@ func (ctrl *Controller) incMessageSeq() int64 {
 }
 
 // SendWebsocket direct sends immediately else it put it in flusher
-func (ctrl *Controller) SendWebsocket(msgEnvelope *msg.MessageEnvelope, direct bool) error {
+func (ctrl *Controller) SendWebsocket(msgEnvelope *rony.MessageEnvelope, direct bool) error {
 	defer logs.RecoverPanic(
 		"NetworkController::SendWebsocket",
 		domain.M{
@@ -632,7 +634,7 @@ func (ctrl *Controller) SendWebsocket(msgEnvelope *msg.MessageEnvelope, direct b
 	ctrl.sendFlusher.Enter(nil, msgEnvelope)
 	return nil
 }
-func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
+func (ctrl *Controller) sendWebsocket(msgEnvelope *rony.MessageEnvelope) error {
 	defer logs.RecoverPanic(
 		"NetworkController::sendWebsocket",
 		domain.M{
@@ -655,7 +657,8 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 	logs.Info("NetCtrl call sendWebsocket",
 		zap.Uint64("ReqID", msgEnvelope.RequestID),
 		zap.String("C", msg.ConstructorNames[msgEnvelope.Constructor]),
-		zap.Any("Team", msgEnvelope.Team),
+		zap.String("TeamID", msgEnvelope.Get("TeamID", "0")),
+		zap.String("TeamAccess", msgEnvelope.Get("TeamAccess", "0")),
 		zap.Bool("Plain", unauthorized),
 		zap.Bool("NoAuth", ctrl.authID == 0),
 	)
@@ -701,7 +704,7 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *msg.MessageEnvelope) error {
 }
 
 // Send encrypt and send request to server and receive and decrypt its response
-func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEnvelope) (*msg.MessageEnvelope, error) {
+func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageEnvelope) (*rony.MessageEnvelope, error) {
 	st := domain.Now()
 	defer func() {
 		logs.Info("SendHttp",
@@ -767,7 +770,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *msg.MessageEn
 		return nil, err
 	}
 	if res.AuthID == 0 {
-		receivedEnvelope := &msg.MessageEnvelope{}
+		receivedEnvelope := &rony.MessageEnvelope{}
 		err = receivedEnvelope.Unmarshal(res.Payload)
 		return receivedEnvelope, err
 	}

@@ -1,0 +1,45 @@
+syntax = "proto3";
+package rony;
+option go_package = "github.com/ronaksoft/rony";
+
+// MessageEnvelope
+// This type of message will be used to contain another ProtoBuffer Message inside
+message MessageEnvelope {
+    int64 Constructor = 1;
+    fixed64 RequestID = 2;
+    bytes Message = 4;
+    bytes Auth = 8;
+    repeated KeyValue Header = 10;
+}
+
+// MessageContainer
+// This type of message will be used to send multi messages inside a single container message
+message MessageContainer {
+    int32 Length = 1;
+    repeated MessageEnvelope Envelopes = 2;
+}
+
+// Error
+message Error {
+    string Code = 1;
+    string Items = 2;
+    string Template = 3;
+    repeated string TemplateItems = 4;
+    string LocalTemplate = 5;
+    repeated string LocalTemplateItems = 6;
+}
+
+// Redirect
+message Redirect {
+    repeated string LeaderHostPort = 1;
+    repeated string HostPorts = 2;
+    string ServerID = 3;
+    uint32 WaitInSec = 4;
+}
+
+// KeyValue
+message KeyValue {
+    string Key = 1;
+    string Value = 2;
+}
+

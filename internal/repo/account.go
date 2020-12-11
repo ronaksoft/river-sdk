@@ -5,6 +5,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"github.com/dgraph-io/badger/v2"
+	"github.com/gogo/protobuf/proto"
 )
 
 const (
@@ -19,7 +20,7 @@ func (r *repoAccount) SetPrivacy(key msg.PrivacyKey, rules []*msg.PrivacyRule) e
 	accountPrivacyRules := &msg.AccountPrivacyRules{}
 	accountPrivacyRules.Rules = rules
 
-	bytes, _ := accountPrivacyRules.Marshal()
+	bytes, _ := proto.Marshal(accountPrivacyRules)
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		return txn.SetEntry(badger.NewEntry(
 			domain.StrToByte(fmt.Sprintf("%s.%s", prefixAccount, key)),

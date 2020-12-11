@@ -12,7 +12,9 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/tools"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/gobwas/pool/pbytes"
+	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 	"sort"
 	"sync"
 	"time"
@@ -197,14 +199,14 @@ func (ctrl *Controller) Sync() {
 			// Get Contacts from the server
 			waitGroup := &sync.WaitGroup{}
 			waitGroup.Add(8)
-			go ctrl.GetContacts(waitGroup, nil)
-			go ctrl.GetAllDialogs(waitGroup, nil, 0, 100)
-			go ctrl.GetLabels(waitGroup, nil)
-			go ctrl.GetAllTopPeers(waitGroup, nil, msg.TopPeerCategory_Users, 0, 100)
-			go ctrl.GetAllTopPeers(waitGroup, nil, msg.TopPeerCategory_Groups, 0, 100)
-			go ctrl.GetAllTopPeers(waitGroup, nil, msg.TopPeerCategory_Forwards, 0, 100)
-			go ctrl.GetAllTopPeers(waitGroup, nil, msg.TopPeerCategory_BotsMessage, 0, 100)
-			go ctrl.GetAllTopPeers(waitGroup, nil, msg.TopPeerCategory_BotsInline, 0, 100)
+			go ctrl.GetContacts(waitGroup, 0, 0)
+			go ctrl.GetAllDialogs(waitGroup, 0, 0, 0, 100)
+			go ctrl.GetLabels(waitGroup, 0, 0)
+			go ctrl.GetAllTopPeers(waitGroup, 0, 0, msg.TopPeerCategory_Users, 0, 100)
+			go ctrl.GetAllTopPeers(waitGroup, 0, 0, msg.TopPeerCategory_Groups, 0, 100)
+			go ctrl.GetAllTopPeers(waitGroup, 0, 0, msg.TopPeerCategory_Forwards, 0, 100)
+			go ctrl.GetAllTopPeers(waitGroup, 0, 0, msg.TopPeerCategory_BotsMessage, 0, 100)
+			go ctrl.GetAllTopPeers(waitGroup, 0, 0, msg.TopPeerCategory_BotsInline, 0, 100)
 			waitGroup.Wait()
 
 			ctrl.updateID = serverUpdateID
@@ -273,7 +275,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 		reqBytes, _ := req.Marshal()
 		waitGroup.Add(1)
 		ctrl.queueCtrl.RealtimeCommand(
-			&msg.MessageEnvelope{
+			&rony.MessageEnvelope{
 				Constructor: msg.C_UpdateGetDifference,
 				RequestID:   uint64(domain.SequentialUniqueID()),
 				Message:     reqBytes,
@@ -282,7 +284,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 				waitGroup.Done()
 				logs.Warn("SyncCtrl got timeout on UpdateGetDifference")
 			},
-			func(m *msg.MessageEnvelope) {
+			func(m *rony.MessageEnvelope) {
 				defer waitGroup.Done()
 				switch m.Constructor {
 				case msg.C_UpdateDifference:
@@ -377,10 +379,6 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 }
 
 func (ctrl *Controller) TeamSync(teamID int64, accessHash uint64, forceUpdate bool) {
-	team := &msg.InputTeam{
-		ID:         teamID,
-		AccessHash: accessHash,
-	}
 	teamKey := fmt.Sprintf("%s.%d", domain.SkTeam, teamID)
 
 	if !forceUpdate {
@@ -394,14 +392,14 @@ func (ctrl *Controller) TeamSync(teamID int64, accessHash uint64, forceUpdate bo
 	// Get Contacts from the server
 	waitGroup := &sync.WaitGroup{}
 	waitGroup.Add(8)
-	go ctrl.GetContacts(waitGroup, team)
-	go ctrl.GetAllDialogs(waitGroup, team, 0, 100)
-	go ctrl.GetLabels(waitGroup, team)
-	go ctrl.GetAllTopPeers(waitGroup, team, msg.TopPeerCategory_Users, 0, 100)
-	go ctrl.GetAllTopPeers(waitGroup, team, msg.TopPeerCategory_Groups, 0, 100)
-	go ctrl.GetAllTopPeers(waitGroup, team, msg.TopPeerCategory_Forwards, 0, 100)
-	go ctrl.GetAllTopPeers(waitGroup, team, msg.TopPeerCategory_BotsMessage, 0, 100)
-	go ctrl.GetAllTopPeers(waitGroup, team, msg.TopPeerCategory_BotsInline, 0, 100)
+	go ctrl.GetContacts(waitGroup, teamID, accessHash)
+	go ctrl.GetAllDialogs(waitGroup, teamID, accessHash, 0, 100)
+	go ctrl.GetLabels(waitGroup, teamID, accessHash)
+	go ctrl.GetAllTopPeers(waitGroup, teamID, accessHash, msg.TopPeerCategory_Users, 0, 100)
+	go ctrl.GetAllTopPeers(waitGroup, teamID, accessHash, msg.TopPeerCategory_Groups, 0, 100)
+	go ctrl.GetAllTopPeers(waitGroup, teamID, accessHash, msg.TopPeerCategory_Forwards, 0, 100)
+	go ctrl.GetAllTopPeers(waitGroup, teamID, accessHash, msg.TopPeerCategory_BotsMessage, 0, 100)
+	go ctrl.GetAllTopPeers(waitGroup, teamID, accessHash, msg.TopPeerCategory_BotsInline, 0, 100)
 	waitGroup.Wait()
 
 	// if this is the first time we switch to this team, then lets sync with server
@@ -449,7 +447,7 @@ func (ctrl *Controller) Stop() {
 }
 
 // MessageHandler call appliers-> repository and sync data
-func (ctrl *Controller) MessageHandler(messages []*msg.MessageEnvelope) {
+func (ctrl *Controller) MessageHandler(messages []*rony.MessageEnvelope) {
 	for _, m := range messages {
 		switch m.Constructor {
 		case msg.C_MessagesSent:
@@ -531,7 +529,7 @@ func (ctrl *Controller) ResetIDs() {
 }
 
 // ContactsImport
-func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHandler, out *msg.MessageEnvelope) {
+func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHandler, out *rony.MessageEnvelope) {
 	var (
 		wg               = sync.WaitGroup{}
 		limit            = 250
@@ -540,7 +538,7 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 		contactsImported = &msg.ContactsImported{}
 	)
 	if out == nil {
-		out = &msg.MessageEnvelope{}
+		out = &rony.MessageEnvelope{}
 	}
 
 	for keepGoing {
@@ -558,12 +556,13 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 			Replace:  replace,
 			Contacts: phoneContacts,
 		}
-		reqBytes := pbytes.GetLen(req.Size())
-		_, _ = req.MarshalToSizedBuffer(reqBytes)
+		mo := proto.MarshalOptions{UseCachedSize: true}
+		reqBytes := pbytes.GetCap(mo.Size(req))
+		reqBytes, _ = mo.MarshalAppend(reqBytes, req)
 
 		wg.Add(1)
 		ctrl.queueCtrl.EnqueueCommand(
-			&msg.MessageEnvelope{
+			&rony.MessageEnvelope{
 				Constructor: msg.C_ContactsImport,
 				RequestID:   uint64(domain.SequentialUniqueID()),
 				Message:     reqBytes,
@@ -572,7 +571,7 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 				wg.Done()
 				logs.Error("SyncCtrl got timeout on ContactsImport")
 			},
-			func(m *msg.MessageEnvelope) {
+			func(m *rony.MessageEnvelope) {
 				defer wg.Done()
 				switch m.Constructor {
 				case msg.C_ContactsImported:
@@ -585,11 +584,11 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 					_ = repo.Users.DeletePhoneContact(phoneContacts...)
 					contactsImported.Users = append(contactsImported.Users, x.Users...)
 					contactsImported.ContactUsers = append(contactsImported.ContactUsers, x.ContactUsers...)
-					msg.ResultContactsImported(out, contactsImported)
-				case msg.C_Error:
-					x := &msg.Error{}
+					out.Fill(out.RequestID, msg.C_ContactsImported, contactsImported)
+				case rony.C_Error:
+					x := &rony.Error{}
 					_ = x.Unmarshal(m.Message)
-					msg.ResultError(out, x)
+					out.Fill(out.RequestID, rony.C_Error, x)
 					switch {
 					case x.Code == msg.ErrCodeRateLimit:
 						maxTry = 0

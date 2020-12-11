@@ -6,7 +6,9 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/gobwas/pool/pbytes"
+	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 	"time"
 )
 
@@ -58,7 +60,7 @@ func init() {
 
 }
 
-func ExecSuccessCB(handler domain.MessageHandler, out *msg.MessageEnvelope) {
+func ExecSuccessCB(handler domain.MessageHandler, out *rony.MessageEnvelope) {
 	if handler != nil {
 		exec("successCB", out.Constructor, func() {
 			handler(out)
@@ -75,12 +77,13 @@ func ExecTimeoutCB(h domain.TimeoutCallback) {
 	}
 }
 
-func ExecUpdate(cb domain.UpdateReceivedCallback, constructor int64, proto domain.Proto) {
-	b := pbytes.GetLen(proto.Size())
-	n, err := proto.MarshalToSizedBuffer(b)
+func ExecUpdate(cb domain.UpdateReceivedCallback, constructor int64, m proto.Message) {
+	mo := proto.MarshalOptions{UseCachedSize: true}
+	b := pbytes.GetCap(mo.Size(m))
+	b, err := mo.MarshalAppend(b, m)
 	if err == nil {
 		exec("update", constructor, func() {
-			cb(constructor, b[:n])
+			cb(constructor, b)
 			pbytes.Put(b)
 		})
 	}

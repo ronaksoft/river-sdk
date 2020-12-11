@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/ronaksoft/rony"
+	"google.golang.org/protobuf/proto"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -19,7 +21,7 @@ var (
 	MyGroups  = map[int64]*msg.Group{}
 )
 
-func MessagePrinter(envelope *msg.MessageEnvelope) {
+func MessagePrinter(envelope *rony.MessageEnvelope) {
 	switch envelope.Constructor {
 	case msg.C_SystemConfig:
 		x := &msg.SystemConfig{}
@@ -149,7 +151,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		x.Unmarshal(envelope.Message)
 		_Shell.Println(fmt.Sprintf("Bool \t Res:%t", x.Result))
 	case msg.C_Error:
-		x := new(msg.Error)
+		x := new(rony.Error)
 		x.Unmarshal(envelope.Message)
 		_Shell.Println(fmt.Sprintf("Error \t %s:%s", x.Code, x.Items))
 	case msg.C_MessagesMany:
@@ -165,7 +167,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		for _, d := range x.Messages {
 			var docID int64
 			var accessHash uint64
-			if d.MediaType == msg.MediaTypeDocument {
+			if d.MediaType == msg.MediaType_MediaTypeDocument {
 				xx := &msg.MediaDocument{}
 				xx.Unmarshal(d.Media)
 				docID = xx.Doc.ID
@@ -233,7 +235,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 
 		for _, v := range x.Updates {
 			if v.Constructor == msg.C_UpdateNewMessage {
-				msg := new(msg.MessageEnvelope)
+				msg := new(rony.MessageEnvelope)
 				msg.Constructor = v.Constructor
 				msg.Message = v.Update
 
@@ -418,7 +420,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 		}
 	case msg.C_TeamMembers:
 		x := &msg.TeamMembers{}
-		x.Unmarshal(envelope.Message)
+		_ = x.Unmarshal(envelope.Message)
 		for _, m := range x.Members {
 			_Shell.Println(m.Admin, m.UserID, m.User.Username, m.User.FirstName, m.User.LastName)
 		}
@@ -436,7 +438,7 @@ func MessagePrinter(envelope *msg.MessageEnvelope) {
 				r.ID,
 				r.Type.String(),
 				r.Title,
-				fmt.Sprintf("%d", r.Message.Size()),
+				fmt.Sprintf("%d", proto.Size(r.Message)),
 			})
 		}
 		_Shell.Println("QueryID:", x.QueryID)

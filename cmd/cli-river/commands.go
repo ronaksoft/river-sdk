@@ -132,13 +132,13 @@ func fnGetPeerType(c *ishell.Context) msg.PeerType {
 		if err == nil {
 			switch id {
 			case 0:
-				peerType = msg.PeerSelf
+				peerType = msg.PeerType_PeerSelf
 			case 1:
-				peerType = msg.PeerUser
+				peerType = msg.PeerType_PeerUser
 			case 2:
-				peerType = msg.PeerGroup
+				peerType = msg.PeerType_PeerGroup
 			case 3:
-				peerType = msg.PeerChannel
+				peerType = msg.PeerType_PeerChannel
 			default:
 				c.Println("Invalid peerType (0:self,1:user,2:group,3:channel)")
 			}
@@ -742,7 +742,7 @@ func fnGetWaveForm(c *ishell.Context) []byte {
 }
 
 func fnGetInputMediaType(c *ishell.Context) msg.InputMediaType {
-	mediaType := msg.InputMediaTypeEmpty
+	mediaType := msg.InputMediaType_InputMediaTypeEmpty
 	for {
 		c.Print("InputMediaType : (UploadedPhoto=1, UploadedDocument= 4)")
 		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
@@ -762,17 +762,17 @@ func fnGetAttributes(c *ishell.Context) []*msg.DocumentAttribute {
 	for {
 		c.Println("Enter 0 zero to break Attribute loop")
 		attrType := getAttributeType(c)
-		if attrType == msg.AttributeTypeNone {
+		if attrType == msg.DocumentAttributeType_AttributeTypeNone {
 			break
 		}
 		switch attrType {
-		case msg.AttributeTypeAudio:
+		case msg.DocumentAttributeType_AttributeTypeAudio:
 			result = append(result, getAudioAttribute(c))
-		case msg.AttributeTypeVideo:
+		case msg.DocumentAttributeType_AttributeTypeVideo:
 			result = append(result, getVideoAttribute(c))
-		case msg.AttributeTypePhoto:
+		case msg.DocumentAttributeType_AttributeTypePhoto:
 			result = append(result, getPhotoAttribute(c))
-		case msg.AttributeTypeFile:
+		case msg.DocumentAttributeType_AttributeTypeFile:
 			result = append(result, getFileAttribute(c))
 		}
 	}
@@ -841,7 +841,7 @@ func fnGetTopPeerCat(c *ishell.Context) msg.TopPeerCategory {
 
 }
 func getAttributeType(c *ishell.Context) msg.DocumentAttributeType {
-	attribType := msg.AttributeTypeNone
+	attribType := msg.DocumentAttributeType_AttributeTypeNone
 	for {
 		// AttributeTypeNone  DocumentAttributeType = 0
 		// AttributeTypeAudio DocumentAttributeType = 1
@@ -863,7 +863,7 @@ func getAttributeType(c *ishell.Context) msg.DocumentAttributeType {
 
 func getAudioAttribute(c *ishell.Context) *msg.DocumentAttribute {
 	req := new(msg.DocumentAttribute)
-	req.Type = msg.AttributeTypeAudio
+	req.Type = msg.DocumentAttributeType_AttributeTypeAudio
 	attrib := new(msg.DocumentAttributeAudio)
 	attrib.Performer = fnGetPerformer(c)
 	attrib.Title = fnGetTitle(c)
@@ -874,7 +874,7 @@ func getAudioAttribute(c *ishell.Context) *msg.DocumentAttribute {
 }
 func getVideoAttribute(c *ishell.Context) *msg.DocumentAttribute {
 	req := new(msg.DocumentAttribute)
-	req.Type = msg.AttributeTypeVideo
+	req.Type = msg.DocumentAttributeType_AttributeTypeVideo
 	attrib := new(msg.DocumentAttributeVideo)
 	attrib.Round = fnGetRound(c)
 	attrib.Width = fnGetWidth(c)
@@ -884,7 +884,7 @@ func getVideoAttribute(c *ishell.Context) *msg.DocumentAttribute {
 }
 func getPhotoAttribute(c *ishell.Context) *msg.DocumentAttribute {
 	req := new(msg.DocumentAttribute)
-	req.Type = msg.AttributeTypePhoto
+	req.Type = msg.DocumentAttributeType_AttributeTypePhoto
 	attrib := new(msg.DocumentAttributePhoto)
 	attrib.Width = fnGetWidth(c)
 	attrib.Height = fnGetHeight(c)
@@ -893,7 +893,7 @@ func getPhotoAttribute(c *ishell.Context) *msg.DocumentAttribute {
 }
 func getFileAttribute(c *ishell.Context) *msg.DocumentAttribute {
 	req := new(msg.DocumentAttribute)
-	req.Type = msg.AttributeTypeFile
+	req.Type = msg.DocumentAttributeType_AttributeTypeFile
 	attrib := new(msg.DocumentAttributeFile)
 	attrib.Filename = fnGetFileName(c)
 	req.Data, _ = attrib.Marshal()
@@ -916,7 +916,7 @@ func fnGetMime(c *ishell.Context) string {
 }
 
 func fnGetMediaType(c *ishell.Context) msg.ClientMediaType {
-	mediaType := msg.ClientMediaNone
+	mediaType := msg.ClientMediaType_ClientMediaNone
 	for {
 		c.Print("Media Type : (All=0, File= 1, Media= 2, Voice= 3, Audio= 4)")
 		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)

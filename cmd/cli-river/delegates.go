@@ -2,6 +2,7 @@ package main
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
+	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
@@ -79,7 +80,7 @@ func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 }
 
 func (d *MainDelegate) OnDeferredRequests(requestID int64, b []byte) {
-	envelope := new(msg.MessageEnvelope)
+	envelope := new(rony.MessageEnvelope)
 	envelope.Unmarshal(b)
 	_Shell.Println("Deferred Request received",
 		zap.Uint64("ReqID", envelope.RequestID),
@@ -103,7 +104,7 @@ func (d *MainDelegate) OnAuthKeyCreated(authID int64) {
 }
 
 func (d *MainDelegate) OnGeneralError(b []byte) {
-	e := new(msg.Error)
+	e := new(rony.Error)
 	e.Unmarshal(b)
 	_Shell.Println("Received general error", zap.String("Code", e.Code), zap.String("Items", e.Items))
 }
@@ -153,7 +154,7 @@ func (d *FileDelegate) OnCancel(reqID string, clusterID int32, fileID, accessHas
 
 type RequestDelegate struct {
 	RequestID int64
-	Envelope  msg.MessageEnvelope
+	Envelope  rony.MessageEnvelope
 	FlagsVal  int32
 }
 

@@ -9,6 +9,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/pools"
 	"git.ronaksoft.com/river/sdk/internal/tools"
 	"github.com/dgraph-io/badger/v2"
+	"github.com/gogo/protobuf/proto"
 	"github.com/tidwall/buntdb"
 	"strings"
 	"sync/atomic"
@@ -75,7 +76,7 @@ func getDialogPeerFromIndexKey(key string) (int64, *msg.Peer) {
 }
 
 func saveDialog(txn *badger.Txn, dialog *msg.Dialog) error {
-	dialogBytes, _ := dialog.Marshal()
+	dialogBytes, _ := proto.Marshal(dialog)
 	err := txn.SetEntry(badger.NewEntry(
 		getDialogKey(dialog.TeamID, dialog.PeerID, dialog.PeerType),
 		dialogBytes,
@@ -126,9 +127,9 @@ func countDialogUnread(txn *badger.Txn, teamID, peerID int64, peerType int32, us
 			}
 			for _, entity := range userMessage.Entities {
 				switch {
-				case entity.Type == msg.MessageEntityTypeMention && entity.UserID == userID:
+				case entity.Type == msg.MessageEntityType_MessageEntityTypeMention && entity.UserID == userID:
 					fallthrough
-				case entity.Type == msg.MessageEntityTypeMentionAll && userMessage.SenderID != userID:
+				case entity.Type == msg.MessageEntityType_MessageEntityTypeMentionAll && userMessage.SenderID != userID:
 					mentioned++
 				}
 			}

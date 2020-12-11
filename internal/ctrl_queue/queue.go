@@ -10,6 +10,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/beeker1121/goque"
 	"github.com/juju/ratelimit"
+	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 	"os"
 	"path/filepath"
@@ -20,10 +21,10 @@ import (
 // easyjson:json
 // request
 type request struct {
-	ID              uint64               `json:"id"`
-	Timeout         time.Duration        `json:"timeout"`
-	MessageEnvelope *msg.MessageEnvelope `json:"message_envelope"`
-	InsertTime      time.Time            `json:"insert_time"`
+	ID              uint64                `json:"id"`
+	Timeout         time.Duration         `json:"timeout"`
+	MessageEnvelope *rony.MessageEnvelope `json:"message_envelope"`
+	InsertTime      time.Time             `json:"insert_time"`
 }
 
 // Controller ...
@@ -185,7 +186,7 @@ func (ctrl *Controller) executor(req request) {
 		case msg.C_MessagesSend, msg.C_MessagesSendMedia:
 			switch res.Constructor {
 			case msg.C_Error:
-				errMsg := &msg.Error{}
+				errMsg := &rony.Error{}
 				_ = errMsg.Unmarshal(res.Message)
 				if errMsg.Code == msg.ErrCodeAlreadyExists && errMsg.Items == msg.ErrItemRandomID {
 					pm, _ := repo.PendingMessages.GetByRandomID(int64(req.ID))
@@ -197,7 +198,7 @@ func (ctrl *Controller) executor(req request) {
 		default:
 			switch res.Constructor {
 			case msg.C_Error:
-				errMsg := new(msg.Error)
+				errMsg := new(rony.Error)
 				_ = errMsg.Unmarshal(res.Message)
 				if errMsg.Code == msg.ErrCodeInvalid && errMsg.Items == msg.ErrItemSalt {
 					ctrl.addToWaitingList(&req)
@@ -224,7 +225,7 @@ func (ctrl *Controller) executor(req request) {
 
 // RealtimeCommand run request immediately and do not save it in queue
 func (ctrl *Controller) RealtimeCommand(
-	messageEnvelope *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
 	blockingMode, isUICallback bool,
 ) {
 	defer logs.RecoverPanic(
@@ -246,7 +247,7 @@ func (ctrl *Controller) RealtimeCommand(
 	reqCB := domain.AddRequestCallback(
 		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, domain.WebsocketRequestTime, timeoutCB, isUICallback,
 	)
-	execBlock := func(reqID uint64, req *msg.MessageEnvelope) {
+	execBlock := func(reqID uint64, req *rony.MessageEnvelope) {
 		err := ctrl.networkCtrl.SendWebsocket(req, blockingMode)
 		if err != nil {
 			logs.Warn("QueueCtrl got error from NetCtrl",
@@ -303,7 +304,7 @@ func (ctrl *Controller) RealtimeCommand(
 
 // EnqueueCommand put request in queue and distributor will execute it later
 func (ctrl *Controller) EnqueueCommand(
-	messageEnvelope *msg.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
 	isUICallback bool,
 ) {
 	defer logs.RecoverPanic(
@@ -352,7 +353,7 @@ func (ctrl *Controller) Start(resetQueue bool) {
 			continue
 		}
 		switch pmsg.MediaType {
-		case msg.InputMediaTypeEmpty:
+		case msg.InputMediaType_InputMediaTypeEmpty:
 			logs.Info("QueueCtrl loads pending messages",
 				zap.Int64("ID", pmsg.ID),
 				zap.Int64("FileID", pmsg.FileID),
@@ -360,7 +361,7 @@ func (ctrl *Controller) Start(resetQueue bool) {
 			// it will be MessagesSend
 			req := repo.PendingMessages.ToMessagesSend(pmsg)
 			reqBytes, _ := req.Marshal()
-			ctrl.EnqueueCommand(&msg.MessageEnvelope{
+			ctrl.EnqueueCommand(&rony.MessageEnvelope{
 				Constructor: msg.C_MessagesSend,
 				RequestID:   uint64(req.RandomID),
 				Message:     reqBytes,
@@ -370,10 +371,10 @@ func (ctrl *Controller) Start(resetQueue bool) {
 			req := &msg.ClientSendMessageMedia{}
 			_ = req.Unmarshal(pmsg.Media)
 			switch req.MediaType {
-			case msg.InputMediaTypeUploadedDocument:
+			case msg.InputMediaType_InputMediaTypeUploadedDocument:
 				checkSha256 := true
 				for _, attr := range req.Attributes {
-					if attr.Type == msg.AttributeTypeAudio {
+					if attr.Type == msg.DocumentAttributeType_AttributeTypeAudio {
 						x := &msg.DocumentAttributeAudio{}
 						_ = x.Unmarshal(attr.Data)
 						if x.Voice {
@@ -389,7 +390,7 @@ func (ctrl *Controller) Start(resetQueue bool) {
 					continue
 				}
 				reqBytes, _ := req.Marshal()
-				ctrl.EnqueueCommand(&msg.MessageEnvelope{
+				ctrl.EnqueueCommand(&rony.MessageEnvelope{
 					Constructor: msg.C_MessagesSendMedia,
 					RequestID:   uint64(req.RandomID),
 					Message:     reqBytes,

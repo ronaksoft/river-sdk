@@ -4,10 +4,10 @@ package queueCtrl
 
 import (
 	json "encoding/json"
-	msg "git.ronaksoft.com/river/msg/go/msg"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
+	rony "github.com/ronaksoft/rony"
 	time "time"
 )
 
@@ -19,7 +19,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(in *jlexer.Lexer, out *request) {
+func easyjson5e1ce037DecodeGitRonaksoftComRiverSdkInternalCtrlQueue(in *jlexer.Lexer, out *request) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -30,7 +30,7 @@ func easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(in *jlex
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -48,9 +48,9 @@ func easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(in *jlex
 				out.MessageEnvelope = nil
 			} else {
 				if out.MessageEnvelope == nil {
-					out.MessageEnvelope = new(msg.MessageEnvelope)
+					out.MessageEnvelope = new(rony.MessageEnvelope)
 				}
-				easyjson5e1ce037DecodeGitRonaksoftwareComRiverMsgMsg(in, out.MessageEnvelope)
+				easyjson5e1ce037DecodeGithubComRonaksoftRony(in, out.MessageEnvelope)
 			}
 		case "insert_time":
 			if data := in.Raw(); in.Ok() {
@@ -66,52 +66,32 @@ func easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(in *jlex
 		in.Consumed()
 	}
 }
-func easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(out *jwriter.Writer, in request) {
+func easyjson5e1ce037EncodeGitRonaksoftComRiverSdkInternalCtrlQueue(out *jwriter.Writer, in request) {
 	out.RawByte('{')
 	first := true
 	_ = first
 	{
 		const prefix string = ",\"id\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix[1:])
 		out.Uint64(uint64(in.ID))
 	}
 	{
 		const prefix string = ",\"timeout\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix)
 		out.Int64(int64(in.Timeout))
 	}
 	{
 		const prefix string = ",\"message_envelope\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix)
 		if in.MessageEnvelope == nil {
 			out.RawString("null")
 		} else {
-			easyjson5e1ce037EncodeGitRonaksoftwareComRiverMsgMsg(out, *in.MessageEnvelope)
+			easyjson5e1ce037EncodeGithubComRonaksoftRony(out, *in.MessageEnvelope)
 		}
 	}
 	{
 		const prefix string = ",\"insert_time\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix)
 		out.Raw((in.InsertTime).MarshalJSON())
 	}
 	out.RawByte('}')
@@ -120,27 +100,27 @@ func easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(out *jwr
 // MarshalJSON supports json.Marshaler interface
 func (v request) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(&w, v)
+	easyjson5e1ce037EncodeGitRonaksoftComRiverSdkInternalCtrlQueue(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v request) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson5e1ce037EncodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(w, v)
+	easyjson5e1ce037EncodeGitRonaksoftComRiverSdkInternalCtrlQueue(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *request) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(&r, v)
+	easyjson5e1ce037DecodeGitRonaksoftComRiverSdkInternalCtrlQueue(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *request) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson5e1ce037DecodeGitRonaksoftwareComRonakRiversdkPkgCtrlQueue(l, v)
+	easyjson5e1ce037DecodeGitRonaksoftComRiverSdkInternalCtrlQueue(l, v)
 }
-func easyjson5e1ce037DecodeGitRonaksoftwareComRiverMsgMsg(in *jlexer.Lexer, out *msg.MessageEnvelope) {
+func easyjson5e1ce037DecodeGithubComRonaksoftRony(in *jlexer.Lexer, out *rony.MessageEnvelope) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -151,7 +131,7 @@ func easyjson5e1ce037DecodeGitRonaksoftwareComRiverMsgMsg(in *jlexer.Lexer, out 
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -170,15 +150,43 @@ func easyjson5e1ce037DecodeGitRonaksoftwareComRiverMsgMsg(in *jlexer.Lexer, out 
 			} else {
 				out.Message = in.Bytes()
 			}
-		case "Team":
+		case "Auth":
 			if in.IsNull() {
 				in.Skip()
-				out.Team = nil
+				out.Auth = nil
 			} else {
-				if out.Team == nil {
-					out.Team = new(msg.InputTeam)
+				out.Auth = in.Bytes()
+			}
+		case "Header":
+			if in.IsNull() {
+				in.Skip()
+				out.Header = nil
+			} else {
+				in.Delim('[')
+				if out.Header == nil {
+					if !in.IsDelim(']') {
+						out.Header = make([]*rony.KeyValue, 0, 8)
+					} else {
+						out.Header = []*rony.KeyValue{}
+					}
+				} else {
+					out.Header = (out.Header)[:0]
 				}
-				easyjson5e1ce037DecodeGitRonaksoftwareComRiverMsgMsg1(in, out.Team)
+				for !in.IsDelim(']') {
+					var v3 *rony.KeyValue
+					if in.IsNull() {
+						in.Skip()
+						v3 = nil
+					} else {
+						if v3 == nil {
+							v3 = new(rony.KeyValue)
+						}
+						easyjson5e1ce037DecodeGithubComRonaksoftRony1(in, v3)
+					}
+					out.Header = append(out.Header, v3)
+					in.WantComma()
+				}
+				in.Delim(']')
 			}
 		default:
 			in.SkipRecursive()
@@ -190,21 +198,17 @@ func easyjson5e1ce037DecodeGitRonaksoftwareComRiverMsgMsg(in *jlexer.Lexer, out 
 		in.Consumed()
 	}
 }
-func easyjson5e1ce037EncodeGitRonaksoftwareComRiverMsgMsg(out *jwriter.Writer, in msg.MessageEnvelope) {
+func easyjson5e1ce037EncodeGithubComRonaksoftRony(out *jwriter.Writer, in rony.MessageEnvelope) {
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
+	if in.Constructor != 0 {
 		const prefix string = ",\"Constructor\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		first = false
+		out.RawString(prefix[1:])
 		out.Int64(int64(in.Constructor))
 	}
-	{
+	if in.RequestID != 0 {
 		const prefix string = ",\"RequestID\":"
 		if first {
 			first = false
@@ -214,7 +218,7 @@ func easyjson5e1ce037EncodeGitRonaksoftwareComRiverMsgMsg(out *jwriter.Writer, i
 		}
 		out.Uint64(uint64(in.RequestID))
 	}
-	{
+	if len(in.Message) != 0 {
 		const prefix string = ",\"Message\":"
 		if first {
 			first = false
@@ -224,19 +228,42 @@ func easyjson5e1ce037EncodeGitRonaksoftwareComRiverMsgMsg(out *jwriter.Writer, i
 		}
 		out.Base64Bytes(in.Message)
 	}
-	if in.Team != nil {
-		const prefix string = ",\"Team\":"
+	if len(in.Auth) != 0 {
+		const prefix string = ",\"Auth\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		easyjson5e1ce037EncodeGitRonaksoftwareComRiverMsgMsg1(out, *in.Team)
+		out.Base64Bytes(in.Auth)
+	}
+	if len(in.Header) != 0 {
+		const prefix string = ",\"Header\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		{
+			out.RawByte('[')
+			for v8, v9 := range in.Header {
+				if v8 > 0 {
+					out.RawByte(',')
+				}
+				if v9 == nil {
+					out.RawString("null")
+				} else {
+					easyjson5e1ce037EncodeGithubComRonaksoftRony1(out, *v9)
+				}
+			}
+			out.RawByte(']')
+		}
 	}
 	out.RawByte('}')
 }
-func easyjson5e1ce037DecodeGitRonaksoftwareComRiverMsgMsg1(in *jlexer.Lexer, out *msg.InputTeam) {
+func easyjson5e1ce037DecodeGithubComRonaksoftRony1(in *jlexer.Lexer, out *rony.KeyValue) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -247,7 +274,7 @@ func easyjson5e1ce037DecodeGitRonaksoftwareComRiverMsgMsg1(in *jlexer.Lexer, out
 	}
 	in.Delim('{')
 	for !in.IsDelim('}') {
-		key := in.UnsafeString()
+		key := in.UnsafeFieldName(false)
 		in.WantColon()
 		if in.IsNull() {
 			in.Skip()
@@ -255,10 +282,10 @@ func easyjson5e1ce037DecodeGitRonaksoftwareComRiverMsgMsg1(in *jlexer.Lexer, out
 			continue
 		}
 		switch key {
-		case "ID":
-			out.ID = int64(in.Int64())
-		case "AccessHash":
-			out.AccessHash = uint64(in.Uint64())
+		case "Key":
+			out.Key = string(in.String())
+		case "Value":
+			out.Value = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -269,29 +296,25 @@ func easyjson5e1ce037DecodeGitRonaksoftwareComRiverMsgMsg1(in *jlexer.Lexer, out
 		in.Consumed()
 	}
 }
-func easyjson5e1ce037EncodeGitRonaksoftwareComRiverMsgMsg1(out *jwriter.Writer, in msg.InputTeam) {
+func easyjson5e1ce037EncodeGithubComRonaksoftRony1(out *jwriter.Writer, in rony.KeyValue) {
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
-		const prefix string = ",\"ID\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.Int64(int64(in.ID))
+	if in.Key != "" {
+		const prefix string = ",\"Key\":"
+		first = false
+		out.RawString(prefix[1:])
+		out.String(string(in.Key))
 	}
-	{
-		const prefix string = ",\"AccessHash\":"
+	if in.Value != "" {
+		const prefix string = ",\"Value\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		out.Uint64(uint64(in.AccessHash))
+		out.String(string(in.Value))
 	}
 	out.RawByte('}')
 }

@@ -8,13 +8,14 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	messageHole "git.ronaksoft.com/river/sdk/internal/message_hole"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 	"hash/crc32"
 	"sort"
 )
 
 // authAuthorization
-func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
+func (ctrl *Controller) authAuthorization(e *rony.MessageEnvelope) {
 	x := new(msg.AuthAuthorization)
 	if err := x.Unmarshal(e.Message); err != nil {
 		logs.Error("SyncCtrl couldn't unmarshal AuthAuthorization", zap.Error(err))
@@ -47,7 +48,7 @@ func (ctrl *Controller) authAuthorization(e *msg.MessageEnvelope) {
 }
 
 // authSentCode
-func (ctrl *Controller) authSentCode(e *msg.MessageEnvelope) {
+func (ctrl *Controller) authSentCode(e *rony.MessageEnvelope) {
 	x := new(msg.AuthSentCode)
 	if err := x.Unmarshal(e.Message); err != nil {
 		logs.Error("SyncCtrl couldn't unmarshal AuthSentCode", zap.Error(err))
@@ -58,19 +59,19 @@ func (ctrl *Controller) authSentCode(e *msg.MessageEnvelope) {
 }
 
 // contactsImported
-func (ctrl *Controller) contactsImported(e *msg.MessageEnvelope) {
+func (ctrl *Controller) contactsImported(e *rony.MessageEnvelope) {
 	x := new(msg.ContactsImported)
 	if err := x.Unmarshal(e.Message); err != nil {
 		logs.Error("SyncCtrl couldn't unmarshal ContactsImported", zap.Error(err))
 		return
 	}
 	logs.Info("SyncCtrl applies contactsImported")
-	_ = repo.Users.SaveContact(domain.GetTeamID(e.Team), x.ContactUsers...)
+	_ = repo.Users.SaveContact(domain.GetTeamID(e), x.ContactUsers...)
 	repo.Users.Save(x.Users...)
 }
 
 // contactsMany
-func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
+func (ctrl *Controller) contactsMany(e *rony.MessageEnvelope) {
 	x := new(msg.ContactsMany)
 	if err := x.Unmarshal(e.Message); err != nil {
 		logs.Error("SyncCtrl couldn't unmarshal ContactsMany", zap.Error(err))
@@ -83,13 +84,13 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 
 	// If contacts are modified in server, then first clear all the contacts and rewrite the new ones
 	if x.Modified == true {
-		_ = repo.Users.DeleteAllContacts(domain.GetTeamID(e.Team))
+		_ = repo.Users.DeleteAllContacts(domain.GetTeamID(e))
 	}
 
 	// Sort the contact users by their ids
 	sort.Slice(x.ContactUsers, func(i, j int) bool { return x.ContactUsers[i].ID < x.ContactUsers[j].ID })
 
-	_ = repo.Users.SaveContact(domain.GetTeamID(e.Team), x.ContactUsers...)
+	_ = repo.Users.SaveContact(domain.GetTeamID(e), x.ContactUsers...)
 	_ = repo.Users.Save(x.Users...)
 
 	if len(x.ContactUsers) > 0 {
@@ -100,7 +101,7 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 			buff.Write(b)
 		}
 		crc32Hash := crc32.ChecksumIEEE(buff.Bytes())
-		err := repo.System.SaveInt(domain.GetContactsGetHashKey(domain.GetTeamID(e.Team)), uint64(crc32Hash))
+		err := repo.System.SaveInt(domain.GetContactsGetHashKey(domain.GetTeamID(e)), uint64(crc32Hash))
 		if err != nil {
 			logs.Error("SyncCtrl couldn't save ContactsHash in to the db", zap.Error(err))
 		}
@@ -109,7 +110,7 @@ func (ctrl *Controller) contactsMany(e *msg.MessageEnvelope) {
 }
 
 // messageDialogs
-func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
+func (ctrl *Controller) messagesDialogs(e *rony.MessageEnvelope) {
 	x := new(msg.MessagesDialogs)
 	if err := x.Unmarshal(e.Message); err != nil {
 		logs.Error("SyncCtrl couldn't unmarshal MessagesDialogs", zap.Error(err))
@@ -143,7 +144,7 @@ func (ctrl *Controller) messagesDialogs(e *msg.MessageEnvelope) {
 }
 
 // usersMany
-func (ctrl *Controller) usersMany(e *msg.MessageEnvelope) {
+func (ctrl *Controller) usersMany(e *rony.MessageEnvelope) {
 	u := new(msg.UsersMany)
 	err := u.Unmarshal(e.Message)
 	if err != nil {
@@ -157,7 +158,7 @@ func (ctrl *Controller) usersMany(e *msg.MessageEnvelope) {
 }
 
 // messagesMany
-func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
+func (ctrl *Controller) messagesMany(e *rony.MessageEnvelope) {
 	u := new(msg.MessagesMany)
 	err := u.Unmarshal(e.Message)
 	if err != nil {
@@ -177,7 +178,7 @@ func (ctrl *Controller) messagesMany(e *msg.MessageEnvelope) {
 }
 
 // groupFull
-func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
+func (ctrl *Controller) groupFull(e *rony.MessageEnvelope) {
 	u := new(msg.GroupFull)
 	err := u.Unmarshal(e.Message)
 	if err != nil {
@@ -204,27 +205,27 @@ func (ctrl *Controller) groupFull(e *msg.MessageEnvelope) {
 	repo.Groups.SavePhotoGallery(u.Group.ID, u.PhotoGallery...)
 
 	// Update NotifySettings
-	repo.Dialogs.UpdateNotifySetting(u.Group.TeamID, u.Group.ID, int32(msg.PeerGroup), u.NotifySettings)
+	repo.Dialogs.UpdateNotifySetting(u.Group.TeamID, u.Group.ID, int32(msg.PeerType_PeerGroup), u.NotifySettings)
 }
 
 // labelsMany
-func (ctrl *Controller) labelsMany(e *msg.MessageEnvelope) {
+func (ctrl *Controller) labelsMany(e *rony.MessageEnvelope) {
 	u := &msg.LabelsMany{}
 	err := u.Unmarshal(e.Message)
 	if err != nil {
 		logs.Error("SyncCtrl couldn't unmarshal LabelsMany", zap.Error(err))
 		return
 	}
-	logs.Info("SyncCtrl applies LabelsMany", zap.Any("Team", e.Team))
+	logs.Info("SyncCtrl applies LabelsMany", zap.Any("TeamID", e.Get("TeamID", "0")))
 
-	err = repo.Labels.Save(domain.GetTeamID(e.Team), u.Labels...)
+	err = repo.Labels.Save(domain.GetTeamID(e), u.Labels...)
 	logs.WarnOnErr("SyncCtrl got error on applying LabelsMany", err)
 
 	return
 }
 
 // labelItems
-func (ctrl *Controller) labelItems(e *msg.MessageEnvelope) {
+func (ctrl *Controller) labelItems(e *rony.MessageEnvelope) {
 	u := &msg.LabelItems{}
 	err := u.Unmarshal(e.Message)
 	if err != nil {
@@ -239,7 +240,7 @@ func (ctrl *Controller) labelItems(e *msg.MessageEnvelope) {
 }
 
 // systemConfig
-func (ctrl *Controller) systemConfig(e *msg.MessageEnvelope) {
+func (ctrl *Controller) systemConfig(e *rony.MessageEnvelope) {
 	u := &msg.SystemConfig{}
 	err := u.Unmarshal(e.Message)
 	if err != nil {
@@ -261,7 +262,7 @@ func (ctrl *Controller) systemConfig(e *msg.MessageEnvelope) {
 }
 
 // contactsTopPeers
-func (ctrl *Controller) contactsTopPeers(e *msg.MessageEnvelope) {
+func (ctrl *Controller) contactsTopPeers(e *rony.MessageEnvelope) {
 	u := &msg.ContactsTopPeers{}
 	err := u.Unmarshal(e.Message)
 	if err != nil {
@@ -272,14 +273,14 @@ func (ctrl *Controller) contactsTopPeers(e *msg.MessageEnvelope) {
 		zap.Int("L", len(u.Peers)),
 		zap.String("Cat", u.Category.String()),
 	)
-	err = repo.TopPeers.Save(u.Category, ctrl.userID, domain.GetTeamID(e.Team), u.Peers...)
+	err = repo.TopPeers.Save(u.Category, ctrl.userID, domain.GetTeamID(e), u.Peers...)
 	if err != nil {
 		logs.Error("SyncCtrl got error on saving ContactsTopPeers", zap.Error(err))
 	}
 }
 
 // wallpapersMany
-func (ctrl *Controller) wallpapersMany(e *msg.MessageEnvelope) {
+func (ctrl *Controller) wallpapersMany(e *rony.MessageEnvelope) {
 	u := &msg.WallPapersMany{}
 	err := u.Unmarshal(e.Message)
 	if err != nil {
@@ -293,7 +294,7 @@ func (ctrl *Controller) wallpapersMany(e *msg.MessageEnvelope) {
 }
 
 // savedGifs
-func (ctrl *Controller) savedGifs(e *msg.MessageEnvelope) {
+func (ctrl *Controller) savedGifs(e *rony.MessageEnvelope) {
 	u := &msg.SavedGifs{}
 	err := u.Unmarshal(e.Message)
 	if err != nil {
@@ -328,7 +329,7 @@ func (ctrl *Controller) savedGifs(e *msg.MessageEnvelope) {
 }
 
 // botResults
-func (ctrl *Controller) botResults(e *msg.MessageEnvelope) {
+func (ctrl *Controller) botResults(e *rony.MessageEnvelope) {
 	br := &msg.BotResults{}
 	err := br.Unmarshal(e.Message)
 	if err != nil {
@@ -337,7 +338,7 @@ func (ctrl *Controller) botResults(e *msg.MessageEnvelope) {
 	}
 
 	for _, m := range br.Results {
-		if m == nil || m.Message == nil || m.Type != msg.MediaTypeDocument || m.Message.MediaData == nil {
+		if m == nil || m.Message == nil || m.Type != msg.MediaType_MediaTypeDocument || m.Message.MediaData == nil {
 			logs.Info("SyncCtrl botResults message or media is nil or not mediaDocument", zap.Error(err))
 			continue
 		}
@@ -358,7 +359,7 @@ func (ctrl *Controller) botResults(e *msg.MessageEnvelope) {
 }
 
 // teamsMany
-func (ctrl *Controller) teamsMany(e *msg.MessageEnvelope) {
+func (ctrl *Controller) teamsMany(e *rony.MessageEnvelope) {
 	tm := &msg.TeamsMany{}
 	err := tm.Unmarshal(e.Message)
 	if err != nil {
@@ -377,7 +378,7 @@ func (ctrl *Controller) teamsMany(e *msg.MessageEnvelope) {
 }
 
 // teamMembers
-func (ctrl *Controller) teamMembers(e *msg.MessageEnvelope) {
+func (ctrl *Controller) teamMembers(e *rony.MessageEnvelope) {
 	tm := &msg.TeamMembers{}
 	err := tm.Unmarshal(e.Message)
 	if err != nil {
@@ -390,7 +391,7 @@ func (ctrl *Controller) teamMembers(e *msg.MessageEnvelope) {
 }
 
 // reactionList
-func (ctrl *Controller) reactionList(e *msg.MessageEnvelope) {
+func (ctrl *Controller) reactionList(e *rony.MessageEnvelope) {
 	tm := &msg.MessagesReactionList{}
 	err := tm.Unmarshal(e.Message)
 	if err != nil {

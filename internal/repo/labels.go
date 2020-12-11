@@ -329,9 +329,9 @@ func (r *repoLabels) ListMessages(labelID int32, teamID int64, limit int32, minI
 						userIDs.Add(um.FwdSenderID)
 					}
 					switch msg.PeerType(um.PeerType) {
-					case msg.PeerUser:
+					case msg.PeerType_PeerUser:
 						userIDs.Add(um.PeerID)
-					case msg.PeerGroup:
+					case msg.PeerType_PeerGroup:
 						groupIDs.Add(um.PeerID)
 					}
 
@@ -381,9 +381,9 @@ func (r *repoLabels) ListMessages(labelID int32, teamID int64, limit int32, minI
 					}
 					userIDs.Add(domain.ExtractActionUserIDs(um.MessageAction, um.MessageActionData)...)
 					switch msg.PeerType(um.PeerType) {
-					case msg.PeerUser:
+					case msg.PeerType_PeerUser:
 						userIDs.Add(um.PeerID)
-					case msg.PeerGroup:
+					case msg.PeerType_PeerGroup:
 						groupIDs.Add(um.PeerID)
 					}
 

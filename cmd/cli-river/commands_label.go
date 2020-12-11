@@ -2,6 +2,7 @@ package main
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
+	"github.com/ronaksoft/rony"
 	"gopkg.in/abiosoft/ishell.v2"
 	"sync"
 )
@@ -86,7 +87,7 @@ func getLabels(c *ishell.Context) (labels []*msg.Label) {
 	wg.Add(1)
 	reqD.OnCompleteFunc = func(b []byte) {
 		defer wg.Done()
-		x := &msg.MessageEnvelope{}
+		x := &rony.MessageEnvelope{}
 		_ = x.Unmarshal(b)
 		switch x.Constructor {
 		case msg.C_LabelsMany:
@@ -113,7 +114,7 @@ func addLabelToMessage(c *ishell.Context, msgIDs []int64, labelIDs []int32) {
 	req := msg.LabelsAddToMessage{
 		Peer: &msg.InputPeer{
 			ID:         _SDK.ConnInfo.UserID,
-			Type:       msg.PeerUser,
+			Type:       msg.PeerType_PeerUser,
 			AccessHash: 0,
 		},
 		LabelIDs:   labelIDs,
@@ -125,7 +126,7 @@ func addLabelToMessage(c *ishell.Context, msgIDs []int64, labelIDs []int32) {
 	wg.Add(1)
 	reqD.OnCompleteFunc = func(b []byte) {
 		defer wg.Done()
-		x := &msg.MessageEnvelope{}
+		x := &rony.MessageEnvelope{}
 		_ = x.Unmarshal(b)
 		switch x.Constructor {
 		case msg.C_Bool:
@@ -149,7 +150,7 @@ func removeLabelFromMessage(c *ishell.Context, msgIDs []int64, labelIDs []int32)
 	req := msg.LabelsRemoveFromMessage{
 		Peer: &msg.InputPeer{
 			ID:         _SDK.ConnInfo.UserID,
-			Type:       msg.PeerUser,
+			Type:       msg.PeerType_PeerUser,
 			AccessHash: 0,
 		},
 		LabelIDs:   labelIDs,
@@ -161,7 +162,7 @@ func removeLabelFromMessage(c *ishell.Context, msgIDs []int64, labelIDs []int32)
 	wg.Add(1)
 	reqD.OnCompleteFunc = func(b []byte) {
 		defer wg.Done()
-		x := &msg.MessageEnvelope{}
+		x := &rony.MessageEnvelope{}
 		_ = x.Unmarshal(b)
 		switch x.Constructor {
 		case msg.C_Bool:
@@ -185,7 +186,7 @@ func getMessage(c *ishell.Context, msgIDs []int64) {
 	req := msg.MessagesGet{
 		Peer: &msg.InputPeer{
 			ID:         _SDK.ConnInfo.UserID,
-			Type:       msg.PeerUser,
+			Type:       msg.PeerType_PeerUser,
 			AccessHash: 0,
 		},
 		MessagesIDs: msgIDs,
@@ -196,7 +197,7 @@ func getMessage(c *ishell.Context, msgIDs []int64) {
 	wg.Add(1)
 	reqD.OnCompleteFunc = func(b []byte) {
 		defer wg.Done()
-		x := &msg.MessageEnvelope{}
+		x := &rony.MessageEnvelope{}
 		_ = x.Unmarshal(b)
 		switch x.Constructor {
 		case msg.C_MessagesMany:

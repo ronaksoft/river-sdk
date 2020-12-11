@@ -39,9 +39,9 @@ var SendTyping = &ishell.Cmd{
 		for i := 0; i < count; i++ {
 			time.Sleep(interval)
 			if i%2 == 0 {
-				req.Action = msg.TypingActionTyping
+				req.Action = msg.TypingAction_TypingActionTyping
 			} else {
-				req.Action = msg.TypingActionCancel
+				req.Action = msg.TypingAction_TypingActionCancel
 			}
 
 			reqBytes, _ := req.Marshal()
@@ -102,7 +102,7 @@ var UpdateNewMessageHexString = &ishell.Cmd{
 
 		fmt.Printf("\r\n\r\n\r\n%# v\r\n\r\n\r\n", pretty.Formatter(udp))
 		switch udp.Message.MediaType {
-		case msg.MediaTypeDocument:
+		case msg.MediaType_MediaTypeDocument:
 			x := new(msg.MediaDocument)
 			err = x.Unmarshal(udp.Message.Media)
 			if err == nil {
@@ -110,25 +110,25 @@ var UpdateNewMessageHexString = &ishell.Cmd{
 
 				for _, att := range x.Doc.Attributes {
 					switch att.Type {
-					case msg.AttributeTypeAudio:
+					case msg.DocumentAttributeType_AttributeTypeAudio:
 						attrib := new(msg.DocumentAttributeAudio)
 						err = attrib.Unmarshal(att.Data)
 						if err == nil {
 							fmt.Printf("\r\n%# v\r\n", pretty.Formatter(attrib))
 						}
-					case msg.AttributeTypeVideo:
+					case msg.DocumentAttributeType_AttributeTypeVideo:
 						attrib := new(msg.DocumentAttributeVideo)
 						err = attrib.Unmarshal(att.Data)
 						if err == nil {
 							fmt.Printf("\r\n%# v\r\n", pretty.Formatter(attrib))
 						}
-					case msg.AttributeTypePhoto:
+					case msg.DocumentAttributeType_AttributeTypePhoto:
 						attrib := new(msg.DocumentAttributePhoto)
 						err = attrib.Unmarshal(att.Data)
 						if err == nil {
 							fmt.Printf("\r\n%# v\r\n", pretty.Formatter(attrib))
 						}
-					case msg.AttributeTypeFile:
+					case msg.DocumentAttributeType_AttributeTypeFile:
 						attrib := new(msg.DocumentAttributeFile)
 						err = attrib.Unmarshal(att.Data)
 						if err == nil {
@@ -167,7 +167,7 @@ var PrintMessage = &ishell.Cmd{
 			return
 		}
 
-		if m.MediaType == msg.MediaTypeDocument {
+		if m.MediaType == msg.MediaType_MediaTypeDocument {
 			// x := new(msg.MediaDocument)
 			// err := x.Unmarshal(m.Media)
 			// if err != nil {
@@ -182,25 +182,25 @@ var PrintMessage = &ishell.Cmd{
 
 				for _, att := range x.Doc.Attributes {
 					switch att.Type {
-					case msg.AttributeTypeAudio:
+					case msg.DocumentAttributeType_AttributeTypeAudio:
 						attrib := new(msg.DocumentAttributeAudio)
 						err = attrib.Unmarshal(att.Data)
 						if err == nil {
 							fmt.Printf("\r\n%# v\r\n", pretty.Formatter(attrib))
 						}
-					case msg.AttributeTypeVideo:
+					case msg.DocumentAttributeType_AttributeTypeVideo:
 						attrib := new(msg.DocumentAttributeVideo)
 						err = attrib.Unmarshal(att.Data)
 						if err == nil {
 							fmt.Printf("\r\n%# v\r\n", pretty.Formatter(attrib))
 						}
-					case msg.AttributeTypePhoto:
+					case msg.DocumentAttributeType_AttributeTypePhoto:
 						attrib := new(msg.DocumentAttributePhoto)
 						err = attrib.Unmarshal(att.Data)
 						if err == nil {
 							fmt.Printf("\r\n%# v\r\n", pretty.Formatter(attrib))
 						}
-					case msg.AttributeTypeFile:
+					case msg.DocumentAttributeType_AttributeTypeFile:
 						attrib := new(msg.DocumentAttributeFile)
 						err = attrib.Unmarshal(att.Data)
 						if err == nil {
@@ -307,7 +307,7 @@ var SendMessage = &ishell.Cmd{
 			req.ClearDraft = true
 			req.RandomID = domain.RandomInt63()
 			req.Peer = &msg.InputPeer{}
-			req.Peer.Type = msg.PeerUser
+			req.Peer.Type = msg.PeerType_PeerUser
 			req.Peer.ID = _SDK.ConnInfo.UserID
 			req.Peer.AccessHash = 0
 			req.Body = fmt.Sprintf("Text: %s", domain.RandomID(32))

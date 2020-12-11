@@ -4,6 +4,7 @@ import (
 	messageHole "git.ronaksoft.com/river/sdk/internal/message_hole"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
+	"github.com/ronaksoft/rony"
 	"os"
 	"sync"
 	"time"
@@ -90,14 +91,14 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 				_ = repo.TopPeers.Update(msg.TopPeerCategory_Forwards, ctrl.GetUserID(), x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 			} else {
 				switch msg.PeerType(x.Message.PeerType) {
-				case msg.PeerUser:
+				case msg.PeerType_PeerUser:
 					p, _ := repo.Users.Get(x.Message.PeerID)
 					if p == nil || !p.IsBot {
 						_ = repo.TopPeers.Update(msg.TopPeerCategory_Users, ctrl.GetUserID(), x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 					} else {
 						_ = repo.TopPeers.Update(msg.TopPeerCategory_BotsMessage, ctrl.GetUserID(), x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 					}
-				case msg.PeerGroup:
+				case msg.PeerType_PeerGroup:
 					_ = repo.TopPeers.Update(msg.TopPeerCategory_Groups, ctrl.GetUserID(), x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 				}
 			}
@@ -105,11 +106,11 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 
 		// We check if the file is GIF then check if it is a saved gif, if true, then update last access
 		switch x.Message.MediaType {
-		case msg.MediaTypeDocument:
+		case msg.MediaType_MediaTypeDocument:
 			xx := &msg.MediaDocument{}
 			_ = xx.Unmarshal(x.Message.Media)
 			for _, attr := range xx.Doc.Attributes {
-				if attr.Type == msg.AttributeTypeAnimated {
+				if attr.Type == msg.DocumentAttributeType_AttributeTypeAnimated {
 					if repo.Gifs.IsSaved(xx.Doc.ClusterID, xx.Doc.ID) {
 						_ = repo.Gifs.UpdateLastAccess(xx.Doc.ClusterID, xx.Doc.ID, x.Message.CreatedOn)
 						forceUpdateUI(ctrl, false, false, true)
@@ -117,14 +118,14 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 				}
 			}
 			mon.IncMediaSent()
-		case msg.MediaTypeEmpty:
+		case msg.MediaType_MediaTypeEmpty:
 			mon.IncMessageSent()
 		default:
 			mon.IncMediaSent()
 		}
 	} else {
 		switch x.Message.MediaType {
-		case msg.MediaTypeEmpty:
+		case msg.MediaType_MediaTypeEmpty:
 			mon.IncMessageReceived()
 		default:
 			mon.IncMediaReceived()
@@ -139,7 +140,7 @@ func (ctrl *Controller) handleMessageAction(x *msg.UpdateNewMessage, u *msg.Upda
 		go func() {
 			waitGroup := &sync.WaitGroup{}
 			waitGroup.Add(1)
-			ctrl.GetContacts(waitGroup, nil)
+			ctrl.GetContacts(waitGroup, 0, 0)
 			waitGroup.Wait()
 		}()
 	case domain.MessageActionGroupDeleteUser:
@@ -218,10 +219,10 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 		return
 	}
 
-	if pmsg.MediaType != msg.InputMediaTypeMessageDocument {
+	if pmsg.MediaType != msg.InputMediaType_InputMediaTypeMessageDocument {
 		// if it was file upload request
 		switch x.Message.MediaType {
-		case msg.MediaTypeDocument:
+		case msg.MediaType_MediaTypeDocument:
 			// save to local files and delete file status
 			clientSendMedia := new(msg.ClientSendMessageMedia)
 			unmarshalErr := clientSendMedia.Unmarshal(pmsg.Media)
@@ -340,8 +341,8 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 		zap.Int64("MessageID", x.MessageID),
 	)
 
-	msgEnvelop := new(msg.MessageEnvelope)
-	msgEnvelop.Constructor = msg.C_MessageEnvelope
+	msgEnvelop := new(rony.MessageEnvelope)
+	msgEnvelop.Constructor = rony.C_MessageEnvelope
 
 	sent := new(msg.MessagesSent)
 	sent.MessageID = x.MessageID
@@ -608,17 +609,17 @@ func (ctrl *Controller) updateAccountPrivacy(u *msg.UpdateEnvelope) ([]*msg.Upda
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
-	err = repo.Account.SetPrivacy(msg.PrivacyKeyChatInvite, x.ChatInvite)
+	err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyChatInvite, x.ChatInvite)
 	logs.WarnOnErr("SyncCtrl got error on set privacy (ChatInvite)", err)
-	err = repo.Account.SetPrivacy(msg.PrivacyKeyLastSeen, x.LastSeen)
+	err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyLastSeen, x.LastSeen)
 	logs.WarnOnErr("SyncCtrl got error on set privacy (LastSeen)", err)
-	err = repo.Account.SetPrivacy(msg.PrivacyKeyPhoneNumber, x.PhoneNumber)
+	err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyPhoneNumber, x.PhoneNumber)
 	logs.WarnOnErr("SyncCtrl got error on set privacy (PhoneNumber)", err)
-	err = repo.Account.SetPrivacy(msg.PrivacyKeyProfilePhoto, x.ProfilePhoto)
+	err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyProfilePhoto, x.ProfilePhoto)
 	logs.WarnOnErr("SyncCtrl got error on set privacy (ProfilePhoto)", err)
-	err = repo.Account.SetPrivacy(msg.PrivacyKeyForwardedMessage, x.ForwardedMessage)
+	err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyForwardedMessage, x.ForwardedMessage)
 	logs.WarnOnErr("SyncCtrl got error on set privacy (ForwardedMessage)", err)
-	err = repo.Account.SetPrivacy(msg.PrivacyKeyCall, x.Call)
+	err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyCall, x.Call)
 	logs.WarnOnErr("SyncCtrl got error on set privacy (Call)", err)
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil

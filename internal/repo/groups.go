@@ -390,7 +390,7 @@ func (r *repoGroups) UpdateMemberType(groupID, userID int64, isAdmin bool) error
 		}
 		flags := make([]msg.GroupFlags, 0, len(group.Flags))
 		for _, f := range group.Flags {
-			if f != msg.GroupFlagsAdmin {
+			if f != msg.GroupFlags_GroupFlagsAdmin {
 				flags = append(flags, f)
 			}
 		}
@@ -406,10 +406,10 @@ func (r *repoGroups) UpdateMemberType(groupID, userID int64, isAdmin bool) error
 			return err
 		}
 		if isAdmin {
-			flags = append(flags, msg.GroupFlagsAdmin)
-			gp.Type = msg.ParticipantTypeAdmin
+			flags = append(flags, msg.GroupFlags_GroupFlagsAdmin)
+			gp.Type = msg.ParticipantType_ParticipantTypeAdmin
 		} else {
-			gp.Type = msg.ParticipantTypeMember
+			gp.Type = msg.ParticipantType_ParticipantTypeMember
 		}
 		group.Flags = flags
 		groupParticipantKey := getGroupParticipantKey(groupID, gp.UserID)
@@ -434,14 +434,14 @@ func (r *repoGroups) ToggleAdmins(groupID int64, adminEnable bool) error {
 
 		if adminEnable {
 			for _, f := range group.Flags {
-				if f == msg.GroupFlagsAdminsEnabled {
+				if f == msg.GroupFlags_GroupFlagsAdminsEnabled {
 					return nil
 				}
 			}
-			group.Flags = append(group.Flags, msg.GroupFlagsAdminsEnabled)
+			group.Flags = append(group.Flags, msg.GroupFlags_GroupFlagsAdminsEnabled)
 		} else {
 			for idx, f := range group.Flags {
-				if f == msg.GroupFlagsAdminsEnabled {
+				if f == msg.GroupFlags_GroupFlagsAdminsEnabled {
 					group.Flags[idx] = group.Flags[len(group.Flags)-1]
 					group.Flags = group.Flags[:len(group.Flags)-1]
 				}

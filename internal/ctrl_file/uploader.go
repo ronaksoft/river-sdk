@@ -9,6 +9,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/gobwas/pool/pbytes"
+	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 	"io"
 	"os"
@@ -40,7 +41,7 @@ type UploadRequest struct {
 }
 
 func (u *UploadRequest) checkSha256() error {
-	envelop := &msg.MessageEnvelope{
+	envelop := &rony.MessageEnvelope{
 		RequestID:   uint64(domain.SequentialUniqueID()),
 		Constructor: msg.C_FileGetBySha256,
 	}
@@ -66,14 +67,14 @@ func (u *UploadRequest) checkSha256() error {
 		u.TotalParts = -1 // dirty hack, which queue.Start() knows the upload request is completed
 		return nil
 	case msg.C_Error:
-		x := &msg.Error{}
+		x := &rony.Error{}
 		_ = x.Unmarshal(res.Message)
 	}
 	return domain.ErrServer
 }
 
-func (u *UploadRequest) generateFileSavePart(fileID int64, partID int32, totalParts int32, bytes []byte) *msg.MessageEnvelope {
-	envelop := msg.MessageEnvelope{
+func (u *UploadRequest) generateFileSavePart(fileID int64, partID int32, totalParts int32, bytes []byte) *rony.MessageEnvelope {
+	envelop := rony.MessageEnvelope{
 		RequestID:   uint64(domain.SequentialUniqueID()),
 		Constructor: msg.C_FileSavePart,
 	}
@@ -424,7 +425,7 @@ func (a *UploadAction) Do(ctx context.Context) {
 			zap.Duration("D", domain.Now().Sub(startTime)),
 		)
 	case msg.C_Error:
-		x := &msg.Error{}
+		x := &rony.Error{}
 		_ = x.Unmarshal(res.Message)
 		logs.Warn("FileCtrl received Error response (Upload)",
 			zap.Int32("PartID", a.id+1),

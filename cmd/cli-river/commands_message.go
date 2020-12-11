@@ -3,6 +3,7 @@ package main
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
+	"github.com/ronaksoft/rony"
 	"gopkg.in/abiosoft/ishell.v2"
 	"time"
 )
@@ -43,7 +44,7 @@ var MessageSendToSelf = &ishell.Cmd{
 		req := msg.MessagesSend{}
 		req.RandomID = domain.RandomInt63()
 		req.Peer = &msg.InputPeer{}
-		req.Peer.Type = msg.PeerUser
+		req.Peer.Type = msg.PeerType_PeerUser
 		req.Peer.ID = _SDK.ConnInfo.UserID
 		req.Peer.AccessHash = 0
 		req.Body = fnGetBody(c)
@@ -55,7 +56,7 @@ var MessageSendToSelf = &ishell.Cmd{
 		reqDelegate := NewCustomDelegate()
 		sendMessageTimer = time.Now()
 		reqDelegate.OnCompleteFunc = func(b []byte) {
-			x := &msg.MessageEnvelope{}
+			x := &rony.MessageEnvelope{}
 			_ = x.Unmarshal(b)
 			MessagePrinter(x)
 			// _Shell.Println("Execute Time:", time.Now().Sub(startTime))
@@ -84,10 +85,10 @@ var MessageSendMediaToSelf = &ishell.Cmd{
 		req := msg.ClientSendMessageMedia{
 			Peer: &msg.InputPeer{
 				ID:         _SDK.ConnInfo.UserID,
-				Type:       msg.PeerUser,
+				Type:       msg.PeerType_PeerUser,
 				AccessHash: 0,
 			},
-			MediaType:  msg.InputMediaTypeUploadedDocument,
+			MediaType:  msg.InputMediaType_InputMediaTypeUploadedDocument,
 			Caption:    "Some Random Caption",
 			FileName:   "Uploaded File",
 			FileMIME:   "image/jpeg",
@@ -96,11 +97,11 @@ var MessageSendMediaToSelf = &ishell.Cmd{
 			ClearDraft: false,
 			Attributes: []*msg.DocumentAttribute{
 				{
-					Type: msg.AttributeTypePhoto,
+					Type: msg.DocumentAttributeType_AttributeTypePhoto,
 					Data: attrPhotoBytes,
 				},
 				{
-					Type: msg.AttributeTypeFile,
+					Type: msg.DocumentAttributeType_AttributeTypeFile,
 					Data: attrFileBytes,
 				},
 			},
@@ -115,7 +116,7 @@ var MessageSendMediaToSelf = &ishell.Cmd{
 		reqDelegate := NewCustomDelegate()
 		sendMessageTimer = time.Now()
 		reqDelegate.OnCompleteFunc = func(b []byte) {
-			x := &msg.MessageEnvelope{}
+			x := &rony.MessageEnvelope{}
 			_ = x.Unmarshal(b)
 			MessagePrinter(x)
 		}

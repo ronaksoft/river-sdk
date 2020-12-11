@@ -6,6 +6,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
+	"github.com/ronaksoft/rony"
 	"gopkg.in/abiosoft/ishell.v2"
 	"os"
 	"time"
@@ -149,7 +150,7 @@ var SdkGetPublicKeys = &ishell.Cmd{
 			return riversdk.RequestBlocking
 		}
 		reqDelegate.OnCompleteFunc = func(b []byte) {
-			e := &msg.MessageEnvelope{}
+			e := &rony.MessageEnvelope{}
 			_ = e.Unmarshal(b)
 			switch e.Constructor {
 			case msg.C_Error:
@@ -178,7 +179,7 @@ var SdkGetPublicKeys = &ishell.Cmd{
 			return riversdk.RequestBlocking
 		}
 		reqDelegate2.OnCompleteFunc = func(b []byte) {
-			e := &msg.MessageEnvelope{}
+			e := &rony.MessageEnvelope{}
 			_ = e.Unmarshal(b)
 			switch e.Constructor {
 			case msg.C_Error:

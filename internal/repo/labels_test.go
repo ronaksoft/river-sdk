@@ -125,7 +125,7 @@ func TestLabel(t *testing.T) {
 				repo.Messages.Save(&msg.UserMessage{
 					ID:                  int64(i),
 					PeerID:              peerID,
-					PeerType:            int32(msg.PeerUser),
+					PeerType:            int32(msg.PeerType_PeerUser),
 					CreatedOn:           0,
 					EditedOn:            0,
 					FwdSenderID:         0,
@@ -153,15 +153,15 @@ func TestLabel(t *testing.T) {
 				err := repo.Labels.RemoveLabelsFromMessages([]int32{1}, 0, um.PeerID, um.PeerType, []int64{um.ID})
 				c.So(err, ShouldBeNil)
 			}
-			err := repo.Labels.AddLabelsToMessages([]int32{1}, 0, peerID, int32(msg.PeerUser), []int64{1, 2, 3})
+			err := repo.Labels.AddLabelsToMessages([]int32{1}, 0, peerID, int32(msg.PeerType_PeerUser), []int64{1, 2, 3})
 			c.So(err, ShouldBeNil)
 			ums, _, _ = repo.Labels.ListMessages(1, 0, 100, 0, 0)
 			c.So(ums, ShouldHaveLength, 3)
-			err = repo.Labels.AddLabelsToMessages([]int32{1}, 0, peerID, int32(msg.PeerUser), []int64{8})
+			err = repo.Labels.AddLabelsToMessages([]int32{1}, 0, peerID, int32(msg.PeerType_PeerUser), []int64{8})
 			c.So(err, ShouldBeNil)
 			ums, _, _ = repo.Labels.ListMessages(1, 0, 100, 0, 0)
 			c.So(ums, ShouldHaveLength, 4)
-			err = repo.Labels.AddLabelsToMessages([]int32{1}, 0, peerID, int32(msg.PeerUser), []int64{7})
+			err = repo.Labels.AddLabelsToMessages([]int32{1}, 0, peerID, int32(msg.PeerType_PeerUser), []int64{7})
 			c.So(err, ShouldBeNil)
 			ums, _, _ = repo.Labels.ListMessages(1, 0, 100, 0, 0)
 			c.So(ums, ShouldHaveLength, 5)
