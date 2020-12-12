@@ -222,7 +222,7 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, teamID int64, t
 			switch m.Constructor {
 			case msg.C_Error:
 				logs.Error("SyncCtrl got error response on MessagesGetDialogs", zap.Error(domain.ParseServerError(m.Message)))
-				x := rony.Error{}
+				x := &rony.Error{}
 				_ = x.Unmarshal(m.Message)
 				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
 					waitGroup.Done()
@@ -279,7 +279,7 @@ func (ctrl *Controller) GetAllTopPeers(
 			switch m.Constructor {
 			case msg.C_Error:
 				logs.Error("SyncCtrl got error response on ContactsGetTopPeers", zap.Error(domain.ParseServerError(m.Message)))
-				x := rony.Error{}
+				x := &rony.Error{}
 				_ = x.Unmarshal(m.Message)
 				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
 					waitGroup.Done()
@@ -327,7 +327,7 @@ func (ctrl *Controller) GetLabels(waitGroup *sync.WaitGroup, teamID int64, teamA
 			switch m.Constructor {
 			case msg.C_Error:
 				logs.Error("SyncCtrl got error response on LabelsGet", zap.Error(domain.ParseServerError(m.Message)))
-				x := rony.Error{}
+				x := &rony.Error{}
 				_ = x.Unmarshal(m.Message)
 				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
 					waitGroup.Done()
