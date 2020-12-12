@@ -88,16 +88,16 @@ func main() {
 	case 2:
 		switch strings.ToLower(os.Args[1]) {
 		case "production":
-			serverEndPoint = "ws://cyrus.river.im"
-			fileEndPoint = "http://file.river.im"
+			serverEndPoint = "ws://edge.river.im"
+			fileEndPoint = "http://edge.river.im"
 			keysFile = "./keys-production.json"
 		case "staging":
-			serverEndPoint = "ws://river.ronaksoftware.com"
-			fileEndPoint = "http://river.ronaksoftware.com:8080"
+			serverEndPoint = "ws://river-rony.ronaksoftware.com"
+			fileEndPoint = "http://river-rony.ronaksoftware.com"
 			keysFile = "./keys-staging.json"
 		case "local":
 			serverEndPoint = "ws://localhost"
-			fileEndPoint = "http://localhost:8881"
+			fileEndPoint = "http://localhost"
 			keysFile = "./keys-staging.json"
 		}
 	}
