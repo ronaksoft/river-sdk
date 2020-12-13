@@ -77,31 +77,25 @@ func main() {
 		filePath: connInfoPath,
 	}
 
-	serverEndPoint := "ws://river.ronaksoftware.com"
-	fileEndPoint := "http://river.ronaksoftware.com:8080"
+	serverHostPort := "river.ronaksoftware.com"
 	keysFile := "./keys-staging.json"
 
 	switch len(os.Args) {
 	case 3:
-		serverEndPoint = os.Args[1]
-		fileEndPoint = os.Args[2]
+		serverHostPort = os.Args[1]
 	case 2:
 		switch strings.ToLower(os.Args[1]) {
 		case "production":
-			serverEndPoint = "ws://edge.river.im"
-			fileEndPoint = "http://edge.river.im"
+			serverHostPort = "edge.river.im"
 			keysFile = "./keys-production.json"
 		case "staging":
-			serverEndPoint = "ws://river-rony.ronaksoftware.com"
-			fileEndPoint = "http://river-rony.ronaksoftware.com"
+			serverHostPort = "river-rony.ronaksoftware.com"
 			keysFile = "./keys-staging.json"
 		case "local":
-			serverEndPoint = "ws://localhost"
-			fileEndPoint = "http://localhost"
+			serverHostPort = "localhost"
 			keysFile = "./keys-staging.json"
 		case "local2":
-			serverEndPoint = "ws://localhost:81"
-			fileEndPoint = "http://localhost:81"
+			serverHostPort = "localhost:81"
 			keysFile = "./keys-staging.json"
 		}
 	}
@@ -110,8 +104,7 @@ func main() {
 
 	_SDK = &riversdk.River{}
 	_SDK.SetConfig(&riversdk.RiverConfig{
-		ServerEndpoint:         serverEndPoint,
-		FileServerEndpoint:     fileEndPoint,
+		ServerHostPort:         serverHostPort,
 		DbPath:                 _DbPath,
 		DbID:                   _DbID,
 		ServerKeys:             domain.ByteToStr(skBytes),

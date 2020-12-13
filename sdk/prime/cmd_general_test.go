@@ -21,7 +21,7 @@ func init() {
 		DbPath: "./_data/",
 		DbID:   "test",
 		// ServerKeysFilePath:     "./keys.json",
-		ServerEndpoint:         "ws://new.river.im",
+		ServerHostPort:         "new.river.im",
 		MainDelegate:           new(MainDelegateDummy),
 		FileDelegate:           new(FileDelegateDummy),
 		LogLevel:               int(zapcore.DebugLevel),

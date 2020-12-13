@@ -57,8 +57,7 @@ func init() {
 		LogDirectory:           "./_files/logs",
 		ConnInfo:               conInfo,
 		ServerKeys:             string(serverKeyBytes),
-		ServerEndpoint:         "ws://river.ronaksoftware.com",
-		FileServerEndpoint:     "http://river.ronaksoftware.com:8080",
+		ServerHostPort:         "river.ronaksoftware.com",
 	})
 	_River = r
 

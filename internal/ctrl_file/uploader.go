@@ -29,7 +29,7 @@ import (
 */
 
 type UploadRequest struct {
-	msg.ClientFileRequest
+	cfr           *msg.ClientFileRequest
 	ctrl          *Controller
 	mtx           sync.Mutex
 	file          *os.File
@@ -47,8 +47,8 @@ func (u *UploadRequest) checkSha256() error {
 		Constructor: msg.C_FileGetBySha256,
 	}
 	req := &msg.FileGetBySha256{
-		Sha256:   u.FileSha256,
-		FileSize: int32(u.FileSize),
+		Sha256:   u.cfr.FileSha256,
+		FileSize: int32(u.cfr.FileSize),
 	}
 	envelop.Message, _ = req.Marshal()
 
@@ -62,10 +62,10 @@ func (u *UploadRequest) checkSha256() error {
 	case msg.C_FileLocation:
 		x := &msg.FileLocation{}
 		_ = x.Unmarshal(res.Message)
-		u.ClusterID = x.ClusterID
-		u.AccessHash = x.AccessHash
-		u.FileID = x.FileID
-		u.TotalParts = -1 // dirty hack, which queue.Start() knows the upload request is completed
+		u.cfr.ClusterID = x.ClusterID
+		u.cfr.AccessHash = x.AccessHash
+		u.cfr.FileID = x.FileID
+		u.cfr.TotalParts = -1 // dirty hack, which queue.Start() knows the upload request is completed
 		return nil
 	case rony.C_Error:
 		x := &rony.Error{}
@@ -88,7 +88,7 @@ func (u *UploadRequest) generateFileSavePart(fileID int64, partID int32, totalPa
 	envelop.Message, _ = req.Marshal()
 
 	logs.Debug("FileCtrl generates FileSavePart",
-		zap.Int64("MsgID", u.MessageID),
+		zap.Int64("MsgID", u.cfr.MessageID),
 		zap.Int64("FileID", req.FileID),
 		zap.Int32("PartID", req.PartID),
 		zap.Int32("TotalParts", req.TotalParts),
@@ -99,19 +99,19 @@ func (u *UploadRequest) generateFileSavePart(fileID int64, partID int32, totalPa
 
 func (u *UploadRequest) resetUploadedList() {
 	u.mtx.Lock()
-	u.FinishedParts = u.FinishedParts[:0]
+	u.cfr.FinishedParts = u.cfr.FinishedParts[:0]
 	u.mtx.Unlock()
 
-	_, _ = repo.Files.SaveFileRequest(u.GetID(), &u.ClientFileRequest, false)
-	if !u.SkipDelegateCall {
-		u.ctrl.onProgressChanged(u.GetID(), 0, u.FileID, 0, 0, u.PeerID)
+	_, _ = repo.Files.SaveFileRequest(u.GetID(), u.cfr, false)
+	if !u.cfr.SkipDelegateCall {
+		u.ctrl.onProgressChanged(u.GetID(), 0, u.cfr.FileID, 0, 0, u.cfr.PeerID)
 	}
 }
 
 func (u *UploadRequest) isUploaded(partIndex int32) bool {
 	u.mtx.Lock()
 	defer u.mtx.Unlock()
-	for _, index := range u.FinishedParts {
+	for _, index := range u.cfr.FinishedParts {
 		if partIndex == index {
 			return true
 		}
@@ -124,8 +124,8 @@ func (u *UploadRequest) addToUploaded(partIndex int32) {
 		return
 	}
 	u.mtx.Lock()
-	u.FinishedParts = append(u.FinishedParts, partIndex)
-	progress := int64(float64(len(u.FinishedParts)) / float64(u.TotalParts) * 100)
+	u.cfr.FinishedParts = append(u.cfr.FinishedParts, partIndex)
+	progress := int64(float64(len(u.cfr.FinishedParts)) / float64(u.cfr.TotalParts) * 100)
 	skipOnProgress := false
 	if u.progress > progress {
 		skipOnProgress = true
@@ -134,9 +134,9 @@ func (u *UploadRequest) addToUploaded(partIndex int32) {
 	}
 	u.mtx.Unlock()
 
-	saved, _ := repo.Files.SaveFileRequest(u.GetID(), &u.ClientFileRequest, true)
-	if saved && !u.SkipDelegateCall && !skipOnProgress {
-		u.ctrl.onProgressChanged(u.GetID(), 0, u.FileID, 0, progress, u.PeerID)
+	saved, _ := repo.Files.SaveFileRequest(u.GetID(), u.cfr, true)
+	if saved && !u.cfr.SkipDelegateCall && !skipOnProgress {
+		u.ctrl.onProgressChanged(u.GetID(), 0, u.cfr.FileID, 0, progress, u.cfr.PeerID)
 	}
 }
 
@@ -155,21 +155,21 @@ func (u *UploadRequest) reset() {
 
 func (u *UploadRequest) cancel(err error) {
 	_ = repo.Files.DeleteFileRequest(u.GetID())
-	if !u.SkipDelegateCall {
-		u.ctrl.onCancel(u.GetID(), 0, u.FileID, 0, err != nil, u.PeerID)
+	if !u.cfr.SkipDelegateCall {
+		u.ctrl.onCancel(u.GetID(), 0, u.cfr.FileID, 0, err != nil, u.cfr.PeerID)
 	}
 }
 
 func (u *UploadRequest) complete() {
 	_ = repo.Files.DeleteFileRequest(u.GetID())
-	if !u.SkipDelegateCall {
-		u.ctrl.onCompleted(u.GetID(), 0, u.FileID, 0, u.FilePath, u.PeerID)
+	if !u.cfr.SkipDelegateCall {
+		u.ctrl.onCompleted(u.GetID(), 0, u.cfr.FileID, 0, u.cfr.FilePath, u.cfr.PeerID)
 	}
 
 }
 
 func (u *UploadRequest) GetID() string {
-	return getRequestID(u.ClusterID, u.FileID, u.AccessHash)
+	return getRequestID(u.cfr.ClusterID, u.cfr.FileID, u.cfr.AccessHash)
 }
 
 func (u *UploadRequest) Prepare() error {
@@ -181,17 +181,17 @@ func (u *UploadRequest) Prepare() error {
 	u.reset()
 
 	// Check File stats and return error if any problem exists
-	fileInfo, err := os.Stat(u.FilePath)
+	fileInfo, err := os.Stat(u.cfr.FilePath)
 	if err != nil {
 		u.cancel(err)
 		return err
 	} else {
-		u.FileSize = fileInfo.Size()
-		if u.FileSize <= 0 {
+		u.cfr.FileSize = fileInfo.Size()
+		if u.cfr.FileSize <= 0 {
 			err = domain.ErrInvalidData
 			u.cancel(err)
 			return err
-		} else if u.FileSize > maxFileSizeAllowedSize {
+		} else if u.cfr.FileSize > maxFileSizeAllowedSize {
 			err = domain.ErrFileTooLarge
 			u.cancel(err)
 			return err
@@ -201,17 +201,17 @@ func (u *UploadRequest) Prepare() error {
 	// If Sha256 exists in the request then we check server if this file has been already uploaded, if true, then
 	// we do not upload it again and we call postUploadProcess with the updated details
 	st1 := domain.Now()
-	if u.CheckSha256 && len(u.FileSha256) != 0 {
+	if u.cfr.CheckSha256 && len(u.cfr.FileSha256) != 0 {
 		oldReqID := u.GetID()
 		err = u.checkSha256()
 		if err == nil {
 			logs.Info("FileCtrl detects the file already exists in the server",
-				zap.Int64("FileID", u.FileID),
-				zap.Int32("ClusterID", u.ClusterID),
+				zap.Int64("FileID", u.cfr.FileID),
+				zap.Int32("ClusterID", u.cfr.ClusterID),
 			)
 			_ = repo.Files.DeleteFileRequest(oldReqID)
 			err = domain.ErrAlreadyUploaded
-			if !u.ctrl.postUploadProcess(u.ClientFileRequest) {
+			if !u.ctrl.postUploadProcess(u.cfr) {
 				err = domain.ErrInvalidData
 				u.cancel(err)
 			}
@@ -221,36 +221,36 @@ func (u *UploadRequest) Prepare() error {
 	st2 := domain.Now()
 
 	// Open the file for read
-	u.file, err = os.OpenFile(u.FilePath, os.O_RDONLY, 0666)
+	u.file, err = os.OpenFile(u.cfr.FilePath, os.O_RDONLY, 0666)
 	if err != nil {
 		u.cancel(err)
 		return err
 	}
 
 	// If chunk size is not set recalculate it
-	if u.ChunkSize <= 0 {
-		u.ChunkSize = bestChunkSize(u.FileSize)
+	if u.cfr.ChunkSize <= 0 {
+		u.cfr.ChunkSize = bestChunkSize(u.cfr.FileSize)
 	}
 
 	// Calculate number of parts based on our chunk size
-	dividend := int32(u.FileSize / int64(u.ChunkSize))
-	if u.FileSize%int64(u.ChunkSize) > 0 {
-		u.TotalParts = dividend + 1
+	dividend := int32(u.cfr.FileSize / int64(u.cfr.ChunkSize))
+	if u.cfr.FileSize%int64(u.cfr.ChunkSize) > 0 {
+		u.cfr.TotalParts = dividend + 1
 	} else {
-		u.TotalParts = dividend
+		u.cfr.TotalParts = dividend
 	}
 
 	// Reset FinishedParts if all parts are finished. Probably something went wrong, it is better to retry
-	if int32(len(u.FinishedParts)) == u.TotalParts {
-		u.FinishedParts = u.FinishedParts[:0]
+	if int32(len(u.cfr.FinishedParts)) == u.cfr.TotalParts {
+		u.cfr.FinishedParts = u.cfr.FinishedParts[:0]
 	}
 
 	// Prepare Channels to active the system dynamics
-	u.parts = make(chan int32, u.TotalParts)
+	u.parts = make(chan int32, u.cfr.TotalParts)
 	u.done = make(chan struct{}, 1)
-	maxPartIndex := u.TotalParts - 1
-	if u.TotalParts == 1 {
-		maxPartIndex = u.TotalParts
+	maxPartIndex := u.cfr.TotalParts - 1
+	if u.cfr.TotalParts == 1 {
+		maxPartIndex = u.cfr.TotalParts
 	}
 	for partIndex := int32(0); partIndex < maxPartIndex; partIndex++ {
 		if u.isUploaded(partIndex) {
@@ -265,7 +265,7 @@ func (u *UploadRequest) Prepare() error {
 		zap.Duration("D", domain.Now().Sub(u.startTime)),
 		zap.Duration("CheckShaD", st2.Sub(st1)),
 		zap.Duration("PrepareD", st3.Sub(st0)),
-		zap.String("Progress", fmt.Sprintf("%d / %d", len(u.FinishedParts), u.TotalParts)),
+		zap.String("Progress", fmt.Sprintf("%d / %d", len(u.cfr.FinishedParts), u.cfr.TotalParts)),
 	)
 	return nil
 }
@@ -299,34 +299,34 @@ func (u *UploadRequest) ActionDone(id int32) {
 		zap.String("ID", u.GetID()),
 		zap.Int32("PartID", id),
 		zap.Duration("D", domain.Now().Sub(u.startTime)),
-		zap.String("Progress", fmt.Sprintf("%d / %d", len(u.FinishedParts), u.TotalParts)),
+		zap.String("Progress", fmt.Sprintf("%d / %d", len(u.cfr.FinishedParts), u.cfr.TotalParts)),
 	)
 	// If we have failed too many times, and we can decrease the chunk size the we do it again.
 	if atomic.LoadInt32(&u.failedActions) > retryMaxAttempts {
 		atomic.StoreInt32(&u.failedActions, 0)
 		logs.Debug("Max Attempts",
-			zap.Int32("ChunkSize", u.ChunkSize),
+			zap.Int32("ChunkSize", u.cfr.ChunkSize),
 		)
 	}
 
 	// For single part uploads we are done
 	// For n-part uploads if we have done n-1 part then we add the last part
-	finishedParts := int32(len(u.FinishedParts))
-	switch u.TotalParts {
+	finishedParts := int32(len(u.cfr.FinishedParts))
+	switch u.cfr.TotalParts {
 	case 1:
-		if finishedParts != u.TotalParts {
+		if finishedParts != u.cfr.TotalParts {
 			return
 		}
 	default:
 		switch {
-		case finishedParts < u.TotalParts-1:
+		case finishedParts < u.cfr.TotalParts-1:
 			return
-		case finishedParts == u.TotalParts-1:
+		case finishedParts == u.cfr.TotalParts-1:
 			if u.lastPartSent {
 				return
 			}
 			u.lastPartSent = true
-			u.parts <- u.TotalParts - 1
+			u.parts <- u.cfr.TotalParts - 1
 			return
 		}
 	}
@@ -336,7 +336,7 @@ func (u *UploadRequest) ActionDone(id int32) {
 	_ = u.file.Close()
 
 	// Run the post process
-	if !u.ctrl.postUploadProcess(u.ClientFileRequest) {
+	if !u.ctrl.postUploadProcess(u.cfr) {
 		u.cancel(domain.ErrNoPostProcess)
 		return
 	}
@@ -348,7 +348,7 @@ func (u *UploadRequest) ActionDone(id int32) {
 }
 
 func (u *UploadRequest) Serialize() []byte {
-	b, err := u.Marshal()
+	b, err := u.cfr.Marshal()
 	if err != nil {
 		panic(err)
 	}
@@ -357,14 +357,14 @@ func (u *UploadRequest) Serialize() []byte {
 
 func (u *UploadRequest) Next() executor.Request {
 	// If the request has a chained request then we swap them and reset the progress
-	if u.ClientFileRequest.Next == nil {
+	if u.cfr.Next == nil {
 		return nil
 	}
 
 	u2 := &UploadRequest{
-		ClientFileRequest: *u.ClientFileRequest.Next,
-		ctrl:              u.ctrl,
-		startTime:         u.startTime,
+		cfr:       u.cfr.Next,
+		ctrl:      u.ctrl,
+		startTime: u.startTime,
 	}
 
 	return u2
@@ -381,11 +381,11 @@ func (a *UploadAction) ID() int32 {
 
 func (a *UploadAction) Do(ctx context.Context) {
 	startTime := domain.Now()
-	bytes := pbytes.GetLen(int(a.req.ChunkSize))
+	bytes := pbytes.GetLen(int(a.req.cfr.ChunkSize))
 	defer pbytes.Put(bytes)
 
 	// Calculate offset based on chunk id and the chunk size
-	offset := a.id * a.req.ChunkSize
+	offset := a.id * a.req.cfr.ChunkSize
 
 	// We try to read the chunk, if it failed we try one more time
 	n, err := a.req.file.ReadAt(bytes, int64(offset))
@@ -398,9 +398,9 @@ func (a *UploadAction) Do(ctx context.Context) {
 	// If we read 0 bytes then something is wrong
 	if n == 0 {
 		logs.Fatal("FileCtrl read zero bytes from file",
-			zap.String("FilePath", a.req.FilePath),
-			zap.Int32("TotalParts", a.req.TotalParts),
-			zap.Int32("ChunkSize", a.req.ChunkSize),
+			zap.String("FilePath", a.req.cfr.FilePath),
+			zap.Int32("TotalParts", a.req.cfr.TotalParts),
+			zap.Int32("ChunkSize", a.req.cfr.ChunkSize),
 		)
 	}
 
@@ -409,7 +409,7 @@ func (a *UploadAction) Do(ctx context.Context) {
 	defer cf()
 	res, err := a.req.ctrl.network.SendHttp(
 		ctx,
-		a.req.generateFileSavePart(a.req.FileID, a.id+1, a.req.TotalParts, bytes[:n]),
+		a.req.generateFileSavePart(a.req.cfr.FileID, a.id+1, a.req.cfr.TotalParts, bytes[:n]),
 	)
 	if err != nil {
 		logs.Warn("FileCtrl got error On SendHttp (Upload)", zap.Error(err))

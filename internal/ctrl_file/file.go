@@ -31,7 +31,7 @@ type Config struct {
 	MaxInflightDownloads int32
 	MaxInflightUploads   int32
 	DbPath               string
-	PostUploadProcessCB  func(req msg.ClientFileRequest) bool
+	PostUploadProcessCB  func(req *msg.ClientFileRequest) bool
 	ProgressChangedCB    func(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64)
 	CompletedCB          func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64)
 	CancelCB             func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool, peerID int64)
@@ -47,7 +47,7 @@ type Controller struct {
 	onProgressChanged func(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64)
 	onCompleted       func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64)
 	onCancel          func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool, peerID int64)
-	postUploadProcess func(req msg.ClientFileRequest) bool
+	postUploadProcess func(req *msg.ClientFileRequest) bool
 }
 
 func New(config Config) *Controller {
@@ -88,10 +88,11 @@ func New(config Config) *Controller {
 
 	ctrl.uploader, err = executor.NewExecutor(config.DbPath, "uploader", func(data []byte) executor.Request {
 		r := &UploadRequest{
+			cfr:       &msg.ClientFileRequest{},
 			ctrl:      ctrl,
 			startTime: domain.Now(),
 		}
-		_ = r.Unmarshal(data)
+		_ = r.cfr.Unmarshal(data)
 		return r
 	}, executor.WithConcurrency(config.MaxInflightUploads))
 	if err != nil {
@@ -511,7 +512,7 @@ func (ctrl *Controller) UploadUserPhoto(filePath string) (reqID string) {
 	}
 
 	fileID := domain.RandomInt63()
-	err := ctrl.upload(msg.ClientFileRequest{
+	err := ctrl.upload(&msg.ClientFileRequest{
 		IsProfilePhoto: true,
 		FileID:         fileID,
 		FilePath:       filePath,
@@ -528,7 +529,7 @@ func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) (reqID 
 	}
 
 	fileID := domain.RandomInt63()
-	err := ctrl.upload(msg.ClientFileRequest{
+	err := ctrl.upload(&msg.ClientFileRequest{
 		IsProfilePhoto: true,
 		GroupID:        groupID,
 		FileID:         fileID,
@@ -564,7 +565,7 @@ func (ctrl *Controller) UploadMessageDocument(
 		}
 	}
 
-	reqFile := msg.ClientFileRequest{
+	reqFile := &msg.ClientFileRequest{
 		MessageID:   messageID,
 		FileID:      fileID,
 		FilePath:    filePath,
@@ -577,7 +578,7 @@ func (ctrl *Controller) UploadMessageDocument(
 
 	// If there is a thumbnail then set the reqFile as the next
 	if thumbID != 0 {
-		reqFile = msg.ClientFileRequest{
+		reqFile = &msg.ClientFileRequest{
 			Next: &msg.ClientFileRequest{
 				MessageID:   messageID,
 				FileID:      fileID,
@@ -600,7 +601,7 @@ func (ctrl *Controller) UploadMessageDocument(
 		logs.WarnOnErr("Error On Upload Message Media", err, zap.Int64("FileID", reqFile.FileID))
 	}
 }
-func (ctrl *Controller) upload(req msg.ClientFileRequest) error {
+func (ctrl *Controller) upload(req *msg.ClientFileRequest) error {
 	if req.ClusterID != 0 {
 		return domain.ErrInvalidData
 	}
@@ -615,13 +616,13 @@ func (ctrl *Controller) upload(req msg.ClientFileRequest) error {
 
 	_, _ = repo.Files.SaveFileRequest(
 		getRequestID(0, req.FileID, 0),
-		&req,
+		req,
 		false,
 	)
 
 	err = ctrl.uploader.Execute(&UploadRequest{
-		ClientFileRequest: req,
-		startTime:         domain.Now(),
+		cfr:       req,
+		startTime: domain.Now(),
 	})
 	if err != nil {
 		return err

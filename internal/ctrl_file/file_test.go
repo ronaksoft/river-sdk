@@ -72,7 +72,7 @@ func init() {
 			delete(waitMap, fmt.Sprintf("%d.%d.%d", clusterID, fileID, accessHash))
 			waitMapLock.Unlock()
 		},
-		PostUploadProcessCB: func(req msg.ClientFileRequest) bool {
+		PostUploadProcessCB: func(req *msg.ClientFileRequest) bool {
 			logs.Info("PostProcess",
 				zap.Any("TotalParts", req.TotalParts),
 				zap.Int32("ChunkSize", req.ChunkSize),

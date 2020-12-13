@@ -732,8 +732,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	// Initialize Network Controller
 	r.networkCtrl = networkCtrl.New(
 		networkCtrl.Config{
-			WebsocketEndpoint: conf.ServerEndpoint,
-			HttpEndpoint:      conf.FileServerEndpoint,
+			WebsocketEndpoint: fmt.Sprintf("ws://%s", conf.ServerHostPort),
+			HttpEndpoint:      fmt.Sprintf("http://%s", conf.ServerHostPort),
 			CountryCode:       conf.CountryCode,
 		},
 	)

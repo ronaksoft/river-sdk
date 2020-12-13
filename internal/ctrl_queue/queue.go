@@ -1,6 +1,7 @@
 package queueCtrl
 
 import (
+	"encoding/json"
 	"git.ronaksoft.com/river/msg/go/msg"
 	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
 	"git.ronaksoft.com/river/sdk/internal/ctrl_network"
@@ -19,7 +20,6 @@ import (
 	"time"
 )
 
-// easyjson:json
 // request
 type request struct {
 	ID              uint64                `json:"id"`
@@ -86,7 +86,7 @@ func (ctrl *Controller) distributor() {
 
 		// Prepare
 		req := request{}
-		if err := req.UnmarshalJSON(item.Value); err != nil {
+		if err := json.Unmarshal(item.Value, &req); err != nil {
 			logs.Error("QueueController could not unmarshal popped request", zap.Error(err))
 			continue
 		}
@@ -107,7 +107,7 @@ func (ctrl *Controller) distributor() {
 // addToWaitingList
 func (ctrl *Controller) addToWaitingList(req *request) {
 	req.InsertTime = time.Now()
-	jsonRequest, err := req.MarshalJSON()
+	jsonRequest, err := json.Marshal(req)
 	if err != nil {
 		logs.Warn("QueueController couldn't marshal the request", zap.Error(err))
 		return

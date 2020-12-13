@@ -34,8 +34,7 @@ func SetLogLevel(l int) {
 
 // RiverConfig
 type RiverConfig struct {
-	ServerEndpoint     string
-	FileServerEndpoint string
+	ServerHostPort string
 	// DbPath is the path of the folder holding the sqlite database.
 	DbPath string
 	// DbID is used to save data for different accounts in separate databases. Could be used for multi-account cases.
@@ -321,7 +320,7 @@ func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {
 	}
 }
 
-func (r *River) postUploadProcess(uploadRequest msg.ClientFileRequest) bool {
+func (r *River) postUploadProcess(uploadRequest *msg.ClientFileRequest) bool {
 	defer logs.RecoverPanic(
 		"River::postUploadProcess",
 		domain.M{
@@ -347,7 +346,7 @@ func (r *River) postUploadProcess(uploadRequest msg.ClientFileRequest) bool {
 	}
 	return false
 }
-func (r *River) sendMessageMedia(uploadRequest msg.ClientFileRequest) (success bool) {
+func (r *River) sendMessageMedia(uploadRequest *msg.ClientFileRequest) (success bool) {
 	// This is a upload for message send media
 	pendingMessage := repo.PendingMessages.GetByID(uploadRequest.MessageID)
 	if pendingMessage == nil {
@@ -469,7 +468,7 @@ func (r *River) sendMessageMedia(uploadRequest msg.ClientFileRequest) (success b
 	waitGroup.Wait()
 	return
 }
-func (r *River) uploadGroupPhoto(uploadRequest msg.ClientFileRequest) (success bool) {
+func (r *River) uploadGroupPhoto(uploadRequest *msg.ClientFileRequest) (success bool) {
 	// This is a upload group profile picture
 	x := &msg.GroupsUploadPhoto{
 		GroupID: uploadRequest.GroupID,
@@ -515,7 +514,7 @@ func (r *River) uploadGroupPhoto(uploadRequest msg.ClientFileRequest) (success b
 	waitGroup.Wait()
 	return
 }
-func (r *River) uploadAccountPhoto(uploadRequest msg.ClientFileRequest) (success bool) {
+func (r *River) uploadAccountPhoto(uploadRequest *msg.ClientFileRequest) (success bool) {
 	// This is a upload account profile picture
 	x := &msg.AccountUploadPhoto{
 		File: &msg.InputFile{
