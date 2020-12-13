@@ -159,8 +159,6 @@ github.com/hashicorp/memberlist
 github.com/hashicorp/raft
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
-# github.com/josharian/intern v1.0.0
-github.com/josharian/intern
 # github.com/jtolds/gls v4.20.0+incompatible
 github.com/jtolds/gls
 # github.com/juju/ratelimit v1.0.1
@@ -177,11 +175,6 @@ github.com/kr/text
 github.com/magiconair/properties
 # github.com/mailru/easygo v0.0.0-20190618140210-3c14a0dc985f
 github.com/mailru/easygo/netpoll
-# github.com/mailru/easyjson v0.7.6
-github.com/mailru/easyjson
-github.com/mailru/easyjson/buffer
-github.com/mailru/easyjson/jlexer
-github.com/mailru/easyjson/jwriter
 # github.com/mattn/go-colorable v0.1.7
 github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.12

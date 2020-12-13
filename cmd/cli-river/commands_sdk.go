@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
@@ -203,7 +204,7 @@ var SdkGetPublicKeys = &ishell.Cmd{
 		}
 
 		f, _ := os.Create("./keys.json")
-		b, _ := sk.MarshalJSON()
+		b, _ := json.Marshal(&sk)
 		f.Write(b)
 		f.Close()
 	},

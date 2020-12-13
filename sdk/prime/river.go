@@ -23,7 +23,6 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 )
 
-//go:generate easyjson river.go
 var (
 	_ServerKeys ServerKeys
 )
@@ -691,7 +690,7 @@ type RiverConnection struct {
 // save RiverConfig interface func
 func (v *RiverConnection) Save() {
 	logs.Debug("ConnInfo saved.")
-	b, _ := v.MarshalJSON()
+	b, _ := json.Marshal(v)
 	v.Delegate.SaveConnInfo(b)
 }
 

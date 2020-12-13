@@ -30,7 +30,6 @@ require (
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/juju/ratelimit v1.0.1
 	github.com/kr/pretty v0.2.0
-	github.com/mailru/easyjson v0.7.6
 	github.com/monnand/dhkx v0.0.0-20180522003156-9e5b033f1ac4
 	github.com/nyaruka/phonenumbers v1.0.60
 	github.com/olekukonko/tablewriter v0.0.4
@@ -53,8 +52,6 @@ require (
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73 // indirect
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	golang.org/x/text v0.3.3 // indirect
-	google.golang.org/genproto v0.0.0-20200911024640-645f7a48b24f // indirect
-	google.golang.org/grpc v1.32.0 // indirect
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/abiosoft/ishell.v2 v2.0.0
 )

@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
@@ -801,7 +802,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	)
 
 	// Initialize Server Keys
-	if err := _ServerKeys.UnmarshalJSON([]byte(conf.ServerKeys)); err != nil {
+	if err := json.Unmarshal([]byte(conf.ServerKeys), &_ServerKeys); err != nil {
 		logs.Error("We couldn't unmarshal ServerKeys",
 			zap.String("Error", err.Error()),
 		)
