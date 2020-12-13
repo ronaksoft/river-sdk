@@ -319,7 +319,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 					if err != nil {
 						logs.Error("SyncCtrl couldn't save current UpdateID", zap.Error(err))
 					}
-				case msg.C_Error:
+				case rony.C_Error:
 					logs.Debug("SyncCtrl got error response",
 						zap.String("Error", domain.ParseServerError(m.Message).Error()),
 					)

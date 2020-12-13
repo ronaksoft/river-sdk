@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_SystemGetPublicKeys int64 = 2826986006
+const C_SystemGetPublicKeys int64 = 1191522796
 
 type poolSystemGetPublicKeys struct {
 	pool sync.Pool
@@ -27,7 +27,7 @@ func (p *poolSystemGetPublicKeys) Put(x *SystemGetPublicKeys) {
 
 var PoolSystemGetPublicKeys = poolSystemGetPublicKeys{}
 
-const C_SystemGetDHGroups int64 = 752822090
+const C_SystemGetDHGroups int64 = 1786665018
 
 type poolSystemGetDHGroups struct {
 	pool sync.Pool
@@ -47,7 +47,7 @@ func (p *poolSystemGetDHGroups) Put(x *SystemGetDHGroups) {
 
 var PoolSystemGetDHGroups = poolSystemGetDHGroups{}
 
-const C_SystemGetServerTime int64 = 2704984879
+const C_SystemGetServerTime int64 = 1321179349
 
 type poolSystemGetServerTime struct {
 	pool sync.Pool
@@ -67,7 +67,7 @@ func (p *poolSystemGetServerTime) Put(x *SystemGetServerTime) {
 
 var PoolSystemGetServerTime = poolSystemGetServerTime{}
 
-const C_SystemGetInfo int64 = 3594074052
+const C_SystemGetInfo int64 = 1486296237
 
 type poolSystemGetInfo struct {
 	pool sync.Pool
@@ -87,7 +87,7 @@ func (p *poolSystemGetInfo) Put(x *SystemGetInfo) {
 
 var PoolSystemGetInfo = poolSystemGetInfo{}
 
-const C_SystemGetSalts int64 = 1363354028
+const C_SystemGetSalts int64 = 1705203315
 
 type poolSystemGetSalts struct {
 	pool sync.Pool
@@ -107,7 +107,7 @@ func (p *poolSystemGetSalts) Put(x *SystemGetSalts) {
 
 var PoolSystemGetSalts = poolSystemGetSalts{}
 
-const C_SystemGetConfig int64 = 1736789536
+const C_SystemGetConfig int64 = 1910333714
 
 type poolSystemGetConfig struct {
 	pool sync.Pool
@@ -127,7 +127,7 @@ func (p *poolSystemGetConfig) Put(x *SystemGetConfig) {
 
 var PoolSystemGetConfig = poolSystemGetConfig{}
 
-const C_SystemUploadUsage int64 = 4035814410
+const C_SystemUploadUsage int64 = 3056393082
 
 type poolSystemUploadUsage struct {
 	pool sync.Pool
@@ -148,7 +148,7 @@ func (p *poolSystemUploadUsage) Put(x *SystemUploadUsage) {
 
 var PoolSystemUploadUsage = poolSystemUploadUsage{}
 
-const C_SystemGetResponse int64 = 314637154
+const C_SystemGetResponse int64 = 1415676946
 
 type poolSystemGetResponse struct {
 	pool sync.Pool
@@ -169,7 +169,7 @@ func (p *poolSystemGetResponse) Put(x *SystemGetResponse) {
 
 var PoolSystemGetResponse = poolSystemGetResponse{}
 
-const C_ClientUsage int64 = 233146944
+const C_ClientUsage int64 = 453987802
 
 type poolClientUsage struct {
 	pool sync.Pool
@@ -202,7 +202,7 @@ func (p *poolClientUsage) Put(x *ClientUsage) {
 
 var PoolClientUsage = poolClientUsage{}
 
-const C_SystemConfig int64 = 86775337
+const C_SystemConfig int64 = 367036084
 
 type poolSystemConfig struct {
 	pool sync.Pool
@@ -245,7 +245,7 @@ func (p *poolSystemConfig) Put(x *SystemConfig) {
 
 var PoolSystemConfig = poolSystemConfig{}
 
-const C_DataCenter int64 = 1250824734
+const C_DataCenter int64 = 3431386561
 
 type poolDataCenter struct {
 	pool sync.Pool
@@ -270,7 +270,7 @@ func (p *poolDataCenter) Put(x *DataCenter) {
 
 var PoolDataCenter = poolDataCenter{}
 
-const C_SystemSalts int64 = 621213680
+const C_SystemSalts int64 = 871116906
 
 type poolSystemSalts struct {
 	pool sync.Pool
@@ -293,7 +293,7 @@ func (p *poolSystemSalts) Put(x *SystemSalts) {
 
 var PoolSystemSalts = poolSystemSalts{}
 
-const C_AppUpdate int64 = 2594101356
+const C_AppUpdate int64 = 1100207036
 
 type poolAppUpdate struct {
 	pool sync.Pool
@@ -320,7 +320,7 @@ func (p *poolAppUpdate) Put(x *AppUpdate) {
 
 var PoolAppUpdate = poolAppUpdate{}
 
-const C_SystemInfo int64 = 574484807
+const C_SystemInfo int64 = 2754948760
 
 type poolSystemInfo struct {
 	pool sync.Pool
@@ -344,7 +344,7 @@ func (p *poolSystemInfo) Put(x *SystemInfo) {
 
 var PoolSystemInfo = poolSystemInfo{}
 
-const C_SystemServerTime int64 = 1659174009
+const C_SystemServerTime int64 = 2854614486
 
 type poolSystemServerTime struct {
 	pool sync.Pool
@@ -365,7 +365,7 @@ func (p *poolSystemServerTime) Put(x *SystemServerTime) {
 
 var PoolSystemServerTime = poolSystemServerTime{}
 
-const C_SystemPublicKeys int64 = 1801344320
+const C_SystemPublicKeys int64 = 2745130223
 
 type poolSystemPublicKeys struct {
 	pool sync.Pool
@@ -386,7 +386,7 @@ func (p *poolSystemPublicKeys) Put(x *SystemPublicKeys) {
 
 var PoolSystemPublicKeys = poolSystemPublicKeys{}
 
-const C_SystemDHGroups int64 = 2561484652
+const C_SystemDHGroups int64 = 2890748083
 
 type poolSystemDHGroups struct {
 	pool sync.Pool
@@ -408,23 +408,23 @@ func (p *poolSystemDHGroups) Put(x *SystemDHGroups) {
 var PoolSystemDHGroups = poolSystemDHGroups{}
 
 func init() {
-	registry.RegisterConstructor(2826986006, "msg.SystemGetPublicKeys")
-	registry.RegisterConstructor(752822090, "msg.SystemGetDHGroups")
-	registry.RegisterConstructor(2704984879, "msg.SystemGetServerTime")
-	registry.RegisterConstructor(3594074052, "msg.SystemGetInfo")
-	registry.RegisterConstructor(1363354028, "msg.SystemGetSalts")
-	registry.RegisterConstructor(1736789536, "msg.SystemGetConfig")
-	registry.RegisterConstructor(4035814410, "msg.SystemUploadUsage")
-	registry.RegisterConstructor(314637154, "msg.SystemGetResponse")
-	registry.RegisterConstructor(233146944, "msg.ClientUsage")
-	registry.RegisterConstructor(86775337, "msg.SystemConfig")
-	registry.RegisterConstructor(1250824734, "msg.DataCenter")
-	registry.RegisterConstructor(621213680, "msg.SystemSalts")
-	registry.RegisterConstructor(2594101356, "msg.AppUpdate")
-	registry.RegisterConstructor(574484807, "msg.SystemInfo")
-	registry.RegisterConstructor(1659174009, "msg.SystemServerTime")
-	registry.RegisterConstructor(1801344320, "msg.SystemPublicKeys")
-	registry.RegisterConstructor(2561484652, "msg.SystemDHGroups")
+	registry.RegisterConstructor(1191522796, "SystemGetPublicKeys")
+	registry.RegisterConstructor(1786665018, "SystemGetDHGroups")
+	registry.RegisterConstructor(1321179349, "SystemGetServerTime")
+	registry.RegisterConstructor(1486296237, "SystemGetInfo")
+	registry.RegisterConstructor(1705203315, "SystemGetSalts")
+	registry.RegisterConstructor(1910333714, "SystemGetConfig")
+	registry.RegisterConstructor(3056393082, "SystemUploadUsage")
+	registry.RegisterConstructor(1415676946, "SystemGetResponse")
+	registry.RegisterConstructor(453987802, "ClientUsage")
+	registry.RegisterConstructor(367036084, "SystemConfig")
+	registry.RegisterConstructor(3431386561, "DataCenter")
+	registry.RegisterConstructor(871116906, "SystemSalts")
+	registry.RegisterConstructor(1100207036, "AppUpdate")
+	registry.RegisterConstructor(2754948760, "SystemInfo")
+	registry.RegisterConstructor(2854614486, "SystemServerTime")
+	registry.RegisterConstructor(2745130223, "SystemPublicKeys")
+	registry.RegisterConstructor(2890748083, "SystemDHGroups")
 }
 
 func (x *SystemGetPublicKeys) DeepCopy(z *SystemGetPublicKeys) {

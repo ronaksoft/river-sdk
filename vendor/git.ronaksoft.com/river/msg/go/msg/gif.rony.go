@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_GifGetSaved int64 = 351289811
+const C_GifGetSaved int64 = 35292745
 
 type poolGifGetSaved struct {
 	pool sync.Pool
@@ -28,7 +28,7 @@ func (p *poolGifGetSaved) Put(x *GifGetSaved) {
 
 var PoolGifGetSaved = poolGifGetSaved{}
 
-const C_GifSave int64 = 1433539893
+const C_GifSave int64 = 4049142282
 
 type poolGifSave struct {
 	pool sync.Pool
@@ -53,7 +53,7 @@ func (p *poolGifSave) Put(x *GifSave) {
 
 var PoolGifSave = poolGifSave{}
 
-const C_GifDelete int64 = 743009261
+const C_GifDelete int64 = 4148453437
 
 type poolGifDelete struct {
 	pool sync.Pool
@@ -77,7 +77,7 @@ func (p *poolGifDelete) Put(x *GifDelete) {
 
 var PoolGifDelete = poolGifDelete{}
 
-const C_GifSearch int64 = 2729168077
+const C_GifSearch int64 = 2040973085
 
 type poolGifSearch struct {
 	pool sync.Pool
@@ -99,7 +99,7 @@ func (p *poolGifSearch) Put(x *GifSearch) {
 
 var PoolGifSearch = poolGifSearch{}
 
-const C_FoundGifs int64 = 3258313539
+const C_FoundGifs int64 = 423157907
 
 type poolFoundGifs struct {
 	pool sync.Pool
@@ -121,7 +121,7 @@ func (p *poolFoundGifs) Put(x *FoundGifs) {
 
 var PoolFoundGifs = poolFoundGifs{}
 
-const C_FoundGif int64 = 3984495849
+const C_FoundGif int64 = 1539084995
 
 type poolFoundGif struct {
 	pool sync.Pool
@@ -150,7 +150,7 @@ func (p *poolFoundGif) Put(x *FoundGif) {
 
 var PoolFoundGif = poolFoundGif{}
 
-const C_SavedGifs int64 = 1791431697
+const C_SavedGifs int64 = 2982813633
 
 type poolSavedGifs struct {
 	pool sync.Pool
@@ -174,13 +174,13 @@ func (p *poolSavedGifs) Put(x *SavedGifs) {
 var PoolSavedGifs = poolSavedGifs{}
 
 func init() {
-	registry.RegisterConstructor(351289811, "msg.GifGetSaved")
-	registry.RegisterConstructor(1433539893, "msg.GifSave")
-	registry.RegisterConstructor(743009261, "msg.GifDelete")
-	registry.RegisterConstructor(2729168077, "msg.GifSearch")
-	registry.RegisterConstructor(3258313539, "msg.FoundGifs")
-	registry.RegisterConstructor(3984495849, "msg.FoundGif")
-	registry.RegisterConstructor(1791431697, "msg.SavedGifs")
+	registry.RegisterConstructor(35292745, "GifGetSaved")
+	registry.RegisterConstructor(4049142282, "GifSave")
+	registry.RegisterConstructor(4148453437, "GifDelete")
+	registry.RegisterConstructor(2040973085, "GifSearch")
+	registry.RegisterConstructor(423157907, "FoundGifs")
+	registry.RegisterConstructor(1539084995, "FoundGif")
+	registry.RegisterConstructor(2982813633, "SavedGifs")
 }
 
 func (x *GifGetSaved) DeepCopy(z *GifGetSaved) {

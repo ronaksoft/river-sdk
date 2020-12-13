@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_MessagesSend int64 = 2719516490
+const C_MessagesSend int64 = 3000244183
 
 type poolMessagesSend struct {
 	pool sync.Pool
@@ -36,7 +36,7 @@ func (p *poolMessagesSend) Put(x *MessagesSend) {
 
 var PoolMessagesSend = poolMessagesSend{}
 
-const C_MessagesSendMedia int64 = 1193569473
+const C_MessagesSendMedia int64 = 25498545
 
 type poolMessagesSendMedia struct {
 	pool sync.Pool
@@ -65,7 +65,7 @@ func (p *poolMessagesSendMedia) Put(x *MessagesSendMedia) {
 
 var PoolMessagesSendMedia = poolMessagesSendMedia{}
 
-const C_MessagesEdit int64 = 2220778397
+const C_MessagesEdit int64 = 2492658432
 
 type poolMessagesEdit struct {
 	pool sync.Pool
@@ -93,7 +93,7 @@ func (p *poolMessagesEdit) Put(x *MessagesEdit) {
 
 var PoolMessagesEdit = poolMessagesEdit{}
 
-const C_MessagesReadHistory int64 = 2718718556
+const C_MessagesReadHistory int64 = 1300826534
 
 type poolMessagesReadHistory struct {
 	pool sync.Pool
@@ -118,7 +118,7 @@ func (p *poolMessagesReadHistory) Put(x *MessagesReadHistory) {
 
 var PoolMessagesReadHistory = poolMessagesReadHistory{}
 
-const C_MessagesGet int64 = 2530327223
+const C_MessagesGet int64 = 2151382317
 
 type poolMessagesGet struct {
 	pool sync.Pool
@@ -143,7 +143,7 @@ func (p *poolMessagesGet) Put(x *MessagesGet) {
 
 var PoolMessagesGet = poolMessagesGet{}
 
-const C_MessagesGetHistory int64 = 2587549819
+const C_MessagesGetHistory int64 = 3396939832
 
 type poolMessagesGetHistory struct {
 	pool sync.Pool
@@ -170,7 +170,7 @@ func (p *poolMessagesGetHistory) Put(x *MessagesGetHistory) {
 
 var PoolMessagesGetHistory = poolMessagesGetHistory{}
 
-const C_MessagesGetDialogs int64 = 91700887
+const C_MessagesGetDialogs int64 = 1429532372
 
 type poolMessagesGetDialogs struct {
 	pool sync.Pool
@@ -193,7 +193,7 @@ func (p *poolMessagesGetDialogs) Put(x *MessagesGetDialogs) {
 
 var PoolMessagesGetDialogs = poolMessagesGetDialogs{}
 
-const C_MessagesGetPinnedDialogs int64 = 2418490440
+const C_MessagesGetPinnedDialogs int64 = 1963188912
 
 type poolMessagesGetPinnedDialogs struct {
 	pool sync.Pool
@@ -213,7 +213,7 @@ func (p *poolMessagesGetPinnedDialogs) Put(x *MessagesGetPinnedDialogs) {
 
 var PoolMessagesGetPinnedDialogs = poolMessagesGetPinnedDialogs{}
 
-const C_MessagesGetDialog int64 = 2013525138
+const C_MessagesGetDialog int64 = 1050840034
 
 type poolMessagesGetDialog struct {
 	pool sync.Pool
@@ -237,7 +237,7 @@ func (p *poolMessagesGetDialog) Put(x *MessagesGetDialog) {
 
 var PoolMessagesGetDialog = poolMessagesGetDialog{}
 
-const C_MessagesSetTyping int64 = 493662630
+const C_MessagesSetTyping int64 = 1540214486
 
 type poolMessagesSetTyping struct {
 	pool sync.Pool
@@ -262,7 +262,7 @@ func (p *poolMessagesSetTyping) Put(x *MessagesSetTyping) {
 
 var PoolMessagesSetTyping = poolMessagesSetTyping{}
 
-const C_MessagesClearHistory int64 = 730920117
+const C_MessagesClearHistory int64 = 1981246180
 
 type poolMessagesClearHistory struct {
 	pool sync.Pool
@@ -288,7 +288,7 @@ func (p *poolMessagesClearHistory) Put(x *MessagesClearHistory) {
 
 var PoolMessagesClearHistory = poolMessagesClearHistory{}
 
-const C_MessagesDelete int64 = 4211128401
+const C_MessagesDelete int64 = 3487616910
 
 type poolMessagesDelete struct {
 	pool sync.Pool
@@ -314,7 +314,7 @@ func (p *poolMessagesDelete) Put(x *MessagesDelete) {
 
 var PoolMessagesDelete = poolMessagesDelete{}
 
-const C_MessagesForward int64 = 2296400547
+const C_MessagesForward int64 = 2662884753
 
 type poolMessagesForward struct {
 	pool sync.Pool
@@ -345,7 +345,7 @@ func (p *poolMessagesForward) Put(x *MessagesForward) {
 
 var PoolMessagesForward = poolMessagesForward{}
 
-const C_MessagesReadContents int64 = 934027930
+const C_MessagesReadContents int64 = 1781251275
 
 type poolMessagesReadContents struct {
 	pool sync.Pool
@@ -370,7 +370,7 @@ func (p *poolMessagesReadContents) Put(x *MessagesReadContents) {
 
 var PoolMessagesReadContents = poolMessagesReadContents{}
 
-const C_MessagesSaveDraft int64 = 1884509359
+const C_MessagesSaveDraft int64 = 921840607
 
 type poolMessagesSaveDraft struct {
 	pool sync.Pool
@@ -398,7 +398,7 @@ func (p *poolMessagesSaveDraft) Put(x *MessagesSaveDraft) {
 
 var PoolMessagesSaveDraft = poolMessagesSaveDraft{}
 
-const C_MessagesClearDraft int64 = 3502044240
+const C_MessagesClearDraft int64 = 2164204563
 
 type poolMessagesClearDraft struct {
 	pool sync.Pool
@@ -422,7 +422,7 @@ func (p *poolMessagesClearDraft) Put(x *MessagesClearDraft) {
 
 var PoolMessagesClearDraft = poolMessagesClearDraft{}
 
-const C_MessagesToggleDialogPin int64 = 2713966841
+const C_MessagesToggleDialogPin int64 = 1352871220
 
 type poolMessagesToggleDialogPin struct {
 	pool sync.Pool
@@ -447,7 +447,7 @@ func (p *poolMessagesToggleDialogPin) Put(x *MessagesToggleDialogPin) {
 
 var PoolMessagesToggleDialogPin = poolMessagesToggleDialogPin{}
 
-const C_MessagesReorderPinnedDialogs int64 = 2974098809
+const C_MessagesReorderPinnedDialogs int64 = 1409872986
 
 type poolMessagesReorderPinnedDialogs struct {
 	pool sync.Pool
@@ -468,7 +468,7 @@ func (p *poolMessagesReorderPinnedDialogs) Put(x *MessagesReorderPinnedDialogs) 
 
 var PoolMessagesReorderPinnedDialogs = poolMessagesReorderPinnedDialogs{}
 
-const C_MessagesSendScreenShotNotification int64 = 679612941
+const C_MessagesSendScreenShotNotification int64 = 3682116055
 
 type poolMessagesSendScreenShotNotification struct {
 	pool sync.Pool
@@ -496,7 +496,7 @@ func (p *poolMessagesSendScreenShotNotification) Put(x *MessagesSendScreenShotNo
 
 var PoolMessagesSendScreenShotNotification = poolMessagesSendScreenShotNotification{}
 
-const C_MessagesSendReaction int64 = 1294935032
+const C_MessagesSendReaction int64 = 279494057
 
 type poolMessagesSendReaction struct {
 	pool sync.Pool
@@ -522,7 +522,7 @@ func (p *poolMessagesSendReaction) Put(x *MessagesSendReaction) {
 
 var PoolMessagesSendReaction = poolMessagesSendReaction{}
 
-const C_MessagesDeleteReaction int64 = 3897816690
+const C_MessagesDeleteReaction int64 = 1547991459
 
 type poolMessagesDeleteReaction struct {
 	pool sync.Pool
@@ -548,7 +548,7 @@ func (p *poolMessagesDeleteReaction) Put(x *MessagesDeleteReaction) {
 
 var PoolMessagesDeleteReaction = poolMessagesDeleteReaction{}
 
-const C_MessagesGetReactionList int64 = 1241106883
+const C_MessagesGetReactionList int64 = 3097050126
 
 type poolMessagesGetReactionList struct {
 	pool sync.Pool
@@ -574,7 +574,7 @@ func (p *poolMessagesGetReactionList) Put(x *MessagesGetReactionList) {
 
 var PoolMessagesGetReactionList = poolMessagesGetReactionList{}
 
-const C_MessagesTogglePin int64 = 4009065684
+const C_MessagesTogglePin int64 = 2824078244
 
 type poolMessagesTogglePin struct {
 	pool sync.Pool
@@ -600,7 +600,7 @@ func (p *poolMessagesTogglePin) Put(x *MessagesTogglePin) {
 
 var PoolMessagesTogglePin = poolMessagesTogglePin{}
 
-const C_MessagesDialogs int64 = 3615935362
+const C_MessagesDialogs int64 = 3252610224
 
 type poolMessagesDialogs struct {
 	pool sync.Pool
@@ -626,7 +626,7 @@ func (p *poolMessagesDialogs) Put(x *MessagesDialogs) {
 
 var PoolMessagesDialogs = poolMessagesDialogs{}
 
-const C_MessagesSent int64 = 3215955758
+const C_MessagesSent int64 = 2942502835
 
 type poolMessagesSent struct {
 	pool sync.Pool
@@ -649,7 +649,7 @@ func (p *poolMessagesSent) Put(x *MessagesSent) {
 
 var PoolMessagesSent = poolMessagesSent{}
 
-const C_MessagesMany int64 = 1993434083
+const C_MessagesMany int64 = 1713238910
 
 type poolMessagesMany struct {
 	pool sync.Pool
@@ -674,7 +674,7 @@ func (p *poolMessagesMany) Put(x *MessagesMany) {
 
 var PoolMessagesMany = poolMessagesMany{}
 
-const C_MessagesReactionList int64 = 1464437214
+const C_MessagesReactionList int64 = 181278607
 
 type poolMessagesReactionList struct {
 	pool sync.Pool
@@ -698,7 +698,7 @@ func (p *poolMessagesReactionList) Put(x *MessagesReactionList) {
 
 var PoolMessagesReactionList = poolMessagesReactionList{}
 
-const C_ReactionList int64 = 3980071153
+const C_ReactionList int64 = 4260855916
 
 type poolReactionList struct {
 	pool sync.Pool
@@ -721,34 +721,34 @@ func (p *poolReactionList) Put(x *ReactionList) {
 var PoolReactionList = poolReactionList{}
 
 func init() {
-	registry.RegisterConstructor(2719516490, "msg.MessagesSend")
-	registry.RegisterConstructor(1193569473, "msg.MessagesSendMedia")
-	registry.RegisterConstructor(2220778397, "msg.MessagesEdit")
-	registry.RegisterConstructor(2718718556, "msg.MessagesReadHistory")
-	registry.RegisterConstructor(2530327223, "msg.MessagesGet")
-	registry.RegisterConstructor(2587549819, "msg.MessagesGetHistory")
-	registry.RegisterConstructor(91700887, "msg.MessagesGetDialogs")
-	registry.RegisterConstructor(2418490440, "msg.MessagesGetPinnedDialogs")
-	registry.RegisterConstructor(2013525138, "msg.MessagesGetDialog")
-	registry.RegisterConstructor(493662630, "msg.MessagesSetTyping")
-	registry.RegisterConstructor(730920117, "msg.MessagesClearHistory")
-	registry.RegisterConstructor(4211128401, "msg.MessagesDelete")
-	registry.RegisterConstructor(2296400547, "msg.MessagesForward")
-	registry.RegisterConstructor(934027930, "msg.MessagesReadContents")
-	registry.RegisterConstructor(1884509359, "msg.MessagesSaveDraft")
-	registry.RegisterConstructor(3502044240, "msg.MessagesClearDraft")
-	registry.RegisterConstructor(2713966841, "msg.MessagesToggleDialogPin")
-	registry.RegisterConstructor(2974098809, "msg.MessagesReorderPinnedDialogs")
-	registry.RegisterConstructor(679612941, "msg.MessagesSendScreenShotNotification")
-	registry.RegisterConstructor(1294935032, "msg.MessagesSendReaction")
-	registry.RegisterConstructor(3897816690, "msg.MessagesDeleteReaction")
-	registry.RegisterConstructor(1241106883, "msg.MessagesGetReactionList")
-	registry.RegisterConstructor(4009065684, "msg.MessagesTogglePin")
-	registry.RegisterConstructor(3615935362, "msg.MessagesDialogs")
-	registry.RegisterConstructor(3215955758, "msg.MessagesSent")
-	registry.RegisterConstructor(1993434083, "msg.MessagesMany")
-	registry.RegisterConstructor(1464437214, "msg.MessagesReactionList")
-	registry.RegisterConstructor(3980071153, "msg.ReactionList")
+	registry.RegisterConstructor(3000244183, "MessagesSend")
+	registry.RegisterConstructor(25498545, "MessagesSendMedia")
+	registry.RegisterConstructor(2492658432, "MessagesEdit")
+	registry.RegisterConstructor(1300826534, "MessagesReadHistory")
+	registry.RegisterConstructor(2151382317, "MessagesGet")
+	registry.RegisterConstructor(3396939832, "MessagesGetHistory")
+	registry.RegisterConstructor(1429532372, "MessagesGetDialogs")
+	registry.RegisterConstructor(1963188912, "MessagesGetPinnedDialogs")
+	registry.RegisterConstructor(1050840034, "MessagesGetDialog")
+	registry.RegisterConstructor(1540214486, "MessagesSetTyping")
+	registry.RegisterConstructor(1981246180, "MessagesClearHistory")
+	registry.RegisterConstructor(3487616910, "MessagesDelete")
+	registry.RegisterConstructor(2662884753, "MessagesForward")
+	registry.RegisterConstructor(1781251275, "MessagesReadContents")
+	registry.RegisterConstructor(921840607, "MessagesSaveDraft")
+	registry.RegisterConstructor(2164204563, "MessagesClearDraft")
+	registry.RegisterConstructor(1352871220, "MessagesToggleDialogPin")
+	registry.RegisterConstructor(1409872986, "MessagesReorderPinnedDialogs")
+	registry.RegisterConstructor(3682116055, "MessagesSendScreenShotNotification")
+	registry.RegisterConstructor(279494057, "MessagesSendReaction")
+	registry.RegisterConstructor(1547991459, "MessagesDeleteReaction")
+	registry.RegisterConstructor(3097050126, "MessagesGetReactionList")
+	registry.RegisterConstructor(2824078244, "MessagesTogglePin")
+	registry.RegisterConstructor(3252610224, "MessagesDialogs")
+	registry.RegisterConstructor(2942502835, "MessagesSent")
+	registry.RegisterConstructor(1713238910, "MessagesMany")
+	registry.RegisterConstructor(181278607, "MessagesReactionList")
+	registry.RegisterConstructor(4260855916, "ReactionList")
 }
 
 func (x *MessagesSend) DeepCopy(z *MessagesSend) {

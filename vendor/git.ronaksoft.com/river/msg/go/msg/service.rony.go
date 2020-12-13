@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_ServiceSendMessage int64 = 1634092712
+const C_ServiceSendMessage int64 = 824547051
 
 type poolServiceSendMessage struct {
 	pool sync.Pool
@@ -38,7 +38,7 @@ func (p *poolServiceSendMessage) Put(x *ServiceSendMessage) {
 var PoolServiceSendMessage = poolServiceSendMessage{}
 
 func init() {
-	registry.RegisterConstructor(1634092712, "msg.ServiceSendMessage")
+	registry.RegisterConstructor(824547051, "ServiceSendMessage")
 }
 
 func (x *ServiceSendMessage) DeepCopy(z *ServiceSendMessage) {

@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_TeamGet int64 = 3788331949
+const C_TeamGet int64 = 1172720786
 
 type poolTeamGet struct {
 	pool sync.Pool
@@ -28,7 +28,7 @@ func (p *poolTeamGet) Put(x *TeamGet) {
 
 var PoolTeamGet = poolTeamGet{}
 
-const C_TeamAddMember int64 = 1767926322
+const C_TeamAddMember int64 = 3889056091
 
 type poolTeamAddMember struct {
 	pool sync.Pool
@@ -51,7 +51,7 @@ func (p *poolTeamAddMember) Put(x *TeamAddMember) {
 
 var PoolTeamAddMember = poolTeamAddMember{}
 
-const C_TeamRemoveMember int64 = 849179626
+const C_TeamRemoveMember int64 = 4200364613
 
 type poolTeamRemoveMember struct {
 	pool sync.Pool
@@ -73,7 +73,7 @@ func (p *poolTeamRemoveMember) Put(x *TeamRemoveMember) {
 
 var PoolTeamRemoveMember = poolTeamRemoveMember{}
 
-const C_TeamPromote int64 = 2300014
+const C_TeamPromote int64 = 382328820
 
 type poolTeamPromote struct {
 	pool sync.Pool
@@ -95,7 +95,7 @@ func (p *poolTeamPromote) Put(x *TeamPromote) {
 
 var PoolTeamPromote = poolTeamPromote{}
 
-const C_TeamDemote int64 = 218030801
+const C_TeamDemote int64 = 2331393294
 
 type poolTeamDemote struct {
 	pool sync.Pool
@@ -117,7 +117,7 @@ func (p *poolTeamDemote) Put(x *TeamDemote) {
 
 var PoolTeamDemote = poolTeamDemote{}
 
-const C_TeamLeave int64 = 2403967687
+const C_TeamLeave int64 = 1413785879
 
 type poolTeamLeave struct {
 	pool sync.Pool
@@ -138,7 +138,7 @@ func (p *poolTeamLeave) Put(x *TeamLeave) {
 
 var PoolTeamLeave = poolTeamLeave{}
 
-const C_TeamJoin int64 = 3491725515
+const C_TeamJoin int64 = 1725794017
 
 type poolTeamJoin struct {
 	pool sync.Pool
@@ -160,7 +160,7 @@ func (p *poolTeamJoin) Put(x *TeamJoin) {
 
 var PoolTeamJoin = poolTeamJoin{}
 
-const C_TeamListMembers int64 = 2943209992
+const C_TeamListMembers int64 = 3107323194
 
 type poolTeamListMembers struct {
 	pool sync.Pool
@@ -181,7 +181,7 @@ func (p *poolTeamListMembers) Put(x *TeamListMembers) {
 
 var PoolTeamListMembers = poolTeamListMembers{}
 
-const C_TeamEdit int64 = 2034992646
+const C_TeamEdit int64 = 3481894956
 
 type poolTeamEdit struct {
 	pool sync.Pool
@@ -203,7 +203,7 @@ func (p *poolTeamEdit) Put(x *TeamEdit) {
 
 var PoolTeamEdit = poolTeamEdit{}
 
-const C_TeamUploadPhoto int64 = 1229209784
+const C_TeamUploadPhoto int64 = 1595699082
 
 type poolTeamUploadPhoto struct {
 	pool sync.Pool
@@ -228,7 +228,7 @@ func (p *poolTeamUploadPhoto) Put(x *TeamUploadPhoto) {
 
 var PoolTeamUploadPhoto = poolTeamUploadPhoto{}
 
-const C_TeamRemovePhoto int64 = 3752229425
+const C_TeamRemovePhoto int64 = 3388888323
 
 type poolTeamRemovePhoto struct {
 	pool sync.Pool
@@ -249,7 +249,7 @@ func (p *poolTeamRemovePhoto) Put(x *TeamRemovePhoto) {
 
 var PoolTeamRemovePhoto = poolTeamRemovePhoto{}
 
-const C_TeamMembers int64 = 2504196980
+const C_TeamMembers int64 = 2208941294
 
 type poolTeamMembers struct {
 	pool sync.Pool
@@ -271,7 +271,7 @@ func (p *poolTeamMembers) Put(x *TeamMembers) {
 
 var PoolTeamMembers = poolTeamMembers{}
 
-const C_TeamMember int64 = 4079191709
+const C_TeamMember int64 = 1965775170
 
 type poolTeamMember struct {
 	pool sync.Pool
@@ -297,7 +297,7 @@ func (p *poolTeamMember) Put(x *TeamMember) {
 
 var PoolTeamMember = poolTeamMember{}
 
-const C_TeamsMany int64 = 1604636247
+const C_TeamsMany int64 = 2225718663
 
 type poolTeamsMany struct {
 	pool sync.Pool
@@ -321,20 +321,20 @@ func (p *poolTeamsMany) Put(x *TeamsMany) {
 var PoolTeamsMany = poolTeamsMany{}
 
 func init() {
-	registry.RegisterConstructor(3788331949, "msg.TeamGet")
-	registry.RegisterConstructor(1767926322, "msg.TeamAddMember")
-	registry.RegisterConstructor(849179626, "msg.TeamRemoveMember")
-	registry.RegisterConstructor(2300014, "msg.TeamPromote")
-	registry.RegisterConstructor(218030801, "msg.TeamDemote")
-	registry.RegisterConstructor(2403967687, "msg.TeamLeave")
-	registry.RegisterConstructor(3491725515, "msg.TeamJoin")
-	registry.RegisterConstructor(2943209992, "msg.TeamListMembers")
-	registry.RegisterConstructor(2034992646, "msg.TeamEdit")
-	registry.RegisterConstructor(1229209784, "msg.TeamUploadPhoto")
-	registry.RegisterConstructor(3752229425, "msg.TeamRemovePhoto")
-	registry.RegisterConstructor(2504196980, "msg.TeamMembers")
-	registry.RegisterConstructor(4079191709, "msg.TeamMember")
-	registry.RegisterConstructor(1604636247, "msg.TeamsMany")
+	registry.RegisterConstructor(1172720786, "TeamGet")
+	registry.RegisterConstructor(3889056091, "TeamAddMember")
+	registry.RegisterConstructor(4200364613, "TeamRemoveMember")
+	registry.RegisterConstructor(382328820, "TeamPromote")
+	registry.RegisterConstructor(2331393294, "TeamDemote")
+	registry.RegisterConstructor(1413785879, "TeamLeave")
+	registry.RegisterConstructor(1725794017, "TeamJoin")
+	registry.RegisterConstructor(3107323194, "TeamListMembers")
+	registry.RegisterConstructor(3481894956, "TeamEdit")
+	registry.RegisterConstructor(1595699082, "TeamUploadPhoto")
+	registry.RegisterConstructor(3388888323, "TeamRemovePhoto")
+	registry.RegisterConstructor(2208941294, "TeamMembers")
+	registry.RegisterConstructor(1965775170, "TeamMember")
+	registry.RegisterConstructor(2225718663, "TeamsMany")
 }
 
 func (x *TeamGet) DeepCopy(z *TeamGet) {

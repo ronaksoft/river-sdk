@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_LabelsCreate int64 = 1873858289
+const C_LabelsCreate int64 = 2138857068
 
 type poolLabelsCreate struct {
 	pool sync.Pool
@@ -30,7 +30,7 @@ func (p *poolLabelsCreate) Put(x *LabelsCreate) {
 
 var PoolLabelsCreate = poolLabelsCreate{}
 
-const C_LabelsEdit int64 = 542898914
+const C_LabelsEdit int64 = 2790466877
 
 type poolLabelsEdit struct {
 	pool sync.Pool
@@ -53,7 +53,7 @@ func (p *poolLabelsEdit) Put(x *LabelsEdit) {
 
 var PoolLabelsEdit = poolLabelsEdit{}
 
-const C_LabelsDelete int64 = 3665056397
+const C_LabelsDelete int64 = 3401105936
 
 type poolLabelsDelete struct {
 	pool sync.Pool
@@ -74,7 +74,7 @@ func (p *poolLabelsDelete) Put(x *LabelsDelete) {
 
 var PoolLabelsDelete = poolLabelsDelete{}
 
-const C_LabelsGet int64 = 1116514513
+const C_LabelsGet int64 = 2575409921
 
 type poolLabelsGet struct {
 	pool sync.Pool
@@ -94,7 +94,7 @@ func (p *poolLabelsGet) Put(x *LabelsGet) {
 
 var PoolLabelsGet = poolLabelsGet{}
 
-const C_LabelsAddToMessage int64 = 1526667572
+const C_LabelsAddToMessage int64 = 180144503
 
 type poolLabelsAddToMessage struct {
 	pool sync.Pool
@@ -120,7 +120,7 @@ func (p *poolLabelsAddToMessage) Put(x *LabelsAddToMessage) {
 
 var PoolLabelsAddToMessage = poolLabelsAddToMessage{}
 
-const C_LabelsRemoveFromMessage int64 = 191715018
+const C_LabelsRemoveFromMessage int64 = 4195197703
 
 type poolLabelsRemoveFromMessage struct {
 	pool sync.Pool
@@ -146,7 +146,7 @@ func (p *poolLabelsRemoveFromMessage) Put(x *LabelsRemoveFromMessage) {
 
 var PoolLabelsRemoveFromMessage = poolLabelsRemoveFromMessage{}
 
-const C_LabelsListItems int64 = 2591367628
+const C_LabelsListItems int64 = 2351763198
 
 type poolLabelsListItems struct {
 	pool sync.Pool
@@ -170,7 +170,7 @@ func (p *poolLabelsListItems) Put(x *LabelsListItems) {
 
 var PoolLabelsListItems = poolLabelsListItems{}
 
-const C_LabelItems int64 = 2023227281
+const C_LabelItems int64 = 4271841358
 
 type poolLabelItems struct {
 	pool sync.Pool
@@ -196,14 +196,14 @@ func (p *poolLabelItems) Put(x *LabelItems) {
 var PoolLabelItems = poolLabelItems{}
 
 func init() {
-	registry.RegisterConstructor(1873858289, "msg.LabelsCreate")
-	registry.RegisterConstructor(542898914, "msg.LabelsEdit")
-	registry.RegisterConstructor(3665056397, "msg.LabelsDelete")
-	registry.RegisterConstructor(1116514513, "msg.LabelsGet")
-	registry.RegisterConstructor(1526667572, "msg.LabelsAddToMessage")
-	registry.RegisterConstructor(191715018, "msg.LabelsRemoveFromMessage")
-	registry.RegisterConstructor(2591367628, "msg.LabelsListItems")
-	registry.RegisterConstructor(2023227281, "msg.LabelItems")
+	registry.RegisterConstructor(2138857068, "LabelsCreate")
+	registry.RegisterConstructor(2790466877, "LabelsEdit")
+	registry.RegisterConstructor(3401105936, "LabelsDelete")
+	registry.RegisterConstructor(2575409921, "LabelsGet")
+	registry.RegisterConstructor(180144503, "LabelsAddToMessage")
+	registry.RegisterConstructor(4195197703, "LabelsRemoveFromMessage")
+	registry.RegisterConstructor(2351763198, "LabelsListItems")
+	registry.RegisterConstructor(4271841358, "LabelItems")
 }
 
 func (x *LabelsCreate) DeepCopy(z *LabelsCreate) {

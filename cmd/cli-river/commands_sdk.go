@@ -153,7 +153,7 @@ var SdkGetPublicKeys = &ishell.Cmd{
 			e := &rony.MessageEnvelope{}
 			_ = e.Unmarshal(b)
 			switch e.Constructor {
-			case msg.C_Error:
+			case rony.C_Error:
 				c.Println(e)
 			case msg.C_SystemPublicKeys:
 				x := &msg.SystemPublicKeys{}
@@ -182,7 +182,7 @@ var SdkGetPublicKeys = &ishell.Cmd{
 			e := &rony.MessageEnvelope{}
 			_ = e.Unmarshal(b)
 			switch e.Constructor {
-			case msg.C_Error:
+			case rony.C_Error:
 				c.Println(e)
 			case msg.C_SystemDHGroups:
 				x := &msg.SystemDHGroups{}

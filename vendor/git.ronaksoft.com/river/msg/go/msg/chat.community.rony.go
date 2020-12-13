@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_CommunitySendMessage int64 = 2357374761
+const C_CommunitySendMessage int64 = 3506778488
 
 type poolCommunitySendMessage struct {
 	pool sync.Pool
@@ -38,7 +38,7 @@ func (p *poolCommunitySendMessage) Put(x *CommunitySendMessage) {
 
 var PoolCommunitySendMessage = poolCommunitySendMessage{}
 
-const C_CommunitySendMedia int64 = 3246205975
+const C_CommunitySendMedia int64 = 2436824148
 
 type poolCommunitySendMedia struct {
 	pool sync.Pool
@@ -69,7 +69,7 @@ func (p *poolCommunitySendMedia) Put(x *CommunitySendMedia) {
 
 var PoolCommunitySendMedia = poolCommunitySendMedia{}
 
-const C_CommunitySetTyping int64 = 2604003696
+const C_CommunitySetTyping int64 = 3413516595
 
 type poolCommunitySetTyping struct {
 	pool sync.Pool
@@ -95,7 +95,7 @@ func (p *poolCommunitySetTyping) Put(x *CommunitySetTyping) {
 
 var PoolCommunitySetTyping = poolCommunitySetTyping{}
 
-const C_CommunityGetUpdates int64 = 2550050209
+const C_CommunityGetUpdates int64 = 2021391963
 
 type poolCommunityGetUpdates struct {
 	pool sync.Pool
@@ -119,7 +119,7 @@ func (p *poolCommunityGetUpdates) Put(x *CommunityGetUpdates) {
 
 var PoolCommunityGetUpdates = poolCommunityGetUpdates{}
 
-const C_CommunityGetMembers int64 = 2534829166
+const C_CommunityGetMembers int64 = 2022915988
 
 type poolCommunityGetMembers struct {
 	pool sync.Pool
@@ -141,7 +141,7 @@ func (p *poolCommunityGetMembers) Put(x *CommunityGetMembers) {
 
 var PoolCommunityGetMembers = poolCommunityGetMembers{}
 
-const C_CommunityRecall int64 = 592021300
+const C_CommunityRecall int64 = 890349574
 
 type poolCommunityRecall struct {
 	pool sync.Pool
@@ -163,7 +163,7 @@ func (p *poolCommunityRecall) Put(x *CommunityRecall) {
 
 var PoolCommunityRecall = poolCommunityRecall{}
 
-const C_CommunityAuthorizeUser int64 = 3800103878
+const C_CommunityAuthorizeUser int64 = 1452766231
 
 type poolCommunityAuthorizeUser struct {
 	pool sync.Pool
@@ -187,7 +187,7 @@ func (p *poolCommunityAuthorizeUser) Put(x *CommunityAuthorizeUser) {
 
 var PoolCommunityAuthorizeUser = poolCommunityAuthorizeUser{}
 
-const C_CommunityUser int64 = 1844275503
+const C_CommunityUser int64 = 3812837958
 
 type poolCommunityUser struct {
 	pool sync.Pool
@@ -211,7 +211,7 @@ func (p *poolCommunityUser) Put(x *CommunityUser) {
 
 var PoolCommunityUser = poolCommunityUser{}
 
-const C_CommunityUpdateEnvelope int64 = 2974071924
+const C_CommunityUpdateEnvelope int64 = 1076119993
 
 type poolCommunityUpdateEnvelope struct {
 	pool sync.Pool
@@ -235,7 +235,7 @@ func (p *poolCommunityUpdateEnvelope) Put(x *CommunityUpdateEnvelope) {
 
 var PoolCommunityUpdateEnvelope = poolCommunityUpdateEnvelope{}
 
-const C_CommunityUpdateContainer int64 = 3549979024
+const C_CommunityUpdateContainer int64 = 918339432
 
 type poolCommunityUpdateContainer struct {
 	pool sync.Pool
@@ -258,16 +258,16 @@ func (p *poolCommunityUpdateContainer) Put(x *CommunityUpdateContainer) {
 var PoolCommunityUpdateContainer = poolCommunityUpdateContainer{}
 
 func init() {
-	registry.RegisterConstructor(2357374761, "msg.CommunitySendMessage")
-	registry.RegisterConstructor(3246205975, "msg.CommunitySendMedia")
-	registry.RegisterConstructor(2604003696, "msg.CommunitySetTyping")
-	registry.RegisterConstructor(2550050209, "msg.CommunityGetUpdates")
-	registry.RegisterConstructor(2534829166, "msg.CommunityGetMembers")
-	registry.RegisterConstructor(592021300, "msg.CommunityRecall")
-	registry.RegisterConstructor(3800103878, "msg.CommunityAuthorizeUser")
-	registry.RegisterConstructor(1844275503, "msg.CommunityUser")
-	registry.RegisterConstructor(2974071924, "msg.CommunityUpdateEnvelope")
-	registry.RegisterConstructor(3549979024, "msg.CommunityUpdateContainer")
+	registry.RegisterConstructor(3506778488, "CommunitySendMessage")
+	registry.RegisterConstructor(2436824148, "CommunitySendMedia")
+	registry.RegisterConstructor(3413516595, "CommunitySetTyping")
+	registry.RegisterConstructor(2021391963, "CommunityGetUpdates")
+	registry.RegisterConstructor(2022915988, "CommunityGetMembers")
+	registry.RegisterConstructor(890349574, "CommunityRecall")
+	registry.RegisterConstructor(1452766231, "CommunityAuthorizeUser")
+	registry.RegisterConstructor(3812837958, "CommunityUser")
+	registry.RegisterConstructor(1076119993, "CommunityUpdateEnvelope")
+	registry.RegisterConstructor(918339432, "CommunityUpdateContainer")
 }
 
 func (x *CommunitySendMessage) DeepCopy(z *CommunitySendMessage) {

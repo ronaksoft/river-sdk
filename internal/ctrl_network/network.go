@@ -428,7 +428,7 @@ func extractMessages(ctrl *Controller, m *rony.MessageEnvelope) ([]*rony.Message
 		if err == nil {
 			updates = append(updates, x)
 		}
-	case msg.C_Error:
+	case rony.C_Error:
 		e := new(rony.Error)
 		_ = e.Unmarshal(m.Message)
 		if ctrl.OnGeneralError != nil {

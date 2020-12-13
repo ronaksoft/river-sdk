@@ -36,6 +36,19 @@ const (
 	Auto = Http | Websocket
 )
 
+var (
+	ignoredHeaders = map[string]bool{
+		"Host":                     true,
+		"Upgrade":                  true,
+		"Connection":               true,
+		"Sec-Websocket-Version":    true,
+		"Sec-Websocket-Protocol":   true,
+		"Sec-Websocket-Extensions": true,
+		"Sec-Websocket-Key":        true,
+		"Sec-Websocket-Accept":     true,
+	}
+)
+
 // Config
 type Config struct {
 	Concurrency   int
@@ -122,9 +135,9 @@ func New(config Config) (*Gateway, error) {
 	g.connGC = newWebsocketConnGC(g)
 
 	// set handlers
-	g.MessageHandler = func(c gateway.Conn, streamID int64, date []byte, kvs ...gateway.KeyValue) {}
+	g.MessageHandler = func(c gateway.Conn, streamID int64, date []byte) {}
 	g.CloseHandler = func(c gateway.Conn) {}
-	g.ConnectHandler = func(c gateway.Conn) {}
+	g.ConnectHandler = func(c gateway.Conn, kvs ...gateway.KeyValue) {}
 	if poller, err := netpoll.New(&netpoll.Config{
 		OnWaitError: func(e error) {
 			log.Warn("Error On NetPoller Wait",
@@ -253,7 +266,11 @@ func (g *Gateway) Addr() []string {
 
 // GetConn returns the connection identified by connID
 func (g *Gateway) GetConn(connID uint64) gateway.Conn {
-	return g.getConnection(connID)
+	c := g.getConnection(connID)
+	if c == nil {
+		return nil
+	}
+	return c
 }
 
 func (g *Gateway) requestHandler(req *fasthttp.RequestCtx) {
@@ -286,10 +303,12 @@ func (g *Gateway) requestHandler(req *fasthttp.RequestCtx) {
 		case "X-Client-Type":
 			clientType = string(value)
 		default:
-			kvs = append(kvs, gateway.KeyValue{
-				Key:   string(key),
-				Value: string(value),
-			})
+			if !ignoredHeaders[tools.ByteToStr(key)] {
+				kvs = append(kvs, gateway.KeyValue{
+					Key:   string(key),
+					Value: string(value),
+				})
+			}
 		}
 	})
 	if !clientDetected {
@@ -307,7 +326,7 @@ func (g *Gateway) requestHandler(req *fasthttp.RequestCtx) {
 		req.HijackSetNoResponse(true)
 		req.Hijack(func(c net.Conn) {
 			g.waitGroupAcceptors.Add(1)
-			g.connectionAcceptor(wc, clientIP, clientType)
+			g.connectionAcceptor(wc, clientIP, clientType, kvs...)
 		})
 		return
 	}
@@ -320,13 +339,14 @@ func (g *Gateway) requestHandler(req *fasthttp.RequestCtx) {
 	conn := acquireHttpConn(g, req)
 	conn.SetClientIP(tools.StrToByte(clientIP))
 	conn.SetClientType(tools.StrToByte(clientType))
-	g.ConnectHandler(conn)
-	g.MessageHandler(conn, int64(req.ID()), req.PostBody(), kvs...)
+
+	g.ConnectHandler(conn, kvs...)
+	g.MessageHandler(conn, int64(req.ID()), req.PostBody())
 	g.CloseHandler(conn)
 	releaseHttpConn(conn)
 }
 
-func (g *Gateway) connectionAcceptor(c net.Conn, clientIP, clientType string) {
+func (g *Gateway) connectionAcceptor(c net.Conn, clientIP, clientType string, kvs ...gateway.KeyValue) {
 	defer g.waitGroupAcceptors.Done()
 	if atomic.LoadInt32(&g.stop) == 1 {
 		return
@@ -347,6 +367,8 @@ func (g *Gateway) connectionAcceptor(c net.Conn, clientIP, clientType string) {
 		err error
 	)
 	wsConn := g.addConnection(c, clientIP, clientType)
+	g.ConnectHandler(wsConn, kvs...)
+
 	wsConn.desc, err = netpoll.Handle(c,
 		netpoll.EventRead|netpoll.EventHup|netpoll.EventOneShot,
 	)
@@ -382,7 +404,6 @@ func (g *Gateway) addConnection(conn net.Conn, clientIP, clientType string) *web
 			zap.Int32("Total", totalConns),
 		)
 	}
-	g.ConnectHandler(wsConn)
 	g.connGC.monitorConnection(connID)
 	return wsConn
 }

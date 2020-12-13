@@ -67,7 +67,7 @@ func (u *UploadRequest) checkSha256() error {
 		u.FileID = x.FileID
 		u.TotalParts = -1 // dirty hack, which queue.Start() knows the upload request is completed
 		return nil
-	case msg.C_Error:
+	case rony.C_Error:
 		x := &rony.Error{}
 		_ = x.Unmarshal(res.Message)
 	}
@@ -425,7 +425,7 @@ func (a *UploadAction) Do(ctx context.Context) {
 			zap.Int32("PartID", a.ID()),
 			zap.Duration("D", domain.Now().Sub(startTime)),
 		)
-	case msg.C_Error:
+	case rony.C_Error:
 		x := &rony.Error{}
 		_ = x.Unmarshal(res.Message)
 		logs.Warn("FileCtrl received Error response (Upload)",

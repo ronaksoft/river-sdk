@@ -151,7 +151,7 @@ func MessagePrinter(envelope *rony.MessageEnvelope) {
 		x := new(msg.Bool)
 		x.Unmarshal(envelope.Message)
 		_Shell.Println(fmt.Sprintf("Bool \t Res:%t", x.Result))
-	case msg.C_Error:
+	case rony.C_Error:
 		x := new(rony.Error)
 		x.Unmarshal(envelope.Message)
 		_Shell.Println(fmt.Sprintf("Error \t %s:%s", x.Code, x.Items))

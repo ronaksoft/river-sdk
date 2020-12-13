@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_GroupsCreate int64 = 1528571280
+const C_GroupsCreate int64 = 1271969037
 
 type poolGroupsCreate struct {
 	pool sync.Pool
@@ -30,7 +30,7 @@ func (p *poolGroupsCreate) Put(x *GroupsCreate) {
 
 var PoolGroupsCreate = poolGroupsCreate{}
 
-const C_GroupsAddUser int64 = 2569785488
+const C_GroupsAddUser int64 = 394654713
 
 type poolGroupsAddUser struct {
 	pool sync.Pool
@@ -56,7 +56,7 @@ func (p *poolGroupsAddUser) Put(x *GroupsAddUser) {
 
 var PoolGroupsAddUser = poolGroupsAddUser{}
 
-const C_GroupsEditTitle int64 = 2410329127
+const C_GroupsEditTitle int64 = 2582813461
 
 type poolGroupsEditTitle struct {
 	pool sync.Pool
@@ -78,7 +78,7 @@ func (p *poolGroupsEditTitle) Put(x *GroupsEditTitle) {
 
 var PoolGroupsEditTitle = poolGroupsEditTitle{}
 
-const C_GroupsDeleteUser int64 = 1976877568
+const C_GroupsDeleteUser int64 = 3172322223
 
 type poolGroupsDeleteUser struct {
 	pool sync.Pool
@@ -103,7 +103,7 @@ func (p *poolGroupsDeleteUser) Put(x *GroupsDeleteUser) {
 
 var PoolGroupsDeleteUser = poolGroupsDeleteUser{}
 
-const C_GroupsGetFull int64 = 1017881444
+const C_GroupsGetFull int64 = 2986704909
 
 type poolGroupsGetFull struct {
 	pool sync.Pool
@@ -124,7 +124,7 @@ func (p *poolGroupsGetFull) Put(x *GroupsGetFull) {
 
 var PoolGroupsGetFull = poolGroupsGetFull{}
 
-const C_GroupsToggleAdmins int64 = 243171822
+const C_GroupsToggleAdmins int64 = 1581076909
 
 type poolGroupsToggleAdmins struct {
 	pool sync.Pool
@@ -146,7 +146,7 @@ func (p *poolGroupsToggleAdmins) Put(x *GroupsToggleAdmins) {
 
 var PoolGroupsToggleAdmins = poolGroupsToggleAdmins{}
 
-const C_GroupsUpdateAdmin int64 = 379276819
+const C_GroupsUpdateAdmin int64 = 1345991011
 
 type poolGroupsUpdateAdmin struct {
 	pool sync.Pool
@@ -172,7 +172,7 @@ func (p *poolGroupsUpdateAdmin) Put(x *GroupsUpdateAdmin) {
 
 var PoolGroupsUpdateAdmin = poolGroupsUpdateAdmin{}
 
-const C_GroupsUploadPhoto int64 = 3670677403
+const C_GroupsUploadPhoto int64 = 2624284907
 
 type poolGroupsUploadPhoto struct {
 	pool sync.Pool
@@ -198,7 +198,7 @@ func (p *poolGroupsUploadPhoto) Put(x *GroupsUploadPhoto) {
 
 var PoolGroupsUploadPhoto = poolGroupsUploadPhoto{}
 
-const C_GroupsRemovePhoto int64 = 1277701394
+const C_GroupsRemovePhoto int64 = 176771682
 
 type poolGroupsRemovePhoto struct {
 	pool sync.Pool
@@ -220,7 +220,7 @@ func (p *poolGroupsRemovePhoto) Put(x *GroupsRemovePhoto) {
 
 var PoolGroupsRemovePhoto = poolGroupsRemovePhoto{}
 
-const C_GroupsUpdatePhoto int64 = 2317535101
+const C_GroupsUpdatePhoto int64 = 3431184397
 
 type poolGroupsUpdatePhoto struct {
 	pool sync.Pool
@@ -242,7 +242,7 @@ func (p *poolGroupsUpdatePhoto) Put(x *GroupsUpdatePhoto) {
 
 var PoolGroupsUpdatePhoto = poolGroupsUpdatePhoto{}
 
-const C_GroupsGetReadHistoryStats int64 = 2572981391
+const C_GroupsGetReadHistoryStats int64 = 719309439
 
 type poolGroupsGetReadHistoryStats struct {
 	pool sync.Pool
@@ -263,7 +263,7 @@ func (p *poolGroupsGetReadHistoryStats) Put(x *GroupsGetReadHistoryStats) {
 
 var PoolGroupsGetReadHistoryStats = poolGroupsGetReadHistoryStats{}
 
-const C_GroupsHistoryStats int64 = 270549877
+const C_GroupsHistoryStats int64 = 1080267574
 
 type poolGroupsHistoryStats struct {
 	pool sync.Pool
@@ -286,7 +286,7 @@ func (p *poolGroupsHistoryStats) Put(x *GroupsHistoryStats) {
 
 var PoolGroupsHistoryStats = poolGroupsHistoryStats{}
 
-const C_ReadHistoryStat int64 = 3650021007
+const C_ReadHistoryStat int64 = 3486960061
 
 type poolReadHistoryStat struct {
 	pool sync.Pool
@@ -309,19 +309,19 @@ func (p *poolReadHistoryStat) Put(x *ReadHistoryStat) {
 var PoolReadHistoryStat = poolReadHistoryStat{}
 
 func init() {
-	registry.RegisterConstructor(1528571280, "msg.GroupsCreate")
-	registry.RegisterConstructor(2569785488, "msg.GroupsAddUser")
-	registry.RegisterConstructor(2410329127, "msg.GroupsEditTitle")
-	registry.RegisterConstructor(1976877568, "msg.GroupsDeleteUser")
-	registry.RegisterConstructor(1017881444, "msg.GroupsGetFull")
-	registry.RegisterConstructor(243171822, "msg.GroupsToggleAdmins")
-	registry.RegisterConstructor(379276819, "msg.GroupsUpdateAdmin")
-	registry.RegisterConstructor(3670677403, "msg.GroupsUploadPhoto")
-	registry.RegisterConstructor(1277701394, "msg.GroupsRemovePhoto")
-	registry.RegisterConstructor(2317535101, "msg.GroupsUpdatePhoto")
-	registry.RegisterConstructor(2572981391, "msg.GroupsGetReadHistoryStats")
-	registry.RegisterConstructor(270549877, "msg.GroupsHistoryStats")
-	registry.RegisterConstructor(3650021007, "msg.ReadHistoryStat")
+	registry.RegisterConstructor(1271969037, "GroupsCreate")
+	registry.RegisterConstructor(394654713, "GroupsAddUser")
+	registry.RegisterConstructor(2582813461, "GroupsEditTitle")
+	registry.RegisterConstructor(3172322223, "GroupsDeleteUser")
+	registry.RegisterConstructor(2986704909, "GroupsGetFull")
+	registry.RegisterConstructor(1581076909, "GroupsToggleAdmins")
+	registry.RegisterConstructor(1345991011, "GroupsUpdateAdmin")
+	registry.RegisterConstructor(2624284907, "GroupsUploadPhoto")
+	registry.RegisterConstructor(176771682, "GroupsRemovePhoto")
+	registry.RegisterConstructor(3431184397, "GroupsUpdatePhoto")
+	registry.RegisterConstructor(719309439, "GroupsGetReadHistoryStats")
+	registry.RegisterConstructor(1080267574, "GroupsHistoryStats")
+	registry.RegisterConstructor(3486960061, "ReadHistoryStat")
 }
 
 func (x *GroupsCreate) DeepCopy(z *GroupsCreate) {

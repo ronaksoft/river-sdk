@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_WallPaperGet int64 = 440050233
+const C_WallPaperGet int64 = 183906980
 
 type poolWallPaperGet struct {
 	pool sync.Pool
@@ -28,7 +28,7 @@ func (p *poolWallPaperGet) Put(x *WallPaperGet) {
 
 var PoolWallPaperGet = poolWallPaperGet{}
 
-const C_WallPaperSave int64 = 1518453350
+const C_WallPaperSave int64 = 3559907599
 
 type poolWallPaperSave struct {
 	pool sync.Pool
@@ -56,7 +56,7 @@ func (p *poolWallPaperSave) Put(x *WallPaperSave) {
 
 var PoolWallPaperSave = poolWallPaperSave{}
 
-const C_WallPaperDelete int64 = 2775068158
+const C_WallPaperDelete int64 = 3006268108
 
 type poolWallPaperDelete struct {
 	pool sync.Pool
@@ -80,7 +80,7 @@ func (p *poolWallPaperDelete) Put(x *WallPaperDelete) {
 
 var PoolWallPaperDelete = poolWallPaperDelete{}
 
-const C_WallPaperUpload int64 = 2294789990
+const C_WallPaperUpload int64 = 2661259348
 
 type poolWallPaperUpload struct {
 	pool sync.Pool
@@ -113,7 +113,7 @@ func (p *poolWallPaperUpload) Put(x *WallPaperUpload) {
 
 var PoolWallPaperUpload = poolWallPaperUpload{}
 
-const C_WallPaperReset int64 = 2502451979
+const C_WallPaperReset int64 = 2714244308
 
 type poolWallPaperReset struct {
 	pool sync.Pool
@@ -133,7 +133,7 @@ func (p *poolWallPaperReset) Put(x *WallPaperReset) {
 
 var PoolWallPaperReset = poolWallPaperReset{}
 
-const C_InputWallPaper int64 = 3667351493
+const C_InputWallPaper int64 = 4000784410
 
 type poolInputWallPaper struct {
 	pool sync.Pool
@@ -155,7 +155,7 @@ func (p *poolInputWallPaper) Put(x *InputWallPaper) {
 
 var PoolInputWallPaper = poolInputWallPaper{}
 
-const C_WallPaperSettings int64 = 131374178
+const C_WallPaperSettings int64 = 1098244882
 
 type poolWallPaperSettings struct {
 	pool sync.Pool
@@ -181,7 +181,7 @@ func (p *poolWallPaperSettings) Put(x *WallPaperSettings) {
 
 var PoolWallPaperSettings = poolWallPaperSettings{}
 
-const C_WallPaper int64 = 1303364187
+const C_WallPaper int64 = 2527250827
 
 type poolWallPaper struct {
 	pool sync.Pool
@@ -215,7 +215,7 @@ func (p *poolWallPaper) Put(x *WallPaper) {
 
 var PoolWallPaper = poolWallPaper{}
 
-const C_WallPapersMany int64 = 2397581318
+const C_WallPapersMany int64 = 3121104857
 
 type poolWallPapersMany struct {
 	pool sync.Pool
@@ -240,15 +240,15 @@ func (p *poolWallPapersMany) Put(x *WallPapersMany) {
 var PoolWallPapersMany = poolWallPapersMany{}
 
 func init() {
-	registry.RegisterConstructor(440050233, "msg.WallPaperGet")
-	registry.RegisterConstructor(1518453350, "msg.WallPaperSave")
-	registry.RegisterConstructor(2775068158, "msg.WallPaperDelete")
-	registry.RegisterConstructor(2294789990, "msg.WallPaperUpload")
-	registry.RegisterConstructor(2502451979, "msg.WallPaperReset")
-	registry.RegisterConstructor(3667351493, "msg.InputWallPaper")
-	registry.RegisterConstructor(131374178, "msg.WallPaperSettings")
-	registry.RegisterConstructor(1303364187, "msg.WallPaper")
-	registry.RegisterConstructor(2397581318, "msg.WallPapersMany")
+	registry.RegisterConstructor(183906980, "WallPaperGet")
+	registry.RegisterConstructor(3559907599, "WallPaperSave")
+	registry.RegisterConstructor(3006268108, "WallPaperDelete")
+	registry.RegisterConstructor(2661259348, "WallPaperUpload")
+	registry.RegisterConstructor(2714244308, "WallPaperReset")
+	registry.RegisterConstructor(4000784410, "InputWallPaper")
+	registry.RegisterConstructor(1098244882, "WallPaperSettings")
+	registry.RegisterConstructor(2527250827, "WallPaper")
+	registry.RegisterConstructor(3121104857, "WallPapersMany")
 }
 
 func (x *WallPaperGet) DeepCopy(z *WallPaperGet) {

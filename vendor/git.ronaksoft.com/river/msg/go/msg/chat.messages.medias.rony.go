@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_DocumentAttributeAudio int64 = 2791459949
+const C_DocumentAttributeAudio int64 = 309707708
 
 type poolDocumentAttributeAudio struct {
 	pool sync.Pool
@@ -33,7 +33,7 @@ func (p *poolDocumentAttributeAudio) Put(x *DocumentAttributeAudio) {
 
 var PoolDocumentAttributeAudio = poolDocumentAttributeAudio{}
 
-const C_DocumentAttributeVideo int64 = 3268976852
+const C_DocumentAttributeVideo int64 = 1993289477
 
 type poolDocumentAttributeVideo struct {
 	pool sync.Pool
@@ -57,7 +57,7 @@ func (p *poolDocumentAttributeVideo) Put(x *DocumentAttributeVideo) {
 
 var PoolDocumentAttributeVideo = poolDocumentAttributeVideo{}
 
-const C_DocumentAttributePhoto int64 = 2863202016
+const C_DocumentAttributePhoto int64 = 515862833
 
 type poolDocumentAttributePhoto struct {
 	pool sync.Pool
@@ -79,7 +79,7 @@ func (p *poolDocumentAttributePhoto) Put(x *DocumentAttributePhoto) {
 
 var PoolDocumentAttributePhoto = poolDocumentAttributePhoto{}
 
-const C_DocumentAttributeFile int64 = 2566250082
+const C_DocumentAttributeFile int64 = 2227452062
 
 type poolDocumentAttributeFile struct {
 	pool sync.Pool
@@ -100,7 +100,7 @@ func (p *poolDocumentAttributeFile) Put(x *DocumentAttributeFile) {
 
 var PoolDocumentAttributeFile = poolDocumentAttributeFile{}
 
-const C_DocumentAttributeAnimated int64 = 2374726028
+const C_DocumentAttributeAnimated int64 = 1040723836
 
 type poolDocumentAttributeAnimated struct {
 	pool sync.Pool
@@ -121,7 +121,7 @@ func (p *poolDocumentAttributeAnimated) Put(x *DocumentAttributeAnimated) {
 
 var PoolDocumentAttributeAnimated = poolDocumentAttributeAnimated{}
 
-const C_DocumentAttribute int64 = 2978518251
+const C_DocumentAttribute int64 = 4146719643
 
 type poolDocumentAttribute struct {
 	pool sync.Pool
@@ -143,7 +143,7 @@ func (p *poolDocumentAttribute) Put(x *DocumentAttribute) {
 
 var PoolDocumentAttribute = poolDocumentAttribute{}
 
-const C_Document int64 = 2547904010
+const C_Document int64 = 555739168
 
 type poolDocument struct {
 	pool sync.Pool
@@ -177,7 +177,7 @@ func (p *poolDocument) Put(x *Document) {
 
 var PoolDocument = poolDocument{}
 
-const C_InputMediaWebDocument int64 = 3463365857
+const C_InputMediaWebDocument int64 = 3529450013
 
 type poolInputMediaWebDocument struct {
 	pool sync.Pool
@@ -201,7 +201,7 @@ func (p *poolInputMediaWebDocument) Put(x *InputMediaWebDocument) {
 
 var PoolInputMediaWebDocument = poolInputMediaWebDocument{}
 
-const C_MediaWebDocument int64 = 2381603882
+const C_MediaWebDocument int64 = 1161129349
 
 type poolMediaWebDocument struct {
 	pool sync.Pool
@@ -226,7 +226,7 @@ func (p *poolMediaWebDocument) Put(x *MediaWebDocument) {
 
 var PoolMediaWebDocument = poolMediaWebDocument{}
 
-const C_MediaWebPage int64 = 404636345
+const C_MediaWebPage int64 = 148034084
 
 type poolMediaWebPage struct {
 	pool sync.Pool
@@ -246,7 +246,7 @@ func (p *poolMediaWebPage) Put(x *MediaWebPage) {
 
 var PoolMediaWebPage = poolMediaWebPage{}
 
-const C_InputMediaContact int64 = 500283952
+const C_InputMediaContact int64 = 1534117184
 
 type poolInputMediaContact struct {
 	pool sync.Pool
@@ -270,7 +270,7 @@ func (p *poolInputMediaContact) Put(x *InputMediaContact) {
 
 var PoolInputMediaContact = poolInputMediaContact{}
 
-const C_MediaContact int64 = 3462982044
+const C_MediaContact int64 = 3735320833
 
 type poolMediaContact struct {
 	pool sync.Pool
@@ -294,7 +294,7 @@ func (p *poolMediaContact) Put(x *MediaContact) {
 
 var PoolMediaContact = poolMediaContact{}
 
-const C_InputMediaUploadedDocument int64 = 2397817199
+const C_InputMediaUploadedDocument int64 = 870692909
 
 type poolInputMediaUploadedDocument struct {
 	pool sync.Pool
@@ -328,7 +328,7 @@ func (p *poolInputMediaUploadedDocument) Put(x *InputMediaUploadedDocument) {
 
 var PoolInputMediaUploadedDocument = poolInputMediaUploadedDocument{}
 
-const C_InputMediaDocument int64 = 3605246232
+const C_InputMediaDocument int64 = 2258657627
 
 type poolInputMediaDocument struct {
 	pool sync.Pool
@@ -360,7 +360,7 @@ func (p *poolInputMediaDocument) Put(x *InputMediaDocument) {
 
 var PoolInputMediaDocument = poolInputMediaDocument{}
 
-const C_InputMediaMessageDocument int64 = 1801596039
+const C_InputMediaMessageDocument int64 = 3638653559
 
 type poolInputMediaMessageDocument struct {
 	pool sync.Pool
@@ -387,7 +387,7 @@ func (p *poolInputMediaMessageDocument) Put(x *InputMediaMessageDocument) {
 
 var PoolInputMediaMessageDocument = poolInputMediaMessageDocument{}
 
-const C_MediaDocument int64 = 156297096
+const C_MediaDocument int64 = 2281620705
 
 type poolMediaDocument struct {
 	pool sync.Pool
@@ -414,7 +414,7 @@ func (p *poolMediaDocument) Put(x *MediaDocument) {
 
 var PoolMediaDocument = poolMediaDocument{}
 
-const C_InputMediaGeoLocation int64 = 388031680
+const C_InputMediaGeoLocation int64 = 185664060
 
 type poolInputMediaGeoLocation struct {
 	pool sync.Pool
@@ -438,7 +438,7 @@ func (p *poolInputMediaGeoLocation) Put(x *InputMediaGeoLocation) {
 
 var PoolInputMediaGeoLocation = poolInputMediaGeoLocation{}
 
-const C_MediaGeoLocation int64 = 1421493259
+const C_MediaGeoLocation int64 = 2625326500
 
 type poolMediaGeoLocation struct {
 	pool sync.Pool
@@ -462,7 +462,7 @@ func (p *poolMediaGeoLocation) Put(x *MediaGeoLocation) {
 
 var PoolMediaGeoLocation = poolMediaGeoLocation{}
 
-const C_InputMediaPoll int64 = 3966771857
+const C_InputMediaPoll int64 = 3633337678
 
 type poolInputMediaPoll struct {
 	pool sync.Pool
@@ -486,7 +486,7 @@ func (p *poolInputMediaPoll) Put(x *InputMediaPoll) {
 
 var PoolInputMediaPoll = poolInputMediaPoll{}
 
-const C_MediaPoll int64 = 2068363023
+const C_MediaPoll int64 = 2688924895
 
 type poolMediaPoll struct {
 	pool sync.Pool
@@ -513,7 +513,7 @@ func (p *poolMediaPoll) Put(x *MediaPoll) {
 
 var PoolMediaPoll = poolMediaPoll{}
 
-const C_PollAnswer int64 = 4172087873
+const C_PollAnswer int64 = 2124799390
 
 type poolPollAnswer struct {
 	pool sync.Pool
@@ -535,7 +535,7 @@ func (p *poolPollAnswer) Put(x *PollAnswer) {
 
 var PoolPollAnswer = poolPollAnswer{}
 
-const C_PollResults int64 = 3579719965
+const C_PollResults int64 = 3283416711
 
 type poolPollResults struct {
 	pool sync.Pool
@@ -557,7 +557,7 @@ func (p *poolPollResults) Put(x *PollResults) {
 
 var PoolPollResults = poolPollResults{}
 
-const C_PollAnswerVoters int64 = 3022112318
+const C_PollAnswerVoters int64 = 2095107985
 
 type poolPollAnswerVoters struct {
 	pool sync.Pool
@@ -582,29 +582,29 @@ func (p *poolPollAnswerVoters) Put(x *PollAnswerVoters) {
 var PoolPollAnswerVoters = poolPollAnswerVoters{}
 
 func init() {
-	registry.RegisterConstructor(2791459949, "msg.DocumentAttributeAudio")
-	registry.RegisterConstructor(3268976852, "msg.DocumentAttributeVideo")
-	registry.RegisterConstructor(2863202016, "msg.DocumentAttributePhoto")
-	registry.RegisterConstructor(2566250082, "msg.DocumentAttributeFile")
-	registry.RegisterConstructor(2374726028, "msg.DocumentAttributeAnimated")
-	registry.RegisterConstructor(2978518251, "msg.DocumentAttribute")
-	registry.RegisterConstructor(2547904010, "msg.Document")
-	registry.RegisterConstructor(3463365857, "msg.InputMediaWebDocument")
-	registry.RegisterConstructor(2381603882, "msg.MediaWebDocument")
-	registry.RegisterConstructor(404636345, "msg.MediaWebPage")
-	registry.RegisterConstructor(500283952, "msg.InputMediaContact")
-	registry.RegisterConstructor(3462982044, "msg.MediaContact")
-	registry.RegisterConstructor(2397817199, "msg.InputMediaUploadedDocument")
-	registry.RegisterConstructor(3605246232, "msg.InputMediaDocument")
-	registry.RegisterConstructor(1801596039, "msg.InputMediaMessageDocument")
-	registry.RegisterConstructor(156297096, "msg.MediaDocument")
-	registry.RegisterConstructor(388031680, "msg.InputMediaGeoLocation")
-	registry.RegisterConstructor(1421493259, "msg.MediaGeoLocation")
-	registry.RegisterConstructor(3966771857, "msg.InputMediaPoll")
-	registry.RegisterConstructor(2068363023, "msg.MediaPoll")
-	registry.RegisterConstructor(4172087873, "msg.PollAnswer")
-	registry.RegisterConstructor(3579719965, "msg.PollResults")
-	registry.RegisterConstructor(3022112318, "msg.PollAnswerVoters")
+	registry.RegisterConstructor(309707708, "DocumentAttributeAudio")
+	registry.RegisterConstructor(1993289477, "DocumentAttributeVideo")
+	registry.RegisterConstructor(515862833, "DocumentAttributePhoto")
+	registry.RegisterConstructor(2227452062, "DocumentAttributeFile")
+	registry.RegisterConstructor(1040723836, "DocumentAttributeAnimated")
+	registry.RegisterConstructor(4146719643, "DocumentAttribute")
+	registry.RegisterConstructor(555739168, "Document")
+	registry.RegisterConstructor(3529450013, "InputMediaWebDocument")
+	registry.RegisterConstructor(1161129349, "MediaWebDocument")
+	registry.RegisterConstructor(148034084, "MediaWebPage")
+	registry.RegisterConstructor(1534117184, "InputMediaContact")
+	registry.RegisterConstructor(3735320833, "MediaContact")
+	registry.RegisterConstructor(870692909, "InputMediaUploadedDocument")
+	registry.RegisterConstructor(2258657627, "InputMediaDocument")
+	registry.RegisterConstructor(3638653559, "InputMediaMessageDocument")
+	registry.RegisterConstructor(2281620705, "MediaDocument")
+	registry.RegisterConstructor(185664060, "InputMediaGeoLocation")
+	registry.RegisterConstructor(2625326500, "MediaGeoLocation")
+	registry.RegisterConstructor(3633337678, "InputMediaPoll")
+	registry.RegisterConstructor(2688924895, "MediaPoll")
+	registry.RegisterConstructor(2124799390, "PollAnswer")
+	registry.RegisterConstructor(3283416711, "PollResults")
+	registry.RegisterConstructor(2095107985, "PollAnswerVoters")
 }
 
 func (x *DocumentAttributeAudio) DeepCopy(z *DocumentAttributeAudio) {

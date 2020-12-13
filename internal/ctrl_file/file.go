@@ -264,7 +264,7 @@ func (ctrl *Controller) downloadAccountPhoto(clientFile *msg.ClientFile) (filePa
 		}
 
 		switch res.Constructor {
-		case msg.C_Error:
+		case rony.C_Error:
 			strErr := ""
 			x := new(rony.Error)
 			if err := x.Unmarshal(res.Message); err == nil {
@@ -318,7 +318,7 @@ func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath
 			return err
 		}
 		switch res.Constructor {
-		case msg.C_Error:
+		case rony.C_Error:
 			strErr := ""
 			x := new(rony.Error)
 			if err := x.Unmarshal(res.Message); err == nil {
@@ -374,7 +374,7 @@ func (ctrl *Controller) downloadWallpaper(clientFile *msg.ClientFile) (filePath 
 		}
 
 		switch res.Constructor {
-		case msg.C_Error:
+		case rony.C_Error:
 			strErr := ""
 			x := new(rony.Error)
 			if err := x.Unmarshal(res.Message); err == nil {
@@ -431,7 +431,7 @@ func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath 
 		}
 
 		switch res.Constructor {
-		case msg.C_Error:
+		case rony.C_Error:
 			strErr := ""
 			x := new(rony.Error)
 			if err := x.Unmarshal(res.Message); err == nil {

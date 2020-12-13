@@ -99,6 +99,10 @@ func main() {
 			serverEndPoint = "ws://localhost"
 			fileEndPoint = "http://localhost"
 			keysFile = "./keys-staging.json"
+		case "local2":
+			serverEndPoint = "ws://localhost:81"
+			fileEndPoint = "http://localhost:81"
+			keysFile = "./keys-staging.json"
 		}
 	}
 

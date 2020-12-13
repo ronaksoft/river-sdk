@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_PhoneInitCall int64 = 1072853829
+const C_PhoneInitCall int64 = 2975617068
 
 type poolPhoneInitCall struct {
 	pool sync.Pool
@@ -31,7 +31,7 @@ func (p *poolPhoneInitCall) Put(x *PhoneInitCall) {
 
 var PoolPhoneInitCall = poolPhoneInitCall{}
 
-const C_PhoneRequestCall int64 = 4276032350
+const C_PhoneRequestCall int64 = 907942641
 
 type poolPhoneRequestCall struct {
 	pool sync.Pool
@@ -59,7 +59,7 @@ func (p *poolPhoneRequestCall) Put(x *PhoneRequestCall) {
 
 var PoolPhoneRequestCall = poolPhoneRequestCall{}
 
-const C_PhoneAcceptCall int64 = 3758215880
+const C_PhoneAcceptCall int64 = 4133092858
 
 type poolPhoneAcceptCall struct {
 	pool sync.Pool
@@ -85,7 +85,7 @@ func (p *poolPhoneAcceptCall) Put(x *PhoneAcceptCall) {
 
 var PoolPhoneAcceptCall = poolPhoneAcceptCall{}
 
-const C_PhoneDiscardCall int64 = 1769049414
+const C_PhoneDiscardCall int64 = 2712700137
 
 type poolPhoneDiscardCall struct {
 	pool sync.Pool
@@ -113,7 +113,7 @@ func (p *poolPhoneDiscardCall) Put(x *PhoneDiscardCall) {
 
 var PoolPhoneDiscardCall = poolPhoneDiscardCall{}
 
-const C_PhoneUpdateCall int64 = 1670536384
+const C_PhoneUpdateCall int64 = 1976202226
 
 type poolPhoneUpdateCall struct {
 	pool sync.Pool
@@ -141,7 +141,7 @@ func (p *poolPhoneUpdateCall) Put(x *PhoneUpdateCall) {
 
 var PoolPhoneUpdateCall = poolPhoneUpdateCall{}
 
-const C_PhoneRateCall int64 = 178487718
+const C_PhoneRateCall int64 = 2215486159
 
 type poolPhoneRateCall struct {
 	pool sync.Pool
@@ -168,7 +168,7 @@ func (p *poolPhoneRateCall) Put(x *PhoneRateCall) {
 
 var PoolPhoneRateCall = poolPhoneRateCall{}
 
-const C_PhoneCall int64 = 527568897
+const C_PhoneCall int64 = 3296664529
 
 type poolPhoneCall struct {
 	pool sync.Pool
@@ -190,7 +190,7 @@ func (p *poolPhoneCall) Put(x *PhoneCall) {
 
 var PoolPhoneCall = poolPhoneCall{}
 
-const C_PhoneInit int64 = 361290571
+const C_PhoneInit int64 = 3464876187
 
 type poolPhoneInit struct {
 	pool sync.Pool
@@ -211,7 +211,7 @@ func (p *poolPhoneInit) Put(x *PhoneInit) {
 
 var PoolPhoneInit = poolPhoneInit{}
 
-const C_IceServer int64 = 618405723
+const C_IceServer int64 = 4291892363
 
 type poolIceServer struct {
 	pool sync.Pool
@@ -234,7 +234,7 @@ func (p *poolIceServer) Put(x *IceServer) {
 
 var PoolIceServer = poolIceServer{}
 
-const C_PhoneParticipant int64 = 3317539065
+const C_PhoneParticipant int64 = 226273622
 
 type poolPhoneParticipant struct {
 	pool sync.Pool
@@ -261,7 +261,7 @@ func (p *poolPhoneParticipant) Put(x *PhoneParticipant) {
 
 var PoolPhoneParticipant = poolPhoneParticipant{}
 
-const C_PhoneParticipantSDP int64 = 3473385804
+const C_PhoneParticipantSDP int64 = 545454774
 
 type poolPhoneParticipantSDP struct {
 	pool sync.Pool
@@ -288,7 +288,7 @@ func (p *poolPhoneParticipantSDP) Put(x *PhoneParticipantSDP) {
 
 var PoolPhoneParticipantSDP = poolPhoneParticipantSDP{}
 
-const C_PhoneActionCallEmpty int64 = 1652462908
+const C_PhoneActionCallEmpty int64 = 1073285997
 
 type poolPhoneActionCallEmpty struct {
 	pool sync.Pool
@@ -309,7 +309,7 @@ func (p *poolPhoneActionCallEmpty) Put(x *PhoneActionCallEmpty) {
 
 var PoolPhoneActionCallEmpty = poolPhoneActionCallEmpty{}
 
-const C_PhoneActionAccepted int64 = 2065576943
+const C_PhoneActionAccepted int64 = 2493210645
 
 type poolPhoneActionAccepted struct {
 	pool sync.Pool
@@ -331,7 +331,7 @@ func (p *poolPhoneActionAccepted) Put(x *PhoneActionAccepted) {
 
 var PoolPhoneActionAccepted = poolPhoneActionAccepted{}
 
-const C_PhoneActionRequested int64 = 965643028
+const C_PhoneActionRequested int64 = 1678316869
 
 type poolPhoneActionRequested struct {
 	pool sync.Pool
@@ -354,7 +354,7 @@ func (p *poolPhoneActionRequested) Put(x *PhoneActionRequested) {
 
 var PoolPhoneActionRequested = poolPhoneActionRequested{}
 
-const C_PhoneActionCallWaiting int64 = 1823655800
+const C_PhoneActionCallWaiting int64 = 3634710697
 
 type poolPhoneActionCallWaiting struct {
 	pool sync.Pool
@@ -375,7 +375,7 @@ func (p *poolPhoneActionCallWaiting) Put(x *PhoneActionCallWaiting) {
 
 var PoolPhoneActionCallWaiting = poolPhoneActionCallWaiting{}
 
-const C_PhoneActionDiscarded int64 = 2733717466
+const C_PhoneActionDiscarded int64 = 4285966731
 
 type poolPhoneActionDiscarded struct {
 	pool sync.Pool
@@ -398,7 +398,7 @@ func (p *poolPhoneActionDiscarded) Put(x *PhoneActionDiscarded) {
 
 var PoolPhoneActionDiscarded = poolPhoneActionDiscarded{}
 
-const C_PhoneActionIceExchange int64 = 3563792996
+const C_PhoneActionIceExchange int64 = 1618781621
 
 type poolPhoneActionIceExchange struct {
 	pool sync.Pool
@@ -422,7 +422,7 @@ func (p *poolPhoneActionIceExchange) Put(x *PhoneActionIceExchange) {
 
 var PoolPhoneActionIceExchange = poolPhoneActionIceExchange{}
 
-const C_PhoneMediaSettingsUpdated int64 = 3124366460
+const C_PhoneMediaSettingsUpdated int64 = 163140236
 
 type poolPhoneMediaSettingsUpdated struct {
 	pool sync.Pool
@@ -444,7 +444,7 @@ func (p *poolPhoneMediaSettingsUpdated) Put(x *PhoneMediaSettingsUpdated) {
 
 var PoolPhoneMediaSettingsUpdated = poolPhoneMediaSettingsUpdated{}
 
-const C_PhoneReactionSet int64 = 721820821
+const C_PhoneReactionSet int64 = 3821475130
 
 type poolPhoneReactionSet struct {
 	pool sync.Pool
@@ -465,7 +465,7 @@ func (p *poolPhoneReactionSet) Put(x *PhoneReactionSet) {
 
 var PoolPhoneReactionSet = poolPhoneReactionSet{}
 
-const C_PhoneSDPOffer int64 = 4121831461
+const C_PhoneSDPOffer int64 = 2063600460
 
 type poolPhoneSDPOffer struct {
 	pool sync.Pool
@@ -487,7 +487,7 @@ func (p *poolPhoneSDPOffer) Put(x *PhoneSDPOffer) {
 
 var PoolPhoneSDPOffer = poolPhoneSDPOffer{}
 
-const C_PhoneSDPAnswer int64 = 1348795238
+const C_PhoneSDPAnswer int64 = 1686408377
 
 type poolPhoneSDPAnswer struct {
 	pool sync.Pool
@@ -510,27 +510,27 @@ func (p *poolPhoneSDPAnswer) Put(x *PhoneSDPAnswer) {
 var PoolPhoneSDPAnswer = poolPhoneSDPAnswer{}
 
 func init() {
-	registry.RegisterConstructor(1072853829, "msg.PhoneInitCall")
-	registry.RegisterConstructor(4276032350, "msg.PhoneRequestCall")
-	registry.RegisterConstructor(3758215880, "msg.PhoneAcceptCall")
-	registry.RegisterConstructor(1769049414, "msg.PhoneDiscardCall")
-	registry.RegisterConstructor(1670536384, "msg.PhoneUpdateCall")
-	registry.RegisterConstructor(178487718, "msg.PhoneRateCall")
-	registry.RegisterConstructor(527568897, "msg.PhoneCall")
-	registry.RegisterConstructor(361290571, "msg.PhoneInit")
-	registry.RegisterConstructor(618405723, "msg.IceServer")
-	registry.RegisterConstructor(3317539065, "msg.PhoneParticipant")
-	registry.RegisterConstructor(3473385804, "msg.PhoneParticipantSDP")
-	registry.RegisterConstructor(1652462908, "msg.PhoneActionCallEmpty")
-	registry.RegisterConstructor(2065576943, "msg.PhoneActionAccepted")
-	registry.RegisterConstructor(965643028, "msg.PhoneActionRequested")
-	registry.RegisterConstructor(1823655800, "msg.PhoneActionCallWaiting")
-	registry.RegisterConstructor(2733717466, "msg.PhoneActionDiscarded")
-	registry.RegisterConstructor(3563792996, "msg.PhoneActionIceExchange")
-	registry.RegisterConstructor(3124366460, "msg.PhoneMediaSettingsUpdated")
-	registry.RegisterConstructor(721820821, "msg.PhoneReactionSet")
-	registry.RegisterConstructor(4121831461, "msg.PhoneSDPOffer")
-	registry.RegisterConstructor(1348795238, "msg.PhoneSDPAnswer")
+	registry.RegisterConstructor(2975617068, "PhoneInitCall")
+	registry.RegisterConstructor(907942641, "PhoneRequestCall")
+	registry.RegisterConstructor(4133092858, "PhoneAcceptCall")
+	registry.RegisterConstructor(2712700137, "PhoneDiscardCall")
+	registry.RegisterConstructor(1976202226, "PhoneUpdateCall")
+	registry.RegisterConstructor(2215486159, "PhoneRateCall")
+	registry.RegisterConstructor(3296664529, "PhoneCall")
+	registry.RegisterConstructor(3464876187, "PhoneInit")
+	registry.RegisterConstructor(4291892363, "IceServer")
+	registry.RegisterConstructor(226273622, "PhoneParticipant")
+	registry.RegisterConstructor(545454774, "PhoneParticipantSDP")
+	registry.RegisterConstructor(1073285997, "PhoneActionCallEmpty")
+	registry.RegisterConstructor(2493210645, "PhoneActionAccepted")
+	registry.RegisterConstructor(1678316869, "PhoneActionRequested")
+	registry.RegisterConstructor(3634710697, "PhoneActionCallWaiting")
+	registry.RegisterConstructor(4285966731, "PhoneActionDiscarded")
+	registry.RegisterConstructor(1618781621, "PhoneActionIceExchange")
+	registry.RegisterConstructor(163140236, "PhoneMediaSettingsUpdated")
+	registry.RegisterConstructor(3821475130, "PhoneReactionSet")
+	registry.RegisterConstructor(2063600460, "PhoneSDPOffer")
+	registry.RegisterConstructor(1686408377, "PhoneSDPAnswer")
 }
 
 func (x *PhoneInitCall) DeepCopy(z *PhoneInitCall) {

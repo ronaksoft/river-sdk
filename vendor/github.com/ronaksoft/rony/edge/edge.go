@@ -168,10 +168,7 @@ func (edge *Server) execute(dispatchCtx *DispatchCtx, isLeader bool) (err error)
 	switch dispatchCtx.req.GetConstructor() {
 	case rony.C_MessageContainer:
 		x := &rony.MessageContainer{}
-		mo := proto.UnmarshalOptions{
-			Merge: true,
-		}
-		err = mo.Unmarshal(dispatchCtx.req.Message, x)
+		err = x.Unmarshal(dispatchCtx.req.Message)
 		if err != nil {
 			return
 		}
@@ -233,6 +230,9 @@ func (edge *Server) executeFunc(requestCtx *RequestCtx, in *rony.MessageEnvelope
 		return
 	}
 
+	// Set the context request
+	requestCtx.reqID = in.RequestID
+
 	// Run the handler
 	for idx := range edge.preHandlers {
 		edge.preHandlers[idx](requestCtx, in)
@@ -281,12 +281,12 @@ func (edge *Server) recoverPanic(ctx *RequestCtx, in *rony.MessageEnvelope) {
 	}
 }
 
-func (edge *Server) onGatewayMessage(conn gateway.Conn, streamID int64, data []byte, kvs ...gateway.KeyValue) {
+func (edge *Server) onGatewayMessage(conn gateway.Conn, streamID int64, data []byte) {
 	// _, task := trace.NewTask(context.Background(), "Handle Gateway Message")
 	// defer task.End()
 
 	dispatchCtx := acquireDispatchCtx(edge, conn, streamID, edge.serverID)
-	err := edge.dispatcher.Interceptor(dispatchCtx, data, kvs...)
+	err := edge.dispatcher.Interceptor(dispatchCtx, data)
 	if err != nil {
 		releaseDispatchCtx(dispatchCtx)
 		return
@@ -308,8 +308,8 @@ func (edge *Server) onError(dispatchCtx *DispatchCtx, code, item string) {
 	edge.dispatcher.OnMessage(dispatchCtx, envelope)
 	releaseMessageEnvelope(envelope)
 }
-func (edge *Server) onConnect(conn gateway.Conn) {
-	edge.dispatcher.OnOpen(conn)
+func (edge *Server) onConnect(conn gateway.Conn, kvs ...gateway.KeyValue) {
+	edge.dispatcher.OnOpen(conn, kvs...)
 }
 func (edge *Server) onClose(conn gateway.Conn) {
 	edge.dispatcher.OnClose(conn)

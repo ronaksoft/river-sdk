@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_ClientUpdatePendingMessageDelivery int64 = 399448663
+const C_ClientUpdatePendingMessageDelivery int64 = 3828722061
 
 type poolClientUpdatePendingMessageDelivery struct {
 	pool sync.Pool
@@ -36,7 +36,7 @@ func (p *poolClientUpdatePendingMessageDelivery) Put(x *ClientUpdatePendingMessa
 
 var PoolClientUpdatePendingMessageDelivery = poolClientUpdatePendingMessageDelivery{}
 
-const C_ClientUpdateMessagesDeleted int64 = 773662531
+const C_ClientUpdateMessagesDeleted int64 = 3060926862
 
 type poolClientUpdateMessagesDeleted struct {
 	pool sync.Pool
@@ -59,7 +59,7 @@ func (p *poolClientUpdateMessagesDeleted) Put(x *ClientUpdateMessagesDeleted) {
 
 var PoolClientUpdateMessagesDeleted = poolClientUpdateMessagesDeleted{}
 
-const C_ClientUpdateSynced int64 = 2897853694
+const C_ClientUpdateSynced int64 = 4244270269
 
 type poolClientUpdateSynced struct {
 	pool sync.Pool
@@ -83,9 +83,9 @@ func (p *poolClientUpdateSynced) Put(x *ClientUpdateSynced) {
 var PoolClientUpdateSynced = poolClientUpdateSynced{}
 
 func init() {
-	registry.RegisterConstructor(399448663, "msg.ClientUpdatePendingMessageDelivery")
-	registry.RegisterConstructor(773662531, "msg.ClientUpdateMessagesDeleted")
-	registry.RegisterConstructor(2897853694, "msg.ClientUpdateSynced")
+	registry.RegisterConstructor(3828722061, "ClientUpdatePendingMessageDelivery")
+	registry.RegisterConstructor(3060926862, "ClientUpdateMessagesDeleted")
+	registry.RegisterConstructor(4244270269, "ClientUpdateSynced")
 }
 
 func (x *ClientUpdatePendingMessageDelivery) DeepCopy(z *ClientUpdatePendingMessageDelivery) {

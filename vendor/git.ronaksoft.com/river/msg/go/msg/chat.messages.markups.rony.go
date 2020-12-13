@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_ReplyKeyboardMarkup int64 = 1353207252
+const C_ReplyKeyboardMarkup int64 = 3207405102
 
 type poolReplyKeyboardMarkup struct {
 	pool sync.Pool
@@ -31,7 +31,7 @@ func (p *poolReplyKeyboardMarkup) Put(x *ReplyKeyboardMarkup) {
 
 var PoolReplyKeyboardMarkup = poolReplyKeyboardMarkup{}
 
-const C_ReplyInlineMarkup int64 = 3617178965
+const C_ReplyInlineMarkup int64 = 2436413989
 
 type poolReplyInlineMarkup struct {
 	pool sync.Pool
@@ -52,7 +52,7 @@ func (p *poolReplyInlineMarkup) Put(x *ReplyInlineMarkup) {
 
 var PoolReplyInlineMarkup = poolReplyInlineMarkup{}
 
-const C_ReplyKeyboardHide int64 = 4235074858
+const C_ReplyKeyboardHide int64 = 3134153306
 
 type poolReplyKeyboardHide struct {
 	pool sync.Pool
@@ -73,7 +73,7 @@ func (p *poolReplyKeyboardHide) Put(x *ReplyKeyboardHide) {
 
 var PoolReplyKeyboardHide = poolReplyKeyboardHide{}
 
-const C_ReplyKeyboardForceReply int64 = 4261878523
+const C_ReplyKeyboardForceReply int64 = 258469686
 
 type poolReplyKeyboardForceReply struct {
 	pool sync.Pool
@@ -95,7 +95,7 @@ func (p *poolReplyKeyboardForceReply) Put(x *ReplyKeyboardForceReply) {
 
 var PoolReplyKeyboardForceReply = poolReplyKeyboardForceReply{}
 
-const C_KeyboardButtonRow int64 = 3268825054
+const C_KeyboardButtonRow int64 = 2222403758
 
 type poolKeyboardButtonRow struct {
 	pool sync.Pool
@@ -116,7 +116,7 @@ func (p *poolKeyboardButtonRow) Put(x *KeyboardButtonRow) {
 
 var PoolKeyboardButtonRow = poolKeyboardButtonRow{}
 
-const C_KeyboardButtonEnvelope int64 = 692302489
+const C_KeyboardButtonEnvelope int64 = 2639543624
 
 type poolKeyboardButtonEnvelope struct {
 	pool sync.Pool
@@ -138,7 +138,7 @@ func (p *poolKeyboardButtonEnvelope) Put(x *KeyboardButtonEnvelope) {
 
 var PoolKeyboardButtonEnvelope = poolKeyboardButtonEnvelope{}
 
-const C_Button int64 = 3346660205
+const C_Button int64 = 1034594571
 
 type poolButton struct {
 	pool sync.Pool
@@ -159,7 +159,7 @@ func (p *poolButton) Put(x *Button) {
 
 var PoolButton = poolButton{}
 
-const C_ButtonUrl int64 = 1386588692
+const C_ButtonUrl int64 = 2309530052
 
 type poolButtonUrl struct {
 	pool sync.Pool
@@ -181,7 +181,7 @@ func (p *poolButtonUrl) Put(x *ButtonUrl) {
 
 var PoolButtonUrl = poolButtonUrl{}
 
-const C_ButtonCallback int64 = 3657475579
+const C_ButtonCallback int64 = 4007711268
 
 type poolButtonCallback struct {
 	pool sync.Pool
@@ -203,7 +203,7 @@ func (p *poolButtonCallback) Put(x *ButtonCallback) {
 
 var PoolButtonCallback = poolButtonCallback{}
 
-const C_ButtonRequestPhone int64 = 1977121245
+const C_ButtonRequestPhone int64 = 630958494
 
 type poolButtonRequestPhone struct {
 	pool sync.Pool
@@ -224,7 +224,7 @@ func (p *poolButtonRequestPhone) Put(x *ButtonRequestPhone) {
 
 var PoolButtonRequestPhone = poolButtonRequestPhone{}
 
-const C_ButtonRequestGeoLocation int64 = 4134316262
+const C_ButtonRequestGeoLocation int64 = 323515934
 
 type poolButtonRequestGeoLocation struct {
 	pool sync.Pool
@@ -245,7 +245,7 @@ func (p *poolButtonRequestGeoLocation) Put(x *ButtonRequestGeoLocation) {
 
 var PoolButtonRequestGeoLocation = poolButtonRequestGeoLocation{}
 
-const C_ButtonSwitchInline int64 = 3041502501
+const C_ButtonSwitchInline int64 = 3842667878
 
 type poolButtonSwitchInline struct {
 	pool sync.Pool
@@ -268,7 +268,7 @@ func (p *poolButtonSwitchInline) Put(x *ButtonSwitchInline) {
 
 var PoolButtonSwitchInline = poolButtonSwitchInline{}
 
-const C_ButtonBuy int64 = 1766878669
+const C_ButtonBuy int64 = 2992465437
 
 type poolButtonBuy struct {
 	pool sync.Pool
@@ -290,19 +290,19 @@ func (p *poolButtonBuy) Put(x *ButtonBuy) {
 var PoolButtonBuy = poolButtonBuy{}
 
 func init() {
-	registry.RegisterConstructor(1353207252, "msg.ReplyKeyboardMarkup")
-	registry.RegisterConstructor(3617178965, "msg.ReplyInlineMarkup")
-	registry.RegisterConstructor(4235074858, "msg.ReplyKeyboardHide")
-	registry.RegisterConstructor(4261878523, "msg.ReplyKeyboardForceReply")
-	registry.RegisterConstructor(3268825054, "msg.KeyboardButtonRow")
-	registry.RegisterConstructor(692302489, "msg.KeyboardButtonEnvelope")
-	registry.RegisterConstructor(3346660205, "msg.Button")
-	registry.RegisterConstructor(1386588692, "msg.ButtonUrl")
-	registry.RegisterConstructor(3657475579, "msg.ButtonCallback")
-	registry.RegisterConstructor(1977121245, "msg.ButtonRequestPhone")
-	registry.RegisterConstructor(4134316262, "msg.ButtonRequestGeoLocation")
-	registry.RegisterConstructor(3041502501, "msg.ButtonSwitchInline")
-	registry.RegisterConstructor(1766878669, "msg.ButtonBuy")
+	registry.RegisterConstructor(3207405102, "ReplyKeyboardMarkup")
+	registry.RegisterConstructor(2436413989, "ReplyInlineMarkup")
+	registry.RegisterConstructor(3134153306, "ReplyKeyboardHide")
+	registry.RegisterConstructor(258469686, "ReplyKeyboardForceReply")
+	registry.RegisterConstructor(2222403758, "KeyboardButtonRow")
+	registry.RegisterConstructor(2639543624, "KeyboardButtonEnvelope")
+	registry.RegisterConstructor(1034594571, "Button")
+	registry.RegisterConstructor(2309530052, "ButtonUrl")
+	registry.RegisterConstructor(4007711268, "ButtonCallback")
+	registry.RegisterConstructor(630958494, "ButtonRequestPhone")
+	registry.RegisterConstructor(323515934, "ButtonRequestGeoLocation")
+	registry.RegisterConstructor(3842667878, "ButtonSwitchInline")
+	registry.RegisterConstructor(2992465437, "ButtonBuy")
 }
 
 func (x *ReplyKeyboardMarkup) DeepCopy(z *ReplyKeyboardMarkup) {

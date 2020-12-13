@@ -42,7 +42,7 @@ func (r *River) ExecuteCommandWithTeam(teamID, accessHash, constructor int64, co
 func (r *River) executeCommand(
 	teamID int64, teamAccess uint64, constructor int64, commandBytes []byte, delegate RequestDelegate,
 ) (requestID int64, err error) {
-	if  registry.ConstructorName(constructor) == "" {
+	if registry.ConstructorName(constructor) == "" {
 		return 0, domain.ErrInvalidConstructor
 	}
 

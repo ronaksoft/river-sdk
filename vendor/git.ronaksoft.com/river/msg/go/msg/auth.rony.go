@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_InitConnect int64 = 3783447223
+const C_InitConnect int64 = 4150793517
 
 type poolInitConnect struct {
 	pool sync.Pool
@@ -28,7 +28,7 @@ func (p *poolInitConnect) Put(x *InitConnect) {
 
 var PoolInitConnect = poolInitConnect{}
 
-const C_InitCompleteAuth int64 = 2526833663
+const C_InitCompleteAuth int64 = 1583178320
 
 type poolInitCompleteAuth struct {
 	pool sync.Pool
@@ -54,7 +54,7 @@ func (p *poolInitCompleteAuth) Put(x *InitCompleteAuth) {
 
 var PoolInitCompleteAuth = poolInitCompleteAuth{}
 
-const C_InitConnectTest int64 = 2824695400
+const C_InitConnectTest int64 = 3188015450
 
 type poolInitConnectTest struct {
 	pool sync.Pool
@@ -74,7 +74,7 @@ func (p *poolInitConnectTest) Put(x *InitConnectTest) {
 
 var PoolInitConnectTest = poolInitConnectTest{}
 
-const C_InitBindUser int64 = 1676873380
+const C_InitBindUser int64 = 1933549113
 
 type poolInitBindUser struct {
 	pool sync.Pool
@@ -99,7 +99,7 @@ func (p *poolInitBindUser) Put(x *InitBindUser) {
 
 var PoolInitBindUser = poolInitBindUser{}
 
-const C_AuthRegister int64 = 2485037225
+const C_AuthRegister int64 = 2228369460
 
 type poolAuthRegister struct {
 	pool sync.Pool
@@ -125,7 +125,7 @@ func (p *poolAuthRegister) Put(x *AuthRegister) {
 
 var PoolAuthRegister = poolAuthRegister{}
 
-const C_AuthBotRegister int64 = 1216269741
+const C_AuthBotRegister int64 = 1579606687
 
 type poolAuthBotRegister struct {
 	pool sync.Pool
@@ -148,7 +148,7 @@ func (p *poolAuthBotRegister) Put(x *AuthBotRegister) {
 
 var PoolAuthBotRegister = poolAuthBotRegister{}
 
-const C_AuthLogin int64 = 1094122952
+const C_AuthLogin int64 = 2587620888
 
 type poolAuthLogin struct {
 	pool sync.Pool
@@ -171,7 +171,7 @@ func (p *poolAuthLogin) Put(x *AuthLogin) {
 
 var PoolAuthLogin = poolAuthLogin{}
 
-const C_AuthCheckPassword int64 = 2178934444
+const C_AuthCheckPassword int64 = 3346962908
 
 type poolAuthCheckPassword struct {
 	pool sync.Pool
@@ -195,7 +195,7 @@ func (p *poolAuthCheckPassword) Put(x *AuthCheckPassword) {
 
 var PoolAuthCheckPassword = poolAuthCheckPassword{}
 
-const C_AuthRecoverPassword int64 = 1310674445
+const C_AuthRecoverPassword int64 = 2711231991
 
 type poolAuthRecoverPassword struct {
 	pool sync.Pool
@@ -216,7 +216,7 @@ func (p *poolAuthRecoverPassword) Put(x *AuthRecoverPassword) {
 
 var PoolAuthRecoverPassword = poolAuthRecoverPassword{}
 
-const C_AuthLogout int64 = 3174011391
+const C_AuthLogout int64 = 992431648
 
 type poolAuthLogout struct {
 	pool sync.Pool
@@ -237,7 +237,7 @@ func (p *poolAuthLogout) Put(x *AuthLogout) {
 
 var PoolAuthLogout = poolAuthLogout{}
 
-const C_AuthLoginByToken int64 = 1630943056
+const C_AuthLoginByToken int64 = 2851553023
 
 type poolAuthLoginByToken struct {
 	pool sync.Pool
@@ -259,7 +259,7 @@ func (p *poolAuthLoginByToken) Put(x *AuthLoginByToken) {
 
 var PoolAuthLoginByToken = poolAuthLoginByToken{}
 
-const C_AuthCheckPhone int64 = 3264335131
+const C_AuthCheckPhone int64 = 4134648516
 
 type poolAuthCheckPhone struct {
 	pool sync.Pool
@@ -280,7 +280,7 @@ func (p *poolAuthCheckPhone) Put(x *AuthCheckPhone) {
 
 var PoolAuthCheckPhone = poolAuthCheckPhone{}
 
-const C_AuthSendCode int64 = 4256906744
+const C_AuthSendCode int64 = 3984043365
 
 type poolAuthSendCode struct {
 	pool sync.Pool
@@ -302,7 +302,7 @@ func (p *poolAuthSendCode) Put(x *AuthSendCode) {
 
 var PoolAuthSendCode = poolAuthSendCode{}
 
-const C_AuthResendCode int64 = 2869330508
+const C_AuthResendCode int64 = 2682713491
 
 type poolAuthResendCode struct {
 	pool sync.Pool
@@ -325,7 +325,7 @@ func (p *poolAuthResendCode) Put(x *AuthResendCode) {
 
 var PoolAuthResendCode = poolAuthResendCode{}
 
-const C_AuthRecall int64 = 3285410214
+const C_AuthRecall int64 = 1172029049
 
 type poolAuthRecall struct {
 	pool sync.Pool
@@ -351,7 +351,7 @@ func (p *poolAuthRecall) Put(x *AuthRecall) {
 
 var PoolAuthRecall = poolAuthRecall{}
 
-const C_AuthDestroyKey int64 = 3994258591
+const C_AuthDestroyKey int64 = 3673422656
 
 type poolAuthDestroyKey struct {
 	pool sync.Pool
@@ -371,7 +371,7 @@ func (p *poolAuthDestroyKey) Put(x *AuthDestroyKey) {
 
 var PoolAuthDestroyKey = poolAuthDestroyKey{}
 
-const C_InitTestAuth int64 = 3026369707
+const C_InitTestAuth int64 = 2762878006
 
 type poolInitTestAuth struct {
 	pool sync.Pool
@@ -393,7 +393,7 @@ func (p *poolInitTestAuth) Put(x *InitTestAuth) {
 
 var PoolInitTestAuth = poolInitTestAuth{}
 
-const C_InitResponse int64 = 3873664266
+const C_InitResponse int64 = 4130340247
 
 type poolInitResponse struct {
 	pool sync.Pool
@@ -419,7 +419,7 @@ func (p *poolInitResponse) Put(x *InitResponse) {
 
 var PoolInitResponse = poolInitResponse{}
 
-const C_InitCompleteAuthInternal int64 = 1771922724
+const C_InitCompleteAuthInternal int64 = 2360982492
 
 type poolInitCompleteAuthInternal struct {
 	pool sync.Pool
@@ -440,7 +440,7 @@ func (p *poolInitCompleteAuthInternal) Put(x *InitCompleteAuthInternal) {
 
 var PoolInitCompleteAuthInternal = poolInitCompleteAuthInternal{}
 
-const C_InitAuthCompleted int64 = 1674275654
+const C_InitAuthCompleted int64 = 627708982
 
 type poolInitAuthCompleted struct {
 	pool sync.Pool
@@ -465,7 +465,7 @@ func (p *poolInitAuthCompleted) Put(x *InitAuthCompleted) {
 
 var PoolInitAuthCompleted = poolInitAuthCompleted{}
 
-const C_InitUserBound int64 = 2299081868
+const C_InitUserBound int64 = 128391141
 
 type poolInitUserBound struct {
 	pool sync.Pool
@@ -486,7 +486,7 @@ func (p *poolInitUserBound) Put(x *InitUserBound) {
 
 var PoolInitUserBound = poolInitUserBound{}
 
-const C_AuthPasswordRecovery int64 = 3200948251
+const C_AuthPasswordRecovery int64 = 3813475914
 
 type poolAuthPasswordRecovery struct {
 	pool sync.Pool
@@ -507,7 +507,7 @@ func (p *poolAuthPasswordRecovery) Put(x *AuthPasswordRecovery) {
 
 var PoolAuthPasswordRecovery = poolAuthPasswordRecovery{}
 
-const C_AuthRecalled int64 = 3513033006
+const C_AuthRecalled int64 = 3249025459
 
 type poolAuthRecalled struct {
 	pool sync.Pool
@@ -533,7 +533,7 @@ func (p *poolAuthRecalled) Put(x *AuthRecalled) {
 
 var PoolAuthRecalled = poolAuthRecalled{}
 
-const C_AuthAuthorization int64 = 89318973
+const C_AuthAuthorization int64 = 1140037965
 
 type poolAuthAuthorization struct {
 	pool sync.Pool
@@ -559,7 +559,7 @@ func (p *poolAuthAuthorization) Put(x *AuthAuthorization) {
 
 var PoolAuthAuthorization = poolAuthAuthorization{}
 
-const C_AuthBotAuthorization int64 = 2574255871
+const C_AuthBotAuthorization int64 = 3304560814
 
 type poolAuthBotAuthorization struct {
 	pool sync.Pool
@@ -585,7 +585,7 @@ func (p *poolAuthBotAuthorization) Put(x *AuthBotAuthorization) {
 
 var PoolAuthBotAuthorization = poolAuthBotAuthorization{}
 
-const C_AuthCheckedPhone int64 = 1300810196
+const C_AuthCheckedPhone int64 = 2236203131
 
 type poolAuthCheckedPhone struct {
 	pool sync.Pool
@@ -607,7 +607,7 @@ func (p *poolAuthCheckedPhone) Put(x *AuthCheckedPhone) {
 
 var PoolAuthCheckedPhone = poolAuthCheckedPhone{}
 
-const C_AuthSentCode int64 = 2640030330
+const C_AuthSentCode int64 = 2375498471
 
 type poolAuthSentCode struct {
 	pool sync.Pool
@@ -631,33 +631,33 @@ func (p *poolAuthSentCode) Put(x *AuthSentCode) {
 var PoolAuthSentCode = poolAuthSentCode{}
 
 func init() {
-	registry.RegisterConstructor(3783447223, "msg.InitConnect")
-	registry.RegisterConstructor(2526833663, "msg.InitCompleteAuth")
-	registry.RegisterConstructor(2824695400, "msg.InitConnectTest")
-	registry.RegisterConstructor(1676873380, "msg.InitBindUser")
-	registry.RegisterConstructor(2485037225, "msg.AuthRegister")
-	registry.RegisterConstructor(1216269741, "msg.AuthBotRegister")
-	registry.RegisterConstructor(1094122952, "msg.AuthLogin")
-	registry.RegisterConstructor(2178934444, "msg.AuthCheckPassword")
-	registry.RegisterConstructor(1310674445, "msg.AuthRecoverPassword")
-	registry.RegisterConstructor(3174011391, "msg.AuthLogout")
-	registry.RegisterConstructor(1630943056, "msg.AuthLoginByToken")
-	registry.RegisterConstructor(3264335131, "msg.AuthCheckPhone")
-	registry.RegisterConstructor(4256906744, "msg.AuthSendCode")
-	registry.RegisterConstructor(2869330508, "msg.AuthResendCode")
-	registry.RegisterConstructor(3285410214, "msg.AuthRecall")
-	registry.RegisterConstructor(3994258591, "msg.AuthDestroyKey")
-	registry.RegisterConstructor(3026369707, "msg.InitTestAuth")
-	registry.RegisterConstructor(3873664266, "msg.InitResponse")
-	registry.RegisterConstructor(1771922724, "msg.InitCompleteAuthInternal")
-	registry.RegisterConstructor(1674275654, "msg.InitAuthCompleted")
-	registry.RegisterConstructor(2299081868, "msg.InitUserBound")
-	registry.RegisterConstructor(3200948251, "msg.AuthPasswordRecovery")
-	registry.RegisterConstructor(3513033006, "msg.AuthRecalled")
-	registry.RegisterConstructor(89318973, "msg.AuthAuthorization")
-	registry.RegisterConstructor(2574255871, "msg.AuthBotAuthorization")
-	registry.RegisterConstructor(1300810196, "msg.AuthCheckedPhone")
-	registry.RegisterConstructor(2640030330, "msg.AuthSentCode")
+	registry.RegisterConstructor(4150793517, "InitConnect")
+	registry.RegisterConstructor(1583178320, "InitCompleteAuth")
+	registry.RegisterConstructor(3188015450, "InitConnectTest")
+	registry.RegisterConstructor(1933549113, "InitBindUser")
+	registry.RegisterConstructor(2228369460, "AuthRegister")
+	registry.RegisterConstructor(1579606687, "AuthBotRegister")
+	registry.RegisterConstructor(2587620888, "AuthLogin")
+	registry.RegisterConstructor(3346962908, "AuthCheckPassword")
+	registry.RegisterConstructor(2711231991, "AuthRecoverPassword")
+	registry.RegisterConstructor(992431648, "AuthLogout")
+	registry.RegisterConstructor(2851553023, "AuthLoginByToken")
+	registry.RegisterConstructor(4134648516, "AuthCheckPhone")
+	registry.RegisterConstructor(3984043365, "AuthSendCode")
+	registry.RegisterConstructor(2682713491, "AuthResendCode")
+	registry.RegisterConstructor(1172029049, "AuthRecall")
+	registry.RegisterConstructor(3673422656, "AuthDestroyKey")
+	registry.RegisterConstructor(2762878006, "InitTestAuth")
+	registry.RegisterConstructor(4130340247, "InitResponse")
+	registry.RegisterConstructor(2360982492, "InitCompleteAuthInternal")
+	registry.RegisterConstructor(627708982, "InitAuthCompleted")
+	registry.RegisterConstructor(128391141, "InitUserBound")
+	registry.RegisterConstructor(3813475914, "AuthPasswordRecovery")
+	registry.RegisterConstructor(3249025459, "AuthRecalled")
+	registry.RegisterConstructor(1140037965, "AuthAuthorization")
+	registry.RegisterConstructor(3304560814, "AuthBotAuthorization")
+	registry.RegisterConstructor(2236203131, "AuthCheckedPhone")
+	registry.RegisterConstructor(2375498471, "AuthSentCode")
 }
 
 func (x *InitConnect) DeepCopy(z *InitConnect) {

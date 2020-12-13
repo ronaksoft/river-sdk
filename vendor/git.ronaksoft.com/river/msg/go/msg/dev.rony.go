@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_EchoWithDelay int64 = 606168969
+const C_EchoWithDelay int64 = 2861516000
 
 type poolEchoWithDelay struct {
 	pool sync.Pool
@@ -28,7 +28,7 @@ func (p *poolEchoWithDelay) Put(x *EchoWithDelay) {
 
 var PoolEchoWithDelay = poolEchoWithDelay{}
 
-const C_TestRequest int64 = 179707619
+const C_TestRequest int64 = 475847033
 
 type poolTestRequest struct {
 	pool sync.Pool
@@ -50,7 +50,7 @@ func (p *poolTestRequest) Put(x *TestRequest) {
 
 var PoolTestRequest = poolTestRequest{}
 
-const C_TestResponse int64 = 1744377725
+const C_TestResponse int64 = 1999996896
 
 type poolTestResponse struct {
 	pool sync.Pool
@@ -71,7 +71,7 @@ func (p *poolTestResponse) Put(x *TestResponse) {
 
 var PoolTestResponse = poolTestResponse{}
 
-const C_TestRequestWithString int64 = 4230997651
+const C_TestRequestWithString int64 = 3760062575
 
 type poolTestRequestWithString struct {
 	pool sync.Pool
@@ -93,7 +93,7 @@ func (p *poolTestRequestWithString) Put(x *TestRequestWithString) {
 
 var PoolTestRequestWithString = poolTestRequestWithString{}
 
-const C_TestResponseWithString int64 = 2503087606
+const C_TestResponseWithString int64 = 556112423
 
 type poolTestResponseWithString struct {
 	pool sync.Pool
@@ -115,11 +115,11 @@ func (p *poolTestResponseWithString) Put(x *TestResponseWithString) {
 var PoolTestResponseWithString = poolTestResponseWithString{}
 
 func init() {
-	registry.RegisterConstructor(606168969, "msg.EchoWithDelay")
-	registry.RegisterConstructor(179707619, "msg.TestRequest")
-	registry.RegisterConstructor(1744377725, "msg.TestResponse")
-	registry.RegisterConstructor(4230997651, "msg.TestRequestWithString")
-	registry.RegisterConstructor(2503087606, "msg.TestResponseWithString")
+	registry.RegisterConstructor(2861516000, "EchoWithDelay")
+	registry.RegisterConstructor(475847033, "TestRequest")
+	registry.RegisterConstructor(1999996896, "TestResponse")
+	registry.RegisterConstructor(3760062575, "TestRequestWithString")
+	registry.RegisterConstructor(556112423, "TestResponseWithString")
 }
 
 func (x *EchoWithDelay) DeepCopy(z *EchoWithDelay) {

@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_UsersGet int64 = 2335210977
+const C_UsersGet int64 = 1039301579
 
 type poolUsersGet struct {
 	pool sync.Pool
@@ -28,7 +28,7 @@ func (p *poolUsersGet) Put(x *UsersGet) {
 
 var PoolUsersGet = poolUsersGet{}
 
-const C_UsersGetFull int64 = 3616262811
+const C_UsersGetFull int64 = 3343342086
 
 type poolUsersGetFull struct {
 	pool sync.Pool
@@ -49,7 +49,7 @@ func (p *poolUsersGetFull) Put(x *UsersGetFull) {
 
 var PoolUsersGetFull = poolUsersGetFull{}
 
-const C_UsersMany int64 = 4106516197
+const C_UsersMany int64 = 801733941
 
 type poolUsersMany struct {
 	pool sync.Pool
@@ -72,9 +72,9 @@ func (p *poolUsersMany) Put(x *UsersMany) {
 var PoolUsersMany = poolUsersMany{}
 
 func init() {
-	registry.RegisterConstructor(2335210977, "msg.UsersGet")
-	registry.RegisterConstructor(3616262811, "msg.UsersGetFull")
-	registry.RegisterConstructor(4106516197, "msg.UsersMany")
+	registry.RegisterConstructor(1039301579, "UsersGet")
+	registry.RegisterConstructor(3343342086, "UsersGetFull")
+	registry.RegisterConstructor(801733941, "UsersMany")
 }
 
 func (x *UsersGet) DeepCopy(z *UsersGet) {

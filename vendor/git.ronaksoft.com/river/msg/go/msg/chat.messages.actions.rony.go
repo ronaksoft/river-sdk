@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_MessageActionGroupAddUser int64 = 3350337765
+const C_MessageActionGroupAddUser int64 = 1949386261
 
 type poolMessageActionGroupAddUser struct {
 	pool sync.Pool
@@ -28,7 +28,7 @@ func (p *poolMessageActionGroupAddUser) Put(x *MessageActionGroupAddUser) {
 
 var PoolMessageActionGroupAddUser = poolMessageActionGroupAddUser{}
 
-const C_MessageActionGroupDeleteUser int64 = 2904432195
+const C_MessageActionGroupDeleteUser int64 = 1213452128
 
 type poolMessageActionGroupDeleteUser struct {
 	pool sync.Pool
@@ -49,7 +49,7 @@ func (p *poolMessageActionGroupDeleteUser) Put(x *MessageActionGroupDeleteUser) 
 
 var PoolMessageActionGroupDeleteUser = poolMessageActionGroupDeleteUser{}
 
-const C_MessageActionGroupCreated int64 = 907021784
+const C_MessageActionGroupCreated int64 = 2241024808
 
 type poolMessageActionGroupCreated struct {
 	pool sync.Pool
@@ -71,7 +71,7 @@ func (p *poolMessageActionGroupCreated) Put(x *MessageActionGroupCreated) {
 
 var PoolMessageActionGroupCreated = poolMessageActionGroupCreated{}
 
-const C_MessageActionGroupTitleChanged int64 = 3747325827
+const C_MessageActionGroupTitleChanged int64 = 2418464749
 
 type poolMessageActionGroupTitleChanged struct {
 	pool sync.Pool
@@ -92,7 +92,7 @@ func (p *poolMessageActionGroupTitleChanged) Put(x *MessageActionGroupTitleChang
 
 var PoolMessageActionGroupTitleChanged = poolMessageActionGroupTitleChanged{}
 
-const C_MessageActionGroupPhotoChanged int64 = 1145423234
+const C_MessageActionGroupPhotoChanged int64 = 188265964
 
 type poolMessageActionGroupPhotoChanged struct {
 	pool sync.Pool
@@ -116,7 +116,7 @@ func (p *poolMessageActionGroupPhotoChanged) Put(x *MessageActionGroupPhotoChang
 
 var PoolMessageActionGroupPhotoChanged = poolMessageActionGroupPhotoChanged{}
 
-const C_MessageActionClearHistory int64 = 4164590160
+const C_MessageActionClearHistory int64 = 1270465696
 
 type poolMessageActionClearHistory struct {
 	pool sync.Pool
@@ -138,7 +138,7 @@ func (p *poolMessageActionClearHistory) Put(x *MessageActionClearHistory) {
 
 var PoolMessageActionClearHistory = poolMessageActionClearHistory{}
 
-const C_MessageActionContactRegistered int64 = 3229435742
+const C_MessageActionContactRegistered int64 = 2399156016
 
 type poolMessageActionContactRegistered struct {
 	pool sync.Pool
@@ -158,7 +158,7 @@ func (p *poolMessageActionContactRegistered) Put(x *MessageActionContactRegister
 
 var PoolMessageActionContactRegistered = poolMessageActionContactRegistered{}
 
-const C_MessageActionScreenShotTaken int64 = 2021478678
+const C_MessageActionScreenShotTaken int64 = 2637201461
 
 type poolMessageActionScreenShotTaken struct {
 	pool sync.Pool
@@ -180,7 +180,7 @@ func (p *poolMessageActionScreenShotTaken) Put(x *MessageActionScreenShotTaken) 
 
 var PoolMessageActionScreenShotTaken = poolMessageActionScreenShotTaken{}
 
-const C_MessageActionThreadClosed int64 = 3807512538
+const C_MessageActionThreadClosed int64 = 1366382890
 
 type poolMessageActionThreadClosed struct {
 	pool sync.Pool
@@ -202,15 +202,15 @@ func (p *poolMessageActionThreadClosed) Put(x *MessageActionThreadClosed) {
 var PoolMessageActionThreadClosed = poolMessageActionThreadClosed{}
 
 func init() {
-	registry.RegisterConstructor(3350337765, "msg.MessageActionGroupAddUser")
-	registry.RegisterConstructor(2904432195, "msg.MessageActionGroupDeleteUser")
-	registry.RegisterConstructor(907021784, "msg.MessageActionGroupCreated")
-	registry.RegisterConstructor(3747325827, "msg.MessageActionGroupTitleChanged")
-	registry.RegisterConstructor(1145423234, "msg.MessageActionGroupPhotoChanged")
-	registry.RegisterConstructor(4164590160, "msg.MessageActionClearHistory")
-	registry.RegisterConstructor(3229435742, "msg.MessageActionContactRegistered")
-	registry.RegisterConstructor(2021478678, "msg.MessageActionScreenShotTaken")
-	registry.RegisterConstructor(3807512538, "msg.MessageActionThreadClosed")
+	registry.RegisterConstructor(1949386261, "MessageActionGroupAddUser")
+	registry.RegisterConstructor(1213452128, "MessageActionGroupDeleteUser")
+	registry.RegisterConstructor(2241024808, "MessageActionGroupCreated")
+	registry.RegisterConstructor(2418464749, "MessageActionGroupTitleChanged")
+	registry.RegisterConstructor(188265964, "MessageActionGroupPhotoChanged")
+	registry.RegisterConstructor(1270465696, "MessageActionClearHistory")
+	registry.RegisterConstructor(2399156016, "MessageActionContactRegistered")
+	registry.RegisterConstructor(2637201461, "MessageActionScreenShotTaken")
+	registry.RegisterConstructor(1366382890, "MessageActionThreadClosed")
 }
 
 func (x *MessageActionGroupAddUser) DeepCopy(z *MessageActionGroupAddUser) {

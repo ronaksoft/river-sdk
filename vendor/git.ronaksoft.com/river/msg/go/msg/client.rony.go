@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_ClientSendMessageMedia int64 = 4115888538
+const C_ClientSendMessageMedia int64 = 1095038539
 
 type poolClientSendMessageMedia struct {
 	pool sync.Pool
@@ -48,7 +48,7 @@ func (p *poolClientSendMessageMedia) Put(x *ClientSendMessageMedia) {
 
 var PoolClientSendMessageMedia = poolClientSendMessageMedia{}
 
-const C_ClientGlobalSearch int64 = 933456896
+const C_ClientGlobalSearch int64 = 1742781507
 
 type poolClientGlobalSearch struct {
 	pool sync.Pool
@@ -76,7 +76,7 @@ func (p *poolClientGlobalSearch) Put(x *ClientGlobalSearch) {
 
 var PoolClientGlobalSearch = poolClientGlobalSearch{}
 
-const C_ClientContactSearch int64 = 2237697201
+const C_ClientContactSearch int64 = 1793449803
 
 type poolClientContactSearch struct {
 	pool sync.Pool
@@ -97,7 +97,7 @@ func (p *poolClientContactSearch) Put(x *ClientContactSearch) {
 
 var PoolClientContactSearch = poolClientContactSearch{}
 
-const C_ClientGetCachedMedia int64 = 1854472868
+const C_ClientGetCachedMedia int64 = 856595701
 
 type poolClientGetCachedMedia struct {
 	pool sync.Pool
@@ -117,7 +117,7 @@ func (p *poolClientGetCachedMedia) Put(x *ClientGetCachedMedia) {
 
 var PoolClientGetCachedMedia = poolClientGetCachedMedia{}
 
-const C_ClientClearCachedMedia int64 = 4086496887
+const C_ClientClearCachedMedia int64 = 1199927718
 
 type poolClientClearCachedMedia struct {
 	pool sync.Pool
@@ -142,7 +142,7 @@ func (p *poolClientClearCachedMedia) Put(x *ClientClearCachedMedia) {
 
 var PoolClientClearCachedMedia = poolClientClearCachedMedia{}
 
-const C_ClientGetLastBotKeyboard int64 = 4021404545
+const C_ClientGetLastBotKeyboard int64 = 177544569
 
 type poolClientGetLastBotKeyboard struct {
 	pool sync.Pool
@@ -166,7 +166,7 @@ func (p *poolClientGetLastBotKeyboard) Put(x *ClientGetLastBotKeyboard) {
 
 var PoolClientGetLastBotKeyboard = poolClientGetLastBotKeyboard{}
 
-const C_ClientGetMediaHistory int64 = 1290827247
+const C_ClientGetMediaHistory int64 = 1354863379
 
 type poolClientGetMediaHistory struct {
 	pool sync.Pool
@@ -187,7 +187,7 @@ func (p *poolClientGetMediaHistory) Put(x *ClientGetMediaHistory) {
 
 var PoolClientGetMediaHistory = poolClientGetMediaHistory{}
 
-const C_ClientGetRecentSearch int64 = 2154225664
+const C_ClientGetRecentSearch int64 = 2622949116
 
 type poolClientGetRecentSearch struct {
 	pool sync.Pool
@@ -208,7 +208,7 @@ func (p *poolClientGetRecentSearch) Put(x *ClientGetRecentSearch) {
 
 var PoolClientGetRecentSearch = poolClientGetRecentSearch{}
 
-const C_ClientPutRecentSearch int64 = 968313913
+const C_ClientPutRecentSearch int64 = 629582533
 
 type poolClientPutRecentSearch struct {
 	pool sync.Pool
@@ -232,7 +232,7 @@ func (p *poolClientPutRecentSearch) Put(x *ClientPutRecentSearch) {
 
 var PoolClientPutRecentSearch = poolClientPutRecentSearch{}
 
-const C_ClientRemoveRecentSearch int64 = 2839880619
+const C_ClientRemoveRecentSearch int64 = 1281490259
 
 type poolClientRemoveRecentSearch struct {
 	pool sync.Pool
@@ -256,7 +256,7 @@ func (p *poolClientRemoveRecentSearch) Put(x *ClientRemoveRecentSearch) {
 
 var PoolClientRemoveRecentSearch = poolClientRemoveRecentSearch{}
 
-const C_ClientRemoveAllRecentSearches int64 = 1946484429
+const C_ClientRemoveAllRecentSearches int64 = 3599155822
 
 type poolClientRemoveAllRecentSearches struct {
 	pool sync.Pool
@@ -277,7 +277,7 @@ func (p *poolClientRemoveAllRecentSearches) Put(x *ClientRemoveAllRecentSearches
 
 var PoolClientRemoveAllRecentSearches = poolClientRemoveAllRecentSearches{}
 
-const C_ClientGetSavedGifs int64 = 3829363537
+const C_ClientGetSavedGifs int64 = 3028067090
 
 type poolClientGetSavedGifs struct {
 	pool sync.Pool
@@ -297,7 +297,7 @@ func (p *poolClientGetSavedGifs) Put(x *ClientGetSavedGifs) {
 
 var PoolClientGetSavedGifs = poolClientGetSavedGifs{}
 
-const C_ClientGetTeamCounters int64 = 3605768168
+const C_ClientGetTeamCounters int64 = 3403301140
 
 type poolClientGetTeamCounters struct {
 	pool sync.Pool
@@ -322,7 +322,7 @@ func (p *poolClientGetTeamCounters) Put(x *ClientGetTeamCounters) {
 
 var PoolClientGetTeamCounters = poolClientGetTeamCounters{}
 
-const C_ClientPendingMessage int64 = 3700309832
+const C_ClientPendingMessage int64 = 2164891929
 
 type poolClientPendingMessage struct {
 	pool sync.Pool
@@ -367,7 +367,7 @@ func (p *poolClientPendingMessage) Put(x *ClientPendingMessage) {
 
 var PoolClientPendingMessage = poolClientPendingMessage{}
 
-const C_ClientSearchResult int64 = 3758739230
+const C_ClientSearchResult int64 = 2957647709
 
 type poolClientSearchResult struct {
 	pool sync.Pool
@@ -392,7 +392,7 @@ func (p *poolClientSearchResult) Put(x *ClientSearchResult) {
 
 var PoolClientSearchResult = poolClientSearchResult{}
 
-const C_ClientFilesMany int64 = 1108295067
+const C_ClientFilesMany int64 = 1414992553
 
 type poolClientFilesMany struct {
 	pool sync.Pool
@@ -414,7 +414,7 @@ func (p *poolClientFilesMany) Put(x *ClientFilesMany) {
 
 var PoolClientFilesMany = poolClientFilesMany{}
 
-const C_ClientFile int64 = 2402799487
+const C_ClientFile int64 = 155127968
 
 type poolClientFile struct {
 	pool sync.Pool
@@ -450,7 +450,7 @@ func (p *poolClientFile) Put(x *ClientFile) {
 
 var PoolClientFile = poolClientFile{}
 
-const C_ClientFileRequest int64 = 2827974747
+const C_ClientFileRequest int64 = 3995993899
 
 type poolClientFileRequest struct {
 	pool sync.Pool
@@ -494,7 +494,7 @@ func (p *poolClientFileRequest) Put(x *ClientFileRequest) {
 
 var PoolClientFileRequest = poolClientFileRequest{}
 
-const C_ClientFileStatus int64 = 1778924689
+const C_ClientFileStatus int64 = 2731095358
 
 type poolClientFileStatus struct {
 	pool sync.Pool
@@ -517,7 +517,7 @@ func (p *poolClientFileStatus) Put(x *ClientFileStatus) {
 
 var PoolClientFileStatus = poolClientFileStatus{}
 
-const C_ClientCachedMediaInfo int64 = 106295789
+const C_ClientCachedMediaInfo int64 = 442767121
 
 type poolClientCachedMediaInfo struct {
 	pool sync.Pool
@@ -538,7 +538,7 @@ func (p *poolClientCachedMediaInfo) Put(x *ClientCachedMediaInfo) {
 
 var PoolClientCachedMediaInfo = poolClientCachedMediaInfo{}
 
-const C_ClientPeerMediaInfo int64 = 1310294801
+const C_ClientPeerMediaInfo int64 = 2711408875
 
 type poolClientPeerMediaInfo struct {
 	pool sync.Pool
@@ -561,7 +561,7 @@ func (p *poolClientPeerMediaInfo) Put(x *ClientPeerMediaInfo) {
 
 var PoolClientPeerMediaInfo = poolClientPeerMediaInfo{}
 
-const C_ClientMediaSize int64 = 1300367097
+const C_ClientMediaSize int64 = 1541024203
 
 type poolClientMediaSize struct {
 	pool sync.Pool
@@ -583,7 +583,7 @@ func (p *poolClientMediaSize) Put(x *ClientMediaSize) {
 
 var PoolClientMediaSize = poolClientMediaSize{}
 
-const C_ClientRecentSearch int64 = 723092779
+const C_ClientRecentSearch int64 = 2069517672
 
 type poolClientRecentSearch struct {
 	pool sync.Pool
@@ -608,7 +608,7 @@ func (p *poolClientRecentSearch) Put(x *ClientRecentSearch) {
 
 var PoolClientRecentSearch = poolClientRecentSearch{}
 
-const C_ClientRecentSearchMany int64 = 1962528854
+const C_ClientRecentSearchMany int64 = 3236847495
 
 type poolClientRecentSearchMany struct {
 	pool sync.Pool
@@ -631,7 +631,7 @@ func (p *poolClientRecentSearchMany) Put(x *ClientRecentSearchMany) {
 
 var PoolClientRecentSearchMany = poolClientRecentSearchMany{}
 
-const C_ClientTeamCounters int64 = 2106901187
+const C_ClientTeamCounters int64 = 769069696
 
 type poolClientTeamCounters struct {
 	pool sync.Pool
@@ -653,7 +653,7 @@ func (p *poolClientTeamCounters) Put(x *ClientTeamCounters) {
 
 var PoolClientTeamCounters = poolClientTeamCounters{}
 
-const C_ClientGetFrequentlyReactions int64 = 1868219623
+const C_ClientGetFrequentlyReactions int64 = 2316768708
 
 type poolClientGetFrequentlyReactions struct {
 	pool sync.Pool
@@ -673,7 +673,7 @@ func (p *poolClientGetFrequentlyReactions) Put(x *ClientGetFrequentlyReactions) 
 
 var PoolClientGetFrequentlyReactions = poolClientGetFrequentlyReactions{}
 
-const C_ClientFrequentlyReactions int64 = 456253042
+const C_ClientFrequentlyReactions int64 = 2830270594
 
 type poolClientFrequentlyReactions struct {
 	pool sync.Pool
@@ -694,7 +694,7 @@ func (p *poolClientFrequentlyReactions) Put(x *ClientFrequentlyReactions) {
 
 var PoolClientFrequentlyReactions = poolClientFrequentlyReactions{}
 
-const C_ClientDismissNotification int64 = 3602391494
+const C_ClientDismissNotification int64 = 1698398006
 
 type poolClientDismissNotification struct {
 	pool sync.Pool
@@ -719,7 +719,7 @@ func (p *poolClientDismissNotification) Put(x *ClientDismissNotification) {
 
 var PoolClientDismissNotification = poolClientDismissNotification{}
 
-const C_ClientGetNotificationDismissTime int64 = 1606401003
+const C_ClientGetNotificationDismissTime int64 = 4106535811
 
 type poolClientGetNotificationDismissTime struct {
 	pool sync.Pool
@@ -743,7 +743,7 @@ func (p *poolClientGetNotificationDismissTime) Put(x *ClientGetNotificationDismi
 
 var PoolClientGetNotificationDismissTime = poolClientGetNotificationDismissTime{}
 
-const C_ClientNotificationDismissTime int64 = 368151442
+const C_ClientNotificationDismissTime int64 = 3077814065
 
 type poolClientNotificationDismissTime struct {
 	pool sync.Pool
@@ -765,36 +765,36 @@ func (p *poolClientNotificationDismissTime) Put(x *ClientNotificationDismissTime
 var PoolClientNotificationDismissTime = poolClientNotificationDismissTime{}
 
 func init() {
-	registry.RegisterConstructor(4115888538, "msg.ClientSendMessageMedia")
-	registry.RegisterConstructor(933456896, "msg.ClientGlobalSearch")
-	registry.RegisterConstructor(2237697201, "msg.ClientContactSearch")
-	registry.RegisterConstructor(1854472868, "msg.ClientGetCachedMedia")
-	registry.RegisterConstructor(4086496887, "msg.ClientClearCachedMedia")
-	registry.RegisterConstructor(4021404545, "msg.ClientGetLastBotKeyboard")
-	registry.RegisterConstructor(1290827247, "msg.ClientGetMediaHistory")
-	registry.RegisterConstructor(2154225664, "msg.ClientGetRecentSearch")
-	registry.RegisterConstructor(968313913, "msg.ClientPutRecentSearch")
-	registry.RegisterConstructor(2839880619, "msg.ClientRemoveRecentSearch")
-	registry.RegisterConstructor(1946484429, "msg.ClientRemoveAllRecentSearches")
-	registry.RegisterConstructor(3829363537, "msg.ClientGetSavedGifs")
-	registry.RegisterConstructor(3605768168, "msg.ClientGetTeamCounters")
-	registry.RegisterConstructor(3700309832, "msg.ClientPendingMessage")
-	registry.RegisterConstructor(3758739230, "msg.ClientSearchResult")
-	registry.RegisterConstructor(1108295067, "msg.ClientFilesMany")
-	registry.RegisterConstructor(2402799487, "msg.ClientFile")
-	registry.RegisterConstructor(2827974747, "msg.ClientFileRequest")
-	registry.RegisterConstructor(1778924689, "msg.ClientFileStatus")
-	registry.RegisterConstructor(106295789, "msg.ClientCachedMediaInfo")
-	registry.RegisterConstructor(1310294801, "msg.ClientPeerMediaInfo")
-	registry.RegisterConstructor(1300367097, "msg.ClientMediaSize")
-	registry.RegisterConstructor(723092779, "msg.ClientRecentSearch")
-	registry.RegisterConstructor(1962528854, "msg.ClientRecentSearchMany")
-	registry.RegisterConstructor(2106901187, "msg.ClientTeamCounters")
-	registry.RegisterConstructor(1868219623, "msg.ClientGetFrequentlyReactions")
-	registry.RegisterConstructor(456253042, "msg.ClientFrequentlyReactions")
-	registry.RegisterConstructor(3602391494, "msg.ClientDismissNotification")
-	registry.RegisterConstructor(1606401003, "msg.ClientGetNotificationDismissTime")
-	registry.RegisterConstructor(368151442, "msg.ClientNotificationDismissTime")
+	registry.RegisterConstructor(1095038539, "ClientSendMessageMedia")
+	registry.RegisterConstructor(1742781507, "ClientGlobalSearch")
+	registry.RegisterConstructor(1793449803, "ClientContactSearch")
+	registry.RegisterConstructor(856595701, "ClientGetCachedMedia")
+	registry.RegisterConstructor(1199927718, "ClientClearCachedMedia")
+	registry.RegisterConstructor(177544569, "ClientGetLastBotKeyboard")
+	registry.RegisterConstructor(1354863379, "ClientGetMediaHistory")
+	registry.RegisterConstructor(2622949116, "ClientGetRecentSearch")
+	registry.RegisterConstructor(629582533, "ClientPutRecentSearch")
+	registry.RegisterConstructor(1281490259, "ClientRemoveRecentSearch")
+	registry.RegisterConstructor(3599155822, "ClientRemoveAllRecentSearches")
+	registry.RegisterConstructor(3028067090, "ClientGetSavedGifs")
+	registry.RegisterConstructor(3403301140, "ClientGetTeamCounters")
+	registry.RegisterConstructor(2164891929, "ClientPendingMessage")
+	registry.RegisterConstructor(2957647709, "ClientSearchResult")
+	registry.RegisterConstructor(1414992553, "ClientFilesMany")
+	registry.RegisterConstructor(155127968, "ClientFile")
+	registry.RegisterConstructor(3995993899, "ClientFileRequest")
+	registry.RegisterConstructor(2731095358, "ClientFileStatus")
+	registry.RegisterConstructor(442767121, "ClientCachedMediaInfo")
+	registry.RegisterConstructor(2711408875, "ClientPeerMediaInfo")
+	registry.RegisterConstructor(1541024203, "ClientMediaSize")
+	registry.RegisterConstructor(2069517672, "ClientRecentSearch")
+	registry.RegisterConstructor(3236847495, "ClientRecentSearchMany")
+	registry.RegisterConstructor(769069696, "ClientTeamCounters")
+	registry.RegisterConstructor(2316768708, "ClientGetFrequentlyReactions")
+	registry.RegisterConstructor(2830270594, "ClientFrequentlyReactions")
+	registry.RegisterConstructor(1698398006, "ClientDismissNotification")
+	registry.RegisterConstructor(4106535811, "ClientGetNotificationDismissTime")
+	registry.RegisterConstructor(3077814065, "ClientNotificationDismissTime")
 }
 
 func (x *ClientSendMessageMedia) DeepCopy(z *ClientSendMessageMedia) {

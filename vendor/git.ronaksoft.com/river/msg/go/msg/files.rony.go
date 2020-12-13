@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_FileSavePart int64 = 4031342907
+const C_FileSavePart int64 = 3766876582
 
 type poolFileSavePart struct {
 	pool sync.Pool
@@ -31,7 +31,7 @@ func (p *poolFileSavePart) Put(x *FileSavePart) {
 
 var PoolFileSavePart = poolFileSavePart{}
 
-const C_FileGet int64 = 1533737583
+const C_FileGet int64 = 4282510672
 
 type poolFileGet struct {
 	pool sync.Pool
@@ -57,7 +57,7 @@ func (p *poolFileGet) Put(x *FileGet) {
 
 var PoolFileGet = poolFileGet{}
 
-const C_FileGetBySha256 int64 = 2997172741
+const C_FileGetBySha256 int64 = 2768049463
 
 type poolFileGetBySha256 struct {
 	pool sync.Pool
@@ -79,7 +79,7 @@ func (p *poolFileGetBySha256) Put(x *FileGetBySha256) {
 
 var PoolFileGetBySha256 = poolFileGetBySha256{}
 
-const C_File int64 = 2510637056
+const C_File int64 = 749574446
 
 type poolFile struct {
 	pool sync.Pool
@@ -104,10 +104,10 @@ func (p *poolFile) Put(x *File) {
 var PoolFile = poolFile{}
 
 func init() {
-	registry.RegisterConstructor(4031342907, "msg.FileSavePart")
-	registry.RegisterConstructor(1533737583, "msg.FileGet")
-	registry.RegisterConstructor(2997172741, "msg.FileGetBySha256")
-	registry.RegisterConstructor(2510637056, "msg.File")
+	registry.RegisterConstructor(3766876582, "FileSavePart")
+	registry.RegisterConstructor(4282510672, "FileGet")
+	registry.RegisterConstructor(2768049463, "FileGetBySha256")
+	registry.RegisterConstructor(749574446, "File")
 }
 
 func (x *FileSavePart) DeepCopy(z *FileSavePart) {

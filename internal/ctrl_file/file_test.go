@@ -193,7 +193,7 @@ func (t server) ServeHTTP(httpRes http.ResponseWriter, httpReq *http.Request) {
 			}
 			t.mtx.Unlock()
 			if sum != (req.TotalParts*(req.TotalParts+1))/2 {
-				out.Constructor = msg.C_Error
+				out.Constructor = rony.C_Error
 				out.Message, _ = (&rony.Error{
 					Code:  msg.ErrCodeIncomplete,
 					Items: msg.ErrItemFileParts,

@@ -8,7 +8,7 @@ import (
 	sync "sync"
 )
 
-const C_Ping int64 = 1022313453
+const C_Ping int64 = 2246546115
 
 type poolPing struct {
 	pool sync.Pool
@@ -29,7 +29,7 @@ func (p *poolPing) Put(x *Ping) {
 
 var PoolPing = poolPing{}
 
-const C_Pong int64 = 945962847
+const C_Pong int64 = 2171268721
 
 type poolPong struct {
 	pool sync.Pool
@@ -50,7 +50,7 @@ func (p *poolPong) Put(x *Pong) {
 
 var PoolPong = poolPong{}
 
-const C_UpdateEnvelope int64 = 3114200509
+const C_UpdateEnvelope int64 = 2373884514
 
 type poolUpdateEnvelope struct {
 	pool sync.Pool
@@ -75,7 +75,7 @@ func (p *poolUpdateEnvelope) Put(x *UpdateEnvelope) {
 
 var PoolUpdateEnvelope = poolUpdateEnvelope{}
 
-const C_UpdateContainer int64 = 824754645
+const C_UpdateContainer int64 = 661712615
 
 type poolUpdateContainer struct {
 	pool sync.Pool
@@ -101,7 +101,7 @@ func (p *poolUpdateContainer) Put(x *UpdateContainer) {
 
 var PoolUpdateContainer = poolUpdateContainer{}
 
-const C_ProtoMessage int64 = 2435337826
+const C_ProtoMessage int64 = 2179260159
 
 type poolProtoMessage struct {
 	pool sync.Pool
@@ -124,7 +124,7 @@ func (p *poolProtoMessage) Put(x *ProtoMessage) {
 
 var PoolProtoMessage = poolProtoMessage{}
 
-const C_ProtoEncryptedPayload int64 = 2201830871
+const C_ProtoEncryptedPayload int64 = 2668405547
 
 type poolProtoEncryptedPayload struct {
 	pool sync.Pool
@@ -151,29 +151,7 @@ func (p *poolProtoEncryptedPayload) Put(x *ProtoEncryptedPayload) {
 
 var PoolProtoEncryptedPayload = poolProtoEncryptedPayload{}
 
-const C_Error int64 = 1081316971
-
-type poolError struct {
-	pool sync.Pool
-}
-
-func (p *poolError) Get() *Error {
-	x, ok := p.pool.Get().(*Error)
-	if !ok {
-		return &Error{}
-	}
-	return x
-}
-
-func (p *poolError) Put(x *Error) {
-	x.Code = ""
-	x.Items = ""
-	p.pool.Put(x)
-}
-
-var PoolError = poolError{}
-
-const C_Ack int64 = 1957468455
+const C_Ack int64 = 447331921
 
 type poolAck struct {
 	pool sync.Pool
@@ -194,7 +172,7 @@ func (p *poolAck) Put(x *Ack) {
 
 var PoolAck = poolAck{}
 
-const C_Bool int64 = 1287342210
+const C_Bool int64 = 4122188204
 
 type poolBool struct {
 	pool sync.Pool
@@ -215,7 +193,7 @@ func (p *poolBool) Put(x *Bool) {
 
 var PoolBool = poolBool{}
 
-const C_Dialog int64 = 3089010482
+const C_Dialog int64 = 1120787796
 
 type poolDialog struct {
 	pool sync.Pool
@@ -254,7 +232,7 @@ func (p *poolDialog) Put(x *Dialog) {
 
 var PoolDialog = poolDialog{}
 
-const C_InputPeer int64 = 303143782
+const C_InputPeer int64 = 3374092470
 
 type poolInputPeer struct {
 	pool sync.Pool
@@ -277,7 +255,7 @@ func (p *poolInputPeer) Put(x *InputPeer) {
 
 var PoolInputPeer = poolInputPeer{}
 
-const C_Peer int64 = 3151792041
+const C_Peer int64 = 47470215
 
 type poolPeer struct {
 	pool sync.Pool
@@ -300,7 +278,7 @@ func (p *poolPeer) Put(x *Peer) {
 
 var PoolPeer = poolPeer{}
 
-const C_InputPassword int64 = 2419733666
+const C_InputPassword int64 = 513021899
 
 type poolInputPassword struct {
 	pool sync.Pool
@@ -323,7 +301,7 @@ func (p *poolInputPassword) Put(x *InputPassword) {
 
 var PoolInputPassword = poolInputPassword{}
 
-const C_InputFileLocation int64 = 1401072402
+const C_InputFileLocation int64 = 354669666
 
 type poolInputFileLocation struct {
 	pool sync.Pool
@@ -347,7 +325,7 @@ func (p *poolInputFileLocation) Put(x *InputFileLocation) {
 
 var PoolInputFileLocation = poolInputFileLocation{}
 
-const C_FileLocation int64 = 2151413950
+const C_FileLocation int64 = 2432133155
 
 type poolFileLocation struct {
 	pool sync.Pool
@@ -370,7 +348,7 @@ func (p *poolFileLocation) Put(x *FileLocation) {
 
 var PoolFileLocation = poolFileLocation{}
 
-const C_UserPhoto int64 = 2871926461
+const C_UserPhoto int64 = 1881347437
 
 type poolUserPhoto struct {
 	pool sync.Pool
@@ -399,7 +377,7 @@ func (p *poolUserPhoto) Put(x *UserPhoto) {
 
 var PoolUserPhoto = poolUserPhoto{}
 
-const C_InputUser int64 = 1030010006
+const C_InputUser int64 = 3865689926
 
 type poolInputUser struct {
 	pool sync.Pool
@@ -421,7 +399,7 @@ func (p *poolInputUser) Put(x *InputUser) {
 
 var PoolInputUser = poolInputUser{}
 
-const C_User int64 = 2494146649
+const C_User int64 = 765557111
 
 type poolUser struct {
 	pool sync.Pool
@@ -464,7 +442,7 @@ func (p *poolUser) Put(x *User) {
 
 var PoolUser = poolUser{}
 
-const C_ContactUser int64 = 226904568
+const C_ContactUser int64 = 460099170
 
 type poolContactUser struct {
 	pool sync.Pool
@@ -495,7 +473,7 @@ func (p *poolContactUser) Put(x *ContactUser) {
 
 var PoolContactUser = poolContactUser{}
 
-const C_Bot int64 = 1465345415
+const C_Bot int64 = 961692401
 
 type poolBot struct {
 	pool sync.Pool
@@ -519,7 +497,7 @@ func (p *poolBot) Put(x *Bot) {
 
 var PoolBot = poolBot{}
 
-const C_BotCommands int64 = 2021700975
+const C_BotCommands int64 = 1852470005
 
 type poolBotCommands struct {
 	pool sync.Pool
@@ -541,7 +519,7 @@ func (p *poolBotCommands) Put(x *BotCommands) {
 
 var PoolBotCommands = poolBotCommands{}
 
-const C_BotInfo int64 = 1440487140
+const C_BotInfo int64 = 4059496923
 
 type poolBotInfo struct {
 	pool sync.Pool
@@ -571,7 +549,7 @@ func (p *poolBotInfo) Put(x *BotInfo) {
 
 var PoolBotInfo = poolBotInfo{}
 
-const C_GroupPhoto int64 = 1750883448
+const C_GroupPhoto int64 = 3998516135
 
 type poolGroupPhoto struct {
 	pool sync.Pool
@@ -600,7 +578,7 @@ func (p *poolGroupPhoto) Put(x *GroupPhoto) {
 
 var PoolGroupPhoto = poolGroupPhoto{}
 
-const C_Group int64 = 1886285535
+const C_Group int64 = 2885774273
 
 type poolGroup struct {
 	pool sync.Pool
@@ -631,7 +609,7 @@ func (p *poolGroup) Put(x *Group) {
 
 var PoolGroup = poolGroup{}
 
-const C_GroupFull int64 = 3611820910
+const C_GroupFull int64 = 205850814
 
 type poolGroupFull struct {
 	pool sync.Pool
@@ -662,7 +640,7 @@ func (p *poolGroupFull) Put(x *GroupFull) {
 
 var PoolGroupFull = poolGroupFull{}
 
-const C_GroupParticipant int64 = 981141470
+const C_GroupParticipant int64 = 4072279665
 
 type poolGroupParticipant struct {
 	pool sync.Pool
@@ -692,7 +670,7 @@ func (p *poolGroupParticipant) Put(x *GroupParticipant) {
 
 var PoolGroupParticipant = poolGroupParticipant{}
 
-const C_UserMessage int64 = 1964490000
+const C_UserMessage int64 = 1677556362
 
 type poolUserMessage struct {
 	pool sync.Pool
@@ -740,7 +718,7 @@ func (p *poolUserMessage) Put(x *UserMessage) {
 
 var PoolUserMessage = poolUserMessage{}
 
-const C_ReactionCounter int64 = 3573720508
+const C_ReactionCounter int64 = 3277490830
 
 type poolReactionCounter struct {
 	pool sync.Pool
@@ -762,7 +740,7 @@ func (p *poolReactionCounter) Put(x *ReactionCounter) {
 
 var PoolReactionCounter = poolReactionCounter{}
 
-const C_DraftMessage int64 = 588836824
+const C_DraftMessage int64 = 869564229
 
 type poolDraftMessage struct {
 	pool sync.Pool
@@ -790,7 +768,7 @@ func (p *poolDraftMessage) Put(x *DraftMessage) {
 
 var PoolDraftMessage = poolDraftMessage{}
 
-const C_MessageEntity int64 = 1103772341
+const C_MessageEntity int64 = 3479443932
 
 type poolMessageEntity struct {
 	pool sync.Pool
@@ -814,7 +792,7 @@ func (p *poolMessageEntity) Put(x *MessageEntity) {
 
 var PoolMessageEntity = poolMessageEntity{}
 
-const C_RSAPublicKey int64 = 783118399
+const C_RSAPublicKey int64 = 1046601890
 
 type poolRSAPublicKey struct {
 	pool sync.Pool
@@ -837,7 +815,7 @@ func (p *poolRSAPublicKey) Put(x *RSAPublicKey) {
 
 var PoolRSAPublicKey = poolRSAPublicKey{}
 
-const C_DHGroup int64 = 2854390
+const C_DHGroup int64 = 2751503049
 
 type poolDHGroup struct {
 	pool sync.Pool
@@ -860,7 +838,7 @@ func (p *poolDHGroup) Put(x *DHGroup) {
 
 var PoolDHGroup = poolDHGroup{}
 
-const C_PhoneContact int64 = 2407583821
+const C_PhoneContact int64 = 2672574672
 
 type poolPhoneContact struct {
 	pool sync.Pool
@@ -884,7 +862,7 @@ func (p *poolPhoneContact) Put(x *PhoneContact) {
 
 var PoolPhoneContact = poolPhoneContact{}
 
-const C_PeerNotifySettings int64 = 2674069559
+const C_PeerNotifySettings int64 = 3475030132
 
 type poolPeerNotifySettings struct {
 	pool sync.Pool
@@ -907,7 +885,7 @@ func (p *poolPeerNotifySettings) Put(x *PeerNotifySettings) {
 
 var PoolPeerNotifySettings = poolPeerNotifySettings{}
 
-const C_InputFile int64 = 1013470415
+const C_InputFile int64 = 3882180383
 
 type poolInputFile struct {
 	pool sync.Pool
@@ -931,7 +909,7 @@ func (p *poolInputFile) Put(x *InputFile) {
 
 var PoolInputFile = poolInputFile{}
 
-const C_InputDocument int64 = 2106718209
+const C_InputDocument int64 = 4081048424
 
 type poolInputDocument struct {
 	pool sync.Pool
@@ -954,7 +932,7 @@ func (p *poolInputDocument) Put(x *InputDocument) {
 
 var PoolInputDocument = poolInputDocument{}
 
-const C_PrivacyRule int64 = 4250744298
+const C_PrivacyRule int64 = 3954700912
 
 type poolPrivacyRule struct {
 	pool sync.Pool
@@ -976,7 +954,7 @@ func (p *poolPrivacyRule) Put(x *PrivacyRule) {
 
 var PoolPrivacyRule = poolPrivacyRule{}
 
-const C_Label int64 = 319388402
+const C_Label int64 = 3479601132
 
 type poolLabel struct {
 	pool sync.Pool
@@ -1000,7 +978,7 @@ func (p *poolLabel) Put(x *Label) {
 
 var PoolLabel = poolLabel{}
 
-const C_LabelsMany int64 = 3537173148
+const C_LabelsMany int64 = 1423713603
 
 type poolLabelsMany struct {
 	pool sync.Pool
@@ -1022,7 +1000,7 @@ func (p *poolLabelsMany) Put(x *LabelsMany) {
 
 var PoolLabelsMany = poolLabelsMany{}
 
-const C_InputGeoLocation int64 = 2607257800
+const C_InputGeoLocation int64 = 1403425127
 
 type poolInputGeoLocation struct {
 	pool sync.Pool
@@ -1044,7 +1022,7 @@ func (p *poolInputGeoLocation) Put(x *InputGeoLocation) {
 
 var PoolInputGeoLocation = poolInputGeoLocation{}
 
-const C_GeoLocation int64 = 4106276783
+const C_GeoLocation int64 = 3794405429
 
 type poolGeoLocation struct {
 	pool sync.Pool
@@ -1066,7 +1044,7 @@ func (p *poolGeoLocation) Put(x *GeoLocation) {
 
 var PoolGeoLocation = poolGeoLocation{}
 
-const C_InputTeam int64 = 1947714752
+const C_InputTeam int64 = 2937769744
 
 type poolInputTeam struct {
 	pool sync.Pool
@@ -1088,7 +1066,7 @@ func (p *poolInputTeam) Put(x *InputTeam) {
 
 var PoolInputTeam = poolInputTeam{}
 
-const C_TeamPhoto int64 = 5154319
+const C_TeamPhoto int64 = 3678645727
 
 type poolTeamPhoto struct {
 	pool sync.Pool
@@ -1116,7 +1094,7 @@ func (p *poolTeamPhoto) Put(x *TeamPhoto) {
 
 var PoolTeamPhoto = poolTeamPhoto{}
 
-const C_Team int64 = 3722106895
+const C_Team int64 = 1691486497
 
 type poolTeam struct {
 	pool sync.Pool
@@ -1148,50 +1126,49 @@ func (p *poolTeam) Put(x *Team) {
 var PoolTeam = poolTeam{}
 
 func init() {
-	registry.RegisterConstructor(1022313453, "msg.Ping")
-	registry.RegisterConstructor(945962847, "msg.Pong")
-	registry.RegisterConstructor(3114200509, "msg.UpdateEnvelope")
-	registry.RegisterConstructor(824754645, "msg.UpdateContainer")
-	registry.RegisterConstructor(2435337826, "msg.ProtoMessage")
-	registry.RegisterConstructor(2201830871, "msg.ProtoEncryptedPayload")
-	registry.RegisterConstructor(1081316971, "msg.Error")
-	registry.RegisterConstructor(1957468455, "msg.Ack")
-	registry.RegisterConstructor(1287342210, "msg.Bool")
-	registry.RegisterConstructor(3089010482, "msg.Dialog")
-	registry.RegisterConstructor(303143782, "msg.InputPeer")
-	registry.RegisterConstructor(3151792041, "msg.Peer")
-	registry.RegisterConstructor(2419733666, "msg.InputPassword")
-	registry.RegisterConstructor(1401072402, "msg.InputFileLocation")
-	registry.RegisterConstructor(2151413950, "msg.FileLocation")
-	registry.RegisterConstructor(2871926461, "msg.UserPhoto")
-	registry.RegisterConstructor(1030010006, "msg.InputUser")
-	registry.RegisterConstructor(2494146649, "msg.User")
-	registry.RegisterConstructor(226904568, "msg.ContactUser")
-	registry.RegisterConstructor(1465345415, "msg.Bot")
-	registry.RegisterConstructor(2021700975, "msg.BotCommands")
-	registry.RegisterConstructor(1440487140, "msg.BotInfo")
-	registry.RegisterConstructor(1750883448, "msg.GroupPhoto")
-	registry.RegisterConstructor(1886285535, "msg.Group")
-	registry.RegisterConstructor(3611820910, "msg.GroupFull")
-	registry.RegisterConstructor(981141470, "msg.GroupParticipant")
-	registry.RegisterConstructor(1964490000, "msg.UserMessage")
-	registry.RegisterConstructor(3573720508, "msg.ReactionCounter")
-	registry.RegisterConstructor(588836824, "msg.DraftMessage")
-	registry.RegisterConstructor(1103772341, "msg.MessageEntity")
-	registry.RegisterConstructor(783118399, "msg.RSAPublicKey")
-	registry.RegisterConstructor(2854390, "msg.DHGroup")
-	registry.RegisterConstructor(2407583821, "msg.PhoneContact")
-	registry.RegisterConstructor(2674069559, "msg.PeerNotifySettings")
-	registry.RegisterConstructor(1013470415, "msg.InputFile")
-	registry.RegisterConstructor(2106718209, "msg.InputDocument")
-	registry.RegisterConstructor(4250744298, "msg.PrivacyRule")
-	registry.RegisterConstructor(319388402, "msg.Label")
-	registry.RegisterConstructor(3537173148, "msg.LabelsMany")
-	registry.RegisterConstructor(2607257800, "msg.InputGeoLocation")
-	registry.RegisterConstructor(4106276783, "msg.GeoLocation")
-	registry.RegisterConstructor(1947714752, "msg.InputTeam")
-	registry.RegisterConstructor(5154319, "msg.TeamPhoto")
-	registry.RegisterConstructor(3722106895, "msg.Team")
+	registry.RegisterConstructor(2246546115, "Ping")
+	registry.RegisterConstructor(2171268721, "Pong")
+	registry.RegisterConstructor(2373884514, "UpdateEnvelope")
+	registry.RegisterConstructor(661712615, "UpdateContainer")
+	registry.RegisterConstructor(2179260159, "ProtoMessage")
+	registry.RegisterConstructor(2668405547, "ProtoEncryptedPayload")
+	registry.RegisterConstructor(447331921, "Ack")
+	registry.RegisterConstructor(4122188204, "Bool")
+	registry.RegisterConstructor(1120787796, "Dialog")
+	registry.RegisterConstructor(3374092470, "InputPeer")
+	registry.RegisterConstructor(47470215, "Peer")
+	registry.RegisterConstructor(513021899, "InputPassword")
+	registry.RegisterConstructor(354669666, "InputFileLocation")
+	registry.RegisterConstructor(2432133155, "FileLocation")
+	registry.RegisterConstructor(1881347437, "UserPhoto")
+	registry.RegisterConstructor(3865689926, "InputUser")
+	registry.RegisterConstructor(765557111, "User")
+	registry.RegisterConstructor(460099170, "ContactUser")
+	registry.RegisterConstructor(961692401, "Bot")
+	registry.RegisterConstructor(1852470005, "BotCommands")
+	registry.RegisterConstructor(4059496923, "BotInfo")
+	registry.RegisterConstructor(3998516135, "GroupPhoto")
+	registry.RegisterConstructor(2885774273, "Group")
+	registry.RegisterConstructor(205850814, "GroupFull")
+	registry.RegisterConstructor(4072279665, "GroupParticipant")
+	registry.RegisterConstructor(1677556362, "UserMessage")
+	registry.RegisterConstructor(3277490830, "ReactionCounter")
+	registry.RegisterConstructor(869564229, "DraftMessage")
+	registry.RegisterConstructor(3479443932, "MessageEntity")
+	registry.RegisterConstructor(1046601890, "RSAPublicKey")
+	registry.RegisterConstructor(2751503049, "DHGroup")
+	registry.RegisterConstructor(2672574672, "PhoneContact")
+	registry.RegisterConstructor(3475030132, "PeerNotifySettings")
+	registry.RegisterConstructor(3882180383, "InputFile")
+	registry.RegisterConstructor(4081048424, "InputDocument")
+	registry.RegisterConstructor(3954700912, "PrivacyRule")
+	registry.RegisterConstructor(3479601132, "Label")
+	registry.RegisterConstructor(1423713603, "LabelsMany")
+	registry.RegisterConstructor(1403425127, "InputGeoLocation")
+	registry.RegisterConstructor(3794405429, "GeoLocation")
+	registry.RegisterConstructor(2937769744, "InputTeam")
+	registry.RegisterConstructor(3678645727, "TeamPhoto")
+	registry.RegisterConstructor(1691486497, "Team")
 }
 
 func (x *Ping) DeepCopy(z *Ping) {
@@ -1251,11 +1228,6 @@ func (x *ProtoEncryptedPayload) DeepCopy(z *ProtoEncryptedPayload) {
 		z.Envelope = rony.PoolMessageEnvelope.Get()
 		x.Envelope.DeepCopy(z.Envelope)
 	}
-}
-
-func (x *Error) DeepCopy(z *Error) {
-	z.Code = x.Code
-	z.Items = x.Items
 }
 
 func (x *Ack) DeepCopy(z *Ack) {
@@ -1681,10 +1653,6 @@ func (x *ProtoEncryptedPayload) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_ProtoEncryptedPayload, x)
 }
 
-func (x *Error) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_Error, x)
-}
-
 func (x *Ack) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_Ack, x)
 }
@@ -1857,10 +1825,6 @@ func (x *ProtoEncryptedPayload) Marshal() ([]byte, error) {
 	return proto.Marshal(x)
 }
 
-func (x *Error) Marshal() ([]byte, error) {
-	return proto.Marshal(x)
-}
-
 func (x *Ack) Marshal() ([]byte, error) {
 	return proto.Marshal(x)
 }
@@ -2030,10 +1994,6 @@ func (x *ProtoMessage) Unmarshal(b []byte) error {
 }
 
 func (x *ProtoEncryptedPayload) Unmarshal(b []byte) error {
-	return proto.UnmarshalOptions{}.Unmarshal(b, x)
-}
-
-func (x *Error) Unmarshal(b []byte) error {
 	return proto.UnmarshalOptions{}.Unmarshal(b, x)
 }
 

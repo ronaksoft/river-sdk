@@ -186,7 +186,7 @@ func (ctrl *Controller) executor(req request) {
 		switch req.MessageEnvelope.Constructor {
 		case msg.C_MessagesSend, msg.C_MessagesSendMedia:
 			switch res.Constructor {
-			case msg.C_Error:
+			case rony.C_Error:
 				errMsg := &rony.Error{}
 				_ = errMsg.Unmarshal(res.Message)
 				if errMsg.Code == msg.ErrCodeAlreadyExists && errMsg.Items == msg.ErrItemRandomID {
@@ -198,7 +198,7 @@ func (ctrl *Controller) executor(req request) {
 			}
 		default:
 			switch res.Constructor {
-			case msg.C_Error:
+			case rony.C_Error:
 				errMsg := new(rony.Error)
 				_ = errMsg.Unmarshal(res.Message)
 				if errMsg.Code == msg.ErrCodeInvalid && errMsg.Items == msg.ErrItemSalt {

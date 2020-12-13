@@ -133,8 +133,9 @@ func (ctx *DispatchCtx) UnmarshalEnvelope(data []byte) error {
 // RequestCtx
 type RequestCtx struct {
 	dispatchCtx *DispatchCtx
-	quickReturn bool
+	reqID       uint64
 	nextChan    chan struct{}
+	quickReturn bool
 	stop        bool
 }
 
@@ -162,7 +163,7 @@ func (ctx *RequestCtx) Conn() gateway.Conn {
 }
 
 func (ctx *RequestCtx) ReqID() uint64 {
-	return ctx.dispatchCtx.req.GetRequestID()
+	return ctx.reqID
 }
 
 func (ctx *RequestCtx) StopExecution() {
@@ -225,7 +226,8 @@ func (ctx *RequestCtx) PushMessage(constructor int64, proto proto.Message) {
 func (ctx *RequestCtx) PushCustomMessage(requestID uint64, constructor int64, proto proto.Message, kvs ...*rony.KeyValue) {
 	envelope := acquireMessageEnvelope()
 	envelope.Fill(requestID, constructor, proto)
-	ctx.dispatchCtx.edge.dispatcher.OnMessage(ctx.dispatchCtx, envelope, kvs...)
+	envelope.Header = append(envelope.Header[:0], kvs...)
+	ctx.dispatchCtx.edge.dispatcher.OnMessage(ctx.dispatchCtx, envelope)
 	releaseMessageEnvelope(envelope)
 }
 

@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_ContactsImport int64 = 4226392133
+const C_ContactsImport int64 = 3473528730
 
 type poolContactsImport struct {
 	pool sync.Pool
@@ -29,7 +29,7 @@ func (p *poolContactsImport) Put(x *ContactsImport) {
 
 var PoolContactsImport = poolContactsImport{}
 
-const C_ContactsAdd int64 = 1124011252
+const C_ContactsAdd int64 = 1410714478
 
 type poolContactsAdd struct {
 	pool sync.Pool
@@ -56,7 +56,7 @@ func (p *poolContactsAdd) Put(x *ContactsAdd) {
 
 var PoolContactsAdd = poolContactsAdd{}
 
-const C_ContactsGet int64 = 1121866083
+const C_ContactsGet int64 = 1412732665
 
 type poolContactsGet struct {
 	pool sync.Pool
@@ -77,7 +77,7 @@ func (p *poolContactsGet) Put(x *ContactsGet) {
 
 var PoolContactsGet = poolContactsGet{}
 
-const C_ContactsDelete int64 = 1555370719
+const C_ContactsDelete int64 = 1750426880
 
 type poolContactsDelete struct {
 	pool sync.Pool
@@ -98,7 +98,7 @@ func (p *poolContactsDelete) Put(x *ContactsDelete) {
 
 var PoolContactsDelete = poolContactsDelete{}
 
-const C_ContactsDeleteAll int64 = 1182757564
+const C_ContactsDeleteAll int64 = 14552524
 
 type poolContactsDeleteAll struct {
 	pool sync.Pool
@@ -118,7 +118,7 @@ func (p *poolContactsDeleteAll) Put(x *ContactsDeleteAll) {
 
 var PoolContactsDeleteAll = poolContactsDeleteAll{}
 
-const C_ContactsBlock int64 = 575538680
+const C_ContactsBlock int64 = 2900371089
 
 type poolContactsBlock struct {
 	pool sync.Pool
@@ -142,7 +142,7 @@ func (p *poolContactsBlock) Put(x *ContactsBlock) {
 
 var PoolContactsBlock = poolContactsBlock{}
 
-const C_ContactsUnblock int64 = 825053263
+const C_ContactsUnblock int64 = 662011773
 
 type poolContactsUnblock struct {
 	pool sync.Pool
@@ -166,7 +166,7 @@ func (p *poolContactsUnblock) Put(x *ContactsUnblock) {
 
 var PoolContactsUnblock = poolContactsUnblock{}
 
-const C_ContactsGetBlocked int64 = 1874595512
+const C_ContactsGetBlocked int64 = 1073733371
 
 type poolContactsGetBlocked struct {
 	pool sync.Pool
@@ -188,7 +188,7 @@ func (p *poolContactsGetBlocked) Put(x *ContactsGetBlocked) {
 
 var PoolContactsGetBlocked = poolContactsGetBlocked{}
 
-const C_ContactsSearch int64 = 3528963583
+const C_ContactsSearch int64 = 3870802464
 
 type poolContactsSearch struct {
 	pool sync.Pool
@@ -209,7 +209,7 @@ func (p *poolContactsSearch) Put(x *ContactsSearch) {
 
 var PoolContactsSearch = poolContactsSearch{}
 
-const C_ContactsGetTopPeers int64 = 3181501046
+const C_ContactsGetTopPeers int64 = 1378126220
 
 type poolContactsGetTopPeers struct {
 	pool sync.Pool
@@ -232,7 +232,7 @@ func (p *poolContactsGetTopPeers) Put(x *ContactsGetTopPeers) {
 
 var PoolContactsGetTopPeers = poolContactsGetTopPeers{}
 
-const C_ContactsResetTopPeer int64 = 536103555
+const C_ContactsResetTopPeer int64 = 1114887378
 
 type poolContactsResetTopPeer struct {
 	pool sync.Pool
@@ -257,7 +257,7 @@ func (p *poolContactsResetTopPeer) Put(x *ContactsResetTopPeer) {
 
 var PoolContactsResetTopPeer = poolContactsResetTopPeer{}
 
-const C_ContactsTopPeers int64 = 1300133545
+const C_ContactsTopPeers int64 = 2243919622
 
 type poolContactsTopPeers struct {
 	pool sync.Pool
@@ -282,7 +282,7 @@ func (p *poolContactsTopPeers) Put(x *ContactsTopPeers) {
 
 var PoolContactsTopPeers = poolContactsTopPeers{}
 
-const C_TopPeer int64 = 3443380542
+const C_TopPeer int64 = 1763100161
 
 type poolTopPeer struct {
 	pool sync.Pool
@@ -309,7 +309,7 @@ func (p *poolTopPeer) Put(x *TopPeer) {
 
 var PoolTopPeer = poolTopPeer{}
 
-const C_BlockedContactsMany int64 = 2494628382
+const C_BlockedContactsMany int64 = 2067026404
 
 type poolBlockedContactsMany struct {
 	pool sync.Pool
@@ -332,7 +332,7 @@ func (p *poolBlockedContactsMany) Put(x *BlockedContactsMany) {
 
 var PoolBlockedContactsMany = poolBlockedContactsMany{}
 
-const C_BlockedContact int64 = 936691798
+const C_BlockedContact int64 = 53788553
 
 type poolBlockedContact struct {
 	pool sync.Pool
@@ -354,7 +354,7 @@ func (p *poolBlockedContact) Put(x *BlockedContact) {
 
 var PoolBlockedContact = poolBlockedContact{}
 
-const C_ContactsImported int64 = 1213516573
+const C_ContactsImported int64 = 2157298354
 
 type poolContactsImported struct {
 	pool sync.Pool
@@ -377,7 +377,7 @@ func (p *poolContactsImported) Put(x *ContactsImported) {
 
 var PoolContactsImported = poolContactsImported{}
 
-const C_ContactsMany int64 = 4156259013
+const C_ContactsMany int64 = 3883395672
 
 type poolContactsMany struct {
 	pool sync.Pool
@@ -404,23 +404,23 @@ func (p *poolContactsMany) Put(x *ContactsMany) {
 var PoolContactsMany = poolContactsMany{}
 
 func init() {
-	registry.RegisterConstructor(4226392133, "msg.ContactsImport")
-	registry.RegisterConstructor(1124011252, "msg.ContactsAdd")
-	registry.RegisterConstructor(1121866083, "msg.ContactsGet")
-	registry.RegisterConstructor(1555370719, "msg.ContactsDelete")
-	registry.RegisterConstructor(1182757564, "msg.ContactsDeleteAll")
-	registry.RegisterConstructor(575538680, "msg.ContactsBlock")
-	registry.RegisterConstructor(825053263, "msg.ContactsUnblock")
-	registry.RegisterConstructor(1874595512, "msg.ContactsGetBlocked")
-	registry.RegisterConstructor(3528963583, "msg.ContactsSearch")
-	registry.RegisterConstructor(3181501046, "msg.ContactsGetTopPeers")
-	registry.RegisterConstructor(536103555, "msg.ContactsResetTopPeer")
-	registry.RegisterConstructor(1300133545, "msg.ContactsTopPeers")
-	registry.RegisterConstructor(3443380542, "msg.TopPeer")
-	registry.RegisterConstructor(2494628382, "msg.BlockedContactsMany")
-	registry.RegisterConstructor(936691798, "msg.BlockedContact")
-	registry.RegisterConstructor(1213516573, "msg.ContactsImported")
-	registry.RegisterConstructor(4156259013, "msg.ContactsMany")
+	registry.RegisterConstructor(3473528730, "ContactsImport")
+	registry.RegisterConstructor(1410714478, "ContactsAdd")
+	registry.RegisterConstructor(1412732665, "ContactsGet")
+	registry.RegisterConstructor(1750426880, "ContactsDelete")
+	registry.RegisterConstructor(14552524, "ContactsDeleteAll")
+	registry.RegisterConstructor(2900371089, "ContactsBlock")
+	registry.RegisterConstructor(662011773, "ContactsUnblock")
+	registry.RegisterConstructor(1073733371, "ContactsGetBlocked")
+	registry.RegisterConstructor(3870802464, "ContactsSearch")
+	registry.RegisterConstructor(1378126220, "ContactsGetTopPeers")
+	registry.RegisterConstructor(1114887378, "ContactsResetTopPeer")
+	registry.RegisterConstructor(2243919622, "ContactsTopPeers")
+	registry.RegisterConstructor(1763100161, "TopPeer")
+	registry.RegisterConstructor(2067026404, "BlockedContactsMany")
+	registry.RegisterConstructor(53788553, "BlockedContact")
+	registry.RegisterConstructor(2157298354, "ContactsImported")
+	registry.RegisterConstructor(3883395672, "ContactsMany")
 }
 
 func (x *ContactsImport) DeepCopy(z *ContactsImport) {

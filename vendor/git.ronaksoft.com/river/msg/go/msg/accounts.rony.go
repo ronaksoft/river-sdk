@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_AccountSetNotifySettings int64 = 2635330403
+const C_AccountSetNotifySettings int64 = 2016882075
 
 type poolAccountSetNotifySettings struct {
 	pool sync.Pool
@@ -35,7 +35,7 @@ func (p *poolAccountSetNotifySettings) Put(x *AccountSetNotifySettings) {
 
 var PoolAccountSetNotifySettings = poolAccountSetNotifySettings{}
 
-const C_AccountGetNotifySettings int64 = 4182396369
+const C_AccountGetNotifySettings int64 = 477008681
 
 type poolAccountGetNotifySettings struct {
 	pool sync.Pool
@@ -59,7 +59,7 @@ func (p *poolAccountGetNotifySettings) Put(x *AccountGetNotifySettings) {
 
 var PoolAccountGetNotifySettings = poolAccountGetNotifySettings{}
 
-const C_AccountRegisterDevice int64 = 609377469
+const C_AccountRegisterDevice int64 = 946059841
 
 type poolAccountRegisterDevice struct {
 	pool sync.Pool
@@ -86,7 +86,7 @@ func (p *poolAccountRegisterDevice) Put(x *AccountRegisterDevice) {
 
 var PoolAccountRegisterDevice = poolAccountRegisterDevice{}
 
-const C_AccountUnregisterDevice int64 = 472768969
+const C_AccountUnregisterDevice int64 = 3981251588
 
 type poolAccountUnregisterDevice struct {
 	pool sync.Pool
@@ -108,7 +108,7 @@ func (p *poolAccountUnregisterDevice) Put(x *AccountUnregisterDevice) {
 
 var PoolAccountUnregisterDevice = poolAccountUnregisterDevice{}
 
-const C_AccountUpdateProfile int64 = 2206794686
+const C_AccountUpdateProfile int64 = 3725499887
 
 type poolAccountUpdateProfile struct {
 	pool sync.Pool
@@ -131,7 +131,7 @@ func (p *poolAccountUpdateProfile) Put(x *AccountUpdateProfile) {
 
 var PoolAccountUpdateProfile = poolAccountUpdateProfile{}
 
-const C_AccountCheckUsername int64 = 83507868
+const C_AccountCheckUsername int64 = 1501406413
 
 type poolAccountCheckUsername struct {
 	pool sync.Pool
@@ -152,7 +152,7 @@ func (p *poolAccountCheckUsername) Put(x *AccountCheckUsername) {
 
 var PoolAccountCheckUsername = poolAccountCheckUsername{}
 
-const C_AccountUpdateUsername int64 = 1144675268
+const C_AccountUpdateUsername int64 = 1477164344
 
 type poolAccountUpdateUsername struct {
 	pool sync.Pool
@@ -173,7 +173,7 @@ func (p *poolAccountUpdateUsername) Put(x *AccountUpdateUsername) {
 
 var PoolAccountUpdateUsername = poolAccountUpdateUsername{}
 
-const C_AccountUploadPhoto int64 = 413055238
+const C_AccountUploadPhoto int64 = 1222469957
 
 type poolAccountUploadPhoto struct {
 	pool sync.Pool
@@ -198,7 +198,7 @@ func (p *poolAccountUploadPhoto) Put(x *AccountUploadPhoto) {
 
 var PoolAccountUploadPhoto = poolAccountUploadPhoto{}
 
-const C_AccountUpdatePhoto int64 = 1215719904
+const C_AccountUpdatePhoto int64 = 406174115
 
 type poolAccountUpdatePhoto struct {
 	pool sync.Pool
@@ -219,7 +219,7 @@ func (p *poolAccountUpdatePhoto) Put(x *AccountUpdatePhoto) {
 
 var PoolAccountUpdatePhoto = poolAccountUpdatePhoto{}
 
-const C_AccountRemovePhoto int64 = 2390524815
+const C_AccountRemovePhoto int64 = 3728692172
 
 type poolAccountRemovePhoto struct {
 	pool sync.Pool
@@ -240,7 +240,7 @@ func (p *poolAccountRemovePhoto) Put(x *AccountRemovePhoto) {
 
 var PoolAccountRemovePhoto = poolAccountRemovePhoto{}
 
-const C_AccountSendChangePhoneCode int64 = 4022476844
+const C_AccountSendChangePhoneCode int64 = 1389121902
 
 type poolAccountSendChangePhoneCode struct {
 	pool sync.Pool
@@ -262,7 +262,7 @@ func (p *poolAccountSendChangePhoneCode) Put(x *AccountSendChangePhoneCode) {
 
 var PoolAccountSendChangePhoneCode = poolAccountSendChangePhoneCode{}
 
-const C_AccountResendChangePhoneCode int64 = 523206354
+const C_AccountResendChangePhoneCode int64 = 4200771569
 
 type poolAccountResendChangePhoneCode struct {
 	pool sync.Pool
@@ -284,7 +284,7 @@ func (p *poolAccountResendChangePhoneCode) Put(x *AccountResendChangePhoneCode) 
 
 var PoolAccountResendChangePhoneCode = poolAccountResendChangePhoneCode{}
 
-const C_AccountChangePhone int64 = 2939511809
+const C_AccountChangePhone int64 = 4285969474
 
 type poolAccountChangePhone struct {
 	pool sync.Pool
@@ -311,7 +311,7 @@ func (p *poolAccountChangePhone) Put(x *AccountChangePhone) {
 
 var PoolAccountChangePhone = poolAccountChangePhone{}
 
-const C_AccountSetPrivacy int64 = 435602842
+const C_AccountSetPrivacy int64 = 1599585002
 
 type poolAccountSetPrivacy struct {
 	pool sync.Pool
@@ -337,7 +337,7 @@ func (p *poolAccountSetPrivacy) Put(x *AccountSetPrivacy) {
 
 var PoolAccountSetPrivacy = poolAccountSetPrivacy{}
 
-const C_AccountGetPrivacy int64 = 934536200
+const C_AccountGetPrivacy int64 = 1897044856
 
 type poolAccountGetPrivacy struct {
 	pool sync.Pool
@@ -358,7 +358,7 @@ func (p *poolAccountGetPrivacy) Put(x *AccountGetPrivacy) {
 
 var PoolAccountGetPrivacy = poolAccountGetPrivacy{}
 
-const C_AccountGetAuthorizations int64 = 2563289800
+const C_AccountGetAuthorizations int64 = 2112646192
 
 type poolAccountGetAuthorizations struct {
 	pool sync.Pool
@@ -378,7 +378,7 @@ func (p *poolAccountGetAuthorizations) Put(x *AccountGetAuthorizations) {
 
 var PoolAccountGetAuthorizations = poolAccountGetAuthorizations{}
 
-const C_AccountResetAuthorization int64 = 2378769356
+const C_AccountResetAuthorization int64 = 1045069116
 
 type poolAccountResetAuthorization struct {
 	pool sync.Pool
@@ -399,7 +399,7 @@ func (p *poolAccountResetAuthorization) Put(x *AccountResetAuthorization) {
 
 var PoolAccountResetAuthorization = poolAccountResetAuthorization{}
 
-const C_AccountUpdateStatus int64 = 3359301343
+const C_AccountUpdateStatus int64 = 666864933
 
 type poolAccountUpdateStatus struct {
 	pool sync.Pool
@@ -420,7 +420,7 @@ func (p *poolAccountUpdateStatus) Put(x *AccountUpdateStatus) {
 
 var PoolAccountUpdateStatus = poolAccountUpdateStatus{}
 
-const C_AccountSetLang int64 = 1288054277
+const C_AccountSetLang int64 = 2015777242
 
 type poolAccountSetLang struct {
 	pool sync.Pool
@@ -441,7 +441,7 @@ func (p *poolAccountSetLang) Put(x *AccountSetLang) {
 
 var PoolAccountSetLang = poolAccountSetLang{}
 
-const C_AccountGetPassword int64 = 892760360
+const C_AccountGetPassword int64 = 1702207851
 
 type poolAccountGetPassword struct {
 	pool sync.Pool
@@ -461,7 +461,7 @@ func (p *poolAccountGetPassword) Put(x *AccountGetPassword) {
 
 var PoolAccountGetPassword = poolAccountGetPassword{}
 
-const C_AccountGetPasswordSettings int64 = 3344806825
+const C_AccountGetPasswordSettings int64 = 2052309739
 
 type poolAccountGetPasswordSettings struct {
 	pool sync.Pool
@@ -485,7 +485,7 @@ func (p *poolAccountGetPasswordSettings) Put(x *AccountGetPasswordSettings) {
 
 var PoolAccountGetPasswordSettings = poolAccountGetPasswordSettings{}
 
-const C_AccountUpdatePasswordSettings int64 = 484279179
+const C_AccountUpdatePasswordSettings int64 = 3193945896
 
 type poolAccountUpdatePasswordSettings struct {
 	pool sync.Pool
@@ -514,7 +514,7 @@ func (p *poolAccountUpdatePasswordSettings) Put(x *AccountUpdatePasswordSettings
 
 var PoolAccountUpdatePasswordSettings = poolAccountUpdatePasswordSettings{}
 
-const C_AccountRecoverPassword int64 = 4107350339
+const C_AccountRecoverPassword int64 = 1086766738
 
 type poolAccountRecoverPassword struct {
 	pool sync.Pool
@@ -538,7 +538,7 @@ func (p *poolAccountRecoverPassword) Put(x *AccountRecoverPassword) {
 
 var PoolAccountRecoverPassword = poolAccountRecoverPassword{}
 
-const C_AccountGetTeams int64 = 3180865232
+const C_AccountGetTeams int64 = 2881489378
 
 type poolAccountGetTeams struct {
 	pool sync.Pool
@@ -558,7 +558,7 @@ func (p *poolAccountGetTeams) Put(x *AccountGetTeams) {
 
 var PoolAccountGetTeams = poolAccountGetTeams{}
 
-const C_AccountPasswordSettings int64 = 957483519
+const C_AccountPasswordSettings int64 = 3362978866
 
 type poolAccountPasswordSettings struct {
 	pool sync.Pool
@@ -580,7 +580,7 @@ func (p *poolAccountPasswordSettings) Put(x *AccountPasswordSettings) {
 
 var PoolAccountPasswordSettings = poolAccountPasswordSettings{}
 
-const C_SecurityQuestions int64 = 763648334
+const C_SecurityQuestions int64 = 1797596734
 
 type poolSecurityQuestions struct {
 	pool sync.Pool
@@ -601,7 +601,7 @@ func (p *poolSecurityQuestions) Put(x *SecurityQuestions) {
 
 var PoolSecurityQuestions = poolSecurityQuestions{}
 
-const C_RecoveryQuestion int64 = 2918071096
+const C_RecoveryQuestion int64 = 1697591959
 
 type poolRecoveryQuestion struct {
 	pool sync.Pool
@@ -623,7 +623,7 @@ func (p *poolRecoveryQuestion) Put(x *RecoveryQuestion) {
 
 var PoolRecoveryQuestion = poolRecoveryQuestion{}
 
-const C_SecurityQuestion int64 = 2312942506
+const C_SecurityQuestion int64 = 1092467205
 
 type poolSecurityQuestion struct {
 	pool sync.Pool
@@ -646,7 +646,7 @@ func (p *poolSecurityQuestion) Put(x *SecurityQuestion) {
 
 var PoolSecurityQuestion = poolSecurityQuestion{}
 
-const C_SecurityAnswer int64 = 1114722082
+const C_SecurityAnswer int64 = 1989228797
 
 type poolSecurityAnswer struct {
 	pool sync.Pool
@@ -668,7 +668,7 @@ func (p *poolSecurityAnswer) Put(x *SecurityAnswer) {
 
 var PoolSecurityAnswer = poolSecurityAnswer{}
 
-const C_AccountPassword int64 = 4014653466
+const C_AccountPassword int64 = 4178767656
 
 type poolAccountPassword struct {
 	pool sync.Pool
@@ -696,7 +696,7 @@ func (p *poolAccountPassword) Put(x *AccountPassword) {
 
 var PoolAccountPassword = poolAccountPassword{}
 
-const C_AccountAuthorizations int64 = 1563073032
+const C_AccountAuthorizations int64 = 1092320500
 
 type poolAccountAuthorizations struct {
 	pool sync.Pool
@@ -717,7 +717,7 @@ func (p *poolAccountAuthorizations) Put(x *AccountAuthorizations) {
 
 var PoolAccountAuthorizations = poolAccountAuthorizations{}
 
-const C_AccountAuthorization int64 = 1307277999
+const C_AccountAuthorization int64 = 275571966
 
 type poolAccountAuthorization struct {
 	pool sync.Pool
@@ -746,7 +746,7 @@ func (p *poolAccountAuthorization) Put(x *AccountAuthorization) {
 
 var PoolAccountAuthorization = poolAccountAuthorization{}
 
-const C_AccountPrivacyRules int64 = 219898582
+const C_AccountPrivacyRules int64 = 3802018092
 
 type poolAccountPrivacyRules struct {
 	pool sync.Pool
@@ -768,39 +768,39 @@ func (p *poolAccountPrivacyRules) Put(x *AccountPrivacyRules) {
 var PoolAccountPrivacyRules = poolAccountPrivacyRules{}
 
 func init() {
-	registry.RegisterConstructor(2635330403, "msg.AccountSetNotifySettings")
-	registry.RegisterConstructor(4182396369, "msg.AccountGetNotifySettings")
-	registry.RegisterConstructor(609377469, "msg.AccountRegisterDevice")
-	registry.RegisterConstructor(472768969, "msg.AccountUnregisterDevice")
-	registry.RegisterConstructor(2206794686, "msg.AccountUpdateProfile")
-	registry.RegisterConstructor(83507868, "msg.AccountCheckUsername")
-	registry.RegisterConstructor(1144675268, "msg.AccountUpdateUsername")
-	registry.RegisterConstructor(413055238, "msg.AccountUploadPhoto")
-	registry.RegisterConstructor(1215719904, "msg.AccountUpdatePhoto")
-	registry.RegisterConstructor(2390524815, "msg.AccountRemovePhoto")
-	registry.RegisterConstructor(4022476844, "msg.AccountSendChangePhoneCode")
-	registry.RegisterConstructor(523206354, "msg.AccountResendChangePhoneCode")
-	registry.RegisterConstructor(2939511809, "msg.AccountChangePhone")
-	registry.RegisterConstructor(435602842, "msg.AccountSetPrivacy")
-	registry.RegisterConstructor(934536200, "msg.AccountGetPrivacy")
-	registry.RegisterConstructor(2563289800, "msg.AccountGetAuthorizations")
-	registry.RegisterConstructor(2378769356, "msg.AccountResetAuthorization")
-	registry.RegisterConstructor(3359301343, "msg.AccountUpdateStatus")
-	registry.RegisterConstructor(1288054277, "msg.AccountSetLang")
-	registry.RegisterConstructor(892760360, "msg.AccountGetPassword")
-	registry.RegisterConstructor(3344806825, "msg.AccountGetPasswordSettings")
-	registry.RegisterConstructor(484279179, "msg.AccountUpdatePasswordSettings")
-	registry.RegisterConstructor(4107350339, "msg.AccountRecoverPassword")
-	registry.RegisterConstructor(3180865232, "msg.AccountGetTeams")
-	registry.RegisterConstructor(957483519, "msg.AccountPasswordSettings")
-	registry.RegisterConstructor(763648334, "msg.SecurityQuestions")
-	registry.RegisterConstructor(2918071096, "msg.RecoveryQuestion")
-	registry.RegisterConstructor(2312942506, "msg.SecurityQuestion")
-	registry.RegisterConstructor(1114722082, "msg.SecurityAnswer")
-	registry.RegisterConstructor(4014653466, "msg.AccountPassword")
-	registry.RegisterConstructor(1563073032, "msg.AccountAuthorizations")
-	registry.RegisterConstructor(1307277999, "msg.AccountAuthorization")
-	registry.RegisterConstructor(219898582, "msg.AccountPrivacyRules")
+	registry.RegisterConstructor(2016882075, "AccountSetNotifySettings")
+	registry.RegisterConstructor(477008681, "AccountGetNotifySettings")
+	registry.RegisterConstructor(946059841, "AccountRegisterDevice")
+	registry.RegisterConstructor(3981251588, "AccountUnregisterDevice")
+	registry.RegisterConstructor(3725499887, "AccountUpdateProfile")
+	registry.RegisterConstructor(1501406413, "AccountCheckUsername")
+	registry.RegisterConstructor(1477164344, "AccountUpdateUsername")
+	registry.RegisterConstructor(1222469957, "AccountUploadPhoto")
+	registry.RegisterConstructor(406174115, "AccountUpdatePhoto")
+	registry.RegisterConstructor(3728692172, "AccountRemovePhoto")
+	registry.RegisterConstructor(1389121902, "AccountSendChangePhoneCode")
+	registry.RegisterConstructor(4200771569, "AccountResendChangePhoneCode")
+	registry.RegisterConstructor(4285969474, "AccountChangePhone")
+	registry.RegisterConstructor(1599585002, "AccountSetPrivacy")
+	registry.RegisterConstructor(1897044856, "AccountGetPrivacy")
+	registry.RegisterConstructor(2112646192, "AccountGetAuthorizations")
+	registry.RegisterConstructor(1045069116, "AccountResetAuthorization")
+	registry.RegisterConstructor(666864933, "AccountUpdateStatus")
+	registry.RegisterConstructor(2015777242, "AccountSetLang")
+	registry.RegisterConstructor(1702207851, "AccountGetPassword")
+	registry.RegisterConstructor(2052309739, "AccountGetPasswordSettings")
+	registry.RegisterConstructor(3193945896, "AccountUpdatePasswordSettings")
+	registry.RegisterConstructor(1086766738, "AccountRecoverPassword")
+	registry.RegisterConstructor(2881489378, "AccountGetTeams")
+	registry.RegisterConstructor(3362978866, "AccountPasswordSettings")
+	registry.RegisterConstructor(1797596734, "SecurityQuestions")
+	registry.RegisterConstructor(1697591959, "RecoveryQuestion")
+	registry.RegisterConstructor(1092467205, "SecurityQuestion")
+	registry.RegisterConstructor(1989228797, "SecurityAnswer")
+	registry.RegisterConstructor(4178767656, "AccountPassword")
+	registry.RegisterConstructor(1092320500, "AccountAuthorizations")
+	registry.RegisterConstructor(275571966, "AccountAuthorization")
+	registry.RegisterConstructor(3802018092, "AccountPrivacyRules")
 }
 
 func (x *AccountSetNotifySettings) DeepCopy(z *AccountSetNotifySettings) {

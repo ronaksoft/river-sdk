@@ -10,7 +10,7 @@ import (
 	sync "sync"
 )
 
-const C_BotStart int64 = 3448758942
+const C_BotStart int64 = 2068702388
 
 type poolBotStart struct {
 	pool sync.Pool
@@ -36,7 +36,7 @@ func (p *poolBotStart) Put(x *BotStart) {
 
 var PoolBotStart = poolBotStart{}
 
-const C_BotRecall int64 = 567464755
+const C_BotRecall int64 = 4208974051
 
 type poolBotRecall struct {
 	pool sync.Pool
@@ -57,7 +57,7 @@ func (p *poolBotRecall) Put(x *BotRecall) {
 
 var PoolBotRecall = poolBotRecall{}
 
-const C_BotSetInfo int64 = 1487199122
+const C_BotSetInfo int64 = 3735815245
 
 type poolBotSetInfo struct {
 	pool sync.Pool
@@ -84,7 +84,7 @@ func (p *poolBotSetInfo) Put(x *BotSetInfo) {
 
 var PoolBotSetInfo = poolBotSetInfo{}
 
-const C_BotGet int64 = 3431546487
+const C_BotGet int64 = 911895569
 
 type poolBotGet struct {
 	pool sync.Pool
@@ -106,7 +106,7 @@ func (p *poolBotGet) Put(x *BotGet) {
 
 var PoolBotGet = poolBotGet{}
 
-const C_BotSendMessage int64 = 3116228191
+const C_BotSendMessage int64 = 2371725696
 
 type poolBotSendMessage struct {
 	pool sync.Pool
@@ -137,7 +137,7 @@ func (p *poolBotSendMessage) Put(x *BotSendMessage) {
 
 var PoolBotSendMessage = poolBotSendMessage{}
 
-const C_BotEditMessage int64 = 149350155
+const C_BotEditMessage int64 = 1007063252
 
 type poolBotEditMessage struct {
 	pool sync.Pool
@@ -167,7 +167,7 @@ func (p *poolBotEditMessage) Put(x *BotEditMessage) {
 
 var PoolBotEditMessage = poolBotEditMessage{}
 
-const C_BotSendMedia int64 = 2100881420
+const C_BotSendMedia int64 = 1844738193
 
 type poolBotSendMedia struct {
 	pool sync.Pool
@@ -195,7 +195,7 @@ func (p *poolBotSendMedia) Put(x *BotSendMedia) {
 
 var PoolBotSendMedia = poolBotSendMedia{}
 
-const C_BotSaveFilePart int64 = 598724192
+const C_BotSaveFilePart int64 = 905437522
 
 type poolBotSaveFilePart struct {
 	pool sync.Pool
@@ -219,7 +219,7 @@ func (p *poolBotSaveFilePart) Put(x *BotSaveFilePart) {
 
 var PoolBotSaveFilePart = poolBotSaveFilePart{}
 
-const C_BotUpdateProfile int64 = 1624560842
+const C_BotUpdateProfile int64 = 2820005221
 
 type poolBotUpdateProfile struct {
 	pool sync.Pool
@@ -242,7 +242,7 @@ func (p *poolBotUpdateProfile) Put(x *BotUpdateProfile) {
 
 var PoolBotUpdateProfile = poolBotUpdateProfile{}
 
-const C_BotUpdatePhoto int64 = 4201069063
+const C_BotUpdatePhoto int64 = 3464973784
 
 type poolBotUpdatePhoto struct {
 	pool sync.Pool
@@ -267,7 +267,7 @@ func (p *poolBotUpdatePhoto) Put(x *BotUpdatePhoto) {
 
 var PoolBotUpdatePhoto = poolBotUpdatePhoto{}
 
-const C_BotRevokeToken int64 = 1601295593
+const C_BotRevokeToken int64 = 1804706614
 
 type poolBotRevokeToken struct {
 	pool sync.Pool
@@ -289,7 +289,7 @@ func (p *poolBotRevokeToken) Put(x *BotRevokeToken) {
 
 var PoolBotRevokeToken = poolBotRevokeToken{}
 
-const C_BotDeleteMessage int64 = 423422518
+const C_BotDeleteMessage int64 = 3523077017
 
 type poolBotDeleteMessage struct {
 	pool sync.Pool
@@ -314,7 +314,7 @@ func (p *poolBotDeleteMessage) Put(x *BotDeleteMessage) {
 
 var PoolBotDeleteMessage = poolBotDeleteMessage{}
 
-const C_BotSetCallbackAnswer int64 = 759509107
+const C_BotSetCallbackAnswer int64 = 1891806754
 
 type poolBotSetCallbackAnswer struct {
 	pool sync.Pool
@@ -338,7 +338,7 @@ func (p *poolBotSetCallbackAnswer) Put(x *BotSetCallbackAnswer) {
 
 var PoolBotSetCallbackAnswer = poolBotSetCallbackAnswer{}
 
-const C_BotGetCallbackAnswer int64 = 1226608321
+const C_BotGetCallbackAnswer int64 = 345706640
 
 type poolBotGetCallbackAnswer struct {
 	pool sync.Pool
@@ -364,7 +364,7 @@ func (p *poolBotGetCallbackAnswer) Put(x *BotGetCallbackAnswer) {
 
 var PoolBotGetCallbackAnswer = poolBotGetCallbackAnswer{}
 
-const C_BotGetInlineResults int64 = 375113086
+const C_BotGetInlineResults int64 = 4192114308
 
 type poolBotGetInlineResults struct {
 	pool sync.Pool
@@ -398,7 +398,7 @@ func (p *poolBotGetInlineResults) Put(x *BotGetInlineResults) {
 
 var PoolBotGetInlineResults = poolBotGetInlineResults{}
 
-const C_BotSetInlineResults int64 = 609072999
+const C_BotSetInlineResults int64 = 3418940573
 
 type poolBotSetInlineResults struct {
 	pool sync.Pool
@@ -428,7 +428,7 @@ func (p *poolBotSetInlineResults) Put(x *BotSetInlineResults) {
 
 var PoolBotSetInlineResults = poolBotSetInlineResults{}
 
-const C_BotSendInlineResults int64 = 1786892237
+const C_BotSendInlineResults int64 = 923160988
 
 type poolBotSendInlineResults struct {
 	pool sync.Pool
@@ -459,7 +459,7 @@ func (p *poolBotSendInlineResults) Put(x *BotSendInlineResults) {
 
 var PoolBotSendInlineResults = poolBotSendInlineResults{}
 
-const C_BotUploadWallPaper int64 = 2519914079
+const C_BotUploadWallPaper int64 = 3329295900
 
 type poolBotUploadWallPaper struct {
 	pool sync.Pool
@@ -489,7 +489,7 @@ func (p *poolBotUploadWallPaper) Put(x *BotUploadWallPaper) {
 
 var PoolBotUploadWallPaper = poolBotUploadWallPaper{}
 
-const C_BotUploadGif int64 = 3754133337
+const C_BotUploadGif int64 = 3473872836
 
 type poolBotUploadGif struct {
 	pool sync.Pool
@@ -521,7 +521,7 @@ func (p *poolBotUploadGif) Put(x *BotUploadGif) {
 
 var PoolBotUploadGif = poolBotUploadGif{}
 
-const C_BotResults int64 = 2575283165
+const C_BotResults int64 = 527920130
 
 type poolBotResults struct {
 	pool sync.Pool
@@ -549,7 +549,7 @@ func (p *poolBotResults) Put(x *BotResults) {
 
 var PoolBotResults = poolBotResults{}
 
-const C_BotInlineSwitchPM int64 = 4111477214
+const C_BotInlineSwitchPM int64 = 3014743726
 
 type poolBotInlineSwitchPM struct {
 	pool sync.Pool
@@ -571,7 +571,7 @@ func (p *poolBotInlineSwitchPM) Put(x *BotInlineSwitchPM) {
 
 var PoolBotInlineSwitchPM = poolBotInlineSwitchPM{}
 
-const C_BotInlineResult int64 = 778738919
+const C_BotInlineResult int64 = 942846933
 
 type poolBotInlineResult struct {
 	pool sync.Pool
@@ -604,7 +604,7 @@ func (p *poolBotInlineResult) Put(x *BotInlineResult) {
 
 var PoolBotInlineResult = poolBotInlineResult{}
 
-const C_InputBotInlineResult int64 = 3710074255
+const C_InputBotInlineResult int64 = 2158273502
 
 type poolInputBotInlineResult struct {
 	pool sync.Pool
@@ -637,7 +637,7 @@ func (p *poolInputBotInlineResult) Put(x *InputBotInlineResult) {
 
 var PoolInputBotInlineResult = poolInputBotInlineResult{}
 
-const C_BotInlineMessage int64 = 206571047
+const C_BotInlineMessage int64 = 3297841032
 
 type poolBotInlineMessage struct {
 	pool sync.Pool
@@ -663,7 +663,7 @@ func (p *poolBotInlineMessage) Put(x *BotInlineMessage) {
 
 var PoolBotInlineMessage = poolBotInlineMessage{}
 
-const C_InputBotInlineMessage int64 = 1338681068
+const C_InputBotInlineMessage int64 = 1408974864
 
 type poolInputBotInlineMessage struct {
 	pool sync.Pool
@@ -690,7 +690,7 @@ func (p *poolInputBotInlineMessage) Put(x *InputBotInlineMessage) {
 
 var PoolInputBotInlineMessage = poolInputBotInlineMessage{}
 
-const C_BotToken int64 = 230757930
+const C_BotToken int64 = 3137540096
 
 type poolBotToken struct {
 	pool sync.Pool
@@ -711,7 +711,7 @@ func (p *poolBotToken) Put(x *BotToken) {
 
 var PoolBotToken = poolBotToken{}
 
-const C_BotRecalled int64 = 4164808656
+const C_BotRecalled int64 = 4007077962
 
 type poolBotRecalled struct {
 	pool sync.Pool
@@ -733,7 +733,7 @@ func (p *poolBotRecalled) Put(x *BotRecalled) {
 
 var PoolBotRecalled = poolBotRecalled{}
 
-const C_BotCallbackAnswer int64 = 2180565590
+const C_BotCallbackAnswer int64 = 3344545062
 
 type poolBotCallbackAnswer struct {
 	pool sync.Pool
@@ -756,7 +756,7 @@ func (p *poolBotCallbackAnswer) Put(x *BotCallbackAnswer) {
 
 var PoolBotCallbackAnswer = poolBotCallbackAnswer{}
 
-const C_BotsMany int64 = 430660433
+const C_BotsMany int64 = 2942918011
 
 type poolBotsMany struct {
 	pool sync.Pool
@@ -777,7 +777,7 @@ func (p *poolBotsMany) Put(x *BotsMany) {
 
 var PoolBotsMany = poolBotsMany{}
 
-const C_BotGetCommands int64 = 685471542
+const C_BotGetCommands int64 = 473628905
 
 type poolBotGetCommands struct {
 	pool sync.Pool
@@ -801,7 +801,7 @@ func (p *poolBotGetCommands) Put(x *BotGetCommands) {
 
 var PoolBotGetCommands = poolBotGetCommands{}
 
-const C_BotCommandsMany int64 = 369478577
+const C_BotCommandsMany int64 = 6153347
 
 type poolBotCommandsMany struct {
 	pool sync.Pool
@@ -824,37 +824,37 @@ func (p *poolBotCommandsMany) Put(x *BotCommandsMany) {
 var PoolBotCommandsMany = poolBotCommandsMany{}
 
 func init() {
-	registry.RegisterConstructor(3448758942, "msg.BotStart")
-	registry.RegisterConstructor(567464755, "msg.BotRecall")
-	registry.RegisterConstructor(1487199122, "msg.BotSetInfo")
-	registry.RegisterConstructor(3431546487, "msg.BotGet")
-	registry.RegisterConstructor(3116228191, "msg.BotSendMessage")
-	registry.RegisterConstructor(149350155, "msg.BotEditMessage")
-	registry.RegisterConstructor(2100881420, "msg.BotSendMedia")
-	registry.RegisterConstructor(598724192, "msg.BotSaveFilePart")
-	registry.RegisterConstructor(1624560842, "msg.BotUpdateProfile")
-	registry.RegisterConstructor(4201069063, "msg.BotUpdatePhoto")
-	registry.RegisterConstructor(1601295593, "msg.BotRevokeToken")
-	registry.RegisterConstructor(423422518, "msg.BotDeleteMessage")
-	registry.RegisterConstructor(759509107, "msg.BotSetCallbackAnswer")
-	registry.RegisterConstructor(1226608321, "msg.BotGetCallbackAnswer")
-	registry.RegisterConstructor(375113086, "msg.BotGetInlineResults")
-	registry.RegisterConstructor(609072999, "msg.BotSetInlineResults")
-	registry.RegisterConstructor(1786892237, "msg.BotSendInlineResults")
-	registry.RegisterConstructor(2519914079, "msg.BotUploadWallPaper")
-	registry.RegisterConstructor(3754133337, "msg.BotUploadGif")
-	registry.RegisterConstructor(2575283165, "msg.BotResults")
-	registry.RegisterConstructor(4111477214, "msg.BotInlineSwitchPM")
-	registry.RegisterConstructor(778738919, "msg.BotInlineResult")
-	registry.RegisterConstructor(3710074255, "msg.InputBotInlineResult")
-	registry.RegisterConstructor(206571047, "msg.BotInlineMessage")
-	registry.RegisterConstructor(1338681068, "msg.InputBotInlineMessage")
-	registry.RegisterConstructor(230757930, "msg.BotToken")
-	registry.RegisterConstructor(4164808656, "msg.BotRecalled")
-	registry.RegisterConstructor(2180565590, "msg.BotCallbackAnswer")
-	registry.RegisterConstructor(430660433, "msg.BotsMany")
-	registry.RegisterConstructor(685471542, "msg.BotGetCommands")
-	registry.RegisterConstructor(369478577, "msg.BotCommandsMany")
+	registry.RegisterConstructor(2068702388, "BotStart")
+	registry.RegisterConstructor(4208974051, "BotRecall")
+	registry.RegisterConstructor(3735815245, "BotSetInfo")
+	registry.RegisterConstructor(911895569, "BotGet")
+	registry.RegisterConstructor(2371725696, "BotSendMessage")
+	registry.RegisterConstructor(1007063252, "BotEditMessage")
+	registry.RegisterConstructor(1844738193, "BotSendMedia")
+	registry.RegisterConstructor(905437522, "BotSaveFilePart")
+	registry.RegisterConstructor(2820005221, "BotUpdateProfile")
+	registry.RegisterConstructor(3464973784, "BotUpdatePhoto")
+	registry.RegisterConstructor(1804706614, "BotRevokeToken")
+	registry.RegisterConstructor(3523077017, "BotDeleteMessage")
+	registry.RegisterConstructor(1891806754, "BotSetCallbackAnswer")
+	registry.RegisterConstructor(345706640, "BotGetCallbackAnswer")
+	registry.RegisterConstructor(4192114308, "BotGetInlineResults")
+	registry.RegisterConstructor(3418940573, "BotSetInlineResults")
+	registry.RegisterConstructor(923160988, "BotSendInlineResults")
+	registry.RegisterConstructor(3329295900, "BotUploadWallPaper")
+	registry.RegisterConstructor(3473872836, "BotUploadGif")
+	registry.RegisterConstructor(527920130, "BotResults")
+	registry.RegisterConstructor(3014743726, "BotInlineSwitchPM")
+	registry.RegisterConstructor(942846933, "BotInlineResult")
+	registry.RegisterConstructor(2158273502, "InputBotInlineResult")
+	registry.RegisterConstructor(3297841032, "BotInlineMessage")
+	registry.RegisterConstructor(1408974864, "InputBotInlineMessage")
+	registry.RegisterConstructor(3137540096, "BotToken")
+	registry.RegisterConstructor(4007077962, "BotRecalled")
+	registry.RegisterConstructor(3344545062, "BotCallbackAnswer")
+	registry.RegisterConstructor(2942918011, "BotsMany")
+	registry.RegisterConstructor(473628905, "BotGetCommands")
+	registry.RegisterConstructor(6153347, "BotCommandsMany")
 }
 
 func (x *BotStart) DeepCopy(z *BotStart) {

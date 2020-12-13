@@ -39,7 +39,7 @@ func (ctrl *Controller) GetServerSalt() {
 			switch m.Constructor {
 			case msg.C_SystemSalts:
 				logs.Debug("SyncCtrl received SystemSalts")
-			case msg.C_Error:
+			case rony.C_Error:
 				e := new(rony.Error)
 				_ = m.Unmarshal(m.Message)
 				logs.Error("SyncCtrl received error response for SystemGetSalts (Error)",
@@ -72,7 +72,7 @@ func (ctrl *Controller) GetSystemConfig() {
 			switch m.Constructor {
 			case msg.C_SystemConfig:
 				logs.Debug("SyncCtrl received SystemConfig")
-			case msg.C_Error:
+			case rony.C_Error:
 				e := new(rony.Error)
 				_ = m.Unmarshal(m.Message)
 				logs.Error("SyncCtrl received error response for SystemGetSalts (Error)",
@@ -135,7 +135,7 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 				domain.TimeDelta = time.Duration(serverTime-clientTime) * time.Second
 
 				ctrl.appUpdateCallback(x.CurrentVersion, x.Available, x.Force)
-			case msg.C_Error:
+			case rony.C_Error:
 				err = domain.ParseServerError(m.Message)
 			default:
 				logs.Error("SyncCtrl did not received expected response for AuthRecall",
@@ -185,7 +185,7 @@ func (ctrl *Controller) GetServerTime() (err error) {
 					zap.Duration("Difference", domain.TimeDelta),
 				)
 
-			case msg.C_Error:
+			case rony.C_Error:
 				logs.Warn("We received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
 				err = domain.ParseServerError(m.Message)
 			}
@@ -220,7 +220,7 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, teamID int64, t
 		},
 		func(m *rony.MessageEnvelope) {
 			switch m.Constructor {
-			case msg.C_Error:
+			case rony.C_Error:
 				logs.Error("SyncCtrl got error response on MessagesGetDialogs", zap.Error(domain.ParseServerError(m.Message)))
 				x := &rony.Error{}
 				_ = x.Unmarshal(m.Message)
@@ -277,7 +277,7 @@ func (ctrl *Controller) GetAllTopPeers(
 		},
 		func(m *rony.MessageEnvelope) {
 			switch m.Constructor {
-			case msg.C_Error:
+			case rony.C_Error:
 				logs.Error("SyncCtrl got error response on ContactsGetTopPeers", zap.Error(domain.ParseServerError(m.Message)))
 				x := &rony.Error{}
 				_ = x.Unmarshal(m.Message)
@@ -325,7 +325,7 @@ func (ctrl *Controller) GetLabels(waitGroup *sync.WaitGroup, teamID int64, teamA
 		},
 		func(m *rony.MessageEnvelope) {
 			switch m.Constructor {
-			case msg.C_Error:
+			case rony.C_Error:
 				logs.Error("SyncCtrl got error response on LabelsGet", zap.Error(domain.ParseServerError(m.Message)))
 				x := &rony.Error{}
 				_ = x.Unmarshal(m.Message)
@@ -362,7 +362,7 @@ func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup, teamID int64, tea
 		},
 		func(m *rony.MessageEnvelope) {
 			switch m.Constructor {
-			case msg.C_Error:
+			case rony.C_Error:
 				x := new(rony.Error)
 				_ = x.Unmarshal(m.Message)
 				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
@@ -400,7 +400,7 @@ func (ctrl *Controller) Logout(waitGroup *sync.WaitGroup, retry int) {
 		},
 		func(m *rony.MessageEnvelope) {
 			switch m.Constructor {
-			case msg.C_Error:
+			case rony.C_Error:
 				x := &rony.Error{}
 				_ = x.Unmarshal(m.Message)
 				logs.Warn("SyncCtrl got error on AuthLogout", zap.String("Code", x.Code), zap.String("Item", x.Items))
@@ -428,7 +428,7 @@ func (ctrl *Controller) UpdateStatus(online bool) {
 		},
 		func(m *rony.MessageEnvelope) {
 			switch m.Constructor {
-			case msg.C_Error:
+			case rony.C_Error:
 				x := new(rony.Error)
 				_ = x.Unmarshal(m.Message)
 				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {

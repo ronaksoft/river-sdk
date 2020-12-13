@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_PasswordAlgorithmVer6A int64 = 2692206874
+const C_PasswordAlgorithmVer6A int64 = 341860043
 
 type poolPasswordAlgorithmVer6A struct {
 	pool sync.Pool
@@ -32,7 +32,7 @@ func (p *poolPasswordAlgorithmVer6A) Put(x *PasswordAlgorithmVer6A) {
 var PoolPasswordAlgorithmVer6A = poolPasswordAlgorithmVer6A{}
 
 func init() {
-	registry.RegisterConstructor(2692206874, "msg.PasswordAlgorithmVer6A")
+	registry.RegisterConstructor(341860043, "PasswordAlgorithmVer6A")
 }
 
 func (x *PasswordAlgorithmVer6A) DeepCopy(z *PasswordAlgorithmVer6A) {

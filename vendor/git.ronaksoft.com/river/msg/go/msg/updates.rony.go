@@ -7,7 +7,7 @@ import (
 	sync "sync"
 )
 
-const C_UpdateGetState int64 = 1632290153
+const C_UpdateGetState int64 = 1437250230
 
 type poolUpdateGetState struct {
 	pool sync.Pool
@@ -27,7 +27,7 @@ func (p *poolUpdateGetState) Put(x *UpdateGetState) {
 
 var PoolUpdateGetState = poolUpdateGetState{}
 
-const C_UpdateGetDifference int64 = 3467307691
+const C_UpdateGetDifference int64 = 556775761
 
 type poolUpdateGetDifference struct {
 	pool sync.Pool
@@ -49,7 +49,7 @@ func (p *poolUpdateGetDifference) Put(x *UpdateGetDifference) {
 
 var PoolUpdateGetDifference = poolUpdateGetDifference{}
 
-const C_UpdateDifference int64 = 2937859860
+const C_UpdateDifference int64 = 1742546619
 
 type poolUpdateDifference struct {
 	pool sync.Pool
@@ -76,7 +76,7 @@ func (p *poolUpdateDifference) Put(x *UpdateDifference) {
 
 var PoolUpdateDifference = poolUpdateDifference{}
 
-const C_UpdateTooLong int64 = 3588398962
+const C_UpdateTooLong int64 = 1531755547
 
 type poolUpdateTooLong struct {
 	pool sync.Pool
@@ -96,7 +96,7 @@ func (p *poolUpdateTooLong) Put(x *UpdateTooLong) {
 
 var PoolUpdateTooLong = poolUpdateTooLong{}
 
-const C_UpdateState int64 = 2070778422
+const C_UpdateState int64 = 1837585836
 
 type poolUpdateState struct {
 	pool sync.Pool
@@ -117,7 +117,7 @@ func (p *poolUpdateState) Put(x *UpdateState) {
 
 var PoolUpdateState = poolUpdateState{}
 
-const C_UpdateMessageID int64 = 1764208092
+const C_UpdateMessageID int64 = 2139063022
 
 type poolUpdateMessageID struct {
 	pool sync.Pool
@@ -140,7 +140,7 @@ func (p *poolUpdateMessageID) Put(x *UpdateMessageID) {
 
 var PoolUpdateMessageID = poolUpdateMessageID{}
 
-const C_UpdateNewMessage int64 = 75740112
+const C_UpdateNewMessage int64 = 3426925183
 
 type poolUpdateNewMessage struct {
 	pool sync.Pool
@@ -172,7 +172,7 @@ func (p *poolUpdateNewMessage) Put(x *UpdateNewMessage) {
 
 var PoolUpdateNewMessage = poolUpdateNewMessage{}
 
-const C_UpdateMessageEdited int64 = 2202915150
+const C_UpdateMessageEdited int64 = 1825079988
 
 type poolUpdateMessageEdited struct {
 	pool sync.Pool
@@ -198,7 +198,7 @@ func (p *poolUpdateMessageEdited) Put(x *UpdateMessageEdited) {
 
 var PoolUpdateMessageEdited = poolUpdateMessageEdited{}
 
-const C_UpdateMessagesDeleted int64 = 1003091958
+const C_UpdateMessagesDeleted int64 = 670568714
 
 type poolUpdateMessagesDeleted struct {
 	pool sync.Pool
@@ -226,7 +226,7 @@ func (p *poolUpdateMessagesDeleted) Put(x *UpdateMessagesDeleted) {
 
 var PoolUpdateMessagesDeleted = poolUpdateMessagesDeleted{}
 
-const C_UpdateReadHistoryInbox int64 = 4013107819
+const C_UpdateReadHistoryInbox int64 = 1529128378
 
 type poolUpdateReadHistoryInbox struct {
 	pool sync.Pool
@@ -254,7 +254,7 @@ func (p *poolUpdateReadHistoryInbox) Put(x *UpdateReadHistoryInbox) {
 
 var PoolUpdateReadHistoryInbox = poolUpdateReadHistoryInbox{}
 
-const C_UpdateReadHistoryOutbox int64 = 4011050865
+const C_UpdateReadHistoryOutbox int64 = 510866108
 
 type poolUpdateReadHistoryOutbox struct {
 	pool sync.Pool
@@ -283,7 +283,7 @@ func (p *poolUpdateReadHistoryOutbox) Put(x *UpdateReadHistoryOutbox) {
 
 var PoolUpdateReadHistoryOutbox = poolUpdateReadHistoryOutbox{}
 
-const C_UpdateMessagePinned int64 = 2761988296
+const C_UpdateMessagePinned int64 = 1260768050
 
 type poolUpdateMessagePinned struct {
 	pool sync.Pool
@@ -313,7 +313,7 @@ func (p *poolUpdateMessagePinned) Put(x *UpdateMessagePinned) {
 
 var PoolUpdateMessagePinned = poolUpdateMessagePinned{}
 
-const C_UpdateUserTyping int64 = 3261004099
+const C_UpdateUserTyping int64 = 178254060
 
 type poolUpdateUserTyping struct {
 	pool sync.Pool
@@ -339,7 +339,7 @@ func (p *poolUpdateUserTyping) Put(x *UpdateUserTyping) {
 
 var PoolUpdateUserTyping = poolUpdateUserTyping{}
 
-const C_UpdateUserStatus int64 = 1752961652
+const C_UpdateUserStatus int64 = 2696747995
 
 type poolUpdateUserStatus struct {
 	pool sync.Pool
@@ -362,7 +362,7 @@ func (p *poolUpdateUserStatus) Put(x *UpdateUserStatus) {
 
 var PoolUpdateUserStatus = poolUpdateUserStatus{}
 
-const C_UpdateUsername int64 = 3411383202
+const C_UpdateUsername int64 = 4290110589
 
 type poolUpdateUsername struct {
 	pool sync.Pool
@@ -390,7 +390,7 @@ func (p *poolUpdateUsername) Put(x *UpdateUsername) {
 
 var PoolUpdateUsername = poolUpdateUsername{}
 
-const C_UpdateUserPhoto int64 = 72923648
+const C_UpdateUserPhoto int64 = 302028082
 
 type poolUpdateUserPhoto struct {
 	pool sync.Pool
@@ -419,7 +419,7 @@ func (p *poolUpdateUserPhoto) Put(x *UpdateUserPhoto) {
 
 var PoolUpdateUserPhoto = poolUpdateUserPhoto{}
 
-const C_UpdateNotifySettings int64 = 3766115140
+const C_UpdateNotifySettings int64 = 3187524885
 
 type poolUpdateNotifySettings struct {
 	pool sync.Pool
@@ -451,7 +451,7 @@ func (p *poolUpdateNotifySettings) Put(x *UpdateNotifySettings) {
 
 var PoolUpdateNotifySettings = poolUpdateNotifySettings{}
 
-const C_UpdateGroupParticipantAdd int64 = 3544906637
+const C_UpdateGroupParticipantAdd int64 = 1623827837
 
 type poolUpdateGroupParticipantAdd struct {
 	pool sync.Pool
@@ -477,7 +477,7 @@ func (p *poolUpdateGroupParticipantAdd) Put(x *UpdateGroupParticipantAdd) {
 
 var PoolUpdateGroupParticipantAdd = poolUpdateGroupParticipantAdd{}
 
-const C_UpdateGroupParticipantDeleted int64 = 921388023
+const C_UpdateGroupParticipantDeleted int64 = 2489941844
 
 type poolUpdateGroupParticipantDeleted struct {
 	pool sync.Pool
@@ -501,7 +501,7 @@ func (p *poolUpdateGroupParticipantDeleted) Put(x *UpdateGroupParticipantDeleted
 
 var PoolUpdateGroupParticipantDeleted = poolUpdateGroupParticipantDeleted{}
 
-const C_UpdateGroupParticipantAdmin int64 = 4102007577
+const C_UpdateGroupParticipantAdmin int64 = 1813022164
 
 type poolUpdateGroupParticipantAdmin struct {
 	pool sync.Pool
@@ -526,7 +526,7 @@ func (p *poolUpdateGroupParticipantAdmin) Put(x *UpdateGroupParticipantAdmin) {
 
 var PoolUpdateGroupParticipantAdmin = poolUpdateGroupParticipantAdmin{}
 
-const C_UpdateGroupAdmins int64 = 1878951933
+const C_UpdateGroupAdmins int64 = 694155405
 
 type poolUpdateGroupAdmins struct {
 	pool sync.Pool
@@ -550,7 +550,7 @@ func (p *poolUpdateGroupAdmins) Put(x *UpdateGroupAdmins) {
 
 var PoolUpdateGroupAdmins = poolUpdateGroupAdmins{}
 
-const C_UpdateGroupPhoto int64 = 3710117357
+const C_UpdateGroupPhoto int64 = 367193154
 
 type poolUpdateGroupPhoto struct {
 	pool sync.Pool
@@ -578,7 +578,7 @@ func (p *poolUpdateGroupPhoto) Put(x *UpdateGroupPhoto) {
 
 var PoolUpdateGroupPhoto = poolUpdateGroupPhoto{}
 
-const C_UpdateReadMessagesContents int64 = 256065898
+const C_UpdateReadMessagesContents int64 = 2991403048
 
 type poolUpdateReadMessagesContents struct {
 	pool sync.Pool
@@ -606,7 +606,7 @@ func (p *poolUpdateReadMessagesContents) Put(x *UpdateReadMessagesContents) {
 
 var PoolUpdateReadMessagesContents = poolUpdateReadMessagesContents{}
 
-const C_UpdateAuthorizationReset int64 = 1770313879
+const C_UpdateAuthorizationReset int64 = 2359297647
 
 type poolUpdateAuthorizationReset struct {
 	pool sync.Pool
@@ -628,7 +628,7 @@ func (p *poolUpdateAuthorizationReset) Put(x *UpdateAuthorizationReset) {
 
 var PoolUpdateAuthorizationReset = poolUpdateAuthorizationReset{}
 
-const C_UpdateDraftMessage int64 = 2643668944
+const C_UpdateDraftMessage int64 = 3453026195
 
 type poolUpdateDraftMessage struct {
 	pool sync.Pool
@@ -654,7 +654,7 @@ func (p *poolUpdateDraftMessage) Put(x *UpdateDraftMessage) {
 
 var PoolUpdateDraftMessage = poolUpdateDraftMessage{}
 
-const C_UpdateDraftMessageCleared int64 = 3294904674
+const C_UpdateDraftMessageCleared int64 = 2011635602
 
 type poolUpdateDraftMessageCleared struct {
 	pool sync.Pool
@@ -681,7 +681,7 @@ func (p *poolUpdateDraftMessageCleared) Put(x *UpdateDraftMessageCleared) {
 
 var PoolUpdateDraftMessageCleared = poolUpdateDraftMessageCleared{}
 
-const C_UpdateDialogPinned int64 = 1569664568
+const C_UpdateDialogPinned int64 = 231538299
 
 type poolUpdateDialogPinned struct {
 	pool sync.Pool
@@ -709,7 +709,7 @@ func (p *poolUpdateDialogPinned) Put(x *UpdateDialogPinned) {
 
 var PoolUpdateDialogPinned = poolUpdateDialogPinned{}
 
-const C_UpdateDialogPinnedReorder int64 = 4008682179
+const C_UpdateDialogPinnedReorder int64 = 1567423539
 
 type poolUpdateDialogPinnedReorder struct {
 	pool sync.Pool
@@ -732,7 +732,7 @@ func (p *poolUpdateDialogPinnedReorder) Put(x *UpdateDialogPinnedReorder) {
 
 var PoolUpdateDialogPinnedReorder = poolUpdateDialogPinnedReorder{}
 
-const C_UpdateAccountPrivacy int64 = 2013786192
+const C_UpdateAccountPrivacy int64 = 629173761
 
 type poolUpdateAccountPrivacy struct {
 	pool sync.Pool
@@ -760,7 +760,7 @@ func (p *poolUpdateAccountPrivacy) Put(x *UpdateAccountPrivacy) {
 
 var PoolUpdateAccountPrivacy = poolUpdateAccountPrivacy{}
 
-const C_UpdateLabelItemsAdded int64 = 2552510165
+const C_UpdateLabelItemsAdded int64 = 2216022057
 
 type poolUpdateLabelItemsAdded struct {
 	pool sync.Pool
@@ -790,7 +790,7 @@ func (p *poolUpdateLabelItemsAdded) Put(x *UpdateLabelItemsAdded) {
 
 var PoolUpdateLabelItemsAdded = poolUpdateLabelItemsAdded{}
 
-const C_UpdateLabelItemsRemoved int64 = 3223106630
+const C_UpdateLabelItemsRemoved int64 = 830226827
 
 type poolUpdateLabelItemsRemoved struct {
 	pool sync.Pool
@@ -820,7 +820,7 @@ func (p *poolUpdateLabelItemsRemoved) Put(x *UpdateLabelItemsRemoved) {
 
 var PoolUpdateLabelItemsRemoved = poolUpdateLabelItemsRemoved{}
 
-const C_UpdateLabelSet int64 = 3098156256
+const C_UpdateLabelSet int64 = 2353687359
 
 type poolUpdateLabelSet struct {
 	pool sync.Pool
@@ -843,7 +843,7 @@ func (p *poolUpdateLabelSet) Put(x *UpdateLabelSet) {
 
 var PoolUpdateLabelSet = poolUpdateLabelSet{}
 
-const C_UpdateLabelDeleted int64 = 2364090608
+const C_UpdateLabelDeleted int64 = 3702192307
 
 type poolUpdateLabelDeleted struct {
 	pool sync.Pool
@@ -866,7 +866,7 @@ func (p *poolUpdateLabelDeleted) Put(x *UpdateLabelDeleted) {
 
 var PoolUpdateLabelDeleted = poolUpdateLabelDeleted{}
 
-const C_UpdateUserBlocked int64 = 2570026653
+const C_UpdateUserBlocked int64 = 3750625773
 
 type poolUpdateUserBlocked struct {
 	pool sync.Pool
@@ -890,7 +890,7 @@ func (p *poolUpdateUserBlocked) Put(x *UpdateUserBlocked) {
 
 var PoolUpdateUserBlocked = poolUpdateUserBlocked{}
 
-const C_UpdateMessagePoll int64 = 1349949010
+const C_UpdateMessagePoll int64 = 383248674
 
 type poolUpdateMessagePoll struct {
 	pool sync.Pool
@@ -921,7 +921,7 @@ func (p *poolUpdateMessagePoll) Put(x *UpdateMessagePoll) {
 
 var PoolUpdateMessagePoll = poolUpdateMessagePoll{}
 
-const C_UpdateBotCallbackQuery int64 = 2133244656
+const C_UpdateBotCallbackQuery int64 = 3408999713
 
 type poolUpdateBotCallbackQuery struct {
 	pool sync.Pool
@@ -951,7 +951,7 @@ func (p *poolUpdateBotCallbackQuery) Put(x *UpdateBotCallbackQuery) {
 
 var PoolUpdateBotCallbackQuery = poolUpdateBotCallbackQuery{}
 
-const C_UpdateBotInlineQuery int64 = 2949144765
+const C_UpdateBotInlineQuery int64 = 4065328876
 
 type poolUpdateBotInlineQuery struct {
 	pool sync.Pool
@@ -985,7 +985,7 @@ func (p *poolUpdateBotInlineQuery) Put(x *UpdateBotInlineQuery) {
 
 var PoolUpdateBotInlineQuery = poolUpdateBotInlineQuery{}
 
-const C_UpdateBotInlineSend int64 = 1813939863
+const C_UpdateBotInlineSend int64 = 2208028013
 
 type poolUpdateBotInlineSend struct {
 	pool sync.Pool
@@ -1014,7 +1014,7 @@ func (p *poolUpdateBotInlineSend) Put(x *UpdateBotInlineSend) {
 
 var PoolUpdateBotInlineSend = poolUpdateBotInlineSend{}
 
-const C_UpdateTeamCreated int64 = 3792600641
+const C_UpdateTeamCreated int64 = 2762932529
 
 type poolUpdateTeamCreated struct {
 	pool sync.Pool
@@ -1040,7 +1040,7 @@ func (p *poolUpdateTeamCreated) Put(x *UpdateTeamCreated) {
 
 var PoolUpdateTeamCreated = poolUpdateTeamCreated{}
 
-const C_UpdateTeamMemberAdded int64 = 1371743118
+const C_UpdateTeamMemberAdded int64 = 1307755890
 
 type poolUpdateTeamMemberAdded struct {
 	pool sync.Pool
@@ -1073,7 +1073,7 @@ func (p *poolUpdateTeamMemberAdded) Put(x *UpdateTeamMemberAdded) {
 
 var PoolUpdateTeamMemberAdded = poolUpdateTeamMemberAdded{}
 
-const C_UpdateTeamMemberRemoved int64 = 4102954453
+const C_UpdateTeamMemberRemoved int64 = 99543064
 
 type poolUpdateTeamMemberRemoved struct {
 	pool sync.Pool
@@ -1099,7 +1099,7 @@ func (p *poolUpdateTeamMemberRemoved) Put(x *UpdateTeamMemberRemoved) {
 
 var PoolUpdateTeamMemberRemoved = poolUpdateTeamMemberRemoved{}
 
-const C_UpdateTeamMemberStatus int64 = 1178766456
+const C_UpdateTeamMemberStatus int64 = 4065657769
 
 type poolUpdateTeamMemberStatus struct {
 	pool sync.Pool
@@ -1124,7 +1124,7 @@ func (p *poolUpdateTeamMemberStatus) Put(x *UpdateTeamMemberStatus) {
 
 var PoolUpdateTeamMemberStatus = poolUpdateTeamMemberStatus{}
 
-const C_UpdateTeamPhoto int64 = 2939683506
+const C_UpdateTeamPhoto int64 = 3110088064
 
 type poolUpdateTeamPhoto struct {
 	pool sync.Pool
@@ -1151,7 +1151,7 @@ func (p *poolUpdateTeamPhoto) Put(x *UpdateTeamPhoto) {
 
 var PoolUpdateTeamPhoto = poolUpdateTeamPhoto{}
 
-const C_UpdateTeam int64 = 931901879
+const C_UpdateTeam int64 = 2978180712
 
 type poolUpdateTeam struct {
 	pool sync.Pool
@@ -1175,7 +1175,7 @@ func (p *poolUpdateTeam) Put(x *UpdateTeam) {
 
 var PoolUpdateTeam = poolUpdateTeam{}
 
-const C_UpdateCommunityMessage int64 = 2394032357
+const C_UpdateCommunityMessage int64 = 983926580
 
 type poolUpdateCommunityMessage struct {
 	pool sync.Pool
@@ -1203,7 +1203,7 @@ func (p *poolUpdateCommunityMessage) Put(x *UpdateCommunityMessage) {
 
 var PoolUpdateCommunityMessage = poolUpdateCommunityMessage{}
 
-const C_UpdateCommunityReadOutbox int64 = 3478641786
+const C_UpdateCommunityReadOutbox int64 = 2094301834
 
 type poolUpdateCommunityReadOutbox struct {
 	pool sync.Pool
@@ -1227,7 +1227,7 @@ func (p *poolUpdateCommunityReadOutbox) Put(x *UpdateCommunityReadOutbox) {
 
 var PoolUpdateCommunityReadOutbox = poolUpdateCommunityReadOutbox{}
 
-const C_UpdateCommunityTyping int64 = 114872457
+const C_UpdateCommunityTyping int64 = 451491445
 
 type poolUpdateCommunityTyping struct {
 	pool sync.Pool
@@ -1251,7 +1251,7 @@ func (p *poolUpdateCommunityTyping) Put(x *UpdateCommunityTyping) {
 
 var PoolUpdateCommunityTyping = poolUpdateCommunityTyping{}
 
-const C_UpdateReaction int64 = 2547814946
+const C_UpdateReaction int64 = 2738677245
 
 type poolUpdateReaction struct {
 	pool sync.Pool
@@ -1286,7 +1286,7 @@ func (p *poolUpdateReaction) Put(x *UpdateReaction) {
 
 var PoolUpdateReaction = poolUpdateReaction{}
 
-const C_UpdateCalendarEventAdded int64 = 4108732989
+const C_UpdateCalendarEventAdded int64 = 297964741
 
 type poolUpdateCalendarEventAdded struct {
 	pool sync.Pool
@@ -1312,7 +1312,7 @@ func (p *poolUpdateCalendarEventAdded) Put(x *UpdateCalendarEventAdded) {
 
 var PoolUpdateCalendarEventAdded = poolUpdateCalendarEventAdded{}
 
-const C_UpdateCalendarEventRemoved int64 = 252222583
+const C_UpdateCalendarEventRemoved int64 = 2986798389
 
 type poolUpdateCalendarEventRemoved struct {
 	pool sync.Pool
@@ -1335,7 +1335,7 @@ func (p *poolUpdateCalendarEventRemoved) Put(x *UpdateCalendarEventRemoved) {
 
 var PoolUpdateCalendarEventRemoved = poolUpdateCalendarEventRemoved{}
 
-const C_UpdateCalendarEventEdited int64 = 2907013722
+const C_UpdateCalendarEventEdited int64 = 516349098
 
 type poolUpdateCalendarEventEdited struct {
 	pool sync.Pool
@@ -1361,7 +1361,7 @@ func (p *poolUpdateCalendarEventEdited) Put(x *UpdateCalendarEventEdited) {
 
 var PoolUpdateCalendarEventEdited = poolUpdateCalendarEventEdited{}
 
-const C_UpdateRedirect int64 = 4026993662
+const C_UpdateRedirect int64 = 3303504929
 
 type poolUpdateRedirect struct {
 	pool sync.Pool
@@ -1385,7 +1385,7 @@ func (p *poolUpdateRedirect) Put(x *UpdateRedirect) {
 
 var PoolUpdateRedirect = poolUpdateRedirect{}
 
-const C_ClientRedirect int64 = 3851114106
+const C_ClientRedirect int64 = 3513459109
 
 type poolClientRedirect struct {
 	pool sync.Pool
@@ -1409,7 +1409,7 @@ func (p *poolClientRedirect) Put(x *ClientRedirect) {
 
 var PoolClientRedirect = poolClientRedirect{}
 
-const C_UpdatePhoneCall int64 = 2953098428
+const C_UpdatePhoneCall int64 = 2791086990
 
 type poolUpdatePhoneCall struct {
 	pool sync.Pool
@@ -1439,60 +1439,60 @@ func (p *poolUpdatePhoneCall) Put(x *UpdatePhoneCall) {
 var PoolUpdatePhoneCall = poolUpdatePhoneCall{}
 
 func init() {
-	registry.RegisterConstructor(1632290153, "msg.UpdateGetState")
-	registry.RegisterConstructor(3467307691, "msg.UpdateGetDifference")
-	registry.RegisterConstructor(2937859860, "msg.UpdateDifference")
-	registry.RegisterConstructor(3588398962, "msg.UpdateTooLong")
-	registry.RegisterConstructor(2070778422, "msg.UpdateState")
-	registry.RegisterConstructor(1764208092, "msg.UpdateMessageID")
-	registry.RegisterConstructor(75740112, "msg.UpdateNewMessage")
-	registry.RegisterConstructor(2202915150, "msg.UpdateMessageEdited")
-	registry.RegisterConstructor(1003091958, "msg.UpdateMessagesDeleted")
-	registry.RegisterConstructor(4013107819, "msg.UpdateReadHistoryInbox")
-	registry.RegisterConstructor(4011050865, "msg.UpdateReadHistoryOutbox")
-	registry.RegisterConstructor(2761988296, "msg.UpdateMessagePinned")
-	registry.RegisterConstructor(3261004099, "msg.UpdateUserTyping")
-	registry.RegisterConstructor(1752961652, "msg.UpdateUserStatus")
-	registry.RegisterConstructor(3411383202, "msg.UpdateUsername")
-	registry.RegisterConstructor(72923648, "msg.UpdateUserPhoto")
-	registry.RegisterConstructor(3766115140, "msg.UpdateNotifySettings")
-	registry.RegisterConstructor(3544906637, "msg.UpdateGroupParticipantAdd")
-	registry.RegisterConstructor(921388023, "msg.UpdateGroupParticipantDeleted")
-	registry.RegisterConstructor(4102007577, "msg.UpdateGroupParticipantAdmin")
-	registry.RegisterConstructor(1878951933, "msg.UpdateGroupAdmins")
-	registry.RegisterConstructor(3710117357, "msg.UpdateGroupPhoto")
-	registry.RegisterConstructor(256065898, "msg.UpdateReadMessagesContents")
-	registry.RegisterConstructor(1770313879, "msg.UpdateAuthorizationReset")
-	registry.RegisterConstructor(2643668944, "msg.UpdateDraftMessage")
-	registry.RegisterConstructor(3294904674, "msg.UpdateDraftMessageCleared")
-	registry.RegisterConstructor(1569664568, "msg.UpdateDialogPinned")
-	registry.RegisterConstructor(4008682179, "msg.UpdateDialogPinnedReorder")
-	registry.RegisterConstructor(2013786192, "msg.UpdateAccountPrivacy")
-	registry.RegisterConstructor(2552510165, "msg.UpdateLabelItemsAdded")
-	registry.RegisterConstructor(3223106630, "msg.UpdateLabelItemsRemoved")
-	registry.RegisterConstructor(3098156256, "msg.UpdateLabelSet")
-	registry.RegisterConstructor(2364090608, "msg.UpdateLabelDeleted")
-	registry.RegisterConstructor(2570026653, "msg.UpdateUserBlocked")
-	registry.RegisterConstructor(1349949010, "msg.UpdateMessagePoll")
-	registry.RegisterConstructor(2133244656, "msg.UpdateBotCallbackQuery")
-	registry.RegisterConstructor(2949144765, "msg.UpdateBotInlineQuery")
-	registry.RegisterConstructor(1813939863, "msg.UpdateBotInlineSend")
-	registry.RegisterConstructor(3792600641, "msg.UpdateTeamCreated")
-	registry.RegisterConstructor(1371743118, "msg.UpdateTeamMemberAdded")
-	registry.RegisterConstructor(4102954453, "msg.UpdateTeamMemberRemoved")
-	registry.RegisterConstructor(1178766456, "msg.UpdateTeamMemberStatus")
-	registry.RegisterConstructor(2939683506, "msg.UpdateTeamPhoto")
-	registry.RegisterConstructor(931901879, "msg.UpdateTeam")
-	registry.RegisterConstructor(2394032357, "msg.UpdateCommunityMessage")
-	registry.RegisterConstructor(3478641786, "msg.UpdateCommunityReadOutbox")
-	registry.RegisterConstructor(114872457, "msg.UpdateCommunityTyping")
-	registry.RegisterConstructor(2547814946, "msg.UpdateReaction")
-	registry.RegisterConstructor(4108732989, "msg.UpdateCalendarEventAdded")
-	registry.RegisterConstructor(252222583, "msg.UpdateCalendarEventRemoved")
-	registry.RegisterConstructor(2907013722, "msg.UpdateCalendarEventEdited")
-	registry.RegisterConstructor(4026993662, "msg.UpdateRedirect")
-	registry.RegisterConstructor(3851114106, "msg.ClientRedirect")
-	registry.RegisterConstructor(2953098428, "msg.UpdatePhoneCall")
+	registry.RegisterConstructor(1437250230, "UpdateGetState")
+	registry.RegisterConstructor(556775761, "UpdateGetDifference")
+	registry.RegisterConstructor(1742546619, "UpdateDifference")
+	registry.RegisterConstructor(1531755547, "UpdateTooLong")
+	registry.RegisterConstructor(1837585836, "UpdateState")
+	registry.RegisterConstructor(2139063022, "UpdateMessageID")
+	registry.RegisterConstructor(3426925183, "UpdateNewMessage")
+	registry.RegisterConstructor(1825079988, "UpdateMessageEdited")
+	registry.RegisterConstructor(670568714, "UpdateMessagesDeleted")
+	registry.RegisterConstructor(1529128378, "UpdateReadHistoryInbox")
+	registry.RegisterConstructor(510866108, "UpdateReadHistoryOutbox")
+	registry.RegisterConstructor(1260768050, "UpdateMessagePinned")
+	registry.RegisterConstructor(178254060, "UpdateUserTyping")
+	registry.RegisterConstructor(2696747995, "UpdateUserStatus")
+	registry.RegisterConstructor(4290110589, "UpdateUsername")
+	registry.RegisterConstructor(302028082, "UpdateUserPhoto")
+	registry.RegisterConstructor(3187524885, "UpdateNotifySettings")
+	registry.RegisterConstructor(1623827837, "UpdateGroupParticipantAdd")
+	registry.RegisterConstructor(2489941844, "UpdateGroupParticipantDeleted")
+	registry.RegisterConstructor(1813022164, "UpdateGroupParticipantAdmin")
+	registry.RegisterConstructor(694155405, "UpdateGroupAdmins")
+	registry.RegisterConstructor(367193154, "UpdateGroupPhoto")
+	registry.RegisterConstructor(2991403048, "UpdateReadMessagesContents")
+	registry.RegisterConstructor(2359297647, "UpdateAuthorizationReset")
+	registry.RegisterConstructor(3453026195, "UpdateDraftMessage")
+	registry.RegisterConstructor(2011635602, "UpdateDraftMessageCleared")
+	registry.RegisterConstructor(231538299, "UpdateDialogPinned")
+	registry.RegisterConstructor(1567423539, "UpdateDialogPinnedReorder")
+	registry.RegisterConstructor(629173761, "UpdateAccountPrivacy")
+	registry.RegisterConstructor(2216022057, "UpdateLabelItemsAdded")
+	registry.RegisterConstructor(830226827, "UpdateLabelItemsRemoved")
+	registry.RegisterConstructor(2353687359, "UpdateLabelSet")
+	registry.RegisterConstructor(3702192307, "UpdateLabelDeleted")
+	registry.RegisterConstructor(3750625773, "UpdateUserBlocked")
+	registry.RegisterConstructor(383248674, "UpdateMessagePoll")
+	registry.RegisterConstructor(3408999713, "UpdateBotCallbackQuery")
+	registry.RegisterConstructor(4065328876, "UpdateBotInlineQuery")
+	registry.RegisterConstructor(2208028013, "UpdateBotInlineSend")
+	registry.RegisterConstructor(2762932529, "UpdateTeamCreated")
+	registry.RegisterConstructor(1307755890, "UpdateTeamMemberAdded")
+	registry.RegisterConstructor(99543064, "UpdateTeamMemberRemoved")
+	registry.RegisterConstructor(4065657769, "UpdateTeamMemberStatus")
+	registry.RegisterConstructor(3110088064, "UpdateTeamPhoto")
+	registry.RegisterConstructor(2978180712, "UpdateTeam")
+	registry.RegisterConstructor(983926580, "UpdateCommunityMessage")
+	registry.RegisterConstructor(2094301834, "UpdateCommunityReadOutbox")
+	registry.RegisterConstructor(451491445, "UpdateCommunityTyping")
+	registry.RegisterConstructor(2738677245, "UpdateReaction")
+	registry.RegisterConstructor(297964741, "UpdateCalendarEventAdded")
+	registry.RegisterConstructor(2986798389, "UpdateCalendarEventRemoved")
+	registry.RegisterConstructor(516349098, "UpdateCalendarEventEdited")
+	registry.RegisterConstructor(3303504929, "UpdateRedirect")
+	registry.RegisterConstructor(3513459109, "ClientRedirect")
+	registry.RegisterConstructor(2791086990, "UpdatePhoneCall")
 }
 
 func (x *UpdateGetState) DeepCopy(z *UpdateGetState) {
