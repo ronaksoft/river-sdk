@@ -81,8 +81,6 @@ func main() {
 	keysFile := "./keys-staging.json"
 
 	switch len(os.Args) {
-	case 3:
-		serverHostPort = os.Args[1]
 	case 2:
 		switch strings.ToLower(os.Args[1]) {
 		case "production":
@@ -97,6 +95,8 @@ func main() {
 		case "local2":
 			serverHostPort = "localhost:81"
 			keysFile = "./keys-staging.json"
+		default:
+			serverHostPort = os.Args[1]
 		}
 	}
 
