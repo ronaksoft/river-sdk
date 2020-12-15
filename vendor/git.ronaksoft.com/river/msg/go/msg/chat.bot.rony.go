@@ -1,10 +1,7 @@
 package msg
 
 import (
-	fmt "fmt"
-	rony "github.com/ronaksoft/rony"
 	edge "github.com/ronaksoft/rony/edge"
-	edgec "github.com/ronaksoft/rony/edgec"
 	registry "github.com/ronaksoft/rony/registry"
 	proto "google.golang.org/protobuf/proto"
 	sync "sync"
@@ -772,6 +769,7 @@ func (p *poolBotsMany) Get() *BotsMany {
 
 func (p *poolBotsMany) Put(x *BotsMany) {
 	x.Bots = x.Bots[:0]
+	x.Empty = false
 	p.pool.Put(x)
 }
 
@@ -1177,6 +1175,7 @@ func (x *BotsMany) DeepCopy(z *BotsMany) {
 			z.Bots = append(z.Bots, xx)
 		}
 	}
+	z.Empty = x.Empty
 }
 
 func (x *BotGetCommands) DeepCopy(z *BotGetCommands) {
@@ -1567,76 +1566,4 @@ func (x *BotGetCommands) Unmarshal(b []byte) error {
 
 func (x *BotCommandsMany) Unmarshal(b []byte) error {
 	return proto.UnmarshalOptions{}.Unmarshal(b, x)
-}
-
-const C_ServeBotRequest int64 = 685561014
-
-type IBotProxy interface {
-	ServeBotRequest(ctx *edge.RequestCtx, req *rony.MessageEnvelope, res *rony.MessageEnvelope)
-}
-
-type BotProxyWrapper struct {
-	h IBotProxy
-}
-
-func RegisterBotProxy(h IBotProxy, e *edge.Server) {
-	w := BotProxyWrapper{
-		h: h,
-	}
-	w.Register(e)
-}
-
-func (sw *BotProxyWrapper) Register(e *edge.Server) {
-	e.SetHandlers(C_ServeBotRequest, true, sw.ServeBotRequestWrapper)
-}
-
-func (sw *BotProxyWrapper) ServeBotRequestWrapper(ctx *edge.RequestCtx, in *rony.MessageEnvelope) {
-	req := rony.PoolMessageEnvelope.Get()
-	defer rony.PoolMessageEnvelope.Put(req)
-	res := rony.PoolMessageEnvelope.Get()
-	defer rony.PoolMessageEnvelope.Put(res)
-	err := proto.UnmarshalOptions{Merge: true}.Unmarshal(in.Message, req)
-	if err != nil {
-		ctx.PushError(rony.ErrCodeInvalid, rony.ErrItemRequest)
-		return
-	}
-
-	sw.h.ServeBotRequest(ctx, req, res)
-	if !ctx.Stopped() {
-		ctx.PushMessage(rony.C_MessageEnvelope, res)
-	}
-}
-
-type BotProxyClient struct {
-	c edgec.Client
-}
-
-func NewBotProxyClient(ec edgec.Client) *BotProxyClient {
-	return &BotProxyClient{
-		c: ec,
-	}
-}
-
-func (c *BotProxyClient) ServeBotRequest(req *rony.MessageEnvelope, kvs ...*rony.KeyValue) (*rony.MessageEnvelope, error) {
-	out := rony.PoolMessageEnvelope.Get()
-	defer rony.PoolMessageEnvelope.Put(out)
-	in := rony.PoolMessageEnvelope.Get()
-	defer rony.PoolMessageEnvelope.Put(in)
-	out.Fill(c.c.GetRequestID(), C_ServeBotRequest, req, kvs...)
-	err := c.c.Send(out, in)
-	if err != nil {
-		return nil, err
-	}
-	switch in.GetConstructor() {
-	case rony.C_MessageEnvelope:
-		x := &rony.MessageEnvelope{}
-		_ = proto.Unmarshal(in.Message, x)
-		return x, nil
-	case rony.C_Error:
-		x := &rony.Error{}
-		_ = proto.Unmarshal(in.Message, x)
-		return nil, fmt.Errorf("%s:%s", x.GetCode(), x.GetItems())
-	default:
-		return nil, fmt.Errorf("unknown message: %d", in.GetConstructor())
-	}
 }

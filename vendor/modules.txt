@@ -1,4 +1,4 @@
-# git.ronaksoft.com/river/msg v0.0.0-20201213070826-2ee0fc910cea
+# git.ronaksoft.com/river/msg v0.0.0-20201215102421-295f02edb990
 git.ronaksoft.com/river/msg/go/msg
 # github.com/DataDog/zstd v1.4.5
 github.com/DataDog/zstd
@@ -202,7 +202,6 @@ github.com/pkg/errors
 # github.com/ronaksoft/rony v0.0.31
 github.com/ronaksoft/rony
 github.com/ronaksoft/rony/edge
-github.com/ronaksoft/rony/edgec
 github.com/ronaksoft/rony/gateway
 github.com/ronaksoft/rony/gateway/dummy
 github.com/ronaksoft/rony/gateway/tcp

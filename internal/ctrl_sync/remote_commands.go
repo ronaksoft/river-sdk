@@ -26,7 +26,7 @@ func (ctrl *Controller) GetServerSalt() {
 	serverSaltReq := &msg.SystemGetSalts{}
 	serverSaltReqBytes, _ := serverSaltReq.Marshal()
 
-	ctrl.queueCtrl.RealtimeCommand(
+	ctrl.networkCtrl.RealtimeCommand(
 		&rony.MessageEnvelope{
 			Constructor: msg.C_SystemGetSalts,
 			RequestID:   uint64(domain.SequentialUniqueID()),
@@ -59,7 +59,7 @@ func (ctrl *Controller) GetSystemConfig() {
 	req := &msg.SystemGetConfig{}
 	reqBytes, _ := req.Marshal()
 
-	ctrl.queueCtrl.RealtimeCommand(
+	ctrl.networkCtrl.RealtimeCommand(
 		&rony.MessageEnvelope{
 			Constructor: msg.C_SystemGetConfig,
 			RequestID:   uint64(domain.SequentialUniqueID()),
@@ -103,7 +103,7 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 	// this is priority command that should not passed to queue
 	// after auth recall answer got back the queue should send its requests in order to get related updates
 	reqID := uint64(domain.SequentialUniqueID())
-	ctrl.queueCtrl.RealtimeCommand(
+	ctrl.networkCtrl.RealtimeCommand(
 		&rony.MessageEnvelope{
 			Constructor: msg.C_AuthRecall,
 			RequestID:   reqID,
@@ -157,7 +157,7 @@ func (ctrl *Controller) GetServerTime() (err error) {
 	logs.Info("SyncCtrl call GetServerTime")
 	timeReq := &msg.SystemGetServerTime{}
 	timeReqBytes, _ := timeReq.Marshal()
-	ctrl.queueCtrl.RealtimeCommand(
+	ctrl.networkCtrl.RealtimeCommand(
 		&rony.MessageEnvelope{
 			Constructor: msg.C_SystemGetServerTime,
 			RequestID:   uint64(domain.SequentialUniqueID()),
@@ -184,7 +184,6 @@ func (ctrl *Controller) GetServerTime() (err error) {
 					zap.Int64("ClientTime", clientTime),
 					zap.Duration("Difference", domain.TimeDelta),
 				)
-
 			case rony.C_Error:
 				logs.Warn("We received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
 				err = domain.ParseServerError(m.Message)
@@ -387,7 +386,7 @@ func (ctrl *Controller) Logout(waitGroup *sync.WaitGroup, retry int) {
 	requestID := domain.SequentialUniqueID()
 	req := &msg.AuthLogout{}
 	reqBytes, _ := req.Marshal()
-	ctrl.queueCtrl.RealtimeCommand(
+	ctrl.networkCtrl.RealtimeCommand(
 		&rony.MessageEnvelope{
 			Constructor: msg.C_AuthLogout,
 			RequestID:   uint64(requestID),
@@ -417,7 +416,7 @@ func (ctrl *Controller) UpdateStatus(online bool) {
 		Online: online,
 	}
 	reqBytes, _ := req.Marshal()
-	ctrl.queueCtrl.RealtimeCommand(
+	ctrl.networkCtrl.RealtimeCommand(
 		&rony.MessageEnvelope{
 			Constructor: msg.C_AccountUpdateStatus,
 			RequestID:   uint64(domain.SequentialUniqueID()),

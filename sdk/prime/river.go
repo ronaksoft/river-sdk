@@ -673,7 +673,6 @@ func (v *ServerKeys) GetDhGroup(keyFP int64) (DHGroup, error) {
 }
 
 // RiverConnection connection info
-// easyjson:json
 type RiverConnection struct {
 	AuthID    int64
 	AuthKey   [256]byte

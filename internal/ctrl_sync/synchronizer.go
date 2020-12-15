@@ -275,7 +275,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 		}
 		reqBytes, _ := req.Marshal()
 		waitGroup.Add(1)
-		ctrl.queueCtrl.RealtimeCommand(
+		ctrl.networkCtrl.RealtimeCommand(
 			&rony.MessageEnvelope{
 				Constructor: msg.C_UpdateGetDifference,
 				RequestID:   uint64(domain.SequentialUniqueID()),

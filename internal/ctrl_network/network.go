@@ -5,12 +5,15 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
+	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/salt"
+	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/ronaksoft/rony"
@@ -38,15 +41,11 @@ type Config struct {
 
 // Controller websocket network controller
 type Controller struct {
-	// Internal Controller Channels
-	connectChannel  chan bool
-	stopChannel     chan bool
-	endpointUpdated bool
-
 	// Authorization Keys
-	authID     int64
-	authKey    []byte
-	messageSeq int64
+	authID       int64
+	authKey      []byte
+	authRecalled int32 // atomic boolean for checking if AuthRecall is sent
+	messageSeq   int64
 
 	// Websocket Settings
 	wsWriteLock      sync.Mutex
@@ -56,17 +55,11 @@ type Controller struct {
 	wsConn           net.Conn
 	wsPingsMtx       sync.Mutex
 	wsPings          map[uint64]chan struct{}
+	wsQuality        int32 // atomic network quality switch
 
 	// Http Settings
 	httpEndpoint string
 	httpClient   *http.Client
-
-	// Internals
-	wsQuality    int32
-	authRecalled int32
-
-	// flusher
-	sendFlusher *domain.Flusher
 
 	// External Handlers
 	OnMessage             domain.ReceivedMessageHandler
@@ -75,11 +68,14 @@ type Controller struct {
 	OnWebsocketConnect    domain.OnConnectCallback
 	OnNetworkStatusChange domain.NetworkStatusChangeCallback
 
-	// requests that it should sent unencrypted
-	unauthorizedRequests map[int64]bool
-
-	// internal parameters to detect network switch
-	countryCode string
+	// internals
+	connectChannel       chan bool
+	stopChannel          chan bool
+	endpointUpdated      bool
+	unauthorizedRequests map[int64]bool // requests that it should sent unencrypted
+	countryCode          string         // the country
+	sendFlusher          *domain.Flusher
+	serverKeys           *ServerKeys
 }
 
 // New
@@ -110,6 +106,15 @@ func New(config Config) *Controller {
 		msg.C_InitConnect:         true,
 		msg.C_InitCompleteAuth:    true,
 		msg.C_SystemGetSalts:      true,
+	}
+
+	skBytes, err := repo.System.LoadBytes("ServerKeys")
+	if skBytes != nil && err == nil {
+		ctrl.serverKeys = &ServerKeys{}
+		err = json.Unmarshal(skBytes, ctrl.serverKeys)
+		if err != nil {
+			ctrl.serverKeys = nil
+		}
 	}
 
 	return ctrl
@@ -702,6 +707,85 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *rony.MessageEnvelope) error {
 	)
 
 	return nil
+}
+
+// RealtimeCommand run request immediately and do not save it in queue
+func (ctrl *Controller) RealtimeCommand(
+	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+	blockingMode, isUICallback bool,
+) {
+	defer logs.RecoverPanic(
+		"SyncCtrl::RealtimeCommand",
+		domain.M{
+			"OS":  domain.ClientOS,
+			"Ver": domain.ClientVersion,
+			"C":   messageEnvelope.Constructor,
+		},
+		nil,
+	)
+
+	logs.Debug("QueueCtrl fires realtime command",
+		zap.Uint64("ReqID", messageEnvelope.RequestID),
+		zap.String("C", registry.ConstructorName(messageEnvelope.Constructor)),
+	)
+
+	// Add the callback functions
+	reqCB := domain.AddRequestCallback(
+		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, domain.WebsocketRequestTime, timeoutCB, isUICallback,
+	)
+	execBlock := func(reqID uint64, req *rony.MessageEnvelope) {
+		err := ctrl.SendWebsocket(req, blockingMode)
+		if err != nil {
+			logs.Warn("QueueCtrl got error from NetCtrl",
+				zap.String("Error", err.Error()),
+				zap.String("C", registry.ConstructorName(req.Constructor)),
+				zap.Uint64("ReqID", req.RequestID),
+			)
+			if timeoutCB != nil {
+				timeoutCB()
+			}
+			return
+		}
+
+		select {
+		case <-time.After(reqCB.Timeout):
+			logs.Debug("QueueCtrl got timeout on realtime command",
+				zap.String("C", registry.ConstructorName(req.Constructor)),
+				zap.Uint64("ReqID", req.RequestID),
+			)
+			domain.RemoveRequestCallback(reqID)
+			if reqCB.TimeoutCallback != nil {
+				if reqCB.IsUICallback {
+					uiexec.ExecTimeoutCB(reqCB.TimeoutCallback)
+				} else {
+					reqCB.TimeoutCallback()
+				}
+			}
+			return
+		case res := <-reqCB.ResponseChannel:
+			logs.Debug("QueueCtrl got response on realtime command",
+				zap.Uint64("ReqID", req.RequestID),
+				zap.String("ReqC", registry.ConstructorName(req.Constructor)),
+				zap.String("ResC", registry.ConstructorName(res.Constructor)),
+			)
+			if reqCB.SuccessCallback != nil {
+				if reqCB.IsUICallback {
+					uiexec.ExecSuccessCB(reqCB.SuccessCallback, res)
+				} else {
+					reqCB.SuccessCallback(res)
+				}
+			}
+		}
+		return
+	}
+
+	if blockingMode {
+		execBlock(messageEnvelope.RequestID, messageEnvelope)
+	} else {
+		go execBlock(messageEnvelope.RequestID, messageEnvelope)
+	}
+
+	return
 }
 
 // Send encrypt and send request to server and receive and decrypt its response

@@ -254,6 +254,8 @@ func (p *poolAuthLoginByToken) Get() *AuthLoginByToken {
 func (p *poolAuthLoginByToken) Put(x *AuthLoginByToken) {
 	x.Token = ""
 	x.Provider = ""
+	x.Firstname = ""
+	x.Lastname = ""
 	p.pool.Put(x)
 }
 
@@ -723,6 +725,8 @@ func (x *AuthLogout) DeepCopy(z *AuthLogout) {
 func (x *AuthLoginByToken) DeepCopy(z *AuthLoginByToken) {
 	z.Token = x.Token
 	z.Provider = x.Provider
+	z.Firstname = x.Firstname
+	z.Lastname = x.Lastname
 }
 
 func (x *AuthCheckPhone) DeepCopy(z *AuthCheckPhone) {

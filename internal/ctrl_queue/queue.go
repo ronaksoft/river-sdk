@@ -199,7 +199,7 @@ func (ctrl *Controller) executor(req request) {
 		default:
 			switch res.Constructor {
 			case rony.C_Error:
-				errMsg := new(rony.Error)
+				errMsg := &rony.Error{}
 				_ = errMsg.Unmarshal(res.Message)
 				if errMsg.Code == msg.ErrCodeInvalid && errMsg.Items == msg.ErrItemSalt {
 					ctrl.addToWaitingList(&req)
@@ -221,85 +221,6 @@ func (ctrl *Controller) executor(req request) {
 		}
 	}
 	domain.RemoveRequestCallback(req.ID)
-	return
-}
-
-// RealtimeCommand run request immediately and do not save it in queue
-func (ctrl *Controller) RealtimeCommand(
-	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-	blockingMode, isUICallback bool,
-) {
-	defer logs.RecoverPanic(
-		"SyncCtrl::RealtimeCommand",
-		domain.M{
-			"OS":  domain.ClientOS,
-			"Ver": domain.ClientVersion,
-			"C":   messageEnvelope.Constructor,
-		},
-		nil,
-	)
-
-	logs.Debug("QueueCtrl fires realtime command",
-		zap.Uint64("ReqID", messageEnvelope.RequestID),
-		zap.String("C", registry.ConstructorName(messageEnvelope.Constructor)),
-	)
-
-	// Add the callback functions
-	reqCB := domain.AddRequestCallback(
-		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, domain.WebsocketRequestTime, timeoutCB, isUICallback,
-	)
-	execBlock := func(reqID uint64, req *rony.MessageEnvelope) {
-		err := ctrl.networkCtrl.SendWebsocket(req, blockingMode)
-		if err != nil {
-			logs.Warn("QueueCtrl got error from NetCtrl",
-				zap.String("Error", err.Error()),
-				zap.String("C", registry.ConstructorName(req.Constructor)),
-				zap.Uint64("ReqID", req.RequestID),
-			)
-			if timeoutCB != nil {
-				timeoutCB()
-			}
-			return
-		}
-
-		select {
-		case <-time.After(reqCB.Timeout):
-			logs.Debug("QueueCtrl got timeout on realtime command",
-				zap.String("C", registry.ConstructorName(req.Constructor)),
-				zap.Uint64("ReqID", req.RequestID),
-			)
-			domain.RemoveRequestCallback(reqID)
-			if reqCB.TimeoutCallback != nil {
-				if reqCB.IsUICallback {
-					uiexec.ExecTimeoutCB(reqCB.TimeoutCallback)
-				} else {
-					reqCB.TimeoutCallback()
-				}
-			}
-			return
-		case res := <-reqCB.ResponseChannel:
-			logs.Debug("QueueCtrl got response on realtime command",
-				zap.Uint64("ReqID", req.RequestID),
-				zap.String("ReqC", registry.ConstructorName(req.Constructor)),
-				zap.String("ResC", registry.ConstructorName(res.Constructor)),
-			)
-			if reqCB.SuccessCallback != nil {
-				if reqCB.IsUICallback {
-					uiexec.ExecSuccessCB(reqCB.SuccessCallback, res)
-				} else {
-					reqCB.SuccessCallback(res)
-				}
-			}
-		}
-		return
-	}
-
-	if blockingMode {
-		execBlock(messageEnvelope.RequestID, messageEnvelope)
-	} else {
-		go execBlock(messageEnvelope.RequestID, messageEnvelope)
-	}
-
 	return
 }
 

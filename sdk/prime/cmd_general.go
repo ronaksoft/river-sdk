@@ -175,7 +175,7 @@ func executeRemoteCommand(
 
 	// If the constructor is a realtime command, then just send it to the server
 	if _, ok := r.realTimeCommands[constructor]; ok {
-		r.queueCtrl.RealtimeCommand(&rony.MessageEnvelope{
+		r.networkCtrl.RealtimeCommand(&rony.MessageEnvelope{
 			Header:      domain.TeamHeader(teamID, teamAccess),
 			Constructor: constructor,
 			RequestID:   requestID,
@@ -280,7 +280,7 @@ func initConnect(r *River) (err error, clientNonce, serverNonce, serverPubFP, se
 				serverPQ = x.PQ
 				logs.Debug("River::CreateAuthKey() InitResponse Received",
 					zap.Uint64("ServerNonce", serverNonce),
-					zap.Uint64("ClientNounce", clientNonce),
+					zap.Uint64("ClientNonce", clientNonce),
 					zap.Uint64("ServerDhFingerPrint", serverDHFP),
 					zap.Uint64("ServerFingerPrint", serverPubFP),
 				)
