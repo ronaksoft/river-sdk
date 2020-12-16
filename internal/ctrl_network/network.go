@@ -5,13 +5,11 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
-	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/salt"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/gobwas/ws"
@@ -108,14 +106,14 @@ func New(config Config) *Controller {
 		msg.C_SystemGetSalts:      true,
 	}
 
-	skBytes, err := repo.System.LoadBytes("ServerKeys")
-	if skBytes != nil && err == nil {
-		ctrl.serverKeys = &ServerKeys{}
-		err = json.Unmarshal(skBytes, ctrl.serverKeys)
-		if err != nil {
-			ctrl.serverKeys = nil
-		}
-	}
+	// skBytes, err := repo.System.LoadBytes("ServerKeys")
+	// if skBytes != nil && err == nil {
+	// 	ctrl.serverKeys = &ServerKeys{}
+	// 	err = json.Unmarshal(skBytes, ctrl.serverKeys)
+	// 	if err != nil {
+	// 		ctrl.serverKeys = nil
+	// 	}
+	// }
 
 	return ctrl
 }
