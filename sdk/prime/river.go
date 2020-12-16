@@ -23,10 +23,6 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 )
 
-var (
-// _ServerKeys ServerKeys
-)
-
 func SetLogLevel(l int) {
 	logs.SetLogLevel(l)
 }
@@ -620,54 +616,6 @@ func (r *River) registerCommandHandlers() {
 		msg.C_ClientGetFrequentlyReactions:  r.clientGetFrequentlyReactions,
 		msg.C_LabelsDelete:                  r.labelsDelete,
 	}
-}
-
-// PublicKey ...
-// easyjson:json
-type PublicKey struct {
-	N           string
-	FingerPrint int64
-	E           uint32
-}
-
-// DHGroup ...
-// easyjson:json
-type DHGroup struct {
-	Prime       string
-	Gen         int32
-	FingerPrint int64
-}
-
-// ServerKeys ...
-// easyjson:json
-type ServerKeys struct {
-	PublicKeys []PublicKey
-	DHGroups   []DHGroup
-}
-
-// GetPublicKey ...
-func (v *ServerKeys) GetPublicKey(keyFP int64) (PublicKey, error) {
-	logs.Info("Public Keys loaded",
-		zap.Any("Public Keys", v.PublicKeys),
-		zap.Int64("keyFP", keyFP),
-	)
-
-	for _, pk := range v.PublicKeys {
-		if pk.FingerPrint == keyFP {
-			return pk, nil
-		}
-	}
-	return PublicKey{}, domain.ErrNotFound
-}
-
-// GetDhGroup ...
-func (v *ServerKeys) GetDhGroup(keyFP int64) (DHGroup, error) {
-	for _, dh := range v.DHGroups {
-		if dh.FingerPrint == keyFP {
-			return dh, nil
-		}
-	}
-	return DHGroup{}, domain.ErrNotFound
 }
 
 // RiverConnection connection info
