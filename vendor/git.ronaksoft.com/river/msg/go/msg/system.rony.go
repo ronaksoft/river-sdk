@@ -7,45 +7,25 @@ import (
 	sync "sync"
 )
 
-const C_SystemGetPublicKeys int64 = 1191522796
+const C_SystemGetServerKeys int64 = 2510636156
 
-type poolSystemGetPublicKeys struct {
+type poolSystemGetServerKeys struct {
 	pool sync.Pool
 }
 
-func (p *poolSystemGetPublicKeys) Get() *SystemGetPublicKeys {
-	x, ok := p.pool.Get().(*SystemGetPublicKeys)
+func (p *poolSystemGetServerKeys) Get() *SystemGetServerKeys {
+	x, ok := p.pool.Get().(*SystemGetServerKeys)
 	if !ok {
-		return &SystemGetPublicKeys{}
+		return &SystemGetServerKeys{}
 	}
 	return x
 }
 
-func (p *poolSystemGetPublicKeys) Put(x *SystemGetPublicKeys) {
+func (p *poolSystemGetServerKeys) Put(x *SystemGetServerKeys) {
 	p.pool.Put(x)
 }
 
-var PoolSystemGetPublicKeys = poolSystemGetPublicKeys{}
-
-const C_SystemGetDHGroups int64 = 1786665018
-
-type poolSystemGetDHGroups struct {
-	pool sync.Pool
-}
-
-func (p *poolSystemGetDHGroups) Get() *SystemGetDHGroups {
-	x, ok := p.pool.Get().(*SystemGetDHGroups)
-	if !ok {
-		return &SystemGetDHGroups{}
-	}
-	return x
-}
-
-func (p *poolSystemGetDHGroups) Put(x *SystemGetDHGroups) {
-	p.pool.Put(x)
-}
-
-var PoolSystemGetDHGroups = poolSystemGetDHGroups{}
+var PoolSystemGetServerKeys = poolSystemGetServerKeys{}
 
 const C_SystemGetServerTime int64 = 1321179349
 
@@ -365,51 +345,30 @@ func (p *poolSystemServerTime) Put(x *SystemServerTime) {
 
 var PoolSystemServerTime = poolSystemServerTime{}
 
-const C_SystemPublicKeys int64 = 2745130223
+const C_SystemKeys int64 = 3677510435
 
-type poolSystemPublicKeys struct {
+type poolSystemKeys struct {
 	pool sync.Pool
 }
 
-func (p *poolSystemPublicKeys) Get() *SystemPublicKeys {
-	x, ok := p.pool.Get().(*SystemPublicKeys)
+func (p *poolSystemKeys) Get() *SystemKeys {
+	x, ok := p.pool.Get().(*SystemKeys)
 	if !ok {
-		return &SystemPublicKeys{}
+		return &SystemKeys{}
 	}
 	return x
 }
 
-func (p *poolSystemPublicKeys) Put(x *SystemPublicKeys) {
+func (p *poolSystemKeys) Put(x *SystemKeys) {
 	x.RSAPublicKeys = x.RSAPublicKeys[:0]
-	p.pool.Put(x)
-}
-
-var PoolSystemPublicKeys = poolSystemPublicKeys{}
-
-const C_SystemDHGroups int64 = 2890748083
-
-type poolSystemDHGroups struct {
-	pool sync.Pool
-}
-
-func (p *poolSystemDHGroups) Get() *SystemDHGroups {
-	x, ok := p.pool.Get().(*SystemDHGroups)
-	if !ok {
-		return &SystemDHGroups{}
-	}
-	return x
-}
-
-func (p *poolSystemDHGroups) Put(x *SystemDHGroups) {
 	x.DHGroups = x.DHGroups[:0]
 	p.pool.Put(x)
 }
 
-var PoolSystemDHGroups = poolSystemDHGroups{}
+var PoolSystemKeys = poolSystemKeys{}
 
 func init() {
-	registry.RegisterConstructor(1191522796, "SystemGetPublicKeys")
-	registry.RegisterConstructor(1786665018, "SystemGetDHGroups")
+	registry.RegisterConstructor(2510636156, "SystemGetServerKeys")
 	registry.RegisterConstructor(1321179349, "SystemGetServerTime")
 	registry.RegisterConstructor(1486296237, "SystemGetInfo")
 	registry.RegisterConstructor(1705203315, "SystemGetSalts")
@@ -423,14 +382,10 @@ func init() {
 	registry.RegisterConstructor(1100207036, "AppUpdate")
 	registry.RegisterConstructor(2754948760, "SystemInfo")
 	registry.RegisterConstructor(2854614486, "SystemServerTime")
-	registry.RegisterConstructor(2745130223, "SystemPublicKeys")
-	registry.RegisterConstructor(2890748083, "SystemDHGroups")
+	registry.RegisterConstructor(3677510435, "SystemKeys")
 }
 
-func (x *SystemGetPublicKeys) DeepCopy(z *SystemGetPublicKeys) {
-}
-
-func (x *SystemGetDHGroups) DeepCopy(z *SystemGetDHGroups) {
+func (x *SystemGetServerKeys) DeepCopy(z *SystemGetServerKeys) {
 }
 
 func (x *SystemGetServerTime) DeepCopy(z *SystemGetServerTime) {
@@ -542,7 +497,7 @@ func (x *SystemServerTime) DeepCopy(z *SystemServerTime) {
 	z.Timestamp = x.Timestamp
 }
 
-func (x *SystemPublicKeys) DeepCopy(z *SystemPublicKeys) {
+func (x *SystemKeys) DeepCopy(z *SystemKeys) {
 	for idx := range x.RSAPublicKeys {
 		if x.RSAPublicKeys[idx] != nil {
 			xx := PoolRSAPublicKey.Get()
@@ -550,9 +505,6 @@ func (x *SystemPublicKeys) DeepCopy(z *SystemPublicKeys) {
 			z.RSAPublicKeys = append(z.RSAPublicKeys, xx)
 		}
 	}
-}
-
-func (x *SystemDHGroups) DeepCopy(z *SystemDHGroups) {
 	for idx := range x.DHGroups {
 		if x.DHGroups[idx] != nil {
 			xx := PoolDHGroup.Get()
@@ -562,12 +514,8 @@ func (x *SystemDHGroups) DeepCopy(z *SystemDHGroups) {
 	}
 }
 
-func (x *SystemGetPublicKeys) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_SystemGetPublicKeys, x)
-}
-
-func (x *SystemGetDHGroups) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_SystemGetDHGroups, x)
+func (x *SystemGetServerKeys) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_SystemGetServerKeys, x)
 }
 
 func (x *SystemGetServerTime) PushToContext(ctx *edge.RequestCtx) {
@@ -622,19 +570,11 @@ func (x *SystemServerTime) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_SystemServerTime, x)
 }
 
-func (x *SystemPublicKeys) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_SystemPublicKeys, x)
+func (x *SystemKeys) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_SystemKeys, x)
 }
 
-func (x *SystemDHGroups) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_SystemDHGroups, x)
-}
-
-func (x *SystemGetPublicKeys) Marshal() ([]byte, error) {
-	return proto.Marshal(x)
-}
-
-func (x *SystemGetDHGroups) Marshal() ([]byte, error) {
+func (x *SystemGetServerKeys) Marshal() ([]byte, error) {
 	return proto.Marshal(x)
 }
 
@@ -690,19 +630,11 @@ func (x *SystemServerTime) Marshal() ([]byte, error) {
 	return proto.Marshal(x)
 }
 
-func (x *SystemPublicKeys) Marshal() ([]byte, error) {
+func (x *SystemKeys) Marshal() ([]byte, error) {
 	return proto.Marshal(x)
 }
 
-func (x *SystemDHGroups) Marshal() ([]byte, error) {
-	return proto.Marshal(x)
-}
-
-func (x *SystemGetPublicKeys) Unmarshal(b []byte) error {
-	return proto.UnmarshalOptions{}.Unmarshal(b, x)
-}
-
-func (x *SystemGetDHGroups) Unmarshal(b []byte) error {
+func (x *SystemGetServerKeys) Unmarshal(b []byte) error {
 	return proto.UnmarshalOptions{}.Unmarshal(b, x)
 }
 
@@ -758,10 +690,6 @@ func (x *SystemServerTime) Unmarshal(b []byte) error {
 	return proto.UnmarshalOptions{}.Unmarshal(b, x)
 }
 
-func (x *SystemPublicKeys) Unmarshal(b []byte) error {
-	return proto.UnmarshalOptions{}.Unmarshal(b, x)
-}
-
-func (x *SystemDHGroups) Unmarshal(b []byte) error {
+func (x *SystemKeys) Unmarshal(b []byte) error {
 	return proto.UnmarshalOptions{}.Unmarshal(b, x)
 }

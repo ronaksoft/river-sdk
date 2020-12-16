@@ -1,15 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
-	"github.com/ronaksoft/rony"
 	"gopkg.in/abiosoft/ishell.v2"
-	"os"
 	"time"
 )
 
@@ -140,76 +137,6 @@ var SdkGetTeam = &ishell.Cmd{
 	},
 }
 
-var SdkGetPublicKeys = &ishell.Cmd{
-	Name: "GetKeys",
-	Func: func(c *ishell.Context) {
-		sk := riversdk.ServerKeys{}
-		req := msg.SystemGetPublicKeys{}
-		reqBytes, _ := req.Marshal()
-		reqDelegate := new(CustomRequestDelegate)
-		reqDelegate.FlagsFunc = func() int32 {
-			return riversdk.RequestBlocking
-		}
-		reqDelegate.OnCompleteFunc = func(b []byte) {
-			e := &rony.MessageEnvelope{}
-			_ = e.Unmarshal(b)
-			switch e.Constructor {
-			case rony.C_Error:
-				c.Println(e)
-			case msg.C_SystemPublicKeys:
-				x := &msg.SystemPublicKeys{}
-				_ = x.Unmarshal(e.Message)
-				for _, k := range x.RSAPublicKeys {
-					sk.PublicKeys = append(sk.PublicKeys, riversdk.PublicKey{
-						N:           k.N,
-						FingerPrint: k.FingerPrint,
-						E:           k.E,
-					})
-				}
-			}
-		}
-		if reqID, err := _SDK.ExecuteCommand(msg.C_SystemGetPublicKeys, reqBytes, reqDelegate); err != nil {
-			c.Println("Command Failed:", err)
-		} else {
-			reqDelegate.RequestID = reqID
-		}
-		req2 := msg.SystemGetPublicKeys{}
-		reqBytes2, _ := req2.Marshal()
-		reqDelegate2 := new(CustomRequestDelegate)
-		reqDelegate2.FlagsFunc = func() int32 {
-			return riversdk.RequestBlocking
-		}
-		reqDelegate2.OnCompleteFunc = func(b []byte) {
-			e := &rony.MessageEnvelope{}
-			_ = e.Unmarshal(b)
-			switch e.Constructor {
-			case rony.C_Error:
-				c.Println(e)
-			case msg.C_SystemDHGroups:
-				x := &msg.SystemDHGroups{}
-				_ = x.Unmarshal(e.Message)
-				for _, k := range x.DHGroups {
-					sk.DHGroups = append(sk.DHGroups, riversdk.DHGroup{
-						Prime:       k.Prime,
-						Gen:         k.Gen,
-						FingerPrint: k.FingerPrint,
-					})
-				}
-			}
-		}
-		if reqID, err := _SDK.ExecuteCommand(msg.C_SystemGetDHGroups, reqBytes2, reqDelegate2); err != nil {
-			c.Println("Command Failed:", err)
-		} else {
-			reqDelegate.RequestID = reqID
-		}
-
-		f, _ := os.Create("./keys.json")
-		b, _ := json.Marshal(&sk)
-		f.Write(b)
-		f.Close()
-	},
-}
-
 var SdkDeletePending = &ishell.Cmd{
 	Name: "DeletePending",
 	Func: func(c *ishell.Context) {
@@ -248,5 +175,4 @@ func init() {
 	SDK.AddCmd(SdkResetUsage)
 	SDK.AddCmd(SdkSetTeam)
 	SDK.AddCmd(SdkGetTeam)
-	SDK.AddCmd(SdkGetPublicKeys)
 }

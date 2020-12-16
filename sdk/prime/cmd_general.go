@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
@@ -225,6 +224,12 @@ func (r *River) CreateAuthKey() (err error) {
 	// Wait for network
 	r.networkCtrl.WaitForNetwork(false)
 
+	sk, err := getServerKeys(r)
+	if err != nil {
+		logs.Warn("River got error on SystemGetServers")
+		return
+	}
+
 	err, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ := initConnect(r)
 	if err != nil {
 		logs.Warn("River got error on InitConnect", zap.Error(err))
@@ -236,7 +241,7 @@ func (r *River) CreateAuthKey() (err error) {
 		zap.Uint64("ServerPQ", serverPQ),
 	)
 
-	err = initCompleteAuth(r, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ)
+	err = initCompleteAuth(r, sk, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ)
 	logs.Info("River passed the 2nd step of CreateAuthKey")
 
 	// double set AuthID
@@ -245,6 +250,49 @@ func (r *River) CreateAuthKey() (err error) {
 	r.ConnInfo.Save()
 
 	return
+}
+func getServerKeys(r *River) (sk *msg.SystemKeys, err error) {
+	logs.Info("River::GetServerKeys")
+	req := &msg.SystemGetServerKeys{}
+	reqBytes, _ := req.Marshal()
+	waitGroup := new(sync.WaitGroup)
+	waitGroup.Add(1)
+	executeRemoteCommand(
+		0, 0,
+		r,
+		uint64(domain.SequentialUniqueID()),
+		msg.C_SystemGetServerKeys,
+		reqBytes,
+		func() {
+			defer waitGroup.Done()
+			err = domain.ErrRequestTimeout
+		},
+		func(res *rony.MessageEnvelope) {
+			defer waitGroup.Done()
+			logs.Debug("River::GetServerKeys() Success Callback Called")
+			switch res.Constructor {
+			case msg.C_SystemKeys:
+				sk = &msg.SystemKeys{}
+				err = sk.Unmarshal(res.Message)
+				if err != nil {
+					logs.Error("SyncCtrl couldn't unmarshal SystemKeys response", zap.Error(err))
+					return
+				}
+
+				logs.Debug("SyncCtrl received SystemKeys",
+					zap.Int("Keys", len(sk.RSAPublicKeys)),
+					zap.Int("DHGroups", len(sk.DHGroups)),
+				)
+			case rony.C_Error:
+				err = domain.ParseServerError(res.Message)
+			default:
+				err = domain.ErrInvalidConstructor
+			}
+		},
+	)
+	waitGroup.Wait()
+	return
+
 }
 func initConnect(r *River) (err error, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64) {
 	logs.Info("River::CreateAuthKey() 1st Step Started :: InitConnect")
@@ -294,12 +342,12 @@ func initConnect(r *River) (err error, clientNonce, serverNonce, serverPubFP, se
 	waitGroup.Wait()
 	return
 }
-func initCompleteAuth(r *River, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64) (err error) {
+func initCompleteAuth(r *River, sk *msg.SystemKeys, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64) (err error) {
 	logs.Info("River::CreateAuthKey() 2nd Step Started :: InitCompleteAuth")
 	req2 := new(msg.InitCompleteAuth)
 	req2.ServerNonce = serverNonce
 	req2.ClientNonce = clientNonce
-	dhGroup, err := _ServerKeys.GetDhGroup(int64(serverDHFP))
+	dhGroup, err := getDhGroup(sk, int64(serverDHFP))
 	if err != nil {
 		return err
 	}
@@ -326,7 +374,7 @@ func initCompleteAuth(r *River, clientNonce, serverNonce, serverPubFP, serverDHF
 	q2Internal := new(msg.InitCompleteAuthInternal)
 	q2Internal.SecretNonce = []byte(domain.RandomID(16))
 
-	serverPubKey, err := _ServerKeys.GetPublicKey(int64(serverPubFP))
+	serverPubKey, err := getPublicKey(sk, int64(serverPubFP))
 	if err != nil {
 		return err
 	}
@@ -403,6 +451,29 @@ func initCompleteAuth(r *River, clientNonce, serverNonce, serverPubFP, serverDHF
 	)
 	waitGroup.Wait()
 	return
+}
+func getPublicKey(pk *msg.SystemKeys, keyFP int64) (*msg.RSAPublicKey, error) {
+	logs.Info("Public Key loaded",
+		zap.Int64("keyFP", keyFP),
+	)
+	for _, pk := range pk.RSAPublicKeys {
+		if pk.FingerPrint == keyFP {
+
+			return pk, nil
+		}
+	}
+	return nil, domain.ErrNotFound
+}
+func getDhGroup(pk *msg.SystemKeys, keyFP int64) (*msg.DHGroup, error) {
+	logs.Info("DHGroup Key loaded",
+		zap.Int64("keyFP", keyFP),
+	)
+	for _, dh := range pk.DHGroups {
+		if dh.FingerPrint == keyFP {
+			return dh, nil
+		}
+	}
+	return nil, domain.ErrNotFound
 }
 
 // ResetAuthKey
@@ -727,7 +798,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		msg.C_SystemGetConfig:     true,
 		msg.C_SystemGetSalts:      true,
 		msg.C_SystemGetServerTime: true,
-		msg.C_SystemGetPublicKeys: true,
+		msg.C_SystemGetServerKeys: true,
 	}
 
 	// Initialize Network Controller
@@ -800,13 +871,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 			},
 		},
 	)
-
-	// Initialize Server Keys
-	if err := json.Unmarshal([]byte(conf.ServerKeys), &_ServerKeys); err != nil {
-		logs.Error("We couldn't unmarshal ServerKeys",
-			zap.String("Error", err.Error()),
-		)
-	}
 
 	// Initialize River Connection
 	logs.Info("River SetConfig done!")

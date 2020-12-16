@@ -15,6 +15,8 @@ git.ronaksoft.com/river/msg v0.0.0-20201213070826-2ee0fc910cea h1:wAc2NE1f5xYr3T
 git.ronaksoft.com/river/msg v0.0.0-20201213070826-2ee0fc910cea/go.mod h1:5LRYzZF7y1Jg2cWiQfKY//fQ7gKBdtkbmZFbZfkoumc=
 git.ronaksoft.com/river/msg v0.0.0-20201215102421-295f02edb990 h1:ChezqYqMmD/FpL7NpepAUfXloZpYzCEqbT8S4m2dTUY=
 git.ronaksoft.com/river/msg v0.0.0-20201215102421-295f02edb990/go.mod h1:5LRYzZF7y1Jg2cWiQfKY//fQ7gKBdtkbmZFbZfkoumc=
+git.ronaksoft.com/river/msg v0.0.0-20201216175652-e83187690455 h1:s1mAWGTwYPG7UNOSxE/QIgUdNsebGMJoqGXk3tStiRw=
+git.ronaksoft.com/river/msg v0.0.0-20201216175652-e83187690455/go.mod h1:5LRYzZF7y1Jg2cWiQfKY//fQ7gKBdtkbmZFbZfkoumc=
 github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9 h1:HD8gA2tkByhMAwYaFAX9w2l7vxvBQ5NMoxDrkhqhtn4=
 github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9/go.mod h1:bOvUY6CB00SOBii9/FifXqc0awNKxLFCL/+pkDPuyl8=
 github.com/AndreasBriese/bbloom v0.0.0-20190825152654-46b345b51c96/go.mod h1:bOvUY6CB00SOBii9/FifXqc0awNKxLFCL/+pkDPuyl8=

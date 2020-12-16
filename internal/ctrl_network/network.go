@@ -73,7 +73,6 @@ type Controller struct {
 	unauthorizedRequests map[int64]bool // requests that it should sent unencrypted
 	countryCode          string         // the country
 	sendFlusher          *domain.Flusher
-	serverKeys           *ServerKeys
 }
 
 // New

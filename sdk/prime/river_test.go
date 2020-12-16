@@ -42,7 +42,6 @@ func init() {
 	connDelegate.Load(conInfo)
 	conInfo.Delegate = new(ConnInfoDelegates)
 
-	serverKeyBytes, _ := ioutil.ReadFile("./keys.json")
 	r.SetConfig(&RiverConfig{
 		DbPath:                 "./_data/",
 		DbID:                   "test",
@@ -56,7 +55,6 @@ func init() {
 		DocumentCacheDirectory: "./_files/cache",
 		LogDirectory:           "./_files/logs",
 		ConnInfo:               conInfo,
-		ServerKeys:             string(serverKeyBytes),
 		ServerHostPort:         "river.ronaksoftware.com",
 	})
 	_River = r

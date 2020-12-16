@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	_ServerKeys ServerKeys
+// _ServerKeys ServerKeys
 )
 
 func SetLogLevel(l int) {
@@ -38,8 +38,6 @@ type RiverConfig struct {
 	DbPath string
 	// DbID is used to save data for different accounts in separate databases. Could be used for multi-account cases.
 	DbID string
-	// ServerKeysFilePath is a json file holding finger print and public keys.
-	ServerKeys string
 	// MainDelegate holds all the general callback functions that let the user of this SDK
 	// get notified of the events.
 	MainDelegate MainDelegate

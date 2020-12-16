@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"git.ronaksoft.com/river/sdk/internal/domain"
 	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
 	"github.com/fatih/color"
 	"go.uber.org/zap/zapcore"
@@ -78,36 +77,28 @@ func main() {
 	}
 
 	serverHostPort := "river.ronaksoftware.com"
-	keysFile := "./keys-staging.json"
 
 	switch len(os.Args) {
 	case 2:
 		switch strings.ToLower(os.Args[1]) {
 		case "production":
 			serverHostPort = "edge.river.im"
-			keysFile = "./keys-production.json"
 		case "staging":
 			serverHostPort = "river-rony.ronaksoftware.com"
-			keysFile = "./keys-staging.json"
 		case "local":
 			serverHostPort = "localhost"
-			keysFile = "./keys-staging.json"
 		case "local2":
 			serverHostPort = "localhost:81"
-			keysFile = "./keys-staging.json"
 		default:
 			serverHostPort = os.Args[1]
 		}
 	}
-
-	skBytes, _ := ioutil.ReadFile(keysFile)
 
 	_SDK = &riversdk.River{}
 	_SDK.SetConfig(&riversdk.RiverConfig{
 		ServerHostPort:         serverHostPort,
 		DbPath:                 _DbPath,
 		DbID:                   _DbID,
-		ServerKeys:             domain.ByteToStr(skBytes),
 		MainDelegate:           new(MainDelegate),
 		FileDelegate:           new(FileDelegate),
 		LogLevel:               int(zapcore.InfoLevel),
