@@ -3,6 +3,7 @@ package tools
 import (
 	"sync/atomic"
 	"time"
+	_ "unsafe"
 )
 
 /*
@@ -31,3 +32,15 @@ func init() {
 func TimeUnix() int64 {
 	return atomic.LoadInt64(&timeInSec)
 }
+
+func Duration(t int64) time.Duration {
+	return time.Duration(CPUTicks() - t)
+}
+
+// NanoTime returns the current time in nanoseconds from a monotonic clock.
+//go:linkname NanoTime runtime.nanotime
+func NanoTime() int64
+
+// CPUTicks is a faster alternative to NanoTime to measure time duration.
+//go:linkname CPUTicks runtime.cputicks
+func CPUTicks() int64

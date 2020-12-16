@@ -71,10 +71,22 @@ func (ctx *DispatchCtx) StreamID() int64 {
 	return ctx.streamID
 }
 
-func (ctx *DispatchCtx) FillEnvelope(requestID uint64, constructor int64, payload []byte) {
+func (ctx *DispatchCtx) FillEnvelope(requestID uint64, constructor int64, payload []byte, auth []byte, kv ...*rony.KeyValue) {
 	ctx.req.RequestID = requestID
 	ctx.req.Constructor = constructor
 	ctx.req.Message = append(ctx.req.Message[:0], payload...)
+	ctx.req.Auth = append(ctx.req.Auth[:0], auth...)
+	if cap(ctx.req.Header) >= len(kv) {
+		ctx.req.Header = ctx.req.Header[:len(kv)]
+	} else {
+		ctx.req.Header = make([]*rony.KeyValue, len(kv))
+	}
+	for idx, kv := range kv {
+		if ctx.req.Header[idx] == nil {
+			ctx.req.Header[idx] = &rony.KeyValue{}
+		}
+		kv.DeepCopy(ctx.req.Header[idx])
+	}
 }
 
 func (ctx *DispatchCtx) Set(key string, v interface{}) {
@@ -216,7 +228,7 @@ func (ctx *RequestCtx) PushRedirectLeader() {
 }
 
 func (ctx *RequestCtx) PushRedirectShard(shard uint32, wait time.Duration) {
-
+	// TODO:: implement it
 }
 
 func (ctx *RequestCtx) PushMessage(constructor int64, proto proto.Message) {

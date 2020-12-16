@@ -122,7 +122,7 @@ func (ctrl *Controller) GetDownloadRequest(clusterID int32, fileID int64, access
 func (ctrl *Controller) GetRequest(clusterID int32, fileID int64, accessHash uint64) *msg.ClientFileRequest {
 	req, err := repo.Files.GetFileRequest(getRequestID(clusterID, fileID, accessHash))
 	if err != nil {
-		return nil
+		return &msg.ClientFileRequest{}
 	}
 	return req
 }

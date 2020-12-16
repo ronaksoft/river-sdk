@@ -6,7 +6,7 @@ import (
 	"github.com/ronaksoft/rony/pools"
 	mathRand "math/rand"
 	"sync"
-	"time"
+	_ "unsafe"
 )
 
 /*
@@ -22,6 +22,10 @@ const (
 	DIGITS        = "0123456789"
 	ALPHANUMERICS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 )
+
+// FastRand is a fast thread local random function.
+//go:linkname FastRand runtime.fastrand
+func FastRand() uint32
 
 type randomGenerator struct {
 	sync.Pool
@@ -39,7 +43,7 @@ var rndGen randomGenerator
 
 func init() {
 	rndGen.New = func() interface{} {
-		x := mathRand.New(mathRand.NewSource(time.Now().UnixNano()))
+		x := mathRand.New(mathRand.NewSource(CPUTicks()))
 		return x
 	}
 }
