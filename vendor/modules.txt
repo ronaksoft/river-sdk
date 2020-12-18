@@ -163,7 +163,7 @@ github.com/inconshreveable/mousetrap
 github.com/jtolds/gls
 # github.com/juju/ratelimit v1.0.1
 github.com/juju/ratelimit
-# github.com/klauspost/compress v1.10.7
+# github.com/klauspost/compress v1.10.10
 github.com/klauspost/compress/flate
 github.com/klauspost/compress/gzip
 github.com/klauspost/compress/zlib
@@ -181,7 +181,7 @@ github.com/mattn/go-colorable
 github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.9
 github.com/mattn/go-runewidth
-# github.com/miekg/dns v1.1.26
+# github.com/miekg/dns v1.1.30
 github.com/miekg/dns
 # github.com/mitchellh/mapstructure v1.1.2
 github.com/mitchellh/mapstructure
@@ -193,7 +193,7 @@ github.com/mschoch/smat
 github.com/nyaruka/phonenumbers
 # github.com/olekukonko/tablewriter v0.0.4
 github.com/olekukonko/tablewriter
-# github.com/pelletier/go-toml v1.2.0
+# github.com/pelletier/go-toml v1.6.0
 github.com/pelletier/go-toml
 # github.com/philhofer/fwd v1.0.0
 github.com/philhofer/fwd

@@ -29,10 +29,13 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/juju/ratelimit v1.0.1
+	github.com/klauspost/compress v1.10.10 // indirect
 	github.com/kr/pretty v0.2.0
+	github.com/miekg/dns v1.1.30 // indirect
 	github.com/monnand/dhkx v0.0.0-20180522003156-9e5b033f1ac4
 	github.com/nyaruka/phonenumbers v1.0.60
 	github.com/olekukonko/tablewriter v0.0.4
+	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/remyoudompheng/bigfft v0.0.0-20190512091148-babf20351dd7 // indirect
 	github.com/ronaksoft/rony v0.0.41
@@ -52,8 +55,10 @@ require (
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73 // indirect
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	golang.org/x/text v0.3.3 // indirect
+	golang.org/x/tools v0.0.0-20201002184944-ecd9fd270d5d // indirect
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/abiosoft/ishell.v2 v2.0.0
+	honnef.co/go/tools v0.0.1-2020.1.4 // indirect
 )
 
 go 1.13
