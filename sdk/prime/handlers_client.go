@@ -240,7 +240,75 @@ func (r *River) clientGetMediaHistory(in, out *rony.MessageEnvelope, timeoutCB d
 		return
 	}
 
-	msgs, _ := repo.Messages.GetMediaHistory(req.MediaType)
+	// Load the dialog
+	dialog, _ := repo.Dialogs.Get(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))
+	if dialog == nil {
+		logs.Debug("asking for a nil dialog")
+		fillMessagesMany(out, []*msg.UserMessage{}, []*msg.User{}, []*msg.Group{}, in.RequestID, successCB)
+		return
+	}
+
+	messages, users, groups := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit, req.MediaType...)
+	if len(messages) > 0 {
+		pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
+		if len(pendingMessages) > 0 {
+			messages = append(pendingMessages, messages...)
+		}
+		fillMessagesMany(out, messages, users, groups, in.RequestID, successCB)
+		return
+	}
+	// req := &msg.ClientGetMediaHistory{}
+	// if err := req.Unmarshal(in.Message); err != nil {
+	// 	out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+	// 	successCB(out)
+	// 	return
+	// }
+	//
+	// msgs, _ := repo.Messages.GetMediaHistory(req.MediaType)
+	//
+	// // get users && group IDs
+	// userIDs := domain.MInt64B{}
+	// groupIDs := domain.MInt64B{}
+	// for _, m := range msgs {
+	// 	if m.PeerType == int32(msg.PeerType_PeerSelf) || m.PeerType == int32(msg.PeerType_PeerUser) {
+	// 		userIDs[m.PeerID] = true
+	// 	}
+	// 	if m.PeerType == int32(msg.PeerType_PeerGroup) {
+	// 		groupIDs[m.PeerID] = true
+	// 	}
+	// 	if m.SenderID > 0 {
+	// 		userIDs[m.SenderID] = true
+	// 	}
+	// 	if m.FwdSenderID > 0 {
+	// 		userIDs[m.FwdSenderID] = true
+	// 	}
+	// }
+	//
+	// users, _ := repo.Users.GetMany(userIDs.ToArray())
+	// groups, _ := repo.Groups.GetMany(groupIDs.ToArray())
+	//
+	// res := msg.MessagesMany{
+	// 	Messages:   msgs,
+	// 	Users:      users,
+	// 	Groups:     groups,
+	// 	Continuous: false,
+	// }
+	//
+	// out.Constructor = msg.C_MessagesMany
+	// out.RequestID = in.RequestID
+	// out.Message, _ = res.Marshal()
+	// uiexec.ExecSuccessCB(successCB, out)
+}
+
+func (r *River) clientGetAllDownloadedMedia(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientGetAllDownloadedMedia{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	msgs, _ := repo.Messages.GetAllMedia(req.MediaType)
 
 	// get users && group IDs
 	userIDs := domain.MInt64B{}
@@ -451,7 +519,7 @@ func (r *River) clientGetTeamCounters(in, out *rony.MessageEnvelope, timeoutCB d
 	uiexec.ExecSuccessCB(successCB, out)
 }
 
-func (r *River) clientGetFrequentlyReactions(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *River) clientGetFrequentReactions(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	reactions := domain.SysConfig.Reactions
 	logs.Info("Reactions", zap.Int("ReactionsCount", len(reactions)))
 
@@ -466,9 +534,9 @@ func (r *River) clientGetFrequentlyReactions(in, out *rony.MessageEnvelope, time
 		return useCountsMap[reactions[i]] > useCountsMap[reactions[j]]
 	})
 
-	res := &msg.ClientFrequentlyReactions{
+	res := &msg.ClientFrequentReactions{
 		Reactions: reactions,
 	}
-	out.Fill(out.RequestID, msg.C_ClientFrequentlyReactions, res)
+	out.Fill(out.RequestID, msg.C_ClientFrequentReactions, res)
 	successCB(out)
 }

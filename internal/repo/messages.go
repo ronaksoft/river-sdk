@@ -341,9 +341,10 @@ func (r *repoMessages) UpdateReactionCounter(messageID int64, reactions []*msg.R
 	})
 }
 
-func (r *repoMessages) GetMessageHistory(teamID, peerID int64, peerType int32, minID, maxID int64, limit int32) (userMessages []*msg.UserMessage, users []*msg.User) {
+func (r *repoMessages) GetMessageHistory(
+	teamID, peerID int64, peerType int32, minID, maxID int64, limit int32, filters ...msg.ClientMediaType,
+) (userMessages []*msg.UserMessage, users []*msg.User, groups []*msg.Group) {
 	userMessages = make([]*msg.UserMessage, 0, limit)
-	userIDs := domain.MInt64B{}
 	switch {
 	case maxID == 0 && minID == 0:
 		dialog, err := Dialogs.Get(teamID, peerID, peerType)
@@ -372,17 +373,17 @@ func (r *repoMessages) GetMessageHistory(teamID, peerID int64, peerType int32, m
 					break
 				}
 				_ = it.Item().Value(func(val []byte) error {
-					userMessage := new(msg.UserMessage)
+					userMessage := &msg.UserMessage{}
 					err := userMessage.Unmarshal(val)
 					if err != nil {
 						return err
 					}
-					userIDs[userMessage.SenderID] = true
-					if userMessage.FwdSenderID != 0 {
-						userIDs[userMessage.FwdSenderID] = true
-					}
-					for _, userID := range domain.ExtractActionUserIDs(userMessage.MessageAction, userMessage.MessageActionData) {
-						userIDs[userID] = true
+					if len(filters) > 0 {
+						if bypassFilter(it.Item().UserMeta(), filters...) {
+							// increase the limit counter since we are not going to use this message
+							limit++
+							return nil
+						}
 					}
 					userMessages = append(userMessages, userMessage)
 					return nil
@@ -416,12 +417,12 @@ func (r *repoMessages) GetMessageHistory(teamID, peerID int64, peerType int32, m
 					if err != nil {
 						return err
 					}
-					userIDs[userMessage.SenderID] = true
-					if userMessage.FwdSenderID != 0 {
-						userIDs[userMessage.FwdSenderID] = true
-					}
-					for _, userID := range domain.ExtractActionUserIDs(userMessage.MessageAction, userMessage.MessageActionData) {
-						userIDs[userID] = true
+					if len(filters) > 0 {
+						if bypassFilter(it.Item().UserMeta(), filters...) {
+							// increase the limit counter since we are not going to use this message
+							limit++
+							return nil
+						}
 					}
 					userMessages = append(userMessages, userMessage)
 					return nil
@@ -460,12 +461,12 @@ func (r *repoMessages) GetMessageHistory(teamID, peerID int64, peerType int32, m
 					if err != nil {
 						return err
 					}
-					userIDs[userMessage.SenderID] = true
-					if userMessage.FwdSenderID != 0 {
-						userIDs[userMessage.FwdSenderID] = true
-					}
-					for _, userID := range domain.ExtractActionUserIDs(userMessage.MessageAction, userMessage.MessageActionData) {
-						userIDs[userID] = true
+					if len(filters) > 0 {
+						if bypassFilter(it.Item().UserMeta(), filters...) {
+							// increase the limit counter since we are not going to use this message
+							limit++
+							return nil
+						}
 					}
 					userMessages = append(userMessages, userMessage)
 					if userMessage.ID <= minID {
@@ -485,7 +486,42 @@ func (r *repoMessages) GetMessageHistory(teamID, peerID int64, peerType int32, m
 
 	}
 
+	users, groups = extractMessages(userMessages...)
+	return
+}
+
+func bypassFilter(userMeta byte, filters ...msg.ClientMediaType) bool {
+	byPass := true
+	for _, f := range filters {
+		if userMeta == byte(f) {
+			byPass = false
+			break
+		}
+	}
+	return byPass
+}
+func extractMessages(msgs ...*msg.UserMessage) (users []*msg.User, groups []*msg.Group) {
+	userIDs := domain.MInt64B{}
+	groupIDs := domain.MInt64B{}
+	for _, m := range msgs {
+		if m.PeerType == int32(msg.PeerType_PeerSelf) || m.PeerType == int32(msg.PeerType_PeerUser) {
+			userIDs[m.PeerID] = true
+		}
+		if m.PeerType == int32(msg.PeerType_PeerGroup) {
+			groupIDs[m.PeerID] = true
+		}
+		if m.SenderID > 0 {
+			userIDs[m.SenderID] = true
+		}
+		if m.FwdSenderID > 0 {
+			userIDs[m.FwdSenderID] = true
+		}
+		for _, userID := range domain.ExtractActionUserIDs(m.MessageAction, m.MessageActionData) {
+			userIDs[userID] = true
+		}
+	}
 	users, _ = Users.GetMany(userIDs.ToArray())
+	groups, _ = Groups.GetMany(groupIDs.ToArray())
 	return
 }
 
@@ -766,39 +802,7 @@ func (r *repoMessages) SearchByLabels(teamID int64, labelIDs []int32, peerID int
 
 }
 
-func (r *repoMessages) GetSharedMedia(teamID, peerID int64, peerType int32, documentType msg.ClientMediaType) ([]*msg.UserMessage, error) {
-	limit := 500
-	userMessages := make([]*msg.UserMessage, 0, limit)
-	_ = badgerView(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.PrefetchValues = false
-		opts.Prefix = getMessagePrefix(teamID, peerID, peerType)
-		opts.Reverse = true
-		it := txn.NewIterator(opts)
-		for it.Seek(getMessageKey(teamID, peerID, peerType, 1<<31)); it.ValidForPrefix(opts.Prefix); it.Next() {
-			if limit--; limit < 0 {
-				break
-			}
-			if it.Item().UserMeta() == byte(documentType) {
-				_ = it.Item().Value(func(val []byte) error {
-					userMessage := new(msg.UserMessage)
-					err := userMessage.Unmarshal(val)
-					if err != nil {
-						return err
-					}
-					userMessages = append(userMessages, userMessage)
-					return nil
-				})
-			}
-		}
-		it.Close()
-		return nil
-	})
-
-	return userMessages, nil
-}
-
-func (r *repoMessages) GetMediaHistory(documentType msg.ClientMediaType) ([]*msg.UserMessage, error) {
+func (r *repoMessages) GetAllMedia(documentType msg.ClientMediaType) ([]*msg.UserMessage, error) {
 	limit := 500
 	msgMtx := sync.Mutex{}
 	userMessages := make([]*msg.UserMessage, 0, limit)

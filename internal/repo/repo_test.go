@@ -180,7 +180,7 @@ func TestRepoDeleteMessage(t *testing.T) {
 	d, _ = repo.Dialogs.Get(0, peerID, peerType)
 	fmt.Println(d)
 
-	msgs, _ := repo.Messages.GetMessageHistory(0, peerID, peerType, 0, 0, 5)
+	msgs, _, _ := repo.Messages.GetMessageHistory(0, peerID, peerType, 0, 0, 5)
 	for idx := range msgs {
 		fmt.Println(msgs[idx].ID)
 	}
@@ -275,7 +275,7 @@ func TestClearHistory(t *testing.T) {
 		return
 	}
 	fmt.Println(d.TopMessageID)
-	ums, us := repo.Messages.GetMessageHistory(0, 10, 1, 0, 0, 100)
+	ums, us, _ := repo.Messages.GetMessageHistory(0, 10, 1, 0, 0, 100)
 	fmt.Println(len(ums), len(us))
 
 	var x []int64

@@ -613,7 +613,7 @@ func (r *River) registerCommandHandlers() {
 		msg.C_MessagesTogglePin:             r.messagesTogglePin,
 		msg.C_MessagesSendReaction:          r.messagesSendReaction,
 		msg.C_MessagesDeleteReaction:        r.messagesDeleteReaction,
-		msg.C_ClientGetFrequentlyReactions:  r.clientGetFrequentlyReactions,
+		msg.C_ClientGetFrequentReactions:    r.clientGetFrequentReactions,
 		msg.C_LabelsDelete:                  r.labelsDelete,
 	}
 }

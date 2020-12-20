@@ -6,7 +6,6 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/dgraph-io/badger/v2"
-	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 	"os"
 )
@@ -132,57 +131,6 @@ func (r *River) AccountUploadPhoto(filePath string) (reqID string) {
 func (r *River) GroupUploadPhoto(groupID int64, filePath string) (reqID string) {
 	reqID = r.fileCtrl.UploadGroupPhoto(groupID, filePath)
 	return
-}
-
-// GetSharedMedia search in given dialog files
-func (r *River) GetSharedMedia(teamID int64, peerID int64, peerType int32, mediaType int32, delegate RequestDelegate) {
-	msgs, err := repo.Messages.GetSharedMedia(teamID, peerID, peerType, msg.ClientMediaType(mediaType))
-	if err != nil {
-		out := new(rony.MessageEnvelope)
-		res := new(rony.Error)
-		res.Code = "00"
-		res.Items = err.Error()
-		out.Fill(out.RequestID, rony.C_Error, res)
-		outBytes, _ := out.Marshal()
-		if delegate != nil {
-			delegate.OnComplete(outBytes)
-		}
-		return
-	}
-
-	// get users && group IDs
-	userIDs := domain.MInt64B{}
-	groupIDs := domain.MInt64B{}
-	for _, m := range msgs {
-		if m.PeerType == int32(msg.PeerType_PeerSelf) || m.PeerType == int32(msg.PeerType_PeerUser) {
-			userIDs[m.PeerID] = true
-		}
-		if m.PeerType == int32(msg.PeerType_PeerGroup) {
-			groupIDs[m.PeerID] = true
-		}
-		if m.SenderID > 0 {
-			userIDs[m.SenderID] = true
-		}
-		if m.FwdSenderID > 0 {
-			userIDs[m.FwdSenderID] = true
-		}
-	}
-
-	users, _ := repo.Users.GetMany(userIDs.ToArray())
-	groups, _ := repo.Groups.GetMany(groupIDs.ToArray())
-
-	msgMany := new(msg.MessagesMany)
-	msgMany.Messages = msgs
-	msgMany.Users = users
-	msgMany.Groups = groups
-
-	out := new(rony.MessageEnvelope)
-	out.Constructor = msg.C_MessagesMany
-	out.Message, _ = msgMany.Marshal()
-	outBytes, _ := out.Marshal()
-	if delegate != nil {
-		delegate.OnComplete(outBytes)
-	}
 }
 
 // GetDocumentHash

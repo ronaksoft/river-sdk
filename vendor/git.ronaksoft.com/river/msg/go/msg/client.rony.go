@@ -181,11 +181,39 @@ func (p *poolClientGetMediaHistory) Get() *ClientGetMediaHistory {
 }
 
 func (p *poolClientGetMediaHistory) Put(x *ClientGetMediaHistory) {
-	x.MediaType = 0
+	x.MediaType = x.MediaType[:0]
+	x.MaxID = 0
+	x.MinID = 0
+	x.Limit = 0
+	if x.Peer != nil {
+		PoolInputPeer.Put(x.Peer)
+		x.Peer = nil
+	}
 	p.pool.Put(x)
 }
 
 var PoolClientGetMediaHistory = poolClientGetMediaHistory{}
+
+const C_ClientGetAllDownloadedMedia int64 = 729082453
+
+type poolClientGetAllDownloadedMedia struct {
+	pool sync.Pool
+}
+
+func (p *poolClientGetAllDownloadedMedia) Get() *ClientGetAllDownloadedMedia {
+	x, ok := p.pool.Get().(*ClientGetAllDownloadedMedia)
+	if !ok {
+		return &ClientGetAllDownloadedMedia{}
+	}
+	return x
+}
+
+func (p *poolClientGetAllDownloadedMedia) Put(x *ClientGetAllDownloadedMedia) {
+	x.MediaType = 0
+	p.pool.Put(x)
+}
+
+var PoolClientGetAllDownloadedMedia = poolClientGetAllDownloadedMedia{}
 
 const C_ClientGetRecentSearch int64 = 2622949116
 
@@ -653,46 +681,46 @@ func (p *poolClientTeamCounters) Put(x *ClientTeamCounters) {
 
 var PoolClientTeamCounters = poolClientTeamCounters{}
 
-const C_ClientGetFrequentlyReactions int64 = 2316768708
+const C_ClientGetFrequentReactions int64 = 2954334910
 
-type poolClientGetFrequentlyReactions struct {
+type poolClientGetFrequentReactions struct {
 	pool sync.Pool
 }
 
-func (p *poolClientGetFrequentlyReactions) Get() *ClientGetFrequentlyReactions {
-	x, ok := p.pool.Get().(*ClientGetFrequentlyReactions)
+func (p *poolClientGetFrequentReactions) Get() *ClientGetFrequentReactions {
+	x, ok := p.pool.Get().(*ClientGetFrequentReactions)
 	if !ok {
-		return &ClientGetFrequentlyReactions{}
+		return &ClientGetFrequentReactions{}
 	}
 	return x
 }
 
-func (p *poolClientGetFrequentlyReactions) Put(x *ClientGetFrequentlyReactions) {
+func (p *poolClientGetFrequentReactions) Put(x *ClientGetFrequentReactions) {
 	p.pool.Put(x)
 }
 
-var PoolClientGetFrequentlyReactions = poolClientGetFrequentlyReactions{}
+var PoolClientGetFrequentReactions = poolClientGetFrequentReactions{}
 
-const C_ClientFrequentlyReactions int64 = 2830270594
+const C_ClientFrequentReactions int64 = 1422804314
 
-type poolClientFrequentlyReactions struct {
+type poolClientFrequentReactions struct {
 	pool sync.Pool
 }
 
-func (p *poolClientFrequentlyReactions) Get() *ClientFrequentlyReactions {
-	x, ok := p.pool.Get().(*ClientFrequentlyReactions)
+func (p *poolClientFrequentReactions) Get() *ClientFrequentReactions {
+	x, ok := p.pool.Get().(*ClientFrequentReactions)
 	if !ok {
-		return &ClientFrequentlyReactions{}
+		return &ClientFrequentReactions{}
 	}
 	return x
 }
 
-func (p *poolClientFrequentlyReactions) Put(x *ClientFrequentlyReactions) {
+func (p *poolClientFrequentReactions) Put(x *ClientFrequentReactions) {
 	x.Reactions = x.Reactions[:0]
 	p.pool.Put(x)
 }
 
-var PoolClientFrequentlyReactions = poolClientFrequentlyReactions{}
+var PoolClientFrequentReactions = poolClientFrequentReactions{}
 
 const C_ClientDismissNotification int64 = 1698398006
 
@@ -772,6 +800,7 @@ func init() {
 	registry.RegisterConstructor(1199927718, "ClientClearCachedMedia")
 	registry.RegisterConstructor(177544569, "ClientGetLastBotKeyboard")
 	registry.RegisterConstructor(1354863379, "ClientGetMediaHistory")
+	registry.RegisterConstructor(729082453, "ClientGetAllDownloadedMedia")
 	registry.RegisterConstructor(2622949116, "ClientGetRecentSearch")
 	registry.RegisterConstructor(629582533, "ClientPutRecentSearch")
 	registry.RegisterConstructor(1281490259, "ClientRemoveRecentSearch")
@@ -790,8 +819,8 @@ func init() {
 	registry.RegisterConstructor(2069517672, "ClientRecentSearch")
 	registry.RegisterConstructor(3236847495, "ClientRecentSearchMany")
 	registry.RegisterConstructor(769069696, "ClientTeamCounters")
-	registry.RegisterConstructor(2316768708, "ClientGetFrequentlyReactions")
-	registry.RegisterConstructor(2830270594, "ClientFrequentlyReactions")
+	registry.RegisterConstructor(2954334910, "ClientGetFrequentReactions")
+	registry.RegisterConstructor(1422804314, "ClientFrequentReactions")
 	registry.RegisterConstructor(1698398006, "ClientDismissNotification")
 	registry.RegisterConstructor(4106535811, "ClientGetNotificationDismissTime")
 	registry.RegisterConstructor(3077814065, "ClientNotificationDismissTime")
@@ -867,6 +896,17 @@ func (x *ClientGetLastBotKeyboard) DeepCopy(z *ClientGetLastBotKeyboard) {
 }
 
 func (x *ClientGetMediaHistory) DeepCopy(z *ClientGetMediaHistory) {
+	z.MediaType = append(z.MediaType[:0], x.MediaType...)
+	z.MaxID = x.MaxID
+	z.MinID = x.MinID
+	z.Limit = x.Limit
+	if x.Peer != nil {
+		z.Peer = PoolInputPeer.Get()
+		x.Peer.DeepCopy(z.Peer)
+	}
+}
+
+func (x *ClientGetAllDownloadedMedia) DeepCopy(z *ClientGetAllDownloadedMedia) {
 	z.MediaType = x.MediaType
 }
 
@@ -1108,10 +1148,10 @@ func (x *ClientTeamCounters) DeepCopy(z *ClientTeamCounters) {
 	z.MentionCount = x.MentionCount
 }
 
-func (x *ClientGetFrequentlyReactions) DeepCopy(z *ClientGetFrequentlyReactions) {
+func (x *ClientGetFrequentReactions) DeepCopy(z *ClientGetFrequentReactions) {
 }
 
-func (x *ClientFrequentlyReactions) DeepCopy(z *ClientFrequentlyReactions) {
+func (x *ClientFrequentReactions) DeepCopy(z *ClientFrequentReactions) {
 	z.Reactions = append(z.Reactions[:0], x.Reactions...)
 }
 
@@ -1160,6 +1200,10 @@ func (x *ClientGetLastBotKeyboard) PushToContext(ctx *edge.RequestCtx) {
 
 func (x *ClientGetMediaHistory) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_ClientGetMediaHistory, x)
+}
+
+func (x *ClientGetAllDownloadedMedia) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_ClientGetAllDownloadedMedia, x)
 }
 
 func (x *ClientGetRecentSearch) PushToContext(ctx *edge.RequestCtx) {
@@ -1234,12 +1278,12 @@ func (x *ClientTeamCounters) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_ClientTeamCounters, x)
 }
 
-func (x *ClientGetFrequentlyReactions) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_ClientGetFrequentlyReactions, x)
+func (x *ClientGetFrequentReactions) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_ClientGetFrequentReactions, x)
 }
 
-func (x *ClientFrequentlyReactions) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_ClientFrequentlyReactions, x)
+func (x *ClientFrequentReactions) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_ClientFrequentReactions, x)
 }
 
 func (x *ClientDismissNotification) PushToContext(ctx *edge.RequestCtx) {
@@ -1279,6 +1323,10 @@ func (x *ClientGetLastBotKeyboard) Marshal() ([]byte, error) {
 }
 
 func (x *ClientGetMediaHistory) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *ClientGetAllDownloadedMedia) Marshal() ([]byte, error) {
 	return proto.Marshal(x)
 }
 
@@ -1354,11 +1402,11 @@ func (x *ClientTeamCounters) Marshal() ([]byte, error) {
 	return proto.Marshal(x)
 }
 
-func (x *ClientGetFrequentlyReactions) Marshal() ([]byte, error) {
+func (x *ClientGetFrequentReactions) Marshal() ([]byte, error) {
 	return proto.Marshal(x)
 }
 
-func (x *ClientFrequentlyReactions) Marshal() ([]byte, error) {
+func (x *ClientFrequentReactions) Marshal() ([]byte, error) {
 	return proto.Marshal(x)
 }
 
@@ -1399,6 +1447,10 @@ func (x *ClientGetLastBotKeyboard) Unmarshal(b []byte) error {
 }
 
 func (x *ClientGetMediaHistory) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *ClientGetAllDownloadedMedia) Unmarshal(b []byte) error {
 	return proto.UnmarshalOptions{}.Unmarshal(b, x)
 }
 
@@ -1474,11 +1526,11 @@ func (x *ClientTeamCounters) Unmarshal(b []byte) error {
 	return proto.UnmarshalOptions{}.Unmarshal(b, x)
 }
 
-func (x *ClientGetFrequentlyReactions) Unmarshal(b []byte) error {
+func (x *ClientGetFrequentReactions) Unmarshal(b []byte) error {
 	return proto.UnmarshalOptions{}.Unmarshal(b, x)
 }
 
-func (x *ClientFrequentlyReactions) Unmarshal(b []byte) error {
+func (x *ClientFrequentReactions) Unmarshal(b []byte) error {
 	return proto.UnmarshalOptions{}.Unmarshal(b, x)
 }
 

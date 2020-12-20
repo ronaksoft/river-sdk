@@ -159,7 +159,7 @@ func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
 	limit := int32(100)
 	cnt := 0
 	for {
-		ms, us := repo.Messages.GetMessageHistory(domain.GetCurrTeamID(), peerID, peerType, 0, maxID, limit)
+		ms, us, _ := repo.Messages.GetMessageHistory(domain.GetCurrTeamID(), peerID, peerType, 0, maxID, limit)
 		usMap := make(map[int64]*msg.User)
 		for _, u := range us {
 			usMap[u.ID] = u

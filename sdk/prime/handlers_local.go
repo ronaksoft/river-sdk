@@ -272,7 +272,7 @@ func (r *River) messagesGetHistory(in, out *rony.MessageEnvelope, timeoutCB doma
 	dialog, _ := repo.Dialogs.Get(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
 		logs.Debug("asking for a nil dialog")
-		fillMessagesMany(out, []*msg.UserMessage{}, []*msg.User{}, in.RequestID, successCB)
+		fillMessagesMany(out, []*msg.UserMessage{}, []*msg.User{}, []*msg.Group{}, in.RequestID, successCB)
 		return
 	}
 
@@ -281,13 +281,13 @@ func (r *River) messagesGetHistory(in, out *rony.MessageEnvelope, timeoutCB doma
 
 	// We are Offline/Disconnected
 	if !r.networkCtrl.Connected() {
-		messages, users := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
+		messages, users, groups := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 		if len(messages) > 0 {
 			pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
 			if len(pendingMessages) > 0 {
 				messages = append(pendingMessages, messages...)
 			}
-			fillMessagesMany(out, messages, users, in.RequestID, successCB)
+			fillMessagesMany(out, messages, users, groups, in.RequestID, successCB)
 			return
 		}
 	}
@@ -309,8 +309,8 @@ func (r *River) messagesGetHistory(in, out *rony.MessageEnvelope, timeoutCB doma
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
-		messages, users := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
-		fillMessagesMany(out, messages, users, in.RequestID, preSuccessCB)
+		messages, users, groups := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
+		fillMessagesMany(out, messages, users, groups, in.RequestID, preSuccessCB)
 	case req.MinID != 0 && req.MaxID == 0:
 		b, bar := messageHole.GetUpperFilled(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID)
 		if !b {
@@ -323,8 +323,8 @@ func (r *River) messagesGetHistory(in, out *rony.MessageEnvelope, timeoutCB doma
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
-		messages, users := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), bar.Min, 0, req.Limit)
-		fillMessagesMany(out, messages, users, in.RequestID, preSuccessCB)
+		messages, users, groups := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), bar.Min, 0, req.Limit)
+		fillMessagesMany(out, messages, users, groups, in.RequestID, preSuccessCB)
 	default:
 		b := messageHole.IsHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID)
 		if b {
@@ -337,14 +337,15 @@ func (r *River) messagesGetHistory(in, out *rony.MessageEnvelope, timeoutCB doma
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
-		messages, users := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
-		fillMessagesMany(out, messages, users, in.RequestID, preSuccessCB)
+		messages, users, groups := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
+		fillMessagesMany(out, messages, users, groups, in.RequestID, preSuccessCB)
 	}
 }
-func fillMessagesMany(out *rony.MessageEnvelope, messages []*msg.UserMessage, users []*msg.User, requestID uint64, successCB domain.MessageHandler) {
+func fillMessagesMany(out *rony.MessageEnvelope, messages []*msg.UserMessage, users []*msg.User, groups []*msg.Group, requestID uint64, successCB domain.MessageHandler) {
 	res := &msg.MessagesMany{
 		Messages: messages,
 		Users:    users,
+		Groups:   groups,
 	}
 
 	out.RequestID = requestID
@@ -476,7 +477,7 @@ func (r *River) messagesGet(in, out *rony.MessageEnvelope, timeoutCB domain.Time
 }
 
 func (r *River) messagesClearHistory(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := new(msg.MessagesClearHistory)
+	req := &msg.MessagesClearHistory{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		successCB(out)
