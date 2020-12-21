@@ -27,6 +27,7 @@ require (
 	github.com/gobwas/pool v0.2.1
 	github.com/gobwas/ws v1.0.4
 	github.com/gogo/protobuf v1.3.1
+	github.com/iRezaaa/mobile v0.0.0-20191126111539-45e4d750f768 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/juju/ratelimit v1.0.1
 	github.com/klauspost/compress v1.10.10 // indirect
