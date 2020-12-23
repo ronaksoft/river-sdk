@@ -219,6 +219,34 @@ func (p *poolAccountUpdatePhoto) Put(x *AccountUpdatePhoto) {
 
 var PoolAccountUpdatePhoto = poolAccountUpdatePhoto{}
 
+const C_AccountSetWebPhoto int64 = 46761477
+
+type poolAccountSetWebPhoto struct {
+	pool sync.Pool
+}
+
+func (p *poolAccountSetWebPhoto) Get() *AccountSetWebPhoto {
+	x, ok := p.pool.Get().(*AccountSetWebPhoto)
+	if !ok {
+		return &AccountSetWebPhoto{}
+	}
+	return x
+}
+
+func (p *poolAccountSetWebPhoto) Put(x *AccountSetWebPhoto) {
+	if x.BigPhoto != nil {
+		PoolInputWebLocation.Put(x.BigPhoto)
+		x.BigPhoto = nil
+	}
+	if x.SmallPhoto != nil {
+		PoolInputWebLocation.Put(x.SmallPhoto)
+		x.SmallPhoto = nil
+	}
+	p.pool.Put(x)
+}
+
+var PoolAccountSetWebPhoto = poolAccountSetWebPhoto{}
+
 const C_AccountRemovePhoto int64 = 3728692172
 
 type poolAccountRemovePhoto struct {
@@ -777,6 +805,7 @@ func init() {
 	registry.RegisterConstructor(1477164344, "AccountUpdateUsername")
 	registry.RegisterConstructor(1222469957, "AccountUploadPhoto")
 	registry.RegisterConstructor(406174115, "AccountUpdatePhoto")
+	registry.RegisterConstructor(46761477, "AccountSetWebPhoto")
 	registry.RegisterConstructor(3728692172, "AccountRemovePhoto")
 	registry.RegisterConstructor(1389121902, "AccountSendChangePhoneCode")
 	registry.RegisterConstructor(4200771569, "AccountResendChangePhoneCode")
@@ -860,6 +889,17 @@ func (x *AccountUploadPhoto) DeepCopy(z *AccountUploadPhoto) {
 
 func (x *AccountUpdatePhoto) DeepCopy(z *AccountUpdatePhoto) {
 	z.PhotoID = x.PhotoID
+}
+
+func (x *AccountSetWebPhoto) DeepCopy(z *AccountSetWebPhoto) {
+	if x.BigPhoto != nil {
+		z.BigPhoto = PoolInputWebLocation.Get()
+		x.BigPhoto.DeepCopy(z.BigPhoto)
+	}
+	if x.SmallPhoto != nil {
+		z.SmallPhoto = PoolInputWebLocation.Get()
+		x.SmallPhoto.DeepCopy(z.SmallPhoto)
+	}
 }
 
 func (x *AccountRemovePhoto) DeepCopy(z *AccountRemovePhoto) {
@@ -1116,6 +1156,10 @@ func (x *AccountUpdatePhoto) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_AccountUpdatePhoto, x)
 }
 
+func (x *AccountSetWebPhoto) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_AccountSetWebPhoto, x)
+}
+
 func (x *AccountRemovePhoto) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_AccountRemovePhoto, x)
 }
@@ -1248,6 +1292,10 @@ func (x *AccountUpdatePhoto) Marshal() ([]byte, error) {
 	return proto.Marshal(x)
 }
 
+func (x *AccountSetWebPhoto) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
 func (x *AccountRemovePhoto) Marshal() ([]byte, error) {
 	return proto.Marshal(x)
 }
@@ -1377,6 +1425,10 @@ func (x *AccountUploadPhoto) Unmarshal(b []byte) error {
 }
 
 func (x *AccountUpdatePhoto) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *AccountSetWebPhoto) Unmarshal(b []byte) error {
 	return proto.UnmarshalOptions{}.Unmarshal(b, x)
 }
 

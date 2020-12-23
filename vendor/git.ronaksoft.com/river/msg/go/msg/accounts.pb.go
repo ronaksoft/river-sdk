@@ -563,6 +563,64 @@ func (x *AccountUpdatePhoto) GetPhotoID() int64 {
 	return 0
 }
 
+// AccountSetWebPhoto
+// @Function
+// @Return: UserPhoto
+type AccountSetWebPhoto struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	BigPhoto   *InputWebLocation `protobuf:"bytes,1,opt,name=BigPhoto,proto3" json:"BigPhoto,omitempty"`
+	SmallPhoto *InputWebLocation `protobuf:"bytes,2,opt,name=SmallPhoto,proto3" json:"SmallPhoto,omitempty"`
+}
+
+func (x *AccountSetWebPhoto) Reset() {
+	*x = AccountSetWebPhoto{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_accounts_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AccountSetWebPhoto) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AccountSetWebPhoto) ProtoMessage() {}
+
+func (x *AccountSetWebPhoto) ProtoReflect() protoreflect.Message {
+	mi := &file_accounts_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AccountSetWebPhoto.ProtoReflect.Descriptor instead.
+func (*AccountSetWebPhoto) Descriptor() ([]byte, []int) {
+	return file_accounts_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *AccountSetWebPhoto) GetBigPhoto() *InputWebLocation {
+	if x != nil {
+		return x.BigPhoto
+	}
+	return nil
+}
+
+func (x *AccountSetWebPhoto) GetSmallPhoto() *InputWebLocation {
+	if x != nil {
+		return x.SmallPhoto
+	}
+	return nil
+}
+
 // AccountRemotePhoto
 // @Function
 // @Return: Bool
@@ -577,7 +635,7 @@ type AccountRemovePhoto struct {
 func (x *AccountRemovePhoto) Reset() {
 	*x = AccountRemovePhoto{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[9]
+		mi := &file_accounts_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -590,7 +648,7 @@ func (x *AccountRemovePhoto) String() string {
 func (*AccountRemovePhoto) ProtoMessage() {}
 
 func (x *AccountRemovePhoto) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[9]
+	mi := &file_accounts_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -603,7 +661,7 @@ func (x *AccountRemovePhoto) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountRemovePhoto.ProtoReflect.Descriptor instead.
 func (*AccountRemovePhoto) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{9}
+	return file_accounts_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *AccountRemovePhoto) GetPhotoID() int64 {
@@ -628,7 +686,7 @@ type AccountSendChangePhoneCode struct {
 func (x *AccountSendChangePhoneCode) Reset() {
 	*x = AccountSendChangePhoneCode{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[10]
+		mi := &file_accounts_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -641,7 +699,7 @@ func (x *AccountSendChangePhoneCode) String() string {
 func (*AccountSendChangePhoneCode) ProtoMessage() {}
 
 func (x *AccountSendChangePhoneCode) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[10]
+	mi := &file_accounts_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -654,7 +712,7 @@ func (x *AccountSendChangePhoneCode) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountSendChangePhoneCode.ProtoReflect.Descriptor instead.
 func (*AccountSendChangePhoneCode) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{10}
+	return file_accounts_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *AccountSendChangePhoneCode) GetPhone() string {
@@ -686,7 +744,7 @@ type AccountResendChangePhoneCode struct {
 func (x *AccountResendChangePhoneCode) Reset() {
 	*x = AccountResendChangePhoneCode{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[11]
+		mi := &file_accounts_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -699,7 +757,7 @@ func (x *AccountResendChangePhoneCode) String() string {
 func (*AccountResendChangePhoneCode) ProtoMessage() {}
 
 func (x *AccountResendChangePhoneCode) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[11]
+	mi := &file_accounts_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -712,7 +770,7 @@ func (x *AccountResendChangePhoneCode) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountResendChangePhoneCode.ProtoReflect.Descriptor instead.
 func (*AccountResendChangePhoneCode) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{11}
+	return file_accounts_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *AccountResendChangePhoneCode) GetPhone() string {
@@ -746,7 +804,7 @@ type AccountChangePhone struct {
 func (x *AccountChangePhone) Reset() {
 	*x = AccountChangePhone{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[12]
+		mi := &file_accounts_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -759,7 +817,7 @@ func (x *AccountChangePhone) String() string {
 func (*AccountChangePhone) ProtoMessage() {}
 
 func (x *AccountChangePhone) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[12]
+	mi := &file_accounts_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -772,7 +830,7 @@ func (x *AccountChangePhone) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountChangePhone.ProtoReflect.Descriptor instead.
 func (*AccountChangePhone) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{12}
+	return file_accounts_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *AccountChangePhone) GetPhone() string {
@@ -822,7 +880,7 @@ type AccountSetPrivacy struct {
 func (x *AccountSetPrivacy) Reset() {
 	*x = AccountSetPrivacy{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[13]
+		mi := &file_accounts_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -835,7 +893,7 @@ func (x *AccountSetPrivacy) String() string {
 func (*AccountSetPrivacy) ProtoMessage() {}
 
 func (x *AccountSetPrivacy) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[13]
+	mi := &file_accounts_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -848,7 +906,7 @@ func (x *AccountSetPrivacy) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountSetPrivacy.ProtoReflect.Descriptor instead.
 func (*AccountSetPrivacy) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{13}
+	return file_accounts_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *AccountSetPrivacy) GetChatInvite() []*PrivacyRule {
@@ -907,7 +965,7 @@ type AccountGetPrivacy struct {
 func (x *AccountGetPrivacy) Reset() {
 	*x = AccountGetPrivacy{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[14]
+		mi := &file_accounts_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -920,7 +978,7 @@ func (x *AccountGetPrivacy) String() string {
 func (*AccountGetPrivacy) ProtoMessage() {}
 
 func (x *AccountGetPrivacy) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[14]
+	mi := &file_accounts_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -933,7 +991,7 @@ func (x *AccountGetPrivacy) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountGetPrivacy.ProtoReflect.Descriptor instead.
 func (*AccountGetPrivacy) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{14}
+	return file_accounts_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *AccountGetPrivacy) GetKey() PrivacyKey {
@@ -955,7 +1013,7 @@ type AccountGetAuthorizations struct {
 func (x *AccountGetAuthorizations) Reset() {
 	*x = AccountGetAuthorizations{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[15]
+		mi := &file_accounts_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -968,7 +1026,7 @@ func (x *AccountGetAuthorizations) String() string {
 func (*AccountGetAuthorizations) ProtoMessage() {}
 
 func (x *AccountGetAuthorizations) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[15]
+	mi := &file_accounts_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -981,7 +1039,7 @@ func (x *AccountGetAuthorizations) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountGetAuthorizations.ProtoReflect.Descriptor instead.
 func (*AccountGetAuthorizations) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{15}
+	return file_accounts_proto_rawDescGZIP(), []int{16}
 }
 
 // AccountResetAuthorization
@@ -998,7 +1056,7 @@ type AccountResetAuthorization struct {
 func (x *AccountResetAuthorization) Reset() {
 	*x = AccountResetAuthorization{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[16]
+		mi := &file_accounts_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1011,7 +1069,7 @@ func (x *AccountResetAuthorization) String() string {
 func (*AccountResetAuthorization) ProtoMessage() {}
 
 func (x *AccountResetAuthorization) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[16]
+	mi := &file_accounts_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1024,7 +1082,7 @@ func (x *AccountResetAuthorization) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountResetAuthorization.ProtoReflect.Descriptor instead.
 func (*AccountResetAuthorization) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{16}
+	return file_accounts_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *AccountResetAuthorization) GetAuthID() int64 {
@@ -1048,7 +1106,7 @@ type AccountUpdateStatus struct {
 func (x *AccountUpdateStatus) Reset() {
 	*x = AccountUpdateStatus{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[17]
+		mi := &file_accounts_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1061,7 +1119,7 @@ func (x *AccountUpdateStatus) String() string {
 func (*AccountUpdateStatus) ProtoMessage() {}
 
 func (x *AccountUpdateStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[17]
+	mi := &file_accounts_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1074,7 +1132,7 @@ func (x *AccountUpdateStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountUpdateStatus.ProtoReflect.Descriptor instead.
 func (*AccountUpdateStatus) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{17}
+	return file_accounts_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *AccountUpdateStatus) GetOnline() bool {
@@ -1098,7 +1156,7 @@ type AccountSetLang struct {
 func (x *AccountSetLang) Reset() {
 	*x = AccountSetLang{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[18]
+		mi := &file_accounts_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1111,7 +1169,7 @@ func (x *AccountSetLang) String() string {
 func (*AccountSetLang) ProtoMessage() {}
 
 func (x *AccountSetLang) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[18]
+	mi := &file_accounts_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1124,7 +1182,7 @@ func (x *AccountSetLang) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountSetLang.ProtoReflect.Descriptor instead.
 func (*AccountSetLang) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{18}
+	return file_accounts_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *AccountSetLang) GetLangCode() string {
@@ -1147,7 +1205,7 @@ type AccountGetPassword struct {
 func (x *AccountGetPassword) Reset() {
 	*x = AccountGetPassword{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[19]
+		mi := &file_accounts_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1160,7 +1218,7 @@ func (x *AccountGetPassword) String() string {
 func (*AccountGetPassword) ProtoMessage() {}
 
 func (x *AccountGetPassword) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[19]
+	mi := &file_accounts_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1173,7 +1231,7 @@ func (x *AccountGetPassword) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountGetPassword.ProtoReflect.Descriptor instead.
 func (*AccountGetPassword) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{19}
+	return file_accounts_proto_rawDescGZIP(), []int{20}
 }
 
 // AccountGetPasswordSettings
@@ -1191,7 +1249,7 @@ type AccountGetPasswordSettings struct {
 func (x *AccountGetPasswordSettings) Reset() {
 	*x = AccountGetPasswordSettings{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[20]
+		mi := &file_accounts_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1204,7 +1262,7 @@ func (x *AccountGetPasswordSettings) String() string {
 func (*AccountGetPasswordSettings) ProtoMessage() {}
 
 func (x *AccountGetPasswordSettings) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[20]
+	mi := &file_accounts_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1217,7 +1275,7 @@ func (x *AccountGetPasswordSettings) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountGetPasswordSettings.ProtoReflect.Descriptor instead.
 func (*AccountGetPasswordSettings) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{20}
+	return file_accounts_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *AccountGetPasswordSettings) GetPassword() *InputPassword {
@@ -1246,7 +1304,7 @@ type AccountUpdatePasswordSettings struct {
 func (x *AccountUpdatePasswordSettings) Reset() {
 	*x = AccountUpdatePasswordSettings{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[21]
+		mi := &file_accounts_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1259,7 +1317,7 @@ func (x *AccountUpdatePasswordSettings) String() string {
 func (*AccountUpdatePasswordSettings) ProtoMessage() {}
 
 func (x *AccountUpdatePasswordSettings) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[21]
+	mi := &file_accounts_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1272,7 +1330,7 @@ func (x *AccountUpdatePasswordSettings) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountUpdatePasswordSettings.ProtoReflect.Descriptor instead.
 func (*AccountUpdatePasswordSettings) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{21}
+	return file_accounts_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *AccountUpdatePasswordSettings) GetPassword() *InputPassword {
@@ -1334,7 +1392,7 @@ type AccountRecoverPassword struct {
 func (x *AccountRecoverPassword) Reset() {
 	*x = AccountRecoverPassword{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[22]
+		mi := &file_accounts_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1347,7 +1405,7 @@ func (x *AccountRecoverPassword) String() string {
 func (*AccountRecoverPassword) ProtoMessage() {}
 
 func (x *AccountRecoverPassword) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[22]
+	mi := &file_accounts_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1360,7 +1418,7 @@ func (x *AccountRecoverPassword) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountRecoverPassword.ProtoReflect.Descriptor instead.
 func (*AccountRecoverPassword) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{22}
+	return file_accounts_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *AccountRecoverPassword) GetAnswers() []*SecurityAnswer {
@@ -1403,7 +1461,7 @@ type AccountGetTeams struct {
 func (x *AccountGetTeams) Reset() {
 	*x = AccountGetTeams{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[23]
+		mi := &file_accounts_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1416,7 +1474,7 @@ func (x *AccountGetTeams) String() string {
 func (*AccountGetTeams) ProtoMessage() {}
 
 func (x *AccountGetTeams) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[23]
+	mi := &file_accounts_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1429,7 +1487,7 @@ func (x *AccountGetTeams) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountGetTeams.ProtoReflect.Descriptor instead.
 func (*AccountGetTeams) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{23}
+	return file_accounts_proto_rawDescGZIP(), []int{24}
 }
 
 // AccountPasswordSettings
@@ -1446,7 +1504,7 @@ type AccountPasswordSettings struct {
 func (x *AccountPasswordSettings) Reset() {
 	*x = AccountPasswordSettings{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[24]
+		mi := &file_accounts_proto_msgTypes[25]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1459,7 +1517,7 @@ func (x *AccountPasswordSettings) String() string {
 func (*AccountPasswordSettings) ProtoMessage() {}
 
 func (x *AccountPasswordSettings) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[24]
+	mi := &file_accounts_proto_msgTypes[25]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1472,7 +1530,7 @@ func (x *AccountPasswordSettings) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountPasswordSettings.ProtoReflect.Descriptor instead.
 func (*AccountPasswordSettings) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{24}
+	return file_accounts_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *AccountPasswordSettings) GetHint() string {
@@ -1501,7 +1559,7 @@ type SecurityQuestions struct {
 func (x *SecurityQuestions) Reset() {
 	*x = SecurityQuestions{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[25]
+		mi := &file_accounts_proto_msgTypes[26]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1514,7 +1572,7 @@ func (x *SecurityQuestions) String() string {
 func (*SecurityQuestions) ProtoMessage() {}
 
 func (x *SecurityQuestions) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[25]
+	mi := &file_accounts_proto_msgTypes[26]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1527,7 +1585,7 @@ func (x *SecurityQuestions) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SecurityQuestions.ProtoReflect.Descriptor instead.
 func (*SecurityQuestions) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{25}
+	return file_accounts_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *SecurityQuestions) GetQuestions() []*SecurityQuestion {
@@ -1550,7 +1608,7 @@ type RecoveryQuestion struct {
 func (x *RecoveryQuestion) Reset() {
 	*x = RecoveryQuestion{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[26]
+		mi := &file_accounts_proto_msgTypes[27]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1563,7 +1621,7 @@ func (x *RecoveryQuestion) String() string {
 func (*RecoveryQuestion) ProtoMessage() {}
 
 func (x *RecoveryQuestion) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[26]
+	mi := &file_accounts_proto_msgTypes[27]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1576,7 +1634,7 @@ func (x *RecoveryQuestion) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecoveryQuestion.ProtoReflect.Descriptor instead.
 func (*RecoveryQuestion) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{26}
+	return file_accounts_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *RecoveryQuestion) GetID() int32 {
@@ -1607,7 +1665,7 @@ type SecurityQuestion struct {
 func (x *SecurityQuestion) Reset() {
 	*x = SecurityQuestion{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[27]
+		mi := &file_accounts_proto_msgTypes[28]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1620,7 +1678,7 @@ func (x *SecurityQuestion) String() string {
 func (*SecurityQuestion) ProtoMessage() {}
 
 func (x *SecurityQuestion) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[27]
+	mi := &file_accounts_proto_msgTypes[28]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1633,7 +1691,7 @@ func (x *SecurityQuestion) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SecurityQuestion.ProtoReflect.Descriptor instead.
 func (*SecurityQuestion) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{27}
+	return file_accounts_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *SecurityQuestion) GetID() int32 {
@@ -1670,7 +1728,7 @@ type SecurityAnswer struct {
 func (x *SecurityAnswer) Reset() {
 	*x = SecurityAnswer{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[28]
+		mi := &file_accounts_proto_msgTypes[29]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1683,7 +1741,7 @@ func (x *SecurityAnswer) String() string {
 func (*SecurityAnswer) ProtoMessage() {}
 
 func (x *SecurityAnswer) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[28]
+	mi := &file_accounts_proto_msgTypes[29]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1696,7 +1754,7 @@ func (x *SecurityAnswer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SecurityAnswer.ProtoReflect.Descriptor instead.
 func (*SecurityAnswer) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{28}
+	return file_accounts_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *SecurityAnswer) GetQuestionID() int32 {
@@ -1733,7 +1791,7 @@ type AccountPassword struct {
 func (x *AccountPassword) Reset() {
 	*x = AccountPassword{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[29]
+		mi := &file_accounts_proto_msgTypes[30]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1746,7 +1804,7 @@ func (x *AccountPassword) String() string {
 func (*AccountPassword) ProtoMessage() {}
 
 func (x *AccountPassword) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[29]
+	mi := &file_accounts_proto_msgTypes[30]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1759,7 +1817,7 @@ func (x *AccountPassword) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountPassword.ProtoReflect.Descriptor instead.
 func (*AccountPassword) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{29}
+	return file_accounts_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *AccountPassword) GetHasPassword() bool {
@@ -1830,7 +1888,7 @@ type AccountAuthorizations struct {
 func (x *AccountAuthorizations) Reset() {
 	*x = AccountAuthorizations{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[30]
+		mi := &file_accounts_proto_msgTypes[31]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1843,7 +1901,7 @@ func (x *AccountAuthorizations) String() string {
 func (*AccountAuthorizations) ProtoMessage() {}
 
 func (x *AccountAuthorizations) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[30]
+	mi := &file_accounts_proto_msgTypes[31]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1856,7 +1914,7 @@ func (x *AccountAuthorizations) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountAuthorizations.ProtoReflect.Descriptor instead.
 func (*AccountAuthorizations) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{30}
+	return file_accounts_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *AccountAuthorizations) GetAuthorizations() []*AccountAuthorization {
@@ -1886,7 +1944,7 @@ type AccountAuthorization struct {
 func (x *AccountAuthorization) Reset() {
 	*x = AccountAuthorization{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[31]
+		mi := &file_accounts_proto_msgTypes[32]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1899,7 +1957,7 @@ func (x *AccountAuthorization) String() string {
 func (*AccountAuthorization) ProtoMessage() {}
 
 func (x *AccountAuthorization) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[31]
+	mi := &file_accounts_proto_msgTypes[32]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1912,7 +1970,7 @@ func (x *AccountAuthorization) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountAuthorization.ProtoReflect.Descriptor instead.
 func (*AccountAuthorization) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{31}
+	return file_accounts_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *AccountAuthorization) GetAuthID() int64 {
@@ -1990,7 +2048,7 @@ type AccountPrivacyRules struct {
 func (x *AccountPrivacyRules) Reset() {
 	*x = AccountPrivacyRules{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_accounts_proto_msgTypes[32]
+		mi := &file_accounts_proto_msgTypes[33]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2003,7 +2061,7 @@ func (x *AccountPrivacyRules) String() string {
 func (*AccountPrivacyRules) ProtoMessage() {}
 
 func (x *AccountPrivacyRules) ProtoReflect() protoreflect.Message {
-	mi := &file_accounts_proto_msgTypes[32]
+	mi := &file_accounts_proto_msgTypes[33]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2016,7 +2074,7 @@ func (x *AccountPrivacyRules) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountPrivacyRules.ProtoReflect.Descriptor instead.
 func (*AccountPrivacyRules) Descriptor() ([]byte, []int) {
-	return file_accounts_proto_rawDescGZIP(), []int{32}
+	return file_accounts_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *AccountPrivacyRules) GetRules() []*PrivacyRule {
@@ -2086,6 +2144,14 @@ var file_accounts_proto_rawDesc = []byte{
 	0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x68, 0x6f,
 	0x74, 0x6f, 0x12, 0x1c, 0x0a, 0x07, 0x50, 0x68, 0x6f, 0x74, 0x6f, 0x49, 0x44, 0x18, 0x01, 0x20,
 	0x01, 0x28, 0x03, 0x42, 0x02, 0x30, 0x01, 0x52, 0x07, 0x50, 0x68, 0x6f, 0x74, 0x6f, 0x49, 0x44,
+	0x22, 0x7e, 0x0a, 0x12, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x53, 0x65, 0x74, 0x57, 0x65,
+	0x62, 0x50, 0x68, 0x6f, 0x74, 0x6f, 0x12, 0x31, 0x0a, 0x08, 0x42, 0x69, 0x67, 0x50, 0x68, 0x6f,
+	0x74, 0x6f, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x6d, 0x73, 0x67, 0x2e, 0x49,
+	0x6e, 0x70, 0x75, 0x74, 0x57, 0x65, 0x62, 0x4c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52,
+	0x08, 0x42, 0x69, 0x67, 0x50, 0x68, 0x6f, 0x74, 0x6f, 0x12, 0x35, 0x0a, 0x0a, 0x53, 0x6d, 0x61,
+	0x6c, 0x6c, 0x50, 0x68, 0x6f, 0x74, 0x6f, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e,
+	0x6d, 0x73, 0x67, 0x2e, 0x49, 0x6e, 0x70, 0x75, 0x74, 0x57, 0x65, 0x62, 0x4c, 0x6f, 0x63, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0a, 0x53, 0x6d, 0x61, 0x6c, 0x6c, 0x50, 0x68, 0x6f, 0x74, 0x6f,
 	0x22, 0x32, 0x0a, 0x12, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x6d, 0x6f, 0x76,
 	0x65, 0x50, 0x68, 0x6f, 0x74, 0x6f, 0x12, 0x1c, 0x0a, 0x07, 0x50, 0x68, 0x6f, 0x74, 0x6f, 0x49,
 	0x44, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x42, 0x02, 0x30, 0x01, 0x52, 0x07, 0x50, 0x68, 0x6f,
@@ -2263,7 +2329,7 @@ func file_accounts_proto_rawDescGZIP() []byte {
 	return file_accounts_proto_rawDescData
 }
 
-var file_accounts_proto_msgTypes = make([]protoimpl.MessageInfo, 33)
+var file_accounts_proto_msgTypes = make([]protoimpl.MessageInfo, 34)
 var file_accounts_proto_goTypes = []interface{}{
 	(*AccountSetNotifySettings)(nil),      // 0: msg.AccountSetNotifySettings
 	(*AccountGetNotifySettings)(nil),      // 1: msg.AccountGetNotifySettings
@@ -2274,66 +2340,70 @@ var file_accounts_proto_goTypes = []interface{}{
 	(*AccountUpdateUsername)(nil),         // 6: msg.AccountUpdateUsername
 	(*AccountUploadPhoto)(nil),            // 7: msg.AccountUploadPhoto
 	(*AccountUpdatePhoto)(nil),            // 8: msg.AccountUpdatePhoto
-	(*AccountRemovePhoto)(nil),            // 9: msg.AccountRemovePhoto
-	(*AccountSendChangePhoneCode)(nil),    // 10: msg.AccountSendChangePhoneCode
-	(*AccountResendChangePhoneCode)(nil),  // 11: msg.AccountResendChangePhoneCode
-	(*AccountChangePhone)(nil),            // 12: msg.AccountChangePhone
-	(*AccountSetPrivacy)(nil),             // 13: msg.AccountSetPrivacy
-	(*AccountGetPrivacy)(nil),             // 14: msg.AccountGetPrivacy
-	(*AccountGetAuthorizations)(nil),      // 15: msg.AccountGetAuthorizations
-	(*AccountResetAuthorization)(nil),     // 16: msg.AccountResetAuthorization
-	(*AccountUpdateStatus)(nil),           // 17: msg.AccountUpdateStatus
-	(*AccountSetLang)(nil),                // 18: msg.AccountSetLang
-	(*AccountGetPassword)(nil),            // 19: msg.AccountGetPassword
-	(*AccountGetPasswordSettings)(nil),    // 20: msg.AccountGetPasswordSettings
-	(*AccountUpdatePasswordSettings)(nil), // 21: msg.AccountUpdatePasswordSettings
-	(*AccountRecoverPassword)(nil),        // 22: msg.AccountRecoverPassword
-	(*AccountGetTeams)(nil),               // 23: msg.AccountGetTeams
-	(*AccountPasswordSettings)(nil),       // 24: msg.AccountPasswordSettings
-	(*SecurityQuestions)(nil),             // 25: msg.SecurityQuestions
-	(*RecoveryQuestion)(nil),              // 26: msg.RecoveryQuestion
-	(*SecurityQuestion)(nil),              // 27: msg.SecurityQuestion
-	(*SecurityAnswer)(nil),                // 28: msg.SecurityAnswer
-	(*AccountPassword)(nil),               // 29: msg.AccountPassword
-	(*AccountAuthorizations)(nil),         // 30: msg.AccountAuthorizations
-	(*AccountAuthorization)(nil),          // 31: msg.AccountAuthorization
-	(*AccountPrivacyRules)(nil),           // 32: msg.AccountPrivacyRules
-	(*InputPeer)(nil),                     // 33: msg.InputPeer
-	(*PeerNotifySettings)(nil),            // 34: msg.PeerNotifySettings
-	(PushTokenProvider)(0),                // 35: msg.PushTokenProvider
-	(*InputFile)(nil),                     // 36: msg.InputFile
-	(*InputPassword)(nil),                 // 37: msg.InputPassword
-	(*PrivacyRule)(nil),                   // 38: msg.PrivacyRule
-	(PrivacyKey)(0),                       // 39: msg.PrivacyKey
+	(*AccountSetWebPhoto)(nil),            // 9: msg.AccountSetWebPhoto
+	(*AccountRemovePhoto)(nil),            // 10: msg.AccountRemovePhoto
+	(*AccountSendChangePhoneCode)(nil),    // 11: msg.AccountSendChangePhoneCode
+	(*AccountResendChangePhoneCode)(nil),  // 12: msg.AccountResendChangePhoneCode
+	(*AccountChangePhone)(nil),            // 13: msg.AccountChangePhone
+	(*AccountSetPrivacy)(nil),             // 14: msg.AccountSetPrivacy
+	(*AccountGetPrivacy)(nil),             // 15: msg.AccountGetPrivacy
+	(*AccountGetAuthorizations)(nil),      // 16: msg.AccountGetAuthorizations
+	(*AccountResetAuthorization)(nil),     // 17: msg.AccountResetAuthorization
+	(*AccountUpdateStatus)(nil),           // 18: msg.AccountUpdateStatus
+	(*AccountSetLang)(nil),                // 19: msg.AccountSetLang
+	(*AccountGetPassword)(nil),            // 20: msg.AccountGetPassword
+	(*AccountGetPasswordSettings)(nil),    // 21: msg.AccountGetPasswordSettings
+	(*AccountUpdatePasswordSettings)(nil), // 22: msg.AccountUpdatePasswordSettings
+	(*AccountRecoverPassword)(nil),        // 23: msg.AccountRecoverPassword
+	(*AccountGetTeams)(nil),               // 24: msg.AccountGetTeams
+	(*AccountPasswordSettings)(nil),       // 25: msg.AccountPasswordSettings
+	(*SecurityQuestions)(nil),             // 26: msg.SecurityQuestions
+	(*RecoveryQuestion)(nil),              // 27: msg.RecoveryQuestion
+	(*SecurityQuestion)(nil),              // 28: msg.SecurityQuestion
+	(*SecurityAnswer)(nil),                // 29: msg.SecurityAnswer
+	(*AccountPassword)(nil),               // 30: msg.AccountPassword
+	(*AccountAuthorizations)(nil),         // 31: msg.AccountAuthorizations
+	(*AccountAuthorization)(nil),          // 32: msg.AccountAuthorization
+	(*AccountPrivacyRules)(nil),           // 33: msg.AccountPrivacyRules
+	(*InputPeer)(nil),                     // 34: msg.InputPeer
+	(*PeerNotifySettings)(nil),            // 35: msg.PeerNotifySettings
+	(PushTokenProvider)(0),                // 36: msg.PushTokenProvider
+	(*InputFile)(nil),                     // 37: msg.InputFile
+	(*InputWebLocation)(nil),              // 38: msg.InputWebLocation
+	(*InputPassword)(nil),                 // 39: msg.InputPassword
+	(*PrivacyRule)(nil),                   // 40: msg.PrivacyRule
+	(PrivacyKey)(0),                       // 41: msg.PrivacyKey
 }
 var file_accounts_proto_depIdxs = []int32{
-	33, // 0: msg.AccountSetNotifySettings.Peer:type_name -> msg.InputPeer
-	34, // 1: msg.AccountSetNotifySettings.Settings:type_name -> msg.PeerNotifySettings
-	33, // 2: msg.AccountGetNotifySettings.Peer:type_name -> msg.InputPeer
-	35, // 3: msg.AccountRegisterDevice.TokenType:type_name -> msg.PushTokenProvider
-	36, // 4: msg.AccountUploadPhoto.File:type_name -> msg.InputFile
-	37, // 5: msg.AccountChangePhone.Password:type_name -> msg.InputPassword
-	38, // 6: msg.AccountSetPrivacy.ChatInvite:type_name -> msg.PrivacyRule
-	38, // 7: msg.AccountSetPrivacy.LastSeen:type_name -> msg.PrivacyRule
-	38, // 8: msg.AccountSetPrivacy.PhoneNumber:type_name -> msg.PrivacyRule
-	38, // 9: msg.AccountSetPrivacy.ProfilePhoto:type_name -> msg.PrivacyRule
-	38, // 10: msg.AccountSetPrivacy.ForwardedMessage:type_name -> msg.PrivacyRule
-	38, // 11: msg.AccountSetPrivacy.Call:type_name -> msg.PrivacyRule
-	39, // 12: msg.AccountGetPrivacy.Key:type_name -> msg.PrivacyKey
-	37, // 13: msg.AccountGetPasswordSettings.Password:type_name -> msg.InputPassword
-	37, // 14: msg.AccountUpdatePasswordSettings.Password:type_name -> msg.InputPassword
-	27, // 15: msg.AccountUpdatePasswordSettings.Questions:type_name -> msg.SecurityQuestion
-	28, // 16: msg.AccountRecoverPassword.Answers:type_name -> msg.SecurityAnswer
-	26, // 17: msg.AccountPasswordSettings.Questions:type_name -> msg.RecoveryQuestion
-	27, // 18: msg.SecurityQuestions.Questions:type_name -> msg.SecurityQuestion
-	26, // 19: msg.AccountPassword.Questions:type_name -> msg.RecoveryQuestion
-	31, // 20: msg.AccountAuthorizations.Authorizations:type_name -> msg.AccountAuthorization
-	38, // 21: msg.AccountPrivacyRules.Rules:type_name -> msg.PrivacyRule
-	22, // [22:22] is the sub-list for method output_type
-	22, // [22:22] is the sub-list for method input_type
-	22, // [22:22] is the sub-list for extension type_name
-	22, // [22:22] is the sub-list for extension extendee
-	0,  // [0:22] is the sub-list for field type_name
+	34, // 0: msg.AccountSetNotifySettings.Peer:type_name -> msg.InputPeer
+	35, // 1: msg.AccountSetNotifySettings.Settings:type_name -> msg.PeerNotifySettings
+	34, // 2: msg.AccountGetNotifySettings.Peer:type_name -> msg.InputPeer
+	36, // 3: msg.AccountRegisterDevice.TokenType:type_name -> msg.PushTokenProvider
+	37, // 4: msg.AccountUploadPhoto.File:type_name -> msg.InputFile
+	38, // 5: msg.AccountSetWebPhoto.BigPhoto:type_name -> msg.InputWebLocation
+	38, // 6: msg.AccountSetWebPhoto.SmallPhoto:type_name -> msg.InputWebLocation
+	39, // 7: msg.AccountChangePhone.Password:type_name -> msg.InputPassword
+	40, // 8: msg.AccountSetPrivacy.ChatInvite:type_name -> msg.PrivacyRule
+	40, // 9: msg.AccountSetPrivacy.LastSeen:type_name -> msg.PrivacyRule
+	40, // 10: msg.AccountSetPrivacy.PhoneNumber:type_name -> msg.PrivacyRule
+	40, // 11: msg.AccountSetPrivacy.ProfilePhoto:type_name -> msg.PrivacyRule
+	40, // 12: msg.AccountSetPrivacy.ForwardedMessage:type_name -> msg.PrivacyRule
+	40, // 13: msg.AccountSetPrivacy.Call:type_name -> msg.PrivacyRule
+	41, // 14: msg.AccountGetPrivacy.Key:type_name -> msg.PrivacyKey
+	39, // 15: msg.AccountGetPasswordSettings.Password:type_name -> msg.InputPassword
+	39, // 16: msg.AccountUpdatePasswordSettings.Password:type_name -> msg.InputPassword
+	28, // 17: msg.AccountUpdatePasswordSettings.Questions:type_name -> msg.SecurityQuestion
+	29, // 18: msg.AccountRecoverPassword.Answers:type_name -> msg.SecurityAnswer
+	27, // 19: msg.AccountPasswordSettings.Questions:type_name -> msg.RecoveryQuestion
+	28, // 20: msg.SecurityQuestions.Questions:type_name -> msg.SecurityQuestion
+	27, // 21: msg.AccountPassword.Questions:type_name -> msg.RecoveryQuestion
+	32, // 22: msg.AccountAuthorizations.Authorizations:type_name -> msg.AccountAuthorization
+	40, // 23: msg.AccountPrivacyRules.Rules:type_name -> msg.PrivacyRule
+	24, // [24:24] is the sub-list for method output_type
+	24, // [24:24] is the sub-list for method input_type
+	24, // [24:24] is the sub-list for extension type_name
+	24, // [24:24] is the sub-list for extension extendee
+	0,  // [0:24] is the sub-list for field type_name
 }
 
 func init() { file_accounts_proto_init() }
@@ -2452,7 +2522,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountRemovePhoto); i {
+			switch v := v.(*AccountSetWebPhoto); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2464,7 +2534,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountSendChangePhoneCode); i {
+			switch v := v.(*AccountRemovePhoto); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2476,7 +2546,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountResendChangePhoneCode); i {
+			switch v := v.(*AccountSendChangePhoneCode); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2488,7 +2558,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountChangePhone); i {
+			switch v := v.(*AccountResendChangePhoneCode); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2500,7 +2570,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountSetPrivacy); i {
+			switch v := v.(*AccountChangePhone); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2512,7 +2582,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountGetPrivacy); i {
+			switch v := v.(*AccountSetPrivacy); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2524,7 +2594,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountGetAuthorizations); i {
+			switch v := v.(*AccountGetPrivacy); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2536,7 +2606,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountResetAuthorization); i {
+			switch v := v.(*AccountGetAuthorizations); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2548,7 +2618,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountUpdateStatus); i {
+			switch v := v.(*AccountResetAuthorization); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2560,7 +2630,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountSetLang); i {
+			switch v := v.(*AccountUpdateStatus); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2572,7 +2642,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountGetPassword); i {
+			switch v := v.(*AccountSetLang); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2584,7 +2654,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountGetPasswordSettings); i {
+			switch v := v.(*AccountGetPassword); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2596,7 +2666,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountUpdatePasswordSettings); i {
+			switch v := v.(*AccountGetPasswordSettings); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2608,7 +2678,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountRecoverPassword); i {
+			switch v := v.(*AccountUpdatePasswordSettings); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2620,7 +2690,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountGetTeams); i {
+			switch v := v.(*AccountRecoverPassword); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2632,7 +2702,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountPasswordSettings); i {
+			switch v := v.(*AccountGetTeams); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2644,7 +2714,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SecurityQuestions); i {
+			switch v := v.(*AccountPasswordSettings); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2656,7 +2726,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RecoveryQuestion); i {
+			switch v := v.(*SecurityQuestions); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2668,7 +2738,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SecurityQuestion); i {
+			switch v := v.(*RecoveryQuestion); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2680,7 +2750,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SecurityAnswer); i {
+			switch v := v.(*SecurityQuestion); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2692,7 +2762,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountPassword); i {
+			switch v := v.(*SecurityAnswer); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2704,7 +2774,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[30].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountAuthorizations); i {
+			switch v := v.(*AccountPassword); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2716,7 +2786,7 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[31].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AccountAuthorization); i {
+			switch v := v.(*AccountAuthorizations); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2728,6 +2798,18 @@ func file_accounts_proto_init() {
 			}
 		}
 		file_accounts_proto_msgTypes[32].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AccountAuthorization); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_accounts_proto_msgTypes[33].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*AccountPrivacyRules); i {
 			case 0:
 				return &v.state
@@ -2746,7 +2828,7 @@ func file_accounts_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_accounts_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   33,
+			NumMessages:   34,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

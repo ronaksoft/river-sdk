@@ -348,6 +348,48 @@ func (p *poolFileLocation) Put(x *FileLocation) {
 
 var PoolFileLocation = poolFileLocation{}
 
+const C_WebLocation int64 = 3180538793
+
+type poolWebLocation struct {
+	pool sync.Pool
+}
+
+func (p *poolWebLocation) Get() *WebLocation {
+	x, ok := p.pool.Get().(*WebLocation)
+	if !ok {
+		return &WebLocation{}
+	}
+	return x
+}
+
+func (p *poolWebLocation) Put(x *WebLocation) {
+	x.Url = ""
+	p.pool.Put(x)
+}
+
+var PoolWebLocation = poolWebLocation{}
+
+const C_InputWebLocation int64 = 203404027
+
+type poolInputWebLocation struct {
+	pool sync.Pool
+}
+
+func (p *poolInputWebLocation) Get() *InputWebLocation {
+	x, ok := p.pool.Get().(*InputWebLocation)
+	if !ok {
+		return &InputWebLocation{}
+	}
+	return x
+}
+
+func (p *poolInputWebLocation) Put(x *InputWebLocation) {
+	x.Url = ""
+	p.pool.Put(x)
+}
+
+var PoolInputWebLocation = poolInputWebLocation{}
+
 const C_UserPhoto int64 = 1881347437
 
 type poolUserPhoto struct {
@@ -372,6 +414,14 @@ func (p *poolUserPhoto) Put(x *UserPhoto) {
 		x.PhotoSmall = nil
 	}
 	x.PhotoID = 0
+	if x.PhotoBigWeb != nil {
+		PoolWebLocation.Put(x.PhotoBigWeb)
+		x.PhotoBigWeb = nil
+	}
+	if x.PhotoSmallWeb != nil {
+		PoolWebLocation.Put(x.PhotoSmallWeb)
+		x.PhotoSmallWeb = nil
+	}
 	p.pool.Put(x)
 }
 
@@ -1140,6 +1190,8 @@ func init() {
 	registry.RegisterConstructor(513021899, "InputPassword")
 	registry.RegisterConstructor(354669666, "InputFileLocation")
 	registry.RegisterConstructor(2432133155, "FileLocation")
+	registry.RegisterConstructor(3180538793, "WebLocation")
+	registry.RegisterConstructor(203404027, "InputWebLocation")
 	registry.RegisterConstructor(1881347437, "UserPhoto")
 	registry.RegisterConstructor(3865689926, "InputUser")
 	registry.RegisterConstructor(765557111, "User")
@@ -1291,6 +1343,14 @@ func (x *FileLocation) DeepCopy(z *FileLocation) {
 	z.AccessHash = x.AccessHash
 }
 
+func (x *WebLocation) DeepCopy(z *WebLocation) {
+	z.Url = x.Url
+}
+
+func (x *InputWebLocation) DeepCopy(z *InputWebLocation) {
+	z.Url = x.Url
+}
+
 func (x *UserPhoto) DeepCopy(z *UserPhoto) {
 	if x.PhotoBig != nil {
 		z.PhotoBig = PoolFileLocation.Get()
@@ -1301,6 +1361,14 @@ func (x *UserPhoto) DeepCopy(z *UserPhoto) {
 		x.PhotoSmall.DeepCopy(z.PhotoSmall)
 	}
 	z.PhotoID = x.PhotoID
+	if x.PhotoBigWeb != nil {
+		z.PhotoBigWeb = PoolWebLocation.Get()
+		x.PhotoBigWeb.DeepCopy(z.PhotoBigWeb)
+	}
+	if x.PhotoSmallWeb != nil {
+		z.PhotoSmallWeb = PoolWebLocation.Get()
+		x.PhotoSmallWeb.DeepCopy(z.PhotoSmallWeb)
+	}
 }
 
 func (x *InputUser) DeepCopy(z *InputUser) {
@@ -1685,6 +1753,14 @@ func (x *FileLocation) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_FileLocation, x)
 }
 
+func (x *WebLocation) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_WebLocation, x)
+}
+
+func (x *InputWebLocation) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_InputWebLocation, x)
+}
+
 func (x *UserPhoto) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_UserPhoto, x)
 }
@@ -1857,6 +1933,14 @@ func (x *FileLocation) Marshal() ([]byte, error) {
 	return proto.Marshal(x)
 }
 
+func (x *WebLocation) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *InputWebLocation) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
 func (x *UserPhoto) Marshal() ([]byte, error) {
 	return proto.Marshal(x)
 }
@@ -2026,6 +2110,14 @@ func (x *InputFileLocation) Unmarshal(b []byte) error {
 }
 
 func (x *FileLocation) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *WebLocation) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *InputWebLocation) Unmarshal(b []byte) error {
 	return proto.UnmarshalOptions{}.Unmarshal(b, x)
 }
 
