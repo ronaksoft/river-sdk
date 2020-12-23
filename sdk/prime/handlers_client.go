@@ -249,14 +249,12 @@ func (r *River) clientGetMediaHistory(in, out *rony.MessageEnvelope, timeoutCB d
 	}
 
 	messages, users, groups := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit, req.MediaType...)
-	if len(messages) > 0 {
-		pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
-		if len(pendingMessages) > 0 {
-			messages = append(pendingMessages, messages...)
-		}
-		fillMessagesMany(out, messages, users, groups, in.RequestID, successCB)
-		return
+	pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
+	if len(pendingMessages) > 0 {
+		messages = append(pendingMessages, messages...)
 	}
+	fillMessagesMany(out, messages, users, groups, in.RequestID, successCB)
+	return
 	// req := &msg.ClientGetMediaHistory{}
 	// if err := req.Unmarshal(in.Message); err != nil {
 	// 	out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
