@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"git.ronaksoft.com/river/msg/go/msg"
 	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
 	"github.com/fatih/color"
 	"go.uber.org/zap/zapcore"
@@ -120,6 +121,16 @@ func main() {
 		if err := _SDK.CreateAuthKey(); err != nil {
 			_Shell.Println("CreateAuthKey::", err.Error())
 		}
+	}
+
+	if _SDK.ConnInfo.UserID != 0 {
+		req := &msg.MessagesGetDialogs{
+			Offset: 0,
+			Limit: 500,
+		}
+		reqBytes, _ := req.Marshal()
+		delegate := new(RequestDelegate)
+		_, _ = _SDK.ExecuteCommand(msg.C_MessagesGetDialogs, reqBytes, delegate)
 	}
 
 	_Shell.Run()

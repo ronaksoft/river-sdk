@@ -226,14 +226,15 @@ func MessagePrinter(envelope *rony.MessageEnvelope) {
 		bufUsers := new(bytes.Buffer)
 		tableUsers := tablewriter.NewWriter(bufUsers)
 		tableUsers.SetHeader([]string{
-			"userID", "FirstName", "LastName", "Photo",
+			"userID", "FirstName", "LastName", "Photo", "LastSeen",
 		})
 		for _, x := range x.Users {
 			tableUsers.Append([]string{
 				fmt.Sprintf("%d", x.ID),
 				fmt.Sprintf("%s", x.FirstName),
-				fmt.Sprintf("%d", len(x.Photo.String())),
 				fmt.Sprintf("%s", x.LastName),
+				fmt.Sprintf("%d", len(x.Photo.String())),
+				fmt.Sprintf("%s", time.Unix(x.LastSeen, 0).Format(time.RFC822)),
 			})
 		}
 		tableUsers.Render()
