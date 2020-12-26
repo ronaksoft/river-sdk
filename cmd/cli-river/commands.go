@@ -217,6 +217,12 @@ func fnGetBody(c *ishell.Context) string {
 	return body
 }
 
+func fnGetPassword(c *ishell.Context) []byte {
+	c.Print("Password: ")
+	body := c.ReadLine()
+	return []byte(body)
+}
+
 func fnGetMaxID(c *ishell.Context) int64 {
 	var maxID int64
 	for {

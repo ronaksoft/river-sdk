@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
+	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
 	"gopkg.in/abiosoft/ishell.v2"
 	"io/ioutil"
 	"os"
@@ -102,6 +103,32 @@ var AuthLogin = &ishell.Cmd{
 	},
 }
 
+var AuthCheckPassword = &ishell.Cmd{
+	Name: "CheckPassword",
+	Func: func(c *ishell.Context) {
+		passwordFile, err := os.Open("./_password")
+		if err != nil {
+			c.Println(err)
+			return
+		}
+		b, _ := ioutil.ReadAll(passwordFile)
+		passwordFile.Close()
+		os.Remove("./_password")
+
+		inputPassword := &msg.InputPassword{}
+		inputPassword.Unmarshal(riversdk.GenInputPassword(fnGetPassword(c), b))
+		req := &msg.AuthCheckPassword{
+			Password: inputPassword,
+		}
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_AuthCheckPassword, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
 var AuthLogout = &ishell.Cmd{
 	Name: "Logout",
 	Func: func(c *ishell.Context) {
@@ -147,6 +174,7 @@ func init() {
 	Auth.AddCmd(AuthCheckPhone)
 	Auth.AddCmd(AuthRegister)
 	Auth.AddCmd(AuthLogin)
+	Auth.AddCmd(AuthCheckPassword)
 	Auth.AddCmd(AuthRecall)
 	Auth.AddCmd(AuthLogout)
 	Auth.AddCmd(AuthLoginByToken)

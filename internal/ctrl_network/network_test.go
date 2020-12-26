@@ -7,7 +7,9 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
+	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/zap"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -89,8 +91,8 @@ func getServerTime() *rony.MessageEnvelope {
 func init() {
 	logs.SetLogLevel(0)
 	ctrl = networkCtrl.New(networkCtrl.Config{
-		WebsocketEndpoint: "ws://river.ronaksoftware.com",
-		HttpEndpoint:      "http://river.ronaksoftware.com",
+		WebsocketEndpoint: "ws://edge.river.im",
+		HttpEndpoint:      "http://edge.river.im",
 		CountryCode:       "IR",
 	})
 	ctrl.OnMessage = dummyMessageHandler
@@ -144,11 +146,32 @@ func TestStartStop(t *testing.T) {
 }
 
 func TestReconnect(t *testing.T) {
-	ctrl.Start()
-	for i := 0; i < 10; i++ {
-		ctrl.Reconnect()
-		time.Sleep(time.Second * 5)
-	}
+	Convey("Reconnect Test", t, func(c C) {
+		wg := sync.WaitGroup{}
+		for i := 0; i < 100; i++ {
+			wg.Add(1)
+			go func() {
+				var ctrl *networkCtrl.Controller
+				ctrl = networkCtrl.New(networkCtrl.Config{
+					WebsocketEndpoint: "ws://edge.river.im",
+					HttpEndpoint:      "http://edge.river.im",
+					CountryCode:       "IR",
+				})
+				ctrl.OnMessage = dummyMessageHandler
+				ctrl.OnGeneralError = dummyErrorHandler
+				ctrl.OnUpdate = dummyUpdateHandler
+				ctrl.OnNetworkStatusChange = dummyNetworkChangeHandler
+				ctrl.OnWebsocketConnect = dummyOnConnectHandler
+				ctrl.Start()
+				for i := 0; i < 100; i++ {
+					ctrl.Reconnect()
+					time.Sleep(time.Millisecond * 250)
+				}
+				wg.Done()
+			}()
+		}
+		wg.Wait()
+	})
 }
 
 func TestPing(t *testing.T) {

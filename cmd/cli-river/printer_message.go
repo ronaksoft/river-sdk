@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
@@ -54,6 +55,14 @@ func MessagePrinter(envelope *rony.MessageEnvelope) {
 			ioutil.WriteFile("./_phoneCodeHash", []byte(x.PhoneCodeHash), 0666)
 		}
 		_Shell.Println(fmt.Sprintf("AuthSentCode \t Phone:%s , Hash:%s", x.Phone, x.PhoneCodeHash))
+	case msg.C_AccountPassword:
+		x := &msg.AccountPassword{}
+		x.Unmarshal(envelope.Message)
+		os.Remove("./_password")
+		ioutil.WriteFile("./_password", envelope.Message, 0666)
+		_Shell.Println("SrpB:", hex.EncodeToString(x.SrpB))
+		_Shell.Println("SrpID:", x.SrpID)
+		_Shell.Println("Hint:", x.Hint)
 	case msg.C_ContactsImported:
 		x := new(msg.ContactsImported)
 		x.Unmarshal(envelope.Message)
