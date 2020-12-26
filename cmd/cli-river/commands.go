@@ -1,9 +1,10 @@
 package main
 
 import (
-	"crypto/rand"
 	"fmt"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"git.ronaksoft.com/river/msg/go/msg"
@@ -46,12 +47,6 @@ func fnGetLastName(c *ishell.Context) string {
 	return lName
 }
 
-func fnGetSearchPhrase(c *ishell.Context) string {
-	c.Print("Search Phrase:")
-	phrase := c.ReadLine()
-	return phrase
-}
-
 func fnGetPeerID(c *ishell.Context) int64 {
 	var peerID int64
 	for {
@@ -80,47 +75,6 @@ func fnGetBotID(c *ishell.Context) int64 {
 		}
 	}
 	return botID
-}
-
-func FnGetDescription(c *ishell.Context) string {
-	c.Print("Description: ")
-	description := c.ReadLine()
-
-	return description
-}
-
-func FnGetCommands(c *ishell.Context) []*msg.BotCommands {
-	var commands = []*msg.BotCommands{}
-	for {
-		var cmd = &msg.BotCommands{}
-		c.Println("Please enter empty command to break...")
-		c.Print("Command:")
-		cmd.Command = c.ReadLine()
-		if cmd.Command == "" {
-			break
-		}
-		c.Print("Description:")
-		cmd.Description = c.ReadLine()
-		commands = append(commands, cmd)
-	}
-
-	return commands
-}
-
-func FnGetLimit(c *ishell.Context) int32 {
-	var limit int32
-	for {
-		c.Print("Limit: ")
-		l, err := strconv.ParseInt(c.ReadLine(), 1, 32)
-		if err == nil {
-			limit = int32(l)
-			break
-		} else {
-			c.Println(err.Error())
-		}
-	}
-
-	return limit
 }
 
 func fnGetPeerType(c *ishell.Context) msg.PeerType {
@@ -194,21 +148,6 @@ func fnGetInterval(c *ishell.Context) time.Duration {
 		}
 	}
 	return interval
-}
-
-func fnGetRequestID(c *ishell.Context) int64 {
-	var requestID int64
-	for {
-		c.Print("RequestID : ")
-		tmp, err := strconv.ParseInt(c.ReadLine(), 10, 32)
-		if err == nil {
-			requestID = tmp
-			break
-		} else {
-			c.Println(err.Error())
-		}
-	}
-	return requestID
 }
 
 func fnGetBody(c *ishell.Context) string {
@@ -630,12 +569,6 @@ func fnGetClientID(c *ishell.Context) string {
 	return code
 }
 
-func fnGetFileName(c *ishell.Context) string {
-	c.Print("File Name: ")
-	name := c.ReadLine()
-	return name
-}
-
 func fnGetLabelName(c *ishell.Context) string {
 	c.Print("Label Name: ")
 	name := c.ReadLine()
@@ -675,116 +608,6 @@ func fnGetReplyTo(c *ishell.Context) int64 {
 	return replyTo
 }
 
-func fnGetWidth(c *ishell.Context) uint32 {
-	var res uint32
-	for {
-		c.Print("Width : ")
-		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
-		if err == nil {
-			res = uint32(id)
-			break
-		} else {
-			c.Println(err.Error())
-		}
-	}
-	return res
-}
-
-func fnGetHeight(c *ishell.Context) uint32 {
-	var res uint32
-	for {
-		c.Print("Heigth : ")
-		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
-		if err == nil {
-			res = uint32(id)
-			break
-		} else {
-			c.Println(err.Error())
-		}
-	}
-	return res
-}
-
-func fnGetVoice(c *ishell.Context) bool {
-	res := false
-	for {
-		c.Print("IsVoice : (0 = false , >=1 : true)")
-		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
-		if err == nil {
-			res = id > 0
-			break
-		} else {
-			c.Println(err.Error())
-		}
-	}
-	return res
-}
-
-func fnGetRound(c *ishell.Context) bool {
-	res := false
-	for {
-		c.Print("IsRound : (0 = false , >=1 : true)")
-		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
-		if err == nil {
-			res = id > 0
-			break
-		} else {
-			c.Println(err.Error())
-		}
-	}
-	return res
-}
-
-func fnGetPerformer(c *ishell.Context) string {
-	c.Print("Performer: ")
-	title := c.ReadLine()
-	return title
-}
-
-func fnGetWaveForm(c *ishell.Context) []byte {
-	res := make([]byte, 100)
-	rand.Read(res)
-	return res
-}
-
-func fnGetInputMediaType(c *ishell.Context) msg.InputMediaType {
-	mediaType := msg.InputMediaType_InputMediaTypeEmpty
-	for {
-		c.Print("InputMediaType : (UploadedPhoto=1, UploadedDocument= 4)")
-		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
-		if err == nil && id == 1 || id == 4 {
-			mediaType = msg.InputMediaType(id)
-			break
-		} else {
-			c.Println("entered value is invalid ")
-		}
-	}
-	return mediaType
-}
-
-func fnGetAttributes(c *ishell.Context) []*msg.DocumentAttribute {
-	result := make([]*msg.DocumentAttribute, 0)
-
-	for {
-		c.Println("Enter 0 zero to break Attribute loop")
-		attrType := getAttributeType(c)
-		if attrType == msg.DocumentAttributeType_AttributeTypeNone {
-			break
-		}
-		switch attrType {
-		case msg.DocumentAttributeType_AttributeTypeAudio:
-			result = append(result, getAudioAttribute(c))
-		case msg.DocumentAttributeType_AttributeTypeVideo:
-			result = append(result, getVideoAttribute(c))
-		case msg.DocumentAttributeType_AttributeTypePhoto:
-			result = append(result, getPhotoAttribute(c))
-		case msg.DocumentAttributeType_AttributeTypeFile:
-			result = append(result, getFileAttribute(c))
-		}
-	}
-	return result
-}
-
 func fnGetPeer(c *ishell.Context) *msg.InputPeer {
 	options := make([]string, 0, len(MyDialogs))
 	for _, d := range MyDialogs {
@@ -808,9 +631,16 @@ func fnGetUser(c *ishell.Context) *msg.InputUser {
 	options := make([]string, 0, len(MyUsers))
 	optionsUser := make([]*msg.User, 0, len(MyUsers))
 	for _, u := range MyUsers {
-		options = append(options, fmt.Sprintf("%s %s", MyUsers[u.ID].FirstName, MyUsers[u.ID].LastName))
 		optionsUser = append(optionsUser, MyUsers[u.ID])
 	}
+	sort.Slice(optionsUser, func(i, j int) bool {
+		return strings.Compare(optionsUser[i].FirstName, optionsUser[j].FirstName) < 0
+	})
+
+	for idx := range optionsUser {
+		options = append(options, fmt.Sprintf("%s %s", optionsUser[idx].FirstName, optionsUser[idx].LastName))
+	}
+
 	idx := c.MultiChoice(options, "Please Select Your User:")
 	return &msg.InputUser{
 		UserID:     optionsUser[idx].ID,
@@ -846,65 +676,7 @@ func fnGetTopPeerCat(c *ishell.Context) msg.TopPeerCategory {
 	return msg.TopPeerCategory(idx)
 
 }
-func getAttributeType(c *ishell.Context) msg.DocumentAttributeType {
-	attribType := msg.DocumentAttributeType_AttributeTypeNone
-	for {
-		// AttributeTypeNone  DocumentAttributeType = 0
-		// AttributeTypeAudio DocumentAttributeType = 1
-		// AttributeTypeVideo DocumentAttributeType = 2
-		// AttributeTypePhoto DocumentAttributeType = 3
-		// AttributeTypeFile  DocumentAttributeType = 4
-		// AttributeAnimated  DocumentAttributeType = 5
-		c.Print("AttributeType : (Exit=0, Audio=1, Video=2 ,Photo=3, File=4)")
-		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
-		if err == nil && id >= 0 && id < 5 {
-			attribType = msg.DocumentAttributeType(id)
-			break
-		} else {
-			c.Println("entered value is invalid ")
-		}
-	}
-	return attribType
-}
 
-func getAudioAttribute(c *ishell.Context) *msg.DocumentAttribute {
-	req := new(msg.DocumentAttribute)
-	req.Type = msg.DocumentAttributeType_AttributeTypeAudio
-	attrib := new(msg.DocumentAttributeAudio)
-	attrib.Performer = fnGetPerformer(c)
-	attrib.Title = fnGetTitle(c)
-	attrib.Voice = fnGetVoice(c)
-	attrib.Waveform = fnGetWaveForm(c)
-	req.Data, _ = attrib.Marshal()
-	return req
-}
-func getVideoAttribute(c *ishell.Context) *msg.DocumentAttribute {
-	req := new(msg.DocumentAttribute)
-	req.Type = msg.DocumentAttributeType_AttributeTypeVideo
-	attrib := new(msg.DocumentAttributeVideo)
-	attrib.Round = fnGetRound(c)
-	attrib.Width = fnGetWidth(c)
-	attrib.Height = fnGetHeight(c)
-	req.Data, _ = attrib.Marshal()
-	return req
-}
-func getPhotoAttribute(c *ishell.Context) *msg.DocumentAttribute {
-	req := new(msg.DocumentAttribute)
-	req.Type = msg.DocumentAttributeType_AttributeTypePhoto
-	attrib := new(msg.DocumentAttributePhoto)
-	attrib.Width = fnGetWidth(c)
-	attrib.Height = fnGetHeight(c)
-	req.Data, _ = attrib.Marshal()
-	return req
-}
-func getFileAttribute(c *ishell.Context) *msg.DocumentAttribute {
-	req := new(msg.DocumentAttribute)
-	req.Type = msg.DocumentAttributeType_AttributeTypeFile
-	attrib := new(msg.DocumentAttributeFile)
-	attrib.Filename = fnGetFileName(c)
-	req.Data, _ = attrib.Marshal()
-	return req
-}
 func fnGetUpdateNewMessageHexString(c *ishell.Context) string {
 	c.Print("Enter UpdateNewMessage Hex String:")
 	title := c.ReadLine()
@@ -934,42 +706,6 @@ func fnGetMediaType(c *ishell.Context) msg.ClientMediaType {
 		}
 	}
 	return mediaType
-}
-
-func fnGetMediaTypes(c *ishell.Context) string {
-	c.Print("Insert Media Types comma separated: Audio 1, Video 2, Photo 3, File 4, Animated 5")
-	t := c.ReadLine()
-	return t
-}
-
-func fnClearAll(c *ishell.Context) bool {
-	del := false
-	for {
-		c.Print("clear all? : (0 = false , >=1 : true)")
-		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
-		if err == nil {
-			del = id > 0
-			break
-		} else {
-			c.Println(err.Error())
-		}
-	}
-	return del
-}
-
-func fnGetClusterID(c *ishell.Context) int32 {
-	var res int32
-	for {
-		c.Print("ClusterID : ")
-		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
-		if err == nil {
-			res = int32(id)
-			break
-		} else {
-			c.Println(err.Error())
-		}
-	}
-	return res
 }
 
 func fnGetFileID(c *ishell.Context) int64 {

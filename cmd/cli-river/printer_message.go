@@ -133,6 +133,7 @@ func MessagePrinter(envelope *rony.MessageEnvelope) {
 		for _, x := range x.Groups {
 			MyGroups[x.ID] = x
 		}
+
 		_Shell.Println("\r\n" + fmt.Sprintf("Total: %d", x.Count))
 		_Shell.Println("\r\n" + bufDialogs.String())
 	case msg.C_Dialog:
