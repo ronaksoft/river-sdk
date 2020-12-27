@@ -545,6 +545,7 @@ func (r *River) messagesSendMedia(in, out *rony.MessageEnvelope, timeoutCB domai
 		}
 		// Return to CallBack with pending message data : Done
 		out.Constructor = msg.C_ClientPendingMessage
+
 		out.Message, _ = res.Marshal()
 		uiexec.ExecSuccessCB(successCB, out)
 
@@ -960,6 +961,38 @@ func (r *River) gifDelete(in, out *rony.MessageEnvelope, timeoutCB domain.Timeou
 	}
 
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+}
+
+func (r *River) gifGetSaved(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.GifGetSaved{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+	gifHash, _ := repo.System.LoadInt(domain.SkGifHash)
+
+	var enqueueSuccessCB domain.MessageHandler
+
+	if gifHash != 0 {
+		res, err := repo.Gifs.GetSaved()
+		if err != nil {
+			out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+			successCB(out)
+			return
+		}
+		out.Fill(out.RequestID, msg.C_SavedGifs, res)
+		successCB(out)
+
+		// ignore success cb because we notify views on message hanlder
+		enqueueSuccessCB = func(m *rony.MessageEnvelope) {
+
+		}
+	} else {
+		enqueueSuccessCB = successCB
+	}
+
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, enqueueSuccessCB, true)
 }
 
 func (r *River) dialogTogglePin(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -1505,38 +1538,6 @@ func fillLabelItems(out *rony.MessageEnvelope, messages []*msg.UserMessage, user
 	out.Constructor = msg.C_LabelItems
 	out.Message, _ = res.Marshal()
 	uiexec.ExecSuccessCB(successCB, out)
-}
-
-func (r *River) gifGetSaved(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := &msg.GifGetSaved{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
-		return
-	}
-	gifHash, _ := repo.System.LoadInt(domain.SkGifHash)
-
-	var enqueSuccessCB domain.MessageHandler
-
-	if gifHash != 0 {
-		res, err := repo.Gifs.GetSaved()
-		if err != nil {
-			out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-			successCB(out)
-			return
-		}
-		out.Fill(out.RequestID, msg.C_SavedGifs, res)
-		successCB(out)
-
-		// ignore success cb because we notify views on message hanlder
-		enqueSuccessCB = func(m *rony.MessageEnvelope) {
-
-		}
-	} else {
-		enqueSuccessCB = successCB
-	}
-
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, enqueSuccessCB, true)
 }
 
 func (r *River) systemGetConfig(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {

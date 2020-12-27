@@ -31,10 +31,10 @@ var GifSave = &ishell.Cmd{
 var GifGetSaved = &ishell.Cmd{
 	Name: "GetSaved",
 	Func: func(c *ishell.Context) {
-		req := msg.ClientGetSavedGifs{}
+		req := msg.GifGetSaved{}
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-		if reqID, err := _SDK.ExecuteCommand(msg.C_ClientGetSavedGifs, reqBytes, reqDelegate); err != nil {
+		if reqID, err := _SDK.ExecuteCommand(msg.C_GifGetSaved, reqBytes, reqDelegate); err != nil {
 			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID

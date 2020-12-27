@@ -425,6 +425,9 @@ func MessagePrinter(envelope *rony.MessageEnvelope) {
 		x := &msg.SavedGifs{}
 		x.Unmarshal(envelope.Message)
 		_Shell.Println(x.Hash, x.NotModified, len(x.Docs))
+		for _, d := range x.Docs {
+			fmt.Println(d.Caption, d.Doc.ID, d.Doc.Attributes)
+		}
 	case msg.C_TeamsMany:
 		x := &msg.TeamsMany{}
 		x.Unmarshal(envelope.Message)
@@ -458,6 +461,7 @@ func MessagePrinter(envelope *rony.MessageEnvelope) {
 		_Shell.Println("NextOffset:", x.NextOffset)
 		table.Render()
 		_Shell.Println(buf)
+
 	default:
 		constructorName := registry.ConstructorName(envelope.Constructor)
 		_Shell.Println("DEFAULT", constructorName, len(envelope.Message))
