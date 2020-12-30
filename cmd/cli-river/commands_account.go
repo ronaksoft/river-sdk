@@ -33,7 +33,7 @@ var RegisterDevice = &ishell.Cmd{
 }
 
 var UpdateUsername = &ishell.Cmd{
-	Name: "UpdateProfile",
+	Name: "UpdateUsername",
 	Func: func(c *ishell.Context) {
 		req := msg.AccountUpdateUsername{}
 		req.Username = fnGetUsername(c)
@@ -90,10 +90,8 @@ var UpdateProfile = &ishell.Cmd{
 		req := msg.AccountUpdateProfile{}
 		req.FirstName = fnGetFirstName(c)
 		req.LastName = fnGetLastName(c)
-
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
-
 		if reqID, err := _SDK.ExecuteCommand(msg.C_AccountUpdateProfile, reqBytes, reqDelegate); err != nil {
 			c.Println("Command Failed:", err)
 		} else {

@@ -22,6 +22,7 @@ var SdkConnInfo = &ishell.Cmd{
 		c.Println("Phone:", _SDK.ConnInfo.Phone)
 		c.Println("FirstName:", _SDK.ConnInfo.FirstName)
 		c.Println("LastName:", _SDK.ConnInfo.LastName)
+		c.Println("Username", _SDK.ConnInfo.Username)
 		c.Println("AuthKey:", _SDK.ConnInfo.AuthKey)
 	},
 }
