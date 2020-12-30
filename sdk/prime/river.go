@@ -10,6 +10,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/salt"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
 	"sort"
 	"strconv"
@@ -270,12 +271,12 @@ func (r *River) onReceivedMessage(msgs []*rony.MessageEnvelope) {
 		case reqCB.ResponseChannel <- msgs[idx]:
 			logs.Debug("We received response",
 				zap.Uint64("ReqID", reqCB.RequestID),
-				zap.String("C", msg.ConstructorNames[msgs[idx].Constructor]),
+				zap.String("C", registry.ConstructorName(msgs[idx].Constructor)),
 			)
 		default:
 			logs.Error("We received response but no callback, we drop response",
 				zap.Uint64("ReqID", reqCB.RequestID),
-				zap.String("C", msg.ConstructorNames[msgs[idx].Constructor]),
+				zap.String("C", registry.ConstructorName(msgs[idx].Constructor)),
 			)
 		}
 		domain.RemoveRequestCallback(msgs[idx].RequestID)
@@ -425,7 +426,7 @@ func (r *River) sendMessageMedia(uploadRequest *msg.ClientFileRequest) (success 
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(1)
 	successCB := func(m *rony.MessageEnvelope) {
-		logs.Info("MessagesSendMedia success callback called", zap.String("C", msg.ConstructorNames[m.Constructor]))
+		logs.Info("MessagesSendMedia success callback called", zap.String("C", registry.ConstructorName(m.Constructor)))
 		switch m.Constructor {
 		case rony.C_Error:
 			success = false

@@ -1226,7 +1226,6 @@ func (r *River) groupRemovePhoto(in, out *rony.MessageEnvelope, timeoutCB domain
 
 func (r *River) usersGetFull(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := &msg.UsersGetFull{}
-
 	if err := req.Unmarshal(in.Message); err != nil {
 		logs.Error("River::usersGetFull()-> Unmarshal()", zap.Error(err))
 		return
@@ -1236,10 +1235,10 @@ func (r *River) usersGetFull(in, out *rony.MessageEnvelope, timeoutCB domain.Tim
 		userIDs[v.UserID] = true
 	}
 
-	users, _ := repo.Users.GetMany(userIDs.ToArray())
-
-	if len(users) == len(userIDs) {
-		res := new(msg.UsersMany)
+	users, outDated, _ := repo.Users.GetManyWithOutdated(userIDs.ToArray())
+	allResolved := len(users) == len(userIDs)
+	if allResolved {
+		res := &msg.UsersMany{}
 		for _, user := range users {
 			user.PhotoGallery = repo.Users.GetPhotoGallery(user.ID)
 			sort.Slice(user.PhotoGallery, func(i, j int) bool {
@@ -1251,6 +1250,18 @@ func (r *River) usersGetFull(in, out *rony.MessageEnvelope, timeoutCB domain.Tim
 		out.Constructor = msg.C_UsersMany
 		out.Message, _ = res.Marshal()
 		uiexec.ExecSuccessCB(successCB, out)
+
+		if len(outDated) > 0 {
+			req.Users = req.Users[:0]
+			for _, user := range outDated {
+				req.Users = append(req.Users, &msg.InputUser{
+					UserID:     user.ID,
+					AccessHash: user.AccessHash,
+				})
+			}
+			in.Fill(in.RequestID, in.Constructor, req, in.Header...)
+			r.queueCtrl.EnqueueCommand(in, nil, nil, false)
+		}
 		return
 	}
 
@@ -1269,14 +1280,27 @@ func (r *River) usersGet(in, out *rony.MessageEnvelope, timeoutCB domain.Timeout
 		userIDs[v.UserID] = true
 	}
 
-	users, _ := repo.Users.GetMany(userIDs.ToArray())
-	if len(users) == len(userIDs) {
+	users, outDated, _ := repo.Users.GetManyWithOutdated(userIDs.ToArray())
+	allResolved := len(users) == len(userIDs)
+	if allResolved {
 		res := new(msg.UsersMany)
 		res.Users = users
 
 		out.Constructor = msg.C_UsersMany
 		out.Message, _ = res.Marshal()
 		uiexec.ExecSuccessCB(successCB, out)
+
+		if len(outDated) > 0 {
+			req.Users = req.Users[:0]
+			for _, user := range outDated {
+				req.Users = append(req.Users, &msg.InputUser{
+					UserID:     user.ID,
+					AccessHash: user.AccessHash,
+				})
+			}
+			in.Fill(in.RequestID, in.Constructor, req, in.Header...)
+			r.queueCtrl.EnqueueCommand(in, nil, nil, false)
+		}
 		return
 	}
 

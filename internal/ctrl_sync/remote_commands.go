@@ -5,6 +5,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/tools"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
@@ -225,9 +226,12 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, teamID int64, t
 				_ = x.Unmarshal(m.Message)
 				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
 					waitGroup.Done()
-				} else {
-					ctrl.GetAllDialogs(waitGroup, teamID, teamAccess, offset, limit)
+					return
+				} else if x.Code == msg.ErrCodeRateLimit {
+					time.Sleep(time.Second * time.Duration(tools.StrToInt64(x.Items)))
 				}
+				ctrl.GetAllDialogs(waitGroup, teamID, teamAccess, offset, limit)
+
 			case msg.C_MessagesDialogs:
 				x := msg.MessagesDialogs{}
 				err := x.Unmarshal(m.Message)
@@ -282,9 +286,11 @@ func (ctrl *Controller) GetAllTopPeers(
 				_ = x.Unmarshal(m.Message)
 				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
 					waitGroup.Done()
-				} else {
-					ctrl.GetAllTopPeers(waitGroup, teamID, teamAccess, cat, offset, limit)
+					return
+				} else if x.Code == msg.ErrCodeRateLimit {
+					time.Sleep(time.Second * time.Duration(tools.StrToInt64(x.Items)))
 				}
+				ctrl.GetAllTopPeers(waitGroup, teamID, teamAccess, cat, offset, limit)
 			case msg.C_ContactsTopPeers:
 				x := msg.ContactsTopPeers{}
 				err := x.Unmarshal(m.Message)
@@ -330,9 +336,11 @@ func (ctrl *Controller) GetLabels(waitGroup *sync.WaitGroup, teamID int64, teamA
 				_ = x.Unmarshal(m.Message)
 				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
 					waitGroup.Done()
-				} else {
-					ctrl.GetLabels(waitGroup, teamID, teamAccess)
+					return
+				} else if x.Code == msg.ErrCodeRateLimit {
+					time.Sleep(time.Second * time.Duration(tools.StrToInt64(x.Items)))
 				}
+				ctrl.GetLabels(waitGroup, teamID, teamAccess)
 			case msg.C_LabelsMany:
 				waitGroup.Done()
 			}
@@ -366,9 +374,12 @@ func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup, teamID int64, tea
 				_ = x.Unmarshal(m.Message)
 				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
 					waitGroup.Done()
-				} else {
-					ctrl.GetContacts(waitGroup, teamID, teamAccess)
+					return
+				} else if x.Code == msg.ErrCodeRateLimit {
+					time.Sleep(time.Second * time.Duration(tools.StrToInt64(x.Items)))
 				}
+				ctrl.GetContacts(waitGroup, teamID, teamAccess)
+
 			default:
 				waitGroup.Done()
 			}

@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"encoding/binary"
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
@@ -16,6 +17,7 @@ import (
 
 const (
 	prefixUsers             = "USERS"
+	prefixUsersLastUpdate   = "ULU"
 	prefixContacts          = "CONTACTS"
 	prefixPhoneContacts     = "PH_CONTACTS"
 	prefixUsersPhotoGallery = "USERS_PHG"
@@ -44,12 +46,25 @@ func getUserByKey(txn *badger.Txn, userKey []byte) (*msg.User, error) {
 	return user, nil
 }
 
-func getContactKey(teamID, userID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixContacts, teamID, userID))
+func getUserLastUpdateKey(userID int64) []byte {
+	return domain.StrToByte(fmt.Sprintf("%s.%021d", prefixUsersLastUpdate, userID))
 }
 
-func getContactTeamKey(teamID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d", prefixContacts, teamID))
+func getUserLastUpdate(txn *badger.Txn, userID int64) int64 {
+	var ts int64
+	item, err := txn.Get(getUserLastUpdateKey(userID))
+	if err != nil {
+		return 0
+	}
+	_ = item.Value(func(val []byte) error {
+		ts = int64(binary.BigEndian.Uint64(val))
+		return nil
+	})
+	return ts
+}
+
+func getContactKey(teamID, userID int64) []byte {
+	return domain.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixContacts, teamID, userID))
 }
 
 func getContactByKey(txn *badger.Txn, contactKey []byte) (*msg.ContactUser, error) {
@@ -105,6 +120,10 @@ func saveUser(txn *badger.Txn, user *msg.User) error {
 	if err != nil {
 		return err
 	}
+
+	var b [8]byte
+	binary.BigEndian.PutUint64(b[:], uint64(tools.TimeUnix()))
+	_ = txn.SetEntry(badger.NewEntry(getUserLastUpdateKey(user.ID), b[:]))
 
 	if user.ID == r.selfUserID {
 		indexPeer(
@@ -207,8 +226,36 @@ func (r *repoUsers) GetMany(userIDs []int64) ([]*msg.User, error) {
 	return users, err
 }
 
+func (r *repoUsers) GetManyWithOutdated(userIDs []int64) ([]*msg.User, []*msg.User, error) {
+	users := make([]*msg.User, 0, len(userIDs))
+	usersOutdated := make([]*msg.User, 0, len(userIDs))
+	err := badgerView(func(txn *badger.Txn) error {
+		for _, userID := range userIDs {
+			if userID == 0 {
+				continue
+			}
+			user, err := getUserByKey(txn, getUserKey(userID))
+			switch err {
+			case nil:
+			case badger.ErrKeyNotFound:
+				continue
+			default:
+				return err
+			}
+			updateStatus(user)
+			users = append(users, user)
+
+			if tools.TimeUnix()-getUserLastUpdate(txn, userID) > 30 {
+				usersOutdated = append(usersOutdated, user)
+			}
+		}
+		return nil
+	})
+	return users, usersOutdated, err
+}
+
 func updateStatus(u *msg.User) {
-	delta := time.Now().Unix() - u.LastSeen
+	delta := tools.TimeUnix() - u.LastSeen
 	if u.Status == msg.UserStatus_UserStatusOnline && delta < domain.Minute {
 		return
 	}
@@ -225,15 +272,11 @@ func updateStatus(u *msg.User) {
 }
 
 func (r *repoUsers) Save(users ...*msg.User) error {
-	userIDs := domain.MInt64B{}
-	for _, v := range users {
-		if strings.TrimSpace(v.FirstName) == "" && strings.TrimSpace(v.LastName) == "" {
-			continue
-		}
-		userIDs[v.ID] = true
-	}
 	return badgerUpdate(func(txn *badger.Txn) error {
 		for idx := range users {
+			if strings.TrimSpace(users[idx].FirstName) == "" && strings.TrimSpace(users[idx].LastName) == "" {
+				continue
+			}
 			err := saveUser(txn, users[idx])
 			if err != nil {
 				return err

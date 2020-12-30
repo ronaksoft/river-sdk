@@ -126,7 +126,7 @@ func main() {
 	if _SDK.ConnInfo.UserID != 0 {
 		req := &msg.MessagesGetDialogs{
 			Offset: 0,
-			Limit: 500,
+			Limit:  500,
 		}
 		reqBytes, _ := req.Marshal()
 		delegate := new(RequestDelegate)

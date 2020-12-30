@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"git.ronaksoft.com/river/sdk/internal/logs"
+	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
 	"go.uber.org/zap/zapcore"
 	"io/ioutil"
 	"mime"
@@ -24,7 +25,53 @@ var Debug = &ishell.Cmd{
 	Name: "Debug",
 }
 
-var SendTyping = &ishell.Cmd{
+func init() {
+	Debug.AddCmd(DebugSendTyping)
+	Debug.AddCmd(DebugContactImportMany)
+	Debug.AddCmd(UpdateNewMessageHexString)
+	Debug.AddCmd(MimeToExt)
+	Debug.AddCmd(PrintMessage)
+	Debug.AddCmd(DebugLogoutLoop)
+	Debug.AddCmd(SendMessage)
+	Debug.AddCmd(DebugConcurrent)
+	Debug.AddCmd(DebugReconnect)
+}
+
+var DebugConcurrent = &ishell.Cmd{
+	Name: "Concurrent",
+	Func: func(c *ishell.Context) {
+		wg := sync.WaitGroup{}
+		for i := 0; i < 20; i++ {
+			wg.Add(1)
+			go func() {
+				req := msg.SystemGetServerTime{}
+				reqBytes, _ := req.Marshal()
+				reqDelegate := new(RequestDelegate)
+				reqDelegate.FlagsVal = riversdk.RequestDontWaitForNetwork
+				if reqID, err := _SDK.ExecuteCommand(msg.C_SystemGetServerTime, reqBytes, reqDelegate); err != nil {
+					c.Println("Command Failed:", err)
+				} else {
+					reqDelegate.RequestID = reqID
+				}
+				wg.Done()
+			}()
+		}
+		wg.Wait()
+	},
+}
+
+var DebugReconnect = &ishell.Cmd{
+	Name: "Reconnect",
+	Func: func(c *ishell.Context) {
+		for i := 0; i < 10; i++ {
+			_SDK.StopNetwork()
+			_SDK.StartNetwork("IR")
+		}
+
+	},
+}
+
+var DebugSendTyping = &ishell.Cmd{
 	Name: "SendTyping",
 	Func: func(c *ishell.Context) {
 		// for just one user
@@ -56,7 +103,7 @@ var SendTyping = &ishell.Cmd{
 	},
 }
 
-var ContactImportMany = &ishell.Cmd{
+var DebugContactImportMany = &ishell.Cmd{
 	Name: "ContactImportMany",
 	Func: func(c *ishell.Context) {
 		req := msg.ContactsImport{}
@@ -80,6 +127,38 @@ var ContactImportMany = &ishell.Cmd{
 
 		time.Sleep(200 * time.Millisecond)
 
+	},
+}
+
+var DebugLogoutLoop = &ishell.Cmd{
+	Name: "LogoutLoop",
+	Func: func(c *ishell.Context) {
+		logs.SetLogLevel(int(zapcore.WarnLevel))
+		phone := fnGetPhone(c)
+		for {
+			if _SDK.ConnInfo.UserID == 0 {
+				c.Println("Sending Code")
+				sendCode(c, phone)
+				c.Println("Sending Login")
+				login(c, phone)
+				time.Sleep(time.Second * 3)
+			}
+			c.Println("Sending Logout")
+			go recall()
+			wg := sync.WaitGroup{}
+			for i := 0; i < 3; i++ {
+				wg.Add(1)
+				go func() {
+					logout()
+					wg.Done()
+				}()
+			}
+			wg.Wait()
+			if _SDK.ConnInfo.UserID != 0 {
+				c.Println("WRONG!!!!!!!!!! We are not logout correctly")
+			}
+			time.Sleep(time.Second * 3)
+		}
 	},
 }
 
@@ -144,7 +223,6 @@ var UpdateNewMessageHexString = &ishell.Cmd{
 var MimeToExt = &ishell.Cmd{
 	Name: "MimeToExt",
 	Func: func(c *ishell.Context) {
-
 		mimeType := fnGetMime(c)
 		exts, err := mime.ExtensionsByType(mimeType)
 		if err != nil {
@@ -214,37 +292,7 @@ var PrintMessage = &ishell.Cmd{
 	},
 }
 
-var LogoutLoop = &ishell.Cmd{
-	Name: "LogoutLoop",
-	Func: func(c *ishell.Context) {
-		logs.SetLogLevel(int(zapcore.WarnLevel))
-		phone := fnGetPhone(c)
-		for {
-			if _SDK.ConnInfo.UserID == 0 {
-				c.Println("Sending Code")
-				sendCode(c, phone)
-				c.Println("Sending Login")
-				login(c, phone)
-				time.Sleep(time.Second * 3)
-			}
-			c.Println("Sending Logout")
-			go recall()
-			wg := sync.WaitGroup{}
-			for i := 0; i < 3; i++ {
-				wg.Add(1)
-				go func() {
-					logout()
-					wg.Done()
-				}()
-			}
-			wg.Wait()
-			if _SDK.ConnInfo.UserID != 0 {
-				c.Println("WRONG!!!!!!!!!! We are not logout correctly")
-			}
-			time.Sleep(time.Second * 3)
-		}
-	},
-}
+
 
 func sendCode(c *ishell.Context, phone string) {
 	req := msg.AuthSendCode{
@@ -322,14 +370,4 @@ var SendMessage = &ishell.Cmd{
 			time.Sleep(time.Second)
 		}
 	},
-}
-
-func init() {
-	Debug.AddCmd(SendTyping)
-	Debug.AddCmd(ContactImportMany)
-	Debug.AddCmd(UpdateNewMessageHexString)
-	Debug.AddCmd(MimeToExt)
-	Debug.AddCmd(PrintMessage)
-	Debug.AddCmd(LogoutLoop)
-	Debug.AddCmd(SendMessage)
 }
