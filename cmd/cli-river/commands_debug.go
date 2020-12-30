@@ -40,23 +40,28 @@ func init() {
 var DebugConcurrent = &ishell.Cmd{
 	Name: "Concurrent",
 	Func: func(c *ishell.Context) {
-		wg := sync.WaitGroup{}
-		for i := 0; i < 20; i++ {
-			wg.Add(1)
-			go func() {
-				req := msg.SystemGetServerTime{}
-				reqBytes, _ := req.Marshal()
-				reqDelegate := new(RequestDelegate)
-				reqDelegate.FlagsVal = riversdk.RequestDontWaitForNetwork
-				if reqID, err := _SDK.ExecuteCommand(msg.C_SystemGetServerTime, reqBytes, reqDelegate); err != nil {
-					c.Println("Command Failed:", err)
-				} else {
-					reqDelegate.RequestID = reqID
-				}
-				wg.Done()
-			}()
+		for j := 0; j < 20; j++ {
+			wg := sync.WaitGroup{}
+			for i := 0; i < 20; i++ {
+				wg.Add(1)
+				go func() {
+					req := msg.ContactsGetTopPeers{
+						Offset:   0,
+						Limit:    100,
+						Category: msg.TopPeerCategory_Users,
+					}
+					reqBytes, _ := req.Marshal()
+					reqDelegate := new(RequestDelegate)
+					if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsGetTopPeers, reqBytes, reqDelegate); err != nil {
+						c.Println("Command Failed:", err)
+					} else {
+						reqDelegate.RequestID = reqID
+					}
+					wg.Done()
+				}()
+			}
+			wg.Wait()
 		}
-		wg.Wait()
 	},
 }
 
@@ -143,23 +148,69 @@ var DebugLogoutLoop = &ishell.Cmd{
 				login(c, phone)
 				time.Sleep(time.Second * 3)
 			}
+			recall()
 			c.Println("Sending Logout")
-			go recall()
-			wg := sync.WaitGroup{}
-			for i := 0; i < 3; i++ {
-				wg.Add(1)
-				go func() {
-					logout()
-					wg.Done()
-				}()
-			}
-			wg.Wait()
+			logout()
 			if _SDK.ConnInfo.UserID != 0 {
 				c.Println("WRONG!!!!!!!!!! We are not logout correctly")
 			}
 			time.Sleep(time.Second * 3)
 		}
 	},
+}
+func sendCode(c *ishell.Context, phone string) {
+	req := msg.AuthSendCode{
+		Phone: phone,
+	}
+	reqBytes, _ := req.Marshal()
+	reqDelegate := new(RequestDelegate)
+	reqDelegate.FlagsVal = riversdk.RequestBlocking
+	if reqID, err := _SDK.ExecuteCommand(msg.C_AuthSendCode, reqBytes, reqDelegate); err != nil {
+		c.Println("Command Failed:", err)
+	} else {
+		reqDelegate.RequestID = reqID
+	}
+}
+func login(c *ishell.Context, phone string) {
+	req := msg.AuthLogin{}
+	phoneFile, err := os.Open("./_phone")
+	if err != nil {
+		return
+	} else {
+		b, _ := ioutil.ReadAll(phoneFile)
+		req.Phone = string(b)
+		if strings.HasPrefix(req.Phone, "2374") {
+			File, err := os.Open("./_phoneCodeHash")
+			if err != nil {
+				return
+			} else {
+				req.PhoneCode = req.Phone[len(req.Phone)-5:]
+				b, _ := ioutil.ReadAll(File)
+				req.PhoneCodeHash = string(b)
+			}
+		}
+	}
+	reqBytes, _ := req.Marshal()
+	reqDelegate := new(RequestDelegate)
+	reqDelegate.FlagsVal = riversdk.RequestBlocking
+	os.Remove("./_phone")
+	os.Remove("./_phoneCodeHash")
+	if reqID, err := _SDK.ExecuteCommand(msg.C_AuthLogin, reqBytes, reqDelegate); err != nil {
+		c.Println("Command Failed:", err)
+	} else {
+		reqDelegate.RequestID = reqID
+	}
+}
+func logout() {
+	_SDK.Logout(true, 0)
+}
+func recall() {
+	req := msg.AuthRecall{}
+	reqBytes, _ := req.Marshal()
+	reqDelegate := new(RequestDelegate)
+	if reqID, err := _SDK.ExecuteCommand(msg.C_AuthRecall, reqBytes, reqDelegate); err == nil {
+		reqDelegate.RequestID = reqID
+	}
 }
 
 var UpdateNewMessageHexString = &ishell.Cmd{
@@ -292,60 +343,6 @@ var PrintMessage = &ishell.Cmd{
 	},
 }
 
-
-
-func sendCode(c *ishell.Context, phone string) {
-	req := msg.AuthSendCode{
-		Phone: phone,
-	}
-	reqBytes, _ := req.Marshal()
-	reqDelegate := new(RequestDelegate)
-	if reqID, err := _SDK.ExecuteCommand(msg.C_AuthSendCode, reqBytes, reqDelegate); err != nil {
-		c.Println("Command Failed:", err)
-	} else {
-		reqDelegate.RequestID = reqID
-	}
-}
-func login(c *ishell.Context, phone string) {
-	req := msg.AuthLogin{}
-	phoneFile, err := os.Open("./_phone")
-	if err != nil {
-		return
-	} else {
-		b, _ := ioutil.ReadAll(phoneFile)
-		req.Phone = string(b)
-		if strings.HasPrefix(req.Phone, "2374") {
-			File, err := os.Open("./_phoneCodeHash")
-			if err != nil {
-				return
-			} else {
-				req.PhoneCode = req.Phone[len(req.Phone)-5:]
-				b, _ := ioutil.ReadAll(File)
-				req.PhoneCodeHash = string(b)
-			}
-		}
-	}
-	reqBytes, _ := req.Marshal()
-	reqDelegate := new(RequestDelegate)
-	os.Remove("./_phone")
-	os.Remove("./_phoneCodeHash")
-	if reqID, err := _SDK.ExecuteCommand(msg.C_AuthLogin, reqBytes, reqDelegate); err != nil {
-		c.Println("Command Failed:", err)
-	} else {
-		reqDelegate.RequestID = reqID
-	}
-}
-func logout() {
-	_SDK.Logout(true, 0)
-}
-func recall() {
-	req := msg.AuthRecall{}
-	reqBytes, _ := req.Marshal()
-	reqDelegate := new(RequestDelegate)
-	if reqID, err := _SDK.ExecuteCommand(msg.C_AuthRecall, reqBytes, reqDelegate); err == nil {
-		reqDelegate.RequestID = reqID
-	}
-}
 
 var SendMessage = &ishell.Cmd{
 	Name: "SendMessage",

@@ -484,6 +484,16 @@ func (r *River) messagesClearHistory(in, out *rony.MessageEnvelope, timeoutCB do
 		return
 	}
 
+	if req.MaxID == 0 {
+		d, err := repo.Dialogs.Get(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))
+		if err != nil {
+			out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+			successCB(out)
+			return
+		}
+		req.MaxID = d.TopMessageID
+	}
+
 	err := repo.Messages.ClearHistory(r.ConnInfo.UserID, domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 	logs.WarnOnErr("We got error on clear history", err,
 		zap.Int64("PeerID", req.Peer.ID),
