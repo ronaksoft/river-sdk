@@ -256,9 +256,6 @@ func (r *repoUsers) GetManyWithOutdated(userIDs []int64) ([]*msg.User, []*msg.Us
 
 func updateStatus(u *msg.User) {
 	delta := tools.TimeUnix() - u.LastSeen
-	if u.Status == msg.UserStatus_UserStatusOnline && delta < domain.Minute {
-		return
-	}
 	switch u.Status {
 	case msg.UserStatus_UserStatusOnline:
 		if delta < int64(domain.SysConfig.OnlineUpdatePeriodInSec) {
