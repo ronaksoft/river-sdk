@@ -158,6 +158,7 @@ var DebugLogoutLoop = &ishell.Cmd{
 		}
 	},
 }
+
 func sendCode(c *ishell.Context, phone string) {
 	req := msg.AuthSendCode{
 		Phone: phone,
@@ -342,7 +343,6 @@ var PrintMessage = &ishell.Cmd{
 
 	},
 }
-
 
 var SendMessage = &ishell.Cmd{
 	Name: "SendMessage",

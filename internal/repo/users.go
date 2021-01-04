@@ -259,15 +259,14 @@ func updateStatus(u *msg.User) {
 	if u.Status == msg.UserStatus_UserStatusOnline && delta < domain.Minute {
 		return
 	}
-	switch {
-	case delta < domain.Hour:
+	switch u.Status {
+	case msg.UserStatus_UserStatusOnline:
+		if delta < int64(domain.SysConfig.OnlineUpdatePeriodInSec) {
+			return
+		}
 		u.Status = msg.UserStatus_UserStatusRecently
-	case delta < domain.Week:
-		u.Status = msg.UserStatus_UserStatusLastWeek
-	case delta < domain.Month:
-		u.Status = msg.UserStatus_UserStatusLastMonth
-	default:
-		u.Status = msg.UserStatus_UserStatusOffline
+	case msg.UserStatus_UserStatusRecently:
+	case msg.UserStatus_UserStatusOffline:
 	}
 }
 
