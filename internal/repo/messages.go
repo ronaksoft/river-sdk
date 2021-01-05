@@ -699,7 +699,7 @@ func (r *repoMessages) SearchText(teamID int64, text string, limit int32) []*msg
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
 			userMessage, _ := getMessageByKey(txn, domain.StrToByte(hit.ID))
-			if userMessage != nil {
+			if userMessage != nil && userMessage.TeamID == teamID {
 				userMessages = append(userMessages, userMessage)
 			}
 		}
@@ -733,7 +733,7 @@ func (r *repoMessages) SearchTextByPeerID(teamID int64, text string, peerID int6
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
 			userMessage, _ := getMessageByKey(txn, domain.StrToByte(hit.ID))
-			if userMessage != nil {
+			if userMessage != nil && userMessage.TeamID == teamID {
 				userMessages = append(userMessages, userMessage)
 			}
 		}
@@ -878,7 +878,7 @@ func (r *repoMessages) SearchBySender(teamID int64, text string, senderID int64,
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
 			userMessage, _ := getMessageByKey(txn, domain.StrToByte(hit.ID))
-			if userMessage != nil {
+			if userMessage != nil && userMessage.TeamID == teamID {
 				userMessages = append(userMessages, userMessage)
 			}
 		}
