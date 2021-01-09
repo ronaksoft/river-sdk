@@ -112,6 +112,29 @@ var TeamGetDialogs = &ishell.Cmd{
 	},
 }
 
+var TeamEdit = &ishell.Cmd{
+	Name: "Edit",
+	Func: func(c *ishell.Context) {
+		req := msg.TeamEdit{}
+		req.TeamID = fnGetTeamID(c)
+		req.Name = fnGetString(c, "Name")
+		teamID := req.TeamID
+		accesshHash := fnGetAccessHash(c)
+		_SDK.SetTeam(teamID, int64(accesshHash), false)
+		reqBytes, _ := req.Marshal()
+		reqDelegate := NewCustomDelegate()
+		reqDelegate.FlagsFunc = func() int32 {
+			return riversdk.RequestServerForced
+		}
+
+		if reqID, err := _SDK.ExecuteCommand(msg.C_TeamEdit, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
 func init() {
 	Team.AddCmd(TeamAddMember)
 	Team.AddCmd(TeamRemoveMember)
@@ -119,4 +142,5 @@ func init() {
 	Team.AddCmd(TeamPromote)
 	Team.AddCmd(TeamDemote)
 	Team.AddCmd(TeamGetDialogs)
+	Team.AddCmd(TeamEdit)
 }
