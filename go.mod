@@ -27,7 +27,6 @@ require (
 	github.com/gobwas/pool v0.2.1
 	github.com/gobwas/ws v1.0.4
 	github.com/gogo/protobuf v1.3.1
-	github.com/iRezaaa/mobile v0.0.0-20191126111539-45e4d750f768 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/juju/ratelimit v1.0.1
 	github.com/klauspost/compress v1.10.10 // indirect
@@ -53,10 +52,8 @@ require (
 	github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a
 	github.com/willf/bitset v1.1.11 // indirect
 	go.uber.org/zap v1.16.0
-	golang.org/x/mobile v0.0.0-20201217150744-e6ae53a27f4f // indirect
 	golang.org/x/mod v0.4.0 // indirect
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
-	golang.org/x/text v0.3.3 // indirect
 	golang.org/x/tools v0.0.0-20210105210202-9ed45478a130 // indirect
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/abiosoft/ishell.v2 v2.0.0
