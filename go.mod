@@ -53,10 +53,11 @@ require (
 	github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a
 	github.com/willf/bitset v1.1.11 // indirect
 	go.uber.org/zap v1.16.0
-	golang.org/x/net v0.0.0-20200904194848-62affa334b73 // indirect
-	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
+	golang.org/x/mobile v0.0.0-20201217150744-e6ae53a27f4f // indirect
+	golang.org/x/mod v0.4.0 // indirect
+	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	golang.org/x/text v0.3.3 // indirect
-	golang.org/x/tools v0.0.0-20201002184944-ecd9fd270d5d // indirect
+	golang.org/x/tools v0.0.0-20210105210202-9ed45478a130 // indirect
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/abiosoft/ishell.v2 v2.0.0
 	honnef.co/go/tools v0.0.1-2020.1.4 // indirect

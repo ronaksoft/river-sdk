@@ -1613,7 +1613,6 @@ func (r *River) teamEdit(in, out *rony.MessageEnvelope, timeoutCB domain.Timeout
 
 	if team != nil {
 		team.Name = req.Name
-
 		_ = repo.Teams.Save(team)
 	}
 

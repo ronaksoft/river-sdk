@@ -89,6 +89,7 @@ var LabelAddToMessage = &ishell.Cmd{
 		}
 	},
 }
+
 func getHistory(c *ishell.Context, p *msg.InputPeer) {
 	req := msg.MessagesGetHistory{}
 	req.Peer = p
@@ -101,6 +102,7 @@ func getHistory(c *ishell.Context, p *msg.InputPeer) {
 		reqDelegate.RequestID = reqID
 	}
 }
+
 var LabelRemoveFromMessage = &ishell.Cmd{
 	Name: "RemoveFromMessage",
 	Func: func(c *ishell.Context) {
@@ -134,6 +136,7 @@ var LabelTest = &ishell.Cmd{
 		getMessage(c, msgIDs)
 	},
 }
+
 func getLabels(c *ishell.Context) (labels []*msg.Label) {
 	req := msg.LabelsGet{}
 	reqBytes, _ := req.Marshal()

@@ -434,7 +434,7 @@ func (ctrl *Controller) UpdateStatus(online bool) {
 			Message:     reqBytes,
 		},
 		func() {
-			ctrl.UpdateStatus(online)
+			return
 		},
 		func(m *rony.MessageEnvelope) {
 			switch m.Constructor {
