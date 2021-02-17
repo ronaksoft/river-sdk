@@ -134,6 +134,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 	} else {
 		r.bunt = buntIndex
 	}
+
 	_ = r.bunt.Update(func(tx *buntdb.Tx) error {
 		_ = tx.CreateIndex(indexDialogs, fmt.Sprintf("%s.*", prefixDialogs), buntdb.IndexBinary)
 		_ = tx.CreateIndex(indexTopPeersUser, fmt.Sprintf("%s.*", indexTopPeersUser), buntdb.IndexFloat)

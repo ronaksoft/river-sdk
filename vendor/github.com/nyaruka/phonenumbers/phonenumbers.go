@@ -2356,7 +2356,6 @@ func testNumberLength(number string, metadata *PhoneMetadata, numberType PhoneNu
 			return IS_POSSIBLE_LOCAL_ONLY
 		}
 	}
-
 	minimumLength := possibleLengths[0]
 	if minimumLength == actualLength {
 		return IS_POSSIBLE
@@ -2580,12 +2579,11 @@ func maybeExtractCountryCode(
 			// if it was too long before, we consider the number with
 			// the country calling code stripped to be a better result and
 			// keep that instead.
-			finds := validNumberPattern.FindAllString(fullNumber.String(), -1)
+			fullValid := validNumberPattern.MatchString(fullNumber.String())
+			nationalValid := validNumberPattern.MatchString(potentialNationalNumber.String())
+			lengthValid := testNumberLength(fullNumber.String(), defaultRegionMetadata, UNKNOWN)
 
-			cond := (len(finds) != 0 && fullNumber.String() == finds[0] &&
-				validNumberPattern.MatchString(potentialNationalNumber.String())) ||
-				testNumberLength(fullNumber.String(), defaultRegionMetadata, UNKNOWN) == TOO_LONG
-			if cond {
+			if (!fullValid && nationalValid) || lengthValid == TOO_LONG {
 				nationalNumber.Write(potentialNationalNumber.Bytes())
 				if keepRawInput {
 					val := PhoneNumber_FROM_NUMBER_WITHOUT_PLUS_SIGN
@@ -2717,6 +2715,38 @@ func maybeStripNationalPrefixAndCarrierCode(
 		}
 	}
 	return false
+}
+
+// MaybeSeparateExtensionFromPhone will extract any extension (as in, the part
+// of the number dialled after the call is connected, usually indicated with
+// extn, ext, x or similar) from the end of the number and returns it along
+// with the proceeding phone number. The phone number will maintain its
+// original formatting including alpha characters.
+func MaybeSeparateExtensionFromPhone(rawPhone string) (phoneNumber string, extension string) {
+	phoneNumber, extWithSeparator := splitAtExtensionSeparator(rawPhone)
+	if !isViablePhoneNumber(phoneNumber) || extWithSeparator == "" {
+		return rawPhone, ""
+	}
+	extension = removeLeadingExtensionSeparator(extWithSeparator)
+	return phoneNumber, extension
+}
+
+func splitAtExtensionSeparator(rawPhone string) (phoneNumber string, extWithSeparator string) {
+	ind := EXTN_PATTERN.FindStringIndex(rawPhone)
+	if len(ind) == 0 {
+		return rawPhone, ""
+	}
+	return rawPhone[0:ind[0]], rawPhone[ind[0]:]
+}
+
+func removeLeadingExtensionSeparator(extWithSeparator string) string {
+	matches := EXTN_PATTERN.FindStringSubmatch(extWithSeparator)
+	for _, extension := range matches[1:] {
+		if len(extension) > 0 {
+			return extension
+		}
+	}
+	return ""
 }
 
 // Strips any extension (as in, the part of the number dialled after the
@@ -3042,7 +3072,7 @@ func buildNationalNumberForParsing(
 // Returns NO_MATCH otherwise.
 // For example, the numbers +1 345 657 1234 and 657 1234 are a SHORT_NSN_MATCH.
 // The numbers +1 345 657 1234 and 345 657 are a NO_MATCH.
-func isNumberMatchWithNumbers(firstNumberIn, secondNumberIn *PhoneNumber) MatchType {
+func IsNumberMatchWithNumbers(firstNumberIn, secondNumberIn *PhoneNumber) MatchType {
 	// Make copies of the phone number so that the numbers passed in are not edited.
 	var firstNumber, secondNumber *PhoneNumber
 	firstNumber = &PhoneNumber{}
@@ -3129,14 +3159,14 @@ func isNationalNumberSuffixOfTheOther(firstNumber, secondNumber *PhoneNumber) bo
 func IsNumberMatch(firstNumber, secondNumber string) MatchType {
 	firstNumberAsProto, err := Parse(firstNumber, UNKNOWN_REGION)
 	if err == nil {
-		return isNumberMatchWithOneNumber(firstNumberAsProto, secondNumber)
+		return IsNumberMatchWithOneNumber(firstNumberAsProto, secondNumber)
 	} else if err != ErrInvalidCountryCode {
 		return NOT_A_NUMBER
 	}
 
 	secondNumberAsProto, err := Parse(secondNumber, UNKNOWN_REGION)
 	if err == nil {
-		return isNumberMatchWithOneNumber(secondNumberAsProto, firstNumber)
+		return IsNumberMatchWithOneNumber(secondNumberAsProto, firstNumber)
 	} else if err != ErrInvalidCountryCode {
 		return NOT_A_NUMBER
 	}
@@ -3150,19 +3180,19 @@ func IsNumberMatch(firstNumber, secondNumber string) MatchType {
 	if err != nil {
 		return NOT_A_NUMBER
 	}
-	return isNumberMatchWithNumbers(&firstNumberProto, &secondNumberProto)
+	return IsNumberMatchWithNumbers(&firstNumberProto, &secondNumberProto)
 }
 
 // Takes two phone numbers and compares them for equality. This is a
 // convenience wrapper for IsNumberMatch(PhoneNumber, PhoneNumber). No
 // default region is known.
-func isNumberMatchWithOneNumber(
+func IsNumberMatchWithOneNumber(
 	firstNumber *PhoneNumber, secondNumber string) MatchType {
 	// First see if the second number has an implicit country calling
 	// code, by attempting to parse it.
 	secondNumberAsProto, err := Parse(secondNumber, UNKNOWN_REGION)
 	if err == nil {
-		return isNumberMatchWithNumbers(firstNumber, secondNumberAsProto)
+		return IsNumberMatchWithNumbers(firstNumber, secondNumberAsProto)
 	}
 	if err != ErrInvalidCountryCode {
 		return NOT_A_NUMBER
@@ -3179,7 +3209,7 @@ func isNumberMatchWithOneNumber(
 		if err != nil {
 			return NOT_A_NUMBER
 		}
-		match := isNumberMatchWithNumbers(
+		match := IsNumberMatchWithNumbers(
 			firstNumber, secondNumberWithFirstNumberRegion)
 		if match == EXACT_MATCH {
 			return NSN_MATCH
@@ -3193,7 +3223,7 @@ func isNumberMatchWithOneNumber(
 		if err != nil {
 			return NOT_A_NUMBER
 		}
-		return isNumberMatchWithNumbers(firstNumber, secondNumberProto)
+		return IsNumberMatchWithNumbers(firstNumber, secondNumberProto)
 	}
 }
 

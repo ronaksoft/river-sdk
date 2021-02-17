@@ -1,8 +1,6 @@
 package edge
 
 import (
-	"github.com/ronaksoft/rony"
-	"github.com/ronaksoft/rony/gateway"
 	"sync"
 )
 
@@ -14,82 +12,6 @@ import (
    Auditor: Ehsan N. Moosa (E2)
    Copyright Ronak Software Group 2020
 */
-
-var messageEnvelopePool sync.Pool
-
-func acquireMessageEnvelope() *rony.MessageEnvelope {
-	v := messageEnvelopePool.Get()
-	if v == nil {
-		return &rony.MessageEnvelope{}
-	}
-	return v.(*rony.MessageEnvelope)
-}
-
-func releaseMessageEnvelope(x *rony.MessageEnvelope) {
-	x.Message = x.Message[:0]
-	x.Constructor = 0
-	x.RequestID = 0
-	x.Header = x.Header[:0]
-	x.Auth = x.Auth[:0]
-	messageEnvelopePool.Put(x)
-}
-
-var clusterMessagePool sync.Pool
-
-func acquireClusterMessage() *rony.ClusterMessage {
-	v := clusterMessagePool.Get()
-	if v == nil {
-		return &rony.ClusterMessage{
-			Envelope: &rony.MessageEnvelope{},
-		}
-	}
-	return v.(*rony.ClusterMessage)
-}
-
-func releaseClusterMessage(x *rony.ClusterMessage) {
-	x.Store = x.Store[:0]
-	x.Sender = x.Sender[:0]
-	x.Envelope.Constructor = 0
-	x.Envelope.Message = x.Envelope.Message[:0]
-	x.Envelope.RequestID = 0
-	clusterMessagePool.Put(x)
-}
-
-var raftCommandPool sync.Pool
-
-func acquireRaftCommand() *rony.RaftCommand {
-	v := raftCommandPool.Get()
-	if v == nil {
-		return &rony.RaftCommand{
-			Envelope: &rony.MessageEnvelope{},
-		}
-	}
-	return v.(*rony.RaftCommand)
-}
-
-func releaseRaftCommand(x *rony.RaftCommand) {
-	x.Sender = x.Sender[:0]
-	x.Store = x.Store[:0]
-	x.Envelope.Message = x.Envelope.Message[:0]
-	x.Envelope.RequestID = 0
-	x.Envelope.Constructor = 0
-	raftCommandPool.Put(x)
-}
-
-var waitGroupPool sync.Pool
-
-func acquireWaitGroup() *sync.WaitGroup {
-	wgv := waitGroupPool.Get()
-	if wgv == nil {
-		return &sync.WaitGroup{}
-	}
-
-	return wgv.(*sync.WaitGroup)
-}
-
-func releaseWaitGroup(wg *sync.WaitGroup) {
-	waitGroupPool.Put(wg)
-}
 
 var requestCtxPool = sync.Pool{}
 
@@ -121,7 +43,7 @@ func releaseRequestCtx(ctx *RequestCtx) {
 
 var dispatchCtxPool = sync.Pool{}
 
-func acquireDispatchCtx(edge *Server, conn gateway.Conn, streamID int64, serverID []byte) *DispatchCtx {
+func acquireDispatchCtx(edge *Server, conn Conn, streamID int64, serverID []byte, kind ContextKind) *DispatchCtx {
 	var ctx *DispatchCtx
 	if v := dispatchCtxPool.Get(); v == nil {
 		ctx = newDispatchCtx(edge)
@@ -129,11 +51,7 @@ func acquireDispatchCtx(edge *Server, conn gateway.Conn, streamID int64, serverI
 		ctx = v.(*DispatchCtx)
 	}
 	ctx.conn = conn
-	if ctx.conn == nil {
-		ctx.kind = gatewayMessage
-	} else {
-		ctx.kind = clusterMessage
-	}
+	ctx.kind = kind
 	ctx.streamID = streamID
 	ctx.serverID = append(ctx.serverID[:0], serverID...)
 	return ctx
@@ -143,5 +61,6 @@ func releaseDispatchCtx(ctx *DispatchCtx) {
 	// Reset the Key-Value store
 	ctx.reset()
 
+	// Put back the context into the pool
 	dispatchCtxPool.Put(ctx)
 }

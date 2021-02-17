@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Embed Assets into the binary
-pkger -o ./cmd/rony
+# pkger -o ./cmd/rony
 
 # Generate codes
 go generate ./... || exit
@@ -12,6 +12,7 @@ go vet ./... || exit
 # Format the code
 go fmt ./... || exit
 
-
 go install ./cmd/protoc-gen-gorony
 go install ./cmd/rony
+
+

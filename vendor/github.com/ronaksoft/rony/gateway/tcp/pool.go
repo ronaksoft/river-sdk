@@ -1,8 +1,9 @@
-package tcp
+package tcpGateway
 
 import (
 	"github.com/gobwas/ws"
 	"github.com/mailru/easygo/netpoll"
+	"github.com/panjf2000/ants/v2"
 	wsutil "github.com/ronaksoft/rony/gateway/tcp/util"
 	"github.com/ronaksoft/rony/tools"
 	"github.com/valyala/fasthttp"
@@ -19,6 +20,8 @@ import (
    Copyright Ronak Software Group 2020
 */
 
+var goPoolB, goPoolNB *ants.Pool
+
 var httpConnPool sync.Pool
 
 func acquireHttpConn(gw *Gateway, req *fasthttp.RequestCtx) *httpConn {
@@ -27,7 +30,6 @@ func acquireHttpConn(gw *Gateway, req *fasthttp.RequestCtx) *httpConn {
 		return &httpConn{
 			gateway: gw,
 			req:     req,
-			buf:     tools.NewLinkedList(),
 			kv:      make(map[string]interface{}, 4),
 		}
 	}
@@ -42,7 +44,6 @@ func releaseHttpConn(c *httpConn) {
 	for k := range c.kv {
 		delete(c.kv, k)
 	}
-	c.buf.Reset()
 	httpConnPool.Put(c)
 }
 
@@ -74,26 +75,24 @@ func acquireWebsocketConn(gw *Gateway, connID uint64, conn net.Conn, desc *netpo
 	if !ok {
 		return &websocketConn{
 			connID:       connID,
-			buf:          tools.NewLinkedList(),
 			gateway:      gw,
 			conn:         conn,
 			desc:         desc,
 			closed:       false,
 			kv:           make(map[string]interface{}, 4),
-			lastActivity: tools.TimeUnix(),
+			lastActivity: tools.CPUTicks(),
 		}
 	}
 	c.gateway = gw
 	c.connID = connID
 	c.desc = desc
 	c.conn = conn
-	c.lastActivity = tools.TimeUnix()
+	c.lastActivity = tools.CPUTicks()
 	return c
 }
 
 func releaseWebsocketConn(wc *websocketConn) {
 	wc.clientIP = wc.clientIP[:0]
-	wc.buf.Reset()
 	wc.conn = nil
 	for k := range wc.kv {
 		delete(wc.kv, k)
@@ -104,14 +103,15 @@ func releaseWebsocketConn(wc *websocketConn) {
 
 var websocketMessagePool sync.Pool
 
-func acquireWebsocketMessage() []wsutil.Message {
-	x, ok := websocketMessagePool.Get().([]wsutil.Message)
+func acquireWebsocketMessage() *[]wsutil.Message {
+	x, ok := websocketMessagePool.Get().(*[]wsutil.Message)
 	if !ok {
-		return make([]wsutil.Message, 0, 8)
+		arr := make([]wsutil.Message, 0, 8)
+		return &arr
 	}
 	return x
 }
 
-func releaseWebsocketMessage(x []wsutil.Message) {
+func releaseWebsocketMessage(x *[]wsutil.Message) {
 	websocketMessagePool.Put(x)
 }

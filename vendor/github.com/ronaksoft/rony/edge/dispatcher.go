@@ -2,7 +2,6 @@ package edge
 
 import (
 	"github.com/ronaksoft/rony"
-	"github.com/ronaksoft/rony/gateway"
 	"github.com/ronaksoft/rony/pools"
 	"google.golang.org/protobuf/proto"
 )
@@ -30,41 +29,34 @@ type Dispatcher interface {
 	// messages and updates in one go.
 	Done(ctx *DispatchCtx)
 	// This will be called when a new connection has been opened
-	OnOpen(conn gateway.Conn, kvs ...gateway.KeyValue)
+	OnOpen(conn rony.Conn, kvs ...*rony.KeyValue)
 	// This will be called when a connection is closed
-	OnClose(conn gateway.Conn)
+	OnClose(conn rony.Conn)
 }
 
-// SimpleDispatcher is a naive implementation of Dispatcher. You only need to set OnMessageFunc with
-type SimpleDispatcher struct {
-	OnMessageFunc func(ctx *DispatchCtx, envelope *rony.MessageEnvelope)
-}
+// defaultDispatcher is a default implementation of Dispatcher. You only need to set OnMessageFunc with
+type defaultDispatcher struct{}
 
-func (s *SimpleDispatcher) OnMessage(ctx *DispatchCtx, envelope *rony.MessageEnvelope) {
-	if s.OnMessageFunc != nil {
-		s.OnMessageFunc(ctx, envelope)
-		return
-	}
-
+func (s *defaultDispatcher) OnMessage(ctx *DispatchCtx, envelope *rony.MessageEnvelope) {
 	mo := proto.MarshalOptions{UseCachedSize: true}
-	eb := pools.Bytes.GetCap(mo.Size(envelope))
-	eb, _ = mo.MarshalAppend(eb, envelope)
+	buf := pools.Buffer.GetCap(mo.Size(envelope))
+	eb, _ := mo.MarshalAppend(*buf.Bytes(), envelope)
 	_ = ctx.Conn().SendBinary(ctx.StreamID(), eb)
-	pools.Bytes.Put(eb)
+	pools.Buffer.Put(buf)
 }
 
-func (s *SimpleDispatcher) Interceptor(ctx *DispatchCtx, data []byte) (err error) {
+func (s *defaultDispatcher) Interceptor(ctx *DispatchCtx, data []byte) (err error) {
 	return ctx.UnmarshalEnvelope(data)
 }
 
-func (s *SimpleDispatcher) Done(ctx *DispatchCtx) {
+func (s *defaultDispatcher) Done(ctx *DispatchCtx) {
 	// Do nothing
 }
 
-func (s *SimpleDispatcher) OnOpen(conn gateway.Conn, kvs ...gateway.KeyValue) {
+func (s *defaultDispatcher) OnOpen(conn rony.Conn, kvs ...*rony.KeyValue) {
 	// Do nothing
 }
 
-func (s *SimpleDispatcher) OnClose(conn gateway.Conn) {
-	panic("implement me")
+func (s *defaultDispatcher) OnClose(conn rony.Conn) {
+	// Do nothing
 }

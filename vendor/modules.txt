@@ -1,4 +1,4 @@
-# git.ronaksoft.com/river/msg v0.0.0-20201223092905-f7f444976a22
+# git.ronaksoft.com/river/msg v0.0.0-20210217054852-352ee3f81b13
 git.ronaksoft.com/river/msg/go/msg
 # github.com/DataDog/zstd v1.4.5
 github.com/DataDog/zstd
@@ -6,15 +6,13 @@ github.com/DataDog/zstd
 github.com/RoaringBitmap/roaring
 # github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db
 github.com/abiosoft/readline
-# github.com/allegro/bigcache/v2 v2.2.4
+# github.com/allegro/bigcache/v2 v2.2.5
 github.com/allegro/bigcache/v2
 github.com/allegro/bigcache/v2/queue
 # github.com/andybalholm/brotli v1.0.0
 github.com/andybalholm/brotli
 # github.com/armon/go-metrics v0.3.2
 github.com/armon/go-metrics
-# github.com/bbva/raft-badger v1.0.1
-github.com/bbva/raft-badger
 # github.com/beeker1121/goque v2.1.0+incompatible
 github.com/beeker1121/goque
 # github.com/blevesearch/bleve v1.0.12
@@ -74,6 +72,12 @@ github.com/blevesearch/zap/v13
 github.com/blevesearch/zap/v14
 # github.com/blevesearch/zap/v15 v15.0.1
 github.com/blevesearch/zap/v15
+# github.com/c-bata/go-prompt v0.2.5
+github.com/c-bata/go-prompt
+github.com/c-bata/go-prompt/internal/bisect
+github.com/c-bata/go-prompt/internal/debug
+github.com/c-bata/go-prompt/internal/strings
+github.com/c-bata/go-prompt/internal/term
 # github.com/cespare/xxhash v1.1.0
 github.com/cespare/xxhash
 # github.com/couchbase/vellum v1.0.2
@@ -89,9 +93,19 @@ github.com/dgraph-io/badger/v2/skl
 github.com/dgraph-io/badger/v2/table
 github.com/dgraph-io/badger/v2/trie
 github.com/dgraph-io/badger/v2/y
-# github.com/dgraph-io/ristretto v0.0.3
+# github.com/dgraph-io/badger/v3 v3.2011.1
+github.com/dgraph-io/badger/v3
+github.com/dgraph-io/badger/v3/fb
+github.com/dgraph-io/badger/v3/options
+github.com/dgraph-io/badger/v3/pb
+github.com/dgraph-io/badger/v3/skl
+github.com/dgraph-io/badger/v3/table
+github.com/dgraph-io/badger/v3/trie
+github.com/dgraph-io/badger/v3/y
+# github.com/dgraph-io/ristretto v0.0.4-0.20210122082011-bb5d392ed82d
 github.com/dgraph-io/ristretto
 github.com/dgraph-io/ristretto/z
+github.com/dgraph-io/ristretto/z/simd
 # github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13
 github.com/dgryski/go-farm
 # github.com/dustin/go-humanize v1.0.0
@@ -120,12 +134,16 @@ github.com/gobwas/ws
 github.com/gobwas/ws/wsutil
 # github.com/gogo/protobuf v1.3.1
 github.com/gogo/protobuf/proto
+# github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6
+github.com/golang/groupcache/lru
 # github.com/golang/protobuf v1.4.3
 github.com/golang/protobuf/proto
-# github.com/golang/snappy v0.0.1
+# github.com/golang/snappy v0.0.2
 github.com/golang/snappy
 # github.com/google/btree v1.0.0
 github.com/google/btree
+# github.com/google/flatbuffers v1.12.0
+github.com/google/flatbuffers/go
 # github.com/gopherjs/gopherjs v0.0.0-20190910122728-9d188e94fb99
 github.com/gopherjs/gopherjs/js
 # github.com/hashicorp/errwrap v1.0.0
@@ -175,12 +193,14 @@ github.com/kr/text
 github.com/magiconair/properties
 # github.com/mailru/easygo v0.0.0-20190618140210-3c14a0dc985f
 github.com/mailru/easygo/netpoll
-# github.com/mattn/go-colorable v0.1.7
+# github.com/mattn/go-colorable v0.1.8
 github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.12
 github.com/mattn/go-isatty
-# github.com/mattn/go-runewidth v0.0.9
+# github.com/mattn/go-runewidth v0.0.10
 github.com/mattn/go-runewidth
+# github.com/mattn/go-tty v0.0.3
+github.com/mattn/go-tty
 # github.com/miekg/dns v1.1.30
 github.com/miekg/dns
 # github.com/mitchellh/mapstructure v1.1.2
@@ -189,27 +209,49 @@ github.com/mitchellh/mapstructure
 github.com/monnand/dhkx
 # github.com/mschoch/smat v0.2.0
 github.com/mschoch/smat
-# github.com/nyaruka/phonenumbers v1.0.60
+# github.com/nyaruka/phonenumbers v1.0.65
 github.com/nyaruka/phonenumbers
 # github.com/olekukonko/tablewriter v0.0.4
 github.com/olekukonko/tablewriter
+# github.com/panjf2000/ants/v2 v2.4.3
+github.com/panjf2000/ants/v2
+github.com/panjf2000/ants/v2/internal
+# github.com/panjf2000/gnet v1.3.2
+github.com/panjf2000/gnet
+github.com/panjf2000/gnet/errors
+github.com/panjf2000/gnet/internal
+github.com/panjf2000/gnet/internal/logging
+github.com/panjf2000/gnet/internal/netpoll
+github.com/panjf2000/gnet/internal/reuseport
+github.com/panjf2000/gnet/pool/bytebuffer
+github.com/panjf2000/gnet/pool/ringbuffer
+github.com/panjf2000/gnet/ringbuffer
 # github.com/pelletier/go-toml v1.6.0
 github.com/pelletier/go-toml
 # github.com/philhofer/fwd v1.0.0
 github.com/philhofer/fwd
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
-# github.com/ronaksoft/rony v0.0.41
+# github.com/pkg/term v1.1.0
+github.com/pkg/term/termios
+# github.com/rivo/uniseg v0.2.0
+github.com/rivo/uniseg
+# github.com/ronaksoft/rony v0.3.17
 github.com/ronaksoft/rony
+github.com/ronaksoft/rony/cluster
+github.com/ronaksoft/rony/cluster/gossip
 github.com/ronaksoft/rony/edge
 github.com/ronaksoft/rony/gateway
 github.com/ronaksoft/rony/gateway/dummy
 github.com/ronaksoft/rony/gateway/tcp
 github.com/ronaksoft/rony/gateway/tcp/util
-github.com/ronaksoft/rony/internal/logger
+github.com/ronaksoft/rony/internal/log
+github.com/ronaksoft/rony/internal/raftstore
 github.com/ronaksoft/rony/pools
 github.com/ronaksoft/rony/registry
 github.com/ronaksoft/rony/tools
+github.com/ronaksoft/rony/tunnel
+github.com/ronaksoft/rony/tunnel/udp
 # github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529
 github.com/sean-/seed
 # github.com/siongui/instago v0.0.0-20200627103523-54424cb565ea
@@ -252,19 +294,19 @@ github.com/syndtr/goleveldb/leveldb/opt
 github.com/syndtr/goleveldb/leveldb/storage
 github.com/syndtr/goleveldb/leveldb/table
 github.com/syndtr/goleveldb/leveldb/util
-# github.com/tidwall/btree v0.0.0-20191029221954-400434d76274
+# github.com/tidwall/btree v0.3.0
 github.com/tidwall/btree
-# github.com/tidwall/buntdb v1.1.2
+# github.com/tidwall/buntdb v1.1.7
 github.com/tidwall/buntdb
-# github.com/tidwall/gjson v1.6.1
+# github.com/tidwall/gjson v1.6.7
 github.com/tidwall/gjson
 # github.com/tidwall/grect v0.0.0-20161006141115-ba9a043346eb
 github.com/tidwall/grect
-# github.com/tidwall/match v1.0.1
+# github.com/tidwall/match v1.0.3
 github.com/tidwall/match
 # github.com/tidwall/pretty v1.0.2
 github.com/tidwall/pretty
-# github.com/tidwall/rtree v0.0.0-20180113144539-6cd427091e0e
+# github.com/tidwall/rtree v0.0.0-20201103190202-0d877048965d
 github.com/tidwall/rtree
 github.com/tidwall/rtree/base
 # github.com/tidwall/tinyqueue v0.0.0-20180302190814-1e39f5511563
@@ -273,7 +315,7 @@ github.com/tidwall/tinyqueue
 github.com/tinylib/msgp/msgp
 # github.com/valyala/bytebufferpool v1.0.0
 github.com/valyala/bytebufferpool
-# github.com/valyala/fasthttp v1.16.0
+# github.com/valyala/fasthttp v1.19.0
 github.com/valyala/fasthttp
 github.com/valyala/fasthttp/fasthttputil
 github.com/valyala/fasthttp/stackless
@@ -283,6 +325,12 @@ github.com/valyala/tcplisten
 github.com/willf/bitset
 # go.etcd.io/bbolt v1.3.5
 go.etcd.io/bbolt
+# go.opencensus.io v0.22.5
+go.opencensus.io
+go.opencensus.io/internal
+go.opencensus.io/trace
+go.opencensus.io/trace/internal
+go.opencensus.io/trace/tracestate
 # go.uber.org/atomic v1.7.0
 go.uber.org/atomic
 # go.uber.org/multierr v1.6.0
@@ -307,7 +355,7 @@ golang.org/x/net/ipv6
 golang.org/x/net/trace
 # golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 golang.org/x/sync/singleflight
-# golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f
+# golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
@@ -341,6 +389,7 @@ google.golang.org/protobuf/reflect/protoreflect
 google.golang.org/protobuf/reflect/protoregistry
 google.golang.org/protobuf/runtime/protoiface
 google.golang.org/protobuf/runtime/protoimpl
+google.golang.org/protobuf/types/descriptorpb
 # gopkg.in/abiosoft/ishell.v2 v2.0.0
 gopkg.in/abiosoft/ishell.v2
 # gopkg.in/ini.v1 v1.51.1

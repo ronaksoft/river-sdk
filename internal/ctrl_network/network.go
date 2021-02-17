@@ -879,7 +879,8 @@ func (ctrl *Controller) Reconnect() {
 	})
 }
 
-// WaitForNetwork
+// WaitForNetwork this function sleeps until the websocket connection is established. If you set waitForRecall then
+// it also waits the initial AuthRecall request sent to the server.
 func (ctrl *Controller) WaitForNetwork(waitForRecall bool) {
 	// Wait While Network is Disconnected or Connecting
 	for ctrl.GetQuality() != domain.NetworkConnected {
@@ -896,16 +897,17 @@ func (ctrl *Controller) WaitForNetwork(waitForRecall bool) {
 	}
 }
 
-// Connected
+// Connected return the connection status for the websocket connection
 func (ctrl *Controller) Connected() bool {
 	return ctrl.GetQuality() == domain.NetworkConnected
 }
 
-// GetQuality
+// GetQuality returns the network status
 func (ctrl *Controller) GetQuality() domain.NetworkStatus {
 	return domain.NetworkStatus(atomic.LoadInt32(&ctrl.wsQuality))
 }
 
+// SetQuality sets the network status
 func (ctrl *Controller) SetQuality(s domain.NetworkStatus) {
 	atomic.StoreInt32(&ctrl.wsQuality, int32(s))
 }
@@ -919,6 +921,7 @@ func (ctrl *Controller) SetAuthRecalled(b bool) {
 	}
 }
 
+// GetAuthRecalled read the internal flag to check if AuthRecall has been called
 func (ctrl *Controller) GetAuthRecalled() bool {
 	return atomic.LoadInt32(&ctrl.authRecalled) > 0
 }

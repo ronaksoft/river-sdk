@@ -1,7 +1,7 @@
 module git.ronaksoft.com/river/sdk
 
 require (
-	git.ronaksoft.com/river/msg v0.0.0-20201223092905-f7f444976a22
+	git.ronaksoft.com/river/msg v0.0.0-20210217054852-352ee3f81b13
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/RoaringBitmap/roaring v0.5.1 // indirect
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
@@ -14,7 +14,6 @@ require (
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
 	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.2
-	github.com/dgraph-io/ristretto v0.0.3 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51 // indirect
@@ -33,22 +32,21 @@ require (
 	github.com/kr/pretty v0.2.0
 	github.com/miekg/dns v1.1.30 // indirect
 	github.com/monnand/dhkx v0.0.0-20180522003156-9e5b033f1ac4
-	github.com/nyaruka/phonenumbers v1.0.60
+	github.com/nyaruka/phonenumbers v1.0.65
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/remyoudompheng/bigfft v0.0.0-20190512091148-babf20351dd7 // indirect
-	github.com/ronaksoft/rony v0.0.41
+	github.com/ronaksoft/rony v0.3.17
 	github.com/siongui/instago v0.0.0-20200627103523-54424cb565ea
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
 	github.com/tecbot/gorocksdb v0.0.0-20190705090504-162552197222 // indirect
-	github.com/tidwall/buntdb v1.1.2
-	github.com/tidwall/gjson v1.6.1 // indirect
+	github.com/tidwall/buntdb v1.1.7
 	github.com/tinylib/msgp v1.1.2 // indirect
-	github.com/valyala/fasthttp v1.16.0
+	github.com/valyala/fasthttp v1.19.0
 	github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a
 	github.com/willf/bitset v1.1.11 // indirect
 	go.uber.org/zap v1.16.0

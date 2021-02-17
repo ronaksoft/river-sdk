@@ -287,6 +287,88 @@ func (x *MessagesEdit) GetEntities() []*MessageEntity {
 	return nil
 }
 
+// MessagesEditMedia
+// @Function
+// @Return: Bool
+type MessagesEditMedia struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	RandomID  int64            `protobuf:"varint,1,opt,name=RandomID,proto3" json:"RandomID,omitempty"`
+	Peer      *InputPeer       `protobuf:"bytes,2,opt,name=Peer,proto3" json:"Peer,omitempty"`
+	MessageID int64            `protobuf:"varint,3,opt,name=MessageID,proto3" json:"MessageID,omitempty"`
+	Caption   string           `protobuf:"bytes,4,opt,name=Caption,proto3" json:"Caption,omitempty"`
+	Entities  []*MessageEntity `protobuf:"bytes,5,rep,name=Entities,proto3" json:"Entities,omitempty"`
+}
+
+func (x *MessagesEditMedia) Reset() {
+	*x = MessagesEditMedia{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_chat_messages_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MessagesEditMedia) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MessagesEditMedia) ProtoMessage() {}
+
+func (x *MessagesEditMedia) ProtoReflect() protoreflect.Message {
+	mi := &file_chat_messages_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MessagesEditMedia.ProtoReflect.Descriptor instead.
+func (*MessagesEditMedia) Descriptor() ([]byte, []int) {
+	return file_chat_messages_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *MessagesEditMedia) GetRandomID() int64 {
+	if x != nil {
+		return x.RandomID
+	}
+	return 0
+}
+
+func (x *MessagesEditMedia) GetPeer() *InputPeer {
+	if x != nil {
+		return x.Peer
+	}
+	return nil
+}
+
+func (x *MessagesEditMedia) GetMessageID() int64 {
+	if x != nil {
+		return x.MessageID
+	}
+	return 0
+}
+
+func (x *MessagesEditMedia) GetCaption() string {
+	if x != nil {
+		return x.Caption
+	}
+	return ""
+}
+
+func (x *MessagesEditMedia) GetEntities() []*MessageEntity {
+	if x != nil {
+		return x.Entities
+	}
+	return nil
+}
+
 // MessageReadHistory
 // @Function
 // Returns:
@@ -302,7 +384,7 @@ type MessagesReadHistory struct {
 func (x *MessagesReadHistory) Reset() {
 	*x = MessagesReadHistory{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[3]
+		mi := &file_chat_messages_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -315,7 +397,7 @@ func (x *MessagesReadHistory) String() string {
 func (*MessagesReadHistory) ProtoMessage() {}
 
 func (x *MessagesReadHistory) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[3]
+	mi := &file_chat_messages_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -328,7 +410,7 @@ func (x *MessagesReadHistory) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesReadHistory.ProtoReflect.Descriptor instead.
 func (*MessagesReadHistory) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{3}
+	return file_chat_messages_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *MessagesReadHistory) GetPeer() *InputPeer {
@@ -360,7 +442,7 @@ type MessagesGet struct {
 func (x *MessagesGet) Reset() {
 	*x = MessagesGet{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[4]
+		mi := &file_chat_messages_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -373,7 +455,7 @@ func (x *MessagesGet) String() string {
 func (*MessagesGet) ProtoMessage() {}
 
 func (x *MessagesGet) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[4]
+	mi := &file_chat_messages_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -386,7 +468,7 @@ func (x *MessagesGet) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesGet.ProtoReflect.Descriptor instead.
 func (*MessagesGet) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{4}
+	return file_chat_messages_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *MessagesGet) GetPeer() *InputPeer {
@@ -420,7 +502,7 @@ type MessagesGetHistory struct {
 func (x *MessagesGetHistory) Reset() {
 	*x = MessagesGetHistory{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[5]
+		mi := &file_chat_messages_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -433,7 +515,7 @@ func (x *MessagesGetHistory) String() string {
 func (*MessagesGetHistory) ProtoMessage() {}
 
 func (x *MessagesGetHistory) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[5]
+	mi := &file_chat_messages_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -446,7 +528,7 @@ func (x *MessagesGetHistory) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesGetHistory.ProtoReflect.Descriptor instead.
 func (*MessagesGetHistory) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{5}
+	return file_chat_messages_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *MessagesGetHistory) GetPeer() *InputPeer {
@@ -477,6 +559,80 @@ func (x *MessagesGetHistory) GetMinID() int64 {
 	return 0
 }
 
+// MessagesGetMediaHistory
+// @Function
+// Returns:     MessagesMany
+type MessagesGetMediaHistory struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Peer  *InputPeer    `protobuf:"bytes,2,opt,name=Peer,proto3" json:"Peer,omitempty"`
+	Limit int32         `protobuf:"varint,3,opt,name=Limit,proto3" json:"Limit,omitempty"`
+	MaxID int64         `protobuf:"varint,4,opt,name=MaxID,proto3" json:"MaxID,omitempty"`
+	Cat   MediaCategory `protobuf:"varint,5,opt,name=Cat,proto3,enum=msg.MediaCategory" json:"Cat,omitempty"`
+}
+
+func (x *MessagesGetMediaHistory) Reset() {
+	*x = MessagesGetMediaHistory{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_chat_messages_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MessagesGetMediaHistory) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MessagesGetMediaHistory) ProtoMessage() {}
+
+func (x *MessagesGetMediaHistory) ProtoReflect() protoreflect.Message {
+	mi := &file_chat_messages_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MessagesGetMediaHistory.ProtoReflect.Descriptor instead.
+func (*MessagesGetMediaHistory) Descriptor() ([]byte, []int) {
+	return file_chat_messages_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *MessagesGetMediaHistory) GetPeer() *InputPeer {
+	if x != nil {
+		return x.Peer
+	}
+	return nil
+}
+
+func (x *MessagesGetMediaHistory) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *MessagesGetMediaHistory) GetMaxID() int64 {
+	if x != nil {
+		return x.MaxID
+	}
+	return 0
+}
+
+func (x *MessagesGetMediaHistory) GetCat() MediaCategory {
+	if x != nil {
+		return x.Cat
+	}
+	return MediaCategory_MediaCategoryNone
+}
+
 // MessagesGetDialogs
 // @Function
 // Returns:     MessagesDialogs
@@ -493,7 +649,7 @@ type MessagesGetDialogs struct {
 func (x *MessagesGetDialogs) Reset() {
 	*x = MessagesGetDialogs{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[6]
+		mi := &file_chat_messages_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -506,7 +662,7 @@ func (x *MessagesGetDialogs) String() string {
 func (*MessagesGetDialogs) ProtoMessage() {}
 
 func (x *MessagesGetDialogs) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[6]
+	mi := &file_chat_messages_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -519,7 +675,7 @@ func (x *MessagesGetDialogs) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesGetDialogs.ProtoReflect.Descriptor instead.
 func (*MessagesGetDialogs) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{6}
+	return file_chat_messages_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *MessagesGetDialogs) GetLimit() int32 {
@@ -555,7 +711,7 @@ type MessagesGetPinnedDialogs struct {
 func (x *MessagesGetPinnedDialogs) Reset() {
 	*x = MessagesGetPinnedDialogs{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[7]
+		mi := &file_chat_messages_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -568,7 +724,7 @@ func (x *MessagesGetPinnedDialogs) String() string {
 func (*MessagesGetPinnedDialogs) ProtoMessage() {}
 
 func (x *MessagesGetPinnedDialogs) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[7]
+	mi := &file_chat_messages_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -581,7 +737,7 @@ func (x *MessagesGetPinnedDialogs) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesGetPinnedDialogs.ProtoReflect.Descriptor instead.
 func (*MessagesGetPinnedDialogs) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{7}
+	return file_chat_messages_proto_rawDescGZIP(), []int{9}
 }
 
 // MessagesGetDialog
@@ -598,7 +754,7 @@ type MessagesGetDialog struct {
 func (x *MessagesGetDialog) Reset() {
 	*x = MessagesGetDialog{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[8]
+		mi := &file_chat_messages_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -611,7 +767,7 @@ func (x *MessagesGetDialog) String() string {
 func (*MessagesGetDialog) ProtoMessage() {}
 
 func (x *MessagesGetDialog) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[8]
+	mi := &file_chat_messages_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -624,7 +780,7 @@ func (x *MessagesGetDialog) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesGetDialog.ProtoReflect.Descriptor instead.
 func (*MessagesGetDialog) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{8}
+	return file_chat_messages_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *MessagesGetDialog) GetPeer() *InputPeer {
@@ -649,7 +805,7 @@ type MessagesSetTyping struct {
 func (x *MessagesSetTyping) Reset() {
 	*x = MessagesSetTyping{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[9]
+		mi := &file_chat_messages_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -662,7 +818,7 @@ func (x *MessagesSetTyping) String() string {
 func (*MessagesSetTyping) ProtoMessage() {}
 
 func (x *MessagesSetTyping) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[9]
+	mi := &file_chat_messages_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -675,7 +831,7 @@ func (x *MessagesSetTyping) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesSetTyping.ProtoReflect.Descriptor instead.
 func (*MessagesSetTyping) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{9}
+	return file_chat_messages_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *MessagesSetTyping) GetPeer() *InputPeer {
@@ -708,7 +864,7 @@ type MessagesClearHistory struct {
 func (x *MessagesClearHistory) Reset() {
 	*x = MessagesClearHistory{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[10]
+		mi := &file_chat_messages_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -721,7 +877,7 @@ func (x *MessagesClearHistory) String() string {
 func (*MessagesClearHistory) ProtoMessage() {}
 
 func (x *MessagesClearHistory) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[10]
+	mi := &file_chat_messages_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -734,7 +890,7 @@ func (x *MessagesClearHistory) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesClearHistory.ProtoReflect.Descriptor instead.
 func (*MessagesClearHistory) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{10}
+	return file_chat_messages_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *MessagesClearHistory) GetPeer() *InputPeer {
@@ -774,7 +930,7 @@ type MessagesDelete struct {
 func (x *MessagesDelete) Reset() {
 	*x = MessagesDelete{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[11]
+		mi := &file_chat_messages_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -787,7 +943,7 @@ func (x *MessagesDelete) String() string {
 func (*MessagesDelete) ProtoMessage() {}
 
 func (x *MessagesDelete) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[11]
+	mi := &file_chat_messages_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -800,7 +956,7 @@ func (x *MessagesDelete) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesDelete.ProtoReflect.Descriptor instead.
 func (*MessagesDelete) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{11}
+	return file_chat_messages_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *MessagesDelete) GetPeer() *InputPeer {
@@ -842,7 +998,7 @@ type MessagesForward struct {
 func (x *MessagesForward) Reset() {
 	*x = MessagesForward{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[12]
+		mi := &file_chat_messages_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -855,7 +1011,7 @@ func (x *MessagesForward) String() string {
 func (*MessagesForward) ProtoMessage() {}
 
 func (x *MessagesForward) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[12]
+	mi := &file_chat_messages_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -868,7 +1024,7 @@ func (x *MessagesForward) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesForward.ProtoReflect.Descriptor instead.
 func (*MessagesForward) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{12}
+	return file_chat_messages_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *MessagesForward) GetFromPeer() *InputPeer {
@@ -921,7 +1077,7 @@ type MessagesReadContents struct {
 func (x *MessagesReadContents) Reset() {
 	*x = MessagesReadContents{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[13]
+		mi := &file_chat_messages_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -934,7 +1090,7 @@ func (x *MessagesReadContents) String() string {
 func (*MessagesReadContents) ProtoMessage() {}
 
 func (x *MessagesReadContents) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[13]
+	mi := &file_chat_messages_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -947,7 +1103,7 @@ func (x *MessagesReadContents) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesReadContents.ProtoReflect.Descriptor instead.
 func (*MessagesReadContents) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{13}
+	return file_chat_messages_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *MessagesReadContents) GetPeer() *InputPeer {
@@ -982,7 +1138,7 @@ type MessagesSaveDraft struct {
 func (x *MessagesSaveDraft) Reset() {
 	*x = MessagesSaveDraft{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[14]
+		mi := &file_chat_messages_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -995,7 +1151,7 @@ func (x *MessagesSaveDraft) String() string {
 func (*MessagesSaveDraft) ProtoMessage() {}
 
 func (x *MessagesSaveDraft) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[14]
+	mi := &file_chat_messages_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1008,7 +1164,7 @@ func (x *MessagesSaveDraft) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesSaveDraft.ProtoReflect.Descriptor instead.
 func (*MessagesSaveDraft) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{14}
+	return file_chat_messages_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *MessagesSaveDraft) GetPeer() *InputPeer {
@@ -1060,7 +1216,7 @@ type MessagesClearDraft struct {
 func (x *MessagesClearDraft) Reset() {
 	*x = MessagesClearDraft{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[15]
+		mi := &file_chat_messages_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1073,7 +1229,7 @@ func (x *MessagesClearDraft) String() string {
 func (*MessagesClearDraft) ProtoMessage() {}
 
 func (x *MessagesClearDraft) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[15]
+	mi := &file_chat_messages_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1086,7 +1242,7 @@ func (x *MessagesClearDraft) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesClearDraft.ProtoReflect.Descriptor instead.
 func (*MessagesClearDraft) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{15}
+	return file_chat_messages_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *MessagesClearDraft) GetPeer() *InputPeer {
@@ -1111,7 +1267,7 @@ type MessagesToggleDialogPin struct {
 func (x *MessagesToggleDialogPin) Reset() {
 	*x = MessagesToggleDialogPin{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[16]
+		mi := &file_chat_messages_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1124,7 +1280,7 @@ func (x *MessagesToggleDialogPin) String() string {
 func (*MessagesToggleDialogPin) ProtoMessage() {}
 
 func (x *MessagesToggleDialogPin) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[16]
+	mi := &file_chat_messages_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1137,7 +1293,7 @@ func (x *MessagesToggleDialogPin) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesToggleDialogPin.ProtoReflect.Descriptor instead.
 func (*MessagesToggleDialogPin) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{16}
+	return file_chat_messages_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *MessagesToggleDialogPin) GetPeer() *InputPeer {
@@ -1168,7 +1324,7 @@ type MessagesReorderPinnedDialogs struct {
 func (x *MessagesReorderPinnedDialogs) Reset() {
 	*x = MessagesReorderPinnedDialogs{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[17]
+		mi := &file_chat_messages_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1181,7 +1337,7 @@ func (x *MessagesReorderPinnedDialogs) String() string {
 func (*MessagesReorderPinnedDialogs) ProtoMessage() {}
 
 func (x *MessagesReorderPinnedDialogs) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[17]
+	mi := &file_chat_messages_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1194,7 +1350,7 @@ func (x *MessagesReorderPinnedDialogs) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesReorderPinnedDialogs.ProtoReflect.Descriptor instead.
 func (*MessagesReorderPinnedDialogs) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{17}
+	return file_chat_messages_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *MessagesReorderPinnedDialogs) GetPeers() []*InputPeer {
@@ -1222,7 +1378,7 @@ type MessagesSendScreenShotNotification struct {
 func (x *MessagesSendScreenShotNotification) Reset() {
 	*x = MessagesSendScreenShotNotification{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[18]
+		mi := &file_chat_messages_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1235,7 +1391,7 @@ func (x *MessagesSendScreenShotNotification) String() string {
 func (*MessagesSendScreenShotNotification) ProtoMessage() {}
 
 func (x *MessagesSendScreenShotNotification) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[18]
+	mi := &file_chat_messages_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1248,7 +1404,7 @@ func (x *MessagesSendScreenShotNotification) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use MessagesSendScreenShotNotification.ProtoReflect.Descriptor instead.
 func (*MessagesSendScreenShotNotification) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{18}
+	return file_chat_messages_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *MessagesSendScreenShotNotification) GetPeer() *InputPeer {
@@ -1302,7 +1458,7 @@ type MessagesSendReaction struct {
 func (x *MessagesSendReaction) Reset() {
 	*x = MessagesSendReaction{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[19]
+		mi := &file_chat_messages_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1315,7 +1471,7 @@ func (x *MessagesSendReaction) String() string {
 func (*MessagesSendReaction) ProtoMessage() {}
 
 func (x *MessagesSendReaction) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[19]
+	mi := &file_chat_messages_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1328,7 +1484,7 @@ func (x *MessagesSendReaction) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesSendReaction.ProtoReflect.Descriptor instead.
 func (*MessagesSendReaction) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{19}
+	return file_chat_messages_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *MessagesSendReaction) GetPeer() *InputPeer {
@@ -1368,7 +1524,7 @@ type MessagesDeleteReaction struct {
 func (x *MessagesDeleteReaction) Reset() {
 	*x = MessagesDeleteReaction{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[20]
+		mi := &file_chat_messages_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1381,7 +1537,7 @@ func (x *MessagesDeleteReaction) String() string {
 func (*MessagesDeleteReaction) ProtoMessage() {}
 
 func (x *MessagesDeleteReaction) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[20]
+	mi := &file_chat_messages_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1394,7 +1550,7 @@ func (x *MessagesDeleteReaction) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesDeleteReaction.ProtoReflect.Descriptor instead.
 func (*MessagesDeleteReaction) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{20}
+	return file_chat_messages_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *MessagesDeleteReaction) GetPeer() *InputPeer {
@@ -1434,7 +1590,7 @@ type MessagesGetReactionList struct {
 func (x *MessagesGetReactionList) Reset() {
 	*x = MessagesGetReactionList{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[21]
+		mi := &file_chat_messages_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1447,7 +1603,7 @@ func (x *MessagesGetReactionList) String() string {
 func (*MessagesGetReactionList) ProtoMessage() {}
 
 func (x *MessagesGetReactionList) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[21]
+	mi := &file_chat_messages_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1460,7 +1616,7 @@ func (x *MessagesGetReactionList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesGetReactionList.ProtoReflect.Descriptor instead.
 func (*MessagesGetReactionList) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{21}
+	return file_chat_messages_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *MessagesGetReactionList) GetPeer() *InputPeer {
@@ -1500,7 +1656,7 @@ type MessagesTogglePin struct {
 func (x *MessagesTogglePin) Reset() {
 	*x = MessagesTogglePin{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[22]
+		mi := &file_chat_messages_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1513,7 +1669,7 @@ func (x *MessagesTogglePin) String() string {
 func (*MessagesTogglePin) ProtoMessage() {}
 
 func (x *MessagesTogglePin) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[22]
+	mi := &file_chat_messages_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1526,7 +1682,7 @@ func (x *MessagesTogglePin) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesTogglePin.ProtoReflect.Descriptor instead.
 func (*MessagesTogglePin) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{22}
+	return file_chat_messages_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *MessagesTogglePin) GetPeer() *InputPeer {
@@ -1567,7 +1723,7 @@ type MessagesDialogs struct {
 func (x *MessagesDialogs) Reset() {
 	*x = MessagesDialogs{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[23]
+		mi := &file_chat_messages_proto_msgTypes[25]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1580,7 +1736,7 @@ func (x *MessagesDialogs) String() string {
 func (*MessagesDialogs) ProtoMessage() {}
 
 func (x *MessagesDialogs) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[23]
+	mi := &file_chat_messages_proto_msgTypes[25]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1593,7 +1749,7 @@ func (x *MessagesDialogs) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesDialogs.ProtoReflect.Descriptor instead.
 func (*MessagesDialogs) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{23}
+	return file_chat_messages_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *MessagesDialogs) GetDialogs() []*Dialog {
@@ -1652,7 +1808,7 @@ type MessagesSent struct {
 func (x *MessagesSent) Reset() {
 	*x = MessagesSent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[24]
+		mi := &file_chat_messages_proto_msgTypes[26]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1665,7 +1821,7 @@ func (x *MessagesSent) String() string {
 func (*MessagesSent) ProtoMessage() {}
 
 func (x *MessagesSent) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[24]
+	mi := &file_chat_messages_proto_msgTypes[26]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1678,7 +1834,7 @@ func (x *MessagesSent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesSent.ProtoReflect.Descriptor instead.
 func (*MessagesSent) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{24}
+	return file_chat_messages_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *MessagesSent) GetMessageID() int64 {
@@ -1718,7 +1874,7 @@ type MessagesMany struct {
 func (x *MessagesMany) Reset() {
 	*x = MessagesMany{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[25]
+		mi := &file_chat_messages_proto_msgTypes[27]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1731,7 +1887,7 @@ func (x *MessagesMany) String() string {
 func (*MessagesMany) ProtoMessage() {}
 
 func (x *MessagesMany) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[25]
+	mi := &file_chat_messages_proto_msgTypes[27]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1744,7 +1900,7 @@ func (x *MessagesMany) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesMany.ProtoReflect.Descriptor instead.
 func (*MessagesMany) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{25}
+	return file_chat_messages_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *MessagesMany) GetMessages() []*UserMessage {
@@ -1797,7 +1953,7 @@ type MessagesReactionList struct {
 func (x *MessagesReactionList) Reset() {
 	*x = MessagesReactionList{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[26]
+		mi := &file_chat_messages_proto_msgTypes[28]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1810,7 +1966,7 @@ func (x *MessagesReactionList) String() string {
 func (*MessagesReactionList) ProtoMessage() {}
 
 func (x *MessagesReactionList) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[26]
+	mi := &file_chat_messages_proto_msgTypes[28]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1823,7 +1979,7 @@ func (x *MessagesReactionList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagesReactionList.ProtoReflect.Descriptor instead.
 func (*MessagesReactionList) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{26}
+	return file_chat_messages_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *MessagesReactionList) GetList() []*ReactionList {
@@ -1867,7 +2023,7 @@ type ReactionList struct {
 func (x *ReactionList) Reset() {
 	*x = ReactionList{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_chat_messages_proto_msgTypes[27]
+		mi := &file_chat_messages_proto_msgTypes[29]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1880,7 +2036,7 @@ func (x *ReactionList) String() string {
 func (*ReactionList) ProtoMessage() {}
 
 func (x *ReactionList) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_messages_proto_msgTypes[27]
+	mi := &file_chat_messages_proto_msgTypes[29]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1893,7 +2049,7 @@ func (x *ReactionList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReactionList.ProtoReflect.Descriptor instead.
 func (*ReactionList) Descriptor() ([]byte, []int) {
-	return file_chat_messages_proto_rawDescGZIP(), []int{27}
+	return file_chat_messages_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *ReactionList) GetReaction() string {
@@ -1954,25 +2110,46 @@ var file_chat_messages_proto_rawDesc = []byte{
 	0x2e, 0x0a, 0x08, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x18, 0x05, 0x20, 0x03, 0x28,
 	0x0b, 0x32, 0x12, 0x2e, 0x6d, 0x73, 0x67, 0x2e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x45,
 	0x6e, 0x74, 0x69, 0x74, 0x79, 0x52, 0x08, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x22,
-	0x4f, 0x0a, 0x13, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x52, 0x65, 0x61, 0x64, 0x48,
-	0x69, 0x73, 0x74, 0x6f, 0x72, 0x79, 0x12, 0x22, 0x0a, 0x04, 0x50, 0x65, 0x65, 0x72, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x6d, 0x73, 0x67, 0x2e, 0x49, 0x6e, 0x70, 0x75, 0x74,
-	0x50, 0x65, 0x65, 0x72, 0x52, 0x04, 0x50, 0x65, 0x65, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x4d, 0x61,
-	0x78, 0x49, 0x44, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x4d, 0x61, 0x78, 0x49, 0x44,
-	0x22, 0x53, 0x0a, 0x0b, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x47, 0x65, 0x74, 0x12,
-	0x22, 0x0a, 0x04, 0x50, 0x65, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0e, 0x2e,
-	0x6d, 0x73, 0x67, 0x2e, 0x49, 0x6e, 0x70, 0x75, 0x74, 0x50, 0x65, 0x65, 0x72, 0x52, 0x04, 0x50,
-	0x65, 0x65, 0x72, 0x12, 0x20, 0x0a, 0x0b, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x49,
-	0x44, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x03, 0x52, 0x0b, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67,
-	0x65, 0x73, 0x49, 0x44, 0x73, 0x22, 0x7a, 0x0a, 0x12, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
-	0x73, 0x47, 0x65, 0x74, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x79, 0x12, 0x22, 0x0a, 0x04, 0x50,
+	0xbb, 0x01, 0x0a, 0x11, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x45, 0x64, 0x69, 0x74,
+	0x4d, 0x65, 0x64, 0x69, 0x61, 0x12, 0x1a, 0x0a, 0x08, 0x52, 0x61, 0x6e, 0x64, 0x6f, 0x6d, 0x49,
+	0x44, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x08, 0x52, 0x61, 0x6e, 0x64, 0x6f, 0x6d, 0x49,
+	0x44, 0x12, 0x22, 0x0a, 0x04, 0x50, 0x65, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x0e, 0x2e, 0x6d, 0x73, 0x67, 0x2e, 0x49, 0x6e, 0x70, 0x75, 0x74, 0x50, 0x65, 0x65, 0x72, 0x52,
+	0x04, 0x50, 0x65, 0x65, 0x72, 0x12, 0x1c, 0x0a, 0x09, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
+	0x49, 0x44, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67,
+	0x65, 0x49, 0x44, 0x12, 0x18, 0x0a, 0x07, 0x43, 0x61, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x04,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x43, 0x61, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x2e, 0x0a,
+	0x08, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x18, 0x05, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x12, 0x2e, 0x6d, 0x73, 0x67, 0x2e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x45, 0x6e, 0x74,
+	0x69, 0x74, 0x79, 0x52, 0x08, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x22, 0x4f, 0x0a,
+	0x13, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x52, 0x65, 0x61, 0x64, 0x48, 0x69, 0x73,
+	0x74, 0x6f, 0x72, 0x79, 0x12, 0x22, 0x0a, 0x04, 0x50, 0x65, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x6d, 0x73, 0x67, 0x2e, 0x49, 0x6e, 0x70, 0x75, 0x74, 0x50, 0x65,
+	0x65, 0x72, 0x52, 0x04, 0x50, 0x65, 0x65, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x4d, 0x61, 0x78, 0x49,
+	0x44, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x4d, 0x61, 0x78, 0x49, 0x44, 0x22, 0x53,
+	0x0a, 0x0b, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x47, 0x65, 0x74, 0x12, 0x22, 0x0a,
+	0x04, 0x50, 0x65, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x6d, 0x73,
+	0x67, 0x2e, 0x49, 0x6e, 0x70, 0x75, 0x74, 0x50, 0x65, 0x65, 0x72, 0x52, 0x04, 0x50, 0x65, 0x65,
+	0x72, 0x12, 0x20, 0x0a, 0x0b, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x49, 0x44, 0x73,
+	0x18, 0x02, 0x20, 0x03, 0x28, 0x03, 0x52, 0x0b, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73,
+	0x49, 0x44, 0x73, 0x22, 0x7a, 0x0a, 0x12, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x47,
+	0x65, 0x74, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x79, 0x12, 0x22, 0x0a, 0x04, 0x50, 0x65, 0x65,
+	0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x6d, 0x73, 0x67, 0x2e, 0x49, 0x6e,
+	0x70, 0x75, 0x74, 0x50, 0x65, 0x65, 0x72, 0x52, 0x04, 0x50, 0x65, 0x65, 0x72, 0x12, 0x14, 0x0a,
+	0x05, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x4c, 0x69,
+	0x6d, 0x69, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x4d, 0x61, 0x78, 0x49, 0x44, 0x18, 0x04, 0x20, 0x01,
+	0x28, 0x03, 0x52, 0x05, 0x4d, 0x61, 0x78, 0x49, 0x44, 0x12, 0x14, 0x0a, 0x05, 0x4d, 0x69, 0x6e,
+	0x49, 0x44, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x4d, 0x69, 0x6e, 0x49, 0x44, 0x22,
+	0x8f, 0x01, 0x0a, 0x17, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x47, 0x65, 0x74, 0x4d,
+	0x65, 0x64, 0x69, 0x61, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x79, 0x12, 0x22, 0x0a, 0x04, 0x50,
 	0x65, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x6d, 0x73, 0x67, 0x2e,
 	0x49, 0x6e, 0x70, 0x75, 0x74, 0x50, 0x65, 0x65, 0x72, 0x52, 0x04, 0x50, 0x65, 0x65, 0x72, 0x12,
 	0x14, 0x0a, 0x05, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05,
 	0x4c, 0x69, 0x6d, 0x69, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x4d, 0x61, 0x78, 0x49, 0x44, 0x18, 0x04,
-	0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x4d, 0x61, 0x78, 0x49, 0x44, 0x12, 0x14, 0x0a, 0x05, 0x4d,
-	0x69, 0x6e, 0x49, 0x44, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x4d, 0x69, 0x6e, 0x49,
-	0x44, 0x22, 0x68, 0x0a, 0x12, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x47, 0x65, 0x74,
+	0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x4d, 0x61, 0x78, 0x49, 0x44, 0x12, 0x24, 0x0a, 0x03, 0x43,
+	0x61, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x12, 0x2e, 0x6d, 0x73, 0x67, 0x2e, 0x4d,
+	0x65, 0x64, 0x69, 0x61, 0x43, 0x61, 0x74, 0x65, 0x67, 0x6f, 0x72, 0x79, 0x52, 0x03, 0x43, 0x61,
+	0x74, 0x22, 0x68, 0x0a, 0x12, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x47, 0x65, 0x74,
 	0x44, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x4c, 0x69, 0x6d, 0x69, 0x74,
 	0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x12, 0x16, 0x0a,
 	0x06, 0x4f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x06, 0x4f,
@@ -2147,87 +2324,94 @@ func file_chat_messages_proto_rawDescGZIP() []byte {
 	return file_chat_messages_proto_rawDescData
 }
 
-var file_chat_messages_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
+var file_chat_messages_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
 var file_chat_messages_proto_goTypes = []interface{}{
 	(*MessagesSend)(nil),                       // 0: msg.MessagesSend
 	(*MessagesSendMedia)(nil),                  // 1: msg.MessagesSendMedia
 	(*MessagesEdit)(nil),                       // 2: msg.MessagesEdit
-	(*MessagesReadHistory)(nil),                // 3: msg.MessagesReadHistory
-	(*MessagesGet)(nil),                        // 4: msg.MessagesGet
-	(*MessagesGetHistory)(nil),                 // 5: msg.MessagesGetHistory
-	(*MessagesGetDialogs)(nil),                 // 6: msg.MessagesGetDialogs
-	(*MessagesGetPinnedDialogs)(nil),           // 7: msg.MessagesGetPinnedDialogs
-	(*MessagesGetDialog)(nil),                  // 8: msg.MessagesGetDialog
-	(*MessagesSetTyping)(nil),                  // 9: msg.MessagesSetTyping
-	(*MessagesClearHistory)(nil),               // 10: msg.MessagesClearHistory
-	(*MessagesDelete)(nil),                     // 11: msg.MessagesDelete
-	(*MessagesForward)(nil),                    // 12: msg.MessagesForward
-	(*MessagesReadContents)(nil),               // 13: msg.MessagesReadContents
-	(*MessagesSaveDraft)(nil),                  // 14: msg.MessagesSaveDraft
-	(*MessagesClearDraft)(nil),                 // 15: msg.MessagesClearDraft
-	(*MessagesToggleDialogPin)(nil),            // 16: msg.MessagesToggleDialogPin
-	(*MessagesReorderPinnedDialogs)(nil),       // 17: msg.MessagesReorderPinnedDialogs
-	(*MessagesSendScreenShotNotification)(nil), // 18: msg.MessagesSendScreenShotNotification
-	(*MessagesSendReaction)(nil),               // 19: msg.MessagesSendReaction
-	(*MessagesDeleteReaction)(nil),             // 20: msg.MessagesDeleteReaction
-	(*MessagesGetReactionList)(nil),            // 21: msg.MessagesGetReactionList
-	(*MessagesTogglePin)(nil),                  // 22: msg.MessagesTogglePin
-	(*MessagesDialogs)(nil),                    // 23: msg.MessagesDialogs
-	(*MessagesSent)(nil),                       // 24: msg.MessagesSent
-	(*MessagesMany)(nil),                       // 25: msg.MessagesMany
-	(*MessagesReactionList)(nil),               // 26: msg.MessagesReactionList
-	(*ReactionList)(nil),                       // 27: msg.ReactionList
-	(*InputPeer)(nil),                          // 28: msg.InputPeer
-	(*MessageEntity)(nil),                      // 29: msg.MessageEntity
-	(InputMediaType)(0),                        // 30: msg.InputMediaType
-	(TypingAction)(0),                          // 31: msg.TypingAction
-	(*Dialog)(nil),                             // 32: msg.Dialog
-	(*User)(nil),                               // 33: msg.User
-	(*UserMessage)(nil),                        // 34: msg.UserMessage
-	(*Group)(nil),                              // 35: msg.Group
+	(*MessagesEditMedia)(nil),                  // 3: msg.MessagesEditMedia
+	(*MessagesReadHistory)(nil),                // 4: msg.MessagesReadHistory
+	(*MessagesGet)(nil),                        // 5: msg.MessagesGet
+	(*MessagesGetHistory)(nil),                 // 6: msg.MessagesGetHistory
+	(*MessagesGetMediaHistory)(nil),            // 7: msg.MessagesGetMediaHistory
+	(*MessagesGetDialogs)(nil),                 // 8: msg.MessagesGetDialogs
+	(*MessagesGetPinnedDialogs)(nil),           // 9: msg.MessagesGetPinnedDialogs
+	(*MessagesGetDialog)(nil),                  // 10: msg.MessagesGetDialog
+	(*MessagesSetTyping)(nil),                  // 11: msg.MessagesSetTyping
+	(*MessagesClearHistory)(nil),               // 12: msg.MessagesClearHistory
+	(*MessagesDelete)(nil),                     // 13: msg.MessagesDelete
+	(*MessagesForward)(nil),                    // 14: msg.MessagesForward
+	(*MessagesReadContents)(nil),               // 15: msg.MessagesReadContents
+	(*MessagesSaveDraft)(nil),                  // 16: msg.MessagesSaveDraft
+	(*MessagesClearDraft)(nil),                 // 17: msg.MessagesClearDraft
+	(*MessagesToggleDialogPin)(nil),            // 18: msg.MessagesToggleDialogPin
+	(*MessagesReorderPinnedDialogs)(nil),       // 19: msg.MessagesReorderPinnedDialogs
+	(*MessagesSendScreenShotNotification)(nil), // 20: msg.MessagesSendScreenShotNotification
+	(*MessagesSendReaction)(nil),               // 21: msg.MessagesSendReaction
+	(*MessagesDeleteReaction)(nil),             // 22: msg.MessagesDeleteReaction
+	(*MessagesGetReactionList)(nil),            // 23: msg.MessagesGetReactionList
+	(*MessagesTogglePin)(nil),                  // 24: msg.MessagesTogglePin
+	(*MessagesDialogs)(nil),                    // 25: msg.MessagesDialogs
+	(*MessagesSent)(nil),                       // 26: msg.MessagesSent
+	(*MessagesMany)(nil),                       // 27: msg.MessagesMany
+	(*MessagesReactionList)(nil),               // 28: msg.MessagesReactionList
+	(*ReactionList)(nil),                       // 29: msg.ReactionList
+	(*InputPeer)(nil),                          // 30: msg.InputPeer
+	(*MessageEntity)(nil),                      // 31: msg.MessageEntity
+	(InputMediaType)(0),                        // 32: msg.InputMediaType
+	(MediaCategory)(0),                         // 33: msg.MediaCategory
+	(TypingAction)(0),                          // 34: msg.TypingAction
+	(*Dialog)(nil),                             // 35: msg.Dialog
+	(*User)(nil),                               // 36: msg.User
+	(*UserMessage)(nil),                        // 37: msg.UserMessage
+	(*Group)(nil),                              // 38: msg.Group
 }
 var file_chat_messages_proto_depIdxs = []int32{
-	28, // 0: msg.MessagesSend.Peer:type_name -> msg.InputPeer
-	29, // 1: msg.MessagesSend.Entities:type_name -> msg.MessageEntity
-	28, // 2: msg.MessagesSendMedia.Peer:type_name -> msg.InputPeer
-	30, // 3: msg.MessagesSendMedia.MediaType:type_name -> msg.InputMediaType
-	28, // 4: msg.MessagesEdit.Peer:type_name -> msg.InputPeer
-	29, // 5: msg.MessagesEdit.Entities:type_name -> msg.MessageEntity
-	28, // 6: msg.MessagesReadHistory.Peer:type_name -> msg.InputPeer
-	28, // 7: msg.MessagesGet.Peer:type_name -> msg.InputPeer
-	28, // 8: msg.MessagesGetHistory.Peer:type_name -> msg.InputPeer
-	28, // 9: msg.MessagesGetDialog.Peer:type_name -> msg.InputPeer
-	28, // 10: msg.MessagesSetTyping.Peer:type_name -> msg.InputPeer
-	31, // 11: msg.MessagesSetTyping.Action:type_name -> msg.TypingAction
-	28, // 12: msg.MessagesClearHistory.Peer:type_name -> msg.InputPeer
-	28, // 13: msg.MessagesDelete.Peer:type_name -> msg.InputPeer
-	28, // 14: msg.MessagesForward.FromPeer:type_name -> msg.InputPeer
-	28, // 15: msg.MessagesForward.ToPeer:type_name -> msg.InputPeer
-	28, // 16: msg.MessagesReadContents.Peer:type_name -> msg.InputPeer
-	28, // 17: msg.MessagesSaveDraft.Peer:type_name -> msg.InputPeer
-	29, // 18: msg.MessagesSaveDraft.Entities:type_name -> msg.MessageEntity
-	28, // 19: msg.MessagesClearDraft.Peer:type_name -> msg.InputPeer
-	28, // 20: msg.MessagesToggleDialogPin.Peer:type_name -> msg.InputPeer
-	28, // 21: msg.MessagesReorderPinnedDialogs.Peers:type_name -> msg.InputPeer
-	28, // 22: msg.MessagesSendScreenShotNotification.Peer:type_name -> msg.InputPeer
-	28, // 23: msg.MessagesSendReaction.Peer:type_name -> msg.InputPeer
-	28, // 24: msg.MessagesDeleteReaction.Peer:type_name -> msg.InputPeer
-	28, // 25: msg.MessagesGetReactionList.Peer:type_name -> msg.InputPeer
-	28, // 26: msg.MessagesTogglePin.Peer:type_name -> msg.InputPeer
-	32, // 27: msg.MessagesDialogs.Dialogs:type_name -> msg.Dialog
-	33, // 28: msg.MessagesDialogs.Users:type_name -> msg.User
-	34, // 29: msg.MessagesDialogs.Messages:type_name -> msg.UserMessage
-	35, // 30: msg.MessagesDialogs.Groups:type_name -> msg.Group
-	34, // 31: msg.MessagesMany.Messages:type_name -> msg.UserMessage
-	33, // 32: msg.MessagesMany.Users:type_name -> msg.User
-	35, // 33: msg.MessagesMany.Groups:type_name -> msg.Group
-	27, // 34: msg.MessagesReactionList.List:type_name -> msg.ReactionList
-	33, // 35: msg.MessagesReactionList.Users:type_name -> msg.User
-	36, // [36:36] is the sub-list for method output_type
-	36, // [36:36] is the sub-list for method input_type
-	36, // [36:36] is the sub-list for extension type_name
-	36, // [36:36] is the sub-list for extension extendee
-	0,  // [0:36] is the sub-list for field type_name
+	30, // 0: msg.MessagesSend.Peer:type_name -> msg.InputPeer
+	31, // 1: msg.MessagesSend.Entities:type_name -> msg.MessageEntity
+	30, // 2: msg.MessagesSendMedia.Peer:type_name -> msg.InputPeer
+	32, // 3: msg.MessagesSendMedia.MediaType:type_name -> msg.InputMediaType
+	30, // 4: msg.MessagesEdit.Peer:type_name -> msg.InputPeer
+	31, // 5: msg.MessagesEdit.Entities:type_name -> msg.MessageEntity
+	30, // 6: msg.MessagesEditMedia.Peer:type_name -> msg.InputPeer
+	31, // 7: msg.MessagesEditMedia.Entities:type_name -> msg.MessageEntity
+	30, // 8: msg.MessagesReadHistory.Peer:type_name -> msg.InputPeer
+	30, // 9: msg.MessagesGet.Peer:type_name -> msg.InputPeer
+	30, // 10: msg.MessagesGetHistory.Peer:type_name -> msg.InputPeer
+	30, // 11: msg.MessagesGetMediaHistory.Peer:type_name -> msg.InputPeer
+	33, // 12: msg.MessagesGetMediaHistory.Cat:type_name -> msg.MediaCategory
+	30, // 13: msg.MessagesGetDialog.Peer:type_name -> msg.InputPeer
+	30, // 14: msg.MessagesSetTyping.Peer:type_name -> msg.InputPeer
+	34, // 15: msg.MessagesSetTyping.Action:type_name -> msg.TypingAction
+	30, // 16: msg.MessagesClearHistory.Peer:type_name -> msg.InputPeer
+	30, // 17: msg.MessagesDelete.Peer:type_name -> msg.InputPeer
+	30, // 18: msg.MessagesForward.FromPeer:type_name -> msg.InputPeer
+	30, // 19: msg.MessagesForward.ToPeer:type_name -> msg.InputPeer
+	30, // 20: msg.MessagesReadContents.Peer:type_name -> msg.InputPeer
+	30, // 21: msg.MessagesSaveDraft.Peer:type_name -> msg.InputPeer
+	31, // 22: msg.MessagesSaveDraft.Entities:type_name -> msg.MessageEntity
+	30, // 23: msg.MessagesClearDraft.Peer:type_name -> msg.InputPeer
+	30, // 24: msg.MessagesToggleDialogPin.Peer:type_name -> msg.InputPeer
+	30, // 25: msg.MessagesReorderPinnedDialogs.Peers:type_name -> msg.InputPeer
+	30, // 26: msg.MessagesSendScreenShotNotification.Peer:type_name -> msg.InputPeer
+	30, // 27: msg.MessagesSendReaction.Peer:type_name -> msg.InputPeer
+	30, // 28: msg.MessagesDeleteReaction.Peer:type_name -> msg.InputPeer
+	30, // 29: msg.MessagesGetReactionList.Peer:type_name -> msg.InputPeer
+	30, // 30: msg.MessagesTogglePin.Peer:type_name -> msg.InputPeer
+	35, // 31: msg.MessagesDialogs.Dialogs:type_name -> msg.Dialog
+	36, // 32: msg.MessagesDialogs.Users:type_name -> msg.User
+	37, // 33: msg.MessagesDialogs.Messages:type_name -> msg.UserMessage
+	38, // 34: msg.MessagesDialogs.Groups:type_name -> msg.Group
+	37, // 35: msg.MessagesMany.Messages:type_name -> msg.UserMessage
+	36, // 36: msg.MessagesMany.Users:type_name -> msg.User
+	38, // 37: msg.MessagesMany.Groups:type_name -> msg.Group
+	29, // 38: msg.MessagesReactionList.List:type_name -> msg.ReactionList
+	36, // 39: msg.MessagesReactionList.Users:type_name -> msg.User
+	40, // [40:40] is the sub-list for method output_type
+	40, // [40:40] is the sub-list for method input_type
+	40, // [40:40] is the sub-list for extension type_name
+	40, // [40:40] is the sub-list for extension extendee
+	0,  // [0:40] is the sub-list for field type_name
 }
 
 func init() { file_chat_messages_proto_init() }
@@ -2274,7 +2458,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesReadHistory); i {
+			switch v := v.(*MessagesEditMedia); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2286,7 +2470,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesGet); i {
+			switch v := v.(*MessagesReadHistory); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2298,7 +2482,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesGetHistory); i {
+			switch v := v.(*MessagesGet); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2310,7 +2494,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesGetDialogs); i {
+			switch v := v.(*MessagesGetHistory); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2322,7 +2506,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesGetPinnedDialogs); i {
+			switch v := v.(*MessagesGetMediaHistory); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2334,7 +2518,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesGetDialog); i {
+			switch v := v.(*MessagesGetDialogs); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2346,7 +2530,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesSetTyping); i {
+			switch v := v.(*MessagesGetPinnedDialogs); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2358,7 +2542,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesClearHistory); i {
+			switch v := v.(*MessagesGetDialog); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2370,7 +2554,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesDelete); i {
+			switch v := v.(*MessagesSetTyping); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2382,7 +2566,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesForward); i {
+			switch v := v.(*MessagesClearHistory); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2394,7 +2578,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesReadContents); i {
+			switch v := v.(*MessagesDelete); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2406,7 +2590,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesSaveDraft); i {
+			switch v := v.(*MessagesForward); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2418,7 +2602,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesClearDraft); i {
+			switch v := v.(*MessagesReadContents); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2430,7 +2614,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesToggleDialogPin); i {
+			switch v := v.(*MessagesSaveDraft); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2442,7 +2626,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesReorderPinnedDialogs); i {
+			switch v := v.(*MessagesClearDraft); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2454,7 +2638,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesSendScreenShotNotification); i {
+			switch v := v.(*MessagesToggleDialogPin); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2466,7 +2650,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesSendReaction); i {
+			switch v := v.(*MessagesReorderPinnedDialogs); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2478,7 +2662,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesDeleteReaction); i {
+			switch v := v.(*MessagesSendScreenShotNotification); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2490,7 +2674,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesGetReactionList); i {
+			switch v := v.(*MessagesSendReaction); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2502,7 +2686,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesTogglePin); i {
+			switch v := v.(*MessagesDeleteReaction); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2514,7 +2698,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesDialogs); i {
+			switch v := v.(*MessagesGetReactionList); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2526,7 +2710,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesSent); i {
+			switch v := v.(*MessagesTogglePin); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2538,7 +2722,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesMany); i {
+			switch v := v.(*MessagesDialogs); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2550,7 +2734,7 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessagesReactionList); i {
+			switch v := v.(*MessagesSent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2562,6 +2746,30 @@ func file_chat_messages_proto_init() {
 			}
 		}
 		file_chat_messages_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MessagesMany); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_chat_messages_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MessagesReactionList); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_chat_messages_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ReactionList); i {
 			case 0:
 				return &v.state
@@ -2580,7 +2788,7 @@ func file_chat_messages_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_chat_messages_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   28,
+			NumMessages:   30,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

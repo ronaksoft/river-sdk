@@ -1,3 +1,25 @@
+v1.0.65
+----------
+ * Add exported IsNumberMatchWithNumbers and IsNumberMatchWithOneNumber (thanks @akurth)
+
+v1.0.64
+----------
+ * test goreleaser config
+
+v1.0.63
+----------
+ * test goreleaser
+
+v1.0.62
+----------
+ * Fix country code parsing
+ * Update metadata
+
+v1.0.61
+----------
+ * Update metadata
+ * Add MaybeSeparatePhoneFromExtension helper function (thanks @richard-rance)
+
 v1.0.60
 ----------
  * update metadata

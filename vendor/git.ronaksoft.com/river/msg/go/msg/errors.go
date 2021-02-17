@@ -111,4 +111,5 @@ const (
 	ErrItemTeamAccess       = "TEAM_ACCESS"
 	ErrItemTeamMember       = "TEAM_MEMBER"
 	ErrItemTeamManager      = "TEAM_MANAGER"
+	ErrItemCall             = "CALL"
 )

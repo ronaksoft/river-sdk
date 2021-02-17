@@ -106,7 +106,8 @@ func (t Result) Bool() bool {
 	case True:
 		return true
 	case String:
-		return t.Str != "" && t.Str != "0" && t.Str != "false"
+		b, _ := strconv.ParseBool(strings.ToLower(t.Str))
+		return b
 	case Number:
 		return t.Num != 0
 	}
@@ -124,16 +125,17 @@ func (t Result) Int() int64 {
 		return n
 	case Number:
 		// try to directly convert the float64 to int64
-		n, ok := floatToInt(t.Num)
-		if !ok {
-			// now try to parse the raw string
-			n, ok = parseInt(t.Raw)
-			if !ok {
-				// fallback to a standard conversion
-				return int64(t.Num)
-			}
+		i, ok := safeInt(t.Num)
+		if ok {
+			return i
 		}
-		return n
+		// now try to parse the raw string
+		i, ok = parseInt(t.Raw)
+		if ok {
+			return i
+		}
+		// fallback to a standard conversion
+		return int64(t.Num)
 	}
 }
 
@@ -149,16 +151,17 @@ func (t Result) Uint() uint64 {
 		return n
 	case Number:
 		// try to directly convert the float64 to uint64
-		n, ok := floatToUint(t.Num)
-		if !ok {
-			// now try to parse the raw string
-			n, ok = parseUint(t.Raw)
-			if !ok {
-				// fallback to a standard conversion
-				return uint64(t.Num)
-			}
+		i, ok := safeInt(t.Num)
+		if ok && i >= 0 {
+			return uint64(i)
 		}
-		return n
+		// now try to parse the raw string
+		u, ok := parseUint(t.Raw)
+		if ok {
+			return u
+		}
+		// fallback to a standard conversion
+		return uint64(t.Num)
 	}
 }
 
@@ -495,6 +498,9 @@ func squash(json string) string {
 					}
 				}
 				if depth == 0 {
+					if i >= len(json) {
+						return json
+					}
 					return json[:i+1]
 				}
 			case '{', '[', '(':
@@ -1835,7 +1841,7 @@ type parseContext struct {
 // A path is in dot syntax, such as "name.last" or "age".
 // When the value is found it's returned immediately.
 //
-// A path is a series of keys searated by a dot.
+// A path is a series of keys separated by a dot.
 // A key may contain special wildcard characters '*' and '?'.
 // To access an array value use the index as the key.
 // To get the number of elements in an array or to access a child path, use
@@ -1944,7 +1950,6 @@ func Get(json, path string) Result {
 			}
 		}
 	}
-
 	var i int
 	var c = &parseContext{json: json}
 	if len(path) >= 2 && path[0] == '.' && path[1] == '.' {
@@ -2524,25 +2529,11 @@ func parseInt(s string) (n int64, ok bool) {
 	return n, true
 }
 
-const minUint53 = 0
-const maxUint53 = 4503599627370495
-const minInt53 = -2251799813685248
-const maxInt53 = 2251799813685247
-
-func floatToUint(f float64) (n uint64, ok bool) {
-	n = uint64(f)
-	if float64(n) == f && n >= minUint53 && n <= maxUint53 {
-		return n, true
+func safeInt(f float64) (n int64, ok bool) {
+	if f < -9007199254740991 || f > 9007199254740991 {
+		return 0, false
 	}
-	return 0, false
-}
-
-func floatToInt(f float64) (n int64, ok bool) {
-	n = int64(f)
-	if float64(n) == f && n >= minInt53 && n <= maxInt53 {
-		return n, true
-	}
-	return 0, false
+	return int64(f), true
 }
 
 // execModifier parses the path to find a matching modifier function.
@@ -2600,7 +2591,7 @@ func execModifier(json, path string) (pathOut, res string, ok bool) {
 // unwrap removes the '[]' or '{}' characters around json
 func unwrap(json string) string {
 	json = trim(json)
-	if len(json) >= 2 && json[0] == '[' || json[0] == '{' {
+	if len(json) >= 2 && (json[0] == '[' || json[0] == '{') {
 		json = json[1 : len(json)-1]
 	}
 	return json
@@ -2632,6 +2623,26 @@ func ModifierExists(name string, fn func(json, arg string) string) bool {
 	return ok
 }
 
+// cleanWS remove any non-whitespace from string
+func cleanWS(s string) string {
+	for i := 0; i < len(s); i++ {
+		switch s[i] {
+		case ' ', '\t', '\n', '\r':
+			continue
+		default:
+			var s2 []byte
+			for i := 0; i < len(s); i++ {
+				switch s[i] {
+				case ' ', '\t', '\n', '\r':
+					s2 = append(s2, s[i])
+				}
+			}
+			return string(s2)
+		}
+	}
+	return s
+}
+
 // @pretty modifier makes the json look nice.
 func modPretty(json, arg string) string {
 	if len(arg) > 0 {
@@ -2641,9 +2652,9 @@ func modPretty(json, arg string) string {
 			case "sortKeys":
 				opts.SortKeys = value.Bool()
 			case "indent":
-				opts.Indent = value.String()
+				opts.Indent = cleanWS(value.String())
 			case "prefix":
-				opts.Prefix = value.String()
+				opts.Prefix = cleanWS(value.String())
 			case "width":
 				opts.Width = int(value.Int())
 			}

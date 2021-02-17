@@ -1,13 +1,14 @@
 package edge
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/ronaksoft/rony"
-	"github.com/ronaksoft/rony/gateway"
-	log "github.com/ronaksoft/rony/internal/logger"
+	"github.com/ronaksoft/rony/cluster"
+	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/tools"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
+	"net"
 	"reflect"
 	"sync"
 	"time"
@@ -22,20 +23,48 @@ import (
    Copyright Ronak Software Group 2020
 */
 
+type ContextKind byte
+
 const (
-	_ byte = iota
-	gatewayMessage
-	clusterMessage
+	_ ContextKind = iota
+	GatewayMessage
+	ReplicaMessage
+	TunnelMessage
 )
+
+func (c ContextKind) String() string {
+	switch c {
+	case GatewayMessage:
+		return "GatewayMessage"
+	case ReplicaMessage:
+		return "ReplicaMessage"
+	case TunnelMessage:
+		return "TunnelMessage"
+	default:
+		panic("BUG!! invalid context kind")
+	}
+}
+
+// Conn defines the Connection interface
+type Conn interface {
+	ConnID() uint64
+	ClientIP() string
+	SendBinary(streamID int64, data []byte) error
+	Persistent() bool
+	Get(key string) interface{}
+	Set(key string, val interface{})
+}
 
 // DispatchCtx
 type DispatchCtx struct {
-	streamID int64
-	serverID []byte
-	conn     gateway.Conn
-	req      *rony.MessageEnvelope
-	edge     *Server
-	kind     byte
+	streamID          int64
+	serverID          []byte
+	conn              Conn
+	req               *rony.MessageEnvelope
+	cluster           cluster.Cluster
+	gatewayDispatcher Dispatcher
+	kind              ContextKind
+	buf               *tools.LinkedList
 	// KeyValue Store Parameters
 	mtx sync.RWMutex
 	kv  map[string]interface{}
@@ -43,9 +72,11 @@ type DispatchCtx struct {
 
 func newDispatchCtx(edge *Server) *DispatchCtx {
 	return &DispatchCtx{
-		edge: edge,
-		req:  &rony.MessageEnvelope{},
-		kv:   make(map[string]interface{}, 3),
+		cluster:           edge.cluster,
+		gatewayDispatcher: edge.gatewayDispatcher,
+		req:               &rony.MessageEnvelope{},
+		kv:                make(map[string]interface{}, 3),
+		buf:               tools.NewLinkedList(),
 	}
 }
 
@@ -53,6 +84,11 @@ func (ctx *DispatchCtx) reset() {
 	for k := range ctx.kv {
 		delete(ctx.kv, k)
 	}
+	ctx.buf.Reset()
+}
+
+func (ctx *DispatchCtx) ServerID() string {
+	return string(ctx.serverID)
 }
 
 func (ctx *DispatchCtx) Debug() {
@@ -63,7 +99,7 @@ func (ctx *DispatchCtx) Debug() {
 	}
 }
 
-func (ctx *DispatchCtx) Conn() gateway.Conn {
+func (ctx *DispatchCtx) Conn() Conn {
 	return ctx.conn
 }
 
@@ -103,7 +139,7 @@ func (ctx *DispatchCtx) Get(key string) interface{} {
 }
 
 func (ctx *DispatchCtx) GetBytes(key string, defaultValue []byte) []byte {
-	v, ok := ctx.kv[key].([]byte)
+	v, ok := ctx.Get(key).([]byte)
 	if ok {
 		return v
 	}
@@ -111,7 +147,7 @@ func (ctx *DispatchCtx) GetBytes(key string, defaultValue []byte) []byte {
 }
 
 func (ctx *DispatchCtx) GetString(key string, defaultValue string) string {
-	v := ctx.kv[key]
+	v := ctx.Get(key)
 	switch x := v.(type) {
 	case []byte:
 		return tools.ByteToStr(x)
@@ -122,8 +158,12 @@ func (ctx *DispatchCtx) GetString(key string, defaultValue string) string {
 	}
 }
 
+func (ctx *DispatchCtx) Kind() ContextKind {
+	return ctx.kind
+}
+
 func (ctx *DispatchCtx) GetInt64(key string, defaultValue int64) int64 {
-	v, ok := ctx.kv[key].(int64)
+	v, ok := ctx.Get(key).(int64)
 	if ok {
 		return v
 	}
@@ -131,7 +171,7 @@ func (ctx *DispatchCtx) GetInt64(key string, defaultValue int64) int64 {
 }
 
 func (ctx *DispatchCtx) GetBool(key string) bool {
-	v, ok := ctx.kv[key].(bool)
+	v, ok := ctx.Get(key).(bool)
 	if ok {
 		return v
 	}
@@ -140,6 +180,22 @@ func (ctx *DispatchCtx) GetBool(key string) bool {
 
 func (ctx *DispatchCtx) UnmarshalEnvelope(data []byte) error {
 	return proto.Unmarshal(data, ctx.req)
+}
+
+func (ctx *DispatchCtx) BufferPush(m *rony.MessageEnvelope) {
+	ctx.buf.Append(m)
+}
+
+func (ctx *DispatchCtx) BufferPop() *rony.MessageEnvelope {
+	v := ctx.buf.PickHeadData()
+	if v != nil {
+		return v.(*rony.MessageEnvelope)
+	}
+	return nil
+}
+
+func (ctx *DispatchCtx) BufferSize() int32 {
+	return ctx.buf.Size()
 }
 
 // RequestCtx
@@ -170,12 +226,20 @@ func (ctx *RequestCtx) ConnID() uint64 {
 	return 0
 }
 
-func (ctx *RequestCtx) Conn() gateway.Conn {
+func (ctx *RequestCtx) Conn() Conn {
 	return ctx.dispatchCtx.Conn()
 }
 
 func (ctx *RequestCtx) ReqID() uint64 {
 	return ctx.reqID
+}
+
+func (ctx *RequestCtx) ServerID() string {
+	return string(ctx.dispatchCtx.serverID)
+}
+
+func (ctx *RequestCtx) Kind() ContextKind {
+	return ctx.dispatchCtx.kind
 }
 
 func (ctx *RequestCtx) StopExecution() {
@@ -213,21 +277,37 @@ func (ctx *RequestCtx) GetBool(key string) bool {
 }
 
 func (ctx *RequestCtx) PushRedirectLeader() {
-	edge := ctx.dispatchCtx.edge
-	if leaderID := edge.cluster.leaderID; leaderID == "" {
+	ctxCluster := ctx.dispatchCtx.cluster
+	if leaderID := ctxCluster.RaftLeaderID(); leaderID == "" {
 		ctx.PushError(rony.ErrCodeUnavailable, rony.ErrItemRaftLeader)
 	} else {
-		ctx.PushMessage(
-			rony.C_Redirect,
-			&rony.Redirect{
-				LeaderHostPort: edge.cluster.GetByID(leaderID).GatewayAddr,
-				ServerID:       leaderID,
-			},
-		)
+		r := rony.PoolRedirect.Get()
+		r.Reason = rony.RedirectReason_ReplicaMaster
+		r.WaitInSec = 0
+		members := ctxCluster.RaftMembers(ctxCluster.ReplicaSet())
+		nodeInfos := make([]*rony.NodeInfo, 0, len(members))
+		for _, m := range members {
+			ni := m.Proto(rony.PoolNodeInfo.Get())
+			if ni.Leader {
+				r.Leader = ni
+			} else {
+				r.Followers = append(r.Followers, ni)
+			}
+			nodeInfos = append(nodeInfos, ni)
+		}
+		ctx.PushMessage(rony.C_Redirect, r)
+		for _, p := range nodeInfos {
+			rony.PoolNodeInfo.Put(p)
+		}
+		rony.PoolRedirect.Put(r)
 	}
 }
 
-func (ctx *RequestCtx) PushRedirectShard(shard uint32, wait time.Duration) {
+func (ctx *RequestCtx) PushRedirectSession(replicaSet uint64, wait time.Duration) {
+	// TODO:: implement it
+}
+
+func (ctx *RequestCtx) PushRedirectRequest(replicaSet uint64) {
 	// TODO:: implement it
 }
 
@@ -236,11 +316,22 @@ func (ctx *RequestCtx) PushMessage(constructor int64, proto proto.Message) {
 }
 
 func (ctx *RequestCtx) PushCustomMessage(requestID uint64, constructor int64, proto proto.Message, kvs ...*rony.KeyValue) {
-	envelope := acquireMessageEnvelope()
+	if ctx.dispatchCtx.kind == ReplicaMessage {
+		return
+	}
+
+	envelope := rony.PoolMessageEnvelope.Get()
 	envelope.Fill(requestID, constructor, proto)
 	envelope.Header = append(envelope.Header[:0], kvs...)
-	ctx.dispatchCtx.edge.dispatcher.OnMessage(ctx.dispatchCtx, envelope)
-	releaseMessageEnvelope(envelope)
+
+	switch ctx.dispatchCtx.kind {
+	case GatewayMessage:
+		ctx.dispatchCtx.gatewayDispatcher.OnMessage(ctx.dispatchCtx, envelope)
+	case TunnelMessage:
+		ctx.dispatchCtx.BufferPush(envelope.Clone())
+	}
+
+	rony.PoolMessageEnvelope.Put(envelope)
 }
 
 func (ctx *RequestCtx) PushError(code, item string) {
@@ -259,17 +350,77 @@ func (ctx *RequestCtx) PushCustomError(code, item string, enTxt string, enItems 
 	ctx.stop = true
 }
 
-func (ctx *RequestCtx) PushClusterMessage(serverID string, requestID uint64, constructor int64, proto proto.Message, kvs ...*rony.KeyValue) {
-	envelope := acquireMessageEnvelope()
-	envelope.Fill(requestID, constructor, proto)
-	err := ctx.dispatchCtx.edge.ClusterSend(serverID, envelope, kvs...)
-	if err != nil {
-		log.Error("ClusterMessage Error",
-			zap.Bool("GatewayRequest", ctx.dispatchCtx.conn != nil),
-			zap.Uint64("RequestID", envelope.GetRequestID()),
-			zap.String("C", ctx.dispatchCtx.edge.getConstructorName(envelope.GetConstructor())),
-			zap.Error(err),
-		)
+func (ctx *RequestCtx) Cluster() cluster.Cluster {
+	return ctx.dispatchCtx.cluster
+}
+
+func (ctx *RequestCtx) ExecuteRemote(replicaSet uint64, onlyLeader bool, req, res *rony.MessageEnvelope) error {
+	target := ctx.getReplicaMember(replicaSet, onlyLeader)
+	if target == nil {
+		return ErrMemberNotFound
 	}
-	releaseMessageEnvelope(envelope)
+	if len(target.TunnelAddr()) == 0 {
+		return ErrNoTunnelAddrs
+	}
+
+	conn, err := net.Dial("udp", target.TunnelAddr()[0])
+	if err != nil {
+		return err
+	}
+
+	// Get a rony.TunnelMessage from pool and put it back into the pool when we are done
+	tmOut := rony.PoolTunnelMessage.Get()
+	defer rony.PoolTunnelMessage.Put(tmOut)
+	tmIn := rony.PoolTunnelMessage.Get()
+	defer rony.PoolTunnelMessage.Put(tmIn)
+	tmOut.SenderID = ctx.dispatchCtx.serverID
+	tmOut.SenderReplicaSet = ctx.dispatchCtx.cluster.ReplicaSet()
+	tmOut.Envelope = rony.PoolMessageEnvelope.Get()
+	req.DeepCopy(tmOut.Envelope)
+
+	// Marshal and send over the wire
+	mo := proto.MarshalOptions{UseCachedSize: true}
+	buf := pools.Buffer.GetCap(mo.Size(tmOut))
+	b, _ := mo.MarshalAppend(*buf.Bytes(), tmOut)
+	buf.SetBytes(&b)
+	n, err := conn.Write(*buf.Bytes())
+	if err != nil {
+		return err
+	}
+	pools.Buffer.Put(buf)
+
+	// Wait for response and unmarshal it
+	buf = pools.Buffer.GetLen(4096)
+	_ = conn.SetReadDeadline(time.Now().Add(time.Second * 3))
+	n, err = bufio.NewReader(conn).Read(*buf.Bytes())
+	if err != nil || n == 0 {
+		return err
+	}
+	err = tmIn.Unmarshal((*buf.Bytes())[:n])
+	if err != nil {
+		return err
+	}
+	pools.Buffer.Put(buf)
+
+	// deep copy
+	tmIn.Envelope.DeepCopy(res)
+
+	return nil
+}
+func (ctx *RequestCtx) getReplicaMember(replicaSet uint64, onlyLeader bool) (target cluster.Member) {
+	members := ctx.dispatchCtx.cluster.RaftMembers(replicaSet)
+	if len(members) == 0 {
+		return nil
+	}
+	for idx := range members {
+		if onlyLeader {
+			if members[idx].RaftState() == rony.RaftState_Leader {
+				target = members[idx]
+				break
+			}
+		} else {
+			target = members[idx]
+		}
+	}
+	return
 }

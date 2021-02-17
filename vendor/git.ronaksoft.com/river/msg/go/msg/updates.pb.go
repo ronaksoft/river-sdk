@@ -4216,6 +4216,7 @@ type UpdatePhoneCall struct {
 	AccessHash uint64          `protobuf:"fixed64,6,opt,name=AccessHash,proto3" json:"AccessHash,omitempty"`
 	Action     PhoneCallAction `protobuf:"varint,7,opt,name=Action,proto3,enum=msg.PhoneCallAction" json:"Action,omitempty"`
 	ActionData []byte          `protobuf:"bytes,8,opt,name=ActionData,proto3" json:"ActionData,omitempty"`
+	Timestamp  int64           `protobuf:"varint,9,opt,name=Timestamp,proto3" json:"Timestamp,omitempty"`
 }
 
 func (x *UpdatePhoneCall) Reset() {
@@ -4309,6 +4310,165 @@ func (x *UpdatePhoneCall) GetAction() PhoneCallAction {
 func (x *UpdatePhoneCall) GetActionData() []byte {
 	if x != nil {
 		return x.ActionData
+	}
+	return nil
+}
+
+func (x *UpdatePhoneCall) GetTimestamp() int64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+// UpdatePhoneCallStarted
+type UpdatePhoneCallStarted struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	UCount   int32 `protobuf:"varint,100,opt,name=UCount,proto3" json:"UCount,omitempty"`
+	UpdateID int64 `protobuf:"varint,101,opt,name=UpdateID,proto3" json:"UpdateID,omitempty"`
+	TeamID   int64 `protobuf:"varint,102,opt,name=TeamID,proto3" json:"TeamID,omitempty"`
+	Peer     *Peer `protobuf:"bytes,1,opt,name=Peer,proto3" json:"Peer,omitempty"`
+	CallId   int64 `protobuf:"varint,2,opt,name=CallId,proto3" json:"CallId,omitempty"`
+}
+
+func (x *UpdatePhoneCallStarted) Reset() {
+	*x = UpdatePhoneCallStarted{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_updates_proto_msgTypes[54]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UpdatePhoneCallStarted) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdatePhoneCallStarted) ProtoMessage() {}
+
+func (x *UpdatePhoneCallStarted) ProtoReflect() protoreflect.Message {
+	mi := &file_updates_proto_msgTypes[54]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdatePhoneCallStarted.ProtoReflect.Descriptor instead.
+func (*UpdatePhoneCallStarted) Descriptor() ([]byte, []int) {
+	return file_updates_proto_rawDescGZIP(), []int{54}
+}
+
+func (x *UpdatePhoneCallStarted) GetUCount() int32 {
+	if x != nil {
+		return x.UCount
+	}
+	return 0
+}
+
+func (x *UpdatePhoneCallStarted) GetUpdateID() int64 {
+	if x != nil {
+		return x.UpdateID
+	}
+	return 0
+}
+
+func (x *UpdatePhoneCallStarted) GetTeamID() int64 {
+	if x != nil {
+		return x.TeamID
+	}
+	return 0
+}
+
+func (x *UpdatePhoneCallStarted) GetPeer() *Peer {
+	if x != nil {
+		return x.Peer
+	}
+	return nil
+}
+
+func (x *UpdatePhoneCallStarted) GetCallId() int64 {
+	if x != nil {
+		return x.CallId
+	}
+	return 0
+}
+
+// UpdatePhoneCallEnded
+type UpdatePhoneCallEnded struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	UCount   int32 `protobuf:"varint,100,opt,name=UCount,proto3" json:"UCount,omitempty"`
+	UpdateID int64 `protobuf:"varint,101,opt,name=UpdateID,proto3" json:"UpdateID,omitempty"`
+	TeamID   int64 `protobuf:"varint,102,opt,name=TeamID,proto3" json:"TeamID,omitempty"`
+	Peer     *Peer `protobuf:"bytes,1,opt,name=Peer,proto3" json:"Peer,omitempty"`
+}
+
+func (x *UpdatePhoneCallEnded) Reset() {
+	*x = UpdatePhoneCallEnded{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_updates_proto_msgTypes[55]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UpdatePhoneCallEnded) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdatePhoneCallEnded) ProtoMessage() {}
+
+func (x *UpdatePhoneCallEnded) ProtoReflect() protoreflect.Message {
+	mi := &file_updates_proto_msgTypes[55]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdatePhoneCallEnded.ProtoReflect.Descriptor instead.
+func (*UpdatePhoneCallEnded) Descriptor() ([]byte, []int) {
+	return file_updates_proto_rawDescGZIP(), []int{55}
+}
+
+func (x *UpdatePhoneCallEnded) GetUCount() int32 {
+	if x != nil {
+		return x.UCount
+	}
+	return 0
+}
+
+func (x *UpdatePhoneCallEnded) GetUpdateID() int64 {
+	if x != nil {
+		return x.UpdateID
+	}
+	return 0
+}
+
+func (x *UpdatePhoneCallEnded) GetTeamID() int64 {
+	if x != nil {
+		return x.TeamID
+	}
+	return 0
+}
+
+func (x *UpdatePhoneCallEnded) GetPeer() *Peer {
+	if x != nil {
+		return x.Peer
 	}
 	return nil
 }
@@ -4861,7 +5021,7 @@ var file_updates_proto_rawDesc = []byte{
 	0x73, 0x67, 0x2e, 0x52, 0x65, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x54, 0x61, 0x72, 0x67, 0x65,
 	0x74, 0x52, 0x06, 0x54, 0x61, 0x72, 0x67, 0x65, 0x74, 0x12, 0x22, 0x0a, 0x0c, 0x41, 0x6c, 0x74,
 	0x65, 0x72, 0x6e, 0x61, 0x74, 0x69, 0x76, 0x65, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28, 0x09, 0x52,
-	0x0c, 0x41, 0x6c, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x74, 0x69, 0x76, 0x65, 0x73, 0x22, 0xa7, 0x02,
+	0x0c, 0x41, 0x6c, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x74, 0x69, 0x76, 0x65, 0x73, 0x22, 0xc5, 0x02,
 	0x0a, 0x0f, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x68, 0x6f, 0x6e, 0x65, 0x43, 0x61, 0x6c,
 	0x6c, 0x12, 0x16, 0x0a, 0x06, 0x55, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x64, 0x20, 0x01, 0x28,
 	0x05, 0x52, 0x06, 0x55, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x1a, 0x0a, 0x06, 0x54, 0x65, 0x61,
@@ -4880,21 +5040,42 @@ var file_updates_proto_rawDesc = []byte{
 	0x50, 0x68, 0x6f, 0x6e, 0x65, 0x43, 0x61, 0x6c, 0x6c, 0x41, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x52,
 	0x06, 0x41, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1e, 0x0a, 0x0a, 0x41, 0x63, 0x74, 0x69, 0x6f,
 	0x6e, 0x44, 0x61, 0x74, 0x61, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0a, 0x41, 0x63, 0x74,
-	0x69, 0x6f, 0x6e, 0x44, 0x61, 0x74, 0x61, 0x2a, 0xcc, 0x01, 0x0a, 0x0e, 0x52, 0x65, 0x64, 0x69,
-	0x72, 0x65, 0x63, 0x74, 0x54, 0x61, 0x72, 0x67, 0x65, 0x74, 0x12, 0x15, 0x0a, 0x11, 0x52, 0x65,
-	0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x54, 0x61, 0x72, 0x67, 0x65, 0x74, 0x52, 0x70, 0x63, 0x10,
-	0x00, 0x12, 0x16, 0x0a, 0x12, 0x52, 0x65, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x54, 0x61, 0x72,
-	0x67, 0x65, 0x74, 0x46, 0x69, 0x6c, 0x65, 0x10, 0x01, 0x12, 0x17, 0x0a, 0x13, 0x52, 0x65, 0x64,
-	0x69, 0x72, 0x65, 0x63, 0x74, 0x54, 0x61, 0x72, 0x67, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x78, 0x79,
-	0x10, 0x02, 0x12, 0x1b, 0x0a, 0x17, 0x52, 0x65, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x54, 0x61,
-	0x72, 0x67, 0x65, 0x74, 0x52, 0x65, 0x73, 0x65, 0x72, 0x76, 0x65, 0x64, 0x31, 0x10, 0x03, 0x12,
-	0x1b, 0x0a, 0x17, 0x52, 0x65, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x54, 0x61, 0x72, 0x67, 0x65,
-	0x74, 0x52, 0x65, 0x73, 0x65, 0x72, 0x76, 0x65, 0x64, 0x32, 0x10, 0x04, 0x12, 0x1b, 0x0a, 0x17,
-	0x52, 0x65, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x54, 0x61, 0x72, 0x67, 0x65, 0x74, 0x52, 0x65,
-	0x73, 0x65, 0x72, 0x76, 0x65, 0x64, 0x33, 0x10, 0x05, 0x12, 0x1b, 0x0a, 0x17, 0x52, 0x65, 0x64,
-	0x69, 0x72, 0x65, 0x63, 0x74, 0x54, 0x61, 0x72, 0x67, 0x65, 0x74, 0x52, 0x65, 0x73, 0x65, 0x72,
-	0x76, 0x65, 0x64, 0x34, 0x10, 0x06, 0x42, 0x07, 0x5a, 0x05, 0x2e, 0x3b, 0x6d, 0x73, 0x67, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x69, 0x6f, 0x6e, 0x44, 0x61, 0x74, 0x61, 0x12, 0x1c, 0x0a, 0x09, 0x54, 0x69, 0x6d, 0x65, 0x73,
+	0x74, 0x61, 0x6d, 0x70, 0x18, 0x09, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x54, 0x69, 0x6d, 0x65,
+	0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0xa3, 0x01, 0x0a, 0x16, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
+	0x50, 0x68, 0x6f, 0x6e, 0x65, 0x43, 0x61, 0x6c, 0x6c, 0x53, 0x74, 0x61, 0x72, 0x74, 0x65, 0x64,
+	0x12, 0x16, 0x0a, 0x06, 0x55, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x64, 0x20, 0x01, 0x28, 0x05,
+	0x52, 0x06, 0x55, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x55, 0x70, 0x64, 0x61,
+	0x74, 0x65, 0x49, 0x44, 0x18, 0x65, 0x20, 0x01, 0x28, 0x03, 0x52, 0x08, 0x55, 0x70, 0x64, 0x61,
+	0x74, 0x65, 0x49, 0x44, 0x12, 0x1a, 0x0a, 0x06, 0x54, 0x65, 0x61, 0x6d, 0x49, 0x44, 0x18, 0x66,
+	0x20, 0x01, 0x28, 0x03, 0x42, 0x02, 0x30, 0x01, 0x52, 0x06, 0x54, 0x65, 0x61, 0x6d, 0x49, 0x44,
+	0x12, 0x1d, 0x0a, 0x04, 0x50, 0x65, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x09,
+	0x2e, 0x6d, 0x73, 0x67, 0x2e, 0x50, 0x65, 0x65, 0x72, 0x52, 0x04, 0x50, 0x65, 0x65, 0x72, 0x12,
+	0x1a, 0x0a, 0x06, 0x43, 0x61, 0x6c, 0x6c, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x42,
+	0x02, 0x30, 0x01, 0x52, 0x06, 0x43, 0x61, 0x6c, 0x6c, 0x49, 0x64, 0x22, 0x85, 0x01, 0x0a, 0x14,
+	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x68, 0x6f, 0x6e, 0x65, 0x43, 0x61, 0x6c, 0x6c, 0x45,
+	0x6e, 0x64, 0x65, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x55, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x64,
+	0x20, 0x01, 0x28, 0x05, 0x52, 0x06, 0x55, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x1a, 0x0a, 0x08,
+	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x49, 0x44, 0x18, 0x65, 0x20, 0x01, 0x28, 0x03, 0x52, 0x08,
+	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x49, 0x44, 0x12, 0x1a, 0x0a, 0x06, 0x54, 0x65, 0x61, 0x6d,
+	0x49, 0x44, 0x18, 0x66, 0x20, 0x01, 0x28, 0x03, 0x42, 0x02, 0x30, 0x01, 0x52, 0x06, 0x54, 0x65,
+	0x61, 0x6d, 0x49, 0x44, 0x12, 0x1d, 0x0a, 0x04, 0x50, 0x65, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x09, 0x2e, 0x6d, 0x73, 0x67, 0x2e, 0x50, 0x65, 0x65, 0x72, 0x52, 0x04, 0x50,
+	0x65, 0x65, 0x72, 0x2a, 0xcc, 0x01, 0x0a, 0x0e, 0x52, 0x65, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74,
+	0x54, 0x61, 0x72, 0x67, 0x65, 0x74, 0x12, 0x15, 0x0a, 0x11, 0x52, 0x65, 0x64, 0x69, 0x72, 0x65,
+	0x63, 0x74, 0x54, 0x61, 0x72, 0x67, 0x65, 0x74, 0x52, 0x70, 0x63, 0x10, 0x00, 0x12, 0x16, 0x0a,
+	0x12, 0x52, 0x65, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x54, 0x61, 0x72, 0x67, 0x65, 0x74, 0x46,
+	0x69, 0x6c, 0x65, 0x10, 0x01, 0x12, 0x17, 0x0a, 0x13, 0x52, 0x65, 0x64, 0x69, 0x72, 0x65, 0x63,
+	0x74, 0x54, 0x61, 0x72, 0x67, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x78, 0x79, 0x10, 0x02, 0x12, 0x1b,
+	0x0a, 0x17, 0x52, 0x65, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x54, 0x61, 0x72, 0x67, 0x65, 0x74,
+	0x52, 0x65, 0x73, 0x65, 0x72, 0x76, 0x65, 0x64, 0x31, 0x10, 0x03, 0x12, 0x1b, 0x0a, 0x17, 0x52,
+	0x65, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x54, 0x61, 0x72, 0x67, 0x65, 0x74, 0x52, 0x65, 0x73,
+	0x65, 0x72, 0x76, 0x65, 0x64, 0x32, 0x10, 0x04, 0x12, 0x1b, 0x0a, 0x17, 0x52, 0x65, 0x64, 0x69,
+	0x72, 0x65, 0x63, 0x74, 0x54, 0x61, 0x72, 0x67, 0x65, 0x74, 0x52, 0x65, 0x73, 0x65, 0x72, 0x76,
+	0x65, 0x64, 0x33, 0x10, 0x05, 0x12, 0x1b, 0x0a, 0x17, 0x52, 0x65, 0x64, 0x69, 0x72, 0x65, 0x63,
+	0x74, 0x54, 0x61, 0x72, 0x67, 0x65, 0x74, 0x52, 0x65, 0x73, 0x65, 0x72, 0x76, 0x65, 0x64, 0x34,
+	0x10, 0x06, 0x42, 0x07, 0x5a, 0x05, 0x2e, 0x3b, 0x6d, 0x73, 0x67, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
@@ -4910,7 +5091,7 @@ func file_updates_proto_rawDescGZIP() []byte {
 }
 
 var file_updates_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_updates_proto_msgTypes = make([]protoimpl.MessageInfo, 54)
+var file_updates_proto_msgTypes = make([]protoimpl.MessageInfo, 56)
 var file_updates_proto_goTypes = []interface{}{
 	(RedirectTarget)(0),                   // 0: msg.RedirectTarget
 	(*UpdateGetState)(nil),                // 1: msg.UpdateGetState
@@ -4967,86 +5148,90 @@ var file_updates_proto_goTypes = []interface{}{
 	(*UpdateRedirect)(nil),                // 52: msg.UpdateRedirect
 	(*ClientRedirect)(nil),                // 53: msg.ClientRedirect
 	(*UpdatePhoneCall)(nil),               // 54: msg.UpdatePhoneCall
-	(*UpdateEnvelope)(nil),                // 55: msg.UpdateEnvelope
-	(*User)(nil),                          // 56: msg.User
-	(*Group)(nil),                         // 57: msg.Group
-	(*UserMessage)(nil),                   // 58: msg.UserMessage
-	(*Peer)(nil),                          // 59: msg.Peer
-	(TypingAction)(0),                     // 60: msg.TypingAction
-	(*UserPhoto)(nil),                     // 61: msg.UserPhoto
-	(*PeerNotifySettings)(nil),            // 62: msg.PeerNotifySettings
-	(*GroupPhoto)(nil),                    // 63: msg.GroupPhoto
-	(*DraftMessage)(nil),                  // 64: msg.DraftMessage
-	(*PrivacyRule)(nil),                   // 65: msg.PrivacyRule
-	(*Label)(nil),                         // 66: msg.Label
-	(*MediaPoll)(nil),                     // 67: msg.MediaPoll
-	(*PollResults)(nil),                   // 68: msg.PollResults
-	(*GeoLocation)(nil),                   // 69: msg.GeoLocation
-	(*Team)(nil),                          // 70: msg.Team
-	(*ContactUser)(nil),                   // 71: msg.ContactUser
-	(*TeamPhoto)(nil),                     // 72: msg.TeamPhoto
-	(*MessageEntity)(nil),                 // 73: msg.MessageEntity
-	(*ReactionCounter)(nil),               // 74: msg.ReactionCounter
-	(*CalendarEvent)(nil),                 // 75: msg.CalendarEvent
-	(PhoneCallAction)(0),                  // 76: msg.PhoneCallAction
+	(*UpdatePhoneCallStarted)(nil),        // 55: msg.UpdatePhoneCallStarted
+	(*UpdatePhoneCallEnded)(nil),          // 56: msg.UpdatePhoneCallEnded
+	(*UpdateEnvelope)(nil),                // 57: msg.UpdateEnvelope
+	(*User)(nil),                          // 58: msg.User
+	(*Group)(nil),                         // 59: msg.Group
+	(*UserMessage)(nil),                   // 60: msg.UserMessage
+	(*Peer)(nil),                          // 61: msg.Peer
+	(TypingAction)(0),                     // 62: msg.TypingAction
+	(*UserPhoto)(nil),                     // 63: msg.UserPhoto
+	(*PeerNotifySettings)(nil),            // 64: msg.PeerNotifySettings
+	(*GroupPhoto)(nil),                    // 65: msg.GroupPhoto
+	(*DraftMessage)(nil),                  // 66: msg.DraftMessage
+	(*PrivacyRule)(nil),                   // 67: msg.PrivacyRule
+	(*Label)(nil),                         // 68: msg.Label
+	(*MediaPoll)(nil),                     // 69: msg.MediaPoll
+	(*PollResults)(nil),                   // 70: msg.PollResults
+	(*GeoLocation)(nil),                   // 71: msg.GeoLocation
+	(*Team)(nil),                          // 72: msg.Team
+	(*ContactUser)(nil),                   // 73: msg.ContactUser
+	(*TeamPhoto)(nil),                     // 74: msg.TeamPhoto
+	(*MessageEntity)(nil),                 // 75: msg.MessageEntity
+	(*ReactionCounter)(nil),               // 76: msg.ReactionCounter
+	(*CalendarEvent)(nil),                 // 77: msg.CalendarEvent
+	(PhoneCallAction)(0),                  // 78: msg.PhoneCallAction
 }
 var file_updates_proto_depIdxs = []int32{
-	55, // 0: msg.UpdateDifference.Updates:type_name -> msg.UpdateEnvelope
-	56, // 1: msg.UpdateDifference.Users:type_name -> msg.User
-	57, // 2: msg.UpdateDifference.Groups:type_name -> msg.Group
-	58, // 3: msg.UpdateNewMessage.Message:type_name -> msg.UserMessage
-	56, // 4: msg.UpdateNewMessage.Sender:type_name -> msg.User
-	58, // 5: msg.UpdateMessageEdited.Message:type_name -> msg.UserMessage
-	59, // 6: msg.UpdateMessagesDeleted.Peer:type_name -> msg.Peer
-	59, // 7: msg.UpdateReadHistoryInbox.Peer:type_name -> msg.Peer
-	59, // 8: msg.UpdateReadHistoryOutbox.Peer:type_name -> msg.Peer
-	59, // 9: msg.UpdateMessagePinned.Peer:type_name -> msg.Peer
-	60, // 10: msg.UpdateUserTyping.Action:type_name -> msg.TypingAction
-	61, // 11: msg.UpdateUserPhoto.Photo:type_name -> msg.UserPhoto
-	59, // 12: msg.UpdateNotifySettings.NotifyPeer:type_name -> msg.Peer
-	62, // 13: msg.UpdateNotifySettings.Settings:type_name -> msg.PeerNotifySettings
-	63, // 14: msg.UpdateGroupPhoto.Photo:type_name -> msg.GroupPhoto
-	59, // 15: msg.UpdateReadMessagesContents.Peer:type_name -> msg.Peer
-	64, // 16: msg.UpdateDraftMessage.Message:type_name -> msg.DraftMessage
-	59, // 17: msg.UpdateDraftMessageCleared.Peer:type_name -> msg.Peer
-	59, // 18: msg.UpdateDialogPinned.Peer:type_name -> msg.Peer
-	59, // 19: msg.UpdateDialogPinnedReorder.Peer:type_name -> msg.Peer
-	65, // 20: msg.UpdateAccountPrivacy.ChatInvite:type_name -> msg.PrivacyRule
-	65, // 21: msg.UpdateAccountPrivacy.LastSeen:type_name -> msg.PrivacyRule
-	65, // 22: msg.UpdateAccountPrivacy.PhoneNumber:type_name -> msg.PrivacyRule
-	65, // 23: msg.UpdateAccountPrivacy.ProfilePhoto:type_name -> msg.PrivacyRule
-	65, // 24: msg.UpdateAccountPrivacy.ForwardedMessage:type_name -> msg.PrivacyRule
-	65, // 25: msg.UpdateAccountPrivacy.Call:type_name -> msg.PrivacyRule
-	59, // 26: msg.UpdateLabelItemsAdded.Peer:type_name -> msg.Peer
-	66, // 27: msg.UpdateLabelItemsAdded.Labels:type_name -> msg.Label
-	59, // 28: msg.UpdateLabelItemsRemoved.Peer:type_name -> msg.Peer
-	66, // 29: msg.UpdateLabelItemsRemoved.Labels:type_name -> msg.Label
-	66, // 30: msg.UpdateLabelSet.Labels:type_name -> msg.Label
-	67, // 31: msg.UpdateMessagePoll.Poll:type_name -> msg.MediaPoll
-	68, // 32: msg.UpdateMessagePoll.Results:type_name -> msg.PollResults
-	59, // 33: msg.UpdateBotCallbackQuery.Peer:type_name -> msg.Peer
-	59, // 34: msg.UpdateBotInlineQuery.Peer:type_name -> msg.Peer
-	69, // 35: msg.UpdateBotInlineQuery.Geo:type_name -> msg.GeoLocation
-	69, // 36: msg.UpdateBotInlineSend.Geo:type_name -> msg.GeoLocation
-	70, // 37: msg.UpdateTeamCreated.Team:type_name -> msg.Team
-	56, // 38: msg.UpdateTeamMemberAdded.User:type_name -> msg.User
-	71, // 39: msg.UpdateTeamMemberAdded.Contact:type_name -> msg.ContactUser
-	72, // 40: msg.UpdateTeamPhoto.Photo:type_name -> msg.TeamPhoto
-	73, // 41: msg.UpdateCommunityMessage.Entities:type_name -> msg.MessageEntity
-	60, // 42: msg.UpdateCommunityTyping.Action:type_name -> msg.TypingAction
-	74, // 43: msg.UpdateReaction.Counter:type_name -> msg.ReactionCounter
-	59, // 44: msg.UpdateReaction.Peer:type_name -> msg.Peer
-	56, // 45: msg.UpdateReaction.Sender:type_name -> msg.User
-	75, // 46: msg.UpdateCalendarEventAdded.Event:type_name -> msg.CalendarEvent
-	75, // 47: msg.UpdateCalendarEventEdited.Event:type_name -> msg.CalendarEvent
+	57, // 0: msg.UpdateDifference.Updates:type_name -> msg.UpdateEnvelope
+	58, // 1: msg.UpdateDifference.Users:type_name -> msg.User
+	59, // 2: msg.UpdateDifference.Groups:type_name -> msg.Group
+	60, // 3: msg.UpdateNewMessage.Message:type_name -> msg.UserMessage
+	58, // 4: msg.UpdateNewMessage.Sender:type_name -> msg.User
+	60, // 5: msg.UpdateMessageEdited.Message:type_name -> msg.UserMessage
+	61, // 6: msg.UpdateMessagesDeleted.Peer:type_name -> msg.Peer
+	61, // 7: msg.UpdateReadHistoryInbox.Peer:type_name -> msg.Peer
+	61, // 8: msg.UpdateReadHistoryOutbox.Peer:type_name -> msg.Peer
+	61, // 9: msg.UpdateMessagePinned.Peer:type_name -> msg.Peer
+	62, // 10: msg.UpdateUserTyping.Action:type_name -> msg.TypingAction
+	63, // 11: msg.UpdateUserPhoto.Photo:type_name -> msg.UserPhoto
+	61, // 12: msg.UpdateNotifySettings.NotifyPeer:type_name -> msg.Peer
+	64, // 13: msg.UpdateNotifySettings.Settings:type_name -> msg.PeerNotifySettings
+	65, // 14: msg.UpdateGroupPhoto.Photo:type_name -> msg.GroupPhoto
+	61, // 15: msg.UpdateReadMessagesContents.Peer:type_name -> msg.Peer
+	66, // 16: msg.UpdateDraftMessage.Message:type_name -> msg.DraftMessage
+	61, // 17: msg.UpdateDraftMessageCleared.Peer:type_name -> msg.Peer
+	61, // 18: msg.UpdateDialogPinned.Peer:type_name -> msg.Peer
+	61, // 19: msg.UpdateDialogPinnedReorder.Peer:type_name -> msg.Peer
+	67, // 20: msg.UpdateAccountPrivacy.ChatInvite:type_name -> msg.PrivacyRule
+	67, // 21: msg.UpdateAccountPrivacy.LastSeen:type_name -> msg.PrivacyRule
+	67, // 22: msg.UpdateAccountPrivacy.PhoneNumber:type_name -> msg.PrivacyRule
+	67, // 23: msg.UpdateAccountPrivacy.ProfilePhoto:type_name -> msg.PrivacyRule
+	67, // 24: msg.UpdateAccountPrivacy.ForwardedMessage:type_name -> msg.PrivacyRule
+	67, // 25: msg.UpdateAccountPrivacy.Call:type_name -> msg.PrivacyRule
+	61, // 26: msg.UpdateLabelItemsAdded.Peer:type_name -> msg.Peer
+	68, // 27: msg.UpdateLabelItemsAdded.Labels:type_name -> msg.Label
+	61, // 28: msg.UpdateLabelItemsRemoved.Peer:type_name -> msg.Peer
+	68, // 29: msg.UpdateLabelItemsRemoved.Labels:type_name -> msg.Label
+	68, // 30: msg.UpdateLabelSet.Labels:type_name -> msg.Label
+	69, // 31: msg.UpdateMessagePoll.Poll:type_name -> msg.MediaPoll
+	70, // 32: msg.UpdateMessagePoll.Results:type_name -> msg.PollResults
+	61, // 33: msg.UpdateBotCallbackQuery.Peer:type_name -> msg.Peer
+	61, // 34: msg.UpdateBotInlineQuery.Peer:type_name -> msg.Peer
+	71, // 35: msg.UpdateBotInlineQuery.Geo:type_name -> msg.GeoLocation
+	71, // 36: msg.UpdateBotInlineSend.Geo:type_name -> msg.GeoLocation
+	72, // 37: msg.UpdateTeamCreated.Team:type_name -> msg.Team
+	58, // 38: msg.UpdateTeamMemberAdded.User:type_name -> msg.User
+	73, // 39: msg.UpdateTeamMemberAdded.Contact:type_name -> msg.ContactUser
+	74, // 40: msg.UpdateTeamPhoto.Photo:type_name -> msg.TeamPhoto
+	75, // 41: msg.UpdateCommunityMessage.Entities:type_name -> msg.MessageEntity
+	62, // 42: msg.UpdateCommunityTyping.Action:type_name -> msg.TypingAction
+	76, // 43: msg.UpdateReaction.Counter:type_name -> msg.ReactionCounter
+	61, // 44: msg.UpdateReaction.Peer:type_name -> msg.Peer
+	58, // 45: msg.UpdateReaction.Sender:type_name -> msg.User
+	77, // 46: msg.UpdateCalendarEventAdded.Event:type_name -> msg.CalendarEvent
+	77, // 47: msg.UpdateCalendarEventEdited.Event:type_name -> msg.CalendarEvent
 	53, // 48: msg.UpdateRedirect.Redirects:type_name -> msg.ClientRedirect
 	0,  // 49: msg.ClientRedirect.Target:type_name -> msg.RedirectTarget
-	76, // 50: msg.UpdatePhoneCall.Action:type_name -> msg.PhoneCallAction
-	51, // [51:51] is the sub-list for method output_type
-	51, // [51:51] is the sub-list for method input_type
-	51, // [51:51] is the sub-list for extension type_name
-	51, // [51:51] is the sub-list for extension extendee
-	0,  // [0:51] is the sub-list for field type_name
+	78, // 50: msg.UpdatePhoneCall.Action:type_name -> msg.PhoneCallAction
+	61, // 51: msg.UpdatePhoneCallStarted.Peer:type_name -> msg.Peer
+	61, // 52: msg.UpdatePhoneCallEnded.Peer:type_name -> msg.Peer
+	53, // [53:53] is the sub-list for method output_type
+	53, // [53:53] is the sub-list for method input_type
+	53, // [53:53] is the sub-list for extension type_name
+	53, // [53:53] is the sub-list for extension extendee
+	0,  // [0:53] is the sub-list for field type_name
 }
 
 func init() { file_updates_proto_init() }
@@ -5707,6 +5892,30 @@ func file_updates_proto_init() {
 				return nil
 			}
 		}
+		file_updates_proto_msgTypes[54].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UpdatePhoneCallStarted); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_updates_proto_msgTypes[55].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UpdatePhoneCallEnded); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -5714,7 +5923,7 @@ func file_updates_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_updates_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   54,
+			NumMessages:   56,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

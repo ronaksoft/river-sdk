@@ -1,8 +1,8 @@
-package dummy
+package dummyGateway
 
 import (
+	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/gateway"
-	"github.com/ronaksoft/rony/tools"
 	"sync"
 	"sync/atomic"
 )
@@ -32,19 +32,17 @@ type Gateway struct {
 
 func New(config Config) (*Gateway, error) {
 	g := &Gateway{
-		conns: make(map[uint64]*Conn, 32),
+		conns: make(map[uint64]*Conn, 8192),
 	}
 
 	// Call the exposer make caller have access to this gateway object
 	config.Exposer(g)
-
 	return g, nil
 }
 
-func (g *Gateway) OpenConn(connID uint64, onReceiveMessage func(connID uint64, streamID int64, data []byte), kvs ...gateway.KeyValue) {
+func (g *Gateway) OpenConn(connID uint64, onReceiveMessage func(connID uint64, streamID int64, data []byte), kvs ...*rony.KeyValue) {
 	dConn := &Conn{
 		id:        connID,
-		buf:       tools.NewLinkedList(),
 		kv:        make(map[string]interface{}),
 		onMessage: onReceiveMessage,
 	}
@@ -90,7 +88,7 @@ func (g *Gateway) Shutdown() {
 	// Do nothing
 }
 
-func (g *Gateway) GetConn(connID uint64) gateway.Conn {
+func (g *Gateway) GetConn(connID uint64) rony.Conn {
 	g.connsMtx.RLock()
 	conn := g.conns[connID]
 	g.connsMtx.RUnlock()

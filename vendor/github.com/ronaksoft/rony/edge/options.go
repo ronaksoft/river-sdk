@@ -2,9 +2,11 @@ package edge
 
 import (
 	"github.com/ronaksoft/rony"
+	gossipCluster "github.com/ronaksoft/rony/cluster/gossip"
 	"github.com/ronaksoft/rony/gateway"
 	dummyGateway "github.com/ronaksoft/rony/gateway/dummy"
 	tcpGateway "github.com/ronaksoft/rony/gateway/tcp"
+	udpTunnel "github.com/ronaksoft/rony/tunnel/udp"
 )
 
 /*
@@ -19,84 +21,84 @@ import (
 // Option
 type Option func(edge *Server)
 
-// WithReplicaSet
-func WithReplicaSet(replicaSet uint64, bindPort int, bootstrap bool) Option {
-	if replicaSet == 0 {
-		panic("replica-set could not be set zero")
-	}
+// WithDispatcher enables custom dispatcher to write your specific event handlers.
+func WithDispatcher(d Dispatcher) Option {
 	return func(edge *Server) {
-		edge.raftFSM = raftFSM{edge: edge}
-		edge.replicaSet = replicaSet
-		edge.raftEnabled = true
-		edge.raftPort = bindPort
-		edge.raftBootstrap = bootstrap
+		edge.gatewayDispatcher = d
 	}
 }
 
-// WithGossipPort
-func WithGossipPort(gossipPort int) Option {
+type GossipClusterConfig gossipCluster.Config
+
+// WithGossipCluster enables the cluster in gossip mode. This mod is eventually consistent mode but there is
+// no need to a central key-value store or any other 3rd party service to run the cluster
+func WithGossipCluster(cfg GossipClusterConfig) Option {
 	return func(edge *Server) {
-		edge.gossipPort = gossipPort
+		c := gossipCluster.New(gossipCluster.Config(cfg))
+		c.ReplicaMessageHandler = edge.onReplicaMessage
+		edge.cluster = c
 	}
 }
 
-// WithCustomerConstructorName will be used to give a human readable names to messages
-func WithCustomConstructorName(h func(constructor int64) (name string)) Option {
-	return func(edge *Server) {
-		edge.getConstructorName = func(constructor int64) string {
-			// Lookup internal messages first
-			n := rony.ConstructorNames[constructor]
-			if len(n) > 0 {
-				return n
-			}
-			return h(constructor)
-		}
-	}
-}
-
-// WithDataPath set where the internal data for raft and gossip are stored.
-func WithDataPath(path string) Option {
-	return func(edge *Server) {
-		edge.dataPath = path
-	}
-}
+type TcpGatewayConfig tcpGateway.Config
 
 // WithTcpGateway set the gateway to tcp which can support http and/or websocket
 // Only one gateway could be set and if you set another gateway it panics on runtime.
-func WithTcpGateway(config tcpGateway.Config) Option {
+func WithTcpGateway(config TcpGatewayConfig) Option {
 	return func(edge *Server) {
 		if edge.gatewayProtocol != gateway.Undefined {
 			panic(rony.ErrGatewayAlreadyInitialized)
 		}
-		gatewayTcp, err := tcpGateway.New(config)
+		if config.Protocol == gateway.Undefined {
+			config.Protocol = gateway.TCP
+		}
+		gatewayTcp, err := tcpGateway.New(tcpGateway.Config(config))
 		if err != nil {
 			panic(err)
 		}
 		gatewayTcp.MessageHandler = edge.onGatewayMessage
-		gatewayTcp.ConnectHandler = edge.onConnect
-		gatewayTcp.CloseHandler = edge.onClose
-		edge.gatewayProtocol = gateway.TCP
+		gatewayTcp.ConnectHandler = edge.onGatewayConnect
+		gatewayTcp.CloseHandler = edge.onGatewayClose
+		edge.gatewayProtocol = config.Protocol
 		edge.gateway = gatewayTcp
 		return
 	}
 }
 
+type DummyGatewayConfig dummyGateway.Config
+
 // WithTestGateway set the gateway to a dummy gateway which is useful for writing tests.
 // Only one gateway could be set and if you set another gateway it panics on runtime.
-func WithTestGateway(config dummyGateway.Config) Option {
+func WithTestGateway(config DummyGatewayConfig) Option {
 	return func(edge *Server) {
 		if edge.gatewayProtocol != gateway.Undefined {
 			panic(rony.ErrGatewayAlreadyInitialized)
 		}
-		gatewayDummy, err := dummyGateway.New(config)
+		gatewayDummy, err := dummyGateway.New(dummyGateway.Config(config))
 		if err != nil {
 			panic(err)
 		}
 		gatewayDummy.MessageHandler = edge.onGatewayMessage
-		gatewayDummy.ConnectHandler = edge.onConnect
-		gatewayDummy.CloseHandler = edge.onClose
+		gatewayDummy.ConnectHandler = edge.onGatewayConnect
+		gatewayDummy.CloseHandler = edge.onGatewayClose
 		edge.gatewayProtocol = gateway.Dummy
 		edge.gateway = gatewayDummy
 		return
+	}
+}
+
+type UdpTunnelConfig udpTunnel.Config
+
+// WithUdpTunnel set the tunnel to a udp based tunnel which provides communication channel between
+// edge servers.
+func WithUdpTunnel(config UdpTunnelConfig) Option {
+	return func(edge *Server) {
+		config.ServerID = string(edge.serverID)
+		tunnelUDP, err := udpTunnel.New(udpTunnel.Config(config))
+		if err != nil {
+			panic(err)
+		}
+		tunnelUDP.MessageHandler = edge.onTunnelMessage
+		edge.tunnel = tunnelUDP
 	}
 }
