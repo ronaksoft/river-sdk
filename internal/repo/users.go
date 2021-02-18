@@ -7,7 +7,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/tools"
-	"github.com/blevesearch/bleve/v2"
+	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
 	"github.com/dgraph-io/badger/v2"
 	"go.uber.org/zap"
