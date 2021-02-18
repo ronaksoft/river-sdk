@@ -3,7 +3,7 @@ package repo
 import (
 	"fmt"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/analysis/lang/en"
 	"github.com/blevesearch/bleve/mapping"
