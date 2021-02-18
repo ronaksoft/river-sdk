@@ -3,3 +3,4 @@ _*
 keys*.json
 extra/rust-helpers/target*
 *.log
+vendor/github.com/iRezaaa
