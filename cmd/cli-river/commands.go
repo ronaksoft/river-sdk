@@ -613,9 +613,9 @@ func fnGetPeer(c *ishell.Context) *msg.InputPeer {
 	for _, d := range MyDialogs {
 		switch d.PeerType {
 		case 1:
-			options = append(options, fmt.Sprintf("%s %s", MyUsers[d.PeerID].FirstName, MyUsers[d.PeerID].LastName))
+			options = append(options, fmt.Sprintf("%s %s (%d)", MyUsers[d.PeerID].FirstName, MyUsers[d.PeerID].LastName, d.TopMessageID))
 		case 2:
-			options = append(options, fmt.Sprintf("%s", MyGroups[d.PeerID].Title))
+			options = append(options, fmt.Sprintf("%s (%d)", MyGroups[d.PeerID].Title, d.TopMessageID))
 		}
 
 	}
@@ -706,6 +706,16 @@ func fnGetMediaType(c *ishell.Context) msg.ClientMediaType {
 		}
 	}
 	return mediaType
+}
+
+func fnGetMediaCat(c *ishell.Context) msg.MediaCategory {
+	options := make([]string, len(msg.MediaCategory_value))
+	for n, v := range msg.MediaCategory_value {
+		options[v] = n
+	}
+
+	idx := c.MultiChoice(options, "Please Select Category:")
+	return msg.MediaCategory(idx)
 }
 
 func fnGetFileID(c *ishell.Context) int64 {

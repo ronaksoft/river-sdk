@@ -381,6 +381,25 @@ var MessagesClearMedia = &ishell.Cmd{
 	},
 }
 
+var MessagesGetMediaHistory = &ishell.Cmd{
+	Name: "GetMediaHistory",
+	Func: func(c *ishell.Context) {
+		req := msg.MessagesGetMediaHistory{}
+		req.Peer = fnGetPeer(c)
+		req.MaxID = fnGetMaxID(c)
+		req.Limit = fnGetLimit(c)
+		req.Cat = fnGetMediaCat(c)
+
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesGetMediaHistory, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+
+	},
+}
 func init() {
 	Message.AddCmd(MessageGetDialogs)
 	Message.AddCmd(MessageGetDialog)
@@ -398,4 +417,5 @@ func init() {
 	Message.AddCmd(MessagesReadContents)
 	Message.AddCmd(MessagesGetDBMediaStatus)
 	Message.AddCmd(MessagesClearMedia)
+	Message.AddCmd(MessagesGetMediaHistory)
 }
