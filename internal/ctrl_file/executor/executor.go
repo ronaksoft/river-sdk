@@ -96,7 +96,6 @@ func (e *Executor) execute() {
 			e.waitGroupsLock.Unlock()
 
 			oWaitGroup := &sync.WaitGroup{}
-
 			// External loop over requests
 			for req != nil {
 				err := req.Prepare()

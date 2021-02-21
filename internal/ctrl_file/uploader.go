@@ -74,7 +74,7 @@ func (u *UploadRequest) checkSha256() error {
 	return domain.ErrServer
 }
 
-func (u *UploadRequest) generateFileSavePart(fileID int64, partID int32, totalParts int32, bytes []byte) *rony.MessageEnvelope {
+func (u *UploadRequest) genFileSavePart(fileID int64, partID int32, totalParts int32, bytes []byte) *rony.MessageEnvelope {
 	envelop := rony.MessageEnvelope{
 		RequestID:   uint64(domain.SequentialUniqueID()),
 		Constructor: msg.C_FileSavePart,
@@ -408,8 +408,7 @@ func (a *UploadAction) Do(ctx context.Context) {
 	ctx, cf := context.WithTimeout(ctx, domain.HttpRequestTimeout)
 	defer cf()
 	res, err := a.req.ctrl.network.SendHttp(
-		ctx,
-		a.req.generateFileSavePart(a.req.cfr.FileID, a.id+1, a.req.cfr.TotalParts, bytes[:n]),
+		ctx, a.req.genFileSavePart(a.req.cfr.FileID, a.id+1, a.req.cfr.TotalParts, bytes[:n]),
 	)
 	if err != nil {
 		logs.Warn("FileCtrl got error On SendHttp (Upload)", zap.Error(err))
