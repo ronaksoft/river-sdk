@@ -9,6 +9,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/tools"
 	"github.com/ronaksoft/rony"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/valyala/tcplisten"
@@ -141,7 +142,8 @@ type server struct {
 
 func (t server) ServeHTTP(httpRes http.ResponseWriter, httpReq *http.Request) {
 	body, _ := ioutil.ReadAll(httpReq.Body)
-	time.Sleep(time.Duration(len(body)/speedBytesPerSec) * time.Second)
+
+	time.Sleep(time.Duration(len(body)/(speedBytesPerSec * (tools.RandomInt(10)+1))) * time.Second)
 
 	if domain.RandomInt(100) > (100 - errRatePercent) {
 		httpRes.WriteHeader(http.StatusForbidden)
@@ -246,7 +248,6 @@ func TestDownloadFileASync(t *testing.T) {
 }
 
 func TestUpload(t *testing.T) {
-
 	Convey("Upload", t, func(c C) {
 		fileID := domain.RandomInt63()
 		msgID := domain.RandomInt63()
@@ -302,7 +303,6 @@ func TestUpload(t *testing.T) {
 			}
 		})
 	})
-
 }
 
 func TestManyUpload(t *testing.T) {
