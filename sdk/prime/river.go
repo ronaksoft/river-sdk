@@ -341,7 +341,7 @@ func (r *River) postUploadProcess(uploadRequest *msg.ClientFileRequest) bool {
 	return false
 }
 func (r *River) sendMessageMedia(uploadRequest *msg.ClientFileRequest) (success bool) {
-	// This is a upload for message send media
+	// This is a upload for message send
 	pendingMessage := repo.PendingMessages.GetByID(uploadRequest.MessageID)
 	if pendingMessage == nil {
 		return true
@@ -349,7 +349,6 @@ func (r *River) sendMessageMedia(uploadRequest *msg.ClientFileRequest) (success 
 
 	req := &msg.ClientSendMessageMedia{}
 	_ = req.Unmarshal(pendingMessage.Media)
-
 	err := domain.Try(3, time.Millisecond*500, func() error {
 		var fileLoc *msg.FileLocation
 		if uploadRequest.FileID != 0 && uploadRequest.AccessHash != 0 && uploadRequest.ClusterID != 0 {

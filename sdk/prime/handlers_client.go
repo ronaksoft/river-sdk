@@ -72,9 +72,10 @@ func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, timeoutCB 
 		domain.GetTeamID(in), domain.GetTeamAccess(in), msgID, r.ConnInfo.UserID, fileID, fileID, thumbID, reqMedia, h,
 	)
 	if err != nil {
-		e := new(rony.Error)
-		e.Code = "n/a"
-		e.Items = "Failed to save to pendingMessages : " + err.Error()
+		e := &rony.Error{
+			Code:  "n/a",
+			Items: "Failed to save to pendingMessages : " + err.Error(),
+		}
 		out.Fill(out.RequestID, rony.C_Error, e)
 		uiexec.ExecSuccessCB(successCB, out)
 		return
@@ -255,47 +256,6 @@ func (r *River) clientGetMediaHistory(in, out *rony.MessageEnvelope, timeoutCB d
 	}
 	fillMessagesMany(out, messages, users, groups, in.RequestID, successCB)
 	return
-	// req := &msg.ClientGetMediaHistory{}
-	// if err := req.Unmarshal(in.Message); err != nil {
-	// 	out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-	// 	successCB(out)
-	// 	return
-	// }
-	//
-	// msgs, _ := repo.Messages.GetMediaHistory(req.MediaType)
-	//
-	// // get users && group IDs
-	// userIDs := domain.MInt64B{}
-	// groupIDs := domain.MInt64B{}
-	// for _, m := range msgs {
-	// 	if m.PeerType == int32(msg.PeerType_PeerSelf) || m.PeerType == int32(msg.PeerType_PeerUser) {
-	// 		userIDs[m.PeerID] = true
-	// 	}
-	// 	if m.PeerType == int32(msg.PeerType_PeerGroup) {
-	// 		groupIDs[m.PeerID] = true
-	// 	}
-	// 	if m.SenderID > 0 {
-	// 		userIDs[m.SenderID] = true
-	// 	}
-	// 	if m.FwdSenderID > 0 {
-	// 		userIDs[m.FwdSenderID] = true
-	// 	}
-	// }
-	//
-	// users, _ := repo.Users.GetMany(userIDs.ToArray())
-	// groups, _ := repo.Groups.GetMany(groupIDs.ToArray())
-	//
-	// res := msg.MessagesMany{
-	// 	Messages:   msgs,
-	// 	Users:      users,
-	// 	Groups:     groups,
-	// 	Continuous: false,
-	// }
-	//
-	// out.Constructor = msg.C_MessagesMany
-	// out.RequestID = in.RequestID
-	// out.Message, _ = res.Marshal()
-	// uiexec.ExecSuccessCB(successCB, out)
 }
 
 func (r *River) clientGetAllDownloadedMedia(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {

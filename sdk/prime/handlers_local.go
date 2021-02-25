@@ -189,9 +189,10 @@ func (r *River) messagesSend(in, out *rony.MessageEnvelope, timeoutCB domain.Tim
 
 	// do not allow empty message
 	if strings.TrimSpace(req.Body) == "" {
-		e := new(rony.Error)
-		e.Code = "n/a"
-		e.Items = "empty message is not allowed"
+		e := &rony.Error{
+			Code: "n/a",
+			Items: "empty message is not allowed",
+		}
 		out.Fill(out.RequestID, rony.C_Error, e)
 		uiexec.ExecSuccessCB(successCB, out)
 		return
@@ -254,6 +255,7 @@ func (r *River) messagesReadHistory(in, out *rony.MessageEnvelope, timeoutCB dom
 		return
 	}
 
+	// update read inbox max id
 	_ = repo.Dialogs.UpdateReadInboxMaxID(r.ConnInfo.UserID, domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 
 	// send the request to server
