@@ -412,13 +412,9 @@ func (r *River) messagesDelete(in, out *rony.MessageEnvelope, timeoutCB domain.T
 		}
 	}
 	if len(pendingMessageIDs) > 0 {
-		// remove from queue
-		pendedRequestIDs := repo.PendingMessages.GetManyRequestIDs(pendingMessageIDs)
-		for _, reqID := range pendedRequestIDs {
-			r.queueCtrl.CancelRequest(reqID)
+		for _, id := range pendingMessageIDs {
+			r.DeletePendingMessage(id)
 		}
-		// remove from DB
-		repo.PendingMessages.DeleteMany(pendingMessageIDs)
 	}
 
 	// send the request to server
