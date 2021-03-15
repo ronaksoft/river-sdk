@@ -116,12 +116,17 @@ func (svr *server) activateEventLoops(numEventLoop int) (err error) {
 			el.ln = l
 			el.svr = svr
 			el.poller = p
-			el.packet = make([]byte, 0x10000)
+			el.packet = make([]byte, svr.opts.ReadBufferCap)
 			el.connections = make(map[int]*conn)
 			el.eventHandler = svr.eventHandler
 			el.calibrateCallback = svr.lb.calibrate
 			_ = el.poller.AddRead(el.ln.fd)
 			svr.lb.register(el)
+
+			// Start the ticker.
+			if el.idx == 0 && svr.opts.Ticker {
+				go el.loopTicker()
+			}
 		} else {
 			return
 		}
@@ -140,11 +145,16 @@ func (svr *server) activateReactors(numEventLoop int) error {
 			el.ln = svr.ln
 			el.svr = svr
 			el.poller = p
-			el.packet = make([]byte, 0x10000)
+			el.packet = make([]byte, svr.opts.ReadBufferCap)
 			el.connections = make(map[int]*conn)
 			el.eventHandler = svr.eventHandler
 			el.calibrateCallback = svr.lb.calibrate
 			svr.lb.register(el)
+
+			// Start the ticker.
+			if el.idx == 0 && svr.opts.Ticker {
+				go el.loopTicker()
+			}
 		} else {
 			return err
 		}
@@ -157,8 +167,8 @@ func (svr *server) activateReactors(numEventLoop int) error {
 		el := new(eventloop)
 		el.ln = svr.ln
 		el.idx = -1
-		el.poller = p
 		el.svr = svr
+		el.poller = p
 		_ = el.poller.AddRead(el.ln.fd)
 		svr.mainLoop = el
 
@@ -213,11 +223,16 @@ func (svr *server) stop(s Server) {
 		sniffErrorAndLog(svr.mainLoop.poller.Close())
 	}
 
+	// Stop the ticker.
+	if svr.opts.Ticker {
+		close(svr.ticktock)
+	}
+
 	atomic.StoreInt32(&svr.inShutdown, 1)
 }
 
 func serve(eventHandler EventHandler, listener *listener, options *Options, protoAddr string) error {
-	// Figure out the correct number of loops/goroutines to use.
+	// Figure out the proper number of event-loops/goroutines to run.
 	numEventLoop := 1
 	if options.Multicore {
 		numEventLoop = runtime.NumCPU()
@@ -241,7 +256,7 @@ func serve(eventHandler EventHandler, listener *listener, options *Options, prot
 	}
 
 	svr.cond = sync.NewCond(&sync.Mutex{})
-	svr.ticktock = make(chan time.Duration, channelBuffer(1))
+	svr.ticktock = make(chan time.Duration, channelBuffer)
 	svr.logger = logging.DefaultLogger
 	svr.codec = func() ICodec {
 		if options.Codec == nil {

@@ -49,7 +49,7 @@ type internalEventloop struct {
 	idx               int                     // loop index in the server loops list
 	svr               *server                 // server in loop
 	poller            *netpoll.Poller         // epoll or kqueue
-	packet            []byte                  // read packet buffer
+	packet            []byte                  // read packet buffer whose capacity is 64KB
 	connCount         int32                   // number of active connections in event-loop
 	connections       map[int]*conn           // loop connections fd -> conn
 	eventHandler      EventHandler            // user eventHandler
@@ -72,15 +72,8 @@ func (el *eventloop) loopRun(lockOSThread bool) {
 	defer func() {
 		el.closeAllConns()
 		el.ln.close()
-		if el.idx == 0 && el.svr.opts.Ticker {
-			close(el.svr.ticktock)
-		}
 		el.svr.signalShutdown()
 	}()
-
-	if el.idx == 0 && el.svr.opts.Ticker {
-		go el.loopTicker()
-	}
 
 	err := el.poller.Polling(el.handleEvent)
 	el.svr.logger.Infof("Event-loop(%d) is exiting due to error: %v", el.idx, err)
@@ -145,6 +138,9 @@ func (el *eventloop) loopRead(c *conn) error {
 		out, action := el.eventHandler.React(inFrame, c)
 		if out != nil {
 			el.eventHandler.PreWrite()
+			// Encode data and try to write it back to the client, this attempt is based on a fact:
+			// a client socket waits for the response data after sending request data to the server,
+			// which makes the client socket writable.
 			if err = c.write(out); err != nil {
 				return err
 			}
@@ -192,6 +188,8 @@ func (el *eventloop) loopWrite(c *conn) error {
 		c.outboundBuffer.Shift(n)
 	}
 
+	// All data have been drained, it's no need to monitor the writable events,
+	// remove the writable event from poller to help the future event-loops.
 	if c.outboundBuffer.IsEmpty() {
 		_ = el.poller.ModRead(c.fd)
 	}

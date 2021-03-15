@@ -400,6 +400,7 @@ var MessagesGetMediaHistory = &ishell.Cmd{
 
 	},
 }
+
 func init() {
 	Message.AddCmd(MessageGetDialogs)
 	Message.AddCmd(MessageGetDialog)

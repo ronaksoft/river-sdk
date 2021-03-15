@@ -13,68 +13,81 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-type Handler func(ctx *RequestCtx, in *rony.MessageEnvelope)
+type (
+	Handler = func(ctx *RequestCtx, in *rony.MessageEnvelope)
+)
 
-type HandlerOptions struct {
-	pre  []Handler
-	post []Handler
+// HandlerOption is a structure holds all the information required for a handler.
+type HandlerOption struct {
+	constructors     map[int64]struct{}
+	handlers         []Handler
+	inconsistentRead bool
+	tunnel           bool
+	gateway          bool
+
+	// internal user
+	builtin bool
 }
 
-func NewHandlerOptions() *HandlerOptions {
-	return &HandlerOptions{}
+func NewHandlerOptions() *HandlerOption {
+	return &HandlerOption{
+		constructors:     map[int64]struct{}{},
+		handlers:         nil,
+		gateway:          true,
+		tunnel:           true,
+		inconsistentRead: false,
+	}
 }
 
-func (ho *HandlerOptions) SetPreHandlers(h ...Handler) *HandlerOptions {
-	ho.pre = append(ho.pre[:0], h...)
+func (ho *HandlerOption) setBuiltin() *HandlerOption {
+	ho.builtin = true
 	return ho
 }
 
-func (ho *HandlerOptions) SetPostHandlers(h ...Handler) *HandlerOptions {
-	ho.post = append(ho.post[:0], h...)
+func (ho *HandlerOption) SetConstructor(constructors ...int64) *HandlerOption {
+	for _, c := range constructors {
+		ho.constructors[c] = struct{}{}
+	}
 	return ho
 }
 
-func (ho *HandlerOptions) ApplyTo(h ...Handler) []Handler {
-	out := make([]Handler, 0, len(ho.pre)+len(h)+len(ho.post))
-	out = append(out, ho.pre...)
-	out = append(out, h...)
-	out = append(out, ho.post...)
-	return out
+// SetHandler replaces the handlers for this constructor with h
+func (ho *HandlerOption) SetHandler(h ...Handler) *HandlerOption {
+	ho.handlers = append(ho.handlers[:0], h...)
+	return ho
 }
 
-func (edge *Server) getNodes(ctx *RequestCtx, in *rony.MessageEnvelope) {
-	req := rony.PoolGetNodes.Get()
-	defer rony.PoolGetNodes.Put(req)
-	res := rony.PoolNodeInfoMany.Get()
-	defer rony.PoolNodeInfoMany.Put(res)
-	err := req.Unmarshal(in.Message)
-	if err != nil {
-		ctx.PushError(rony.ErrCodeInvalid, rony.ErrItemRequest)
-		return
-	}
+// GatewayOnly makes this method only available through gateway messages.
+func (ho *HandlerOption) GatewayOnly() *HandlerOption {
+	ho.tunnel = false
+	ho.gateway = true
+	return ho
+}
 
-	if edge.cluster == nil {
-		res.Nodes = append(res.Nodes, &rony.NodeInfo{
-			ReplicaSet: 0,
-			ServerID:   edge.GetServerID(),
-			HostPorts:  edge.gateway.Addr(),
-			Leader:     true,
-		})
-	} else if len(req.ReplicaSet) == 0 {
-		members := edge.cluster.RaftMembers(edge.cluster.ReplicaSet())
-		for _, m := range members {
-			res.Nodes = append(res.Nodes, m.Proto(nil))
-		}
-	} else {
-		for _, rs := range req.ReplicaSet {
-			members := edge.cluster.RaftMembers(rs)
-			for _, m := range members {
-				res.Nodes = append(res.Nodes, m.Proto(nil))
-			}
-		}
-	}
+// TunnelOnly makes this method only available through tunnel messages.
+func (ho *HandlerOption) TunnelOnly() *HandlerOption {
+	ho.tunnel = true
+	ho.gateway = false
+	return ho
+}
 
-	ctx.PushMessage(rony.C_NodeInfoMany, res)
-	return
+// InconsistentRead makes this method (constructor) available on edges in follower state
+func (ho *HandlerOption) InconsistentRead() *HandlerOption {
+	ho.inconsistentRead = true
+	return ho
+}
 
+// Prepend adds the h handlers before already set handlers
+func (ho *HandlerOption) Prepend(h ...Handler) *HandlerOption {
+	nh := make([]Handler, 0, len(ho.handlers)+len(h))
+	nh = append(nh, h...)
+	nh = append(nh, ho.handlers...)
+	ho.handlers = nh
+	return ho
+}
+
+// Append adds the h handlers after already set handlers
+func (ho *HandlerOption) Append(h ...Handler) *HandlerOption {
+	ho.handlers = append(ho.handlers, h...)
+	return ho
 }

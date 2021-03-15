@@ -35,6 +35,11 @@ func StrToUInt32(s string) uint32 {
 	return uint32(v)
 }
 
+func StrToInt(s string) int {
+	v, _ := strconv.ParseInt(s, 10, 32)
+	return int(v)
+}
+
 func Int64ToStr(x int64) string {
 	return strconv.FormatInt(x, 10)
 }
@@ -51,6 +56,10 @@ func UInt32ToStr(x uint32) string {
 	return strconv.FormatUint(uint64(x), 10)
 }
 
+func IntToStr(x int) string {
+	return strconv.FormatUint(uint64(x), 10)
+}
+
 // ByteToStr converts byte slice to a string without memory allocation.
 // Note it may break if string and/or slice header will change
 // in the future go versions.
@@ -60,6 +69,10 @@ func ByteToStr(bts []byte) string {
 	return *(*string)(unsafe.Pointer(s))
 }
 
+func B2S(bts []byte) string {
+	return ByteToStr(bts)
+}
+
 // StrToByte converts string to a byte slice without memory allocation.
 // Note it may break if string and/or slice header will change
 // in the future go versions.
@@ -67,4 +80,8 @@ func StrToByte(str string) []byte {
 	s := *(*reflect.StringHeader)(unsafe.Pointer(&str))
 	b := &reflect.SliceHeader{Data: s.Data, Len: s.Len, Cap: s.Len}
 	return *(*[]byte)(unsafe.Pointer(b))
+}
+
+func S2B(str string) []byte {
+	return StrToByte(str)
 }

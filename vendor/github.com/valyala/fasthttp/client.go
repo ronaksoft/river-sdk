@@ -512,7 +512,7 @@ func (c *Client) Do(req *Request, resp *Response) error {
 	c.mLock.Unlock()
 
 	if startCleaner {
-		go c.mCleaner()
+		go c.mCleaner(m)
 	}
 
 	return hc.Do(req, resp)
@@ -533,21 +533,21 @@ func (c *Client) CloseIdleConnections() {
 	c.mLock.Unlock()
 }
 
-func (c *Client) mCleaner() {
+func (c *Client) mCleaner(m map[string]*HostClient) {
 	mustStop := false
 
 	for {
 		c.mLock.Lock()
-		for k, v := range c.m {
+		for k, v := range m {
 			v.connsLock.Lock()
 			shouldRemove := v.connsCount == 0
 			v.connsLock.Unlock()
 
 			if shouldRemove {
-				delete(c.m, k)
+				delete(m, k)
 			}
 		}
-		if len(c.m) == 0 {
+		if len(m) == 0 {
 			mustStop = true
 		}
 		c.mLock.Unlock()
@@ -856,8 +856,6 @@ func clientGetURLDeadline(dst []byte, url string, deadline time.Time, c clientDo
 	}
 	ch = chv.(chan clientURLResponse)
 
-	req := AcquireRequest()
-
 	// Note that the request continues execution on ErrTimeout until
 	// client-specific ReadTimeout exceeds. This helps limiting load
 	// on slow hosts by MaxConns* concurrent requests.
@@ -865,28 +863,55 @@ func clientGetURLDeadline(dst []byte, url string, deadline time.Time, c clientDo
 	// Without this 'hack' the load on slow host could exceed MaxConns*
 	// concurrent requests, since timed out requests on client side
 	// usually continue execution on the host.
+
+	var mu sync.Mutex
+	var timedout, responded bool
+
 	go func() {
+		req := AcquireRequest()
+
 		statusCodeCopy, bodyCopy, errCopy := doRequestFollowRedirectsBuffer(req, dst, url, c)
-		ch <- clientURLResponse{
-			statusCode: statusCodeCopy,
-			body:       bodyCopy,
-			err:        errCopy,
+		mu.Lock()
+		{
+			if !timedout {
+				ch <- clientURLResponse{
+					statusCode: statusCodeCopy,
+					body:       bodyCopy,
+					err:        errCopy,
+				}
+				responded = true
+			}
 		}
+		mu.Unlock()
+
+		ReleaseRequest(req)
 	}()
 
 	tc := AcquireTimer(timeout)
 	select {
 	case resp := <-ch:
-		ReleaseRequest(req)
-		clientURLResponseChPool.Put(chv)
 		statusCode = resp.statusCode
 		body = resp.body
 		err = resp.err
 	case <-tc.C:
-		body = dst
-		err = ErrTimeout
+		mu.Lock()
+		{
+			if responded {
+				resp := <-ch
+				statusCode = resp.statusCode
+				body = resp.body
+				err = resp.err
+			} else {
+				timedout = true
+				err = ErrTimeout
+				body = dst
+			}
+		}
+		mu.Unlock()
 	}
 	ReleaseTimer(tc)
+
+	clientURLResponseChPool.Put(chv)
 
 	return statusCode, body, err
 }
@@ -1152,7 +1177,7 @@ func clientDoDeadline(req *Request, resp *Response, deadline time.Time, c client
 	// usually continue execution on the host.
 
 	var mu sync.Mutex
-	var timedout bool
+	var timedout, responded bool
 
 	go func() {
 		reqCopy.timeout = timeout
@@ -1166,6 +1191,7 @@ func clientDoDeadline(req *Request, resp *Response, deadline time.Time, c client
 				}
 				swapRequestBody(reqCopy, req)
 				ch <- errDo
+				responded = true
 			}
 		}
 		mu.Unlock()
@@ -1181,17 +1207,17 @@ func clientDoDeadline(req *Request, resp *Response, deadline time.Time, c client
 	case <-tc.C:
 		mu.Lock()
 		{
-			timedout = true
-			err = ErrTimeout
+			if responded {
+				err = <-ch
+			} else {
+				timedout = true
+				err = ErrTimeout
+			}
 		}
 		mu.Unlock()
 	}
 	ReleaseTimer(tc)
 
-	select {
-	case <-ch:
-	default:
-	}
 	errorChPool.Put(chv)
 
 	return err
@@ -1317,7 +1343,7 @@ func (c *HostClient) doNonNilReqResp(req *Request, resp *Response) (bool, error)
 		req.URI().DisablePathNormalizing = true
 	}
 
-	cc, err := c.acquireConn(req.timeout)
+	cc, err := c.acquireConn(req.timeout, req.ConnectionClose())
 	if err != nil {
 		return false, err
 	}
@@ -1444,7 +1470,7 @@ func (c *HostClient) SetMaxConns(newMaxConns int) {
 	c.connsLock.Unlock()
 }
 
-func (c *HostClient) acquireConn(reqTimeout time.Duration) (cc *clientConn, err error) {
+func (c *HostClient) acquireConn(reqTimeout time.Duration, connectionClose bool) (cc *clientConn, err error) {
 	createConn := false
 	startCleaner := false
 
@@ -1459,7 +1485,7 @@ func (c *HostClient) acquireConn(reqTimeout time.Duration) (cc *clientConn, err 
 		if c.connsCount < maxConns {
 			c.connsCount++
 			createConn = true
-			if !c.connsCleanerRun {
+			if !c.connsCleanerRun && !connectionClose {
 				startCleaner = true
 				c.connsCleanerRun = true
 			}
@@ -1665,6 +1691,14 @@ func (c *HostClient) decConnsCount() {
 		c.connsCount--
 	}
 
+}
+
+// ConnsCount returns connection count of HostClient
+func (c *HostClient) ConnsCount() int {
+	c.connsLock.Lock()
+	defer c.connsLock.Unlock()
+
+	return c.connsCount
 }
 
 func acquireClientConn(conn net.Conn) *clientConn {
@@ -2118,6 +2152,15 @@ type PipelineClient struct {
 	// since unfortunately ipv6 remains broken in many networks worldwide :)
 	DialDualStack bool
 
+	// Path values are sent as-is without normalization
+	//
+	// Disabled path normalization may be useful for proxying incoming requests
+	// to servers that are expecting paths to be forwarded as-is.
+	//
+	// By default path values are normalized, i.e.
+	// extra slashes are removed, special characters are encoded.
+	DisablePathNormalizing bool
+
 	// Whether to use TLS (aka SSL or HTTPS) for host connections.
 	IsTLS bool
 
@@ -2163,19 +2206,20 @@ type PipelineClient struct {
 type pipelineConnClient struct {
 	noCopy noCopy //nolint:unused,structcheck
 
-	Addr                string
-	MaxPendingRequests  int
-	MaxBatchDelay       time.Duration
-	Dial                DialFunc
-	DialDualStack       bool
-	IsTLS               bool
-	TLSConfig           *tls.Config
-	MaxIdleConnDuration time.Duration
-	ReadBufferSize      int
-	WriteBufferSize     int
-	ReadTimeout         time.Duration
-	WriteTimeout        time.Duration
-	Logger              Logger
+	Addr                   string
+	MaxPendingRequests     int
+	MaxBatchDelay          time.Duration
+	Dial                   DialFunc
+	DialDualStack          bool
+	DisablePathNormalizing bool
+	IsTLS                  bool
+	TLSConfig              *tls.Config
+	MaxIdleConnDuration    time.Duration
+	ReadBufferSize         int
+	WriteBufferSize        int
+	ReadTimeout            time.Duration
+	WriteTimeout           time.Duration
+	Logger                 Logger
 
 	workPool sync.Pool
 
@@ -2249,6 +2293,10 @@ func (c *pipelineConnClient) DoDeadline(req *Request, resp *Response, deadline t
 		return ErrTimeout
 	}
 
+	if c.DisablePathNormalizing {
+		req.URI().DisablePathNormalizing = true
+	}
+
 	w := acquirePipelineWork(&c.workPool, timeout)
 	w.req = &w.reqCopy
 	w.resp = &w.respCopy
@@ -2305,6 +2353,10 @@ func (c *PipelineClient) Do(req *Request, resp *Response) error {
 
 func (c *pipelineConnClient) Do(req *Request, resp *Response) error {
 	c.init()
+
+	if c.DisablePathNormalizing {
+		req.URI().DisablePathNormalizing = true
+	}
 
 	w := acquirePipelineWork(&c.workPool, 0)
 	w.req = req
@@ -2384,19 +2436,20 @@ func (c *PipelineClient) getConnClientUnlocked() *pipelineConnClient {
 
 func (c *PipelineClient) newConnClient() *pipelineConnClient {
 	cc := &pipelineConnClient{
-		Addr:                c.Addr,
-		MaxPendingRequests:  c.MaxPendingRequests,
-		MaxBatchDelay:       c.MaxBatchDelay,
-		Dial:                c.Dial,
-		DialDualStack:       c.DialDualStack,
-		IsTLS:               c.IsTLS,
-		TLSConfig:           c.TLSConfig,
-		MaxIdleConnDuration: c.MaxIdleConnDuration,
-		ReadBufferSize:      c.ReadBufferSize,
-		WriteBufferSize:     c.WriteBufferSize,
-		ReadTimeout:         c.ReadTimeout,
-		WriteTimeout:        c.WriteTimeout,
-		Logger:              c.Logger,
+		Addr:                   c.Addr,
+		MaxPendingRequests:     c.MaxPendingRequests,
+		MaxBatchDelay:          c.MaxBatchDelay,
+		Dial:                   c.Dial,
+		DialDualStack:          c.DialDualStack,
+		DisablePathNormalizing: c.DisablePathNormalizing,
+		IsTLS:                  c.IsTLS,
+		TLSConfig:              c.TLSConfig,
+		MaxIdleConnDuration:    c.MaxIdleConnDuration,
+		ReadBufferSize:         c.ReadBufferSize,
+		WriteBufferSize:        c.WriteBufferSize,
+		ReadTimeout:            c.ReadTimeout,
+		WriteTimeout:           c.WriteTimeout,
+		Logger:                 c.Logger,
 	}
 	c.connClients = append(c.connClients, cc)
 	return cc

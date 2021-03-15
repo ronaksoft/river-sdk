@@ -17,16 +17,22 @@ type poolMessageEnvelope struct {
 func (p *poolMessageEnvelope) Get() *MessageEnvelope {
 	x, ok := p.pool.Get().(*MessageEnvelope)
 	if !ok {
-		return &MessageEnvelope{}
+		x = &MessageEnvelope{}
 	}
 	return x
 }
 
 func (p *poolMessageEnvelope) Put(x *MessageEnvelope) {
+	if x == nil {
+		return
+	}
 	x.Constructor = 0
 	x.RequestID = 0
 	x.Message = x.Message[:0]
 	x.Auth = x.Auth[:0]
+	for _, z := range x.Header {
+		PoolKeyValue.Put(z)
+	}
 	x.Header = x.Header[:0]
 	p.pool.Put(x)
 }
@@ -64,12 +70,15 @@ type poolKeyValue struct {
 func (p *poolKeyValue) Get() *KeyValue {
 	x, ok := p.pool.Get().(*KeyValue)
 	if !ok {
-		return &KeyValue{}
+		x = &KeyValue{}
 	}
 	return x
 }
 
 func (p *poolKeyValue) Put(x *KeyValue) {
+	if x == nil {
+		return
+	}
 	x.Key = ""
 	x.Value = ""
 	p.pool.Put(x)
@@ -99,13 +108,19 @@ type poolMessageContainer struct {
 func (p *poolMessageContainer) Get() *MessageContainer {
 	x, ok := p.pool.Get().(*MessageContainer)
 	if !ok {
-		return &MessageContainer{}
+		x = &MessageContainer{}
 	}
 	return x
 }
 
 func (p *poolMessageContainer) Put(x *MessageContainer) {
+	if x == nil {
+		return
+	}
 	x.Length = 0
+	for _, z := range x.Envelopes {
+		PoolMessageEnvelope.Put(z)
+	}
 	x.Envelopes = x.Envelopes[:0]
 	p.pool.Put(x)
 }
@@ -140,18 +155,18 @@ type poolError struct {
 func (p *poolError) Get() *Error {
 	x, ok := p.pool.Get().(*Error)
 	if !ok {
-		return &Error{}
+		x = &Error{}
 	}
 	return x
 }
 
 func (p *poolError) Put(x *Error) {
+	if x == nil {
+		return
+	}
 	x.Code = ""
 	x.Items = ""
-	x.Template = ""
-	x.TemplateItems = x.TemplateItems[:0]
-	x.LocalTemplate = ""
-	x.LocalTemplateItems = x.LocalTemplateItems[:0]
+	x.Description = ""
 	p.pool.Put(x)
 }
 
@@ -160,10 +175,7 @@ var PoolError = poolError{}
 func (x *Error) DeepCopy(z *Error) {
 	z.Code = x.Code
 	z.Items = x.Items
-	z.Template = x.Template
-	z.TemplateItems = append(z.TemplateItems[:0], x.TemplateItems...)
-	z.LocalTemplate = x.LocalTemplate
-	z.LocalTemplateItems = append(z.LocalTemplateItems[:0], x.LocalTemplateItems...)
+	z.Description = x.Description
 }
 
 func (x *Error) Marshal() ([]byte, error) {
@@ -183,16 +195,20 @@ type poolRedirect struct {
 func (p *poolRedirect) Get() *Redirect {
 	x, ok := p.pool.Get().(*Redirect)
 	if !ok {
-		return &Redirect{}
+		x = &Redirect{}
 	}
 	return x
 }
 
 func (p *poolRedirect) Put(x *Redirect) {
+	if x == nil {
+		return
+	}
 	x.Reason = 0
-	if x.Leader != nil {
-		PoolNodeInfo.Put(x.Leader)
-		x.Leader = nil
+	PoolEdge.Put(x.Leader)
+	x.Leader = nil
+	for _, z := range x.Followers {
+		PoolEdge.Put(z)
 	}
 	x.Followers = x.Followers[:0]
 	x.WaitInSec = 0
@@ -204,12 +220,16 @@ var PoolRedirect = poolRedirect{}
 func (x *Redirect) DeepCopy(z *Redirect) {
 	z.Reason = x.Reason
 	if x.Leader != nil {
-		z.Leader = PoolNodeInfo.Get()
+		if z.Leader == nil {
+			z.Leader = PoolEdge.Get()
+		}
 		x.Leader.DeepCopy(z.Leader)
+	} else {
+		z.Leader = nil
 	}
 	for idx := range x.Followers {
 		if x.Followers[idx] != nil {
-			xx := PoolNodeInfo.Get()
+			xx := PoolEdge.Get()
 			x.Followers[idx].DeepCopy(xx)
 			z.Followers = append(z.Followers, xx)
 		}
@@ -225,21 +245,24 @@ func (x *Redirect) Unmarshal(b []byte) error {
 	return proto.UnmarshalOptions{}.Unmarshal(b, x)
 }
 
-const C_NodeInfo int64 = 2894317502
+const C_Edge int64 = 3576986712
 
-type poolNodeInfo struct {
+type poolEdge struct {
 	pool sync.Pool
 }
 
-func (p *poolNodeInfo) Get() *NodeInfo {
-	x, ok := p.pool.Get().(*NodeInfo)
+func (p *poolEdge) Get() *Edge {
+	x, ok := p.pool.Get().(*Edge)
 	if !ok {
-		return &NodeInfo{}
+		x = &Edge{}
 	}
 	return x
 }
 
-func (p *poolNodeInfo) Put(x *NodeInfo) {
+func (p *poolEdge) Put(x *Edge) {
+	if x == nil {
+		return
+	}
 	x.ReplicaSet = 0
 	x.ServerID = ""
 	x.HostPorts = x.HostPorts[:0]
@@ -247,92 +270,65 @@ func (p *poolNodeInfo) Put(x *NodeInfo) {
 	p.pool.Put(x)
 }
 
-var PoolNodeInfo = poolNodeInfo{}
+var PoolEdge = poolEdge{}
 
-func (x *NodeInfo) DeepCopy(z *NodeInfo) {
+func (x *Edge) DeepCopy(z *Edge) {
 	z.ReplicaSet = x.ReplicaSet
 	z.ServerID = x.ServerID
 	z.HostPorts = append(z.HostPorts[:0], x.HostPorts...)
 	z.Leader = x.Leader
 }
 
-func (x *NodeInfo) Marshal() ([]byte, error) {
+func (x *Edge) Marshal() ([]byte, error) {
 	return proto.Marshal(x)
 }
 
-func (x *NodeInfo) Unmarshal(b []byte) error {
+func (x *Edge) Unmarshal(b []byte) error {
 	return proto.UnmarshalOptions{}.Unmarshal(b, x)
 }
 
-const C_GetNodes int64 = 362407405
+const C_Edges int64 = 2120950449
 
-type poolGetNodes struct {
+type poolEdges struct {
 	pool sync.Pool
 }
 
-func (p *poolGetNodes) Get() *GetNodes {
-	x, ok := p.pool.Get().(*GetNodes)
+func (p *poolEdges) Get() *Edges {
+	x, ok := p.pool.Get().(*Edges)
 	if !ok {
-		return &GetNodes{}
+		x = &Edges{}
 	}
 	return x
 }
 
-func (p *poolGetNodes) Put(x *GetNodes) {
-	x.ReplicaSet = x.ReplicaSet[:0]
-	p.pool.Put(x)
-}
-
-var PoolGetNodes = poolGetNodes{}
-
-func (x *GetNodes) DeepCopy(z *GetNodes) {
-	z.ReplicaSet = append(z.ReplicaSet[:0], x.ReplicaSet...)
-}
-
-func (x *GetNodes) Marshal() ([]byte, error) {
-	return proto.Marshal(x)
-}
-
-func (x *GetNodes) Unmarshal(b []byte) error {
-	return proto.UnmarshalOptions{}.Unmarshal(b, x)
-}
-
-const C_NodeInfoMany int64 = 1963715709
-
-type poolNodeInfoMany struct {
-	pool sync.Pool
-}
-
-func (p *poolNodeInfoMany) Get() *NodeInfoMany {
-	x, ok := p.pool.Get().(*NodeInfoMany)
-	if !ok {
-		return &NodeInfoMany{}
+func (p *poolEdges) Put(x *Edges) {
+	if x == nil {
+		return
 	}
-	return x
-}
-
-func (p *poolNodeInfoMany) Put(x *NodeInfoMany) {
+	for _, z := range x.Nodes {
+		PoolEdge.Put(z)
+	}
 	x.Nodes = x.Nodes[:0]
 	p.pool.Put(x)
 }
 
-var PoolNodeInfoMany = poolNodeInfoMany{}
+var PoolEdges = poolEdges{}
 
-func (x *NodeInfoMany) DeepCopy(z *NodeInfoMany) {
+func (x *Edges) DeepCopy(z *Edges) {
 	for idx := range x.Nodes {
 		if x.Nodes[idx] != nil {
-			xx := PoolNodeInfo.Get()
+			xx := PoolEdge.Get()
 			x.Nodes[idx].DeepCopy(xx)
 			z.Nodes = append(z.Nodes, xx)
 		}
 	}
 }
 
-func (x *NodeInfoMany) Marshal() ([]byte, error) {
+func (x *Edges) Marshal() ([]byte, error) {
 	return proto.Marshal(x)
 }
 
-func (x *NodeInfoMany) Unmarshal(b []byte) error {
+func (x *Edges) Unmarshal(b []byte) error {
 	return proto.UnmarshalOptions{}.Unmarshal(b, x)
 }
 
@@ -342,7 +338,6 @@ func init() {
 	registry.RegisterConstructor(1972016308, "MessageContainer")
 	registry.RegisterConstructor(2619118453, "Error")
 	registry.RegisterConstructor(981138557, "Redirect")
-	registry.RegisterConstructor(2894317502, "NodeInfo")
-	registry.RegisterConstructor(362407405, "GetNodes")
-	registry.RegisterConstructor(1963715709, "NodeInfoMany")
+	registry.RegisterConstructor(3576986712, "Edge")
+	registry.RegisterConstructor(2120950449, "Edges")
 }

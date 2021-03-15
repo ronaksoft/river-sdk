@@ -164,8 +164,7 @@ func MessagePrinter(envelope *rony.MessageEnvelope) {
 	case rony.C_Error:
 		x := new(rony.Error)
 		x.Unmarshal(envelope.Message)
-		_Shell.Println(fmt.Sprintf("Error \t %s:%s", x.Code, x.Items))
-		_Shell.Println(fmt.Sprintf("%s: %s", x.Template, x.TemplateItems))
+		_Shell.Println(fmt.Sprintf("Error \t %s:%s (%s)", x.Code, x.Items, x.Description))
 	case msg.C_MessagesMany:
 
 		x := new(msg.MessagesMany)

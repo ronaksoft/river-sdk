@@ -15,8 +15,9 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-//go:generate protoc -I=. --go_out=paths=source_relative:. msg.proto imsg.proto options.proto
-//go:generate protoc -I=. --gorony_out=paths=source_relative:. msg.proto imsg.proto
+//go:generate protoc -I=. --go_out=paths=source_relative:. imsg.proto msg.proto options.proto
+//go:generate protoc -I=. --gorony_out=paths=source_relative:. imsg.proto msg.proto
+func init() {}
 
 func ErrorMessage(out *MessageEnvelope, reqID uint64, errCode, errItem string) {
 	errMessage := PoolError.Get()
@@ -74,9 +75,19 @@ func (x *MessageEnvelope) Set(KVs ...*KeyValue) {
 	x.Header = append(x.Header[:0], KVs...)
 }
 
+func (x *MessageContainer) Add(reqID uint64, constructor int64, p proto.Message, kvs ...*KeyValue) {
+	me := PoolMessageEnvelope.Get()
+	me.Fill(reqID, constructor, p, kvs...)
+	x.Envelopes = append(x.Envelopes, me)
+	x.Length += 1
+}
+
 func (x *RaftCommand) Fill(senderID []byte, e *MessageEnvelope, kvs ...*KeyValue) {
 	x.Sender = append(x.Sender[:0], senderID...)
 	x.Store = append(x.Store[:0], kvs...)
+	if x.Envelope == nil {
+		x.Envelope = PoolMessageEnvelope.Get()
+	}
 	e.DeepCopy(x.Envelope)
 }
 
@@ -84,12 +95,15 @@ func (x *TunnelMessage) Fill(senderID []byte, senderReplicaSet uint64, e *Messag
 	x.SenderID = append(x.SenderID[:0], senderID...)
 	x.SenderReplicaSet = senderReplicaSet
 	x.Store = append(x.Store[:0], kvs...)
+	if x.Envelope == nil {
+		x.Envelope = PoolMessageEnvelope.Get()
+	}
 	e.DeepCopy(x.Envelope)
 }
 
 func (x *Error) Error() string {
-	if len(x.Template) > 0 {
-		return fmt.Sprintf("%s:%s (%s %s)", x.Code, x.Items, x.Template, x.Items)
+	if len(x.Description) > 0 {
+		return fmt.Sprintf("%s:%s (%s)", x.Code, x.Items, x.Description)
 	} else {
 		return fmt.Sprintf("%s:%s", x.Code, x.Items)
 	}

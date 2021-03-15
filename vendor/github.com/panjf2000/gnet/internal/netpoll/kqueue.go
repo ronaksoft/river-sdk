@@ -25,17 +25,20 @@ package netpoll
 
 import (
 	"os"
+	"runtime"
+	"sync/atomic"
 
 	"github.com/panjf2000/gnet/errors"
-	"github.com/panjf2000/gnet/internal"
 	"github.com/panjf2000/gnet/internal/logging"
+	"github.com/panjf2000/gnet/internal/netpoll/queue"
 	"golang.org/x/sys/unix"
 )
 
 // Poller represents a poller which is in charge of monitoring file-descriptors.
 type Poller struct {
-	fd            int
-	asyncJobQueue internal.AsyncJobQueue
+	fd             int
+	netpollWakeSig int32
+	asyncTaskQueue queue.AsyncTaskQueue
 }
 
 // OpenPoller instantiates a poller.
@@ -56,7 +59,7 @@ func OpenPoller() (poller *Poller, err error) {
 		err = os.NewSyscallError("kevent add|clear", err)
 		return
 	}
-	poller.asyncJobQueue = internal.NewAsyncJobQueue()
+	poller.asyncTaskQueue = queue.NewLockFreeQueue()
 	return
 }
 
@@ -71,10 +74,12 @@ var wakeChanges = []unix.Kevent_t{{
 	Fflags: unix.NOTE_TRIGGER,
 }}
 
-// Trigger wakes up the poller blocked in waiting for network-events and runs jobs in asyncJobQueue.
-func (p *Poller) Trigger(job internal.Job) (err error) {
-	if p.asyncJobQueue.Push(job) == 1 {
-		_, err = unix.Kevent(p.fd, wakeChanges, nil, nil)
+// Trigger wakes up the poller blocked in waiting for network-events and runs jobs in asyncTaskQueue.
+func (p *Poller) Trigger(task queue.Task) (err error) {
+	p.asyncTaskQueue.Enqueue(task)
+	if atomic.CompareAndSwapInt32(&p.netpollWakeSig, 0, 1) {
+		for _, err = unix.Kevent(p.fd, wakeChanges, nil, nil); err == unix.EINTR || err == unix.EAGAIN; _, err = unix.Kevent(p.fd, wakeChanges, nil, nil) {
+		}
 	}
 	return os.NewSyscallError("kevent trigger", err)
 }
@@ -82,14 +87,23 @@ func (p *Poller) Trigger(job internal.Job) (err error) {
 // Polling blocks the current goroutine, waiting for network-events.
 func (p *Poller) Polling(callback func(fd int, filter int16) error) error {
 	el := newEventList(InitEvents)
-	var wakenUp bool
 
+	var (
+		ts      unix.Timespec
+		tsp     *unix.Timespec
+		wakenUp bool
+	)
 	for {
-		n, err := unix.Kevent(p.fd, nil, el.events, nil)
-		if err != nil && err != unix.EINTR {
-			logging.DefaultLogger.Warnf("Error occurs in kqueue: %v", os.NewSyscallError("kevent wait", err))
+		n, err := unix.Kevent(p.fd, nil, el.events, tsp)
+		if n == 0 || (n < 0 && err == unix.EINTR) {
+			tsp = nil
+			runtime.Gosched()
 			continue
+		} else if err != nil {
+			logging.DefaultLogger.Warnf("Error occurs in kqueue: %v", os.NewSyscallError("kevent wait", err))
+			return err
 		}
+		tsp = &ts
 
 		var evFilter int16
 		for i := 0; i < n; i++ {
@@ -112,17 +126,30 @@ func (p *Poller) Polling(callback func(fd int, filter int16) error) error {
 
 		if wakenUp {
 			wakenUp = false
-			switch err = p.asyncJobQueue.ForEach(); err {
-			case nil:
-			case errors.ErrServerShutdown:
-				return err
-			default:
-				logging.DefaultLogger.Warnf("Error occurs in user-defined function, %v", err)
+			var task queue.Task
+			for i := 0; i < AsyncTasks; i++ {
+				if task = p.asyncTaskQueue.Dequeue(); task == nil {
+					break
+				}
+				switch err = task(); err {
+				case nil:
+				case errors.ErrServerShutdown:
+					return err
+				default:
+					logging.DefaultLogger.Warnf("Error occurs in user-defined function, %v", err)
+				}
+			}
+			atomic.StoreInt32(&p.netpollWakeSig, 0)
+			if !p.asyncTaskQueue.Empty() {
+				for _, err = unix.Kevent(p.fd, wakeChanges, nil, nil); err == unix.EINTR || err == unix.EAGAIN; _, err = unix.Kevent(p.fd, wakeChanges, nil, nil) {
+				}
 			}
 		}
 
 		if n == el.size {
-			el.increase()
+			el.expand()
+		} else if n < el.size>>1 {
+			el.shrink()
 		}
 	}
 }

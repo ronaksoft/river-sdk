@@ -1,16 +1,19 @@
 package edge
 
 import (
-	"errors"
+	"bufio"
 	"github.com/hashicorp/raft"
 	"github.com/ronaksoft/rony"
-	"github.com/ronaksoft/rony/cluster"
-	"github.com/ronaksoft/rony/gateway"
+	"github.com/ronaksoft/rony/internal/cluster"
+	"github.com/ronaksoft/rony/internal/gateway"
+	tcpGateway "github.com/ronaksoft/rony/internal/gateway/tcp"
 	"github.com/ronaksoft/rony/internal/log"
+	"github.com/ronaksoft/rony/internal/metrics"
+	"github.com/ronaksoft/rony/internal/tunnel"
 	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/registry"
+	"github.com/ronaksoft/rony/store"
 	"github.com/ronaksoft/rony/tools"
-	"github.com/ronaksoft/rony/tunnel"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 	"os"
@@ -35,13 +38,13 @@ func init() {
 // Server
 type Server struct {
 	// General
+	dataDir  string
 	serverID []byte
 
 	// Handlers
-	preHandlers      []Handler
-	handlers         map[int64][]Handler
-	postHandlers     []Handler
-	readonlyHandlers map[int64]struct{}
+	preHandlers  []Handler
+	handlers     map[int64]*HandlerOption
+	postHandlers []Handler
 
 	// Gateway's Configs
 	gatewayProtocol   gateway.Protocol
@@ -57,8 +60,8 @@ type Server struct {
 
 func NewServer(serverID string, opts ...Option) *Server {
 	edgeServer := &Server{
-		handlers:          make(map[int64][]Handler),
-		readonlyHandlers:  make(map[int64]struct{}),
+		dataDir:           "./_hdd",
+		handlers:          make(map[int64]*HandlerOption),
 		serverID:          []byte(serverID),
 		gatewayDispatcher: &defaultDispatcher{},
 	}
@@ -67,8 +70,18 @@ func NewServer(serverID string, opts ...Option) *Server {
 		opt(edgeServer)
 	}
 
-	// register default rony handlers
-	edgeServer.SetHandlers(rony.C_GetNodes, false, edgeServer.getNodes)
+	// Initialize store
+	store.MustInit(store.DefaultConfig(edgeServer.dataDir))
+
+	// Initialize metrics
+	metrics.Init(map[string]string{
+		"ServerID": serverID,
+	})
+
+	// register builtin rony handlers
+	builtin := newBuiltin(edgeServer.GetServerID(), edgeServer.Gateway(), edgeServer.Cluster())
+	edgeServer.SetHandler(NewHandlerOptions().SetConstructor(rony.C_GetNodes).Append(builtin.GetNodes).InconsistentRead().setBuiltin())
+	edgeServer.SetHandler(NewHandlerOptions().SetConstructor(rony.C_GetPage).Append(builtin.GetPage).setBuiltin())
 
 	return edgeServer
 }
@@ -93,48 +106,44 @@ func (edge *Server) SetGlobalPostHandlers(handlers ...Handler) {
 	edge.postHandlers = handlers
 }
 
-// SetHandlers set the handlers for the constructor. 'leaderOnly' is applicable ONLY if the cluster is run
+// SetHandler set the handlers for the constructor. 'leaderOnly' is applicable ONLY if the cluster is run
 // with Raft support. If cluster is a Raft enabled cluster, then by setting 'leaderOnly' to TRUE, requests sent
 // to a follower server will return redirect error to the client. For standalone servers 'leaderOnly' does not
 // affect.
-func (edge *Server) SetHandlers(constructor int64, leaderOnly bool, handlers ...Handler) {
-	if !leaderOnly {
-		edge.readonlyHandlers[constructor] = struct{}{}
+func (edge *Server) SetHandler(ho *HandlerOption) {
+	for c := range ho.constructors {
+		edge.handlers[c] = ho
 	}
-	edge.handlers[constructor] = handlers
+
 }
 
-// AppendHandlers appends the handlers for the constructor in order. So handlers[n] will be called before
-// handlers[n+1].
-func (edge *Server) AppendHandlers(constructor int64, handlers ...Handler) {
-	edge.handlers[constructor] = append(edge.handlers[constructor], handlers...)
+// GetHandler returns the handlers of the constructor
+func (edge *Server) GetHandler(constructor int64) *HandlerOption {
+	return edge.handlers[constructor]
 }
 
-// BulkAppendHandlers appends the handlers for all the constructors. This method is useful when you
-// a fixed set of pre-handlers for many of your rpc.it appends the handlers for the constructor in order.
-// So handlers[n] will be called before handlers[n+1]
-func (edge *Server) BulkAppendHandlers(handlers []Handler, constructors ...int64) {
-	for _, c := range constructors {
-		edge.handlers[c] = append(edge.handlers[c], handlers...)
-	}
-}
-
-// PrependHandlers prepends the handlers for the constructor in order.
-func (edge *Server) PrependHandlers(constructor int64, handlers ...Handler) {
-	edge.handlers[constructor] = append(handlers, edge.handlers[constructor]...)
-}
-
-// BulkPrependHandlers prepends the handlers for all the constructors. This method is useful when you
-// a fixed set of post-handlers for many of your rpc.it appends the handlers for the constructor in order.
-func (edge *Server) BulkPrependHandlers(handlers []Handler, constructors ...int64) {
-	for _, c := range constructors {
-		edge.handlers[c] = append(handlers, edge.handlers[c]...)
+// SetHttpProxy
+func (edge *Server) SetHttpProxy(
+	method, path string,
+	onRequest func(c rony.Conn, ctx *HttpRequest) []byte,
+	onResponse func(data []byte) ([]byte, map[string]string),
+) {
+	switch gw := edge.gateway.(type) {
+	case *tcpGateway.Gateway:
+		gw.SetProxy(method, path, tcpGateway.CreateHandle(onRequest, onResponse))
+	default:
+		panic("only works on tcp gateway")
 	}
 }
 
 // Cluster returns a reference to the underlying cluster of the Edge server
 func (edge *Server) Cluster() cluster.Cluster {
 	return edge.cluster
+}
+
+// Gateway returns a reference to the underlying gateway of the Edge server
+func (edge *Server) Gateway() gateway.Gateway {
+	return edge.gateway
 }
 
 func (edge *Server) executePrepare(dispatchCtx *DispatchCtx) (err error, isLeader bool) {
@@ -210,9 +219,16 @@ func (edge *Server) executeFunc(requestCtx *RequestCtx, in *rony.MessageEnvelope
 	// Set the context request
 	requestCtx.reqID = in.RequestID
 
-	if !isLeader && requestCtx.dispatchCtx.kind != ReplicaMessage {
-		_, ok := edge.readonlyHandlers[in.GetConstructor()]
-		if !ok {
+	ho, ok := edge.handlers[in.GetConstructor()]
+	if !ok {
+		requestCtx.PushError(rony.ErrCodeInvalid, rony.ErrItemHandler)
+		return
+	}
+
+	switch requestCtx.Kind() {
+	case ReplicaMessage:
+	default:
+		if !isLeader && !ho.inconsistentRead {
 			if ce := log.Check(log.DebugLevel, "Redirect To Leader"); ce != nil {
 				ce.Write(
 					zap.String("RaftLeaderID", edge.cluster.RaftLeaderID()),
@@ -224,28 +240,24 @@ func (edge *Server) executeFunc(requestCtx *RequestCtx, in *rony.MessageEnvelope
 		}
 	}
 
-	handlers, ok := edge.handlers[in.GetConstructor()]
-	if !ok {
-		requestCtx.PushError(rony.ErrCodeInvalid, rony.ErrItemHandler)
-		return
-	}
-
 	// Run the handler
-	for idx := range edge.preHandlers {
-		edge.preHandlers[idx](requestCtx, in)
-		if requestCtx.stop {
-			break
-		}
-	}
-	if !requestCtx.stop {
-		for idx := range handlers {
-			handlers[idx](requestCtx, in)
+	if !ho.builtin {
+		for idx := range edge.preHandlers {
+			edge.preHandlers[idx](requestCtx, in)
 			if requestCtx.stop {
 				break
 			}
 		}
 	}
 	if !requestCtx.stop {
+		for idx := range ho.handlers {
+			ho.handlers[idx](requestCtx, in)
+			if requestCtx.stop {
+				break
+			}
+		}
+	}
+	if !requestCtx.stop && !ho.builtin {
 		for idx := range edge.postHandlers {
 			edge.postHandlers[idx](requestCtx, in)
 			if requestCtx.stop {
@@ -258,15 +270,19 @@ func (edge *Server) executeFunc(requestCtx *RequestCtx, in *rony.MessageEnvelope
 	}
 
 	if ce := log.Check(log.DebugLevel, "Request Executed"); ce != nil {
-		if requestCtx.Kind() != ReplicaMessage {
-			ce.Write(
-				zap.String("ServerID", edge.GetServerID()),
-				zap.String("Kind", requestCtx.Kind().String()),
-				zap.Uint64("ReqID", in.GetRequestID()),
-				zap.String("C", registry.ConstructorName(in.GetConstructor())),
-				zap.Duration("T", time.Duration(tools.CPUTicks()-startTime)),
-			)
-		}
+		ce.Write(
+			zap.String("ServerID", edge.GetServerID()),
+			zap.String("Kind", requestCtx.Kind().String()),
+			zap.Uint64("ReqID", in.GetRequestID()),
+			zap.String("C", registry.ConstructorName(in.GetConstructor())),
+			zap.Duration("T", time.Duration(tools.CPUTicks()-startTime)),
+		)
+	}
+	switch requestCtx.Kind() {
+	case GatewayMessage:
+		metrics.ObserveHistogram(metrics.HistGatewayRequestTime, float64(time.Duration(tools.CPUTicks()-startTime)/time.Millisecond))
+	case TunnelMessage:
+		metrics.ObserveHistogram(metrics.HistTunnelRequestTime, float64(time.Duration(tools.CPUTicks()-startTime)/time.Millisecond))
 	}
 
 	return
@@ -364,11 +380,10 @@ func (edge *Server) onTunnelDone(ctx *DispatchCtx) {
 	}
 
 	mo := proto.MarshalOptions{UseCachedSize: true}
-	b := pools.Bytes.GetCap(mo.Size(tm))
-	b, _ = mo.MarshalAppend(b, tm)
-	_ = ctx.Conn().SendBinary(ctx.streamID, b)
+	b := pools.Buffer.GetCap(mo.Size(tm))
+	bb, _ := mo.MarshalAppend(*b.Bytes(), tm)
+	_ = ctx.Conn().SendBinary(ctx.streamID, bb)
 }
-
 func (edge *Server) onError(ctx *DispatchCtx, code, item string) {
 	envelope := rony.PoolMessageEnvelope.Get()
 	rony.ErrorMessage(envelope, ctx.req.GetRequestID(), code, item)
@@ -406,7 +421,7 @@ func (edge *Server) StartGateway() error {
 
 	log.Info("Edge Server:: Gateway Started",
 		zap.ByteString("ServerID", edge.serverID),
-		zap.String("Protocol", string(edge.gatewayProtocol)),
+		zap.String("Protocol", edge.gatewayProtocol.String()),
 		zap.Strings("Addr", edge.gateway.Addr()),
 	)
 
@@ -466,6 +481,9 @@ func (edge *Server) Shutdown() {
 		edge.cluster.Shutdown()
 	}
 
+	// Shutdown the underlying store
+	store.Shutdown()
+
 	edge.gatewayProtocol = gateway.Undefined
 	log.Info("Server Shutdown!", zap.ByteString("ID", edge.serverID))
 }
@@ -482,15 +500,83 @@ func (edge *Server) ShutdownWithSignal(signals ...os.Signal) {
 
 // GetGatewayConn return the gateway connection identified by connID or returns nil if not found.
 func (edge *Server) GetGatewayConn(connID uint64) rony.Conn {
+	if edge.gateway == nil {
+		return nil
+	}
 	return edge.gateway.GetConn(connID)
 }
 
-var (
-	ErrClusterNotSet            = errors.New("cluster is not set")
-	ErrGatewayNotSet            = errors.New("gateway is not set")
-	ErrTunnelNotSet             = errors.New("tunnel is not set")
-	ErrUnexpectedTunnelResponse = errors.New("unexpected tunnel response")
-	ErrEmptyMemberList          = errors.New("member list is empty")
-	ErrMemberNotFound           = errors.New("member not found")
-	ErrNoTunnelAddrs            = errors.New("tunnel address does not found")
-)
+// ExecuteRemote sends and receives a request through the Tunnel interface of the receiver Edge node.
+func (edge *Server) ExecuteRemote(replicaSet uint64, onlyLeader bool, req, res *rony.MessageEnvelope) error {
+	return edge.TryExecuteRemote(1, 0, replicaSet, onlyLeader, req, res)
+}
+func (edge *Server) TryExecuteRemote(attempts int, retryWait time.Duration, replicaSet uint64, onlyLeader bool, req, res *rony.MessageEnvelope) error {
+	startTime := tools.CPUTicks()
+	err := tools.Try(attempts, retryWait, func() error {
+		target := edge.getReplicaMember(replicaSet, onlyLeader)
+		if target == nil {
+			return ErrMemberNotFound
+		}
+
+		return edge.sendRemoteCommand(target, req, res)
+	})
+	metrics.ObserveHistogram(metrics.HistTunnelRoundtripTime, float64(time.Duration(tools.CPUTicks()-startTime)/time.Millisecond))
+	return err
+}
+func (edge *Server) getReplicaMember(replicaSet uint64, onlyLeader bool) (target cluster.Member) {
+	members := edge.cluster.RaftMembers(replicaSet)
+	if len(members) == 0 {
+		return nil
+	}
+	for idx := range members {
+		if onlyLeader {
+			if members[idx].RaftState() == rony.RaftState_Leader {
+				target = members[idx]
+				break
+			}
+		} else {
+			target = members[idx]
+		}
+	}
+	return
+}
+func (edge *Server) sendRemoteCommand(target cluster.Member, req, res *rony.MessageEnvelope) error {
+	conn, err := target.TunnelConn()
+	if err != nil {
+		return err
+	}
+
+	// Get a rony.TunnelMessage from pool and put it back into the pool when we are done
+	tmOut := rony.PoolTunnelMessage.Get()
+	defer rony.PoolTunnelMessage.Put(tmOut)
+	tmIn := rony.PoolTunnelMessage.Get()
+	defer rony.PoolTunnelMessage.Put(tmIn)
+	tmOut.Fill(edge.serverID, edge.cluster.ReplicaSet(), req)
+
+	// Marshal and send over the wire
+	mo := proto.MarshalOptions{UseCachedSize: true}
+	buf := pools.Buffer.GetCap(mo.Size(tmOut))
+	b, _ := mo.MarshalAppend(*buf.Bytes(), tmOut)
+	n, err := conn.Write(b)
+	if err != nil {
+		return err
+	}
+	pools.Buffer.Put(buf)
+
+	// Wait for response and unmarshal it
+	buf = pools.Buffer.GetLen(4096)
+	_ = conn.SetReadDeadline(time.Now().Add(time.Second * 3))
+	n, err = bufio.NewReader(conn).Read(*buf.Bytes())
+	if err != nil || n == 0 {
+		return err
+	}
+	err = tmIn.Unmarshal((*buf.Bytes())[:n])
+	if err != nil {
+		return err
+	}
+	pools.Buffer.Put(buf)
+
+	// deep copy
+	tmIn.Envelope.DeepCopy(res)
+	return nil
+}

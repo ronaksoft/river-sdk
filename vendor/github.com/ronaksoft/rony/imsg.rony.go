@@ -4,9 +4,84 @@ package rony
 
 import (
 	registry "github.com/ronaksoft/rony/registry"
+	store "github.com/ronaksoft/rony/store"
 	proto "google.golang.org/protobuf/proto"
 	sync "sync"
 )
+
+const C_GetNodes int64 = 362407405
+
+type poolGetNodes struct {
+	pool sync.Pool
+}
+
+func (p *poolGetNodes) Get() *GetNodes {
+	x, ok := p.pool.Get().(*GetNodes)
+	if !ok {
+		x = &GetNodes{}
+	}
+	return x
+}
+
+func (p *poolGetNodes) Put(x *GetNodes) {
+	if x == nil {
+		return
+	}
+	x.ReplicaSet = x.ReplicaSet[:0]
+	p.pool.Put(x)
+}
+
+var PoolGetNodes = poolGetNodes{}
+
+func (x *GetNodes) DeepCopy(z *GetNodes) {
+	z.ReplicaSet = append(z.ReplicaSet[:0], x.ReplicaSet...)
+}
+
+func (x *GetNodes) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *GetNodes) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+const C_GetPage int64 = 3721890413
+
+type poolGetPage struct {
+	pool sync.Pool
+}
+
+func (p *poolGetPage) Get() *GetPage {
+	x, ok := p.pool.Get().(*GetPage)
+	if !ok {
+		x = &GetPage{}
+	}
+	return x
+}
+
+func (p *poolGetPage) Put(x *GetPage) {
+	if x == nil {
+		return
+	}
+	x.PageID = 0
+	x.ReplicaSet = 0
+	p.pool.Put(x)
+}
+
+var PoolGetPage = poolGetPage{}
+
+func (x *GetPage) DeepCopy(z *GetPage) {
+	z.PageID = x.PageID
+	z.ReplicaSet = x.ReplicaSet
+}
+
+func (x *GetPage) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *GetPage) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
 
 const C_TunnelMessage int64 = 3271476222
 
@@ -17,19 +92,23 @@ type poolTunnelMessage struct {
 func (p *poolTunnelMessage) Get() *TunnelMessage {
 	x, ok := p.pool.Get().(*TunnelMessage)
 	if !ok {
-		return &TunnelMessage{}
+		x = &TunnelMessage{}
 	}
 	return x
 }
 
 func (p *poolTunnelMessage) Put(x *TunnelMessage) {
+	if x == nil {
+		return
+	}
 	x.SenderID = x.SenderID[:0]
 	x.SenderReplicaSet = 0
-	x.Store = x.Store[:0]
-	if x.Envelope != nil {
-		PoolMessageEnvelope.Put(x.Envelope)
-		x.Envelope = nil
+	for _, z := range x.Store {
+		PoolKeyValue.Put(z)
 	}
+	x.Store = x.Store[:0]
+	PoolMessageEnvelope.Put(x.Envelope)
+	x.Envelope = nil
 	p.pool.Put(x)
 }
 
@@ -46,8 +125,12 @@ func (x *TunnelMessage) DeepCopy(z *TunnelMessage) {
 		}
 	}
 	if x.Envelope != nil {
-		z.Envelope = PoolMessageEnvelope.Get()
+		if z.Envelope == nil {
+			z.Envelope = PoolMessageEnvelope.Get()
+		}
 		x.Envelope.DeepCopy(z.Envelope)
+	} else {
+		z.Envelope = nil
 	}
 }
 
@@ -68,18 +151,22 @@ type poolRaftCommand struct {
 func (p *poolRaftCommand) Get() *RaftCommand {
 	x, ok := p.pool.Get().(*RaftCommand)
 	if !ok {
-		return &RaftCommand{}
+		x = &RaftCommand{}
 	}
 	return x
 }
 
 func (p *poolRaftCommand) Put(x *RaftCommand) {
-	x.Sender = x.Sender[:0]
-	x.Store = x.Store[:0]
-	if x.Envelope != nil {
-		PoolMessageEnvelope.Put(x.Envelope)
-		x.Envelope = nil
+	if x == nil {
+		return
 	}
+	x.Sender = x.Sender[:0]
+	for _, z := range x.Store {
+		PoolKeyValue.Put(z)
+	}
+	x.Store = x.Store[:0]
+	PoolMessageEnvelope.Put(x.Envelope)
+	x.Envelope = nil
 	p.pool.Put(x)
 }
 
@@ -95,8 +182,12 @@ func (x *RaftCommand) DeepCopy(z *RaftCommand) {
 		}
 	}
 	if x.Envelope != nil {
-		z.Envelope = PoolMessageEnvelope.Get()
+		if z.Envelope == nil {
+			z.Envelope = PoolMessageEnvelope.Get()
+		}
 		x.Envelope.DeepCopy(z.Envelope)
+	} else {
+		z.Envelope = nil
 	}
 }
 
@@ -117,16 +208,17 @@ type poolEdgeNode struct {
 func (p *poolEdgeNode) Get() *EdgeNode {
 	x, ok := p.pool.Get().(*EdgeNode)
 	if !ok {
-		return &EdgeNode{}
+		x = &EdgeNode{}
 	}
 	return x
 }
 
 func (p *poolEdgeNode) Put(x *EdgeNode) {
+	if x == nil {
+		return
+	}
 	x.ServerID = x.ServerID[:0]
 	x.ReplicaSet = 0
-	x.ShardRangeMin = 0
-	x.ShardRangeMax = 0
 	x.RaftPort = 0
 	x.RaftState = 0
 	x.GatewayAddr = x.GatewayAddr[:0]
@@ -139,8 +231,6 @@ var PoolEdgeNode = poolEdgeNode{}
 func (x *EdgeNode) DeepCopy(z *EdgeNode) {
 	z.ServerID = append(z.ServerID[:0], x.ServerID...)
 	z.ReplicaSet = x.ReplicaSet
-	z.ShardRangeMin = x.ShardRangeMin
-	z.ShardRangeMax = x.ShardRangeMax
 	z.RaftPort = x.RaftPort
 	z.RaftState = x.RaftState
 	z.GatewayAddr = append(z.GatewayAddr[:0], x.GatewayAddr...)
@@ -155,8 +245,352 @@ func (x *EdgeNode) Unmarshal(b []byte) error {
 	return proto.UnmarshalOptions{}.Unmarshal(b, x)
 }
 
+const C_Page int64 = 3023575326
+
+type poolPage struct {
+	pool sync.Pool
+}
+
+func (p *poolPage) Get() *Page {
+	x, ok := p.pool.Get().(*Page)
+	if !ok {
+		x = &Page{}
+	}
+	return x
+}
+
+func (p *poolPage) Put(x *Page) {
+	if x == nil {
+		return
+	}
+	x.ID = 0
+	x.ReplicaSet = 0
+	p.pool.Put(x)
+}
+
+var PoolPage = poolPage{}
+
+func (x *Page) DeepCopy(z *Page) {
+	z.ID = x.ID
+	z.ReplicaSet = x.ReplicaSet
+}
+
+func (x *Page) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *Page) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
 func init() {
+	registry.RegisterConstructor(362407405, "GetNodes")
+	registry.RegisterConstructor(3721890413, "GetPage")
 	registry.RegisterConstructor(3271476222, "TunnelMessage")
 	registry.RegisterConstructor(2919813429, "RaftCommand")
 	registry.RegisterConstructor(999040174, "EdgeNode")
+	registry.RegisterConstructor(3023575326, "Page")
+}
+
+func CreatePage(m *Page) error {
+	alloc := store.NewAllocator()
+	defer alloc.ReleaseAll()
+	return store.Update(func(txn *store.Txn) error {
+		return CreatePageWithTxn(txn, alloc, m)
+	})
+}
+
+func CreatePageWithTxn(txn *store.Txn, alloc *store.Allocator, m *Page) (err error) {
+	if alloc == nil {
+		alloc = store.NewAllocator()
+		defer alloc.ReleaseAll()
+	}
+
+	if store.Exists(txn, alloc, 'M', C_Page, 299066170, m.ID) {
+		return store.ErrAlreadyExists
+	}
+	// save entry
+	val := alloc.Marshal(m)
+	err = store.Set(txn, alloc, val, 'M', C_Page, 299066170, m.ID)
+	if err != nil {
+		return
+	}
+
+	// save views
+	// save entry for view: [ReplicaSet ID]
+	err = store.Set(txn, alloc, val, 'M', C_Page, 1040696757, m.ReplicaSet, m.ID)
+	if err != nil {
+		return
+	}
+
+	return
+
+}
+
+func ReadPageWithTxn(txn *store.Txn, alloc *store.Allocator, id uint32, m *Page) (*Page, error) {
+	if alloc == nil {
+		alloc = store.NewAllocator()
+		defer alloc.ReleaseAll()
+	}
+
+	err := store.Unmarshal(txn, alloc, m, 'M', C_Page, 299066170, id)
+	if err != nil {
+		return nil, err
+	}
+	return m, err
+}
+
+func ReadPage(id uint32, m *Page) (*Page, error) {
+	alloc := store.NewAllocator()
+	defer alloc.ReleaseAll()
+
+	if m == nil {
+		m = &Page{}
+	}
+
+	err := store.View(func(txn *store.Txn) (err error) {
+		m, err = ReadPageWithTxn(txn, alloc, id, m)
+		return err
+	})
+	return m, err
+}
+
+func ReadPageByReplicaSetAndIDWithTxn(txn *store.Txn, alloc *store.Allocator, replicaSet uint64, id uint32, m *Page) (*Page, error) {
+	if alloc == nil {
+		alloc = store.NewAllocator()
+		defer alloc.ReleaseAll()
+	}
+
+	err := store.Unmarshal(txn, alloc, m, 'M', C_Page, 1040696757, replicaSet, id)
+	if err != nil {
+		return nil, err
+	}
+	return m, err
+}
+
+func ReadPageByReplicaSetAndID(replicaSet uint64, id uint32, m *Page) (*Page, error) {
+	alloc := store.NewAllocator()
+	defer alloc.ReleaseAll()
+	if m == nil {
+		m = &Page{}
+	}
+	err := store.View(func(txn *store.Txn) (err error) {
+		m, err = ReadPageByReplicaSetAndIDWithTxn(txn, alloc, replicaSet, id, m)
+		return err
+	})
+	return m, err
+}
+
+func UpdatePageWithTxn(txn *store.Txn, alloc *store.Allocator, m *Page) error {
+	if alloc == nil {
+		alloc = store.NewAllocator()
+		defer alloc.ReleaseAll()
+	}
+
+	om := &Page{}
+	err := store.Unmarshal(txn, alloc, om, 'M', C_Page, 299066170, m.ID)
+	if err != nil {
+		return err
+	}
+
+	err = DeletePageWithTxn(txn, alloc, om.ID)
+	if err != nil {
+		return err
+	}
+
+	return CreatePageWithTxn(txn, alloc, m)
+}
+
+func UpdatePage(id uint32, m *Page) error {
+	alloc := store.NewAllocator()
+	defer alloc.ReleaseAll()
+
+	if m == nil {
+		return store.ErrEmptyObject
+	}
+
+	err := store.View(func(txn *store.Txn) (err error) {
+		return UpdatePageWithTxn(txn, alloc, m)
+	})
+	return err
+}
+
+func DeletePageWithTxn(txn *store.Txn, alloc *store.Allocator, id uint32) error {
+	m := &Page{}
+	err := store.Unmarshal(txn, alloc, m, 'M', C_Page, 299066170, id)
+	if err != nil {
+		return err
+	}
+	err = store.Delete(txn, alloc, 'M', C_Page, 299066170, m.ID)
+	if err != nil {
+		return err
+	}
+
+	err = store.Delete(txn, alloc, 'M', C_Page, 1040696757, m.ReplicaSet, m.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeletePage(id uint32) error {
+	alloc := store.NewAllocator()
+	defer alloc.ReleaseAll()
+
+	return store.Update(func(txn *store.Txn) error {
+		return DeletePageWithTxn(txn, alloc, id)
+	})
+}
+
+func SavePageWithTxn(txn *store.Txn, alloc *store.Allocator, m *Page) (err error) {
+	if store.Exists(txn, alloc, 'M', C_Page, 299066170, m.ID) {
+		return UpdatePageWithTxn(txn, alloc, m)
+	} else {
+		return CreatePageWithTxn(txn, alloc, m)
+	}
+}
+
+func SavePage(m *Page) error {
+	alloc := store.NewAllocator()
+	defer alloc.ReleaseAll()
+	return store.Update(func(txn *store.Txn) error {
+		return SavePageWithTxn(txn, alloc, m)
+	})
+}
+
+func IterPages(txn *store.Txn, alloc *store.Allocator, cb func(m *Page) bool) error {
+	if alloc == nil {
+		alloc = store.NewAllocator()
+		defer alloc.ReleaseAll()
+	}
+
+	exitLoop := false
+	iterOpt := store.DefaultIteratorOptions
+	iterOpt.Prefix = alloc.Gen('M', C_Page, 299066170)
+	iter := txn.NewIterator(iterOpt)
+	for iter.Rewind(); iter.ValidForPrefix(iterOpt.Prefix); iter.Next() {
+		_ = iter.Item().Value(func(val []byte) error {
+			m := &Page{}
+			err := m.Unmarshal(val)
+			if err != nil {
+				return err
+			}
+			if !cb(m) {
+				exitLoop = true
+			}
+			return nil
+		})
+		if exitLoop {
+			break
+		}
+	}
+	iter.Close()
+	return nil
+}
+
+func ListPage(
+	offsetID uint32, lo *store.ListOption, cond func(m *Page) bool,
+) ([]*Page, error) {
+	alloc := store.NewAllocator()
+	defer alloc.ReleaseAll()
+
+	res := make([]*Page, 0, lo.Limit())
+	err := store.View(func(txn *store.Txn) error {
+		opt := store.DefaultIteratorOptions
+		opt.Prefix = alloc.Gen('M', C_Page, 299066170)
+		opt.Reverse = lo.Backward()
+		osk := alloc.Gen('M', C_Page, 299066170, offsetID)
+		iter := txn.NewIterator(opt)
+		offset := lo.Skip()
+		limit := lo.Limit()
+		for iter.Seek(osk); iter.ValidForPrefix(opt.Prefix); iter.Next() {
+			if offset--; offset >= 0 {
+				continue
+			}
+			if limit--; limit < 0 {
+				break
+			}
+			_ = iter.Item().Value(func(val []byte) error {
+				m := &Page{}
+				err := m.Unmarshal(val)
+				if err != nil {
+					return err
+				}
+				if cond == nil || cond(m) {
+					res = append(res, m)
+				}
+				return nil
+			})
+		}
+		iter.Close()
+		return nil
+	})
+	return res, err
+}
+
+func IterPageByReplicaSet(txn *store.Txn, alloc *store.Allocator, replicaSet uint64, cb func(m *Page) bool) error {
+	if alloc == nil {
+		alloc = store.NewAllocator()
+		defer alloc.ReleaseAll()
+	}
+
+	exitLoop := false
+	opt := store.DefaultIteratorOptions
+	opt.Prefix = alloc.Gen('M', C_Page, 1040696757, replicaSet)
+	iter := txn.NewIterator(opt)
+	for iter.Rewind(); iter.ValidForPrefix(opt.Prefix); iter.Next() {
+		_ = iter.Item().Value(func(val []byte) error {
+			m := &Page{}
+			err := m.Unmarshal(val)
+			if err != nil {
+				return err
+			}
+			if !cb(m) {
+				exitLoop = true
+			}
+			return nil
+		})
+		if exitLoop {
+			break
+		}
+	}
+	iter.Close()
+	return nil
+}
+
+func ListPageByReplicaSet(replicaSet uint64, offsetID uint32, lo *store.ListOption) ([]*Page, error) {
+	alloc := store.NewAllocator()
+	defer alloc.ReleaseAll()
+
+	res := make([]*Page, 0, lo.Limit())
+	err := store.View(func(txn *store.Txn) error {
+		opt := store.DefaultIteratorOptions
+		opt.Prefix = alloc.Gen('M', C_Page, 1040696757, replicaSet)
+		opt.Reverse = lo.Backward()
+		osk := alloc.Gen('M', C_Page, 1040696757, replicaSet, offsetID)
+		iter := txn.NewIterator(opt)
+		offset := lo.Skip()
+		limit := lo.Limit()
+		for iter.Seek(osk); iter.ValidForPrefix(opt.Prefix); iter.Next() {
+			if offset--; offset >= 0 {
+				continue
+			}
+			if limit--; limit < 0 {
+				break
+			}
+			_ = iter.Item().Value(func(val []byte) error {
+				m := &Page{}
+				err := m.Unmarshal(val)
+				if err != nil {
+					return err
+				}
+				res = append(res, m)
+				return nil
+			})
+		}
+		iter.Close()
+		return nil
+	})
+	return res, err
 }

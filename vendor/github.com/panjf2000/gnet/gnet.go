@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/panjf2000/gnet/errors"
+	"github.com/panjf2000/gnet/internal"
 	"github.com/panjf2000/gnet/internal/logging"
 )
 
@@ -160,6 +161,9 @@ type (
 		// OnOpened fires when a new connection has been opened.
 		// The parameter:c has information about the connection such as it's local and remote address.
 		// Parameter:out is the return value which is going to be sent back to the client.
+		// It is generally not recommended to send large amounts of data back to the client in OnOpened.
+		//
+		// Note that the bytes returned by OnOpened will be sent back to client without being encoded.
 		OnOpened(c Conn) (out []byte, action Action)
 
 		// OnClosed fires when a connection has been closed.
@@ -259,6 +263,12 @@ func Serve(eventHandler EventHandler, protoAddr string, opts ...Option) (err err
 		return errors.ErrTooManyEventLoopThreads
 	}
 
+	if rbc := options.ReadBufferCap; rbc <= 0 {
+		options.ReadBufferCap = 0x4000
+	} else {
+		options.ReadBufferCap = internal.CeilToPowerOfTwo(rbc)
+	}
+
 	network, addr := parseProtoAddr(protoAddr)
 
 	var ln *listener
@@ -321,15 +331,19 @@ func sniffErrorAndLog(err error) {
 }
 
 // channelBuffer determines whether the channel should be a buffered channel to get the best performance.
-func channelBuffer(preset int) int {
+var channelBuffer = func() int {
 	// Use blocking channel if GOMAXPROCS=1.
 	// This switches context from sender to receiver immediately,
-	// which results in higher performance (under go1.5 at least).
-	if runtime.GOMAXPROCS(0) == 1 {
+	// which results in higher performance.
+	var n int
+	if n = runtime.GOMAXPROCS(0); n == 1 {
 		return 0
 	}
 
-	// Use non-blocking workerChan if GOMAXPROCS>1,
-	// since otherwise the sender might be dragged down if the receiver is CPU-bound.
-	return preset
-}
+	// Make channel non-blocking and set up its capacity with GOMAXPROCS if GOMAXPROCS>1,
+	// otherwise the sender might be dragged down if the receiver is CPU-bound.
+	//
+	// GOMAXPROCS determines how many goroutines can run in parallel,
+	// which makes it the best choice as the channel capacity,
+	return n
+}()

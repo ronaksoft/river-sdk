@@ -26,7 +26,6 @@ package gnet
 import (
 	"net"
 	"os"
-	"time"
 
 	"github.com/panjf2000/gnet/internal/netpoll"
 	"github.com/panjf2000/gnet/pool/bytebuffer"
@@ -61,13 +60,23 @@ func newTCPConn(fd int, el *eventloop, sa unix.Sockaddr, remoteAddr net.Addr) (c
 	}
 	c.localAddr = el.ln.lnaddr
 	c.remoteAddr = remoteAddr
-	if el.svr.opts.TCPKeepAlive > 0 {
-		if proto := el.ln.network; proto == "tcp" || proto == "unix" {
-			_ = netpoll.SetKeepAlive(fd, int(el.svr.opts.TCPKeepAlive/time.Second))
-		}
+
+	if el.svr.ln.network != "tcp" {
+		return
 	}
+
+	var noDelay bool
+	switch el.svr.opts.TCPNoDelay {
+	case TCPNoDelay:
+		noDelay = true
+	case TCPDelay:
+	}
+	_ = netpoll.SetNoDelay(fd, noDelay)
+	_ = netpoll.SetKeepAlive(fd, el.svr.opts.TCPKeepAlive)
 	return
 }
+
+var emptyBuffer = ringbuffer.New(0)
 
 func (c *conn) releaseTCP() {
 	c.opened = false
@@ -79,7 +88,7 @@ func (c *conn) releaseTCP() {
 	prb.Put(c.inboundBuffer)
 	prb.Put(c.outboundBuffer)
 	c.inboundBuffer = nil
-	c.outboundBuffer = nil
+	c.outboundBuffer = emptyBuffer
 	bytebuffer.Put(c.byteBuffer)
 	c.byteBuffer = nil
 }
@@ -120,6 +129,8 @@ func (c *conn) write(buf []byte) (err error) {
 	if outFrame, err = c.codec.Encode(c, buf); err != nil {
 		return
 	}
+	// If there is pending data in outbound buffer, the current data ought to be appended to the outbound buffer
+	// for maintaining the sequence of network packets.
 	if !c.outboundBuffer.IsEmpty() {
 		_, _ = c.outboundBuffer.Write(outFrame)
 		return
@@ -127,6 +138,7 @@ func (c *conn) write(buf []byte) (err error) {
 
 	var n int
 	if n, err = unix.Write(c.fd, outFrame); err != nil {
+		// A temporary error occurs, append the data to outbound buffer, writing it back to client in the next round.
 		if err == unix.EAGAIN {
 			_, _ = c.outboundBuffer.Write(outFrame)
 			err = c.loop.poller.ModReadWrite(c.fd)
@@ -134,6 +146,7 @@ func (c *conn) write(buf []byte) (err error) {
 		}
 		return c.loop.loopCloseConn(c, os.NewSyscallError("write", err))
 	}
+	// Fail to send all data back to client, buffer the leftover data for the next round.
 	if n < len(outFrame) {
 		_, _ = c.outboundBuffer.Write(outFrame[n:])
 		err = c.loop.poller.ModReadWrite(c.fd)

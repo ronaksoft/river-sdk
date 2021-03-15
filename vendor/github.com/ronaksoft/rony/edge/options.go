@@ -2,11 +2,11 @@ package edge
 
 import (
 	"github.com/ronaksoft/rony"
-	gossipCluster "github.com/ronaksoft/rony/cluster/gossip"
-	"github.com/ronaksoft/rony/gateway"
-	dummyGateway "github.com/ronaksoft/rony/gateway/dummy"
-	tcpGateway "github.com/ronaksoft/rony/gateway/tcp"
-	udpTunnel "github.com/ronaksoft/rony/tunnel/udp"
+	gossipCluster "github.com/ronaksoft/rony/internal/cluster/gossip"
+	"github.com/ronaksoft/rony/internal/gateway"
+	dummyGateway "github.com/ronaksoft/rony/internal/gateway/dummy"
+	tcpGateway "github.com/ronaksoft/rony/internal/gateway/tcp"
+	udpTunnel "github.com/ronaksoft/rony/internal/tunnel/udp"
 )
 
 /*
@@ -21,6 +21,13 @@ import (
 // Option
 type Option func(edge *Server)
 
+// WithDataDir
+func WithDataDir(path string) Option {
+	return func(edge *Server) {
+		edge.dataDir = path
+	}
+}
+
 // WithDispatcher enables custom dispatcher to write your specific event handlers.
 func WithDispatcher(d Dispatcher) Option {
 	return func(edge *Server) {
@@ -28,19 +35,19 @@ func WithDispatcher(d Dispatcher) Option {
 	}
 }
 
-type GossipClusterConfig gossipCluster.Config
+type GossipClusterConfig = gossipCluster.Config
 
 // WithGossipCluster enables the cluster in gossip mode. This mod is eventually consistent mode but there is
 // no need to a central key-value store or any other 3rd party service to run the cluster
 func WithGossipCluster(cfg GossipClusterConfig) Option {
 	return func(edge *Server) {
-		c := gossipCluster.New(gossipCluster.Config(cfg))
+		c := gossipCluster.New(edge.dataDir, cfg)
 		c.ReplicaMessageHandler = edge.onReplicaMessage
 		edge.cluster = c
 	}
 }
 
-type TcpGatewayConfig tcpGateway.Config
+type TcpGatewayConfig = tcpGateway.Config
 
 // WithTcpGateway set the gateway to tcp which can support http and/or websocket
 // Only one gateway could be set and if you set another gateway it panics on runtime.
@@ -52,7 +59,7 @@ func WithTcpGateway(config TcpGatewayConfig) Option {
 		if config.Protocol == gateway.Undefined {
 			config.Protocol = gateway.TCP
 		}
-		gatewayTcp, err := tcpGateway.New(tcpGateway.Config(config))
+		gatewayTcp, err := tcpGateway.New(config)
 		if err != nil {
 			panic(err)
 		}
@@ -65,7 +72,7 @@ func WithTcpGateway(config TcpGatewayConfig) Option {
 	}
 }
 
-type DummyGatewayConfig dummyGateway.Config
+type DummyGatewayConfig = dummyGateway.Config
 
 // WithTestGateway set the gateway to a dummy gateway which is useful for writing tests.
 // Only one gateway could be set and if you set another gateway it panics on runtime.
@@ -74,7 +81,7 @@ func WithTestGateway(config DummyGatewayConfig) Option {
 		if edge.gatewayProtocol != gateway.Undefined {
 			panic(rony.ErrGatewayAlreadyInitialized)
 		}
-		gatewayDummy, err := dummyGateway.New(dummyGateway.Config(config))
+		gatewayDummy, err := dummyGateway.New(config)
 		if err != nil {
 			panic(err)
 		}
@@ -87,14 +94,14 @@ func WithTestGateway(config DummyGatewayConfig) Option {
 	}
 }
 
-type UdpTunnelConfig udpTunnel.Config
+type UdpTunnelConfig = udpTunnel.Config
 
 // WithUdpTunnel set the tunnel to a udp based tunnel which provides communication channel between
 // edge servers.
 func WithUdpTunnel(config UdpTunnelConfig) Option {
 	return func(edge *Server) {
 		config.ServerID = string(edge.serverID)
-		tunnelUDP, err := udpTunnel.New(udpTunnel.Config(config))
+		tunnelUDP, err := udpTunnel.New(config)
 		if err != nil {
 			panic(err)
 		}

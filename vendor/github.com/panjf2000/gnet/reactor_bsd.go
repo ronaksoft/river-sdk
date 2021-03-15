@@ -48,39 +48,21 @@ func (svr *server) activateSubReactor(el *eventloop, lockOSThread bool) {
 
 	defer func() {
 		el.closeAllConns()
-		if el.idx == 0 && svr.opts.Ticker {
-			close(svr.ticktock)
-		}
 		svr.signalShutdown()
 	}()
 
-	if el.idx == 0 && svr.opts.Ticker {
-		go el.loopTicker()
-	}
-
-	err := el.poller.Polling(func(fd int, filter int16) error {
+	err := el.poller.Polling(func(fd int, filter int16) (err error) {
 		if c, ack := el.connections[fd]; ack {
-			if filter == netpoll.EVFilterSock {
-				return el.loopCloseConn(c, nil)
-			}
-
-			switch c.outboundBuffer.IsEmpty() {
-			// Don't change the ordering of processing EVFILT_WRITE | EVFILT_READ | EV_ERROR/EV_EOF unless you're 100%
-			// sure what you're doing!
-			// Re-ordering can easily introduce bugs and bad side-effects, as I found out painfully in the past.
-			case false:
-				if filter == netpoll.EVFilterWrite {
-					return el.loopWrite(c)
-				}
-				return nil
-			case true:
-				if filter == netpoll.EVFilterRead {
-					return el.loopRead(c)
-				}
-				return nil
+			switch filter {
+			case netpoll.EVFilterSock:
+				err = el.loopCloseConn(c, nil)
+			case netpoll.EVFilterWrite:
+				err = el.loopWrite(c)
+			case netpoll.EVFilterRead:
+				err = el.loopRead(c)
 			}
 		}
-		return nil
+		return
 	})
 	svr.logger.Infof("Event-loop(%d) is exiting normally on the signal error: %v", el.idx, err)
 }

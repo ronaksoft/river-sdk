@@ -1,7 +1,7 @@
 <p align="center">
 <img src="https://raw.githubusercontent.com/panjf2000/logos/master/gnet/logo.png" alt="gnet" />
 <br />
-<a title="Build Status" target="_blank" href="https://travis-ci.com/panjf2000/gnet"><img src="https://img.shields.io/travis/com/panjf2000/gnet?style=flat-square&logo=travis" /></a>
+<a title="Build Status" target="_blank" href="https://github.com/panjf2000/gnet/actions?query=workflow%3ATests"><img src="https://img.shields.io/github/workflow/status/panjf2000/gnet/Tests?style=flat-square&logo=github-actions" /></a>
 <a title="Codecov" target="_blank" href="https://codecov.io/gh/panjf2000/gnet"><img src="https://img.shields.io/codecov/c/github/panjf2000/gnet?style=flat-square&logo=codecov" /></a>
 <a title="Supported Platforms" target="_blank" href="https://github.com/panjf2000/gnet"><img src="https://img.shields.io/badge/platform-Linux%20%7C%20FreeBSD%20%7C%20DragonFly%20%7C%20Darwin%20%7C%20Windows-549688?style=flat-square&logo=launchpad" /></a>
 <a title="Require Go Version" target="_blank" href="https://github.com/panjf2000/gnet"><img src="https://img.shields.io/badge/go-%3E%3D1.9-30dff3?style=flat-square&logo=go" /></a>
@@ -15,6 +15,7 @@
 <a title="Release" target="_blank" href="https://github.com/panjf2000/gnet/releases"><img src="https://img.shields.io/github/v/release/panjf2000/gnet.svg?color=161823&style=flat-square&logo=smartthings" /></a>
 <a title="Tag" target="_blank" href="https://github.com/panjf2000/gnet/tags"><img src="https://img.shields.io/github/v/tag/panjf2000/gnet?color=%23ff8936&logo=fitbit&style=flat-square" /></a>
 </p>
+
 
 English | [🇨🇳中文](README_ZH.md)
 
@@ -35,7 +36,7 @@ English | [🇨🇳中文](README_ZH.md)
 - [x] Built-in memory pool with bytes powered by the library [bytebufferpool](https://github.com/valyala/bytebufferpool)
 - [x] Lock-free during the entire runtime
 - [x] Concise and easy-to-use APIs
-- [x] Efficient and reusable memory buffer: Ring-Buffer
+- [x] Efficient, reusable and scalable memory buffer: Ring-Buffer
 - [x] Supporting multiple protocols/IPC mechanism: `TCP`, `UDP` and `Unix Domain Socket`
 - [x] Supporting multiple load-balancing algorithms: `Round-Robin`, `Source-Addr-Hash` and `Least-Connections`
 - [x] Supporting two event-driven mechanisms: `epoll` on **Linux** and `kqueue` on **FreeBSD/DragonFly/Darwin**
@@ -78,13 +79,17 @@ To see the full ranking list, visit [TechEmpower Plaintext Benchmark](https://ww
 
 ```powershell
 # Machine information
-        OS : Ubuntu 18.04/x86_64
-       CPU : 8 Virtual CPUs
+        OS : Ubuntu 20.04/x86_64
+       CPU : 8 processors, AMD EPYC 7K62 48-Core Processor
     Memory : 16.0 GiB
 
-# Go version and configurations
-Go Version : go1.12.9 linux/amd64
-GOMAXPROCS=8
+# Go version and settings
+Go Version : go1.15.7 linux/amd64
+GOMAXPROCS : 8
+
+# Netwokr settings
+TCP connections : 300
+Test duration   : 30s
 ```
 
 #### Echo Server
@@ -101,13 +106,17 @@ GOMAXPROCS=8
 
 ```powershell
 # Machine information
-        OS : macOS Mojave 10.14.6/x86_64
-       CPU : 4 CPUs
-    Memory : 8.0 GiB
+        OS : macOS Catalina 10.15.7/x86_64
+       CPU : 6-Core Intel Core i7
+    Memory : 16.0 GiB
 
 # Go version and configurations
-Go Version : go version go1.12.9 darwin/amd64
-GOMAXPROCS=4
+Go Version : go1.15.7 darwin/amd64
+GOMAXPROCS : 12
+
+# Netwokr settings
+TCP connections : 100
+Test duration   : 20s
 ```
 
 #### Echo Server
@@ -136,19 +145,19 @@ Please read the [Contributing Guidelines](CONTRIBUTING.md) before opening a PR a
 
 - [A Million WebSockets and Go](https://www.freecodecamp.org/news/million-websockets-and-go-cc58418460bb/)
 - [Going Infinite, handling 1M websockets connections in Go](https://speakerdeck.com/eranyanay/going-infinite-handling-1m-websockets-connections-in-go)
-- [Go netpoll I/O 多路复用构建原生网络模型之源码深度解析](https://taohuawu.club/go-netpoll-io-multiplexing-reactor)
-- [gnet: 一个轻量级且高性能的 Golang 网络库](https://taohuawu.club/go-event-loop-networking-library-gnet)
-- [最快的 Go 网络框架 gnet 来啦！](https://taohuawu.club/releasing-gnet-v1-with-techempower)
-- [字节跳动在 Go 网络库上的实践](https://taohuawu.club/bytedance-network-library-practices)
+- [Go netpoller 原生网络模型之源码全面揭秘](https://strikefreedom.top/go-netpoll-io-multiplexing-reactor)
+- [gnet: 一个轻量级且高性能的 Golang 网络库](https://strikefreedom.top/go-event-loop-networking-library-gnet)
+- [最快的 Go 网络框架 gnet 来啦！](https://strikefreedom.top/releasing-gnet-v1-with-techempower)
+- [字节跳动在 Go 网络库上的实践](https://strikefreedom.top/bytedance-network-library-practices)
 
 # 🎡 User cases
 
-Please feel free to add your projects here~~
+The following companies/organizations use `gnet` as the underlying network service in production.
 
-<!--
-<a href="https://github.com/panjf2000/gnet" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/logos/master/gnet/logo.png" width="150" align="middle"/></a>&nbsp;&nbsp;
-<a href="https://www.tencent.com"><img src="https://www.tencent.com/img/index/tencent_logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;
--->
+<a href="https://www.tencent.com"><img src="https://img.taohuawu.club/gallery/tencent_logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.iqiyi.com" target="_blank"><img src="https://img.taohuawu.club/gallery/iqiyi-logo.png" width="150" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.mi.com" target="_blank"><img src="https://img.taohuawu.club/gallery/mi-logo.png" width="150" align="middle"/></a>&nbsp;&nbsp;<a href="https://www.360.cn" target="_blank"><img src="https://img.taohuawu.club/gallery/360-logo.png" width="150" align="middle"/></a>
+
+If your project is also using `gnet`, feel free to open a pull request to refresh this list of user cases.
+
 
 # 💰 Backers
 
@@ -172,7 +181,7 @@ Become a bronze sponsor with a monthly donation of $10 and get your logo on our 
 
 # 💴 Donors
 
-<a target="_blank" href="https://github.com/patrick-othmer"><img src="https://avatars1.githubusercontent.com/u/8964313" width="100" alt="Patrick Othmer" /></a>&nbsp;<a target="_blank" href="https://github.com/panjf2000/gnet"><img src="https://avatars2.githubusercontent.com/u/50285334" width="100" alt="Jimmy" /></a>&nbsp;<a target="_blank" href="https://github.com/cafra"><img src="https://avatars0.githubusercontent.com/u/13758306" width="100" alt="ChenZhen" /></a>&nbsp;<a target="_blank" href="https://github.com/yangwenmai"><img src="https://avatars0.githubusercontent.com/u/1710912" width="100" alt="Mai Yang" /></a>&nbsp;<a target="_blank" href="https://github.com/BeijingWks"><img src="https://avatars3.githubusercontent.com/u/33656339" width="100" alt="王开帅" /></a>
+<a target="_blank" href="https://github.com/patrick-othmer"><img src="https://avatars1.githubusercontent.com/u/8964313" width="100" alt="Patrick Othmer" /></a>&nbsp;<a target="_blank" href="https://github.com/panjf2000/gnet"><img src="https://avatars2.githubusercontent.com/u/50285334" width="100" alt="Jimmy" /></a>&nbsp;<a target="_blank" href="https://github.com/cafra"><img src="https://avatars0.githubusercontent.com/u/13758306" width="100" alt="ChenZhen" /></a>&nbsp;<a target="_blank" href="https://github.com/yangwenmai"><img src="https://avatars0.githubusercontent.com/u/1710912" width="100" alt="Mai Yang" /></a>&nbsp;<a target="_blank" href="https://github.com/BeijingWks"><img src="https://avatars3.githubusercontent.com/u/33656339" width="100" alt="王开帅" /></a>&nbsp;<a target="_blank" href="https://github.com/refs"><img src="https://avatars3.githubusercontent.com/u/6905948" width="100" alt="Unger Alejandro" /></a>
 
 # 💵 Paid Support
 

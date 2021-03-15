@@ -190,7 +190,7 @@ func (r *River) messagesSend(in, out *rony.MessageEnvelope, timeoutCB domain.Tim
 	// do not allow empty message
 	if strings.TrimSpace(req.Body) == "" {
 		e := &rony.Error{
-			Code: "n/a",
+			Code:  "n/a",
 			Items: "empty message is not allowed",
 		}
 		out.Fill(out.RequestID, rony.C_Error, e)

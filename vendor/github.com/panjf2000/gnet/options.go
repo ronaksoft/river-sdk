@@ -37,6 +37,15 @@ func loadOptions(options ...Option) *Options {
 	return opts
 }
 
+// TCPSocketOpt is the type of TCP socket options.
+type TCPSocketOpt int
+
+// Available TCP socket options.
+const (
+	TCPNoDelay TCPSocketOpt = iota
+	TCPDelay
+)
+
 // Options are set when the client opens.
 type Options struct {
 	// Multicore indicates whether the server will be effectively created with multi-cores, if so,
@@ -50,6 +59,13 @@ type Options struct {
 	// that require thread-level manipulation via cgo, or want all I/O event-loops to actually run in parallel for a
 	// potential higher performance.
 	LockOSThread bool
+
+	// ReadBufferCap is the maximum number of bytes that can be read from the client when the readable event comes.
+	// The default value is 16KB, it can be reduced to avoid starving subsequent client connections.
+	//
+	// Note that ReadBufferCap will be always converted to the least power of two integer value greater than
+	// or equal to its real amount.
+	ReadBufferCap int
 
 	// LB represents the load-balancing algorithm used when assigning new connections.
 	LB LoadBalancing
@@ -66,6 +82,13 @@ type Options struct {
 
 	// TCPKeepAlive sets up a duration for (SO_KEEPALIVE) socket option.
 	TCPKeepAlive time.Duration
+
+	// TCPNoDelay controls whether the operating system should delay
+	// packet transmission in hopes of sending fewer packets (Nagle's algorithm).
+	//
+	// The default is true (no delay), meaning that data is sent
+	// as soon as possible after a Write.
+	TCPNoDelay TCPSocketOpt
 
 	// ICodec encodes and decodes TCP stream.
 	Codec ICodec
@@ -89,10 +112,17 @@ func WithMulticore(multicore bool) Option {
 	}
 }
 
-// WithLockOSThread sets up lockOSThread mode for I/O event-loops.
+// WithLockOSThread sets up LockOSThread mode for I/O event-loops.
 func WithLockOSThread(lockOSThread bool) Option {
 	return func(opts *Options) {
 		opts.LockOSThread = lockOSThread
+	}
+}
+
+// WithReadBufferCap sets up ReadBufferCap for reading bytes.
+func WithReadBufferCap(readBufferCap int) Option {
+	return func(opts *Options) {
+		opts.ReadBufferCap = readBufferCap
 	}
 }
 
@@ -117,10 +147,17 @@ func WithReusePort(reusePort bool) Option {
 	}
 }
 
-// WithTCPKeepAlive sets up SO_KEEPALIVE socket option.
+// WithTCPKeepAlive sets up the SO_KEEPALIVE socket option with duration.
 func WithTCPKeepAlive(tcpKeepAlive time.Duration) Option {
 	return func(opts *Options) {
 		opts.TCPKeepAlive = tcpKeepAlive
+	}
+}
+
+// WithTCPNoDelay enable/disable the TCP_NODELAY socket option.
+func WithTCPNoDelay(tcpNoDelay TCPSocketOpt) Option {
+	return func(opts *Options) {
+		opts.TCPNoDelay = tcpNoDelay
 	}
 }
 

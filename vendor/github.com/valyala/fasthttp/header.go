@@ -68,6 +68,7 @@ type RequestHeader struct {
 
 	method      []byte
 	requestURI  []byte
+	proto       []byte
 	host        []byte
 	contentType []byte
 	userAgent   []byte
@@ -455,6 +456,26 @@ func (h *RequestHeader) SetMethodBytes(method []byte) {
 	h.method = append(h.method[:0], method...)
 }
 
+// Protocol returns HTTP protocol.
+func (h *RequestHeader) Protocol() []byte {
+	if len(h.proto) == 0 {
+		return strHTTP11
+	}
+	return h.proto
+}
+
+// SetProtocol sets HTTP request protocol.
+func (h *RequestHeader) SetProtocol(method string) {
+	h.proto = append(h.proto[:0], method...)
+	h.noHTTP11 = !bytes.Equal(h.proto, strHTTP11)
+}
+
+// SetProtocolBytes sets HTTP request protocol.
+func (h *RequestHeader) SetProtocolBytes(method []byte) {
+	h.proto = append(h.proto[:0], method...)
+	h.noHTTP11 = !bytes.Equal(h.proto, strHTTP11)
+}
+
 // RequestURI returns RequestURI from the first HTTP request line.
 func (h *RequestHeader) RequestURI() []byte {
 	requestURI := h.requestURI
@@ -680,6 +701,7 @@ func (h *RequestHeader) resetSkipNormalize() {
 	h.contentLengthBytes = h.contentLengthBytes[:0]
 
 	h.method = h.method[:0]
+	h.proto = h.proto[:0]
 	h.requestURI = h.requestURI[:0]
 	h.host = h.host[:0]
 	h.contentType = h.contentType[:0]
@@ -722,6 +744,7 @@ func (h *RequestHeader) CopyTo(dst *RequestHeader) {
 	dst.contentLength = h.contentLength
 	dst.contentLengthBytes = append(dst.contentLengthBytes[:0], h.contentLengthBytes...)
 	dst.method = append(dst.method[:0], h.method...)
+	dst.proto = append(dst.proto[:0], h.proto...)
 	dst.requestURI = append(dst.requestURI[:0], h.requestURI...)
 	dst.host = append(dst.host[:0], h.host...)
 	dst.contentType = append(dst.contentType[:0], h.contentType...)
@@ -1016,6 +1039,16 @@ func (h *RequestHeader) SetCookieBytesKV(key, value []byte) {
 }
 
 // DelClientCookie instructs the client to remove the given cookie.
+// This doesn't work for a cookie with specific domain or path,
+// you should delete it manually like:
+//
+//      c := AcquireCookie()
+//      c.SetKey(key)
+//      c.SetDomain("example.com")
+//      c.SetPath("/path")
+//      c.SetExpire(CookieExpireDelete)
+//      h.SetCookie(c)
+//      ReleaseCookie(c)
 //
 // Use DelCookie if you want just removing the cookie from response header.
 func (h *ResponseHeader) DelClientCookie(key string) {
@@ -1029,6 +1062,16 @@ func (h *ResponseHeader) DelClientCookie(key string) {
 }
 
 // DelClientCookieBytes instructs the client to remove the given cookie.
+// This doesn't work for a cookie with specific domain or path,
+// you should delete it manually like:
+//
+//      c := AcquireCookie()
+//      c.SetKey(key)
+//      c.SetDomain("example.com")
+//      c.SetPath("/path")
+//      c.SetExpire(CookieExpireDelete)
+//      h.SetCookie(c)
+//      ReleaseCookie(c)
 //
 // Use DelCookieBytes if you want just removing the cookie from response header.
 func (h *ResponseHeader) DelClientCookieBytes(key []byte) {
@@ -1581,7 +1624,7 @@ func (h *RequestHeader) AppendBytes(dst []byte) []byte {
 	dst = append(dst, ' ')
 	dst = append(dst, h.RequestURI()...)
 	dst = append(dst, ' ')
-	dst = append(dst, strHTTP11...)
+	dst = append(dst, h.Protocol()...)
 	dst = append(dst, strCRLF...)
 
 	userAgent := h.UserAgent()
@@ -1716,16 +1759,21 @@ func (h *RequestHeader) parseFirstLine(buf []byte) (int, error) {
 	h.method = append(h.method[:0], b[:n]...)
 	b = b[n+1:]
 
+	protoStr := strHTTP11
 	// parse requestURI
 	n = bytes.LastIndexByte(b, ' ')
 	if n < 0 {
 		h.noHTTP11 = true
 		n = len(b)
+		protoStr = strHTTP10
 	} else if n == 0 {
 		return 0, fmt.Errorf("requestURI cannot be empty in %q", buf)
 	} else if !bytes.Equal(b[n+1:], strHTTP11) {
 		h.noHTTP11 = true
+		protoStr = b[n+1:]
 	}
+
+	h.proto = append(h.proto[:0], protoStr...)
 	h.requestURI = append(h.requestURI[:0], b[:n]...)
 
 	return len(buf) - len(bNext), nil
@@ -1839,7 +1887,7 @@ func (h *ResponseHeader) parseHeaders(buf []byte) (int, error) {
 				}
 			case 't':
 				if caseInsensitiveCompare(s.key, strTransferEncoding) {
-					if !bytes.Equal(s.value, strIdentity) {
+					if len(s.value) > 0 && !bytes.Equal(s.value, strIdentity) {
 						h.contentLength = -1
 						h.h = setArgBytes(h.h, strTransferEncoding, strChunked, argsHasValue)
 					}

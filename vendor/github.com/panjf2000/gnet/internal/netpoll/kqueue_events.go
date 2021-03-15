@@ -27,6 +27,8 @@ import "golang.org/x/sys/unix"
 const (
 	// InitEvents represents the initial length of poller event-list.
 	InitEvents = 64
+	// AsyncTasks is the maximum number of asynchronous tasks that the event-loop will process at one time.
+	AsyncTasks = 48
 	// EVFilterWrite represents writeable events from sockets.
 	EVFilterWrite = unix.EVFILT_WRITE
 	// EVFilterRead represents readable events from sockets.
@@ -45,7 +47,12 @@ func newEventList(size int) *eventList {
 	return &eventList{size, make([]unix.Kevent_t, size)}
 }
 
-func (el *eventList) increase() {
+func (el *eventList) expand() {
 	el.size <<= 1
+	el.events = make([]unix.Kevent_t, el.size)
+}
+
+func (el *eventList) shrink() {
+	el.size >>= 1
 	el.events = make([]unix.Kevent_t, el.size)
 }

@@ -143,7 +143,7 @@ type server struct {
 func (t server) ServeHTTP(httpRes http.ResponseWriter, httpReq *http.Request) {
 	body, _ := ioutil.ReadAll(httpReq.Body)
 
-	time.Sleep(time.Duration(len(body)/(speedBytesPerSec * (tools.RandomInt(10)+1))) * time.Second)
+	time.Sleep(time.Duration(len(body)/(speedBytesPerSec*(tools.RandomInt(10)+1))) * time.Second)
 
 	if domain.RandomInt(100) > (100 - errRatePercent) {
 		httpRes.WriteHeader(http.StatusForbidden)

@@ -32,11 +32,6 @@ import (
 	"github.com/panjf2000/gnet/internal/logging"
 )
 
-// commandBufferSize represents the buffer size of event-loop command channel on Windows.
-const (
-	commandBufferSize = 128
-)
-
 var errCloseAllConns = errors.New("close all connections in event-loop")
 
 type server struct {
@@ -96,12 +91,17 @@ func (svr *server) startListener() {
 func (svr *server) startEventLoops(numEventLoop int) {
 	for i := 0; i < numEventLoop; i++ {
 		el := new(eventloop)
-		el.ch = make(chan interface{}, channelBuffer(commandBufferSize))
+		el.ch = make(chan interface{}, channelBuffer)
 		el.svr = svr
 		el.connections = make(map[*stdConn]struct{})
 		el.eventHandler = svr.eventHandler
 		el.calibrateCallback = svr.lb.calibrate
 		svr.lb.register(el)
+
+		// Start the ticker.
+		if el.idx == 0 && svr.opts.Ticker {
+			go el.loopTicker()
+		}
 	}
 
 	svr.loopWG.Add(svr.lb.len())
@@ -137,6 +137,11 @@ func (svr *server) stop(s Server) {
 		return true
 	})
 	svr.loopWG.Wait()
+
+	// Stop the ticker.
+	if svr.opts.Ticker {
+		close(svr.ticktock)
+	}
 
 	atomic.StoreInt32(&svr.inShutdown, 1)
 }

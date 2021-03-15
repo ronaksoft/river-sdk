@@ -57,18 +57,11 @@ func (el *eventloop) loopRun(lockOSThread bool) {
 
 	var err error
 	defer func() {
-		if el.idx == 0 && el.svr.opts.Ticker {
-			close(el.svr.ticktock)
-		}
 		el.svr.signalShutdownWithErr(err)
 		el.svr.loopWG.Done()
 		el.loopEgress()
 		el.svr.loopWG.Done()
 	}()
-
-	if el.idx == 0 && el.svr.opts.Ticker {
-		go el.loopTicker()
-	}
 
 	for v := range el.ch {
 		switch v := v.(type) {
@@ -135,8 +128,11 @@ func (el *eventloop) loopRead(c *stdConn) (err error) {
 	return
 }
 
-func (el *eventloop) loopCloseConn(c *stdConn) error {
-	return c.conn.SetReadDeadline(time.Now())
+func (el *eventloop) loopCloseConn(c *stdConn) (err error) {
+	if c.conn != nil {
+		err = c.conn.SetReadDeadline(time.Now())
+	}
+	return
 }
 
 func (el *eventloop) loopEgress() {
