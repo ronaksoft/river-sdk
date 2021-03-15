@@ -292,16 +292,16 @@ func (r *repoLabels) ListMessages(labelID int32, teamID int64, limit int32, minI
 	switch {
 	case maxID == 0 && minID == 0:
 		fallthrough
-	case maxID != 0:
+	case maxID > 0:
 		err := badgerView(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
 			opts.Prefix = getLabelMessagePrefix(labelID)
-			if maxID > 0 {
+			if minID > 0 {
 				opts.Reverse = true
 			}
 			it := txn.NewIterator(opts)
 			defer it.Close()
-			if maxID > 0 {
+			if minID > 0 {
 				it.Seek(getLabelMessageKey(labelID, maxID))
 			} else {
 				it.Rewind()
