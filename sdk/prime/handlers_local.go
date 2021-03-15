@@ -1462,13 +1462,7 @@ func (r *River) labelsListItems(in, out *rony.MessageEnvelope, timeoutCB domain.
 
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:
-		bar := repo.Labels.GetFilled(domain.GetTeamID(in), req.LabelID)
-		logs.Debug("Label Filled", zap.Int32("LabelID", req.LabelID),
-			zap.Int64("MinID", bar.MinID),
-			zap.Int64("MaxID", bar.MaxID),
-		)
-		req.MaxID = bar.MaxID
-		fallthrough
+		r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 	case req.MinID == 0 && req.MaxID != 0:
 		b, bar := repo.Labels.GetLowerFilled(domain.GetTeamID(in), req.LabelID, req.MaxID)
 		if !b {
