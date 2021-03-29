@@ -4,8 +4,9 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/pools"
-	"git.ronaksoft.com/river/sdk/internal/tools"
+	"git.ronaksoft.com/river/sdk/internal/z"
 	"github.com/dgraph-io/badger/v2"
+	"github.com/ronaksoft/rony/tools"
 )
 
 /**
@@ -26,9 +27,9 @@ func getRecentSearchKey(teamID, peerID int64, peerType int32) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixRecentSearch)
 	sb.WriteRune('.')
-	tools.AppendStrInt64(sb, teamID)
-	tools.AppendStrInt64(sb, peerID)
-	tools.AppendStrInt32(sb, peerType)
+	z.AppendStrInt64(sb, teamID)
+	z.AppendStrInt64(sb, peerID)
+	z.AppendStrInt32(sb, peerType)
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id
@@ -38,7 +39,7 @@ func getRecentSearchPrefix(teamID int64) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixRecentSearch)
 	sb.WriteRune('.')
-	tools.AppendStrInt64(sb, teamID)
+	z.AppendStrInt64(sb, teamID)
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id

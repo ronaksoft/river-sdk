@@ -1,8 +1,8 @@
 package domain
 
 import (
-	"git.ronaksoft.com/river/sdk/internal/tools"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/tools"
 )
 
 /**

@@ -8,11 +8,12 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/pools"
-	"git.ronaksoft.com/river/sdk/internal/tools"
+	"git.ronaksoft.com/river/sdk/internal/z"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
 	"github.com/dgraph-io/badger/v2"
 	"github.com/dgraph-io/badger/v2/pb"
+	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 	"sort"
 	"strings"
@@ -33,10 +34,10 @@ func getMessageKey(teamID, peerID int64, peerType int32, msgID int64) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixMessages)
 	sb.WriteRune('.')
-	tools.AppendStrInt64(sb, teamID)
-	tools.AppendStrInt64(sb, peerID)
-	tools.AppendStrInt32(sb, peerType)
-	tools.AppendStrInt64(sb, msgID)
+	z.AppendStrInt64(sb, teamID)
+	z.AppendStrInt64(sb, peerID)
+	z.AppendStrInt32(sb, peerType)
+	z.AppendStrInt64(sb, msgID)
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id
@@ -46,9 +47,9 @@ func getMessagePrefix(teamID, peerID int64, peerType int32) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixMessages)
 	sb.WriteRune('.')
-	tools.AppendStrInt64(sb, teamID)
-	tools.AppendStrInt64(sb, peerID)
-	tools.AppendStrInt32(sb, peerType)
+	z.AppendStrInt64(sb, teamID)
+	z.AppendStrInt64(sb, peerID)
+	z.AppendStrInt32(sb, peerType)
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id
@@ -58,7 +59,7 @@ func getUserMessageKey(msgID int64) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixUserMessages)
 	sb.WriteRune('.')
-	tools.AppendStrInt64(sb, msgID)
+	z.AppendStrInt64(sb, msgID)
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id
@@ -691,7 +692,7 @@ func (r *repoMessages) SearchText(teamID int64, text string, limit int32) []*msg
 		qs = append(qs, bleve.NewMatchQuery(term), bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
-	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", tools.AbsInt64(teamID)))
+	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", z.AbsInt64(teamID)))
 	t3.SetField("team_id")
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3))
 	searchResult, _ := r.msgSearch.Search(searchRequest)
@@ -724,9 +725,9 @@ func (r *repoMessages) SearchTextByPeerID(teamID int64, text string, peerID int6
 		qs = append(qs, bleve.NewMatchQuery(term), bleve.NewPrefixQuery(term), bleve.NewFuzzyQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
-	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", tools.AbsInt64(peerID)))
+	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", z.AbsInt64(peerID)))
 	t3.SetField("peer_id")
-	t4 := bleve.NewTermQuery(fmt.Sprintf("%d", tools.AbsInt64(teamID)))
+	t4 := bleve.NewTermQuery(fmt.Sprintf("%d", z.AbsInt64(teamID)))
 	t4.SetField("team_id")
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3, t4))
 	searchResult, _ := r.msgSearch.Search(searchRequest)
@@ -856,13 +857,13 @@ func (r *repoMessages) SearchBySender(teamID int64, text string, senderID int64,
 		t2 = bleve.NewDisjunctionQuery(qs...)
 	}
 
-	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", tools.AbsInt64(peerID)))
+	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", z.AbsInt64(peerID)))
 	t3.SetField("peer_id")
 
-	t4 := bleve.NewTermQuery(fmt.Sprintf("%d", tools.AbsInt64(senderID)))
+	t4 := bleve.NewTermQuery(fmt.Sprintf("%d", z.AbsInt64(senderID)))
 	t4.SetField("sender_id")
 
-	t5 := bleve.NewTermQuery(fmt.Sprintf("%d", tools.AbsInt64(teamID)))
+	t5 := bleve.NewTermQuery(fmt.Sprintf("%d", z.AbsInt64(teamID)))
 	t5.SetField("team_id")
 
 	var searchRequest *bleve.SearchRequest

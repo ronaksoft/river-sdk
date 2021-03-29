@@ -1,4 +1,4 @@
-package tools
+package z
 
 import (
 	"crypto/sha256"

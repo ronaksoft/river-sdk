@@ -6,10 +6,11 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
-	"git.ronaksoft.com/river/sdk/internal/tools"
+	"git.ronaksoft.com/river/sdk/internal/z"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
 	"github.com/dgraph-io/badger/v2"
+	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 	"strings"
 	"time"
@@ -425,7 +426,7 @@ func (r *repoUsers) SearchContacts(teamID int64, searchPhrase string) ([]*msg.Co
 		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewMatchQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
-	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", tools.AbsInt64(teamID)))
+	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", z.AbsInt64(teamID)))
 	t3.SetField("team_id")
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3))
 	searchResult, _ := r.peerSearch.Search(searchRequest)

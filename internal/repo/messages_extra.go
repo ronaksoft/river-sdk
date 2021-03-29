@@ -3,8 +3,9 @@ package repo
 import (
 	"encoding/json"
 	"git.ronaksoft.com/river/sdk/internal/pools"
-	"git.ronaksoft.com/river/sdk/internal/tools"
+	"git.ronaksoft.com/river/sdk/internal/z"
 	"github.com/dgraph-io/badger/v2"
+	"github.com/ronaksoft/rony/tools"
 )
 
 const (
@@ -26,9 +27,9 @@ func (r *repoMessagesExtra) getKey(teamID, peerID int64, peerType int32) []byte 
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixMessageExtra)
 	sb.WriteRune('.')
-	tools.AppendStrInt64(sb, teamID)
-	tools.AppendStrInt64(sb, peerID)
-	tools.AppendStrInt32(sb, peerType)
+	z.AppendStrInt64(sb, teamID)
+	z.AppendStrInt64(sb, peerID)
+	z.AppendStrInt32(sb, peerType)
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id

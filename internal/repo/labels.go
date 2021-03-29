@@ -8,9 +8,10 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/pools"
-	"git.ronaksoft.com/river/sdk/internal/tools"
+	"git.ronaksoft.com/river/sdk/internal/z"
 	"github.com/dgraph-io/badger/v2"
 	"github.com/dgraph-io/badger/v2/pb"
+	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 	"sort"
 	"strings"
@@ -41,7 +42,7 @@ func getLabelKey(labelID int32) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixLabel)
 	sb.WriteRune('.')
-	tools.AppendStrInt32(sb, labelID)
+	z.AppendStrInt32(sb, labelID)
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id
@@ -51,8 +52,8 @@ func getLabelCountKey(teamID int64, labelID int32) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixLabelCount)
 	sb.WriteRune('.')
-	tools.AppendStrInt32(sb, labelID)
-	tools.AppendStrInt64(sb, teamID)
+	z.AppendStrInt32(sb, labelID)
+	z.AppendStrInt64(sb, teamID)
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id
@@ -62,7 +63,7 @@ func getLabelCountPrefix(labelID int32) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixLabelCount)
 	sb.WriteRune('.')
-	tools.AppendStrInt32(sb, labelID)
+	z.AppendStrInt32(sb, labelID)
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id
@@ -72,8 +73,8 @@ func getLabelMessageKey(labelID int32, msgID int64) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixLabelMessages)
 	sb.WriteRune('.')
-	tools.AppendStrInt32(sb, labelID)
-	tools.AppendStrInt64(sb, msgID)
+	z.AppendStrInt32(sb, labelID)
+	z.AppendStrInt64(sb, msgID)
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id
@@ -83,7 +84,7 @@ func getLabelMessagePrefix(labelID int32) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixLabelMessages)
 	sb.WriteRune('.')
-	tools.AppendStrInt32(sb, labelID)
+	z.AppendStrInt32(sb, labelID)
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id

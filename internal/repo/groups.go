@@ -5,10 +5,11 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/pools"
-	"git.ronaksoft.com/river/sdk/internal/tools"
+	"git.ronaksoft.com/river/sdk/internal/z"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
 	"github.com/dgraph-io/badger/v2"
+	"github.com/ronaksoft/rony/tools"
 	"strings"
 	"time"
 )
@@ -28,7 +29,7 @@ func getGroupKey(groupID int64) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixGroups)
 	sb.WriteRune('.')
-	tools.AppendStrInt64(sb, groupID)
+	z.AppendStrInt64(sb, groupID)
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id
@@ -38,7 +39,7 @@ func getGroupFullKey(groupID int64) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixGroupsFull)
 	sb.WriteRune('.')
-	tools.AppendStrInt64(sb, groupID)
+	z.AppendStrInt64(sb, groupID)
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id
@@ -78,8 +79,8 @@ func getGroupParticipantKey(groupID, memberID int64) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixGroupsParticipants)
 	sb.WriteRune('.')
-	tools.AppendStrInt64(sb, groupID)
-	tools.AppendStrInt64(sb, memberID)
+	z.AppendStrInt64(sb, groupID)
+	z.AppendStrInt64(sb, memberID)
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id
@@ -89,8 +90,8 @@ func getGroupPhotoGalleryKey(groupID, photoID int64) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixGroupsPhotoGallery)
 	sb.WriteRune('.')
-	tools.AppendStrInt64(sb, groupID)
-	tools.AppendStrInt64(sb, photoID)
+	z.AppendStrInt64(sb, groupID)
+	z.AppendStrInt64(sb, photoID)
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id
@@ -100,7 +101,7 @@ func getGroupPhotoGalleryPrefix(groupID int64) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixGroupsPhotoGallery)
 	sb.WriteRune('.')
-	tools.AppendStrInt64(sb, groupID)
+	z.AppendStrInt64(sb, groupID)
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id
@@ -465,7 +466,7 @@ func (r *repoGroups) Search(teamID int64, searchPhrase string) []*msg.Group {
 		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewMatchQuery(term), bleve.NewFuzzyQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
-	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", tools.AbsInt64(teamID)))
+	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", z.AbsInt64(teamID)))
 	t3.SetField("team_id")
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3))
 	searchResult, _ := r.peerSearch.Search(searchRequest)

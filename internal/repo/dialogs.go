@@ -7,9 +7,10 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/pools"
-	"git.ronaksoft.com/river/sdk/internal/tools"
+	"git.ronaksoft.com/river/sdk/internal/z"
 	"github.com/dgraph-io/badger/v2"
 	"github.com/gogo/protobuf/proto"
+	"github.com/ronaksoft/rony/tools"
 	"github.com/tidwall/buntdb"
 	"strings"
 	"sync/atomic"
@@ -34,9 +35,9 @@ func getDialogKey(teamID int64, peerID int64, peerType int32) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixDialogs)
 	sb.WriteRune('.')
-	tools.AppendStrInt64(sb, teamID)
-	tools.AppendStrInt64(sb, peerID)
-	tools.AppendStrInt32(sb, peerType)
+	z.AppendStrInt64(sb, teamID)
+	z.AppendStrInt64(sb, peerID)
+	z.AppendStrInt32(sb, peerType)
 	id := []byte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id
@@ -46,7 +47,7 @@ func getDialogPrefix(teamID int64) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixDialogs)
 	sb.WriteRune('.')
-	tools.AppendStrInt64(sb, teamID)
+	z.AppendStrInt64(sb, teamID)
 	id := []byte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id
@@ -56,9 +57,9 @@ func getPinnedDialogKey(teamID int64, peerID int64, peerType int32) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixPinnedDialogs)
 	sb.WriteRune('.')
-	tools.AppendStrInt64(sb, teamID)
-	tools.AppendStrInt64(sb, peerID)
-	tools.AppendStrInt32(sb, peerType)
+	z.AppendStrInt64(sb, teamID)
+	z.AppendStrInt64(sb, peerID)
+	z.AppendStrInt32(sb, peerType)
 	id := tools.StrToByte(sb.String())
 	pools.ReleaseStringsBuilder(sb)
 	return id

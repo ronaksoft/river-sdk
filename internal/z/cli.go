@@ -1,4 +1,4 @@
-package tools
+package z
 
 import (
 	"github.com/spf13/cobra"

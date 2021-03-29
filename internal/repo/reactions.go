@@ -2,8 +2,9 @@ package repo
 
 import (
 	"git.ronaksoft.com/river/sdk/internal/pools"
-	"git.ronaksoft.com/river/sdk/internal/tools"
+	"git.ronaksoft.com/river/sdk/internal/z"
 	"github.com/dgraph-io/badger/v2"
+	"github.com/ronaksoft/rony/tools"
 )
 
 /**
@@ -42,7 +43,7 @@ func getReactionUseCount(txn *badger.Txn, reaction string) (uint32, error) {
 	}
 
 	err = item.Value(func(val []byte) error {
-		useCount = tools.ByteToUInt32(val)
+		useCount = z.ByteToUInt32(val)
 		return nil
 	})
 	return useCount, err
@@ -51,7 +52,7 @@ func getReactionUseCount(txn *badger.Txn, reaction string) (uint32, error) {
 func saveReactionUseCount(txn *badger.Txn, reaction string, useCount uint32) error {
 	return txn.SetEntry(badger.NewEntry(
 		getReactionUseCountKey(reaction),
-		tools.UInt32ToByte(useCount),
+		z.UInt32ToByte(useCount),
 	))
 }
 
@@ -70,9 +71,9 @@ func (r *repoReactions) IncrementReactionUseCount(reaction string, cnt int32) er
 			return err
 		}
 		if cnt < 0 {
-			useCount -= uint32(tools.AbsInt32(cnt))
+			useCount -= uint32(z.AbsInt32(cnt))
 		} else {
-			useCount += uint32(tools.AbsInt32(cnt))
+			useCount += uint32(z.AbsInt32(cnt))
 		}
 		return saveReactionUseCount(txn, reaction, useCount)
 	})
