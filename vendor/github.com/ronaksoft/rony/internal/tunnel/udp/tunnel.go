@@ -27,7 +27,6 @@ import (
 // Config
 type Config struct {
 	ServerID      string
-	Concurrency   int
 	ListenAddress string
 	MaxBodySize   int
 	ExternalAddrs []string
@@ -104,7 +103,6 @@ func (t *Tunnel) Run() {
 		gnet.WithReusePort(true),
 		gnet.WithMulticore(true),
 		gnet.WithLockOSThread(true),
-		gnet.WithNumEventLoop(t.cfg.Concurrency),
 	)
 
 	if err != nil {
@@ -167,5 +165,5 @@ func (t *Tunnel) React(frame []byte, c gnet.Conn) (out []byte, action gnet.Actio
 }
 
 func (t *Tunnel) Tick() (delay time.Duration, action gnet.Action) {
-	return 0, gnet.None
+	return time.Minute, gnet.None
 }

@@ -290,7 +290,7 @@ github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
 # github.com/rivo/uniseg v0.2.0
 github.com/rivo/uniseg
-# github.com/ronaksoft/rony v0.6.19
+# github.com/ronaksoft/rony v0.6.27
 ## explicit
 github.com/ronaksoft/rony
 github.com/ronaksoft/rony/edge
