@@ -15,7 +15,6 @@ import (
 	"go.uber.org/zap"
 	"sort"
 	"strings"
-	"time"
 )
 
 /*
@@ -288,21 +287,22 @@ func (r *repoLabels) GetAll(teamID int64) []*msg.Label {
 
 func (r *repoLabels) ListMessages(labelID int32, teamID int64, limit int32, minID, maxID int64) ([]*msg.UserMessage, []*msg.User, []*msg.Group) {
 	userMessages := make([]*msg.UserMessage, 0, limit)
-	userIDs := domain.MInt64B{}
-	groupIDs := domain.MInt64B{}
+	userIDs := make(domain.MInt64B, limit)
+	groupIDs := make(domain.MInt64B, limit)
+
+	opts := badger.DefaultIteratorOptions
+	opts.Prefix = getLabelMessagePrefix(labelID)
 	switch {
 	case maxID == 0 && minID == 0:
 		fallthrough
 	case maxID > 0:
+		if maxID > 0 {
+			opts.Reverse = true
+		}
 		err := badgerView(func(txn *badger.Txn) error {
-			opts := badger.DefaultIteratorOptions
-			opts.Prefix = getLabelMessagePrefix(labelID)
-			if minID > 0 {
-				opts.Reverse = true
-			}
 			it := txn.NewIterator(opts)
 			defer it.Close()
-			if minID > 0 {
+			if maxID > 0 {
 				it.Seek(getLabelMessageKey(labelID, maxID))
 			} else {
 				it.Rewind()
@@ -312,104 +312,68 @@ func (r *repoLabels) ListMessages(labelID int32, teamID int64, limit int32, minI
 					break
 				}
 				err := it.Item().Value(func(val []byte) error {
-					parts := strings.Split(tools.ByteToStr(val), ".")
-					if len(parts) != 3 {
-						return domain.ErrInvalidData
-					}
-					msgID := tools.StrToInt64(parts[2])
-
-					um, err := getMessageByID(txn, msgID)
-					if err != nil {
-						return err
-					}
-					if um.TeamID != teamID {
-						return nil
-					}
-					userIDs.Add(um.SenderID)
-					if um.FwdSenderID != 0 {
-						userIDs.Add(um.FwdSenderID)
-					}
-					switch msg.PeerType(um.PeerType) {
-					case msg.PeerType_PeerUser:
-						userIDs.Add(um.PeerID)
-					case msg.PeerType_PeerGroup:
-						groupIDs.Add(um.PeerID)
-					}
-
-					userIDs.Add(domain.ExtractActionUserIDs(um.MessageAction, um.MessageActionData)...)
-
-					userMessages = append(userMessages, um)
-					return nil
+					return extractMessage(txn, val, teamID, &userMessages, userIDs, groupIDs)
 				})
 				logs.WarnOnErr("RepoLabels got error on ListMessage for getting message", err)
 			}
 			return nil
 		})
 		logs.WarnOnErr("RepoLabels got error on ListMessages", err)
-		logs.Info("RepoLabels got list", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID))
+		logs.Debug("RepoLabels got list", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID))
 	case minID != 0:
-		var (
-			startTime                          = time.Now()
-			stopWatch1, stopWatch2, stopWatch3 time.Time
-		)
 		_ = badgerView(func(txn *badger.Txn) error {
-			opts := badger.DefaultIteratorOptions
-			opts.Prefix = getLabelMessagePrefix(labelID)
 			it := txn.NewIterator(opts)
 			defer it.Close()
 			it.Seek(getLabelMessageKey(labelID, minID))
-			stopWatch1 = time.Now()
 			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
 					break
 				}
 				_ = it.Item().Value(func(val []byte) error {
-					parts := strings.Split(tools.ByteToStr(val), ".")
-					if len(parts) != 3 {
-						return domain.ErrInvalidData
-					}
-					msgID := tools.StrToInt64(parts[2])
-					um, err := getMessageByID(txn, msgID)
-					if err != nil {
-						return err
-					}
-					if um.TeamID != teamID {
-						return nil
-					}
-					userIDs.Add(um.SenderID)
-					if um.FwdSenderID != 0 {
-						userIDs.Add(um.FwdSenderID)
-					}
-					userIDs.Add(domain.ExtractActionUserIDs(um.MessageAction, um.MessageActionData)...)
-					switch msg.PeerType(um.PeerType) {
-					case msg.PeerType_PeerUser:
-						userIDs.Add(um.PeerID)
-					case msg.PeerType_PeerGroup:
-						groupIDs.Add(um.PeerID)
-					}
-
-					userMessages = append(userMessages, um)
-					return nil
+					return extractMessage(txn, val, teamID, &userMessages, userIDs, groupIDs)
 				})
 			}
-			stopWatch2 = time.Now()
-			sort.Slice(userMessages, func(i, j int) bool {
-				return userMessages[i].ID > userMessages[j].ID
-			})
-			stopWatch3 = time.Now()
 			return nil
 		})
-		logs.Info("RepoLabels got list", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID),
-			zap.Duration("SP1", stopWatch1.Sub(startTime)),
-			zap.Duration("SP2", stopWatch2.Sub(startTime)),
-			zap.Duration("SP3", stopWatch3.Sub(startTime)),
-		)
+
 	default:
 	}
-
+	sort.Slice(userMessages, func(i, j int) bool {
+		return userMessages[i].ID < userMessages[j].ID
+	})
 	users, _ := Users.GetMany(userIDs.ToArray())
 	groups, _ := Groups.GetMany(groupIDs.ToArray())
 	return userMessages, users, groups
+}
+func extractMessage(txn *badger.Txn, val []byte, teamID int64, userMessages *[]*msg.UserMessage, userIDs, groupIDs domain.MInt64B ) error {
+	parts := strings.Split(tools.ByteToStr(val), ".")
+	if len(parts) != 3 {
+		return domain.ErrInvalidData
+	}
+	msgID := tools.StrToInt64(parts[2])
+
+	um, err := getMessageByID(txn, msgID)
+	if err != nil {
+		return err
+	}
+	if um.TeamID != teamID {
+		return nil
+	}
+	userIDs.Add(um.SenderID)
+	if um.FwdSenderID != 0 {
+		userIDs.Add(um.FwdSenderID)
+	}
+	switch msg.PeerType(um.PeerType) {
+	case msg.PeerType_PeerUser:
+		userIDs.Add(um.PeerID)
+	case msg.PeerType_PeerGroup:
+		groupIDs.Add(um.PeerID)
+	}
+
+	userIDs.Add(domain.ExtractActionUserIDs(um.MessageAction, um.MessageActionData)...)
+
+	*userMessages = append(*userMessages, um)
+	return nil
 }
 
 func (r *repoLabels) AddLabelsToMessages(labelIDs []int32, teamID, peerID int64, peerType int32, msgIDs []int64) error {

@@ -5,6 +5,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"github.com/ronaksoft/rony/tools"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
@@ -39,7 +40,8 @@ func TestLabel(t *testing.T) {
 			c.So(labels, ShouldHaveLength, 2)
 		})
 		Convey("Add Label To Message", func(c C) {
-			peerID := int64(100)
+			peerID := tools.RandomInt64(0)
+			// Save 10 new message for peerID
 			for i := 1; i <= 10; i++ {
 				repo.Messages.Save(&msg.UserMessage{
 					ID:                  int64(i),
@@ -86,14 +88,14 @@ func TestLabel(t *testing.T) {
 
 			ums, _, _ = repo.Labels.ListMessages(1, 0, 2, 6, 0)
 			c.So(ums, ShouldHaveLength, 2)
-			c.So(ums[0].ID, ShouldEqual, 8)
-			c.So(ums[1].ID, ShouldEqual, 6)
+			c.So(ums[0].ID, ShouldEqual, 6)
+			c.So(ums[1].ID, ShouldEqual, 8)
 
 			ums, _, _ = repo.Labels.ListMessages(1, 0, 3, 0, 9)
 			c.So(ums, ShouldHaveLength, 3)
-			c.So(ums[0].ID, ShouldEqual, 9)
+			c.So(ums[0].ID, ShouldEqual, 6)
 			c.So(ums[1].ID, ShouldEqual, 8)
-			c.So(ums[2].ID, ShouldEqual, 6)
+			c.So(ums[2].ID, ShouldEqual, 9)
 		})
 		Convey("Label Hole", func(c C) {
 			b, _ := repo.Labels.GetLowerFilled(0, 10, 100)
