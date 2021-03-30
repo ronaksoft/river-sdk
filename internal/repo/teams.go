@@ -3,7 +3,6 @@ package repo
 import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/z"
 	"github.com/dgraph-io/badger/v2"
@@ -39,7 +38,7 @@ func (r *repoTeams) List() []*msg.Team {
 	teamList := make([]*msg.Team, 0, 10)
 	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixTeams))
+		opts.Prefix = tools.StrToByte(fmt.Sprintf("%s.", prefixTeams))
 		it := txn.NewIterator(opts)
 
 		defer it.Close()
@@ -113,7 +112,7 @@ func (r *repoTeams) Delete(teamID int64) error {
 func (r *repoTeams) Clear() error {
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixTeams))
+		opts.Prefix = tools.StrToByte(fmt.Sprintf("%s.", prefixTeams))
 		opts.PrefetchValues = false
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {

@@ -129,6 +129,7 @@ var AuthCheckPassword = &ishell.Cmd{
 		}
 	},
 }
+
 var AuthLogout = &ishell.Cmd{
 	Name: "Logout",
 	Func: func(c *ishell.Context) {

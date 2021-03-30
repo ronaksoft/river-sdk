@@ -7,6 +7,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/dgraph-io/badger/v2"
+	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 	"sort"
 	"time"
@@ -76,7 +77,7 @@ func UpdateSalt() bool {
 			if err != nil {
 				logs.Warn("UpdateSalt got error on save salt to db",
 					zap.Error(err),
-					zap.String("Salts", domain.ByteToStr(b)),
+					zap.String("Salts", tools.ByteToStr(b)),
 				)
 			}
 			saltFound = true

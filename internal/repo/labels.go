@@ -157,7 +157,7 @@ func deleteLabel(txn *badger.Txn, labelID int32) error {
 func addLabelToMessage(txn *badger.Txn, labelID int32, peerType int32, peerID int64, msgID int64) error {
 	err := txn.SetEntry(badger.NewEntry(
 		getLabelMessageKey(labelID, msgID),
-		domain.StrToByte(fmt.Sprintf("%d.%d.%d", peerType, peerID, msgID)),
+		tools.StrToByte(fmt.Sprintf("%d.%d.%d", peerType, peerID, msgID)),
 	))
 	return err
 }
@@ -224,11 +224,11 @@ func (r *repoLabels) Delete(labelIDs ...int32) error {
 			stream.Prefix = getLabelMessagePrefix(labelID)
 			stream.Send = func(list *pb.KVList) error {
 				for _, kv := range list.Kv {
-					parts := strings.Split(domain.ByteToStr(kv.Value), ".")
+					parts := strings.Split(tools.ByteToStr(kv.Value), ".")
 					if len(parts) != 3 {
 						return domain.ErrInvalidData
 					}
-					msgID := domain.StrToInt64(parts[2])
+					msgID := tools.StrToInt64(parts[2])
 					_ = removeLabelFromMessage(txn, labelID, msgID)
 				}
 				return nil
@@ -263,7 +263,7 @@ func (r *repoLabels) GetAll(teamID int64) []*msg.Label {
 	labels := make([]*msg.Label, 0, 20)
 	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = domain.StrToByte(prefixLabel)
+		opts.Prefix = tools.StrToByte(prefixLabel)
 		it := txn.NewIterator(opts)
 		defer it.Close()
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
@@ -312,11 +312,11 @@ func (r *repoLabels) ListMessages(labelID int32, teamID int64, limit int32, minI
 					break
 				}
 				err := it.Item().Value(func(val []byte) error {
-					parts := strings.Split(domain.ByteToStr(val), ".")
+					parts := strings.Split(tools.ByteToStr(val), ".")
 					if len(parts) != 3 {
 						return domain.ErrInvalidData
 					}
-					msgID := domain.StrToInt64(parts[2])
+					msgID := tools.StrToInt64(parts[2])
 
 					um, err := getMessageByID(txn, msgID)
 					if err != nil {
@@ -364,11 +364,11 @@ func (r *repoLabels) ListMessages(labelID int32, teamID int64, limit int32, minI
 					break
 				}
 				_ = it.Item().Value(func(val []byte) error {
-					parts := strings.Split(domain.ByteToStr(val), ".")
+					parts := strings.Split(tools.ByteToStr(val), ".")
 					if len(parts) != 3 {
 						return domain.ErrInvalidData
 					}
-					msgID := domain.StrToInt64(parts[2])
+					msgID := tools.StrToInt64(parts[2])
 					um, err := getMessageByID(txn, msgID)
 					if err != nil {
 						return err
@@ -484,11 +484,11 @@ type LabelBar struct {
 }
 
 func getLabelBarMaxKey(teamID int64, labelID int32) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d.03%d.MAXID", prefixLabelFill, teamID, labelID))
+	return tools.StrToByte(fmt.Sprintf("%s.%021d.03%d.MAXID", prefixLabelFill, teamID, labelID))
 }
 
 func getLabelBarMinKey(teamID int64, labelID int32) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d.03%d.MINID", prefixLabelFill, teamID, labelID))
+	return tools.StrToByte(fmt.Sprintf("%s.%021d.03%d.MINID", prefixLabelFill, teamID, labelID))
 }
 
 func (r *repoLabels) Fill(teamID int64, labelID int32, minID, maxID int64) error {

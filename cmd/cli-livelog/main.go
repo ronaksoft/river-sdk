@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"git.ronaksoft.com/river/sdk/internal/domain"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
+	"github.com/ronaksoft/rony/tools"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/valyala/fasthttp"
@@ -88,7 +88,7 @@ func runServer() {
 		err := fasthttp.ListenAndServe(
 			fmt.Sprintf(":%d", viper.GetInt(ConfListenPort)),
 			func(ctx *fasthttp.RequestCtx) {
-				pid := strings.TrimLeft(domain.ByteToStr(ctx.Request.RequestURI()), "/")
+				pid := strings.TrimLeft(tools.ByteToStr(ctx.Request.RequestURI()), "/")
 				p := getPipe(pid)
 				if p == nil {
 					return

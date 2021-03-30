@@ -3,8 +3,8 @@ package repo
 import (
 	"encoding/binary"
 	"fmt"
-	"git.ronaksoft.com/river/sdk/internal/domain"
 	"github.com/dgraph-io/badger/v2"
+	"github.com/ronaksoft/rony/tools"
 )
 
 const (
@@ -17,7 +17,7 @@ type repoSystem struct {
 }
 
 func (r *repoSystem) getKey(keyName string) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%s", systemPrefix, keyName))
+	return tools.StrToByte(fmt.Sprintf("%s.%s", systemPrefix, keyName))
 }
 
 // LoadInt
@@ -107,7 +107,7 @@ func (r *repoSystem) SaveInt(keyName string, keyValue uint64) error {
 func (r *repoSystem) SaveString(keyName string, keyValue string) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		return txn.SetEntry(
-			badger.NewEntry(r.getKey(keyName), domain.StrToByte(keyValue)),
+			badger.NewEntry(r.getKey(keyName), tools.StrToByte(keyValue)),
 		)
 	})
 }

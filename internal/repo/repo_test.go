@@ -6,6 +6,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 	"sync"
 	"testing"
@@ -147,7 +148,7 @@ func TestGetMessageKey(t *testing.T) {
 	peerID := 10001
 	peerType := 1
 	msgID := 1 << 32
-	domain.StrToByte(fmt.Sprintf("%s.%021d.%d.%012d", "MSG", peerID, peerType, msgID))
+	tools.StrToByte(fmt.Sprintf("%s.%021d.%d.%012d", "MSG", peerID, peerType, msgID))
 	fmt.Println(fmt.Sprintf("%s.%021d.%d.%012d", "MSG", peerID, peerType, msgID))
 }
 

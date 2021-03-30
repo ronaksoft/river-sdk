@@ -41,8 +41,8 @@ func getTopPeerFromIndexKey(key string) (int64, *msg.Peer) {
 		return 0, nil
 	}
 	return tools.StrToInt64(parts[1]), &msg.Peer{
-		ID:   domain.StrToInt64(parts[2]),
-		Type: domain.StrToInt32(parts[3]),
+		ID:   tools.StrToInt64(parts[2]),
+		Type: tools.StrToInt32(parts[3]),
 	}
 }
 
@@ -63,7 +63,7 @@ func getTopPeerKey(cat msg.TopPeerCategory, teamID, peerID int64, peerType int32
 		panic("BUG! we dont support the top peer category")
 	}
 
-	return domain.StrToByte(fmt.Sprintf("%s.%021d.%021d.%04d", indexName, teamID, peerID, peerType))
+	return tools.StrToByte(fmt.Sprintf("%s.%021d.%021d.%04d", indexName, teamID, peerID, peerType))
 }
 
 func saveTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, teamID int64, tp *msg.TopPeer) error {

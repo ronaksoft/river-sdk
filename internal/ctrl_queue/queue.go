@@ -13,6 +13,7 @@ import (
 	"github.com/juju/ratelimit"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
+	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 	"os"
 	"path/filepath"
@@ -214,7 +215,7 @@ func (ctrl *Controller) executor(req request) {
 				reqCB.SuccessCallback(res)
 			}
 		} else {
-			logs.Warn("QueueCtrl received response but no callback exists!!!",
+			logs.Debug("QueueCtrl received response but no callback exists!!!",
 				zap.String("C", registry.ConstructorName(res.Constructor)),
 				zap.Uint64("ReqID", res.RequestID),
 			)
@@ -351,7 +352,7 @@ func (ctrl *Controller) CancelRequest(reqID int64) {
 
 // DropQueue remove queue from storage
 func (ctrl *Controller) DropQueue() {
-	err := domain.Try(10, time.Millisecond*100, func() error {
+	err := tools.Try(10, time.Millisecond*100, func() error {
 		return ctrl.waitingList.Drop()
 	})
 	if err != nil {
@@ -361,7 +362,7 @@ func (ctrl *Controller) DropQueue() {
 
 // OpenQueue init queue files in storage
 func (ctrl *Controller) OpenQueue() (err error) {
-	err = domain.Try(10, 100*time.Millisecond, func() error {
+	err = tools.Try(10, 100*time.Millisecond, func() error {
 		if q, err := goque.OpenQueue(ctrl.dataDir); err != nil {
 			err = os.RemoveAll(ctrl.dataDir)
 			if err != nil {

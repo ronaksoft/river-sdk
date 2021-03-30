@@ -10,6 +10,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/dgraph-io/badger/v2"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
@@ -241,7 +242,7 @@ func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash u
 	return
 }
 func (ctrl *Controller) downloadAccountPhoto(clientFile *msg.ClientFile) (filePath string, err error) {
-	err = domain.Try(retryMaxAttempts, retryWaitTime, func() error {
+	err = tools.Try(retryMaxAttempts, retryWaitTime, func() error {
 		req := &msg.FileGet{
 			Location: &msg.InputFileLocation{
 				ClusterID:  clientFile.ClusterID,
@@ -296,7 +297,7 @@ func (ctrl *Controller) downloadAccountPhoto(clientFile *msg.ClientFile) (filePa
 	return
 }
 func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath string, err error) {
-	err = domain.Try(retryMaxAttempts, retryWaitTime, func() error {
+	err = tools.Try(retryMaxAttempts, retryWaitTime, func() error {
 		req := &msg.FileGet{
 			Location: &msg.InputFileLocation{
 				ClusterID:  clientFile.ClusterID,
@@ -351,7 +352,7 @@ func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath
 	return
 }
 func (ctrl *Controller) downloadWallpaper(clientFile *msg.ClientFile) (filePath string, err error) {
-	err = domain.Try(retryMaxAttempts, retryWaitTime, func() error {
+	err = tools.Try(retryMaxAttempts, retryWaitTime, func() error {
 		req := &msg.FileGet{
 			Location: &msg.InputFileLocation{
 				ClusterID:  clientFile.ClusterID,
@@ -408,7 +409,7 @@ func (ctrl *Controller) downloadWallpaper(clientFile *msg.ClientFile) (filePath 
 	return
 }
 func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath string, err error) {
-	err = domain.Try(retryMaxAttempts, retryWaitTime, func() error {
+	err = tools.Try(retryMaxAttempts, retryWaitTime, func() error {
 		req := &msg.FileGet{
 			Location: &msg.InputFileLocation{
 				ClusterID:  clientFile.ClusterID,

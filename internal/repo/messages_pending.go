@@ -316,7 +316,7 @@ func (r *repoMessagesPending) GetByPeer(peerID int64, peerType int32) []*msg.Use
 	userMessages := make([]*msg.UserMessage, 0, 10)
 	_ = badgerUpdate(func(txn *badger.Txn) error {
 		opt := badger.DefaultIteratorOptions
-		opt.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
+		opt.Prefix = tools.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
 		it := txn.NewIterator(opt)
 		for it.Rewind(); it.Valid(); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
@@ -338,7 +338,7 @@ func (r *repoMessagesPending) GetAndConvertAll() []*msg.UserMessage {
 	userMessages := make([]*msg.UserMessage, 0, 10)
 	_ = badgerUpdate(func(txn *badger.Txn) error {
 		opt := badger.DefaultIteratorOptions
-		opt.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
+		opt.Prefix = tools.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
 		it := txn.NewIterator(opt)
 		for it.Rewind(); it.Valid(); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
@@ -358,7 +358,7 @@ func (r *repoMessagesPending) GetAll() []*msg.ClientPendingMessage {
 	pendingMessages := make([]*msg.ClientPendingMessage, 0, 10)
 	_ = badgerUpdate(func(txn *badger.Txn) error {
 		opt := badger.DefaultIteratorOptions
-		opt.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
+		opt.Prefix = tools.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
 		it := txn.NewIterator(opt)
 		for it.Rewind(); it.Valid(); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
@@ -418,7 +418,7 @@ func (r *repoMessagesPending) DeletePeerAllMessages(peerID int64, peerType int32
 	res.MessageIDs = make([]int64, 0)
 	_ = badgerUpdate(func(txn *badger.Txn) error {
 		opt := badger.DefaultIteratorOptions
-		opt.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
+		opt.Prefix = tools.StrToByte(fmt.Sprintf("%s.", prefixPMessagesByID))
 		it := txn.NewIterator(opt)
 		for it.Rewind(); it.Valid(); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {

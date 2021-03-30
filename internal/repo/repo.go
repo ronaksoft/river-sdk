@@ -9,6 +9,7 @@ import (
 	"github.com/blevesearch/bleve/mapping"
 	"github.com/dgraph-io/badger/v2/options"
 	"github.com/pkg/errors"
+	"github.com/ronaksoft/rony/tools"
 	"github.com/tidwall/buntdb"
 	"os"
 	"strings"
@@ -150,7 +151,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 	// Initialize Search
 	go func() {
 		// 1. Messages Search
-		_ = domain.Try(10, time.Millisecond*100, func() error {
+		_ = tools.Try(10, time.Millisecond*100, func() error {
 			searchDbPath := fmt.Sprintf("%s/searchdb/msg", strings.TrimRight(dbPath, "/"))
 			if msgSearch, err := bleve.Open(searchDbPath); err != nil {
 				switch err {
@@ -176,7 +177,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 	}()
 	go func() {
 		// 2. Peer Search
-		_ = domain.Try(10, 100*time.Millisecond, func() error {
+		_ = tools.Try(10, 100*time.Millisecond, func() error {
 			peerDbPath := fmt.Sprintf("%s/searchdb/peer", strings.TrimRight(dbPath, "/"))
 			if peerSearch, err := bleve.Open(peerDbPath); err != nil {
 				switch err {
@@ -330,7 +331,7 @@ func indexMessage(key, value interface{}) {
 }
 
 var msgIndexer = domain.NewFlusher(1000, 1, time.Millisecond, func(items []domain.FlusherEntry) {
-	_ = domain.Try(100, time.Second, func() error {
+	_ = tools.Try(100, time.Second, func() error {
 		if r.msgSearch == nil {
 			return domain.ErrDoesNotExists
 		}
@@ -351,7 +352,7 @@ func indexMessageRemove(key string) {
 }
 
 var msgIndexRemover = domain.NewFlusher(1000, 1, time.Millisecond, func(items []domain.FlusherEntry) {
-	_ = domain.Try(100, time.Second, func() error {
+	_ = tools.Try(100, time.Second, func() error {
 		if r.msgSearch == nil {
 			return domain.ErrDoesNotExists
 		}
@@ -368,7 +369,7 @@ func indexPeer(key, value interface{}) {
 }
 
 var peerIndexer = domain.NewFlusher(1000, 1, time.Millisecond, func(items []domain.FlusherEntry) {
-	domain.Try(100, time.Second, func() error {
+	tools.Try(100, time.Second, func() error {
 		if r.peerSearch == nil {
 			return domain.ErrDoesNotExists
 		}
@@ -389,7 +390,7 @@ func indexPeerRemove(key string) {
 }
 
 var peerIndexRemover = domain.NewFlusher(1000, 1, time.Millisecond, func(items []domain.FlusherEntry) {
-	domain.Try(100, time.Second, func() error {
+	tools.Try(100, time.Second, func() error {
 		if r.peerSearch == nil {
 			return domain.ErrDoesNotExists
 		}

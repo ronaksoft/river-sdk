@@ -29,7 +29,7 @@ type repoUsers struct {
 }
 
 func getUserKey(userID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d", prefixUsers, userID))
+	return tools.StrToByte(fmt.Sprintf("%s.%021d", prefixUsers, userID))
 }
 
 func getUserByKey(txn *badger.Txn, userKey []byte) (*msg.User, error) {
@@ -48,7 +48,7 @@ func getUserByKey(txn *badger.Txn, userKey []byte) (*msg.User, error) {
 }
 
 func getUserLastUpdateKey(userID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d", prefixUsersLastUpdate, userID))
+	return tools.StrToByte(fmt.Sprintf("%s.%021d", prefixUsersLastUpdate, userID))
 }
 
 func getUserLastUpdate(txn *badger.Txn, userID int64) int64 {
@@ -65,7 +65,7 @@ func getUserLastUpdate(txn *badger.Txn, userID int64) int64 {
 }
 
 func getContactKey(teamID, userID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixContacts, teamID, userID))
+	return tools.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixContacts, teamID, userID))
 }
 
 func getContactByKey(txn *badger.Txn, contactKey []byte) (*msg.ContactUser, error) {
@@ -84,15 +84,15 @@ func getContactByKey(txn *badger.Txn, contactKey []byte) (*msg.ContactUser, erro
 }
 
 func getPhoneContactKey(phone string) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%s", prefixPhoneContacts, phone))
+	return tools.StrToByte(fmt.Sprintf("%s.%s", prefixPhoneContacts, phone))
 }
 
 func getUserPhotoGalleryKey(userID, photoID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixUsersPhotoGallery, userID, photoID))
+	return tools.StrToByte(fmt.Sprintf("%s.%021d.%021d", prefixUsersPhotoGallery, userID, photoID))
 }
 
 func getUserPhotoGalleryPrefix(userID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%021d.", prefixUsersPhotoGallery, userID))
+	return tools.StrToByte(fmt.Sprintf("%s.%021d.", prefixUsersPhotoGallery, userID))
 }
 
 func saveUser(txn *badger.Txn, user *msg.User) error {
@@ -128,7 +128,7 @@ func saveUser(txn *badger.Txn, user *msg.User) error {
 
 	if user.ID == r.selfUserID {
 		indexPeer(
-			domain.ByteToStr(userKey),
+			tools.ByteToStr(userKey),
 			UserSearch{
 				Type:      "user",
 				FirstName: "Saved",
@@ -139,7 +139,7 @@ func saveUser(txn *badger.Txn, user *msg.User) error {
 		)
 	} else {
 		indexPeer(
-			domain.ByteToStr(userKey),
+			tools.ByteToStr(userKey),
 			UserSearch{
 				Type:      "user",
 				FirstName: user.FirstName,
@@ -163,7 +163,7 @@ func saveContact(txn *badger.Txn, teamID int64, contactUser *msg.ContactUser) er
 		return err
 	}
 	indexPeer(
-		domain.ByteToStr(contactKey),
+		tools.ByteToStr(contactKey),
 		ContactSearch{
 			Type:      "contact",
 			FirstName: contactUser.FirstName,
@@ -348,7 +348,7 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 
 	err := badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
-			user, err := getUserByKey(txn, domain.StrToByte(hit.ID))
+			user, err := getUserByKey(txn, tools.StrToByte(hit.ID))
 			if err == nil && user != nil {
 				users = append(users, user)
 			}
@@ -382,7 +382,7 @@ func (r *repoUsers) GetContacts(teamID int64) ([]*msg.ContactUser, []*msg.PhoneC
 
 	_ = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.%021d.", prefixContacts, teamID))
+		opts.Prefix = tools.StrToByte(fmt.Sprintf("%s.%021d.", prefixContacts, teamID))
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
 			contactUser := &msg.ContactUser{}
@@ -433,7 +433,7 @@ func (r *repoUsers) SearchContacts(teamID int64, searchPhrase string) ([]*msg.Co
 
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
-			contactUser, err := getContactByKey(txn, domain.StrToByte(hit.ID))
+			contactUser, err := getContactByKey(txn, tools.StrToByte(hit.ID))
 			if err == nil && contactUser != nil {
 				phoneContacts = append(phoneContacts, &msg.PhoneContact{
 					ClientID:  contactUser.ClientID,
@@ -466,7 +466,7 @@ func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
 
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
-			user, _ := getUserByKey(txn, domain.StrToByte(hit.ID))
+			user, _ := getUserByKey(txn, tools.StrToByte(hit.ID))
 			if user != nil {
 				contactUsers = append(contactUsers, &msg.ContactUser{
 					ID:        user.ID,
@@ -532,7 +532,7 @@ func (r *repoUsers) GetPhoneContacts(limit int) ([]*msg.PhoneContact, error) {
 	phoneContacts := make([]*msg.PhoneContact, 0, limit)
 	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixPhoneContacts))
+		opts.Prefix = tools.StrToByte(fmt.Sprintf("%s.", prefixPhoneContacts))
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
 			if limit <= 0 {
@@ -568,7 +568,7 @@ func (r *repoUsers) DeleteContact(teamID int64, contactIDs ...int64) error {
 func (r *repoUsers) DeleteAllContacts(teamID int64) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = domain.StrToByte(fmt.Sprintf("%s.%021d.", prefixContacts, teamID))
+		opts.Prefix = tools.StrToByte(fmt.Sprintf("%s.%021d.", prefixContacts, teamID))
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {
 			_ = txn.Delete(it.Item().KeyCopy(nil))
@@ -644,7 +644,7 @@ func (r *repoUsers) GetPhotoGallery(userID int64) []*msg.UserPhoto {
 }
 
 func (r *repoUsers) ReIndex(teamID int64) {
-	err := domain.Try(10, time.Second, func() error {
+	err := tools.Try(10, time.Second, func() error {
 		if r.peerSearch == nil {
 			return domain.ErrDoesNotExists
 		}
@@ -656,13 +656,13 @@ func (r *repoUsers) ReIndex(teamID int64) {
 
 	_ = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = domain.StrToByte(prefixUsers)
+		opts.Prefix = tools.StrToByte(prefixUsers)
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.Valid(); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
 				user := new(msg.User)
 				_ = user.Unmarshal(val)
-				key := domain.ByteToStr(getUserKey(user.ID))
+				key := tools.ByteToStr(getUserKey(user.ID))
 				if d, _ := r.peerSearch.Document(key); d == nil {
 					if user.ID == r.repository.selfUserID {
 						indexPeer(
@@ -695,14 +695,14 @@ func (r *repoUsers) ReIndex(teamID int64) {
 		it.Close()
 
 		opts = badger.DefaultIteratorOptions
-		opts.Prefix = domain.StrToByte(prefixContacts)
+		opts.Prefix = tools.StrToByte(prefixContacts)
 		it = txn.NewIterator(opts)
 		for it.Rewind(); it.Valid(); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
 				contactUser := new(msg.ContactUser)
 				_ = contactUser.Unmarshal(val)
 				indexPeer(
-					domain.ByteToStr(getContactKey(teamID, contactUser.ID)),
+					tools.ByteToStr(getContactKey(teamID, contactUser.ID)),
 					ContactSearch{
 						Type:      "contact",
 						FirstName: contactUser.FirstName,

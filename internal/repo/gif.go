@@ -3,7 +3,6 @@ package repo
 import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
 	"github.com/dgraph-io/badger/v2"
 	"github.com/ronaksoft/rony/tools"
 	"github.com/tidwall/buntdb"
@@ -29,7 +28,7 @@ type repoGifs struct {
 }
 
 func getGifKey(clusterID int32, docID int64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%012d.%021d", prefixGif, clusterID, docID))
+	return tools.StrToByte(fmt.Sprintf("%s.%012d.%021d", prefixGif, clusterID, docID))
 }
 
 func getGifByID(txn *badger.Txn, clusterID int32, docID int64) (*msg.MediaDocument, error) {

@@ -8,6 +8,9 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"fmt"
+	"git.ronaksoft.com/river/msg/go/msg"
+	"github.com/nyaruka/phonenumbers"
+	"github.com/ronaksoft/rony/tools"
 	"hash/crc32"
 	"io"
 	"log"
@@ -15,17 +18,11 @@ import (
 	"math/big"
 	"math/rand"
 	"os"
-	"reflect"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
-	"unsafe"
-
-	"git.ronaksoft.com/river/msg/go/msg"
-	"github.com/nyaruka/phonenumbers"
 )
 
 func init() {
@@ -328,9 +325,9 @@ func CalculateContactsImportHash(req *msg.ContactsImport) uint64 {
 	count := len(phones)
 	bb := bytes.Buffer{}
 	for idx := 0; idx < count; idx++ {
-		bb.Write(StrToByte(phones[idx].Phone))
-		bb.Write(StrToByte(phones[idx].FirstName))
-		bb.Write(StrToByte(phones[idx].LastName))
+		bb.Write(tools.StrToByte(phones[idx].Phone))
+		bb.Write(tools.StrToByte(phones[idx].FirstName))
+		bb.Write(tools.StrToByte(phones[idx].LastName))
 	}
 	crc32Hash := crc32.ChecksumIEEE(bb.Bytes())
 	return uint64(crc32Hash)
@@ -456,44 +453,4 @@ func CalculateSha256(filePath string) ([]byte, error) {
 		h.Write(buf[:n])
 	}
 	return h.Sum(nil), nil
-}
-
-// ByteToStr converts byte slice to a string without memory allocation.
-// Note it may break if string and/or slice header will change
-// in the future go versions.
-func ByteToStr(b []byte) string {
-	return *(*string)(unsafe.Pointer(&b))
-}
-
-// StrToByte converts string to a byte slice without memory allocation.
-// Note it may break if string and/or slice header will change
-// in the future go versions.
-func StrToByte(s string) []byte {
-	sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
-	bh := reflect.SliceHeader{
-		Data: sh.Data,
-		Len:  sh.Len,
-		Cap:  sh.Len,
-	}
-	return *(*[]byte)(unsafe.Pointer(&bh))
-}
-
-func StrToInt64(s string) int64 {
-	v, _ := strconv.ParseInt(s, 10, 64)
-	return v
-}
-
-func StrToInt32(s string) int32 {
-	v, _ := strconv.ParseInt(s, 10, 32)
-	return int32(v)
-}
-
-func StrToUInt64(s string) uint64 {
-	v, _ := strconv.ParseInt(s, 10, 64)
-	return uint64(v)
-}
-
-func StrToUInt32(s string) uint32 {
-	v, _ := strconv.ParseInt(s, 10, 32)
-	return uint32(v)
 }

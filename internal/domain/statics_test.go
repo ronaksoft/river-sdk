@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
+	"github.com/ronaksoft/rony/tools"
 	"math/big"
 	"testing"
 	"time"
@@ -33,7 +34,7 @@ func TestSplitPQ(t *testing.T) {
 }
 
 func TestGenerateMessageKey(t *testing.T) {
-	dhKey := StrToByte(RandomID(100))
+	dhKey := tools.StrToByte(RandomID(100))
 	dhKey = append(dhKey, []byte("1234567890123456789012345678901234567890")...)
 	body := []byte("Hello It is Ehsan")
 	key := GenerateMessageKey(dhKey, body)

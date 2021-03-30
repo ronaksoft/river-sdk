@@ -71,8 +71,8 @@ func getDialogPeerFromIndexKey(key string) (int64, *msg.Peer) {
 		return 0, nil
 	}
 	return tools.StrToInt64(parts[1]), &msg.Peer{
-		ID:   domain.StrToInt64(parts[2]),
-		Type: domain.StrToInt32(parts[3]),
+		ID:   tools.StrToInt64(parts[2]),
+		Type: tools.StrToInt32(parts[3]),
 	}
 }
 
@@ -297,7 +297,7 @@ func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
 	dialogs := make([]*msg.Dialog, 0, 7)
 	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = domain.StrToByte(prefixDialogs)
+		opts.Prefix = tools.StrToByte(prefixDialogs)
 		opts.Reverse = true
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.ValidForPrefix(opts.Prefix); it.Next() {

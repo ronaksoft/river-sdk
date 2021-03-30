@@ -626,6 +626,8 @@ func (r *River) GetServerTimeUnix() int64 {
 
 // AppForeground
 func (r *River) AppForeground() {
+	statusOnline = true
+
 	// Set the time we come to foreground
 	mon.SetForegroundTime()
 
@@ -641,29 +643,11 @@ func (r *River) AppForeground() {
 		logs.Debug("AppForeground:: Network was disconnected we reconnect")
 		r.networkCtrl.Reconnect()
 	}
-
-	// Try to keep the user's status online
-	go r.updateStatusJob()
-}
-
-var updateStatusChan = make(chan struct{}, 1)
-
-func (r *River) updateStatusJob() {
-	r.syncCtrl.UpdateStatus(true)
-	t := time.NewTicker(time.Duration(domain.SysConfig.OnlineUpdatePeriodInSec-5) * time.Second)
-	for {
-		select {
-		case <-t.C:
-			r.syncCtrl.UpdateStatus(true)
-		case <-updateStatusChan:
-			return
-		}
-	}
 }
 
 // AppBackground
 func (r *River) AppBackground() {
-	updateStatusChan <- struct{}{}
+	statusOnline = false
 	r.syncCtrl.UpdateStatus(false)
 
 	// Compute the time we have been foreground
@@ -680,6 +664,7 @@ func (r *River) AppKill() {
 
 // AppStart
 func (r *River) AppStart() error {
+	statusOnline = true
 	runtime.GOMAXPROCS(runtime.NumCPU() * 2)
 
 	logs.Info("River Starting")
@@ -740,6 +725,9 @@ func (r *River) AppStart() error {
 		r.mainDelegate.AddLog(txt)
 	}
 	logs.Info("River Started")
+
+	// Try to keep the user's status online
+	go r.updateStatusJob()
 
 	// Run Garbage Collection In Background
 	go func() {
@@ -889,4 +877,18 @@ func (r *River) SetTeam(teamID int64, teamAccessHash int64, forceSync bool) {
 
 func (r *River) Version() string {
 	return domain.SDKVersion
+}
+
+/*
+	Online Status
+*/
+
+var statusOnline bool
+
+func (r *River) updateStatusJob() {
+	d := time.Duration(domain.SysConfig.OnlineUpdatePeriodInSec-5) * time.Second
+	for {
+		r.syncCtrl.UpdateStatus(statusOnline)
+		time.Sleep(d)
+	}
 }

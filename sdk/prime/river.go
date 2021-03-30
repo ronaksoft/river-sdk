@@ -11,6 +11,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/salt"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
+	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 	"sort"
 	"strconv"
@@ -349,7 +350,7 @@ func (r *River) sendMessageMedia(uploadRequest *msg.ClientFileRequest) (success 
 
 	req := &msg.ClientSendMessageMedia{}
 	_ = req.Unmarshal(pendingMessage.Media)
-	err := domain.Try(3, time.Millisecond*500, func() error {
+	err := tools.Try(3, time.Millisecond*500, func() error {
 		var fileLoc *msg.FileLocation
 		if uploadRequest.FileID != 0 && uploadRequest.AccessHash != 0 && uploadRequest.ClusterID != 0 {
 			req.MediaType = msg.InputMediaType_InputMediaTypeDocument

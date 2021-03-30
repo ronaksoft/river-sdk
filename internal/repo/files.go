@@ -8,6 +8,7 @@ import (
 	"github.com/dgraph-io/badger/v2"
 	"github.com/dgraph-io/badger/v2/pb"
 	"github.com/gogo/protobuf/proto"
+	"github.com/ronaksoft/rony/tools"
 	"mime"
 	"os"
 	"path"
@@ -43,7 +44,7 @@ type repoFiles struct {
 }
 
 func getFileKey(clusterID int32, fileID int64, accessHash uint64) []byte {
-	return domain.StrToByte(fmt.Sprintf("%s.%012d.%021d.%021d", prefixFiles, clusterID, fileID, accessHash))
+	return tools.StrToByte(fmt.Sprintf("%s.%012d.%021d.%021d", prefixFiles, clusterID, fileID, accessHash))
 }
 
 func getFile(txn *badger.Txn, clusterID int32, fileID int64, accessHash uint64) (*msg.ClientFile, error) {
@@ -439,7 +440,7 @@ func (r *repoFiles) GetCachedMedia() *msg.ClientCachedMediaInfo {
 	groupMtx := sync.Mutex{}
 
 	stream := r.badger.NewStream()
-	stream.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixMessages))
+	stream.Prefix = tools.StrToByte(fmt.Sprintf("%s.", prefixMessages))
 	stream.ChooseKey = func(item *badger.Item) bool {
 		m := &msg.UserMessage{}
 		err := item.Value(func(val []byte) error {
@@ -698,7 +699,7 @@ func getGroupProfilePath(groupID int64, fileID int64) string {
 func (r *repoFiles) SaveFileRequest(reqID string, req *msg.ClientFileRequest, overwriteOnly bool) (bool, error) {
 	var saved bool
 	err := badgerUpdate(func(txn *badger.Txn) error {
-		key := domain.StrToByte(fmt.Sprintf("%s.%s", prefixFilesRequests, reqID))
+		key := tools.StrToByte(fmt.Sprintf("%s.%s", prefixFilesRequests, reqID))
 		if overwriteOnly {
 			_, err := txn.Get(key)
 			if err != nil {
@@ -719,7 +720,7 @@ func (r *repoFiles) SaveFileRequest(reqID string, req *msg.ClientFileRequest, ov
 func (r *repoFiles) DeleteFileRequest(reqID string) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		return txn.Delete(
-			domain.StrToByte(fmt.Sprintf("%s.%s", prefixFilesRequests, reqID)),
+			tools.StrToByte(fmt.Sprintf("%s.%s", prefixFilesRequests, reqID)),
 		)
 	})
 }
@@ -728,7 +729,7 @@ func (r *repoFiles) GetFileRequest(reqID string) (*msg.ClientFileRequest, error)
 	req := &msg.ClientFileRequest{}
 	err := badgerView(func(txn *badger.Txn) error {
 		item, err := txn.Get(
-			domain.StrToByte(fmt.Sprintf("%s.%s", prefixFilesRequests, reqID)),
+			tools.StrToByte(fmt.Sprintf("%s.%s", prefixFilesRequests, reqID)),
 		)
 		switch err {
 		case nil:
@@ -748,7 +749,7 @@ func (r *repoFiles) GetFileRequest(reqID string) (*msg.ClientFileRequest, error)
 func (r *repoFiles) GetAllFileRequests() ([]*msg.ClientFileRequest, error) {
 	reqs := make([]*msg.ClientFileRequest, 0, 8)
 	st := r.badger.NewStream()
-	st.Prefix = domain.StrToByte(prefixFilesRequests)
+	st.Prefix = tools.StrToByte(prefixFilesRequests)
 	st.ChooseKey = func(item *badger.Item) bool {
 		return true
 	}

@@ -12,6 +12,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/salt"
 	"github.com/dustin/go-humanize"
 	"github.com/olekukonko/tablewriter"
+	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 	"io"
 	"io/ioutil"
@@ -102,9 +103,9 @@ func (r *River) HandleDebugActions(txt string) {
 	case "//sdk_clear_salt":
 		resetSalt(r)
 	case "//sdk_memory_stats":
-		sendToSavedMessage(r, domain.ByteToStr(getMemoryStats(r)))
+		sendToSavedMessage(r, tools.ByteToStr(getMemoryStats(r)))
 	case "//sdk_monitor":
-		txt := domain.ByteToStr(getMonitorStats(r))
+		txt := tools.ByteToStr(getMonitorStats(r))
 		sendToSavedMessage(r, txt,
 			&msg.MessageEntity{
 				Type:   msg.MessageEntityType_MessageEntityTypeCode,
@@ -143,8 +144,8 @@ func (r *River) HandleDebugActions(txt string) {
 			logs.Warn("invalid args: //sdk_export_messages [peerType] [peerID]")
 			return
 		}
-		peerType := domain.StrToInt32(args[0])
-		peerID := domain.StrToInt64(args[1])
+		peerType := tools.StrToInt32(args[0])
+		peerID := tools.StrToInt64(args[1])
 		sendMediaToSaveMessage(r, exportMessages(r, peerType, peerID), fmt.Sprintf("Messages-%s-%d.txt", msg.PeerType(peerType).String(), peerID))
 	}
 }
@@ -216,7 +217,7 @@ func getMemoryStats(r *River) []byte {
 		"HeapObjects": ms.HeapObjects,
 	}
 	b, _ := json.MarshalIndent(m, "", "    ")
-	sendToSavedMessage(r, domain.ByteToStr(b))
+	sendToSavedMessage(r, tools.ByteToStr(b))
 	return b
 }
 func getMonitorStats(r *River) []byte {

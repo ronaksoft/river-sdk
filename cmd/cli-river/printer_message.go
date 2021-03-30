@@ -220,7 +220,6 @@ func MessagePrinter(envelope *rony.MessageEnvelope) {
 		_Shell.Println("\r\n" + bufMessages.String())
 		_Shell.Println("\r\n" + bufUsers.String())
 	case msg.C_UsersMany:
-
 		x := new(msg.UsersMany)
 		x.Unmarshal(envelope.Message)
 		bufUsers := new(bytes.Buffer)
@@ -234,7 +233,7 @@ func MessagePrinter(envelope *rony.MessageEnvelope) {
 				fmt.Sprintf("%s", x.FirstName),
 				fmt.Sprintf("%s", x.LastName),
 				x.Username,
-				fmt.Sprintf("%d", len(x.Photo.String())),
+				fmt.Sprintf("%d", x.Photo.PhotoID),
 				fmt.Sprintf("%s", time.Unix(x.LastSeen, 0).Format(time.RFC822)),
 			})
 		}

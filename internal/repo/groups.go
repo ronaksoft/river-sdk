@@ -118,7 +118,7 @@ func saveGroup(txn *badger.Txn, group *msg.Group) error {
 	}
 
 	indexPeer(
-		domain.ByteToStr(groupKey),
+		tools.ByteToStr(groupKey),
 		GroupSearch{
 			Type:   "group",
 			Title:  group.Title,
@@ -155,7 +155,7 @@ func saveGroupFull(txn *badger.Txn, groupFull *msg.GroupFull) error {
 	}
 
 	indexPeer(
-		domain.ByteToStr(groupKey),
+		tools.ByteToStr(groupKey),
 		GroupSearch{
 			Type:   "group",
 			Title:  groupFull.Group.Title,
@@ -472,7 +472,7 @@ func (r *repoGroups) Search(teamID int64, searchPhrase string) []*msg.Group {
 	searchResult, _ := r.peerSearch.Search(searchRequest)
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
-			group, _ := getGroupByKey(txn, domain.StrToByte(hit.ID))
+			group, _ := getGroupByKey(txn, tools.StrToByte(hit.ID))
 			if group != nil {
 				groups = append(groups, group)
 			}
@@ -484,7 +484,7 @@ func (r *repoGroups) Search(teamID int64, searchPhrase string) []*msg.Group {
 }
 
 func (r *repoGroups) ReIndex() error {
-	err := domain.Try(10, time.Second, func() error {
+	err := tools.Try(10, time.Second, func() error {
 		if r.peerSearch == nil {
 			return domain.ErrDoesNotExists
 		}
@@ -495,13 +495,13 @@ func (r *repoGroups) ReIndex() error {
 	}
 	return badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = domain.StrToByte(prefixGroups)
+		opts.Prefix = tools.StrToByte(prefixGroups)
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.Valid(); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
 				group := new(msg.Group)
 				_ = group.Unmarshal(val)
-				groupKey := domain.ByteToStr(getGroupKey(group.ID))
+				groupKey := tools.ByteToStr(getGroupKey(group.ID))
 				if d, _ := r.peerSearch.Document(groupKey); d == nil {
 					indexPeer(
 						groupKey,

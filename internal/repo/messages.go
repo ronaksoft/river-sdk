@@ -72,11 +72,11 @@ func getMessageByID(txn *badger.Txn, msgID int64) (*msg.UserMessage, error) {
 		return nil, err
 	}
 	err = item.Value(func(val []byte) error {
-		parts := strings.Split(domain.ByteToStr(val), ".")
+		parts := strings.Split(tools.ByteToStr(val), ".")
 		if len(parts) != 3 {
 			return domain.ErrInvalidUserMessageKey
 		}
-		itemMessage, err := txn.Get(getMessageKey(domain.StrToInt64(parts[0]), domain.StrToInt64(parts[1]), domain.StrToInt32(parts[2]), msgID))
+		itemMessage, err := txn.Get(getMessageKey(tools.StrToInt64(parts[0]), tools.StrToInt64(parts[1]), tools.StrToInt32(parts[2]), msgID))
 		if err != nil {
 			return err
 		}
@@ -188,7 +188,7 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 	err = txn.SetEntry(
 		badger.NewEntry(
 			getUserMessageKey(message.ID),
-			domain.StrToByte(fmt.Sprintf("%d.%d.%d", message.TeamID, message.PeerID, message.PeerType)),
+			tools.StrToByte(fmt.Sprintf("%d.%d.%d", message.TeamID, message.PeerID, message.PeerType)),
 		).WithMeta(byte(docType)),
 	)
 	if err != nil {
@@ -196,7 +196,7 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 	}
 
 	indexMessage(
-		domain.ByteToStr(getMessageKey(message.TeamID, message.PeerID, message.PeerType, message.ID)),
+		tools.ByteToStr(getMessageKey(message.TeamID, message.PeerID, message.PeerType, message.ID)),
 		MessageSearch{
 			Type:     "msg",
 			Body:     message.Body,
@@ -569,7 +569,7 @@ func (r *repoMessages) Delete(userID int64, teamID, peerID int64, peerType int32
 			it.Close()
 			if dialog.TopMessageID == msgID {
 				_ = txn.Delete(getDialogKey(teamID, peerID, peerType))
-				indexMessageRemove(domain.ByteToStr(getMessageKey(teamID, peerID, peerType, msgID)))
+				indexMessageRemove(tools.ByteToStr(getMessageKey(teamID, peerID, peerType, msgID)))
 				return nil
 			}
 		}
@@ -583,7 +583,7 @@ func (r *repoMessages) Delete(userID int64, teamID, peerID int64, peerType int32
 			return err
 		}
 
-		indexMessageRemove(domain.ByteToStr(getMessageKey(teamID, peerID, peerType, msgID)))
+		indexMessageRemove(tools.ByteToStr(getMessageKey(teamID, peerID, peerType, msgID)))
 		return nil
 	})
 	if err != nil {
@@ -617,7 +617,7 @@ func (r *repoMessages) ClearHistory(userID int64, teamID, peerID int64, peerType
 				}
 				err := txn.Delete(kv.Key)
 				if err != nil {
-					logs.Warn("RepoMessage got error on ClearHistory", zap.Error(err), zap.String("Key", domain.ByteToStr(kv.Key)))
+					logs.Warn("RepoMessage got error on ClearHistory", zap.Error(err), zap.String("Key", tools.ByteToStr(kv.Key)))
 				}
 			}
 			return nil
@@ -699,7 +699,7 @@ func (r *repoMessages) SearchText(teamID int64, text string, limit int32) []*msg
 	searchRequest.Size = int(limit)
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
-			userMessage, _ := getMessageByKey(txn, domain.StrToByte(hit.ID))
+			userMessage, _ := getMessageByKey(txn, tools.StrToByte(hit.ID))
 			if userMessage != nil && userMessage.TeamID == teamID {
 				userMessages = append(userMessages, userMessage)
 			}
@@ -733,7 +733,7 @@ func (r *repoMessages) SearchTextByPeerID(teamID int64, text string, peerID int6
 	searchResult, _ := r.msgSearch.Search(searchRequest)
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
-			userMessage, _ := getMessageByKey(txn, domain.StrToByte(hit.ID))
+			userMessage, _ := getMessageByKey(txn, tools.StrToByte(hit.ID))
 			if userMessage != nil && userMessage.TeamID == teamID {
 				userMessages = append(userMessages, userMessage)
 			}
@@ -751,7 +751,7 @@ func (r *repoMessages) SearchByLabels(teamID int64, labelIDs []int32, peerID int
 	userMessages := make([]*msg.UserMessage, 0, limit)
 	_ = badgerView(func(txn *badger.Txn) error {
 		st := r.badger.NewStream()
-		st.Prefix = domain.StrToByte(prefixMessages)
+		st.Prefix = tools.StrToByte(prefixMessages)
 		st.ChooseKey = func(item *badger.Item) bool {
 			m := &msg.UserMessage{}
 			err := item.Value(func(val []byte) error {
@@ -809,7 +809,7 @@ func (r *repoMessages) GetAllMedia(documentType msg.ClientMediaType) ([]*msg.Use
 	userMessages := make([]*msg.UserMessage, 0, limit)
 
 	stream := r.badger.NewStream()
-	stream.Prefix = domain.StrToByte(fmt.Sprintf("%s.", prefixMessages))
+	stream.Prefix = tools.StrToByte(fmt.Sprintf("%s.", prefixMessages))
 	stream.ChooseKey = func(item *badger.Item) bool {
 		if item.UserMeta() == byte(documentType) {
 			m := &msg.UserMessage{}
@@ -878,7 +878,7 @@ func (r *repoMessages) SearchBySender(teamID int64, text string, senderID int64,
 	searchResult, _ := r.msgSearch.Search(searchRequest)
 	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
-			userMessage, _ := getMessageByKey(txn, domain.StrToByte(hit.ID))
+			userMessage, _ := getMessageByKey(txn, tools.StrToByte(hit.ID))
 			if userMessage != nil && userMessage.TeamID == teamID {
 				userMessages = append(userMessages, userMessage)
 			}
@@ -933,7 +933,7 @@ func (r *repoMessages) GetLastBotKeyboard(teamID, peerID int64, peerType int32) 
 }
 
 func (r *repoMessages) ReIndex() {
-	err := domain.Try(10, time.Second, func() error {
+	err := tools.Try(10, time.Second, func() error {
 		if r.msgSearch == nil {
 			return domain.ErrDoesNotExists
 		}
@@ -944,13 +944,13 @@ func (r *repoMessages) ReIndex() {
 	}
 	err = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.Prefix = domain.StrToByte(prefixMessages)
+		opts.Prefix = tools.StrToByte(prefixMessages)
 		it := txn.NewIterator(opts)
 		for it.Rewind(); it.Valid(); it.Next() {
 			_ = it.Item().Value(func(val []byte) error {
 				message := &msg.UserMessage{}
 				_ = message.Unmarshal(val)
-				msgKey := domain.ByteToStr(getMessageKey(message.TeamID, message.PeerID, message.PeerType, message.ID))
+				msgKey := tools.ByteToStr(getMessageKey(message.TeamID, message.PeerID, message.PeerType, message.ID))
 				if d, _ := r.msgSearch.Document(msgKey); d == nil {
 					indexMessage(
 						msgKey,
