@@ -27,7 +27,7 @@ import (
 */
 
 const (
-	prefixLabel         = "LBL"
+	prefixLabel         = "LBLL"
 	prefixLabelMessages = "LBLM"
 	prefixLabelFill     = "LBLF"
 	prefixLabelCount    = "LBLC"

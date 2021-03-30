@@ -7,6 +7,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/ronaksoft/rony/tools"
+	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/zap"
 	"sync"
 	"testing"
@@ -76,12 +77,12 @@ func createMediaMessage(body string, filename string, labelIDs []int32) *msg.Use
 		LabelIDs:            labelIDs,
 	}
 }
-func createMessage(id int64, body string, labelIDs []int32) *msg.UserMessage {
+func createMessage(id int64, peerID int64, body string, labelIDs []int32) *msg.UserMessage {
 	userID := domain.RandomInt63()
 
 	return &msg.UserMessage{
 		ID:                  id,
-		PeerID:              domain.RandomInt63(),
+		PeerID:              peerID,
 		PeerType:            1,
 		CreatedOn:           time.Now().Unix(),
 		EditedOn:            0,
@@ -144,47 +145,46 @@ func TestPending(t *testing.T) {
 	fmt.Println(pm2)
 }
 
-func TestGetMessageKey(t *testing.T) {
-	peerID := 10001
-	peerType := 1
-	msgID := 1 << 32
-	tools.StrToByte(fmt.Sprintf("%s.%021d.%d.%012d", "MSG", peerID, peerType, msgID))
-	fmt.Println(fmt.Sprintf("%s.%021d.%d.%012d", "MSG", peerID, peerType, msgID))
-}
-
 func TestRepoDeleteMessage(t *testing.T) {
-	peerID := int64(10001)
-	peerType := int32(1)
+	Convey("RepoDeleteMessage", t, func(c C) {
+		userID := tools.RandomInt64(0)
+		peerID := tools.RandomInt64(0)
+		peerType := int32(1)
 
-	d, _ := repo.Dialogs.Get(0, peerID, peerType)
-	if d == nil {
-		d = new(msg.Dialog)
-		d.PeerID = peerID
-		d.PeerType = peerType
-		repo.Dialogs.Save(d)
-	}
+		d, _ := repo.Dialogs.Get(0, peerID, peerType)
+		if d == nil {
+			d = new(msg.Dialog)
+			d.PeerID = peerID
+			d.PeerType = peerType
+			err := repo.Dialogs.Save(d)
+			c.So(err, ShouldBeNil)
+		}
 
-	for i := int64(10); i < 20; i++ {
-		m := new(msg.UserMessage)
-		m.ID = i
-		m.PeerID = peerID
-		m.PeerType = peerType
-		m.SenderID = peerID
-		m.Body = fmt.Sprintf("Text %d", i)
-		repo.Messages.SaveNew(m, 10002)
-	}
+		for i := int64(10); i < 20; i++ {
+			m := new(msg.UserMessage)
+			m.ID = i
+			m.PeerID = peerID
+			m.PeerType = peerType
+			m.SenderID = peerID
+			m.Body = fmt.Sprintf("Text %d", i)
+			err := repo.Messages.SaveNew(m, userID)
+			c.So(err, ShouldBeNil)
+		}
 
-	d, _ = repo.Dialogs.Get(0, peerID, peerType)
-	fmt.Println(d)
+		d, _ = repo.Dialogs.Get(0, peerID, peerType)
+		c.So(d.TopMessageID, ShouldEqual, 19)
 
-	repo.Messages.Delete(10002, 0, peerID, peerType, 19)
-	d, _ = repo.Dialogs.Get(0, peerID, peerType)
-	fmt.Println(d)
+		repo.Messages.Delete(userID, 0, peerID, peerType, 19)
+		d, _ = repo.Dialogs.Get(0, peerID, peerType)
+		c.So(d.TopMessageID, ShouldEqual, 18)
 
-	msgs, _, _ := repo.Messages.GetMessageHistory(0, peerID, peerType, 0, 0, 5)
-	for idx := range msgs {
-		fmt.Println(msgs[idx].ID)
-	}
+
+		msgs, _, _ := repo.Messages.GetMessageHistory(0, peerID, peerType, 0, 0, 5)
+		c.So(msgs, ShouldHaveLength, 5)
+		c.So(msgs[0].ID, ShouldEqual, 18)
+		c.So(msgs[4].ID, ShouldEqual, 14)
+	})
+
 
 }
 
@@ -221,77 +221,66 @@ func TestConcurrent(t *testing.T) {
 }
 
 func TestClearHistory(t *testing.T) {
-	m := make([]*msg.UserMessage, 0, 10)
-	for i := 1; i < 1000; i++ {
-		m = append(m, &msg.UserMessage{
-			ID:                  int64(i),
-			PeerID:              10,
-			PeerType:            1,
-			CreatedOn:           time.Now().Unix(),
-			EditedOn:            0,
-			FwdSenderID:         0,
-			FwdChannelID:        0,
-			FwdChannelMessageID: 0,
-			Flags:               0,
-			MessageType:         0,
-			Body:                fmt.Sprintf("Hello %d", i),
-			SenderID:            100,
-			ContentRead:         false,
-			Inbox:               false,
-			ReplyTo:             0,
-			MessageAction:       0,
-			MessageActionData:   nil,
-			Entities:            nil,
-			MediaType:           0,
-			Media:               nil,
-		})
-	}
-	err := repo.Dialogs.Save(&msg.Dialog{
-		PeerID:          10,
-		PeerType:        1,
-		TopMessageID:    999,
-		ReadInboxMaxID:  0,
-		ReadOutboxMaxID: 0,
-		UnreadCount:     0,
-		AccessHash:      0,
-		NotifySettings:  nil,
-		MentionedCount:  0,
-		Pinned:          false,
-		Draft:           nil,
+	Convey("ClearHistory", t, func(c C) {
+		peerID := tools.RandomInt64(0)
+		userID := tools.RandomInt64(0)
+		dialog := &msg.Dialog{
+			TeamID:         0,
+			PeerID:         peerID,
+			PeerType:       1,
+			TopMessageID:   1,
+			UnreadCount:    0,
+			MentionedCount: 0,
+			AccessHash:     0,
+		}
+		err := repo.Dialogs.SaveNew(dialog, tools.TimeUnix())
+		c.So(err, ShouldBeNil)
+
+		for i := 1; i < 1000; i++ {
+			err := repo.Messages.SaveNew(&msg.UserMessage{
+				ID:                  int64(i),
+				PeerID:              peerID,
+				PeerType:            1,
+				CreatedOn:           time.Now().Unix(),
+				EditedOn:            0,
+				FwdSenderID:         0,
+				FwdChannelID:        0,
+				FwdChannelMessageID: 0,
+				Flags:               0,
+				MessageType:         0,
+				Body:                fmt.Sprintf("Hello %d", i),
+				SenderID:            peerID,
+				ContentRead:         false,
+				Inbox:               false,
+				ReplyTo:             0,
+				MessageAction:       0,
+				MessageActionData:   nil,
+				Entities:            nil,
+				MediaType:           0,
+				Media:               nil,
+			}, userID)
+			c.So(err, ShouldBeNil)
+		}
+
+		err = repo.Messages.ClearHistory(userID, 0, peerID, 1, 995)
+		c.So(err, ShouldBeNil)
+
+		d, err := repo.Dialogs.Get(0, peerID, 1)
+		c.So(err, ShouldBeNil)
+		c.So(d.TopMessageID, ShouldEqual, 999)
+
+		ums, users, groups := repo.Messages.GetMessageHistory(0, peerID, 1, 0, 0, 100)
+		c.So(users, ShouldNotBeNil)
+		c.So(groups, ShouldNotBeNil)
+		c.So(ums, ShouldHaveLength, 4)
+
+
+		repo.Messages.Delete(userID, 0, peerID, 1, 999)
+		d, err = repo.Dialogs.Get(0, peerID, 1)
+		c.So(err, ShouldBeNil)
+		c.So(d.TopMessageID, ShouldEqual, 998)
 	})
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	repo.Messages.Save(m...)
-	fmt.Println("Saved")
-	err = repo.Messages.ClearHistory(101, 0, 10, 1, 995)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	d, err := repo.Dialogs.Get(0, 10, 1)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	fmt.Println(d.TopMessageID)
-	ums, us, _ := repo.Messages.GetMessageHistory(0, 10, 1, 0, 0, 100)
-	fmt.Println(len(ums), len(us))
 
-	var x []int64
-	for _, um := range ums {
-		x = append(x, um.ID)
-	}
-	fmt.Println(x)
-
-	repo.Messages.Delete(101, 10, 1, 1950)
-	d, err = repo.Dialogs.Get(0, 10, 1)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	fmt.Println(d.TopMessageID)
 }
 
 func TestSearch(t *testing.T) {
@@ -327,145 +316,138 @@ func TestSearch(t *testing.T) {
 		})
 	}
 	repo.Messages.Save(m...)
-	fmt.Println("Saved")
 
-	// mm := repo.Messages.SearchText("Hello")
-	fmt.Print("Search in UserPeer:")
-	mm := repo.Messages.SearchTextByPeerID(0, "H", 6, 100)
-	for _, m := range mm {
-		fmt.Println(m.ID, m.Body, m.PeerID)
-	}
-	fmt.Print("Search in GroupPeer:")
-	mm = repo.Messages.SearchTextByPeerID(0, "H", -7, 100)
-	for _, m := range mm {
-		fmt.Println(m.ID, m.Body, m.PeerID)
-	}
+	_ = repo.Messages.SearchTextByPeerID(0, "H", 6, 100)
+	_  = repo.Messages.SearchTextByPeerID(0, "H", -7, 100)
 }
 
 func TestUserPhotoGallery(t *testing.T) {
-	photo1 := &msg.UserPhoto{
-		PhotoBig: &msg.FileLocation{
-			ClusterID:  100,
-			FileID:     200,
-			AccessHash: 300,
-		},
-		PhotoSmall: &msg.FileLocation{
-			ClusterID:  10,
-			FileID:     20,
-			AccessHash: 30,
-		},
-		PhotoID: 1,
-	}
-	photo2 := &msg.UserPhoto{
-		PhotoBig: &msg.FileLocation{
-			ClusterID:  101,
-			FileID:     201,
-			AccessHash: 301,
-		},
-		PhotoSmall: &msg.FileLocation{
-			ClusterID:  11,
-			FileID:     21,
-			AccessHash: 31,
-		},
-		PhotoID: 2,
-	}
-	user := &msg.User{
-		ID:           1000,
-		FirstName:    "Ehsan",
-		LastName:     "Noureddin Moosa",
-		Username:     "",
-		Status:       0,
-		Restricted:   false,
-		AccessHash:   0,
-		Photo:        photo1,
-		Bio:          "",
-		Phone:        "",
-		LastSeen:     0,
-		PhotoGallery: nil,
-		IsBot:        false,
-	}
-	repo.Users.Save(user)
+	Convey("UserPhotoGallery", t, func(c C) {
+		userID := tools.RandomInt64(0)
+		photo1 := &msg.UserPhoto{
+			PhotoBig: &msg.FileLocation{
+				ClusterID:  100,
+				FileID:     200,
+				AccessHash: 300,
+			},
+			PhotoSmall: &msg.FileLocation{
+				ClusterID:  10,
+				FileID:     20,
+				AccessHash: 30,
+			},
+			PhotoID: 1,
+		}
+		photo2 := &msg.UserPhoto{
+			PhotoBig: &msg.FileLocation{
+				ClusterID:  101,
+				FileID:     201,
+				AccessHash: 301,
+			},
+			PhotoSmall: &msg.FileLocation{
+				ClusterID:  11,
+				FileID:     21,
+				AccessHash: 31,
+			},
+			PhotoID: 2,
+		}
+		user := &msg.User{
+			ID:           userID,
+			FirstName:    "Ehsan",
+			LastName:     "Noureddin Moosa",
+			Username:     "",
+			Status:       0,
+			Restricted:   false,
+			AccessHash:   0,
+			Photo:        photo1,
+			Bio:          "",
+			Phone:        "",
+			LastSeen:     0,
+			PhotoGallery: nil,
+			IsBot:        false,
+		}
+		repo.Users.Save(user)
 
-	u1, err := repo.Users.Get(1000)
-	if err != nil {
-		t.Fatal(err)
-	}
+		_, err := repo.Users.Get(userID)
+		c.So(err, ShouldBeNil)
 
-	user.PhotoGallery = []*msg.UserPhoto{photo1, photo2}
-	repo.Users.Save(user)
-	u2, err := repo.Users.Get(1000)
-	if err != nil {
-		t.Fatal(err)
-	}
+		user.PhotoGallery = []*msg.UserPhoto{photo1, photo2}
+		repo.Users.Save(user)
+		_, err = repo.Users.Get(userID)
+		c.So(err, ShouldBeNil)
 
-	phGallery := repo.Users.GetPhotoGallery(1000)
-	fmt.Println(phGallery)
-	_ = u1
-	_ = u2
+
+		phGallery := repo.Users.GetPhotoGallery(userID)
+		c.So(phGallery, ShouldHaveLength, 2)
+		c.So(phGallery[0].PhotoID, ShouldEqual, 1)
+		c.So(phGallery[1].PhotoID, ShouldEqual, 2)
+	})
 }
 
 func TestGroupPhotoGallery(t *testing.T) {
-	photo1 := &msg.GroupPhoto{
-		PhotoBig: &msg.FileLocation{
-			ClusterID:  100,
-			FileID:     200,
-			AccessHash: 300,
-		},
-		PhotoSmall: &msg.FileLocation{
-			ClusterID:  10,
-			FileID:     20,
-			AccessHash: 30,
-		},
-		PhotoID: 1,
-	}
-	photo2 := &msg.GroupPhoto{
-		PhotoBig: &msg.FileLocation{
-			ClusterID:  101,
-			FileID:     201,
-			AccessHash: 301,
-		},
-		PhotoSmall: &msg.FileLocation{
-			ClusterID:  11,
-			FileID:     21,
-			AccessHash: 31,
-		},
-		PhotoID: 2,
-	}
-	group := &msg.GroupFull{
-		Group: &msg.Group{
-			ID:           1000,
-			Title:        "Test Group",
-			CreatedOn:    0,
-			Participants: 0,
-			EditedOn:     0,
-			Flags:        nil,
-			Photo:        photo1,
-		},
-		Users:          nil,
-		Participants:   nil,
-		NotifySettings: nil,
-		PhotoGallery:   []*msg.GroupPhoto{photo1, photo2},
-	}
+	Convey("GroupPhotoGallery", t, func(c C) {
+		groupID := -tools.RandomInt64(0)
+		photo1 := &msg.GroupPhoto{
+			PhotoBig: &msg.FileLocation{
+				ClusterID:  100,
+				FileID:     200,
+				AccessHash: 300,
+			},
+			PhotoSmall: &msg.FileLocation{
+				ClusterID:  10,
+				FileID:     20,
+				AccessHash: 30,
+			},
+			PhotoID: 1,
+		}
+		photo2 := &msg.GroupPhoto{
+			PhotoBig: &msg.FileLocation{
+				ClusterID:  101,
+				FileID:     201,
+				AccessHash: 301,
+			},
+			PhotoSmall: &msg.FileLocation{
+				ClusterID:  11,
+				FileID:     21,
+				AccessHash: 31,
+			},
+			PhotoID: 2,
+		}
+		group := &msg.GroupFull{
+			Group: &msg.Group{
+				ID:           groupID,
+				Title:        "Test Group",
+				CreatedOn:    0,
+				Participants: 0,
+				EditedOn:     0,
+				Flags:        nil,
+				Photo:        photo1,
+			},
+			Users:          nil,
+			Participants:   nil,
+			NotifySettings: nil,
+			PhotoGallery:   []*msg.GroupPhoto{photo1, photo2},
+		}
 
-	repo.Groups.Save(group.Group)
-	repo.Groups.SavePhotoGallery(group.Group.ID, group.PhotoGallery...)
+		repo.Groups.Save(group.Group)
+		repo.Groups.SavePhotoGallery(group.Group.ID, group.PhotoGallery...)
 
-	phGallery, err := repo.Groups.GetPhotoGallery(1000)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Println(phGallery)
+		phGallery, err := repo.Groups.GetPhotoGallery(groupID)
+		c.So(err, ShouldBeNil)
+		c.So(phGallery, ShouldHaveLength, 2)
+	})
+
 }
 
 func TestMessagesSave(t *testing.T) {
-	m := createMediaMessage("Hello", "file.txt", nil)
-	repo.Messages.Save(m)
-	media := &msg.MediaDocument{}
-	media.Unmarshal(m.Media)
-	clientFile, err := repo.Files.Get(media.Doc.ClusterID, media.Doc.ID, media.Doc.AccessHash)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(clientFile.Extension)
-	t.Log(repo.Files.GetFilePath(clientFile))
+	Convey("MessageSave", t, func(c C) {
+		m := createMediaMessage("Hello", "file.txt", nil)
+		repo.Messages.Save(m)
+		media := &msg.MediaDocument{}
+		err := media.Unmarshal(m.Media)
+		c.So(err, ShouldBeNil)
+		clientFile, err := repo.Files.Get(media.Doc.ClusterID, media.Doc.ID, media.Doc.AccessHash)
+		c.So(err, ShouldBeNil)
+		c.So(clientFile.MessageID, ShouldEqual, m.ID)
+	})
+
 }
