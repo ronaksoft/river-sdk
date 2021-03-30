@@ -96,6 +96,18 @@ func TestLabel(t *testing.T) {
 			c.So(ums[0].ID, ShouldEqual, 6)
 			c.So(ums[1].ID, ShouldEqual, 8)
 			c.So(ums[2].ID, ShouldEqual, 9)
+
+			ums, _, _ = repo.Labels.ListMessages(1, 0, 3, 0, 5)
+			c.So(ums, ShouldHaveLength, 3)
+			c.So(ums[0].ID, ShouldEqual, 1)
+			c.So(ums[1].ID, ShouldEqual, 2)
+			c.So(ums[2].ID, ShouldEqual, 3)
+
+			ums, _, _ = repo.Labels.ListMessages(1, 0, 3, 5, 0)
+			c.So(ums, ShouldHaveLength, 3)
+			c.So(ums[0].ID, ShouldEqual, 6)
+			c.So(ums[1].ID, ShouldEqual, 8)
+			c.So(ums[2].ID, ShouldEqual, 9)
 		})
 		Convey("Label Hole", func(c C) {
 			b, _ := repo.Labels.GetLowerFilled(0, 10, 100)

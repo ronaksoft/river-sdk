@@ -1444,6 +1444,7 @@ func (r *River) labelsListItems(in, out *rony.MessageEnvelope, timeoutCB domain.
 					zap.Int64("MinID", x.Messages[msgCount-1].ID),
 					zap.Int64("MaxID", x.Messages[0].ID),
 				)
+
 				switch {
 				case req.MinID == 0 && req.MaxID != 0:
 					_ = repo.Labels.Fill(domain.GetTeamID(in), req.LabelID, x.Messages[msgCount-1].ID, req.MaxID)
@@ -1464,7 +1465,7 @@ func (r *River) labelsListItems(in, out *rony.MessageEnvelope, timeoutCB domain.
 	case req.MinID == 0 && req.MaxID == 0:
 		r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 	case req.MinID == 0 && req.MaxID != 0:
-		b, bar := repo.Labels.GetLowerFilled(domain.GetTeamID(in), req.LabelID, req.MaxID)
+		b, _ := repo.Labels.GetLowerFilled(domain.GetTeamID(in), req.LabelID, req.MaxID)
 		if !b {
 			logs.Info("River detected label hole (With MaxID Only)",
 				zap.Int32("LabelID", req.LabelID),
@@ -1474,16 +1475,10 @@ func (r *River) labelsListItems(in, out *rony.MessageEnvelope, timeoutCB domain.
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
-		messages, users, groups := repo.Labels.ListMessages(req.LabelID, domain.GetTeamID(in), req.Limit, bar.MinID, bar.MaxID)
-		logs.Debug("List Messages By Label",
-			zap.Int32("LabelID", req.LabelID),
-			zap.Int64("MinID", bar.MinID),
-			zap.Int64("MaxID", bar.MaxID),
-			zap.Int("Count", len(messages)),
-		)
+		messages, users, groups := repo.Labels.ListMessages(req.LabelID, domain.GetTeamID(in), req.Limit, 0, req.MaxID)
 		fillLabelItems(out, messages, users, groups, in.RequestID, preSuccessCB)
 	case req.MinID != 0 && req.MaxID == 0:
-		b, bar := repo.Labels.GetUpperFilled(domain.GetTeamID(in), req.LabelID, req.MinID)
+		b, _ := repo.Labels.GetUpperFilled(domain.GetTeamID(in), req.LabelID, req.MinID)
 		if !b {
 			logs.Info("River detected label hole (With MinID Only)",
 				zap.Int32("LabelID", req.LabelID),
@@ -1493,7 +1488,7 @@ func (r *River) labelsListItems(in, out *rony.MessageEnvelope, timeoutCB domain.
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
-		messages, users, groups := repo.Labels.ListMessages(req.LabelID, domain.GetTeamID(in), req.Limit, bar.MinID, bar.MaxID)
+		messages, users, groups := repo.Labels.ListMessages(req.LabelID, domain.GetTeamID(in), req.Limit, req.MinID, 0)
 		fillLabelItems(out, messages, users, groups, in.RequestID, preSuccessCB)
 	default:
 		r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)

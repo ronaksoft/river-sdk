@@ -167,9 +167,9 @@ func (ctrl *Controller) messagesMany(e *rony.MessageEnvelope) {
 	}
 
 	// save Groups & Users & Messages
-	repo.Users.Save(u.Users...)
-	repo.Groups.Save(u.Groups...)
-	repo.Messages.Save(u.Messages...)
+	_ = repo.Users.Save(u.Users...)
+	_ = repo.Groups.Save(u.Groups...)
+	_ = repo.Messages.Save(u.Messages...)
 
 	logs.Info("SyncCtrl applies MessagesMany",
 		zap.Bool("Continues", u.Continuous),

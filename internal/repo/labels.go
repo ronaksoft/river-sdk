@@ -320,7 +320,7 @@ func (r *repoLabels) ListMessages(labelID int32, teamID int64, limit int32, minI
 		})
 		logs.WarnOnErr("RepoLabels got error on ListMessages", err)
 		logs.Debug("RepoLabels got list", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID))
-	case minID != 0:
+	case minID > 0:
 		_ = badgerView(func(txn *badger.Txn) error {
 			it := txn.NewIterator(opts)
 			defer it.Close()
@@ -330,6 +330,7 @@ func (r *repoLabels) ListMessages(labelID int32, teamID int64, limit int32, minI
 					break
 				}
 				_ = it.Item().Value(func(val []byte) error {
+					fmt.Println(val)
 					return extractMessage(txn, val, teamID, &userMessages, userIDs, groupIDs)
 				})
 			}
@@ -345,7 +346,7 @@ func (r *repoLabels) ListMessages(labelID int32, teamID int64, limit int32, minI
 	groups, _ := Groups.GetMany(groupIDs.ToArray())
 	return userMessages, users, groups
 }
-func extractMessage(txn *badger.Txn, val []byte, teamID int64, userMessages *[]*msg.UserMessage, userIDs, groupIDs domain.MInt64B ) error {
+func extractMessage(txn *badger.Txn, val []byte, teamID int64, userMessages *[]*msg.UserMessage, userIDs, groupIDs domain.MInt64B) error {
 	parts := strings.Split(tools.ByteToStr(val), ".")
 	if len(parts) != 3 {
 		return domain.ErrInvalidData
@@ -456,16 +457,15 @@ func getLabelBarMinKey(teamID int64, labelID int32) []byte {
 }
 
 func (r *repoLabels) Fill(teamID int64, labelID int32, minID, maxID int64) error {
-	minIDb := make([]byte, 8)
-	binary.BigEndian.PutUint64(minIDb, uint64(minID))
-	maxIDb := make([]byte, 8)
-	binary.BigEndian.PutUint64(maxIDb, uint64(maxID))
+	var minIDb, maxIDb [8]byte
+	binary.BigEndian.PutUint64(minIDb[:], uint64(minID))
+	binary.BigEndian.PutUint64(maxIDb[:], uint64(maxID))
 	bar := r.GetFilled(teamID, labelID)
 	if maxID > bar.MaxID {
 		_ = badgerUpdate(func(txn *badger.Txn) error {
 			return txn.SetEntry(badger.NewEntry(
 				getLabelBarMaxKey(teamID, labelID),
-				maxIDb,
+				maxIDb[:],
 			))
 		})
 	}
@@ -474,7 +474,7 @@ func (r *repoLabels) Fill(teamID int64, labelID int32, minID, maxID int64) error
 		_ = badgerUpdate(func(txn *badger.Txn) error {
 			return txn.SetEntry(badger.NewEntry(
 				getLabelBarMinKey(teamID, labelID),
-				minIDb,
+				minIDb[:],
 			))
 		})
 	}

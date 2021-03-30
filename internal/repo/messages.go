@@ -305,8 +305,8 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, userID int64) error {
 	return err
 }
 
-func (r *repoMessages) Save(messages ...*msg.UserMessage) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+func (r *repoMessages) Save(messages ...*msg.UserMessage) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		for _, message := range messages {
 			err := saveMessage(txn, message)
 			if err != nil {
@@ -326,7 +326,6 @@ func (r *repoMessages) Save(messages ...*msg.UserMessage) {
 		}
 		return nil
 	})
-	logs.ErrorOnErr("RepoMessage got error on save", err)
 }
 
 func (r *repoMessages) UpdateReactionCounter(messageID int64, reactions []*msg.ReactionCounter, yourReactions []string) error {

@@ -2,6 +2,8 @@ package main
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
+	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/ronaksoft/rony"
 	"gopkg.in/abiosoft/ishell.v2"
 	"sync"
@@ -63,6 +65,7 @@ var LabelListItems = &ishell.Cmd{
 
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
+		c.Println("LabelFill", repo.Labels.GetFilled(domain.GetCurrTeamID(), req.LabelID))
 		if reqID, err := _SDK.ExecuteCommand(msg.C_LabelsListItems, reqBytes, reqDelegate); err != nil {
 			c.Println("Command Failed:", err)
 		} else {
