@@ -284,7 +284,7 @@ func sendLogs(r *River) {
 }
 
 func (r *River) GetHole(peerID int64, peerType int32) []byte {
-	return repo.MessagesExtra.GetHoles(domain.GetCurrTeamID(), peerID, peerType)
+	return repo.MessagesExtra.GetHoles(domain.GetCurrTeamID(), peerID, peerType, 0)
 }
 
 func (r *River) CancelFileRequest(reqID string) {

@@ -300,13 +300,13 @@ func (r *River) messagesGetHistory(in, out *rony.MessageEnvelope, timeoutCB doma
 		req.MaxID = dialog.TopMessageID
 		fallthrough
 	case req.MinID == 0 && req.MaxID != 0:
-		b, bar := messageHole.GetLowerFilled(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+		b, bar := messageHole.GetLowerFilled(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, req.MaxID)
 		if !b {
 			logs.Info("River detected hole (With MaxID Only)",
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
-				zap.String("Holes", messageHole.PrintHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))),
+				zap.String("Holes", messageHole.PrintHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0)),
 			)
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
@@ -314,13 +314,13 @@ func (r *River) messagesGetHistory(in, out *rony.MessageEnvelope, timeoutCB doma
 		messages, users, groups := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
 		fillMessagesMany(out, messages, users, groups, in.RequestID, preSuccessCB)
 	case req.MinID != 0 && req.MaxID == 0:
-		b, bar := messageHole.GetUpperFilled(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID)
+		b, bar := messageHole.GetUpperFilled(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, req.MinID)
 		if !b {
 			logs.Info("River detected hole (With MinID Only)",
 				zap.Int64("MinID", req.MinID),
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
-				zap.String("Holes", messageHole.PrintHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))),
+				zap.String("Holes", messageHole.PrintHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0)),
 			)
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
@@ -328,7 +328,7 @@ func (r *River) messagesGetHistory(in, out *rony.MessageEnvelope, timeoutCB doma
 		messages, users, groups := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), bar.Min, 0, req.Limit)
 		fillMessagesMany(out, messages, users, groups, in.RequestID, preSuccessCB)
 	default:
-		b := messageHole.IsHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID)
+		b := messageHole.IsHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, req.MinID, req.MaxID)
 		if b {
 			logs.Info("River detected hole (With Min & Max)",
 				zap.Int64("MinID", req.MinID),
@@ -373,11 +373,11 @@ func genSuccessCallback(cb domain.MessageHandler, teamID, peerID int64, peerType
 			if msgCount := len(x.Messages); msgCount > 0 {
 				switch {
 				case minID == 0 && maxID != 0:
-					messageHole.InsertFill(teamID, peerID, peerType, x.Messages[msgCount-1].ID, maxID)
+					messageHole.InsertFill(teamID, peerID, peerType, 0, x.Messages[msgCount-1].ID, maxID)
 				case minID != 0 && maxID == 0:
-					messageHole.InsertFill(teamID, peerID, peerType, minID, x.Messages[0].ID)
+					messageHole.InsertFill(teamID, peerID, peerType, 0, minID, x.Messages[0].ID)
 				case minID == 0 && maxID == 0:
-					messageHole.InsertFill(teamID, peerID, peerType, x.Messages[msgCount-1].ID, x.Messages[0].ID)
+					messageHole.InsertFill(teamID, peerID, peerType, 0, x.Messages[msgCount-1].ID, x.Messages[0].ID)
 				}
 			}
 
@@ -396,6 +396,16 @@ func genSuccessCallback(cb domain.MessageHandler, teamID, peerID int64, peerType
 		// Call the actual success callback function
 		cb(m)
 	}
+}
+
+func (r *River) messagesGetMediaHistory(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.MessagesGetMediaHistory{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
 }
 
 func (r *River) messagesDelete(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {

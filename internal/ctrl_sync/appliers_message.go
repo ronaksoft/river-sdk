@@ -135,7 +135,7 @@ func (ctrl *Controller) messagesDialogs(e *rony.MessageEnvelope) {
 		} else {
 			err := repo.Dialogs.SaveNew(dialog, topMessage.CreatedOn)
 			logs.WarnOnErr("SyncCtrl got error on save new dialog", err)
-			messageHole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, dialog.TopMessageID, dialog.TopMessageID)
+			messageHole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID, dialog.TopMessageID)
 		}
 	}
 	repo.Users.Save(x.Users...)

@@ -125,8 +125,8 @@ func TestRepoDialogs(t *testing.T) {
 }
 
 func TestRepoMessagesExtra(t *testing.T) {
-	repo.MessagesExtra.SaveScrollID(0, 11, 1, 101)
-	x := repo.MessagesExtra.GetScrollID(0, 11, 1)
+	repo.MessagesExtra.SaveScrollID(0, 11, 1, 0, 101)
+	x := repo.MessagesExtra.GetScrollID(0, 11, 1, 0)
 	fmt.Println(x)
 }
 
@@ -178,13 +178,11 @@ func TestRepoDeleteMessage(t *testing.T) {
 		d, _ = repo.Dialogs.Get(0, peerID, peerType)
 		c.So(d.TopMessageID, ShouldEqual, 18)
 
-
 		msgs, _, _ := repo.Messages.GetMessageHistory(0, peerID, peerType, 0, 0, 5)
 		c.So(msgs, ShouldHaveLength, 5)
 		c.So(msgs[0].ID, ShouldEqual, 18)
 		c.So(msgs[4].ID, ShouldEqual, 14)
 	})
-
 
 }
 
@@ -274,7 +272,6 @@ func TestClearHistory(t *testing.T) {
 		c.So(groups, ShouldNotBeNil)
 		c.So(ums, ShouldHaveLength, 4)
 
-
 		repo.Messages.Delete(userID, 0, peerID, 1, 999)
 		d, err = repo.Dialogs.Get(0, peerID, 1)
 		c.So(err, ShouldBeNil)
@@ -318,7 +315,7 @@ func TestSearch(t *testing.T) {
 	repo.Messages.Save(m...)
 
 	_ = repo.Messages.SearchTextByPeerID(0, "H", 6, 100)
-	_  = repo.Messages.SearchTextByPeerID(0, "H", -7, 100)
+	_ = repo.Messages.SearchTextByPeerID(0, "H", -7, 100)
 }
 
 func TestUserPhotoGallery(t *testing.T) {
@@ -374,7 +371,6 @@ func TestUserPhotoGallery(t *testing.T) {
 		repo.Users.Save(user)
 		_, err = repo.Users.Get(userID)
 		c.So(err, ShouldBeNil)
-
 
 		phGallery := repo.Users.GetPhotoGallery(userID)
 		c.So(phGallery, ShouldHaveLength, 2)
