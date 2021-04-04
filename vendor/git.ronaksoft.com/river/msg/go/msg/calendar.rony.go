@@ -18,12 +18,15 @@ type poolCalendarGetEvents struct {
 func (p *poolCalendarGetEvents) Get() *CalendarGetEvents {
 	x, ok := p.pool.Get().(*CalendarGetEvents)
 	if !ok {
-		return &CalendarGetEvents{}
+		x = &CalendarGetEvents{}
 	}
 	return x
 }
 
 func (p *poolCalendarGetEvents) Put(x *CalendarGetEvents) {
+	if x == nil {
+		return
+	}
 	x.From = 0
 	x.To = 0
 	x.Filter = 0
@@ -59,12 +62,15 @@ type poolCalendarSetEvent struct {
 func (p *poolCalendarSetEvent) Get() *CalendarSetEvent {
 	x, ok := p.pool.Get().(*CalendarSetEvent)
 	if !ok {
-		return &CalendarSetEvent{}
+		x = &CalendarSetEvent{}
 	}
 	return x
 }
 
 func (p *poolCalendarSetEvent) Put(x *CalendarSetEvent) {
+	if x == nil {
+		return
+	}
 	x.Name = ""
 	x.Date = 0
 	x.StartRange = 0
@@ -112,12 +118,15 @@ type poolCalendarEditEvent struct {
 func (p *poolCalendarEditEvent) Get() *CalendarEditEvent {
 	x, ok := p.pool.Get().(*CalendarEditEvent)
 	if !ok {
-		return &CalendarEditEvent{}
+		x = &CalendarEditEvent{}
 	}
 	return x
 }
 
 func (p *poolCalendarEditEvent) Put(x *CalendarEditEvent) {
+	if x == nil {
+		return
+	}
 	x.EventID = 0
 	x.Name = ""
 	x.Date = 0
@@ -165,12 +174,15 @@ type poolCalendarRemoveEvent struct {
 func (p *poolCalendarRemoveEvent) Get() *CalendarRemoveEvent {
 	x, ok := p.pool.Get().(*CalendarRemoveEvent)
 	if !ok {
-		return &CalendarRemoveEvent{}
+		x = &CalendarRemoveEvent{}
 	}
 	return x
 }
 
 func (p *poolCalendarRemoveEvent) Put(x *CalendarRemoveEvent) {
+	if x == nil {
+		return
+	}
 	x.EventID = 0
 	p.pool.Put(x)
 }
@@ -202,12 +214,15 @@ type poolCalendarEvent struct {
 func (p *poolCalendarEvent) Get() *CalendarEvent {
 	x, ok := p.pool.Get().(*CalendarEvent)
 	if !ok {
-		return &CalendarEvent{}
+		x = &CalendarEvent{}
 	}
 	return x
 }
 
 func (p *poolCalendarEvent) Put(x *CalendarEvent) {
+	if x == nil {
+		return
+	}
 	x.ID = 0
 	x.Name = ""
 	x.Recurring = false
@@ -247,12 +262,15 @@ type poolCalendarEventInstance struct {
 func (p *poolCalendarEventInstance) Get() *CalendarEventInstance {
 	x, ok := p.pool.Get().(*CalendarEventInstance)
 	if !ok {
-		return &CalendarEventInstance{}
+		x = &CalendarEventInstance{}
 	}
 	return x
 }
 
 func (p *poolCalendarEventInstance) Put(x *CalendarEventInstance) {
+	if x == nil {
+		return
+	}
 	x.ID = 0
 	x.EventID = 0
 	x.Start = 0

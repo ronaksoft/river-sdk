@@ -18,12 +18,15 @@ type poolGifGetSaved struct {
 func (p *poolGifGetSaved) Get() *GifGetSaved {
 	x, ok := p.pool.Get().(*GifGetSaved)
 	if !ok {
-		return &GifGetSaved{}
+		x = &GifGetSaved{}
 	}
 	return x
 }
 
 func (p *poolGifGetSaved) Put(x *GifGetSaved) {
+	if x == nil {
+		return
+	}
 	x.Hash = 0
 	p.pool.Put(x)
 }
@@ -55,15 +58,19 @@ type poolGifSave struct {
 func (p *poolGifSave) Get() *GifSave {
 	x, ok := p.pool.Get().(*GifSave)
 	if !ok {
-		return &GifSave{}
+		x = &GifSave{}
 	}
 	return x
 }
 
 func (p *poolGifSave) Put(x *GifSave) {
-	if x.Doc != nil {
-		PoolInputDocument.Put(x.Doc)
-		x.Doc = nil
+	if x == nil {
+		return
+	}
+	PoolInputDocument.Put(x.Doc)
+	x.Doc = nil
+	for _, z := range x.Attributes {
+		PoolDocumentAttribute.Put(z)
 	}
 	x.Attributes = x.Attributes[:0]
 	p.pool.Put(x)
@@ -73,8 +80,12 @@ var PoolGifSave = poolGifSave{}
 
 func (x *GifSave) DeepCopy(z *GifSave) {
 	if x.Doc != nil {
-		z.Doc = PoolInputDocument.Get()
+		if z.Doc == nil {
+			z.Doc = PoolInputDocument.Get()
+		}
 		x.Doc.DeepCopy(z.Doc)
+	} else {
+		z.Doc = nil
 	}
 	for idx := range x.Attributes {
 		if x.Attributes[idx] != nil {
@@ -106,16 +117,17 @@ type poolGifDelete struct {
 func (p *poolGifDelete) Get() *GifDelete {
 	x, ok := p.pool.Get().(*GifDelete)
 	if !ok {
-		return &GifDelete{}
+		x = &GifDelete{}
 	}
 	return x
 }
 
 func (p *poolGifDelete) Put(x *GifDelete) {
-	if x.Doc != nil {
-		PoolInputDocument.Put(x.Doc)
-		x.Doc = nil
+	if x == nil {
+		return
 	}
+	PoolInputDocument.Put(x.Doc)
+	x.Doc = nil
 	p.pool.Put(x)
 }
 
@@ -123,8 +135,12 @@ var PoolGifDelete = poolGifDelete{}
 
 func (x *GifDelete) DeepCopy(z *GifDelete) {
 	if x.Doc != nil {
-		z.Doc = PoolInputDocument.Get()
+		if z.Doc == nil {
+			z.Doc = PoolInputDocument.Get()
+		}
 		x.Doc.DeepCopy(z.Doc)
+	} else {
+		z.Doc = nil
 	}
 }
 
@@ -149,12 +165,15 @@ type poolGifSearch struct {
 func (p *poolGifSearch) Get() *GifSearch {
 	x, ok := p.pool.Get().(*GifSearch)
 	if !ok {
-		return &GifSearch{}
+		x = &GifSearch{}
 	}
 	return x
 }
 
 func (p *poolGifSearch) Put(x *GifSearch) {
+	if x == nil {
+		return
+	}
 	x.Query = ""
 	x.Hash = 0
 	p.pool.Put(x)
@@ -188,13 +207,19 @@ type poolFoundGifs struct {
 func (p *poolFoundGifs) Get() *FoundGifs {
 	x, ok := p.pool.Get().(*FoundGifs)
 	if !ok {
-		return &FoundGifs{}
+		x = &FoundGifs{}
 	}
 	return x
 }
 
 func (p *poolFoundGifs) Put(x *FoundGifs) {
+	if x == nil {
+		return
+	}
 	x.NextOffset = 0
+	for _, z := range x.Gifs {
+		PoolFoundGif.Put(z)
+	}
 	x.Gifs = x.Gifs[:0]
 	p.pool.Put(x)
 }
@@ -233,21 +258,20 @@ type poolFoundGif struct {
 func (p *poolFoundGif) Get() *FoundGif {
 	x, ok := p.pool.Get().(*FoundGif)
 	if !ok {
-		return &FoundGif{}
+		x = &FoundGif{}
 	}
 	return x
 }
 
 func (p *poolFoundGif) Put(x *FoundGif) {
+	if x == nil {
+		return
+	}
 	x.Url = ""
-	if x.Doc != nil {
-		PoolDocument.Put(x.Doc)
-		x.Doc = nil
-	}
-	if x.Thumb != nil {
-		PoolDocument.Put(x.Thumb)
-		x.Thumb = nil
-	}
+	PoolDocument.Put(x.Doc)
+	x.Doc = nil
+	PoolDocument.Put(x.Thumb)
+	x.Thumb = nil
 	p.pool.Put(x)
 }
 
@@ -256,12 +280,20 @@ var PoolFoundGif = poolFoundGif{}
 func (x *FoundGif) DeepCopy(z *FoundGif) {
 	z.Url = x.Url
 	if x.Doc != nil {
-		z.Doc = PoolDocument.Get()
+		if z.Doc == nil {
+			z.Doc = PoolDocument.Get()
+		}
 		x.Doc.DeepCopy(z.Doc)
+	} else {
+		z.Doc = nil
 	}
 	if x.Thumb != nil {
-		z.Thumb = PoolDocument.Get()
+		if z.Thumb == nil {
+			z.Thumb = PoolDocument.Get()
+		}
 		x.Thumb.DeepCopy(z.Thumb)
+	} else {
+		z.Thumb = nil
 	}
 }
 
@@ -286,13 +318,19 @@ type poolSavedGifs struct {
 func (p *poolSavedGifs) Get() *SavedGifs {
 	x, ok := p.pool.Get().(*SavedGifs)
 	if !ok {
-		return &SavedGifs{}
+		x = &SavedGifs{}
 	}
 	return x
 }
 
 func (p *poolSavedGifs) Put(x *SavedGifs) {
+	if x == nil {
+		return
+	}
 	x.Hash = 0
+	for _, z := range x.Docs {
+		PoolMediaDocument.Put(z)
+	}
 	x.Docs = x.Docs[:0]
 	x.NotModified = false
 	p.pool.Put(x)

@@ -18,12 +18,15 @@ type poolDocumentAttributeAudio struct {
 func (p *poolDocumentAttributeAudio) Get() *DocumentAttributeAudio {
 	x, ok := p.pool.Get().(*DocumentAttributeAudio)
 	if !ok {
-		return &DocumentAttributeAudio{}
+		x = &DocumentAttributeAudio{}
 	}
 	return x
 }
 
 func (p *poolDocumentAttributeAudio) Put(x *DocumentAttributeAudio) {
+	if x == nil {
+		return
+	}
 	x.Voice = false
 	x.Duration = 0
 	x.Title = ""
@@ -65,12 +68,15 @@ type poolDocumentAttributeVideo struct {
 func (p *poolDocumentAttributeVideo) Get() *DocumentAttributeVideo {
 	x, ok := p.pool.Get().(*DocumentAttributeVideo)
 	if !ok {
-		return &DocumentAttributeVideo{}
+		x = &DocumentAttributeVideo{}
 	}
 	return x
 }
 
 func (p *poolDocumentAttributeVideo) Put(x *DocumentAttributeVideo) {
+	if x == nil {
+		return
+	}
 	x.Width = 0
 	x.Height = 0
 	x.Duration = 0
@@ -108,12 +114,15 @@ type poolDocumentAttributePhoto struct {
 func (p *poolDocumentAttributePhoto) Get() *DocumentAttributePhoto {
 	x, ok := p.pool.Get().(*DocumentAttributePhoto)
 	if !ok {
-		return &DocumentAttributePhoto{}
+		x = &DocumentAttributePhoto{}
 	}
 	return x
 }
 
 func (p *poolDocumentAttributePhoto) Put(x *DocumentAttributePhoto) {
+	if x == nil {
+		return
+	}
 	x.Width = 0
 	x.Height = 0
 	p.pool.Put(x)
@@ -147,12 +156,15 @@ type poolDocumentAttributeFile struct {
 func (p *poolDocumentAttributeFile) Get() *DocumentAttributeFile {
 	x, ok := p.pool.Get().(*DocumentAttributeFile)
 	if !ok {
-		return &DocumentAttributeFile{}
+		x = &DocumentAttributeFile{}
 	}
 	return x
 }
 
 func (p *poolDocumentAttributeFile) Put(x *DocumentAttributeFile) {
+	if x == nil {
+		return
+	}
 	x.Filename = ""
 	p.pool.Put(x)
 }
@@ -184,12 +196,15 @@ type poolDocumentAttributeAnimated struct {
 func (p *poolDocumentAttributeAnimated) Get() *DocumentAttributeAnimated {
 	x, ok := p.pool.Get().(*DocumentAttributeAnimated)
 	if !ok {
-		return &DocumentAttributeAnimated{}
+		x = &DocumentAttributeAnimated{}
 	}
 	return x
 }
 
 func (p *poolDocumentAttributeAnimated) Put(x *DocumentAttributeAnimated) {
+	if x == nil {
+		return
+	}
 	x.Sound = false
 	p.pool.Put(x)
 }
@@ -221,12 +236,15 @@ type poolDocumentAttribute struct {
 func (p *poolDocumentAttribute) Get() *DocumentAttribute {
 	x, ok := p.pool.Get().(*DocumentAttribute)
 	if !ok {
-		return &DocumentAttribute{}
+		x = &DocumentAttribute{}
 	}
 	return x
 }
 
 func (p *poolDocumentAttribute) Put(x *DocumentAttribute) {
+	if x == nil {
+		return
+	}
 	x.Type = 0
 	x.Data = x.Data[:0]
 	p.pool.Put(x)
@@ -260,12 +278,15 @@ type poolDocument struct {
 func (p *poolDocument) Get() *Document {
 	x, ok := p.pool.Get().(*Document)
 	if !ok {
-		return &Document{}
+		x = &Document{}
 	}
 	return x
 }
 
 func (p *poolDocument) Put(x *Document) {
+	if x == nil {
+		return
+	}
 	x.ID = 0
 	x.AccessHash = 0
 	x.Date = 0
@@ -273,11 +294,12 @@ func (p *poolDocument) Put(x *Document) {
 	x.FileSize = 0
 	x.Version = 0
 	x.ClusterID = 0
-	x.Attributes = x.Attributes[:0]
-	if x.Thumbnail != nil {
-		PoolFileLocation.Put(x.Thumbnail)
-		x.Thumbnail = nil
+	for _, z := range x.Attributes {
+		PoolDocumentAttribute.Put(z)
 	}
+	x.Attributes = x.Attributes[:0]
+	PoolFileLocation.Put(x.Thumbnail)
+	x.Thumbnail = nil
 	x.MD5Checksum = ""
 	x.TinyThumbnail = x.TinyThumbnail[:0]
 	p.pool.Put(x)
@@ -301,8 +323,12 @@ func (x *Document) DeepCopy(z *Document) {
 		}
 	}
 	if x.Thumbnail != nil {
-		z.Thumbnail = PoolFileLocation.Get()
+		if z.Thumbnail == nil {
+			z.Thumbnail = PoolFileLocation.Get()
+		}
 		x.Thumbnail.DeepCopy(z.Thumbnail)
+	} else {
+		z.Thumbnail = nil
 	}
 	z.MD5Checksum = x.MD5Checksum
 	z.TinyThumbnail = append(z.TinyThumbnail[:0], x.TinyThumbnail...)
@@ -329,15 +355,21 @@ type poolInputMediaWebDocument struct {
 func (p *poolInputMediaWebDocument) Get() *InputMediaWebDocument {
 	x, ok := p.pool.Get().(*InputMediaWebDocument)
 	if !ok {
-		return &InputMediaWebDocument{}
+		x = &InputMediaWebDocument{}
 	}
 	return x
 }
 
 func (p *poolInputMediaWebDocument) Put(x *InputMediaWebDocument) {
+	if x == nil {
+		return
+	}
 	x.Url = ""
 	x.DocSize = 0
 	x.MimeType = ""
+	for _, z := range x.Attributes {
+		PoolDocumentAttribute.Put(z)
+	}
 	x.Attributes = x.Attributes[:0]
 	p.pool.Put(x)
 }
@@ -378,15 +410,21 @@ type poolMediaWebDocument struct {
 func (p *poolMediaWebDocument) Get() *MediaWebDocument {
 	x, ok := p.pool.Get().(*MediaWebDocument)
 	if !ok {
-		return &MediaWebDocument{}
+		x = &MediaWebDocument{}
 	}
 	return x
 }
 
 func (p *poolMediaWebDocument) Put(x *MediaWebDocument) {
+	if x == nil {
+		return
+	}
 	x.Url = ""
 	x.DocSize = 0
 	x.MimeType = ""
+	for _, z := range x.Attributes {
+		PoolDocumentAttribute.Put(z)
+	}
 	x.Attributes = x.Attributes[:0]
 	x.AccessHash = 0
 	p.pool.Put(x)
@@ -429,12 +467,15 @@ type poolMediaWebPage struct {
 func (p *poolMediaWebPage) Get() *MediaWebPage {
 	x, ok := p.pool.Get().(*MediaWebPage)
 	if !ok {
-		return &MediaWebPage{}
+		x = &MediaWebPage{}
 	}
 	return x
 }
 
 func (p *poolMediaWebPage) Put(x *MediaWebPage) {
+	if x == nil {
+		return
+	}
 	p.pool.Put(x)
 }
 
@@ -464,12 +505,15 @@ type poolInputMediaContact struct {
 func (p *poolInputMediaContact) Get() *InputMediaContact {
 	x, ok := p.pool.Get().(*InputMediaContact)
 	if !ok {
-		return &InputMediaContact{}
+		x = &InputMediaContact{}
 	}
 	return x
 }
 
 func (p *poolInputMediaContact) Put(x *InputMediaContact) {
+	if x == nil {
+		return
+	}
 	x.Phone = ""
 	x.FirstName = ""
 	x.LastName = ""
@@ -507,12 +551,15 @@ type poolMediaContact struct {
 func (p *poolMediaContact) Get() *MediaContact {
 	x, ok := p.pool.Get().(*MediaContact)
 	if !ok {
-		return &MediaContact{}
+		x = &MediaContact{}
 	}
 	return x
 }
 
 func (p *poolMediaContact) Put(x *MediaContact) {
+	if x == nil {
+		return
+	}
 	x.Phone = ""
 	x.FirstName = ""
 	x.LastName = ""
@@ -550,24 +597,32 @@ type poolInputMediaUploadedDocument struct {
 func (p *poolInputMediaUploadedDocument) Get() *InputMediaUploadedDocument {
 	x, ok := p.pool.Get().(*InputMediaUploadedDocument)
 	if !ok {
-		return &InputMediaUploadedDocument{}
+		x = &InputMediaUploadedDocument{}
 	}
 	return x
 }
 
 func (p *poolInputMediaUploadedDocument) Put(x *InputMediaUploadedDocument) {
-	if x.File != nil {
-		PoolInputFile.Put(x.File)
-		x.File = nil
+	if x == nil {
+		return
 	}
-	if x.Thumbnail != nil {
-		PoolInputFile.Put(x.Thumbnail)
-		x.Thumbnail = nil
-	}
+	PoolInputFile.Put(x.File)
+	x.File = nil
+	PoolInputFile.Put(x.Thumbnail)
+	x.Thumbnail = nil
 	x.MimeType = ""
 	x.Caption = ""
+	for _, z := range x.Stickers {
+		PoolInputDocument.Put(z)
+	}
 	x.Stickers = x.Stickers[:0]
+	for _, z := range x.Attributes {
+		PoolDocumentAttribute.Put(z)
+	}
 	x.Attributes = x.Attributes[:0]
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
+	}
 	x.Entities = x.Entities[:0]
 	x.TinyThumbnail = x.TinyThumbnail[:0]
 	p.pool.Put(x)
@@ -577,12 +632,20 @@ var PoolInputMediaUploadedDocument = poolInputMediaUploadedDocument{}
 
 func (x *InputMediaUploadedDocument) DeepCopy(z *InputMediaUploadedDocument) {
 	if x.File != nil {
-		z.File = PoolInputFile.Get()
+		if z.File == nil {
+			z.File = PoolInputFile.Get()
+		}
 		x.File.DeepCopy(z.File)
+	} else {
+		z.File = nil
 	}
 	if x.Thumbnail != nil {
-		z.Thumbnail = PoolInputFile.Get()
+		if z.Thumbnail == nil {
+			z.Thumbnail = PoolInputFile.Get()
+		}
 		x.Thumbnail.DeepCopy(z.Thumbnail)
+	} else {
+		z.Thumbnail = nil
 	}
 	z.MimeType = x.MimeType
 	z.Caption = x.Caption
@@ -631,21 +694,26 @@ type poolInputMediaDocument struct {
 func (p *poolInputMediaDocument) Get() *InputMediaDocument {
 	x, ok := p.pool.Get().(*InputMediaDocument)
 	if !ok {
-		return &InputMediaDocument{}
+		x = &InputMediaDocument{}
 	}
 	return x
 }
 
 func (p *poolInputMediaDocument) Put(x *InputMediaDocument) {
+	if x == nil {
+		return
+	}
 	x.Caption = ""
-	if x.Document != nil {
-		PoolInputDocument.Put(x.Document)
-		x.Document = nil
+	PoolInputDocument.Put(x.Document)
+	x.Document = nil
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
 	}
 	x.Entities = x.Entities[:0]
-	if x.Thumbnail != nil {
-		PoolInputFile.Put(x.Thumbnail)
-		x.Thumbnail = nil
+	PoolInputFile.Put(x.Thumbnail)
+	x.Thumbnail = nil
+	for _, z := range x.Attributes {
+		PoolDocumentAttribute.Put(z)
 	}
 	x.Attributes = x.Attributes[:0]
 	x.TinyThumbnail = x.TinyThumbnail[:0]
@@ -657,8 +725,12 @@ var PoolInputMediaDocument = poolInputMediaDocument{}
 func (x *InputMediaDocument) DeepCopy(z *InputMediaDocument) {
 	z.Caption = x.Caption
 	if x.Document != nil {
-		z.Document = PoolInputDocument.Get()
+		if z.Document == nil {
+			z.Document = PoolInputDocument.Get()
+		}
 		x.Document.DeepCopy(z.Document)
+	} else {
+		z.Document = nil
 	}
 	for idx := range x.Entities {
 		if x.Entities[idx] != nil {
@@ -668,8 +740,12 @@ func (x *InputMediaDocument) DeepCopy(z *InputMediaDocument) {
 		}
 	}
 	if x.Thumbnail != nil {
-		z.Thumbnail = PoolInputFile.Get()
+		if z.Thumbnail == nil {
+			z.Thumbnail = PoolInputFile.Get()
+		}
 		x.Thumbnail.DeepCopy(z.Thumbnail)
+	} else {
+		z.Thumbnail = nil
 	}
 	for idx := range x.Attributes {
 		if x.Attributes[idx] != nil {
@@ -702,18 +778,22 @@ type poolInputMediaMessageDocument struct {
 func (p *poolInputMediaMessageDocument) Get() *InputMediaMessageDocument {
 	x, ok := p.pool.Get().(*InputMediaMessageDocument)
 	if !ok {
-		return &InputMediaMessageDocument{}
+		x = &InputMediaMessageDocument{}
 	}
 	return x
 }
 
 func (p *poolInputMediaMessageDocument) Put(x *InputMediaMessageDocument) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MessageID = 0
 	x.Caption = ""
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
+	}
 	x.Entities = x.Entities[:0]
 	p.pool.Put(x)
 }
@@ -722,8 +802,12 @@ var PoolInputMediaMessageDocument = poolInputMediaMessageDocument{}
 
 func (x *InputMediaMessageDocument) DeepCopy(z *InputMediaMessageDocument) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MessageID = x.MessageID
 	z.Caption = x.Caption
@@ -757,17 +841,21 @@ type poolMediaDocument struct {
 func (p *poolMediaDocument) Get() *MediaDocument {
 	x, ok := p.pool.Get().(*MediaDocument)
 	if !ok {
-		return &MediaDocument{}
+		x = &MediaDocument{}
 	}
 	return x
 }
 
 func (p *poolMediaDocument) Put(x *MediaDocument) {
+	if x == nil {
+		return
+	}
 	x.Caption = ""
 	x.TTLinSeconds = 0
-	if x.Doc != nil {
-		PoolDocument.Put(x.Doc)
-		x.Doc = nil
+	PoolDocument.Put(x.Doc)
+	x.Doc = nil
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
 	}
 	x.Entities = x.Entities[:0]
 	p.pool.Put(x)
@@ -779,8 +867,12 @@ func (x *MediaDocument) DeepCopy(z *MediaDocument) {
 	z.Caption = x.Caption
 	z.TTLinSeconds = x.TTLinSeconds
 	if x.Doc != nil {
-		z.Doc = PoolDocument.Get()
+		if z.Doc == nil {
+			z.Doc = PoolDocument.Get()
+		}
 		x.Doc.DeepCopy(z.Doc)
+	} else {
+		z.Doc = nil
 	}
 	for idx := range x.Entities {
 		if x.Entities[idx] != nil {
@@ -812,15 +904,21 @@ type poolInputMediaGeoLocation struct {
 func (p *poolInputMediaGeoLocation) Get() *InputMediaGeoLocation {
 	x, ok := p.pool.Get().(*InputMediaGeoLocation)
 	if !ok {
-		return &InputMediaGeoLocation{}
+		x = &InputMediaGeoLocation{}
 	}
 	return x
 }
 
 func (p *poolInputMediaGeoLocation) Put(x *InputMediaGeoLocation) {
+	if x == nil {
+		return
+	}
 	x.Lat = 0
 	x.Long = 0
 	x.Caption = ""
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
+	}
 	x.Entities = x.Entities[:0]
 	p.pool.Put(x)
 }
@@ -861,15 +959,21 @@ type poolMediaGeoLocation struct {
 func (p *poolMediaGeoLocation) Get() *MediaGeoLocation {
 	x, ok := p.pool.Get().(*MediaGeoLocation)
 	if !ok {
-		return &MediaGeoLocation{}
+		x = &MediaGeoLocation{}
 	}
 	return x
 }
 
 func (p *poolMediaGeoLocation) Put(x *MediaGeoLocation) {
+	if x == nil {
+		return
+	}
 	x.Lat = 0
 	x.Long = 0
 	x.Caption = ""
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
+	}
 	x.Entities = x.Entities[:0]
 	p.pool.Put(x)
 }
@@ -910,16 +1014,17 @@ type poolInputMediaPoll struct {
 func (p *poolInputMediaPoll) Get() *InputMediaPoll {
 	x, ok := p.pool.Get().(*InputMediaPoll)
 	if !ok {
-		return &InputMediaPoll{}
+		x = &InputMediaPoll{}
 	}
 	return x
 }
 
 func (p *poolInputMediaPoll) Put(x *InputMediaPoll) {
-	if x.Poll != nil {
-		PoolMediaPoll.Put(x.Poll)
-		x.Poll = nil
+	if x == nil {
+		return
 	}
+	PoolMediaPoll.Put(x.Poll)
+	x.Poll = nil
 	p.pool.Put(x)
 }
 
@@ -927,8 +1032,12 @@ var PoolInputMediaPoll = poolInputMediaPoll{}
 
 func (x *InputMediaPoll) DeepCopy(z *InputMediaPoll) {
 	if x.Poll != nil {
-		z.Poll = PoolMediaPoll.Get()
+		if z.Poll == nil {
+			z.Poll = PoolMediaPoll.Get()
+		}
 		x.Poll.DeepCopy(z.Poll)
+	} else {
+		z.Poll = nil
 	}
 }
 
@@ -953,18 +1062,24 @@ type poolMediaPoll struct {
 func (p *poolMediaPoll) Get() *MediaPoll {
 	x, ok := p.pool.Get().(*MediaPoll)
 	if !ok {
-		return &MediaPoll{}
+		x = &MediaPoll{}
 	}
 	return x
 }
 
 func (p *poolMediaPoll) Put(x *MediaPoll) {
+	if x == nil {
+		return
+	}
 	x.ID = 0
 	x.Closed = false
 	x.PublicVoters = false
 	x.MultiChoice = false
 	x.Quiz = false
 	x.Question = ""
+	for _, z := range x.Answers {
+		PoolPollAnswer.Put(z)
+	}
 	x.Answers = x.Answers[:0]
 	p.pool.Put(x)
 }
@@ -1008,12 +1123,15 @@ type poolPollAnswer struct {
 func (p *poolPollAnswer) Get() *PollAnswer {
 	x, ok := p.pool.Get().(*PollAnswer)
 	if !ok {
-		return &PollAnswer{}
+		x = &PollAnswer{}
 	}
 	return x
 }
 
 func (p *poolPollAnswer) Put(x *PollAnswer) {
+	if x == nil {
+		return
+	}
 	x.Text = ""
 	x.Option = x.Option[:0]
 	p.pool.Put(x)
@@ -1047,12 +1165,18 @@ type poolPollResults struct {
 func (p *poolPollResults) Get() *PollResults {
 	x, ok := p.pool.Get().(*PollResults)
 	if !ok {
-		return &PollResults{}
+		x = &PollResults{}
 	}
 	return x
 }
 
 func (p *poolPollResults) Put(x *PollResults) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Results {
+		PoolPollAnswerVoters.Put(z)
+	}
 	x.Results = x.Results[:0]
 	x.TotalVoters = 0
 	p.pool.Put(x)
@@ -1092,12 +1216,15 @@ type poolPollAnswerVoters struct {
 func (p *poolPollAnswerVoters) Get() *PollAnswerVoters {
 	x, ok := p.pool.Get().(*PollAnswerVoters)
 	if !ok {
-		return &PollAnswerVoters{}
+		x = &PollAnswerVoters{}
 	}
 	return x
 }
 
 func (p *poolPollAnswerVoters) Put(x *PollAnswerVoters) {
+	if x == nil {
+		return
+	}
 	x.Chosen = false
 	x.Correct = false
 	x.Option = x.Option[:0]

@@ -18,20 +18,19 @@ type poolAccountSetNotifySettings struct {
 func (p *poolAccountSetNotifySettings) Get() *AccountSetNotifySettings {
 	x, ok := p.pool.Get().(*AccountSetNotifySettings)
 	if !ok {
-		return &AccountSetNotifySettings{}
+		x = &AccountSetNotifySettings{}
 	}
 	return x
 }
 
 func (p *poolAccountSetNotifySettings) Put(x *AccountSetNotifySettings) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
-	if x.Settings != nil {
-		PoolPeerNotifySettings.Put(x.Settings)
-		x.Settings = nil
-	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
+	PoolPeerNotifySettings.Put(x.Settings)
+	x.Settings = nil
 	p.pool.Put(x)
 }
 
@@ -39,12 +38,20 @@ var PoolAccountSetNotifySettings = poolAccountSetNotifySettings{}
 
 func (x *AccountSetNotifySettings) DeepCopy(z *AccountSetNotifySettings) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	if x.Settings != nil {
-		z.Settings = PoolPeerNotifySettings.Get()
+		if z.Settings == nil {
+			z.Settings = PoolPeerNotifySettings.Get()
+		}
 		x.Settings.DeepCopy(z.Settings)
+	} else {
+		z.Settings = nil
 	}
 }
 
@@ -69,16 +76,17 @@ type poolAccountGetNotifySettings struct {
 func (p *poolAccountGetNotifySettings) Get() *AccountGetNotifySettings {
 	x, ok := p.pool.Get().(*AccountGetNotifySettings)
 	if !ok {
-		return &AccountGetNotifySettings{}
+		x = &AccountGetNotifySettings{}
 	}
 	return x
 }
 
 func (p *poolAccountGetNotifySettings) Put(x *AccountGetNotifySettings) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	p.pool.Put(x)
 }
 
@@ -86,8 +94,12 @@ var PoolAccountGetNotifySettings = poolAccountGetNotifySettings{}
 
 func (x *AccountGetNotifySettings) DeepCopy(z *AccountGetNotifySettings) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 }
 
@@ -112,12 +124,15 @@ type poolAccountRegisterDevice struct {
 func (p *poolAccountRegisterDevice) Get() *AccountRegisterDevice {
 	x, ok := p.pool.Get().(*AccountRegisterDevice)
 	if !ok {
-		return &AccountRegisterDevice{}
+		x = &AccountRegisterDevice{}
 	}
 	return x
 }
 
 func (p *poolAccountRegisterDevice) Put(x *AccountRegisterDevice) {
+	if x == nil {
+		return
+	}
 	x.Token = ""
 	x.DeviceModel = ""
 	x.SystemVersion = ""
@@ -161,12 +176,15 @@ type poolAccountUnregisterDevice struct {
 func (p *poolAccountUnregisterDevice) Get() *AccountUnregisterDevice {
 	x, ok := p.pool.Get().(*AccountUnregisterDevice)
 	if !ok {
-		return &AccountUnregisterDevice{}
+		x = &AccountUnregisterDevice{}
 	}
 	return x
 }
 
 func (p *poolAccountUnregisterDevice) Put(x *AccountUnregisterDevice) {
+	if x == nil {
+		return
+	}
 	x.TokenType = 0
 	x.Token = ""
 	p.pool.Put(x)
@@ -200,12 +218,15 @@ type poolAccountUpdateProfile struct {
 func (p *poolAccountUpdateProfile) Get() *AccountUpdateProfile {
 	x, ok := p.pool.Get().(*AccountUpdateProfile)
 	if !ok {
-		return &AccountUpdateProfile{}
+		x = &AccountUpdateProfile{}
 	}
 	return x
 }
 
 func (p *poolAccountUpdateProfile) Put(x *AccountUpdateProfile) {
+	if x == nil {
+		return
+	}
 	x.FirstName = ""
 	x.LastName = ""
 	x.Bio = ""
@@ -241,12 +262,15 @@ type poolAccountCheckUsername struct {
 func (p *poolAccountCheckUsername) Get() *AccountCheckUsername {
 	x, ok := p.pool.Get().(*AccountCheckUsername)
 	if !ok {
-		return &AccountCheckUsername{}
+		x = &AccountCheckUsername{}
 	}
 	return x
 }
 
 func (p *poolAccountCheckUsername) Put(x *AccountCheckUsername) {
+	if x == nil {
+		return
+	}
 	x.Username = ""
 	p.pool.Put(x)
 }
@@ -278,12 +302,15 @@ type poolAccountUpdateUsername struct {
 func (p *poolAccountUpdateUsername) Get() *AccountUpdateUsername {
 	x, ok := p.pool.Get().(*AccountUpdateUsername)
 	if !ok {
-		return &AccountUpdateUsername{}
+		x = &AccountUpdateUsername{}
 	}
 	return x
 }
 
 func (p *poolAccountUpdateUsername) Put(x *AccountUpdateUsername) {
+	if x == nil {
+		return
+	}
 	x.Username = ""
 	p.pool.Put(x)
 }
@@ -315,16 +342,17 @@ type poolAccountUploadPhoto struct {
 func (p *poolAccountUploadPhoto) Get() *AccountUploadPhoto {
 	x, ok := p.pool.Get().(*AccountUploadPhoto)
 	if !ok {
-		return &AccountUploadPhoto{}
+		x = &AccountUploadPhoto{}
 	}
 	return x
 }
 
 func (p *poolAccountUploadPhoto) Put(x *AccountUploadPhoto) {
-	if x.File != nil {
-		PoolInputFile.Put(x.File)
-		x.File = nil
+	if x == nil {
+		return
 	}
+	PoolInputFile.Put(x.File)
+	x.File = nil
 	x.ReturnObject = false
 	p.pool.Put(x)
 }
@@ -333,8 +361,12 @@ var PoolAccountUploadPhoto = poolAccountUploadPhoto{}
 
 func (x *AccountUploadPhoto) DeepCopy(z *AccountUploadPhoto) {
 	if x.File != nil {
-		z.File = PoolInputFile.Get()
+		if z.File == nil {
+			z.File = PoolInputFile.Get()
+		}
 		x.File.DeepCopy(z.File)
+	} else {
+		z.File = nil
 	}
 	z.ReturnObject = x.ReturnObject
 }
@@ -360,12 +392,15 @@ type poolAccountUpdatePhoto struct {
 func (p *poolAccountUpdatePhoto) Get() *AccountUpdatePhoto {
 	x, ok := p.pool.Get().(*AccountUpdatePhoto)
 	if !ok {
-		return &AccountUpdatePhoto{}
+		x = &AccountUpdatePhoto{}
 	}
 	return x
 }
 
 func (p *poolAccountUpdatePhoto) Put(x *AccountUpdatePhoto) {
+	if x == nil {
+		return
+	}
 	x.PhotoID = 0
 	p.pool.Put(x)
 }
@@ -397,20 +432,19 @@ type poolAccountSetWebPhoto struct {
 func (p *poolAccountSetWebPhoto) Get() *AccountSetWebPhoto {
 	x, ok := p.pool.Get().(*AccountSetWebPhoto)
 	if !ok {
-		return &AccountSetWebPhoto{}
+		x = &AccountSetWebPhoto{}
 	}
 	return x
 }
 
 func (p *poolAccountSetWebPhoto) Put(x *AccountSetWebPhoto) {
-	if x.BigPhoto != nil {
-		PoolInputWebLocation.Put(x.BigPhoto)
-		x.BigPhoto = nil
+	if x == nil {
+		return
 	}
-	if x.SmallPhoto != nil {
-		PoolInputWebLocation.Put(x.SmallPhoto)
-		x.SmallPhoto = nil
-	}
+	PoolInputWebLocation.Put(x.BigPhoto)
+	x.BigPhoto = nil
+	PoolInputWebLocation.Put(x.SmallPhoto)
+	x.SmallPhoto = nil
 	p.pool.Put(x)
 }
 
@@ -418,12 +452,20 @@ var PoolAccountSetWebPhoto = poolAccountSetWebPhoto{}
 
 func (x *AccountSetWebPhoto) DeepCopy(z *AccountSetWebPhoto) {
 	if x.BigPhoto != nil {
-		z.BigPhoto = PoolInputWebLocation.Get()
+		if z.BigPhoto == nil {
+			z.BigPhoto = PoolInputWebLocation.Get()
+		}
 		x.BigPhoto.DeepCopy(z.BigPhoto)
+	} else {
+		z.BigPhoto = nil
 	}
 	if x.SmallPhoto != nil {
-		z.SmallPhoto = PoolInputWebLocation.Get()
+		if z.SmallPhoto == nil {
+			z.SmallPhoto = PoolInputWebLocation.Get()
+		}
 		x.SmallPhoto.DeepCopy(z.SmallPhoto)
+	} else {
+		z.SmallPhoto = nil
 	}
 }
 
@@ -448,12 +490,15 @@ type poolAccountRemovePhoto struct {
 func (p *poolAccountRemovePhoto) Get() *AccountRemovePhoto {
 	x, ok := p.pool.Get().(*AccountRemovePhoto)
 	if !ok {
-		return &AccountRemovePhoto{}
+		x = &AccountRemovePhoto{}
 	}
 	return x
 }
 
 func (p *poolAccountRemovePhoto) Put(x *AccountRemovePhoto) {
+	if x == nil {
+		return
+	}
 	x.PhotoID = 0
 	p.pool.Put(x)
 }
@@ -485,12 +530,15 @@ type poolAccountSendChangePhoneCode struct {
 func (p *poolAccountSendChangePhoneCode) Get() *AccountSendChangePhoneCode {
 	x, ok := p.pool.Get().(*AccountSendChangePhoneCode)
 	if !ok {
-		return &AccountSendChangePhoneCode{}
+		x = &AccountSendChangePhoneCode{}
 	}
 	return x
 }
 
 func (p *poolAccountSendChangePhoneCode) Put(x *AccountSendChangePhoneCode) {
+	if x == nil {
+		return
+	}
 	x.Phone = ""
 	x.AppHash = ""
 	p.pool.Put(x)
@@ -524,12 +572,15 @@ type poolAccountResendChangePhoneCode struct {
 func (p *poolAccountResendChangePhoneCode) Get() *AccountResendChangePhoneCode {
 	x, ok := p.pool.Get().(*AccountResendChangePhoneCode)
 	if !ok {
-		return &AccountResendChangePhoneCode{}
+		x = &AccountResendChangePhoneCode{}
 	}
 	return x
 }
 
 func (p *poolAccountResendChangePhoneCode) Put(x *AccountResendChangePhoneCode) {
+	if x == nil {
+		return
+	}
 	x.Phone = ""
 	x.PhoneCodeHash = ""
 	p.pool.Put(x)
@@ -563,19 +614,20 @@ type poolAccountChangePhone struct {
 func (p *poolAccountChangePhone) Get() *AccountChangePhone {
 	x, ok := p.pool.Get().(*AccountChangePhone)
 	if !ok {
-		return &AccountChangePhone{}
+		x = &AccountChangePhone{}
 	}
 	return x
 }
 
 func (p *poolAccountChangePhone) Put(x *AccountChangePhone) {
+	if x == nil {
+		return
+	}
 	x.Phone = ""
 	x.PhoneCodeHash = ""
 	x.PhoneCode = ""
-	if x.Password != nil {
-		PoolInputPassword.Put(x.Password)
-		x.Password = nil
-	}
+	PoolInputPassword.Put(x.Password)
+	x.Password = nil
 	p.pool.Put(x)
 }
 
@@ -586,8 +638,12 @@ func (x *AccountChangePhone) DeepCopy(z *AccountChangePhone) {
 	z.PhoneCodeHash = x.PhoneCodeHash
 	z.PhoneCode = x.PhoneCode
 	if x.Password != nil {
-		z.Password = PoolInputPassword.Get()
+		if z.Password == nil {
+			z.Password = PoolInputPassword.Get()
+		}
 		x.Password.DeepCopy(z.Password)
+	} else {
+		z.Password = nil
 	}
 }
 
@@ -612,17 +668,38 @@ type poolAccountSetPrivacy struct {
 func (p *poolAccountSetPrivacy) Get() *AccountSetPrivacy {
 	x, ok := p.pool.Get().(*AccountSetPrivacy)
 	if !ok {
-		return &AccountSetPrivacy{}
+		x = &AccountSetPrivacy{}
 	}
 	return x
 }
 
 func (p *poolAccountSetPrivacy) Put(x *AccountSetPrivacy) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.ChatInvite {
+		PoolPrivacyRule.Put(z)
+	}
 	x.ChatInvite = x.ChatInvite[:0]
+	for _, z := range x.LastSeen {
+		PoolPrivacyRule.Put(z)
+	}
 	x.LastSeen = x.LastSeen[:0]
+	for _, z := range x.PhoneNumber {
+		PoolPrivacyRule.Put(z)
+	}
 	x.PhoneNumber = x.PhoneNumber[:0]
+	for _, z := range x.ProfilePhoto {
+		PoolPrivacyRule.Put(z)
+	}
 	x.ProfilePhoto = x.ProfilePhoto[:0]
+	for _, z := range x.ForwardedMessage {
+		PoolPrivacyRule.Put(z)
+	}
 	x.ForwardedMessage = x.ForwardedMessage[:0]
+	for _, z := range x.Call {
+		PoolPrivacyRule.Put(z)
+	}
 	x.Call = x.Call[:0]
 	p.pool.Put(x)
 }
@@ -695,12 +772,15 @@ type poolAccountGetPrivacy struct {
 func (p *poolAccountGetPrivacy) Get() *AccountGetPrivacy {
 	x, ok := p.pool.Get().(*AccountGetPrivacy)
 	if !ok {
-		return &AccountGetPrivacy{}
+		x = &AccountGetPrivacy{}
 	}
 	return x
 }
 
 func (p *poolAccountGetPrivacy) Put(x *AccountGetPrivacy) {
+	if x == nil {
+		return
+	}
 	x.Key = 0
 	p.pool.Put(x)
 }
@@ -732,12 +812,15 @@ type poolAccountGetAuthorizations struct {
 func (p *poolAccountGetAuthorizations) Get() *AccountGetAuthorizations {
 	x, ok := p.pool.Get().(*AccountGetAuthorizations)
 	if !ok {
-		return &AccountGetAuthorizations{}
+		x = &AccountGetAuthorizations{}
 	}
 	return x
 }
 
 func (p *poolAccountGetAuthorizations) Put(x *AccountGetAuthorizations) {
+	if x == nil {
+		return
+	}
 	p.pool.Put(x)
 }
 
@@ -767,12 +850,15 @@ type poolAccountResetAuthorization struct {
 func (p *poolAccountResetAuthorization) Get() *AccountResetAuthorization {
 	x, ok := p.pool.Get().(*AccountResetAuthorization)
 	if !ok {
-		return &AccountResetAuthorization{}
+		x = &AccountResetAuthorization{}
 	}
 	return x
 }
 
 func (p *poolAccountResetAuthorization) Put(x *AccountResetAuthorization) {
+	if x == nil {
+		return
+	}
 	x.AuthID = 0
 	p.pool.Put(x)
 }
@@ -804,12 +890,15 @@ type poolAccountUpdateStatus struct {
 func (p *poolAccountUpdateStatus) Get() *AccountUpdateStatus {
 	x, ok := p.pool.Get().(*AccountUpdateStatus)
 	if !ok {
-		return &AccountUpdateStatus{}
+		x = &AccountUpdateStatus{}
 	}
 	return x
 }
 
 func (p *poolAccountUpdateStatus) Put(x *AccountUpdateStatus) {
+	if x == nil {
+		return
+	}
 	x.Online = false
 	p.pool.Put(x)
 }
@@ -841,12 +930,15 @@ type poolAccountSetLang struct {
 func (p *poolAccountSetLang) Get() *AccountSetLang {
 	x, ok := p.pool.Get().(*AccountSetLang)
 	if !ok {
-		return &AccountSetLang{}
+		x = &AccountSetLang{}
 	}
 	return x
 }
 
 func (p *poolAccountSetLang) Put(x *AccountSetLang) {
+	if x == nil {
+		return
+	}
 	x.LangCode = ""
 	p.pool.Put(x)
 }
@@ -878,12 +970,15 @@ type poolAccountGetPassword struct {
 func (p *poolAccountGetPassword) Get() *AccountGetPassword {
 	x, ok := p.pool.Get().(*AccountGetPassword)
 	if !ok {
-		return &AccountGetPassword{}
+		x = &AccountGetPassword{}
 	}
 	return x
 }
 
 func (p *poolAccountGetPassword) Put(x *AccountGetPassword) {
+	if x == nil {
+		return
+	}
 	p.pool.Put(x)
 }
 
@@ -913,16 +1008,17 @@ type poolAccountGetPasswordSettings struct {
 func (p *poolAccountGetPasswordSettings) Get() *AccountGetPasswordSettings {
 	x, ok := p.pool.Get().(*AccountGetPasswordSettings)
 	if !ok {
-		return &AccountGetPasswordSettings{}
+		x = &AccountGetPasswordSettings{}
 	}
 	return x
 }
 
 func (p *poolAccountGetPasswordSettings) Put(x *AccountGetPasswordSettings) {
-	if x.Password != nil {
-		PoolInputPassword.Put(x.Password)
-		x.Password = nil
+	if x == nil {
+		return
 	}
+	PoolInputPassword.Put(x.Password)
+	x.Password = nil
 	p.pool.Put(x)
 }
 
@@ -930,8 +1026,12 @@ var PoolAccountGetPasswordSettings = poolAccountGetPasswordSettings{}
 
 func (x *AccountGetPasswordSettings) DeepCopy(z *AccountGetPasswordSettings) {
 	if x.Password != nil {
-		z.Password = PoolInputPassword.Get()
+		if z.Password == nil {
+			z.Password = PoolInputPassword.Get()
+		}
 		x.Password.DeepCopy(z.Password)
+	} else {
+		z.Password = nil
 	}
 }
 
@@ -956,20 +1056,24 @@ type poolAccountUpdatePasswordSettings struct {
 func (p *poolAccountUpdatePasswordSettings) Get() *AccountUpdatePasswordSettings {
 	x, ok := p.pool.Get().(*AccountUpdatePasswordSettings)
 	if !ok {
-		return &AccountUpdatePasswordSettings{}
+		x = &AccountUpdatePasswordSettings{}
 	}
 	return x
 }
 
 func (p *poolAccountUpdatePasswordSettings) Put(x *AccountUpdatePasswordSettings) {
-	if x.Password != nil {
-		PoolInputPassword.Put(x.Password)
-		x.Password = nil
+	if x == nil {
+		return
 	}
+	PoolInputPassword.Put(x.Password)
+	x.Password = nil
 	x.PasswordHash = x.PasswordHash[:0]
 	x.Algorithm = 0
 	x.AlgorithmData = x.AlgorithmData[:0]
 	x.Hint = ""
+	for _, z := range x.Questions {
+		PoolSecurityQuestion.Put(z)
+	}
 	x.Questions = x.Questions[:0]
 	p.pool.Put(x)
 }
@@ -978,8 +1082,12 @@ var PoolAccountUpdatePasswordSettings = poolAccountUpdatePasswordSettings{}
 
 func (x *AccountUpdatePasswordSettings) DeepCopy(z *AccountUpdatePasswordSettings) {
 	if x.Password != nil {
-		z.Password = PoolInputPassword.Get()
+		if z.Password == nil {
+			z.Password = PoolInputPassword.Get()
+		}
 		x.Password.DeepCopy(z.Password)
+	} else {
+		z.Password = nil
 	}
 	z.PasswordHash = append(z.PasswordHash[:0], x.PasswordHash...)
 	z.Algorithm = x.Algorithm
@@ -1015,12 +1123,18 @@ type poolAccountRecoverPassword struct {
 func (p *poolAccountRecoverPassword) Get() *AccountRecoverPassword {
 	x, ok := p.pool.Get().(*AccountRecoverPassword)
 	if !ok {
-		return &AccountRecoverPassword{}
+		x = &AccountRecoverPassword{}
 	}
 	return x
 }
 
 func (p *poolAccountRecoverPassword) Put(x *AccountRecoverPassword) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Answers {
+		PoolSecurityAnswer.Put(z)
+	}
 	x.Answers = x.Answers[:0]
 	x.Algorithm = 0
 	x.AlgorithmData = x.AlgorithmData[:0]
@@ -1064,12 +1178,15 @@ type poolAccountGetTeams struct {
 func (p *poolAccountGetTeams) Get() *AccountGetTeams {
 	x, ok := p.pool.Get().(*AccountGetTeams)
 	if !ok {
-		return &AccountGetTeams{}
+		x = &AccountGetTeams{}
 	}
 	return x
 }
 
 func (p *poolAccountGetTeams) Put(x *AccountGetTeams) {
+	if x == nil {
+		return
+	}
 	p.pool.Put(x)
 }
 
@@ -1099,13 +1216,19 @@ type poolAccountPasswordSettings struct {
 func (p *poolAccountPasswordSettings) Get() *AccountPasswordSettings {
 	x, ok := p.pool.Get().(*AccountPasswordSettings)
 	if !ok {
-		return &AccountPasswordSettings{}
+		x = &AccountPasswordSettings{}
 	}
 	return x
 }
 
 func (p *poolAccountPasswordSettings) Put(x *AccountPasswordSettings) {
+	if x == nil {
+		return
+	}
 	x.Hint = ""
+	for _, z := range x.Questions {
+		PoolRecoveryQuestion.Put(z)
+	}
 	x.Questions = x.Questions[:0]
 	p.pool.Put(x)
 }
@@ -1144,12 +1267,18 @@ type poolSecurityQuestions struct {
 func (p *poolSecurityQuestions) Get() *SecurityQuestions {
 	x, ok := p.pool.Get().(*SecurityQuestions)
 	if !ok {
-		return &SecurityQuestions{}
+		x = &SecurityQuestions{}
 	}
 	return x
 }
 
 func (p *poolSecurityQuestions) Put(x *SecurityQuestions) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Questions {
+		PoolSecurityQuestion.Put(z)
+	}
 	x.Questions = x.Questions[:0]
 	p.pool.Put(x)
 }
@@ -1187,12 +1316,15 @@ type poolRecoveryQuestion struct {
 func (p *poolRecoveryQuestion) Get() *RecoveryQuestion {
 	x, ok := p.pool.Get().(*RecoveryQuestion)
 	if !ok {
-		return &RecoveryQuestion{}
+		x = &RecoveryQuestion{}
 	}
 	return x
 }
 
 func (p *poolRecoveryQuestion) Put(x *RecoveryQuestion) {
+	if x == nil {
+		return
+	}
 	x.ID = 0
 	x.Text = ""
 	p.pool.Put(x)
@@ -1226,12 +1358,15 @@ type poolSecurityQuestion struct {
 func (p *poolSecurityQuestion) Get() *SecurityQuestion {
 	x, ok := p.pool.Get().(*SecurityQuestion)
 	if !ok {
-		return &SecurityQuestion{}
+		x = &SecurityQuestion{}
 	}
 	return x
 }
 
 func (p *poolSecurityQuestion) Put(x *SecurityQuestion) {
+	if x == nil {
+		return
+	}
 	x.ID = 0
 	x.Text = ""
 	x.Answer = ""
@@ -1267,12 +1402,15 @@ type poolSecurityAnswer struct {
 func (p *poolSecurityAnswer) Get() *SecurityAnswer {
 	x, ok := p.pool.Get().(*SecurityAnswer)
 	if !ok {
-		return &SecurityAnswer{}
+		x = &SecurityAnswer{}
 	}
 	return x
 }
 
 func (p *poolSecurityAnswer) Put(x *SecurityAnswer) {
+	if x == nil {
+		return
+	}
 	x.QuestionID = 0
 	x.Answer = ""
 	p.pool.Put(x)
@@ -1306,12 +1444,15 @@ type poolAccountPassword struct {
 func (p *poolAccountPassword) Get() *AccountPassword {
 	x, ok := p.pool.Get().(*AccountPassword)
 	if !ok {
-		return &AccountPassword{}
+		x = &AccountPassword{}
 	}
 	return x
 }
 
 func (p *poolAccountPassword) Put(x *AccountPassword) {
+	if x == nil {
+		return
+	}
 	x.HasPassword = false
 	x.Hint = ""
 	x.Algorithm = 0
@@ -1319,6 +1460,9 @@ func (p *poolAccountPassword) Put(x *AccountPassword) {
 	x.SrpB = x.SrpB[:0]
 	x.RandomData = x.RandomData[:0]
 	x.SrpID = 0
+	for _, z := range x.Questions {
+		PoolRecoveryQuestion.Put(z)
+	}
 	x.Questions = x.Questions[:0]
 	p.pool.Put(x)
 }
@@ -1363,12 +1507,18 @@ type poolAccountAuthorizations struct {
 func (p *poolAccountAuthorizations) Get() *AccountAuthorizations {
 	x, ok := p.pool.Get().(*AccountAuthorizations)
 	if !ok {
-		return &AccountAuthorizations{}
+		x = &AccountAuthorizations{}
 	}
 	return x
 }
 
 func (p *poolAccountAuthorizations) Put(x *AccountAuthorizations) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Authorizations {
+		PoolAccountAuthorization.Put(z)
+	}
 	x.Authorizations = x.Authorizations[:0]
 	p.pool.Put(x)
 }
@@ -1406,12 +1556,15 @@ type poolAccountAuthorization struct {
 func (p *poolAccountAuthorization) Get() *AccountAuthorization {
 	x, ok := p.pool.Get().(*AccountAuthorization)
 	if !ok {
-		return &AccountAuthorization{}
+		x = &AccountAuthorization{}
 	}
 	return x
 }
 
 func (p *poolAccountAuthorization) Put(x *AccountAuthorization) {
+	if x == nil {
+		return
+	}
 	x.AuthID = 0
 	x.Model = ""
 	x.AppVersion = ""
@@ -1459,12 +1612,18 @@ type poolAccountPrivacyRules struct {
 func (p *poolAccountPrivacyRules) Get() *AccountPrivacyRules {
 	x, ok := p.pool.Get().(*AccountPrivacyRules)
 	if !ok {
-		return &AccountPrivacyRules{}
+		x = &AccountPrivacyRules{}
 	}
 	return x
 }
 
 func (p *poolAccountPrivacyRules) Put(x *AccountPrivacyRules) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Rules {
+		PoolPrivacyRule.Put(z)
+	}
 	x.Rules = x.Rules[:0]
 	p.pool.Put(x)
 }

@@ -18,18 +18,22 @@ type poolCommunitySendMessage struct {
 func (p *poolCommunitySendMessage) Get() *CommunitySendMessage {
 	x, ok := p.pool.Get().(*CommunitySendMessage)
 	if !ok {
-		return &CommunitySendMessage{}
+		x = &CommunitySendMessage{}
 	}
 	return x
 }
 
 func (p *poolCommunitySendMessage) Put(x *CommunitySendMessage) {
-	x.RandomID = 0
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	x.RandomID = 0
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.Body = ""
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
+	}
 	x.Entities = x.Entities[:0]
 	x.ReplyMarkup = 0
 	x.ReplyMarkupData = x.ReplyMarkupData[:0]
@@ -43,8 +47,12 @@ var PoolCommunitySendMessage = poolCommunitySendMessage{}
 func (x *CommunitySendMessage) DeepCopy(z *CommunitySendMessage) {
 	z.RandomID = x.RandomID
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Body = x.Body
 	for idx := range x.Entities {
@@ -81,17 +89,18 @@ type poolCommunitySendMedia struct {
 func (p *poolCommunitySendMedia) Get() *CommunitySendMedia {
 	x, ok := p.pool.Get().(*CommunitySendMedia)
 	if !ok {
-		return &CommunitySendMedia{}
+		x = &CommunitySendMedia{}
 	}
 	return x
 }
 
 func (p *poolCommunitySendMedia) Put(x *CommunitySendMedia) {
-	x.RandomID = 0
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	x.RandomID = 0
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MediaType = 0
 	x.MediaData = x.MediaData[:0]
 	x.ReplyTo = 0
@@ -106,8 +115,12 @@ var PoolCommunitySendMedia = poolCommunitySendMedia{}
 func (x *CommunitySendMedia) DeepCopy(z *CommunitySendMedia) {
 	z.RandomID = x.RandomID
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MediaType = x.MediaType
 	z.MediaData = append(z.MediaData[:0], x.MediaData...)
@@ -138,16 +151,17 @@ type poolCommunitySetTyping struct {
 func (p *poolCommunitySetTyping) Get() *CommunitySetTyping {
 	x, ok := p.pool.Get().(*CommunitySetTyping)
 	if !ok {
-		return &CommunitySetTyping{}
+		x = &CommunitySetTyping{}
 	}
 	return x
 }
 
 func (p *poolCommunitySetTyping) Put(x *CommunitySetTyping) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.Action = 0
 	x.SenderID = 0
 	p.pool.Put(x)
@@ -157,8 +171,12 @@ var PoolCommunitySetTyping = poolCommunitySetTyping{}
 
 func (x *CommunitySetTyping) DeepCopy(z *CommunitySetTyping) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Action = x.Action
 	z.SenderID = x.SenderID
@@ -185,12 +203,15 @@ type poolCommunityGetUpdates struct {
 func (p *poolCommunityGetUpdates) Get() *CommunityGetUpdates {
 	x, ok := p.pool.Get().(*CommunityGetUpdates)
 	if !ok {
-		return &CommunityGetUpdates{}
+		x = &CommunityGetUpdates{}
 	}
 	return x
 }
 
 func (p *poolCommunityGetUpdates) Put(x *CommunityGetUpdates) {
+	if x == nil {
+		return
+	}
 	x.WaitAfterInMS = 0
 	x.WaitMaxInMS = 0
 	x.SizeLimit = 0
@@ -228,12 +249,15 @@ type poolCommunityGetMembers struct {
 func (p *poolCommunityGetMembers) Get() *CommunityGetMembers {
 	x, ok := p.pool.Get().(*CommunityGetMembers)
 	if !ok {
-		return &CommunityGetMembers{}
+		x = &CommunityGetMembers{}
 	}
 	return x
 }
 
 func (p *poolCommunityGetMembers) Put(x *CommunityGetMembers) {
+	if x == nil {
+		return
+	}
 	x.Offset = 0
 	x.Limit = 0
 	p.pool.Put(x)
@@ -267,12 +291,15 @@ type poolCommunityRecall struct {
 func (p *poolCommunityRecall) Get() *CommunityRecall {
 	x, ok := p.pool.Get().(*CommunityRecall)
 	if !ok {
-		return &CommunityRecall{}
+		x = &CommunityRecall{}
 	}
 	return x
 }
 
 func (p *poolCommunityRecall) Put(x *CommunityRecall) {
+	if x == nil {
+		return
+	}
 	x.TeamID = 0
 	x.AccessKey = x.AccessKey[:0]
 	p.pool.Put(x)
@@ -306,12 +333,15 @@ type poolCommunityAuthorizeUser struct {
 func (p *poolCommunityAuthorizeUser) Get() *CommunityAuthorizeUser {
 	x, ok := p.pool.Get().(*CommunityAuthorizeUser)
 	if !ok {
-		return &CommunityAuthorizeUser{}
+		x = &CommunityAuthorizeUser{}
 	}
 	return x
 }
 
 func (p *poolCommunityAuthorizeUser) Put(x *CommunityAuthorizeUser) {
+	if x == nil {
+		return
+	}
 	x.Phone = ""
 	x.FirstName = ""
 	x.LastName = ""
@@ -349,12 +379,15 @@ type poolCommunityUser struct {
 func (p *poolCommunityUser) Get() *CommunityUser {
 	x, ok := p.pool.Get().(*CommunityUser)
 	if !ok {
-		return &CommunityUser{}
+		x = &CommunityUser{}
 	}
 	return x
 }
 
 func (p *poolCommunityUser) Put(x *CommunityUser) {
+	if x == nil {
+		return
+	}
 	x.UserID = 0
 	x.FirstName = ""
 	x.LastName = ""
@@ -392,12 +425,15 @@ type poolCommunityUpdateEnvelope struct {
 func (p *poolCommunityUpdateEnvelope) Get() *CommunityUpdateEnvelope {
 	x, ok := p.pool.Get().(*CommunityUpdateEnvelope)
 	if !ok {
-		return &CommunityUpdateEnvelope{}
+		x = &CommunityUpdateEnvelope{}
 	}
 	return x
 }
 
 func (p *poolCommunityUpdateEnvelope) Put(x *CommunityUpdateEnvelope) {
+	if x == nil {
+		return
+	}
 	x.OffsetID = 0
 	x.PartitionID = 0
 	x.Constructor = 0
@@ -435,12 +471,18 @@ type poolCommunityUpdateContainer struct {
 func (p *poolCommunityUpdateContainer) Get() *CommunityUpdateContainer {
 	x, ok := p.pool.Get().(*CommunityUpdateContainer)
 	if !ok {
-		return &CommunityUpdateContainer{}
+		x = &CommunityUpdateContainer{}
 	}
 	return x
 }
 
 func (p *poolCommunityUpdateContainer) Put(x *CommunityUpdateContainer) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Updates {
+		PoolCommunityUpdateEnvelope.Put(z)
+	}
 	x.Updates = x.Updates[:0]
 	x.Empty = false
 	p.pool.Put(x)

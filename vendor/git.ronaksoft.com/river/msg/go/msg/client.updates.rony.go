@@ -18,20 +18,19 @@ type poolClientUpdatePendingMessageDelivery struct {
 func (p *poolClientUpdatePendingMessageDelivery) Get() *ClientUpdatePendingMessageDelivery {
 	x, ok := p.pool.Get().(*ClientUpdatePendingMessageDelivery)
 	if !ok {
-		return &ClientUpdatePendingMessageDelivery{}
+		x = &ClientUpdatePendingMessageDelivery{}
 	}
 	return x
 }
 
 func (p *poolClientUpdatePendingMessageDelivery) Put(x *ClientUpdatePendingMessageDelivery) {
-	if x.Messages != nil {
-		PoolUserMessage.Put(x.Messages)
-		x.Messages = nil
+	if x == nil {
+		return
 	}
-	if x.PendingMessage != nil {
-		PoolClientPendingMessage.Put(x.PendingMessage)
-		x.PendingMessage = nil
-	}
+	PoolUserMessage.Put(x.Messages)
+	x.Messages = nil
+	PoolClientPendingMessage.Put(x.PendingMessage)
+	x.PendingMessage = nil
 	x.Success = false
 	p.pool.Put(x)
 }
@@ -40,12 +39,20 @@ var PoolClientUpdatePendingMessageDelivery = poolClientUpdatePendingMessageDeliv
 
 func (x *ClientUpdatePendingMessageDelivery) DeepCopy(z *ClientUpdatePendingMessageDelivery) {
 	if x.Messages != nil {
-		z.Messages = PoolUserMessage.Get()
+		if z.Messages == nil {
+			z.Messages = PoolUserMessage.Get()
+		}
 		x.Messages.DeepCopy(z.Messages)
+	} else {
+		z.Messages = nil
 	}
 	if x.PendingMessage != nil {
-		z.PendingMessage = PoolClientPendingMessage.Get()
+		if z.PendingMessage == nil {
+			z.PendingMessage = PoolClientPendingMessage.Get()
+		}
 		x.PendingMessage.DeepCopy(z.PendingMessage)
+	} else {
+		z.PendingMessage = nil
 	}
 	z.Success = x.Success
 }
@@ -71,12 +78,15 @@ type poolClientUpdateMessagesDeleted struct {
 func (p *poolClientUpdateMessagesDeleted) Get() *ClientUpdateMessagesDeleted {
 	x, ok := p.pool.Get().(*ClientUpdateMessagesDeleted)
 	if !ok {
-		return &ClientUpdateMessagesDeleted{}
+		x = &ClientUpdateMessagesDeleted{}
 	}
 	return x
 }
 
 func (p *poolClientUpdateMessagesDeleted) Put(x *ClientUpdateMessagesDeleted) {
+	if x == nil {
+		return
+	}
 	x.PeerID = 0
 	x.PeerType = 0
 	x.MessageIDs = x.MessageIDs[:0]
@@ -112,12 +122,15 @@ type poolClientUpdateSynced struct {
 func (p *poolClientUpdateSynced) Get() *ClientUpdateSynced {
 	x, ok := p.pool.Get().(*ClientUpdateSynced)
 	if !ok {
-		return &ClientUpdateSynced{}
+		x = &ClientUpdateSynced{}
 	}
 	return x
 }
 
 func (p *poolClientUpdateSynced) Put(x *ClientUpdateSynced) {
+	if x == nil {
+		return
+	}
 	x.Dialogs = false
 	x.Contacts = false
 	x.Gifs = false

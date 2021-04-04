@@ -18,12 +18,15 @@ type poolEchoWithDelay struct {
 func (p *poolEchoWithDelay) Get() *EchoWithDelay {
 	x, ok := p.pool.Get().(*EchoWithDelay)
 	if !ok {
-		return &EchoWithDelay{}
+		x = &EchoWithDelay{}
 	}
 	return x
 }
 
 func (p *poolEchoWithDelay) Put(x *EchoWithDelay) {
+	if x == nil {
+		return
+	}
 	x.DelayInSeconds = 0
 	p.pool.Put(x)
 }
@@ -55,12 +58,15 @@ type poolTestRequest struct {
 func (p *poolTestRequest) Get() *TestRequest {
 	x, ok := p.pool.Get().(*TestRequest)
 	if !ok {
-		return &TestRequest{}
+		x = &TestRequest{}
 	}
 	return x
 }
 
 func (p *poolTestRequest) Put(x *TestRequest) {
+	if x == nil {
+		return
+	}
 	x.Payload = x.Payload[:0]
 	x.Hash = x.Hash[:0]
 	p.pool.Put(x)
@@ -94,12 +100,15 @@ type poolTestResponse struct {
 func (p *poolTestResponse) Get() *TestResponse {
 	x, ok := p.pool.Get().(*TestResponse)
 	if !ok {
-		return &TestResponse{}
+		x = &TestResponse{}
 	}
 	return x
 }
 
 func (p *poolTestResponse) Put(x *TestResponse) {
+	if x == nil {
+		return
+	}
 	x.Hash = x.Hash[:0]
 	p.pool.Put(x)
 }
@@ -131,12 +140,15 @@ type poolTestRequestWithString struct {
 func (p *poolTestRequestWithString) Get() *TestRequestWithString {
 	x, ok := p.pool.Get().(*TestRequestWithString)
 	if !ok {
-		return &TestRequestWithString{}
+		x = &TestRequestWithString{}
 	}
 	return x
 }
 
 func (p *poolTestRequestWithString) Put(x *TestRequestWithString) {
+	if x == nil {
+		return
+	}
 	x.Payload = ""
 	x.Hash = ""
 	p.pool.Put(x)
@@ -170,12 +182,15 @@ type poolTestResponseWithString struct {
 func (p *poolTestResponseWithString) Get() *TestResponseWithString {
 	x, ok := p.pool.Get().(*TestResponseWithString)
 	if !ok {
-		return &TestResponseWithString{}
+		x = &TestResponseWithString{}
 	}
 	return x
 }
 
 func (p *poolTestResponseWithString) Put(x *TestResponseWithString) {
+	if x == nil {
+		return
+	}
 	x.Hash = x.Hash[:0]
 	p.pool.Put(x)
 }

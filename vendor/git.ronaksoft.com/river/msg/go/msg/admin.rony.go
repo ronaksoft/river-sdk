@@ -18,14 +18,20 @@ type poolAdminBroadcastMessage struct {
 func (p *poolAdminBroadcastMessage) Get() *AdminBroadcastMessage {
 	x, ok := p.pool.Get().(*AdminBroadcastMessage)
 	if !ok {
-		return &AdminBroadcastMessage{}
+		x = &AdminBroadcastMessage{}
 	}
 	return x
 }
 
 func (p *poolAdminBroadcastMessage) Put(x *AdminBroadcastMessage) {
+	if x == nil {
+		return
+	}
 	x.Body = ""
 	x.ReceiverIDs = x.ReceiverIDs[:0]
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
+	}
 	x.Entities = x.Entities[:0]
 	x.MediaType = 0
 	x.MediaData = x.MediaData[:0]
@@ -69,12 +75,15 @@ type poolAdminSetWelcomeMessage struct {
 func (p *poolAdminSetWelcomeMessage) Get() *AdminSetWelcomeMessage {
 	x, ok := p.pool.Get().(*AdminSetWelcomeMessage)
 	if !ok {
-		return &AdminSetWelcomeMessage{}
+		x = &AdminSetWelcomeMessage{}
 	}
 	return x
 }
 
 func (p *poolAdminSetWelcomeMessage) Put(x *AdminSetWelcomeMessage) {
+	if x == nil {
+		return
+	}
 	x.AccessToken = ""
 	x.Lang = ""
 	x.Template = ""
@@ -110,12 +119,15 @@ type poolAdminGetWelcomeMessages struct {
 func (p *poolAdminGetWelcomeMessages) Get() *AdminGetWelcomeMessages {
 	x, ok := p.pool.Get().(*AdminGetWelcomeMessages)
 	if !ok {
-		return &AdminGetWelcomeMessages{}
+		x = &AdminGetWelcomeMessages{}
 	}
 	return x
 }
 
 func (p *poolAdminGetWelcomeMessages) Put(x *AdminGetWelcomeMessages) {
+	if x == nil {
+		return
+	}
 	x.AccessToken = ""
 	p.pool.Put(x)
 }
@@ -147,12 +159,15 @@ type poolAdminDeleteWelcomeMessage struct {
 func (p *poolAdminDeleteWelcomeMessage) Get() *AdminDeleteWelcomeMessage {
 	x, ok := p.pool.Get().(*AdminDeleteWelcomeMessage)
 	if !ok {
-		return &AdminDeleteWelcomeMessage{}
+		x = &AdminDeleteWelcomeMessage{}
 	}
 	return x
 }
 
 func (p *poolAdminDeleteWelcomeMessage) Put(x *AdminDeleteWelcomeMessage) {
+	if x == nil {
+		return
+	}
 	x.AccessToken = ""
 	x.Lang = ""
 	p.pool.Put(x)
@@ -186,17 +201,18 @@ type poolAdminSetPushProvider struct {
 func (p *poolAdminSetPushProvider) Get() *AdminSetPushProvider {
 	x, ok := p.pool.Get().(*AdminSetPushProvider)
 	if !ok {
-		return &AdminSetPushProvider{}
+		x = &AdminSetPushProvider{}
 	}
 	return x
 }
 
 func (p *poolAdminSetPushProvider) Put(x *AdminSetPushProvider) {
-	x.AccessToken = ""
-	if x.Provider != nil {
-		PoolPushProvider.Put(x.Provider)
-		x.Provider = nil
+	if x == nil {
+		return
 	}
+	x.AccessToken = ""
+	PoolPushProvider.Put(x.Provider)
+	x.Provider = nil
 	p.pool.Put(x)
 }
 
@@ -205,8 +221,12 @@ var PoolAdminSetPushProvider = poolAdminSetPushProvider{}
 func (x *AdminSetPushProvider) DeepCopy(z *AdminSetPushProvider) {
 	z.AccessToken = x.AccessToken
 	if x.Provider != nil {
-		z.Provider = PoolPushProvider.Get()
+		if z.Provider == nil {
+			z.Provider = PoolPushProvider.Get()
+		}
 		x.Provider.DeepCopy(z.Provider)
+	} else {
+		z.Provider = nil
 	}
 }
 
@@ -231,12 +251,15 @@ type poolAdminGetPushProviders struct {
 func (p *poolAdminGetPushProviders) Get() *AdminGetPushProviders {
 	x, ok := p.pool.Get().(*AdminGetPushProviders)
 	if !ok {
-		return &AdminGetPushProviders{}
+		x = &AdminGetPushProviders{}
 	}
 	return x
 }
 
 func (p *poolAdminGetPushProviders) Put(x *AdminGetPushProviders) {
+	if x == nil {
+		return
+	}
 	x.AccessToken = ""
 	p.pool.Put(x)
 }
@@ -268,12 +291,15 @@ type poolAdminDeletePushProvider struct {
 func (p *poolAdminDeletePushProvider) Get() *AdminDeletePushProvider {
 	x, ok := p.pool.Get().(*AdminDeletePushProvider)
 	if !ok {
-		return &AdminDeletePushProvider{}
+		x = &AdminDeletePushProvider{}
 	}
 	return x
 }
 
 func (p *poolAdminDeletePushProvider) Put(x *AdminDeletePushProvider) {
+	if x == nil {
+		return
+	}
 	x.AccessToken = ""
 	x.Name = ""
 	x.Type = 0
@@ -309,17 +335,18 @@ type poolAdminSetVersion struct {
 func (p *poolAdminSetVersion) Get() *AdminSetVersion {
 	x, ok := p.pool.Get().(*AdminSetVersion)
 	if !ok {
-		return &AdminSetVersion{}
+		x = &AdminSetVersion{}
 	}
 	return x
 }
 
 func (p *poolAdminSetVersion) Put(x *AdminSetVersion) {
-	x.AccessToken = ""
-	if x.Version != nil {
-		PoolVersion.Put(x.Version)
-		x.Version = nil
+	if x == nil {
+		return
 	}
+	x.AccessToken = ""
+	PoolVersion.Put(x.Version)
+	x.Version = nil
 	p.pool.Put(x)
 }
 
@@ -328,8 +355,12 @@ var PoolAdminSetVersion = poolAdminSetVersion{}
 func (x *AdminSetVersion) DeepCopy(z *AdminSetVersion) {
 	z.AccessToken = x.AccessToken
 	if x.Version != nil {
-		z.Version = PoolVersion.Get()
+		if z.Version == nil {
+			z.Version = PoolVersion.Get()
+		}
 		x.Version.DeepCopy(z.Version)
+	} else {
+		z.Version = nil
 	}
 }
 
@@ -354,12 +385,15 @@ type poolAdminGetVersions struct {
 func (p *poolAdminGetVersions) Get() *AdminGetVersions {
 	x, ok := p.pool.Get().(*AdminGetVersions)
 	if !ok {
-		return &AdminGetVersions{}
+		x = &AdminGetVersions{}
 	}
 	return x
 }
 
 func (p *poolAdminGetVersions) Put(x *AdminGetVersions) {
+	if x == nil {
+		return
+	}
 	x.AccessToken = ""
 	p.pool.Put(x)
 }
@@ -391,12 +425,15 @@ type poolAdminSetToken struct {
 func (p *poolAdminSetToken) Get() *AdminSetToken {
 	x, ok := p.pool.Get().(*AdminSetToken)
 	if !ok {
-		return &AdminSetToken{}
+		x = &AdminSetToken{}
 	}
 	return x
 }
 
 func (p *poolAdminSetToken) Put(x *AdminSetToken) {
+	if x == nil {
+		return
+	}
 	x.AccessToken = ""
 	x.Privilege = 0
 	p.pool.Put(x)
@@ -430,12 +467,15 @@ type poolAdminDeleteToken struct {
 func (p *poolAdminDeleteToken) Get() *AdminDeleteToken {
 	x, ok := p.pool.Get().(*AdminDeleteToken)
 	if !ok {
-		return &AdminDeleteToken{}
+		x = &AdminDeleteToken{}
 	}
 	return x
 }
 
 func (p *poolAdminDeleteToken) Put(x *AdminDeleteToken) {
+	if x == nil {
+		return
+	}
 	x.AccessToken = ""
 	x.DeletedToken = ""
 	p.pool.Put(x)
@@ -469,12 +509,15 @@ type poolAdminReserveUsername struct {
 func (p *poolAdminReserveUsername) Get() *AdminReserveUsername {
 	x, ok := p.pool.Get().(*AdminReserveUsername)
 	if !ok {
-		return &AdminReserveUsername{}
+		x = &AdminReserveUsername{}
 	}
 	return x
 }
 
 func (p *poolAdminReserveUsername) Put(x *AdminReserveUsername) {
+	if x == nil {
+		return
+	}
 	x.AccessToken = ""
 	x.Usernames = x.Usernames[:0]
 	x.Delete = false
@@ -510,12 +553,15 @@ type poolAdminGetReservedUsernames struct {
 func (p *poolAdminGetReservedUsernames) Get() *AdminGetReservedUsernames {
 	x, ok := p.pool.Get().(*AdminGetReservedUsernames)
 	if !ok {
-		return &AdminGetReservedUsernames{}
+		x = &AdminGetReservedUsernames{}
 	}
 	return x
 }
 
 func (p *poolAdminGetReservedUsernames) Put(x *AdminGetReservedUsernames) {
+	if x == nil {
+		return
+	}
 	x.AccessToken = ""
 	p.pool.Put(x)
 }
@@ -547,12 +593,15 @@ type poolAdminTeamCreate struct {
 func (p *poolAdminTeamCreate) Get() *AdminTeamCreate {
 	x, ok := p.pool.Get().(*AdminTeamCreate)
 	if !ok {
-		return &AdminTeamCreate{}
+		x = &AdminTeamCreate{}
 	}
 	return x
 }
 
 func (p *poolAdminTeamCreate) Put(x *AdminTeamCreate) {
+	if x == nil {
+		return
+	}
 	x.RandomID = 0
 	x.AccessToken = ""
 	x.Capacity = 0
@@ -596,12 +645,15 @@ type poolAdminToken struct {
 func (p *poolAdminToken) Get() *AdminToken {
 	x, ok := p.pool.Get().(*AdminToken)
 	if !ok {
-		return &AdminToken{}
+		x = &AdminToken{}
 	}
 	return x
 }
 
 func (p *poolAdminToken) Put(x *AdminToken) {
+	if x == nil {
+		return
+	}
 	x.Privilege = 0
 	x.Token = ""
 	p.pool.Put(x)
@@ -635,12 +687,18 @@ type poolWelcomeMessagesMany struct {
 func (p *poolWelcomeMessagesMany) Get() *WelcomeMessagesMany {
 	x, ok := p.pool.Get().(*WelcomeMessagesMany)
 	if !ok {
-		return &WelcomeMessagesMany{}
+		x = &WelcomeMessagesMany{}
 	}
 	return x
 }
 
 func (p *poolWelcomeMessagesMany) Put(x *WelcomeMessagesMany) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Messages {
+		PoolWelcomeMessage.Put(z)
+	}
 	x.Messages = x.Messages[:0]
 	x.Count = 0
 	p.pool.Put(x)
@@ -680,12 +738,18 @@ type poolVersionsMany struct {
 func (p *poolVersionsMany) Get() *VersionsMany {
 	x, ok := p.pool.Get().(*VersionsMany)
 	if !ok {
-		return &VersionsMany{}
+		x = &VersionsMany{}
 	}
 	return x
 }
 
 func (p *poolVersionsMany) Put(x *VersionsMany) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Versions {
+		PoolVersion.Put(z)
+	}
 	x.Versions = x.Versions[:0]
 	x.Count = 0
 	p.pool.Put(x)
@@ -725,12 +789,18 @@ type poolPushProvidersMany struct {
 func (p *poolPushProvidersMany) Get() *PushProvidersMany {
 	x, ok := p.pool.Get().(*PushProvidersMany)
 	if !ok {
-		return &PushProvidersMany{}
+		x = &PushProvidersMany{}
 	}
 	return x
 }
 
 func (p *poolPushProvidersMany) Put(x *PushProvidersMany) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Providers {
+		PoolPushProvider.Put(z)
+	}
 	x.Providers = x.Providers[:0]
 	x.Count = 0
 	p.pool.Put(x)
@@ -770,12 +840,15 @@ type poolWelcomeMessage struct {
 func (p *poolWelcomeMessage) Get() *WelcomeMessage {
 	x, ok := p.pool.Get().(*WelcomeMessage)
 	if !ok {
-		return &WelcomeMessage{}
+		x = &WelcomeMessage{}
 	}
 	return x
 }
 
 func (p *poolWelcomeMessage) Put(x *WelcomeMessage) {
+	if x == nil {
+		return
+	}
 	x.Lang = ""
 	x.Template = ""
 	p.pool.Put(x)
@@ -809,12 +882,15 @@ type poolPushProvider struct {
 func (p *poolPushProvider) Get() *PushProvider {
 	x, ok := p.pool.Get().(*PushProvider)
 	if !ok {
-		return &PushProvider{}
+		x = &PushProvider{}
 	}
 	return x
 }
 
 func (p *poolPushProvider) Put(x *PushProvider) {
+	if x == nil {
+		return
+	}
 	x.Name = ""
 	x.Type = 0
 	x.TestMode = false
@@ -858,12 +934,15 @@ type poolVersion struct {
 func (p *poolVersion) Get() *Version {
 	x, ok := p.pool.Get().(*Version)
 	if !ok {
-		return &Version{}
+		x = &Version{}
 	}
 	return x
 }
 
 func (p *poolVersion) Put(x *Version) {
+	if x == nil {
+		return
+	}
 	x.Vendor = ""
 	x.Stage = ""
 	x.OS = ""
@@ -905,12 +984,15 @@ type poolReservedUsernames struct {
 func (p *poolReservedUsernames) Get() *ReservedUsernames {
 	x, ok := p.pool.Get().(*ReservedUsernames)
 	if !ok {
-		return &ReservedUsernames{}
+		x = &ReservedUsernames{}
 	}
 	return x
 }
 
 func (p *poolReservedUsernames) Put(x *ReservedUsernames) {
+	if x == nil {
+		return
+	}
 	x.Usernames = x.Usernames[:0]
 	x.Count = 0
 	p.pool.Put(x)

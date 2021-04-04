@@ -18,12 +18,15 @@ type poolFileSavePart struct {
 func (p *poolFileSavePart) Get() *FileSavePart {
 	x, ok := p.pool.Get().(*FileSavePart)
 	if !ok {
-		return &FileSavePart{}
+		x = &FileSavePart{}
 	}
 	return x
 }
 
 func (p *poolFileSavePart) Put(x *FileSavePart) {
+	if x == nil {
+		return
+	}
 	x.FileID = 0
 	x.PartID = 0
 	x.TotalParts = 0
@@ -61,16 +64,17 @@ type poolFileGet struct {
 func (p *poolFileGet) Get() *FileGet {
 	x, ok := p.pool.Get().(*FileGet)
 	if !ok {
-		return &FileGet{}
+		x = &FileGet{}
 	}
 	return x
 }
 
 func (p *poolFileGet) Put(x *FileGet) {
-	if x.Location != nil {
-		PoolInputFileLocation.Put(x.Location)
-		x.Location = nil
+	if x == nil {
+		return
 	}
+	PoolInputFileLocation.Put(x.Location)
+	x.Location = nil
 	x.Offset = 0
 	x.Limit = 0
 	p.pool.Put(x)
@@ -80,8 +84,12 @@ var PoolFileGet = poolFileGet{}
 
 func (x *FileGet) DeepCopy(z *FileGet) {
 	if x.Location != nil {
-		z.Location = PoolInputFileLocation.Get()
+		if z.Location == nil {
+			z.Location = PoolInputFileLocation.Get()
+		}
 		x.Location.DeepCopy(z.Location)
+	} else {
+		z.Location = nil
 	}
 	z.Offset = x.Offset
 	z.Limit = x.Limit
@@ -108,12 +116,15 @@ type poolFileGetBySha256 struct {
 func (p *poolFileGetBySha256) Get() *FileGetBySha256 {
 	x, ok := p.pool.Get().(*FileGetBySha256)
 	if !ok {
-		return &FileGetBySha256{}
+		x = &FileGetBySha256{}
 	}
 	return x
 }
 
 func (p *poolFileGetBySha256) Put(x *FileGetBySha256) {
+	if x == nil {
+		return
+	}
 	x.Sha256 = x.Sha256[:0]
 	x.FileSize = 0
 	p.pool.Put(x)
@@ -147,12 +158,15 @@ type poolFile struct {
 func (p *poolFile) Get() *File {
 	x, ok := p.pool.Get().(*File)
 	if !ok {
-		return &File{}
+		x = &File{}
 	}
 	return x
 }
 
 func (p *poolFile) Put(x *File) {
+	if x == nil {
+		return
+	}
 	x.Type = 0
 	x.ModifiedTime = 0
 	x.Bytes = x.Bytes[:0]

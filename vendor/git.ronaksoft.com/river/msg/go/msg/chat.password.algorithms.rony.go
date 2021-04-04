@@ -18,12 +18,15 @@ type poolPasswordAlgorithmVer6A struct {
 func (p *poolPasswordAlgorithmVer6A) Get() *PasswordAlgorithmVer6A {
 	x, ok := p.pool.Get().(*PasswordAlgorithmVer6A)
 	if !ok {
-		return &PasswordAlgorithmVer6A{}
+		x = &PasswordAlgorithmVer6A{}
 	}
 	return x
 }
 
 func (p *poolPasswordAlgorithmVer6A) Put(x *PasswordAlgorithmVer6A) {
+	if x == nil {
+		return
+	}
 	x.Salt1 = x.Salt1[:0]
 	x.Salt2 = x.Salt2[:0]
 	x.G = 0

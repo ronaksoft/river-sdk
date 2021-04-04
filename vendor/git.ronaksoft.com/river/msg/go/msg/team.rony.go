@@ -18,12 +18,15 @@ type poolTeamGet struct {
 func (p *poolTeamGet) Get() *TeamGet {
 	x, ok := p.pool.Get().(*TeamGet)
 	if !ok {
-		return &TeamGet{}
+		x = &TeamGet{}
 	}
 	return x
 }
 
 func (p *poolTeamGet) Put(x *TeamGet) {
+	if x == nil {
+		return
+	}
 	x.ID = 0
 	p.pool.Put(x)
 }
@@ -55,12 +58,15 @@ type poolTeamAddMember struct {
 func (p *poolTeamAddMember) Get() *TeamAddMember {
 	x, ok := p.pool.Get().(*TeamAddMember)
 	if !ok {
-		return &TeamAddMember{}
+		x = &TeamAddMember{}
 	}
 	return x
 }
 
 func (p *poolTeamAddMember) Put(x *TeamAddMember) {
+	if x == nil {
+		return
+	}
 	x.TeamID = 0
 	x.UserID = 0
 	x.Manager = false
@@ -96,12 +102,15 @@ type poolTeamRemoveMember struct {
 func (p *poolTeamRemoveMember) Get() *TeamRemoveMember {
 	x, ok := p.pool.Get().(*TeamRemoveMember)
 	if !ok {
-		return &TeamRemoveMember{}
+		x = &TeamRemoveMember{}
 	}
 	return x
 }
 
 func (p *poolTeamRemoveMember) Put(x *TeamRemoveMember) {
+	if x == nil {
+		return
+	}
 	x.TeamID = 0
 	x.UserID = 0
 	p.pool.Put(x)
@@ -135,12 +144,15 @@ type poolTeamPromote struct {
 func (p *poolTeamPromote) Get() *TeamPromote {
 	x, ok := p.pool.Get().(*TeamPromote)
 	if !ok {
-		return &TeamPromote{}
+		x = &TeamPromote{}
 	}
 	return x
 }
 
 func (p *poolTeamPromote) Put(x *TeamPromote) {
+	if x == nil {
+		return
+	}
 	x.TeamID = 0
 	x.UserID = 0
 	p.pool.Put(x)
@@ -174,12 +186,15 @@ type poolTeamDemote struct {
 func (p *poolTeamDemote) Get() *TeamDemote {
 	x, ok := p.pool.Get().(*TeamDemote)
 	if !ok {
-		return &TeamDemote{}
+		x = &TeamDemote{}
 	}
 	return x
 }
 
 func (p *poolTeamDemote) Put(x *TeamDemote) {
+	if x == nil {
+		return
+	}
 	x.TeamID = 0
 	x.UserID = 0
 	p.pool.Put(x)
@@ -213,12 +228,15 @@ type poolTeamLeave struct {
 func (p *poolTeamLeave) Get() *TeamLeave {
 	x, ok := p.pool.Get().(*TeamLeave)
 	if !ok {
-		return &TeamLeave{}
+		x = &TeamLeave{}
 	}
 	return x
 }
 
 func (p *poolTeamLeave) Put(x *TeamLeave) {
+	if x == nil {
+		return
+	}
 	x.TeamID = 0
 	p.pool.Put(x)
 }
@@ -250,12 +268,15 @@ type poolTeamJoin struct {
 func (p *poolTeamJoin) Get() *TeamJoin {
 	x, ok := p.pool.Get().(*TeamJoin)
 	if !ok {
-		return &TeamJoin{}
+		x = &TeamJoin{}
 	}
 	return x
 }
 
 func (p *poolTeamJoin) Put(x *TeamJoin) {
+	if x == nil {
+		return
+	}
 	x.TeamID = 0
 	x.Token = x.Token[:0]
 	p.pool.Put(x)
@@ -289,12 +310,15 @@ type poolTeamListMembers struct {
 func (p *poolTeamListMembers) Get() *TeamListMembers {
 	x, ok := p.pool.Get().(*TeamListMembers)
 	if !ok {
-		return &TeamListMembers{}
+		x = &TeamListMembers{}
 	}
 	return x
 }
 
 func (p *poolTeamListMembers) Put(x *TeamListMembers) {
+	if x == nil {
+		return
+	}
 	x.TeamID = 0
 	p.pool.Put(x)
 }
@@ -326,12 +350,15 @@ type poolTeamEdit struct {
 func (p *poolTeamEdit) Get() *TeamEdit {
 	x, ok := p.pool.Get().(*TeamEdit)
 	if !ok {
-		return &TeamEdit{}
+		x = &TeamEdit{}
 	}
 	return x
 }
 
 func (p *poolTeamEdit) Put(x *TeamEdit) {
+	if x == nil {
+		return
+	}
 	x.TeamID = 0
 	x.Name = ""
 	x.ReturnTeam = false
@@ -367,17 +394,18 @@ type poolTeamUploadPhoto struct {
 func (p *poolTeamUploadPhoto) Get() *TeamUploadPhoto {
 	x, ok := p.pool.Get().(*TeamUploadPhoto)
 	if !ok {
-		return &TeamUploadPhoto{}
+		x = &TeamUploadPhoto{}
 	}
 	return x
 }
 
 func (p *poolTeamUploadPhoto) Put(x *TeamUploadPhoto) {
-	x.TeamID = 0
-	if x.File != nil {
-		PoolInputFile.Put(x.File)
-		x.File = nil
+	if x == nil {
+		return
 	}
+	x.TeamID = 0
+	PoolInputFile.Put(x.File)
+	x.File = nil
 	p.pool.Put(x)
 }
 
@@ -386,8 +414,12 @@ var PoolTeamUploadPhoto = poolTeamUploadPhoto{}
 func (x *TeamUploadPhoto) DeepCopy(z *TeamUploadPhoto) {
 	z.TeamID = x.TeamID
 	if x.File != nil {
-		z.File = PoolInputFile.Get()
+		if z.File == nil {
+			z.File = PoolInputFile.Get()
+		}
 		x.File.DeepCopy(z.File)
+	} else {
+		z.File = nil
 	}
 }
 
@@ -412,12 +444,15 @@ type poolTeamRemovePhoto struct {
 func (p *poolTeamRemovePhoto) Get() *TeamRemovePhoto {
 	x, ok := p.pool.Get().(*TeamRemovePhoto)
 	if !ok {
-		return &TeamRemovePhoto{}
+		x = &TeamRemovePhoto{}
 	}
 	return x
 }
 
 func (p *poolTeamRemovePhoto) Put(x *TeamRemovePhoto) {
+	if x == nil {
+		return
+	}
 	x.TeamID = 0
 	p.pool.Put(x)
 }
@@ -449,13 +484,22 @@ type poolTeamMembers struct {
 func (p *poolTeamMembers) Get() *TeamMembers {
 	x, ok := p.pool.Get().(*TeamMembers)
 	if !ok {
-		return &TeamMembers{}
+		x = &TeamMembers{}
 	}
 	return x
 }
 
 func (p *poolTeamMembers) Put(x *TeamMembers) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Members {
+		PoolTeamMember.Put(z)
+	}
 	x.Members = x.Members[:0]
+	for _, z := range x.Users {
+		PoolUser.Put(z)
+	}
 	x.Users = x.Users[:0]
 	p.pool.Put(x)
 }
@@ -500,18 +544,19 @@ type poolTeamMember struct {
 func (p *poolTeamMember) Get() *TeamMember {
 	x, ok := p.pool.Get().(*TeamMember)
 	if !ok {
-		return &TeamMember{}
+		x = &TeamMember{}
 	}
 	return x
 }
 
 func (p *poolTeamMember) Put(x *TeamMember) {
+	if x == nil {
+		return
+	}
 	x.UserID = 0
 	x.Admin = false
-	if x.User != nil {
-		PoolUser.Put(x.User)
-		x.User = nil
-	}
+	PoolUser.Put(x.User)
+	x.User = nil
 	p.pool.Put(x)
 }
 
@@ -521,8 +566,12 @@ func (x *TeamMember) DeepCopy(z *TeamMember) {
 	z.UserID = x.UserID
 	z.Admin = x.Admin
 	if x.User != nil {
-		z.User = PoolUser.Get()
+		if z.User == nil {
+			z.User = PoolUser.Get()
+		}
 		x.User.DeepCopy(z.User)
+	} else {
+		z.User = nil
 	}
 }
 
@@ -547,13 +596,22 @@ type poolTeamsMany struct {
 func (p *poolTeamsMany) Get() *TeamsMany {
 	x, ok := p.pool.Get().(*TeamsMany)
 	if !ok {
-		return &TeamsMany{}
+		x = &TeamsMany{}
 	}
 	return x
 }
 
 func (p *poolTeamsMany) Put(x *TeamsMany) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Teams {
+		PoolTeam.Put(z)
+	}
 	x.Teams = x.Teams[:0]
+	for _, z := range x.Users {
+		PoolUser.Put(z)
+	}
 	x.Users = x.Users[:0]
 	x.Empty = false
 	p.pool.Put(x)

@@ -138,9 +138,9 @@ func (ctrl *Controller) messagesDialogs(e *rony.MessageEnvelope) {
 			messageHole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID, dialog.TopMessageID)
 		}
 	}
-	repo.Users.Save(x.Users...)
-	repo.Groups.Save(x.Groups...)
-	repo.Messages.Save(x.Messages...)
+	_ = repo.Users.Save(x.Users...)
+	_ = repo.Groups.Save(x.Groups...)
+	_ = repo.Messages.Save(x.Messages...)
 }
 
 // usersMany
@@ -199,13 +199,10 @@ func (ctrl *Controller) groupFull(e *rony.MessageEnvelope) {
 		logs.Error("SyncCtrl couldn't save GroupFull's Group", zap.Error(err))
 	}
 
-	// save Users
-	repo.Users.Save(u.Users...)
-
-	repo.Groups.SavePhotoGallery(u.Group.ID, u.PhotoGallery...)
-
-	// Update NotifySettings
-	repo.Dialogs.UpdateNotifySetting(u.Group.TeamID, u.Group.ID, int32(msg.PeerType_PeerGroup), u.NotifySettings)
+	// Save Users, and notify settings
+	_ = repo.Users.Save(u.Users...)
+	_ = repo.Groups.SavePhotoGallery(u.Group.ID, u.PhotoGallery...)
+	_ = repo.Dialogs.UpdateNotifySetting(u.Group.TeamID, u.Group.ID, int32(msg.PeerType_PeerGroup), u.NotifySettings)
 }
 
 // labelsMany
@@ -234,9 +231,9 @@ func (ctrl *Controller) labelItems(e *rony.MessageEnvelope) {
 	}
 	logs.Info("SyncCtrl applies LabelItems")
 
-	repo.Messages.Save(u.Messages...)
-	repo.Users.Save(u.Users...)
-	repo.Groups.Save(u.Groups...)
+	_ = repo.Messages.Save(u.Messages...)
+	_ = repo.Users.Save(u.Users...)
+	_ = repo.Groups.Save(u.Groups...)
 }
 
 // systemConfig

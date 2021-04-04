@@ -18,12 +18,15 @@ type poolUpdateGetState struct {
 func (p *poolUpdateGetState) Get() *UpdateGetState {
 	x, ok := p.pool.Get().(*UpdateGetState)
 	if !ok {
-		return &UpdateGetState{}
+		x = &UpdateGetState{}
 	}
 	return x
 }
 
 func (p *poolUpdateGetState) Put(x *UpdateGetState) {
+	if x == nil {
+		return
+	}
 	p.pool.Put(x)
 }
 
@@ -53,12 +56,15 @@ type poolUpdateGetDifference struct {
 func (p *poolUpdateGetDifference) Get() *UpdateGetDifference {
 	x, ok := p.pool.Get().(*UpdateGetDifference)
 	if !ok {
-		return &UpdateGetDifference{}
+		x = &UpdateGetDifference{}
 	}
 	return x
 }
 
 func (p *poolUpdateGetDifference) Put(x *UpdateGetDifference) {
+	if x == nil {
+		return
+	}
 	x.From = 0
 	x.Limit = 0
 	p.pool.Put(x)
@@ -92,17 +98,29 @@ type poolUpdateDifference struct {
 func (p *poolUpdateDifference) Get() *UpdateDifference {
 	x, ok := p.pool.Get().(*UpdateDifference)
 	if !ok {
-		return &UpdateDifference{}
+		x = &UpdateDifference{}
 	}
 	return x
 }
 
 func (p *poolUpdateDifference) Put(x *UpdateDifference) {
+	if x == nil {
+		return
+	}
 	x.More = false
 	x.MaxUpdateID = 0
 	x.MinUpdateID = 0
+	for _, z := range x.Updates {
+		PoolUpdateEnvelope.Put(z)
+	}
 	x.Updates = x.Updates[:0]
+	for _, z := range x.Users {
+		PoolUser.Put(z)
+	}
 	x.Users = x.Users[:0]
+	for _, z := range x.Groups {
+		PoolGroup.Put(z)
+	}
 	x.Groups = x.Groups[:0]
 	x.CurrentUpdateID = 0
 	p.pool.Put(x)
@@ -159,12 +177,15 @@ type poolUpdateTooLong struct {
 func (p *poolUpdateTooLong) Get() *UpdateTooLong {
 	x, ok := p.pool.Get().(*UpdateTooLong)
 	if !ok {
-		return &UpdateTooLong{}
+		x = &UpdateTooLong{}
 	}
 	return x
 }
 
 func (p *poolUpdateTooLong) Put(x *UpdateTooLong) {
+	if x == nil {
+		return
+	}
 	p.pool.Put(x)
 }
 
@@ -194,12 +215,15 @@ type poolUpdateState struct {
 func (p *poolUpdateState) Get() *UpdateState {
 	x, ok := p.pool.Get().(*UpdateState)
 	if !ok {
-		return &UpdateState{}
+		x = &UpdateState{}
 	}
 	return x
 }
 
 func (p *poolUpdateState) Put(x *UpdateState) {
+	if x == nil {
+		return
+	}
 	x.UpdateID = 0
 	p.pool.Put(x)
 }
@@ -231,12 +255,15 @@ type poolUpdateMessageID struct {
 func (p *poolUpdateMessageID) Get() *UpdateMessageID {
 	x, ok := p.pool.Get().(*UpdateMessageID)
 	if !ok {
-		return &UpdateMessageID{}
+		x = &UpdateMessageID{}
 	}
 	return x
 }
 
 func (p *poolUpdateMessageID) Put(x *UpdateMessageID) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.MessageID = 0
 	x.RandomID = 0
@@ -272,22 +299,21 @@ type poolUpdateNewMessage struct {
 func (p *poolUpdateNewMessage) Get() *UpdateNewMessage {
 	x, ok := p.pool.Get().(*UpdateNewMessage)
 	if !ok {
-		return &UpdateNewMessage{}
+		x = &UpdateNewMessage{}
 	}
 	return x
 }
 
 func (p *poolUpdateNewMessage) Put(x *UpdateNewMessage) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
-	if x.Message != nil {
-		PoolUserMessage.Put(x.Message)
-		x.Message = nil
-	}
-	if x.Sender != nil {
-		PoolUser.Put(x.Sender)
-		x.Sender = nil
-	}
+	PoolUserMessage.Put(x.Message)
+	x.Message = nil
+	PoolUser.Put(x.Sender)
+	x.Sender = nil
 	x.AccessHash = 0
 	x.SenderRefID = 0
 	p.pool.Put(x)
@@ -299,12 +325,20 @@ func (x *UpdateNewMessage) DeepCopy(z *UpdateNewMessage) {
 	z.UCount = x.UCount
 	z.UpdateID = x.UpdateID
 	if x.Message != nil {
-		z.Message = PoolUserMessage.Get()
+		if z.Message == nil {
+			z.Message = PoolUserMessage.Get()
+		}
 		x.Message.DeepCopy(z.Message)
+	} else {
+		z.Message = nil
 	}
 	if x.Sender != nil {
-		z.Sender = PoolUser.Get()
+		if z.Sender == nil {
+			z.Sender = PoolUser.Get()
+		}
 		x.Sender.DeepCopy(z.Sender)
+	} else {
+		z.Sender = nil
 	}
 	z.AccessHash = x.AccessHash
 	z.SenderRefID = x.SenderRefID
@@ -331,18 +365,19 @@ type poolUpdateMessageEdited struct {
 func (p *poolUpdateMessageEdited) Get() *UpdateMessageEdited {
 	x, ok := p.pool.Get().(*UpdateMessageEdited)
 	if !ok {
-		return &UpdateMessageEdited{}
+		x = &UpdateMessageEdited{}
 	}
 	return x
 }
 
 func (p *poolUpdateMessageEdited) Put(x *UpdateMessageEdited) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
-	if x.Message != nil {
-		PoolUserMessage.Put(x.Message)
-		x.Message = nil
-	}
+	PoolUserMessage.Put(x.Message)
+	x.Message = nil
 	p.pool.Put(x)
 }
 
@@ -352,8 +387,12 @@ func (x *UpdateMessageEdited) DeepCopy(z *UpdateMessageEdited) {
 	z.UCount = x.UCount
 	z.UpdateID = x.UpdateID
 	if x.Message != nil {
-		z.Message = PoolUserMessage.Get()
+		if z.Message == nil {
+			z.Message = PoolUserMessage.Get()
+		}
 		x.Message.DeepCopy(z.Message)
+	} else {
+		z.Message = nil
 	}
 }
 
@@ -378,20 +417,21 @@ type poolUpdateMessagesDeleted struct {
 func (p *poolUpdateMessagesDeleted) Get() *UpdateMessagesDeleted {
 	x, ok := p.pool.Get().(*UpdateMessagesDeleted)
 	if !ok {
-		return &UpdateMessagesDeleted{}
+		x = &UpdateMessagesDeleted{}
 	}
 	return x
 }
 
 func (p *poolUpdateMessagesDeleted) Put(x *UpdateMessagesDeleted) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.TeamID = 0
 	x.MessageIDs = x.MessageIDs[:0]
-	if x.Peer != nil {
-		PoolPeer.Put(x.Peer)
-		x.Peer = nil
-	}
+	PoolPeer.Put(x.Peer)
+	x.Peer = nil
 	p.pool.Put(x)
 }
 
@@ -403,8 +443,12 @@ func (x *UpdateMessagesDeleted) DeepCopy(z *UpdateMessagesDeleted) {
 	z.TeamID = x.TeamID
 	z.MessageIDs = append(z.MessageIDs[:0], x.MessageIDs...)
 	if x.Peer != nil {
-		z.Peer = PoolPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 }
 
@@ -429,19 +473,20 @@ type poolUpdateReadHistoryInbox struct {
 func (p *poolUpdateReadHistoryInbox) Get() *UpdateReadHistoryInbox {
 	x, ok := p.pool.Get().(*UpdateReadHistoryInbox)
 	if !ok {
-		return &UpdateReadHistoryInbox{}
+		x = &UpdateReadHistoryInbox{}
 	}
 	return x
 }
 
 func (p *poolUpdateReadHistoryInbox) Put(x *UpdateReadHistoryInbox) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.TeamID = 0
-	if x.Peer != nil {
-		PoolPeer.Put(x.Peer)
-		x.Peer = nil
-	}
+	PoolPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MaxID = 0
 	p.pool.Put(x)
 }
@@ -453,8 +498,12 @@ func (x *UpdateReadHistoryInbox) DeepCopy(z *UpdateReadHistoryInbox) {
 	z.UpdateID = x.UpdateID
 	z.TeamID = x.TeamID
 	if x.Peer != nil {
-		z.Peer = PoolPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MaxID = x.MaxID
 }
@@ -480,19 +529,20 @@ type poolUpdateReadHistoryOutbox struct {
 func (p *poolUpdateReadHistoryOutbox) Get() *UpdateReadHistoryOutbox {
 	x, ok := p.pool.Get().(*UpdateReadHistoryOutbox)
 	if !ok {
-		return &UpdateReadHistoryOutbox{}
+		x = &UpdateReadHistoryOutbox{}
 	}
 	return x
 }
 
 func (p *poolUpdateReadHistoryOutbox) Put(x *UpdateReadHistoryOutbox) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.TeamID = 0
-	if x.Peer != nil {
-		PoolPeer.Put(x.Peer)
-		x.Peer = nil
-	}
+	PoolPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MaxID = 0
 	x.UserID = 0
 	p.pool.Put(x)
@@ -505,8 +555,12 @@ func (x *UpdateReadHistoryOutbox) DeepCopy(z *UpdateReadHistoryOutbox) {
 	z.UpdateID = x.UpdateID
 	z.TeamID = x.TeamID
 	if x.Peer != nil {
-		z.Peer = PoolPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MaxID = x.MaxID
 	z.UserID = x.UserID
@@ -533,19 +587,20 @@ type poolUpdateMessagePinned struct {
 func (p *poolUpdateMessagePinned) Get() *UpdateMessagePinned {
 	x, ok := p.pool.Get().(*UpdateMessagePinned)
 	if !ok {
-		return &UpdateMessagePinned{}
+		x = &UpdateMessagePinned{}
 	}
 	return x
 }
 
 func (p *poolUpdateMessagePinned) Put(x *UpdateMessagePinned) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.TeamID = 0
-	if x.Peer != nil {
-		PoolPeer.Put(x.Peer)
-		x.Peer = nil
-	}
+	PoolPeer.Put(x.Peer)
+	x.Peer = nil
 	x.UserID = 0
 	x.MsgID = 0
 	x.Version = 0
@@ -559,8 +614,12 @@ func (x *UpdateMessagePinned) DeepCopy(z *UpdateMessagePinned) {
 	z.UpdateID = x.UpdateID
 	z.TeamID = x.TeamID
 	if x.Peer != nil {
-		z.Peer = PoolPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.UserID = x.UserID
 	z.MsgID = x.MsgID
@@ -588,12 +647,15 @@ type poolUpdateUserTyping struct {
 func (p *poolUpdateUserTyping) Get() *UpdateUserTyping {
 	x, ok := p.pool.Get().(*UpdateUserTyping)
 	if !ok {
-		return &UpdateUserTyping{}
+		x = &UpdateUserTyping{}
 	}
 	return x
 }
 
 func (p *poolUpdateUserTyping) Put(x *UpdateUserTyping) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.TeamID = 0
 	x.UserID = 0
@@ -635,12 +697,15 @@ type poolUpdateUserStatus struct {
 func (p *poolUpdateUserStatus) Get() *UpdateUserStatus {
 	x, ok := p.pool.Get().(*UpdateUserStatus)
 	if !ok {
-		return &UpdateUserStatus{}
+		x = &UpdateUserStatus{}
 	}
 	return x
 }
 
 func (p *poolUpdateUserStatus) Put(x *UpdateUserStatus) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UserID = 0
 	x.Status = 0
@@ -676,12 +741,15 @@ type poolUpdateUsername struct {
 func (p *poolUpdateUsername) Get() *UpdateUsername {
 	x, ok := p.pool.Get().(*UpdateUsername)
 	if !ok {
-		return &UpdateUsername{}
+		x = &UpdateUsername{}
 	}
 	return x
 }
 
 func (p *poolUpdateUsername) Put(x *UpdateUsername) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.UserID = 0
@@ -727,19 +795,20 @@ type poolUpdateUserPhoto struct {
 func (p *poolUpdateUserPhoto) Get() *UpdateUserPhoto {
 	x, ok := p.pool.Get().(*UpdateUserPhoto)
 	if !ok {
-		return &UpdateUserPhoto{}
+		x = &UpdateUserPhoto{}
 	}
 	return x
 }
 
 func (p *poolUpdateUserPhoto) Put(x *UpdateUserPhoto) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.UserID = 0
-	if x.Photo != nil {
-		PoolUserPhoto.Put(x.Photo)
-		x.Photo = nil
-	}
+	PoolUserPhoto.Put(x.Photo)
+	x.Photo = nil
 	x.PhotoID = 0
 	x.DeletedPhotoIDs = x.DeletedPhotoIDs[:0]
 	p.pool.Put(x)
@@ -752,8 +821,12 @@ func (x *UpdateUserPhoto) DeepCopy(z *UpdateUserPhoto) {
 	z.UpdateID = x.UpdateID
 	z.UserID = x.UserID
 	if x.Photo != nil {
-		z.Photo = PoolUserPhoto.Get()
+		if z.Photo == nil {
+			z.Photo = PoolUserPhoto.Get()
+		}
 		x.Photo.DeepCopy(z.Photo)
+	} else {
+		z.Photo = nil
 	}
 	z.PhotoID = x.PhotoID
 	z.DeletedPhotoIDs = append(z.DeletedPhotoIDs[:0], x.DeletedPhotoIDs...)
@@ -780,24 +853,23 @@ type poolUpdateNotifySettings struct {
 func (p *poolUpdateNotifySettings) Get() *UpdateNotifySettings {
 	x, ok := p.pool.Get().(*UpdateNotifySettings)
 	if !ok {
-		return &UpdateNotifySettings{}
+		x = &UpdateNotifySettings{}
 	}
 	return x
 }
 
 func (p *poolUpdateNotifySettings) Put(x *UpdateNotifySettings) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.TeamID = 0
 	x.UserID = 0
-	if x.NotifyPeer != nil {
-		PoolPeer.Put(x.NotifyPeer)
-		x.NotifyPeer = nil
-	}
-	if x.Settings != nil {
-		PoolPeerNotifySettings.Put(x.Settings)
-		x.Settings = nil
-	}
+	PoolPeer.Put(x.NotifyPeer)
+	x.NotifyPeer = nil
+	PoolPeerNotifySettings.Put(x.Settings)
+	x.Settings = nil
 	p.pool.Put(x)
 }
 
@@ -809,12 +881,20 @@ func (x *UpdateNotifySettings) DeepCopy(z *UpdateNotifySettings) {
 	z.TeamID = x.TeamID
 	z.UserID = x.UserID
 	if x.NotifyPeer != nil {
-		z.NotifyPeer = PoolPeer.Get()
+		if z.NotifyPeer == nil {
+			z.NotifyPeer = PoolPeer.Get()
+		}
 		x.NotifyPeer.DeepCopy(z.NotifyPeer)
+	} else {
+		z.NotifyPeer = nil
 	}
 	if x.Settings != nil {
-		z.Settings = PoolPeerNotifySettings.Get()
+		if z.Settings == nil {
+			z.Settings = PoolPeerNotifySettings.Get()
+		}
 		x.Settings.DeepCopy(z.Settings)
+	} else {
+		z.Settings = nil
 	}
 }
 
@@ -839,12 +919,15 @@ type poolUpdateGroupParticipantAdd struct {
 func (p *poolUpdateGroupParticipantAdd) Get() *UpdateGroupParticipantAdd {
 	x, ok := p.pool.Get().(*UpdateGroupParticipantAdd)
 	if !ok {
-		return &UpdateGroupParticipantAdd{}
+		x = &UpdateGroupParticipantAdd{}
 	}
 	return x
 }
 
 func (p *poolUpdateGroupParticipantAdd) Put(x *UpdateGroupParticipantAdd) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.GroupID = 0
@@ -886,12 +969,15 @@ type poolUpdateGroupParticipantDeleted struct {
 func (p *poolUpdateGroupParticipantDeleted) Get() *UpdateGroupParticipantDeleted {
 	x, ok := p.pool.Get().(*UpdateGroupParticipantDeleted)
 	if !ok {
-		return &UpdateGroupParticipantDeleted{}
+		x = &UpdateGroupParticipantDeleted{}
 	}
 	return x
 }
 
 func (p *poolUpdateGroupParticipantDeleted) Put(x *UpdateGroupParticipantDeleted) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.GroupID = 0
@@ -929,12 +1015,15 @@ type poolUpdateGroupParticipantAdmin struct {
 func (p *poolUpdateGroupParticipantAdmin) Get() *UpdateGroupParticipantAdmin {
 	x, ok := p.pool.Get().(*UpdateGroupParticipantAdmin)
 	if !ok {
-		return &UpdateGroupParticipantAdmin{}
+		x = &UpdateGroupParticipantAdmin{}
 	}
 	return x
 }
 
 func (p *poolUpdateGroupParticipantAdmin) Put(x *UpdateGroupParticipantAdmin) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.GroupID = 0
@@ -974,12 +1063,15 @@ type poolUpdateGroupAdmins struct {
 func (p *poolUpdateGroupAdmins) Get() *UpdateGroupAdmins {
 	x, ok := p.pool.Get().(*UpdateGroupAdmins)
 	if !ok {
-		return &UpdateGroupAdmins{}
+		x = &UpdateGroupAdmins{}
 	}
 	return x
 }
 
 func (p *poolUpdateGroupAdmins) Put(x *UpdateGroupAdmins) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.GroupID = 0
@@ -1017,19 +1109,20 @@ type poolUpdateGroupPhoto struct {
 func (p *poolUpdateGroupPhoto) Get() *UpdateGroupPhoto {
 	x, ok := p.pool.Get().(*UpdateGroupPhoto)
 	if !ok {
-		return &UpdateGroupPhoto{}
+		x = &UpdateGroupPhoto{}
 	}
 	return x
 }
 
 func (p *poolUpdateGroupPhoto) Put(x *UpdateGroupPhoto) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.GroupID = 0
-	if x.Photo != nil {
-		PoolGroupPhoto.Put(x.Photo)
-		x.Photo = nil
-	}
+	PoolGroupPhoto.Put(x.Photo)
+	x.Photo = nil
 	x.PhotoID = 0
 	p.pool.Put(x)
 }
@@ -1041,8 +1134,12 @@ func (x *UpdateGroupPhoto) DeepCopy(z *UpdateGroupPhoto) {
 	z.UpdateID = x.UpdateID
 	z.GroupID = x.GroupID
 	if x.Photo != nil {
-		z.Photo = PoolGroupPhoto.Get()
+		if z.Photo == nil {
+			z.Photo = PoolGroupPhoto.Get()
+		}
 		x.Photo.DeepCopy(z.Photo)
+	} else {
+		z.Photo = nil
 	}
 	z.PhotoID = x.PhotoID
 }
@@ -1068,20 +1165,21 @@ type poolUpdateReadMessagesContents struct {
 func (p *poolUpdateReadMessagesContents) Get() *UpdateReadMessagesContents {
 	x, ok := p.pool.Get().(*UpdateReadMessagesContents)
 	if !ok {
-		return &UpdateReadMessagesContents{}
+		x = &UpdateReadMessagesContents{}
 	}
 	return x
 }
 
 func (p *poolUpdateReadMessagesContents) Put(x *UpdateReadMessagesContents) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.TeamID = 0
 	x.MessageIDs = x.MessageIDs[:0]
-	if x.Peer != nil {
-		PoolPeer.Put(x.Peer)
-		x.Peer = nil
-	}
+	PoolPeer.Put(x.Peer)
+	x.Peer = nil
 	p.pool.Put(x)
 }
 
@@ -1093,8 +1191,12 @@ func (x *UpdateReadMessagesContents) DeepCopy(z *UpdateReadMessagesContents) {
 	z.TeamID = x.TeamID
 	z.MessageIDs = append(z.MessageIDs[:0], x.MessageIDs...)
 	if x.Peer != nil {
-		z.Peer = PoolPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 }
 
@@ -1119,12 +1221,15 @@ type poolUpdateAuthorizationReset struct {
 func (p *poolUpdateAuthorizationReset) Get() *UpdateAuthorizationReset {
 	x, ok := p.pool.Get().(*UpdateAuthorizationReset)
 	if !ok {
-		return &UpdateAuthorizationReset{}
+		x = &UpdateAuthorizationReset{}
 	}
 	return x
 }
 
 func (p *poolUpdateAuthorizationReset) Put(x *UpdateAuthorizationReset) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	p.pool.Put(x)
@@ -1158,18 +1263,19 @@ type poolUpdateDraftMessage struct {
 func (p *poolUpdateDraftMessage) Get() *UpdateDraftMessage {
 	x, ok := p.pool.Get().(*UpdateDraftMessage)
 	if !ok {
-		return &UpdateDraftMessage{}
+		x = &UpdateDraftMessage{}
 	}
 	return x
 }
 
 func (p *poolUpdateDraftMessage) Put(x *UpdateDraftMessage) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
-	if x.Message != nil {
-		PoolDraftMessage.Put(x.Message)
-		x.Message = nil
-	}
+	PoolDraftMessage.Put(x.Message)
+	x.Message = nil
 	p.pool.Put(x)
 }
 
@@ -1179,8 +1285,12 @@ func (x *UpdateDraftMessage) DeepCopy(z *UpdateDraftMessage) {
 	z.UCount = x.UCount
 	z.UpdateID = x.UpdateID
 	if x.Message != nil {
-		z.Message = PoolDraftMessage.Get()
+		if z.Message == nil {
+			z.Message = PoolDraftMessage.Get()
+		}
 		x.Message.DeepCopy(z.Message)
+	} else {
+		z.Message = nil
 	}
 }
 
@@ -1205,19 +1315,20 @@ type poolUpdateDraftMessageCleared struct {
 func (p *poolUpdateDraftMessageCleared) Get() *UpdateDraftMessageCleared {
 	x, ok := p.pool.Get().(*UpdateDraftMessageCleared)
 	if !ok {
-		return &UpdateDraftMessageCleared{}
+		x = &UpdateDraftMessageCleared{}
 	}
 	return x
 }
 
 func (p *poolUpdateDraftMessageCleared) Put(x *UpdateDraftMessageCleared) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.TeamID = 0
-	if x.Peer != nil {
-		PoolPeer.Put(x.Peer)
-		x.Peer = nil
-	}
+	PoolPeer.Put(x.Peer)
+	x.Peer = nil
 	p.pool.Put(x)
 }
 
@@ -1228,8 +1339,12 @@ func (x *UpdateDraftMessageCleared) DeepCopy(z *UpdateDraftMessageCleared) {
 	z.UpdateID = x.UpdateID
 	z.TeamID = x.TeamID
 	if x.Peer != nil {
-		z.Peer = PoolPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 }
 
@@ -1254,19 +1369,20 @@ type poolUpdateDialogPinned struct {
 func (p *poolUpdateDialogPinned) Get() *UpdateDialogPinned {
 	x, ok := p.pool.Get().(*UpdateDialogPinned)
 	if !ok {
-		return &UpdateDialogPinned{}
+		x = &UpdateDialogPinned{}
 	}
 	return x
 }
 
 func (p *poolUpdateDialogPinned) Put(x *UpdateDialogPinned) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.TeamID = 0
-	if x.Peer != nil {
-		PoolPeer.Put(x.Peer)
-		x.Peer = nil
-	}
+	PoolPeer.Put(x.Peer)
+	x.Peer = nil
 	x.Pinned = false
 	p.pool.Put(x)
 }
@@ -1278,8 +1394,12 @@ func (x *UpdateDialogPinned) DeepCopy(z *UpdateDialogPinned) {
 	z.UpdateID = x.UpdateID
 	z.TeamID = x.TeamID
 	if x.Peer != nil {
-		z.Peer = PoolPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Pinned = x.Pinned
 }
@@ -1305,14 +1425,20 @@ type poolUpdateDialogPinnedReorder struct {
 func (p *poolUpdateDialogPinnedReorder) Get() *UpdateDialogPinnedReorder {
 	x, ok := p.pool.Get().(*UpdateDialogPinnedReorder)
 	if !ok {
-		return &UpdateDialogPinnedReorder{}
+		x = &UpdateDialogPinnedReorder{}
 	}
 	return x
 }
 
 func (p *poolUpdateDialogPinnedReorder) Put(x *UpdateDialogPinnedReorder) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
+	for _, z := range x.Peer {
+		PoolPeer.Put(z)
+	}
 	x.Peer = x.Peer[:0]
 	p.pool.Put(x)
 }
@@ -1352,19 +1478,40 @@ type poolUpdateAccountPrivacy struct {
 func (p *poolUpdateAccountPrivacy) Get() *UpdateAccountPrivacy {
 	x, ok := p.pool.Get().(*UpdateAccountPrivacy)
 	if !ok {
-		return &UpdateAccountPrivacy{}
+		x = &UpdateAccountPrivacy{}
 	}
 	return x
 }
 
 func (p *poolUpdateAccountPrivacy) Put(x *UpdateAccountPrivacy) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
+	for _, z := range x.ChatInvite {
+		PoolPrivacyRule.Put(z)
+	}
 	x.ChatInvite = x.ChatInvite[:0]
+	for _, z := range x.LastSeen {
+		PoolPrivacyRule.Put(z)
+	}
 	x.LastSeen = x.LastSeen[:0]
+	for _, z := range x.PhoneNumber {
+		PoolPrivacyRule.Put(z)
+	}
 	x.PhoneNumber = x.PhoneNumber[:0]
+	for _, z := range x.ProfilePhoto {
+		PoolPrivacyRule.Put(z)
+	}
 	x.ProfilePhoto = x.ProfilePhoto[:0]
+	for _, z := range x.ForwardedMessage {
+		PoolPrivacyRule.Put(z)
+	}
 	x.ForwardedMessage = x.ForwardedMessage[:0]
+	for _, z := range x.Call {
+		PoolPrivacyRule.Put(z)
+	}
 	x.Call = x.Call[:0]
 	p.pool.Put(x)
 }
@@ -1439,21 +1586,25 @@ type poolUpdateLabelItemsAdded struct {
 func (p *poolUpdateLabelItemsAdded) Get() *UpdateLabelItemsAdded {
 	x, ok := p.pool.Get().(*UpdateLabelItemsAdded)
 	if !ok {
-		return &UpdateLabelItemsAdded{}
+		x = &UpdateLabelItemsAdded{}
 	}
 	return x
 }
 
 func (p *poolUpdateLabelItemsAdded) Put(x *UpdateLabelItemsAdded) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.TeamID = 0
-	if x.Peer != nil {
-		PoolPeer.Put(x.Peer)
-		x.Peer = nil
-	}
+	PoolPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MessageIDs = x.MessageIDs[:0]
 	x.LabelIDs = x.LabelIDs[:0]
+	for _, z := range x.Labels {
+		PoolLabel.Put(z)
+	}
 	x.Labels = x.Labels[:0]
 	p.pool.Put(x)
 }
@@ -1465,8 +1616,12 @@ func (x *UpdateLabelItemsAdded) DeepCopy(z *UpdateLabelItemsAdded) {
 	z.UpdateID = x.UpdateID
 	z.TeamID = x.TeamID
 	if x.Peer != nil {
-		z.Peer = PoolPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MessageIDs = append(z.MessageIDs[:0], x.MessageIDs...)
 	z.LabelIDs = append(z.LabelIDs[:0], x.LabelIDs...)
@@ -1500,21 +1655,25 @@ type poolUpdateLabelItemsRemoved struct {
 func (p *poolUpdateLabelItemsRemoved) Get() *UpdateLabelItemsRemoved {
 	x, ok := p.pool.Get().(*UpdateLabelItemsRemoved)
 	if !ok {
-		return &UpdateLabelItemsRemoved{}
+		x = &UpdateLabelItemsRemoved{}
 	}
 	return x
 }
 
 func (p *poolUpdateLabelItemsRemoved) Put(x *UpdateLabelItemsRemoved) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.TeamID = 0
-	if x.Peer != nil {
-		PoolPeer.Put(x.Peer)
-		x.Peer = nil
-	}
+	PoolPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MessageIDs = x.MessageIDs[:0]
 	x.LabelIDs = x.LabelIDs[:0]
+	for _, z := range x.Labels {
+		PoolLabel.Put(z)
+	}
 	x.Labels = x.Labels[:0]
 	p.pool.Put(x)
 }
@@ -1526,8 +1685,12 @@ func (x *UpdateLabelItemsRemoved) DeepCopy(z *UpdateLabelItemsRemoved) {
 	z.UpdateID = x.UpdateID
 	z.TeamID = x.TeamID
 	if x.Peer != nil {
-		z.Peer = PoolPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MessageIDs = append(z.MessageIDs[:0], x.MessageIDs...)
 	z.LabelIDs = append(z.LabelIDs[:0], x.LabelIDs...)
@@ -1561,14 +1724,20 @@ type poolUpdateLabelSet struct {
 func (p *poolUpdateLabelSet) Get() *UpdateLabelSet {
 	x, ok := p.pool.Get().(*UpdateLabelSet)
 	if !ok {
-		return &UpdateLabelSet{}
+		x = &UpdateLabelSet{}
 	}
 	return x
 }
 
 func (p *poolUpdateLabelSet) Put(x *UpdateLabelSet) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
+	for _, z := range x.Labels {
+		PoolLabel.Put(z)
+	}
 	x.Labels = x.Labels[:0]
 	p.pool.Put(x)
 }
@@ -1608,12 +1777,15 @@ type poolUpdateLabelDeleted struct {
 func (p *poolUpdateLabelDeleted) Get() *UpdateLabelDeleted {
 	x, ok := p.pool.Get().(*UpdateLabelDeleted)
 	if !ok {
-		return &UpdateLabelDeleted{}
+		x = &UpdateLabelDeleted{}
 	}
 	return x
 }
 
 func (p *poolUpdateLabelDeleted) Put(x *UpdateLabelDeleted) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.LabelIDs = x.LabelIDs[:0]
@@ -1649,12 +1821,15 @@ type poolUpdateUserBlocked struct {
 func (p *poolUpdateUserBlocked) Get() *UpdateUserBlocked {
 	x, ok := p.pool.Get().(*UpdateUserBlocked)
 	if !ok {
-		return &UpdateUserBlocked{}
+		x = &UpdateUserBlocked{}
 	}
 	return x
 }
 
 func (p *poolUpdateUserBlocked) Put(x *UpdateUserBlocked) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.UserID = 0
@@ -1692,23 +1867,22 @@ type poolUpdateMessagePoll struct {
 func (p *poolUpdateMessagePoll) Get() *UpdateMessagePoll {
 	x, ok := p.pool.Get().(*UpdateMessagePoll)
 	if !ok {
-		return &UpdateMessagePoll{}
+		x = &UpdateMessagePoll{}
 	}
 	return x
 }
 
 func (p *poolUpdateMessagePoll) Put(x *UpdateMessagePoll) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.PollID = 0
-	if x.Poll != nil {
-		PoolMediaPoll.Put(x.Poll)
-		x.Poll = nil
-	}
-	if x.Results != nil {
-		PoolPollResults.Put(x.Results)
-		x.Results = nil
-	}
+	PoolMediaPoll.Put(x.Poll)
+	x.Poll = nil
+	PoolPollResults.Put(x.Results)
+	x.Results = nil
 	p.pool.Put(x)
 }
 
@@ -1719,12 +1893,20 @@ func (x *UpdateMessagePoll) DeepCopy(z *UpdateMessagePoll) {
 	z.UpdateID = x.UpdateID
 	z.PollID = x.PollID
 	if x.Poll != nil {
-		z.Poll = PoolMediaPoll.Get()
+		if z.Poll == nil {
+			z.Poll = PoolMediaPoll.Get()
+		}
 		x.Poll.DeepCopy(z.Poll)
+	} else {
+		z.Poll = nil
 	}
 	if x.Results != nil {
-		z.Results = PoolPollResults.Get()
+		if z.Results == nil {
+			z.Results = PoolPollResults.Get()
+		}
 		x.Results.DeepCopy(z.Results)
+	} else {
+		z.Results = nil
 	}
 }
 
@@ -1749,20 +1931,21 @@ type poolUpdateBotCallbackQuery struct {
 func (p *poolUpdateBotCallbackQuery) Get() *UpdateBotCallbackQuery {
 	x, ok := p.pool.Get().(*UpdateBotCallbackQuery)
 	if !ok {
-		return &UpdateBotCallbackQuery{}
+		x = &UpdateBotCallbackQuery{}
 	}
 	return x
 }
 
 func (p *poolUpdateBotCallbackQuery) Put(x *UpdateBotCallbackQuery) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.QueryID = 0
 	x.UserID = 0
-	if x.Peer != nil {
-		PoolPeer.Put(x.Peer)
-		x.Peer = nil
-	}
+	PoolPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MessageID = 0
 	x.Data = x.Data[:0]
 	p.pool.Put(x)
@@ -1776,8 +1959,12 @@ func (x *UpdateBotCallbackQuery) DeepCopy(z *UpdateBotCallbackQuery) {
 	z.QueryID = x.QueryID
 	z.UserID = x.UserID
 	if x.Peer != nil {
-		z.Peer = PoolPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MessageID = x.MessageID
 	z.Data = append(z.Data[:0], x.Data...)
@@ -1804,26 +1991,25 @@ type poolUpdateBotInlineQuery struct {
 func (p *poolUpdateBotInlineQuery) Get() *UpdateBotInlineQuery {
 	x, ok := p.pool.Get().(*UpdateBotInlineQuery)
 	if !ok {
-		return &UpdateBotInlineQuery{}
+		x = &UpdateBotInlineQuery{}
 	}
 	return x
 }
 
 func (p *poolUpdateBotInlineQuery) Put(x *UpdateBotInlineQuery) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.QueryID = 0
 	x.UserID = 0
-	if x.Peer != nil {
-		PoolPeer.Put(x.Peer)
-		x.Peer = nil
-	}
+	PoolPeer.Put(x.Peer)
+	x.Peer = nil
 	x.Query = ""
 	x.Offset = ""
-	if x.Geo != nil {
-		PoolGeoLocation.Put(x.Geo)
-		x.Geo = nil
-	}
+	PoolGeoLocation.Put(x.Geo)
+	x.Geo = nil
 	p.pool.Put(x)
 }
 
@@ -1835,14 +2021,22 @@ func (x *UpdateBotInlineQuery) DeepCopy(z *UpdateBotInlineQuery) {
 	z.QueryID = x.QueryID
 	z.UserID = x.UserID
 	if x.Peer != nil {
-		z.Peer = PoolPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Query = x.Query
 	z.Offset = x.Offset
 	if x.Geo != nil {
-		z.Geo = PoolGeoLocation.Get()
+		if z.Geo == nil {
+			z.Geo = PoolGeoLocation.Get()
+		}
 		x.Geo.DeepCopy(z.Geo)
+	} else {
+		z.Geo = nil
 	}
 }
 
@@ -1867,21 +2061,22 @@ type poolUpdateBotInlineSend struct {
 func (p *poolUpdateBotInlineSend) Get() *UpdateBotInlineSend {
 	x, ok := p.pool.Get().(*UpdateBotInlineSend)
 	if !ok {
-		return &UpdateBotInlineSend{}
+		x = &UpdateBotInlineSend{}
 	}
 	return x
 }
 
 func (p *poolUpdateBotInlineSend) Put(x *UpdateBotInlineSend) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.UserID = 0
 	x.Query = ""
 	x.ResultID = ""
-	if x.Geo != nil {
-		PoolGeoLocation.Put(x.Geo)
-		x.Geo = nil
-	}
+	PoolGeoLocation.Put(x.Geo)
+	x.Geo = nil
 	p.pool.Put(x)
 }
 
@@ -1894,8 +2089,12 @@ func (x *UpdateBotInlineSend) DeepCopy(z *UpdateBotInlineSend) {
 	z.Query = x.Query
 	z.ResultID = x.ResultID
 	if x.Geo != nil {
-		z.Geo = PoolGeoLocation.Get()
+		if z.Geo == nil {
+			z.Geo = PoolGeoLocation.Get()
+		}
 		x.Geo.DeepCopy(z.Geo)
+	} else {
+		z.Geo = nil
 	}
 }
 
@@ -1920,18 +2119,19 @@ type poolUpdateTeamCreated struct {
 func (p *poolUpdateTeamCreated) Get() *UpdateTeamCreated {
 	x, ok := p.pool.Get().(*UpdateTeamCreated)
 	if !ok {
-		return &UpdateTeamCreated{}
+		x = &UpdateTeamCreated{}
 	}
 	return x
 }
 
 func (p *poolUpdateTeamCreated) Put(x *UpdateTeamCreated) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
-	if x.Team != nil {
-		PoolTeam.Put(x.Team)
-		x.Team = nil
-	}
+	PoolTeam.Put(x.Team)
+	x.Team = nil
 	p.pool.Put(x)
 }
 
@@ -1941,8 +2141,12 @@ func (x *UpdateTeamCreated) DeepCopy(z *UpdateTeamCreated) {
 	z.UCount = x.UCount
 	z.UpdateID = x.UpdateID
 	if x.Team != nil {
-		z.Team = PoolTeam.Get()
+		if z.Team == nil {
+			z.Team = PoolTeam.Get()
+		}
 		x.Team.DeepCopy(z.Team)
+	} else {
+		z.Team = nil
 	}
 }
 
@@ -1967,23 +2171,22 @@ type poolUpdateTeamMemberAdded struct {
 func (p *poolUpdateTeamMemberAdded) Get() *UpdateTeamMemberAdded {
 	x, ok := p.pool.Get().(*UpdateTeamMemberAdded)
 	if !ok {
-		return &UpdateTeamMemberAdded{}
+		x = &UpdateTeamMemberAdded{}
 	}
 	return x
 }
 
 func (p *poolUpdateTeamMemberAdded) Put(x *UpdateTeamMemberAdded) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.TeamID = 0
-	if x.User != nil {
-		PoolUser.Put(x.User)
-		x.User = nil
-	}
-	if x.Contact != nil {
-		PoolContactUser.Put(x.Contact)
-		x.Contact = nil
-	}
+	PoolUser.Put(x.User)
+	x.User = nil
+	PoolContactUser.Put(x.Contact)
+	x.Contact = nil
 	x.AdderID = 0
 	x.Hash = 0
 	p.pool.Put(x)
@@ -1996,12 +2199,20 @@ func (x *UpdateTeamMemberAdded) DeepCopy(z *UpdateTeamMemberAdded) {
 	z.UpdateID = x.UpdateID
 	z.TeamID = x.TeamID
 	if x.User != nil {
-		z.User = PoolUser.Get()
+		if z.User == nil {
+			z.User = PoolUser.Get()
+		}
 		x.User.DeepCopy(z.User)
+	} else {
+		z.User = nil
 	}
 	if x.Contact != nil {
-		z.Contact = PoolContactUser.Get()
+		if z.Contact == nil {
+			z.Contact = PoolContactUser.Get()
+		}
 		x.Contact.DeepCopy(z.Contact)
+	} else {
+		z.Contact = nil
 	}
 	z.AdderID = x.AdderID
 	z.Hash = x.Hash
@@ -2028,12 +2239,15 @@ type poolUpdateTeamMemberRemoved struct {
 func (p *poolUpdateTeamMemberRemoved) Get() *UpdateTeamMemberRemoved {
 	x, ok := p.pool.Get().(*UpdateTeamMemberRemoved)
 	if !ok {
-		return &UpdateTeamMemberRemoved{}
+		x = &UpdateTeamMemberRemoved{}
 	}
 	return x
 }
 
 func (p *poolUpdateTeamMemberRemoved) Put(x *UpdateTeamMemberRemoved) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.TeamID = 0
@@ -2075,12 +2289,15 @@ type poolUpdateTeamMemberStatus struct {
 func (p *poolUpdateTeamMemberStatus) Get() *UpdateTeamMemberStatus {
 	x, ok := p.pool.Get().(*UpdateTeamMemberStatus)
 	if !ok {
-		return &UpdateTeamMemberStatus{}
+		x = &UpdateTeamMemberStatus{}
 	}
 	return x
 }
 
 func (p *poolUpdateTeamMemberStatus) Put(x *UpdateTeamMemberStatus) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.TeamID = 0
@@ -2120,19 +2337,20 @@ type poolUpdateTeamPhoto struct {
 func (p *poolUpdateTeamPhoto) Get() *UpdateTeamPhoto {
 	x, ok := p.pool.Get().(*UpdateTeamPhoto)
 	if !ok {
-		return &UpdateTeamPhoto{}
+		x = &UpdateTeamPhoto{}
 	}
 	return x
 }
 
 func (p *poolUpdateTeamPhoto) Put(x *UpdateTeamPhoto) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.TeamID = 0
-	if x.Photo != nil {
-		PoolTeamPhoto.Put(x.Photo)
-		x.Photo = nil
-	}
+	PoolTeamPhoto.Put(x.Photo)
+	x.Photo = nil
 	p.pool.Put(x)
 }
 
@@ -2143,8 +2361,12 @@ func (x *UpdateTeamPhoto) DeepCopy(z *UpdateTeamPhoto) {
 	z.UpdateID = x.UpdateID
 	z.TeamID = x.TeamID
 	if x.Photo != nil {
-		z.Photo = PoolTeamPhoto.Get()
+		if z.Photo == nil {
+			z.Photo = PoolTeamPhoto.Get()
+		}
 		x.Photo.DeepCopy(z.Photo)
+	} else {
+		z.Photo = nil
 	}
 }
 
@@ -2169,12 +2391,15 @@ type poolUpdateTeam struct {
 func (p *poolUpdateTeam) Get() *UpdateTeam {
 	x, ok := p.pool.Get().(*UpdateTeam)
 	if !ok {
-		return &UpdateTeam{}
+		x = &UpdateTeam{}
 	}
 	return x
 }
 
 func (p *poolUpdateTeam) Put(x *UpdateTeam) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.TeamID = 0
@@ -2212,18 +2437,24 @@ type poolUpdateCommunityMessage struct {
 func (p *poolUpdateCommunityMessage) Get() *UpdateCommunityMessage {
 	x, ok := p.pool.Get().(*UpdateCommunityMessage)
 	if !ok {
-		return &UpdateCommunityMessage{}
+		x = &UpdateCommunityMessage{}
 	}
 	return x
 }
 
 func (p *poolUpdateCommunityMessage) Put(x *UpdateCommunityMessage) {
+	if x == nil {
+		return
+	}
 	x.TeamID = 0
 	x.SenderID = 0
 	x.ReceiverID = 0
 	x.Body = ""
 	x.CreatedOn = 0
 	x.GlobalMsgID = 0
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
+	}
 	x.Entities = x.Entities[:0]
 	x.SenderMsgID = 0
 	p.pool.Put(x)
@@ -2269,12 +2500,15 @@ type poolUpdateCommunityReadOutbox struct {
 func (p *poolUpdateCommunityReadOutbox) Get() *UpdateCommunityReadOutbox {
 	x, ok := p.pool.Get().(*UpdateCommunityReadOutbox)
 	if !ok {
-		return &UpdateCommunityReadOutbox{}
+		x = &UpdateCommunityReadOutbox{}
 	}
 	return x
 }
 
 func (p *poolUpdateCommunityReadOutbox) Put(x *UpdateCommunityReadOutbox) {
+	if x == nil {
+		return
+	}
 	x.TeamID = 0
 	x.SenderID = 0
 	x.ReceiverID = 0
@@ -2312,12 +2546,15 @@ type poolUpdateCommunityTyping struct {
 func (p *poolUpdateCommunityTyping) Get() *UpdateCommunityTyping {
 	x, ok := p.pool.Get().(*UpdateCommunityTyping)
 	if !ok {
-		return &UpdateCommunityTyping{}
+		x = &UpdateCommunityTyping{}
 	}
 	return x
 }
 
 func (p *poolUpdateCommunityTyping) Put(x *UpdateCommunityTyping) {
+	if x == nil {
+		return
+	}
 	x.TeamID = 0
 	x.SenderID = 0
 	x.ReceiverID = 0
@@ -2355,25 +2592,27 @@ type poolUpdateReaction struct {
 func (p *poolUpdateReaction) Get() *UpdateReaction {
 	x, ok := p.pool.Get().(*UpdateReaction)
 	if !ok {
-		return &UpdateReaction{}
+		x = &UpdateReaction{}
 	}
 	return x
 }
 
 func (p *poolUpdateReaction) Put(x *UpdateReaction) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.MessageID = 0
+	for _, z := range x.Counter {
+		PoolReactionCounter.Put(z)
+	}
 	x.Counter = x.Counter[:0]
 	x.TeamID = 0
-	if x.Peer != nil {
-		PoolPeer.Put(x.Peer)
-		x.Peer = nil
-	}
-	if x.Sender != nil {
-		PoolUser.Put(x.Sender)
-		x.Sender = nil
-	}
+	PoolPeer.Put(x.Peer)
+	x.Peer = nil
+	PoolUser.Put(x.Sender)
+	x.Sender = nil
 	x.YourReactions = x.YourReactions[:0]
 	x.Reaction = ""
 	p.pool.Put(x)
@@ -2394,12 +2633,20 @@ func (x *UpdateReaction) DeepCopy(z *UpdateReaction) {
 	}
 	z.TeamID = x.TeamID
 	if x.Peer != nil {
-		z.Peer = PoolPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	if x.Sender != nil {
-		z.Sender = PoolUser.Get()
+		if z.Sender == nil {
+			z.Sender = PoolUser.Get()
+		}
 		x.Sender.DeepCopy(z.Sender)
+	} else {
+		z.Sender = nil
 	}
 	z.YourReactions = append(z.YourReactions[:0], x.YourReactions...)
 	z.Reaction = x.Reaction
@@ -2426,18 +2673,19 @@ type poolUpdateCalendarEventAdded struct {
 func (p *poolUpdateCalendarEventAdded) Get() *UpdateCalendarEventAdded {
 	x, ok := p.pool.Get().(*UpdateCalendarEventAdded)
 	if !ok {
-		return &UpdateCalendarEventAdded{}
+		x = &UpdateCalendarEventAdded{}
 	}
 	return x
 }
 
 func (p *poolUpdateCalendarEventAdded) Put(x *UpdateCalendarEventAdded) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
-	if x.Event != nil {
-		PoolCalendarEvent.Put(x.Event)
-		x.Event = nil
-	}
+	PoolCalendarEvent.Put(x.Event)
+	x.Event = nil
 	p.pool.Put(x)
 }
 
@@ -2447,8 +2695,12 @@ func (x *UpdateCalendarEventAdded) DeepCopy(z *UpdateCalendarEventAdded) {
 	z.UCount = x.UCount
 	z.UpdateID = x.UpdateID
 	if x.Event != nil {
-		z.Event = PoolCalendarEvent.Get()
+		if z.Event == nil {
+			z.Event = PoolCalendarEvent.Get()
+		}
 		x.Event.DeepCopy(z.Event)
+	} else {
+		z.Event = nil
 	}
 }
 
@@ -2473,12 +2725,15 @@ type poolUpdateCalendarEventRemoved struct {
 func (p *poolUpdateCalendarEventRemoved) Get() *UpdateCalendarEventRemoved {
 	x, ok := p.pool.Get().(*UpdateCalendarEventRemoved)
 	if !ok {
-		return &UpdateCalendarEventRemoved{}
+		x = &UpdateCalendarEventRemoved{}
 	}
 	return x
 }
 
 func (p *poolUpdateCalendarEventRemoved) Put(x *UpdateCalendarEventRemoved) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.EventID = 0
@@ -2514,18 +2769,19 @@ type poolUpdateCalendarEventEdited struct {
 func (p *poolUpdateCalendarEventEdited) Get() *UpdateCalendarEventEdited {
 	x, ok := p.pool.Get().(*UpdateCalendarEventEdited)
 	if !ok {
-		return &UpdateCalendarEventEdited{}
+		x = &UpdateCalendarEventEdited{}
 	}
 	return x
 }
 
 func (p *poolUpdateCalendarEventEdited) Put(x *UpdateCalendarEventEdited) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
-	if x.Event != nil {
-		PoolCalendarEvent.Put(x.Event)
-		x.Event = nil
-	}
+	PoolCalendarEvent.Put(x.Event)
+	x.Event = nil
 	p.pool.Put(x)
 }
 
@@ -2535,8 +2791,12 @@ func (x *UpdateCalendarEventEdited) DeepCopy(z *UpdateCalendarEventEdited) {
 	z.UCount = x.UCount
 	z.UpdateID = x.UpdateID
 	if x.Event != nil {
-		z.Event = PoolCalendarEvent.Get()
+		if z.Event == nil {
+			z.Event = PoolCalendarEvent.Get()
+		}
 		x.Event.DeepCopy(z.Event)
+	} else {
+		z.Event = nil
 	}
 }
 
@@ -2561,14 +2821,20 @@ type poolUpdateRedirect struct {
 func (p *poolUpdateRedirect) Get() *UpdateRedirect {
 	x, ok := p.pool.Get().(*UpdateRedirect)
 	if !ok {
-		return &UpdateRedirect{}
+		x = &UpdateRedirect{}
 	}
 	return x
 }
 
 func (p *poolUpdateRedirect) Put(x *UpdateRedirect) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
+	for _, z := range x.Redirects {
+		PoolClientRedirect.Put(z)
+	}
 	x.Redirects = x.Redirects[:0]
 	x.Empty = false
 	p.pool.Put(x)
@@ -2610,12 +2876,15 @@ type poolClientRedirect struct {
 func (p *poolClientRedirect) Get() *ClientRedirect {
 	x, ok := p.pool.Get().(*ClientRedirect)
 	if !ok {
-		return &ClientRedirect{}
+		x = &ClientRedirect{}
 	}
 	return x
 }
 
 func (p *poolClientRedirect) Put(x *ClientRedirect) {
+	if x == nil {
+		return
+	}
 	x.HostPort = ""
 	x.Permanent = false
 	x.Target = 0
@@ -2653,12 +2922,15 @@ type poolUpdatePhoneCall struct {
 func (p *poolUpdatePhoneCall) Get() *UpdatePhoneCall {
 	x, ok := p.pool.Get().(*UpdatePhoneCall)
 	if !ok {
-		return &UpdatePhoneCall{}
+		x = &UpdatePhoneCall{}
 	}
 	return x
 }
 
 func (p *poolUpdatePhoneCall) Put(x *UpdatePhoneCall) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.TeamID = 0
 	x.PeerID = 0
@@ -2708,19 +2980,20 @@ type poolUpdatePhoneCallStarted struct {
 func (p *poolUpdatePhoneCallStarted) Get() *UpdatePhoneCallStarted {
 	x, ok := p.pool.Get().(*UpdatePhoneCallStarted)
 	if !ok {
-		return &UpdatePhoneCallStarted{}
+		x = &UpdatePhoneCallStarted{}
 	}
 	return x
 }
 
 func (p *poolUpdatePhoneCallStarted) Put(x *UpdatePhoneCallStarted) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.TeamID = 0
-	if x.Peer != nil {
-		PoolPeer.Put(x.Peer)
-		x.Peer = nil
-	}
+	PoolPeer.Put(x.Peer)
+	x.Peer = nil
 	x.CallId = 0
 	p.pool.Put(x)
 }
@@ -2732,8 +3005,12 @@ func (x *UpdatePhoneCallStarted) DeepCopy(z *UpdatePhoneCallStarted) {
 	z.UpdateID = x.UpdateID
 	z.TeamID = x.TeamID
 	if x.Peer != nil {
-		z.Peer = PoolPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.CallId = x.CallId
 }
@@ -2759,19 +3036,20 @@ type poolUpdatePhoneCallEnded struct {
 func (p *poolUpdatePhoneCallEnded) Get() *UpdatePhoneCallEnded {
 	x, ok := p.pool.Get().(*UpdatePhoneCallEnded)
 	if !ok {
-		return &UpdatePhoneCallEnded{}
+		x = &UpdatePhoneCallEnded{}
 	}
 	return x
 }
 
 func (p *poolUpdatePhoneCallEnded) Put(x *UpdatePhoneCallEnded) {
+	if x == nil {
+		return
+	}
 	x.UCount = 0
 	x.UpdateID = 0
 	x.TeamID = 0
-	if x.Peer != nil {
-		PoolPeer.Put(x.Peer)
-		x.Peer = nil
-	}
+	PoolPeer.Put(x.Peer)
+	x.Peer = nil
 	p.pool.Put(x)
 }
 
@@ -2782,8 +3060,12 @@ func (x *UpdatePhoneCallEnded) DeepCopy(z *UpdatePhoneCallEnded) {
 	z.UpdateID = x.UpdateID
 	z.TeamID = x.TeamID
 	if x.Peer != nil {
-		z.Peer = PoolPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 }
 

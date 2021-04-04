@@ -1,18 +1,77 @@
 package tools
 
 import (
+	"encoding/binary"
+	"github.com/ronaksoft/rony/pools"
 	"reflect"
 	"strconv"
+	"strings"
 	"unsafe"
 )
 
 /*
-   Creation Time: 2019 - Oct - 03
+   Creation Time: 2021 - Mar - 29
    Created by:  (ehsan)
    Maintainers:
       1.  Ehsan N. Moosa (E2)
    Auditor: Ehsan N. Moosa (E2)
    Copyright Ronak Software Group 2020
+*/
+
+/*
+	Strings Builder helper functions
+*/
+
+func AppendStrInt(sb *strings.Builder, x int) {
+	b := pools.TinyBytes.GetLen(8)
+	binary.BigEndian.PutUint64(b, uint64(x))
+	sb.Write(b)
+	pools.TinyBytes.Put(b)
+	return
+}
+
+func AppendStrUInt(sb *strings.Builder, x uint) {
+	b := pools.TinyBytes.GetLen(8)
+	binary.BigEndian.PutUint64(b, uint64(x))
+	sb.Write(b)
+	pools.TinyBytes.Put(b)
+	return
+}
+
+func AppendStrInt64(sb *strings.Builder, x int64) {
+	b := pools.TinyBytes.GetLen(8)
+	binary.BigEndian.PutUint64(b, uint64(x))
+	sb.Write(b)
+	pools.TinyBytes.Put(b)
+	return
+}
+
+func AppendStrUInt64(sb *strings.Builder, x uint64) {
+	b := pools.TinyBytes.GetLen(8)
+	binary.BigEndian.PutUint64(b, x)
+	sb.Write(b)
+	pools.TinyBytes.Put(b)
+	return
+}
+
+func AppendStrInt32(sb *strings.Builder, x int32) {
+	b := pools.TinyBytes.GetLen(4)
+	binary.BigEndian.PutUint32(b, uint32(x))
+	sb.Write(b)
+	pools.TinyBytes.Put(b)
+	return
+}
+
+func AppendStrUInt32(sb *strings.Builder, x uint32) {
+	b := pools.TinyBytes.GetLen(4)
+	binary.BigEndian.PutUint32(b, x)
+	sb.Write(b)
+	pools.TinyBytes.Put(b)
+	return
+}
+
+/*
+	String Conversion helper functions
 */
 
 func StrToInt64(s string) int64 {
@@ -68,6 +127,7 @@ func ByteToStr(bts []byte) string {
 	return *(*string)(unsafe.Pointer(&bts))
 }
 
+// B2S is alias for ByteToStr
 func B2S(bts []byte) string {
 	return ByteToStr(bts)
 }
@@ -86,6 +146,7 @@ func StrToByte(str string) (b []byte) {
 	return b
 }
 
+// S2B is alias for StrToByte
 func S2B(str string) []byte {
 	return StrToByte(str)
 }

@@ -18,16 +18,17 @@ type poolClientSendMessageMedia struct {
 func (p *poolClientSendMessageMedia) Get() *ClientSendMessageMedia {
 	x, ok := p.pool.Get().(*ClientSendMessageMedia)
 	if !ok {
-		return &ClientSendMessageMedia{}
+		x = &ClientSendMessageMedia{}
 	}
 	return x
 }
 
 func (p *poolClientSendMessageMedia) Put(x *ClientSendMessageMedia) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MediaType = 0
 	x.Caption = ""
 	x.FileName = ""
@@ -37,12 +38,18 @@ func (p *poolClientSendMessageMedia) Put(x *ClientSendMessageMedia) {
 	x.ThumbMIME = ""
 	x.ReplyTo = 0
 	x.ClearDraft = false
+	for _, z := range x.Attributes {
+		PoolDocumentAttribute.Put(z)
+	}
 	x.Attributes = x.Attributes[:0]
 	x.FileUploadID = ""
 	x.ThumbUploadID = ""
 	x.FileID = 0
 	x.ThumbID = 0
 	x.FileTotalParts = 0
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
+	}
 	x.Entities = x.Entities[:0]
 	x.TinyThumb = x.TinyThumb[:0]
 	p.pool.Put(x)
@@ -52,8 +59,12 @@ var PoolClientSendMessageMedia = poolClientSendMessageMedia{}
 
 func (x *ClientSendMessageMedia) DeepCopy(z *ClientSendMessageMedia) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MediaType = x.MediaType
 	z.Caption = x.Caption
@@ -107,18 +118,19 @@ type poolClientGlobalSearch struct {
 func (p *poolClientGlobalSearch) Get() *ClientGlobalSearch {
 	x, ok := p.pool.Get().(*ClientGlobalSearch)
 	if !ok {
-		return &ClientGlobalSearch{}
+		x = &ClientGlobalSearch{}
 	}
 	return x
 }
 
 func (p *poolClientGlobalSearch) Put(x *ClientGlobalSearch) {
+	if x == nil {
+		return
+	}
 	x.Text = ""
 	x.LabelIDs = x.LabelIDs[:0]
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
-	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.Limit = 0
 	x.SenderID = 0
 	p.pool.Put(x)
@@ -130,8 +142,12 @@ func (x *ClientGlobalSearch) DeepCopy(z *ClientGlobalSearch) {
 	z.Text = x.Text
 	z.LabelIDs = append(z.LabelIDs[:0], x.LabelIDs...)
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Limit = x.Limit
 	z.SenderID = x.SenderID
@@ -158,12 +174,15 @@ type poolClientContactSearch struct {
 func (p *poolClientContactSearch) Get() *ClientContactSearch {
 	x, ok := p.pool.Get().(*ClientContactSearch)
 	if !ok {
-		return &ClientContactSearch{}
+		x = &ClientContactSearch{}
 	}
 	return x
 }
 
 func (p *poolClientContactSearch) Put(x *ClientContactSearch) {
+	if x == nil {
+		return
+	}
 	x.Text = ""
 	p.pool.Put(x)
 }
@@ -195,12 +214,15 @@ type poolClientGetCachedMedia struct {
 func (p *poolClientGetCachedMedia) Get() *ClientGetCachedMedia {
 	x, ok := p.pool.Get().(*ClientGetCachedMedia)
 	if !ok {
-		return &ClientGetCachedMedia{}
+		x = &ClientGetCachedMedia{}
 	}
 	return x
 }
 
 func (p *poolClientGetCachedMedia) Put(x *ClientGetCachedMedia) {
+	if x == nil {
+		return
+	}
 	p.pool.Put(x)
 }
 
@@ -230,16 +252,17 @@ type poolClientClearCachedMedia struct {
 func (p *poolClientClearCachedMedia) Get() *ClientClearCachedMedia {
 	x, ok := p.pool.Get().(*ClientClearCachedMedia)
 	if !ok {
-		return &ClientClearCachedMedia{}
+		x = &ClientClearCachedMedia{}
 	}
 	return x
 }
 
 func (p *poolClientClearCachedMedia) Put(x *ClientClearCachedMedia) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MediaTypes = x.MediaTypes[:0]
 	p.pool.Put(x)
 }
@@ -248,8 +271,12 @@ var PoolClientClearCachedMedia = poolClientClearCachedMedia{}
 
 func (x *ClientClearCachedMedia) DeepCopy(z *ClientClearCachedMedia) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MediaTypes = append(z.MediaTypes[:0], x.MediaTypes...)
 }
@@ -275,16 +302,17 @@ type poolClientGetLastBotKeyboard struct {
 func (p *poolClientGetLastBotKeyboard) Get() *ClientGetLastBotKeyboard {
 	x, ok := p.pool.Get().(*ClientGetLastBotKeyboard)
 	if !ok {
-		return &ClientGetLastBotKeyboard{}
+		x = &ClientGetLastBotKeyboard{}
 	}
 	return x
 }
 
 func (p *poolClientGetLastBotKeyboard) Put(x *ClientGetLastBotKeyboard) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	p.pool.Put(x)
 }
 
@@ -292,8 +320,12 @@ var PoolClientGetLastBotKeyboard = poolClientGetLastBotKeyboard{}
 
 func (x *ClientGetLastBotKeyboard) DeepCopy(z *ClientGetLastBotKeyboard) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 }
 
@@ -318,20 +350,21 @@ type poolClientGetMediaHistory struct {
 func (p *poolClientGetMediaHistory) Get() *ClientGetMediaHistory {
 	x, ok := p.pool.Get().(*ClientGetMediaHistory)
 	if !ok {
-		return &ClientGetMediaHistory{}
+		x = &ClientGetMediaHistory{}
 	}
 	return x
 }
 
 func (p *poolClientGetMediaHistory) Put(x *ClientGetMediaHistory) {
+	if x == nil {
+		return
+	}
 	x.MediaType = x.MediaType[:0]
 	x.MaxID = 0
 	x.MinID = 0
 	x.Limit = 0
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
-	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	p.pool.Put(x)
 }
 
@@ -343,8 +376,12 @@ func (x *ClientGetMediaHistory) DeepCopy(z *ClientGetMediaHistory) {
 	z.MinID = x.MinID
 	z.Limit = x.Limit
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 }
 
@@ -369,12 +406,15 @@ type poolClientGetAllDownloadedMedia struct {
 func (p *poolClientGetAllDownloadedMedia) Get() *ClientGetAllDownloadedMedia {
 	x, ok := p.pool.Get().(*ClientGetAllDownloadedMedia)
 	if !ok {
-		return &ClientGetAllDownloadedMedia{}
+		x = &ClientGetAllDownloadedMedia{}
 	}
 	return x
 }
 
 func (p *poolClientGetAllDownloadedMedia) Put(x *ClientGetAllDownloadedMedia) {
+	if x == nil {
+		return
+	}
 	x.MediaType = 0
 	p.pool.Put(x)
 }
@@ -406,12 +446,15 @@ type poolClientGetRecentSearch struct {
 func (p *poolClientGetRecentSearch) Get() *ClientGetRecentSearch {
 	x, ok := p.pool.Get().(*ClientGetRecentSearch)
 	if !ok {
-		return &ClientGetRecentSearch{}
+		x = &ClientGetRecentSearch{}
 	}
 	return x
 }
 
 func (p *poolClientGetRecentSearch) Put(x *ClientGetRecentSearch) {
+	if x == nil {
+		return
+	}
 	x.Limit = 0
 	p.pool.Put(x)
 }
@@ -443,16 +486,17 @@ type poolClientPutRecentSearch struct {
 func (p *poolClientPutRecentSearch) Get() *ClientPutRecentSearch {
 	x, ok := p.pool.Get().(*ClientPutRecentSearch)
 	if !ok {
-		return &ClientPutRecentSearch{}
+		x = &ClientPutRecentSearch{}
 	}
 	return x
 }
 
 func (p *poolClientPutRecentSearch) Put(x *ClientPutRecentSearch) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	p.pool.Put(x)
 }
 
@@ -460,8 +504,12 @@ var PoolClientPutRecentSearch = poolClientPutRecentSearch{}
 
 func (x *ClientPutRecentSearch) DeepCopy(z *ClientPutRecentSearch) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 }
 
@@ -486,16 +534,17 @@ type poolClientRemoveRecentSearch struct {
 func (p *poolClientRemoveRecentSearch) Get() *ClientRemoveRecentSearch {
 	x, ok := p.pool.Get().(*ClientRemoveRecentSearch)
 	if !ok {
-		return &ClientRemoveRecentSearch{}
+		x = &ClientRemoveRecentSearch{}
 	}
 	return x
 }
 
 func (p *poolClientRemoveRecentSearch) Put(x *ClientRemoveRecentSearch) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	p.pool.Put(x)
 }
 
@@ -503,8 +552,12 @@ var PoolClientRemoveRecentSearch = poolClientRemoveRecentSearch{}
 
 func (x *ClientRemoveRecentSearch) DeepCopy(z *ClientRemoveRecentSearch) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 }
 
@@ -529,12 +582,15 @@ type poolClientRemoveAllRecentSearches struct {
 func (p *poolClientRemoveAllRecentSearches) Get() *ClientRemoveAllRecentSearches {
 	x, ok := p.pool.Get().(*ClientRemoveAllRecentSearches)
 	if !ok {
-		return &ClientRemoveAllRecentSearches{}
+		x = &ClientRemoveAllRecentSearches{}
 	}
 	return x
 }
 
 func (p *poolClientRemoveAllRecentSearches) Put(x *ClientRemoveAllRecentSearches) {
+	if x == nil {
+		return
+	}
 	x.Extra = false
 	p.pool.Put(x)
 }
@@ -566,12 +622,15 @@ type poolClientGetSavedGifs struct {
 func (p *poolClientGetSavedGifs) Get() *ClientGetSavedGifs {
 	x, ok := p.pool.Get().(*ClientGetSavedGifs)
 	if !ok {
-		return &ClientGetSavedGifs{}
+		x = &ClientGetSavedGifs{}
 	}
 	return x
 }
 
 func (p *poolClientGetSavedGifs) Put(x *ClientGetSavedGifs) {
+	if x == nil {
+		return
+	}
 	p.pool.Put(x)
 }
 
@@ -601,16 +660,17 @@ type poolClientGetTeamCounters struct {
 func (p *poolClientGetTeamCounters) Get() *ClientGetTeamCounters {
 	x, ok := p.pool.Get().(*ClientGetTeamCounters)
 	if !ok {
-		return &ClientGetTeamCounters{}
+		x = &ClientGetTeamCounters{}
 	}
 	return x
 }
 
 func (p *poolClientGetTeamCounters) Put(x *ClientGetTeamCounters) {
-	if x.Team != nil {
-		PoolInputTeam.Put(x.Team)
-		x.Team = nil
+	if x == nil {
+		return
 	}
+	PoolInputTeam.Put(x.Team)
+	x.Team = nil
 	x.WithMutes = false
 	p.pool.Put(x)
 }
@@ -619,8 +679,12 @@ var PoolClientGetTeamCounters = poolClientGetTeamCounters{}
 
 func (x *ClientGetTeamCounters) DeepCopy(z *ClientGetTeamCounters) {
 	if x.Team != nil {
-		z.Team = PoolInputTeam.Get()
+		if z.Team == nil {
+			z.Team = PoolInputTeam.Get()
+		}
 		x.Team.DeepCopy(z.Team)
+	} else {
+		z.Team = nil
 	}
 	z.WithMutes = x.WithMutes
 }
@@ -646,12 +710,15 @@ type poolClientPendingMessage struct {
 func (p *poolClientPendingMessage) Get() *ClientPendingMessage {
 	x, ok := p.pool.Get().(*ClientPendingMessage)
 	if !ok {
-		return &ClientPendingMessage{}
+		x = &ClientPendingMessage{}
 	}
 	return x
 }
 
 func (p *poolClientPendingMessage) Put(x *ClientPendingMessage) {
+	if x == nil {
+		return
+	}
 	x.ID = 0
 	x.RequestID = 0
 	x.PeerID = 0
@@ -661,6 +728,9 @@ func (p *poolClientPendingMessage) Put(x *ClientPendingMessage) {
 	x.ReplyTo = 0
 	x.Body = ""
 	x.SenderID = 0
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
+	}
 	x.Entities = x.Entities[:0]
 	x.MediaType = 0
 	x.Media = x.Media[:0]
@@ -670,10 +740,8 @@ func (p *poolClientPendingMessage) Put(x *ClientPendingMessage) {
 	x.FileID = 0
 	x.ThumbID = 0
 	x.Sha256 = x.Sha256[:0]
-	if x.ServerFile != nil {
-		PoolFileLocation.Put(x.ServerFile)
-		x.ServerFile = nil
-	}
+	PoolFileLocation.Put(x.ServerFile)
+	x.ServerFile = nil
 	x.TeamID = 0
 	x.TeamAccessHash = 0
 	x.TinyThumb = x.TinyThumb[:0]
@@ -708,8 +776,12 @@ func (x *ClientPendingMessage) DeepCopy(z *ClientPendingMessage) {
 	z.ThumbID = x.ThumbID
 	z.Sha256 = append(z.Sha256[:0], x.Sha256...)
 	if x.ServerFile != nil {
-		z.ServerFile = PoolFileLocation.Get()
+		if z.ServerFile == nil {
+			z.ServerFile = PoolFileLocation.Get()
+		}
 		x.ServerFile.DeepCopy(z.ServerFile)
+	} else {
+		z.ServerFile = nil
 	}
 	z.TeamID = x.TeamID
 	z.TeamAccessHash = x.TeamAccessHash
@@ -737,16 +809,34 @@ type poolClientSearchResult struct {
 func (p *poolClientSearchResult) Get() *ClientSearchResult {
 	x, ok := p.pool.Get().(*ClientSearchResult)
 	if !ok {
-		return &ClientSearchResult{}
+		x = &ClientSearchResult{}
 	}
 	return x
 }
 
 func (p *poolClientSearchResult) Put(x *ClientSearchResult) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Messages {
+		PoolUserMessage.Put(z)
+	}
 	x.Messages = x.Messages[:0]
+	for _, z := range x.Users {
+		PoolUser.Put(z)
+	}
 	x.Users = x.Users[:0]
+	for _, z := range x.Groups {
+		PoolGroup.Put(z)
+	}
 	x.Groups = x.Groups[:0]
+	for _, z := range x.MatchedUsers {
+		PoolUser.Put(z)
+	}
 	x.MatchedUsers = x.MatchedUsers[:0]
+	for _, z := range x.MatchedGroups {
+		PoolGroup.Put(z)
+	}
 	x.MatchedGroups = x.MatchedGroups[:0]
 	p.pool.Put(x)
 }
@@ -812,12 +902,18 @@ type poolClientFilesMany struct {
 func (p *poolClientFilesMany) Get() *ClientFilesMany {
 	x, ok := p.pool.Get().(*ClientFilesMany)
 	if !ok {
-		return &ClientFilesMany{}
+		x = &ClientFilesMany{}
 	}
 	return x
 }
 
 func (p *poolClientFilesMany) Put(x *ClientFilesMany) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Gifs {
+		PoolClientFile.Put(z)
+	}
 	x.Gifs = x.Gifs[:0]
 	x.Total = 0
 	p.pool.Put(x)
@@ -857,12 +953,15 @@ type poolClientFile struct {
 func (p *poolClientFile) Get() *ClientFile {
 	x, ok := p.pool.Get().(*ClientFile)
 	if !ok {
-		return &ClientFile{}
+		x = &ClientFile{}
 	}
 	return x
 }
 
 func (p *poolClientFile) Put(x *ClientFile) {
+	if x == nil {
+		return
+	}
 	x.ClusterID = 0
 	x.FileID = 0
 	x.AccessHash = 0
@@ -878,6 +977,9 @@ func (p *poolClientFile) Put(x *ClientFile) {
 	x.Extension = ""
 	x.MD5Checksum = ""
 	x.WallpaperID = 0
+	for _, z := range x.Attributes {
+		PoolDocumentAttribute.Put(z)
+	}
 	x.Attributes = x.Attributes[:0]
 	p.pool.Put(x)
 }
@@ -930,16 +1032,17 @@ type poolClientFileRequest struct {
 func (p *poolClientFileRequest) Get() *ClientFileRequest {
 	x, ok := p.pool.Get().(*ClientFileRequest)
 	if !ok {
-		return &ClientFileRequest{}
+		x = &ClientFileRequest{}
 	}
 	return x
 }
 
 func (p *poolClientFileRequest) Put(x *ClientFileRequest) {
-	if x.Next != nil {
-		PoolClientFileRequest.Put(x.Next)
-		x.Next = nil
+	if x == nil {
+		return
 	}
+	PoolClientFileRequest.Put(x.Next)
+	x.Next = nil
 	x.PeerID = 0
 	x.PeerType = 0
 	x.MessageID = 0
@@ -967,8 +1070,12 @@ var PoolClientFileRequest = poolClientFileRequest{}
 
 func (x *ClientFileRequest) DeepCopy(z *ClientFileRequest) {
 	if x.Next != nil {
-		z.Next = PoolClientFileRequest.Get()
+		if z.Next == nil {
+			z.Next = PoolClientFileRequest.Get()
+		}
 		x.Next.DeepCopy(z.Next)
+	} else {
+		z.Next = nil
 	}
 	z.PeerID = x.PeerID
 	z.PeerType = x.PeerType
@@ -1013,12 +1120,15 @@ type poolClientFileStatus struct {
 func (p *poolClientFileStatus) Get() *ClientFileStatus {
 	x, ok := p.pool.Get().(*ClientFileStatus)
 	if !ok {
-		return &ClientFileStatus{}
+		x = &ClientFileStatus{}
 	}
 	return x
 }
 
 func (p *poolClientFileStatus) Put(x *ClientFileStatus) {
+	if x == nil {
+		return
+	}
 	x.Status = 0
 	x.Progress = 0
 	x.FilePath = ""
@@ -1054,12 +1164,18 @@ type poolClientCachedMediaInfo struct {
 func (p *poolClientCachedMediaInfo) Get() *ClientCachedMediaInfo {
 	x, ok := p.pool.Get().(*ClientCachedMediaInfo)
 	if !ok {
-		return &ClientCachedMediaInfo{}
+		x = &ClientCachedMediaInfo{}
 	}
 	return x
 }
 
 func (p *poolClientCachedMediaInfo) Put(x *ClientCachedMediaInfo) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.MediaInfo {
+		PoolClientPeerMediaInfo.Put(z)
+	}
 	x.MediaInfo = x.MediaInfo[:0]
 	p.pool.Put(x)
 }
@@ -1097,14 +1213,20 @@ type poolClientPeerMediaInfo struct {
 func (p *poolClientPeerMediaInfo) Get() *ClientPeerMediaInfo {
 	x, ok := p.pool.Get().(*ClientPeerMediaInfo)
 	if !ok {
-		return &ClientPeerMediaInfo{}
+		x = &ClientPeerMediaInfo{}
 	}
 	return x
 }
 
 func (p *poolClientPeerMediaInfo) Put(x *ClientPeerMediaInfo) {
+	if x == nil {
+		return
+	}
 	x.PeerID = 0
 	x.PeerType = 0
+	for _, z := range x.Media {
+		PoolClientMediaSize.Put(z)
+	}
 	x.Media = x.Media[:0]
 	p.pool.Put(x)
 }
@@ -1144,12 +1266,15 @@ type poolClientMediaSize struct {
 func (p *poolClientMediaSize) Get() *ClientMediaSize {
 	x, ok := p.pool.Get().(*ClientMediaSize)
 	if !ok {
-		return &ClientMediaSize{}
+		x = &ClientMediaSize{}
 	}
 	return x
 }
 
 func (p *poolClientMediaSize) Put(x *ClientMediaSize) {
+	if x == nil {
+		return
+	}
 	x.MediaType = 0
 	x.TotalSize = 0
 	p.pool.Put(x)
@@ -1183,16 +1308,17 @@ type poolClientRecentSearch struct {
 func (p *poolClientRecentSearch) Get() *ClientRecentSearch {
 	x, ok := p.pool.Get().(*ClientRecentSearch)
 	if !ok {
-		return &ClientRecentSearch{}
+		x = &ClientRecentSearch{}
 	}
 	return x
 }
 
 func (p *poolClientRecentSearch) Put(x *ClientRecentSearch) {
-	if x.Peer != nil {
-		PoolPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolPeer.Put(x.Peer)
+	x.Peer = nil
 	x.Date = 0
 	p.pool.Put(x)
 }
@@ -1201,8 +1327,12 @@ var PoolClientRecentSearch = poolClientRecentSearch{}
 
 func (x *ClientRecentSearch) DeepCopy(z *ClientRecentSearch) {
 	if x.Peer != nil {
-		z.Peer = PoolPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Date = x.Date
 }
@@ -1228,14 +1358,26 @@ type poolClientRecentSearchMany struct {
 func (p *poolClientRecentSearchMany) Get() *ClientRecentSearchMany {
 	x, ok := p.pool.Get().(*ClientRecentSearchMany)
 	if !ok {
-		return &ClientRecentSearchMany{}
+		x = &ClientRecentSearchMany{}
 	}
 	return x
 }
 
 func (p *poolClientRecentSearchMany) Put(x *ClientRecentSearchMany) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.RecentSearches {
+		PoolClientRecentSearch.Put(z)
+	}
 	x.RecentSearches = x.RecentSearches[:0]
+	for _, z := range x.Users {
+		PoolUser.Put(z)
+	}
 	x.Users = x.Users[:0]
+	for _, z := range x.Groups {
+		PoolGroup.Put(z)
+	}
 	x.Groups = x.Groups[:0]
 	p.pool.Put(x)
 }
@@ -1287,12 +1429,15 @@ type poolClientTeamCounters struct {
 func (p *poolClientTeamCounters) Get() *ClientTeamCounters {
 	x, ok := p.pool.Get().(*ClientTeamCounters)
 	if !ok {
-		return &ClientTeamCounters{}
+		x = &ClientTeamCounters{}
 	}
 	return x
 }
 
 func (p *poolClientTeamCounters) Put(x *ClientTeamCounters) {
+	if x == nil {
+		return
+	}
 	x.UnreadCount = 0
 	x.MentionCount = 0
 	p.pool.Put(x)
@@ -1326,12 +1471,15 @@ type poolClientGetFrequentReactions struct {
 func (p *poolClientGetFrequentReactions) Get() *ClientGetFrequentReactions {
 	x, ok := p.pool.Get().(*ClientGetFrequentReactions)
 	if !ok {
-		return &ClientGetFrequentReactions{}
+		x = &ClientGetFrequentReactions{}
 	}
 	return x
 }
 
 func (p *poolClientGetFrequentReactions) Put(x *ClientGetFrequentReactions) {
+	if x == nil {
+		return
+	}
 	p.pool.Put(x)
 }
 
@@ -1361,12 +1509,15 @@ type poolClientFrequentReactions struct {
 func (p *poolClientFrequentReactions) Get() *ClientFrequentReactions {
 	x, ok := p.pool.Get().(*ClientFrequentReactions)
 	if !ok {
-		return &ClientFrequentReactions{}
+		x = &ClientFrequentReactions{}
 	}
 	return x
 }
 
 func (p *poolClientFrequentReactions) Put(x *ClientFrequentReactions) {
+	if x == nil {
+		return
+	}
 	x.Reactions = x.Reactions[:0]
 	p.pool.Put(x)
 }
@@ -1398,16 +1549,17 @@ type poolClientDismissNotification struct {
 func (p *poolClientDismissNotification) Get() *ClientDismissNotification {
 	x, ok := p.pool.Get().(*ClientDismissNotification)
 	if !ok {
-		return &ClientDismissNotification{}
+		x = &ClientDismissNotification{}
 	}
 	return x
 }
 
 func (p *poolClientDismissNotification) Put(x *ClientDismissNotification) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.Ts = 0
 	p.pool.Put(x)
 }
@@ -1416,8 +1568,12 @@ var PoolClientDismissNotification = poolClientDismissNotification{}
 
 func (x *ClientDismissNotification) DeepCopy(z *ClientDismissNotification) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Ts = x.Ts
 }
@@ -1443,16 +1599,17 @@ type poolClientGetNotificationDismissTime struct {
 func (p *poolClientGetNotificationDismissTime) Get() *ClientGetNotificationDismissTime {
 	x, ok := p.pool.Get().(*ClientGetNotificationDismissTime)
 	if !ok {
-		return &ClientGetNotificationDismissTime{}
+		x = &ClientGetNotificationDismissTime{}
 	}
 	return x
 }
 
 func (p *poolClientGetNotificationDismissTime) Put(x *ClientGetNotificationDismissTime) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	p.pool.Put(x)
 }
 
@@ -1460,8 +1617,12 @@ var PoolClientGetNotificationDismissTime = poolClientGetNotificationDismissTime{
 
 func (x *ClientGetNotificationDismissTime) DeepCopy(z *ClientGetNotificationDismissTime) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 }
 
@@ -1486,12 +1647,15 @@ type poolClientNotificationDismissTime struct {
 func (p *poolClientNotificationDismissTime) Get() *ClientNotificationDismissTime {
 	x, ok := p.pool.Get().(*ClientNotificationDismissTime)
 	if !ok {
-		return &ClientNotificationDismissTime{}
+		x = &ClientNotificationDismissTime{}
 	}
 	return x
 }
 
 func (p *poolClientNotificationDismissTime) Put(x *ClientNotificationDismissTime) {
+	if x == nil {
+		return
+	}
 	x.Ts = 0
 	p.pool.Put(x)
 }

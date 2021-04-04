@@ -18,21 +18,25 @@ type poolServiceSendMessage struct {
 func (p *poolServiceSendMessage) Get() *ServiceSendMessage {
 	x, ok := p.pool.Get().(*ServiceSendMessage)
 	if !ok {
-		return &ServiceSendMessage{}
+		x = &ServiceSendMessage{}
 	}
 	return x
 }
 
 func (p *poolServiceSendMessage) Put(x *ServiceSendMessage) {
+	if x == nil {
+		return
+	}
 	x.OnBehalf = 0
 	x.RandomID = 0
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
-	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.Body = ""
 	x.ReplyTo = 0
 	x.ClearDraft = false
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
+	}
 	x.Entities = x.Entities[:0]
 	p.pool.Put(x)
 }
@@ -43,8 +47,12 @@ func (x *ServiceSendMessage) DeepCopy(z *ServiceSendMessage) {
 	z.OnBehalf = x.OnBehalf
 	z.RandomID = x.RandomID
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Body = x.Body
 	z.ReplyTo = x.ReplyTo

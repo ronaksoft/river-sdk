@@ -18,15 +18,21 @@ type poolReplyKeyboardMarkup struct {
 func (p *poolReplyKeyboardMarkup) Get() *ReplyKeyboardMarkup {
 	x, ok := p.pool.Get().(*ReplyKeyboardMarkup)
 	if !ok {
-		return &ReplyKeyboardMarkup{}
+		x = &ReplyKeyboardMarkup{}
 	}
 	return x
 }
 
 func (p *poolReplyKeyboardMarkup) Put(x *ReplyKeyboardMarkup) {
+	if x == nil {
+		return
+	}
 	x.SingleUse = false
 	x.Selective = false
 	x.Resize = false
+	for _, z := range x.Rows {
+		PoolKeyboardButtonRow.Put(z)
+	}
 	x.Rows = x.Rows[:0]
 	p.pool.Put(x)
 }
@@ -67,12 +73,18 @@ type poolReplyInlineMarkup struct {
 func (p *poolReplyInlineMarkup) Get() *ReplyInlineMarkup {
 	x, ok := p.pool.Get().(*ReplyInlineMarkup)
 	if !ok {
-		return &ReplyInlineMarkup{}
+		x = &ReplyInlineMarkup{}
 	}
 	return x
 }
 
 func (p *poolReplyInlineMarkup) Put(x *ReplyInlineMarkup) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Rows {
+		PoolKeyboardButtonRow.Put(z)
+	}
 	x.Rows = x.Rows[:0]
 	p.pool.Put(x)
 }
@@ -110,12 +122,15 @@ type poolReplyKeyboardHide struct {
 func (p *poolReplyKeyboardHide) Get() *ReplyKeyboardHide {
 	x, ok := p.pool.Get().(*ReplyKeyboardHide)
 	if !ok {
-		return &ReplyKeyboardHide{}
+		x = &ReplyKeyboardHide{}
 	}
 	return x
 }
 
 func (p *poolReplyKeyboardHide) Put(x *ReplyKeyboardHide) {
+	if x == nil {
+		return
+	}
 	x.Selective = false
 	p.pool.Put(x)
 }
@@ -147,12 +162,15 @@ type poolReplyKeyboardForceReply struct {
 func (p *poolReplyKeyboardForceReply) Get() *ReplyKeyboardForceReply {
 	x, ok := p.pool.Get().(*ReplyKeyboardForceReply)
 	if !ok {
-		return &ReplyKeyboardForceReply{}
+		x = &ReplyKeyboardForceReply{}
 	}
 	return x
 }
 
 func (p *poolReplyKeyboardForceReply) Put(x *ReplyKeyboardForceReply) {
+	if x == nil {
+		return
+	}
 	x.SingleUse = false
 	x.Selective = false
 	p.pool.Put(x)
@@ -186,12 +204,18 @@ type poolKeyboardButtonRow struct {
 func (p *poolKeyboardButtonRow) Get() *KeyboardButtonRow {
 	x, ok := p.pool.Get().(*KeyboardButtonRow)
 	if !ok {
-		return &KeyboardButtonRow{}
+		x = &KeyboardButtonRow{}
 	}
 	return x
 }
 
 func (p *poolKeyboardButtonRow) Put(x *KeyboardButtonRow) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Buttons {
+		PoolKeyboardButtonEnvelope.Put(z)
+	}
 	x.Buttons = x.Buttons[:0]
 	p.pool.Put(x)
 }
@@ -229,12 +253,15 @@ type poolKeyboardButtonEnvelope struct {
 func (p *poolKeyboardButtonEnvelope) Get() *KeyboardButtonEnvelope {
 	x, ok := p.pool.Get().(*KeyboardButtonEnvelope)
 	if !ok {
-		return &KeyboardButtonEnvelope{}
+		x = &KeyboardButtonEnvelope{}
 	}
 	return x
 }
 
 func (p *poolKeyboardButtonEnvelope) Put(x *KeyboardButtonEnvelope) {
+	if x == nil {
+		return
+	}
 	x.Constructor = 0
 	x.Data = x.Data[:0]
 	p.pool.Put(x)
@@ -268,12 +295,15 @@ type poolButton struct {
 func (p *poolButton) Get() *Button {
 	x, ok := p.pool.Get().(*Button)
 	if !ok {
-		return &Button{}
+		x = &Button{}
 	}
 	return x
 }
 
 func (p *poolButton) Put(x *Button) {
+	if x == nil {
+		return
+	}
 	x.Text = ""
 	p.pool.Put(x)
 }
@@ -305,12 +335,15 @@ type poolButtonUrl struct {
 func (p *poolButtonUrl) Get() *ButtonUrl {
 	x, ok := p.pool.Get().(*ButtonUrl)
 	if !ok {
-		return &ButtonUrl{}
+		x = &ButtonUrl{}
 	}
 	return x
 }
 
 func (p *poolButtonUrl) Put(x *ButtonUrl) {
+	if x == nil {
+		return
+	}
 	x.Text = ""
 	x.Url = ""
 	p.pool.Put(x)
@@ -344,12 +377,15 @@ type poolButtonCallback struct {
 func (p *poolButtonCallback) Get() *ButtonCallback {
 	x, ok := p.pool.Get().(*ButtonCallback)
 	if !ok {
-		return &ButtonCallback{}
+		x = &ButtonCallback{}
 	}
 	return x
 }
 
 func (p *poolButtonCallback) Put(x *ButtonCallback) {
+	if x == nil {
+		return
+	}
 	x.Text = ""
 	x.Data = x.Data[:0]
 	p.pool.Put(x)
@@ -383,12 +419,15 @@ type poolButtonRequestPhone struct {
 func (p *poolButtonRequestPhone) Get() *ButtonRequestPhone {
 	x, ok := p.pool.Get().(*ButtonRequestPhone)
 	if !ok {
-		return &ButtonRequestPhone{}
+		x = &ButtonRequestPhone{}
 	}
 	return x
 }
 
 func (p *poolButtonRequestPhone) Put(x *ButtonRequestPhone) {
+	if x == nil {
+		return
+	}
 	x.Text = ""
 	p.pool.Put(x)
 }
@@ -420,12 +459,15 @@ type poolButtonRequestGeoLocation struct {
 func (p *poolButtonRequestGeoLocation) Get() *ButtonRequestGeoLocation {
 	x, ok := p.pool.Get().(*ButtonRequestGeoLocation)
 	if !ok {
-		return &ButtonRequestGeoLocation{}
+		x = &ButtonRequestGeoLocation{}
 	}
 	return x
 }
 
 func (p *poolButtonRequestGeoLocation) Put(x *ButtonRequestGeoLocation) {
+	if x == nil {
+		return
+	}
 	x.Text = ""
 	p.pool.Put(x)
 }
@@ -457,12 +499,15 @@ type poolButtonSwitchInline struct {
 func (p *poolButtonSwitchInline) Get() *ButtonSwitchInline {
 	x, ok := p.pool.Get().(*ButtonSwitchInline)
 	if !ok {
-		return &ButtonSwitchInline{}
+		x = &ButtonSwitchInline{}
 	}
 	return x
 }
 
 func (p *poolButtonSwitchInline) Put(x *ButtonSwitchInline) {
+	if x == nil {
+		return
+	}
 	x.Text = ""
 	x.Query = ""
 	x.SamePeer = false
@@ -498,12 +543,15 @@ type poolButtonBuy struct {
 func (p *poolButtonBuy) Get() *ButtonBuy {
 	x, ok := p.pool.Get().(*ButtonBuy)
 	if !ok {
-		return &ButtonBuy{}
+		x = &ButtonBuy{}
 	}
 	return x
 }
 
 func (p *poolButtonBuy) Put(x *ButtonBuy) {
+	if x == nil {
+		return
+	}
 	x.Text = ""
 	p.pool.Put(x)
 }

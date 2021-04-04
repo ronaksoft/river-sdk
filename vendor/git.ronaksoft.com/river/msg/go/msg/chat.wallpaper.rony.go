@@ -18,12 +18,15 @@ type poolWallPaperGet struct {
 func (p *poolWallPaperGet) Get() *WallPaperGet {
 	x, ok := p.pool.Get().(*WallPaperGet)
 	if !ok {
-		return &WallPaperGet{}
+		x = &WallPaperGet{}
 	}
 	return x
 }
 
 func (p *poolWallPaperGet) Put(x *WallPaperGet) {
+	if x == nil {
+		return
+	}
 	x.Crc32Hash = 0
 	p.pool.Put(x)
 }
@@ -55,20 +58,19 @@ type poolWallPaperSave struct {
 func (p *poolWallPaperSave) Get() *WallPaperSave {
 	x, ok := p.pool.Get().(*WallPaperSave)
 	if !ok {
-		return &WallPaperSave{}
+		x = &WallPaperSave{}
 	}
 	return x
 }
 
 func (p *poolWallPaperSave) Put(x *WallPaperSave) {
-	if x.WallPaper != nil {
-		PoolInputWallPaper.Put(x.WallPaper)
-		x.WallPaper = nil
+	if x == nil {
+		return
 	}
-	if x.Settings != nil {
-		PoolWallPaperSettings.Put(x.Settings)
-		x.Settings = nil
-	}
+	PoolInputWallPaper.Put(x.WallPaper)
+	x.WallPaper = nil
+	PoolWallPaperSettings.Put(x.Settings)
+	x.Settings = nil
 	p.pool.Put(x)
 }
 
@@ -76,12 +78,20 @@ var PoolWallPaperSave = poolWallPaperSave{}
 
 func (x *WallPaperSave) DeepCopy(z *WallPaperSave) {
 	if x.WallPaper != nil {
-		z.WallPaper = PoolInputWallPaper.Get()
+		if z.WallPaper == nil {
+			z.WallPaper = PoolInputWallPaper.Get()
+		}
 		x.WallPaper.DeepCopy(z.WallPaper)
+	} else {
+		z.WallPaper = nil
 	}
 	if x.Settings != nil {
-		z.Settings = PoolWallPaperSettings.Get()
+		if z.Settings == nil {
+			z.Settings = PoolWallPaperSettings.Get()
+		}
 		x.Settings.DeepCopy(z.Settings)
+	} else {
+		z.Settings = nil
 	}
 }
 
@@ -106,16 +116,17 @@ type poolWallPaperDelete struct {
 func (p *poolWallPaperDelete) Get() *WallPaperDelete {
 	x, ok := p.pool.Get().(*WallPaperDelete)
 	if !ok {
-		return &WallPaperDelete{}
+		x = &WallPaperDelete{}
 	}
 	return x
 }
 
 func (p *poolWallPaperDelete) Put(x *WallPaperDelete) {
-	if x.WallPaper != nil {
-		PoolInputWallPaper.Put(x.WallPaper)
-		x.WallPaper = nil
+	if x == nil {
+		return
 	}
+	PoolInputWallPaper.Put(x.WallPaper)
+	x.WallPaper = nil
 	p.pool.Put(x)
 }
 
@@ -123,8 +134,12 @@ var PoolWallPaperDelete = poolWallPaperDelete{}
 
 func (x *WallPaperDelete) DeepCopy(z *WallPaperDelete) {
 	if x.WallPaper != nil {
-		z.WallPaper = PoolInputWallPaper.Get()
+		if z.WallPaper == nil {
+			z.WallPaper = PoolInputWallPaper.Get()
+		}
 		x.WallPaper.DeepCopy(z.WallPaper)
+	} else {
+		z.WallPaper = nil
 	}
 }
 
@@ -149,25 +164,22 @@ type poolWallPaperUpload struct {
 func (p *poolWallPaperUpload) Get() *WallPaperUpload {
 	x, ok := p.pool.Get().(*WallPaperUpload)
 	if !ok {
-		return &WallPaperUpload{}
+		x = &WallPaperUpload{}
 	}
 	return x
 }
 
 func (p *poolWallPaperUpload) Put(x *WallPaperUpload) {
-	if x.UploadedFile != nil {
-		PoolInputFile.Put(x.UploadedFile)
-		x.UploadedFile = nil
+	if x == nil {
+		return
 	}
-	if x.File != nil {
-		PoolInputDocument.Put(x.File)
-		x.File = nil
-	}
+	PoolInputFile.Put(x.UploadedFile)
+	x.UploadedFile = nil
+	PoolInputDocument.Put(x.File)
+	x.File = nil
 	x.MimeType = ""
-	if x.Settings != nil {
-		PoolWallPaperSettings.Put(x.Settings)
-		x.Settings = nil
-	}
+	PoolWallPaperSettings.Put(x.Settings)
+	x.Settings = nil
 	p.pool.Put(x)
 }
 
@@ -175,17 +187,29 @@ var PoolWallPaperUpload = poolWallPaperUpload{}
 
 func (x *WallPaperUpload) DeepCopy(z *WallPaperUpload) {
 	if x.UploadedFile != nil {
-		z.UploadedFile = PoolInputFile.Get()
+		if z.UploadedFile == nil {
+			z.UploadedFile = PoolInputFile.Get()
+		}
 		x.UploadedFile.DeepCopy(z.UploadedFile)
+	} else {
+		z.UploadedFile = nil
 	}
 	if x.File != nil {
-		z.File = PoolInputDocument.Get()
+		if z.File == nil {
+			z.File = PoolInputDocument.Get()
+		}
 		x.File.DeepCopy(z.File)
+	} else {
+		z.File = nil
 	}
 	z.MimeType = x.MimeType
 	if x.Settings != nil {
-		z.Settings = PoolWallPaperSettings.Get()
+		if z.Settings == nil {
+			z.Settings = PoolWallPaperSettings.Get()
+		}
 		x.Settings.DeepCopy(z.Settings)
+	} else {
+		z.Settings = nil
 	}
 }
 
@@ -210,12 +234,15 @@ type poolWallPaperReset struct {
 func (p *poolWallPaperReset) Get() *WallPaperReset {
 	x, ok := p.pool.Get().(*WallPaperReset)
 	if !ok {
-		return &WallPaperReset{}
+		x = &WallPaperReset{}
 	}
 	return x
 }
 
 func (p *poolWallPaperReset) Put(x *WallPaperReset) {
+	if x == nil {
+		return
+	}
 	p.pool.Put(x)
 }
 
@@ -245,12 +272,15 @@ type poolInputWallPaper struct {
 func (p *poolInputWallPaper) Get() *InputWallPaper {
 	x, ok := p.pool.Get().(*InputWallPaper)
 	if !ok {
-		return &InputWallPaper{}
+		x = &InputWallPaper{}
 	}
 	return x
 }
 
 func (p *poolInputWallPaper) Put(x *InputWallPaper) {
+	if x == nil {
+		return
+	}
 	x.ID = 0
 	x.AccessHash = 0
 	p.pool.Put(x)
@@ -284,12 +314,15 @@ type poolWallPaperSettings struct {
 func (p *poolWallPaperSettings) Get() *WallPaperSettings {
 	x, ok := p.pool.Get().(*WallPaperSettings)
 	if !ok {
-		return &WallPaperSettings{}
+		x = &WallPaperSettings{}
 	}
 	return x
 }
 
 func (p *poolWallPaperSettings) Put(x *WallPaperSettings) {
+	if x == nil {
+		return
+	}
 	x.Blur = false
 	x.Motion = false
 	x.BackgroundColour = 0
@@ -331,26 +364,25 @@ type poolWallPaper struct {
 func (p *poolWallPaper) Get() *WallPaper {
 	x, ok := p.pool.Get().(*WallPaper)
 	if !ok {
-		return &WallPaper{}
+		x = &WallPaper{}
 	}
 	return x
 }
 
 func (p *poolWallPaper) Put(x *WallPaper) {
+	if x == nil {
+		return
+	}
 	x.ID = 0
 	x.AccessHash = 0
 	x.Creator = false
 	x.Default = false
 	x.Pattern = false
 	x.Dark = false
-	if x.Document != nil {
-		PoolDocument.Put(x.Document)
-		x.Document = nil
-	}
-	if x.Settings != nil {
-		PoolWallPaperSettings.Put(x.Settings)
-		x.Settings = nil
-	}
+	PoolDocument.Put(x.Document)
+	x.Document = nil
+	PoolWallPaperSettings.Put(x.Settings)
+	x.Settings = nil
 	p.pool.Put(x)
 }
 
@@ -364,12 +396,20 @@ func (x *WallPaper) DeepCopy(z *WallPaper) {
 	z.Pattern = x.Pattern
 	z.Dark = x.Dark
 	if x.Document != nil {
-		z.Document = PoolDocument.Get()
+		if z.Document == nil {
+			z.Document = PoolDocument.Get()
+		}
 		x.Document.DeepCopy(z.Document)
+	} else {
+		z.Document = nil
 	}
 	if x.Settings != nil {
-		z.Settings = PoolWallPaperSettings.Get()
+		if z.Settings == nil {
+			z.Settings = PoolWallPaperSettings.Get()
+		}
 		x.Settings.DeepCopy(z.Settings)
+	} else {
+		z.Settings = nil
 	}
 }
 
@@ -394,12 +434,18 @@ type poolWallPapersMany struct {
 func (p *poolWallPapersMany) Get() *WallPapersMany {
 	x, ok := p.pool.Get().(*WallPapersMany)
 	if !ok {
-		return &WallPapersMany{}
+		x = &WallPapersMany{}
 	}
 	return x
 }
 
 func (p *poolWallPapersMany) Put(x *WallPapersMany) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.WallPapers {
+		PoolWallPaper.Put(z)
+	}
 	x.WallPapers = x.WallPapers[:0]
 	x.Count = 0
 	x.Crc32Hash = 0

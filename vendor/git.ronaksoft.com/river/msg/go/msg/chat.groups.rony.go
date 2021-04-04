@@ -18,12 +18,18 @@ type poolGroupsCreate struct {
 func (p *poolGroupsCreate) Get() *GroupsCreate {
 	x, ok := p.pool.Get().(*GroupsCreate)
 	if !ok {
-		return &GroupsCreate{}
+		x = &GroupsCreate{}
 	}
 	return x
 }
 
 func (p *poolGroupsCreate) Put(x *GroupsCreate) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Users {
+		PoolInputUser.Put(z)
+	}
 	x.Users = x.Users[:0]
 	x.Title = ""
 	x.RandomID = 0
@@ -65,17 +71,18 @@ type poolGroupsAddUser struct {
 func (p *poolGroupsAddUser) Get() *GroupsAddUser {
 	x, ok := p.pool.Get().(*GroupsAddUser)
 	if !ok {
-		return &GroupsAddUser{}
+		x = &GroupsAddUser{}
 	}
 	return x
 }
 
 func (p *poolGroupsAddUser) Put(x *GroupsAddUser) {
-	x.GroupID = 0
-	if x.User != nil {
-		PoolInputUser.Put(x.User)
-		x.User = nil
+	if x == nil {
+		return
 	}
+	x.GroupID = 0
+	PoolInputUser.Put(x.User)
+	x.User = nil
 	x.ForwardLimit = 0
 	p.pool.Put(x)
 }
@@ -85,8 +92,12 @@ var PoolGroupsAddUser = poolGroupsAddUser{}
 func (x *GroupsAddUser) DeepCopy(z *GroupsAddUser) {
 	z.GroupID = x.GroupID
 	if x.User != nil {
-		z.User = PoolInputUser.Get()
+		if z.User == nil {
+			z.User = PoolInputUser.Get()
+		}
 		x.User.DeepCopy(z.User)
+	} else {
+		z.User = nil
 	}
 	z.ForwardLimit = x.ForwardLimit
 }
@@ -112,12 +123,15 @@ type poolGroupsEditTitle struct {
 func (p *poolGroupsEditTitle) Get() *GroupsEditTitle {
 	x, ok := p.pool.Get().(*GroupsEditTitle)
 	if !ok {
-		return &GroupsEditTitle{}
+		x = &GroupsEditTitle{}
 	}
 	return x
 }
 
 func (p *poolGroupsEditTitle) Put(x *GroupsEditTitle) {
+	if x == nil {
+		return
+	}
 	x.GroupID = 0
 	x.Title = ""
 	p.pool.Put(x)
@@ -151,17 +165,18 @@ type poolGroupsDeleteUser struct {
 func (p *poolGroupsDeleteUser) Get() *GroupsDeleteUser {
 	x, ok := p.pool.Get().(*GroupsDeleteUser)
 	if !ok {
-		return &GroupsDeleteUser{}
+		x = &GroupsDeleteUser{}
 	}
 	return x
 }
 
 func (p *poolGroupsDeleteUser) Put(x *GroupsDeleteUser) {
-	x.GroupID = 0
-	if x.User != nil {
-		PoolInputUser.Put(x.User)
-		x.User = nil
+	if x == nil {
+		return
 	}
+	x.GroupID = 0
+	PoolInputUser.Put(x.User)
+	x.User = nil
 	p.pool.Put(x)
 }
 
@@ -170,8 +185,12 @@ var PoolGroupsDeleteUser = poolGroupsDeleteUser{}
 func (x *GroupsDeleteUser) DeepCopy(z *GroupsDeleteUser) {
 	z.GroupID = x.GroupID
 	if x.User != nil {
-		z.User = PoolInputUser.Get()
+		if z.User == nil {
+			z.User = PoolInputUser.Get()
+		}
 		x.User.DeepCopy(z.User)
+	} else {
+		z.User = nil
 	}
 }
 
@@ -196,12 +215,15 @@ type poolGroupsGetFull struct {
 func (p *poolGroupsGetFull) Get() *GroupsGetFull {
 	x, ok := p.pool.Get().(*GroupsGetFull)
 	if !ok {
-		return &GroupsGetFull{}
+		x = &GroupsGetFull{}
 	}
 	return x
 }
 
 func (p *poolGroupsGetFull) Put(x *GroupsGetFull) {
+	if x == nil {
+		return
+	}
 	x.GroupID = 0
 	p.pool.Put(x)
 }
@@ -233,12 +255,15 @@ type poolGroupsToggleAdmins struct {
 func (p *poolGroupsToggleAdmins) Get() *GroupsToggleAdmins {
 	x, ok := p.pool.Get().(*GroupsToggleAdmins)
 	if !ok {
-		return &GroupsToggleAdmins{}
+		x = &GroupsToggleAdmins{}
 	}
 	return x
 }
 
 func (p *poolGroupsToggleAdmins) Put(x *GroupsToggleAdmins) {
+	if x == nil {
+		return
+	}
 	x.GroupID = 0
 	x.AdminEnabled = false
 	p.pool.Put(x)
@@ -272,17 +297,18 @@ type poolGroupsUpdateAdmin struct {
 func (p *poolGroupsUpdateAdmin) Get() *GroupsUpdateAdmin {
 	x, ok := p.pool.Get().(*GroupsUpdateAdmin)
 	if !ok {
-		return &GroupsUpdateAdmin{}
+		x = &GroupsUpdateAdmin{}
 	}
 	return x
 }
 
 func (p *poolGroupsUpdateAdmin) Put(x *GroupsUpdateAdmin) {
-	x.GroupID = 0
-	if x.User != nil {
-		PoolInputUser.Put(x.User)
-		x.User = nil
+	if x == nil {
+		return
 	}
+	x.GroupID = 0
+	PoolInputUser.Put(x.User)
+	x.User = nil
 	x.Admin = false
 	p.pool.Put(x)
 }
@@ -292,8 +318,12 @@ var PoolGroupsUpdateAdmin = poolGroupsUpdateAdmin{}
 func (x *GroupsUpdateAdmin) DeepCopy(z *GroupsUpdateAdmin) {
 	z.GroupID = x.GroupID
 	if x.User != nil {
-		z.User = PoolInputUser.Get()
+		if z.User == nil {
+			z.User = PoolInputUser.Get()
+		}
 		x.User.DeepCopy(z.User)
+	} else {
+		z.User = nil
 	}
 	z.Admin = x.Admin
 }
@@ -319,17 +349,18 @@ type poolGroupsUploadPhoto struct {
 func (p *poolGroupsUploadPhoto) Get() *GroupsUploadPhoto {
 	x, ok := p.pool.Get().(*GroupsUploadPhoto)
 	if !ok {
-		return &GroupsUploadPhoto{}
+		x = &GroupsUploadPhoto{}
 	}
 	return x
 }
 
 func (p *poolGroupsUploadPhoto) Put(x *GroupsUploadPhoto) {
-	x.GroupID = 0
-	if x.File != nil {
-		PoolInputFile.Put(x.File)
-		x.File = nil
+	if x == nil {
+		return
 	}
+	x.GroupID = 0
+	PoolInputFile.Put(x.File)
+	x.File = nil
 	x.ReturnObject = false
 	p.pool.Put(x)
 }
@@ -339,8 +370,12 @@ var PoolGroupsUploadPhoto = poolGroupsUploadPhoto{}
 func (x *GroupsUploadPhoto) DeepCopy(z *GroupsUploadPhoto) {
 	z.GroupID = x.GroupID
 	if x.File != nil {
-		z.File = PoolInputFile.Get()
+		if z.File == nil {
+			z.File = PoolInputFile.Get()
+		}
 		x.File.DeepCopy(z.File)
+	} else {
+		z.File = nil
 	}
 	z.ReturnObject = x.ReturnObject
 }
@@ -366,12 +401,15 @@ type poolGroupsRemovePhoto struct {
 func (p *poolGroupsRemovePhoto) Get() *GroupsRemovePhoto {
 	x, ok := p.pool.Get().(*GroupsRemovePhoto)
 	if !ok {
-		return &GroupsRemovePhoto{}
+		x = &GroupsRemovePhoto{}
 	}
 	return x
 }
 
 func (p *poolGroupsRemovePhoto) Put(x *GroupsRemovePhoto) {
+	if x == nil {
+		return
+	}
 	x.GroupID = 0
 	x.PhotoID = 0
 	p.pool.Put(x)
@@ -405,12 +443,15 @@ type poolGroupsUpdatePhoto struct {
 func (p *poolGroupsUpdatePhoto) Get() *GroupsUpdatePhoto {
 	x, ok := p.pool.Get().(*GroupsUpdatePhoto)
 	if !ok {
-		return &GroupsUpdatePhoto{}
+		x = &GroupsUpdatePhoto{}
 	}
 	return x
 }
 
 func (p *poolGroupsUpdatePhoto) Put(x *GroupsUpdatePhoto) {
+	if x == nil {
+		return
+	}
 	x.PhotoID = 0
 	x.GroupID = 0
 	p.pool.Put(x)
@@ -444,12 +485,15 @@ type poolGroupsGetReadHistoryStats struct {
 func (p *poolGroupsGetReadHistoryStats) Get() *GroupsGetReadHistoryStats {
 	x, ok := p.pool.Get().(*GroupsGetReadHistoryStats)
 	if !ok {
-		return &GroupsGetReadHistoryStats{}
+		x = &GroupsGetReadHistoryStats{}
 	}
 	return x
 }
 
 func (p *poolGroupsGetReadHistoryStats) Put(x *GroupsGetReadHistoryStats) {
+	if x == nil {
+		return
+	}
 	x.GroupID = 0
 	p.pool.Put(x)
 }
@@ -481,13 +525,22 @@ type poolGroupsHistoryStats struct {
 func (p *poolGroupsHistoryStats) Get() *GroupsHistoryStats {
 	x, ok := p.pool.Get().(*GroupsHistoryStats)
 	if !ok {
-		return &GroupsHistoryStats{}
+		x = &GroupsHistoryStats{}
 	}
 	return x
 }
 
 func (p *poolGroupsHistoryStats) Put(x *GroupsHistoryStats) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Stats {
+		PoolReadHistoryStat.Put(z)
+	}
 	x.Stats = x.Stats[:0]
+	for _, z := range x.Users {
+		PoolUser.Put(z)
+	}
 	x.Users = x.Users[:0]
 	x.Empty = false
 	p.pool.Put(x)
@@ -534,12 +587,15 @@ type poolReadHistoryStat struct {
 func (p *poolReadHistoryStat) Get() *ReadHistoryStat {
 	x, ok := p.pool.Get().(*ReadHistoryStat)
 	if !ok {
-		return &ReadHistoryStat{}
+		x = &ReadHistoryStat{}
 	}
 	return x
 }
 
 func (p *poolReadHistoryStat) Put(x *ReadHistoryStat) {
+	if x == nil {
+		return
+	}
 	x.UserID = 0
 	x.MessageID = 0
 	p.pool.Put(x)
