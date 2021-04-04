@@ -18,16 +18,17 @@ type poolPhoneInitCall struct {
 func (p *poolPhoneInitCall) Get() *PhoneInitCall {
 	x, ok := p.pool.Get().(*PhoneInitCall)
 	if !ok {
-		return &PhoneInitCall{}
+		x = &PhoneInitCall{}
 	}
 	return x
 }
 
 func (p *poolPhoneInitCall) Put(x *PhoneInitCall) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	p.pool.Put(x)
 }
 
@@ -35,8 +36,12 @@ var PoolPhoneInitCall = poolPhoneInitCall{}
 
 func (x *PhoneInitCall) DeepCopy(z *PhoneInitCall) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 }
 
@@ -61,18 +66,22 @@ type poolPhoneRequestCall struct {
 func (p *poolPhoneRequestCall) Get() *PhoneRequestCall {
 	x, ok := p.pool.Get().(*PhoneRequestCall)
 	if !ok {
-		return &PhoneRequestCall{}
+		x = &PhoneRequestCall{}
 	}
 	return x
 }
 
 func (p *poolPhoneRequestCall) Put(x *PhoneRequestCall) {
-	x.RandomID = 0
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	x.RandomID = 0
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.Initiator = false
+	for _, z := range x.Participants {
+		PoolPhoneParticipantSDP.Put(z)
+	}
 	x.Participants = x.Participants[:0]
 	x.CallID = 0
 	x.DeviceType = 0
@@ -84,8 +93,12 @@ var PoolPhoneRequestCall = poolPhoneRequestCall{}
 func (x *PhoneRequestCall) DeepCopy(z *PhoneRequestCall) {
 	z.RandomID = x.RandomID
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Initiator = x.Initiator
 	for idx := range x.Participants {
@@ -120,17 +133,21 @@ type poolPhoneAcceptCall struct {
 func (p *poolPhoneAcceptCall) Get() *PhoneAcceptCall {
 	x, ok := p.pool.Get().(*PhoneAcceptCall)
 	if !ok {
-		return &PhoneAcceptCall{}
+		x = &PhoneAcceptCall{}
 	}
 	return x
 }
 
 func (p *poolPhoneAcceptCall) Put(x *PhoneAcceptCall) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.CallID = 0
+	for _, z := range x.Participants {
+		PoolPhoneParticipantSDP.Put(z)
+	}
 	x.Participants = x.Participants[:0]
 	x.DeviceType = 0
 	p.pool.Put(x)
@@ -140,8 +157,12 @@ var PoolPhoneAcceptCall = poolPhoneAcceptCall{}
 
 func (x *PhoneAcceptCall) DeepCopy(z *PhoneAcceptCall) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.CallID = x.CallID
 	for idx := range x.Participants {
@@ -175,16 +196,17 @@ type poolPhoneDiscardCall struct {
 func (p *poolPhoneDiscardCall) Get() *PhoneDiscardCall {
 	x, ok := p.pool.Get().(*PhoneDiscardCall)
 	if !ok {
-		return &PhoneDiscardCall{}
+		x = &PhoneDiscardCall{}
 	}
 	return x
 }
 
 func (p *poolPhoneDiscardCall) Put(x *PhoneDiscardCall) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.CallID = 0
 	x.Duration = 0
 	x.Reason = 0
@@ -195,8 +217,12 @@ var PoolPhoneDiscardCall = poolPhoneDiscardCall{}
 
 func (x *PhoneDiscardCall) DeepCopy(z *PhoneDiscardCall) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.CallID = x.CallID
 	z.Duration = x.Duration
@@ -224,16 +250,17 @@ type poolPhoneJoinCall struct {
 func (p *poolPhoneJoinCall) Get() *PhoneJoinCall {
 	x, ok := p.pool.Get().(*PhoneJoinCall)
 	if !ok {
-		return &PhoneJoinCall{}
+		x = &PhoneJoinCall{}
 	}
 	return x
 }
 
 func (p *poolPhoneJoinCall) Put(x *PhoneJoinCall) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.CallID = 0
 	p.pool.Put(x)
 }
@@ -242,8 +269,12 @@ var PoolPhoneJoinCall = poolPhoneJoinCall{}
 
 func (x *PhoneJoinCall) DeepCopy(z *PhoneJoinCall) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.CallID = x.CallID
 }
@@ -269,17 +300,21 @@ type poolPhoneAddParticipant struct {
 func (p *poolPhoneAddParticipant) Get() *PhoneAddParticipant {
 	x, ok := p.pool.Get().(*PhoneAddParticipant)
 	if !ok {
-		return &PhoneAddParticipant{}
+		x = &PhoneAddParticipant{}
 	}
 	return x
 }
 
 func (p *poolPhoneAddParticipant) Put(x *PhoneAddParticipant) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.CallID = 0
+	for _, z := range x.Participants {
+		PoolInputUser.Put(z)
+	}
 	x.Participants = x.Participants[:0]
 	p.pool.Put(x)
 }
@@ -288,8 +323,12 @@ var PoolPhoneAddParticipant = poolPhoneAddParticipant{}
 
 func (x *PhoneAddParticipant) DeepCopy(z *PhoneAddParticipant) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.CallID = x.CallID
 	for idx := range x.Participants {
@@ -322,17 +361,21 @@ type poolPhoneRemoveParticipant struct {
 func (p *poolPhoneRemoveParticipant) Get() *PhoneRemoveParticipant {
 	x, ok := p.pool.Get().(*PhoneRemoveParticipant)
 	if !ok {
-		return &PhoneRemoveParticipant{}
+		x = &PhoneRemoveParticipant{}
 	}
 	return x
 }
 
 func (p *poolPhoneRemoveParticipant) Put(x *PhoneRemoveParticipant) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.CallID = 0
+	for _, z := range x.Participants {
+		PoolInputUser.Put(z)
+	}
 	x.Participants = x.Participants[:0]
 	x.Timeout = false
 	p.pool.Put(x)
@@ -342,8 +385,12 @@ var PoolPhoneRemoveParticipant = poolPhoneRemoveParticipant{}
 
 func (x *PhoneRemoveParticipant) DeepCopy(z *PhoneRemoveParticipant) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.CallID = x.CallID
 	for idx := range x.Participants {
@@ -377,17 +424,21 @@ type poolPhoneUpdateCall struct {
 func (p *poolPhoneUpdateCall) Get() *PhoneUpdateCall {
 	x, ok := p.pool.Get().(*PhoneUpdateCall)
 	if !ok {
-		return &PhoneUpdateCall{}
+		x = &PhoneUpdateCall{}
 	}
 	return x
 }
 
 func (p *poolPhoneUpdateCall) Put(x *PhoneUpdateCall) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.CallID = 0
+	for _, z := range x.Participants {
+		PoolInputUser.Put(z)
+	}
 	x.Participants = x.Participants[:0]
 	x.Action = 0
 	x.ActionData = x.ActionData[:0]
@@ -398,8 +449,12 @@ var PoolPhoneUpdateCall = poolPhoneUpdateCall{}
 
 func (x *PhoneUpdateCall) DeepCopy(z *PhoneUpdateCall) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.CallID = x.CallID
 	for idx := range x.Participants {
@@ -434,16 +489,17 @@ type poolPhoneRateCall struct {
 func (p *poolPhoneRateCall) Get() *PhoneRateCall {
 	x, ok := p.pool.Get().(*PhoneRateCall)
 	if !ok {
-		return &PhoneRateCall{}
+		x = &PhoneRateCall{}
 	}
 	return x
 }
 
 func (p *poolPhoneRateCall) Put(x *PhoneRateCall) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.CallID = 0
 	x.Rate = 0
 	x.ReasonType = 0
@@ -455,8 +511,12 @@ var PoolPhoneRateCall = poolPhoneRateCall{}
 
 func (x *PhoneRateCall) DeepCopy(z *PhoneRateCall) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.CallID = x.CallID
 	z.Rate = x.Rate
@@ -485,12 +545,15 @@ type poolPhoneGetHistory struct {
 func (p *poolPhoneGetHistory) Get() *PhoneGetHistory {
 	x, ok := p.pool.Get().(*PhoneGetHistory)
 	if !ok {
-		return &PhoneGetHistory{}
+		x = &PhoneGetHistory{}
 	}
 	return x
 }
 
 func (p *poolPhoneGetHistory) Put(x *PhoneGetHistory) {
+	if x == nil {
+		return
+	}
 	x.Limit = 0
 	x.After = 0
 	p.pool.Put(x)
@@ -524,12 +587,15 @@ type poolPhoneCallRecord struct {
 func (p *poolPhoneCallRecord) Get() *PhoneCallRecord {
 	x, ok := p.pool.Get().(*PhoneCallRecord)
 	if !ok {
-		return &PhoneCallRecord{}
+		x = &PhoneCallRecord{}
 	}
 	return x
 }
 
 func (p *poolPhoneCallRecord) Put(x *PhoneCallRecord) {
+	if x == nil {
+		return
+	}
 	x.UserID = 0
 	x.TeamID = 0
 	x.CallID = 0
@@ -577,14 +643,26 @@ type poolPhoneCallsMany struct {
 func (p *poolPhoneCallsMany) Get() *PhoneCallsMany {
 	x, ok := p.pool.Get().(*PhoneCallsMany)
 	if !ok {
-		return &PhoneCallsMany{}
+		x = &PhoneCallsMany{}
 	}
 	return x
 }
 
 func (p *poolPhoneCallsMany) Put(x *PhoneCallsMany) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.PhoneCalls {
+		PoolPhoneCallRecord.Put(z)
+	}
 	x.PhoneCalls = x.PhoneCalls[:0]
+	for _, z := range x.Users {
+		PoolUser.Put(z)
+	}
 	x.Users = x.Users[:0]
+	for _, z := range x.Groups {
+		PoolGroup.Put(z)
+	}
 	x.Groups = x.Groups[:0]
 	x.Continuous = false
 	x.Empty = false
@@ -640,21 +718,20 @@ type poolPhoneUpdateAdmin struct {
 func (p *poolPhoneUpdateAdmin) Get() *PhoneUpdateAdmin {
 	x, ok := p.pool.Get().(*PhoneUpdateAdmin)
 	if !ok {
-		return &PhoneUpdateAdmin{}
+		x = &PhoneUpdateAdmin{}
 	}
 	return x
 }
 
 func (p *poolPhoneUpdateAdmin) Put(x *PhoneUpdateAdmin) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.CallID = 0
-	if x.User != nil {
-		PoolInputUser.Put(x.User)
-		x.User = nil
-	}
+	PoolInputUser.Put(x.User)
+	x.User = nil
 	x.Admin = false
 	p.pool.Put(x)
 }
@@ -663,13 +740,21 @@ var PoolPhoneUpdateAdmin = poolPhoneUpdateAdmin{}
 
 func (x *PhoneUpdateAdmin) DeepCopy(z *PhoneUpdateAdmin) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.CallID = x.CallID
 	if x.User != nil {
-		z.User = PoolInputUser.Get()
+		if z.User == nil {
+			z.User = PoolInputUser.Get()
+		}
 		x.User.DeepCopy(z.User)
+	} else {
+		z.User = nil
 	}
 	z.Admin = x.Admin
 }
@@ -695,12 +780,15 @@ type poolPhoneCall struct {
 func (p *poolPhoneCall) Get() *PhoneCall {
 	x, ok := p.pool.Get().(*PhoneCall)
 	if !ok {
-		return &PhoneCall{}
+		x = &PhoneCall{}
 	}
 	return x
 }
 
 func (p *poolPhoneCall) Put(x *PhoneCall) {
+	if x == nil {
+		return
+	}
 	x.ID = 0
 	x.CreatedOn = 0
 	p.pool.Put(x)
@@ -734,12 +822,18 @@ type poolPhoneInit struct {
 func (p *poolPhoneInit) Get() *PhoneInit {
 	x, ok := p.pool.Get().(*PhoneInit)
 	if !ok {
-		return &PhoneInit{}
+		x = &PhoneInit{}
 	}
 	return x
 }
 
 func (p *poolPhoneInit) Put(x *PhoneInit) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.IceServers {
+		PoolIceServer.Put(z)
+	}
 	x.IceServers = x.IceServers[:0]
 	p.pool.Put(x)
 }
@@ -777,12 +871,18 @@ type poolPhoneParticipants struct {
 func (p *poolPhoneParticipants) Get() *PhoneParticipants {
 	x, ok := p.pool.Get().(*PhoneParticipants)
 	if !ok {
-		return &PhoneParticipants{}
+		x = &PhoneParticipants{}
 	}
 	return x
 }
 
 func (p *poolPhoneParticipants) Put(x *PhoneParticipants) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Participants {
+		PoolPhoneParticipant.Put(z)
+	}
 	x.Participants = x.Participants[:0]
 	p.pool.Put(x)
 }
@@ -820,12 +920,15 @@ type poolIceServer struct {
 func (p *poolIceServer) Get() *IceServer {
 	x, ok := p.pool.Get().(*IceServer)
 	if !ok {
-		return &IceServer{}
+		x = &IceServer{}
 	}
 	return x
 }
 
 func (p *poolIceServer) Put(x *IceServer) {
+	if x == nil {
+		return
+	}
 	x.Urls = x.Urls[:0]
 	x.Username = ""
 	x.Credential = ""
@@ -861,17 +964,18 @@ type poolPhoneParticipant struct {
 func (p *poolPhoneParticipant) Get() *PhoneParticipant {
 	x, ok := p.pool.Get().(*PhoneParticipant)
 	if !ok {
-		return &PhoneParticipant{}
+		x = &PhoneParticipant{}
 	}
 	return x
 }
 
 func (p *poolPhoneParticipant) Put(x *PhoneParticipant) {
-	x.ConnectionId = 0
-	if x.Peer != nil {
-		PoolInputUser.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	x.ConnectionId = 0
+	PoolInputUser.Put(x.Peer)
+	x.Peer = nil
 	x.Initiator = false
 	x.Admin = false
 	p.pool.Put(x)
@@ -882,8 +986,12 @@ var PoolPhoneParticipant = poolPhoneParticipant{}
 func (x *PhoneParticipant) DeepCopy(z *PhoneParticipant) {
 	z.ConnectionId = x.ConnectionId
 	if x.Peer != nil {
-		z.Peer = PoolInputUser.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputUser.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Initiator = x.Initiator
 	z.Admin = x.Admin
@@ -910,17 +1018,18 @@ type poolPhoneParticipantSDP struct {
 func (p *poolPhoneParticipantSDP) Get() *PhoneParticipantSDP {
 	x, ok := p.pool.Get().(*PhoneParticipantSDP)
 	if !ok {
-		return &PhoneParticipantSDP{}
+		x = &PhoneParticipantSDP{}
 	}
 	return x
 }
 
 func (p *poolPhoneParticipantSDP) Put(x *PhoneParticipantSDP) {
-	x.ConnectionId = 0
-	if x.Peer != nil {
-		PoolInputUser.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	x.ConnectionId = 0
+	PoolInputUser.Put(x.Peer)
+	x.Peer = nil
 	x.SDP = ""
 	x.Type = ""
 	p.pool.Put(x)
@@ -931,8 +1040,12 @@ var PoolPhoneParticipantSDP = poolPhoneParticipantSDP{}
 func (x *PhoneParticipantSDP) DeepCopy(z *PhoneParticipantSDP) {
 	z.ConnectionId = x.ConnectionId
 	if x.Peer != nil {
-		z.Peer = PoolInputUser.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputUser.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.SDP = x.SDP
 	z.Type = x.Type
@@ -959,12 +1072,15 @@ type poolPhoneActionCallEmpty struct {
 func (p *poolPhoneActionCallEmpty) Get() *PhoneActionCallEmpty {
 	x, ok := p.pool.Get().(*PhoneActionCallEmpty)
 	if !ok {
-		return &PhoneActionCallEmpty{}
+		x = &PhoneActionCallEmpty{}
 	}
 	return x
 }
 
 func (p *poolPhoneActionCallEmpty) Put(x *PhoneActionCallEmpty) {
+	if x == nil {
+		return
+	}
 	x.Empty = false
 	p.pool.Put(x)
 }
@@ -996,12 +1112,15 @@ type poolPhoneActionAccepted struct {
 func (p *poolPhoneActionAccepted) Get() *PhoneActionAccepted {
 	x, ok := p.pool.Get().(*PhoneActionAccepted)
 	if !ok {
-		return &PhoneActionAccepted{}
+		x = &PhoneActionAccepted{}
 	}
 	return x
 }
 
 func (p *poolPhoneActionAccepted) Put(x *PhoneActionAccepted) {
+	if x == nil {
+		return
+	}
 	x.SDP = ""
 	x.Type = ""
 	x.DeviceType = 0
@@ -1037,14 +1156,20 @@ type poolPhoneActionRequested struct {
 func (p *poolPhoneActionRequested) Get() *PhoneActionRequested {
 	x, ok := p.pool.Get().(*PhoneActionRequested)
 	if !ok {
-		return &PhoneActionRequested{}
+		x = &PhoneActionRequested{}
 	}
 	return x
 }
 
 func (p *poolPhoneActionRequested) Put(x *PhoneActionRequested) {
+	if x == nil {
+		return
+	}
 	x.SDP = ""
 	x.Type = ""
+	for _, z := range x.Participants {
+		PoolPhoneParticipant.Put(z)
+	}
 	x.Participants = x.Participants[:0]
 	x.DeviceType = 0
 	p.pool.Put(x)
@@ -1086,12 +1211,15 @@ type poolPhoneActionCallWaiting struct {
 func (p *poolPhoneActionCallWaiting) Get() *PhoneActionCallWaiting {
 	x, ok := p.pool.Get().(*PhoneActionCallWaiting)
 	if !ok {
-		return &PhoneActionCallWaiting{}
+		x = &PhoneActionCallWaiting{}
 	}
 	return x
 }
 
 func (p *poolPhoneActionCallWaiting) Put(x *PhoneActionCallWaiting) {
+	if x == nil {
+		return
+	}
 	x.Empty = false
 	p.pool.Put(x)
 }
@@ -1123,12 +1251,15 @@ type poolPhoneActionDiscarded struct {
 func (p *poolPhoneActionDiscarded) Get() *PhoneActionDiscarded {
 	x, ok := p.pool.Get().(*PhoneActionDiscarded)
 	if !ok {
-		return &PhoneActionDiscarded{}
+		x = &PhoneActionDiscarded{}
 	}
 	return x
 }
 
 func (p *poolPhoneActionDiscarded) Put(x *PhoneActionDiscarded) {
+	if x == nil {
+		return
+	}
 	x.Duration = 0
 	x.Video = false
 	x.Reason = 0
@@ -1166,12 +1297,15 @@ type poolPhoneActionIceExchange struct {
 func (p *poolPhoneActionIceExchange) Get() *PhoneActionIceExchange {
 	x, ok := p.pool.Get().(*PhoneActionIceExchange)
 	if !ok {
-		return &PhoneActionIceExchange{}
+		x = &PhoneActionIceExchange{}
 	}
 	return x
 }
 
 func (p *poolPhoneActionIceExchange) Put(x *PhoneActionIceExchange) {
+	if x == nil {
+		return
+	}
 	x.Candidate = ""
 	x.SdpMLineIndex = 0
 	x.SdpMid = ""
@@ -1209,12 +1343,15 @@ type poolPhoneActionAck struct {
 func (p *poolPhoneActionAck) Get() *PhoneActionAck {
 	x, ok := p.pool.Get().(*PhoneActionAck)
 	if !ok {
-		return &PhoneActionAck{}
+		x = &PhoneActionAck{}
 	}
 	return x
 }
 
 func (p *poolPhoneActionAck) Put(x *PhoneActionAck) {
+	if x == nil {
+		return
+	}
 	p.pool.Put(x)
 }
 
@@ -1244,12 +1381,18 @@ type poolPhoneActionParticipantAdded struct {
 func (p *poolPhoneActionParticipantAdded) Get() *PhoneActionParticipantAdded {
 	x, ok := p.pool.Get().(*PhoneActionParticipantAdded)
 	if !ok {
-		return &PhoneActionParticipantAdded{}
+		x = &PhoneActionParticipantAdded{}
 	}
 	return x
 }
 
 func (p *poolPhoneActionParticipantAdded) Put(x *PhoneActionParticipantAdded) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Participants {
+		PoolPhoneParticipant.Put(z)
+	}
 	x.Participants = x.Participants[:0]
 	p.pool.Put(x)
 }
@@ -1287,12 +1430,15 @@ type poolPhoneActionParticipantRemoved struct {
 func (p *poolPhoneActionParticipantRemoved) Get() *PhoneActionParticipantRemoved {
 	x, ok := p.pool.Get().(*PhoneActionParticipantRemoved)
 	if !ok {
-		return &PhoneActionParticipantRemoved{}
+		x = &PhoneActionParticipantRemoved{}
 	}
 	return x
 }
 
 func (p *poolPhoneActionParticipantRemoved) Put(x *PhoneActionParticipantRemoved) {
+	if x == nil {
+		return
+	}
 	x.UserIDs = x.UserIDs[:0]
 	x.Timeout = false
 	p.pool.Put(x)
@@ -1326,12 +1472,15 @@ type poolPhoneActionJoinRequested struct {
 func (p *poolPhoneActionJoinRequested) Get() *PhoneActionJoinRequested {
 	x, ok := p.pool.Get().(*PhoneActionJoinRequested)
 	if !ok {
-		return &PhoneActionJoinRequested{}
+		x = &PhoneActionJoinRequested{}
 	}
 	return x
 }
 
 func (p *poolPhoneActionJoinRequested) Put(x *PhoneActionJoinRequested) {
+	if x == nil {
+		return
+	}
 	x.UserIDs = x.UserIDs[:0]
 	p.pool.Put(x)
 }
@@ -1363,12 +1512,15 @@ type poolPhoneActionAdminUpdated struct {
 func (p *poolPhoneActionAdminUpdated) Get() *PhoneActionAdminUpdated {
 	x, ok := p.pool.Get().(*PhoneActionAdminUpdated)
 	if !ok {
-		return &PhoneActionAdminUpdated{}
+		x = &PhoneActionAdminUpdated{}
 	}
 	return x
 }
 
 func (p *poolPhoneActionAdminUpdated) Put(x *PhoneActionAdminUpdated) {
+	if x == nil {
+		return
+	}
 	x.UserID = 0
 	x.Admin = false
 	p.pool.Put(x)
@@ -1402,12 +1554,15 @@ type poolPhoneActionScreenShare struct {
 func (p *poolPhoneActionScreenShare) Get() *PhoneActionScreenShare {
 	x, ok := p.pool.Get().(*PhoneActionScreenShare)
 	if !ok {
-		return &PhoneActionScreenShare{}
+		x = &PhoneActionScreenShare{}
 	}
 	return x
 }
 
 func (p *poolPhoneActionScreenShare) Put(x *PhoneActionScreenShare) {
+	if x == nil {
+		return
+	}
 	x.Enable = false
 	x.TrackIDs = x.TrackIDs[:0]
 	p.pool.Put(x)
@@ -1441,12 +1596,15 @@ type poolPhoneActionPicked struct {
 func (p *poolPhoneActionPicked) Get() *PhoneActionPicked {
 	x, ok := p.pool.Get().(*PhoneActionPicked)
 	if !ok {
-		return &PhoneActionPicked{}
+		x = &PhoneActionPicked{}
 	}
 	return x
 }
 
 func (p *poolPhoneActionPicked) Put(x *PhoneActionPicked) {
+	if x == nil {
+		return
+	}
 	x.AuthID = 0
 	p.pool.Put(x)
 }
@@ -1478,12 +1636,15 @@ type poolPhoneActionMediaSettingsUpdated struct {
 func (p *poolPhoneActionMediaSettingsUpdated) Get() *PhoneActionMediaSettingsUpdated {
 	x, ok := p.pool.Get().(*PhoneActionMediaSettingsUpdated)
 	if !ok {
-		return &PhoneActionMediaSettingsUpdated{}
+		x = &PhoneActionMediaSettingsUpdated{}
 	}
 	return x
 }
 
 func (p *poolPhoneActionMediaSettingsUpdated) Put(x *PhoneActionMediaSettingsUpdated) {
+	if x == nil {
+		return
+	}
 	x.Video = false
 	x.Audio = false
 	x.ScreenShare = false
@@ -1519,12 +1680,15 @@ type poolPhoneActionReactionSet struct {
 func (p *poolPhoneActionReactionSet) Get() *PhoneActionReactionSet {
 	x, ok := p.pool.Get().(*PhoneActionReactionSet)
 	if !ok {
-		return &PhoneActionReactionSet{}
+		x = &PhoneActionReactionSet{}
 	}
 	return x
 }
 
 func (p *poolPhoneActionReactionSet) Put(x *PhoneActionReactionSet) {
+	if x == nil {
+		return
+	}
 	x.Reaction = ""
 	p.pool.Put(x)
 }
@@ -1556,12 +1720,15 @@ type poolPhoneActionSDPOffer struct {
 func (p *poolPhoneActionSDPOffer) Get() *PhoneActionSDPOffer {
 	x, ok := p.pool.Get().(*PhoneActionSDPOffer)
 	if !ok {
-		return &PhoneActionSDPOffer{}
+		x = &PhoneActionSDPOffer{}
 	}
 	return x
 }
 
 func (p *poolPhoneActionSDPOffer) Put(x *PhoneActionSDPOffer) {
+	if x == nil {
+		return
+	}
 	x.SDP = ""
 	x.Type = ""
 	p.pool.Put(x)
@@ -1595,12 +1762,15 @@ type poolPhoneActionSDPAnswer struct {
 func (p *poolPhoneActionSDPAnswer) Get() *PhoneActionSDPAnswer {
 	x, ok := p.pool.Get().(*PhoneActionSDPAnswer)
 	if !ok {
-		return &PhoneActionSDPAnswer{}
+		x = &PhoneActionSDPAnswer{}
 	}
 	return x
 }
 
 func (p *poolPhoneActionSDPAnswer) Put(x *PhoneActionSDPAnswer) {
+	if x == nil {
+		return
+	}
 	x.SDP = ""
 	x.Type = ""
 	p.pool.Put(x)

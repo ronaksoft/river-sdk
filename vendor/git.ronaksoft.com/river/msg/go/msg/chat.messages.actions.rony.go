@@ -18,12 +18,15 @@ type poolMessageActionGroupAddUser struct {
 func (p *poolMessageActionGroupAddUser) Get() *MessageActionGroupAddUser {
 	x, ok := p.pool.Get().(*MessageActionGroupAddUser)
 	if !ok {
-		return &MessageActionGroupAddUser{}
+		x = &MessageActionGroupAddUser{}
 	}
 	return x
 }
 
 func (p *poolMessageActionGroupAddUser) Put(x *MessageActionGroupAddUser) {
+	if x == nil {
+		return
+	}
 	x.UserIDs = x.UserIDs[:0]
 	p.pool.Put(x)
 }
@@ -55,12 +58,15 @@ type poolMessageActionGroupDeleteUser struct {
 func (p *poolMessageActionGroupDeleteUser) Get() *MessageActionGroupDeleteUser {
 	x, ok := p.pool.Get().(*MessageActionGroupDeleteUser)
 	if !ok {
-		return &MessageActionGroupDeleteUser{}
+		x = &MessageActionGroupDeleteUser{}
 	}
 	return x
 }
 
 func (p *poolMessageActionGroupDeleteUser) Put(x *MessageActionGroupDeleteUser) {
+	if x == nil {
+		return
+	}
 	x.UserIDs = x.UserIDs[:0]
 	p.pool.Put(x)
 }
@@ -92,12 +98,15 @@ type poolMessageActionGroupCreated struct {
 func (p *poolMessageActionGroupCreated) Get() *MessageActionGroupCreated {
 	x, ok := p.pool.Get().(*MessageActionGroupCreated)
 	if !ok {
-		return &MessageActionGroupCreated{}
+		x = &MessageActionGroupCreated{}
 	}
 	return x
 }
 
 func (p *poolMessageActionGroupCreated) Put(x *MessageActionGroupCreated) {
+	if x == nil {
+		return
+	}
 	x.GroupTitle = ""
 	x.UserIDs = x.UserIDs[:0]
 	p.pool.Put(x)
@@ -131,12 +140,15 @@ type poolMessageActionGroupTitleChanged struct {
 func (p *poolMessageActionGroupTitleChanged) Get() *MessageActionGroupTitleChanged {
 	x, ok := p.pool.Get().(*MessageActionGroupTitleChanged)
 	if !ok {
-		return &MessageActionGroupTitleChanged{}
+		x = &MessageActionGroupTitleChanged{}
 	}
 	return x
 }
 
 func (p *poolMessageActionGroupTitleChanged) Put(x *MessageActionGroupTitleChanged) {
+	if x == nil {
+		return
+	}
 	x.GroupTitle = ""
 	p.pool.Put(x)
 }
@@ -168,16 +180,17 @@ type poolMessageActionGroupPhotoChanged struct {
 func (p *poolMessageActionGroupPhotoChanged) Get() *MessageActionGroupPhotoChanged {
 	x, ok := p.pool.Get().(*MessageActionGroupPhotoChanged)
 	if !ok {
-		return &MessageActionGroupPhotoChanged{}
+		x = &MessageActionGroupPhotoChanged{}
 	}
 	return x
 }
 
 func (p *poolMessageActionGroupPhotoChanged) Put(x *MessageActionGroupPhotoChanged) {
-	if x.Photo != nil {
-		PoolGroupPhoto.Put(x.Photo)
-		x.Photo = nil
+	if x == nil {
+		return
 	}
+	PoolGroupPhoto.Put(x.Photo)
+	x.Photo = nil
 	p.pool.Put(x)
 }
 
@@ -185,8 +198,12 @@ var PoolMessageActionGroupPhotoChanged = poolMessageActionGroupPhotoChanged{}
 
 func (x *MessageActionGroupPhotoChanged) DeepCopy(z *MessageActionGroupPhotoChanged) {
 	if x.Photo != nil {
-		z.Photo = PoolGroupPhoto.Get()
+		if z.Photo == nil {
+			z.Photo = PoolGroupPhoto.Get()
+		}
 		x.Photo.DeepCopy(z.Photo)
+	} else {
+		z.Photo = nil
 	}
 }
 
@@ -211,12 +228,15 @@ type poolMessageActionClearHistory struct {
 func (p *poolMessageActionClearHistory) Get() *MessageActionClearHistory {
 	x, ok := p.pool.Get().(*MessageActionClearHistory)
 	if !ok {
-		return &MessageActionClearHistory{}
+		x = &MessageActionClearHistory{}
 	}
 	return x
 }
 
 func (p *poolMessageActionClearHistory) Put(x *MessageActionClearHistory) {
+	if x == nil {
+		return
+	}
 	x.MaxID = 0
 	x.Delete = false
 	p.pool.Put(x)
@@ -250,12 +270,15 @@ type poolMessageActionContactRegistered struct {
 func (p *poolMessageActionContactRegistered) Get() *MessageActionContactRegistered {
 	x, ok := p.pool.Get().(*MessageActionContactRegistered)
 	if !ok {
-		return &MessageActionContactRegistered{}
+		x = &MessageActionContactRegistered{}
 	}
 	return x
 }
 
 func (p *poolMessageActionContactRegistered) Put(x *MessageActionContactRegistered) {
+	if x == nil {
+		return
+	}
 	p.pool.Put(x)
 }
 
@@ -285,12 +308,15 @@ type poolMessageActionScreenShotTaken struct {
 func (p *poolMessageActionScreenShotTaken) Get() *MessageActionScreenShotTaken {
 	x, ok := p.pool.Get().(*MessageActionScreenShotTaken)
 	if !ok {
-		return &MessageActionScreenShotTaken{}
+		x = &MessageActionScreenShotTaken{}
 	}
 	return x
 }
 
 func (p *poolMessageActionScreenShotTaken) Put(x *MessageActionScreenShotTaken) {
+	if x == nil {
+		return
+	}
 	x.MinID = 0
 	x.MaxID = 0
 	p.pool.Put(x)
@@ -324,12 +350,15 @@ type poolMessageActionThreadClosed struct {
 func (p *poolMessageActionThreadClosed) Get() *MessageActionThreadClosed {
 	x, ok := p.pool.Get().(*MessageActionThreadClosed)
 	if !ok {
-		return &MessageActionThreadClosed{}
+		x = &MessageActionThreadClosed{}
 	}
 	return x
 }
 
 func (p *poolMessageActionThreadClosed) Put(x *MessageActionThreadClosed) {
+	if x == nil {
+		return
+	}
 	x.ThreadID = 0
 	p.pool.Put(x)
 }
@@ -361,12 +390,15 @@ type poolMessageActionCallStarted struct {
 func (p *poolMessageActionCallStarted) Get() *MessageActionCallStarted {
 	x, ok := p.pool.Get().(*MessageActionCallStarted)
 	if !ok {
-		return &MessageActionCallStarted{}
+		x = &MessageActionCallStarted{}
 	}
 	return x
 }
 
 func (p *poolMessageActionCallStarted) Put(x *MessageActionCallStarted) {
+	if x == nil {
+		return
+	}
 	x.CallID = 0
 	p.pool.Put(x)
 }
@@ -398,12 +430,15 @@ type poolMessageActionCallEnded struct {
 func (p *poolMessageActionCallEnded) Get() *MessageActionCallEnded {
 	x, ok := p.pool.Get().(*MessageActionCallEnded)
 	if !ok {
-		return &MessageActionCallEnded{}
+		x = &MessageActionCallEnded{}
 	}
 	return x
 }
 
 func (p *poolMessageActionCallEnded) Put(x *MessageActionCallEnded) {
+	if x == nil {
+		return
+	}
 	x.CallID = 0
 	x.Reason = 0
 	p.pool.Put(x)

@@ -18,16 +18,17 @@ type poolBotStart struct {
 func (p *poolBotStart) Get() *BotStart {
 	x, ok := p.pool.Get().(*BotStart)
 	if !ok {
-		return &BotStart{}
+		x = &BotStart{}
 	}
 	return x
 }
 
 func (p *poolBotStart) Put(x *BotStart) {
-	if x.Bot != nil {
-		PoolInputPeer.Put(x.Bot)
-		x.Bot = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Bot)
+	x.Bot = nil
 	x.RandomID = 0
 	x.StartParam = ""
 	p.pool.Put(x)
@@ -37,8 +38,12 @@ var PoolBotStart = poolBotStart{}
 
 func (x *BotStart) DeepCopy(z *BotStart) {
 	if x.Bot != nil {
-		z.Bot = PoolInputPeer.Get()
+		if z.Bot == nil {
+			z.Bot = PoolInputPeer.Get()
+		}
 		x.Bot.DeepCopy(z.Bot)
+	} else {
+		z.Bot = nil
 	}
 	z.RandomID = x.RandomID
 	z.StartParam = x.StartParam
@@ -65,12 +70,15 @@ type poolBotRecall struct {
 func (p *poolBotRecall) Get() *BotRecall {
 	x, ok := p.pool.Get().(*BotRecall)
 	if !ok {
-		return &BotRecall{}
+		x = &BotRecall{}
 	}
 	return x
 }
 
 func (p *poolBotRecall) Put(x *BotRecall) {
+	if x == nil {
+		return
+	}
 	x.Version = 0
 	p.pool.Put(x)
 }
@@ -102,15 +110,21 @@ type poolBotSetInfo struct {
 func (p *poolBotSetInfo) Get() *BotSetInfo {
 	x, ok := p.pool.Get().(*BotSetInfo)
 	if !ok {
-		return &BotSetInfo{}
+		x = &BotSetInfo{}
 	}
 	return x
 }
 
 func (p *poolBotSetInfo) Put(x *BotSetInfo) {
+	if x == nil {
+		return
+	}
 	x.BotID = 0
 	x.RandomID = 0
 	x.Owner = 0
+	for _, z := range x.BotCommands {
+		PoolBotCommands.Put(z)
+	}
 	x.BotCommands = x.BotCommands[:0]
 	x.Description = ""
 	x.InlinePlaceholder = ""
@@ -157,12 +171,15 @@ type poolBotGet struct {
 func (p *poolBotGet) Get() *BotGet {
 	x, ok := p.pool.Get().(*BotGet)
 	if !ok {
-		return &BotGet{}
+		x = &BotGet{}
 	}
 	return x
 }
 
 func (p *poolBotGet) Put(x *BotGet) {
+	if x == nil {
+		return
+	}
 	x.UserID = 0
 	x.Limit = 0
 	p.pool.Put(x)
@@ -196,20 +213,24 @@ type poolBotSendMessage struct {
 func (p *poolBotSendMessage) Get() *BotSendMessage {
 	x, ok := p.pool.Get().(*BotSendMessage)
 	if !ok {
-		return &BotSendMessage{}
+		x = &BotSendMessage{}
 	}
 	return x
 }
 
 func (p *poolBotSendMessage) Put(x *BotSendMessage) {
-	x.RandomID = 0
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	x.RandomID = 0
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.Body = ""
 	x.ReplyTo = 0
 	x.ClearDraft = false
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
+	}
 	x.Entities = x.Entities[:0]
 	x.ReplyMarkup = 0
 	x.ReplyMarkupData = x.ReplyMarkupData[:0]
@@ -221,8 +242,12 @@ var PoolBotSendMessage = poolBotSendMessage{}
 func (x *BotSendMessage) DeepCopy(z *BotSendMessage) {
 	z.RandomID = x.RandomID
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Body = x.Body
 	z.ReplyTo = x.ReplyTo
@@ -259,19 +284,23 @@ type poolBotEditMessage struct {
 func (p *poolBotEditMessage) Get() *BotEditMessage {
 	x, ok := p.pool.Get().(*BotEditMessage)
 	if !ok {
-		return &BotEditMessage{}
+		x = &BotEditMessage{}
 	}
 	return x
 }
 
 func (p *poolBotEditMessage) Put(x *BotEditMessage) {
-	x.RandomID = 0
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	x.RandomID = 0
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.Body = ""
 	x.MessageID = 0
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
+	}
 	x.Entities = x.Entities[:0]
 	x.ReplyMarkup = 0
 	x.ReplyMarkupData = x.ReplyMarkupData[:0]
@@ -283,8 +312,12 @@ var PoolBotEditMessage = poolBotEditMessage{}
 func (x *BotEditMessage) DeepCopy(z *BotEditMessage) {
 	z.RandomID = x.RandomID
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Body = x.Body
 	z.MessageID = x.MessageID
@@ -320,17 +353,18 @@ type poolBotSendMedia struct {
 func (p *poolBotSendMedia) Get() *BotSendMedia {
 	x, ok := p.pool.Get().(*BotSendMedia)
 	if !ok {
-		return &BotSendMedia{}
+		x = &BotSendMedia{}
 	}
 	return x
 }
 
 func (p *poolBotSendMedia) Put(x *BotSendMedia) {
-	x.RandomID = 0
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	x.RandomID = 0
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MediaType = 0
 	x.MediaData = x.MediaData[:0]
 	x.ReplyTo = 0
@@ -342,8 +376,12 @@ var PoolBotSendMedia = poolBotSendMedia{}
 func (x *BotSendMedia) DeepCopy(z *BotSendMedia) {
 	z.RandomID = x.RandomID
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MediaType = x.MediaType
 	z.MediaData = append(z.MediaData[:0], x.MediaData...)
@@ -371,12 +409,15 @@ type poolBotSaveFilePart struct {
 func (p *poolBotSaveFilePart) Get() *BotSaveFilePart {
 	x, ok := p.pool.Get().(*BotSaveFilePart)
 	if !ok {
-		return &BotSaveFilePart{}
+		x = &BotSaveFilePart{}
 	}
 	return x
 }
 
 func (p *poolBotSaveFilePart) Put(x *BotSaveFilePart) {
+	if x == nil {
+		return
+	}
 	x.FileID = 0
 	x.PartID = 0
 	x.TotalParts = 0
@@ -414,12 +455,15 @@ type poolBotUpdateProfile struct {
 func (p *poolBotUpdateProfile) Get() *BotUpdateProfile {
 	x, ok := p.pool.Get().(*BotUpdateProfile)
 	if !ok {
-		return &BotUpdateProfile{}
+		x = &BotUpdateProfile{}
 	}
 	return x
 }
 
 func (p *poolBotUpdateProfile) Put(x *BotUpdateProfile) {
+	if x == nil {
+		return
+	}
 	x.BotID = 0
 	x.Name = ""
 	x.Bio = ""
@@ -455,16 +499,17 @@ type poolBotUpdatePhoto struct {
 func (p *poolBotUpdatePhoto) Get() *BotUpdatePhoto {
 	x, ok := p.pool.Get().(*BotUpdatePhoto)
 	if !ok {
-		return &BotUpdatePhoto{}
+		x = &BotUpdatePhoto{}
 	}
 	return x
 }
 
 func (p *poolBotUpdatePhoto) Put(x *BotUpdatePhoto) {
-	if x.File != nil {
-		PoolInputFileLocation.Put(x.File)
-		x.File = nil
+	if x == nil {
+		return
 	}
+	PoolInputFileLocation.Put(x.File)
+	x.File = nil
 	x.BotID = 0
 	p.pool.Put(x)
 }
@@ -473,8 +518,12 @@ var PoolBotUpdatePhoto = poolBotUpdatePhoto{}
 
 func (x *BotUpdatePhoto) DeepCopy(z *BotUpdatePhoto) {
 	if x.File != nil {
-		z.File = PoolInputFileLocation.Get()
+		if z.File == nil {
+			z.File = PoolInputFileLocation.Get()
+		}
 		x.File.DeepCopy(z.File)
+	} else {
+		z.File = nil
 	}
 	z.BotID = x.BotID
 }
@@ -500,12 +549,15 @@ type poolBotRevokeToken struct {
 func (p *poolBotRevokeToken) Get() *BotRevokeToken {
 	x, ok := p.pool.Get().(*BotRevokeToken)
 	if !ok {
-		return &BotRevokeToken{}
+		x = &BotRevokeToken{}
 	}
 	return x
 }
 
 func (p *poolBotRevokeToken) Put(x *BotRevokeToken) {
+	if x == nil {
+		return
+	}
 	x.BotID = 0
 	x.GetNew = false
 	p.pool.Put(x)
@@ -539,16 +591,17 @@ type poolBotDeleteMessage struct {
 func (p *poolBotDeleteMessage) Get() *BotDeleteMessage {
 	x, ok := p.pool.Get().(*BotDeleteMessage)
 	if !ok {
-		return &BotDeleteMessage{}
+		x = &BotDeleteMessage{}
 	}
 	return x
 }
 
 func (p *poolBotDeleteMessage) Put(x *BotDeleteMessage) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MessageIDs = x.MessageIDs[:0]
 	p.pool.Put(x)
 }
@@ -557,8 +610,12 @@ var PoolBotDeleteMessage = poolBotDeleteMessage{}
 
 func (x *BotDeleteMessage) DeepCopy(z *BotDeleteMessage) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MessageIDs = append(z.MessageIDs[:0], x.MessageIDs...)
 }
@@ -584,12 +641,15 @@ type poolBotSetCallbackAnswer struct {
 func (p *poolBotSetCallbackAnswer) Get() *BotSetCallbackAnswer {
 	x, ok := p.pool.Get().(*BotSetCallbackAnswer)
 	if !ok {
-		return &BotSetCallbackAnswer{}
+		x = &BotSetCallbackAnswer{}
 	}
 	return x
 }
 
 func (p *poolBotSetCallbackAnswer) Put(x *BotSetCallbackAnswer) {
+	if x == nil {
+		return
+	}
 	x.QueryID = 0
 	x.Url = ""
 	x.Message = ""
@@ -627,16 +687,17 @@ type poolBotGetCallbackAnswer struct {
 func (p *poolBotGetCallbackAnswer) Get() *BotGetCallbackAnswer {
 	x, ok := p.pool.Get().(*BotGetCallbackAnswer)
 	if !ok {
-		return &BotGetCallbackAnswer{}
+		x = &BotGetCallbackAnswer{}
 	}
 	return x
 }
 
 func (p *poolBotGetCallbackAnswer) Put(x *BotGetCallbackAnswer) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MessageID = 0
 	x.Data = x.Data[:0]
 	p.pool.Put(x)
@@ -646,8 +707,12 @@ var PoolBotGetCallbackAnswer = poolBotGetCallbackAnswer{}
 
 func (x *BotGetCallbackAnswer) DeepCopy(z *BotGetCallbackAnswer) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MessageID = x.MessageID
 	z.Data = append(z.Data[:0], x.Data...)
@@ -674,26 +739,23 @@ type poolBotGetInlineResults struct {
 func (p *poolBotGetInlineResults) Get() *BotGetInlineResults {
 	x, ok := p.pool.Get().(*BotGetInlineResults)
 	if !ok {
-		return &BotGetInlineResults{}
+		x = &BotGetInlineResults{}
 	}
 	return x
 }
 
 func (p *poolBotGetInlineResults) Put(x *BotGetInlineResults) {
-	if x.Bot != nil {
-		PoolInputUser.Put(x.Bot)
-		x.Bot = nil
+	if x == nil {
+		return
 	}
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
-	}
+	PoolInputUser.Put(x.Bot)
+	x.Bot = nil
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.Query = ""
 	x.Offset = ""
-	if x.Location != nil {
-		PoolInputGeoLocation.Put(x.Location)
-		x.Location = nil
-	}
+	PoolInputGeoLocation.Put(x.Location)
+	x.Location = nil
 	p.pool.Put(x)
 }
 
@@ -701,18 +763,30 @@ var PoolBotGetInlineResults = poolBotGetInlineResults{}
 
 func (x *BotGetInlineResults) DeepCopy(z *BotGetInlineResults) {
 	if x.Bot != nil {
-		z.Bot = PoolInputUser.Get()
+		if z.Bot == nil {
+			z.Bot = PoolInputUser.Get()
+		}
 		x.Bot.DeepCopy(z.Bot)
+	} else {
+		z.Bot = nil
 	}
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Query = x.Query
 	z.Offset = x.Offset
 	if x.Location != nil {
-		z.Location = PoolInputGeoLocation.Get()
+		if z.Location == nil {
+			z.Location = PoolInputGeoLocation.Get()
+		}
 		x.Location.DeepCopy(z.Location)
+	} else {
+		z.Location = nil
 	}
 }
 
@@ -737,21 +811,25 @@ type poolBotSetInlineResults struct {
 func (p *poolBotSetInlineResults) Get() *BotSetInlineResults {
 	x, ok := p.pool.Get().(*BotSetInlineResults)
 	if !ok {
-		return &BotSetInlineResults{}
+		x = &BotSetInlineResults{}
 	}
 	return x
 }
 
 func (p *poolBotSetInlineResults) Put(x *BotSetInlineResults) {
+	if x == nil {
+		return
+	}
 	x.Gallery = false
 	x.Private = false
 	x.CacheTime = 0
 	x.NextOffset = ""
-	x.Results = x.Results[:0]
-	if x.SwitchPM != nil {
-		PoolBotInlineSwitchPM.Put(x.SwitchPM)
-		x.SwitchPM = nil
+	for _, z := range x.Results {
+		PoolInputBotInlineResult.Put(z)
 	}
+	x.Results = x.Results[:0]
+	PoolBotInlineSwitchPM.Put(x.SwitchPM)
+	x.SwitchPM = nil
 	x.QueryID = 0
 	p.pool.Put(x)
 }
@@ -771,8 +849,12 @@ func (x *BotSetInlineResults) DeepCopy(z *BotSetInlineResults) {
 		}
 	}
 	if x.SwitchPM != nil {
-		z.SwitchPM = PoolBotInlineSwitchPM.Get()
+		if z.SwitchPM == nil {
+			z.SwitchPM = PoolBotInlineSwitchPM.Get()
+		}
 		x.SwitchPM.DeepCopy(z.SwitchPM)
+	} else {
+		z.SwitchPM = nil
 	}
 	z.QueryID = x.QueryID
 }
@@ -798,20 +880,21 @@ type poolBotSendInlineResults struct {
 func (p *poolBotSendInlineResults) Get() *BotSendInlineResults {
 	x, ok := p.pool.Get().(*BotSendInlineResults)
 	if !ok {
-		return &BotSendInlineResults{}
+		x = &BotSendInlineResults{}
 	}
 	return x
 }
 
 func (p *poolBotSendInlineResults) Put(x *BotSendInlineResults) {
+	if x == nil {
+		return
+	}
 	x.RandomID = 0
 	x.QueryID = 0
 	x.ResultID = ""
 	x.ClearDraft = false
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
-	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.ReplyTo = 0
 	x.Silent = false
 	x.HideVia = false
@@ -826,8 +909,12 @@ func (x *BotSendInlineResults) DeepCopy(z *BotSendInlineResults) {
 	z.ResultID = x.ResultID
 	z.ClearDraft = x.ClearDraft
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.ReplyTo = x.ReplyTo
 	z.Silent = x.Silent
@@ -855,22 +942,21 @@ type poolBotUploadWallPaper struct {
 func (p *poolBotUploadWallPaper) Get() *BotUploadWallPaper {
 	x, ok := p.pool.Get().(*BotUploadWallPaper)
 	if !ok {
-		return &BotUploadWallPaper{}
+		x = &BotUploadWallPaper{}
 	}
 	return x
 }
 
 func (p *poolBotUploadWallPaper) Put(x *BotUploadWallPaper) {
-	if x.File != nil {
-		PoolInputFileLocation.Put(x.File)
-		x.File = nil
+	if x == nil {
+		return
 	}
+	PoolInputFileLocation.Put(x.File)
+	x.File = nil
 	x.Dark = false
 	x.Pattern = false
-	if x.Settings != nil {
-		PoolWallPaperSettings.Put(x.Settings)
-		x.Settings = nil
-	}
+	PoolWallPaperSettings.Put(x.Settings)
+	x.Settings = nil
 	p.pool.Put(x)
 }
 
@@ -878,14 +964,22 @@ var PoolBotUploadWallPaper = poolBotUploadWallPaper{}
 
 func (x *BotUploadWallPaper) DeepCopy(z *BotUploadWallPaper) {
 	if x.File != nil {
-		z.File = PoolInputFileLocation.Get()
+		if z.File == nil {
+			z.File = PoolInputFileLocation.Get()
+		}
 		x.File.DeepCopy(z.File)
+	} else {
+		z.File = nil
 	}
 	z.Dark = x.Dark
 	z.Pattern = x.Pattern
 	if x.Settings != nil {
-		z.Settings = PoolWallPaperSettings.Get()
+		if z.Settings == nil {
+			z.Settings = PoolWallPaperSettings.Get()
+		}
 		x.Settings.DeepCopy(z.Settings)
+	} else {
+		z.Settings = nil
 	}
 }
 
@@ -910,21 +1004,20 @@ type poolBotUploadGif struct {
 func (p *poolBotUploadGif) Get() *BotUploadGif {
 	x, ok := p.pool.Get().(*BotUploadGif)
 	if !ok {
-		return &BotUploadGif{}
+		x = &BotUploadGif{}
 	}
 	return x
 }
 
 func (p *poolBotUploadGif) Put(x *BotUploadGif) {
+	if x == nil {
+		return
+	}
 	x.Token = ""
-	if x.File != nil {
-		PoolInputFile.Put(x.File)
-		x.File = nil
-	}
-	if x.Thumb != nil {
-		PoolInputFile.Put(x.Thumb)
-		x.Thumb = nil
-	}
+	PoolInputFile.Put(x.File)
+	x.File = nil
+	PoolInputFile.Put(x.Thumb)
+	x.Thumb = nil
 	x.Width = 0
 	x.Height = 0
 	x.MimeType = ""
@@ -936,12 +1029,20 @@ var PoolBotUploadGif = poolBotUploadGif{}
 func (x *BotUploadGif) DeepCopy(z *BotUploadGif) {
 	z.Token = x.Token
 	if x.File != nil {
-		z.File = PoolInputFile.Get()
+		if z.File == nil {
+			z.File = PoolInputFile.Get()
+		}
 		x.File.DeepCopy(z.File)
+	} else {
+		z.File = nil
 	}
 	if x.Thumb != nil {
-		z.Thumb = PoolInputFile.Get()
+		if z.Thumb == nil {
+			z.Thumb = PoolInputFile.Get()
+		}
 		x.Thumb.DeepCopy(z.Thumb)
+	} else {
+		z.Thumb = nil
 	}
 	z.Width = x.Width
 	z.Height = x.Height
@@ -969,18 +1070,22 @@ type poolBotResults struct {
 func (p *poolBotResults) Get() *BotResults {
 	x, ok := p.pool.Get().(*BotResults)
 	if !ok {
-		return &BotResults{}
+		x = &BotResults{}
 	}
 	return x
 }
 
 func (p *poolBotResults) Put(x *BotResults) {
+	if x == nil {
+		return
+	}
 	x.Gallery = false
 	x.QueryID = 0
 	x.NextOffset = ""
-	if x.SwitchPM != nil {
-		PoolBotInlineSwitchPM.Put(x.SwitchPM)
-		x.SwitchPM = nil
+	PoolBotInlineSwitchPM.Put(x.SwitchPM)
+	x.SwitchPM = nil
+	for _, z := range x.Results {
+		PoolBotInlineResult.Put(z)
 	}
 	x.Results = x.Results[:0]
 	p.pool.Put(x)
@@ -993,8 +1098,12 @@ func (x *BotResults) DeepCopy(z *BotResults) {
 	z.QueryID = x.QueryID
 	z.NextOffset = x.NextOffset
 	if x.SwitchPM != nil {
-		z.SwitchPM = PoolBotInlineSwitchPM.Get()
+		if z.SwitchPM == nil {
+			z.SwitchPM = PoolBotInlineSwitchPM.Get()
+		}
 		x.SwitchPM.DeepCopy(z.SwitchPM)
+	} else {
+		z.SwitchPM = nil
 	}
 	for idx := range x.Results {
 		if x.Results[idx] != nil {
@@ -1026,12 +1135,15 @@ type poolBotInlineSwitchPM struct {
 func (p *poolBotInlineSwitchPM) Get() *BotInlineSwitchPM {
 	x, ok := p.pool.Get().(*BotInlineSwitchPM)
 	if !ok {
-		return &BotInlineSwitchPM{}
+		x = &BotInlineSwitchPM{}
 	}
 	return x
 }
 
 func (p *poolBotInlineSwitchPM) Put(x *BotInlineSwitchPM) {
+	if x == nil {
+		return
+	}
 	x.Text = ""
 	x.StartParam = ""
 	p.pool.Put(x)
@@ -1065,25 +1177,24 @@ type poolBotInlineResult struct {
 func (p *poolBotInlineResult) Get() *BotInlineResult {
 	x, ok := p.pool.Get().(*BotInlineResult)
 	if !ok {
-		return &BotInlineResult{}
+		x = &BotInlineResult{}
 	}
 	return x
 }
 
 func (p *poolBotInlineResult) Put(x *BotInlineResult) {
+	if x == nil {
+		return
+	}
 	x.ID = ""
 	x.Type = 0
 	x.Title = ""
 	x.Description = ""
 	x.Url = ""
-	if x.Thumb != nil {
-		PoolMediaWebDocument.Put(x.Thumb)
-		x.Thumb = nil
-	}
-	if x.Message != nil {
-		PoolBotInlineMessage.Put(x.Message)
-		x.Message = nil
-	}
+	PoolMediaWebDocument.Put(x.Thumb)
+	x.Thumb = nil
+	PoolBotInlineMessage.Put(x.Message)
+	x.Message = nil
 	p.pool.Put(x)
 }
 
@@ -1096,12 +1207,20 @@ func (x *BotInlineResult) DeepCopy(z *BotInlineResult) {
 	z.Description = x.Description
 	z.Url = x.Url
 	if x.Thumb != nil {
-		z.Thumb = PoolMediaWebDocument.Get()
+		if z.Thumb == nil {
+			z.Thumb = PoolMediaWebDocument.Get()
+		}
 		x.Thumb.DeepCopy(z.Thumb)
+	} else {
+		z.Thumb = nil
 	}
 	if x.Message != nil {
-		z.Message = PoolBotInlineMessage.Get()
+		if z.Message == nil {
+			z.Message = PoolBotInlineMessage.Get()
+		}
 		x.Message.DeepCopy(z.Message)
+	} else {
+		z.Message = nil
 	}
 }
 
@@ -1126,25 +1245,24 @@ type poolInputBotInlineResult struct {
 func (p *poolInputBotInlineResult) Get() *InputBotInlineResult {
 	x, ok := p.pool.Get().(*InputBotInlineResult)
 	if !ok {
-		return &InputBotInlineResult{}
+		x = &InputBotInlineResult{}
 	}
 	return x
 }
 
 func (p *poolInputBotInlineResult) Put(x *InputBotInlineResult) {
+	if x == nil {
+		return
+	}
 	x.ID = ""
 	x.Type = 0
 	x.Title = ""
 	x.Description = ""
 	x.Url = ""
-	if x.Thumb != nil {
-		PoolInputMediaWebDocument.Put(x.Thumb)
-		x.Thumb = nil
-	}
-	if x.Message != nil {
-		PoolInputBotInlineMessage.Put(x.Message)
-		x.Message = nil
-	}
+	PoolInputMediaWebDocument.Put(x.Thumb)
+	x.Thumb = nil
+	PoolInputBotInlineMessage.Put(x.Message)
+	x.Message = nil
 	p.pool.Put(x)
 }
 
@@ -1157,12 +1275,20 @@ func (x *InputBotInlineResult) DeepCopy(z *InputBotInlineResult) {
 	z.Description = x.Description
 	z.Url = x.Url
 	if x.Thumb != nil {
-		z.Thumb = PoolInputMediaWebDocument.Get()
+		if z.Thumb == nil {
+			z.Thumb = PoolInputMediaWebDocument.Get()
+		}
 		x.Thumb.DeepCopy(z.Thumb)
+	} else {
+		z.Thumb = nil
 	}
 	if x.Message != nil {
-		z.Message = PoolInputBotInlineMessage.Get()
+		if z.Message == nil {
+			z.Message = PoolInputBotInlineMessage.Get()
+		}
 		x.Message.DeepCopy(z.Message)
+	} else {
+		z.Message = nil
 	}
 }
 
@@ -1187,14 +1313,20 @@ type poolBotInlineMessage struct {
 func (p *poolBotInlineMessage) Get() *BotInlineMessage {
 	x, ok := p.pool.Get().(*BotInlineMessage)
 	if !ok {
-		return &BotInlineMessage{}
+		x = &BotInlineMessage{}
 	}
 	return x
 }
 
 func (p *poolBotInlineMessage) Put(x *BotInlineMessage) {
+	if x == nil {
+		return
+	}
 	x.MediaData = x.MediaData[:0]
 	x.Body = ""
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
+	}
 	x.Entities = x.Entities[:0]
 	x.ReplyTo = 0
 	x.ReplyMarkup = 0
@@ -1240,15 +1372,21 @@ type poolInputBotInlineMessage struct {
 func (p *poolInputBotInlineMessage) Get() *InputBotInlineMessage {
 	x, ok := p.pool.Get().(*InputBotInlineMessage)
 	if !ok {
-		return &InputBotInlineMessage{}
+		x = &InputBotInlineMessage{}
 	}
 	return x
 }
 
 func (p *poolInputBotInlineMessage) Put(x *InputBotInlineMessage) {
+	if x == nil {
+		return
+	}
 	x.InputMediaData = x.InputMediaData[:0]
 	x.NoWebPage = false
 	x.Body = ""
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
+	}
 	x.Entities = x.Entities[:0]
 	x.ReplyTo = 0
 	x.ReplyMarkup = 0
@@ -1295,12 +1433,15 @@ type poolBotToken struct {
 func (p *poolBotToken) Get() *BotToken {
 	x, ok := p.pool.Get().(*BotToken)
 	if !ok {
-		return &BotToken{}
+		x = &BotToken{}
 	}
 	return x
 }
 
 func (p *poolBotToken) Put(x *BotToken) {
+	if x == nil {
+		return
+	}
 	x.Token = x.Token[:0]
 	p.pool.Put(x)
 }
@@ -1332,12 +1473,15 @@ type poolBotRecalled struct {
 func (p *poolBotRecalled) Get() *BotRecalled {
 	x, ok := p.pool.Get().(*BotRecalled)
 	if !ok {
-		return &BotRecalled{}
+		x = &BotRecalled{}
 	}
 	return x
 }
 
 func (p *poolBotRecalled) Put(x *BotRecalled) {
+	if x == nil {
+		return
+	}
 	x.ID = 0
 	x.Username = ""
 	p.pool.Put(x)
@@ -1371,12 +1515,15 @@ type poolBotCallbackAnswer struct {
 func (p *poolBotCallbackAnswer) Get() *BotCallbackAnswer {
 	x, ok := p.pool.Get().(*BotCallbackAnswer)
 	if !ok {
-		return &BotCallbackAnswer{}
+		x = &BotCallbackAnswer{}
 	}
 	return x
 }
 
 func (p *poolBotCallbackAnswer) Put(x *BotCallbackAnswer) {
+	if x == nil {
+		return
+	}
 	x.Url = ""
 	x.Message = ""
 	x.CacheTime = 0
@@ -1412,12 +1559,18 @@ type poolBotsMany struct {
 func (p *poolBotsMany) Get() *BotsMany {
 	x, ok := p.pool.Get().(*BotsMany)
 	if !ok {
-		return &BotsMany{}
+		x = &BotsMany{}
 	}
 	return x
 }
 
 func (p *poolBotsMany) Put(x *BotsMany) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Bots {
+		PoolBotInfo.Put(z)
+	}
 	x.Bots = x.Bots[:0]
 	x.Empty = false
 	p.pool.Put(x)
@@ -1457,16 +1610,17 @@ type poolBotGetCommands struct {
 func (p *poolBotGetCommands) Get() *BotGetCommands {
 	x, ok := p.pool.Get().(*BotGetCommands)
 	if !ok {
-		return &BotGetCommands{}
+		x = &BotGetCommands{}
 	}
 	return x
 }
 
 func (p *poolBotGetCommands) Put(x *BotGetCommands) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	p.pool.Put(x)
 }
 
@@ -1474,8 +1628,12 @@ var PoolBotGetCommands = poolBotGetCommands{}
 
 func (x *BotGetCommands) DeepCopy(z *BotGetCommands) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 }
 
@@ -1500,12 +1658,18 @@ type poolBotCommandsMany struct {
 func (p *poolBotCommandsMany) Get() *BotCommandsMany {
 	x, ok := p.pool.Get().(*BotCommandsMany)
 	if !ok {
-		return &BotCommandsMany{}
+		x = &BotCommandsMany{}
 	}
 	return x
 }
 
 func (p *poolBotCommandsMany) Put(x *BotCommandsMany) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Commands {
+		PoolBotCommands.Put(z)
+	}
 	x.Commands = x.Commands[:0]
 	x.Empty = false
 	p.pool.Put(x)

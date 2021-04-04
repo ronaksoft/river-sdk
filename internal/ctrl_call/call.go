@@ -26,16 +26,11 @@ type UpdatePhoneCall struct {
 	Data interface{}
 }
 
-type MediaSettings struct {
-	Audio       bool
-	ScreenShare bool
-	Video       bool
-}
-
 type CallParticipant struct {
 	msg.PhoneParticipant
-	DeviceType msg.CallDeviceType
-	MediaSettings
+	DeviceType    msg.CallDeviceType
+	MediaSettings msg.CallMediaSettings
+	Started       bool
 }
 
 type RTCIceCandidate struct {
@@ -50,6 +45,18 @@ type CallConnection struct {
 	IceQueue []RTCIceCandidate
 	Interval interface{}
 	Try      int64
+}
+
+type CallInfo struct {
+	AcceptedParticipantIds []int64
+	AcceptedParticipants   []int
+	AllConnected           bool
+	Dialed                 bool
+	MediaSettings          msg.CallMediaSettings
+	ParticipantMap         map[int64]int64
+	Participants           map[int64]CallParticipant
+	RequestParticipantIds  []int64
+	Requests               []UpdatePhoneCall
 }
 
 func parseCallAction(constructor msg.PhoneCallAction, data []byte) (out interface{}, err error) {
@@ -164,6 +171,10 @@ func parseCallAction(constructor msg.PhoneCallAction, data []byte) (out interfac
 }
 
 type callController struct {
+	peerConnections map[int64]CallConnection
+	peer            *msg.InputPeer
+	activeCallID    int64
+	callInfo        map[int64]CallInfo
 }
 
 func (c *callController) ToggleVide(enable bool) {
@@ -171,5 +182,9 @@ func (c *callController) ToggleVide(enable bool) {
 }
 
 func (c *callController) ToggleAudio(enable bool) {
+
+}
+
+func (c *callController) CallStart(peer *msg.InputPeer, participants []*msg.InputUser, callID int64) {
 
 }

@@ -18,12 +18,18 @@ type poolUsersGet struct {
 func (p *poolUsersGet) Get() *UsersGet {
 	x, ok := p.pool.Get().(*UsersGet)
 	if !ok {
-		return &UsersGet{}
+		x = &UsersGet{}
 	}
 	return x
 }
 
 func (p *poolUsersGet) Put(x *UsersGet) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Users {
+		PoolInputUser.Put(z)
+	}
 	x.Users = x.Users[:0]
 	p.pool.Put(x)
 }
@@ -61,12 +67,18 @@ type poolUsersGetFull struct {
 func (p *poolUsersGetFull) Get() *UsersGetFull {
 	x, ok := p.pool.Get().(*UsersGetFull)
 	if !ok {
-		return &UsersGetFull{}
+		x = &UsersGetFull{}
 	}
 	return x
 }
 
 func (p *poolUsersGetFull) Put(x *UsersGetFull) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Users {
+		PoolInputUser.Put(z)
+	}
 	x.Users = x.Users[:0]
 	p.pool.Put(x)
 }
@@ -104,12 +116,18 @@ type poolUsersMany struct {
 func (p *poolUsersMany) Get() *UsersMany {
 	x, ok := p.pool.Get().(*UsersMany)
 	if !ok {
-		return &UsersMany{}
+		x = &UsersMany{}
 	}
 	return x
 }
 
 func (p *poolUsersMany) Put(x *UsersMany) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Users {
+		PoolUser.Put(z)
+	}
 	x.Users = x.Users[:0]
 	x.Empty = false
 	p.pool.Put(x)

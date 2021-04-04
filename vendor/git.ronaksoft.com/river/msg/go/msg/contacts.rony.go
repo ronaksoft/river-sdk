@@ -18,12 +18,18 @@ type poolContactsImport struct {
 func (p *poolContactsImport) Get() *ContactsImport {
 	x, ok := p.pool.Get().(*ContactsImport)
 	if !ok {
-		return &ContactsImport{}
+		x = &ContactsImport{}
 	}
 	return x
 }
 
 func (p *poolContactsImport) Put(x *ContactsImport) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Contacts {
+		PoolPhoneContact.Put(z)
+	}
 	x.Contacts = x.Contacts[:0]
 	x.Replace = false
 	p.pool.Put(x)
@@ -63,16 +69,17 @@ type poolContactsAdd struct {
 func (p *poolContactsAdd) Get() *ContactsAdd {
 	x, ok := p.pool.Get().(*ContactsAdd)
 	if !ok {
-		return &ContactsAdd{}
+		x = &ContactsAdd{}
 	}
 	return x
 }
 
 func (p *poolContactsAdd) Put(x *ContactsAdd) {
-	if x.User != nil {
-		PoolInputUser.Put(x.User)
-		x.User = nil
+	if x == nil {
+		return
 	}
+	PoolInputUser.Put(x.User)
+	x.User = nil
 	x.FirstName = ""
 	x.LastName = ""
 	x.Phone = ""
@@ -83,8 +90,12 @@ var PoolContactsAdd = poolContactsAdd{}
 
 func (x *ContactsAdd) DeepCopy(z *ContactsAdd) {
 	if x.User != nil {
-		z.User = PoolInputUser.Get()
+		if z.User == nil {
+			z.User = PoolInputUser.Get()
+		}
 		x.User.DeepCopy(z.User)
+	} else {
+		z.User = nil
 	}
 	z.FirstName = x.FirstName
 	z.LastName = x.LastName
@@ -112,12 +123,15 @@ type poolContactsGet struct {
 func (p *poolContactsGet) Get() *ContactsGet {
 	x, ok := p.pool.Get().(*ContactsGet)
 	if !ok {
-		return &ContactsGet{}
+		x = &ContactsGet{}
 	}
 	return x
 }
 
 func (p *poolContactsGet) Put(x *ContactsGet) {
+	if x == nil {
+		return
+	}
 	x.Crc32Hash = 0
 	p.pool.Put(x)
 }
@@ -149,12 +163,15 @@ type poolContactsDelete struct {
 func (p *poolContactsDelete) Get() *ContactsDelete {
 	x, ok := p.pool.Get().(*ContactsDelete)
 	if !ok {
-		return &ContactsDelete{}
+		x = &ContactsDelete{}
 	}
 	return x
 }
 
 func (p *poolContactsDelete) Put(x *ContactsDelete) {
+	if x == nil {
+		return
+	}
 	x.UserIDs = x.UserIDs[:0]
 	p.pool.Put(x)
 }
@@ -186,12 +203,15 @@ type poolContactsDeleteAll struct {
 func (p *poolContactsDeleteAll) Get() *ContactsDeleteAll {
 	x, ok := p.pool.Get().(*ContactsDeleteAll)
 	if !ok {
-		return &ContactsDeleteAll{}
+		x = &ContactsDeleteAll{}
 	}
 	return x
 }
 
 func (p *poolContactsDeleteAll) Put(x *ContactsDeleteAll) {
+	if x == nil {
+		return
+	}
 	p.pool.Put(x)
 }
 
@@ -221,16 +241,17 @@ type poolContactsBlock struct {
 func (p *poolContactsBlock) Get() *ContactsBlock {
 	x, ok := p.pool.Get().(*ContactsBlock)
 	if !ok {
-		return &ContactsBlock{}
+		x = &ContactsBlock{}
 	}
 	return x
 }
 
 func (p *poolContactsBlock) Put(x *ContactsBlock) {
-	if x.User != nil {
-		PoolInputUser.Put(x.User)
-		x.User = nil
+	if x == nil {
+		return
 	}
+	PoolInputUser.Put(x.User)
+	x.User = nil
 	p.pool.Put(x)
 }
 
@@ -238,8 +259,12 @@ var PoolContactsBlock = poolContactsBlock{}
 
 func (x *ContactsBlock) DeepCopy(z *ContactsBlock) {
 	if x.User != nil {
-		z.User = PoolInputUser.Get()
+		if z.User == nil {
+			z.User = PoolInputUser.Get()
+		}
 		x.User.DeepCopy(z.User)
+	} else {
+		z.User = nil
 	}
 }
 
@@ -264,16 +289,17 @@ type poolContactsUnblock struct {
 func (p *poolContactsUnblock) Get() *ContactsUnblock {
 	x, ok := p.pool.Get().(*ContactsUnblock)
 	if !ok {
-		return &ContactsUnblock{}
+		x = &ContactsUnblock{}
 	}
 	return x
 }
 
 func (p *poolContactsUnblock) Put(x *ContactsUnblock) {
-	if x.User != nil {
-		PoolInputUser.Put(x.User)
-		x.User = nil
+	if x == nil {
+		return
 	}
+	PoolInputUser.Put(x.User)
+	x.User = nil
 	p.pool.Put(x)
 }
 
@@ -281,8 +307,12 @@ var PoolContactsUnblock = poolContactsUnblock{}
 
 func (x *ContactsUnblock) DeepCopy(z *ContactsUnblock) {
 	if x.User != nil {
-		z.User = PoolInputUser.Get()
+		if z.User == nil {
+			z.User = PoolInputUser.Get()
+		}
 		x.User.DeepCopy(z.User)
+	} else {
+		z.User = nil
 	}
 }
 
@@ -307,12 +337,15 @@ type poolContactsGetBlocked struct {
 func (p *poolContactsGetBlocked) Get() *ContactsGetBlocked {
 	x, ok := p.pool.Get().(*ContactsGetBlocked)
 	if !ok {
-		return &ContactsGetBlocked{}
+		x = &ContactsGetBlocked{}
 	}
 	return x
 }
 
 func (p *poolContactsGetBlocked) Put(x *ContactsGetBlocked) {
+	if x == nil {
+		return
+	}
 	x.Offset = 0
 	x.Limit = 0
 	p.pool.Put(x)
@@ -346,12 +379,15 @@ type poolContactsSearch struct {
 func (p *poolContactsSearch) Get() *ContactsSearch {
 	x, ok := p.pool.Get().(*ContactsSearch)
 	if !ok {
-		return &ContactsSearch{}
+		x = &ContactsSearch{}
 	}
 	return x
 }
 
 func (p *poolContactsSearch) Put(x *ContactsSearch) {
+	if x == nil {
+		return
+	}
 	x.Q = ""
 	p.pool.Put(x)
 }
@@ -383,12 +419,15 @@ type poolContactsGetTopPeers struct {
 func (p *poolContactsGetTopPeers) Get() *ContactsGetTopPeers {
 	x, ok := p.pool.Get().(*ContactsGetTopPeers)
 	if !ok {
-		return &ContactsGetTopPeers{}
+		x = &ContactsGetTopPeers{}
 	}
 	return x
 }
 
 func (p *poolContactsGetTopPeers) Put(x *ContactsGetTopPeers) {
+	if x == nil {
+		return
+	}
 	x.Offset = 0
 	x.Limit = 0
 	x.Category = 0
@@ -424,17 +463,18 @@ type poolContactsResetTopPeer struct {
 func (p *poolContactsResetTopPeer) Get() *ContactsResetTopPeer {
 	x, ok := p.pool.Get().(*ContactsResetTopPeer)
 	if !ok {
-		return &ContactsResetTopPeer{}
+		x = &ContactsResetTopPeer{}
 	}
 	return x
 }
 
 func (p *poolContactsResetTopPeer) Put(x *ContactsResetTopPeer) {
-	x.Category = 0
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	x.Category = 0
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	p.pool.Put(x)
 }
 
@@ -443,8 +483,12 @@ var PoolContactsResetTopPeer = poolContactsResetTopPeer{}
 func (x *ContactsResetTopPeer) DeepCopy(z *ContactsResetTopPeer) {
 	z.Category = x.Category
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 }
 
@@ -469,16 +513,28 @@ type poolContactsTopPeers struct {
 func (p *poolContactsTopPeers) Get() *ContactsTopPeers {
 	x, ok := p.pool.Get().(*ContactsTopPeers)
 	if !ok {
-		return &ContactsTopPeers{}
+		x = &ContactsTopPeers{}
 	}
 	return x
 }
 
 func (p *poolContactsTopPeers) Put(x *ContactsTopPeers) {
+	if x == nil {
+		return
+	}
 	x.Category = 0
 	x.Count = 0
+	for _, z := range x.Peers {
+		PoolTopPeer.Put(z)
+	}
 	x.Peers = x.Peers[:0]
+	for _, z := range x.Users {
+		PoolUser.Put(z)
+	}
 	x.Users = x.Users[:0]
+	for _, z := range x.Groups {
+		PoolGroup.Put(z)
+	}
 	x.Groups = x.Groups[:0]
 	p.pool.Put(x)
 }
@@ -532,17 +588,18 @@ type poolTopPeer struct {
 func (p *poolTopPeer) Get() *TopPeer {
 	x, ok := p.pool.Get().(*TopPeer)
 	if !ok {
-		return &TopPeer{}
+		x = &TopPeer{}
 	}
 	return x
 }
 
 func (p *poolTopPeer) Put(x *TopPeer) {
-	x.TeamID = 0
-	if x.Peer != nil {
-		PoolPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	x.TeamID = 0
+	PoolPeer.Put(x.Peer)
+	x.Peer = nil
 	x.Rate = 0
 	x.LastUpdate = 0
 	p.pool.Put(x)
@@ -553,8 +610,12 @@ var PoolTopPeer = poolTopPeer{}
 func (x *TopPeer) DeepCopy(z *TopPeer) {
 	z.TeamID = x.TeamID
 	if x.Peer != nil {
-		z.Peer = PoolPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Rate = x.Rate
 	z.LastUpdate = x.LastUpdate
@@ -581,13 +642,22 @@ type poolBlockedContactsMany struct {
 func (p *poolBlockedContactsMany) Get() *BlockedContactsMany {
 	x, ok := p.pool.Get().(*BlockedContactsMany)
 	if !ok {
-		return &BlockedContactsMany{}
+		x = &BlockedContactsMany{}
 	}
 	return x
 }
 
 func (p *poolBlockedContactsMany) Put(x *BlockedContactsMany) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Contacts {
+		PoolBlockedContact.Put(z)
+	}
 	x.Contacts = x.Contacts[:0]
+	for _, z := range x.Users {
+		PoolUser.Put(z)
+	}
 	x.Users = x.Users[:0]
 	x.Total = 0
 	p.pool.Put(x)
@@ -634,12 +704,15 @@ type poolBlockedContact struct {
 func (p *poolBlockedContact) Get() *BlockedContact {
 	x, ok := p.pool.Get().(*BlockedContact)
 	if !ok {
-		return &BlockedContact{}
+		x = &BlockedContact{}
 	}
 	return x
 }
 
 func (p *poolBlockedContact) Put(x *BlockedContact) {
+	if x == nil {
+		return
+	}
 	x.UserID = 0
 	x.Date = 0
 	p.pool.Put(x)
@@ -673,13 +746,22 @@ type poolContactsImported struct {
 func (p *poolContactsImported) Get() *ContactsImported {
 	x, ok := p.pool.Get().(*ContactsImported)
 	if !ok {
-		return &ContactsImported{}
+		x = &ContactsImported{}
 	}
 	return x
 }
 
 func (p *poolContactsImported) Put(x *ContactsImported) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.ContactUsers {
+		PoolContactUser.Put(z)
+	}
 	x.ContactUsers = x.ContactUsers[:0]
+	for _, z := range x.Users {
+		PoolUser.Put(z)
+	}
 	x.Users = x.Users[:0]
 	x.Empty = false
 	p.pool.Put(x)
@@ -726,15 +808,27 @@ type poolContactsMany struct {
 func (p *poolContactsMany) Get() *ContactsMany {
 	x, ok := p.pool.Get().(*ContactsMany)
 	if !ok {
-		return &ContactsMany{}
+		x = &ContactsMany{}
 	}
 	return x
 }
 
 func (p *poolContactsMany) Put(x *ContactsMany) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Contacts {
+		PoolPhoneContact.Put(z)
+	}
 	x.Contacts = x.Contacts[:0]
+	for _, z := range x.ContactUsers {
+		PoolContactUser.Put(z)
+	}
 	x.ContactUsers = x.ContactUsers[:0]
 	x.Modified = false
+	for _, z := range x.Users {
+		PoolUser.Put(z)
+	}
 	x.Users = x.Users[:0]
 	x.Empty = false
 	x.Hash = 0

@@ -18,12 +18,15 @@ type poolInitConnect struct {
 func (p *poolInitConnect) Get() *InitConnect {
 	x, ok := p.pool.Get().(*InitConnect)
 	if !ok {
-		return &InitConnect{}
+		x = &InitConnect{}
 	}
 	return x
 }
 
 func (p *poolInitConnect) Put(x *InitConnect) {
+	if x == nil {
+		return
+	}
 	x.ClientNonce = 0
 	p.pool.Put(x)
 }
@@ -55,12 +58,15 @@ type poolInitCompleteAuth struct {
 func (p *poolInitCompleteAuth) Get() *InitCompleteAuth {
 	x, ok := p.pool.Get().(*InitCompleteAuth)
 	if !ok {
-		return &InitCompleteAuth{}
+		x = &InitCompleteAuth{}
 	}
 	return x
 }
 
 func (p *poolInitCompleteAuth) Put(x *InitCompleteAuth) {
+	if x == nil {
+		return
+	}
 	x.ClientNonce = 0
 	x.ServerNonce = 0
 	x.ClientDHPubKey = x.ClientDHPubKey[:0]
@@ -102,12 +108,15 @@ type poolInitConnectTest struct {
 func (p *poolInitConnectTest) Get() *InitConnectTest {
 	x, ok := p.pool.Get().(*InitConnectTest)
 	if !ok {
-		return &InitConnectTest{}
+		x = &InitConnectTest{}
 	}
 	return x
 }
 
 func (p *poolInitConnectTest) Put(x *InitConnectTest) {
+	if x == nil {
+		return
+	}
 	p.pool.Put(x)
 }
 
@@ -137,12 +146,15 @@ type poolInitBindUser struct {
 func (p *poolInitBindUser) Get() *InitBindUser {
 	x, ok := p.pool.Get().(*InitBindUser)
 	if !ok {
-		return &InitBindUser{}
+		x = &InitBindUser{}
 	}
 	return x
 }
 
 func (p *poolInitBindUser) Put(x *InitBindUser) {
+	if x == nil {
+		return
+	}
 	x.AuthKey = ""
 	x.Username = ""
 	x.Phone = ""
@@ -182,12 +194,15 @@ type poolAuthRegister struct {
 func (p *poolAuthRegister) Get() *AuthRegister {
 	x, ok := p.pool.Get().(*AuthRegister)
 	if !ok {
-		return &AuthRegister{}
+		x = &AuthRegister{}
 	}
 	return x
 }
 
 func (p *poolAuthRegister) Put(x *AuthRegister) {
+	if x == nil {
+		return
+	}
 	x.Phone = ""
 	x.FirstName = ""
 	x.LastName = ""
@@ -229,12 +244,15 @@ type poolAuthBotRegister struct {
 func (p *poolAuthBotRegister) Get() *AuthBotRegister {
 	x, ok := p.pool.Get().(*AuthBotRegister)
 	if !ok {
-		return &AuthBotRegister{}
+		x = &AuthBotRegister{}
 	}
 	return x
 }
 
 func (p *poolAuthBotRegister) Put(x *AuthBotRegister) {
+	if x == nil {
+		return
+	}
 	x.Name = ""
 	x.Username = ""
 	x.OwnerID = 0
@@ -270,12 +288,15 @@ type poolAuthLogin struct {
 func (p *poolAuthLogin) Get() *AuthLogin {
 	x, ok := p.pool.Get().(*AuthLogin)
 	if !ok {
-		return &AuthLogin{}
+		x = &AuthLogin{}
 	}
 	return x
 }
 
 func (p *poolAuthLogin) Put(x *AuthLogin) {
+	if x == nil {
+		return
+	}
 	x.Phone = ""
 	x.PhoneCodeHash = ""
 	x.PhoneCode = ""
@@ -311,16 +332,17 @@ type poolAuthCheckPassword struct {
 func (p *poolAuthCheckPassword) Get() *AuthCheckPassword {
 	x, ok := p.pool.Get().(*AuthCheckPassword)
 	if !ok {
-		return &AuthCheckPassword{}
+		x = &AuthCheckPassword{}
 	}
 	return x
 }
 
 func (p *poolAuthCheckPassword) Put(x *AuthCheckPassword) {
-	if x.Password != nil {
-		PoolInputPassword.Put(x.Password)
-		x.Password = nil
+	if x == nil {
+		return
 	}
+	PoolInputPassword.Put(x.Password)
+	x.Password = nil
 	p.pool.Put(x)
 }
 
@@ -328,8 +350,12 @@ var PoolAuthCheckPassword = poolAuthCheckPassword{}
 
 func (x *AuthCheckPassword) DeepCopy(z *AuthCheckPassword) {
 	if x.Password != nil {
-		z.Password = PoolInputPassword.Get()
+		if z.Password == nil {
+			z.Password = PoolInputPassword.Get()
+		}
 		x.Password.DeepCopy(z.Password)
+	} else {
+		z.Password = nil
 	}
 }
 
@@ -354,12 +380,15 @@ type poolAuthRecoverPassword struct {
 func (p *poolAuthRecoverPassword) Get() *AuthRecoverPassword {
 	x, ok := p.pool.Get().(*AuthRecoverPassword)
 	if !ok {
-		return &AuthRecoverPassword{}
+		x = &AuthRecoverPassword{}
 	}
 	return x
 }
 
 func (p *poolAuthRecoverPassword) Put(x *AuthRecoverPassword) {
+	if x == nil {
+		return
+	}
 	x.Code = ""
 	p.pool.Put(x)
 }
@@ -391,12 +420,15 @@ type poolAuthLogout struct {
 func (p *poolAuthLogout) Get() *AuthLogout {
 	x, ok := p.pool.Get().(*AuthLogout)
 	if !ok {
-		return &AuthLogout{}
+		x = &AuthLogout{}
 	}
 	return x
 }
 
 func (p *poolAuthLogout) Put(x *AuthLogout) {
+	if x == nil {
+		return
+	}
 	x.AuthIDs = x.AuthIDs[:0]
 	p.pool.Put(x)
 }
@@ -428,12 +460,15 @@ type poolAuthLoginByToken struct {
 func (p *poolAuthLoginByToken) Get() *AuthLoginByToken {
 	x, ok := p.pool.Get().(*AuthLoginByToken)
 	if !ok {
-		return &AuthLoginByToken{}
+		x = &AuthLoginByToken{}
 	}
 	return x
 }
 
 func (p *poolAuthLoginByToken) Put(x *AuthLoginByToken) {
+	if x == nil {
+		return
+	}
 	x.Token = ""
 	x.Provider = ""
 	x.Firstname = ""
@@ -471,12 +506,15 @@ type poolAuthCheckPhone struct {
 func (p *poolAuthCheckPhone) Get() *AuthCheckPhone {
 	x, ok := p.pool.Get().(*AuthCheckPhone)
 	if !ok {
-		return &AuthCheckPhone{}
+		x = &AuthCheckPhone{}
 	}
 	return x
 }
 
 func (p *poolAuthCheckPhone) Put(x *AuthCheckPhone) {
+	if x == nil {
+		return
+	}
 	x.Phone = ""
 	p.pool.Put(x)
 }
@@ -508,12 +546,15 @@ type poolAuthSendCode struct {
 func (p *poolAuthSendCode) Get() *AuthSendCode {
 	x, ok := p.pool.Get().(*AuthSendCode)
 	if !ok {
-		return &AuthSendCode{}
+		x = &AuthSendCode{}
 	}
 	return x
 }
 
 func (p *poolAuthSendCode) Put(x *AuthSendCode) {
+	if x == nil {
+		return
+	}
 	x.Phone = ""
 	x.AppHash = ""
 	p.pool.Put(x)
@@ -547,12 +588,15 @@ type poolAuthResendCode struct {
 func (p *poolAuthResendCode) Get() *AuthResendCode {
 	x, ok := p.pool.Get().(*AuthResendCode)
 	if !ok {
-		return &AuthResendCode{}
+		x = &AuthResendCode{}
 	}
 	return x
 }
 
 func (p *poolAuthResendCode) Put(x *AuthResendCode) {
+	if x == nil {
+		return
+	}
 	x.Phone = ""
 	x.PhoneCodeHash = ""
 	x.AppHash = ""
@@ -588,12 +632,15 @@ type poolAuthRecall struct {
 func (p *poolAuthRecall) Get() *AuthRecall {
 	x, ok := p.pool.Get().(*AuthRecall)
 	if !ok {
-		return &AuthRecall{}
+		x = &AuthRecall{}
 	}
 	return x
 }
 
 func (p *poolAuthRecall) Put(x *AuthRecall) {
+	if x == nil {
+		return
+	}
 	x.ClientID = 0
 	x.Version = 0
 	x.AppVersion = ""
@@ -635,12 +682,15 @@ type poolAuthDestroyKey struct {
 func (p *poolAuthDestroyKey) Get() *AuthDestroyKey {
 	x, ok := p.pool.Get().(*AuthDestroyKey)
 	if !ok {
-		return &AuthDestroyKey{}
+		x = &AuthDestroyKey{}
 	}
 	return x
 }
 
 func (p *poolAuthDestroyKey) Put(x *AuthDestroyKey) {
+	if x == nil {
+		return
+	}
 	p.pool.Put(x)
 }
 
@@ -670,12 +720,15 @@ type poolInitTestAuth struct {
 func (p *poolInitTestAuth) Get() *InitTestAuth {
 	x, ok := p.pool.Get().(*InitTestAuth)
 	if !ok {
-		return &InitTestAuth{}
+		x = &InitTestAuth{}
 	}
 	return x
 }
 
 func (p *poolInitTestAuth) Put(x *InitTestAuth) {
+	if x == nil {
+		return
+	}
 	x.AuthID = 0
 	x.AuthKey = x.AuthKey[:0]
 	p.pool.Put(x)
@@ -709,12 +762,15 @@ type poolInitResponse struct {
 func (p *poolInitResponse) Get() *InitResponse {
 	x, ok := p.pool.Get().(*InitResponse)
 	if !ok {
-		return &InitResponse{}
+		x = &InitResponse{}
 	}
 	return x
 }
 
 func (p *poolInitResponse) Put(x *InitResponse) {
+	if x == nil {
+		return
+	}
 	x.ClientNonce = 0
 	x.ServerNonce = 0
 	x.RSAPubKeyFingerPrint = 0
@@ -756,12 +812,15 @@ type poolInitCompleteAuthInternal struct {
 func (p *poolInitCompleteAuthInternal) Get() *InitCompleteAuthInternal {
 	x, ok := p.pool.Get().(*InitCompleteAuthInternal)
 	if !ok {
-		return &InitCompleteAuthInternal{}
+		x = &InitCompleteAuthInternal{}
 	}
 	return x
 }
 
 func (p *poolInitCompleteAuthInternal) Put(x *InitCompleteAuthInternal) {
+	if x == nil {
+		return
+	}
 	x.SecretNonce = x.SecretNonce[:0]
 	p.pool.Put(x)
 }
@@ -793,12 +852,15 @@ type poolInitAuthCompleted struct {
 func (p *poolInitAuthCompleted) Get() *InitAuthCompleted {
 	x, ok := p.pool.Get().(*InitAuthCompleted)
 	if !ok {
-		return &InitAuthCompleted{}
+		x = &InitAuthCompleted{}
 	}
 	return x
 }
 
 func (p *poolInitAuthCompleted) Put(x *InitAuthCompleted) {
+	if x == nil {
+		return
+	}
 	x.ClientNonce = 0
 	x.ServerNonce = 0
 	x.Status = 0
@@ -838,12 +900,15 @@ type poolInitUserBound struct {
 func (p *poolInitUserBound) Get() *InitUserBound {
 	x, ok := p.pool.Get().(*InitUserBound)
 	if !ok {
-		return &InitUserBound{}
+		x = &InitUserBound{}
 	}
 	return x
 }
 
 func (p *poolInitUserBound) Put(x *InitUserBound) {
+	if x == nil {
+		return
+	}
 	x.AuthID = 0
 	p.pool.Put(x)
 }
@@ -875,12 +940,15 @@ type poolAuthPasswordRecovery struct {
 func (p *poolAuthPasswordRecovery) Get() *AuthPasswordRecovery {
 	x, ok := p.pool.Get().(*AuthPasswordRecovery)
 	if !ok {
-		return &AuthPasswordRecovery{}
+		x = &AuthPasswordRecovery{}
 	}
 	return x
 }
 
 func (p *poolAuthPasswordRecovery) Put(x *AuthPasswordRecovery) {
+	if x == nil {
+		return
+	}
 	x.EmailPattern = ""
 	p.pool.Put(x)
 }
@@ -912,12 +980,15 @@ type poolAuthRecalled struct {
 func (p *poolAuthRecalled) Get() *AuthRecalled {
 	x, ok := p.pool.Get().(*AuthRecalled)
 	if !ok {
-		return &AuthRecalled{}
+		x = &AuthRecalled{}
 	}
 	return x
 }
 
 func (p *poolAuthRecalled) Put(x *AuthRecalled) {
+	if x == nil {
+		return
+	}
 	x.ClientID = 0
 	x.Timestamp = 0
 	x.UpdateID = 0
@@ -959,17 +1030,18 @@ type poolAuthAuthorization struct {
 func (p *poolAuthAuthorization) Get() *AuthAuthorization {
 	x, ok := p.pool.Get().(*AuthAuthorization)
 	if !ok {
-		return &AuthAuthorization{}
+		x = &AuthAuthorization{}
 	}
 	return x
 }
 
 func (p *poolAuthAuthorization) Put(x *AuthAuthorization) {
-	x.Expired = 0
-	if x.User != nil {
-		PoolUser.Put(x.User)
-		x.User = nil
+	if x == nil {
+		return
 	}
+	x.Expired = 0
+	PoolUser.Put(x.User)
+	x.User = nil
 	x.ActiveSessions = 0
 	p.pool.Put(x)
 }
@@ -979,8 +1051,12 @@ var PoolAuthAuthorization = poolAuthAuthorization{}
 func (x *AuthAuthorization) DeepCopy(z *AuthAuthorization) {
 	z.Expired = x.Expired
 	if x.User != nil {
-		z.User = PoolUser.Get()
+		if z.User == nil {
+			z.User = PoolUser.Get()
+		}
 		x.User.DeepCopy(z.User)
+	} else {
+		z.User = nil
 	}
 	z.ActiveSessions = x.ActiveSessions
 }
@@ -1006,18 +1082,19 @@ type poolAuthBotAuthorization struct {
 func (p *poolAuthBotAuthorization) Get() *AuthBotAuthorization {
 	x, ok := p.pool.Get().(*AuthBotAuthorization)
 	if !ok {
-		return &AuthBotAuthorization{}
+		x = &AuthBotAuthorization{}
 	}
 	return x
 }
 
 func (p *poolAuthBotAuthorization) Put(x *AuthBotAuthorization) {
+	if x == nil {
+		return
+	}
 	x.AuthID = 0
 	x.AuthKey = x.AuthKey[:0]
-	if x.Bot != nil {
-		PoolBot.Put(x.Bot)
-		x.Bot = nil
-	}
+	PoolBot.Put(x.Bot)
+	x.Bot = nil
 	p.pool.Put(x)
 }
 
@@ -1027,8 +1104,12 @@ func (x *AuthBotAuthorization) DeepCopy(z *AuthBotAuthorization) {
 	z.AuthID = x.AuthID
 	z.AuthKey = append(z.AuthKey[:0], x.AuthKey...)
 	if x.Bot != nil {
-		z.Bot = PoolBot.Get()
+		if z.Bot == nil {
+			z.Bot = PoolBot.Get()
+		}
 		x.Bot.DeepCopy(z.Bot)
+	} else {
+		z.Bot = nil
 	}
 }
 
@@ -1053,12 +1134,15 @@ type poolAuthCheckedPhone struct {
 func (p *poolAuthCheckedPhone) Get() *AuthCheckedPhone {
 	x, ok := p.pool.Get().(*AuthCheckedPhone)
 	if !ok {
-		return &AuthCheckedPhone{}
+		x = &AuthCheckedPhone{}
 	}
 	return x
 }
 
 func (p *poolAuthCheckedPhone) Put(x *AuthCheckedPhone) {
+	if x == nil {
+		return
+	}
 	x.Invited = false
 	x.Registered = false
 	p.pool.Put(x)
@@ -1092,12 +1176,15 @@ type poolAuthSentCode struct {
 func (p *poolAuthSentCode) Get() *AuthSentCode {
 	x, ok := p.pool.Get().(*AuthSentCode)
 	if !ok {
-		return &AuthSentCode{}
+		x = &AuthSentCode{}
 	}
 	return x
 }
 
 func (p *poolAuthSentCode) Put(x *AuthSentCode) {
+	if x == nil {
+		return
+	}
 	x.Phone = ""
 	x.PhoneCodeHash = ""
 	x.SendToPhone = false

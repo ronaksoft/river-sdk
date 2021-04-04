@@ -18,12 +18,15 @@ type poolLabelsCreate struct {
 func (p *poolLabelsCreate) Get() *LabelsCreate {
 	x, ok := p.pool.Get().(*LabelsCreate)
 	if !ok {
-		return &LabelsCreate{}
+		x = &LabelsCreate{}
 	}
 	return x
 }
 
 func (p *poolLabelsCreate) Put(x *LabelsCreate) {
+	if x == nil {
+		return
+	}
 	x.RandomID = 0
 	x.Name = ""
 	x.Colour = ""
@@ -59,12 +62,15 @@ type poolLabelsEdit struct {
 func (p *poolLabelsEdit) Get() *LabelsEdit {
 	x, ok := p.pool.Get().(*LabelsEdit)
 	if !ok {
-		return &LabelsEdit{}
+		x = &LabelsEdit{}
 	}
 	return x
 }
 
 func (p *poolLabelsEdit) Put(x *LabelsEdit) {
+	if x == nil {
+		return
+	}
 	x.LabelID = 0
 	x.Name = ""
 	x.Colour = ""
@@ -100,12 +106,15 @@ type poolLabelsDelete struct {
 func (p *poolLabelsDelete) Get() *LabelsDelete {
 	x, ok := p.pool.Get().(*LabelsDelete)
 	if !ok {
-		return &LabelsDelete{}
+		x = &LabelsDelete{}
 	}
 	return x
 }
 
 func (p *poolLabelsDelete) Put(x *LabelsDelete) {
+	if x == nil {
+		return
+	}
 	x.LabelIDs = x.LabelIDs[:0]
 	p.pool.Put(x)
 }
@@ -137,12 +146,15 @@ type poolLabelsGet struct {
 func (p *poolLabelsGet) Get() *LabelsGet {
 	x, ok := p.pool.Get().(*LabelsGet)
 	if !ok {
-		return &LabelsGet{}
+		x = &LabelsGet{}
 	}
 	return x
 }
 
 func (p *poolLabelsGet) Put(x *LabelsGet) {
+	if x == nil {
+		return
+	}
 	p.pool.Put(x)
 }
 
@@ -172,16 +184,17 @@ type poolLabelsAddToMessage struct {
 func (p *poolLabelsAddToMessage) Get() *LabelsAddToMessage {
 	x, ok := p.pool.Get().(*LabelsAddToMessage)
 	if !ok {
-		return &LabelsAddToMessage{}
+		x = &LabelsAddToMessage{}
 	}
 	return x
 }
 
 func (p *poolLabelsAddToMessage) Put(x *LabelsAddToMessage) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.LabelIDs = x.LabelIDs[:0]
 	x.MessageIDs = x.MessageIDs[:0]
 	p.pool.Put(x)
@@ -191,8 +204,12 @@ var PoolLabelsAddToMessage = poolLabelsAddToMessage{}
 
 func (x *LabelsAddToMessage) DeepCopy(z *LabelsAddToMessage) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.LabelIDs = append(z.LabelIDs[:0], x.LabelIDs...)
 	z.MessageIDs = append(z.MessageIDs[:0], x.MessageIDs...)
@@ -219,16 +236,17 @@ type poolLabelsRemoveFromMessage struct {
 func (p *poolLabelsRemoveFromMessage) Get() *LabelsRemoveFromMessage {
 	x, ok := p.pool.Get().(*LabelsRemoveFromMessage)
 	if !ok {
-		return &LabelsRemoveFromMessage{}
+		x = &LabelsRemoveFromMessage{}
 	}
 	return x
 }
 
 func (p *poolLabelsRemoveFromMessage) Put(x *LabelsRemoveFromMessage) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.LabelIDs = x.LabelIDs[:0]
 	x.MessageIDs = x.MessageIDs[:0]
 	p.pool.Put(x)
@@ -238,8 +256,12 @@ var PoolLabelsRemoveFromMessage = poolLabelsRemoveFromMessage{}
 
 func (x *LabelsRemoveFromMessage) DeepCopy(z *LabelsRemoveFromMessage) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.LabelIDs = append(z.LabelIDs[:0], x.LabelIDs...)
 	z.MessageIDs = append(z.MessageIDs[:0], x.MessageIDs...)
@@ -266,12 +288,15 @@ type poolLabelsListItems struct {
 func (p *poolLabelsListItems) Get() *LabelsListItems {
 	x, ok := p.pool.Get().(*LabelsListItems)
 	if !ok {
-		return &LabelsListItems{}
+		x = &LabelsListItems{}
 	}
 	return x
 }
 
 func (p *poolLabelsListItems) Put(x *LabelsListItems) {
+	if x == nil {
+		return
+	}
 	x.LabelID = 0
 	x.MinID = 0
 	x.MaxID = 0
@@ -309,16 +334,31 @@ type poolLabelItems struct {
 func (p *poolLabelItems) Get() *LabelItems {
 	x, ok := p.pool.Get().(*LabelItems)
 	if !ok {
-		return &LabelItems{}
+		x = &LabelItems{}
 	}
 	return x
 }
 
 func (p *poolLabelItems) Put(x *LabelItems) {
+	if x == nil {
+		return
+	}
 	x.LabelID = 0
+	for _, z := range x.Messages {
+		PoolUserMessage.Put(z)
+	}
 	x.Messages = x.Messages[:0]
+	for _, z := range x.Dialogs {
+		PoolDialog.Put(z)
+	}
 	x.Dialogs = x.Dialogs[:0]
+	for _, z := range x.Users {
+		PoolUser.Put(z)
+	}
 	x.Users = x.Users[:0]
+	for _, z := range x.Groups {
+		PoolGroup.Put(z)
+	}
 	x.Groups = x.Groups[:0]
 	p.pool.Put(x)
 }

@@ -18,20 +18,24 @@ type poolMessagesSend struct {
 func (p *poolMessagesSend) Get() *MessagesSend {
 	x, ok := p.pool.Get().(*MessagesSend)
 	if !ok {
-		return &MessagesSend{}
+		x = &MessagesSend{}
 	}
 	return x
 }
 
 func (p *poolMessagesSend) Put(x *MessagesSend) {
-	x.RandomID = 0
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	x.RandomID = 0
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.Body = ""
 	x.ReplyTo = 0
 	x.ClearDraft = false
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
+	}
 	x.Entities = x.Entities[:0]
 	p.pool.Put(x)
 }
@@ -41,8 +45,12 @@ var PoolMessagesSend = poolMessagesSend{}
 func (x *MessagesSend) DeepCopy(z *MessagesSend) {
 	z.RandomID = x.RandomID
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Body = x.Body
 	z.ReplyTo = x.ReplyTo
@@ -77,17 +85,18 @@ type poolMessagesSendMedia struct {
 func (p *poolMessagesSendMedia) Get() *MessagesSendMedia {
 	x, ok := p.pool.Get().(*MessagesSendMedia)
 	if !ok {
-		return &MessagesSendMedia{}
+		x = &MessagesSendMedia{}
 	}
 	return x
 }
 
 func (p *poolMessagesSendMedia) Put(x *MessagesSendMedia) {
-	x.RandomID = 0
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	x.RandomID = 0
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MediaType = 0
 	x.MediaData = x.MediaData[:0]
 	x.ReplyTo = 0
@@ -100,8 +109,12 @@ var PoolMessagesSendMedia = poolMessagesSendMedia{}
 func (x *MessagesSendMedia) DeepCopy(z *MessagesSendMedia) {
 	z.RandomID = x.RandomID
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MediaType = x.MediaType
 	z.MediaData = append(z.MediaData[:0], x.MediaData...)
@@ -130,19 +143,23 @@ type poolMessagesEdit struct {
 func (p *poolMessagesEdit) Get() *MessagesEdit {
 	x, ok := p.pool.Get().(*MessagesEdit)
 	if !ok {
-		return &MessagesEdit{}
+		x = &MessagesEdit{}
 	}
 	return x
 }
 
 func (p *poolMessagesEdit) Put(x *MessagesEdit) {
-	x.RandomID = 0
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	x.RandomID = 0
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.Body = ""
 	x.MessageID = 0
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
+	}
 	x.Entities = x.Entities[:0]
 	p.pool.Put(x)
 }
@@ -152,8 +169,12 @@ var PoolMessagesEdit = poolMessagesEdit{}
 func (x *MessagesEdit) DeepCopy(z *MessagesEdit) {
 	z.RandomID = x.RandomID
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Body = x.Body
 	z.MessageID = x.MessageID
@@ -187,19 +208,23 @@ type poolMessagesEditMedia struct {
 func (p *poolMessagesEditMedia) Get() *MessagesEditMedia {
 	x, ok := p.pool.Get().(*MessagesEditMedia)
 	if !ok {
-		return &MessagesEditMedia{}
+		x = &MessagesEditMedia{}
 	}
 	return x
 }
 
 func (p *poolMessagesEditMedia) Put(x *MessagesEditMedia) {
-	x.RandomID = 0
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	x.RandomID = 0
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MessageID = 0
 	x.Caption = ""
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
+	}
 	x.Entities = x.Entities[:0]
 	p.pool.Put(x)
 }
@@ -209,8 +234,12 @@ var PoolMessagesEditMedia = poolMessagesEditMedia{}
 func (x *MessagesEditMedia) DeepCopy(z *MessagesEditMedia) {
 	z.RandomID = x.RandomID
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MessageID = x.MessageID
 	z.Caption = x.Caption
@@ -244,16 +273,17 @@ type poolMessagesReadHistory struct {
 func (p *poolMessagesReadHistory) Get() *MessagesReadHistory {
 	x, ok := p.pool.Get().(*MessagesReadHistory)
 	if !ok {
-		return &MessagesReadHistory{}
+		x = &MessagesReadHistory{}
 	}
 	return x
 }
 
 func (p *poolMessagesReadHistory) Put(x *MessagesReadHistory) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MaxID = 0
 	p.pool.Put(x)
 }
@@ -262,8 +292,12 @@ var PoolMessagesReadHistory = poolMessagesReadHistory{}
 
 func (x *MessagesReadHistory) DeepCopy(z *MessagesReadHistory) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MaxID = x.MaxID
 }
@@ -289,16 +323,17 @@ type poolMessagesGet struct {
 func (p *poolMessagesGet) Get() *MessagesGet {
 	x, ok := p.pool.Get().(*MessagesGet)
 	if !ok {
-		return &MessagesGet{}
+		x = &MessagesGet{}
 	}
 	return x
 }
 
 func (p *poolMessagesGet) Put(x *MessagesGet) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MessagesIDs = x.MessagesIDs[:0]
 	p.pool.Put(x)
 }
@@ -307,8 +342,12 @@ var PoolMessagesGet = poolMessagesGet{}
 
 func (x *MessagesGet) DeepCopy(z *MessagesGet) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MessagesIDs = append(z.MessagesIDs[:0], x.MessagesIDs...)
 }
@@ -334,16 +373,17 @@ type poolMessagesGetHistory struct {
 func (p *poolMessagesGetHistory) Get() *MessagesGetHistory {
 	x, ok := p.pool.Get().(*MessagesGetHistory)
 	if !ok {
-		return &MessagesGetHistory{}
+		x = &MessagesGetHistory{}
 	}
 	return x
 }
 
 func (p *poolMessagesGetHistory) Put(x *MessagesGetHistory) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.Limit = 0
 	x.MaxID = 0
 	x.MinID = 0
@@ -354,8 +394,12 @@ var PoolMessagesGetHistory = poolMessagesGetHistory{}
 
 func (x *MessagesGetHistory) DeepCopy(z *MessagesGetHistory) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Limit = x.Limit
 	z.MaxID = x.MaxID
@@ -383,16 +427,17 @@ type poolMessagesGetMediaHistory struct {
 func (p *poolMessagesGetMediaHistory) Get() *MessagesGetMediaHistory {
 	x, ok := p.pool.Get().(*MessagesGetMediaHistory)
 	if !ok {
-		return &MessagesGetMediaHistory{}
+		x = &MessagesGetMediaHistory{}
 	}
 	return x
 }
 
 func (p *poolMessagesGetMediaHistory) Put(x *MessagesGetMediaHistory) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.Limit = 0
 	x.MaxID = 0
 	x.Cat = 0
@@ -403,8 +448,12 @@ var PoolMessagesGetMediaHistory = poolMessagesGetMediaHistory{}
 
 func (x *MessagesGetMediaHistory) DeepCopy(z *MessagesGetMediaHistory) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Limit = x.Limit
 	z.MaxID = x.MaxID
@@ -432,12 +481,15 @@ type poolMessagesGetDialogs struct {
 func (p *poolMessagesGetDialogs) Get() *MessagesGetDialogs {
 	x, ok := p.pool.Get().(*MessagesGetDialogs)
 	if !ok {
-		return &MessagesGetDialogs{}
+		x = &MessagesGetDialogs{}
 	}
 	return x
 }
 
 func (p *poolMessagesGetDialogs) Put(x *MessagesGetDialogs) {
+	if x == nil {
+		return
+	}
 	x.Limit = 0
 	x.Offset = 0
 	x.ExcludePinned = false
@@ -473,12 +525,15 @@ type poolMessagesGetPinnedDialogs struct {
 func (p *poolMessagesGetPinnedDialogs) Get() *MessagesGetPinnedDialogs {
 	x, ok := p.pool.Get().(*MessagesGetPinnedDialogs)
 	if !ok {
-		return &MessagesGetPinnedDialogs{}
+		x = &MessagesGetPinnedDialogs{}
 	}
 	return x
 }
 
 func (p *poolMessagesGetPinnedDialogs) Put(x *MessagesGetPinnedDialogs) {
+	if x == nil {
+		return
+	}
 	p.pool.Put(x)
 }
 
@@ -508,16 +563,17 @@ type poolMessagesGetDialog struct {
 func (p *poolMessagesGetDialog) Get() *MessagesGetDialog {
 	x, ok := p.pool.Get().(*MessagesGetDialog)
 	if !ok {
-		return &MessagesGetDialog{}
+		x = &MessagesGetDialog{}
 	}
 	return x
 }
 
 func (p *poolMessagesGetDialog) Put(x *MessagesGetDialog) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	p.pool.Put(x)
 }
 
@@ -525,8 +581,12 @@ var PoolMessagesGetDialog = poolMessagesGetDialog{}
 
 func (x *MessagesGetDialog) DeepCopy(z *MessagesGetDialog) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 }
 
@@ -551,16 +611,17 @@ type poolMessagesSetTyping struct {
 func (p *poolMessagesSetTyping) Get() *MessagesSetTyping {
 	x, ok := p.pool.Get().(*MessagesSetTyping)
 	if !ok {
-		return &MessagesSetTyping{}
+		x = &MessagesSetTyping{}
 	}
 	return x
 }
 
 func (p *poolMessagesSetTyping) Put(x *MessagesSetTyping) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.Action = 0
 	p.pool.Put(x)
 }
@@ -569,8 +630,12 @@ var PoolMessagesSetTyping = poolMessagesSetTyping{}
 
 func (x *MessagesSetTyping) DeepCopy(z *MessagesSetTyping) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Action = x.Action
 }
@@ -596,16 +661,17 @@ type poolMessagesClearHistory struct {
 func (p *poolMessagesClearHistory) Get() *MessagesClearHistory {
 	x, ok := p.pool.Get().(*MessagesClearHistory)
 	if !ok {
-		return &MessagesClearHistory{}
+		x = &MessagesClearHistory{}
 	}
 	return x
 }
 
 func (p *poolMessagesClearHistory) Put(x *MessagesClearHistory) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MaxID = 0
 	x.Delete = false
 	p.pool.Put(x)
@@ -615,8 +681,12 @@ var PoolMessagesClearHistory = poolMessagesClearHistory{}
 
 func (x *MessagesClearHistory) DeepCopy(z *MessagesClearHistory) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MaxID = x.MaxID
 	z.Delete = x.Delete
@@ -643,16 +713,17 @@ type poolMessagesDelete struct {
 func (p *poolMessagesDelete) Get() *MessagesDelete {
 	x, ok := p.pool.Get().(*MessagesDelete)
 	if !ok {
-		return &MessagesDelete{}
+		x = &MessagesDelete{}
 	}
 	return x
 }
 
 func (p *poolMessagesDelete) Put(x *MessagesDelete) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MessageIDs = x.MessageIDs[:0]
 	x.Revoke = false
 	p.pool.Put(x)
@@ -662,8 +733,12 @@ var PoolMessagesDelete = poolMessagesDelete{}
 
 func (x *MessagesDelete) DeepCopy(z *MessagesDelete) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MessageIDs = append(z.MessageIDs[:0], x.MessageIDs...)
 	z.Revoke = x.Revoke
@@ -690,20 +765,19 @@ type poolMessagesForward struct {
 func (p *poolMessagesForward) Get() *MessagesForward {
 	x, ok := p.pool.Get().(*MessagesForward)
 	if !ok {
-		return &MessagesForward{}
+		x = &MessagesForward{}
 	}
 	return x
 }
 
 func (p *poolMessagesForward) Put(x *MessagesForward) {
-	if x.FromPeer != nil {
-		PoolInputPeer.Put(x.FromPeer)
-		x.FromPeer = nil
+	if x == nil {
+		return
 	}
-	if x.ToPeer != nil {
-		PoolInputPeer.Put(x.ToPeer)
-		x.ToPeer = nil
-	}
+	PoolInputPeer.Put(x.FromPeer)
+	x.FromPeer = nil
+	PoolInputPeer.Put(x.ToPeer)
+	x.ToPeer = nil
 	x.Silence = false
 	x.MessageIDs = x.MessageIDs[:0]
 	x.RandomID = 0
@@ -714,12 +788,20 @@ var PoolMessagesForward = poolMessagesForward{}
 
 func (x *MessagesForward) DeepCopy(z *MessagesForward) {
 	if x.FromPeer != nil {
-		z.FromPeer = PoolInputPeer.Get()
+		if z.FromPeer == nil {
+			z.FromPeer = PoolInputPeer.Get()
+		}
 		x.FromPeer.DeepCopy(z.FromPeer)
+	} else {
+		z.FromPeer = nil
 	}
 	if x.ToPeer != nil {
-		z.ToPeer = PoolInputPeer.Get()
+		if z.ToPeer == nil {
+			z.ToPeer = PoolInputPeer.Get()
+		}
 		x.ToPeer.DeepCopy(z.ToPeer)
+	} else {
+		z.ToPeer = nil
 	}
 	z.Silence = x.Silence
 	z.MessageIDs = append(z.MessageIDs[:0], x.MessageIDs...)
@@ -747,16 +829,17 @@ type poolMessagesReadContents struct {
 func (p *poolMessagesReadContents) Get() *MessagesReadContents {
 	x, ok := p.pool.Get().(*MessagesReadContents)
 	if !ok {
-		return &MessagesReadContents{}
+		x = &MessagesReadContents{}
 	}
 	return x
 }
 
 func (p *poolMessagesReadContents) Put(x *MessagesReadContents) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MessageIDs = x.MessageIDs[:0]
 	p.pool.Put(x)
 }
@@ -765,8 +848,12 @@ var PoolMessagesReadContents = poolMessagesReadContents{}
 
 func (x *MessagesReadContents) DeepCopy(z *MessagesReadContents) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MessageIDs = append(z.MessageIDs[:0], x.MessageIDs...)
 }
@@ -792,18 +879,22 @@ type poolMessagesSaveDraft struct {
 func (p *poolMessagesSaveDraft) Get() *MessagesSaveDraft {
 	x, ok := p.pool.Get().(*MessagesSaveDraft)
 	if !ok {
-		return &MessagesSaveDraft{}
+		x = &MessagesSaveDraft{}
 	}
 	return x
 }
 
 func (p *poolMessagesSaveDraft) Put(x *MessagesSaveDraft) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.ReplyTo = 0
 	x.Body = ""
+	for _, z := range x.Entities {
+		PoolMessageEntity.Put(z)
+	}
 	x.Entities = x.Entities[:0]
 	x.EditedID = 0
 	p.pool.Put(x)
@@ -813,8 +904,12 @@ var PoolMessagesSaveDraft = poolMessagesSaveDraft{}
 
 func (x *MessagesSaveDraft) DeepCopy(z *MessagesSaveDraft) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.ReplyTo = x.ReplyTo
 	z.Body = x.Body
@@ -849,16 +944,17 @@ type poolMessagesClearDraft struct {
 func (p *poolMessagesClearDraft) Get() *MessagesClearDraft {
 	x, ok := p.pool.Get().(*MessagesClearDraft)
 	if !ok {
-		return &MessagesClearDraft{}
+		x = &MessagesClearDraft{}
 	}
 	return x
 }
 
 func (p *poolMessagesClearDraft) Put(x *MessagesClearDraft) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	p.pool.Put(x)
 }
 
@@ -866,8 +962,12 @@ var PoolMessagesClearDraft = poolMessagesClearDraft{}
 
 func (x *MessagesClearDraft) DeepCopy(z *MessagesClearDraft) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 }
 
@@ -892,16 +992,17 @@ type poolMessagesToggleDialogPin struct {
 func (p *poolMessagesToggleDialogPin) Get() *MessagesToggleDialogPin {
 	x, ok := p.pool.Get().(*MessagesToggleDialogPin)
 	if !ok {
-		return &MessagesToggleDialogPin{}
+		x = &MessagesToggleDialogPin{}
 	}
 	return x
 }
 
 func (p *poolMessagesToggleDialogPin) Put(x *MessagesToggleDialogPin) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.Pin = false
 	p.pool.Put(x)
 }
@@ -910,8 +1011,12 @@ var PoolMessagesToggleDialogPin = poolMessagesToggleDialogPin{}
 
 func (x *MessagesToggleDialogPin) DeepCopy(z *MessagesToggleDialogPin) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.Pin = x.Pin
 }
@@ -937,12 +1042,18 @@ type poolMessagesReorderPinnedDialogs struct {
 func (p *poolMessagesReorderPinnedDialogs) Get() *MessagesReorderPinnedDialogs {
 	x, ok := p.pool.Get().(*MessagesReorderPinnedDialogs)
 	if !ok {
-		return &MessagesReorderPinnedDialogs{}
+		x = &MessagesReorderPinnedDialogs{}
 	}
 	return x
 }
 
 func (p *poolMessagesReorderPinnedDialogs) Put(x *MessagesReorderPinnedDialogs) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Peers {
+		PoolInputPeer.Put(z)
+	}
 	x.Peers = x.Peers[:0]
 	p.pool.Put(x)
 }
@@ -980,16 +1091,17 @@ type poolMessagesSendScreenShotNotification struct {
 func (p *poolMessagesSendScreenShotNotification) Get() *MessagesSendScreenShotNotification {
 	x, ok := p.pool.Get().(*MessagesSendScreenShotNotification)
 	if !ok {
-		return &MessagesSendScreenShotNotification{}
+		x = &MessagesSendScreenShotNotification{}
 	}
 	return x
 }
 
 func (p *poolMessagesSendScreenShotNotification) Put(x *MessagesSendScreenShotNotification) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.RandomID = 0
 	x.ReplyTo = 0
 	x.MinID = 0
@@ -1001,8 +1113,12 @@ var PoolMessagesSendScreenShotNotification = poolMessagesSendScreenShotNotificat
 
 func (x *MessagesSendScreenShotNotification) DeepCopy(z *MessagesSendScreenShotNotification) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.RandomID = x.RandomID
 	z.ReplyTo = x.ReplyTo
@@ -1031,16 +1147,17 @@ type poolMessagesSendReaction struct {
 func (p *poolMessagesSendReaction) Get() *MessagesSendReaction {
 	x, ok := p.pool.Get().(*MessagesSendReaction)
 	if !ok {
-		return &MessagesSendReaction{}
+		x = &MessagesSendReaction{}
 	}
 	return x
 }
 
 func (p *poolMessagesSendReaction) Put(x *MessagesSendReaction) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MessageID = 0
 	x.Reaction = ""
 	p.pool.Put(x)
@@ -1050,8 +1167,12 @@ var PoolMessagesSendReaction = poolMessagesSendReaction{}
 
 func (x *MessagesSendReaction) DeepCopy(z *MessagesSendReaction) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MessageID = x.MessageID
 	z.Reaction = x.Reaction
@@ -1078,16 +1199,17 @@ type poolMessagesDeleteReaction struct {
 func (p *poolMessagesDeleteReaction) Get() *MessagesDeleteReaction {
 	x, ok := p.pool.Get().(*MessagesDeleteReaction)
 	if !ok {
-		return &MessagesDeleteReaction{}
+		x = &MessagesDeleteReaction{}
 	}
 	return x
 }
 
 func (p *poolMessagesDeleteReaction) Put(x *MessagesDeleteReaction) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MessageID = 0
 	x.Reactions = x.Reactions[:0]
 	p.pool.Put(x)
@@ -1097,8 +1219,12 @@ var PoolMessagesDeleteReaction = poolMessagesDeleteReaction{}
 
 func (x *MessagesDeleteReaction) DeepCopy(z *MessagesDeleteReaction) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MessageID = x.MessageID
 	z.Reactions = append(z.Reactions[:0], x.Reactions...)
@@ -1125,16 +1251,17 @@ type poolMessagesGetReactionList struct {
 func (p *poolMessagesGetReactionList) Get() *MessagesGetReactionList {
 	x, ok := p.pool.Get().(*MessagesGetReactionList)
 	if !ok {
-		return &MessagesGetReactionList{}
+		x = &MessagesGetReactionList{}
 	}
 	return x
 }
 
 func (p *poolMessagesGetReactionList) Put(x *MessagesGetReactionList) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MessageID = 0
 	x.Hash = 0
 	p.pool.Put(x)
@@ -1144,8 +1271,12 @@ var PoolMessagesGetReactionList = poolMessagesGetReactionList{}
 
 func (x *MessagesGetReactionList) DeepCopy(z *MessagesGetReactionList) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MessageID = x.MessageID
 	z.Hash = x.Hash
@@ -1172,16 +1303,17 @@ type poolMessagesTogglePin struct {
 func (p *poolMessagesTogglePin) Get() *MessagesTogglePin {
 	x, ok := p.pool.Get().(*MessagesTogglePin)
 	if !ok {
-		return &MessagesTogglePin{}
+		x = &MessagesTogglePin{}
 	}
 	return x
 }
 
 func (p *poolMessagesTogglePin) Put(x *MessagesTogglePin) {
-	if x.Peer != nil {
-		PoolInputPeer.Put(x.Peer)
-		x.Peer = nil
+	if x == nil {
+		return
 	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
 	x.MessageID = 0
 	x.Silent = false
 	p.pool.Put(x)
@@ -1191,8 +1323,12 @@ var PoolMessagesTogglePin = poolMessagesTogglePin{}
 
 func (x *MessagesTogglePin) DeepCopy(z *MessagesTogglePin) {
 	if x.Peer != nil {
-		z.Peer = PoolInputPeer.Get()
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
 		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
 	}
 	z.MessageID = x.MessageID
 	z.Silent = x.Silent
@@ -1219,17 +1355,32 @@ type poolMessagesDialogs struct {
 func (p *poolMessagesDialogs) Get() *MessagesDialogs {
 	x, ok := p.pool.Get().(*MessagesDialogs)
 	if !ok {
-		return &MessagesDialogs{}
+		x = &MessagesDialogs{}
 	}
 	return x
 }
 
 func (p *poolMessagesDialogs) Put(x *MessagesDialogs) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Dialogs {
+		PoolDialog.Put(z)
+	}
 	x.Dialogs = x.Dialogs[:0]
+	for _, z := range x.Users {
+		PoolUser.Put(z)
+	}
 	x.Users = x.Users[:0]
+	for _, z := range x.Messages {
+		PoolUserMessage.Put(z)
+	}
 	x.Messages = x.Messages[:0]
 	x.Count = 0
 	x.UpdateID = 0
+	for _, z := range x.Groups {
+		PoolGroup.Put(z)
+	}
 	x.Groups = x.Groups[:0]
 	p.pool.Put(x)
 }
@@ -1290,12 +1441,15 @@ type poolMessagesSent struct {
 func (p *poolMessagesSent) Get() *MessagesSent {
 	x, ok := p.pool.Get().(*MessagesSent)
 	if !ok {
-		return &MessagesSent{}
+		x = &MessagesSent{}
 	}
 	return x
 }
 
 func (p *poolMessagesSent) Put(x *MessagesSent) {
+	if x == nil {
+		return
+	}
 	x.MessageID = 0
 	x.RandomID = 0
 	x.CreatedOn = 0
@@ -1331,14 +1485,26 @@ type poolMessagesMany struct {
 func (p *poolMessagesMany) Get() *MessagesMany {
 	x, ok := p.pool.Get().(*MessagesMany)
 	if !ok {
-		return &MessagesMany{}
+		x = &MessagesMany{}
 	}
 	return x
 }
 
 func (p *poolMessagesMany) Put(x *MessagesMany) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Messages {
+		PoolUserMessage.Put(z)
+	}
 	x.Messages = x.Messages[:0]
+	for _, z := range x.Users {
+		PoolUser.Put(z)
+	}
 	x.Users = x.Users[:0]
+	for _, z := range x.Groups {
+		PoolGroup.Put(z)
+	}
 	x.Groups = x.Groups[:0]
 	x.Continuous = false
 	x.Empty = false
@@ -1394,13 +1560,22 @@ type poolMessagesReactionList struct {
 func (p *poolMessagesReactionList) Get() *MessagesReactionList {
 	x, ok := p.pool.Get().(*MessagesReactionList)
 	if !ok {
-		return &MessagesReactionList{}
+		x = &MessagesReactionList{}
 	}
 	return x
 }
 
 func (p *poolMessagesReactionList) Put(x *MessagesReactionList) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.List {
+		PoolReactionList.Put(z)
+	}
 	x.List = x.List[:0]
+	for _, z := range x.Users {
+		PoolUser.Put(z)
+	}
 	x.Users = x.Users[:0]
 	x.Hash = 0
 	x.Modified = false
@@ -1449,12 +1624,15 @@ type poolReactionList struct {
 func (p *poolReactionList) Get() *ReactionList {
 	x, ok := p.pool.Get().(*ReactionList)
 	if !ok {
-		return &ReactionList{}
+		x = &ReactionList{}
 	}
 	return x
 }
 
 func (p *poolReactionList) Put(x *ReactionList) {
+	if x == nil {
+		return
+	}
 	x.Reaction = ""
 	x.UserIDs = x.UserIDs[:0]
 	p.pool.Put(x)
