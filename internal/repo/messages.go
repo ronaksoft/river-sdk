@@ -562,9 +562,12 @@ func (r *repoMessages) GetMediaMessageHistory(
 					return err
 				}
 
-				// TODO:: extract MediaCategory from message and compare it with cat
+				if userMessage.MediaCat == cat {
+					userMessages = append(userMessages, userMessage)
+				} else {
+					limit++
+				}
 
-				userMessages = append(userMessages, userMessage)
 				return nil
 			})
 		}

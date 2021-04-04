@@ -1540,6 +1540,7 @@ func (p *poolUserMessage) Put(x *UserMessage) {
 	}
 	x.Reactions = x.Reactions[:0]
 	x.YourReactions = x.YourReactions[:0]
+	x.MediaCat = 0
 	p.pool.Put(x)
 }
 
@@ -1586,6 +1587,7 @@ func (x *UserMessage) DeepCopy(z *UserMessage) {
 		}
 	}
 	z.YourReactions = append(z.YourReactions[:0], x.YourReactions...)
+	z.MediaCat = x.MediaCat
 }
 
 func (x *UserMessage) Marshal() ([]byte, error) {
