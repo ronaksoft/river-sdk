@@ -293,6 +293,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 					err := x.Unmarshal(m.Message)
 					if err != nil {
 						logs.Error("SyncCtrl couldn't unmarshal response (UpdateDifference)", zap.Error(err))
+						time.Sleep(time.Second)
 						return
 					}
 					sort.Slice(x.Updates, func(i, j int) bool {
