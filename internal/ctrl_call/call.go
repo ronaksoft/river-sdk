@@ -52,7 +52,7 @@ type CallConnection struct {
 	Try      int64
 }
 
-func parseCallData(constructor msg.PhoneCallAction, data []byte) (out interface{}, err error) {
+func parseCallAction(constructor msg.PhoneCallAction, data []byte) (out interface{}, err error) {
 	switch constructor {
 	case msg.PhoneCallAction_PhoneCallRequested:
 		t1 := &msg.PhoneActionRequested{}
