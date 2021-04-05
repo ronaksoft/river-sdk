@@ -96,16 +96,15 @@ var ShareContact = &ishell.Cmd{
 var GetSharedMedia = &ishell.Cmd{
 	Name: "GetSharedMedia",
 	Func: func(c *ishell.Context) {
-		mediaType := fnGetMediaType(c)
+		mediaType := fnGetMediaCat(c)
 		reqDelegate := &RequestDelegate{}
-		req := &msg.ClientGetMediaHistory{
-			MediaType: []msg.ClientMediaType{mediaType},
-			Peer:      fnGetPeer(c),
-			MaxID:     0,
-			MinID:     0,
+		req := &msg.MessagesGetMediaHistory{
+			Cat:   mediaType,
+			Peer:  fnGetPeer(c),
+			MaxID: 0,
 		}
 		reqBytes, _ := req.Marshal()
-		_SDK.ExecuteCommand(msg.C_ClientGetMediaHistory, reqBytes, reqDelegate)
+		_SDK.ExecuteCommand(msg.C_MessagesGetMediaHistory, reqBytes, reqDelegate)
 	},
 }
 
