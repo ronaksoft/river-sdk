@@ -341,62 +341,6 @@ func (x *ClientGetLastBotKeyboard) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_ClientGetLastBotKeyboard, x)
 }
 
-const C_ClientGetMediaHistory int64 = 1354863379
-
-type poolClientGetMediaHistory struct {
-	pool sync.Pool
-}
-
-func (p *poolClientGetMediaHistory) Get() *ClientGetMediaHistory {
-	x, ok := p.pool.Get().(*ClientGetMediaHistory)
-	if !ok {
-		x = &ClientGetMediaHistory{}
-	}
-	return x
-}
-
-func (p *poolClientGetMediaHistory) Put(x *ClientGetMediaHistory) {
-	if x == nil {
-		return
-	}
-	x.MediaType = x.MediaType[:0]
-	x.MaxID = 0
-	x.MinID = 0
-	x.Limit = 0
-	PoolInputPeer.Put(x.Peer)
-	x.Peer = nil
-	p.pool.Put(x)
-}
-
-var PoolClientGetMediaHistory = poolClientGetMediaHistory{}
-
-func (x *ClientGetMediaHistory) DeepCopy(z *ClientGetMediaHistory) {
-	z.MediaType = append(z.MediaType[:0], x.MediaType...)
-	z.MaxID = x.MaxID
-	z.MinID = x.MinID
-	z.Limit = x.Limit
-	if x.Peer != nil {
-		if z.Peer == nil {
-			z.Peer = PoolInputPeer.Get()
-		}
-		x.Peer.DeepCopy(z.Peer)
-	} else {
-		z.Peer = nil
-	}
-}
-
-func (x *ClientGetMediaHistory) Marshal() ([]byte, error) {
-	return proto.Marshal(x)
-}
-
-func (x *ClientGetMediaHistory) Unmarshal(b []byte) error {
-	return proto.UnmarshalOptions{}.Unmarshal(b, x)
-}
-
-func (x *ClientGetMediaHistory) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_ClientGetMediaHistory, x)
-}
-
 const C_ClientGetAllDownloadedMedia int64 = 729082453
 
 type poolClientGetAllDownloadedMedia struct {
@@ -1685,7 +1629,6 @@ func init() {
 	registry.RegisterConstructor(856595701, "ClientGetCachedMedia")
 	registry.RegisterConstructor(1199927718, "ClientClearCachedMedia")
 	registry.RegisterConstructor(177544569, "ClientGetLastBotKeyboard")
-	registry.RegisterConstructor(1354863379, "ClientGetMediaHistory")
 	registry.RegisterConstructor(729082453, "ClientGetAllDownloadedMedia")
 	registry.RegisterConstructor(2622949116, "ClientGetRecentSearch")
 	registry.RegisterConstructor(629582533, "ClientPutRecentSearch")

@@ -1,7 +1,7 @@
 module git.ronaksoft.com/river/sdk
 
 require (
-	git.ronaksoft.com/river/msg v0.0.0-20210404200024-9660e2a311a2
+	git.ronaksoft.com/river/msg v0.0.0-20210405044418-a02b2bc09eb2
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/RoaringBitmap/roaring v0.5.1 // indirect
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
