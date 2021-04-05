@@ -233,31 +233,6 @@ func (r *River) clientClearCachedMedia(in, out *rony.MessageEnvelope, timeoutCB 
 	uiexec.ExecSuccessCB(successCB, out)
 }
 
-func (r *River) clientGetMediaHistory(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := &msg.ClientGetMediaHistory{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
-		return
-	}
-
-	// Load the dialog
-	dialog, _ := repo.Dialogs.Get(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))
-	if dialog == nil {
-		logs.Debug("asking for a nil dialog")
-		fillMessagesMany(out, []*msg.UserMessage{}, []*msg.User{}, []*msg.Group{}, in.RequestID, successCB)
-		return
-	}
-
-	messages, users, groups := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit, req.MediaType...)
-	pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
-	if len(pendingMessages) > 0 {
-		messages = append(pendingMessages, messages...)
-	}
-	fillMessagesMany(out, messages, users, groups, in.RequestID, successCB)
-	return
-}
-
 func (r *River) clientGetAllDownloadedMedia(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := &msg.ClientGetAllDownloadedMedia{}
 	if err := req.Unmarshal(in.Message); err != nil {
