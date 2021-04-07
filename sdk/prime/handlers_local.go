@@ -421,7 +421,7 @@ func (r *River) messagesGetMediaHistory(in, out *rony.MessageEnvelope, timeoutCB
 
 	// We are Offline/Disconnected
 	if !r.networkCtrl.Connected() {
-		messages, users, groups := repo.Messages.GetMediaMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MaxID, req.Limit, req.Cat)
+		messages, users, groups := repo.Messages.GetMediaMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, req.MaxID, req.Limit, req.Cat)
 		if len(messages) > 0 {
 			pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
 			if len(pendingMessages) > 0 {
@@ -447,7 +447,7 @@ func (r *River) messagesGetMediaHistory(in, out *rony.MessageEnvelope, timeoutCB
 		r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 		return
 	}
-	messages, users, groups := repo.Messages.GetMediaMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), bar.Max, req.Limit, req.Cat)
+	messages, users, groups := repo.Messages.GetMediaMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, bar.Max, req.Limit, req.Cat)
 	fillMessagesMany(out, messages, users, groups, in.RequestID, preSuccessCB)
 }
 func genGetMediaHistoryCB(

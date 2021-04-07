@@ -565,6 +565,7 @@ func (r *River) registerCommandHandlers() {
 		msg.C_ClientContactSearch:           r.clientContactSearch,
 		msg.C_ClientGetCachedMedia:          r.clientGetCachedMedia,
 		msg.C_ClientGetFrequentReactions:    r.clientGetFrequentReactions,
+		msg.C_ClientGetMediaHistory:         r.clientGetMediaHistory,
 		msg.C_ClientGetLastBotKeyboard:      r.clientGetLastBotKeyboard,
 		msg.C_ClientGetRecentSearch:         r.clientGetRecentSearch,
 		msg.C_ClientGetTeamCounters:         r.clientGetTeamCounters,

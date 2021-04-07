@@ -23,6 +23,34 @@ import (
    Copyright Ronak Software Group 2020
 */
 
+func (r *River) clientGetMediaHistory(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientGetMediaHistory{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	messages, users, groups := repo.Messages.GetMediaMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit, req.Cat)
+	if len(messages) > 0 {
+		pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
+		if len(pendingMessages) > 0 {
+			messages = append(pendingMessages, messages...)
+		}
+		res := &msg.MessagesMany{
+			Messages: messages,
+			Users:    users,
+			Groups:   groups,
+		}
+
+		out.RequestID = in.RequestID
+		out.Constructor = msg.C_MessagesMany
+		out.Message, _ = res.Marshal()
+		uiexec.ExecSuccessCB(successCB, out)
+		return
+	}
+}
+
 func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	reqMedia := &msg.ClientSendMessageMedia{}
 	if err := reqMedia.Unmarshal(in.Message); err != nil {
