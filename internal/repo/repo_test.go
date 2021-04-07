@@ -25,6 +25,7 @@ import (
 
 func init() {
 	repo.MustInitRepo("./_data", false)
+	logs.SetLogLevel(2)
 }
 
 func createMediaMessage(body string, filename string, labelIDs []int32) *msg.UserMessage {
