@@ -625,8 +625,8 @@ func (r *River) GetServerTimeUnix() int64 {
 }
 
 // AppForeground
-func (r *River) AppForeground() {
-	statusOnline = true
+func (r *River) AppForeground(online bool) {
+	statusOnline = online
 
 	// Set the time we come to foreground
 	mon.SetForegroundTime()
