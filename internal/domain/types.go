@@ -53,7 +53,6 @@ func (m MInt32B) ToArray() []int32 {
 	return a
 }
 
-// Salt
 type Slt struct {
 	Value     int64 `json:"value"`
 	Timestamp int64 `json:"timestamp"`

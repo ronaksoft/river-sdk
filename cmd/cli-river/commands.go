@@ -111,7 +111,7 @@ func fnGetAccessHash(c *ishell.Context) uint64 {
 		c.Print("Access Hash: ")
 		hash, err := strconv.ParseUint(c.ReadLine(), 10, 64)
 		if err == nil {
-			accessHash = uint64(hash)
+			accessHash = hash
 			break
 		} else {
 			c.Println(err.Error())
@@ -724,7 +724,7 @@ func fnGetFileID(c *ishell.Context) int64 {
 		c.Print("FileID : ")
 		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
 		if err == nil {
-			res = int64(id)
+			res = id
 			break
 		} else {
 			c.Println(err.Error())
@@ -754,7 +754,7 @@ func fnGetTeamID(c *ishell.Context) int64 {
 		c.Print("TeamID : ")
 		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
 		if err == nil {
-			res = int64(id)
+			res = id
 			break
 		} else {
 			c.Println(err.Error())
@@ -769,7 +769,7 @@ func fnGetUserID(c *ishell.Context) int64 {
 		c.Print("UserID : ")
 		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
 		if err == nil {
-			res = int64(id)
+			res = id
 			break
 		} else {
 			c.Println(err.Error())

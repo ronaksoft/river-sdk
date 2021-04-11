@@ -193,7 +193,7 @@ func MessagePrinter(envelope *rony.MessageEnvelope) {
 				fmt.Sprintf("%d", d.PeerType),
 				fmt.Sprintf("%d", d.CreatedOn),
 				fmt.Sprintf("%d", d.Flags),
-				fmt.Sprintf("%v", string(d.Body)),
+				fmt.Sprintf("%v", d.Body),
 				fmt.Sprintf("%v", d.Entities),
 				fmt.Sprintf("%s", d.MediaType.String()),
 				fmt.Sprintf("%d", docID),
@@ -389,7 +389,7 @@ func MessagePrinter(envelope *rony.MessageEnvelope) {
 				fmt.Sprintf("%d", d.PeerType),
 				fmt.Sprintf("%d", d.CreatedOn),
 				fmt.Sprintf("%d", d.Flags),
-				fmt.Sprintf("%v", string(d.Body)),
+				fmt.Sprintf("%v", d.Body),
 				fmt.Sprintf("%v", d.Entities),
 				fmt.Sprintf("%s", d.MediaType.String()),
 			})

@@ -61,7 +61,6 @@ func NewFlusher(maxBatchSize, maxConcurrency int32, flushPeriod time.Duration, f
 	return f
 }
 
-// EnterWithChan
 func (f *Flusher) EnterWithChan(key, value interface{}) chan interface{} {
 	ch := make(chan interface{}, 1)
 	f.entries <- FlusherEntry{
@@ -72,7 +71,6 @@ func (f *Flusher) EnterWithChan(key, value interface{}) chan interface{} {
 	return ch
 }
 
-// EnterWithResult
 func (f *Flusher) EnterWithResult(key, value interface{}) (res interface{}) {
 	waitGroup := waitGroupPool.Get().(*sync.WaitGroup)
 	waitGroup.Add(1)
@@ -101,7 +99,6 @@ func (f *Flusher) EnterWithSyncCallback(key, value interface{}, cbFunc func(inte
 	}
 }
 
-// EnterWithAsyncCallback
 func (f *Flusher) EnterWithAsyncCallback(key, value interface{}, cbFunc func(interface{})) {
 	f.entries <- FlusherEntry{
 		Key:            key,
@@ -178,10 +175,6 @@ func (f *Flusher) worker() {
 		}
 	}
 }
-
-const (
-	maxWorkerIdleTime = 3 * time.Second
-)
 
 var waitGroupPool = sync.Pool{
 	New: func() interface{} {

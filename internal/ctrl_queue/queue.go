@@ -48,7 +48,6 @@ type Controller struct {
 	cancelledRequest map[int64]bool
 }
 
-// New
 func New(fileCtrl *fileCtrl.Controller, network *networkCtrl.Controller, dataDir string) (*Controller, error) {
 	ctrl := new(Controller)
 	ctrl.dataDir = filepath.Join(dataDir, "queue")

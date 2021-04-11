@@ -27,7 +27,6 @@ type repoTopPeers struct {
 }
 
 const (
-	prefixTopPeers          = "T_PEER"
 	indexTopPeersUser       = "T_PEER_U"
 	indexTopPeersGroup      = "T_PEER_G"
 	indexTopPeersForward    = "T_PEER_F"

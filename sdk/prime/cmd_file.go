@@ -141,7 +141,7 @@ func (r *River) GetDocumentHash(clusterID int32, fileID int64, accessHash int64)
 		logs.Warn("Error On GetDocumentHash (Files.Get)",
 			zap.Int32("ClusterID", clusterID),
 			zap.Int64("FileID", fileID),
-			zap.Int64("AccessHash", int64(accessHash)),
+			zap.Int64("AccessHash", accessHash),
 			zap.Error(err),
 		)
 		return ""
@@ -151,7 +151,7 @@ func (r *River) GetDocumentHash(clusterID int32, fileID int64, accessHash int64)
 		logs.Warn("Not a message document",
 			zap.Int32("ClusterID", clusterID),
 			zap.Int64("FileID", fileID),
-			zap.Int64("AccessHash", int64(accessHash)),
+			zap.Int64("AccessHash", accessHash),
 		)
 		return ""
 	}

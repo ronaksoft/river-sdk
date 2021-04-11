@@ -636,7 +636,7 @@ func (ctrl *Controller) updateDraftMessage(u *msg.UpdateEnvelope) ([]*msg.Update
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
-	dialog, _ := repo.Dialogs.Get(x.Message.TeamID, x.Message.PeerID, int32(x.Message.PeerType))
+	dialog, _ := repo.Dialogs.Get(x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 	if dialog != nil {
 		dialog.Draft = x.Message
 		repo.Dialogs.Save(dialog)

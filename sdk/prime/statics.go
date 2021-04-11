@@ -83,12 +83,10 @@ func GenInputPassword(password []byte, accountPasswordBytes []byte) []byte {
 	return res
 }
 
-// SanitizeQuestionAnswer
 func SanitizeQuestionAnswer(answer string) string {
 	return strings.ToLower(strings.TrimSpace(answer))
 }
 
-// GetCountryCode
 func GetCountryCode(phone string) string {
 	return domain.GetCountryCode(phone)
 }
@@ -114,7 +112,6 @@ func BadgerSupport(dbDir string) bool {
 	return true
 }
 
-// LastSeenEstimate
 func LastSeenEstimate(ts int64) int {
 	if ts == 0 {
 		return domain.LastSeenUnknown

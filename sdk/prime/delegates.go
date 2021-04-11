@@ -12,7 +12,6 @@ type MainDelegate interface {
 	AppUpdate(version string, updateAvailable, force bool)
 }
 
-// FileDelegate
 type FileDelegate interface {
 	OnProgressChanged(reqID string, clusterID int32, fileID, accessHash, percent int64, peerID int64)
 	OnCompleted(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64)

@@ -195,11 +195,11 @@ var TestUpload = &ishell.Cmd{
 		attrBuff4, _ := attr4.Marshal()
 		attrBuff5, _ := attr5.Marshal()
 
-		f1.Attributes = []*msg.DocumentAttribute{&msg.DocumentAttribute{Type: msg.DocumentAttributeType_AttributeTypeFile, Data: attrBuff1}}
-		f2.Attributes = []*msg.DocumentAttribute{&msg.DocumentAttribute{Type: msg.DocumentAttributeType_AttributeTypeFile, Data: attrBuff2}}
-		f3.Attributes = []*msg.DocumentAttribute{&msg.DocumentAttribute{Type: msg.DocumentAttributeType_AttributeTypeFile, Data: attrBuff3}}
-		f4.Attributes = []*msg.DocumentAttribute{&msg.DocumentAttribute{Type: msg.DocumentAttributeType_AttributeTypeFile, Data: attrBuff4}}
-		f5.Attributes = []*msg.DocumentAttribute{&msg.DocumentAttribute{Type: msg.DocumentAttributeType_AttributeTypeFile, Data: attrBuff5}}
+		f1.Attributes = []*msg.DocumentAttribute{{Type: msg.DocumentAttributeType_AttributeTypeFile, Data: attrBuff1}}
+		f2.Attributes = []*msg.DocumentAttribute{{Type: msg.DocumentAttributeType_AttributeTypeFile, Data: attrBuff2}}
+		f3.Attributes = []*msg.DocumentAttribute{{Type: msg.DocumentAttributeType_AttributeTypeFile, Data: attrBuff3}}
+		f4.Attributes = []*msg.DocumentAttribute{{Type: msg.DocumentAttributeType_AttributeTypeFile, Data: attrBuff4}}
+		f5.Attributes = []*msg.DocumentAttribute{{Type: msg.DocumentAttributeType_AttributeTypeFile, Data: attrBuff5}}
 
 		reqBuff1, _ := f1.Marshal()
 		reqBuff2, _ := f2.Marshal()

@@ -230,7 +230,6 @@ func (ctrl *Controller) createHttpClient(timeout time.Duration) {
 		DialContext: (&net.Dialer{
 			Timeout:   time.Second,
 			KeepAlive: 30 * time.Second,
-			DualStack: true,
 		}).DialContext,
 		ForceAttemptHTTP2:     false,
 		MaxIdleConns:          100,

@@ -29,7 +29,6 @@ func SetLogLevel(l int) {
 	logs.SetLogLevel(l)
 }
 
-// RiverConfig
 type RiverConfig struct {
 	ServerHostPort string
 	// DbPath is the path of the folder holding the sqlite database.
@@ -633,7 +632,7 @@ type RiverConnection struct {
 	Version   int
 }
 
-// save RiverConfig interface func
+// Save RiverConfig interface func
 func (v *RiverConnection) Save() {
 	logs.Debug("ConnInfo saved.")
 	b, _ := json.Marshal(v)

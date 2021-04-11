@@ -25,7 +25,6 @@ const (
 
 type RequestFactoryFunc func(data []byte) Request
 
-// Executor
 type Executor struct {
 	name    string
 	stack   *goque.Stack

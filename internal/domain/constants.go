@@ -7,9 +7,6 @@ import (
 )
 
 //go:generate go run update_version.go
-const (
-	FilePayloadSize = 1024 * 256 // 256KB
-)
 
 var (
 	ClientPlatform string
@@ -18,7 +15,9 @@ var (
 	ClientVendor   string
 	SysConfig      *msg.SystemConfig
 
-	// Parameters which prevent sending duplicate requests
+	/*
+		Parameters which prevent sending duplicate requests
+	*/
 	ContactsSynced int32
 	TimeSynced     int32
 	ConfigSynced   int32
@@ -46,7 +45,7 @@ func init() {
 		TopPeerDecayRate:        3500000,
 		TopPeerMaxStep:          365,
 		MaxActiveSessions:       10,
-		//Reactions: []string{"😂",
+		// Reactions: []string{"😂",
 		//	"😢",
 		//	"😡",
 		//	"👎",
@@ -188,7 +187,6 @@ const (
 	Hour   = Minute * 60
 	Day    = Hour * 24
 	Week   = Day * 7
-	Month  = Week * 4
 )
 
 // UserStatus
