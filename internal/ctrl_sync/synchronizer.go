@@ -481,8 +481,8 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer, outO
 	udpContainer.Groups = updateContainer.Groups
 
 	// save Groups & Users
-	repo.Groups.Save(updateContainer.Groups...)
-	repo.Users.Save(updateContainer.Users...)
+	_ = repo.Groups.Save(updateContainer.Groups...)
+	_ = repo.Users.Save(updateContainer.Users...)
 
 	for _, update := range updateContainer.Updates {
 		if outOfSync && update.UpdateID != 0 {
@@ -524,13 +524,13 @@ func (ctrl *Controller) UpdateID() int64 {
 	return ctrl.updateID
 }
 
-// ClearUpdateID reset updateID
+// ResetIDs reset updateID
 func (ctrl *Controller) ResetIDs() {
 	ctrl.updateID = 0
 	ctrl.SetUserID(0)
 }
 
-// ContactsImport
+// ContactsImport executes ContactsImport rpc commands
 func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHandler, out *rony.MessageEnvelope) {
 	var (
 		wg               = sync.WaitGroup{}
@@ -627,7 +627,6 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 	return
 }
 
-// GetSyncStatus
 func (ctrl *Controller) GetSyncStatus() domain.SyncStatus {
 	return ctrl.syncStatus
 }

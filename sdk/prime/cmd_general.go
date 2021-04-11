@@ -216,8 +216,7 @@ func getDelegate(r *River, requestID uint64) (RequestDelegate, bool) {
 	return d, ok
 }
 
-// CreateAuthKey ...
-// This function creates an AuthID and AuthKey to be used for transporting messages between client and server
+// CreateAuthKey creates an AuthID and AuthKey to be used for transporting messages between client and server
 func (r *River) CreateAuthKey() (err error) {
 	logs.Info("River::CreateAuthKey()")
 
@@ -476,7 +475,7 @@ func getDhGroup(pk *msg.SystemKeys, keyFP int64) (*msg.DHGroup, error) {
 	return nil, domain.ErrNotFound
 }
 
-// ResetAuthKey
+// ResetAuthKey reset authorization information, useful in logout
 func (r *River) ResetAuthKey() {
 	r.networkCtrl.SetAuthorization(0, nil)
 	r.ConnInfo.AuthID = 0
@@ -499,7 +498,7 @@ func (r *River) CancelRequest(requestID int64) {
 
 }
 
-// Delete removes pending message from DB
+// DeletePendingMessage removes pending message from DB
 func (r *River) DeletePendingMessage(id int64) (isSuccess bool) {
 	pmsg := repo.PendingMessages.GetByID(id)
 	if pmsg == nil {
@@ -608,23 +607,20 @@ func (r *River) UpdateContactInfo(teamID int64, userID int64, firstName, lastNam
 	return repo.Users.UpdateContactInfo(teamID, userID, firstName, lastName)
 }
 
-// GetScrollStatus
 func (r *River) GetScrollStatus(peerID int64, peerType int32) int64 {
 	return repo.MessagesExtra.GetScrollID(domain.GetCurrTeamID(), peerID, peerType, 0)
 }
 
-// SetScrollStatus
 func (r *River) SetScrollStatus(peerID, msgID int64, peerType int32) {
 	repo.MessagesExtra.SaveScrollID(domain.GetCurrTeamID(), peerID, peerType, 0, msgID)
 
 }
 
-// GetServerTimeUnix
 func (r *River) GetServerTimeUnix() int64 {
 	return domain.Now().Unix()
 }
 
-// AppForeground
+// AppForeground must be called every time apps come into foreground.
 func (r *River) AppForeground(online bool) {
 	statusOnline = online
 
@@ -645,7 +641,7 @@ func (r *River) AppForeground(online bool) {
 	}
 }
 
-// AppBackground
+// AppBackground must be called every time apps goes into background
 func (r *River) AppBackground() {
 	statusOnline = false
 	r.syncCtrl.UpdateStatus(false)
@@ -657,12 +653,12 @@ func (r *River) AppBackground() {
 	mon.SaveUsage()
 }
 
-// AppKill
+// AppKill must be called when app is closed
 func (r *River) AppKill() {
 	r.AppBackground()
 }
 
-// AppStart
+// AppStart must be called when app is started
 func (r *River) AppStart() error {
 	statusOnline = true
 	runtime.GOMAXPROCS(runtime.NumCPU() * 2)

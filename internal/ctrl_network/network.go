@@ -75,7 +75,7 @@ type Controller struct {
 	sendFlusher          *domain.Flusher
 }
 
-// New
+// New constructs the network controller
 func New(config Config) *Controller {
 	ctrl := new(Controller)
 	ctrl.wsPings = make(map[uint64]chan struct{})
@@ -615,7 +615,7 @@ func (ctrl *Controller) incMessageSeq() int64 {
 	return atomic.AddInt64(&ctrl.messageSeq, 1)
 }
 
-// SendWebsocket direct sends immediately else it put it in flusher
+// SendWebsocket if 'direct' sends immediately otherwise it put it in flusher
 func (ctrl *Controller) SendWebsocket(msgEnvelope *rony.MessageEnvelope, direct bool) error {
 	defer logs.RecoverPanic(
 		"NetworkController::SendWebsocket",
@@ -785,7 +785,7 @@ func (ctrl *Controller) RealtimeCommand(
 	return
 }
 
-// Send encrypt and send request to server and receive and decrypt its response
+// SendHttp encrypt and send request to server and receive and decrypt its response
 func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageEnvelope) (*rony.MessageEnvelope, error) {
 	st := domain.Now()
 	defer func() {
