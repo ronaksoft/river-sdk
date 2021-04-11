@@ -433,7 +433,7 @@ func (r *repoFiles) Delete(clusterID int32, fileID int64, accessHash uint64) err
 	})
 }
 
-func (r *repoFiles) GetCachedMedia() *msg.ClientCachedMediaInfo {
+func (r *repoFiles) GetCachedMedia(teamID int64) *msg.ClientCachedMediaInfo {
 	userMediaInfo := make(map[int64]map[msg.ClientMediaType]int64, 128)
 	groupMediaInfo := make(map[int64]map[msg.ClientMediaType]int64, 128)
 	userMtx := sync.Mutex{}
@@ -447,6 +447,9 @@ func (r *repoFiles) GetCachedMedia() *msg.ClientCachedMediaInfo {
 			return m.Unmarshal(val)
 		})
 		if err != nil {
+			return false
+		}
+		if m.TeamID != teamID {
 			return false
 		}
 		switch m.MediaType {
@@ -564,7 +567,7 @@ func (r *repoFiles) DeleteCachedMediaByPeer(teamID, peerID int64, peerType int32
 	_ = stream.Orchestrate(context.Background())
 }
 
-func (r *repoFiles) DeleteCachedMediaByMediaType(mediaTypes []msg.ClientMediaType) {
+func (r *repoFiles) DeleteCachedMediaByMediaType(teamID int64, mediaTypes []msg.ClientMediaType) {
 	stream := r.badger.NewStream()
 
 	stream.Prefix = []byte(fmt.Sprintf("%s.", prefixMessages))
@@ -574,6 +577,9 @@ func (r *repoFiles) DeleteCachedMediaByMediaType(mediaTypes []msg.ClientMediaTyp
 			return m.Unmarshal(val)
 		})
 		if err != nil {
+			return false
+		}
+		if m.TeamID != teamID {
 			return false
 		}
 		switch m.MediaType {

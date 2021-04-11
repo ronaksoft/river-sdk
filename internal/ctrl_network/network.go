@@ -558,8 +558,7 @@ func (ctrl *Controller) Connect() {
 	})
 }
 
-// IgnoreSIGPIPE prevents SIGPIPE from being raised on TCP sockets when remote hangs up
-// See: https://github.com/golang/go/issues/17393
+// UpdateEndpoint updates the url of the server based on the country.
 func (ctrl *Controller) UpdateEndpoint(country string) {
 	if country != "" {
 		ctrl.countryCode = country

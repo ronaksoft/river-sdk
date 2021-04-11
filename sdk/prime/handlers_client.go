@@ -230,7 +230,7 @@ func (r *River) clientGetCachedMedia(in, out *rony.MessageEnvelope, timeoutCB do
 		return
 	}
 
-	res := repo.Files.GetCachedMedia()
+	res := repo.Files.GetCachedMedia(domain.GetTeamID(in))
 
 	out.Constructor = msg.C_ClientCachedMediaInfo
 	out.RequestID = in.RequestID
@@ -249,7 +249,7 @@ func (r *River) clientClearCachedMedia(in, out *rony.MessageEnvelope, timeoutCB 
 	if req.Peer != nil {
 		repo.Files.DeleteCachedMediaByPeer(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MediaTypes)
 	} else if len(req.MediaTypes) > 0 {
-		repo.Files.DeleteCachedMediaByMediaType(req.MediaTypes)
+		repo.Files.DeleteCachedMediaByMediaType(domain.GetTeamID(in), req.MediaTypes)
 	} else {
 		repo.Files.ClearCache()
 	}

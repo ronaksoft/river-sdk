@@ -133,7 +133,7 @@ func (r *River) GroupUploadPhoto(groupID int64, filePath string) (reqID string) 
 	return
 }
 
-// GetDocumentHash
+// GetDocumentHash returns the md5 hash of the document
 func (r *River) GetDocumentHash(clusterID int32, fileID int64, accessHash int64) string {
 	file, err := repo.Files.Get(clusterID, fileID, uint64(accessHash))
 
