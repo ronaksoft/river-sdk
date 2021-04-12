@@ -153,6 +153,11 @@ func (r *River) HandleDebugActions(txt string) {
 		setUpdateState(r, tools.StrToInt64(args[0]))
 	}
 }
+
+func (r *River) GetCurrentUpdateState() int64 {
+	return r.syncCtrl.GetUpdateID()
+}
+
 func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
 	filePath = path.Join(repo.DirCache, fmt.Sprintf("Messages-%s-%d.txt", msg.PeerType(peerType).String(), peerID))
 	file, err := os.Create(filePath)
