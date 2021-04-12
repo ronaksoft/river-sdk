@@ -71,7 +71,7 @@ func saveTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, teamID int64, tp *msg
 		return domain.ErrDoesNotExists
 	}
 	b, _ := tp.Marshal()
-	logs.Info("SaveTopPeer",
+	logs.Debug("SaveTopPeer",
 		zap.ByteString("Key", getTopPeerKey(cat, teamID, tp.Peer.ID, tp.Peer.Type)),
 		zap.Float32("Rate", tp.Rate),
 	)

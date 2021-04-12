@@ -662,7 +662,7 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *rony.MessageEnvelope) error {
 	}
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
 
-	logs.Info("NetCtrl call sendWebsocket",
+	logs.Debug("NetCtrl call sendWebsocket",
 		zap.Uint64("ReqID", msgEnvelope.RequestID),
 		zap.String("C", registry.ConstructorName(msgEnvelope.Constructor)),
 		zap.String("TeamID", msgEnvelope.Get("TeamID", "0")),

@@ -223,18 +223,17 @@ func (ctrl *Controller) Sync() {
 	})
 }
 func forceUpdateUI(ctrl *Controller, dialogs, contacts, gifs bool) {
-	update := &msg.ClientUpdateSynced{}
-	update.Dialogs = dialogs
-	update.Contacts = contacts
-	update.Gifs = gifs
-	bytes, _ := update.Marshal()
-
-	updateEnvelope := &msg.UpdateEnvelope{}
-	updateEnvelope.Constructor = msg.C_ClientUpdateSynced
-	updateEnvelope.Update = bytes
-	updateEnvelope.UpdateID = 0
-	updateEnvelope.Timestamp = time.Now().Unix()
-
+	update := &msg.ClientUpdateSynced{
+		Dialogs:  dialogs,
+		Contacts: contacts,
+		Gifs:     gifs,
+	}
+	updateEnvelope := &msg.UpdateEnvelope{
+		Constructor: msg.C_ClientUpdateSynced,
+		UpdateID:    0,
+		Timestamp:   tools.TimeUnix(),
+	}
+	updateEnvelope.Update, _ = update.Marshal()
 	// call external handler
 	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateEnvelope, updateEnvelope)
 }
@@ -247,7 +246,7 @@ func updateSyncStatus(ctrl *Controller, newStatus domain.SyncStatus) {
 	ctrl.syncStatusChangeCallback(newStatus)
 }
 func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
-	logs.Info("SyncCtrl calls getUpdateDifference",
+	logs.Info("SyncCtrl calls UpdateGetDifference",
 		zap.Int64("ServerUpdateID", serverUpdateID),
 		zap.Int64("ClientUpdateID", ctrl.GetUpdateID()),
 	)
@@ -327,7 +326,34 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 		waitGroup.Wait()
 	}
 }
+func getUpdateTargetID(u *msg.UpdateEnvelope) string {
+	switch u.Constructor {
+	case msg.C_UpdateNewMessage:
+		x := &msg.UpdateNewMessage{}
+		_ = x.Unmarshal(u.Update)
+		return fmt.Sprintf(fmt.Sprintf("NewMessage_%d_%d_%d", x.Message.TeamID, x.Message.PeerID, x.Message.PeerType))
+	case msg.C_UpdateDraftMessage:
+		x := &msg.UpdateDraftMessage{}
+		_ = x.Unmarshal(u.Update)
+		return fmt.Sprintf(fmt.Sprintf("DraftMessage_%d_%d_%d", x.Message.TeamID, x.Message.PeerID, x.Message.PeerType))
+	case msg.C_UpdateDraftMessageCleared:
+		x := &msg.UpdateDraftMessageCleared{}
+		_ = x.Unmarshal(u.Update)
+		return fmt.Sprintf(fmt.Sprintf("DraftMessage_%d_%d_%d", x.TeamID, x.Peer.ID, x.Peer.Type))
+	case msg.C_UpdateReadHistoryInbox:
+		x := &msg.UpdateReadHistoryInbox{}
+		_ = x.Unmarshal(u.Update)
+		return fmt.Sprintf(fmt.Sprintf("ReadHistoryIn_%d_%d_%d", x.TeamID, x.Peer.ID, x.Peer.Type))
+	case msg.C_UpdateReadHistoryOutbox:
+		x := &msg.UpdateReadHistoryOutbox{}
+		_ = x.Unmarshal(u.Update)
+		return fmt.Sprintf(fmt.Sprintf("ReadHistoryOut_%d_%d_%d", x.TeamID, x.Peer.ID, x.Peer.Type))
+	default:
+		return fmt.Sprintf("%d", u.Constructor)
+	}
+}
 func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
+	mtx := sync.Mutex{}
 	updContainer := &msg.UpdateContainer{
 		Updates:     make([]*msg.UpdateEnvelope, 0),
 		Users:       x.Users,
@@ -335,12 +361,25 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 		MaxUpdateID: x.MaxUpdateID,
 		MinUpdateID: x.MinUpdateID,
 	}
+	var (
+		startTime = tools.NanoTime()
+		timeLapse [2]int64
+	)
 
-	logs.Info("SyncController:: onGetDifferenceSucceed",
+	logs.Info("SyncCtrl received  UpdateDifference",
 		zap.Int64("MaxUpdateID", x.MaxUpdateID),
 		zap.Int64("MinUpdateID", x.MinUpdateID),
 		zap.Int("Length", len(x.Updates)),
 	)
+	defer func() {
+		endTime := tools.NanoTime()
+		logs.Info("SyncCtrl applied UpdateDifference",
+			zap.Int("Length", len(x.Updates)),
+			zap.Duration("Messages", time.Duration(timeLapse[1]-timeLapse[0])),
+			zap.Duration("Others", time.Duration(endTime-timeLapse[1])),
+			zap.Duration("D", time.Duration(endTime-startTime)),
+		)
+	}()
 
 	if len(x.Updates) == 0 {
 		return
@@ -348,6 +387,8 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 
 	// save Groups & Users
 	waitGroup := pools.AcquireWaitGroup()
+	defer pools.ReleaseWaitGroup(waitGroup)
+
 	waitGroup.Add(2)
 	go func() {
 		_ = repo.Groups.Save(x.Groups...)
@@ -357,46 +398,64 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 		_ = repo.Users.Save(x.Users...)
 		waitGroup.Done()
 	}()
-	waitGroup.Wait()
-	pools.ReleaseWaitGroup(waitGroup)
 
-	for _, update := range mergeUpdates(x.Updates) {
-		if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
-			externalHandlerUpdates, err := applier(update)
-			if err != nil {
-				logs.Warn("Error On UpdateDiff",
-					zap.Error(err),
-					zap.Int64("GetUpdateID", update.UpdateID),
-					zap.String("C", registry.ConstructorName(update.Constructor)),
-				)
-				return
+	applierFlusher := tools.NewFlusherPool(30, 100, func(targetID string, entries []tools.FlushEntry) {
+		for _, e := range entries {
+			ue := e.Value().(*msg.UpdateEnvelope)
+			if applier, ok := ctrl.updateAppliers[ue.Constructor]; ok {
+				externalHandlerUpdates, err := applier(ue)
+				if err != nil {
+					logs.Warn("SyncCtrl got error on UpdateDifference",
+						zap.Error(err),
+						zap.Int64("UpdateID", ue.UpdateID),
+						zap.String("C", registry.ConstructorName(ue.Constructor)),
+					)
+					break
+				}
+				mtx.Lock()
+				updContainer.Updates = append(updContainer.Updates, externalHandlerUpdates...)
+				mtx.Unlock()
+			} else {
+				mtx.Lock()
+				updContainer.Updates = append(updContainer.Updates, ue)
+				mtx.Unlock()
 			}
-			updContainer.Updates = append(updContainer.Updates, externalHandlerUpdates...)
-		} else {
-			updContainer.Updates = append(updContainer.Updates, update)
 		}
-		if update.UpdateID != 0 {
-			_ = ctrl.SetUpdateID(update.UpdateID)
+	})
+	waitGroup.Wait()
+
+	// Separate updates into categories based on their constructor
+	queues := make([][]*msg.UpdateEnvelope, 2)
+	for _, update := range x.Updates {
+		switch update.Constructor {
+		case msg.C_UpdateNewMessage:
+			queues[0] = append(queues[0], update)
+		default:
+			queues[1] = append(queues[1], update)
 		}
+	}
+
+	// apply updates based on their priority queue
+	for idx, updates := range queues {
+		timeLapse[idx] = tools.NanoTime()
+		for _, ue := range updates {
+			waitGroup.Add(1)
+			applierFlusher.Enter(
+				getUpdateTargetID(ue),
+				tools.NewEntryWithCallback(ue, func() {
+					waitGroup.Done()
+				}),
+			)
+		}
+		waitGroup.Wait()
+	}
+
+	if x.MaxUpdateID != 0 {
+		_ = ctrl.SetUpdateID(x.MaxUpdateID)
 	}
 	updContainer.Length = int32(len(updContainer.Updates))
 
 	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateContainer, updContainer)
-}
-func mergeUpdates(updates []*msg.UpdateEnvelope) []*msg.UpdateEnvelope {
-	return updates
-
-	// out := make([]*msg.UpdateEnvelope, 0, len(updates))
-	// for _, u := range updates {
-	// 	switch u.Constructor {
-	// 	case msg.C_UpdateReadHistoryInbox:
-	// 		x := &msg.UpdateReadHistoryInbox{}
-	// 		_ = x.Unmarshal(u.Update)
-	//
-	// 	case msg.C_UpdateReadHistoryOutbox:
-	//
-	// 	}
-	// }
 }
 
 func (ctrl *Controller) TeamSync(teamID int64, accessHash uint64, forceUpdate bool) {
