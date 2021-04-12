@@ -5,6 +5,7 @@ import (
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/tools"
 	"os"
 	"sync"
@@ -30,10 +31,6 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 		zap.Int64("GetUpdateID", x.UpdateID),
 	)
 
-	// used messageType to identify client & server messages on Media thingy
-	x.Message.MessageType = 1
-	repo.MessagesExtra.SaveScrollID(x.Message.TeamID, x.Message.PeerID, x.Message.PeerType, 0, 0)
-
 	dialog, _ := repo.Dialogs.Get(x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 	if dialog == nil {
 		unreadCount := int32(0)
@@ -56,37 +53,47 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 		}
 	}
 
-	// save user if does not exist
-	err = repo.Users.Save(x.Sender)
-	logs.WarnOnErr("SyncCtrl got error on saving user while applying new message", err, zap.Int64("SenderID", x.Sender.ID))
-	if err != nil {
-		return nil, err
-	}
+	waitGroup := pools.AcquireWaitGroup()
+	waitGroup.Add(1)
+	go func() {
+		// used messageType to identify client & server messages on Media thingy
+		x.Message.MessageType = 1
+		repo.MessagesExtra.SaveScrollID(x.Message.TeamID, x.Message.PeerID, x.Message.PeerType, 0, 0)
+		waitGroup.Done()
+	}()
 
-	err = repo.Messages.SaveNew(x.Message, ctrl.GetUserID())
-	logs.WarnOnErr("SyncCtrl got error on saving new message while applying new message", err, zap.Int64("SenderID", x.Sender.ID))
-	if err != nil {
-		return nil, err
-	}
-	messageHole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID, x.Message.ID)
+	waitGroup.Add(1)
+	go func() {
+		// save user if does not exist
+		err = repo.Users.Save(x.Sender)
+		logs.WarnOnErr("SyncCtrl got error on saving user while applying new message", err, zap.Int64("SenderID", x.Sender.ID))
+		waitGroup.Done()
+	}()
 
-	// If sender is me, check for pending
-	if x.Message.SenderID == ctrl.GetUserID() {
-		pm := repo.PendingMessages.GetByRealID(x.Message.ID)
+	waitGroup.Add(1)
+	go func() {
+		err = repo.Messages.SaveNew(x.Message, ctrl.GetUserID())
+		logs.WarnOnErr("SyncCtrl got error on saving new message while applying new message", err, zap.Int64("SenderID", x.Sender.ID))
+		messageHole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID, x.Message.ID)
+		waitGroup.Done()
+	}()
 
-		if pm != nil {
-			ctrl.handlePendingMessage(x)
-			_ = repo.PendingMessages.Delete(pm.ID)
-			repo.PendingMessages.DeleteByRealID(x.Message.ID)
-		}
-	}
+	waitGroup.Wait()
+	pools.ReleaseWaitGroup(waitGroup)
 
 	// handle Message's Action
 	res := []*msg.UpdateEnvelope{u}
 	ctrl.handleMessageAction(x, u, res)
 
-	// update monitoring && top peer && gif
+	// If sender is me, check for pending
 	if x.Message.SenderID == ctrl.GetUserID() {
+		pm := repo.PendingMessages.GetByRealID(x.Message.ID)
+		if pm != nil {
+			ctrl.handlePendingMessage(x)
+			_ = repo.PendingMessages.Delete(pm.ID)
+			repo.PendingMessages.DeleteByRealID(x.Message.ID)
+		}
+
 		if x.Message.PeerID != x.Message.SenderID {
 			if x.Message.FwdSenderID != 0 {
 				_ = repo.TopPeers.Update(msg.TopPeerCategory_Forwards, ctrl.GetUserID(), x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
@@ -266,15 +273,6 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) ([]*msg.Up
 		return nil, err
 	}
 
-	dialog, err := repo.Dialogs.Get(x.TeamID, x.Peer.ID, x.Peer.Type)
-	if dialog == nil {
-		logs.Error("SyncCtrl got error on UpdateReadHistoryInbox",
-			zap.Int64("PeerID", x.Peer.ID),
-			zap.Int32("PeerType", x.Peer.Type),
-			zap.Error(err),
-		)
-	}
-
 	logs.Info("SyncCtrl applies UpdateReadHistoryInbox",
 		zap.Int64("MaxID", x.MaxID),
 		zap.Int64("GetUpdateID", x.UpdateID),
@@ -291,15 +289,6 @@ func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) ([]*msg.U
 	err := x.Unmarshal(u.Update)
 	if err != nil {
 		return nil, err
-	}
-
-	dialog, err := repo.Dialogs.Get(x.TeamID, x.Peer.ID, x.Peer.Type)
-	if dialog == nil {
-		logs.Error("SyncCtrl got error on UpdateReadHistoryOutbox",
-			zap.Int64("PeerID", x.Peer.ID),
-			zap.Int32("PeerType", x.Peer.Type),
-			zap.Error(err),
-		)
 	}
 
 	logs.Info("SyncCtrl applies UpdateReadHistoryOutbox",

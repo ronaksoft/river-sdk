@@ -359,7 +359,7 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 	waitGroup.Wait()
 	pools.ReleaseWaitGroup(waitGroup)
 
-	for _, update := range x.Updates {
+	for _, update := range mergeUpdates(x.Updates) {
 		if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
 			externalHandlerUpdates, err := applier(update)
 			if err != nil {
@@ -381,6 +381,21 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 	updContainer.Length = int32(len(updContainer.Updates))
 
 	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateContainer, updContainer)
+}
+func mergeUpdates(updates []*msg.UpdateEnvelope) []*msg.UpdateEnvelope {
+	return updates
+
+	// out := make([]*msg.UpdateEnvelope, 0, len(updates))
+	// for _, u := range updates {
+	// 	switch u.Constructor {
+	// 	case msg.C_UpdateReadHistoryInbox:
+	// 		x := &msg.UpdateReadHistoryInbox{}
+	// 		_ = x.Unmarshal(u.Update)
+	//
+	// 	case msg.C_UpdateReadHistoryOutbox:
+	//
+	// 	}
+	// }
 }
 
 func (ctrl *Controller) TeamSync(teamID int64, accessHash uint64, forceUpdate bool) {

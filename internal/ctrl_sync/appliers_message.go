@@ -141,7 +141,7 @@ func (ctrl *Controller) messagesDialogs(e *rony.MessageEnvelope) {
 	}
 	// save Groups & Users & Messages
 	waitGroup := pools.AcquireWaitGroup()
-	waitGroup.Add(1)
+	waitGroup.Add(3)
 	go func() {
 		_ = repo.Users.Save(x.Users...)
 		waitGroup.Done()
@@ -183,7 +183,7 @@ func (ctrl *Controller) messagesMany(e *rony.MessageEnvelope) {
 
 	// save Groups & Users & Messages
 	waitGroup := pools.AcquireWaitGroup()
-	waitGroup.Add(1)
+	waitGroup.Add(3)
 	go func() {
 		_ = repo.Users.Save(x.Users...)
 		waitGroup.Done()
