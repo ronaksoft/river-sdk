@@ -399,7 +399,7 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 		waitGroup.Done()
 	}()
 
-	applierFlusher := tools.NewFlusherPool(30, 100, func(targetID string, entries []tools.FlushEntry) {
+	applierFlusher := tools.NewFlusherPool(16, 10, func(targetID string, entries []tools.FlushEntry) {
 		for _, e := range entries {
 			ue := e.Value().(*msg.UpdateEnvelope)
 			if applier, ok := ctrl.updateAppliers[ue.Constructor]; ok {
@@ -425,7 +425,7 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 	waitGroup.Wait()
 
 	// Separate updates into categories based on their constructor
-	queues := make([][]*msg.UpdateEnvelope, 2)
+	var queues [2][]*msg.UpdateEnvelope
 	for _, update := range x.Updates {
 		switch update.Constructor {
 		case msg.C_UpdateNewMessage:
