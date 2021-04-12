@@ -147,6 +147,10 @@ func (r *River) HandleDebugActions(txt string) {
 		peerType := tools.StrToInt32(args[0])
 		peerID := tools.StrToInt64(args[1])
 		sendMediaToSaveMessage(r, exportMessages(r, peerType, peerID), fmt.Sprintf("Messages-%s-%d.txt", msg.PeerType(peerType).String(), peerID))
+	case "//sdk_update_state_get":
+		getUpdateState(r)
+	case "//sdk_update_state_set":
+		setUpdateState(r, tools.StrToInt64(args[0]))
 	}
 }
 func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
@@ -281,6 +285,13 @@ func sendLogs(r *River) {
 		}
 		return nil
 	})
+}
+func getUpdateState(r *River) {
+	sendToSavedMessage(r, fmt.Sprintf("UpdateState is %d", r.syncCtrl.GetUpdateID()))
+}
+func setUpdateState(r *River, updateID int64) {
+	sendToSavedMessage(r, fmt.Sprintf("UpdateState set to: %d", updateID))
+	r.SetUpdateState(updateID)
 }
 
 func (r *River) GetHole(peerID int64, peerType int32) []byte {
