@@ -266,7 +266,7 @@ func (r *River) onReceivedMessage(msgs []*rony.MessageEnvelope) {
 			continue
 		}
 
-		mon.ServerResponseTime(reqCB.Constructor, msgs[idx].Constructor, time.Now().Sub(reqCB.DepartureTime))
+		mon.ServerResponseTime(reqCB.Constructor, msgs[idx].Constructor, time.Duration(tools.NanoTime()-reqCB.DepartureTime))
 		select {
 		case reqCB.ResponseChannel <- msgs[idx]:
 			logs.Debug("We received response",

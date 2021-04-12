@@ -144,12 +144,11 @@ func (ctrl *Controller) executor(req request) {
 			req.ID, req.MessageEnvelope.Constructor, nil, domain.WebsocketRequestTime, nil, false,
 		)
 	}
-	reqCB.DepartureTime = time.Now()
+	reqCB.DepartureTime = tools.NanoTime()
 
 	// Try to send it over wire, if error happened put it back into the queue
 	if err := ctrl.networkCtrl.SendWebsocket(req.MessageEnvelope, false); err != nil {
-		logs.Error("QueueCtrl got error from NetCtrl", zap.Error(err))
-		logs.Info("QueueCtrl re-push the request into the queue")
+		logs.Info("QueueCtrl re-push the request into the queue", zap.Error(err))
 		ctrl.addToWaitingList(&req)
 		return
 	}

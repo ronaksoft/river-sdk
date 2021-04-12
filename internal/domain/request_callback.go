@@ -2,6 +2,7 @@ package domain
 
 import (
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/tools"
 	"sync"
 	"time"
 )
@@ -20,10 +21,10 @@ type RequestCallback struct {
 	SuccessCallback MessageHandler
 	TimeoutCallback TimeoutCallback
 	ResponseChannel chan *rony.MessageEnvelope
-	CreatedOn       time.Time
+	CreatedOn       int64
+	DepartureTime   int64
 	Timeout         time.Duration
 	IsUICallback    bool
-	DepartureTime   time.Time
 	Constructor     int64
 }
 
@@ -38,8 +39,8 @@ func AddRequestCallback(reqID uint64, constructor int64, successCB MessageHandle
 		SuccessCallback: successCB,
 		TimeoutCallback: timeoutCB,
 		ResponseChannel: make(chan *rony.MessageEnvelope),
-		CreatedOn:       time.Now(),
-		DepartureTime:   time.Now(),
+		CreatedOn:       tools.NanoTime(),
+		DepartureTime:   tools.NanoTime(),
 		Timeout:         timeOut,
 		IsUICallback:    isUICallback,
 		Constructor:     constructor,
