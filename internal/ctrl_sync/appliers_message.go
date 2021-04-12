@@ -15,7 +15,6 @@ import (
 	"sort"
 )
 
-// authAuthorization
 func (ctrl *Controller) authAuthorization(e *rony.MessageEnvelope) {
 	x := new(msg.AuthAuthorization)
 	if err := x.Unmarshal(e.Message); err != nil {
@@ -49,7 +48,6 @@ func (ctrl *Controller) authAuthorization(e *rony.MessageEnvelope) {
 	}()
 }
 
-// authSentCode
 func (ctrl *Controller) authSentCode(e *rony.MessageEnvelope) {
 	x := new(msg.AuthSentCode)
 	if err := x.Unmarshal(e.Message); err != nil {
@@ -62,7 +60,6 @@ func (ctrl *Controller) authSentCode(e *rony.MessageEnvelope) {
 	ctrl.connInfo.ChangePhone(x.Phone)
 }
 
-// contactsImported
 func (ctrl *Controller) contactsImported(e *rony.MessageEnvelope) {
 	x := new(msg.ContactsImported)
 	if err := x.Unmarshal(e.Message); err != nil {
@@ -76,7 +73,6 @@ func (ctrl *Controller) contactsImported(e *rony.MessageEnvelope) {
 	repo.Users.Save(x.Users...)
 }
 
-// contactsMany
 func (ctrl *Controller) contactsMany(e *rony.MessageEnvelope) {
 	x := new(msg.ContactsMany)
 	if err := x.Unmarshal(e.Message); err != nil {
@@ -115,7 +111,6 @@ func (ctrl *Controller) contactsMany(e *rony.MessageEnvelope) {
 	}
 }
 
-// messageDialogs
 func (ctrl *Controller) messagesDialogs(e *rony.MessageEnvelope) {
 	x := new(msg.MessagesDialogs)
 	if err := x.Unmarshal(e.Message); err != nil {
@@ -163,7 +158,6 @@ func (ctrl *Controller) messagesDialogs(e *rony.MessageEnvelope) {
 	pools.ReleaseWaitGroup(waitGroup)
 }
 
-// usersMany
 func (ctrl *Controller) usersMany(e *rony.MessageEnvelope) {
 	x := new(msg.UsersMany)
 	err := x.Unmarshal(e.Message)
@@ -177,7 +171,6 @@ func (ctrl *Controller) usersMany(e *rony.MessageEnvelope) {
 	_ = repo.Users.Save(x.Users...)
 }
 
-// messagesMany
 func (ctrl *Controller) messagesMany(e *rony.MessageEnvelope) {
 	x := new(msg.MessagesMany)
 	err := x.Unmarshal(e.Message)
@@ -210,7 +203,6 @@ func (ctrl *Controller) messagesMany(e *rony.MessageEnvelope) {
 	)
 }
 
-// groupFull
 func (ctrl *Controller) groupFull(e *rony.MessageEnvelope) {
 	u := new(msg.GroupFull)
 	err := u.Unmarshal(e.Message)
@@ -238,7 +230,6 @@ func (ctrl *Controller) groupFull(e *rony.MessageEnvelope) {
 	_ = repo.Dialogs.UpdateNotifySetting(u.Group.TeamID, u.Group.ID, int32(msg.PeerType_PeerGroup), u.NotifySettings)
 }
 
-// labelsMany
 func (ctrl *Controller) labelsMany(e *rony.MessageEnvelope) {
 	u := &msg.LabelsMany{}
 	err := u.Unmarshal(e.Message)
@@ -255,7 +246,6 @@ func (ctrl *Controller) labelsMany(e *rony.MessageEnvelope) {
 	return
 }
 
-// labelItems
 func (ctrl *Controller) labelItems(e *rony.MessageEnvelope) {
 	u := &msg.LabelItems{}
 	err := u.Unmarshal(e.Message)
@@ -271,7 +261,6 @@ func (ctrl *Controller) labelItems(e *rony.MessageEnvelope) {
 	_ = repo.Groups.Save(u.Groups...)
 }
 
-// systemConfig
 func (ctrl *Controller) systemConfig(e *rony.MessageEnvelope) {
 	u := &msg.SystemConfig{}
 	err := u.Unmarshal(e.Message)
@@ -294,7 +283,6 @@ func (ctrl *Controller) systemConfig(e *rony.MessageEnvelope) {
 	}
 }
 
-// contactsTopPeers
 func (ctrl *Controller) contactsTopPeers(e *rony.MessageEnvelope) {
 	u := &msg.ContactsTopPeers{}
 	err := u.Unmarshal(e.Message)
@@ -313,7 +301,6 @@ func (ctrl *Controller) contactsTopPeers(e *rony.MessageEnvelope) {
 	}
 }
 
-// wallpapersMany
 func (ctrl *Controller) wallpapersMany(e *rony.MessageEnvelope) {
 	u := &msg.WallPapersMany{}
 	err := u.Unmarshal(e.Message)
@@ -328,7 +315,6 @@ func (ctrl *Controller) wallpapersMany(e *rony.MessageEnvelope) {
 	}
 }
 
-// savedGifs
 func (ctrl *Controller) savedGifs(e *rony.MessageEnvelope) {
 	u := &msg.SavedGifs{}
 	err := u.Unmarshal(e.Message)
@@ -364,7 +350,6 @@ func (ctrl *Controller) savedGifs(e *rony.MessageEnvelope) {
 	}
 }
 
-// botResults
 func (ctrl *Controller) botResults(e *rony.MessageEnvelope) {
 	br := &msg.BotResults{}
 	err := br.Unmarshal(e.Message)
@@ -394,7 +379,6 @@ func (ctrl *Controller) botResults(e *rony.MessageEnvelope) {
 	}
 }
 
-// teamsMany
 func (ctrl *Controller) teamsMany(e *rony.MessageEnvelope) {
 	tm := &msg.TeamsMany{}
 	err := tm.Unmarshal(e.Message)
@@ -413,7 +397,6 @@ func (ctrl *Controller) teamsMany(e *rony.MessageEnvelope) {
 	logs.ErrorOnErr("SyncCtrl couldn't save teamsMany teams", err)
 }
 
-// teamMembers
 func (ctrl *Controller) teamMembers(e *rony.MessageEnvelope) {
 	tm := &msg.TeamMembers{}
 	err := tm.Unmarshal(e.Message)
@@ -426,7 +409,6 @@ func (ctrl *Controller) teamMembers(e *rony.MessageEnvelope) {
 	logs.ErrorOnErr("SyncCtrl couldn't save teamMembers users", err)
 }
 
-// reactionList
 func (ctrl *Controller) reactionList(e *rony.MessageEnvelope) {
 	tm := &msg.MessagesReactionList{}
 	err := tm.Unmarshal(e.Message)
