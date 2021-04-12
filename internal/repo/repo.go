@@ -326,11 +326,19 @@ func badgerView(fn func(txn *badger.Txn) error) (err error) {
 	return
 }
 
-func indexMessage(key, value interface{}) {
-	msgIndexer.Enter(key, value)
+type keyValue struct {
+	Key   interface{}
+	Value interface{}
 }
 
-var msgIndexer = domain.NewFlusher(1000, 1, time.Millisecond, func(items []domain.FlusherEntry) {
+func indexMessage(key, value interface{}) {
+	msgIndexer.Enter("", tools.NewEntry(&keyValue{
+		Key:   key,
+		Value: value,
+	}))
+}
+
+var msgIndexer = tools.NewFlusherPool(10, 1000, func(targetID string, entries []tools.FlushEntry) {
 	_ = tools.Try(100, time.Second, func() error {
 		if r.msgSearch == nil {
 			return domain.ErrDoesNotExists
@@ -338,8 +346,9 @@ var msgIndexer = domain.NewFlusher(1000, 1, time.Millisecond, func(items []domai
 		return nil
 	})
 	b := r.msgSearch.NewBatch()
-	for _, item := range items {
-		_ = b.Index(item.Key.(string), item.Value)
+	for _, item := range entries {
+		kv := item.Value().(*keyValue)
+		_ = b.Index(kv.Key.(string), kv.Value)
 	}
 	err := r.msgSearch.Batch(b)
 	if err != nil {
@@ -348,56 +357,43 @@ var msgIndexer = domain.NewFlusher(1000, 1, time.Millisecond, func(items []domai
 })
 
 func indexMessageRemove(key string) {
-	msgIndexRemover.Enter(key, nil)
+	msgIndexRemover.Enter("", tools.NewEntry(key))
 }
 
-var msgIndexRemover = domain.NewFlusher(1000, 1, time.Millisecond, func(items []domain.FlusherEntry) {
+var msgIndexRemover = tools.NewFlusherPool(10, 1000, func(targetID string, entries []tools.FlushEntry) {
 	_ = tools.Try(100, time.Second, func() error {
 		if r.msgSearch == nil {
 			return domain.ErrDoesNotExists
 		}
 		return nil
 	})
-	for _, item := range items {
-		_ = r.msgSearch.Delete(item.Key.(string))
+	for _, item := range entries {
+		_ = r.msgSearch.Delete(item.Value().(string))
 
 	}
 })
 
 func indexPeer(key, value interface{}) {
-	peerIndexer.Enter(key, value)
+	peerIndexer.Enter("", tools.NewEntry(&keyValue{
+		Key:   key,
+		Value: value,
+	}))
 }
 
-var peerIndexer = domain.NewFlusher(1000, 1, time.Millisecond, func(items []domain.FlusherEntry) {
-	tools.Try(100, time.Second, func() error {
+var peerIndexer = tools.NewFlusherPool(10, 1000, func(targetID string, entries []tools.FlushEntry) {
+	_ = tools.Try(100, time.Second, func() error {
 		if r.peerSearch == nil {
 			return domain.ErrDoesNotExists
 		}
 		return nil
 	})
 	b := r.peerSearch.NewBatch()
-	for _, item := range items {
-		_ = b.Index(item.Key.(string), item.Value)
+	for _, item := range entries {
+		kv := item.Value().(*keyValue)
+		_ = b.Index(kv.Key.(string), kv.Value)
 	}
 	err := r.peerSearch.Batch(b)
 	if err != nil {
 		logs.Warn("PeerIndexer got error", zap.Error(err))
-	}
-})
-
-func indexPeerRemove(key string) {
-	peerIndexRemover.Enter(key, nil)
-}
-
-var peerIndexRemover = domain.NewFlusher(1000, 1, time.Millisecond, func(items []domain.FlusherEntry) {
-	tools.Try(100, time.Second, func() error {
-		if r.peerSearch == nil {
-			return domain.ErrDoesNotExists
-		}
-		return nil
-	})
-	for _, item := range items {
-		_ = r.peerSearch.Delete(item.Key.(string))
-
 	}
 })

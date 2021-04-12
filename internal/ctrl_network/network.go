@@ -16,6 +16,7 @@ import (
 	"github.com/gobwas/ws/wsutil"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
+	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"net"
@@ -72,7 +73,7 @@ type Controller struct {
 	endpointUpdated      bool
 	unauthorizedRequests map[int64]bool // requests that it should sent unencrypted
 	countryCode          string         // the country
-	sendFlusher          *domain.Flusher
+	sendFlusher          *tools.FlusherPool
 }
 
 // New constructs the network controller
@@ -96,7 +97,7 @@ func New(config Config) *Controller {
 
 	ctrl.stopChannel = make(chan bool, 1)
 	ctrl.connectChannel = make(chan bool)
-	ctrl.sendFlusher = domain.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.sendFlushFunc)
+	ctrl.sendFlusher = tools.NewFlusherPool(1, 1000, ctrl.sendFlushFunc)
 
 	ctrl.unauthorizedRequests = map[int64]bool{
 		msg.C_SystemGetServerTime: true,
@@ -153,13 +154,13 @@ func (ctrl *Controller) createDialer(timeout time.Duration) {
 		WrapConn:      nil,
 	}
 }
-func (ctrl *Controller) sendFlushFunc(entries []domain.FlusherEntry) {
+func (ctrl *Controller) sendFlushFunc(targetID string, entries []tools.FlushEntry) {
 	itemsCount := len(entries)
 	switch itemsCount {
 	case 0:
 		return
 	case 1:
-		m := entries[0].Value.(*rony.MessageEnvelope)
+		m := entries[0].Value().(*rony.MessageEnvelope)
 		err := ctrl.sendWebsocket(m)
 		if err != nil {
 			logs.Warn("NetCtrl got error on flushing outgoing messages",
@@ -171,7 +172,7 @@ func (ctrl *Controller) sendFlushFunc(entries []domain.FlusherEntry) {
 	default:
 		messages := make([]*rony.MessageEnvelope, 0, itemsCount)
 		for idx := range entries {
-			m := entries[idx].Value.(*rony.MessageEnvelope)
+			m := entries[idx].Value().(*rony.MessageEnvelope)
 			logs.Debug("Message",
 				zap.Int("Idx", idx),
 				zap.String("TeamID", m.Get("TeamID", "0")),
@@ -632,7 +633,7 @@ func (ctrl *Controller) SendWebsocket(msgEnvelope *rony.MessageEnvelope, direct 
 	if direct || unauthorized {
 		return ctrl.sendWebsocket(msgEnvelope)
 	}
-	ctrl.sendFlusher.Enter(nil, msgEnvelope)
+	ctrl.sendFlusher.Enter("", tools.NewEntry(msgEnvelope))
 	return nil
 }
 func (ctrl *Controller) sendWebsocket(msgEnvelope *rony.MessageEnvelope) error {
