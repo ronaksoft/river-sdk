@@ -33,6 +33,7 @@ func init() {
 	Debug.AddCmd(PrintMessage)
 	Debug.AddCmd(DebugLogoutLoop)
 	Debug.AddCmd(SendMessage)
+	Debug.AddCmd(SetUpdateState)
 	Debug.AddCmd(DebugConcurrent)
 	Debug.AddCmd(DebugReconnect)
 }
@@ -366,5 +367,13 @@ var SendMessage = &ishell.Cmd{
 			}
 			time.Sleep(time.Second)
 		}
+	},
+}
+
+var SetUpdateState = &ishell.Cmd{
+	Name: "SetUpdateState",
+	Func: func(c *ishell.Context) {
+		updateID := fnGetFromUpdateID(c)
+		_SDK.SetUpdateState(updateID)
 	},
 }

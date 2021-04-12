@@ -296,6 +296,13 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 					sort.Slice(x.Updates, func(i, j int) bool {
 						return x.Updates[i].UpdateID < x.Updates[j].UpdateID
 					})
+
+					logs.Info("SyncCtrl received UpdateDifference",
+						zap.Bool("More", x.More),
+						zap.Int64("MinUpdateID", x.MinUpdateID),
+						zap.Int64("MaxUpdateID", x.MaxUpdateID),
+					)
+
 					onGetDifferenceSucceed(ctrl, x)
 					if x.CurrentUpdateID != 0 {
 						serverUpdateID = x.CurrentUpdateID
@@ -305,12 +312,6 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 					if !x.More {
 						_ = ctrl.SetUpdateID(x.CurrentUpdateID)
 					}
-
-					logs.Info("SyncCtrl received UpdateDifference",
-						zap.Bool("More", x.More),
-						zap.Int64("MinUpdateID", x.MinUpdateID),
-						zap.Int64("MaxUpdateID", x.MaxUpdateID),
-					)
 
 				case rony.C_Error:
 					logs.Debug("SyncCtrl got error response",

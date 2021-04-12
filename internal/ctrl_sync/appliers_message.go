@@ -22,13 +22,14 @@ func (ctrl *Controller) authAuthorization(e *rony.MessageEnvelope) {
 		logs.Error("SyncCtrl couldn't unmarshal AuthAuthorization", zap.Error(err))
 		return
 	}
-	logs.Info("SyncCtrl applies AuthAuthorization",
+	logs.Debug("SyncCtrl applies AuthAuthorization",
 		zap.String("FirstName", x.User.FirstName),
 		zap.String("LastName", x.User.LastName),
 		zap.Int64("UserID", x.User.ID),
 		zap.String("Bio", x.User.Bio),
 		zap.String("Username", x.User.Username),
 	)
+
 	ctrl.connInfo.ChangeFirstName(x.User.FirstName)
 	ctrl.connInfo.ChangeLastName(x.User.LastName)
 	ctrl.connInfo.ChangeUserID(x.User.ID)
@@ -55,7 +56,9 @@ func (ctrl *Controller) authSentCode(e *rony.MessageEnvelope) {
 		logs.Error("SyncCtrl couldn't unmarshal AuthSentCode", zap.Error(err))
 		return
 	}
-	logs.Info("SyncCtrl applies AuthSentCode")
+
+	logs.Debug("SyncCtrl applies AuthSentCode")
+
 	ctrl.connInfo.ChangePhone(x.Phone)
 }
 
@@ -66,7 +69,9 @@ func (ctrl *Controller) contactsImported(e *rony.MessageEnvelope) {
 		logs.Error("SyncCtrl couldn't unmarshal ContactsImported", zap.Error(err))
 		return
 	}
-	logs.Info("SyncCtrl applies contactsImported")
+
+	logs.Debug("SyncCtrl applies contactsImported")
+
 	_ = repo.Users.SaveContact(domain.GetTeamID(e), x.ContactUsers...)
 	repo.Users.Save(x.Users...)
 }
@@ -78,7 +83,7 @@ func (ctrl *Controller) contactsMany(e *rony.MessageEnvelope) {
 		logs.Error("SyncCtrl couldn't unmarshal ContactsMany", zap.Error(err))
 		return
 	}
-	logs.Info("SyncCtrl applies contactsMany",
+	logs.Debug("SyncCtrl applies contactsMany",
 		zap.Int("Users", len(x.Users)),
 		zap.Int("Contacts", len(x.Contacts)),
 	)
@@ -117,7 +122,7 @@ func (ctrl *Controller) messagesDialogs(e *rony.MessageEnvelope) {
 		logs.Error("SyncCtrl couldn't unmarshal MessagesDialogs", zap.Error(err))
 		return
 	}
-	logs.Info("SyncCtrl applies MessagesDialogs",
+	logs.Debug("SyncCtrl applies MessagesDialogs",
 		zap.Int("Dialogs", len(x.Dialogs)),
 		zap.Int64("GetUpdateID", x.UpdateID),
 		zap.Int32("Count", x.Count),
@@ -166,7 +171,7 @@ func (ctrl *Controller) usersMany(e *rony.MessageEnvelope) {
 		logs.Error("SyncCtrl couldn't unmarshal UsersMany", zap.Error(err))
 		return
 	}
-	logs.Info("SyncCtrl applies usersMany",
+	logs.Debug("SyncCtrl applies usersMany",
 		zap.Int("Users", len(x.Users)),
 	)
 	_ = repo.Users.Save(x.Users...)
@@ -213,7 +218,7 @@ func (ctrl *Controller) groupFull(e *rony.MessageEnvelope) {
 		logs.Error("SyncCtrl couldn't unmarshal GroupFull", zap.Error(err))
 		return
 	}
-	logs.Info("SyncCtrl applies GroupFull",
+	logs.Debug("SyncCtrl applies GroupFull",
 		zap.Int64("GroupID", u.Group.ID),
 	)
 
@@ -241,7 +246,8 @@ func (ctrl *Controller) labelsMany(e *rony.MessageEnvelope) {
 		logs.Error("SyncCtrl couldn't unmarshal LabelsMany", zap.Error(err))
 		return
 	}
-	logs.Info("SyncCtrl applies LabelsMany", zap.Any("TeamID", e.Get("TeamID", "0")))
+
+	logs.Debug("SyncCtrl applies LabelsMany", zap.Any("TeamID", e.Get("TeamID", "0")))
 
 	err = repo.Labels.Save(domain.GetTeamID(e), u.Labels...)
 	logs.WarnOnErr("SyncCtrl got error on applying LabelsMany", err)
@@ -257,7 +263,8 @@ func (ctrl *Controller) labelItems(e *rony.MessageEnvelope) {
 		logs.Error("SyncCtrl couldn't unmarshal LabelItems", zap.Error(err))
 		return
 	}
-	logs.Info("SyncCtrl applies LabelItems")
+
+	logs.Debug("SyncCtrl applies LabelItems")
 
 	_ = repo.Messages.Save(u.Messages...)
 	_ = repo.Users.Save(u.Users...)
@@ -272,7 +279,8 @@ func (ctrl *Controller) systemConfig(e *rony.MessageEnvelope) {
 		logs.Error("SyncCtrl couldn't unmarshal SystemConfig", zap.Error(err))
 		return
 	}
-	logs.Info("SyncCtrl applies SystemConfig")
+
+	logs.Debug("SyncCtrl applies SystemConfig")
 
 	sysConfBytes, _ := u.Marshal()
 	domain.SysConfig.Reactions = domain.SysConfig.Reactions[:0]
@@ -294,7 +302,8 @@ func (ctrl *Controller) contactsTopPeers(e *rony.MessageEnvelope) {
 		logs.Error("SyncCtrl couldn't unmarshal ContactsTopPeers", zap.Error(err))
 		return
 	}
-	logs.Info("SyncCtrl applies ContactsTopPeers",
+
+	logs.Debug("SyncCtrl applies ContactsTopPeers",
 		zap.Int("L", len(u.Peers)),
 		zap.String("Cat", u.Category.String()),
 	)
@@ -312,6 +321,7 @@ func (ctrl *Controller) wallpapersMany(e *rony.MessageEnvelope) {
 		logs.Error("SyncCtrl couldn't unmarshal wallpapersMany", zap.Error(err))
 		return
 	}
+
 	err = repo.Wallpapers.SaveWallpapers(u)
 	if err != nil {
 		logs.Error("SyncCtrl got error on saving wallpapersMany", zap.Error(err))
@@ -326,6 +336,7 @@ func (ctrl *Controller) savedGifs(e *rony.MessageEnvelope) {
 		logs.Error("SyncCtrl couldn't unmarshal savedGifs", zap.Error(err))
 		return
 	}
+
 	accessTime := domain.Now().Unix()
 	for _, d := range u.Docs {
 		err = repo.Files.SaveGif(d)

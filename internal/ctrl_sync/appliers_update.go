@@ -26,9 +26,9 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateNewMessage",
+	logs.Debug("SyncCtrl applies UpdateNewMessage",
 		zap.Int64("MessageID", x.Message.ID),
-		zap.Int64("GetUpdateID", x.UpdateID),
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	dialog, _ := repo.Dialogs.Get(x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
@@ -273,9 +273,9 @@ func (ctrl *Controller) updateReadHistoryInbox(u *msg.UpdateEnvelope) ([]*msg.Up
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateReadHistoryInbox",
+	logs.Debug("SyncCtrl applies UpdateReadHistoryInbox",
 		zap.Int64("MaxID", x.MaxID),
-		zap.Int64("GetUpdateID", x.UpdateID),
+		zap.Int64("UpdateID", x.UpdateID),
 		zap.Int64("PeerID", x.Peer.ID),
 	)
 
@@ -291,9 +291,9 @@ func (ctrl *Controller) updateReadHistoryOutbox(u *msg.UpdateEnvelope) ([]*msg.U
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateReadHistoryOutbox",
+	logs.Debug("SyncCtrl applies UpdateReadHistoryOutbox",
 		zap.Int64("MaxID", x.MaxID),
-		zap.Int64("GetUpdateID", x.UpdateID),
+		zap.Int64("UpdateID", x.UpdateID),
 		zap.Int64("PeerID", x.Peer.ID),
 	)
 
@@ -309,9 +309,9 @@ func (ctrl *Controller) updateMessageEdited(u *msg.UpdateEnvelope) ([]*msg.Updat
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateMessageEdited",
+	logs.Debug("SyncCtrl applies UpdateMessageEdited",
 		zap.Int64("MessageID", x.Message.ID),
-		zap.Int64("GetUpdateID", x.UpdateID),
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	repo.Messages.Save(x.Message)
@@ -328,7 +328,7 @@ func (ctrl *Controller) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applied UpdateMessageID",
+	logs.Debug("SyncCtrl applied UpdateMessageID",
 		zap.Int64("RandomID", x.RandomID),
 		zap.Int64("MessageID", x.MessageID),
 	)
@@ -403,8 +403,8 @@ func (ctrl *Controller) updateNotifySettings(u *msg.UpdateEnvelope) ([]*msg.Upda
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateNotifySettings",
-		zap.Int64("GetUpdateID", x.UpdateID),
+	logs.Debug("SyncCtrl applies UpdateNotifySettings",
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	repo.Dialogs.UpdateNotifySetting(x.TeamID, x.NotifyPeer.ID, x.NotifyPeer.Type, x.Settings)
@@ -420,8 +420,8 @@ func (ctrl *Controller) updateDialogPinned(u *msg.UpdateEnvelope) ([]*msg.Update
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateDialogPinned",
-		zap.Int64("GetUpdateID", x.UpdateID),
+	logs.Debug("SyncCtrl applies UpdateDialogPinned",
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	repo.Dialogs.UpdatePinned(x)
@@ -436,8 +436,8 @@ func (ctrl *Controller) updateUsername(u *msg.UpdateEnvelope) ([]*msg.UpdateEnve
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateUsername",
-		zap.Int64("GetUpdateID", x.UpdateID),
+	logs.Debug("SyncCtrl applies UpdateUsername",
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	if x.UserID == ctrl.GetUserID() {
@@ -466,8 +466,8 @@ func (ctrl *Controller) updateMessagesDeleted(u *msg.UpdateEnvelope) ([]*msg.Upd
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateMessagesDeleted",
-		zap.Int64("GetUpdateID", x.UpdateID),
+	logs.Debug("SyncCtrl applies UpdateMessagesDeleted",
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	repo.Messages.Delete(ctrl.GetUserID(), x.TeamID, x.Peer.ID, x.Peer.Type, x.MessageIDs...)
@@ -496,8 +496,8 @@ func (ctrl *Controller) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) ([]*m
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateGroupParticipantAdmin",
-		zap.Int64("GetUpdateID", x.UpdateID),
+	logs.Debug("SyncCtrl applies UpdateGroupParticipantAdmin",
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	res := []*msg.UpdateEnvelope{u}
@@ -512,9 +512,9 @@ func (ctrl *Controller) updateReadMessagesContents(u *msg.UpdateEnvelope) ([]*ms
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateReadMessagesContents",
+	logs.Debug("SyncCtrl applies UpdateReadMessagesContents",
 		zap.Int64s("MessageIDs", x.MessageIDs),
-		zap.Int64("GetUpdateID", x.UpdateID),
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	repo.Messages.SetContentRead(x.Peer.ID, x.Peer.Type, x.MessageIDs)
@@ -530,8 +530,8 @@ func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateUserPhoto",
-		zap.Int64("GetUpdateID", x.UpdateID),
+	logs.Debug("SyncCtrl applies UpdateUserPhoto",
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	if x.Photo != nil {
@@ -553,9 +553,9 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateGroupPhoto",
+	logs.Debug("SyncCtrl applies UpdateGroupPhoto",
 		zap.Int64("GroupID", x.GroupID),
-		zap.Int64("GetUpdateID", x.UpdateID),
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	if x.Photo != nil {
@@ -581,9 +581,9 @@ func (ctrl *Controller) updateGroupAdmins(u *msg.UpdateEnvelope) ([]*msg.UpdateE
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateGroupAdmins",
+	logs.Debug("SyncCtrl applies UpdateGroupAdmins",
 		zap.Int64("GroupID", x.GroupID),
-		zap.Int64("GetUpdateID", x.UpdateID),
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	res := []*msg.UpdateEnvelope{u}
@@ -597,8 +597,8 @@ func (ctrl *Controller) updateAccountPrivacy(u *msg.UpdateEnvelope) ([]*msg.Upda
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateAccountPrivacy",
-		zap.Int64("GetUpdateID", x.UpdateID),
+	logs.Debug("SyncCtrl applies UpdateAccountPrivacy",
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyChatInvite, x.ChatInvite)
@@ -624,8 +624,8 @@ func (ctrl *Controller) updateDraftMessage(u *msg.UpdateEnvelope) ([]*msg.Update
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateDraftMessage",
-		zap.Int64("GetUpdateID", x.UpdateID),
+	logs.Debug("SyncCtrl applies UpdateDraftMessage",
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	dialog, _ := repo.Dialogs.Get(x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
@@ -645,15 +645,14 @@ func (ctrl *Controller) updateDraftMessageCleared(u *msg.UpdateEnvelope) ([]*msg
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateDraftMessageCleared",
-		zap.Int64("GetUpdateID", x.UpdateID),
+	logs.Debug("SyncCtrl applies UpdateDraftMessageCleared",
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	dialog, _ := repo.Dialogs.Get(x.TeamID, x.Peer.ID, x.Peer.Type)
-
 	if dialog != nil {
 		dialog.Draft = nil
-		repo.Dialogs.Save(dialog)
+		_ = repo.Dialogs.Save(dialog)
 	}
 
 	res := []*msg.UpdateEnvelope{u}
@@ -667,8 +666,8 @@ func (ctrl *Controller) updateLabelItemsAdded(u *msg.UpdateEnvelope) ([]*msg.Upd
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateLabelItemsAdded",
-		zap.Int64("GetUpdateID", x.UpdateID),
+	logs.Debug("SyncCtrl applies UpdateLabelItemsAdded",
+		zap.Int64("UpdateID", x.UpdateID),
 		zap.Int64s("MsgIDs", x.MessageIDs),
 		zap.Int32s("LabelIDs", x.LabelIDs),
 	)
@@ -705,8 +704,8 @@ func (ctrl *Controller) updateLabelItemsRemoved(u *msg.UpdateEnvelope) ([]*msg.U
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateLabelItemsRemoved",
-		zap.Int64("GetUpdateID", x.UpdateID),
+	logs.Debug("SyncCtrl applies UpdateLabelItemsRemoved",
+		zap.Int64("UpdateID", x.UpdateID),
 		zap.Int64s("MsgIDs", x.MessageIDs),
 		zap.Int32s("LabelIDs", x.LabelIDs),
 		zap.Int64("TeamID", x.TeamID),
@@ -733,8 +732,8 @@ func (ctrl *Controller) updateLabelSet(u *msg.UpdateEnvelope) ([]*msg.UpdateEnve
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateLabelSet",
-		zap.Int64("GetUpdateID", x.UpdateID),
+	logs.Debug("SyncCtrl applies UpdateLabelSet",
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	err = repo.Labels.Set(x.Labels...)
@@ -751,8 +750,8 @@ func (ctrl *Controller) updateLabelDeleted(u *msg.UpdateEnvelope) ([]*msg.Update
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateLabelDeleted",
-		zap.Int64("GetUpdateID", x.UpdateID),
+	logs.Debug("SyncCtrl applies UpdateLabelDeleted",
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	err = repo.Labels.Delete(x.LabelIDs...)
@@ -769,8 +768,8 @@ func (ctrl *Controller) updateUserBlocked(u *msg.UpdateEnvelope) ([]*msg.UpdateE
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateUserBlocked",
-		zap.Int64("GetUpdateID", x.UpdateID),
+	logs.Debug("SyncCtrl applies UpdateUserBlocked",
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	err = repo.Users.UpdateBlocked(x.UserID, x.Blocked)
@@ -787,8 +786,8 @@ func (ctrl *Controller) updateTeamMemberAdded(u *msg.UpdateEnvelope) ([]*msg.Upd
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateTeamMemberAdded",
-		zap.Int64("GetUpdateID", x.UpdateID),
+	logs.Debug("SyncCtrl applies UpdateTeamMemberAdded",
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	_ = repo.Users.Save(x.User)
@@ -807,8 +806,8 @@ func (ctrl *Controller) updateTeamMemberRemoved(u *msg.UpdateEnvelope) ([]*msg.U
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateTeamMemberRemoved",
-		zap.Int64("GetUpdateID", x.UpdateID),
+	logs.Debug("SyncCtrl applies UpdateTeamMemberRemoved",
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	_ = repo.Users.DeleteContact(x.TeamID, x.UserID)
@@ -827,8 +826,8 @@ func (ctrl *Controller) updateTeamMemberStatus(u *msg.UpdateEnvelope) ([]*msg.Up
 		return nil, err
 	}
 
-	logs.Info("SyncCtrl applies UpdateTeamMemberStatus",
-		zap.Int64("GetUpdateID", x.UpdateID),
+	logs.Debug("SyncCtrl applies UpdateTeamMemberStatus",
+		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	return []*msg.UpdateEnvelope{u}, nil
@@ -840,6 +839,10 @@ func (ctrl *Controller) updateTeamCreated(u *msg.UpdateEnvelope) ([]*msg.UpdateE
 	if err != nil {
 		return nil, err
 	}
+
+	logs.Debug("SyncCtrl applies UpdateTeamCreated",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
 
 	err = repo.Teams.Save(x.Team)
 	if err != nil {
@@ -855,6 +858,11 @@ func (ctrl *Controller) updateTeam(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope
 	if err != nil {
 		return nil, err
 	}
+
+	logs.Debug("SyncCtrl applies UpdateTeam",
+		zap.Int64("UpdateID", x.UpdateID),
+		zap.String("Name", x.Name),
+	)
 
 	team, err := repo.Teams.Get(x.TeamID)
 
@@ -879,6 +887,10 @@ func (ctrl *Controller) updateReaction(u *msg.UpdateEnvelope) ([]*msg.UpdateEnve
 		return nil, err
 	}
 
+	logs.Debug("SyncCtrl applies UpdateReaction",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
+
 	err = repo.Messages.UpdateReactionCounter(x.MessageID, x.Counter, x.YourReactions)
 	if err != nil {
 		return nil, err
@@ -893,6 +905,10 @@ func (ctrl *Controller) updateMessagePinned(u *msg.UpdateEnvelope) ([]*msg.Updat
 	if err != nil {
 		return nil, err
 	}
+
+	logs.Debug("SyncCtrl applies UpdateMessagePinned",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
 
 	err = repo.Dialogs.UpdatePinMessageID(x.TeamID, x.Peer.ID, x.Peer.Type, x.MsgID)
 	if err != nil {
