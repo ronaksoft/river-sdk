@@ -154,10 +154,6 @@ func (r *River) HandleDebugActions(txt string) {
 	}
 }
 
-func (r *River) GetCurrentUpdateState() int64 {
-	return r.syncCtrl.GetUpdateID()
-}
-
 func exportMessages(r *River, peerType int32, peerID int64) (filePath string) {
 	filePath = path.Join(repo.DirCache, fmt.Sprintf("Messages-%s-%d.txt", msg.PeerType(peerType).String(), peerID))
 	file, err := os.Create(filePath)
@@ -323,3 +319,8 @@ func (r *River) SetUpdateState(newUpdateID int64) {
 	_ = r.syncCtrl.SetUpdateID(newUpdateID)
 	go r.syncCtrl.Sync()
 }
+
+func (r *River) GetUpdateState() int64 {
+	return r.syncCtrl.GetUpdateID()
+}
+
