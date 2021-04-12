@@ -396,6 +396,11 @@ func messageHandler(ctrl *Controller, message *rony.MessageEnvelope) {
 	// extract all updates/ messages
 	messages, updates := extractMessages(ctrl, message)
 	if ctrl.OnMessage != nil {
+		// sort messages by requestID
+		sort.Slice(messages, func(i, j int) bool {
+			return messages[i].RequestID < messages[j].RequestID
+		})
+
 		ctrl.OnMessage(messages)
 	}
 	if ctrl.OnUpdate != nil {
@@ -530,6 +535,7 @@ func (ctrl *Controller) Connect() {
 				attempts++
 				if attempts > 2 {
 					attempts = 0
+					logs.Info("NetCtrl got error on Dial", zap.Error(err), zap.String("Endpoint", ctrl.wsEndpoint))
 					ctrl.createDialer(domain.WebsocketDialTimeoutLong)
 				}
 				continue

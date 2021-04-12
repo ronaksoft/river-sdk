@@ -43,7 +43,7 @@ func dummyUpdateHandler(updateContainer *msg.UpdateContainer) {
 	for _, u := range updateContainer.Updates {
 		logs.Info("Update",
 			zap.String("C", registry.ConstructorName(u.Constructor)),
-			zap.Int64("UpdateID", u.UpdateID),
+			zap.Int64("GetUpdateID", u.UpdateID),
 		)
 	}
 

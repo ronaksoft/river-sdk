@@ -56,7 +56,7 @@ func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 		}
 		// _Shell.Println("Processing UpdateContainer:", updateContainer.MinUpdateID, updateContainer.MaxUpdateID)
 		for _, update := range updateContainer.Updates {
-			// _Shell.Println("Processing Update", update.UpdateID, registry.ConstructorName(update.Constructor))
+			// _Shell.Println("Processing Update", update.GetUpdateID, registry.ConstructorName(update.Constructor))
 			UpdatePrinter(update)
 		}
 	case msg.C_ClientUpdatePendingMessageDelivery:
@@ -73,7 +73,7 @@ func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
 			_Shell.Println("Error On Unmarshal UpdateEnvelope:", err)
 			return
 		} else {
-			// _Shell.Println("Processing UpdateEnvelop", update.UpdateID, registry.ConstructorName(update.Constructor))
+			// _Shell.Println("Processing UpdateEnvelop", update.GetUpdateID, registry.ConstructorName(update.Constructor))
 			UpdatePrinter(update)
 		}
 	}

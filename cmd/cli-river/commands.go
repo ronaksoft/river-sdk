@@ -271,7 +271,7 @@ func fnGetMessageID(c *ishell.Context) int64 {
 func fnGetFromUpdateID(c *ishell.Context) int64 {
 	var updateID int64
 	for {
-		c.Print("From UpdateID: ")
+		c.Print("From GetUpdateID: ")
 		fromUpdateID, err := strconv.ParseInt(c.ReadLine(), 10, 64)
 		if err == nil {
 			updateID = fromUpdateID

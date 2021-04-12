@@ -262,7 +262,7 @@ func MessagePrinter(envelope *rony.MessageEnvelope) {
 		bufMsg := new(bytes.Buffer)
 		tableMsg := tablewriter.NewWriter(bufMsg)
 		tableMsg.SetHeader([]string{
-			"UpdateID", "AccessHash", "Sender", "Message.ID", "Message.Body",
+			"GetUpdateID", "AccessHash", "Sender", "Message.ID", "Message.Body",
 		})
 
 		tableMsg.Append([]string{

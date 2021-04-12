@@ -118,7 +118,7 @@ func (ctrl *Controller) messagesDialogs(e *rony.MessageEnvelope) {
 	}
 	logs.Info("SyncCtrl applies MessagesDialogs",
 		zap.Int("Dialogs", len(x.Dialogs)),
-		zap.Int64("UpdateID", x.UpdateID),
+		zap.Int64("GetUpdateID", x.UpdateID),
 		zap.Int32("Count", x.Count),
 	)
 

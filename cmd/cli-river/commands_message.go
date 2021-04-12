@@ -5,7 +5,6 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"github.com/ronaksoft/rony"
 	"gopkg.in/abiosoft/ishell.v2"
-	"time"
 )
 
 var Message = &ishell.Cmd{
@@ -34,10 +33,6 @@ var MessageSend = &ishell.Cmd{
 	},
 }
 
-var (
-	sendMessageTimer time.Time
-)
-
 var MessageSendToSelf = &ishell.Cmd{
 	Name: "SendToMe",
 	Func: func(c *ishell.Context) {
@@ -54,7 +49,6 @@ var MessageSendToSelf = &ishell.Cmd{
 		req.Entities = nil
 		reqBytes, _ := req.Marshal()
 		reqDelegate := NewCustomDelegate()
-		sendMessageTimer = time.Now()
 		reqDelegate.OnCompleteFunc = func(b []byte) {
 			x := &rony.MessageEnvelope{}
 			_ = x.Unmarshal(b)
@@ -114,7 +108,6 @@ var MessageSendMediaToSelf = &ishell.Cmd{
 		req.Entities = nil
 		reqBytes, _ := req.Marshal()
 		reqDelegate := NewCustomDelegate()
-		sendMessageTimer = time.Now()
 		reqDelegate.OnCompleteFunc = func(b []byte) {
 			x := &rony.MessageEnvelope{}
 			_ = x.Unmarshal(b)

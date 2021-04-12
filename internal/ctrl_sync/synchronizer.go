@@ -40,7 +40,7 @@ type Controller struct {
 	fileCtrl    *fileCtrl.Controller
 
 	syncStatus         domain.SyncStatus
-	lastUpdateReceived time.Time
+	lastUpdateReceived int64
 	updateID           int64
 	updateAppliers     map[int64]domain.UpdateApplier
 	messageAppliers    map[int64]domain.MessageApplier
@@ -146,9 +146,8 @@ func (ctrl *Controller) watchDog() {
 				break
 			}
 
-			now := time.Now()
 			// Check if we were not syncing in the last 3 minutes
-			if now.Sub(ctrl.lastUpdateReceived) > syncTime {
+			if time.Duration(tools.NanoTime()-ctrl.lastUpdateReceived) > syncTime {
 				go ctrl.Sync()
 			}
 
@@ -185,7 +184,7 @@ func (ctrl *Controller) Sync() {
 			}
 		}
 
-		if ctrl.updateID == serverUpdateID {
+		if ctrl.GetUpdateID() == serverUpdateID {
 			updateSyncStatus(ctrl, domain.Synced)
 			return
 		}
@@ -194,7 +193,8 @@ func (ctrl *Controller) Sync() {
 		updateSyncStatus(ctrl, domain.Syncing)
 		defer updateSyncStatus(ctrl, domain.Synced)
 
-		if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSyncThreshold {
+		ctrlUpdateID := ctrl.GetUpdateID()
+		if ctrlUpdateID == 0 || (serverUpdateID-ctrlUpdateID) > domain.SnapshotSyncThreshold {
 			logs.Info("SyncCtrl goes for a Snapshot sync")
 
 			// Get Contacts from the server
@@ -210,13 +210,11 @@ func (ctrl *Controller) Sync() {
 			go ctrl.GetAllTopPeers(waitGroup, 0, 0, msg.TopPeerCategory_BotsInline, 0, 100)
 			waitGroup.Wait()
 
-			ctrl.updateID = serverUpdateID
-			err = repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
-			if err != nil {
-				logs.Error("SyncCtrl couldn't save the current UpdateID", zap.Error(err))
+			if err := ctrl.SetUpdateID(serverUpdateID); err != nil {
+				logs.Error("SyncCtrl couldn't save the current GetUpdateID", zap.Error(err))
 				return
 			}
-		} else if serverUpdateID >= ctrl.updateID+1 {
+		} else if serverUpdateID >= ctrl.GetUpdateID()+1 {
 			logs.Info("SyncCtrl goes for a Sequential sync")
 			getUpdateDifference(ctrl, serverUpdateID)
 		}
@@ -252,12 +250,12 @@ func updateSyncStatus(ctrl *Controller, newStatus domain.SyncStatus) {
 func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 	logs.Info("SyncCtrl calls getUpdateDifference",
 		zap.Int64("ServerUpdateID", serverUpdateID),
-		zap.Int64("ClientUpdateID", ctrl.updateID),
+		zap.Int64("ClientUpdateID", ctrl.GetUpdateID()),
 	)
 
 	waitGroup := sync.WaitGroup{}
-	for serverUpdateID > ctrl.updateID {
-		limit := serverUpdateID - ctrl.updateID
+	for serverUpdateID > ctrl.GetUpdateID() {
+		limit := serverUpdateID - ctrl.GetUpdateID()
 		if limit > 250 {
 			limit = 250
 		}
@@ -271,7 +269,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 		}
 		req := &msg.UpdateGetDifference{
 			Limit: int32(limit),
-			From:  ctrl.updateID + 1, // +1 cuz we already have ctrl.updateID itself,
+			From:  ctrl.GetUpdateID() + 1, // +1 cuz we already have ctrl.updateID itself,
 		}
 		reqBytes, _ := req.Marshal()
 		waitGroup.Add(1)
@@ -306,7 +304,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 
 					// If there is no more update then set ClientUpdateID to the ServerUpdateID
 					if !x.More {
-						ctrl.updateID = x.CurrentUpdateID
+						_ = ctrl.SetUpdateID(x.CurrentUpdateID)
 					}
 
 					logs.Info("SyncCtrl received UpdateDifference",
@@ -315,11 +313,6 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 						zap.Int64("MaxUpdateID", x.MaxUpdateID),
 					)
 
-					// save UpdateID to DB
-					err = repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
-					if err != nil {
-						logs.Error("SyncCtrl couldn't save current UpdateID", zap.Error(err))
-					}
 				case rony.C_Error:
 					logs.Debug("SyncCtrl got error response",
 						zap.String("Error", domain.ParseServerError(m.Message).Error()),
@@ -335,12 +328,13 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 	}
 }
 func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
-	updContainer := new(msg.UpdateContainer)
-	updContainer.Updates = make([]*msg.UpdateEnvelope, 0)
-	updContainer.Users = x.Users
-	updContainer.Groups = x.Groups
-	updContainer.MaxUpdateID = x.MaxUpdateID
-	updContainer.MinUpdateID = x.MinUpdateID
+	updContainer := &msg.UpdateContainer{
+		Updates:     make([]*msg.UpdateEnvelope, 0),
+		Users:       x.Users,
+		Groups:      x.Groups,
+		MaxUpdateID: x.MaxUpdateID,
+		MinUpdateID: x.MinUpdateID,
+	}
 
 	logs.Info("SyncController:: onGetDifferenceSucceed",
 		zap.Int64("MaxUpdateID", x.MaxUpdateID),
@@ -353,8 +347,8 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 	}
 
 	// save Groups & Users
-	repo.Groups.Save(x.Groups...)
-	repo.Users.Save(x.Users...)
+	_ = repo.Groups.Save(x.Groups...)
+	_ = repo.Users.Save(x.Users...)
 
 	for _, update := range x.Updates {
 		if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
@@ -362,7 +356,7 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 			if err != nil {
 				logs.Warn("Error On UpdateDiff",
 					zap.Error(err),
-					zap.Int64("UpdateID", update.UpdateID),
+					zap.Int64("GetUpdateID", update.UpdateID),
 					zap.String("C", registry.ConstructorName(update.Constructor)),
 				)
 				return
@@ -420,15 +414,26 @@ func (ctrl *Controller) GetUserID() int64 {
 	return ctrl.userID
 }
 
+// GetUpdateID returns current updateID
+func (ctrl *Controller) GetUpdateID() int64 {
+	return ctrl.updateID
+}
+
+// SetUpdateID set the controller last update id
+func (ctrl *Controller) SetUpdateID(id int64) error {
+	ctrl.updateID = id
+	return repo.System.SaveInt(domain.SkUpdateID, uint64(id))
+}
+
 // Start controller
 func (ctrl *Controller) Start() {
 	logs.Info("SyncCtrl started")
 
-	// Load the latest UpdateID stored in DB
+	// Load the latest GetUpdateID stored in DB
 	if v, err := repo.System.LoadInt(domain.SkUpdateID); err != nil {
 		err := repo.System.SaveInt(domain.SkUpdateID, 0)
 		if err != nil {
-			logs.Error("SyncCtrl couldn't save current UpdateID", zap.Error(err))
+			logs.Error("SyncCtrl couldn't save current GetUpdateID", zap.Error(err))
 		}
 		ctrl.updateID = 0
 	} else {
@@ -448,8 +453,8 @@ func (ctrl *Controller) Stop() {
 	logs.Info("SyncCtrl Stopped")
 }
 
-// MessageHandler call appliers-> repository and sync data
-func (ctrl *Controller) MessageHandler(messages []*rony.MessageEnvelope) {
+// MessageApplier call appliers-> repository and sync data
+func (ctrl *Controller) MessageApplier(messages []*rony.MessageEnvelope) {
 	for _, m := range messages {
 		switch m.Constructor {
 		case msg.C_MessagesSent:
@@ -462,23 +467,24 @@ func (ctrl *Controller) MessageHandler(messages []*rony.MessageEnvelope) {
 	}
 }
 
-// UpdateHandler receives update to cache them in client DB
-func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer, outOfSync bool) {
-	logs.Debug("SyncCtrl calls UpdateHandler",
-		zap.Int64("ctrl.UpdateID", ctrl.updateID),
+// UpdateApplier receives update to cache them in client DB
+func (ctrl *Controller) UpdateApplier(updateContainer *msg.UpdateContainer, outOfSync bool) {
+	logs.Debug("SyncCtrl calls UpdateApplier",
+		zap.Int64("ctrl.GetUpdateID", ctrl.GetUpdateID()),
 		zap.Int64("MaxID", updateContainer.MaxUpdateID),
 		zap.Int64("MinID", updateContainer.MinUpdateID),
 		zap.Int("Count", len(updateContainer.Updates)),
 	)
 
-	ctrl.lastUpdateReceived = time.Now()
+	ctrl.lastUpdateReceived = tools.NanoTime()
 
-	udpContainer := new(msg.UpdateContainer)
-	udpContainer.Updates = make([]*msg.UpdateEnvelope, 0)
-	udpContainer.MaxUpdateID = updateContainer.MaxUpdateID
-	udpContainer.MinUpdateID = updateContainer.MinUpdateID
-	udpContainer.Users = updateContainer.Users
-	udpContainer.Groups = updateContainer.Groups
+	udpContainer := &msg.UpdateContainer{
+		Updates:     make([]*msg.UpdateEnvelope, 0),
+		MaxUpdateID: updateContainer.MaxUpdateID,
+		MinUpdateID: updateContainer.MinUpdateID,
+		Users:       updateContainer.Users,
+		Groups:      updateContainer.Groups,
+	}
 
 	// save Groups & Users
 	_ = repo.Groups.Save(updateContainer.Groups...)
@@ -505,13 +511,8 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer, outO
 			udpContainer.Updates = append(udpContainer.Updates, update)
 		}
 		if update.UpdateID != 0 {
-			ctrl.updateID = update.UpdateID
+			_ = ctrl.SetUpdateID(update.UpdateID)
 		}
-	}
-
-	err := repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
-	if err != nil {
-		logs.Error("SyncCtrl got error on save UpdateID", zap.Error(err))
 	}
 
 	udpContainer.Length = int32(len(udpContainer.Updates))
@@ -519,14 +520,9 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer, outO
 	return
 }
 
-// UpdateID returns current updateID
-func (ctrl *Controller) UpdateID() int64 {
-	return ctrl.updateID
-}
-
 // ResetIDs reset updateID
 func (ctrl *Controller) ResetIDs() {
-	ctrl.updateID = 0
+	_ = ctrl.SetUpdateID(0)
 	ctrl.SetUserID(0)
 }
 

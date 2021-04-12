@@ -77,7 +77,7 @@ func main() {
 		filePath: connInfoPath,
 	}
 
-	serverHostPort := "river.ronaksoftware.com"
+	serverHostPort := "river-rony.ronaksoftware.com"
 
 	switch len(os.Args) {
 	case 2:

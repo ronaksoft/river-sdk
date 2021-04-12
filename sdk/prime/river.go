@@ -13,7 +13,6 @@ import (
 	"github.com/ronaksoft/rony/registry"
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
-	"sort"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -187,7 +186,7 @@ func (r *River) onNetworkConnect() (err error) {
 
 	go func() {
 		// Check if client is synced with servers
-		if r.syncCtrl.UpdateID() < serverUpdateID {
+		if r.syncCtrl.GetUpdateID() < serverUpdateID {
 			// Sync with Server
 			r.syncCtrl.Sync()
 			domain.WindowLog(fmt.Sprintf("Synced: %s", time.Now().Sub(domain.StartTime)))
@@ -251,13 +250,8 @@ func (r *River) onReceivedMessage(msgs []*rony.MessageEnvelope) {
 		nil,
 	)
 
-	// sort messages by requestID
-	sort.Slice(msgs, func(i, j int) bool {
-		return msgs[i].RequestID < msgs[j].RequestID
-	})
-
 	// sync localDB with responses in the background
-	r.syncCtrl.MessageHandler(msgs)
+	r.syncCtrl.MessageApplier(msgs)
 
 	// check requestCallbacks and call callbacks
 	for idx := range msgs {
@@ -299,15 +293,15 @@ func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {
 	}
 
 	outOfSync := false
-	if updateContainer.MinUpdateID != 0 && updateContainer.MinUpdateID > r.syncCtrl.UpdateID()+1 {
+	if updateContainer.MinUpdateID != 0 && updateContainer.MinUpdateID > r.syncCtrl.GetUpdateID()+1 {
 		logs.Info("We are out of sync",
 			zap.Int64("ContainerMinID", updateContainer.MinUpdateID),
-			zap.Int64("ClientUpdateID", r.syncCtrl.UpdateID()),
+			zap.Int64("ClientUpdateID", r.syncCtrl.GetUpdateID()),
 		)
 		outOfSync = true
 	}
 
-	r.syncCtrl.UpdateHandler(updateContainer, outOfSync)
+	r.syncCtrl.UpdateApplier(updateContainer, outOfSync)
 
 	if outOfSync {
 		go r.syncCtrl.Sync()

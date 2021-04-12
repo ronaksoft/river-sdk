@@ -32,7 +32,7 @@ func (r *River) messagesGetDialogs(in, out *rony.MessageEnvelope, timeoutCB doma
 
 	// If the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {
-		res.UpdateID = r.syncCtrl.UpdateID()
+		res.UpdateID = r.syncCtrl.GetUpdateID()
 		out.Constructor = msg.C_MessagesDialogs
 		buff, err := res.Marshal()
 		logs.ErrorOnErr("River got error on marshal MessagesDialogs", err)
