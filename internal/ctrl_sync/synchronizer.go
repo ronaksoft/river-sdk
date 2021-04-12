@@ -12,6 +12,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/gobwas/pool/pbytes"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/registry"
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
@@ -241,9 +242,7 @@ func updateSyncStatus(ctrl *Controller, newStatus domain.SyncStatus) {
 	if ctrl.syncStatus == newStatus {
 		return
 	}
-	logs.Info("SyncCtrl status changed",
-		zap.String("Status", newStatus.ToString()),
-	)
+	logs.Info("SyncCtrl status changed", zap.String("Status", newStatus.ToString()))
 	ctrl.syncStatus = newStatus
 	ctrl.syncStatusChangeCallback(newStatus)
 }
@@ -347,8 +346,18 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 	}
 
 	// save Groups & Users
-	_ = repo.Groups.Save(x.Groups...)
-	_ = repo.Users.Save(x.Users...)
+	waitGroup := pools.AcquireWaitGroup()
+	waitGroup.Add(2)
+	go func() {
+		_ = repo.Groups.Save(x.Groups...)
+		waitGroup.Done()
+	}()
+	go func() {
+		_ = repo.Users.Save(x.Users...)
+		waitGroup.Done()
+	}()
+	waitGroup.Wait()
+	pools.ReleaseWaitGroup(waitGroup)
 
 	for _, update := range x.Updates {
 		if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
@@ -366,7 +375,7 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 			updContainer.Updates = append(updContainer.Updates, update)
 		}
 		if update.UpdateID != 0 {
-			ctrl.updateID = update.UpdateID
+			_ = ctrl.SetUpdateID(update.UpdateID)
 		}
 	}
 	updContainer.Length = int32(len(updContainer.Updates))
@@ -487,8 +496,18 @@ func (ctrl *Controller) UpdateApplier(updateContainer *msg.UpdateContainer, outO
 	}
 
 	// save Groups & Users
-	_ = repo.Groups.Save(updateContainer.Groups...)
-	_ = repo.Users.Save(updateContainer.Users...)
+	waitGroup := pools.AcquireWaitGroup()
+	waitGroup.Add(2)
+	go func() {
+		_ = repo.Groups.Save(updateContainer.Groups...)
+		waitGroup.Done()
+	}()
+	go func() {
+		_ = repo.Users.Save(updateContainer.Users...)
+		waitGroup.Done()
+	}()
+	waitGroup.Wait()
+	pools.ReleaseWaitGroup(waitGroup)
 
 	for _, update := range updateContainer.Updates {
 		if outOfSync && update.UpdateID != 0 {

@@ -9,6 +9,7 @@ import (
 	messageHole "git.ronaksoft.com/river/sdk/internal/message_hole"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/pools"
 	"go.uber.org/zap"
 	"hash/crc32"
 	"sort"
@@ -138,42 +139,69 @@ func (ctrl *Controller) messagesDialogs(e *rony.MessageEnvelope) {
 			messageHole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID, dialog.TopMessageID)
 		}
 	}
-	_ = repo.Users.Save(x.Users...)
-	_ = repo.Groups.Save(x.Groups...)
-	_ = repo.Messages.Save(x.Messages...)
+	// save Groups & Users & Messages
+	waitGroup := pools.AcquireWaitGroup()
+	waitGroup.Add(1)
+	go func() {
+		_ = repo.Users.Save(x.Users...)
+		waitGroup.Done()
+	}()
+	go func() {
+		_ = repo.Groups.Save(x.Groups...)
+		waitGroup.Done()
+	}()
+	go func() {
+		_ = repo.Messages.Save(x.Messages...)
+		waitGroup.Done()
+	}()
+	waitGroup.Wait()
+	pools.ReleaseWaitGroup(waitGroup)
 }
 
 // usersMany
 func (ctrl *Controller) usersMany(e *rony.MessageEnvelope) {
-	u := new(msg.UsersMany)
-	err := u.Unmarshal(e.Message)
+	x := new(msg.UsersMany)
+	err := x.Unmarshal(e.Message)
 	if err != nil {
 		logs.Error("SyncCtrl couldn't unmarshal UsersMany", zap.Error(err))
 		return
 	}
 	logs.Info("SyncCtrl applies usersMany",
-		zap.Int("Users", len(u.Users)),
+		zap.Int("Users", len(x.Users)),
 	)
-	repo.Users.Save(u.Users...)
+	_ = repo.Users.Save(x.Users...)
 }
 
 // messagesMany
 func (ctrl *Controller) messagesMany(e *rony.MessageEnvelope) {
-	u := new(msg.MessagesMany)
-	err := u.Unmarshal(e.Message)
+	x := new(msg.MessagesMany)
+	err := x.Unmarshal(e.Message)
 	if err != nil {
 		logs.Error("SyncCtrl couldn't unmarshal MessagesMany", zap.Error(err))
 		return
 	}
 
 	// save Groups & Users & Messages
-	_ = repo.Users.Save(u.Users...)
-	_ = repo.Groups.Save(u.Groups...)
-	_ = repo.Messages.Save(u.Messages...)
+	waitGroup := pools.AcquireWaitGroup()
+	waitGroup.Add(1)
+	go func() {
+		_ = repo.Users.Save(x.Users...)
+		waitGroup.Done()
+	}()
+	go func() {
+		_ = repo.Groups.Save(x.Groups...)
+		waitGroup.Done()
+	}()
+	go func() {
+		_ = repo.Messages.Save(x.Messages...)
+		waitGroup.Done()
+	}()
+	waitGroup.Wait()
+	pools.ReleaseWaitGroup(waitGroup)
 
 	logs.Info("SyncCtrl applies MessagesMany",
-		zap.Bool("Continues", u.Continuous),
-		zap.Int("Messages", len(u.Messages)),
+		zap.Bool("Continues", x.Continuous),
+		zap.Int("Messages", len(x.Messages)),
 	)
 }
 

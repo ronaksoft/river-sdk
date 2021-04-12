@@ -302,3 +302,8 @@ func (r *River) DeleteAllPendingMessages() {
 		_ = repo.PendingMessages.Delete(p.ID)
 	}
 }
+
+func (r *River) SetUpdateState(newUpdateID int64) {
+	_ = r.syncCtrl.SetUpdateID(newUpdateID)
+	go r.syncCtrl.Sync()
+}

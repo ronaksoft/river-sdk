@@ -5,6 +5,7 @@ import (
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/tools"
 	"os"
 	"sync"
 	"time"
@@ -241,17 +242,19 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 		}
 	}
 
-	clientUpdate := new(msg.ClientUpdatePendingMessageDelivery)
-	clientUpdate.Messages = x.Message
-	clientUpdate.PendingMessage = pmsg
-	clientUpdate.Success = true
-	bytes, _ := clientUpdate.Marshal()
+	clientUpdate := &msg.ClientUpdatePendingMessageDelivery{
+		Messages:       x.Message,
+		PendingMessage: pmsg,
+		Success:        true,
+	}
 
-	udpMsg := new(msg.UpdateEnvelope)
-	udpMsg.Constructor = msg.C_ClientUpdatePendingMessageDelivery
-	udpMsg.Update = bytes
-	udpMsg.UpdateID = 0
-	udpMsg.Timestamp = time.Now().Unix()
+	bytes, _ := clientUpdate.Marshal()
+	udpMsg := &msg.UpdateEnvelope{
+		Constructor: msg.C_ClientUpdatePendingMessageDelivery,
+		Update:      bytes,
+		UpdateID:    0,
+		Timestamp:   tools.TimeUnix(),
+	}
 
 	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateEnvelope, udpMsg)
 }
