@@ -665,7 +665,8 @@ func (r *repoMessages) Delete(userID int64, teamID, peerID int64, peerType int32
 			}
 			it.Close()
 			if dialog.TopMessageID == msgID {
-				_ = txn.Delete(getDialogKey(teamID, peerID, peerType))
+				// We used to delete dialog in this case but we are not deleting the dialog on last message anymore
+				// _ = txn.Delete(getDialogKey(teamID, peerID, peerType))
 				indexMessageRemove(tools.ByteToStr(getMessageKey(teamID, peerID, peerType, msgID)))
 				return nil
 			}
