@@ -323,4 +323,3 @@ func (r *River) SetUpdateState(newUpdateID int64) {
 func (r *River) GetUpdateState() int64 {
 	return r.syncCtrl.GetUpdateID()
 }
-

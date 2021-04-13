@@ -141,7 +141,7 @@ func (ctrl *Controller) executor(req request) {
 	reqCB := domain.GetRequestCallback(req.ID)
 	if reqCB == nil {
 		reqCB = domain.AddRequestCallback(
-			req.ID, req.MessageEnvelope.Constructor, nil, domain.WebsocketRequestTime, nil, false,
+			req.ID, req.MessageEnvelope.Constructor, nil, domain.WebsocketRequestTimeout, nil, false,
 		)
 	}
 	reqCB.DepartureTime = tools.NanoTime()
@@ -245,13 +245,13 @@ func (ctrl *Controller) EnqueueCommand(
 
 	// Add the callback functions
 	_ = domain.AddRequestCallback(
-		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, domain.WebsocketRequestTime, timeoutCB, isUICallback,
+		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, domain.WebsocketRequestTimeout, timeoutCB, isUICallback,
 	)
 
 	// Add the request to the queue
 	ctrl.addToWaitingList(&request{
 		ID:              messageEnvelope.RequestID,
-		Timeout:         domain.WebsocketRequestTime,
+		Timeout:         domain.WebsocketRequestTimeout,
 		MessageEnvelope: messageEnvelope,
 	})
 }

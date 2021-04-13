@@ -271,7 +271,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 		}
 		reqBytes, _ := req.Marshal()
 		waitGroup.Add(1)
-		ctrl.networkCtrl.RealtimeCommand(
+		ctrl.networkCtrl.RealtimeCommandWithTimeout(
 			&rony.MessageEnvelope{
 				Constructor: msg.C_UpdateGetDifference,
 				RequestID:   uint64(domain.SequentialUniqueID()),
@@ -296,12 +296,6 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 						return x.Updates[i].UpdateID < x.Updates[j].UpdateID
 					})
 
-					logs.Info("SyncCtrl received UpdateDifference",
-						zap.Bool("More", x.More),
-						zap.Int64("MinUpdateID", x.MinUpdateID),
-						zap.Int64("MaxUpdateID", x.MaxUpdateID),
-					)
-
 					onGetDifferenceSucceed(ctrl, x)
 					if x.CurrentUpdateID != 0 {
 						serverUpdateID = x.CurrentUpdateID
@@ -322,6 +316,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 			},
 			true,
 			false,
+			domain.WebsocketRequestTimeoutLong,
 		)
 		waitGroup.Wait()
 	}
@@ -366,10 +361,11 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 		timeLapse [2]int64
 	)
 
-	logs.Info("SyncCtrl received  UpdateDifference",
+	logs.Info("SyncCtrl received UpdateDifference",
 		zap.Int64("MaxUpdateID", x.MaxUpdateID),
 		zap.Int64("MinUpdateID", x.MinUpdateID),
 		zap.Int("Length", len(x.Updates)),
+		zap.Bool("More", x.More),
 	)
 	defer func() {
 		endTime := tools.NanoTime()

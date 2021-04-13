@@ -153,7 +153,7 @@ func executeRemoteCommand(
 	if dontWaitForNetwork {
 		go func() {
 			select {
-			case <-time.After(domain.WebsocketRequestTime):
+			case <-time.After(domain.WebsocketRequestTimeout):
 				reqCB := domain.GetRequestCallback(requestID)
 				if reqCB == nil {
 					break
@@ -639,6 +639,9 @@ func (r *River) AppForeground(online bool) {
 		logs.Debug("AppForeground:: Network was disconnected we reconnect")
 		r.networkCtrl.Reconnect()
 	}
+	if online {
+		r.syncCtrl.UpdateStatus(statusOnline)
+	}
 }
 
 // AppBackground must be called every time apps goes into background
@@ -883,8 +886,9 @@ var statusOnline bool
 
 func (r *River) updateStatusJob() {
 	d := time.Duration(domain.SysConfig.OnlineUpdatePeriodInSec-5) * time.Second
+	// We wait about 5 seconds to make sure user is actually in app
 	for {
-		r.syncCtrl.UpdateStatus(statusOnline)
 		time.Sleep(d)
+		r.syncCtrl.UpdateStatus(statusOnline)
 	}
 }

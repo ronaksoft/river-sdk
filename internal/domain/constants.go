@@ -85,15 +85,16 @@ func init() {
 
 // Global Parameters
 const (
-	DefaultWebsocketEndpoint = "ws://cyrus.river.im"
-	WebsocketIdleTimeout     = 5 * time.Minute
-	WebsocketPingTimeout     = 2 * time.Second
-	WebsocketWriteTime       = 3 * time.Second
-	WebsocketRequestTime     = 3 * time.Second
-	WebsocketDialTimeout     = 3 * time.Second
-	WebsocketDialTimeoutLong = 10 * time.Second
-	HttpRequestTimeout       = 30 * time.Second
-	SnapshotSyncThreshold    = 10000
+	DefaultWebsocketEndpoint    = "ws://cyrus.river.im"
+	WebsocketIdleTimeout        = 5 * time.Minute
+	WebsocketPingTimeout        = 2 * time.Second
+	WebsocketWriteTime          = 3 * time.Second
+	WebsocketRequestTimeout     = 3 * time.Second
+	WebsocketRequestTimeoutLong = 8 * time.Second
+	WebsocketDialTimeout        = 3 * time.Second
+	WebsocketDialTimeoutLong    = 10 * time.Second
+	HttpRequestTimeout          = 30 * time.Second
+	SnapshotSyncThreshold       = 10000
 )
 
 // System Keys

@@ -711,10 +711,10 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *rony.MessageEnvelope) error {
 	return nil
 }
 
-// RealtimeCommand run request immediately and do not save it in queue
-func (ctrl *Controller) RealtimeCommand(
+// RealtimeCommandWithTimeout run request immediately and do not save it in queue
+func (ctrl *Controller) RealtimeCommandWithTimeout(
 	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-	blockingMode, isUICallback bool,
+	blockingMode, isUICallback bool, timeout time.Duration,
 ) {
 	defer logs.RecoverPanic(
 		"SyncCtrl::RealtimeCommand",
@@ -733,7 +733,7 @@ func (ctrl *Controller) RealtimeCommand(
 
 	// Add the callback functions
 	reqCB := domain.AddRequestCallback(
-		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, domain.WebsocketRequestTime, timeoutCB, isUICallback,
+		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, timeout, timeoutCB, isUICallback,
 	)
 	execBlock := func(reqID uint64, req *rony.MessageEnvelope) {
 		err := ctrl.SendWebsocket(req, blockingMode)
@@ -788,6 +788,14 @@ func (ctrl *Controller) RealtimeCommand(
 	}
 
 	return
+}
+
+// RealtimeCommand run request immediately and do not save it in queue
+func (ctrl *Controller) RealtimeCommand(
+	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+	blockingMode, isUICallback bool,
+) {
+	ctrl.RealtimeCommandWithTimeout(messageEnvelope, timeoutCB, successCB, blockingMode, isUICallback, domain.WebsocketRequestTimeout)
 }
 
 // SendHttp encrypt and send request to server and receive and decrypt its response
