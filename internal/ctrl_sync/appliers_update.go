@@ -240,6 +240,7 @@ func (ctrl *Controller) handlePendingMessage(x *msg.UpdateNewMessage) {
 
 				err = os.Rename(clientSendMedia.FilePath, repo.Files.GetFilePath(clientFile))
 				if err != nil {
+
 					logs.Error("Error On HandlePendingMessage (Rename)", zap.Error(err))
 					return
 				}
