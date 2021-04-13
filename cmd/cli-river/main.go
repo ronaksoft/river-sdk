@@ -77,7 +77,7 @@ func main() {
 		filePath: connInfoPath,
 	}
 
-	serverHostPort := "river-rony.ronaksoftware.com"
+	serverHostPort := "river.ronaksoftware.com"
 
 	switch len(os.Args) {
 	case 2:
@@ -85,7 +85,7 @@ func main() {
 		case "production":
 			serverHostPort = "edge.river.im"
 		case "staging":
-			serverHostPort = "river-rony.ronaksoftware.com"
+			serverHostPort = "river.ronaksoftware.com"
 		case "local":
 			serverHostPort = "localhost"
 		case "local2":

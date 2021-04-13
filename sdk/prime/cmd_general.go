@@ -630,13 +630,13 @@ func (r *River) AppForeground(online bool) {
 	if r.networkCtrl.GetQuality() == domain.NetworkConnected {
 		err := r.networkCtrl.Ping(domain.RandomUint64(), domain.WebsocketPingTimeout)
 		if err != nil {
-			logs.Debug("AppForeground:: Ping failed, we reconnect", zap.Error(err))
+			logs.Info("AppForeground:: Ping failed, we reconnect", zap.Error(err))
 			r.networkCtrl.Reconnect()
 		} else {
 			r.syncCtrl.Sync()
 		}
 	} else {
-		logs.Debug("AppForeground:: Network was disconnected we reconnect")
+		logs.Info("AppForeground:: Network was disconnected we reconnect")
 		r.networkCtrl.Reconnect()
 	}
 	if online {
