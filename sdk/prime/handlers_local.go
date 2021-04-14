@@ -416,9 +416,6 @@ func (r *River) messagesGetMediaHistory(in, out *rony.MessageEnvelope, timeoutCB
 		return
 	}
 
-	// Prepare the the result before sending back to the client
-	preSuccessCB := genGetMediaHistoryCB(successCB, domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MaxID, req.Cat)
-
 	// We are Offline/Disconnected
 	if !r.networkCtrl.Connected() {
 		messages, users, groups := repo.Messages.GetMediaMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, req.MaxID, req.Limit, req.Cat)
@@ -427,6 +424,9 @@ func (r *River) messagesGetMediaHistory(in, out *rony.MessageEnvelope, timeoutCB
 			return
 		}
 	}
+
+	// Prepare the the result before sending back to the client
+	preSuccessCB := genGetMediaHistoryCB(successCB, domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MaxID, req.Cat)
 
 	// We are Online
 	if req.MaxID == 0 {

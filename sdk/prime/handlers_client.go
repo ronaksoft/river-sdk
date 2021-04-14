@@ -33,10 +33,6 @@ func (r *River) clientGetMediaHistory(in, out *rony.MessageEnvelope, timeoutCB d
 
 	messages, users, groups := repo.Messages.GetMediaMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit, req.Cat)
 	if len(messages) > 0 {
-		pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
-		if len(pendingMessages) > 0 {
-			messages = append(pendingMessages, messages...)
-		}
 		res := &msg.MessagesMany{
 			Messages: messages,
 			Users:    users,
