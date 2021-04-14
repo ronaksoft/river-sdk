@@ -435,6 +435,10 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 	for idx, updates := range queues {
 		timeLapse[idx] = tools.NanoTime()
 		for _, ue := range updates {
+			logs.Info("UpdateDifference applies",
+				zap.Int64("UpdateID", ue.UpdateID),
+				zap.String("C", registry.ConstructorName(ue.Constructor)),
+			)
 			waitGroup.Add(1)
 			applierFlusher.Enter(
 				getUpdateTargetID(ue),
