@@ -563,46 +563,90 @@ func (x *AccountSendChangePhoneCode) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_AccountSendChangePhoneCode, x)
 }
 
-const C_AccountResendChangePhoneCode int64 = 4200771569
+const C_AccountSendVerifyPhoneCode int64 = 328900044
 
-type poolAccountResendChangePhoneCode struct {
+type poolAccountSendVerifyPhoneCode struct {
 	pool sync.Pool
 }
 
-func (p *poolAccountResendChangePhoneCode) Get() *AccountResendChangePhoneCode {
-	x, ok := p.pool.Get().(*AccountResendChangePhoneCode)
+func (p *poolAccountSendVerifyPhoneCode) Get() *AccountSendVerifyPhoneCode {
+	x, ok := p.pool.Get().(*AccountSendVerifyPhoneCode)
 	if !ok {
-		x = &AccountResendChangePhoneCode{}
+		x = &AccountSendVerifyPhoneCode{}
 	}
 	return x
 }
 
-func (p *poolAccountResendChangePhoneCode) Put(x *AccountResendChangePhoneCode) {
+func (p *poolAccountSendVerifyPhoneCode) Put(x *AccountSendVerifyPhoneCode) {
+	if x == nil {
+		return
+	}
+	x.Phone = ""
+	x.AppHash = ""
+	p.pool.Put(x)
+}
+
+var PoolAccountSendVerifyPhoneCode = poolAccountSendVerifyPhoneCode{}
+
+func (x *AccountSendVerifyPhoneCode) DeepCopy(z *AccountSendVerifyPhoneCode) {
+	z.Phone = x.Phone
+	z.AppHash = x.AppHash
+}
+
+func (x *AccountSendVerifyPhoneCode) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *AccountSendVerifyPhoneCode) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *AccountSendVerifyPhoneCode) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_AccountSendVerifyPhoneCode, x)
+}
+
+const C_AccountResendVerifyPhoneCode int64 = 3140772691
+
+type poolAccountResendVerifyPhoneCode struct {
+	pool sync.Pool
+}
+
+func (p *poolAccountResendVerifyPhoneCode) Get() *AccountResendVerifyPhoneCode {
+	x, ok := p.pool.Get().(*AccountResendVerifyPhoneCode)
+	if !ok {
+		x = &AccountResendVerifyPhoneCode{}
+	}
+	return x
+}
+
+func (p *poolAccountResendVerifyPhoneCode) Put(x *AccountResendVerifyPhoneCode) {
 	if x == nil {
 		return
 	}
 	x.Phone = ""
 	x.PhoneCodeHash = ""
+	x.AppHash = ""
 	p.pool.Put(x)
 }
 
-var PoolAccountResendChangePhoneCode = poolAccountResendChangePhoneCode{}
+var PoolAccountResendVerifyPhoneCode = poolAccountResendVerifyPhoneCode{}
 
-func (x *AccountResendChangePhoneCode) DeepCopy(z *AccountResendChangePhoneCode) {
+func (x *AccountResendVerifyPhoneCode) DeepCopy(z *AccountResendVerifyPhoneCode) {
 	z.Phone = x.Phone
 	z.PhoneCodeHash = x.PhoneCodeHash
+	z.AppHash = x.AppHash
 }
 
-func (x *AccountResendChangePhoneCode) Marshal() ([]byte, error) {
+func (x *AccountResendVerifyPhoneCode) Marshal() ([]byte, error) {
 	return proto.Marshal(x)
 }
 
-func (x *AccountResendChangePhoneCode) Unmarshal(b []byte) error {
+func (x *AccountResendVerifyPhoneCode) Unmarshal(b []byte) error {
 	return proto.UnmarshalOptions{}.Unmarshal(b, x)
 }
 
-func (x *AccountResendChangePhoneCode) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_AccountResendChangePhoneCode, x)
+func (x *AccountResendVerifyPhoneCode) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_AccountResendVerifyPhoneCode, x)
 }
 
 const C_AccountChangePhone int64 = 4285969474
@@ -657,6 +701,62 @@ func (x *AccountChangePhone) Unmarshal(b []byte) error {
 
 func (x *AccountChangePhone) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_AccountChangePhone, x)
+}
+
+const C_AccountDelete int64 = 846661545
+
+type poolAccountDelete struct {
+	pool sync.Pool
+}
+
+func (p *poolAccountDelete) Get() *AccountDelete {
+	x, ok := p.pool.Get().(*AccountDelete)
+	if !ok {
+		x = &AccountDelete{}
+	}
+	return x
+}
+
+func (p *poolAccountDelete) Put(x *AccountDelete) {
+	if x == nil {
+		return
+	}
+	x.Phone = ""
+	x.PhoneCodeHash = ""
+	x.PhoneCode = ""
+	PoolInputPassword.Put(x.Password)
+	x.Password = nil
+	x.Reason = ""
+	p.pool.Put(x)
+}
+
+var PoolAccountDelete = poolAccountDelete{}
+
+func (x *AccountDelete) DeepCopy(z *AccountDelete) {
+	z.Phone = x.Phone
+	z.PhoneCodeHash = x.PhoneCodeHash
+	z.PhoneCode = x.PhoneCode
+	if x.Password != nil {
+		if z.Password == nil {
+			z.Password = PoolInputPassword.Get()
+		}
+		x.Password.DeepCopy(z.Password)
+	} else {
+		z.Password = nil
+	}
+	z.Reason = x.Reason
+}
+
+func (x *AccountDelete) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *AccountDelete) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *AccountDelete) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_AccountDelete, x)
 }
 
 const C_AccountSetPrivacy int64 = 1599585002
@@ -1665,8 +1765,10 @@ func init() {
 	registry.RegisterConstructor(46761477, "AccountSetWebPhoto")
 	registry.RegisterConstructor(3728692172, "AccountRemovePhoto")
 	registry.RegisterConstructor(1389121902, "AccountSendChangePhoneCode")
-	registry.RegisterConstructor(4200771569, "AccountResendChangePhoneCode")
+	registry.RegisterConstructor(328900044, "AccountSendVerifyPhoneCode")
+	registry.RegisterConstructor(3140772691, "AccountResendVerifyPhoneCode")
 	registry.RegisterConstructor(4285969474, "AccountChangePhone")
+	registry.RegisterConstructor(846661545, "AccountDelete")
 	registry.RegisterConstructor(1599585002, "AccountSetPrivacy")
 	registry.RegisterConstructor(1897044856, "AccountGetPrivacy")
 	registry.RegisterConstructor(2112646192, "AccountGetAuthorizations")

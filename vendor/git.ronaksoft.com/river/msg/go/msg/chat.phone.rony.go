@@ -415,6 +415,56 @@ func (x *PhoneRemoveParticipant) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_PhoneRemoveParticipant, x)
 }
 
+const C_PhoneGetParticipants int64 = 3924781570
+
+type poolPhoneGetParticipants struct {
+	pool sync.Pool
+}
+
+func (p *poolPhoneGetParticipants) Get() *PhoneGetParticipants {
+	x, ok := p.pool.Get().(*PhoneGetParticipants)
+	if !ok {
+		x = &PhoneGetParticipants{}
+	}
+	return x
+}
+
+func (p *poolPhoneGetParticipants) Put(x *PhoneGetParticipants) {
+	if x == nil {
+		return
+	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
+	x.CallID = 0
+	p.pool.Put(x)
+}
+
+var PoolPhoneGetParticipants = poolPhoneGetParticipants{}
+
+func (x *PhoneGetParticipants) DeepCopy(z *PhoneGetParticipants) {
+	if x.Peer != nil {
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
+		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
+	}
+	z.CallID = x.CallID
+}
+
+func (x *PhoneGetParticipants) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *PhoneGetParticipants) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *PhoneGetParticipants) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_PhoneGetParticipants, x)
+}
+
 const C_PhoneUpdateCall int64 = 1976202226
 
 type poolPhoneUpdateCall struct {
@@ -1803,6 +1853,7 @@ func init() {
 	registry.RegisterConstructor(3019166552, "PhoneJoinCall")
 	registry.RegisterConstructor(2867411100, "PhoneAddParticipant")
 	registry.RegisterConstructor(188662172, "PhoneRemoveParticipant")
+	registry.RegisterConstructor(3924781570, "PhoneGetParticipants")
 	registry.RegisterConstructor(1976202226, "PhoneUpdateCall")
 	registry.RegisterConstructor(2215486159, "PhoneRateCall")
 	registry.RegisterConstructor(407776572, "PhoneGetHistory")
