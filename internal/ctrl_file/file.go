@@ -55,6 +55,7 @@ func New(config Config) *Controller {
 	var (
 		err error
 	)
+
 	ctrl := &Controller{
 		network:           config.Network,
 		postUploadProcess: config.PostUploadProcessCB,

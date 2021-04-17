@@ -25,6 +25,7 @@ import (
 
 func init() {
 	repo.MustInitRepo("./_data", false)
+	logs.SetLogLevel(2)
 }
 
 func createMediaMessage(body string, filename string, labelIDs []int32) *msg.UserMessage {
@@ -125,8 +126,8 @@ func TestRepoDialogs(t *testing.T) {
 }
 
 func TestRepoMessagesExtra(t *testing.T) {
-	repo.MessagesExtra.SaveScrollID(0, 11, 1, 101)
-	x := repo.MessagesExtra.GetScrollID(0, 11, 1)
+	repo.MessagesExtra.SaveScrollID(0, 11, 1, 0, 101)
+	x := repo.MessagesExtra.GetScrollID(0, 11, 1, 0)
 	fmt.Println(x)
 }
 

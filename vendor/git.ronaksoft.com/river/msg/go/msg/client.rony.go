@@ -9,6 +9,62 @@ import (
 	sync "sync"
 )
 
+const C_ClientGetMediaHistory int64 = 1354863379
+
+type poolClientGetMediaHistory struct {
+	pool sync.Pool
+}
+
+func (p *poolClientGetMediaHistory) Get() *ClientGetMediaHistory {
+	x, ok := p.pool.Get().(*ClientGetMediaHistory)
+	if !ok {
+		x = &ClientGetMediaHistory{}
+	}
+	return x
+}
+
+func (p *poolClientGetMediaHistory) Put(x *ClientGetMediaHistory) {
+	if x == nil {
+		return
+	}
+	x.Cat = 0
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
+	x.Limit = 0
+	x.MaxID = 0
+	x.MinID = 0
+	p.pool.Put(x)
+}
+
+var PoolClientGetMediaHistory = poolClientGetMediaHistory{}
+
+func (x *ClientGetMediaHistory) DeepCopy(z *ClientGetMediaHistory) {
+	z.Cat = x.Cat
+	if x.Peer != nil {
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
+		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
+	}
+	z.Limit = x.Limit
+	z.MaxID = x.MaxID
+	z.MinID = x.MinID
+}
+
+func (x *ClientGetMediaHistory) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *ClientGetMediaHistory) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *ClientGetMediaHistory) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_ClientGetMediaHistory, x)
+}
+
 const C_ClientSendMessageMedia int64 = 1095038539
 
 type poolClientSendMessageMedia struct {
@@ -165,6 +221,99 @@ func (x *ClientGlobalSearch) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_ClientGlobalSearch, x)
 }
 
+const C_ClientSearchResult int64 = 2957647709
+
+type poolClientSearchResult struct {
+	pool sync.Pool
+}
+
+func (p *poolClientSearchResult) Get() *ClientSearchResult {
+	x, ok := p.pool.Get().(*ClientSearchResult)
+	if !ok {
+		x = &ClientSearchResult{}
+	}
+	return x
+}
+
+func (p *poolClientSearchResult) Put(x *ClientSearchResult) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Messages {
+		PoolUserMessage.Put(z)
+	}
+	x.Messages = x.Messages[:0]
+	for _, z := range x.Users {
+		PoolUser.Put(z)
+	}
+	x.Users = x.Users[:0]
+	for _, z := range x.Groups {
+		PoolGroup.Put(z)
+	}
+	x.Groups = x.Groups[:0]
+	for _, z := range x.MatchedUsers {
+		PoolUser.Put(z)
+	}
+	x.MatchedUsers = x.MatchedUsers[:0]
+	for _, z := range x.MatchedGroups {
+		PoolGroup.Put(z)
+	}
+	x.MatchedGroups = x.MatchedGroups[:0]
+	p.pool.Put(x)
+}
+
+var PoolClientSearchResult = poolClientSearchResult{}
+
+func (x *ClientSearchResult) DeepCopy(z *ClientSearchResult) {
+	for idx := range x.Messages {
+		if x.Messages[idx] != nil {
+			xx := PoolUserMessage.Get()
+			x.Messages[idx].DeepCopy(xx)
+			z.Messages = append(z.Messages, xx)
+		}
+	}
+	for idx := range x.Users {
+		if x.Users[idx] != nil {
+			xx := PoolUser.Get()
+			x.Users[idx].DeepCopy(xx)
+			z.Users = append(z.Users, xx)
+		}
+	}
+	for idx := range x.Groups {
+		if x.Groups[idx] != nil {
+			xx := PoolGroup.Get()
+			x.Groups[idx].DeepCopy(xx)
+			z.Groups = append(z.Groups, xx)
+		}
+	}
+	for idx := range x.MatchedUsers {
+		if x.MatchedUsers[idx] != nil {
+			xx := PoolUser.Get()
+			x.MatchedUsers[idx].DeepCopy(xx)
+			z.MatchedUsers = append(z.MatchedUsers, xx)
+		}
+	}
+	for idx := range x.MatchedGroups {
+		if x.MatchedGroups[idx] != nil {
+			xx := PoolGroup.Get()
+			x.MatchedGroups[idx].DeepCopy(xx)
+			z.MatchedGroups = append(z.MatchedGroups, xx)
+		}
+	}
+}
+
+func (x *ClientSearchResult) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *ClientSearchResult) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *ClientSearchResult) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_ClientSearchResult, x)
+}
+
 const C_ClientContactSearch int64 = 1793449803
 
 type poolClientContactSearch struct {
@@ -241,6 +390,150 @@ func (x *ClientGetCachedMedia) Unmarshal(b []byte) error {
 
 func (x *ClientGetCachedMedia) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_ClientGetCachedMedia, x)
+}
+
+const C_ClientCachedMediaInfo int64 = 442767121
+
+type poolClientCachedMediaInfo struct {
+	pool sync.Pool
+}
+
+func (p *poolClientCachedMediaInfo) Get() *ClientCachedMediaInfo {
+	x, ok := p.pool.Get().(*ClientCachedMediaInfo)
+	if !ok {
+		x = &ClientCachedMediaInfo{}
+	}
+	return x
+}
+
+func (p *poolClientCachedMediaInfo) Put(x *ClientCachedMediaInfo) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.MediaInfo {
+		PoolClientPeerMediaInfo.Put(z)
+	}
+	x.MediaInfo = x.MediaInfo[:0]
+	p.pool.Put(x)
+}
+
+var PoolClientCachedMediaInfo = poolClientCachedMediaInfo{}
+
+func (x *ClientCachedMediaInfo) DeepCopy(z *ClientCachedMediaInfo) {
+	for idx := range x.MediaInfo {
+		if x.MediaInfo[idx] != nil {
+			xx := PoolClientPeerMediaInfo.Get()
+			x.MediaInfo[idx].DeepCopy(xx)
+			z.MediaInfo = append(z.MediaInfo, xx)
+		}
+	}
+}
+
+func (x *ClientCachedMediaInfo) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *ClientCachedMediaInfo) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *ClientCachedMediaInfo) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_ClientCachedMediaInfo, x)
+}
+
+const C_ClientPeerMediaInfo int64 = 2711408875
+
+type poolClientPeerMediaInfo struct {
+	pool sync.Pool
+}
+
+func (p *poolClientPeerMediaInfo) Get() *ClientPeerMediaInfo {
+	x, ok := p.pool.Get().(*ClientPeerMediaInfo)
+	if !ok {
+		x = &ClientPeerMediaInfo{}
+	}
+	return x
+}
+
+func (p *poolClientPeerMediaInfo) Put(x *ClientPeerMediaInfo) {
+	if x == nil {
+		return
+	}
+	x.PeerID = 0
+	x.PeerType = 0
+	for _, z := range x.Media {
+		PoolClientMediaSize.Put(z)
+	}
+	x.Media = x.Media[:0]
+	p.pool.Put(x)
+}
+
+var PoolClientPeerMediaInfo = poolClientPeerMediaInfo{}
+
+func (x *ClientPeerMediaInfo) DeepCopy(z *ClientPeerMediaInfo) {
+	z.PeerID = x.PeerID
+	z.PeerType = x.PeerType
+	for idx := range x.Media {
+		if x.Media[idx] != nil {
+			xx := PoolClientMediaSize.Get()
+			x.Media[idx].DeepCopy(xx)
+			z.Media = append(z.Media, xx)
+		}
+	}
+}
+
+func (x *ClientPeerMediaInfo) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *ClientPeerMediaInfo) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *ClientPeerMediaInfo) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_ClientPeerMediaInfo, x)
+}
+
+const C_ClientMediaSize int64 = 1541024203
+
+type poolClientMediaSize struct {
+	pool sync.Pool
+}
+
+func (p *poolClientMediaSize) Get() *ClientMediaSize {
+	x, ok := p.pool.Get().(*ClientMediaSize)
+	if !ok {
+		x = &ClientMediaSize{}
+	}
+	return x
+}
+
+func (p *poolClientMediaSize) Put(x *ClientMediaSize) {
+	if x == nil {
+		return
+	}
+	x.MediaType = 0
+	x.TotalSize = 0
+	p.pool.Put(x)
+}
+
+var PoolClientMediaSize = poolClientMediaSize{}
+
+func (x *ClientMediaSize) DeepCopy(z *ClientMediaSize) {
+	z.MediaType = x.MediaType
+	z.TotalSize = x.TotalSize
+}
+
+func (x *ClientMediaSize) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *ClientMediaSize) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *ClientMediaSize) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_ClientMediaSize, x)
 }
 
 const C_ClientClearCachedMedia int64 = 1199927718
@@ -341,62 +634,6 @@ func (x *ClientGetLastBotKeyboard) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_ClientGetLastBotKeyboard, x)
 }
 
-const C_ClientGetMediaHistory int64 = 1354863379
-
-type poolClientGetMediaHistory struct {
-	pool sync.Pool
-}
-
-func (p *poolClientGetMediaHistory) Get() *ClientGetMediaHistory {
-	x, ok := p.pool.Get().(*ClientGetMediaHistory)
-	if !ok {
-		x = &ClientGetMediaHistory{}
-	}
-	return x
-}
-
-func (p *poolClientGetMediaHistory) Put(x *ClientGetMediaHistory) {
-	if x == nil {
-		return
-	}
-	x.MediaType = x.MediaType[:0]
-	x.MaxID = 0
-	x.MinID = 0
-	x.Limit = 0
-	PoolInputPeer.Put(x.Peer)
-	x.Peer = nil
-	p.pool.Put(x)
-}
-
-var PoolClientGetMediaHistory = poolClientGetMediaHistory{}
-
-func (x *ClientGetMediaHistory) DeepCopy(z *ClientGetMediaHistory) {
-	z.MediaType = append(z.MediaType[:0], x.MediaType...)
-	z.MaxID = x.MaxID
-	z.MinID = x.MinID
-	z.Limit = x.Limit
-	if x.Peer != nil {
-		if z.Peer == nil {
-			z.Peer = PoolInputPeer.Get()
-		}
-		x.Peer.DeepCopy(z.Peer)
-	} else {
-		z.Peer = nil
-	}
-}
-
-func (x *ClientGetMediaHistory) Marshal() ([]byte, error) {
-	return proto.Marshal(x)
-}
-
-func (x *ClientGetMediaHistory) Unmarshal(b []byte) error {
-	return proto.UnmarshalOptions{}.Unmarshal(b, x)
-}
-
-func (x *ClientGetMediaHistory) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_ClientGetMediaHistory, x)
-}
-
 const C_ClientGetAllDownloadedMedia int64 = 729082453
 
 type poolClientGetAllDownloadedMedia struct {
@@ -475,6 +712,127 @@ func (x *ClientGetRecentSearch) Unmarshal(b []byte) error {
 
 func (x *ClientGetRecentSearch) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_ClientGetRecentSearch, x)
+}
+
+const C_ClientRecentSearch int64 = 2069517672
+
+type poolClientRecentSearch struct {
+	pool sync.Pool
+}
+
+func (p *poolClientRecentSearch) Get() *ClientRecentSearch {
+	x, ok := p.pool.Get().(*ClientRecentSearch)
+	if !ok {
+		x = &ClientRecentSearch{}
+	}
+	return x
+}
+
+func (p *poolClientRecentSearch) Put(x *ClientRecentSearch) {
+	if x == nil {
+		return
+	}
+	PoolPeer.Put(x.Peer)
+	x.Peer = nil
+	x.Date = 0
+	p.pool.Put(x)
+}
+
+var PoolClientRecentSearch = poolClientRecentSearch{}
+
+func (x *ClientRecentSearch) DeepCopy(z *ClientRecentSearch) {
+	if x.Peer != nil {
+		if z.Peer == nil {
+			z.Peer = PoolPeer.Get()
+		}
+		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
+	}
+	z.Date = x.Date
+}
+
+func (x *ClientRecentSearch) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *ClientRecentSearch) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *ClientRecentSearch) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_ClientRecentSearch, x)
+}
+
+const C_ClientRecentSearchMany int64 = 3236847495
+
+type poolClientRecentSearchMany struct {
+	pool sync.Pool
+}
+
+func (p *poolClientRecentSearchMany) Get() *ClientRecentSearchMany {
+	x, ok := p.pool.Get().(*ClientRecentSearchMany)
+	if !ok {
+		x = &ClientRecentSearchMany{}
+	}
+	return x
+}
+
+func (p *poolClientRecentSearchMany) Put(x *ClientRecentSearchMany) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.RecentSearches {
+		PoolClientRecentSearch.Put(z)
+	}
+	x.RecentSearches = x.RecentSearches[:0]
+	for _, z := range x.Users {
+		PoolUser.Put(z)
+	}
+	x.Users = x.Users[:0]
+	for _, z := range x.Groups {
+		PoolGroup.Put(z)
+	}
+	x.Groups = x.Groups[:0]
+	p.pool.Put(x)
+}
+
+var PoolClientRecentSearchMany = poolClientRecentSearchMany{}
+
+func (x *ClientRecentSearchMany) DeepCopy(z *ClientRecentSearchMany) {
+	for idx := range x.RecentSearches {
+		if x.RecentSearches[idx] != nil {
+			xx := PoolClientRecentSearch.Get()
+			x.RecentSearches[idx].DeepCopy(xx)
+			z.RecentSearches = append(z.RecentSearches, xx)
+		}
+	}
+	for idx := range x.Users {
+		if x.Users[idx] != nil {
+			xx := PoolUser.Get()
+			x.Users[idx].DeepCopy(xx)
+			z.Users = append(z.Users, xx)
+		}
+	}
+	for idx := range x.Groups {
+		if x.Groups[idx] != nil {
+			xx := PoolGroup.Get()
+			x.Groups[idx].DeepCopy(xx)
+			z.Groups = append(z.Groups, xx)
+		}
+	}
+}
+
+func (x *ClientRecentSearchMany) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *ClientRecentSearchMany) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *ClientRecentSearchMany) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_ClientRecentSearchMany, x)
 }
 
 const C_ClientPutRecentSearch int64 = 629582533
@@ -701,6 +1059,48 @@ func (x *ClientGetTeamCounters) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_ClientGetTeamCounters, x)
 }
 
+const C_ClientTeamCounters int64 = 769069696
+
+type poolClientTeamCounters struct {
+	pool sync.Pool
+}
+
+func (p *poolClientTeamCounters) Get() *ClientTeamCounters {
+	x, ok := p.pool.Get().(*ClientTeamCounters)
+	if !ok {
+		x = &ClientTeamCounters{}
+	}
+	return x
+}
+
+func (p *poolClientTeamCounters) Put(x *ClientTeamCounters) {
+	if x == nil {
+		return
+	}
+	x.UnreadCount = 0
+	x.MentionCount = 0
+	p.pool.Put(x)
+}
+
+var PoolClientTeamCounters = poolClientTeamCounters{}
+
+func (x *ClientTeamCounters) DeepCopy(z *ClientTeamCounters) {
+	z.UnreadCount = x.UnreadCount
+	z.MentionCount = x.MentionCount
+}
+
+func (x *ClientTeamCounters) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *ClientTeamCounters) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *ClientTeamCounters) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_ClientTeamCounters, x)
+}
+
 const C_ClientPendingMessage int64 = 2164891929
 
 type poolClientPendingMessage struct {
@@ -798,99 +1198,6 @@ func (x *ClientPendingMessage) Unmarshal(b []byte) error {
 
 func (x *ClientPendingMessage) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_ClientPendingMessage, x)
-}
-
-const C_ClientSearchResult int64 = 2957647709
-
-type poolClientSearchResult struct {
-	pool sync.Pool
-}
-
-func (p *poolClientSearchResult) Get() *ClientSearchResult {
-	x, ok := p.pool.Get().(*ClientSearchResult)
-	if !ok {
-		x = &ClientSearchResult{}
-	}
-	return x
-}
-
-func (p *poolClientSearchResult) Put(x *ClientSearchResult) {
-	if x == nil {
-		return
-	}
-	for _, z := range x.Messages {
-		PoolUserMessage.Put(z)
-	}
-	x.Messages = x.Messages[:0]
-	for _, z := range x.Users {
-		PoolUser.Put(z)
-	}
-	x.Users = x.Users[:0]
-	for _, z := range x.Groups {
-		PoolGroup.Put(z)
-	}
-	x.Groups = x.Groups[:0]
-	for _, z := range x.MatchedUsers {
-		PoolUser.Put(z)
-	}
-	x.MatchedUsers = x.MatchedUsers[:0]
-	for _, z := range x.MatchedGroups {
-		PoolGroup.Put(z)
-	}
-	x.MatchedGroups = x.MatchedGroups[:0]
-	p.pool.Put(x)
-}
-
-var PoolClientSearchResult = poolClientSearchResult{}
-
-func (x *ClientSearchResult) DeepCopy(z *ClientSearchResult) {
-	for idx := range x.Messages {
-		if x.Messages[idx] != nil {
-			xx := PoolUserMessage.Get()
-			x.Messages[idx].DeepCopy(xx)
-			z.Messages = append(z.Messages, xx)
-		}
-	}
-	for idx := range x.Users {
-		if x.Users[idx] != nil {
-			xx := PoolUser.Get()
-			x.Users[idx].DeepCopy(xx)
-			z.Users = append(z.Users, xx)
-		}
-	}
-	for idx := range x.Groups {
-		if x.Groups[idx] != nil {
-			xx := PoolGroup.Get()
-			x.Groups[idx].DeepCopy(xx)
-			z.Groups = append(z.Groups, xx)
-		}
-	}
-	for idx := range x.MatchedUsers {
-		if x.MatchedUsers[idx] != nil {
-			xx := PoolUser.Get()
-			x.MatchedUsers[idx].DeepCopy(xx)
-			z.MatchedUsers = append(z.MatchedUsers, xx)
-		}
-	}
-	for idx := range x.MatchedGroups {
-		if x.MatchedGroups[idx] != nil {
-			xx := PoolGroup.Get()
-			x.MatchedGroups[idx].DeepCopy(xx)
-			z.MatchedGroups = append(z.MatchedGroups, xx)
-		}
-	}
-}
-
-func (x *ClientSearchResult) Marshal() ([]byte, error) {
-	return proto.Marshal(x)
-}
-
-func (x *ClientSearchResult) Unmarshal(b []byte) error {
-	return proto.UnmarshalOptions{}.Unmarshal(b, x)
-}
-
-func (x *ClientSearchResult) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_ClientSearchResult, x)
 }
 
 const C_ClientFilesMany int64 = 1414992553
@@ -1155,313 +1462,6 @@ func (x *ClientFileStatus) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_ClientFileStatus, x)
 }
 
-const C_ClientCachedMediaInfo int64 = 442767121
-
-type poolClientCachedMediaInfo struct {
-	pool sync.Pool
-}
-
-func (p *poolClientCachedMediaInfo) Get() *ClientCachedMediaInfo {
-	x, ok := p.pool.Get().(*ClientCachedMediaInfo)
-	if !ok {
-		x = &ClientCachedMediaInfo{}
-	}
-	return x
-}
-
-func (p *poolClientCachedMediaInfo) Put(x *ClientCachedMediaInfo) {
-	if x == nil {
-		return
-	}
-	for _, z := range x.MediaInfo {
-		PoolClientPeerMediaInfo.Put(z)
-	}
-	x.MediaInfo = x.MediaInfo[:0]
-	p.pool.Put(x)
-}
-
-var PoolClientCachedMediaInfo = poolClientCachedMediaInfo{}
-
-func (x *ClientCachedMediaInfo) DeepCopy(z *ClientCachedMediaInfo) {
-	for idx := range x.MediaInfo {
-		if x.MediaInfo[idx] != nil {
-			xx := PoolClientPeerMediaInfo.Get()
-			x.MediaInfo[idx].DeepCopy(xx)
-			z.MediaInfo = append(z.MediaInfo, xx)
-		}
-	}
-}
-
-func (x *ClientCachedMediaInfo) Marshal() ([]byte, error) {
-	return proto.Marshal(x)
-}
-
-func (x *ClientCachedMediaInfo) Unmarshal(b []byte) error {
-	return proto.UnmarshalOptions{}.Unmarshal(b, x)
-}
-
-func (x *ClientCachedMediaInfo) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_ClientCachedMediaInfo, x)
-}
-
-const C_ClientPeerMediaInfo int64 = 2711408875
-
-type poolClientPeerMediaInfo struct {
-	pool sync.Pool
-}
-
-func (p *poolClientPeerMediaInfo) Get() *ClientPeerMediaInfo {
-	x, ok := p.pool.Get().(*ClientPeerMediaInfo)
-	if !ok {
-		x = &ClientPeerMediaInfo{}
-	}
-	return x
-}
-
-func (p *poolClientPeerMediaInfo) Put(x *ClientPeerMediaInfo) {
-	if x == nil {
-		return
-	}
-	x.PeerID = 0
-	x.PeerType = 0
-	for _, z := range x.Media {
-		PoolClientMediaSize.Put(z)
-	}
-	x.Media = x.Media[:0]
-	p.pool.Put(x)
-}
-
-var PoolClientPeerMediaInfo = poolClientPeerMediaInfo{}
-
-func (x *ClientPeerMediaInfo) DeepCopy(z *ClientPeerMediaInfo) {
-	z.PeerID = x.PeerID
-	z.PeerType = x.PeerType
-	for idx := range x.Media {
-		if x.Media[idx] != nil {
-			xx := PoolClientMediaSize.Get()
-			x.Media[idx].DeepCopy(xx)
-			z.Media = append(z.Media, xx)
-		}
-	}
-}
-
-func (x *ClientPeerMediaInfo) Marshal() ([]byte, error) {
-	return proto.Marshal(x)
-}
-
-func (x *ClientPeerMediaInfo) Unmarshal(b []byte) error {
-	return proto.UnmarshalOptions{}.Unmarshal(b, x)
-}
-
-func (x *ClientPeerMediaInfo) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_ClientPeerMediaInfo, x)
-}
-
-const C_ClientMediaSize int64 = 1541024203
-
-type poolClientMediaSize struct {
-	pool sync.Pool
-}
-
-func (p *poolClientMediaSize) Get() *ClientMediaSize {
-	x, ok := p.pool.Get().(*ClientMediaSize)
-	if !ok {
-		x = &ClientMediaSize{}
-	}
-	return x
-}
-
-func (p *poolClientMediaSize) Put(x *ClientMediaSize) {
-	if x == nil {
-		return
-	}
-	x.MediaType = 0
-	x.TotalSize = 0
-	p.pool.Put(x)
-}
-
-var PoolClientMediaSize = poolClientMediaSize{}
-
-func (x *ClientMediaSize) DeepCopy(z *ClientMediaSize) {
-	z.MediaType = x.MediaType
-	z.TotalSize = x.TotalSize
-}
-
-func (x *ClientMediaSize) Marshal() ([]byte, error) {
-	return proto.Marshal(x)
-}
-
-func (x *ClientMediaSize) Unmarshal(b []byte) error {
-	return proto.UnmarshalOptions{}.Unmarshal(b, x)
-}
-
-func (x *ClientMediaSize) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_ClientMediaSize, x)
-}
-
-const C_ClientRecentSearch int64 = 2069517672
-
-type poolClientRecentSearch struct {
-	pool sync.Pool
-}
-
-func (p *poolClientRecentSearch) Get() *ClientRecentSearch {
-	x, ok := p.pool.Get().(*ClientRecentSearch)
-	if !ok {
-		x = &ClientRecentSearch{}
-	}
-	return x
-}
-
-func (p *poolClientRecentSearch) Put(x *ClientRecentSearch) {
-	if x == nil {
-		return
-	}
-	PoolPeer.Put(x.Peer)
-	x.Peer = nil
-	x.Date = 0
-	p.pool.Put(x)
-}
-
-var PoolClientRecentSearch = poolClientRecentSearch{}
-
-func (x *ClientRecentSearch) DeepCopy(z *ClientRecentSearch) {
-	if x.Peer != nil {
-		if z.Peer == nil {
-			z.Peer = PoolPeer.Get()
-		}
-		x.Peer.DeepCopy(z.Peer)
-	} else {
-		z.Peer = nil
-	}
-	z.Date = x.Date
-}
-
-func (x *ClientRecentSearch) Marshal() ([]byte, error) {
-	return proto.Marshal(x)
-}
-
-func (x *ClientRecentSearch) Unmarshal(b []byte) error {
-	return proto.UnmarshalOptions{}.Unmarshal(b, x)
-}
-
-func (x *ClientRecentSearch) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_ClientRecentSearch, x)
-}
-
-const C_ClientRecentSearchMany int64 = 3236847495
-
-type poolClientRecentSearchMany struct {
-	pool sync.Pool
-}
-
-func (p *poolClientRecentSearchMany) Get() *ClientRecentSearchMany {
-	x, ok := p.pool.Get().(*ClientRecentSearchMany)
-	if !ok {
-		x = &ClientRecentSearchMany{}
-	}
-	return x
-}
-
-func (p *poolClientRecentSearchMany) Put(x *ClientRecentSearchMany) {
-	if x == nil {
-		return
-	}
-	for _, z := range x.RecentSearches {
-		PoolClientRecentSearch.Put(z)
-	}
-	x.RecentSearches = x.RecentSearches[:0]
-	for _, z := range x.Users {
-		PoolUser.Put(z)
-	}
-	x.Users = x.Users[:0]
-	for _, z := range x.Groups {
-		PoolGroup.Put(z)
-	}
-	x.Groups = x.Groups[:0]
-	p.pool.Put(x)
-}
-
-var PoolClientRecentSearchMany = poolClientRecentSearchMany{}
-
-func (x *ClientRecentSearchMany) DeepCopy(z *ClientRecentSearchMany) {
-	for idx := range x.RecentSearches {
-		if x.RecentSearches[idx] != nil {
-			xx := PoolClientRecentSearch.Get()
-			x.RecentSearches[idx].DeepCopy(xx)
-			z.RecentSearches = append(z.RecentSearches, xx)
-		}
-	}
-	for idx := range x.Users {
-		if x.Users[idx] != nil {
-			xx := PoolUser.Get()
-			x.Users[idx].DeepCopy(xx)
-			z.Users = append(z.Users, xx)
-		}
-	}
-	for idx := range x.Groups {
-		if x.Groups[idx] != nil {
-			xx := PoolGroup.Get()
-			x.Groups[idx].DeepCopy(xx)
-			z.Groups = append(z.Groups, xx)
-		}
-	}
-}
-
-func (x *ClientRecentSearchMany) Marshal() ([]byte, error) {
-	return proto.Marshal(x)
-}
-
-func (x *ClientRecentSearchMany) Unmarshal(b []byte) error {
-	return proto.UnmarshalOptions{}.Unmarshal(b, x)
-}
-
-func (x *ClientRecentSearchMany) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_ClientRecentSearchMany, x)
-}
-
-const C_ClientTeamCounters int64 = 769069696
-
-type poolClientTeamCounters struct {
-	pool sync.Pool
-}
-
-func (p *poolClientTeamCounters) Get() *ClientTeamCounters {
-	x, ok := p.pool.Get().(*ClientTeamCounters)
-	if !ok {
-		x = &ClientTeamCounters{}
-	}
-	return x
-}
-
-func (p *poolClientTeamCounters) Put(x *ClientTeamCounters) {
-	if x == nil {
-		return
-	}
-	x.UnreadCount = 0
-	x.MentionCount = 0
-	p.pool.Put(x)
-}
-
-var PoolClientTeamCounters = poolClientTeamCounters{}
-
-func (x *ClientTeamCounters) DeepCopy(z *ClientTeamCounters) {
-	z.UnreadCount = x.UnreadCount
-	z.MentionCount = x.MentionCount
-}
-
-func (x *ClientTeamCounters) Marshal() ([]byte, error) {
-	return proto.Marshal(x)
-}
-
-func (x *ClientTeamCounters) Unmarshal(b []byte) error {
-	return proto.UnmarshalOptions{}.Unmarshal(b, x)
-}
-
-func (x *ClientTeamCounters) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_ClientTeamCounters, x)
-}
-
 const C_ClientGetFrequentReactions int64 = 2954334910
 
 type poolClientGetFrequentReactions struct {
@@ -1679,32 +1679,32 @@ func (x *ClientNotificationDismissTime) PushToContext(ctx *edge.RequestCtx) {
 }
 
 func init() {
+	registry.RegisterConstructor(1354863379, "ClientGetMediaHistory")
 	registry.RegisterConstructor(1095038539, "ClientSendMessageMedia")
 	registry.RegisterConstructor(1742781507, "ClientGlobalSearch")
+	registry.RegisterConstructor(2957647709, "ClientSearchResult")
 	registry.RegisterConstructor(1793449803, "ClientContactSearch")
 	registry.RegisterConstructor(856595701, "ClientGetCachedMedia")
+	registry.RegisterConstructor(442767121, "ClientCachedMediaInfo")
+	registry.RegisterConstructor(2711408875, "ClientPeerMediaInfo")
+	registry.RegisterConstructor(1541024203, "ClientMediaSize")
 	registry.RegisterConstructor(1199927718, "ClientClearCachedMedia")
 	registry.RegisterConstructor(177544569, "ClientGetLastBotKeyboard")
-	registry.RegisterConstructor(1354863379, "ClientGetMediaHistory")
 	registry.RegisterConstructor(729082453, "ClientGetAllDownloadedMedia")
 	registry.RegisterConstructor(2622949116, "ClientGetRecentSearch")
+	registry.RegisterConstructor(2069517672, "ClientRecentSearch")
+	registry.RegisterConstructor(3236847495, "ClientRecentSearchMany")
 	registry.RegisterConstructor(629582533, "ClientPutRecentSearch")
 	registry.RegisterConstructor(1281490259, "ClientRemoveRecentSearch")
 	registry.RegisterConstructor(3599155822, "ClientRemoveAllRecentSearches")
 	registry.RegisterConstructor(3028067090, "ClientGetSavedGifs")
 	registry.RegisterConstructor(3403301140, "ClientGetTeamCounters")
+	registry.RegisterConstructor(769069696, "ClientTeamCounters")
 	registry.RegisterConstructor(2164891929, "ClientPendingMessage")
-	registry.RegisterConstructor(2957647709, "ClientSearchResult")
 	registry.RegisterConstructor(1414992553, "ClientFilesMany")
 	registry.RegisterConstructor(155127968, "ClientFile")
 	registry.RegisterConstructor(3995993899, "ClientFileRequest")
 	registry.RegisterConstructor(2731095358, "ClientFileStatus")
-	registry.RegisterConstructor(442767121, "ClientCachedMediaInfo")
-	registry.RegisterConstructor(2711408875, "ClientPeerMediaInfo")
-	registry.RegisterConstructor(1541024203, "ClientMediaSize")
-	registry.RegisterConstructor(2069517672, "ClientRecentSearch")
-	registry.RegisterConstructor(3236847495, "ClientRecentSearchMany")
-	registry.RegisterConstructor(769069696, "ClientTeamCounters")
 	registry.RegisterConstructor(2954334910, "ClientGetFrequentReactions")
 	registry.RegisterConstructor(1422804314, "ClientFrequentReactions")
 	registry.RegisterConstructor(1698398006, "ClientDismissNotification")

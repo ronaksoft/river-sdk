@@ -48,7 +48,6 @@ type Controller struct {
 	cancelledRequest map[int64]bool
 }
 
-// New
 func New(fileCtrl *fileCtrl.Controller, network *networkCtrl.Controller, dataDir string) (*Controller, error) {
 	ctrl := new(Controller)
 	ctrl.dataDir = filepath.Join(dataDir, "queue")
@@ -142,15 +141,14 @@ func (ctrl *Controller) executor(req request) {
 	reqCB := domain.GetRequestCallback(req.ID)
 	if reqCB == nil {
 		reqCB = domain.AddRequestCallback(
-			req.ID, req.MessageEnvelope.Constructor, nil, domain.WebsocketRequestTime, nil, false,
+			req.ID, req.MessageEnvelope.Constructor, nil, domain.WebsocketRequestTimeout, nil, false,
 		)
 	}
-	reqCB.DepartureTime = time.Now()
+	reqCB.DepartureTime = tools.NanoTime()
 
 	// Try to send it over wire, if error happened put it back into the queue
 	if err := ctrl.networkCtrl.SendWebsocket(req.MessageEnvelope, false); err != nil {
-		logs.Error("QueueCtrl got error from NetCtrl", zap.Error(err))
-		logs.Info("QueueCtrl re-push the request into the queue")
+		logs.Info("QueueCtrl re-push the request into the queue", zap.Error(err))
 		ctrl.addToWaitingList(&req)
 		return
 	}
@@ -247,13 +245,13 @@ func (ctrl *Controller) EnqueueCommand(
 
 	// Add the callback functions
 	_ = domain.AddRequestCallback(
-		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, domain.WebsocketRequestTime, timeoutCB, isUICallback,
+		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, domain.WebsocketRequestTimeout, timeoutCB, isUICallback,
 	)
 
 	// Add the request to the queue
 	ctrl.addToWaitingList(&request{
 		ID:              messageEnvelope.RequestID,
-		Timeout:         domain.WebsocketRequestTime,
+		Timeout:         domain.WebsocketRequestTimeout,
 		MessageEnvelope: messageEnvelope,
 	})
 }

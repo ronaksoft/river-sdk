@@ -439,15 +439,12 @@ func (ctrl *Controller) UpdateStatus(online bool) {
 		func(m *rony.MessageEnvelope) {
 			switch m.Constructor {
 			case rony.C_Error:
-				x := new(rony.Error)
+				x := &rony.Error{}
 				_ = x.Unmarshal(m.Message)
-				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
-					return
-				} else {
+				if !(x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID) {
+					time.Sleep(time.Second)
 					ctrl.UpdateStatus(online)
 				}
-			default:
-				return
 			}
 			// Controller applier will take care of this
 		},

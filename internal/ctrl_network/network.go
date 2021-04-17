@@ -16,6 +16,7 @@ import (
 	"github.com/gobwas/ws/wsutil"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
+	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"net"
@@ -72,10 +73,10 @@ type Controller struct {
 	endpointUpdated      bool
 	unauthorizedRequests map[int64]bool // requests that it should sent unencrypted
 	countryCode          string         // the country
-	sendFlusher          *domain.Flusher
+	sendFlusher          *tools.FlusherPool
 }
 
-// New
+// New constructs the network controller
 func New(config Config) *Controller {
 	ctrl := new(Controller)
 	ctrl.wsPings = make(map[uint64]chan struct{})
@@ -96,7 +97,7 @@ func New(config Config) *Controller {
 
 	ctrl.stopChannel = make(chan bool, 1)
 	ctrl.connectChannel = make(chan bool)
-	ctrl.sendFlusher = domain.NewFlusher(1000, 1, 50*time.Millisecond, ctrl.sendFlushFunc)
+	ctrl.sendFlusher = tools.NewFlusherPool(1, 1000, ctrl.sendFlushFunc)
 
 	ctrl.unauthorizedRequests = map[int64]bool{
 		msg.C_SystemGetServerTime: true,
@@ -153,13 +154,13 @@ func (ctrl *Controller) createDialer(timeout time.Duration) {
 		WrapConn:      nil,
 	}
 }
-func (ctrl *Controller) sendFlushFunc(entries []domain.FlusherEntry) {
+func (ctrl *Controller) sendFlushFunc(targetID string, entries []tools.FlushEntry) {
 	itemsCount := len(entries)
 	switch itemsCount {
 	case 0:
 		return
 	case 1:
-		m := entries[0].Value.(*rony.MessageEnvelope)
+		m := entries[0].Value().(*rony.MessageEnvelope)
 		err := ctrl.sendWebsocket(m)
 		if err != nil {
 			logs.Warn("NetCtrl got error on flushing outgoing messages",
@@ -171,7 +172,7 @@ func (ctrl *Controller) sendFlushFunc(entries []domain.FlusherEntry) {
 	default:
 		messages := make([]*rony.MessageEnvelope, 0, itemsCount)
 		for idx := range entries {
-			m := entries[idx].Value.(*rony.MessageEnvelope)
+			m := entries[idx].Value().(*rony.MessageEnvelope)
 			logs.Debug("Message",
 				zap.Int("Idx", idx),
 				zap.String("TeamID", m.Get("TeamID", "0")),
@@ -230,7 +231,6 @@ func (ctrl *Controller) createHttpClient(timeout time.Duration) {
 		DialContext: (&net.Dialer{
 			Timeout:   time.Second,
 			KeepAlive: 30 * time.Second,
-			DualStack: true,
 		}).DialContext,
 		ForceAttemptHTTP2:     false,
 		MaxIdleConns:          100,
@@ -396,6 +396,11 @@ func messageHandler(ctrl *Controller, message *rony.MessageEnvelope) {
 	// extract all updates/ messages
 	messages, updates := extractMessages(ctrl, message)
 	if ctrl.OnMessage != nil {
+		// sort messages by requestID
+		sort.Slice(messages, func(i, j int) bool {
+			return messages[i].RequestID < messages[j].RequestID
+		})
+
 		ctrl.OnMessage(messages)
 	}
 	if ctrl.OnUpdate != nil {
@@ -530,6 +535,7 @@ func (ctrl *Controller) Connect() {
 				attempts++
 				if attempts > 2 {
 					attempts = 0
+					logs.Info("NetCtrl got error on Dial", zap.Error(err), zap.String("Endpoint", ctrl.wsEndpoint))
 					ctrl.createDialer(domain.WebsocketDialTimeoutLong)
 				}
 				continue
@@ -558,8 +564,7 @@ func (ctrl *Controller) Connect() {
 	})
 }
 
-// IgnoreSIGPIPE prevents SIGPIPE from being raised on TCP sockets when remote hangs up
-// See: https://github.com/golang/go/issues/17393
+// UpdateEndpoint updates the url of the server based on the country.
 func (ctrl *Controller) UpdateEndpoint(country string) {
 	if country != "" {
 		ctrl.countryCode = country
@@ -615,7 +620,7 @@ func (ctrl *Controller) incMessageSeq() int64 {
 	return atomic.AddInt64(&ctrl.messageSeq, 1)
 }
 
-// SendWebsocket direct sends immediately else it put it in flusher
+// SendWebsocket if 'direct' sends immediately otherwise it put it in flusher
 func (ctrl *Controller) SendWebsocket(msgEnvelope *rony.MessageEnvelope, direct bool) error {
 	defer logs.RecoverPanic(
 		"NetworkController::SendWebsocket",
@@ -634,7 +639,7 @@ func (ctrl *Controller) SendWebsocket(msgEnvelope *rony.MessageEnvelope, direct 
 	if direct || unauthorized {
 		return ctrl.sendWebsocket(msgEnvelope)
 	}
-	ctrl.sendFlusher.Enter(nil, msgEnvelope)
+	ctrl.sendFlusher.Enter("", tools.NewEntry(msgEnvelope))
 	return nil
 }
 func (ctrl *Controller) sendWebsocket(msgEnvelope *rony.MessageEnvelope) error {
@@ -657,7 +662,7 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *rony.MessageEnvelope) error {
 	}
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
 
-	logs.Info("NetCtrl call sendWebsocket",
+	logs.Debug("NetCtrl call sendWebsocket",
 		zap.Uint64("ReqID", msgEnvelope.RequestID),
 		zap.String("C", registry.ConstructorName(msgEnvelope.Constructor)),
 		zap.String("TeamID", msgEnvelope.Get("TeamID", "0")),
@@ -706,10 +711,10 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *rony.MessageEnvelope) error {
 	return nil
 }
 
-// RealtimeCommand run request immediately and do not save it in queue
-func (ctrl *Controller) RealtimeCommand(
+// RealtimeCommandWithTimeout run request immediately and do not save it in queue
+func (ctrl *Controller) RealtimeCommandWithTimeout(
 	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-	blockingMode, isUICallback bool,
+	blockingMode, isUICallback bool, timeout time.Duration,
 ) {
 	defer logs.RecoverPanic(
 		"SyncCtrl::RealtimeCommand",
@@ -728,7 +733,7 @@ func (ctrl *Controller) RealtimeCommand(
 
 	// Add the callback functions
 	reqCB := domain.AddRequestCallback(
-		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, domain.WebsocketRequestTime, timeoutCB, isUICallback,
+		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, timeout, timeoutCB, isUICallback,
 	)
 	execBlock := func(reqID uint64, req *rony.MessageEnvelope) {
 		err := ctrl.SendWebsocket(req, blockingMode)
@@ -785,7 +790,15 @@ func (ctrl *Controller) RealtimeCommand(
 	return
 }
 
-// Send encrypt and send request to server and receive and decrypt its response
+// RealtimeCommand run request immediately and do not save it in queue
+func (ctrl *Controller) RealtimeCommand(
+	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+	blockingMode, isUICallback bool,
+) {
+	ctrl.RealtimeCommandWithTimeout(messageEnvelope, timeoutCB, successCB, blockingMode, isUICallback, domain.WebsocketRequestTimeout)
+}
+
+// SendHttp encrypt and send request to server and receive and decrypt its response
 func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageEnvelope) (*rony.MessageEnvelope, error) {
 	st := domain.Now()
 	defer func() {

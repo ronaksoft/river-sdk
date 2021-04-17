@@ -27,7 +27,6 @@ type repoTopPeers struct {
 }
 
 const (
-	prefixTopPeers          = "T_PEER"
 	indexTopPeersUser       = "T_PEER_U"
 	indexTopPeersGroup      = "T_PEER_G"
 	indexTopPeersForward    = "T_PEER_F"
@@ -72,7 +71,7 @@ func saveTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, teamID int64, tp *msg
 		return domain.ErrDoesNotExists
 	}
 	b, _ := tp.Marshal()
-	logs.Info("SaveTopPeer",
+	logs.Debug("SaveTopPeer",
 		zap.ByteString("Key", getTopPeerKey(cat, teamID, tp.Peer.ID, tp.Peer.Type)),
 		zap.Float32("Rate", tp.Rate),
 	)

@@ -525,6 +525,104 @@ func extractMessages(msgs ...*msg.UserMessage) (users []*msg.User, groups []*msg
 	return
 }
 
+func (r *repoMessages) GetMediaMessageHistory(
+	teamID, peerID int64, peerType int32, minID, maxID int64, limit int32, cat msg.MediaCategory,
+) (userMessages []*msg.UserMessage, users []*msg.User, groups []*msg.Group) {
+	userMessages = make([]*msg.UserMessage, 0, limit)
+	startTime := time.Now()
+	var stopWatch1, stopWatch2 time.Time
+
+	switch {
+	case maxID == 0 && minID == 0:
+		dialog, err := Dialogs.Get(teamID, peerID, peerType)
+		if err != nil {
+			logs.Error("RepoMessage got error on GetHistory",
+				zap.Error(err),
+				zap.Int64("TeamID", teamID),
+				zap.Int64("PeerID", peerID),
+			)
+			return
+		}
+		maxID = dialog.TopMessageID
+		fallthrough
+	case maxID > 0 && minID == 0:
+		_ = badgerView(func(txn *badger.Txn) error {
+			opts := badger.DefaultIteratorOptions
+			opts.Prefix = getMessagePrefix(teamID, peerID, peerType)
+			opts.Reverse = true
+			it := txn.NewIterator(opts)
+			it.Seek(getMessageKey(teamID, peerID, peerType, maxID))
+			stopWatch1 = time.Now()
+			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
+				if limit--; limit < 0 {
+					break
+				}
+				_ = it.Item().Value(func(val []byte) error {
+					userMessage := &msg.UserMessage{}
+					err := userMessage.Unmarshal(val)
+					if err != nil {
+						return err
+					}
+
+					if userMessage.MediaCat == cat {
+						userMessages = append(userMessages, userMessage)
+					} else {
+						limit++
+					}
+
+					return nil
+				})
+			}
+			it.Close()
+			stopWatch2 = time.Now()
+			return nil
+		})
+	case minID > 0:
+		_ = badgerView(func(txn *badger.Txn) error {
+			opts := badger.DefaultIteratorOptions
+			opts.Prefix = getMessagePrefix(teamID, peerID, peerType)
+			it := txn.NewIterator(opts)
+			it.Seek(getMessageKey(teamID, peerID, peerType, minID))
+			stopWatch1 = time.Now()
+			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
+				if limit--; limit < 0 {
+					break
+				}
+				_ = it.Item().Value(func(val []byte) error {
+					userMessage := &msg.UserMessage{}
+					err := userMessage.Unmarshal(val)
+					if err != nil {
+						return err
+					}
+
+					if userMessage.MediaCat == cat {
+						userMessages = append(userMessages, userMessage)
+					} else {
+						limit++
+					}
+
+					return nil
+				})
+			}
+			it.Close()
+			stopWatch2 = time.Now()
+			return nil
+		})
+	default:
+
+	}
+
+	logs.Info("RepoMessage got media history",
+		zap.Int64("MinID", minID),
+		zap.Int64("MaxID", maxID),
+		zap.Duration("SP1", stopWatch1.Sub(startTime)),
+		zap.Duration("SP2", stopWatch2.Sub(startTime)),
+	)
+
+	users, groups = extractMessages(userMessages...)
+	return
+}
+
 func (r *repoMessages) Delete(userID int64, teamID, peerID int64, peerType int32, msgIDs ...int64) {
 	sort.Slice(msgIDs, func(i, j int) bool {
 		return msgIDs[i] < msgIDs[j]
@@ -567,7 +665,8 @@ func (r *repoMessages) Delete(userID int64, teamID, peerID int64, peerType int32
 			}
 			it.Close()
 			if dialog.TopMessageID == msgID {
-				_ = txn.Delete(getDialogKey(teamID, peerID, peerType))
+				// We used to delete dialog in this case but we are not deleting the dialog on last message anymore
+				// _ = txn.Delete(getDialogKey(teamID, peerID, peerType))
 				indexMessageRemove(tools.ByteToStr(getMessageKey(teamID, peerID, peerType, msgID)))
 				return nil
 			}

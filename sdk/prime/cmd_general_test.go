@@ -3,14 +3,6 @@ package riversdk
 import (
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"go.uber.org/zap/zapcore"
-	"sync"
-	"testing"
-)
-
-var (
-	wg       *sync.WaitGroup
-	testCase int
-	test     *testing.T
 )
 
 func init() {

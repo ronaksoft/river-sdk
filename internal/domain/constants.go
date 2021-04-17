@@ -7,9 +7,6 @@ import (
 )
 
 //go:generate go run update_version.go
-const (
-	FilePayloadSize = 1024 * 256 // 256KB
-)
 
 var (
 	ClientPlatform string
@@ -18,7 +15,9 @@ var (
 	ClientVendor   string
 	SysConfig      *msg.SystemConfig
 
-	// Parameters which prevent sending duplicate requests
+	/*
+		Parameters which prevent sending duplicate requests
+	*/
 	ContactsSynced int32
 	TimeSynced     int32
 	ConfigSynced   int32
@@ -46,7 +45,7 @@ func init() {
 		TopPeerDecayRate:        3500000,
 		TopPeerMaxStep:          365,
 		MaxActiveSessions:       10,
-		//Reactions: []string{"😂",
+		// Reactions: []string{"😂",
 		//	"😢",
 		//	"😡",
 		//	"👎",
@@ -86,15 +85,16 @@ func init() {
 
 // Global Parameters
 const (
-	DefaultWebsocketEndpoint = "ws://cyrus.river.im"
-	WebsocketIdleTimeout     = 5 * time.Minute
-	WebsocketPingTimeout     = 2 * time.Second
-	WebsocketWriteTime       = 3 * time.Second
-	WebsocketRequestTime     = 3 * time.Second
-	WebsocketDialTimeout     = 3 * time.Second
-	WebsocketDialTimeoutLong = 10 * time.Second
-	HttpRequestTimeout       = 30 * time.Second
-	SnapshotSyncThreshold    = 10000
+	DefaultWebsocketEndpoint    = "ws://cyrus.river.im"
+	WebsocketIdleTimeout        = 5 * time.Minute
+	WebsocketPingTimeout        = 2 * time.Second
+	WebsocketWriteTime          = 3 * time.Second
+	WebsocketRequestTimeout     = 3 * time.Second
+	WebsocketRequestTimeoutLong = 8 * time.Second
+	WebsocketDialTimeout        = 3 * time.Second
+	WebsocketDialTimeoutLong    = 10 * time.Second
+	HttpRequestTimeout          = 30 * time.Second
+	SnapshotSyncThreshold       = 10000
 )
 
 // System Keys
@@ -188,7 +188,6 @@ const (
 	Hour   = Minute * 60
 	Day    = Hour * 24
 	Week   = Day * 7
-	Month  = Week * 4
 )
 
 // UserStatus

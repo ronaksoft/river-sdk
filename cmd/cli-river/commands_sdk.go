@@ -96,7 +96,7 @@ var SdkUpdateGetState = &ishell.Cmd{
 var SdkAppForeground = &ishell.Cmd{
 	Name: "AppForeground",
 	Func: func(c *ishell.Context) {
-		_SDK.AppForeground()
+		_SDK.AppForeground(true)
 	},
 }
 

@@ -32,7 +32,7 @@ func (r *River) messagesGetDialogs(in, out *rony.MessageEnvelope, timeoutCB doma
 
 	// If the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {
-		res.UpdateID = r.syncCtrl.UpdateID()
+		res.UpdateID = r.syncCtrl.GetUpdateID()
 		out.Constructor = msg.C_MessagesDialogs
 		buff, err := res.Marshal()
 		logs.ErrorOnErr("River got error on marshal MessagesDialogs", err)
@@ -273,13 +273,12 @@ func (r *River) messagesGetHistory(in, out *rony.MessageEnvelope, timeoutCB doma
 	// Load the dialog
 	dialog, _ := repo.Dialogs.Get(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
-		logs.Debug("asking for a nil dialog")
 		fillMessagesMany(out, []*msg.UserMessage{}, []*msg.User{}, []*msg.Group{}, in.RequestID, successCB)
 		return
 	}
 
 	// Prepare the the result before sending back to the client
-	preSuccessCB := genSuccessCallback(successCB, domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, dialog.TopMessageID)
+	preSuccessCB := genGetHistoryCB(successCB, domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, dialog.TopMessageID)
 
 	// We are Offline/Disconnected
 	if !r.networkCtrl.Connected() {
@@ -300,13 +299,13 @@ func (r *River) messagesGetHistory(in, out *rony.MessageEnvelope, timeoutCB doma
 		req.MaxID = dialog.TopMessageID
 		fallthrough
 	case req.MinID == 0 && req.MaxID != 0:
-		b, bar := messageHole.GetLowerFilled(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+		b, bar := messageHole.GetLowerFilled(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, req.MaxID)
 		if !b {
 			logs.Info("River detected hole (With MaxID Only)",
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
-				zap.String("Holes", messageHole.PrintHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))),
+				zap.String("Holes", messageHole.PrintHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0)),
 			)
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
@@ -314,13 +313,13 @@ func (r *River) messagesGetHistory(in, out *rony.MessageEnvelope, timeoutCB doma
 		messages, users, groups := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
 		fillMessagesMany(out, messages, users, groups, in.RequestID, preSuccessCB)
 	case req.MinID != 0 && req.MaxID == 0:
-		b, bar := messageHole.GetUpperFilled(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID)
+		b, bar := messageHole.GetUpperFilled(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, req.MinID)
 		if !b {
 			logs.Info("River detected hole (With MinID Only)",
 				zap.Int64("MinID", req.MinID),
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
-				zap.String("Holes", messageHole.PrintHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))),
+				zap.String("Holes", messageHole.PrintHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0)),
 			)
 			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
@@ -328,7 +327,7 @@ func (r *River) messagesGetHistory(in, out *rony.MessageEnvelope, timeoutCB doma
 		messages, users, groups := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), bar.Min, 0, req.Limit)
 		fillMessagesMany(out, messages, users, groups, in.RequestID, preSuccessCB)
 	default:
-		b := messageHole.IsHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID)
+		b := messageHole.IsHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, req.MinID, req.MaxID)
 		if b {
 			logs.Info("River detected hole (With Min & Max)",
 				zap.Int64("MinID", req.MinID),
@@ -343,7 +342,9 @@ func (r *River) messagesGetHistory(in, out *rony.MessageEnvelope, timeoutCB doma
 		fillMessagesMany(out, messages, users, groups, in.RequestID, preSuccessCB)
 	}
 }
-func fillMessagesMany(out *rony.MessageEnvelope, messages []*msg.UserMessage, users []*msg.User, groups []*msg.Group, requestID uint64, successCB domain.MessageHandler) {
+func fillMessagesMany(
+	out *rony.MessageEnvelope, messages []*msg.UserMessage, users []*msg.User, groups []*msg.Group, requestID uint64, successCB domain.MessageHandler,
+) {
 	res := &msg.MessagesMany{
 		Messages: messages,
 		Users:    users,
@@ -355,7 +356,9 @@ func fillMessagesMany(out *rony.MessageEnvelope, messages []*msg.UserMessage, us
 	out.Message, _ = res.Marshal()
 	uiexec.ExecSuccessCB(successCB, out)
 }
-func genSuccessCallback(cb domain.MessageHandler, teamID, peerID int64, peerType int32, minID, maxID int64, topMessageID int64) domain.MessageHandler {
+func genGetHistoryCB(
+	cb domain.MessageHandler, teamID, peerID int64, peerType int32, minID, maxID int64, topMessageID int64,
+) domain.MessageHandler {
 	return func(m *rony.MessageEnvelope) {
 		pendingMessages := repo.PendingMessages.GetByPeer(peerID, peerType)
 		switch m.Constructor {
@@ -373,17 +376,97 @@ func genSuccessCallback(cb domain.MessageHandler, teamID, peerID int64, peerType
 			if msgCount := len(x.Messages); msgCount > 0 {
 				switch {
 				case minID == 0 && maxID != 0:
-					messageHole.InsertFill(teamID, peerID, peerType, x.Messages[msgCount-1].ID, maxID)
+					messageHole.InsertFill(teamID, peerID, peerType, 0, x.Messages[msgCount-1].ID, maxID)
 				case minID != 0 && maxID == 0:
-					messageHole.InsertFill(teamID, peerID, peerType, minID, x.Messages[0].ID)
+					messageHole.InsertFill(teamID, peerID, peerType, 0, minID, x.Messages[0].ID)
 				case minID == 0 && maxID == 0:
-					messageHole.InsertFill(teamID, peerID, peerType, x.Messages[msgCount-1].ID, x.Messages[0].ID)
+					messageHole.InsertFill(teamID, peerID, peerType, 0, x.Messages[msgCount-1].ID, x.Messages[0].ID)
 				}
 			}
 
 			if len(pendingMessages) > 0 {
 				if maxID == 0 || (len(x.Messages) > 0 && x.Messages[len(x.Messages)-1].ID == topMessageID) {
 					x.Messages = append(pendingMessages, x.Messages...)
+				}
+			}
+
+			m.Message, _ = x.Marshal()
+		case rony.C_Error:
+			logs.Warn("We received error on GetHistory", zap.Error(domain.ParseServerError(m.Message)))
+		default:
+		}
+
+		// Call the actual success callback function
+		cb(m)
+	}
+}
+
+func (r *River) messagesGetMediaHistory(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.MessagesGetMediaHistory{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	// Load the dialog
+	dialog, _ := repo.Dialogs.Get(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))
+	if dialog == nil {
+		fillMessagesMany(out, []*msg.UserMessage{}, []*msg.User{}, []*msg.Group{}, in.RequestID, successCB)
+		return
+	}
+
+	// We are Offline/Disconnected
+	if !r.networkCtrl.Connected() {
+		messages, users, groups := repo.Messages.GetMediaMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, req.MaxID, req.Limit, req.Cat)
+		if len(messages) > 0 {
+			fillMessagesMany(out, messages, users, groups, in.RequestID, successCB)
+			return
+		}
+	}
+
+	// Prepare the the result before sending back to the client
+	preSuccessCB := genGetMediaHistoryCB(successCB, domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MaxID, req.Cat)
+
+	// We are Online
+	if req.MaxID == 0 {
+		req.MaxID = dialog.TopMessageID
+	}
+	b, bar := messageHole.GetLowerFilled(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.Cat, req.MaxID)
+	if !b {
+		logs.Info("River detected hole (With MaxID Only)",
+			zap.Int64("MaxID", req.MaxID),
+			zap.Int64("PeerID", req.Peer.ID),
+			zap.Int64("TopMsgID", dialog.TopMessageID),
+			zap.String("Holes", messageHole.PrintHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0)),
+		)
+		r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
+		return
+	}
+	messages, users, groups := repo.Messages.GetMediaMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, bar.Max, req.Limit, req.Cat)
+	fillMessagesMany(out, messages, users, groups, in.RequestID, preSuccessCB)
+}
+func genGetMediaHistoryCB(
+	cb domain.MessageHandler, teamID, peerID int64, peerType int32, maxID int64, cat msg.MediaCategory,
+) domain.MessageHandler {
+	return func(m *rony.MessageEnvelope) {
+		switch m.Constructor {
+		case msg.C_MessagesMany:
+			x := &msg.MessagesMany{}
+			err := x.Unmarshal(m.Message)
+			logs.WarnOnErr("Error On Unmarshal MessagesMany", err)
+
+			// 1st sort the received messages by id
+			sort.Slice(x.Messages, func(i, j int) bool {
+				return x.Messages[i].ID > x.Messages[j].ID
+			})
+
+			// Fill Messages Hole
+			if msgCount := len(x.Messages); msgCount > 0 {
+				if maxID == 0 {
+					messageHole.InsertFill(teamID, peerID, peerType, cat, x.Messages[msgCount-1].ID, x.Messages[0].ID)
+				} else {
+					messageHole.InsertFill(teamID, peerID, peerType, cat, x.Messages[msgCount-1].ID, maxID)
 				}
 			}
 

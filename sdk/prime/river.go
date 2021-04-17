@@ -13,7 +13,6 @@ import (
 	"github.com/ronaksoft/rony/registry"
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
-	"sort"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -29,7 +28,6 @@ func SetLogLevel(l int) {
 	logs.SetLogLevel(l)
 }
 
-// RiverConfig
 type RiverConfig struct {
 	ServerHostPort string
 	// DbPath is the path of the folder holding the sqlite database.
@@ -188,7 +186,7 @@ func (r *River) onNetworkConnect() (err error) {
 
 	go func() {
 		// Check if client is synced with servers
-		if r.syncCtrl.UpdateID() < serverUpdateID {
+		if r.syncCtrl.GetUpdateID() < serverUpdateID {
 			// Sync with Server
 			r.syncCtrl.Sync()
 			domain.WindowLog(fmt.Sprintf("Synced: %s", time.Now().Sub(domain.StartTime)))
@@ -252,13 +250,8 @@ func (r *River) onReceivedMessage(msgs []*rony.MessageEnvelope) {
 		nil,
 	)
 
-	// sort messages by requestID
-	sort.Slice(msgs, func(i, j int) bool {
-		return msgs[i].RequestID < msgs[j].RequestID
-	})
-
 	// sync localDB with responses in the background
-	r.syncCtrl.MessageHandler(msgs)
+	r.syncCtrl.MessageApplier(msgs)
 
 	// check requestCallbacks and call callbacks
 	for idx := range msgs {
@@ -267,7 +260,7 @@ func (r *River) onReceivedMessage(msgs []*rony.MessageEnvelope) {
 			continue
 		}
 
-		mon.ServerResponseTime(reqCB.Constructor, msgs[idx].Constructor, time.Now().Sub(reqCB.DepartureTime))
+		mon.ServerResponseTime(reqCB.Constructor, msgs[idx].Constructor, time.Duration(tools.NanoTime()-reqCB.DepartureTime))
 		select {
 		case reqCB.ResponseChannel <- msgs[idx]:
 			logs.Debug("We received response",
@@ -300,15 +293,15 @@ func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {
 	}
 
 	outOfSync := false
-	if updateContainer.MinUpdateID != 0 && updateContainer.MinUpdateID > r.syncCtrl.UpdateID()+1 {
+	if updateContainer.MinUpdateID != 0 && updateContainer.MinUpdateID > r.syncCtrl.GetUpdateID()+1 {
 		logs.Info("We are out of sync",
 			zap.Int64("ContainerMinID", updateContainer.MinUpdateID),
-			zap.Int64("ClientUpdateID", r.syncCtrl.UpdateID()),
+			zap.Int64("ClientUpdateID", r.syncCtrl.GetUpdateID()),
 		)
 		outOfSync = true
 	}
 
-	r.syncCtrl.UpdateHandler(updateContainer, outOfSync)
+	r.syncCtrl.UpdateApplier(updateContainer, outOfSync)
 
 	if outOfSync {
 		go r.syncCtrl.Sync()
@@ -554,68 +547,68 @@ func (r *River) uploadAccountPhoto(uploadRequest *msg.ClientFileRequest) (succes
 
 func (r *River) registerCommandHandlers() {
 	r.localCommands = map[int64]domain.LocalMessageHandler{
-		msg.C_MessagesGetDialogs:            r.messagesGetDialogs,
-		msg.C_MessagesGetDialog:             r.messagesGetDialog,
-		msg.C_MessagesGetHistory:            r.messagesGetHistory,
-		msg.C_MessagesSend:                  r.messagesSend,
-		msg.C_ContactsGet:                   r.contactsGet,
-		msg.C_MessagesReadHistory:           r.messagesReadHistory,
-		msg.C_UsersGet:                      r.usersGet,
-		msg.C_MessagesGet:                   r.messagesGet,
-		msg.C_AccountUpdateUsername:         r.accountUpdateUsername,
-		msg.C_AccountUpdateProfile:          r.accountUpdateProfile,
+		msg.C_AccountGetTeams:               r.accountsGetTeams,
 		msg.C_AccountRegisterDevice:         r.accountRegisterDevice,
-		msg.C_AccountUnregisterDevice:       r.accountUnregisterDevice,
-		msg.C_AccountSetNotifySettings:      r.accountSetNotifySettings,
-		msg.C_MessagesToggleDialogPin:       r.dialogTogglePin,
-		msg.C_GroupsEditTitle:               r.groupsEditTitle,
-		msg.C_MessagesClearHistory:          r.messagesClearHistory,
-		msg.C_MessagesDelete:                r.messagesDelete,
-		msg.C_GroupsAddUser:                 r.groupAddUser,
-		msg.C_GroupsDeleteUser:              r.groupDeleteUser,
-		msg.C_GroupsGetFull:                 r.groupsGetFull,
-		msg.C_GroupsUpdateAdmin:             r.groupUpdateAdmin,
-		msg.C_GroupsToggleAdmins:            r.groupToggleAdmin,
-		msg.C_ContactsImport:                r.contactsImport,
-		msg.C_ContactsAdd:                   r.contactsAdd,
-		msg.C_ContactsDelete:                r.contactsDelete,
-		msg.C_ContactsDeleteAll:             r.contactsDeleteAll,
-		msg.C_ContactsGetTopPeers:           r.contactsGetTopPeers,
-		msg.C_ContactsResetTopPeer:          r.contactsResetTopPeer,
-		msg.C_MessagesReadContents:          r.messagesReadContents,
-		msg.C_UsersGetFull:                  r.usersGetFull,
 		msg.C_AccountRemovePhoto:            r.accountRemovePhoto,
-		msg.C_GroupsRemovePhoto:             r.groupRemovePhoto,
-		msg.C_MessagesSendMedia:             r.messagesSendMedia,
-		msg.C_ClientSendMessageMedia:        r.clientSendMessageMedia,
-		msg.C_MessagesSaveDraft:             r.messagesSaveDraft,
-		msg.C_MessagesClearDraft:            r.messagesClearDraft,
-		msg.C_LabelsGet:                     r.labelsGet,
-		msg.C_LabelsListItems:               r.labelsListItems,
-		msg.C_LabelsAddToMessage:            r.labelAddToMessage,
-		msg.C_LabelsRemoveFromMessage:       r.labelRemoveFromMessage,
-		msg.C_ClientGlobalSearch:            r.clientGlobalSearch,
+		msg.C_AccountSetNotifySettings:      r.accountSetNotifySettings,
+		msg.C_AccountUnregisterDevice:       r.accountUnregisterDevice,
+		msg.C_AccountUpdateProfile:          r.accountUpdateProfile,
+		msg.C_AccountUpdateUsername:         r.accountUpdateUsername,
+		msg.C_ClientClearCachedMedia:        r.clientClearCachedMedia,
 		msg.C_ClientContactSearch:           r.clientContactSearch,
 		msg.C_ClientGetCachedMedia:          r.clientGetCachedMedia,
-		msg.C_ClientClearCachedMedia:        r.clientClearCachedMedia,
+		msg.C_ClientGetFrequentReactions:    r.clientGetFrequentReactions,
 		msg.C_ClientGetMediaHistory:         r.clientGetMediaHistory,
 		msg.C_ClientGetLastBotKeyboard:      r.clientGetLastBotKeyboard,
 		msg.C_ClientGetRecentSearch:         r.clientGetRecentSearch,
+		msg.C_ClientGetTeamCounters:         r.clientGetTeamCounters,
+		msg.C_ClientGlobalSearch:            r.clientGlobalSearch,
 		msg.C_ClientPutRecentSearch:         r.clientPutRecentSearch,
 		msg.C_ClientRemoveAllRecentSearches: r.clientRemoveAllRecentSearches,
 		msg.C_ClientRemoveRecentSearch:      r.clientRemoveRecentSearch,
+		msg.C_ClientSendMessageMedia:        r.clientSendMessageMedia,
+		msg.C_ContactsAdd:                   r.contactsAdd,
+		msg.C_ContactsDelete:                r.contactsDelete,
+		msg.C_ContactsDeleteAll:             r.contactsDeleteAll,
+		msg.C_ContactsGet:                   r.contactsGet,
+		msg.C_ContactsGetTopPeers:           r.contactsGetTopPeers,
+		msg.C_ContactsImport:                r.contactsImport,
+		msg.C_ContactsResetTopPeer:          r.contactsResetTopPeer,
+		msg.C_GifDelete:                     r.gifDelete,
 		msg.C_GifGetSaved:                   r.gifGetSaved,
 		msg.C_GifSave:                       r.gifSave,
-		msg.C_GifDelete:                     r.gifDelete,
-		msg.C_SystemGetConfig:               r.systemGetConfig,
-		msg.C_ClientGetTeamCounters:         r.clientGetTeamCounters,
-		msg.C_AccountGetTeams:               r.accountsGetTeams,
-		msg.C_TeamEdit:                      r.teamEdit,
-		msg.C_MessagesTogglePin:             r.messagesTogglePin,
-		msg.C_MessagesSendReaction:          r.messagesSendReaction,
-		msg.C_MessagesDeleteReaction:        r.messagesDeleteReaction,
-		msg.C_ClientGetFrequentReactions:    r.clientGetFrequentReactions,
+		msg.C_GroupsAddUser:                 r.groupAddUser,
+		msg.C_GroupsDeleteUser:              r.groupDeleteUser,
+		msg.C_GroupsEditTitle:               r.groupsEditTitle,
+		msg.C_GroupsGetFull:                 r.groupsGetFull,
+		msg.C_GroupsRemovePhoto:             r.groupRemovePhoto,
+		msg.C_GroupsToggleAdmins:            r.groupToggleAdmin,
+		msg.C_GroupsUpdateAdmin:             r.groupUpdateAdmin,
+		msg.C_LabelsAddToMessage:            r.labelAddToMessage,
 		msg.C_LabelsDelete:                  r.labelsDelete,
+		msg.C_LabelsGet:                     r.labelsGet,
+		msg.C_LabelsListItems:               r.labelsListItems,
+		msg.C_LabelsRemoveFromMessage:       r.labelRemoveFromMessage,
+		msg.C_MessagesClearDraft:            r.messagesClearDraft,
+		msg.C_MessagesClearHistory:          r.messagesClearHistory,
+		msg.C_MessagesDelete:                r.messagesDelete,
+		msg.C_MessagesDeleteReaction:        r.messagesDeleteReaction,
+		msg.C_MessagesGet:                   r.messagesGet,
+		msg.C_MessagesGetDialog:             r.messagesGetDialog,
+		msg.C_MessagesGetDialogs:            r.messagesGetDialogs,
+		msg.C_MessagesGetHistory:            r.messagesGetHistory,
+		msg.C_MessagesReadContents:          r.messagesReadContents,
+		msg.C_MessagesReadHistory:           r.messagesReadHistory,
+		msg.C_MessagesSaveDraft:             r.messagesSaveDraft,
+		msg.C_MessagesSend:                  r.messagesSend,
+		msg.C_MessagesSendMedia:             r.messagesSendMedia,
+		msg.C_MessagesSendReaction:          r.messagesSendReaction,
+		msg.C_MessagesToggleDialogPin:       r.dialogTogglePin,
+		msg.C_MessagesTogglePin:             r.messagesTogglePin,
+		msg.C_SystemGetConfig:               r.systemGetConfig,
+		msg.C_TeamEdit:                      r.teamEdit,
+		msg.C_UsersGet:                      r.usersGet,
+		msg.C_UsersGetFull:                  r.usersGetFull,
 	}
 }
 
@@ -633,7 +626,7 @@ type RiverConnection struct {
 	Version   int
 }
 
-// save RiverConfig interface func
+// Save RiverConfig interface func
 func (v *RiverConnection) Save() {
 	logs.Debug("ConnInfo saved.")
 	b, _ := json.Marshal(v)

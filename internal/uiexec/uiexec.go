@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	maxDelay = time.Millisecond * 100
+	maxDelay = time.Millisecond * 500
 )
 
 var (

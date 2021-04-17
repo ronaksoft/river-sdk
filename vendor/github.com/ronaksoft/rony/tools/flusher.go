@@ -14,7 +14,7 @@ import (
 */
 
 type FlushEntry interface {
-	wait() chan struct{}
+	wait()
 	done()
 	Value() interface{}
 }
@@ -22,6 +22,7 @@ type FlushEntry interface {
 type entry struct {
 	v  interface{}
 	ch chan struct{}
+	cb func()
 }
 
 func NewEntry(v interface{}) FlushEntry {
@@ -31,11 +32,22 @@ func NewEntry(v interface{}) FlushEntry {
 	}
 }
 
-func (e *entry) wait() chan struct{} {
-	return e.ch
+func NewEntryWithCallback(v interface{}, cb func()) FlushEntry {
+	return &entry{
+		v:  v,
+		ch: make(chan struct{}, 1),
+		cb: cb,
+	}
+}
+
+func (e *entry) wait() {
+	<-e.ch
 }
 
 func (e *entry) done() {
+	if e.cb != nil {
+		e.cb()
+	}
 	e.ch <- struct{}{}
 }
 
@@ -123,7 +135,7 @@ func (f *flusher) enter(entry FlushEntry) {
 func (f *flusher) enterAndWait(entry FlushEntry) {
 	f.entryChan <- entry
 	f.startWorker()
-	<-entry.wait()
+	entry.wait()
 }
 
 type worker struct {

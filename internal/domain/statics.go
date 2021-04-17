@@ -429,7 +429,7 @@ func GetExponentialTime(min time.Duration, max time.Duration, attempts int) time
 	// add some jitter
 	napDuration += rand.Float64()*minFloat - (minFloat / 2)
 	if napDuration > float64(max) {
-		return time.Duration(max)
+		return max
 	}
 	return time.Duration(napDuration)
 }

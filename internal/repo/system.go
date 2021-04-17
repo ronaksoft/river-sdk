@@ -9,7 +9,6 @@ import (
 
 const (
 	systemPrefix = "SYS"
-	usagePrefix  = "USAGE"
 )
 
 type repoSystem struct {
@@ -20,7 +19,6 @@ func (r *repoSystem) getKey(keyName string) []byte {
 	return tools.StrToByte(fmt.Sprintf("%s.%s", systemPrefix, keyName))
 }
 
-// LoadInt
 func (r *repoSystem) LoadInt(keyName string) (uint64, error) {
 	keyValue := uint64(0)
 	err := badgerView(func(txn *badger.Txn) error {
@@ -46,7 +44,6 @@ func (r *repoSystem) LoadInt(keyName string) (uint64, error) {
 	}
 }
 
-// LoadInt64
 func (r *repoSystem) LoadInt64(keyName string) (int64, error) {
 	x, err := r.LoadInt(keyName)
 	if err != nil {
@@ -55,7 +52,6 @@ func (r *repoSystem) LoadInt64(keyName string) (int64, error) {
 	return int64(x), nil
 }
 
-// LoadString
 func (r *repoSystem) LoadString(keyName string) (string, error) {
 
 	var v []byte
@@ -74,7 +70,6 @@ func (r *repoSystem) LoadString(keyName string) (string, error) {
 	return string(v), nil
 }
 
-// LoadBytes
 func (r *repoSystem) LoadBytes(keyName string) ([]byte, error) {
 	var v []byte
 	err := badgerView(func(txn *badger.Txn) error {
@@ -92,7 +87,6 @@ func (r *repoSystem) LoadBytes(keyName string) ([]byte, error) {
 	return v, nil
 }
 
-// SaveInt
 func (r *repoSystem) SaveInt(keyName string, keyValue uint64) error {
 	b := make([]byte, 8)
 	binary.BigEndian.PutUint64(b, keyValue)
@@ -103,7 +97,6 @@ func (r *repoSystem) SaveInt(keyName string, keyValue uint64) error {
 	})
 }
 
-// SaveString
 func (r *repoSystem) SaveString(keyName string, keyValue string) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		return txn.SetEntry(
@@ -112,7 +105,6 @@ func (r *repoSystem) SaveString(keyName string, keyValue string) error {
 	})
 }
 
-// SaveBytes
 func (r *repoSystem) SaveBytes(keyName string, keyValue []byte) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		return txn.SetEntry(
@@ -121,7 +113,6 @@ func (r *repoSystem) SaveBytes(keyName string, keyValue []byte) error {
 	})
 }
 
-// Delete
 func (r *repoSystem) Delete(keyName string) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		return txn.Delete(r.getKey(keyName))

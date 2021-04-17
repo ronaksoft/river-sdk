@@ -85,7 +85,7 @@ func main() {
 		case "production":
 			serverHostPort = "edge.river.im"
 		case "staging":
-			serverHostPort = "river-rony.ronaksoftware.com"
+			serverHostPort = "river.ronaksoftware.com"
 		case "local":
 			serverHostPort = "localhost"
 		case "local2":

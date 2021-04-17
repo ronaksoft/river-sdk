@@ -3,6 +3,7 @@ package messageHole
 import (
 	"encoding/json"
 	"fmt"
+	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"go.uber.org/zap"
@@ -46,8 +47,8 @@ func newHoleManager() *HoleManager {
 	return m
 }
 
-func (m *HoleManager) LoadFromDB(teamID, peerID int64, peerType int32) {
-	b := repo.MessagesExtra.GetHoles(teamID, peerID, peerType)
+func (m *HoleManager) LoadFromDB(teamID, peerID int64, peerType int32, cat msg.MediaCategory) {
+	b := repo.MessagesExtra.GetHoles(teamID, peerID, peerType, cat)
 	_ = json.Unmarshal(b, &m.bars)
 	m.maxIndex = 0
 	for idx := range m.bars {
@@ -278,14 +279,14 @@ func Init() {
 	holder.list = make(map[string]*HoleManager)
 }
 
-func loadManager(teamID, peerID int64, peerType int32) *HoleManager {
+func loadManager(teamID, peerID int64, peerType int32, cat msg.MediaCategory) *HoleManager {
 	keyID := fmt.Sprintf("%d.%d", peerID, peerType)
 	holder.mtx.Lock()
 	defer holder.mtx.Unlock()
 	hm, ok := holder.list[keyID]
 	if !ok {
 		hm = newHoleManager()
-		hm.LoadFromDB(teamID, peerID, peerType)
+		hm.LoadFromDB(teamID, peerID, peerType, cat)
 		holder.list[keyID] = hm
 	}
 
@@ -293,54 +294,54 @@ func loadManager(teamID, peerID int64, peerType int32) *HoleManager {
 		logs.Error("HoleManager Not Valid", zap.String("Dump", hm.String()))
 		hm = newHoleManager()
 		b, _ := json.Marshal(hm)
-		repo.MessagesExtra.SaveHoles(teamID, peerID, peerType, b)
+		repo.MessagesExtra.SaveHoles(teamID, peerID, peerType, cat, b)
 		holder.list[keyID] = hm
 	}
 	return hm
 }
 
-func saveManager(teamID, peerID int64, peerType int32, hm *HoleManager) {
+func saveManager(teamID, peerID int64, peerType int32, cat msg.MediaCategory, hm *HoleManager) {
 	b, err := json.Marshal(hm.bars)
 	if err != nil {
 		logs.Error("Error On HoleManager", zap.Error(err))
 		return
 	}
-	repo.MessagesExtra.SaveHoles(teamID, peerID, peerType, b)
+	repo.MessagesExtra.SaveHoles(teamID, peerID, peerType, cat, b)
 	return
 }
 
-func InsertFill(teamID, peerID int64, peerType int32, minID, maxID int64) {
+func InsertFill(teamID, peerID int64, peerType int32, cat msg.MediaCategory, minID, maxID int64) {
 	if minID > maxID {
 		return
 	}
-	hm := loadManager(teamID, peerID, peerType)
+	hm := loadManager(teamID, peerID, peerType, cat)
 	hm.InsertBar(Bar{Type: Filled, Min: minID, Max: maxID})
-	saveManager(teamID, peerID, peerType, hm)
+	saveManager(teamID, peerID, peerType, cat, hm)
 	return
 }
 
 // IsHole Checks if there is any hole in the range [minID-maxID].
-func IsHole(teamID, peerID int64, peerType int32, minID, maxID int64) bool {
-	hm := loadManager(teamID, peerID, peerType)
+func IsHole(teamID, peerID int64, peerType int32, cat msg.MediaCategory, minID, maxID int64) bool {
+	hm := loadManager(teamID, peerID, peerType, cat)
 	return hm.IsRangeFilled(minID, maxID)
 }
 
 // GetUpperFilled It returns a LabelBar starts from minID to the highest possible index,
 // which makes a continuous Filled section, otherwise it returns false.
-func GetUpperFilled(teamID, peerID int64, peerType int32, minID int64) (bool, Bar) {
-	hm := loadManager(teamID, peerID, peerType)
+func GetUpperFilled(teamID, peerID int64, peerType int32, cat msg.MediaCategory, minID int64) (bool, Bar) {
+	hm := loadManager(teamID, peerID, peerType, cat)
 	return hm.GetUpperFilled(minID)
 }
 
 // GetLowerFilled It returns a LabelBar starts from the lowest possible index to maxID,
 // which makes a continuous Filled section, otherwise it returns false.
-func GetLowerFilled(teamID, peerID int64, peerType int32, maxID int64) (bool, Bar) {
-	hm := loadManager(teamID, peerID, peerType)
+func GetLowerFilled(teamID, peerID int64, peerType int32, cat msg.MediaCategory, maxID int64) (bool, Bar) {
+	hm := loadManager(teamID, peerID, peerType, cat)
 	return hm.GetLowerFilled(maxID)
 }
 
-func PrintHole(teamID, peerID int64, peerType int32) string {
-	hm := loadManager(teamID, peerID, peerType)
+func PrintHole(teamID, peerID int64, peerType int32, cat msg.MediaCategory) string {
+	hm := loadManager(teamID, peerID, peerType, cat)
 	sb := strings.Builder{}
 	for _, bar := range hm.bars {
 		sb.WriteString(fmt.Sprintf("[%s: %d - %d]", bar.Type.String(), bar.Min, bar.Max))

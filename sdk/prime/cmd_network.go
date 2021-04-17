@@ -15,7 +15,6 @@ import (
    Copyright Ronak Software Group 2018
 */
 
-// StartNetwork
 func (r *River) StartNetwork(country string) {
 	if country != "" {
 		r.networkCtrl.UpdateEndpoint(country)
@@ -23,7 +22,6 @@ func (r *River) StartNetwork(country string) {
 	r.networkCtrl.Connect()
 }
 
-// StopNetwork
 func (r *River) StopNetwork() {
 	r.networkCtrl.Disconnect()
 }
@@ -40,7 +38,6 @@ func (r *River) NetworkChange(connection int) {
 	}
 }
 
-// GetNetworkStatus
 func (r *River) GetNetworkStatus() int32 {
 	return int32(r.networkCtrl.GetQuality())
 }

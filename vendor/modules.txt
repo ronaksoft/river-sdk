@@ -1,4 +1,4 @@
-# git.ronaksoft.com/river/msg v0.0.0-20210404114136-2d25b84c8173
+# git.ronaksoft.com/river/msg v0.0.0-20210414181343-33fcedbc7718
 ## explicit
 git.ronaksoft.com/river/msg/go/msg
 # github.com/DataDog/zstd v1.4.5
@@ -294,7 +294,7 @@ github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
 # github.com/rivo/uniseg v0.2.0
 github.com/rivo/uniseg
-# github.com/ronaksoft/rony v0.6.31
+# github.com/ronaksoft/rony v0.6.34
 ## explicit
 github.com/ronaksoft/rony
 github.com/ronaksoft/rony/edge

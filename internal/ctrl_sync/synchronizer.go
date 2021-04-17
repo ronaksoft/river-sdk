@@ -12,6 +12,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/gobwas/pool/pbytes"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/registry"
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
@@ -40,7 +41,7 @@ type Controller struct {
 	fileCtrl    *fileCtrl.Controller
 
 	syncStatus         domain.SyncStatus
-	lastUpdateReceived time.Time
+	lastUpdateReceived int64
 	updateID           int64
 	updateAppliers     map[int64]domain.UpdateApplier
 	messageAppliers    map[int64]domain.MessageApplier
@@ -76,55 +77,55 @@ func NewSyncController(config Config) *Controller {
 	ctrl.appUpdateCallback = config.AppUpdateCB
 
 	ctrl.updateAppliers = map[int64]domain.UpdateApplier{
-		msg.C_UpdateNewMessage:            ctrl.updateNewMessage,
-		msg.C_UpdateReadHistoryOutbox:     ctrl.updateReadHistoryOutbox,
-		msg.C_UpdateReadHistoryInbox:      ctrl.updateReadHistoryInbox,
-		msg.C_UpdateMessageEdited:         ctrl.updateMessageEdited,
-		msg.C_UpdateMessageID:             ctrl.updateMessageID,
-		msg.C_UpdateNotifySettings:        ctrl.updateNotifySettings,
-		msg.C_UpdateUsername:              ctrl.updateUsername,
-		msg.C_UpdateMessagesDeleted:       ctrl.updateMessagesDeleted,
-		msg.C_UpdateGroupParticipantAdmin: ctrl.updateGroupParticipantAdmin,
-		msg.C_UpdateReadMessagesContents:  ctrl.updateReadMessagesContents,
-		msg.C_UpdateUserPhoto:             ctrl.updateUserPhoto,
-		msg.C_UpdateGroupPhoto:            ctrl.updateGroupPhoto,
-		msg.C_UpdateGroupAdmins:           ctrl.updateGroupAdmins,
-		msg.C_UpdateDialogPinned:          ctrl.updateDialogPinned,
 		msg.C_UpdateAccountPrivacy:        ctrl.updateAccountPrivacy,
+		msg.C_UpdateDialogPinned:          ctrl.updateDialogPinned,
 		msg.C_UpdateDraftMessage:          ctrl.updateDraftMessage,
 		msg.C_UpdateDraftMessageCleared:   ctrl.updateDraftMessageCleared,
-		msg.C_UpdateLabelSet:              ctrl.updateLabelSet,
+		msg.C_UpdateGroupAdmins:           ctrl.updateGroupAdmins,
+		msg.C_UpdateGroupParticipantAdmin: ctrl.updateGroupParticipantAdmin,
+		msg.C_UpdateGroupPhoto:            ctrl.updateGroupPhoto,
 		msg.C_UpdateLabelDeleted:          ctrl.updateLabelDeleted,
 		msg.C_UpdateLabelItemsAdded:       ctrl.updateLabelItemsAdded,
 		msg.C_UpdateLabelItemsRemoved:     ctrl.updateLabelItemsRemoved,
-		msg.C_UpdateUserBlocked:           ctrl.updateUserBlocked,
-		msg.C_UpdateTeamMemberStatus:      ctrl.updateTeamMemberStatus,
+		msg.C_UpdateLabelSet:              ctrl.updateLabelSet,
+		msg.C_UpdateMessageEdited:         ctrl.updateMessageEdited,
+		msg.C_UpdateMessageID:             ctrl.updateMessageID,
+		msg.C_UpdateMessagePinned:         ctrl.updateMessagePinned,
+		msg.C_UpdateMessagesDeleted:       ctrl.updateMessagesDeleted,
+		msg.C_UpdateNewMessage:            ctrl.updateNewMessage,
+		msg.C_UpdateNotifySettings:        ctrl.updateNotifySettings,
+		msg.C_UpdateReaction:              ctrl.updateReaction,
+		msg.C_UpdateReadHistoryInbox:      ctrl.updateReadHistoryInbox,
+		msg.C_UpdateReadHistoryOutbox:     ctrl.updateReadHistoryOutbox,
+		msg.C_UpdateReadMessagesContents:  ctrl.updateReadMessagesContents,
+		msg.C_UpdateTeam:                  ctrl.updateTeam,
+		msg.C_UpdateTeamCreated:           ctrl.updateTeamCreated,
 		msg.C_UpdateTeamMemberAdded:       ctrl.updateTeamMemberAdded,
 		msg.C_UpdateTeamMemberRemoved:     ctrl.updateTeamMemberRemoved,
-		msg.C_UpdateTeamCreated:           ctrl.updateTeamCreated,
-		msg.C_UpdateTeam:                  ctrl.updateTeam,
-		msg.C_UpdateReaction:              ctrl.updateReaction,
-		msg.C_UpdateMessagePinned:         ctrl.updateMessagePinned,
+		msg.C_UpdateTeamMemberStatus:      ctrl.updateTeamMemberStatus,
+		msg.C_UpdateUserBlocked:           ctrl.updateUserBlocked,
+		msg.C_UpdateUsername:              ctrl.updateUsername,
+		msg.C_UpdateUserPhoto:             ctrl.updateUserPhoto,
 	}
 	ctrl.messageAppliers = map[int64]domain.MessageApplier{
 		msg.C_AuthAuthorization:    ctrl.authAuthorization,
+		msg.C_AuthSentCode:         ctrl.authSentCode,
+		msg.C_BotResults:           ctrl.botResults,
 		msg.C_ContactsImported:     ctrl.contactsImported,
 		msg.C_ContactsMany:         ctrl.contactsMany,
-		msg.C_MessagesDialogs:      ctrl.messagesDialogs,
-		msg.C_AuthSentCode:         ctrl.authSentCode,
-		msg.C_UsersMany:            ctrl.usersMany,
-		msg.C_MessagesMany:         ctrl.messagesMany,
-		msg.C_GroupFull:            ctrl.groupFull,
-		msg.C_LabelsMany:           ctrl.labelsMany,
-		msg.C_LabelItems:           ctrl.labelItems,
-		msg.C_SystemConfig:         ctrl.systemConfig,
 		msg.C_ContactsTopPeers:     ctrl.contactsTopPeers,
-		msg.C_WallPapersMany:       ctrl.wallpapersMany,
-		msg.C_SavedGifs:            ctrl.savedGifs,
-		msg.C_BotResults:           ctrl.botResults,
-		msg.C_TeamsMany:            ctrl.teamsMany,
-		msg.C_TeamMembers:          ctrl.teamMembers,
+		msg.C_GroupFull:            ctrl.groupFull,
+		msg.C_LabelItems:           ctrl.labelItems,
+		msg.C_LabelsMany:           ctrl.labelsMany,
+		msg.C_MessagesDialogs:      ctrl.messagesDialogs,
+		msg.C_MessagesMany:         ctrl.messagesMany,
 		msg.C_MessagesReactionList: ctrl.reactionList,
+		msg.C_SavedGifs:            ctrl.savedGifs,
+		msg.C_SystemConfig:         ctrl.systemConfig,
+		msg.C_TeamMembers:          ctrl.teamMembers,
+		msg.C_TeamsMany:            ctrl.teamsMany,
+		msg.C_UsersMany:            ctrl.usersMany,
+		msg.C_WallPapersMany:       ctrl.wallpapersMany,
 	}
 	return ctrl
 }
@@ -146,9 +147,8 @@ func (ctrl *Controller) watchDog() {
 				break
 			}
 
-			now := time.Now()
 			// Check if we were not syncing in the last 3 minutes
-			if now.Sub(ctrl.lastUpdateReceived) > syncTime {
+			if time.Duration(tools.NanoTime()-ctrl.lastUpdateReceived) > syncTime {
 				go ctrl.Sync()
 			}
 
@@ -185,7 +185,7 @@ func (ctrl *Controller) Sync() {
 			}
 		}
 
-		if ctrl.updateID == serverUpdateID {
+		if ctrl.GetUpdateID() == serverUpdateID {
 			updateSyncStatus(ctrl, domain.Synced)
 			return
 		}
@@ -194,7 +194,8 @@ func (ctrl *Controller) Sync() {
 		updateSyncStatus(ctrl, domain.Syncing)
 		defer updateSyncStatus(ctrl, domain.Synced)
 
-		if ctrl.updateID == 0 || (serverUpdateID-ctrl.updateID) > domain.SnapshotSyncThreshold {
+		ctrlUpdateID := ctrl.GetUpdateID()
+		if ctrlUpdateID == 0 || (serverUpdateID-ctrlUpdateID) > domain.SnapshotSyncThreshold {
 			logs.Info("SyncCtrl goes for a Snapshot sync")
 
 			// Get Contacts from the server
@@ -210,13 +211,11 @@ func (ctrl *Controller) Sync() {
 			go ctrl.GetAllTopPeers(waitGroup, 0, 0, msg.TopPeerCategory_BotsInline, 0, 100)
 			waitGroup.Wait()
 
-			ctrl.updateID = serverUpdateID
-			err = repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
-			if err != nil {
-				logs.Error("SyncCtrl couldn't save the current UpdateID", zap.Error(err))
+			if err := ctrl.SetUpdateID(serverUpdateID); err != nil {
+				logs.Error("SyncCtrl couldn't save the current GetUpdateID", zap.Error(err))
 				return
 			}
-		} else if serverUpdateID >= ctrl.updateID+1 {
+		} else if serverUpdateID >= ctrl.GetUpdateID()+1 {
 			logs.Info("SyncCtrl goes for a Sequential sync")
 			getUpdateDifference(ctrl, serverUpdateID)
 		}
@@ -224,18 +223,17 @@ func (ctrl *Controller) Sync() {
 	})
 }
 func forceUpdateUI(ctrl *Controller, dialogs, contacts, gifs bool) {
-	update := &msg.ClientUpdateSynced{}
-	update.Dialogs = dialogs
-	update.Contacts = contacts
-	update.Gifs = gifs
-	bytes, _ := update.Marshal()
-
-	updateEnvelope := &msg.UpdateEnvelope{}
-	updateEnvelope.Constructor = msg.C_ClientUpdateSynced
-	updateEnvelope.Update = bytes
-	updateEnvelope.UpdateID = 0
-	updateEnvelope.Timestamp = time.Now().Unix()
-
+	update := &msg.ClientUpdateSynced{
+		Dialogs:  dialogs,
+		Contacts: contacts,
+		Gifs:     gifs,
+	}
+	updateEnvelope := &msg.UpdateEnvelope{
+		Constructor: msg.C_ClientUpdateSynced,
+		UpdateID:    0,
+		Timestamp:   tools.TimeUnix(),
+	}
+	updateEnvelope.Update, _ = update.Marshal()
 	// call external handler
 	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateEnvelope, updateEnvelope)
 }
@@ -243,21 +241,19 @@ func updateSyncStatus(ctrl *Controller, newStatus domain.SyncStatus) {
 	if ctrl.syncStatus == newStatus {
 		return
 	}
-	logs.Info("SyncCtrl status changed",
-		zap.String("Status", newStatus.ToString()),
-	)
+	logs.Info("SyncCtrl status changed", zap.String("Status", newStatus.ToString()))
 	ctrl.syncStatus = newStatus
 	ctrl.syncStatusChangeCallback(newStatus)
 }
 func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
-	logs.Info("SyncCtrl calls getUpdateDifference",
+	logs.Info("SyncCtrl calls UpdateGetDifference",
 		zap.Int64("ServerUpdateID", serverUpdateID),
-		zap.Int64("ClientUpdateID", ctrl.updateID),
+		zap.Int64("ClientUpdateID", ctrl.GetUpdateID()),
 	)
 
 	waitGroup := sync.WaitGroup{}
-	for serverUpdateID > ctrl.updateID {
-		limit := serverUpdateID - ctrl.updateID
+	for serverUpdateID > ctrl.GetUpdateID() {
+		limit := serverUpdateID - ctrl.GetUpdateID()
 		if limit > 250 {
 			limit = 250
 		}
@@ -271,11 +267,11 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 		}
 		req := &msg.UpdateGetDifference{
 			Limit: int32(limit),
-			From:  ctrl.updateID + 1, // +1 cuz we already have ctrl.updateID itself,
+			From:  ctrl.GetUpdateID() + 1, // +1 cuz we already have ctrl.updateID itself,
 		}
 		reqBytes, _ := req.Marshal()
 		waitGroup.Add(1)
-		ctrl.networkCtrl.RealtimeCommand(
+		ctrl.networkCtrl.RealtimeCommandWithTimeout(
 			&rony.MessageEnvelope{
 				Constructor: msg.C_UpdateGetDifference,
 				RequestID:   uint64(domain.SequentialUniqueID()),
@@ -293,11 +289,13 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 					err := x.Unmarshal(m.Message)
 					if err != nil {
 						logs.Error("SyncCtrl couldn't unmarshal response (UpdateDifference)", zap.Error(err))
+						time.Sleep(time.Second)
 						return
 					}
 					sort.Slice(x.Updates, func(i, j int) bool {
 						return x.Updates[i].UpdateID < x.Updates[j].UpdateID
 					})
+
 					onGetDifferenceSucceed(ctrl, x)
 					if x.CurrentUpdateID != 0 {
 						serverUpdateID = x.CurrentUpdateID
@@ -305,20 +303,9 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 
 					// If there is no more update then set ClientUpdateID to the ServerUpdateID
 					if !x.More {
-						ctrl.updateID = x.CurrentUpdateID
+						_ = ctrl.SetUpdateID(x.CurrentUpdateID)
 					}
 
-					logs.Info("SyncCtrl received UpdateDifference",
-						zap.Bool("More", x.More),
-						zap.Int64("MinUpdateID", x.MinUpdateID),
-						zap.Int64("MaxUpdateID", x.MaxUpdateID),
-					)
-
-					// save UpdateID to DB
-					err = repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
-					if err != nil {
-						logs.Error("SyncCtrl couldn't save current UpdateID", zap.Error(err))
-					}
 				case rony.C_Error:
 					logs.Debug("SyncCtrl got error response",
 						zap.String("Error", domain.ParseServerError(m.Message).Error()),
@@ -329,50 +316,142 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 			},
 			true,
 			false,
+			domain.WebsocketRequestTimeoutLong,
 		)
 		waitGroup.Wait()
 	}
 }
+func getUpdateTargetID(u *msg.UpdateEnvelope) string {
+	switch u.Constructor {
+	case msg.C_UpdateNewMessage:
+		x := &msg.UpdateNewMessage{}
+		_ = x.Unmarshal(u.Update)
+		return fmt.Sprintf(fmt.Sprintf("NewMessage_%d_%d_%d", x.Message.TeamID, x.Message.PeerID, x.Message.PeerType))
+	case msg.C_UpdateDraftMessage:
+		x := &msg.UpdateDraftMessage{}
+		_ = x.Unmarshal(u.Update)
+		return fmt.Sprintf(fmt.Sprintf("DraftMessage_%d_%d_%d", x.Message.TeamID, x.Message.PeerID, x.Message.PeerType))
+	case msg.C_UpdateDraftMessageCleared:
+		x := &msg.UpdateDraftMessageCleared{}
+		_ = x.Unmarshal(u.Update)
+		return fmt.Sprintf(fmt.Sprintf("DraftMessage_%d_%d_%d", x.TeamID, x.Peer.ID, x.Peer.Type))
+	case msg.C_UpdateReadHistoryInbox:
+		x := &msg.UpdateReadHistoryInbox{}
+		_ = x.Unmarshal(u.Update)
+		return fmt.Sprintf(fmt.Sprintf("ReadHistoryIn_%d_%d_%d", x.TeamID, x.Peer.ID, x.Peer.Type))
+	case msg.C_UpdateReadHistoryOutbox:
+		x := &msg.UpdateReadHistoryOutbox{}
+		_ = x.Unmarshal(u.Update)
+		return fmt.Sprintf(fmt.Sprintf("ReadHistoryOut_%d_%d_%d", x.TeamID, x.Peer.ID, x.Peer.Type))
+	default:
+		return fmt.Sprintf("%d", u.Constructor)
+	}
+}
 func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
-	updContainer := new(msg.UpdateContainer)
-	updContainer.Updates = make([]*msg.UpdateEnvelope, 0)
-	updContainer.Users = x.Users
-	updContainer.Groups = x.Groups
-	updContainer.MaxUpdateID = x.MaxUpdateID
-	updContainer.MinUpdateID = x.MinUpdateID
+	mtx := sync.Mutex{}
+	updContainer := &msg.UpdateContainer{
+		Updates:     make([]*msg.UpdateEnvelope, 0),
+		Users:       x.Users,
+		Groups:      x.Groups,
+		MaxUpdateID: x.MaxUpdateID,
+		MinUpdateID: x.MinUpdateID,
+	}
+	var (
+		startTime = tools.NanoTime()
+		timeLapse [2]int64
+	)
 
-	logs.Info("SyncController:: onGetDifferenceSucceed",
+	logs.Info("SyncCtrl received UpdateDifference",
 		zap.Int64("MaxUpdateID", x.MaxUpdateID),
 		zap.Int64("MinUpdateID", x.MinUpdateID),
 		zap.Int("Length", len(x.Updates)),
+		zap.Bool("More", x.More),
 	)
+	defer func() {
+		endTime := tools.NanoTime()
+		logs.Info("SyncCtrl applied UpdateDifference",
+			zap.Int("Length", len(x.Updates)),
+			zap.Duration("Messages", time.Duration(timeLapse[1]-timeLapse[0])),
+			zap.Duration("Others", time.Duration(endTime-timeLapse[1])),
+			zap.Duration("D", time.Duration(endTime-startTime)),
+		)
+	}()
 
 	if len(x.Updates) == 0 {
 		return
 	}
 
 	// save Groups & Users
-	repo.Groups.Save(x.Groups...)
-	repo.Users.Save(x.Users...)
+	waitGroup := pools.AcquireWaitGroup()
+	defer pools.ReleaseWaitGroup(waitGroup)
 
-	for _, update := range x.Updates {
-		if applier, ok := ctrl.updateAppliers[update.Constructor]; ok {
-			externalHandlerUpdates, err := applier(update)
-			if err != nil {
-				logs.Warn("Error On UpdateDiff",
-					zap.Error(err),
-					zap.Int64("UpdateID", update.UpdateID),
-					zap.String("C", registry.ConstructorName(update.Constructor)),
-				)
-				return
+	waitGroup.Add(2)
+	go func() {
+		_ = repo.Groups.Save(x.Groups...)
+		waitGroup.Done()
+	}()
+	go func() {
+		_ = repo.Users.Save(x.Users...)
+		waitGroup.Done()
+	}()
+
+	applierFlusher := tools.NewFlusherPool(16, 10, func(targetID string, entries []tools.FlushEntry) {
+		for _, e := range entries {
+			ue := e.Value().(*msg.UpdateEnvelope)
+			if applier, ok := ctrl.updateAppliers[ue.Constructor]; ok {
+				externalHandlerUpdates, err := applier(ue)
+				if err != nil {
+					logs.Warn("SyncCtrl got error on UpdateDifference",
+						zap.Error(err),
+						zap.Int64("UpdateID", ue.UpdateID),
+						zap.String("C", registry.ConstructorName(ue.Constructor)),
+					)
+					break
+				}
+				mtx.Lock()
+				updContainer.Updates = append(updContainer.Updates, externalHandlerUpdates...)
+				mtx.Unlock()
+			} else {
+				mtx.Lock()
+				updContainer.Updates = append(updContainer.Updates, ue)
+				mtx.Unlock()
 			}
-			updContainer.Updates = append(updContainer.Updates, externalHandlerUpdates...)
-		} else {
-			updContainer.Updates = append(updContainer.Updates, update)
 		}
-		if update.UpdateID != 0 {
-			ctrl.updateID = update.UpdateID
+	})
+	waitGroup.Wait()
+
+	// Separate updates into categories based on their constructor
+	var queues [2][]*msg.UpdateEnvelope
+	for _, update := range x.Updates {
+		switch update.Constructor {
+		case msg.C_UpdateNewMessage:
+			queues[0] = append(queues[0], update)
+		default:
+			queues[1] = append(queues[1], update)
 		}
+	}
+
+	// apply updates based on their priority queue
+	for idx, updates := range queues {
+		timeLapse[idx] = tools.NanoTime()
+		for _, ue := range updates {
+			logs.Info("UpdateDifference applies",
+				zap.Int64("UpdateID", ue.UpdateID),
+				zap.String("C", registry.ConstructorName(ue.Constructor)),
+			)
+			waitGroup.Add(1)
+			applierFlusher.Enter(
+				getUpdateTargetID(ue),
+				tools.NewEntryWithCallback(ue, func() {
+					waitGroup.Done()
+				}),
+			)
+		}
+		waitGroup.Wait()
+	}
+
+	if x.MaxUpdateID != 0 {
+		_ = ctrl.SetUpdateID(x.MaxUpdateID)
 	}
 	updContainer.Length = int32(len(updContainer.Updates))
 
@@ -419,15 +498,26 @@ func (ctrl *Controller) GetUserID() int64 {
 	return ctrl.userID
 }
 
+// GetUpdateID returns current updateID
+func (ctrl *Controller) GetUpdateID() int64 {
+	return ctrl.updateID
+}
+
+// SetUpdateID set the controller last update id
+func (ctrl *Controller) SetUpdateID(id int64) error {
+	ctrl.updateID = id
+	return repo.System.SaveInt(domain.SkUpdateID, uint64(id))
+}
+
 // Start controller
 func (ctrl *Controller) Start() {
 	logs.Info("SyncCtrl started")
 
-	// Load the latest UpdateID stored in DB
+	// Load the latest GetUpdateID stored in DB
 	if v, err := repo.System.LoadInt(domain.SkUpdateID); err != nil {
 		err := repo.System.SaveInt(domain.SkUpdateID, 0)
 		if err != nil {
-			logs.Error("SyncCtrl couldn't save current UpdateID", zap.Error(err))
+			logs.Error("SyncCtrl couldn't save current GetUpdateID", zap.Error(err))
 		}
 		ctrl.updateID = 0
 	} else {
@@ -447,8 +537,8 @@ func (ctrl *Controller) Stop() {
 	logs.Info("SyncCtrl Stopped")
 }
 
-// MessageHandler call appliers-> repository and sync data
-func (ctrl *Controller) MessageHandler(messages []*rony.MessageEnvelope) {
+// MessageApplier call appliers-> repository and sync data
+func (ctrl *Controller) MessageApplier(messages []*rony.MessageEnvelope) {
 	for _, m := range messages {
 		switch m.Constructor {
 		case msg.C_MessagesSent:
@@ -461,27 +551,38 @@ func (ctrl *Controller) MessageHandler(messages []*rony.MessageEnvelope) {
 	}
 }
 
-// UpdateHandler receives update to cache them in client DB
-func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer, outOfSync bool) {
-	logs.Debug("SyncCtrl calls UpdateHandler",
-		zap.Int64("ctrl.UpdateID", ctrl.updateID),
+// UpdateApplier receives update to cache them in client DB
+func (ctrl *Controller) UpdateApplier(updateContainer *msg.UpdateContainer, outOfSync bool) {
+	logs.Debug("SyncCtrl calls UpdateApplier",
+		zap.Int64("ctrl.GetUpdateID", ctrl.GetUpdateID()),
 		zap.Int64("MaxID", updateContainer.MaxUpdateID),
 		zap.Int64("MinID", updateContainer.MinUpdateID),
 		zap.Int("Count", len(updateContainer.Updates)),
 	)
 
-	ctrl.lastUpdateReceived = time.Now()
+	ctrl.lastUpdateReceived = tools.NanoTime()
 
-	udpContainer := new(msg.UpdateContainer)
-	udpContainer.Updates = make([]*msg.UpdateEnvelope, 0)
-	udpContainer.MaxUpdateID = updateContainer.MaxUpdateID
-	udpContainer.MinUpdateID = updateContainer.MinUpdateID
-	udpContainer.Users = updateContainer.Users
-	udpContainer.Groups = updateContainer.Groups
+	udpContainer := &msg.UpdateContainer{
+		Updates:     make([]*msg.UpdateEnvelope, 0),
+		MaxUpdateID: updateContainer.MaxUpdateID,
+		MinUpdateID: updateContainer.MinUpdateID,
+		Users:       updateContainer.Users,
+		Groups:      updateContainer.Groups,
+	}
 
 	// save Groups & Users
-	repo.Groups.Save(updateContainer.Groups...)
-	repo.Users.Save(updateContainer.Users...)
+	waitGroup := pools.AcquireWaitGroup()
+	waitGroup.Add(2)
+	go func() {
+		_ = repo.Groups.Save(updateContainer.Groups...)
+		waitGroup.Done()
+	}()
+	go func() {
+		_ = repo.Users.Save(updateContainer.Users...)
+		waitGroup.Done()
+	}()
+	waitGroup.Wait()
+	pools.ReleaseWaitGroup(waitGroup)
 
 	for _, update := range updateContainer.Updates {
 		if outOfSync && update.UpdateID != 0 {
@@ -504,13 +605,8 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer, outO
 			udpContainer.Updates = append(udpContainer.Updates, update)
 		}
 		if update.UpdateID != 0 {
-			ctrl.updateID = update.UpdateID
+			_ = ctrl.SetUpdateID(update.UpdateID)
 		}
-	}
-
-	err := repo.System.SaveInt(domain.SkUpdateID, uint64(ctrl.updateID))
-	if err != nil {
-		logs.Error("SyncCtrl got error on save UpdateID", zap.Error(err))
 	}
 
 	udpContainer.Length = int32(len(udpContainer.Updates))
@@ -518,18 +614,13 @@ func (ctrl *Controller) UpdateHandler(updateContainer *msg.UpdateContainer, outO
 	return
 }
 
-// UpdateID returns current updateID
-func (ctrl *Controller) UpdateID() int64 {
-	return ctrl.updateID
-}
-
-// ClearUpdateID reset updateID
+// ResetIDs reset updateID
 func (ctrl *Controller) ResetIDs() {
-	ctrl.updateID = 0
+	_ = ctrl.SetUpdateID(0)
 	ctrl.SetUserID(0)
 }
 
-// ContactsImport
+// ContactsImport executes ContactsImport rpc commands
 func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHandler, out *rony.MessageEnvelope) {
 	var (
 		wg               = sync.WaitGroup{}
@@ -626,7 +717,6 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 	return
 }
 
-// GetSyncStatus
 func (ctrl *Controller) GetSyncStatus() domain.SyncStatus {
 	return ctrl.syncStatus
 }

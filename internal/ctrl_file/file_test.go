@@ -36,9 +36,9 @@ var (
 	_Network *networkCtrl.Controller
 	_File    *fileCtrl.Controller
 
-	waitMapLock          = sync.Mutex{}
-	waitMap              = make(map[string]struct{})
-	speedBytesPerSec int = 1024 * 1024
+	waitMapLock      = sync.Mutex{}
+	waitMap          = make(map[string]struct{})
+	speedBytesPerSec = 1024 * 1024
 	errRatePercent   int
 )
 
