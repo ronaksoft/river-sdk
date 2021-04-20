@@ -557,17 +557,28 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 	logs.Debug("SyncCtrl applies UpdateGroupPhoto",
 		zap.Int64("GroupID", x.GroupID),
 		zap.Int64("UpdateID", x.UpdateID),
+		zap.Int64("PhotoID", x.PhotoID),
+		zap.Int64("PhotoID", x.Photo.PhotoID),
 	)
 
 	if x.Photo != nil {
-		repo.Groups.UpdatePhoto(x.GroupID, x.Photo)
+		_ = repo.Groups.UpdatePhoto(x.GroupID, x.Photo)
 	}
 
 	if x.PhotoID != 0 {
 		if x.Photo != nil && x.Photo.PhotoSmall.FileID != 0 {
-			repo.Groups.SavePhotoGallery(x.GroupID, x.Photo)
+			_ = repo.Groups.SavePhotoGallery(x.GroupID, x.Photo)
 		} else {
-			repo.Groups.RemovePhotoGallery(x.GroupID, x.PhotoID)
+			_ = repo.Groups.RemovePhotoGallery(x.GroupID, x.PhotoID)
+		}
+	}
+
+	groupFull, _ := repo.Groups.GetFull(x.GroupID)
+	if groupFull != nil {
+		group, _ := repo.Groups.Get(x.GroupID)
+		if group != nil {
+			groupFull.Group = group
+			_ = repo.Groups.SaveFull(groupFull)
 		}
 	}
 
