@@ -536,7 +536,13 @@ func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 	)
 
 	if x.Photo != nil {
-		_ = repo.Users.UpdatePhoto(x.UserID, x.Photo)
+		err = repo.Users.UpdatePhoto(x.UserID, x.Photo)
+		if err != nil {
+			logs.Warn("SyncCtrl got error on updating user's profile photo",
+				zap.Int64("UserID", x.UserID),
+				zap.Any("Photo", x.Photo),
+			)
+		}
 	}
 
 	for _, photoID := range x.DeletedPhotoIDs {

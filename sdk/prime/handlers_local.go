@@ -1126,6 +1126,8 @@ func (r *River) accountRemovePhoto(in, out *rony.MessageEnvelope, timeoutCB doma
 		_ = repo.Users.UpdatePhoto(r.ConnInfo.UserID, &msg.UserPhoto{
 			PhotoBig:   &msg.FileLocation{},
 			PhotoSmall: &msg.FileLocation{},
+			PhotoBigWeb: &msg.WebLocation{},
+			PhotoSmallWeb: &msg.WebLocation{},
 			PhotoID:    0,
 		})
 	}
