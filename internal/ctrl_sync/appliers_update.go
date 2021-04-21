@@ -558,7 +558,6 @@ func (ctrl *Controller) updateGroupPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 		zap.Int64("GroupID", x.GroupID),
 		zap.Int64("UpdateID", x.UpdateID),
 		zap.Int64("PhotoID", x.PhotoID),
-		zap.Int64("PhotoID", x.Photo.PhotoID),
 	)
 
 	if x.Photo != nil {
@@ -879,7 +878,7 @@ func (ctrl *Controller) updateTeam(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope
 	team, err := repo.Teams.Get(x.TeamID)
 
 	if err != nil {
-		return nil, err
+		return nil, nil
 	}
 
 	team.Name = x.Name
