@@ -533,6 +533,7 @@ func (ctrl *Controller) updateUserPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 
 	logs.Debug("SyncCtrl applies UpdateUserPhoto",
 		zap.Int64("UpdateID", x.UpdateID),
+		zap.Any("PhotoID", x.PhotoID),
 	)
 
 	if x.Photo != nil {

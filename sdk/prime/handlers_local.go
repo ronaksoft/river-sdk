@@ -1124,11 +1124,11 @@ func (r *River) accountRemovePhoto(in, out *rony.MessageEnvelope, timeoutCB doma
 
 	if user.Photo != nil && user.Photo.PhotoID == x.PhotoID {
 		_ = repo.Users.UpdatePhoto(r.ConnInfo.UserID, &msg.UserPhoto{
-			PhotoBig:   &msg.FileLocation{},
-			PhotoSmall: &msg.FileLocation{},
-			PhotoBigWeb: &msg.WebLocation{},
+			PhotoBig:      &msg.FileLocation{},
+			PhotoSmall:    &msg.FileLocation{},
+			PhotoBigWeb:   &msg.WebLocation{},
 			PhotoSmallWeb: &msg.WebLocation{},
-			PhotoID:    0,
+			PhotoID:       0,
 		})
 	}
 
