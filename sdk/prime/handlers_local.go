@@ -9,7 +9,6 @@ import (
 	"github.com/ronaksoft/rony/registry"
 	"sort"
 	"strings"
-	"sync"
 	"time"
 
 	"git.ronaksoft.com/river/msg/go/msg"
@@ -70,26 +69,6 @@ func (r *River) messagesGetDialogs(in, out *rony.MessageEnvelope, timeoutCB doma
 
 	// Load Messages
 	res.Messages = repo.Messages.GetMany(mMessages.ToArray())
-	if len(res.Messages) != len(mMessages) {
-		logs.Warn("River found unmatched dialog messages", zap.Int("Got", len(res.Messages)), zap.Int("Need", len(mMessages)))
-		waitGroup := &sync.WaitGroup{}
-		waitGroup.Add(1)
-		r.syncCtrl.GetAllDialogs(waitGroup, domain.GetTeamID(in), domain.GetTeamAccess(in), 0, 100)
-		for msgID := range mMessages {
-			found := false
-			for _, m := range res.Messages {
-				if m.ID == msgID {
-					found = true
-					break
-				}
-			}
-			if !found {
-				logs.Warn("missed message", zap.Int64("MsgID", msgID))
-			}
-		}
-		waitGroup.Wait()
-		logs.Error("River re-synced dialogs")
-	}
 
 	// Load Pending messages
 	res.Messages = append(res.Messages, pendingMessages...)
