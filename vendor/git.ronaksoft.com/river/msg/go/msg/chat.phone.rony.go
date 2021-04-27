@@ -29,6 +29,7 @@ func (p *poolPhoneInitCall) Put(x *PhoneInitCall) {
 	}
 	PoolInputPeer.Put(x.Peer)
 	x.Peer = nil
+	x.CallID = 0
 	p.pool.Put(x)
 }
 
@@ -43,6 +44,7 @@ func (x *PhoneInitCall) DeepCopy(z *PhoneInitCall) {
 	} else {
 		z.Peer = nil
 	}
+	z.CallID = x.CallID
 }
 
 func (x *PhoneInitCall) Marshal() ([]byte, error) {
@@ -1677,6 +1679,46 @@ func (x *PhoneActionPicked) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_PhoneActionPicked, x)
 }
 
+const C_PhoneActionRestarted int64 = 1979061868
+
+type poolPhoneActionRestarted struct {
+	pool sync.Pool
+}
+
+func (p *poolPhoneActionRestarted) Get() *PhoneActionRestarted {
+	x, ok := p.pool.Get().(*PhoneActionRestarted)
+	if !ok {
+		x = &PhoneActionRestarted{}
+	}
+	return x
+}
+
+func (p *poolPhoneActionRestarted) Put(x *PhoneActionRestarted) {
+	if x == nil {
+		return
+	}
+	x.Sender = false
+	p.pool.Put(x)
+}
+
+var PoolPhoneActionRestarted = poolPhoneActionRestarted{}
+
+func (x *PhoneActionRestarted) DeepCopy(z *PhoneActionRestarted) {
+	z.Sender = x.Sender
+}
+
+func (x *PhoneActionRestarted) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *PhoneActionRestarted) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *PhoneActionRestarted) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_PhoneActionRestarted, x)
+}
+
 const C_PhoneActionMediaSettingsUpdated int64 = 2310335221
 
 type poolPhoneActionMediaSettingsUpdated struct {
@@ -1879,6 +1921,7 @@ func init() {
 	registry.RegisterConstructor(1804765545, "PhoneActionAdminUpdated")
 	registry.RegisterConstructor(813039088, "PhoneActionScreenShare")
 	registry.RegisterConstructor(2478763318, "PhoneActionPicked")
+	registry.RegisterConstructor(1979061868, "PhoneActionRestarted")
 	registry.RegisterConstructor(2310335221, "PhoneActionMediaSettingsUpdated")
 	registry.RegisterConstructor(2047679815, "PhoneActionReactionSet")
 	registry.RegisterConstructor(931453435, "PhoneActionSDPOffer")

@@ -263,7 +263,7 @@ func (r *River) messagesGetHistory(in, out *rony.MessageEnvelope, timeoutCB doma
 	if !r.networkCtrl.Connected() {
 		messages, users, groups := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 		if len(messages) > 0 {
-			pendingMessages := repo.PendingMessages.GetByPeer(req.Peer.ID, int32(req.Peer.Type))
+			pendingMessages := repo.PendingMessages.GetByPeer(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))
 			if len(pendingMessages) > 0 {
 				messages = append(pendingMessages, messages...)
 			}
@@ -339,7 +339,7 @@ func genGetHistoryCB(
 	cb domain.MessageHandler, teamID, peerID int64, peerType int32, minID, maxID int64, topMessageID int64,
 ) domain.MessageHandler {
 	return func(m *rony.MessageEnvelope) {
-		pendingMessages := repo.PendingMessages.GetByPeer(peerID, peerType)
+		pendingMessages := repo.PendingMessages.GetByPeer(teamID, peerID, peerType)
 		switch m.Constructor {
 		case msg.C_MessagesMany:
 			x := &msg.MessagesMany{}

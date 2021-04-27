@@ -416,6 +416,302 @@ func (x *AdminGetVersions) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_AdminGetVersions, x)
 }
 
+const C_AdminSetStorageNode int64 = 4159566764
+
+type poolAdminSetStorageNode struct {
+	pool sync.Pool
+}
+
+func (p *poolAdminSetStorageNode) Get() *AdminSetStorageNode {
+	x, ok := p.pool.Get().(*AdminSetStorageNode)
+	if !ok {
+		x = &AdminSetStorageNode{}
+	}
+	return x
+}
+
+func (p *poolAdminSetStorageNode) Put(x *AdminSetStorageNode) {
+	if x == nil {
+		return
+	}
+	x.AccessToken = ""
+	x.ClusterID = 0
+	x.DSN = ""
+	x.Type = ""
+	x.Location = ""
+	x.Archive = false
+	p.pool.Put(x)
+}
+
+var PoolAdminSetStorageNode = poolAdminSetStorageNode{}
+
+func (x *AdminSetStorageNode) DeepCopy(z *AdminSetStorageNode) {
+	z.AccessToken = x.AccessToken
+	z.ClusterID = x.ClusterID
+	z.DSN = x.DSN
+	z.Type = x.Type
+	z.Location = x.Location
+	z.Archive = x.Archive
+}
+
+func (x *AdminSetStorageNode) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *AdminSetStorageNode) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *AdminSetStorageNode) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_AdminSetStorageNode, x)
+}
+
+const C_AdminGetStorageNode int64 = 2297643227
+
+type poolAdminGetStorageNode struct {
+	pool sync.Pool
+}
+
+func (p *poolAdminGetStorageNode) Get() *AdminGetStorageNode {
+	x, ok := p.pool.Get().(*AdminGetStorageNode)
+	if !ok {
+		x = &AdminGetStorageNode{}
+	}
+	return x
+}
+
+func (p *poolAdminGetStorageNode) Put(x *AdminGetStorageNode) {
+	if x == nil {
+		return
+	}
+	x.AccessToken = ""
+	x.ClusterID = 0
+	p.pool.Put(x)
+}
+
+var PoolAdminGetStorageNode = poolAdminGetStorageNode{}
+
+func (x *AdminGetStorageNode) DeepCopy(z *AdminGetStorageNode) {
+	z.AccessToken = x.AccessToken
+	z.ClusterID = x.ClusterID
+}
+
+func (x *AdminGetStorageNode) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *AdminGetStorageNode) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *AdminGetStorageNode) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_AdminGetStorageNode, x)
+}
+
+const C_AdminGetStorageNodes int64 = 176633623
+
+type poolAdminGetStorageNodes struct {
+	pool sync.Pool
+}
+
+func (p *poolAdminGetStorageNodes) Get() *AdminGetStorageNodes {
+	x, ok := p.pool.Get().(*AdminGetStorageNodes)
+	if !ok {
+		x = &AdminGetStorageNodes{}
+	}
+	return x
+}
+
+func (p *poolAdminGetStorageNodes) Put(x *AdminGetStorageNodes) {
+	if x == nil {
+		return
+	}
+	x.AccessToken = ""
+	p.pool.Put(x)
+}
+
+var PoolAdminGetStorageNodes = poolAdminGetStorageNodes{}
+
+func (x *AdminGetStorageNodes) DeepCopy(z *AdminGetStorageNodes) {
+	z.AccessToken = x.AccessToken
+}
+
+func (x *AdminGetStorageNodes) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *AdminGetStorageNodes) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *AdminGetStorageNodes) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_AdminGetStorageNodes, x)
+}
+
+const C_AdminAddBannedSubnet int64 = 1018562272
+
+type poolAdminAddBannedSubnet struct {
+	pool sync.Pool
+}
+
+func (p *poolAdminAddBannedSubnet) Get() *AdminAddBannedSubnet {
+	x, ok := p.pool.Get().(*AdminAddBannedSubnet)
+	if !ok {
+		x = &AdminAddBannedSubnet{}
+	}
+	return x
+}
+
+func (p *poolAdminAddBannedSubnet) Put(x *AdminAddBannedSubnet) {
+	if x == nil {
+		return
+	}
+	x.AccessToken = ""
+	x.CIDR = x.CIDR[:0]
+	p.pool.Put(x)
+}
+
+var PoolAdminAddBannedSubnet = poolAdminAddBannedSubnet{}
+
+func (x *AdminAddBannedSubnet) DeepCopy(z *AdminAddBannedSubnet) {
+	z.AccessToken = x.AccessToken
+	z.CIDR = append(z.CIDR[:0], x.CIDR...)
+}
+
+func (x *AdminAddBannedSubnet) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *AdminAddBannedSubnet) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *AdminAddBannedSubnet) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_AdminAddBannedSubnet, x)
+}
+
+const C_AdminDeleteBannedSubnet int64 = 4271915141
+
+type poolAdminDeleteBannedSubnet struct {
+	pool sync.Pool
+}
+
+func (p *poolAdminDeleteBannedSubnet) Get() *AdminDeleteBannedSubnet {
+	x, ok := p.pool.Get().(*AdminDeleteBannedSubnet)
+	if !ok {
+		x = &AdminDeleteBannedSubnet{}
+	}
+	return x
+}
+
+func (p *poolAdminDeleteBannedSubnet) Put(x *AdminDeleteBannedSubnet) {
+	if x == nil {
+		return
+	}
+	x.AccessToken = ""
+	x.CIDR = x.CIDR[:0]
+	p.pool.Put(x)
+}
+
+var PoolAdminDeleteBannedSubnet = poolAdminDeleteBannedSubnet{}
+
+func (x *AdminDeleteBannedSubnet) DeepCopy(z *AdminDeleteBannedSubnet) {
+	z.AccessToken = x.AccessToken
+	z.CIDR = append(z.CIDR[:0], x.CIDR...)
+}
+
+func (x *AdminDeleteBannedSubnet) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *AdminDeleteBannedSubnet) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *AdminDeleteBannedSubnet) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_AdminDeleteBannedSubnet, x)
+}
+
+const C_AdminGetBannedSubnets int64 = 937432341
+
+type poolAdminGetBannedSubnets struct {
+	pool sync.Pool
+}
+
+func (p *poolAdminGetBannedSubnets) Get() *AdminGetBannedSubnets {
+	x, ok := p.pool.Get().(*AdminGetBannedSubnets)
+	if !ok {
+		x = &AdminGetBannedSubnets{}
+	}
+	return x
+}
+
+func (p *poolAdminGetBannedSubnets) Put(x *AdminGetBannedSubnets) {
+	if x == nil {
+		return
+	}
+	x.AccessToken = ""
+	p.pool.Put(x)
+}
+
+var PoolAdminGetBannedSubnets = poolAdminGetBannedSubnets{}
+
+func (x *AdminGetBannedSubnets) DeepCopy(z *AdminGetBannedSubnets) {
+	z.AccessToken = x.AccessToken
+}
+
+func (x *AdminGetBannedSubnets) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *AdminGetBannedSubnets) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *AdminGetBannedSubnets) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_AdminGetBannedSubnets, x)
+}
+
+const C_BannedSubnets int64 = 1393688488
+
+type poolBannedSubnets struct {
+	pool sync.Pool
+}
+
+func (p *poolBannedSubnets) Get() *BannedSubnets {
+	x, ok := p.pool.Get().(*BannedSubnets)
+	if !ok {
+		x = &BannedSubnets{}
+	}
+	return x
+}
+
+func (p *poolBannedSubnets) Put(x *BannedSubnets) {
+	if x == nil {
+		return
+	}
+	x.Subnets = x.Subnets[:0]
+	p.pool.Put(x)
+}
+
+var PoolBannedSubnets = poolBannedSubnets{}
+
+func (x *BannedSubnets) DeepCopy(z *BannedSubnets) {
+	z.Subnets = append(z.Subnets[:0], x.Subnets...)
+}
+
+func (x *BannedSubnets) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *BannedSubnets) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *BannedSubnets) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_BannedSubnets, x)
+}
+
 const C_AdminSetToken int64 = 2892519162
 
 type poolAdminSetToken struct {
@@ -634,6 +930,145 @@ func (x *AdminTeamCreate) Unmarshal(b []byte) error {
 
 func (x *AdminTeamCreate) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_AdminTeamCreate, x)
+}
+
+const C_AdminGetClusterInfo int64 = 52432287
+
+type poolAdminGetClusterInfo struct {
+	pool sync.Pool
+}
+
+func (p *poolAdminGetClusterInfo) Get() *AdminGetClusterInfo {
+	x, ok := p.pool.Get().(*AdminGetClusterInfo)
+	if !ok {
+		x = &AdminGetClusterInfo{}
+	}
+	return x
+}
+
+func (p *poolAdminGetClusterInfo) Put(x *AdminGetClusterInfo) {
+	if x == nil {
+		return
+	}
+	x.ReplicaSet = 0
+	p.pool.Put(x)
+}
+
+var PoolAdminGetClusterInfo = poolAdminGetClusterInfo{}
+
+func (x *AdminGetClusterInfo) DeepCopy(z *AdminGetClusterInfo) {
+	z.ReplicaSet = x.ReplicaSet
+}
+
+func (x *AdminGetClusterInfo) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *AdminGetClusterInfo) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *AdminGetClusterInfo) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_AdminGetClusterInfo, x)
+}
+
+const C_StorageNode int64 = 1966993242
+
+type poolStorageNode struct {
+	pool sync.Pool
+}
+
+func (p *poolStorageNode) Get() *StorageNode {
+	x, ok := p.pool.Get().(*StorageNode)
+	if !ok {
+		x = &StorageNode{}
+	}
+	return x
+}
+
+func (p *poolStorageNode) Put(x *StorageNode) {
+	if x == nil {
+		return
+	}
+	x.Archive = false
+	x.ClusterID = 0
+	x.Location = ""
+	x.DSN = ""
+	x.Type = ""
+	p.pool.Put(x)
+}
+
+var PoolStorageNode = poolStorageNode{}
+
+func (x *StorageNode) DeepCopy(z *StorageNode) {
+	z.Archive = x.Archive
+	z.ClusterID = x.ClusterID
+	z.Location = x.Location
+	z.DSN = x.DSN
+	z.Type = x.Type
+}
+
+func (x *StorageNode) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *StorageNode) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *StorageNode) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_StorageNode, x)
+}
+
+const C_StorageNodeMany int64 = 2667693068
+
+type poolStorageNodeMany struct {
+	pool sync.Pool
+}
+
+func (p *poolStorageNodeMany) Get() *StorageNodeMany {
+	x, ok := p.pool.Get().(*StorageNodeMany)
+	if !ok {
+		x = &StorageNodeMany{}
+	}
+	return x
+}
+
+func (p *poolStorageNodeMany) Put(x *StorageNodeMany) {
+	if x == nil {
+		return
+	}
+	for _, z := range x.Nodes {
+		PoolStorageNode.Put(z)
+	}
+	x.Nodes = x.Nodes[:0]
+	x.Empty = false
+	p.pool.Put(x)
+}
+
+var PoolStorageNodeMany = poolStorageNodeMany{}
+
+func (x *StorageNodeMany) DeepCopy(z *StorageNodeMany) {
+	for idx := range x.Nodes {
+		if x.Nodes[idx] != nil {
+			xx := PoolStorageNode.Get()
+			x.Nodes[idx].DeepCopy(xx)
+			z.Nodes = append(z.Nodes, xx)
+		}
+	}
+	z.Empty = x.Empty
+}
+
+func (x *StorageNodeMany) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *StorageNodeMany) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *StorageNodeMany) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_StorageNodeMany, x)
 }
 
 const C_AdminToken int64 = 2895609620
@@ -1027,11 +1462,21 @@ func init() {
 	registry.RegisterConstructor(1864898932, "AdminDeletePushProvider")
 	registry.RegisterConstructor(1311023404, "AdminSetVersion")
 	registry.RegisterConstructor(934752256, "AdminGetVersions")
+	registry.RegisterConstructor(4159566764, "AdminSetStorageNode")
+	registry.RegisterConstructor(2297643227, "AdminGetStorageNode")
+	registry.RegisterConstructor(176633623, "AdminGetStorageNodes")
+	registry.RegisterConstructor(1018562272, "AdminAddBannedSubnet")
+	registry.RegisterConstructor(4271915141, "AdminDeleteBannedSubnet")
+	registry.RegisterConstructor(937432341, "AdminGetBannedSubnets")
+	registry.RegisterConstructor(1393688488, "BannedSubnets")
 	registry.RegisterConstructor(2892519162, "AdminSetToken")
 	registry.RegisterConstructor(3154441897, "AdminDeleteToken")
 	registry.RegisterConstructor(1947723452, "AdminReserveUsername")
 	registry.RegisterConstructor(1588181579, "AdminGetReservedUsernames")
 	registry.RegisterConstructor(2797066608, "AdminTeamCreate")
+	registry.RegisterConstructor(52432287, "AdminGetClusterInfo")
+	registry.RegisterConstructor(1966993242, "StorageNode")
+	registry.RegisterConstructor(2667693068, "StorageNodeMany")
 	registry.RegisterConstructor(2895609620, "AdminToken")
 	registry.RegisterConstructor(414982091, "WelcomeMessagesMany")
 	registry.RegisterConstructor(2123920547, "VersionsMany")
