@@ -2,14 +2,19 @@ package mini
 
 import (
 	"fmt"
+	"git.ronaksoft.com/river/msg/go/msg"
+	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
+	networkCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_network"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
 	"github.com/ronaksoft/rony"
-	"github.com/ronaksoft/rony/registry"
+	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 	"strings"
+	"sync"
+	"time"
 )
 
 /*
@@ -70,6 +75,14 @@ type River struct {
 	serverHostPort string
 	dbPath         string
 	sentryDSN      string
+
+	// Internal Controllers
+	networkCtrl *networkCtrl.Controller
+	fileCtrl    *fileCtrl.Controller
+
+	// Delegates
+	mainDelegate riversdk.MainDelegate
+	fileDelegate riversdk.FileDelegate
 }
 
 // SetConfig must be called before any other function, otherwise it panics
@@ -105,6 +118,20 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		_ = logs.SetLogFilePath(conf.LogDirectory)
 	}
 
+	// Initialize Network Controller
+	r.networkCtrl = networkCtrl.New(
+		networkCtrl.Config{
+			WebsocketEndpoint: fmt.Sprintf("ws://%s", conf.ServerHostPort),
+			HttpEndpoint:      fmt.Sprintf("http://%s", conf.ServerHostPort),
+			CountryCode:       conf.CountryCode,
+		},
+	)
+	r.networkCtrl.OnNetworkStatusChange = func(newQuality domain.NetworkStatus) {}
+	r.networkCtrl.OnGeneralError = r.onGeneralError
+	r.networkCtrl.OnMessage = r.onReceivedMessage
+	r.networkCtrl.OnUpdate = r.onReceivedUpdate
+	r.networkCtrl.OnWebsocketConnect = r.onNetworkConnect
+
 	// Initialize FileController
 	repo.Files.SetRootFolders(
 		conf.DocumentAudioDirectory,
@@ -113,6 +140,16 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		conf.DocumentVideoDirectory,
 		conf.DocumentCacheDirectory,
 	)
+	r.fileCtrl = fileCtrl.New(fileCtrl.Config{
+		Network:              r.networkCtrl,
+		DbPath:               r.dbPath,
+		MaxInflightDownloads: conf.MaxInFlightDownloads,
+		MaxInflightUploads:   conf.MaxInFlightUploads,
+		CompletedCB:          r.fileDelegate.OnCompleted,
+		ProgressChangedCB:    r.fileDelegate.OnProgressChanged,
+		CancelCB:             r.fileDelegate.OnCancel,
+		PostUploadProcessCB:  r.postUploadProcess,
+	})
 
 	// Initialize River Connection
 	logs.Info("River SetConfig done!")
@@ -121,98 +158,169 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	domain.SetCurrentTeam(conf.TeamID, uint64(conf.TeamAccessHash))
 }
 
-func (r *River) ExecuteCommand(
-	teamID int64, teamAccess uint64, constructor int64, commandBytes []byte, delegate riversdk.RequestDelegate,
-) (requestID int64, err error) {
-	if registry.ConstructorName(constructor) == "" {
-		return 0, domain.ErrInvalidConstructor
-	}
-
-	// commandBytesDump := deepCopy(commandBytes)
-	//
-	// waitGroup := new(sync.WaitGroup)
-	// requestID = domain.SequentialUniqueID()
-	// logs.Debug("River executes command",
-	// 	zap.String("C", registry.ConstructorName(constructor)),
-	// )
-	//
-	// blockingMode := delegate.Flags()&RequestBlocking != 0
-	// serverForce := delegate.Flags()&RequestServerForced != 0
-	//
-	// // if function is in blocking mode set the waitGroup to block until the job is done, otherwise
-	// // save 'delegate' into delegates list to be fetched later.
-	// if blockingMode {
-	// 	waitGroup.Add(1)
-	// 	defer waitGroup.Wait()
-	// } else {
-	// 	r.delegateMutex.Lock()
-	// 	r.delegates[uint64(requestID)] = delegate
-	// 	r.delegateMutex.Unlock()
-	// }
-	//
-	// // Timeout Callback
-	// timeoutCallback := func() {
-	// 	err = domain.ErrRequestTimeout
-	// 	delegate.OnTimeout(err)
-	// 	releaseDelegate(r, uint64(requestID))
-	// 	if blockingMode {
-	// 		waitGroup.Done()
-	// 	}
-	// }
-	//
-	// // Success Callback
-	// successCallback := func(envelope *rony.MessageEnvelope) {
-	// 	b, _ := envelope.Marshal()
-	// 	delegate.OnComplete(b)
-	// 	releaseDelegate(r, uint64(requestID))
-	// 	if blockingMode {
-	// 		waitGroup.Done()
-	// 	}
-	// }
-	//
-	// // If this request must be sent to the server then executeRemoteCommand
-	// if serverForce {
-	// 	executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
-	// 	return
-	// }
-	//
-	// // If the constructor is a local command then
-	// handler, ok := r.localCommands[constructor]
-	// if ok {
-	// 	if blockingMode {
-	// 		executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
-	// 	} else {
-	// 		go executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
-	// 	}
-	// 	return
-	// }
-	//
-	// // If we reached here, then execute the remote commands
-	// executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
-
-	return
+func (r *River) onNetworkConnect() (err error) {
+	return nil
 }
-func executeLocalCommand(
-	teamID int64, teamAccess uint64,
-	handler domain.LocalMessageHandler,
-	requestID uint64, constructor int64, commandBytes []byte,
-	timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-) {
-	logs.Debug("We execute local command",
-		zap.String("C", registry.ConstructorName(constructor)),
+
+func (r *River) onGeneralError(requestID uint64, e *rony.Error) {
+	logs.Info("We received error (General)",
+		zap.Uint64("ReqID", requestID),
+		zap.String("Code", e.Code),
+		zap.String("Item", e.Items),
 	)
 
-	in := &rony.MessageEnvelope{
-		Header:      domain.TeamHeader(teamID, teamAccess),
-		Constructor: constructor,
-		Message:     commandBytes,
-		RequestID:   requestID,
+	if r.mainDelegate != nil && requestID == 0 {
+		buff, _ := e.Marshal()
+		r.mainDelegate.OnGeneralError(buff)
 	}
-	out := &rony.MessageEnvelope{
-		Header:    domain.TeamHeader(teamID, teamAccess),
-		RequestID: requestID,
+}
+
+func (r *River) onReceivedMessage(msgs []*rony.MessageEnvelope) {}
+
+func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {}
+
+func (r *River) postUploadProcess(uploadRequest *msg.ClientFileRequest) bool {
+	defer logs.RecoverPanic(
+		"River::postUploadProcess",
+		domain.M{
+			"OS":       domain.ClientOS,
+			"Ver":      domain.ClientVersion,
+			"FilePath": uploadRequest.FilePath,
+		},
+		nil,
+	)
+
+	logs.Info("River Post Upload Process",
+		zap.Bool("IsProfile", uploadRequest.IsProfilePhoto),
+		zap.Int64("MessageID", uploadRequest.MessageID),
+		zap.Int64("FileID", uploadRequest.FileID),
+	)
+	switch {
+	case uploadRequest.IsProfilePhoto == false && uploadRequest.MessageID != 0:
+		return r.sendMessageMedia(uploadRequest)
 	}
-	handler(in, out, timeoutCB, successCB)
+	return false
+}
+func (r *River) sendMessageMedia(uploadRequest *msg.ClientFileRequest) (success bool) {
+	// This is a upload for message send
+	pendingMessage := repo.PendingMessages.GetByID(uploadRequest.MessageID)
+	if pendingMessage == nil {
+		return true
+	}
+
+	req := &msg.ClientSendMessageMedia{}
+	_ = req.Unmarshal(pendingMessage.Media)
+	err := tools.Try(3, time.Millisecond*500, func() error {
+		var fileLoc *msg.FileLocation
+		if uploadRequest.FileID != 0 && uploadRequest.AccessHash != 0 && uploadRequest.ClusterID != 0 {
+			req.MediaType = msg.InputMediaType_InputMediaTypeDocument
+			fileLoc = &msg.FileLocation{
+				ClusterID:  uploadRequest.ClusterID,
+				FileID:     uploadRequest.FileID,
+				AccessHash: uploadRequest.AccessHash,
+			}
+		}
+		return repo.PendingMessages.UpdateClientMessageMedia(pendingMessage, uploadRequest.TotalParts, req.MediaType, fileLoc)
+	})
+	if err != nil {
+		logs.Error("Error On UpdateClientMessageMedia", zap.Error(err))
+	}
+
+	// Create SendMessageMedia Request
+	x := &msg.MessagesSendMedia{
+		Peer:       req.Peer,
+		ClearDraft: req.ClearDraft,
+		MediaType:  req.MediaType,
+		RandomID:   pendingMessage.FileID,
+		ReplyTo:    req.ReplyTo,
+	}
+
+	switch x.MediaType {
+	case msg.InputMediaType_InputMediaTypeUploadedDocument:
+		doc := &msg.InputMediaUploadedDocument{
+			MimeType:   req.FileMIME,
+			Attributes: req.Attributes,
+			Caption:    req.Caption,
+			Entities:   req.Entities,
+			File: &msg.InputFile{
+				FileID:      uploadRequest.FileID,
+				FileName:    req.FileName,
+				MD5Checksum: "",
+			},
+			TinyThumbnail: req.TinyThumb,
+		}
+		if uploadRequest.ThumbID != 0 {
+			doc.Thumbnail = &msg.InputFile{
+				FileID:      uploadRequest.ThumbID,
+				FileName:    "thumb_" + req.FileName,
+				MD5Checksum: "",
+			}
+		}
+		x.MediaData, _ = doc.Marshal()
+	case msg.InputMediaType_InputMediaTypeDocument:
+		doc := &msg.InputMediaDocument{
+			Caption:    req.Caption,
+			Attributes: req.Attributes,
+			Entities:   req.Entities,
+			Document: &msg.InputDocument{
+				ID:         uploadRequest.FileID,
+				AccessHash: uploadRequest.AccessHash,
+				ClusterID:  uploadRequest.ClusterID,
+			},
+			TinyThumbnail: req.TinyThumb,
+		}
+		if uploadRequest.ThumbID != 0 {
+			doc.Thumbnail = &msg.InputFile{
+				FileID:      uploadRequest.ThumbID,
+				FileName:    "thumb_" + req.FileName,
+				MD5Checksum: "",
+			}
+		}
+		x.MediaData, _ = doc.Marshal()
+
+	default:
+	}
+	// reqBuff, _ := x.Marshal()
+	success = true
+
+	waitGroup := sync.WaitGroup{}
+	// waitGroup.Add(1)
+	// successCB := func(m *rony.MessageEnvelope) {
+	// 	logs.Info("MessagesSendMedia success callback called", zap.String("C", registry.ConstructorName(m.Constructor)))
+	// 	switch m.Constructor {
+	// 	case rony.C_Error:
+	// 		success = false
+	// 		x := &rony.Error{}
+	// 		if err := x.Unmarshal(m.Message); err != nil {
+	// 			logs.Error("We couldn't unmarshal MessagesSendMedia (Error) response", zap.Error(err))
+	// 		}
+	// 		logs.Error("We received error on MessagesSendMedia response",
+	// 			zap.String("Code", x.Code),
+	// 			zap.String("Item", x.Items),
+	// 		)
+	// 		if x.Code == msg.ErrCodeAlreadyExists && x.Items == msg.ErrItemRandomID {
+	// 			success = true
+	// 			_ = repo.PendingMessages.Delete(uploadRequest.MessageID)
+	//
+	// 		}
+	// 	}
+	// 	waitGroup.Done()
+	// }
+	// timeoutCB := func() {
+	// 	success = false
+	// 	logs.Debug("We got Timeout! on MessagesSendMedia response")
+	// 	waitGroup.Done()
+	// }
+	// r.queueCtrl.EnqueueCommand(
+	// 	&rony.MessageEnvelope{
+	// 		Constructor: msg.C_MessagesSendMedia,
+	// 		RequestID:   uint64(x.RandomID),
+	// 		Message:     reqBuff,
+	// 		Header:      domain.TeamHeader(pendingMessage.TeamID, pendingMessage.TeamAccessHash),
+	// 	},
+	// 	timeoutCB, successCB, false)
+	waitGroup.Wait()
+	return
 }
 
 // RiverConnection connection info

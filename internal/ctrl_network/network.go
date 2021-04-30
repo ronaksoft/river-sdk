@@ -106,15 +106,6 @@ func New(config Config) *Controller {
 		msg.C_SystemGetSalts:      true,
 	}
 
-	// skBytes, err := repo.System.LoadBytes("ServerKeys")
-	// if skBytes != nil && err == nil {
-	// 	ctrl.serverKeys = &ServerKeys{}
-	// 	err = json.Unmarshal(skBytes, ctrl.serverKeys)
-	// 	if err != nil {
-	// 		ctrl.serverKeys = nil
-	// 	}
-	// }
-
 	return ctrl
 }
 func (ctrl *Controller) createDialer(timeout time.Duration) {
@@ -717,7 +708,7 @@ func (ctrl *Controller) RealtimeCommandWithTimeout(
 	blockingMode, isUICallback bool, timeout time.Duration,
 ) {
 	defer logs.RecoverPanic(
-		"SyncCtrl::RealtimeCommand",
+		"NetCtrl::RealtimeCommand",
 		domain.M{
 			"OS":  domain.ClientOS,
 			"Ver": domain.ClientVersion,
@@ -726,7 +717,7 @@ func (ctrl *Controller) RealtimeCommandWithTimeout(
 		nil,
 	)
 
-	logs.Debug("QueueCtrl fires realtime command",
+	logs.Debug("NetCtrl fires realtime command",
 		zap.Uint64("ReqID", messageEnvelope.RequestID),
 		zap.String("C", registry.ConstructorName(messageEnvelope.Constructor)),
 	)
