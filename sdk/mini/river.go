@@ -5,6 +5,10 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
+	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/registry"
+	"go.uber.org/zap"
 	"strings"
 )
 
@@ -115,6 +119,100 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Set current team
 	domain.SetCurrentTeam(conf.TeamID, uint64(conf.TeamAccessHash))
+}
+
+func (r *River) ExecuteCommand(
+	teamID int64, teamAccess uint64, constructor int64, commandBytes []byte, delegate riversdk.RequestDelegate,
+) (requestID int64, err error) {
+	if registry.ConstructorName(constructor) == "" {
+		return 0, domain.ErrInvalidConstructor
+	}
+
+	// commandBytesDump := deepCopy(commandBytes)
+	//
+	// waitGroup := new(sync.WaitGroup)
+	// requestID = domain.SequentialUniqueID()
+	// logs.Debug("River executes command",
+	// 	zap.String("C", registry.ConstructorName(constructor)),
+	// )
+	//
+	// blockingMode := delegate.Flags()&RequestBlocking != 0
+	// serverForce := delegate.Flags()&RequestServerForced != 0
+	//
+	// // if function is in blocking mode set the waitGroup to block until the job is done, otherwise
+	// // save 'delegate' into delegates list to be fetched later.
+	// if blockingMode {
+	// 	waitGroup.Add(1)
+	// 	defer waitGroup.Wait()
+	// } else {
+	// 	r.delegateMutex.Lock()
+	// 	r.delegates[uint64(requestID)] = delegate
+	// 	r.delegateMutex.Unlock()
+	// }
+	//
+	// // Timeout Callback
+	// timeoutCallback := func() {
+	// 	err = domain.ErrRequestTimeout
+	// 	delegate.OnTimeout(err)
+	// 	releaseDelegate(r, uint64(requestID))
+	// 	if blockingMode {
+	// 		waitGroup.Done()
+	// 	}
+	// }
+	//
+	// // Success Callback
+	// successCallback := func(envelope *rony.MessageEnvelope) {
+	// 	b, _ := envelope.Marshal()
+	// 	delegate.OnComplete(b)
+	// 	releaseDelegate(r, uint64(requestID))
+	// 	if blockingMode {
+	// 		waitGroup.Done()
+	// 	}
+	// }
+	//
+	// // If this request must be sent to the server then executeRemoteCommand
+	// if serverForce {
+	// 	executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
+	// 	return
+	// }
+	//
+	// // If the constructor is a local command then
+	// handler, ok := r.localCommands[constructor]
+	// if ok {
+	// 	if blockingMode {
+	// 		executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
+	// 	} else {
+	// 		go executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
+	// 	}
+	// 	return
+	// }
+	//
+	// // If we reached here, then execute the remote commands
+	// executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
+
+	return
+}
+func executeLocalCommand(
+	teamID int64, teamAccess uint64,
+	handler domain.LocalMessageHandler,
+	requestID uint64, constructor int64, commandBytes []byte,
+	timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+) {
+	logs.Debug("We execute local command",
+		zap.String("C", registry.ConstructorName(constructor)),
+	)
+
+	in := &rony.MessageEnvelope{
+		Header:      domain.TeamHeader(teamID, teamAccess),
+		Constructor: constructor,
+		Message:     commandBytes,
+		RequestID:   requestID,
+	}
+	out := &rony.MessageEnvelope{
+		Header:    domain.TeamHeader(teamID, teamAccess),
+		RequestID: requestID,
+	}
+	handler(in, out, timeoutCB, successCB)
 }
 
 // RiverConnection connection info
