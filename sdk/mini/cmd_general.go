@@ -71,17 +71,92 @@ func (r *River) AppStart() error {
 	return nil
 }
 
-func (r *River) ExecuteCommand(
+// ExecuteCommand is a wrapper function to pass the request to the queueController, to be passed to networkController for final
+// delivery to the server. SDK uses GetCurrentTeam() to detect the targeted team of the request
+func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate riversdk.RequestDelegate) (requestID int64, err error) {
+	return r.executeCommand(domain.GetCurrTeamID(), domain.GetCurrTeamAccess(), constructor, commandBytes, delegate)
+}
+
+// ExecuteCommandWithTeam is similar to ExecuteTeam but explicitly defines the target team
+func (r *River) ExecuteCommandWithTeam(teamID, accessHash, constructor int64, commandBytes []byte, delegate riversdk.RequestDelegate) (requestID int64, err error) {
+	return r.executeCommand(teamID, uint64(accessHash), constructor, commandBytes, delegate)
+}
+
+func (r *River) executeCommand(
 	teamID int64, teamAccess uint64, constructor int64, commandBytes []byte, delegate riversdk.RequestDelegate,
 ) (requestID int64, err error) {
 	if registry.ConstructorName(constructor) == "" {
 		return 0, domain.ErrInvalidConstructor
 	}
-	requestID = domain.SequentialUniqueID()
+
+	// Timeout Callback
+	timeoutCallback := func() {
+		err = domain.ErrRequestTimeout
+		delegate.OnTimeout(err)
+	}
+
+	// Success Callback
+	successCallback := func(envelope *rony.MessageEnvelope) {
+		b, _ := envelope.Marshal()
+		delegate.OnComplete(b)
+	}
+
+	serverForce := delegate.Flags()&riversdk.RequestServerForced != 0
+
+	// If this request must be sent to the server then executeRemoteCommand
+	if serverForce {
+		executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytes, timeoutCallback, successCallback)
+		return
+	}
+
+	// If the constructor is a local command then
+	handler, ok := r.localCommands[constructor]
+	if ok {
+		executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytes, timeoutCallback, successCallback)
+		return
+	}
+
+	// If we reached here, then execute the remote commands
+	executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytes, timeoutCallback, successCallback)
+
+	return
+}
+func executeLocalCommand(
+	teamID int64, teamAccess uint64,
+	handler domain.LocalMessageHandler,
+	requestID uint64, constructor int64, commandBytes []byte,
+	timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+) {
+	logs.Debug("We execute local command",
+		zap.String("C", registry.ConstructorName(constructor)),
+	)
+
+	in := &rony.MessageEnvelope{
+		Header:      domain.TeamHeader(teamID, teamAccess),
+		Constructor: constructor,
+		Message:     commandBytes,
+		RequestID:   requestID,
+	}
+	out := &rony.MessageEnvelope{
+		Header:    domain.TeamHeader(teamID, teamAccess),
+		RequestID: requestID,
+	}
+	handler(in, out, timeoutCB, successCB)
+}
+func executeRemoteCommand(
+	teamID int64, teamAccess uint64,
+	r *River,
+	requestID uint64, constructor int64, commandBytes []byte,
+	timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+) {
+	logs.Debug("We execute remote command",
+		zap.String("C", registry.ConstructorName(constructor)),
+	)
+	requestID = uint64(domain.SequentialUniqueID())
 	req := &rony.MessageEnvelope{
 		Header:      domain.TeamHeader(teamID, teamAccess),
 		Constructor: constructor,
-		RequestID:   uint64(requestID),
+		RequestID:   requestID,
 		Message:     commandBytes,
 		Auth:        nil,
 	}
@@ -92,16 +167,11 @@ func (r *River) ExecuteCommand(
 	if res == nil {
 		res = &rony.MessageEnvelope{}
 		if err != nil {
-			rony.ErrorMessage(res, uint64(requestID), "E100", err.Error())
+			rony.ErrorMessage(res, requestID, "E100", err.Error())
 		} else {
-			rony.ErrorMessage(res, uint64(requestID), "E100", "Nil Response")
+			rony.ErrorMessage(res, requestID, "E100", "Nil Response")
 		}
 	}
-	resBytes, _ := res.Marshal()
-	delegate.OnComplete(resBytes)
-	return
-}
 
-func (r *River) MessagesGetDialogs() {}
-func (r *River) MessagesSendMedia()  {}
-func (r *River) MessagesSend()       {}
+	successCB(res)
+}

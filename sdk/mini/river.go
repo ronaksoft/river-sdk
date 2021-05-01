@@ -76,6 +76,9 @@ type River struct {
 	dbPath         string
 	sentryDSN      string
 
+	// localCommands can be satisfied by client cache
+	localCommands map[int64]domain.LocalMessageHandler
+
 	// Internal Controllers
 	networkCtrl *networkCtrl.Controller
 	fileCtrl    *fileCtrl.Controller
@@ -109,6 +112,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	}
 	conf.DbPath = strings.TrimRight(conf.DbPath, "/ ")
 	r.dbPath = fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID)
+
+	r.registerCommandHandlers()
 
 	// set log level
 	logs.SetLogLevel(conf.LogLevel)
@@ -321,6 +326,25 @@ func (r *River) sendMessageMedia(uploadRequest *msg.ClientFileRequest) (success 
 	// 	timeoutCB, successCB, false)
 	waitGroup.Wait()
 	return
+}
+
+func (r *River) registerCommandHandlers() {
+	r.localCommands = map[int64]domain.LocalMessageHandler{
+		msg.C_AccountGetTeams:        r.accountsGetTeams,
+		msg.C_ClientContactSearch:    r.clientContactSearch,
+		msg.C_ClientGetRecentSearch:  r.clientGetRecentSearch,
+		msg.C_ClientGetTeamCounters:  r.clientGetTeamCounters,
+		msg.C_ClientGlobalSearch:     r.clientGlobalSearch,
+		msg.C_ClientPutRecentSearch:  r.clientPutRecentSearch,
+		msg.C_ClientSendMessageMedia: r.clientSendMessageMedia,
+		msg.C_MessagesDelete:         r.messagesDelete,
+		msg.C_MessagesGet:            r.messagesGet,
+		msg.C_MessagesGetDialog:      r.messagesGetDialog,
+		msg.C_MessagesGetDialogs:     r.messagesGetDialogs,
+		msg.C_MessagesSendMedia:      r.messagesSendMedia,
+		msg.C_UsersGet:               r.usersGet,
+		msg.C_UsersGetFull:           r.usersGetFull,
+	}
 }
 
 // RiverConnection connection info

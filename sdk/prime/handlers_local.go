@@ -3,19 +3,18 @@ package riversdk
 import (
 	"encoding/json"
 	"fmt"
-	messageHole "git.ronaksoft.com/river/sdk/internal/message_hole"
-	"git.ronaksoft.com/river/sdk/internal/uiexec"
-	"github.com/ronaksoft/rony"
-	"github.com/ronaksoft/rony/registry"
-	"sort"
-	"strings"
-	"time"
-
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
+	messageHole "git.ronaksoft.com/river/sdk/internal/message_hole"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/uiexec"
+	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
+	"sort"
+	"strings"
+	"time"
 )
 
 func (r *River) messagesGetDialogs(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -216,6 +215,55 @@ func (r *River) messagesSend(in, out *rony.MessageEnvelope, timeoutCB domain.Tim
 	//   exist in pendingTable we remove it and insert new message with new id to message table
 	//   invoke new OnUpdate with new proto buffer to inform ui that pending message got delivered
 	uiexec.ExecSuccessCB(successCB, out)
+}
+
+func (r *River) messagesSendMedia(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.MessagesSendMedia{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	switch req.MediaType {
+	case msg.InputMediaType_InputMediaTypeContact, msg.InputMediaType_InputMediaTypeGeoLocation,
+		msg.InputMediaType_InputMediaTypeDocument, msg.InputMediaType_InputMediaTypeMessageDocument:
+		// This will be used as next requestID
+		req.RandomID = domain.SequentialUniqueID()
+
+		// Insert into pending messages, id is negative nano timestamp and save RandomID too : Done
+		dbID := -req.RandomID
+
+		res, err := repo.PendingMessages.SaveMessageMedia(domain.GetTeamID(in), domain.GetTeamAccess(in), dbID, r.ConnInfo.UserID, req)
+		if err != nil {
+			e := &rony.Error{
+				Code:  "n/a",
+				Items: "Failed to save to pendingMessages : " + err.Error(),
+			}
+			out.Fill(out.RequestID, rony.C_Error, e)
+			uiexec.ExecSuccessCB(successCB, out)
+			return
+		}
+		// Return to CallBack with pending message data : Done
+		out.Constructor = msg.C_ClientPendingMessage
+
+		out.Message, _ = res.Marshal()
+		uiexec.ExecSuccessCB(successCB, out)
+
+	case msg.InputMediaType_InputMediaTypeUploadedDocument:
+		// no need to insert pending message cuz we already insert one b4 start uploading
+	}
+
+	requestBytes, _ := req.Marshal()
+	r.queueCtrl.EnqueueCommand(
+		&rony.MessageEnvelope{
+			Constructor: msg.C_MessagesSendMedia,
+			RequestID:   uint64(req.RandomID),
+			Message:     requestBytes,
+			Header:      in.Header,
+		},
+		timeoutCB, successCB, true,
+	)
 }
 
 func (r *River) messagesReadHistory(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -532,7 +580,7 @@ func (r *River) messagesGet(in, out *rony.MessageEnvelope, timeoutCB domain.Time
 		return
 	}
 
-	// SendWebsocket the request to the server
+	// WebsocketSend the request to the server
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
@@ -586,53 +634,92 @@ func (r *River) messagesReadContents(in, out *rony.MessageEnvelope, timeoutCB do
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
-func (r *River) messagesSendMedia(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := &msg.MessagesSendMedia{}
+func (r *River) messagesSaveDraft(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.MessagesSaveDraft{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		logs.Error("River::messagesSaveDraft()-> Unmarshal()", zap.Error(err))
+		return
+	}
+
+	dialog, _ := repo.Dialogs.Get(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))
+	if dialog != nil {
+		draftMessage := msg.DraftMessage{
+			Body:     req.Body,
+			Entities: req.Entities,
+			PeerID:   req.Peer.ID,
+			PeerType: int32(req.Peer.Type),
+			Date:     time.Now().Unix(),
+			ReplyTo:  req.ReplyTo,
+		}
+
+		dialog.Draft = &draftMessage
+
+		repo.Dialogs.Save(dialog)
+	}
+
+	// send the request to server
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+}
+
+func (r *River) messagesClearDraft(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.MessagesClearDraft{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		logs.Error("River::messagesClearDraft()-> Unmarshal()", zap.Error(err))
+		return
+	}
+
+	dialog, _ := repo.Dialogs.Get(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))
+	if dialog != nil {
+		dialog.Draft = nil
+		repo.Dialogs.Save(dialog)
+	}
+
+	// send the request to server
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+}
+
+func (r *River) messagesTogglePin(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.MessagesTogglePin{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		successCB(out)
 		return
 	}
 
-	switch req.MediaType {
-	case msg.InputMediaType_InputMediaTypeContact, msg.InputMediaType_InputMediaTypeGeoLocation,
-		msg.InputMediaType_InputMediaTypeDocument, msg.InputMediaType_InputMediaTypeMessageDocument:
-		// This will be used as next requestID
-		req.RandomID = domain.SequentialUniqueID()
+	err := repo.Dialogs.UpdatePinMessageID(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MessageID)
+	logs.ErrorOnErr("MessagesTogglePin", err)
 
-		// Insert into pending messages, id is negative nano timestamp and save RandomID too : Done
-		dbID := -req.RandomID
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+}
 
-		res, err := repo.PendingMessages.SaveMessageMedia(domain.GetTeamID(in), domain.GetTeamAccess(in), dbID, r.ConnInfo.UserID, req)
-		if err != nil {
-			e := &rony.Error{
-				Code:  "n/a",
-				Items: "Failed to save to pendingMessages : " + err.Error(),
-			}
-			out.Fill(out.RequestID, rony.C_Error, e)
-			uiexec.ExecSuccessCB(successCB, out)
-			return
-		}
-		// Return to CallBack with pending message data : Done
-		out.Constructor = msg.C_ClientPendingMessage
-
-		out.Message, _ = res.Marshal()
-		uiexec.ExecSuccessCB(successCB, out)
-
-	case msg.InputMediaType_InputMediaTypeUploadedDocument:
-		// no need to insert pending message cuz we already insert one b4 start uploading
+func (r *River) messagesSendReaction(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.MessagesSendReaction{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
 	}
 
-	requestBytes, _ := req.Marshal()
-	r.queueCtrl.EnqueueCommand(
-		&rony.MessageEnvelope{
-			Constructor: msg.C_MessagesSendMedia,
-			RequestID:   uint64(req.RandomID),
-			Message:     requestBytes,
-			Header:      in.Header,
-		},
-		timeoutCB, successCB, true,
-	)
+	err := repo.Reactions.IncrementReactionUseCount(req.Reaction, 1)
+	logs.ErrorOnErr("messagesSendReaction", err)
+
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+}
+
+func (r *River) messagesDeleteReaction(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.MessagesDeleteReaction{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	for _, r := range req.Reactions {
+		err := repo.Reactions.IncrementReactionUseCount(r, -1)
+		logs.ErrorOnErr("messagesDeleteReaction", err)
+	}
+
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) contactsGet(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -971,6 +1058,75 @@ func (r *River) accountSetNotifySettings(in, out *rony.MessageEnvelope, timeoutC
 
 }
 
+func (r *River) accountRemovePhoto(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	x := &msg.AccountRemovePhoto{}
+	_ = x.Unmarshal(in.Message)
+
+	// send the request to server
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+
+	user, err := repo.Users.Get(r.ConnInfo.UserID)
+	if err != nil {
+		return
+	}
+
+	if user.Photo != nil && user.Photo.PhotoID == x.PhotoID {
+		_ = repo.Users.UpdatePhoto(r.ConnInfo.UserID, &msg.UserPhoto{
+			PhotoBig:      &msg.FileLocation{},
+			PhotoSmall:    &msg.FileLocation{},
+			PhotoBigWeb:   &msg.WebLocation{},
+			PhotoSmallWeb: &msg.WebLocation{},
+			PhotoID:       0,
+		})
+	}
+
+	repo.Users.RemovePhotoGallery(r.ConnInfo.UserID, x.PhotoID)
+}
+
+func (r *River) accountUpdateProfile(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.AccountUpdateProfile{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	// TODO : add connInfo Bio and save it too
+	r.ConnInfo.FirstName = req.FirstName
+	r.ConnInfo.LastName = req.LastName
+	r.ConnInfo.Bio = req.Bio
+	r.ConnInfo.Save()
+
+	_ = repo.Users.UpdateProfile(r.ConnInfo.UserID,
+		req.FirstName, req.LastName, r.ConnInfo.Username, req.Bio, r.ConnInfo.Phone,
+	)
+
+	// send the request to server
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+}
+
+func (r *River) accountsGetTeams(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.AccountGetTeams{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	teams := repo.Teams.List()
+
+	if len(teams) > 0 {
+		teamsMany := &msg.TeamsMany{
+			Teams: teams,
+		}
+		out.Fill(out.RequestID, msg.C_TeamsMany, teamsMany)
+		successCB(out)
+		return
+	}
+
+	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+}
+
 func (r *River) gifSave(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := &msg.GifSave{}
 	if err := req.Unmarshal(in.Message); err != nil {
@@ -1087,53 +1243,6 @@ func (r *River) dialogTogglePin(in, out *rony.MessageEnvelope, timeoutCB domain.
 	// send the request to server
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 
-}
-
-func (r *River) accountRemovePhoto(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	x := &msg.AccountRemovePhoto{}
-	_ = x.Unmarshal(in.Message)
-
-	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
-
-	user, err := repo.Users.Get(r.ConnInfo.UserID)
-	if err != nil {
-		return
-	}
-
-	if user.Photo != nil && user.Photo.PhotoID == x.PhotoID {
-		_ = repo.Users.UpdatePhoto(r.ConnInfo.UserID, &msg.UserPhoto{
-			PhotoBig:      &msg.FileLocation{},
-			PhotoSmall:    &msg.FileLocation{},
-			PhotoBigWeb:   &msg.WebLocation{},
-			PhotoSmallWeb: &msg.WebLocation{},
-			PhotoID:       0,
-		})
-	}
-
-	repo.Users.RemovePhotoGallery(r.ConnInfo.UserID, x.PhotoID)
-}
-
-func (r *River) accountUpdateProfile(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := &msg.AccountUpdateProfile{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
-		return
-	}
-
-	// TODO : add connInfo Bio and save it too
-	r.ConnInfo.FirstName = req.FirstName
-	r.ConnInfo.LastName = req.LastName
-	r.ConnInfo.Bio = req.Bio
-	r.ConnInfo.Save()
-
-	_ = repo.Users.UpdateProfile(r.ConnInfo.UserID,
-		req.FirstName, req.LastName, r.ConnInfo.Username, req.Bio, r.ConnInfo.Phone,
-	)
-
-	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *River) groupsEditTitle(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -1380,50 +1489,6 @@ func (r *River) usersGet(in, out *rony.MessageEnvelope, timeoutCB domain.Timeout
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
-func (r *River) messagesSaveDraft(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := &msg.MessagesSaveDraft{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::messagesSaveDraft()-> Unmarshal()", zap.Error(err))
-		return
-	}
-
-	dialog, _ := repo.Dialogs.Get(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))
-	if dialog != nil {
-		draftMessage := msg.DraftMessage{
-			Body:     req.Body,
-			Entities: req.Entities,
-			PeerID:   req.Peer.ID,
-			PeerType: int32(req.Peer.Type),
-			Date:     time.Now().Unix(),
-			ReplyTo:  req.ReplyTo,
-		}
-
-		dialog.Draft = &draftMessage
-
-		repo.Dialogs.Save(dialog)
-	}
-
-	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
-}
-
-func (r *River) messagesClearDraft(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := &msg.MessagesClearDraft{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::messagesClearDraft()-> Unmarshal()", zap.Error(err))
-		return
-	}
-
-	dialog, _ := repo.Dialogs.Get(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))
-	if dialog != nil {
-		dialog.Draft = nil
-		repo.Dialogs.Save(dialog)
-	}
-
-	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
-}
-
 func (r *River) labelsGet(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := &msg.LabelsGet{}
 	if err := req.Unmarshal(in.Message); err != nil {
@@ -1630,28 +1695,6 @@ func (r *River) systemGetConfig(in, out *rony.MessageEnvelope, timeoutCB domain.
 	successCB(out)
 }
 
-func (r *River) accountsGetTeams(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := &msg.AccountGetTeams{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
-		return
-	}
-
-	teams := repo.Teams.List()
-
-	if len(teams) > 0 {
-		teamsMany := &msg.TeamsMany{
-			Teams: teams,
-		}
-		out.Fill(out.RequestID, msg.C_TeamsMany, teamsMany)
-		successCB(out)
-		return
-	}
-
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
-}
-
 func (r *River) teamEdit(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := &msg.TeamEdit{}
 	if err := req.Unmarshal(in.Message); err != nil {
@@ -1665,50 +1708,6 @@ func (r *River) teamEdit(in, out *rony.MessageEnvelope, timeoutCB domain.Timeout
 	if team != nil {
 		team.Name = req.Name
 		_ = repo.Teams.Save(team)
-	}
-
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
-}
-
-func (r *River) messagesTogglePin(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := &msg.MessagesTogglePin{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
-		return
-	}
-
-	err := repo.Dialogs.UpdatePinMessageID(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MessageID)
-	logs.ErrorOnErr("MessagesTogglePin", err)
-
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
-}
-
-func (r *River) messagesSendReaction(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := &msg.MessagesSendReaction{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
-		return
-	}
-
-	err := repo.Reactions.IncrementReactionUseCount(req.Reaction, 1)
-	logs.ErrorOnErr("messagesSendReaction", err)
-
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
-}
-
-func (r *River) messagesDeleteReaction(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := &msg.MessagesDeleteReaction{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
-		return
-	}
-
-	for _, r := range req.Reactions {
-		err := repo.Reactions.IncrementReactionUseCount(r, -1)
-		logs.ErrorOnErr("messagesDeleteReaction", err)
 	}
 
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)

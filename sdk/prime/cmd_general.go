@@ -169,7 +169,7 @@ func executeRemoteCommand(
 
 	// If the constructor is a realtime command, then just send it to the server
 	if _, ok := r.realTimeCommands[constructor]; ok {
-		r.networkCtrl.RealtimeCommand(&rony.MessageEnvelope{
+		r.networkCtrl.WebsocketCommand(&rony.MessageEnvelope{
 			Header:      domain.TeamHeader(teamID, teamAccess),
 			Constructor: constructor,
 			RequestID:   requestID,
