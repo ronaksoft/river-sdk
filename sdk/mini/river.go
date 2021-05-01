@@ -85,7 +85,6 @@ type River struct {
 
 	// Delegates
 	mainDelegate riversdk.MainDelegate
-	fileDelegate riversdk.FileDelegate
 }
 
 // SetConfig must be called before any other function, otherwise it panics
@@ -145,16 +144,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		conf.DocumentVideoDirectory,
 		conf.DocumentCacheDirectory,
 	)
-	r.fileCtrl = fileCtrl.New(fileCtrl.Config{
-		Network:              r.networkCtrl,
-		DbPath:               r.dbPath,
-		MaxInflightDownloads: conf.MaxInFlightDownloads,
-		MaxInflightUploads:   conf.MaxInFlightUploads,
-		CompletedCB:          r.fileDelegate.OnCompleted,
-		ProgressChangedCB:    r.fileDelegate.OnProgressChanged,
-		CancelCB:             r.fileDelegate.OnCancel,
-		PostUploadProcessCB:  r.postUploadProcess,
-	})
 
 	// Initialize River Connection
 	logs.Info("River SetConfig done!")

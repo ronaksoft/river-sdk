@@ -33,7 +33,7 @@ func main() {
 	// Initialize Shell
 	_Shell = ishell.New()
 	loadCommands(
-		Account, Auth, Bot, Contact, Debug, File, Gif, Group, Init, Label, Message, SDK, System, Team, User, WallPaper,
+		Account, Auth, Bot, Contact, Debug, File, Gif, Group, Init, Label, Message, Mini, SDK, System, Team, User, WallPaper,
 	)
 
 	_Shell.Println("============================")
