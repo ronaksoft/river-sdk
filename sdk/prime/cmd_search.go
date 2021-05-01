@@ -18,8 +18,8 @@ func (r *River) SearchReIndex(teamID int64) {
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(2)
 	go func() {
-		repo.Users.ReIndex(teamID)
-		repo.Groups.ReIndex()
+		_ = repo.Users.ReIndex(teamID)
+		_ = repo.Groups.ReIndex()
 		waitGroup.Done()
 	}()
 	go func() {

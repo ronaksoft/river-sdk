@@ -6,10 +6,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
-	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
-	networkCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_network"
-	queueCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_queue"
-	syncCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_sync"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	messageHole "git.ronaksoft.com/river/sdk/internal/message_hole"
@@ -23,7 +19,6 @@ import (
 	"go.uber.org/zap"
 	"math/big"
 	"runtime"
-	"strings"
 	"sync"
 	"time"
 )
@@ -174,7 +169,7 @@ func executeRemoteCommand(
 
 	// If the constructor is a realtime command, then just send it to the server
 	if _, ok := r.realTimeCommands[constructor]; ok {
-		r.networkCtrl.RealtimeCommand(&rony.MessageEnvelope{
+		r.networkCtrl.WebsocketCommand(&rony.MessageEnvelope{
 			Header:      domain.TeamHeader(teamID, teamAccess),
 			Constructor: constructor,
 			RequestID:   requestID,
@@ -735,135 +730,6 @@ func (r *River) AppStart() error {
 	}()
 
 	return nil
-}
-
-// SetConfig must be called before any other function, otherwise it panics
-func (r *River) SetConfig(conf *RiverConfig) {
-	domain.ClientPlatform = conf.ClientPlatform
-	domain.ClientVersion = conf.ClientVersion
-	domain.ClientOS = conf.ClientOs
-	domain.ClientVendor = conf.ClientVendor
-
-	r.sentryDSN = conf.SentryDSN
-	r.optimizeForLowMemory = conf.OptimizeForLowMemory
-	r.resetQueueOnStartup = conf.ResetQueueOnStartup
-	r.ConnInfo = conf.ConnInfo
-
-	if conf.MaxInFlightDownloads <= 0 {
-		conf.MaxInFlightDownloads = 10
-	}
-	if conf.MaxInFlightUploads <= 0 {
-		conf.MaxInFlightUploads = 10
-	}
-
-	// Initialize DB Path
-	if strings.HasPrefix(conf.DbPath, "file://") {
-		conf.DbPath = conf.DbPath[7:]
-	}
-	conf.DbPath = strings.TrimRight(conf.DbPath, "/ ")
-	r.dbPath = fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID)
-
-	r.registerCommandHandlers()
-	r.delegates = make(map[uint64]RequestDelegate)
-	r.mainDelegate = conf.MainDelegate
-	r.fileDelegate = conf.FileDelegate
-
-	// set loglevel
-	logs.SetLogLevel(conf.LogLevel)
-
-	// set log file path
-	if conf.LogDirectory != "" {
-		_ = logs.SetLogFilePath(conf.LogDirectory)
-	}
-
-	// Initialize realtime requests
-	r.realTimeCommands = map[int64]bool{
-		msg.C_MessagesSetTyping:   true,
-		msg.C_InitConnect:         true,
-		msg.C_InitConnectTest:     true,
-		msg.C_InitAuthCompleted:   true,
-		msg.C_SystemGetConfig:     true,
-		msg.C_SystemGetSalts:      true,
-		msg.C_SystemGetServerTime: true,
-		msg.C_SystemGetServerKeys: true,
-	}
-
-	// Initialize Network Controller
-	r.networkCtrl = networkCtrl.New(
-		networkCtrl.Config{
-			WebsocketEndpoint: fmt.Sprintf("ws://%s", conf.ServerHostPort),
-			HttpEndpoint:      fmt.Sprintf("http://%s", conf.ServerHostPort),
-			CountryCode:       conf.CountryCode,
-		},
-	)
-	r.networkCtrl.OnNetworkStatusChange = func(newQuality domain.NetworkStatus) {
-		if r.mainDelegate != nil {
-			r.mainDelegate.OnNetworkStatusChanged(int(newQuality))
-		}
-	}
-	r.networkCtrl.OnGeneralError = r.onGeneralError
-	r.networkCtrl.OnMessage = r.onReceivedMessage
-	r.networkCtrl.OnUpdate = r.onReceivedUpdate
-	r.networkCtrl.OnWebsocketConnect = r.onNetworkConnect
-
-	// Initialize FileController
-	repo.Files.SetRootFolders(
-		conf.DocumentAudioDirectory,
-		conf.DocumentFileDirectory,
-		conf.DocumentPhotoDirectory,
-		conf.DocumentVideoDirectory,
-		conf.DocumentCacheDirectory,
-	)
-	r.fileCtrl = fileCtrl.New(fileCtrl.Config{
-		Network:              r.networkCtrl,
-		DbPath:               r.dbPath,
-		MaxInflightDownloads: conf.MaxInFlightDownloads,
-		MaxInflightUploads:   conf.MaxInFlightUploads,
-		CompletedCB:          r.fileDelegate.OnCompleted,
-		ProgressChangedCB:    r.fileDelegate.OnProgressChanged,
-		CancelCB:             r.fileDelegate.OnCancel,
-		PostUploadProcessCB:  r.postUploadProcess,
-	})
-
-	// Initialize queueController
-	if q, err := queueCtrl.New(r.fileCtrl, r.networkCtrl, r.dbPath); err != nil {
-		logs.Fatal("We couldn't initialize MessageQueue",
-			zap.String("Error", err.Error()),
-		)
-	} else {
-		r.queueCtrl = q
-	}
-
-	// Initialize Sync Controller
-	r.syncCtrl = syncCtrl.NewSyncController(
-		syncCtrl.Config{
-			ConnInfo:    r.ConnInfo,
-			NetworkCtrl: r.networkCtrl,
-			QueueCtrl:   r.queueCtrl,
-			FileCtrl:    r.fileCtrl,
-			SyncStatusChangeCB: func(newStatus domain.SyncStatus) {
-				if r.mainDelegate != nil {
-					r.mainDelegate.OnSyncStatusChanged(int(newStatus))
-				}
-			},
-			UpdateReceivedCB: func(constructorID int64, b []byte) {
-				if r.mainDelegate != nil {
-					r.mainDelegate.OnUpdates(constructorID, b)
-				}
-			},
-			AppUpdateCB: func(version string, updateAvailable bool, force bool) {
-				if r.mainDelegate != nil {
-					r.mainDelegate.AppUpdate(version, updateAvailable, force)
-				}
-			},
-		},
-	)
-
-	// Initialize River Connection
-	logs.Info("River SetConfig done!")
-
-	// Set current team
-	domain.SetCurrentTeam(conf.TeamID, uint64(conf.TeamAccessHash))
 }
 
 func (r *River) SetTeam(teamID int64, teamAccessHash int64, forceSync bool) {

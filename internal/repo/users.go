@@ -643,7 +643,7 @@ func (r *repoUsers) GetPhotoGallery(userID int64) []*msg.UserPhoto {
 	return photoGallery
 }
 
-func (r *repoUsers) ReIndex(teamID int64) {
+func (r *repoUsers) ReIndex(teamID int64) error {
 	err := tools.Try(10, time.Second, func() error {
 		if r.peerSearch == nil {
 			return domain.ErrDoesNotExists
@@ -651,10 +651,10 @@ func (r *repoUsers) ReIndex(teamID int64) {
 		return nil
 	})
 	if err != nil {
-		return
+		return err
 	}
 
-	_ = badgerView(func(txn *badger.Txn) error {
+	return badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = tools.StrToByte(prefixUsers)
 		it := txn.NewIterator(opts)

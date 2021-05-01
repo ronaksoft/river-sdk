@@ -312,7 +312,7 @@ func (r *repoMessagesPending) GetMany(messageIDs []int64) []*msg.UserMessage {
 	return userMessages
 }
 
-func (r *repoMessagesPending) GetByPeer(peerID int64, peerType int32) []*msg.UserMessage {
+func (r *repoMessagesPending) GetByPeer(teamID int64, peerID int64, peerType int32) []*msg.UserMessage {
 	userMessages := make([]*msg.UserMessage, 0, 10)
 	_ = badgerUpdate(func(txn *badger.Txn) error {
 		opt := badger.DefaultIteratorOptions
@@ -322,7 +322,7 @@ func (r *repoMessagesPending) GetByPeer(peerID int64, peerType int32) []*msg.Use
 			_ = it.Item().Value(func(val []byte) error {
 				pm := new(msg.ClientPendingMessage)
 				_ = pm.Unmarshal(val)
-				if pm.PeerID == peerID && pm.PeerType == peerType {
+				if pm.PeerID == peerID && pm.PeerType == peerType && pm.TeamID == teamID {
 					userMessages = append(userMessages, r.ToUserMessage(pm))
 				}
 				return nil

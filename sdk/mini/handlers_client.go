@@ -1,0 +1,295 @@
+package mini
+
+import (
+	"fmt"
+	"git.ronaksoft.com/river/msg/go/msg"
+	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/logs"
+	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/uiexec"
+	"github.com/ronaksoft/rony"
+	"go.uber.org/zap"
+	"strings"
+	"time"
+)
+
+/*
+   Creation Time: 2021 - May - 01
+   Created by:  (ehsan)
+   Maintainers:
+      1.  Ehsan N. Moosa (E2)
+   Auditor: Ehsan N. Moosa (E2)
+   Copyright Ronak Software Group 2020
+*/
+
+func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	reqMedia := &msg.ClientSendMessageMedia{}
+	if err := reqMedia.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		uiexec.ExecSuccessCB(successCB, out)
+		return
+	}
+
+	// support IOS file path
+	if strings.HasPrefix(reqMedia.FilePath, "file://") {
+		reqMedia.FilePath = reqMedia.FilePath[7:]
+	}
+	if strings.HasPrefix(reqMedia.ThumbFilePath, "file://") {
+		reqMedia.ThumbFilePath = reqMedia.ThumbFilePath[7:]
+	}
+
+	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
+	fileID := domain.SequentialUniqueID()
+	msgID := -fileID
+	thumbID := int64(0)
+	reqMedia.FileUploadID = fmt.Sprintf("%d", fileID)
+	reqMedia.FileID = fileID
+	if reqMedia.ThumbFilePath != "" {
+		thumbID = domain.RandomInt63()
+		reqMedia.ThumbID = thumbID
+		reqMedia.ThumbUploadID = fmt.Sprintf("%d", thumbID)
+	}
+
+	checkSha256 := true
+	switch reqMedia.MediaType {
+	case msg.InputMediaType_InputMediaTypeUploadedDocument:
+		for _, attr := range reqMedia.Attributes {
+			if attr.Type == msg.DocumentAttributeType_AttributeTypeAudio {
+				x := &msg.DocumentAttributeAudio{}
+				_ = x.Unmarshal(attr.Data)
+				if x.Voice {
+					checkSha256 = false
+				}
+			}
+		}
+	default:
+		panic("Invalid MediaInputType")
+	}
+
+	h, _ := domain.CalculateSha256(reqMedia.FilePath)
+	pendingMessage, err := repo.PendingMessages.SaveClientMessageMedia(
+		domain.GetTeamID(in), domain.GetTeamAccess(in), msgID, r.ConnInfo.UserID, fileID, fileID, thumbID, reqMedia, h,
+	)
+	if err != nil {
+		e := &rony.Error{
+			Code:  "n/a",
+			Items: "Failed to save to pendingMessages : " + err.Error(),
+		}
+		out.Fill(out.RequestID, rony.C_Error, e)
+		uiexec.ExecSuccessCB(successCB, out)
+		return
+	}
+
+	// 3. return to CallBack with pending message data : Done
+	out.Fill(out.RequestID, msg.C_ClientPendingMessage, pendingMessage)
+
+	// 4. Start the upload process
+	r.fileCtrl.UploadMessageDocument(pendingMessage.ID, reqMedia.FilePath, reqMedia.ThumbFilePath, fileID, thumbID, h, pendingMessage.PeerID, checkSha256)
+
+	uiexec.ExecSuccessCB(successCB, out)
+}
+
+func (r *River) clientGlobalSearch(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientGlobalSearch{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	searchPhrase := strings.ToLower(req.Text)
+	searchResults := &msg.ClientSearchResult{}
+	var userContacts []*msg.ContactUser
+	var nonContacts []*msg.ContactUser
+	var msgs []*msg.UserMessage
+	if len(req.LabelIDs) > 0 {
+		if req.Peer != nil {
+			msgs = repo.Messages.SearchByLabels(domain.GetTeamID(in), req.LabelIDs, req.Peer.ID, req.Limit)
+		} else {
+			msgs = repo.Messages.SearchByLabels(domain.GetTeamID(in), req.LabelIDs, 0, req.Limit)
+		}
+
+	} else if req.SenderID != 0 {
+		msgs = repo.Messages.SearchBySender(domain.GetTeamID(in), searchPhrase, req.SenderID, req.Peer.ID, req.Limit)
+	} else if req.Peer != nil {
+		msgs = repo.Messages.SearchTextByPeerID(domain.GetTeamID(in), searchPhrase, req.Peer.ID, req.Limit)
+	} else {
+		msgs = repo.Messages.SearchText(domain.GetTeamID(in), searchPhrase, req.Limit)
+	}
+
+	// get users && group IDs
+	userIDs := domain.MInt64B{}
+	matchedUserIDs := domain.MInt64B{}
+	groupIDs := domain.MInt64B{}
+	for _, m := range msgs {
+		if m.PeerType == int32(msg.PeerType_PeerSelf) || m.PeerType == int32(msg.PeerType_PeerUser) {
+			userIDs[m.PeerID] = true
+		}
+		if m.PeerType == int32(msg.PeerType_PeerGroup) {
+			groupIDs[m.PeerID] = true
+		}
+		if m.SenderID > 0 {
+			userIDs[m.SenderID] = true
+		} else {
+			groupIDs[m.PeerID] = true
+		}
+		if m.FwdSenderID > 0 {
+			userIDs[m.FwdSenderID] = true
+		} else {
+			groupIDs[m.FwdSenderID] = true
+		}
+	}
+
+	// if peerID == 0 then look for group and contact names too
+	if req.Peer == nil {
+		userContacts, _ = repo.Users.SearchContacts(domain.GetTeamID(in), searchPhrase)
+		for _, userContact := range userContacts {
+			matchedUserIDs[userContact.ID] = true
+		}
+		nonContacts = repo.Users.SearchNonContacts(searchPhrase)
+		for _, userContact := range nonContacts {
+			matchedUserIDs[userContact.ID] = true
+		}
+		searchResults.MatchedGroups = repo.Groups.Search(domain.GetTeamID(in), searchPhrase)
+	}
+
+	users, _ := repo.Users.GetMany(userIDs.ToArray())
+	groups, _ := repo.Groups.GetMany(groupIDs.ToArray())
+	matchedUsers, _ := repo.Users.GetMany(matchedUserIDs.ToArray())
+
+	searchResults.Messages = msgs
+	searchResults.Users = users
+	searchResults.Groups = groups
+	searchResults.MatchedUsers = matchedUsers
+
+	out.RequestID = in.RequestID
+	out.Constructor = msg.C_ClientSearchResult
+	out.Message, _ = searchResults.Marshal()
+	uiexec.ExecSuccessCB(successCB, out)
+}
+
+func (r *River) clientContactSearch(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientContactSearch{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	searchPhrase := strings.ToLower(req.Text)
+	logs.Info("SearchContacts", zap.String("Phrase", searchPhrase))
+
+	users := &msg.UsersMany{}
+	contactUsers, _ := repo.Users.SearchContacts(domain.GetTeamID(in), searchPhrase)
+	userIDs := make([]int64, 0, len(contactUsers))
+	for _, contactUser := range contactUsers {
+		userIDs = append(userIDs, contactUser.ID)
+	}
+	users.Users, _ = repo.Users.GetMany(userIDs)
+
+	out.Constructor = msg.C_UsersMany
+	out.RequestID = in.RequestID
+	out.Message, _ = users.Marshal()
+	uiexec.ExecSuccessCB(successCB, out)
+}
+
+func (r *River) clientGetRecentSearch(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientGetRecentSearch{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	recentSearches := repo.RecentSearches.List(domain.GetTeamID(in), req.Limit)
+
+	// get users && group IDs
+	userIDs := domain.MInt64B{}
+	groupIDs := domain.MInt64B{}
+	for _, r := range recentSearches {
+		if r.Peer.Type == int32(msg.PeerType_PeerSelf) || r.Peer.Type == int32(msg.PeerType_PeerUser) {
+			userIDs[r.Peer.ID] = true
+		}
+		if r.Peer.Type == int32(msg.PeerType_PeerGroup) {
+			groupIDs[r.Peer.ID] = true
+		}
+	}
+
+	users, _ := repo.Users.GetMany(userIDs.ToArray())
+	groups, _ := repo.Groups.GetMany(groupIDs.ToArray())
+
+	res := msg.ClientRecentSearchMany{
+		RecentSearches: recentSearches,
+		Users:          users,
+		Groups:         groups,
+	}
+
+	out.Constructor = msg.C_ClientRecentSearchMany
+	out.RequestID = in.RequestID
+	out.Message, _ = res.Marshal()
+	uiexec.ExecSuccessCB(successCB, out)
+}
+
+func (r *River) clientGetTeamCounters(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientGetTeamCounters{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	unreadCount, mentionCount, err := repo.Dialogs.CountAllUnread(r.ConnInfo.UserID, req.Team.ID, req.WithMutes)
+
+	if err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	res := msg.ClientTeamCounters{
+		UnreadCount:  int64(unreadCount),
+		MentionCount: int64(mentionCount),
+	}
+
+	out.Constructor = msg.C_ClientTeamCounters
+	out.RequestID = in.RequestID
+	out.Message, _ = res.Marshal()
+	uiexec.ExecSuccessCB(successCB, out)
+}
+
+func (r *River) clientPutRecentSearch(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientPutRecentSearch{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	peer := &msg.Peer{
+		ID:         req.Peer.ID,
+		Type:       int32(req.Peer.Type),
+		AccessHash: req.Peer.AccessHash,
+	}
+
+	recentSearch := &msg.ClientRecentSearch{
+		Peer: peer,
+		Date: int32(time.Now().Unix()),
+	}
+
+	err := repo.RecentSearches.Put(domain.GetTeamID(in), recentSearch)
+
+	if err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	res := msg.Bool{
+		Result: true,
+	}
+
+	out.Constructor = msg.C_Bool
+	out.RequestID = in.RequestID
+	out.Message, _ = res.Marshal()
+	uiexec.ExecSuccessCB(successCB, out)
+}

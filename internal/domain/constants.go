@@ -85,7 +85,7 @@ func init() {
 
 // Global Parameters
 const (
-	DefaultWebsocketEndpoint    = "ws://cyrus.river.im"
+	DefaultWebsocketEndpoint    = "ws://edge.river.im"
 	WebsocketIdleTimeout        = 5 * time.Minute
 	WebsocketPingTimeout        = 2 * time.Second
 	WebsocketWriteTime          = 3 * time.Second

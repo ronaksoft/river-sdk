@@ -106,15 +106,6 @@ func New(config Config) *Controller {
 		msg.C_SystemGetSalts:      true,
 	}
 
-	// skBytes, err := repo.System.LoadBytes("ServerKeys")
-	// if skBytes != nil && err == nil {
-	// 	ctrl.serverKeys = &ServerKeys{}
-	// 	err = json.Unmarshal(skBytes, ctrl.serverKeys)
-	// 	if err != nil {
-	// 		ctrl.serverKeys = nil
-	// 	}
-	// }
-
 	return ctrl
 }
 func (ctrl *Controller) createDialer(timeout time.Duration) {
@@ -161,7 +152,7 @@ func (ctrl *Controller) sendFlushFunc(targetID string, entries []tools.FlushEntr
 		return
 	case 1:
 		m := entries[0].Value().(*rony.MessageEnvelope)
-		err := ctrl.sendWebsocket(m)
+		err := ctrl.writeToWebsocket(m)
 		if err != nil {
 			logs.Warn("NetCtrl got error on flushing outgoing messages",
 				zap.Uint64("ReqID", m.RequestID),
@@ -205,7 +196,7 @@ func (ctrl *Controller) sendFlushFunc(targetID string, entries []tools.FlushEntr
 			messageEnvelope.Constructor = rony.C_MessageContainer
 			messageEnvelope.Message, _ = msgContainer.Marshal()
 			messageEnvelope.RequestID = 0
-			err := ctrl.sendWebsocket(messageEnvelope)
+			err := ctrl.writeToWebsocket(messageEnvelope)
 			if err != nil {
 				logs.Warn("NetCtrl got error on flushing outgoing messages",
 					zap.Error(err),
@@ -546,13 +537,13 @@ func (ctrl *Controller) Connect() {
 			ctrl.wsConn = wsConn
 
 			// it should be started here cuz we need receiver to get AuthRecall answer
-			// SendWebsocket Signal to start the 'receiver' and 'keepAlive' routines
+			// WebsocketSend Signal to start the 'receiver' and 'keepAlive' routines
 			ctrl.connectChannel <- true
 			logs.Info("NetCtrl connected")
 			ctrl.updateNetworkStatus(domain.NetworkConnected)
 
 			// Call the OnConnect handler here b4 changing network status that trigger queue to start working
-			// basically we sendWebsocket priority requests b4 queue starts to work
+			// basically we writeToWebsocket priority requests b4 queue starts to work
 			err = ctrl.OnWebsocketConnect()
 			if !ctrl.Connected() || err != nil {
 				ctrl.updateNetworkStatus(domain.NetworkConnecting)
@@ -620,10 +611,10 @@ func (ctrl *Controller) incMessageSeq() int64 {
 	return atomic.AddInt64(&ctrl.messageSeq, 1)
 }
 
-// SendWebsocket if 'direct' sends immediately otherwise it put it in flusher
-func (ctrl *Controller) SendWebsocket(msgEnvelope *rony.MessageEnvelope, direct bool) error {
+// WebsocketSend if 'direct' sends immediately otherwise it put it in flusher
+func (ctrl *Controller) WebsocketSend(msgEnvelope *rony.MessageEnvelope, direct bool) error {
 	defer logs.RecoverPanic(
-		"NetworkController::SendWebsocket",
+		"NetworkController::WebsocketSend",
 		domain.M{
 			"AuthID": ctrl.authID,
 			"OS":     domain.ClientOS,
@@ -637,14 +628,14 @@ func (ctrl *Controller) SendWebsocket(msgEnvelope *rony.MessageEnvelope, direct 
 
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
 	if direct || unauthorized {
-		return ctrl.sendWebsocket(msgEnvelope)
+		return ctrl.writeToWebsocket(msgEnvelope)
 	}
 	ctrl.sendFlusher.Enter("", tools.NewEntry(msgEnvelope))
 	return nil
 }
-func (ctrl *Controller) sendWebsocket(msgEnvelope *rony.MessageEnvelope) error {
+func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) error {
 	defer logs.RecoverPanic(
-		"NetworkController::sendWebsocket",
+		"NetworkController::writeToWebsocket",
 		domain.M{
 			"AuthID": ctrl.authID,
 			"OS":     domain.ClientOS,
@@ -662,7 +653,7 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *rony.MessageEnvelope) error {
 	}
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
 
-	logs.Debug("NetCtrl call sendWebsocket",
+	logs.Debug("NetCtrl call writeToWebsocket",
 		zap.Uint64("ReqID", msgEnvelope.RequestID),
 		zap.String("C", registry.ConstructorName(msgEnvelope.Constructor)),
 		zap.String("TeamID", msgEnvelope.Get("TeamID", "0")),
@@ -711,13 +702,13 @@ func (ctrl *Controller) sendWebsocket(msgEnvelope *rony.MessageEnvelope) error {
 	return nil
 }
 
-// RealtimeCommandWithTimeout run request immediately and do not save it in queue
-func (ctrl *Controller) RealtimeCommandWithTimeout(
+// WebsocketCommandWithTimeout run request immediately in blocking or non-blocking mode
+func (ctrl *Controller) WebsocketCommandWithTimeout(
 	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
 	blockingMode, isUICallback bool, timeout time.Duration,
 ) {
 	defer logs.RecoverPanic(
-		"SyncCtrl::RealtimeCommand",
+		"NetCtrl::WebsocketCommandWithTimeout",
 		domain.M{
 			"OS":  domain.ClientOS,
 			"Ver": domain.ClientVersion,
@@ -726,7 +717,7 @@ func (ctrl *Controller) RealtimeCommandWithTimeout(
 		nil,
 	)
 
-	logs.Debug("QueueCtrl fires realtime command",
+	logs.Debug("NetCtrl fires websocket command",
 		zap.Uint64("ReqID", messageEnvelope.RequestID),
 		zap.String("C", registry.ConstructorName(messageEnvelope.Constructor)),
 	)
@@ -736,9 +727,9 @@ func (ctrl *Controller) RealtimeCommandWithTimeout(
 		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, timeout, timeoutCB, isUICallback,
 	)
 	execBlock := func(reqID uint64, req *rony.MessageEnvelope) {
-		err := ctrl.SendWebsocket(req, blockingMode)
+		err := ctrl.WebsocketSend(req, blockingMode)
 		if err != nil {
-			logs.Warn("QueueCtrl got error from NetCtrl",
+			logs.Warn("NetCtrl got error from NetCtrl",
 				zap.String("Error", err.Error()),
 				zap.String("C", registry.ConstructorName(req.Constructor)),
 				zap.Uint64("ReqID", req.RequestID),
@@ -751,7 +742,7 @@ func (ctrl *Controller) RealtimeCommandWithTimeout(
 
 		select {
 		case <-time.After(reqCB.Timeout):
-			logs.Debug("QueueCtrl got timeout on realtime command",
+			logs.Debug("NetCtrl got timeout on websocket command",
 				zap.String("C", registry.ConstructorName(req.Constructor)),
 				zap.Uint64("ReqID", req.RequestID),
 			)
@@ -765,7 +756,7 @@ func (ctrl *Controller) RealtimeCommandWithTimeout(
 			}
 			return
 		case res := <-reqCB.ResponseChannel:
-			logs.Debug("QueueCtrl got response on realtime command",
+			logs.Debug("NetCtrl got response for websocket command",
 				zap.Uint64("ReqID", req.RequestID),
 				zap.String("ReqC", registry.ConstructorName(req.Constructor)),
 				zap.String("ResC", registry.ConstructorName(res.Constructor)),
@@ -790,12 +781,11 @@ func (ctrl *Controller) RealtimeCommandWithTimeout(
 	return
 }
 
-// RealtimeCommand run request immediately and do not save it in queue
-func (ctrl *Controller) RealtimeCommand(
+func (ctrl *Controller) WebsocketCommand(
 	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
 	blockingMode, isUICallback bool,
 ) {
-	ctrl.RealtimeCommandWithTimeout(messageEnvelope, timeoutCB, successCB, blockingMode, isUICallback, domain.WebsocketRequestTimeout)
+	ctrl.WebsocketCommandWithTimeout(messageEnvelope, timeoutCB, successCB, blockingMode, isUICallback, domain.WebsocketRequestTimeout)
 }
 
 // SendHttp encrypt and send request to server and receive and decrypt its response
@@ -809,10 +799,12 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 	}()
 
 	var totalUploadBytes, totalDownloadBytes int
-	startTime := time.Now()
+	startTime := tools.NanoTime()
 
 	if ctx == nil {
-		ctx = context.Background()
+		var cf context.CancelFunc
+		ctx, cf = context.WithTimeout(context.Background(), domain.HttpRequestTimeout)
+		defer cf()
 	}
 	protoMessage := msg.ProtoMessage{
 		AuthID:     ctrl.authID,
@@ -856,7 +848,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 		return nil, err
 	}
 	totalDownloadBytes += len(resBuff)
-	mon.DataTransfer(totalUploadBytes, totalDownloadBytes, time.Now().Sub(startTime))
+	mon.DataTransfer(totalUploadBytes, totalDownloadBytes, time.Duration(tools.NanoTime()-startTime))
 
 	// Decrypt response
 	res := &msg.ProtoMessage{}
@@ -878,6 +870,36 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 	}
 
 	return receivedEncryptedPayload.Envelope, nil
+}
+
+// HttpCommandWithTimeout run request immediately
+func (ctrl *Controller) HttpCommandWithTimeout(
+	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+	timeout time.Duration,
+) {
+	ctx, cf := context.WithTimeout(context.Background(), timeout)
+	defer cf()
+
+	res, err := ctrl.SendHttp(ctx, messageEnvelope)
+	switch err {
+	case nil:
+	case context.DeadlineExceeded:
+		timeoutCB()
+	case context.Canceled:
+		rony.ErrorMessage(res, messageEnvelope.RequestID, "E100", "Canceled")
+		successCB(res)
+	default:
+		rony.ErrorMessage(res, messageEnvelope.RequestID, "E100", err.Error())
+		successCB(res)
+	}
+
+}
+
+// HttpCommand run request immediately
+func (ctrl *Controller) HttpCommand(
+	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+) {
+	ctrl.HttpCommandWithTimeout(messageEnvelope, timeoutCB, successCB, domain.HttpRequestTimeout)
 }
 
 // Reconnect by wsKeepConnection = true the watchdog will connect itself again no need to call ctrl.Connect()

@@ -1030,7 +1030,7 @@ func (r *repoMessages) GetLastBotKeyboard(teamID, peerID int64, peerType int32) 
 	return keyboardMessage, nil
 }
 
-func (r *repoMessages) ReIndex() {
+func (r *repoMessages) ReIndex() error {
 	err := tools.Try(10, time.Second, func() error {
 		if r.msgSearch == nil {
 			return domain.ErrDoesNotExists
@@ -1038,9 +1038,9 @@ func (r *repoMessages) ReIndex() {
 		return nil
 	})
 	if err != nil {
-		return
+		return err
 	}
-	err = badgerView(func(txn *badger.Txn) error {
+	return badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = tools.StrToByte(prefixMessages)
 		it := txn.NewIterator(opts)
@@ -1067,7 +1067,4 @@ func (r *repoMessages) ReIndex() {
 		it.Close()
 		return nil
 	})
-	if err != nil {
-		logs.Warn("Error On ReIndex", zap.Error(err))
-	}
 }

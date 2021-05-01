@@ -8,7 +8,6 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
-	"github.com/dgraph-io/badger/v2"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
@@ -196,21 +195,6 @@ func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash u
 
 	clientFile, err := repo.Files.Get(clusterID, fileID, accessHash)
 	if err != nil {
-		switch err {
-		case badger.ErrKeyNotFound:
-			logs.Warn("Error On GetFile (Key not found)",
-				zap.Int32("ClusterID", clusterID),
-				zap.Int64("FileID", fileID),
-				zap.Int64("AccessHash", int64(accessHash)),
-			)
-		default:
-			logs.Warn("Error On GetFile",
-				zap.Int32("ClusterID", clusterID),
-				zap.Int64("FileID", fileID),
-				zap.Int64("AccessHash", int64(accessHash)),
-				zap.Error(err),
-			)
-		}
 		return "", err
 	}
 	filePath = repo.Files.GetFilePath(clientFile)
