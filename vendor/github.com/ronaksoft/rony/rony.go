@@ -14,6 +14,8 @@ type Conn interface {
 	ConnID() uint64
 	ClientIP() string
 	SendBinary(streamID int64, data []byte) error
+	// Persistent returns FALSE if this connection will be closed when edge.DispatchCtx has been done. i.e. HTTP connections
+	// It returns TRUE if this connection still alive when edge.DispatchCtx has been done. i.e. WebSocket connections
 	Persistent() bool
 	Get(key string) interface{}
 	Set(key string, val interface{})

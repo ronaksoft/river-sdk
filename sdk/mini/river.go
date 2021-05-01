@@ -10,11 +10,8 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
 	"github.com/ronaksoft/rony"
-	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 	"strings"
-	"sync"
-	"time"
 )
 
 /*
@@ -173,166 +170,10 @@ func (r *River) onReceivedMessage(msgs []*rony.MessageEnvelope) {}
 
 func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {}
 
-func (r *River) postUploadProcess(uploadRequest *msg.ClientFileRequest) bool {
-	defer logs.RecoverPanic(
-		"River::postUploadProcess",
-		domain.M{
-			"OS":       domain.ClientOS,
-			"Ver":      domain.ClientVersion,
-			"FilePath": uploadRequest.FilePath,
-		},
-		nil,
-	)
-
-	logs.Info("River Post Upload Process",
-		zap.Bool("IsProfile", uploadRequest.IsProfilePhoto),
-		zap.Int64("MessageID", uploadRequest.MessageID),
-		zap.Int64("FileID", uploadRequest.FileID),
-	)
-	switch {
-	case uploadRequest.IsProfilePhoto == false && uploadRequest.MessageID != 0:
-		return r.sendMessageMedia(uploadRequest)
-	}
-	return false
-}
-func (r *River) sendMessageMedia(uploadRequest *msg.ClientFileRequest) (success bool) {
-	// This is a upload for message send
-	pendingMessage := repo.PendingMessages.GetByID(uploadRequest.MessageID)
-	if pendingMessage == nil {
-		return true
-	}
-
-	req := &msg.ClientSendMessageMedia{}
-	_ = req.Unmarshal(pendingMessage.Media)
-	err := tools.Try(3, time.Millisecond*500, func() error {
-		var fileLoc *msg.FileLocation
-		if uploadRequest.FileID != 0 && uploadRequest.AccessHash != 0 && uploadRequest.ClusterID != 0 {
-			req.MediaType = msg.InputMediaType_InputMediaTypeDocument
-			fileLoc = &msg.FileLocation{
-				ClusterID:  uploadRequest.ClusterID,
-				FileID:     uploadRequest.FileID,
-				AccessHash: uploadRequest.AccessHash,
-			}
-		}
-		return repo.PendingMessages.UpdateClientMessageMedia(pendingMessage, uploadRequest.TotalParts, req.MediaType, fileLoc)
-	})
-	if err != nil {
-		logs.Error("Error On UpdateClientMessageMedia", zap.Error(err))
-	}
-
-	// Create SendMessageMedia Request
-	x := &msg.MessagesSendMedia{
-		Peer:       req.Peer,
-		ClearDraft: req.ClearDraft,
-		MediaType:  req.MediaType,
-		RandomID:   pendingMessage.FileID,
-		ReplyTo:    req.ReplyTo,
-	}
-
-	switch x.MediaType {
-	case msg.InputMediaType_InputMediaTypeUploadedDocument:
-		doc := &msg.InputMediaUploadedDocument{
-			MimeType:   req.FileMIME,
-			Attributes: req.Attributes,
-			Caption:    req.Caption,
-			Entities:   req.Entities,
-			File: &msg.InputFile{
-				FileID:      uploadRequest.FileID,
-				FileName:    req.FileName,
-				MD5Checksum: "",
-			},
-			TinyThumbnail: req.TinyThumb,
-		}
-		if uploadRequest.ThumbID != 0 {
-			doc.Thumbnail = &msg.InputFile{
-				FileID:      uploadRequest.ThumbID,
-				FileName:    "thumb_" + req.FileName,
-				MD5Checksum: "",
-			}
-		}
-		x.MediaData, _ = doc.Marshal()
-	case msg.InputMediaType_InputMediaTypeDocument:
-		doc := &msg.InputMediaDocument{
-			Caption:    req.Caption,
-			Attributes: req.Attributes,
-			Entities:   req.Entities,
-			Document: &msg.InputDocument{
-				ID:         uploadRequest.FileID,
-				AccessHash: uploadRequest.AccessHash,
-				ClusterID:  uploadRequest.ClusterID,
-			},
-			TinyThumbnail: req.TinyThumb,
-		}
-		if uploadRequest.ThumbID != 0 {
-			doc.Thumbnail = &msg.InputFile{
-				FileID:      uploadRequest.ThumbID,
-				FileName:    "thumb_" + req.FileName,
-				MD5Checksum: "",
-			}
-		}
-		x.MediaData, _ = doc.Marshal()
-
-	default:
-	}
-	// reqBuff, _ := x.Marshal()
-	success = true
-
-	waitGroup := sync.WaitGroup{}
-	// waitGroup.Add(1)
-	// successCB := func(m *rony.MessageEnvelope) {
-	// 	logs.Info("MessagesSendMedia success callback called", zap.String("C", registry.ConstructorName(m.Constructor)))
-	// 	switch m.Constructor {
-	// 	case rony.C_Error:
-	// 		success = false
-	// 		x := &rony.Error{}
-	// 		if err := x.Unmarshal(m.Message); err != nil {
-	// 			logs.Error("We couldn't unmarshal MessagesSendMedia (Error) response", zap.Error(err))
-	// 		}
-	// 		logs.Error("We received error on MessagesSendMedia response",
-	// 			zap.String("Code", x.Code),
-	// 			zap.String("Item", x.Items),
-	// 		)
-	// 		if x.Code == msg.ErrCodeAlreadyExists && x.Items == msg.ErrItemRandomID {
-	// 			success = true
-	// 			_ = repo.PendingMessages.Delete(uploadRequest.MessageID)
-	//
-	// 		}
-	// 	}
-	// 	waitGroup.Done()
-	// }
-	// timeoutCB := func() {
-	// 	success = false
-	// 	logs.Debug("We got Timeout! on MessagesSendMedia response")
-	// 	waitGroup.Done()
-	// }
-	// r.queueCtrl.EnqueueCommand(
-	// 	&rony.MessageEnvelope{
-	// 		Constructor: msg.C_MessagesSendMedia,
-	// 		RequestID:   uint64(x.RandomID),
-	// 		Message:     reqBuff,
-	// 		Header:      domain.TeamHeader(pendingMessage.TeamID, pendingMessage.TeamAccessHash),
-	// 	},
-	// 	timeoutCB, successCB, false)
-	waitGroup.Wait()
-	return
-}
-
 func (r *River) registerCommandHandlers() {
 	r.localCommands = map[int64]domain.LocalMessageHandler{
-		msg.C_AccountGetTeams:        r.accountsGetTeams,
-		msg.C_ClientContactSearch:    r.clientContactSearch,
-		msg.C_ClientGetRecentSearch:  r.clientGetRecentSearch,
-		msg.C_ClientGetTeamCounters:  r.clientGetTeamCounters,
-		msg.C_ClientGlobalSearch:     r.clientGlobalSearch,
-		msg.C_ClientPutRecentSearch:  r.clientPutRecentSearch,
 		msg.C_ClientSendMessageMedia: r.clientSendMessageMedia,
-		msg.C_MessagesDelete:         r.messagesDelete,
-		msg.C_MessagesGet:            r.messagesGet,
-		msg.C_MessagesGetDialog:      r.messagesGetDialog,
-		msg.C_MessagesGetDialogs:     r.messagesGetDialogs,
 		msg.C_MessagesSendMedia:      r.messagesSendMedia,
-		msg.C_UsersGet:               r.usersGet,
-		msg.C_UsersGetFull:           r.usersGetFull,
 	}
 }
 

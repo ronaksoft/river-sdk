@@ -42,7 +42,8 @@ func (c MessageKind) String() string {
 	return messageKindNames[c]
 }
 
-// DispatchCtx
+// DispatchCtx holds the context of the dispatcher's request. Each DispatchCtx could holds one or many RequestCtx.
+// DispatchCtx lives until the last of its RequestCtx children.
 type DispatchCtx struct {
 	edge     *Server
 	streamID int64
@@ -172,18 +173,15 @@ func (ctx *DispatchCtx) BufferPush(m *rony.MessageEnvelope) {
 }
 
 func (ctx *DispatchCtx) BufferPop() *rony.MessageEnvelope {
-	v := ctx.buf.PickHeadData()
-	if v != nil {
-		return v.(*rony.MessageEnvelope)
-	}
-	return nil
+	v, _ := ctx.buf.PickHeadData().(*rony.MessageEnvelope)
+	return v
 }
 
 func (ctx *DispatchCtx) BufferSize() int32 {
 	return ctx.buf.Size()
 }
 
-// RequestCtx
+// RequestCtx holds the context of an RPC handler
 type RequestCtx struct {
 	dispatchCtx *DispatchCtx
 	edge        *Server
@@ -301,18 +299,22 @@ func (ctx *RequestCtx) PushMessage(constructor int64, proto proto.Message) {
 	ctx.PushCustomMessage(ctx.ReqID(), constructor, proto)
 }
 
-func (ctx *RequestCtx) PushCustomMessage(requestID uint64, constructor int64, proto proto.Message, kvs ...*rony.KeyValue) {
+func (ctx *RequestCtx) PushCustomMessage(requestID uint64, constructor int64, message proto.Message, kvs ...*rony.KeyValue) {
 	if ctx.dispatchCtx.kind == ReplicaMessage {
 		return
 	}
 
 	envelope := rony.PoolMessageEnvelope.Get()
-	envelope.Fill(requestID, constructor, proto)
+	envelope.Fill(requestID, constructor, message)
 	envelope.Header = append(envelope.Header[:0], kvs...)
 
 	switch ctx.dispatchCtx.kind {
 	case GatewayMessage:
-		ctx.edge.gatewayDispatcher.OnMessage(ctx.dispatchCtx, envelope)
+		if ctx.Conn().Persistent() {
+			ctx.edge.gatewayDispatcher.OnMessage(ctx.dispatchCtx, envelope)
+		} else {
+			ctx.dispatchCtx.BufferPush(envelope.Clone())
+		}
 	case TunnelMessage:
 		ctx.dispatchCtx.BufferPush(envelope.Clone())
 	}
@@ -343,6 +345,32 @@ func (ctx *RequestCtx) TryExecuteRemote(attempts int, retryWait time.Duration, r
 
 func (ctx *RequestCtx) ExecuteRemote(replicaSet uint64, onlyLeader bool, req, res *rony.MessageEnvelope) error {
 	return ctx.edge.TryExecuteRemote(1, 0, replicaSet, onlyLeader, req, res)
+}
+
+func (ctx *RequestCtx) ClusterView(replicaSet uint64, edges *rony.Edges) (*rony.Edges, error) {
+	req := rony.PoolMessageEnvelope.Get()
+	defer rony.PoolMessageEnvelope.Put(req)
+	res := rony.PoolMessageEnvelope.Get()
+	defer rony.PoolMessageEnvelope.Put(res)
+	req.Fill(tools.RandomUint64(0), rony.C_GetNodes, &rony.GetNodes{})
+	err := ctx.ExecuteRemote(replicaSet, true, req, res)
+	if err != nil {
+		return nil, err
+	}
+	switch res.Constructor {
+	case rony.C_Edges:
+		if edges == nil {
+			edges = &rony.Edges{}
+		}
+		_ = edges.Unmarshal(res.GetMessage())
+		return edges, nil
+	case rony.C_Error:
+		x := &rony.Error{}
+		_ = x.Unmarshal(res.GetMessage())
+		return nil, x
+	default:
+		return nil, ErrUnexpectedTunnelResponse
+	}
 }
 
 func (ctx *RequestCtx) Log() log.Logger {

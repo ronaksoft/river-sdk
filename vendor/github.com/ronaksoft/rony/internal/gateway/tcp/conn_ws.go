@@ -59,7 +59,15 @@ func newWebsocketConn(g *Gateway, conn net.Conn, clientIP []byte) (*websocketCon
 	// Increment total connection counter and connection ID
 	totalConns := atomic.AddInt32(&g.connsTotal, 1)
 	connID := atomic.AddUint64(&g.connsLastID, 1)
-	wsConn := acquireWebsocketConn(g, connID, conn, desc)
+	wsConn := &websocketConn{
+		connID:       connID,
+		gateway:      g,
+		conn:         conn,
+		desc:         desc,
+		closed:       false,
+		kv:           make(map[string]interface{}, 4),
+		lastActivity: tools.CPUTicks(),
+	}
 	wsConn.SetClientIP(clientIP)
 
 	g.connsMtx.Lock()
@@ -184,6 +192,7 @@ func (wc *websocketConn) write(opCode ws.OpCode, payload []byte) (err error) {
 	wc.mtx.Unlock()
 	return
 }
+
 func (wc *websocketConn) Get(key string) interface{} {
 	wc.kvLock.Lock()
 	v := wc.kv[key]

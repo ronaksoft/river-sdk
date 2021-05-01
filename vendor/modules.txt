@@ -291,7 +291,7 @@ github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
 # github.com/rivo/uniseg v0.2.0
 github.com/rivo/uniseg
-# github.com/ronaksoft/rony v0.6.34
+# github.com/ronaksoft/rony v0.6.52
 ## explicit
 github.com/ronaksoft/rony
 github.com/ronaksoft/rony/edge
@@ -308,6 +308,7 @@ github.com/ronaksoft/rony/internal/tunnel
 github.com/ronaksoft/rony/internal/tunnel/udp
 github.com/ronaksoft/rony/pools
 github.com/ronaksoft/rony/registry
+github.com/ronaksoft/rony/rest
 github.com/ronaksoft/rony/store
 github.com/ronaksoft/rony/tools
 # github.com/scylladb/gocqlx/v2 v2.2.0
