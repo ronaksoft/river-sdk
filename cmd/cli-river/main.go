@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
+	"git.ronaksoft.com/river/sdk/sdk/mini"
 	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
 	"github.com/fatih/color"
 	"go.uber.org/zap/zapcore"
@@ -17,6 +18,7 @@ import (
 var (
 	_Shell                   *ishell.Shell
 	_SDK                     *riversdk.River
+	_MiniSDK                 *mini.River
 	_DbID                    string
 	_DbPath                  string
 	green, red, yellow, blue func(format string, a ...interface{}) string
@@ -30,27 +32,13 @@ func main() {
 
 	// Initialize Shell
 	_Shell = ishell.New()
+	loadCommands(
+		Account, Auth, Bot, Contact, Debug, File, Gif, Group, Init, Label, Message, SDK, System, Team, User, WallPaper,
+	)
+
 	_Shell.Println("============================")
 	_Shell.Println("## River CLI Console ##")
 	_Shell.Println("============================")
-	_Shell.AddCmd(Init)
-	_Shell.AddCmd(Auth)
-	_Shell.AddCmd(Message)
-	_Shell.AddCmd(Contact)
-	_Shell.AddCmd(SDK)
-	_Shell.AddCmd(Bot)
-	_Shell.AddCmd(User)
-	_Shell.AddCmd(Debug)
-	_Shell.AddCmd(Account)
-	_Shell.AddCmd(Group)
-	_Shell.AddCmd(File)
-	_Shell.AddCmd(Botfather)
-	_Shell.AddCmd(WallPaper)
-	_Shell.AddCmd(Label)
-	_Shell.AddCmd(Gif)
-	_Shell.AddCmd(Team)
-	_Shell.AddCmd(System)
-
 	_Shell.Print("River Host (default: river.im):")
 	_Shell.Print("DB Path (./_db): ")
 
@@ -112,6 +100,25 @@ func main() {
 		ConnInfo:               connInfo,
 	})
 
+	_MiniSDK = &mini.River{}
+	_MiniSDK.SetConfig(&mini.RiverConfig{
+		ServerHostPort:         serverHostPort,
+		DbPath:                 _DbPath,
+		DbID:                   _DbID,
+		LogLevel:               int(zapcore.InfoLevel),
+		DocumentAudioDirectory: "./_files/audio",
+		DocumentVideoDirectory: "./_files/video",
+		DocumentPhotoDirectory: "./_files/photo",
+		DocumentFileDirectory:  "./_files/file",
+		DocumentCacheDirectory: "./_files/cache",
+		LogDirectory:           "./_files/logs",
+		ConnInfo: &mini.RiverConnection{
+			AuthID:  connInfo.AuthID,
+			AuthKey: connInfo.AuthKey,
+			UserID:  connInfo.UserID,
+		},
+	})
+
 	err = _SDK.AppStart()
 	if err != nil {
 		panic(err)
@@ -135,4 +142,10 @@ func main() {
 
 	_Shell.Run()
 
+}
+
+func loadCommands(cmds ...*ishell.Cmd) {
+	for _, cmd := range cmds {
+		_Shell.AddCmd(cmd)
+	}
 }

@@ -9,7 +9,7 @@ var Account = &ishell.Cmd{
 	Name: "Account",
 }
 
-var RegisterDevice = &ishell.Cmd{
+var AccountRegisterDevice = &ishell.Cmd{
 	Name: "RegisterDevice",
 	Func: func(c *ishell.Context) {
 		req := msg.AccountRegisterDevice{}
@@ -32,7 +32,7 @@ var RegisterDevice = &ishell.Cmd{
 	},
 }
 
-var UpdateUsername = &ishell.Cmd{
+var AccountUpdateUsername = &ishell.Cmd{
 	Name: "UpdateUsername",
 	Func: func(c *ishell.Context) {
 		req := msg.AccountUpdateUsername{}
@@ -49,7 +49,7 @@ var UpdateUsername = &ishell.Cmd{
 	},
 }
 
-var CheckUsername = &ishell.Cmd{
+var AccountCheckUsername = &ishell.Cmd{
 	Name: "CheckUsername",
 	Func: func(c *ishell.Context) {
 		req := msg.AccountCheckUsername{}
@@ -66,7 +66,7 @@ var CheckUsername = &ishell.Cmd{
 	},
 }
 
-var UnregisterDevice = &ishell.Cmd{
+var AccountUnregisterDevice = &ishell.Cmd{
 	Name: "UnregisterDevice",
 	Func: func(c *ishell.Context) {
 		req := msg.AccountUnregisterDevice{}
@@ -84,7 +84,7 @@ var UnregisterDevice = &ishell.Cmd{
 	},
 }
 
-var UpdateProfile = &ishell.Cmd{
+var AccountUpdateProfile = &ishell.Cmd{
 	Name: "UpdateProfile",
 	Func: func(c *ishell.Context) {
 		req := msg.AccountUpdateProfile{}
@@ -100,7 +100,7 @@ var UpdateProfile = &ishell.Cmd{
 	},
 }
 
-var SetNotifySettings = &ishell.Cmd{
+var AccountSetNotifySettings = &ishell.Cmd{
 	Name: "SetNotifySettings",
 	Func: func(c *ishell.Context) {
 		req := msg.AccountSetNotifySettings{
@@ -125,7 +125,7 @@ var SetNotifySettings = &ishell.Cmd{
 	},
 }
 
-var UploadPhoto = &ishell.Cmd{
+var AccountUploadPhoto = &ishell.Cmd{
 	Name: "UploadPhoto",
 	Func: func(c *ishell.Context) {
 		filePath := fnGetFilePath(c)
@@ -134,7 +134,7 @@ var UploadPhoto = &ishell.Cmd{
 	},
 }
 
-var RemovePhoto = &ishell.Cmd{
+var AccountRemovePhoto = &ishell.Cmd{
 	Name: "RemovePhoto",
 	Func: func(c *ishell.Context) {
 		req := msg.AccountRemovePhoto{}
@@ -149,7 +149,7 @@ var RemovePhoto = &ishell.Cmd{
 	},
 }
 
-var GetTeams = &ishell.Cmd{
+var AccountGetTeams = &ishell.Cmd{
 	Name: "GetTeams",
 	Func: func(c *ishell.Context) {
 		req := msg.AccountGetTeams{}
@@ -165,13 +165,13 @@ var GetTeams = &ishell.Cmd{
 }
 
 func init() {
-	Account.AddCmd(RegisterDevice)
-	Account.AddCmd(UpdateUsername)
-	Account.AddCmd(CheckUsername)
-	Account.AddCmd(UnregisterDevice)
-	Account.AddCmd(UpdateProfile)
-	Account.AddCmd(SetNotifySettings)
-	Account.AddCmd(UploadPhoto)
-	Account.AddCmd(RemovePhoto)
-	Account.AddCmd(GetTeams)
+	Account.AddCmd(AccountRegisterDevice)
+	Account.AddCmd(AccountUpdateUsername)
+	Account.AddCmd(AccountCheckUsername)
+	Account.AddCmd(AccountUnregisterDevice)
+	Account.AddCmd(AccountUpdateProfile)
+	Account.AddCmd(AccountSetNotifySettings)
+	Account.AddCmd(AccountUploadPhoto)
+	Account.AddCmd(AccountRemovePhoto)
+	Account.AddCmd(AccountGetTeams)
 }

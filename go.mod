@@ -23,7 +23,7 @@ require (
 	github.com/gocql/gocql v0.0.0-20200815110948-5378c8f664e9 // indirect
 	github.com/gogo/protobuf v1.3.1
 	github.com/juju/ratelimit v1.0.1
-	github.com/kr/pretty v0.2.0
+	github.com/kr/pretty v0.2.0 // indirect
 	github.com/miekg/dns v1.1.30 // indirect
 	github.com/monnand/dhkx v0.0.0-20180522003156-9e5b033f1ac4
 	github.com/nyaruka/phonenumbers v1.0.65
