@@ -10,6 +10,7 @@ import (
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/tools"
+	"io"
 	"os"
 	"strings"
 )
@@ -207,7 +208,6 @@ func (r *River) uploadFile(in *rony.MessageEnvelope, fileID int64, filePath stri
 	defer f.Close()
 
 	var (
-		buf      [fileCtrl.DefaultChunkSize]byte
 		fileSize int64
 	)
 	// Check File stats and return error if any problem exists
@@ -237,38 +237,49 @@ func (r *River) uploadFile(in *rony.MessageEnvelope, fileID int64, filePath stri
 		maxPartIndex = totalParts
 	}
 	for partIndex := int32(0); partIndex < maxPartIndex; partIndex++ {
-		err = tools.TrySlow(func() error {
-			n, err := f.Read(buf[:])
-			if err != nil {
-				return err
-			}
-			req := &msg.FileSavePart{
-				FileID:     fileID,
-				PartID:     partIndex + 1,
-				TotalParts: totalParts,
-				Bytes:      buf[:n],
-			}
-			reqBuf := pools.Buffer.FromProto(req)
-			r.networkCtrl.HttpCommand(
-				&rony.MessageEnvelope{
-					Constructor: msg.C_FileSavePart,
-					RequestID:   tools.RandomUint64(0),
-					Message:     *reqBuf.Bytes(),
-					Header:      domain.TeamHeader(domain.GetTeamID(in), domain.GetTeamAccess(in)),
-				},
-				func() {
-
-				},
-				func(m *rony.MessageEnvelope) {
-
-				},
-			)
-			return nil
-		})
+		err = r.savePart(in, f, fileID, partIndex, totalParts)
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+func (r *River) savePart(in *rony.MessageEnvelope, f io.Reader, fileID int64, partIndex, totalParts int32) error {
+	var buf [fileCtrl.DefaultChunkSize]byte
+	n, err := f.Read(buf[:])
+	if err != nil {
+		return err
+	}
+	req := &msg.FileSavePart{
+		FileID:     fileID,
+		PartID:     partIndex + 1,
+		TotalParts: totalParts,
+		Bytes:      buf[:n],
+	}
+	reqBuf := pools.Buffer.FromProto(req)
+	r.networkCtrl.HttpCommand(
+		&rony.MessageEnvelope{
+			Constructor: msg.C_FileSavePart,
+			RequestID:   tools.RandomUint64(0),
+			Message:     *reqBuf.Bytes(),
+			Header:      domain.TeamHeader(domain.GetTeamID(in), domain.GetTeamAccess(in)),
+		},
+		func() {
+			err = domain.ErrRequestTimeout
+		},
+		func(m *rony.MessageEnvelope) {
+			switch m.Constructor {
+			case msg.C_Bool:
+				err = nil
+			case rony.C_Error:
+				x := &rony.Error{}
+				_ = x.Unmarshal(m.Message)
+				err = x
+			default:
+				err = domain.ErrServer
+			}
+		},
+	)
+	return err
 }

@@ -3,7 +3,6 @@ package mini
 import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
-	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
 	networkCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_network"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
@@ -78,7 +77,6 @@ type River struct {
 
 	// Internal Controllers
 	networkCtrl *networkCtrl.Controller
-	fileCtrl    *fileCtrl.Controller
 
 	// Delegates
 	mainDelegate riversdk.MainDelegate

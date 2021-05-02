@@ -62,7 +62,6 @@ func (r *River) AppStart() error {
 
 	// Start Controllers
 	r.networkCtrl.Start()
-	r.fileCtrl.Start()
 
 	domain.StartTime = time.Now()
 	domain.WindowLog = func(txt string) {}
