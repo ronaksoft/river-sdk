@@ -234,11 +234,11 @@ func (r *River) uploadFile(in *rony.MessageEnvelope, fileID int64, filePath stri
 		totalParts = dividend
 	}
 
-	maxPartIndex := totalParts - 1
-	if totalParts == 1 {
-		maxPartIndex = totalParts
-	}
-	for partIndex := int32(0); partIndex < maxPartIndex; partIndex++ {
+	for partIndex := int32(0); partIndex < totalParts; partIndex++ {
+		logs.Info("SavePart",
+			zap.Int32("PartID", partIndex), zap.Int32("Total", totalParts),
+			zap.Int64("FileSize", fileSize),
+		)
 		err = r.savePart(in, f, fileID, partIndex, totalParts)
 		if err != nil {
 			logs.Warn("Error On SavePart (MiniSDK)", zap.Error(err))
@@ -261,6 +261,7 @@ func (r *River) savePart(in *rony.MessageEnvelope, f io.Reader, fileID int64, pa
 		Bytes:      buf[:n],
 	}
 	reqBuf := pools.Buffer.FromProto(req)
+	defer pools.Buffer.Put(reqBuf)
 	r.networkCtrl.HttpCommand(
 		&rony.MessageEnvelope{
 			Constructor: msg.C_FileSavePart,
