@@ -2,7 +2,6 @@ package domain
 
 import (
 	"errors"
-	"fmt"
 	"github.com/ronaksoft/rony"
 )
 
@@ -28,7 +27,7 @@ var (
 
 // ParseServerError ...
 func ParseServerError(b []byte) error {
-	x := new(rony.Error)
+	x := &rony.Error{}
 	_ = x.Unmarshal(b)
-	return fmt.Errorf("%s:%s", x.Code, x.Items)
+	return x
 }
