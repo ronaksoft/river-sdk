@@ -883,6 +883,7 @@ func (ctrl *Controller) HttpCommandWithTimeout(
 	res, err := ctrl.SendHttp(ctx, messageEnvelope)
 	switch err {
 	case nil:
+		successCB(res)
 	case context.DeadlineExceeded:
 		timeoutCB()
 	case context.Canceled:

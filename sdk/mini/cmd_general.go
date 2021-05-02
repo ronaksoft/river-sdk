@@ -4,7 +4,6 @@ import (
 	"context"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
-	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/salt"
 	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
@@ -50,9 +49,6 @@ func (r *River) AppStart() error {
 			logs.Warn("We could not unmarshal SysConfig", zap.Error(err))
 		}
 	}
-
-	// Load the usage stats
-	mon.LoadUsage()
 
 	// Update Authorizations
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
