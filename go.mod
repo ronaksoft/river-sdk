@@ -6,7 +6,6 @@ require (
 	github.com/RoaringBitmap/roaring v0.5.1 // indirect
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
-	github.com/bbva/raft-badger v1.0.1 // indirect
 	github.com/beeker1121/goque v2.1.0+incompatible
 	github.com/blevesearch/bleve v1.0.14
 	github.com/chzyer/logex v1.1.10 // indirect
@@ -20,10 +19,8 @@ require (
 	github.com/glycerine/go-unsnap-stream v0.0.0-20190901134440-81cf024a9e0a // indirect
 	github.com/gobwas/pool v0.2.1
 	github.com/gobwas/ws v1.0.4
-	github.com/gocql/gocql v0.0.0-20200815110948-5378c8f664e9 // indirect
 	github.com/gogo/protobuf v1.3.1
 	github.com/juju/ratelimit v1.0.1
-	github.com/kr/pretty v0.2.0 // indirect
 	github.com/miekg/dns v1.1.30 // indirect
 	github.com/monnand/dhkx v0.0.0-20180522003156-9e5b033f1ac4
 	github.com/nyaruka/phonenumbers v1.0.65
@@ -31,11 +28,9 @@ require (
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/ronaksoft/rony v0.6.52
-	github.com/scylladb/gocqlx/v2 v2.2.0 // indirect
 	github.com/siongui/instago v0.0.0-20200627103523-54424cb565ea
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/spf13/cobra v1.1.1
-	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.1
 	github.com/tidwall/buntdb v1.1.7
 	github.com/tinylib/msgp v1.1.2 // indirect
