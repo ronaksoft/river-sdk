@@ -7,7 +7,6 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
-	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
 	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 	"strings"
@@ -79,7 +78,7 @@ type River struct {
 	networkCtrl *networkCtrl.Controller
 
 	// Delegates
-	mainDelegate riversdk.MainDelegate
+	mainDelegate MainDelegate
 }
 
 // SetConfig must be called before any other function, otherwise it panics
