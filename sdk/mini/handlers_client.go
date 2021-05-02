@@ -26,11 +26,11 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, da *DelegateAdapter) {
 	reqMedia := &msg.ClientSendMessageMedia{}
 	if err := reqMedia.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		uiexec.ExecSuccessCB(successCB, out)
+		uiexec.ExecSuccessCB(da.OnComplete, out)
 		return
 	}
 
@@ -69,28 +69,19 @@ func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, timeoutCB 
 	}
 
 	if thumbID != 0 {
-		err := r.uploadFile(in, thumbID, reqMedia.ThumbFilePath, reqMedia.Peer.ID)
+		err := r.uploadFile(in, nil, thumbID, reqMedia.ThumbFilePath, reqMedia.Peer.ID)
 		if err != nil {
 			rony.ErrorMessage(out, in.RequestID, "E100", err.Error())
-			successCB(out)
+			da.OnComplete(out)
 			return
 		}
 	}
 
 	var (
 		fileLocation *msg.FileLocation
-		err          error
 	)
 	if checkSha256 {
-		fileLocation, err = r.checkSha256(reqMedia)
-		if err != nil {
-			err = r.uploadFile(in, fileID, reqMedia.FilePath, reqMedia.Peer.ID)
-			if err != nil {
-				rony.ErrorMessage(out, in.RequestID, "E100", err.Error())
-				successCB(out)
-				return
-			}
-		}
+		fileLocation, _ = r.checkSha256(reqMedia)
 	}
 
 	// Create SendMessageMedia Request
@@ -124,6 +115,12 @@ func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, timeoutCB 
 		}
 		x.MediaData, _ = doc.Marshal()
 	} else {
+		err := r.uploadFile(in, da, fileID, reqMedia.FilePath, reqMedia.Peer.ID)
+		if err != nil {
+			rony.ErrorMessage(out, in.RequestID, "E100", err.Error())
+			da.OnComplete(out)
+			return
+		}
 		// File just uploaded
 		doc := &msg.InputMediaUploadedDocument{
 			MimeType:   reqMedia.FileMIME,
@@ -155,7 +152,7 @@ func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, timeoutCB 
 			Message:     reqBuff,
 			Header:      domain.TeamHeader(domain.GetTeamID(in), domain.GetTeamAccess(in)),
 		},
-		timeoutCB, successCB,
+		da.OnTimeout, da.OnComplete,
 	)
 
 }
@@ -202,7 +199,7 @@ func (r *River) checkSha256(req *msg.ClientSendMessageMedia) (*msg.FileLocation,
 	}
 	return nil, domain.ErrServer
 }
-func (r *River) uploadFile(in *rony.MessageEnvelope, fileID int64, filePath string, peerID int64) error {
+func (r *River) uploadFile(in *rony.MessageEnvelope, da *DelegateAdapter, fileID int64, filePath string, peerID int64) error {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -244,19 +241,11 @@ func (r *River) uploadFile(in *rony.MessageEnvelope, fileID int64, filePath stri
 			logs.Warn("Error On SavePart (MiniSDK)", zap.Error(err))
 			return err
 		}
-		// r.fileDelegate.OnProgressChanged(
-		// 	getUploadRequestID(0, fileID, 0),
-		// 	0, fileID, 0,
-		// 	int64(float64(partIndex)/float64(totalParts)*100),
-		// 	peerID,
-		// )
+
+		if da != nil {
+			da.OnProgress(int64(float64(partIndex) / float64(totalParts) * 100))
+		}
 	}
-	// r.fileDelegate.OnCompleted(
-	// 	getUploadRequestID(0, fileID, 0),
-	// 	0, fileID, 0,
-	// 	filePath,
-	// 	peerID,
-	// )
 
 	return nil
 }
@@ -298,8 +287,4 @@ func (r *River) savePart(in *rony.MessageEnvelope, f io.Reader, fileID int64, pa
 		},
 	)
 	return err
-}
-
-func getUploadRequestID(clusterID int32, fileID int64, accessHash uint64) string {
-	return fmt.Sprintf("%d.%d.%d", clusterID, fileID, accessHash)
 }

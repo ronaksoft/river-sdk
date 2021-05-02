@@ -83,43 +83,32 @@ func (r *River) executeCommand(
 		return 0, domain.ErrInvalidConstructor
 	}
 
-	// Timeout Callback
-	timeoutCallback := func() {
-		err = domain.ErrRequestTimeout
-		delegate.OnTimeout(err)
-	}
-
-	// Success Callback
-	successCallback := func(envelope *rony.MessageEnvelope) {
-		b, _ := envelope.Marshal()
-		delegate.OnComplete(b)
-	}
-
 	serverForce := delegate.Flags()&RequestServerForced != 0
+	rda := NewDelegateAdapter(delegate)
 
 	// If this request must be sent to the server then executeRemoteCommand
 	if serverForce {
-		executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytes, timeoutCallback, successCallback)
+		executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytes, rda)
 		return
 	}
 
 	// If the constructor is a local command then
 	handler, ok := r.localCommands[constructor]
 	if ok {
-		executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytes, timeoutCallback, successCallback)
+		executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytes, rda)
 		return
 	}
 
 	// If we reached here, then execute the remote commands
-	executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytes, timeoutCallback, successCallback)
+	executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytes, rda)
 
 	return
 }
 func executeLocalCommand(
 	teamID int64, teamAccess uint64,
-	handler domain.LocalMessageHandler,
+	handler LocalHandler,
 	requestID uint64, constructor int64, commandBytes []byte,
-	timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+	da *DelegateAdapter,
 ) {
 	logs.Debug("We execute local command",
 		zap.String("C", registry.ConstructorName(constructor)),
@@ -135,13 +124,13 @@ func executeLocalCommand(
 		Header:    domain.TeamHeader(teamID, teamAccess),
 		RequestID: requestID,
 	}
-	handler(in, out, timeoutCB, successCB)
+	handler(in, out, da)
 }
 func executeRemoteCommand(
 	teamID int64, teamAccess uint64,
 	r *River,
 	requestID uint64, constructor int64, commandBytes []byte,
-	timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+	da *DelegateAdapter,
 ) {
 	logs.Debug("We execute remote command",
 		zap.String("C", registry.ConstructorName(constructor)),
@@ -167,5 +156,5 @@ func executeRemoteCommand(
 		}
 	}
 
-	successCB(res)
+	da.OnComplete(res)
 }

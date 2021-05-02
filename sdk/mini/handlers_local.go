@@ -15,11 +15,11 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *River) messagesSendMedia(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *River) messagesSendMedia(in, out *rony.MessageEnvelope, da *DelegateAdapter) {
 	req := &msg.MessagesSendMedia{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -31,6 +31,6 @@ func (r *River) messagesSendMedia(in, out *rony.MessageEnvelope, timeoutCB domai
 			RequestID:   uint64(req.RandomID),
 			Message:     requestBytes,
 			Header:      in.Header,
-		}, timeoutCB, successCB,
+		}, da.OnTimeout, da.OnComplete,
 	)
 }

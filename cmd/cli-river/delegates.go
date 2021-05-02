@@ -174,6 +174,10 @@ func (d *RequestDelegate) OnTimeout(err error) {
 	_Shell.Println("Request TimedOut:", d.RequestID, err)
 }
 
+func (d *RequestDelegate) OnProgress(percent int64) {
+	_Shell.Println("Progress:", d.RequestID, percent)
+}
+
 func (d *RequestDelegate) Flags() int32 {
 	return d.FlagsVal
 }
@@ -182,6 +186,7 @@ type CustomRequestDelegate struct {
 	RequestID      int64
 	OnCompleteFunc func(b []byte)
 	OnTimeoutFunc  func(err error)
+	OnProgressFunc func(int64)
 	FlagsFunc      func() int32
 }
 
@@ -193,6 +198,10 @@ func (c CustomRequestDelegate) OnTimeout(err error) {
 	c.OnTimeoutFunc(err)
 }
 
+func (c *CustomRequestDelegate) OnProgress(percent int64) {
+	c.OnProgressFunc(percent)
+}
+
 func (c CustomRequestDelegate) Flags() int32 {
 	return c.FlagsFunc()
 }
@@ -202,6 +211,7 @@ func NewCustomDelegate() *CustomRequestDelegate {
 	d := &RequestDelegate{}
 	c.OnCompleteFunc = d.OnComplete
 	c.OnTimeoutFunc = d.OnTimeout
+	c.OnProgressFunc = d.OnProgress
 	c.FlagsFunc = d.Flags
 	return c
 }
