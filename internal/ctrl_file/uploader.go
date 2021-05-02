@@ -302,7 +302,7 @@ func (u *UploadRequest) ActionDone(id int32) {
 		zap.String("Progress", fmt.Sprintf("%d / %d", len(u.cfr.FinishedParts), u.cfr.TotalParts)),
 	)
 	// If we have failed too many times, and we can decrease the chunk size the we do it again.
-	if atomic.LoadInt32(&u.failedActions) > retryMaxAttempts {
+	if atomic.LoadInt32(&u.failedActions) > RetryMaxAttempts {
 		atomic.StoreInt32(&u.failedActions, 0)
 		logs.Debug("Max Attempts",
 			zap.Int32("ChunkSize", u.cfr.ChunkSize),

@@ -31,6 +31,10 @@ type RiverConfig struct {
 	DbPath string
 	// DbID is used to save data for different accounts in separate databases. Could be used for multi-account cases.
 	DbID string
+	// MainDelegate holds all the general callback functions that let the user of this SDK
+	// get notified of the events.
+	MainDelegate MainDelegate
+
 	// LogLevel
 	LogLevel  int
 	SentryDSN string
@@ -107,6 +111,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.dbPath = fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID)
 
 	r.registerCommandHandlers()
+	r.mainDelegate = conf.MainDelegate
 
 	// set log level
 	logs.SetLogLevel(conf.LogLevel)

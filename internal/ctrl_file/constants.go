@@ -18,8 +18,8 @@ const (
 	MaxChunkSize           = 512 * 1 << 10 // 512KB
 	MaxFileSizeAllowedSize = 750 * 1 << 20 // 750 MB
 	MaxParts               = 3000
-	retryMaxAttempts       = 25
-	retryWaitTime          = 100 * time.Millisecond
+	RetryMaxAttempts       = 25
+	RetryWaitTime          = 100 * time.Millisecond
 )
 
 var chunkSizesKB = []int32{256, 512}

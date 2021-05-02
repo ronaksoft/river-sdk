@@ -69,7 +69,7 @@ func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, timeoutCB 
 	}
 
 	if thumbID != 0 {
-		err := r.uploadFile(in, thumbID, reqMedia.ThumbFilePath)
+		err := r.uploadFile(in, thumbID, reqMedia.ThumbFilePath, reqMedia.Peer.ID)
 		if err != nil {
 			rony.ErrorMessage(out, in.RequestID, "E100", err.Error())
 			successCB(out)
@@ -84,7 +84,7 @@ func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, timeoutCB 
 	if checkSha256 {
 		fileLocation, err = r.checkSha256(reqMedia)
 		if err != nil {
-			err = r.uploadFile(in, fileID, reqMedia.FilePath)
+			err = r.uploadFile(in, fileID, reqMedia.FilePath, reqMedia.Peer.ID)
 			if err != nil {
 				rony.ErrorMessage(out, in.RequestID, "E100", err.Error())
 				successCB(out)
@@ -202,7 +202,7 @@ func (r *River) checkSha256(req *msg.ClientSendMessageMedia) (*msg.FileLocation,
 	}
 	return nil, domain.ErrServer
 }
-func (r *River) uploadFile(in *rony.MessageEnvelope, fileID int64, filePath string) error {
+func (r *River) uploadFile(in *rony.MessageEnvelope, fileID int64, filePath string, peerID int64) error {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -244,7 +244,19 @@ func (r *River) uploadFile(in *rony.MessageEnvelope, fileID int64, filePath stri
 			logs.Warn("Error On SavePart (MiniSDK)", zap.Error(err))
 			return err
 		}
+		// r.fileDelegate.OnProgressChanged(
+		// 	getUploadRequestID(0, fileID, 0),
+		// 	0, fileID, 0,
+		// 	int64(float64(partIndex)/float64(totalParts)*100),
+		// 	peerID,
+		// )
 	}
+	// r.fileDelegate.OnCompleted(
+	// 	getUploadRequestID(0, fileID, 0),
+	// 	0, fileID, 0,
+	// 	filePath,
+	// 	peerID,
+	// )
 
 	return nil
 }
@@ -286,4 +298,8 @@ func (r *River) savePart(in *rony.MessageEnvelope, f io.Reader, fileID int64, pa
 		},
 	)
 	return err
+}
+
+func getUploadRequestID(clusterID int32, fileID int64, accessHash uint64) string {
+	return fmt.Sprintf("%d.%d.%d", clusterID, fileID, accessHash)
 }
