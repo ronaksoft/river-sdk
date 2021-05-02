@@ -6,10 +6,12 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
 	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/tools"
+	"go.uber.org/zap"
 	"io"
 	"os"
 	"strings"
@@ -239,6 +241,7 @@ func (r *River) uploadFile(in *rony.MessageEnvelope, fileID int64, filePath stri
 	for partIndex := int32(0); partIndex < maxPartIndex; partIndex++ {
 		err = r.savePart(in, f, fileID, partIndex, totalParts)
 		if err != nil {
+			logs.Warn("Error On SavePart (MiniSDK)", zap.Error(err))
 			return err
 		}
 	}
