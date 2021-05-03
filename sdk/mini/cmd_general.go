@@ -158,3 +158,8 @@ func executeRemoteCommand(
 
 	da.OnComplete(res)
 }
+
+
+func (r *River) SetTeam(teamID int64, teamAccessHash int64) {
+	domain.SetCurrentTeam(teamID, uint64(teamAccessHash))
+}
