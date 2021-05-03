@@ -38,7 +38,7 @@ func (r *River) AppStart() error {
 
 	domain.StartTime = time.Now()
 	domain.WindowLog = func(txt string) {}
-	logs.Info("River Started")
+	logs.Info("Mini River Started")
 
 	return nil
 }
