@@ -166,6 +166,13 @@ func parseCallAction(constructor msg.PhoneCallAction, data []byte) (out interfac
 			return
 		}
 		return out, nil
+	case msg.PhoneCallAction_PhoneCallRestarted:
+		t15 := &msg.PhoneActionRestarted{}
+		err = t15.Unmarshal(data)
+		if err != nil {
+			return
+		}
+		return out, nil
 	}
 	return nil, ErrNActionNotFound
 }

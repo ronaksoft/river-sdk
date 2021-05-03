@@ -191,7 +191,7 @@ func (u *UploadRequest) Prepare() error {
 			err = domain.ErrInvalidData
 			u.cancel(err)
 			return err
-		} else if u.cfr.FileSize > maxFileSizeAllowedSize {
+		} else if u.cfr.FileSize > MaxFileSizeAllowedSize {
 			err = domain.ErrFileTooLarge
 			u.cancel(err)
 			return err
@@ -221,7 +221,7 @@ func (u *UploadRequest) Prepare() error {
 	st2 := domain.Now()
 
 	// Open the file for read
-	u.file, err = os.OpenFile(u.cfr.FilePath, os.O_RDONLY, 0666)
+	u.file, err = os.OpenFile(u.cfr.FilePath, os.O_RDONLY, 0)
 	if err != nil {
 		u.cancel(err)
 		return err
@@ -302,7 +302,7 @@ func (u *UploadRequest) ActionDone(id int32) {
 		zap.String("Progress", fmt.Sprintf("%d / %d", len(u.cfr.FinishedParts), u.cfr.TotalParts)),
 	)
 	// If we have failed too many times, and we can decrease the chunk size the we do it again.
-	if atomic.LoadInt32(&u.failedActions) > retryMaxAttempts {
+	if atomic.LoadInt32(&u.failedActions) > RetryMaxAttempts {
 		atomic.StoreInt32(&u.failedActions, 0)
 		logs.Debug("Max Attempts",
 			zap.Int32("ChunkSize", u.cfr.ChunkSize),

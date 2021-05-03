@@ -5,9 +5,6 @@ import (
 	"github.com/ronaksoft/rony"
 )
 
-// DeferredRequestHandler late responses that they requestID has been terminated callback/delegate
-type DeferredRequestHandler func(constructor int64, msg []byte)
-
 // UpdateReceivedCallback used as relay to pass getDifference updates to UI
 type UpdateReceivedCallback func(constructor int64, msg []byte)
 

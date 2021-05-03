@@ -5,20 +5,13 @@ import (
 )
 
 const (
-	// MessageActionNope glass messages type
-	MessageActionNope int32 = 0x00
-	// MessageActionContactRegistered glass messages type
+	MessageActionNope              int32 = 0x00
 	MessageActionContactRegistered int32 = 0x01
-	// MessageActionGroupCreated glass messages type
-	MessageActionGroupCreated int32 = 0x02
-	// MessageActionGroupAddUser glass messages type
-	MessageActionGroupAddUser int32 = 0x03
-	// MessageActionGroupDeleteUser glass messages type
-	MessageActionGroupDeleteUser int32 = 0x05
-	// MessageActionGroupTitleChanged glass messages type
+	MessageActionGroupCreated      int32 = 0x02
+	MessageActionGroupAddUser      int32 = 0x03
+	MessageActionGroupDeleteUser   int32 = 0x05
 	MessageActionGroupTitleChanged int32 = 0x06
-	// MessageActionClearHistory glass messages type
-	MessageActionClearHistory int32 = 0x07
+	MessageActionClearHistory      int32 = 0x07
 )
 
 // ExtractActionUserIDs get user ids from  MessageActions
@@ -28,19 +21,19 @@ func ExtractActionUserIDs(act int32, data []byte) []int64 {
 	case MessageActionNope:
 	case MessageActionContactRegistered:
 	case MessageActionGroupCreated:
-		x := new(msg.MessageActionGroupCreated)
+		x := &msg.MessageActionGroupCreated{}
 		err := x.Unmarshal(data)
 		if err == nil {
 			res = append(res, x.UserIDs...)
 		}
 	case MessageActionGroupAddUser:
-		x := new(msg.MessageActionGroupAddUser)
+		x := &msg.MessageActionGroupAddUser{}
 		err := x.Unmarshal(data)
 		if err == nil {
 			res = append(res, x.UserIDs...)
 		}
 	case MessageActionGroupDeleteUser:
-		x := new(msg.MessageActionGroupDeleteUser)
+		x := &msg.MessageActionGroupDeleteUser{}
 		err := x.Unmarshal(data)
 		if err == nil {
 			res = append(res, x.UserIDs...)

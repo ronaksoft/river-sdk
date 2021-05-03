@@ -167,7 +167,7 @@ func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash 
 			AccessHash:       clientFile.AccessHash,
 			Version:          clientFile.Version,
 			FileSize:         clientFile.FileSize,
-			ChunkSize:        defaultChunkSize,
+			ChunkSize:        DefaultChunkSize,
 			FilePath:         repo.Files.GetFilePath(clientFile),
 			SkipDelegateCall: skipDelegates,
 			PeerID:           clientFile.PeerID,
@@ -216,7 +216,7 @@ func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash u
 				AccessHash:       clientFile.AccessHash,
 				Version:          clientFile.Version,
 				FileSize:         clientFile.FileSize,
-				ChunkSize:        defaultChunkSize,
+				ChunkSize:        DefaultChunkSize,
 				FilePath:         filePath,
 				SkipDelegateCall: skipDelegate,
 				PeerID:           clientFile.PeerID,
@@ -227,7 +227,7 @@ func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash u
 	return
 }
 func (ctrl *Controller) downloadAccountPhoto(clientFile *msg.ClientFile) (filePath string, err error) {
-	err = tools.Try(retryMaxAttempts, retryWaitTime, func() error {
+	err = tools.Try(RetryMaxAttempts, RetryWaitTime, func() error {
 		req := &msg.FileGet{
 			Location: &msg.InputFileLocation{
 				ClusterID:  clientFile.ClusterID,
@@ -282,7 +282,7 @@ func (ctrl *Controller) downloadAccountPhoto(clientFile *msg.ClientFile) (filePa
 	return
 }
 func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath string, err error) {
-	err = tools.Try(retryMaxAttempts, retryWaitTime, func() error {
+	err = tools.Try(RetryMaxAttempts, RetryWaitTime, func() error {
 		req := &msg.FileGet{
 			Location: &msg.InputFileLocation{
 				ClusterID:  clientFile.ClusterID,
@@ -337,7 +337,7 @@ func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath
 	return
 }
 func (ctrl *Controller) downloadWallpaper(clientFile *msg.ClientFile) (filePath string, err error) {
-	err = tools.Try(retryMaxAttempts, retryWaitTime, func() error {
+	err = tools.Try(RetryMaxAttempts, RetryWaitTime, func() error {
 		req := &msg.FileGet{
 			Location: &msg.InputFileLocation{
 				ClusterID:  clientFile.ClusterID,
@@ -394,7 +394,7 @@ func (ctrl *Controller) downloadWallpaper(clientFile *msg.ClientFile) (filePath 
 	return
 }
 func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath string, err error) {
-	err = tools.Try(retryMaxAttempts, retryWaitTime, func() error {
+	err = tools.Try(RetryMaxAttempts, RetryWaitTime, func() error {
 		req := &msg.FileGet{
 			Location: &msg.InputFileLocation{
 				ClusterID:  clientFile.ClusterID,

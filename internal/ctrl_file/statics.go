@@ -16,10 +16,10 @@ import (
 */
 
 func bestChunkSize(fileSize int64) int32 {
-	if fileSize <= maxChunkSize {
-		return defaultChunkSize
+	if fileSize <= MaxChunkSize {
+		return DefaultChunkSize
 	}
-	minChunkSize := (fileSize / maxParts) >> 10
+	minChunkSize := (fileSize / MaxParts) >> 10
 	dataRate := mon.GetDataTransferRate()
 	if dataRate == 0 {
 		dataRate = chunkSizesKB[len(chunkSizesKB)-1]

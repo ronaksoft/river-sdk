@@ -790,16 +790,11 @@ func (ctrl *Controller) WebsocketCommand(
 
 // SendHttp encrypt and send request to server and receive and decrypt its response
 func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageEnvelope) (*rony.MessageEnvelope, error) {
-	st := domain.Now()
-	defer func() {
-		logs.Info("SendHttp",
-			zap.String("C", registry.ConstructorName(msgEnvelope.Constructor)),
-			zap.Duration("D", domain.Now().Sub(st)),
-		)
-	}()
 
-	var totalUploadBytes, totalDownloadBytes int
-	startTime := tools.NanoTime()
+	var (
+		totalUploadBytes, totalDownloadBytes int
+		startTime                            = tools.NanoTime()
+	)
 
 	if ctx == nil {
 		var cf context.CancelFunc
@@ -869,6 +864,12 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 		return nil, err
 	}
 
+	logs.Info("SendHttp",
+		zap.String("ReqC", registry.ConstructorName(msgEnvelope.Constructor)),
+		zap.String("ResC", registry.ConstructorName(receivedEncryptedPayload.Envelope.Constructor)),
+		zap.Duration("D", time.Duration(tools.NanoTime()-startTime)),
+	)
+
 	return receivedEncryptedPayload.Envelope, nil
 }
 
@@ -883,6 +884,7 @@ func (ctrl *Controller) HttpCommandWithTimeout(
 	res, err := ctrl.SendHttp(ctx, messageEnvelope)
 	switch err {
 	case nil:
+		successCB(res)
 	case context.DeadlineExceeded:
 		timeoutCB()
 	case context.Canceled:

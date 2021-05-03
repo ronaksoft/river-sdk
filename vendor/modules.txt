@@ -19,8 +19,6 @@ github.com/allegro/bigcache/v2/queue
 github.com/andybalholm/brotli
 # github.com/armon/go-metrics v0.3.2
 github.com/armon/go-metrics
-# github.com/bbva/raft-badger v1.0.1
-## explicit
 # github.com/beeker1121/goque v2.1.0+incompatible
 ## explicit
 github.com/beeker1121/goque
@@ -159,8 +157,6 @@ github.com/gobwas/pool/pbytes
 ## explicit
 github.com/gobwas/ws
 github.com/gobwas/ws/wsutil
-# github.com/gocql/gocql v0.0.0-20200815110948-5378c8f664e9
-## explicit
 # github.com/gogo/protobuf v1.3.1
 ## explicit
 github.com/gogo/protobuf/proto
@@ -220,8 +216,6 @@ github.com/juju/ratelimit
 github.com/klauspost/compress/flate
 github.com/klauspost/compress/gzip
 github.com/klauspost/compress/zlib
-# github.com/kr/pretty v0.2.0
-## explicit
 # github.com/magiconair/properties v1.8.1
 github.com/magiconair/properties
 # github.com/mailru/easygo v0.0.0-20190618140210-3c14a0dc985f
@@ -311,8 +305,6 @@ github.com/ronaksoft/rony/registry
 github.com/ronaksoft/rony/rest
 github.com/ronaksoft/rony/store
 github.com/ronaksoft/rony/tools
-# github.com/scylladb/gocqlx/v2 v2.2.0
-## explicit
 # github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529
 github.com/sean-/seed
 # github.com/siongui/instago v0.0.0-20200627103523-54424cb565ea
@@ -338,7 +330,6 @@ github.com/spf13/cobra
 # github.com/spf13/jwalterweatherman v1.0.0
 github.com/spf13/jwalterweatherman
 # github.com/spf13/pflag v1.0.5
-## explicit
 github.com/spf13/pflag
 # github.com/spf13/viper v1.7.1
 ## explicit

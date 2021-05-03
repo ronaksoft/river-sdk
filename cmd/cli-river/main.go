@@ -123,6 +123,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	err = _MiniSDK.AppStart()
+	if err != nil {
+		panic(err)
+	}
+
 	_SDK.StartNetwork("")
 	if _SDK.ConnInfo.AuthID == 0 {
 		if err := _SDK.CreateAuthKey(); err != nil {

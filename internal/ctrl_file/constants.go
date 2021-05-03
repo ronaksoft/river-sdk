@@ -14,12 +14,12 @@ import (
 */
 
 const (
-	defaultChunkSize       = 512 * 1 << 10 // 256KB
-	maxChunkSize           = 512 * 1 << 10 // 512KB
-	maxFileSizeAllowedSize = 750 * 1 << 20 // 750 MB
-	maxParts               = 3000
-	retryMaxAttempts       = 25
-	retryWaitTime          = 100 * time.Millisecond
+	DefaultChunkSize       = 512 * 1 << 10 // 512KB
+	MaxChunkSize           = 512 * 1 << 10 // 512KB
+	MaxFileSizeAllowedSize = 750 * 1 << 20 // 750 MB
+	MaxParts               = 3000
+	RetryMaxAttempts       = 25
+	RetryWaitTime          = 100 * time.Millisecond
 )
 
 var chunkSizesKB = []int32{256, 512}
