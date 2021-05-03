@@ -350,13 +350,7 @@ func UpdatePageWithTxn(txn *store.Txn, alloc *store.Allocator, m *Page) error {
 		defer alloc.ReleaseAll()
 	}
 
-	om := &Page{}
-	err := store.Unmarshal(txn, alloc, om, 'M', C_Page, 299066170, m.ID)
-	if err != nil {
-		return err
-	}
-
-	err = DeletePageWithTxn(txn, alloc, om.ID)
+	err := DeletePageWithTxn(txn, alloc, m.ID)
 	if err != nil {
 		return err
 	}
@@ -482,6 +476,8 @@ func ListPage(
 				}
 				if cond == nil || cond(m) {
 					res = append(res, m)
+				} else {
+					limit++
 				}
 				return nil
 			})
@@ -522,7 +518,9 @@ func IterPageByReplicaSet(txn *store.Txn, alloc *store.Allocator, replicaSet uin
 	return nil
 }
 
-func ListPageByReplicaSet(replicaSet uint64, offsetID uint32, lo *store.ListOption) ([]*Page, error) {
+func ListPageByReplicaSet(
+	replicaSet uint64, offsetID uint32, lo *store.ListOption, cond func(m *Page) bool,
+) ([]*Page, error) {
 	alloc := store.NewAllocator()
 	defer alloc.ReleaseAll()
 
@@ -548,7 +546,11 @@ func ListPageByReplicaSet(replicaSet uint64, offsetID uint32, lo *store.ListOpti
 				if err != nil {
 					return err
 				}
-				res = append(res, m)
+				if cond == nil || cond(m) {
+					res = append(res, m)
+				} else {
+					limit++
+				}
 				return nil
 			})
 		}

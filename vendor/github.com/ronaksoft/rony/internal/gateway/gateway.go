@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/pools"
 	"github.com/valyala/fasthttp"
 )
 
@@ -23,8 +24,7 @@ const (
 	Websocket
 	Quic
 	Grpc
-	// Mixed
-	TCP Protocol = 0x0003 // Http & Websocket
+	TCP = Http | Websocket // Http & Websocket
 )
 
 var protocolNames = map[Protocol]string{
@@ -54,11 +54,16 @@ type Gateway interface {
 type (
 	RequestCtx     = fasthttp.RequestCtx
 	ConnectHandler = func(c rony.Conn, kvs ...*rony.KeyValue)
-	MessageHandler = func(c rony.Conn, streamID int64, data []byte)
+	MessageHandler = func(c rony.Conn, streamID int64, data []byte, bypass bool)
 	CloseHandler   = func(c rony.Conn)
 )
 
 type ProxyHandle interface {
 	OnRequest(conn rony.Conn, ctx *RequestCtx) []byte
-	OnResponse(data []byte) ([]byte, map[string]string)
+	OnResponse(data []byte) (*pools.ByteBuffer, map[string]string)
+}
+
+type ProxyFactory interface {
+	Get() ProxyHandle
+	Release(h ProxyHandle)
 }

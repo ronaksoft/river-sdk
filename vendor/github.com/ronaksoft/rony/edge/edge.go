@@ -12,10 +12,10 @@ import (
 	"github.com/ronaksoft/rony/internal/tunnel"
 	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/registry"
+	"github.com/ronaksoft/rony/rest"
 	"github.com/ronaksoft/rony/store"
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
-	"google.golang.org/protobuf/proto"
 	"os"
 	"os/signal"
 	"runtime/debug"
@@ -35,7 +35,6 @@ func init() {
 	log.Init(log.DefaultConfig)
 }
 
-// Server
 type Server struct {
 	// General
 	dataDir  string
@@ -122,15 +121,14 @@ func (edge *Server) GetHandler(constructor int64) *HandlerOption {
 	return edge.handlers[constructor]
 }
 
-// SetHttpProxy
-func (edge *Server) SetHttpProxy(
-	method, path string,
-	onRequest func(c rony.Conn, ctx *HttpRequest) []byte,
-	onResponse func(data []byte) ([]byte, map[string]string),
-) {
+// SetRestWrapper set a REST wrapper to expose RPCs in REST (Representational State Transfer) format
+func (edge *Server) SetRestWrapper(method string, path string, f *rest.Factory) {
 	switch gw := edge.gateway.(type) {
 	case *tcpGateway.Gateway:
-		gw.SetProxy(method, path, tcpGateway.CreateHandle(onRequest, onResponse))
+		if !gw.Support(gateway.Http) {
+			panic("tcp gateway does not support http protocol")
+		}
+		gw.SetProxy(method, path, f)
 	default:
 		panic("only works on tcp gateway")
 	}
@@ -157,14 +155,8 @@ func (edge *Server) executePrepare(dispatchCtx *DispatchCtx) (err error, isLeade
 		raftCmd := rony.PoolRaftCommand.Get()
 		raftCmd.Envelope = rony.PoolMessageEnvelope.Get()
 		raftCmd.Fill(edge.serverID, dispatchCtx.req)
-		mo := proto.MarshalOptions{UseCachedSize: true}
-		buf := pools.Buffer.GetCap(mo.Size(raftCmd))
-		var raftCmdBytes []byte
-		raftCmdBytes, err = mo.MarshalAppend(*buf.Bytes(), raftCmd)
-		if err != nil {
-			return
-		}
-		f := edge.cluster.RaftApply(raftCmdBytes)
+		buf := pools.Buffer.FromProto(raftCmd)
+		f := edge.cluster.RaftApply(*buf.Bytes())
 		err = f.Error()
 		pools.Buffer.Put(buf)
 		rony.PoolRaftCommand.Put(raftCmd)
@@ -316,16 +308,27 @@ func (edge *Server) onReplicaMessage(raftCmd *rony.RaftCommand) error {
 	releaseDispatchCtx(dispatchCtx)
 	return nil
 }
-func (edge *Server) onGatewayMessage(conn rony.Conn, streamID int64, data []byte) {
+func (edge *Server) onGatewayMessage(conn rony.Conn, streamID int64, data []byte, byPassDispatcher bool) {
 	// _, task := trace.NewTask(context.Background(), "onGatewayMessage")
 	// defer task.End()
 
+	var (
+		err error
+	)
+
+	// Fill dispatch context with data. We use the GatewayDispatcher or consume data directly based on the
+	// byPassDispatcher argument
 	dispatchCtx := acquireDispatchCtx(edge, conn, streamID, edge.serverID, GatewayMessage)
-	err := edge.gatewayDispatcher.Interceptor(dispatchCtx, data)
+	if byPassDispatcher {
+		err = dispatchCtx.UnmarshalEnvelope(data)
+	} else {
+		err = edge.gatewayDispatcher.Interceptor(dispatchCtx, data)
+	}
 	if err != nil {
 		releaseDispatchCtx(dispatchCtx)
 		return
 	}
+
 	err, isLeader := edge.executePrepare(dispatchCtx)
 	if err != nil {
 		edge.onError(dispatchCtx, rony.ErrCodeInternal, rony.ErrItemServer)
@@ -334,6 +337,8 @@ func (edge *Server) onGatewayMessage(conn rony.Conn, streamID int64, data []byte
 	} else {
 		edge.gatewayDispatcher.Done(dispatchCtx)
 	}
+
+	// Release the dispatch context
 	releaseDispatchCtx(dispatchCtx)
 	return
 }
@@ -347,6 +352,7 @@ func (edge *Server) onTunnelMessage(conn rony.Conn, tm *rony.TunnelMessage) {
 	// _, task := trace.NewTask(context.Background(), "onTunnelMessage")
 	// defer task.End()
 
+	// Fill the dispatch context envelope from the received tunnel message
 	dispatchCtx := acquireDispatchCtx(edge, conn, 0, tm.SenderID, TunnelMessage)
 	dispatchCtx.FillEnvelope(
 		tm.Envelope.GetRequestID(), tm.Envelope.GetConstructor(), tm.Envelope.Message,
@@ -361,6 +367,8 @@ func (edge *Server) onTunnelMessage(conn rony.Conn, tm *rony.TunnelMessage) {
 	} else {
 		edge.onTunnelDone(dispatchCtx)
 	}
+
+	// Release the dispatch context
 	releaseDispatchCtx(dispatchCtx)
 	return
 }
@@ -378,11 +386,9 @@ func (edge *Server) onTunnelDone(ctx *DispatchCtx) {
 		// TODO:: implement it
 		panic("not implemented, handle multiple tunnel message")
 	}
-
-	mo := proto.MarshalOptions{UseCachedSize: true}
-	b := pools.Buffer.GetCap(mo.Size(tm))
-	bb, _ := mo.MarshalAppend(*b.Bytes(), tm)
-	_ = ctx.Conn().SendBinary(ctx.streamID, bb)
+	buf := pools.Buffer.FromProto(tm)
+	_ = ctx.Conn().SendBinary(ctx.streamID, *buf.Bytes())
+	pools.Buffer.Put(buf)
 }
 func (edge *Server) onError(ctx *DispatchCtx, code, item string) {
 	envelope := rony.PoolMessageEnvelope.Get()
@@ -488,7 +494,7 @@ func (edge *Server) Shutdown() {
 	log.Info("Server Shutdown!", zap.ByteString("ID", edge.serverID))
 }
 
-// Shutdown blocks until any of the signals has been called
+// ShutdownWithSignal blocks until any of the signals has been called
 func (edge *Server) ShutdownWithSignal(signals ...os.Signal) {
 	ch := make(chan os.Signal)
 	signal.Notify(ch, signals...)
@@ -554,14 +560,12 @@ func (edge *Server) sendRemoteCommand(target cluster.Member, req, res *rony.Mess
 	tmOut.Fill(edge.serverID, edge.cluster.ReplicaSet(), req)
 
 	// Marshal and send over the wire
-	mo := proto.MarshalOptions{UseCachedSize: true}
-	buf := pools.Buffer.GetCap(mo.Size(tmOut))
-	b, _ := mo.MarshalAppend(*buf.Bytes(), tmOut)
-	n, err := conn.Write(b)
+	buf := pools.Buffer.FromProto(tmOut)
+	n, err := conn.Write(*buf.Bytes())
+	pools.Buffer.Put(buf)
 	if err != nil {
 		return err
 	}
-	pools.Buffer.Put(buf)
 
 	// Wait for response and unmarshal it
 	buf = pools.Buffer.GetLen(4096)

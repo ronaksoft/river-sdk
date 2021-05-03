@@ -1,7 +1,7 @@
 module git.ronaksoft.com/river/sdk
 
 require (
-	git.ronaksoft.com/river/msg v0.0.0-20210426103435-9e77c2a5038f
+	git.ronaksoft.com/river/msg v0.0.0-20210501075913-a7882bfa73f0
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/RoaringBitmap/roaring v0.5.1 // indirect
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
@@ -30,7 +30,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/ronaksoft/rony v0.6.34
+	github.com/ronaksoft/rony v0.6.52
 	github.com/scylladb/gocqlx/v2 v2.2.0 // indirect
 	github.com/siongui/instago v0.0.0-20200627103523-54424cb565ea
 	github.com/smartystreets/goconvey v1.6.4

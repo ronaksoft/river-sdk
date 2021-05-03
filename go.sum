@@ -25,6 +25,8 @@ git.ronaksoft.com/river/msg v0.0.0-20210414181343-33fcedbc7718 h1:r5Yr08Akib+lS6
 git.ronaksoft.com/river/msg v0.0.0-20210414181343-33fcedbc7718/go.mod h1:kgKDCyv7+rqvvElj5tt6UaQf2p56laz08Lotov2WKls=
 git.ronaksoft.com/river/msg v0.0.0-20210426103435-9e77c2a5038f h1:P5lGy0GsxqZncz9oWy0KW5S3KIZxa57vKd5bD6YkrMY=
 git.ronaksoft.com/river/msg v0.0.0-20210426103435-9e77c2a5038f/go.mod h1:kgKDCyv7+rqvvElj5tt6UaQf2p56laz08Lotov2WKls=
+git.ronaksoft.com/river/msg v0.0.0-20210501075913-a7882bfa73f0 h1:JgD8PM4cnvHJejnALSGqcVULJUtReF7cbXxMnkzzOkU=
+git.ronaksoft.com/river/msg v0.0.0-20210501075913-a7882bfa73f0/go.mod h1:U8LJ7P93dHqeXFP47ag3xdwMuxtvqsEYLNqZfwMlVGI=
 github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9/go.mod h1:bOvUY6CB00SOBii9/FifXqc0awNKxLFCL/+pkDPuyl8=
 github.com/AndreasBriese/bbloom v0.0.0-20190825152654-46b345b51c96/go.mod h1:bOvUY6CB00SOBii9/FifXqc0awNKxLFCL/+pkDPuyl8=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
@@ -536,6 +538,8 @@ github.com/ronaksoft/rony v0.6.33 h1:lmlGSZhWKcY8GoATTVu3rk4lZR2K8BlZnz/mVd1z/9E
 github.com/ronaksoft/rony v0.6.33/go.mod h1:lNRYO+6ws3xQEGdLCYyxSTS+tMzsAkm8KwVz350RDkA=
 github.com/ronaksoft/rony v0.6.34 h1:QwljrX4vtFRHn/rGytyYkJiUYgvZGo8B4L+d3nbHiuw=
 github.com/ronaksoft/rony v0.6.34/go.mod h1:lNRYO+6ws3xQEGdLCYyxSTS+tMzsAkm8KwVz350RDkA=
+github.com/ronaksoft/rony v0.6.52 h1:hnBoiVe3mHdeI3/eZsvJkH9DMITfIoTibI0iIPvQy6M=
+github.com/ronaksoft/rony v0.6.52/go.mod h1:lNRYO+6ws3xQEGdLCYyxSTS+tMzsAkm8KwVz350RDkA=
 github.com/russross/blackfriday v1.5.2/go.mod h1:JO/DiYxRf+HjHt06OyowR9PTA263kcR/rfWxYHBV53g=
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/ryanuber/columnize v0.0.0-20160712163229-9b3edd62028f/go.mod h1:sm1tb6uqfes/u+d4ooFouqFdy9/2g9QGwK3SQygK0Ts=
