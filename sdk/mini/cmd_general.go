@@ -5,7 +5,6 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
-	"git.ronaksoft.com/river/sdk/internal/salt"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
@@ -51,9 +50,6 @@ func (r *River) AppStart() error {
 
 	// Update Authorizations
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-
-	// Update the current salt
-	salt.UpdateSalt()
 
 	// Start Controllers
 	r.networkCtrl.Start()
