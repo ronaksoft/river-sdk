@@ -4,7 +4,6 @@ import (
 	"context"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
-	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
@@ -30,23 +29,6 @@ func (r *River) AppStart() error {
 
 	logs.Info("Mini River Starting")
 	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
-
-	// Initialize DB replaced with ORM
-	err := repo.InitRepo(r.dbPath, true)
-	if err != nil {
-		return err
-	}
-
-	repo.SetSelfUserID(r.ConnInfo.UserID)
-
-	confBytes, _ := repo.System.LoadBytes("SysConfig")
-	if confBytes != nil {
-		domain.SysConfig.Reactions = domain.SysConfig.Reactions[:0]
-		err := domain.SysConfig.Unmarshal(confBytes)
-		if err != nil {
-			logs.Warn("We could not unmarshal SysConfig", zap.Error(err))
-		}
-	}
 
 	// Update Authorizations
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
@@ -154,7 +136,6 @@ func executeRemoteCommand(
 
 	da.OnComplete(res)
 }
-
 
 func (r *River) SetTeam(teamID int64, teamAccessHash int64) {
 	domain.SetCurrentTeam(teamID, uint64(teamAccessHash))

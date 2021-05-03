@@ -26,14 +26,6 @@ import (
    Copyright Ronak Software Group 2018
 */
 
-var (
-	DirAudio string
-	DirFile  string
-	DirPhoto string
-	DirVideo string
-	DirCache string
-)
-
 const (
 	prefixFiles         = "FILES"
 	prefixFilesRequests = "FILES_REQ"
@@ -643,20 +635,6 @@ func (r *repoFiles) GetFilePath(clientFile *msg.ClientFile) string {
 		return getWallpaperPath(clientFile.FileID, clientFile.ClusterID)
 	}
 	return ""
-}
-
-// SetRootFolders directory paths to Download files
-func (r *repoFiles) SetRootFolders(audioDir, fileDir, photoDir, videoDir, cacheDir string) {
-	DirAudio = audioDir
-	_ = os.MkdirAll(audioDir, os.ModePerm)
-	DirFile = fileDir
-	_ = os.MkdirAll(fileDir, os.ModePerm)
-	DirPhoto = photoDir
-	_ = os.MkdirAll(photoDir, os.ModePerm)
-	DirVideo = videoDir
-	_ = os.MkdirAll(videoDir, os.ModePerm)
-	DirCache = cacheDir
-	_ = os.MkdirAll(cacheDir, os.ModePerm)
 }
 
 func getMessageFilePath(mimeType string, docID int64, ext string) string {

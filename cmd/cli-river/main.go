@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/sdk/mini"
 	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
 	"github.com/fatih/color"
@@ -119,31 +118,31 @@ func main() {
 		},
 	})
 
-	err = _SDK.AppStart()
-	if err != nil {
-		panic(err)
-	}
+	// err = _SDK.AppStart()
+	// if err != nil {
+	// 	panic(err)
+	// }
 	err = _MiniSDK.AppStart()
 	if err != nil {
 		panic(err)
 	}
 
-	_SDK.StartNetwork("")
-	if _SDK.ConnInfo.AuthID == 0 {
-		if err := _SDK.CreateAuthKey(); err != nil {
-			_Shell.Println("CreateAuthKey::", err.Error())
-		}
-	}
-
-	if _SDK.ConnInfo.UserID != 0 {
-		req := &msg.MessagesGetDialogs{
-			Offset: 0,
-			Limit:  500,
-		}
-		reqBytes, _ := req.Marshal()
-		delegate := new(RequestDelegate)
-		_, _ = _SDK.ExecuteCommand(msg.C_MessagesGetDialogs, reqBytes, delegate)
-	}
+	// _SDK.StartNetwork("")
+	// if _SDK.ConnInfo.AuthID == 0 {
+	// 	if err := _SDK.CreateAuthKey(); err != nil {
+	// 		_Shell.Println("CreateAuthKey::", err.Error())
+	// 	}
+	// }
+	//
+	// if _SDK.ConnInfo.UserID != 0 {
+	// 	req := &msg.MessagesGetDialogs{
+	// 		Offset: 0,
+	// 		Limit:  500,
+	// 	}
+	// 	reqBytes, _ := req.Marshal()
+	// 	delegate := new(RequestDelegate)
+	// 	_, _ = _SDK.ExecuteCommand(msg.C_MessagesGetDialogs, reqBytes, delegate)
+	// }
 
 	_Shell.Run()
 
