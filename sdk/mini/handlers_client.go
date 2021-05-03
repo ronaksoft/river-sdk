@@ -88,13 +88,13 @@ func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, da *Delega
 	x := &msg.MessagesSendMedia{
 		Peer:       reqMedia.Peer,
 		ClearDraft: reqMedia.ClearDraft,
-		MediaType:  reqMedia.MediaType,
 		RandomID:   tools.RandomInt64(0),
 		ReplyTo:    reqMedia.ReplyTo,
 	}
 
 	if fileLocation != nil {
 		// File already uploaded
+		x.MediaType = msg.InputMediaType_InputMediaTypeDocument
 		doc := &msg.InputMediaDocument{
 			Caption:    reqMedia.Caption,
 			Attributes: reqMedia.Attributes,
@@ -122,6 +122,7 @@ func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, da *Delega
 			return
 		}
 		// File just uploaded
+		x.MediaType = msg.InputMediaType_InputMediaTypeUploadedDocument
 		doc := &msg.InputMediaUploadedDocument{
 			MimeType:   reqMedia.FileMIME,
 			Attributes: reqMedia.Attributes,
