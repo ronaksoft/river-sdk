@@ -184,6 +184,6 @@ func (r *River) registerCommandHandlers() {
 // RiverConnection connection info
 type RiverConnection struct {
 	AuthID  int64
-	AuthKey [256]byte
+	AuthKey []byte
 	UserID  int64
 }

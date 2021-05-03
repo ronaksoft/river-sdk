@@ -115,7 +115,7 @@ func main() {
 			LogDirectory:           "./_files/logs",
 			ConnInfo: &mini.RiverConnection{
 				AuthID:  connInfo.AuthID,
-				AuthKey: connInfo.AuthKey,
+				AuthKey: connInfo.AuthKey[:],
 				UserID:  connInfo.UserID,
 			},
 		})
@@ -169,7 +169,6 @@ func main() {
 		loadCommands(
 			Account, Auth, Bot, Contact, Debug, File, Gif, Group, Init, Label, Message, Mini, SDK, System, Team, User, WallPaper,
 		)
-
 
 	}
 
