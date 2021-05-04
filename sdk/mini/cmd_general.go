@@ -21,7 +21,9 @@ import (
 */
 
 // AppKill must be called when app is closed
-func (r *River) AppKill() {}
+func (r *River) AppKill() {
+	r.networkCtrl.Stop()
+}
 
 // AppStart must be called when app is started
 func (r *River) AppStart() error {
@@ -31,7 +33,7 @@ func (r *River) AppStart() error {
 	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
 
 	// Update Authorizations
-	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey)
 
 	// Start Controllers
 	r.networkCtrl.Start()
