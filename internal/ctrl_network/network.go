@@ -368,8 +368,9 @@ func (ctrl *Controller) receiver() {
 					)
 					continue
 				}
-				receivedEncryptedPayload := new(msg.ProtoEncryptedPayload)
+				receivedEncryptedPayload := &msg.ProtoEncryptedPayload{}
 				err = receivedEncryptedPayload.Unmarshal(decryptedBytes)
+				pools.Bytes.Put(decryptedBytes)
 				if err != nil {
 					logs.Error("NetCtrl couldn't unmarshal decrypted message", zap.Error(err))
 					continue
@@ -649,47 +650,54 @@ func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) erro
 	)
 
 	startTime := time.Now()
-	protoMessage := &msg.ProtoMessage{
-		MessageKey: make([]byte, 32),
+	protoMessage := msg.PoolProtoMessage.Get()
+	defer msg.PoolProtoMessage.Put(protoMessage)
+	if cap(protoMessage.MessageKey) < 32 {
+		protoMessage.MessageKey = make([]byte, 32)
+	} else {
+		protoMessage.MessageKey = protoMessage.MessageKey[:32]
 	}
-	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
 
 	logs.Debug("NetCtrl call writeToWebsocket",
 		zap.Uint64("ReqID", msgEnvelope.RequestID),
 		zap.String("C", registry.ConstructorName(msgEnvelope.Constructor)),
 		zap.String("TeamID", msgEnvelope.Get("TeamID", "0")),
 		zap.String("TeamAccess", msgEnvelope.Get("TeamAccess", "0")),
-		zap.Bool("Plain", unauthorized),
+		zap.Bool("Plain", ctrl.unauthorizedRequests[msgEnvelope.Constructor]),
 		zap.Bool("NoAuth", ctrl.authID == 0),
 	)
-	if ctrl.authID == 0 || unauthorized {
+	if ctrl.authID == 0 || ctrl.unauthorizedRequests[msgEnvelope.Constructor] {
 		protoMessage.AuthID = 0
-		protoMessage.Payload, _ = msgEnvelope.Marshal()
+		buf := pools.Buffer.FromProto(msgEnvelope)
+		protoMessage.Payload = buf.AppendTo(protoMessage.Payload)
+		pools.Buffer.Put(buf)
 	} else {
 		protoMessage.AuthID = ctrl.authID
-		encryptedPayload := msg.ProtoEncryptedPayload{
+		encryptedPayload := &msg.ProtoEncryptedPayload{
 			ServerSalt: salt.Get(),
 			Envelope:   msgEnvelope,
 		}
 		encryptedPayload.MessageID = uint64(domain.Now().Unix()<<32 | ctrl.incMessageSeq())
-		unencryptedBytes, _ := encryptedPayload.Marshal()
+		mo := proto.MarshalOptions{UseCachedSize: true}
+		unencryptedBytes := pools.Bytes.GetCap(mo.Size(encryptedPayload))
+		unencryptedBytes, _ = mo.MarshalAppend(unencryptedBytes, encryptedPayload)
 		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes)
 		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes)
 		copy(protoMessage.MessageKey, messageKey)
-		protoMessage.Payload = encryptedPayloadBytes
+		protoMessage.Payload = append(protoMessage.Payload[:0], encryptedPayloadBytes...)
+		pools.Bytes.Put(encryptedPayloadBytes)
 	}
 
-	b, err := protoMessage.Marshal()
-	if err != nil {
-		return err
-	}
+	reqBuff := pools.Buffer.FromProto(protoMessage)
+	defer pools.Buffer.Put(reqBuff)
+
 	if ctrl.wsConn == nil {
 		return domain.ErrNoConnection
 	}
 
 	ctrl.wsWriteLock.Lock()
 	_ = ctrl.wsConn.SetWriteDeadline(time.Now().Add(domain.WebsocketWriteTime))
-	err = wsutil.WriteClientMessage(ctrl.wsConn, ws.OpBinary, b)
+	err := wsutil.WriteClientMessage(ctrl.wsConn, ws.OpBinary, *reqBuff.Bytes())
 	ctrl.wsWriteLock.Unlock()
 	if err != nil {
 		_ = ctrl.wsConn.Close()
@@ -873,6 +881,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 
 	receivedEncryptedPayload := &msg.ProtoEncryptedPayload{}
 	err = receivedEncryptedPayload.Unmarshal(decryptedBytes)
+	pools.Bytes.Put(decryptedBytes)
 	if err != nil {
 		return nil, err
 	}
