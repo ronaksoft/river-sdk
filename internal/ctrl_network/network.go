@@ -790,7 +790,6 @@ func (ctrl *Controller) WebsocketCommand(
 
 // SendHttp encrypt and send request to server and receive and decrypt its response
 func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageEnvelope) (*rony.MessageEnvelope, error) {
-
 	var (
 		totalUploadBytes, totalDownloadBytes int
 		startTime                            = tools.NanoTime()
@@ -865,6 +864,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 	}
 
 	logs.Info("SendHttp",
+		zap.String("URL", ctrl.httpEndpoint),
 		zap.String("ReqC", registry.ConstructorName(msgEnvelope.Constructor)),
 		zap.String("ResC", registry.ConstructorName(receivedEncryptedPayload.Envelope.Constructor)),
 		zap.Duration("D", time.Duration(tools.NanoTime()-startTime)),

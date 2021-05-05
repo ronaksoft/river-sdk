@@ -2,6 +2,7 @@ package mini
 
 import (
 	"context"
+	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/ronaksoft/rony"
@@ -29,20 +30,65 @@ func (r *River) AppKill() {
 func (r *River) AppStart() error {
 	runtime.GOMAXPROCS(runtime.NumCPU() * 2)
 
-	logs.Info("Mini River Starting")
+	logs.Info("MiniRiver Starting")
 	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
-
-	// Update Authorizations
-	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey)
 
 	// Start Controllers
 	r.networkCtrl.Start()
 
 	domain.StartTime = time.Now()
 	domain.WindowLog = func(txt string) {}
-	logs.Info("Mini River Started")
+	logs.Info("MiniRiver Started")
+
+	err := r.GetServerTime()
+	if err != nil {
+		logs.Warn("MiniRiver got error on get server time", zap.Error(err))
+	}
+
+	// Update Authorizations
+	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey)
 
 	return nil
+}
+
+func (r *River) GetServerTime() (err error) {
+	logs.Info("SyncCtrl call GetServerTime")
+	timeReq := &msg.SystemGetServerTime{}
+	timeReqBytes, _ := timeReq.Marshal()
+	r.networkCtrl.HttpCommand(
+		&rony.MessageEnvelope{
+			Constructor: msg.C_SystemGetServerTime,
+			RequestID:   uint64(domain.SequentialUniqueID()),
+			Message:     timeReqBytes,
+		},
+		func() {
+			err = domain.ErrRequestTimeout
+		},
+		func(m *rony.MessageEnvelope) {
+			switch m.Constructor {
+			case msg.C_SystemServerTime:
+				x := new(msg.SystemServerTime)
+				err = x.Unmarshal(m.Message)
+				if err != nil {
+					logs.Error("SyncCtrl couldn't unmarshal SystemGetServerTime response", zap.Error(err))
+					return
+				}
+				clientTime := time.Now().Unix()
+				serverTime := x.Timestamp
+				domain.TimeDelta = time.Duration(serverTime-clientTime) * time.Second
+
+				logs.Debug("SyncCtrl received SystemServerTime",
+					zap.Int64("ServerTime", serverTime),
+					zap.Int64("ClientTime", clientTime),
+					zap.Duration("Difference", domain.TimeDelta),
+				)
+			case rony.C_Error:
+				logs.Warn("We received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
+				err = domain.ParseServerError(m.Message)
+			}
+		},
+	)
+	return
 }
 
 // ExecuteCommand is a wrapper function to pass the request to the queueController, to be passed to networkController for final
