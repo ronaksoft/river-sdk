@@ -33,6 +33,9 @@ func (r *River) AppStart() error {
 	logs.Info("MiniRiver Starting")
 	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
 
+	// Update Authorizations
+	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey)
+
 	// Start Controllers
 	r.networkCtrl.Start()
 
@@ -45,8 +48,7 @@ func (r *River) AppStart() error {
 		logs.Warn("MiniRiver got error on get server time", zap.Error(err))
 	}
 
-	// Update Authorizations
-	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey)
+
 
 	return nil
 }

@@ -800,11 +800,17 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 		ctx, cf = context.WithTimeout(context.Background(), domain.HttpRequestTimeout)
 		defer cf()
 	}
+
 	protoMessage := msg.ProtoMessage{
-		AuthID:     ctrl.authID,
 		MessageKey: make([]byte, 32),
 	}
-	if ctrl.authID == 0 {
+	if ctrl.unauthorizedRequests[msgEnvelope.Constructor] {
+		protoMessage.AuthID = 0
+	} else {
+		protoMessage.AuthID = ctrl.authID
+	}
+
+	if protoMessage.AuthID == 0 {
 		protoMessage.Payload, _ = msgEnvelope.Marshal()
 	} else {
 		encryptedPayload := msg.ProtoEncryptedPayload{
