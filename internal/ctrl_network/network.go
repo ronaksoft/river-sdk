@@ -1,7 +1,6 @@
 package networkCtrl
 
 import (
-	"bytes"
 	"context"
 	"encoding/binary"
 	"encoding/hex"
@@ -15,6 +14,7 @@ import (
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/registry"
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
@@ -801,8 +801,15 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 		defer cf()
 	}
 
-	protoMessage := msg.ProtoMessage{
-		MessageKey: make([]byte, 32),
+	// protoMessage := msg.ProtoMessage{
+	// 	MessageKey: make([]byte, 32),
+	// }
+	protoMessage := msg.PoolProtoMessage.Get()
+	defer msg.PoolProtoMessage.Put(protoMessage)
+	if cap(protoMessage.MessageKey) != 32 {
+		protoMessage.MessageKey = make([]byte, 32)
+	} else {
+		protoMessage.MessageKey = protoMessage.MessageKey[:32]
 	}
 	if ctrl.unauthorizedRequests[msgEnvelope.Constructor] {
 		protoMessage.AuthID = 0
@@ -811,26 +818,27 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 	}
 
 	if protoMessage.AuthID == 0 {
-		protoMessage.Payload, _ = msgEnvelope.Marshal()
+		buf := pools.Buffer.FromProto(msgEnvelope)
+		protoMessage.Payload = append(protoMessage.Payload[:0], *buf.Bytes()...)
+		pools.Buffer.Put(buf)
 	} else {
-		encryptedPayload := msg.ProtoEncryptedPayload{
+		encryptedPayload := &msg.ProtoEncryptedPayload{
 			ServerSalt: salt.Get(),
 			Envelope:   msgEnvelope,
 			MessageID:  uint64(domain.Now().Unix()<<32 | ctrl.incMessageSeq()),
 		}
-		unencryptedBytes, _ := encryptedPayload.Marshal()
-		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes)
-		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes)
+		// unencryptedBytes, _ := encryptedPayload.Marshal()
+		buf := pools.Buffer.FromProto(encryptedPayload)
+		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, *buf.Bytes())
+		messageKey := domain.GenerateMessageKey(ctrl.authKey, *buf.Bytes())
+		pools.Buffer.Put(buf)
 		copy(protoMessage.MessageKey, messageKey)
-		protoMessage.Payload = encryptedPayloadBytes
+		protoMessage.Payload = append(protoMessage.Payload[:0], encryptedPayloadBytes...)
+
 	}
 
-	protoMessageBytes, err := protoMessage.Marshal()
-	reqBuff := bytes.NewBuffer(protoMessageBytes)
-	if err != nil {
-		return nil, err
-	}
-	totalUploadBytes += len(protoMessageBytes)
+	reqBuff := pools.Buffer.FromProto(protoMessage)
+	totalUploadBytes += reqBuff.Len() // len(reqBuff.Len()protoMessageBytes)
 
 	// Send Data
 	httpReq, err := http.NewRequest(http.MethodPost, ctrl.httpEndpoint, reqBuff)

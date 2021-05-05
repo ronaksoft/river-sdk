@@ -48,8 +48,6 @@ func (r *River) AppStart() error {
 		logs.Warn("MiniRiver got error on get server time", zap.Error(err))
 	}
 
-
-
 	return nil
 }
 
