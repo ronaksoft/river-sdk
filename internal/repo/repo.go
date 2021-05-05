@@ -12,6 +12,7 @@ import (
 	"github.com/ronaksoft/rony/tools"
 	"github.com/tidwall/buntdb"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -57,18 +58,18 @@ type repository struct {
 	peerSearch bleve.Index
 }
 
-func MustInitRepo(dbPath string, lowMemory bool, readOnly bool) {
-	err := InitRepo(dbPath, lowMemory, readOnly)
+func MustInit(dbPath string, lowMemory bool) {
+	err := Init(dbPath, lowMemory)
 	if err != nil {
 		panic(err)
 	}
 }
 
-// InitRepo initialize repo singleton
-func InitRepo(dbPath string, lowMemory bool, readOnly bool) error {
+// Init initialize repo singleton
+func Init(dbPath string, lowMemory bool) error {
 	if ctx == nil {
 		singleton.Lock()
-		err := repoSetDB(dbPath, lowMemory, readOnly)
+		err := repoSetDB(dbPath, lowMemory)
 		if err != nil {
 			return err
 		}
@@ -97,14 +98,15 @@ func InitRepo(dbPath string, lowMemory bool, readOnly bool) error {
 	return nil
 }
 
-func repoSetDB(dbPath string, lowMemory bool, readOnly bool) error {
+func repoSetDB(dbPath string, lowMemory bool) error {
 	r = new(repository)
 
 	_ = os.MkdirAll(dbPath, os.ModePerm)
 	// Initialize BadgerDB
-	_ = os.MkdirAll(fmt.Sprintf("%s/badger", strings.TrimRight(dbPath, "/")), os.ModePerm)
-	badgerOpts := badger.DefaultOptions(fmt.Sprintf("%s/badger", strings.TrimRight(dbPath, "/"))).
-		WithLogger(nil).WithReadOnly(readOnly)
+	badgerPath := filepath.Join(dbPath, "badger")
+	_ = os.MkdirAll(badgerPath, os.ModePerm)
+	badgerOpts := badger.DefaultOptions(badgerPath).
+		WithLogger(nil)
 	if lowMemory {
 		badgerOpts = badgerOpts.
 			WithTableLoadingMode(options.FileIO).
@@ -129,7 +131,8 @@ func repoSetDB(dbPath string, lowMemory bool, readOnly bool) error {
 	}
 
 	// Initialize BuntDB Indexer
-	_ = os.MkdirAll(fmt.Sprintf("%s/bunty", strings.TrimRight(dbPath, "/")), os.ModePerm)
+	buntPath := filepath.Join(dbPath, "bunty")
+	_ = os.MkdirAll(buntPath, os.ModePerm)
 	if buntIndex, err := buntdb.Open(fmt.Sprintf("%s/bunty/dialogs.db", strings.TrimRight(dbPath, "/"))); err != nil {
 		logs.Fatal("Context::repoSetDB()->bunt Open()", zap.Error(err))
 	} else {

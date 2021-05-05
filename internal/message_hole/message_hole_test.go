@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	repo.InitRepo("./_data", false, false)
+	repo.MustInit("./_data", false)
 }
 func TestHole(t *testing.T) {
 	Convey("Hole", t, func(c C) {

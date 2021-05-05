@@ -5,7 +5,6 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
-	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
@@ -34,12 +33,6 @@ func (r *River) AppStart() error {
 	logs.Info("MiniRiver Starting")
 	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
 
-	// Initialize DB replaced with ORM
-	err := repo.InitRepo(r.dbPath, true, true)
-	if err != nil {
-		return err
-	}
-
 	// Update Authorizations
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey)
 
@@ -50,7 +43,7 @@ func (r *River) AppStart() error {
 	domain.WindowLog = func(txt string) {}
 	logs.Info("MiniRiver Started")
 
-	err = r.GetServerTime()
+	err := r.GetServerTime()
 	if err != nil {
 		logs.Warn("MiniRiver got error on get server time", zap.Error(err))
 	}

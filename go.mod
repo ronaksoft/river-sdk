@@ -8,6 +8,7 @@ require (
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
 	github.com/beeker1121/goque v2.1.0+incompatible
 	github.com/blevesearch/bleve v1.0.14
+	github.com/boltdb/bolt v1.3.1
 	github.com/chzyer/logex v1.1.10 // indirect
 	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.2
@@ -39,6 +40,7 @@ require (
 	github.com/willf/bitset v1.1.11 // indirect
 	go.uber.org/zap v1.16.0
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
+	golang.org/x/sys v0.0.0-20210503173754-0981d6026fa6 // indirect
 	google.golang.org/protobuf v1.26.0
 	gopkg.in/abiosoft/ishell.v2 v2.0.0
 	honnef.co/go/tools v0.0.1-2020.1.4 // indirect

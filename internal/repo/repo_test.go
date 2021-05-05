@@ -24,7 +24,7 @@ import (
 */
 
 func init() {
-	repo.MustInitRepo("./_data", false)
+	repo.MustInit("./_data", false)
 	logs.SetLogLevel(2)
 }
 
