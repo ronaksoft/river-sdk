@@ -35,7 +35,7 @@ func TestSplitPQ(t *testing.T) {
 }
 
 func TestGenerateMessageKey(t *testing.T) {
-	Convey("Generating MessageKey" , t, func(c C) {
+	Convey("Generating MessageKey", t, func(c C) {
 		dhKey := tools.StrToByte(RandomID(256))
 		body := []byte("Hello It is Ehsan")
 		key := GenerateMessageKey(dhKey, body)
@@ -45,7 +45,7 @@ func TestGenerateMessageKey(t *testing.T) {
 }
 
 func TestEncrypt(t *testing.T) {
-	Convey("Encrypt/Decrypt Test",t, func(c C) {
+	Convey("Encrypt/Decrypt Test", t, func(c C) {
 		dhKey := tools.StrToByte(RandomID(256))
 		body := []byte("Hello It is Ehsan")
 		key := GenerateMessageKey(dhKey, body)
@@ -55,6 +55,5 @@ func TestEncrypt(t *testing.T) {
 		c.So(err, ShouldBeNil)
 		c.So(dec, ShouldResemble, body)
 	})
-
 
 }

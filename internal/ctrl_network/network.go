@@ -18,6 +18,7 @@ import (
 	"github.com/ronaksoft/rony/registry"
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -816,7 +817,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 
 	if protoMessage.AuthID == 0 {
 		buf := pools.Buffer.FromProto(msgEnvelope)
-		buf.AppendTo(protoMessage.Payload)
+		protoMessage.Payload = buf.AppendTo(protoMessage.Payload)
 		pools.Buffer.Put(buf)
 	} else {
 		encryptedPayload := &msg.ProtoEncryptedPayload{
@@ -824,11 +825,12 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 			Envelope:   msgEnvelope,
 			MessageID:  uint64(domain.Now().Unix()<<32 | ctrl.incMessageSeq()),
 		}
-		// unencryptedBytes, _ := encryptedPayload.Marshal()
-		buf := pools.Buffer.FromProto(encryptedPayload)
-		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, *buf.Bytes())
-		messageKey := domain.GenerateMessageKey(ctrl.authKey, *buf.Bytes())
-		pools.Buffer.Put(buf)
+		mo := proto.MarshalOptions{UseCachedSize: true}
+		unencryptedBytes := pools.Bytes.GetCap(mo.Size(encryptedPayload))
+		unencryptedBytes, _ = mo.MarshalAppend(unencryptedBytes, encryptedPayload)
+		encryptedPayloadBytes, _ := domain.Encrypt(ctrl.authKey, unencryptedBytes)
+		messageKey := domain.GenerateMessageKey(ctrl.authKey, unencryptedBytes)
+		pools.Bytes.Put(unencryptedBytes)
 		copy(protoMessage.MessageKey, messageKey)
 		protoMessage.Payload = append(protoMessage.Payload[:0], encryptedPayloadBytes...)
 		pools.Bytes.Put(encryptedPayloadBytes)

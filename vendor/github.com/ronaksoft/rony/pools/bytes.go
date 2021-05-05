@@ -93,10 +93,11 @@ type ByteBuffer struct {
 }
 
 func (bb *ByteBuffer) Read(p []byte) (n int, err error) {
-	if bb.ri == len(bb.b)-1 {
+	if bb.ri >= len(bb.b)-1 {
 		return 0, io.EOF
 	}
 	n = copy(p, bb.b[bb.ri:])
+	bb.ri += n
 	return n, nil
 }
 
@@ -131,16 +132,18 @@ func (bb *ByteBuffer) CopyFrom(data []byte) {
 	copy(bb.b, data)
 }
 
-func (bb *ByteBuffer) CopyTo(data []byte) {
+func (bb *ByteBuffer) CopyTo(data []byte) []byte {
 	copy(data, bb.b)
+	return data
 }
 
 func (bb *ByteBuffer) AppendFrom(data []byte) {
 	bb.b = append(bb.b, data...)
 }
 
-func (bb *ByteBuffer) AppendTo(data []byte) {
+func (bb *ByteBuffer) AppendTo(data []byte) []byte {
 	data = append(data, bb.b...)
+	return data
 }
 
 func (bb *ByteBuffer) Len() int {
