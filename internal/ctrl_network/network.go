@@ -831,6 +831,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 		pools.Buffer.Put(buf)
 		copy(protoMessage.MessageKey, messageKey)
 		protoMessage.Payload = append(protoMessage.Payload[:0], encryptedPayloadBytes...)
+		pools.Bytes.Put(encryptedPayloadBytes)
 
 	}
 

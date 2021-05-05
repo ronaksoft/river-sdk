@@ -417,7 +417,7 @@ func initCompleteAuth(r *River, sk *msg.SystemKeys, clientNonce, serverNonce, se
 
 					// authKeyHash, _ := domain.Sha256(r.ConnInfo.AuthKey[:])
 					var authKeyHash [32]byte
-					tools.MustSha256(r.ConnInfo.AuthKey[:], authKeyHash[:])
+					tools.MustSha256(r.ConnInfo.AuthKey[:], authKeyHash[:0])
 					r.ConnInfo.AuthID = int64(binary.LittleEndian.Uint64(authKeyHash[24:32]))
 
 					var (
@@ -427,9 +427,7 @@ func initCompleteAuth(r *River, sk *msg.SystemKeys, clientNonce, serverNonce, se
 					secret = append(secret, q2Internal.SecretNonce...)
 					secret = append(secret, byte(msg.InitAuthCompleted_OK))
 					secret = append(secret, authKeyHash[:8]...)
-
-					tools.MustSha256(secret, secretHash[:])
-
+					tools.MustSha256(secret, secretHash[:0])
 					if x.SecretHash != binary.LittleEndian.Uint64(secretHash[24:32]) {
 						fmt.Println(x.SecretHash, binary.LittleEndian.Uint64(secretHash[24:32]))
 						err = domain.ErrSecretNonceMismatch

@@ -143,7 +143,7 @@ func GenerateMessageKey(dhKey, plain []byte) []byte {
 	copy(keyBuffer, dhKey[100:140])
 	copy(keyBuffer[40:], plain)
 	var sh512 [64]byte
-	err := tools.Sha512(keyBuffer, sh512[:])
+	err := tools.Sha512(keyBuffer, sh512[:0])
 	if err != nil {
 		return nil
 	}
@@ -167,7 +167,7 @@ func Encrypt(dhKey, plain []byte) (encrypted []byte, err error) {
 	// AES IV: _Sha512 (DHKey[180:220], MessageKey)[:32]
 	copy(iv[:], dhKey[180:220])
 	copy(iv[40:], msgKey)
-	err = tools.Sha512(iv[:], aesIV[:])
+	err = tools.Sha512(iv[:], aesIV[:0])
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +175,7 @@ func Encrypt(dhKey, plain []byte) (encrypted []byte, err error) {
 	// AES KEY: _Sha512 (MessageKey, DHKey[170:210])[:32]
 	copy(key[:], msgKey)
 	copy(key[32:], dhKey[170:210])
-	err = tools.Sha512(key[:], aesKey[:])
+	err = tools.Sha512(key[:], aesKey[:0])
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +216,7 @@ func Decrypt(dhKey, msgKey, encrypted []byte) (plain []byte, err error) {
 	// AES IV: _Sha512 (DHKey[180:220], MessageKey)[:32]
 	copy(iv[:], dhKey[180:220])
 	copy(iv[40:], msgKey)
-	err = tools.Sha512(iv[:], aesIV[:])
+	err = tools.Sha512(iv[:], aesIV[:0])
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +224,7 @@ func Decrypt(dhKey, msgKey, encrypted []byte) (plain []byte, err error) {
 	// AES KEY: _Sha512 (MessageKey, DHKey[170:210])[:32]
 	copy(key[:], msgKey)
 	copy(key[32:], dhKey[170:210])
-	err = tools.Sha512(key[:], aesKey[:])
+	err = tools.Sha512(key[:], aesKey[:0])
 	if err != nil {
 		return nil, err
 	}
