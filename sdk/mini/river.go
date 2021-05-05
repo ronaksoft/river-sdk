@@ -177,7 +177,9 @@ func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {}
 func (r *River) registerCommandHandlers() {
 	r.localCommands = map[int64]LocalHandler{
 		msg.C_ClientSendMessageMedia: r.clientSendMessageMedia,
+		msg.C_ClientGlobalSearch:     r.clientGlobalSearch,
 		msg.C_MessagesSendMedia:      r.messagesSendMedia,
+		msg.C_MessagesGetDialogs:     r.messagesGetDialogs,
 	}
 }
 
