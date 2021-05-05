@@ -816,7 +816,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 
 	if protoMessage.AuthID == 0 {
 		buf := pools.Buffer.FromProto(msgEnvelope)
-		protoMessage.Payload = append(protoMessage.Payload[:0], *buf.Bytes()...)
+		buf.AppendTo(protoMessage.Payload)
 		pools.Buffer.Put(buf)
 	} else {
 		encryptedPayload := &msg.ProtoEncryptedPayload{
