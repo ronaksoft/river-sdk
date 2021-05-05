@@ -1,7 +1,7 @@
-package minirepo
+package minirepo_test
 
 import (
-	"os"
+	"git.ronaksoft.com/river/sdk/internal/minirepo"
 )
 
 /*
@@ -14,6 +14,5 @@ import (
 */
 
 func init() {
-	_ = os.MkdirAll("./_hdd", os.ModePerm)
-	MustInit("./_hdd")
+	minirepo.MustInit("./_hdd")
 }

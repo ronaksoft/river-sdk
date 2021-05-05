@@ -18,7 +18,9 @@ import (
 */
 
 var (
-	r *repository
+	r        *repository
+	Dialogs  *repoDialogs
+	Contacts *repoContacts
 )
 
 type repository struct {
@@ -42,7 +44,7 @@ func Init(dbPath string) (err error) {
 
 	boltPath := filepath.Join(dbPath, "db")
 	_ = os.MkdirAll(boltPath, os.ModePerm)
-	if boldDB, err := bolt.Open(boltPath, 0666, bolt.DefaultOptions); err != nil {
+	if boldDB, err := bolt.Open(filepath.Join(boltPath, "db.dat"), 0666, bolt.DefaultOptions); err != nil {
 		return err
 	} else {
 		r.db = boldDB
@@ -55,7 +57,7 @@ func Init(dbPath string) (err error) {
 	// Initialize BuntDB Indexer
 	buntPath := filepath.Join(dbPath, "index")
 	_ = os.MkdirAll(buntPath, os.ModePerm)
-	if buntIndex, err := buntdb.Open(filepath.Join(buntPath, "index.db")); err != nil {
+	if buntIndex, err := buntdb.Open(filepath.Join(buntPath, "index.dat")); err != nil {
 		return err
 	} else {
 		r.index = buntIndex
@@ -66,6 +68,9 @@ func Init(dbPath string) (err error) {
 		_ = tx.CreateIndex(indexContacts, fmt.Sprintf("%s.*", prefixContacts), buntdb.IndexBinary)
 		return nil
 	})
+
+	Dialogs = newDialog(r)
+	Contacts = newContact(r)
 
 	return
 }

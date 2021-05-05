@@ -1,7 +1,9 @@
 package minirepo
 
 import (
+	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
+	"git.ronaksoft.com/river/sdk/internal/domain"
 	"github.com/boltdb/bolt"
 	"github.com/ronaksoft/rony/store"
 	"github.com/ronaksoft/rony/tools"
@@ -53,7 +55,7 @@ func (d *repoDialogs) Save(dialog *msg.Dialog) error {
 		}
 		err = d.index.Update(func(tx *buntdb.Tx) error {
 			_, _, err := tx.Set(
-				tools.B2S(alloc.Gen(prefixDialogs, dialog.TeamID, dialog.PeerID, dialog.PeerType)),
+				fmt.Sprintf("%s.%d.%d.%d", prefixDialogs, dialog.TeamID, dialog.PeerID, dialog.PeerType),
 				tools.Int64ToStr(dialog.TopMessageID),
 				nil,
 			)
@@ -64,6 +66,43 @@ func (d *repoDialogs) Save(dialog *msg.Dialog) error {
 		}
 		return nil
 	})
+}
+
+func (d *repoDialogs) Delete(teamID int64, peerID int64, peerType int32) error {
+	alloc := store.NewAllocator()
+	defer alloc.ReleaseAll()
+
+	return d.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucketDialogs)
+		err := b.Delete(alloc.Gen(teamID, peerID, peerType))
+		if err != nil {
+			return err
+		}
+		return d.index.Update(func(tx *buntdb.Tx) error {
+			_, _ = tx.Delete(fmt.Sprintf("%s.%d.%d.%d", prefixDialogs, teamID, peerID, peerType))
+			return nil
+		})
+	})
+}
+
+func (d *repoDialogs) Read(teamID int64, peerID int64, peerType int32) (*msg.Dialog, error) {
+	alloc := store.NewAllocator()
+	defer alloc.ReleaseAll()
+
+	dialog := &msg.Dialog{}
+
+	err := d.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucketDialogs)
+		v := b.Get(alloc.Gen(teamID, peerID, peerType))
+		if len(v) > 0 {
+			return dialog.Unmarshal(v)
+		}
+		return domain.ErrNotFound
+	})
+	if err != nil {
+		return nil, err
+	}
+	return dialog, nil
 }
 
 func (d *repoDialogs) List(offset, limit int32) ([]*msg.Dialog, error) {
@@ -83,7 +122,7 @@ func (d *repoDialogs) List(offset, limit int32) ([]*msg.Dialog, error) {
 			_ = d.db.View(func(tx *bolt.Tx) error {
 				b := tx.Bucket(bucketDialogs)
 				parts := strings.Split(key, ".")
-				v := b.Get(alloc.Gen(prefixDialogs, tools.StrToInt64(parts[1]), tools.StrToInt64(parts[2]), tools.StrToInt32(parts[3])))
+				v := b.Get(alloc.Gen(tools.StrToInt64(parts[1]), tools.StrToInt64(parts[2]), tools.StrToInt32(parts[3])))
 				if len(v) > 0 {
 					dialog := &msg.Dialog{}
 					_ = dialog.Unmarshal(v)

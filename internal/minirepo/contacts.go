@@ -13,3 +13,18 @@ const (
 	prefixContacts = "CONTACTS"
 	indexContacts
 )
+
+var (
+	bucketContacts = []byte("DLG")
+)
+
+type repoContacts struct {
+	*repository
+}
+
+func newContact(r *repository) *repoContacts {
+	rd := &repoContacts{
+		repository: r,
+	}
+	return rd
+}
