@@ -801,12 +801,9 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 		defer cf()
 	}
 
-	// protoMessage := msg.ProtoMessage{
-	// 	MessageKey: make([]byte, 32),
-	// }
 	protoMessage := msg.PoolProtoMessage.Get()
 	defer msg.PoolProtoMessage.Put(protoMessage)
-	if cap(protoMessage.MessageKey) != 32 {
+	if cap(protoMessage.MessageKey) < 32 {
 		protoMessage.MessageKey = make([]byte, 32)
 	} else {
 		protoMessage.MessageKey = protoMessage.MessageKey[:32]
@@ -902,9 +899,11 @@ func (ctrl *Controller) HttpCommandWithTimeout(
 	case context.DeadlineExceeded:
 		timeoutCB()
 	case context.Canceled:
+		res := &rony.MessageEnvelope{}
 		rony.ErrorMessage(res, messageEnvelope.RequestID, "E100", "Canceled")
 		successCB(res)
 	default:
+		res := &rony.MessageEnvelope{}
 		rony.ErrorMessage(res, messageEnvelope.RequestID, "E100", err.Error())
 		successCB(res)
 	}
