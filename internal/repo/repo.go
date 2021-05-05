@@ -57,18 +57,18 @@ type repository struct {
 	peerSearch bleve.Index
 }
 
-func MustInitRepo(dbPath string, lowMemory bool) {
-	err := InitRepo(dbPath, lowMemory)
+func MustInitRepo(dbPath string, lowMemory bool, readOnly bool) {
+	err := InitRepo(dbPath, lowMemory, readOnly)
 	if err != nil {
 		panic(err)
 	}
 }
 
 // InitRepo initialize repo singleton
-func InitRepo(dbPath string, lowMemory bool) error {
+func InitRepo(dbPath string, lowMemory bool, readOnly bool) error {
 	if ctx == nil {
 		singleton.Lock()
-		err := repoSetDB(dbPath, lowMemory)
+		err := repoSetDB(dbPath, lowMemory, readOnly)
 		if err != nil {
 			return err
 		}
@@ -97,14 +97,14 @@ func InitRepo(dbPath string, lowMemory bool) error {
 	return nil
 }
 
-func repoSetDB(dbPath string, lowMemory bool) error {
+func repoSetDB(dbPath string, lowMemory bool, readOnly bool) error {
 	r = new(repository)
 
 	_ = os.MkdirAll(dbPath, os.ModePerm)
 	// Initialize BadgerDB
 	_ = os.MkdirAll(fmt.Sprintf("%s/badger", strings.TrimRight(dbPath, "/")), os.ModePerm)
 	badgerOpts := badger.DefaultOptions(fmt.Sprintf("%s/badger", strings.TrimRight(dbPath, "/"))).
-		WithLogger(nil)
+		WithLogger(nil).WithReadOnly(readOnly)
 	if lowMemory {
 		badgerOpts = badgerOpts.
 			WithTableLoadingMode(options.FileIO).

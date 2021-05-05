@@ -35,7 +35,7 @@ func (r *River) AppStart() error {
 	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
 
 	// Initialize DB replaced with ORM
-	err := repo.InitRepo(r.dbPath, true)
+	err := repo.InitRepo(r.dbPath, true, true)
 	if err != nil {
 		return err
 	}

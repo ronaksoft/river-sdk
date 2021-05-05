@@ -674,7 +674,7 @@ func (r *River) AppStart() error {
 	messageHole.Init()
 
 	// Initialize DB replaced with ORM
-	err := repo.InitRepo(r.dbPath, r.optimizeForLowMemory)
+	err := repo.InitRepo(r.dbPath, r.optimizeForLowMemory, false)
 	if err != nil {
 		return err
 	}

@@ -59,7 +59,7 @@ func init() {
 	})
 	_River = r
 
-	_ = repo.InitRepo(fmt.Sprintf("%s/%s.db", "./_data", "test"), false)
+	_ = repo.InitRepo(fmt.Sprintf("%s/%s.db", "./_data", "test"), false, false)
 }
 
 type ConnInfoDelegates struct{}
