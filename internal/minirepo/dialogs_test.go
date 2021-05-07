@@ -28,7 +28,7 @@ func TestRepoDialogs(t *testing.T) {
 			})
 			c.So(err, ShouldBeNil)
 		}
-		dialogs, err := minirepo.Dialogs.List(0, 10)
+		dialogs, err := minirepo.Dialogs.List(0, 0, 10)
 		c.So(err, ShouldBeNil)
 		c.So(dialogs, ShouldHaveLength, 10)
 	})

@@ -19,6 +19,7 @@ func init() {
 	Mini.AddCmd(MiniMessageGetDialogs)
 	Mini.AddCmd(MiniAccountGetTeams)
 	Mini.AddCmd(MiniMessageSendMediaToSelf)
+	Mini.AddCmd(MiniContactsGet)
 }
 
 var Mini = &ishell.Cmd{
@@ -55,6 +56,21 @@ var MiniAccountGetTeams = &ishell.Cmd{
 		} else {
 			reqDelegate.RequestID = reqID
 		}
+	},
+}
+
+var MiniContactsGet = &ishell.Cmd{
+	Name: "GetContacts",
+	Func: func(c *ishell.Context) {
+		req := msg.ContactsGet{}
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _MiniSDK.ExecuteCommand(msg.C_ContactsGet, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+
 	},
 }
 

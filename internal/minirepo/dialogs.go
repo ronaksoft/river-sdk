@@ -107,7 +107,7 @@ func (d *repoDialogs) Read(teamID int64, peerID int64, peerType int32) (*msg.Dia
 	return dialog, nil
 }
 
-func (d *repoDialogs) List(offset, limit int32) ([]*msg.Dialog, error) {
+func (d *repoDialogs) List(teamID int64, offset, limit int32) ([]*msg.Dialog, error) {
 	dialogs := make([]*msg.Dialog, 0, limit)
 	alloc := store.NewAllocator()
 	defer alloc.ReleaseAll()
@@ -120,11 +120,16 @@ func (d *repoDialogs) List(offset, limit int32) ([]*msg.Dialog, error) {
 			if limit--; limit < 0 {
 				return false
 			}
-
+			parts := strings.Split(key, ".")
+			if tools.StrToInt64(parts[1]) != teamID {
+				return true
+			}
+			peerID := tools.StrToInt64(parts[2])
+			peerType := tools.StrToInt32(parts[3])
 			_ = d.db.View(func(tx *bolt.Tx) error {
 				b := tx.Bucket(bucketDialogs)
-				parts := strings.Split(key, ".")
-				v := b.Get(alloc.Gen(tools.StrToInt64(parts[1]), tools.StrToInt64(parts[2]), tools.StrToInt32(parts[3])))
+
+				v := b.Get(alloc.Gen(teamID, peerID, peerType))
 				if len(v) > 0 {
 					dialog := &msg.Dialog{}
 					_ = dialog.Unmarshal(v)

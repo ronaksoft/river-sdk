@@ -4,6 +4,7 @@ import (
 	"context"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
+	"git.ronaksoft.com/river/sdk/internal/minirepo"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
@@ -32,6 +33,8 @@ func (r *River) AppStart() error {
 
 	logs.Info("MiniRiver Starting")
 	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
+
+	minirepo.MustInit(r.dbPath)
 
 	// Update Authorizations
 	r.network.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey)

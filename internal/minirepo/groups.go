@@ -82,3 +82,26 @@ func (d *repoGroups) Read(teamID int64, groupID int64) (*msg.Group, error) {
 	}
 	return group, nil
 }
+
+func (d *repoGroups) ReadMany(teamID int64, groupIDs ...int64) ([]*msg.Group, error) {
+	alloc := store.NewAllocator()
+	defer alloc.ReleaseAll()
+
+	groups := make([]*msg.Group, 0, len(groupIDs))
+	err := d.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucketGroups)
+		for _, groupID := range groupIDs {
+			group := &msg.Group{}
+			v := b.Get(alloc.Gen(teamID, groupID))
+			if len(v) > 0 {
+				_ = group.Unmarshal(v)
+				groups = append(groups, group)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return groups, nil
+}

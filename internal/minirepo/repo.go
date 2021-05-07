@@ -2,6 +2,7 @@ package minirepo
 
 import (
 	"fmt"
+	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/boltdb/bolt"
 	"github.com/tidwall/buntdb"
 	"os"
@@ -52,7 +53,13 @@ func Init(dbPath string) (err error) {
 		r.db = boldDB
 	}
 	_ = r.db.Update(func(tx *bolt.Tx) error {
-		_, _ = tx.CreateBucketIfNotExists(bucketDialogs)
+		buckets := [][]byte{
+			bucketGroups, bucketUsers, bucketGenerals, bucketContacts, bucketDialogs,
+		}
+		for _, b := range buckets {
+			_, err = tx.CreateBucketIfNotExists(b)
+			logs.WarnOnErr("MiniRepo got error on creating bucket", err)
+		}
 		return nil
 	})
 

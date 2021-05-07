@@ -7,7 +7,6 @@ import (
 	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
-	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/pools"
@@ -298,40 +297,4 @@ func (r *River) clientGlobalSearch(in, out *rony.MessageEnvelope, da *DelegateAd
 		da.OnComplete(out)
 		return
 	}
-
-	searchPhrase := strings.ToLower(req.Text)
-	searchResults := &msg.ClientSearchResult{}
-	var userContacts []*msg.ContactUser
-	var nonContacts []*msg.ContactUser
-
-	// get users && group IDs
-	userIDs := domain.MInt64B{}
-	matchedUserIDs := domain.MInt64B{}
-	groupIDs := domain.MInt64B{}
-
-	// if peerID == 0 then look for group and contact names too
-	if req.Peer == nil {
-		userContacts, _ = repo.Users.SearchContacts(domain.GetTeamID(in), searchPhrase)
-		for _, userContact := range userContacts {
-			matchedUserIDs[userContact.ID] = true
-		}
-		nonContacts = repo.Users.SearchNonContacts(searchPhrase)
-		for _, userContact := range nonContacts {
-			matchedUserIDs[userContact.ID] = true
-		}
-		searchResults.MatchedGroups = repo.Groups.Search(domain.GetTeamID(in), searchPhrase)
-	}
-
-	users, _ := repo.Users.GetMany(userIDs.ToArray())
-	groups, _ := repo.Groups.GetMany(groupIDs.ToArray())
-	matchedUsers, _ := repo.Users.GetMany(matchedUserIDs.ToArray())
-
-	searchResults.Users = users
-	searchResults.Groups = groups
-	searchResults.MatchedUsers = matchedUsers
-
-	out.RequestID = in.RequestID
-	out.Constructor = msg.C_ClientSearchResult
-	out.Message, _ = searchResults.Marshal()
-	da.OnComplete(out)
 }

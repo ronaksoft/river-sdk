@@ -4,7 +4,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
-	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/minirepo"
 	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 )
@@ -46,8 +46,8 @@ func (r *River) messagesGetDialogs(in, out *rony.MessageEnvelope, da *DelegateAd
 		return
 	}
 	res := &msg.MessagesDialogs{}
-	res.Dialogs = repo.Dialogs.List(domain.GetTeamID(in), req.Offset, req.Limit)
-	res.Count = repo.Dialogs.CountDialogs(domain.GetTeamID(in))
+	res.Dialogs, _ = minirepo.Dialogs.List(domain.GetTeamID(in), req.Offset, req.Limit)
+	// res.Count = minirepo.Dialogs.CountDialogs(domain.GetTeamID(in))
 
 	// If the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {
@@ -67,31 +67,7 @@ func (r *River) messagesGetDialogs(in, out *rony.MessageEnvelope, da *DelegateAd
 		mMessages[dialog.TopMessageID] = true
 	}
 
-	// Load Messages
-	res.Messages = repo.Messages.GetMany(mMessages.ToArray())
-	for _, m := range res.Messages {
-		switch msg.PeerType(m.PeerType) {
-		case msg.PeerType_PeerUser:
-			mUsers[m.PeerID] = true
-		case msg.PeerType_PeerGroup:
-			mGroups[m.PeerID] = true
-		}
-		if m.SenderID != 0 {
-			mUsers[m.SenderID] = true
-		}
-		if m.FwdSenderID != 0 {
-			mUsers[m.FwdSenderID] = true
-		}
-
-		// load MessageActionData users
-		actUserIDs := domain.ExtractActionUserIDs(m.MessageAction, m.MessageActionData)
-		for _, id := range actUserIDs {
-			if id != 0 {
-				mUsers[id] = true
-			}
-		}
-	}
-	res.Groups, _ = repo.Groups.GetMany(mGroups.ToArray())
+	res.Groups, _ = minirepo.Groups.ReadMany(domain.GetTeamID(in), mGroups.ToArray()...)
 	if len(res.Groups) != len(mGroups) {
 		logs.Warn("River found unmatched dialog groups", zap.Int("Got", len(res.Groups)), zap.Int("Need", len(mGroups)))
 		for groupID := range mGroups {
@@ -107,7 +83,7 @@ func (r *River) messagesGetDialogs(in, out *rony.MessageEnvelope, da *DelegateAd
 			}
 		}
 	}
-	res.Users, _ = repo.Users.GetMany(mUsers.ToArray())
+	res.Users, _ = minirepo.Users.ReadMany(mUsers.ToArray()...)
 	if len(res.Users) != len(mUsers) {
 		logs.Warn("River found unmatched dialog users", zap.Int("Got", len(res.Users)), zap.Int("Need", len(mUsers)))
 		for userID := range mUsers {
@@ -124,9 +100,23 @@ func (r *River) messagesGetDialogs(in, out *rony.MessageEnvelope, da *DelegateAd
 		}
 	}
 
-	out.Constructor = msg.C_MessagesDialogs
-	buff, err := res.Marshal()
-	logs.ErrorOnErr("River got error on marshal MessagesDialogs", err)
-	out.Message = buff
+	out.Fill(in.RequestID, msg.C_MessagesDialogs, res)
+	da.OnComplete(out)
+}
+
+func (r *River) contactsGet(in, out *rony.MessageEnvelope, da *DelegateAdapter) {
+	req := &msg.ContactsGet{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.OnComplete(out)
+		return
+	}
+	res, err := minirepo.Users.ReadAllContacts()
+	if err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.OnComplete(out)
+		return
+	}
+	out.Fill(in.RequestID, msg.C_ContactsMany, res)
 	da.OnComplete(out)
 }

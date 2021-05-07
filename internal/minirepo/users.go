@@ -211,3 +211,27 @@ func (d *repoUsers) ReadUser(userID int64) (*msg.User, error) {
 	}
 	return u, nil
 }
+
+func (d *repoUsers) ReadMany(userIDs ...int64) ([]*msg.User, error) {
+	alloc := store.NewAllocator()
+	defer alloc.ReleaseAll()
+
+	var (
+		users = make([]*msg.User, 0, len(userIDs))
+		err   error
+	)
+	err = d.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucketUsers)
+		for _, userID := range userIDs {
+			u, _ := d.getUser(alloc, b, userID)
+			if u != nil {
+				users = append(users, u)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}

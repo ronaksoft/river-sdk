@@ -182,6 +182,7 @@ func (r *River) registerCommandHandlers() {
 		msg.C_ClientGlobalSearch:     r.clientGlobalSearch,
 		msg.C_MessagesSendMedia:      r.messagesSendMedia,
 		msg.C_MessagesGetDialogs:     r.messagesGetDialogs,
+		msg.C_ContactsGet:            r.contactsGet,
 	}
 }
 

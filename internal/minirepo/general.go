@@ -120,20 +120,32 @@ func (d *repoGenerals) Get(key []byte) []byte {
 
 func (d *repoGenerals) GetInt64(key []byte) int64 {
 	v := d.Get(key)
+	if v == nil {
+		return 0
+	}
 	return int64(binary.BigEndian.Uint64(v))
 }
 
 func (d *repoGenerals) GetUInt64(key []byte) uint64 {
 	v := d.Get(key)
+	if v == nil {
+		return 0
+	}
 	return binary.BigEndian.Uint64(v)
 }
 
 func (d *repoGenerals) GetInt32(key []byte) int32 {
 	v := d.Get(key)
+	if v == nil {
+		return 0
+	}
 	return int32(binary.BigEndian.Uint32(v))
 }
 
 func (d *repoGenerals) GetUInt32(key []byte) uint32 {
 	v := d.Get(key)
+	if v == nil {
+		return 0
+	}
 	return binary.BigEndian.Uint32(v)
 }
