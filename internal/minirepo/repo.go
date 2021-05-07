@@ -45,7 +45,7 @@ func Init(dbPath string) (err error) {
 
 	r = &repository{}
 
-	boltPath := filepath.Join(dbPath, "db")
+	boltPath := filepath.Join(dbPath, "bolt")
 	_ = os.MkdirAll(boltPath, os.ModePerm)
 	if boldDB, err := bolt.Open(filepath.Join(boltPath, "db.dat"), 0666, bolt.DefaultOptions); err != nil {
 		return err
@@ -64,9 +64,9 @@ func Init(dbPath string) (err error) {
 	})
 
 	// Initialize BuntDB Indexer
-	buntPath := filepath.Join(dbPath, "index")
+	buntPath := filepath.Join(dbPath, "bunty")
 	_ = os.MkdirAll(buntPath, os.ModePerm)
-	if buntIndex, err := buntdb.Open(filepath.Join(buntPath, "index.dat")); err != nil {
+	if buntIndex, err := buntdb.Open(filepath.Join(buntPath, "mini.dat")); err != nil {
 		return err
 	} else {
 		r.index = buntIndex
