@@ -18,9 +18,11 @@ import (
 */
 
 var (
-	r        *repository
-	Dialogs  *repoDialogs
-	Contacts *repoContacts
+	r       *repository
+	Dialogs *repoDialogs
+	Users   *repoUsers
+	Groups  *repoGroups
+	General *repoGenerals
 )
 
 type repository struct {
@@ -70,7 +72,9 @@ func Init(dbPath string) (err error) {
 	})
 
 	Dialogs = newDialog(r)
-	Contacts = newContact(r)
+	Users = newUser(r)
+	Groups = newGroup(r)
+	General = newGeneral(r)
 
 	return
 }
