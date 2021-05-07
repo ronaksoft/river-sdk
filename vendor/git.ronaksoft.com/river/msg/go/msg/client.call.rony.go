@@ -53,25 +53,25 @@ func (x *CallMediaSettings) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_CallMediaSettings, x)
 }
 
-const C_CallConnection int64 = 3450901888
+const C_CallParticipant int64 = 2652007354
 
-type poolCallConnection struct {
+type poolCallParticipant struct {
 	pool sync.Pool
 }
 
-func (p *poolCallConnection) Get() *CallConnection {
-	x, ok := p.pool.Get().(*CallConnection)
+func (p *poolCallParticipant) Get() *CallParticipant {
+	x, ok := p.pool.Get().(*CallParticipant)
 	if !ok {
-		x = &CallConnection{}
+		x = &CallParticipant{}
 	}
 	return x
 }
 
-func (p *poolCallConnection) Put(x *CallConnection) {
+func (p *poolCallParticipant) Put(x *CallParticipant) {
 	if x == nil {
 		return
 	}
-	x.ConnectionId = 0
+	x.ConnectionID = 0
 	PoolInputUser.Put(x.Peer)
 	x.Peer = nil
 	x.Initiator = false
@@ -83,10 +83,10 @@ func (p *poolCallConnection) Put(x *CallConnection) {
 	p.pool.Put(x)
 }
 
-var PoolCallConnection = poolCallConnection{}
+var PoolCallParticipant = poolCallParticipant{}
 
-func (x *CallConnection) DeepCopy(z *CallConnection) {
-	z.ConnectionId = x.ConnectionId
+func (x *CallParticipant) DeepCopy(z *CallParticipant) {
+	z.ConnectionID = x.ConnectionID
 	if x.Peer != nil {
 		if z.Peer == nil {
 			z.Peer = PoolInputUser.Get()
@@ -107,6 +107,174 @@ func (x *CallConnection) DeepCopy(z *CallConnection) {
 		z.MediaSettings = nil
 	}
 	z.Started = x.Started
+}
+
+func (x *CallParticipant) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *CallParticipant) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *CallParticipant) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_CallParticipant, x)
+}
+
+const C_CallRTCIceCandidate int64 = 2748774954
+
+type poolCallRTCIceCandidate struct {
+	pool sync.Pool
+}
+
+func (p *poolCallRTCIceCandidate) Get() *CallRTCIceCandidate {
+	x, ok := p.pool.Get().(*CallRTCIceCandidate)
+	if !ok {
+		x = &CallRTCIceCandidate{}
+	}
+	return x
+}
+
+func (p *poolCallRTCIceCandidate) Put(x *CallRTCIceCandidate) {
+	if x == nil {
+		return
+	}
+	x.Candidate = ""
+	x.SdpMLineIndex = 0
+	x.SdpMid = ""
+	x.UsernameFragment = ""
+	p.pool.Put(x)
+}
+
+var PoolCallRTCIceCandidate = poolCallRTCIceCandidate{}
+
+func (x *CallRTCIceCandidate) DeepCopy(z *CallRTCIceCandidate) {
+	z.Candidate = x.Candidate
+	z.SdpMLineIndex = x.SdpMLineIndex
+	z.SdpMid = x.SdpMid
+	z.UsernameFragment = x.UsernameFragment
+}
+
+func (x *CallRTCIceCandidate) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *CallRTCIceCandidate) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *CallRTCIceCandidate) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_CallRTCIceCandidate, x)
+}
+
+const C_CallRTCIceServer int64 = 1457208388
+
+type poolCallRTCIceServer struct {
+	pool sync.Pool
+}
+
+func (p *poolCallRTCIceServer) Get() *CallRTCIceServer {
+	x, ok := p.pool.Get().(*CallRTCIceServer)
+	if !ok {
+		x = &CallRTCIceServer{}
+	}
+	return x
+}
+
+func (p *poolCallRTCIceServer) Put(x *CallRTCIceServer) {
+	if x == nil {
+		return
+	}
+	x.Credential = ""
+	x.CredentialType = ""
+	x.Urls = x.Urls[:0]
+	x.Username = ""
+	p.pool.Put(x)
+}
+
+var PoolCallRTCIceServer = poolCallRTCIceServer{}
+
+func (x *CallRTCIceServer) DeepCopy(z *CallRTCIceServer) {
+	z.Credential = x.Credential
+	z.CredentialType = x.CredentialType
+	z.Urls = append(z.Urls[:0], x.Urls...)
+	z.Username = x.Username
+}
+
+func (x *CallRTCIceServer) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *CallRTCIceServer) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *CallRTCIceServer) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_CallRTCIceServer, x)
+}
+
+const C_CallConnection int64 = 3450901888
+
+type poolCallConnection struct {
+	pool sync.Pool
+}
+
+func (p *poolCallConnection) Get() *CallConnection {
+	x, ok := p.pool.Get().(*CallConnection)
+	if !ok {
+		x = &CallConnection{}
+	}
+	return x
+}
+
+func (p *poolCallConnection) Put(x *CallConnection) {
+	if x == nil {
+		return
+	}
+	x.Accepted = false
+	x.RTCPeerConnection = 0
+	for _, z := range x.IceQueue {
+		PoolCallRTCIceCandidate.Put(z)
+	}
+	x.IceQueue = x.IceQueue[:0]
+	for _, z := range x.IceServers {
+		PoolCallRTCIceServer.Put(z)
+	}
+	x.IceServers = x.IceServers[:0]
+	x.Init = false
+	x.Reconnecting = false
+	x.ScreenShareStreamID = 0
+	x.StreamID = 0
+	x.IntervalID = 0
+	x.Try = 0
+	p.pool.Put(x)
+}
+
+var PoolCallConnection = poolCallConnection{}
+
+func (x *CallConnection) DeepCopy(z *CallConnection) {
+	z.Accepted = x.Accepted
+	z.RTCPeerConnection = x.RTCPeerConnection
+	for idx := range x.IceQueue {
+		if x.IceQueue[idx] != nil {
+			xx := PoolCallRTCIceCandidate.Get()
+			x.IceQueue[idx].DeepCopy(xx)
+			z.IceQueue = append(z.IceQueue, xx)
+		}
+	}
+	for idx := range x.IceServers {
+		if x.IceServers[idx] != nil {
+			xx := PoolCallRTCIceServer.Get()
+			x.IceServers[idx].DeepCopy(xx)
+			z.IceServers = append(z.IceServers, xx)
+		}
+	}
+	z.Init = x.Init
+	z.Reconnecting = x.Reconnecting
+	z.ScreenShareStreamID = x.ScreenShareStreamID
+	z.StreamID = x.StreamID
+	z.IntervalID = x.IntervalID
+	z.Try = x.Try
 }
 
 func (x *CallConnection) Marshal() ([]byte, error) {
@@ -183,14 +351,14 @@ func (p *poolCallUpdateCallAccepted) Put(x *CallUpdateCallAccepted) {
 	if x == nil {
 		return
 	}
-	x.ConnectionId = 0
+	x.ConnectionID = 0
 	p.pool.Put(x)
 }
 
 var PoolCallUpdateCallAccepted = poolCallUpdateCallAccepted{}
 
 func (x *CallUpdateCallAccepted) DeepCopy(z *CallUpdateCallAccepted) {
-	z.ConnectionId = x.ConnectionId
+	z.ConnectionID = x.ConnectionID
 }
 
 func (x *CallUpdateCallAccepted) Marshal() ([]byte, error) {
@@ -223,7 +391,7 @@ func (p *poolCallUpdateStreamUpdated) Put(x *CallUpdateStreamUpdated) {
 	if x == nil {
 		return
 	}
-	x.ConnectionId = 0
+	x.ConnectionID = 0
 	x.StreamID = ""
 	p.pool.Put(x)
 }
@@ -231,7 +399,7 @@ func (p *poolCallUpdateStreamUpdated) Put(x *CallUpdateStreamUpdated) {
 var PoolCallUpdateStreamUpdated = poolCallUpdateStreamUpdated{}
 
 func (x *CallUpdateStreamUpdated) DeepCopy(z *CallUpdateStreamUpdated) {
-	z.ConnectionId = x.ConnectionId
+	z.ConnectionID = x.ConnectionID
 	z.StreamID = x.StreamID
 }
 
@@ -307,7 +475,7 @@ func (p *poolCallUpdateMediaSettingsUpdated) Put(x *CallUpdateMediaSettingsUpdat
 	if x == nil {
 		return
 	}
-	x.ConnectionId = 0
+	x.ConnectionID = 0
 	PoolCallMediaSettings.Put(x.MediaSettings)
 	x.MediaSettings = nil
 	p.pool.Put(x)
@@ -316,7 +484,7 @@ func (p *poolCallUpdateMediaSettingsUpdated) Put(x *CallUpdateMediaSettingsUpdat
 var PoolCallUpdateMediaSettingsUpdated = poolCallUpdateMediaSettingsUpdated{}
 
 func (x *CallUpdateMediaSettingsUpdated) DeepCopy(z *CallUpdateMediaSettingsUpdated) {
-	z.ConnectionId = x.ConnectionId
+	z.ConnectionID = x.ConnectionID
 	if x.MediaSettings != nil {
 		if z.MediaSettings == nil {
 			z.MediaSettings = PoolCallMediaSettings.Get()
@@ -435,14 +603,14 @@ func (p *poolCallUpdateCallAck) Put(x *CallUpdateCallAck) {
 	if x == nil {
 		return
 	}
-	x.ConnectionId = 0
+	x.ConnectionID = 0
 	p.pool.Put(x)
 }
 
 var PoolCallUpdateCallAck = poolCallUpdateCallAck{}
 
 func (x *CallUpdateCallAck) DeepCopy(z *CallUpdateCallAck) {
-	z.ConnectionId = x.ConnectionId
+	z.ConnectionID = x.ConnectionID
 }
 
 func (x *CallUpdateCallAck) Marshal() ([]byte, error) {
@@ -782,7 +950,7 @@ func (p *poolCallUpdateShareScreenStreamUpdated) Put(x *CallUpdateShareScreenStr
 		return
 	}
 	x.CallID = 0
-	x.ConnectionId = 0
+	x.ConnectionID = 0
 	x.StreamID = ""
 	p.pool.Put(x)
 }
@@ -791,7 +959,7 @@ var PoolCallUpdateShareScreenStreamUpdated = poolCallUpdateShareScreenStreamUpda
 
 func (x *CallUpdateShareScreenStreamUpdated) DeepCopy(z *CallUpdateShareScreenStreamUpdated) {
 	z.CallID = x.CallID
-	z.ConnectionId = x.ConnectionId
+	z.ConnectionID = x.ConnectionID
 	z.StreamID = x.StreamID
 }
 
@@ -863,7 +1031,7 @@ func (p *poolCallUpdateConnectionStatusChanged) Put(x *CallUpdateConnectionStatu
 	if x == nil {
 		return
 	}
-	x.ConnectionId = 0
+	x.ConnectionID = 0
 	x.State = ""
 	p.pool.Put(x)
 }
@@ -871,7 +1039,7 @@ func (p *poolCallUpdateConnectionStatusChanged) Put(x *CallUpdateConnectionStatu
 var PoolCallUpdateConnectionStatusChanged = poolCallUpdateConnectionStatusChanged{}
 
 func (x *CallUpdateConnectionStatusChanged) DeepCopy(z *CallUpdateConnectionStatusChanged) {
-	z.ConnectionId = x.ConnectionId
+	z.ConnectionID = x.ConnectionID
 	z.State = x.State
 }
 
@@ -887,8 +1055,133 @@ func (x *CallUpdateConnectionStatusChanged) PushToContext(ctx *edge.RequestCtx) 
 	ctx.PushMessage(C_CallUpdateConnectionStatusChanged, x)
 }
 
+const C_CallUpdateParticipantMuted int64 = 2194386679
+
+type poolCallUpdateParticipantMuted struct {
+	pool sync.Pool
+}
+
+func (p *poolCallUpdateParticipantMuted) Get() *CallUpdateParticipantMuted {
+	x, ok := p.pool.Get().(*CallUpdateParticipantMuted)
+	if !ok {
+		x = &CallUpdateParticipantMuted{}
+	}
+	return x
+}
+
+func (p *poolCallUpdateParticipantMuted) Put(x *CallUpdateParticipantMuted) {
+	if x == nil {
+		return
+	}
+	x.ConnectionID = 0
+	x.Muted = false
+	x.UserID = 0
+	p.pool.Put(x)
+}
+
+var PoolCallUpdateParticipantMuted = poolCallUpdateParticipantMuted{}
+
+func (x *CallUpdateParticipantMuted) DeepCopy(z *CallUpdateParticipantMuted) {
+	z.ConnectionID = x.ConnectionID
+	z.Muted = x.Muted
+	z.UserID = x.UserID
+}
+
+func (x *CallUpdateParticipantMuted) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *CallUpdateParticipantMuted) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *CallUpdateParticipantMuted) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_CallUpdateParticipantMuted, x)
+}
+
+const C_CallUpdateCallDestroyed int64 = 3684039715
+
+type poolCallUpdateCallDestroyed struct {
+	pool sync.Pool
+}
+
+func (p *poolCallUpdateCallDestroyed) Get() *CallUpdateCallDestroyed {
+	x, ok := p.pool.Get().(*CallUpdateCallDestroyed)
+	if !ok {
+		x = &CallUpdateCallDestroyed{}
+	}
+	return x
+}
+
+func (p *poolCallUpdateCallDestroyed) Put(x *CallUpdateCallDestroyed) {
+	if x == nil {
+		return
+	}
+	x.CallID = 0
+	p.pool.Put(x)
+}
+
+var PoolCallUpdateCallDestroyed = poolCallUpdateCallDestroyed{}
+
+func (x *CallUpdateCallDestroyed) DeepCopy(z *CallUpdateCallDestroyed) {
+	z.CallID = x.CallID
+}
+
+func (x *CallUpdateCallDestroyed) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *CallUpdateCallDestroyed) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *CallUpdateCallDestroyed) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_CallUpdateCallDestroyed, x)
+}
+
+const C_CallUpdateLocalMediaSettingsUpdated int64 = 587913546
+
+type poolCallUpdateLocalMediaSettingsUpdated struct {
+	pool sync.Pool
+}
+
+func (p *poolCallUpdateLocalMediaSettingsUpdated) Get() *CallUpdateLocalMediaSettingsUpdated {
+	x, ok := p.pool.Get().(*CallUpdateLocalMediaSettingsUpdated)
+	if !ok {
+		x = &CallUpdateLocalMediaSettingsUpdated{}
+	}
+	return x
+}
+
+func (p *poolCallUpdateLocalMediaSettingsUpdated) Put(x *CallUpdateLocalMediaSettingsUpdated) {
+	if x == nil {
+		return
+	}
+	p.pool.Put(x)
+}
+
+var PoolCallUpdateLocalMediaSettingsUpdated = poolCallUpdateLocalMediaSettingsUpdated{}
+
+func (x *CallUpdateLocalMediaSettingsUpdated) DeepCopy(z *CallUpdateLocalMediaSettingsUpdated) {
+}
+
+func (x *CallUpdateLocalMediaSettingsUpdated) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *CallUpdateLocalMediaSettingsUpdated) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *CallUpdateLocalMediaSettingsUpdated) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_CallUpdateLocalMediaSettingsUpdated, x)
+}
+
 func init() {
 	registry.RegisterConstructor(1147111688, "CallMediaSettings")
+	registry.RegisterConstructor(2652007354, "CallParticipant")
+	registry.RegisterConstructor(2748774954, "CallRTCIceCandidate")
+	registry.RegisterConstructor(1457208388, "CallRTCIceServer")
 	registry.RegisterConstructor(3450901888, "CallConnection")
 	registry.RegisterConstructor(2556114354, "CallUpdateCallRequested")
 	registry.RegisterConstructor(2134109006, "CallUpdateCallAccepted")
@@ -908,4 +1201,7 @@ func init() {
 	registry.RegisterConstructor(2763784404, "CallUpdateShareScreenStreamUpdated")
 	registry.RegisterConstructor(1993183151, "CallUpdateAllConnected")
 	registry.RegisterConstructor(4028141073, "CallUpdateConnectionStatusChanged")
+	registry.RegisterConstructor(2194386679, "CallUpdateParticipantMuted")
+	registry.RegisterConstructor(3684039715, "CallUpdateCallDestroyed")
+	registry.RegisterConstructor(587913546, "CallUpdateLocalMediaSettingsUpdated")
 }
