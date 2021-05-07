@@ -16,6 +16,7 @@ type MainDelegate interface {
 	ShowLoggerAlert()
 	AddLog(text string)
 	AppUpdate(version string, updateAvailable, force bool)
+	DataSynced(dialogs, contacts, gifs bool)
 }
 
 // RequestDelegate each request should have this callbacks

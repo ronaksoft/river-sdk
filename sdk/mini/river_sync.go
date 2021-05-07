@@ -106,6 +106,9 @@ func (r *River) syncContacts() {
 			case msg.C_ContactsMany:
 				x := &msg.ContactsMany{}
 				_ = x.Unmarshal(m.Message)
+				if !x.Modified {
+					return
+				}
 				err := minirepo.Users.SaveAllContacts(x)
 				if err != nil {
 					logs.Warn("MiniRiver got error on saving contacts", zap.Error(err))
@@ -115,6 +118,7 @@ func (r *River) syncContacts() {
 				if err != nil {
 					logs.Warn("MiniRiver got error on saving contacts hash", zap.Error(err))
 				}
+				r.mainDelegate.DataSynced(false, true, false)
 			case rony.C_Error:
 				x := &rony.Error{}
 				_ = x.Unmarshal(m.Message)
@@ -124,6 +128,7 @@ func (r *River) syncContacts() {
 			}
 		},
 	)
+
 }
 
 func (r *River) syncDialogs() {
@@ -174,4 +179,5 @@ func (r *River) syncDialogs() {
 		rony.PoolMessageEnvelope.Put(req)
 	}
 
+	r.mainDelegate.DataSynced(true, false, false)
 }

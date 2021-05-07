@@ -120,6 +120,8 @@ func (d *MainDelegate) AddLog(txt string) {}
 
 func (d *MainDelegate) AppUpdate(version string, available, force bool) {}
 
+func (d *MainDelegate) DataSynced(dialogs, contacts, gifs bool) {}
+
 type PrintDelegate struct{}
 
 func (d *PrintDelegate) Log(logLevel int, msg string) {

@@ -107,7 +107,7 @@ func (ctrl *Controller) contactsMany(e *rony.MessageEnvelope) {
 		if err != nil {
 			logs.Error("SyncCtrl couldn't save ContactsHash in to the db", zap.Error(err))
 		}
-		forceUpdateUI(ctrl, false, true, false)
+		ctrl.dataSyncCallback(false, true, false)
 	}
 }
 
@@ -346,7 +346,7 @@ func (ctrl *Controller) savedGifs(e *rony.MessageEnvelope) {
 		logs.Warn("SyncCtrl got error on saving GifHash", zap.Error(err))
 	}
 	if oldHash != uint64(u.Hash) {
-		forceUpdateUI(ctrl, false, false, true)
+		ctrl.dataSyncCallback(false, false, true)
 	}
 }
 

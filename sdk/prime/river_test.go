@@ -118,6 +118,9 @@ func (d *MainDelegateDummy) AddLog(txt string) {}
 
 func (d *MainDelegateDummy) AppUpdate(version string, available, force bool) {}
 
+func (d *MainDelegateDummy) DataSynced(dialogs, contacts, gifs bool) {
+}
+
 type RequestDelegateDummy struct{}
 
 func (RequestDelegateDummy) OnComplete(b []byte) {
